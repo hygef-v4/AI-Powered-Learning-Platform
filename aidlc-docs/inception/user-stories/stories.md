@@ -1376,7 +1376,7 @@ Given AI credentials, When cấu hình, Then bản ghi được bảo vệ qua U
 
 - **Given** giảng viên có phân công lớp và có dữ liệu activity
 - **When** xem timeline từng sinh viên kể cả bài nhóm
-- **Then** thấy số lần/thời lượng/khoảng thiếu, không tự kết luận gian lận hoặc đổi điểm; ngoài quyền bị từ chối.
+- **Then** thấy số lần/thời lượng/khoảng thiếu, không tự kết luận gian lận; ngoài quyền bị từ chối. Assignment không đổi điểm. Quiz có cấu hình thì mức trừ gợi ý được tính khi nộp, giảng viên quyết định trừ hay không từng lượt kèm lý do, chưa quyết định thì điểm giữ nguyên (sửa FR-039 2026-11-02).
 
 #### Scenario 3 - Activity trong UC 42
 

@@ -20,12 +20,14 @@ import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.Role;
 import edu.aiplatform.quizpractice.dto.PracticeViews.SaveResult;
 import edu.aiplatform.quizpractice.dto.PracticeViews.TakingView;
+import edu.aiplatform.quizpractice.model.PenaltyDecision;
 import edu.aiplatform.quizpractice.service.QuizActivityService;
 import edu.aiplatform.quizpractice.service.QuizAttemptService;
 import edu.aiplatform.quizpractice.service.QuizPracticeQueryService;
 import edu.aiplatform.quizpractice.service.TeacherQuizAttemptService;
 import edu.aiplatform.shared.error.ApiException;
 import edu.aiplatform.shared.error.GlobalExceptionHandler;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +77,25 @@ class QuizPracticeControllerTest {
     }
 
     @Test
+    void penaltyDecisionReadsAndValidatesBody() throws Exception {
+        String url = "/api/v1/classes/{c}/quiz-attempts/{a}/penalty:decide";
+        mvc.perform(post(url, classId, attemptId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"decision\":\"APPLIED\",\"points\":1.5,\"reason\":\"Rời nhiều\"}"))
+                .andExpect(status().isOk());
+        verify(teacher).decidePenalty(student, classId, attemptId, PenaltyDecision.APPLIED, new BigDecimal("1.5"), "Rời nhiều");
+        mvc.perform(post(url, classId, attemptId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"decision\":\"DISMISSED\",\"reason\":\"Lỗi máy\"}"))
+                .andExpect(status().isOk());
+        verify(teacher).decidePenalty(student, classId, attemptId, PenaltyDecision.DISMISSED, null, "Lỗi máy");
+        for (String body : List.of("{\"decision\":\"DISMISSED\",\"points\":1,\"reason\":\"x\"}",
+                "{\"decision\":\"WAIVED\",\"reason\":\"x\"}", "{\"decision\":\"APPLIED\",\"points\":\"1\",\"reason\":\"x\"}",
+                "{\"decision\":\"APPLIED\",\"points\":1}", "{\"reason\":\"x\"}")) {
+            mvc.perform(post(url, classId, attemptId).contentType(MediaType.APPLICATION_JSON).content(body))
+                    .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("QUIZ_PRACTICE_REQUEST_INVALID"));
+        }
+    }
+
+    @Test
     void startReadsClassIdFromBody() throws Exception {
         when(attempts.start(student, quizId, classId)).thenReturn(new TakingView(attemptId, quizId, classId, "Quiz", 1,
                 NOW, null, NOW, 0, List.of(), Map.of(), false, null));
@@ -112,12 +133,8 @@ class QuizPracticeControllerTest {
     void readEndpointsAndActivityValidateInput() throws Exception {
         mvc.perform(get("/api/v1/me/quizzes/{q}", quizId)).andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/me/quizzes").param("other", "1")).andExpect(status().isBadRequest());
-        UUID material = UUID.randomUUID();
-        mvc.perform(get("/api/v1/me/quizzes").param("materialId", material.toString()))
+        mvc.perform(get("/api/v1/me/quizzes").param("materialId", UUID.randomUUID().toString()))
                 .andExpect(status().isBadRequest());
-        mvc.perform(get("/api/v1/me/quizzes").param("materialId", material.toString())
-                .param("classId", quizId.toString())).andExpect(status().isOk());
-        verify(queries).byMaterial(student, quizId, material);
         mvc.perform(post("/api/v1/quiz-attempts/{a}/activity", attemptId).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"events\":[{\"sessionId\":\"" + UUID.randomUUID() + "\",\"clientEventId\":\"e1\","
                                 + "\"sequence\":1,\"kind\":\"HIDDEN\",\"clientTime\":\"2026-10-20T08:00:00Z\"}]}"))

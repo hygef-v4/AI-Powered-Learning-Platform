@@ -4,7 +4,7 @@ import type { SourceChoice } from "@/shared/ai";
 
 export type QuestionType = "MCQ_SINGLE" | "MCQ_MULTI";
 export type Difficulty = "EASY" | "MEDIUM" | "HARD";
-export type QuestionStatus = "DRAFT" | "ACTIVE" | "RETIRED";
+export type QuestionStatus = "DRAFT" | "PENDING" | "REJECTED" | "ACTIVE" | "RETIRED";
 
 export type QuestionOption = { id: string; text: string };
 
@@ -35,7 +35,31 @@ export type QuestionView = QuestionContent & {
 
 export type VersionEntry = { id: string; versionNo: number; status: QuestionStatus; createdAt: string; activatedAt: string | null };
 
-export type QuestionDetail = { question: QuestionView; versions: VersionEntry[]; usedInQuizzes: number; draftId: string | null };
+/** Câu gần giống trong ngân hàng, chỉ để cảnh báo (BR-U10-08). */
+export type SimilarQuestion = { id: string; stem: string; status: QuestionStatus; percent: number };
+
+/** Lần duyệt gần nhất của câu đề xuất (BR-U10-09). */
+export type ReviewInfo = { decision: "APPROVED" | "REJECTED"; reason: string | null; reviewedAt: string };
+
+export type QuestionDetail = {
+  question: QuestionView;
+  versions: VersionEntry[];
+  usedInQuizzes: number;
+  draftId: string | null;
+  similar: SimilarQuestion[];
+  review: ReviewInfo | null;
+  /** Quiz sinh đề đang mở thiếu câu sau khi ngưng câu này (BR-U10-17). */
+  quizzesShortOfQuestions: string[];
+};
+
+/** Câu giảng viên đề xuất ở một lớp (BR-U10-09). */
+export type ProposalView = { question: QuestionView; review: ReviewInfo | null; similar: SimilarQuestion[] };
+
+export type BulkItemResult = { id: string; ok: boolean; code: string | null; message: string | null };
+export type BulkResult = { items: BulkItemResult[]; succeeded: number; failed: number };
+export type BulkItem = { id: string; version: number };
+
+export type DuplicateGroup = { questions: SimilarQuestion[] };
 
 export type QuestionRow = {
   id: string;
@@ -48,6 +72,7 @@ export type QuestionRow = {
   status: QuestionStatus;
   hasDraft: boolean;
   updatedAt: string;
+  version: number;
 };
 
 export type QuestionPage = { items: QuestionRow[]; total: number; page: number; size: number };
@@ -73,8 +98,12 @@ export type ManagedSubject = { id: string; code: string; name: string; status?: 
 // --- Quiz (UC 48)
 
 export type QuizScope = "CLASS" | "SUBJECT";
-export type QuizStatus = "DRAFT" | "REVIEWED" | "OPEN" | "RETIRED";
+export type QuizStatus = "DRAFT" | "OPEN" | "RETIRED";
+export type QuizPaperMode = "FIXED" | "GENERATED";
 export type QuizOrigin = "MANUAL" | "CLONE" | "NEW_VERSION" | "CLASS_COPY";
+
+/** Mức trừ gợi ý theo số lần rời trang; giảng viên quyết định có trừ hay không (BR-U10-15). */
+export type LeavePenalty = { freeLeaves: number; pointsPerLeave: number; maxPenalty: number | null; minAwaySeconds: number };
 
 export type QuizSettings = {
   shuffleQuestions: boolean;
@@ -83,6 +112,7 @@ export type QuizSettings = {
   maxAttempts: number | null;
   showScoreAfterSubmit: boolean;
   showCorrectAnswers: boolean;
+  leavePenalty: LeavePenalty | null;
 };
 
 export type QuizInfo = {
@@ -98,7 +128,7 @@ export type QuizInfo = {
   settings: QuizSettings;
   activityMonitoringEnabled: boolean;
   activityNotice: string | null;
-  referenceMaterialIds: string[];
+  paperMode: QuizPaperMode;
   status: QuizStatus;
   publishedAt: string | null;
   retiredAt: string | null;
@@ -110,9 +140,24 @@ export type QuizInfo = {
 
 export type QuizItemView = { position: number; points: number; inline: boolean; question: QuestionView };
 
+/** Một quy tắc sinh đề (BR-U10-17). */
+export type DrawRule = { position: number; tag: string; difficulty: Difficulty | null; questionCount: number; pointsEach: number };
+export type DrawRuleInput = Omit<DrawRule, "position">;
+
+export type BankTag = { tag: string; activeCount: number };
+
+export type RuleShortage = { position: number; tag: string; difficulty: Difficulty | null; required: number; available: number };
+
+export type PaperPreview = {
+  items: { rulePosition: number; points: number; question: QuestionView }[];
+  maxScore: number;
+  shortages: RuleShortage[];
+};
+
 export type QuizDetail = {
   quiz: QuizInfo;
   items: QuizItemView[];
+  drawRules: DrawRule[];
   maxScore: number;
   canManage: boolean;
 };
@@ -140,14 +185,13 @@ export type QuizDetailsInput = {
   settings: QuizSettings;
   activityMonitoringEnabled: boolean;
   activityNotice: string | null;
-  referenceMaterialIds: string[];
 };
 
 export type QuizItemInput = { questionId: string; points: number | null };
 
 export type RandomPreview = { questions: QuestionView[]; matching: number; freeSlots: number };
 
-// --- Đề xuất AI, MCP và tài liệu tham khảo (giai đoạn 4)
+// --- Đề xuất AI, MCP và tài liệu nguồn cho AI (giai đoạn 4)
 
 export type SelectableMaterial = { materialId: string; title: string; hasText: boolean };
 

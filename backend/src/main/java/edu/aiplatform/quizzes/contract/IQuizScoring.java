@@ -1,6 +1,9 @@
 package edu.aiplatform.quizzes.contract;
 
+import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -12,4 +15,14 @@ public interface IQuizScoring {
     QuizScore score(UUID quizId, List<QuizAnswer> answers);
 
     AnswerReview answerReview(UUID quizId);
+
+    /** Chấm lượt sinh đề: chỉ các câu và điểm đã lưu trong lượt (BR-U10-17). */
+    default QuizScore score(UUID quizId, List<QuizAnswer> answers, Map<UUID, BigDecimal> questionPoints) {
+        return score(quizId, answers);
+    }
+
+    /** Đáp án của các câu trong lượt sinh đề. */
+    default AnswerReview answerReview(UUID quizId, Collection<UUID> questionIds) {
+        return answerReview(quizId);
+    }
 }

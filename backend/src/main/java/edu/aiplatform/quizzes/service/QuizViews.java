@@ -5,8 +5,11 @@ import edu.aiplatform.quizzes.contract.QuizScope;
 import edu.aiplatform.quizzes.contract.QuizSettings;
 import edu.aiplatform.quizzes.contract.QuizStatus;
 import edu.aiplatform.quizzes.repository.IQuizRepository.QuizSummary;
+import edu.aiplatform.quizzes.model.Difficulty;
+import edu.aiplatform.quizzes.model.DrawRule;
 import edu.aiplatform.quizzes.model.Quiz;
 import edu.aiplatform.quizzes.model.QuizOrigin;
+import edu.aiplatform.quizzes.model.QuizPaperMode;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -20,14 +23,14 @@ public final class QuizViews {
 
     public record QuizInfo(UUID id, QuizScope scope, UUID classId, UUID subjectId, UUID sourceQuizId,
                            QuizOrigin origin, int versionNo, String title, String instructions, QuizSettings settings,
-                           boolean activityMonitoringEnabled, String activityNotice, List<UUID> referenceMaterialIds,
+                           boolean activityMonitoringEnabled, String activityNotice, QuizPaperMode paperMode,
                            QuizStatus status, Instant publishedAt, Instant retiredAt, String retiredReason,
                            Instant createdAt, Instant updatedAt, long version) {
 
         static QuizInfo of(Quiz q) {
             return new QuizInfo(q.id(), q.scope(), q.classId(), q.subjectId(), q.sourceQuizId(), q.origin(),
                     q.versionNo(), q.title(), q.instructions(), q.settings(), q.activityMonitoringEnabled(),
-                    q.activityNotice(), q.referenceMaterialIds(), q.status(), q.publishedAt(), q.retiredAt(),
+                    q.activityNotice(), q.paperMode(), q.status(), q.publishedAt(), q.retiredAt(),
                     q.retiredReason(), q.createdAt(), q.updatedAt(), q.version());
         }
     }
@@ -36,8 +39,36 @@ public final class QuizViews {
     public record QuizItemView(int position, BigDecimal points, boolean inline, QuestionView question) {
     }
 
-    /** Quiz Detail; {@code canManage} sai khi giảng viên lớp xem Quiz của môn (chỉ xem, BR-U10-10). */
-    public record QuizDetail(QuizInfo quiz, List<QuizItemView> items, BigDecimal maxScore, boolean canManage) {
+    /** Một quy tắc sinh đề (BR-U10-17). */
+    public record DrawRuleView(int position, String tag, Difficulty difficulty, int questionCount, BigDecimal pointsEach) {
+
+        static DrawRuleView of(DrawRule r) {
+            return new DrawRuleView(r.position(), r.tag(), r.difficulty(), r.questionCount(), r.pointsEach());
+        }
+    }
+
+    /**
+     * Quiz Detail; {@code canManage} sai khi giảng viên lớp xem Quiz của môn (chỉ xem, BR-U10-10). Quiz sinh đề có
+     * {@code drawRules}, còn {@code maxScore} tính theo quy tắc.
+     */
+    public record QuizDetail(QuizInfo quiz, List<QuizItemView> items, List<DrawRuleView> drawRules, BigDecimal maxScore,
+                             boolean canManage) {
+    }
+
+    /** Một thẻ trong ngân hàng của môn kèm số câu đang dùng, để chọn khi lập quy tắc. */
+    public record BankTag(String tag, int activeCount) {
+    }
+
+    /** Một câu trong đề mẫu của Quiz sinh đề, kèm quy tắc đã bốc ra câu đó. */
+    public record PaperPreviewItem(int rulePosition, BigDecimal points, QuestionView question) {
+    }
+
+    /** Một quy tắc còn thiếu câu: cần {@code required}, kho chỉ cấp được {@code available}. */
+    public record RuleShortage(int position, String tag, Difficulty difficulty, int required, int available) {
+    }
+
+    /** "Xem thử đề mẫu": đề bốc thử và các quy tắc thiếu câu; không lưu gì. */
+    public record PaperPreview(List<PaperPreviewItem> items, BigDecimal maxScore, List<RuleShortage> shortages) {
     }
 
     /** Một dòng Quiz trên Quiz List hoặc tab Đánh giá; {@code readOnly} với Quiz của môn hiện ở lớp. */

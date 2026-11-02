@@ -3,13 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import {
   createSubjectQuiz, getBankQuestionsForQuiz, getClassQuizzes, getManagedSubjects, getQuiz, getSubjectQuizzes, previewRandomItems,
-  publishQuiz, reopenQuiz, reviewQuiz, saveQuizItems, updateQuizDetails,
+  previewPaper, proposeQuestion, publishQuiz, reopenQuiz, saveDrawRules, saveQuizItems, updateQuizDetails,
 } from "@/features/quizzes/api";
 import { BankQuestionPicker } from "@/features/quizzes/components/BankQuestionPicker";
 import { ClassQuizzesSection } from "@/features/quizzes/components/ClassQuizzesSection";
 import { settingsFormOf, settingsInput } from "@/features/quizzes/components/QuizDetailParts";
 import { QuizDetailPage } from "@/features/quizzes/pages/QuizDetailPage";
 import { SubjectQuizListPage } from "@/features/quizzes/pages/SubjectQuizListPage";
+import { quizDetailSections } from "@/features/quizzes/slots";
 import type { QuestionView, QuizDetail, QuizInfo, QuizRow } from "@/features/quizzes/model/types";
 
 vi.mock("@/features/quizzes/api", () => ({
@@ -27,7 +28,10 @@ vi.mock("@/features/quizzes/api", () => ({
   getBankQuestionsForQuiz: vi.fn(),
   addInlineQuestion: vi.fn(),
   updateInlineQuestion: vi.fn(),
-  reviewQuiz: vi.fn(),
+  saveDrawRules: vi.fn(),
+  getBankTags: vi.fn(async () => [{ tag: "Chương 1", activeCount: 12 }]),
+  previewPaper: vi.fn(),
+  proposeQuestion: vi.fn(),
   publishQuiz: vi.fn(),
   retireQuiz: vi.fn(),
   reopenQuiz: vi.fn(),
@@ -52,12 +56,12 @@ const QUESTION: QuestionView = {
 const INFO: QuizInfo = {
   id: "z1", scope: "CLASS", classId: "c1", subjectId: "s1", sourceQuizId: null, origin: "MANUAL", versionNo: 1, title: "Luyện tập",
   instructions: null, settings: { shuffleQuestions: false, shuffleOptions: false, timeLimitMinutes: null, maxAttempts: 1,
-    showScoreAfterSubmit: true, showCorrectAnswers: false },
-  activityMonitoringEnabled: false, activityNotice: null, referenceMaterialIds: [], status: "DRAFT", publishedAt: null, retiredAt: null,
+    showScoreAfterSubmit: true, showCorrectAnswers: false, leavePenalty: null },
+  activityMonitoringEnabled: false, activityNotice: null, paperMode: "FIXED", status: "DRAFT", publishedAt: null, retiredAt: null,
   retiredReason: null, createdAt: "2026-10-20T08:00:00Z", updatedAt: "2026-10-20T08:00:00Z", version: 3,
 };
 const detail = (quiz: Partial<QuizInfo> = {}, canManage = true): QuizDetail => ({
-  quiz: { ...INFO, ...quiz }, items: [{ position: 1, points: 2, inline: false, question: QUESTION }], maxScore: 2, canManage,
+  quiz: { ...INFO, ...quiz }, items: [{ position: 1, points: 2, inline: false, question: QUESTION }], drawRules: [], maxScore: 2, canManage,
 });
 const row = (overrides: Partial<QuizRow> = {}): QuizRow => ({
   id: "z1", scope: "CLASS", classId: "c1", subjectId: "s1", versionNo: 1, title: "Luyện tập", status: "DRAFT", itemCount: 3,
@@ -108,7 +112,7 @@ describe("QuizDetailPage", () => {
     render(<QuizDetailPage id="z1" />);
 
     fireEvent.change(await screen.findByTestId("quiz-item-points-0"), { target: { value: "2,5" } });
-    expect(screen.getByTestId("quiz-detail-review")).toBeDisabled();
+    expect(screen.getByTestId("quiz-detail-publish")).toBeDisabled();
     fireEvent.click(screen.getByTestId("quiz-detail-save"));
 
     await waitFor(() => expect(saveQuizItems).toHaveBeenCalledWith("z1", [{ questionId: "q1", points: 2.5 }], 3));
@@ -129,31 +133,34 @@ describe("QuizDetailPage", () => {
     expect(saveQuizItems).not.toHaveBeenCalled();
   });
 
-  it("duyệt lỗi thì hiện danh sách cần sửa; xung đột thì tải lại", async () => {
+  it("phát hành lỗi thì hiện danh sách cần sửa; xung đột thì tải lại", async () => {
     vi.mocked(getQuiz).mockResolvedValue(detail());
-    vi.mocked(reviewQuiz).mockRejectedValue(new ApiError({ status: 400, code: "QUIZ_REVIEW_FAILED",
+    vi.mocked(publishQuiz).mockRejectedValue(new ApiError({ status: 400, code: "QUIZ_PUBLISH_FAILED",
       violations: [{ field: "items[1]", code: "QUESTION_NOT_ACTIVE", message: "Câu 1 lấy từ ngân hàng đã ngưng dùng" }] } as never));
     render(<QuizDetailPage id="z1" />);
 
-    fireEvent.click(await screen.findByTestId("quiz-detail-review"));
+    fireEvent.click(await screen.findByTestId("quiz-detail-publish"));
+    fireEvent.click(await screen.findByTestId("quiz-detail-publish-confirm"));
     expect(await screen.findByText("Câu 1 lấy từ ngân hàng đã ngưng dùng")).toBeInTheDocument();
 
-    vi.mocked(reviewQuiz).mockRejectedValue(new ApiError({ status: 409, code: "QUIZ_VERSION_CONFLICT" }));
-    fireEvent.click(screen.getByTestId("quiz-detail-review"));
+    vi.mocked(publishQuiz).mockRejectedValue(new ApiError({ status: 409, code: "QUIZ_VERSION_CONFLICT" }));
+    fireEvent.click(screen.getByTestId("quiz-detail-publish"));
+    fireEvent.click(await screen.findByTestId("quiz-detail-publish-confirm"));
     await waitFor(() => expect(getQuiz).toHaveBeenCalledTimes(2));
   });
 
-  it("thêm câu từ ngân hàng sau khi duyệt lỗi thì xóa danh sách lỗi cũ", async () => {
+  it("thêm câu từ ngân hàng sau khi phát hành lỗi thì xóa danh sách lỗi cũ", async () => {
     vi.mocked(getQuiz).mockResolvedValue({ ...detail(), items: [], maxScore: 0 });
-    vi.mocked(reviewQuiz).mockRejectedValue(new ApiError({ status: 400, code: "QUIZ_REVIEW_FAILED",
+    vi.mocked(publishQuiz).mockRejectedValue(new ApiError({ status: 400, code: "QUIZ_PUBLISH_FAILED",
       violations: [{ field: "items", code: "ITEMS_EMPTY", message: "Quiz cần ít nhất 1 câu" }] } as never));
     vi.mocked(getBankQuestionsForQuiz).mockResolvedValue({ items: [{ id: "q1", lineageId: "q1", versionNo: 2, type: "MCQ_SINGLE",
-      stem: "Thủ đô của Việt Nam?", difficulty: "EASY", tags: [], status: "ACTIVE", hasDraft: false, updatedAt: "2026-10-20T08:00:00Z" }],
+      stem: "Thủ đô của Việt Nam?", difficulty: "EASY", tags: [], status: "ACTIVE", hasDraft: false, updatedAt: "2026-10-20T08:00:00Z", version: 1 }],
       total: 1, page: 0, size: 50 });
     vi.mocked(saveQuizItems).mockResolvedValue(detail({ version: 4 }));
     render(<QuizDetailPage id="z1" />);
 
-    fireEvent.click(await screen.findByTestId("quiz-detail-review"));
+    fireEvent.click(await screen.findByTestId("quiz-detail-publish"));
+    fireEvent.click(await screen.findByTestId("quiz-detail-publish-confirm"));
     expect(await screen.findByTestId("quiz-detail-violations")).toHaveTextContent("Quiz cần ít nhất 1 câu");
 
     fireEvent.click(screen.getByTestId("quiz-detail-add-bank"));
@@ -164,15 +171,90 @@ describe("QuizDetailPage", () => {
     await waitFor(() => expect(screen.queryByTestId("quiz-detail-violations")).not.toBeInTheDocument());
   });
 
-  it("quiz đã duyệt có nút phát hành", async () => {
-    vi.mocked(getQuiz).mockResolvedValue(detail({ status: "REVIEWED" }));
+  it("quiz nháp phát hành thẳng sau khi xác nhận, không còn bước duyệt", async () => {
+    vi.mocked(getQuiz).mockResolvedValue(detail());
     vi.mocked(publishQuiz).mockResolvedValue(detail({ status: "OPEN", publishedAt: "2026-10-20T09:00:00Z", version: 4 }));
     render(<QuizDetailPage id="z1" />);
     fireEvent.click(await screen.findByTestId("quiz-detail-publish"));
+    expect(await screen.findByTestId("quiz-detail-publish-summary")).toHaveTextContent("Quiz có 1 câu");
+    expect(publishQuiz).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId("quiz-detail-publish-confirm"));
     expect(await screen.findByText("Đang mở")).toBeInTheDocument();
     expect(publishQuiz).toHaveBeenCalledWith("z1", 3);
     expect(screen.getByTestId("quiz-detail-edit")).toBeInTheDocument();
     expect(screen.queryByTestId("quiz-detail-save")).not.toBeInTheDocument();
+  });
+
+  it("sinh đề: lưu quy tắc theo thẻ, ẩn danh sách câu, xem thử đề mẫu", async () => {
+    vi.mocked(getQuiz).mockResolvedValue(detail());
+    const generated: QuizDetail = { ...detail({ paperMode: "GENERATED", version: 4 }), items: [], maxScore: 2,
+      drawRules: [{ position: 1, tag: "Chương 1", difficulty: null, questionCount: 4, pointsEach: 0.5 }] };
+    vi.mocked(saveDrawRules).mockResolvedValue(generated);
+    vi.mocked(previewPaper).mockResolvedValue({ items: [{ rulePosition: 1, points: 0.5, question: QUESTION }], maxScore: 2,
+      shortages: [{ position: 1, tag: "Chương 1", difficulty: null, required: 4, available: 1 }] });
+    render(<QuizDetailPage id="z1" />);
+
+    fireEvent.change(await screen.findByTestId("draw-rules-mode"), { target: { value: "GENERATED" } });
+    fireEvent.click(screen.getByTestId("draw-rule-add"));
+    fireEvent.change(screen.getByTestId("draw-rule-tag-0"), { target: { value: "Chương 1" } });
+    expect(await screen.findByText("Kho có 12 câu đang dùng mang thẻ này")).toBeInTheDocument();
+    fireEvent.change(screen.getByTestId("draw-rule-count-0"), { target: { value: "4" } });
+    fireEvent.change(screen.getByTestId("draw-rule-points-0"), { target: { value: "0,5" } });
+    expect(screen.getByTestId("draw-rules-total")).toHaveTextContent("4 câu · 2 điểm");
+    fireEvent.click(screen.getByTestId("draw-rules-save"));
+
+    await waitFor(() => expect(saveDrawRules).toHaveBeenCalledWith("z1", "GENERATED",
+      [{ tag: "Chương 1", difficulty: null, questionCount: 4, pointsEach: 0.5 }], 3));
+    await waitFor(() => expect(screen.queryByTestId("quiz-item")).not.toBeInTheDocument());
+    fireEvent.click(await screen.findByTestId("draw-rules-preview"));
+    expect(await screen.findByTestId("paper-preview")).toHaveTextContent("cần 4 câu, kho chỉ cấp được 1 câu");
+    fireEvent.click(screen.getAllByRole("button", { name: "Đóng" })[0]!);
+    fireEvent.click(screen.getByTestId("quiz-detail-publish"));
+    expect(await screen.findByTestId("quiz-detail-publish-summary")).toHaveTextContent("một đề mới gồm 4 câu");
+  });
+
+  it("hiện phần lượt làm của sinh viên theo lớp của quiz; quiz của môn mở từ lớp thì theo lớp đó", async () => {
+    const seen: { quizId: string; classId?: string }[] = [];
+    quizDetailSections.register({ key: "test-attempts", order: 1, component: (props) => { seen.push(props); return null; } });
+    vi.mocked(getQuiz).mockResolvedValue(detail());
+    const { unmount } = render(<QuizDetailPage id="z1" />);
+    await screen.findByTestId("quiz-detail-publish");
+    expect(seen.at(-1)).toEqual({ quizId: "z1", classId: "c1" });
+    unmount();
+    vi.mocked(getQuiz).mockResolvedValue(detail({ scope: "SUBJECT", classId: null, status: "OPEN" }, false));
+    render(<QuizDetailPage id="z1" classId="c9" />);
+    await screen.findByText("Đang mở");
+    expect(seen.at(-1)).toEqual({ quizId: "z1", classId: "c9" });
+  });
+
+  it("giảng viên đề xuất câu riêng vào ngân hàng; quiz của môn thì không có nút này", async () => {
+    const inline = { ...detail(), items: [{ position: 1, points: 2, inline: true, question: QUESTION }] };
+    vi.mocked(getQuiz).mockResolvedValue(inline);
+    vi.mocked(proposeQuestion).mockResolvedValue({ question: { ...QUESTION, status: "PENDING" }, review: null, similar: [] });
+    const { unmount } = render(<QuizDetailPage id="z1" />);
+    fireEvent.click(await screen.findByTestId("quiz-item-propose-0"));
+    await waitFor(() => expect(proposeQuestion).toHaveBeenCalledWith("c1", QUESTION));
+    unmount();
+
+    vi.mocked(getQuiz).mockResolvedValue({ ...inline, quiz: { ...INFO, scope: "SUBJECT", classId: null } });
+    render(<QuizDetailPage id="z1" />);
+    expect(await screen.findByTestId("quiz-item-edit-0")).toBeInTheDocument();
+    expect(screen.queryByTestId("quiz-item-propose-0")).not.toBeInTheDocument();
+  });
+
+  it("cấu hình trừ điểm cần bật ghi nhận hoạt động và gửi đúng dữ liệu", async () => {
+    const monitored = detail({ activityMonitoringEnabled: true, activityNotice: "Có ghi nhận" });
+    vi.mocked(getQuiz).mockResolvedValue(monitored);
+    vi.mocked(updateQuizDetails).mockResolvedValue(monitored);
+    render(<QuizDetailPage id="z1" />);
+    fireEvent.click(await screen.findByRole("switch", { name: "Gợi ý trừ điểm khi rời trang" }));
+    fireEvent.change(screen.getByTestId("quiz-settings-free-leaves"), { target: { value: "1" } });
+    fireEvent.change(screen.getByTestId("quiz-settings-points-per-leave"), { target: { value: "0,5" } });
+    fireEvent.change(screen.getByTestId("quiz-settings-max-penalty"), { target: { value: "3" } });
+    fireEvent.click(screen.getByTestId("quiz-detail-save"));
+    await waitFor(() => expect(updateQuizDetails).toHaveBeenCalled());
+    expect(vi.mocked(updateQuizDetails).mock.calls[0]?.[1].settings.leavePenalty)
+      .toEqual({ freeLeaves: 1, pointsPerLeave: 0.5, maxPenalty: 3, minAwaySeconds: 5 });
   });
 
   it("quiz đã lưu trữ mở lại được, không sửa hay lưu trữ lần nữa", async () => {
@@ -203,7 +285,7 @@ describe("QuizDetailPage", () => {
 describe("BankQuestionPicker", () => {
   it("chọn tay rồi thêm các câu đã chọn", async () => {
     vi.mocked(getBankQuestionsForQuiz).mockResolvedValue({ items: [{ id: "b1", lineageId: "b1", versionNo: 1, type: "MCQ_SINGLE",
-      stem: "Câu ngân hàng", difficulty: "EASY", tags: [], status: "ACTIVE", hasDraft: false, updatedAt: "2026-10-20T08:00:00Z" }], total: 1, page: 0, size: 50 });
+      stem: "Câu ngân hàng", difficulty: "EASY", tags: [], status: "ACTIVE", hasDraft: false, updatedAt: "2026-10-20T08:00:00Z", version: 1 }], total: 1, page: 0, size: 50 });
     const onAdd = vi.fn().mockResolvedValue(undefined);
     render(<BankQuestionPicker quizId="z1" freeSlots={199} onClose={vi.fn()} onAdd={onAdd} />);
 

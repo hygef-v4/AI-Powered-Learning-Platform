@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -74,9 +75,12 @@ public class QuizAttemptService {
             access.rejected(actor, "QUIZ_SUBMIT_REJECTED", null, "NO_ATTEMPTS_LEFT");
             throw ApiException.conflict("NO_ATTEMPTS_LEFT", "Bạn đã dùng hết " + max + "/" + max + " lượt làm quiz này");
         }
-        QuizStudentView view = support.studentView(quizId);
+        Set<UUID> seen = attempts.listByAccount(actor.accountId(), List.of(quizId)).stream()
+                .flatMap(a -> a.snapshot().questionOrder().stream()).collect(Collectors.toSet());
+        long seed = SEEDS.nextLong();
+        QuizStudentView view = support.newPaper(quizId, seen, seed);
         QuizAttempt attempt = QuizAttempt.start(quizId, classId, actor.accountId(), used + 1,
-                AttemptSnapshot.of(view, SEEDS.nextLong()), clock.instant());
+                AttemptSnapshot.of(view, seed), clock.instant());
         attempts.insert(attempt);
         return taking(attempt, view);
     }
@@ -166,7 +170,7 @@ public class QuizAttemptService {
     }
 
     private TakingView taking(QuizAttempt attempt) {
-        return taking(attempt, support.studentView(attempt.quizId()));
+        return taking(attempt, support.paperOf(attempt));
     }
 
     private TakingView taking(QuizAttempt attempt, QuizStudentView view) {
@@ -182,7 +186,7 @@ public class QuizAttemptService {
         return new TakingView(attempt.id(), attempt.quizId(), attempt.classId(), attempt.snapshot().title(),
                 attempt.attemptNo(), attempt.startedAt(), attempt.deadlineAt(), clock.instant(),
                 attempt.answerVersion(), questions, attempt.answers(), attempt.snapshot().activityMonitoringEnabled(),
-                attempt.snapshot().activityNotice());
+                attempt.snapshot().activityNotice(), attempt.snapshot().settings().leavePenalty());
     }
 
     private static ApiException versionConflict() {

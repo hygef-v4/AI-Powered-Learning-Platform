@@ -71,13 +71,14 @@ public class QuizAiDraftService {
     private final QuizReferenceMaterials materials;
     private final IAiTask ai;
     private final QuizAudit audit;
+    private final QuestionDuplicates duplicates;
     private final TransactionOperations transactions;
     private final Clock clock;
 
     public QuizAiDraftService(IQuizAiDraftRepository drafts, IQuizRepository quizzes, IQuestionRepository questions,
                               QuizSupport support, QuizAccess access, ActiveSubjects activeSubjects,
                               QuizReferenceMaterials materials, IAiTask ai, QuizAudit audit,
-                              TransactionOperations transactions, Clock clock) {
+                              QuestionDuplicates duplicates, TransactionOperations transactions, Clock clock) {
         this.drafts = drafts;
         this.quizzes = quizzes;
         this.questions = questions;
@@ -87,6 +88,7 @@ public class QuizAiDraftService {
         this.materials = materials;
         this.ai = ai;
         this.audit = audit;
+        this.duplicates = duplicates;
         this.transactions = transactions;
         this.clock = clock;
     }
@@ -268,6 +270,7 @@ public class QuizAiDraftService {
         validatePicked(picked, draft);
         List<UUID> created = new ArrayList<>();
         for (QuestionContent content : picked) {
+            duplicates.requireUnique(subjectId, content, null);
             Question q = Question.newBankDraft(subjectId, content, actor.accountId(), clock.instant());
             questions.insert(q);
             created.add(q.id());

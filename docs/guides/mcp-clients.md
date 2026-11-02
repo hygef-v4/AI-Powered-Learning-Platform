@@ -143,7 +143,7 @@ Các tool hiện có trong mã nguồn (danh sách thực tế còn lọc theo r
 
 Admin không thấy/gọi tool MCP. Teacher/Manager giữ tool học vụ đúng scope; Student chỉ các tool đọc metadata/Practice của mình và lưu góp ý riêng. READ_ONLY không gọi tool ghi.
 
-Luồng soạn: capabilities → tìm lớp/môn → học liệu → requirements → tạo nháp. Cung cấp `title`, đúng một `classId`/`subjectId`, `requestRef` và `draft` (assignment) hoặc `questions` (quiz). Quiz nhận `settings` tùy chọn; cả hai nhận `referenceMaterialIds`. Mở nháp trên UI để xem/áp dụng đề xuất. Giữ nguyên requestRef và nội dung khi retry sau timeout: server trả cùng ID. Đổi nội dung phải dùng requestRef mới; quyền hiện tại được kiểm lại trước replay. Mutation lỗi rollback cả container lẫn kết quả retry.
+Luồng soạn: capabilities → tìm lớp/môn → học liệu → requirements → tạo nháp. Cung cấp `title`, đúng một `classId`/`subjectId`, `requestRef` và `draft` (assignment) hoặc `questions` (quiz). Quiz nhận `settings` tùy chọn; assignment nhận `referenceMaterialIds`. Quiz không còn gắn tài liệu; cách lập đề và trừ điểm khi rời trang đặt trên UI. Mở nháp trên UI để xem/áp dụng đề xuất. Giữ nguyên requestRef và nội dung khi retry sau timeout: server trả cùng ID. Đổi nội dung phải dùng requestRef mới; quyền hiện tại được kiểm lại trước replay. Mutation lỗi rollback cả container lẫn kết quả retry.
 
 Assignment trả `reviewUrl` để mở đúng đề xuất đã tạo; trang không gọi provider để tạo lại. Quiz dùng danh sách đề xuất hiện có trên trang chi tiết. Ngân hàng cho phép `read_question_bank_context` nhận thêm `questionId` từ kết quả tìm kiếm để đọc đầy đủ câu/đáp án đúng môn. Phản hồi retry chứa version lúc tạo; đọc lại đối tượng nếu người soạn đã chỉnh sửa sau đó.
 

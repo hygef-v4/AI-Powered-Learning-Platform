@@ -1,5 +1,7 @@
 package edu.aiplatform.quizzes.repository;
 
+import edu.aiplatform.quizzes.model.DrawRule;
+import edu.aiplatform.quizzes.model.QuizPaperMode;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -157,9 +159,7 @@ class JdbcQuizRepositoryIntegrationTest {
     @Test
     void publishedQuizRetiredAtPublicationInstantReopensAsOpenAfterRoundTrip() {
         Quiz draft = subjectQuiz();
-        assertThat(quizzes.update(draft.reviewed(NOW))).isTrue();
-        Quiz reviewed = quizzes.find(draft.id()).orElseThrow();
-        assertThat(quizzes.update(reviewed.published(NOW))).isTrue();
+        assertThat(quizzes.update(draft.published(NOW))).isTrue();
         Quiz open = quizzes.find(draft.id()).orElseThrow();
         assertThat(quizzes.update(open.retired("Hết đợt", NOW))).isTrue();
         Quiz retired = quizzes.find(draft.id()).orElseThrow();
@@ -178,12 +178,11 @@ class JdbcQuizRepositoryIntegrationTest {
         Question q = activeBank(Difficulty.EASY, "a");
         quizzes.replaceItems(quiz.id(), List.of(new QuizItem(quiz.id(), q.id(), 1, new BigDecimal("2.50"))));
         Quiz changed = quiz.withDetails("Bài 1", "Đọc kỹ", new QuizSettings(true, false, 45, null, true, true), false,
-                null, List.of(UUID.randomUUID()), NOW);
+                null, NOW);
 
         assertThat(quizzes.update(changed)).isTrue();
         Quiz read = quizzes.find(quiz.id()).orElseThrow();
         assertThat(read.settings()).isEqualTo(changed.settings());
-        assertThat(read.referenceMaterialIds()).isEqualTo(changed.referenceMaterialIds());
         assertThat(read.version()).isEqualTo(1);
         assertThat(quizzes.update(changed)).as("version cũ").isFalse();
         assertThat(quizzes.items(quiz.id())).singleElement().satisfies(i -> assertThat(i.points()).isEqualByComparingTo("2.5"));
@@ -208,18 +207,15 @@ class JdbcQuizRepositoryIntegrationTest {
         assertThat(quizzes.find(quiz.id())).isEmpty();
         assertThat(questions.find(inline.id())).isEmpty();
 
-        Quiz published = subjectQuiz().reviewed(NOW);
-        quizzes.update(published);
-        Quiz open = quizzes.find(published.id()).orElseThrow().published(NOW);
+        Quiz open = subjectQuiz().published(NOW);
         quizzes.update(open);
-        assertThat(quizzes.delete(open.id(), 2)).isFalse();
+        assertThat(quizzes.delete(open.id(), 1)).isFalse();
     }
 
     @Test
     void versionChainFindsOpenSiblingAndAllowsOneDraftVersion() {
         Quiz v1 = subjectQuiz();
-        quizzes.update(v1.reviewed(NOW));
-        quizzes.update(quizzes.find(v1.id()).orElseThrow().published(NOW));
+        quizzes.update(v1.published(NOW));
         Quiz v2 = quizzes.find(v1.id()).orElseThrow().copyAs(QuizOrigin.NEW_VERSION, 2, null, author, NOW);
         quizzes.insert(v2);
 
@@ -250,16 +246,19 @@ class JdbcQuizRepositoryIntegrationTest {
     }
 
     @Test
-    void openQuizzesAttachedToMaterialAreFound() {
-        UUID material = UUID.randomUUID();
+    void drawRulesRoundTripAndDriveSummaryOfGeneratedQuiz() {
         Quiz quiz = subjectQuiz();
-        quizzes.update(quiz.withDetails("Có tài liệu", null, quiz.settings(), false, null, List.of(material), NOW)
-                .reviewed(NOW));
-        quizzes.update(quizzes.find(quiz.id()).orElseThrow().published(NOW));
+        quizzes.replaceDrawRules(quiz.id(), List.of(
+                new DrawRule(quiz.id(), 1, "Chương 1", null, 4, new BigDecimal("0.50")),
+                new DrawRule(quiz.id(), 2, "Chương 2", Difficulty.HARD, 3, new BigDecimal("2.00"))));
+        quizzes.update(quiz.withPaperMode(QuizPaperMode.GENERATED, NOW));
 
-        assertThat(quizzes.listOpenByMaterial(material, UUID.randomUUID(), subject)).extracting(s -> s.quiz().id())
-                .containsExactly(quiz.id());
-        assertThat(quizzes.listOpenByMaterial(UUID.randomUUID(), UUID.randomUUID(), subject)).isEmpty();
+        assertThat(quizzes.find(quiz.id()).orElseThrow().paperMode()).isEqualTo(QuizPaperMode.GENERATED);
+        assertThat(quizzes.drawRules(quiz.id())).extracting(DrawRule::tag).containsExactly("Chương 1", "Chương 2");
+        assertThat(quizzes.drawRules(quiz.id()).get(1).difficulty()).isEqualTo(Difficulty.HARD);
+        var summary = quizzes.listSubjectQuizzes(subject, null, null, 0, 20).items().get(0);
+        assertThat(summary.itemCount()).isEqualTo(7);
+        assertThat(summary.maxScore()).isEqualByComparingTo("8");
     }
 
     @Test

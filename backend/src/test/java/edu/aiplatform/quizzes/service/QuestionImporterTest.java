@@ -58,7 +58,7 @@ class QuestionImporterTest {
     void setup() {
         QuizAudit audit = new QuizAudit(audits::add, Clock.fixed(NOW, ZoneOffset.UTC));
         importer = new QuestionImporter(repo, new ActiveSubjects(subjects), new QuizAccess(authorization, audit), audit,
-                Clock.fixed(NOW, ZoneOffset.UTC));
+                new QuestionDuplicates(repo), Clock.fixed(NOW, ZoneOffset.UTC));
         when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
         when(subjects.isActive(subject)).thenReturn(true);
     }

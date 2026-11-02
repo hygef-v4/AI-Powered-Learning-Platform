@@ -736,3 +736,7 @@ Primary UC 66; FR-024, FR-038.
 ## Shared verification
 
 - [ArchitectureTest.java](../../../backend/src/test/java/edu/aiplatform/ArchitectureTest.java)
+
+## Delta 2026-11-01: làm lại Quiz
+
+Quiz bỏ `REVIEWED`, có sinh đề theo thẻ, chống trùng câu, đề xuất và duyệt câu của giảng viên, trừ điểm theo số lần rời trang, xem kết quả mỗi câu một trang, bỏ gắn tài liệu vào quiz. Trên nhánh `feat/quiz-rework-2026-11-01`: [kết quả và giới hạn](../../construction/build-and-test/2026-11-01-quiz-rework-results.md).

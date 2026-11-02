@@ -5,8 +5,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zaxxer.hikari.HikariDataSource;
+import edu.aiplatform.quizpractice.model.ActivityOutcome;
+import edu.aiplatform.quizpractice.model.ActivitySignal;
 import edu.aiplatform.quizpractice.model.AttemptSnapshot;
 import edu.aiplatform.quizpractice.model.AttemptStatus;
+import edu.aiplatform.quizpractice.model.PenaltyDecision;
 import edu.aiplatform.quizpractice.model.QuestionResult;
 import edu.aiplatform.quizpractice.model.QuizAttempt;
 import edu.aiplatform.quizpractice.model.SubmitMode;
@@ -157,6 +160,45 @@ class JdbcQuizAttemptRepositoryIntegrationTest {
         assertThat(repository.countAttempts(quizId, student)).isEqualTo(1);
         assertThat(repository.quizzesAttemptedBy(student)).containsEntry(quizId, classId);
         assertThat(repository.listByQuizAndClass(quizId, classId)).hasSize(1);
+    }
+
+    @Test
+    void penaltyDecisionChangesScoreAndCanBeRevised() {
+        QuizAttempt attempt = attempt(1, null);
+        repository.insert(attempt);
+        UUID q = attempt.snapshot().questionOrder().get(0);
+        BigDecimal raw = new BigDecimal("2");
+        QuizAttempt submitted = attempt.submitted(SubmitMode.MANUAL, raw, raw,
+                List.of(new QuestionResult(q, true, raw, raw)), NOW.plusSeconds(9));
+        assertThat(repository.submit(submitted.withOutcome(new ActivityOutcome(raw, new BigDecimal("1.50"), BigDecimal.ZERO, 3,
+                ActivitySignal.OK, null, null, null, null), raw))).isTrue();
+
+        QuizAttempt pending = repository.find(attempt.id()).orElseThrow();
+        assertThat(pending.score()).isEqualByComparingTo("2");
+        assertThat(pending.outcome().suggestedPenalty()).isEqualByComparingTo("1.5");
+        assertThat(pending.outcome().pendingDecision()).isTrue();
+
+        assertThat(repository.decidePenalty(attempt.id(), PenaltyDecision.APPLIED, new BigDecimal("3"), student, NOW, "Quá điểm gốc"))
+                .as("không trừ quá điểm gốc").isFalse();
+        assertThat(repository.decidePenalty(attempt.id(), PenaltyDecision.APPLIED, new BigDecimal("1"), student, NOW, "Rời nhiều lần")).isTrue();
+        QuizAttempt applied = repository.find(attempt.id()).orElseThrow();
+        assertThat(applied.score()).isEqualByComparingTo("1");
+        assertThat(applied.outcome().penaltyPoints()).isEqualByComparingTo("1");
+        assertThat(applied.outcome().decision()).isEqualTo(PenaltyDecision.APPLIED);
+        assertThat(applied.outcome().decidedBy()).isEqualTo(student);
+        assertThat(applied.outcome().decisionReason()).isEqualTo("Rời nhiều lần");
+
+        assertThat(repository.decidePenalty(attempt.id(), PenaltyDecision.DISMISSED, BigDecimal.ZERO, student, NOW, "Báo nhầm")).isTrue();
+        QuizAttempt dismissed = repository.find(attempt.id()).orElseThrow();
+        assertThat(dismissed.score()).as("đổi quyết định tính lại từ điểm gốc").isEqualByComparingTo("2");
+        assertThat(dismissed.outcome().decision()).isEqualTo(PenaltyDecision.DISMISSED);
+    }
+
+    @Test
+    void penaltyDecisionNeedsASubmittedAttemptWithSuggestion() {
+        QuizAttempt attempt = attempt(1, null);
+        repository.insert(attempt);
+        assertThat(repository.decidePenalty(attempt.id(), PenaltyDecision.APPLIED, BigDecimal.ONE, student, NOW, "Chưa nộp")).isFalse();
     }
 
     @Test

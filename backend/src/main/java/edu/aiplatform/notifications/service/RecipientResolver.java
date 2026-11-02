@@ -28,10 +28,12 @@ public class RecipientResolver {
             case EventTypes.GROUP_LEADER_REQUEST_REJECTED -> {type=NotificationType.LEADER_REQUEST_REJECTED;ids=members(p);link=groupLink(p);}
             case EventTypes.GROUP_MEMBERSHIP_CHANGED -> {type=NotificationType.GROUP_MEMBERSHIP_CHANGED;ids=members(p);link=groupLink(p);}
             case EventTypes.GROUP_SUBMITTED -> {type=NotificationType.GROUP_SUBMITTED;ids=members(p);link=groupLink(p);}
+            case EventTypes.QUESTION_PROPOSED -> {type=NotificationType.QUESTION_PROPOSED;ids=ids(p,"recipientIds");link="/manager/questions?subjectId="+id(p,"subjectId")+"&status=PENDING";}
+            case EventTypes.QUESTION_REVIEWED -> {type=NotificationType.QUESTION_REVIEWED;ids=ids(p,"recipientIds");link=classId==null?"/teaching":"/teaching/classes/"+classId+"?tab=materials";}
             case EventTypes.BACKUP_FAILED -> {type=NotificationType.BACKUP_FAILED;ids=admins();id(p,"runId");link="/admin";email="BACKUP_FAILED";}
             default -> throw new IllegalArgumentException("Unsupported notification event");
         }
-        boolean teacher=type==NotificationType.LEADER_CHANGE_REQUESTED;
+        boolean teacher=type==NotificationType.LEADER_CHANGE_REQUESTED||type==NotificationType.QUESTION_PROPOSED||type==NotificationType.QUESTION_REVIEWED;
         boolean admin=type==NotificationType.BACKUP_FAILED;
         List<UUID> recipients=ids.stream().distinct().filter(account->{
             var c=accounts.getContact(account).orElse(null);if(c==null||c.status()!=AccountStatus.ACTIVE)return false;

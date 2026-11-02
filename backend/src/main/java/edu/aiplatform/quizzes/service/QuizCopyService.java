@@ -10,6 +10,7 @@ import edu.aiplatform.quizzes.contract.QuizScope;
 import edu.aiplatform.quizzes.contract.QuizStatus;
 import edu.aiplatform.quizzes.repository.IQuestionRepository;
 import edu.aiplatform.quizzes.repository.IQuizRepository;
+import edu.aiplatform.quizzes.model.DrawRule;
 import edu.aiplatform.quizzes.model.Question;
 import edu.aiplatform.quizzes.model.QuestionScope;
 import edu.aiplatform.quizzes.model.Quiz;
@@ -28,7 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Nhân bản, version mới, copy Quiz giữa lớp (UC 48; F11; BR-U10-30, 31). Sao tiêu đề, hướng dẫn, cài đặt, theo
- * dõi, tài liệu và câu: câu ngân hàng giữ phiên bản đã ghim, câu riêng sao thành câu riêng mới. Không sao lượt
+ * dõi, quy tắc sinh đề và câu: câu ngân hàng giữ phiên bản đã ghim, câu riêng sao thành câu riêng mới. Không sao lượt
  * làm, kết quả, đề xuất AI.
  */
 @Service
@@ -135,6 +136,9 @@ public class QuizCopyService {
             items.add(new QuizItem(copy.id(), questionId, item.position(), item.points()));
         }
         quizzes.replaceItems(copy.id(), items);
+        quizzes.replaceDrawRules(copy.id(), quizzes.drawRules(source.id()).stream()
+                .map(r -> new DrawRule(copy.id(), r.position(), r.tag(), r.difficulty(), r.questionCount(), r.pointsEach()))
+                .toList());
         return copy;
     }
 

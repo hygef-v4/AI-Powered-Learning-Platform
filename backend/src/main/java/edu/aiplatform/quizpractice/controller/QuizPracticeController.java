@@ -42,19 +42,11 @@ public class QuizPracticeController {
         this.activity = activity;
     }
 
-    /** {@code materialId} (cần kèm {@code classId}): Quiz gắn tài liệu cho Learning Material (G4). */
     @GetMapping("/me/quizzes")
     public List<PracticeQuizRow> history(@AuthenticationPrincipal Actor actor,
                                          @RequestParam(required = false) UUID classId,
-                                         @RequestParam(required = false) UUID materialId,
                                          @RequestParam MultiValueMap<String, String> params) {
-        PracticeRequests.query(params, Set.of("classId", "materialId"));
-        if (materialId != null) {
-            if (classId == null) {
-                throw ApiException.badRequest("QUIZ_PRACTICE_REQUEST_INVALID", "Lọc theo tài liệu cần kèm classId");
-            }
-            return queries.byMaterial(actor, classId, materialId);
-        }
+        PracticeRequests.query(params, Set.of("classId"));
         return queries.history(actor, classId);
     }
 

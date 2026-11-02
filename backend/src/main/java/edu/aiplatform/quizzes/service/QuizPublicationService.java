@@ -28,7 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Duyệt, phát hành, ngưng Quiz (UC 48; F9, F10; P3). Phát hành version mới thì version cũ đang mở bị ngưng và
+ * Phát hành, ngưng Quiz (UC 48; F9, F10; P3). Phát hành version mới thì version cũ đang mở bị ngưng và
  * {@link IQuizLifecycleListener} (U11 cài) chạy trong cùng transaction; lỗi thì rollback cả.
  */
 @Service
@@ -36,51 +36,40 @@ public class QuizPublicationService {
 
     private final IQuizRepository quizzes;
     private final QuizSupport support;
+    private final QuizPaperService papers;
     private final ObjectProvider<IQuizLifecycleListener> listeners;
     private final IEventPublisher events;
     private final QuizAudit audit;
     private final Clock clock;
 
-    public QuizPublicationService(IQuizRepository quizzes, QuizSupport support,
+    public QuizPublicationService(IQuizRepository quizzes, QuizSupport support, QuizPaperService papers,
                                   ObjectProvider<IQuizLifecycleListener> listeners, IEventPublisher events,
                                   QuizAudit audit, Clock clock) {
         this.quizzes = quizzes;
         this.support = support;
+        this.papers = papers;
         this.listeners = listeners;
         this.events = events;
         this.audit = audit;
         this.clock = clock;
     }
 
-    /** Người soạn tự duyệt sau khi xem trước (BR-U10-21); lỗi trả danh sách cần sửa theo câu. */
-    @Transactional
-    public QuizDetail review(Actor actor, UUID id, long version) {
-        Quiz quiz = support.loadManaged(actor, id);
-        if (quiz.status() != QuizStatus.DRAFT) {
-            throw ApiException.conflict("QUIZ_NOT_DRAFT", "Chỉ duyệt được quiz đang nháp");
-        }
-        QuizSupport.requireVersion(quiz, version);
-        support.requireContainerActive(quiz);
-        requireReviewable(quiz);
-        Quiz reviewed = support.save(quiz.reviewed(clock.instant()));
-        audit.success(actor, "QUIZ_REVIEWED", QuizSupport.OBJECT, id, Map.of());
-        return support.detail(reviewed, true);
-    }
-
-    /** Phát hành từ {@code REVIEWED} (BR-U10-22): lớp {@code OPEN} hoặc môn {@code ACTIVE}; mở ngay. */
+    /**
+     * Phát hành từ {@code DRAFT} (BR-U10-21, 22): lớp {@code OPEN} hoặc môn {@code ACTIVE}, Quiz đủ điều kiện thì mở
+     * ngay; lỗi trả danh sách cần sửa theo câu hoặc theo quy tắc sinh đề.
+     */
     @Transactional
     public QuizDetail publish(Actor actor, UUID id, long version) {
         Quiz quiz = support.loadManaged(actor, id);
-        if (quiz.status() != QuizStatus.REVIEWED) {
-            throw ApiException.conflict("QUIZ_NOT_REVIEWED", "Cần duyệt quiz trước khi phát hành");
+        if (quiz.status() != QuizStatus.DRAFT) {
+            throw ApiException.conflict("QUIZ_NOT_DRAFT", "Chỉ phát hành được quiz đang nháp");
         }
         QuizSupport.requireVersion(quiz, version);
         support.requireContainerActive(quiz);
         if (quiz.scope() == QuizScope.CLASS && support.classRef(quiz.classId()).status() != ClassStatus.OPEN) {
             throw ApiException.conflict("CLASS_NOT_OPEN", "Lớp chưa mở nên chưa phát hành được quiz của lớp");
         }
-        // Câu ngân hàng có thể đã bị ngưng sau khi duyệt.
-        requireReviewable(quiz);
+        requirePublishable(quiz);
         Instant now = clock.instant();
         quizzes.findOpenInVersionChain(id).ifPresent(old -> retire(actor, old, "Đã phát hành version " + quiz.versionNo(), now));
         Quiz published = support.save(quiz.published(now));
@@ -140,12 +129,20 @@ public class QuizPublicationService {
         return retired;
     }
 
-    private void requireReviewable(Quiz quiz) {
-        List<QuizItem> items = quizzes.items(quiz.id());
-        List<Violation> violations = new ArrayList<>(QuizRules.validateForReview(quiz, items, support.questionsOf(items)));
+    private void requirePublishable(Quiz quiz) {
+        List<Violation> violations = new ArrayList<>();
+        if (quiz.generated()) {
+            violations.addAll(QuizRules.validateDetails(quiz.title(), quiz.instructions(), quiz.settings(),
+                    quiz.activityNotice()));
+            violations.addAll(papers.violationsOf(quiz));
+        } else {
+            List<QuizItem> items = quizzes.items(quiz.id());
+            violations.addAll(QuizRules.validateForReview(quiz, items, support.questionsOf(items)));
+        }
         violations.addAll(QuizRules.validateActivity(quiz.activityMonitoringEnabled(), quiz.activityNotice()));
+        violations.addAll(QuizRules.validatePenaltyNeedsMonitoring(quiz.activityMonitoringEnabled(), quiz.settings()));
         if (!violations.isEmpty()) {
-            throw new RuleViolationException(HttpStatus.BAD_REQUEST, "QUIZ_REVIEW_FAILED",
+            throw new RuleViolationException(HttpStatus.BAD_REQUEST, "QUIZ_PUBLISH_FAILED",
                     "Quiz chưa đủ điều kiện; hãy sửa các mục được nêu", violations);
         }
     }

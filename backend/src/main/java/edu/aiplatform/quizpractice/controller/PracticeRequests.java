@@ -3,7 +3,9 @@ package edu.aiplatform.quizpractice.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import edu.aiplatform.assignmentwork.contract.ActivityEventInput;
 import edu.aiplatform.assignmentwork.contract.ActivityKind;
+import edu.aiplatform.quizpractice.model.PenaltyDecision;
 import edu.aiplatform.shared.error.ApiException;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -25,6 +27,38 @@ final class PracticeRequests {
     }
 
     record Answers(Map<UUID, List<String>> answers, long answerVersion) {
+    }
+
+    record PenaltyInput(PenaltyDecision decision, BigDecimal points, String reason) {
+    }
+
+    static PenaltyInput penaltyInput(JsonNode body) {
+        fields(body, Set.of("decision", "points", "reason"));
+        JsonNode reason = body.get("reason");
+        if (reason == null || !reason.isTextual()) {
+            throw invalid("reason cần là chuỗi");
+        }
+        PenaltyDecision decision = penaltyDecision(body.get("decision"));
+        JsonNode points = body.get("points");
+        if (points != null && !points.isNull() && !points.isNumber()) {
+            throw invalid("points cần là số");
+        }
+        BigDecimal value = points == null || points.isNull() ? null : points.decimalValue();
+        if (decision == PenaltyDecision.DISMISSED && value != null) {
+            throw invalid("Không trừ điểm thì không gửi points");
+        }
+        return new PenaltyInput(decision, value, reason.asText());
+    }
+
+    private static PenaltyDecision penaltyDecision(JsonNode decision) {
+        if (decision == null || !decision.isTextual()) {
+            throw invalid("decision cần là APPLIED hoặc DISMISSED");
+        }
+        try {
+            return PenaltyDecision.valueOf(decision.asText());
+        } catch (IllegalArgumentException unknown) {
+            throw invalid("decision cần là APPLIED hoặc DISMISSED");
+        }
     }
 
     static UUID classId(JsonNode body) {

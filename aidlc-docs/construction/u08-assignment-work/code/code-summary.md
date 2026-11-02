@@ -122,3 +122,7 @@ Unit test thêm: cỡ bảng của đề trong lượt làm; frontend: người 
 ## Thay đổi 2026-10-24
 
 - Bỏ `ActivitySettingDefinitions` (cài đặt `activity.retentionDays`): thời hạn giữ sự kiện hoạt động cố định 1 ngày (`ActivityService.RETENTION`); `ActivityRetentionScanner` xóa sự kiện cũ hơn 1 ngày, tóm tắt báo `EXPIRED` sau 1 ngày.
+
+## Delta 2026-11-01
+
+`ActivitySummary` thêm `lastEventAt`; `IActivityQuery` thêm `retention()`; `useActivityTracker` thêm `trackFocus` và trả hàm gửi nốt hàng đợi. Assignment và tài liệu nhóm không bật `trackFocus`, hành vi không đổi. Dùng cho BR-U11-32, 33.

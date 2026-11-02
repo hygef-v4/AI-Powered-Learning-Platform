@@ -1,7 +1,9 @@
 package edu.aiplatform.quizpractice.repository;
 
+import edu.aiplatform.quizpractice.model.PenaltyDecision;
 import edu.aiplatform.quizpractice.model.QuizAttempt;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -46,6 +48,9 @@ public interface IQuizAttemptRepository {
 
     /** Lượt đang làm của một Quiz (Quiz bị ngưng hoặc có version mới). */
     List<QuizAttempt> findInProgressByQuiz(UUID quizId);
+
+    /** Ghi quyết định của giảng viên: điểm cuối bằng điểm gốc trừ {@code points}; quyết định sau thay quyết định trước (BR-U11-33). */
+    boolean decidePenalty(UUID attemptId, PenaltyDecision decision, BigDecimal points, UUID decidedBy, Instant at, String reason);
 
     /** Lượt của sinh viên một lớp cho một Quiz (giảng viên xem). */
     List<QuizAttempt> listByQuizAndClass(UUID quizId, UUID classId);

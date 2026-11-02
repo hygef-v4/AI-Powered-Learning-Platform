@@ -20,8 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Tài liệu tham khảo của U13 qua {@code IReferenceMaterial} (H8): danh sách chọn được theo lớp hoặc môn của Quiz,
- * kiểm id khi gắn vào Quiz hoặc gửi AI, lấy chữ cho prompt. U13 lỗi không chặn soạn tay (BR-U10-52).
+ * Tài liệu nguồn cho AI của U13 qua {@code IReferenceMaterial} (H8): danh sách chọn được theo lớp hoặc môn của Quiz,
+ * kiểm id khi gửi AI, lấy chữ cho prompt. U13 lỗi không chặn soạn tay (BR-U10-52).
  */
 @Service
 public class QuizReferenceMaterials {
@@ -36,7 +36,7 @@ public class QuizReferenceMaterials {
         this.access = access;
     }
 
-    /** Tài liệu gắn được vào Quiz hoặc đưa vào popup AI của Quiz. */
+    /** Tài liệu đưa được vào popup AI của Quiz. */
     @Transactional(readOnly = true)
     public List<SelectableMaterial> forQuiz(Actor actor, UUID quizId) {
         Quiz quiz = support.loadManaged(actor, quizId);
@@ -70,7 +70,7 @@ public class QuizReferenceMaterials {
             if (material == null || (needText && !material.hasText())) {
                 throw ApiException.badRequest("MATERIAL_NOT_SELECTABLE",
                         needText ? "Có tài liệu không chọn được hoặc chưa trích được chữ"
-                                : "Có tài liệu không chọn được cho quiz này");
+                                : "Có tài liệu không chọn được");
             }
             chosen.add(material);
         }

@@ -11,18 +11,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Chụp lúc bắt đầu lượt (BR-U11-11): version Quiz, cài đặt, chính sách theo dõi, seed và thứ tự câu, thứ tự lựa chọn
- * đã trộn theo seed (G5). Sửa Quiz sau đó không ảnh hưởng lượt đã có.
+ * đã trộn theo seed (G5). Sửa Quiz sau đó không ảnh hưởng lượt đã có. Lượt của Quiz sinh đề có thêm
+ * {@code questionPoints}: đúng các câu đã bốc và điểm từng câu (BR-U11-11); lượt đề cố định và lượt cũ để trống.
  */
 public record AttemptSnapshot(int versionNo, String title, QuizSettings settings, boolean activityMonitoringEnabled,
                               String activityNotice, long seed, List<UUID> questionOrder,
-                              Map<UUID, List<String>> optionOrder, BigDecimal maxScore) {
+                              Map<UUID, List<String>> optionOrder, BigDecimal maxScore,
+                              Map<UUID, BigDecimal> questionPoints) {
 
     public AttemptSnapshot {
         questionOrder = List.copyOf(questionOrder);
         optionOrder = Map.copyOf(optionOrder);
+        questionPoints = questionPoints == null ? null : Map.copyOf(questionPoints);
+    }
+
+    public AttemptSnapshot(int versionNo, String title, QuizSettings settings, boolean activityMonitoringEnabled,
+                           String activityNotice, long seed, List<UUID> questionOrder,
+                           Map<UUID, List<String>> optionOrder, BigDecimal maxScore) {
+        this(versionNo, title, settings, activityMonitoringEnabled, activityNotice, seed, questionOrder, optionOrder,
+                maxScore, null);
     }
 
     /** Trộn câu rồi trộn lựa chọn từng câu bằng cùng một dãy ngẫu nhiên từ {@code seed}: cùng seed cho cùng thứ tự. */
@@ -43,7 +54,9 @@ public record AttemptSnapshot(int versionNo, String title, QuizSettings settings
         }
         return new AttemptSnapshot(view.quiz().versionNo(), view.quiz().title(), settings,
                 view.quiz().activityMonitoringEnabled(), view.quiz().activityNotice(), seed,
-                questions.stream().map(QuizQuestionView::questionId).toList(), options, view.quiz().maxScore());
+                questions.stream().map(QuizQuestionView::questionId).toList(), options, view.quiz().maxScore(),
+                view.generated() ? questions.stream().collect(Collectors.toMap(QuizQuestionView::questionId,
+                        QuizQuestionView::points)) : null);
     }
 
     /** Câu và lựa chọn có thuộc đề của lượt không (NFR-U11-31). */

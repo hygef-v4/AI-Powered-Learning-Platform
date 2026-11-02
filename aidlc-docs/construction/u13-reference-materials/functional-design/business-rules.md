@@ -23,7 +23,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U13-10 | Hai loại: `FILE` (PDF, DOCX, PPTX qua U03 purpose `MATERIAL`; loại và dung lượng theo Settings, mặc định ≤ 50 MB; kiểm theo nội dung tệp) và `YOUTUBE_LINK` (một video dạng `youtube.com/watch?v=` hoặc `youtu.be/`, không nhận playlist). | FR-004, UC 59, 61 |
 | BR-U13-11 | Mỗi tài liệu có tiêu đề (≤ 200), mô tả (≤ 2.000) và thứ tự trong danh sách. Có module cơ bản của môn; Lesson nâng cao và tiến độ học chưa thuộc scope implementation này. | FR-004, FR-005 |
-| BR-U13-12 | Sửa tiêu đề, mô tả, thứ tự không tạo phiên bản. Thay tệp hoặc link tạo phiên bản mới; phiên bản cũ giữ lại để các tham chiếu cũ (Quiz gắn tài liệu, provenance của AI) vẫn đọc được; người học luôn thấy phiên bản mới nhất. Material Detail hiện lịch sử phiên bản. | UC 58, US-CNT-001 |
+| BR-U13-12 | Sửa tiêu đề, mô tả, thứ tự không tạo phiên bản. Thay tệp hoặc link tạo phiên bản mới; phiên bản cũ giữ lại để các tham chiếu cũ (provenance của AI) vẫn đọc được; người học luôn thấy phiên bản mới nhất. Material Detail hiện lịch sử phiên bản. | UC 58, US-CNT-001 |
 | BR-U13-13 | Xóa là lưu trữ: tài liệu ẩn với người học, không chọn được làm nguồn AI hay gắn vào Quiz mới; tham chiếu cũ vẫn giữ. | FR-004 |
 | BR-U13-14 | Thêm tài liệu không tự gọi AI, không tóm tắt, không tạo embedding. Tóm tắt, phụ đề, embedding, RAG là phần mở rộng US-CNT-005. | FR-004, US-CNT-005 |
 
@@ -33,7 +33,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U13-20 | Learning Material: PDF xem ngay trên trang, mọi tệp tải được; link YouTube mở trong trình phát nhúng `youtube-nocookie.com`. Tải và xem tệp qua token 5 phút của U03 sau khi U13 kiểm quyền. | UC 62 |
 | BR-U13-21 | ALAP không kiểm soát quyền xem video trên YouTube; video bị xóa hoặc riêng tư thì trình phát của YouTube báo lỗi. U13 không gọi API của YouTube. | UC 62 |
-| BR-U13-22 | Learning Material có vùng cho unit khác gắn vào (slot `LearningMaterialSection`); U11 gắn danh sách Quiz có tham chiếu tài liệu này. | FR-005 |
+| BR-U13-22 | Bỏ từ 2026-11-01: Learning Material không còn vùng cho unit khác gắn vào; Quiz nằm trong module học liệu. | FR-005 |
 | BR-U13-23 | Tài liệu gắn kèm Assignment (U07) và Quiz (U10) hiện trên Assignment Detail (U08) và Quiz Practice Detail (U11) qua `MaterialLinkList` của U13; chỉ hiện tài liệu `ACTIVE` người xem có quyền, mỗi dòng mở Learning Material. | FR-004, FR-005 |
 
 ## 4. Nguồn cho AI

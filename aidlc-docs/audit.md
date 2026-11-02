@@ -7421,3 +7421,115 @@ Later follow-up inputs (raw): “thêm nút prompt copy để đưa vào agent t
 **Context**: Integration only; no new behavior change.
 
 ---
+
+## PR merge request — 2026-11-01
+
+**Timestamp**: 2026-11-01T16:12:10Z
+
+**User Input (complete raw)**:
+
+> Merge khi CI xanh
+
+**AI Response**: CI for `2f1ccdf4` was already green (backend, frontend, GitGuardian) and the PR state was clean, so merged PR #34 into `staging` as merge commit `6fe413fa`. Branch not deleted. Manual staging check (OTP limit, group doc images, DOCX preview) still open.
+
+**Context**: Integration; no new behavior change. This entry was written after the merge and is not yet committed.
+
+---
+
+## Quiz feedback assessment — 2026-11-01
+
+**Timestamp**: 2026-11-01T16:27:32Z
+
+**User Input (complete raw)**:
+
+> Phần Quiz có các vấn đề sau: 
+>
+> * Phần tài liệu tham khảo hình như đang thừa
+> * Trong thực tế (theo thầy Kiên): Khi sinh viên làm nó sẽ sinh ra đề mới chứ không cố định câu hỏi hoặc người dùng muốn tạo 1 quiz gồm tag 1: 4 câu tag 2: 5 câu tag 3: 7 câu -> Thêm quiz config 
+> * Chống cheating: sử dụng js để ghi số lần sinh viên out tab -> Vấn đề: sinh viên có thể disable được
+> * Hiển thị câu hỏi và xem kết quả thành mỗi câu 1 trang
+> * Thêm cơ chế chống trùng câu hỏi hoặc cho chủ nhiệm môn duyệt khi có câu hỏi và ngân hàng câu hỏi
+> * Cần cấu hình sao cho bao nhiêu điểm cho bao nhiêu lượt out tab/cheating.
+> * Phần duyệt đang bị thừa. Để lại trong trường hợp: giảng viên có câu hỏi cho vào ngân hàng câu hỏi để chủ nhiệm môn duyệt
+>
+> kiểm tra các điểm trên sau đó gửi lại tôi báo cáo và hướng giải quyết cho từng vấn đề
+
+**AI Response**: Read the Quiz code, migrations and requirements; wrote the assessment and the open questions. Static review only: no application code changed, nothing run on the UI, no real data read, no commit or push.
+
+**Context**: Inception, assessment of the 29/10 feedback. Artifacts: `inception/requirements/2026-11-01-quiz-feedback-assessment.md`, `inception/requirements/2026-11-01-quiz-rework-questions.md`. Awaiting user answers before any construction.
+
+---
+
+## Quiz rework construction request — 2026-11-01
+
+**Timestamp**: 2026-11-01T16:42:58Z
+
+**User Input (complete raw)**:
+
+> làm roadmap chi tiết để hoàn thiện 7 mục trên cho tôi, sau đó sửa cả 7 mục (nhớ đồng bộ tài liệu dự án theo những gì được thay đổi)
+
+**AI Response**: The question file was not answered, so the recommended options are applied and recorded, including the FR-039 change. Created branch `feat/quiz-rework-2026-11-01` from `origin/staging` with no upstream, wrote the roadmap, started construction.
+
+**Context**: Construction approval for the seven Quiz items, given in this message. Plan: `construction/plans/code-generation-plan/2026-11-01-quiz-rework.md`.
+
+---
+
+## Quiz rework construction completed — 2026-11-01
+
+**Timestamp**: 2026-11-01T17:40:48Z
+
+**User Input (complete raw)**: None since the construction request above; completion entry for that request.
+
+**AI Response**: Implemented all seven items on `feat/quiz-rework-2026-11-01` and synchronized documentation. Backend clean verify 1,708 passed, zero skipped; required suites passed; frontend 674 passed, typecheck and build passed, lint zero errors with one warning. API end-to-end and browser checks passed on isolated project `quiz-rework-e2e`, removed afterwards; the user's local database was not touched. Browser testing found a never-rendered attempts slot and a misplaced proposal section, both fixed. A script mistake briefly damaged the question file; it was rewritten immediately. No commit, push or deployment.
+
+**Context**: Build and Test. Recommended options were applied as defaults because the question file was unanswered; user confirmation is still open. Results: `construction/build-and-test/2026-11-01-quiz-rework-results.md`.
+
+---
+
+## Quiz rework default decisions challenged — 2026-11-02
+
+**Timestamp**: 2026-11-02T00:13:57Z
+
+**User Input (complete raw)**: "Đổi quyết định"
+
+**AI Response**: Asked which default answers in `inception/requirements/2026-11-01-quiz-rework-questions.md` to change, starting with the leave penalty and the gradebook. No code or requirement changed yet; nothing committed.
+
+**Context**: Build and Test follow-up. The user declined to keep all defaults and commit.
+
+---
+
+## Quiz rework decision answers — 2026-11-02
+
+**Timestamp**: 2026-11-02T00:15:39Z
+
+**User Input (complete raw)**: "Xử lý điểm khi sinh viên rời trang (FR-039) thế nào?"="Chỉ gợi ý mức trừ", "Quiz có cần điểm chính thức trong sổ điểm không?"="Vẫn chỉ luyện tập", "Đổi gì trong cách sinh đề theo thẻ?"="Giữ nguyên", "Đổi gì ở tài liệu tham khảo, chống trùng và duyệt câu?"="Giữ nguyên"
+
+**AI Response**: Recording Question 2 as B: the system only suggests a penalty and the teacher decides each attempt. All other answers keep their options and are now confirmed by the user. Starting the code and documentation change.
+
+**Context**: Build and Test follow-up. Decision change for the Quiz-only FR-039 handling.
+
+---
+
+## Quiz rework suggested penalty completed — 2026-11-02
+
+**Timestamp**: 2026-11-02T00:33:48Z
+
+**User Input (complete raw)**: None since the decision answers above; completion entry for that decision.
+
+**AI Response**: Changed the Quiz leave penalty from automatic deduction to a suggestion: submit keeps the score, and the teacher applies a chosen amount or dismisses it per attempt with a reason, and can revise it. Added `PenaltyDecision` and `POST /classes/{classId}/quiz-attempts/{attemptId}/penalty:decide`, replacing `penalty:waive`; edited the uncommitted migration. Backend clean verify 1,712 passed, zero skipped; required suites passed; frontend 677 passed, typecheck and build passed, lint zero errors with one warning. API end-to-end 56 checks and the penalty browser flow passed on isolated project `quiz-rework-e2e`, removed afterwards. No commit, push or deployment.
+
+**Context**: Build and Test. Documentation synchronized. Known limits: students are not notified of a decision; no cross-quiz list of pending decisions.
+
+---
+
+## Quiz rework commit requested — 2026-11-02
+
+**Timestamp**: 2026-11-02T01:38:28Z
+
+**User Input (complete raw)**: "Commit"
+
+**AI Response**: Committing the Quiz rework on `feat/quiz-rework-2026-11-01` without pushing or deploying.
+
+**Context**: Build and Test follow-up. User approved the commit.
+
+---

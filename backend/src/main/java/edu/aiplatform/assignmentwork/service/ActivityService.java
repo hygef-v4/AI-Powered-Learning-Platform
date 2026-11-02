@@ -92,6 +92,11 @@ public class ActivityService implements IActivityWrite, IActivityQuery {
         return ActivitySummaryCalculator.summarize(list);
     }
 
+    @Override
+    public Duration retention() {
+        return RETENTION;
+    }
+
     private int insert(Actor actor, WorkRef workRef, List<ActivityEventInput> input) {
         if (actor == null || actor.accountId() == null || workRef == null || workRef.workId() == null
                 || workRef.classId() == null) {

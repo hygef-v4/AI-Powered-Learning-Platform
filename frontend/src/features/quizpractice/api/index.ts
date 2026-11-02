@@ -1,6 +1,6 @@
 import type { ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import { apiFetch } from "@/shared/api/client";
-import type { ClassAttempts, PracticeQuizDetail, PracticeQuizRow, ResultView, SaveResult, TakingView, TeacherAttemptDetail } from "../model/types";
+import type { ClassAttempts, PenaltyDecisionInput, PracticeQuizDetail, PracticeQuizRow, ResultView, SaveResult, TakingView, TeacherAttemptDetail } from "../model/types";
 
 const enc = encodeURIComponent;
 const attemptPath = (id: string) => `/api/v1/quiz-attempts/${enc(id)}`;
@@ -10,10 +10,6 @@ export function getPracticeHistory(classId?: string | null, signal?: AbortSignal
 }
 
 /** Quiz đang mở gắn một học liệu cho lớp đang học (G4). */
-export function getMaterialQuizzes(classId: string, materialId: string, signal?: AbortSignal): Promise<PracticeQuizRow[]> {
-  return apiFetch<PracticeQuizRow[]>(`/api/v1/me/quizzes?classId=${enc(classId)}&materialId=${enc(materialId)}`, { signal });
-}
-
 export function getPracticeQuiz(quizId: string, classId: string, signal?: AbortSignal): Promise<PracticeQuizDetail> {
   return apiFetch<PracticeQuizDetail>(`/api/v1/me/quizzes/${enc(quizId)}?classId=${enc(classId)}`, { signal });
 }
@@ -49,6 +45,14 @@ export function getResult(attemptId: string, signal?: AbortSignal): Promise<Resu
 
 export function getClassAttempts(classId: string, quizId: string, signal?: AbortSignal): Promise<ClassAttempts> {
   return apiFetch<ClassAttempts>(`/api/v1/classes/${enc(classId)}/quizzes/${enc(quizId)}/attempts`, { signal });
+}
+
+/** Giảng viên quyết định trừ hay không trừ điểm do rời trang, kèm lý do (BR-U11-33). */
+export function decideAttemptPenalty(classId: string, attemptId: string, input: PenaltyDecisionInput): Promise<TeacherAttemptDetail> {
+  return apiFetch<TeacherAttemptDetail>(`/api/v1/classes/${enc(classId)}/quiz-attempts/${enc(attemptId)}/penalty:decide`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }
 
 export function getTeacherAttempt(classId: string, attemptId: string): Promise<TeacherAttemptDetail> {

@@ -341,3 +341,7 @@ Chưa kiểm: AI soạn câu bằng khóa thật (cần người dùng nhập kh
 ## Thay đổi 2026-10-24
 
 - Thời hạn giữ dữ liệu hoạt động cố định 1 ngày (U08), không còn cài đặt `activity.retentionDays`: bỏ `QuizActivityPolicy` và trường `activityRetentionConfigured`, nên lỗi `ACTIVITY_RETENTION_NOT_SET` không còn xảy ra; bỏ `FakeSettings` trong test.
+
+## Làm lại Quiz (2026-11-01)
+
+Thêm `QuizPaperService`, `QuizPaperPlanner`, `QuestionProposalService`, `QuestionDuplicates`, `QuestionFingerprintBackfill`, `QuestionFingerprint`. Mã lỗi: `QUIZ_REVIEW_FAILED` đổi thành `QUIZ_PUBLISH_FAILED`; thêm `QUESTION_DUPLICATE`, `QUESTION_IS_PROPOSAL`, `QUESTION_NOT_PENDING`, `QUESTION_REASON_INVALID`, `QUESTION_SAME_LINEAGE`, `QUIZ_POOL_INSUFFICIENT`, `POOL_INSUFFICIENT`, `PENALTY_NEEDS_MONITORING`. Các mục G4, "Gắn với học liệu" ở trên là lịch sử, đã bỏ. Chi tiết: [kết quả](../../build-and-test/2026-11-01-quiz-rework-results.md).

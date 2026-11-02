@@ -60,7 +60,8 @@ class QuestionBankServiceTest {
         IAudit audit = audits::add;
         QuizAudit quizAudit = new QuizAudit(audit, Clock.fixed(NOW, ZoneOffset.UTC));
         service = new QuestionBankService(repo, new ActiveSubjects(subjects),
-                new QuizAccess(authorization, quizAudit), quizAudit, Clock.fixed(NOW, ZoneOffset.UTC));
+                new QuizAccess(authorization, quizAudit), quizAudit, new QuestionDuplicates(repo),
+                mock(QuizPaperService.class), event -> { }, Clock.fixed(NOW, ZoneOffset.UTC));
         when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
         when(subjects.isActive(subject)).thenReturn(true);
         when(repo.update(any())).thenReturn(true);

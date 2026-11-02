@@ -1,5 +1,6 @@
 package edu.aiplatform.quizzes.repository;
 
+import edu.aiplatform.quizzes.model.DrawRule;
 import edu.aiplatform.quizzes.model.Quiz;
 import edu.aiplatform.quizzes.model.QuizItem;
 
@@ -39,8 +40,13 @@ public interface IQuizRepository {
     /** Quiz của các lớp cho trước (nguồn copy), trừ một lớp. */
     List<QuizSummary> listClassQuizzesOf(Collection<UUID> classIds, UUID excludeClassId);
 
-    /** Quiz {@code OPEN} gắn học liệu, của lớp hoặc của môn chứa lớp. */
-    List<QuizSummary> listOpenByMaterial(UUID materialId, UUID classId, UUID subjectId);
+    /** Quy tắc sinh đề của Quiz theo thứ tự (BR-U10-17). */
+    List<DrawRule> drawRules(UUID quizId);
+
+    void replaceDrawRules(UUID quizId, List<DrawRule> rules);
+
+    /** Quiz sinh đề đang {@code OPEN} của môn, gồm Quiz của môn và của các lớp thuộc môn. */
+    List<Quiz> listOpenGenerated(UUID subjectId);
 
     /** Quiz đang {@code OPEN} khác {@code quizId} trong cùng chuỗi version (nối bằng {@code NEW_VERSION}). */
     Optional<Quiz> findOpenInVersionChain(UUID quizId);

@@ -13,6 +13,13 @@ import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.assignmentwork.contract.ActivityEventInput;
+import edu.aiplatform.assignmentwork.contract.ActivityInterval;
+import edu.aiplatform.assignmentwork.contract.ActivityPolicyState;
+import edu.aiplatform.assignmentwork.contract.ActivitySummary;
+import edu.aiplatform.assignmentwork.contract.IntervalCertainty;
+import edu.aiplatform.quizpractice.model.ActivityOutcome;
+import edu.aiplatform.quizpractice.model.PenaltyDecision;
+import edu.aiplatform.quizzes.contract.LeavePenalty;
 import edu.aiplatform.assignmentwork.contract.ActivityKind;
 import edu.aiplatform.assignmentwork.contract.IActivityQuery;
 import edu.aiplatform.assignmentwork.contract.IActivityWrite;
@@ -86,6 +93,7 @@ class QuizPracticeServicesTest {
     private final IQuizScoring scoring = mock(IQuizScoring.class);
     private final IClassAccess classes = mock(IClassAccess.class);
     private final IActivityWrite activityWrite = mock(IActivityWrite.class);
+    private final IActivityQuery activityQuery = mock(IActivityQuery.class);
     private QuizSettings settings = new QuizSettings(false, false, 10, 2, true, true);
     private QuizStatus quizStatus = QuizStatus.OPEN;
     private boolean monitoring;
@@ -130,10 +138,11 @@ class QuizPracticeServicesTest {
         lookups = accounts;
 
         PracticeAccess access = new PracticeAccess(authorization, audits::add, clock);
-        PracticeSupport support = new PracticeSupport(store, quizzes, scoring, classes, access, clock);
+        PracticeSupport support = new PracticeSupport(store, quizzes, scoring, classes, access,
+                new AttemptActivityAssessor(activityQuery), clock);
         attemptsService = new QuizAttemptService(store, support, access, clock);
         queries = new QuizPracticeQueryService(store, quizzes, classes, support, access);
-        teacherService = new TeacherQuizAttemptService(store, classes, accounts, mock(IActivityQuery.class), support, access);
+        teacherService = new TeacherQuizAttemptService(store, classes, accounts, activityQuery, support, access, clock);
         scanner = new QuizAutoSubmitScanner(store, support, TransactionOperations.withoutTransaction());
         retired = new QuizRetiredHandler(store, support);
         activity = new QuizActivityService(activityWrite, support, clock);
@@ -145,7 +154,7 @@ class QuizPracticeServicesTest {
 
     private QuizView quiz() {
         return new QuizView(quizId, QuizScope.CLASS, classA, subject, 1, "Luyện tập", quizStatus, settings, monitoring,
-                monitoring ? "Ghi lại khi rời trang" : null, List.of(), new BigDecimal("3"));
+                monitoring ? "Ghi lại khi rời trang" : null, new BigDecimal("3"));
     }
 
     private static QuizQuestionView question(UUID id, QuestionType type) {
@@ -401,7 +410,8 @@ class QuizPracticeServicesTest {
         List<AuditEvent> guardAudits = new ArrayList<>();
         PracticeAccess access = new PracticeAccess(provider, guardAudits::add, clock);
         var guarded = new QuizAttemptService(store,
-                new PracticeSupport(store, quizzes, scoring, classes, access, clock), access, clock);
+                new PracticeSupport(store, quizzes, scoring, classes, access, new AttemptActivityAssessor(activityQuery), clock),
+                access, clock);
 
         ApiException rejected = api(() -> guarded.result(student, attemptId));
 
@@ -480,21 +490,6 @@ class QuizPracticeServicesTest {
     }
 
     @Test
-    void materialListShowsLinkedOpenQuizzesWithOwnAttemptsForEnrolledClassOnly() {
-        UUID material = UUID.randomUUID();
-        when(quizzes.listByMaterial(material, classA)).thenAnswer(call -> List.of(quiz()));
-        submitFresh(student);
-
-        assertThat(queries.byMaterial(student, classA, material)).singleElement().satisfies(row -> {
-            assertThat(row.quizId()).isEqualTo(quizId);
-            assertThat(row.attemptsUsed()).isEqualTo(1);
-        });
-        assertThat(queries.byMaterial(student, classA, UUID.randomUUID())).isEmpty();
-        assertThat(api(() -> queries.byMaterial(student, classB, material)).status()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(api(() -> queries.byMaterial(teacher, classA, material)).status()).isEqualTo(HttpStatus.FORBIDDEN);
-    }
-
-    @Test
     void teacherSeesClassStudentsAttemptsReadOnly() {
         UUID attemptId = submitFresh(student);
         var list = teacherService.list(teacher, classA, quizId);
@@ -509,6 +504,101 @@ class QuizPracticeServicesTest {
         var detail = teacherService.detail(teacher, classA, attemptId);
         assertThat(detail.result().questions()).allSatisfy(q -> assertThat(q.correctOptionIds()).isNotNull());
         assertThat(api(() -> teacherService.detail(teacher, classB, attemptId)).status()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    private void leaves(int count) {
+        Instant start = clock.instant().minusSeconds(600);
+        List<ActivityInterval> intervals = java.util.stream.IntStream.range(0, count)
+                .mapToObj(i -> new ActivityInterval(start, start.plusSeconds(30), IntervalCertainty.KNOWN)).toList();
+        when(activityQuery.summary(any(), any())).thenReturn(new ActivitySummary(ActivityPolicyState.AVAILABLE, count,
+                Duration.ofSeconds(30L * count), intervals, 0, "ghi chú", clock.instant()));
+    }
+
+    @Test
+    void penaltyIsOnlySuggestedUntilTeacherDecidesAndCanBeRevised() {
+        monitoring = true;
+        settings = new QuizSettings(false, false, null, null, true, true, new LeavePenalty(0, new BigDecimal("0.5"), null, 5));
+        leaves(2);
+        var taking = attemptsService.start(student, quizId, classA);
+        assertThat(taking.leavePenalty()).isEqualTo(settings.leavePenalty());
+        attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("1"), q2, List.of("1", "2")), taking.answerVersion());
+        var submitted = attemptsService.submit(student, taking.attemptId());
+        assertThat(submitted.penalty().leaveCount()).isEqualTo(2);
+        assertThat(submitted.penalty().suggestedPenalty()).as("sinh viên không thấy mức gợi ý").isNull();
+        assertThat(submitted.penalty().decisionPending()).isTrue();
+        assertThat(submitted.penalty().penaltyPoints()).isEqualByComparingTo("0");
+        BigDecimal raw = submitted.penalty().rawScore();
+        assertThat(raw).isPositive();
+        assertThat(submitted.score()).as("nộp bài không tự trừ").isEqualByComparingTo(raw);
+
+        var row = teacherService.list(teacher, classA, quizId).students().stream().filter(s -> s.attempts() > 0).findFirst().orElseThrow();
+        assertThat(row.lastLeaveCount()).isEqualTo(2);
+        assertThat(row.rows().get(0).leaveCount()).isEqualTo(2);
+        assertThat(row.rows().get(0).suggestedPenalty()).isEqualByComparingTo("1");
+        assertThat(row.penaltyPending()).isTrue();
+        assertThat(teacherService.detail(teacher, classA, taking.attemptId()).result().penalty().suggestedPenalty())
+                .isEqualByComparingTo("1");
+
+        UUID id = taking.attemptId();
+        assertThat(api(() -> teacherService.decidePenalty(teacher, classA, id, PenaltyDecision.APPLIED, BigDecimal.ONE, "  ")).code())
+                .isEqualTo("PENALTY_REASON_INVALID");
+        assertThat(api(() -> teacherService.decidePenalty(other, classA, id, PenaltyDecision.APPLIED, BigDecimal.ONE, "Lý do")).status())
+                .isEqualTo(HttpStatus.NOT_FOUND);
+        for (BigDecimal bad : new BigDecimal[] {null, BigDecimal.ZERO, new BigDecimal("0.125"), raw.add(BigDecimal.ONE)}) {
+            assertThat(api(() -> teacherService.decidePenalty(teacher, classA, id, PenaltyDecision.APPLIED, bad, "Lý do")).code())
+                    .isEqualTo("PENALTY_POINTS_INVALID");
+        }
+
+        var applied = teacherService.decidePenalty(teacher, classA, id, PenaltyDecision.APPLIED, new BigDecimal("0.5"), "Rời nhiều lần");
+        assertThat(applied.result().score()).as("giảng viên chọn số điểm khác mức gợi ý").isEqualByComparingTo(raw.subtract(new BigDecimal("0.5")));
+        var seen = attemptsService.result(student, id);
+        assertThat(seen.score()).isEqualByComparingTo(raw.subtract(new BigDecimal("0.5")));
+        assertThat(seen.penalty().decision()).isEqualTo(PenaltyDecision.APPLIED);
+        assertThat(seen.penalty().decisionReason()).isEqualTo("Rời nhiều lần");
+        assertThat(seen.penalty().decisionPending()).isFalse();
+
+        var dismissed = teacherService.decidePenalty(teacher, classA, id, PenaltyDecision.DISMISSED, null, "Máy sinh viên báo lỗi");
+        assertThat(dismissed.result().score()).as("đổi quyết định").isEqualByComparingTo(raw);
+        assertThat(dismissed.result().penalty().penaltyPoints()).isEqualByComparingTo("0");
+        assertThat(attemptsService.result(student, id).score()).isEqualByComparingTo(raw);
+        assertThat(teacherService.list(teacher, classA, quizId).students().stream().filter(s -> s.attempts() > 0)
+                .findFirst().orElseThrow().penaltyPending()).isFalse();
+    }
+
+    @Test
+    void attemptWithoutSuggestionCannotBePenalized() {
+        monitoring = true;
+        settings = new QuizSettings(false, false, null, null, true, true, new LeavePenalty(5, new BigDecimal("0.5"), null, 5));
+        leaves(2);
+        var taking = attemptsService.start(student, quizId, classA);
+        attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("1")), taking.answerVersion());
+        attemptsService.submit(student, taking.attemptId());
+        assertThat(api(() -> teacherService.decidePenalty(teacher, classA, taking.attemptId(), PenaltyDecision.APPLIED,
+                new BigDecimal("0.5"), "Lý do")).code()).isEqualTo("PENALTY_NOT_DECIDABLE");
+    }
+
+    @Test
+    void studentRowsDoNotExposeSignalFlags() {
+        monitoring = true;
+        leaves(1);
+        var taking = attemptsService.start(student, quizId, classA);
+        attemptsService.submit(student, taking.attemptId());
+        var mine = queries.detail(student, quizId, classA).attempts().get(0);
+        assertThat(mine.activitySignal()).isNull();
+        assertThat(mine.leaveCount()).isNull();
+    }
+
+    @Test
+    void quizActivityOlderThanRetentionReportsExpiredNotMissing() {
+        monitoring = true;
+        when(activityQuery.summary(any(), any())).thenReturn(new ActivitySummary(ActivityPolicyState.NO_DATA, 0, Duration.ZERO,
+                List.of(), 0, "Chưa có dữ liệu"));
+        when(activityQuery.retention()).thenReturn(Duration.ofDays(1));
+        var taking = attemptsService.start(student, quizId, classA);
+        attemptsService.submit(student, taking.attemptId());
+        clock.advance(Duration.ofDays(2));
+        assertThat(teacherService.detail(teacher, classA, taking.attemptId()).activity().policyState())
+                .isEqualTo(ActivityPolicyState.EXPIRED);
     }
 
     @Test
@@ -586,6 +676,19 @@ class QuizPracticeServicesTest {
         final Map<UUID, QuizAttempt> byId = new LinkedHashMap<>();
         /** Chạy ngay trước câu lệnh nộp: giả một lần lưu từ request khác xen vào giữa lúc chấm và lúc nộp. */
         Runnable beforeSubmit;
+
+        @Override
+        public boolean decidePenalty(UUID attemptId, PenaltyDecision decision, BigDecimal points, UUID decidedBy, Instant at,
+                                     String reason) {
+            QuizAttempt current = byId.get(attemptId);
+            if (current == null || current.outcome() == null || !current.outcome().decidable()) {
+                return false;
+            }
+            ActivityOutcome o = current.outcome();
+            byId.put(attemptId, current.withOutcome(new ActivityOutcome(o.rawScore(), o.suggestedPenalty(), points,
+                    o.leaveCount(), o.signal(), decision, decidedBy, at, reason), o.rawScore().subtract(points)));
+            return true;
+        }
 
         @Override
         public Optional<QuizAttempt> find(UUID id) {

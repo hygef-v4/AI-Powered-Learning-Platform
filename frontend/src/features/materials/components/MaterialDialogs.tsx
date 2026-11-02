@@ -18,7 +18,7 @@ const TEXTAREA = "min-h-24 w-full rounded-lg border border-field px-3 py-2 text-
 function quizDetails(detail: QuizDetail, title: string, instructions: string, keep = false) {
   const q = detail.quiz;
   return { title, instructions: instructions.trim() || (keep ? q.instructions : null), settings: q.settings, activityMonitoringEnabled: q.activityMonitoringEnabled,
-    activityNotice: q.activityNotice, referenceMaterialIds: q.referenceMaterialIds };
+    activityNotice: q.activityNotice };
 }
 
 /**

@@ -1,8 +1,12 @@
 package edu.aiplatform.quizpractice.dto;
 
 import edu.aiplatform.assignmentwork.contract.ActivitySummary;
+import edu.aiplatform.quizpractice.model.ActivityOutcome;
+import edu.aiplatform.quizpractice.model.ActivitySignal;
 import edu.aiplatform.quizpractice.model.AttemptStatus;
+import edu.aiplatform.quizpractice.model.PenaltyDecision;
 import edu.aiplatform.quizpractice.model.SubmitMode;
+import edu.aiplatform.quizzes.contract.LeavePenalty;
 import edu.aiplatform.quizzes.contract.QuestionType;
 import edu.aiplatform.quizzes.contract.QuizOptionView;
 import edu.aiplatform.quizzes.contract.QuizStatus;
@@ -25,9 +29,29 @@ public final class PracticeViews {
                                   Instant lastAttemptAt, UUID inProgressAttemptId, boolean canStart) {
     }
 
-    /** Một lượt của mình trên Quiz Practice Detail. */
+    /**
+     * Một lượt trên Quiz Practice Detail hoặc danh sách của giảng viên; {@code leaveCount}, {@code activitySignal},
+     * {@code suggestedPenalty}, {@code penaltyDecision} chỉ có ở danh sách của giảng viên.
+     */
     public record AttemptRow(UUID attemptId, int attemptNo, AttemptStatus status, Instant startedAt,
-                             Instant submittedAt, BigDecimal score, BigDecimal maxScore) {
+                             Instant submittedAt, BigDecimal score, BigDecimal maxScore, Integer leaveCount,
+                             ActivitySignal activitySignal, BigDecimal suggestedPenalty,
+                             PenaltyDecision penaltyDecision) {
+    }
+
+    /**
+     * Điểm gốc và quyết định trừ điểm của lượt (BR-U11-33). {@code suggestedPenalty} chỉ giảng viên thấy; sinh viên chỉ
+     * thấy điểm đã bị trừ, lý do và việc lượt đang chờ quyết định.
+     */
+    public record PenaltyView(BigDecimal rawScore, BigDecimal suggestedPenalty, BigDecimal penaltyPoints,
+                              Integer leaveCount, boolean decisionPending, PenaltyDecision decision,
+                              String decisionReason) {
+
+        public static PenaltyView of(ActivityOutcome outcome, boolean teacher) {
+            return outcome == null ? null : new PenaltyView(outcome.rawScore(),
+                    teacher ? outcome.suggestedPenalty() : null, outcome.penaltyPoints(), outcome.leaveCount(),
+                    outcome.pendingDecision(), outcome.decision(), outcome.decisionReason());
+        }
     }
 
     /** Quiz Practice Detail (BR-U11-03): {@code blockedReason} giải thích vì sao không làm được. */
@@ -35,7 +59,7 @@ public final class PracticeViews {
                                      String instructions, QuizStatus status, int questionCount, BigDecimal maxScore,
                                      Integer timeLimitMinutes, int attemptsUsed, Integer maxAttempts,
                                      Integer attemptsLeft, BigDecimal bestScore, boolean showScoreAfterSubmit,
-                                     boolean showCorrectAnswers, String activityNotice, List<UUID> referenceMaterialIds,
+                                     boolean showCorrectAnswers, String activityNotice, LeavePenalty leavePenalty,
                                      List<AttemptRow> attempts, UUID inProgressAttemptId, boolean canStart,
                                      String blockedReason) {
     }
@@ -50,7 +74,14 @@ public final class PracticeViews {
     public record TakingView(UUID attemptId, UUID quizId, UUID classId, String title, int attemptNo,
                              Instant startedAt, Instant deadlineAt, Instant serverTime, long answerVersion,
                              List<TakingQuestion> questions, Map<UUID, List<String>> answers,
-                             boolean activityMonitoringEnabled, String activityNotice) {
+                             boolean activityMonitoringEnabled, String activityNotice, LeavePenalty leavePenalty) {
+
+        public TakingView(UUID attemptId, UUID quizId, UUID classId, String title, int attemptNo, Instant startedAt,
+                          Instant deadlineAt, Instant serverTime, long answerVersion, List<TakingQuestion> questions,
+                          Map<UUID, List<String>> answers, boolean activityMonitoringEnabled, String activityNotice) {
+            this(attemptId, quizId, classId, title, attemptNo, startedAt, deadlineAt, serverTime, answerVersion, questions,
+                    answers, activityMonitoringEnabled, activityNotice, null);
+        }
     }
 
     public record SaveResult(long answerVersion, Instant savedAt) {
@@ -64,17 +95,19 @@ public final class PracticeViews {
 
     /**
      * Quiz Result (BR-U11-20): điểm trống khi Quiz không hiện điểm; đúng/sai từng câu và số câu đúng, sai trống khi Quiz
-     * không hiện cả điểm lẫn đáp án.
+     * không hiện cả điểm lẫn đáp án. {@code penalty} trống khi không hiện điểm hoặc Quiz không bật theo dõi.
      */
     public record ResultView(UUID attemptId, UUID quizId, UUID classId, String title, int attemptNo,
                              Instant startedAt, Instant submittedAt, SubmitMode submitMode, boolean showScore,
                              boolean showAnswers, BigDecimal score, BigDecimal maxScore, Integer correctCount,
-                             Integer wrongCount, int blankCount, List<ResultQuestion> questions, boolean canRetry) {
+                             Integer wrongCount, int blankCount, List<ResultQuestion> questions, boolean canRetry,
+                             PenaltyView penalty) {
     }
 
     /** Tóm tắt lượt của một sinh viên cho giảng viên (BR-U11-31). */
     public record StudentAttempts(UUID accountId, String displayName, String email, int attempts, BigDecimal bestScore,
-                                  BigDecimal lastScore, Instant lastSubmittedAt, List<AttemptRow> rows) {
+                                  BigDecimal lastScore, Instant lastSubmittedAt, List<AttemptRow> rows,
+                                  Integer lastLeaveCount, boolean signalWarning, boolean penaltyPending) {
     }
 
     public record ClassAttempts(UUID quizId, UUID classId, Integer maxAttempts, int studentsAttempted,
@@ -82,6 +115,7 @@ public final class PracticeViews {
     }
 
     /** Một lượt cho giảng viên: kết quả đầy đủ chỉ đọc kèm tóm tắt hoạt động (có thể trống). */
-    public record TeacherAttemptDetail(ResultView result, String displayName, ActivitySummary activity) {
+    public record TeacherAttemptDetail(ResultView result, String displayName, ActivitySummary activity,
+                                       ActivitySignal activitySignal) {
     }
 }

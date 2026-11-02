@@ -261,10 +261,10 @@ function DraftRequestForm({ api, busy, initial, onSubmit }: {
         </Field>
       </div>
       <div className="flex flex-col gap-1.5">
-        <p className="text-xs font-semibold text-body">Tài liệu tham khảo <span className="font-normal text-muted">· tối đa 10, chỉ học liệu đã trích chữ</span></p>
+        <p className="text-xs font-semibold text-body">Tài liệu nguồn cho AI <span className="font-normal text-muted">· tối đa 10, chỉ học liệu đã trích chữ</span></p>
         {materialsError && <p className="text-[11px] text-muted">Chưa lấy được danh sách tài liệu; vẫn gửi được yêu cầu không kèm tài liệu.</p>}
         {materials?.length === 0 && <p className="text-[11px] text-muted">Chưa có học liệu nào.</p>}
-        <ul className="flex flex-col gap-1" aria-label="Tài liệu tham khảo">
+        <ul className="flex flex-col gap-1" aria-label="Tài liệu nguồn cho AI">
           {materials?.map((m) => {
             const checked = materialIds.includes(m.materialId);
             const blocked = !m.hasText || (!checked && materialIds.length >= MAX_MATERIALS);

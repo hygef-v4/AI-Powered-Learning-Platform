@@ -3,23 +3,24 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, Dialog, PageHeader, Pill, Section } from "@/shared/ui";
-import { activateQuestion, createQuestion, deleteQuestion, getQuestion, openDraft, retireQuestion, updateQuestion } from "../api";
+import { Alert, Button, Dialog, Field, PageHeader, Pill, Section } from "@/shared/ui";
+import { activateQuestion, approveQuestion, createQuestion, deleteQuestion, getQuestion, openDraft, rejectQuestion, retireQuestion, updateQuestion } from "../api";
 import { errorCode, errorMessage, STATUS_LABELS, STATUS_TONES } from "../model/labels";
 import { McqEditor } from "../components/McqEditor";
 import { QuestionMetaPanel, QuestionVersionPanel } from "../components/QuestionSidePanels";
+import { SimilarQuestionsAlert } from "../components/SimilarQuestionsAlert";
 import { emptyForm, formOf, toContent, validateForm, type FormErrors, type QuestionForm } from "../model/questionForm";
 import type { QuestionDetail, Violation } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 type Props = { id: string; subjectId?: string | null };
-type Confirm = "retire" | "delete" | null;
+type Confirm = "retire" | "delete" | "reject" | null;
 
 const listHref = (subjectId?: string | null) => `/manager/questions${subjectId ? `?subjectId=${encodeURIComponent(subjectId)}` : ""}`;
 
 /**
  * Màn #20 Question Detail (UC 46, 47): tạo câu (id "new"), sửa bản nháp, sửa câu đang dùng bằng bản nháp mới
- * (BR-U10-04), kích hoạt, ngưng, xóa nháp (BR-U10-05).
+ * (BR-U10-04), kích hoạt, ngưng, xóa nháp (BR-U10-05); duyệt hoặc từ chối câu giảng viên đề xuất (BR-U10-09).
  */
 export function QuestionDetailPage({ id, subjectId }: Props) {
   const router = useRouter();
@@ -32,6 +33,7 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
   const [notice, setNotice] = useState<{ tone: "success" | "danger" | "warning"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState<Confirm>(null);
+  const [reason, setReason] = useState("");
 
   const show = useCallback((next: QuestionDetail) => {
     setDetail(next);
@@ -63,7 +65,9 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
   const question = detail?.question;
   const ownerSubject = question?.subjectId ?? subjectId ?? null;
   const dirty = useMemo(() => !question || JSON.stringify(form) !== JSON.stringify(formOf(question)), [form, question]);
-  const readOnly = question?.status === "RETIRED";
+  const pending = question?.status === "PENDING";
+  const rejected = question?.status === "REJECTED";
+  const readOnly = question?.status === "RETIRED" || pending || rejected;
 
   const fail = (error: unknown) => {
     if (error instanceof ApiError && error.problem.code === "QUESTION_INVALID") {
@@ -118,10 +122,22 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
     setNotice({ tone: "success", text: "Đã kích hoạt câu hỏi." });
   });
 
+  const approve = () => question && void run(async () => {
+    show(await approveQuestion(question.id, question.version));
+    setNotice({ tone: "success", text: "Đã duyệt: câu đã vào ngân hàng." });
+  });
+
   const confirmAction = () => question && void run(async () => {
     if (confirm === "retire") {
-      show(await retireQuestion(question.id, question.version));
-      setNotice({ tone: "success", text: "Đã ngưng dùng câu hỏi." });
+      const next = await retireQuestion(question.id, question.version);
+      show(next);
+      setNotice(next.quizzesShortOfQuestions?.length
+        ? { tone: "warning", text: `Đã ngưng dùng câu hỏi. Các quiz sinh đề đang mở không còn đủ câu, sinh viên sẽ chưa bắt đầu được: ${next.quizzesShortOfQuestions.join(", ")}.` }
+        : { tone: "success", text: "Đã ngưng dùng câu hỏi." });
+    } else if (confirm === "reject") {
+      show(await rejectQuestion(question.id, reason.trim(), question.version));
+      setReason("");
+      setNotice({ tone: "success", text: "Đã từ chối và báo cho người đề xuất." });
     } else if (confirm === "delete") {
       await deleteQuestion(question.id, question.version);
       router.push(listHref(question.subjectId));
@@ -152,6 +168,8 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
           {question?.status === "DRAFT" && (
             <Button disabled={busy || dirty} title={dirty ? "Lưu thay đổi trước khi kích hoạt" : undefined} onClick={activate} data-testid="question-detail-activate">Kích hoạt</Button>
           )}
+          {pending && <Button disabled={busy} onClick={() => setConfirm("reject")} data-testid="question-detail-reject">Từ chối</Button>}
+          {pending && <Button variant="primary" disabled={busy} onClick={approve} data-testid="question-detail-approve">Duyệt vào ngân hàng</Button>}
           {!readOnly && <Button variant="primary" icon="save" disabled={busy || !dirty} onClick={save} data-testid="question-detail-save">Lưu thay đổi</Button>}
         </div>}
       />
@@ -164,7 +182,10 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
       {question?.status === "ACTIVE" && (
         <Alert tone="info">Đang dùng trong {detail?.usedInQuizzes ?? 0} quiz.</Alert>
       )}
-      {readOnly && <Alert tone="warning">Câu đã ngưng dùng.</Alert>}
+      {question?.status === "RETIRED" && <Alert tone="warning">Câu đã ngưng dùng.</Alert>}
+      {pending && <Alert tone="info">Câu do giảng viên đề xuất, đang chờ duyệt. Không sửa ở đây; nếu cần sửa, hãy từ chối kèm lý do.</Alert>}
+      {rejected && <Alert tone="warning" title="Đã từ chối">{detail?.review?.reason ?? "Không có lý do."}</Alert>}
+      {detail && <SimilarQuestionsAlert similar={detail.similar ?? []} />}
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Section title="Nội dung">
           <McqEditor value={form} onChange={setForm} errors={errors} readOnly={readOnly} />
@@ -175,13 +196,18 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
         </div>
       </div>
       <Dialog open={confirm !== null} onClose={() => setConfirm(null)} tone={confirm === "delete" ? "danger" : "warning"}
-        title={confirm === "delete" ? "Xóa câu nháp?" : "Ngưng dùng câu hỏi?"}
+        title={confirm === "delete" ? "Xóa câu nháp?" : confirm === "reject" ? "Từ chối câu đề xuất?" : "Ngưng dùng câu hỏi?"}
         footer={<>
-          <Button variant={confirm === "delete" ? "danger" : "primary"} disabled={busy} onClick={confirmAction} data-testid="question-detail-confirm">
-            {confirm === "delete" ? "Xóa" : "Ngưng dùng"}
+          <Button variant={confirm === "delete" ? "danger" : "primary"} disabled={busy || (confirm === "reject" && !reason.trim())} onClick={confirmAction} data-testid="question-detail-confirm">
+            {confirm === "delete" ? "Xóa" : confirm === "reject" ? "Từ chối" : "Ngưng dùng"}
           </Button>
         </>}>
-        <p>{confirm === "delete" ? "Bạn có chắc muốn xóa câu hỏi nháp này không?" : "Bạn có chắc muốn ngưng dùng câu hỏi này không?"}</p>
+        {confirm === "reject" ? (
+          <Field label="Lý do từ chối" required htmlFor="question-reject-reason" hint="Giảng viên thấy lý do này để sửa rồi gửi lại.">
+            <textarea id="question-reject-reason" rows={3} maxLength={1000} value={reason} onChange={(e) => setReason(e.target.value)}
+              className="w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus" data-testid="question-detail-reason" />
+          </Field>
+        ) : <p>{confirm === "delete" ? "Bạn có chắc muốn xóa câu hỏi nháp này không?" : "Bạn có chắc muốn ngưng dùng câu hỏi này không?"}</p>}
       </Dialog>
     </>
   );

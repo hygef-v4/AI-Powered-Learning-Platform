@@ -47,13 +47,16 @@ class QuizPublicationMigrationIntegrationTest {
             JdbcQuizRepository quizzes = new JdbcQuizRepository(jdbc, new ObjectMapper());
             Quiz noProof = legacy(subject, author), proven = legacy(subject, author),
                     denied = legacy(subject, author), wrongType = legacy(subject, author);
-            List.of(noProof, proven, denied, wrongType).forEach(quizzes::insert);
+            List.of(noProof, proven, denied, wrongType).forEach(q -> insertLegacy(jdbc, q, "RETIRED"));
+            Quiz reviewed = legacy(subject, author);
+            insertLegacy(jdbc, reviewed, "REVIEWED");
             proof(jdbc, proven.id(), "QUIZ", "SUCCESS");
             proof(jdbc, denied.id(), "QUIZ", "DENIED");
             proof(jdbc, wrongType.id(), "ASSIGNMENT", "SUCCESS");
 
             Flyway.configure().dataSource(pool).locations("classpath:db/migration").load().migrate();
 
+            assertThat(quizzes.find(reviewed.id()).orElseThrow().status()).as("bỏ REVIEWED").isEqualTo(QuizStatus.DRAFT);
             for (Quiz source : List.of(noProof, denied, wrongType)) {
                 Quiz migrated = quizzes.find(source.id()).orElseThrow();
                 assertThat(migrated.status()).isEqualTo(QuizStatus.RETIRED);
@@ -66,9 +69,25 @@ class QuizPublicationMigrationIntegrationTest {
         }
     }
 
+    /** Dòng ở lược đồ cũ, chưa có các cột thêm sau mốc {@code target}. */
+    private static void insertLegacy(JdbcClient jdbc, Quiz q, String status) {
+        boolean published = "RETIRED".equals(status);
+        jdbc.sql("""
+                        insert into quizzes (id, scope, subject_id, origin, version_no, title, settings, status,
+                            published_at, retired_at, retired_reason, created_by, created_at, updated_at, version)
+                        values (:id, 'SUBJECT', :subject, 'MANUAL', 1, :title, cast('{}' as jsonb), :status, :publishedAt,
+                            :retiredAt, :reason, :author, :now, :now, 0)
+                        """)
+                .param("id", q.id()).param("subject", q.subjectId()).param("title", q.title()).param("status", status)
+                .param("publishedAt", published ? java.sql.Timestamp.from(NOW) : null)
+                .param("retiredAt", published ? java.sql.Timestamp.from(NOW) : null)
+                .param("reason", published ? "Archived" : null).param("author", q.createdBy())
+                .param("now", java.sql.Timestamp.from(NOW)).update();
+    }
+
     private static Quiz legacy(UUID subject, UUID author) {
         return new Quiz(UUID.randomUUID(), QuizScope.SUBJECT, null, subject, null, QuizOrigin.MANUAL, 1,
-                "Legacy retired Quiz", null, Quiz.DEFAULT_SETTINGS, false, null, List.of(), QuizStatus.RETIRED,
+                "Legacy retired Quiz", null, Quiz.DEFAULT_SETTINGS, false, null, null, QuizStatus.RETIRED,
                 NOW, NOW, "Archived", author, NOW, NOW, 0);
     }
 

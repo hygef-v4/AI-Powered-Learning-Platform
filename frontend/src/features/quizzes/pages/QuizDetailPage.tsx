@@ -5,11 +5,14 @@ import { ArchiveItemDialog, ModuleItemDialog } from "@/features/materials/compon
 import { ModuleNeighbours, useModulePlace, useModuleScope } from "@/features/materials/components/ModulePlace";
 import { notifyOutlineChanged, useOutlineChanged } from "@/features/materials/model/outline";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, Menu, MenuItem, PageHeader, Pill, Section, showToast } from "@/shared/ui";
-import { addInlineQuestion, getQuiz, reopenQuiz, publishQuiz, reviewQuiz, saveQuizItems, updateInlineQuestion, updateQuizDetails } from "../api";
+import { SlotOutlet } from "@/shared/slots/SlotOutlet";
+import { Alert, Button, Dialog, Menu, MenuItem, PageHeader, Pill, Section, showToast } from "@/shared/ui";
+import { addInlineQuestion, getQuiz, proposeQuestion, reopenQuiz, publishQuiz, saveQuizItems, updateInlineQuestion, updateQuizDetails } from "../api";
 import { QuizAiDraftPanel } from "../components/AiDraftTargets";
 import { BankQuestionPicker } from "../components/BankQuestionPicker";
-import { errorCode, errorMessage, QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "../model/labels";
+import { DrawRulesPanel } from "../components/DrawRulesPanel";
+import { errorCode, errorMessage, formatPoints, QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "../model/labels";
+import { quizDetailSections } from "../slots";
 import {
   InlineQuestionDialog, QuizItemList, QuizPreviewDialog, QuizSettingsPanel, settingsFormOf, settingsInput, type DraftItem,
   type SettingsForm,
@@ -18,7 +21,7 @@ import type { QuizDetail, QuizItemView, Violation } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 const MAX_ITEMS = 200;
-type Dialogs = "picker" | "inline" | "preview" | "edit" | "archive" | null;
+type Dialogs = "picker" | "inline" | "preview" | "edit" | "archive" | "publish" | null;
 
 const draftItems = (detail: QuizDetail): DraftItem[] => detail.items.map((item) => ({ item, points: String(item.points) }));
 const validPoints = (value: string) => /^\d+([.,]\d{1,2})?$/.test(value.trim()) && Number(value.replace(",", ".")) > 0
@@ -28,7 +31,8 @@ const validPoints = (value: string) => /^\d+([.,]\d{1,2})?$/.test(value.trim()) 
  * Màn #22 Quiz Detail (UC 48), cùng bố cục trang chi tiết học liệu: tên module nhỏ phía trên tên quiz, Sửa (cùng popup Tạo
  * học liệu) và Lưu trữ như ở danh sách học liệu; bên dưới là mô tả, câu hỏi, cấu hình rồi mục trước / sau trong danh sách
  * module (sidebar cũng là danh sách module). Quiz chưa lưu trữ sửa được tại chỗ, kể cả đang
- * mở (không tạo phiên bản mới). Giảng viên mở quiz của môn từ lớp (`classId`) thì chỉ xem.
+ * mở (không tạo phiên bản mới). Giảng viên mở quiz của môn từ lớp (`classId`) thì chỉ xem. Quiz sinh đề dùng quy tắc thay cho
+ * danh sách câu (BR-U10-17).
  */
 export function QuizDetailPage({ id, classId }: { id: string; classId?: string | null }) {
   const [detail, setDetail] = useState<QuizDetail | null>(null);
@@ -45,7 +49,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
   const [editing, setEditing] = useState<QuizItemView | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
-  // Mọi lần nhận Quiz mới từ máy chủ (thêm câu, lưu, tải lại…) thì lỗi duyệt cũ không còn đúng nữa.
+  // Mọi lần nhận Quiz mới từ máy chủ (thêm câu, lưu, tải lại…) thì lỗi phát hành cũ không còn đúng nữa.
   const show = useCallback((next: QuizDetail) => {
     setDetail(next);
     setViolations([]);
@@ -144,9 +148,18 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
     setEditing(null);
   };
 
-  const lifecycle = (action: "review" | "publish") => quiz && void run(async () => {
-    show(action === "review" ? await reviewQuiz(quiz.id, quiz.version) : await publishQuiz(quiz.id, quiz.version));
-    showToast(action === "review" ? "Đã duyệt quiz" : "Đã phát hành quiz");
+  // Phát hành thẳng từ nháp (BR-U10-21): máy chủ vẫn kiểm đủ điều kiện, lỗi trả danh sách cần sửa.
+  const publish = () => quiz && void run(async () => {
+    setDialog(null);
+    show(await publishQuiz(quiz.id, quiz.version));
+    showToast("Đã phát hành quiz");
+    notifyOutlineChanged();
+  });
+
+  // Giảng viên gửi câu riêng vào ngân hàng của môn để Chủ nhiệm môn duyệt (BR-U10-09); câu trong quiz giữ nguyên.
+  const propose = (item: QuizItemView) => quiz?.classId && void run(async () => {
+    await proposeQuestion(quiz.classId as string, item.question);
+    showToast("Đã gửi đề xuất cho Chủ nhiệm môn");
   });
 
   if (loadError) {
@@ -155,6 +168,8 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
   if (!detail || !quiz || !settings) return <PageLoading label="Đang tải quiz…" />;
 
   const free = MAX_ITEMS - detail.items.length;
+  const generated = quiz.paperMode === "GENERATED";
+  const questionCount = generated ? detail.drawRules.reduce((sum, r) => sum + r.questionCount, 0) : detail.items.length;
   const editScope = classId ? { kind: "class" as const, classId } : quiz.scope === "CLASS" && quiz.classId
     ? { kind: "class" as const, classId: quiz.classId } : { kind: "subject" as const, subjectId: quiz.subjectId };
   const moduleQuiz = { quizId: quiz.id, title: quiz.title, status: quiz.status, scope: quiz.scope, classId: quiz.classId, canManage: detail.canManage };
@@ -165,14 +180,11 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
         title={<><span className="min-w-0 [overflow-wrap:anywhere]">{quiz.title}</span><Pill tone={QUIZ_STATUS_TONES[quiz.status]}>{QUIZ_STATUS_LABELS[quiz.status]}</Pill></>}
         breadcrumb={place.moduleTitle ? [{ label: place.moduleTitle }, { label: quiz.title }] : undefined}
         actions={<>
-          <Button icon="visibility" onClick={() => setDialog("preview")} data-testid="quiz-detail-preview">Xem trước</Button>
+          {!generated && <Button icon="visibility" onClick={() => setDialog("preview")} data-testid="quiz-detail-preview">Xem trước</Button>}
           {editable && dirty && <Button icon="save" disabled={busy} onClick={save} data-testid="quiz-detail-save">Lưu thay đổi</Button>}
           {detail.canManage && quiz.status === "DRAFT" && (
-            <Button variant="primary" disabled={busy || dirty} title={dirty ? "Lưu thay đổi trước khi duyệt" : undefined}
-              onClick={() => lifecycle("review")} data-testid="quiz-detail-review">Duyệt</Button>
-          )}
-          {detail.canManage && quiz.status === "REVIEWED" && (
-            <Button variant="primary" disabled={busy || dirty} onClick={() => lifecycle("publish")} data-testid="quiz-detail-publish">Phát hành</Button>
+            <Button variant="primary" disabled={busy || dirty} title={dirty ? "Lưu thay đổi trước khi phát hành" : undefined}
+              onClick={() => setDialog("publish")} data-testid="quiz-detail-publish">Phát hành</Button>
           )}
           {detail.canManage && quiz.status === "RETIRED" && (
             <Button variant="primary" icon="lock_open" disabled={busy} data-testid="quiz-detail-reopen"
@@ -188,12 +200,22 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
       {quiz.instructions && <Section title="Mô tả"><p className="text-[14px] leading-relaxed whitespace-pre-wrap text-body">{quiz.instructions}</p></Section>}
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {violations.length > 0 && (
-        <Alert tone="danger" title="Cần sửa trước khi duyệt hoặc phát hành">
+        <Alert tone="danger" title="Cần sửa trước khi phát hành">
           <ul className="list-disc pl-4" data-testid="quiz-detail-violations">{violations.map((v, i) => <li key={i}>{v.message}</li>)}</ul>
         </Alert>
       )}
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <Section title={<>Câu hỏi <span className="font-mono text-xs font-medium text-muted">{items.length}</span></>}
+        <div className="flex min-w-0 flex-col gap-4">
+        {(editable || generated) && (
+          <DrawRulesPanel key={quiz.version} detail={detail} editable={editable} disabled={dirty} onSaved={show}
+            onError={(failure) => {
+              const problem = failure instanceof ApiError ? (failure.problem as { violations?: Violation[] }) : {};
+              setViolations(problem.violations ?? []);
+              setError(errorMessage(failure));
+              if (errorCode(failure) === "QUIZ_VERSION_CONFLICT") setReloadKey((k) => k + 1);
+            }} />
+        )}
+        {!generated && <Section title={<>Câu hỏi <span className="font-mono text-xs font-medium text-muted">{items.length}</span></>}
           actions={editable && (
             <Menu align="right" icon="add" label="Thêm câu hỏi" ariaLabel="Thêm câu hỏi">
               <MenuItem icon="edit" disabled={busy || itemsDirty || free <= 0} onClick={() => { setEditing(null); setDialog("inline"); }}
@@ -205,16 +227,27 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
             </Menu>
           )}>
           <QuizItemList items={items} onChange={setItems} editable={editable}
-            onEditInline={(item) => { setEditing(item); setDialog("inline"); }} />
-        </Section>
+            onEditInline={(item) => { setEditing(item); setDialog("inline"); }}
+            onPropose={quiz.scope === "CLASS" ? propose : undefined} />
+        </Section>}
+        </div>
         <QuizSettingsPanel value={settings} onChange={setSettings} errors={settingsErrors} readOnly={!editable} />
       </div>
       {editable && (
         <QuizAiDraftPanel detail={detail} disabled={busy || dirty} onConflict={reload}
           onQuizChange={acceptedFromAi} openRequest={aiRequest} />
       )}
+      <SlotOutlet slot={quizDetailSections} props={{ quizId: quiz.id, classId: classId ?? quiz.classId ?? undefined }} />
       <ModuleNeighbours scope={scope} previous={place.previous} next={place.next} />
 
+      {dialog === "publish" && (
+        <Dialog open onClose={() => setDialog(null)} title="Phát hành quiz?" tone="warning"
+          footer={<Button variant="primary" disabled={busy} onClick={publish} data-testid="quiz-detail-publish-confirm">Phát hành</Button>}>
+          <p className="text-[13px]" data-testid="quiz-detail-publish-summary">
+            {generated ? `Mỗi lượt làm nhận một đề mới gồm ${questionCount} câu` : `Quiz có ${questionCount} câu`}, tổng {formatPoints(detail.maxScore)} điểm. Sau khi phát hành, sinh viên của lớp hoặc môn sẽ làm được ngay.
+          </p>
+        </Dialog>
+      )}
       {dialog === "picker" && <BankQuestionPicker quizId={quiz.id} freeSlots={free} onClose={() => setDialog(null)} onAdd={addFromBank} />}
       {dialog === "inline" && <InlineQuestionDialog initial={editing} onClose={() => { setDialog(null); setEditing(null); }} onSave={saveInline} />}
       {dialog === "preview" && <QuizPreviewDialog title={quiz.title} items={detail.items} onClose={() => setDialog(null)} />}

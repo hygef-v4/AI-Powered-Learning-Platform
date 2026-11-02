@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ModuleNeighbours, useModulePlace, useModuleScope } from "@/features/materials/components/ModulePlace";
 import { Alert, Button, ClickableRow, Icon, PageHeader, Section, TableFrame, Td, Th } from "@/shared/ui";
 import { getPracticeHistory, getPracticeQuiz, startAttempt } from "../api";
-import { errorMessage, formatDateTime, formatPoints } from "../model/labels";
+import { errorMessage, formatDateTime, formatPoints, penaltyRuleText } from "../model/labels";
 import type { PracticeQuizDetail, PracticeQuizRow } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
@@ -127,7 +127,10 @@ function PracticeDetail({ quizId, classId }: { quizId: string; classId: string }
           <Section title="Làm bài" className={action || detail.activityNotice ? undefined : "gap-0"}
             actions={<span className="text-[13px] text-muted tabular-nums" title="Lượt đã dùng / tối đa" data-testid="practice-detail-attempts">
               {detail.maxAttempts === null ? `${detail.attemptsUsed} lượt` : `${detail.attemptsUsed}/${detail.maxAttempts}`}</span>}>
-            {detail.activityNotice && <Alert tone="info">{detail.activityNotice}</Alert>}
+            {detail.activityNotice && <Alert tone="info">
+              {detail.activityNotice}
+              {detail.leavePenalty && <span className="block" data-testid="practice-detail-penalty-rule">{penaltyRuleText(detail.leavePenalty)}</span>}
+            </Alert>}
             {action && <Button variant="primary" disabled={busy} onClick={() => void start()} data-testid="practice-detail-start">
               {detail.inProgressAttemptId ? "Tiếp tục làm bài" : detail.attemptsUsed > 0 ? "Làm lại" : "Bắt đầu làm bài"}
             </Button>}

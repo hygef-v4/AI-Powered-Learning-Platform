@@ -36,7 +36,6 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Kiểm R5 với lớp và Quiz (BR-U11-01); không đạt thì "không tìm thấy".
 3. Trả thông tin theo BR-U11-03 (`IQuizQuery.get`) và các lượt của mình.
 4. Nút Làm Quiz hoặc Tiếp tục khi Quiz `OPEN` và còn lượt; không thì nêu lý do (đã ngưng, hết lượt).
-5. Learning Material (U13) nhúng `MaterialQuizList` của U11 qua slot `LearningMaterialSection`: Quiz gắn tài liệu đó (`IQuizQuery.listByMaterial`) kèm lượt đã dùng, còn lại và nút Làm Quiz.
 
 ## 3. Làm Quiz
 
@@ -83,3 +82,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Kiểm giảng viên chính của lớp; Quiz là Quiz của lớp hoặc của môn chứa lớp.
 3. Trả mỗi sinh viên: số lượt, điểm cao nhất, điểm lượt gần nhất, thời điểm nộp.
 4. Mở một lượt: câu trả lời chỉ đọc, điểm, và `ActivityTimeline` (U08) với dữ liệu từ `IActivityQuery.summary` (BR-U11-31).
+
+## Delta 2026-11-01
+
+Bắt đầu lượt Quiz sinh đề: `PracticeSupport.newPaper` lấy câu đã gặp của người học rồi gọi `drawPaper`. Nộp: `AttemptActivityAssessor` đọc tóm tắt của U08, tính số lần, tín hiệu, mức trừ gợi ý và lưu cùng câu lệnh nộp, điểm giữ nguyên; lỗi đọc không chặn nộp. Giảng viên quyết định: `POST /classes/{classId}/quiz-attempts/{attemptId}/penalty:decide` với `decision` (`APPLIED`, `DISMISSED`), `points` (khi trừ), `reason`; điểm tính lại từ điểm gốc. Bỏ lọc `GET /me/quizzes?materialId=`.
