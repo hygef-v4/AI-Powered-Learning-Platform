@@ -7776,3 +7776,21 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 **AI Response**: Resolve the in-progress merge of staging d33e31c3 into fix/u05-u09-u15. The sole conflict is aidlc-state.md: retain both Finalized grade lock and Staging check fixes sections, removing markers only. Preserve all already auto-merged source/package/test changes and existing audit entries, then complete the local merge commit. Checked section uniqueness, conflict markers, staged whitespace and package JSON parsing. Runtime tests/build are not rerun for this documentation conflict resolution; prior branch test evidence remains dated. No push, live DB change or restart.
 
 ---
+
+## Dedicated MCP documentation — 2026-11-02
+**User Input**: "[Image #1] phần kết nối mcp này thì nên có 1 trang doc riêng, cho 1 cái link hay 1 cái nút vào để xem doc mcp trong đó thì mô tả rõ cách dùng, cách kết nối, mô tả từng chức năng, tool làm gì"
+**AI Response**: Build a dedicated authenticated guide linked from Agent MCP. Reuse safe client setup/copy prompt; explain workflows, per-tool behavior/permissions and troubleshooting. Preserve the existing design and token management. Read current provider schemas and official client documentation; no new backend/DB behavior, dependency or live write.
+
+---
+
+## MCP documentation verification — 2026-11-02
+**Result**: Route/link and source-aligned 29-tool guide implemented; U06/AI-DLC synchronized. Full frontend ran 727 cases (726 pass, one duplicate-note UI failure), fixed that localized duplicate and reran all 39 AI/MCP cases successfully. TypeScript, scoped lint and final Next 16.4.3 production build passed. Actual desktop/mobile light/dark rendering/navigation inspected, no horizontal overflow. Native dependency locks required restarting only frontend while syncing the existing lockfile; backend/terminal windows preserved. Independent review no Critical/Important findings. Generated config/AGENTS edits restored. No live MCP write, schema/API/backend change, commit or push. Detailed evidence: construction/build-and-test/2026-11-02-mcp-documentation-results.md.
+
+---
+
+## Local commit — dedicated MCP documentation
+**Timestamp**: 2026-11-02T18:47:03+07:00
+**User Input**: "giúp tôi commit"
+**AI Response**: Commit the verified MCP documentation route/link, 29-tool catalog, shared safe setup/SSR handling, regression tests and U06 AI-DLC in English on fix/u05-u09-u15. Reviewed the scoped diff, whitespace and recorded test/build/browser evidence; no application source changed after verification. Exclude generated files, local scripts/logs/screenshots and credentials. Local commit only; no push, backend restart or DB migration.
+
+---

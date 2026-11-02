@@ -18,6 +18,7 @@ Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://clau
 |---|---|---|---|---|
 | 6 | AI Connection (`c12`), popup Thêm khóa API (`c12a`), Kết nối agent mới (`c12b`), Token agent và owner reveal khi có ciphertext (`c12c`) | `AiConnectionPage`, `ApiKeyDialog`, `McpCredentialDialog`, `McpTokenDialog` | 31, 32 | Student, Teacher, Subject Manager |
 | 7 | AI Usage History (`c13`) | `AiUsageHistoryPage` | 33 | Student, Teacher, Subject Manager |
+| – | Tài liệu MCP `/ai/mcp-guide`, mở từ tab Agent MCP | `McpGuidePage`, `McpClientSetup` | 32, BR-U06-50 | Student, Teacher, Subject Manager |
 | 10 | Setting Detail — API AI của trường và hạn mức: tab Khóa và hạn mức (`a14`), tab Usage (`a14c`) | `AiConnectionsPanel`, `TeacherQuotaPanel` | 14, 15, 33 | Admin |
 | – | Popup Chọn nguồn AI (`c16`), nhúng ở màn của unit khác | `AiSourcePicker`, `AiTaskStatus` | UC của U07–U10 | Theo màn chứa |
 
@@ -34,7 +35,10 @@ app/ai/connection/            AiConnectionPage     #6 AI Connection
   McpAgentSection                                  bảng credential MCP
     McpCredentialDialog                            c12b: nhãn, quyền, hạn dùng
     McpTokenDialog                                 c12c: token tạo/reveal có kiểm owner và ACTIVE
-    McpSetupGuide                                  các bước cài agent và đoạn cấu hình mẫu
+    McpSetupGuide                                  liên kết tài liệu riêng, vẫn hiện nếu tải credential lỗi
+app/ai/mcp-guide/             McpGuidePage          hướng dẫn kết nối, sử dụng, tool và xử lý lỗi
+  McpClientSetup                                  cấu hình/prompt tiếng Anh dùng chung với token dialog
+  MCP_TOOL_GROUPS                                 danh mục 29 tool không dành cho Admin, có phạm vi/quyền/tác dụng
 app/ai/usage/                 AiUsageHistoryPage   #7 AI Usage History
   UsageSummaryCards, UsageFilters, UsageTable
 shared/ai/
@@ -59,7 +63,8 @@ shell/ (đăng ký vào AccountMenuEntry của U01)
 | `PersonalApiSection`, `ApiKeyDialog` | `GET /api/v1/ai/providers`, `GET`, `PUT`, `DELETE /api/v1/me/ai-connections/...`, `POST ...:test` | Bảng Nhà cung cấp (Gemini, OpenAI, Claude), Khóa (chỉ 4 ký tự cuối, ví dụ "••••3kQf"), Mô hình, Kiểm tra gần nhất (Đạt hoặc lỗi · thời điểm); Kiểm tra, Thay khóa, Thu hồi (có xác nhận); nhà cung cấp chưa có khóa ghi "Chưa cấu hình" kèm Thêm khóa. Popup: Nhà cung cấp* (Gemini — Google AI Studio, OpenAI — platform.openai.com, Claude — console.anthropic.com), Khóa API* (chỉ nhập, không hiện lại; "sau khi lưu chỉ hiện 4 ký tự cuối"), Mô hình*, nút Kiểm tra kết nối (kết quả, thời gian) kèm cảnh báo có thể tính phí; Hủy, Lưu khóa |
 | `ApiSetupGuide` | - | "Hướng dẫn lấy khóa API": các bước cho Gemini, OpenAI, Claude |
 | `McpAgentSection`, `McpCredentialDialog`, `McpTokenDialog` | `GET`, `POST`, `DELETE /api/v1/me/mcp-credentials` | "Kết nối agent riêng để dùng công cụ của nền tảng · quyền Chỉ đọc hoặc Đọc và ghi · tối đa 5 agent còn hiệu lực"; nút Kết nối agent mới. Bảng Nhãn và token (4 ký tự cuối), Quyền, Ngày tạo, Hạn dùng, Lần dùng cuối, Trạng thái (Còn hiệu lực, Hết hạn, Đã thu hồi), Thu hồi. Popup tạo: Nhãn*, Quyền* (Chỉ đọc: xem lớp, bài, học liệu, kết quả trong quyền; Đọc và ghi: thêm thao tác được làm như tạo nháp, đề xuất chấm), Hạn dùng 7 / 30 / 90 ngày (mặc định 30), "Bạn đang có n/5 agent còn hiệu lực"; Hủy, Tạo token. Popup token: "Sao chép token trước khi đóng", token kèm nút Sao chép, nhãn, quyền, hạn (ngày hết hạn); "Tôi đã sao chép, đóng" |
-| `McpSetupGuide` | - | "Hướng dẫn cài agent": tạo token, dán đoạn cấu hình (URL `/mcp`, header `Authorization: Bearer`) vào cấu hình MCP của agent, khởi động lại; ứng dụng chưa kiểm chứng ghi rõ |
+| `McpSetupGuide` | - | Thẻ trợ giúp ngắn và nút Xem tài liệu MCP mở /ai/mcp-guide; không còn toàn bộ hướng dẫn dài trong tab token; vẫn hiển thị khi credential chưa tải hoặc bị lỗi |
+| `McpGuidePage`, `McpClientSetup`, `MCP_TOOL_GROUPS` | Không fetch token/credential | Trang Read có mục lục responsive, kết nối bốn ứng dụng, prompt tiếng Anh/config mẫu theo origin và placeholder, luồng Assignment/Quiz/chấm/Practice, 29 tool theo chức năng/quyền, lỗi/thử lại và nguồn chính thức; trở lại /ai/connection?tab=mcp. SSR dùng endpoint tương đối ổn định rồi đọc origin sau hydrate. Ngoài Codex, ghi rõ cấu hình chưa kiểm chứng thực tế trên môi trường hiện tại. |
 | `AiUsageHistoryPage` | `GET /api/v1/me/ai-usage`, `GET /api/v1/ai/sources` | Đường dẫn "Kết nối AI › Lịch sử sử dụng AI"; chọn khoảng ngày. Thẻ: Token hôm nay và Hạn mức còn lại (Teacher, Subject Manager), API cá nhân (số yêu cầu trong kỳ), Agent MCP (số lượt agent gọi tool, token do agent tự báo). Tab nguồn Tất cả, Hạn mức trường, API cá nhân, Agent MCP; lọc trạng thái. Cột Thời gian, Tác vụ (loại tác vụ, hoặc "Tool: tên tool"), Nguồn · mô hình, Token vào / ra, Nguồn số liệu (Nhà cung cấp đo, Ước tính, Agent tự báo, Không có số liệu), Trạng thái; phân trang; ghi chú không lưu tên bài, tên sinh viên, nội dung |
 | `AiConnectionsPanel`, `TeacherQuotaPanel` | - | Nút quay lại; "API AI của trường và hạn mức"; đường dẫn "Cài đặt › API AI của trường"; "Mỗi lần lưu được ghi vào Nhật ký audit · chỉ Quản trị viên"; tab Khóa và hạn mức, Usage. Mở từ thẻ hạn mức thì cuộn tới phần hạn mức |
 | `InstitutionalKeysSection` | `/api/v1/admin/ai/connections/...` | Nút Thêm khóa; bảng Nhà cung cấp, Khóa (4 ký tự cuối), Mô hình, Kiểm tra gần nhất, Bật (công tắc: tắt vẫn giữ khóa, không dùng cho yêu cầu mới), Kiểm tra, Thay khóa, Thu hồi; `409` báo tải lại |
