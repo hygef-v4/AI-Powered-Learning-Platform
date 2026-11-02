@@ -898,7 +898,7 @@
     "/api/v1/me/notification-preferences": {
       "get": {
         "operationId": "getNotificationPreferences",
-        "summary": "Student only; missing preference defaults on",
+        "summary": "All roles; own role-specific email preferences",
         "security": [
           {
             "session": []
@@ -965,11 +965,12 @@
               }
             }
           }
-        }
+        },
+        "description": "Student: ENROLLED, ASSIGNMENT_OPENED, GRADE_PUBLISHED, DEADLINE_REMINDER, ANNOUNCEMENT_IMPORTANT (default true). Teacher: LEADER_CHANGE_REQUESTED, QUESTION_REVIEWED (default false). Subject Manager: Teacher types plus QUESTION_PROPOSED (default false). Admin: BACKUP_FAILED, always true. Only keys applicable to the authenticated role are returned."
       },
       "put": {
         "operationId": "setNotificationPreferences",
-        "summary": "Student only; partial update; BACKUP_FAILED cannot be disabled",
+        "summary": "All roles; partial update of own role-specific preferences; BACKUP_FAILED cannot be disabled",
         "security": [
           {
             "session": []
@@ -1051,7 +1052,8 @@
           {
             "$ref": "#/components/parameters/csrf"
           }
-        ]
+        ],
+        "description": "Rejects keys outside the current role, null values, empty updates, and BACKUP_FAILED=false. Account and role come from the authenticated principal. New staff email types require opt-in; in-app notifications remain enabled."
       }
     }
   },
@@ -1325,6 +1327,21 @@
           },
           "ANNOUNCEMENT_IMPORTANT": {
             "type": "boolean"
+          },
+          "LEADER_CHANGE_REQUESTED": {
+            "type": "boolean"
+          },
+          "QUESTION_PROPOSED": {
+            "type": "boolean"
+          },
+          "QUESTION_REVIEWED": {
+            "type": "boolean"
+          },
+          "BACKUP_FAILED": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
           }
         },
         "additionalProperties": false,

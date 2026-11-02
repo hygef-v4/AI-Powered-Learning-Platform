@@ -23,7 +23,7 @@ public class EmailDeliveryService {
     public void schedule(Notification n,String type,Instant expiresAt) {
         if(type==null)return;Instant now=clock.instant();var e=new EmailDelivery();e.id=UUID.randomUUID();e.notificationId=n.id;e.recipientId=n.recipientId;e.type=type;
         e.priority=EmailCapPolicy.PRIORITY.get(type);e.createdAt=now;e.scheduledFor=now;e.expiresAt=expiresAt;
-        if(!type.equals("BACKUP_FAILED")&&!repository.preferences(n.recipientId).getOrDefault(type,true))e.status=EmailDelivery.Status.SKIPPED;
+        if(!type.equals("BACKUP_FAILED")&&!repository.preferences(n.recipientId).getOrDefault(type,NotificationPreferenceService.defaultEnabled(type)))e.status=EmailDelivery.Status.SKIPPED;
         else if(expired(e,now))e.status=EmailDelivery.Status.SKIPPED;
         else if(cap.available(now))e.status=EmailDelivery.Status.PENDING;
         else {e.status=EmailDelivery.Status.DEFERRED;e.scheduledFor=cap.nextDay(now);}
@@ -39,7 +39,7 @@ public class EmailDeliveryService {
         }
         AccountContact contact;
         try {contact=accounts.getContact(e.recipientId).orElse(null);}catch(RuntimeException unavailable){throw new RetryableJobException("NOTIFICATION_ACCOUNT_UNAVAILABLE");}
-        if(contact==null||contact.status()!=AccountStatus.ACTIVE||(e.type.equals("BACKUP_FAILED")?contact.role()!=Role.ADMIN:contact.role()!=Role.STUDENT)) {e.status=EmailDelivery.Status.SKIPPED;return;}
+        if(contact==null||contact.status()!=AccountStatus.ACTIVE||!NotificationPreferenceService.typesFor(contact.role()).contains(e.type)) {e.status=EmailDelivery.Status.SKIPPED;return;}
         var n=repository.find(e.notificationId).orElse(null);if(n==null){e.status=EmailDelivery.Status.SKIPPED;return;}
         if(e.type.equals("DEADLINE_REMINDER")) {
             UUID assignmentId;

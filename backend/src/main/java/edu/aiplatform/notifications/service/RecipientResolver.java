@@ -23,13 +23,13 @@ public class RecipientResolver {
                 id(p,"announcementId");link="/classes/"+classId+"/announcements";
                 if(Boolean.TRUE.equals(p.get("important"))&&Boolean.TRUE.equals(p.get("sendEmail")))email="ANNOUNCEMENT_IMPORTANT";
             }
-            case EventTypes.GROUP_LEADER_CHANGE_REQUESTED -> {type=NotificationType.LEADER_CHANGE_REQUESTED;var c=openClass(id(p,"classId"));ids=c==null||c.teacherId()==null?List.of():List.of(c.teacherId());link=teacherGroupLink(p);}
+            case EventTypes.GROUP_LEADER_CHANGE_REQUESTED -> {type=NotificationType.LEADER_CHANGE_REQUESTED;var c=openClass(id(p,"classId"));ids=c==null||c.teacherId()==null?List.of():List.of(c.teacherId());link=teacherGroupLink(p);email="LEADER_CHANGE_REQUESTED";}
             case EventTypes.GROUP_LEADER_CHANGED -> {type=NotificationType.LEADER_CHANGED;ids=members(p);link=groupLink(p);}
             case EventTypes.GROUP_LEADER_REQUEST_REJECTED -> {type=NotificationType.LEADER_REQUEST_REJECTED;ids=members(p);link=groupLink(p);}
             case EventTypes.GROUP_MEMBERSHIP_CHANGED -> {type=NotificationType.GROUP_MEMBERSHIP_CHANGED;ids=members(p);link=groupLink(p);}
             case EventTypes.GROUP_SUBMITTED -> {type=NotificationType.GROUP_SUBMITTED;ids=members(p);link=groupLink(p);}
-            case EventTypes.QUESTION_PROPOSED -> {type=NotificationType.QUESTION_PROPOSED;ids=ids(p,"recipientIds");link="/manager/questions?subjectId="+id(p,"subjectId")+"&status=PENDING";}
-            case EventTypes.QUESTION_REVIEWED -> {type=NotificationType.QUESTION_REVIEWED;ids=ids(p,"recipientIds");link=classId==null?"/teaching":"/teaching/classes/"+classId+"?tab=materials";}
+            case EventTypes.QUESTION_PROPOSED -> {type=NotificationType.QUESTION_PROPOSED;ids=ids(p,"recipientIds");link="/manager/questions?subjectId="+id(p,"subjectId")+"&status=PENDING";email="QUESTION_PROPOSED";}
+            case EventTypes.QUESTION_REVIEWED -> {type=NotificationType.QUESTION_REVIEWED;ids=ids(p,"recipientIds");link=classId==null?"/teaching":"/teaching/classes/"+classId+"?tab=materials";email="QUESTION_REVIEWED";}
             case EventTypes.BACKUP_FAILED -> {type=NotificationType.BACKUP_FAILED;ids=admins();id(p,"runId");link="/admin";email="BACKUP_FAILED";}
             default -> throw new IllegalArgumentException("Unsupported notification event");
         }

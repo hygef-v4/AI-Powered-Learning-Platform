@@ -59,6 +59,24 @@ class EmailDeliveryServiceTest {
     EmailDelivery pending(){var n=notice();var e=new EmailDelivery();e.id=UUID.randomUUID();e.notificationId=n.id;e.recipientId=recipient;e.type="GRADE_PUBLISHED";e.status=EmailDelivery.Status.PENDING;e.scheduledFor=now;e.createdAt=now;when(repo.lockEmail(e.id)).thenReturn(Optional.of(e));return e;}
     EmailDelivery captured(){var captor=ArgumentCaptor.forClass(EmailDelivery.class);verify(repo).addEmail(captor.capture());return captor.getValue();}
     @Test void defaultPreferenceQueuesEmail(){service.schedule(notice(),"ENROLLED",null);assertThat(captured().status).isEqualTo(EmailDelivery.Status.PENDING);verify(jobs).enqueue(eq(JobTypes.EMAIL_SEND),anyMap(),startsWith("email:"));}
+    @Test void staffEmailsDefaultOffUntilOptedIn(){service.schedule(notice(),"QUESTION_REVIEWED",null);assertThat(captured().status).isEqualTo(EmailDelivery.Status.SKIPPED);verifyNoInteractions(jobs);}
+    @Test void staffOptInQueuesEmail(){when(repo.preferences(recipient)).thenReturn(Map.of("QUESTION_REVIEWED",true));service.schedule(notice(),"QUESTION_REVIEWED",null);assertThat(captured().status).isEqualTo(EmailDelivery.Status.PENDING);verify(jobs).enqueue(eq(JobTypes.EMAIL_SEND),anyMap(),startsWith("email:"));}
+    @Test void teacherEmailCanBeDeliveredButCannotReceiveManagerOnlyEmail(){
+        when(accounts.getContact(recipient)).thenReturn(Optional.of(new AccountContact(recipient,"t@example.test","Teacher",Role.TEACHER,AccountStatus.ACTIVE)));
+        var allowed=pending();allowed.type="QUESTION_REVIEWED";service.send(allowed.id);
+        assertThat(allowed.status).isEqualTo(EmailDelivery.Status.SENT);
+        var denied=pending();denied.type="QUESTION_PROPOSED";service.send(denied.id);
+        assertThat(denied.status).isEqualTo(EmailDelivery.Status.SKIPPED);
+        verify(mail,times(1)).send(any());
+    }
+    @Test void managerReceivesProposalEmailButNotStudentGradeEmail(){
+        when(accounts.getContact(recipient)).thenReturn(Optional.of(new AccountContact(recipient,"m@example.test","Manager",Role.SUBJECT_MANAGER,AccountStatus.ACTIVE)));
+        var allowed=pending();allowed.type="QUESTION_PROPOSED";service.send(allowed.id);
+        assertThat(allowed.status).isEqualTo(EmailDelivery.Status.SENT);
+        var denied=pending();service.send(denied.id);
+        assertThat(denied.status).isEqualTo(EmailDelivery.Status.SKIPPED);
+        verify(mail,times(1)).send(any());
+    }
     @Test void disabledPreferenceStillKeepsNotificationButSkipsEmail(){when(repo.preferences(recipient)).thenReturn(Map.of("ENROLLED",false));service.schedule(notice(),"ENROLLED",null);assertThat(captured().status).isEqualTo(EmailDelivery.Status.SKIPPED);verifyNoInteractions(jobs);}
     @Test void capReachedDefersUntilVietnamMidnight(){when(repo.reserved(any(),any())).thenReturn(300L);service.schedule(notice(),"ENROLLED",null);var e=captured();assertThat(e.status).isEqualTo(EmailDelivery.Status.DEFERRED);assertThat(e.scheduledFor).isEqualTo(Instant.parse("2026-10-21T17:00:00Z"));verifyNoInteractions(jobs);}
     @Test void backupIgnoresLearningPreferences(){when(repo.preferences(recipient)).thenReturn(Map.of("BACKUP_FAILED",false));service.schedule(notice(),"BACKUP_FAILED",null);assertThat(captured().status).isEqualTo(EmailDelivery.Status.PENDING);}

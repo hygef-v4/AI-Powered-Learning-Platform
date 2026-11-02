@@ -26,7 +26,40 @@ class NotificationServiceTest {
     @Test void readAllUsesPrincipalOnly(){service.readAll(actor);verify(repo).readAll(eq(account),any());assertThat(service.authorizedChannel(actor)).isEqualTo("notifications:account:"+account);}
     @Test void disabledAccountCannotReadEvenEmptyFeed(){when(auth.authorize(any(),any(),any())).thenReturn(AuthorizationDecision.deny("DISABLED"));assertThatThrownBy(()->service.unread(actor)).isInstanceOf(ApiException.class);verify(repo,never()).unread(any());}
     @Test void preferencesDefaultOnAndWhitelist(){var prefs=new NotificationPreferenceService(repo,access);when(repo.preferences(account)).thenReturn(Map.of());assertThat(prefs.get(actor)).hasSize(5).containsEntry("ANNOUNCEMENT_IMPORTANT",true);assertThatThrownBy(()->prefs.put(actor,Map.of("BACKUP_FAILED",false))).isInstanceOf(ApiException.class);prefs.put(actor,Map.of("ENROLLED",false));verify(repo).preference(account,"ENROLLED",false);}
-    @Test void staffCannotSetLearningPreferences(){var prefs=new NotificationPreferenceService(repo,access);assertThatThrownBy(()->prefs.get(new Actor(account,Role.ADMIN))).isInstanceOf(ApiException.class);}
+    @ParameterizedTest @EnumSource(Role.class)
+    void everyRoleHasOnlyItsOwnSettings(Role role) {
+        var prefs=new NotificationPreferenceService(repo,access);
+        when(repo.preferences(account)).thenReturn(Map.of());
+        var values=prefs.get(new Actor(account,role));
+        var expected=switch(role) {
+            case STUDENT -> Set.of("ENROLLED","ASSIGNMENT_OPENED","GRADE_PUBLISHED","DEADLINE_REMINDER","ANNOUNCEMENT_IMPORTANT");
+            case TEACHER -> Set.of("LEADER_CHANGE_REQUESTED","QUESTION_REVIEWED");
+            case SUBJECT_MANAGER -> Set.of("LEADER_CHANGE_REQUESTED","QUESTION_REVIEWED","QUESTION_PROPOSED");
+            case ADMIN -> Set.of("BACKUP_FAILED");
+        };
+        assertThat(values.keySet()).isEqualTo(expected);
+        assertThat(values.values()).allMatch(enabled -> enabled==(role==Role.STUDENT||role==Role.ADMIN));
+    }
+    @ParameterizedTest @EnumSource(value=Role.class,names={"TEACHER","SUBJECT_MANAGER"})
+    void staffCanSaveOwnPreferencesButNotStudentOrBackupTypes(Role role) {
+        var prefs=new NotificationPreferenceService(repo,access);var staff=new Actor(account,role);
+        when(repo.preferences(account)).thenReturn(Map.of("QUESTION_REVIEWED",true,"ENROLLED",false));
+        assertThat(prefs.put(staff,Map.of("QUESTION_REVIEWED",true))).containsEntry("QUESTION_REVIEWED",true).doesNotContainKey("ENROLLED");
+        verify(repo).preference(account,"QUESTION_REVIEWED",true);
+        assertThatThrownBy(()->prefs.put(staff,Map.of("ENROLLED",false))).isInstanceOf(ApiException.class);
+        assertThatThrownBy(()->prefs.put(staff,Map.of("BACKUP_FAILED",false))).isInstanceOf(ApiException.class);
+    }
+    @Test void adminBackupRemainsRequiredEvenWithAnOldDisabledRow() {
+        var prefs=new NotificationPreferenceService(repo,access);var admin=new Actor(account,Role.ADMIN);
+        when(repo.preferences(account)).thenReturn(Map.of("BACKUP_FAILED",false));
+        assertThat(prefs.get(admin)).containsExactlyEntriesOf(Map.of("BACKUP_FAILED",true));
+        assertThatThrownBy(()->prefs.put(admin,Map.of("BACKUP_FAILED",false))).isInstanceOf(ApiException.class);
+        verify(repo,never()).preference(any(),anyString(),anyBoolean());
+    }
+    @Test void teacherCannotEnableManagerOnlyQuestionProposals() {
+        var prefs=new NotificationPreferenceService(repo,access);
+        assertThatThrownBy(()->prefs.put(new Actor(account,Role.TEACHER),Map.of("QUESTION_PROPOSED",true))).isInstanceOf(ApiException.class);
+    }
     @Test void unsafeLinksAndOversizePagesRejected(){assertThatThrownBy(()->service.create(UUID.randomUUID(),NotificationType.ENROLLED,List.of(account),"t","s","//external.test",null,null)).isInstanceOf(IllegalArgumentException.class);assertThatThrownBy(()->service.list(actor,false,1,51)).isInstanceOf(ApiException.class);}
 
     @ParameterizedTest @EnumSource(NotificationType.class)
