@@ -7533,3 +7533,27 @@ Later follow-up inputs (raw): “thêm nút prompt copy để đưa vào agent t
 **Context**: Build and Test follow-up. User approved the commit.
 
 ---
+
+## Staging merge readiness check — 2026-11-02
+
+**Timestamp**: 2026-11-02T03:06:56Z
+
+**User Input (complete raw)**: "kiểm tra xem có thể merge vào staging chưa"
+
+**AI Response**: Checked the merge against `origin/staging` (`008c72be`) in a temporary, since removed worktree, without merging, pushing or opening a PR. Conflicts only in `aidlc-state.md` and `audit.md`, both resolved by keeping both sides. On the merged tree: backend clean verify 1,732 passed plus a temporary upgrade test, zero skipped; frontend 689 passed, typecheck and build passed, lint zero errors. Upgrading a staging-schema database with data ran both Quiz migrations out of order and turned REVIEWED quizzes into DRAFT. API end-to-end and browser checks were not rerun on the merged tree.
+
+**Context**: Build and Test follow-up. Read-only check of merge readiness.
+
+---
+
+## Staging pull request requested — 2026-11-02
+
+**Timestamp**: 2026-11-02T03:15:50Z
+
+**User Input (complete raw)**: "Có, mở PR"
+
+**AI Response**: Merging `origin/staging` into `feat/quiz-rework-2026-11-01`, keeping both sides of the documentation conflicts, then pushing and opening a PR into `staging`. Not merging the PR.
+
+**Context**: Build and Test follow-up. User approved resolving the conflicts, pushing and opening the PR.
+
+---
