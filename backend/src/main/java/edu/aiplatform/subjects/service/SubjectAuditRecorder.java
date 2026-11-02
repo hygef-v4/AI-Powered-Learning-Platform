@@ -30,10 +30,23 @@ public class SubjectAuditRecorder {
      * U02 vẫn phải ghi DENIED bằng transaction riêng theo IAudit, kể cả caller không có transaction.
      */
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void accessDenied(Actor actor, String attemptedAction, ResourceRef resource, String reason, Instant at) {
-        audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED", "SUBJECT",
-                resource.id() == null ? null : resource.id().toString(), AuditResult.DENIED, reason,
-                Map.of("attemptedAction", attemptedAction, "scope", resource.scope().name()), at));
+    public void accessDenied(
+            Actor actor, String attemptedAction, ResourceRef resource, String reason, Instant at) {
+        audit.record(
+                new AuditEvent(
+                        UUID.randomUUID(),
+                        actor == null ? null : actor.accountId(),
+                        "ACCESS_DENIED",
+                        "SUBJECT",
+                        resource.id() == null ? null : resource.id().toString(),
+                        AuditResult.DENIED,
+                        reason,
+                        Map.of(
+                                "attemptedAction",
+                                attemptedAction,
+                                "scope",
+                                resource.scope().name()),
+                        at));
     }
 
     public void created(Actor actor, Subject subject) {
@@ -51,7 +64,12 @@ public class SubjectAuditRecorder {
         if (!java.util.Objects.equals(before.description(), after.description())) {
             fields.add("description");
         }
-        record(actor, "SUBJECT_UPDATED", after, Map.of("changedFields", List.copyOf(fields)), after.updatedAt());
+        record(
+                actor,
+                "SUBJECT_UPDATED",
+                after,
+                Map.of("changedFields", List.copyOf(fields)),
+                after.updatedAt());
     }
 
     public void managerChanged(Actor actor, Subject before, Subject after) {
@@ -62,13 +80,28 @@ public class SubjectAuditRecorder {
     }
 
     public void statusChanged(Actor actor, Subject before, Subject after) {
-        record(actor, after.status() == edu.aiplatform.subjects.contract.SubjectStatus.ARCHIVED
-                        ? "SUBJECT_ARCHIVED" : "SUBJECT_REOPENED", after,
-                Map.of("before", before.status().name(), "after", after.status().name()), after.updatedAt());
+        record(
+                actor,
+                after.status() == edu.aiplatform.subjects.contract.SubjectStatus.ARCHIVED
+                        ? "SUBJECT_ARCHIVED"
+                        : "SUBJECT_REOPENED",
+                after,
+                Map.of("before", before.status().name(), "after", after.status().name()),
+                after.updatedAt());
     }
 
-    private void record(Actor actor, String action, Subject subject, Map<String, Object> details, Instant at) {
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), action, "SUBJECT", subject.id().toString(),
-                AuditResult.SUCCESS, null, java.util.Collections.unmodifiableMap(details), at));
+    private void record(
+            Actor actor, String action, Subject subject, Map<String, Object> details, Instant at) {
+        audit.record(
+                new AuditEvent(
+                        UUID.randomUUID(),
+                        actor.accountId(),
+                        action,
+                        "SUBJECT",
+                        subject.id().toString(),
+                        AuditResult.SUCCESS,
+                        null,
+                        java.util.Collections.unmodifiableMap(details),
+                        at));
     }
 }

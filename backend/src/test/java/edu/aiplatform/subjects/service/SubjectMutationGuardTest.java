@@ -22,18 +22,27 @@ class SubjectMutationGuardTest {
     @Test
     void activeReturnsContractRefUsingBoundedLock() {
         Subject subject = subject();
-        when(repository.findByIdForUpdate(eq(id), any(Duration.class))).thenReturn(Optional.of(subject));
+        when(repository.findByIdForUpdate(eq(id), any(Duration.class)))
+                .thenReturn(Optional.of(subject));
         var ref = guard.lockActive(id, Duration.ofSeconds(5));
         assertThat(ref.subjectId()).isEqualTo(id);
-        verify(repository).findByIdForUpdate(eq(id), argThat(value -> !value.isZero() && !value.isNegative()
-                && value.compareTo(Duration.ofSeconds(1)) <= 0));
+        verify(repository)
+                .findByIdForUpdate(
+                        eq(id),
+                        argThat(
+                                value ->
+                                        !value.isZero()
+                                                && !value.isNegative()
+                                                && value.compareTo(Duration.ofSeconds(1)) <= 0));
     }
 
     @Test
     void archivedAndMissingCannotMutate() {
-        when(repository.findByIdForUpdate(eq(id), any(Duration.class))).thenReturn(Optional.empty());
+        when(repository.findByIdForUpdate(eq(id), any(Duration.class)))
+                .thenReturn(Optional.empty());
         code(() -> guard.lockActive(id, Duration.ofSeconds(1)), "SUBJECT_NOT_FOUND");
-        when(repository.findByIdForUpdate(eq(id), any(Duration.class))).thenReturn(Optional.of(subject().archive(Instant.now())));
+        when(repository.findByIdForUpdate(eq(id), any(Duration.class)))
+                .thenReturn(Optional.of(subject().archive(Instant.now())));
         code(() -> guard.lockActive(id, Duration.ofSeconds(1)), "SUBJECT_ARCHIVED");
     }
 
@@ -47,12 +56,18 @@ class SubjectMutationGuardTest {
 
     @Test
     void lockErrorIsFailClosed() {
-        when(repository.findByIdForUpdate(eq(id), any(Duration.class))).thenThrow(new CannotAcquireLockException("SQL"));
+        when(repository.findByIdForUpdate(eq(id), any(Duration.class)))
+                .thenThrow(new CannotAcquireLockException("SQL"));
         code(() -> guard.lockActive(id, Duration.ofSeconds(1)), "SUBJECT_LIFECYCLE_UNAVAILABLE");
     }
 
-    private Subject subject() { return Subject.create(id, "ABC", "Name", null, null, Instant.now()); }
+    private Subject subject() {
+        return Subject.create(id, "ABC", "Name", null, null, Instant.now());
+    }
+
     private void code(Runnable call, String expected) {
-        assertThatThrownBy(call::run).isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.code()).isEqualTo(expected));
+        assertThatThrownBy(call::run)
+                .isInstanceOfSatisfying(
+                        ApiException.class, error -> assertThat(error.code()).isEqualTo(expected));
     }
 }
