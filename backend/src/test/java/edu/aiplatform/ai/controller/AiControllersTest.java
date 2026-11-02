@@ -23,6 +23,8 @@ import edu.aiplatform.ai.service.AiConnectionService;
 import edu.aiplatform.ai.service.AiConnectionService.ConnectionView;
 import edu.aiplatform.ai.service.AiConnectionService.SaveCommand;
 import edu.aiplatform.ai.service.AiSourceService;
+import edu.aiplatform.ai.model.AiSourcePreference;
+import edu.aiplatform.ai.contract.AiSource;
 import edu.aiplatform.ai.service.AiTaskService;
 import edu.aiplatform.ai.service.AiUsageService;
 import edu.aiplatform.ai.service.AiUsageService.UsagePage;
@@ -74,7 +76,7 @@ class AiControllersTest {
     @BeforeEach
     void setUp() {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(actor, null));
-        mvc = MockMvcBuilders.standaloneSetup(new AiConnectionController(connections, catalog),
+        mvc = MockMvcBuilders.standaloneSetup(new AiConnectionController(connections, catalog, sources),
                         new McpCredentialController(credentials), new AiUsageController(usage, sources, tasks),
                         new AiAdminController(connections, quota), new McpController(credentials, server, json))
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -103,6 +105,24 @@ class AiControllersTest {
         mvc.perform(delete("/api/v1/me/ai-connections/claude")).andExpect(status().isNoContent());
         mvc.perform(delete("/api/v1/me/ai-connections/mistral")).andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(AiAccess.NOT_FOUND));
+    }
+
+    @Test
+    void sourcePreferenceRoutesReadSaveAndClear() throws Exception {
+        when(sources.preference(actor)).thenReturn(Optional.empty());
+        when(sources.savePreference(actor, AiSource.PERSONAL, AiProvider.GEMINI))
+                .thenReturn(Optional.of(new AiSourcePreference(AiSource.PERSONAL, AiProvider.GEMINI)));
+
+        mvc.perform(get("/api/v1/me/ai-source-preference")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.source").doesNotExist());
+        mvc.perform(put("/api/v1/me/ai-source-preference").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"source\":\"PERSONAL\",\"provider\":\"GEMINI\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.source").value("PERSONAL"))
+                .andExpect(jsonPath("$.provider").value("GEMINI"));
+        mvc.perform(put("/api/v1/me/ai-source-preference").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"source\":null}"))
+                .andExpect(status().isOk());
+        verify(sources).savePreference(actor, null, null);
     }
 
     @Test

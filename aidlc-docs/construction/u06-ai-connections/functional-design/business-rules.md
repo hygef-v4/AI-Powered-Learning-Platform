@@ -55,6 +55,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U06-25 | Gọi provider có timeout 120 giây. U06 không tự gọi lại provider; người dùng muốn thử lại thì tạo yêu cầu mới. | FR-036 |
 | BR-U06-26 | Người gửi được hủy task `QUEUED` của mình; giữ chỗ được giải phóng. | Thiết kế |
 | BR-U06-27 | Trước khi gửi, UI hiện nguồn, bên chịu chi phí (trường hoặc chính người dùng), quota còn lại nếu dùng API chung và số token ước tính có nhãn "ước tính". | FR-036 |
+| BR-U06-28 | Người dùng đặt một nguồn AI mặc định ở Kết nối AI › API cá nhân (API của trường hoặc API cá nhân theo nhà cung cấp; mặc định là Hỏi mỗi lần). Có mặc định và nguồn đang dùng được thì popup Chọn nguồn AI tự gửi bằng nguồn đó, không bắt chọn lại; nguồn mặc định chưa dùng được (chưa có khóa, hết quota, API trường tắt) thì popup hiện lý do để chọn nguồn khác cho lần đó, không tự đổi nguồn (BR-U06-10). Mất quyền dùng API chung thì mặc định API chung coi như chưa đặt. Hộp tạo nháp của U07 lấy mặc định làm giá trị ban đầu. | Góp ý 2026-11-02 |
 
 ## 4. MCP (UC 32)
 

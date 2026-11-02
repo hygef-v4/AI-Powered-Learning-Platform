@@ -7,8 +7,19 @@ import { ApiError } from "@/shared/api/client";
 import { Alert, Button, ButtonLink, Dialog, Pill, Section, TableFrame, Td, Th, cx, type Tone } from "@/shared/ui";
 import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import { DocumentViewer } from "@/shared/document";
-import { claimSection, downloadDocx, getWorkspace, groupDocImageUrl, releaseSection, sendActivity } from "../api";
+import {
+  claimSection,
+  downloadDocx,
+  getWorkspace,
+  groupDocImageUrl,
+  lockSection,
+  releaseSection,
+  sendActivity,
+  takeOverSection,
+  unlockSection,
+} from "../api";
 import { AssignSectionDialog, SectionEditorDialog, SubmitGroupDialog } from "../components/SectionDialogs";
+import { GroupImportDialog, PeerReviewPanel, SectionHistoryDialog } from "../components/CollaborationPanels";
 import type { Receipt, SectionView, StreamEvent, WorkspaceView } from "../model/types";
 import { useGroupDocStream } from "../hooks/useGroupDocStream";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
@@ -26,15 +37,23 @@ function dateTime(iso: string | null | undefined): string {
 /**
  * Màn #40 Assignment Workspace chế độ nhóm (UC 56): tài liệu chung, danh sách mục kèm người giữ và thao tác hợp lệ
  * cho từng người, nộp (trưởng nhóm), thẻ Bản nộp; realtime qua SSE, tự nộp thì khóa trang rồi chuyển sang Bản nộp.
+ * Thành viên tiếp quản mục người khác đang giữ, trưởng nhóm chốt mục và nhập từ file, ai cũng xem lịch sử mục
+ * (BR-U12-33, 35, 39, 46); thẻ Đánh giá chéo (BR-U12-47).
  */
 export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   const [view, setView] = useState<WorkspaceView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [tab, setTab] = useUrlState("tab", "work", ["work", "submission"]);
+  const [tab, setTab] = useUrlState("tab", "work", ["work", "submission", "peer"]);
   const [editing, setEditing] = useState<SectionView | null>(null);
   const [assigning, setAssigning] = useState<SectionView | null>(null);
   const [releasing, setReleasing] = useState<SectionView | null>(null);
+  const [taking, setTaking] = useState<SectionView | null>(null);
+  const [history, setHistory] = useState<SectionView | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [info, setInfo] = useState<string | null>(null);
+  // Tên người vừa tiếp quản mục đang mở trong trình soạn; trình soạn chuyển sang chỉ xem.
+  const [lostTo, setLostTo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [autoSubmitting, setAutoSubmitting] = useState(false);
 
@@ -75,9 +94,12 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         });
         return;
       }
+      if (event.type === "section.taken" && editing && event.sectionId === editing.id && view && event.holderId !== view.viewerId) {
+        setLostTo(view.members.find((m) => m.accountId === event.holderId)?.name ?? "");
+      }
       void reload();
     },
-    [reload, setTab],
+    [reload, setTab, editing, view],
   );
   useGroupDocStream(view ? documentId : null, onEvent, () => void reload());
 
@@ -89,6 +111,11 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     enabled: !!view && view.activityMonitoring && view.role.member && view.status === "IN_PROGRESS" && view.window !== "CLOSED",
     send,
   });
+
+  const openEditor = (s: SectionView) => {
+    setLostTo(null);
+    setEditing(s);
+  };
 
   const act = async (action: () => Promise<unknown>, fallback: string) => {
     setNotice(null);
@@ -104,7 +131,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   const claimAndEdit = async (s: SectionView) => {
     setNotice(null);
     try {
-      setEditing(await claimSection(documentId, s.id));
+      openEditor(await claimSection(documentId, s.id));
       void reload();
     } catch (e) {
       setNotice(e instanceof ApiError ? (e.problem.detail ?? "Không nhận được mục.") : "Không nhận được mục.");
@@ -122,15 +149,36 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   const name = (id: string | null) =>
     id === null ? "Chưa ai nhận" : id === myId ? "Bạn" : (view.members.find((m) => m.accountId === id)?.name ?? "Thành viên");
   const isMine = (s: SectionView) => s.status === "CLAIMED" && s.holderId === myId;
-  const claimable = (s: SectionView) => editable && me.member && s.status !== "CLAIMED";
-  // Bấm vào mục: mục mình giữ thì soạn tiếp, mục trống thì nhận và soạn, mục người khác giữ thì chỉ cuộn tới nội dung.
+  const locked = (s: SectionView) => !!s.lockedBy;
+  const claimable = (s: SectionView) => editable && me.member && s.status !== "CLAIMED" && !locked(s);
+  const takeable = (s: SectionView) => editable && me.member && s.status === "CLAIMED" && s.holderId !== myId;
+  // Bấm vào mục: mục mình giữ thì soạn tiếp, mục trống thì nhận và soạn, mục người khác giữ thì hỏi tiếp quản.
   const openSection = (s: SectionView) => {
-    if (editable && isMine(s)) setEditing(s);
+    if (editable && isMine(s)) openEditor(s);
     else if (claimable(s)) void claimAndEdit(s);
+    else if (takeable(s)) setTaking(s);
     else document.getElementById(`section-${s.id}`)?.scrollIntoView?.({ behavior: "smooth", block: "start" });
   };
   const sectionHint = (s: SectionView) =>
-    editable && isMine(s) ? "Bấm để soạn tiếp" : claimable(s) ? "Bấm để nhận và soạn" : s.status === "CLAIMED" ? "Chỉ xem" : "Xem nội dung";
+    editable && isMine(s)
+      ? "Bấm để soạn tiếp"
+      : claimable(s)
+        ? "Bấm để nhận và soạn"
+        : takeable(s)
+          ? "Bấm để tiếp quản và soạn"
+          : locked(s)
+            ? "Đã chốt, chỉ xem"
+            : "Xem nội dung";
+  const takeOver = async (s: SectionView) => {
+    setTaking(null);
+    setNotice(null);
+    try {
+      openEditor(await takeOverSection(documentId, s.id));
+      void reload();
+    } catch (e) {
+      setNotice(e instanceof ApiError ? (e.problem.detail ?? "Không tiếp quản được mục.") : "Không tiếp quản được mục.");
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -151,6 +199,11 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
           {view.status === "CLOSED" ? "Đã đóng" : view.lastSubmission ? "Đã nộp" : "Đang làm"}
         </Pill>
         {me.leader && editable && (
+          <Button icon="folder_open" onClick={() => setImporting(true)}>
+            Nhập từ file
+          </Button>
+        )}
+        {me.leader && editable && (
           <Button variant="primary" icon="upload_file" onClick={() => setSubmitting(true)}>
             {view.lastSubmission ? "Nộp lại" : "Nộp tài liệu"}
           </Button>
@@ -159,7 +212,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
       </div>
 
       <div role="tablist" aria-label="Tài liệu nhóm" className="flex gap-1 border-b border-line">
-        {([["work", "Tài liệu"], ["submission", "Bản nộp"]] as const).map(([key, label]) => (
+        {([["work", "Tài liệu"], ["submission", "Bản nộp"], ["peer", "Đánh giá chéo"]] as const).map(([key, label]) => (
           <button
             key={key}
             role="tab"
@@ -178,6 +231,11 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
           {notice}
         </Alert>
       )}
+      {info && (
+        <Alert tone="success" role="status">
+          {info}
+        </Alert>
+      )}
       {!editable && view.status === "IN_PROGRESS" && <Alert tone="info">Đã hết hạn nộp; tài liệu chỉ còn xem.</Alert>}
 
       {tab === "work" ? (
@@ -185,8 +243,8 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
           <Section title={`Các mục (${done} / ${view.sections.length} Xong)`} icon="assignment">
             {me.member && editable && (
               <p className="text-xs text-muted">
-                Bấm vào mục Mở hoặc Xong để nhận và soạn toàn trang; bạn chỉ sửa được mục mình đang giữ. Nội dung tự lưu mỗi
-                10 giây.
+                Bấm vào mục để nhận và soạn toàn trang. Mục người khác đang giữ thì tiếp quản được, bản nháp của họ được giữ
+                trong lịch sử. Mục trưởng nhóm đã chốt chỉ xem. Nội dung tự lưu mỗi 10 giây.
               </p>
             )}
             <ul className="flex flex-col gap-2">
@@ -206,36 +264,53 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
                     >
                       <span className="flex w-full items-center gap-2">
                         <span className="min-w-0 flex-1 text-[13px] font-semibold text-ink">{s.title}</span>
+                        {locked(s) && <Pill tone="primary">Đã chốt</Pill>}
                         <Pill tone={STATUS[s.status].tone}>{STATUS[s.status].text}</Pill>
                       </span>
                       <span className="text-xs text-muted">
                         {s.status === "CLAIMED" ? `Đang giữ: ${name(s.holderId)}` : s.lastAuthorId ? `Xong bởi ${name(s.lastAuthorId)}` : "Chưa ai nhận"}
                       </span>
                     </button>
-                    {editable && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {claimable(s) && (
-                          <Button size="sm" onClick={() => void claimAndEdit(s)}>
-                            Nhận mục
-                          </Button>
-                        )}
-                        {mine && (
-                          <Button size="sm" variant="primary" onClick={() => setEditing(s)}>
-                            Làm
-                          </Button>
-                        )}
-                        {me.leader && (
-                          <Button size="sm" onClick={() => setAssigning(s)}>
-                            Giao mục
-                          </Button>
-                        )}
-                        {s.status === "CLAIMED" && (mine || me.leader || me.teacher) && (
-                          <Button size="sm" variant="ghost" onClick={() => setReleasing(s)}>
-                            Nhả mục
-                          </Button>
-                        )}
-                      </div>
-                    )}
+                    <div className="flex flex-wrap gap-1.5">
+                      {editable && claimable(s) && (
+                        <Button size="sm" onClick={() => void claimAndEdit(s)}>
+                          Nhận mục
+                        </Button>
+                      )}
+                      {editable && mine && (
+                        <Button size="sm" variant="primary" onClick={() => openEditor(s)}>
+                          Làm
+                        </Button>
+                      )}
+                      {takeable(s) && (
+                        <Button size="sm" onClick={() => setTaking(s)}>
+                          Tiếp quản
+                        </Button>
+                      )}
+                      {editable && me.leader && !locked(s) && (
+                        <Button size="sm" onClick={() => setAssigning(s)}>
+                          Giao mục
+                        </Button>
+                      )}
+                      {editable && me.leader && s.status === "DONE" && !locked(s) && (
+                        <Button size="sm" icon="lock" onClick={() => void act(() => lockSection(documentId, s.id), "Không chốt được mục.")}>
+                          Chốt
+                        </Button>
+                      )}
+                      {editable && me.leader && locked(s) && (
+                        <Button size="sm" icon="lock_open" onClick={() => void act(() => unlockSection(documentId, s.id), "Không mở chốt được mục.")}>
+                          Mở chốt
+                        </Button>
+                      )}
+                      {editable && s.status === "CLAIMED" && (mine || me.leader || me.teacher) && (
+                        <Button size="sm" variant="ghost" onClick={() => setReleasing(s)}>
+                          Nhả mục
+                        </Button>
+                      )}
+                      <Button size="sm" variant="ghost" icon="history" onClick={() => setHistory(s)}>
+                        Lịch sử
+                      </Button>
+                    </div>
                   </li>
                 );
               })}
@@ -256,6 +331,8 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
             ))}
           </Section>
         </div>
+      ) : tab === "peer" ? (
+        <PeerReviewPanel view={view} />
       ) : (
         <GroupSubmissionTab view={view} />
       )}
@@ -266,10 +343,40 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
           section={editing}
           shared={view.sharedBlocks}
           diagramEnabled={view.diagramEnabled}
+          members={view.members}
+          viewerId={view.viewerId}
+          lostTo={lostTo}
           onClose={() => setEditing(null)}
           onChanged={() => void reload()}
         />
       )}
+      {history && <SectionHistoryDialog view={view} section={history} onClose={() => setHistory(null)} />}
+      {importing && (
+        <GroupImportDialog
+          view={view}
+          onClose={() => setImporting(false)}
+          onImported={(text) => {
+            setInfo(text);
+            void reload();
+          }}
+        />
+      )}
+      <Dialog
+        open={taking !== null}
+        title={`Tiếp quản mục ${taking?.title ?? ""}?`}
+        icon="swap_horiz"
+        onClose={() => setTaking(null)}
+        footer={
+          <Button variant="primary" onClick={() => taking && void takeOver(taking)}>
+            Tiếp quản
+          </Button>
+        }
+      >
+        <p>
+          {name(taking?.holderId ?? null)} đang giữ mục này. Bạn sẽ làm tiếp từ bản nháp đã lưu gần nhất của họ; bản nháp đó được
+          giữ trong lịch sử. Phần họ gõ trong 10 giây gần nhất chưa tự lưu có thể không có trong bản nháp.
+        </p>
+      </Dialog>
       {assigning && <AssignSectionDialog view={view} section={assigning} onClose={() => setAssigning(null)} onChanged={() => void reload()} />}
       {submitting && (
         <SubmitGroupDialog
