@@ -129,7 +129,7 @@ class GroupControllersTest {
         UUID section = UUID.randomUUID();
         UUID assignee = UUID.randomUUID();
         when(sections.claim(actor, doc, section)).thenReturn(new SectionView(section, "p1", "Mục 1", 1,
-                GroupSection.Status.CLAIMED, actor.accountId(), actor.accountId(), null, null, null, null, 1, null, null));
+                GroupSection.Status.CLAIMED, actor.accountId(), actor.accountId(), null, null, null, null, 1, null, null, List.of()));
 
         mvc.perform(post("/api/v1/group-docs/" + doc + "/sections/" + section + ":claim")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CLAIMED"));

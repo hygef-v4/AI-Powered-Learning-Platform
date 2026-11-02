@@ -90,6 +90,8 @@ check(R, "U12-33 trưởng nhóm tiếp quản mục thành viên đang giữ, l
   JSON.stringify(take.data?.draftBlocks ?? []).includes("Nháp của thành viên"), brief(take));
 const late = await M.put(`/api/v1/group-docs/${D}/sections/${s1.id}/draft`, { version: d1.data.version, blocks: para("thành viên gõ tiếp") });
 check(R, "U12-33 người bị tiếp quản lưu tiếp nhận SECTION_NOT_HELD", late.status === 409 && late.data?.code === "SECTION_NOT_HELD", brief(late));
+const memberTake = await M.post(`/api/v1/group-docs/${D}/sections/${s1.id}:take-over`);
+check(R, "U12-33 thành viên thường không tiếp quản được (chỉ trưởng nhóm)", memberTake.status === 403 && memberTake.data?.code === "GROUP_DOC_LEADER_ONLY", brief(memberTake));
 const outsiderTake = await O.post(`/api/v1/group-docs/${D}/sections/${s1.id}:take-over`);
 check(R, "U12-33 sinh viên nhóm khác không tiếp quản được", outsiderTake.status === 404, brief(outsiderTake));
 const teacherTake = await T.post(`/api/v1/group-docs/${D}/sections/${s1.id}:take-over`);
@@ -107,6 +109,9 @@ const notDone = await L.post(`/api/v1/group-docs/${D}/sections/${s3.id}:lock`);
 check(R, "U12-39 mục chưa Xong không chốt được", notDone.status === 409 && notDone.data?.code === "SECTION_NOT_DONE", brief(notDone));
 const lock = await L.post(`/api/v1/group-docs/${D}/sections/${s1.id}:lock`);
 check(R, "U12-39 trưởng nhóm chốt mục đã Xong", lock.status === 200 && lock.data?.lockedBy === LID, brief(lock));
+check(R, "U12-39 chốt ghi công mọi người từng làm (thành viên trước, trưởng nhóm sau)", JSON.stringify(lock.data?.contributorIds) === JSON.stringify([MID, LID]), JSON.stringify(lock.data?.contributorIds));
+const wsLocked = (await M.get(`/api/v1/group-docs/${D}`)).data.sections.find((x) => x.id === s1.id);
+check(R, "U12-39 ghi công hiện trong workspace của thành viên", JSON.stringify(wsLocked?.contributorIds) === JSON.stringify([MID, LID]), JSON.stringify(wsLocked?.contributorIds));
 const claimLocked = await M.post(`/api/v1/group-docs/${D}/sections/${s1.id}:claim`);
 const assignLocked = await L.post(`/api/v1/group-docs/${D}/sections/${s1.id}:assign`, { assigneeId: MID, replaceHolder: false });
 check(R, "U12-39 mục đã chốt không nhận, không giao được", claimLocked.data?.code === "SECTION_LOCKED" && assignLocked.data?.code === "SECTION_LOCKED", `${brief(claimLocked)} | ${brief(assignLocked)}`);

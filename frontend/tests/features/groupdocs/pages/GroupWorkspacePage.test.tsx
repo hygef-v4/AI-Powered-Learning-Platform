@@ -160,11 +160,23 @@ describe("GroupWorkspacePage", () => {
     expect(screen.getByText("Nháp của Bình")).toBeInTheDocument();
   });
 
-  it("trưởng nhóm chốt mục đã Xong; mục đã chốt không ai nhận được", async () => {
-    const view = workspace(MEMBER, { sections: [section("s1", "DONE", null, { lockedBy: LEADER, lockedAt: "2026-10-22T03:00:00Z" })] });
+  it("thành viên thường không tiếp quản được mục người khác đang giữ", async () => {
+    const view = workspace(MEMBER, { sections: [section("s2", "CLAIMED", LEADER)] });
+    const calls = backend(view);
+    render(<GroupWorkspacePage documentId="doc1" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: /Mục s2 · Đang làm · Chỉ xem/ }));
+    expect(screen.queryByRole("button", { name: "Tiếp quản" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: /Tiếp quản/ })).not.toBeInTheDocument();
+    expect(calls.some((c) => c.url.endsWith(":take-over"))).toBe(false);
+  });
+
+  it("trưởng nhóm chốt mục đã Xong; mục đã chốt ghi công mọi người từng làm, không ai nhận được", async () => {
+    const view = workspace(MEMBER, { sections: [section("s1", "DONE", null, { lockedBy: LEADER, lockedAt: "2026-10-22T03:00:00Z", contributorIds: [MEMBER, LEADER] })] });
     backend(view);
     const { unmount } = render(<GroupWorkspacePage documentId="doc1" />);
     expect(await screen.findByText("Đã chốt")).toBeInTheDocument();
+    expect(screen.getByText("Ghi công: Bạn, An")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Nhận mục" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Mục s1 · Xong · Đã chốt, chỉ xem/ })).toBeInTheDocument();
     unmount();

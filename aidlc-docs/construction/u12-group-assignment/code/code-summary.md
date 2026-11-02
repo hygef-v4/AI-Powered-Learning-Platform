@@ -177,3 +177,11 @@ Plan: `construction/plans/code-generation-plan/2026-11-02-u06-u12-feedback.md`, 
 - **Giới hạn:**
   - Sơ đồ nhập từ `.drawio` chưa có ảnh xem trước cho tới khi mở sơ đồ và lưu trong Draw.io.
   - Điểm đánh giá chéo chưa ghép vào điểm cuối; trọng số ba đầu điểm (tài liệu, thành viên, thuyết trình) cần U07/U09.
+
+## Chỉ trưởng nhóm tiếp quản, chốt ghi công người từng làm (2026-11-02)
+
+Người dùng chốt lại BR-U12-33, 39 sau khi xem bản đã gộp (PR #35). Nhánh `fix/u12-leader-takeover-credit`.
+
+- **Backend:** `SectionRules.canTakeOver` chỉ cho trưởng nhóm (`403 GROUP_DOC_LEADER_ONLY`); `GroupDocumentRepository.lockedContributors` lấy tác giả các bản lịch sử tạo tới lúc chốt; `SectionView.contributorIds` (rỗng khi chưa chốt); `GroupWorkspaceService` và `lock` trả ghi công. Không đổi schema.
+- **Frontend:** nút Tiếp quản chỉ hiện với trưởng nhóm, thành viên bấm mục người khác giữ thì chỉ xem; dòng "Ghi công: …" ở mục đã chốt; cột Tác giả ở thẻ Bản nộp hiện người được ghi công.
+- **Test:** `GroupSectionServiceTest` (thành viên bị chặn tiếp quản, ghi công khi chốt), `GroupRepositoriesIntegrationTest` (ghi công theo lịch sử tới lúc chốt, bản sau lúc chốt không tính), `GroupWorkspacePage.test.tsx`, e2e `u12c`.

@@ -22,6 +22,8 @@ export type SectionView = {
   /** Trưởng nhóm đã chốt mục (BR-U12-39). */
   lockedBy?: string | null;
   lockedAt?: string | null;
+  /** Người được ghi công khi mục đã chốt: mọi người từng làm mục, theo thứ tự đóng góp. */
+  contributorIds?: string[];
 };
 
 export type RevisionKind = "DONE" | "TAKEOVER" | "IMPORT";

@@ -7792,5 +7792,50 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 **Timestamp**: 2026-11-02T18:47:03+07:00
 **User Input**: "giúp tôi commit"
 **AI Response**: Commit the verified MCP documentation route/link, 29-tool catalog, shared safe setup/SSR handling, regression tests and U06 AI-DLC in English on fix/u05-u09-u15. Reviewed the scoped diff, whitespace and recorded test/build/browser evidence; no application source changed after verification. Exclude generated files, local scripts/logs/screenshots and credentials. Local commit only; no push, backend restart or DB migration.
+## Merge to staging — 2026-11-02
+
+**Timestamp**: 2026-11-02T04:10:00Z
+
+**User Input (complete raw)**:
+
+> gop di
+
+**AI Response**: PR #35 checks all green (CI backend, CI frontend, GitGuardian; deploy/images skipped). Merged into `staging` as `008c72be`; local `staging` fast-forwarded and its tree is identical to the tested branch tip `1bbf5dfe`, so the verify and end-to-end results above apply to `staging`.
+
+**Context**: Integration.
+
+---
+
+## Retest on staging — 2026-11-02
+
+**Timestamp**: 2026-11-02T04:40:00Z
+
+**User Input (complete raw)**:
+
+> test lai tren nhang stag di
+
+**AI Response**: On `staging` `008c72be` (up to date with origin): backend `mvn -B clean verify` 1,694 tests, 0 failures, BUILD SUCCESS; frontend vitest 669/669, lint and typecheck clean. Local stack rebuilt from `staging`; fresh class SE-TEST11. End-to-end: U02 16/16, U06 24/24, U06b 15/15, U12 53/53, U12b 30/30, feedback features (u12c) 30/30, U12→U14 notify 3/3. Teacher's real personal Gemini key untouched.
+
+**Context**: Build and Test on staging.
+
+---
+
+## U12 take-over and finalize rework — 2026-11-02
+
+**Timestamp**: 2026-11-02T05:10:00Z
+
+**User Input (complete raw)**:
+
+> hoac sua lai khi truong nhom chot phan thi nhung nguoi da lam se nhan muc do, khong ai sua duoc con truoc day moi nguoi co the nhan cac phan nhung chua lam, nhung phan nhan roi nguoi khac se khong nhan duoc nua
+
+Answers to clarifying questions: "Nếu người đang giữ phần nghỉ hoặc bỏ dở (chưa chốt), ai được gỡ hoặc đổi người làm phần đó?" = "Chỉ trưởng nhóm (Recommended)"; "Khi trưởng nhóm chốt một phần, ghi công cho ai?" = "Tất cả người từng làm (Recommended)".
+
+**AI Response**: Rework BR-U12-33/39: members claim only free sections (exclusive, as before); only the leader takes over a held section (draft kept in history); finalizing records every contributor from the section history and the credit is shown in the workspace, submission tab and DOCX.
+
+**Context**: Code Generation (change request on PR #35 behaviour).
+
+---
+
+**Result (U12 rework)**: backend `mvn -B clean verify` 1,695 tests, 0 failures; frontend vitest 670/670, lint and typecheck clean; e2e on fresh class SE-TEST12: U12 53/53, U12b 30/30, u12c 33/33 (member take-over refused, credit on finalize), notify 3/3. BR-U12-33/39, user guide and U12 code summary updated.
 
 ---

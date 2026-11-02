@@ -64,13 +64,14 @@ Mở bài tập nhóm › thẻ **Bài nhóm** › **Mở tài liệu nhóm**. C
 - **Soạn**: dùng như trình soạn bài cá nhân. Chèn ảnh, bảng, sơ đồ Draw.io (nếu bài bật sơ đồ).
 - **Nhập DOCX** (trong trình soạn): chọn tệp Word, xem trước, bấm **Nhập**. Nội dung được thêm vào cuối mục.
 - **Xong**: đăng nội dung cho cả nhóm thấy và nhả mục.
-- **Tiếp quản**: mục người khác đang giữ vẫn sửa được. Bấm vào mục › **Tiếp quản**. Bạn làm tiếp từ bản nháp đã lưu của người kia; bản nháp đó được giữ trong lịch sử. Người kia sẽ thấy "Đã bị tiếp quản" và không sửa tiếp được.
+- **Mục đã có người nhận**: thành viên khác chỉ xem, không nhận được. Muốn đổi người làm thì nhờ trưởng nhóm.
 - **Lịch sử**: mỗi lần Xong, tiếp quản hoặc nhập file đều có một bản. Người đang giữ mục bấm **Dùng bản này làm bản nháp** để khôi phục, rồi bấm **Xong** để đăng.
 
 ### 3.4 Trưởng nhóm
 
-- **Giao mục** cho một thành viên. Thành viên cũng tự nhận được.
-- **Chốt** mục đã Xong khi nội dung đã ổn. Mục đã chốt không ai nhận, giao hay tiếp quản được tới khi bấm **Mở chốt**.
+- **Giao mục** cho một thành viên. Thành viên cũng tự nhận được mục trống.
+- **Tiếp quản**: chỉ trưởng nhóm. Bấm vào mục thành viên khác đang giữ › **Tiếp quản**, làm tiếp từ bản nháp đã lưu của họ; bản nháp đó được giữ trong lịch sử. Người kia thấy "Đã bị tiếp quản" và không sửa tiếp được.
+- **Chốt** mục đã Xong khi nội dung đã ổn. Mục được **ghi công cho tất cả người từng làm** (theo lịch sử mục), hiện ở dòng "Ghi công" và thẻ Bản nộp. Mục đã chốt không ai nhận, giao hay tiếp quản được tới khi bấm **Mở chốt**.
 - **Nhập từ file**: nhóm có thể soạn ngoài rồi nộp vào hệ thống.
   1. Trong Word, đặt tiêu đề trùng tên mục (ví dụ `1. Phân tích yêu cầu`).
   2. Trong Draw.io, mỗi trang là một sơ đồ, đặt tên trang trùng tên mục có sơ đồ.
