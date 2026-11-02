@@ -4,7 +4,10 @@ import edu.aiplatform.groupdocs.model.GroupSection.Status;
 import java.time.Duration;
 import java.util.UUID;
 
-/** Quy tắc thao tác trên mục (BR-U12-32, 33, 36); trả mã lỗi hoặc {@code null} khi được phép. */
+/**
+ * Quy tắc thao tác trên mục (BR-U12-32, 33, 36; giai đoạn phân công FB-U12-01); trả mã lỗi hoặc {@code null} khi được
+ * phép. {@code working}: trưởng nhóm đã chốt phân công.
+ */
 public final class SectionRules {
 
     /** Lần lưu nháp cuối vẫn nhận trong 30 giây sau hạn (BR-U12-32). */
@@ -14,53 +17,47 @@ public final class SectionRules {
     }
 
     /**
-     * Thành viên tự nhận mục {@code OPEN} hoặc {@code DONE}; mục người khác đang giữ thì tiếp quản
-     * ({@link #canTakeOver}); mục đã chốt thì không (BR-U12-39).
+     * Nhận mục. Chưa chốt phân công: nhận làm người phụ trách mục chưa có ai; mục người khác đã nhận thì không. Đã chốt:
+     * chỉ người phụ trách bắt đầu soạn mục của mình.
      */
-    public static String canClaim(GroupSection section, UUID actor) {
-        if (section.locked()) {
-            return "SECTION_LOCKED";
+    public static String canClaim(GroupSection section, UUID actor, boolean working) {
+        if (!working) {
+            return section.assigneeId() == null || section.assignedTo(actor) ? null : "SECTION_CLAIMED_BY_OTHER";
         }
-        if (section.status() == Status.CLAIMED) {
-            return actor.equals(section.claimedBy()) ? null : "SECTION_CLAIMED_BY_OTHER";
+        if (section.assignedTo(actor)) {
+            return section.status() == Status.CLAIMED && !actor.equals(section.claimedBy()) ? "SECTION_CLAIMED_BY_OTHER" : null;
         }
-        return null;
+        return section.assigneeId() == null ? "ASSIGNMENT_LOCKED" : "SECTION_ASSIGNED_TO_OTHER";
     }
 
-    /** Người giữ, trưởng nhóm hoặc giảng viên của lớp nhả được mục đang giữ. */
-    public static String canRelease(GroupSection section, UUID actor, boolean leader, boolean teacher) {
+    /** Trưởng nhóm giao hoặc đổi người phụ trách chỉ khi chưa chốt phân công. */
+    public static String canAssign(boolean working) {
+        return working ? "ASSIGNMENT_LOCKED" : null;
+    }
+
+    /**
+     * Nhả mục. Chưa chốt phân công: người phụ trách, trưởng nhóm hoặc giảng viên bỏ người phụ trách. Đã chốt: người giữ,
+     * trưởng nhóm hoặc giảng viên dừng soạn (bản nháp bị bỏ, BR-U12-36), người phụ trách giữ nguyên.
+     */
+    public static String canRelease(GroupSection section, UUID actor, boolean leader, boolean teacher, boolean working) {
+        if (!working) {
+            if (section.assigneeId() == null && section.status() != Status.CLAIMED) {
+                return "SECTION_NOT_CLAIMED";
+            }
+            return section.assignedTo(actor) || actor.equals(section.claimedBy()) || leader || teacher
+                    ? null : "SECTION_RELEASE_FORBIDDEN";
+        }
         if (section.status() != Status.CLAIMED) {
             return "SECTION_NOT_CLAIMED";
         }
         return actor.equals(section.claimedBy()) || leader || teacher ? null : "SECTION_RELEASE_FORBIDDEN";
     }
 
-    /**
-     * Chỉ trưởng nhóm tiếp quản mục người khác đang giữ (BR-U12-33); thành viên thường chỉ nhận mục trống. Mục chưa ai
-     * giữ thì nhận như thường.
-     */
-    public static String canTakeOver(GroupSection section, boolean leader) {
-        if (!leader) {
-            return "GROUP_DOC_LEADER_ONLY";
+    /** Chỉ người giữ lưu nháp và bấm Xong, và chỉ sau khi chốt phân công. */
+    public static String canEdit(GroupSection section, UUID actor, boolean working) {
+        if (!working) {
+            return "ASSIGNMENT_NOT_LOCKED";
         }
-        if (section.status() != Status.CLAIMED) {
-            return "SECTION_NOT_CLAIMED";
-        }
-        return null;
-    }
-
-    /** Trưởng nhóm giao mục chưa chốt (BR-U12-33, 39). */
-    public static String canAssign(GroupSection section) {
-        return section.locked() ? "SECTION_LOCKED" : null;
-    }
-
-    /** Trưởng nhóm chốt mục đã Xong (BR-U12-39); mục đang có người giữ hay chưa có nội dung thì không. */
-    public static String canLock(GroupSection section) {
-        return section.status() == Status.DONE ? null : "SECTION_NOT_DONE";
-    }
-
-    /** Chỉ người giữ lưu nháp và bấm Xong. */
-    public static String canEdit(GroupSection section, UUID actor) {
         return section.status() == Status.CLAIMED && actor.equals(section.claimedBy()) ? null : "SECTION_NOT_HELD";
     }
 }

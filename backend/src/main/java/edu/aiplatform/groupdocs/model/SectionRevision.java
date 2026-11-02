@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Bản lịch sử bất biến của một mục (BR-U12-35): mỗi lần Xong, bản nháp của người trước khi bị tiếp quản và mỗi lần
- * trưởng nhóm nhập file.
+ * Bản lịch sử bất biến của một mục (BR-U12-35): mỗi lần Xong và mỗi lần trưởng nhóm nhập file (FB-U12-03).
+ * {@code TAKEOVER} chỉ còn ở dữ liệu cũ (tính năng tiếp quản đã bỏ 2026-11-02).
  */
 public record SectionRevision(UUID id, UUID sectionId, UUID authorId, List<DocumentBlock> blocks, Instant createdAt,
                               Kind kind) {

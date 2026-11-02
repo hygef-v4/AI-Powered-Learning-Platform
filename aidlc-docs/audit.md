@@ -7839,3 +7839,61 @@ Answers to clarifying questions: "Nếu người đang giữ phần nghỉ hoặ
 **Result (U12 rework)**: backend `mvn -B clean verify` 1,695 tests, 0 failures; frontend vitest 670/670, lint and typecheck clean; e2e on fresh class SE-TEST12: U12 53/53, U12b 30/30, u12c 33/33 (member take-over refused, credit on finalize), notify 3/3. BR-U12-33/39, user guide and U12 code summary updated.
 
 ---
+
+## Frozen business rules and take-over removal — 2026-11-02
+
+**Timestamp**: 2026-11-02T13:30:00Z
+
+**User Input (complete raw)**:
+
+> phan tiep quan nay xu ly nhu the nao, co the bo luon va nguoi da giao muc neu khong lam thi nguoi do se khong co diem
+
+> cap nhap br la sao, br da chot r nen khong the doi duock
+
+Answers: "Tính năng 'Trưởng nhóm chốt mục' (do thầy góp ý) đang trái BR-U12-33 đã chốt vì chặn nhận mục DONE. Xử lý thế nào?" = "nay chốt mục tức là cho thành viên nhóm nhận hoặc trưởng nhóm phân và sau đấy khi nào cả nhóm đã oke thì trưởng nhóm sẽ chốt phần đấy sẽ cho thành viên đấy phụ trách, không sửa nữa"; "Các tính năng làm thêm không trái BR (...) giữ hay bỏ?" = "Giữ, ghi vào file riêng (Recommended)".
+
+**AI Response**: Acknowledged that PR #35/#40 edited the frozen business-rules files (BR-U12-33, 35 modified; BR-U12-39, 46, 47 and BR-U06-28 added). Plan: restore the frozen rule text (teammates' own edits kept), remove take-over entirely (BR-U12-33/36 as frozen, release still discards the draft), keep leader finalize with a single responsible member (the member who completed the section), and record every addition as FB-xx items in a separate feedback-additions file instead of the BR files.
+
+**Context**: Correction of documentation scope + Code Generation.
+
+---
+
+## U12 assignment phase before work — 2026-11-02
+
+**Timestamp**: 2026-11-02T14:20:00Z
+
+**User Input (complete raw)**:
+
+> luc truong nhom chua chot thi sinh vien da lam bai da nhan duoc chua
+
+> lỡ đang làm thì trưởng nhóm phân cho người khác
+
+> chỉnh là khi giao mục thì chưa làm chỉ nhận mục thôi khi nào trưởngh nhóm chốt mục thì tất cả các thành viên sẽ bắt đầu làm
+
+Answers: "Trưởng nhóm chốt phân công cho cả tài liệu một lần, hay chốt từng mục?" = "Cả tài liệu một lần (Recommended)"; "Khi chốt, mục nào chưa có người nhận thì xử lý thế nào?" = "Bắt buộc giao hết mới chốt (Recommended)"; "Sau khi chốt, nếu một thành viên bỏ làm thì sao?" = "Trưởng nhóm mở chốt để phân lại (Recommended)"; "Tính năng 'chốt mục đã Xong để khóa nội dung' (FB-U12-01 hiện tại) có còn cần không?" = "Bỏ, thay bằng chốt phân công (Recommended)".
+
+**AI Response**: New FB-U12-01 "phân công rồi chốt": planning phase (claim/assign only, no editing) → leader locks the whole assignment once every section has a responsible member → each member edits only their own section (also after Done) → leader can unlock to reassign. Section-level content lock removed. Differs from frozen BR-U12-33/34; recorded in the feedback-additions file, business-rules.md untouched.
+
+**Context**: Code Generation (change request).
+
+---
+
+## Group membership lock request (deferred) — 2026-11-02
+
+**Timestamp**: 2026-11-02T14:50:00Z
+
+**User Input (complete raw)**:
+
+> thành viên sẽ không thể rời nhóm trừ khi được giảng viên đổi nhưng giảng viên chỉ đổi được khi bắt đầu môn học và nhóm sẽ bị giữ đến cuối môn học
+
+Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mốc khóa nhóm là lúc nào?" = "cứ để phần này sau đi sửa phần kia trước đã"; "Sau khi khóa nhóm, sinh viên bị gỡ khỏi lớp (nghỉ học, chuyển lớp) thì sao?" = "giữ nguyên nhóm toàn bộ từ đầu đến cuối".
+
+**AI Response**: Students already cannot leave a group themselves (BR-U12-01). Teacher-side group lock conflicts with frozen BR-U12-06/07; deferred by the user and recorded as a pending item (FB-U12-05) in the feedback-additions file. Continuing with the assignment phase.
+
+**Context**: Requirements note (deferred).
+
+---
+
+**Result (assignment phase)**: backend `mvn -B clean verify` 1,749 tests, 0 failures; frontend vitest 735/735 after rerunning 5 unrelated tests that timed out under load; e2e on fresh class SE-TEST15: U12 59/59, U12b 36/36, u12c 32/32, notify 3/3, U02 16/16, U06 24/24.
+
+---

@@ -60,18 +60,21 @@ Lỗi thường gặp: **Key API không hợp lệ (HTTP 400)** nghĩa là khóa
 
 Mở bài tập nhóm › thẻ **Bài nhóm** › **Mở tài liệu nhóm**. Cột trái là danh sách mục, cột phải là toàn bộ tài liệu.
 
-- **Nhận mục**: bấm vào mục **Mở** hoặc **Xong**. Trình soạn mở toàn trang và tự lưu mỗi 10 giây.
+**Hai giai đoạn:**
+1. **Đang phân công:** mỗi người bấm **Nhận mục** cho mục chưa có ai, hoặc trưởng nhóm **Giao mục**. Lúc này chưa soạn được. Mục đã có người nhận thì người khác không nhận được; người nhận có thể **Bỏ nhận**.
+2. **Đã chốt phân công:** khi mọi mục đã có người phụ trách, trưởng nhóm bấm **Chốt phân công**. Từ đó mỗi người bấm **Làm** để soạn mục mình phụ trách; mục của người khác chỉ xem. Trưởng nhóm bấm **Mở chốt** nếu cần phân lại (nội dung đã Xong giữ nguyên).
+
+- **Soạn**: sau khi chốt phân công, bấm **Làm** ở mục của mình. Trình soạn mở toàn trang và tự lưu mỗi 10 giây.
 - **Soạn**: dùng như trình soạn bài cá nhân. Chèn ảnh, bảng, sơ đồ Draw.io (nếu bài bật sơ đồ).
 - **Nhập DOCX** (trong trình soạn): chọn tệp Word, xem trước, bấm **Nhập**. Nội dung được thêm vào cuối mục.
 - **Xong**: đăng nội dung cho cả nhóm thấy và nhả mục.
-- **Mục đã có người nhận**: thành viên khác chỉ xem, không nhận được. Muốn đổi người làm thì nhờ trưởng nhóm.
-- **Lịch sử**: mỗi lần Xong, tiếp quản hoặc nhập file đều có một bản. Người đang giữ mục bấm **Dùng bản này làm bản nháp** để khôi phục, rồi bấm **Xong** để đăng.
+- **Mục đã có người nhận**: người khác (kể cả trưởng nhóm) chỉ xem, không nhận được. Muốn đổi người làm thì người giữ tự **Nhả mục**, hoặc trưởng nhóm **Giao mục** cho người khác (bản nháp chưa Xong của người đang giữ sẽ bị bỏ).
+- **Lịch sử**: mỗi lần Xong hoặc nhập file đều có một bản. Người đang giữ mục bấm **Dùng bản này làm bản nháp** để khôi phục, rồi bấm **Xong** để đăng.
 
 ### 3.4 Trưởng nhóm
 
 - **Giao mục** cho một thành viên. Thành viên cũng tự nhận được mục trống.
-- **Tiếp quản**: chỉ trưởng nhóm. Bấm vào mục thành viên khác đang giữ › **Tiếp quản**, làm tiếp từ bản nháp đã lưu của họ; bản nháp đó được giữ trong lịch sử. Người kia thấy "Đã bị tiếp quản" và không sửa tiếp được.
-- **Chốt** mục đã Xong khi nội dung đã ổn. Mục được **ghi công cho tất cả người từng làm** (theo lịch sử mục), hiện ở dòng "Ghi công" và thẻ Bản nộp. Mục đã chốt không ai nhận, giao hay tiếp quản được tới khi bấm **Mở chốt**.
+- **Chốt phân công / Mở chốt**: xem "Hai giai đoạn" ở trên.
 - **Nhập từ file**: nhóm có thể soạn ngoài rồi nộp vào hệ thống.
   1. Trong Word, đặt tiêu đề trùng tên mục (ví dụ `1. Phân tích yêu cầu`).
   2. Trong Draw.io, mỗi trang là một sơ đồ, đặt tên trang trùng tên mục có sơ đồ.

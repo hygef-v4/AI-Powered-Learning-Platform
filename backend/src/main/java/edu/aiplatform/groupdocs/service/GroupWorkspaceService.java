@@ -6,6 +6,7 @@ import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.SubmissionWindow;
 import edu.aiplatform.groupdocs.service.GroupSectionService.SectionView;
+import edu.aiplatform.groupdocs.model.AssignmentLock;
 import edu.aiplatform.groupdocs.model.GroupDocument;
 import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
 import edu.aiplatform.groups.service.GroupAccess;
@@ -17,7 +18,6 @@ import edu.aiplatform.identity.contract.IAccountLookup;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -71,12 +71,12 @@ public class GroupWorkspaceService {
 
     private WorkspaceView view(GroupDocContext ctx, AssignmentView assignment) {
         GroupDocument d = ctx.document();
-        Map<UUID, List<UUID>> contributors = documents.lockedContributors(d.id());
         List<SectionView> sections = documents.listSections(d.id()).stream()
-                .map(s -> SectionView.of(s, ctx.actorId(), contributors.getOrDefault(s.id(), List.of()))).toList();
+                .map(s -> SectionView.of(s, ctx.actorId())).toList();
         List<Member> members = ctx.group().memberIds().stream().map(id -> member(id, ctx.group())).toList();
         SubmissionWindow window = assignment == null ? SubmissionWindow.CLOSED
                 : docAccess.window(d.assignmentId(), false);
+        AssignmentLock lock = documents.assignmentLock(d.id()).orElse(null);
         Submission submission = d.submittedAt() == null ? null : new Submission(d.submittedBy(), d.submitMode().name(),
                 d.submittedAt(), d.late(), d.receiptHash());
         return new WorkspaceView(d.id(), d.assignmentId(), assignment == null ? null : assignment.title(),
@@ -85,7 +85,7 @@ public class GroupWorkspaceService {
                 window.name(), DocumentFiles.hideFiles(d.sharedBlocks()), sections,
                 new Role(ctx.member(), ctx.leader(), ctx.teacher()),
                 submission, d.activityMonitoring(), assignment != null && assignment.diagramEnabled(), d.version(),
-                ctx.actorId());
+                ctx.actorId(), lock == null ? null : lock.lockedBy(), lock == null ? null : lock.lockedAt());
     }
 
     private Member member(UUID id, ClassGroup group) {
@@ -102,7 +102,8 @@ public class GroupWorkspaceService {
                                 Instant lateUntil, UUID classId, UUID groupId, String groupName, UUID leaderId,
                                 List<Member> members, String status, String window, DocumentModel sharedBlocks,
                                 List<SectionView> sections, Role role, Submission lastSubmission,
-                                boolean activityMonitoring, boolean diagramEnabled, long version, UUID viewerId) {
+                                boolean activityMonitoring, boolean diagramEnabled, long version, UUID viewerId,
+                                UUID assignmentLockedBy, Instant assignmentLockedAt) {
     }
 
     public record Member(UUID accountId, String name, boolean leader) {
