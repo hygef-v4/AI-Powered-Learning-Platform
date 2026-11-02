@@ -4,8 +4,9 @@ import { SubmissionDetailPage } from "@/features/grading/pages/SubmissionDetailP
 import type { SubmissionPage } from "@/features/grading/model/types";
 import { ApiError } from "@/shared/api/client";
 
-const mocks = vi.hoisted(() => ({ submissions: vi.fn(), assignmentContext: vi.fn() }));
+const mocks = vi.hoisted(() => ({ submissions: vi.fn(), assignmentContext: vi.fn(), classDetail: vi.fn() }));
 vi.mock("@/features/grading/api", () => ({ gradingApi: mocks }));
+vi.mock("@/features/academics/api", () => ({ academicsApi: { detail: mocks.classDetail } }));
 vi.mock("@/features/grading/components/BatchActionDialog", () => ({
   BatchActionDialog: ({ items, onDone }: { items: unknown; onDone: () => void }) => (
     <div role="dialog" aria-label="Batch preview">
@@ -40,6 +41,46 @@ async function ready() {
 }
 
 describe("submission assignment context", () => {
+  it("labels subject-scoped work using the authorized class in the same subject", async () => {
+    mocks.assignmentContext.mockResolvedValue({ ...context, scope: "SUBJECT", classId: null, subjectId: "subject", ownerName: "Subject name" });
+    mocks.classDetail.mockResolvedValue({ id: "c", subject: { id: "subject" }, code: "SE_JS", name: "Software Design" });
+    render(<SubmissionDetailPage classId="c" assignmentId="a" />);
+    expect(await screen.findByText("Lớp: SE_JS — Software Design")).toBeInTheDocument();
+    expect(mocks.classDetail).toHaveBeenCalledWith("teaching", "c");
+    expect(screen.queryByText("Không tải được thông tin bài tập/lớp.")).not.toBeInTheDocument();
+  });
+  it.each([
+    { id: "c", subject: { id: "other" }, code: "OTHER", name: "Other subject" },
+    { id: "other", subject: { id: "subject" }, code: "OTHER", name: "Other class" },
+  ])("rejects subject work with a mismatched authorized class: %j", async (courseClass) => {
+    mocks.assignmentContext.mockResolvedValue({ ...context, scope: "SUBJECT", classId: null, subjectId: "subject" });
+    mocks.classDetail.mockResolvedValue(courseClass);
+    render(<SubmissionDetailPage classId="c" assignmentId="a" />);
+    await screen.findByText("Không tải được thông tin bài tập/lớp.");
+    expect(screen.queryByText(/Lớp: OTHER/)).not.toBeInTheDocument();
+  });
+  it("does not expose subject context when the teaching class lookup is unavailable", async () => {
+    mocks.assignmentContext.mockResolvedValue({ ...context, scope: "SUBJECT", classId: null, subjectId: "subject" });
+    mocks.classDetail.mockRejectedValue(new ApiError({ status: 503, title: "Unavailable" }));
+    render(<SubmissionDetailPage classId="c" assignmentId="a" />);
+    await screen.findByText("Không tải được thông tin bài tập/lớp.");
+    await ready();
+    expect(screen.queryByText(`Lớp: ${context.ownerName}`)).not.toBeInTheDocument();
+  });
+  it("ignores a subject class lookup that finishes after navigating to another assignment", async () => {
+    const oldClass = deferred<{ id: string; subject: { id: string }; code: string; name: string }>();
+    mocks.assignmentContext.mockImplementation((id: string) => Promise.resolve(id === "a"
+      ? { ...context, scope: "SUBJECT", classId: null, subjectId: "subject" }
+      : { ...context, id, title: "Bài mới" }));
+    mocks.classDetail.mockReturnValue(oldClass.promise);
+    const view = render(<SubmissionDetailPage classId="c" assignmentId="a" />);
+    await waitFor(() => expect(mocks.classDetail).toHaveBeenCalled());
+    view.rerender(<SubmissionDetailPage classId="c" assignmentId="new" />);
+    await screen.findByRole("heading", { name: "Bài nộp — Bài mới" });
+    await act(async () => oldClass.resolve({ id: "c", subject: { id: "subject" }, code: "OLD", name: "Old class" }));
+    expect(screen.getByRole("heading", { name: "Bài nộp — Bài mới" })).toBeInTheDocument();
+    expect(screen.queryByText("Lớp: OLD — Old class")).not.toBeInTheDocument();
+  });
   it("names the assignment and class using authorized metadata", async () => {
     render(<SubmissionDetailPage classId="c" assignmentId="a" />);
     expect(await screen.findByRole("heading", { level: 1, name: "Bài nộp — Phân tích yêu cầu" })).toBeInTheDocument();

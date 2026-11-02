@@ -181,8 +181,9 @@ public class AcademicsService {
 
     public EnrollmentResult enroll(Actor actor,UUID id,UUID accountId) {
         return command(actor,"STUDENT_ENROLLED",id,() -> {
+            requireAudience(actor,"manager"); editable(requireClassAccess(actor,"manager",id));
+            AccountContact account=accounts.lockContact(Objects.requireNonNull(accountId)).orElse(null);
             CourseClass current=locked(actor,id,null); editable(current);
-            AccountContact account=accounts.getContact(Objects.requireNonNull(accountId)).orElse(null);
             return enrollLine(actor,current,account,EnrollmentSource.MANUAL);
         });
     }
@@ -212,8 +213,9 @@ public class AcademicsService {
 
     public EnrollmentResult enrollmentStatus(Actor actor,UUID id,UUID accountId,EnrollmentStatus status) {
         if(status==EnrollmentStatus.ACTIVE) return command(actor,"STUDENT_ENROLLED",id,() -> {
+            requireAudience(actor,"manager"); editable(requireClassAccess(actor,"manager",id));
+            AccountContact account=accounts.lockContact(accountId).orElse(null);
             CourseClass current=locked(actor,id,null); editable(current);
-            AccountContact account=accounts.getContact(accountId).orElse(null);
             EnrollmentResult result=enrollLine(actor,current,account,EnrollmentSource.MANUAL);
             if(result==EnrollmentResult.IN_OTHER_CLASS) throw ApiException.conflict("IN_OTHER_CLASS","Sinh viên đang ở lớp khác cùng môn");
             if(result!=EnrollmentResult.ENROLLED && result!=EnrollmentResult.RESTORED && result!=EnrollmentResult.ALREADY_ENROLLED)

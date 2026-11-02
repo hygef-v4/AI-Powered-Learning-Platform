@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { gradingApi } from "../api";
+import { academicsApi } from "@/features/academics/api";
 import type { AssignmentContext } from "../model/types";
 
 const CONTEXT_ERROR = "Không tải được thông tin bài tập/lớp.";
@@ -16,8 +17,15 @@ export function useSubmissionContext(classId: string, assignmentId: string) {
     const current = ++sequence.current;
     setState({ key, value: null, error: "" });
     try {
-      const value = await gradingApi.assignmentContext(assignmentId);
-      if (value.id !== assignmentId || value.scope !== "CLASS" || value.classId !== classId) {
+      let value = await gradingApi.assignmentContext(assignmentId);
+      if (value.id !== assignmentId) {
+        throw new Error(CONTEXT_ERROR);
+      }
+      if (value.scope === "SUBJECT" && value.subjectId && value.classId === null) {
+        const courseClass = await academicsApi.detail("teaching", classId);
+        if (courseClass.id !== classId || courseClass.subject.id !== value.subjectId) throw new Error(CONTEXT_ERROR);
+        value = { ...value, ownerName: `${courseClass.code} — ${courseClass.name}` };
+      } else if (value.scope !== "CLASS" || value.classId !== classId) {
         throw new Error(CONTEXT_ERROR);
       }
       if (sequence.current === current) setState({ key, value, error: "" });

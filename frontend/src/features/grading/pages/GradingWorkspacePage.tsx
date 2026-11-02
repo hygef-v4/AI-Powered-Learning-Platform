@@ -22,6 +22,7 @@ import { ActivityReview, GradeHistory, GroupSectionAuthors } from "../components
 import { AiProposalPanel } from "../components/AiProposalPanel";
 import { BatchActionDialog } from "../components/BatchActionDialog";
 import { MemberContributionPanel } from "../components/MemberContributionPanel";
+import { countUnresolvedReviews } from "../components/StructuredFeedbackSection";
 import { points, statusLabels, type Detail, type DocumentModel, type Rubric } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
@@ -141,7 +142,9 @@ function Workspace({ initial, refresh, proposalId }: { initial: Detail; refresh:
     }
     return ids;
   }, [detail.document.blocks, detail.rubrics]);
-  const total = Math.min(Number(evaluation.maxScore), Math.max(0, checklistPoints(detail.rubrics, form.checks, form.itemScores)));
+  const total = Math.min(Number(evaluation.maxScore), Math.max(0, checklistPoints(detail.rubrics, form.checks, form.itemScores) + Number(form.adjustment)));
+  const unresolvedReviews = countUnresolvedReviews(detail.rubrics, form.checks, form.itemScores,
+    form.structuredFeedback, form.reviewedItemScores, form.acknowledgedReviewItems).total;
   const checklist = { ...checklistBindings(form, disabled, updateForm), validBlockIds };
   const blockIds = new Set(paper.blocks.map((block) => block.id));
   const pending = proposals.some((proposal) => proposal.status === "PENDING");
@@ -223,10 +226,11 @@ function Workspace({ initial, refresh, proposalId }: { initial: Detail; refresh:
           <p role="status" className={dirty ? "text-xs font-semibold text-warning" : "text-xs text-muted"}>
             {busy ? "Đang xử lý…" : dirty ? "Chưa lưu" : `Đã lưu ${points(evaluation.score, evaluation.maxScore)}`}
           </p>
+          {Number(form.adjustment) !== 0 && <p className="text-xs text-muted">Điều chỉnh đã lưu: {form.adjustment} · {form.adjustmentReason}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           <Button size="sm" variant="primary" icon="save" disabled={disabled} onClick={() => void save()}>Lưu nháp / thay đổi</Button>
-          <Button size="sm" disabled={disabled || dirty || evaluation.state !== "DRAFT"} onClick={() => setAction("finalize")}>Chốt điểm</Button>
+          <Button size="sm" disabled={disabled || dirty || evaluation.state !== "DRAFT" || unresolvedReviews > 0} onClick={() => setAction("finalize")}>Chốt điểm</Button>
           <Button size="sm" disabled={disabled || dirty || evaluation.state !== "FINALIZED"} onClick={() => setAction("publish")}>Công bố điểm</Button>
         </div>
       </div>
@@ -273,8 +277,8 @@ function Workspace({ initial, refresh, proposalId }: { initial: Detail; refresh:
             rubrics={detail.rubrics} currentValues={form} partTitles={partTitles} validBlockIds={validBlockIds}
             pollExhausted={pollExhausted} onRecheck={resumePolling}
             onRequest={(input) => void requestProposal(input)}
-            onApply={(checks, feedback, id, itemScores) => {
-              applyProposal(checks, feedback, id, itemScores);
+            onApply={(checks, feedback, id, itemScores, structuredFeedback) => {
+              applyProposal(checks, feedback, id, itemScores, structuredFeedback);
               setAiOpen(false);
             }} />
         </section>

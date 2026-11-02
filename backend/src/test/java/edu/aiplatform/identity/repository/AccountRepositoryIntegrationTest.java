@@ -168,6 +168,44 @@ class AccountRepositoryIntegrationTest {
     }
 
     @Test
+    void enrollmentContactLockKeepsStudentEligibleUntilTheTransactionCommits() throws Exception {
+        Account student = pending("enrollment-lock@fpt.edu.vn", Role.STUDENT, "Enrollment student");
+        repository.insert(student);
+        var lookup = new edu.aiplatform.identity.service.AccountLookupService(repository);
+        CountDownLatch held = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            Future<?> enrollment = pool.submit(() -> tx.executeWithoutResult(s -> {
+                assertThat(lookup.lockContact(student.id())).hasValueSatisfying(contact -> {
+                    assertThat(contact.role()).isEqualTo(Role.STUDENT);
+                    assertThat(contact.status()).isEqualTo(AccountStatus.PENDING);
+                });
+                held.countDown();
+                await(release);
+                assertThat(lookup.getContact(student.id()).orElseThrow().status()).isEqualTo(AccountStatus.PENDING);
+            }));
+            assertThat(held.await(5, TimeUnit.SECONDS)).isTrue();
+            Future<Integer> disable = pool.submit(() -> tx.execute(s ->
+                    repository.updateStatus(student.id(), AccountStatus.DISABLED, student.version(), NOW.plusSeconds(1))));
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+            while (admin.sql("select count(*) from pg_stat_activity where wait_event_type = 'Lock' "
+                    + "and query ilike 'update accounts set status%'").query(Long.class).single() == 0) {
+                assertThat(System.nanoTime()).as("disable waits on the enrollment account lock").isLessThan(deadline);
+                Thread.sleep(50);
+            }
+            assertThat(disable.isDone()).isFalse();
+            release.countDown();
+            enrollment.get(5, TimeUnit.SECONDS);
+            assertThat(disable.get(5, TimeUnit.SECONDS)).isEqualTo(1);
+            assertThat(lookup.getContact(student.id()).orElseThrow().status()).isEqualTo(AccountStatus.DISABLED);
+        } finally {
+            release.countDown();
+            pool.shutdownNow();
+        }
+    }
+
+    @Test
     void failedLoginsLockAtThresholdThenResetCounterWithoutBumpingVersion() {
         Account account = active("taivm@fpt.edu.vn", Role.STUDENT);
         repository.insert(account);

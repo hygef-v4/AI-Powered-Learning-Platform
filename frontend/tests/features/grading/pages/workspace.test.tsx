@@ -271,11 +271,10 @@ describe("AI proposal comparison and draft application", () => {
     openAi();
     const review = screen.getByRole("region", { name: "Chấm bằng AI" });
     expect(screen.queryByRole("dialog", { name: "Chấm bằng AI" })).not.toBeInTheDocument();
-    // Điểm lẻ 0.5 đã lưu của mục 1 không còn tính (chỉ checklist).
-    expect(review).toHaveTextContent(/Điểm đang chấm: 2\.00/);
+    expect(review).toHaveTextContent(/Điểm đang chấm: 2\.50/);
     expect(review).toHaveTextContent(/AI đề xuất: 3\.00/);
     expect(review).not.toHaveTextContent(/Điều chỉnh/);
-    expect(review).toHaveTextContent(/Lệch \+1\.00/);
+    expect(review).toHaveTextContent(/Lệch \+0\.50/);
 
     fireEvent.click(screen.getByRole("button", { name: "Áp dụng vào bản nháp" }));
     expect(mocks.save).not.toHaveBeenCalled();
@@ -311,7 +310,7 @@ describe("AI proposal comparison and draft application", () => {
     // Đề xuất AI tải bằng yêu cầu riêng, có thể về sau phần chấm điểm: chờ có đề xuất rồi mới mở popup.
     expect(await screen.findByText("Có đề xuất AI")).toBeInTheDocument();
     openAi();
-    expect(screen.getByRole("region", { name: "Chấm bằng AI" })).toHaveTextContent(/Điểm đang chấm: 2\.00/);
+    expect(screen.getByRole("region", { name: "Chấm bằng AI" })).toHaveTextContent(/Điểm đang chấm: 2\.50/);
     expect(document.body.textContent).not.toContain("NaN");
   });
 

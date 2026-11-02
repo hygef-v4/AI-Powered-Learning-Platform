@@ -46,3 +46,11 @@ Route `/admin` chỉ cho `ADMIN` (dùng `RoleGuard` của U01). Backend vẫn ki
 Admin Dashboard có counts, backup metadata/history và GET /activity. Activity gồm biến động ACTIVE accounts hôm nay, số Assignment 7 ngày (individual/group/practice), tối đa 50 security events trong 30 ngày; ngày Asia/Ho_Chi_Minh. Các nguồn lỗi/timeout trả từng Section UNAVAILABLE/data null; no-store, chỉ ADMIN, query lạ bị từ chối. Không lộ archive/secrets hoặc cấp quyền học vụ.
 
 [Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.
+
+## Backup UI remediation — 2026-11-02 (KAN-157)
+
+The current `AdminDashboardPage` keeps its 30-day backup calendar and renders `components/BackupStatus.tsx` beneath it. This replaces the historical `BackupSection` / `BackupHistoryDialog` presentation above; backup operations and public contracts are unchanged.
+
+- Existing `dashboard.backup` sections supply enabled/disabled status, daily time/timezone, next run, latest result/start/end/size/sanitized error, latest successful time and seven-day failure count. Disabled, never-run and unavailable are distinct. Settings opens the existing `/admin/settings` route.
+- `Xem lịch sử sao lưu` expands inline, with no popup. History uses the existing no-store `/api/v1/admin/dashboard/backups?page=0&size=20` endpoint, zero-based pagination and independent loading/error/retry. Close/unmount/page changes abort obsolete requests. The calendar's failed source does not suppress available metadata.
+- History shows scheduled date, result, start/end, size and sanitized error. No download/archive URL, restore or data-changing backup control is exposed. Source failures never masquerade as zero failures or successful backups.

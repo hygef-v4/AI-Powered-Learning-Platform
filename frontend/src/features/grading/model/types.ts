@@ -114,6 +114,7 @@ export type AssignmentContext = {
   id: string;
   scope: "CLASS" | "SUBJECT";
   classId: string | null;
+  subjectId?: string | null;
   title: string;
   ownerName: string;
 };

@@ -8,6 +8,7 @@ import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { Donut, LineChart, Legend, Reveal, SegmentBar, StackedColumns, formatNumber, type Series } from "../components/charts";
 import type { BackupRunItem, SecurityEventItem } from "../model/types";
 import { isDenied, useLiveOverview, type Overview } from "../hooks/useLiveOverview";
+import { BackupStatus } from "../components/BackupStatus";
 
 const ZONE = "Asia/Ho_Chi_Minh";
 const KINDS: Series[] = [
@@ -127,6 +128,7 @@ function Board({ data }: { data: Overview }) {
         </Panel>
         <Panel title="Sao lưu" subtitle="Trong 30 ngày gần nhất" testId="dashboard-backups" order={5}>
           {backups ? <BackupCalendar runs={backups} /> : <Unavailable />}
+          <BackupStatus backup={dashboard.backup} />
         </Panel>
       </div>
 
