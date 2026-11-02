@@ -7273,3 +7273,80 @@ Later follow-up inputs (raw): “thêm nút prompt copy để đưa vào agent t
 **Evidence**: Backend 1,630 runtime cases passed; original combined Maven command then exhausted Metaspace in architecture discovery, and separate architecture rerun passed 2 cases. Required database-suite guard passed. Frontend full 644 passed before final guide revisions; final affected setup suites 15 passed. Final production build/typecheck passed; lint zero errors and two existing warnings. Hooks 13 scenarios passed. Backend package built, existing Orca backend terminal restarted, /health UP. Orca guide inspected without Computer Use. Results/remaining gates: construction/build-and-test/2026-11-01-mcp-quality-remediation-results.md.
 
 **Limits**: No new external-client authenticated acceptance, teacher-scored model pilot, representative latency/load measurement, Python fixture run, global installation, provider invocation, official publication, commit or push. Historical policy supersession notice already existed and was preserved. Schema validity does not establish semantic grading quality. Security/resiliency retained; PBT disabled.
+
+## Integration test report — scope preparation
+**Timestamp**: 2026-11-01T14:01:21Z
+**User Input (raw)**:
+
+> [@Superpowers](plugin://superpowers@openai-curated-remote) Bạn là một Senior QA Engineer và Automation/Manual Tester có chuyên môn sâu về Integration Testing, giúp tôi viết integration test theo như đề xuất của bạn. Tôi muốn giữ nguyên format và styling (đường viền bảng, màu sắc, vân vân...) như template
+
+**Follow-up User Input (raw)**:
+
+> trước khi làm thì hãy tạo branch mới từ staging
+
+**Follow-up User Input (raw)**:
+
+> bỏ codex/ ở tên branch
+
+**AI Response / Action**: Created branch from local staging, then renamed it to integration-test-report as requested. Verified branch HEAD and staging both e54359e46e449342e863cbb94ee14d5b8a754259. Existing AD state on unrelated Report-1 docx preserved. Reviewed repository workflow, current requirements/catalog/state and source Excel structure/styles. Prepared scoped review document at inception/requirements/2026-11-01-integration-test-report.md with full-15-unit versus core-flow approach, Vietnamese case content, unchanged template styling, Pending execution status, and content/formula/layout verification requirements. No workbook authored, no application tests executed, no commit/push.
+
+**Approval prompt**: Review the scope document and choose A (full 15 units), B (core flows), or C (changes) before workbook construction, following CLAUDE.md Requirements Analysis approval gate. No new extension configuration requested; existing Security/Resiliency enabled and PBT disabled retained.
+
+---
+
+## Integration test report — Requirements approved and plan review
+**Timestamp**: 2026-11-01T14:09:33Z
+**User Input (raw)**:
+
+> tôi đã điền vào câu trả lời
+
+**Answer read from the user's scope document (raw)**:
+
+> [Answer]: x
+> Theo phương án A nhưng sửa ở quy tắc viết test case: ngôn ngữ tiếng Anh nhưng không quá khó hiểu
+
+**Interpretation**: The explicit prose selects option A (all 15 units), overriding the non-option marker x. Use simple English for case content and preserve actual UI labels and template headings. No ambiguity remains about the chosen scope or language.
+
+**AI Response / Action**: Updated the scoped requirements and marked the decision step complete. Used writing-plans to create inception/plans/2026-11-01-integration-test-report-plan.md, including UC01–66 ownership map, 19-sheet structure, case schema, a simple-English enrollment example, template-preservation requirements, and content/formula/style verification. Recommended native execution in the current chat. Existing Security/Resiliency/PBT settings unchanged. No workbook authored, no application tests executed, no commit/push.
+
+**Approval prompt**: Review the concrete plan and its sample case, then choose A to execute directly, B for changes, or C for another approach. Awaiting workflow-planning approval as required by CLAUDE.md and Superpowers writing-plans. This is plan approval, not a repeated requirements approval.
+
+---
+
+## Integration test report — approved native execution and completion
+**Timestamp**: 2026-11-01T15:11:21Z
+**User Input (raw)**:
+
+> tôi đã điền câu trả lời
+
+**Plan answer read (raw)**:
+
+> [Answer]: A
+
+**Follow-up User Inputs (raw, in order)**:
+
+> trong phần pre-conditions, câu Backend contract stubs are disabled có cần thiết không?
+
+> tiếp tục
+
+> thử lại
+
+> Vì sao lại xử lý lâu và bị đứng vậy
+
+**AI Response / Action**: Accepted plan approval and executed directly in this chat. Moved stubs-off condition to the shared environment; individual cases contain business setup only. Acknowledged earlier excessive process/document-reading overhead and interruptions. Authored 164 simple-English functional integration cases across 15 units plus distinct SecurityTest cases, all 66 UC mapped. Artifact-tool authored workbook cells/formulas; lxml packaged them in original template shells to preserve native styles/resources. Output: construction/build-and-test/outputs/integration-test-report/Report-5.2_ALAP_Integration_Test.xlsx. Original template unchanged; unrelated Word report preserved.
+
+**Verification**: Independent saved-file checks passed all 164 case rows, unique IDs, 19 sheets, UC01–66, unexecuted statuses, blank tester/date/defects, all case styles/column widths, original fonts/fills/borders/theme, no formula errors; initial summary 0 passed/0 failed/164 pending/0 N/A. In-memory recalculation tests passed Round 1/global totals, Round 2 independence and SecurityTest mapping, then restored inputs without changing deliverable. Rendered and visually inspected all 19 sheets. One fresh reviewer found no Critical/Important content findings. Narrow metadata wrapping/date variants added to avoid clipped text/date serials; all original style definitions preserved. Detailed rulings/limits in integration-test-report/verification.md.
+
+**Limits**: Application cases not executed; no real-provider quality/client acceptance, production restore/fault, credential/account mutation, commit, push or merge. Native Excel was not opened. Fault/clock/contract-harness cases require the identified isolated QA fixtures/tooling during execution. UC traceability is not exhaustive business-rule acceptance.
+
+---
+
+## Integration test report — cleanup and local commit
+**Timestamp**: 2026-11-02T07:53:44Z
+**User Input (raw)**:
+
+> giúp tôi commit lên branch, bỏ các file tạm thời vừa thêm vào để giữ thư mục dự án được clean, không push
+
+**Action**: Fresh saved-workbook verification passed 164 cases/19 sheets/66 UC, unexecuted statuses, formula totals, exact case-row styles/column widths and original fonts/fills/borders/theme. Workbook blob 74f0f2c74622964cd7d9407ee9b2c1c3c2b728fd. Removed only named report-generation intermediates, previews, generated JSON and one-off scripts after resolving all cleanup targets inside the task directory. Retained final workbook, coverage, verification and workflow records. Prepare a scoped commit on integration-test-report; exclude the unrelated staged Report-1 Word document. No application code change; no application suite rerun; no push or merge.
+
+---

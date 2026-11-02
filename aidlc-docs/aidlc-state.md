@@ -152,3 +152,19 @@ HEAD `11df6307` contains documentation only; code remains staged as 1,066 rename
 ## Commit authorization — 2026-10-30 17:13 +07:00
 
 User requested “giúp tôi commit”. Include the verified file/package relocation and latest verification/audit notes in this commit. Pre-commit comparison confirms all 1,501 original source/resource files retained, 908 Java bodies and 506 TypeScript/TSX ASTs unchanged except necessary package/import/reference updates. Backend/frontend source matches the tested tree; test/build evidence above applies. No push, deployment or history rewrite.
+
+## Integration test report — 2026-11-01
+
+Scoped documentation task on `integration-test-report`, branched from local `staging` at `e54359e4`. Workspace/template inspection and requirements proposal complete; scope review pending in [report scope](inception/requirements/2026-11-01-integration-test-report.md). Proposed functional integration cases across 15 units with UC/FR traceability, original Excel styling and Pending execution statuses. Workbook generation/QA not started. Existing unrelated Word report change preserved; no application changes, commit or push. Security/Resiliency configuration retained; PBT disabled.
+
+### Integration test report — scope approved, plan ready
+
+User selected full 15-unit coverage and changed the case language to simple English in the scope document. Requirements accepted. [Execution plan](inception/plans/2026-11-01-integration-test-report-plan.md) contains the 66-UC map, 19-sheet workbook structure, a sample case and content/formula/style QA. Workflow-planning approval pending; recommend native execution in this chat. No workbook generated or application test execution claimed.
+
+### Integration test report — completed 2026-11-01
+
+Native execution approved with `[Answer]: A`. Delivered [integration workbook](construction/build-and-test/outputs/integration-test-report/Report-5.2_ALAP_Integration_Test.xlsx): 164 English cases, 19 sheets, 15 units plus SecurityTest, UC01–66 traced. Original template fonts/colors/borders/theme and case-row styles/column widths preserved; metadata wrap/date variants added to prevent clipping. Shared environment holds stubs-off condition. [Verification](construction/build-and-test/integration-test-report/verification.md): all-row saved-file checks, live in-memory formula/status perturbations, 19 rendered sheets and fresh content review passed. All cases remain unexecuted; no app acceptance, native Excel, real-provider or production restore claim. Existing unrelated Word report preserved. No commit/push/merge.
+
+### Integration test report — cleanup/local commit 2026-11-02
+
+User requested a local branch commit without push. Fresh saved-workbook checks passed. Removed temporary generation scripts/JSON, intermediate XLSX and preview images; retained final workbook and coverage/verification/workflow records. Unrelated staged Report-1 Word report excluded. No application changes or acceptance execution; no push/merge.
