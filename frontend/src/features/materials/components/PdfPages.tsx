@@ -5,8 +5,18 @@ import { useEffect, useRef, useState } from "react";
  * Vẽ PDF thành từng trang giấy trắng (pdf.js), rộng vừa khung xem nhân với mức phóng; mỗi trang đánh dấu `data-page` để
  * thanh công cụ đếm trang. Vẽ lại khi đổi mức phóng hay độ rộng khung.
  */
-export function PdfPages({ blob, zoom, width, onPages, onError }: {
-  blob: Blob; zoom: number; width: number; onPages: (count: number) => void; onError: () => void;
+export function PdfPages({
+  blob,
+  zoom,
+  width,
+  onPages,
+  onError,
+}: {
+  blob: Blob;
+  zoom: number;
+  width: number;
+  onPages: (count: number) => void;
+  onError: () => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const [doc, setDoc] = useState<import("pdfjs-dist").PDFDocumentProxy | null>(null);
@@ -17,7 +27,10 @@ export function PdfPages({ blob, zoom, width, onPages, onError }: {
     (async () => {
       try {
         const pdfjs = await import("pdfjs-dist");
-        pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
+        pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+          "pdfjs-dist/build/pdf.worker.min.mjs",
+          import.meta.url,
+        ).toString();
         const loading = pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) });
         task = loading;
         const loaded = await loading.promise;
@@ -28,7 +41,10 @@ export function PdfPages({ blob, zoom, width, onPages, onError }: {
         if (!cancelled) onError();
       }
     })();
-    return () => { cancelled = true; void task?.destroy(); };
+    return () => {
+      cancelled = true;
+      void task?.destroy();
+    };
   }, [blob, onPages, onError]);
 
   useEffect(() => {
@@ -57,13 +73,31 @@ export function PdfPages({ blob, zoom, width, onPages, onError }: {
         container.appendChild(sheet);
         const context = canvas.getContext("2d");
         if (!context) continue;
-        const task = page.render({ canvas, canvasContext: context, viewport, transform: ratio !== 1 ? [ratio, 0, 0, ratio, 0, 0] : undefined });
+        const task = page.render({
+          canvas,
+          canvasContext: context,
+          viewport,
+          transform: ratio !== 1 ? [ratio, 0, 0, ratio, 0, 0] : undefined,
+        });
         tasks.push(task);
-        try { await task.promise; } catch { /* hủy khi vẽ lại */ }
+        try {
+          await task.promise;
+        } catch {
+          /* hủy khi vẽ lại */
+        }
       }
     })();
-    return () => { cancelled = true; tasks.forEach((task) => task.cancel()); };
+    return () => {
+      cancelled = true;
+      tasks.forEach((task) => task.cancel());
+    };
   }, [doc, zoom, width]);
 
-  return <div ref={host} data-testid="material-pdf-viewer" className="flex flex-col items-center gap-4" />;
+  return (
+    <div
+      ref={host}
+      data-testid="material-pdf-viewer"
+      className="flex flex-col items-center gap-4"
+    />
+  );
 }

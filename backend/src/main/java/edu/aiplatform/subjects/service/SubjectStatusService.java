@@ -30,8 +30,12 @@ public class SubjectStatusService {
     private final SubjectAuditRecorder audit;
     private final Clock clock;
 
-    public SubjectStatusService(ISubjectRepository repository, IAuthorization authorization,
-                                ObjectProvider<ISubjectClasses> classes, SubjectAuditRecorder audit, Clock clock) {
+    public SubjectStatusService(
+            ISubjectRepository repository,
+            IAuthorization authorization,
+            ObjectProvider<ISubjectClasses> classes,
+            SubjectAuditRecorder audit,
+            Clock clock) {
         this.repository = repository;
         this.access = new SubjectAdminAccess(authorization, audit, clock);
         this.classes = classes;
@@ -39,7 +43,7 @@ public class SubjectStatusService {
         this.clock = clock;
     }
 
-    public record ChangeStatus(SubjectStatus status, Long version) { }
+    public record ChangeStatus(SubjectStatus status, Long version) {}
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Subject changeStatus(Actor actor, UUID subjectId, ChangeStatus command) {
@@ -53,10 +57,13 @@ public class SubjectStatusService {
         SubjectLifecycleBudget budget = new SubjectLifecycleBudget(Duration.ofSeconds(1));
         Subject before;
         try {
-            before = repository.findByIdForUpdate(subjectId, budget.remaining())
-                    .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
+            before =
+                    repository
+                            .findByIdForUpdate(subjectId, budget.remaining())
+                            .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
         } catch (DataAccessException failure) {
-            throw ApiException.unavailable("SUBJECT_LIFECYCLE_UNAVAILABLE", "Chưa khóa được môn, vui lòng thử lại");
+            throw ApiException.unavailable(
+                    "SUBJECT_LIFECYCLE_UNAVAILABLE", "Chưa khóa được môn, vui lòng thử lại");
         }
         before.requireVersion(command.version());
         if (before.status() == command.status()) {
@@ -68,7 +75,8 @@ public class SubjectStatusService {
             if (provider == null) {
                 throw classesUnavailable();
             }
-            // BR-U04-04: lưu trữ môn thì lưu trữ luôn mọi lớp của môn; U05 lỗi thì cả thao tác rollback.
+            // BR-U04-04: lưu trữ môn thì lưu trữ luôn mọi lớp của môn; U05 lỗi thì cả thao tác
+            // rollback.
             try {
                 provider.archiveClassesOfSubject(subjectId, actor);
             } catch (RuntimeException failure) {
@@ -76,10 +84,14 @@ public class SubjectStatusService {
             }
             budget.remaining();
         }
-        Subject after = command.status() == SubjectStatus.ARCHIVED
-                ? before.archive(clock.instant()) : before.reopen(clock.instant());
+        Subject after =
+                command.status() == SubjectStatus.ARCHIVED
+                        ? before.archive(clock.instant())
+                        : before.reopen(clock.instant());
         if (!repository.update(after, command.version())) {
-            throw ApiException.conflict("SUBJECT_VERSION_CONFLICT", "Dữ liệu môn đã thay đổi. Hãy tải lại trước khi sửa");
+            throw ApiException.conflict(
+                    "SUBJECT_VERSION_CONFLICT",
+                    "Dữ liệu môn đã thay đổi. Hãy tải lại trước khi sửa");
         }
         audit.statusChanged(actor, before, after);
         if (before.managerId() != null && after.managerId() == null) {
@@ -89,6 +101,7 @@ public class SubjectStatusService {
     }
 
     private ApiException classesUnavailable() {
-        return ApiException.unavailable("SUBJECT_CLASSES_UNAVAILABLE", "Chưa kiểm tra được lớp, vui lòng thử lại");
+        return ApiException.unavailable(
+                "SUBJECT_CLASSES_UNAVAILABLE", "Chưa kiểm tra được lớp, vui lòng thử lại");
     }
 }

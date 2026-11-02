@@ -3,8 +3,14 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { apiFetch } from "@/shared/api/client";
 import { moduleContext } from "@/features/materials/components/moduleNav";
 
-vi.mock("@/shared/api/client", async importOriginal => ({ ...await importOriginal<typeof import("@/shared/api/client")>(), apiFetch: vi.fn() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), usePathname: () => "/quizzes/q1" }));
+vi.mock("@/shared/api/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/api/client")>()),
+  apiFetch: vi.fn(),
+}));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => "/quizzes/q1",
+}));
 vi.mock("@/features/identity/hooks/session", () => ({
   useSession: () => ({ status: "authenticated", profile: { role: "TEACHER" } }),
 }));
@@ -25,7 +31,9 @@ function nav(search = "") {
   render(<>{context?.header}</>);
 }
 
-beforeEach(() => { vi.mocked(apiFetch).mockReset(); });
+beforeEach(() => {
+  vi.mocked(apiFetch).mockReset();
+});
 
 it("Quiz của lớp mở không kèm classId vẫn dùng module của lớp", async () => {
   backend({ subjectId: "s1", scope: "CLASS", classId: "c1" });
@@ -34,7 +42,10 @@ it("Quiz của lớp mở không kèm classId vẫn dùng module của lớp", a
   expect(await screen.findByText("Module 1")).toBeInTheDocument();
   expect(paths()).toContain("/api/v1/classes/c1/modules");
   expect(paths().some((path) => path.includes("/subjects/"))).toBe(false);
-  expect(screen.getByRole("link", { name: /Học liệu/ })).toHaveAttribute("href", "/teaching/classes/c1?tab=materials");
+  expect(screen.getByRole("link", { name: /Học liệu/ })).toHaveAttribute(
+    "href",
+    "/teaching/classes/c1?tab=materials",
+  );
 });
 
 it("Quiz của môn vẫn dùng module của môn", async () => {
@@ -42,7 +53,10 @@ it("Quiz của môn vẫn dùng module của môn", async () => {
   nav();
 
   await waitFor(() => expect(paths()).toContain("/api/v1/subjects/s1/modules"));
-  expect(await screen.findByRole("link", { name: /Học liệu/ })).toHaveAttribute("href", "/manager/materials?subjectId=s1");
+  expect(await screen.findByRole("link", { name: /Học liệu/ })).toHaveAttribute(
+    "href",
+    "/manager/materials?subjectId=s1",
+  );
 });
 
 it("có classId trên URL thì không cần đọc Quiz", async () => {

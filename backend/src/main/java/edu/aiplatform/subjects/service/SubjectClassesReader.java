@@ -40,13 +40,21 @@ public class SubjectClassesReader {
         }
         this.provider = provider;
         this.timeout = timeout;
-        // Không chạy provider trên caller khi đầy; provider bỏ qua interrupt cũng không tạo vô hạn thread.
-        this.executor = new ThreadPoolExecutor(4, 4, 0, TimeUnit.MILLISECONDS,
-                new ArrayBlockingQueue<>(16), task -> {
-                    Thread thread = new Thread(task, "u04-subject-classes");
-                    thread.setDaemon(true);
-                    return thread;
-                }, new ThreadPoolExecutor.AbortPolicy());
+        // Không chạy provider trên caller khi đầy; provider bỏ qua interrupt cũng không tạo vô hạn
+        // thread.
+        this.executor =
+                new ThreadPoolExecutor(
+                        4,
+                        4,
+                        0,
+                        TimeUnit.MILLISECONDS,
+                        new ArrayBlockingQueue<>(16),
+                        task -> {
+                            Thread thread = new Thread(task, "u04-subject-classes");
+                            thread.setDaemon(true);
+                            return thread;
+                        },
+                        new ThreadPoolExecutor.AbortPolicy());
     }
 
     /** Missing key, null hoặc số âm đều là unknown, không suy ra 0 lớp. */
@@ -55,30 +63,37 @@ public class SubjectClassesReader {
         if (ids.isEmpty()) {
             return Map.of();
         }
-        Map<UUID, Integer> result = read(() -> {
-            Map<UUID, Integer> raw = provider.countClasses(ids);
-            if (raw == null) {
-                return Map.of();
-            }
-            Map<UUID, Integer> known = new HashMap<>();
-            for (UUID id : ids) {
-                Integer count = raw.get(id);
-                if (count != null && count >= 0) {
-                    known.put(id, count);
-                }
-            }
-            return Map.copyOf(known);
-        });
+        Map<UUID, Integer> result =
+                read(
+                        () -> {
+                            Map<UUID, Integer> raw = provider.countClasses(ids);
+                            if (raw == null) {
+                                return Map.of();
+                            }
+                            Map<UUID, Integer> known = new HashMap<>();
+                            for (UUID id : ids) {
+                                Integer count = raw.get(id);
+                                if (count != null && count >= 0) {
+                                    known.put(id, count);
+                                }
+                            }
+                            return Map.copyOf(known);
+                        });
         return result == null ? Map.of() : result;
     }
 
     public SubjectAdminViews.Classes classes(UUID subjectId) {
-        List<SubjectClassSummary> items = read(() -> {
-            var raw = provider.listClassesOfSubject(subjectId);
-            return raw == null ? null : List.copyOf(raw);
-        });
-        return new SubjectAdminViews.Classes(items == null ? SubjectAdminViews.Availability.UNAVAILABLE
-                : SubjectAdminViews.Availability.AVAILABLE, items);
+        List<SubjectClassSummary> items =
+                read(
+                        () -> {
+                            var raw = provider.listClassesOfSubject(subjectId);
+                            return raw == null ? null : List.copyOf(raw);
+                        });
+        return new SubjectAdminViews.Classes(
+                items == null
+                        ? SubjectAdminViews.Availability.UNAVAILABLE
+                        : SubjectAdminViews.Availability.AVAILABLE,
+                items);
     }
 
     private <T> T read(Callable<T> call) {

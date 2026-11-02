@@ -30,7 +30,7 @@ U14 không sở hữu: tài khoản, gửi SMTP (U01), sự kiện nguồn (U03,
 | `Announcement` | `id`, `classId`, `title` (≤ 200), `body` (≤ 5.000), `important`, `sendEmail`, `status` (`ACTIVE`, `DELETED`), `createdBy`, `createdAt`, `updatedBy`, `updatedAt`, `deletedBy`, `deletedAt`, `version` |
 | `Notification` | `id`, `recipientId`, `type`, `sourceEventId`, `title`, `summary`, `link`, `readAt`, `createdAt`; duy nhất (`sourceEventId`, `recipientId`, `type`) |
 | `EmailDelivery` | `id`, `notificationId` (duy nhất), `recipientId`, `type`, `status` (`PENDING`, `SENT`, `FAILED`, `SKIPPED`, `DEFERRED`), `priority`, `scheduledFor`, `attempts`, `lastError`, `createdAt`, `sentAt` |
-| `NotificationPreference` | `accountId`, `type`, `emailEnabled`; khóa (`accountId`, `type`); không có dòng nghĩa là bật |
+| `NotificationPreference` | `accountId`, `type`, `emailEnabled`; khóa (`accountId`, `type`); không có dòng: loại học tập Student mặc định bật, loại staff mới mặc định tắt; BACKUP_FAILED luôn bật |
 | `DeadlineReminder` | `assignmentId`, `classId`, `closesAt`, `status` (`SENT`, `SKIPPED`), `processedAt`; khóa (`assignmentId`, `classId`, `closesAt`) |
 
 ```mermaid

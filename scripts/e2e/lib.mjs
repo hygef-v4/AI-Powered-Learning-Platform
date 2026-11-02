@@ -1,11 +1,13 @@
 // Trợ giúp gọi API local (http://localhost:8088) với cookie + CSRF, và đọc OTP từ Mailpit.
 import fs from "node:fs";
 
-export const BASE = "http://localhost:8088";
-export const MAILPIT = "http://localhost:8025";
+export const BASE = (process.env.E2E_BASE_URL ?? "http://localhost:8088").replace(/\/$/, "");
+export const MAILPIT = (process.env.E2E_MAILPIT_URL ?? "http://localhost:8025").replace(/\/$/, "");
 const ENV = new URL("../../infra/.env.local", import.meta.url);
 
 export function env(key) {
+  if (process.env[key] !== undefined) return process.env[key];
+  if (!fs.existsSync(ENV)) return undefined;
   const line = fs.readFileSync(ENV, "utf8").split(/\r?\n/).find((l) => l.startsWith(key + "="));
   return line ? line.slice(key.length + 1) : undefined;
 }

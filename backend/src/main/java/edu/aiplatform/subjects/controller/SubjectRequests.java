@@ -13,23 +13,28 @@ import org.springframework.util.MultiValueMap;
 
 /** Parse JSON riêng U04: không đổi Jackson toàn dự án hoặc âm thầm bỏ field/ép number thành text. */
 public final class SubjectRequests {
-    private SubjectRequests() { }
+    private SubjectRequests() {}
 
     public static SubjectCommandService.Create create(JsonNode body) {
         fields(body, Set.of("code", "name", "description", "managerId"));
-        return new SubjectCommandService.Create(text(body, "code", true), text(body, "name", true),
-                text(body, "description", false), uuid(body, "managerId", false));
+        return new SubjectCommandService.Create(
+                text(body, "code", true),
+                text(body, "name", true),
+                text(body, "description", false),
+                uuid(body, "managerId", false));
     }
 
     public static SubjectCommandService.UpdateInformation information(JsonNode body) {
         fields(body, Set.of("name", "description", "version"));
         require(body, "description");
-        return new SubjectCommandService.UpdateInformation(text(body, "name", true), text(body, "description", false), version(body));
+        return new SubjectCommandService.UpdateInformation(
+                text(body, "name", true), text(body, "description", false), version(body));
     }
 
     public static SubjectCommandService.ChangeManager manager(JsonNode body) {
         fields(body, Set.of("managerId", "version"));
-        return new SubjectCommandService.ChangeManager(uuid(body, "managerId", true), version(body));
+        return new SubjectCommandService.ChangeManager(
+                uuid(body, "managerId", true), version(body));
     }
 
     public static SubjectStatusService.ChangeStatus status(JsonNode body) {
@@ -116,6 +121,8 @@ public final class SubjectRequests {
             fieldErrors = Map.of(field, message);
         }
 
-        public Map<String, String> fieldErrors() { return fieldErrors; }
+        public Map<String, String> fieldErrors() {
+            return fieldErrors;
+        }
     }
 }

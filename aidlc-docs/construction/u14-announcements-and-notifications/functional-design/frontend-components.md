@@ -35,7 +35,7 @@ app/announcements/                 ClassAnnouncementsPage   #31 Class Announceme
 (HeaderWidget của U01)
   NotificationBell                                          số chưa đọc, kết nối SSE
     NotificationPopup                                       danh sách, đánh dấu đã đọc, tất cả đã đọc
-      EmailPreferencePanel                                  chỉ hiện với Student
+      EmailPreferencePanel                                  mọi role, loại email theo API
 ```
 
 ## 3. Component và API
@@ -49,6 +49,6 @@ app/announcements/                 ClassAnnouncementsPage   #31 Class Announceme
 | `ClassAnnouncementsCard` | `GET /api/v1/me/announcements?classId=` | "Thông báo lớp" trên Student Class Detail: vài thông báo mới nhất (tiêu đề, nhãn Quan trọng, tác giả · thời điểm); link Xem tất cả mở Class Announcements lọc lớp |
 | `NotificationBell` | `GET /api/v1/me/notifications/unread-count`, `.../events` | Chuông trên thanh trên cùng, chấm đỏ kèm số chưa đọc; SSE; mất kết nối thì tải lại số chưa đọc |
 | `NotificationPopup` | `GET /api/v1/me/notifications`, `POST .../{id}:read`, `POST .../notifications:read-all` | "Thông báo", nút Đánh dấu tất cả đã đọc; tab Tất cả, Chưa đọc (kèm số); mỗi thông báo: tiêu đề, lớp hoặc nhóm · thời điểm tương đối, chấm chưa đọc; bấm thì đánh dấu đã đọc rồi mở link; tải thêm khi cuộn (không có trang thông báo riêng) |
-| `EmailPreferencePanel` | `GET`, `PUT /api/v1/me/notification-preferences` | Chỉ Student, cuối popup: "Gửi email cho tôi khi có" với công tắc từng loại: Ghi danh vào lớp, Bài tập mới mở, Nhắc hạn nộp, Công bố điểm, Thông báo quan trọng của lớp (BR-U14-20, 21); tắt thì vẫn có thông báo trong app |
+| `EmailPreferencePanel` | `GET`, `PUT /api/v1/me/notification-preferences` | Mọi role, trong trang Cài đặt của popup: "Gửi email cho tôi khi có" với công tắc từng loại: Ghi danh vào lớp, Bài tập mới mở, Nhắc hạn nộp, Công bố điểm, Thông báo quan trọng của lớp (BR-U14-20, 21); Teacher có yêu cầu đổi trưởng nhóm/kết quả duyệt câu hỏi; Subject Manager thêm đề xuất câu hỏi; Admin thấy cảnh báo sao lưu bắt buộc (khóa bật); tắt email tùy chọn vẫn có thông báo trong app |
 
 Route `/announcements` cho Student, Teacher, Subject Manager (dùng `RoleGuard` của U01); chuông hiện cho mọi vai trò. Backend vẫn kiểm quyền thật.

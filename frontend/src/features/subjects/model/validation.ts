@@ -15,7 +15,9 @@ export function validateSubjectInformation(input: SubjectInformationInput): Subj
   return errors;
 }
 
-export function validateCreateSubject(input: SubjectInformationInput & { code: string }): SubjectFieldErrors {
+export function validateCreateSubject(
+  input: SubjectInformationInput & { code: string },
+): SubjectFieldErrors {
   const errors = validateSubjectInformation(input);
   if (!/^[A-Z0-9-]{1,20}$/.test(normalizeSubjectCode(input.code))) {
     errors.code = "Mã môn phải gồm 1–20 ký tự chữ hoa, số hoặc dấu -";

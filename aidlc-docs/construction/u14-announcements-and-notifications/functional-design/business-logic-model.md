@@ -76,9 +76,9 @@ Refinement B2: trước gửi email nhắc hạn, parse UUID từ đường dẫ
 Refinement B8 được duyệt 2026-10-25: mỗi lớp xử lý trong transaction riêng có timeout 15 giây. Bắt lỗi bên ngoài transaction để marker, notification và email cùng rollback; tiếp tục lớp sau, đồng thời cô lập lỗi đọc bài/liệt kê lớp để tiếp tục bài sau. Log scanner, assignmentId/classId, scanTime và loại lỗi, không log thông tin người nhận hoặc exception message. Giữ nguyên cửa sổ nhắc 5 phút và khóa chống trùng; không bảo đảm phục hồi sau outage vượt cửa sổ.
 
 ### F8 - Tùy chọn email (UC 65)
-1. Người học mở phần Cài đặt email trong popup: `GET /api/v1/me/notification-preferences`.
-2. Bật, tắt từng loại học tập: `PUT /api/v1/me/notification-preferences`; áp cho email tạo sau đó (BR-U14-21).
-3. Giảng viên, Admin không thấy phần này vì không có loại email học tập gửi cho họ.
+1. Mọi vai trò mở phần Cài đặt email trong popup: `GET /api/v1/me/notification-preferences`.
+2. Bật, tắt từng loại email phù hợp role (Student mặc định bật, staff mới mặc định tắt; Admin backup luôn bật): `PUT /api/v1/me/notification-preferences`; áp cho email tạo sau đó (BR-U14-21).
+3. Mọi role thấy phần này; không hiển thị loại của role khác. Admin thấy cảnh báo backup bắt buộc, không có quyền tắt.
 
 ### F9 - Dọn dữ liệu, gửi email đã hoãn
 1. Scanner mỗi phút: sang ngày mới (giờ Việt Nam) thì chuyển email `DEFERRED` sang `PENDING` theo thứ tự ưu tiên tới trần ngày; nhắc hạn đã qua hạn thì `SKIPPED` (BR-U14-24).

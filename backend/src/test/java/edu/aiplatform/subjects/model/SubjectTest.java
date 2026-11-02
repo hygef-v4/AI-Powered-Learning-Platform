@@ -39,17 +39,24 @@ class SubjectTest {
     @ValueSource(strings = {"  ", "\t\n"})
     void rejectsMissingName(String name) {
         assertThatThrownBy(() -> subject().updateInformation(name, null, LATER))
-                .isInstanceOf(ApiException.class).extracting("code").isEqualTo("SUBJECT_NAME_INVALID");
+                .isInstanceOf(ApiException.class)
+                .extracting("code")
+                .isEqualTo("SUBJECT_NAME_INVALID");
     }
 
     @Test
     void enforcesNameAndDescriptionBoundariesOnCreateAndEdit() {
-        Subject boundary = Subject.create(ID, "SWR302", "N".repeat(200), "D".repeat(2000), MANAGER, CREATED);
+        Subject boundary =
+                Subject.create(ID, "SWR302", "N".repeat(200), "D".repeat(2000), MANAGER, CREATED);
         assertThat(boundary.description()).hasSize(2000);
         assertThatThrownBy(() -> Subject.create(ID, "SWR302", "N".repeat(201), null, null, CREATED))
-                .isInstanceOf(ApiException.class).extracting("code").isEqualTo("SUBJECT_NAME_INVALID");
+                .isInstanceOf(ApiException.class)
+                .extracting("code")
+                .isEqualTo("SUBJECT_NAME_INVALID");
         assertThatThrownBy(() -> subject().updateInformation("Name", "D".repeat(2001), LATER))
-                .isInstanceOf(ApiException.class).extracting("code").isEqualTo("SUBJECT_DESCRIPTION_INVALID");
+                .isInstanceOf(ApiException.class)
+                .extracting("code")
+                .isEqualTo("SUBJECT_DESCRIPTION_INVALID");
         assertThat(subject().description()).isNull();
     }
 
@@ -95,10 +102,13 @@ class SubjectTest {
         subject.requireVersion(1);
         assertThat(subject.changeManager(null, LATER)).isSameAs(subject);
         assertThat(subject.reopen(LATER)).isSameAs(subject);
-        assertThat(subject.updateInformation(" Software Requirements ", null, LATER)).isSameAs(subject);
+        assertThat(subject.updateInformation(" Software Requirements ", null, LATER))
+                .isSameAs(subject);
         Subject archived = subject.archive(LATER);
         assertThat(archived.archive(LATER)).isSameAs(archived);
-        assertThatThrownBy(() -> archived.requireVersion(1)).isInstanceOf(ApiException.class)
-                .extracting("code").isEqualTo("SUBJECT_VERSION_CONFLICT");
+        assertThatThrownBy(() -> archived.requireVersion(1))
+                .isInstanceOf(ApiException.class)
+                .extracting("code")
+                .isEqualTo("SUBJECT_VERSION_CONFLICT");
     }
 }

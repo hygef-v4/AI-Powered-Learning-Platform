@@ -34,13 +34,21 @@ class SubjectAdminReadTest {
     private final IAccountLookup accounts = mock(IAccountLookup.class);
     private final ISubjectClasses provider = mock(ISubjectClasses.class);
     private final SubjectClassesReader reader = new SubjectClassesReader(provider);
-    private final edu.aiplatform.audit.contract.IAudit audit = mock(edu.aiplatform.audit.contract.IAudit.class);
-    private final SubjectAdminService service = new SubjectAdminService(repository, authorization, accounts, reader,
-            new SubjectAuditRecorder(audit), java.time.Clock.systemUTC());
+    private final edu.aiplatform.audit.contract.IAudit audit =
+            mock(edu.aiplatform.audit.contract.IAudit.class);
+    private final SubjectAdminService service =
+            new SubjectAdminService(
+                    repository,
+                    authorization,
+                    accounts,
+                    reader,
+                    new SubjectAuditRecorder(audit),
+                    java.time.Clock.systemUTC());
 
     @BeforeEach
     void authorize() {
-        when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
+        when(authorization.authorize(any(), anyString(), any()))
+                .thenReturn(AuthorizationDecision.allow());
     }
 
     @AfterEach
@@ -68,7 +76,8 @@ class SubjectAdminReadTest {
 
     @Test
     void adminDeniedByU01CannotReadSubjectExistence() {
-        when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.deny("DISABLED"));
+        when(authorization.authorize(any(), anyString(), any()))
+                .thenReturn(AuthorizationDecision.deny("DISABLED"));
         assertCode(() -> service.detail(admin, id), "SUBJECT_FORBIDDEN");
         verify(authorization).authorize(admin, "SUBJECT_VIEW", ResourceRef.subject(id));
         verifyNoInteractions(repository, accounts, provider);
@@ -76,8 +85,10 @@ class SubjectAdminReadTest {
 
     @Test
     void authorizationErrorOrNullFailsClosedBeforeRepository() {
-        when(authorization.authorize(any(), anyString(), any())).thenThrow(new IllegalStateException("internal"));
-        assertCode(() -> service.list(admin, null, null, 0, 20), "SUBJECT_AUTHORIZATION_UNAVAILABLE");
+        when(authorization.authorize(any(), anyString(), any()))
+                .thenThrow(new IllegalStateException("internal"));
+        assertCode(
+                () -> service.list(admin, null, null, 0, 20), "SUBJECT_AUTHORIZATION_UNAVAILABLE");
         doReturn(null).when(authorization).authorize(any(), anyString(), any());
         assertCode(() -> service.classes(admin, id), "SUBJECT_AUTHORIZATION_UNAVAILABLE");
         verifyNoInteractions(repository, accounts, provider);
@@ -85,7 +96,8 @@ class SubjectAdminReadTest {
 
     @Test
     void defaultsAndEmptyResultDoNotCallContactOrClassesProviders() {
-        when(repository.countByStatus(null)).thenReturn(Map.of(SubjectStatus.ACTIVE, 0L, SubjectStatus.ARCHIVED, 0L));
+        when(repository.countByStatus(null))
+                .thenReturn(Map.of(SubjectStatus.ACTIVE, 0L, SubjectStatus.ARCHIVED, 0L));
         var page = service.list(admin, null, null, null, null);
         assertThat(page.page()).isZero();
         assertThat(page.size()).isEqualTo(20);
@@ -101,14 +113,21 @@ class SubjectAdminReadTest {
     void paginationSearchCountsAndManagerDedupFollowCurrentPage() {
         Subject first = subject(id, "AAA", managerId);
         Subject second = subject(UUID.randomUUID(), "BBB", managerId);
-        when(repository.findPage("math", SubjectStatus.ACTIVE, 2, 10)).thenReturn(List.of(first, second));
+        when(repository.findPage("math", SubjectStatus.ACTIVE, 2, 10))
+                .thenReturn(List.of(first, second));
         when(repository.count("math", SubjectStatus.ACTIVE)).thenReturn(25L);
-        when(repository.countByStatus("math")).thenReturn(Map.of(SubjectStatus.ACTIVE, 25L, SubjectStatus.ARCHIVED, 4L));
+        when(repository.countByStatus("math"))
+                .thenReturn(Map.of(SubjectStatus.ACTIVE, 25L, SubjectStatus.ARCHIVED, 4L));
         when(accounts.getContact(managerId)).thenReturn(Optional.of(contact()));
-        when(provider.countClasses(List.of(first.id(), second.id()))).thenReturn(Map.of(first.id(), 0, second.id(), 3));
+        when(provider.countClasses(List.of(first.id(), second.id())))
+                .thenReturn(Map.of(first.id(), 0, second.id(), 3));
         var page = service.list(admin, " math ", SubjectStatus.ACTIVE, 2, 10);
-        assertThat(page.items()).extracting(SubjectAdminViews.ListItem::code).containsExactly("AAA", "BBB");
-        assertThat(page.items()).extracting(SubjectAdminViews.ListItem::classCount).containsExactly(0, 3);
+        assertThat(page.items())
+                .extracting(SubjectAdminViews.ListItem::code)
+                .containsExactly("AAA", "BBB");
+        assertThat(page.items())
+                .extracting(SubjectAdminViews.ListItem::classCount)
+                .containsExactly(0, 3);
         assertThat(page.items().get(0).manager().displayName()).isEqualTo("Manager");
         assertThat(page.totalElements()).isEqualTo(25);
         assertThat(page.statusCounts()).containsEntry(SubjectStatus.ARCHIVED, 4L);
@@ -143,7 +162,8 @@ class SubjectAdminReadTest {
     void providerErrorsDegradeDisplayWithoutLosingCoreDetail() {
         when(repository.findById(id)).thenReturn(Optional.of(subject(id, "AAA", managerId)));
         when(accounts.getContact(managerId)).thenThrow(new IllegalStateException("unavailable"));
-        when(provider.countClasses(any())).thenThrow(ApiException.unavailable("SUBJECT_CLASSES_UNAVAILABLE", "retry"));
+        when(provider.countClasses(any()))
+                .thenThrow(ApiException.unavailable("SUBJECT_CLASSES_UNAVAILABLE", "retry"));
         var detail = service.detail(admin, id);
         assertThat(detail.id()).isEqualTo(id);
         assertThat(detail.managerId()).isEqualTo(managerId);
@@ -171,33 +191,50 @@ class SubjectAdminReadTest {
     @Test
     void emptyClassesAreAvailableButUnavailableIsDistinct() {
         when(repository.findById(id)).thenReturn(Optional.of(subject(id, "AAA", null)));
-        when(provider.listClassesOfSubject(id)).thenReturn(List.of()).thenThrow(new IllegalStateException("down"));
+        when(provider.listClassesOfSubject(id))
+                .thenReturn(List.of())
+                .thenThrow(new IllegalStateException("down"));
         var available = service.classes(admin, id);
         assertThat(available.availability()).isEqualTo(SubjectAdminViews.Availability.AVAILABLE);
         assertThat(available.items()).isEmpty();
         var unavailable = service.classes(admin, id);
-        assertThat(unavailable.availability()).isEqualTo(SubjectAdminViews.Availability.UNAVAILABLE);
+        assertThat(unavailable.availability())
+                .isEqualTo(SubjectAdminViews.Availability.UNAVAILABLE);
         assertThat(unavailable.items()).isNull();
     }
 
     @Test
     void invalidPaginationIsRejectedBeforeReading() {
-        for (int[] input : List.of(new int[]{-1, 20}, new int[]{0, 0}, new int[]{0, 101})) {
-            assertCode(() -> service.list(admin, null, null, input[0], input[1]), "SUBJECT_PAGE_INVALID");
+        for (int[] input : List.of(new int[] {-1, 20}, new int[] {0, 0}, new int[] {0, 101})) {
+            assertCode(
+                    () -> service.list(admin, null, null, input[0], input[1]),
+                    "SUBJECT_PAGE_INVALID");
         }
         verifyNoInteractions(repository, accounts, provider);
     }
 
     private Subject subject(UUID subjectId, String code, UUID manager) {
-        return Subject.create(subjectId, code, "Name", "Description", manager, Instant.parse("2026-10-18T00:00:00Z"));
+        return Subject.create(
+                subjectId,
+                code,
+                "Name",
+                "Description",
+                manager,
+                Instant.parse("2026-10-18T00:00:00Z"));
     }
 
     private AccountContact contact() {
-        return new AccountContact(managerId, "manager@example.test", "Manager", Role.SUBJECT_MANAGER, AccountStatus.ACTIVE);
+        return new AccountContact(
+                managerId,
+                "manager@example.test",
+                "Manager",
+                Role.SUBJECT_MANAGER,
+                AccountStatus.ACTIVE);
     }
 
     private void assertCode(Runnable call, String code) {
-        assertThatThrownBy(call::run).isInstanceOfSatisfying(ApiException.class,
-                error -> assertThat(error.code()).isEqualTo(code));
+        assertThatThrownBy(call::run)
+                .isInstanceOfSatisfying(
+                        ApiException.class, error -> assertThat(error.code()).isEqualTo(code));
     }
 }

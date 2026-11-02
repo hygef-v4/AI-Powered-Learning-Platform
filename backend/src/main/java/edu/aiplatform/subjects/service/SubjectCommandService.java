@@ -28,8 +28,12 @@ public class SubjectCommandService {
     private final SubjectAuditRecorder audit;
     private final Clock clock;
 
-    public SubjectCommandService(ISubjectRepository repository, IAuthorization authorization, IAccountLookup accounts,
-                                 SubjectAuditRecorder audit, Clock clock) {
+    public SubjectCommandService(
+            ISubjectRepository repository,
+            IAuthorization authorization,
+            IAccountLookup accounts,
+            SubjectAuditRecorder audit,
+            Clock clock) {
         this.repository = repository;
         this.access = new SubjectAdminAccess(authorization, audit, clock);
         this.accounts = accounts;
@@ -37,18 +41,27 @@ public class SubjectCommandService {
         this.clock = clock;
     }
 
-    public record Create(String code, String name, String description, UUID managerId) { }
-    public record UpdateInformation(String name, String description, Long version) { }
-    public record ChangeManager(UUID managerId, Long version) { }
+    public record Create(String code, String name, String description, UUID managerId) {}
+
+    public record UpdateInformation(String name, String description, Long version) {}
+
+    public record ChangeManager(UUID managerId, Long version) {}
 
     @Transactional
     public Subject create(Actor actor, Create command) {
         access.require(actor, Actions.SUBJECT_CREATE, ResourceRef.none());
         requireCommand(command);
-        Subject subject = Subject.create(UUID.randomUUID(), command.code(), command.name(), command.description(),
-                command.managerId(), clock.instant());
+        Subject subject =
+                Subject.create(
+                        UUID.randomUUID(),
+                        command.code(),
+                        command.name(),
+                        command.description(),
+                        command.managerId(),
+                        clock.instant());
         if (repository.existsByCode(subject.code())) {
-            throw ApiException.conflict("SUBJECT_CODE_DUPLICATE", "Mã môn đã tồn tại, hãy dùng mã khác");
+            throw ApiException.conflict(
+                    "SUBJECT_CODE_DUPLICATE", "Mã môn đã tồn tại, hãy dùng mã khác");
         }
         if (subject.managerId() != null) {
             requireEligibleManager(subject.managerId(), lockManager(subject.managerId()));
@@ -59,7 +72,8 @@ public class SubjectCommandService {
             for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
                 if (cause instanceof org.hibernate.exception.ConstraintViolationException constraint
                         && "uk_subjects_code".equals(constraint.getConstraintName())) {
-                    throw ApiException.conflict("SUBJECT_CODE_DUPLICATE", "Mã môn đã tồn tại, hãy dùng mã khác");
+                    throw ApiException.conflict(
+                            "SUBJECT_CODE_DUPLICATE", "Mã môn đã tồn tại, hãy dùng mã khác");
                 }
             }
             throw failure;
@@ -75,7 +89,8 @@ public class SubjectCommandService {
         long version = requireVersion(command.version());
         Subject before = subject(subjectId);
         before.requireVersion(version);
-        Subject after = before.updateInformation(command.name(), command.description(), clock.instant());
+        Subject after =
+                before.updateInformation(command.name(), command.description(), clock.instant());
         if (after == before) {
             return before;
         }
@@ -97,11 +112,15 @@ public class SubjectCommandService {
         if (command.managerId() != null && preliminary.status() == SubjectStatus.ARCHIVED) {
             throw archivedSubject();
         }
-        // Khóa tài khoản trước dòng môn, cùng thứ tự với U01 khi vô hiệu hóa tài khoản rồi gỡ phân công; điều kiện của
+        // Khóa tài khoản trước dòng môn, cùng thứ tự với U01 khi vô hiệu hóa tài khoản rồi gỡ phân
+        // công; điều kiện của
         // tài khoản kiểm sau môn để giữ thứ tự lỗi (version, lưu trữ, rồi mới tới Chủ nhiệm môn).
-        AccountContact manager = command.managerId() == null ? null : lockManager(command.managerId());
-        Subject before = repository.findByIdForUpdate(subjectId)
-                .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
+        AccountContact manager =
+                command.managerId() == null ? null : lockManager(command.managerId());
+        Subject before =
+                repository
+                        .findByIdForUpdate(subjectId)
+                        .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
         before.requireVersion(version);
         if (command.managerId() != null) {
             if (before.status() == SubjectStatus.ARCHIVED) {
@@ -116,7 +135,8 @@ public class SubjectCommandService {
     }
 
     private static ApiException archivedSubject() {
-        return ApiException.conflict("SUBJECT_ARCHIVED", "Môn đã lưu trữ không có Chủ nhiệm môn. Hãy mở lại môn trước");
+        return ApiException.conflict(
+                "SUBJECT_ARCHIVED", "Môn đã lưu trữ không có Chủ nhiệm môn. Hãy mở lại môn trước");
     }
 
     /** Đọc và khóa tài khoản tới hết transaction (U01 {@code lockContact}) để role không đổi trước khi gán xong. */
@@ -124,14 +144,20 @@ public class SubjectCommandService {
         try {
             return accounts.lockContact(id).orElse(null);
         } catch (RuntimeException unavailable) {
-            throw ApiException.unavailable("SUBJECT_ACCOUNT_LOOKUP_UNAVAILABLE", "Chưa kiểm tra được tài khoản, vui lòng thử lại");
+            throw ApiException.unavailable(
+                    "SUBJECT_ACCOUNT_LOOKUP_UNAVAILABLE",
+                    "Chưa kiểm tra được tài khoản, vui lòng thử lại");
         }
     }
 
     private static void requireEligibleManager(UUID id, AccountContact contact) {
-        if (contact == null || !id.equals(contact.accountId())
-                || contact.role() != Role.SUBJECT_MANAGER || contact.status() != AccountStatus.ACTIVE) {
-            throw ApiException.badRequest("SUBJECT_MANAGER_INVALID", "Chủ nhiệm môn phải là tài khoản Chủ nhiệm môn đang hoạt động");
+        if (contact == null
+                || !id.equals(contact.accountId())
+                || contact.role() != Role.SUBJECT_MANAGER
+                || contact.status() != AccountStatus.ACTIVE) {
+            throw ApiException.badRequest(
+                    "SUBJECT_MANAGER_INVALID",
+                    "Chủ nhiệm môn phải là tài khoản Chủ nhiệm môn đang hoạt động");
         }
     }
 
@@ -139,12 +165,16 @@ public class SubjectCommandService {
         if (id == null) {
             throw ApiException.badRequest("SUBJECT_ID_REQUIRED", "Cần mã định danh môn học");
         }
-        return repository.findById(id).orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
+        return repository
+                .findById(id)
+                .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
     }
 
     private void save(Subject after, long version) {
         if (!repository.update(after, version)) {
-            throw ApiException.conflict("SUBJECT_VERSION_CONFLICT", "Dữ liệu môn đã thay đổi. Hãy tải lại trước khi sửa");
+            throw ApiException.conflict(
+                    "SUBJECT_VERSION_CONFLICT",
+                    "Dữ liệu môn đã thay đổi. Hãy tải lại trước khi sửa");
         }
     }
 
@@ -157,7 +187,8 @@ public class SubjectCommandService {
 
     private void requireCommand(Object command) {
         if (command == null) {
-            throw ApiException.badRequest("SUBJECT_COMMAND_REQUIRED", "Cần dữ liệu thao tác môn học");
+            throw ApiException.badRequest(
+                    "SUBJECT_COMMAND_REQUIRED", "Cần dữ liệu thao tác môn học");
         }
     }
 }
