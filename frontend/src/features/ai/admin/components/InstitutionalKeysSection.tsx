@@ -77,6 +77,18 @@ export function InstitutionalKeysSection() {
     }
   };
 
+  // Bật / tắt một khóa: chỉ công tắc đó tự khóa trong lúc lưu (Switch), các nút và công tắc khác trong bảng vẫn dùng được.
+  const toggle = async (id: string, enabled: boolean, version: number) => {
+    setError(null);
+    try {
+      await setInstitutionalEnabled(id, enabled, version);
+      await reload();
+    } catch (e) {
+      const problem = e instanceof ApiError ? e.problem : undefined;
+      setError(problem?.status === 409 ? CONFLICT : errorMessage(problem?.code, "Không đổi được trạng thái khóa."));
+    }
+  };
+
   const current = editing === "new" ? null : editing;
 
   return (
@@ -154,10 +166,7 @@ export function InstitutionalKeysSection() {
                         checked={c.status === "ACTIVE"}
                         label=""
                         ariaLabel={`Bật khóa ${label} ••••${c.keyHint ?? ""}`}
-                        disabled={busy !== null}
-                        onChange={(enabled) =>
-                          void run(id, () => setInstitutionalEnabled(id, enabled, c.version), "Không đổi được trạng thái khóa.")
-                        }
+                        onChange={(enabled) => toggle(id, enabled, c.version)}
                       />
                       <IconButton icon="edit" label={`Thay khóa ${label}`} disabled={busy !== null} onClick={() => setEditing(c)} />
                       <IconButton

@@ -26,11 +26,11 @@ it("lays out name, content choice and description in that order", () => {
   expect(screen.getByRole("radio", { name: "Tệp" })).toBeChecked();
 });
 
-it("rejects playlist before creating anything", async () => {
+it("rejects a playlist-only link before creating anything", async () => {
   youtube();
-  fireEvent.change(screen.getByTestId("material-source-url"), { target: { value: "https://youtu.be/abcdefghijk?list=x" } });
+  fireEvent.change(screen.getByTestId("material-source-url"), { target: { value: "https://www.youtube.com/playlist?list=x" } });
   fireEvent.click(screen.getByTestId("material-source-save"));
-  expect(await screen.findByRole("alert")).toHaveTextContent("bỏ phần đó rồi thử lại");
+  expect(await screen.findByRole("alert")).toHaveTextContent("Dán link của một video YouTube.");
   expect(posts()).toHaveLength(0);
 });
 
@@ -51,4 +51,15 @@ it("keeps the dialog open and shows conflict with reload guidance", async () => 
   fireEvent.click(screen.getByTestId("material-source-save"));
   expect(await screen.findByRole("alert")).toHaveTextContent("Tải lại");
   expect(saved).not.toHaveBeenCalled();
+});
+
+it("creating a new quiz closes the popup before opening the quiz", async () => {
+  vi.mocked(apiFetch).mockImplementation(async (_path, init) => !init?.method || init.method === "GET" ? []
+    : { quiz: { id: "q9", version: 1, title: "Quiz mới", subjectId: "s1", scope: "SUBJECT", classId: null, status: "DRAFT" }, items: [], drawRules: [] });
+  const saved = vi.fn();
+  render(<ModuleItemDialog scope={scope} moduleId="m1" onClose={vi.fn()} onSaved={saved} />);
+  fireEvent.click(screen.getByRole("radio", { name: "Quiz" }));
+  fireEvent.change(screen.getByTestId("material-source-title"), { target: { value: "Quiz mới" } });
+  fireEvent.click(screen.getByTestId("material-source-save"));
+  await waitFor(() => expect(saved).toHaveBeenCalledWith("Đã tạo quiz"));
 });

@@ -12,6 +12,25 @@ beforeEach(() => { vi.clearAllMocks(); vi.mocked(notificationsApi.list).mockReso
 afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
 it("rejects external, protocol-relative and escaped notification links", () => { expect(safeNotificationLink("/classes/1")).toBe("/classes/1"); for (const link of ["https://evil.test", "//evil.test", "/\\evil.test", "/\n/evil.test"]) expect(safeNotificationLink(link)).toBeNull(); });
 it("preference update only appears after API success", async () => { vi.mocked(notificationsApi.savePreferences).mockRejectedValue(new Error("down")); render(<EmailPreferencePanel />); const toggle = await screen.findByRole("switch", { name: "Ghi danh vào lớp" }); expect(toggle).toHaveAttribute("aria-checked", "true"); fireEvent.click(toggle); expect(await screen.findByRole("alert")).toHaveTextContent("Chưa lưu được"); expect(toggle).toHaveAttribute("aria-checked", "true"); });
+it("saving one email preference locks only that switch; others stay usable", async () => {
+  let finish!: (value: Record<string, boolean>) => void;
+  vi.mocked(notificationsApi.savePreferences).mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }))
+    .mockResolvedValue({ ENROLLED: false, ASSIGNMENT_OPENED: false, DEADLINE_REMINDER: true, GRADE_PUBLISHED: true, ANNOUNCEMENT_IMPORTANT: true });
+  render(<EmailPreferencePanel />);
+  const enrolled = await screen.findByRole("switch", { name: "Ghi danh vào lớp" });
+  const opened = screen.getByRole("switch", { name: "Bài tập mới mở" });
+  fireEvent.click(enrolled);
+  expect(enrolled).toHaveAttribute("aria-checked", "false");
+  expect(enrolled).toBeDisabled();
+  expect(opened).toBeEnabled();
+  fireEvent.click(opened);
+  await waitFor(() => expect(opened).toHaveAttribute("aria-checked", "false"));
+  await act(async () => finish({ ENROLLED: false, ASSIGNMENT_OPENED: true, DEADLINE_REMINDER: true, GRADE_PUBLISHED: true, ANNOUNCEMENT_IMPORTANT: true }));
+  // Lần lưu xong sau không ghi đè mục đã đổi của lần lưu khác.
+  expect(enrolled).toHaveAttribute("aria-checked", "false");
+  expect(opened).toHaveAttribute("aria-checked", "false");
+  expect(enrolled).toBeEnabled();
+});
 it("shows all five learning preference types including important announcement", async () => { render(<EmailPreferencePanel />); expect(await screen.findByRole("switch", { name: "Thông báo quan trọng của lớp" })).toBeInTheDocument(); expect(screen.getAllByRole("switch")).toHaveLength(5); });
 it("notification opens only after read succeeds", async () => { vi.mocked(notificationsApi.read).mockResolvedValue(undefined); render(<NotificationPopup count={1} student={false} revision={0} onChanged={vi.fn()} onClose={vi.fn()} />); fireEvent.click(await screen.findByTestId("notification-item")); await waitFor(() => expect(push).toHaveBeenCalledWith("/classes/1")); expect(notificationsApi.read).toHaveBeenCalledWith("n"); expect(screen.queryByRole("switch")).not.toBeInTheDocument(); });
 it("failed read does not navigate", async () => { vi.mocked(notificationsApi.read).mockRejectedValue(new Error("down")); render(<NotificationPopup count={1} student={false} revision={0} onChanged={vi.fn()} onClose={vi.fn()} />); fireEvent.click(await screen.findByTestId("notification-item")); expect(await screen.findByRole("alert")).toHaveTextContent("Chưa đánh dấu"); expect(push).not.toHaveBeenCalled(); });

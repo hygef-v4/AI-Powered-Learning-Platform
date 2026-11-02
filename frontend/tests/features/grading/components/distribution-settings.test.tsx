@@ -62,8 +62,9 @@ describe("assignment/class grade distribution visibility", () => {
     expect(screen.getByText(/ít nhất 20 kết quả/)).toHaveTextContent("điểm đã công bố");
     fireEvent.click(toggle);
     expect(save).toHaveBeenCalledWith("c", "a", true, 0);
+    // Gạt ngay sang bật và khóa lại trong lúc chờ server.
     expect(toggle).toBeDisabled();
-    expect(toggle).toHaveAttribute("aria-checked", "false");
+    expect(toggle).toHaveAttribute("aria-checked", "true");
     await act(async () => confirm({ enabled: true, version: 1, canEdit: true }));
     expect(toggle).toHaveAttribute("aria-checked", "true");
     fireEvent.click(toggle);
