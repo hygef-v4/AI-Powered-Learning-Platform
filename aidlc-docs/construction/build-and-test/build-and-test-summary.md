@@ -1,39 +1,27 @@
-# Build & Test summary — U14,2026-10-21
+# Build and test evidence — consolidated source baseline
 
-Scope: `announcements-and-notifications`, UC63–65. User approved code-generation step11 via “tiếp tục”; all11 code-generation steps are complete. Source subsequently split into7local commits `6cef92a` through `adfc51f` with documentation committed separately, per user request; no source changes during commit preparation. Global Build & Test is **not complete** and Operations readiness is **not established**: owner dependencies and independent acceptance remain open.
+**Documentation baseline 2026-10-30: staging@794a405304bf02dd2593a9fa2c88662d7cd52845**. The initial documentation-only sync performed no application run; the subsequent approved remediation now has fresh automated verification below. All 15 units have source; full platform acceptance and NFR certification remain pending.
 
-## Available results
+## Evidence matrix
 
-| Check | Actual result and evidence |
-|---|---|
-| Final-source full backend `mvn -B verify` |BUILD SUCCESS,921total/844passed/77skipped/0failures/errors;85s, finished2026-10-21T16:35:07+07:00; `.tmp/u14-build-test-verify.log` |
-| Artifact |Executable `backend/target/platform-backend-0.1.0-SNAPSHOT.jar`; JDK21 runtime, Java17 target; JDK17 execution not claimed |
-| Focused backend (previous final-source run) |71passed:66U14+3U01+2architecture; separate run, not added to full totals |
-| Frontend |314passed/61files; lint0warnings/errors, typecheck and production standalone build passed; retained final-source evidence, not rerun this continuation |
-| Contract/security smoke |OpenAPI syntax/localrefs and production nonce/header/login/announcements/404/repeated-request checks passed; production npm audit0vulnerabilities |
-| Desktop fixture |Teacher CRUD, Student read-only/preferences/read-all, no CSP/hydration console errors; fixture-only, no real provider acceptance |
-| Independent integration/E2E/security/performance |Not run; no measured latency, capacity, coverage percentage or independent acceptance claimed |
+| Scope/date | Evidence | Status and limit |
+|---|---|---|
+| U14 21/10 | [u14-verification.md](u14-verification.md) | historical-test-evidence; prior checkout/schema/Docker assumptions, not current blockers |
+| U02/U06/U12 24/10 | [e2e-u02-u06-u12-2026-10-24.md](e2e-u02-u06-u12-2026-10-24.md) | historical-test-evidence; exact fixture/failure/fix/rerun scope inside report |
+| U04/U13/U14 remediation 24/10 | [u04-u13-u14-remediation-2026-10-24.md](../remediation/u04-u13-u14/verification/u04-u13-u14-remediation-2026-10-24.md) | historical-test-evidence, not fresh HEAD acceptance |
+| B2/B8 UI + Mailpit 25/10 | [2026-10-25-b2-ui-smtp-acceptance-results.md](2026-10-25-b2-ui-smtp-acceptance-results.md) | historical local UI/SMTP evidence; not real delivery/inbox certification |
+| U09 structured feedback 26/10 | [2026-10-26-u09-structured-feedback-report.md](2026-10-26-u09-structured-feedback-report.md) | historical source/automated verification; scope and manual limits in report |
+| U05/U15 followup 26/10 | [2026-10-26-u05-u15-followup-report.md](2026-10-26-u05-u15-followup-report.md) | historical scoped fixes/verification |
+| MCP staff expansion 26/10 | [2026-10-26-mcp-staff-expansion-results.md](2026-10-26-mcp-staff-expansion-results.md) | historical full/focused/isolated PostgreSQL runs; 91 frontend files/560 tests recorded for that run, not HEAD |
+| Merged MCP/staging 26/10 | [audit.md](../../audit.md) | historical integration entry: 92 files/565 frontend and 101 focused backend; a separate run, not added to previous totals |
+| Code/docs 30/10 | [current-code-baseline.md](../../inception/reverse-engineering/current-code-baseline.md) | source-observed only; Markdown/OpenAPI/XML/export verification has separate sync report |
 
-Detailed logs and earlier unsuccessful environment/timeout attempts are listed in [verification handoff](u14-verification.md). Logs under `.tmp` are local ignored evidence, not committed artifacts. Skips remain skips; full counts include existing Surefire integration tests and are not unit-only counts.
+## Current gates
 
-## Runtime prerequisites and remaining gates
+Current move-only working tree at parent HEAD `5a76e428`: backend 1,611 passed/0 skipped and required DB guard passed; frontend 599 passed/94 files, typecheck/build passed, lint exit 0 with two existing warnings. All original source/resource files retained; broader refactor edits withdrawn. See [package/file move results](2026-10-30-package-moves-only-results.md). No stage, commit, push or history rewrite.
 
-Docker CLI is installed but Engine is not running: `docker version`/`docker ps` cannot reach the `dockerDesktopLinuxEngine` named pipe. No local stack was started. U09 grading migration references real U07 `assignments` and U08 `assignment_attempts` schemas absent in this checkout. Their owner migrations must be supplied; no fake schema was created. U07/U08/U12 providers remain stubs, so assignment/group/reminder and two-instance SSE behavior needs real integration.
+Fresh local automated verification: backend 1,611 passed/0 skipped, required DB guard passed, frontend 599 passed/94 files, lint/typecheck/build passed (2 existing lint warnings). See [2026-10-30-remediation-student-mcp-results.md](2026-10-30-remediation-student-mcp-results.md). CI, browser/runtime/provider/restore/security/performance acceptance remains pending. Docker and disposable PostgreSQL migrations were exercised in the remediation; the older “Docker stopped”, skipped-suite and missing-schema statements describe earlier runs. No live application database migration, provider call, email/grade publication or deployment was performed.
 
-After owner prerequisites and Engine availability, an independent tester must execute the [full matrix](u14-verification.md): DB/CAS/rollback/audit, actual event payloads, broker retries, Mailpit failures/cap/midnight/priority, reminder changed deadlines/cardinality, retention, real sessions/CSRF, proxy headers, mobile and measured NFR. Preserve the explicitly approved IMail limitation: SMTP may accept before a crash prevents recording SENT; current interface cannot guarantee exactly-once in that window.
+## Runbooks
 
-## Instructions and tracking
-
-- [Build](build-instructions.md)
-- [Unit/existing automated suites](unit-test-instructions.md)
-- [Integration](integration-test-instructions.md)
-- [Performance](performance-test-instructions.md)
-- [Security and contract](security-test-instructions.md)
-- [End-to-end](e2e-test-instructions.md)
-- [Execution checklist](u14-build-and-test-plan.md)
-
-Enabled Security/Resiliency controls have developer evidence in [code summary](../u14-announcements-and-notifications/code/code-summary.md); runtime effectiveness remains pending where listed. PBT stays disabled. No application source changed during Build & Test or commit preparation, no real email sent, no push/deploy or global stage advance performed. Local commits were explicitly authorized in the subsequent user request.
-
-## MCP staff expansion — 2026-10-26
-
-See [MCP staff expansion results](2026-10-26-mcp-staff-expansion-results.md) for exact commands, test counts, the isolated PostgreSQL migration/retry checks, limits and [manual acceptance](2026-10-26-mcp-staff-expansion-manual-test-guide.md). Bounded protocol/batch checks are verified; load/performance certification and new live-account acceptance are pending. No live stack migration is part of automated verification.
+[Build](build-instructions.md), [automated tests](unit-test-instructions.md), [integration](integration-test-instructions.md), [E2E](e2e-test-instructions.md), [security](security-test-instructions.md), [performance](performance-test-instructions.md). CI source and required DB-suite guard are linked in build instructions; deploy job remains disabled. Historical instructions and results are preserved with dates.

@@ -1,6 +1,9 @@
 # U15 Admin Dashboard — frontend-components
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U15 Admin Dashboard thuộc Iter 3, người code: Người 5; UC 66. Lấy phần Admin Dashboard của U16 cũ; thêm trạng thái backup của U03. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 > Cập nhật 2026-10-17 theo design G21 (bản 17/10, 123 artboard): màn, popup, trường và thao tác lấy theo design; chỗ design khác quy tắc nghiệp vụ thì giữ quy tắc. Chỉ sửa tài liệu.
 
 **Primary UC:** 66. **Primary stories:** US-RPT-002. **Requirements:** FR-024, FR-038.
@@ -37,3 +40,17 @@ app/admin/                        AdminDashboardPage   #8 Admin Dashboard
 | `StatusBreakdown` | `GET /api/v1/admin/dashboard` | "Chi tiết theo trạng thái", "Tính theo yêu cầu · không chứa dữ liệu cá nhân": bảng Tài khoản theo vai trò × trạng thái (Hoạt động, Chờ kích hoạt, Vô hiệu hóa), Môn học theo trạng thái (Hoạt động, Lưu trữ), Lớp học theo trạng thái (Nháp, Đang mở, Lưu trữ) |
 
 Route `/admin` chỉ cho `ADMIN` (dùng `RoleGuard` của U01). Backend vẫn kiểm quyền thật.
+
+## Source behavior delta — 2026-10-30
+
+Admin Dashboard có counts, backup metadata/history và GET /activity. Activity gồm biến động ACTIVE accounts hôm nay, số Assignment 7 ngày (individual/group/practice), tối đa 50 security events trong 30 ngày; ngày Asia/Ho_Chi_Minh. Các nguồn lỗi/timeout trả từng Section UNAVAILABLE/data null; no-store, chỉ ADMIN, query lạ bị từ chối. Không lộ archive/secrets hoặc cấp quyền học vụ.
+
+[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.
+
+## Backup UI remediation — 2026-11-02 (KAN-157)
+
+The current `AdminDashboardPage` keeps its 30-day backup calendar and renders `components/BackupStatus.tsx` beneath it. This replaces the historical `BackupSection` / `BackupHistoryDialog` presentation above; backup operations and public contracts are unchanged.
+
+- Existing `dashboard.backup` sections supply enabled/disabled status, daily time/timezone, next run, latest result/start/end/size/sanitized error, latest successful time and seven-day failure count. Disabled, never-run and unavailable are distinct. Settings opens the existing `/admin/settings` route.
+- `Xem lịch sử sao lưu` expands inline, with no popup. History uses the existing no-store `/api/v1/admin/dashboard/backups?page=0&size=20` endpoint, zero-based pagination and independent loading/error/retry. Close/unmount/page changes abort obsolete requests. The calendar's failed source does not suppress available metadata.
+- History shows scheduled date, result, start/end, size and sanitized error. No download/archive URL, restore or data-changing backup control is exposed. Source failures never masquerade as zero failures or successful backups.

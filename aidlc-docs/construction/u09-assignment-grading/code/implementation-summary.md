@@ -1,5 +1,9 @@
 # U09 — Implementation and verification
 
+**Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
+
+## Ghi nhận trước baseline 2026-10-30 (lịch sử)
+
 Ngày: 2026-10-20. Branch: `grading-gradebook`, baseline `6341aed2`.
 
 Đã triển khai mã backend/frontend cho UC42–45 dựa trên bộ thiết kế `u09-assignment-grading` và các public contract hiện có. Chưa nghiệm thu tích hợp production: U06/U07/U08 chủ yếu còn stub, U12 chưa có provider và môi trường hiện tại không truy cập được Docker. Các gate dưới đây phải được hoàn tất trước khi triển khai staging có U09.

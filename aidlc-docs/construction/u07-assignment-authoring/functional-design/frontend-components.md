@@ -1,6 +1,9 @@
 # U07 Assignment Authoring — frontend-components
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U07 Assignment Authoring thuộc Iter 2, người code: Người 4; UC 34–36. Lấy phần Assignment của U08 cũ (vòng đời, phát hành), U09 cũ (tài liệu, khung, DOCX) và rubric của U06 cũ. Quiz và ngân hàng thuộc U10. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 > Cập nhật 2026-10-17 theo design G21 (bản 17/10, 123 artboard): màn, popup, trường và thao tác lấy theo design; chỗ design khác quy tắc nghiệp vụ thì giữ quy tắc. Chỉ sửa tài liệu.
 > Cập nhật 2026-10-22 theo code hiện tại (các yêu cầu của người dùng 2026-10-21, 2026-10-22; chi tiết từng vòng trong code-summary).
 
@@ -44,6 +47,7 @@ app/assignments/[id]/     AssignmentFormPage          #26 Assignment Form
   AiDraftDialog                               AiSourcePicker (U06), AiTaskStatus (U06), xem trước đề xuất
   RetireDialog, popup Xóa bản nháp
   (vùng AssignmentFormSection cho U12: kiểm tra sẵn sàng của bài nhóm)
+  (vùng AssignmentSettingsSection / assignmentSettingsSections cho U09: cài đặt phân bố theo bài–lớp)
 app/assignments/[id]/diagrams/[blockId]/   DiagramViewPage   trang xem sơ đồ từ link trong DOCX
 shared/document/
   DocumentEditor, RichText, runs              trình soạn dùng chung U07, U08, U12; định dạng theo vùng bôi đen
@@ -77,3 +81,4 @@ Route `/assignments/*` và `/manager/assignments` cho Teacher, Subject Manager (
 |---|---|---|
 | `AssignmentRowAction` | U09 | Cột Bài nộp trên dòng bài ở tab Đánh giá |
 | `AssignmentFormSection` | U12 | Kiểm tra sẵn sàng nhóm trên Assignment Form của bài nhóm |
+| `AssignmentSettingsSection` (`assignmentSettingsSections`) | U09 | Cài đặt phân bố cho bài GRADED khi có classId. Quyền `canEdit` của U09 độc lập với readOnly của nội dung bài, kể cả bài SUBJECT chỉ đọc |

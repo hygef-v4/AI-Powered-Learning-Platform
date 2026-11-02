@@ -14,7 +14,7 @@
 
 ## Step 2 — AI request/output contract and validator (U07)
 
-Files: `backend/src/main/java/edu/aiplatform/assignments/application/AssignmentCommands.java`, `AssignmentRequests.java`, `AssignmentViews.java`, `AiDraftProposal.java`, `AssignmentAiDraftService.java`, new `AssignmentDraftPromptBuilder.java`, new `AssignmentDraftValidator.java`, `AssignmentMcpTools.java`; corresponding files under `backend/src/test/java/edu/aiplatform/assignments/application/`.
+Files: `backend/src/main/java/edu/aiplatform/assignments/service/AssignmentCommands.java`, `AssignmentRequests.java`, `AssignmentViews.java`, `AiDraftProposal.java`, `AssignmentAiDraftService.java`, new `AssignmentDraftPromptBuilder.java`, new `AssignmentDraftValidator.java`, `AssignmentMcpTools.java`; corresponding files under `backend/src/test/java/edu/aiplatform/assignments/application/`.
 
 - [ ] Default to automatic assessment-style inference from free-text/source documents (no SWR/SWD picker in UI); preserve legacy API profiles, and support VI/EN, target top-level requirement count and total points.
 - [ ] Extend the proposal schema with title and business context while accepting legacy MCP proposals without silently inventing metadata.
@@ -25,7 +25,7 @@ Files: `backend/src/main/java/edu/aiplatform/assignments/application/AssignmentC
 
 ## Step 3 — Private source upload and bounded text extraction (U03/U13)
 
-Files: `backend/src/main/java/edu/aiplatform/files/contract/ArtifactPurpose.java`, `domain/FileType.java`, `domain/PurposePolicy.java`, `application/FilePolicyService.java`, related file policy/content inspector tests; U13 contract and implementation in `backend/src/main/java/edu/aiplatform/ai/contract/` and `backend/src/main/java/edu/aiplatform/materials/application/ReferenceMaterialService.java`; `MaterialTextExtractor.java`/`MaterialParserMain.java` only through the existing parser boundary; U07 request/controller/service/tests; frontend `features/files/purposes.ts` and its tests.
+Files: `backend/src/main/java/edu/aiplatform/files/contract/ArtifactPurpose.java`, `domain/FileType.java`, `domain/PurposePolicy.java`, `application/FilePolicyService.java`, related file policy/content inspector tests; U13 contract and implementation in `backend/src/main/java/edu/aiplatform/ai/contract/` and `backend/src/main/java/edu/aiplatform/materials/service/ReferenceMaterialService.java`; `MaterialTextExtractor.java`/`MaterialParserMain.java` only through the existing parser boundary; U07 request/controller/service/tests; frontend `features/files/purposes.ts` and its tests.
 
 - [ ] Add a distinct assignment-source purpose, private educator-only authorization, TXT/DOCX/PDF allowlist and bounded 2 MiB per file / 3 files / 30,000 extracted characters per request.
 - [ ] Verify actual content type server-side; reject unsupported, empty, oversized and unreadable sources with a safe actionable error.
@@ -34,7 +34,7 @@ Files: `backend/src/main/java/edu/aiplatform/files/contract/ArtifactPurpose.java
 
 ## Step 4 — Create and edit assignment UI
 
-Files: `frontend/src/features/assignments/CreateAssignmentDialog.tsx`, `AssignmentFormPage.tsx`, `AiDraftDialog.tsx`, `RubricEditor.tsx`, `types.ts`, `api.ts`, shared `features/files/` uploader; assignment tests and new `AiDraftDialog.test.tsx`/focused upload tests.
+Files: `frontend/src/features/assignments/components/CreateAssignmentDialog.tsx`, `AssignmentFormPage.tsx`, `AiDraftDialog.tsx`, `RubricEditor.tsx`, `types.ts`, `api.ts`, shared `features/files/` uploader; assignment tests and new `AiDraftDialog.test.tsx`/focused upload tests.
 
 - [ ] Provide clear Manual / Import DOCX / AI entry paths; all paths create or edit the same DRAFT assignment.
 - [ ] Add free-text request, VI/EN, number of top-level requirements, total score and optional diagram constraints; let AI infer the assessment style instead of asking instructors to choose SWR/SWD.

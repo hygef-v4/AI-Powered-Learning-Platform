@@ -255,6 +255,25 @@ Plan chi tiết: [U10, giai đoạn 7](code-generation-plan/u10-quiz-authoring-c
 - KAN-152: chờ Report 3.
 - BR-U11-20: chờ người viết requirement.
 
+### Kiểm lại 2026-10-24
+
+`staging` mới nhất là `9530a35` (PR #15). Từ lần kiểm trước đã thêm:
+- Bản sửa vòng bean `fix/u06-ai-handler-cycle` (`fcbb71a`).
+- PR #12 (U09), PR #13 (U03/U15 backup).
+- PR #14 (giai đoạn 7), PR #15 (tài liệu bước 7.4).
+- `41c5ff7` (U06 Gemini).
+
+- **Phần code của lộ trình đã xong hết:** giai đoạn 0–4, G3/G4/E3, các bản sửa sau chạy thử, giai đoạn 7 (nối U06 thật), đều nằm trên `staging`.
+- **Không còn nhánh làm dở:** nhánh local `quiz-u06-integration` đã nằm trong `staging` (PR #14). Không có nhánh remote nào của U10/U11.
+- **Jira không đổi:** KAN-18 In Progress, KAN-23 và KAN-25 To Do, KAN-152 In Progress. Tester chưa thêm integration test nào cho U01, U10, U11.
+
+**Còn lại (đều chờ người khác hoặc cần người dùng):**
+
+- [ ] Tester viết integration test, rồi đóng KAN-18, KAN-23, KAN-25.
+- [ ] KAN-152: người dùng gửi Report 3.
+- [ ] BR-U11-20: người viết requirement chốt.
+- [ ] Tùy chọn: chạy AI soạn câu bằng khóa thật (người dùng tự nhập khóa trên trang Kết nối AI, hoặc Admin bật API của trường).
+
 ## 3. Nhánh
 
 - U01 giữ nhánh `cuong` tới khi merge vào `staging`.

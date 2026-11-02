@@ -1,32 +1,33 @@
-# Application Design — 2026-10-13
+# Application Design — AS-BUILT 2026-10-30
 
-> Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime hoặc phê duyệt các quyết định còn mở.
+Baseline `staging@794a405304bf02dd2593a9fa2c88662d7cd52845`; source-observed, không phải runtime acceptance. 66 active UC, 50 MVP stories + 1 extension, 15 logical units.
 
-## Architecture
+| Unit | Trách nhiệm hiện hành | UC | Packages |
+|---|---|---|---|
+| U01 | Account & Access | 01–12 | [identity](../../../backend/src/main/java/edu/aiplatform/identity) |
+| U02 | Audit | 13 | [audit](../../../backend/src/main/java/edu/aiplatform/audit) |
+| U03 | Job and Settings | 14–15 | [files](../../../backend/src/main/java/edu/aiplatform/files), [jobs](../../../backend/src/main/java/edu/aiplatform/jobs), [settings](../../../backend/src/main/java/edu/aiplatform/settings), [backup](../../../backend/src/main/java/edu/aiplatform/backup) |
+| U04 | Subject Administration | 16–19 | [subjects](../../../backend/src/main/java/edu/aiplatform/subjects) |
+| U05 | Class & Enrollment | 20–30 | [academics](../../../backend/src/main/java/edu/aiplatform/academics) |
+| U06 | AI Connections | 31–33 | [ai](../../../backend/src/main/java/edu/aiplatform/ai) |
+| U07 | Assignment Authoring | 34–36 | [assignments](../../../backend/src/main/java/edu/aiplatform/assignments) |
+| U08 | Assignment Work | 37–41 | [assignmentwork](../../../backend/src/main/java/edu/aiplatform/assignmentwork) |
+| U09 | Assignment Grading | 42–45 | [grading](../../../backend/src/main/java/edu/aiplatform/grading) |
+| U10 | Quiz Authoring | 46–48 | [quizzes](../../../backend/src/main/java/edu/aiplatform/quizzes) |
+| U11 | Quiz Practice | 49–52 | [quizpractice](../../../backend/src/main/java/edu/aiplatform/quizpractice) |
+| U12 | Group Assignment | 53–57 | [groups](../../../backend/src/main/java/edu/aiplatform/groups), [groupdocs](../../../backend/src/main/java/edu/aiplatform/groupdocs) |
+| U13 | Reference Materials | 58–62 | [materials](../../../backend/src/main/java/edu/aiplatform/materials) |
+| U14 | Announcements & Notifications | 63–65 | [announcements](../../../backend/src/main/java/edu/aiplatform/announcements), [notifications](../../../backend/src/main/java/edu/aiplatform/notifications) |
+| U15 | Admin Dashboard | 66 | [admindashboard](../../../backend/src/main/java/edu/aiplatform/admindashboard) |
 
-Giữ Next.js desktop-first, Spring Boot modular monolith, PostgreSQL, Redis, RabbitMQ, worker cùng code, Google Drive và email. 15 logical modules, không 15 deployable. MCP là authenticated inbound adapter gọi domain services; direct provider API là outbound adapter. Không Judge0/PayOS.
+## Kiến trúc triển khai
 
-## Invariants
+Một backend Spring Boot và một worker dùng chung code/module; frontend Next.js; không phải 15 microservice. PostgreSQL/Flyway quản lý schema; Redis cho phiên/rate limit; RabbitMQ cho job/events; private Google Drive cho tệp/backup; SMTP Brevo demo/production và Mailpit local. Adapter availability phụ thuộc cấu hình/profile; có lớp fallback không chứng minh runtime đang dùng stub.
 
-1. Chỉ ASSIGNMENT/QUIZ. Assignment = INDIVIDUAL/GROUP × diagramEnabled; doc model chung.
-2. Official grade/publication vẫn quyết định human; proposal/feedback không official.
-3. Subject/class/object authorization chạy cho web/API/MCP; key/agent không nới scope.
-4. Shared educator quota, không Student; personal API/agent không tự dùng shared account.
-5. Provider usage đo được khác externallyReported MCP. Unknown không = zero.
-6. Request gắn source/version/idempotency; stale output không overwrite. Autosave/submission không phụ thuộc AI.
-7. Group sections/leader submit, rubric snapshot; quyền full-group AI còn D03.
-8. Credentials riêng protected; Settings thường chỉ cấu hình non-secret, audit không raw key/prompt.
-9. Quiz Practice/Group Graded tạm giữ D01/D02; Lesson extension không bắt buộc.
-10. Construction/code/schema và diagrams hiện có chưa đồng bộ; không tự certify runtime.
+## Quyền và ranh giới
 
-## Ownership và validation
+U01 kiểm actor/current role/session; U04/U05 cung cấp subject/class scope. U06 sở hữu AI quota/task/credential/MCP; U07 authoring, U08 attempts/activity, U09 grading/gradebook; U10 bank/Quiz, U11 Quiz attempts; U12 groups và groupdocs; U13 materials/modules, U14 announcements/notifications, U15 admin aggregates. Student dùng API cá nhân hoặc MCP cho UC41; Admin không kết nối MCP. Không wallet/payment/Code Lab/Judge0.
 
-Xem components.md, services.md, component-methods.md, component-dependency.md và unit-of-work*.md. Security enabled subset giữ validation/auth/audit/secret; Resiliency giữ timeout/health/deploy; PBT disabled. Không thay phê duyệt giai đoạn cũ.
+## Nguồn chi tiết
 
-## Bổ sung hội đồng — current scope
-
-Backup/restore evidence U03, policy activity U09, ActivityEvent U11 (U14 tích hợp), teacher review U15, email quan trọng/failure U16; minh bạch AI U07/U13. Không thêm unit hoặc đổi nhân sự. Xem [đặc tả hội đồng](../requirements/council-features-2026-10-13.md). D05 đã được người dùng yêu cầu bổ sung, D01–D04 còn mở. Đây là phạm vi tài liệu, chưa runtime evidence.
-
-## Ranh giới sau gộp UC
-
-Current catalog: 66 UC, 50 MVP stories + 1 extension, 15 logical units. UC owner là nơi điều phối trải nghiệm; data/service owner có thể khác. UC 14/U03 dùng quota U07, UC 66/U16 đọc backup U03, UC 42/U15 đọc activity U11/U14. Không repository access xuyên unit; thu gọn catalog không xóa requirement hoặc trộn trách nhiệm.
+[Manifest code/schema/UI/tests](../reverse-engineering/current-code-baseline.md); [Public contract signatures](component-methods.md); [HTTP API inventory](../reverse-engineering/api-inventory.md); [Decision/delta register](../reverse-engineering/decision-register.md).

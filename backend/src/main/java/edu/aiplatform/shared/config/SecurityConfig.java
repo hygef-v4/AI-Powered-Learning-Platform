@@ -1,7 +1,7 @@
 package edu.aiplatform.shared.config;
 
-import edu.aiplatform.identity.web.IdentityHttpSecurity;
-import edu.aiplatform.identity.web.JwtAuthFilter;
+import edu.aiplatform.identity.controller.IdentityHttpSecurity;
+import edu.aiplatform.identity.controller.JwtAuthFilter;
 import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

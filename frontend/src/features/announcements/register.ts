@@ -3,7 +3,7 @@
 import { createElement } from "react";
 import { studentClassBoard, teacherClassTabs } from "@/features/academics/slots";
 import { navEntries } from "@/features/identity/slots";
-import { ClassRecentAnnouncements } from "./ClassRecentAnnouncements";
+import { ClassRecentAnnouncements } from "./components/ClassRecentAnnouncements";
 
 // Thông báo gần đây chiếm nửa trái hàng thẻ dưới Thông tin lớp của trang lớp sinh viên.
 studentClassBoard.register({ key: "u14-announcements", order: 10, component: ClassRecentAnnouncements });

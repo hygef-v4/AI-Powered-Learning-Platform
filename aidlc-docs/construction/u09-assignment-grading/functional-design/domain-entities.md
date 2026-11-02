@@ -1,6 +1,9 @@
 # U09 Assignment Grading — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U09 Assignment Grading thuộc Iter 2, người code: Người 2; UC 42–45. Lấy phần chấm Assignment và sổ điểm của U15 cũ và phần tiến độ nộp, phân bố điểm, xuất bảng điểm của U16 cũ. Kết quả Quiz luyện tập thuộc U11, thông báo thuộc U14. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 42, 43, 44, 45. **Primary stories:** US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005, US-RPT-001, US-RPT-003, US-INT-001. **Requirements:** FR-008, FR-009, FR-019, FR-020, FR-024, FR-039.
 
@@ -15,11 +18,14 @@ Thiết kế độc lập công nghệ.
 | `Evaluation` | Aggregate root | `evaluations` |
 | `EvaluationHistory` | Phần tử chỉ thêm | `evaluations.history` |
 | `GradingProposal` | Đề xuất từ AI hoặc MCP, có version | `grading_proposals` |
+| `GradeDistributionVisibility` | Cài đặt có version theo cặp `assignmentId`, `classId`; `enabled=false` mặc định | `grade_distribution_visibility` (U09/grading) |
 | `GradebookView`, `GradeDistributionView` | Kết quả tính khi đọc | Không lưu |
 
 U09 không sở hữu: bài nộp (U08, U12), bài và rubric (U07), lượt Quiz và kết quả luyện tập (U11), phản hồi Practice (U08), dữ liệu hoạt động (U08), thông báo (U14).
 
 ## 2. `Evaluation`
+
+`GradeDistributionVisibility` dùng khóa duy nhất `(assignmentId,classId)`, `enabled` và `version`. Migration grading `V20261101_0900__assignment_grade_distribution_visibility.sql` tạo bảng rỗng, không chuyển cờ lớp cũ. Không có bản ghi nghĩa là tắt. GET/PUT trả `{enabled,version,canEdit}`; PUT nhận `{enabled,version}`. Quyền `canEdit` dựa phân công dạy hiện tại và trạng thái lớp/bài, độc lập quyền sửa nội dung bài; bài SUBJECT mỗi lớp một bản ghi.
 
 | Thuộc tính | Kiểu | Ràng buộc |
 |---|---|---|
@@ -98,7 +104,7 @@ Chưa có U12 thì không có đánh giá nhóm; Submission Detail chỉ có bà
 | `IAuthorization` | U01 | Kiểm R3/R4, R5 |
 | `IAudit` | U02 | Audit |
 | `IEventPublisher` | U03 | Sự kiện `grade.published` |
-| `IClassAccess` | U05 | Sinh viên đang ghi danh, cờ `showGradeDistribution` |
+| `IClassAccess` | U05 | Sinh viên đang ghi danh, giảng viên được phân công, trạng thái và phạm vi lớp; không đọc cột phân bố lịch sử |
 | `IAiTask` | U06 | Task đề xuất chấm |
 | `IAssignmentQuery`, `IRubric`, `IDocumentModel` | U07 | Bài, rubric đã khóa, tính điểm, chữ và XML rút gọn cho AI |
 | `ISubmissionQuery`, `IActivityQuery` | U08 | Bài nộp, tiến độ, dữ liệu hoạt động |
@@ -112,6 +118,7 @@ Chưa có U12 thì không có đánh giá nhóm; Submission Detail chỉ có bà
 | `POST`, `GET /api/v1/evaluations/{id}/ai-proposals`; `POST /api/v1/evaluations:ai-proposals` | 43 |
 | `POST /api/v1/evaluations:finalize`, `POST /api/v1/evaluations:publish` | 43, 44 |
 | `GET /api/v1/classes/{classId}/gradebook`, `GET .../gradebook/export` | 45 |
+| `GET`, `PUT /api/v1/classes/{classId}/assignments/{assignmentId}/grade-distribution-visibility` | 34, 35, 45 (cài đặt U09 trong ngữ cảnh bài) |
 | `GET /api/v1/classes/{classId}/submission-progress`; `GET /api/v1/classes/{classId}/grade-distribution?assignmentId=` | 42, 45 (tab Thông tin lớp) |
 | `GET /api/v1/classes/{classId}/students/{accountId}/grades` | 45 (popup Student Detail) |
 | `GET /api/v1/me/grades`, `GET /api/v1/me/grades/attempts/{attemptId}`, `GET /api/v1/me/grade-distributions` | 37, 40 (U08) |

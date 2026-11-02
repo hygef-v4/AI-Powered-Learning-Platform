@@ -1,4 +1,4 @@
-import { ReceiptPage } from "@/features/assignmentwork/ReceiptPage";
+import { ReceiptPage } from "@/features/assignmentwork/pages/ReceiptPage";
 
 // U08: biên nhận sau khi nộp.
 export default async function Page({ params }: { params: Promise<{ attemptId: string }> }) {

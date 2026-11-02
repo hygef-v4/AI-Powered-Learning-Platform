@@ -1,6 +1,6 @@
 "use client";
 
-import { ErrorPage } from "./ErrorPage";
+import { ErrorPage } from "@/shared/ui/ErrorPage";
 
 /** Lỗi khi vẽ trang: mất mạng thì báo mất kết nối, còn lại là trang lỗi chung. */
 export default function Error({ reset }: { error: Error & { digest?: string }; reset: () => void }) {

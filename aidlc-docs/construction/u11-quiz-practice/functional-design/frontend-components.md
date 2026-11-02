@@ -1,6 +1,9 @@
 # U11 Quiz Practice — frontend-components
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U11 Quiz Practice thuộc Iter 3, người code: Người 1; UC 49–52. Lấy phần lượt Quiz của U11 cũ và chấm Quiz luyện tập của U15 cũ. Quiz chỉ có chế độ luyện tập (D01). Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 > Cập nhật 2026-10-17 theo design G21 (bản 17/10, 123 artboard): màn, popup, trường và thao tác lấy theo design; chỗ design khác quy tắc nghiệp vụ thì giữ quy tắc. Chỉ sửa tài liệu.
 
 **Primary UC:** 49, 50, 51, 52. **Primary stories:** US-ASM-003 (phần Quiz); dữ liệu hoạt động lượt Quiz của US-INT-001. **Requirements:** FR-007, FR-008, FR-018, FR-039.
@@ -17,7 +20,6 @@ Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://clau
 | 43 | Quiz Practice Detail (`s21`), trạng thái hết lượt (`s21b`) | `QuizPracticeDetailPage` | 50 | Student |
 | 44 | Quiz Taking (`s14`), popup Nộp bài (`s14b`), Hết giờ tự nộp (`s14c`) | `QuizTakingPage`, `SubmitQuizDialog`, `TimeUpOverlay` | 51 | Student |
 | 45 | Quiz Result (`s22`), Quiz không hiện điểm (`s22b`) | `QuizResultPage` | 52 | Student |
-| 37 | Learning Material, phần Quiz gắn với học liệu (`s05`, `s05b`) | `MaterialQuizList` | 50, 51 | Student |
 | 22 | Quiz Detail, tab Lượt làm của sinh viên (`t10c`) | `QuizAttemptsSection` | 42 | Teacher, Subject Manager được giao dạy |
 | 32 | Tab Đánh giá, cột Bài nộp của dòng Quiz (`t21`) | `QuizAttemptCount` | 48 | Teacher, Subject Manager được giao dạy |
 
@@ -38,7 +40,6 @@ app/quiz-attempts/[attemptId]/            QuizTakingPage            #44
 app/quiz-attempts/[attemptId]/result/     QuizResultPage            #45
   ScoreSummary, AnswerReview, RetryButton
 (đăng ký vào slot)
-  MaterialQuizList                        LearningMaterialSection của U13
   QuizAttemptsSection                     QuizDetailSection của U10; ActivityTimeline (U08)
   QuizAttemptCount                        QuizRowAction của U10
 ```
@@ -53,8 +54,18 @@ app/quiz-attempts/[attemptId]/result/     QuizResultPage            #45
 | `SubmitQuizDialog` | `POST .../submit` | "Nộp bài?": số câu chưa trả lời và câu nào, "Câu chưa trả lời được tính sai", thời gian còn lại, "Sau khi nộp, lượt này kết thúc."; Làm tiếp, Nộp bài |
 | `TimeUpOverlay` | `POST .../submit` | Hết giờ thì lưu lần cuối, tự nộp, khóa trang: "Hết thời gian làm bài. Các câu đã chọn được tự lưu và nộp. Đang chuyển sang trang kết quả…" |
 | `QuizResultPage`, `ScoreSummary`, `AnswerReview` | `GET .../result` | Nút quay lại; "Kết quả · tên"; đường dẫn; "Lần n · nộp lúc … · làm trong n phút". Quiz hiện điểm: điểm x / y, Đúng, Sai, Bỏ trống, "Practice · không tính vào sổ điểm". Quiz hiện đáp án sau khi nộp: "Xem lại từng câu": trạng thái câu, lựa chọn có nhãn "Đáp án đúng" và "Bạn chọn", Giải thích. Quiz không hiện điểm: "Đã nộp bài", "Quiz này không hiện điểm và đáp án sau khi nộp." Nút Về danh sách, Làm lại (khi còn lượt) |
-| `MaterialQuizList` | `GET /api/v1/me/quizzes?materialId=` | "Quiz gắn với học liệu": tên, "Practice · n câu · n phút", "Đã dùng x / y lượt", Điểm cao nhất, nút Làm quiz; hết lượt thì "Bạn đã dùng hết y/y lượt làm quiz này" |
 | `QuizAttemptsSection` | `GET /api/v1/classes/{classId}/quizzes/{quizId}/attempts`, `GET .../quiz-attempts/{attemptId}` | Tab "Lượt làm của sinh viên (n)": cột Sinh viên (avatar, tên, email), Lượt (x / y), Điểm cao nhất, Hoạt động (tóm tắt rời trang, ẩn tab hoặc "Không có"); "n / N sinh viên đã làm"; phân trang; "Chỉ đọc. Quiz Practice không vào sổ điểm."; chọn sinh viên hiện "Dòng thời gian hoạt động" của từng lượt (bắt đầu, rời trang kèm thời lượng, nộp bài kèm điểm), "Dữ liệu hoạt động chỉ để tham khảo; nền tảng không kết luận gian lận." |
 | `QuizAttemptCount` | `GET /api/v1/classes/{classId}/quizzes/{quizId}/attempts` (tóm tắt) | Cột Bài nộp của dòng Quiz: "n sinh viên đã làm" |
 
 Route `/quiz-practice/*` và `/quiz-attempts/*` chỉ cho Student (dùng `RoleGuard` của U01). Backend vẫn kiểm quyền thật.
+
+## Delta 2026-11-01
+
+| Thành phần | Nội dung |
+|---|---|
+| `QuestionPager` | `QuestionNav`, `QuestionPrevNext` dùng chung cho làm bài và kết quả |
+| `QuizTakingPage` | Câu đang xem giữ ở `?q=` (thay thế lịch sử); báo quy tắc gợi ý trừ điểm; gửi nốt sự kiện trước khi nộp |
+| `QuizResultPage`, `ResultQuestions` | Xem lại mỗi câu một trang, bảng số có màu đúng, sai, bỏ trống; dòng số lần rời và quyết định của giảng viên kèm lý do |
+| `QuizAttemptsSection` | Cột Rời trang, cờ thiếu tín hiệu, nhãn "Chờ quyết định"; `AttemptPenaltyPanel` hiện mức gợi ý, ô số điểm và lý do, nút "Trừ điểm", "Không trừ"; xem bài của sinh viên mỗi câu một trang |
+| `QuizPracticeDetailPage` | Báo quy tắc gợi ý trừ điểm trước khi làm |
+| Đã bỏ | `MaterialQuizList`, slot `quizMaterialSections`, `LearningMaterialSection` |

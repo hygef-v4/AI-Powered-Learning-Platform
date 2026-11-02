@@ -1,6 +1,9 @@
 # U11 Quiz Practice — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U11 Quiz Practice thuộc Iter 3, người code: Người 1; UC 49–52. Lấy phần lượt Quiz của U11 cũ và chấm Quiz luyện tập của U15 cũ. Quiz chỉ có chế độ luyện tập (D01). Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 49, 50, 51, 52. **Primary stories:** US-ASM-003 (phần Quiz); dữ liệu hoạt động lượt Quiz của US-INT-001. **Requirements:** FR-007, FR-008, FR-018, FR-039.
 
@@ -50,7 +53,6 @@ stateDiagram-v2
 |---|---|---|---|
 | `IQuizLifecycleListener` (contract của U10, U11 cài) | `onRetired(quizId)` | U10 | Tự nộp và chấm lượt đang làm khi Quiz bị ngưng hoặc có version mới |
 | Slot `QuizDetailSection` (của U10, U11 cài) | - | U10 | Phần Lượt làm và hoạt động cho giảng viên trên Quiz Detail |
-| Slot `LearningMaterialSection` (của U13, U11 cài) | - | U13 | Danh sách Quiz gắn tài liệu kèm nút Làm Quiz trên Learning Material |
 | `NavEntry` (contract của U01, U11 cài) | - | U01 | Mục Luyện tập Quiz trên menu bên của Student |
 | Slot `QuizRowAction` (của U10, U11 cài) | - | U10 | Số sinh viên đã làm trên dòng Quiz ở tab Đánh giá |
 | `IScheduledScanner` (contract của U03, U11 cài) | - | U03 | Tự nộp khi hết giờ |
@@ -79,3 +81,7 @@ stateDiagram-v2
 | `POST /api/v1/quizzes/{quizId}/attempts`, `GET /api/v1/quiz-attempts/{attemptId}`, `PUT .../answers`, `POST .../submit`, `POST .../activity` | 51 |
 | `GET /api/v1/quiz-attempts/{attemptId}/result` | 52 |
 | `GET /api/v1/classes/{classId}/quizzes/{quizId}/attempts`, `GET /api/v1/classes/{classId}/quiz-attempts/{attemptId}` | 42 |
+
+## Delta 2026-11-01
+
+`AttemptSnapshot` thêm `questionPoints` (Quiz sinh đề; lượt cũ trống). `QuizAttempt` thêm `ActivityOutcome`: `rawScore`, `suggestedPenalty`, `penaltyPoints` (đã trừ), `leaveCount`, `signal`, `decision` (`APPLIED`, `DISMISSED`), người quyết định, lúc quyết định, lý do. Migration `quizpractice/V20261101_1210__quiz_attempt_activity_penalty.sql`. Lượt cũ để trống, không có gợi ý.

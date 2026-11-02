@@ -36,7 +36,7 @@ class ArchitectureTest {
 
     @ArchTest
     static final ArchRule unit_internals_are_private = classes()
-            .that().resideInAnyPackage("..application..", "..domain..", "..infrastructure..", "..web..")
+            .that().resideInAnyPackage("..service..", "..model..", "..repository..", "..dto..", "..config..", "..integration..", "..controller..")
             .should(onlyBeAccessedFromTheSameUnit())
             .allowEmptyShould(true)
             .because("unit khác chỉ dùng package contract");

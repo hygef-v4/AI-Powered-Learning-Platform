@@ -45,7 +45,7 @@ U13 chỉ gọi package `contract` của unit khác. Bổ sung action U13 cùng 
 
 U13 sở hữu hai bảng trong infrastructure design. ID, kiểu FK, grants và Flyway locations phải đối chiếu migration thật trước khi viết SQL. Không tự tạo bảng U07/U08/U12 còn thiếu để làm full startup qua. Migration toàn hệ thống và kiểm thử provider thật là gate riêng nếu prerequisite chưa sẵn sàng.
 
-`IArtifact.attach(FileRef, Actor, MATERIAL)` xác nhận ownership/purpose và lấy metadata tin cậy; bỏ qua metadata tệp do client khai. Upload tái sử dụng `frontend/src/features/files/FileUploader.tsx` và `/api/v1/files`, không dựng upload service khác. Download cấp qua `issueDownloadToken` sau authorize; response U13 không lộ storage fileId. Token hết hạn 5 phút do U03 chịu trách nhiệm; U13 UI cho lấy token mới.
+`IArtifact.attach(FileRef, Actor, MATERIAL)` xác nhận ownership/purpose và lấy metadata tin cậy; bỏ qua metadata tệp do client khai. Upload tái sử dụng `frontend/src/features/files/components/FileUploader.tsx` và `/api/v1/files`, không dựng upload service khác. Download cấp qua `issueDownloadToken` sau authorize; response U13 không lộ storage fileId. Token hết hạn 5 phút do U03 chịu trách nhiệm; U13 UI cho lấy token mới.
 
 Update metadata, replace version, archive và reorder phải nguyên tử, có điều kiện theo `version`; tranh chấp trả 409 và không ghi đè. Reorder chỉ gồm ID thuộc đúng scope, không trùng, không kéo tài liệu môn vào thứ tự của lớp; payload có version của các hàng bị thay đổi, transaction rollback toàn bộ khi một hàng xung đột. Lịch sử phiên bản giữ nguyên nội dung cũ.
 

@@ -1,4 +1,4 @@
-import { SubjectDetailPage } from "@/features/subjects/SubjectDetailPage";
+import { SubjectDetailPage } from "@/features/subjects/pages/SubjectDetailPage";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

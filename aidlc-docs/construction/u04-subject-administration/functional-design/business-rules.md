@@ -1,6 +1,9 @@
 # U04 Subject Administration — business-rules
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U04 Subject Administration thuộc Iter 1, người code: Người 4; UC 16–19. Tách phần môn học từ U04 cũ (Subject, Class & Enrollment); phần lớp và ghi danh thuộc U05. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 16, 17, 18, 19. **Primary stories:** US-CAT-001 (phần môn). **Requirements:** FR-002, FR-003.
 
@@ -16,7 +19,7 @@ Mỗi rule có mã `BR-U04-xx` để truy vết sang test. Mã giữ như U04 c�
 | BR-U04-02 | `code` môn duy nhất toàn hệ thống, tối đa 20 ký tự, chỉ chữ hoa, số và `-`; không đổi sau khi tạo. | UC 17, 19 |
 | BR-U04-03 | Mỗi môn có tối đa một Chủ nhiệm môn, phải là tài khoản `SUBJECT_MANAGER` đang `ACTIVE`; Admin không được gán. Gán khi thêm môn hoặc khi sửa môn; gán người mới thay người cũ; được để trống. Môn `ARCHIVED` không có Chủ nhiệm môn: không gán được tới khi mở lại. `subjects.manager_id` hiện thời là căn cứ duy nhất của quyền R2. | FR-002, FR-003 |
 | BR-U04-04 | Lưu trữ và mở lại là thao tác trong UC 19. Lưu trữ môn thì lưu trữ luôn mọi lớp `DRAFT`, `OPEN` của môn trong cùng transaction (U05 thực hiện, giữ nguyên ghi danh và dữ liệu học tập); U05 không trả lời thì từ chối, không lưu trữ gì. Mở lại đưa môn về `ACTIVE`, các lớp vẫn `ARCHIVED`. Không xóa môn. | UC 19 |
-| BR-U04-05 | Subject Detail của Admin (UC 18) hiện thông tin môn, Chủ nhiệm môn và danh sách lớp của môn chỉ đọc (mã, tên, học kỳ, trạng thái, giảng viên, số sinh viên). Admin không mở chi tiết lớp và không sửa lớp. | UC 18 |
+| BR-U04-05 | Admin Subject Detail xem lớp của môn chỉ đọc; source UI không hiển thị student count trên bảng này. Admin không nhận quyền sửa lớp/ghi danh/chấm từ màn quản lý môn. | UC 18 |
 | BR-U04-06 | `name` bắt buộc, tối đa 200 ký tự; `description` tùy chọn, tối đa 2.000 ký tự. Sửa phải gửi kèm `version`; lệch thì trả `409`. | UC 17, 19 |
 | BR-U04-07 | Môn `ARCHIVED`: không tạo lớp mới (U05 kiểm), tài nguyên cấp môn chỉ đọc (U07, U10, U13 kiểm qua `ISubjectQuery.isActive`); lịch sử giữ nguyên. | UC 19 |
 
