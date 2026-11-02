@@ -65,7 +65,7 @@ export function SettingRow({ item, disabled = false, onSaved, onConflict }: Prop
           checked={item.value === true}
           disabled={locked}
           label=""
-          onChange={(next) => void save(next)}
+          onChange={(next) => save(next)}
         />
       );
       break;

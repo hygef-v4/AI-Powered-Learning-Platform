@@ -53,9 +53,10 @@ function VisibilitySetting({ classId, assignmentId }: { classId: string; assignm
   return <div className="flex flex-col gap-1" data-testid="grade-distribution-settings">
     {value?.canEdit && <>
       <Switch checked={value.enabled} label="Cho sinh viên xem phổ điểm ẩn danh" ariaLabel="Cho sinh viên xem phổ điểm ẩn danh"
-        disabled={busy || !!error} onChange={(enabled) => void save(enabled)} />
+        disabled={busy || !!error} onChange={(enabled) => save(enabled)} />
       <p className="text-[11px] text-muted">Chỉ hiển thị điểm đã công bố khi có ít nhất 20 kết quả. Cài đặt riêng cho bài này trong lớp, được lưu ngay.</p>
-      {busy && <p className="text-[11px] text-muted" role="status">Đang lưu cài đặt phổ điểm…</p>}
+      {/* Công tắc tự cho thấy đang lưu; dòng báo chỉ cho trình đọc màn hình để thẻ không xô lên xuống khi lưu. */}
+      <p className="sr-only" role="status">{busy ? "Đang lưu cài đặt phổ điểm…" : ""}</p>
     </>}
     {error && <Alert tone="danger" role="alert" action={<Button size="sm" data-testid="grade-distribution-settings-retry" onClick={() => {
       setValue(null);

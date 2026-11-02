@@ -14,21 +14,25 @@ describe("single video validation", () => {
     "https://youtu.be/abcdefghijk",
     "https://youtube.com/watch?v=abcdefghijk",
     "https://www.youtube.com/watch?v=abcdefghijk&t=20",
-    "https://www.youtube.com/watch?v=abcdefghijk&list=RDabcdefghijk&index=2",
-    "https://youtu.be/abcdefghijk?list=x&index=1",
-    "https://youtube.com/watch?list=x&v=abcdefghijk",
-    "https://youtube.com/watch?v=abcdefghijk&%6cist=x",
+    "https://www.youtube.com/watch?v=abcdefghijk&list=PLx&index=3",
+    "https://youtu.be/abcdefghijk?si=AbC123",
+    "http://youtu.be/abcdefghijk",
+    "youtube.com/watch?v=abcdefghijk",
+    "https://m.youtube.com/watch?v=abcdefghijk",
+    "https://www.youtube.com/shorts/abcdefghijk",
+    "https://www.youtube.com/live/abcdefghijk?feature=share",
+    "https://youtube.com/embed/abcdefghijk",
   ])("accepts %s", (url) => expect(validYoutube(url)).toBe(true));
   it.each([
     "javascript:alert(1)",
     "https://youtube.com.evil.test/watch?v=abcdefghijk",
     "https://youtube.com/playlist?list=x",
-    "https://youtube.com/watch?list=x",
+    "https://www.youtube.com/watch?list=x",
     "https://user@youtube.com/watch?v=abcdefghijk",
     "https://youtube.com/watch?v=abcdefghijk&v=abcdefghijk",
-    "https://youtube.com/watch?v=abcdefghijk&list=x&%6cist=y",
-    "http://youtu.be/abcdefghijk",
+    "https://youtube.com:8443/watch?v=abcdefghijk",
     "https://youtu.be/short",
+    "https://www.youtube.com/@channel",
   ])("rejects %s", (url) => expect(validYoutube(url)).toBe(false));
 });
 it("replacement carries the signed file reference and optimistic version", async () => {
@@ -64,3 +68,11 @@ it("conflict instructs reloading instead of silently retrying write", () => {
   expect(materialError(new ApiError({ status: 409 }))).toContain("Tải lại");
   expect(materialError(new ApiError({ status: 404 }))).toContain("không có quyền");
 });
+
+it.each([
+  "https://youtube.com/watch?list=x&v=abcdefghijk",
+  "https://youtu.be/abcdefghijk?list=x&index=2",
+  "https://youtube.com/watch?v=abcdefghijk&list=x&%6cist=y",
+])("accepts a single video with playlist context: %s", (url) =>
+  expect(validYoutube(url)).toBe(true),
+);

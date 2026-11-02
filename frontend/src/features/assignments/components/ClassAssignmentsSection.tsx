@@ -34,7 +34,7 @@ function ClassAssignments({ classId, headerActions }: { classId: string; headerA
       {creating && page.data && (
         <CreateAssignmentDialog target={{ kind: "class", classId, groupSupported: page.data.groupSupported }}
           onClose={() => setCreating(false)}
-          onCreated={(created) => router.push(`/assignments/${encodeURIComponent(created.id)}?classId=${encodeURIComponent(classId)}`)} />
+          onCreated={(created) => { setCreating(false); router.push(`/assignments/${encodeURIComponent(created.id)}?classId=${encodeURIComponent(classId)}`); }} />
       )}
     </div>
   );

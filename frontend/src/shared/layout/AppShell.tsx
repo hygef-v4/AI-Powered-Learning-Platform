@@ -182,7 +182,9 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
           <div aria-hidden className="fixed inset-x-0 top-14 bottom-0 z-20 animate-fade bg-[var(--c-scrim)] md:hidden" onClick={() => setDrawer(null)} />
         )}
         <div className="relative isolate flex min-w-0 flex-1 flex-col overflow-x-clip">
-          <main className="mx-auto flex w-full max-w-[1160px] min-w-0 flex-1 flex-col gap-7 px-4 pt-8 pb-16 has-[[data-wide-workspace]]:max-w-[1680px] sm:px-8 md:pt-10">{children}</main>
+          {/* Nội dung rộng theo phần trăm màn hình (lề hai bên 4%), không chặn ở một độ rộng cố định: màn lớn không còn khoảng
+              trống to hai bên. */}
+          <main className="flex w-full min-w-0 flex-1 flex-col gap-7 px-4 pt-8 pb-16 sm:px-[4%] md:pt-10">{children}</main>
         </div>
       </div>
       <LogoutDialog open={logoutOpen} onClose={closeLogout} />

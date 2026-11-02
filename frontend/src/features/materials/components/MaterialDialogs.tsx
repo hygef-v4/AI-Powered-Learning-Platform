@@ -126,9 +126,7 @@ export function ModuleItemDialog({
       (!editing || url.trim() !== (material?.current.videoUrl ?? "")) &&
       !validYoutube(url)
     ) {
-      setError(
-        "Dán link HTTPS của một video YouTube cụ thể, không dùng link chỉ có danh sách phát.",
-      );
+      setError("Dán link của một video YouTube.");
       return;
     }
     if (content === "FILE" && !editing && !fileRef) {
@@ -184,6 +182,8 @@ export function ModuleItemDialog({
             );
         }
         await moduleApi.attachQuiz(moduleId, created.quiz.id);
+        // Đóng popup trước khi điều hướng từ sidebar sang quiz vừa tạo.
+        onSaved("Đã tạo quiz");
         router.push(
           scope.kind === "class"
             ? `/quizzes/${encodeURIComponent(created.quiz.id)}?classId=${encodeURIComponent(scope.classId)}`

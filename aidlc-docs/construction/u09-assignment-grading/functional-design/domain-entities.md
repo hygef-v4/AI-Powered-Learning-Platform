@@ -33,8 +33,8 @@ U09 không sở hữu: bài nộp (U08, U12), bài và rubric (U07), lượt Qui
 | `kind` | enum | `ATTEMPT`, `GROUP_DOCUMENT`, `MEMBER` |
 | `assignmentId`, `classId` | UUID | Bài; lớp của lượt hoặc của nhóm |
 | `attemptId` | UUID | Với `ATTEMPT`; duy nhất |
-| `groupDocumentId` | UUID | Với `GROUP_DOCUMENT`, `MEMBER` |
-| `accountId` | UUID | Chủ lượt (`ATTEMPT`) hoặc thành viên (`MEMBER`); duy nhất cùng `groupDocumentId` với `MEMBER` |
+| `groupDocumentId` | UUID | Với GROUP_DOCUMENT/MEMBER; một root cho mỗi tài liệu nhóm |
+| `accountId` | UUID | Chủ lượt hoặc thành viên; MEMBER duy nhất theo documentId và accountId |
 | `submissionHash` | chuỗi | Hash của bài nộp được chấm |
 | `maxScore` | số (6,2) | Tổng điểm rubric |
 | `rubricChecks` | JSON | Theo phần: mục đạt, điểm phần |
@@ -53,14 +53,13 @@ stateDiagram-v2
     DRAFT --> DRAFT: Lưu lại
     DRAFT --> FINALIZED: Chốt
     FINALIZED --> PUBLISHED: Công bố
-    FINALIZED --> FINALIZED: Sửa có lý do
-    PUBLISHED --> PUBLISHED: Sửa có lý do
     PENDING --> SUPERSEDED: Có lượt nộp mới
     DRAFT --> SUPERSEDED: Có lượt nộp mới
-    FINALIZED --> SUPERSEDED: Có lượt nộp mới
+    FINALIZED --> SUPERSEDED: Cá nhân nộp lại
+    PUBLISHED --> SUPERSEDED: Cá nhân nộp lại
 ```
 
-**Text alternative**: Bài `GRADED` được nộp tạo đánh giá `PENDING`. Giảng viên lưu điểm thì `DRAFT`; chốt thì `FINALIZED`; công bố thì `PUBLISHED`. Sửa điểm đã chốt hoặc đã công bố cần lý do, giữ trạng thái và thêm lịch sử. Người học nộp lượt mới thì đánh giá chưa công bố của lượt cũ thành `SUPERSEDED`; đánh giá đã công bố giữ nguyên. Với bài nhóm, nhóm nộp lại thì đánh giá đưa về `PENDING` và điểm cũ vào lịch sử.
+**Text alternative (quyết định mới nhất 2026-11-02)**: Sau chốt không sửa được nội dung chấm; công bố đổi FINALIZED thành PUBLISHED. Nộp lại làm điểm trước mất hiệu lực: cá nhân chuyển đánh giá cũ thành SUPERSEDED kể cả đã công bố, tạo PENDING cho lượt mới; nhóm dùng lại root/member, xóa điểm và dữ liệu review hiện hành, trở về PENDING. Lịch sử/audit vẫn chỉ đọc; không lưu các lượt chấm nhóm song song, không đổi schema DB.
 
 ## 3. `GradingProposal`
 
@@ -81,7 +80,7 @@ stateDiagram-v2
 
 | Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `IGroupEvaluation` | `onGroupSubmitted(groupDocumentId, submissionHash, assignmentId, classId, memberIds)` | U12 | Tạo hoặc đưa về chờ chấm đánh giá tài liệu nhóm và thành viên trong transaction nộp |
+| `IGroupEvaluation` | `onGroupSubmitted(groupDocumentId, submissionHash, assignmentId, classId, memberIds)` | U12 | Reset root/member về PENDING cho lần nộp mới trong transaction nộp |
 | Sự kiện `grade.published` | - | U14 | Báo người học vừa có điểm (bài, lớp, danh sách người học) |
 | `ISubmissionListener` (contract của U08, U09 cài) | `onSubmitted(attemptId)` | U08 | Tạo đánh giá chờ chấm khi nộp bài `GRADED` |
 | `IAiTaskResultHandler` cho `GRADING_PROPOSAL`, `IMcpToolProvider` (contract của U06, U09 cài) | - | U06 | Nhận đề xuất AI; tool `record_grading_proposal` |

@@ -135,7 +135,7 @@ export function ManagerPicker({
                 ? { top: place.top, left: place.left, width: place.width }
                 : { visibility: "hidden" }
             }
-            className="fixed z-[60] max-h-56 overflow-auto rounded-lg border border-line bg-surface py-1 shadow-[var(--shadow-float)]"
+            className="fixed z-[110] max-h-56 overflow-auto rounded-lg border border-line bg-surface py-1 shadow-[var(--shadow-float)]"
           >
             {(resource.loading || waiting) && (
               <p role="status" className="px-3 py-2 text-xs text-muted">

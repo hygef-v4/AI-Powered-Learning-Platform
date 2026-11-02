@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * UC 31: API cá nhân của Student, Teacher, Subject Manager, danh sách provider, model cho phép và nguồn AI mặc định
- * (BR-U06-28).
+ * (FB-U06-01).
  */
 @RestController
 public class AiConnectionController {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ActivityTimeline } from "@/shared/activity/ActivityTimeline";
-import { Alert, Button, ClickableRow, Dialog, Pill, Section, TableFrame, Td, TextInput, Th } from "@/shared/ui";
+import { Alert, Button, ClickableRow, Dialog, Icon, PageNav, Pill, Section, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import { decideAttemptPenalty, getClassAttempts, getTeacherAttempt } from "../api";
 import { errorMessage, formatDateTime, formatPoints, signalText, submitModeText } from "../model/labels";
 import { ResultQuestions } from "./ResultQuestions";
@@ -52,9 +52,12 @@ function AttemptPenaltyPanel({ penalty, onDecide }: { penalty: PenaltyView; onDe
   );
 }
 
+/** Số sinh viên mỗi trang của bảng Lượt làm. */
+const PAGE_SIZE = 10;
+
 /**
  * Tab "Lượt làm của sinh viên" trên Quiz Detail (U10 `QuizDetailSection`, BR-U11-31): chỉ giảng viên của lớp; chỉ sửa được
- * quyết định trừ điểm (BR-U11-33). Mở từ lớp (có `classId`) mới có phần này.
+ * quyết định trừ điểm (BR-U11-33). Mở từ lớp (có `classId`) mới có phần này. Tiêu đề không kèm số, không có dòng tóm tắt.
  */
 export function QuizAttemptsSection({ quizId, classId }: { quizId: string; classId?: string }) {
   const [data, setData] = useState<ClassAttempts | null>(null);
@@ -62,6 +65,7 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
   const [student, setStudent] = useState<StudentAttempts | null>(null);
   const [detail, setDetail] = useState<TeacherAttemptDetail | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     if (!classId) return;
@@ -95,31 +99,37 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
   const penalty = detail?.result.penalty;
 
   return (
-    <Section title={`Lượt làm của sinh viên${data ? ` (${data.studentsAttempted})` : ""}`} icon="groups" className="mt-4">
+    <Section title="Lượt làm của sinh viên" icon="groups">
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {!data && !error && <p role="status" className="text-[13px] text-muted">Đang tải lượt làm…</p>}
       {data && <>
-        <p className="mb-2 text-xs text-muted" data-testid="quiz-attempts-summary">
-          {data.studentsAttempted} / {data.totalStudents} sinh viên đã làm · Quiz Practice không vào sổ điểm.
-        </p>
-        <TableFrame className="[&_table]:table-fixed">
-          <colgroup><col /><col className="w-[90px]" /><col className="w-[130px]" /><col className="w-[130px]" /><col className="w-[170px]" /></colgroup><thead><tr><Th>Sinh viên</Th><Th>Lượt</Th><Th>Điểm cao nhất</Th><Th>Rời trang</Th><Th>Lần gần nhất</Th></tr></thead>
+        {/* Cùng kiểu các bảng khác: hàng tiêu đề tô nền, bấm cả dòng để mở (mũi tên cuối dòng), phân trang dưới bảng. */}
+        <TableFrame filledHead className="[&_table]:min-w-[560px] [&_table]:table-fixed">
+          <colgroup><col /><col className="w-[72px]" /><col className="w-[96px]" /><col className="w-[96px]" /><col className="w-[40px]" /></colgroup>
+          <thead><tr><Th>Sinh viên</Th><Th>Lượt</Th><Th>Điểm cao nhất</Th><Th>Rời trang</Th><Th><span className="sr-only">Mở</span></Th></tr></thead>
           <tbody>
-            {data.students.map((s) => (
-              <ClickableRow key={s.accountId} onClick={() => s.attempts > 0 && setStudent(s)} data-testid="quiz-attempts-row">
-                <Td><span className="font-semibold">{s.displayName ?? "—"}</span><span className="block text-xs text-muted">{s.email}</span></Td>
-                <Td>{s.attempts}{data.maxAttempts ? ` / ${data.maxAttempts}` : ""}</Td>
-                <Td>{formatPoints(s.bestScore)}</Td>
+            {data.students.length === 0 && <tr><Td colSpan={5} className="py-6 text-center! text-muted">Lớp chưa có sinh viên.</Td></tr>}
+            {data.students.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((s) => (
+              <ClickableRow key={s.accountId} onClick={() => s.attempts > 0 && setStudent(s)} data-testid="quiz-attempts-row"
+                className={s.attempts > 0 ? undefined : "cursor-default"}>
+                <Td>
+                  <span className="block truncate font-semibold" title={s.displayName ?? undefined}>{s.displayName ?? "—"}</span>
+                  <span className="block truncate text-xs text-muted" title={s.email ?? undefined}>{s.email}</span>
+                  {s.lastSubmittedAt && <span className="block text-xs text-muted tabular-nums">Lần gần nhất {formatDateTime(s.lastSubmittedAt)}</span>}
+                </Td>
+                <Td className="tabular-nums">{s.attempts}{data.maxAttempts ? ` / ${data.maxAttempts}` : ""}</Td>
+                <Td className="tabular-nums">{formatPoints(s.bestScore)}</Td>
                 <Td data-testid="quiz-attempts-leaves">
                   {s.lastLeaveCount === null ? "—" : `${s.lastLeaveCount} lần`}
                   {s.signalWarning && <span className="block"><Pill tone="warning">Thiếu tín hiệu</Pill></span>}
                   {s.penaltyPending && <span className="block" data-testid="quiz-attempts-penalty-pending"><Pill tone="warning">Chờ quyết định</Pill></span>}
                 </Td>
-                <Td className="whitespace-nowrap text-muted">{formatDateTime(s.lastSubmittedAt)}</Td>
+                <Td className="text-faint">{s.attempts > 0 && <Icon name="chevron_right" size={18} />}</Td>
               </ClickableRow>
             ))}
           </tbody>
         </TableFrame>
+        <PageNav page={page} size={PAGE_SIZE} total={data.students.length} onPage={setPage} />
       </>}
       {student && !detail && (
         <Dialog open onClose={() => setStudent(null)} title={`Lượt làm · ${student.displayName ?? ""}`} footer={<Button onClick={() => setStudent(null)}>Đóng</Button>}>

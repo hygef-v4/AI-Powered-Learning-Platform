@@ -12,7 +12,7 @@ function keyOf(p: SourcePreference | SourceOption): string {
 }
 
 /**
- * Nguồn AI mặc định (BR-U06-28): chọn một lần, các chức năng AI tự dùng nguồn này thay vì hỏi mỗi lần. Nguồn chưa
+ * Nguồn AI mặc định (FB-U06-01): chọn một lần, các chức năng AI tự dùng nguồn này thay vì hỏi mỗi lần. Nguồn chưa
  * dùng được vẫn chọn được (ví dụ chưa dán khóa) và hiện lý do; lúc dùng popup báo lại, không tự đổi nguồn.
  * `reloadKey` đổi khi khóa cá nhân thay đổi để cập nhật trạng thái dùng được.
  */

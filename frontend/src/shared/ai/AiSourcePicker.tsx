@@ -24,7 +24,7 @@ function keyOf(option: SourceOption) {
 
 /**
  * Popup Chọn nguồn AI (c16): nguồn không dùng được hiện mờ kèm lý do. Người dùng đã đặt nguồn mặc định
- * (BR-U06-28) và nguồn đó dùng được thì popup tự gửi bằng nguồn ấy, không bắt chọn lại; mặc định không dùng được
+ * (FB-U06-01) và nguồn đó dùng được thì popup tự gửi bằng nguồn ấy, không bắt chọn lại; mặc định không dùng được
  * thì báo lý do để chọn nguồn khác cho lần này. Lỗi hay hết hạn mức không tự đổi nguồn (BR-U06-10, 11).
  */
 export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, onSubmit }: Props) {

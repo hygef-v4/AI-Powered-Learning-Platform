@@ -56,6 +56,9 @@ class GradebookServiceTest {
         assertThat(service.myGrades(actor, cid)).isEmpty();
         when(repo.findByAttemptId(mine.attemptId)).thenReturn(Optional.of(mine));
         assertThat(service.forAttempt(actor, mine.attemptId).score()).isEqualByComparingTo("1");
+        mine.supersede();
+        assertThat(service.forAttempt(actor, mine.attemptId).score()).isNull();
+        assertThat(service.myGrades(actor, cid)).isEmpty();
         when(classes.isActiveStudent(sid, cid)).thenReturn(false);
         assertThatThrownBy(() -> service.myGrades(actor, cid)).isInstanceOf(RuntimeException.class);
     }

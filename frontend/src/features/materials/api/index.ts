@@ -90,17 +90,34 @@ export function materialError(error: unknown): string {
   }
   return "Không tải được học liệu, vui lòng thử lại.";
 }
+const WATCH_HOSTS = [
+  "youtube.com",
+  "www.youtube.com",
+  "m.youtube.com",
+  "music.youtube.com",
+  "youtube-nocookie.com",
+  "www.youtube-nocookie.com",
+];
+/**
+ * Link chỉ ra một video YouTube (cùng luật với backend): watch, youtu.be, Shorts, embed, live, bản di động, thiếu "https://"
+ * hay dùng http đều nhận; phần danh sách phát, thời điểm phát bị bỏ qua. Link chỉ là danh sách phát thì không nhận.
+ */
 export function validYoutube(value: string): boolean {
   try {
-    const url = new URL(value.trim());
-    if (url.protocol !== "https:" || url.username || url.password || url.port) return false;
-    const keys = [...url.searchParams.keys()];
-    if (new Set(keys).size !== keys.length) return false;
+    const text = value.trim();
+    const url = new URL(text.includes("://") ? text : `https://${text}`);
+    if (!["https:", "http:"].includes(url.protocol) || url.username || url.password || url.port)
+      return false;
+    if (url.searchParams.getAll("v").length > 1) return false;
+    const host = url.hostname.toLowerCase();
     const id =
-      url.hostname === "youtu.be"
-        ? url.pathname.slice(1)
-        : ["youtube.com", "www.youtube.com"].includes(url.hostname) && url.pathname === "/watch"
-          ? url.searchParams.get("v")
+      host === "youtu.be"
+        ? url.pathname.replace(/^\/|\/$/g, "")
+        : WATCH_HOSTS.includes(host)
+          ? /^\/watch\/?$/.test(url.pathname)
+            ? url.searchParams.get("v")
+            : (/^\/(?:shorts|embed|live|v)\/([A-Za-z0-9_-]{11})\/?$/.exec(url.pathname)?.[1] ??
+              null)
           : null;
     return !!id && /^[A-Za-z0-9_-]{11}$/.test(id);
   } catch {

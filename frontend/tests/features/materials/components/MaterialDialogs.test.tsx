@@ -76,3 +76,29 @@ it("keeps the dialog open and shows conflict with reload guidance", async () => 
   expect(await screen.findByRole("alert")).toHaveTextContent("Tải lại");
   expect(saved).not.toHaveBeenCalled();
 });
+
+it("creating a new quiz closes the popup before opening the quiz", async () => {
+  vi.mocked(apiFetch).mockImplementation(async (_path, init) =>
+    !init?.method || init.method === "GET"
+      ? []
+      : {
+          quiz: {
+            id: "q9",
+            version: 1,
+            title: "Quiz mới",
+            subjectId: "s1",
+            scope: "SUBJECT",
+            classId: null,
+            status: "DRAFT",
+          },
+          items: [],
+          drawRules: [],
+        },
+  );
+  const saved = vi.fn();
+  render(<ModuleItemDialog scope={scope} moduleId="m1" onClose={vi.fn()} onSaved={saved} />);
+  fireEvent.click(screen.getByRole("radio", { name: "Quiz" }));
+  fireEvent.change(screen.getByTestId("material-source-title"), { target: { value: "Quiz mới" } });
+  fireEvent.click(screen.getByTestId("material-source-save"));
+  await waitFor(() => expect(saved).toHaveBeenCalledWith("Đã tạo quiz"));
+});

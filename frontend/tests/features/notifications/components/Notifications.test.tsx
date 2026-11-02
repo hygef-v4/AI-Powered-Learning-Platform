@@ -290,3 +290,43 @@ it("reconnects with bounded backoff and refreshes unread count after an outage",
   await vi.advanceTimersByTimeAsync(60000);
   expect(ReconnectingStream.instances).toHaveLength(size);
 });
+
+it("saving one email preference locks only that switch; others stay usable", async () => {
+  let finish!: (value: Record<string, boolean>) => void;
+  vi.mocked(notificationsApi.savePreferences)
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    )
+    .mockResolvedValue({
+      ENROLLED: false,
+      ASSIGNMENT_OPENED: false,
+      DEADLINE_REMINDER: true,
+      GRADE_PUBLISHED: true,
+      ANNOUNCEMENT_IMPORTANT: true,
+    });
+  render(<EmailPreferencePanel />);
+  const enrolled = await screen.findByRole("switch", { name: "Ghi danh vào lớp" });
+  const opened = screen.getByRole("switch", { name: "Bài tập mới mở" });
+  fireEvent.click(enrolled);
+  expect(enrolled).toHaveAttribute("aria-checked", "false");
+  expect(enrolled).toBeDisabled();
+  expect(opened).toBeEnabled();
+  fireEvent.click(opened);
+  await waitFor(() => expect(opened).toHaveAttribute("aria-checked", "false"));
+  await act(async () =>
+    finish({
+      ENROLLED: false,
+      ASSIGNMENT_OPENED: true,
+      DEADLINE_REMINDER: true,
+      GRADE_PUBLISHED: true,
+      ANNOUNCEMENT_IMPORTANT: true,
+    }),
+  );
+  // Lần lưu xong sau không ghi đè mục đã đổi của lần lưu khác.
+  expect(enrolled).toHaveAttribute("aria-checked", "false");
+  expect(opened).toHaveAttribute("aria-checked", "false");
+  expect(enrolled).toBeEnabled();
+});

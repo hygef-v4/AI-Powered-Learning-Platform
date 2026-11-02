@@ -7828,4 +7828,164 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 **AI Response**: Removed the task-owned formatter directory and23 known temporary scripts/snapshots/logs, after recording verification and source commit hashes. Six interim documents consolidated into2 durable plan/results documents; current links validated, superseded audit paths retained only as historical text. Confirmed214 final working-source hashes unchanged and source/index clean after8 scoped source commits. Prepared the final6-file documentation commit. The user's report remains untracked at its original path. No push, merge, deployment or unrelated cleanup.
 **Context**: Explicit cleanup/local-commit request fulfilled in scope; final Git commit/status checks follow.
 
+## Freeze finalized grades — 2026-11-02
+**Timestamp**: 2026-11-02T15:19:14+07:00 (completion record)
+**User Input**: "điểm đã chốt rồi thi k được sửa nữa, giúp tôi sửa lại business rule, doc aidlc sau sửa lại code, test"
+**Clarification**: "Cho nộp lại thành lượt mới, giữ nguyên điểm đã chốt của lượt cũ"
+**AI Response**: Implement immutable FINALIZED/PUBLISHED grades; publication only changes visibility. Retain old graded snapshots and create a separate pending grading round on resubmission. Update AI-DLC before implementation and verify backend/UI/persistence. Existing branch fix/u05-u09-u15, initially clean at d857fd7f. No commit/push/live migration requested.
+
+**Verification**: Final backend reports 1,743 cases/229 suites, zero failures/errors/skips after full execution and corrected-fixture GradingServiceTest rerun (17 cases). Required PostgreSQL suites passed. Frontend 710/710, TypeScript, lint (one existing unrelated warning), production build and OpenAPI parse passed. Initial concurrent verification hit Windows native-memory/pagefile exhaustion; sequential runs passed. Independent review: no Critical/Important findings. Next-generated tsconfig restored; no live migration/restart, real grade write, commit or push. Details: construction/build-and-test/2026-11-02-locked-grades-results.md.
+
+---
+
+## Resubmission decision changed — 2026-11-02
+**User Input**: "tôi nghĩ để cái cũ đi nộp lại thì bỏ điểm cũ"
+**AI Response**: Supersede the previous separate-round decision. Retain grade edit locks but invalidate prior grades on resubmission: individual evaluations become SUPERSEDED, including published; group evaluations reuse existing IDs and reset to PENDING. Remove the unexecuted migration and snapshot/current-field/query changes. Preserve audit/history rather than deleting rows. Update AI-DLC and rerun regression tests; no live DB migration/restart/commit/push.
+
+**Verification**: Full backend 1,741 tests / 229 suites, zero failures/errors/skips, required PostgreSQL suites passed. Grading frontend 118/118, TypeScript, scoped ESLint and final production build passed. Reviewer found stale local marks after a changed group receipt; fixed reload/reset, confirmed red/green regression and independent recheck with no remaining Critical/Important finding. Maven clean plugin unavailable offline: removed only the discarded generated migration, then full test passed. Build passed with one process-local worker after an initial 23-worker native exit. Restored generated tsconfig; no schema/index diff or source/target copy of the discarded migration. No live DB write/restart, commit or push. Results supersede the previous preserve-rounds evidence above.
+
+---
+
+## Local commit authorization — finalized grade lock
+**Timestamp**: 2026-11-02T16:10:53+07:00
+**User Input**: "giúp tôi commit"
+**AI Response**: Review and commit the verified grading lock/reset implementation, regression tests, API contract and AI-DLC in English on fix/u05-u09-u15. Rechecked working diff and recorded test/build evidence; no production source change since verification. Exclude generated files and local logs; no migration, push, restart or deployment.
+
+---
+
+## Resolve staging merge conflict
+**Timestamp**: 2026-11-02T16:15:25+07:00
+**User Input**: "[Image #1] giúp tôi resolve conflict"
+**AI Response**: Resolve the in-progress merge of staging d33e31c3 into fix/u05-u09-u15. The sole conflict is aidlc-state.md: retain both Finalized grade lock and Staging check fixes sections, removing markers only. Preserve all already auto-merged source/package/test changes and existing audit entries, then complete the local merge commit. Checked section uniqueness, conflict markers, staged whitespace and package JSON parsing. Runtime tests/build are not rerun for this documentation conflict resolution; prior branch test evidence remains dated. No push, live DB change or restart.
+
+---
+
+## Dedicated MCP documentation — 2026-11-02
+**User Input**: "[Image #1] phần kết nối mcp này thì nên có 1 trang doc riêng, cho 1 cái link hay 1 cái nút vào để xem doc mcp trong đó thì mô tả rõ cách dùng, cách kết nối, mô tả từng chức năng, tool làm gì"
+**AI Response**: Build a dedicated authenticated guide linked from Agent MCP. Reuse safe client setup/copy prompt; explain workflows, per-tool behavior/permissions and troubleshooting. Preserve the existing design and token management. Read current provider schemas and official client documentation; no new backend/DB behavior, dependency or live write.
+
+---
+
+## MCP documentation verification — 2026-11-02
+**Result**: Route/link and source-aligned 29-tool guide implemented; U06/AI-DLC synchronized. Full frontend ran 727 cases (726 pass, one duplicate-note UI failure), fixed that localized duplicate and reran all 39 AI/MCP cases successfully. TypeScript, scoped lint and final Next 16.4.3 production build passed. Actual desktop/mobile light/dark rendering/navigation inspected, no horizontal overflow. Native dependency locks required restarting only frontend while syncing the existing lockfile; backend/terminal windows preserved. Independent review no Critical/Important findings. Generated config/AGENTS edits restored. No live MCP write, schema/API/backend change, commit or push. Detailed evidence: construction/build-and-test/2026-11-02-mcp-documentation-results.md.
+
+---
+
+## Local commit — dedicated MCP documentation
+**Timestamp**: 2026-11-02T18:47:03+07:00
+**User Input**: "giúp tôi commit"
+**AI Response**: Commit the verified MCP documentation route/link, 29-tool catalog, shared safe setup/SSR handling, regression tests and U06 AI-DLC in English on fix/u05-u09-u15. Reviewed the scoped diff, whitespace and recorded test/build/browser evidence; no application source changed after verification. Exclude generated files, local scripts/logs/screenshots and credentials. Local commit only; no push, backend restart or DB migration.
+## Merge to staging — 2026-11-02
+
+**Timestamp**: 2026-11-02T04:10:00Z
+
+**User Input (complete raw)**:
+
+> gop di
+
+**AI Response**: PR #35 checks all green (CI backend, CI frontend, GitGuardian; deploy/images skipped). Merged into `staging` as `008c72be`; local `staging` fast-forwarded and its tree is identical to the tested branch tip `1bbf5dfe`, so the verify and end-to-end results above apply to `staging`.
+
+**Context**: Integration.
+
+---
+
+## Retest on staging — 2026-11-02
+
+**Timestamp**: 2026-11-02T04:40:00Z
+
+**User Input (complete raw)**:
+
+> test lai tren nhang stag di
+
+**AI Response**: On `staging` `008c72be` (up to date with origin): backend `mvn -B clean verify` 1,694 tests, 0 failures, BUILD SUCCESS; frontend vitest 669/669, lint and typecheck clean. Local stack rebuilt from `staging`; fresh class SE-TEST11. End-to-end: U02 16/16, U06 24/24, U06b 15/15, U12 53/53, U12b 30/30, feedback features (u12c) 30/30, U12→U14 notify 3/3. Teacher's real personal Gemini key untouched.
+
+**Context**: Build and Test on staging.
+
+---
+
+## U12 take-over and finalize rework — 2026-11-02
+
+**Timestamp**: 2026-11-02T05:10:00Z
+
+**User Input (complete raw)**:
+
+> hoac sua lai khi truong nhom chot phan thi nhung nguoi da lam se nhan muc do, khong ai sua duoc con truoc day moi nguoi co the nhan cac phan nhung chua lam, nhung phan nhan roi nguoi khac se khong nhan duoc nua
+
+Answers to clarifying questions: "Nếu người đang giữ phần nghỉ hoặc bỏ dở (chưa chốt), ai được gỡ hoặc đổi người làm phần đó?" = "Chỉ trưởng nhóm (Recommended)"; "Khi trưởng nhóm chốt một phần, ghi công cho ai?" = "Tất cả người từng làm (Recommended)".
+
+**AI Response**: Rework BR-U12-33/39: members claim only free sections (exclusive, as before); only the leader takes over a held section (draft kept in history); finalizing records every contributor from the section history and the credit is shown in the workspace, submission tab and DOCX.
+
+**Context**: Code Generation (change request on PR #35 behaviour).
+
+---
+
+**Result (U12 rework)**: backend `mvn -B clean verify` 1,695 tests, 0 failures; frontend vitest 670/670, lint and typecheck clean; e2e on fresh class SE-TEST12: U12 53/53, U12b 30/30, u12c 33/33 (member take-over refused, credit on finalize), notify 3/3. BR-U12-33/39, user guide and U12 code summary updated.
+
+---
+
+## Frozen business rules and take-over removal — 2026-11-02
+
+**Timestamp**: 2026-11-02T13:30:00Z
+
+**User Input (complete raw)**:
+
+> phan tiep quan nay xu ly nhu the nao, co the bo luon va nguoi da giao muc neu khong lam thi nguoi do se khong co diem
+
+> cap nhap br la sao, br da chot r nen khong the doi duock
+
+Answers: "Tính năng 'Trưởng nhóm chốt mục' (do thầy góp ý) đang trái BR-U12-33 đã chốt vì chặn nhận mục DONE. Xử lý thế nào?" = "nay chốt mục tức là cho thành viên nhóm nhận hoặc trưởng nhóm phân và sau đấy khi nào cả nhóm đã oke thì trưởng nhóm sẽ chốt phần đấy sẽ cho thành viên đấy phụ trách, không sửa nữa"; "Các tính năng làm thêm không trái BR (...) giữ hay bỏ?" = "Giữ, ghi vào file riêng (Recommended)".
+
+**AI Response**: Acknowledged that PR #35/#40 edited the frozen business-rules files (BR-U12-33, 35 modified; BR-U12-39, 46, 47 and BR-U06-28 added). Plan: restore the frozen rule text (teammates' own edits kept), remove take-over entirely (BR-U12-33/36 as frozen, release still discards the draft), keep leader finalize with a single responsible member (the member who completed the section), and record every addition as FB-xx items in a separate feedback-additions file instead of the BR files.
+
+**Context**: Correction of documentation scope + Code Generation.
+
+---
+
+## U12 assignment phase before work — 2026-11-02
+
+**Timestamp**: 2026-11-02T14:20:00Z
+
+**User Input (complete raw)**:
+
+> luc truong nhom chua chot thi sinh vien da lam bai da nhan duoc chua
+
+> lỡ đang làm thì trưởng nhóm phân cho người khác
+
+> chỉnh là khi giao mục thì chưa làm chỉ nhận mục thôi khi nào trưởngh nhóm chốt mục thì tất cả các thành viên sẽ bắt đầu làm
+
+Answers: "Trưởng nhóm chốt phân công cho cả tài liệu một lần, hay chốt từng mục?" = "Cả tài liệu một lần (Recommended)"; "Khi chốt, mục nào chưa có người nhận thì xử lý thế nào?" = "Bắt buộc giao hết mới chốt (Recommended)"; "Sau khi chốt, nếu một thành viên bỏ làm thì sao?" = "Trưởng nhóm mở chốt để phân lại (Recommended)"; "Tính năng 'chốt mục đã Xong để khóa nội dung' (FB-U12-01 hiện tại) có còn cần không?" = "Bỏ, thay bằng chốt phân công (Recommended)".
+
+**AI Response**: New FB-U12-01 "phân công rồi chốt": planning phase (claim/assign only, no editing) → leader locks the whole assignment once every section has a responsible member → each member edits only their own section (also after Done) → leader can unlock to reassign. Section-level content lock removed. Differs from frozen BR-U12-33/34; recorded in the feedback-additions file, business-rules.md untouched.
+
+**Context**: Code Generation (change request).
+
+---
+
+## Group membership lock request (deferred) — 2026-11-02
+
+**Timestamp**: 2026-11-02T14:50:00Z
+
+**User Input (complete raw)**:
+
+> thành viên sẽ không thể rời nhóm trừ khi được giảng viên đổi nhưng giảng viên chỉ đổi được khi bắt đầu môn học và nhóm sẽ bị giữ đến cuối môn học
+
+Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mốc khóa nhóm là lúc nào?" = "cứ để phần này sau đi sửa phần kia trước đã"; "Sau khi khóa nhóm, sinh viên bị gỡ khỏi lớp (nghỉ học, chuyển lớp) thì sao?" = "giữ nguyên nhóm toàn bộ từ đầu đến cuối".
+
+**AI Response**: Students already cannot leave a group themselves (BR-U12-01). Teacher-side group lock conflicts with frozen BR-U12-06/07; deferred by the user and recorded as a pending item (FB-U12-05) in the feedback-additions file. Continuing with the assignment phase.
+
+**Context**: Requirements note (deferred).
+
+---
+
+**Result (assignment phase)**: backend `mvn -B clean verify` 1,749 tests, 0 failures; frontend vitest 735/735 after rerunning 5 unrelated tests that timed out under load; e2e on fresh class SE-TEST15: U12 59/59, U12b 36/36, u12c 32/32, notify 3/3, U02 16/16, U06 24/24.
+
+---
+
+
+## Staging synchronization and PR execution authorization
+**Timestamp**: 2026-11-02T15:55:07.108Z
+**User Input**: "giúp tôi thực hiện đi" (the preceding approved workflow: fetch/compare, merge staging into feature, verification and isolated E2E, push feature, create PR to staging and check CI; no PR merge/deployment).
+**AI Response**: Fetched origin. Feature has9 local commits; staging has11 newer commits from grading/U12/UI/MCP work. Existing remote feature is an ancestor, so no history rewrite is needed. Resolved11 overlapping document/material/notification/picker conflicts: retained staging's expanded YouTube input support, quiz popup closure, optimistic per-switch persistence and picker layer, plus role-specific settings and formatting. U13 API/rule descriptions synchronized to the incoming URL policy. Report DOCX retained outside commits. Isolated Docker project pr-u041314-2a661abd uses separate data/ports and Mailpit; existing platform stack untouched. Missing U04/U13/U14 API E2E coverage is being added.
+**Context**: Explicit push/PR authorization supersedes the earlier local-only limit. Preserve9 commits; no rebase/force-push. Full verification follows the merge.
+
 ---

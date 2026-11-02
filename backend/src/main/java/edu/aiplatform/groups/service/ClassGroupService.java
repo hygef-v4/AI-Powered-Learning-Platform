@@ -301,8 +301,12 @@ public class ClassGroupService {
         }
     }
 
-    /** Người rời nhóm: nhả mục đang giữ, bỏ bản nháp chưa Xong; nội dung đã Xong giữ tác giả (BR-U12-05, F14). */
+    /**
+     * Người rời nhóm: nhả mục đang giữ, bỏ bản nháp chưa Xong; nội dung đã Xong giữ tác giả (BR-U12-05, F14). Người đó
+     * cũng thôi phụ trách mục (FB-U12-01); trưởng nhóm mở chốt để phân lại.
+     */
     private void releaseHeldSections(UUID groupId, UUID member, Actor actor, Instant now) {
+        documents.clearAssignee(groupId, member);
         for (GroupSection section : documents.lockSectionsHeldBy(groupId, member)) {
             if (documents.updateSection(section.released())) {
                 documents.touch(section.documentId(), now);

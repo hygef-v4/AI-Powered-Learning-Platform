@@ -48,7 +48,7 @@ export function SubjectAssignmentListPage() {
       {subjectId && <AssignmentListCard page={page} />}
       {creating && subjectId && (
         <CreateAssignmentDialog target={{ kind: "subject", subjectId }} onClose={() => setCreating(false)}
-          onCreated={(created) => router.push(`/assignments/${encodeURIComponent(created.id)}`)} />
+          onCreated={(created) => { setCreating(false); router.push(`/assignments/${encodeURIComponent(created.id)}`); }} />
       )}
     </div>
   );

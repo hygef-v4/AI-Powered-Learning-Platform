@@ -104,6 +104,7 @@ public class GradingService {
 
     Evaluation saveChecked(Actor actor, UUID id, Save input, GradingProposal usedProposal) {
         var evaluation = requireCurrent(actor, id, input.version());
+        evaluation.requireMutableGrade();
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.badRequest("MEMBER_ENDPOINT_REQUIRED", "Use member grading endpoint");
         var rubrics = GradingJson.rubrics(json, evaluation.rubricSnapshot);
@@ -125,11 +126,6 @@ public class GradingService {
 
         var feedbackState = resolveFeedbackState(evaluation, input, usedProposal, rubrics, validBlockIds,
                 currentEffectiveScores, previousEffectiveScores);
-        boolean changingOfficialGrade = evaluation.official();
-        if (changingOfficialGrade && feedbackState.feedback() != null) {
-            requireStructuredFeedbackReviewed(feedbackState.feedback(), feedbackState.reviewedScores(),
-                    feedbackState.acknowledgedItems(), currentEffectiveScores);
-        }
 
         evaluation.save(GradingJson.write(json, input.checkedItemsByRubric()), points, input.adjustment(),
                 input.adjustmentReason(), input.feedback(), input.changeReason(), actor.accountId(), clock.instant());
@@ -139,7 +135,7 @@ public class GradingService {
         evaluation.acknowledgedReviewItems = feedbackState.acknowledgedItems();
         propagateGroup(evaluation, actor, GroupOperation.SAVE, input.changeReason());
         evaluations.save(evaluation);
-        record(actor, evaluation, changingOfficialGrade ? "GRADE_CHANGED" : "GRADE_SAVED", input.changeReason());
+        record(actor, evaluation, "GRADE_SAVED", null);
         return evaluation;
     }
 
@@ -185,7 +181,7 @@ public class GradingService {
         var root = evaluations.findById(rootId).orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
         access.requireTeacher(actor, root.classId, Actions.GRADING_WRITE);
         root = evaluations.lockById(rootId).orElseThrow();
-        root.editable();
+        root.requireMutableGrade();
         if (root.kind != EvaluationKind.GROUP_DOCUMENT || root.score == null)
             throw ApiException.conflict("GROUP_NOT_GRADED", "Grade group document first");
         final UUID documentId = root.groupDocumentId;

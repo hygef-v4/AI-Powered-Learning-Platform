@@ -14,10 +14,19 @@ class YoutubeVideoTest {
                 "https://youtu.be/abcdefghijk",
                 "https://youtube.com/watch?v=abcdefghijk",
                 "https://www.youtube.com/watch?v=abcdefghijk&t=10",
+                "http://youtu.be/abcdefghijk",
+                "youtube.com/watch?v=abcdefghijk",
+                "https://www.youtube.com/watch?v=abcdefghijk&list=PLx&index=3",
+                "https://youtu.be/abcdefghijk?si=AbC123&list=x",
+                "https://m.youtube.com/watch?v=abcdefghijk",
+                "https://www.youtube.com/shorts/abcdefghijk",
+                "https://youtube.com/embed/abcdefghijk",
+                "https://www.youtube.com/live/abcdefghijk?feature=share",
+                "https://music.youtube.com/watch?v=abcdefghijk&%6cist=x",
                 "https://youtube.com/watch?v=abcdefghijk&list=x&index=2",
-                "https://youtu.be/abcdefghijk?list=x",
                 "https://youtube.com/watch?list=x&v=abcdefghijk",
-                "https://youtube.com/watch?v=abcdefghijk&%6cist=x"
+                "https://youtube.com/watch?v=abcdefghijk&%6cist=x",
+                "https://youtube.com/watch?v=abcdefghijk&list=x&%6cist=y"
             })
     void acceptsSingleVideo(String url) {
         assertThat(YoutubeVideo.parse(url).url())
@@ -27,10 +36,8 @@ class YoutubeVideoTest {
     @ParameterizedTest
     @ValueSource(
             strings = {
-                "http://youtu.be/abcdefghijk",
                 "https://youtube.com/playlist?list=x",
-                "https://youtube.com/watch?list=x",
-                "https://youtube.com/watch?v=abcdefghijk&list=x&%6cist=y",
+                "https://www.youtube.com/watch?list=x",
                 "https://youtube.com.evil.test/watch?v=abcdefghijk",
                 "javascript:alert(1)",
                 "https://user@youtube.com/watch?v=abcdefghijk",
@@ -38,9 +45,11 @@ class YoutubeVideoTest {
                 "https://youtube.com/watch?v=abcdefghijk&v=abcdefghijk",
                 "https://youtu.be/abcdefghijk/extra",
                 "https://youtube.com:8443/watch?v=abcdefghijk",
+                "ftp://youtube.com/watch?v=abcdefghijk",
+                "https://www.youtube.com/@channel",
                 ""
             })
-    void rejectsUnsafeOrPlaylistUrls(String url) {
+    void rejectsUnsafeOrPlaylistOnlyUrls(String url) {
         assertThatIllegalArgumentException().isThrownBy(() -> YoutubeVideo.parse(url));
     }
 

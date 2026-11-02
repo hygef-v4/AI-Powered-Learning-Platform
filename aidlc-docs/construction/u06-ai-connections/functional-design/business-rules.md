@@ -55,7 +55,6 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U06-25 | Gọi provider có timeout 120 giây. U06 không tự gọi lại provider; người dùng muốn thử lại thì tạo yêu cầu mới. | FR-036 |
 | BR-U06-26 | Người gửi được hủy task `QUEUED` của mình; giữ chỗ được giải phóng. | Thiết kế |
 | BR-U06-27 | Trước khi gửi, UI hiện nguồn, bên chịu chi phí (trường hoặc chính người dùng), quota còn lại nếu dùng API chung và số token ước tính có nhãn "ước tính". | FR-036 |
-| BR-U06-28 | Người dùng đặt một nguồn AI mặc định ở Kết nối AI › API cá nhân (API của trường hoặc API cá nhân theo nhà cung cấp; mặc định là Hỏi mỗi lần). Có mặc định và nguồn đang dùng được thì popup Chọn nguồn AI tự gửi bằng nguồn đó, không bắt chọn lại; nguồn mặc định chưa dùng được (chưa có khóa, hết quota, API trường tắt) thì popup hiện lý do để chọn nguồn khác cho lần đó, không tự đổi nguồn (BR-U06-10). Mất quyền dùng API chung thì mặc định API chung coi như chưa đặt. Hộp tạo nháp của U07 lấy mặc định làm giá trị ban đầu. | Góp ý 2026-11-02 |
 
 ## 4. MCP (UC 32)
 
@@ -79,7 +78,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U06-50 | Mỗi provider có hướng dẫn lấy key và chọn model; MCP có hướng dẫn cho từng ứng dụng agent đã thử thật (cài đặt, xác thực, thử tool, ngắt kết nối, xử lý lỗi); ứng dụng chưa thử ghi "chưa kiểm chứng". Không hướng dẫn dán key vào prompt. | FR-037 |
+| BR-U06-50 | Mỗi provider có hướng dẫn lấy key và chọn model. Tab Agent MCP có nút mở tài liệu riêng /ai/mcp-guide, kể cả khi tải credential lỗi: hướng dẫn kết nối theo ứng dụng, xác thực/đọc thử, ngắt kết nối, luồng dùng và từng tool theo vai trò/quyền, lỗi thường gặp. Hướng dẫn ưu tiên thao tác trong ứng dụng và prompt tiếng Anh; ứng dụng chưa thử ghi "chưa kiểm chứng". Không đưa key/token thật vào tài liệu hoặc hướng dẫn dán key API vào prompt; chỉ cấu hình cá nhân có token. Tạo/chấm qua MCP là nháp/đề xuất chờ giảng viên xem, áp dụng và quyết định trên UI. Danh mục cần đồng bộ khi provider registry đổi. | FR-037, quyết định người dùng 2026-11-02 |
 | BR-U06-51 | Mọi API kiểm quyền phía server: API Settings chỉ Admin; kết nối cá nhân, credential MCP, task và usage chỉ chủ sở hữu. Ngoài phạm vi trả `404` và ghi audit `ACCESS_DENIED`. | SEC-002 |
 | BR-U06-52 | Audit: `AI_CONNECTION_CHANGED` (thêm, thay, tắt, bật, thu hồi; provider, loại, 4 ký tự cuối), `AI_CONNECTION_TESTED`, `QUOTA_CHANGED` (trước, sau), `MCP_CREDENTIAL_CREATED`, `MCP_REVOKED`, `MCP_TOOL_CALLED` (tool, đích, kết quả). Không ghi key, token, prompt. | FR-014, FR-035 |
 | BR-U06-53 | U01 hoặc U03 không trả lời thì từ chối (fail closed). Lỗi AI không làm mất dữ liệu người dùng đang soạn; người dùng vẫn làm thủ công được. | BR-U01-93, US-AIG-001 |
