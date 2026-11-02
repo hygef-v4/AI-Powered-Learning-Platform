@@ -1,6 +1,6 @@
 # Kết quả làm lại phần Quiz — 2026-11-01
 
-Nhánh `feat/quiz-rework-2026-11-01`, tách từ `origin/staging`. Đã commit trên nhánh này, chưa push, chưa triển khai. [Roadmap](../plans/code-generation-plan/2026-11-01-quiz-rework.md), [đánh giá](../../inception/requirements/2026-11-01-quiz-feedback-assessment.md), [câu hỏi](../../inception/requirements/2026-11-01-quiz-rework-questions.md).
+Nhánh `feat/quiz-rework-2026-11-01`, tách từ `origin/staging`. Merge vào `staging` qua PR #36, chưa triển khai. E2E trên code đã merge với staging: Quiz 56/56, U02 16/16, U06 24 đạt và 1 bỏ qua (cần thêm khóa AI giả của trường vào database thử), U06b 15/15, U12 53/53, U12b 30/30, U12 thông báo 3/3, U12c 30/30. [Roadmap](../plans/code-generation-plan/2026-11-01-quiz-rework.md), [đánh giá](../../inception/requirements/2026-11-01-quiz-feedback-assessment.md), [câu hỏi](../../inception/requirements/2026-11-01-quiz-rework-questions.md).
 
 ## Đã làm
 

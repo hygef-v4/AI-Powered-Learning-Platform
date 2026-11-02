@@ -7558,6 +7558,54 @@ Later follow-up inputs (raw): “thêm nút prompt copy để đưa vào agent t
 
 ---
 
+## Auto-fix enabled for the staging PR — 2026-11-02
+
+**Timestamp**: 2026-11-02T03:25:00Z
+
+**User Input (complete raw)**: "Bật Auto-fix"
+
+**AI Response**: Turned on the app's Auto-fix monitor for PR #36. This does not merge the PR.
+
+**Context**: Build and Test follow-up. User asked for Auto-fix on the PR opened in this session.
+
+---
+
+## Staging merge readiness recheck — 2026-11-02
+
+**Timestamp**: 2026-11-02T04:29:06Z
+
+**User Input (complete raw)**: "kiểm tra xem có thể merge vào staging chưa"
+
+**AI Response**: Rechecked PR #36 at `32f274b4` against `origin/staging` `008c72be`. GitHub reports MERGEABLE and CLEAN; backend, frontend and GitGuardian passed, images and deploy were skipped; no reviews or comments; staging has no new commits. API end-to-end and browser checks remain not rerun on the merged code. Did not merge.
+
+**Context**: Build and Test follow-up. Read-only recheck of merge readiness.
+
+---
+
+## Staging merge end-to-end check requested — 2026-11-02
+
+**Timestamp**: 2026-11-02T04:35:00Z
+
+**User Input (complete raw)**: "Chạy E2E trước"
+
+**AI Response**: Ran end-to-end checks on the merged code at `32f274b4` on an isolated, since removed Docker stack, without merging the PR. Quiz 56/56, U12 53/53, U12b 30/30, U12 notify 3/3, U12c 30/30. U02 first gave 15/16 because no AI or group audit rows existed yet, then 16/16 when rerun last. U06 first gave 24/25 and U06b stopped early because a fresh database has no school AI key; after adding a fake school key to the test database, U06 gave 24 passed and U06-16 skipped (it passed on the first run) and U06b 15/15. Browser checks passed: default AI source sent a Quiz AI draft and showed the provider error for the fake key; student result page, penalty decision and group page rendered correctly. No real AI key, real mobile or load testing.
+
+**Context**: Build and Test follow-up. User chose end-to-end checks before merging.
+
+---
+
+## Staging merge requested — 2026-11-02
+
+**Timestamp**: 2026-11-02T04:58:21Z
+
+**User Input (complete raw)**: "Cập nhật và merge"
+
+**AI Response**: Committing the audit and status notes, updating the PR description with the end-to-end results, and merging PR #36 into `staging` with a merge commit. No deployment.
+
+**Context**: Build and Test follow-up. User approved updating the PR and merging it.
+
+---
+
 ## Feedback triage and remediation for U02/U06/U12 — 2026-11-02
 
 **Timestamp**: 2026-11-02T02:00:00Z
