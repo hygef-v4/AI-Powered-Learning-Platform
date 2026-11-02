@@ -96,7 +96,9 @@ describe("Detail mutations dùng chung version và làm mới snapshot", () => {
     render(<SubjectDetailPage subjectId="a" searchManagers={search} />);
     await screen.findByDisplayValue("Mô tả môn");
     fireEvent.change(screen.getByTestId("subject-edit-name"), { target: { value: "Tên mới" } });
-    fireEvent.submit(screen.getByTestId("subject-edit-form"));
+    await act(async () => {
+      fireEvent.submit(screen.getByTestId("subject-edit-form"));
+    });
     await screen.findByRole("heading", { name: /Tên mới/ });
     expect(updateSubject).toHaveBeenCalledWith("a", {
       name: "Tên mới",
@@ -105,20 +107,28 @@ describe("Detail mutations dùng chung version và làm mới snapshot", () => {
     });
     fireEvent.click(screen.getByTestId("subject-manager-open"));
     await pickB();
-    fireEvent.click(screen.getByTestId("subject-manager-save"));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("subject-manager-save"));
+    });
     await screen.findByText("Người B");
     expect(changeSubjectManager).toHaveBeenLastCalledWith("a", { managerId: "b", version: 8 });
     fireEvent.click(screen.getByTestId("subject-manager-open"));
     fireEvent.click(screen.getByTestId("subject-manager-clear"));
-    fireEvent.click(screen.getByTestId("subject-manager-save"));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("subject-manager-save"));
+    });
     await screen.findByText("Chưa phân công");
     expect(changeSubjectManager).toHaveBeenLastCalledWith("a", { managerId: null, version: 9 });
     fireEvent.click(screen.getByTestId("subject-status-open"));
-    fireEvent.click(screen.getByTestId("subject-status-confirm"));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("subject-status-confirm"));
+    });
     await screen.findByRole("button", { name: "Mở lại môn học" });
     expect(changeSubjectStatus).toHaveBeenLastCalledWith("a", { status: "ARCHIVED", version: 10 });
     fireEvent.click(screen.getByTestId("subject-status-open"));
-    fireEvent.click(screen.getByTestId("subject-status-confirm"));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("subject-status-confirm"));
+    });
     await screen.findByRole("button", { name: "Lưu trữ môn học" });
     expect(changeSubjectStatus).toHaveBeenLastCalledWith("a", { status: "ACTIVE", version: 11 });
     expect(getSubject).toHaveBeenCalledTimes(6);
