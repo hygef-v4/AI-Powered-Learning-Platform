@@ -54,10 +54,12 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   // Môn của mục đang mở (trang của môn không có `classId`): đọc từ học liệu hay Quiz.
-  const owner = useMaterialResource<Material | { quiz: { subjectId: string } }>(classId ? null
+  const owner = useMaterialResource<Material | { quiz: { subjectId: string; scope: string; classId: string | null } }>(classId ? null
     : source.kind === "material" ? `${materialPath(source.id)}${contextQuery(classId)}` : `/api/v1/quizzes/${encodeURIComponent(source.id)}`);
+  const quiz = owner.data && "quiz" in owner.data ? owner.data.quiz : undefined;
   const subjectId = owner.data ? "quiz" in owner.data ? owner.data.quiz.subjectId : owner.data.subjectId : undefined;
-  const scope = useModuleScope(subjectId, classId);
+  // Quiz của lớp mở không kèm `classId`: lấy lớp từ chính Quiz, giống trang Quiz.
+  const scope = useModuleScope(subjectId, classId ?? (quiz?.scope === "CLASS" ? quiz.classId : null));
   const { outline } = useModuleOutline(scope);
   const [dialog, setDialog] = useState<Dialogs | null>(null);
   const { collapsed, toggle } = useModuleCollapse("nav");
