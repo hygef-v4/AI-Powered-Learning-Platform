@@ -7695,3 +7695,28 @@ Later follow-up inputs (raw): “thêm nút prompt copy để đưa vào agent t
 **Context**: User-authorized local commit; no merge or deployment.
 
 ---
+
+## Freeze finalized grades — 2026-11-02
+**Timestamp**: 2026-11-02T15:19:14+07:00 (completion record)
+**User Input**: "điểm đã chốt rồi thi k được sửa nữa, giúp tôi sửa lại business rule, doc aidlc sau sửa lại code, test"
+**Clarification**: "Cho nộp lại thành lượt mới, giữ nguyên điểm đã chốt của lượt cũ"
+**AI Response**: Implement immutable FINALIZED/PUBLISHED grades; publication only changes visibility. Retain old graded snapshots and create a separate pending grading round on resubmission. Update AI-DLC before implementation and verify backend/UI/persistence. Existing branch fix/u05-u09-u15, initially clean at d857fd7f. No commit/push/live migration requested.
+
+**Verification**: Final backend reports 1,743 cases/229 suites, zero failures/errors/skips after full execution and corrected-fixture GradingServiceTest rerun (17 cases). Required PostgreSQL suites passed. Frontend 710/710, TypeScript, lint (one existing unrelated warning), production build and OpenAPI parse passed. Initial concurrent verification hit Windows native-memory/pagefile exhaustion; sequential runs passed. Independent review: no Critical/Important findings. Next-generated tsconfig restored; no live migration/restart, real grade write, commit or push. Details: construction/build-and-test/2026-11-02-locked-grades-results.md.
+
+---
+
+## Resubmission decision changed — 2026-11-02
+**User Input**: "tôi nghĩ để cái cũ đi nộp lại thì bỏ điểm cũ"
+**AI Response**: Supersede the previous separate-round decision. Retain grade edit locks but invalidate prior grades on resubmission: individual evaluations become SUPERSEDED, including published; group evaluations reuse existing IDs and reset to PENDING. Remove the unexecuted migration and snapshot/current-field/query changes. Preserve audit/history rather than deleting rows. Update AI-DLC and rerun regression tests; no live DB migration/restart/commit/push.
+
+**Verification**: Full backend 1,741 tests / 229 suites, zero failures/errors/skips, required PostgreSQL suites passed. Grading frontend 118/118, TypeScript, scoped ESLint and final production build passed. Reviewer found stale local marks after a changed group receipt; fixed reload/reset, confirmed red/green regression and independent recheck with no remaining Critical/Important finding. Maven clean plugin unavailable offline: removed only the discarded generated migration, then full test passed. Build passed with one process-local worker after an initial 23-worker native exit. Restored generated tsconfig; no schema/index diff or source/target copy of the discarded migration. No live DB write/restart, commit or push. Results supersede the previous preserve-rounds evidence above.
+
+---
+
+## Local commit authorization — finalized grade lock
+**Timestamp**: 2026-11-02T16:10:53+07:00
+**User Input**: "giúp tôi commit"
+**AI Response**: Review and commit the verified grading lock/reset implementation, regression tests, API contract and AI-DLC in English on fix/u05-u09-u15. Rechecked working diff and recorded test/build evidence; no production source change since verification. Exclude generated files and local logs; no migration, push, restart or deployment.
+
+---

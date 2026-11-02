@@ -22,7 +22,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | F7 Đề xuất qua agent MCP | UC 43 | - |
 | F8 Chốt | UC 43, 44 | Submission Detail, Grading Workspace |
 | F9 Công bố | UC 43, 44 | Submission Detail, Grading Workspace |
-| F10 Sửa điểm đã chốt hoặc đã công bố | UC 44 | Grading Workspace |
+| F10 Xem điểm đã khóa | UC 44 | Grading Workspace chỉ đọc |
 | F11 Sổ điểm | UC 45 | Teacher Class Detail, tab Evals |
 | F12 Xuất bảng điểm | UC 45 | Teacher Class Detail, tab Evals |
 | F13 Người học xem điểm và phân bố | UC 37, 40 (U08) | Student Assignments, Submission History |
@@ -34,7 +34,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 1. U08 gọi `ISubmissionListener.onSubmitted(attemptId)` trong transaction nộp.
 2. U09 đọc lượt qua `ISubmissionQuery.getSubmission` và bài qua `IAssignmentQuery.get`; bài `PRACTICE` thì bỏ qua.
 3. Tạo đánh giá `PENDING` (lượt, bài, lớp, người học, `submissionHash`, tổng điểm từ `IRubric.maxPoints`).
-4. Đánh giá cũ chưa công bố của cùng (bài, người học) chuyển `SUPERSEDED` (BR-U09-10).
+4. Khi cá nhân nộp lại, mọi đánh giá cũ chuyển SUPERSEDED kể cả FINALIZED/PUBLISHED; điểm trước không còn hiệu lực hay hiển thị. Tạo PENDING cho lượt mới (BR-U09-10).
 
 ### F2 - Danh sách bài nộp và tiến độ (UC 42)
 1. Giảng viên bấm "Bài nộp" trên dòng bài ở tab Evals (U09 gắn qua slot `AssignmentRowAction` của U07); frontend gọi `GET /api/v1/classes/{classId}/assignments/{assignmentId}/submissions`.
@@ -93,11 +93,11 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 3. Sau commit phát `grade.published` (bài, lớp, người học vừa có điểm; bài nhóm là các thành viên) cho U14.
 4. Trả kết quả từng mục.
 
-### F10 - Sửa điểm đã chốt hoặc đã công bố (UC 44)
-1. Trong Grading Workspace sửa checklist, điều chỉnh, nhận xét của đánh giá `FINALIZED` hoặc `PUBLISHED`, nhập lý do.
-2. `PUT /api/v1/evaluations/{id}` kèm `version` và lý do; thiếu lý do thì từ chối.
-3. Giữ trạng thái, thêm một mục lịch sử; audit `GRADE_CHANGED`.
-4. Đánh giá đã công bố: người học thấy điểm mới kèm nhãn "đã cập nhật".
+### F10 - Xem điểm đã khóa (UC 44, thay quy tắc cũ ngày 2026-11-02)
+1. `FINALIZED`/`PUBLISHED` chỉ đọc rubric, điểm, nhận xét và lịch sử, không có ô lý do sửa.
+2. Lưu trực tiếp, áp dụng AI hoặc sửa điểm thành viên bị từ chối `409 GRADE_LOCKED`, kể cả có lý do.
+3. `FINALIZED` hiện hành vẫn được công bố sang `PUBLISHED`; điểm và nội dung chấm không đổi.
+4. Nộp lại làm điểm cũ mất hiệu lực: cá nhân SUPERSEDED lượt cũ; nhóm reset bản chấm hiện có về PENDING. Không có mở khóa/sửa điểm cũ bằng lý do.
 
 ## 5. Sổ điểm và người học
 
@@ -126,7 +126,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 4. Mỗi lớp của bài SUBJECT độc lập; Quiz/Practice không có công tắc. Bật chưa đủ mẫu vẫn lưu ý định, chỉ hiện histogram khi đạt ngưỡng riêng tư.
 
 ### F14 - Bài nhóm (khi U12 có)
-1. U12 gọi `IGroupEvaluation.onGroupSubmitted` trong transaction nộp: tạo hoặc đưa về `PENDING` đánh giá tài liệu nhóm và đánh giá từng thành viên (BR-U09-50).
+1. U12 gọi IGroupEvaluation.onGroupSubmitted trong transaction nộp: dùng lại root/member, reset về PENDING cho receipt mới (BR-U09-50), bỏ điểm hiện hành trước đó.
 2. Submission Detail hiện nhóm thay cho sinh viên; Grading Workspace đọc tài liệu nhóm qua `IGroupSubmissionSource`, hiện từng phần kèm người làm.
 3. Chấm tài liệu nhóm như F4, F5; điểm thành viên mặc định bằng điểm tài liệu chung; giảng viên sửa từng người qua `PUT /api/v1/evaluations/{id}/members/{accountId}` (BR-U09-51).
 4. Chốt, công bố cả đánh giá tài liệu và đánh giá thành viên như F8, F9.

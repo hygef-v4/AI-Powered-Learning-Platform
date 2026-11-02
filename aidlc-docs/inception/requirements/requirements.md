@@ -1,5 +1,7 @@
 # Yêu cầu sản phẩm ALAP — Inception revision 2026-10-13
 
+> Quyết định mới nhất 2026-11-02, FR-007/008: FINALIZED/PUBLISHED khóa chỉnh sửa điểm. Nộp lại bỏ hiệu lực điểm cũ: cá nhân SUPERSEDED bản chấm cũ, nhóm reset về PENDING. Không giữ nhiều lượt chấm nhóm, không đổi DB schema. [Quy tắc và acceptance](2026-11-02-locked-grades.md).
+
 > AS-BUILT synchronization 2026-10-30 at staging@794a4053. Giữ FR IDs và phạm vi đã chốt; source-observed, không thay thế runtime acceptance. Các khác biệt với yêu cầu cũ được ghi tại decision register.
 
 ## 1. Ý định, nguồn và trạng thái

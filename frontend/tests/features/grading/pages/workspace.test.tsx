@@ -63,6 +63,22 @@ function openAi() {
   fireEvent.click(screen.getByRole("button", { name: "Chấm bằng AI" }));
 }
 describe("workspace save", () => {
+  it.each(["FINALIZED", "PUBLISHED"] as const)("shows %s grades read-only while allowing current FINALIZED publication", async (state) => {
+    mocks.detail.mockResolvedValue({ ...detail, evaluation: { ...detail.evaluation, state }, rubrics: [
+      { rubricId: "r", partId: "p", maxPoints: 1, criteria: [{ criterionId: "c", title: "Đúng", items: [{ itemId: "i", text: "Đúng nội dung", points: 1 }] }] },
+    ] });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    expect(await screen.findByText(/Điểm đã chốt. Bản chấm chỉ có thể xem/)).toBeVisible();
+    expect(screen.getByRole("checkbox", { name: "Đúng nội dung" })).toBeDisabled();
+    const save = screen.getByRole("button", { name: /Lưu nháp/ });
+    expect(save).toBeDisabled();
+    fireEvent.click(save);
+    expect(mocks.save).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText(/Lý do sửa điểm/)).not.toBeInTheDocument();
+    const publish = screen.getByRole("button", { name: "Công bố điểm" });
+    if (state === "FINALIZED") expect(publish).toBeEnabled();
+    else expect(publish).toBeDisabled();
+  });
   it("reports an unavailable proposal link without creating or applying a replacement", async () => {
     render(<GradingWorkspacePage evaluationId="e" proposalId="missing" />);
     expect(await screen.findByText(/Không tìm thấy đề xuất từ liên kết/)).toBeInTheDocument();
