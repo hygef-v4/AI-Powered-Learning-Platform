@@ -26,7 +26,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U05-20 | Chỉ Chủ nhiệm môn của môn thêm và gỡ sinh viên; giảng viên không thêm/gỡ. Chỉ ghi danh vào lớp `DRAFT` hoặc `OPEN`; người được ghi danh phải có role `STUDENT`, trạng thái `ACTIVE` hoặc `PENDING`. | UC 28 |
+| BR-U05-20 | Chỉ Chủ nhiệm môn của môn thêm và gỡ sinh viên; giảng viên không thêm/gỡ. Chỉ ghi danh vào lớp `DRAFT` hoặc `OPEN`; người được ghi danh phải có role `STUDENT`, trạng thái `ACTIVE` hoặc `PENDING`. Thêm thủ công, khôi phục và từng dòng nhập danh sách đều kiểm quyền trước, rồi khóa tài khoản đích trước khóa môn, giữ role/trạng thái hợp lệ tới commit; thay đổi tài khoản đồng thời phải chờ khóa hoặc được thấy trước khi kiểm điều kiện. | UC 28, KAN-155 |
 | BR-U05-21 | Mỗi `(lớp, sinh viên)` một bản ghi. Đã `ACTIVE` thì báo "đã ghi danh"; đang `REMOVED` thì chuyển lại `ACTIVE`. | US-CAT-003 S2 |
 | BR-U05-22 | Một sinh viên chỉ `ACTIVE` ở tối đa 1 lớp chưa lưu trữ của mỗi môn. | Thiết kế |
 | BR-U05-23 | Thêm từng người: tìm theo email hoặc tên, tối đa 20 kết quả, chỉ `STUDENT`. Thêm theo danh sách: dán email hoặc CSV một cột, tối đa 200 dòng và 100 KB; xử lý từng dòng, dòng hợp lệ vẫn được ghi danh. | UC 28 |

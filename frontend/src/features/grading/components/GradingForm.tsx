@@ -127,7 +127,7 @@ export function needsGradingNotes(rubrics: Rubric[], values: GradingFormValues, 
 
 /**
  * Thẻ ở đầu lề, chỉ hiện khi cần: nhắc mục AI cần kiểm tra trước khi chốt và lý do khi sửa điểm đã chốt / công bố. Tạm thời
- * không có ô nhận xét gửi sinh viên (lề chỉ để điểm). Điểm bài là tổng mục đạt, không có điều chỉnh ngoài rubric (BR-U09-20).
+ * không có ô nhận xét gửi sinh viên. Điểm lẻ, nhận xét và điều chỉnh đã lưu vẫn được giữ nguyên trong biểu mẫu.
  */
 export function GradingNotes({
   rubrics,

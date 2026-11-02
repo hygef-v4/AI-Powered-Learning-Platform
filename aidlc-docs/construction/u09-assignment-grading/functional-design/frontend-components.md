@@ -80,3 +80,10 @@ app/teaching/evaluations/[evaluationId]/      GradingWorkspacePage   #35
 | `StudentGradeCell`, `StudentGradePanel` | `GET /api/v1/me/grades`, `/me/grades/attempts/{attemptId}`, `/me/grade-distributions` | Chỉ điểm đã công bố của chính mình. Ô Điểm: "x / tổng", nút Phân bố khi cặp bài–lớp đã bật và đủ mẫu riêng tư (BR-U09-62). Phần Kết quả: Điểm chính thức · lượt được chấm, "x / tổng", ngày công bố, nhãn "Đã cập nhật" kèm dòng "Giảng viên sửa điểm a → b ngày …" khi sửa sau công bố, Nhận xét, Mục rubric đạt |
 
 Route `/teaching/*` cho Teacher, Subject Manager (dùng `RoleGuard` của U01). Backend vẫn kiểm phân công lớp thật.
+
+## Defect remediation — 2026-11-02 (KAN-153/154/156)
+
+- Opening and saving an evaluation preserves explicit partial rubric item scores, feedback and existing adjustment/reason. Checkbox clicks explicitly award full/zero points; untouched partial values remain visible. The displayed total includes the retained adjustment and is clamped to the assignment maximum. Legacy checklist-only responses remain compatible.
+- Applying an AI proposal fills the local draft with its item scores, general/structured feedback, evidence and review flags; it resets previous acknowledgements instead of clearing structured feedback. A legacy proposal without structured feedback preserves existing explanations for re-review. No automatic save/finalize/publish occurs.
+- Flagged items and scores changed after explanation review expose acknowledgement controls. Finalize stays disabled while unresolved reviews exist; server-side review/version checks remain authoritative. Removing a previous acknowledgement by editing points requires a fresh review.
+- SUBJECT assignment context loads the existing authorized teaching-class endpoint, requires matching class ID and subject ID, and uses that class's code/name rather than the subject label. CLASS context retains its exact class check. Failed/stale metadata never supplies a heading for another route or hides independently loaded submission rows.

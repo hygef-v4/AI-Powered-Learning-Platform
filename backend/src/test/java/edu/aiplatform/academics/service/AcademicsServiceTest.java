@@ -113,9 +113,46 @@ class AcademicsServiceTest {
         service.changeStatus(manager,classId,ClassStatus.OPEN,0);
         verify(events).publish(argThat(e -> e.eventType().equals("enrollment.activated") && e.payload().get("accountId").equals(studentId.toString())));
     }
+    @Test void outOfScopeManualAndRestoreRequestsNeverLockTheTargetAccount() {
+        when(scope.isSubjectManager(managerId,subjectId)).thenReturn(false);
+        assertThatThrownBy(() -> service.enroll(manager,classId,studentId)).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> service.enrollmentStatus(manager,classId,studentId,EnrollmentStatus.ACTIVE)).isInstanceOf(ApiException.class);
+        verify(accounts,never()).lockContact(studentId);
+        verifyNoInteractions(lock);
+        verify(enrollments,never()).insert(any());
+    }
+    @Test void manualEnrollmentLocksTheTargetBeforeTheSubject() {
+        when(accounts.lockContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.ACTIVE)));
+        assertThat(service.enroll(manager,classId,studentId)).isEqualTo(EnrollmentResult.ENROLLED);
+        var order=inOrder(accounts,lock,enrollments);
+        order.verify(accounts).lockContact(studentId);
+        order.verify(lock).lockActive(eq(subjectId),any());
+        order.verify(enrollments).insert(any());
+    }
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"STUDENT,DISABLED,DISABLED","TEACHER,ACTIVE,NOT_STUDENT"})
+    void manualAndRestoreUseLockedEligibilityRatherThanAnOlderRead(Role role,AccountStatus status,EnrollmentResult expected) {
+        when(accounts.getContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.ACTIVE)));
+        when(accounts.lockContact(studentId)).thenReturn(Optional.of(contact(studentId,role,status)));
+        assertThat(service.enroll(manager,classId,studentId)).isEqualTo(expected);
+        assertThatThrownBy(() -> service.enrollmentStatus(manager,classId,studentId,EnrollmentStatus.ACTIVE))
+                .isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.code()).isEqualTo(expected.name()));
+        verify(enrollments,never()).insert(any());
+        verify(enrollments,never()).update(any(),any());
+        verify(accounts,never()).getContact(studentId);
+    }
+    @Test void restoringEnrollmentLocksTheTargetBeforeTheSubject() {
+        when(accounts.lockContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.PENDING)));
+        when(enrollments.find(classId,studentId)).thenReturn(Optional.of(Enrollment.create(classId,studentId,EnrollmentSource.MANUAL,now.minusSeconds(2)).remove(now.minusSeconds(1))));
+        assertThat(service.enrollmentStatus(manager,classId,studentId,EnrollmentStatus.ACTIVE)).isEqualTo(EnrollmentResult.RESTORED);
+        var order=inOrder(accounts,lock,enrollments);
+        order.verify(accounts).lockContact(studentId);
+        order.verify(lock).lockActive(eq(subjectId),any());
+        order.verify(enrollments).update(any(),eq(EnrollmentStatus.REMOVED));
+    }
     @Test void pendingStudentCanEnrollAndDuplicateDoesNotRepublish() {
         when(classes.find(classId)).thenReturn(Optional.of(course(ClassStatus.OPEN,0)));
-        when(accounts.getContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.PENDING)));
+        when(accounts.lockContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.PENDING)));
         assertThat(service.enroll(manager,classId,studentId)).isEqualTo(EnrollmentResult.ENROLLED);
         verify(enrollments).insert(any()); verify(events).publish(any());
         when(enrollments.find(classId,studentId)).thenReturn(Optional.of(Enrollment.create(classId,studentId,EnrollmentSource.MANUAL,now)));

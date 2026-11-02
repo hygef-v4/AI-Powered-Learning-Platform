@@ -1,5 +1,5 @@
 "use client";
-import { RubricItemFeedback, isItemAcknowledged } from "./StructuredFeedbackSection";
+import { RubricItemFeedback, isItemAcknowledged, isScoreChangedAfterReview } from "./StructuredFeedbackSection";
 import type {
   Checks,
   ItemScores,
@@ -27,22 +27,21 @@ export function hasPartialPoints(rubrics: Rubric[], checks: Checks, scores: Item
   })));
 }
 /**
- * Chấm chỉ theo checklist (không có điểm lẻ): mục đạt khi đã tích (điểm đã lưu, nếu có, phải đủ điểm tối đa); mục đạt được đủ
- * điểm, mục khác 0. Dùng khi mở bài và khi áp dụng đề xuất AI, để điểm lẻ cũ hay điểm lẻ của AI không còn.
+ * Explicit scores take precedence over legacy checkboxes, including partial points.
  */
-export function checklistOnly(rubrics: Rubric[], checks: Checks, scores: ItemScores = {}): { checks: Checks; itemScores: ItemScores } {
+export function rubricValues(rubrics: Rubric[], checks: Checks, scores: ItemScores = {}): { checks: Checks; itemScores: ItemScores } {
   const nextChecks: Checks = {};
   const nextScores: ItemScores = {};
   for (const rubric of rubrics) {
     const ticked = new Set(checks[rubric.rubricId] ?? []);
     const achieved: string[] = [];
-    const perItem: Record<string, number> = {};
+    const perItem: ItemScores[string] = {};
     for (const item of rubric.criteria.flatMap((criterion) => criterion.items)) {
       const max = Number(item.points);
       const saved = scores[rubric.rubricId]?.[item.itemId];
       const ok = saved !== undefined ? Number(saved) >= max && max > 0 : ticked.has(item.itemId);
       if (ok) achieved.push(item.itemId);
-      perItem[item.itemId] = ok ? max : 0;
+      perItem[item.itemId] = saved ?? (ok ? max : 0);
     }
     nextChecks[rubric.rubricId] = achieved;
     nextScores[rubric.rubricId] = perItem;
@@ -74,9 +73,8 @@ export type ChecklistProps = {
 };
 
 /**
- * Checklist của một phần (BR-U09-20): chỉ tích mục đạt; mục đạt được đủ điểm của mục, không đạt là 0, không có điểm lẻ
- * hay ô nhập điểm. Tạm thời không có nhận xét từng mục; chỉ còn khung kiểm tra khi AI đánh dấu mục cần giảng viên xác nhận
- * (bắt buộc trước khi chốt điểm).
+ * Checkbox edits award full/zero points; previously stored or proposed partial values remain visible until edited.
+ * Review controls appear for flagged explanations or scores changed since their last review.
  */
 export function RubricChecklist({
   rubric,
@@ -111,7 +109,9 @@ export function RubricChecklist({
           (entry) => entry.rubricId === rubric.rubricId && entry.itemId === item.itemId,
         );
         const showCriterion = criterion.title.trim() !== "" && criterion.title.trim() !== item.text.trim();
-        const review = Boolean(fbItem?.requiresReview);
+        const review = Boolean(fbItem?.requiresReview || isScoreChangedAfterReview(fbItem,
+          reviewedItemScores[rubric.rubricId]?.[item.itemId], value,
+          isItemAcknowledged(acknowledgedReviewItems, rubric.rubricId, item.itemId)));
         return (
           <li key={item.itemId} data-testid={`rubric-item-${item.itemId}`}
             className={`rounded-lg border px-2 py-1.5 text-xs leading-snug ${achieved ? "border-primary/30 bg-primary/5" : "border-line bg-surface"}`}>
@@ -123,7 +123,7 @@ export function RubricChecklist({
                 {showCriterion && <span className="block text-[10.5px] text-faint">{criterion.title}</span>}
                 {item.text}
               </span>
-              <span className="shrink-0 tabular-nums text-muted">{max.toFixed(2)}</span>
+              <span className="shrink-0 tabular-nums text-muted">{value > 0 && value < max ? `${value.toFixed(2)} / ` : ""}{max.toFixed(2)}</span>
             </label>
             {review && (
               <div className="pl-6">
