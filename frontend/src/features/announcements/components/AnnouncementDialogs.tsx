@@ -93,7 +93,7 @@ function ClassPicker({ classes, chosen, disabled, onChange }: { classes: ClassOp
   }, [open]);
   const shown = useMemo(() => {
     const q = query.toLocaleLowerCase("vi").trim();
-    return q ? classes.filter((c) => `${c.code} ${c.name}`.toLocaleLowerCase("vi").includes(q)) : classes;
+    return q ? classes.filter((c) => `${c.subjectCode ?? ""} ${c.code}`.toLocaleLowerCase("vi").includes(q)) : classes;
   }, [classes, query]);
   const allShown = shown.length > 0 && shown.every((c) => chosen.includes(c.classId));
   const toggle = (classId: string) => onChange(chosen.includes(classId) ? chosen.filter((x) => x !== classId) : [...chosen, classId]);
@@ -118,7 +118,7 @@ function ClassPicker({ classes, chosen, disabled, onChange }: { classes: ClassOp
       <label htmlFor={`${id}-input`} className="text-[13px] font-semibold text-ink">Lớp <span className="text-danger">*</span></label>
       <div ref={anchorRef}>
         <TextInput id={`${id}-input`} icon="search" role="combobox" aria-expanded={open} aria-controls={`${id}-list`} aria-autocomplete="list" autoComplete="off"
-          maxLength={100} disabled={disabled} placeholder={open ? "Gõ mã hoặc tên lớp" : "Chọn lớp"} data-testid="announcement-classes-input"
+          maxLength={100} disabled={disabled} placeholder={open ? "Gõ mã lớp hoặc mã môn" : "Chọn lớp"} data-testid="announcement-classes-input"
           value={open ? query : summary} title={codes.join(", ")}
           onFocus={() => setOpen(true)}
           onChange={(event) => { setQuery(event.target.value); setOpen(true); }}
@@ -132,7 +132,7 @@ function ClassPicker({ classes, chosen, disabled, onChange }: { classes: ClassOp
           className="fixed z-[105] max-h-64 overflow-auto overscroll-contain rounded-lg border border-line bg-surface shadow-[var(--shadow-float)]">
           {shown.length > 1 && row("all", allShown, toggleShown, <span className="flex-1">{query ? "Chọn các lớp đang tìm" : "Chọn tất cả"}</span>, true)}
           {shown.map((c) => row(c.classId, chosen.includes(c.classId), () => toggle(c.classId),
-            <ClassLabel code={c.code} name={c.name} />))}
+            <ClassLabel subjectCode={c.subjectCode} code={c.code} />))}
           {!shown.length && <p className="px-3 py-2 text-xs text-muted">Không có lớp phù hợp</p>}
         </div>, document.body)}
     </div>

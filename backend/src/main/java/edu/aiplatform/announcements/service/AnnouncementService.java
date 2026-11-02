@@ -33,7 +33,7 @@ public class AnnouncementService {
         var rows=repository.list(allowed.stream().map(ClassRef::classId).toList(),page,size);
         boolean more=rows.size()==size&&!repository.list(allowed.stream().map(ClassRef::classId).toList(),page+1,size).isEmpty();
         var items=rows.stream().map(a->view(actor,a,byId.get(a.classId))).toList();
-        var options=all.stream().map(c->new AnnouncementViews.ClassOption(c.classId(),c.code(),c.name(),actor.role()!=Role.STUDENT&&Objects.equals(c.teacherId(),actor.accountId()),actor.role()==Role.STUDENT?0:classes.listActiveStudents(c.classId()).size())).toList();
+        var options=all.stream().map(c->new AnnouncementViews.ClassOption(c.classId(),c.code(),c.subjectCode(),actor.role()!=Role.STUDENT&&Objects.equals(c.teacherId(),actor.accountId()),actor.role()==Role.STUDENT?0:classes.listActiveStudents(c.classId()).size())).toList();
         return new AnnouncementViews.Feed(items,options,page,size,more);
     }
     public AnnouncementViews.Item create(Actor actor,UUID classId,AnnouncementCommands.Create input) {
@@ -58,7 +58,7 @@ public class AnnouncementService {
     private void save(Announcement a,long version) {if(!repository.update(a,version))throw ApiException.conflict("ANNOUNCEMENT_STALE","Thông báo đã thay đổi, hãy tải lại");a.version=version+1;}
     private AnnouncementViews.Item view(Actor actor,Announcement a,ClassRef c) {
         String author=accounts.getContact(a.createdBy).map(AccountContact::displayName).orElse("Giảng viên");
-        return new AnnouncementViews.Item(a.id,a.classId,c.name(),a.title,a.body,a.important,a.sendEmail,a.createdBy,author,a.createdAt,a.updatedAt,a.version,actor.role()!=Role.STUDENT&&Objects.equals(c.teacherId(),actor.accountId()));
+        return new AnnouncementViews.Item(a.id,a.classId,c.code(),a.title,a.body,a.important,a.sendEmail,a.createdBy,author,a.createdAt,a.updatedAt,a.version,actor.role()!=Role.STUDENT&&Objects.equals(c.teacherId(),actor.accountId()));
     }
     private Map<String,Object> metadata(Announcement a) {return Map.of("classId",a.classId.toString(),"titleLength",a.title.length(),"bodyLength",a.body.length(),"contentHash",hash(a.title+"\n"+a.body),"important",a.important,"sendEmail",a.sendEmail,"version",a.version,"status",a.status.name());}
     private String hash(String text) {try{return HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(text.getBytes(java.nio.charset.StandardCharsets.UTF_8)));}catch(java.security.NoSuchAlgorithmException e){throw new IllegalStateException(e);}}

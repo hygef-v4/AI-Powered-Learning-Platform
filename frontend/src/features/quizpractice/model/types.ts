@@ -13,7 +13,7 @@ export type PracticeQuizRow = {
   quizId: string;
   classId: string;
   classCode: string;
-  className: string;
+  subjectCode: string | null;
   title: string;
   status: QuizStatus;
   timeLimitMinutes: number | null;
@@ -46,7 +46,7 @@ export type PracticeQuizDetail = {
   quizId: string;
   classId: string;
   classCode: string;
-  className: string;
+  subjectCode: string | null;
   title: string;
   instructions: string | null;
   status: QuizStatus;

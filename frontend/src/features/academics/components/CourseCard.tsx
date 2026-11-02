@@ -15,7 +15,7 @@ function toneOf(seed: string): Tone {
 
 /**
  * Thẻ dọc (cao hơn rộng) của môn hoặc lớp trên Môn được phân công, Lớp được phân công, Lớp của tôi: phần trên là dải màu
- * trang trí in mờ mã môn dựng đứng bên trái, đọc từ trên xuống (dài thì chỉ thấy mấy chữ đầu), icon bên phải; phần dưới chỉ có mã (môn hoặc lớp) ở trên và tên ở dưới. Cả thẻ bấm được;
+ * trang trí in mờ mã môn dựng đứng bên trái, đọc từ trên xuống (dài thì chỉ thấy mấy chữ đầu), icon bên phải; phần dưới chỉ có mã ở trên và tên ở dưới (thẻ lớp: mã môn ở trên, mã lớp ở dưới). Cả thẻ bấm được;
  * thẻ không mở được (lớp đã kết thúc của sinh viên) thì mờ đi.
  */
 export function CourseCard({ code, name, band, icon, extra, onOpen, label, testId }: {

@@ -9,7 +9,7 @@ afterEach(() => vi.unstubAllGlobals());
 function course(id = "c"): CourseClassView {
   return {
     id, subject: {id: "s", code: "S", name: "Subject"}, code: id,
-    name: `Class ${id}`, description: "", term: "1", status: "DRAFT",
+    name: `Class ${id}`, description: `Mô tả ${id}`, term: "1", status: "DRAFT",
     teacher: {id: "t", name: "Teacher", email: "t@example.test"},
     version: 1, activeStudentCount: 0, removedStudentCount: 0,
     showGradeDistribution: false, createdAt: "2026-01-01",
@@ -35,10 +35,10 @@ it("ignores the old route response even when HTTP completes after cancellation",
   const view = render(<ClassDetailRoute scope="manager" id="old"/>);
   await waitFor(() => expect(oldSignal).toBeDefined());
   view.rerender(<ClassDetailRoute scope="manager" id="new"/>);
-  expect(await screen.findByLabelText(/Tên lớp/)).toHaveValue("Class new");
+  expect(await screen.findByLabelText(/Mô tả/)).toHaveValue("Mô tả new");
   expect(oldSignal!.aborted).toBe(true);
   await act(async () => { oldResponse.resolve(Response.json(course("old"))); });
-  expect(screen.getByLabelText(/Tên lớp/)).toHaveValue("Class new");
+  expect(screen.getByLabelText(/Mô tả/)).toHaveValue("Mô tả new");
 });
 
 it("cancels an in-flight refresh when the detail route unmounts", async () => {
@@ -53,7 +53,7 @@ it("cancels an in-flight refresh when the detail route unmounts", async () => {
     return refreshing.promise;
   }));
   const view = render(<ClassDetailRoute scope="manager" id="c"/>);
-  fireEvent.change(await screen.findByLabelText(/Tên lớp/), {target: {value: "Edited"}});
+  fireEvent.change(await screen.findByLabelText(/Mô tả/), {target: {value: "Edited"}});
   fireEvent.click(screen.getByTestId("class-info-save"));
   await waitFor(() => expect(refreshSignal).toBeDefined());
   view.unmount();
@@ -71,17 +71,17 @@ it("preserves the failed-read screen after a successful write and retries only t
     }
     if (url.includes("/students?")) return Promise.resolve(Response.json([]));
     if (saved && !readAvailable) return Promise.resolve(Response.json({}, {status: 503}));
-    return Promise.resolve(Response.json({...course(), name: saved ? "Saved remotely" : "Original"}));
+    return Promise.resolve(Response.json({...course(), description: saved ? "Saved remotely" : "Original"}));
   });
   vi.stubGlobal("fetch", request);
   render(<ClassDetailRoute scope="manager" id="c"/>);
-  fireEvent.change(await screen.findByLabelText(/Tên lớp/), {target: {value: "Local edit"}});
+  fireEvent.change(await screen.findByLabelText(/Mô tả/), {target: {value: "Local edit"}});
   fireEvent.click(screen.getByTestId("class-info-save"));
   expect(await screen.findByRole("alert")).toHaveTextContent("Không thể hoàn tất thao tác");
-  expect(screen.queryByLabelText(/Tên lớp/)).not.toBeInTheDocument();
+  expect(screen.queryByLabelText(/Mô tả/)).not.toBeInTheDocument();
   readAvailable = true;
   fireEvent.click(screen.getByRole("button", {name: "Tải lại trang"}));
-  expect(await screen.findByLabelText(/Tên lớp/)).toHaveValue("Saved remotely");
+  expect(await screen.findByLabelText(/Mô tả/)).toHaveValue("Saved remotely");
   expect(request.mock.calls.filter(([, init]) => init.method === "PATCH")).toHaveLength(1);
 });
 

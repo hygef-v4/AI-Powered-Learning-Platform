@@ -33,5 +33,3 @@ export const studentDetailSections = createSlot<{ classId: string; studentId: st
 /** Dòng tóm tắt trên thẻ lớp ở Class Dashboard (U08: bài sắp đến hạn). */
 export const classCardSections = createSlot<{ classId: string }>("ClassCardSection");
 
-/** Ô thêm trong thẻ Thông tin lớp của giảng viên, sau ô Sinh viên (U13: số học liệu đang hoạt động). */
-export const teacherClassInfoFields = createSlot<{ classId: string }>("TeacherClassInfoField");

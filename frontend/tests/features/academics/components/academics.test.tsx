@@ -50,22 +50,20 @@ describe("U05 reference UI", () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
-  it("creates a class with an optional teacher and normalized text", async () => {
+  it("creates a class from its code only (no class name or term) with an optional teacher", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(<ClassFormDialog subject={subject} teachers={[teacher]} onSubmit={onSubmit} onClose={vi.fn()} />);
+    expect(screen.queryByLabelText(/Tên lớp/)).toBeNull();
+    expect(screen.queryByLabelText(/Học kỳ/)).toBeNull();
     fireEvent.change(screen.getByLabelText(/Mã lớp/), { target: { value: " SE1902 " } });
-    fireEvent.change(screen.getByLabelText(/Tên lớp/), { target: { value: " Lớp mới " } });
-    fireEvent.change(screen.getByLabelText(/Học kỳ/), { target: { value: "2026-2" } });
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Tạo lớp" }));
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ subjectId: subject.id, code: "SE1902", name: "Lớp mới", term: "2026-2", description: "", teacherId: null }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ subjectId: subject.id, code: "SE1902", name: "SE1902", term: "", description: "", teacherId: null }));
   });
 
   it("sends the chosen teacher when creating a class", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(<ClassFormDialog subject={subject} teachers={[teacher]} onSubmit={onSubmit} onClose={vi.fn()} />);
     fireEvent.change(screen.getByLabelText(/Mã lớp/), { target: { value: "SE1902" } });
-    fireEvent.change(screen.getByLabelText(/Tên lớp/), { target: { value: "Lớp mới" } });
-    fireEvent.change(screen.getByLabelText(/Học kỳ/), { target: { value: "2026-2" } });
     fireEvent.focus(screen.getByRole("combobox", { name: /Giảng viên/ }));
     fireEvent.click(await screen.findByRole("option", { name: new RegExp(teacher.name) }));
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Tạo lớp" }));
@@ -75,24 +73,26 @@ describe("U05 reference UI", () => {
   it("preserves unsaved info and displays version conflict", async () => {
     const onSave = vi.fn().mockRejectedValue(new Error("Dữ liệu đã thay đổi. Vui lòng tải lại."));
     render(<ClassInfoForm value={course} onSave={onSave} />);
-    fireEvent.change(screen.getByLabelText(/Tên lớp/), { target: { value: "Lớp mới" } });
+    expect(screen.queryByLabelText(/Tên lớp/)).toBeNull();
+    expect(screen.queryByLabelText(/Học kỳ/)).toBeNull();
+    fireEvent.change(screen.getByLabelText(/Mô tả/), { target: { value: "Mô tả mới" } });
     fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
-    await waitFor(() => expect(onSave).toHaveBeenCalledWith({ name: "Lớp mới", description: course.description, term: course.term, version: 3 }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith({ name: course.name, description: "Mô tả mới", term: course.term, version: 3 }));
     expect(await screen.findByRole("alert")).toHaveTextContent("tải lại");
-    expect(screen.getByLabelText(/Tên lớp/)).toHaveValue("Lớp mới");
+    expect(screen.getByLabelText(/Mô tả/)).toHaveValue("Mô tả mới");
   });
 
   it("does not offer editing for archived classes", () => {
     render(<ClassInfoForm value={{ ...course, status: "ARCHIVED" }} onSave={vi.fn()} />);
-    expect(screen.getByLabelText(/Tên lớp/)).toBeDisabled();
+    expect(screen.getByLabelText(/Mô tả/)).toBeDisabled();
     expect(screen.queryByRole("button", { name: "Lưu thay đổi" })).not.toBeInTheDocument();
   });
 
   it("refreshes unsaved info when a newer server version arrives", () => {
     const { rerender } = render(<ClassInfoForm value={course} onSave={vi.fn()} />);
-    fireEvent.change(screen.getByLabelText(/Tên lớp/), { target: { value: "Chưa lưu" } });
-    rerender(<ClassInfoForm value={{ ...course, name: "Mới từ server", version: 4 }} onSave={vi.fn()} />);
-    expect(screen.getByLabelText(/Tên lớp/)).toHaveValue("Mới từ server");
+    fireEvent.change(screen.getByLabelText(/Mô tả/), { target: { value: "Chưa lưu" } });
+    rerender(<ClassInfoForm value={{ ...course, description: "Mới từ server", version: 4 }} onSave={vi.fn()} />);
+    expect(screen.getByLabelText(/Mô tả/)).toHaveValue("Mới từ server");
   });
 
   it("shows server enrollment conflicts with their original row number", () => {

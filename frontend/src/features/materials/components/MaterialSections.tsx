@@ -1,20 +1,11 @@
 "use client";
 import Link from "next/link";
-import { useId } from "react";
-import { Field, LockedInput } from "@/shared/ui";
 import { Button } from "@/shared/ui/Button";
 import { ModuleBoard } from "./ModuleBoard";
 import { useMaterialResource } from "../hooks/useMaterialResource";
 import { fileDescription, materialHref, type Material } from "../model/types";
 import styles from "../styles/materials.module.css";
 
-/** Ô Học liệu trong thẻ Thông tin lớp của giảng viên: số học liệu đang hoạt động của lớp (kể cả của môn). */
-export function ClassMaterialCountField({ classId }: { classId: string }) {
-  const id = useId();
-  const resource = useMaterialResource<Material[]>(`/api/v1/classes/${encodeURIComponent(classId)}/materials`);
-  const value = resource.data ? String(resource.data.filter((m) => m.status === "ACTIVE").length) : resource.error ? "Không tải được" : "…";
-  return <Field label="Học liệu" htmlFor={`${id}-materials`}><LockedInput id={`${id}-materials`} value={value} /></Field>;
-}
 export function MaterialLinkList({ classId, materialIds }: { classId: string; materialIds: string[] }) {
   const ids = [...new Set(materialIds)].sort();
   return <MaterialLinks classId={classId} ids={ids} title="Học liệu gắn kèm" />;

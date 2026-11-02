@@ -7,11 +7,11 @@ import { EmailPreferencePanel } from "./EmailPreferencePanel";
 import type { NotificationItem } from "../model/types";
 import styles from "../styles/notifications.module.css";
 /**
- * Popup thông báo: tiêu đề kèm nút cài đặt (bánh răng, chỉ Sinh viên có tùy chọn email) mở trang Cài đặt riêng trong popup; hàng tab
+ * Popup thông báo: tiêu đề kèm nút cài đặt (bánh răng, mọi vai trò: email của các loại thông báo mình nhận) mở trang Cài đặt riêng trong popup; hàng tab
  * Tất cả / Chưa đọc mang luôn nút đánh dấu đã đọc. Làm mới (SSE, định kỳ, sau khi đọc) giữ danh sách cũ của cùng bộ lọc cho tới khi
  * có dữ liệu mới, nên danh sách không nháy trống rồi hiện lại (yêu cầu 2026-10-29).
  */
-export function NotificationPopup({ count, student, revision, onChanged, onClose }: { count: number; student: boolean; revision: number; onChanged: () => void; onClose: () => void }) {
+export function NotificationPopup({ count, revision, onChanged, onClose }: { count: number; revision: number; onChanged: () => void; onClose: () => void }) {
   const router = useRouter(); const [unread, setUnread] = useState(false); const [settings, setSettings] = useState(false); const [busy, setBusy] = useState(false); const [mutationError, setMutationError] = useState(""); const more = useRef<HTMLButtonElement>(null); const panel = useRef<HTMLElement>(null); const gear = useRef<HTMLButtonElement>(null); const back = useRef<HTMLButtonElement>(null);
   const filter = String(unread); const base = `${filter}:${revision}`; const [pagination, setPagination] = useState({ base: "", page: 1 }); const page = pagination.base === base ? pagination.page : 1;
   function setPage(value: number | ((page: number) => number)) { setPagination(previous => ({ base, page: typeof value === "number" ? value : value(previous.base === base ? previous.page : 1) })); }
@@ -27,9 +27,9 @@ export function NotificationPopup({ count, student, revision, onChanged, onClose
   return <section id="notification-popup" ref={panel} tabIndex={-1} role="dialog" aria-label="Thông báo" className={styles.popup} onKeyDown={e => { if (e.key !== "Escape") return; if (settings) { e.stopPropagation(); showSettings(false); } else onClose(); }}>
     <header className={styles.heading}>
       {settings ? <><button ref={back} type="button" aria-label="Quay lại thông báo" title="Quay lại thông báo" className={styles.iconButton} onClick={() => showSettings(false)}><Icon name="arrow_back" size={18} /></button><h2>Cài đặt</h2></>
-        : <><h2>Thông báo</h2>{student && <button ref={gear} type="button" data-testid="notification-settings" aria-label="Cài đặt thông báo" title="Cài đặt thông báo" className={styles.iconButton} onClick={() => showSettings(true)}><Icon name="settings" size={19} /></button>}</>}
+        : <><h2>Thông báo</h2><button ref={gear} type="button" data-testid="notification-settings" aria-label="Cài đặt thông báo" title="Cài đặt thông báo" className={styles.iconButton} onClick={() => showSettings(true)}><Icon name="settings" size={19} /></button></>}
     </header>
-    {student && <div hidden={!settings} className={styles.scroll}><EmailPreferencePanel /></div>}
+    {settings && <div className={styles.scroll}><EmailPreferencePanel /></div>}
     <div hidden={settings} className={styles.listView}>
       <div className={styles.tabbar}>
         <div role="tablist" aria-label="Lọc thông báo" className={styles.tabs}><button role="tab" aria-selected={!unread} onClick={() => { setUnread(false); setPage(1); }}>Tất cả</button><button role="tab" aria-selected={unread} onClick={() => { setUnread(true); setPage(1); }}>Chưa đọc ({count})</button></div>

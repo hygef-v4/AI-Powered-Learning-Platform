@@ -5,8 +5,8 @@ import { announcementsApi } from "@/features/announcements/api";
 import type { Announcement, ClassOption } from "@/features/announcements/model/types";
 vi.mock("@/features/announcements/api", async original => ({ ...await original<typeof import("@/features/announcements/api")>(), announcementsApi: { list: vi.fn(), create: vi.fn() } }));
 const classes: ClassOption[] = [
-  { classId: "c1", code: "SE1801", name: "Thiết kế", canManage: true, studentCount: 30 },
-  { classId: "c2", code: "SE1802", name: "Thiết kế", canManage: true, studentCount: 28 },
+  { classId: "c1", code: "SE1801", subjectCode: "SWD392", canManage: true, studentCount: 30 },
+  { classId: "c2", code: "SE1802", subjectCode: "SWD392", canManage: true, studentCount: 28 },
 ];
 const item: Announcement = { id: "a", classId: "c1", className: "Thiết kế", title: "Đổi lịch bảo vệ đồ án sang thứ Sáu tuần sau", body: "Nội dung đầy đủ của thông báo", important: true, sendEmail: false, createdBy: "t", authorName: "Giảng viên", createdAt: "2026-10-21T08:00:00Z", updatedAt: "2026-10-22T08:00:00Z", version: 1, canManage: true };
 beforeEach(() => { vi.clearAllMocks(); vi.mocked(announcementsApi.list).mockResolvedValue({ items: [item], classes, page: 1, size: 20, hasMore: false }); });
@@ -75,7 +75,7 @@ it("đăng lỗi ở một lớp thì giữ lại đúng lớp đó và báo tê
 });
 
 it("100 lớp: ô Lớp đóng chỉ một dòng tóm tắt; mở ra tìm được và chọn tất cả", async () => {
-  const many = Array.from({ length: 100 }, (_, i) => ({ classId: `k${i}`, code: `SE${1800 + i}`, name: "Thiết kế", canManage: true, studentCount: 30 }));
+  const many = Array.from({ length: 100 }, (_, i) => ({ classId: `k${i}`, code: `SE${1800 + i}`, subjectCode: "SWD392", canManage: true, studentCount: 30 }));
   vi.mocked(announcementsApi.list).mockResolvedValue({ items: [], classes: many, page: 1, size: 20, hasMore: false });
   render(<ClassAnnouncementsPage />);
   expect(await screen.findByTestId("announcement-class-filter")).toBeInTheDocument();

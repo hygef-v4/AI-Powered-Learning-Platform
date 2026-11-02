@@ -59,7 +59,7 @@ function ClassResolver({ quizId }: { quizId: string }) {
         {rows.map((row) => (
           <li key={row.classId}>
             <Button onClick={() => router.push(detailHref(quizId, row.classId))} data-testid="practice-detail-class">
-              {row.classCode} · {row.className}
+              {row.subjectCode ? `${row.subjectCode} · ` : ""}{row.classCode}
             </Button>
           </li>
         ))}

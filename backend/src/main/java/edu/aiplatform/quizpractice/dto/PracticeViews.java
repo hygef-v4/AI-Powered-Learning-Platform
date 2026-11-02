@@ -23,7 +23,7 @@ public final class PracticeViews {
     }
 
     /** Một Quiz trên Quiz Practice History (BR-U11-02); điểm trống khi Quiz không hiện điểm. */
-    public record PracticeQuizRow(UUID quizId, UUID classId, String classCode, String className, String title,
+    public record PracticeQuizRow(UUID quizId, UUID classId, String classCode, String subjectCode, String title,
                                   QuizStatus status, Integer timeLimitMinutes, int attemptsUsed, Integer maxAttempts,
                                   BigDecimal bestScore, BigDecimal lastScore, BigDecimal maxScore,
                                   Instant lastAttemptAt, UUID inProgressAttemptId, boolean canStart) {
@@ -55,7 +55,7 @@ public final class PracticeViews {
     }
 
     /** Quiz Practice Detail (BR-U11-03): {@code blockedReason} giải thích vì sao không làm được. */
-    public record PracticeQuizDetail(UUID quizId, UUID classId, String classCode, String className, String title,
+    public record PracticeQuizDetail(UUID quizId, UUID classId, String classCode, String subjectCode, String title,
                                      String instructions, QuizStatus status, int questionCount, BigDecimal maxScore,
                                      Integer timeLimitMinutes, int attemptsUsed, Integer maxAttempts,
                                      Integer attemptsLeft, BigDecimal bestScore, boolean showScoreAfterSubmit,
