@@ -54,7 +54,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 /**
- * Nhập file vào tài liệu nhóm (BR-U12-46), không dùng AI nên không tốn token:
+ * Nhập file vào tài liệu nhóm (FB-U12-03), không dùng AI nên không tốn token:
  * <ul>
  * <li>Người giữ nhập DOCX vào mục đang sửa: xem trước rồi trình soạn chèn vào bản nháp.</li>
  * <li>Trưởng nhóm nhập DOCX và/hoặc tệp Draw.io cho cả tài liệu: heading trùng tên mục thì nội dung dưới heading vào

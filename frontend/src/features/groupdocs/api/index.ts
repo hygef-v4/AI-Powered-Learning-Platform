@@ -36,10 +36,6 @@ export const saveDraft = (id: string, sectionId: string, version: number, blocks
 export const finishSection = (id: string, sectionId: string) =>
   apiFetch<SectionView>(`${section(id, sectionId)}:done`, { method: "POST" });
 
-/** Tiếp quản mục người khác đang giữ; bản nháp của người trước được giữ (BR-U12-33). */
-export const takeOverSection = (id: string, sectionId: string) =>
-  apiFetch<SectionView>(`${section(id, sectionId)}:take-over`, { method: "POST" });
-
 export const lockSection = (id: string, sectionId: string) =>
   apiFetch<SectionView>(`${section(id, sectionId)}:lock`, { method: "POST" });
 
@@ -62,7 +58,7 @@ export const previewSectionDocx = async (id: string, sectionId: string, file: Fi
   return { document: r.document, warnings: r.warnings, imageCount: r.images, diagramCount: r.diagrams };
 };
 
-/** Trưởng nhóm nhập DOCX và/hoặc Draw.io cho cả tài liệu: xem trước theo mục (BR-U12-46). */
+/** Trưởng nhóm nhập DOCX và/hoặc Draw.io cho cả tài liệu: xem trước theo mục (FB-U12-03). */
 export const previewImport = (id: string, files: { docx?: File | null; drawio?: File | null }) => {
   const form = new FormData();
   if (files.docx) form.append("docx", files.docx);

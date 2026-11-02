@@ -158,7 +158,7 @@ Plan: `construction/plans/2026-10-24-u12-document-editor.md`, nhánh `feat/u12-d
 
 ## Cộng tác trên mục, nhập file, đánh giá chéo (2026-11-02)
 
-Plan: `construction/plans/code-generation-plan/2026-11-02-u06-u12-feedback.md`, nhánh `feat/u06-u12-feedback-2026-11-02`. Rule: BR-U12-33, 35, 39, 46, 47.
+Plan: `construction/plans/code-generation-plan/2026-11-02-u06-u12-feedback.md`, nhánh `feat/u06-u12-feedback-2026-11-02`. Bổ sung FB-U12-01..04 (ngoài BR đã chốt, xem `2026-11-02-feedback-additions.md`).
 
 - **Migration** `groups/V20261102_1000__group_section_collaboration.sql`: `group_document_sections.locked_by/locked_at` (chỉ khi `DONE`), `group_document_revisions.kind` (`DONE`, `TAKEOVER`, `IMPORT`), bảng `group_peer_reviews` (1–5, không tự chấm, một người chấm một người một lần).
 - **`GroupSectionService`:**
@@ -185,3 +185,11 @@ Người dùng chốt lại BR-U12-33, 39 sau khi xem bản đã gộp (PR #35).
 - **Backend:** `SectionRules.canTakeOver` chỉ cho trưởng nhóm (`403 GROUP_DOC_LEADER_ONLY`); `GroupDocumentRepository.lockedContributors` lấy tác giả các bản lịch sử tạo tới lúc chốt; `SectionView.contributorIds` (rỗng khi chưa chốt); `GroupWorkspaceService` và `lock` trả ghi công. Không đổi schema.
 - **Frontend:** nút Tiếp quản chỉ hiện với trưởng nhóm, thành viên bấm mục người khác giữ thì chỉ xem; dòng "Ghi công: …" ở mục đã chốt; cột Tác giả ở thẻ Bản nộp hiện người được ghi công.
 - **Test:** `GroupSectionServiceTest` (thành viên bị chặn tiếp quản, ghi công khi chốt), `GroupRepositoriesIntegrationTest` (ghi công theo lịch sử tới lúc chốt, bản sau lúc chốt không tính), `GroupWorkspacePage.test.tsx`, e2e `u12c`.
+
+## Bỏ tiếp quản, chốt ghi người phụ trách, trả BR về bản chốt (2026-11-02)
+
+BR đã chốt nên không sửa `business-rules.md`; đã trả về đúng bản chốt. Nhánh `fix/u12-follow-frozen-br`. Danh sách bổ sung: `construction/plans/code-generation-plan/2026-11-02-feedback-additions.md`.
+
+- **Bỏ tiếp quản** (trái BR-U12-33): gỡ `GroupSectionService.takeOver`, `SectionRules.canTakeOver`, `GroupSection.takenOverBy`, API `:take-over`, nút và hộp thoại, trạng thái "Đã bị tiếp quản" của trình soạn. Nhả và giao lại vẫn bỏ bản nháp theo BR-U12-36.
+- **Chốt mục (FB-U12-01)**: người phụ trách là `lastAuthorId`, hiện "Phụ trách: …"; bỏ `lockedContributors` và `SectionView.contributorIds`.
+- **Test:** bỏ test tiếp quản và ghi công; e2e `u12c` kiểm mục đã có người nhận thì kể cả trưởng nhóm không nhận được, API tiếp quản không còn, chốt ghi người phụ trách.

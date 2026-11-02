@@ -8,7 +8,7 @@ import java.util.UUID;
 /**
  * Mục của tài liệu nhóm, khóa theo {@code partId} (BR-U12-30). Chỉ người giữ thấy {@code draftBlocks}; nội dung đã
  * đăng ({@code publishedBlocks}) là bản mọi người thấy và vào bản nộp. {@code lockedBy}: trưởng nhóm đã chốt mục
- * (BR-U12-39), chỉ khi mục {@code DONE}.
+ * (FB-U12-01), chỉ khi mục {@code DONE}.
  */
 public record GroupSection(UUID id, UUID documentId, String partId, UUID headingBlockId, List<UUID> ancestorHeadingIds,
                            int orderNo, String title, Status status, UUID claimedBy, Instant claimedAt, UUID assignedBy,
@@ -69,23 +69,14 @@ public record GroupSection(UUID id, UUID documentId, String partId, UUID heading
                 null, null, null, content, null, now, claimedBy, version, lockedBy, lockedAt);
     }
 
-    /**
-     * Tiếp quản (BR-U12-33): người mới giữ mục, bản nháp đã lưu của người trước được giữ nguyên để làm tiếp; chưa có
-     * bản nháp thì bắt đầu từ nội dung đã đăng.
-     */
-    public GroupSection takenOverBy(UUID holder, Instant now) {
-        List<DocumentBlock> draft = draftBlocks != null ? draftBlocks : publishedBlocks;
-        return new GroupSection(id, documentId, partId, headingBlockId, ancestorHeadingIds, orderNo, title, Status.CLAIMED,
-                holder, now, holder, publishedBlocks, draft, draftSavedAt, lastAuthorId, version, lockedBy, lockedAt);
-    }
 
-    /** Nhập file của trưởng nhóm (BR-U12-46): nội dung thành bản đã đăng, mục {@code DONE}. */
+    /** Nhập file của trưởng nhóm (FB-U12-03): nội dung thành bản đã đăng, mục {@code DONE}. */
     public GroupSection published(List<DocumentBlock> blocks, UUID author, Instant now) {
         return new GroupSection(id, documentId, partId, headingBlockId, ancestorHeadingIds, orderNo, title, Status.DONE,
                 null, null, null, blocks, null, now, author, version, lockedBy, lockedAt);
     }
 
-    /** Trưởng nhóm chốt mục đã Xong (BR-U12-39). */
+    /** Trưởng nhóm chốt mục đã Xong (FB-U12-01). */
     public GroupSection lockedBy(UUID leader, Instant now) {
         return new GroupSection(id, documentId, partId, headingBlockId, ancestorHeadingIds, orderNo, title, status,
                 claimedBy, claimedAt, assignedBy, publishedBlocks, draftBlocks, draftSavedAt, lastAuthorId, version, leader,

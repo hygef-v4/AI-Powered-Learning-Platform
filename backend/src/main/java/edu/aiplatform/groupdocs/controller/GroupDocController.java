@@ -120,11 +120,6 @@ public class GroupDocController {
         return sections.done(actor, id, sectionId);
     }
 
-    @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:take-over")
-    public SectionView takeOver(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId) {
-        return sections.takeOver(actor, id, sectionId);
-    }
-
     @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:lock")
     public SectionView lock(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId) {
         return sections.lock(actor, id, sectionId);

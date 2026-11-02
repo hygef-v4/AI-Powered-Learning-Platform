@@ -227,49 +227,6 @@ class GroupSectionServiceTest {
     }
 
     @Test
-    void onlyTheLeaderTakesOverAHeldSection() {
-        GroupSection held = new GroupSection(sectionId, document.id(), "p1", null, List.of(), 1, "1. Sơ đồ", Status.CLAIMED,
-                leader.accountId(), NOW, null, null, List.of(block()), NOW, null, 4);
-        when(documents.lockSection(document.id(), sectionId)).thenReturn(Optional.of(held));
-
-        assertThatThrownBy(() -> service.takeOver(member, document.id(), sectionId))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_LEADER_ONLY"));
-        verify(documents, never()).updateSection(any());
-        verify(documents, never()).insertRevision(any());
-    }
-
-    @Test
-    void leaderTakesOverAHeldSectionKeepingTheDraftInHistory() {
-        GroupSection held = new GroupSection(sectionId, document.id(), "p1", null, List.of(), 1, "1. Sơ đồ", Status.CLAIMED,
-                member.accountId(), NOW, null, null, List.of(block()), NOW, null, 4);
-        when(documents.lockSection(document.id(), sectionId)).thenReturn(Optional.of(held));
-
-        var taken = service.takeOver(leader, document.id(), sectionId);
-
-        assertThat(taken.holderId()).isEqualTo(leader.accountId());
-        assertThat(taken.draftBlocks()).hasSize(1);
-        ArgumentCaptor<SectionRevision> revision = ArgumentCaptor.forClass(SectionRevision.class);
-        verify(documents).insertRevision(revision.capture());
-        assertThat(revision.getValue().kind()).isEqualTo(SectionRevision.Kind.TAKEOVER);
-        assertThat(revision.getValue().authorId()).isEqualTo(member.accountId());
-        ArgumentCaptor<AuditEvent> event = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(audit).record(event.capture());
-        assertThat(event.getValue().action()).isEqualTo("GROUP_SECTION_TAKEN_OVER");
-
-        // Người trước lưu tiếp thì bị từ chối vì không còn giữ mục.
-        when(documents.lockSection(document.id(), sectionId)).thenReturn(Optional.of(held.takenOverBy(leader.accountId(), NOW)));
-        assertThatThrownBy(() -> service.saveDraft(member, document.id(), sectionId, 4L, List.of(block())))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_NOT_HELD"));
-    }
-
-    @Test
-    void takingOverAnUnheldSectionIsRefused() {
-        section(Status.OPEN, null, null, 0);
-        assertThatThrownBy(() -> service.takeOver(leader, document.id(), sectionId))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_NOT_CLAIMED"));
-    }
-
-    @Test
     void leaderLocksDoneSectionWhichBlocksClaimAndAssignUntilUnlocked() {
         section(Status.CLAIMED, member.accountId(), null, 1);
         assertThatThrownBy(() -> service.lock(leader, document.id(), sectionId))
@@ -278,12 +235,9 @@ class GroupSectionServiceTest {
         assertThatThrownBy(() -> service.lock(member, document.id(), sectionId))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_LEADER_ONLY"));
 
-        when(documents.lockedContributors(document.id()))
-                .thenReturn(java.util.Map.of(sectionId, List.of(member.accountId(), leader.accountId())));
         var locked = service.lock(leader, document.id(), sectionId);
         assertThat(locked.lockedBy()).isEqualTo(leader.accountId());
         assertThat(locked.lockedAt()).isEqualTo(NOW);
-        assertThat(locked.contributorIds()).containsExactly(member.accountId(), leader.accountId());
 
         GroupSection lockedSection = new GroupSection(sectionId, document.id(), "p1", null, List.of(), 1, "1. Sơ đồ",
                 Status.DONE, null, null, null, List.of(block()), null, null, member.accountId(), 3, leader.accountId(), NOW);

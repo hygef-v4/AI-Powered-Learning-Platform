@@ -15,7 +15,7 @@ export type SourceOption = {
   reason: string | null;
   quota: SourceQuota | null;
   costBearer: "SCHOOL" | "SELF";
-  /** Nguồn mặc định của người dùng (BR-U06-28); có thể đang không dùng được. */
+  /** Nguồn mặc định của người dùng (FB-U06-01); có thể đang không dùng được. */
   preferred?: boolean;
 };
 

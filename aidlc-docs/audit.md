@@ -7839,3 +7839,21 @@ Answers to clarifying questions: "Nếu người đang giữ phần nghỉ hoặ
 **Result (U12 rework)**: backend `mvn -B clean verify` 1,695 tests, 0 failures; frontend vitest 670/670, lint and typecheck clean; e2e on fresh class SE-TEST12: U12 53/53, U12b 30/30, u12c 33/33 (member take-over refused, credit on finalize), notify 3/3. BR-U12-33/39, user guide and U12 code summary updated.
 
 ---
+
+## Frozen business rules and take-over removal — 2026-11-02
+
+**Timestamp**: 2026-11-02T13:30:00Z
+
+**User Input (complete raw)**:
+
+> phan tiep quan nay xu ly nhu the nao, co the bo luon va nguoi da giao muc neu khong lam thi nguoi do se khong co diem
+
+> cap nhap br la sao, br da chot r nen khong the doi duock
+
+Answers: "Tính năng 'Trưởng nhóm chốt mục' (do thầy góp ý) đang trái BR-U12-33 đã chốt vì chặn nhận mục DONE. Xử lý thế nào?" = "nay chốt mục tức là cho thành viên nhóm nhận hoặc trưởng nhóm phân và sau đấy khi nào cả nhóm đã oke thì trưởng nhóm sẽ chốt phần đấy sẽ cho thành viên đấy phụ trách, không sửa nữa"; "Các tính năng làm thêm không trái BR (...) giữ hay bỏ?" = "Giữ, ghi vào file riêng (Recommended)".
+
+**AI Response**: Acknowledged that PR #35/#40 edited the frozen business-rules files (BR-U12-33, 35 modified; BR-U12-39, 46, 47 and BR-U06-28 added). Plan: restore the frozen rule text (teammates' own edits kept), remove take-over entirely (BR-U12-33/36 as frozen, release still discards the draft), keep leader finalize with a single responsible member (the member who completed the section), and record every addition as FB-xx items in a separate feedback-additions file instead of the BR files.
+
+**Context**: Correction of documentation scope + Code Generation.
+
+---

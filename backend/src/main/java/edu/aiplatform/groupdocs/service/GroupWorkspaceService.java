@@ -17,7 +17,6 @@ import edu.aiplatform.identity.contract.IAccountLookup;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -71,9 +70,8 @@ public class GroupWorkspaceService {
 
     private WorkspaceView view(GroupDocContext ctx, AssignmentView assignment) {
         GroupDocument d = ctx.document();
-        Map<UUID, List<UUID>> contributors = documents.lockedContributors(d.id());
         List<SectionView> sections = documents.listSections(d.id()).stream()
-                .map(s -> SectionView.of(s, ctx.actorId(), contributors.getOrDefault(s.id(), List.of()))).toList();
+                .map(s -> SectionView.of(s, ctx.actorId())).toList();
         List<Member> members = ctx.group().memberIds().stream().map(id -> member(id, ctx.group())).toList();
         SubmissionWindow window = assignment == null ? SubmissionWindow.CLOSED
                 : docAccess.window(d.assignmentId(), false);

@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Đánh giá chéo giữa thành viên nhóm (BR-U12-47). Mở sau khi nhóm có bản nộp, sửa được tới 7 ngày sau hạn cuối
+ * Đánh giá chéo giữa thành viên nhóm (FB-U12-04). Mở sau khi nhóm có bản nộp, sửa được tới 7 ngày sau hạn cuối
  * nhận bài (không có hạn thì không đóng). Thành viên chấm mỗi thành viên khác 1–5 kèm nhận xét và chỉ thấy đánh giá
  * của mình; giảng viên chính của lớp thấy trung bình, quy đổi thang 10, số người chấm và từng nhận xét. Điểm chỉ để
  * giảng viên tham khảo; ghép vào điểm cuối theo trọng số là việc của U09.

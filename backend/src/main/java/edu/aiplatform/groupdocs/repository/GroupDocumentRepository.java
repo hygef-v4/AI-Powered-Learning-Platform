@@ -241,24 +241,6 @@ public class GroupDocumentRepository {
                 .update();
     }
 
-    /**
-     * Người được ghi công của các mục đã chốt (BR-U12-39): tác giả các bản lịch sử tạo tới lúc chốt, theo thứ tự đóng
-     * góp đầu tiên. Lịch sử chỉ thêm và mục đã chốt không sửa được nên kết quả cố định sau khi chốt.
-     */
-    public Map<UUID, List<UUID>> lockedContributors(UUID documentId) {
-        Map<UUID, List<UUID>> result = new HashMap<>();
-        jdbc.sql("select r.section_id, r.author_id, min(r.created_at) as first_at from group_document_revisions r "
-                        + "join group_document_sections s on s.id = r.section_id where s.group_document_id = :id "
-                        + "and s.locked_by is not null and r.created_at <= s.locked_at group by r.section_id, r.author_id "
-                        + "order by r.section_id, first_at, r.author_id")
-                .param("id", documentId)
-                .query(rs -> {
-                    result.computeIfAbsent(rs.getObject("section_id", UUID.class), k -> new ArrayList<>())
-                            .add(rs.getObject("author_id", UUID.class));
-                });
-        return result;
-    }
-
     /** Lịch sử của mục, mới nhất trước, tối đa {@code limit} bản. */
     public List<SectionRevision> listRevisions(UUID sectionId, int limit) {
         return jdbc.sql("select id, section_id, author_id, blocks::text as blocks, created_at, kind "

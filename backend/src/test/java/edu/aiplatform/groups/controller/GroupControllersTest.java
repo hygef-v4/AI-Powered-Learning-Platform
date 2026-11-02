@@ -129,7 +129,7 @@ class GroupControllersTest {
         UUID section = UUID.randomUUID();
         UUID assignee = UUID.randomUUID();
         when(sections.claim(actor, doc, section)).thenReturn(new SectionView(section, "p1", "Mục 1", 1,
-                GroupSection.Status.CLAIMED, actor.accountId(), actor.accountId(), null, null, null, null, 1, null, null, List.of()));
+                GroupSection.Status.CLAIMED, actor.accountId(), actor.accountId(), null, null, null, null, 1, null, null));
 
         mvc.perform(post("/api/v1/group-docs/" + doc + "/sections/" + section + ":claim")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CLAIMED"));
@@ -147,14 +147,13 @@ class GroupControllersTest {
     }
 
     @Test
-    void takeOverLockHistoryAndRestoreAreMapped() throws Exception {
+    void lockHistoryAndRestoreAreMappedAndTakeOverIsGone() throws Exception {
         UUID doc = UUID.randomUUID();
         UUID section = UUID.randomUUID();
         UUID revision = UUID.randomUUID();
         String base = "/api/v1/group-docs/" + doc + "/sections/" + section;
 
-        mvc.perform(post(base + ":take-over")).andExpect(status().isOk());
-        verify(sections).takeOver(actor, doc, section);
+        mvc.perform(post(base + ":take-over")).andExpect(status().isNotFound());
         mvc.perform(post(base + ":lock")).andExpect(status().isOk());
         verify(sections).lock(actor, doc, section);
         mvc.perform(post(base + ":unlock")).andExpect(status().isOk());
