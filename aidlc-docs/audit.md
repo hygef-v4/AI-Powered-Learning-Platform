@@ -7989,3 +7989,11 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **Context**: Explicit push/PR authorization supersedes the earlier local-only limit. Preserve9 commits; no rebase/force-push. Full verification follows the merge.
 
 ---
+
+
+## Post-merge verification and isolated E2E
+**Timestamp**: 2026-11-02T16:28:29.748Z
+**AI Response**: Merge1ef38be7 preserved staging's11 commits and original9 feature commits. Added808ce7ed for deterministic U04 async mutation/readback tests and b4e935bc for guarded U04/U13/U14 API E2E. Full backend clean verify1764/1764, zero skips; required real PostgreSQL suites31+2 passed. Full frontend743/743 across108 files, lint/typecheck/production build passed. Isolated API E2E40/40 passed after waiting for the OTP worker; first pre-fixture attempt preceded worker readiness and was not a business-case pass. Removed only project pr-u041314-2a661abd and its volumes; existing platform stack untouched. Fresh remote fetch: staging fully merged, remote feature is an ancestor, no force-push needed. Independent review found no actionable introduced issues.
+**Context**: Local gates passed; prepare push of only fix/u04-u13-u14, create PR to staging, and inspect latest CI. PR merge/deployment not authorized. Unrelated report DOCX remains outside commits.
+
+---
