@@ -5,8 +5,11 @@ import type { Material } from "@/features/materials/model/types";
 vi.mock("@/shared/api/client", async importOriginal => ({ ...await importOriginal<typeof import("@/shared/api/client")>(), apiFetch: vi.fn() }));
 beforeEach(() => { vi.mocked(apiFetch).mockReset(); });
 describe("single video validation", () => {
-  it.each(["https://youtu.be/abcdefghijk", "https://youtube.com/watch?v=abcdefghijk", "https://www.youtube.com/watch?v=abcdefghijk&t=20"])("accepts %s", url => expect(validYoutube(url)).toBe(true));
-  it.each(["javascript:alert(1)", "https://youtube.com.evil.test/watch?v=abcdefghijk", "https://youtube.com/watch?v=abcdefghijk&list=x", "https://youtu.be/abcdefghijk?list=x", "https://user@youtube.com/watch?v=abcdefghijk", "https://youtube.com/watch?v=abcdefghijk&v=abcdefghijk", "http://youtu.be/abcdefghijk", "https://youtu.be/short"])("rejects %s", url => expect(validYoutube(url)).toBe(false));
+  it.each(["https://youtu.be/abcdefghijk", "https://youtube.com/watch?v=abcdefghijk", "https://www.youtube.com/watch?v=abcdefghijk&t=20",
+    "https://www.youtube.com/watch?v=abcdefghijk&list=PLx&index=3", "https://youtu.be/abcdefghijk?si=AbC123", "http://youtu.be/abcdefghijk",
+    "youtube.com/watch?v=abcdefghijk", "https://m.youtube.com/watch?v=abcdefghijk", "https://www.youtube.com/shorts/abcdefghijk",
+    "https://www.youtube.com/live/abcdefghijk?feature=share", "https://youtube.com/embed/abcdefghijk"])("accepts %s", url => expect(validYoutube(url)).toBe(true));
+  it.each(["javascript:alert(1)", "https://youtube.com.evil.test/watch?v=abcdefghijk", "https://youtube.com/playlist?list=x", "https://www.youtube.com/watch?list=x", "https://user@youtube.com/watch?v=abcdefghijk", "https://youtube.com/watch?v=abcdefghijk&v=abcdefghijk", "https://youtube.com:8443/watch?v=abcdefghijk", "https://youtu.be/short", "https://www.youtube.com/@channel"])("rejects %s", url => expect(validYoutube(url)).toBe(false));
 });
 it("replacement carries the signed file reference and optimistic version", async () => {
   await materialApi.replace({ id: "id", version: 3 } as Material, { fileRef: "signed-reference" });

@@ -29,8 +29,8 @@ const validPoints = (value: string) => /^\d+([.,]\d{1,2})?$/.test(value.trim()) 
 
 /**
  * Màn #22 Quiz Detail (UC 48), cùng bố cục trang chi tiết học liệu: tên module nhỏ phía trên tên quiz, Sửa (cùng popup Tạo
- * học liệu) và Lưu trữ như ở danh sách học liệu; bên dưới là mô tả, câu hỏi, cấu hình rồi mục trước / sau trong danh sách
- * module (sidebar cũng là danh sách module). Quiz chưa lưu trữ sửa được tại chỗ, kể cả đang
+ * học liệu) và Lưu trữ như ở danh sách học liệu. Cột trái: cách lập đề, câu hỏi rồi mô tả; cột phải: cấu hình rồi lượt làm
+ * của sinh viên; cuối trang là mục trước / sau trong danh sách module (sidebar cũng là danh sách module). Quiz chưa lưu trữ sửa được tại chỗ, kể cả đang
  * mở (không tạo phiên bản mới). Giảng viên mở quiz của môn từ lớp (`classId`) thì chỉ xem. Quiz sinh đề dùng quy tắc thay cho
  * danh sách câu (BR-U10-17).
  */
@@ -197,14 +197,14 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
         </>}
       />
       <ModuleNeighbours scope={scope} previous={place.previous} next={place.next} position="top" />
-      {quiz.instructions && <Section title="Mô tả"><p className="text-[14px] leading-relaxed whitespace-pre-wrap text-body">{quiz.instructions}</p></Section>}
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {violations.length > 0 && (
         <Alert tone="danger" title="Cần sửa trước khi phát hành">
           <ul className="list-disc pl-4" data-testid="quiz-detail-violations">{violations.map((v, i) => <li key={i}>{v.message}</li>)}</ul>
         </Alert>
       )}
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+      {/* Cột phải rộng theo màn hình (bảng lượt làm cần chỗ), tối thiểu 360px. */}
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(360px,40%)]">
         <div className="flex min-w-0 flex-col gap-4">
         {(editable || generated) && (
           <DrawRulesPanel key={quiz.version} detail={detail} editable={editable} disabled={dirty} onSaved={show}
@@ -215,7 +215,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
               if (errorCode(failure) === "QUIZ_VERSION_CONFLICT") setReloadKey((k) => k + 1);
             }} />
         )}
-        {!generated && <Section title={<>Câu hỏi <span className="font-mono text-xs font-medium text-muted">{items.length}</span></>}
+        {!generated && <Section title="Câu hỏi"
           actions={editable && (
             <Menu align="right" icon="add" label="Thêm câu hỏi" ariaLabel="Thêm câu hỏi">
               <MenuItem icon="edit" disabled={busy || itemsDirty || free <= 0} onClick={() => { setEditing(null); setDialog("inline"); }}
@@ -230,14 +230,17 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
             onEditInline={(item) => { setEditing(item); setDialog("inline"); }}
             onPropose={quiz.scope === "CLASS" ? propose : undefined} />
         </Section>}
+        {quiz.instructions && <Section title="Mô tả"><p className="text-[14px] leading-relaxed whitespace-pre-wrap text-body">{quiz.instructions}</p></Section>}
         </div>
-        <QuizSettingsPanel value={settings} onChange={setSettings} errors={settingsErrors} readOnly={!editable} />
+        <div className="flex min-w-0 flex-col gap-4">
+          <QuizSettingsPanel value={settings} onChange={setSettings} errors={settingsErrors} readOnly={!editable} />
+          <SlotOutlet slot={quizDetailSections} props={{ quizId: quiz.id, classId: classId ?? quiz.classId ?? undefined }} />
+        </div>
       </div>
       {editable && (
         <QuizAiDraftPanel detail={detail} disabled={busy || dirty} onConflict={reload}
           onQuizChange={acceptedFromAi} openRequest={aiRequest} />
       )}
-      <SlotOutlet slot={quizDetailSections} props={{ quizId: quiz.id, classId: classId ?? quiz.classId ?? undefined }} />
       <ModuleNeighbours scope={scope} previous={place.previous} next={place.next} />
 
       {dialog === "publish" && (

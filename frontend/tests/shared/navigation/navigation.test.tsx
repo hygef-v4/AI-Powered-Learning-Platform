@@ -8,33 +8,18 @@ vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(w
 afterEach(() => { cleanup(); vi.restoreAllMocks(); window.history.replaceState(null, "", "/"); });
 
 describe("BackLink", () => {
-  it("returns through browser history instead of a fixed parent destination", () => {
+  it("opens the fixed parent page instead of going back through browser history", () => {
     vi.spyOn(window.history, "length", "get").mockReturnValue(3);
     const back = vi.spyOn(window.history, "back").mockImplementation(() => {});
-    render(<BackLink href="/fallback">Quay lại</BackLink>);
-    expect(fireEvent.click(screen.getByRole("link"))).toBe(false);
-    expect(back).toHaveBeenCalledOnce();
-    expect(screen.getByRole("link")).toHaveAttribute("href", "/fallback");
-  });
-
-  it("keeps the fallback for a tab with no previous history entry", () => {
-    vi.spyOn(window.history, "length", "get").mockReturnValue(1);
-    const back = vi.spyOn(window.history, "back").mockImplementation(() => {});
-    render(<BackLink href="#fallback">Quay lại</BackLink>);
+    render(<BackLink href="#parent">Quay lại</BackLink>);
+    expect(screen.getByRole("link")).toHaveAttribute("href", "#parent");
     expect(fireEvent.click(screen.getByRole("link"))).toBe(true);
-    expect(back).not.toHaveBeenCalled();
-  });
-
-  it.each([{ ctrlKey: true }, { metaKey: true }, { shiftKey: true }, { button: 1 }])("preserves modified link clicks (%j)", (options) => {
-    const back = vi.spyOn(window.history, "back").mockImplementation(() => {});
-    render(<BackLink href="#fallback">Quay lại</BackLink>);
-    expect(fireEvent.click(screen.getByRole("link"), options)).toBe(true);
     expect(back).not.toHaveBeenCalled();
   });
 
   it("honors an unsaved-work guard cancelling navigation", () => {
     const back = vi.spyOn(window.history, "back").mockImplementation(() => {});
-    render(<BackLink href="#fallback" onClick={(event) => event.preventDefault()}>Quay lại</BackLink>);
+    render(<BackLink href="#parent" onClick={(event) => event.preventDefault()}>Quay lại</BackLink>);
     expect(fireEvent.click(screen.getByRole("link"))).toBe(false);
     expect(back).not.toHaveBeenCalled();
   });

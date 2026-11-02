@@ -326,14 +326,18 @@ describe("QuizResultPage (UC 52)", () => {
 });
 
 describe("QuizAttemptsSection (UC 42)", () => {
-  it("giảng viên xem số sinh viên đã làm; không có lớp thì không hiện", async () => {
+  it("giảng viên xem bảng lượt làm (tiêu đề không kèm số, không có dòng tóm tắt); không có lớp thì không hiện", async () => {
     vi.mocked(getClassAttempts).mockResolvedValue({ quizId: "z1", classId: "c1", maxAttempts: 2, studentsAttempted: 1, totalStudents: 30,
       students: [{ accountId: "s1", displayName: "Sinh viên A", email: "a@fpt.edu.vn", attempts: 1, bestScore: 2, lastScore: 2,
         lastSubmittedAt: "2026-10-20T08:05:00Z", rows: [], lastLeaveCount: null, signalWarning: false, penaltyPending: false }] });
     const { container } = render(<QuizAttemptsSection quizId="z1" />);
     expect(container).toBeEmptyDOMElement();
     render(<QuizAttemptsSection quizId="z1" classId="c1" />);
-    expect(await screen.findByTestId("quiz-attempts-summary")).toHaveTextContent("1 / 30 sinh viên đã làm");
+    const row = await screen.findByTestId("quiz-attempts-row");
+    expect(row).toHaveTextContent("Sinh viên A");
+    expect(screen.getByRole("heading", { name: "Lượt làm của sinh viên" })).toBeInTheDocument();
+    expect(screen.queryByText(/sinh viên đã làm/)).not.toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Điểm cao nhất" })).toBeInTheDocument();
     expect(getClassAttempts).toHaveBeenCalledWith("c1", "z1");
   });
 });

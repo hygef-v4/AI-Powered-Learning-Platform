@@ -79,7 +79,9 @@ export function SettingListPage() {
             <SettingsGroup key={group.group} title={groupMeta(group.group).label}>
               {group.items.map((item) => (
                 <SettingRow
-                  key={`${item.key}-${item.version}`}
+                  // Mục có ô nhập dựng lại theo version để ô nhập nhận giá trị mới; công tắc giữ nguyên để nút gạt trượt
+                  // trọn vẹn, không bị dựng lại giữa chừng khi lưu xong.
+                  key={item.type === "BOOLEAN" ? item.key : `${item.key}-${item.version}`}
                   item={item}
                   disabled={item.key === BACKUP_DAILY_AT && !backupOn}
                   onSaved={replace}
