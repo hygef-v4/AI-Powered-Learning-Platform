@@ -1,5 +1,9 @@
 # AI-DLC State Tracking
 
+## Staging check fixes — 2026-11-02
+
+Findings of the `staging` check, logged as KAN-178 to KAN-182 and fixed on `fix/staging-check-2026-11-02`: `next` 16.4.3; `echarts` and `uuid` overrides under `pptx-preview`; class quiz sidebar without `classId`; audit labels; leftover cleanup. Frontend `npm ci`, lint, typecheck, 700 tests and build passed; `npm audit --omit=dev` found 0 vulnerabilities. Backend code unchanged. Charts with no explicit series color show no bars in `pptx-preview`, with `echarts` 5 and 6 alike. Not pushed or deployed.
+
 ## U05/U09/U15 defect remediation — 2026-11-02
 
 Implemented KAN-153–157 on `fix/u05-u09-u15` from clean staging `86b16d92`: preserve partial points/adjustments and AI feedback/review gates; lock manual/restore enrollment targets before subjects; support authorized SUBJECT grading context; restore backup operational metadata and inline paginated history. [Plan](construction/plans/code-generation-plan/2026-11-02-u05-u09-u15-defects.md), [verification and limits](construction/build-and-test/2026-11-02-u05-u09-u15-defects-results.md). Backend 411 distinct tests/zero skips with real PostgreSQL, frontend 189/189, typecheck/focused lint/final production build passed. Full lint has one unrelated existing warning. Fresh reviewer rechecked the corrected legacy metadata issue, no remaining Critical/Important findings. Actual admin dashboard checked; no live grade write, backend restart, broad role/mobile/load acceptance or full-project rerun. Security/resiliency scope retained; PBT disabled. User requested a local commit after verification; no push/merge/deployment.
