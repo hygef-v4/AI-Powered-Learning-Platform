@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
 import { Icon } from "./Icon";
-import { BackLink } from "../navigation/BackLink";
 
 export type Crumb = { label: string; href?: string };
 
@@ -23,13 +22,13 @@ export function PageHeader({ title, subtitle, breadcrumb, backHref, actions }: P
         {(backHref || trail.length > 0) && (
           <nav aria-label="Đường dẫn" className="flex flex-wrap items-center gap-1 text-[12.5px] font-semibold text-muted">
             {backHref && (
-              <BackLink
+              <Link
                 href={backHref}
                 aria-label="Quay lại"
                 className="-ml-1 inline-flex size-6 items-center justify-center rounded-md transition-colors hover:bg-sunken hover:text-ink"
               >
                 <Icon name="arrow_back" size={14} />
-              </BackLink>
+              </Link>
             )}
             {trail.map((crumb, index) => (
               <Fragment key={`${index}-${crumb.label}`}>

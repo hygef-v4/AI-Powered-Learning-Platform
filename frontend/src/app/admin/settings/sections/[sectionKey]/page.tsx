@@ -1,4 +1,4 @@
-import { SettingsSectionHost } from "@/features/settings/components/SettingsSectionHost";
+import { SettingsSectionHost } from "@/features/settings/SettingsSectionHost";
 
 export default async function Page({
   params,

@@ -2,7 +2,7 @@
 
 import { teacherClassTabs } from "@/features/academics/slots";
 import { subjectNavEntries } from "@/features/identity/slots";
-import { ClassAssignmentsSection } from "./components/ClassAssignmentsSection";
+import { ClassAssignmentsSection } from "./ClassAssignmentsSection";
 
 subjectNavEntries.register({ key: "manager-assignments", order: 40, title: "Bài tập", icon: "assignment", path: "/manager/assignments" });
 teacherClassTabs.register({ key: "assignments", order: 10, component: ClassAssignmentsSection });

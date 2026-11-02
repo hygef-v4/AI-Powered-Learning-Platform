@@ -6,8 +6,8 @@ import "@/features/register";
 import { THEME_BOOT_SCRIPT } from "@/shared/themeBoot";
 import { Toaster } from "@/shared/ui/Toast";
 import { ClientRegistrations } from "./ClientRegistrations";
-import "../shared/styles/globals.css";
-import "../shared/styles/fonts.css";
+import "./globals.css";
+import "./fonts.css";
 
 export const metadata: Metadata = {
   title: "Nền tảng học tập",
@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 };
 
 const PRELOAD_FONTS = [
-  "/fonts/plus-jakarta-sans/normal-latin.woff2",
-  "/fonts/plus-jakarta-sans/normal-vietnamese.woff2",
+  "/fonts/be-vietnam-pro/be-vietnam-pro-latin-400-normal.woff2",
+  "/fonts/be-vietnam-pro/be-vietnam-pro-vietnamese-400-normal.woff2",
 ];
 
 export default async function RootLayout({ children }: { children: ReactNode }) {

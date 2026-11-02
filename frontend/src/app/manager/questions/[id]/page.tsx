@@ -1,4 +1,4 @@
-import { QuestionDetailPage } from "@/features/quizzes/pages/QuestionDetailPage";
+import { QuestionDetailPage } from "@/features/quizzes/QuestionDetailPage";
 
 // U10 #20 Question Detail; id "new" là thêm câu vào môn ?subjectId=.
 export default async function Page({ params, searchParams }: {

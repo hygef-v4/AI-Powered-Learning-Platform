@@ -1,1 +1,1 @@
-export {AdminDashboardPage} from "./pages/AdminDashboardPage";
+export {AdminDashboardPage} from "./AdminDashboardPage";

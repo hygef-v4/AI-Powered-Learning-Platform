@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { apiFetch } from "@/shared/api/client";
 import { Alert, Button, Dialog, Pill, cx } from "@/shared/ui";
 import { PROVIDER_LABEL, formatTokens, masked } from "./format";
@@ -23,20 +22,13 @@ function keyOf(option: SourceOption) {
 }
 
 /**
- * Popup Chọn nguồn AI (c16): nguồn không dùng được hiện mờ kèm lý do. Người dùng đã đặt nguồn mặc định
- * (BR-U06-28) và nguồn đó dùng được thì popup tự gửi bằng nguồn ấy, không bắt chọn lại; mặc định không dùng được
- * thì báo lý do để chọn nguồn khác cho lần này. Lỗi hay hết hạn mức không tự đổi nguồn (BR-U06-10, 11).
+ * Popup Chọn nguồn AI (c16): mỗi yêu cầu chọn một nguồn, không chọn sẵn; nguồn không dùng được hiện mờ kèm lý do.
+ * Lỗi hay hết hạn mức không tự đổi nguồn (BR-U06-10, 11).
  */
 export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, onSubmit }: Props) {
   const [options, setOptions] = useState<SourceOption[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
-  // Mỗi lần mở chỉ tự gửi một lần; gửi lỗi mà popup còn mở thì người dùng chọn lại như thường.
-  const [autoSent, setAutoSent] = useState(false);
-  const submitRef = useRef(onSubmit);
-  useEffect(() => {
-    submitRef.current = onSubmit;
-  }, [onSubmit]);
 
   useEffect(() => {
     if (!open) return;
@@ -46,10 +38,7 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
         if (!active) return;
         setOptions(loaded);
         setError(null);
-        const preferred = loaded.find((option) => option.preferred && option.available);
-        setSelected(preferred ? keyOf(preferred) : null);
-        setAutoSent(!!preferred);
-        if (preferred) submitRef.current({ source: preferred.source, provider: preferred.provider });
+        setSelected(null);
       },
       () => {
         if (active) setError("Không tải được danh sách nguồn AI, thử lại sau.");
@@ -61,7 +50,6 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
   }, [open]);
 
   const choice = options?.find((option) => keyOf(option) === selected && option.available);
-  const preferred = options?.find((option) => option.preferred);
 
   return (
     <Dialog
@@ -87,17 +75,6 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
       }
     >
       <p className="text-muted">{task}</p>
-      {autoSent && choice && (
-        <Alert tone="info" role="status">
-          Đang gửi bằng nguồn mặc định: {label(choice)}.
-        </Alert>
-      )}
-      {preferred && !preferred.available && (
-        <Alert tone="warning" role="status">
-          Nguồn mặc định {label(preferred)} chưa dùng được{preferred.reason ? `: ${preferred.reason}` : ""}. Chọn nguồn khác cho lần
-          này.
-        </Alert>
-      )}
       {error && (
         <Alert tone="danger" role="alert">
           {error}
@@ -118,18 +95,10 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
         </div>
       )}
       <p className="text-[11px] text-muted">
-        {preferred ? "Đổi nguồn mặc định" : "Không muốn chọn mỗi lần? Đặt nguồn mặc định"} ở{" "}
-        <Link href="/ai/connection?tab=settings" className="font-semibold text-primary-ink underline">
-          Kết nối AI
-        </Link>
-        . Agent MCP không phải nguồn ở đây; agent tự gọi công cụ của nền tảng từ ứng dụng của bạn.
+        Agent MCP không phải nguồn ở đây; agent tự gọi công cụ của nền tảng từ ứng dụng của bạn.
       </p>
     </Dialog>
   );
-}
-
-function label(option: SourceOption) {
-  return option.source === "SHARED" ? "API của trường" : `API cá nhân · ${option.provider ? PROVIDER_LABEL[option.provider] : ""}`;
 }
 
 function SourceRow({
@@ -144,7 +113,9 @@ function SourceRow({
   onSelect: () => void;
 }) {
   const shared = option.source === "SHARED";
-  const title = label(option);
+  const title = shared
+    ? "API của trường"
+    : `API cá nhân · ${option.provider ? PROVIDER_LABEL[option.provider] : ""}`;
   return (
     <button
       type="button"
@@ -163,7 +134,6 @@ function SourceRow({
       <span className="flex items-center gap-2 text-[13px] font-semibold text-ink">
         {title}
         {option.keyHint && <span className="font-normal text-muted">{masked(option.keyHint)}</span>}
-        {option.preferred && <Pill tone="neutral">Mặc định</Pill>}
         <Pill tone={shared ? "primary" : "accent"} className="ml-auto">
           {shared ? "Trường chịu chi phí" : "Bạn chịu chi phí"}
         </Pill>

@@ -1,2 +1,2 @@
-import {ClassesRoute} from "@/features/academics/pages/routes";
+import {ClassesRoute} from "@/features/academics/routes";
 export default function Page(){return <ClassesRoute/>;}

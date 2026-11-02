@@ -1,9 +1,6 @@
 # U09 Assignment Grading — frontend-components
 
-**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
-
-
-> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U09 Assignment Grading thuộc Iter 2, người code: Người 2; UC 42–45. Lấy phần chấm Assignment và sổ điểm của U15 cũ và phần tiến độ nộp, phân bố điểm, xuất bảng điểm của U16 cũ. Kết quả Quiz luyện tập thuộc U11, thông báo thuộc U14. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
 > Cập nhật 2026-10-17 theo design G21 (bản 17/10, 123 artboard): màn, popup, trường và thao tác lấy theo design; chỗ design khác quy tắc nghiệp vụ thì giữ quy tắc. Chỉ sửa tài liệu.
 
 **Primary UC:** 42, 43, 44, 45. **Primary stories:** US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005, US-RPT-001, US-RPT-003, US-INT-001. **Requirements:** FR-008, FR-009, FR-019, FR-020, FR-024, FR-039.
@@ -76,14 +73,6 @@ app/teaching/evaluations/[evaluationId]/      GradingWorkspacePage   #35
 | `ClassProgressSection` | `GET /api/v1/classes/{classId}/submission-progress`, `GET .../grade-distribution` | Trên tab Thông tin lớp: thẻ Bài đang mở (kèm số bài hết hạn hôm nay), Chờ chấm (bài nộp chưa có điểm); "Tiến độ nộp bài": từng bài (tên, hình thức · chế độ, hạn, số đã nộp / N sinh viên hoặc nhóm, phần trăm), link mở tab Đánh giá; "Phân bố điểm" của một bài đã công bố: số bài theo khoảng điểm (theo phần trăm tổng điểm) |
 | `SubmissionsLink` | `GET .../assignments/{assignmentId}/submissions` (tóm tắt) | Cột Bài nộp: "x / N nộp · n chờ chấm", "đã công bố", bài nhóm "x / k nhóm nộp"; bấm mở Submission Detail |
 | `StudentGradesSection` | `GET /api/v1/classes/{classId}/students/{accountId}/grades` | Trong popup Student Detail: Đã nộp x / y bài Graded, Nộp trễ n; bảng Bài, Hình thức, Nộp (Đúng hạn, Trễ, Chưa nộp), Điểm ("x / tổng" hoặc Chờ chấm) |
-| `GradeDistributionSettings` (slot `AssignmentSettingsSection`) | `GET`, `PUT /api/v1/classes/{classId}/assignments/{assignmentId}/grade-distribution-visibility` | Trong popup Cài đặt bài GRADED của lớp: công tắc "Cho sinh viên xem phổ điểm ẩn danh", mặc định tắt. Đọc `{enabled,version,canEdit}`, ghi `{enabled,version}`; quyền dựa `canEdit`, độc lập với quyền sửa nội dung bài. Bài SUBJECT dùng lớp hiện tại; không có lớp thì không hiện công tắc. Quiz/Practice không hiện; `canEdit=false` ẩn control. Đang lưu khóa thao tác, lỗi giữ trạng thái đã xác nhận, `409` yêu cầu tải lại. Bật chưa đủ mẫu không vẽ histogram |
-| `StudentGradeCell`, `StudentGradePanel` | `GET /api/v1/me/grades`, `/me/grades/attempts/{attemptId}`, `/me/grade-distributions` | Chỉ điểm đã công bố của chính mình. Ô Điểm: "x / tổng", nút Phân bố khi cặp bài–lớp đã bật và đủ mẫu riêng tư (BR-U09-62). Phần Kết quả: Điểm chính thức · lượt được chấm, "x / tổng", ngày công bố, nhãn "Đã cập nhật" kèm dòng "Giảng viên sửa điểm a → b ngày …" khi sửa sau công bố, Nhận xét, Mục rubric đạt |
+| `StudentGradeCell`, `StudentGradePanel` | `GET /api/v1/me/grades`, `/me/grades/attempts/{attemptId}`, `/me/grade-distributions` | Chỉ điểm đã công bố của chính mình. Ô Điểm: "x / tổng", nút Phân bố khi lớp cho xem (BR-U09-62). Phần Kết quả: Điểm chính thức · lượt được chấm, "x / tổng", ngày công bố, nhãn "Đã cập nhật" kèm dòng "Giảng viên sửa điểm a → b ngày …" khi sửa sau công bố, Nhận xét, Mục rubric đạt |
 
 Route `/teaching/*` cho Teacher, Subject Manager (dùng `RoleGuard` của U01). Backend vẫn kiểm phân công lớp thật.
-
-## Defect remediation — 2026-11-02 (KAN-153/154/156)
-
-- Opening and saving an evaluation preserves explicit partial rubric item scores, feedback and existing adjustment/reason. Checkbox clicks explicitly award full/zero points; untouched partial values remain visible. The displayed total includes the retained adjustment and is clamped to the assignment maximum. Legacy checklist-only responses remain compatible.
-- Applying an AI proposal fills the local draft with its item scores, general/structured feedback, evidence and review flags; it resets previous acknowledgements instead of clearing structured feedback. A legacy proposal without structured feedback preserves existing explanations for re-review. No automatic save/finalize/publish occurs.
-- Flagged items and scores changed after explanation review expose acknowledgement controls. Finalize stays disabled while unresolved reviews exist; server-side review/version checks remain authoritative. Removing a previous acknowledgement by editing points requires a fresh review.
-- SUBJECT assignment context loads the existing authorized teaching-class endpoint, requires matching class ID and subject ID, and uses that class's code/name rather than the subject label. CLASS context retains its exact class check. Failed/stale metadata never supplies a heading for another route or hides independently loaded submission rows.

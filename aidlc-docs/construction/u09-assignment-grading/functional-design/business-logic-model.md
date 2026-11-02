@@ -1,9 +1,6 @@
 # U09 Assignment Grading — business-logic-model
 
-**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
-
-
-> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U09 Assignment Grading thuộc Iter 2, người code: Người 2; UC 42–45. Lấy phần chấm Assignment và sổ điểm của U15 cũ và phần tiến độ nộp, phân bố điểm, xuất bảng điểm của U16 cũ. Kết quả Quiz luyện tập thuộc U11, thông báo thuộc U14. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
 
 **Primary UC:** 42, 43, 44, 45. **Primary stories:** US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005, US-RPT-001, US-RPT-003, US-INT-001. **Requirements:** FR-008, FR-009, FR-019, FR-020, FR-024, FR-039.
 
@@ -53,7 +50,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ## 3. Chấm
 
 ### F4 - Chấm tay (UC 44)
-1. Giảng viên tích mục đạt của từng phần; điểm phần và điểm bài tự tính qua GradingJson item scores (partial0..max, checkbox-compatible).
+1. Giảng viên tích mục đạt của từng phần; điểm phần và điểm bài tự tính qua `IRubric.score`.
 2. Tùy chọn nhập điều chỉnh (kèm lý do) và nhận xét.
 3. Lưu: `PUT /api/v1/evaluations/{id}` kèm `version`; kiểm quyền, đánh giá không `SUPERSEDED`, mục thuộc rubric, điều chỉnh có lý do, điểm cuối trong 0 tới tổng.
 4. Đánh giá `PENDING` hoặc `DRAFT` thành `DRAFT`; ghi người chấm, thời điểm; audit `GRADE_SAVED`. Đánh giá đã chốt hoặc đã công bố đi theo F10.
@@ -116,14 +113,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F13 - Người học xem điểm và phân bố
 1. Student Assignments (U08) nhúng `StudentGradeCell` qua slot `StudentAssignmentResult`; component gọi `GET /api/v1/me/grades` và `GET /api/v1/me/grade-distributions` kèm lớp.
 2. U09 kiểm người học đang ghi danh lớp; trả điểm `PUBLISHED` của chính mình theo từng bài.
-3. Phân bố: kiểm cài đặt `enabled` của đúng cặp bài–lớp và BR-U09-62 với từng bài; chỉ tính người đang ghi danh có điểm công bố dùng được, ít nhất 20 người; trả khoảng điểm, ẩn khoảng dưới 5 người; không đủ thì không trả. Không đọc cờ lịch sử ở lớp.
+3. Phân bố: kiểm BR-U09-62 với từng bài; đủ điều kiện thì trả khoảng điểm, ẩn khoảng dưới 5 người; không đủ thì không trả.
 4. Submission History (U08) nhúng `StudentGradePanel` qua slot `SubmissionResultSection`; gọi `GET /api/v1/me/grades/attempts/{attemptId}`: điểm, nhận xét, mục rubric đạt, nhãn "đã cập nhật" nếu có; lượt chưa công bố thì trả "chưa có điểm".
-
-### F13a - Giảng viên bật/tắt phân bố theo bài–lớp
-1. Trong ngữ cảnh bài GRADED của lớp, gọi `GET /api/v1/classes/{classId}/assignments/{assignmentId}/grade-distribution-visibility`, nhận `{enabled,version,canEdit}`. Chưa có bản ghi thì trả tắt và version ban đầu; không chuyển cờ true từ lớp.
-2. Kiểm bài thuộc lớp (bài CLASS của lớp hoặc SUBJECT của môn), người gọi được phân công dạy và lớp cho phép sửa. Quyền chỉ đọc nội dung bài không khóa cài đặt này; Chủ nhiệm môn chỉ quản lý môn không được sửa. Bài SUBJECT còn DRAFT/REVIEWED chưa được giao cho lớp: GET trả `404`. Lớp ARCHIVED hoặc bài RETIRED: GET trả `canEdit=false`, PUT trả `409`.
-3. PUT cùng URL gửi `{enabled,version}`. Chưa có bản ghi dùng version `0`, lưu lần đầu thành `1`. Cập nhật lạc quan trong U09 theo khóa bài–lớp; version lệch trả `409`, tạo mới đồng thời cũng phải kiểm version. Trả `{enabled,version,canEdit}` và audit `GRADE_DISTRIBUTION_VISIBILITY_CHANGED` với bài/lớp và trạng thái enabled.
-4. Mỗi lớp của bài SUBJECT độc lập; Quiz/Practice không có công tắc. Bật chưa đủ mẫu vẫn lưu ý định, chỉ hiện histogram khi đạt ngưỡng riêng tư.
 
 ### F14 - Bài nhóm (khi U12 có)
 1. U12 gọi `IGroupEvaluation.onGroupSubmitted` trong transaction nộp: tạo hoặc đưa về `PENDING` đánh giá tài liệu nhóm và đánh giá từng thành viên (BR-U09-50).

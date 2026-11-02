@@ -37,17 +37,15 @@ const oa2 = await conn("OPENAI");
 check(R, "U06-03 thu hồi: nhà cung cấp về Chưa cấu hình", (del.status === 204 || del.status === 200) && oa2 && !oa2.configured, `${del.status} configured=${oa2?.configured}`);
 
 // U06-07 / U06-08 khóa của trường
-// Khóa của trường gọi theo id (một nhà cung cấp có thể có nhiều khóa).
-let ac = ((await admin.get("/api/v1/admin/ai/connections")).data || []).find((c) => c.provider === "GEMINI");
-const at = await admin.post(`/api/v1/admin/ai/connections/${ac.id}:test`);
+const at = await admin.post("/api/v1/admin/ai/connections/GEMINI:test");
 check(R, "U06-07 Kiểm tra khóa trường sai báo khóa không hợp lệ", at.status === 200 && /Key API không hợp lệ/.test(at.data?.lastTestResult ?? ""), `${at.status} ${at.data?.lastTestResult}`);
-ac = ((await admin.get("/api/v1/admin/ai/connections")).data || []).find((c) => c.id === ac.id);
-const off = await admin.put(`/api/v1/admin/ai/connections/${ac.id}/status`, { enabled: false, version: ac.version });
+let ac = ((await admin.get("/api/v1/admin/ai/connections")).data || []).find((c) => c.provider === "GEMINI");
+const off = await admin.put("/api/v1/admin/ai/connections/GEMINI/status", { enabled: false, version: ac.version });
 let src = ((await T.get("/api/v1/ai/sources")).data || []).find((s) => s.source === "SHARED");
-const still = ((await admin.get("/api/v1/admin/ai/connections")).data || []).find((c) => c.id === ac.id);
+const still = ((await admin.get("/api/v1/admin/ai/connections")).data || []).find((c) => c.provider === "GEMINI");
 check(R, "U06-08 tắt khóa: còn trong bảng, API trường không dùng được", off.status === 200 && still?.configured && src && !src.available, `${brief(off)} shared.available=${src?.available} reason=${src?.reason}`);
 ac = still;
-await admin.put(`/api/v1/admin/ai/connections/${ac.id}/status`, { enabled: true, version: ac.version });
+await admin.put("/api/v1/admin/ai/connections/GEMINI/status", { enabled: true, version: ac.version });
 
 // Bài cá nhân để chạy tác vụ AI (tạo nháp bằng AI)
 const asg = await T.post(`/api/v1/classes/${seed.classId}/assignments`, { submissionMode: "INDIVIDUAL", gradingMode: "GRADED", diagramEnabled: false, title: "Bài thử AI " + Date.now() });

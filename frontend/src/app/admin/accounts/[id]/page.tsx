@@ -1,4 +1,4 @@
-import { AccountDetailPage } from "@/features/identity/admin/pages/AccountDetailPage";
+import { AccountDetailPage } from "@/features/identity/admin/AccountDetailPage";
 
 export default function Page() {
   return <AccountDetailPage />;

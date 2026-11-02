@@ -1,6 +1,6 @@
 # U03 Job and Settings — nfr-design-patterns
 
-> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U03 Job and Settings thuộc Iter 1, người code: Người 3. Viết lại từ thiết kế chi tiết 2026-10-09 theo phạm vi 66 UC: bỏ avatar và việc nền của Code Lab, PayOS, tóm tắt học liệu; thêm backup và các nhóm cài đặt mới. Chỉ sửa tài liệu; unit chưa có code (khung code tạo lại 2026-10-16).
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
@@ -33,7 +33,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 - Health kiểm Drive bằng `drives.get` có cache 60 giây; lỗi thì Drive `DEGRADED` nhưng backend vẫn chạy.
 
 ## P8 - Gửi việc nền sau commit
-- Có transaction thì đăng ký `afterCommit`; không có thì gửi ngay; gửi trên luồng riêng để RabbitMQ chậm không chặn request. Hàng đợi luồng gửi đầy thì từ chối (AbortPolicy), không chạy trên luồng request; message không gửi được ghi log WARN nếu loại việc có sweeper gửi lại (AI_TASK, BACKUP_RUN, MATERIAL_TEXT_EXTRACT, EMAIL_SEND, GROUP_DOC_CREATE), ngược lại ERROR kèm loại việc và khóa.
+- Có transaction thì đăng ký `afterCommit`; không có thì gửi ngay; gửi trên luồng riêng để RabbitMQ chậm không chặn request; lỗi chỉ log.
 
 ## P9 - Thử lại qua queue có TTL
 - Bản sao `attempt + 1` gửi tới exchange fanout `jobs.retry.{30s|1m|2m|4m|8m}` (routing key là loại việc) rồi vào queue cùng tên có TTL cố định; hết hạn thì dead-letter về `jobs` giữ routing key.
@@ -73,7 +73,3 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 
 ## P18 - Giữ bản trong 7 ngày
 - Chọn các lần `SUCCESS` có `snapshot_at` cũ hơn 7 ngày, trừ lần thành công mới nhất; xóa thư mục `backup/{runId}` của các lần đó, ghi `purged_at`.
-
-## Design assessment scope — 2026-10-30
-
-Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evidence có ngày trước baseline, không chứng nhận runtime tại HEAD. Đợt này chỉ đồng bộ tài liệu; hiệu lực security/resiliency, latency/capacity và provider acceptance phải có kiểm chứng riêng. PBT vẫn disabled.

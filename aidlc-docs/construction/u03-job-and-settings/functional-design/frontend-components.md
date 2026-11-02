@@ -1,9 +1,6 @@
 # U03 Job and Settings — frontend-components
 
-**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
-
-
-> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U03 Job and Settings thuộc Iter 1, người code: Người 3. Viết lại từ thiết kế chi tiết 2026-10-09 theo phạm vi 66 UC: bỏ avatar và việc nền của Code Lab, PayOS, tóm tắt học liệu; thêm backup và các nhóm cài đặt mới. Chỉ sửa tài liệu; unit chưa có code (khung code tạo lại 2026-10-16).
 > Cập nhật 2026-10-17 theo design G21 (bản 17/10, 123 artboard): màn, popup, trường và thao tác lấy theo design; chỗ design khác quy tắc nghiệp vụ thì giữ quy tắc. Code frontend U03 (Settings, tệp, khung trang, `shared/ui`) đã làm theo bản này.
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
@@ -51,9 +48,9 @@ shared/layout/                 AppShell, SignOutDialog, menu bên (U01 nối phi
 | `SettingDetailPage` | `GET /api/v1/admin/settings/{key}` | Nút quay lại; tên mục; đường dẫn "Cài đặt › nhóm › mục". Thẻ "Giá trị": kiểu (số nguyên, bật / tắt, giờ:phút, chọn một, chọn nhiều), mô tả, Giá trị hiện hành, Giới hạn hợp lệ, Sửa gần nhất (người · thời điểm, hoặc "Chưa sửa, đang dùng giá trị khởi tạo") |
 | `SettingValueForm` | `PATCH /api/v1/admin/settings/{key}` | Ô "Giá trị mới" theo kiểu: số kèm đơn vị, công tắc, giờ:phút, chọn một, chọn nhiều bằng nhãn bật/tắt. Kiểm ngay khi sửa, lỗi hiện dưới ô; nút Lưu khóa khi giá trị sai hoặc chưa đổi; Hủy trả về giá trị hiện hành; Bỏ trống với mục không có mặc định. `400` hiện lý do dưới ô; `409` hiện hộp "Người khác vừa sửa" kèm nút Tải lại; lỗi không xóa nội dung đang nhập (UC 15) |
 | `SettingsSectionHost` | API của unit sở hữu panel | Panel tự vẽ đầu trang có nút quay lại về Setting List; không có panel đăng ký cho `sectionKey` thì báo "Phần cài đặt này hiện không khả dụng." |
-| `FileUploader` | `GET /api/v1/files/policies`, `POST /api/v1/files` | Chưa chọn tệp: ô kéo thả có nút "Chọn tệp". Đang tải: ô tệp (tên, phần trăm), thanh tiến trình, nút Hủy. Xong: ô tệp có dấu xong và dung lượng, nút "Chọn tệp khác". Dòng giới hạn hiện hành (loại, dung lượng) dưới ô; kiểm sơ bộ đuôi và dung lượng; lỗi an toàn từ backend hiện dưới ô. Gặp 401 (hết phiên) thì làm mới phiên và gửi lại tệp một lần; hủy hay mất mạng không gửi lại |
+| `FileUploader` | `GET /api/v1/files/policies`, `POST /api/v1/files` | Chưa chọn tệp: ô kéo thả có nút "Chọn tệp". Đang tải: ô tệp (tên, phần trăm), thanh tiến trình, nút Hủy. Xong: ô tệp có dấu xong và dung lượng, nút "Chọn tệp khác". Dòng giới hạn hiện hành (loại, dung lượng) dưới ô; kiểm sơ bộ đuôi và dung lượng; lỗi an toàn từ backend hiện dưới ô |
 | `FileLink` | API của unit sở hữu | Khi bấm mới lấy URL tải (token 5 phút) rồi mở; không lưu URL |
-| `usePollStatus`, `StatusBadge` | API của unit sở hữu | Poll mỗi 3 giây, dừng ở trạng thái cuối hoặc khi rời trang; lỗi tạm (mất mạng, 5xx, 429) thì poll tiếp, lỗi 4xx khác (không tìm thấy, không có quyền) thì dừng; nhãn bo tròn theo màu (trung tính, đang chạy, thành công, cảnh báo, lỗi), chữ tiếng Việt do unit truyền vào |
+| `usePollStatus`, `StatusBadge` | API của unit sở hữu | Poll mỗi 3 giây, dừng ở trạng thái cuối hoặc khi rời trang; nhãn bo tròn theo màu (trung tính, đang chạy, thành công, cảnh báo, lỗi), chữ tiếng Việt do unit truyền vào |
 
 Route dưới `/admin` nên `RoleGuard` của U01 chỉ cho `ADMIN` vào; API vẫn tự kiểm quyền.
 

@@ -1,3 +1,3 @@
-import { SubjectListPage } from "@/features/subjects/pages/SubjectListPage";
+import { SubjectListPage } from "@/features/subjects/SubjectListPage";
 
 export default function Page() { return <SubjectListPage />; }

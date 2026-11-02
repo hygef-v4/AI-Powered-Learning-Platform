@@ -1,4 +1,4 @@
-import { AssignmentWorkspacePage } from "@/features/assignmentwork/pages/AssignmentWorkspacePage";
+import { AssignmentWorkspacePage } from "@/features/assignmentwork/AssignmentWorkspacePage";
 
 // U08 #40 Assignment Workspace.
 export default async function Page({ params }: { params: Promise<{ attemptId: string }> }) {

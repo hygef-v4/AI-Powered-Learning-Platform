@@ -1,19 +1,9 @@
 package edu.aiplatform.assignmentwork.contract;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 
-/**
- * Tính khi đọc, không lưu; chỉ là dấu hiệu rời trang do trình duyệt tự báo, có thể bị chặn hoặc giả, không phải bằng
- * chứng gian lận. {@code lastEventAt}: giờ server của sự kiện cuối.
- */
+/** Tính khi đọc, không lưu; chỉ là dấu hiệu rời trang, không kết luận gian lận. */
 public record ActivitySummary(ActivityPolicyState policyState, int awayCount, Duration knownAwayDuration,
-                              List<ActivityInterval> intervals, int unknownGaps, String reliabilityNote,
-                              Instant lastEventAt) {
-
-    public ActivitySummary(ActivityPolicyState policyState, int awayCount, Duration knownAwayDuration,
-                           List<ActivityInterval> intervals, int unknownGaps, String reliabilityNote) {
-        this(policyState, awayCount, knownAwayDuration, intervals, unknownGaps, reliabilityNote, null);
-    }
+                              List<ActivityInterval> intervals, int unknownGaps, String reliabilityNote) {
 }

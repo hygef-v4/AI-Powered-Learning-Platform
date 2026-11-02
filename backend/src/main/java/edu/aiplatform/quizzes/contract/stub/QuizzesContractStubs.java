@@ -29,7 +29,7 @@ public class QuizzesContractStubs {
     static QuizView sampleQuiz(UUID quizId) {
         return new QuizView(quizId, QuizScope.CLASS, Stubs.derivedId("class", quizId), Stubs.derivedId("subject", quizId),
                 1, "Quiz mẫu", QuizStatus.OPEN, new QuizSettings(false, false, null, null, true, true), false, null,
-                BigDecimal.ZERO);
+                List.of(), BigDecimal.ZERO);
     }
 
     @Bean
@@ -44,6 +44,11 @@ public class QuizzesContractStubs {
             @Override
             public Optional<QuizStudentView> getStudentView(UUID quizId) {
                 return Optional.of(new QuizStudentView(sampleQuiz(quizId), "", List.of()));
+            }
+
+            @Override
+            public List<QuizView> listByMaterial(UUID materialId, UUID classId) {
+                return List.of();
             }
 
             @Override

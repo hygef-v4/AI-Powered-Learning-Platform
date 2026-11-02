@@ -1,9 +1,5 @@
 # U03 Job and Settings — code summary
 
-**Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
-
-## Ghi nhận trước baseline 2026-10-30 (lịch sử)
-
 Code viết ngày 2026-10-16 theo [plan](../../plans/code-generation-plan/u03-job-and-settings-code-generation-plan.md). Chưa chạy với PostgreSQL, Redis, RabbitMQ, Google Drive thật; integration test do tester viết.
 
 ## Business logic
@@ -38,7 +34,7 @@ Code viết ngày 2026-10-16 theo [plan](../../plans/code-generation-plan/u03-jo
 - `app/admin/settings` (Setting List), `app/admin/settings/[key]` (Setting Detail), `app/admin/settings/sections/[sectionKey]` (panel ủy quyền).
 - `features/settings`: `SettingGroupTable`, `DelegatedSectionCard`, `SettingValueForm` (kiểm sơ bộ, 400, 409), `SettingsSectionHost`.
 - `features/files`: `FileUploader` (kéo thả, tiến trình, Hủy), `useFileUpload`, `FileLink`, `purposes`.
-- `shared/status`: `StatusBadge`, `usePollStatus` (3 giây, dừng ở trạng thái cuối hoặc lỗi 4xx; mất mạng, 5xx, 429 thì poll tiếp).
+- `shared/status`: `StatusBadge`, `usePollStatus` (3 giây, dừng ở trạng thái cuối).
 - Giao diện theo design G21 (17/10): `shared/ui` (màu, nút, thẻ, bảng, ô nhập, nhãn, popup, icon Material Symbols dạng SVG tự host) và `shared/layout/AppShell` (thanh trên cùng, menu bên theo vai trò, popup Đăng xuất), gắn cho mọi màn `/admin/*` qua `app/admin/layout.tsx`. Menu bên lấy từ `NavEntry` (slot của U01); mỗi unit đăng ký mục của mình trong `features/<package>/register.ts` (đã đăng ký sẵn đủ mục theo design). Unit khác dùng lại, không tự vẽ khung.
 
 ## Hạ tầng

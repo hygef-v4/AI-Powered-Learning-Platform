@@ -1,9 +1,5 @@
 # U12 Group Assignment — code summary
 
-**Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
-
-## Ghi nhận trước baseline 2026-10-30 (lịch sử)
-
 Code viết ngày 2026-10-21 đến 2026-10-22 theo [plan](../../plans/code-generation-plan/u12-group-assignment-code-generation-plan.md), trên nhánh `group-assignment` tạo lại từ `staging`, chưa push. Người code: Võ Minh Tài (Người 2). U07 (soạn bài, khung, `DocumentEditor`) và U08 (Assignment Detail, `useActivityTracker`) chưa có code nên luồng thật phát hành bài nhóm → tạo tài liệu → làm → nộp → U09 chấm chỉ thử được khi hai unit đó vào `staging`; integration test do tester viết.
 
 ## Commit
@@ -155,25 +151,3 @@ Plan: `construction/plans/2026-10-24-u12-document-editor.md`, nhánh `feat/u12-d
   - `GroupWorkspaceService.WorkspaceView.diagramEnabled` lấy từ `AssignmentView`, kèm `GroupWorkspaceServiceTest`.
   - Migration `groups/V20261025_1800__add_group_documents_assignment_fk.sql` thêm khóa ngoại `group_documents.assignment_id → assignments(id)` (`NOT VALID`).
 - **Giới hạn:** chưa tải ảnh trong tài liệu nhóm (không có `uploadImage`/`imageUrl`); ảnh trong khung của giảng viên chưa hiện ảnh thật vì endpoint ảnh của U07 dành cho người soạn.
-
-## Cộng tác trên mục, nhập file, đánh giá chéo (2026-11-02)
-
-Plan: `construction/plans/code-generation-plan/2026-11-02-u06-u12-feedback.md`, nhánh `feat/u06-u12-feedback-2026-11-02`. Rule: BR-U12-33, 35, 39, 46, 47.
-
-- **Migration** `groups/V20261102_1000__group_section_collaboration.sql`: `group_document_sections.locked_by/locked_at` (chỉ khi `DONE`), `group_document_revisions.kind` (`DONE`, `TAKEOVER`, `IMPORT`), bảng `group_peer_reviews` (1–5, không tự chấm, một người chấm một người một lần).
-- **`GroupSectionService`:**
-  - `takeOver`: tiếp quản mục người khác giữ, giữ bản nháp và ghi lịch sử `TAKEOVER`.
-  - `lock`, `unlock`: trưởng nhóm chốt hoặc mở chốt; `SectionRules.canClaim/canAssign/canLock` chặn mục đã chốt.
-  - `revisions`, `restore`: lịch sử 50 bản mới nhất, khôi phục vào bản nháp.
-  - `saveDraft` gắn ảnh `fileRef` qua `IArtifact` (ảnh trong tài liệu nhóm dùng được).
-- **`GroupDocImportService`:** xem trước DOCX vào mục; xem trước và áp dụng DOCX/Draw.io cho cả tài liệu theo tên mục (không AI); XML Draw.io đọc an toàn.
-- **`GroupPeerReviewService`, `GroupPeerReviewRepository`:** cửa sổ mở sau khi nộp tới 7 ngày sau hạn cuối; giảng viên xem trung bình và thang 10.
-- **API mới:** `:take-over`, `:lock`, `:unlock`, `/revisions`, `:restore` trên mục; `/sections/{id}/docx:preview`, `/import:preview`, `/import:apply`, `GET/PUT /peer-reviews` (`GroupDocCollaborationController`).
-- **Frontend:**
-  - `GroupWorkspacePage`: nút Tiếp quản, Chốt/Mở chốt, Lịch sử, Nhập từ file; thẻ Đánh giá chéo.
-  - `SectionEditorDialog`: tải ảnh, Nhập DOCX, Lịch sử kèm khôi phục, chỉ xem khi bị tiếp quản.
-  - `CollaborationPanels.tsx`: `SectionHistoryDialog`, `GroupImportDialog`, `PeerReviewPanel`.
-- **Test:** `GroupSectionServiceTest` (+5), `GroupDocCollaborationServicesTest` (9, mới), `GroupControllersTest` (+2), `GroupRepositoriesIntegrationTest` (khóa, loại lịch sử, đánh giá chéo), `GroupWorkspacePage.test.tsx` (+8).
-- **Giới hạn:**
-  - Sơ đồ nhập từ `.drawio` chưa có ảnh xem trước cho tới khi mở sơ đồ và lưu trong Draw.io.
-  - Điểm đánh giá chéo chưa ghép vào điểm cuối; trọng số ba đầu điểm (tài liệu, thành viên, thuyết trình) cần U07/U09.

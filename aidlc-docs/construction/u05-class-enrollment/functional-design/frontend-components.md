@@ -1,9 +1,6 @@
 # U05 Class & Enrollment — frontend-components
 
-**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
-
-
-> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U05 Class & Enrollment thuộc Iter 1, người code: Người 5; UC 20–30. Tách phần lớp và ghi danh từ U04 cũ; mã `BR-U05-xx` ứng với `BR-U04-xx` cũ cùng số. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
 > Cập nhật 2026-10-17 theo design G21 (bản 17/10, 123 artboard): màn, popup, trường và thao tác lấy theo design; chỗ design khác quy tắc nghiệp vụ thì giữ quy tắc. Chỉ sửa tài liệu.
 
 **Primary UC:** 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30. **Primary stories:** US-CAT-002, US-CAT-003, US-LRN-001; phần lớp của US-CAT-001. **Requirements:** FR-002, FR-003, FR-005.
@@ -43,6 +40,7 @@ app/manager/classes/[id]/       ManagedClassPage     #29 Class Detail
   ReopenRejectedDialog                               popup Mở lại bị từ chối
   ClassInfoForm                                      tab Thông tin: sửa học kỳ, tên, mô tả (UC 29)
   TeacherCard, AssignTeacherDialog                   thẻ Giảng viên, popup Phân công (UC 27)
+  GradeDistributionToggle                            thẻ Quyền xem (UC 29)
   StudentsTabManaged                                 tab Sinh viên (UC 28)
     AddStudentsPanel                                 Thêm từng người / Thêm theo danh sách, kết quả từng dòng
     EnrollmentTable                                  Đang học / Đã gỡ; Gỡ, Thêm lại
@@ -72,6 +70,7 @@ features/academics/slots.ts                          StudentClassSection, Teache
 | `ManagedClassPage` | `GET /api/v1/manager/classes/{id}` | Nút quay lại; "mã môn · mã lớp" kèm nhãn trạng thái; đường dẫn "Lớp của môn › …"; nút Phân công giảng viên và Mở lớp (Nháp), Lưu trữ lớp (Đang mở) hoặc Mở lại lớp (Lưu trữ); tab Thông tin, Sinh viên (kèm số) |
 | `ClassInfoForm` | `PATCH /api/v1/manager/classes/{id}` | Mã lớp (chỉ đọc), Học kỳ*, Tên lớp*, Mô tả (tùy chọn); Sinh viên "n đang học · n đã gỡ"; Ngày tạo; Hủy, Lưu thay đổi; `409` báo tải lại |
 | `TeacherCard`, `AssignTeacherDialog` | `GET /api/v1/manager/teacher-candidates`, `PUT .../teacher` | Thẻ "Giảng viên": avatar, tên, email, nút Đổi giảng viên. Popup "Phân công giảng viên": ô "Tìm theo tên hoặc email"; danh sách chọn một (avatar, tên, email, vai trò; người đang dạy ghi "hiện tại"); "Chỉ hiện người có vai trò Giảng viên hoặc Chủ nhiệm môn đang hoạt động."; Hủy, Phân công |
+| `GradeDistributionToggle` | `PUT .../grade-distribution` | Thẻ "Quyền xem": công tắc "Cho sinh viên xem phân bố điểm", ghi chú "Sinh viên thấy biểu đồ phân bố điểm của bài đã công bố, không thấy điểm người khác." |
 | `ClassStateActions`, `ReopenRejectedDialog` | `PUT .../status` | Mở, lưu trữ, mở lại có xác nhận; `409` báo tải lại. Mở lại bị từ chối: popup "Không mở lại được lớp" (mã lớp · học kỳ), "Một số người trong lớp không còn hoạt động. Hãy đổi giảng viên hoặc gỡ sinh viên bị vô hiệu hóa rồi thử lại.", bảng Người, Vai trò trong lớp, Lý do; Đóng |
 | `AddStudentsPanel` | `GET .../student-candidates?q=`, `POST .../enrollments:batch` | Thẻ "Thêm sinh viên", hai cách: Thêm từng người (tìm theo tên hoặc email, debounce 300 ms) và Thêm theo danh sách (dán email, mỗi dòng một, tối đa 200 dòng); bảng kết quả từng dòng Email, Kết quả (Đã thêm, Đã có trong lớp, Tài khoản vô hiệu hóa, Không phải sinh viên…); nút Thêm vào lớp |
 | `EnrollmentTable`, `RemoveStudentDialog` | `PUT .../enrollments/{accountId}/status` | Ô tìm tên hoặc email; tab Đang học, Đã gỡ (kèm số); cột Sinh viên (avatar, tên, email), Trạng thái, Ngày vào lớp, nút Gỡ hoặc Thêm lại; phân trang. Popup "Gỡ sinh viên khỏi lớp?": "X sẽ không còn thấy lớp. Bài đã nộp và điểm vẫn được giữ; bạn có thể Thêm lại sau."; Hủy, Gỡ khỏi lớp |
@@ -99,9 +98,3 @@ Route theo `RoleGuard` của U01: `/classes/*` cho Student; `/teaching/*` cho Te
 | `StudentDetailSection` | U12 (nhóm), U09 (bài nộp, điểm trong lớp) | Phần trong popup Student Detail |
 | `SubjectSummarySection` | U13 (học liệu), U10 (câu hỏi, Quiz), U07 (bài tập của môn) | Số liệu theo môn trên Manager Dashboard và My Subject |
 | `ClassCardSection` | U08 (bài sắp đến hạn của Student) | Dòng tóm tắt trên thẻ lớp ở Class Dashboard |
-
-## Source behavior delta — 2026-10-30
-
-CourseClass.create tạo DRAFT. OPEN không bắt buộc teacher: domain, AcademicsService và migration 27/10 đã bỏ guard. Nếu có teacher thì account vẫn phải ACTIVE và đúng role. Scope teaching dựa teacher_id hiện hành, manager dựa subject ownership, Student dựa enrollment/status; không tự cấp teaching cho manager chưa được giao.
-
-[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.

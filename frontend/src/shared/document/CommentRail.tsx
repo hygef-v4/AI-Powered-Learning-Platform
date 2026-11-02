@@ -31,40 +31,21 @@ function anchorTop(paper: HTMLElement, blockId: string | null, base: number): nu
  * đó, và chỉ bị đẩy đi khi đầu phần kế tiếp cuộn tới. Thẻ chồng nhau thì thẻ sau dời xuống. Vị trí đặt trực tiếp lên
  * DOM (không qua state) nên gõ chữ làm block cao lên thì dải đi theo mà không render lại.
  */
-export function CommentRail({ paper, comments, activeKey, matchSectionHeight = false }: {
+export function CommentRail({ paper, comments, activeKey }: {
   paper: RefObject<HTMLElement | null>;
   comments: DocumentComment[];
   activeKey?: string | null;
-  matchSectionHeight?: boolean;
 }) {
   const rail = useRef<HTMLDivElement>(null);
   const bands = useRef(new Map<string, HTMLDivElement>());
   const cards = useRef(new Map<string, HTMLDivElement>());
-  const state = useRef({ comments, activeKey, matchSectionHeight });
-  const sizedBodies = useRef(new Set<HTMLElement>());
+  const state = useRef({ comments, activeKey });
   const observer = useRef<ResizeObserver | null>(null);
 
   const layout = useRef(() => {
     const railEl = rail.current;
     const paperEl = paper.current;
     if (!railEl || !paperEl) return;
-    const nextBodies = new Set<HTMLElement>();
-    if (state.current.matchSectionHeight) {
-      for (const comment of state.current.comments) {
-        if (!comment.anchorBlockId) continue;
-        const anchor = paperEl.querySelector<HTMLElement>(`[data-block-id="${comment.anchorBlockId.replace(/["\\]/g, "\\$&")}"]`);
-        const section = anchor?.closest<HTMLElement>("[data-section][data-leaf]");
-        const body = section?.querySelector<HTMLElement>(":scope > [data-leaf-body]");
-        const card = cards.current.get(comment.key);
-        if (!anchor || !body || !card) continue;
-        const height = Math.max(0, Math.ceil(card.offsetHeight - (body.getBoundingClientRect().top - anchor.getBoundingClientRect().top)));
-        const minimum = `${height}px`;
-        if (body.style.minHeight !== minimum) body.style.minHeight = minimum;
-        nextBodies.add(body);
-      }
-    }
-    sizedBodies.current.forEach((body) => { if (!nextBodies.has(body)) body.style.minHeight = ""; });
-    sizedBodies.current = nextBodies;
     const base = railEl.getBoundingClientRect().top;
     const end = paperEl.getBoundingClientRect().bottom - base;
     const entries = state.current.comments.flatMap((comment) => {
@@ -95,7 +76,7 @@ export function CommentRail({ paper, comments, activeKey, matchSectionHeight = f
   });
 
   useLayoutEffect(() => {
-    state.current = { comments, activeKey, matchSectionHeight };
+    state.current = { comments, activeKey };
     cards.current.forEach((card) => observer.current?.observe(card));
     layout.current();
   });
@@ -112,8 +93,6 @@ export function CommentRail({ paper, comments, activeKey, matchSectionHeight = f
     return () => {
       observer.current?.disconnect();
       observer.current = null;
-      sizedBodies.current.forEach((body) => { body.style.minHeight = ""; });
-      sizedBodies.current.clear();
       window.removeEventListener("resize", run);
     };
   }, [paper]);

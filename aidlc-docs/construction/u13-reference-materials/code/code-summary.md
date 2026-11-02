@@ -1,9 +1,5 @@
 # U13 Reference Materials — bàn giao code
 
-**Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
-
-## Ghi nhận trước baseline 2026-10-30 (lịch sử)
-
 Ngày 2026-10-21; nhánh `reference-materials`. Người dùng chọn A trong file duyệt Part 1, sau đó yêu cầu giữ nguyên DTO U06 và tiếp tục code. Không commit/push, đổi Jira hoặc nhắn owner unit.
 
 ## Phạm vi đã triển khai
@@ -30,7 +26,7 @@ OpenAPI: [materials.yaml](../../../../docs/contracts/openapi/materials.yaml). Fi
 - U03: không sửa source; tái sử dụng IArtifact/IJob/IJobHandler/IPendingSweeper và routing MATERIAL_TEXT_EXTRACT đã có. `backend/pom.xml` thêm hai parser module Tika cùng `tika.version` hiện có; không thêm OCR parser.
 - U06: không sửa DTO, chữ ký interface hoặc stub. Bean U13 thực hiện IReferenceMaterial; test context xác nhận conditional stub nhường đúng một provider thật. DTO hiện tại thiếu versionNo/textStatus trong kết quả nguồn AI; giữ gate C04, không giả rằng provenance liên unit đã đầy đủ. MCP của U13 có versionNo thực trong kết quả.
 - U05/U08/U11: đăng ký qua slot trong register.ts của U13; không sửa implementation các unit này. Giữ LearningMaterialSection cho U11.
-- `frontend/next.config.ts`: thêm CSP/header cho `/manager/materials` và `/materials/*`, cho phép self/blob PDF và youtube-nocookie; không áp CSP mới lên route unit khác. Hiện CSP chung đặt trong `frontend/src/proxy.ts` với `font-src 'self' blob:` cho font nhúng trong DOCX. Xem trước DOCX (`DocumentViewer`): `docx-preview` dựng style vào một khung tách rời, `noncedStyles()` chép thành thẻ `<style>` mang nonce của trang để không bị `style-src` chặn.
+- `frontend/next.config.ts`: thêm CSP/header cho `/manager/materials` và `/materials/*`, cho phép self/blob PDF và youtube-nocookie; không áp CSP mới lên route unit khác.
 
 ## Các quyết định cần người nhận biết
 

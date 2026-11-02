@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { AuditLogPage } from "@/features/audit/pages/AuditLogPage";
+import { AuditLogPage } from "@/features/audit/AuditLogPage";
 
 export default function Page() {
   return (

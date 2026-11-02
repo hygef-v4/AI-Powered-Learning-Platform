@@ -82,7 +82,7 @@ export function Dialog({ open, title, onClose, dismissible = true, size = "md", 
             aria-label="Đóng"
             onClick={onClose}
             disabled={!dismissible}
-            className="-mr-1.5 inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink disabled:cursor-not-allowed disabled:opacity-45"
+            className="-mr-1.5 inline-flex size-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink disabled:opacity-45"
           >
             <Icon name="close" size={16} />
           </button>

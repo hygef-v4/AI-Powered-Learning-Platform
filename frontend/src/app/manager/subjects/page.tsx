@@ -1,2 +1,2 @@
-import {ManagerRoute} from "@/features/academics/pages/routes";
+import {ManagerRoute} from "@/features/academics/routes";
 export default function Page(){return <ManagerRoute view="subjects"/>;}

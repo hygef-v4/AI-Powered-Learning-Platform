@@ -1,5 +1,5 @@
 import { Icon } from "@/shared/ui/Icon";
-import { checkPassword } from "../model/passwordRules";
+import { checkPassword } from "../passwordRules";
 
 /**
  * Hai điều kiện dưới ô mật khẩu: "Ít nhất 8 ký tự", "Có cả chữ và số" (design `c02`, `c04`, `c06`).

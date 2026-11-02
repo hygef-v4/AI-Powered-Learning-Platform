@@ -1,4 +1,4 @@
-import { PostLoginRedirect } from "@/features/identity/components/PostLoginRedirect";
+import { PostLoginRedirect } from "@/features/identity/PostLoginRedirect";
 
 export default function Page() {
   return <PostLoginRedirect />;

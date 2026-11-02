@@ -1,6 +1,6 @@
 # U10 Quiz Authoring — infrastructure-design
 
-> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U10 Quiz Authoring thuộc Iter 2, người code: Người 1; UC 46–48. Lấy ngân hàng câu hỏi của U06 cũ, phần Quiz của U08 cũ và cài đặt Quiz của U09 cũ. Ngân hàng chỉ còn câu trắc nghiệm theo UC 46, 47. Làm Quiz thuộc U11. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
 
 **Primary UC:** 46, 47, 48. **Primary stories:** US-ASM-006, US-QBK-002; phần Quiz của US-ASM-001. **Requirements:** FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 
@@ -15,7 +15,3 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Sự kiện | `quiz.published` qua exchange `platform.events` của U03 |
 | Nginx | Giới hạn body API nhập tệp 6 MB |
 | Mạng ra | Không có |
-
-## Delta 2026-11-01
-
-Migration `db/migration/quizzes/V20261101_1200__quiz_rework.sql`: bỏ `REVIEWED`, thêm `quizzes.paper_mode`, `quiz_draw_rules`, `questions.content_hash`, `questions.normalized_stem`, trạng thái `PENDING`, `REJECTED`, `question_reviews`, `question_proposals`. Không dùng extension PostgreSQL mới.

@@ -1,9 +1,6 @@
 # U01 Account & Access — frontend-components
 
-**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
-
-
-> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
+> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U01 Account & Access thuộc Iter 1, người code: Người 1; phạm vi UC 01–12 giữ như U01 cũ, chỉ đổi liên kết sang các unit mới. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
 > Cập nhật 2026-10-17 theo design G21 (bản 17/10, 123 artboard): màn, popup, trường và thao tác lấy theo design; chỗ design khác quy tắc nghiệp vụ thì giữ quy tắc. Chỉ sửa tài liệu.
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
@@ -78,7 +75,7 @@ shared/ui/                        bộ giao diện dùng chung (U03); U01 thêm 
 | Validation phía client | Email đúng định dạng, mật khẩu không rỗng |
 | API | `authenticate` → `SessionInfo { accountId, displayName, role, homePath }` |
 | Hành vi lỗi | Mọi thất bại hiện **một** câu: "Email hoặc mật khẩu không đúng, hoặc tài khoản chưa sẵn sàng." Không phân biệt khóa tạm, chưa kích hoạt hay không tồn tại |
-| Thành công | Chuyển tới `homePath` (BR-U01-48): Student, Teacher → `/classes` (Class Dashboard); Subject Manager → `/manager` (Manager Dashboard); Admin → `/admin` (Admin Dashboard). Hết phiên ở trang nội bộ thì về `/login?next=<trang đang mở>` và đăng nhập xong quay lại đó; `safeNextPath` chỉ nhận đường dẫn cùng origin bắt đầu bằng một `/`, bỏ giá trị có `//`, `\`, ký tự điều khiển hay khoảng trắng (chặn open redirect) và bỏ trang công khai, không hợp lệ thì về `homePath` |
+| Thành công | Chuyển tới `homePath` (BR-U01-48): Student, Teacher → `/classes` (Class Dashboard); Subject Manager → `/manager` (Manager Dashboard); Admin → `/admin` (Admin Dashboard) |
 
 ### ActivationPage (#2) / PasswordResetPage (#3)
 

@@ -1,4 +1,4 @@
-import { AssignmentDiagramPage } from "@/features/assignments/pages/AssignmentDiagramPage";
+import { AssignmentDiagramPage } from "@/features/assignments/AssignmentDiagramPage";
 
 // U07: trang xem sơ đồ mở từ link trong DOCX của đề.
 export default async function Page({ params }: { params: Promise<{ id: string; blockId: string }> }) {
