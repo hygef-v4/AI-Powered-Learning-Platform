@@ -1,6 +1,6 @@
 # Kết quả làm lại phần Quiz — 2026-11-01
 
-Nhánh `feat/quiz-rework-2026-11-01`, tách từ `origin/staging`. Chưa commit, chưa push, chưa triển khai. [Roadmap](../plans/code-generation-plan/2026-11-01-quiz-rework.md), [đánh giá](../../inception/requirements/2026-11-01-quiz-feedback-assessment.md), [câu hỏi](../../inception/requirements/2026-11-01-quiz-rework-questions.md).
+Nhánh `feat/quiz-rework-2026-11-01`, tách từ `origin/staging`. Đã commit trên nhánh này, chưa push, chưa triển khai. [Roadmap](../plans/code-generation-plan/2026-11-01-quiz-rework.md), [đánh giá](../../inception/requirements/2026-11-01-quiz-feedback-assessment.md), [câu hỏi](../../inception/requirements/2026-11-01-quiz-rework-questions.md).
 
 ## Đã làm
 
