@@ -12,6 +12,7 @@ import edu.aiplatform.quizzes.model.Question;
 import edu.aiplatform.quizzes.model.QuizItem;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -41,7 +42,22 @@ public class QuizScorer implements IQuizScoring {
     @Override
     @Transactional(readOnly = true)
     public QuizScore score(UUID quizId, List<QuizAnswer> answers) {
-        List<QuizItem> items = quizzes.items(quizId);
+        return scoreItems(quizzes.items(quizId), answers);
+    }
+
+    /** Lượt sinh đề chấm đúng các câu và điểm đã lưu trong lượt, không theo {@code quiz_items} (BR-U10-17). */
+    @Override
+    @Transactional(readOnly = true)
+    public QuizScore score(UUID quizId, List<QuizAnswer> answers, Map<UUID, BigDecimal> questionPoints) {
+        List<QuizItem> items = new ArrayList<>();
+        int position = 0;
+        for (var entry : questionPoints.entrySet()) {
+            items.add(new QuizItem(quizId, entry.getKey(), ++position, entry.getValue()));
+        }
+        return scoreItems(items, answers);
+    }
+
+    private QuizScore scoreItems(List<QuizItem> items, List<QuizAnswer> answers) {
         Map<UUID, Question> byId = byId(items);
         Map<UUID, Set<String>> selected = new HashMap<>();
         for (QuizAnswer answer : answers == null ? List.<QuizAnswer>of() : answers) {
@@ -74,6 +90,14 @@ public class QuizScorer implements IQuizScoring {
                 })
                 .toList();
         return new AnswerReview(quizId, keys);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AnswerReview answerReview(UUID quizId, Collection<UUID> questionIds) {
+        return new AnswerReview(quizId, questions.findAll(questionIds).stream()
+                .map(q -> new AnswerKey(q.id(), Set.copyOf(q.content().correctOptionIds()), q.content().explanation()))
+                .toList());
     }
 
     private Map<UUID, Question> byId(List<QuizItem> items) {

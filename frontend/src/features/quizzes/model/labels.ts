@@ -4,8 +4,8 @@ import type { Difficulty, QuestionStatus, QuestionType, QuizStatus } from "./typ
 
 export const TYPE_LABELS: Record<QuestionType, string> = { MCQ_SINGLE: "Một đáp án", MCQ_MULTI: "Nhiều đáp án" };
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = { EASY: "Dễ", MEDIUM: "Trung bình", HARD: "Khó" };
-export const STATUS_LABELS: Record<QuestionStatus, string> = { DRAFT: "Nháp", ACTIVE: "Đang dùng", RETIRED: "Ngưng" };
-export const STATUS_TONES: Record<QuestionStatus, Tone> = { DRAFT: "warning", ACTIVE: "success", RETIRED: "neutral" };
+export const STATUS_LABELS: Record<QuestionStatus, string> = { DRAFT: "Nháp", PENDING: "Chờ duyệt", REJECTED: "Bị từ chối", ACTIVE: "Đang dùng", RETIRED: "Ngưng" };
+export const STATUS_TONES: Record<QuestionStatus, Tone> = { DRAFT: "warning", PENDING: "info", REJECTED: "danger", ACTIVE: "success", RETIRED: "neutral" };
 export const DIFFICULTY_TONES: Record<Difficulty, Tone> = { EASY: "success", MEDIUM: "info", HARD: "danger" };
 
 const SYSTEM_BUSY = "Hệ thống tạm bận, vui lòng thử lại sau.";
@@ -34,7 +34,7 @@ const ERROR_LABELS: Record<string, string> = {
   AI_DRAFT_NOT_READY: "AI chưa soạn xong đề xuất.",
   AI_DRAFT_INVALID: "Có câu chưa hợp lệ, hãy sửa trước khi chấp nhận.",
   MATERIAL_NOT_SELECTABLE: "Có tài liệu không chọn được hoặc chưa trích được chữ.",
-  MATERIAL_SERVICE_UNAVAILABLE: "Chưa lấy được tài liệu tham khảo, vui lòng thử lại.",
+  MATERIAL_SERVICE_UNAVAILABLE: "Chưa lấy được tài liệu nguồn, vui lòng thử lại.",
   AI_SERVICE_UNAVAILABLE: "Chưa gửi được yêu cầu AI, vui lòng thử lại.",
   AI_OUTPUT_INVALID: "Kết quả AI không đúng định dạng câu hỏi; hãy gửi lại yêu cầu.",
   SYSTEM_BUSY,
@@ -45,8 +45,8 @@ export function failureLabel(code: string | null, message: string | null): strin
   return (code && ERROR_LABELS[code]) || message || "AI chưa soạn được đề xuất.";
 }
 
-export const QUIZ_STATUS_LABELS: Record<QuizStatus, string> = { DRAFT: "Nháp", REVIEWED: "Đã duyệt", OPEN: "Đang mở", RETIRED: "Lưu trữ" };
-export const QUIZ_STATUS_TONES: Record<QuizStatus, Tone> = { DRAFT: "warning", REVIEWED: "info", OPEN: "success", RETIRED: "danger" };
+export const QUIZ_STATUS_LABELS: Record<QuizStatus, string> = { DRAFT: "Nháp", OPEN: "Đang mở", RETIRED: "Lưu trữ" };
+export const QUIZ_STATUS_TONES: Record<QuizStatus, Tone> = { DRAFT: "warning", OPEN: "success", RETIRED: "danger" };
 
 export function formatPoints(value: number): string {
   return Number(value).toLocaleString("vi-VN", { maximumFractionDigits: 2 });

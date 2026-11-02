@@ -6,9 +6,11 @@ import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.quizpractice.dto.PracticeViews.AttemptRow;
+import edu.aiplatform.quizpractice.dto.PracticeViews.PenaltyView;
 import edu.aiplatform.quizpractice.dto.PracticeViews.ResultQuestion;
 import edu.aiplatform.quizpractice.dto.PracticeViews.ResultView;
 import edu.aiplatform.quizpractice.repository.IQuizAttemptRepository;
+import edu.aiplatform.quizpractice.model.ActivityOutcome;
 import edu.aiplatform.quizpractice.model.QuestionResult;
 import edu.aiplatform.quizpractice.model.QuizAttempt;
 import edu.aiplatform.quizpractice.model.SubmitMode;
@@ -23,12 +25,14 @@ import edu.aiplatform.quizzes.contract.QuizScore;
 import edu.aiplatform.quizzes.contract.QuizStudentView;
 import edu.aiplatform.quizzes.contract.QuizView;
 import edu.aiplatform.shared.error.ApiException;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -49,15 +53,17 @@ class PracticeSupport {
     private final IQuizScoring scoring;
     private final IClassAccess classes;
     private final PracticeAccess access;
+    private final AttemptActivityAssessor assessor;
     private final Clock clock;
 
     PracticeSupport(IQuizAttemptRepository attempts, IQuizQuery quizzes, IQuizScoring scoring, IClassAccess classes,
-                    PracticeAccess access, Clock clock) {
+                    PracticeAccess access, AttemptActivityAssessor assessor, Clock clock) {
         this.attempts = attempts;
         this.quizzes = quizzes;
         this.scoring = scoring;
         this.classes = classes;
         this.access = access;
+        this.assessor = assessor;
         this.clock = clock;
     }
 
@@ -85,6 +91,21 @@ class PracticeSupport {
 
     QuizStudentView studentView(UUID quizId) {
         return call(() -> quizzes.getStudentView(quizId)).orElseThrow(() -> ApiException.notFound(QUIZ_NOT_FOUND));
+    }
+
+    /** Đề cho lượt mới: Quiz sinh đề bốc câu riêng, ưu tiên câu người học chưa gặp (BR-U10-17). */
+    QuizStudentView newPaper(UUID quizId, Set<UUID> seenQuestionIds, long seed) {
+        QuizStudentView view = studentView(quizId);
+        return view.generated()
+                ? call(() -> quizzes.drawPaper(quizId, seenQuestionIds, seed)).orElseThrow(() -> ApiException.notFound(QUIZ_NOT_FOUND))
+                : view;
+    }
+
+    /** Đề của một lượt đã có: lượt sinh đề theo câu đã lưu, lượt khác theo Quiz. */
+    QuizStudentView paperOf(QuizAttempt attempt) {
+        Map<UUID, BigDecimal> points = attempt.snapshot().questionPoints();
+        return points == null ? studentView(attempt.quizId())
+                : call(() -> quizzes.getPaper(attempt.quizId(), points)).orElseThrow(() -> ApiException.notFound(QUIZ_NOT_FOUND));
     }
 
     /** Lượt của chính người gọi; của người khác thì 404 và audit (BR-U11-22). Kết quả cũ vẫn xem được sau khi rời lớp. */
@@ -128,10 +149,12 @@ class PracticeSupport {
     private QuizAttempt scored(QuizAttempt attempt, SubmitMode mode) {
         List<QuizAnswer> answers = attempt.answers().entrySet().stream()
                 .map(e -> new QuizAnswer(e.getKey(), new HashSet<>(e.getValue()))).toList();
-        QuizScore score = call(() -> scoring.score(attempt.quizId(), answers));
+        Map<UUID, BigDecimal> points = attempt.snapshot().questionPoints();
+        QuizScore score = call(() -> points == null ? scoring.score(attempt.quizId(), answers)
+                : scoring.score(attempt.quizId(), answers, points));
         List<QuestionResult> results = score.questions().stream()
                 .map(q -> new QuestionResult(q.questionId(), q.correct(), q.points(), q.maxPoints())).toList();
-        return attempt.submitted(mode, score.total(), score.maxTotal(), results, clock.instant());
+        return assessor.assess(attempt.submitted(mode, score.total(), score.maxTotal(), results, clock.instant()));
     }
 
     /**
@@ -144,12 +167,14 @@ class PracticeSupport {
         boolean showScore = full || attempt.snapshot().settings().showScoreAfterSubmit();
         boolean showAnswers = full || attempt.snapshot().settings().showCorrectAnswers();
         boolean revealCorrectness = showScore || showAnswers;
-        Map<UUID, QuizQuestionView> byId = studentView(attempt.quizId()).questions().stream()
+        Map<UUID, QuizQuestionView> byId = paperOf(attempt).questions().stream()
                 .collect(Collectors.toMap(QuizQuestionView::questionId, Function.identity()));
         Map<UUID, QuestionResult> results = attempt.result().stream()
                 .collect(Collectors.toMap(QuestionResult::questionId, Function.identity()));
+        Map<UUID, BigDecimal> paper = attempt.snapshot().questionPoints();
         Map<UUID, AnswerKey> keys = showAnswers
-                ? call(() -> scoring.answerReview(attempt.quizId())).answers().stream()
+                ? call(() -> paper == null ? scoring.answerReview(attempt.quizId())
+                        : scoring.answerReview(attempt.quizId(), paper.keySet())).answers().stream()
                         .collect(Collectors.toMap(AnswerKey::questionId, Function.identity()))
                 : Map.of();
         int correct = 0;
@@ -177,7 +202,8 @@ class PracticeSupport {
         return new ResultView(attempt.id(), attempt.quizId(), attempt.classId(), attempt.snapshot().title(),
                 attempt.attemptNo(), attempt.startedAt(), attempt.submittedAt(), attempt.submitMode(), showScore,
                 showAnswers, showScore ? attempt.score() : null, showScore ? attempt.maxScore() : null,
-                revealCorrectness ? correct : null, revealCorrectness ? wrong : null, blank, questions, canRetry);
+                revealCorrectness ? correct : null, revealCorrectness ? wrong : null, blank, questions, canRetry,
+                showScore ? PenaltyView.of(attempt.outcome(), full) : null);
     }
 
     /** Lựa chọn theo thứ tự đã trộn của lượt. */
@@ -190,7 +216,15 @@ class PracticeSupport {
 
     static AttemptRow row(QuizAttempt a, boolean showScore) {
         return new AttemptRow(a.id(), a.attemptNo(), a.status(), a.startedAt(), a.submittedAt(),
-                showScore ? a.score() : null, showScore ? a.maxScore() : null);
+                showScore ? a.score() : null, showScore ? a.maxScore() : null, null, null, null, null);
+    }
+
+    /** Dòng cho giảng viên: thêm số lần rời trang, tín hiệu đã chụp và mức trừ gợi ý (BR-U11-32, 33). */
+    static AttemptRow teacherRow(QuizAttempt a) {
+        ActivityOutcome outcome = a.outcome();
+        return new AttemptRow(a.id(), a.attemptNo(), a.status(), a.startedAt(), a.submittedAt(), a.score(), a.maxScore(),
+                outcome == null ? null : outcome.leaveCount(), outcome == null ? null : outcome.signal(),
+                outcome == null ? null : outcome.suggestedPenalty(), outcome == null ? null : outcome.decision());
     }
 
     /** U10 lỗi thì từ chối (BR-U11-41), giữ nguyên lỗi nghiệp vụ. */

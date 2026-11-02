@@ -34,7 +34,7 @@ class MaterialModuleServiceTest {
         when(repo.delete(any(),anyLong())).thenReturn(true);
     }
     QuizView quiz(UUID id,QuizScope scope,UUID subjectId,UUID classOf,QuizStatus status) {
-        return new QuizView(id,scope,classOf,subjectId,1,"Quiz",status,null,false,null,List.of(),BigDecimal.TEN,
+        return new QuizView(id,scope,classOf,subjectId,1,"Quiz",status,null,false,null,BigDecimal.TEN,
                 status==QuizStatus.OPEN||status==QuizStatus.RETIRED?now:null);
     }
 
@@ -88,7 +88,7 @@ class MaterialModuleServiceTest {
         Actor teacher=new Actor(UUID.randomUUID(),Role.TEACHER);
         UUID quizId=UUID.randomUUID();
         QuizView unpublished=new QuizView(quizId,QuizScope.SUBJECT,null,subject,1,"Unpublished",QuizStatus.RETIRED,
-                null,false,null,List.of(),BigDecimal.TEN,null);
+                null,false,null,BigDecimal.TEN,null);
         when(access.classList(teacher,classId,false)).thenReturn(new ClassRef(classId,subject,"C","Class",ClassStatus.OPEN,teacher.accountId(),false));
         when(repo.quizLinks(subject)).thenReturn(List.of(new MaterialModule.QuizLink(moduleId,quizId,0)));
         when(quizzes.get(quizId)).thenReturn(Optional.of(unpublished));

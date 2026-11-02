@@ -6,18 +6,22 @@ import { formatPoints, TYPE_LABELS } from "../model/labels";
 import { McqEditor } from "./McqEditor";
 import { QuestionMetaPanel } from "./QuestionSidePanels";
 import { emptyForm, formOf, toContent, validateForm, type FormErrors, type QuestionForm } from "../model/questionForm";
-import type { QuestionContent, QuizDetailsInput, QuizItemView, QuizSettings } from "../model/types";
+import type { LeavePenalty, QuestionContent, QuizDetailsInput, QuizItemView, QuizSettings } from "../model/types";
 
 export type DraftItem = { item: QuizItemView; points: string };
 
 const TEXTAREA = "w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus disabled:bg-shell";
 
-/** "Câu hỏi (n)": thứ tự, nguồn câu, điểm, nội dung và đáp án; sửa điểm, đổi thứ tự, bỏ câu khi quiz còn nháp. */
-export function QuizItemList({ items, onChange, editable, onEditInline }: {
+/**
+ * "Câu hỏi (n)": thứ tự, nguồn câu, điểm, nội dung và đáp án; sửa điểm, đổi thứ tự, bỏ câu khi quiz còn nháp. `onPropose`
+ * (Quiz của lớp): giảng viên đề xuất câu riêng vào ngân hàng của môn (BR-U10-09).
+ */
+export function QuizItemList({ items, onChange, editable, onEditInline, onPropose }: {
   items: DraftItem[];
   onChange: (items: DraftItem[]) => void;
   editable: boolean;
   onEditInline: (item: QuizItemView) => void;
+  onPropose?: (item: QuizItemView) => void;
 }) {
   const move = (index: number, delta: number) => {
     const next = [...items];
@@ -62,6 +66,7 @@ export function QuizItemList({ items, onChange, editable, onEditInline }: {
                 <Button size="sm" variant="ghost" disabled={index === 0} onClick={() => move(index, -1)} aria-label={`Đưa câu ${index + 1} lên`}>Lên</Button>
                 <Button size="sm" variant="ghost" disabled={index === items.length - 1} onClick={() => move(index, 1)} aria-label={`Đưa câu ${index + 1} xuống`}>Xuống</Button>
                 {inline && <Button size="sm" variant="ghost" onClick={() => onEditInline(draft.item)} data-testid={`quiz-item-edit-${index}`}>Sửa câu</Button>}
+                {inline && onPropose && <Button size="sm" variant="ghost" onClick={() => onPropose(draft.item)} data-testid={`quiz-item-propose-${index}`}>Đề xuất vào ngân hàng</Button>}
                 <Button size="sm" variant="ghost" onClick={() => onChange(items.filter((_, i) => i !== index))} data-testid={`quiz-item-remove-${index}`}>Bỏ khỏi quiz</Button>
               </div>
             )}
@@ -73,11 +78,12 @@ export function QuizItemList({ items, onChange, editable, onEditInline }: {
 }
 
 
-/** Popup soạn câu riêng của quiz (BR-U10-13), dùng McqEditor. */
-export function InlineQuestionDialog({ initial, onClose, onSave }: {
-  initial: QuizItemView | null;
+/** Popup soạn câu riêng của quiz (BR-U10-13) hoặc câu đề xuất (BR-U10-09), dùng McqEditor. */
+export function InlineQuestionDialog({ initial, onClose, onSave, title }: {
+  initial: Pick<QuizItemView, "question"> | null;
   onClose: () => void;
   onSave: (content: QuestionContent) => Promise<void>;
+  title?: string;
 }) {
   const [form, setForm] = useState<QuestionForm>(() => (initial ? formOf(initial.question) : emptyForm()));
   const [errors, setErrors] = useState<FormErrors>({});
@@ -97,7 +103,7 @@ export function InlineQuestionDialog({ initial, onClose, onSave }: {
     }
   };
   return (
-    <Dialog open onClose={onClose} dismissible={!busy} size="lg" icon="quiz" title={initial ? "Sửa câu riêng của quiz" : "Thêm câu riêng"}
+    <Dialog open onClose={onClose} dismissible={!busy} size="lg" icon="quiz" title={title ?? (initial ? "Sửa câu riêng của quiz" : "Thêm câu riêng")}
       footer={<>
         <Button variant="primary" onClick={() => void save()} disabled={busy} data-testid="inline-question-save">Lưu câu</Button>
       </>}>
@@ -121,7 +127,11 @@ export type SettingsForm = {
   showCorrectAnswers: boolean;
   activityMonitoringEnabled: boolean;
   activityNotice: string;
-  materialIds: string[];
+  penaltyEnabled: boolean;
+  freeLeaves: string;
+  pointsPerLeave: string;
+  maxPenalty: string;
+  minAwaySeconds: string;
 };
 
 export function settingsFormOf(quiz: QuizDetailsInput): SettingsForm {
@@ -137,8 +147,28 @@ export function settingsFormOf(quiz: QuizDetailsInput): SettingsForm {
     showCorrectAnswers: s.showCorrectAnswers,
     activityMonitoringEnabled: quiz.activityMonitoringEnabled,
     activityNotice: quiz.activityNotice ?? "",
-    materialIds: [...quiz.referenceMaterialIds],
+    penaltyEnabled: !!s.leavePenalty,
+    freeLeaves: String(s.leavePenalty?.freeLeaves ?? 0),
+    pointsPerLeave: s.leavePenalty ? String(s.leavePenalty.pointsPerLeave) : "",
+    maxPenalty: s.leavePenalty?.maxPenalty === null || s.leavePenalty?.maxPenalty === undefined ? "" : String(s.leavePenalty.maxPenalty),
+    minAwaySeconds: String(s.leavePenalty?.minAwaySeconds ?? 5),
   };
+}
+
+const POINTS = /^\d+([.,]\d{1,2})?$/;
+const decimal = (value: string) => Number(value.trim().replace(",", "."));
+
+/** Gợi ý trừ điểm khi rời trang (BR-U10-15): cần bật ghi nhận hoạt động. */
+function penaltyInput(form: SettingsForm, errors: Record<string, string>): LeavePenalty | null {
+  if (!form.activityMonitoringEnabled) errors.penalty = "Cần bật ghi nhận hoạt động thì mới gợi ý trừ điểm được";
+  const free = Number(form.freeLeaves);
+  if (!Number.isInteger(free) || free < 0 || free > 50) errors.freeLeaves = "Từ 0 đến 50 lần";
+  if (!POINTS.test(form.pointsPerLeave.trim()) || decimal(form.pointsPerLeave) <= 0) errors.pointsPerLeave = "Lớn hơn 0, tối đa 2 chữ số thập phân";
+  const hasMax = form.maxPenalty.trim() !== "";
+  if (hasMax && (!POINTS.test(form.maxPenalty.trim()) || decimal(form.maxPenalty) <= 0)) errors.maxPenalty = "Lớn hơn 0 hoặc để trống";
+  const minAway = Number(form.minAwaySeconds);
+  if (!Number.isInteger(minAway) || minAway < 0 || minAway > 600) errors.minAwaySeconds = "Từ 0 đến 600 giây";
+  return { freeLeaves: free, pointsPerLeave: decimal(form.pointsPerLeave), maxPenalty: hasMax ? decimal(form.maxPenalty) : null, minAwaySeconds: minAway };
 }
 
 /** Kiểm cấu hình theo BR-U10-15; trả lỗi theo trường hoặc dữ liệu gửi API. */
@@ -151,6 +181,7 @@ export function settingsInput(form: SettingsForm): { errors: Record<string, stri
   if (attempts !== null && (!Number.isInteger(attempts) || attempts < 1 || attempts > 10)) errors.maxAttempts = "Từ 1 đến 10 hoặc để trống";
   if (form.activityMonitoringEnabled && !form.activityNotice.trim()) errors.activityNotice = "Cần lời báo cho sinh viên khi bật ghi nhận hoạt động";
   if (form.activityNotice.trim().length > 1000) errors.activityNotice = "Lời báo tối đa 1.000 ký tự";
+  const penalty = form.penaltyEnabled ? penaltyInput(form, errors) : null;
   if (Object.keys(errors).length > 0) return { errors };
   const settings: QuizSettings = {
     shuffleQuestions: form.shuffleQuestions,
@@ -159,6 +190,7 @@ export function settingsInput(form: SettingsForm): { errors: Record<string, stri
     maxAttempts: attempts,
     showScoreAfterSubmit: form.showScoreAfterSubmit,
     showCorrectAnswers: form.showCorrectAnswers,
+    leavePenalty: penalty,
   };
   return {
     errors,
@@ -168,7 +200,6 @@ export function settingsInput(form: SettingsForm): { errors: Record<string, stri
       settings,
       activityMonitoringEnabled: form.activityMonitoringEnabled,
       activityNotice: form.activityNotice.trim() || null,
-      referenceMaterialIds: form.materialIds,
     },
   };
 }
@@ -206,6 +237,27 @@ export function QuizSettingsPanel({ value, onChange, errors, readOnly }: {
               aria-invalid={!!errors.activityNotice} onChange={(e) => set("activityNotice", e.target.value)}
               data-testid="quiz-settings-activity-notice" />
           </Field>
+        )}
+        {value.activityMonitoringEnabled && (
+          <Switch checked={value.penaltyEnabled} onChange={(v) => set("penaltyEnabled", v)} label="Gợi ý trừ điểm khi rời trang" ariaLabel="Gợi ý trừ điểm khi rời trang" disabled={readOnly} />
+        )}
+        {errors.penalty && <p className="text-xs text-danger" role="alert">{errors.penalty}</p>}
+        {value.activityMonitoringEnabled && value.penaltyEnabled && (
+          <div className="grid grid-cols-2 gap-2" data-testid="quiz-settings-penalty">
+            <Field label="Số lần được miễn" htmlFor={`${id}-free`} error={errors.freeLeaves}>
+              <TextInput id={`${id}-free`} inputMode="numeric" value={value.freeLeaves} invalid={!!errors.freeLeaves} onChange={(e) => set("freeLeaves", e.target.value)} data-testid="quiz-settings-free-leaves" />
+            </Field>
+            <Field label="Điểm trừ mỗi lần" htmlFor={`${id}-per`} error={errors.pointsPerLeave}>
+              <TextInput id={`${id}-per`} inputMode="decimal" value={value.pointsPerLeave} invalid={!!errors.pointsPerLeave} onChange={(e) => set("pointsPerLeave", e.target.value)} data-testid="quiz-settings-points-per-leave" />
+            </Field>
+            <Field label="Trừ tối đa" htmlFor={`${id}-max`} hint="Trống là không giới hạn" error={errors.maxPenalty}>
+              <TextInput id={`${id}-max`} inputMode="decimal" value={value.maxPenalty} invalid={!!errors.maxPenalty} onChange={(e) => set("maxPenalty", e.target.value)} data-testid="quiz-settings-max-penalty" />
+            </Field>
+            <Field label="Chỉ tính khi rời từ" htmlFor={`${id}-min`} error={errors.minAwaySeconds}>
+              <TextInput id={`${id}-min`} inputMode="numeric" suffix="giây" value={value.minAwaySeconds} invalid={!!errors.minAwaySeconds} onChange={(e) => set("minAwaySeconds", e.target.value)} data-testid="quiz-settings-min-away" />
+            </Field>
+            <p className="col-span-2 text-xs text-muted">Hệ thống không tự trừ điểm: chỉ tính mức gợi ý, giảng viên quyết định ở từng lượt làm. Tín hiệu do trình duyệt tự báo nên có thể sai hoặc bị chặn.</p>
+          </div>
         )}
       </fieldset>
     </Section>

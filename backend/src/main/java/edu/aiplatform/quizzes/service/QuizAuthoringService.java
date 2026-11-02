@@ -30,6 +30,7 @@ import edu.aiplatform.shared.error.ApiException;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,23 +56,21 @@ public class QuizAuthoringService {
     private final QuizSupport support;
     private final QuizAccess access;
     private final QuizAudit audit;
-    private final QuizReferenceMaterials materials;
     private final Clock clock;
 
     public QuizAuthoringService(IQuizRepository quizzes, IQuestionRepository questions, QuizSupport support,
-                                QuizAccess access, QuizAudit audit, QuizReferenceMaterials materials, Clock clock) {
+                                QuizAccess access, QuizAudit audit, Clock clock) {
         this.quizzes = quizzes;
         this.questions = questions;
         this.support = support;
         this.access = access;
         this.audit = audit;
-        this.materials = materials;
         this.clock = clock;
     }
 
     /** Thông tin, cài đặt Quiz (F7 bước 5). */
     public record Details(String title, String instructions, QuizSettings settings, boolean activityMonitoringEnabled,
-                          String activityNotice, List<UUID> referenceMaterialIds) {
+                          String activityNotice) {
     }
 
     /** Một câu khi lưu danh sách câu; {@code points} trống thì lấy điểm mặc định của câu. */
@@ -120,7 +119,7 @@ public class QuizAuthoringService {
 
     private QuizDetail create(Actor actor, Quiz quiz) {
         support.requireContainerActive(quiz);
-        reject(QuizRules.validateDetails(quiz.title(), null, quiz.settings(), null, List.of()));
+        reject(QuizRules.validateDetails(quiz.title(), null, quiz.settings(), null));
         quizzes.insert(quiz);
         audit.success(actor, "QUIZ_CREATED", QuizSupport.OBJECT, quiz.id(), Map.of("scope", quiz.scope().name()));
         return support.detail(quiz, true);
@@ -137,17 +136,13 @@ public class QuizAuthoringService {
         Quiz quiz = support.loadEditable(actor, id, version);
         String title = details.title() == null ? null : details.title().strip();
         List<Violation> violations = new ArrayList<>(QuizRules.validateDetails(title, details.instructions(),
-                details.settings(), details.activityNotice(), details.referenceMaterialIds()));
+                details.settings(), details.activityNotice()));
         // K2: bật thì phải có lời báo cho sinh viên; thời hạn giữ dữ liệu cố định 1 ngày nên luôn bật được (BR-U10-15).
         violations.addAll(QuizRules.validateActivity(details.activityMonitoringEnabled(), details.activityNotice()));
+        violations.addAll(QuizRules.validatePenaltyNeedsMonitoring(details.activityMonitoringEnabled(), details.settings()));
         reject(violations);
-        // H8: chỉ kiểm tài liệu mới gắn, để U13 lỗi không chặn lưu các thay đổi khác (BR-U10-52).
-        List<UUID> added = details.referenceMaterialIds() == null ? List.of() : details.referenceMaterialIds().stream()
-                .filter(m -> !quiz.referenceMaterialIds().contains(m)).distinct().toList();
-        materials.requireSelectable(actor, QuizReferenceMaterials.scopeOf(quiz), added, false);
         Quiz changed = quiz.withDetails(title, blankToNull(details.instructions()), details.settings(),
-                details.activityMonitoringEnabled(), blankToNull(details.activityNotice()),
-                details.referenceMaterialIds(), clock.instant());
+                details.activityMonitoringEnabled(), blankToNull(details.activityNotice()), clock.instant());
         return support.detail(support.save(changed), true);
     }
 
@@ -165,6 +160,7 @@ public class QuizAuthoringService {
                 .stream().collect(Collectors.toMap(Question::id, q -> q));
         List<QuizItem> items = new ArrayList<>();
         List<Violation> violations = new ArrayList<>();
+        Map<UUID, UUID> lineages = new HashMap<>();
         int position = 0;
         for (ItemInput input : inputs) {
             position++;
@@ -178,6 +174,12 @@ public class QuizAuthoringService {
             if (q.scope() == QuestionScope.BANK && q.status() != QuestionStatus.ACTIVE && !pinned.contains(q.id())) {
                 violations.add(new Violation(field, "QUESTION_NOT_ACTIVE",
                         "Câu " + position + " chưa kích hoạt hoặc đã ngưng dùng"));
+                continue;
+            }
+            UUID sameLineage = lineages.putIfAbsent(q.lineageId(), q.id());
+            if (q.scope() == QuestionScope.BANK && sameLineage != null && !sameLineage.equals(q.id())) {
+                violations.add(new Violation(field, "QUESTION_SAME_LINEAGE",
+                        "Câu " + position + " là phiên bản khác của một câu đã có trong quiz"));
                 continue;
             }
             BigDecimal points = input.points() == null ? q.content().defaultPoints() : input.points();
@@ -222,7 +224,7 @@ public class QuizAuthoringService {
         List<QuestionRow> rows = result.items().stream().map(row -> {
             Question q = row.question();
             return new QuestionRow(q.id(), q.lineageId(), q.versionNo(), q.content().type(), preview(q.content().stem()),
-                    q.content().difficulty(), q.content().tags(), q.status(), false, q.updatedAt());
+                    q.content().difficulty(), q.content().tags(), q.status(), false, q.updatedAt(), q.version());
         }).toList();
         return new QuestionPage(rows, result.total(), result.page(), result.size());
     }

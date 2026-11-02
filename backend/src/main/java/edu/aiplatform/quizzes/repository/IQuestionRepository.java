@@ -2,10 +2,12 @@ package edu.aiplatform.quizzes.repository;
 
 import edu.aiplatform.quizzes.model.Difficulty;
 import edu.aiplatform.quizzes.model.Question;
+import edu.aiplatform.quizzes.model.QuestionReview;
 import edu.aiplatform.quizzes.model.QuestionStatus;
 import edu.aiplatform.quizzes.model.Quiz;
 
 import edu.aiplatform.quizzes.contract.QuestionType;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -53,6 +55,47 @@ public interface IQuestionRepository {
 
     /** Số câu {@code ACTIVE} khớp bộ lọc ("Có n câu phù hợp"). */
     long countActive(UUID subjectId, PickQuery query);
+
+    /** Câu {@code ACTIVE} mới nhất mỗi lineage của môn, phần đủ để sinh đề (BR-U10-17). */
+    List<PoolEntry> activePool(UUID subjectId);
+
+    /** Khóa theo môn tới hết transaction để hai lần lưu cùng lúc không cùng lọt kiểm trùng (BR-U10-08). */
+    void lockSubject(UUID subjectId);
+
+    /** Câu đang mở của ngân hàng (nháp, chờ duyệt, đang dùng) có cùng hash, khác lineage; ưu tiên câu đang dùng. */
+    Optional<Question> findDuplicate(UUID subjectId, String contentHash, UUID excludeLineage);
+
+    /** Nội dung đã chuẩn hóa của các câu đang mở khác lineage, để tìm câu gần giống. */
+    List<StemEntry> bankStems(UUID subjectId, UUID excludeLineage);
+
+    /** Các nhóm câu trùng hash trong ngân hàng (báo cáo cho Chủ nhiệm môn). */
+    List<List<StemEntry>> duplicateGroups(UUID subjectId);
+
+    /** Câu chưa có dấu vân tay (dữ liệu trước khi thêm cột). */
+    List<Question> withoutFingerprint(int limit);
+
+    void saveFingerprint(Question question);
+
+    void insertReview(QuestionReview review);
+
+    Optional<QuestionReview> latestReview(UUID questionId);
+
+    void insertProposal(UUID questionId, UUID classId, Instant now);
+
+    /** Lớp mà câu đề xuất được gửi từ đó. */
+    Optional<UUID> proposalClass(UUID questionId);
+
+    /** Câu đề xuất của một người ở một lớp, mới cập nhật trước. */
+    List<Question> listProposals(UUID classId, UUID createdBy);
+
+    /** Xóa câu đề xuất chưa được duyệt (người đề xuất rút lại). */
+    boolean deleteProposal(UUID id, long version);
+
+    record PoolEntry(UUID id, UUID lineageId, List<String> tags, Difficulty difficulty, String contentHash) {
+    }
+
+    record StemEntry(UUID id, String normalizedStem, String stem, QuestionStatus status) {
+    }
 
     record PickQuery(Difficulty difficulty, String tag, String text, Set<UUID> excludeLineages, int page, int size) {
     }

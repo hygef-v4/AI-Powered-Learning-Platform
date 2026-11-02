@@ -20,6 +20,20 @@ class RecipientResolverTest {
     @Test void gradeUsesStudentIdsAndNeverScore(){var r=resolver.resolve(event(EventTypes.GRADE_PUBLISHED,Map.of("classId",classId.toString(),"studentIds",List.of(student.toString()),"score",9.5))).get(0);assertThat(r.recipients()).containsExactly(student);assertThat(r.link()).doesNotContain("9.5");}
     @Test void subjectAssignmentFansOutAllOpenClassesAndDeduplicates(){var second=UUID.randomUUID();when(classes.listOpenClassesOfSubject(subjectId)).thenReturn(List.of(new ClassRef(classId,subjectId,"C","Class",ClassStatus.OPEN,teacher,false),new ClassRef(second,subjectId,"D","Other",ClassStatus.OPEN,teacher,false)));when(classes.listActiveStudents(second)).thenReturn(List.of(student));var r=resolver.resolve(event(EventTypes.ASSIGNMENT_OPENED,Map.of("scope","SUBJECT","subjectId",subjectId.toString(),"assignmentId",UUID.randomUUID().toString()))).get(0);assertThat(r.recipients()).containsExactly(student);}
     @Test void quizHasNoEmail(){var r=resolver.resolve(event(EventTypes.QUIZ_PUBLISHED,Map.of("classId",classId.toString(),"quizId",UUID.randomUUID().toString()))).get(0);assertThat(r.emailType()).isNull();}
+    @Test void questionProposalNotifiesManagerAndReviewNotifiesProposer(){
+        UUID manager=UUID.randomUUID();
+        when(accounts.getContact(manager)).thenReturn(Optional.of(new AccountContact(manager,"m@example.test","M",Role.SUBJECT_MANAGER,AccountStatus.ACTIVE)));
+        when(accounts.getContact(teacher)).thenReturn(Optional.of(new AccountContact(teacher,"t@example.test","T",Role.TEACHER,AccountStatus.ACTIVE)));
+        var proposed=resolver.resolve(event(EventTypes.QUESTION_PROPOSED,Map.of("questionId",UUID.randomUUID().toString(),
+                "subjectId",subjectId.toString(),"recipientIds",List.of(manager.toString())))).get(0);
+        assertThat(proposed.recipients()).containsExactly(manager);
+        assertThat(proposed.link()).isEqualTo("/manager/questions?subjectId="+subjectId+"&status=PENDING");
+        assertThat(proposed.emailType()).isNull();
+        var reviewed=resolver.resolve(event(EventTypes.QUESTION_REVIEWED,Map.of("questionId",UUID.randomUUID().toString(),"classId",classId.toString(),
+                "subjectId",subjectId.toString(),"decision","REJECTED","recipientIds",List.of(teacher.toString())))).get(0);
+        assertThat(reviewed.recipients()).containsExactly(teacher);
+        assertThat(reviewed.link()).isEqualTo("/teaching/classes/"+classId+"?tab=materials");
+    }
     @Test void announcementOpensTheClassAnnouncementsPage(){var r=resolver.resolve(event(EventTypes.CLASS_ANNOUNCEMENT_POSTED,Map.of("classId",classId.toString(),"announcementId",UUID.randomUUID().toString(),"actorId",teacher.toString()))).get(0);assertThat(r.link()).isEqualTo("/classes/"+classId+"/announcements");}
     @Test void announcementEmailRequiresBothFlagsAndExcludesAuthor(){var p=new HashMap<String,Object>(Map.of("classId",classId.toString(),"announcementId",UUID.randomUUID().toString(),"actorId",student.toString(),"important",true,"sendEmail",true));assertThat(resolver.resolve(event(EventTypes.CLASS_ANNOUNCEMENT_POSTED,p)).get(0).recipients()).isEmpty();p.put("actorId",teacher.toString());p.put("important",false);assertThat(resolver.resolve(event(EventTypes.CLASS_ANNOUNCEMENT_POSTED,p)).get(0).emailType()).isNull();}
     @ParameterizedTest @CsvSource({"false,false", "false,true", "true,false", "true,true"})

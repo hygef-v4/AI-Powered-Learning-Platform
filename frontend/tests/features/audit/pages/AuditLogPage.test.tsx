@@ -74,7 +74,10 @@ describe("AuditLogPage", () => {
     expect(screen.getByRole("columnheader", { name: "STT" })).toBeInTheDocument();
     expect(within(row).getByText("1")).toBeInTheDocument();
     expect(within(screen.getByTestId(`audit-table-row-${SYSTEM_ROW.id}`)).getByText("2")).toBeInTheDocument();
-    expect(within(row).getByText("17:55 14/10/2026")).toBeInTheDocument();
+    // Thời gian hai dòng: ngày rồi giờ; ngày giờ đầy đủ khi rê chuột.
+    expect(within(row).getByText("14/10/2026")).toBeInTheDocument();
+    expect(within(row).getByText("17:55")).toBeInTheDocument();
+    expect(within(row).getByText("14/10/2026").closest("td")).toHaveAttribute("title", expect.stringMatching(/^14\/10\/2026 17:55:/));
     expect(within(row).queryByText(/3f9c2a/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Hiển thị|dòng mỗi trang/)).not.toBeInTheDocument();
     expect(screen.queryByText("Người thực hiện (email)")).not.toBeInTheDocument();

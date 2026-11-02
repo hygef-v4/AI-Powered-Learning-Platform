@@ -18,7 +18,7 @@ const TEXTAREA = "min-h-24 w-full rounded-lg border border-field px-3 py-2 text-
 function quizDetails(detail: QuizDetail, title: string, instructions: string, keep = false) {
   const q = detail.quiz;
   return { title, instructions: instructions.trim() || (keep ? q.instructions : null), settings: q.settings, activityMonitoringEnabled: q.activityMonitoringEnabled,
-    activityNotice: q.activityNotice, referenceMaterialIds: q.referenceMaterialIds };
+    activityNotice: q.activityNotice };
 }
 
 /**
@@ -73,7 +73,7 @@ export function ModuleItemDialog({ scope, moduleId, item, onClose, onSaved }: {
     if (lock.current) return;
     if (!title.trim()) { setError("Nhập tên học liệu."); return; }
     if (content === "YOUTUBE_LINK" && (!editing || url.trim() !== (material?.current.videoUrl ?? "")) && !validYoutube(url)) {
-      setError("Dán link HTTPS của một video YouTube. Nếu link có &list= hoặc &index=, hãy bỏ phần đó rồi thử lại."); return;
+      setError("Dán link của một video YouTube."); return;
     }
     if (content === "FILE" && !editing && !fileRef) { setError("Chọn tệp."); return; }
     lock.current = true; setBusy(true); setError("");
@@ -99,6 +99,8 @@ export function ModuleItemDialog({ scope, moduleId, item, onClose, onSaved }: {
           if (description.trim()) created = await updateQuizDetails(created.quiz.id, quizDetails(created, title.trim(), description), created.quiz.version);
         }
         await moduleApi.attachQuiz(moduleId, created.quiz.id);
+        // Đóng popup trước rồi mới mở quiz vừa tạo: popup mở từ sidebar module không tự mất khi chuyển trang.
+        onSaved("Đã tạo quiz");
         router.push(scope.kind === "class" ? `/quizzes/${encodeURIComponent(created.quiz.id)}?classId=${encodeURIComponent(scope.classId)}` : `/quizzes/${encodeURIComponent(created.quiz.id)}`);
       } else {
         await materialApi.create(outlinePaths(scope).materials, { kind: content, title: title.trim(), description, orderNo: 0,

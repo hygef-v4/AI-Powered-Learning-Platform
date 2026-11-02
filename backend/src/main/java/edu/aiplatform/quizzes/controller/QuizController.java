@@ -8,8 +8,11 @@ import edu.aiplatform.quizzes.service.QuestionViews.QuestionPage;
 import edu.aiplatform.quizzes.service.QuizAiDraftService;
 import edu.aiplatform.quizzes.service.QuizAuthoringService;
 import edu.aiplatform.quizzes.service.QuizCopyService;
+import edu.aiplatform.quizzes.service.QuizPaperService;
 import edu.aiplatform.quizzes.service.QuizPublicationService;
 import edu.aiplatform.quizzes.service.QuizReferenceMaterials;
+import edu.aiplatform.quizzes.service.QuizViews.BankTag;
+import edu.aiplatform.quizzes.service.QuizViews.PaperPreview;
 import edu.aiplatform.quizzes.service.QuizViews.QuizDetail;
 import edu.aiplatform.quizzes.service.QuizViews.RandomPreview;
 import edu.aiplatform.quizzes.model.Difficulty;
@@ -42,17 +45,19 @@ public class QuizController {
     private final QuizCopyService copies;
     private final QuizAiDraftService drafts;
     private final QuizReferenceMaterials materials;
+    private final QuizPaperService papers;
 
     public QuizController(QuizAuthoringService authoring, QuizPublicationService publication, QuizCopyService copies,
-                          QuizAiDraftService drafts, QuizReferenceMaterials materials) {
+                          QuizAiDraftService drafts, QuizReferenceMaterials materials, QuizPaperService papers) {
         this.authoring = authoring;
         this.publication = publication;
         this.copies = copies;
         this.drafts = drafts;
         this.materials = materials;
+        this.papers = papers;
     }
 
-    /** Tài liệu gắn được vào Quiz hoặc đưa vào popup AI (H8). */
+    /** Tài liệu đưa vào popup AI của Quiz (H8). */
     @GetMapping("/reference-materials")
     public List<SelectableMaterial> referenceMaterials(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
         return materials.forQuiz(actor, id);
@@ -160,9 +165,24 @@ public class QuizController {
         return authoring.deleteInline(actor, id, questionId, version);
     }
 
-    @PostMapping(value = "/review", consumes = "application/json")
-    public QuizDetail review(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @RequestBody JsonNode body) {
-        return publication.review(actor, id, QuestionRequests.versionOnly(body));
+    /** Lưu chế độ đề và quy tắc sinh đề (BR-U10-17). */
+    @PutMapping(value = "/draw-rules", consumes = "application/json")
+    public QuizDetail saveDrawRules(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+                                    @RequestBody JsonNode body) {
+        QuizRequests.DrawRules request = QuizRequests.drawRules(body);
+        return papers.saveRules(actor, id, request.paperMode(), request.rules(), request.version());
+    }
+
+    /** Thẻ trong ngân hàng của môn kèm số câu đang dùng. */
+    @GetMapping("/bank-tags")
+    public List<BankTag> bankTags(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return papers.bankTags(actor, id);
+    }
+
+    /** Bốc thử một đề mẫu theo các quy tắc đã lưu; không lưu gì. */
+    @PostMapping("/paper-preview")
+    public PaperPreview paperPreview(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return papers.preview(actor, id);
     }
 
     @PostMapping(value = "/publish", consumes = "application/json")

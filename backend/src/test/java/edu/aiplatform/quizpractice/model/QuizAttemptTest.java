@@ -27,7 +27,7 @@ class QuizAttemptTest {
     static QuizStudentView view(boolean shuffle, Integer timeLimit, int questions) {
         QuizSettings settings = new QuizSettings(shuffle, shuffle, timeLimit, 2, true, true);
         QuizView quiz = new QuizView(UUID.randomUUID(), QuizScope.CLASS, UUID.randomUUID(), UUID.randomUUID(), 3,
-                "Luyện tập", QuizStatus.OPEN, settings, false, null, List.of(), new BigDecimal(questions));
+                "Luyện tập", QuizStatus.OPEN, settings, false, null, new BigDecimal(questions));
         List<QuizQuestionView> list = IntStream.range(0, questions).mapToObj(i -> new QuizQuestionView(UUID.randomUUID(),
                 QuestionType.MCQ_SINGLE, "Câu " + i, List.of(new QuizOptionView("1", "A"), new QuizOptionView("2", "B"),
                 new QuizOptionView("3", "C"), new QuizOptionView("4", "D")), BigDecimal.ONE)).toList();

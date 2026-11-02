@@ -87,26 +87,6 @@ public class QuizPracticeQueryService {
         return rows;
     }
 
-    /**
-     * Quiz {@code OPEN} gắn tài liệu {@code materialId} cho lớp đang học (F1 bước 5, G4): Learning Material của U13
-     * hiện kèm số lượt đã dùng, điểm cao nhất và nút Làm quiz.
-     */
-    @Transactional(readOnly = true)
-    public List<PracticeQuizRow> byMaterial(Actor actor, UUID classId, UUID materialId) {
-        if (actor == null || actor.role() != Role.STUDENT) {
-            throw ApiException.forbidden("QUIZ_PRACTICE_STUDENT_ONLY");
-        }
-        ClassRef ref = PracticeSupport.call(() -> classes.listOpenClassesOf(actor.accountId())).stream()
-                .filter(c -> c.status() == ClassStatus.OPEN && c.classId().equals(classId))
-                .findFirst().orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
-        List<QuizView> linked = PracticeSupport.call(() -> quizzes.listByMaterial(materialId, classId));
-        Map<UUID, List<QuizAttempt>> mine = attempts.listByAccount(actor.accountId(),
-                        linked.stream().map(QuizView::quizId).toList()).stream()
-                .collect(Collectors.groupingBy(QuizAttempt::quizId));
-        return linked.stream().map(quiz -> row(quiz, ref, mine.getOrDefault(quiz.quizId(), List.of()).stream()
-                .filter(a -> a.classId().equals(classId)).toList())).toList();
-    }
-
     /** Quiz Practice Detail (BR-U11-03): chỉ sinh viên đang học lớp; Quiz đã ngưng chỉ xem khi mình đã có lượt. */
     @Transactional(readOnly = true)
     public PracticeQuizDetail detail(Actor actor, UUID quizId, UUID classId) {
@@ -125,10 +105,11 @@ public class QuizPracticeQueryService {
         UUID inProgress = own.stream().filter(QuizAttempt::inProgress).map(QuizAttempt::id).findFirst().orElse(null);
         String blocked = blockedReason(quiz, ref, used, inProgress);
         return new PracticeQuizDetail(quizId, classId, ref.code(), ref.name(), quiz.title(),
-                view.instructions(), quiz.status(), view.questions().size(), quiz.maxScore(),
+                view.instructions(), quiz.status(), view.questionCount(), quiz.maxScore(),
                 quiz.settings().timeLimitMinutes(), used, max, max == null ? null : Math.max(max - used, 0),
                 showScore ? best(own) : null, showScore, quiz.settings().showCorrectAnswers(),
-                quiz.activityMonitoringEnabled() ? quiz.activityNotice() : null, quiz.referenceMaterialIds(),
+                quiz.activityMonitoringEnabled() ? quiz.activityNotice() : null,
+                quiz.activityMonitoringEnabled() ? quiz.settings().leavePenalty() : null,
                 own.stream().sorted(Comparator.comparingInt(QuizAttempt::attemptNo).reversed())
                         .map(a -> PracticeSupport.row(a, a.snapshot().settings().showScoreAfterSubmit())).toList(),
                 inProgress, blocked == null, blocked);

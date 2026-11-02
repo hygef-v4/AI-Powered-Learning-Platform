@@ -33,21 +33,27 @@ class EvaluationTest {
     }
 
     @Test
-    void publishedChangeKeepsStatusAndHistoryAndNeedsReason() {
+    void finalizedAndPublishedGradesRejectChangesEvenWithReason() {
         var e = evaluation();
         e.save("{}", new BigDecimal("4"), BigDecimal.ZERO, null, "ok", null, actor, now);
         e.finalizeGrade(actor, now);
+        assertThatThrownBy(() -> e.save("{}", new BigDecimal("6"), BigDecimal.ZERO, null, "updated", "correction", actor, now))
+                .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
+                        ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
         e.publish(actor, now);
         assertThatThrownBy(() -> e.save("{}", new BigDecimal("6"), BigDecimal.ZERO, null, null, null, actor, now))
-                .hasMessageContaining("reason");
-        e.save("{}", new BigDecimal("6"), BigDecimal.ZERO, null, "updated", "correction", actor, now);
+                .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
+                        ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
+        assertThatThrownBy(() -> e.overrideMemberScore(BigDecimal.TEN, "correction", actor, now));
+        assertThat(e.memberOverride).isFalse();
         assertThat(e.status()).isEqualTo(EvaluationStatus.PUBLISHED);
-        assertThat(e.history()).hasSize(1);
-        assertThat(e.history().get(0).before()).isEqualByComparingTo("4");
+        assertThat(e.score()).isEqualByComparingTo("4");
+        assertThat(e.feedback).isEqualTo("ok");
+        assertThat(e.history()).isEmpty();
     }
 
     @Test
-    void publishedOldSubmissionIsRetainedButUnpublishedIsSuperseded() {
+    void resubmissionSupersedesOldGradeIncludingPublished() {
         var e = evaluation();
         e.supersede();
         assertThat(e.status()).isEqualTo(EvaluationStatus.SUPERSEDED);
@@ -58,7 +64,7 @@ class EvaluationTest {
         p.finalizeGrade(actor, now);
         p.publish(actor, now);
         p.supersede();
-        assertThat(p.status()).isEqualTo(EvaluationStatus.PUBLISHED);
+        assertThat(p.status()).isEqualTo(EvaluationStatus.SUPERSEDED);
     }
 
     @Test

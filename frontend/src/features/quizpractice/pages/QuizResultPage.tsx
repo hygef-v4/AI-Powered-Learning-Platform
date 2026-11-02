@@ -1,20 +1,26 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useEffect, useState } from "react";
 import { Alert, Button, PageHeader, Section } from "@/shared/ui";
 import { getResult, startAttempt } from "../api";
-import { errorCode, errorMessage, formatDateTime, formatDuration, formatPoints, submitModeText } from "../model/labels";
+import { errorCode, errorMessage, formatDateTime, formatDuration, formatPoints, penaltyResultText, submitModeText } from "../model/labels";
+import { questionIndex } from "../components/QuestionPager";
 import { ResultQuestions } from "../components/ResultQuestions";
 import type { ResultView } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
-/** Màn #45 Quiz Result (UC 52, BR-U11-20, 21): điểm và đáp án theo cài đặt; kết quả luyện tập không vào sổ điểm. */
+/**
+ * Màn #45 Quiz Result (UC 52, BR-U11-20, 21, 33): điểm, quyết định trừ điểm khi rời trang và đáp án theo cài đặt; xem lại mỗi câu một
+ * trang; kết quả luyện tập không vào sổ điểm.
+ */
 export function QuizResultPage({ attemptId }: { attemptId: string }) {
   const router = useRouter();
   const [result, setResult] = useState<ResultView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [questionParam, setQuestionParam] = useUrlState<string>("q", "1", undefined, "replace");
 
   useEffect(() => {
     let active = true;
@@ -59,6 +65,9 @@ export function QuizResultPage({ attemptId }: { attemptId: string }) {
         <Section title="Điểm" icon="check_circle">
           <p className="text-2xl font-bold text-ink" data-testid="result-score">{formatPoints(result.score)} / {formatPoints(result.maxScore)}</p>
           <p className="text-[13px] text-body">Đúng {result.correctCount} · Sai {result.wrongCount} · Bỏ trống {result.blankCount}</p>
+          {result.penalty && penaltyResultText(result.penalty) && (
+            <p className="text-[13px] text-body" data-testid="result-penalty">{penaltyResultText(result.penalty)}</p>
+          )}
           <p className="text-xs text-muted">Practice · không tính vào sổ điểm</p>
         </Section>
       ) : (
@@ -68,7 +77,8 @@ export function QuizResultPage({ attemptId }: { attemptId: string }) {
       )}
       <div className="mt-4">
         {result.showAnswers
-          ? <ResultQuestions questions={result.questions} showScore={result.showScore} />
+          ? <ResultQuestions questions={result.questions} showScore={result.showScore}
+              index={questionIndex(questionParam, result.questions.length)} onIndex={(next) => setQuestionParam(String(next + 1))} />
           : <p className="text-[13px] text-muted">Quiz này không hiện đáp án sau khi nộp.</p>}
       </div>
     </>

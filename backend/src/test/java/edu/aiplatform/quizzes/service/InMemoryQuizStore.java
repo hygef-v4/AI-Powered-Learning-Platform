@@ -1,5 +1,10 @@
 package edu.aiplatform.quizzes.service;
 
+import edu.aiplatform.quizzes.model.DrawRule;
+import edu.aiplatform.quizzes.model.QuestionFingerprint;
+import edu.aiplatform.quizzes.model.QuestionReview;
+import edu.aiplatform.quizzes.model.QuestionStatus;
+import java.time.Instant;
 import edu.aiplatform.quizzes.contract.QuizScope;
 import edu.aiplatform.quizzes.contract.QuizStatus;
 import edu.aiplatform.quizzes.model.DraftStatus;
@@ -31,6 +36,9 @@ class InMemoryQuizStore {
 
     final Map<UUID, Quiz> quizzes = new LinkedHashMap<>();
     final Map<UUID, List<QuizItem>> items = new HashMap<>();
+    final Map<UUID, List<DrawRule>> drawRules = new HashMap<>();
+    final List<QuestionReview> reviews = new ArrayList<>();
+    final Map<UUID, UUID> proposals = new HashMap<>();
     final Map<UUID, Question> questions = new LinkedHashMap<>();
     final Quizzes quizRepository = new Quizzes();
     final Questions questionRepository = new Questions();
@@ -52,7 +60,7 @@ class InMemoryQuizStore {
         public void insert(Quiz quiz) {
             if (quiz.origin() == QuizOrigin.NEW_VERSION && quizzes.values().stream().anyMatch(q ->
                     q.origin() == QuizOrigin.NEW_VERSION && quiz.sourceQuizId().equals(q.sourceQuizId())
-                            && (q.status() == QuizStatus.DRAFT || q.status() == QuizStatus.REVIEWED))) {
+                            && q.status() == QuizStatus.DRAFT)) {
                 throw new DuplicateKeyException("ux_quizzes_open_new_version");
             }
             quizzes.put(quiz.id(), quiz);
@@ -118,9 +126,19 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public List<QuizSummary> listOpenByMaterial(UUID materialId, UUID classId, UUID subjectId) {
-            return quizzes.values().stream().filter(q -> q.status() == QuizStatus.OPEN && q.referenceMaterialIds().contains(materialId))
-                    .map(this::summary).toList();
+        public List<DrawRule> drawRules(UUID quizId) {
+            return drawRules.getOrDefault(quizId, List.of());
+        }
+
+        @Override
+        public void replaceDrawRules(UUID quizId, List<DrawRule> rules) {
+            drawRules.put(quizId, List.copyOf(rules));
+        }
+
+        @Override
+        public List<Quiz> listOpenGenerated(UUID subjectId) {
+            return quizzes.values().stream()
+                    .filter(q -> q.subjectId().equals(subjectId) && q.status() == QuizStatus.OPEN && q.generated()).toList();
         }
 
         @Override
@@ -150,6 +168,10 @@ class InMemoryQuizStore {
         }
 
         private QuizSummary summary(Quiz q) {
+            if (q.generated()) {
+                List<DrawRule> rules = drawRules(q.id());
+                return new QuizSummary(q, rules.stream().mapToInt(DrawRule::questionCount).sum(), QuizSupport.maxScoreOf(rules));
+            }
             List<QuizItem> list = items(q.id());
             return new QuizSummary(q, list.size(), list.stream().map(QuizItem::points).reduce(BigDecimal.ZERO, BigDecimal::add));
         }
@@ -157,13 +179,95 @@ class InMemoryQuizStore {
         private static Quiz withVersion(Quiz q, long version) {
             return new Quiz(q.id(), q.scope(), q.classId(), q.subjectId(), q.sourceQuizId(), q.origin(), q.versionNo(),
                     q.title(), q.instructions(), q.settings(), q.activityMonitoringEnabled(), q.activityNotice(),
-                    q.referenceMaterialIds(), q.status(), q.publishedAt(), q.retiredAt(), q.retiredReason(), q.createdBy(),
+                    q.paperMode(), q.status(), q.publishedAt(), q.retiredAt(), q.retiredReason(), q.createdBy(),
                     q.createdAt(), q.updatedAt(), version);
         }
 
     }
 
     class Questions implements IQuestionRepository {
+
+        private List<Question> open(UUID subjectId, UUID excludeLineage) {
+            return questions.values().stream()
+                    .filter(q -> q.scope() == QuestionScope.BANK && q.subjectId().equals(subjectId)
+                            && !q.lineageId().equals(excludeLineage)
+                            && (q.isDraft() || q.status() == QuestionStatus.PENDING || q.status() == QuestionStatus.ACTIVE))
+                    .toList();
+        }
+
+        @Override
+        public List<PoolEntry> activePool(UUID subjectId) {
+            Map<UUID, Question> latest = new LinkedHashMap<>();
+            questions.values().stream()
+                    .filter(q -> q.scope() == QuestionScope.BANK && q.subjectId().equals(subjectId)
+                            && (q.status() == QuestionStatus.ACTIVE || q.status() == QuestionStatus.RETIRED))
+                    .forEach(q -> latest.merge(q.lineageId(), q, (a, b) -> a.versionNo() >= b.versionNo() ? a : b));
+            return latest.values().stream().filter(q -> q.status() == QuestionStatus.ACTIVE)
+                    .map(q -> new PoolEntry(q.id(), q.lineageId(), q.content().tags(), q.content().difficulty(),
+                            QuestionFingerprint.hash(q.content())))
+                    .toList();
+        }
+
+        @Override
+        public void lockSubject(UUID subjectId) {
+        }
+
+        @Override
+        public Optional<Question> findDuplicate(UUID subjectId, String contentHash, UUID excludeLineage) {
+            return open(subjectId, excludeLineage).stream()
+                    .filter(q -> QuestionFingerprint.hash(q.content()).equals(contentHash)).findFirst();
+        }
+
+        @Override
+        public List<StemEntry> bankStems(UUID subjectId, UUID excludeLineage) {
+            return open(subjectId, excludeLineage).stream().map(q -> new StemEntry(q.id(),
+                    QuestionFingerprint.normalize(q.content().stem()), q.content().stem(), q.status())).toList();
+        }
+
+        @Override
+        public List<List<StemEntry>> duplicateGroups(UUID subjectId) {
+            return List.of();
+        }
+
+        @Override
+        public List<Question> withoutFingerprint(int limit) {
+            return List.of();
+        }
+
+        @Override
+        public void saveFingerprint(Question question) {
+        }
+
+        @Override
+        public void insertReview(QuestionReview review) {
+            reviews.add(review);
+        }
+
+        @Override
+        public Optional<QuestionReview> latestReview(UUID questionId) {
+            return reviews.stream().filter(r -> r.questionId().equals(questionId)).reduce((a, b) -> b);
+        }
+
+        @Override
+        public void insertProposal(UUID questionId, UUID classId, Instant now) {
+            proposals.put(questionId, classId);
+        }
+
+        @Override
+        public Optional<UUID> proposalClass(UUID questionId) {
+            return Optional.ofNullable(proposals.get(questionId));
+        }
+
+        @Override
+        public List<Question> listProposals(UUID classId, UUID createdBy) {
+            return questions.values().stream().filter(q -> classId.equals(proposals.get(q.id()))
+                    && q.createdBy().equals(createdBy)).toList();
+        }
+
+        @Override
+        public boolean deleteProposal(UUID id, long version) {
+            return questions.remove(id) != null;
+        }
 
         @Override
         public Optional<Question> find(UUID id) {
@@ -201,7 +305,10 @@ class InMemoryQuizStore {
             if (current == null || current.version() != question.version()) {
                 return false;
             }
-            questions.put(question.id(), question);
+            questions.put(question.id(), new Question(question.id(), question.lineageId(), question.versionNo(),
+                    question.scope(), question.subjectId(), question.quizId(), question.content(), question.status(),
+                    question.activatedAt(), question.createdBy(), question.createdAt(), question.updatedAt(),
+                    question.version() + 1));
             return true;
         }
 

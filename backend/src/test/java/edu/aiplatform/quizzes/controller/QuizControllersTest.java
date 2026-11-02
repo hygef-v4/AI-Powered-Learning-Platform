@@ -1,5 +1,9 @@
 package edu.aiplatform.quizzes.controller;
 
+import edu.aiplatform.quizzes.contract.LeavePenalty;
+import edu.aiplatform.quizzes.model.QuizPaperMode;
+import edu.aiplatform.quizzes.service.QuestionProposalService;
+import edu.aiplatform.quizzes.service.QuizPaperService;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -79,14 +83,16 @@ class QuizControllersTest {
     private final QuizCopyService copies = mock(QuizCopyService.class);
     private final QuizAiDraftService drafts = mock(QuizAiDraftService.class);
     private final QuizReferenceMaterials materials = mock(QuizReferenceMaterials.class);
+    private final QuizPaperService papers = mock(QuizPaperService.class);
+    private final QuestionProposalService proposals = mock(QuestionProposalService.class);
     private MockMvc mvc;
 
     @BeforeEach
     void setup() {
         ObjectMapper mapper = Jackson2ObjectMapperBuilder.json()
                 .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS).build();
-        mvc = MockMvcBuilders.standaloneSetup(new QuizController(authoring, publication, copies, drafts, materials),
-                        new ClassQuizController(authoring, copies), new SubjectQuizController(authoring))
+        mvc = MockMvcBuilders.standaloneSetup(new QuizController(authoring, publication, copies, drafts, materials, papers),
+                        new ClassQuizController(authoring, copies, proposals), new SubjectQuizController(authoring))
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
                 .setControllerAdvice(new QuizzesExceptionHandler(), new GlobalExceptionHandler()).build();
@@ -100,9 +106,9 @@ class QuizControllersTest {
 
     private QuizDetail detail() {
         QuizInfo info = new QuizInfo(quizId, QuizScope.CLASS, classId, subjectId, null, QuizOrigin.MANUAL, 1, "Luyện tập",
-                null, new QuizSettings(false, false, null, 1, true, false), false, null, List.of(), QuizStatus.DRAFT,
+                null, new QuizSettings(false, false, null, 1, true, false), false, null, QuizPaperMode.FIXED, QuizStatus.DRAFT,
                 null, null, null, NOW, NOW, 0);
-        return new QuizDetail(info, List.of(), BigDecimal.ZERO, true);
+        return new QuizDetail(info, List.of(), List.of(), BigDecimal.ZERO, true);
     }
 
     @Test
@@ -123,8 +129,7 @@ class QuizControllersTest {
         when(authoring.updateDetails(eq(teacher), eq(quizId), any(), eq(4L))).thenReturn(detail());
         mvc.perform(patch("/api/v1/quizzes/{id}", quizId).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"Bài\",\"instructions\":null,\"settings\":" + SETTINGS
-                                + ",\"activityMonitoringEnabled\":false,\"activityNotice\":null,"
-                                + "\"referenceMaterialIds\":[],\"version\":4}"))
+                                + ",\"activityMonitoringEnabled\":false,\"activityNotice\":null,\"version\":4}"))
                 .andExpect(status().isOk());
         ArgumentCaptor<QuizAuthoringService.Details> details = ArgumentCaptor.forClass(QuizAuthoringService.Details.class);
         verify(authoring).updateDetails(eq(teacher), eq(quizId), details.capture(), eq(4L));
@@ -137,7 +142,7 @@ class QuizControllersTest {
     }
 
     @Test
-    void itemsAndReviewErrorsCarryViolations() throws Exception {
+    void itemsAndPublishErrorsCarryViolations() throws Exception {
         UUID question = UUID.randomUUID();
         when(authoring.saveItems(eq(teacher), eq(quizId), any(), eq(1L))).thenReturn(detail());
         mvc.perform(put("/api/v1/quizzes/{id}/items", quizId).contentType(MediaType.APPLICATION_JSON)
@@ -149,12 +154,12 @@ class QuizControllersTest {
         assertThat(items.getValue()).extracting(QuizAuthoringService.ItemInput::points)
                 .containsExactly(new BigDecimal("2.5"), null);
 
-        when(publication.review(teacher, quizId, 2)).thenThrow(new RuleViolationException(HttpStatus.BAD_REQUEST,
-                "QUIZ_REVIEW_FAILED", "x", List.of(new Violation("items[1]", "QUESTION_NOT_ACTIVE", "Câu 1"))));
-        mvc.perform(post("/api/v1/quizzes/{id}/review", quizId).contentType(MediaType.APPLICATION_JSON)
+        when(publication.publish(teacher, quizId, 2)).thenThrow(new RuleViolationException(HttpStatus.BAD_REQUEST,
+                "QUIZ_PUBLISH_FAILED", "x", List.of(new Violation("items[1]", "QUESTION_NOT_ACTIVE", "Câu 1"))));
+        mvc.perform(post("/api/v1/quizzes/{id}/publish", quizId).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"version\":2}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("QUIZ_REVIEW_FAILED"))
+                .andExpect(jsonPath("$.code").value("QUIZ_PUBLISH_FAILED"))
                 .andExpect(jsonPath("$.violations[0].field").value("items[1]"));
     }
 
@@ -265,6 +270,41 @@ class QuizControllersTest {
         verify(drafts).discardForQuiz(teacher, quizId, draft);
         mvc.perform(get("/api/v1/quizzes/{id}/ai-drafts/{d}", quizId, draft)).andExpect(status().isOk());
         verify(drafts).getForQuiz(teacher, quizId, draft);
+    }
+
+    @Test
+    void drawRulesParseStrictly() throws Exception {
+        when(papers.saveRules(eq(teacher), eq(quizId), eq(QuizPaperMode.GENERATED), any(), eq(3L))).thenReturn(detail());
+        mvc.perform(put("/api/v1/quizzes/{id}/draw-rules", quizId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"paperMode\":\"GENERATED\",\"rules\":[{\"tag\":\"Chương 1\",\"difficulty\":\"HARD\","
+                                + "\"questionCount\":4,\"pointsEach\":0.5}],\"version\":3}"))
+                .andExpect(status().isOk());
+        mvc.perform(put("/api/v1/quizzes/{id}/draw-rules", quizId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"paperMode\":\"RANDOM\",\"rules\":[],\"version\":3}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(put("/api/v1/quizzes/{id}/draw-rules", quizId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"paperMode\":\"GENERATED\",\"rules\":[{\"tag\":\"x\"}],\"version\":3}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void reviewEndpointIsGoneAndPenaltySettingsParse() throws Exception {
+        mvc.perform(post("/api/v1/quizzes/{id}/review", quizId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"version\":2}"))
+                .andExpect(status().is4xxClientError());
+        when(authoring.updateDetails(eq(teacher), eq(quizId), any(), eq(4L))).thenReturn(detail());
+        mvc.perform(patch("/api/v1/quizzes/{id}", quizId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Bài\",\"settings\":" + SETTINGS.replace("}",
+                                ",\"leavePenalty\":{\"freeLeaves\":1,\"pointsPerLeave\":0.5,\"maxPenalty\":null,\"minAwaySeconds\":5}}")
+                                + ",\"activityMonitoringEnabled\":true,\"activityNotice\":\"Báo\",\"version\":4}"))
+                .andExpect(status().isOk());
+        ArgumentCaptor<QuizAuthoringService.Details> details = ArgumentCaptor.forClass(QuizAuthoringService.Details.class);
+        verify(authoring).updateDetails(eq(teacher), eq(quizId), details.capture(), eq(4L));
+        assertThat(details.getValue().settings().leavePenalty()).isEqualTo(new LeavePenalty(1, new BigDecimal("0.5"), null, 5));
+        mvc.perform(patch("/api/v1/quizzes/{id}", quizId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Bài\",\"settings\":" + SETTINGS + ",\"activityMonitoringEnabled\":false,"
+                                + "\"referenceMaterialIds\":[],\"version\":4}"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

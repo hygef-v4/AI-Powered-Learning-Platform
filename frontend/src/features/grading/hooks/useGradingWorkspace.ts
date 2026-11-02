@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { gradingApi } from "../api";
-import { checklistOnly, hasPartialPoints, invalidItemScores } from "../components/RubricChecklistPanel";
+import { rubricValues, hasPartialPoints, invalidItemScores } from "../components/RubricChecklistPanel";
 import { message } from "./useResource";
 import { useGradingProposals } from "./useGradingProposals";
 import type {
@@ -13,11 +13,12 @@ import type {
   GradingFormValues,
   ItemScores,
   Rubric,
+  StructuredFeedback,
 } from "../model/types";
 
 const UNSAVED_CHANGES_MESSAGE = "Bạn có thay đổi chưa lưu. Rời bài này?";
 
-/** Biểu mẫu chấm khi mở bài: điểm đưa về checklist (điểm lẻ cũ thành chưa đạt cho tới khi giảng viên tích). */
+/** Opening a grade preserves explicit item scores and historical adjustments. */
 function initialForm(evaluation: Evaluation, rubrics: Rubric[]): GradingFormValues {
   let checks: Checks;
   try {
@@ -25,7 +26,7 @@ function initialForm(evaluation: Evaluation, rubrics: Rubric[]): GradingFormValu
   } catch {
     checks = {};
   }
-  const normalized = checklistOnly(rubrics, checks, evaluation.rubricItemScores ?? {});
+  const normalized = rubricValues(rubrics, checks, evaluation.rubricItemScores ?? {});
   return {
     checks: normalized.checks,
     itemScores: normalized.itemScores,
@@ -49,6 +50,8 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   const [error, setError] = useState("");
   const [dirty, setDirty] = useState(false);
   const evaluation = detail.evaluation;
+  const official = evaluation.state === "FINALIZED" || evaluation.state === "PUBLISHED";
+  const disabled = busy || !detail.current || evaluation.state === "SUPERSEDED" || official;
   const dirtyRef = useRef(dirty);
   const { proposals, proposalsLoaded, pollExhausted, addProposal, resumePolling } = useGradingProposals(evaluation.id, busy, setError);
 
@@ -67,14 +70,23 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   }, []);
 
   function updateForm(patch: Partial<GradingFormValues>) {
+    if (disabled) return;
     setForm((current) => ({ ...current, ...patch }));
     setDirty(true);
   }
 
   async function reload() {
     try {
-      // Keep the unsaved form so a version conflict does not discard the teacher's work.
-      setDetail(await refresh());
+      // Preserve unsaved edits only while grading the same submitted receipt.
+      const refreshed = await refresh();
+      setDetail(refreshed);
+      const receiptChanged = refreshed.evaluation.submissionHash !== evaluation.submissionHash;
+      if (receiptChanged || refreshed.evaluation.state === "FINALIZED" || refreshed.evaluation.state === "PUBLISHED") {
+        setForm(initialForm(refreshed.evaluation, refreshed.rubrics));
+        setDirty(false);
+        dirtyRef.current = false;
+      }
+      if (receiptChanged) resumePolling();
     } catch (error) {
       setError(message(error));
     }
@@ -88,7 +100,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   }
 
   async function save() {
-    if (busy) return;
+    if (disabled) return;
     setBusy(true);
     setError("");
     try {
@@ -121,9 +133,8 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
           : {}),
         version: evaluation.version,
         checkedItemsByRubric: form.checks,
-        // Màn chấm không còn điều chỉnh ngoài rubric (BR-U09-20): điểm bài là tổng mục đạt.
-        adjustment: "0",
-        adjustmentReason: null,
+        adjustment: form.adjustment,
+        adjustmentReason: form.adjustmentReason || null,
         feedback: form.feedback,
         changeReason: form.changeReason || null,
         usedProposalId: form.usedProposalId,
@@ -149,6 +160,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   }
 
   async function requestProposal(input: AiRequest) {
+    if (disabled) return;
     setBusy(true);
     setError("");
     try {
@@ -160,24 +172,33 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     }
   }
 
-  /**
-   * Áp dụng đề xuất AI vào bản nháp: chỉ lấy checklist (mục AI cho đủ điểm là đạt, điểm lẻ thành chưa đạt). Tạm thời không
-   * nhận nhận xét của AI; nhận xét cấu trúc cũ của bài (nếu có) được xoá khi lưu.
-   */
+  /** Applying a proposal changes only the local draft and requires a fresh review. */
   function applyProposal(
     checks: Checks,
-    _feedback: string,
+    feedback: string,
     proposalId: string,
     itemScores: ItemScores = {},
+    structuredFeedback?: StructuredFeedback | null,
   ) {
-    const normalized = checklistOnly(detail.rubrics, checks, itemScores);
+    if (disabled) return;
+    const normalized = rubricValues(detail.rubrics, checks, itemScores);
+    const retainedFeedback = structuredFeedback ?? form.structuredFeedback ?? evaluation.structuredFeedback ?? null;
+    const reviewedItemScores: ItemScores = {};
+    // Legacy proposals contain no new explanations: keep only the old text's item/score baselines.
+    if (!structuredFeedback && retainedFeedback) {
+      for (const { rubricId, itemId } of retainedFeedback.items) {
+        const score = form.reviewedItemScores?.[rubricId]?.[itemId] ?? form.itemScores?.[rubricId]?.[itemId];
+        if (score !== undefined) (reviewedItemScores[rubricId] ??= {})[itemId] = score;
+      }
+    }
     updateForm({
       checks: normalized.checks,
       itemScores: normalized.itemScores,
-      structuredFeedback: null,
-      clearStructuredFeedback: Boolean(form.structuredFeedback || evaluation.structuredFeedback),
+      feedback,
+      structuredFeedback: retainedFeedback,
+      clearStructuredFeedback: false,
       acknowledgedReviewItems: {},
-      reviewedItemScores: {},
+      reviewedItemScores,
       usedProposalId: proposalId,
     });
   }
@@ -192,8 +213,8 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     proposals,
     proposalsLoaded,
     pollExhausted,
-    disabled: busy || !detail.current || evaluation.state === "SUPERSEDED",
-    official: evaluation.state === "FINALIZED" || evaluation.state === "PUBLISHED",
+    disabled,
+    official,
     currentIndex: detail.navigationIds.indexOf(evaluation.id),
     updateForm,
     reload,

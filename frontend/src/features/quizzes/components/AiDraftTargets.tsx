@@ -8,7 +8,7 @@ import {
 } from "../api";
 import { AiDraftDialog, type DraftTargetApi } from "./AiDrafts";
 import { errorMessage, failureLabel, formatDateTime } from "../model/labels";
-import type { AiDraft, AiDraftStatus, QuizDetail, SelectableMaterial } from "../model/types";
+import type { AiDraft, AiDraftStatus, QuizDetail } from "../model/types";
 
 const STATUS_LABELS: Record<AiDraftStatus, string> = {
   PENDING: "AI đang soạn", READY: "Chờ chấp nhận", ACCEPTED: "Đã chấp nhận", DISCARDED: "Đã bỏ", FAILED: "Lỗi",
@@ -128,64 +128,5 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
         <AiDraftDialog api={api} initialDraftId={open.draftId} onClose={close} onAccepted={close} />
       )}
     </Section>
-  );
-}
-
-/**
- * Gắn quiz với học liệu (BR-U10-11, H8): tối đa 10 tài liệu của lớp hoặc môn chứa quiz. Tài liệu đã gắn nhưng không còn
- * trong danh sách vẫn hiện để bỏ gắn.
- */
-export function MaterialRefPicker({ quizId, value, onChange, readOnly }: {
-  quizId: string;
-  value: string[];
-  onChange: (value: string[]) => void;
-  readOnly: boolean;
-}) {
-  const [materials, setMaterials] = useState<SelectableMaterial[] | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    getQuizMaterials(quizId, controller.signal)
-      .then((list) => !controller.signal.aborted && setMaterials(list))
-      .catch(() => !controller.signal.aborted && setFailed(true));
-    return () => controller.abort();
-  }, [quizId]);
-
-  const known = new Set(materials?.map((m) => m.materialId));
-  const missing = value.filter((id) => materials && !known.has(id));
-  const toggle = (id: string) => onChange(value.includes(id) ? value.filter((v) => v !== id) : [...value, id]);
-  const shown = readOnly ? (materials ?? []).filter((m) => value.includes(m.materialId)) : materials ?? [];
-
-  return (
-    <div className="flex flex-col gap-1.5" data-testid="material-ref-picker">
-      <p className="text-xs font-semibold text-body">Gắn với học liệu <span className="font-normal text-muted">· tối đa 10</span></p>
-      {failed && <p className="text-[11px] text-muted">Chưa tải được danh sách học liệu; các học liệu đã gắn vẫn được giữ.</p>}
-      {materials && shown.length === 0 && missing.length === 0 && (
-        <p className="text-[11px] text-muted">{readOnly ? "Chưa gắn học liệu." : "Lớp hoặc môn chưa có học liệu."}</p>
-      )}
-      <ul className="flex flex-col gap-1">
-        {shown.map((m) => {
-          const checked = value.includes(m.materialId);
-          return (
-            <li key={m.materialId}>
-              <label className="inline-flex items-center gap-2 text-[13px]">
-                <input type="checkbox" checked={checked} disabled={readOnly || (!checked && value.length >= 10)}
-                  onChange={() => toggle(m.materialId)} data-testid="material-ref-option" />
-                {m.title}
-              </label>
-            </li>
-          );
-        })}
-        {missing.map((id) => (
-          <li key={id}>
-            <label className="inline-flex items-center gap-2 text-[13px] text-muted">
-              <input type="checkbox" checked disabled={readOnly} onChange={() => toggle(id)} />
-              Học liệu không còn truy cập được
-            </label>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }

@@ -90,7 +90,7 @@ Code viết ngày 2026-10-20 trên `quiz-authoring` sau commit giai đoạn 1 `5
 | F5 Danh sách | `QuizAuthoringService.listSubject` (Quiz List của môn), `.listClass` (Quiz của lớp + Quiz của môn đã phát hành, chỉ xem) |
 | F6 Tạo | `createForSubject`, `createForClass` (cài đặt mặc định, lớp/môn chưa lưu trữ, audit `QUIZ_CREATED`) |
 | F7 Soạn | `updateDetails` (BR-U10-15; bật ghi nhận hoạt động bị chặn khi chưa có thời hạn lưu, E3), `saveItems` (câu ngân hàng `ACTIVE` cùng môn, câu đã ghim được giữ, câu riêng bị bỏ thì xóa), `randomPreview`, `bankQuestions` (E2), `addInline`, `updateInline`, `deleteInline`; mọi thay đổi kèm `version`, Quiz đã duyệt về nháp |
-| F9 Duyệt, phát hành | `QuizPublicationService.review` (lỗi theo câu `items[n]`), `.publish` (lớp `OPEN` hoặc môn `ACTIVE`, kiểm lại câu, version cũ đang mở → `RETIRED` + `IQuizLifecycleListener` trong cùng transaction, phát `quiz.published` sau commit) |
+| F9 Phát hành | `QuizPublicationService.publish` (lỗi theo câu `items[n]`; lớp `OPEN` hoặc môn `ACTIVE`, kiểm lại câu, version cũ đang mở → `RETIRED` + `IQuizLifecycleListener` trong cùng transaction, phát `quiz.published` sau commit) |
 | F10 Ngưng | `QuizPublicationService.retire` (lý do bắt buộc, gọi listener) |
 | F11 Nhân bản, version, copy | `QuizCopyService.cloneQuiz`, `.newVersion` (chỉ từ Quiz đã phát hành; một version đang soạn mỗi chuỗi), `.copySources`, `.copyToClass` (dạy cả hai lớp, cùng môn); câu ngân hàng giữ phiên bản ghim, câu riêng sao mới |
 | F12 Xóa | `QuizAuthoringService.delete` (chưa từng phát hành; xóa kèm câu, câu riêng, đề xuất AI) |
@@ -109,9 +109,9 @@ Domain: `Quiz`, `QuizItem`, `QuizOrigin`, `QuizRules`, `IQuizRepository`; `Quest
 | `PATCH`, `DELETE /api/v1/quizzes/{id}` | Thông tin, cài đặt kèm `version`; xóa `?version=` |
 | `PUT .../items`, `POST .../items:random-preview`, `GET .../bank-questions` | Danh sách câu, bốc thử, chọn tay (E2) |
 | `POST .../inline-questions`, `PATCH`, `DELETE .../inline-questions/{questionId}` | Câu riêng |
-| `POST .../review`, `/publish`, `/retire`, `/clone`, `/versions` | Vòng đời, nhân bản, version mới |
+| `POST .../publish`, `/retire`, `/clone`, `/versions` | Vòng đời, nhân bản, version mới |
 
-Mã lỗi mới: `QUIZ_NOT_FOUND`, `QUIZ_INVALID`, `QUIZ_REVIEW_FAILED` (kèm `violations`), `QUIZ_VERSION_CONFLICT`, `QUIZ_NOT_EDITABLE`, `QUIZ_NOT_DRAFT`, `QUIZ_NOT_REVIEWED`, `QUIZ_NOT_OPEN`, `QUIZ_DELETE_BLOCKED`, `QUIZ_NOT_PUBLISHED`, `QUIZ_VERSION_EXISTS`, `QUIZ_FULL`, `QUIZ_RANDOM_COUNT_INVALID`, `QUIZ_COPY_SUBJECT_MISMATCH`, `CLASS_NOT_OPEN`, `CLASS_ARCHIVED`, `ACTIVITY_RETENTION_NOT_SET`, `QUIZ_REQUEST_INVALID`.
+Mã lỗi mới: `QUIZ_NOT_FOUND`, `QUIZ_INVALID`, `QUIZ_PUBLISH_FAILED` (kèm `violations`), `QUIZ_VERSION_CONFLICT`, `QUIZ_NOT_EDITABLE`, `QUIZ_NOT_DRAFT`, `QUIZ_NOT_OPEN`, `QUIZ_DELETE_BLOCKED`, `QUIZ_NOT_PUBLISHED`, `QUIZ_VERSION_EXISTS`, `QUIZ_FULL`, `QUIZ_RANDOM_COUNT_INVALID`, `QUIZ_COPY_SUBJECT_MISMATCH`, `CLASS_NOT_OPEN`, `CLASS_ARCHIVED`, `ACTIVITY_RETENTION_NOT_SET`, `QUIZ_REQUEST_INVALID`.
 
 ## Frontend (giai đoạn 2)
 
@@ -147,7 +147,7 @@ Mã lỗi mới: `QUIZ_NOT_FOUND`, `QUIZ_INVALID`, `QUIZ_REVIEW_FAILED` (kèm `v
 | BR-U10-14 chọn tay, bốc ngẫu nhiên không trùng, không vượt chỗ trống | `randomPreview`, `bankQuestions`, `searchActive`, `randomActive` | `randomPreviewSkips…`, `activePicksSkipExistingLineages…` |
 | BR-U10-15 cài đặt; theo dõi hoạt động cần thời hạn lưu | `QuizRules.validateSettings`, `updateDetails` | `settingsAreValidatedAndActivityMonitoring…`, `settingsInput` |
 | BR-U10-16 chấm theo đáp án ghim, `MCQ_MULTI` đúng đủ | `QuizScorer` | `scoringNeedsExactAnswerSetAndStudentViewHidesAnswers` |
-| BR-U10-20 vòng đời, sửa Quiz đã duyệt về nháp | `Quiz` | `QuizTest`, `savingItems…ReturnsReviewedQuizToDraft` |
+| BR-U10-20 vòng đời | `Quiz` | `QuizTest`, `savingItems…ReturnsReviewedQuizToDraft` |
 | BR-U10-21 điều kiện duyệt theo câu | `QuizRules.validateForReview` | `reviewListsProblemsPerQuestion…` |
 | BR-U10-22 phát hành, version cũ ngưng, `quiz.published` | `QuizPublicationService.publish` | `publishNeedsOpenClassThenOpensAndAnnounces`, `publishingNewVersionRetires…` |
 | BR-U10-23 ngưng có lý do, listener trong transaction | `retire` | `retireNeedsReasonAndNotifiesListeners` |
@@ -341,3 +341,7 @@ Chưa kiểm: AI soạn câu bằng khóa thật (cần người dùng nhập kh
 ## Thay đổi 2026-10-24
 
 - Thời hạn giữ dữ liệu hoạt động cố định 1 ngày (U08), không còn cài đặt `activity.retentionDays`: bỏ `QuizActivityPolicy` và trường `activityRetentionConfigured`, nên lỗi `ACTIVITY_RETENTION_NOT_SET` không còn xảy ra; bỏ `FakeSettings` trong test.
+
+## Làm lại Quiz (2026-11-01)
+
+Thêm `QuizPaperService`, `QuizPaperPlanner`, `QuestionProposalService`, `QuestionDuplicates`, `QuestionFingerprintBackfill`, `QuestionFingerprint`. Mã lỗi: `QUIZ_REVIEW_FAILED` đổi thành `QUIZ_PUBLISH_FAILED`; thêm `QUESTION_DUPLICATE`, `QUESTION_IS_PROPOSAL`, `QUESTION_NOT_PENDING`, `QUESTION_REASON_INVALID`, `QUESTION_SAME_LINEAGE`, `QUIZ_POOL_INSUFFICIENT`, `POOL_INSUFFICIENT`, `PENALTY_NEEDS_MONITORING`. Các mục G4, "Gắn với học liệu" ở trên là lịch sử, đã bỏ. Chi tiết: [kết quả](../../build-and-test/2026-11-01-quiz-rework-results.md).

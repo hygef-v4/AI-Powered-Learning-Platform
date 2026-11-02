@@ -1,5 +1,7 @@
 # Yêu cầu sản phẩm ALAP — Inception revision 2026-10-13
 
+> Quyết định mới nhất 2026-11-02, FR-007/008: FINALIZED/PUBLISHED khóa chỉnh sửa điểm. Nộp lại bỏ hiệu lực điểm cũ: cá nhân SUPERSEDED bản chấm cũ, nhóm reset về PENDING. Không giữ nhiều lượt chấm nhóm, không đổi DB schema. [Quy tắc và acceptance](2026-11-02-locked-grades.md).
+
 > AS-BUILT synchronization 2026-10-30 at staging@794a4053. Giữ FR IDs và phạm vi đã chốt; source-observed, không thay thế runtime acceptance. Các khác biệt với yêu cầu cũ được ghi tại decision register.
 
 ## 1. Ý định, nguồn và trạng thái
@@ -340,7 +342,8 @@ Giảng viên tùy chọn activityMonitoringEnabled cho Assignment/Quiz, mặc �
 - Server kiểm actor/enrollment/attempt/group/state, dedup và giới hạn tần suất; không thu thập khi policy off.
 - Hiển thị lần/thời gian rời trang và khoảng dữ liệu thiếu; không cộng trùng blur/visibility hoặc tính iframe Draw.io là rời trang.
 - Chỉ dữ liệu trong quyền, nhóm phân biệt từng thành viên; retention hiện tại cố định 1 ngày (ActivityService.RETENTION), thông báo trước khi thu thập.
-- Client event là tín hiệu không đáng tin tuyệt đối. Không tự kết luận gian lận, trừ điểm hoặc nộp bài; không webcam/screenshots/chặn ứng dụng ngoài.
+- Client event là tín hiệu không đáng tin tuyệt đối, có thể bị chặn hoặc giả. Không tự kết luận gian lận hoặc tự nộp bài; không webcam/screenshots/chặn ứng dụng ngoài.
+- **Sửa 2026-11-02 (người dùng chốt, thay bản 2026-11-01):** vẫn không tự trừ điểm. Riêng Quiz, người soạn có thể cấu hình mức trừ gợi ý theo số lần rời trang (số lần miễn, điểm mỗi lần, mức tối đa, thời gian rời tối thiểu). Hệ thống tính mức gợi ý khi nộp, chỉ đếm khoảng rời chắc chắn; không có tín hiệu thì gắn cờ, không có gợi ý. Giảng viên quyết định từng lượt: trừ (được chọn số điểm khác mức gợi ý) hoặc không trừ, kèm lý do; chưa quyết định thì điểm giữ nguyên. Sinh viên được báo quy tắc trước khi làm và thấy quyết định cùng lý do. Quiz vẫn là luyện tập, không vào sổ điểm (D01). Assignment không đổi. Chi tiết: BR-U11-32, 33.
 
 ## 5. Luồng chính
 
@@ -471,7 +474,7 @@ Construction current docs: [README](../../construction/README.md). Stage approva
 ## AS-BUILT behavior clarifications — 2026-10-30
 
 - FR-003: create lớp vẫn DRAFT; OPEN được phép teacher null. Nếu có teacher phải ACTIVE/đúng role; không cấp teaching scope cho người chưa được gán.
-- FR-007/028: Quiz edit OPEN giữ OPEN; retire mọi trạng thái chưa RETIRED, reason mặc định Lưu trữ; reopen theo publication history (publishedAt nullable); REVIEWED vẫn còn.
+- FR-007/028: Quiz edit OPEN giữ OPEN; retire mọi trạng thái chưa RETIRED, reason mặc định Lưu trữ; reopen theo publication history (publishedAt nullable); bỏ REVIEWED của Quiz từ 2026-11-01, phát hành thẳng từ DRAFT (Assignment vẫn có REVIEWED).
 - FR-012/034/035: nhiều institutional keys/provider, chọn theo repository (ACTIVE ưu tiên rồi created_at/id); credential/key reveal theo điều kiện ở trên.
 - FR-025: leader request/reject reason tùy chọn, tối đa 1.000 ký tự.
 - FR-024: U15 activity projection riêng, ngày VN, counts/backup vẫn có; từng nguồn có availability.

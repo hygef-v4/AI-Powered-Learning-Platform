@@ -1,5 +1,7 @@
 # User Stories — Inception revision 2026-10-13
 
+> Latest acceptance 2026-11-02, US-GRD-003/004 and US-GRP-006: FINALIZED/PUBLISHED rejects manual/AI/member edits even with a reason; FINALIZED can publish. Resubmission invalidates the old grade; individual evaluations become SUPERSEDED and group evaluations reset to PENDING. Keep audit/history, without parallel group snapshots or DB changes. [Decision](../requirements/2026-11-02-locked-grades.md).
+
 > Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime. D01–D04 đã chốt 2026-10-15.
 
 **50 MVP stories + 1 extension story**, 66 active UC, 15 logical units. IDs giữ lịch sử; US-ASM-005 và US-PAY-* retired; US-ASM-007 gộp tài liệu thuần vào US-ASM-004.
@@ -1376,7 +1378,7 @@ Given AI credentials, When cấu hình, Then bản ghi được bảo vệ qua U
 
 - **Given** giảng viên có phân công lớp và có dữ liệu activity
 - **When** xem timeline từng sinh viên kể cả bài nhóm
-- **Then** thấy số lần/thời lượng/khoảng thiếu, không tự kết luận gian lận hoặc đổi điểm; ngoài quyền bị từ chối.
+- **Then** thấy số lần/thời lượng/khoảng thiếu, không tự kết luận gian lận; ngoài quyền bị từ chối. Assignment không đổi điểm. Quiz có cấu hình thì mức trừ gợi ý được tính khi nộp, giảng viên quyết định trừ hay không từng lượt kèm lý do, chưa quyết định thì điểm giữ nguyên (sửa FR-039 2026-11-02).
 
 #### Scenario 3 - Activity trong UC 42
 

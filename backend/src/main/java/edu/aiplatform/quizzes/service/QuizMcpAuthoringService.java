@@ -30,7 +30,6 @@ public class QuizMcpAuthoringService implements IMcpToolProvider {
                         +"\"shuffleQuestions\":{\"type\":\"boolean\"},\"shuffleOptions\":{\"type\":\"boolean\"},"
                         +"\"timeLimitMinutes\":{\"type\":[\"integer\",\"null\"]},\"maxAttempts\":{\"type\":[\"integer\",\"null\"]},"
                         +"\"showScoreAfterSubmit\":{\"type\":\"boolean\"},\"showCorrectAnswers\":{\"type\":\"boolean\"}}}"
-                        +",\"referenceMaterialIds\":{\"type\":\"array\",\"maxItems\":20,\"items\":"+McpSchemas.UUID+"}"
                         +",\"agentLabel\":"+McpSchemas.TEXT+",\"questions\":"+questionsSchema(json),"title","requestRef","questions"),McpToolKind.WRITE,McpSchemas.STAFF));
     }
     @Override public McpToolResult call(Actor actor,String name,Map<String,Object> args) {
@@ -49,16 +48,12 @@ public class QuizMcpAuthoringService implements IMcpToolProvider {
             if(!provided.isObject())throw McpInput.invalid();provided.fields().forEachRemaining(e -> ((com.fasterxml.jackson.databind.node.ObjectNode)merged).set(e.getKey(),e.getValue()));
             try{settings=json.treeToValue(merged,QuizSettings.class);}catch(Exception e){throw McpInput.invalid();}
         }
-        List<UUID> materials=List.of();if(in.has("referenceMaterialIds")) {
-            if(!(in.get("referenceMaterialIds") instanceof List<?> list)||list.size()>20)throw McpInput.invalid();
-            materials=list.stream().map(v -> new McpInput(Map.of("id",v)).uuid("id")).distinct().toList();
-        }
-        final var chosen=materials;final var selected=settings;
-        Map<String,Object> semantic=new LinkedHashMap<>(args);semantic.remove("requestRef");semantic.put("settings",selected);semantic.put("referenceMaterialIds",chosen);
+        final var selected=settings;
+        Map<String,Object> semantic=new LinkedHashMap<>(args);semantic.remove("requestRef");semantic.put("settings",selected);
         return new McpToolResult(false,writes.execute(actor,name,in.text("requestRef",null),McpFingerprint.of(json,semantic),() -> {
             var created=in.has("classId")?authoring.createForClass(actor,target,in.text("title",null)):authoring.createForSubject(actor,target,in.text("title",null));
             var changed=authoring.updateDetails(actor,created.quiz().id(),new QuizAuthoringService.Details(in.text("title",null),
-                    in.text("instructions",null),selected,false,null,chosen),created.quiz().version());
+                    in.text("instructions",null),selected,false,null),created.quiz().version());
             var proposal=drafts.saveFromMcp(actor,changed.quiz().id(),changed.quiz().version(),questions,in.text("agentLabel",null));
             return Map.of("quizId",changed.quiz().id().toString(),"proposalId",proposal.id().toString(),"version",changed.quiz().version(),"status","DRAFT","proposalStatus","READY");
         }));

@@ -1,7 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Button, PageHeader, Section, showToast } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { ArchiveItemDialog, ModuleItemDialog } from "../components/MaterialDialogs";
@@ -9,7 +8,6 @@ import { MaterialPreview } from "../components/MaterialPreview";
 import { ModuleNeighbours, useModulePlace, useModuleScope } from "../components/ModulePlace";
 import { contextQuery, materialPath } from "../api";
 import { boardHref, notifyOutlineChanged, useOutlineChanged } from "../model/outline";
-import { learningMaterialSections } from "../slots";
 import { useMaterialResource } from "../hooks/useMaterialResource";
 import type { Material, ModuleScope } from "../model/types";
 
@@ -44,7 +42,6 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
     <ModuleNeighbours scope={scope} previous={place.previous} next={place.next} position="top" />
     <MaterialPreview material={m} classId={classId} />
     {m.description && <Section title="Mô tả"><p className="text-[14px] leading-relaxed whitespace-pre-wrap text-body">{m.description}</p></Section>}
-    {classId && <SlotOutlet slot={learningMaterialSections} props={{ materialId: id, classId }} />}
     <ModuleNeighbours scope={scope} previous={place.previous} next={place.next} />
     {dialog === "edit" && scope && scope.kind !== "student" && <ModuleItemDialog scope={scope} moduleId={m.moduleId} item={{ kind: "material", material: m }}
       onClose={() => setDialog(null)} onSaved={(message) => { setDialog(null); showToast(message); notifyOutlineChanged(); }} />}

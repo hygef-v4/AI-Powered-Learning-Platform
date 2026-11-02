@@ -177,3 +177,7 @@ Các thao tác kiểm thì làm trên trình duyệt (khung trình duyệt của
 | Mở lại học liệu lớp | Đạt; "Bạn đã dùng hết 1/1 lượt làm quiz này." |
 | Giảng viên mở Lượt làm → Sinh viên Một → Xem bài | Đạt; "Dòng thời gian hoạt động": "Rời trang 1 lần · tổng thời gian đã biết 4 giây", khoảng 14:13:18–14:13:22, kèm câu trả lời |
 | Log backend, worker | Không có lỗi |
+
+## Làm lại Quiz (2026-11-01)
+
+Thêm `AttemptActivityAssessor`, `ActivityOutcome`, `ActivitySignal`, `PenaltyDecision`, `QuestionPager`. Mã lỗi: `PENALTY_REASON_INVALID`, `PENALTY_POINTS_INVALID`, `PENALTY_NOT_DECIDABLE`. Mục G4 ở trên là lịch sử, đã bỏ. Chi tiết: [kết quả](../../build-and-test/2026-11-01-quiz-rework-results.md).

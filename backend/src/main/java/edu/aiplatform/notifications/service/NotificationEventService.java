@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class NotificationEventService {
     public static final Map<String,String> SOURCES=Map.ofEntries(
-        Map.entry(EventTypes.ENROLLMENT_ACTIVATED,"U05"),Map.entry(EventTypes.ASSIGNMENT_OPENED,"U07"),Map.entry(EventTypes.GRADE_PUBLISHED,"U09"),Map.entry(EventTypes.QUIZ_PUBLISHED,"U10"),
+        Map.entry(EventTypes.ENROLLMENT_ACTIVATED,"U05"),Map.entry(EventTypes.ASSIGNMENT_OPENED,"U07"),Map.entry(EventTypes.GRADE_PUBLISHED,"U09"),Map.entry(EventTypes.QUIZ_PUBLISHED,"U10"),Map.entry(EventTypes.QUESTION_PROPOSED,"U10"),Map.entry(EventTypes.QUESTION_REVIEWED,"U10"),
         Map.entry(EventTypes.GROUP_MEMBERSHIP_CHANGED,"U12"),Map.entry(EventTypes.GROUP_LEADER_CHANGE_REQUESTED,"U12"),Map.entry(EventTypes.GROUP_LEADER_CHANGED,"U12"),Map.entry(EventTypes.GROUP_LEADER_REQUEST_REJECTED,"U12"),Map.entry(EventTypes.GROUP_SUBMITTED,"U12"),Map.entry(EventTypes.BACKUP_FAILED,"U03"),Map.entry(EventTypes.CLASS_ANNOUNCEMENT_POSTED,"U14"));
     private final RecipientResolver resolver;private final NotificationService notifications;
     public NotificationEventService(RecipientResolver resolver,NotificationService notifications) {this.resolver=resolver;this.notifications=notifications;}
@@ -23,5 +23,6 @@ public class NotificationEventService {
         case ENROLLED->"Bạn đã được ghi danh vào lớp";case ASSIGNMENT_OPENED->"Có bài tập mới mở";case QUIZ_PUBLISHED->"Có Quiz mới";case GRADE_PUBLISHED->"Bạn có điểm mới";
         case DEADLINE_REMINDER->"Bài tập sắp đến hạn";case ANNOUNCEMENT->"Có thông báo mới của lớp";case BACKUP_FAILED->"Sao lưu hệ thống thất bại";
         case LEADER_CHANGE_REQUESTED->"Có yêu cầu đổi trưởng nhóm";case LEADER_CHANGED->"Trưởng nhóm đã thay đổi";case LEADER_REQUEST_REJECTED->"Yêu cầu đổi trưởng nhóm bị từ chối";
-        case GROUP_MEMBERSHIP_CHANGED->"Thành viên nhóm đã thay đổi";case GROUP_SUBMITTED->"Nhóm đã nộp bài";};}
+        case GROUP_MEMBERSHIP_CHANGED->"Thành viên nhóm đã thay đổi";case GROUP_SUBMITTED->"Nhóm đã nộp bài";
+        case QUESTION_PROPOSED->"Có câu hỏi chờ duyệt";case QUESTION_REVIEWED->"Câu hỏi đề xuất đã được xử lý";};}
 }

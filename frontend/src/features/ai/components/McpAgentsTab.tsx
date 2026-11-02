@@ -42,8 +42,8 @@ export function McpAgentsTab() {
           }}
           onUpdate={async (id, label, access) => { await updateMcpCredential(id, label, access); await reload(); }}
           onRevoke={async (id) => { await revokeMcpCredential(id); await reload(); }} />
-        <McpSetupGuide />
       </SettingsCard>}
+      <McpSetupGuide />
     </>
   );
 }

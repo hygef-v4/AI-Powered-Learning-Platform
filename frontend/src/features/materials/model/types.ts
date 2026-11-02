@@ -13,7 +13,7 @@ export type Material = {
 };
 export type MaterialSource = { fileRef?: string; videoUrl?: string };
 export type CreateMaterial = { kind: MaterialKind; title: string; description: string; orderNo: number; source: MaterialSource; moduleId: string };
-export type QuizStatus = "DRAFT" | "REVIEWED" | "OPEN" | "RETIRED";
+export type QuizStatus = "DRAFT" | "OPEN" | "RETIRED";
 /** Quiz gắn trong module; `canManage`: người xem gỡ được khỏi module. */
 export type ModuleQuiz = { quizId: string; title: string; status: QuizStatus; scope: "SUBJECT" | "CLASS"; classId: string | null; canManage: boolean };
 /** Module của môn (U13); học liệu thuộc module qua `Material.moduleId`. */

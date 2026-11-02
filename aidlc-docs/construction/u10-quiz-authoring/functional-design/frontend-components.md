@@ -80,10 +80,23 @@ Route `/manager/*` cho Subject Manager, `/quizzes/*` cho Teacher, Subject Manage
 
 ## Source behavior delta — 2026-10-30
 
-Quiz còn DRAFT/REVIEWED/OPEN/RETIRED. Quiz.edited giữ OPEN khi sửa quiz OPEN chưa có lượt làm; OPEN đã có lượt làm thì không sửa câu (409 QUIZ_HAS_ATTEMPTS, tạo version mới), thông tin chung vẫn sửa được; sửa REVIEWED về DRAFT. Retire mọi trạng thái chưa RETIRED, lý do trống mặc định Lưu trữ. Reopen RETIRED về DRAFT nếu publishedAt null, ngược lại OPEN; đã phát hành mà chuỗi version có bản khác đang OPEN thì 409 QUIZ_OTHER_VERSION_OPEN; điều kiện service vẫn áp dụng. Không suy ra bỏ review hoặc sinh đề theo tag từ góp ý chưa triển khai.
+Quiz có DRAFT/OPEN/RETIRED (bỏ REVIEWED 2026-11-01). Quiz.edited giữ OPEN khi sửa quiz OPEN chưa có lượt làm; OPEN đã có lượt làm thì không sửa câu (409 QUIZ_HAS_ATTEMPTS, tạo version mới), thông tin chung vẫn sửa được; Retire mọi trạng thái chưa RETIRED, lý do trống mặc định Lưu trữ. Reopen RETIRED về DRAFT nếu publishedAt null, ngược lại OPEN; đã phát hành mà chuỗi version có bản khác đang OPEN thì 409 QUIZ_OTHER_VERSION_OPEN; điều kiện service vẫn áp dụng. Sinh đề theo tag: BR-U10-17.
 
 [Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.
 
 ## Quiz reopen HTTP/UI — source 2026-10-30
 
 QuizController POST `/api/v1/quizzes/{id}/reopen` nhận expected version; frontend chỉ hiển thị thao tác theo trạng thái/quyền trả từ server. Source service kiểm RETIRED, version và active container. Retire reason trống dùng Lưu trữ; không trình bày lý do là bắt buộc trên mọi nhánh. Actor-scope/version errors vẫn phải hiển thị, không tự retry mutation.
+
+## Delta 2026-11-01
+
+| Thành phần | Nội dung |
+|---|---|
+| `QuizDetailPage` | Bỏ nút Duyệt; Phát hành từ nháp kèm hộp xác nhận số câu, tổng điểm; Quiz sinh đề ẩn danh sách câu |
+| `DrawRulesPanel` | "Cách lập đề": đề cố định hoặc sinh đề; bảng quy tắc, gợi ý thẻ kèm số câu trong kho, tổng câu và điểm, "Xem thử đề mẫu" |
+| `QuizSettingsPanel` | Thêm "Gợi ý trừ điểm khi rời trang" khi bật ghi nhận hoạt động; bỏ trường tài liệu ẩn |
+| `QuestionListPage` | Lọc từ URL `?status=`; lọc Chờ duyệt thì duyệt, từ chối hàng loạt; lọc Nháp thì kích hoạt hàng loạt; nút "Câu trùng" |
+| `QuestionDetailPage` | Câu `PENDING` chỉ duyệt hoặc từ chối kèm lý do; `SimilarQuestionsAlert`; cảnh báo Quiz thiếu câu khi ngưng |
+| `QuizDetailPage`, slot `QuizDetailSection` | Slot này trước đây đăng ký mà chưa render nên giảng viên không thấy lượt làm; nay render theo lớp của Quiz hoặc `classId` |
+| `QuestionProposalsSection` | Tab Học liệu của lớp (`teacherClassTabs`): đề xuất câu, xem kết quả, sửa và gửi lại, rút đề xuất; nút "Đề xuất vào ngân hàng" trên câu riêng của Quiz lớp |
+| `AiDrafts` | Đổi nhãn thành "Tài liệu nguồn cho AI" |

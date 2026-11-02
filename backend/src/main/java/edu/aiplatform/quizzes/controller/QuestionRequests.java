@@ -5,6 +5,7 @@ import edu.aiplatform.quizzes.contract.QuestionType;
 import edu.aiplatform.quizzes.model.Difficulty;
 import edu.aiplatform.quizzes.model.QuestionContent;
 import edu.aiplatform.quizzes.model.QuestionOption;
+import edu.aiplatform.quizzes.service.QuestionBankService;
 import edu.aiplatform.shared.error.ApiException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import org.springframework.util.MultiValueMap;
 
 /** Đọc JSON của API ngân hàng câu hỏi: field lạ, sai kiểu → {@code 400 QUESTION_REQUEST_INVALID}. */
@@ -20,11 +22,44 @@ final class QuestionRequests {
     private static final Set<String> CONTENT_FIELDS = Set.of("type", "stem", "options", "correctOptionIds",
             "explanation", "defaultPoints", "difficulty", "tags");
     private static final Set<String> QUERY_FIELDS = Set.of("type", "difficulty", "status", "q", "page", "size");
+    private static final int MAX_BULK = 200;
 
     private QuestionRequests() {
     }
 
     record Update(QuestionContent content, long version) {
+    }
+
+    record Reject(String reason, long version) {
+    }
+
+    record Bulk(List<QuestionBankService.ReviewItem> items, String reason) {
+    }
+
+    static Reject reject(JsonNode body) {
+        fields(body, Set.of("reason", "version"));
+        return new Reject(text(body, "reason", true), version(body));
+    }
+
+    /** Danh sách {id, version}, tối đa 200 câu mỗi lần. */
+    static Bulk bulk(JsonNode body) {
+        fields(body, Set.of("items", "reason"));
+        JsonNode list = array(body, "items");
+        if (list.isEmpty() || list.size() > MAX_BULK) {
+            throw invalid("Mỗi lần xử lý 1–200 câu");
+        }
+        List<QuestionBankService.ReviewItem> items = new ArrayList<>();
+        for (JsonNode node : list) {
+            fields(node, Set.of("id", "version"));
+            UUID id;
+            try {
+                id = UUID.fromString(text(node, "id", true));
+            } catch (IllegalArgumentException malformed) {
+                throw invalid("id cần là mã định danh");
+            }
+            items.add(new QuestionBankService.ReviewItem(id, version(node)));
+        }
+        return new Bulk(items, text(body, "reason", false));
     }
 
     static QuestionContent create(JsonNode body) {
