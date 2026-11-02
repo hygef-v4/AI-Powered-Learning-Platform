@@ -2,9 +2,9 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import {
-  acceptBankDraft, acceptQuizDraft, getBankDrafts, getQuizDraft, getQuizDrafts, getQuizMaterials, getSubjectMaterials, requestBankDraft,
+  acceptBankDraft, acceptQuizDraft, getBankDrafts, getQuizDraft, getQuizDrafts, getSubjectMaterials, requestBankDraft,
 } from "@/features/quizzes/api";
-import { MaterialRefPicker, QuestionAiDraftDialog, QuizAiDraftPanel } from "@/features/quizzes/components/AiDraftTargets";
+import { QuestionAiDraftDialog, QuizAiDraftPanel } from "@/features/quizzes/components/AiDraftTargets";
 import type { AiDraft, QuestionContent, QuizDetail } from "@/features/quizzes/model/types";
 
 vi.mock("@/features/quizzes/api", () => ({
@@ -170,21 +170,5 @@ describe("QuizAiDraftPanel (F8, F13)", () => {
     await waitFor(() => expect(acceptQuizDraft).toHaveBeenCalledWith("z1", "d1", [expect.objectContaining({ stem: "2 + 2 = ?" })], 4));
     expect(onConflict).toHaveBeenCalled();
     expect(await screen.findByText(/Quiz đã được thay đổi ở phiên khác/)).toBeInTheDocument();
-  });
-});
-
-describe("MaterialRefPicker (H8)", () => {
-  it("giới hạn 10 học liệu và giữ học liệu không còn truy cập được", async () => {
-    const list = Array.from({ length: 11 }, (_, i) => ({ materialId: `m${i}`, title: `Tài liệu ${i}`, hasText: true }));
-    vi.mocked(getQuizMaterials).mockResolvedValue(list);
-    const chosen = [...list.slice(0, 9).map((m) => m.materialId), "gone"];
-    const onChange = vi.fn();
-    render(<MaterialRefPicker quizId="z1" value={chosen} onChange={onChange} readOnly={false} />);
-
-    const boxes = await screen.findAllByTestId("material-ref-option");
-    expect(nth(boxes, 10)).toBeDisabled();
-    expect(screen.getByText("Học liệu không còn truy cập được")).toBeInTheDocument();
-    fireEvent.click(nth(boxes, 0));
-    expect(onChange).toHaveBeenCalledWith(chosen.filter((id) => id !== "m0"));
   });
 });

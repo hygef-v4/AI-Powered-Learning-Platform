@@ -1,7 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Button, PageHeader, Section, showToast } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { ArchiveItemDialog, ModuleItemDialog } from "../components/MaterialDialogs";
