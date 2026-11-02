@@ -200,9 +200,18 @@ class GroupRepositoriesIntegrationTest {
         assertThat(documents.updateSection(documents.lockSection(doc.id(), section.id()).orElseThrow().unlocked())).isTrue();
         documents.insertRevision(new SectionRevision(UUID.randomUUID(), section.id(), studentB, blocks, NOW.plusSeconds(1),
                 SectionRevision.Kind.IMPORT));
+        GroupSection relock = documents.lockSection(doc.id(), section.id()).orElseThrow();
+        assertThat(documents.updateSection(relock.lockedBy(studentA, NOW.plusSeconds(2)))).isTrue();
+        assertThat(documents.lockedContributors(doc.id()).get(section.id())).as("ghi công theo lịch sử tới lúc chốt")
+                .containsExactly(studentA, studentB);
+        documents.insertRevision(new SectionRevision(UUID.randomUUID(), section.id(), teacher, blocks, NOW.plusSeconds(3)));
+        assertThat(documents.lockedContributors(doc.id()).get(section.id())).as("bản sau lúc chốt không được ghi công")
+                .containsExactly(studentA, studentB);
+        assertThat(documents.updateSection(documents.lockSection(doc.id(), section.id()).orElseThrow().unlocked())).isTrue();
+        assertThat(documents.lockedContributors(doc.id())).isEmpty();
         assertThat(documents.listRevisions(section.id(), 10)).extracting(SectionRevision::kind)
-                .containsExactly(SectionRevision.Kind.IMPORT, SectionRevision.Kind.DONE);
-        UUID firstRevision = documents.listRevisions(section.id(), 10).get(1).id();
+                .containsExactly(SectionRevision.Kind.DONE, SectionRevision.Kind.IMPORT, SectionRevision.Kind.DONE);
+        UUID firstRevision = documents.listRevisions(section.id(), 10).get(2).id();
         assertThat(documents.findRevision(section.id(), firstRevision)).isPresent();
         assertThat(documents.findRevision(UUID.randomUUID(), firstRevision)).isEmpty();
         GroupPeerReviewRepository peer = new GroupPeerReviewRepository(JdbcClient.create(appDataSource));

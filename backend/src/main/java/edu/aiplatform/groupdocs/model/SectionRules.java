@@ -35,8 +35,14 @@ public final class SectionRules {
         return actor.equals(section.claimedBy()) || leader || teacher ? null : "SECTION_RELEASE_FORBIDDEN";
     }
 
-    /** Mọi thành viên tiếp quản được mục người khác đang giữ (BR-U12-33); mục chưa ai giữ thì nhận như thường. */
-    public static String canTakeOver(GroupSection section, UUID actor) {
+    /**
+     * Chỉ trưởng nhóm tiếp quản mục người khác đang giữ (BR-U12-33); thành viên thường chỉ nhận mục trống. Mục chưa ai
+     * giữ thì nhận như thường.
+     */
+    public static String canTakeOver(GroupSection section, boolean leader) {
+        if (!leader) {
+            return "GROUP_DOC_LEADER_ONLY";
+        }
         if (section.status() != Status.CLAIMED) {
             return "SECTION_NOT_CLAIMED";
         }

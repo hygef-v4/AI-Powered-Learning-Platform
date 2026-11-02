@@ -169,8 +169,8 @@ public class GroupSectionService {
     }
 
     /**
-     * Tiếp quản mục người khác đang giữ (BR-U12-33): bản nháp đã lưu của người trước được giữ và ghi vào lịch sử,
-     * người mới làm tiếp từ đó. Người trước lưu tiếp sẽ nhận {@code 409 SECTION_NOT_HELD}.
+     * Trưởng nhóm tiếp quản mục thành viên khác đang giữ (BR-U12-33): bản nháp đã lưu của người trước được giữ và ghi
+     * vào lịch sử, trưởng nhóm làm tiếp từ đó. Người trước lưu tiếp sẽ nhận {@code 409 SECTION_NOT_HELD}.
      */
     @Transactional
     public SectionView takeOver(Actor actor, UUID documentId, UUID sectionId) {
@@ -181,7 +181,7 @@ public class GroupSectionService {
         if (actor.accountId().equals(section.claimedBy())) {
             return SectionView.of(section, actor.accountId());
         }
-        refuse(SectionRules.canTakeOver(section, actor.accountId()));
+        refuse(SectionRules.canTakeOver(section, ctx.leader()));
         Instant now = clock.instant();
         UUID previous = section.claimedBy();
         if (section.draftBlocks() != null) {
@@ -194,7 +194,10 @@ public class GroupSectionService {
         return SectionView.of(taken, actor.accountId());
     }
 
-    /** Trưởng nhóm chốt mục đã Xong (BR-U12-39): không ai nhận, giao, tiếp quản được tới khi mở chốt. */
+    /**
+     * Trưởng nhóm chốt mục đã Xong (BR-U12-39): ghi công cho mọi người từng làm mục (tác giả các bản lịch sử tới lúc
+     * chốt); không ai nhận, giao, tiếp quản được tới khi mở chốt.
+     */
     @Transactional
     public SectionView lock(Actor actor, UUID documentId, UUID sectionId) {
         GroupDocContext ctx = access.read(actor, documentId);
@@ -206,9 +209,10 @@ public class GroupSectionService {
         }
         refuse(SectionRules.canLock(section));
         GroupSection locked = save(section.lockedBy(actor.accountId(), clock.instant()));
-        record(actor, "GROUP_SECTION_LOCKED", locked, Map.of());
+        List<UUID> contributors = documents.lockedContributors(documentId).getOrDefault(locked.id(), List.of());
+        record(actor, "GROUP_SECTION_LOCKED", locked, Map.of("contributors", contributors.size()));
         push(documentId, "section.locked", locked);
-        return SectionView.of(locked, actor.accountId());
+        return SectionView.of(locked, actor.accountId(), contributors);
     }
 
     @Transactional
@@ -336,7 +340,7 @@ public class GroupSectionService {
             return;
         }
         switch (code) {
-            case "SECTION_RELEASE_FORBIDDEN" -> throw ApiException.forbidden(code);
+            case "SECTION_RELEASE_FORBIDDEN", "GROUP_DOC_LEADER_ONLY" -> throw ApiException.forbidden(code);
             case "SECTION_NOT_HELD" -> throw ApiException.conflict(code, "Bạn không giữ mục này");
             case "SECTION_NOT_CLAIMED" -> throw ApiException.conflict(code, "Mục không có ai giữ");
             case "SECTION_LOCKED" -> throw ApiException.conflict(code, "Mục đã được trưởng nhóm chốt");
@@ -369,16 +373,25 @@ public class GroupSectionService {
                 AuditResult.SUCCESS, null, details, clock.instant()));
     }
 
-    /** Mục trả ra ngoài; bản nháp chỉ người giữ thấy (BR-U12-34). */
+    /**
+     * Mục trả ra ngoài; bản nháp chỉ người giữ thấy (BR-U12-34). {@code contributorIds}: người được ghi công khi mục đã
+     * chốt (BR-U12-39), theo thứ tự đóng góp đầu tiên; mục chưa chốt thì rỗng.
+     */
     public record SectionView(UUID id, String partId, String title, int orderNo, GroupSection.Status status, UUID holderId,
                               UUID assignedBy, List<DocumentBlock> publishedBlocks, List<DocumentBlock> draftBlocks,
-                              Instant draftSavedAt, UUID lastAuthorId, long version, UUID lockedBy, Instant lockedAt) {
+                              Instant draftSavedAt, UUID lastAuthorId, long version, UUID lockedBy, Instant lockedAt,
+                              List<UUID> contributorIds) {
 
         public static SectionView of(GroupSection s, UUID viewer) {
+            return of(s, viewer, List.of());
+        }
+
+        public static SectionView of(GroupSection s, UUID viewer, List<UUID> contributors) {
             boolean holder = viewer != null && viewer.equals(s.claimedBy());
             return new SectionView(s.id(), s.partId(), s.title(), s.orderNo(), s.status(), s.claimedBy(), s.assignedBy(),
                     hideFiles(s.publishedBlocks()), holder ? hideFiles(s.draftBlocks()) : null,
-                    holder ? s.draftSavedAt() : null, s.lastAuthorId(), s.version(), s.lockedBy(), s.lockedAt());
+                    holder ? s.draftSavedAt() : null, s.lastAuthorId(), s.version(), s.lockedBy(), s.lockedAt(),
+                    s.locked() && contributors != null ? List.copyOf(contributors) : List.of());
         }
 
         /** Không trả {@code fileId} của U03 cho trình duyệt; ảnh mở theo id block (như bài cá nhân). */
