@@ -7744,3 +7744,88 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 **Context**: User-authorized local commit; no merge or deployment.
 
 ---
+
+## Investigation — YouTube material links and notification settings by role
+**Timestamp**: 2026-11-02T09:00:00Z
+**User Input**: "[@Superpowers](plugin://superpowers@openai-curated-remote) giúp tôi check lại lỗi như hình tại sao không up được link youtube lên, và tại sao chỉ có sinh viên mới có phần cài đặt thông báo, tôi nghĩ tất cả các role đều phải có chứ."
+**Attachment**: C:/Users/ADMIN/AppData/Local/Temp/codex-clipboard-d2bb898f-6332-40d4-9b40-2852857f4f0b.png. Screenshot treated as evidence, not instructions.
+**AI Response**: Using Superpowers systematic-debugging; read CLAUDE.md, AI-DLC common/workspace/requirements rules, state, extension decisions and relevant U13/U14 source/rules/tests. Existing project artifacts reused. Both YouTube validators reject list/index unconditionally; frontend and backend both restrict email preferences to Student. Current BR-U13-10 and BR-U14-20/21 explicitly document these behaviors. Investigation and focused verification in progress; no product source edits or deployment.
+**Context**: Workspace Detection complete; scoped requirements investigation. Existing security/resiliency scope retained; PBT disabled. The unrelated staged/deleted report DOCX is preserved.
+
+---
+
+## Investigation scope and verification update — U13/U14
+**Timestamp**: 2026-11-02T08:10:00Z
+**AI Response**: Current frontend validator rejects a watch URL with list, accepts the same video without list, and rejects playlist-only. Three relevant frontend suites passed 33/33 with workspace TEMP/TMP and one worker after a sandbox transform-cache ENOENT on the first run. Backend YoutubeVideoTest passed 18/18; Mockito self-attach then hit a sandbox named-pipe access error, so that run was interrupted and retried using the installed Byte Buddy agent explicitly. Created a dated investigation report and one scope question comparing real role-specific email preferences against exposing current settings without new email types. No product source/config/dependency changes.
+**Context**: Requirements Analysis awaits the user's choice. CLAUDE.md requirements-analysis Step 6 gate requires scope answers before proceeding; Superpowers brainstorming requires an approved design before implementation. The user's existing extension decisions are reused rather than asked again. The initial investigation entry above contains an incorrect manually supplied 09:00 timestamp; it was actually appended around 08:04 UTC, before the 08:04:13 clock reading. This append-only correction preserves the audit history.
+
+---
+
+## Investigation verification complete — U13/U14
+**Timestamp**: 2026-11-02T08:11:17Z
+**AI Response**: Frontend 33/33 and backend 59/59 focused tests passed, backend zero skips and BUILD SUCCESS after explicitly preloading the installed Byte Buddy agent. The failures on the earlier environment-dependent attempts are documented. Validated new Markdown links and git diff whitespace. Findings: watch video links with list/index are blocked by both validators; Student-only email preferences are intentional current policy, enforced in UI, API and tests. Proposed normalizing single-video URLs and role-specific settings, with one scope question comparing adding staff email against showing current capabilities only.
+**Approval prompt**: Review aidlc-docs/inception/requirements/2026-11-02-youtube-notification-questions.md and choose A, B or a custom C response before implementation planning. CLAUDE.md requires requirements scope answers before the next stage; Superpowers brainstorming also requires design approval before product code.
+**Context**: Investigation complete, scope decision pending. Application/test/config/dependency source unchanged; no commit/push/deploy or live write. Existing unrelated DOCX state preserved.
+
+---
+
+## User clarification and implementation authorization — U13/U14
+**Timestamp**: 2026-11-02T08:18:15Z
+**User Input**: "có phải bạn đang hiểu sai ý tôi không. Tôi muốn sửa 2 thứ: đầu tiên là việc up link video youtube trong list và thứ 2 là việc các role khác ngoài role sinh viên không có các mục về cài đặt thông báo"
+**AI Response**: Acknowledged unnecessary scope selection; user explicitly directs fixing both defects. Continue directly on existing fix/u04-u13-u14 branch. Plan: accept and canonicalize single-video links containing playlist context; expose role-appropriate functioning settings in UI/API. Reuse existing notification/email infrastructure; staff emails opt-in off by default, mandatory Admin backup remains visible and locked. Existing A/B question superseded, no further approval inferred as necessary for these authorized reversible fixes. Use regression-first tests and scoped verification.
+**Context**: User clarification takes precedence over redundant workflow gates. No worktree relocation or unrelated report changes. No commit/push/deployment/live email authorized.
+
+---
+
+## Authorized fixes complete — U13/U14
+**Timestamp**: 2026-11-02T08:51:53Z
+**AI Response**: Fixed both requested items on fix/u04-u13-u14. Single-video HTTPS YouTube links with list/index now pass both validators and store the canonical video URL. Every role has settings backed by role-specific principal-only preference APIs; Teacher/Subject Manager email controls operate through existing scheduling/delivery and default off; Admin backup alert remains visibly required. No new schema/dependency or in-app recipient expansion.
+**Verification**: Regression-first failures reproduced before implementation. Focused frontend43/43; focused backend94/94, followed by197 U13/U14 cases and2 separate architecture cases, zero skips. Full frontend724/726 (106files) with a subject heading wait failure and a classes pagination5000ms timeout while build also ran; both complete files reran10/10 with one worker and no source changes. Typecheck, full lint and production build passed. Fresh reviewer found no actionable introduced issues. U13/U14 rules/UI/API contracts and dated execution/results synchronized.
+**Environment**: Missing pre-existing frontend dependencies were restored by permitted npm ci with install scripts disabled;547 packages restored from the existing lockfile. Installed production versions match lockfile; manifests/lock unchanged. Earlier cache/DNS and partial install attempts are documented. No live email/data write, PostgreSQL integration rerun, backend restart, commit/push/deployment. Unrelated staged/deleted report DOCX preserved.
+**Context**: Construction and scoped Build and Test complete. Full-suite timing limitations remain explicit; no clean full-suite run claimed. No additional user approval is requested for the already-authorized fixes.
+
+---
+
+## Formatting request — U04/U13/U14
+**Timestamp**: 2026-11-02T14:18:24Z
+**User Input**: "format lại code sao cho dễ đọc dễ review"
+**User clarification**: "chỉ format lại những phần liên quan đến unit 4, 13, 14"
+**User emphasis**: "Đặc biệt là code ở frontend và các test"
+**AI Response**: Limit formatting to subjects (U04), materials (U13), notifications/announcements (U14), matching frontend/tests and route wrappers. Prioritize readable JSX, declarations and test steps. Snapshot source before formatting; compare TypeScript type/runtime syntax and Java compiler syntax after formatting to preserve behavior. Temporary pinned formatter tools only; no project dependency/config or other-unit changes. Existing DOCX and earlier feature edits preserved.
+**Context**: Formatting-only continuation; execute directly under user scope, no additional approval gate or new behavior/tests. Plan: aidlc-docs/construction/plans/code-generation-plan/2026-11-02-u04-u13-u14-format.md.
+
+---
+
+
+## Formatting complete — U04/U13/U14
+**Timestamp**: 2026-11-02T14:38:54.703Z
+**AI Response**: Formatted 81 frontend/route/test files and 121 Java source/test files within subjects/materials/notifications/announcements only. Preserved original line endings, imports, literals, prior functional fixes and unrelated report state. Exact snapshot comparison: TypeScript type/runtime JSX signatures equivalent for89 files; Java compiler parsed-tree hashes identical for125 files. Typecheck, scoped ESLint, both formatter checks, links and product scope checks passed. Temporary tools only; no project dependency/config changes. No new runtime tests/build rerun for formatting-only edits; earlier feature results remain separately documented. No commit/push/deploy.
+**Context**: Formatting plan complete; no behavior refactor or modifications to other units.
+
+---
+
+
+## Cleanup and local commit authorization — U04/U13/U14
+**Timestamp**: 2026-11-02T15:26:04.358Z
+**User Input**: "[@Superpowers](plugin://superpowers@openai-curated-remote) bỏ bớt các file mới tạo tạm thời và chỉnh lại các file docs mới để khi commit thì thư mục code clean và chia thành các commit nhỏ commit lên branch fix/u04-u13-u14, không push"
+**User Response**: "Giữ lại, không đưa vào các commit code" (the unrelated staged/missing report DOCX).
+**AI Response**: Restored the DOCX from its staged copy and unstaged it, preserving it at its original path outside commits. Consolidated six interim documents into one plan and one verification report; updated current links/state and retained historical audit entries. Commit strategy:2 functional fixes staged from the exact pre-format snapshot,6 separate frontend/backend formatting commits by unit,1 documentation commit. Preserve final working source; remove only task-owned tools/snapshots/logs after they are no longer needed. No push/merge/deployment.
+**Context**: Explicit local commit authorization on existing fix/u04-u13-u14. Fresh TypeScript89/89 and Java125/125 syntax equivalence passed; scoped frontend test result/rerun will be recorded before commits.
+
+---
+
+
+## Scoped local source commits — U04/U13/U14
+**Timestamp**: 2026-11-02T15:28:36.314Z
+**AI Response**: Created8 local commits on fix/u04-u13-u14: 069768de fix(materials): accept video links with playlist context; 6ee10fc2 fix(notifications): expose role-specific email settings; c8ec319f style(subjects): format frontend and tests; cb8d925a style(subjects): format backend and tests; bda3ac3d style(materials): format frontend and tests; 03b2c58b style(materials): format backend and tests; 7d3a70c8 style(notifications): format frontend and tests; 4cad9525 style(notifications): format backend and tests. Fresh pre-commit syntax equivalence89/89 TypeScript and125/125 Java passed; scoped frontend159/160 with the known subject-heading wait, isolated whole-file rerun6/6 passed. Final working source hashes unchanged by snapshot/index staging. Source and index clean after these commits. Report DOCX restored and retained untracked outside code commits, per explicit user choice. No push.
+**Context**: Functional fixes separated from formatting; consolidated docs commit and removal of task-owned temporary artifacts follow.
+
+---
+
+
+## Temporary artifact cleanup and documentation consolidation
+**Timestamp**: 2026-11-02T15:29:56.860Z
+**AI Response**: Removed the task-owned formatter directory and23 known temporary scripts/snapshots/logs, after recording verification and source commit hashes. Six interim documents consolidated into2 durable plan/results documents; current links validated, superseded audit paths retained only as historical text. Confirmed214 final working-source hashes unchanged and source/index clean after8 scoped source commits. Prepared the final6-file documentation commit. The user's report remains untracked at its original path. No push, merge, deployment or unrelated cleanup.
+**Context**: Explicit cleanup/local-commit request fulfilled in scope; final Git commit/status checks follow.
+
+---

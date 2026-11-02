@@ -1,5 +1,9 @@
 # AI-DLC State Tracking
 
+## U04/U13/U14 fixes and formatting — 2026-11-02
+
+U13 accepts a single-video YouTube link with list/index and stores its canonical URL. U14 exposes role-specific settings for every role; new staff email is opt-in and the Admin backup alert remains required. U04/U13/U14 source/tests were formatted with syntax-equivalence checks. User requested cleanup and small local commits on fix/u04-u13-u14, with no push. [Plan](construction/plans/code-generation-plan/2026-11-02-u04-u13-u14.md), [verification and limits](construction/build-and-test/2026-11-02-u04-u13-u14-results.md). Prior full frontend 724/726; two timing failures reran 10/10 separately. Backend 197 plus 2 architecture cases passed; typecheck/lint/build and formatting checks passed. Fresh pre-commit syntax checks matched 89 TypeScript/TSX and 125 Java files; scoped frontend 159/160, with the existing subject-heading wait rerun 6/6 in isolation. Eight source commits separate 2 fixes from 6 formatting groups; documentation is consolidated and task-owned temporary artifacts are removed. No push. Existing security/resiliency scope retained; PBT disabled. Unrelated report DOCX retained outside the commits.
+
 ## Staging check fixes — 2026-11-02
 
 Findings of the `staging` check, logged as KAN-178 to KAN-182 and fixed on `fix/staging-check-2026-11-02`: `next` 16.4.3; `echarts` and `uuid` overrides under `pptx-preview`; class quiz sidebar without `classId`; audit labels; leftover cleanup. Frontend `npm ci`, lint, typecheck, 700 tests and build passed; `npm audit --omit=dev` found 0 vulnerabilities. Backend code unchanged. Charts with no explicit series color show no bars in `pptx-preview`, with `echarts` 5 and 6 alike. Not pushed or deployed.
