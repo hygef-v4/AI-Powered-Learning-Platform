@@ -36,11 +36,10 @@ export const saveDraft = (id: string, sectionId: string, version: number, blocks
 export const finishSection = (id: string, sectionId: string) =>
   apiFetch<SectionView>(`${section(id, sectionId)}:done`, { method: "POST" });
 
-export const lockSection = (id: string, sectionId: string) =>
-  apiFetch<SectionView>(`${section(id, sectionId)}:lock`, { method: "POST" });
+/** Trưởng nhóm chốt phân công cho cả tài liệu (FB-U12-01). */
+export const lockAssignment = (id: string) => apiFetch<{ lockedBy: string; lockedAt: string }>(`${doc(id)}/assignment:lock`, { method: "POST" });
 
-export const unlockSection = (id: string, sectionId: string) =>
-  apiFetch<SectionView>(`${section(id, sectionId)}:unlock`, { method: "POST" });
+export const unlockAssignment = (id: string) => apiFetch<void>(`${doc(id)}/assignment:unlock`, { method: "POST" });
 
 export const getRevisions = (id: string, sectionId: string) => apiFetch<RevisionView[]>(`${section(id, sectionId)}/revisions`);
 

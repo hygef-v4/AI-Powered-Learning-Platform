@@ -193,3 +193,12 @@ BR đã chốt nên không sửa `business-rules.md`; đã trả về đúng b�
 - **Bỏ tiếp quản** (trái BR-U12-33): gỡ `GroupSectionService.takeOver`, `SectionRules.canTakeOver`, `GroupSection.takenOverBy`, API `:take-over`, nút và hộp thoại, trạng thái "Đã bị tiếp quản" của trình soạn. Nhả và giao lại vẫn bỏ bản nháp theo BR-U12-36.
 - **Chốt mục (FB-U12-01)**: người phụ trách là `lastAuthorId`, hiện "Phụ trách: …"; bỏ `lockedContributors` và `SectionView.contributorIds`.
 - **Test:** bỏ test tiếp quản và ghi công; e2e `u12c` kiểm mục đã có người nhận thì kể cả trưởng nhóm không nhận được, API tiếp quản không còn, chốt ghi người phụ trách.
+
+## Phân công rồi chốt (FB-U12-01, 2026-11-02)
+
+Thay chốt từng mục. Nhánh `fix/u12-follow-frozen-br`.
+
+- **Migration** `groups/V20261102_1200__group_assignment_phase.sql`: `group_documents.assignment_locked_by/at`, `group_document_sections.assignee_id`; dữ liệu cũ: người phụ trách = người giữ hoặc người làm cuối, tài liệu đã có người làm coi như đã chốt phân công.
+- **Backend:** `SectionRules` theo giai đoạn (`canClaim/canAssign/canRelease/canEdit` nhận `working`); `GroupSectionService.claim` (phân công: nhận làm người phụ trách; đã chốt: người phụ trách bắt đầu soạn), `assign` chỉ khi chưa chốt, `release`, `lockAssignment` (đủ người phụ trách mới chốt), `unlockAssignment`; API `POST /group-docs/{id}/assignment:lock|:unlock`; `WorkspaceView.assignmentLockedBy/At`, `SectionView.assigneeId`; người rời nhóm thôi phụ trách (`clearAssignee`).
+- **Frontend:** thanh "Đang phân công / Đã chốt phân công" với nút Chốt phân công (khóa khi còn mục trống) và Mở chốt (hỏi xác nhận); mục hiện "Phụ trách / Đang soạn / Chưa có người nhận"; nút Nhận mục, Bỏ nhận, Bỏ giao, Giao mục (khi phân công), Làm (khi đã chốt).
+- **Test:** backend 1749/1749; frontend 735/735 (5 test chậm của unit khác chạy lại đạt); e2e lớp SE-TEST15: U12 59/59, U12b 36/36, u12c 32/32, notify 3/3; U02 16/16, U06 24/24.

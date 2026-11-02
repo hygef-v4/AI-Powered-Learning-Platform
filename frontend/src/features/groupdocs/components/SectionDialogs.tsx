@@ -234,7 +234,7 @@ export function AssignSectionDialog({
     >
       <Select aria-label="Thành viên nhận mục" value={assignee} onChange={(e) => setAssignee(e.target.value)}>
         <option value="">Chọn thành viên</option>
-        {view.members.filter((m) => m.accountId !== section.holderId).map((m) => (
+        {view.members.filter((m) => m.accountId !== section.assigneeId).map((m) => (
           <option key={m.accountId} value={m.accountId}>
             {m.name ?? m.accountId}
           </option>
@@ -246,7 +246,11 @@ export function AssignSectionDialog({
           người đang giữ sẽ bị bỏ.
         </Alert>
       )}
-      <p className="text-xs text-muted">Thành viên cũng có thể tự nhận mục.</p>
+      <p className="text-xs text-muted">
+        {section.assigneeId
+          ? `Đang phụ trách: ${view.members.find((m) => m.accountId === section.assigneeId)?.name ?? "thành viên"}; giao sẽ đổi người phụ trách.`
+          : "Thành viên cũng có thể tự nhận mục."}
+      </p>
       {error && (
         <Alert tone="danger" role="alert">
           {error}

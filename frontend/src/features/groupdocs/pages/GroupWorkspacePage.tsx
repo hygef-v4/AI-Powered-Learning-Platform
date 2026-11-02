@@ -12,10 +12,10 @@ import {
   downloadDocx,
   getWorkspace,
   groupDocImageUrl,
-  lockSection,
+  lockAssignment,
   releaseSection,
   sendActivity,
-  unlockSection,
+  unlockAssignment,
 } from "../api";
 import { AssignSectionDialog, SectionEditorDialog, SubmitGroupDialog } from "../components/SectionDialogs";
 import { GroupImportDialog, PeerReviewPanel, SectionHistoryDialog } from "../components/CollaborationPanels";
@@ -36,9 +36,9 @@ function dateTime(iso: string | null | undefined): string {
 /**
  * Màn #40 Assignment Workspace chế độ nhóm (UC 56): tài liệu chung, danh sách mục kèm người giữ và thao tác hợp lệ
  * cho từng người, nộp (trưởng nhóm), thẻ Bản nộp; realtime qua SSE, tự nộp thì khóa trang rồi chuyển sang Bản nộp.
- * Thành viên nhận mục trống, mục đã có người nhận thì chỉ xem (BR-U12-33). Trưởng nhóm chốt mục khi cả nhóm đồng ý,
- * ghi người phụ trách (FB-U12-01), nhập từ file (FB-U12-03); ai cũng xem lịch sử mục (FB-U12-02); thẻ Đánh giá chéo
- * (FB-U12-04).
+ * Giai đoạn phân công (FB-U12-01): thành viên nhận mục trống hoặc trưởng nhóm giao, chưa soạn; trưởng nhóm chốt phân
+ * công khi mọi mục có người phụ trách, từ đó mỗi người soạn mục của mình; mở chốt để phân lại. Nhập từ file (FB-U12-03),
+ * lịch sử mục (FB-U12-02), thẻ Đánh giá chéo (FB-U12-04).
  */
 export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   const [view, setView] = useState<WorkspaceView | null>(null);
@@ -51,6 +51,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   const [history, setHistory] = useState<SectionView | null>(null);
   const [importing, setImporting] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
+  const [unlocking, setUnlocking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [autoSubmitting, setAutoSubmitting] = useState(false);
 
@@ -118,11 +119,12 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     }
   };
 
-  // Nhận mục rồi mở luôn trình soạn bằng bản mục server trả về (U12-08).
+  // Chưa chốt phân công: nhận mục (làm người phụ trách). Đã chốt: người phụ trách bắt đầu soạn, mở luôn trình soạn.
   const claimAndEdit = async (s: SectionView) => {
     setNotice(null);
     try {
-      openEditor(await claimSection(documentId, s.id));
+      const claimed = await claimSection(documentId, s.id);
+      if (view?.assignmentLockedAt) openEditor(claimed);
       void reload();
     } catch (e) {
       setNotice(e instanceof ApiError ? (e.problem.detail ?? "Không nhận được mục.") : "Không nhận được mục.");
@@ -139,10 +141,12 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   const myId = view.viewerId;
   const name = (id: string | null) =>
     id === null ? "Chưa ai nhận" : id === myId ? "Bạn" : (view.members.find((m) => m.accountId === id)?.name ?? "Thành viên");
+  const working = !!view.assignmentLockedAt;
+  const unassigned = view.sections.filter((s) => !s.assigneeId).length;
   const isMine = (s: SectionView) => s.status === "CLAIMED" && s.holderId === myId;
-  const locked = (s: SectionView) => !!s.lockedBy;
-  const claimable = (s: SectionView) => editable && me.member && s.status !== "CLAIMED" && !locked(s);
-  // Bấm vào mục: mục mình giữ thì soạn tiếp, mục trống thì nhận và soạn, mục người khác giữ thì chỉ cuộn tới nội dung.
+  const responsible = (s: SectionView) => s.assigneeId === myId;
+  // Chưa chốt: nhận mục chưa có ai. Đã chốt: người phụ trách bắt đầu soạn mục của mình.
+  const claimable = (s: SectionView) => editable && me.member && (working ? responsible(s) && !isMine(s) : !s.assigneeId);
   const openSection = (s: SectionView) => {
     if (editable && isMine(s)) openEditor(s);
     else if (claimable(s)) void claimAndEdit(s);
@@ -152,12 +156,16 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     editable && isMine(s)
       ? "Bấm để soạn tiếp"
       : claimable(s)
-        ? "Bấm để nhận và soạn"
-        : locked(s)
-          ? "Đã chốt, chỉ xem"
-          : s.status === "CLAIMED"
-            ? "Chỉ xem"
-            : "Xem nội dung";
+        ? working
+          ? "Bấm để soạn"
+          : "Bấm để nhận mục"
+        : "Xem nội dung";
+  const assigneeLine = (s: SectionView) =>
+    s.status === "CLAIMED" && working
+      ? `Đang soạn: ${name(s.holderId)}`
+      : s.assigneeId
+        ? `Phụ trách: ${name(s.assigneeId)}`
+        : "Chưa có người nhận";
 
   return (
     <div className="flex flex-col gap-4">
@@ -216,14 +224,44 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         </Alert>
       )}
       {!editable && view.status === "IN_PROGRESS" && <Alert tone="info">Đã hết hạn nộp; tài liệu chỉ còn xem.</Alert>}
+      {editable && tab === "work" && (
+        <Alert
+          tone={working ? "success" : "warning"}
+          title={working ? "Đã chốt phân công" : "Đang phân công"}
+          action={
+            me.leader &&
+            (working ? (
+              <Button size="sm" icon="lock_open" onClick={() => setUnlocking(true)}>
+                Mở chốt
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="primary"
+                icon="lock"
+                disabled={unassigned > 0}
+                title={unassigned > 0 ? `Còn ${unassigned} mục chưa có người phụ trách` : undefined}
+                onClick={() => void act(() => lockAssignment(documentId), "Không chốt được phân công.")}
+              >
+                Chốt phân công
+              </Button>
+            ))
+          }
+        >
+          {working
+            ? `Trưởng nhóm chốt lúc ${dateTime(view.assignmentLockedAt)}. Mỗi người soạn mục mình phụ trách.`
+            : `Nhận mục hoặc chờ trưởng nhóm giao; chưa soạn được cho tới khi trưởng nhóm chốt phân công. ${view.sections.length - unassigned}/${view.sections.length} mục đã có người phụ trách.`}
+        </Alert>
+      )}
 
       {tab === "work" ? (
         <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
           <Section title={`Các mục (${done} / ${view.sections.length} Xong)`} icon="assignment">
             {me.member && editable && (
               <p className="text-xs text-muted">
-                Bấm vào mục trống để nhận và soạn toàn trang; mục người khác đã nhận thì chỉ xem. Mục trưởng nhóm đã chốt
-                ghi người phụ trách và không ai sửa được. Nội dung tự lưu mỗi 10 giây.
+                {working
+                  ? "Bấm vào mục bạn phụ trách để soạn toàn trang; mục của người khác chỉ xem. Nội dung tự lưu mỗi 10 giây."
+                  : "Bấm vào mục chưa có người nhận để nhận; mục đã có người nhận thì người khác không nhận được."}
               </p>
             )}
             <ul className="flex flex-col gap-2">
@@ -243,18 +281,14 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
                     >
                       <span className="flex w-full items-center gap-2">
                         <span className="min-w-0 flex-1 text-[13px] font-semibold text-ink">{s.title}</span>
-                        {locked(s) && <Pill tone="primary">Đã chốt</Pill>}
                         <Pill tone={STATUS[s.status].tone}>{STATUS[s.status].text}</Pill>
                       </span>
-                      <span className="text-xs text-muted">
-                        {s.status === "CLAIMED" ? `Đang giữ: ${name(s.holderId)}` : s.lastAuthorId ? `Xong bởi ${name(s.lastAuthorId)}` : "Chưa ai nhận"}
-                      </span>
-                      {locked(s) && s.lastAuthorId && <span className="text-xs text-primary-ink">Phụ trách: {name(s.lastAuthorId)}</span>}
+                      <span className="text-xs text-muted">{assigneeLine(s)}</span>
                     </button>
                     <div className="flex flex-wrap gap-1.5">
-                      {editable && claimable(s) && (
-                        <Button size="sm" onClick={() => void claimAndEdit(s)}>
-                          Nhận mục
+                      {claimable(s) && (
+                        <Button size="sm" variant={working ? "primary" : "secondary"} onClick={() => void claimAndEdit(s)}>
+                          {working ? "Làm" : "Nhận mục"}
                         </Button>
                       )}
                       {editable && mine && (
@@ -262,22 +296,17 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
                           Làm
                         </Button>
                       )}
-                      {editable && me.leader && !locked(s) && (
+                      {editable && !working && me.leader && (
                         <Button size="sm" onClick={() => setAssigning(s)}>
                           Giao mục
                         </Button>
                       )}
-                      {editable && me.leader && s.status === "DONE" && !locked(s) && (
-                        <Button size="sm" icon="lock" onClick={() => void act(() => lockSection(documentId, s.id), "Không chốt được mục.")}>
-                          Chốt
+                      {editable && !working && s.assigneeId && (responsible(s) || me.leader || me.teacher) && (
+                        <Button size="sm" variant="ghost" onClick={() => void act(() => releaseSection(view.documentId, s.id), "Không bỏ nhận được mục.")}>
+                          {responsible(s) ? "Bỏ nhận" : "Bỏ giao"}
                         </Button>
                       )}
-                      {editable && me.leader && locked(s) && (
-                        <Button size="sm" icon="lock_open" onClick={() => void act(() => unlockSection(documentId, s.id), "Không mở chốt được mục.")}>
-                          Mở chốt
-                        </Button>
-                      )}
-                      {editable && s.status === "CLAIMED" && (mine || me.leader || me.teacher) && (
+                      {editable && working && s.status === "CLAIMED" && (mine || me.leader || me.teacher) && (
                         <Button size="sm" variant="ghost" onClick={() => setReleasing(s)}>
                           Nhả mục
                         </Button>
@@ -348,6 +377,26 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
           }}
         />
       )}
+      <Dialog
+        open={unlocking}
+        title="Mở chốt phân công?"
+        icon="lock_open"
+        tone="warning"
+        onClose={() => setUnlocking(false)}
+        footer={
+          <Button
+            variant="primary"
+            onClick={() => {
+              setUnlocking(false);
+              void act(() => unlockAssignment(documentId), "Không mở chốt được.");
+            }}
+          >
+            Mở chốt
+          </Button>
+        }
+      >
+        <p>Cả nhóm tạm dừng soạn cho tới khi chốt lại. Nội dung đã Xong và bản nháp đã lưu giữ nguyên; bạn đổi được người phụ trách các mục.</p>
+      </Dialog>
       <Dialog
         open={releasing !== null}
         title={`Nhả mục ${releasing?.title ?? ""}?`}
@@ -429,7 +478,7 @@ function GroupSubmissionTab({ view }: { view: WorkspaceView }) {
               {view.sections.map((sec) => (
                 <tr key={sec.id}>
                   <Td>{sec.title}</Td>
-                  <Td>{view.members.find((m) => m.accountId === sec.lastAuthorId)?.name ?? "—"}</Td>
+                  <Td>{view.members.find((m) => m.accountId === (sec.lastAuthorId ?? sec.assigneeId))?.name ?? "—"}</Td>
                   <Td>{STATUS[sec.status].text}</Td>
                 </tr>
               ))}

@@ -29,6 +29,7 @@ function section(id: string, status: SectionView["status"], holderId: string | n
     draftSavedAt: null,
     lastAuthorId: null,
     version: 2,
+    assigneeId: holderId,
     ...extra,
   };
 }
@@ -54,10 +55,11 @@ function workspace(viewerId: string, overrides: Partial<WorkspaceView> = {}): Wo
     sections: [
       section("s1", "DONE", null, {
         lastAuthorId: LEADER,
+        assigneeId: LEADER,
         publishedBlocks: [{ id: "b1", origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: "Nội dung đã xong" }] } }],
       }),
       section("s2", "CLAIMED", MEMBER),
-      section("s3", "OPEN", null),
+      section("s3", "OPEN", null, { assigneeId: viewerId }),
     ],
     role: { member: true, leader: viewerId === LEADER, teacher: false },
     lastSubmission: null,
@@ -65,6 +67,8 @@ function workspace(viewerId: string, overrides: Partial<WorkspaceView> = {}): Wo
     diagramEnabled: false,
     version: 5,
     viewerId,
+    assignmentLockedBy: LEADER,
+    assignmentLockedAt: "2026-10-21T03:00:00Z",
     ...overrides,
   };
 }
@@ -83,7 +87,8 @@ function backend(view: WorkspaceView) {
       calls.push({ url, method, body: typeof init?.body === "string" ? JSON.parse(init.body) : init?.body });
       if (url === "/api/v1/group-docs/doc1" && method === "GET") return json(view);
       if (url.endsWith(":claim")) return json(section("s3", "CLAIMED", view.viewerId));
-      if (url.endsWith(":lock")) return json(section("s1", "DONE", null, { lockedBy: view.viewerId, lockedAt: "2026-10-22T03:00:00Z" }));
+      if (url.endsWith("/assignment:lock")) return json({ lockedBy: view.viewerId, lockedAt: "2026-10-22T03:00:00Z" });
+      if (url.endsWith("/assignment:unlock")) return Promise.resolve(new Response(null, { status: 204 }));
       if (url.endsWith("/revisions"))
         return json([
           { id: "r2", authorId: MEMBER, kind: "IMPORT", createdAt: "2026-10-22T04:00:00Z", blocks: [{ id: "x2", origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: "Bản nháp cũ" }] } }] },
@@ -117,7 +122,7 @@ describe("GroupWorkspacePage", () => {
     vi.useRealTimers();
   });
 
-  it("thành viên thấy nội dung đã Xong, nhận mục mở, không có nút nộp", async () => {
+  it("đã chốt phân công: thành viên thấy nội dung đã Xong, soạn mục mình phụ trách, không có nút nộp", async () => {
     const calls = backend(workspace(MEMBER));
     render(<GroupWorkspacePage documentId="doc1" />);
 
@@ -126,49 +131,71 @@ describe("GroupWorkspacePage", () => {
     expect(screen.queryByRole("button", { name: /Nộp tài liệu/ })).not.toBeInTheDocument();
     const item = (title: string) => screen.getAllByRole("listitem").find((li) => within(li).queryByText(title))!;
     const mine = item("Mục s2");
-    expect(within(mine).getByText("Đang giữ: Bạn")).toBeInTheDocument();
+    expect(within(mine).getByText("Đang soạn: Bạn")).toBeInTheDocument();
     expect(within(mine).getByRole("button", { name: "Làm" })).toBeInTheDocument();
 
-    fireEvent.click(within(item("Mục s3")).getByRole("button", { name: "Nhận mục" }));
+    fireEvent.click(within(item("Mục s3")).getByRole("button", { name: "Làm" }));
     await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s3:claim"))).toBe(true));
     expect(await screen.findByText("Bạn đang giữ")).toBeInTheDocument();
   });
 
-  it("bấm vào mục Mở thì nhận và mở trình soạn", async () => {
+  it("đã chốt phân công: bấm vào mục mình phụ trách thì mở trình soạn", async () => {
     const calls = backend(workspace(LEADER));
     render(<GroupWorkspacePage documentId="doc1" />);
 
-    fireEvent.click(await screen.findByRole("button", { name: /Mục s3 · Mở · Bấm để nhận và soạn/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Mục s3 · Mở · Bấm để soạn/ }));
     await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s3:claim"))).toBe(true));
     expect(await screen.findByText("Bạn đang giữ")).toBeInTheDocument();
   });
 
-  it("mục người khác đang giữ chỉ xem, không có tiếp quản (kể cả trưởng nhóm)", async () => {
+  it("mục người khác phụ trách chỉ xem, không có tiếp quản (kể cả trưởng nhóm)", async () => {
     const view = workspace(LEADER, { sections: [section("s2", "CLAIMED", MEMBER)] });
     const calls = backend(view);
     render(<GroupWorkspacePage documentId="doc1" />);
 
-    fireEvent.click(await screen.findByRole("button", { name: /Mục s2 · Đang làm · Chỉ xem/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Mục s2 · Đang làm · Xem nội dung/ }));
     expect(screen.queryByRole("button", { name: "Tiếp quản" })).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog", { name: /Tiếp quản/ })).not.toBeInTheDocument();
     expect(calls.some((c) => c.url.endsWith(":take-over"))).toBe(false);
   });
 
-  it("trưởng nhóm chốt mục đã Xong; mục đã chốt ghi người phụ trách, không ai nhận được", async () => {
-    const view = workspace(MEMBER, { sections: [section("s1", "DONE", null, { lockedBy: LEADER, lockedAt: "2026-10-22T03:00:00Z", lastAuthorId: MEMBER })] });
-    backend(view);
+  it("đang phân công: thành viên chỉ nhận mục, chưa mở trình soạn; trưởng nhóm chưa chốt được khi còn mục trống", async () => {
+    const planning = { assignmentLockedBy: null, assignmentLockedAt: null };
+    const view = workspace(MEMBER, { ...planning, sections: [section("s1", "OPEN", null), section("s2", "OPEN", null, { assigneeId: LEADER })] });
+    const calls = backend(view);
     const { unmount } = render(<GroupWorkspacePage documentId="doc1" />);
-    expect(await screen.findByText("Đã chốt")).toBeInTheDocument();
-    expect(screen.getByText("Phụ trách: Bạn")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Nhận mục" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Mục s1 · Xong · Đã chốt, chỉ xem/ })).toBeInTheDocument();
+
+    expect(await screen.findByText("Đang phân công")).toBeInTheDocument();
+    expect(screen.getByText(/0\/2 mục|1\/2 mục đã có người phụ trách/)).toBeInTheDocument();
+    const item = (title: string) => screen.getAllByRole("listitem").find((li) => within(li).queryByText(title))!;
+    expect(within(item("Mục s2")).getByText("Phụ trách: An")).toBeInTheDocument();
+    expect(within(item("Mục s2")).queryByRole("button", { name: "Nhận mục" })).not.toBeInTheDocument();
+    fireEvent.click(within(item("Mục s1")).getByRole("button", { name: "Nhận mục" }));
+    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s1:claim"))).toBe(true));
+    expect(screen.queryByText("Bạn đang giữ")).not.toBeInTheDocument();
     unmount();
 
-    const calls = backend(workspace(LEADER));
+    backend(workspace(LEADER, { ...planning, sections: [section("s1", "OPEN", null), section("s2", "OPEN", null, { assigneeId: LEADER })] }));
     render(<GroupWorkspacePage documentId="doc1" />);
-    const done = (await screen.findAllByRole("listitem")).find((li) => within(li).queryByText("Mục s1"))!;
-    fireEvent.click(within(done).getByRole("button", { name: "Chốt" }));
-    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s1:lock"))).toBe(true));
+    expect(await screen.findByRole("button", { name: "Chốt phân công" })).toBeDisabled();
+  });
+
+  it("trưởng nhóm chốt phân công khi mọi mục có người phụ trách, mở chốt phải xác nhận", async () => {
+    const planning = { assignmentLockedBy: null, assignmentLockedAt: null };
+    const calls = backend(workspace(LEADER, { ...planning, sections: [section("s1", "OPEN", null, { assigneeId: MEMBER })] }));
+    const { unmount } = render(<GroupWorkspacePage documentId="doc1" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Chốt phân công" }));
+    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/assignment:lock"))).toBe(true));
+    unmount();
+
+    const after = backend(workspace(LEADER));
+    render(<GroupWorkspacePage documentId="doc1" />);
+    expect(await screen.findByText("Đã chốt phân công")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Giao mục" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Mở chốt" }));
+    const dialog = await screen.findByRole("dialog", { name: /Mở chốt phân công/ });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Mở chốt" }));
+    await waitFor(() => expect(after.some((c) => c.url.endsWith("/assignment:unlock"))).toBe(true));
   });
 
   it("lịch sử mục hiện từng bản với loại và tác giả", async () => {

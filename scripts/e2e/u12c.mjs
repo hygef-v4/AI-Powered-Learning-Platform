@@ -82,30 +82,39 @@ let w = (await M.get(`/api/v1/group-docs/${D}`)).data;
 const [s1, s2, s3] = w.sections;
 const para = (t) => [{ id: crypto.randomUUID(), origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: t }] } }];
 
-// ---------- Mục đã có người nhận: người khác không nhận, không tiếp quản (BR-U12-33)
-let c = await M.post(`/api/v1/group-docs/${D}/sections/${s1.id}:claim`);
-const d1 = await M.put(`/api/v1/group-docs/${D}/sections/${s1.id}/draft`, { version: c.data.version, blocks: para("Bản của thành viên") });
-const leaderClaim = await L.post(`/api/v1/group-docs/${D}/sections/${s1.id}:claim`);
+// ---------- Phân công rồi chốt (FB-U12-01)
+const base = `/api/v1/group-docs/${D}`;
+let c = await M.post(`${base}/sections/${s1.id}:claim`);
+check(R, "FB-U12-01 phân công: thành viên nhận mục làm người phụ trách", c.status === 200 && c.data?.assigneeId === MID && !c.data?.holderId, brief(c));
+const leaderClaim = await L.post(`${base}/sections/${s1.id}:claim`);
 check(R, "U12-33 mục đã có người nhận: trưởng nhóm cũng không nhận được", leaderClaim.status === 409 && leaderClaim.data?.code === "SECTION_CLAIMED_BY_OTHER", brief(leaderClaim));
-const takeGone = await L.post(`/api/v1/group-docs/${D}/sections/${s1.id}:take-over`);
+const takeGone = await L.post(`${base}/sections/${s1.id}:take-over`);
 check(R, "U12-33 không còn chức năng tiếp quản", takeGone.status === 404 || takeGone.status === 405, `${takeGone.status}`);
-const done = await M.post(`/api/v1/group-docs/${D}/sections/${s1.id}:done`);
-check(R, "U12-35 thành viên bấm Xong mục mình nhận", d1.status === 200 && done.status === 200 && done.data?.status === "DONE", brief(done));
-
-// ---------- Chốt mục, người phụ trách (FB-U12-01)
-const memberLock = await M.post(`/api/v1/group-docs/${D}/sections/${s1.id}:lock`);
-check(R, "FB-U12-01 thành viên không chốt được", memberLock.status === 403, brief(memberLock));
-const notDone = await L.post(`/api/v1/group-docs/${D}/sections/${s3.id}:lock`);
-check(R, "FB-U12-01 mục chưa Xong không chốt được", notDone.status === 409 && notDone.data?.code === "SECTION_NOT_DONE", brief(notDone));
-const lock = await L.post(`/api/v1/group-docs/${D}/sections/${s1.id}:lock`);
-check(R, "FB-U12-01 trưởng nhóm chốt mục, người phụ trách là thành viên đã làm", lock.status === 200 && lock.data?.lockedBy === LID && lock.data?.lastAuthorId === MID, brief(lock));
-const wsLocked = (await M.get(`/api/v1/group-docs/${D}`)).data.sections.find((x) => x.id === s1.id);
-check(R, "FB-U12-01 workspace hiện mục đã chốt với người phụ trách", wsLocked?.lockedBy === LID && wsLocked?.lastAuthorId === MID, JSON.stringify({ l: wsLocked?.lockedBy === LID, a: wsLocked?.lastAuthorId === MID }));
-const claimLocked = await M.post(`/api/v1/group-docs/${D}/sections/${s1.id}:claim`);
-const assignLocked = await L.post(`/api/v1/group-docs/${D}/sections/${s1.id}:assign`, { assigneeId: MID, replaceHolder: false });
-check(R, "FB-U12-01 mục đã chốt không ai nhận, không giao được", claimLocked.data?.code === "SECTION_LOCKED" && assignLocked.data?.code === "SECTION_LOCKED", `${brief(claimLocked)} | ${brief(assignLocked)}`);
-const unlock = await L.post(`/api/v1/group-docs/${D}/sections/${s1.id}:unlock`);
-check(R, "FB-U12-01 mở chốt", unlock.status === 200 && !unlock.data?.lockedBy, brief(unlock));
+const tooEarly = await M.put(`${base}/sections/${s1.id}/draft`, { version: c.data.version, blocks: para("Sớm") });
+check(R, "FB-U12-01 chưa chốt phân công thì chưa soạn được", tooEarly.status === 409 && tooEarly.data?.code === "ASSIGNMENT_NOT_LOCKED", brief(tooEarly));
+const memberLock = await M.post(`${base}/assignment:lock`);
+check(R, "FB-U12-01 thành viên không chốt phân công được", memberLock.status === 403, brief(memberLock));
+const incomplete = await L.post(`${base}/assignment:lock`);
+check(R, "FB-U12-01 còn mục trống thì chưa chốt được", incomplete.status === 409 && incomplete.data?.code === "ASSIGNMENT_INCOMPLETE", brief(incomplete));
+await L.post(`${base}/sections/${s2.id}:assign`, { assigneeId: LID, replaceHolder: false });
+await L.post(`${base}/sections/${s3.id}:assign`, { assigneeId: MID, replaceHolder: false });
+const lock = await L.post(`${base}/assignment:lock`);
+const ws = (await M.get(base)).data;
+check(R, "FB-U12-01 trưởng nhóm chốt phân công, workspace hiện trạng thái và người phụ trách", lock.status === 200 && ws.assignmentLockedBy === LID &&
+  ws.sections.find((x) => x.id === s1.id)?.assigneeId === MID, brief(lock));
+const assignLocked = await L.post(`${base}/sections/${s1.id}:assign`, { assigneeId: LID, replaceHolder: false });
+check(R, "FB-U12-01 đã chốt thì không giao lại được", assignLocked.data?.code === "ASSIGNMENT_LOCKED", brief(assignLocked));
+c = await M.post(`${base}/sections/${s1.id}:claim`);
+const d1 = await M.put(`${base}/sections/${s1.id}/draft`, { version: c.data.version, blocks: para("Bản của thành viên") });
+const done = await M.post(`${base}/sections/${s1.id}:done`);
+check(R, "U12-35 người phụ trách soạn và bấm Xong mục của mình", c.data?.holderId === MID && d1.status === 200 && done.data?.status === "DONE", brief(done));
+const notMine = await L.post(`${base}/sections/${s1.id}:claim`);
+check(R, "FB-U12-01 trưởng nhóm không soạn mục người khác phụ trách", notMine.status === 409 && notMine.data?.code === "SECTION_ASSIGNED_TO_OTHER", brief(notMine));
+const unlock = await L.post(`${base}/assignment:unlock`);
+const wsU = (await M.get(base)).data;
+check(R, "FB-U12-01 mở chốt để phân lại, nội dung đã Xong giữ nguyên", unlock.status === 204 && !wsU.assignmentLockedAt &&
+  wsU.sections.find((x) => x.id === s1.id)?.status === "DONE", `${unlock.status}`);
+await L.post(`${base}/assignment:lock`);
 
 // ---------- Lịch sử và khôi phục (FB-U12-02)
 let revs = await O.get(`/api/v1/group-docs/${D}/sections/${s1.id}/revisions`);
@@ -133,9 +142,9 @@ const memberImport = await multipart(M, `/api/v1/group-docs/${D}/import:preview`
 check(R, "FB-U12-03 thành viên không nhập cả tài liệu", memberImport.status === 403, `${memberImport.status}`);
 const prev = await multipart(L, `/api/v1/group-docs/${D}/import:preview`, { docx: [docxBytes, "nhom.docx", DOCX], drawio: [Buffer.from(drawio), "nhom.drawio", "application/xml"] });
 const plan = prev.data?.sections ?? [];
-check(R, "FB-U12-03 xem trước chia theo tên mục, sơ đồ vào mục 2, mục đang giữ bị bỏ qua", prev.status === 200 &&
+check(R, "FB-U12-03 xem trước chia theo tên mục, sơ đồ vào mục 2, mục đang có người soạn bị bỏ qua", prev.status === 200 &&
   plan.some((p) => p.sectionId === s1.id && !p.skipReason) && plan.some((p) => p.sectionId === s2.id && p.blocks.some((b) => b.type === "DIAGRAM")) &&
-  (plan.find((p) => p.sectionId === s3.id)?.skipReason ?? "").includes("người giữ") && prev.data.unmatched.some((u) => u.includes("Trang lạ")),
+  (plan.find((p) => p.sectionId === s3.id)?.skipReason ?? "").includes("người soạn") && prev.data.unmatched.some((u) => u.includes("Trang lạ")),
   `${prev.status} ${JSON.stringify(plan.map((p) => [p.title, p.blocks.length, p.skipReason]))} unmatched=${JSON.stringify(prev.data?.unmatched)}`);
 const apply = await L.post(`/api/v1/group-docs/${D}/import:apply`, { sections: plan.filter((p) => !p.skipReason).map((p) => ({ sectionId: p.sectionId, version: p.version, blocks: p.blocks })) });
 w = (await L.get(`/api/v1/group-docs/${D}`)).data;
@@ -168,11 +177,11 @@ check(R, "FB-U12-04 giảng viên thấy trung bình và thang 10", tView.status
 const admin = new Session("admin");
 await admin.login(env("U01_BOOTSTRAP_ADMIN_EMAIL"), PW);
 const found = new Set();
-for (const action of ["GROUP_SECTION_LOCKED", "GROUP_SECTION_UNLOCKED", "GROUP_SECTION_RESTORED", "GROUP_DOC_IMPORTED", "GROUP_PEER_REVIEW_SAVED"]) {
+for (const action of ["GROUP_ASSIGNMENT_LOCKED", "GROUP_ASSIGNMENT_UNLOCKED", "GROUP_SECTION_RESTORED", "GROUP_DOC_IMPORTED", "GROUP_PEER_REVIEW_SAVED"]) {
   const r = await admin.get(`/api/v1/admin/audit-logs?action=${action}&size=5`);
   if ((r.data?.items ?? []).length > 0) found.add(action);
 }
-check(R, "U02 nhật ký ghi chốt, mở chốt, khôi phục, nhập file, đánh giá chéo", found.size === 5, [...found].join(","));
+check(R, "U02 nhật ký ghi chốt phân công, mở chốt, khôi phục, nhập file, đánh giá chéo", found.size === 5, [...found].join(","));
 
 fs.writeFileSync(new URL("./u12c-result.json", import.meta.url), JSON.stringify(R, null, 2));
 console.log(`\nGóp ý 11/2: ${R.filter((r) => r.ok).length}/${R.length} đạt`);

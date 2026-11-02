@@ -19,9 +19,8 @@ export type SectionView = {
   draftSavedAt: string | null;
   lastAuthorId: string | null;
   version: number;
-  /** Trưởng nhóm đã chốt mục (FB-U12-01); người phụ trách là `lastAuthorId`. */
-  lockedBy?: string | null;
-  lockedAt?: string | null;
+  /** Người phụ trách mục, nhận hoặc được giao trong giai đoạn phân công (FB-U12-01). */
+  assigneeId: string | null;
 };
 
 export type RevisionKind = "DONE" | "TAKEOVER" | "IMPORT";
@@ -86,6 +85,9 @@ export type WorkspaceView = {
   diagramEnabled: boolean;
   version: number;
   viewerId: string;
+  /** Trưởng nhóm đã chốt phân công (FB-U12-01); chưa chốt thì chỉ nhận/giao mục, chưa soạn được. */
+  assignmentLockedBy: string | null;
+  assignmentLockedAt: string | null;
 };
 
 export type Receipt = {

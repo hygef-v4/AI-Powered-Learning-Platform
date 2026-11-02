@@ -189,15 +189,17 @@ class GroupRepositoriesIntegrationTest {
         documents.insertRevision(new SectionRevision(UUID.randomUUID(), section.id(), studentA, blocks, NOW));
         assertThat(documents.groupHasContent(groupId)).isTrue();
 
-        // Chốt mục (BR-U12-39), lịch sử theo loại (BR-U12-35) và đánh giá chéo (BR-U12-47).
+        // Phân công và chốt phân công (FB-U12-01), lịch sử theo loại (FB-U12-02), đánh giá chéo (FB-U12-04).
         GroupSection done = documents.lockSection(doc.id(), section.id()).orElseThrow();
-        assertThat(documents.updateSection(done.lockedBy(studentA, NOW))).isTrue();
-        GroupSection lockedDone = documents.lockSection(doc.id(), section.id()).orElseThrow();
-        assertThat(lockedDone.lockedBy()).isEqualTo(studentA);
-        assertThat(lockedDone.lockedAt()).isEqualTo(NOW);
-        assertThatThrownBy(() -> documents.updateSection(lockedDone.claimedBy(studentB, studentB, NOW)))
-                .as("CSDL không cho giữ mục đã chốt").isInstanceOf(RuntimeException.class);
-        assertThat(documents.updateSection(documents.lockSection(doc.id(), section.id()).orElseThrow().unlocked())).isTrue();
+        assertThat(documents.updateSection(done.withAssignee(studentA))).isTrue();
+        assertThat(documents.lockSection(doc.id(), section.id()).orElseThrow().assigneeId()).isEqualTo(studentA);
+        assertThat(documents.assignmentLock(doc.id())).isEmpty();
+        documents.setAssignmentLock(doc.id(), new AssignmentLock(studentA, NOW));
+        assertThat(documents.assignmentLock(doc.id())).contains(new AssignmentLock(studentA, NOW));
+        documents.setAssignmentLock(doc.id(), null);
+        assertThat(documents.assignmentLock(doc.id())).isEmpty();
+        assertThat(documents.clearAssignee(groupId, studentA)).isEqualTo(1);
+        assertThat(documents.lockSection(doc.id(), section.id()).orElseThrow().assigneeId()).isNull();
         documents.insertRevision(new SectionRevision(UUID.randomUUID(), section.id(), studentB, blocks, NOW.plusSeconds(1),
                 SectionRevision.Kind.IMPORT));
         documents.insertRevision(new SectionRevision(UUID.randomUUID(), section.id(), teacher, blocks, NOW.plusSeconds(3)));
