@@ -53,7 +53,6 @@ stateDiagram-v2
 |---|---|---|---|
 | `IQuizLifecycleListener` (contract của U10, U11 cài) | `onRetired(quizId)` | U10 | Tự nộp và chấm lượt đang làm khi Quiz bị ngưng hoặc có version mới |
 | Slot `QuizDetailSection` (của U10, U11 cài) | - | U10 | Phần Lượt làm và hoạt động cho giảng viên trên Quiz Detail |
-| Slot `LearningMaterialSection` (của U13, U11 cài) | - | U13 | Danh sách Quiz gắn tài liệu kèm nút Làm Quiz trên Learning Material |
 | `NavEntry` (contract của U01, U11 cài) | - | U01 | Mục Luyện tập Quiz trên menu bên của Student |
 | Slot `QuizRowAction` (của U10, U11 cài) | - | U10 | Số sinh viên đã làm trên dòng Quiz ở tab Đánh giá |
 | `IScheduledScanner` (contract của U03, U11 cài) | - | U03 | Tự nộp khi hết giờ |
@@ -82,3 +81,7 @@ stateDiagram-v2
 | `POST /api/v1/quizzes/{quizId}/attempts`, `GET /api/v1/quiz-attempts/{attemptId}`, `PUT .../answers`, `POST .../submit`, `POST .../activity` | 51 |
 | `GET /api/v1/quiz-attempts/{attemptId}/result` | 52 |
 | `GET /api/v1/classes/{classId}/quizzes/{quizId}/attempts`, `GET /api/v1/classes/{classId}/quiz-attempts/{attemptId}` | 42 |
+
+## Delta 2026-11-01
+
+`AttemptSnapshot` thêm `questionPoints` (Quiz sinh đề; lượt cũ trống). `QuizAttempt` thêm `ActivityOutcome`: `rawScore`, `suggestedPenalty`, `penaltyPoints` (đã trừ), `leaveCount`, `signal`, `decision` (`APPLIED`, `DISMISSED`), người quyết định, lúc quyết định, lý do. Migration `quizpractice/V20261101_1210__quiz_attempt_activity_penalty.sql`. Lượt cũ để trống, không có gợi ý.

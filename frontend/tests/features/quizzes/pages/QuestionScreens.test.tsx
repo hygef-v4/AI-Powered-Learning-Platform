@@ -1,7 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
-import { activateQuestion, getManagedSubjects, getQuestion, getQuestions, importQuestions, openDraft, updateQuestion } from "@/features/quizzes/api";
+import {
+  activateQuestion, approveQuestion, bulkQuestions, getDuplicateQuestions, getManagedSubjects, getQuestion, getQuestions, importQuestions,
+  openDraft, rejectQuestion, retireQuestion, updateQuestion,
+} from "@/features/quizzes/api";
 import { QuestionDetailPage } from "@/features/quizzes/pages/QuestionDetailPage";
 import { QuestionImportDialog } from "@/features/quizzes/components/QuestionImportDialog";
 import { QuestionListPage } from "@/features/quizzes/pages/QuestionListPage";
@@ -18,6 +21,10 @@ vi.mock("@/features/quizzes/api", () => ({
   retireQuestion: vi.fn(),
   deleteQuestion: vi.fn(),
   importQuestions: vi.fn(),
+  approveQuestion: vi.fn(),
+  rejectQuestion: vi.fn(),
+  bulkQuestions: vi.fn(),
+  getDuplicateQuestions: vi.fn(),
 }));
 
 const push = vi.fn();
@@ -31,16 +38,93 @@ const QUESTION: QuestionView = {
   createdBy: "u1", createdAt: "2026-10-20T08:00:00Z", updatedAt: "2026-10-20T08:00:00Z", version: 1,
 };
 const detail = (question: Partial<QuestionView> = {}, extra: Partial<QuestionDetail> = {}): QuestionDetail =>
-  ({ question: { ...QUESTION, ...question }, versions: [], usedInQuizzes: 3, draftId: null, ...extra });
+  ({ question: { ...QUESTION, ...question }, versions: [], usedInQuizzes: 3, draftId: null, similar: [], review: null, quizzesShortOfQuestions: [], ...extra });
 
 afterEach(() => vi.clearAllMocks());
+
+describe("Duyệt câu giảng viên đề xuất (BR-U10-09)", () => {
+  it("câu chờ duyệt chỉ duyệt hoặc từ chối kèm lý do, không sửa; hiện câu gần giống", async () => {
+    const pending = detail({ status: "PENDING" }, { similar: [{ id: "q9", stem: "Thủ đô Việt Nam là gì?", status: "ACTIVE", percent: 82 }] });
+    vi.mocked(getQuestion).mockResolvedValue(pending);
+    vi.mocked(rejectQuestion).mockResolvedValue(detail({ status: "REJECTED" }, { review: { decision: "REJECTED", reason: "Trùng ý", reviewedAt: "2026-11-01T00:00:00Z" } }));
+    render(<QuestionDetailPage id="q1" />);
+    expect(await screen.findByTestId("similar-questions")).toHaveTextContent("82%");
+    expect(screen.queryByTestId("question-detail-save")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("question-detail-reject"));
+    expect(screen.getByTestId("question-detail-confirm")).toBeDisabled();
+    fireEvent.change(screen.getByTestId("question-detail-reason"), { target: { value: " Trùng ý " } });
+    fireEvent.click(screen.getByTestId("question-detail-confirm"));
+    await waitFor(() => expect(rejectQuestion).toHaveBeenCalledWith("q1", "Trùng ý", 1));
+    expect(await screen.findByText("Trùng ý")).toBeInTheDocument();
+  });
+
+  it("duyệt đưa câu vào ngân hàng", async () => {
+    vi.mocked(getQuestion).mockResolvedValue(detail({ status: "PENDING" }));
+    vi.mocked(approveQuestion).mockResolvedValue(detail({ status: "ACTIVE" }));
+    render(<QuestionDetailPage id="q1" />);
+    fireEvent.click(await screen.findByTestId("question-detail-approve"));
+    await waitFor(() => expect(approveQuestion).toHaveBeenCalledWith("q1", 1));
+    expect(await screen.findByText("Đã duyệt: câu đã vào ngân hàng.")).toBeInTheDocument();
+  });
+
+  it("ngưng câu làm kho sinh đề thiếu thì cảnh báo tên quiz", async () => {
+    vi.mocked(getQuestion).mockResolvedValue(detail());
+    vi.mocked(retireQuestion).mockResolvedValue(detail({ status: "RETIRED" }, { quizzesShortOfQuestions: ["Giữa kỳ"] }));
+    render(<QuestionDetailPage id="q1" />);
+    fireEvent.click(await screen.findByTestId("question-detail-retire"));
+    fireEvent.click(screen.getByTestId("question-detail-confirm"));
+    expect(await screen.findByText(/không còn đủ câu.*Giữa kỳ/)).toBeInTheDocument();
+  });
+});
+
+describe("Thao tác hàng loạt và câu trùng trên Question List", () => {
+  const pendingRow = { id: "q1", lineageId: "q1", versionNo: 1, type: "MCQ_SINGLE" as const, stem: "Câu đề xuất", difficulty: "EASY" as const,
+    tags: [], status: "PENDING" as const, hasDraft: false, updatedAt: "2026-10-20T08:00:00Z", version: 7 };
+
+  beforeEach(() => {
+    vi.mocked(getManagedSubjects).mockResolvedValue([{ id: "s1", code: "SWT301", name: "Kiểm thử", status: "ACTIVE" }]);
+    vi.mocked(getQuestions).mockResolvedValue({ items: [pendingRow], total: 1, page: 0, size: 20 });
+  });
+  afterEach(() => window.history.replaceState(null, "", "/"));
+
+  it("mở từ thông báo thì lọc sẵn Chờ duyệt; duyệt hàng loạt kèm version và báo câu lỗi", async () => {
+    window.history.replaceState(null, "", "/manager/questions?status=PENDING");
+    vi.mocked(bulkQuestions).mockResolvedValue({ succeeded: 0, failed: 1, items: [{ id: "q1", ok: false, code: "QUESTION_DUPLICATE", message: "Trùng câu đã có" }] });
+    render(<QuestionListPage />);
+    await waitFor(() => expect(getQuestions).toHaveBeenCalledWith("s1", expect.objectContaining({ status: "PENDING" })));
+    fireEvent.click(await screen.findByTestId("question-list-select"));
+    fireEvent.click(screen.getByTestId("question-list-bulk-approve"));
+    await waitFor(() => expect(bulkQuestions).toHaveBeenCalledWith("s1", "approve", [{ id: "q1", version: 7 }], undefined));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Trùng câu đã có");
+  });
+
+  it("từ chối hàng loạt bắt buộc lý do", async () => {
+    window.history.replaceState(null, "", "/manager/questions?status=PENDING");
+    vi.mocked(bulkQuestions).mockResolvedValue({ succeeded: 1, failed: 0, items: [{ id: "q1", ok: true, code: null, message: null }] });
+    render(<QuestionListPage />);
+    fireEvent.click(await screen.findByTestId("question-list-select"));
+    fireEvent.click(screen.getByTestId("question-list-bulk-reject"));
+    expect(screen.getByTestId("question-list-reject-confirm")).toBeDisabled();
+    fireEvent.change(screen.getByTestId("question-list-reason"), { target: { value: "Chưa rõ" } });
+    fireEvent.click(screen.getByTestId("question-list-reject-confirm"));
+    await waitFor(() => expect(bulkQuestions).toHaveBeenCalledWith("s1", "reject", [{ id: "q1", version: 7 }], "Chưa rõ"));
+  });
+
+  it("xem các nhóm câu giống hệt nhau", async () => {
+    vi.mocked(getDuplicateQuestions).mockResolvedValue([{ questions: [{ id: "a", stem: "Câu A", status: "ACTIVE", percent: 100 }, { id: "b", stem: "câu a", status: "DRAFT", percent: 100 }] }]);
+    render(<QuestionListPage />);
+    fireEvent.click(await screen.findByTestId("question-list-duplicates"));
+    expect(await screen.findByTestId("question-duplicates")).toHaveTextContent("Nhóm 1");
+    expect(screen.getByText("Câu A")).toBeInTheDocument();
+  });
+});
 
 describe("QuestionListPage (UC 46)", () => {
   beforeEach(() => {
     vi.mocked(getManagedSubjects).mockResolvedValue([{ id: "s1", code: "SWT301", name: "Kiểm thử", status: "ACTIVE" }]);
     vi.mocked(getQuestions).mockResolvedValue({
       items: [{ id: "q1", lineageId: "q1", versionNo: 1, type: "MCQ_SINGLE", stem: "Thủ đô của Việt Nam?", difficulty: "EASY",
-        tags: ["địa lý"], status: "ACTIVE", hasDraft: true, updatedAt: "2026-10-20T08:00:00Z" }],
+        tags: ["địa lý"], status: "ACTIVE", hasDraft: true, updatedAt: "2026-10-20T08:00:00Z", version: 1 }],
       total: 1, page: 0, size: 20,
     });
   });

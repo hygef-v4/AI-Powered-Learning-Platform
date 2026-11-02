@@ -22,11 +22,11 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U11-10 | Bấm Làm Quiz tạo lượt và tính vào số lượt; hết lượt thì từ chối. Mỗi người tối đa một lượt `IN_PROGRESS` mỗi Quiz; bấm lại thì mở lượt đó. Lượt ghi `classId` là lớp người học làm Quiz. | FR-007 |
-| BR-U11-11 | Lượt chụp version Quiz, cài đặt, chính sách theo dõi và seed trộn; thứ tự câu và đáp án theo seed khi Quiz bật trộn. `deadlineAt` là giờ bắt đầu cộng giới hạn giờ, trống nếu Quiz không giới hạn. Sửa Quiz sau đó không ảnh hưởng lượt đã có. | FR-018 |
+| BR-U11-11 | Lượt chụp version Quiz, cài đặt, chính sách theo dõi và seed trộn; thứ tự câu và đáp án theo seed khi Quiz bật trộn. Quiz sinh đề: lượt bốc đề riêng qua `drawPaper` và lưu đúng các câu, điểm từng câu (`questionPoints`); đề, chấm và kết quả của lượt đọc theo danh sách này. `deadlineAt` là giờ bắt đầu cộng giới hạn giờ, trống nếu Quiz không giới hạn. Sửa Quiz sau đó không ảnh hưởng lượt đã có. | FR-018, BR-U10-17 |
 | BR-U11-12 | Đề lấy qua `getStudentView` của U10, không có đáp án. Xem đề, lưu, nộp và ghi hoạt động của một lượt đang làm cần người học vẫn đang ghi danh lớp `OPEN` (kiểm lại lớp mỗi lần, không chỉ lúc bắt đầu); đã rời lớp thì bị từ chối như ngoài phạm vi. Tự lưu câu trả lời 2 giây sau lần chọn cuối và khi rời trang, kèm `answerVersion`; lệch thì `409`. Lưu sau `deadlineAt` bị từ chối, trừ lần lưu cuối trong 30 giây ân hạn. | FR-018 |
 | BR-U11-13 | Nộp tay: lượt của mình, `IN_PROGRESS`, trước `deadlineAt` cộng 30 giây; câu chưa trả lời được tính sai. Nộp lặp trả cùng kết quả. | UC 51 |
 | BR-U11-14 | Tự nộp câu trả lời đã lưu gần nhất: hết giờ (`AUTO_TIME_LIMIT`, scanner mỗi phút) và khi Quiz bị ngưng hoặc có version mới được phát hành (`AUTO_RETIRED`, trong `onRetired`). | US-ASM-003 |
-| BR-U11-15 | Nộp thì câu trả lời bất biến; chấm ngay trong transaction nộp bằng `IQuizScoring.score` của U10 (đáp án ghim, `MCQ_MULTI` đúng hết mới có điểm); lưu điểm và đúng sai từng câu trên lượt. | US-ASM-003 S2, BR-U10-16 |
+| BR-U11-15 | Nộp thì câu trả lời bất biến; chấm ngay trong transaction nộp bằng `IQuizScoring.score` của U10 (đáp án ghim, `MCQ_MULTI` đúng hết mới có điểm); lưu điểm và đúng sai từng câu trên lượt. Sau đó điểm chỉ đổi theo quyết định trừ điểm của giảng viên (BR-U11-33). | US-ASM-003 S2, BR-U10-16 |
 
 ## 3. Kết quả (UC 52)
 
@@ -40,8 +40,10 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U11-30 | Quiz bật theo dõi: Quiz Taking gửi sự kiện qua `useActivityTracker`; U11 kiểm chủ lượt, `IN_PROGRESS`, chính sách đã chụp rồi gọi `IActivityWrite` của U08. | FR-039 |
-| BR-U11-31 | Giảng viên chính của lớp xem lượt Quiz của sinh viên lớp mình trên Quiz Detail (U11 gắn qua slot `QuizDetailSection` của U10): số lượt, điểm cao nhất, điểm lượt gần nhất, thời điểm nộp, câu trả lời từng lượt (chỉ đọc) và dòng thời gian hoạt động (`IActivityQuery`). Không sửa kết quả; Admin, Chủ nhiệm môn không dạy lớp không xem. | UC 42, US-INT-001 S3 |
+| BR-U11-30 | Quiz bật theo dõi: Quiz Taking gửi sự kiện qua `useActivityTracker`, gồm cả mất tiêu điểm cửa sổ (`trackFocus`, chỉ Quiz); gửi hết sự kiện đang chờ trước khi nộp, tối đa chờ 2 giây. U11 kiểm chủ lượt, `IN_PROGRESS`, chính sách đã chụp rồi gọi `IActivityWrite` của U08. | FR-039 |
+| BR-U11-31 | Giảng viên chính của lớp xem lượt Quiz của sinh viên lớp mình trên Quiz Detail (U11 gắn qua slot `QuizDetailSection` của U10): số lượt, điểm cao nhất, điểm lượt gần nhất, thời điểm nộp, số lần rời trang, cờ thiếu tín hiệu, câu trả lời từng lượt và dòng thời gian hoạt động (`IActivityQuery`). Chỉ sửa được quyết định trừ điểm (BR-U11-33); Admin, Chủ nhiệm môn không dạy lớp không xem. | UC 42, US-INT-001 S3 |
+| BR-U11-32 | Khi nộp (cả ba cách), Quiz bật theo dõi thì chụp vào lượt: số lần rời chắc chắn và tín hiệu `OK`, `NO_SIGNAL` (không có sự kiện nào), `SIGNAL_LOST` (có khoảng thiếu, hoặc vẫn lưu câu trả lời hơn 2 phút sau sự kiện cuối), `UNAVAILABLE` (không đọc được). Cờ chỉ để giảng viên xem, sinh viên không thấy; không phải bằng chứng gian lận vì tín hiệu do trình duyệt tự báo, có thể bị chặn hoặc giả. Sự kiện gốc hết hạn thì dòng thời gian báo `EXPIRED`, số liệu đã chụp vẫn còn. | FR-039 |
+| BR-U11-33 | Hệ thống không tự trừ điểm, chỉ gợi ý: `mức gợi ý = min(mức tối đa, max(0, số lần − số lần miễn) × điểm mỗi lần)`, không vượt điểm gốc. Chỉ đếm khoảng rời `KNOWN` dài ít nhất `minAwaySeconds`; không có tín hiệu hoặc không đọc được thì không có gợi ý. Nộp bài giữ nguyên điểm: `raw_score` là điểm chấm, `score` là điểm cuối. Chỉ lượt có mức gợi ý mới được quyết định. Giảng viên chọn trừ (lớn hơn 0, không quá điểm gốc, được khác mức gợi ý) hoặc không trừ, bắt buộc lý do; `score = raw_score − điểm trừ`. Được đổi quyết định, mỗi lần ghi audit `QUIZ_PENALTY_APPLIED` hoặc `QUIZ_PENALTY_DISMISSED`. Sinh viên được báo quy tắc trước và trong khi làm; kết quả không hiện mức gợi ý, chỉ hiện số lần rời, việc đang chờ xem xét, hoặc quyết định kèm lý do; ẩn theo cờ hiện điểm. Quiz vẫn không vào sổ điểm (BR-U11-21). | FR-039 sửa 2026-11-02 |
 
 ## 5. Audit và lỗi
 

@@ -1,5 +1,5 @@
 import { ApiError } from "@/shared/api/client";
-import type { SubmitMode } from "./types";
+import type { ActivitySignal, LeavePenalty, PenaltyView, SubmitMode } from "./types";
 
 const SYSTEM_BUSY = "Hệ thống tạm bận, vui lòng thử lại sau.";
 
@@ -11,6 +11,8 @@ const ERROR_LABELS: Record<string, string> = {
   ATTEMPT_TIME_UP: "Đã hết thời gian làm bài.",
   ATTEMPT_SUBMITTED: "Lượt này đã nộp.",
   QUIZ_PRACTICE_STUDENT_ONLY: "Chỉ sinh viên làm Quiz Practice.",
+  PENALTY_NOT_DECIDABLE: "Lượt này không có mức trừ gợi ý.",
+  PENALTY_POINTS_INVALID: "Điểm trừ phải lớn hơn 0, không quá điểm gốc, tối đa 2 chữ số thập phân.",
   SYSTEM_BUSY,
 };
 
@@ -45,6 +47,32 @@ export function formatDuration(fromIso: string, toIso: string | null): string {
 
 export function attemptsText(used: number, max: number | null): string {
   return max === null ? `${used} lượt · không giới hạn` : `${used} / ${max} lượt`;
+}
+
+/** Cờ tín hiệu cho giảng viên (BR-U11-32); chỉ là dấu hiệu, tín hiệu tốt thì không hiện gì. */
+export function signalText(signal: ActivitySignal | null | undefined): string | null {
+  return signal === "NO_SIGNAL" ? "Không nhận được tín hiệu"
+    : signal === "SIGNAL_LOST" ? "Mất tín hiệu một phần"
+      : signal === "UNAVAILABLE" ? "Không đọc được dữ liệu lúc nộp" : null;
+}
+
+/** Quy tắc gợi ý trừ điểm để báo sinh viên trước và trong khi làm bài (BR-U11-33): giảng viên mới là người quyết định. */
+export function penaltyRuleText(rule: LeavePenalty): string {
+  const free = rule.freeLeaves > 0 ? `Được miễn ${rule.freeLeaves} lần đầu rời trang; sau đó mỗi lần` : "Mỗi lần rời trang";
+  const max = rule.maxPenalty === null ? "" : `, tối đa ${formatPoints(rule.maxPenalty)} điểm`;
+  const min = rule.minAwaySeconds > 0 ? ` Chỉ tính khi rời từ ${rule.minAwaySeconds} giây trở lên.` : "";
+  return `${free} có thể bị trừ ${formatPoints(rule.pointsPerLeave)} điểm${max}, do giảng viên quyết định khi xem lượt làm.${min}`;
+}
+
+/** Dòng rời trang và điểm trừ trên kết quả của sinh viên (BR-U11-33); không có gì để báo thì trả về null. */
+export function penaltyResultText(penalty: PenaltyView): string | null {
+  const leaves = `Rời trang ${penalty.leaveCount ?? 0} lần`;
+  if (penalty.decision === "APPLIED") {
+    return `Điểm gốc ${formatPoints(penalty.rawScore)} · ${leaves.toLowerCase()} · giảng viên trừ ${formatPoints(penalty.penaltyPoints)} điểm: ${penalty.decisionReason}`;
+  }
+  if (penalty.decision === "DISMISSED") return `${leaves} · giảng viên quyết định không trừ điểm: ${penalty.decisionReason}`;
+  if (penalty.decisionPending) return `${leaves} · chưa bị trừ điểm, giảng viên sẽ xem xét.`;
+  return (penalty.leaveCount ?? 0) > 0 ? `${leaves}.` : null;
 }
 
 /** Lượt được hệ thống tự nộp thì ghi rõ lý do (L4); nộp tay thì không có nhãn. */

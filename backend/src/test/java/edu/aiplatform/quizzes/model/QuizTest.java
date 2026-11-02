@@ -24,12 +24,10 @@ class QuizTest {
     }
 
     @Test
-    void lifecycleGoesDraftReviewedOpenRetired() {
-        Quiz reviewed = draft().reviewed(NOW);
-        assertThat(reviewed.status()).isEqualTo(QuizStatus.REVIEWED);
-        assertThat(reviewed.edited(NOW).status()).as("sửa Quiz đã duyệt về nháp").isEqualTo(QuizStatus.DRAFT);
+    void lifecycleGoesDraftOpenRetired() {
+        assertThat(draft().edited(NOW).status()).as("sửa nháp vẫn nháp").isEqualTo(QuizStatus.DRAFT);
 
-        Quiz open = reviewed.published(NOW);
+        Quiz open = draft().published(NOW);
         assertThat(open.status()).isEqualTo(QuizStatus.OPEN);
         assertThat(open.isEditable()).as("quiz đang mở sửa tại chỗ").isTrue();
         assertThat(open.isDeletable()).isFalse();
@@ -40,7 +38,7 @@ class QuizTest {
         assertThat(retired.retiredReason()).isEqualTo("Hết dùng");
         assertThat(retired.reopened(NOW).status()).as("trùng thời điểm vẫn là Quiz từng phát hành")
                 .isEqualTo(QuizStatus.OPEN);
-        assertThatThrownBy(() -> draft().published(NOW)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> open.published(NOW)).as("chỉ phát hành từ nháp").isInstanceOf(IllegalStateException.class);
 
         Quiz later = open.retired("Hết dùng", NOW.plusSeconds(60));
         assertThat(later.reopened(NOW.plusSeconds(120)).status()).as("quiz đã phát hành mở lại").isEqualTo(QuizStatus.OPEN);
@@ -55,7 +53,7 @@ class QuizTest {
     @Test
     void copyStartsAsDraftWithoutPublicationHistory() {
         Quiz open = draft().withDetails("Bài", "Hướng dẫn", new QuizSettings(true, true, 30, 3, true, true), false,
-                null, List.of(UUID.randomUUID()), NOW).reviewed(NOW).published(NOW);
+                null, NOW).withPaperMode(QuizPaperMode.GENERATED, NOW).published(NOW);
 
         Quiz copy = open.copyAs(QuizOrigin.NEW_VERSION, 2, null, author, NOW);
 
@@ -65,7 +63,7 @@ class QuizTest {
         assertThat(copy.publishedAt()).isNull();
         assertThat(copy.versionNo()).isEqualTo(2);
         assertThat(copy.settings()).isEqualTo(open.settings());
-        assertThat(copy.referenceMaterialIds()).isEqualTo(open.referenceMaterialIds());
+        assertThat(copy.paperMode()).isEqualTo(QuizPaperMode.GENERATED);
         assertThat(copy.isDeletable()).isTrue();
     }
 

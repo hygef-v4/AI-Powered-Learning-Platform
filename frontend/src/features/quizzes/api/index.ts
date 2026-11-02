@@ -1,7 +1,8 @@
 import { apiFetch } from "@/shared/api/client";
 import type {
-  AiDraft, AiDraftInput, BankAcceptResult, Difficulty, ImportResult, ManagedSubject, QuestionContent, QuestionDetail,
-  QuestionPage, QuestionQuery, QuizDetail, QuizDetailsInput, QuizItemInput, QuizPage, QuizRow, QuizStatus, RandomPreview,
+  AiDraft, AiDraftInput, BankAcceptResult, BankTag, BulkItem, BulkResult, Difficulty, DrawRuleInput, DuplicateGroup,
+  ImportResult, ManagedSubject, PaperPreview, ProposalView, QuestionContent, QuestionDetail, QuestionPage, QuestionQuery,
+  QuizDetail, QuizDetailsInput, QuizItemInput, QuizPage, QuizPaperMode, QuizRow, QuizStatus, RandomPreview,
   SelectableMaterial,
 } from "../model/types";
 
@@ -69,6 +70,44 @@ export function deleteQuestion(id: string, version: number): Promise<void> {
   return apiFetch<void>(`${questionPath(id)}?version=${version}`, { method: "DELETE" });
 }
 
+export function approveQuestion(id: string, version: number): Promise<QuestionDetail> {
+  return apiFetch<QuestionDetail>(`${questionPath(id)}/approve`, { method: "POST", body: JSON.stringify({ version }) });
+}
+
+export function rejectQuestion(id: string, reason: string, version: number): Promise<QuestionDetail> {
+  return apiFetch<QuestionDetail>(`${questionPath(id)}/reject`, { method: "POST", body: JSON.stringify({ reason, version }) });
+}
+
+/** Thao tác hàng loạt trên ngân hàng: câu lỗi không chặn các câu khác. */
+export function bulkQuestions(subjectId: string, action: "activate" | "approve" | "reject", items: BulkItem[], reason?: string): Promise<BulkResult> {
+  const body = action === "reject" ? { items: items.map(({ id, version }) => ({ id, version })), reason } : { items: items.map(({ id, version }) => ({ id, version })) };
+  return apiFetch<BulkResult>(`${bankPath(subjectId)}:${action}`, { method: "POST", body: JSON.stringify(body) });
+}
+
+export function getDuplicateQuestions(subjectId: string, signal?: AbortSignal): Promise<DuplicateGroup[]> {
+  return apiFetch<DuplicateGroup[]>(`${bankPath(subjectId)}:duplicates`, { signal });
+}
+
+// --- Giảng viên đề xuất câu vào ngân hàng (BR-U10-09)
+
+const proposalPath = (classId: string) => `/api/v1/classes/${enc(classId)}/question-proposals`;
+
+export function getProposals(classId: string, signal?: AbortSignal): Promise<ProposalView[]> {
+  return apiFetch<ProposalView[]>(proposalPath(classId), { signal });
+}
+
+export function proposeQuestion(classId: string, content: QuestionContent): Promise<ProposalView> {
+  return apiFetch<ProposalView>(proposalPath(classId), { method: "POST", body: JSON.stringify(contentBody(content)) });
+}
+
+export function resubmitProposal(classId: string, id: string, content: QuestionContent, version: number): Promise<ProposalView> {
+  return apiFetch<ProposalView>(`${proposalPath(classId)}/${enc(id)}`, { method: "PATCH", body: JSON.stringify({ ...contentBody(content), version }) });
+}
+
+export function withdrawProposal(classId: string, id: string, version: number): Promise<void> {
+  return apiFetch<void>(`${proposalPath(classId)}/${enc(id)}?version=${version}`, { method: "DELETE" });
+}
+
 /** Nhập tệp: `dryRun` chỉ kiểm từng dòng, không có thì ghi các dòng hợp lệ (D3). */
 export function importQuestions(subjectId: string, file: File, dryRun: boolean): Promise<ImportResult> {
   const body = new FormData();
@@ -122,10 +161,10 @@ export function getQuiz(id: string, classId?: string | null, signal?: AbortSigna
 }
 
 export function updateQuizDetails(id: string, input: QuizDetailsInput, version: number): Promise<QuizDetail> {
-  const { title, instructions, settings, activityMonitoringEnabled, activityNotice, referenceMaterialIds } = input;
+  const { title, instructions, settings, activityMonitoringEnabled, activityNotice } = input;
   return apiFetch<QuizDetail>(quizPath(id), {
     method: "PATCH",
-    body: JSON.stringify({ title, instructions, settings, activityMonitoringEnabled, activityNotice, referenceMaterialIds, version }),
+    body: JSON.stringify({ title, instructions, settings, activityMonitoringEnabled, activityNotice, version }),
   });
 }
 
@@ -160,8 +199,24 @@ export function deleteInlineQuestion(id: string, questionId: string, version: nu
   return apiFetch<QuizDetail>(`${quizPath(id)}/inline-questions/${enc(questionId)}?version=${version}`, { method: "DELETE" });
 }
 
-export function reviewQuiz(id: string, version: number): Promise<QuizDetail> {
-  return post<QuizDetail>(`${quizPath(id)}/review`, { version });
+/** Lưu chế độ đề và quy tắc sinh đề (BR-U10-17). */
+export function saveDrawRules(id: string, paperMode: QuizPaperMode, rules: DrawRuleInput[], version: number): Promise<QuizDetail> {
+  return apiFetch<QuizDetail>(`${quizPath(id)}/draw-rules`, {
+    method: "PUT",
+    body: JSON.stringify({
+      paperMode, version,
+      rules: rules.map(({ tag, difficulty, questionCount, pointsEach }) => ({ tag, difficulty, questionCount, pointsEach })),
+    }),
+  });
+}
+
+export function getBankTags(id: string, signal?: AbortSignal): Promise<BankTag[]> {
+  return apiFetch<BankTag[]>(`${quizPath(id)}/bank-tags`, { signal });
+}
+
+/** Bốc thử một đề mẫu theo quy tắc đã lưu; không lưu gì. */
+export function previewPaper(id: string): Promise<PaperPreview> {
+  return post<PaperPreview>(`${quizPath(id)}/paper-preview`);
 }
 
 export function publishQuiz(id: string, version: number): Promise<QuizDetail> {
@@ -189,7 +244,7 @@ export function deleteQuiz(id: string, version: number): Promise<void> {
   return apiFetch<void>(`${quizPath(id)}?version=${version}`, { method: "DELETE" });
 }
 
-// --- Đề xuất AI, tài liệu tham khảo (F4, F8, H8)
+// --- Đề xuất AI, tài liệu nguồn cho AI (F4, F8, H8)
 
 const bankDraftPath = (subjectId: string) => `/api/v1/subjects/${enc(subjectId)}/question-ai-drafts`;
 const quizDraftPath = (quizId: string) => `${quizPath(quizId)}/ai-drafts`;

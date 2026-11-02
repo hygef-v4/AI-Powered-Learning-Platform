@@ -42,6 +42,11 @@ export const ACTION_LABELS: Record<string, string> = {
   GROUP_SUBMITTED: "Nộp bài nhóm",
   ANNOUNCEMENT_CREATED: "Tạo thông báo",
   QUIZ_REOPENED: "Mở lại quiz",
+  QUIZ_PENALTY_APPLIED: "Trừ điểm lượt quiz",
+  QUIZ_PENALTY_DISMISSED: "Quyết định không trừ điểm lượt quiz",
+  QUESTION_PROPOSED: "Đề xuất câu vào ngân hàng",
+  QUESTION_APPROVED: "Duyệt câu đề xuất",
+  QUESTION_REJECTED: "Từ chối câu đề xuất",
   QUIZ_RETIRED: "Lưu trữ quiz",
   QUIZ_ATTEMPT_SUBMITTED: "Nộp bài quiz",
 };

@@ -11,7 +11,7 @@ public class QuizMcpQueryTools implements IMcpToolProvider {
     private final QuizAuthoringService authoring;
     public QuizMcpQueryTools(QuizAuthoringService authoring){this.authoring=authoring;}
     @Override public List<McpToolDefinition> tools(){return List.of(McpSchemas.read("list_quizzes","Tìm quiz theo lớp hoặc môn được phép.",
-            McpSchemas.SCOPE+","+McpSchemas.PAGE+",\"query\":"+McpSchemas.TEXT+",\"status\":{\"enum\":[\"DRAFT\",\"REVIEWED\",\"OPEN\",\"RETIRED\"]}"));}
+            McpSchemas.SCOPE+","+McpSchemas.PAGE+",\"query\":"+McpSchemas.TEXT+",\"status\":{\"enum\":[\"DRAFT\",\"OPEN\",\"RETIRED\"]}"));}
     @Override public McpToolResult call(Actor actor,String name,Map<String,Object> args){
         McpInput.teaching(actor);if(!"list_quizzes".equals(name))throw McpInput.invalid();var in=new McpInput(args);
         int page=in.page(),size=in.size();if(in.has("classId")==in.has("subjectId"))throw McpInput.invalid();

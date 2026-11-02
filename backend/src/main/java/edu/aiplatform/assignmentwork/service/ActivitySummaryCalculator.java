@@ -18,7 +18,7 @@ import java.util.UUID;
 /**
  * Tóm tắt rời trang (BR-U08-53; P4): ghép {@code HIDDEN} với {@code VISIBLE} theo phiên thành khoảng rời đã biết;
  * khoảng không có sự kiện quá 2 phút, sự kiện thiếu số thứ tự, giờ client lệch bất thường, rời trang chưa thấy quay
- * lại là "không rõ". Chỉ là dấu hiệu, không kết luận gian lận.
+ * lại là "không rõ". Chỉ là dấu hiệu do trình duyệt tự báo, không kết luận gian lận.
  */
 final class ActivitySummaryCalculator {
 
@@ -93,7 +93,9 @@ final class ActivitySummaryCalculator {
         }
         String note = unknown == 0 ? NOTE
                 : "Có " + unknown + " chỗ thiếu hoặc lệch dữ liệu, ghi là không rõ. " + NOTE;
-        return new ActivitySummary(ActivityPolicyState.AVAILABLE, away, known, List.copyOf(intervals), unknown, note);
+        Instant lastEventAt = events.stream().map(ActivityEvent::serverTime).max(Comparator.naturalOrder()).orElse(null);
+        return new ActivitySummary(ActivityPolicyState.AVAILABLE, away, known, List.copyOf(intervals), unknown, note,
+                lastEventAt);
     }
 
     /** Lệch giữa đồng hồ server và client của phiên, lấy ở sự kiện đầu có giờ client. */

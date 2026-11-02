@@ -158,10 +158,13 @@ class QuizAiDraftServiceTest {
         QuizSupport support = new QuizSupport(store.quizRepository, store.questionRepository, classes, access, active);
         QuizReferenceMaterials materials = new QuizReferenceMaterials(u13, support, access);
         authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access, audit,
-                materials, clock);
-        publication = new QuizPublicationService(store.quizRepository, support, listeners, event -> { }, audit, clock);
+                clock);
+        publication = new QuizPublicationService(store.quizRepository, support,
+                new QuizPaperService(store.quizRepository, store.questionRepository, support, clock), listeners,
+                event -> { }, audit, clock);
         drafts = new QuizAiDraftService(store.draftRepository, store.quizRepository, store.questionRepository, support,
-                access, active, materials, ai, audit, TransactionOperations.withoutTransaction(), clock);
+                access, active, materials, ai, audit, new QuestionDuplicates(store.questionRepository),
+                TransactionOperations.withoutTransaction(), clock);
         handler = new QuizDraftResultHandler(store.draftRepository, store.quizRepository, support, access, active,
                 new ObjectMapper(), clock);
         mcp = new QuizMcpTools(drafts, new ObjectMapper());
@@ -376,8 +379,7 @@ class QuizAiDraftServiceTest {
         store.put(q);
         QuizDetail withItem = authoring.saveItems(teacher, quiz.quiz().id(),
                 List.of(new QuizAuthoringService.ItemInput(q.id(), null)), quiz.quiz().version());
-        QuizDetail reviewed = publication.review(teacher, quiz.quiz().id(), withItem.quiz().version());
-        QuizDetail open = publication.publish(teacher, quiz.quiz().id(), reviewed.quiz().version());
+        QuizDetail open = publication.publish(teacher, quiz.quiz().id(), withItem.quiz().version());
         publication.retire(teacher, quiz.quiz().id(), null, open.quiz().version());
 
         ApplyOutcome outcome = handler.onReady(new AiTaskResult(UUID.randomUUID(), sent.taskType(), teacher,
@@ -524,32 +526,6 @@ class QuizAiDraftServiceTest {
                 .isEqualTo("AI_DRAFT_CLOSED");
         assertThat(drafts.listForQuiz(teacher, quiz.quiz().id())).isEmpty();
         assertThat(api(() -> drafts.getForBank(manager, subject, pending.id())).code()).isEqualTo("AI_DRAFT_NOT_FOUND");
-    }
-
-    // ---- Tài liệu gắn Quiz (H8) ----
-
-    @Test
-    void attachingMaterialsChecksOnlyNewlyAddedIds() {
-        QuizDetail quiz = classQuiz();
-        UUID ok = u13.add(ResourceRef.courseClass(classA), "Chương 1", false);
-        UUID foreign = u13.add(ResourceRef.subject(UUID.randomUUID()), "Môn khác", true);
-        UUID id = quiz.quiz().id();
-
-        assertThat(api(() -> authoring.updateDetails(teacher, id, details(List.of(foreign)), quiz.quiz().version()))
-                .code()).isEqualTo("MATERIAL_NOT_SELECTABLE");
-        QuizDetail attached = authoring.updateDetails(teacher, id, details(List.of(ok)), quiz.quiz().version());
-        assertThat(attached.quiz().referenceMaterialIds()).containsExactly(ok);
-
-        u13.down = true;
-        QuizDetail renamed = authoring.updateDetails(teacher, id, details(List.of(ok)), attached.quiz().version());
-        assertThat(renamed.quiz().version()).isGreaterThan(attached.quiz().version());
-        assertThat(api(() -> authoring.updateDetails(teacher, id, details(List.of(ok, UUID.randomUUID())),
-                renamed.quiz().version())).code()).isEqualTo("MATERIAL_SERVICE_UNAVAILABLE");
-    }
-
-    private static Details details(List<UUID> materials) {
-        return new Details("Luyện tập", null, Quiz.DEFAULT_SETTINGS, false, null,
-                materials);
     }
 
     // ---- MCP (H7, BR-U10-42) ----

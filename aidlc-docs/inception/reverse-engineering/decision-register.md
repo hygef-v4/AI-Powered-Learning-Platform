@@ -13,7 +13,12 @@ Baseline `staging@794a405304bf02dd2593a9fa2c88662d7cd52845`. User approved docum
 | D07 audit | Configurable 1–365 day retention | Activity retention is fixed at 1 day | No automatic penalty inferred |
 | D08 audit | Leader request/reject reason required | Optional, maximum 1,000 characters | Update validation and flow |
 | D09 audit | Module only an extension | Basic module is implemented in U13 | Keep advanced Lesson/RAG separate |
-| D10 audit | Only edit DRAFT, retire OPEN with reason, no reopen | OPEN edit stays OPEN; retire non-RETIRED; reopen DRAFT/OPEN | REVIEWED still exists; do not remove review from docs |
+| D10 audit | Only edit DRAFT, retire OPEN with reason, no reopen | OPEN edit stays OPEN; retire non-RETIRED; reopen DRAFT/OPEN | Quiz REVIEWED removed 2026-11-01 (D-Q2 below); Assignment REVIEWED remains |
+| D-Q1 2026-11-02 | FR-039: no automatic penalty | Still no automatic penalty. Quiz only: configurable suggested penalty computed at submit; the teacher applies an amount or dismisses it per attempt, with a reason; no signal means flag and no suggestion | User decision in the [question file](../requirements/2026-11-01-quiz-rework-questions.md), Question 2 option B, replacing the 2026-11-01 default of automatic deduction. Assignment unchanged |
+| D-Q2 2026-11-01 | Quiz DRAFT → REVIEWED → OPEN, author approves own quiz | DRAFT → OPEN; same validation at publish | Feedback 29/10 implemented |
+| D-Q3 2026-11-01 | Only Subject Manager writes to the bank | Teachers propose, manager approves or rejects; quiz-own questions need no approval | Feedback 29/10 implemented |
+| D-Q4 2026-11-01 | Near-duplicate via `pg_trgm` proposed in the assessment | Trigram in Java; exact via SHA-256 | Role `migrator` has no CREATE on the database, so `create extension` could break existing environments |
+| D-Q5 2026-11-01 | Quiz could attach reference materials | Attachment removed from API and UI; column `reference_material_ids` kept unused until checked on staging | AI source materials remain |
 | D15 discovered during execution | FR-012/BR-U06-03 prohibit all API-key readback | AiConnectionService.revealInstitutional and AiAdminController permit Admin reveal for non-REVOKED institutional connections, including DISABLED; AI_CONNECTION_KEY_REVEALED audit | Document AS-BUILT exception; security design approval pending, no code/security change in this synchronization. Admin cannot thereby read personal keys |
 
 ## Execution rulings

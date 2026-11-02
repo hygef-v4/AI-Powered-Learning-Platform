@@ -11,6 +11,7 @@ import edu.aiplatform.quizzes.contract.QuizView;
 import edu.aiplatform.quizzes.repository.IQuestionRepository;
 import edu.aiplatform.quizzes.repository.IQuizRepository;
 import edu.aiplatform.quizzes.repository.IQuizRepository.QuizSummary;
+import edu.aiplatform.quizzes.model.DrawRule;
 import edu.aiplatform.quizzes.model.Question;
 import edu.aiplatform.quizzes.model.Quiz;
 import edu.aiplatform.quizzes.model.QuizItem;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -26,7 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Cài {@link IQuizQuery} cho U11, U13 (F14): Quiz {@code OPEN} của lớp và của môn chứa lớp (BR-U10-25); đề cho
+ * Cài {@link IQuizQuery} cho U11 (F14): Quiz {@code OPEN} của lớp và của môn chứa lớp (BR-U10-25); đề cho
  * người học không có đáp án, giải thích (P2, NFR-U10-31). Không kiểm quyền: unit gọi tự kiểm người học.
  */
 @Service
@@ -35,11 +37,14 @@ public class QuizQueryService implements IQuizQuery {
     private final IQuizRepository quizzes;
     private final IQuestionRepository questions;
     private final IClassAccess classes;
+    private final QuizPaperService papers;
 
-    public QuizQueryService(IQuizRepository quizzes, IQuestionRepository questions, IClassAccess classes) {
+    public QuizQueryService(IQuizRepository quizzes, IQuestionRepository questions, IClassAccess classes,
+                            QuizPaperService papers) {
         this.quizzes = quizzes;
         this.questions = questions;
         this.classes = classes;
+        this.papers = papers;
     }
 
     @Override
@@ -60,35 +65,62 @@ public class QuizQueryService implements IQuizQuery {
     @Transactional(readOnly = true)
     public Optional<QuizStudentView> getStudentView(UUID quizId) {
         return quizzes.find(quizId).map(quiz -> {
+            if (quiz.generated()) {
+                List<DrawRule> rules = quizzes.drawRules(quizId);
+                return new QuizStudentView(view(quiz, QuizSupport.maxScoreOf(rules)), quiz.instructions(), List.of(),
+                        rules.stream().mapToInt(DrawRule::questionCount).sum(), true);
+            }
             List<QuizItem> items = quizzes.items(quizId);
             Map<UUID, Question> byId = questions.findAll(items.stream().map(QuizItem::questionId).toList()).stream()
                     .collect(Collectors.toMap(Question::id, Function.identity()));
             List<QuizQuestionView> views = items.stream().filter(item -> byId.containsKey(item.questionId()))
-                    .map(item -> {
-                        Question q = byId.get(item.questionId());
-                        return new QuizQuestionView(q.id(), q.content().type(), q.content().stem(),
-                                q.content().options().stream().map(o -> new QuizOptionView(o.id(), o.text())).toList(),
-                                item.points());
-                    })
+                    .map(item -> questionView(byId.get(item.questionId()), item.points()))
                     .toList();
             BigDecimal max = items.stream().map(QuizItem::points).reduce(BigDecimal.ZERO, BigDecimal::add);
             return new QuizStudentView(view(quiz, max), quiz.instructions(), views);
         });
     }
 
+    /** Đề cho lượt mới: Quiz đề cố định dùng {@code quiz_items}; Quiz sinh đề bốc câu theo quy tắc (BR-U10-17). */
     @Override
     @Transactional(readOnly = true)
-    public List<QuizView> listByMaterial(UUID materialId, UUID classId) {
-        return classes.getClassRef(classId)
-                .map(ref -> quizzes.listOpenByMaterial(materialId, classId, ref.subjectId()).stream().map(this::view).toList())
-                .orElse(List.of());
+    public Optional<QuizStudentView> drawPaper(UUID quizId, Set<UUID> seenQuestionIds, long seed) {
+        return quizzes.find(quizId).flatMap(quiz -> {
+            if (!quiz.generated()) {
+                return getStudentView(quizId);
+            }
+            return Optional.of(paperView(quiz, papers.draw(quiz, seenQuestionIds, seed)));
+        });
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<QuizStudentView> getPaper(UUID quizId, Map<UUID, BigDecimal> questionPoints) {
+        return quizzes.find(quizId).map(quiz -> paperView(quiz, questionPoints));
+    }
+
+    private QuizStudentView paperView(Quiz quiz, Map<UUID, BigDecimal> questionPoints) {
+        Map<UUID, Question> byId = questions.findAll(questionPoints.keySet()).stream()
+                .collect(Collectors.toMap(Question::id, Function.identity()));
+        List<QuizQuestionView> views = questionPoints.entrySet().stream()
+                .filter(entry -> byId.containsKey(entry.getKey()))
+                .map(entry -> questionView(byId.get(entry.getKey()), entry.getValue()))
+                .toList();
+        BigDecimal max = questionPoints.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new QuizStudentView(view(quiz, max), quiz.instructions(), views, views.size(), true);
+    }
+
+    private static QuizQuestionView questionView(Question q, BigDecimal points) {
+        return new QuizQuestionView(q.id(), q.content().type(), q.content().stem(),
+                q.content().options().stream().map(o -> new QuizOptionView(o.id(), o.text())).toList(), points);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<QuizView> get(UUID quizId) {
-        return quizzes.find(quizId).map(quiz -> view(quiz,
-                quizzes.items(quizId).stream().map(QuizItem::points).reduce(BigDecimal.ZERO, BigDecimal::add)));
+        return quizzes.find(quizId).map(quiz -> view(quiz, quiz.generated()
+                ? QuizSupport.maxScoreOf(quizzes.drawRules(quizId))
+                : quizzes.items(quizId).stream().map(QuizItem::points).reduce(BigDecimal.ZERO, BigDecimal::add)));
     }
 
     private QuizView view(QuizSummary summary) {
@@ -97,7 +129,6 @@ public class QuizQueryService implements IQuizQuery {
 
     private static QuizView view(Quiz q, BigDecimal maxScore) {
         return new QuizView(q.id(), q.scope(), q.classId(), q.subjectId(), q.versionNo(), q.title(), q.status(),
-                q.settings(), q.activityMonitoringEnabled(), q.activityNotice(), q.referenceMaterialIds(), maxScore,
-                q.publishedAt());
+                q.settings(), q.activityMonitoringEnabled(), q.activityNotice(), maxScore, q.publishedAt());
     }
 }

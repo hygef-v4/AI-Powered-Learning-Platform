@@ -78,3 +78,15 @@ Source-observed at `794a405304bf02dd2593a9fa2c88662d7cd52845`. Rows use the **de
 ## Structure snapshot
 
 Paths refreshed for parent HEAD `5a76e428` + working-tree structure refactor; endpoint annotations and public contracts unchanged. [Verification results](../../construction/build-and-test/2026-10-30-package-moves-only-results.md).
+
+## Delta 2026-11-01: làm lại Quiz
+
+| Yêu cầu | Rule | Source |
+|---|---|---|
+| Bỏ duyệt Quiz | BR-U10-20, 21, 22 | `QuizPublicationService`, `Quiz`, `V20261101_1200` |
+| Sinh đề theo thẻ | BR-U10-17, BR-U11-11 | `QuizPaperService`, `QuizPaperPlanner`, `AttemptSnapshot` |
+| Chống trùng | BR-U10-08 | `QuestionFingerprint`, `QuestionDuplicates` |
+| Đề xuất và duyệt câu | BR-U10-09 | `QuestionProposalService`, `QuestionBankService` |
+| Tín hiệu rời trang | BR-U11-30, 32 | `useActivityTracker`, `AttemptActivityAssessor` |
+| Trừ điểm | BR-U10-15, BR-U11-33 | `AttemptActivityAssessor`, `TeacherQuizAttemptService` |
+| Mỗi câu một trang | Frontend U11 | `QuestionPager`, `ResultQuestions` |

@@ -7,6 +7,8 @@ import edu.aiplatform.quizzes.service.AiDraftViews.AiDraftView;
 import edu.aiplatform.quizzes.service.AiDraftViews.BankAcceptResult;
 import edu.aiplatform.quizzes.service.QuestionBankService;
 import edu.aiplatform.quizzes.service.QuestionImporter;
+import edu.aiplatform.quizzes.service.QuestionViews.BulkResult;
+import edu.aiplatform.quizzes.service.QuestionViews.DuplicateGroup;
 import edu.aiplatform.quizzes.service.QuestionViews.QuestionDetail;
 import edu.aiplatform.quizzes.service.QuestionViews.QuestionPage;
 import edu.aiplatform.quizzes.service.QuizAiDraftService;
@@ -156,6 +158,45 @@ public class QuestionController {
     public QuestionDetail activate(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                    @RequestBody JsonNode body) {
         return bank.activate(actor, id, QuestionRequests.versionOnly(body));
+    }
+
+    /** Duyệt câu giảng viên đề xuất (BR-U10-09). */
+    @PostMapping(value = "/questions/{id}/approve", consumes = "application/json")
+    public QuestionDetail approve(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+                                  @RequestBody JsonNode body) {
+        return bank.approve(actor, id, QuestionRequests.versionOnly(body));
+    }
+
+    @PostMapping(value = "/questions/{id}/reject", consumes = "application/json")
+    public QuestionDetail reject(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+                                 @RequestBody JsonNode body) {
+        QuestionRequests.Reject request = QuestionRequests.reject(body);
+        return bank.reject(actor, id, request.reason(), request.version());
+    }
+
+    @PostMapping(value = "/subjects/{subjectId}/questions:activate", consumes = "application/json")
+    public BulkResult activateMany(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
+                                   @RequestBody JsonNode body) {
+        return bank.activateMany(actor, subjectId, QuestionRequests.bulk(body).items());
+    }
+
+    @PostMapping(value = "/subjects/{subjectId}/questions:approve", consumes = "application/json")
+    public BulkResult approveMany(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
+                                  @RequestBody JsonNode body) {
+        return bank.approveMany(actor, subjectId, QuestionRequests.bulk(body).items());
+    }
+
+    @PostMapping(value = "/subjects/{subjectId}/questions:reject", consumes = "application/json")
+    public BulkResult rejectMany(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
+                                 @RequestBody JsonNode body) {
+        QuestionRequests.Bulk request = QuestionRequests.bulk(body);
+        return bank.rejectMany(actor, subjectId, request.items(), request.reason());
+    }
+
+    /** Các nhóm câu giống hệt nhau trong ngân hàng (BR-U10-08). */
+    @GetMapping("/subjects/{subjectId}/questions:duplicates")
+    public List<DuplicateGroup> duplicates(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId) {
+        return bank.duplicateGroups(actor, subjectId);
     }
 
     @PostMapping(value = "/questions/{id}/retire", consumes = "application/json")

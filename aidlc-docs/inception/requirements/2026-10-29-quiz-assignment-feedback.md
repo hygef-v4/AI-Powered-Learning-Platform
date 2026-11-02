@@ -9,15 +9,15 @@ Ghi lại góp ý (một phần theo thầy Kiên) để chuẩn bị làm lại
 
 ## 2. Quiz — U10 (soạn), U11 (làm và kết quả), U09 (review activity có scope)
 
-- [ ] [proposed/pending] Phần "Tài liệu tham khảo" trong Quiz có vẻ thừa → xem lại, có thể bỏ.
-- [ ] [proposed/pending] **Quiz config (sinh đề):** khi sinh viên bắt đầu làm thì hệ thống sinh đề mới, không cố định bộ câu hỏi. Người tạo cấu hình theo tag, ví dụ: tag 1 lấy 4 câu, tag 2 lấy 5 câu, tag 3 lấy 7 câu.
-- [ ] [partial/source-observed] **Chống gian lận:** dùng JS ghi số lần sinh viên rời tab (out tab).
+- [x] [source-observed 01/11] Phần "Tài liệu tham khảo" trong Quiz có vẻ thừa → đã bỏ phần gắn vào quiz; giữ phần chọn tài liệu nguồn cho AI.
+- [x] [source-observed 01/11] **Quiz config (sinh đề):** khi sinh viên bắt đầu làm thì hệ thống sinh đề mới, không cố định bộ câu hỏi. Người tạo cấu hình theo tag, ví dụ: tag 1 lấy 4 câu, tag 2 lấy 5 câu, tag 3 lấy 7 câu.
+- [x] [source-observed 01/11] **Chống gian lận:** dùng JS ghi số lần sinh viên rời tab (out tab); thêm `blur`, cờ mất tín hiệu, chụp số liệu vào lượt.
   - Hạn chế đã biết: sinh viên có thể tắt JS / chặn script, nên đây chỉ là tín hiệu, không phải bằng chứng.
-  - [ ] [conflicting/decision-needed] Cho cấu hình **bao nhiêu lượt out tab thì trừ bao nhiêu điểm**.
-  - ⚠ Mâu thuẫn với quyết định cũ FR-039 (council-features-2026-10-13, mục 2: "không tự trừ điểm, không kết luận gian lận"). Cần chốt lại trước khi làm.
-- [ ] [partial/source-observed] Hiển thị câu hỏi **mỗi câu một trang**; màn xem kết quả cũng mỗi câu một trang.
-- [ ] [proposed/pending] **Ngân hàng câu hỏi:** thêm cơ chế chống trùng câu hỏi, hoặc cho chủ nhiệm môn duyệt khi có câu hỏi mới vào ngân hàng.
-- [ ] [proposed/pending] **Bước duyệt hiện tại đang thừa.** Chỉ giữ duyệt cho một trường hợp: giảng viên đưa câu hỏi vào ngân hàng câu hỏi → chủ nhiệm môn duyệt.
+  - [x] [source-observed 01/11] Cho cấu hình **bao nhiêu lượt out tab thì trừ bao nhiêu điểm**.
+  - Người dùng chốt ngày 02/11: hệ thống chỉ gợi ý mức trừ, giảng viên quyết định từng lượt; xem [file câu hỏi](2026-11-01-quiz-rework-questions.md).
+- [x] [source-observed 01/11] Hiển thị câu hỏi **mỗi câu một trang**; màn xem kết quả cũng mỗi câu một trang.
+- [x] [source-observed 01/11] **Ngân hàng câu hỏi:** thêm cơ chế chống trùng câu hỏi, hoặc cho chủ nhiệm môn duyệt khi có câu hỏi mới vào ngân hàng.
+- [x] [source-observed 01/11] **Bước duyệt hiện tại đang thừa.** Chỉ giữ duyệt cho một trường hợp: giảng viên đưa câu hỏi vào ngân hàng câu hỏi → chủ nhiệm môn duyệt.
 - [ ] [partial/source-observed] **Tạo đề bằng AI:** không dùng popup (hoặc nếu giữ popup thì phải kéo rộng ra).
 
 ## 3. Assignment — U07 (soạn), U08 (làm)
@@ -67,7 +67,7 @@ Ghi lại góp ý (một phần theo thầy Kiên) để chuẩn bị làm lại
 | Module/chương và Quiz trong learning materials | source-observed | U13 MaterialModuleService + ModuleBoard; Quiz attach có quyền riêng. Không phải RAG/Lesson nâng cao |
 | Sinh đề mỗi lần theo tag/count | proposed/pending | Chưa có bằng chứng đủ về tag allocation/sampling contract; không tick theo commit UI |
 | Out-tab signal | partial/source-observed | Activity hiện có theo policy, retention 1 ngày; không automatic penalty |
-| Trừ điểm theo out-tab | conflicting/decision-needed | Trái FR-039 no automatic penalty; chưa thay quyết định cũ |
+| Trừ điểm theo out-tab | decided 02/11 | Giữ FR-039 no automatic penalty; hệ thống gợi ý mức trừ, giảng viên quyết định từng lượt |
 | Mỗi câu một trang lúc làm/kết quả | partial | QuizTakingPage dùng index, một question; ResultQuestions vẫn map toàn bộ questions |
 | Chống trùng/người duyệt ngân hàng | proposed/pending | Version/ACTIVE bank không chứng minh duplicate-detection hoặc teacher proposal approval đầy đủ |
 | Bỏ bước REVIEWED Quiz | proposed/pending | Source vẫn có REVIEWED/review/publish; không mô tả đã bỏ |
@@ -86,3 +86,7 @@ Ghi lại góp ý (một phần theo thầy Kiên) để chuẩn bị làm lại
 | Hướng dẫn sử dụng hoàn chỉnh | proposed/pending | Có MCP/API guides; chưa chứng minh user manual toàn sản phẩm |
 
 Checkbox hoàn thành ở đây chỉ nói source đã có đúng phần được mô tả, không phải E2E acceptance.
+
+## Đối chiếu source — 2026-11-01
+
+7 mục Quiz ở trên đã có trong source trên nhánh `feat/quiz-rework-2026-11-01`: [đánh giá](2026-11-01-quiz-feedback-assessment.md), [roadmap](../../construction/plans/code-generation-plan/2026-11-01-quiz-rework.md), [kết quả và giới hạn](../../construction/build-and-test/2026-11-01-quiz-rework-results.md). Câu hỏi 1–3 ở mục "Câu hỏi cần chốt" được áp dụng theo phương án đề xuất, chưa do người dùng chọn. Các bảng ở trên ghi trạng thái lúc 30/10 và giữ làm lịch sử.

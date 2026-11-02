@@ -47,7 +47,6 @@ app/materials/[id]/               MaterialDetailPage        #24 Material Detail
 app/materials/[id]/view/          LearningMaterialPage      #37 Learning Material
   ClassMaterialNav                                          danh sách học liệu của lớp, mục đang xem
   PdfViewer, FileDownloadButton, YoutubeEmbed
-  (vùng LearningMaterialSection cho U11)
 ```
 
 ## 3. Component và API
@@ -59,7 +58,7 @@ app/materials/[id]/view/          LearningMaterialPage      #37 Learning Materia
 | `MaterialDetailPage`, `MaterialPreview` | `GET /api/v1/materials/{id}` | Nút quay lại; tên kèm nhãn trạng thái; đường dẫn "Học liệu › mã môn"; nút Lưu trữ, Lưu thay đổi; "Xem trước": PDF xem ngay có chuyển trang, video nhúng |
 | `MaterialInfoForm`, `ReplaceVersionDialog` | `PATCH /api/v1/materials/{id}`, `POST .../versions` | "Thông tin": Tên học liệu*, Mô tả (tùy chọn), Tệp hiện hành (tên, dung lượng · phiên bản) kèm nút Thay tệp ("Thay tệp tạo phiên bản mới; phiên bản cũ vẫn xem được."), Trích chữ; `409` báo tải lại |
 | `VersionHistory` | `GET /api/v1/materials/{id}` | "Lịch sử phiên bản": Phiên bản, Người tạo, Thời điểm, Trích chữ, nhãn Hiện hành |
-| `ArchiveMaterialDialog` | `POST .../archive` | "Lưu trữ học liệu?": "X sẽ ẩn với sinh viên và giảng viên. Học liệu không bị xóa; bạn có thể mở lại ở tab Lưu trữ."; "Bài tập, Quiz đang gắn học liệu này vẫn giữ liên kết nhưng sinh viên không mở được học liệu đã lưu trữ."; Hủy, Lưu trữ |
+| `ArchiveMaterialDialog` | `POST .../archive` | "Lưu trữ học liệu?": "X sẽ ẩn với sinh viên và giảng viên. Học liệu không bị xóa; bạn có thể mở lại ở tab Lưu trữ."; "Bài tập đang gắn học liệu này vẫn giữ liên kết nhưng sinh viên không mở được học liệu đã lưu trữ."; Hủy, Lưu trữ |
 | `ClassMaterialsTab` | `GET /api/v1/classes/{classId}/materials`, `POST .../materials` | Lọc Tất cả, Của lớp (n), Của môn (n), Lưu trữ; nút Thêm học liệu; cột #, Học liệu, Phạm vi (Của lớp, Của môn), Trích chữ, thao tác Xem, Lưu trữ (học liệu của lớp) hoặc "Chỉ xem" (học liệu của môn); "Học liệu của lớp chỉ sinh viên lớp này thấy. Học liệu của môn do Chủ nhiệm môn quản lý, bạn chỉ xem." |
 | `ClassMaterialsCard` | `GET /api/v1/me/classes/{classId}/materials` | "Học liệu" (số học liệu): danh sách có số thứ tự, tên, loại · dung lượng, nhãn "của lớp"; bấm mở Learning Material |
 | `LearningMaterialPage`, `PdfViewer`, `YoutubeEmbed`, `FileDownloadButton` | `GET .../view`, `POST .../download-token` | Nút quay lại; tên; đường dẫn "Lớp của tôi › lớp › Học liệu"; nút Tải xuống (tệp) hoặc Mở trên YouTube (video); cột trái: danh sách học liệu của lớp, mục đang xem tô đậm; phần Quiz gắn với học liệu (U11); "Mô tả" kèm loại · dung lượng · ngày cập nhật; vùng xem: PDF xem ngay có chuyển trang, video qua `youtube-nocookie.com`. Không hiện thời lượng hay tên kênh YouTube (không lưu) |

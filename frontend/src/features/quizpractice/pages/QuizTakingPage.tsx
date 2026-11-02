@@ -1,15 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import { Alert, Button, cx, Dialog, Pill } from "@/shared/ui";
 import { getAttempt, recordQuizActivity, saveAnswers, submitAttempt } from "../api";
-import { errorCode, errorMessage, formatPoints } from "../model/labels";
+import { QuestionNav, QuestionPrevNext, questionIndex } from "../components/QuestionPager";
+import { errorCode, errorMessage, formatPoints, penaltyRuleText } from "../model/labels";
 import type { TakingView } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 export const AUTOSAVE_DELAY_MS = 2000;
+/** Không để việc gửi nốt sự kiện rời trang giữ chân lần nộp bài. */
+const ACTIVITY_DRAIN_LIMIT_MS = 2000;
 type SaveState = "saved" | "dirty" | "saving" | "error";
 /** `time-up`: máy chủ không nhận lưu vì đã quá hạn cộng ân hạn; `failed`: còn câu trả lời chưa lưu được. */
 type SaveOutcome = "saved" | "time-up" | "failed";
@@ -26,14 +30,15 @@ function clockText(seconds: number): string {
 }
 
 /**
- * Màn #44 Quiz Taking (UC 51; BR-U11-12, 13, 14): đề không có đáp án, tự lưu 2 giây sau lần chọn cuối và khi rời
- * trang kèm `answerVersion`, nộp có xác nhận, hết giờ thì lưu lần cuối rồi tự nộp.
+ * Màn #44 Quiz Taking (UC 51; BR-U11-12, 13, 14): đề không có đáp án, mỗi câu một trang (câu đang xem giữ trên URL để tải
+ * lại không mất chỗ), tự lưu 2 giây sau lần chọn cuối và khi rời trang kèm `answerVersion`, nộp có xác nhận, hết giờ thì
+ * lưu lần cuối rồi tự nộp.
  */
 export function QuizTakingPage({ attemptId }: { attemptId: string }) {
   const router = useRouter();
   const [view, setView] = useState<TakingView | null>(null);
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
-  const [index, setIndex] = useState(0);
+  const [questionParam, setQuestionParam] = useUrlState<string>("q", "1", undefined, "replace");
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [remaining, setRemaining] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -78,6 +83,11 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
       active = false;
     };
   }, [attemptId, reloadKey, toResult]);
+
+  // G3 (K5): gửi sự kiện rời trang khi lượt bật ghi nhận hoạt động; lỗi gửi không chặn làm bài.
+  const sendActivity = useCallback((events: ActivityEventInput[], { keepalive }: { keepalive: boolean }) =>
+    recordQuizActivity(attemptId, events, keepalive), [attemptId]);
+  const drainActivity = useActivityTracker({ enabled: !!view?.activityMonitoringEnabled, send: sendActivity, trackFocus: true });
 
   /** Một lần lưu câu trả lời đang chờ kèm `answerVersion` hiện có. */
   const saveOnce = useCallback(async (keepalive: boolean): Promise<SaveOutcome> => {
@@ -141,6 +151,8 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
       setFinishing(null);
       return;
     }
+    // Lượt đã nộp thì máy chủ không nhận sự kiện nữa: gửi nốt trước để số lần rời trang được tính đủ (BR-U11-33).
+    await Promise.race([drainActivity(), new Promise((resolve) => setTimeout(resolve, ACTIVITY_DRAIN_LIMIT_MS))]);
     try {
       await submitAttempt(attemptId);
       toResult();
@@ -154,7 +166,7 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
       setFinishing(null);
       setError(errorMessage(failure));
     }
-  }, [attemptId, flush, toResult]);
+  }, [attemptId, drainActivity, flush, toResult]);
 
   useEffect(() => {
     if (!view?.deadlineAt) return;
@@ -181,11 +193,6 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
     };
   }, [flush]);
 
-  // G3 (K5): gửi sự kiện rời trang khi lượt bật ghi nhận hoạt động; lỗi gửi không chặn làm bài.
-  const sendActivity = useCallback((events: ActivityEventInput[], { keepalive }: { keepalive: boolean }) =>
-    recordQuizActivity(attemptId, events, keepalive), [attemptId]);
-  useActivityTracker({ enabled: !!view?.activityMonitoringEnabled && finishing === null, send: sendActivity });
-
   const choose = (questionId: string, optionId: string, multi: boolean) => {
     const current = answersRef.current[questionId] ?? [];
     const next = multi
@@ -203,6 +210,8 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
   if (!view) {
     return error ? <PageLoadError>{error}</PageLoadError> : <PageLoading label="Đang tải đề…" />;
   }
+  const index = questionIndex(questionParam, view.questions.length);
+  const setIndex = (next: number) => setQuestionParam(String(next + 1));
   const question = view.questions[index];
   const answered = (id: string) => (answers[id]?.length ?? 0) > 0;
   const unanswered = view.questions.map((q, i) => (answered(q.questionId) ? null : i + 1)).filter((n): n is number => n !== null);
@@ -226,7 +235,10 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {view.activityMonitoringEnabled && (
         <div data-testid="quiz-taking-activity-notice">
-          <Alert tone="info">Quiz này ghi nhận hoạt động khi làm bài{view.activityNotice ? `: ${view.activityNotice}` : "."}</Alert>
+          <Alert tone="info">
+            Quiz này ghi nhận hoạt động khi làm bài{view.activityNotice ? `: ${view.activityNotice}` : "."}
+            {view.leavePenalty && <span className="block" data-testid="quiz-taking-penalty-rule">{penaltyRuleText(view.leavePenalty)}</span>}
+          </Alert>
         </div>
       )}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_240px]">
@@ -252,24 +264,14 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
                 );
               })}
             </ul>
-            <div className="mt-4 flex justify-between">
-              <Button size="sm" disabled={index === 0} onClick={() => setIndex(index - 1)} data-testid="quiz-taking-prev">Câu trước</Button>
-              <Button size="sm" disabled={index === view.questions.length - 1} onClick={() => setIndex(index + 1)} data-testid="quiz-taking-next">Câu tiếp</Button>
-            </div>
+            <QuestionPrevNext count={view.questions.length} index={index} onChange={setIndex} testIdPrefix="quiz-taking" />
           </section>
         )}
         <nav aria-label="Danh sách câu" className="rounded-xl border border-line bg-surface p-3">
           <p className="mb-2 text-xs text-muted">Đã làm {view.questions.length - unanswered.length} / {view.questions.length}</p>
-          <div className="flex flex-wrap gap-1.5">
-            {view.questions.map((q, i) => (
-              <button key={q.questionId} type="button" onClick={() => setIndex(i)} aria-current={i === index ? "true" : undefined}
-                aria-label={`Câu ${i + 1}${answered(q.questionId) ? " đã trả lời" : ""}`}
-                className={cx("h-8 w-8 rounded-lg border text-xs font-semibold",
-                  i === index ? "border-primary text-primary-ink" : answered(q.questionId) ? "border-success bg-success-soft text-success" : "border-line text-body")}>
-                {i + 1}
-              </button>
-            ))}
-          </div>
+          <QuestionNav count={view.questions.length} index={index} onChange={setIndex}
+            toneOf={(i) => (i === index ? "current" : answered(view.questions[i]?.questionId ?? "") ? "done" : "blank")}
+            labelOf={(i) => `Câu ${i + 1}${answered(view.questions[i]?.questionId ?? "") ? " đã trả lời" : ""}`} />
         </nav>
       </div>
       {confirming && (

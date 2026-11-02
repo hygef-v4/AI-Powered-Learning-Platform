@@ -33,6 +33,39 @@ public record Question(UUID id, UUID lineageId, int versionNo, QuestionScope sco
         return newInline(targetQuizId, subjectId, content, actorId, now);
     }
 
+    /** Câu giảng viên đề xuất vào ngân hàng: lineage mới, chờ Chủ nhiệm môn duyệt (BR-U10-09). */
+    public static Question newProposal(UUID subjectId, QuestionContent content, UUID createdBy, Instant now) {
+        UUID id = UUID.randomUUID();
+        return new Question(id, id, 1, QuestionScope.BANK, subjectId, null, content, QuestionStatus.PENDING, null,
+                createdBy, now, now, 0);
+    }
+
+    /** Đề xuất chưa được duyệt: đang chờ hoặc đã bị từ chối. */
+    public boolean isProposal() {
+        return status == QuestionStatus.PENDING || status == QuestionStatus.REJECTED;
+    }
+
+    /** Người đề xuất sửa rồi gửi lại: về {@code PENDING}. */
+    public Question resubmitted(QuestionContent newContent, Instant now) {
+        if (!isProposal()) {
+            throw new IllegalStateException("Chỉ gửi lại được câu đề xuất");
+        }
+        return new Question(id, lineageId, versionNo, scope, subjectId, quizId, newContent, QuestionStatus.PENDING, null,
+                createdBy, createdAt, now, version);
+    }
+
+    public Question approved(Instant now) {
+        requireStatus(QuestionStatus.PENDING);
+        return new Question(id, lineageId, versionNo, scope, subjectId, quizId, content, QuestionStatus.ACTIVE, now,
+                createdBy, createdAt, now, version);
+    }
+
+    public Question rejected(Instant now) {
+        requireStatus(QuestionStatus.PENDING);
+        return new Question(id, lineageId, versionNo, scope, subjectId, quizId, content, QuestionStatus.REJECTED, null,
+                createdBy, createdAt, now, version);
+    }
+
     public boolean isDraft() {
         return status == QuestionStatus.DRAFT;
     }
@@ -62,7 +95,7 @@ public record Question(UUID id, UUID lineageId, int versionNo, QuestionScope sco
 
     /** Bản nháp kế tiếp cùng lineage, chép nội dung của bản này; {@code nextVersionNo} lấy từ phiên bản lớn nhất. */
     public Question nextDraft(int nextVersionNo, UUID actorId, Instant now) {
-        if (status == QuestionStatus.DRAFT) {
+        if (status == QuestionStatus.DRAFT || isProposal()) {
             throw new IllegalStateException("Bản nháp không mở bản nháp mới");
         }
         return new Question(UUID.randomUUID(), lineageId, nextVersionNo, scope, subjectId, quizId, content,

@@ -15,7 +15,7 @@ public record QuizAttempt(UUID id, UUID quizId, UUID classId, UUID accountId, in
                           Map<UUID, List<String>> answers, long answerVersion, AttemptStatus status,
                           SubmitMode submitMode, Instant startedAt, Instant deadlineAt, Instant lastSavedAt,
                           Instant submittedAt, BigDecimal score, BigDecimal maxScore, Integer correctCount,
-                          List<QuestionResult> result) {
+                          List<QuestionResult> result, ActivityOutcome outcome) {
 
     /** Lần lưu cuối và nộp tay vẫn nhận trong 30 giây sau hạn (bù độ trễ mạng). */
     public static final Duration GRACE = Duration.ofSeconds(30);
@@ -23,6 +23,15 @@ public record QuizAttempt(UUID id, UUID quizId, UUID classId, UUID accountId, in
     public QuizAttempt {
         answers = answers == null ? Map.of() : Map.copyOf(answers);
         result = result == null ? null : List.copyOf(result);
+    }
+
+    public QuizAttempt(UUID id, UUID quizId, UUID classId, UUID accountId, int attemptNo, AttemptSnapshot snapshot,
+                       Map<UUID, List<String>> answers, long answerVersion, AttemptStatus status,
+                       SubmitMode submitMode, Instant startedAt, Instant deadlineAt, Instant lastSavedAt,
+                       Instant submittedAt, BigDecimal score, BigDecimal maxScore, Integer correctCount,
+                       List<QuestionResult> result) {
+        this(id, quizId, classId, accountId, attemptNo, snapshot, answers, answerVersion, status, submitMode, startedAt,
+                deadlineAt, lastSavedAt, submittedAt, score, maxScore, correctCount, result, null);
     }
 
     public static QuizAttempt start(UUID quizId, UUID classId, UUID accountId, int attemptNo, AttemptSnapshot snapshot,
@@ -53,6 +62,13 @@ public record QuizAttempt(UUID id, UUID quizId, UUID classId, UUID accountId, in
         }
         return new QuizAttempt(id, quizId, classId, accountId, attemptNo, snapshot, newAnswers, answerVersion + 1,
                 status, submitMode, startedAt, deadlineAt, now, submittedAt, score, maxScore, correctCount, result);
+    }
+
+    /** Gắn số liệu rời trang và điểm cuối sau khi chấm (BR-U11-33). */
+    public QuizAttempt withOutcome(ActivityOutcome newOutcome, BigDecimal finalScore) {
+        return new QuizAttempt(id, quizId, classId, accountId, attemptNo, snapshot, answers, answerVersion, status,
+                submitMode, startedAt, deadlineAt, lastSavedAt, submittedAt, finalScore, maxScore, correctCount, result,
+                newOutcome);
     }
 
     public QuizAttempt submitted(SubmitMode mode, BigDecimal newScore, BigDecimal newMax, List<QuestionResult> results,

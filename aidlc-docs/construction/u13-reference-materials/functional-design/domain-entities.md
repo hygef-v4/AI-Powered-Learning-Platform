@@ -56,7 +56,6 @@ stateDiagram-v2
 
 | Contract | Unit cài | Dùng để |
 |---|---|---|
-| Slot frontend `LearningMaterialSection` | U11 | Danh sách Quiz gắn tài liệu kèm nút Làm Quiz trên Learning Material |
 
 ### Interface U13 dùng
 

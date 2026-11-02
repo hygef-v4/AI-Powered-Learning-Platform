@@ -15,3 +15,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Sự kiện | `quiz.published` qua exchange `platform.events` của U03 |
 | Nginx | Giới hạn body API nhập tệp 6 MB |
 | Mạng ra | Không có |
+
+## Delta 2026-11-01
+
+Migration `db/migration/quizzes/V20261101_1200__quiz_rework.sql`: bỏ `REVIEWED`, thêm `quizzes.paper_mode`, `quiz_draw_rules`, `questions.content_hash`, `questions.normalized_stem`, trạng thái `PENDING`, `REJECTED`, `question_reviews`, `question_proposals`. Không dùng extension PostgreSQL mới.

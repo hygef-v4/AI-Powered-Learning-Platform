@@ -3,12 +3,12 @@
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Alert, Button, ClickableRow, cx, Menu, MenuItem, PageHeader, Pagination, Pill, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
-import { getManagedSubjects, getQuestions } from "../api";
+import { Alert, Button, ClickableRow, cx, Dialog, Field, Menu, MenuItem, PageHeader, Pagination, Pill, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
+import { bulkQuestions, getDuplicateQuestions, getManagedSubjects, getQuestions } from "../api";
 import { DIFFICULTY_LABELS, DIFFICULTY_TONES, errorMessage, formatDateTime, STATUS_LABELS, STATUS_TONES, TYPE_LABELS } from "../model/labels";
 import { QuestionAiDraftDialog } from "../components/AiDraftTargets";
 import { QuestionImportDialog } from "../components/QuestionImportDialog";
-import type { Difficulty, ManagedSubject, QuestionPage, QuestionStatus, QuestionType } from "../model/types";
+import type { BulkResult, Difficulty, DuplicateGroup, ManagedSubject, QuestionPage, QuestionRow, QuestionStatus, QuestionType } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 const PAGE_SIZE = 20;
@@ -20,15 +20,22 @@ const TABS: { key: QuestionType | null; label: string }[] = [
 
 type Filters = { difficulty: Difficulty | ""; status: QuestionStatus | ""; q: string; page: number };
 const NO_FILTERS: Filters = { difficulty: "", status: "", q: "", page: 0 };
+const STATUSES = Object.keys(STATUS_LABELS) as QuestionStatus[];
 
-/** Màn #19 Question List (UC 46): ngân hàng câu hỏi của môn Chủ nhiệm môn đang quản lý (BR-U10-01, 06). */
+/**
+ * Màn #19 Question List (UC 46): ngân hàng câu hỏi của môn Chủ nhiệm môn đang quản lý (BR-U10-01, 06). Lọc "Chờ duyệt" để
+ * duyệt hoặc từ chối hàng loạt câu giảng viên đề xuất (BR-U10-09), lọc "Nháp" để kích hoạt hàng loạt, và xem các nhóm câu
+ * giống hệt nhau (BR-U10-08).
+ */
 export function QuestionListPage() {
   const router = useRouter();
   const params = useSearchParams();
   const [subjects, setSubjects] = useState<ManagedSubject[] | null>(null);
   const [subjectsError, setSubjectsError] = useState<string | null>(null);
   const [type, setType] = useUrlState<QuestionType | "">("type", "", ["", "MCQ_SINGLE", "MCQ_MULTI"]);
-  const [filters, setFilters] = useState<Filters>(NO_FILTERS);
+  const initialStatus = params?.get("status");
+  const [filters, setFilters] = useState<Filters>(() => ({ ...NO_FILTERS,
+    status: STATUSES.includes(initialStatus as QuestionStatus) ? initialStatus as QuestionStatus : "" }));
   const [search, setSearch] = useState("");
   const [data, setData] = useState<QuestionPage | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +43,11 @@ export function QuestionListPage() {
   const [importing, setImporting] = useState(false);
   const [drafting, setDrafting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [duplicates, setDuplicates] = useState<DuplicateGroup[] | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -70,6 +82,7 @@ export function QuestionListPage() {
         if (!active) return;
         setError(null);
         setData(page);
+        setSelected([]);
       })
       .catch((failure: unknown) => active && setError(errorMessage(failure)));
     return () => {
@@ -82,6 +95,40 @@ export function QuestionListPage() {
     setSearch("");
     setData(null);
     router.replace(`/manager/questions?subjectId=${encodeURIComponent(id)}`);
+  };
+
+  const bulkAction = filters.status === "PENDING" ? "review" : filters.status === "DRAFT" ? "activate" : null;
+  const selectedRows = (data?.items ?? []).filter((row: QuestionRow) => selected.includes(row.id));
+  const toggleRow = (id: string) => setSelected((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
+  const report = (result: BulkResult, done: string) => {
+    const failures = result.items.filter((item) => !item.ok);
+    if (failures.length > 0) setError(`${done} ${result.succeeded} câu; ${failures.length} câu chưa xử lý được: ${failures[0]?.message ?? ""}`);
+    else setError(null);
+    setNotice(result.succeeded > 0 ? `${done} ${result.succeeded} câu.` : null);
+    setReloadKey((k) => k + 1);
+  };
+  const runBulk = async (action: "activate" | "approve" | "reject") => {
+    if (!subject) return;
+    setBusy(true);
+    try {
+      const items = selectedRows.map((row) => ({ id: row.id, version: row.version }));
+      const result = await bulkQuestions(subject.id, action, items, action === "reject" ? reason.trim() : undefined);
+      report(result, action === "activate" ? "Đã kích hoạt" : action === "approve" ? "Đã duyệt" : "Đã từ chối");
+      setRejecting(false);
+      setReason("");
+    } catch (failure) {
+      setError(errorMessage(failure));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const showDuplicates = async () => {
+    if (!subject) return;
+    try {
+      setDuplicates(await getDuplicateQuestions(subject.id));
+    } catch (failure) {
+      setError(errorMessage(failure));
+    }
   };
 
   if (subjectsError) return <PageLoadError>{subjectsError}</PageLoadError>;
@@ -101,6 +148,7 @@ export function QuestionListPage() {
               {subjects.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}
             </Select>
           )}
+          <Button icon="copy" onClick={() => void showDuplicates()} data-testid="question-list-duplicates">Câu trùng</Button>
           {!archived && (
             <Menu align="right" icon="add" label="Thêm câu hỏi" ariaLabel="Thêm câu hỏi"
               summaryClassName="!border-primary !bg-primary !text-on-primary hover:!bg-primary-strong">
@@ -131,6 +179,16 @@ export function QuestionListPage() {
           <option value="">Mọi độ khó</option>
           {(Object.keys(DIFFICULTY_LABELS) as Difficulty[]).map((d) => <option key={d} value={d}>{DIFFICULTY_LABELS[d]}</option>)}
         </Select>
+        {!archived && bulkAction && selected.length > 0 && (
+          <div className="flex items-center gap-2" data-testid="question-list-bulk">
+            <span className="text-xs text-muted">Đã chọn {selected.length} câu</span>
+            {bulkAction === "activate" && <Button size="sm" variant="primary" disabled={busy} onClick={() => void runBulk("activate")} data-testid="question-list-bulk-activate">Kích hoạt</Button>}
+            {bulkAction === "review" && <>
+              <Button size="sm" variant="primary" disabled={busy} onClick={() => void runBulk("approve")} data-testid="question-list-bulk-approve">Duyệt</Button>
+              <Button size="sm" disabled={busy} onClick={() => setRejecting(true)} data-testid="question-list-bulk-reject">Từ chối</Button>
+            </>}
+          </div>
+        )}
         <Select aria-label="Trạng thái" value={filters.status} data-testid="question-list-status"
           onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value as QuestionStatus | "", page: 0 }))}>
           <option value="">Mọi trạng thái</option>
@@ -145,11 +203,16 @@ export function QuestionListPage() {
       {!error && data && (
         <div className="flex flex-col gap-3">
           <TableFrame className="[&_table]:min-w-[720px] [&_table]:table-fixed">
-            <colgroup><col /><col className="w-[130px]" /><col className="w-[100px]" /><col className="w-[130px]" /><col className="w-[150px]" /></colgroup><thead><tr><Th>Câu hỏi</Th><Th>Loại</Th><Th>Độ khó</Th><Th>Trạng thái</Th><Th>Cập nhật</Th></tr></thead>
+            <colgroup>{bulkAction && <col className="w-[44px]" />}<col /><col className="w-[130px]" /><col className="w-[100px]" /><col className="w-[130px]" /><col className="w-[150px]" /></colgroup><thead><tr>{bulkAction && <Th><span className="sr-only">Chọn</span></Th>}<Th>Câu hỏi</Th><Th>Loại</Th><Th>Độ khó</Th><Th>Trạng thái</Th><Th>Cập nhật</Th></tr></thead>
             <tbody>
-              {data.items.length === 0 && <tr><Td colSpan={5} className="py-8 text-center text-muted">Chưa có câu hỏi phù hợp.</Td></tr>}
+              {data.items.length === 0 && <tr><Td colSpan={bulkAction ? 6 : 5} className="py-8 text-center text-muted">Chưa có câu hỏi phù hợp.</Td></tr>}
               {data.items.map((row) => (
                 <ClickableRow key={row.id} onClick={() => router.push(`/manager/questions/${row.id}`)} data-testid="question-list-row">
+                  {bulkAction && (
+                    <Td onClick={(event) => event.stopPropagation()}>
+                      <input type="checkbox" aria-label={`Chọn câu ${row.stem}`} checked={selected.includes(row.id)} onChange={() => toggleRow(row.id)} data-testid="question-list-select" />
+                    </Td>
+                  )}
                   <Td className="max-w-[28rem]">
                     <p className="line-clamp-2 whitespace-pre-wrap">{row.stem}</p>
                     {row.tags.length > 0 && <p className="mt-1 text-[11px] text-muted">{row.tags.join(" · ")}</p>}
@@ -172,6 +235,35 @@ export function QuestionListPage() {
         </div>
       )}
 
+      {rejecting && (
+        <Dialog open onClose={() => setRejecting(false)} tone="warning" title={`Từ chối ${selected.length} câu đề xuất?`}
+          footer={<Button variant="primary" disabled={busy || !reason.trim()} onClick={() => void runBulk("reject")} data-testid="question-list-reject-confirm">Từ chối</Button>}>
+          <Field label="Lý do từ chối" required htmlFor="question-list-reason" hint="Giảng viên thấy lý do này để sửa rồi gửi lại.">
+            <textarea id="question-list-reason" rows={3} maxLength={1000} value={reason} onChange={(e) => setReason(e.target.value)}
+              className="w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus" data-testid="question-list-reason" />
+          </Field>
+        </Dialog>
+      )}
+      {duplicates && (
+        <Dialog open size="lg" onClose={() => setDuplicates(null)} title="Câu giống hệt nhau trong ngân hàng" footer={<Button onClick={() => setDuplicates(null)}>Đóng</Button>}>
+          <div className="flex flex-col gap-3 text-[13px]" data-testid="question-duplicates">
+            {duplicates.length === 0 && <p className="text-muted">Không có câu trùng.</p>}
+            {duplicates.map((group, index) => (
+              <section key={index} className="rounded-lg border border-line p-3">
+                <p className="mb-1 text-xs text-muted">Nhóm {index + 1}: hệ thống không tự xóa, hãy mở câu để ngưng hoặc xóa bớt.</p>
+                <ul className="flex flex-col gap-1">
+                  {group.questions.map((q) => (
+                    <li key={q.id} className="flex items-center gap-2">
+                      <Pill tone={STATUS_TONES[q.status]}>{STATUS_LABELS[q.status]}</Pill>
+                      <button type="button" className="line-clamp-1 text-left text-primary-ink underline-offset-2 hover:underline" onClick={() => router.push(`/manager/questions/${q.id}`)}>{q.stem}</button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </Dialog>
+      )}
       {drafting && (
         <QuestionAiDraftDialog subjectId={subject.id} onClose={() => setDrafting(false)}
           onAccepted={(count) => {

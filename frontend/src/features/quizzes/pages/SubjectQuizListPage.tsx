@@ -14,7 +14,6 @@ const PAGE_SIZE = 20;
 const TABS: { key: QuizStatus | null; label: string }[] = [
   { key: null, label: "Tất cả" },
   { key: "DRAFT", label: QUIZ_STATUS_LABELS.DRAFT },
-  { key: "REVIEWED", label: QUIZ_STATUS_LABELS.REVIEWED },
   { key: "OPEN", label: QUIZ_STATUS_LABELS.OPEN },
   { key: "RETIRED", label: QUIZ_STATUS_LABELS.RETIRED },
 ];
@@ -25,7 +24,7 @@ export function SubjectQuizListPage() {
   const params = useSearchParams();
   const [subjects, setSubjects] = useState<ManagedSubject[] | null>(null);
   const [subjectsError, setSubjectsError] = useState<string | null>(null);
-  const [status, setStatus] = useUrlState<QuizStatus | "">("status", "", ["", "DRAFT", "REVIEWED", "OPEN", "RETIRED"]);
+  const [status, setStatus] = useUrlState<QuizStatus | "">("status", "", ["", "DRAFT", "OPEN", "RETIRED"]);
   const [filters, setFilters] = useState({ q: "", page: 0 });
   const [search, setSearch] = useState("");
   const [data, setData] = useState<QuizPage | null>(null);

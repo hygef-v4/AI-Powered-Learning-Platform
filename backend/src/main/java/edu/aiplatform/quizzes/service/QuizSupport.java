@@ -7,6 +7,7 @@ import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.quizzes.service.QuestionViews.QuestionView;
+import edu.aiplatform.quizzes.service.QuizViews.DrawRuleView;
 import edu.aiplatform.quizzes.service.QuizViews.QuizDetail;
 import edu.aiplatform.quizzes.service.QuizViews.QuizInfo;
 import edu.aiplatform.quizzes.service.QuizViews.QuizItemView;
@@ -15,6 +16,7 @@ import edu.aiplatform.quizzes.contract.QuizScope;
 import edu.aiplatform.quizzes.contract.QuizStatus;
 import edu.aiplatform.quizzes.repository.IQuestionRepository;
 import edu.aiplatform.quizzes.repository.IQuizRepository;
+import edu.aiplatform.quizzes.model.DrawRule;
 import edu.aiplatform.quizzes.model.Question;
 import edu.aiplatform.quizzes.model.QuestionScope;
 import edu.aiplatform.quizzes.model.Quiz;
@@ -104,7 +106,7 @@ class QuizSupport {
         return quiz;
     }
 
-    /** Quiz đang soạn được: người có quyền, Quiz còn nháp/đã duyệt, lớp/môn chưa lưu trữ. */
+    /** Quiz đang soạn được: người có quyền, Quiz chưa lưu trữ, lớp/môn chưa lưu trữ. */
     Quiz loadEditable(Actor actor, UUID id, long version) {
         Quiz quiz = loadManaged(actor, id);
         if (!quiz.isEditable()) {
@@ -171,6 +173,11 @@ class QuizSupport {
         return ApiException.conflict("QUIZ_VERSION_CONFLICT", "Quiz đã được thay đổi ở phiên khác; hãy tải lại");
     }
 
+    static BigDecimal maxScoreOf(List<DrawRule> rules) {
+        return rules.stream().map(r -> r.pointsEach().multiply(BigDecimal.valueOf(r.questionCount())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
     Map<UUID, Question> questionsOf(List<QuizItem> items) {
         return questions.findAll(items.stream().map(QuizItem::questionId).toList()).stream()
                 .collect(Collectors.toMap(Question::id, Function.identity()));
@@ -187,7 +194,9 @@ class QuizSupport {
                             QuestionView.of(q));
                 })
                 .toList();
-        BigDecimal max = items.stream().map(QuizItem::points).reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new QuizDetail(QuizInfo.of(quiz), views, max, canManage);
+        List<DrawRule> rules = quizzes.drawRules(quiz.id());
+        BigDecimal max = quiz.generated() ? maxScoreOf(rules)
+                : items.stream().map(QuizItem::points).reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new QuizDetail(QuizInfo.of(quiz), views, rules.stream().map(DrawRuleView::of).toList(), max, canManage);
     }
 }

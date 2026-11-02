@@ -57,3 +57,7 @@ Refinement approved 2026-10-24: mô tả trong chuông dùng lời dẫn hành �
 | BR-U14-40 | Mọi API kiểm quyền phía server; ngoài phạm vi trả `404` và ghi audit `ACCESS_DENIED`. | SEC-002 |
 | BR-U14-41 | Audit: `ANNOUNCEMENT_CREATED`, `ANNOUNCEMENT_UPDATED` (trước, sau), `ANNOUNCEMENT_DELETED`. Không audit từng thông báo, từng email. | FR-014 |
 | BR-U14-42 | U01, U05 không trả lời khi xử lý sự kiện thì thử lại theo U03; mất sự kiện chỉ mất thông báo, không ảnh hưởng nghiệp vụ. | BR-U03-70 |
+
+## Delta 2026-11-01
+
+Thêm hai loại thông báo trong ứng dụng từ U10, không gửi email: `QUESTION_PROPOSED` tới Chủ nhiệm môn của môn, mở Question List lọc Chờ duyệt; `QUESTION_REVIEWED` tới giảng viên đề xuất, mở tab Học liệu của lớp ở trang giảng dạy (BR-U10-09).

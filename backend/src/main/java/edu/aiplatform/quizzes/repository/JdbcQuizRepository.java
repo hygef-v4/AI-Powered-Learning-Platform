@@ -7,9 +7,12 @@ import edu.aiplatform.quizzes.contract.QuizScope;
 import edu.aiplatform.quizzes.contract.QuizSettings;
 import edu.aiplatform.quizzes.contract.QuizStatus;
 import edu.aiplatform.quizzes.repository.IQuizRepository;
+import edu.aiplatform.quizzes.model.Difficulty;
+import edu.aiplatform.quizzes.model.DrawRule;
 import edu.aiplatform.quizzes.model.Quiz;
 import edu.aiplatform.quizzes.model.QuizItem;
 import edu.aiplatform.quizzes.model.QuizOrigin;
+import edu.aiplatform.quizzes.model.QuizPaperMode;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -21,18 +24,22 @@ import java.util.UUID;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
-/** {@code quizzes}, {@code quiz_items} bằng SQL viết tay; cài đặt và học liệu gắn kèm lưu {@code jsonb}. */
+/** {@code quizzes}, {@code quiz_items}, {@code quiz_draw_rules} bằng SQL viết tay; cài đặt lưu {@code jsonb}. */
 @Repository
 public class JdbcQuizRepository implements IQuizRepository {
 
     private static final String COLUMNS = """
             id, scope, class_id, subject_id, source_quiz_id, origin, version_no, title, instructions, settings,
-            activity_monitoring_enabled, activity_notice, reference_material_ids, status, published_at, retired_at,
+            activity_monitoring_enabled, activity_notice, paper_mode, status, published_at, retired_at,
             retired_reason, created_by, created_at, updated_at, version""";
-    /** Số câu và tổng điểm của Quiz (BR-U10-13). */
+    /** Số câu và tổng điểm của Quiz (BR-U10-13); Quiz sinh đề tính theo quy tắc (BR-U10-17). */
     private static final String SUMMARY = COLUMNS + """
-            , (select count(*) from quiz_items i where i.quiz_id = quizzes.id) as item_count,
-            (select coalesce(sum(i.points), 0) from quiz_items i where i.quiz_id = quizzes.id) as max_score""";
+            , case when paper_mode = 'GENERATED'
+                then (select coalesce(sum(r.question_count), 0) from quiz_draw_rules r where r.quiz_id = quizzes.id)
+                else (select count(*) from quiz_items i where i.quiz_id = quizzes.id) end as item_count,
+            case when paper_mode = 'GENERATED'
+                then (select coalesce(sum(r.question_count * r.points_each), 0) from quiz_draw_rules r where r.quiz_id = quizzes.id)
+                else (select coalesce(sum(i.points), 0) from quiz_items i where i.quiz_id = quizzes.id) end as max_score""";
     /** Mọi Quiz cùng chuỗi version với {@code :id}: đi lên tới Quiz gốc rồi đi xuống theo {@code NEW_VERSION}. */
     private static final String VERSION_CHAIN = """
             with recursive up as (
@@ -48,7 +55,6 @@ public class JdbcQuizRepository implements IQuizRepository {
                 select q.id from quizzes q join down on q.source_quiz_id = down.id where q.origin = 'NEW_VERSION'
             )
             """;
-    private static final TypeReference<List<UUID>> UUIDS = new TypeReference<>() { };
 
     private final JdbcClient jdbc;
     private final ObjectMapper json;
@@ -68,10 +74,10 @@ public class JdbcQuizRepository implements IQuizRepository {
         jdbc.sql("""
                         insert into quizzes (id, scope, class_id, subject_id, source_quiz_id, origin, version_no, title,
                             instructions, settings, activity_monitoring_enabled, activity_notice,
-                            reference_material_ids, status, published_at, retired_at, retired_reason, created_by,
+                            paper_mode, status, published_at, retired_at, retired_reason, created_by,
                             created_at, updated_at, version)
                         values (:id, :scope, :classId, :subjectId, :sourceQuizId, :origin, :versionNo, :title,
-                            :instructions, cast(:settings as jsonb), :monitoring, :notice, cast(:materials as jsonb),
+                            :instructions, cast(:settings as jsonb), :monitoring, :notice, :paperMode,
                             :status, :publishedAt, :retiredAt, :retiredReason, :createdBy, :createdAt, :updatedAt,
                             :version)
                         """)
@@ -80,7 +86,7 @@ public class JdbcQuizRepository implements IQuizRepository {
                 .param("origin", q.origin().name()).param("versionNo", q.versionNo()).param("title", q.title())
                 .param("instructions", q.instructions()).param("settings", write(q.settings()))
                 .param("monitoring", q.activityMonitoringEnabled()).param("notice", q.activityNotice())
-                .param("materials", write(q.referenceMaterialIds())).param("status", q.status().name())
+                .param("paperMode", q.paperMode().name()).param("status", q.status().name())
                 .param("publishedAt", timestamp(q.publishedAt())).param("retiredAt", timestamp(q.retiredAt()))
                 .param("retiredReason", q.retiredReason()).param("createdBy", q.createdBy())
                 .param("createdAt", timestamp(q.createdAt())).param("updatedAt", timestamp(q.updatedAt()))
@@ -93,14 +99,14 @@ public class JdbcQuizRepository implements IQuizRepository {
         return jdbc.sql("""
                         update quizzes set title = :title, instructions = :instructions,
                             settings = cast(:settings as jsonb), activity_monitoring_enabled = :monitoring,
-                            activity_notice = :notice, reference_material_ids = cast(:materials as jsonb),
+                            activity_notice = :notice, paper_mode = :paperMode,
                             status = :status, published_at = :publishedAt, retired_at = :retiredAt,
                             retired_reason = :retiredReason, updated_at = :updatedAt, version = version + 1
                         where id = :id and version = :version
                         """)
                 .param("title", q.title()).param("instructions", q.instructions())
                 .param("settings", write(q.settings())).param("monitoring", q.activityMonitoringEnabled())
-                .param("notice", q.activityNotice()).param("materials", write(q.referenceMaterialIds()))
+                .param("notice", q.activityNotice()).param("paperMode", q.paperMode().name())
                 .param("status", q.status().name()).param("publishedAt", timestamp(q.publishedAt()))
                 .param("retiredAt", timestamp(q.retiredAt())).param("retiredReason", q.retiredReason())
                 .param("updatedAt", timestamp(q.updatedAt())).param("id", q.id()).param("version", q.version())
@@ -111,7 +117,7 @@ public class JdbcQuizRepository implements IQuizRepository {
     public boolean delete(UUID id, long version) {
         boolean deletable = jdbc.sql("""
                         select 1 from quizzes where id = :id and version = :version and published_at is null
-                            and status in ('DRAFT', 'REVIEWED')
+                            and status = 'DRAFT'
                         for update
                         """)
                 .param("id", id).param("version", version).query(Integer.class).optional().isPresent();
@@ -198,13 +204,36 @@ public class JdbcQuizRepository implements IQuizRepository {
     }
 
     @Override
-    public List<QuizSummary> listOpenByMaterial(UUID materialId, UUID classId, UUID subjectId) {
-        return jdbc.sql("select " + SUMMARY + " from quizzes where status = 'OPEN'"
-                        + " and reference_material_ids @> jsonb_build_array(cast(:materialId as text))"
-                        + " and ((scope = 'CLASS' and class_id = :classId) or (scope = 'SUBJECT' and subject_id = :subjectId))"
-                        + " order by updated_at desc, id")
-                .param("materialId", materialId.toString()).param("classId", classId).param("subjectId", subjectId)
-                .query(this::summary).list();
+    public List<DrawRule> drawRules(UUID quizId) {
+        return jdbc.sql("select quiz_id, position, tag, difficulty, question_count, points_each from quiz_draw_rules"
+                        + " where quiz_id = :id order by position")
+                .param("id", quizId)
+                .query((rs, n) -> {
+                    String difficulty = rs.getString("difficulty");
+                    return new DrawRule(rs.getObject("quiz_id", UUID.class), rs.getInt("position"), rs.getString("tag"),
+                            difficulty == null ? null : Difficulty.valueOf(difficulty), rs.getInt("question_count"),
+                            rs.getBigDecimal("points_each"));
+                })
+                .list();
+    }
+
+    @Override
+    public void replaceDrawRules(UUID quizId, List<DrawRule> rules) {
+        jdbc.sql("delete from quiz_draw_rules where quiz_id = :id").param("id", quizId).update();
+        for (DrawRule rule : rules) {
+            jdbc.sql("insert into quiz_draw_rules (quiz_id, position, tag, difficulty, question_count, points_each)"
+                            + " values (:quizId, :position, :tag, :difficulty, :count, :points)")
+                    .param("quizId", quizId).param("position", rule.position()).param("tag", rule.tag())
+                    .param("difficulty", rule.difficulty() == null ? null : rule.difficulty().name())
+                    .param("count", rule.questionCount()).param("points", rule.pointsEach()).update();
+        }
+    }
+
+    @Override
+    public List<Quiz> listOpenGenerated(UUID subjectId) {
+        return jdbc.sql("select " + COLUMNS + " from quizzes where subject_id = :subjectId and status = 'OPEN'"
+                        + " and paper_mode = 'GENERATED' order by title, id")
+                .param("subjectId", subjectId).query(this::map).list();
     }
 
     @Override
@@ -230,7 +259,7 @@ public class JdbcQuizRepository implements IQuizRepository {
                 rs.getObject("source_quiz_id", UUID.class), QuizOrigin.valueOf(rs.getString("origin")),
                 rs.getInt("version_no"), rs.getString("title"), rs.getString("instructions"),
                 read(rs.getString("settings"), QuizSettings.class), rs.getBoolean("activity_monitoring_enabled"),
-                rs.getString("activity_notice"), read(rs.getString("reference_material_ids"), UUIDS),
+                rs.getString("activity_notice"), QuizPaperMode.valueOf(rs.getString("paper_mode")),
                 QuizStatus.valueOf(rs.getString("status")), instant(rs.getTimestamp("published_at")),
                 instant(rs.getTimestamp("retired_at")), rs.getString("retired_reason"),
                 rs.getObject("created_by", UUID.class), instant(rs.getTimestamp("created_at")),

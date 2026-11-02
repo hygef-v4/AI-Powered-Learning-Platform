@@ -2,21 +2,66 @@
 
 import { useEffect, useState } from "react";
 import { ActivityTimeline } from "@/shared/activity/ActivityTimeline";
-import { Alert, Button, ClickableRow, Dialog, Section, TableFrame, Td, Th } from "@/shared/ui";
-import { getClassAttempts, getTeacherAttempt } from "../api";
-import { errorMessage, formatDateTime, formatPoints, submitModeText } from "../model/labels";
+import { Alert, Button, ClickableRow, Dialog, Pill, Section, TableFrame, Td, TextInput, Th } from "@/shared/ui";
+import { decideAttemptPenalty, getClassAttempts, getTeacherAttempt } from "../api";
+import { errorMessage, formatDateTime, formatPoints, signalText, submitModeText } from "../model/labels";
 import { ResultQuestions } from "./ResultQuestions";
-import type { ClassAttempts, StudentAttempts, TeacherAttemptDetail } from "../model/types";
+import type { ClassAttempts, PenaltyDecisionInput, PenaltyView, StudentAttempts, TeacherAttemptDetail } from "../model/types";
+
+const POINTS = /^\d+([.,]\d{1,2})?$/;
 
 /**
- * Tab "Lượt làm của sinh viên" trên Quiz Detail (U10 `QuizDetailSection`, BR-U11-31): chỉ giảng viên của lớp, chỉ đọc.
- * Mở từ lớp (có `classId`) mới có phần này.
+ * Giảng viên quyết định trừ hay không trừ điểm của một lượt (BR-U11-33): hệ thống chỉ gợi ý mức trừ, chưa quyết định thì
+ * điểm giữ nguyên. Mở lại được để đổi quyết định.
+ */
+function AttemptPenaltyPanel({ penalty, onDecide }: { penalty: PenaltyView; onDecide: (input: PenaltyDecisionInput) => Promise<void> }) {
+  const [points, setPoints] = useState(String(penalty.decision === "APPLIED" ? penalty.penaltyPoints : penalty.suggestedPenalty));
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const value = Number(points.trim().replace(",", "."));
+  const pointsValid = POINTS.test(points.trim()) && value > 0 && value <= penalty.rawScore;
+  const hasReason = reason.trim() !== "";
+  const decide = async (input: PenaltyDecisionInput) => {
+    setBusy(true);
+    try {
+      await onDecide(input);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mb-3 flex flex-col gap-2 rounded-lg border border-line p-3 text-[13px]" data-testid="teacher-attempt-penalty">
+      <p>Điểm gốc {formatPoints(penalty.rawScore)} · rời trang {penalty.leaveCount ?? 0} lần · gợi ý trừ {formatPoints(penalty.suggestedPenalty)} điểm</p>
+      <p className="text-muted" data-testid="teacher-attempt-penalty-state">
+        {penalty.decision === "APPLIED" && <>Đã trừ {formatPoints(penalty.penaltyPoints)} điểm: {penalty.decisionReason}</>}
+        {penalty.decision === "DISMISSED" && <>Đã quyết định không trừ: {penalty.decisionReason}</>}
+        {!penalty.decision && "Chưa quyết định, điểm chưa bị trừ."}
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <TextInput aria-label="Số điểm trừ" inputMode="decimal" value={points} invalid={!pointsValid} wrapperClassName="w-24"
+          onChange={(event) => setPoints(event.target.value)} data-testid="teacher-attempt-penalty-points" />
+        <TextInput aria-label="Lý do quyết định" placeholder="Lý do quyết định" value={reason} maxLength={1000} wrapperClassName="min-w-48 flex-1"
+          onChange={(event) => setReason(event.target.value)} data-testid="teacher-attempt-penalty-reason" />
+        <Button size="sm" variant="primary" disabled={busy || !hasReason || !pointsValid}
+          onClick={() => void decide({ decision: "APPLIED", points: value, reason: reason.trim() })} data-testid="teacher-attempt-penalty-apply">Trừ điểm</Button>
+        <Button size="sm" disabled={busy || !hasReason}
+          onClick={() => void decide({ decision: "DISMISSED", reason: reason.trim() })} data-testid="teacher-attempt-penalty-dismiss">Không trừ</Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Tab "Lượt làm của sinh viên" trên Quiz Detail (U10 `QuizDetailSection`, BR-U11-31): chỉ giảng viên của lớp; chỉ sửa được
+ * quyết định trừ điểm (BR-U11-33). Mở từ lớp (có `classId`) mới có phần này.
  */
 export function QuizAttemptsSection({ quizId, classId }: { quizId: string; classId?: string }) {
   const [data, setData] = useState<ClassAttempts | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [student, setStudent] = useState<StudentAttempts | null>(null);
   const [detail, setDetail] = useState<TeacherAttemptDetail | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!classId) return;
@@ -27,7 +72,7 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
     return () => {
       active = false;
     };
-  }, [quizId, classId]);
+  }, [quizId, classId, reloadKey]);
 
   if (!classId) return null;
   const open = async (attemptId: string) => {
@@ -38,22 +83,38 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
     }
   };
 
+  const decide = async (attemptId: string, input: PenaltyDecisionInput) => {
+    try {
+      setDetail(await decideAttemptPenalty(classId, attemptId, input));
+      setStudent(null);
+      setReloadKey((k) => k + 1);
+    } catch (failure) {
+      setError(errorMessage(failure));
+    }
+  };
+  const penalty = detail?.result.penalty;
+
   return (
     <Section title={`Lượt làm của sinh viên${data ? ` (${data.studentsAttempted})` : ""}`} icon="groups" className="mt-4">
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {!data && !error && <p role="status" className="text-[13px] text-muted">Đang tải lượt làm…</p>}
       {data && <>
         <p className="mb-2 text-xs text-muted" data-testid="quiz-attempts-summary">
-          {data.studentsAttempted} / {data.totalStudents} sinh viên đã làm · Chỉ đọc. Quiz Practice không vào sổ điểm.
+          {data.studentsAttempted} / {data.totalStudents} sinh viên đã làm · Quiz Practice không vào sổ điểm.
         </p>
         <TableFrame className="[&_table]:table-fixed">
-          <colgroup><col /><col className="w-[90px]" /><col className="w-[130px]" /><col className="w-[170px]" /></colgroup><thead><tr><Th>Sinh viên</Th><Th>Lượt</Th><Th>Điểm cao nhất</Th><Th>Lần gần nhất</Th></tr></thead>
+          <colgroup><col /><col className="w-[90px]" /><col className="w-[130px]" /><col className="w-[130px]" /><col className="w-[170px]" /></colgroup><thead><tr><Th>Sinh viên</Th><Th>Lượt</Th><Th>Điểm cao nhất</Th><Th>Rời trang</Th><Th>Lần gần nhất</Th></tr></thead>
           <tbody>
             {data.students.map((s) => (
               <ClickableRow key={s.accountId} onClick={() => s.attempts > 0 && setStudent(s)} data-testid="quiz-attempts-row">
                 <Td><span className="font-semibold">{s.displayName ?? "—"}</span><span className="block text-xs text-muted">{s.email}</span></Td>
                 <Td>{s.attempts}{data.maxAttempts ? ` / ${data.maxAttempts}` : ""}</Td>
                 <Td>{formatPoints(s.bestScore)}</Td>
+                <Td data-testid="quiz-attempts-leaves">
+                  {s.lastLeaveCount === null ? "—" : `${s.lastLeaveCount} lần`}
+                  {s.signalWarning && <span className="block"><Pill tone="warning">Thiếu tín hiệu</Pill></span>}
+                  {s.penaltyPending && <span className="block" data-testid="quiz-attempts-penalty-pending"><Pill tone="warning">Chờ quyết định</Pill></span>}
+                </Td>
                 <Td className="whitespace-nowrap text-muted">{formatDateTime(s.lastSubmittedAt)}</Td>
               </ClickableRow>
             ))}
@@ -65,7 +126,14 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
           <ul className="flex flex-col gap-2 text-[13px]">
             {student.rows.map((row) => (
               <li key={row.attemptId} className="flex items-center justify-between gap-2">
-                <span>Lần {row.attemptNo} · {row.status === "SUBMITTED" ? `${formatPoints(row.score)} / ${formatPoints(row.maxScore)}` : "Đang làm"}</span>
+                <span>
+                  Lần {row.attemptNo} · {row.status === "SUBMITTED" ? `${formatPoints(row.score)} / ${formatPoints(row.maxScore)}` : "Đang làm"}
+                  {row.leaveCount !== null && ` · rời trang ${row.leaveCount} lần`}
+                  {signalText(row.activitySignal) && <> · <Pill tone="warning">{signalText(row.activitySignal)}</Pill></>}
+                  {!!row.suggestedPenalty && !row.penaltyDecision && <> · <Pill tone="warning">Gợi ý trừ {formatPoints(row.suggestedPenalty)}</Pill></>}
+                  {row.penaltyDecision === "APPLIED" && " · đã trừ điểm"}
+                  {row.penaltyDecision === "DISMISSED" && " · không trừ điểm"}
+                </span>
                 {row.status === "SUBMITTED" && <Button size="sm" onClick={() => void open(row.attemptId)} data-testid="quiz-attempts-open">Xem bài</Button>}
               </li>
             ))}
@@ -82,8 +150,13 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
           <div className="mb-3 flex flex-col gap-1.5" data-testid="teacher-attempt-activity">
             <p className="text-[13px] font-semibold text-ink">Dòng thời gian hoạt động</p>
             {detail.activity ? <ActivityTimeline summary={detail.activity} /> : <p className="text-xs text-muted">Không có dữ liệu hoạt động cho lượt này.</p>}
-            <p className="text-xs text-muted">Dữ liệu hoạt động chỉ để tham khảo; nền tảng không kết luận gian lận.</p>
+            {signalText(detail.activitySignal) && <p data-testid="teacher-attempt-signal"><Pill tone="warning">{signalText(detail.activitySignal)}</Pill></p>}
+            <p className="text-xs text-muted">Tín hiệu do trình duyệt tự báo, có thể sai hoặc bị chặn: chỉ là dấu hiệu, nền tảng không kết luận gian lận.</p>
           </div>
+          {!!penalty?.suggestedPenalty && (
+            <AttemptPenaltyPanel key={`${detail.result.attemptId}-${penalty.decision}-${penalty.penaltyPoints}`} penalty={penalty}
+              onDecide={(input) => decide(detail.result.attemptId, input)} />
+          )}
           <ResultQuestions questions={detail.result.questions} showScore />
         </Dialog>
       )}

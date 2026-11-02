@@ -2,7 +2,9 @@
 
 import type { ActivitySummary } from "@/shared/activity/ActivityTimeline";
 
-export type QuizStatus = "DRAFT" | "REVIEWED" | "OPEN" | "RETIRED";
+export type QuizStatus = "DRAFT" | "OPEN" | "RETIRED";
+export type ActivitySignal = "DISABLED" | "OK" | "NO_SIGNAL" | "SIGNAL_LOST" | "UNAVAILABLE";
+export type LeavePenalty = { freeLeaves: number; pointsPerLeave: number; maxPenalty: number | null; minAwaySeconds: number };
 export type QuestionType = "MCQ_SINGLE" | "MCQ_MULTI";
 export type AttemptStatus = "IN_PROGRESS" | "SUBMITTED";
 export type SubmitMode = "MANUAL" | "AUTO_TIME_LIMIT" | "AUTO_RETIRED";
@@ -33,6 +35,11 @@ export type AttemptRow = {
   submittedAt: string | null;
   score: number | null;
   maxScore: number | null;
+  /** Chỉ có ở danh sách của giảng viên (BR-U11-32). */
+  leaveCount: number | null;
+  activitySignal: ActivitySignal | null;
+  suggestedPenalty: number | null;
+  penaltyDecision: PenaltyDecision | null;
 };
 
 export type PracticeQuizDetail = {
@@ -53,7 +60,7 @@ export type PracticeQuizDetail = {
   showScoreAfterSubmit: boolean;
   showCorrectAnswers: boolean;
   activityNotice: string | null;
-  referenceMaterialIds: string[];
+  leavePenalty: LeavePenalty | null;
   attempts: AttemptRow[];
   inProgressAttemptId: string | null;
   canStart: boolean;
@@ -79,6 +86,7 @@ export type TakingView = {
   /** Theo ảnh chụp của lượt (K4). */
   activityMonitoringEnabled: boolean;
   activityNotice: string | null;
+  leavePenalty: LeavePenalty | null;
 };
 
 export type SaveResult = { answerVersion: number; savedAt: string };
@@ -96,6 +104,21 @@ export type ResultQuestion = {
   correctOptionIds: string[] | null;
   explanation: string | null;
 };
+
+export type PenaltyDecision = "APPLIED" | "DISMISSED";
+
+/** Điểm gốc và quyết định trừ điểm của lượt (BR-U11-33); `suggestedPenalty` chỉ giảng viên thấy. */
+export type PenaltyView = {
+  rawScore: number;
+  suggestedPenalty: number | null;
+  penaltyPoints: number;
+  leaveCount: number | null;
+  decisionPending: boolean;
+  decision: PenaltyDecision | null;
+  decisionReason: string | null;
+};
+
+export type PenaltyDecisionInput = { decision: PenaltyDecision; points?: number; reason: string };
 
 export type ResultView = {
   attemptId: string;
@@ -116,6 +139,7 @@ export type ResultView = {
   blankCount: number;
   questions: ResultQuestion[];
   canRetry: boolean;
+  penalty: PenaltyView | null;
 };
 
 export type StudentAttempts = {
@@ -127,6 +151,9 @@ export type StudentAttempts = {
   lastScore: number | null;
   lastSubmittedAt: string | null;
   rows: AttemptRow[];
+  lastLeaveCount: number | null;
+  signalWarning: boolean;
+  penaltyPending: boolean;
 };
 
 export type ClassAttempts = {
@@ -138,4 +165,4 @@ export type ClassAttempts = {
   students: StudentAttempts[];
 };
 
-export type TeacherAttemptDetail = { result: ResultView; displayName: string | null; activity: ActivitySummary | null };
+export type TeacherAttemptDetail = { result: ResultView; displayName: string | null; activity: ActivitySummary | null; activitySignal: ActivitySignal | null };

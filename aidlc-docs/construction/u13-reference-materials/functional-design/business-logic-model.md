@@ -52,7 +52,6 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Bấm tài liệu mở Learning Material: `GET /api/v1/materials/{id}/view` kèm `classId`; kiểm quyền xem (BR-U13-02).
 3. Tệp: frontend gọi `POST /api/v1/materials/{id}/download-token`; U13 kiểm quyền rồi gọi `IArtifact.issueDownloadToken`; PDF hiện ngay trên trang, tệp khác tải về.
 4. Link YouTube: trang nhúng `youtube-nocookie.com` theo id video đã lưu (BR-U13-20, 21).
-5. Vùng `LearningMaterialSection` hiện phần do unit khác gắn (U11: Quiz gắn tài liệu này).
 6. Giảng viên, Chủ nhiệm môn cũng mở được Learning Material của tài liệu mình có quyền xem.
 7. Assignment Detail (U08) và Quiz Practice Detail (U11) nhúng `MaterialLinkList` qua slot `AssignmentMaterialSection`, `QuizMaterialSection`: component gọi `GET /api/v1/me/classes/{classId}/materials?ids=`; U13 chỉ trả tài liệu `ACTIVE` người học được xem (BR-U13-23).
 

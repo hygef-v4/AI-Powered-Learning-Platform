@@ -2,8 +2,8 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import {
-  getAttempt, getClassAttempts, getPracticeHistory, getPracticeQuiz, getResult, getTeacherAttempt, recordQuizActivity, saveAnswers, startAttempt,
-  submitAttempt,
+  decideAttemptPenalty, getAttempt, getClassAttempts, getPracticeHistory, getPracticeQuiz, getResult, getTeacherAttempt, recordQuizActivity, saveAnswers,
+  startAttempt, submitAttempt,
 } from "@/features/quizpractice/api";
 import { QuizPracticeDetailPage } from "@/features/quizpractice/pages/QuizPracticeDetailPage";
 import { QuizPracticeHistoryPage } from "@/features/quizpractice/pages/QuizPracticeHistoryPage";
@@ -23,18 +23,19 @@ vi.mock("@/features/quizpractice/api", () => ({
   getClassAttempts: vi.fn(),
   getTeacherAttempt: vi.fn(),
   recordQuizActivity: vi.fn(() => Promise.resolve()),
+  decideAttemptPenalty: vi.fn(),
 }));
 
 const push = vi.fn();
 const replace = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace }), useSearchParams: () => new URLSearchParams(window.location.search) }));
 vi.mock("@/features/identity/hooks/session", () => ({ useSession: () => ({ status: "authenticated", profile: { role: "STUDENT" } }) }));
 vi.mock("@/features/materials/components/ModulePlace", () => ({ useModuleScope: () => null, useModulePlace: () => ({ reload: () => {} }), ModuleNeighbours: () => null }));
 
 const TAKING: TakingView = {
   attemptId: "a1", quizId: "z1", classId: "c1", title: "Luyện tập", attemptNo: 1, startedAt: "2026-10-20T08:00:00Z",
   deadlineAt: null, serverTime: new Date().toISOString(), answerVersion: 0, answers: {}, activityMonitoringEnabled: false,
-  activityNotice: null,
+  activityNotice: null, leavePenalty: null,
   questions: [
     { questionId: "q1", type: "MCQ_SINGLE", stem: "Thủ đô?", points: 1, options: [{ optionId: "1", text: "Hà Nội" }, { optionId: "2", text: "Huế" }] },
     { questionId: "q2", type: "MCQ_MULTI", stem: "Số chẵn?", points: 2, options: [{ optionId: "1", text: "2" }, { optionId: "2", text: "3" }] },
@@ -43,14 +44,14 @@ const TAKING: TakingView = {
 const DETAIL: PracticeQuizDetail = {
   quizId: "z1", classId: "c1", classCode: "SE1801", className: "Lớp", title: "Luyện tập", instructions: null, status: "OPEN",
   questionCount: 2, maxScore: 3, timeLimitMinutes: null, attemptsUsed: 2, maxAttempts: 2, attemptsLeft: 0, bestScore: 2,
-  showScoreAfterSubmit: true, showCorrectAnswers: true, activityNotice: null, referenceMaterialIds: [],
-  attempts: [{ attemptId: "a2", attemptNo: 2, status: "SUBMITTED", startedAt: "2026-10-20T08:00:00Z", submittedAt: "2026-10-20T08:05:00Z", score: 2, maxScore: 3 }],
+  showScoreAfterSubmit: true, showCorrectAnswers: true, activityNotice: null, leavePenalty: null,
+  attempts: [{ attemptId: "a2", attemptNo: 2, status: "SUBMITTED", startedAt: "2026-10-20T08:00:00Z", submittedAt: "2026-10-20T08:05:00Z", score: 2, maxScore: 3, leaveCount: null, activitySignal: null, suggestedPenalty: null, penaltyDecision: null }],
   inProgressAttemptId: null, canStart: false, blockedReason: "Bạn đã dùng hết 2/2 lượt làm quiz này.",
 };
 const RESULT: ResultView = {
   attemptId: "a1", quizId: "z1", classId: "c1", title: "Luyện tập", attemptNo: 1, startedAt: "2026-10-20T08:00:00Z",
   submittedAt: "2026-10-20T08:05:00Z", submitMode: "MANUAL", showScore: false, showAnswers: false, score: null, maxScore: null,
-  correctCount: 1, wrongCount: 1, blankCount: 0, canRetry: true,
+  correctCount: 1, wrongCount: 1, blankCount: 0, canRetry: true, penalty: null,
   questions: [{ questionId: "q1", type: "MCQ_SINGLE", stem: "Thủ đô?", options: [{ optionId: "1", text: "Hà Nội" }], selectedOptionIds: ["1"],
     correct: true, points: null, maxPoints: null, correctOptionIds: null, explanation: null }],
 };
@@ -328,12 +329,98 @@ describe("QuizAttemptsSection (UC 42)", () => {
   it("giảng viên xem số sinh viên đã làm; không có lớp thì không hiện", async () => {
     vi.mocked(getClassAttempts).mockResolvedValue({ quizId: "z1", classId: "c1", maxAttempts: 2, studentsAttempted: 1, totalStudents: 30,
       students: [{ accountId: "s1", displayName: "Sinh viên A", email: "a@fpt.edu.vn", attempts: 1, bestScore: 2, lastScore: 2,
-        lastSubmittedAt: "2026-10-20T08:05:00Z", rows: [] }] });
+        lastSubmittedAt: "2026-10-20T08:05:00Z", rows: [], lastLeaveCount: null, signalWarning: false, penaltyPending: false }] });
     const { container } = render(<QuizAttemptsSection quizId="z1" />);
     expect(container).toBeEmptyDOMElement();
     render(<QuizAttemptsSection quizId="z1" classId="c1" />);
     expect(await screen.findByTestId("quiz-attempts-summary")).toHaveTextContent("1 / 30 sinh viên đã làm");
     expect(getClassAttempts).toHaveBeenCalledWith("c1", "z1");
+  });
+});
+
+describe("Gợi ý trừ điểm khi rời trang (BR-U11-33)", () => {
+  const pending = { ...RESULT, showScore: true, showAnswers: true, score: 8, maxScore: 10,
+    penalty: { rawScore: 8, suggestedPenalty: 1.5, penaltyPoints: 0, leaveCount: 4, decisionPending: true, decision: null, decisionReason: null } };
+  const row = { attemptId: "a1", attemptNo: 1, status: "SUBMITTED" as const, startedAt: "2026-10-20T08:00:00Z",
+    submittedAt: "2026-10-20T08:05:00Z", score: 8, maxScore: 10, leaveCount: 4, activitySignal: "OK" as const, suggestedPenalty: 1.5, penaltyDecision: null };
+  const applied = (points: number, reason: string) => ({ result: { ...pending, score: 8 - points,
+    penalty: { ...pending.penalty, penaltyPoints: points, decisionPending: false, decision: "APPLIED" as const, decisionReason: reason } },
+    displayName: "Sinh viên A", activity: null, activitySignal: "OK" as const });
+
+  it("sinh viên thấy điểm chưa bị trừ khi chờ quyết định, rồi thấy điểm trừ và lý do", async () => {
+    vi.mocked(getResult).mockResolvedValue({ ...pending, penalty: { ...pending.penalty, suggestedPenalty: null } });
+    const { unmount } = render(<QuizResultPage attemptId="a1" />);
+    expect(await screen.findByTestId("result-penalty")).toHaveTextContent("Rời trang 4 lần · chưa bị trừ điểm, giảng viên sẽ xem xét.");
+    expect(screen.getByTestId("result-score")).toHaveTextContent("8 / 10");
+    unmount();
+    vi.mocked(getResult).mockResolvedValue(applied(1.5, "Rời nhiều").result);
+    render(<QuizResultPage attemptId="a1" />);
+    expect(await screen.findByTestId("result-penalty")).toHaveTextContent("Điểm gốc 8 · rời trang 4 lần · giảng viên trừ 1,5 điểm: Rời nhiều");
+  });
+
+  const openAttempt = async () => {
+    vi.mocked(getClassAttempts).mockResolvedValue({ quizId: "z1", classId: "c1", maxAttempts: 2, studentsAttempted: 1, totalStudents: 30,
+      students: [{ accountId: "s1", displayName: "Sinh viên A", email: "a@fpt.edu.vn", attempts: 1, bestScore: 8, lastScore: 8,
+        lastSubmittedAt: "2026-10-20T08:05:00Z", rows: [row], lastLeaveCount: 4, signalWarning: false, penaltyPending: true }] });
+    vi.mocked(getTeacherAttempt).mockResolvedValue({ result: pending, displayName: "Sinh viên A", activity: null, activitySignal: "OK" });
+    render(<QuizAttemptsSection quizId="z1" classId="c1" />);
+    expect(await screen.findByTestId("quiz-attempts-leaves")).toHaveTextContent("4 lần");
+    expect(screen.getByTestId("quiz-attempts-penalty-pending")).toHaveTextContent("Chờ quyết định");
+    fireEvent.click(screen.getByTestId("quiz-attempts-row"));
+    fireEvent.click(await screen.findByTestId("quiz-attempts-open"));
+    expect(await screen.findByTestId("teacher-attempt-penalty")).toHaveTextContent("gợi ý trừ 1,5 điểm");
+    expect(screen.getByTestId("teacher-attempt-penalty-state")).toHaveTextContent("Chưa quyết định, điểm chưa bị trừ.");
+  };
+
+  it("giảng viên chọn số điểm khác mức gợi ý và trừ kèm lý do", async () => {
+    vi.mocked(decideAttemptPenalty).mockResolvedValue(applied(1, "Rời nhiều"));
+    await openAttempt();
+    expect(screen.getByTestId("teacher-attempt-penalty-points")).toHaveValue("1.5");
+    expect(screen.getByTestId("teacher-attempt-penalty-apply")).toBeDisabled();
+    expect(screen.getByTestId("teacher-attempt-penalty-dismiss")).toBeDisabled();
+    fireEvent.change(screen.getByTestId("teacher-attempt-penalty-reason"), { target: { value: " Rời nhiều " } });
+    fireEvent.change(screen.getByTestId("teacher-attempt-penalty-points"), { target: { value: "9" } });
+    expect(screen.getByTestId("teacher-attempt-penalty-apply")).toBeDisabled();
+    fireEvent.change(screen.getByTestId("teacher-attempt-penalty-points"), { target: { value: "1" } });
+    fireEvent.click(screen.getByTestId("teacher-attempt-penalty-apply"));
+    await waitFor(() => expect(decideAttemptPenalty).toHaveBeenCalledWith("c1", "a1", { decision: "APPLIED", points: 1, reason: "Rời nhiều" }));
+    expect(await screen.findByTestId("teacher-attempt-penalty-state")).toHaveTextContent("Đã trừ 1 điểm: Rời nhiều");
+    expect(screen.getByTestId("teacher-attempt-penalty-reason")).toHaveValue("");
+  });
+
+  it("giảng viên quyết định không trừ kèm lý do", async () => {
+    vi.mocked(decideAttemptPenalty).mockResolvedValue({ result: { ...pending, penalty: { ...pending.penalty, decisionPending: false, decision: "DISMISSED", decisionReason: "Lỗi máy" } },
+      displayName: "Sinh viên A", activity: null, activitySignal: "OK" });
+    await openAttempt();
+    fireEvent.change(screen.getByTestId("teacher-attempt-penalty-reason"), { target: { value: "Lỗi máy" } });
+    fireEvent.click(screen.getByTestId("teacher-attempt-penalty-dismiss"));
+    await waitFor(() => expect(decideAttemptPenalty).toHaveBeenCalledWith("c1", "a1", { decision: "DISMISSED", reason: "Lỗi máy" }));
+    expect(await screen.findByTestId("teacher-attempt-penalty-state")).toHaveTextContent("Đã quyết định không trừ: Lỗi máy");
+  });
+
+  it("lượt không có mức gợi ý thì không có phần quyết định", async () => {
+    vi.mocked(getClassAttempts).mockResolvedValue({ quizId: "z1", classId: "c1", maxAttempts: 2, studentsAttempted: 1, totalStudents: 30,
+      students: [{ accountId: "s1", displayName: "Sinh viên A", email: "a@fpt.edu.vn", attempts: 1, bestScore: 8, lastScore: 8,
+        lastSubmittedAt: "2026-10-20T08:05:00Z", rows: [{ ...row, suggestedPenalty: 0 }], lastLeaveCount: 0, signalWarning: false, penaltyPending: false }] });
+    vi.mocked(getTeacherAttempt).mockResolvedValue({ result: { ...pending, penalty: { ...pending.penalty, suggestedPenalty: 0, decisionPending: false } },
+      displayName: "Sinh viên A", activity: null, activitySignal: "OK" });
+    render(<QuizAttemptsSection quizId="z1" classId="c1" />);
+    fireEvent.click(await screen.findByTestId("quiz-attempts-row"));
+    expect(screen.queryByText(/Gợi ý trừ/)).toBeNull();
+    fireEvent.click(await screen.findByTestId("quiz-attempts-open"));
+    expect(await screen.findByTestId("teacher-attempt-summary")).toBeInTheDocument();
+    expect(screen.queryByTestId("teacher-attempt-penalty")).toBeNull();
+  });
+
+  it("báo quy tắc trước và trong khi làm bài", async () => {
+    const rule = { freeLeaves: 0, pointsPerLeave: 1, maxPenalty: null, minAwaySeconds: 0 };
+    vi.mocked(getPracticeQuiz).mockResolvedValue({ ...DETAIL, activityNotice: "Có ghi nhận", leavePenalty: rule });
+    const { unmount } = render(<QuizPracticeDetailPage quizId="z1" classId="c1" />);
+    expect(await screen.findByTestId("practice-detail-penalty-rule")).toHaveTextContent("Mỗi lần rời trang có thể bị trừ 1 điểm");
+    unmount();
+    vi.mocked(getAttempt).mockResolvedValue({ ...TAKING, activityMonitoringEnabled: true, activityNotice: "Có ghi nhận", leavePenalty: rule });
+    render(<QuizTakingPage attemptId="a1" />);
+    expect(await screen.findByTestId("quiz-taking-penalty-rule")).toHaveTextContent("Mỗi lần rời trang có thể bị trừ 1 điểm");
   });
 });
 
@@ -343,10 +430,10 @@ describe("Chi tiết lượt của giảng viên (BR-U11-31)", () => {
       students: [{ accountId: "s1", displayName: "Sinh viên A", email: "a@fpt.edu.vn", attempts: 1, bestScore: 2, lastScore: 2,
         lastSubmittedAt: "2026-10-20T08:05:00Z",
         rows: [{ attemptId: "a1", attemptNo: 1, status: "SUBMITTED", startedAt: "2026-10-20T08:00:00Z",
-          submittedAt: "2026-10-20T08:05:00Z", score: 2, maxScore: 3 }] }] });
+          submittedAt: "2026-10-20T08:05:00Z", score: 2, maxScore: 3, leaveCount: 2, activitySignal: "SIGNAL_LOST", suggestedPenalty: null, penaltyDecision: null }], lastLeaveCount: 2, signalWarning: true, penaltyPending: false }] });
     vi.mocked(getTeacherAttempt).mockResolvedValue({ result: { ...RESULT, showScore: true, score: 2, maxScore: 3 }, displayName: "Sinh viên A",
       activity: { policyState: "AVAILABLE", awayCount: 2, knownAwayDuration: "PT1M5S", intervals: [], unknownGaps: 0,
-        reliabilityNote: "Chỉ để tham khảo" } });
+        reliabilityNote: "Chỉ để tham khảo" }, activitySignal: "SIGNAL_LOST" });
     render(<QuizAttemptsSection quizId="z1" classId="c1" />);
     fireEvent.click(await screen.findByTestId("quiz-attempts-row"));
     fireEvent.click(await screen.findByTestId("quiz-attempts-open"));

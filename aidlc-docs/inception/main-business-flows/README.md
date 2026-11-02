@@ -221,7 +221,7 @@ Notes:
 | 2 | Teacher / Subject Manager | Human | Build Quiz | The author picks ACTIVE bank questions (manually or randomly by filter) or writes own questions, and sets scoring, shuffling, time limit, attempts, answer review and activity monitoring (off by default). | 48 |
 | 3 | Teacher / Subject Manager | Human decision | Use AI questions? | Human decision: the author may ask AI to draft questions from selected reference materials. Writing questions manually is always possible. | 48 |
 | 4 | System | Automated | Generate AI questions | The System runs the AI request through the source the author selects (BF-08). Suggested questions, keys and explanations are proposals that the author edits and accepts. | 48 |
-| 5 | Teacher / Subject Manager | Human | Preview and review | The author previews the Quiz and marks it as reviewed. | 48 |
+| 5 | Teacher / Subject Manager | Human | Preview | The author previews the Quiz, or a sample paper when papers are generated, then confirms publication. | 48 |
 | 6 | System | Automatic check | Quiz valid? | The System checks 1–200 questions, a valid answer key for every own question, bank questions still ACTIVE, valid points and settings, and that the author teaches the class or manages the subject. Errors return to 2. | 48 |
 | 7 | System | Automated | Publish, notify students | On Publish the System stores the snapshot, makes the Quiz OPEN as PRACTICE (no schedule, no gradebook entry), retires a previous version in the same transaction and queues an in-app notification for enrolled students (no email, BF-10). | 48, 65 |
 | 8 | Student | Human | Start Quiz | The student opens the Quiz detail and starts a practice attempt. | 49, 50, 51 |
@@ -454,7 +454,7 @@ Single-flow XML, combined 12-page draw.io and PNG exports share the same source 
 - BF-03: U07 owns authoring/rubric and U06 AI proposals. Source existence is separate from historical test evidence; review/publication remain explicit.
 - BF-04: Activity retained one day; activity.retentionDays setting removed. No automatic score penalty. Version and owned submission checks remain.
 - BF-05: U12 groups/groupdocs; existing claims/locks and leader submission remain. Peer grading/import-by-AI feedback remains proposed.
-- BF-06: REVIEWED still exists. OPEN edits remain OPEN; retire any non-RETIRED Quiz. Reopen returns DRAFT/OPEN using publishedAt null vs proven publication; version and active-container guards.
+- BF-06: Quiz REVIEWED removed 2026-11-01; publish directly from DRAFT. Each attempt can draw its own paper by tag rules. Teachers propose bank questions, Subject Manager approves. A leave penalty is only suggested from the Quiz settings; the teacher applies or dismisses it per attempt, with a reason. OPEN edits remain OPEN; retire any non-RETIRED Quiz. Reopen returns DRAFT/OPEN using publishedAt null vs proven publication; version and active-container guards.
 - BF-07: U09 grading/gradebook; structured feedback/proposals require educator review; no AI finalize/publish. Work activity retention one day.
 - BF-08: MCP Student/Teacher/Manager; Admin denied. Student personal API/MCP share Practice-feedback guards. Multiple institutional keys/provider. Admin key reveal and ACTIVE owner token reveal are audited source exceptions; no secrets in diagrams.
 - BF-09: U03 owns encrypted DB-only backup, seven-day retention. U15 metadata, U14 failure notification. Actual restore evidence required separately.

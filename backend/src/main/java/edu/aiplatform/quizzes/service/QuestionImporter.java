@@ -7,6 +7,7 @@ import edu.aiplatform.quizzes.model.Difficulty;
 import edu.aiplatform.quizzes.repository.IQuestionRepository;
 import edu.aiplatform.quizzes.model.Question;
 import edu.aiplatform.quizzes.model.QuestionContent;
+import edu.aiplatform.quizzes.model.QuestionFingerprint;
 import edu.aiplatform.quizzes.model.QuestionOption;
 import edu.aiplatform.quizzes.model.QuestionRules;
 import edu.aiplatform.quizzes.model.Violation;
@@ -24,10 +25,13 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -44,7 +48,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Nhập câu ngân hàng từ tệp (UC 47, F3, P5, BR-U10-07, NFR-U10-30). Loại tệp nhận theo nội dung: ZIP là
  * {@code .xlsx}, văn bản UTF-8 là {@code .csv}. Đọc trong bộ nhớ, không tính công thức: ô bắt đầu bằng {@code =},
- * {@code +}, {@code -}, {@code @} giữ nguyên là văn bản. Mỗi dòng kiểm như tạo tay; dòng hợp lệ thành câu
+ * {@code +}, {@code -}, {@code @} giữ nguyên là văn bản. Mỗi dòng kiểm như tạo tay và kiểm trùng (BR-U10-08); dòng hợp lệ thành câu
  * {@code DRAFT}, ghi trong một transaction; {@code dryRun} chỉ kiểm (D3).
  */
 @Service
@@ -63,14 +67,16 @@ public class QuestionImporter {
     private final ActiveSubjects activeSubjects;
     private final QuizAccess access;
     private final QuizAudit audit;
+    private final QuestionDuplicates duplicates;
     private final Clock clock;
 
     public QuestionImporter(IQuestionRepository questions, ActiveSubjects activeSubjects, QuizAccess access, QuizAudit audit,
-                            Clock clock) {
+                            QuestionDuplicates duplicates, Clock clock) {
         this.questions = questions;
         this.activeSubjects = activeSubjects;
         this.access = access;
         this.audit = audit;
+        this.duplicates = duplicates;
         this.clock = clock;
     }
 
@@ -101,11 +107,19 @@ public class QuestionImporter {
         Instant now = clock.instant();
         List<RowResult> results = new ArrayList<>();
         List<Question> valid = new ArrayList<>();
+        Set<String> inFile = new HashSet<>();
+        questions.lockSubject(subjectId);
         for (Map<String, String> row : rows) {
             int rowNumber = Integer.parseInt(row.get(ROW_NUMBER));
             List<Violation> reasons = new ArrayList<>();
             QuestionContent content = toContent(row, reasons);
             reasons.addAll(QuestionRules.validate(content));
+            if (reasons.isEmpty()) {
+                duplicates.duplicateOf(subjectId, content, null)
+                        .or(() -> inFile.add(QuestionFingerprint.hash(content)) ? Optional.empty()
+                                : Optional.of("Câu này trùng với một dòng trước đó trong tệp"))
+                        .ifPresent(message -> reasons.add(new Violation("noi_dung", "QUESTION_DUPLICATE", message)));
+            }
             boolean ok = reasons.isEmpty();
             results.add(new RowResult(rowNumber, preview(content.stem()), content.options().size(), ok,
                     List.copyOf(reasons)));

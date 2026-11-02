@@ -3,12 +3,16 @@ package edu.aiplatform.quizpractice.repository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.aiplatform.quizpractice.model.ActivityOutcome;
+import edu.aiplatform.quizpractice.model.ActivitySignal;
+import edu.aiplatform.quizpractice.model.PenaltyDecision;
 import edu.aiplatform.quizpractice.model.AttemptSnapshot;
 import edu.aiplatform.quizpractice.model.AttemptStatus;
 import edu.aiplatform.quizpractice.repository.IQuizAttemptRepository;
 import edu.aiplatform.quizpractice.model.QuestionResult;
 import edu.aiplatform.quizpractice.model.QuizAttempt;
 import edu.aiplatform.quizpractice.model.SubmitMode;
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -28,7 +32,9 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
 
     private static final String COLUMNS = """
             id, quiz_id, class_id, account_id, attempt_no, snapshot, answers, answer_version, status, submit_mode,
-            started_at, deadline_at, last_saved_at, submitted_at, score, max_score, correct_count, result""";
+            started_at, deadline_at, last_saved_at, submitted_at, score, max_score, correct_count, result, raw_score,
+            suggested_penalty, penalty_points, leave_count, activity_signal, penalty_decision, penalty_decided_by,
+            penalty_decided_at, penalty_decision_reason""";
     private static final TypeReference<Map<UUID, List<String>>> ANSWERS = new TypeReference<>() { };
     private static final TypeReference<List<QuestionResult>> RESULTS = new TypeReference<>() { };
 
@@ -104,12 +110,32 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
         return jdbc.sql("""
                         update quiz_attempts set status = 'SUBMITTED', submit_mode = :mode, submitted_at = :submittedAt,
                             score = :score, max_score = :maxScore, correct_count = :correct,
-                            result = cast(:result as jsonb)
+                            result = cast(:result as jsonb), raw_score = :rawScore, suggested_penalty = :suggested,
+                            penalty_points = :penalty, leave_count = :leaveCount, activity_signal = :signal
                         where id = :id and status = 'IN_PROGRESS' and answer_version = :answerVersion
                         """)
                 .param("mode", a.submitMode().name()).param("submittedAt", timestamp(a.submittedAt()))
                 .param("score", a.score()).param("maxScore", a.maxScore()).param("correct", a.correctCount())
                 .param("result", write(a.result())).param("id", a.id()).param("answerVersion", a.answerVersion())
+                .param("rawScore", a.outcome() == null ? null : a.outcome().rawScore())
+                .param("suggested", a.outcome() == null ? null : a.outcome().suggestedPenalty())
+                .param("penalty", a.outcome() == null ? null : a.outcome().penaltyPoints())
+                .param("leaveCount", a.outcome() == null ? null : a.outcome().leaveCount())
+                .param("signal", a.outcome() == null || a.outcome().signal() == null ? null : a.outcome().signal().name())
+                .update() == 1;
+    }
+
+    @Override
+    public boolean decidePenalty(UUID attemptId, PenaltyDecision decision, BigDecimal points, UUID decidedBy, Instant at,
+                                 String reason) {
+        return jdbc.sql("""
+                        update quiz_attempts set score = raw_score - :points, penalty_points = :points,
+                            penalty_decision = :decision, penalty_decided_by = :decidedBy,
+                            penalty_decided_at = :at, penalty_decision_reason = :reason
+                        where id = :id and status = 'SUBMITTED' and suggested_penalty > 0 and raw_score >= :points
+                        """)
+                .param("points", points).param("decision", decision.name()).param("decidedBy", decidedBy)
+                .param("at", timestamp(at)).param("reason", reason).param("id", attemptId)
                 .update() == 1;
     }
 
@@ -166,7 +192,22 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
                 mode == null ? null : SubmitMode.valueOf(mode), instant(rs.getTimestamp("started_at")),
                 instant(rs.getTimestamp("deadline_at")), instant(rs.getTimestamp("last_saved_at")),
                 instant(rs.getTimestamp("submitted_at")), rs.getBigDecimal("score"), rs.getBigDecimal("max_score"),
-                correct == null ? null : ((Number) correct).intValue(), result == null ? null : read(result, RESULTS));
+                correct == null ? null : ((Number) correct).intValue(), result == null ? null : read(result, RESULTS),
+                outcome(rs));
+    }
+
+    private static ActivityOutcome outcome(ResultSet rs) throws SQLException {
+        String signal = rs.getString("activity_signal");
+        if (signal == null) {
+            return null;
+        }
+        Object leaves = rs.getObject("leave_count");
+        String decision = rs.getString("penalty_decision");
+        return new ActivityOutcome(rs.getBigDecimal("raw_score"), rs.getBigDecimal("suggested_penalty"),
+                rs.getBigDecimal("penalty_points"), leaves == null ? null : ((Number) leaves).intValue(),
+                ActivitySignal.valueOf(signal), decision == null ? null : PenaltyDecision.valueOf(decision),
+                rs.getObject("penalty_decided_by", UUID.class), instant(rs.getTimestamp("penalty_decided_at")),
+                rs.getString("penalty_decision_reason"));
     }
 
     private String write(Object value) {

@@ -26,7 +26,7 @@ public class QuestionBankMcpTools implements IMcpToolProvider {
         return List.of(
                 definition("read_question_bank_context",McpToolKind.READ,subject+",\"questionId\":"+McpSchemas.UUID),
                 definition("list_bank_questions",McpToolKind.READ,subject+","+McpSchemas.PAGE+",\"query\":"+McpSchemas.TEXT
-                        +",\"type\":{\"enum\":[\"MCQ_SINGLE\",\"MCQ_MULTI\"]},\"difficulty\":{\"enum\":[\"EASY\",\"MEDIUM\",\"HARD\"]},\"status\":{\"enum\":[\"DRAFT\",\"ACTIVE\",\"RETIRED\"]}"),
+                        +",\"type\":{\"enum\":[\"MCQ_SINGLE\",\"MCQ_MULTI\"]},\"difficulty\":{\"enum\":[\"EASY\",\"MEDIUM\",\"HARD\"]},\"status\":{\"enum\":[\"DRAFT\",\"PENDING\",\"REJECTED\",\"ACTIVE\",\"RETIRED\"]}"),
                 definition("save_question_bank_draft",McpToolKind.WRITE,subject+",\"questions\":"+QuizMcpAuthoringService.questionsSchema(json)
                         +",\"requestRef\":"+McpSchemas.TEXT+",\"agentLabel\":"+McpSchemas.TEXT,"questions","requestRef"));
     }
