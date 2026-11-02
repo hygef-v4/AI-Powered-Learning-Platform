@@ -20,7 +20,6 @@ public record YoutubeVideo(String id) {
                 if (query.putIfAbsent(key, pair.length == 2 ? URLDecoder.decode(pair[1], StandardCharsets.UTF_8) : "") != null)
                     throw new IllegalArgumentException();
             }
-            if (query.containsKey("list") || query.containsKey("index")) throw new IllegalArgumentException();
             String id;
             if (host.equals("youtu.be")) id = uri.getPath().substring(1);
             else if ((host.equals("youtube.com") || host.equals("www.youtube.com")) && uri.getPath().equals("/watch"))

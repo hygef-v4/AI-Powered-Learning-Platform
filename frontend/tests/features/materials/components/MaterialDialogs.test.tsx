@@ -28,15 +28,15 @@ it("lays out name, content choice and description in that order", () => {
 
 it("rejects playlist before creating anything", async () => {
   youtube();
-  fireEvent.change(screen.getByTestId("material-source-url"), { target: { value: "https://youtu.be/abcdefghijk?list=x" } });
+  fireEvent.change(screen.getByTestId("material-source-url"), { target: { value: "https://youtube.com/playlist?list=x" } });
   fireEvent.click(screen.getByTestId("material-source-save"));
-  expect(await screen.findByRole("alert")).toHaveTextContent("bỏ phần đó rồi thử lại");
+  expect(await screen.findByRole("alert")).toHaveTextContent("một video YouTube");
   expect(posts()).toHaveLength(0);
 });
 
-it("creates a single video inside the module", async () => {
+it("creates a video copied from a playlist inside the module", async () => {
   const saved = youtube();
-  fireEvent.change(screen.getByTestId("material-source-url"), { target: { value: "https://youtu.be/abcdefghijk" } });
+  fireEvent.change(screen.getByTestId("material-source-url"), { target: { value: "https://youtu.be/abcdefghijk?list=x&index=2" } });
   fireEvent.click(screen.getByTestId("material-source-save"));
   await waitFor(() => expect(saved).toHaveBeenCalledOnce());
   const [path, init] = posts()[0]!;

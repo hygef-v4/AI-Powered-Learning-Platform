@@ -5,8 +5,8 @@ import type { Material } from "@/features/materials/model/types";
 vi.mock("@/shared/api/client", async importOriginal => ({ ...await importOriginal<typeof import("@/shared/api/client")>(), apiFetch: vi.fn() }));
 beforeEach(() => { vi.mocked(apiFetch).mockReset(); });
 describe("single video validation", () => {
-  it.each(["https://youtu.be/abcdefghijk", "https://youtube.com/watch?v=abcdefghijk", "https://www.youtube.com/watch?v=abcdefghijk&t=20"])("accepts %s", url => expect(validYoutube(url)).toBe(true));
-  it.each(["javascript:alert(1)", "https://youtube.com.evil.test/watch?v=abcdefghijk", "https://youtube.com/watch?v=abcdefghijk&list=x", "https://youtu.be/abcdefghijk?list=x", "https://user@youtube.com/watch?v=abcdefghijk", "https://youtube.com/watch?v=abcdefghijk&v=abcdefghijk", "http://youtu.be/abcdefghijk", "https://youtu.be/short"])("rejects %s", url => expect(validYoutube(url)).toBe(false));
+  it.each(["https://youtu.be/abcdefghijk", "https://youtube.com/watch?v=abcdefghijk", "https://www.youtube.com/watch?v=abcdefghijk&t=20", "https://www.youtube.com/watch?v=abcdefghijk&list=RDabcdefghijk&index=2", "https://youtu.be/abcdefghijk?list=x&index=1", "https://youtube.com/watch?list=x&v=abcdefghijk", "https://youtube.com/watch?v=abcdefghijk&%6cist=x"])("accepts %s", url => expect(validYoutube(url)).toBe(true));
+  it.each(["javascript:alert(1)", "https://youtube.com.evil.test/watch?v=abcdefghijk", "https://youtube.com/playlist?list=x", "https://youtube.com/watch?list=x", "https://user@youtube.com/watch?v=abcdefghijk", "https://youtube.com/watch?v=abcdefghijk&v=abcdefghijk", "https://youtube.com/watch?v=abcdefghijk&list=x&%6cist=y", "http://youtu.be/abcdefghijk", "https://youtu.be/short"])("rejects %s", url => expect(validYoutube(url)).toBe(false));
 });
 it("replacement carries the signed file reference and optimistic version", async () => {
   await materialApi.replace({ id: "id", version: 3 } as Material, { fileRef: "signed-reference" });

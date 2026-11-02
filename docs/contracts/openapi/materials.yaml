@@ -2157,7 +2157,7 @@
           "videoUrl": {
             "type": "string",
             "maxLength": 500,
-            "description": "HTTPS single-video youtube.com/watch?v= or youtu.be URL; playlists rejected"
+            "description": "HTTPS single-video youtube.com/watch?v= or youtu.be URL; list/index context is ignored and the single video is saved canonically; playlist-only URLs rejected"
           }
         },
         "required": []

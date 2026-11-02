@@ -21,7 +21,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U13-10 | Hai loại: `FILE` (PDF, DOCX, PPTX qua U03 purpose `MATERIAL`; loại và dung lượng theo Settings, mặc định ≤ 50 MB; kiểm theo nội dung tệp) và `YOUTUBE_LINK` (một video dạng `youtube.com/watch?v=` hoặc `youtu.be/`, không nhận playlist). | FR-004, UC 59, 61 |
+| BR-U13-10 | Hai loại: `FILE` (PDF, DOCX, PPTX qua U03 purpose `MATERIAL`; loại và dung lượng theo Settings, mặc định ≤ 50 MB; kiểm theo nội dung tệp) và `YOUTUBE_LINK` (một video HTTPS dạng `youtube.com/watch?v=` hoặc `youtu.be/`). Nhận video có thêm ngữ cảnh `list`/`index`, chỉ lưu ID và URL chuẩn của video đó; không nhận URL chỉ có playlist hoặc tham số trùng gây mơ hồ. | FR-004, UC 59, 61; sửa lỗi 2026-11-02 |
 | BR-U13-11 | Mỗi tài liệu có tiêu đề (≤ 200), mô tả (≤ 2.000) và thứ tự trong danh sách. Có module cơ bản của môn; Lesson nâng cao và tiến độ học chưa thuộc scope implementation này. | FR-004, FR-005 |
 | BR-U13-12 | Sửa tiêu đề, mô tả, thứ tự không tạo phiên bản. Thay tệp hoặc link tạo phiên bản mới; phiên bản cũ giữ lại để các tham chiếu cũ (provenance của AI) vẫn đọc được; người học luôn thấy phiên bản mới nhất. Material Detail hiện lịch sử phiên bản. | UC 58, US-CNT-001 |
 | BR-U13-13 | Xóa là lưu trữ: tài liệu ẩn với người học, không chọn được làm nguồn AI hay gắn vào Quiz mới; tham chiếu cũ vẫn giữ. | FR-004 |

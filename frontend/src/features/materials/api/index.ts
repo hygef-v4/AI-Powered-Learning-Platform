@@ -45,7 +45,7 @@ export function materialError(error: unknown): string {
 export function validYoutube(value: string): boolean {
   try {
     const url = new URL(value.trim());
-    if (url.protocol !== "https:" || url.username || url.password || url.port || url.searchParams.has("list") || url.searchParams.has("index")) return false;
+    if (url.protocol !== "https:" || url.username || url.password || url.port) return false;
     const keys = [...url.searchParams.keys()]; if (new Set(keys).size !== keys.length) return false;
     const id = url.hostname === "youtu.be" ? url.pathname.slice(1)
       : ["youtube.com", "www.youtube.com"].includes(url.hostname) && url.pathname === "/watch" ? url.searchParams.get("v") : null;

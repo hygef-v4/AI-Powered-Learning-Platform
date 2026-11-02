@@ -9,13 +9,15 @@ import java.util.UUID;
 
 class YoutubeVideoTest {
     @ParameterizedTest @ValueSource(strings={"https://youtu.be/abcdefghijk","https://youtube.com/watch?v=abcdefghijk",
-            "https://www.youtube.com/watch?v=abcdefghijk&t=10"})
+            "https://www.youtube.com/watch?v=abcdefghijk&t=10",
+            "https://youtube.com/watch?v=abcdefghijk&list=x&index=2","https://youtu.be/abcdefghijk?list=x",
+            "https://youtube.com/watch?list=x&v=abcdefghijk","https://youtube.com/watch?v=abcdefghijk&%6cist=x"})
     void acceptsSingleVideo(String url) {assertThat(YoutubeVideo.parse(url).url()).isEqualTo("https://www.youtube.com/watch?v=abcdefghijk");}
     @ParameterizedTest @ValueSource(strings={"http://youtu.be/abcdefghijk","https://youtube.com/playlist?list=x",
-            "https://youtube.com/watch?v=abcdefghijk&list=x","https://youtu.be/abcdefghijk?list=x",
+            "https://youtube.com/watch?list=x","https://youtube.com/watch?v=abcdefghijk&list=x&%6cist=y",
             "https://youtube.com.evil.test/watch?v=abcdefghijk","javascript:alert(1)","https://user@youtube.com/watch?v=abcdefghijk",
             "https://youtu.be/short","https://youtube.com/watch?v=abcdefghijk&v=abcdefghijk","https://youtu.be/abcdefghijk/extra",
-            "https://youtube.com:8443/watch?v=abcdefghijk","https://youtube.com/watch?v=abcdefghijk&%6cist=x",""})
+            "https://youtube.com:8443/watch?v=abcdefghijk",""})
     void rejectsUnsafeOrPlaylistUrls(String url) {assertThatIllegalArgumentException().isThrownBy(()->YoutubeVideo.parse(url));}
     @Test void revisionPreservesIdentityAndOldSnapshot() {
         UUID id=UUID.randomUUID(),subject=UUID.randomUUID(),actor=UUID.randomUUID();Instant now=Instant.now();
