@@ -8068,3 +8068,43 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **Context**: [CI run 41482601367](https://github.com/hygef-v4/AI-Powered-Learning-Platform/actions/runs/41482601367) completed successfully on 123fa1c19c4d15b2e3efb92becaaafc96f6a85ca: backend verify and required PostgreSQL guard passed; frontend install/lint/typecheck/tests/build passed; images/deploy skipped. The final documentation head will be checked separately. No PR merge, staging push, force-push or deployment. Unrelated DOCX retained outside commits; only task-owned temporary helpers will be removed after monitoring completes.
 
 ---
+
+## Local Run - Rebuild After Merge
+**Timestamp**: 2026-11-03T09:08:48Z
+**User Input**: "Build lại stack"
+**AI Response**: "Build lại stack local từ 5ff297b2; mọi container healthy, migration 20261102.1200 đã áp dụng, dữ liệu giữ nguyên. Thử lại đăng nhập, bank-tags, chặn phát hành thiếu câu và cảnh báo trên trang quiz: đều đúng. Không đổi code."
+**Context**: Chạy thử sau khi merge origin/staging vào staging local.
+
+---
+
+## Audit Log Redaction
+**Timestamp**: 2026-11-03T09:20:02Z
+**User Input**: "bỏ mật khẩu trong audit log cho tôi"
+**AI Response**: "Thay giá trị mật khẩu trong một dòng User Input bằng [đã ẩn mật khẩu], ở file và ở ba commit chưa push. Riêng dòng này không còn là nguyên văn, theo yêu cầu của người dùng."
+**Context**: Ngoại lệ có chủ ý với quy tắc ghi nguyên văn của audit log.
+
+---
+
+## Merge Readiness Check - Local staging
+**Timestamp**: 2026-11-03T10:02:45Z
+**User Input**: "kiểm tra xem có thể merge vào staging chưa"
+**AI Response**: "Không có commit mới trên origin/staging, không xung đột. Chạy các bước CI trên 841436e5 trong container: xem kết quả ở tin nhắn trả lời. Chưa push."
+**Context**: Kiểm tra trước khi đưa staging local lên remote.
+
+---
+
+## Merge Readiness Check - Progress Question
+**Timestamp**: 2026-11-03T10:02:45Z
+**User Input**: "được chưa"
+**AI Response**: "Báo backend đã đạt, frontend còn đang chạy."
+**Context**: Hỏi tiến độ khi đang chạy kiểm tra CI.
+
+---
+
+## Pull Request - Draw Rule Shortage Warning
+**Timestamp**: 2026-11-03T10:25:37Z
+**User Input**: "Mở PR vào staging"
+**AI Response**: "Tạo nhánh feat/quiz-draw-rule-shortage-warning không theo dõi upstream, commit các mục audit còn lại, push nhánh và mở PR vào staging."
+**Context**: Đưa cảnh báo thiếu câu lên staging qua PR để CI chạy.
+
+---
