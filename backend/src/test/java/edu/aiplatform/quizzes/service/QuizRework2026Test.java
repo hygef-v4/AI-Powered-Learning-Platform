@@ -213,6 +213,7 @@ class QuizRework2026Test {
         assertThat(papers.bankTags(teacher, quiz.quiz().id())).singleElement().satisfies(t -> {
             assertThat(t.tag()).isEqualTo("Thẻ A");
             assertThat(t.activeCount()).isEqualTo(2);
+            assertThat(t.byDifficulty()).containsOnly(Map.entry(Difficulty.EASY, 2));
         });
         QuizDetail generated = papers.saveRules(teacher, quiz.quiz().id(), QuizPaperMode.GENERATED, List.of(rule("thẻ a", 3)),
                 quiz.quiz().version());

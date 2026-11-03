@@ -7860,6 +7860,70 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 
 ---
 
+## Local Run - Quiz Review
+**Timestamp**: 2026-11-02T11:38:07Z
+**User Input**: "chạy local dự án để tôi kiểm tra lại các thay đổi mới của phần quiz"
+**AI Response**: "Khởi động Docker Desktop, build và chạy stack local từ staging (047c2e5c) bằng docker compose; mọi container healthy, ứng dụng ở http://localhost:8088. Không đổi code và không đổi dữ liệu."
+**Context**: Chạy thử theo yêu cầu, không phải thay đổi phần mềm; không mở stage AI-DLC mới.
+
+---
+
+## Local Run - Quiz Sample Data
+**Timestamp**: 2026-11-02T11:54:19Z
+**User Input**: "Tạo dữ liệu mẫu"
+**AI Response**: "Tạo dữ liệu mẫu trên database local qua API thật: môn SWT301, lớp SE-MAU1, 25 câu hỏi (19 đang dùng, 2 nháp, 3 chờ duyệt, 1 bị từ chối), 4 quiz (2 đang mở, 2 nháp), 5 lượt làm đã nộp. Đã đọc lại dữ liệu trên giao diện của cả ba vai trò. Không đổi code."
+**Context**: Dữ liệu thử cho việc kiểm tra phần quiz; script nằm ngoài repo.
+
+---
+
+## Local Run - Test Account Passwords
+**Timestamp**: 2026-11-02T11:56:55Z
+**User Input**: "đặt mặt khẩu cho các tài khoản là [đã ẩn mật khẩu] cho tôi"
+**AI Response**: "Ghi trực tiếp hash bcrypt vào database local cho 4 tài khoản *@platform.local vì mật khẩu này không đạt chính sách mật khẩu của ứng dụng; không đổi code và không đổi chính sách."
+**Context**: Chỉ áp dụng cho tài khoản thử trên stack Docker local.
+
+---
+
+## Local Run - Quiz Creation Question
+**Timestamp**: 2026-11-02T12:23:43Z
+**User Input**: "làm sao để chủ nhiệm môn tạo quiz"
+**AI Response**: "Hướng dẫn tạo quiz qua mục Học liệu: Tạo học liệu, chọn nội dung Quiz. Không đổi code."
+**Context**: Câu hỏi khi kiểm tra phần quiz; mục ghi muộn cùng lúc với thay đổi bên dưới.
+
+---
+
+## Local Run - Draw Rule Shortage Question
+**Timestamp**: 2026-11-02T12:23:43Z
+**User Input**: "kho đang có 6 câu sao tôi nhập 7 vẫn nhận"
+**AI Response**: "Giải thích BR-U10-17: cho lưu quy tắc, chặn khi phát hành. Thử phát hành quiz thiếu câu qua API: trả 400 POOL_INSUFFICIENT, quiz vẫn là nháp."
+**Context**: Câu hỏi khi kiểm tra phần quiz; mục ghi muộn cùng lúc với thay đổi bên dưới.
+
+---
+
+## U10 Change - Draw Rule Shortage Warning
+**Timestamp**: 2026-11-02T12:23:43Z
+**User Input**: "Thêm cảnh báo"
+**AI Response**: "Thêm cảnh báo thiếu câu ngay trên từng quy tắc sinh đề, đếm theo thẻ và độ khó; vẫn cho lưu, backend vẫn quyết định khi phát hành. API bank-tags trả thêm byDifficulty. Chưa commit."
+**Context**: Thay đổi nhỏ trong phạm vi U10 (DrawRulesPanel, QuizPaperService); làm trực tiếp, không mở stage AI-DLC mới.
+
+---
+
+## Merge Readiness Check - origin/staging
+**Timestamp**: 2026-11-03T08:54:40Z
+**User Input**: "kiểm tra các thay đổi mới nhất trên staging xem có xung đột gì không, có thể merge vào chưa"
+**AI Response**: "Thử merge không đổi cây làm việc với origin/staging 1878da06: chỉ xung đột aidlc-docs/audit.md. Trên bản ghép: frontend typecheck, lint, 745 test đạt; backend chạy 1721 test có 9 lỗi do thiếu thư mục khi đóng gói, chạy lại đủ mã nguồn đều đạt. Chưa merge."
+**Context**: Kiểm tra trước khi merge; không đổi code.
+
+---
+
+## Merge origin/staging Into Local staging
+**Timestamp**: 2026-11-03T08:59:50Z
+**User Input**: "Merge vào local"
+**AI Response**: "Merge origin/staging vào staging local; xung đột aidlc-docs/audit.md xử lý bằng cách giữ cả hai bên. Không push."
+**Context**: Thực hiện sau kiểm tra sẵn sàng merge.
+
+---
+
 ## Dedicated MCP documentation — 2026-11-02
 **User Input**: "[Image #1] phần kết nối mcp này thì nên có 1 trang doc riêng, cho 1 cái link hay 1 cái nút vào để xem doc mcp trong đó thì mô tả rõ cách dùng, cách kết nối, mô tả từng chức năng, tool làm gì"
 **AI Response**: Build a dedicated authenticated guide linked from Agent MCP. Reuse safe client setup/copy prompt; explain workflows, per-tool behavior/permissions and troubleshooting. Preserve the existing design and token management. Read current provider schemas and official client documentation; no new backend/DB behavior, dependency or live write.
@@ -8002,5 +8066,45 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **Timestamp**: 2026-11-02T16:36:15Z
 **AI Response**: Pushed only fix/u04-u13-u14 at 123fa1c19c4d15b2e3efb92becaaafc96f6a85ca and created [PR #44 into staging](https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/44). Attached the PR to this task. GitHub CI started backend verify and frontend checks for that exact head. The desktop CI connection was unavailable, so the existing Git credential was used in memory for GitHub API diagnostics; no credential was printed or committed. Updated the existing state, plan and verification report with the PR/check links. CI will also be inspected after this documentation push, using the final PR head. Local verification remains backend 1,764, frontend 743, isolated API E2E 40, all passing as recorded above.
 **Context**: [CI run 41482601367](https://github.com/hygef-v4/AI-Powered-Learning-Platform/actions/runs/41482601367) completed successfully on 123fa1c19c4d15b2e3efb92becaaafc96f6a85ca: backend verify and required PostgreSQL guard passed; frontend install/lint/typecheck/tests/build passed; images/deploy skipped. The final documentation head will be checked separately. No PR merge, staging push, force-push or deployment. Unrelated DOCX retained outside commits; only task-owned temporary helpers will be removed after monitoring completes.
+
+---
+
+## Local Run - Rebuild After Merge
+**Timestamp**: 2026-11-03T09:08:48Z
+**User Input**: "Build lại stack"
+**AI Response**: "Build lại stack local từ 5ff297b2; mọi container healthy, migration 20261102.1200 đã áp dụng, dữ liệu giữ nguyên. Thử lại đăng nhập, bank-tags, chặn phát hành thiếu câu và cảnh báo trên trang quiz: đều đúng. Không đổi code."
+**Context**: Chạy thử sau khi merge origin/staging vào staging local.
+
+---
+
+## Audit Log Redaction
+**Timestamp**: 2026-11-03T09:20:02Z
+**User Input**: "bỏ mật khẩu trong audit log cho tôi"
+**AI Response**: "Thay giá trị mật khẩu trong một dòng User Input bằng [đã ẩn mật khẩu], ở file và ở ba commit chưa push. Riêng dòng này không còn là nguyên văn, theo yêu cầu của người dùng."
+**Context**: Ngoại lệ có chủ ý với quy tắc ghi nguyên văn của audit log.
+
+---
+
+## Merge Readiness Check - Local staging
+**Timestamp**: 2026-11-03T10:02:45Z
+**User Input**: "kiểm tra xem có thể merge vào staging chưa"
+**AI Response**: "Không có commit mới trên origin/staging, không xung đột. Chạy các bước CI trên 841436e5 trong container: xem kết quả ở tin nhắn trả lời. Chưa push."
+**Context**: Kiểm tra trước khi đưa staging local lên remote.
+
+---
+
+## Merge Readiness Check - Progress Question
+**Timestamp**: 2026-11-03T10:02:45Z
+**User Input**: "được chưa"
+**AI Response**: "Báo backend đã đạt, frontend còn đang chạy."
+**Context**: Hỏi tiến độ khi đang chạy kiểm tra CI.
+
+---
+
+## Pull Request - Draw Rule Shortage Warning
+**Timestamp**: 2026-11-03T10:25:37Z
+**User Input**: "Mở PR vào staging"
+**AI Response**: "Tạo nhánh feat/quiz-draw-rule-shortage-warning không theo dõi upstream, commit các mục audit còn lại, push nhánh và mở PR vào staging."
+**Context**: Đưa cảnh báo thiếu câu lên staging qua PR để CI chạy.
 
 ---
