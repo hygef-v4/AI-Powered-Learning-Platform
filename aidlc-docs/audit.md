@@ -7824,3 +7824,19 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 **Context**: Thay đổi nhỏ trong phạm vi U10 (DrawRulesPanel, QuizPaperService); làm trực tiếp, không mở stage AI-DLC mới.
 
 ---
+
+## Merge Readiness Check - origin/staging
+**Timestamp**: 2026-11-03T08:54:40Z
+**User Input**: "kiểm tra các thay đổi mới nhất trên staging xem có xung đột gì không, có thể merge vào chưa"
+**AI Response**: "Thử merge không đổi cây làm việc với origin/staging 1878da06: chỉ xung đột aidlc-docs/audit.md. Trên bản ghép: frontend typecheck, lint, 745 test đạt; backend chạy 1721 test có 9 lỗi do thiếu thư mục khi đóng gói, chạy lại đủ mã nguồn đều đạt. Chưa merge."
+**Context**: Kiểm tra trước khi merge; không đổi code.
+
+---
+
+## Merge origin/staging Into Local staging
+**Timestamp**: 2026-11-03T08:59:50Z
+**User Input**: "Merge vào local"
+**AI Response**: "Merge origin/staging vào staging local; xung đột aidlc-docs/audit.md xử lý bằng cách giữ cả hai bên. Không push."
+**Context**: Thực hiện sau kiểm tra sẵn sàng merge.
+
+---
