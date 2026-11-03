@@ -144,7 +144,7 @@ export type QuizItemView = { position: number; points: number; inline: boolean; 
 export type DrawRule = { position: number; tag: string; difficulty: Difficulty | null; questionCount: number; pointsEach: number };
 export type DrawRuleInput = Omit<DrawRule, "position">;
 
-export type BankTag = { tag: string; activeCount: number };
+export type BankTag = { tag: string; activeCount: number; byDifficulty: Partial<Record<Difficulty, number>> };
 
 export type RuleShortage = { position: number; tag: string; difficulty: Difficulty | null; required: number; available: number };
 

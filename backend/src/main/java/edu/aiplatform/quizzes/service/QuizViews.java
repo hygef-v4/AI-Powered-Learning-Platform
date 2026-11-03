@@ -13,6 +13,7 @@ import edu.aiplatform.quizzes.model.QuizPaperMode;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /** Dữ liệu Quiz cho người soạn (giảng viên, Chủ nhiệm môn); có đáp án, không dùng cho người học (P2). */
@@ -55,8 +56,8 @@ public final class QuizViews {
                              boolean canManage) {
     }
 
-    /** Một thẻ trong ngân hàng của môn kèm số câu đang dùng, để chọn khi lập quy tắc. */
-    public record BankTag(String tag, int activeCount) {
+    /** Một thẻ trong ngân hàng của môn kèm số câu đang dùng, tổng và theo độ khó, để chọn khi lập quy tắc. */
+    public record BankTag(String tag, int activeCount, Map<Difficulty, Integer> byDifficulty) {
     }
 
     /** Một câu trong đề mẫu của Quiz sinh đề, kèm quy tắc đã bốc ra câu đó. */
