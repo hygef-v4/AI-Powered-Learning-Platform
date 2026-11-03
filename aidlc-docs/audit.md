@@ -7776,3 +7776,51 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 **AI Response**: Resolve the in-progress merge of staging d33e31c3 into fix/u05-u09-u15. The sole conflict is aidlc-state.md: retain both Finalized grade lock and Staging check fixes sections, removing markers only. Preserve all already auto-merged source/package/test changes and existing audit entries, then complete the local merge commit. Checked section uniqueness, conflict markers, staged whitespace and package JSON parsing. Runtime tests/build are not rerun for this documentation conflict resolution; prior branch test evidence remains dated. No push, live DB change or restart.
 
 ---
+
+## Local Run - Quiz Review
+**Timestamp**: 2026-11-02T11:38:07Z
+**User Input**: "chạy local dự án để tôi kiểm tra lại các thay đổi mới của phần quiz"
+**AI Response**: "Khởi động Docker Desktop, build và chạy stack local từ staging (047c2e5c) bằng docker compose; mọi container healthy, ứng dụng ở http://localhost:8088. Không đổi code và không đổi dữ liệu."
+**Context**: Chạy thử theo yêu cầu, không phải thay đổi phần mềm; không mở stage AI-DLC mới.
+
+---
+
+## Local Run - Quiz Sample Data
+**Timestamp**: 2026-11-02T11:54:19Z
+**User Input**: "Tạo dữ liệu mẫu"
+**AI Response**: "Tạo dữ liệu mẫu trên database local qua API thật: môn SWT301, lớp SE-MAU1, 25 câu hỏi (19 đang dùng, 2 nháp, 3 chờ duyệt, 1 bị từ chối), 4 quiz (2 đang mở, 2 nháp), 5 lượt làm đã nộp. Đã đọc lại dữ liệu trên giao diện của cả ba vai trò. Không đổi code."
+**Context**: Dữ liệu thử cho việc kiểm tra phần quiz; script nằm ngoài repo.
+
+---
+
+## Local Run - Test Account Passwords
+**Timestamp**: 2026-11-02T11:56:55Z
+**User Input**: "đặt mặt khẩu cho các tài khoản là [đã ẩn mật khẩu] cho tôi"
+**AI Response**: "Ghi trực tiếp hash bcrypt vào database local cho 4 tài khoản *@platform.local vì mật khẩu này không đạt chính sách mật khẩu của ứng dụng; không đổi code và không đổi chính sách."
+**Context**: Chỉ áp dụng cho tài khoản thử trên stack Docker local.
+
+---
+
+## Local Run - Quiz Creation Question
+**Timestamp**: 2026-11-02T12:23:43Z
+**User Input**: "làm sao để chủ nhiệm môn tạo quiz"
+**AI Response**: "Hướng dẫn tạo quiz qua mục Học liệu: Tạo học liệu, chọn nội dung Quiz. Không đổi code."
+**Context**: Câu hỏi khi kiểm tra phần quiz; mục ghi muộn cùng lúc với thay đổi bên dưới.
+
+---
+
+## Local Run - Draw Rule Shortage Question
+**Timestamp**: 2026-11-02T12:23:43Z
+**User Input**: "kho đang có 6 câu sao tôi nhập 7 vẫn nhận"
+**AI Response**: "Giải thích BR-U10-17: cho lưu quy tắc, chặn khi phát hành. Thử phát hành quiz thiếu câu qua API: trả 400 POOL_INSUFFICIENT, quiz vẫn là nháp."
+**Context**: Câu hỏi khi kiểm tra phần quiz; mục ghi muộn cùng lúc với thay đổi bên dưới.
+
+---
+
+## U10 Change - Draw Rule Shortage Warning
+**Timestamp**: 2026-11-02T12:23:43Z
+**User Input**: "Thêm cảnh báo"
+**AI Response**: "Thêm cảnh báo thiếu câu ngay trên từng quy tắc sinh đề, đếm theo thẻ và độ khó; vẫn cho lưu, backend vẫn quyết định khi phát hành. API bank-tags trả thêm byDifficulty. Chưa commit."
+**Context**: Thay đổi nhỏ trong phạm vi U10 (DrawRulesPanel, QuizPaperService); làm trực tiếp, không mở stage AI-DLC mới.
+
+---
