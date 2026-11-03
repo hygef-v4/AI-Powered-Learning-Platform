@@ -24,8 +24,10 @@ class SubjectCodeTest {
     @NullAndEmptySource
     @ValueSource(strings = {"   ", "SWR 302", "SWR_302", "SWR/302", "MÔN", "ABCDEFGHIJKLMNOPQRSTU"})
     void rejectsInvalidCodes(String value) {
-        assertThatThrownBy(() -> new SubjectCode(value)).isInstanceOf(ApiException.class)
-                .extracting("code").isEqualTo("SUBJECT_CODE_INVALID");
+        assertThatThrownBy(() -> new SubjectCode(value))
+                .isInstanceOf(ApiException.class)
+                .extracting("code")
+                .isEqualTo("SUBJECT_CODE_INVALID");
     }
 
     @Test

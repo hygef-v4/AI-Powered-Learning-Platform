@@ -7,7 +7,11 @@ import { createSubject } from "../api";
 import { ManagerPicker } from "./ManagerPicker";
 import type { ManagerCandidate, SearchSubjectManagers } from "../model/managerSearch";
 import type { SubjectDetail } from "../model/types";
-import { normalizeSubjectCode, validateCreateSubject, type SubjectFieldErrors } from "../model/validation";
+import {
+  normalizeSubjectCode,
+  validateCreateSubject,
+  type SubjectFieldErrors,
+} from "../model/validation";
 
 type Props = {
   onClose: () => void;
@@ -26,7 +30,9 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
   const [manager, setManager] = useState<ManagerCandidate | null>(null);
   const [errors, setErrors] = useState<SubjectFieldErrors & { managerId?: string }>({});
   const [message, setMessage] = useState<string | null>(null);
-  const close = useCallback(() => { if (!pending.current) onClose(); }, [onClose]);
+  const close = useCallback(() => {
+    if (!pending.current) onClose();
+  }, [onClose]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -39,14 +45,28 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
     setBusy(true);
     let created: SubjectDetail;
     try {
-      created = await createSubject({ code: normalizeSubjectCode(code), name: name.trim(), description: description || null, managerId: manager?.accountId ?? null });
+      created = await createSubject({
+        code: normalizeSubjectCode(code),
+        name: name.trim(),
+        description: description || null,
+        managerId: manager?.accountId ?? null,
+      });
     } catch (error: unknown) {
       const problem = error instanceof ApiError ? error.problem : null;
-      if (problem?.code === "SUBJECT_CODE_DUPLICATE") setErrors({ code: "Mã môn đã tồn tại, hãy dùng mã khác." });
-      else if (problem?.code === "SUBJECT_MANAGER_INVALID") setErrors({ managerId: "Chủ nhiệm đã chọn không còn hợp lệ. Hãy chọn lại hoặc bỏ lựa chọn." });
-      else setMessage(problem?.status === 401 ? "Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại."
-        : problem?.status === 403 ? "Bạn không có quyền thêm môn học."
-        : "Chưa xác nhận tạo môn thành công. Dữ liệu nhập được giữ lại; hãy kiểm tra danh sách trước khi thử lại.");
+      if (problem?.code === "SUBJECT_CODE_DUPLICATE")
+        setErrors({ code: "Mã môn đã tồn tại, hãy dùng mã khác." });
+      else if (problem?.code === "SUBJECT_MANAGER_INVALID")
+        setErrors({
+          managerId: "Chủ nhiệm đã chọn không còn hợp lệ. Hãy chọn lại hoặc bỏ lựa chọn.",
+        });
+      else
+        setMessage(
+          problem?.status === 401
+            ? "Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại."
+            : problem?.status === 403
+              ? "Bạn không có quyền thêm môn học."
+              : "Chưa xác nhận tạo môn thành công. Dữ liệu nhập được giữ lại; hãy kiểm tra danh sách trước khi thử lại.",
+        );
       pending.current = false;
       setBusy(false);
       return;
@@ -55,24 +75,96 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
     onCreated(created);
   }
 
-  return <Dialog open title="Thêm môn học" icon="menu_book" onClose={close} dismissible={!busy} size="lg"
-    footer={<Button type="submit" form={formId} variant="primary" disabled={busy} data-testid="subject-create-submit">{busy ? "Đang thêm…" : "Thêm môn học"}</Button>}>
-    <form id={formId} onSubmit={(event) => void submit(event)} noValidate aria-busy={busy} data-testid="subject-create-form" className="flex flex-col gap-3.5">
-      <fieldset disabled={busy} className="flex min-w-0 flex-col gap-3.5">
-        <Field label="Mã môn" htmlFor={`${formId}-code`} required error={errors.code}>
-          <TextInput id={`${formId}-code`} value={code} maxLength={20} invalid={!!errors.code} onChange={(event) => { setCode(event.target.value.toUpperCase()); setErrors((current) => ({ ...current, code: undefined })); }} data-testid="subject-create-code" />
-        </Field>
-        <Field label="Tên môn" htmlFor={`${formId}-name`} required error={errors.name}>
-          <TextInput id={`${formId}-name`} value={name} maxLength={200} invalid={!!errors.name} onChange={(event) => { setName(event.target.value); setErrors((current) => ({ ...current, name: undefined })); }} data-testid="subject-create-name" />
-        </Field>
-        <ManagerPicker value={manager} onChange={(value) => { setManager(value); setErrors((current) => ({ ...current, managerId: undefined })); }} disabled={busy} searchManagers={searchManagers} />
-        {errors.managerId && <p role="alert" className="text-xs text-danger">{errors.managerId}</p>}
-        <Field label="Mô tả" htmlFor={`${formId}-description`} error={errors.description}>
-          <textarea id={`${formId}-description`} value={description} maxLength={2000} aria-invalid={!!errors.description} onChange={(event) => { setDescription(event.target.value); setErrors((current) => ({ ...current, description: undefined })); }} data-testid="subject-create-description"
-            className="min-h-20 w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus" />
-        </Field>
-      </fieldset>
-      {message && <p role="alert" className="text-sm text-danger">{message}</p>}
-    </form>
-  </Dialog>;
+  return (
+    <Dialog
+      open
+      title="Thêm môn học"
+      icon="menu_book"
+      onClose={close}
+      dismissible={!busy}
+      size="lg"
+      footer={
+        <Button
+          type="submit"
+          form={formId}
+          variant="primary"
+          disabled={busy}
+          data-testid="subject-create-submit"
+        >
+          {busy ? "Đang thêm…" : "Thêm môn học"}
+        </Button>
+      }
+    >
+      <form
+        id={formId}
+        onSubmit={(event) => void submit(event)}
+        noValidate
+        aria-busy={busy}
+        data-testid="subject-create-form"
+        className="flex flex-col gap-3.5"
+      >
+        <fieldset disabled={busy} className="flex min-w-0 flex-col gap-3.5">
+          <Field label="Mã môn" htmlFor={`${formId}-code`} required error={errors.code}>
+            <TextInput
+              id={`${formId}-code`}
+              value={code}
+              maxLength={20}
+              invalid={!!errors.code}
+              onChange={(event) => {
+                setCode(event.target.value.toUpperCase());
+                setErrors((current) => ({ ...current, code: undefined }));
+              }}
+              data-testid="subject-create-code"
+            />
+          </Field>
+          <Field label="Tên môn" htmlFor={`${formId}-name`} required error={errors.name}>
+            <TextInput
+              id={`${formId}-name`}
+              value={name}
+              maxLength={200}
+              invalid={!!errors.name}
+              onChange={(event) => {
+                setName(event.target.value);
+                setErrors((current) => ({ ...current, name: undefined }));
+              }}
+              data-testid="subject-create-name"
+            />
+          </Field>
+          <ManagerPicker
+            value={manager}
+            onChange={(value) => {
+              setManager(value);
+              setErrors((current) => ({ ...current, managerId: undefined }));
+            }}
+            disabled={busy}
+            searchManagers={searchManagers}
+          />
+          {errors.managerId && (
+            <p role="alert" className="text-xs text-danger">
+              {errors.managerId}
+            </p>
+          )}
+          <Field label="Mô tả" htmlFor={`${formId}-description`} error={errors.description}>
+            <textarea
+              id={`${formId}-description`}
+              value={description}
+              maxLength={2000}
+              aria-invalid={!!errors.description}
+              onChange={(event) => {
+                setDescription(event.target.value);
+                setErrors((current) => ({ ...current, description: undefined }));
+              }}
+              data-testid="subject-create-description"
+              className="min-h-20 w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus"
+            />
+          </Field>
+        </fieldset>
+        {message && (
+          <p role="alert" className="text-sm text-danger">
+            {message}
+          </p>
+        )}
+      </form>
+    </Dialog>
+  );
 }

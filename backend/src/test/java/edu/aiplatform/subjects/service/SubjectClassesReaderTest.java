@@ -18,7 +18,10 @@ class SubjectClassesReaderTest {
     @Test
     void partialOrInvalidCountsStayUnknownAndExtraKeysAreDiscarded() {
         ISubjectClasses provider = mock(ISubjectClasses.class);
-        UUID zero = UUID.randomUUID(), missing = UUID.randomUUID(), negative = UUID.randomUUID(), extra = UUID.randomUUID();
+        UUID zero = UUID.randomUUID(),
+                missing = UUID.randomUUID(),
+                negative = UUID.randomUUID(),
+                extra = UUID.randomUUID();
         List<UUID> ids = List.of(zero, missing, negative);
         when(provider.countClasses(ids)).thenReturn(Map.of(zero, 0, negative, -1, extra, 10));
         var reader = new SubjectClassesReader(provider);
@@ -48,7 +51,8 @@ class SubjectClassesReaderTest {
         when(provider.listClassesOfSubject(any())).thenReturn(null);
         var reader = new SubjectClassesReader(provider);
         try {
-            assertThat(reader.classes(UUID.randomUUID()).availability()).isEqualTo(SubjectAdminViews.Availability.UNAVAILABLE);
+            assertThat(reader.classes(UUID.randomUUID()).availability())
+                    .isEqualTo(SubjectAdminViews.Availability.UNAVAILABLE);
         } finally {
             reader.close();
         }
@@ -58,16 +62,18 @@ class SubjectClassesReaderTest {
     void deadlineReturnsUnknownAndInterruptsBlockedProvider() throws Exception {
         var provider = mock(ISubjectClasses.class);
         CountDownLatch entered = new CountDownLatch(1), interrupted = new CountDownLatch(1);
-        when(provider.countClasses(any())).thenAnswer(call -> {
-            entered.countDown();
-            try {
-                new CountDownLatch(1).await();
-                return Map.of();
-            } catch (InterruptedException expected) {
-                interrupted.countDown();
-                throw expected;
-            }
-        });
+        when(provider.countClasses(any()))
+                .thenAnswer(
+                        call -> {
+                            entered.countDown();
+                            try {
+                                new CountDownLatch(1).await();
+                                return Map.of();
+                            } catch (InterruptedException expected) {
+                                interrupted.countDown();
+                                throw expected;
+                            }
+                        });
         var reader = new SubjectClassesReader(provider, Duration.ofMillis(100));
         try {
             assertThat(reader.counts(List.of(UUID.randomUUID()))).isEmpty();
@@ -81,14 +87,17 @@ class SubjectClassesReaderTest {
     @Test
     void interruptedCallerKeepsInterruptFlagAndGetsUnavailable() {
         var provider = mock(ISubjectClasses.class);
-        when(provider.listClassesOfSubject(any())).thenAnswer(call -> {
-            new CountDownLatch(1).await();
-            return List.of();
-        });
+        when(provider.listClassesOfSubject(any()))
+                .thenAnswer(
+                        call -> {
+                            new CountDownLatch(1).await();
+                            return List.of();
+                        });
         var reader = new SubjectClassesReader(provider);
         try {
             Thread.currentThread().interrupt();
-            assertThat(reader.classes(UUID.randomUUID()).availability()).isEqualTo(SubjectAdminViews.Availability.UNAVAILABLE);
+            assertThat(reader.classes(UUID.randomUUID()).availability())
+                    .isEqualTo(SubjectAdminViews.Availability.UNAVAILABLE);
             assertThat(Thread.currentThread().isInterrupted()).isTrue();
         } finally {
             Thread.interrupted();

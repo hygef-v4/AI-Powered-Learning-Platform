@@ -6,14 +6,23 @@ import java.util.regex.Pattern;
 
 /** Internal student links; legacy paths remain readable by already queued reminder emails. */
 final class AssignmentNotificationLink {
-    private static final String UUID_PATTERN = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
-    private static final Pattern LINK = Pattern.compile("^/(?:my-assignments|assignments)/(" + UUID_PATTERN
-            + ")(?:\\?classId=" + UUID_PATTERN + ")?$");
+    private static final String UUID_PATTERN =
+            "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
+    private static final Pattern LINK =
+            Pattern.compile(
+                    "^/(?:my-assignments|assignments)/("
+                            + UUID_PATTERN
+                            + ")(?:\\?classId="
+                            + UUID_PATTERN
+                            + ")?$");
 
-    private AssignmentNotificationLink() { }
+    private AssignmentNotificationLink() {}
 
     static String student(UUID assignmentId, UUID classId) {
-        return "/my-assignments/" + Objects.requireNonNull(assignmentId) + "?classId=" + Objects.requireNonNull(classId);
+        return "/my-assignments/"
+                + Objects.requireNonNull(assignmentId)
+                + "?classId="
+                + Objects.requireNonNull(classId);
     }
 
     static UUID assignmentId(String link) {

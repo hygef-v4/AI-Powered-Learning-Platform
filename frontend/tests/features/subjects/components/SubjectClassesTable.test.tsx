@@ -3,13 +3,39 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { SubjectClassesTab } from "@/features/subjects/components/SubjectClassesTab";
 import type { SubjectClassSummary } from "@/features/subjects/model/types";
 
-vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(window.location.search) }));
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(window.location.search),
+}));
 afterEach(() => window.history.replaceState(null, "", "/"));
 
 const items: SubjectClassSummary[] = [
-  { classId: "a", code: "C-A", name: "Lớp nháp", term: "2026-1", status: "DRAFT", teacherName: null, activeStudentCount: 100 },
-  { classId: "b", code: "C-B", name: "Lớp mở", term: "2026-1", status: "OPEN", teacherName: "Giảng viên B", activeStudentCount: 200 },
-  { classId: "c", code: "C-C", name: "Lớp lưu trữ", term: "2026-2", status: "ARCHIVED", teacherName: "Giảng viên C", activeStudentCount: 300 },
+  {
+    classId: "a",
+    code: "C-A",
+    name: "Lớp nháp",
+    term: "2026-1",
+    status: "DRAFT",
+    teacherName: null,
+    activeStudentCount: 100,
+  },
+  {
+    classId: "b",
+    code: "C-B",
+    name: "Lớp mở",
+    term: "2026-1",
+    status: "OPEN",
+    teacherName: "Giảng viên B",
+    activeStudentCount: 200,
+  },
+  {
+    classId: "c",
+    code: "C-C",
+    name: "Lớp lưu trữ",
+    term: "2026-2",
+    status: "ARCHIVED",
+    teacherName: "Giảng viên C",
+    activeStudentCount: 300,
+  },
 ];
 
 describe("SubjectClassesTable/Tab", () => {
@@ -29,9 +55,14 @@ describe("SubjectClassesTable/Tab", () => {
     fireEvent.click(screen.getByTestId("subjects-classes-filter-OPEN"));
     expect(screen.getByText("Lớp mở")).toBeInTheDocument();
     expect(screen.queryByText("Lớp nháp")).not.toBeInTheDocument();
-    expect(screen.getByTestId("subjects-classes-filter-OPEN")).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByTestId("subjects-classes-filter-OPEN")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
     expect(screen.queryByLabelText("Lọc lớp theo học kỳ")).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText("Lọc theo mã hoặc tên lớp"), { target: { value: "lưu trữ" } });
+    fireEvent.change(screen.getByLabelText("Lọc theo mã hoặc tên lớp"), {
+      target: { value: "lưu trữ" },
+    });
     expect(screen.getByText("Không có lớp phù hợp.")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("subjects-classes-filter-ARCHIVED"));
     expect(screen.getByText("Lớp lưu trữ")).toBeInTheDocument();
@@ -47,7 +78,11 @@ describe("SubjectClassesTable/Tab", () => {
 });
 
 it("restores the subject class status and search independently of the subject tab", () => {
-  window.history.replaceState(null, "", "/subjects/s?tab=classes&subjectClassStatus=ARCHIVED&subjectClassQuery=C-C");
+  window.history.replaceState(
+    null,
+    "",
+    "/subjects/s?tab=classes&subjectClassStatus=ARCHIVED&subjectClassQuery=C-C",
+  );
   const first = render(<SubjectClassesTab items={items} />);
   expect(screen.getByRole("tab", { name: "Lưu trữ" })).toHaveAttribute("aria-selected", "true");
   expect(screen.getByRole("searchbox")).toHaveValue("C-C");

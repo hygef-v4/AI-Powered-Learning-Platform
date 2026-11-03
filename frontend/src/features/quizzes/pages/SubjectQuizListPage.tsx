@@ -129,7 +129,7 @@ export function SubjectQuizListPage() {
       )}
       {creating && (
         <CreateQuizDialog onClose={() => setCreating(false)} onCreate={(title) => createSubjectQuiz(subject.id, title)}
-          onCreated={(quiz) => router.push(`/quizzes/${quiz.quiz.id}`)} />
+          onCreated={(quiz) => { setCreating(false); router.push(`/quizzes/${quiz.quiz.id}`); }} />
       )}
     </>
   );

@@ -1,5 +1,7 @@
 # U13 Reference Materials — bàn giao code
 
+Sửa lỗi 2026-11-02: nhận link một video YouTube có thêm `list`/`index`, lưu URL chuẩn của riêng video; playlist không có video vẫn bị chặn. Cả tạo và thay nguồn dùng cùng bộ phân tích backend. [Kế hoạch và kiểm chứng](../../plans/code-generation-plan/2026-11-02-u04-u13-u14.md).
+
 **Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
 
 ## Ghi nhận trước baseline 2026-10-30 (lịch sử)

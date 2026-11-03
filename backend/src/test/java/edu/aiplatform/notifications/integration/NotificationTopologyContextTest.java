@@ -17,10 +17,11 @@ class NotificationTopologyContextTest {
         new ApplicationContextRunner()
                 .withAllowBeanDefinitionOverriding(allowOverriding)
                 .withUserConfiguration(NotificationTopology.class)
-                .run(context -> {
-                    assertThat(context).hasNotFailed();
-                    assertThat(context).hasSingleBean(NotificationTopology.class);
-                    assertThat(context).hasSingleBean(Declarables.class);
-                });
+                .run(
+                        context -> {
+                            assertThat(context).hasNotFailed();
+                            assertThat(context).hasSingleBean(NotificationTopology.class);
+                            assertThat(context).hasSingleBean(Declarables.class);
+                        });
     }
 }

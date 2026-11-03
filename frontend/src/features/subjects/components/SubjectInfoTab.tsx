@@ -4,7 +4,9 @@ import type { SubjectMutationProps } from "../hooks/subjectMutation";
 
 /** Thẻ Thông tin môn học: sửa ngay trên thẻ như Thông tin tài khoản, không có nút "Chỉnh sửa" riêng. */
 export function SubjectInfoTab(props: SubjectMutationProps) {
-  return <Section title="Thông tin môn học">
-    <SubjectEditForm {...props} />
-  </Section>;
+  return (
+    <Section title="Thông tin môn học">
+      <SubjectEditForm {...props} />
+    </Section>
+  );
 }

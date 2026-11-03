@@ -4,7 +4,13 @@ import { useEffect } from "react";
 import type { IconName } from "@/shared/ui/Icon";
 import { outlinePaths } from "../api";
 import { useMaterialResource } from "../hooks/useMaterialResource";
-import { materialHref, type Material, type MaterialModule, type ModuleQuiz, type ModuleScope } from "./types";
+import {
+  materialHref,
+  type Material,
+  type MaterialModule,
+  type ModuleQuiz,
+  type ModuleScope,
+} from "./types";
 
 const enc = encodeURIComponent;
 
@@ -23,7 +29,9 @@ export function useOutlineChanged(reload: () => void) {
   }, [reload]);
 }
 
-export type OutlineItem = { kind: "material"; material: Material } | { kind: "quiz"; quiz: ModuleQuiz };
+export type OutlineItem =
+  | { kind: "material"; material: Material }
+  | { kind: "quiz"; quiz: ModuleQuiz };
 export type OutlineModule = { module: MaterialModule; items: OutlineItem[] };
 
 function pendingText(materials: Material[]) {
@@ -31,27 +39,36 @@ function pendingText(materials: Material[]) {
 }
 
 /** Module của môn kèm học liệu đang dùng (theo thứ tự) và Quiz gắn trong từng module. */
-export function useModuleOutline(scope: ModuleScope | null, options: { poll?: boolean; pollPaused?: boolean } = {}) {
+export function useModuleOutline(
+  scope: ModuleScope | null,
+  options: { poll?: boolean; pollPaused?: boolean } = {},
+) {
   const paths = scope ? outlinePaths(scope) : null;
   const modules = useMaterialResource<MaterialModule[]>(paths?.modules ?? null);
   const materials = useMaterialResource<Material[]>(paths?.materials ?? null, {
     pollWhile: options.poll ? pendingText : undefined,
     pollPaused: options.pollPaused,
   });
-  const outline: OutlineModule[] | undefined = modules.data && materials.data
-    ? modules.data.map((module) => ({
-      module,
-      items: [
-        ...materials.data!.filter((m) => m.status === "ACTIVE" && m.moduleId === module.id)
-          .sort((a, b) => a.orderNo - b.orderNo || a.title.localeCompare(b.title, "vi"))
-          .map((material) => ({ kind: "material" as const, material })),
-        ...module.quizzes.map((quiz) => ({ kind: "quiz" as const, quiz })),
-      ],
-    }))
-    : undefined;
-  const reloadModules = modules.reload, reloadMaterials = materials.reload;
+  const outline: OutlineModule[] | undefined =
+    modules.data && materials.data
+      ? modules.data.map((module) => ({
+          module,
+          items: [
+            ...materials
+              .data!.filter((m) => m.status === "ACTIVE" && m.moduleId === module.id)
+              .sort((a, b) => a.orderNo - b.orderNo || a.title.localeCompare(b.title, "vi"))
+              .map((material) => ({ kind: "material" as const, material })),
+            ...module.quizzes.map((quiz) => ({ kind: "quiz" as const, quiz })),
+          ],
+        }))
+      : undefined;
+  const reloadModules = modules.reload,
+    reloadMaterials = materials.reload;
   useEffect(() => {
-    const reload = () => { reloadModules(); reloadMaterials(); };
+    const reload = () => {
+      reloadModules();
+      reloadMaterials();
+    };
     window.addEventListener(CHANGED, reload);
     return () => window.removeEventListener(CHANGED, reload);
   }, [reloadModules, reloadMaterials]);
@@ -59,7 +76,10 @@ export function useModuleOutline(scope: ModuleScope | null, options: { poll?: bo
     outline,
     error: modules.error ?? materials.error,
     loading: modules.loading || materials.loading,
-    reload: () => { modules.reload(); materials.reload(); },
+    reload: () => {
+      modules.reload();
+      materials.reload();
+    },
   };
 }
 
@@ -89,5 +109,7 @@ export function itemHref(item: OutlineItem, scope: ModuleScope) {
 /** Trang danh sách học liệu của nơi xem (lối về trên sidebar module). */
 export function boardHref(scope: ModuleScope) {
   if (scope.kind === "subject") return `/manager/materials?subjectId=${enc(scope.subjectId)}`;
-  return scope.kind === "class" ? `/teaching/classes/${enc(scope.classId)}?tab=materials` : `/classes/${enc(scope.classId)}?tab=materials`;
+  return scope.kind === "class"
+    ? `/teaching/classes/${enc(scope.classId)}?tab=materials`
+    : `/classes/${enc(scope.classId)}?tab=materials`;
 }

@@ -3,15 +3,11 @@
 import Link from "next/link";
 import type { ComponentProps } from "react";
 
-/** The href is a direct-entry fallback; ordinary Back clicks use browser history. */
-export function BackLink({ onClick, ...props }: ComponentProps<typeof Link>) {
-  return <Link {...props} onClick={(event) => {
-    onClick?.(event);
-    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey
-      || (props.target && props.target !== "_self") || props.download) return;
-    if (window.history.length > 1) {
-      event.preventDefault();
-      window.history.back();
-    }
-  }} />;
+/**
+ * Nút / link quay lại: luôn mở đúng trang cha đã đặt ở `href`, không quay theo lịch sử trình duyệt (yêu cầu 2026-11-02).
+ * Trang cha tự khôi phục tab, bộ lọc nếu chúng nằm trong `href` (tham số URL). Trang có việc chưa lưu vẫn chặn được bằng
+ * `onClick` gọi `preventDefault()`.
+ */
+export function BackLink(props: ComponentProps<typeof Link>) {
+  return <Link {...props} />;
 }

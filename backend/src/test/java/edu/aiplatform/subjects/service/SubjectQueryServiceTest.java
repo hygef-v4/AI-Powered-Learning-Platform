@@ -28,8 +28,20 @@ class SubjectQueryServiceTest {
     void returnsOnlyContractFieldsAndMissingSubjectIsEmpty() {
         UUID id = UUID.randomUUID();
         UUID manager = UUID.randomUUID();
-        when(repository.findById(id)).thenReturn(Optional.of(Subject.create(id, "swr302", "Requirements", "Private note", manager, NOW)));
-        assertThat(service.getSubject(id)).contains(new SubjectRef(id, "SWR302", "Requirements", SubjectStatus.ACTIVE, manager));
+        when(repository.findById(id))
+                .thenReturn(
+                        Optional.of(
+                                Subject.create(
+                                        id,
+                                        "swr302",
+                                        "Requirements",
+                                        "Private note",
+                                        manager,
+                                        NOW)));
+        assertThat(service.getSubject(id))
+                .contains(
+                        new SubjectRef(
+                                id, "SWR302", "Requirements", SubjectStatus.ACTIVE, manager));
         UUID missing = UUID.randomUUID();
         when(repository.findById(missing)).thenReturn(Optional.empty());
         assertThat(service.getSubject(missing)).isEmpty();
@@ -40,7 +52,8 @@ class SubjectQueryServiceTest {
     void activeCheckReadsAgainAndDoesNotTreatArchivedAsActive() {
         UUID id = UUID.randomUUID();
         Subject active = Subject.create(id, "SWR302", "Requirements", null, null, NOW);
-        when(repository.findById(id)).thenReturn(Optional.of(active), Optional.of(active.archive(NOW)));
+        when(repository.findById(id))
+                .thenReturn(Optional.of(active), Optional.of(active.archive(NOW)));
         assertThat(service.isActive(id)).isTrue();
         assertThat(service.isActive(id)).isFalse();
     }
@@ -48,10 +61,17 @@ class SubjectQueryServiceTest {
     @Test
     void managedQueryMapsSubjectsAndNullableManagerIsRepresented() {
         UUID manager = UUID.randomUUID();
-        Subject managed = Subject.create(UUID.randomUUID(), "SWR302", "Requirements", null, manager, NOW);
+        Subject managed =
+                Subject.create(UUID.randomUUID(), "SWR302", "Requirements", null, manager, NOW);
         when(repository.findManagedBy(manager)).thenReturn(List.of(managed));
-        assertThat(service.listManagedSubjects(manager)).containsExactly(new SubjectRef(managed.id(), "SWR302",
-                "Requirements", SubjectStatus.ACTIVE, manager));
+        assertThat(service.listManagedSubjects(manager))
+                .containsExactly(
+                        new SubjectRef(
+                                managed.id(),
+                                "SWR302",
+                                "Requirements",
+                                SubjectStatus.ACTIVE,
+                                manager));
         Subject unassigned = Subject.create(UUID.randomUUID(), "SWR303", "Other", null, null, NOW);
         when(repository.findById(unassigned.id())).thenReturn(Optional.of(unassigned));
         assertThat(service.getSubject(unassigned.id()).orElseThrow().managerId()).isNull();
@@ -59,7 +79,8 @@ class SubjectQueryServiceTest {
 
     @Test
     void countsUseTheWholeRepositoryWithoutStatusOrSearchFilter() {
-        Map<SubjectStatus, Long> counts = Map.of(SubjectStatus.ACTIVE, 0L, SubjectStatus.ARCHIVED, 2L);
+        Map<SubjectStatus, Long> counts =
+                Map.of(SubjectStatus.ACTIVE, 0L, SubjectStatus.ARCHIVED, 2L);
         when(repository.countByStatus(null)).thenReturn(counts);
         assertThat(service.countSubjectsByStatus()).containsExactlyInAnyOrderEntriesOf(counts);
         verify(repository).countByStatus(null);

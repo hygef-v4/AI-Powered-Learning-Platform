@@ -18,8 +18,7 @@ import java.util.UUID;
 @Table(name = "subjects")
 public class SubjectJpaEntity {
 
-    @Id
-    private UUID id;
+    @Id private UUID id;
 
     @Column(nullable = false, length = 20, updatable = false)
     private String code;
@@ -47,8 +46,7 @@ public class SubjectJpaEntity {
     @Column(nullable = false)
     private Long version;
 
-    protected SubjectJpaEntity() {
-    }
+    protected SubjectJpaEntity() {}
 
     static SubjectJpaEntity forInsert(Subject subject) {
         if (subject.version() != 1) {
@@ -68,7 +66,15 @@ public class SubjectJpaEntity {
     }
 
     Subject toDomain() {
-        return new Subject(id, new SubjectCode(code), name, description, status, managerId,
-                createdAt, updatedAt, Math.addExact(version, 1));
+        return new Subject(
+                id,
+                new SubjectCode(code),
+                name,
+                description,
+                status,
+                managerId,
+                createdAt,
+                updatedAt,
+                Math.addExact(version, 1));
     }
 }

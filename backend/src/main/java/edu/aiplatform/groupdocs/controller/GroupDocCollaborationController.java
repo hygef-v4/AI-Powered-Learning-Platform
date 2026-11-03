@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-/** Nhập DOCX/Draw.io vào tài liệu nhóm (BR-U12-46) và đánh giá chéo giữa thành viên (BR-U12-47). */
+/** Nhập DOCX/Draw.io vào tài liệu nhóm (FB-U12-03) và đánh giá chéo giữa thành viên (FB-U12-04). */
 @RestController
 public class GroupDocCollaborationController {
 

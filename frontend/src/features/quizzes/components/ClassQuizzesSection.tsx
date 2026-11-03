@@ -63,7 +63,7 @@ export function ClassQuizzesSection({ classId }: { classId: string }) {
       {creating && (
         <CreateQuizDialog onClose={() => setCreating(false)} onCreate={(title) => createClassQuiz(classId, title)}
           copy={{ load: () => getCopySources(classId), run: (sourceId) => copyQuizToClass(classId, sourceId) }}
-          onCreated={(quiz) => router.push(`/quizzes/${quiz.quiz.id}`)} />
+          onCreated={(quiz) => { setCreating(false); router.push(`/quizzes/${quiz.quiz.id}`); }} />
       )}
     </Section>
   );
