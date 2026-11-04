@@ -1,5 +1,7 @@
 # U05 Class & Enrollment — AS-BUILT 2026-10-30
 
+**Cleanup delta 2026-11-04:** removed one consecutive duplicate manager-scope check in class creation. Checks before account locking and after subject locking remain; no authorization/transaction or schema change. [Evidence](../../build-and-test/2026-11-04-u05-u09-u15-cleanup-results.md).
+
 Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership unchanged.
 
 **Contract delta 2026-11-01:** U05 no longer exposes the manager class-wide distribution mutation. Historical `course_classes.show_grade_distribution` and the retained `showGradeDistribution` DTO/`ClassRef` field remain dormant; no true flags migrate to the new settings. U09 owns assignment-class visibility and never uses this field as a gate; U05 supplies current teaching scope and active enrollment. Verification for this delta belongs to the current change, not the older reports below.

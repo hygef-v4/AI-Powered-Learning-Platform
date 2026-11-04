@@ -2,9 +2,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { gradingApi } from "../api";
-import { rubricValues, hasPartialPoints, invalidItemScores } from "../components/RubricChecklistPanel";
+import { rubricValues, hasPartialPoints, invalidItemScores } from "../model/rubricScores";
 import { message } from "./useResource";
 import { useGradingProposals } from "./useGradingProposals";
+import { evaluationHref, type NavigationFilters } from "../model/navigation";
 import type {
   AiRequest,
   Checks,
@@ -42,7 +43,7 @@ function initialForm(evaluation: Evaluation, rubrics: Rubric[]): GradingFormValu
   };
 }
 
-export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Detail>) {
+export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Detail>, filters: NavigationFilters = {}) {
   const router = useRouter();
   const [detail, setDetail] = useState(initial);
   const [form, setForm] = useState(() => initialForm(initial.evaluation, initial.rubrics));
@@ -95,12 +96,14 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   function confirmNavigation() {
     return !dirty || window.confirm(UNSAVED_CHANGES_MESSAGE);
   }
-  function navigate(id: string) {
-    if (confirmNavigation()) router.push(`/teaching/evaluations/${id}`);
+  function navigate(id: string, keepFilters = true) {
+    if (confirmNavigation()) router.push(evaluationHref(id, keepFilters ? filters : {}));
   }
 
   async function save() {
     if (disabled) return;
+    const currentIndex = detail.navigationIds.indexOf(evaluation.id);
+    const next = currentIndex >= 0 ? detail.navigationIds[currentIndex + 1] : undefined;
     setBusy(true);
     setError("");
     try {
@@ -150,8 +153,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
         reviewedItemScores: saved.reviewedItemScores ?? current.reviewedItemScores ?? {},
         usedProposalId: null,
       }));
-      const next = detail.navigationIds[detail.navigationIds.indexOf(evaluation.id) + 1];
-      if (next) router.push(`/teaching/evaluations/${next}`);
+      if (next) router.push(evaluationHref(next, filters));
     } catch (error) {
       setError(message(error));
     } finally {

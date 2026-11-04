@@ -8004,3 +8004,17 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **Context**: [CI run 41482601367](https://github.com/hygef-v4/AI-Powered-Learning-Platform/actions/runs/41482601367) completed successfully on 123fa1c19c4d15b2e3efb92becaaafc96f6a85ca: backend verify and required PostgreSQL guard passed; frontend install/lint/typecheck/tests/build passed; images/deploy skipped. The final documentation head will be checked separately. No PR merge, staging push, force-push or deployment. Unrelated DOCX retained outside commits; only task-owned temporary helpers will be removed after monitoring completes.
 
 ---
+## U05/U09/U15 cleanup implementation — 2026-11-04
+
+**User request (raw):** giúp tôi triển khai theo kế hoạch
+
+**AI action:** Implemented the accepted `2026-11-04-u05-u09-u15-cleanup` plan on the existing feature branch. Added filter-aware grading navigation and save-next edge guards, batched/indexed gradebook assembly and one-load export, business-code conflict explanations, model-owned pure scoring helpers, and removed one duplicate class-creation authorization call while preserving lock rechecks. Updated U05/U09 as-built docs, U09 business/frontend/logical design, OpenAPI, plan and state. U15 source unchanged.
+
+**Verification:** Regression-first navigation and conflict failures were observed; 201-student export exposed three repeated whole-class loads before the fix. Final full backend Maven verify: 1,771 passed, zero failures/errors/skips, required real PostgreSQL suites 31 + 2 passed, production JAR built. Final frontend: 760 passed across 111 files; lint, TypeScript and isolated production build passed. Independent review found one missing-current navigation P2, reproduced RED and corrected; re-review found no remaining actionable introduced finding. All six scoring bodies match the baseline; OpenAPI YAML parsed and parameter schemas checked; diff whitespace check passes.
+
+**Limits:** Orca CLI is unavailable, so browser acceptance was replaced by automated React interaction and exporter fixtures; no manual browser or load/latency acceptance claim. No schema migration, application restart, live grade write, commit, push, merge or deployment. Full commands/log locations and retained memory limits are in `construction/build-and-test/2026-11-04-u05-u09-u15-cleanup-results.md`.
+## Local cleanup commit requested — 2026-11-04
+
+**User request (raw):** giúp tôi commit rõ ràng
+
+**Action:** Rechecked the complete task diff and verification logs: backend 1,771 passed/zero skips, frontend 760 passed, final production builds/lint/TypeScript passed. Prepare one atomic local commit with an English title/body covering preserved grading filters and save-next guards, indexed/batched gradebook export, business conflict messages, model scoring helpers, the duplicate U05 check removal and synchronized AI-DLC/OpenAPI. This retains the tested snapshot across shared navigation/scoring/workspace files. Existing staged plan retained; no unrelated files or private configuration included. No push, merge or deployment authorized.

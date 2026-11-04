@@ -1,5 +1,7 @@
 # U09 Assignment Grading — AS-BUILT 2026-10-30
 
+**Cleanup delta 2026-11-04:** optional evaluation navigation filters preserve the originating submission queue; direct/MCP calls remain compatible. Gradebook uses batched contacts and request-local indexes, and export loads sources once. Frontend scoring helpers are in `model/rubricScores.ts`; conflict messages use business error codes. Grade locks, resubmission policy and public unit contracts are unchanged. [Evidence and limits](../../build-and-test/2026-11-04-u05-u09-u15-cleanup-results.md).
+
 Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership unchanged.
 
 **Rule delta 2026-11-02 (latest decision):** FINALIZED/PUBLISHED rejects manual/AI/member grade edits with GRADE_LOCKED, even with a reason; FINALIZED publication remains allowed. Resubmission invalidates the previous grade: individual evaluations become SUPERSEDED including published ones; group root/member evaluations are reused and reset to PENDING. Existing audit/history remains; no group revision snapshot or schema/index migration is added. [Decision](../../../inception/requirements/2026-11-02-locked-grades.md).

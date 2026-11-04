@@ -1,5 +1,9 @@
 # U09 Assignment Grading — frontend-components
 
+## Audit remediation — 2026-11-04
+
+Submission links carry `status`/`late` into the evaluation page, detail request and previous/next/save-next links. Explicit student selection clears the queue context. Direct proposal links remain compatible. Conflict copy distinguishes locked grades, changed submissions, changed rubrics and version conflicts while retaining local edits. Pure rubric calculations live in `model/rubricScores.ts`; components and workspace hooks consume that module. Automated execution evidence is tracked in [cleanup results](../../build-and-test/2026-11-04-u05-u09-u15-cleanup-results.md); browser acceptance is separate.
+
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
 

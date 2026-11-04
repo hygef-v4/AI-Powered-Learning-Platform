@@ -171,6 +171,10 @@ public class SubmissionReviewService {
     }
 
     public EvaluationDetail detail(Actor actor, UUID id) {
+        return detail(actor, id, null, null);
+    }
+
+    public EvaluationDetail detail(Actor actor, UUID id, String status, Boolean late) {
         var evaluation = evaluations.findById(id).orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
         access.requireTeacher(actor, evaluation.classId, Actions.GRADING_REVIEW);
         var assignment = assignments.get(evaluation.assignmentId)
@@ -226,6 +230,11 @@ public class SubmissionReviewService {
                         && candidate.state != EvaluationStatus.SUPERSEDED
                         && (candidate.kind != EvaluationKind.ATTEMPT || latestAttempts.contains(candidate.attemptId)))
                 .sorted(Comparator.comparing(candidate -> candidate.id)).map(candidate -> candidate.id).toList();
+        if (status != null || late != null) {
+            navigationIds = listRows(actor, evaluation.classId, evaluation.assignmentId, status, late).rows().stream()
+                    .filter(row -> row.evaluationId() != null && !row.status().equals("SUPERSEDED"))
+                    .map(SubmissionRow::evaluationId).toList();
+        }
         var members = all.stream()
                 .filter(candidate -> candidate.kind == EvaluationKind.MEMBER
                         && Objects.equals(evaluation.groupDocumentId, candidate.groupDocumentId)

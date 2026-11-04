@@ -41,6 +41,13 @@ async function ready() {
 }
 
 describe("submission assignment context", () => {
+  it("carries the selected status and late filters into the grading workspace", async () => {
+    render(<SubmissionDetailPage classId="c" assignmentId="a" />);
+    await ready();
+    fireEvent.change(screen.getByTestId("submissions-status-filter"), { target: { value: "DRAFT" } });
+    fireEvent.change(screen.getByTestId("submissions-late-filter"), { target: { value: "true" } });
+    expect(screen.getByRole("link", { name: "Tiếp tục chấm" })).toHaveAttribute("href", "/teaching/evaluations/e?status=DRAFT&late=true");
+  });
   it("labels subject-scoped work using the authorized class in the same subject", async () => {
     mocks.assignmentContext.mockResolvedValue({ ...context, scope: "SUBJECT", classId: null, subjectId: "subject", ownerName: "Subject name" });
     mocks.classDetail.mockResolvedValue({ id: "c", subject: { id: "subject" }, code: "SE_JS", name: "Software Design" });
@@ -196,9 +203,9 @@ describe("submission filters and batch behavior", () => {
     });
     render(<SubmissionDetailPage classId="c" assignmentId="a" />);
     await screen.findByRole("checkbox", { name: "Chọn SV Pending" });
-    expect(screen.getByRole("link", { name: "Chấm bài" })).toHaveAttribute("href", "/teaching/evaluations/e-pending");
-    expect(screen.getByRole("link", { name: "Tiếp tục chấm" })).toHaveAttribute("href", "/teaching/evaluations/e-draft");
-    expect(screen.getByRole("link", { name: "Xem điểm" })).toHaveAttribute("href", "/teaching/evaluations/e-final");
+    expect(screen.getByRole("link", { name: "Chấm bài" })).toHaveAttribute("href", "/teaching/evaluations/e-pending?status=ALL");
+    expect(screen.getByRole("link", { name: "Tiếp tục chấm" })).toHaveAttribute("href", "/teaching/evaluations/e-draft?status=ALL");
+    expect(screen.getByRole("link", { name: "Xem điểm" })).toHaveAttribute("href", "/teaching/evaluations/e-final?status=ALL");
     expect(screen.getByText("7.50 / 10.00")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("checkbox", { name: "Chọn SV Pending" }));

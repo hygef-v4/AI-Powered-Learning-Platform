@@ -11,7 +11,8 @@ import {
   type RubricCriterion,
 } from "@/shared/document";
 import { Alert, Button, Icon, IconButton, Pill } from "@/shared/ui";
-import { checklistPoints, RubricChecklist } from "../components/RubricChecklistPanel";
+import { RubricChecklist } from "../components/RubricChecklistPanel";
+import { checklistPoints } from "../model/rubricScores";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
 import { useSubmissionDirectory } from "../hooks/useSubmissionDirectory";
 import { gradingApi } from "../api";
@@ -25,12 +26,14 @@ import { MemberContributionPanel } from "../components/MemberContributionPanel";
 import { countUnresolvedReviews } from "../components/StructuredFeedbackSection";
 import { points, statusLabels, type Detail, type DocumentModel, type Rubric } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
+import type { NavigationFilters } from "../model/navigation";
 
-export function GradingWorkspacePage({ evaluationId, proposalId }: { evaluationId: string; proposalId?: string }) {
-  const load = useCallback(() => gradingApi.detail(evaluationId), [evaluationId]);
+export function GradingWorkspacePage({ evaluationId, proposalId, status, late }: { evaluationId: string; proposalId?: string } & NavigationFilters) {
+  const load = useCallback(() => status !== undefined || late !== undefined
+    ? gradingApi.detail(evaluationId, { status, late }) : gradingApi.detail(evaluationId), [evaluationId, status, late]);
   const resource = useResource(load);
   return resource.value ? (
-    <Workspace key={evaluationId} initial={resource.value} refresh={resource.refresh} proposalId={proposalId} />
+    <Workspace key={`${evaluationId}:${status ?? ""}:${late ?? ""}`} initial={resource.value} refresh={resource.refresh} proposalId={proposalId} status={status} late={late} />
   ) : resource.error ? (
     <PageLoadError onRetry={() => void resource.refresh()}>{resource.error}</PageLoadError>
   ) : (
@@ -83,8 +86,8 @@ function noteCriteria(rubric: Rubric): RubricCriterion[] {
   }));
 }
 
-function Workspace({ initial, refresh, proposalId }: { initial: Detail; refresh: () => Promise<Detail>; proposalId?: string }) {
-  const workspace = useGradingWorkspace(initial, refresh);
+function Workspace({ initial, refresh, proposalId, status, late }: { initial: Detail; refresh: () => Promise<Detail>; proposalId?: string } & NavigationFilters) {
+  const workspace = useGradingWorkspace(initial, refresh, { status, late });
   const {
     detail,
     evaluation,
@@ -209,7 +212,7 @@ function Workspace({ initial, refresh, proposalId }: { initial: Detail; refresh:
                 : !directory.value ? <p role="status" className="mt-3 text-sm text-muted">Đang tải sinh viên…</p>
                   : <ul aria-label="Bài nộp sinh viên" className="mt-2 max-h-64 overflow-y-auto">
                     {studentMatches.map((row) => <li key={row.student.accountId}>
-                      <button type="button" disabled={busy || row.evaluationId === evaluation.id} onClick={() => navigate(row.evaluationId!)}
+                      <button type="button" disabled={busy || row.evaluationId === evaluation.id} onClick={() => navigate(row.evaluationId!, false)}
                         className="w-full cursor-pointer rounded-lg px-2 py-2 text-left text-sm hover:bg-sunken disabled:cursor-default disabled:opacity-50">
                         <span className="block font-semibold">{row.student.name}</span><span className="block text-xs text-muted">{row.student.email}</span>
                       </button>

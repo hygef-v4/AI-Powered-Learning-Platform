@@ -118,7 +118,6 @@ public class AcademicsService {
     public ClassView create(Actor actor,UUID subjectId,String code,String name,String description,String term,UUID teacherId) {
         return command(actor,"CLASS_CREATED",subjectId,() -> {
             requireAudience(actor,"manager"); requireManager(actor,subjectId);
-            requireManager(actor,subjectId);
             // Khóa tài khoản giảng viên trước dòng môn: U01 vô hiệu hóa tài khoản khóa tài khoản rồi mới tới môn.
             requireTeacher(teacherId);
             subjectGuard.lockActive(subjectId,SUBJECT_LOCK_WAIT); requireManager(actor,subjectId);

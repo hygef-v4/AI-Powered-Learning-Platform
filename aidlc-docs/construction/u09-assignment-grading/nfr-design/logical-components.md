@@ -1,5 +1,9 @@
 # U09 Assignment Grading — logical-components
 
+## Request-local gradebook assembly — 2026-11-04
+
+`GradebookService` batches account contacts and indexes current evaluations/submission metadata by assignment and learner. It constructs only the requested page's grade rows; export loads the class dataset once rather than repeating full assembly per 100 students. Current-attempt selection, group-member overrides, official-only export fields, authorization and audit transactions remain unchanged. No cross-request cache or schema change: source data and export output still consume memory proportional to the class dataset. See [verification and limits](../../build-and-test/2026-11-04-u05-u09-u15-cleanup-results.md).
+
 > Current structure: parent HEAD 5a76e428 + working-tree refactor, 2026-10-30. Unit ownership unchanged; runtime/provider acceptance remains separate.
 
 **Primary UC:** 42, 43, 44, 45. **Primary stories:** US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005, US-RPT-001, US-RPT-003, US-INT-001. **Requirements:** FR-008, FR-009, FR-019, FR-020, FR-024, FR-039.

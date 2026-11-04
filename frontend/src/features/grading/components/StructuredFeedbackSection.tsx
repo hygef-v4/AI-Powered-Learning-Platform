@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Pill } from "@/shared/ui";
-import { itemPoints, validItemScore } from "./RubricChecklistPanel";
+import { itemPoints, validItemScore } from "../model/rubricScores";
 import type {
   Checks,
   Decimal,
