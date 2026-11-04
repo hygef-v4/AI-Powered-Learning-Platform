@@ -10,6 +10,7 @@ import type { DocumentImport, PeerGiven, PeerReviewView, RevisionKind, RevisionV
 
 const KIND: Record<RevisionKind, string> = {
   DONE: "Xong",
+  // Dữ liệu cũ, trước khi bỏ tiếp quản (2026-11-02).
   TAKEOVER: "Bản nháp trước khi bị tiếp quản",
   IMPORT: "Nhập từ file",
 };
@@ -132,7 +133,7 @@ export function SectionHistoryDialog({
 }
 
 /**
- * Trưởng nhóm nhập DOCX và/hoặc tệp Draw.io cho cả tài liệu (BR-U12-46): tiêu đề trong DOCX trùng tên mục thì nội dung
+ * Trưởng nhóm nhập DOCX và/hoặc tệp Draw.io cho cả tài liệu (FB-U12-03): tiêu đề trong DOCX trùng tên mục thì nội dung
  * vào mục đó; mỗi trang Draw.io đặt tên trùng tên mục thành sơ đồ của mục. Xem trước, bỏ chọn mục không muốn, rồi áp
  * dụng. Không dùng AI nên không tốn token.
  */
@@ -295,7 +296,7 @@ export function GroupImportDialog({ view, onClose, onImported }: { view: Workspa
 }
 
 /**
- * Thẻ Đánh giá chéo (BR-U12-47). Thành viên chấm từng thành viên khác 1–5 kèm nhận xét sau khi nhóm nộp; giảng viên
+ * Thẻ Đánh giá chéo (FB-U12-04). Thành viên chấm từng thành viên khác 1–5 kèm nhận xét sau khi nhóm nộp; giảng viên
  * xem trung bình, quy đổi thang 10 và nhận xét. Điểm chỉ để giảng viên tham khảo khi chấm.
  */
 export function PeerReviewPanel({ view }: { view: WorkspaceView }) {

@@ -3,15 +3,47 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import { changeSubjectManager } from "@/features/subjects/api";
 import { ManagerChangeDialog } from "@/features/subjects/components/ManagerChangeDialog";
-import type { ManagerCandidate, SearchSubjectManagers } from "@/features/subjects/model/managerSearch";
+import type {
+  ManagerCandidate,
+  SearchSubjectManagers,
+} from "@/features/subjects/model/managerSearch";
 import type { SubjectDetail } from "@/features/subjects/model/types";
 
 vi.mock("@/features/subjects/api", () => ({ changeSubjectManager: vi.fn() }));
-const subject: SubjectDetail = { id: "s", code: "ABC", name: "Môn A", description: null, managerId: "a", manager: { accountId: "a", displayName: "Người cũ", email: "old@example.test" }, status: "ACTIVE", classCount: 0, version: 7, createdAt: "2026-10-01T00:00:00Z", updatedAt: "2026-10-01T00:00:00Z" };
-const candidate: ManagerCandidate = { accountId: "b", displayName: "Người mới", email: "new@example.test", role: "SUBJECT_MANAGER", status: "ACTIVE" };
-function setup(search: SearchSubjectManagers = vi.fn<SearchSubjectManagers>().mockResolvedValue([candidate]), overrides: Partial<SubjectDetail> = {}) {
-  const onSaved = vi.fn(), onReload = vi.fn(), onClose = vi.fn();
-  render(<ManagerChangeDialog subject={{ ...subject, ...overrides }} searchManagers={search} {...{ onSaved, onReload, onClose }} />);
+const subject: SubjectDetail = {
+  id: "s",
+  code: "ABC",
+  name: "Môn A",
+  description: null,
+  managerId: "a",
+  manager: { accountId: "a", displayName: "Người cũ", email: "old@example.test" },
+  status: "ACTIVE",
+  classCount: 0,
+  version: 7,
+  createdAt: "2026-10-01T00:00:00Z",
+  updatedAt: "2026-10-01T00:00:00Z",
+};
+const candidate: ManagerCandidate = {
+  accountId: "b",
+  displayName: "Người mới",
+  email: "new@example.test",
+  role: "SUBJECT_MANAGER",
+  status: "ACTIVE",
+};
+function setup(
+  search: SearchSubjectManagers = vi.fn<SearchSubjectManagers>().mockResolvedValue([candidate]),
+  overrides: Partial<SubjectDetail> = {},
+) {
+  const onSaved = vi.fn(),
+    onReload = vi.fn(),
+    onClose = vi.fn();
+  render(
+    <ManagerChangeDialog
+      subject={{ ...subject, ...overrides }}
+      searchManagers={search}
+      {...{ onSaved, onReload, onClose }}
+    />,
+  );
   return { onSaved, onReload, onClose };
 }
 async function pickNew() {
@@ -19,7 +51,11 @@ async function pickNew() {
   await screen.findByRole("option", { name: /Người mới/ });
   fireEvent.click(screen.getByRole("option", { name: /Người mới/ }));
 }
-beforeEach(() => { vi.mocked(changeSubjectManager).mockReset().mockResolvedValue({ ...subject, version: 8 }); });
+beforeEach(() => {
+  vi.mocked(changeSubjectManager)
+    .mockReset()
+    .mockResolvedValue({ ...subject, version: 8 });
+});
 afterEach(cleanup);
 
 describe("ManagerChangeDialog", () => {
@@ -37,11 +73,20 @@ describe("ManagerChangeDialog", () => {
     setup(vi.fn<SearchSubjectManagers>().mockRejectedValue(new Error("offline")));
     fireEvent.click(screen.getByTestId("subject-manager-clear"));
     fireEvent.click(screen.getByTestId("subject-manager-save"));
-    await waitFor(() => expect(changeSubjectManager).toHaveBeenCalledWith("s", { managerId: null, version: 7 }));
+    await waitFor(() =>
+      expect(changeSubjectManager).toHaveBeenCalledWith("s", { managerId: null, version: 7 }),
+    );
   });
 
   it("chọn lại đúng chủ nhiệm cũ thì không lưu được", async () => {
-    setup(vi.fn<SearchSubjectManagers>().mockResolvedValue([candidate, { ...candidate, accountId: "a", displayName: "Người cũ", email: "old@example.test" }]));
+    setup(
+      vi
+        .fn<SearchSubjectManagers>()
+        .mockResolvedValue([
+          candidate,
+          { ...candidate, accountId: "a", displayName: "Người cũ", email: "old@example.test" },
+        ]),
+    );
     await pickNew();
     expect(screen.getByTestId("subject-manager-save")).toBeEnabled();
     fireEvent.focus(screen.getByRole("combobox"));
@@ -54,30 +99,42 @@ describe("ManagerChangeDialog", () => {
     vi.mocked(changeSubjectManager).mockReturnValue(new Promise(() => {}));
     const { onClose } = setup();
     fireEvent.click(screen.getByTestId("subject-manager-clear"));
-    fireEvent.click(screen.getByTestId("subject-manager-save")); fireEvent.click(screen.getByTestId("subject-manager-save"));
-    fireEvent.keyDown(document, { key: "Escape" }); fireEvent.mouseDown(screen.getByRole("dialog").parentElement!);
+    fireEvent.click(screen.getByTestId("subject-manager-save"));
+    fireEvent.click(screen.getByTestId("subject-manager-save"));
+    fireEvent.keyDown(document, { key: "Escape" });
+    fireEvent.mouseDown(screen.getByRole("dialog").parentElement!);
     fireEvent.click(screen.getByRole("button", { name: "Đóng" }));
-    expect(changeSubjectManager).toHaveBeenCalledTimes(1); expect(onClose).not.toHaveBeenCalled();
+    expect(changeSubjectManager).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it("manager invalid giữ lựa chọn, cho user bỏ phân công rồi gửi null", async () => {
-    vi.mocked(changeSubjectManager).mockRejectedValueOnce(new ApiError({ status: 400, code: "SUBJECT_MANAGER_INVALID" }));
+    vi.mocked(changeSubjectManager).mockRejectedValueOnce(
+      new ApiError({ status: 400, code: "SUBJECT_MANAGER_INVALID" }),
+    );
     setup();
     await pickNew();
     fireEvent.click(screen.getByTestId("subject-manager-save"));
     await screen.findByText(/Chủ nhiệm đã chọn không còn hợp lệ/);
     expect(screen.getByRole("combobox")).toHaveValue("new@example.test");
-    fireEvent.click(screen.getByTestId("subject-manager-clear")); fireEvent.click(screen.getByTestId("subject-manager-save"));
-    await waitFor(() => expect(changeSubjectManager).toHaveBeenLastCalledWith("s", { managerId: null, version: 7 }));
+    fireEvent.click(screen.getByTestId("subject-manager-clear"));
+    fireEvent.click(screen.getByTestId("subject-manager-save"));
+    await waitFor(() =>
+      expect(changeSubjectManager).toHaveBeenLastCalledWith("s", { managerId: null, version: 7 }),
+    );
   });
 
   it("version conflict giữ lựa chọn và không ghi lại bằng version tự lấy mới", async () => {
-    vi.mocked(changeSubjectManager).mockRejectedValue(new ApiError({ status: 409, code: "SUBJECT_VERSION_CONFLICT" }));
+    vi.mocked(changeSubjectManager).mockRejectedValue(
+      new ApiError({ status: 409, code: "SUBJECT_VERSION_CONFLICT" }),
+    );
     const { onReload } = setup();
-    fireEvent.click(screen.getByTestId("subject-manager-clear")); fireEvent.click(screen.getByTestId("subject-manager-save"));
+    fireEvent.click(screen.getByTestId("subject-manager-clear"));
+    fireEvent.click(screen.getByTestId("subject-manager-save"));
     await screen.findByText(/Bản nhập được giữ lại/);
     expect(screen.getByTestId("subject-manager-save")).toBeDisabled();
     expect(onReload).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByTestId("subject-mutation-reload")); expect(onReload).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByTestId("subject-mutation-reload"));
+    expect(onReload).toHaveBeenCalledTimes(1);
   });
 });

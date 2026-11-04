@@ -23,13 +23,16 @@ class SubjectAuditTest {
     private final IAuthorization authorization = mock(IAuthorization.class);
     private final IAudit audit = mock(IAudit.class);
     private final SubjectAuditRecorder recorder = new SubjectAuditRecorder(audit);
-    private final SubjectAdminAccess access = new SubjectAdminAccess(authorization, recorder, Clock.fixed(NOW, ZoneOffset.UTC));
+    private final SubjectAdminAccess access =
+            new SubjectAdminAccess(authorization, recorder, Clock.fixed(NOW, ZoneOffset.UTC));
     private final Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
     private final UUID id = UUID.randomUUID();
 
     @Test
     void anonymousDenialRecordsOneSafeEventWithoutAccountOrObjectId() {
-        code(() -> access.require(null, "SUBJECT_LIST", ResourceRef.none()), "AUTHENTICATION_REQUIRED");
+        code(
+                () -> access.require(null, "SUBJECT_LIST", ResourceRef.none()),
+                "AUTHENTICATION_REQUIRED");
         AuditEvent event = event();
         assertThat(event.actorId()).isNull();
         assertThat(event.objectId()).isNull();
@@ -38,14 +41,18 @@ class SubjectAuditTest {
         assertThat(event.reason()).isEqualTo("AUTHENTICATION_REQUIRED");
         assertThat(event.occurredAt()).isEqualTo(NOW);
         assertThat(event.details()).containsOnlyKeys("attemptedAction", "scope");
-        assertThat(event.details()).containsEntry("attemptedAction", "SUBJECT_LIST").containsEntry("scope", "NONE");
+        assertThat(event.details())
+                .containsEntry("attemptedAction", "SUBJECT_LIST")
+                .containsEntry("scope", "NONE");
         verifyNoInteractions(authorization);
     }
 
     @Test
     void nonAdminDenialHasActorAndSubjectButDoesNotCallAuthorization() {
         var student = new Actor(UUID.randomUUID(), Role.STUDENT);
-        code(() -> access.require(student, "SUBJECT_UPDATE", ResourceRef.subject(id)), "SUBJECT_FORBIDDEN");
+        code(
+                () -> access.require(student, "SUBJECT_UPDATE", ResourceRef.subject(id)),
+                "SUBJECT_FORBIDDEN");
         assertThat(event().actorId()).isEqualTo(student.accountId());
         assertThat(event().objectId()).isEqualTo(id.toString());
         verifyNoInteractions(authorization);
@@ -53,45 +60,61 @@ class SubjectAuditTest {
 
     @Test
     void deniedDecisionDoesNotCopyProviderReasonOrSecrets() {
-        when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.deny("secret-token-and-internal-reason"));
-        code(() -> access.require(admin, "SUBJECT_VIEW", ResourceRef.subject(id)), "SUBJECT_FORBIDDEN");
+        when(authorization.authorize(any(), anyString(), any()))
+                .thenReturn(AuthorizationDecision.deny("secret-token-and-internal-reason"));
+        code(
+                () -> access.require(admin, "SUBJECT_VIEW", ResourceRef.subject(id)),
+                "SUBJECT_FORBIDDEN");
         assertThat(event().reason()).isEqualTo("SUBJECT_FORBIDDEN");
-        assertThat(event().details().toString()).doesNotContain("secret-token", "email", "description");
+        assertThat(event().details().toString())
+                .doesNotContain("secret-token", "email", "description");
     }
 
     @Test
     void authorizationFailureIsAuditedAsRejectedWithSafeReason() {
-        when(authorization.authorize(any(), anyString(), any())).thenThrow(new IllegalStateException("password=hidden"));
-        code(() -> access.require(admin, "SUBJECT_CREATE", ResourceRef.none()), "SUBJECT_AUTHORIZATION_UNAVAILABLE");
+        when(authorization.authorize(any(), anyString(), any()))
+                .thenThrow(new IllegalStateException("password=hidden"));
+        code(
+                () -> access.require(admin, "SUBJECT_CREATE", ResourceRef.none()),
+                "SUBJECT_AUTHORIZATION_UNAVAILABLE");
         assertThat(event().reason()).isEqualTo("SUBJECT_AUTHORIZATION_UNAVAILABLE");
         assertThat(event().details().toString()).doesNotContain("password");
     }
 
     @Test
     void nullDecisionIsAlsoAuditedAndDenied() {
-        code(() -> access.require(admin, "SUBJECT_MANAGER_CHANGE", ResourceRef.subject(id)), "SUBJECT_AUTHORIZATION_UNAVAILABLE");
+        code(
+                () -> access.require(admin, "SUBJECT_MANAGER_CHANGE", ResourceRef.subject(id)),
+                "SUBJECT_AUTHORIZATION_UNAVAILABLE");
         assertThat(event().result()).isEqualTo(AuditResult.DENIED);
     }
 
     @Test
     void auditFailureKeepsAccessClosedAndReturnsSafeUnavailable() {
         doThrow(new IllegalStateException("SQL internal")).when(audit).record(any());
-        code(() -> access.require(null, "SUBJECT_LIST", ResourceRef.none()), "SUBJECT_AUDIT_UNAVAILABLE");
+        code(
+                () -> access.require(null, "SUBJECT_LIST", ResourceRef.none()),
+                "SUBJECT_AUDIT_UNAVAILABLE");
         verify(audit, times(1)).record(any());
         verifyNoInteractions(authorization);
     }
 
     @Test
     void allowedRequestDoesNotRecordDeniedOrReadAudit() {
-        when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
+        when(authorization.authorize(any(), anyString(), any()))
+                .thenReturn(AuthorizationDecision.allow());
         access.require(admin, "SUBJECT_VIEW", ResourceRef.subject(id));
         verifyNoInteractions(audit);
     }
 
     @Test
     void distinctRejectedRequestsHaveDistinctEventIds() {
-        code(() -> access.require(null, "SUBJECT_LIST", ResourceRef.none()), "AUTHENTICATION_REQUIRED");
-        code(() -> access.require(null, "SUBJECT_LIST", ResourceRef.none()), "AUTHENTICATION_REQUIRED");
+        code(
+                () -> access.require(null, "SUBJECT_LIST", ResourceRef.none()),
+                "AUTHENTICATION_REQUIRED");
+        code(
+                () -> access.require(null, "SUBJECT_LIST", ResourceRef.none()),
+                "AUTHENTICATION_REQUIRED");
         var events = ArgumentCaptor.forClass(AuditEvent.class);
         verify(audit, times(2)).record(events.capture());
         assertThat(events.getAllValues()).extracting(AuditEvent::id).doesNotHaveDuplicates();
@@ -99,7 +122,14 @@ class SubjectAuditTest {
 
     @Test
     void successPayloadsAreAllowlistedAndKeepExplicitNullForUnassignment() {
-        Subject before = Subject.create(id, "ABC", "Name", "secret-description", UUID.randomUUID(), NOW.minusSeconds(10));
+        Subject before =
+                Subject.create(
+                        id,
+                        "ABC",
+                        "Name",
+                        "secret-description",
+                        UUID.randomUUID(),
+                        NOW.minusSeconds(10));
         Subject edited = before.updateInformation("New", "new-secret-description", NOW);
         recorder.informationUpdated(admin, before, edited);
         var update = event();
@@ -109,7 +139,9 @@ class SubjectAuditTest {
         clearInvocations(audit);
         Subject unassigned = before.changeManager(null, NOW);
         recorder.managerChanged(admin, before, unassigned);
-        assertThat(event().details()).containsOnlyKeys("oldManagerId", "newManagerId").containsEntry("newManagerId", null);
+        assertThat(event().details())
+                .containsOnlyKeys("oldManagerId", "newManagerId")
+                .containsEntry("newManagerId", null);
     }
 
     private AuditEvent event() {
@@ -119,9 +151,13 @@ class SubjectAuditTest {
     }
 
     private void code(Runnable call, String expected) {
-        assertThatThrownBy(call::run).isInstanceOfSatisfying(ApiException.class, error -> {
-            assertThat(error.code()).isEqualTo(expected);
-            assertThat(error.getMessage()).doesNotContain("SQL", "password", "secret-token");
-        });
+        assertThatThrownBy(call::run)
+                .isInstanceOfSatisfying(
+                        ApiException.class,
+                        error -> {
+                            assertThat(error.code()).isEqualTo(expected);
+                            assertThat(error.getMessage())
+                                    .doesNotContain("SQL", "password", "secret-token");
+                        });
     }
 }

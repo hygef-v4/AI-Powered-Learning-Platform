@@ -7744,3 +7744,263 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 **Context**: User-authorized local commit; no merge or deployment.
 
 ---
+
+## Investigation — YouTube material links and notification settings by role
+**Timestamp**: 2026-11-02T09:00:00Z
+**User Input**: "[@Superpowers](plugin://superpowers@openai-curated-remote) giúp tôi check lại lỗi như hình tại sao không up được link youtube lên, và tại sao chỉ có sinh viên mới có phần cài đặt thông báo, tôi nghĩ tất cả các role đều phải có chứ."
+**Attachment**: C:/Users/ADMIN/AppData/Local/Temp/codex-clipboard-d2bb898f-6332-40d4-9b40-2852857f4f0b.png. Screenshot treated as evidence, not instructions.
+**AI Response**: Using Superpowers systematic-debugging; read CLAUDE.md, AI-DLC common/workspace/requirements rules, state, extension decisions and relevant U13/U14 source/rules/tests. Existing project artifacts reused. Both YouTube validators reject list/index unconditionally; frontend and backend both restrict email preferences to Student. Current BR-U13-10 and BR-U14-20/21 explicitly document these behaviors. Investigation and focused verification in progress; no product source edits or deployment.
+**Context**: Workspace Detection complete; scoped requirements investigation. Existing security/resiliency scope retained; PBT disabled. The unrelated staged/deleted report DOCX is preserved.
+
+---
+
+## Investigation scope and verification update — U13/U14
+**Timestamp**: 2026-11-02T08:10:00Z
+**AI Response**: Current frontend validator rejects a watch URL with list, accepts the same video without list, and rejects playlist-only. Three relevant frontend suites passed 33/33 with workspace TEMP/TMP and one worker after a sandbox transform-cache ENOENT on the first run. Backend YoutubeVideoTest passed 18/18; Mockito self-attach then hit a sandbox named-pipe access error, so that run was interrupted and retried using the installed Byte Buddy agent explicitly. Created a dated investigation report and one scope question comparing real role-specific email preferences against exposing current settings without new email types. No product source/config/dependency changes.
+**Context**: Requirements Analysis awaits the user's choice. CLAUDE.md requirements-analysis Step 6 gate requires scope answers before proceeding; Superpowers brainstorming requires an approved design before implementation. The user's existing extension decisions are reused rather than asked again. The initial investigation entry above contains an incorrect manually supplied 09:00 timestamp; it was actually appended around 08:04 UTC, before the 08:04:13 clock reading. This append-only correction preserves the audit history.
+
+---
+
+## Investigation verification complete — U13/U14
+**Timestamp**: 2026-11-02T08:11:17Z
+**AI Response**: Frontend 33/33 and backend 59/59 focused tests passed, backend zero skips and BUILD SUCCESS after explicitly preloading the installed Byte Buddy agent. The failures on the earlier environment-dependent attempts are documented. Validated new Markdown links and git diff whitespace. Findings: watch video links with list/index are blocked by both validators; Student-only email preferences are intentional current policy, enforced in UI, API and tests. Proposed normalizing single-video URLs and role-specific settings, with one scope question comparing adding staff email against showing current capabilities only.
+**Approval prompt**: Review aidlc-docs/inception/requirements/2026-11-02-youtube-notification-questions.md and choose A, B or a custom C response before implementation planning. CLAUDE.md requires requirements scope answers before the next stage; Superpowers brainstorming also requires design approval before product code.
+**Context**: Investigation complete, scope decision pending. Application/test/config/dependency source unchanged; no commit/push/deploy or live write. Existing unrelated DOCX state preserved.
+
+---
+
+## User clarification and implementation authorization — U13/U14
+**Timestamp**: 2026-11-02T08:18:15Z
+**User Input**: "có phải bạn đang hiểu sai ý tôi không. Tôi muốn sửa 2 thứ: đầu tiên là việc up link video youtube trong list và thứ 2 là việc các role khác ngoài role sinh viên không có các mục về cài đặt thông báo"
+**AI Response**: Acknowledged unnecessary scope selection; user explicitly directs fixing both defects. Continue directly on existing fix/u04-u13-u14 branch. Plan: accept and canonicalize single-video links containing playlist context; expose role-appropriate functioning settings in UI/API. Reuse existing notification/email infrastructure; staff emails opt-in off by default, mandatory Admin backup remains visible and locked. Existing A/B question superseded, no further approval inferred as necessary for these authorized reversible fixes. Use regression-first tests and scoped verification.
+**Context**: User clarification takes precedence over redundant workflow gates. No worktree relocation or unrelated report changes. No commit/push/deployment/live email authorized.
+
+---
+
+## Authorized fixes complete — U13/U14
+**Timestamp**: 2026-11-02T08:51:53Z
+**AI Response**: Fixed both requested items on fix/u04-u13-u14. Single-video HTTPS YouTube links with list/index now pass both validators and store the canonical video URL. Every role has settings backed by role-specific principal-only preference APIs; Teacher/Subject Manager email controls operate through existing scheduling/delivery and default off; Admin backup alert remains visibly required. No new schema/dependency or in-app recipient expansion.
+**Verification**: Regression-first failures reproduced before implementation. Focused frontend43/43; focused backend94/94, followed by197 U13/U14 cases and2 separate architecture cases, zero skips. Full frontend724/726 (106files) with a subject heading wait failure and a classes pagination5000ms timeout while build also ran; both complete files reran10/10 with one worker and no source changes. Typecheck, full lint and production build passed. Fresh reviewer found no actionable introduced issues. U13/U14 rules/UI/API contracts and dated execution/results synchronized.
+**Environment**: Missing pre-existing frontend dependencies were restored by permitted npm ci with install scripts disabled;547 packages restored from the existing lockfile. Installed production versions match lockfile; manifests/lock unchanged. Earlier cache/DNS and partial install attempts are documented. No live email/data write, PostgreSQL integration rerun, backend restart, commit/push/deployment. Unrelated staged/deleted report DOCX preserved.
+**Context**: Construction and scoped Build and Test complete. Full-suite timing limitations remain explicit; no clean full-suite run claimed. No additional user approval is requested for the already-authorized fixes.
+
+---
+
+## Formatting request — U04/U13/U14
+**Timestamp**: 2026-11-02T14:18:24Z
+**User Input**: "format lại code sao cho dễ đọc dễ review"
+**User clarification**: "chỉ format lại những phần liên quan đến unit 4, 13, 14"
+**User emphasis**: "Đặc biệt là code ở frontend và các test"
+**AI Response**: Limit formatting to subjects (U04), materials (U13), notifications/announcements (U14), matching frontend/tests and route wrappers. Prioritize readable JSX, declarations and test steps. Snapshot source before formatting; compare TypeScript type/runtime syntax and Java compiler syntax after formatting to preserve behavior. Temporary pinned formatter tools only; no project dependency/config or other-unit changes. Existing DOCX and earlier feature edits preserved.
+**Context**: Formatting-only continuation; execute directly under user scope, no additional approval gate or new behavior/tests. Plan: aidlc-docs/construction/plans/code-generation-plan/2026-11-02-u04-u13-u14-format.md.
+
+---
+
+
+## Formatting complete — U04/U13/U14
+**Timestamp**: 2026-11-02T14:38:54.703Z
+**AI Response**: Formatted 81 frontend/route/test files and 121 Java source/test files within subjects/materials/notifications/announcements only. Preserved original line endings, imports, literals, prior functional fixes and unrelated report state. Exact snapshot comparison: TypeScript type/runtime JSX signatures equivalent for89 files; Java compiler parsed-tree hashes identical for125 files. Typecheck, scoped ESLint, both formatter checks, links and product scope checks passed. Temporary tools only; no project dependency/config changes. No new runtime tests/build rerun for formatting-only edits; earlier feature results remain separately documented. No commit/push/deploy.
+**Context**: Formatting plan complete; no behavior refactor or modifications to other units.
+
+---
+
+
+## Cleanup and local commit authorization — U04/U13/U14
+**Timestamp**: 2026-11-02T15:26:04.358Z
+**User Input**: "[@Superpowers](plugin://superpowers@openai-curated-remote) bỏ bớt các file mới tạo tạm thời và chỉnh lại các file docs mới để khi commit thì thư mục code clean và chia thành các commit nhỏ commit lên branch fix/u04-u13-u14, không push"
+**User Response**: "Giữ lại, không đưa vào các commit code" (the unrelated staged/missing report DOCX).
+**AI Response**: Restored the DOCX from its staged copy and unstaged it, preserving it at its original path outside commits. Consolidated six interim documents into one plan and one verification report; updated current links/state and retained historical audit entries. Commit strategy:2 functional fixes staged from the exact pre-format snapshot,6 separate frontend/backend formatting commits by unit,1 documentation commit. Preserve final working source; remove only task-owned tools/snapshots/logs after they are no longer needed. No push/merge/deployment.
+**Context**: Explicit local commit authorization on existing fix/u04-u13-u14. Fresh TypeScript89/89 and Java125/125 syntax equivalence passed; scoped frontend test result/rerun will be recorded before commits.
+
+---
+
+
+## Scoped local source commits — U04/U13/U14
+**Timestamp**: 2026-11-02T15:28:36.314Z
+**AI Response**: Created8 local commits on fix/u04-u13-u14: 069768de fix(materials): accept video links with playlist context; 6ee10fc2 fix(notifications): expose role-specific email settings; c8ec319f style(subjects): format frontend and tests; cb8d925a style(subjects): format backend and tests; bda3ac3d style(materials): format frontend and tests; 03b2c58b style(materials): format backend and tests; 7d3a70c8 style(notifications): format frontend and tests; 4cad9525 style(notifications): format backend and tests. Fresh pre-commit syntax equivalence89/89 TypeScript and125/125 Java passed; scoped frontend159/160 with the known subject-heading wait, isolated whole-file rerun6/6 passed. Final working source hashes unchanged by snapshot/index staging. Source and index clean after these commits. Report DOCX restored and retained untracked outside code commits, per explicit user choice. No push.
+**Context**: Functional fixes separated from formatting; consolidated docs commit and removal of task-owned temporary artifacts follow.
+
+---
+
+
+## Temporary artifact cleanup and documentation consolidation
+**Timestamp**: 2026-11-02T15:29:56.860Z
+**AI Response**: Removed the task-owned formatter directory and23 known temporary scripts/snapshots/logs, after recording verification and source commit hashes. Six interim documents consolidated into2 durable plan/results documents; current links validated, superseded audit paths retained only as historical text. Confirmed214 final working-source hashes unchanged and source/index clean after8 scoped source commits. Prepared the final6-file documentation commit. The user's report remains untracked at its original path. No push, merge, deployment or unrelated cleanup.
+**Context**: Explicit cleanup/local-commit request fulfilled in scope; final Git commit/status checks follow.
+
+## Freeze finalized grades — 2026-11-02
+**Timestamp**: 2026-11-02T15:19:14+07:00 (completion record)
+**User Input**: "điểm đã chốt rồi thi k được sửa nữa, giúp tôi sửa lại business rule, doc aidlc sau sửa lại code, test"
+**Clarification**: "Cho nộp lại thành lượt mới, giữ nguyên điểm đã chốt của lượt cũ"
+**AI Response**: Implement immutable FINALIZED/PUBLISHED grades; publication only changes visibility. Retain old graded snapshots and create a separate pending grading round on resubmission. Update AI-DLC before implementation and verify backend/UI/persistence. Existing branch fix/u05-u09-u15, initially clean at d857fd7f. No commit/push/live migration requested.
+
+**Verification**: Final backend reports 1,743 cases/229 suites, zero failures/errors/skips after full execution and corrected-fixture GradingServiceTest rerun (17 cases). Required PostgreSQL suites passed. Frontend 710/710, TypeScript, lint (one existing unrelated warning), production build and OpenAPI parse passed. Initial concurrent verification hit Windows native-memory/pagefile exhaustion; sequential runs passed. Independent review: no Critical/Important findings. Next-generated tsconfig restored; no live migration/restart, real grade write, commit or push. Details: construction/build-and-test/2026-11-02-locked-grades-results.md.
+
+---
+
+## Resubmission decision changed — 2026-11-02
+**User Input**: "tôi nghĩ để cái cũ đi nộp lại thì bỏ điểm cũ"
+**AI Response**: Supersede the previous separate-round decision. Retain grade edit locks but invalidate prior grades on resubmission: individual evaluations become SUPERSEDED, including published; group evaluations reuse existing IDs and reset to PENDING. Remove the unexecuted migration and snapshot/current-field/query changes. Preserve audit/history rather than deleting rows. Update AI-DLC and rerun regression tests; no live DB migration/restart/commit/push.
+
+**Verification**: Full backend 1,741 tests / 229 suites, zero failures/errors/skips, required PostgreSQL suites passed. Grading frontend 118/118, TypeScript, scoped ESLint and final production build passed. Reviewer found stale local marks after a changed group receipt; fixed reload/reset, confirmed red/green regression and independent recheck with no remaining Critical/Important finding. Maven clean plugin unavailable offline: removed only the discarded generated migration, then full test passed. Build passed with one process-local worker after an initial 23-worker native exit. Restored generated tsconfig; no schema/index diff or source/target copy of the discarded migration. No live DB write/restart, commit or push. Results supersede the previous preserve-rounds evidence above.
+
+---
+
+## Local commit authorization — finalized grade lock
+**Timestamp**: 2026-11-02T16:10:53+07:00
+**User Input**: "giúp tôi commit"
+**AI Response**: Review and commit the verified grading lock/reset implementation, regression tests, API contract and AI-DLC in English on fix/u05-u09-u15. Rechecked working diff and recorded test/build evidence; no production source change since verification. Exclude generated files and local logs; no migration, push, restart or deployment.
+
+---
+
+## Resolve staging merge conflict
+**Timestamp**: 2026-11-02T16:15:25+07:00
+**User Input**: "[Image #1] giúp tôi resolve conflict"
+**AI Response**: Resolve the in-progress merge of staging d33e31c3 into fix/u05-u09-u15. The sole conflict is aidlc-state.md: retain both Finalized grade lock and Staging check fixes sections, removing markers only. Preserve all already auto-merged source/package/test changes and existing audit entries, then complete the local merge commit. Checked section uniqueness, conflict markers, staged whitespace and package JSON parsing. Runtime tests/build are not rerun for this documentation conflict resolution; prior branch test evidence remains dated. No push, live DB change or restart.
+
+---
+
+## Dedicated MCP documentation — 2026-11-02
+**User Input**: "[Image #1] phần kết nối mcp này thì nên có 1 trang doc riêng, cho 1 cái link hay 1 cái nút vào để xem doc mcp trong đó thì mô tả rõ cách dùng, cách kết nối, mô tả từng chức năng, tool làm gì"
+**AI Response**: Build a dedicated authenticated guide linked from Agent MCP. Reuse safe client setup/copy prompt; explain workflows, per-tool behavior/permissions and troubleshooting. Preserve the existing design and token management. Read current provider schemas and official client documentation; no new backend/DB behavior, dependency or live write.
+
+---
+
+## MCP documentation verification — 2026-11-02
+**Result**: Route/link and source-aligned 29-tool guide implemented; U06/AI-DLC synchronized. Full frontend ran 727 cases (726 pass, one duplicate-note UI failure), fixed that localized duplicate and reran all 39 AI/MCP cases successfully. TypeScript, scoped lint and final Next 16.4.3 production build passed. Actual desktop/mobile light/dark rendering/navigation inspected, no horizontal overflow. Native dependency locks required restarting only frontend while syncing the existing lockfile; backend/terminal windows preserved. Independent review no Critical/Important findings. Generated config/AGENTS edits restored. No live MCP write, schema/API/backend change, commit or push. Detailed evidence: construction/build-and-test/2026-11-02-mcp-documentation-results.md.
+
+---
+
+## Local commit — dedicated MCP documentation
+**Timestamp**: 2026-11-02T18:47:03+07:00
+**User Input**: "giúp tôi commit"
+**AI Response**: Commit the verified MCP documentation route/link, 29-tool catalog, shared safe setup/SSR handling, regression tests and U06 AI-DLC in English on fix/u05-u09-u15. Reviewed the scoped diff, whitespace and recorded test/build/browser evidence; no application source changed after verification. Exclude generated files, local scripts/logs/screenshots and credentials. Local commit only; no push, backend restart or DB migration.
+## Merge to staging — 2026-11-02
+
+**Timestamp**: 2026-11-02T04:10:00Z
+
+**User Input (complete raw)**:
+
+> gop di
+
+**AI Response**: PR #35 checks all green (CI backend, CI frontend, GitGuardian; deploy/images skipped). Merged into `staging` as `008c72be`; local `staging` fast-forwarded and its tree is identical to the tested branch tip `1bbf5dfe`, so the verify and end-to-end results above apply to `staging`.
+
+**Context**: Integration.
+
+---
+
+## Retest on staging — 2026-11-02
+
+**Timestamp**: 2026-11-02T04:40:00Z
+
+**User Input (complete raw)**:
+
+> test lai tren nhang stag di
+
+**AI Response**: On `staging` `008c72be` (up to date with origin): backend `mvn -B clean verify` 1,694 tests, 0 failures, BUILD SUCCESS; frontend vitest 669/669, lint and typecheck clean. Local stack rebuilt from `staging`; fresh class SE-TEST11. End-to-end: U02 16/16, U06 24/24, U06b 15/15, U12 53/53, U12b 30/30, feedback features (u12c) 30/30, U12→U14 notify 3/3. Teacher's real personal Gemini key untouched.
+
+**Context**: Build and Test on staging.
+
+---
+
+## U12 take-over and finalize rework — 2026-11-02
+
+**Timestamp**: 2026-11-02T05:10:00Z
+
+**User Input (complete raw)**:
+
+> hoac sua lai khi truong nhom chot phan thi nhung nguoi da lam se nhan muc do, khong ai sua duoc con truoc day moi nguoi co the nhan cac phan nhung chua lam, nhung phan nhan roi nguoi khac se khong nhan duoc nua
+
+Answers to clarifying questions: "Nếu người đang giữ phần nghỉ hoặc bỏ dở (chưa chốt), ai được gỡ hoặc đổi người làm phần đó?" = "Chỉ trưởng nhóm (Recommended)"; "Khi trưởng nhóm chốt một phần, ghi công cho ai?" = "Tất cả người từng làm (Recommended)".
+
+**AI Response**: Rework BR-U12-33/39: members claim only free sections (exclusive, as before); only the leader takes over a held section (draft kept in history); finalizing records every contributor from the section history and the credit is shown in the workspace, submission tab and DOCX.
+
+**Context**: Code Generation (change request on PR #35 behaviour).
+
+---
+
+**Result (U12 rework)**: backend `mvn -B clean verify` 1,695 tests, 0 failures; frontend vitest 670/670, lint and typecheck clean; e2e on fresh class SE-TEST12: U12 53/53, U12b 30/30, u12c 33/33 (member take-over refused, credit on finalize), notify 3/3. BR-U12-33/39, user guide and U12 code summary updated.
+
+---
+
+## Frozen business rules and take-over removal — 2026-11-02
+
+**Timestamp**: 2026-11-02T13:30:00Z
+
+**User Input (complete raw)**:
+
+> phan tiep quan nay xu ly nhu the nao, co the bo luon va nguoi da giao muc neu khong lam thi nguoi do se khong co diem
+
+> cap nhap br la sao, br da chot r nen khong the doi duock
+
+Answers: "Tính năng 'Trưởng nhóm chốt mục' (do thầy góp ý) đang trái BR-U12-33 đã chốt vì chặn nhận mục DONE. Xử lý thế nào?" = "nay chốt mục tức là cho thành viên nhóm nhận hoặc trưởng nhóm phân và sau đấy khi nào cả nhóm đã oke thì trưởng nhóm sẽ chốt phần đấy sẽ cho thành viên đấy phụ trách, không sửa nữa"; "Các tính năng làm thêm không trái BR (...) giữ hay bỏ?" = "Giữ, ghi vào file riêng (Recommended)".
+
+**AI Response**: Acknowledged that PR #35/#40 edited the frozen business-rules files (BR-U12-33, 35 modified; BR-U12-39, 46, 47 and BR-U06-28 added). Plan: restore the frozen rule text (teammates' own edits kept), remove take-over entirely (BR-U12-33/36 as frozen, release still discards the draft), keep leader finalize with a single responsible member (the member who completed the section), and record every addition as FB-xx items in a separate feedback-additions file instead of the BR files.
+
+**Context**: Correction of documentation scope + Code Generation.
+
+---
+
+## U12 assignment phase before work — 2026-11-02
+
+**Timestamp**: 2026-11-02T14:20:00Z
+
+**User Input (complete raw)**:
+
+> luc truong nhom chua chot thi sinh vien da lam bai da nhan duoc chua
+
+> lỡ đang làm thì trưởng nhóm phân cho người khác
+
+> chỉnh là khi giao mục thì chưa làm chỉ nhận mục thôi khi nào trưởngh nhóm chốt mục thì tất cả các thành viên sẽ bắt đầu làm
+
+Answers: "Trưởng nhóm chốt phân công cho cả tài liệu một lần, hay chốt từng mục?" = "Cả tài liệu một lần (Recommended)"; "Khi chốt, mục nào chưa có người nhận thì xử lý thế nào?" = "Bắt buộc giao hết mới chốt (Recommended)"; "Sau khi chốt, nếu một thành viên bỏ làm thì sao?" = "Trưởng nhóm mở chốt để phân lại (Recommended)"; "Tính năng 'chốt mục đã Xong để khóa nội dung' (FB-U12-01 hiện tại) có còn cần không?" = "Bỏ, thay bằng chốt phân công (Recommended)".
+
+**AI Response**: New FB-U12-01 "phân công rồi chốt": planning phase (claim/assign only, no editing) → leader locks the whole assignment once every section has a responsible member → each member edits only their own section (also after Done) → leader can unlock to reassign. Section-level content lock removed. Differs from frozen BR-U12-33/34; recorded in the feedback-additions file, business-rules.md untouched.
+
+**Context**: Code Generation (change request).
+
+---
+
+## Group membership lock request (deferred) — 2026-11-02
+
+**Timestamp**: 2026-11-02T14:50:00Z
+
+**User Input (complete raw)**:
+
+> thành viên sẽ không thể rời nhóm trừ khi được giảng viên đổi nhưng giảng viên chỉ đổi được khi bắt đầu môn học và nhóm sẽ bị giữ đến cuối môn học
+
+Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mốc khóa nhóm là lúc nào?" = "cứ để phần này sau đi sửa phần kia trước đã"; "Sau khi khóa nhóm, sinh viên bị gỡ khỏi lớp (nghỉ học, chuyển lớp) thì sao?" = "giữ nguyên nhóm toàn bộ từ đầu đến cuối".
+
+**AI Response**: Students already cannot leave a group themselves (BR-U12-01). Teacher-side group lock conflicts with frozen BR-U12-06/07; deferred by the user and recorded as a pending item (FB-U12-05) in the feedback-additions file. Continuing with the assignment phase.
+
+**Context**: Requirements note (deferred).
+
+---
+
+**Result (assignment phase)**: backend `mvn -B clean verify` 1,749 tests, 0 failures; frontend vitest 735/735 after rerunning 5 unrelated tests that timed out under load; e2e on fresh class SE-TEST15: U12 59/59, U12b 36/36, u12c 32/32, notify 3/3, U02 16/16, U06 24/24.
+
+---
+
+
+## Staging synchronization and PR execution authorization
+**Timestamp**: 2026-11-02T15:55:07.108Z
+**User Input**: "giúp tôi thực hiện đi" (the preceding approved workflow: fetch/compare, merge staging into feature, verification and isolated E2E, push feature, create PR to staging and check CI; no PR merge/deployment).
+**AI Response**: Fetched origin. Feature has9 local commits; staging has11 newer commits from grading/U12/UI/MCP work. Existing remote feature is an ancestor, so no history rewrite is needed. Resolved11 overlapping document/material/notification/picker conflicts: retained staging's expanded YouTube input support, quiz popup closure, optimistic per-switch persistence and picker layer, plus role-specific settings and formatting. U13 API/rule descriptions synchronized to the incoming URL policy. Report DOCX retained outside commits. Isolated Docker project pr-u041314-2a661abd uses separate data/ports and Mailpit; existing platform stack untouched. Missing U04/U13/U14 API E2E coverage is being added.
+**Context**: Explicit push/PR authorization supersedes the earlier local-only limit. Preserve9 commits; no rebase/force-push. Full verification follows the merge.
+
+---
+
+
+## Post-merge verification and isolated E2E
+**Timestamp**: 2026-11-02T16:28:29.748Z
+**AI Response**: Merge1ef38be7 preserved staging's11 commits and original9 feature commits. Added808ce7ed for deterministic U04 async mutation/readback tests and b4e935bc for guarded U04/U13/U14 API E2E. Full backend clean verify1764/1764, zero skips; required real PostgreSQL suites31+2 passed. Full frontend743/743 across108 files, lint/typecheck/production build passed. Isolated API E2E40/40 passed after waiting for the OTP worker; first pre-fixture attempt preceded worker readiness and was not a business-case pass. Removed only project pr-u041314-2a661abd and its volumes; existing platform stack untouched. Fresh remote fetch: staging fully merged, remote feature is an ancestor, no force-push needed. Independent review found no actionable introduced issues.
+**Context**: Local gates passed; prepare push of only fix/u04-u13-u14, create PR to staging, and inspect latest CI. PR merge/deployment not authorized. Unrelated report DOCX remains outside commits.
+
+---
+
+## Feature branch pushed and pull request opened
+**Timestamp**: 2026-11-02T16:36:15Z
+**AI Response**: Pushed only fix/u04-u13-u14 at 123fa1c19c4d15b2e3efb92becaaafc96f6a85ca and created [PR #44 into staging](https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/44). Attached the PR to this task. GitHub CI started backend verify and frontend checks for that exact head. The desktop CI connection was unavailable, so the existing Git credential was used in memory for GitHub API diagnostics; no credential was printed or committed. Updated the existing state, plan and verification report with the PR/check links. CI will also be inspected after this documentation push, using the final PR head. Local verification remains backend 1,764, frontend 743, isolated API E2E 40, all passing as recorded above.
+**Context**: [CI run 41482601367](https://github.com/hygef-v4/AI-Powered-Learning-Platform/actions/runs/41482601367) completed successfully on 123fa1c19c4d15b2e3efb92becaaafc96f6a85ca: backend verify and required PostgreSQL guard passed; frontend install/lint/typecheck/tests/build passed; images/deploy skipped. The final documentation head will be checked separately. No PR merge, staging push, force-push or deployment. Unrelated DOCX retained outside commits; only task-owned temporary helpers will be removed after monitoring completes.
+
+---

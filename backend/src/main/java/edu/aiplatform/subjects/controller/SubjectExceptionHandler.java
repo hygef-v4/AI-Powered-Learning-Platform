@@ -20,33 +20,52 @@ public class SubjectExceptionHandler {
     @ExceptionHandler(ApiException.class)
     public ProblemDetail api(ApiException failure) {
         ProblemDetail result = problem(failure.status(), failure.code(), failure.getMessage());
-        if (failure instanceof SubjectRequests.InvalidRequest invalid) result.setProperty("fieldErrors", invalid.fieldErrors());
+        if (failure instanceof SubjectRequests.InvalidRequest invalid)
+            result.setProperty("fieldErrors", invalid.fieldErrors());
         return result;
     }
 
-    @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler({
+        HttpMessageNotReadableException.class,
+        MethodArgumentTypeMismatchException.class
+    })
     public ProblemDetail invalid(Exception failure) {
-        return problem(HttpStatus.BAD_REQUEST, "SUBJECT_REQUEST_INVALID", "JSON, mã định danh hoặc tham số không hợp lệ");
+        return problem(
+                HttpStatus.BAD_REQUEST,
+                "SUBJECT_REQUEST_INVALID",
+                "JSON, mã định danh hoặc tham số không hợp lệ");
     }
 
     @ExceptionHandler(OptimisticLockingFailureException.class)
     public ProblemDetail stale(OptimisticLockingFailureException failure) {
-        return problem(HttpStatus.CONFLICT, "SUBJECT_VERSION_CONFLICT", "Dữ liệu môn đã thay đổi. Hãy tải lại trước khi sửa");
+        return problem(
+                HttpStatus.CONFLICT,
+                "SUBJECT_VERSION_CONFLICT",
+                "Dữ liệu môn đã thay đổi. Hãy tải lại trước khi sửa");
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail integrity(DataIntegrityViolationException failure) {
-        return problem(HttpStatus.CONFLICT, "SUBJECT_DATA_CONFLICT", "Dữ liệu liên quan đã thay đổi, vui lòng tải lại");
+        return problem(
+                HttpStatus.CONFLICT,
+                "SUBJECT_DATA_CONFLICT",
+                "Dữ liệu liên quan đã thay đổi, vui lòng tải lại");
     }
 
     @ExceptionHandler(DataAccessException.class)
     public ProblemDetail storage(DataAccessException failure) {
-        return problem(HttpStatus.SERVICE_UNAVAILABLE, "SUBJECT_STORAGE_UNAVAILABLE", "Chưa truy cập được dữ liệu, vui lòng thử lại");
+        return problem(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "SUBJECT_STORAGE_UNAVAILABLE",
+                "Chưa truy cập được dữ liệu, vui lòng thử lại");
     }
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail unexpected(Exception failure) {
-        return problem(HttpStatus.INTERNAL_SERVER_ERROR, "SUBJECT_INTERNAL_ERROR", "Chưa xử lý được yêu cầu, vui lòng thử lại");
+        return problem(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "SUBJECT_INTERNAL_ERROR",
+                "Chưa xử lý được yêu cầu, vui lòng thử lại");
     }
 
     private ProblemDetail problem(HttpStatus status, String code, String detail) {

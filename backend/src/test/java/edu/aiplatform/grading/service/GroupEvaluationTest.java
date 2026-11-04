@@ -14,8 +14,9 @@ import java.time.*;
 import java.math.BigDecimal;
 
 class GroupEvaluationTest {
-    @Test
-    void resubmissionReusesGroupIdentityAndResetsGradesWithHistory() {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(value = EvaluationStatus.class, names = {"FINALIZED", "PUBLISHED"})
+    void resubmissionReusesGroupIdentityAndResetsGradesWithHistory(EvaluationStatus state) {
         var repo = mock(IEvaluationRepository.class);
         var assignments = mock(IAssignmentQuery.class);
         var rubric = mock(IRubric.class);
@@ -39,12 +40,17 @@ class GroupEvaluationTest {
         root.kind = EvaluationKind.GROUP_DOCUMENT;
         root.groupDocumentId = doc;
         root.score = BigDecimal.ONE;
-        root.state = EvaluationStatus.PUBLISHED;
+        root.state = state;
         var member = Evaluation.pending(null, aid, cid, sid, "old", BigDecimal.TEN, "[]", Instant.now());
         member.kind = EvaluationKind.MEMBER;
         member.groupDocumentId = doc;
         member.score = BigDecimal.ONE;
-        member.state = EvaluationStatus.PUBLISHED;
+        member.state = state;
+        root.publishedAt = Instant.now();
+        member.publishedAt = Instant.now();
+        root.feedback = "Old feedback";
+        root.adjustment = BigDecimal.ONE;
+        root.rubricChecks = "{\"old\":[]}";
         when(repo.findForAssignmentAndClass(aid, cid)).thenReturn(List.of(root, member));
         when(repo.lockById(root.id)).thenReturn(Optional.of(root));
         when(repo.lockById(member.id)).thenReturn(Optional.of(member));
@@ -56,6 +62,14 @@ class GroupEvaluationTest {
         assertThat(root.score).isNull();
         assertThat(root.history()).hasSize(1);
         assertThat(member.state).isEqualTo(EvaluationStatus.PENDING);
+        assertThat(member.score).isNull();
+        assertThat(member.publishedAt).isNull();
+        assertThat(root.publishedAt).isNull();
+        assertThat(root.rubricItemScores).isEmpty();
+        assertThat(root.structuredFeedback).isNull();
+        assertThat(root.feedback).isNull();
+        assertThat(root.adjustment).isEqualByComparingTo("0");
+        assertThat(root.rubricChecks).isEqualTo("{}");
         verify(repo).save(argThat(e -> e.id.equals(root.id)));
         verify(repo).save(argThat(e -> e.id.equals(member.id)));
         verify(repo, times(2)).save(any());

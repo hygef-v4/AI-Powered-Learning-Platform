@@ -33,18 +33,26 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 class SubjectAdminCommandTest {
     private static final Instant NOW = Instant.parse("2026-10-18T08:00:00Z");
-    private final UUID subjectId = UUID.randomUUID(), oldManager = UUID.randomUUID(), newManager = UUID.randomUUID();
+    private final UUID subjectId = UUID.randomUUID(),
+            oldManager = UUID.randomUUID(),
+            newManager = UUID.randomUUID();
     private final Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
     private final ISubjectRepository repository = mock(ISubjectRepository.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
     private final IAccountLookup accounts = mock(IAccountLookup.class);
     private final IAudit audit = mock(IAudit.class);
-    private final SubjectCommandService service = new SubjectCommandService(repository, authorization, accounts,
-            new SubjectAuditRecorder(audit), Clock.fixed(NOW, ZoneOffset.UTC));
+    private final SubjectCommandService service =
+            new SubjectCommandService(
+                    repository,
+                    authorization,
+                    accounts,
+                    new SubjectAuditRecorder(audit),
+                    Clock.fixed(NOW, ZoneOffset.UTC));
 
     @BeforeEach
     void setup() {
-        when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
+        when(authorization.authorize(any(), anyString(), any()))
+                .thenReturn(AuthorizationDecision.allow());
         when(repository.update(any(), anyLong())).thenReturn(true);
     }
 
@@ -70,17 +78,26 @@ class SubjectAdminCommandTest {
 
     @Test
     void deniedAndUnavailableAuthorizationNeverWrite() {
-        when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.deny("DISABLED"));
+        when(authorization.authorize(any(), anyString(), any()))
+                .thenReturn(AuthorizationDecision.deny("DISABLED"));
         code(() -> service.create(admin, null), "SUBJECT_FORBIDDEN");
-        doThrow(new IllegalStateException("down")).when(authorization).authorize(any(), anyString(), any());
-        code(() -> service.changeManager(admin, subjectId, null), "SUBJECT_AUTHORIZATION_UNAVAILABLE");
+        doThrow(new IllegalStateException("down"))
+                .when(authorization)
+                .authorize(any(), anyString(), any());
+        code(
+                () -> service.changeManager(admin, subjectId, null),
+                "SUBJECT_AUTHORIZATION_UNAVAILABLE");
         verifyNoInteractions(repository, accounts);
         verify(audit, times(2)).record(argThat(event -> event.result() == AuditResult.DENIED));
     }
 
     @Test
     void createWithoutManagerNormalizesAndAuditsAfterInsert() {
-        var subject = service.create(admin, new SubjectCommandService.Create(" swr302 ", " Name ", "secret description", null));
+        var subject =
+                service.create(
+                        admin,
+                        new SubjectCommandService.Create(
+                                " swr302 ", " Name ", "secret description", null));
         assertThat(subject.code().value()).isEqualTo("SWR302");
         assertThat(subject.name()).isEqualTo("Name");
         assertThat(subject.status()).isEqualTo(SubjectStatus.ACTIVE);
@@ -95,7 +112,9 @@ class SubjectAdminCommandTest {
         assertThat(event.actorId()).isEqualTo(admin.accountId());
         assertThat(event.result()).isEqualTo(AuditResult.SUCCESS);
         assertThat(event.occurredAt()).isEqualTo(NOW);
-        assertThat(event.details()).containsEntry("managerId", null).doesNotContainKey("description");
+        assertThat(event.details())
+                .containsEntry("managerId", null)
+                .doesNotContainKey("description");
         verifyNoInteractions(accounts);
     }
 
@@ -109,11 +128,18 @@ class SubjectAdminCommandTest {
 
     @Test
     void onlyNamedUniqueConstraintIsTranslatedForConcurrentInsert() {
-        var unique = new org.hibernate.exception.ConstraintViolationException("duplicate", new java.sql.SQLException(), "uk_subjects_code");
-        doThrow(new DataIntegrityViolationException("duplicate", unique)).when(repository).insert(any());
+        var unique =
+                new org.hibernate.exception.ConstraintViolationException(
+                        "duplicate", new java.sql.SQLException(), "uk_subjects_code");
+        doThrow(new DataIntegrityViolationException("duplicate", unique))
+                .when(repository)
+                .insert(any());
         code(() -> service.create(admin, create(null)), "SUBJECT_CODE_DUPLICATE");
-        var foreign = new DataIntegrityViolationException("FK", new org.hibernate.exception.ConstraintViolationException(
-                "FK", new java.sql.SQLException(), "fk_subjects_manager"));
+        var foreign =
+                new DataIntegrityViolationException(
+                        "FK",
+                        new org.hibernate.exception.ConstraintViolationException(
+                                "FK", new java.sql.SQLException(), "fk_subjects_manager"));
         doThrow(foreign).when(repository).insert(any());
         assertThatThrownBy(() -> service.create(admin, create(null))).isSameAs(foreign);
         verifyNoInteractions(audit);
@@ -132,15 +158,22 @@ class SubjectAdminCommandTest {
     }
 
     static Stream<Arguments> invalidManagers() {
-        return Stream.of(Arguments.of(Role.ADMIN, AccountStatus.ACTIVE), Arguments.of(Role.STUDENT, AccountStatus.ACTIVE),
-                Arguments.of(Role.TEACHER, AccountStatus.ACTIVE), Arguments.of(Role.SUBJECT_MANAGER, AccountStatus.PENDING),
+        return Stream.of(
+                Arguments.of(Role.ADMIN, AccountStatus.ACTIVE),
+                Arguments.of(Role.STUDENT, AccountStatus.ACTIVE),
+                Arguments.of(Role.TEACHER, AccountStatus.ACTIVE),
+                Arguments.of(Role.SUBJECT_MANAGER, AccountStatus.PENDING),
                 Arguments.of(Role.SUBJECT_MANAGER, AccountStatus.DISABLED));
     }
 
     @ParameterizedTest
     @MethodSource("invalidManagers")
     void invalidManagerIsRejectedAtSubmit(Role role, AccountStatus status) {
-        when(accounts.lockContact(newManager)).thenReturn(Optional.of(new AccountContact(newManager, "x@example.test", "X", role, status)));
+        when(accounts.lockContact(newManager))
+                .thenReturn(
+                        Optional.of(
+                                new AccountContact(
+                                        newManager, "x@example.test", "X", role, status)));
         code(() -> service.create(admin, create(newManager)), "SUBJECT_MANAGER_INVALID");
         verify(repository, never()).insert(any());
         verifyNoInteractions(audit);
@@ -150,7 +183,15 @@ class SubjectAdminCommandTest {
     void missingOrMismatchedContactIsInvalidButLookupErrorIsUnavailable() {
         when(accounts.lockContact(newManager)).thenReturn(Optional.empty());
         code(() -> service.create(admin, create(newManager)), "SUBJECT_MANAGER_INVALID");
-        when(accounts.lockContact(newManager)).thenReturn(Optional.of(new AccountContact(oldManager, "x@example.test", "X", Role.SUBJECT_MANAGER, AccountStatus.ACTIVE)));
+        when(accounts.lockContact(newManager))
+                .thenReturn(
+                        Optional.of(
+                                new AccountContact(
+                                        oldManager,
+                                        "x@example.test",
+                                        "X",
+                                        Role.SUBJECT_MANAGER,
+                                        AccountStatus.ACTIVE)));
         code(() -> service.create(admin, create(newManager)), "SUBJECT_MANAGER_INVALID");
         when(accounts.lockContact(newManager)).thenThrow(new IllegalStateException("down"));
         code(() -> service.create(admin, create(newManager)), "SUBJECT_ACCOUNT_LOOKUP_UNAVAILABLE");
@@ -160,10 +201,30 @@ class SubjectAdminCommandTest {
 
     @Test
     void invalidInputAndMissingVersionNeverWrite() {
-        code(() -> service.create(admin, new SubjectCommandService.Create("a_", "Name", null, null)), "SUBJECT_CODE_INVALID");
-        code(() -> service.create(admin, new SubjectCommandService.Create("AAA", " ", null, null)), "SUBJECT_NAME_INVALID");
-        code(() -> service.updateInformation(admin, subjectId, new SubjectCommandService.UpdateInformation("Name", null, null)), "SUBJECT_VERSION_REQUIRED");
-        code(() -> service.changeManager(admin, subjectId, new SubjectCommandService.ChangeManager(null, 0L)), "SUBJECT_VERSION_REQUIRED");
+        code(
+                () ->
+                        service.create(
+                                admin, new SubjectCommandService.Create("a_", "Name", null, null)),
+                "SUBJECT_CODE_INVALID");
+        code(
+                () ->
+                        service.create(
+                                admin, new SubjectCommandService.Create("AAA", " ", null, null)),
+                "SUBJECT_NAME_INVALID");
+        code(
+                () ->
+                        service.updateInformation(
+                                admin,
+                                subjectId,
+                                new SubjectCommandService.UpdateInformation("Name", null, null)),
+                "SUBJECT_VERSION_REQUIRED");
+        code(
+                () ->
+                        service.changeManager(
+                                admin,
+                                subjectId,
+                                new SubjectCommandService.ChangeManager(null, 0L)),
+                "SUBJECT_VERSION_REQUIRED");
         verify(repository, never()).insert(any());
         verify(repository, never()).update(any(), anyLong());
         verifyNoInteractions(audit);
@@ -173,21 +234,39 @@ class SubjectAdminCommandTest {
     void metadataOnArchivedSubjectChangesOnlyEditableFieldsAndAuditsFieldNames() {
         Subject before = subject(oldManager).archive(NOW.minusSeconds(30));
         when(repository.findById(subjectId)).thenReturn(Optional.of(before));
-        Subject after = service.updateInformation(admin, subjectId, new SubjectCommandService.UpdateInformation("New", null, 2L));
+        Subject after =
+                service.updateInformation(
+                        admin,
+                        subjectId,
+                        new SubjectCommandService.UpdateInformation("New", null, 2L));
         assertThat(after.status()).isEqualTo(SubjectStatus.ARCHIVED);
         assertThat(after.managerId()).isNull();
         assertThat(after.code()).isEqualTo(before.code());
         assertThat(after.createdAt()).isEqualTo(before.createdAt());
         assertThat(after.version()).isEqualTo(3);
-        assertThat(event().details()).containsEntry("changedFields", List.of("name", "description"));
+        assertThat(event().details())
+                .containsEntry("changedFields", List.of("name", "description"));
         verifyNoInteractions(accounts);
     }
 
     @Test
     void staleVersionRejectedEvenForSameValues() {
         when(repository.findById(subjectId)).thenReturn(Optional.of(subject(oldManager)));
-        code(() -> service.updateInformation(admin, subjectId, new SubjectCommandService.UpdateInformation("Name", "Description", 2L)), "SUBJECT_VERSION_CONFLICT");
-        code(() -> service.changeManager(admin, subjectId, new SubjectCommandService.ChangeManager(oldManager, 2L)), "SUBJECT_VERSION_CONFLICT");
+        code(
+                () ->
+                        service.updateInformation(
+                                admin,
+                                subjectId,
+                                new SubjectCommandService.UpdateInformation(
+                                        "Name", "Description", 2L)),
+                "SUBJECT_VERSION_CONFLICT");
+        code(
+                () ->
+                        service.changeManager(
+                                admin,
+                                subjectId,
+                                new SubjectCommandService.ChangeManager(oldManager, 2L)),
+                "SUBJECT_VERSION_CONFLICT");
         verify(repository, never()).update(any(), anyLong());
         verifyNoInteractions(audit);
     }
@@ -196,8 +275,19 @@ class SubjectAdminCommandTest {
     void currentNoOpDoesNotWriteLockOrAudit() {
         Subject before = subject(oldManager);
         when(repository.findById(subjectId)).thenReturn(Optional.of(before));
-        assertThat(service.updateInformation(admin, subjectId, new SubjectCommandService.UpdateInformation("Name", "Description", 1L))).isSameAs(before);
-        assertThat(service.changeManager(admin, subjectId, new SubjectCommandService.ChangeManager(oldManager, 1L))).isSameAs(before);
+        assertThat(
+                        service.updateInformation(
+                                admin,
+                                subjectId,
+                                new SubjectCommandService.UpdateInformation(
+                                        "Name", "Description", 1L)))
+                .isSameAs(before);
+        assertThat(
+                        service.changeManager(
+                                admin,
+                                subjectId,
+                                new SubjectCommandService.ChangeManager(oldManager, 1L)))
+                .isSameAs(before);
         verify(repository, never()).update(any(), anyLong());
         verifyNoInteractions(audit);
     }
@@ -208,7 +298,9 @@ class SubjectAdminCommandTest {
         when(repository.findById(subjectId)).thenReturn(Optional.of(before));
         when(repository.findByIdForUpdate(subjectId)).thenReturn(Optional.of(before));
         eligible(newManager);
-        Subject after = service.changeManager(admin, subjectId, new SubjectCommandService.ChangeManager(newManager, 1L));
+        Subject after =
+                service.changeManager(
+                        admin, subjectId, new SubjectCommandService.ChangeManager(newManager, 1L));
         var order = inOrder(repository, accounts, audit);
         order.verify(repository).findById(subjectId);
         order.verify(accounts).lockContact(newManager);
@@ -216,7 +308,9 @@ class SubjectAdminCommandTest {
         order.verify(repository).update(after, 1L);
         order.verify(audit).record(any());
         assertThat(after.managerId()).isEqualTo(newManager);
-        assertThat(event().details()).containsEntry("oldManagerId", oldManager).containsEntry("newManagerId", newManager);
+        assertThat(event().details())
+                .containsEntry("oldManagerId", oldManager)
+                .containsEntry("newManagerId", newManager);
     }
 
     @Test
@@ -224,7 +318,9 @@ class SubjectAdminCommandTest {
         Subject before = subject(oldManager);
         when(repository.findById(subjectId)).thenReturn(Optional.of(before));
         when(repository.findByIdForUpdate(subjectId)).thenReturn(Optional.of(before));
-        Subject after = service.changeManager(admin, subjectId, new SubjectCommandService.ChangeManager(null, 1L));
+        Subject after =
+                service.changeManager(
+                        admin, subjectId, new SubjectCommandService.ChangeManager(null, 1L));
         assertThat(after.managerId()).isNull();
         assertThat(after.version()).isEqualTo(2);
         assertThat(event().details()).containsEntry("newManagerId", null);
@@ -236,7 +332,13 @@ class SubjectAdminCommandTest {
         Subject archived = subject(null).archive(NOW.minusSeconds(30));
         when(repository.findById(subjectId)).thenReturn(Optional.of(archived));
         when(repository.findByIdForUpdate(subjectId)).thenReturn(Optional.of(archived));
-        code(() -> service.changeManager(admin, subjectId, new SubjectCommandService.ChangeManager(newManager, 2L)), "SUBJECT_ARCHIVED");
+        code(
+                () ->
+                        service.changeManager(
+                                admin,
+                                subjectId,
+                                new SubjectCommandService.ChangeManager(newManager, 2L)),
+                "SUBJECT_ARCHIVED");
         verify(repository, never()).update(any(), anyLong());
         verifyNoInteractions(accounts, audit);
     }
@@ -245,9 +347,17 @@ class SubjectAdminCommandTest {
     void concurrentChangeIsRejectedAfterLockedReload() {
         Subject before = subject(oldManager);
         when(repository.findById(subjectId)).thenReturn(Optional.of(before));
-        when(repository.findByIdForUpdate(subjectId)).thenReturn(Optional.of(before.changeManager(null, NOW)));
-        code(() -> service.changeManager(admin, subjectId, new SubjectCommandService.ChangeManager(newManager, 1L)), "SUBJECT_VERSION_CONFLICT");
-        // Tài khoản được khóa trước dòng môn (cùng thứ tự với U01); version lệch vẫn báo trước Chủ nhiệm môn.
+        when(repository.findByIdForUpdate(subjectId))
+                .thenReturn(Optional.of(before.changeManager(null, NOW)));
+        code(
+                () ->
+                        service.changeManager(
+                                admin,
+                                subjectId,
+                                new SubjectCommandService.ChangeManager(newManager, 1L)),
+                "SUBJECT_VERSION_CONFLICT");
+        // Tài khoản được khóa trước dòng môn (cùng thứ tự với U01); version lệch vẫn báo trước Chủ
+        // nhiệm môn.
         verify(accounts).lockContact(newManager);
         verifyNoInteractions(audit);
         verify(repository, never()).update(any(), anyLong());
@@ -257,7 +367,13 @@ class SubjectAdminCommandTest {
     void compareAndSetFailureDoesNotEmitSuccessAudit() {
         when(repository.findById(subjectId)).thenReturn(Optional.of(subject(null)));
         when(repository.update(any(), anyLong())).thenReturn(false);
-        code(() -> service.updateInformation(admin, subjectId, new SubjectCommandService.UpdateInformation("New", null, 1L)), "SUBJECT_VERSION_CONFLICT");
+        code(
+                () ->
+                        service.updateInformation(
+                                admin,
+                                subjectId,
+                                new SubjectCommandService.UpdateInformation("New", null, 1L)),
+                "SUBJECT_VERSION_CONFLICT");
         verifyNoInteractions(audit);
     }
 
@@ -273,11 +389,20 @@ class SubjectAdminCommandTest {
     }
 
     private Subject subject(UUID manager) {
-        return Subject.create(subjectId, "SWR302", "Name", "Description", manager, NOW.minusSeconds(60));
+        return Subject.create(
+                subjectId, "SWR302", "Name", "Description", manager, NOW.minusSeconds(60));
     }
 
     private void eligible(UUID id) {
-        when(accounts.lockContact(id)).thenReturn(Optional.of(new AccountContact(id, "manager@example.test", "Manager", Role.SUBJECT_MANAGER, AccountStatus.ACTIVE)));
+        when(accounts.lockContact(id))
+                .thenReturn(
+                        Optional.of(
+                                new AccountContact(
+                                        id,
+                                        "manager@example.test",
+                                        "Manager",
+                                        Role.SUBJECT_MANAGER,
+                                        AccountStatus.ACTIVE)));
     }
 
     private AuditEvent event() {
@@ -287,6 +412,8 @@ class SubjectAdminCommandTest {
     }
 
     private void code(Runnable call, String code) {
-        assertThatThrownBy(call::run).isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.code()).isEqualTo(code));
+        assertThatThrownBy(call::run)
+                .isInstanceOfSatisfying(
+                        ApiException.class, error -> assertThat(error.code()).isEqualTo(code));
     }
 }

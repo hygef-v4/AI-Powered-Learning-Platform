@@ -266,7 +266,7 @@ Notes:
 
 Notes:
 
-- Changing a FINALIZED or PUBLISHED grade requires a reason, keeps the status and adds an entry to the grade history; the student sees the new grade marked "updated". Appeals, individual extensions and similarity checks are out of scope.
+- Latest decision 2026-11-02: FINALIZED/PUBLISHED grades cannot be manually/AI/member edited, even with a reason. Publication changes visibility only. Resubmission invalidates the previous grade: individual grades become SUPERSEDED, group grades reset to PENDING using existing rows. Retain audit/history, not parallel group grading rounds. No DB schema/index change. Appeals, individual extensions and similarity checks remain out of scope.
 - The gradebook (UC 45) shows GRADED Assignments only and can be exported to CSV or XLSX.
 
 ## BF-08

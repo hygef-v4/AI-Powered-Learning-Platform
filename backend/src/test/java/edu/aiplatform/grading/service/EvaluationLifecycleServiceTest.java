@@ -45,5 +45,18 @@ class EvaluationLifecycleServiceTest {
                 Optional.of(Evaluation.pending(id, aid, cid, sid, "hash", BigDecimal.TEN, "[]", Instant.now())));
         service.onSubmitted(id);
         verify(repo, times(1)).save(any());
+        for (var state : List.of(EvaluationStatus.FINALIZED, EvaluationStatus.PUBLISHED)) {
+            clearInvocations(repo);
+            var previous = Evaluation.pending(UUID.randomUUID(), aid, cid, sid, "old", BigDecimal.TEN, "[]", Instant.now());
+            previous.state = state;
+            previous.score = new BigDecimal("7.50");
+            when(repo.findByAttemptId(id)).thenReturn(Optional.empty());
+            when(repo.findForAssignmentAndClass(aid, cid)).thenReturn(List.of(previous));
+            when(repo.lockById(previous.id)).thenReturn(Optional.of(previous));
+            service.onSubmitted(id);
+            assertThat(previous.state).isEqualTo(EvaluationStatus.SUPERSEDED);
+            verify(repo).save(argThat(e -> !e.id.equals(previous.id) && e.attemptId.equals(id)
+                    && e.state == EvaluationStatus.PENDING && e.score == null));
+        }
     }
 }

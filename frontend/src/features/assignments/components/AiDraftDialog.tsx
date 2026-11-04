@@ -71,7 +71,7 @@ export function AiDraftDialog({
   const abortUploads = useRef(new Map<string, () => void>());
   const [source, setSource] = useState<"SHARED" | "PERSONAL">("SHARED");
   const [provider, setProvider] = useState("GEMINI");
-  // Nguồn AI mặc định của người dùng (U06, BR-U06-28) làm giá trị ban đầu; vẫn đổi được cho lần này.
+  // Nguồn AI mặc định của người dùng (U06, FB-U06-01) làm giá trị ban đầu; vẫn đổi được cho lần này.
   const preferred = usePreferredSource();
   const [appliedPreferred, setAppliedPreferred] = useState<SourceChoice | null>(null);
   if (preferred && preferred !== appliedPreferred) {

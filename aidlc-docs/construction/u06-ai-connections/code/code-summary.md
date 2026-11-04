@@ -140,7 +140,7 @@ Bằng chứng: `construction/build-and-test/e2e-u02-u06-u12-2026-10-24.md`. Nh�
 
 ## Nguồn AI mặc định (2026-11-02)
 
-Plan: `construction/plans/code-generation-plan/2026-11-02-u06-u12-feedback.md`. Rule: BR-U06-28.
+Plan: `construction/plans/code-generation-plan/2026-11-02-u06-u12-feedback.md`. Bổ sung FB-U06-01 (ngoài BR đã chốt, xem `2026-11-02-feedback-additions.md`).
 
 - **Migration** `ai/V20261102_0900__create_ai_source_preferences.sql`: một dòng mỗi tài khoản, API cá nhân bắt buộc có provider.
 - **Backend:** `AiSourcePreferenceRepository`, `AiSourcePreference`; `AiSourceService.preference/savePreference`; `SourceOption.preferred`; API `GET/PUT /api/v1/me/ai-source-preference` (`source` null là hỏi mỗi lần).

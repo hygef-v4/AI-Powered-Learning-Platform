@@ -70,7 +70,7 @@ public class Evaluation {
 
     public void save(String checks, BigDecimal rubricScore, BigDecimal delta, String deltaReason, String feedback,
             String changeReason, UUID actor, Instant now) {
-        editable();
+        requireMutableGrade();
         if (feedback != null && feedback.length() > 10000)
             throw ApiException.badRequest("FEEDBACK_TOO_LONG", "Feedback exceeds 10000 characters");
         delta = delta == null ? BigDecimal.ZERO : delta;
@@ -78,14 +78,7 @@ public class Evaluation {
             throw ApiException.badRequest("INVALID_ADJUSTMENT", "Invalid adjustment");
         if (delta.signum() != 0 && blank(deltaReason))
             throw ApiException.badRequest("ADJUSTMENT_REASON_REQUIRED", "Adjustment requires a reason");
-        boolean official = official();
-        if (official && blank(changeReason))
-            throw ApiException.badRequest("CHANGE_REASON_REQUIRED", "Changing an official grade requires a reason");
         var next = rubricScore.add(delta).max(BigDecimal.ZERO).min(maxScore).setScale(2, RoundingMode.HALF_UP);
-        if (official)
-            changes.add(new EvaluationHistory(actor, now, score, next, changeReason, rubricChecks, this.feedback,
-                    copyItemScores(rubricItemScores),
-                    structuredFeedback == null ? null : structuredFeedback.copy()));
         rubricChecks = checks;
         score = next;
         adjustment = delta;
@@ -93,8 +86,7 @@ public class Evaluation {
         this.feedback = feedback;
         gradedBy = actor;
         gradedAt = now;
-        if (!official)
-            state = EvaluationStatus.DRAFT;
+        state = EvaluationStatus.DRAFT;
     }
 
     public void finalizeGrade(UUID actor, Instant now) {
@@ -122,6 +114,7 @@ public class Evaluation {
     }
 
     public void inheritGroupGrade(Evaluation root, String reason, UUID actorId, Instant now) {
+        requireMutableGrade();
         if (!memberOverride) {
             save(root.rubricChecks, root.score, BigDecimal.ZERO, null, root.feedback, reason, actorId, now);
         } else {
@@ -134,6 +127,7 @@ public class Evaluation {
     }
 
     public void overrideMemberScore(BigDecimal memberScore, String reason, UUID actorId, Instant now) {
+        requireMutableGrade();
         if (memberScore == null || memberScore.signum() < 0 || memberScore.compareTo(maxScore) > 0
                 || memberScore.scale() > 2) {
             throw ApiException.badRequest("INVALID_MEMBER_SCORE", "Invalid member score");
@@ -168,8 +162,13 @@ public class Evaluation {
     }
 
     public void supersede() {
-        if (state != EvaluationStatus.PUBLISHED)
-            state = EvaluationStatus.SUPERSEDED;
+        state = EvaluationStatus.SUPERSEDED;
+    }
+
+    public void requireMutableGrade() {
+        if (official())
+            throw ApiException.conflict("GRADE_LOCKED", "Điểm đã chốt không thể chỉnh sửa.");
+        editable();
     }
 
     public void editable() {

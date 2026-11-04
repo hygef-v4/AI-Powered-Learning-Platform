@@ -46,35 +46,54 @@ public class SubjectRepositoryAdapter implements ISubjectRepository {
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public Optional<Subject> findByIdForUpdate(UUID subjectId, java.time.Duration timeout) {
-        if (timeout == null || timeout.isNegative() || timeout.isZero() || timeout.compareTo(java.time.Duration.ofSeconds(1)) > 0) {
+        if (timeout == null
+                || timeout.isNegative()
+                || timeout.isZero()
+                || timeout.compareTo(java.time.Duration.ofSeconds(1)) > 0) {
             throw new IllegalArgumentException("Lock timeout phải trong (0,1s]");
         }
         long started = System.nanoTime();
-        Object[] previous = (Object[]) entityManager.createNativeQuery("""
+        Object[] previous =
+                (Object[])
+                        entityManager
+                                .createNativeQuery(
+                                        """
                 select current_setting('transaction_isolation'), current_setting('lock_timeout'),
                        current_setting('statement_timeout'),
                        (select setting from pg_settings where name = 'lock_timeout'),
                        (select setting from pg_settings where name = 'statement_timeout')
-                """).getSingleResult();
+                """)
+                                .getSingleResult();
         if (!"read committed".equals(previous[0])) {
-            throw ApiException.unavailable("SUBJECT_ISOLATION_UNSUPPORTED", "Thao tác môn cần transaction READ_COMMITTED");
+            throw ApiException.unavailable(
+                    "SUBJECT_ISOLATION_UNSUPPORTED", "Thao tác môn cần transaction READ_COMMITTED");
         }
-        long millis = timeout.toMillis() - java.time.Duration.ofNanos(System.nanoTime() - started).toMillis();
+        long millis =
+                timeout.toMillis()
+                        - java.time.Duration.ofNanos(System.nanoTime() - started).toMillis();
         if (millis <= 0) {
-            throw ApiException.unavailable("SUBJECT_LIFECYCLE_TIMEOUT", "Kiểm tra môn quá thời gian, vui lòng thử lại");
+            throw ApiException.unavailable(
+                    "SUBJECT_LIFECYCLE_TIMEOUT", "Kiểm tra môn quá thời gian, vui lòng thử lại");
         }
-        long oldLock = Long.parseLong(previous[3].toString()), oldStatement = Long.parseLong(previous[4].toString());
-        setTimeouts((oldLock > 0 ? Math.min(oldLock, millis) : millis) + "ms",
+        long oldLock = Long.parseLong(previous[3].toString()),
+                oldStatement = Long.parseLong(previous[4].toString());
+        setTimeouts(
+                (oldLock > 0 ? Math.min(oldLock, millis) : millis) + "ms",
                 (oldStatement > 0 ? Math.min(oldStatement, millis) : millis) + "ms");
-        // Khi query lỗi PostgreSQL transaction có thể đã aborted; không chạy SQL restore che lỗi gốc.
+        // Khi query lỗi PostgreSQL transaction có thể đã aborted; không chạy SQL restore che lỗi
+        // gốc.
         Optional<Subject> result = rows.findByIdForUpdate(subjectId).map(this::snapshot);
         setTimeouts(previous[1].toString(), previous[2].toString());
         return result;
     }
 
     private void setTimeouts(String lock, String statement) {
-        entityManager.createNativeQuery("select set_config('lock_timeout', :lock, true), set_config('statement_timeout', :statement, true)")
-                .setParameter("lock", lock).setParameter("statement", statement).getSingleResult();
+        entityManager
+                .createNativeQuery(
+                        "select set_config('lock_timeout', :lock, true), set_config('statement_timeout', :statement, true)")
+                .setParameter("lock", lock)
+                .setParameter("statement", statement)
+                .getSingleResult();
     }
 
     @Override
@@ -92,10 +111,14 @@ public class SubjectRepositoryAdapter implements ISubjectRepository {
     @Override
     public List<Subject> findPage(String query, SubjectStatus status, int page, int size) {
         if (page < 0 || size < 1 || size > 100) {
-            throw ApiException.badRequest("SUBJECT_PAGE_INVALID", "Trang phải từ 0, số dòng mỗi trang từ 1 đến 100");
+            throw ApiException.badRequest(
+                    "SUBJECT_PAGE_INVALID", "Trang phải từ 0, số dòng mỗi trang từ 1 đến 100");
         }
-        return rows.findPage(pattern(query), status, PageRequest.of(page, size, Sort.by("code")))
-                .stream().map(this::snapshot).toList();
+        return rows
+                .findPage(pattern(query), status, PageRequest.of(page, size, Sort.by("code")))
+                .stream()
+                .map(this::snapshot)
+                .toList();
     }
 
     @Override
@@ -131,16 +154,28 @@ public class SubjectRepositoryAdapter implements ISubjectRepository {
     @Transactional
     public boolean update(Subject subject, long expectedVersion) {
         if (expectedVersion < 1 || subject.version() != Math.addExact(expectedVersion, 1)) {
-            throw new IllegalArgumentException("Snapshot cập nhật phải có public version bằng expectedVersion + 1");
+            throw new IllegalArgumentException(
+                    "Snapshot cập nhật phải có public version bằng expectedVersion + 1");
         }
-        return rows.updateSnapshot(subject.id(), subject.code().value(), subject.name(), subject.description(),
-                subject.status(), subject.managerId(), subject.updatedAt(), expectedVersion - 1, subject.version() - 1) == 1;
+        return rows.updateSnapshot(
+                        subject.id(),
+                        subject.code().value(),
+                        subject.name(),
+                        subject.description(),
+                        subject.status(),
+                        subject.managerId(),
+                        subject.updatedAt(),
+                        expectedVersion - 1,
+                        subject.version() - 1)
+                == 1;
     }
 
     private Subject snapshot(SubjectJpaEntity row) {
         Subject subject = row.toDomain();
-        // Bulk UPDATE phía trên không đồng bộ managed entity. Detach chỉ row này để lần đọc sau lấy DB mới,
-        // không clear/detach dữ liệu unit khác trong transaction dùng chung (ví dụ disable account).
+        // Bulk UPDATE phía trên không đồng bộ managed entity. Detach chỉ row này để lần đọc sau lấy
+        // DB mới,
+        // không clear/detach dữ liệu unit khác trong transaction dùng chung (ví dụ disable
+        // account).
         entityManager.detach(row);
         return subject;
     }

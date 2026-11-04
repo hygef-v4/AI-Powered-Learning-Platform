@@ -155,7 +155,7 @@ function Workspace({ initial, refresh, proposalId }: { initial: Detail; refresh:
     ...(needsGradingNotes(detail.rubrics, form, official) ? [{
       key: "grading-notes",
       anchorBlockId: null,
-      content: <GradingNotes rubrics={detail.rubrics} values={form} official={official} onChange={updateForm} />,
+      content: <GradingNotes rubrics={detail.rubrics} values={form} />,
     }] : []),
     ...detail.rubrics.map((rubric, index): DocumentComment => ({
       key: rubric.rubricId,
@@ -231,10 +231,11 @@ function Workspace({ initial, refresh, proposalId }: { initial: Detail; refresh:
         <div className="flex flex-wrap items-center gap-1.5">
           <Button size="sm" variant="primary" icon="save" disabled={disabled} onClick={() => void save()}>Lưu nháp / thay đổi</Button>
           <Button size="sm" disabled={disabled || dirty || evaluation.state !== "DRAFT" || unresolvedReviews > 0} onClick={() => setAction("finalize")}>Chốt điểm</Button>
-          <Button size="sm" disabled={disabled || dirty || evaluation.state !== "FINALIZED"} onClick={() => setAction("publish")}>Công bố điểm</Button>
+          <Button size="sm" disabled={busy || !detail.current || dirty || evaluation.state !== "FINALIZED"} onClick={() => setAction("publish")}>Công bố điểm</Button>
         </div>
       </div>
       {!detail.current && <Alert tone="info">Đây là lần nộp cũ, chỉ có thể xem lại.</Alert>}
+      {official && <Alert tone="info">Điểm đã chốt. Bản chấm chỉ có thể xem, không thể chỉnh sửa.</Alert>}
       {error && (
         <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void reload()}>Tải lại phiên bản</Button>}>{error}</Alert>
       )}
