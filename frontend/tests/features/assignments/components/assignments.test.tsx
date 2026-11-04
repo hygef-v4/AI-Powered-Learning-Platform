@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { rubricComplete, rubricTotal, type DocumentModel, type RubricCriterion } from "@/shared/document";
 import { assignmentsApi } from "@/features/assignments/api";
 import { AssignmentListCard } from "@/features/assignments/components/AssignmentListCard";
-import { mergeSaved, missingText } from "@/features/assignments/pages/AssignmentFormPage";
+import { mergeSaved, missingText, reappearedParts } from "@/features/assignments/pages/AssignmentFormPage";
 import { CreateAssignmentDialog } from "@/features/assignments/components/CreateAssignmentDialog";
 import { fromLocalInput, toLocalInput } from "@/features/assignments/model/format";
 import { RubricEditor, cleanCriteria, rubricPointsMalformed } from "@/features/assignments/components/RubricEditor";
@@ -269,4 +269,10 @@ it("uses the first assignment page for invalid URL page numbers", () => {
   const page = { data: { items: [{ id: "a", title: "Open", status: "OPEN", scope: "CLASS", submissionMode: "GROUP", gradingMode: "GRADED", closesAt: null }] }, error: null, loading: false, reload: vi.fn() } as never;
   render(<AssignmentListCard page={page} />);
   expect(screen.getByTestId("assignment-row-a")).toBeInTheDocument();
+});
+
+it("mục thành phần chấm lại mà trang còn giữ tiêu chí cũ thì lưu lại rubric đó; mục mới chưa có tiêu chí thì không", () => {
+  const part = (partId: string) => ({ partId, headingBlockId: partId, ancestorHeadingIds: [], title: partId });
+  const criterion = { criterionId: "c", title: "Đúng", order: 0, atomic: true, points: 2, items: [] } as never;
+  expect(reappearedParts(new Set(["b"]), [part("a"), part("b"), part("n")], { a: [criterion], b: [criterion] })).toEqual(["a"]);
 });

@@ -1,22 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BackLink } from "@/shared/navigation/BackLink";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { uploadFile } from "@/features/files/api";
 import { ApiError } from "@/shared/api/client";
 import {
-  AutoTextarea,
   DocumentEditor,
   RubricNote,
   ToolbarButton,
   computeParts,
-  diagramTypeLabels,
-  formatPoints,
   rubricComplete,
-  rubricTotal,
   sectionsOf,
-  type DiagramType,
   type DocumentBlock,
   type DocumentComment,
   type DocumentModel,
@@ -24,15 +18,16 @@ import {
   type RubricCriterion,
   type ValidationIssue,
 } from "@/shared/document";
-import { Alert, Button, Dialog, Field, Icon, Menu, MenuItem, Pill, cx } from "@/shared/ui";
+import { Alert, Button, Dialog, Field, Menu, MenuItem, Pill } from "@/shared/ui";
 import { AiDraftDialog } from "../components/AiDraftDialog";
 import { assignmentsApi, docxUrl, imageUrlFor } from "../api";
 import { AssignmentSettingsPanel, settingsOf, type Settings } from "../components/AssignmentSettingsPanel";
 import { errorMessage, formatTime, problemCode, problemIssues } from "../model/format";
 import { RubricEditor, cleanCriteria, rubricPointsMalformed } from "../components/RubricEditor";
 import { ScheduleForm } from "../components/ScheduleForm";
-import { gradingLabels, statusLabels, statusTones, submissionLabels, type AssignmentDetail, type RubricDetail } from "../model/types";
+import { statusLabels, statusTones, submissionLabels, type AssignmentDetail, type RubricDetail } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
+import { assignmentsReturn, outlineOf, publishOutline } from "../model/outline";
 
 const AUTOSAVE_MS = 1500;
 const VERSION_CONFLICT = "ASSIGNMENT_VERSION_CONFLICT";
@@ -48,6 +43,11 @@ type Local = {
 };
 
 /** Sau khi lưu: ảnh vừa tải lên đã được gắn (server trả {@code hasFile}); bản đang sửa bỏ {@code fileRef} để không gắn lại. */
+/** Phần mới có trong {@code parts} (chưa có trong {@code before}) mà trang còn giữ tiêu chí: cần lưu lại rubric đó. */
+export function reappearedParts(before: Set<string>, parts: DocumentPart[], criteria: Record<string, RubricCriterion[]>): string[] {
+  return parts.filter((part) => !before.has(part.partId) && (criteria[part.partId]?.length ?? 0) > 0).map((part) => part.partId);
+}
+
 export function mergeSaved(local: DocumentModel, saved: DocumentModel): DocumentModel {
   const persisted = new Set(saved.blocks.filter((b) => b.type === "IMAGE" && b.content.hasFile).map((b) => b.id));
   return {
@@ -104,6 +104,18 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const [dialog, setDialog] = useState<"ai" | "retire" | "delete" | "settings" | "schedule" | null>(null);
   const openedMcpProposal = useRef<string | null>(null);
   const [preview, setPreview] = useState(false);
+  // Header dính trên đầu: nút chọn cách đọc nằm giữa header; thanh công cụ của trình soạn dính ngay dưới header (yêu cầu 2026-11-04).
+  const [viewSlot, setViewSlot] = useState<HTMLElement | null>(null);
+  const [headerHeight, setHeaderHeight] = useState(64);
+  const headerObserver = useRef<ResizeObserver | null>(null);
+  const headerRef = useCallback((element: HTMLElement | null) => {
+    headerObserver.current?.disconnect();
+    headerObserver.current = null;
+    if (!element || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => setHeaderHeight(element.offsetHeight));
+    observer.observe(element);
+    headerObserver.current = observer;
+  }, []);
   const version = useRef(0);
   const detailRef = useRef<AssignmentDetail | null>(null);
   // Bản mới nhất người dùng đã gõ, cập nhật ngay trong lúc sửa để lần lưu đang chờ không gửi bản cũ.
@@ -203,8 +215,12 @@ export function AssignmentFormPage({ id }: { id: string }) {
         version.current = next.version;
       }
       if (work.skeleton) {
+        const before = new Set((detailRef.current?.parts ?? []).map((part) => part.partId));
         next = await assignmentsApi.saveSkeleton(id, version.current, values.skeleton);
         version.current = next.version;
+        // Mục thành phần chấm lại (ví dụ xóa mục con vừa thêm): server tạo rubric trống mới, trang vẫn giữ tiêu chí cũ. Lưu lại
+        // tiêu chí cũ lên server để thẻ trên trang và server khớp nhau, không báo thiếu rubric khi phát hành (yêu cầu 2026-11-04).
+        reappearedParts(before, next.parts, values.criteria).forEach((partId) => work.rubrics.add(partId));
         const saved = next.skeleton;
         latest.current = { ...latest.current, skeleton: mergeSaved(latest.current.skeleton, saved) };
         setSkeleton((current) => mergeSaved(current, saved));
@@ -327,12 +343,6 @@ export function AssignmentFormPage({ id }: { id: string }) {
     dirty.current.details = true;
     changed();
   }
-  function editInstructions(value: string) {
-    setInstructions(value);
-    latest.current = { ...latest.current, instructions: value };
-    dirty.current.details = true;
-    changed();
-  }
   function editSettings(value: Settings) {
     setSettings(value);
     latest.current = { ...latest.current, settings: value };
@@ -422,28 +432,39 @@ export function AssignmentFormPage({ id }: { id: string }) {
     setDialog("schedule");
   }
 
+  // Sidebar của bài: các phần (Đề bài, Câu hỏi) theo khung đang soạn, lối về trang Bài tập của lớp / môn.
+  useEffect(() => {
+    if (!detail) return;
+    // Lối về đúng tab, bộ lọc của trang danh sách đã mở bài này (Nháp, Đang mở, Đã đóng…).
+    const backHref = assignmentsReturn(assignmentsHref(detail, params.get("classId") ?? detail.classId));
+    const editable = detail.permissions.canEditContent && !preview;
+    publishOutline({ assignmentId: detail.id, backHref, backLabel: "Bài tập", entries: outlineOf(skeleton.blocks), editable });
+  }, [detail, skeleton, params, preview]);
+  useEffect(() => () => publishOutline(null), []);
+
   if (loadError) {
     return <PageLoadError onRetry={() => void reload()}>{errorMessage(loadError)}</PageLoadError>;
   }
   if (!detail || !settings) return <PageLoading label="Đang tải bài tập…" />;
 
   const classId = params.get("classId") ?? detail.classId;
-  const backHref = detail.scope === "SUBJECT" && !classId ? `/manager/assignments?subjectId=${encodeURIComponent(detail.subjectId)}`
-    : classId ? `/teaching/classes/${encodeURIComponent(classId)}` : "/teaching/classes";
+  // Xóa bản nháp xong về trang Bài tập (tab Bài tập của lớp, hoặc Bài tập của môn), như lối về ở sidebar.
+  const backHref = assignmentsHref(detail, classId);
   const permissions = detail.permissions;
   const editable = permissions.canEditContent && !preview;
-  const missing = parts.filter((part) => !rubricComplete(criteria[part.partId] ?? [])).length;
-  const totalPoints = parts.reduce((sum, part) => sum + rubricTotal(criteria[part.partId] ?? []), 0);
-  const waitingForRubrics = detail.parts.some((part) => !Object.hasOwn(criteria, part.partId));
-  const topLevelQuestionCount = skeleton.blocks.filter((block) => block.type === "HEADING" && block.content.style === "H1").length;
-  const rubricCriterionCount = Object.values(criteria).reduce((sum, list) => sum + list.length, 0);
   const rubricItemCount = Object.values(criteria).reduce((sum, list) => sum + list.reduce((partSum, criterion) => partSum + criterion.items.length, 0), 0);
   const active = parts.find((part) => part.partId === activePart);
   const titleMissing = issues.some((issue) => issue.code === "TITLE_REQUIRED");
-  const required = Object.entries(settings.requiredDiagrams) as [DiagramType, number][];
   const saveText = !permissions.canEditContent ? "Chỉ xem" : saving ? "Đang lưu…" : conflict ? "Chưa lưu"
     : unsaved ? "Chưa lưu" : savedAt ? `Đã lưu lúc ${formatTime(savedAt)}` : "Đã lưu";
 
+  // Thẻ rubric ghi số mục như trong trang: "1.2. Tên", mục chưa đặt tên chỉ có số (yêu cầu 2026-11-04).
+  const numberOf = new Map(outlineOf(skeleton.blocks).map((entry) => [entry.id, entry.number]));
+  const rubricTitle = (part: DocumentPart) => {
+    const name = part.title.split(" › ").at(-1) ?? part.title;
+    const number = part.headingBlockId ? numberOf.get(part.headingBlockId) : undefined;
+    return number && name !== number ? `${number} ${name}` : name;
+  };
   const comments: DocumentComment[] = parts.map((part) => {
     const list = criteria[part.partId] ?? [];
     const locked = !!rubrics[part.partId]?.locked;
@@ -454,7 +475,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
       content: awaitingRubric ? <p role="status" className="rounded-lg border border-line bg-surface p-3 text-xs text-muted">
         {rubricLoadError ? "Chưa tải được tiêu chí chấm." : "Đang tải tiêu chí chấm…"}
       </p> : (
-        <RubricNote title={part.title} criteria={list} active={activePart === part.partId} onActivate={() => setActivePart(part.partId)}
+        <RubricNote title={rubricTitle(part)} criteria={list} active={activePart === part.partId} onActivate={() => setActivePart(part.partId)}
           issues={issues.filter((issue) => issue.code.startsWith("RUBRIC") && issue.blockId === part.headingBlockId).map((issue) => issue.message)}
           badge={locked ? <Pill>Đã khóa</Pill> : undefined}
           editor={editable && !locked
@@ -466,55 +487,28 @@ export function AssignmentFormPage({ id }: { id: string }) {
 
   const header = (
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
-      {editable ? (
-        <AutoTextarea id="assignment-title" aria-label="Tên bài" value={title} maxLength={200} placeholder="Tên bài tập"
-          aria-invalid={titleMissing || undefined}
-          className={cx("font-display text-[28px] leading-tight tracking-[-0.025em] text-ink", titleMissing && "rounded-md bg-danger-soft")}
-          onKeyDown={(event) => { if (event.key === "Enter") event.preventDefault(); }}
-          onChange={(event) => editTitle(event.target.value.replace(/\n/g, " "))} />
-      ) : <h2 className="font-display text-[28px] leading-tight tracking-[-0.025em] text-ink">{title || "Bài chưa đặt tên"}</h2>}
-      {editable ? (
-        <Field label="Hướng dẫn làm và nộp bài" htmlFor="assignment-instructions" hint="Quy định áp dụng cho toàn bài: thời lượng, cách trình bày và tệp cần nộp.">
-          <AutoTextarea id="assignment-instructions" aria-label="Hướng dẫn làm và nộp bài" value={instructions} maxLength={20000}
-            placeholder="Ví dụ: Làm cá nhân trong 90 phút; nộp báo cáo PDF và tệp sơ đồ."
-            className="text-sm leading-[1.65] text-body" onChange={(event) => editInstructions(event.target.value)} />
-        </Field>
-      ) : instructions && <p className="text-sm leading-[1.65] whitespace-pre-wrap text-body">{instructions}</p>}
-      <p className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[13px] text-muted">
-        <span>{submissionLabels[detail.submissionMode]}</span>
-        <span aria-hidden>·</span><span>{gradingLabels[settings.gradingMode]}</span>
-        <span aria-hidden>·</span><span>{topLevelQuestionCount} câu · {parts.length} mục chấm</span>
-        {!preview && (waitingForRubrics ? <><span aria-hidden>·</span><span>{rubricLoadError ? "Chưa tải được điểm" : "Đang tải tiêu chí chấm…"}</span></>
-          : <><span aria-hidden>·</span><span>{rubricCriterionCount} tiêu chí · {rubricItemCount} mục điểm</span><span aria-hidden>·</span><strong className="font-display text-[18px] text-ink">{formatPoints(totalPoints)} điểm</strong></>)}
-        {required.map(([type, count]) => <span key={type}>· {count} {diagramTypeLabels[type]}</span>)}
-        {!preview && !waitingForRubrics && missing > 0 && <Pill tone="warning">{missing} mục cần bổ sung rubric</Pill>}
+      {/* Tên bài do trình soạn vẽ ngay trên dòng này (định dạng được, lưu trong khung đề). */}
+      {/* Dòng cuối chỉ ghi loại bài (yêu cầu 2026-11-02): Luyện tập, hoặc Cá nhân / Nhóm. */}
+      <p className="text-[13px] text-muted" data-testid="assignment-kind">
+        {settings.gradingMode === "PRACTICE" ? "Luyện tập" : submissionLabels[detail.submissionMode]}
       </p>
     </div>
   );
 
   return (
-    <div data-wide-workspace className="flex flex-col gap-4">
-      <header className="sticky top-14 z-30 -mx-4 -mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] px-4 py-3 backdrop-blur-md sm:-mx-8 sm:px-8 md:-mt-10">
-        <BackLink href={backHref} aria-label="Quay lại" className="inline-flex size-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink">
-          <Icon name="arrow_back" size={16} />
-        </BackLink>
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
-          <h1 className="sr-only">{title || detail.title || "Bài chưa đặt tên"}</h1>
-          <span className="truncate text-[13px] font-semibold text-ink">{detail.ownerName || (detail.scope === "SUBJECT" ? "Bài của môn" : "Bài của lớp")}</span>
-          <span className="font-mono text-xs text-muted">v{detail.versionNo}</span>
+    <div data-wide-workspace className="flex flex-col gap-4" style={{ "--doc-toolbar-top": `${56 + headerHeight}px` } as CSSProperties}>
+      <header ref={headerRef} className="sticky top-14 z-30 -mx-4 -mt-8 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] px-4 py-3 backdrop-blur-md sm:-mx-8 sm:px-8 md:-mt-10">
+        {/* Quay lại nằm ở sidebar của bài; đầu trang chỉ còn tên bài (đổi theo ô tên đang sửa) và trạng thái. */}
+        <div className="flex min-w-0 flex-1 items-center gap-x-3">
+          <h1 className="min-w-0 truncate text-[15px] font-semibold text-ink" title={title || detail.title}>{title || detail.title || "Bài chưa đặt tên"}</h1>
           <Pill tone={statusTones[detail.status]}>{statusLabels[detail.status]}</Pill>
-          <span data-testid="save-state" className="text-xs text-muted">{saveText}</span>
+          <span data-testid="save-state" className="sr-only" role="status">{saveText}</span>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div ref={setViewSlot} data-testid="view-slot" className="flex justify-center" />
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <Menu label="" icon="more_horiz" ariaLabel="Thao tác khác" align="right">
             <MenuItem icon="download" onClick={() => void exportDocx("skeleton")}>Xuất DOCX</MenuItem>
             <MenuItem icon="download" onClick={() => void exportDocx("rubric")}>Xuất rubric</MenuItem>
-            {permissions.canClone && (
-              <MenuItem icon="add" onClick={() => void act(async () => {
-                const copy = await assignmentsApi.clone(id);
-                router.push(`/assignments/${copy.id}${classId ? `?classId=${classId}` : ""}`);
-              }, null)}>Nhân bản</MenuItem>
-            )}
             {permissions.canCreateVersion && (
               <MenuItem icon="history" onClick={() => void act(async () => {
                 const copy = await assignmentsApi.newVersion(id);
@@ -525,7 +519,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
             {permissions.canDelete && <MenuItem icon="close" tone="danger" onClick={() => setDialog("delete")}>Xóa bản nháp</MenuItem>}
           </Menu>
           {preview ? (
-            <Button icon="arrow_back" data-testid="preview-back" onClick={() => setPreview(false)}>Quay lại</Button>
+            <Button icon="edit" data-testid="preview-back" onClick={() => setPreview(false)}>Chỉnh sửa</Button>
           ) : (
             <Button icon="visibility" data-testid="assignment-preview" onClick={() => void openPreview()}>Xem trước</Button>
           )}
@@ -563,11 +557,13 @@ export function AssignmentFormPage({ id }: { id: string }) {
         imageUrl={imageUrlFor(detail.id)} issues={preview ? [] : issues.filter((issue) => !issue.code.startsWith("RUBRIC"))}
         uploadImage={async (file) => (await uploadFile(file, "DOCUMENT_IMAGE", () => {}).promise).fileRef.value}
         onChange={editSkeleton}
+        titleField={{ text: title, placeholder: "Tên bài tập", invalid: titleMissing, readOnly: !editable, onText: (value) => editTitle(value.slice(0, 200)) }}
         header={header}
         comments={preview ? undefined : comments}
         activeComment={activePart}
         highlightBlockId={preview ? null : active?.headingBlockId ?? null}
         onFocusBlock={(blockId) => { const part = sections.get(blockId); if (part) setActivePart(part); }}
+        viewSlot={viewSlot}
         toolbarExtra={preview ? undefined : <>
           {editable && detail.status === "DRAFT" && <ToolbarButton icon="smart_toy" title="Soạn bằng AI" aria-label="Soạn bằng AI" onClick={() => setDialog("ai")} />}
           <ToolbarButton icon="tune" title="Cài đặt bài" aria-label="Cài đặt bài" onClick={() => setDialog("settings")} />
@@ -627,7 +623,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
           footer={<>
             <Button variant="danger" data-testid="assignment-delete-confirm" onClick={() => void act(async () => {
               await assignmentsApi.remove(id, version.current);
-              router.push(backHref);
+              router.push(assignmentsReturn(backHref));
             }, null)}>Xóa</Button>
           </>}>
           <p>Bạn có chắc muốn xóa bản nháp này không?</p>
@@ -635,6 +631,12 @@ export function AssignmentFormPage({ id }: { id: string }) {
       )}
     </div>
   );
+}
+
+/** Trang Bài tập chứa bài: tab Bài tập của lớp, bài chung của môn thì trang Bài tập của môn. */
+function assignmentsHref(detail: { scope: string; subjectId: string }, classId: string | null | undefined) {
+  if (detail.scope === "SUBJECT" && !classId) return `/manager/assignments?subjectId=${encodeURIComponent(detail.subjectId)}`;
+  return classId ? `/teaching/classes/${encodeURIComponent(classId)}?tab=evals` : "/teaching/classes";
 }
 
 function RetireDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: (reason: string) => Promise<void> }) {

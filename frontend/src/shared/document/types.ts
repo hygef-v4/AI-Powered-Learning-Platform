@@ -17,16 +17,22 @@ export type Run = {
   color?: string;
   highlight?: string;
 };
-export type HeadingContent = { style: HeadingStyle; text: string; align?: Align };
-export type ParagraphContent = { runs: Run[]; align?: Align };
+/** {@code runs}: chữ có định dạng của tiêu đề (yêu cầu 2026-11-04); {@code text} luôn là chữ thuần của nó. */
+export type HeadingContent = { style: HeadingStyle; text: string; runs?: Run[]; align?: Align };
+/**
+ * {@code under}: đoạn viết ở dòng cuối của một mục cha, sau các mục con (yêu cầu 2026-11-02), mang cấp tiêu đề của mục đó
+ * (0: cả tài liệu); các block thường theo sau nó cũng thuộc mục đó.
+ */
+export type ParagraphContent = { runs: Run[]; align?: Align; under?: number };
 export type ListItem = { level?: number; runs: Run[] };
-export type ListContent = { ordered?: boolean; items: ListItem[]; align?: Align };
+export type ListContent = { ordered?: boolean; items: ListItem[]; align?: Align; under?: number };
 /** {@code added}: ô người học thêm vào bảng của đề (yêu cầu 2026-10-22), người học chỉ xóa được hàng, cột gồm toàn ô này. */
-export type TableCell = { runs: Run[]; added?: boolean };
-export type TableContent = { headerRow?: boolean; rows: TableCell[][] };
+export type TableCell = { runs: Run[]; added?: boolean; align?: Align };
+/** {@code widths}: độ rộng các cột theo % bề ngang bảng (người soạn kéo mép cột); không có thì các cột bằng nhau. */
+export type TableContent = { headerRow?: boolean; rows: TableCell[][]; widths?: number[]; under?: number };
 /** {@code fileRef}: ảnh vừa tải lên, chưa lưu; {@code hasFile}: ảnh đã lưu, mở theo id block. */
-export type ImageContent = { fileRef?: string; hasFile?: boolean; alt?: string; width?: number };
-export type DiagramContent = { diagramType: DiagramType; xml: string; svgPreview?: string; alt?: string };
+export type ImageContent = { fileRef?: string; hasFile?: boolean; alt?: string; width?: number; under?: number };
+export type DiagramContent = { diagramType: DiagramType; xml: string; svgPreview?: string; alt?: string; under?: number };
 
 type Base<T extends BlockType, C> = { id: string; origin: BlockOrigin; type: T; content: C };
 export type DocumentBlock =
@@ -37,7 +43,9 @@ export type DocumentBlock =
   | Base<"IMAGE", ImageContent>
   | Base<"DIAGRAM", DiagramContent>;
 
-export type DocumentModel = { blocks: DocumentBlock[] };
+/** Tên bài có định dạng của khung đề (yêu cầu 2026-11-04); chữ thuần của tên vẫn ở tên bài. */
+export type TitleContent = { runs: Run[]; align?: Align };
+export type DocumentModel = { blocks: DocumentBlock[]; title?: TitleContent };
 
 export type DocumentPart = { partId: string; headingBlockId: string | null; ancestorHeadingIds: string[]; title: string };
 
@@ -201,15 +209,20 @@ export function computeParts(document: DocumentModel): DocumentPart[] {
   const headings = document.blocks
     .map((block) => ({ block, level: headingLevel(block) }))
     .filter((h) => h.level > 0)
-    .map(({ block, level }) => ({ id: block.id, level, title: blockText(block).trim() || "(Chưa đặt tên)" }));
+    .map(({ block, level }) => ({ id: block.id, level, title: blockText(block).trim() }));
   if (headings.length === 0) return [{ partId: WHOLE_DOCUMENT, headingBlockId: null, ancestorHeadingIds: [], title: "Toàn bài" }];
   const parts: DocumentPart[] = [];
-  const branch: typeof headings = [];
+  const branch: (typeof headings[number] & { label: string })[] = [];
+  // Số thứ tự như trong trang (1., 1.1.): mục chưa đặt tên thì gọi bằng số của nó.
+  const counters: number[] = [];
   headings.forEach((heading, index) => {
     while (branch.length > 0 && branch[branch.length - 1]!.level >= heading.level) branch.pop();
+    counters.length = branch.length + 1;
+    counters[branch.length] = (counters[branch.length] ?? 0) + 1;
+    const label = heading.title || `${counters.join(".")}.`;
     const ancestors = branch.map((h) => h.id);
-    const path = [...branch.map((h) => h.title), heading.title];
-    branch.push(heading);
+    const path = [...branch.map((h) => h.label), label];
+    branch.push({ ...heading, label });
     const next = headings[index + 1];
     if (!next || next.level <= heading.level) {
       parts.push({ partId: heading.id, headingBlockId: heading.id, ancestorHeadingIds: ancestors, title: path.join(" › ") });
@@ -226,14 +239,24 @@ export function sectionsOf(document: DocumentModel, parts: DocumentPart[]): Map<
   let current = whole;
   for (const block of document.blocks) {
     if (!whole && headingLevel(block) > 0) current = leaves.has(block.id) ? block.id : null;
+    else if (!whole && underOf(block) !== null) current = null;
     if (current) sections.set(block.id, current);
   }
   return sections;
 }
 
+/** Mục lồng tối đa 3 tầng: 1., 1.1., 1.1.1. (yêu cầu 2026-11-04). */
+export const MAX_SECTION_DEPTH = 3;
+
+/** Cấp mục mà đoạn {@code block} quay về (đoạn viết ở dòng cuối của mục cha), null nếu là đoạn thường. */
+export function underOf(block: DocumentBlock): number | null {
+  return block.type !== "HEADING" && typeof block.content.under === "number" ? block.content.under : null;
+}
+
 /**
  * Cây phần của tài liệu theo Tiêu đề 1–6: gốc giữ phần chung (trước tiêu đề đầu tiên); mỗi tiêu đề là một nhánh chứa
  * đoạn dẫn của nó rồi các nhánh con; nhánh không có con là lá (phần của BR-U07-11). Khung không có tiêu đề thì gốc là lá.
+ * {@code after}: văn bản của nhánh viết sau các nhánh con (dòng cuối ở đáy ô trắng, yêu cầu 2026-11-02).
  */
 export type DocSection = {
   heading: DocumentBlock | null;
@@ -241,20 +264,24 @@ export type DocSection = {
   depth: number;
   blocks: DocumentBlock[];
   children: DocSection[];
+  after: DocumentBlock[];
   leaf: boolean;
 };
 
 export function documentTree(document: DocumentModel): DocSection {
-  const root: DocSection = { heading: null, level: 0, depth: 0, blocks: [], children: [], leaf: false };
+  const root: DocSection = { heading: null, level: 0, depth: 0, blocks: [], children: [], after: [], leaf: false };
   const stack: DocSection[] = [root];
   for (const block of document.blocks) {
     const level = headingLevel(block);
     if (level === 0) {
-      stack.at(-1)!.blocks.push(block);
+      const under = underOf(block);
+      if (under !== null) while (stack.length > 1 && stack.at(-1)!.level > under) stack.pop();
+      const owner = stack.at(-1)!;
+      (owner.children.length > 0 ? owner.after : owner.blocks).push(block);
       continue;
     }
     while (stack.length > 1 && stack.at(-1)!.level >= level) stack.pop();
-    const node: DocSection = { heading: block, level, depth: stack.length, blocks: [], children: [], leaf: false };
+    const node: DocSection = { heading: block, level, depth: stack.length, blocks: [], children: [], after: [], leaf: false };
     stack.at(-1)!.children.push(node);
     stack.push(node);
   }

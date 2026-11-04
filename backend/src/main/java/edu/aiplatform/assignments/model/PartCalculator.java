@@ -19,7 +19,6 @@ public final class PartCalculator {
 
     public static final String WHOLE_DOCUMENT = "DOCUMENT";
     public static final String WHOLE_DOCUMENT_TITLE = "Toàn bài";
-    public static final String UNTITLED = "(Chưa đặt tên)";
     public static final String SEPARATOR = " › ";
 
     private PartCalculator() {
@@ -32,16 +31,29 @@ public final class PartCalculator {
         }
         List<DocumentPart> parts = new ArrayList<>();
         Deque<Heading> branch = new ArrayDeque<>();
+        // Số thứ tự như trên trang (1., 1.1.): mục chưa đặt tên gọi bằng số của nó (yêu cầu 2026-11-04).
+        List<Integer> counters = new ArrayList<>();
         for (int i = 0; i < headings.size(); i++) {
-            Heading heading = headings.get(i);
-            while (!branch.isEmpty() && branch.peekLast().level() >= heading.level()) {
+            Heading raw = headings.get(i);
+            while (!branch.isEmpty() && branch.peekLast().level() >= raw.level()) {
                 branch.removeLast();
             }
+            int depth = branch.size();
+            while (counters.size() > depth + 1) {
+                counters.remove(counters.size() - 1);
+            }
+            if (counters.size() == depth + 1) {
+                counters.set(depth, counters.get(depth) + 1);
+            } else {
+                counters.add(1);
+            }
+            String number = String.join(".", counters.stream().map(String::valueOf).toList()) + ".";
+            Heading heading = new Heading(raw.id(), raw.level(), raw.title().isEmpty() ? number : raw.title());
             List<UUID> ancestors = branch.stream().map(Heading::id).toList();
             List<String> path = new ArrayList<>(branch.stream().map(Heading::title).toList());
             branch.addLast(heading);
             path.add(heading.title());
-            boolean leaf = i + 1 == headings.size() || headings.get(i + 1).level() <= heading.level();
+            boolean leaf = i + 1 == headings.size() || headings.get(i + 1).level() <= raw.level();
             if (leaf) {
                 parts.add(new DocumentPart(heading.id().toString(), heading.id(), ancestors,
                         String.join(SEPARATOR, path)));
@@ -71,7 +83,7 @@ public final class PartCalculator {
             int level = level(block);
             if (level > 0 && block.id() != null) {
                 JsonNode text = block.content().path("text");
-                String title = text.isTextual() && !text.asText().isBlank() ? text.asText().strip() : UNTITLED;
+                String title = text.isTextual() && !text.asText().isBlank() ? text.asText().strip() : "";
                 headings.add(new Heading(block.id(), level, title));
             }
         }

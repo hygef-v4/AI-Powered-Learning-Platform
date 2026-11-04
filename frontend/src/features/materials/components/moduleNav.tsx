@@ -27,6 +27,7 @@ type Dialogs = { type: "item"; module: MaterialModule; item?: OutlineItem } | { 
 
 /** Nút nhỏ trên sidebar; ẩn khi sidebar thu gọn. */
 const TOOL = "flex size-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-sunken hover:text-ink md:group-data-[collapsed]/sidebar:hidden";
+const CHEVRON = "flex size-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-sunken hover:text-ink md:group-data-[collapsed]/sidebar:mx-auto";
 
 function sourceOf(pathname: string, classId?: string): Source | null {
   const material = /^\/materials\/([^/]+)(\/view)?$/.exec(pathname);
@@ -85,12 +86,13 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
           return <div key={module.id} className={cx(index > 0 && "mt-1 border-t border-line pt-1")}>
             {/* Cả hàng đầu module bấm được; nút Tạo học liệu không làm đổi trạng thái. */}
             <div className="flex cursor-pointer items-center gap-0.5 rounded-lg py-1.5 pr-1 pl-2 select-none hover:bg-sunken/60" onClick={() => toggle(module.id)}>
-              <span title={module.title} className={cx("line-clamp-2 min-w-0 flex-1 text-[11.5px] font-semibold text-muted", FADE_LABEL)}>{module.title}</span>
+              <span title={module.title} className={cx("line-clamp-2 min-w-0 flex-1 text-[11.5px] font-semibold text-muted md:group-data-[collapsed]/sidebar:hidden", FADE_LABEL)}>{module.title}</span>
               {staff && (staff.kind === "class" || module.canManage) && <button type="button" className={TOOL}
                 aria-label={`Tạo học liệu trong ${module.title}`} title="Tạo học liệu" onClick={(event) => { event.stopPropagation(); setDialog({ type: "item", module }); }}>
                 <Icon name="add" size={15} />
               </button>}
-              <button type="button" className={TOOL} aria-expanded={open} aria-controls={`nav-module-${module.id}`}
+              {/* Mũi tên đóng / mở vẫn hiện khi thu gọn sidebar (đứng giữa), để đầu module không trống trơn. */}
+              <button type="button" className={CHEVRON} aria-expanded={open} aria-controls={`nav-module-${module.id}`}
                 aria-label={open ? `Thu gọn ${module.title}` : `Mở ${module.title}`} title={open ? "Thu gọn" : "Mở"}>
                 <Icon name="expand_more" size={15} className={cx("transition-transform duration-300 ease-[cubic-bezier(.16,1,.3,1)]", open && "rotate-180")} />
               </button>

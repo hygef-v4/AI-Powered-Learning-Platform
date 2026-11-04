@@ -59,7 +59,7 @@ export function RubricNote({ title, criteria, active = false, onActivate, issues
         !active && onActivate && "cursor-pointer hover:shadow-[var(--shadow-float)]")}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          {path.length > 1 && <p className="truncate text-[10.5px] text-faint">{path.slice(0, -1).join(" › ")}</p>}
+          {/* Chỉ tên mục (dòng cuối của đường dẫn), không ghi các mục cha phía trên (yêu cầu 2026-11-04). */}
           <p className={cx("text-[13px] font-semibold text-ink", !active && "truncate")} title={title}>{name}</p>
         </div>
         {badge}

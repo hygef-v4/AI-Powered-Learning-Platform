@@ -54,7 +54,6 @@ function VisibilitySetting({ classId, assignmentId }: { classId: string; assignm
     {value?.canEdit && <>
       <Switch checked={value.enabled} label="Cho sinh viên xem phổ điểm ẩn danh" ariaLabel="Cho sinh viên xem phổ điểm ẩn danh"
         disabled={busy || !!error} onChange={(enabled) => save(enabled)} />
-      <p className="text-[11px] text-muted">Chỉ hiển thị điểm đã công bố khi có ít nhất 20 kết quả. Cài đặt riêng cho bài này trong lớp, được lưu ngay.</p>
       {/* Công tắc tự cho thấy đang lưu; dòng báo chỉ cho trình đọc màn hình để thẻ không xô lên xuống khi lưu. */}
       <p className="sr-only" role="status">{busy ? "Đang lưu cài đặt phổ điểm…" : ""}</p>
     </>}

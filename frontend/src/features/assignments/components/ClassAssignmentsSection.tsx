@@ -7,7 +7,8 @@ import { Button } from "@/shared/ui";
 import { assignmentsApi, type ListFilter } from "../api";
 import { ALL_ASSIGNMENTS, AssignmentListCard } from "./AssignmentListCard";
 import { CreateAssignmentDialog } from "./CreateAssignmentDialog";
-import { useAssignmentPage } from "../hooks/useAssignmentPage";
+import { useAssignmentPage } from "../hooks/useAssignmentPage";
+import { rememberAssignmentsPage } from "../model/outline";
 
 /**
  * Tab Bài tập của Teacher Class Detail (F1, UC 34), gắn qua TeacherClassTab: nút Tạo bài tập trên dòng tiêu đề trang lớp;
@@ -34,7 +35,7 @@ function ClassAssignments({ classId, headerActions }: { classId: string; headerA
       {creating && page.data && (
         <CreateAssignmentDialog target={{ kind: "class", classId, groupSupported: page.data.groupSupported }}
           onClose={() => setCreating(false)}
-          onCreated={(created) => { setCreating(false); router.push(`/assignments/${encodeURIComponent(created.id)}?classId=${encodeURIComponent(classId)}`); }} />
+          onCreated={(created) => { setCreating(false); rememberAssignmentsPage(); router.push(`/assignments/${encodeURIComponent(created.id)}?classId=${encodeURIComponent(classId)}`); }} />
       )}
     </div>
   );

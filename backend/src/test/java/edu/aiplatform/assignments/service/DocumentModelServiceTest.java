@@ -272,6 +272,60 @@ class DocumentModelServiceTest {
     }
 
     @Test
+    void formattedTitleIsKeptCleanedAndValidated() throws Exception {
+        ObjectMapper json = new ObjectMapper();
+        DocumentModel skeleton = json.readValue("{\"blocks\":[],\"title\":{\"runs\":[{\"text\":\"Bài\",\"bold\":true,\"font\":\"x\"}],\"align\":\"CENTER\",\"x\":1}}", DocumentModel.class);
+        DocumentModel clean = service.sanitize(skeleton);
+        assertThat(clean.title().toString()).isEqualTo("{\"runs\":[{\"text\":\"Bài\",\"bold\":true}],\"align\":\"CENTER\"}");
+        assertThat(json.writeValueAsString(new DocumentModel(List.of()))).isEqualTo("{\"blocks\":[]}");
+        DocumentModel bad = json.readValue("{\"blocks\":[],\"title\":{\"runs\":[{\"text\":\"x\"}],\"align\":\"MIDDLE\"}}", DocumentModel.class);
+        assertThat(codes(service.validateSkeleton(bad).errors())).contains("DOCUMENT_INVALID");
+    }
+
+    @Test
+    void headingRunsAndTableWidthsAreKept() {
+        ObjectNode headingContent = JsonNodeFactory.instance.objectNode().put("style", "H1").put("text", "Đề");
+        headingContent.putArray("runs").addObject().put("text", "Đề").put("bold", true);
+        DocumentBlock heading = new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.HEADING, headingContent);
+        ObjectNode tableContent = JsonNodeFactory.instance.objectNode();
+        tableContent.putArray("widths").add(70).add(30);
+        ObjectNode row = tableContent.putArray("rows").addArray().addObject();
+        row.putArray("runs").addObject().put("text", "Ô");
+        DocumentBlock table = new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.TABLE, tableContent);
+        DocumentModel clean = service.sanitize(new DocumentModel(List.of(heading, table)));
+        assertThat(clean.blocks().get(0).content().path("runs").get(0).path("bold").asBoolean()).isTrue();
+        assertThat(clean.blocks().get(1).content().path("widths").get(0).asInt()).isEqualTo(70);
+        tableContent.putArray("widths").add(0);
+        assertThat(codes(service.validateSkeleton(new DocumentModel(List.of(table))).errors())).contains("TABLE_INVALID");
+    }
+
+    @Test
+    void tableCellsKeepAlignAndRejectBadValues() {
+        ObjectNode content = JsonNodeFactory.instance.objectNode();
+        ObjectNode cell = content.putArray("rows").addArray().addObject().put("align", "CENTER");
+        cell.putArray("runs").addObject().put("text", "Ô");
+        DocumentBlock table = new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.TABLE, content);
+        DocumentModel skeleton = new DocumentModel(List.of(table));
+        assertThat(service.sanitize(skeleton).blocks().get(0).content().path("rows").get(0).get(0).path("align").asText())
+                .isEqualTo("CENTER");
+        cell.put("align", "MIDDLE");
+        assertThat(codes(service.validateSkeleton(skeleton).errors())).contains("TABLE_INVALID");
+    }
+
+    @Test
+    void paragraphAfterSubPartsKeepsUnderAndLeavesTheLastPart() {
+        DocumentBlock problem = heading(BlockOrigin.TEACHER, "H1", "Đề 1");
+        DocumentBlock question = heading(BlockOrigin.TEACHER, "H2", "Câu 1");
+        DocumentBlock note = paragraph(BlockOrigin.TEACHER, "Ghi chú cuối đề");
+        ((ObjectNode) note.content()).put("under", 1);
+        DocumentModel skeleton = new DocumentModel(List.of(problem, question, note));
+        assertThat(service.sanitize(skeleton).blocks().get(2).content().path("under").asInt()).isEqualTo(1);
+        assertThat(DocumentModelService.blocksInParts(skeleton)).contains(question.id()).doesNotContain(note.id());
+        ((ObjectNode) note.content()).put("under", 9);
+        assertThat(codes(service.validateSkeleton(skeleton).errors())).contains("BLOCK_INVALID");
+    }
+
+    @Test
     void formattingKeepsStrikeColorsAlignAndRejectsBadValues() {
         ObjectNode content = JsonNodeFactory.instance.objectNode().put("align", "CENTER").put("extra", "x");
         content.putArray("runs").addObject().put("text", "Chữ").put("strike", true).put("color", "#C5221F")

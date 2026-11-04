@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { useRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { CommentRail } from "@/shared/document/CommentRail";
@@ -40,6 +40,9 @@ describe("DocumentEditor", () => {
     expect(next.blocks.map((b) => b.id).at(-1)).toBe("q2");
     expect(next.blocks[2]).toMatchObject({ origin: "STUDENT", type: "DIAGRAM" });
     rerender(<DocumentEditor document={next} onChange={onChange} mode="student" diagramEnabled answerGuidance />);
+    // Thêm khung sơ đồ không tự mở Draw.io; bấm vào khung mới mở (yêu cầu 2026-11-04).
+    expect(screen.queryByTestId("drawio-panel")).toBeNull();
+    fireEvent.click(within(screen.getByTestId("answer-t1")).getByRole("button", { name: "Vẽ sơ đồ" }));
     expect(screen.getByTestId("drawio-panel")).toBeInTheDocument();
     // A diagram-only answer still offers an explicit way to add explanation text.
     expect(within(screen.getByTestId("answer-t1")).getByTestId("write-part-t1")).toHaveTextContent("Bấm để bắt đầu viết bài làm");
@@ -79,13 +82,15 @@ describe("DocumentEditor", () => {
     expect(next.blocks[2]!).toMatchObject({ origin: "STUDENT", type: "PARAGRAPH" });
   });
 
-  it("người soạn đổi đoạn thành tiêu đề; một nút chèn sơ đồ, mở luôn Draw.io ở cột phải đẩy trang sang trái", () => {
+  it("người soạn thêm mục ngay dòng đang đứng; nút chèn sơ đồ chỉ thêm khung, bấm khung mới mở Draw.io ở cột phải đẩy trang sang trái", () => {
     const onChange = vi.fn();
     const { rerender } = render(<DocumentEditor document={{ blocks: [] }} onChange={onChange} mode="author" diagramEnabled />);
     fireEvent.click(screen.getByTestId("add-DIAGRAM"));
     const inserted = onChange.mock.calls[0]![0] as DocumentModel;
     expect(inserted.blocks[0]!).toMatchObject({ origin: "TEACHER", type: "DIAGRAM", content: { diagramType: "OTHER" } });
     rerender(<DocumentEditor document={inserted} onChange={onChange} mode="author" diagramEnabled />);
+    expect(screen.queryByTestId("drawio-panel")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Vẽ sơ đồ" }));
     expect(screen.getByTestId("drawio-panel")).toBeInTheDocument();
     expect(document.documentElement).toHaveClass("drawio-panel-open");
     expect(screen.queryByRole("dialog", { name: /Draw.io/ })).toHaveAttribute("data-testid", "drawio-panel");
@@ -94,8 +99,9 @@ describe("DocumentEditor", () => {
     expect(document.documentElement).not.toHaveClass("drawio-panel-open");
     rerender(<DocumentEditor document={doc} onChange={onChange} mode="author" diagramEnabled />);
     fireEvent.mouseDown(screen.getByTestId("block-t2"));
-    fireEvent.change(screen.getByLabelText("Kiểu đoạn"), { target: { value: "H2" } });
-    expect((onChange.mock.calls.at(-1)![0] as DocumentModel).blocks[1]!).toMatchObject({ type: "HEADING", content: { style: "H2", text: "Đề bài" } });
+    fireEvent.click(screen.getByTestId("add-block"));
+    expect((onChange.mock.calls.at(-1)![0] as DocumentModel).blocks.map((b) => b.type === "HEADING" ? b.content.style : b.id))
+      .toEqual(["H1", "t2", "H2"]);
   });
 
   it("thanh công cụ: gạch ngang, màu chữ, căn giữa áp cho cả đoạn; hoàn tác trả lại bản trước", () => {
@@ -123,7 +129,7 @@ describe("DocumentEditor", () => {
     expect(next.blocks[1]!.content).toEqual({ runs: [{ text: "Đề mới", bold: true }] });
   });
 
-  it("bôi đen rồi chỉnh thì chỉ đổi phần bôi đen; không còn nút mã, kiểu đoạn chỉ 4 tiêu đề", () => {
+  it("bôi đen rồi chỉnh thì chỉ đổi phần bôi đen; không còn nút mã; nút + Mục thêm mục cùng tầng, không có menu", () => {
     const onChange = vi.fn();
     render(<DocumentEditor document={doc} onChange={onChange} mode="author" diagramEnabled={false} />);
     fireEvent.mouseDown(screen.getByTestId("block-t2"));
@@ -140,8 +146,97 @@ describe("DocumentEditor", () => {
       runs: [{ text: "Đề", bold: true, color: "#C5221F" }, { text: " bài", bold: true }],
     });
     expect(screen.queryByLabelText("Mã")).toBeNull();
-    expect(within(screen.getByLabelText("Kiểu đoạn")).getAllByRole("option").map((o) => o.textContent))
-      .toEqual(["Văn bản thường", "Tiêu đề 1", "Tiêu đề 2", "Tiêu đề 3", "Tiêu đề 4"]);
+    expect(screen.queryByLabelText("Kiểu đoạn")).toBeNull();
+    expect(screen.getByTestId("add-block")).toHaveTextContent("Mục");
+    fireEvent.click(screen.getByTestId("add-block"));
+    expect(screen.queryByRole("menuitem")).toBeNull();
+  });
+
+  it("mỗi mục có ô văn bản với dòng cuối; mục con nằm trong ô văn bản của mục cha; đáy mỗi ô có nút thêm mục con", () => {
+    const onChange = vi.fn();
+    const withQuestion: DocumentModel = { blocks: [...doc.blocks, { id: "q1", origin: "TEACHER", type: "HEADING", content: { style: "H2", text: "Câu 1" } }] };
+    render(<DocumentEditor document={withQuestion} onChange={onChange} mode="author" diagramEnabled={false} />);
+    const problemBox = document.querySelector('[data-section="t1"] > [data-leaf-body]')!;
+    // Mục đã có mục con: không còn dòng cuối ở giữa (trên mục con) hay "+" giữa các mục, chỉ một dòng cuối và một "+" ở đáy.
+    expect(screen.queryByTestId("tail-t1")).toBeNull();
+    expect(document.querySelector('[data-testid^="add-sibling"]')).toBeNull();
+    expect(problemBox.querySelector('[data-section="q1"]')).not.toBeNull();
+    expect(screen.getByTestId("tail-q1")).toBeInTheDocument();
+    expect(screen.getByTestId("number-t1")).toHaveTextContent("1.");
+    expect(screen.getByTestId("number-q1")).toHaveTextContent("1.1.");
+    expect(screen.queryByTestId("quick-add-t1")).toBeNull();
+    fireEvent.focus(within(screen.getByTestId("tail-end-t1")).getByLabelText("Dòng cuối"));
+    const problemRow = screen.getByTestId("quick-add-t1");
+    expect(problemRow.parentElement).toBe(problemBox);
+    expect(problemRow.previousElementSibling).toBe(screen.getByTestId("tail-end-t1"));
+    expect(screen.getByTestId("tail-end-t1").previousElementSibling).toBe(problemBox.querySelector('[data-section="q1"]'));
+    expect(screen.getByTestId("tail-end-DOCUMENT")).toBeInTheDocument();
+    expect(within(problemRow).getAllByRole("button").map((b) => b.getAttribute("aria-label"))).toEqual(["Thêm mục"]);
+    fireEvent.click(within(problemRow).getByRole("button", { name: "Thêm mục" }));
+    expect((onChange.mock.calls[0]![0] as DocumentModel).blocks.map((b) => b.type === "HEADING" ? b.content.style : b.id)).toEqual(["H1", "t2", "H2", "H2"]);
+    fireEvent.focus(within(screen.getByTestId("tail-q1")).getByLabelText("Dòng cuối"));
+    expect(screen.queryByTestId("quick-add-t1")).toBeNull();
+    fireEvent.click(within(screen.getByTestId("quick-add-q1")).getByRole("button", { name: "Thêm mục" }));
+    expect((onChange.mock.calls[1]![0] as DocumentModel).blocks.map((b) => b.type === "HEADING" ? b.content.style : b.id)).toEqual(["H1", "t2", "H2", "H3"]);
+  });
+
+  it("nút xóa góc trái trên xóa cả mục: xóa mục con chỉ bỏ mục đó, xóa mục cha bỏ cả mục con bên trong", () => {
+    const onChange = vi.fn();
+    const withQuestion: DocumentModel = { blocks: [...doc.blocks,
+      { id: "q1", origin: "TEACHER", type: "HEADING", content: { style: "H2", text: "Câu 1" } },
+      { id: "a1", origin: "TEACHER", type: "PARAGRAPH", content: { runs: [{ text: "Nội dung câu 1" }] } },
+      { id: "p2", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Đề 2" } }] };
+    render(<DocumentEditor document={withQuestion} onChange={onChange} mode="author" diagramEnabled={false} />);
+    expect(screen.getByTestId("number-p2")).toHaveTextContent("2.");
+    fireEvent.click(within(document.querySelector<HTMLElement>('[data-section="q1"]')!).getByRole("button", { name: "Xóa mục" }));
+    expect((onChange.mock.calls[0]![0] as DocumentModel).blocks.map((b) => b.id)).toEqual(["t1", "t2", "p2"]);
+    fireEvent.click(within(document.querySelector<HTMLElement>('[data-section="t1"]')!).getAllByRole("button", { name: "Xóa mục" })[0]!);
+    expect((onChange.mock.calls[1]![0] as DocumentModel).blocks.map((b) => b.id)).toEqual(["p2"]);
+  });
+
+  it("gõ vào dòng cuối thành đoạn mới cuối phần; xóa hết chữ đoạn cuối thì đoạn đó mất", () => {
+    const onChange = vi.fn();
+    render(<DocumentEditor document={doc} onChange={onChange} mode="author" diagramEnabled={false} />);
+    const tail = within(screen.getByTestId("tail-t1")).getByLabelText("Dòng cuối");
+    tail.textContent = "Ý mới";
+    fireEvent.input(tail);
+    const added = onChange.mock.calls[0]![0] as DocumentModel;
+    expect(added.blocks).toHaveLength(3);
+    expect(added.blocks[2]).toMatchObject({ type: "PARAGRAPH", content: { runs: [{ text: "Ý mới" }] } });
+    const last = within(screen.getByTestId("block-t2")).getByLabelText("Đoạn văn");
+    last.textContent = "";
+    fireEvent.input(last);
+    expect((onChange.mock.calls[1]![0] as DocumentModel).blocks.map((b) => b.id)).toEqual(["t1"]);
+  });
+
+  it("tài liệu chưa có mục: dòng cuối và nút thêm Mục; xem Từng phần chuyển được giữa các mục", () => {
+    const onChange = vi.fn();
+    const { rerender } = render(<DocumentEditor document={{ blocks: [] }} onChange={onChange} mode="author" diagramEnabled={false} />);
+    fireEvent.focus(within(screen.getByTestId("tail-DOCUMENT")).getByLabelText("Dòng cuối"));
+    expect(within(screen.getByTestId("quick-add-DOCUMENT")).getAllByRole("button").map((b) => b.getAttribute("aria-label"))).toEqual(["Thêm mục"]);
+    const two: DocumentModel = { blocks: [
+      { id: "p1", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Đề 1" } },
+      { id: "q1", origin: "TEACHER", type: "HEADING", content: { style: "H2", text: "Câu A" } },
+      { id: "q2", origin: "TEACHER", type: "HEADING", content: { style: "H2", text: "Câu B" } },
+    ] };
+    rerender(<DocumentEditor document={two} onChange={onChange} mode="author" diagramEnabled={false} />);
+    fireEvent.click(screen.getByRole("radio", { name: "Từng phần" }));
+    // Mỗi mục là một trang: 1. (chỉ văn bản của mục), 1.1., 1.2.
+    expect(screen.getByTestId("step-nav")).toHaveTextContent("1 / 3");
+    expect(document.querySelector('[data-section="p1"]')).not.toBeNull();
+    expect(document.querySelector('[data-section="q1"]')).toBeNull();
+    expect(within(screen.getByTestId("step-nav")).getAllByRole("button").map((b) => b.textContent)).toEqual(["", ""]);
+    // Nút chuyển trang có cả ở đầu trang.
+    expect(within(screen.getByTestId("step-nav-top")).getByRole("button", { name: "Phần sau" })).toBeEnabled();
+    fireEvent.click(within(screen.getByTestId("step-nav")).getByRole("button", { name: "Phần sau" }));
+    expect(screen.getByTestId("step-nav")).toHaveTextContent("2 / 3");
+    expect(document.querySelector('[data-section="q1"]')).not.toBeNull();
+    fireEvent.click(within(screen.getByTestId("step-nav")).getByRole("button", { name: "Phần sau" }));
+    expect(document.querySelector('[data-section="q1"]')).toBeNull();
+    expect(document.querySelector('[data-section="q2"]')).not.toBeNull();
+    // Bấm mục cha trên sidebar khi đang ở mục con: về trang của mục cha.
+    act(() => { window.dispatchEvent(new CustomEvent("document:show-part", { detail: { headingId: "p1" } })); });
+    expect(screen.getByTestId("step-nav")).toHaveTextContent("1 / 3");
   });
 
   it("chỉ đọc thì không có thanh thêm khối", () => {
@@ -248,7 +343,10 @@ describe("DocumentEditor", () => {
     const slot = screen.getByTestId("block-slot");
     expect(within(slot).queryByLabelText("Thao tác khối")).toBeNull();
     expect(within(slot).queryByLabelText("Xóa hàng")).toBeNull();
-    fireEvent.change(within(slot).getByLabelText("Ô 2-1"), { target: { value: "Đăng nhập" } });
+    // Ô bảng là ô chữ định dạng được (contentEditable), không còn là textarea.
+    const cell = within(slot).getByLabelText("Ô 2-1");
+    cell.textContent = "Đăng nhập";
+    fireEvent.input(cell);
     expect((onChange.mock.calls[0]![0] as DocumentModel).blocks[2]!).toMatchObject({
       id: "slot", origin: "TEACHER", content: { headerRow: true, rows: [[{ runs: [{ text: "Ca" }] }], [{ runs: [{ text: "Đăng nhập" }] }]] },
     });
