@@ -1,3 +1,4 @@
+import { studentAssignmentContext } from "@/features/assignments/components/assignmentNav";
 import { templateFor } from "@/features/assignments/model/templateStore";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -332,4 +333,14 @@ it("thẻ Toàn bài chỉ có ở bài có mục; thẻ soạn chỉ mở trìn
   expect(screen.queryByText("Trình sửa")).toBeNull();
   rerender(<RubricNote title="Toàn bài" criteria={list} total={7.5} editOnActive active editor={<p>Trình sửa</p>} />);
   expect(screen.getByText("Trình sửa")).toBeInTheDocument();
+});
+
+describe("studentAssignmentContext", () => {
+  it("trang làm bài và lịch sử nộp bài của sinh viên có sidebar mục lục của bài", () => {
+    const at = (pathname: string) => studentAssignmentContext({ pathname, search: new URLSearchParams() });
+    expect(at("/attempts/a1")?.label).toBe("Các phần của bài");
+    expect(at("/my-assignments/x1/history")?.label).toBe("Các phần của bài");
+    expect(at("/my-assignments/x1")).toBeNull();
+    expect(at("/attempts/a1/receipt")).toBeNull();
+  });
 });

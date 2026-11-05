@@ -25,20 +25,19 @@ const attempt: Attempt = {
 beforeEach(() => { vi.clearAllMocks(); vi.mocked(workApi.attempt).mockResolvedValue(attempt); });
 
 describe("assignment workspace UI", () => {
-  it("focus toggle and document menu do not modify the draft; deadline has a date", async () => {
+  it("looks like the teacher preview: top bar with title, status and view switch; menu does not modify the draft", async () => {
     render(<AssignmentWorkspacePage attemptId="a" />);
-    const focus = await screen.findByRole("button", { name: "Chế độ tập trung" });
-    expect(screen.getByText(/Hạn nộp:/)).toHaveTextContent("30/10/2026");
-    expect(screen.getByText(/Hạn nộp:/)).toHaveTextContent("đến hạn nộp");
-    expect(screen.getByRole("region", { name: "Lưu và nộp bài" })).toHaveClass("sticky", "bottom-0");
-    expect(screen.getByRole("button", { name: "Lưu bài" })).toBeDisabled();
-    fireEvent.click(focus);
-    expect(screen.getByRole("button", { name: "Thoát tập trung" })).toHaveAttribute("aria-pressed", "true");
-    expect(document.querySelector('[data-workspace-focus="true"]')).not.toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Thoát tập trung" }));
-    expect(document.querySelector('[data-workspace-focus="true"]')).toBeNull();
-    fireEvent.click(screen.getByText("Tệp DOCX"));
-    expect(screen.getByRole("link", { name: "Tải DOCX" })).toHaveAttribute("href", "/export.docx");
+    const bar = await screen.findByRole("banner");
+    expect(within(bar).getByRole("heading", { level: 1 })).toHaveTextContent(attempt.title);
+    expect(within(bar).getByText(/^Còn /)).toBeInTheDocument();
+    expect(bar.querySelector("span[title^='Hạn nộp:']")?.getAttribute("title")).toContain("30/10/2026");
+    // Cạnh tên bài chỉ có thời gian còn lại, không ghi lượt.
+    expect(within(bar).queryByText(/^Lượt /)).toBeNull();
+    expect(screen.getByTestId("view-slot")).toBeInTheDocument();
+    expect(screen.getByTestId("assignment-kind")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Chế độ tập trung" })).toBeNull();
+    fireEvent.click(within(bar).getByLabelText("Thao tác khác"));
+    expect(within(bar).getByText("Tải DOCX")).toBeInTheDocument();
     expect(workApi.save).not.toHaveBeenCalled();
     expect(workApi.submit).not.toHaveBeenCalled();
   });
@@ -51,7 +50,7 @@ describe("assignment workspace UI", () => {
     const field = await screen.findByRole("textbox", { name: "Đoạn văn" });
     field.textContent = "Bài làm mới";
     fireEvent.input(field);
-    expect(screen.getByRole("region", { name: "Lưu và nộp bài" })).toHaveTextContent("Có thay đổi chưa lưu");
+    expect(screen.getByTestId("save-state")).toHaveTextContent("Có thay đổi chưa lưu");
     fireEvent.click(screen.getByTestId("open-submit"));
     expect(workApi.submit).not.toHaveBeenCalled();
     fireEvent.click(screen.getByTestId("confirm-submit"));

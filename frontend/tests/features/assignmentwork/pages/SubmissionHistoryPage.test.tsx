@@ -38,8 +38,42 @@ describe("SubmissionHistoryPage", () => {
     expect(screen.getByRole("button", { name: "Lượt sau" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Lượt trước" }));
     await waitFor(() => expect(load).toHaveBeenLastCalledWith("a1", expect.anything()));
-    expect(screen.getByRole("link", { name: "Tải DOCX" })).toHaveAttribute("href", expect.stringContaining("/attempts/a1/export.docx"));
-    expect(screen.getByRole("link", { name: "Quay lại" })).toHaveAttribute("href", "/my-assignments?classId=c1&focus=x");
+    // Header như trang làm bài: tên bài, chuyển cách xem ở giữa, Tải DOCX trong menu "…"; thanh công cụ chỉ còn chuyển lượt.
+    const bar = screen.getByRole("banner");
+    expect(within(bar).getByRole("heading", { level: 1 })).toHaveTextContent("Bài");
+    expect(within(bar).getByTestId("view-slot")).toBeInTheDocument();
+    expect(within(bar).getByText("Tải DOCX")).toBeInTheDocument();
+    const toolbar = screen.getByRole("toolbar", { name: "Thanh công cụ" });
+    expect(within(toolbar).queryByText("Tải DOCX")).toBeNull();
+    expect(within(toolbar).queryByLabelText("Tải DOCX")).toBeNull();
+  });
+});
+
+describe("SubmissionHistoryPage chỉ có lượt đã nộp", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("lượt đang làm không hiện trong lịch sử; cạnh tên bài không ghi gì", async () => {
+    vi.spyOn(workApi, "detail").mockResolvedValue({ title: "Bài", gradingMode: "GRADED" } as StudentDetail);
+    vi.spyOn(workApi, "history").mockResolvedValue([
+      summary({ attemptId: "a3", attemptNo: 3, status: "IN_PROGRESS", submittedAt: null }),
+      summary({ attemptId: "a2", attemptNo: 2 }),
+      summary({ attemptId: "a1", attemptNo: 1 }),
+    ]);
+    const load = vi.spyOn(workApi, "attempt").mockImplementation((id) => Promise.resolve(attempt(id)));
+    render(<SubmissionHistoryPage assignmentId="x" />);
+    const picker = await screen.findByRole("combobox", { name: "Chọn lượt" });
+    expect(within(picker).getAllByRole("option").map((o) => o.getAttribute("value"))).toEqual(["a2", "a1"]);
+    expect(picker).toHaveValue("a2");
+    expect(load).not.toHaveBeenCalledWith("a3", expect.anything());
+    const heading = within(screen.getByRole("banner")).getByRole("heading", { level: 1 });
+    expect(heading.parentElement?.children).toHaveLength(1);
+  });
+
+  it("chưa nộp lượt nào thì báo chưa nộp", async () => {
+    vi.spyOn(workApi, "detail").mockResolvedValue({ title: "Bài", gradingMode: "GRADED" } as StudentDetail);
+    vi.spyOn(workApi, "history").mockResolvedValue([summary({ attemptId: "a1", status: "IN_PROGRESS", submittedAt: null })]);
+    render(<SubmissionHistoryPage assignmentId="x" />);
+    expect(await screen.findByText("Bạn chưa nộp lượt nào.")).toBeInTheDocument();
   });
 });
 

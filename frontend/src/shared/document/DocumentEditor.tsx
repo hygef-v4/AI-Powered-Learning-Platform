@@ -1137,7 +1137,6 @@ export function DocumentEditor({
             onOpenDiagram={drawable ? (id) => setDiagram(id) : undefined} />
         ) : (
           <BlockEditor block={block} imageUrl={imageUrl} previewUrl={previews[block.id]} uploadError={uploadError[block.id]}
-            placeholder={guided && block.origin === "STUDENT" ? "Nhập bài làm của bạn tại đây…" : undefined}
             onUpload={uploadImage ? (file) => void upload(block.id, file) : undefined} guard={teacherBlock}
             ops={{
               change: (next, focus) => {
@@ -1188,19 +1187,11 @@ export function DocumentEditor({
     if (!guided) return <>{section.blocks.map(renderBlock)}{emptyLeaf(section, key)}</>;
     const firstAnswer = section.blocks.findIndex((block) => block.origin === "STUDENT" || block.type === "DIAGRAM" || block.type === "TABLE");
     const splitAt = firstAnswer < 0 ? section.blocks.length : firstAnswer;
-    const last = section.blocks.at(-1) ?? section.heading;
-    const writable = !readOnly && inPart(last?.id);
     return <>
       {section.blocks.slice(0, splitAt).map(renderBlock)}
       <div data-testid={`answer-${key}`} className="mt-4 rounded-lg border border-line bg-surface p-3 focus-within:border-focus focus-within:ring-2 focus-within:ring-focus/15">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2">
           <p className="text-sm font-semibold text-ink">Bài làm của bạn</p>
-          {writable && diagramEnabled && <button type="button" className="rounded-md px-2 py-1 text-sm font-medium text-primary-ink hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-focus"
-            onClick={() => {
-              if (!last) return;
-              const block = newBlock("DIAGRAM", "STUDENT");
-              insertAfter(last.id, block);
-            }}>Thêm sơ đồ cho câu này</button>}
         </div>
         {section.blocks.slice(splitAt).map(renderBlock)}
         {emptyLeaf(section, key)}
@@ -1521,7 +1512,6 @@ export function DocumentEditor({
         }
       }}>
       {viewSlot && viewToggle && createPortal(viewToggle, viewSlot)}
-      {guided && !readOnly && <p className="text-xs text-muted">Chọn vùng bài làm để định dạng chữ.{diagramEnabled && " Dùng nút trong từng câu để thêm sơ đồ đúng vị trí."}</p>}
       {readOnly && toolbarCenter && (
         // Cùng lưới với trang giấy và cột ghi chú bên dưới, để nút giữa nằm thẳng giữa trang giấy.
         <div role="toolbar" aria-label="Thanh công cụ"
@@ -1529,7 +1519,8 @@ export function DocumentEditor({
           <div className={rail ? "grid grid-cols-[minmax(0,816px)_300px] items-center justify-center gap-5" : "grid grid-cols-[1fr_auto_1fr] items-center"}>
             {!rail && <span />}
             <div className="flex items-center justify-center gap-0.5">{toolbarCenter}</div>
-            <div className="flex items-center justify-end gap-0.5">{toolbarExtra}</div>
+            {/* Chỉ đọc (lịch sử nộp bài) cũng đổi được Cả trang / Từng phần (yêu cầu 2026-11-05). */}
+            <div className="flex items-center justify-end gap-0.5">{!viewSlot && viewToggle}{toolbarExtra}</div>
           </div>
         </div>
       )}

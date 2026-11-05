@@ -17,6 +17,16 @@ export function assignmentContext({ pathname }: NavLocation): NavContext | null 
   return { key: `assignment:${match[1]}`, label: "Các phần của bài", header: <AssignmentNav />, items: [] };
 }
 
+/**
+ * Trang làm bài (`/attempts/{id}`) và lịch sử nộp bài (`/my-assignments/{id}/history`) của sinh viên: cùng sidebar mục lục
+ * với trang soạn, xem trước của giảng viên, chỉ không có nút thêm mục (yêu cầu 2026-11-05).
+ */
+export function studentAssignmentContext({ pathname }: NavLocation): NavContext | null {
+  const match = /^\/attempts\/([^/]+)$/.exec(pathname) ?? /^\/my-assignments\/([^/]+)\/history$/.exec(pathname);
+  if (!match) return null;
+  return { key: `assignment-work:${match[1]}`, label: "Các phần của bài", header: <AssignmentNav />, items: [] };
+}
+
 /** Nút "+" nhỏ trên sidebar: thêm mục con (hàng của mục) hoặc mục ngoài cùng (header Mục lục). */
 function AddButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (

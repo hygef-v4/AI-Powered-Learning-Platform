@@ -28,19 +28,17 @@ const doc: DocumentModel = {
 };
 
 describe("DocumentEditor", () => {
-  it("workspace: answer actions insert into their own section regardless of current focus", () => {
+  it("workspace: each question has its answer box, no per-question diagram button; a diagram opens on click", () => {
     const second = { id: "q2", origin: "TEACHER" as const, type: "HEADING" as const, content: { style: "H1" as const, text: "Câu 2" } };
-    const content = { blocks: [...doc.blocks, second] };
-    const onChange = vi.fn();
-    const { rerender } = render(<DocumentEditor document={content} onChange={onChange} mode="student" diagramEnabled answerGuidance />);
+    const drawn = { id: "d1", origin: "STUDENT" as const, type: "DIAGRAM" as const,
+      content: { diagramType: null, xml: "", svgPreview: null, alt: "" } } as unknown as DocumentBlock;
+    const content = { blocks: [...doc.blocks, drawn, second] };
+    render(<DocumentEditor document={content} onChange={vi.fn()} mode="student" diagramEnabled answerGuidance />);
     expect(screen.getAllByText("Bài làm của bạn")).toHaveLength(2);
-    fireEvent.mouseDown(screen.getByTestId("block-q2"));
-    fireEvent.click(within(screen.getByTestId("answer-t1")).getByRole("button", { name: "Thêm sơ đồ cho câu này" }));
-    const next = onChange.mock.calls[0]![0] as DocumentModel;
-    expect(next.blocks.map((b) => b.id).at(-1)).toBe("q2");
-    expect(next.blocks[2]).toMatchObject({ origin: "STUDENT", type: "DIAGRAM" });
-    rerender(<DocumentEditor document={next} onChange={onChange} mode="student" diagramEnabled answerGuidance />);
-    // Thêm khung sơ đồ không tự mở Draw.io; bấm vào khung mới mở (yêu cầu 2026-11-04).
+    // Bỏ nút "Thêm sơ đồ cho câu này" và dòng gợi ý dưới tên bài (yêu cầu 2026-11-05).
+    expect(screen.queryByRole("button", { name: "Thêm sơ đồ cho câu này" })).toBeNull();
+    expect(screen.queryByText(/Chọn vùng bài làm để định dạng chữ/)).toBeNull();
+    // Khung sơ đồ không tự mở Draw.io; bấm vào khung mới mở (yêu cầu 2026-11-04).
     expect(screen.queryByTestId("drawio-panel")).toBeNull();
     fireEvent.click(within(screen.getByTestId("answer-t1")).getByRole("button", { name: "Vẽ sơ đồ" }));
     expect(screen.getByTestId("drawio-panel")).toBeInTheDocument();
@@ -62,7 +60,6 @@ describe("DocumentEditor", () => {
     expect(next.blocks[2]).toMatchObject({ origin: "STUDENT", type: "PARAGRAPH" });
     rerender(<DocumentEditor document={next} onChange={onChange} mode="student" diagramEnabled={false} answerGuidance />);
     const field = screen.getByRole("textbox", { name: "Đoạn văn" });
-    expect(field).toHaveAttribute("aria-placeholder", "Nhập bài làm của bạn tại đây…");
     expect(field).toHaveTextContent("");
     expect(next.blocks[2]).toMatchObject({ content: { runs: [{ text: "" }] } });
   });
@@ -283,6 +280,17 @@ describe("DocumentEditor", () => {
     rerender(<DocumentEditor document={doc} onChange={onChange} mode="author" diagramEnabled={false} externalEdit={{ id: 1, before: doc }} />);
     fireEvent.keyDown(screen.getByTestId("document-editor"), { key: "y", ctrlKey: true });
     expect(onChange).toHaveBeenLastCalledWith(ai);
+  });
+
+  it("chỉ đọc có nút giữa (lịch sử nộp bài) vẫn đổi được Cả trang / Từng phần", () => {
+    const two: DocumentModel = { blocks: [
+      { id: "p1", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Đề 1" } },
+      { id: "p2", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Đề 2" } },
+    ] };
+    render(<DocumentEditor document={two} onChange={vi.fn()} mode="student" diagramEnabled={false} readOnly
+      toolbarCenter={<span>Lượt</span>} />);
+    fireEvent.click(screen.getByRole("radio", { name: "Từng phần" }));
+    expect(screen.getByTestId("step-nav")).toHaveTextContent(/\/ 2/);
   });
 
   it("chỉ đọc thì không có thanh thêm khối", () => {
