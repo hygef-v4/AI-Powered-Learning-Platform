@@ -1,5 +1,12 @@
 # AI-DLC State Tracking
 
+## Shared code conventions — 2026-11-05
+
+- [x] Review existing naming guidance and approved proposal; scope is documentation for all units, not a U09 code rename.
+- [x] Publish [shared code conventions](construction/code-conventions.md) covering Java/TypeScript names, service dependencies, action methods, files, framework/contract exceptions and refactor verification.
+- [x] Link README and CLAUDE.md to the canonical convention document.
+- [x] Verify documentation references, relative migration link, Markdown fences and whitespace diff. Runtime/build/tests are not required for this documentation-only change. No source rename, new tooling or contract change; implementation/design stages skipped as unnecessary. Existing extension scope retained; runtime security/resiliency checks N/A.
+
 ## U05/U09/U15 follow-up implementation — 2026-11-05
 
 Delivery follow-up: user requested an English commit, push of the existing feature branch and PR into `staging`, with CI verification. Current PR head and remote check results are tracked on GitHub and reported with delivery; no merge/deployment requested. This supersedes the implementation-only no-commit scope below.

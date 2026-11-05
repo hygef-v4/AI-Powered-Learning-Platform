@@ -10309,3 +10309,22 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **AI Response**: Preparing an English commit for the verified follow-up, pushing the existing feature branch and opening a pull request targeting staging. Confirmed requester GitHub display name Quang Hung, no existing open PR for this head, and staging/head both at the same baseline before this commit. CI will run on the pull request; its current head/check links and outcome are reported through the PR and final response. No merge or deployment requested.
 
 **Context**: Source unchanged since the recorded backend/frontend verification. Public contracts, database schema, grade locks/resubmission and authorization remain unchanged. Manual browser acceptance is still deferred.
+
+## Shared source code conventions — 2026-11-05
+
+**Timestamp**: 2026-11-05T14:58:46Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "ok giúp tôi tạo doc quy ước trong aidlc như kế hoạch k chỉ cho mỗi u09 riêng mà là cả src code chung"
+**AI Response**: Created construction/code-conventions.md for all backend/frontend units, tests and project scripts. Linked README and CLAUDE.md and updated state. Defined dependency naming, verb-object action methods, file names, framework/contract exceptions and verification checklist. Documentation references, migration link, Markdown fences and whitespace diff checked. No source code rename or application tests.
+**Context**: Approved documentation-only proposal; implementation stages unnecessary. GitHub CLI configuration could not be read, so current requester display name is unverified. Historical attribution preserved. No commit/push or tooling changes.
+
+## Commit shared source code conventions — 2026-11-05
+
+**Timestamp**: 2026-11-05T15:05:00Z
+**Requested by:** Quang Hung
+
+**User Input**: "giúp tôi commit rõ ràng"
+
+**AI Response**: Reviewed the five pending documentation files and prepared a descriptive English commit for project-wide source conventions. The canonical document covers backend/frontend names, service dependencies, action methods, files, framework/contract exceptions and refactor verification; README and CLAUDE.md link to it. Preserve historical requester fields. Verify local references, Markdown fences and whitespace; application tests are unnecessary for documentation-only changes.
+
+**Context**: Commit locally on the current fix/u05-u09-u15 branch. No application code, dependency, database, push, merge or deployment change requested.
