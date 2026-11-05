@@ -9,12 +9,15 @@ describe("styles of rendered Word documents", () => {
     boot.setAttribute("nonce", "abc123");
     document.head.append(boot);
     const rendered = document.createElement("div");
-    rendered.innerHTML = "<style>.docx { color: red; }</style><!-- comment --><style>p { margin: 0 }</style>";
+    rendered.innerHTML =
+      "<style>.docx { color: red; }</style><!-- comment --><style>p { margin: 0 }</style>";
 
     const styles = noncedStyles(rendered);
 
     expect(styles).toHaveLength(2);
     expect(styles.map((s) => s.textContent)).toEqual([".docx { color: red; }", "p { margin: 0 }"]);
-    expect(styles.every((s) => s.nonce === "abc123" || s.getAttribute("nonce") === "abc123")).toBe(true);
+    expect(styles.every((s) => s.nonce === "abc123" || s.getAttribute("nonce") === "abc123")).toBe(
+      true,
+    );
   });
 });

@@ -6,10 +6,16 @@ import { itemHref, itemKey, itemTitle, useModuleOutline, type OutlineItem } from
 import type { ModuleScope } from "../model/types";
 
 /** Nơi xem: lớp (sinh viên, giảng viên) theo `classId`, không có thì là môn (Chủ nhiệm môn) theo `subjectId`. */
-export function useModuleScope(subjectId: string | undefined, classId?: string | null): ModuleScope | null {
+export function useModuleScope(
+  subjectId: string | undefined,
+  classId?: string | null,
+): ModuleScope | null {
   const session = useSession();
   if (session.status !== "authenticated") return null;
-  if (classId) return session.profile.role === "STUDENT" ? { kind: "student", classId } : { kind: "class", classId };
+  if (classId)
+    return session.profile.role === "STUDENT"
+      ? { kind: "student", classId }
+      : { kind: "class", classId };
   return subjectId ? { kind: "subject", subjectId } : null;
 }
 
@@ -29,20 +35,56 @@ export function useModulePlace(scope: ModuleScope | null, match: (item: OutlineI
 }
 
 /** Chuyển sang mục trước, sau trong danh sách module (chỉ tên mục và mũi tên); đặt ở cả đầu và cuối trang. */
-export function ModuleNeighbours({ scope, previous, next, position = "bottom" }: { scope: ModuleScope | null; previous?: OutlineItem; next?: OutlineItem; position?: "top" | "bottom" }) {
+export function ModuleNeighbours({
+  scope,
+  previous,
+  next,
+  position = "bottom",
+}: {
+  scope: ModuleScope | null;
+  previous?: OutlineItem;
+  next?: OutlineItem;
+  position?: "top" | "bottom";
+}) {
   if (!scope || (!previous && !next)) return null;
-  return <nav aria-label={position === "top" ? "Học liệu trước và sau (đầu trang)" : "Học liệu trước và sau"}
-    className={`grid gap-3 sm:grid-cols-2 ${position === "bottom" ? "border-t border-line pt-4" : ""}`}>
-    {previous ? <Neighbour item={previous} scope={scope} after={false} /> : <span />}
-    {next && <Neighbour item={next} scope={scope} after />}
-  </nav>;
+  return (
+    <nav
+      aria-label={
+        position === "top" ? "Học liệu trước và sau (đầu trang)" : "Học liệu trước và sau"
+      }
+      className={`grid gap-3 sm:grid-cols-2 ${position === "bottom" ? "border-t border-line pt-4" : ""}`}
+    >
+      {previous ? <Neighbour item={previous} scope={scope} after={false} /> : <span />}
+      {next && <Neighbour item={next} scope={scope} after />}
+    </nav>
+  );
 }
 
-function Neighbour({ item, scope, after }: { item: OutlineItem; scope: ModuleScope; after: boolean }) {
-  return <Link href={itemHref(item, scope)} data-testid={`material-${after ? "next" : "previous"}-${itemKey(item)}`} aria-label={`${after ? "Sau" : "Trước"}: ${itemTitle(item)}`}
-    className={`group flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:border-line-strong ${after ? "sm:col-start-2 sm:justify-end sm:text-right" : ""}`}>
-    {!after && <Icon name="chevron_left" size={18} className="shrink-0 text-muted group-hover:text-ink" />}
-    <span className="min-w-0 truncate text-[13.5px] font-semibold text-ink">{itemTitle(item)}</span>
-    {after && <Icon name="chevron_right" size={18} className="shrink-0 text-muted group-hover:text-ink" />}
-  </Link>;
+function Neighbour({
+  item,
+  scope,
+  after,
+}: {
+  item: OutlineItem;
+  scope: ModuleScope;
+  after: boolean;
+}) {
+  return (
+    <Link
+      href={itemHref(item, scope)}
+      data-testid={`material-${after ? "next" : "previous"}-${itemKey(item)}`}
+      aria-label={`${after ? "Sau" : "Trước"}: ${itemTitle(item)}`}
+      className={`group flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:border-line-strong ${after ? "sm:col-start-2 sm:justify-end sm:text-right" : ""}`}
+    >
+      {!after && (
+        <Icon name="chevron_left" size={18} className="shrink-0 text-muted group-hover:text-ink" />
+      )}
+      <span className="min-w-0 truncate text-[13.5px] font-semibold text-ink">
+        {itemTitle(item)}
+      </span>
+      {after && (
+        <Icon name="chevron_right" size={18} className="shrink-0 text-muted group-hover:text-ink" />
+      )}
+    </Link>
+  );
 }

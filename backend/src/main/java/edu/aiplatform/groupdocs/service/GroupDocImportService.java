@@ -54,12 +54,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 /**
- * Nhập file vào tài liệu nhóm (BR-U12-46), không dùng AI nên không tốn token:
+ * Nhập file vào tài liệu nhóm (FB-U12-03), không dùng AI nên không tốn token:
  * <ul>
  * <li>Người giữ nhập DOCX vào mục đang sửa: xem trước rồi trình soạn chèn vào bản nháp.</li>
  * <li>Trưởng nhóm nhập DOCX và/hoặc tệp Draw.io cho cả tài liệu: heading trùng tên mục thì nội dung dưới heading vào
- * mục đó, trang Draw.io trùng tên mục thành sơ đồ của mục. Xem trước rồi áp dụng; mục đang có người giữ hoặc đã chốt
- * thì bỏ qua. Áp dụng ghi nội dung đã đăng và một bản lịch sử {@code IMPORT} cho từng mục.</li>
+ * mục đó, trang Draw.io trùng tên mục thành sơ đồ của mục. Xem trước rồi áp dụng; mục đang có người soạn thì bỏ qua. Áp dụng ghi nội dung đã đăng và một bản lịch sử {@code IMPORT} cho từng mục.</li>
  * </ul>
  */
 @Service
@@ -98,7 +97,7 @@ public class GroupDocImportService {
         GroupDocAccess.requireMember(ctx);
         access.requireEditable(ctx, false);
         GroupSection section = section(documentId, sectionId);
-        if (SectionRules.canEdit(section, actor.accountId()) != null) {
+        if (SectionRules.canEdit(section, actor.accountId(), documents.assignmentLock(documentId).isPresent()) != null) {
             throw ApiException.conflict("SECTION_NOT_HELD", "Bạn không giữ mục này");
         }
         DocxImportPreview preview = docx.importPreview(actor, file, BlockOrigin.STUDENT, diagramEnabled(ctx),
@@ -148,8 +147,7 @@ public class GroupDocImportService {
             if (blocks == null) {
                 continue;
             }
-            String skip = section.locked() ? "Mục đã chốt" : section.status() == GroupSection.Status.CLAIMED
-                    ? "Mục đang có người giữ" : null;
+            String skip = section.status() == GroupSection.Status.CLAIMED ? "Mục đang có người soạn" : null;
             plans.add(new SectionPlan(section.id(), section.title(), section.version(), blocks, skip,
                     section.hasPublished()));
         }
@@ -177,9 +175,8 @@ public class GroupDocImportService {
                 continue;
             }
             GroupSection section = locked.get();
-            String reason = section.locked() ? "đã chốt" : section.status() == GroupSection.Status.CLAIMED
-                    ? "đang có người giữ" : item.version() == null || item.version() != section.version()
-                    ? "vừa được thay đổi" : null;
+            String reason = section.status() == GroupSection.Status.CLAIMED ? "đang có người soạn"
+                    : item.version() == null || item.version() != section.version() ? "vừa được thay đổi" : null;
             if (reason != null) {
                 skipped.add(section.title() + ": " + reason);
                 continue;

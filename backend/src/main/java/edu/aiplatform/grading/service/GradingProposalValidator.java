@@ -1,5 +1,6 @@
 package edu.aiplatform.grading.service;
 
+import edu.aiplatform.grading.model.RubricScoring;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.assignments.contract.RubricView;
@@ -76,14 +77,14 @@ public class GradingProposalValidator {
                     : Map.of();
             if (itemScores == null) throw new IllegalArgumentException();
             requireCompleteScores(rubrics, checks, itemScores);
-            var score = GradingJson.score(rubrics, checks, itemScores);
+            var score = RubricScoring.score(rubrics, checks, itemScores);
             requireMatchingScore(payload.get("score"), score);
             var feedback = readFeedback(payload.get("feedback"));
             var sections = payload.get("sections");
             validateSections(sections, rubrics);
             GradingFeedback structuredFeedback = feedbackValidator.validateNode(
                     payload.get("structuredFeedback"), rubrics, validBlockIds, true);
-            return new Validated(checks, score, feedback, sections, GradingJson.copyItemScores(itemScores), structuredFeedback);
+            return new Validated(checks, score, feedback, sections, RubricScoring.copyItemScores(itemScores), structuredFeedback);
         } catch (ApiException ex) {
             throw ApiException.badRequest("INVALID_AI_PROPOSAL", ex.getMessage());
         } catch (RuntimeException ex) {

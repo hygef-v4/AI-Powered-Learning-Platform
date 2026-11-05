@@ -5,7 +5,7 @@ import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button, ClickableRow, Dialog, Icon, IconButton, PageNav, Pill, Section, Select, TableFrame, Td, TextInput, Th, cx, showToast } from "@/shared/ui";
 import { PersonPicker } from "./PersonPicker";
-import { formatDate, operationError } from "./ui";
+import { formatDate, operationError } from "../model/format";
 import { parseEnrollmentList, type EnrollmentPreviewRow } from "../model/enrollmentList";
 import { resultLabels, type EnrollmentRowResult, type EnrollmentView, type PersonView } from "../model/types";
 

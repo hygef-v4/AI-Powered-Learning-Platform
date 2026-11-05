@@ -29,28 +29,44 @@ public class AssignmentSourceTextService implements IAssignmentSourceTextExtract
         int remaining = maxChars;
         List<AssignmentSourceText> result = new ArrayList<>();
         for (AssignmentSourceFile file : files) {
-            if (file == null || file.fileId() == null || file.fileName() == null || file.byteSize() < 1
+            if (file == null
+                    || file.fileId() == null
+                    || file.fileName() == null
+                    || file.byteSize() < 1
                     || file.byteSize() > MAX_BYTES_PER_FILE
-                    || !List.of("text/plain", "application/pdf",
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document").contains(file.mediaType())) {
-                throw ApiException.badRequest("ASSIGNMENT_SOURCE_INVALID", "Một tệp nguồn không hợp lệ hoặc vượt 2 MB");
+                    || !List.of(
+                                    "text/plain",
+                                    "application/pdf",
+                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                            .contains(file.mediaType())) {
+                throw ApiException.badRequest(
+                        "ASSIGNMENT_SOURCE_INVALID", "Một tệp nguồn không hợp lệ hoặc vượt 2 MB");
             }
             final String text;
             try {
                 text = extractor.extract(file.fileId(), file.mediaType()).text();
             } catch (MaterialTextExtractor.BusyException e) {
-                throw ApiException.unavailable("ASSIGNMENT_SOURCE_BUSY",
+                throw ApiException.unavailable(
+                        "ASSIGNMENT_SOURCE_BUSY",
                         "Hệ thống đang đọc nhiều tệp cùng lúc, vui lòng thử lại sau ít phút");
             } catch (RuntimeException e) {
-                throw ApiException.badRequest("ASSIGNMENT_SOURCE_UNREADABLE",
-                        "Không đọc được " + file.fileName() + ". Dùng TXT UTF-8 hoặc PDF/DOCX có lớp chữ.");
+                throw ApiException.badRequest(
+                        "ASSIGNMENT_SOURCE_UNREADABLE",
+                        "Không đọc được "
+                                + file.fileName()
+                                + ". Dùng TXT UTF-8 hoặc PDF/DOCX có lớp chữ.");
             }
             if (text == null || text.isBlank()) {
-                throw ApiException.badRequest("ASSIGNMENT_SOURCE_NO_TEXT",
-                        "Không tìm thấy chữ trong " + file.fileName() + ". Tệp PDF scan chưa được hỗ trợ.");
+                throw ApiException.badRequest(
+                        "ASSIGNMENT_SOURCE_NO_TEXT",
+                        "Không tìm thấy chữ trong "
+                                + file.fileName()
+                                + ". Tệp PDF scan chưa được hỗ trợ.");
             }
             int length = Math.min(remaining, text.length());
-            result.add(new AssignmentSourceText(file.fileName(), text.substring(0, length), length < text.length()));
+            result.add(
+                    new AssignmentSourceText(
+                            file.fileName(), text.substring(0, length), length < text.length()));
             remaining -= length;
         }
         return List.copyOf(result);

@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Nguồn AI người dùng chọn được (popup Chọn nguồn AI, BR-U06-27): API của trường kèm quota còn lại (chỉ giảng viên)
  * và API cá nhân theo từng provider đã lưu; nguồn không dùng được kèm lý do. Nguồn mặc định của người dùng
- * (BR-U06-28) được đánh dấu {@code preferred}; không có mặc định thì không chọn sẵn nguồn nào.
+ * (FB-U06-01) được đánh dấu {@code preferred}; không có mặc định thì không chọn sẵn nguồn nào.
  */
 @Service
 public class AiSourceService {
@@ -72,7 +72,7 @@ public class AiSourceService {
     }
 
     /**
-     * Đặt nguồn mặc định (BR-U06-28); {@code source} rỗng là hỏi mỗi lần. Không đòi nguồn đang dùng được: lúc dùng
+     * Đặt nguồn mặc định (FB-U06-01); {@code source} rỗng là hỏi mỗi lần. Không đòi nguồn đang dùng được: lúc dùng
      * popup báo lý do và không tự đổi sang nguồn khác (BR-U06-10).
      */
     @Transactional

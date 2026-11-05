@@ -6,7 +6,8 @@ import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Button, Dialog, showToast } from "@/shared/ui";
 import { studentDetailSections } from "../slots";
 import { PersonPicker } from "./PersonPicker";
-import { Avatar, formatDate, Modal, operationError } from "./ui";
+import { Avatar, Modal } from "./ui";
+import { formatDate, operationError } from "../model/format";
 import type { ClassStatus, CourseClassView, EnrollmentView, PersonView } from "../model/types";
 import styles from "../styles/academics.module.css";
 

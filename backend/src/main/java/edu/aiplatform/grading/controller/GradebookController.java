@@ -6,7 +6,6 @@ import edu.aiplatform.grading.dto.GradingViews.GradebookPage;
 import edu.aiplatform.grading.dto.GradingViews.GradebookRow;
 import edu.aiplatform.grading.model.GradeDistributionCalculator;
 import edu.aiplatform.identity.contract.Actor;
-import edu.aiplatform.shared.error.ApiException;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -62,13 +61,6 @@ public class GradebookController {
     @GetMapping("/students/{accountId}/grades")
     public GradebookRow student(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
             @PathVariable UUID accountId) {
-        var first = service.list(actor, classId, null, 1, 100);
-        for (int page = 1; page <= Math.max(1, (first.total() + 99) / 100); page++) {
-            var data = page == 1 ? first : service.list(actor, classId, null, page, 100);
-            var row = data.rows().stream().filter(r -> r.student().accountId().equals(accountId)).findFirst();
-            if (row.isPresent())
-                return row.get();
-        }
-        throw ApiException.notFound("STUDENT_NOT_FOUND");
+        return service.student(actor, classId, accountId);
     }
 }

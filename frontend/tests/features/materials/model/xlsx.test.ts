@@ -4,7 +4,11 @@ import { readWorkbook } from "@/features/materials/model/xlsx";
 
 function workbook() {
   const book = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet([["Họ tên", "Điểm", "Đạt"], [], ["Nguyễn An", 8.5, true]]), "Điểm");
+  XLSX.utils.book_append_sheet(
+    book,
+    XLSX.utils.aoa_to_sheet([["Họ tên", "Điểm", "Đạt"], [], ["Nguyễn An", 8.5, true]]),
+    "Điểm",
+  );
   XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet([]), "Trống");
   return new Blob([XLSX.write(book, { type: "array", bookType: "xlsx" }) as ArrayBuffer]);
 }

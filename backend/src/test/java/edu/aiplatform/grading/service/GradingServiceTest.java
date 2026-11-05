@@ -60,6 +60,22 @@ class GradingServiceTest {
                 submissions, json, Clock.systemUTC());
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(value = EvaluationStatus.class, names = {"FINALIZED", "PUBLISHED"})
+    void officialGradesRejectManualAndProposalSavesWithoutMutation(EvaluationStatus state) {
+        service.save(teacher, evaluation.id, command(0));
+        evaluation.state = state;
+        var before = evaluation.score;
+        var input = new Save(0, Map.of(), BigDecimal.ZERO, null, "replacement", "correction", null);
+        assertThatThrownBy(() -> service.save(teacher, evaluation.id, input))
+                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
+        assertThatThrownBy(() -> service.saveChecked(teacher, evaluation.id, input, new GradingProposal()))
+                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
+        assertThat(evaluation.score).isEqualTo(before);
+        assertThat(evaluation.feedback).isEqualTo("feedback");
+        assertThat(evaluation.state).isEqualTo(state);
+    }
+
     Save command(long version) {
         return new Save(version, Map.of(rubricId, Set.of(itemId)), BigDecimal.ZERO, null, "feedback", null, null);
     }
@@ -196,11 +212,16 @@ class GradingServiceTest {
         assertThat(member.score).isEqualByComparingTo("0.50");
         assertThat(member.rubricItemScores).isEqualTo(evaluation.rubricItemScores);
         service.finalizeOne(teacher, new ItemVersion(evaluation.id, 0));
-        service.save(teacher, evaluation.id, new Save(0, Map.of(), null, null, "reviewed", "correction", null,
-                Map.of(rubricId, Map.of(itemId, new BigDecimal("0.75")))));
-        assertThat(evaluation.changes.get(0).previousItemScores().get(rubricId).get(itemId)).isEqualByComparingTo("0.50");
-        evaluation.resetForGroupSubmission("new", new BigDecimal("4"), evaluation.rubricSnapshot, Instant.now());
-        assertThat(evaluation.rubricItemScores).isEmpty();
+        assertThatThrownBy(() -> service.save(teacher, evaluation.id, new Save(0, Map.of(), null, null, "reviewed", "correction", null,
+                Map.of(rubricId, Map.of(itemId, new BigDecimal("0.75"))))))
+                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
+        assertThat(evaluation.rubricItemScores.get(rubricId).get(itemId)).isEqualByComparingTo("0.50");
+        assertThat(member.rubricItemScores).isEqualTo(evaluation.rubricItemScores);
+        assertThatThrownBy(() -> service.saveMember(teacher, evaluation.id, studentId,
+                new MemberSave(0, BigDecimal.ONE, "correction")))
+                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
+        service.publishOne(teacher, new ItemVersion(evaluation.id, 0));
+        assertThat(member.state).isEqualTo(EvaluationStatus.PUBLISHED);
     }
 
     @Test
@@ -369,18 +390,14 @@ class GradingServiceTest {
                 List.of(new GradingFeedback.Item(
                         rubricId, itemId, "Minh chứng nhóm", "Giải thích lần 2 sau khi chỉnh điểm", "Gợi ý cải thiện", "p",
                         false, null)));
-        service.save(teacher, evaluation.id, new Save(
+        assertThatThrownBy(() -> service.save(teacher, evaluation.id, new Save(
                 0, Map.of(), BigDecimal.ZERO, null, "group v2", "Cập nhật điểm nhóm", null,
                 Map.of(rubricId, Map.of(itemId, new BigDecimal("3.00"))),
-                feedbackV2, false, null, null));
-        assertThat(evaluation.changes).singleElement().satisfies(change -> {
-            assertThat(change.previousStructuredFeedback()).isEqualTo(feedbackV1);
-        });
-        assertThat(member.structuredFeedback).isEqualTo(feedbackV2);
-
-        evaluation.resetForGroupSubmission("new-hash", new BigDecimal("4"), evaluation.rubricSnapshot, Instant.now());
-        assertThat(evaluation.structuredFeedback).isNull();
-        assertThat(evaluation.reviewedItemScores).isEmpty();
-        assertThat(evaluation.acknowledgedReviewItems).isEmpty();
+                feedbackV2, false, null, null)))
+                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
+        assertThat(evaluation.changes).isEmpty();
+        assertThat(evaluation.structuredFeedback).isEqualTo(feedbackV1);
+        assertThat(member.structuredFeedback).isEqualTo(feedbackV1);
+        assertThat(member.state).isEqualTo(EvaluationStatus.FINALIZED);
     }
 }

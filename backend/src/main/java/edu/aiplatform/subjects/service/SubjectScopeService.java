@@ -26,7 +26,8 @@ public class SubjectScopeService implements ISubjectScope {
     private final SubjectAuditRecorder audit;
     private final Clock clock;
 
-    public SubjectScopeService(ISubjectRepository repository, SubjectAuditRecorder audit, Clock clock) {
+    public SubjectScopeService(
+            ISubjectRepository repository, SubjectAuditRecorder audit, Clock clock) {
         this.repository = repository;
         this.audit = audit;
         this.clock = clock;
@@ -34,12 +35,16 @@ public class SubjectScopeService implements ISubjectScope {
 
     @Override
     public boolean isSubjectManager(UUID accountId, UUID subjectId) {
-        return accountId != null && subjectId != null && repository.isManagedBy(accountId, subjectId);
+        return accountId != null
+                && subjectId != null
+                && repository.isManagedBy(accountId, subjectId);
     }
 
     @Override
     public List<UUID> listManagedSubjects(UUID accountId) {
-        return accountId == null ? List.of() : repository.findManagedBy(accountId).stream().map(Subject::id).toList();
+        return accountId == null
+                ? List.of()
+                : repository.findManagedBy(accountId).stream().map(Subject::id).toList();
     }
 
     /** Khóa từng môn theo thứ tự id, gỡ Chủ nhiệm, tăng version, ghi audit trong transaction của U01. */
@@ -50,7 +55,8 @@ public class SubjectScopeService implements ISubjectScope {
         if (accountId == null) {
             return List.of();
         }
-        List<UUID> ids = repository.findManagedBy(accountId).stream().map(Subject::id).sorted().toList();
+        List<UUID> ids =
+                repository.findManagedBy(accountId).stream().map(Subject::id).sorted().toList();
         Instant now = clock.instant();
         List<UUID> released = new ArrayList<>();
         for (UUID id : ids) {
@@ -60,7 +66,8 @@ public class SubjectScopeService implements ISubjectScope {
             }
             Subject after = before.changeManager(null, now);
             if (!repository.update(after, before.version())) {
-                throw ApiException.conflict("SUBJECT_VERSION_CONFLICT", "Dữ liệu môn đã thay đổi. Hãy thử lại");
+                throw ApiException.conflict(
+                        "SUBJECT_VERSION_CONFLICT", "Dữ liệu môn đã thay đổi. Hãy thử lại");
             }
             audit.managerChanged(actor, before, after);
             released.add(id);

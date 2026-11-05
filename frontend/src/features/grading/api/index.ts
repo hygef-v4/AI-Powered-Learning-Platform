@@ -1,4 +1,5 @@
 import { apiFetch, apiDownload } from "@/shared/api/client";
+import type { NavigationFilters } from "../model/navigation";
 import type {
   AiRequest,
   AssignmentContext,
@@ -39,7 +40,10 @@ export const gradingApi = {
     apiFetch<SubmissionPage>(
       `${root}/classes/${classId}/assignments/${assignmentId}/submissions?${query({ status, page, size: 20, late: late || undefined })}`,
     ),
-  detail: (id: string) => apiFetch<Detail>(`${root}/evaluations/${id}`),
+  detail: (id: string, filters: NavigationFilters = {}) => {
+    const params = query(filters);
+    return apiFetch<Detail>(`${root}/evaluations/${id}${params ? `?${params}` : ""}`);
+  },
   save: (id: string, body: Save) => write<Evaluation>(`/evaluations/${id}`, body, "PUT"),
   finalize: (items: ItemVersion[]) => write<BatchResult>("/evaluations:finalize", { items }),
   publish: (items: ItemVersion[]) => write<BatchResult>("/evaluations:publish", { items }),

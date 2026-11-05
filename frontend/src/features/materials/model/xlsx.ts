@@ -14,9 +14,25 @@ export async function readWorkbook(blob: Blob): Promise<Sheet[]> {
   if (workbook.SheetNames.length === 0) throw new Error("Không phải tệp Excel");
   return workbook.SheetNames.map((name) => {
     const sheet = workbook.Sheets[name];
-    const rows = sheet ? XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: false, defval: "", blankrows: true }) : [];
-    const data = rows.slice(0, MAX_ROWS).map((row) => row.slice(0, MAX_COLUMNS).map((cell) => (cell === null || cell === undefined ? "" : String(cell))));
+    const rows = sheet
+      ? XLSX.utils.sheet_to_json<unknown[]>(sheet, {
+          header: 1,
+          raw: false,
+          defval: "",
+          blankrows: true,
+        })
+      : [];
+    const data = rows
+      .slice(0, MAX_ROWS)
+      .map((row) =>
+        row
+          .slice(0, MAX_COLUMNS)
+          .map((cell) => (cell === null || cell === undefined ? "" : String(cell))),
+      );
     const width = Math.max(0, ...data.map((row) => row.length));
-    return { sheet: name, data: data.map((row) => [...row, ...Array<string>(width - row.length).fill("")]) };
+    return {
+      sheet: name,
+      data: data.map((row) => [...row, ...Array<string>(width - row.length).fill("")]),
+    };
   });
 }

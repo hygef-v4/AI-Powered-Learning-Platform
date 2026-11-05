@@ -22,49 +22,71 @@ public class SubjectAdminController {
     private final SubjectCommandService commands;
     private final SubjectStatusService statuses;
 
-    public SubjectAdminController(SubjectAdminService reads, SubjectCommandService commands, SubjectStatusService statuses) {
+    public SubjectAdminController(
+            SubjectAdminService reads,
+            SubjectCommandService commands,
+            SubjectStatusService statuses) {
         this.reads = reads;
         this.commands = commands;
         this.statuses = statuses;
     }
 
     @GetMapping
-    public SubjectAdminViews.Page list(@AuthenticationPrincipal Actor actor,
-            @RequestParam(required = false) String q, @RequestParam(required = false) SubjectStatus status,
-            @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size,
+    public SubjectAdminViews.Page list(
+            @AuthenticationPrincipal Actor actor,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) SubjectStatus status,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
             @RequestParam MultiValueMap<String, String> params) {
         SubjectRequests.query(params);
         return reads.list(actor, q, status, page, size);
     }
 
     @PostMapping(consumes = "application/json")
-    public ResponseEntity<SubjectAdminViews.Detail> create(@AuthenticationPrincipal Actor actor, @RequestBody JsonNode body) {
+    public ResponseEntity<SubjectAdminViews.Detail> create(
+            @AuthenticationPrincipal Actor actor, @RequestBody JsonNode body) {
         var subject = commands.create(actor, SubjectRequests.create(body));
-        return ResponseEntity.created(URI.create("/api/v1/admin/subjects/" + subject.id())).body(SubjectResponses.detail(subject));
+        return ResponseEntity.created(URI.create("/api/v1/admin/subjects/" + subject.id()))
+                .body(SubjectResponses.detail(subject));
     }
 
     @GetMapping("/{id}")
-    public SubjectAdminViews.Detail detail(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+    public SubjectAdminViews.Detail detail(
+            @AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
         return reads.detail(actor, id);
     }
 
     @GetMapping("/{id}/classes")
-    public SubjectAdminViews.Classes classes(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+    public SubjectAdminViews.Classes classes(
+            @AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
         return reads.classes(actor, id);
     }
 
     @PatchMapping(value = "/{id}", consumes = "application/json")
-    public SubjectAdminViews.Detail information(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @RequestBody JsonNode body) {
-        return SubjectResponses.detail(commands.updateInformation(actor, id, SubjectRequests.information(body)));
+    public SubjectAdminViews.Detail information(
+            @AuthenticationPrincipal Actor actor,
+            @PathVariable UUID id,
+            @RequestBody JsonNode body) {
+        return SubjectResponses.detail(
+                commands.updateInformation(actor, id, SubjectRequests.information(body)));
     }
 
     @PutMapping(value = "/{id}/manager", consumes = "application/json")
-    public SubjectAdminViews.Detail manager(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @RequestBody JsonNode body) {
-        return SubjectResponses.detail(commands.changeManager(actor, id, SubjectRequests.manager(body)));
+    public SubjectAdminViews.Detail manager(
+            @AuthenticationPrincipal Actor actor,
+            @PathVariable UUID id,
+            @RequestBody JsonNode body) {
+        return SubjectResponses.detail(
+                commands.changeManager(actor, id, SubjectRequests.manager(body)));
     }
 
     @PutMapping(value = "/{id}/status", consumes = "application/json")
-    public SubjectAdminViews.Detail status(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @RequestBody JsonNode body) {
-        return SubjectResponses.detail(statuses.changeStatus(actor, id, SubjectRequests.status(body)));
+    public SubjectAdminViews.Detail status(
+            @AuthenticationPrincipal Actor actor,
+            @PathVariable UUID id,
+            @RequestBody JsonNode body) {
+        return SubjectResponses.detail(
+                statuses.changeStatus(actor, id, SubjectRequests.status(body)));
     }
 }

@@ -6,7 +6,7 @@ import type { Detail, StructuredFeedback } from "@/features/grading/model/types"
 const mocks = vi.hoisted(() => ({ save: vi.fn(), push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock("@/features/grading/api", () => ({ gradingApi: mocks }));
-vi.mock("@/features/grading/hooks/useGradingProposals", () => ({ useGradingProposals: () => ({ proposals: [], addProposal: vi.fn() }) }));
+vi.mock("@/features/grading/hooks/useGradingProposals", () => ({ useGradingProposals: () => ({ proposals: [], addProposal: vi.fn(), resumePolling: vi.fn() }) }));
 
 const initial: Detail = {
   evaluation: { id: "e", assignmentId: "a", classId: "c", attemptId: "t", accountId: "s", groupDocumentId: null,
@@ -18,11 +18,49 @@ const initial: Detail = {
   document: { blocks: [] }, navigationIds: ["e"], current: true, activity: null, activityState: "DISABLED",
   members: [], memberActivities: [], sectionAuthors: [],
 };
+
+it.each(["FINALIZED", "PUBLISHED"] as const)("does not edit or save a %s evaluation, including AI application", async (state) => {
+  const source: Detail = { ...initial, evaluation: { ...initial.evaluation, state } };
+  const { result } = renderHook(() => useGradingWorkspace(source, async () => source));
+  const before = result.current.form;
+  act(() => result.current.updateForm({ feedback: "changed" }));
+  act(() => result.current.applyProposal({ r: ["i"] }, "AI feedback", "proposal"));
+  await act(() => result.current.save());
+  expect(result.current.disabled).toBe(true);
+  expect(result.current.form).toEqual(before);
+  expect(result.current.dirty).toBe(false);
+  expect(mocks.save).not.toHaveBeenCalled();
+});
 const feedback: StructuredFeedback = { schemaVersion: 1, summary: { strengths: [], improvements: [], nextSteps: [] },
   items: [{ rubricId: "r", itemId: "i", evidence: null, reason: "Review diagram", suggestion: null,
     evidenceBlockId: null, requiresReview: true, reviewReason: "Unreadable diagram" }] };
 
 beforeEach(() => { vi.clearAllMocks(); mocks.save.mockResolvedValue({ ...initial.evaluation, version: 3 }); });
+
+it("reloads the official values and clears a stale unsaved draft when another session has finalized", async () => {
+  const finalized: Detail = { ...initial, evaluation: { ...initial.evaluation, state: "FINALIZED", feedback: "Official feedback" } };
+  const { result } = renderHook(() => useGradingWorkspace(initial, async () => finalized));
+  act(() => result.current.updateForm({ feedback: "Unsaved edits" }));
+  await act(() => result.current.reload());
+  expect(result.current.form.feedback).toBe("Official feedback");
+  expect(result.current.dirty).toBe(false);
+  expect(result.current.disabled).toBe(true);
+});
+
+it("discards old marks and AI selection when a group resubmits using the same evaluation ID", async () => {
+  const pending: Detail = { ...initial, evaluation: { ...initial.evaluation, state: "PENDING",
+    submissionHash: "new-receipt", version: 3, score: null, rubricChecks: "{}", rubricItemScores: {},
+    adjustment: 0, adjustmentReason: null, feedback: null } };
+  const { result } = renderHook(() => useGradingWorkspace(initial, async () => pending));
+  act(() => result.current.updateForm({ feedback: "Unsaved old feedback", usedProposalId: "old-proposal" }));
+  await act(() => result.current.reload());
+  expect(result.current.form.feedback).toBe("");
+  expect(Number(result.current.form.itemScores?.r?.i ?? 0)).toBe(0);
+  expect(result.current.form.adjustment).toBe("0");
+  expect(result.current.form.usedProposalId).toBeNull();
+  expect(result.current.dirty).toBe(false);
+  expect(result.current.disabled).toBe(false);
+});
 
 it("preserves explicit partial points and adjustments on a feedback-only save", async () => {
   const { result } = renderHook(() => useGradingWorkspace(initial, async () => initial));

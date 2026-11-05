@@ -10,6 +10,7 @@ import { Pagination } from "@/shared/ui/Pagination";
 import { BatchActionDialog } from "../components/BatchActionDialog";
 import { Alert, Button, EmptyState, Icon, Pill, Select, type Tone } from "@/shared/ui";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
+import { evaluationHref } from "../model/navigation";
 
 const STATUS_TONES: Record<string, Tone> = {
   PENDING: "warning",
@@ -213,7 +214,7 @@ export function SubmissionDetailPage({
                       {r.evaluationId ? (
                         <Link
                           className="inline-flex items-center gap-1 font-semibold text-primary-ink transition-colors hover:text-ink"
-                          href={`/teaching/evaluations/${r.evaluationId}`}
+                          href={evaluationHref(r.evaluationId!, { status: filter, late })}
                         >
                           {rowActionLabel(r.status)}
                           <Icon name="chevron_right" size={13} />

@@ -10,12 +10,19 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 class ReferenceMaterialWiringTest {
-    @Test void realU13ProviderReplacesOnlyConditionalReferenceStub() {
-        var provider=new ReferenceMaterialService(mock(MaterialQueryService.class),mock(IMaterialRepository.class));
-        new ApplicationContextRunner().withConfiguration(AutoConfigurations.of(AiContractStubs.class))
-                .withBean(ReferenceMaterialService.class,()->provider).run(context->{
-                    assertThat(context).hasSingleBean(IReferenceMaterial.class);
-                    assertThat(context.getBean(IReferenceMaterial.class)).isSameAs(provider);
-                });
+    @Test
+    void realU13ProviderReplacesOnlyConditionalReferenceStub() {
+        var provider =
+                new ReferenceMaterialService(
+                        mock(MaterialQueryService.class), mock(IMaterialRepository.class));
+        new ApplicationContextRunner()
+                .withConfiguration(AutoConfigurations.of(AiContractStubs.class))
+                .withBean(ReferenceMaterialService.class, () -> provider)
+                .run(
+                        context -> {
+                            assertThat(context).hasSingleBean(IReferenceMaterial.class);
+                            assertThat(context.getBean(IReferenceMaterial.class))
+                                    .isSameAs(provider);
+                        });
     }
 }

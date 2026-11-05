@@ -29,10 +29,15 @@ class GroupSectionTest {
     void claimStartsDraftFromPublishedAndOnlyHolderEdits() {
         GroupSection claimed = open().claimedBy(holder, holder, NOW);
         assertThat(claimed.status()).isEqualTo(Status.CLAIMED);
-        assertThat(SectionRules.canEdit(claimed, holder)).isNull();
-        assertThat(SectionRules.canEdit(claimed, other)).isEqualTo("SECTION_NOT_HELD");
-        assertThat(SectionRules.canClaim(claimed, other)).isEqualTo("SECTION_CLAIMED_BY_OTHER");
-        assertThat(SectionRules.canClaim(open(), other)).isNull();
+        assertThat(SectionRules.canEdit(claimed, holder, true)).isNull();
+        assertThat(SectionRules.canEdit(claimed, holder, false)).as("chưa chốt phân công").isEqualTo("ASSIGNMENT_NOT_LOCKED");
+        assertThat(SectionRules.canEdit(claimed, other, true)).isEqualTo("SECTION_NOT_HELD");
+        assertThat(SectionRules.canClaim(claimed.withAssignee(holder), other, true)).isEqualTo("SECTION_ASSIGNED_TO_OTHER");
+        assertThat(SectionRules.canClaim(open(), other, false)).as("phân công: nhận mục trống").isNull();
+        assertThat(SectionRules.canClaim(open().withAssignee(holder), other, false)).isEqualTo("SECTION_CLAIMED_BY_OTHER");
+        assertThat(SectionRules.canClaim(open(), other, true)).as("đã chốt, mục chưa ai phụ trách").isEqualTo("ASSIGNMENT_LOCKED");
+        assertThat(SectionRules.canAssign(true)).isEqualTo("ASSIGNMENT_LOCKED");
+        assertThat(SectionRules.canAssign(false)).isNull();
     }
 
     @Test
@@ -43,7 +48,7 @@ class GroupSectionTest {
         assertThat(done.draftBlocks()).isNull();
         assertThat(done.claimedBy()).isNull();
         assertThat(done.lastAuthorId()).isEqualTo(holder);
-        assertThat(SectionRules.canClaim(done, other)).as("mục Xong nhận lại được").isNull();
+        assertThat(SectionRules.canClaim(done.withAssignee(holder), holder, true)).as("người phụ trách mở lại mục Xong").isNull();
     }
 
     @Test
@@ -61,10 +66,14 @@ class GroupSectionTest {
     @Test
     void releaseAllowedForHolderLeaderAndTeacherOnly() {
         GroupSection claimed = open().claimedBy(holder, holder, NOW);
-        assertThat(SectionRules.canRelease(claimed, holder, false, false)).isNull();
-        assertThat(SectionRules.canRelease(claimed, other, true, false)).isNull();
-        assertThat(SectionRules.canRelease(claimed, other, false, true)).isNull();
-        assertThat(SectionRules.canRelease(claimed, other, false, false)).isEqualTo("SECTION_RELEASE_FORBIDDEN");
-        assertThat(SectionRules.canRelease(open(), holder, false, false)).isEqualTo("SECTION_NOT_CLAIMED");
+        assertThat(SectionRules.canRelease(claimed, holder, false, false, true)).isNull();
+        assertThat(SectionRules.canRelease(claimed, other, true, false, true)).isNull();
+        assertThat(SectionRules.canRelease(claimed, other, false, true, true)).isNull();
+        assertThat(SectionRules.canRelease(claimed, other, false, false, true)).isEqualTo("SECTION_RELEASE_FORBIDDEN");
+        assertThat(SectionRules.canRelease(open(), holder, false, false, true)).isEqualTo("SECTION_NOT_CLAIMED");
+        assertThat(SectionRules.canRelease(open().withAssignee(holder), holder, false, false, false)).as("bỏ nhận khi phân công")
+                .isNull();
+        assertThat(SectionRules.canRelease(open().withAssignee(holder), other, false, false, false))
+                .isEqualTo("SECTION_RELEASE_FORBIDDEN");
     }
 }

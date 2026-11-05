@@ -26,6 +26,7 @@ export function MemberContributionPanel({
         <MemberRow
           key={`${m.id}-${m.version}`}
           rootId={root.id}
+          locked={root.state === "FINALIZED" || root.state === "PUBLISHED" || root.state === "SUPERSEDED"}
           member={m}
           name={names[m.accountId!] ?? "Thành viên"}
           onSaved={onSaved}
@@ -36,11 +37,13 @@ export function MemberContributionPanel({
 }
 function MemberRow({
   rootId,
+  locked,
   member,
   name,
   onSaved,
 }: {
   rootId: string;
+  locked: boolean;
   member: Evaluation;
   name: string;
   onSaved: () => void;
@@ -49,7 +52,9 @@ function MemberRow({
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const disabled = locked || busy || member.state === "FINALIZED" || member.state === "PUBLISHED" || member.state === "SUPERSEDED";
   async function save() {
+    if (disabled) return;
     setBusy(true);
     try {
       await gradingApi.member(rootId, member.accountId!, member.version, score, reason || null);
@@ -67,6 +72,7 @@ function MemberRow({
         Điểm{" "}
         <input
           type="number"
+          disabled={disabled}
           min="0"
           max={Number(member.maxScore)}
           step="0.01"
@@ -79,12 +85,13 @@ function MemberRow({
         Lý do{" "}
         <input
           value={reason}
+          disabled={disabled}
           onChange={(e) => setReason(e.target.value)}
           className="h-10 rounded-lg border border-line-strong bg-surface px-3 text-ink"
         />
       </label>
       <button
-        disabled={busy || member.state === "SUPERSEDED" || rootId === member.id || score === ""}
+        disabled={disabled || rootId === member.id || score === ""}
         onClick={() => void save()}
         className="ml-3 rounded border px-3 py-2"
       >

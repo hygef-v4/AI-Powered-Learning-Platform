@@ -47,7 +47,10 @@ export function updateSubject(id: string, request: UpdateSubjectRequest): Promis
   });
 }
 
-export function changeSubjectManager(id: string, request: ChangeSubjectManagerRequest): Promise<SubjectDetail> {
+export function changeSubjectManager(
+  id: string,
+  request: ChangeSubjectManagerRequest,
+): Promise<SubjectDetail> {
   const { managerId, version } = request;
   return apiFetch<SubjectDetail>(`${subjectPath(id)}/manager`, {
     method: "PUT",
@@ -55,7 +58,10 @@ export function changeSubjectManager(id: string, request: ChangeSubjectManagerRe
   });
 }
 
-export function changeSubjectStatus(id: string, request: ChangeSubjectStatusRequest): Promise<SubjectDetail> {
+export function changeSubjectStatus(
+  id: string,
+  request: ChangeSubjectStatusRequest,
+): Promise<SubjectDetail> {
   const { status, version } = request;
   return apiFetch<SubjectDetail>(`${subjectPath(id)}/status`, {
     method: "PUT",

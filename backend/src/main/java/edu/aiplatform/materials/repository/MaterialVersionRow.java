@@ -19,30 +19,72 @@ class MaterialVersionRow {
     Long byteSize;
     String videoUrl;
     String videoId;
-    @Enumerated(EnumType.STRING) MaterialVersion.TextStatus textStatus;
-    @Column(columnDefinition="text") String extractedText;
+
+    @Enumerated(EnumType.STRING)
+    MaterialVersion.TextStatus textStatus;
+
+    @Column(columnDefinition = "text")
+    String extractedText;
+
     UUID createdBy;
     Instant createdAt;
-    protected MaterialVersionRow() { }
+
+    protected MaterialVersionRow() {}
+
     public static class Key implements Serializable {
         public UUID materialId;
         public int versionNo;
-        public Key() { }
-        public Key(UUID id, int version) { materialId=id; versionNo=version; }
-        @Override public boolean equals(Object o) {
-            return o instanceof Key k && Objects.equals(materialId,k.materialId) && versionNo==k.versionNo;
+
+        public Key() {}
+
+        public Key(UUID id, int version) {
+            materialId = id;
+            versionNo = version;
         }
-        @Override public int hashCode() { return Objects.hash(materialId,versionNo); }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof Key k
+                    && Objects.equals(materialId, k.materialId)
+                    && versionNo == k.versionNo;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(materialId, versionNo);
+        }
     }
+
     static MaterialVersionRow of(MaterialVersion v) {
-        MaterialVersionRow r=new MaterialVersionRow();
-        r.materialId=v.materialId(); r.versionNo=v.versionNo(); r.fileId=v.fileId(); r.fileName=v.fileName();
-        r.mimeType=v.mimeType(); r.byteSize=v.byteSize(); r.videoUrl=v.videoUrl(); r.videoId=v.videoId();
-        r.textStatus=v.textStatus(); r.extractedText=v.extractedText(); r.createdBy=v.createdBy();
-        r.createdAt=v.createdAt(); return r;
+        MaterialVersionRow r = new MaterialVersionRow();
+        r.materialId = v.materialId();
+        r.versionNo = v.versionNo();
+        r.fileId = v.fileId();
+        r.fileName = v.fileName();
+        r.mimeType = v.mimeType();
+        r.byteSize = v.byteSize();
+        r.videoUrl = v.videoUrl();
+        r.videoId = v.videoId();
+        r.textStatus = v.textStatus();
+        r.extractedText = v.extractedText();
+        r.createdBy = v.createdBy();
+        r.createdAt = v.createdAt();
+        return r;
     }
+
     MaterialVersion snapshot() {
-        return new MaterialVersion(materialId,versionNo,fileId,fileName,mimeType,byteSize,videoUrl,videoId,
-                textStatus,extractedText,createdBy,createdAt);
+        return new MaterialVersion(
+                materialId,
+                versionNo,
+                fileId,
+                fileName,
+                mimeType,
+                byteSize,
+                videoUrl,
+                videoId,
+                textStatus,
+                extractedText,
+                createdBy,
+                createdAt);
     }
 }
