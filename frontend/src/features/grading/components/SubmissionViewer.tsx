@@ -3,19 +3,19 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { Button, Dialog } from "@/shared/ui";
 import { apiFetch } from "@/shared/api/client";
-import { message } from "../hooks/useResource";
+import { formatErrorMessage } from "../hooks/useResource";
 import type { SubmissionDocumentDto } from "../model/submissionDocument";
 import { RunsView, alignClass } from "@/shared/document/DocumentViewer";
 import type { Align, Run, DiagramContent } from "@/shared/document/types";
 
 /** Only document text fields become visible content; formatting metadata stays in RunsView. */
-function contentRuns(value: unknown): Run[] {
+function readContentRuns(value: unknown): Run[] {
   if (typeof value === "string") return [{ text: value }];
   if (typeof value === "number") return [{ text: String(value) }];
-  if (Array.isArray(value)) return value.flatMap(contentRuns);
+  if (Array.isArray(value)) return value.flatMap(readContentRuns);
   if (!value || typeof value !== "object") return [];
   const content = value as Record<string, unknown>;
-  if (Array.isArray(content.runs)) return contentRuns(content.runs);
+  if (Array.isArray(content.runs)) return readContentRuns(content.runs);
   if (typeof content.text !== "string") return [];
   const run: Run = { text: content.text };
   for (const flag of ["bold", "italic", "underline", "strike", "code"] as const)
@@ -27,12 +27,12 @@ function contentRuns(value: unknown): Run[] {
   return [run];
 }
 
-function contentAlignment(value: unknown): string {
+function resolveAlignmentClass(value: unknown): string {
   return alignClass(typeof value === "string" && ["LEFT", "CENTER", "RIGHT", "JUSTIFY"].includes(value)
     ? value as Align : undefined);
 }
 
-function listIndent(item: unknown): number {
+function calculateListIndent(item: unknown): number {
   const level = item && typeof item === "object" ? (item as Record<string, unknown>).level : undefined;
   return typeof level === "number" && Number.isInteger(level) && level >= 0 && level <= 4 ? level * 24 : 0;
 }
@@ -62,7 +62,7 @@ function SubmittedImage({
         throw new Error("Liên kết ảnh không hợp lệ.");
       setUrl(parsed.href);
     } catch (e) {
-      setError(message(e));
+      setError(formatErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -87,7 +87,7 @@ function SubmittedImage({
     </figure>
   );
 }
-function safeDiagramPreview(value: unknown): string {
+function sanitizeDiagramPreview(value: unknown): string {
     if (typeof value !== "string" || !value.trim() || typeof DOMParser === "undefined") return "";
     const parsed = new DOMParser().parseFromString(value, "image/svg+xml");
     if (parsed.querySelector("parsererror") || parsed.documentElement.localName !== "svg") {
@@ -156,7 +156,7 @@ function safeDiagramPreview(value: unknown): string {
 }
 function Diagram({ blockId, content }: { blockId: string; content: DiagramContent }) {
   const [expanded, setExpanded] = useState(false);
-  const preview = useMemo(() => safeDiagramPreview(content.svgPreview), [content.svgPreview]);
+  const preview = useMemo(() => sanitizeDiagramPreview(content.svgPreview), [content.svgPreview]);
   const title = typeof content.alt === "string" && content.alt ? content.alt : "Sơ đồ bài nộp";
   return <figure id={`submission-block-${blockId}`} className="my-4 min-w-0 scroll-mt-24 rounded-lg border border-line bg-shell/30 p-3">
     <figcaption className="mb-2 text-xs font-medium text-muted">{title}</figcaption>
@@ -214,11 +214,11 @@ export function SubmissionViewer({
                       {(Array.isArray(row) ? row : [row]).map((cell, i) =>
                         c.headerRow && index === 0 ? (
                           <th key={i} className="border p-2">
-                            <RunsView runs={contentRuns(cell)} />
+                            <RunsView runs={readContentRuns(cell)} />
                           </th>
                         ) : (
                           <td key={i} className="border p-2">
-                            <RunsView runs={contentRuns(cell)} />
+                            <RunsView runs={readContentRuns(cell)} />
                           </td>
                         ),
                       )}
@@ -232,27 +232,27 @@ export function SubmissionViewer({
         if (block.type === "HEADING")
           return (
             <h3 key={block.id} id={anchorId} className="my-4 scroll-mt-24 text-lg font-bold">
-              <RunsView runs={contentRuns(block.content.text)} />
+              <RunsView runs={readContentRuns(block.content.text)} />
             </h3>
           );
         if (block.type === "LIST" && Array.isArray(block.content.items)) {
           const c = block.content;
           const items = c.items.map((item, i) => (
-            <li key={i} style={{ marginLeft: `${listIndent(item)}px` }}><RunsView runs={contentRuns(item)} /></li>
+            <li key={i} style={{ marginLeft: `${calculateListIndent(item)}px` }}><RunsView runs={readContentRuns(item)} /></li>
           ));
           return c.ordered ? (
-            <ol key={block.id} id={anchorId} className={`ml-5 scroll-mt-24 list-decimal ${contentAlignment(c.align)}`}>
+            <ol key={block.id} id={anchorId} className={`ml-5 scroll-mt-24 list-decimal ${resolveAlignmentClass(c.align)}`}>
               {items}
             </ol>
           ) : (
-            <ul key={block.id} id={anchorId} className={`ml-5 scroll-mt-24 list-disc ${contentAlignment(c.align)}`}>
+            <ul key={block.id} id={anchorId} className={`ml-5 scroll-mt-24 list-disc ${resolveAlignmentClass(c.align)}`}>
               {items}
             </ul>
           );
         }
         return (
-          <p key={block.id} id={anchorId} className={`mb-4 scroll-mt-24 ${contentAlignment("align" in c ? c.align : undefined)}`}>
-            <RunsView runs={contentRuns(c)} />
+          <p key={block.id} id={anchorId} className={`mb-4 scroll-mt-24 ${resolveAlignmentClass("align" in c ? c.align : undefined)}`}>
+            <RunsView runs={readContentRuns(c)} />
           </p>
         );
       })}

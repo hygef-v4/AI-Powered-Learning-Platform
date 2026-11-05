@@ -25,15 +25,15 @@ class GradingBatchTest {
         var second = new ItemVersion(b, 4);
         var e = new Evaluation();
         e.version = 3;
-        when(grading.finalizeOne(actor, first)).thenReturn(e);
-        when(grading.finalizeOne(actor, second)).thenThrow(ApiException.conflict("GRADE_VERSION_CONFLICT", "Reload"));
-        var result = new GradingBatchService(grading, manager).run(actor, new Batch(List.of(first, second, first)),
+        when(grading.finalizeEvaluation(actor, first)).thenReturn(e);
+        when(grading.finalizeEvaluation(actor, second)).thenThrow(ApiException.conflict("GRADE_VERSION_CONFLICT", "Reload"));
+        var result = new GradingBatchService(grading, manager).executeBatch(actor, new Batch(List.of(first, second, first)),
                 false);
         assertThat(result.items()).extracting(v -> v.outcome()).containsExactly("SUCCESS", "FAILED", "SKIPPED");
         verify(manager, times(2)).getTransaction(
                 argThat(d -> d.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW));
         verify(manager).commit(any());
         verify(manager).rollback(any());
-        verify(grading, times(1)).finalizeOne(actor, first);
+        verify(grading, times(1)).finalizeEvaluation(actor, first);
     }
 }

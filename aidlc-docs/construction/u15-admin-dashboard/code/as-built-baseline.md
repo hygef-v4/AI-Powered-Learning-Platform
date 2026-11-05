@@ -1,5 +1,7 @@
 # U15 Admin Dashboard — AS-BUILT 2026-10-30
 
+**Convention delta 2026-11-05:** internal actions use `loadDashboard`, `loadActivity`, `listBackups`, `requireNonNegativeCount` and `validateBackupSummary`; dependencies identify actual services/contracts. Frontend API uses load/list verbs; chart components live in `DashboardCharts.tsx`. All callers/imports/tests are updated. Public routes, response data, source deadlines, stale-data/denial behavior and MCP provider contracts remain unchanged. [Naming verification and exceptions](../../build-and-test/2026-11-05-u05-u09-u15-conventions-results.md).
+
 **Follow-up delta 2026-11-05:** independent frontend sources render counts without waiting for activity/usage/history. Each request has a five-second deadline and linked cancellation; optional cards distinguish pending from unavailable. Thirty-second visible-tab refresh, stale-primary behavior and denial clearing remain. Backend fan-out/contracts are unchanged. [Current verification and limits](../../build-and-test/2026-11-05-u05-u09-u15-followup-results.md); older dated evidence below remains historical.
 
 Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership and public contracts unchanged.

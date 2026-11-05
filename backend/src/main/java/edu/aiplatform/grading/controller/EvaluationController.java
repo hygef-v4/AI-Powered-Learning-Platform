@@ -26,45 +26,45 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1")
 public class EvaluationController {
-    private final GradingService grading;
-    private final SubmissionReviewService review;
-    private final GradingBatchService batch;
-    private final GradingProposalTransactions proposals;
+    private final GradingService gradingService;
+    private final SubmissionReviewService submissionReviewService;
+    private final GradingBatchService gradingBatchService;
+    private final GradingProposalTransactions gradingProposalTransactions;
 
-    public EvaluationController(GradingService grading, SubmissionReviewService review, GradingBatchService batch,
-            GradingProposalTransactions proposals) {
-        this.grading = grading;
-        this.review = review;
-        this.batch = batch;
-        this.proposals = proposals;
+    public EvaluationController(GradingService gradingService, SubmissionReviewService submissionReviewService, GradingBatchService gradingBatchService,
+            GradingProposalTransactions gradingProposalTransactions) {
+        this.gradingService = gradingService;
+        this.submissionReviewService = submissionReviewService;
+        this.gradingBatchService = gradingBatchService;
+        this.gradingProposalTransactions = gradingProposalTransactions;
     }
 
     @GetMapping("/evaluations/{id}")
-    public EvaluationDetail detail(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public EvaluationDetail loadEvaluation(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
             @RequestParam(required = false) String status, @RequestParam(required = false) Boolean late) {
-        return review.detail(actor, id, status, late);
+        return submissionReviewService.loadEvaluation(actor, id, status, late);
     }
 
     @PutMapping("/evaluations/{id}")
-    public Evaluation save(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public Evaluation saveEvaluation(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
             @Valid @RequestBody Save input) {
-        return input.usedProposalId() == null ? grading.save(actor, id, input)
-                : proposals.saveUsingProposal(actor, id, input);
+        return input.usedProposalId() == null ? gradingService.saveEvaluation(actor, id, input)
+                : gradingProposalTransactions.saveUsingProposal(actor, id, input);
     }
 
     @PutMapping("/evaluations/{id}/members/{accountId}")
-    public Evaluation member(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID accountId,
+    public Evaluation saveMemberGrade(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID accountId,
             @Valid @RequestBody MemberSave input) {
-        return grading.saveMember(actor, id, accountId, input);
+        return gradingService.saveMemberGrade(actor, id, accountId, input);
     }
 
     @PostMapping("/evaluations:finalize")
     public BatchResult finalizeGrades(@AuthenticationPrincipal Actor actor, @Valid @RequestBody Batch input) {
-        return batch.run(actor, input, false);
+        return gradingBatchService.executeBatch(actor, input, false);
     }
 
     @PostMapping("/evaluations:publish")
-    public BatchResult publish(@AuthenticationPrincipal Actor actor, @Valid @RequestBody Batch input) {
-        return batch.run(actor, input, true);
+    public BatchResult publishGrades(@AuthenticationPrincipal Actor actor, @Valid @RequestBody Batch input) {
+        return gradingBatchService.executeBatch(actor, input, true);
     }
 }

@@ -1,5 +1,30 @@
 # AI-DLC State Tracking
 
+## U05/U09/U15 staging PR and CI delivery — 2026-11-06
+
+User authorized publishing the current `fix/u05-u09-u15` branch as a PR into `staging` and checking CI before any PR merge. Initial remote head `b466400b` matches the clean local checkout; GitHub comparison is ahead by three commits, behind zero, and no open PR exists for this head/base. Reuse the unchanged source's [verified merge results](construction/build-and-test/2026-11-06-merge-staging-u05-u09-u15.md): backend 1,804 / frontend 799 passing, lint/typecheck/build passing and required real PostgreSQL guard passing. Commit only this delivery record before publishing; no new source changes or local test rerun needed. GitHub PR creation triggers the existing backend/frontend CI jobs; check the final PR head and report its live results. Images/deploy do not run on this PR. No PR merge, auto-merge or deployment authorized; existing security/resiliency scope retained and PBT disabled.
+
+## Merge staging into U05/U09/U15 — 2026-11-06
+
+Resolved the user's existing local merge of `staging` at `b91413ca` into `fix/u05-u09-u15` at `2440cbe4`. Six conflicts resolved by retaining staging behavior and the branch's convention names; all incoming staged changes preserved. Fixed the directly related inherited `@NotNull source` mismatch after reproducing HTTP 400 for single/batch automatic AI requests; added seven HTTP cases and synchronized grading OpenAPI. Independent reviews found no remaining introduced or follow-up issue. Final backend verify **1,804 passed, zero failures/errors/skips**, required PostgreSQL guard **31 + 2 passed**, JAR built. Frontend **799 passed / 116 files**, lint/typecheck/production build passed; generated configuration restored and typechecked again. Deliver through the authorized local merge commit; [plan, evidence and memory constraints](construction/build-and-test/2026-11-06-merge-staging-u05-u09-u15.md). No push, live migration, application restart or deployment; manual UI/provider acceptance not repeated. Existing security/resiliency scope retained; PBT disabled.
+
+## Wildcard import preference — 2026-11-05
+
+Delivery follow-up: user authorized a descriptive local commit of the convention refactor and compact-import follow-up on the current branch. No push requested; this supersedes the prior no-commit scope. Reuse the recorded full verification and subsequent import-only compilation; no further source changes.
+
+User requested compact imports after the convention refactor. The canonical convention now permits Java wildcard/static wildcard imports, including contract types; keep explicit imports when needed to disambiguate names. Restored original import blocks in 71 changed U05/U09/U15 Java files (883 fewer import statements), retaining all naming changes and all bytes outside those import blocks. Backend source and all 244 test source files compile successfully (`mvn -DskipTests test-compile`); full runtime suites were not repeated for this import-only follow-up. The earlier full test/build results below describe the preceding refactor state. [Follow-up evidence](construction/build-and-test/2026-11-05-u05-u09-u15-conventions-results.md#wildcard-import-follow-up--2026-11-05). No behavior, public contract, frontend, schema, dependency, security/resiliency scope, commit or push change; PBT remains disabled.
+
+## U05/U09/U15 shared convention refactor — 2026-11-05
+
+Implemented the [convention plan](construction/plans/code-generation-plan/2026-11-05-u05-u09-u15-conventions.md) from `3bfc2fb8` in the existing `fix/u05-u09-u15` checkout. Concrete dependencies identify their service/repository roles; internal actions use verb-object names, predicates/guards have appropriate names, fixed constants use UPPER_SNAKE_CASE, four React modules use descriptive PascalCase and scoped Java wildcard imports are expanded. All affected callers/imports/mocks updated. Preserve public contracts, HTTP/JSON/DB/event/MCP identifiers, hook return keys, authorization, transactions, grade locks/resubmission and rendering. JSON regression protects against new bean fields. Independent review: no Critical/Important defect; its minor naming correction applied. Final backend **1,783 passed, zero failures/errors/skips**, required PostgreSQL guard **31 + 2 passed**, JAR built; frontend **776 passed**, full lint/typecheck/production build passed. Generated configuration restored and typecheck passed again. [Evidence, compatibility exceptions and memory-constrained verification](construction/build-and-test/2026-11-05-u05-u09-u15-conventions-results.md). No commit/push, migration, live grade write, restart or deployment; manual browser/provider acceptance not repeated. Existing security/resiliency scope retained; PBT disabled. Build/test stage complete; no operations change requested.
+
+## Shared code conventions — 2026-11-05
+
+- [x] Review existing naming guidance and approved proposal; scope is documentation for all units, not a U09 code rename.
+- [x] Publish [shared code conventions](construction/code-conventions.md) covering Java/TypeScript names, service dependencies, action methods, files, framework/contract exceptions and refactor verification.
+- [x] Link README and CLAUDE.md to the canonical convention document.
+- [x] Verify documentation references, relative migration link, Markdown fences and whitespace diff. Runtime/build/tests are not required for this documentation-only change. No source rename, new tooling or contract change; implementation/design stages skipped as unnecessary. Existing extension scope retained; runtime security/resiliency checks N/A.
+
 ## U05/U09/U15 follow-up implementation — 2026-11-05
 
 Delivery follow-up: user requested an English commit, push of the existing feature branch and PR into `staging`, with CI verification. Current PR head and remote check results are tracked on GitHub and reported with delivery; no merge/deployment requested. This supersedes the implementation-only no-commit scope below.

@@ -35,9 +35,9 @@ import org.testcontainers.junit.jupiter.*;
 class EvaluationVersionIntegrationTest {
     @Container static final PostgreSQLContainer<?> DB = new PostgreSQLContainer<>("postgres:16-alpine");
     static AnnotationConfigApplicationContext context;
-    static IEvaluationRepository repository;
-    static IGradingProposalRepository proposals;
-    static TransactionTemplate tx;
+    static IEvaluationRepository evaluationRepository;
+    static IGradingProposalRepository gradingProposalRepository;
+    static TransactionTemplate transactionTemplate;
     static final Instant NOW = Instant.parse("2026-10-23T11:00:00Z");
 
     @Configuration @EnableTransactionManagement
@@ -63,19 +63,19 @@ class EvaluationVersionIntegrationTest {
 
     @BeforeAll static void setup() {
         context = new AnnotationConfigApplicationContext(Config.class);
-        repository = context.getBean(IEvaluationRepository.class);
-        proposals = context.getBean(IGradingProposalRepository.class);
-        tx = new TransactionTemplate(context.getBean(PlatformTransactionManager.class));
-        tx.setTimeout(10);
+        evaluationRepository = context.getBean(IEvaluationRepository.class);
+        gradingProposalRepository = context.getBean(IGradingProposalRepository.class);
+        transactionTemplate = new TransactionTemplate(context.getBean(PlatformTransactionManager.class));
+        transactionTemplate.setTimeout(10);
     }
     @AfterAll static void close() { if (context != null) context.close(); }
 
     Evaluation seed() {
-        var e = Evaluation.pending(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+        var e = Evaluation.createPendingEvaluation(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 "hash", BigDecimal.TEN, "[]", NOW);
-        return tx.execute(status -> repository.save(e));
+        return transactionTemplate.execute(status -> evaluationRepository.save(e));
     }
-    Evaluation read(UUID id) { return tx.execute(status -> repository.findById(id).orElseThrow()); }
+    Evaluation read(UUID id) { return transactionTemplate.execute(status -> evaluationRepository.findById(id).orElseThrow()); }
 
     @Test void readingJsonDoesNotWriteOrInvalidateVersion() {
         var created = seed();
@@ -100,7 +100,7 @@ class EvaluationVersionIntegrationTest {
         p.rubricFingerprint = created.rubricSnapshot;
         p.status = "PENDING";
         p.createdAt = NOW;
-        tx.execute(status -> proposals.save(p));
+        transactionTemplate.execute(status -> gradingProposalRepository.save(p));
 
         assertThat(jdbc.queryForObject("select jsonb_typeof(proposal_document) from grading_proposals where id=?",
                 String.class, p.id)).isEqualTo("object");
@@ -109,9 +109,9 @@ class EvaluationVersionIntegrationTest {
 
         // Simulate repeated polling transactions (lock evaluation + read proposals).
         for (int i = 0; i < 5; i++) {
-            var listed = tx.execute(status -> {
-                repository.lockById(created.id).orElseThrow();
-                return proposals.findForEvaluation(created.id);
+            var listed = transactionTemplate.execute(status -> {
+                evaluationRepository.lockById(created.id).orElseThrow();
+                return gradingProposalRepository.findForEvaluation(created.id);
             });
             assertThat(listed).singleElement().satisfies(found -> assertThat(found.status).isEqualTo("PENDING"));
         }
@@ -121,14 +121,14 @@ class EvaluationVersionIntegrationTest {
         // Callback delivery updates proposal to READY in its transaction cleanly.
         UUID taskId = UUID.randomUUID();
         var payload = json.readTree("{\"checks\":{},\"score\":8.5,\"feedback\":\"Tốt\",\"sections\":[]}");
-        var delivered = tx.execute(status -> {
-            repository.lockById(created.id).orElseThrow();
-            var match = proposals.findForEvaluation(created.id).get(0);
+        var delivered = transactionTemplate.execute(status -> {
+            evaluationRepository.lockById(created.id).orElseThrow();
+            var match = gradingProposalRepository.findForEvaluation(created.id).get(0);
             match.taskId = taskId;
             match.status = "READY";
             match.proposal = payload;
             match.completedAt = NOW.plusSeconds(3);
-            return proposals.save(match);
+            return gradingProposalRepository.save(match);
         });
         assertThat(delivered.status).isEqualTo("READY");
         assertThat(delivered.taskId).isEqualTo(taskId);
@@ -144,14 +144,14 @@ class EvaluationVersionIntegrationTest {
                 1,
                 new GradingFeedback.Summary(List.of("Đúng cấu trúc"), List.of("Cần bổ sung"), List.of("Ôn tập chương 2")),
                 List.of(new GradingFeedback.Item(rubricId, itemId, "Minh chứng", "Giải thích", "Gợi ý", "q1", false, null)));
-        var saved = tx.execute(status -> {
-            var e = repository.lockById(created.id).orElseThrow();
+        var saved = transactionTemplate.execute(status -> {
+            var e = evaluationRepository.lockById(created.id).orElseThrow();
             e.checkVersion(created.version);
-            e.save("{}", BigDecimal.TEN, BigDecimal.ZERO, null, "QA", null, UUID.randomUUID(), NOW);
+            e.saveGrade("{}", BigDecimal.TEN, BigDecimal.ZERO, null, "QA", null, UUID.randomUUID(), NOW);
             e.structuredFeedback = structured;
             e.reviewedItemScores = Map.of(rubricId, Map.of(itemId, BigDecimal.TEN));
             e.acknowledgedReviewItems = Map.of(rubricId, Set.of(itemId));
-            return repository.save(e);
+            return evaluationRepository.save(e);
         });
         assertThat(saved.version).isEqualTo(created.version+1);
         var reloaded = read(saved.id);
@@ -159,23 +159,23 @@ class EvaluationVersionIntegrationTest {
         assertThat(reloaded.structuredFeedback).isEqualTo(structured);
         assertThat(reloaded.reviewedItemScores.get(rubricId).get(itemId)).isEqualByComparingTo("10");
         assertThat(reloaded.acknowledgedReviewItems.get(rubricId)).containsExactly(itemId);
-        var finalized = tx.execute(status -> {
-            var e = repository.lockById(saved.id).orElseThrow();
+        var finalized = transactionTemplate.execute(status -> {
+            var e = evaluationRepository.lockById(saved.id).orElseThrow();
             e.checkVersion(saved.version);
             e.finalizeGrade(UUID.randomUUID(), NOW);
-            return repository.save(e);
+            return evaluationRepository.save(e);
         });
         assertThat(finalized.version).isEqualTo(saved.version+1);
         assertThat(read(finalized.id).version).isEqualTo(finalized.version);
-        var published = tx.execute(status -> {
-            var e = repository.lockById(finalized.id).orElseThrow();
+        var published = transactionTemplate.execute(status -> {
+            var e = evaluationRepository.lockById(finalized.id).orElseThrow();
             e.checkVersion(finalized.version);
-            e.publish(UUID.randomUUID(), NOW);
-            return repository.save(e);
+            e.publishGrade(UUID.randomUUID(), NOW);
+            return evaluationRepository.save(e);
         });
         assertThat(published.version).isEqualTo(finalized.version+1);
         assertThat(read(published.id).version).isEqualTo(published.version);
-        assertThatThrownBy(() -> tx.execute(status -> repository.save(saved)))
+        assertThatThrownBy(() -> transactionTemplate.execute(status -> evaluationRepository.save(saved)))
                 .isInstanceOf(ApiException.class).extracting("code").isEqualTo("GRADE_VERSION_CONFLICT");
         assertThat(read(published.id).state.name()).isEqualTo("PUBLISHED");
     }

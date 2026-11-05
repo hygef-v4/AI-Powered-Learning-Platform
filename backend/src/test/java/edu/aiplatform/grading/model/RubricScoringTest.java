@@ -16,39 +16,39 @@ class RubricScoringTest {
     final Map<UUID, Set<UUID>> checks = Map.of(rubricId, Set.of(itemId));
 
     @Test void explicitZeroAndPartialScoresOverrideChecks() {
-        assertThat(RubricScoring.score(rubrics, checks)).isEqualByComparingTo("2.50");
+        assertThat(RubricScoring.calculateScore(rubrics, checks)).isEqualByComparingTo("2.50");
         for (var points : List.of(BigDecimal.ZERO, new BigDecimal("1.25")))
-            assertThat(RubricScoring.score(rubrics, checks, Map.of(rubricId, Map.of(itemId, points))))
+            assertThat(RubricScoring.calculateScore(rubrics, checks, Map.of(rubricId, Map.of(itemId, points))))
                     .isEqualByComparingTo(points);
-        assertThat(RubricScoring.score(rubrics, Map.of(), null)).isEqualByComparingTo("0");
+        assertThat(RubricScoring.calculateScore(rubrics, Map.of(), null)).isEqualByComparingTo("0");
     }
 
     @Test void rejectsInvalidPointsInsteadOfRoundingInput() {
         for (String points : List.of("-0.01", "2.51", "1.255"))
-            assertThatThrownBy(() -> RubricScoring.score(rubrics, checks,
+            assertThatThrownBy(() -> RubricScoring.calculateScore(rubrics, checks,
                     Map.of(rubricId, Map.of(itemId, new BigDecimal(points)))))
                     .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("INVALID_RUBRIC_SCORE"));
         var nullItem = new HashMap<UUID, BigDecimal>();
         nullItem.put(itemId, null);
-        assertThatThrownBy(() -> RubricScoring.score(rubrics, checks, Map.of(rubricId, nullItem)))
+        assertThatThrownBy(() -> RubricScoring.calculateScore(rubrics, checks, Map.of(rubricId, nullItem)))
                 .isInstanceOf(ApiException.class);
     }
 
     @Test void rejectsUnknownRubricsItemsAndNullChecks() {
-        assertThatThrownBy(() -> RubricScoring.score(rubrics, null)).isInstanceOf(ApiException.class);
-        assertThatThrownBy(() -> RubricScoring.score(rubrics, Map.of(UUID.randomUUID(), Set.of())))
+        assertThatThrownBy(() -> RubricScoring.calculateScore(rubrics, null)).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> RubricScoring.calculateScore(rubrics, Map.of(UUID.randomUUID(), Set.of())))
                 .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("INVALID_RUBRIC"));
-        assertThatThrownBy(() -> RubricScoring.score(rubrics, Map.of(rubricId, Set.of(UUID.randomUUID()))))
+        assertThatThrownBy(() -> RubricScoring.calculateScore(rubrics, Map.of(rubricId, Set.of(UUID.randomUUID()))))
                 .isInstanceOf(ApiException.class);
-        assertThatThrownBy(() -> RubricScoring.score(rubrics, checks, Map.of(rubricId, Map.of(UUID.randomUUID(), BigDecimal.ONE))))
+        assertThatThrownBy(() -> RubricScoring.calculateScore(rubrics, checks, Map.of(rubricId, Map.of(UUID.randomUUID(), BigDecimal.ONE))))
                 .isInstanceOf(ApiException.class);
     }
 
     @Test void effectiveScoresRetainLegacyNullAndHalfUpRounding() {
-        assertThat(RubricScoring.effectiveItemScores(null, null, null)).isEmpty();
-        assertThat(RubricScoring.effectiveItemScores(rubrics, null, null).get(rubricId).get(itemId))
+        assertThat(RubricScoring.calculateEffectiveItemScores(null, null, null)).isEmpty();
+        assertThat(RubricScoring.calculateEffectiveItemScores(rubrics, null, null).get(rubricId).get(itemId))
                 .isEqualByComparingTo("0.00");
-        assertThat(RubricScoring.effectiveItemScores(rubrics, checks,
+        assertThat(RubricScoring.calculateEffectiveItemScores(rubrics, checks,
                 Map.of(rubricId, Map.of(itemId, new BigDecimal("1.255")))).get(rubricId).get(itemId))
                 .isEqualByComparingTo("1.26");
     }

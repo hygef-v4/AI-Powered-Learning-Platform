@@ -12,11 +12,11 @@ import java.util.UUID;
 public record GradingFeedback(int schemaVersion, Summary summary, List<Item> items) {
 
     @JsonAnySetter
-    public void unknown(String key, Object value) {
+    public void createUnknownFeedback(String key, Object value) {
         throw ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK", "Unknown structuredFeedback field: " + key);
     }
 
-    public GradingFeedback copy() {
+    public GradingFeedback copyFeedback() {
         return new GradingFeedback(
                 schemaVersion,
                 summary == null ? new Summary(List.of(), List.of(), List.of()) : summary.copy(),

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Pill } from "@/shared/ui";
-import { itemPoints, validItemScore } from "../model/rubricScores";
+import { resolveItemPoints, isValidItemScore } from "../model/rubricScores";
 import type {
   Checks,
   Decimal,
@@ -48,8 +48,8 @@ export function countUnresolvedReviews(
     const rubric = rubrics.find((r) => r.rubricId === fbItem.rubricId);
     const rubricItem = rubric?.criteria.flatMap((c) => c.items).find((i) => i.itemId === fbItem.itemId);
     const max = rubricItem ? Number(rubricItem.points) : 0;
-    const rawAwarded = itemPoints(fbItem.rubricId, fbItem.itemId, max, checks, itemScores);
-    const awarded = validItemScore(rawAwarded, max) ? Number(rawAwarded) : NaN;
+    const rawAwarded = resolveItemPoints(fbItem.rubricId, fbItem.itemId, max, checks, itemScores);
+    const awarded = isValidItemScore(rawAwarded, max) ? Number(rawAwarded) : NaN;
     const ack = isItemAcknowledged(acknowledgedReviewItems, fbItem.rubricId, fbItem.itemId);
     if (fbItem.requiresReview && !ack) {
       unacknowledgedFlags += 1;

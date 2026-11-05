@@ -14,21 +14,21 @@ import org.springframework.web.bind.annotation.*;
 public class GradeDistributionVisibilityController {
     public record Input(@NotNull Boolean enabled, @NotNull @Min(0) Long version) { }
 
-    private final GradeDistributionVisibilityService service;
+    private final GradeDistributionVisibilityService gradeDistributionVisibilityService;
 
-    public GradeDistributionVisibilityController(GradeDistributionVisibilityService service) {
-        this.service = service;
+    public GradeDistributionVisibilityController(GradeDistributionVisibilityService gradeDistributionVisibilityService) {
+        this.gradeDistributionVisibilityService = gradeDistributionVisibilityService;
     }
 
     @GetMapping
-    public GradeDistributionVisibilityService.View get(@AuthenticationPrincipal Actor actor,
+    public GradeDistributionVisibilityService.View loadVisibility(@AuthenticationPrincipal Actor actor,
             @PathVariable UUID classId, @PathVariable UUID assignmentId) {
-        return service.get(actor, classId, assignmentId);
+        return gradeDistributionVisibilityService.loadVisibility(actor, classId, assignmentId);
     }
 
     @PutMapping
-    public GradeDistributionVisibilityService.View update(@AuthenticationPrincipal Actor actor,
+    public GradeDistributionVisibilityService.View updateVisibility(@AuthenticationPrincipal Actor actor,
             @PathVariable UUID classId, @PathVariable UUID assignmentId, @Valid @RequestBody Input input) {
-        return service.update(actor, classId, assignmentId, input.enabled(), input.version());
+        return gradeDistributionVisibilityService.updateVisibility(actor, classId, assignmentId, input.enabled(), input.version());
     }
 }

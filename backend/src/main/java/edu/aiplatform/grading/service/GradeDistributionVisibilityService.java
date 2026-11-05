@@ -23,36 +23,36 @@ import org.springframework.transaction.annotation.Transactional;
 public class GradeDistributionVisibilityService {
     public record View(boolean enabled, long version, boolean canEdit) { }
 
-    private final GradeDistributionVisibilityRepository repository;
-    private final GradingAccess access;
-    private final IClassAccess classes;
-    private final IAssignmentQuery assignments;
+    private final GradeDistributionVisibilityRepository gradeDistributionVisibilityRepository;
+    private final GradingAccess gradingAccess;
+    private final IClassAccess classAccess;
+    private final IAssignmentQuery assignmentQuery;
     private final IAudit audit;
     private final Clock clock;
 
-    public GradeDistributionVisibilityService(GradeDistributionVisibilityRepository repository, GradingAccess access,
-            IClassAccess classes, IAssignmentQuery assignments, IAudit audit, Clock clock) {
-        this.repository = repository;
-        this.access = access;
-        this.classes = classes;
-        this.assignments = assignments;
+    public GradeDistributionVisibilityService(GradeDistributionVisibilityRepository gradeDistributionVisibilityRepository, GradingAccess gradingAccess,
+            IClassAccess classAccess, IAssignmentQuery assignmentQuery, IAudit audit, Clock clock) {
+        this.gradeDistributionVisibilityRepository = gradeDistributionVisibilityRepository;
+        this.gradingAccess = gradingAccess;
+        this.classAccess = classAccess;
+        this.assignmentQuery = assignmentQuery;
         this.audit = audit;
         this.clock = clock;
     }
 
-    public View get(Actor actor, UUID classId, UUID assignmentId) {
+    public View loadVisibility(Actor actor, UUID classId, UUID assignmentId) {
         boolean canEdit = requireAssignedTeacher(actor, classId, assignmentId);
-        var current = repository.find(classId, assignmentId);
+        var current = gradeDistributionVisibilityRepository.findVisibility(classId, assignmentId);
         return new View(current.enabled(), current.version(), canEdit);
     }
 
     @Transactional
-    public View update(Actor actor, UUID classId, UUID assignmentId, boolean enabled, long version) {
+    public View updateVisibility(Actor actor, UUID classId, UUID assignmentId, boolean enabled, long version) {
         if (!requireAssignedTeacher(actor, classId, assignmentId))
             throw ApiException.conflict("GRADE_DISTRIBUTION_READ_ONLY", "Archived class or retired assignment");
         if (version < 0)
             throw ApiException.badRequest("INVALID_VERSION", "Version must be nonnegative");
-        if (!repository.update(classId, assignmentId, enabled, version))
+        if (!gradeDistributionVisibilityRepository.updateVisibility(classId, assignmentId, enabled, version))
             throw ApiException.conflict("GRADE_DISTRIBUTION_VERSION_CONFLICT", "Visibility changed; reload and retry");
         audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "GRADE_DISTRIBUTION_VISIBILITY_CHANGED",
                 "ASSIGNMENT", assignmentId.toString(), AuditResult.SUCCESS, null,
@@ -61,11 +61,11 @@ public class GradeDistributionVisibilityService {
     }
 
     private boolean requireAssignedTeacher(Actor actor, UUID classId, UUID assignmentId) {
-        access.requireTeacher(actor, classId, Actions.GRADING_WRITE);
-        var courseClass = classes.getClassRef(classId).orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+        gradingAccess.requireTeacher(actor, classId, Actions.GRADING_WRITE);
+        var courseClass = classAccess.getClassRef(classId).orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
         if (actor == null || !actor.accountId().equals(courseClass.teacherId()))
             throw ApiException.notFound("GRADE_NOT_FOUND");
-        var assignment = assignments.get(assignmentId).orElseThrow(() -> ApiException.notFound("ASSIGNMENT_NOT_FOUND"));
+        var assignment = assignmentQuery.get(assignmentId).orElseThrow(() -> ApiException.notFound("ASSIGNMENT_NOT_FOUND"));
         SubmissionReviewService.requireAssignment(assignment, courseClass);
         if (assignment.scope() == AssignmentScope.SUBJECT
                 && (assignment.status() == AssignmentStatus.DRAFT || assignment.status() == AssignmentStatus.REVIEWED))

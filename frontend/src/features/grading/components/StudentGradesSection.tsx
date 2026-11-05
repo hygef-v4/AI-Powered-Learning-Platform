@@ -2,7 +2,7 @@
 import { useCallback } from "react";
 import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
-import { points, statusLabels } from "../model/types";
+import { formatPoints, GRADE_STATUS_LABELS } from "../model/types";
 export function StudentGradesSection({
   classId,
   studentId,
@@ -12,8 +12,8 @@ export function StudentGradesSection({
 }) {
   const load = useCallback(async () => {
     const [row, gradebook] = await Promise.all([
-      gradingApi.student(classId, studentId),
-      gradingApi.gradebook(classId),
+      gradingApi.loadStudentGrades(classId, studentId),
+      gradingApi.loadGradebook(classId),
     ]);
     return { grades: row.grades, assignments: gradebook.assignments };
   }, [classId, studentId]);
@@ -33,7 +33,7 @@ export function StudentGradesSection({
               <th scope="row" className="p-2 font-medium">{assignment.title}</th>
               <td className="p-2">{assignment.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}</td>
               <td className="p-2">{grade?.submittedAt ? <>{grade.late ? "Trễ" : "Đúng hạn"}<br/>{new Date(grade.submittedAt).toLocaleString("vi-VN")}</> : grade?.status === "IN_PROGRESS" ? "Đang làm" : "Chưa nộp"}</td>
-              <td className="p-2">{points(grade?.score, grade?.maxScore ?? assignment.maxScore)}<br/>{statusLabels[grade?.status ?? "NOT_SUBMITTED"] ?? grade?.status}</td>
+              <td className="p-2">{formatPoints(grade?.score, grade?.maxScore ?? assignment.maxScore)}<br/>{GRADE_STATUS_LABELS[grade?.status ?? "NOT_SUBMITTED"] ?? grade?.status}</td>
             </tr>;
           })}</tbody>
         </table></div>

@@ -44,32 +44,32 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class GradingService {
-    private final IEvaluationRepository evaluations;
-    private final GradingAccess access;
+    private final IEvaluationRepository evaluationRepository;
+    private final GradingAccess gradingAccess;
     private final IAudit audit;
-    private final IEventPublisher events;
-    private final ISubmissionQuery submissions;
-    private final ObjectMapper json;
+    private final IEventPublisher eventPublisher;
+    private final ISubmissionQuery submissionQuery;
+    private final ObjectMapper objectMapper;
     private final Clock clock;
-    private final GradingFeedbackValidator feedbackValidator;
+    private final GradingFeedbackValidator gradingFeedbackValidator;
 
-    public GradingService(IEvaluationRepository evaluations, GradingAccess access, IAudit audit, IEventPublisher events,
-            ISubmissionQuery submissions, ObjectMapper json, Clock clock) {
-        this.evaluations = evaluations;
-        this.access = access;
+    public GradingService(IEvaluationRepository evaluationRepository, GradingAccess gradingAccess, IAudit audit, IEventPublisher eventPublisher,
+            ISubmissionQuery submissionQuery, ObjectMapper objectMapper, Clock clock) {
+        this.evaluationRepository = evaluationRepository;
+        this.gradingAccess = gradingAccess;
         this.audit = audit;
-        this.events = events;
-        this.submissions = submissions;
-        this.json = json;
+        this.eventPublisher = eventPublisher;
+        this.submissionQuery = submissionQuery;
+        this.objectMapper = objectMapper;
         this.clock = clock;
-        this.feedbackValidator = new GradingFeedbackValidator(json);
+        this.gradingFeedbackValidator = new GradingFeedbackValidator(objectMapper);
     }
 
     public Evaluation requireCurrent(Actor actor, UUID id, long version) {
-        var evaluation = evaluations.lockById(id).orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
-        access.requireTeacher(actor, evaluation.classId, Actions.GRADING_WRITE);
+        var evaluation = evaluationRepository.lockById(id).orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
+        gradingAccess.requireTeacher(actor, evaluation.classId, Actions.GRADING_WRITE);
         evaluation.checkVersion(version);
-        evaluation.editable();
+        evaluation.requireEditableGrade();
         if (evaluation.kind == EvaluationKind.ATTEMPT) {
             requireLatestSubmission(evaluation);
         }
@@ -77,13 +77,13 @@ public class GradingService {
     }
 
     private SubmissionView requireLatestSubmission(Evaluation evaluation) {
-        var submission = submissions.getSubmission(evaluation.attemptId)
+        var submission = submissionQuery.getSubmission(evaluation.attemptId)
                 .orElseThrow(() -> ApiException.unavailable("SUBMISSION_UNAVAILABLE", "Submission unavailable"));
         if (!evaluation.submissionHash.equals(submission.receiptHash())
                 || !evaluation.assignmentId.equals(submission.assignmentId())
                 || !evaluation.classId.equals(submission.classId()))
             throw ApiException.conflict("SUBMISSION_CHANGED", "Submission snapshot changed");
-        boolean latest = submissions.listSubmissions(evaluation.assignmentId, evaluation.classId).stream()
+        boolean latest = submissionQuery.listSubmissions(evaluation.assignmentId, evaluation.classId).stream()
                 .anyMatch(row -> evaluation.accountId.equals(row.accountId())
                         && evaluation.attemptId.equals(row.gradedAttemptId()));
         if (!latest)
@@ -92,85 +92,85 @@ public class GradingService {
     }
 
     @Transactional
-    public Evaluation save(Actor actor, UUID id, Save input) {
+    public Evaluation saveEvaluation(Actor actor, UUID id, Save input) {
         if (input.usedProposalId() != null)
             throw ApiException.badRequest("PROPOSAL_REQUIRES_VALIDATION",
                     "Apply proposal through proposal review endpoint");
-        return saveChecked(actor, id, input, null);
+        return saveCheckedEvaluation(actor, id, input, null);
     }
 
-    Evaluation saveChecked(Actor actor, UUID id, Save input) {
-        return saveChecked(actor, id, input, null);
+    Evaluation saveCheckedEvaluation(Actor actor, UUID id, Save input) {
+        return saveCheckedEvaluation(actor, id, input, null);
     }
 
-    Evaluation saveChecked(Actor actor, UUID id, Save input, GradingProposal usedProposal) {
+    Evaluation saveCheckedEvaluation(Actor actor, UUID id, Save input, GradingProposal usedProposal) {
         var evaluation = requireCurrent(actor, id, input.version());
         evaluation.requireMutableGrade();
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.badRequest("MEMBER_ENDPOINT_REQUIRED", "Use member grading endpoint");
-        var rubrics = GradingJson.rubrics(json, evaluation.rubricSnapshot);
-        var points = RubricScoring.score(rubrics, input.checkedItemsByRubric(), input.itemScoresByRubric());
+        var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
+        var points = RubricScoring.calculateScore(rubrics, input.checkedItemsByRubric(), input.itemScoresByRubric());
         var itemScores = RubricScoring.copyItemScores(input.itemScoresByRubric());
-        var currentEffectiveScores = RubricScoring.effectiveItemScores(rubrics, input.checkedItemsByRubric(), itemScores);
+        var currentEffectiveScores = RubricScoring.calculateEffectiveItemScores(rubrics, input.checkedItemsByRubric(), itemScores);
         var previousEffectiveScores = evaluation.score == null
                 ? Map.<UUID, Map<UUID, BigDecimal>>of()
-                : RubricScoring.effectiveItemScores(rubrics, GradingJson.readChecks(json, evaluation.rubricChecks),
+                : RubricScoring.calculateEffectiveItemScores(rubrics, GradingJson.readChecks(objectMapper, evaluation.rubricChecks),
                         evaluation.rubricItemScores);
 
         DocumentModel submittedDocument = null;
         if (evaluation.kind == EvaluationKind.ATTEMPT && evaluation.attemptId != null) {
-            submittedDocument = submissions.getSubmission(evaluation.attemptId)
+            submittedDocument = submissionQuery.getSubmission(evaluation.attemptId)
                     .map(SubmissionView::content)
                     .orElse(null);
         }
-        Set<String> validBlockIds = GradingFeedbackValidator.validBlockIds(rubrics, submittedDocument);
+        Set<String> validBlockIds = GradingFeedbackValidator.listValidBlockIds(rubrics, submittedDocument);
 
         var feedbackState = resolveFeedbackState(evaluation, input, usedProposal, rubrics, validBlockIds,
                 currentEffectiveScores, previousEffectiveScores);
 
-        evaluation.save(GradingJson.write(json, input.checkedItemsByRubric()), points, input.adjustment(),
+        evaluation.saveGrade(GradingJson.writeSnapshot(objectMapper, input.checkedItemsByRubric()), points, input.adjustment(),
                 input.adjustmentReason(), input.feedback(), input.changeReason(), actor.accountId(), clock.instant());
         evaluation.rubricItemScores = itemScores;
         evaluation.structuredFeedback = feedbackState.feedback();
         evaluation.reviewedItemScores = feedbackState.reviewedScores();
         evaluation.acknowledgedReviewItems = feedbackState.acknowledgedItems();
-        propagateGroup(evaluation, actor, GroupOperation.SAVE, input.changeReason());
-        evaluations.save(evaluation);
-        record(actor, evaluation, "GRADE_SAVED", null);
+        propagateGroupGrade(evaluation, actor, GroupOperation.SAVE, input.changeReason());
+        evaluationRepository.save(evaluation);
+        recordAudit(actor, evaluation, "GRADE_SAVED", null);
         return evaluation;
     }
 
     @Transactional
-    public Evaluation finalizeOne(Actor actor, ItemVersion item) {
+    public Evaluation finalizeEvaluation(Actor actor, ItemVersion item) {
         var evaluation = requireCurrent(actor, item.evaluationId(), item.version());
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Finalize the group document");
         if (evaluation.structuredFeedback != null) {
-            var rubrics = GradingJson.rubrics(json, evaluation.rubricSnapshot);
-            var currentEffectiveScores = RubricScoring.effectiveItemScores(rubrics,
-                    GradingJson.readChecks(json, evaluation.rubricChecks), evaluation.rubricItemScores);
+            var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
+            var currentEffectiveScores = RubricScoring.calculateEffectiveItemScores(rubrics,
+                    GradingJson.readChecks(objectMapper, evaluation.rubricChecks), evaluation.rubricItemScores);
             requireStructuredFeedbackReviewed(evaluation.structuredFeedback, evaluation.reviewedItemScores,
                     evaluation.acknowledgedReviewItems, currentEffectiveScores);
         }
         evaluation.finalizeGrade(actor.accountId(), clock.instant());
-        propagateGroup(evaluation, actor, GroupOperation.FINALIZE, null);
-        evaluations.save(evaluation);
-        record(actor, evaluation, "GRADE_FINALIZED", null);
+        propagateGroupGrade(evaluation, actor, GroupOperation.FINALIZE, null);
+        evaluationRepository.save(evaluation);
+        recordAudit(actor, evaluation, "GRADE_FINALIZED", null);
         return evaluation;
     }
 
     @Transactional
-    public Evaluation publishOne(Actor actor, ItemVersion item) {
+    public Evaluation publishEvaluation(Actor actor, ItemVersion item) {
         var evaluation = requireCurrent(actor, item.evaluationId(), item.version());
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Publish the group document");
-        evaluation.publish(actor.accountId(), clock.instant());
-        var recipients = propagateGroup(evaluation, actor, GroupOperation.PUBLISH, null);
+        evaluation.publishGrade(actor.accountId(), clock.instant());
+        var recipients = propagateGroupGrade(evaluation, actor, GroupOperation.PUBLISH, null);
         if (evaluation.kind == EvaluationKind.ATTEMPT)
             recipients = List.of(evaluation.accountId);
-        evaluations.save(evaluation);
-        record(actor, evaluation, "GRADE_PUBLISHED", null);
-        events.publish(new DomainEvent(1, UUID.randomUUID(), EventTypes.GRADE_PUBLISHED, "U09", clock.instant(),
+        evaluationRepository.save(evaluation);
+        recordAudit(actor, evaluation, "GRADE_PUBLISHED", null);
+        eventPublisher.publish(new DomainEvent(1, UUID.randomUUID(), EventTypes.GRADE_PUBLISHED, "U09", clock.instant(),
                 evaluation.id.toString(),
                 Map.of("assignmentId", evaluation.assignmentId.toString(), "classId", evaluation.classId.toString(),
                         "studentIds", recipients.stream().map(UUID::toString).toList())));
@@ -178,25 +178,25 @@ public class GradingService {
     }
 
     @Transactional
-    public Evaluation saveMember(Actor actor, UUID rootId, UUID accountId, MemberSave input) {
-        var root = evaluations.findById(rootId).orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
-        access.requireTeacher(actor, root.classId, Actions.GRADING_WRITE);
-        root = evaluations.lockById(rootId).orElseThrow();
+    public Evaluation saveMemberGrade(Actor actor, UUID rootId, UUID accountId, MemberSave input) {
+        var root = evaluationRepository.findById(rootId).orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
+        gradingAccess.requireTeacher(actor, root.classId, Actions.GRADING_WRITE);
+        root = evaluationRepository.lockById(rootId).orElseThrow();
         root.requireMutableGrade();
         if (root.kind != EvaluationKind.GROUP_DOCUMENT || root.score == null)
             throw ApiException.conflict("GROUP_NOT_GRADED", "Grade group document first");
         final UUID documentId = root.groupDocumentId;
         final String hash = root.submissionHash;
-        var candidate = evaluations.findForAssignmentAndClass(root.assignmentId, root.classId).stream()
+        var candidate = evaluationRepository.findForAssignmentAndClass(root.assignmentId, root.classId).stream()
                 .filter(evaluation -> evaluation.kind == EvaluationKind.MEMBER
                         && documentId.equals(evaluation.groupDocumentId) && hash.equals(evaluation.submissionHash)
                         && accountId.equals(evaluation.accountId) && evaluation.state != EvaluationStatus.SUPERSEDED)
                 .findFirst().orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
-        var member = evaluations.lockById(candidate.id).orElseThrow();
+        var member = evaluationRepository.lockById(candidate.id).orElseThrow();
         member.checkVersion(input.version());
         member.overrideMemberScore(input.score(), input.reason(), actor.accountId(), clock.instant());
-        evaluations.save(member);
-        record(actor, member, "GRADE_CHANGED", input.reason());
+        evaluationRepository.save(member);
+        recordAudit(actor, member, "GRADE_CHANGED", input.reason());
         return member;
     }
 
@@ -222,14 +222,14 @@ public class GradingService {
                         currentEffectiveScores);
                 return new ResolvedFeedbackState(null, Map.of(), Map.of());
             }
-            var retained = evaluation.structuredFeedback.copy();
+            var retained = evaluation.structuredFeedback.copyFeedback();
             validateMetadataEmptyOrKnown(input.acknowledgedReviewItems(), input.reviewedItemScores(), retained,
                     currentEffectiveScores);
             return computeReviewMetadata(evaluation, retained, retained, input, previousEffectiveScores,
                     currentEffectiveScores, false);
         }
 
-        var validated = feedbackValidator.validate(input.structuredFeedback(), rubrics, validBlockIds, false);
+        var validated = gradingFeedbackValidator.validateFeedback(input.structuredFeedback(), rubrics, validBlockIds, false);
         validateMetadataEmptyOrKnown(input.acknowledgedReviewItems(), input.reviewedItemScores(), validated,
                 currentEffectiveScores);
 
@@ -240,7 +240,7 @@ public class GradingService {
             fromProposal = true;
             baselineScores = extractProposalEffectiveScores(usedProposal.proposal, rubrics);
             if (usedProposal.proposal.hasNonNull("structuredFeedback")) {
-                baselineFeedback = feedbackValidator.validateNode(
+                baselineFeedback = gradingFeedbackValidator.validateNode(
                         usedProposal.proposal.get("structuredFeedback"), rubrics, validBlockIds, false);
             }
         }
@@ -407,15 +407,15 @@ public class GradingService {
             List<RubricView> rubrics) {
         try {
             Map<UUID, Set<UUID>> checks = proposalNode.has("checks")
-                    ? json.convertValue(proposalNode.get("checks"), new TypeReference<Map<UUID, Set<UUID>>>() {
+                    ? objectMapper.convertValue(proposalNode.get("checks"), new TypeReference<Map<UUID, Set<UUID>>>() {
                     })
                     : Map.of();
             Map<UUID, Map<UUID, BigDecimal>> itemScores = proposalNode.has("itemScoresByRubric")
-                    ? json.convertValue(proposalNode.get("itemScoresByRubric"),
+                    ? objectMapper.convertValue(proposalNode.get("itemScoresByRubric"),
                             new TypeReference<Map<UUID, Map<UUID, BigDecimal>>>() {
                             })
                     : Map.of();
-            return RubricScoring.effectiveItemScores(rubrics, checks, itemScores);
+            return RubricScoring.calculateEffectiveItemScores(rubrics, checks, itemScores);
         } catch (RuntimeException ex) {
             return Map.of();
         }
@@ -425,21 +425,21 @@ public class GradingService {
         SAVE, FINALIZE, PUBLISH
     }
 
-    private List<UUID> propagateGroup(Evaluation root, Actor actor, GroupOperation operation, String reason) {
+    private List<UUID> propagateGroupGrade(Evaluation root, Actor actor, GroupOperation operation, String reason) {
         if (root.kind != EvaluationKind.GROUP_DOCUMENT)
             return List.of();
         List<UUID> recipients = new ArrayList<>();
-        var members = evaluations.findForAssignmentAndClass(root.assignmentId, root.classId).stream()
-                .filter(member -> member.currentMemberOf(root))
+        var members = evaluationRepository.findForAssignmentAndClass(root.assignmentId, root.classId).stream()
+                .filter(member -> member.isCurrentMemberOf(root))
                 .sorted(Comparator.comparing(evaluation -> evaluation.id)).toList();
         for (var candidate : members) {
-            var member = evaluations.lockById(candidate.id).orElseThrow();
+            var member = evaluationRepository.lockById(candidate.id).orElseThrow();
             switch (operation) {
             case SAVE -> member.inheritGroupGrade(root, reason, actor.accountId(), clock.instant());
             case FINALIZE -> member.finalizeGrade(actor.accountId(), clock.instant());
-            case PUBLISH -> member.publish(actor.accountId(), clock.instant());
+            case PUBLISH -> member.publishGrade(actor.accountId(), clock.instant());
             }
-            evaluations.save(member);
+            evaluationRepository.save(member);
             recipients.add(member.accountId);
         }
         if (recipients.isEmpty())
@@ -447,7 +447,7 @@ public class GradingService {
         return recipients;
     }
 
-    void record(Actor actor, Evaluation evaluation, String action, String reason) {
+    void recordAudit(Actor actor, Evaluation evaluation, String action, String reason) {
         audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), action, "EVALUATION",
                 evaluation.id.toString(), AuditResult.SUCCESS, reason, Map.of("classId", evaluation.classId.toString()),
                 clock.instant()));

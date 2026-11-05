@@ -23,17 +23,17 @@ public class GradingMcpTools implements IMcpToolProvider {
     private static final Set<String> ARGUMENT_FIELDS = Set.of("submissionRef", "submissionHash", "proposal",
             "requestRef", "expectedVersion", "agentLabel", "snapshotFingerprint");
     private static final Set<String> REFERENCE_FIELDS = Set.of("kind", "id", "classId", "assignmentId");
-    private final IEvaluationRepository evaluations;
-    private final GradingProposalTransactions tx;
-    private final ObjectMapper json;
-    private final GradingMcpQueryService reads;
+    private final IEvaluationRepository evaluationRepository;
+    private final GradingProposalTransactions gradingProposalTransactions;
+    private final ObjectMapper objectMapper;
+    private final GradingMcpQueryService gradingMcpQueryService;
 
-    public GradingMcpTools(IEvaluationRepository evaluations, GradingProposalTransactions tx, ObjectMapper json,
-            GradingMcpQueryService reads) {
-        this.evaluations = evaluations;
-        this.tx = tx;
-        this.json = json;
-        this.reads = reads;
+    public GradingMcpTools(IEvaluationRepository evaluationRepository, GradingProposalTransactions gradingProposalTransactions, ObjectMapper objectMapper,
+            GradingMcpQueryService gradingMcpQueryService) {
+        this.evaluationRepository = evaluationRepository;
+        this.gradingProposalTransactions = gradingProposalTransactions;
+        this.objectMapper = objectMapper;
+        this.gradingMcpQueryService = gradingMcpQueryService;
     }
 
     public List<McpToolDefinition> tools() {
@@ -55,7 +55,7 @@ public class GradingMcpTools implements IMcpToolProvider {
         if (!"record_grading_proposal".equals(name))
             throw ApiException.notFound("MCP_TOOL_NOT_FOUND");
         try {
-            var root = json.valueToTree(args);
+            var root = objectMapper.valueToTree(args);
             var reference = readSubmissionReference(root);
             var kind = reference.path("kind").asText();
             var submissionId = UUID.fromString(reference.path("id").asText());
@@ -70,14 +70,14 @@ public class GradingMcpTools implements IMcpToolProvider {
             if (requestRef.isBlank() || requestRef.length() > 200)
                 throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid request reference");
             String fingerprint=root.path("snapshotFingerprint").asText();
-            if(!fingerprint.matches("[0-9a-f]{64}"))throw GradingMcpReadProgress.required();
-            reads.requireCompleteRead(actor,evaluation.id,root.path("expectedVersion").asLong(),
+            if(!fingerprint.matches("[0-9a-f]{64}"))throw GradingMcpReadProgress.createReadRequiredError();
+            gradingMcpQueryService.requireCompleteRead(actor,evaluation.id,root.path("expectedVersion").asLong(),
                     root.path("submissionHash").asText(),fingerprint);
-            var proposal = tx.recordMcp(actor, evaluation.id, root.path("expectedVersion").asLong(),
+            var proposal = gradingProposalTransactions.recordMcpProposal(actor, evaluation.id, root.path("expectedVersion").asLong(),
                     root.path("submissionHash").asText(), requestRef, root.get("proposal"),
                     root.path("agentLabel").asText("Agent"));
             return new McpToolResult(false, Map.of("proposalId", proposal.id, "status", proposal.status,
-                    "evaluationId",evaluation.id,"reviewUrl",reviewUrl(evaluation.id,proposal.id)));
+                    "evaluationId",evaluation.id,"reviewUrl",buildReviewUrl(evaluation.id,proposal.id)));
         } catch (ApiException ex) {
             throw ex;
         } catch (RuntimeException ex) {
@@ -85,7 +85,7 @@ public class GradingMcpTools implements IMcpToolProvider {
         }
     }
 
-    static String reviewUrl(UUID evaluationId,UUID proposalId) {
+    static String buildReviewUrl(UUID evaluationId,UUID proposalId) {
         return "/teaching/evaluations/"+evaluationId+"?proposalId="+proposalId+"#grading-ai-review";
     }
 
@@ -109,10 +109,10 @@ public class GradingMcpTools implements IMcpToolProvider {
 
     private Evaluation findEvaluation(String kind, UUID submissionId, UUID classId, UUID assignmentId) {
         if (kind.equals("ATTEMPT"))
-            return evaluations.findByAttemptId(submissionId)
+            return evaluationRepository.findByAttemptId(submissionId)
                     .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
         if (kind.equals("GROUP_DOCUMENT"))
-            return evaluations.findForAssignmentAndClass(assignmentId, classId).stream()
+            return evaluationRepository.findForAssignmentAndClass(assignmentId, classId).stream()
                     .filter(evaluation -> evaluation.kind == EvaluationKind.GROUP_DOCUMENT
                             && submissionId.equals(evaluation.groupDocumentId))
                     .findFirst().orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));

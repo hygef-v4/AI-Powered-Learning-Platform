@@ -21,16 +21,16 @@ public class GradingProposalValidator {
     private static final int MAX_PAYLOAD_LENGTH = 262144;
     private static final Set<String> PROPOSAL_FIELDS = Set.of(
             "checks", "score", "feedback", "sections", "itemScoresByRubric", "structuredFeedback");
-    private final ObjectMapper json;
-    private final GradingFeedbackValidator feedbackValidator;
+    private final ObjectMapper objectMapper;
+    private final GradingFeedbackValidator gradingFeedbackValidator;
 
-    public GradingProposalValidator(ObjectMapper json) {
-        this.json = json;
-        this.feedbackValidator = new GradingFeedbackValidator(json);
+    public GradingProposalValidator(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+        this.gradingFeedbackValidator = new GradingFeedbackValidator(objectMapper);
     }
 
     /** Classify validation failures without exposing provider-authored field values. */
-    public static String rejectionDiagnostic(ApiException error) {
+    public static String buildRejectionDiagnostic(ApiException error) {
         String detail = error.getMessage() == null ? "" : error.getMessage();
         if (detail.startsWith("Unknown evidenceBlockId:")) return "FEEDBACK_UNKNOWN_EVIDENCE_BLOCK";
         if (detail.equals("AI structuredFeedback must provide feedback for every rubric item"))
@@ -64,25 +64,25 @@ public class GradingProposalValidator {
         }
     }
 
-    public Validated validate(JsonNode payload, List<RubricView> rubrics) {
-        return validate(payload, rubrics, null);
+    public Validated validateProposal(JsonNode payload, List<RubricView> rubrics) {
+        return validateProposal(payload, rubrics, null);
     }
 
-    public Validated validate(JsonNode payload, List<RubricView> rubrics, Set<String> validBlockIds) {
+    public Validated validateProposal(JsonNode payload, List<RubricView> rubrics, Set<String> validBlockIds) {
         try {
             requireProposalObject(payload);
             var checks = readChecks(payload);
             Map<UUID, Map<UUID, BigDecimal>> itemScores = payload.has("itemScoresByRubric")
-                    ? json.convertValue(payload.get("itemScoresByRubric"), new com.fasterxml.jackson.core.type.TypeReference<Map<UUID, Map<UUID, BigDecimal>>>() {})
+                    ? objectMapper.convertValue(payload.get("itemScoresByRubric"), new com.fasterxml.jackson.core.type.TypeReference<Map<UUID, Map<UUID, BigDecimal>>>() {})
                     : Map.of();
             if (itemScores == null) throw new IllegalArgumentException();
             requireCompleteScores(rubrics, checks, itemScores);
-            var score = RubricScoring.score(rubrics, checks, itemScores);
+            var score = RubricScoring.calculateScore(rubrics, checks, itemScores);
             requireMatchingScore(payload.get("score"), score);
             var feedback = readFeedback(payload.get("feedback"));
             var sections = payload.get("sections");
             validateSections(sections, rubrics);
-            GradingFeedback structuredFeedback = feedbackValidator.validateNode(
+            GradingFeedback structuredFeedback = gradingFeedbackValidator.validateNode(
                     payload.get("structuredFeedback"), rubrics, validBlockIds, true);
             return new Validated(checks, score, feedback, sections, RubricScoring.copyItemScores(itemScores), structuredFeedback);
         } catch (ApiException ex) {
@@ -179,11 +179,11 @@ public class GradingProposalValidator {
         }
     }
 
-    public JsonNode parse(String value) {
+    public JsonNode parseProposal(String value) {
         if (value == null || value.length() > MAX_PAYLOAD_LENGTH)
             throw ApiException.badRequest("INVALID_AI_PROPOSAL", "AI proposal too large");
         try {
-            return json.reader().with(com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
+            return objectMapper.reader().with(com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
                     .readTree(value);
         } catch (Exception ex) {
             throw ApiException.badRequest("INVALID_AI_PROPOSAL", "Invalid AI proposal JSON");

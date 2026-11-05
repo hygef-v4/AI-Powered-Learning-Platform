@@ -14,7 +14,7 @@ final class GradingJson {
     private GradingJson() {
     }
 
-    static String write(ObjectMapper json, Object value) {
+    static String writeSnapshot(ObjectMapper json, Object value) {
         try {
             return json.writeValueAsString(value);
         } catch (Exception ex) {
@@ -22,7 +22,7 @@ final class GradingJson {
         }
     }
 
-    static List<RubricView> rubrics(ObjectMapper json, String value) {
+    static List<RubricView> readRubrics(ObjectMapper json, String value) {
         try {
             return json.readValue(value, new TypeReference<List<RubricView>>() {
             });

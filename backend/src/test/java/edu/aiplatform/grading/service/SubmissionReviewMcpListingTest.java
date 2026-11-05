@@ -34,7 +34,7 @@ class SubmissionReviewMcpListingTest {
         List<UUID> students=new ArrayList<>();List<StudentSubmissionStatus> statuses=new ArrayList<>();List<Evaluation> evals=new ArrayList<>();
         for(int n=0;n<200;n++) {
             var student=UUID.randomUUID();students.add(student);
-            var e=Evaluation.pending(UUID.randomUUID(),assignmentId,classId,student,"hash",BigDecimal.TEN,"[]",Instant.now());evals.add(e);
+            var e=Evaluation.createPendingEvaluation(UUID.randomUUID(),assignmentId,classId,student,"hash",BigDecimal.TEN,"[]",Instant.now());evals.add(e);
             statuses.add(new StudentSubmissionStatus(student,e.attemptId,1,AttemptStatus.SUBMITTED,Instant.now(),n%2==0));
         }
         when(classes.listActiveStudents(classId)).thenReturn(students);

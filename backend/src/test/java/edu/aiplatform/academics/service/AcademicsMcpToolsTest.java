@@ -13,33 +13,33 @@ import java.time.Instant;
 import org.junit.jupiter.api.Test;
 
 class AcademicsMcpToolsTest {
-    private final IAcademicsReadRepository reads = mock(IAcademicsReadRepository.class);
-    private final ISubjectQuery subjects = mock(ISubjectQuery.class);
+    private final IAcademicsReadRepository academicsReadRepository = mock(IAcademicsReadRepository.class);
+    private final ISubjectQuery subjectQuery = mock(ISubjectQuery.class);
     private final Actor teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
 
     @Test void onlyTaughtClassesArePagedAndSubjectsAreDeduplicated() {
         UUID subject = UUID.randomUUID();
         var now=Instant.now();
-        var one=CourseClass.create(UUID.randomUUID(),subject,"C1","First","","",teacher.accountId(),now);
-        var two=CourseClass.create(UUID.randomUUID(),subject,"C2","Second","","",teacher.accountId(),now);
-        when(reads.listTaught(teacher.accountId())).thenReturn(List.of(one,two));
-        when(subjects.getSubject(subject)).thenReturn(Optional.of(new SubjectRef(subject,"S","Subject",SubjectStatus.ACTIVE,UUID.randomUUID())));
-        var tools=new AcademicsMcpTools(reads,subjects);
+        var one=CourseClass.createClass(UUID.randomUUID(),subject,"C1","First","","",teacher.accountId(),now);
+        var two=CourseClass.createClass(UUID.randomUUID(),subject,"C2","Second","","",teacher.accountId(),now);
+        when(academicsReadRepository.listTaught(teacher.accountId())).thenReturn(List.of(one,two));
+        when(subjectQuery.getSubject(subject)).thenReturn(Optional.of(new SubjectRef(subject,"S","Subject",SubjectStatus.ACTIVE,UUID.randomUUID())));
+        var tools=new AcademicsMcpTools(academicsReadRepository,subjectQuery);
         var result=(Map<?,?>)tools.call(teacher,"list_my_classes",Map.of("size",1,"page",1)).content();
         assertThat(result.get("total")).isEqualTo(2);
         assertThat((List<?>)result.get("items")).hasSize(1);
         var found=(Map<?,?>)tools.call(teacher,"list_my_subjects",Map.of()).content();
         assertThat((List<?>)found.get("items")).hasSize(1);
-        verify(subjects,never()).listManagedSubjects(teacher.accountId());
+        verify(subjectQuery,never()).listManagedSubjects(teacher.accountId());
     }
 
     @Test void studentAdminAndInvalidPaginationAreRejectedBeforeQueries() {
-        var tools=new AcademicsMcpTools(reads,subjects);
+        var tools=new AcademicsMcpTools(academicsReadRepository,subjectQuery);
         for(Role role:List.of(Role.STUDENT,Role.ADMIN)) {
             assertThatThrownBy(()->tools.call(new Actor(UUID.randomUUID(),role),"list_my_classes",Map.of())).isInstanceOf(ApiException.class);
         }
         assertThatThrownBy(()->tools.call(teacher,"list_my_classes",Map.of("page",-1))).isInstanceOf(ApiException.class);
         assertThatThrownBy(()->tools.call(teacher,"list_my_classes",Map.of("size",101))).isInstanceOf(ApiException.class);
-        verifyNoInteractions(reads);
+        verifyNoInteractions(academicsReadRepository);
     }
 }

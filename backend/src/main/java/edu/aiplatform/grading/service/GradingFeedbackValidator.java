@@ -30,13 +30,13 @@ public class GradingFeedbackValidator {
     private static final Set<String> ITEM_FIELDS = Set.of("rubricId", "itemId", "evidence", "reason", "suggestion",
             "evidenceBlockId", "requiresReview", "reviewReason");
 
-    private final ObjectMapper json;
+    private final ObjectMapper objectMapper;
 
-    public GradingFeedbackValidator(ObjectMapper json) {
-        this.json = json;
+    public GradingFeedbackValidator(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
-    public static Set<String> validBlockIds(List<RubricView> rubrics, DocumentModel document) {
+    public static Set<String> listValidBlockIds(List<RubricView> rubrics, DocumentModel document) {
         Set<String> ids = new HashSet<>();
         if (rubrics != null) {
             for (var rubric : rubrics) {
@@ -59,24 +59,24 @@ public class GradingFeedbackValidator {
             boolean requireAllItems) {
         if (node == null || node.isNull()) {
             if (requireAllItems) {
-                throw invalid("Missing structuredFeedback");
+                throw createInvalidFeedback("Missing structuredFeedback");
             }
             return null;
         }
         if (!node.isObject()) {
-            throw invalid("structuredFeedback must be a JSON object");
+            throw createInvalidFeedback("structuredFeedback must be a JSON object");
         }
-        String raw = GradingJson.write(json, node);
+        String raw = GradingJson.writeSnapshot(objectMapper, node);
         if (raw.length() > MAX_TOTAL_JSON_CHARS) {
-            throw invalid("structuredFeedback exceeds maximum length of 60000 characters");
+            throw createInvalidFeedback("structuredFeedback exceeds maximum length of 60000 characters");
         }
         requireFields(node, ROOT_FIELDS, Set.of("schemaVersion", "summary", "items"));
         if (!node.get("schemaVersion").isIntegralNumber() || node.get("schemaVersion").asInt() != 1) {
-            throw invalid("Unsupported schemaVersion");
+            throw createInvalidFeedback("Unsupported schemaVersion");
         }
         var summaryNode = node.get("summary");
         if (summaryNode == null || !summaryNode.isObject()) {
-            throw invalid("summary must be an object");
+            throw createInvalidFeedback("summary must be an object");
         }
         requireFields(summaryNode, SUMMARY_FIELDS, SUMMARY_FIELDS);
         var summary = new GradingFeedback.Summary(
@@ -86,12 +86,12 @@ public class GradingFeedbackValidator {
 
         var itemsNode = node.get("items");
         if (itemsNode == null || !itemsNode.isArray()) {
-            throw invalid("items must be an array");
+            throw createInvalidFeedback("items must be an array");
         }
         List<GradingFeedback.Item> items = new ArrayList<>();
         for (var itemNode : itemsNode) {
             if (itemNode == null || !itemNode.isObject()) {
-                throw invalid("Each item in structuredFeedback.items must be an object");
+                throw createInvalidFeedback("Each item in structuredFeedback.items must be an object");
             }
             requireFields(itemNode, ITEM_FIELDS, Set.of("rubricId", "itemId", "reason", "requiresReview"));
             UUID rubricId = readUuid(itemNode.get("rubricId"), "rubricId");
@@ -103,7 +103,7 @@ public class GradingFeedbackValidator {
                     "evidenceBlockId");
             var reqReviewNode = itemNode.get("requiresReview");
             if (reqReviewNode == null || !reqReviewNode.isBoolean()) {
-                throw invalid("requiresReview must be a boolean");
+                throw createInvalidFeedback("requiresReview must be a boolean");
             }
             boolean requiresReview = reqReviewNode.booleanValue();
             String reviewReason = readOptionalText(itemNode.get("reviewReason"), MAX_REVIEW_REASON_LENGTH,
@@ -113,55 +113,55 @@ public class GradingFeedbackValidator {
         }
 
         var feedback = new GradingFeedback(1, summary, List.copyOf(items));
-        return validate(feedback, rubrics, validBlockIds, requireAllItems);
+        return validateFeedback(feedback, rubrics, validBlockIds, requireAllItems);
     }
 
-    public GradingFeedback validate(GradingFeedback feedback, List<RubricView> rubrics, Set<String> validBlockIds,
+    public GradingFeedback validateFeedback(GradingFeedback feedback, List<RubricView> rubrics, Set<String> validBlockIds,
             boolean requireAllItems) {
         if (feedback == null) {
             if (requireAllItems) {
-                throw invalid("Missing structuredFeedback");
+                throw createInvalidFeedback("Missing structuredFeedback");
             }
             return null;
         }
-        String serialized = GradingJson.write(json, feedback);
+        String serialized = GradingJson.writeSnapshot(objectMapper, feedback);
         if (serialized.length() > MAX_TOTAL_JSON_CHARS) {
-            throw invalid("structuredFeedback exceeds maximum length of 60000 characters");
+            throw createInvalidFeedback("structuredFeedback exceeds maximum length of 60000 characters");
         }
         if (feedback.schemaVersion() != 1) {
-            throw invalid("Unsupported structuredFeedback schemaVersion");
+            throw createInvalidFeedback("Unsupported structuredFeedback schemaVersion");
         }
         if (feedback.summary() == null) {
-            throw invalid("Missing structuredFeedback summary");
+            throw createInvalidFeedback("Missing structuredFeedback summary");
         }
         validateSummaryList(feedback.summary().strengths(), "strengths");
         validateSummaryList(feedback.summary().improvements(), "improvements");
         validateSummaryList(feedback.summary().nextSteps(), "nextSteps");
 
         if (feedback.items() == null) {
-            throw invalid("Missing structuredFeedback items");
+            throw createInvalidFeedback("Missing structuredFeedback items");
         }
         Map<UUID, Map<UUID, RubricItem>> knownItems = indexRubrics(rubrics);
         int totalRubricItems = knownItems.values().stream().mapToInt(Map::size).sum();
         if (feedback.items().size() > totalRubricItems) {
-            throw invalid("structuredFeedback item count exceeds rubric item count");
+            throw createInvalidFeedback("structuredFeedback item count exceeds rubric item count");
         }
         if (requireAllItems && feedback.items().size() != totalRubricItems) {
-            throw invalid("AI structuredFeedback must provide feedback for every rubric item");
+            throw createInvalidFeedback("AI structuredFeedback must provide feedback for every rubric item");
         }
 
-        Set<String> allowedBlocks = validBlockIds != null ? validBlockIds : validBlockIds(rubrics, null);
+        Set<String> allowedBlocks = validBlockIds != null ? validBlockIds : listValidBlockIds(rubrics, null);
         Set<UUID> seenItems = new HashSet<>();
         for (var item : feedback.items()) {
             if (item == null || item.rubricId() == null || item.itemId() == null) {
-                throw invalid("structuredFeedback item requires rubricId and itemId");
+                throw createInvalidFeedback("structuredFeedback item requires rubricId and itemId");
             }
             var rubricMap = knownItems.get(item.rubricId());
             if (rubricMap == null || !rubricMap.containsKey(item.itemId())) {
-                throw invalid("Unknown rubricId or itemId in structuredFeedback");
+                throw createInvalidFeedback("Unknown rubricId or itemId in structuredFeedback");
             }
             if (!seenItems.add(item.itemId())) {
-                throw invalid("Duplicate rubric item in structuredFeedback");
+                throw createInvalidFeedback("Duplicate rubric item in structuredFeedback");
             }
             validateRequiredText(item.reason(), MAX_ITEM_TEXT_LENGTH, "reason");
             validateOptionalText(item.evidence(), MAX_ITEM_TEXT_LENGTH, "evidence");
@@ -171,21 +171,21 @@ public class GradingFeedbackValidator {
             boolean hasEvidence = item.evidence() != null && !item.evidence().isBlank();
             boolean hasReviewReason = item.reviewReason() != null && !item.reviewReason().isBlank();
             if (item.requiresReview() && !hasReviewReason) {
-                throw invalid("requiresReview requires a non-blank reviewReason");
+                throw createInvalidFeedback("requiresReview requires a non-blank reviewReason");
             }
             if (!hasEvidence && !(item.requiresReview() && hasReviewReason)) {
-                throw invalid("Each item requires observed evidence or an explicit review flag with reason");
+                throw createInvalidFeedback("Each item requires observed evidence or an explicit review flag with reason");
             }
             if (item.evidenceBlockId() != null) {
                 if (item.evidenceBlockId().isBlank() || item.evidenceBlockId().length() > MAX_BLOCK_ID_LENGTH) {
-                    throw invalid("Invalid evidenceBlockId");
+                    throw createInvalidFeedback("Invalid evidenceBlockId");
                 }
                 if (!allowedBlocks.contains(item.evidenceBlockId())) {
-                    throw invalid("Unknown evidenceBlockId: " + item.evidenceBlockId());
+                    throw createInvalidFeedback("Unknown evidenceBlockId: " + item.evidenceBlockId());
                 }
             }
         }
-        return feedback.copy();
+        return feedback.copyFeedback();
     }
 
     private static Map<UUID, Map<UUID, RubricItem>> indexRubrics(List<RubricView> rubrics) {
@@ -213,27 +213,27 @@ public class GradingFeedbackValidator {
         var names = new HashSet<String>();
         node.fieldNames().forEachRemaining(field -> {
             if (!allowed.contains(field)) {
-                throw invalid("Unknown field in structuredFeedback: " + field);
+                throw createInvalidFeedback("Unknown field in structuredFeedback: " + field);
             }
             names.add(field);
         });
         if (!names.containsAll(required)) {
-            throw invalid("Missing required field in structuredFeedback");
+            throw createInvalidFeedback("Missing required field in structuredFeedback");
         }
     }
 
     private static List<String> readSummaryList(JsonNode node, String field) {
         if (node == null || !node.isArray() || node.size() > MAX_SUMMARY_ITEMS) {
-            throw invalid("Invalid summary list: " + field);
+            throw createInvalidFeedback("Invalid summary list: " + field);
         }
         List<String> values = new ArrayList<>(node.size());
         for (var entry : node) {
             if (entry == null || !entry.isTextual()) {
-                throw invalid("Summary entry must be a string in " + field);
+                throw createInvalidFeedback("Summary entry must be a string in " + field);
             }
             String text = entry.textValue();
             if (text == null || text.isBlank() || text.length() > MAX_SUMMARY_ENTRY_LENGTH) {
-                throw invalid("Summary entry out of bounds in " + field);
+                throw createInvalidFeedback("Summary entry out of bounds in " + field);
             }
             values.add(text);
         }
@@ -242,29 +242,29 @@ public class GradingFeedbackValidator {
 
     private static void validateSummaryList(List<String> list, String field) {
         if (list == null || list.size() > MAX_SUMMARY_ITEMS) {
-            throw invalid("Invalid summary list: " + field);
+            throw createInvalidFeedback("Invalid summary list: " + field);
         }
         for (var entry : list) {
             if (entry == null || entry.isBlank() || entry.length() > MAX_SUMMARY_ENTRY_LENGTH) {
-                throw invalid("Summary entry out of bounds in " + field);
+                throw createInvalidFeedback("Summary entry out of bounds in " + field);
             }
         }
     }
 
     private static UUID readUuid(JsonNode node, String field) {
         if (node == null || !node.isTextual()) {
-            throw invalid("Expected UUID string for " + field);
+            throw createInvalidFeedback("Expected UUID string for " + field);
         }
         try {
             return UUID.fromString(node.textValue());
         } catch (IllegalArgumentException ex) {
-            throw invalid("Invalid UUID for " + field);
+            throw createInvalidFeedback("Invalid UUID for " + field);
         }
     }
 
     private static String readRequiredText(JsonNode node, int maxLength, String field) {
         if (node == null || !node.isTextual()) {
-            throw invalid("Expected string for " + field);
+            throw createInvalidFeedback("Expected string for " + field);
         }
         String text = node.textValue();
         validateRequiredText(text, maxLength, field);
@@ -276,7 +276,7 @@ public class GradingFeedbackValidator {
             return null;
         }
         if (!node.isTextual()) {
-            throw invalid("Expected string or null for " + field);
+            throw createInvalidFeedback("Expected string or null for " + field);
         }
         String text = node.textValue();
         validateOptionalText(text, maxLength, field);
@@ -285,17 +285,17 @@ public class GradingFeedbackValidator {
 
     private static void validateRequiredText(String value, int maxLength, String field) {
         if (value == null || value.isBlank() || value.length() > maxLength) {
-            throw invalid("Field " + field + " is required and must be at most " + maxLength + " characters");
+            throw createInvalidFeedback("Field " + field + " is required and must be at most " + maxLength + " characters");
         }
     }
 
     private static void validateOptionalText(String value, int maxLength, String field) {
         if (value != null && value.length() > maxLength) {
-            throw invalid("Field " + field + " exceeds " + maxLength + " characters");
+            throw createInvalidFeedback("Field " + field + " exceeds " + maxLength + " characters");
         }
     }
 
-    private static ApiException invalid(String detail) {
+    private static ApiException createInvalidFeedback(String detail) {
         return ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK", detail);
     }
 }

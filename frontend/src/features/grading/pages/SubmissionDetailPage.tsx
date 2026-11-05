@@ -5,12 +5,12 @@ import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useCallback, useState } from "react";
 import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
-import { points, statusLabels } from "../model/types";
+import { formatPoints, GRADE_STATUS_LABELS } from "../model/types";
 import { Pagination } from "@/shared/ui/Pagination";
 import { BatchActionDialog } from "../components/BatchActionDialog";
 import { Alert, Button, EmptyState, Icon, Pill, Select, type Tone } from "@/shared/ui";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
-import { evaluationHref } from "../model/navigation";
+import { buildEvaluationHref } from "../model/navigation";
 
 const STATUS_TONES: Record<string, Tone> = {
   PENDING: "warning",
@@ -49,7 +49,7 @@ export function SubmissionDetailPage({
   const [selected, setSelected] = useState<string[]>([]);
   const [action, setAction] = useState<"ai" | "finalize" | "publish" | null>(null);
   const load = useCallback(
-    () => gradingApi.submissions(classId, assignmentId, filter, page, late),
+    () => gradingApi.listSubmissions(classId, assignmentId, filter, page, late),
     [classId, assignmentId, filter, page, late],
   );
   const resource = useResource(load);
@@ -125,7 +125,7 @@ export function SubmissionDetailPage({
               <option value="ALL">Mọi trạng thái</option>
               {["PENDING", "DRAFT", "FINALIZED", "PUBLISHED", "IN_PROGRESS", "NOT_SUBMITTED"].map((s) => (
                 <option key={s} value={s}>
-                  {statusLabels[s]}
+                  {GRADE_STATUS_LABELS[s]}
                 </option>
               ))}
             </Select>
@@ -207,14 +207,14 @@ export function SubmissionDetailPage({
                     </td>
                     <td className={`${CELL} tabular-nums`}>{r.attemptCount}</td>
                     <td className={CELL}>
-                      <Pill tone={STATUS_TONES[r.status] ?? "neutral"}>{statusLabels[r.status] ?? r.status}</Pill>
+                      <Pill tone={STATUS_TONES[r.status] ?? "neutral"}>{GRADE_STATUS_LABELS[r.status] ?? r.status}</Pill>
                     </td>
-                    <td className={`${CELL} font-semibold whitespace-nowrap tabular-nums`}>{points(r.score, r.maxScore)}</td>
+                    <td className={`${CELL} font-semibold whitespace-nowrap tabular-nums`}>{formatPoints(r.score, r.maxScore)}</td>
                     <td className={`${CELL} text-right whitespace-nowrap`}>
                       {r.evaluationId ? (
                         <Link
                           className="inline-flex items-center gap-1 font-semibold text-primary-ink transition-colors hover:text-ink"
-                          href={evaluationHref(r.evaluationId!, { status: filter, late })}
+                          href={buildEvaluationHref(r.evaluationId!, { status: filter, late })}
                         >
                           {rowActionLabel(r.status)}
                           <Icon name="chevron_right" size={13} />

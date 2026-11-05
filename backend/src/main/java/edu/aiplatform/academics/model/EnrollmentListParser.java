@@ -17,7 +17,7 @@ public final class EnrollmentListParser {
 
     public record Row(int lineNumber, String email, EnrollmentResult error) { }
 
-    public static List<Row> parse(String input) {
+    public static List<Row> parseEnrollmentRows(String input) {
         if (input == null || input.getBytes(StandardCharsets.UTF_8).length > MAX_BYTES) {
             throw new AcademicRuleException("LIST_TOO_LARGE", "Danh sách tối đa 100 KB");
         }
