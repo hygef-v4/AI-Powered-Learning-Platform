@@ -299,14 +299,12 @@ class QuizAiDraftServiceTest {
         QuizDetail quiz = classQuiz();
         UUID id = quiz.quiz().id();
         long version = quiz.quiz().version();
-        DraftRequest personalWithoutProvider = new DraftRequest("x", 2, null, null, List.of(), AiSource.PERSONAL,
-                null, "r");
         DraftRequest sharedWithProvider = new DraftRequest("x", 2, null, null, List.of(), AiSource.SHARED,
                 AiProvider.OPENAI, "r");
         DraftRequest tooMany = new DraftRequest("x", 51, null, null, List.of(), AiSource.SHARED, null, "r");
         DraftRequest blank = new DraftRequest("  ", 2, null, null, List.of(), AiSource.SHARED, null, "r");
 
-        for (DraftRequest bad : List.of(personalWithoutProvider, sharedWithProvider, tooMany, blank)) {
+        for (DraftRequest bad : List.of(sharedWithProvider, tooMany, blank)) {
             assertThat(api(() -> drafts.requestForQuiz(teacher, id, bad, version)).code())
                     .isEqualTo("AI_DRAFT_REQUEST_INVALID");
         }

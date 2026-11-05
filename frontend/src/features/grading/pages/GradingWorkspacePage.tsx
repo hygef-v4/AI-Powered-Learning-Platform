@@ -130,8 +130,9 @@ function Workspace({ initial, refresh, proposalId }: { initial: Detail; refresh:
     `${row.student.name} ${row.student.email}`.toLocaleLowerCase("vi").includes(studentSearch.trim().toLocaleLowerCase("vi")));
   const paper = useMemo(() => editorDocument(detail.document), [detail.document]);
   const imageUrls = useSubmissionImages(evaluation.id, detail.document);
-  const partTitles = Object.fromEntries(detail.document.blocks.filter((block) => block.type === "HEADING" && typeof block.content.text === "string")
-    .map((block) => [block.id, block.content.text as string]));
+  // Rubric "Toàn bài" (mã ASSIGNMENT) không gắn với mục nào.
+  const partTitles: Record<string, string> = { ASSIGNMENT: "Toàn bài", ...Object.fromEntries(detail.document.blocks.filter((block) => block.type === "HEADING" && typeof block.content.text === "string")
+    .map((block) => [block.id, block.content.text as string])) };
   const validBlockIds = useMemo(() => {
     const ids = new Set<string>();
     for (const block of detail.document.blocks) {

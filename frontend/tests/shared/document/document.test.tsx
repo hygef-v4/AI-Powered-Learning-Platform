@@ -219,9 +219,16 @@ describe("DocumentEditor", () => {
       { id: "q1", origin: "TEACHER", type: "HEADING", content: { style: "H2", text: "Câu A" } },
       { id: "q2", origin: "TEACHER", type: "HEADING", content: { style: "H2", text: "Câu B" } },
     ] };
+    // Đang xem mục 1 (ở mép trên màn hình), các mục con còn ở dưới.
+    const tops: Record<string, number> = { p1: 100, q1: 600, q2: 900 };
+    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      const top = tops[this.dataset.section ?? ""] ?? 0;
+      return { top, bottom: top + 100, left: 0, right: 0, width: 0, height: 100, x: 0, y: top, toJSON: () => ({}) };
+    });
     rerender(<DocumentEditor document={two} onChange={onChange} mode="author" diagramEnabled={false} />);
     fireEvent.click(screen.getByRole("radio", { name: "Từng phần" }));
-    // Mỗi mục là một trang: 1. (chỉ văn bản của mục), 1.1., 1.2.
+    rect.mockRestore();
+    // Mỗi mục là một trang: 1. (chỉ văn bản của mục), 1.1., 1.2.; mở đúng trang của mục đang xem.
     expect(screen.getByTestId("step-nav")).toHaveTextContent("1 / 3");
     expect(document.querySelector('[data-section="p1"]')).not.toBeNull();
     expect(document.querySelector('[data-section="q1"]')).toBeNull();
@@ -234,9 +241,48 @@ describe("DocumentEditor", () => {
     fireEvent.click(within(screen.getByTestId("step-nav")).getByRole("button", { name: "Phần sau" }));
     expect(document.querySelector('[data-section="q1"]')).toBeNull();
     expect(document.querySelector('[data-section="q2"]')).not.toBeNull();
-    // Bấm mục cha trên sidebar khi đang ở mục con: về trang của mục cha.
+    // Bấm mục cha chưa có chữ riêng khi đang ở mục con: sang trang mục con đầu tiên (1.1), không ở lại trang mục con khác.
+    act(() => { window.dispatchEvent(new CustomEvent("document:show-part", { detail: { headingId: "p1" } })); });
+    expect(screen.getByTestId("step-nav")).toHaveTextContent("2 / 3");
+    expect(document.querySelector('[data-section="q1"]')).not.toBeNull();
+    // Mục cha có chữ riêng thì mở trang của chính nó.
+    const withText: DocumentModel = { blocks: [two.blocks[0]!,
+      { id: "t", origin: "TEACHER", type: "PARAGRAPH", content: { runs: [{ text: "Bối cảnh" }] } }, ...two.blocks.slice(1)] };
+    rerender(<DocumentEditor document={withText} onChange={onChange} mode="author" diagramEnabled={false} />);
     act(() => { window.dispatchEvent(new CustomEvent("document:show-part", { detail: { headingId: "p1" } })); });
     expect(screen.getByTestId("step-nav")).toHaveTextContent("1 / 3");
+  });
+
+  it("mục lục chọn mục thấp (không cuộn tới mép trên được): đổi sang Từng phần mở đúng mục đó", () => {
+    const two: DocumentModel = { blocks: [
+      { id: "p1", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Đề 1" } },
+      { id: "p2", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Đề 2" } },
+      { id: "p3", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Đề 3" } },
+    ] };
+    // Trang đã cuộn hết: mục 2 vẫn ở mép trên, mục 3 ở thấp.
+    const tops: Record<string, number> = { p1: -500, p2: 100, p3: 600 };
+    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      const top = tops[this.dataset.section ?? ""] ?? 0;
+      return { top, bottom: top + 100, left: 0, right: 0, width: 0, height: 100, x: 0, y: top, toJSON: () => ({}) };
+    });
+    render(<DocumentEditor document={two} onChange={vi.fn()} mode="author" diagramEnabled={false} />);
+    act(() => { window.dispatchEvent(new CustomEvent("document:show-part", { detail: { headingId: "p3" } })); });
+    act(() => { window.dispatchEvent(new Event("scroll")); });
+    fireEvent.click(screen.getByRole("radio", { name: "Từng phần" }));
+    rect.mockRestore();
+    expect(screen.getByTestId("step-nav")).toHaveTextContent("3 / 3");
+  });
+
+  it("tài liệu thay từ ngoài (AI ghi đề): Ctrl+Z về bản trước, Ctrl+Y tiến lại", () => {
+    const onChange = vi.fn();
+    const ai: DocumentModel = { blocks: [{ id: "a1", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Đề AI" } }] };
+    const { rerender } = render(<DocumentEditor document={doc} onChange={onChange} mode="author" diagramEnabled={false} />);
+    rerender(<DocumentEditor document={ai} onChange={onChange} mode="author" diagramEnabled={false} externalEdit={{ id: 1, before: doc }} />);
+    fireEvent.keyDown(screen.getByTestId("document-editor"), { key: "z", ctrlKey: true });
+    expect(onChange).toHaveBeenLastCalledWith(doc);
+    rerender(<DocumentEditor document={doc} onChange={onChange} mode="author" diagramEnabled={false} externalEdit={{ id: 1, before: doc }} />);
+    fireEvent.keyDown(screen.getByTestId("document-editor"), { key: "y", ctrlKey: true });
+    expect(onChange).toHaveBeenLastCalledWith(ai);
   });
 
   it("chỉ đọc thì không có thanh thêm khối", () => {

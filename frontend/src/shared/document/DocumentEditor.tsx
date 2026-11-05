@@ -44,6 +44,12 @@ import {
 
 type Mode = "author" | "student";
 
+/** Mục có chữ riêng (ngoài các mục con): có khối khác đoạn trống. */
+function hasOwnText(section: DocSection): boolean {
+  return [...section.blocks, ...section.after].some((block) => block.type !== "PARAGRAPH"
+    || block.content.runs.some((run) => run.text.trim() !== ""));
+}
+
 type Props = {
   document: DocumentModel;
   onChange: (next: DocumentModel) => void;
@@ -80,6 +86,11 @@ type Props = {
   answerGuidance?: boolean;
   fullWidth?: boolean;
   matchCommentHeight?: boolean;
+  /**
+   * Trang thay cả tài liệu từ ngoài (AI soạn ghi thẳng lên trang): mỗi {@code id} mới đưa {@code before} vào lịch sử để
+   * Ctrl+Z quay về bản trước, Ctrl+Y tiến lại (yêu cầu 2026-11-05).
+   */
+  externalEdit?: { id: number; before: DocumentModel } | null;
 };
 
 type StyleValue = "P" | "UL" | "OL" | HeadingStyle;
@@ -573,6 +584,7 @@ const TOOLBAR_COVER = "shadow-[0_-0.75rem_0_0.25rem_var(--c-bg)]";
 export function DocumentEditor({
   document, onChange, mode, diagramEnabled, readOnly = false, imageUrl, uploadImage, issues = [],
   header, titleField, toolbarExtra, viewSlot, toolbarCenter, comments, activeComment, highlightBlockId, onFocusBlock, emptyLeafLabel, answerGuidance = false, fullWidth = false, matchCommentHeight = false,
+  externalEdit = null,
 }: Props) {
   const origin: BlockOrigin = mode === "author" ? "TEACHER" : "STUDENT";
   const [previews, setPreviews] = useState<Record<string, string>>({});
@@ -628,6 +640,15 @@ export function DocumentEditor({
   useEffect(() => {
     latest.current = document;
   }, [document]);
+  const seenExternal = useRef(externalEdit?.id ?? null);
+  useEffect(() => {
+    if (!externalEdit || externalEdit.id === seenExternal.current) return;
+    seenExternal.current = externalEdit.id;
+    past.current = [...past.current.slice(-99), externalEdit.before];
+    future.current = [];
+    lastPush.current = 0;
+    setHistory({ past: past.current.length, future: 0 });
+  }, [externalEdit]);
   useEffect(() => () => Object.values(previewsRef.current).forEach((url) => URL.revokeObjectURL(url)), []);
 
   useEffect(() => {
@@ -642,10 +663,27 @@ export function DocumentEditor({
     const show = (event: Event) => {
       const id = (event as CustomEvent<{ headingId: string }>).detail?.headingId;
       if (!id) return;
+      // Mục được bấm trên Mục lục là mục đang xem (sáng trên Mục lục), kể cả khi trang không cuộn tới được mép trên (mục
+      // cuối thấp); giữ tới khi người dùng tự cuộn (yêu cầu 2026-11-05).
+      pinned.current = id;
       // Mỗi mục là một trang: mở đúng trang của mục được bấm (bấm 1 khi đang ở 1.2 thì về trang 1).
       // "DOCUMENT": văn bản ngoài mọi mục (trang gốc), cuộn tới khối đầu tiên của nó.
       const root = id === "DOCUMENT";
-      const page = latestLeaves.current.findIndex((leaf) => (root ? !leaf.heading : leaf.heading?.id === id));
+      const pages = latestLeaves.current;
+      let page = pages.findIndex((leaf) => (root ? !leaf.heading : leaf.heading?.id === id));
+      if (latestView.current === "step" && page >= 0) {
+        // Mục cha chưa có chữ riêng (chỉ chứa mục con): mở trang mục con đầu tiên, ví dụ bấm 1.2 thì sang 1.2.1; trang ngay
+        // sau mục cha luôn là mục con đầu của nó (yêu cầu 2026-11-05).
+        while (pages[page]?.heading && pages[page]!.children.length > 0 && !hasOwnText(pages[page]!) && pages[page + 1]) page++;
+        pinned.current = pages[page]!.heading?.id ?? "DOCUMENT";
+        // Ở chế độ Từng phần luôn chuyển trang rồi lên đầu trang, kể cả khi mục cha đang hiện trên trang mục con.
+        setStepAt(page);
+        requestAnimationFrame(() => {
+          const top = paper.current ? paper.current.getBoundingClientRect().top + window.scrollY - 140 : 0;
+          if (typeof window.scrollTo === "function") window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+        });
+        return;
+      }
       if (page >= 0) setStepAt(page);
       const first = root ? latestLeaves.current.find((leaf) => !leaf.heading) : undefined;
       const scrollId = root ? (first?.blocks[0] ?? first?.after[0])?.id : id;
@@ -656,7 +694,22 @@ export function DocumentEditor({
   }, []);
   // Báo cho Mục lục mục đang xem (sự kiện `document:current-part`): cả trang thì là mục cuối cùng đã cuộn qua mép trên.
   const lastCurrent = useRef<string | null>(null);
+  const latestView = useRef(view);
+  useEffect(() => { latestView.current = view; }, [view]);
+  const pinned = useRef<string | null>(null);
   const reportCurrent = useRef<() => void>(() => {});
+  // Người dùng tự cuộn (con lăn, chạm, phím) thì bỏ mục ghim, lại theo chỗ cuộn tới.
+  useEffect(() => {
+    const release = (event: Event) => {
+      if (event instanceof KeyboardEvent && !["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key)) return;
+      if (event instanceof KeyboardEvent && (event.target as HTMLElement | null)?.closest?.("[contenteditable], textarea, input")) return;
+      pinned.current = null;
+    };
+    window.addEventListener("wheel", release, { passive: true });
+    window.addEventListener("touchmove", release, { passive: true });
+    window.addEventListener("keydown", release);
+    return () => { window.removeEventListener("wheel", release); window.removeEventListener("touchmove", release); window.removeEventListener("keydown", release); };
+  }, []);
   useEffect(() => {
     let frame = 0;
     const onScroll = () => {
@@ -1358,8 +1411,8 @@ export function DocumentEditor({
   const topOf = (target: DocSection) => tree.children.find((child) => contains(child, target)) ?? target;
   latestLeaves.current = leaves;
   reportCurrent.current = () => {
-    let current: string | null = currentLeaf ? currentLeaf.heading?.id ?? "DOCUMENT" : null;
-    if (!currentLeaf) {
+    let current: string | null = currentLeaf ? currentLeaf.heading?.id ?? "DOCUMENT" : pinned.current;
+    if (!currentLeaf && !current) {
       const sections = Array.from(paper.current?.querySelectorAll<HTMLElement>("section[data-section]") ?? []);
       for (const section of sections) if (section.getBoundingClientRect().top <= 200) current = section.dataset.section ?? null;
       if (!current && (tree.blocks.length > 0 || tree.after.length > 0)) current = "DOCUMENT";
@@ -1402,13 +1455,17 @@ export function DocumentEditor({
   const viewToggle = tree.children.length > 0 ? (
     <span role="radiogroup" aria-label="Chế độ xem" className="flex items-center gap-0.5 rounded-lg bg-line/60 p-0.5">
       <ViewButton label="Cả trang" on={!stepping} onClick={() => {
+        pinned.current = currentLeaf ? currentLeaf.heading?.id ?? "DOCUMENT" : null;
         // Về Cả trang thì cuộn tới đúng mục đang xem, không về đầu trang.
         const id = currentLeaf?.heading?.id;
         setView("page");
         if (id) requestAnimationFrame(() => scrollToSection(id));
       }}><PageGlyph /></ViewButton>
       <ViewButton label="Từng phần" on={stepping} onClick={() => {
-        const at = focused ? leaves.findIndex((leaf) => leaf.heading?.id === focused.id || leaf.blocks.some((b) => b.id === focused.id)) : -1;
+        // Mở đúng trang của mục đang xem (theo chỗ đã cuộn tới), không thì theo chỗ con trỏ (yêu cầu 2026-11-05).
+        const viewing = lastCurrent.current ? leaves.findIndex((leaf) => (leaf.heading?.id ?? "DOCUMENT") === lastCurrent.current) : -1;
+        const at = viewing >= 0 ? viewing
+          : focused ? leaves.findIndex((leaf) => leaf.heading?.id === focused.id || leaf.blocks.some((b) => b.id === focused.id)) : -1;
         if (at >= 0) setStepAt(at);
         setView("step");
       }}><StepGlyph /></ViewButton>

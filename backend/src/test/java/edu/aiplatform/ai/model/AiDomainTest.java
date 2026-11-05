@@ -61,7 +61,8 @@ class AiDomainTest {
     void onlyInstitutionalConnectionCanBeDisabledAndRevokeDropsCiphertext() {
         AiConnection personal = AiConnection.create(UUID.randomUUID(), Scope.PERSONAL, UUID.randomUUID(), AiProvider.OPENAI,
                 "gpt-4.1-mini", new EncryptedKey(new byte[] {1}, new byte[] {2}, 1), "3kQf", NOW);
-        assertThatThrownBy(() -> personal.withStatus(Status.DISABLED, NOW)).isInstanceOf(IllegalStateException.class);
+        // Khóa cá nhân cũng tắt được (yêu cầu 2026-11-05).
+        assertThat(personal.withStatus(Status.DISABLED, NOW).status()).isEqualTo(Status.DISABLED);
         AiConnection revoked = personal.revoked(NOW);
         assertThat(revoked.status()).isEqualTo(Status.REVOKED);
         assertThat(revoked.keyCiphertext()).isNull();

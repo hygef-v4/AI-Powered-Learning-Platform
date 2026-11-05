@@ -48,11 +48,22 @@ public final class AssignmentCommands {
     public record DraftOptions(String profile, String language, Integer questionCount, BigDecimal targetPoints) {
     }
 
+    /**
+     * {@code source} rỗng: hệ thống tự chọn nguồn theo token của lượt này; {@code PERSONAL} không kèm provider: chỉ thử
+     * API cá nhân. {@code formatText}: chữ của mẫu đề (DOCX đã nhập ở trình duyệt, không giới hạn 2 MB) mà AI phải
+     * theo (yêu cầu 2026-11-05).
+     */
     public record AiDraftRequest(String request, List<UUID> materialIds, List<String> sourceFileRefs,
-                                 AiSource source, AiProvider provider, String requestRef, DraftOptions options) {
+                                 AiSource source, AiProvider provider, String requestRef, DraftOptions options,
+                                 String formatText) {
+        public AiDraftRequest(String request, List<UUID> materialIds, List<String> sourceFileRefs, AiSource source,
+                              AiProvider provider, String requestRef, DraftOptions options) {
+            this(request, materialIds, sourceFileRefs, source, provider, requestRef, options, null);
+        }
+
         public AiDraftRequest(String request, List<UUID> materialIds, AiSource source, AiProvider provider,
                               String requestRef) {
-            this(request, materialIds, List.of(), source, provider, requestRef, null);
+            this(request, materialIds, List.of(), source, provider, requestRef, null, null);
         }
     }
 

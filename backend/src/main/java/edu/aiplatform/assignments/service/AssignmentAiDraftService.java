@@ -8,7 +8,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import edu.aiplatform.ai.contract.AiPrompt;
 import edu.aiplatform.ai.contract.AiSource;
+import edu.aiplatform.ai.contract.AiSourceChoice;
 import edu.aiplatform.ai.contract.AssignmentSourceFile;
 import edu.aiplatform.ai.contract.AssignmentSourceText;
 import edu.aiplatform.ai.contract.IAssignmentSourceTextExtractor;
@@ -69,6 +71,12 @@ public class AssignmentAiDraftService {
     static final int MAX_SOURCE_FILES = 3;
     static final long MAX_SOURCE_BYTES = 2L * 1024 * 1024;
     static final long MAX_SOURCE_TOTAL_BYTES = MAX_SOURCE_FILES * MAX_SOURCE_BYTES;
+    static final int MAX_FORMAT_CHARS = 30_000;
+    static final String FORMAT_TITLE_PREFIX = "FORMAT TEMPLATE: ";
+    static final String FORMAT_INSTRUCTION = "\n\nThe source titled \"FORMAT TEMPLATE: ...\" is the instructor's "
+            + "assignment format template: follow its section order, numbering, headings and layout exactly, but take "
+            + "the content from the request and the other sources. Take the number of questions and the output language "
+            + "from the template when the settings do not fix them.";
 
     private final AssignmentRepository assignments;
     private final AiDraftRepository drafts;
@@ -126,8 +134,14 @@ public class AssignmentAiDraftService {
         if (requestRef == null || requestRef.isBlank() || requestRef.length() > 100) {
             throw ApiException.badRequest("REQUEST_REF_INVALID", "Thiếu mã yêu cầu");
         }
-        if (command.source() == null || (command.source() == AiSource.PERSONAL) != (command.provider() != null)) {
-            throw ApiException.badRequest("AI_SOURCE_INVALID", "Chọn nguồn AI");
+        // Nguồn rỗng: tự chọn; PERSONAL không kèm provider: tự chọn trong API cá nhân (yêu cầu 2026-11-05).
+        if (command.provider() != null && command.source() != AiSource.PERSONAL) {
+            throw ApiException.badRequest("AI_SOURCE_INVALID", "Nguồn AI không hợp lệ");
+        }
+        String formatText = command.formatText() == null || command.formatText().isBlank() ? null
+                : command.formatText().strip();
+        if (formatText != null && formatText.length() > MAX_FORMAT_CHARS) {
+            formatText = formatText.substring(0, MAX_FORMAT_CHARS);
         }
         AssignmentCommands.DraftOptions draftOptions = normalizeOptions(command.options());
         List<String> sourceRefs = normalizeSourceRefs(command.sourceFileRefs());
@@ -136,7 +150,7 @@ public class AssignmentAiDraftService {
         if (materialIds.size() > Assignment.MATERIALS_MAX) {
             throw ApiException.badRequest("TOO_MANY_MATERIALS", "Chọn tối đa 10 tài liệu tham khảo");
         }
-        if (prompt.isEmpty() && sourceRefs.isEmpty() && materialIds.isEmpty()) {
+        if (prompt.isEmpty() && sourceRefs.isEmpty() && materialIds.isEmpty() && formatText == null) {
             throw ApiException.badRequest("AI_REQUEST_INVALID", "Nhập yêu cầu hoặc chọn ít nhất một tài liệu nguồn");
         }
         String effectivePrompt = prompt.isEmpty()
@@ -162,7 +176,7 @@ public class AssignmentAiDraftService {
             ObjectNode provenance = JsonNodeFactory.instance.objectNode();
             provenance.put("requestedBy", actor.accountId().toString());
             provenance.put("origin", "AI_TASK");
-            provenance.put("source", command.source().name());
+            provenance.put("source", command.source() == null ? "AUTO" : command.source().name());
             if (command.provider() != null) {
                 provenance.put("provider", command.provider().name());
             }
@@ -205,31 +219,62 @@ public class AssignmentAiDraftService {
             throw ApiException.badRequest("ASSIGNMENT_SOURCE_UNREADABLE", "Không đọc được tệp nguồn. Kiểm tra định dạng và thử lại.");
         }
         List<MaterialText> texts = new java.util.ArrayList<>(materialIds.isEmpty() ? List.of() : texts(actor, materialIds));
-        sourceTexts.forEach(source -> texts.add(new MaterialText(UUID.randomUUID(), source.fileName(), source.text(), source.truncated())));
-        AiTaskView task;
-        try {
-            task = aiTasks.submit(new AiTaskRequest(actor, command.source(), command.provider(), TASK_TYPE,
-                    TARGET_PREFIX + draft.id(), prepared.assignment().version(), requestRef,
-                    AssignmentDraftPromptBuilder.build(prepared.assignment(), effectivePrompt, texts, draftOptions),
-                    AssignmentDraftGenerationSchema.build(draftOptions, prepared.assignment().gradingMode()), MAX_OUTPUT_TOKENS));
-        } catch (ApiException e) {
-            transaction.executeWithoutResult(s -> drafts.markFailed(draft.id(), e.getMessage(), clock.instant()));
-            throw e;
-        } catch (RuntimeException e) {
-            transaction.executeWithoutResult(s -> drafts.markFailed(draft.id(), "AI chưa sẵn sàng", clock.instant()));
-            return view(drafts.find(draft.id()).orElseThrow());
+        sourceTexts.forEach(source -> texts.add(new MaterialText(UUID.randomUUID(), source.fileName(), source.text(),
+                source.truncated())));
+        boolean hasFormat = formatText != null;
+        if (hasFormat) {
+            texts.add(new MaterialText(UUID.randomUUID(), FORMAT_TITLE_PREFIX + "template", formatText,
+                    command.formatText().strip().length() > MAX_FORMAT_CHARS));
         }
+        String finalPrompt = hasFormat ? effectivePrompt + FORMAT_INSTRUCTION : effectivePrompt;
+        AiPrompt aiPrompt = AssignmentDraftPromptBuilder.build(prepared.assignment(), finalPrompt, texts, draftOptions);
+        String schema = AssignmentDraftGenerationSchema.build(draftOptions, prepared.assignment().gradingMode());
+        List<AiSourceChoice> order = sourceOrder(actor, command, aiPrompt);
+        if (order.isEmpty()) {
+            String message = "API chung không đủ hạn mức cho lượt này và bạn chưa lưu khóa API cá nhân";
+            transaction.executeWithoutResult(s -> drafts.markFailed(draft.id(), message, clock.instant()));
+            throw ApiException.badRequest("AI_SOURCE_UNAVAILABLE", message);
+        }
+        AiTaskView task = null;
+        AiSourceChoice picked = null;
+        for (int index = 0; index < order.size() && task == null; index++) {
+            AiSourceChoice choice = order.get(index);
+            boolean last = index == order.size() - 1;
+            try {
+                task = aiTasks.submit(new AiTaskRequest(actor, choice.source(), choice.provider(), TASK_TYPE,
+                        TARGET_PREFIX + draft.id(), prepared.assignment().version(), requestRef, aiPrompt, schema,
+                        MAX_OUTPUT_TOKENS));
+                picked = choice;
+            } catch (ApiException e) {
+                // API chung không dùng được thì tự chuyển sang nguồn kế tiếp (API cá nhân), không bắt tải lại.
+                if (!last) continue;
+                transaction.executeWithoutResult(s -> drafts.markFailed(draft.id(), e.getMessage(), clock.instant()));
+                throw e;
+            } catch (RuntimeException e) {
+                if (!last) continue;
+                transaction.executeWithoutResult(s -> drafts.markFailed(draft.id(), "AI chưa sẵn sàng", clock.instant()));
+                return view(drafts.find(draft.id()).orElseThrow());
+            }
+        }
+        AiTaskView submitted = task;
+        AiSourceChoice chosen = picked;
         transaction.executeWithoutResult(s -> {
             ObjectNode provenance = drafts.find(draft.id()).orElseThrow().provenance().deepCopy();
-            if (task.model() != null) {
-                provenance.put("model", task.model());
+            provenance.put("source", chosen.source().name());
+            if (chosen.provider() != null) {
+                provenance.put("provider", chosen.provider().name());
+            } else {
+                provenance.remove("provider");
+            }
+            if (submitted.model() != null) {
+                provenance.put("model", submitted.model());
             }
             ArrayNode used = provenance.putArray("materials");
             texts.forEach(t -> used.addObject().put("materialId", t.materialId().toString()).put("title", t.title())
                     .put("truncated", t.truncated()));
-            drafts.attachTask(draft.id(), task.taskId(), provenance);
-            if (task.state() == AiTaskState.FAILED || task.state() == AiTaskState.CANCELLED) {
-                drafts.markFailed(draft.id(), task.safeError() == null ? "AI không trả kết quả" : task.safeError(),
+            drafts.attachTask(draft.id(), submitted.taskId(), provenance);
+            if (submitted.state() == AiTaskState.FAILED || submitted.state() == AiTaskState.CANCELLED) {
+                drafts.markFailed(draft.id(), submitted.safeError() == null ? "AI không trả kết quả" : submitted.safeError(),
                         clock.instant());
             }
         });
@@ -413,6 +458,16 @@ public class AssignmentAiDraftService {
         }
     }
 
+    /** Nguồn chọn đích danh, hoặc thứ tự tự chọn của module AI (chỉ còn API cá nhân khi yêu cầu PERSONAL). */
+    private List<AiSourceChoice> sourceOrder(Actor actor, AssignmentCommands.AiDraftRequest command, AiPrompt prompt) {
+        if (command.source() != null && command.provider() != null) {
+            return List.of(new AiSourceChoice(command.source(), command.provider()));
+        }
+        List<AiSourceChoice> order = aiTasks.sourceOrder(actor, prompt, MAX_OUTPUT_TOKENS);
+        if (command.source() == null) return order;
+        return order.stream().filter(choice -> choice.source() == command.source()).toList();
+    }
+
     private List<StoredFileInfo> attachSources(Actor actor, List<String> refs) {
         List<StoredFileInfo> files = new java.util.ArrayList<>();
         long total = 0;
@@ -473,7 +528,8 @@ public class AssignmentAiDraftService {
                 ? new AssignmentCommands.DraftOptions("AUTO", "VI", null, null) : requested;
         String profile = options.profile() == null ? "AUTO" : options.profile().strip().toUpperCase(Locale.ROOT);
         String language = options.language() == null ? "VI" : options.language().strip().toUpperCase(Locale.ROOT);
-        if (!Set.of("AUTO", "GENERAL", "SWR", "SWD").contains(profile) || !Set.of("VI", "EN").contains(language)
+        // AUTO: theo mẫu đề (yêu cầu 2026-11-05).
+        if (!Set.of("AUTO", "GENERAL", "SWR", "SWD").contains(profile) || !Set.of("VI", "EN", "AUTO").contains(language)
                 || (options.questionCount() != null && (options.questionCount() < 1 || options.questionCount() > 10))
                 || (options.targetPoints() != null && !validTarget(options.targetPoints()))) {
             throw ApiException.badRequest("AI_OPTIONS_INVALID", "Kiểm tra profile, ngôn ngữ, số câu và tổng điểm");

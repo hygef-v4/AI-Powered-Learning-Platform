@@ -173,7 +173,8 @@ export type Proposal = {
   };
 };
 export type AiRequest = {
-  source: "SHARED" | "PERSONAL";
+  /** Bỏ trống: hệ thống tự chọn nguồn. */
+  source?: "SHARED" | "PERSONAL";
   provider?: "GEMINI" | "OPENAI" | "CLAUDE";
   requestRef: string;
 };

@@ -253,8 +253,8 @@ const quizDraftPath = (quizId: string) => `${quizPath(quizId)}/ai-drafts`;
 function draftBody(input: AiDraftInput) {
   const { instructions, count, type, difficulty, materialIds, choice } = input;
   return {
-    instructions, count, type, difficulty, materialIds, source: choice.source,
-    provider: choice.source === "PERSONAL" ? choice.provider : null, requestRef: crypto.randomUUID(),
+    instructions, count, type, difficulty, materialIds, source: choice?.source ?? null,
+    provider: choice?.source === "PERSONAL" ? choice.provider : null, requestRef: crypto.randomUUID(),
   };
 }
 

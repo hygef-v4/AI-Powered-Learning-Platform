@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { useState } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { DocumentEditor } from "@/shared/document/DocumentEditor";
 import type { DocumentModel } from "@/shared/document";
 
@@ -293,4 +293,18 @@ it("dòng cuối: Enter thêm dòng trống; + Mục tại con trỏ để khố
   const child = document.querySelector<HTMLElement>(`[data-section="${blocks[2]!.id}"]`)!;
   expect(child.querySelector('[data-testid="block-d"]')).toBeNull();
   expect(document.querySelector('[data-section="a"] [data-testid="block-d"]')).not.toBeNull();
+});
+
+it("đang cuộn tới mục 3 mà chuyển sang Từng phần thì mở đúng trang của mục 3", () => {
+  const doc: DocumentModel = { blocks: ["a", "b", "c"].map((id) => ({ id, origin: "TEACHER" as const, type: "HEADING" as const, content: { style: "H1" as const, text: id.toUpperCase() } })) };
+  const tops: Record<string, number> = { a: -900, b: -400, c: 120 };
+  const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+    const top = tops[this.dataset.section ?? ""] ?? 0;
+    return { top, bottom: top + 100, left: 0, right: 0, width: 0, height: 100, x: 0, y: top, toJSON: () => ({}) };
+  });
+  render(<DocumentEditor document={doc} onChange={() => {}} mode="author" diagramEnabled={false} />);
+  fireEvent.click(screen.getByRole("radio", { name: "Từng phần" }));
+  rect.mockRestore();
+  expect(screen.getByTestId("step-nav")).toHaveTextContent("3 / 3");
+  expect(document.querySelector('[data-section="c"]')).not.toBeNull();
 });

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Alert, Button, Dialog, Pill, Select } from "@/shared/ui";
+import { Alert, Button, Dialog, Pill } from "@/shared/ui";
 import { workApi } from "../api";
 import { errorMessage, formatDateTime, requestRef } from "../model/format";
 import type { Feedback } from "../model/types";
@@ -22,7 +22,6 @@ export function PracticeFeedbackDialog({ attemptId, partTitles, onClose }: {
   const [items, setItems] = useState<Feedback[] | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [tick, setTick] = useState(0);
-  const [provider, setProvider] = useState("GEMINI");
   const [busy, setBusy] = useState(false);
   const [ref, setRef] = useState(requestRef);
 
@@ -44,7 +43,8 @@ export function PracticeFeedbackDialog({ attemptId, partTitles, onClose }: {
     setBusy(true);
     setError(null);
     try {
-      await workApi.requestFeedback(attemptId, provider, ref);
+      // Không chọn nhà cung cấp: hệ thống tự thử API chung rồi các khóa cá nhân (yêu cầu 2026-11-05).
+      await workApi.requestFeedback(attemptId, ref);
       setRef(requestRef());
       setTick((value) => value + 1);
     } catch (e) {
@@ -52,16 +52,11 @@ export function PracticeFeedbackDialog({ attemptId, partTitles, onClose }: {
     } finally {
       setBusy(false);
     }
-  }, [attemptId, provider, ref]);
+  }, [attemptId, ref]);
 
   return (
     <Dialog open size="lg" title="Góp ý AI" icon="smart_toy" onClose={onClose} dismissible={!busy}
       footer={<>
-        <Select aria-label="Nhà cung cấp" value={provider} onChange={(e) => setProvider(e.target.value)} className="w-36">
-          <option value="GEMINI">Gemini</option>
-          <option value="OPENAI">OpenAI</option>
-          <option value="CLAUDE">Claude</option>
-        </Select>
         <Button variant="primary" icon="smart_toy" disabled={busy || pending} data-testid="ask-feedback" onClick={() => void ask()}>
           {items?.length ? "Nhận góp ý lại" : "Nhận góp ý AI"}
         </Button>

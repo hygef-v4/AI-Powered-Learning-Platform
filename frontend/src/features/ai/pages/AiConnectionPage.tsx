@@ -1,26 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { useUrlState } from "@/shared/navigation/useUrlState";
-import type { AiProvider } from "@/shared/ai";
-import { Alert, Button, PageHeader, SettingsCard, Tabs, type TabItem } from "@/shared/ui";
+import { PageHeader, SettingsCard, Tabs, type TabItem } from "@/shared/ui";
 import { useSession } from "@/features/identity/hooks/session";
 import { McpAgentsTab } from "../components/McpAgentsTab";
-import { getConnections, getProviders, revokeConnection, saveConnection, testConnection } from "../api";
+import {
+  addConnection,
+  getConnections,
+  revealConnection,
+  revokeConnection,
+  saveConnection,
+  setConnectionEnabled,
+  testConnection,
+  testConnectionDraft,
+} from "../api";
 import { AiUsageHistoryPage } from "./AiUsageHistoryPage";
-import { PersonalApiSection } from "../components/PersonalApiSection";
-import { DefaultSourceSection } from "../components/DefaultSourceSection";
+import { KeysSection, type KeysApi } from "../components/KeysSection";
 import { ApiSetupGuide } from "../components/SetupGuides";
-import type { ConnectionView, ProviderInfo, SaveConnection } from "../model/types";
 
 type Tab = "usage" | "settings" | "mcp";
-type Data = { connections: ConnectionView[]; providers: ProviderInfo[] };
-
-const loadAll = async (): Promise<Data> => {
-  const [connections, providers] = await Promise.all([getConnections(), getProviders()]);
-  return { connections, providers };
-};
-
 /**
  * Màn #6 AI Connection (UC 31–33), cùng bố cục trang Cài đặt AI của Admin: tab Usage mở trước (lịch sử của chính mình),
  * tab API cá nhân là khóa API cá nhân, tab Agent MCP của Student/Teacher/Subject Manager là agent của chính mình.
@@ -48,67 +46,27 @@ export function AiConnectionPage({ initialTab }: { initialTab?: string }) {
   );
 }
 
-/** Tab API cá nhân: nguồn AI mặc định, bảng khóa API cá nhân và hướng dẫn lấy khóa trong một thẻ. */
+const PERSONAL: KeysApi = {
+  list: async () => (await getConnections()).filter((c) => c.configured && c.id),
+  add: addConnection,
+  save: saveConnection,
+  reveal: revealConnection,
+  test: testConnection,
+  testDraft: testConnectionDraft,
+  setEnabled: setConnectionEnabled,
+  revoke: revokeConnection,
+};
+
+/**
+ * Tab API cá nhân: bảng khóa cá nhân giống hệt bảng khóa của trường (nhiều khóa cho một nhà cung cấp, công tắc, kiểm tra,
+ * thay, thu hồi) và hướng dẫn lấy khóa. Khi gọi AI hệ thống tự thử khóa của trường rồi khóa cá nhân (yêu cầu 2026-11-05).
+ */
 function PersonalKeysTab() {
-  const [data, setData] = useState<Data | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const reload = useCallback(
-    () =>
-      loadAll().then(
-        (loaded) => {
-          setData(loaded);
-          setError(null);
-        },
-        () => setError("Không tải được kết nối AI, thử lại sau."),
-      ),
-    [],
-  );
-
-  useEffect(() => {
-    let active = true;
-    loadAll().then(
-      (loaded) => {
-        if (active) setData(loaded);
-      },
-      () => {
-        if (active) setError("Không tải được kết nối AI, thử lại sau.");
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const save = async (provider: AiProvider, body: SaveConnection) => {
-    await saveConnection(provider, body);
-    await reload();
-  };
-  const test = async (provider: AiProvider) => {
-    const result = await testConnection(provider);
-    await reload();
-    return result;
-  };
-  const revoke = async (provider: AiProvider) => {
-    await revokeConnection(provider);
-    await reload();
-  };
-
   return (
-    <>
-      {error && (
-        <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void reload()}>Tải lại</Button>}>
-          {error}
-        </Alert>
-      )}
-      {!data && !error && <p className="text-[13px] text-muted">Đang tải…</p>}
-      {data && (
-        <SettingsCard>
-          <DefaultSourceSection reloadKey={data.connections} />
-          <PersonalApiSection connections={data.connections} providers={data.providers} onSave={save} onTest={test} onRevoke={revoke} />
-          <ApiSetupGuide />
-        </SettingsCard>
-      )}
-    </>
+    <SettingsCard>
+      <KeysSection title="Khóa API cá nhân" api={PERSONAL} revokeTitle="Thu hồi khóa API?"
+        loadError="Không tải được kết nối AI, thử lại sau." />
+      <ApiSetupGuide />
+    </SettingsCard>
   );
 }

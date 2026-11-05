@@ -100,13 +100,13 @@ export function criteriaOf(items: AtomicItem[]): RubricCriterion[] {
 /** BR-U07-21: điểm một mục là số dương, tối đa 2 chữ số thập phân (server từ chối 1.255, không làm tròn). */
 export function pointsValid(points: number | null | undefined): boolean {
   const value = Number(points);
-  return points !== null && points !== undefined && Number.isFinite(value) && value > 0
+  return points !== null && points !== undefined && Number.isFinite(value) && value >= 0
     && Math.abs(value * 100 - Math.round(value * 100)) < 1e-6;
 }
 
 /** Điểm đã nhập nhưng sai dạng (quá 2 chữ số thập phân); ô trống, 0, số âm là "chưa có điểm", không tính là sai. */
 export function pointsMalformed(points: number | null | undefined): boolean {
-  return points !== null && points !== undefined && Number(points) > 0 && !pointsValid(points);
+  return points !== null && points !== undefined && Number(points) >= 0 && !pointsValid(points);
 }
 
 /** Tổng điểm rubric: cộng điểm hợp lệ của các mục chấm. */
@@ -122,6 +122,27 @@ export function criterionTotal(criterion: RubricCriterion): number {
 export function rubricComplete(criteria: RubricCriterion[]): boolean {
   return criteria.length > 0 && criteria.every((criterion) => criterion.title.trim() !== "" && criterion.items.length > 0
     && criterion.items.every((item) => item.text.trim() !== "" && pointsValid(item.points)));
+}
+
+/** Mục chấm có ghi gì đó (chữ hoặc điểm); dòng không chữ không điểm bỏ qua (yêu cầu 2026-11-05). */
+function writtenItems(criteria: RubricCriterion[]) {
+  return criteria.flatMap((criterion) => criterion.items)
+    .filter((item) => item.text.trim() !== "" || (item.points !== null && item.points !== undefined));
+}
+
+/**
+ * Thẻ rubric thiếu điểm (giống RubricService.pointsMissing): có mục chấm mà tổng điểm không quá 0, hoặc có mục ghi chữ
+ * chưa ghi điểm / ghi điểm chưa ghi chữ. Thẻ chỉ có dòng trống coi như chưa có rubric, không báo.
+ */
+/** Có mục chấm ghi dở: có chữ chưa điểm (hoặc điểm sai), có điểm chưa chữ. */
+export function rubricHalfWritten(criteria: RubricCriterion[]): boolean {
+  return writtenItems(criteria).some((item) => item.text.trim() === "" || !pointsValid(item.points));
+}
+
+export function rubricPointsMissing(criteria: RubricCriterion[]): boolean {
+  const items = writtenItems(criteria);
+  if (items.length === 0) return false;
+  return items.some((item) => item.text.trim() === "" || !pointsValid(item.points)) || rubricTotal(criteria) <= 0;
 }
 
 export const headingLabels: Record<HeadingStyle, string> = {
