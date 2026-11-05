@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -39,8 +40,9 @@ public class EvaluationController {
     }
 
     @GetMapping("/evaluations/{id}")
-    public EvaluationDetail detail(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return review.detail(actor, id);
+    public EvaluationDetail detail(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+            @RequestParam(required = false) String status, @RequestParam(required = false) Boolean late) {
+        return review.detail(actor, id, status, late);
     }
 
     @PutMapping("/evaluations/{id}")

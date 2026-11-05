@@ -23,18 +23,25 @@ public class SubjectQueryService implements ISubjectQuery {
 
     @Override
     public Optional<SubjectRef> getSubject(UUID subjectId) {
-        return subjectId == null ? Optional.empty() : repository.findById(subjectId).map(SubjectQueryService::reference);
+        return subjectId == null
+                ? Optional.empty()
+                : repository.findById(subjectId).map(SubjectQueryService::reference);
     }
 
     @Override
     public boolean isActive(UUID subjectId) {
-        return getSubject(subjectId).filter(subject -> subject.status() == SubjectStatus.ACTIVE).isPresent();
+        return getSubject(subjectId)
+                .filter(subject -> subject.status() == SubjectStatus.ACTIVE)
+                .isPresent();
     }
 
     @Override
     public List<SubjectRef> listManagedSubjects(UUID accountId) {
-        return accountId == null ? List.of() : repository.findManagedBy(accountId).stream()
-                .map(SubjectQueryService::reference).toList();
+        return accountId == null
+                ? List.of()
+                : repository.findManagedBy(accountId).stream()
+                        .map(SubjectQueryService::reference)
+                        .toList();
     }
 
     @Override
@@ -43,6 +50,11 @@ public class SubjectQueryService implements ISubjectQuery {
     }
 
     private static SubjectRef reference(Subject subject) {
-        return new SubjectRef(subject.id(), subject.code().value(), subject.name(), subject.status(), subject.managerId());
+        return new SubjectRef(
+                subject.id(),
+                subject.code().value(),
+                subject.name(),
+                subject.status(),
+                subject.managerId());
     }
 }

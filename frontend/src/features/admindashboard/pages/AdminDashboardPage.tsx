@@ -90,7 +90,7 @@ function LiveBadge({ live }: { live: boolean }) {
 }
 
 function Board({ data }: { data: Overview }) {
-  const { dashboard, activity, usage, backups } = data;
+  const { dashboard, activity, usage, backups, loading } = data;
   const accounts = dashboard.accounts.data;
   const subjects = dashboard.subjects.data;
   const classes = dashboard.classes.data;
@@ -111,7 +111,7 @@ function Board({ data }: { data: Overview }) {
         <Kpi tone="success" label="Lớp đang mở" value={classes?.OPEN} testId="dashboard-classes" order={2}>
           {classes && <><span className="text-danger">{formatNumber(classes.ARCHIVED)} lưu trữ</span> · <span className="text-warning">{formatNumber(classes.DRAFT)} nháp</span></>}
         </Kpi>
-        <Kpi tone="warning" label="Token AI hệ thống" value={usage?.todayTokens} testId="dashboard-tokens" order={3}>
+        <Kpi tone="warning" label="Token AI hệ thống" value={usage?.todayTokens} loading={loading.usage} testId="dashboard-tokens" order={3}>
           {usage && (usage.globalDayTokens === null ? "Không giới hạn" : `/ ${formatNumber(usage.globalDayTokens)}`)}
         </Kpi>
       </div>
@@ -124,10 +124,10 @@ function Board({ data }: { data: Overview }) {
               {(shown) => <StackedColumns shown={shown} series={KINDS}
                 days={activity.assignmentsByDay.data!.map((d) => ({ label: shortDay(d.day), values: [d.individual, d.group, d.practice] }))} />}
             </Reveal>
-          </> : <Unavailable />}
+          </> : <Unavailable loading={loading.activity} />}
         </Panel>
         <Panel title="Sao lưu" subtitle="Trong 30 ngày gần nhất" testId="dashboard-backups" order={5}>
-          {backups ? <BackupCalendar runs={backups} /> : <Unavailable />}
+          {backups ? <BackupCalendar runs={backups} /> : <Unavailable loading={loading.backups} />}
           <BackupStatus backup={dashboard.backup} />
         </Panel>
       </div>
@@ -161,13 +161,13 @@ function Board({ data }: { data: Overview }) {
             <Reveal label="Token AI hệ thống theo ngày">
               {(shown) => <LineChart shown={shown} color="var(--c-info)" points={usage.byDay.map((d) => ({ label: shortDay(d.day), value: d.tokens }))} />}
             </Reveal>
-          ) : <Unavailable />}
+          ) : <Unavailable loading={loading.usage} />}
         </Panel>
       </div>
 
       <Panel title="Hoạt động đáng ngờ" subtitle="Các sự việc đáng chú ý gần đây" testId="dashboard-security" order={9}
         action={<Link href="/admin/audit" className="text-[13px] font-semibold text-primary-ink hover:underline">Mở Nhật ký</Link>}>
-        {activity?.securityEvents.data ? <SecurityTable events={activity.securityEvents.data} /> : <Unavailable />}
+        {activity?.securityEvents.data ? <SecurityTable events={activity.securityEvents.data} /> : <Unavailable loading={loading.activity} />}
       </Panel>
     </>
   );
@@ -216,13 +216,13 @@ function CountUp({ value }: { value: number }) {
 }
 
 /** Ô số tô màu: nhãn, số lớn, một dòng phụ; chữ lấy màu của chính ô. */
-function Kpi({ tone, label, value, testId, order, children }: { tone: keyof typeof KPI_TONES; label: string; value: number | undefined; testId: string; order: number; children?: ReactNode }) {
+function Kpi({ tone, label, value, loading, testId, order, children }: { tone: keyof typeof KPI_TONES; label: string; value: number | undefined; loading?: boolean; testId: string; order: number; children?: ReactNode }) {
   return (
     <section aria-label={label} data-testid={testId} style={enterDelay(order)}
       className={cx("flex min-w-0 flex-col gap-1 rounded-xl px-5 py-4", ENTER, KPI_TONES[tone])}>
       <h2 className="text-[13px] font-semibold">{label}</h2>
       <p className="font-display text-[34px] leading-none font-bold tracking-[-0.02em] tabular-nums">{value === undefined ? "—" : <CountUp value={value} />}</p>
-      <p className="min-h-[1.25rem] text-[13px] font-semibold">{value === undefined ? "Không khả dụng" : children}</p>
+      <p className="min-h-[1.25rem] text-[13px] font-semibold">{loading ? "Đang tải…" : value === undefined ? "Không khả dụng" : children}</p>
     </section>
   );
 }
@@ -243,8 +243,8 @@ function Panel({ title, subtitle, action, testId, order, children }: { title: st
   );
 }
 
-function Unavailable() {
-  return <p className="py-6 text-center text-[13px] text-muted">Không khả dụng</p>;
+function Unavailable({ loading = false }: { loading?: boolean }) {
+  return <p role={loading ? "status" : undefined} className="py-6 text-center text-[13px] text-muted">{loading ? "Đang tải…" : "Không khả dụng"}</p>;
 }
 
 /** Mỗi ô một ngày trong 30 ngày gần nhất (7 ô một hàng, cũ trước), màu theo kết quả sao lưu của ngày đó. */

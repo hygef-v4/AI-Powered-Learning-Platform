@@ -2,6 +2,7 @@ package edu.aiplatform.groupdocs.controller;
 
 import edu.aiplatform.assignments.contract.DocumentBlock;
 import edu.aiplatform.assignmentwork.contract.ActivityEventInput;
+import edu.aiplatform.groupdocs.model.AssignmentLock;
 import edu.aiplatform.groupdocs.service.GroupDocAccess;
 import edu.aiplatform.groupdocs.service.GroupSectionService;
 import edu.aiplatform.groupdocs.service.GroupSectionService.RevisionView;
@@ -120,19 +121,16 @@ public class GroupDocController {
         return sections.done(actor, id, sectionId);
     }
 
-    @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:take-over")
-    public SectionView takeOver(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId) {
-        return sections.takeOver(actor, id, sectionId);
+    /** Trưởng nhóm chốt phân công cho cả tài liệu (FB-U12-01). */
+    @PostMapping("/api/v1/group-docs/{id}/assignment:lock")
+    public AssignmentLock lockAssignment(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return sections.lockAssignment(actor, id);
     }
 
-    @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:lock")
-    public SectionView lock(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId) {
-        return sections.lock(actor, id, sectionId);
-    }
-
-    @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:unlock")
-    public SectionView unlock(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId) {
-        return sections.unlock(actor, id, sectionId);
+    @PostMapping("/api/v1/group-docs/{id}/assignment:unlock")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void unlockAssignment(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        sections.unlockAssignment(actor, id);
     }
 
     @GetMapping("/api/v1/group-docs/{id}/sections/{sectionId}/revisions")

@@ -134,7 +134,20 @@ it("hủy yêu cầu đang chờ khi rời trang", async () => {
     return new Promise<Response>(() => {});
   }));
   const view = render(<AdminDashboardPage/>);
-  await waitFor(() => expect(signals.length).toBeGreaterThan(0));
+  await waitFor(() => expect(signals).toHaveLength(4));
   view.unmount();
   expect(signals.every((signal) => signal.aborted)).toBe(true);
+});
+
+it.each(["/usage-summary", "/dashboard/activity", "/dashboard/backups"])("shows counts while %s hangs, then only that source becomes unavailable", async (path) => {
+  vi.useFakeTimers({shouldAdvanceTime: true});
+  const ok = routes();
+  vi.stubGlobal("fetch", vi.fn((url: string) => url.includes(path) ? new Promise<Response>(() => {}) : ok(url)));
+  render(<AdminDashboardPage/>);
+  await screen.findByTestId("dashboard-accounts");
+  const card = screen.getByTestId(path.includes("usage") ? "dashboard-tokens" : path.includes("activity") ? "dashboard-assignments" : "dashboard-backups");
+  expect(card).toHaveTextContent("Đang tải");
+  await act(async () => { await vi.advanceTimersByTimeAsync(5_000); });
+  expect(card).toHaveTextContent("Không khả dụng");
+  expect(screen.getByTestId("dashboard-accounts")).toHaveTextContent("3");
 });

@@ -38,9 +38,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U09-10 | Bài `GRADED` được nộp (U08 gọi `onSubmitted`) tạo đánh giá `PENDING` gắn lượt đó. Chỉ lượt nộp cuối được chấm: có lượt mới thì đánh giá cũ chưa công bố chuyển `SUPERSEDED`; đánh giá cũ đã công bố giữ nguyên để người học xem, sổ điểm dùng lượt mới. | FR-007 |
+| BR-U09-10 | Nộp lại làm điểm lượt cá nhân cũ mất hiệu lực: mọi đánh giá cũ của cùng bài/người học chuyển SUPERSEDED, kể cả FINALIZED/PUBLISHED; lượt mới tạo PENDING. Điểm cũ không còn hiển thị cho sinh viên hoặc vào sổ điểm/phân bố. Không xóa bản ghi audit. | Quyết định mới nhất của người dùng 2026-11-02 |
 | BR-U09-11 | Submission Detail của một bài trong lớp: tiến độ (đã nộp, đang làm, chưa nộp, nộp trễ, thời gian còn lại) theo từng sinh viên, hoặc theo nhóm với bài nhóm; bảng bài nộp có trạng thái chấm, điểm, nhãn trễ; lọc theo trạng thái, trễ. | US-RPT-001 S1, FR-019 |
-| BR-U09-12 | Grading Workspace hiện bài nộp đầy đủ (văn bản, bảng, ảnh, sơ đồ; bài nhóm theo từng phần kèm người làm), rubric từng phần, đánh giá, đề xuất AI và lịch sử điểm; có nút ‹ › chuyển giữa các bài theo bộ lọc hiện tại; lưu một bài thì tự sang bài kế. | UC 42 |
+| BR-U09-12 | Grading Workspace hiện bài nộp đầy đủ (văn bản, bảng, ảnh, sơ đồ; bài nhóm theo từng phần kèm người làm), rubric từng phần, đánh giá, đề xuất AI và lịch sử điểm; nút ‹ › và lưu-sang-bài-kế giữ bộ lọc trạng thái/nộp trễ từ danh sách, theo thứ tự danh sách và chỉ chọn hàng có bản chấm hiện hành. Xác định bài kế từ danh sách trước khi lưu vì PENDING có thể đổi thành DRAFT; không có bài kế thì ở lại. Chọn sinh viên trực tiếp là đổi sang danh sách toàn bài của assignment và bỏ bộ lọc ban đầu. Link trực tiếp/MCP không có bộ lọc giữ hành vi tương thích; mọi thao tác ghi vẫn kiểm tra scope, receipt và version. | UC 42 |
 | BR-U09-13 | Bài có theo dõi hoạt động: Grading Workspace hiện dòng thời gian từ `IActivityQuery` của U08 (bài nhóm theo từng thành viên); phân biệt tắt, chưa có dữ liệu, có dữ liệu, đã hết hạn giữ. Dữ liệu chỉ để đối chiếu, không đổi điểm, không kết luận gian lận. Lượt Quiz và hoạt động của lượt Quiz do U11 hiện trên Quiz Detail (slot `QuizDetailSection` của U10). | FR-039, US-INT-001 |
 
 ## 3. Chấm tay (UC 44)
@@ -69,15 +69,15 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U09-40 | Finalize chỉ DRAFT có điểm/version hợp lệ; structured feedback phải được review/acknowledge theo từng item và điểm hiện hành. Điểm đã đổi sau review cần xác nhận lại tương ứng, không lấy review cũ cho giá trị mới. Batch trả kết quả riêng; publish là thao tác tách biệt. | US-GRD-005 S1, S2, FR-020 |
 | BR-U09-41 | Công bố từng bài hoặc hàng loạt (có "chọn tất cả đã chốt"): đánh giá `FINALIZED` thành `PUBLISHED`; mỗi lần công bố phát `grade.published` kèm bài, lớp và danh sách người học vừa có điểm. Bài của môn công bố riêng ở từng lớp. | US-GRD-005 S3 |
-| BR-U09-42 | Sửa điểm đã `FINALIZED` hoặc `PUBLISHED` bắt buộc lý do, giữ trạng thái và thêm một mục lịch sử (người sửa, thời điểm, trước, sau, lý do); người học thấy điểm mới kèm nhãn "đã cập nhật". | FR-008 |
+| BR-U09-42 | `FINALIZED` và `PUBLISHED` khóa điểm, rubric, điều chỉnh, nhận xét và điểm thành viên. Mọi lưu hoặc áp dụng AI trả `409 GRADE_LOCKED`, kể cả có lý do; không có mở khóa. Bản `FINALIZED` hiện hành vẫn được công bố mà không đổi nội dung chấm. Lịch sử chỉnh sửa cũ chỉ đọc. | Quyết định người dùng 2026-11-02 |
 | BR-U09-43 | Lịch sử điểm chỉ thêm, chỉ giảng viên của lớp xem. | FR-009 |
 
 ## 6. Bài nhóm (khi U12 có)
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U09-50 | U12 gọi `IGroupEvaluation.onGroupSubmitted` trong transaction nộp: tạo hoặc đưa về `PENDING` một đánh giá tài liệu nhóm và một đánh giá thành viên cho mỗi người; điểm trước đó vào lịch sử. | US-GRP-006 |
-| BR-U09-51 | Tài liệu nhóm chấm như bài cá nhân theo rubric từng phần; điểm thành viên mặc định bằng điểm tài liệu chung, giảng viên sửa từng người khi cần, lý do tùy chọn; không có công thức ghép điểm. | Người dùng chốt 2026-10-04 |
+| BR-U09-50 | U12 nộp lại trong hạn thì dùng lại root/member hiện có, reset điểm, rubric checks, nhận xét, điều chỉnh và dữ liệu AI review, trở về PENDING kể cả trước đó FINALIZED/PUBLISHED. Điểm trước mất hiệu lực; lịch sử/audit vẫn chỉ đọc. Đây là reset do nộp mới, không phải cho giảng viên sửa điểm đã chốt. Không đổi DB schema/index. | Quyết định mới nhất của người dùng 2026-11-02 |
+| BR-U09-51 | Tài liệu nhóm chấm theo rubric từng phần; điểm thành viên mặc định bằng điểm nhóm. Chỉ sửa đóng góp khi root và thành viên hiện hành chưa chốt; FINALIZED/PUBLISHED khóa cả hai theo BR-U09-42. Lý do sửa draft tùy chọn; không có công thức ghép điểm. | Quyết định người dùng 2026-11-02 |
 
 ## 7. Sổ điểm, xuất, phân bố (UC 45)
 
@@ -92,6 +92,6 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U09-70 | Audit: `GRADE_SAVED`, `GRADE_FINALIZED`, `GRADE_PUBLISHED`, `GRADE_CHANGED` (lý do), `AI_GRADING_REQUESTED`, `GRADEBOOK_EXPORTED`. Không ghi nội dung bài nộp. | FR-014 |
+| BR-U09-70 | Audit: GRADE_SAVED, GRADE_FINALIZED, GRADE_PUBLISHED, GRADE_CHANGED (điểm thành viên chưa chốt; lý do tùy chọn), AI_GRADING_REQUESTED, GRADEBOOK_EXPORTED. Không ghi nội dung bài nộp. GRADE_CHANGED của điểm official trong lịch sử giữ nguyên, không tạo mới. | FR-014, BR-U09-42 |
 | BR-U09-71 | Sửa đánh giá phải kèm `version`; lệch thì `409`. U01, U05, U07, U08 không trả lời thì từ chối (fail closed). | SEC-002 |
 | BR-U09-72 | Xin gia hạn cá nhân, phúc khảo và kiểm tra tương đồng bài nộp nằm ngoài phạm vi. | Phạm vi 2026-09-25 |

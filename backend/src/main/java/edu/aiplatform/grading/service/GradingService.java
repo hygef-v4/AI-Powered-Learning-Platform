@@ -1,5 +1,6 @@
 package edu.aiplatform.grading.service;
 
+import edu.aiplatform.grading.model.RubricScoring;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -104,15 +105,16 @@ public class GradingService {
 
     Evaluation saveChecked(Actor actor, UUID id, Save input, GradingProposal usedProposal) {
         var evaluation = requireCurrent(actor, id, input.version());
+        evaluation.requireMutableGrade();
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.badRequest("MEMBER_ENDPOINT_REQUIRED", "Use member grading endpoint");
         var rubrics = GradingJson.rubrics(json, evaluation.rubricSnapshot);
-        var points = GradingJson.score(rubrics, input.checkedItemsByRubric(), input.itemScoresByRubric());
-        var itemScores = GradingJson.copyItemScores(input.itemScoresByRubric());
-        var currentEffectiveScores = GradingJson.effectiveItemScores(rubrics, input.checkedItemsByRubric(), itemScores);
+        var points = RubricScoring.score(rubrics, input.checkedItemsByRubric(), input.itemScoresByRubric());
+        var itemScores = RubricScoring.copyItemScores(input.itemScoresByRubric());
+        var currentEffectiveScores = RubricScoring.effectiveItemScores(rubrics, input.checkedItemsByRubric(), itemScores);
         var previousEffectiveScores = evaluation.score == null
                 ? Map.<UUID, Map<UUID, BigDecimal>>of()
-                : GradingJson.effectiveItemScores(rubrics, GradingJson.readChecks(json, evaluation.rubricChecks),
+                : RubricScoring.effectiveItemScores(rubrics, GradingJson.readChecks(json, evaluation.rubricChecks),
                         evaluation.rubricItemScores);
 
         DocumentModel submittedDocument = null;
@@ -125,11 +127,6 @@ public class GradingService {
 
         var feedbackState = resolveFeedbackState(evaluation, input, usedProposal, rubrics, validBlockIds,
                 currentEffectiveScores, previousEffectiveScores);
-        boolean changingOfficialGrade = evaluation.official();
-        if (changingOfficialGrade && feedbackState.feedback() != null) {
-            requireStructuredFeedbackReviewed(feedbackState.feedback(), feedbackState.reviewedScores(),
-                    feedbackState.acknowledgedItems(), currentEffectiveScores);
-        }
 
         evaluation.save(GradingJson.write(json, input.checkedItemsByRubric()), points, input.adjustment(),
                 input.adjustmentReason(), input.feedback(), input.changeReason(), actor.accountId(), clock.instant());
@@ -139,7 +136,7 @@ public class GradingService {
         evaluation.acknowledgedReviewItems = feedbackState.acknowledgedItems();
         propagateGroup(evaluation, actor, GroupOperation.SAVE, input.changeReason());
         evaluations.save(evaluation);
-        record(actor, evaluation, changingOfficialGrade ? "GRADE_CHANGED" : "GRADE_SAVED", input.changeReason());
+        record(actor, evaluation, "GRADE_SAVED", null);
         return evaluation;
     }
 
@@ -150,7 +147,7 @@ public class GradingService {
             throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Finalize the group document");
         if (evaluation.structuredFeedback != null) {
             var rubrics = GradingJson.rubrics(json, evaluation.rubricSnapshot);
-            var currentEffectiveScores = GradingJson.effectiveItemScores(rubrics,
+            var currentEffectiveScores = RubricScoring.effectiveItemScores(rubrics,
                     GradingJson.readChecks(json, evaluation.rubricChecks), evaluation.rubricItemScores);
             requireStructuredFeedbackReviewed(evaluation.structuredFeedback, evaluation.reviewedItemScores,
                     evaluation.acknowledgedReviewItems, currentEffectiveScores);
@@ -185,7 +182,7 @@ public class GradingService {
         var root = evaluations.findById(rootId).orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
         access.requireTeacher(actor, root.classId, Actions.GRADING_WRITE);
         root = evaluations.lockById(rootId).orElseThrow();
-        root.editable();
+        root.requireMutableGrade();
         if (root.kind != EvaluationKind.GROUP_DOCUMENT || root.score == null)
             throw ApiException.conflict("GROUP_NOT_GRADED", "Grade group document first");
         final UUID documentId = root.groupDocumentId;
@@ -338,8 +335,8 @@ public class GradingService {
 
         return new ResolvedFeedbackState(
                 target,
-                GradingJson.copyItemScores(nextReviewed),
-                GradingJson.copyChecks(nextAck));
+                RubricScoring.copyItemScores(nextReviewed),
+                RubricScoring.copyChecks(nextAck));
     }
 
     private void validateMetadataEmptyOrKnown(Map<UUID, Set<UUID>> acknowledged,
@@ -418,7 +415,7 @@ public class GradingService {
                             new TypeReference<Map<UUID, Map<UUID, BigDecimal>>>() {
                             })
                     : Map.of();
-            return GradingJson.effectiveItemScores(rubrics, checks, itemScores);
+            return RubricScoring.effectiveItemScores(rubrics, checks, itemScores);
         } catch (RuntimeException ex) {
             return Map.of();
         }

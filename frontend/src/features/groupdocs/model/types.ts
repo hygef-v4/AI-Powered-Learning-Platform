@@ -19,9 +19,8 @@ export type SectionView = {
   draftSavedAt: string | null;
   lastAuthorId: string | null;
   version: number;
-  /** Trưởng nhóm đã chốt mục (BR-U12-39). */
-  lockedBy?: string | null;
-  lockedAt?: string | null;
+  /** Người phụ trách mục, nhận hoặc được giao trong giai đoạn phân công (FB-U12-01). */
+  assigneeId: string | null;
 };
 
 export type RevisionKind = "DONE" | "TAKEOVER" | "IMPORT";
@@ -29,7 +28,7 @@ export type RevisionKind = "DONE" | "TAKEOVER" | "IMPORT";
 /** Một bản lịch sử của mục (BR-U12-35), mới nhất trước. */
 export type RevisionView = { id: string; authorId: string; kind: RevisionKind; createdAt: string; blocks: DocumentBlock[] };
 
-/** Nhập file cho cả tài liệu (BR-U12-46): nội dung dự kiến của từng mục. */
+/** Nhập file cho cả tài liệu (FB-U12-03): nội dung dự kiến của từng mục. */
 export type SectionPlan = {
   sectionId: string;
   title: string;
@@ -43,7 +42,7 @@ export type DocumentImport = { sections: SectionPlan[]; unmatched: string[]; war
 
 export type ApplyResult = { applied: number; skipped: string[] };
 
-/** Đánh giá chéo (BR-U12-47). */
+/** Đánh giá chéo (FB-U12-04). */
 export type PeerGiven = { revieweeId: string; score: number; comment: string | null };
 
 export type PeerSummary = {
@@ -86,6 +85,9 @@ export type WorkspaceView = {
   diagramEnabled: boolean;
   version: number;
   viewerId: string;
+  /** Trưởng nhóm đã chốt phân công (FB-U12-01); chưa chốt thì chỉ nhận/giao mục, chưa soạn được. */
+  assignmentLockedBy: string | null;
+  assignmentLockedAt: string | null;
 };
 
 export type Receipt = {
@@ -98,4 +100,4 @@ export type Receipt = {
   warnings: string[];
 };
 
-export type StreamEvent = { type: string; documentId: string; sectionId?: string; holderId?: string | null; receiptHash?: string };
+export type StreamEvent = { type: string; documentId: string; sectionId?: string; receiptHash?: string };

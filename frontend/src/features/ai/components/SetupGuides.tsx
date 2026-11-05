@@ -1,7 +1,7 @@
 "use client";
 
-import { useId, useState, type ReactNode } from "react";
-import { Button, IconButton, Select, SettingsGroup } from "@/shared/ui";
+import { useId, useState, useSyncExternalStore, type ReactNode } from "react";
+import { Button, ButtonLink, IconButton, Select, SettingsGroup } from "@/shared/ui";
 
 const KEY_STEPS: { provider: string; steps: string[] }[] = [
   {
@@ -76,6 +76,9 @@ export function mcpEndpoint(): string {
     : `${window.location.origin}/mcp`;
 }
 
+const subscribeToOrigin = () => () => {};
+const serverEndpoint = () => "/mcp";
+
 const JSON_TOKEN = /("(?:[^"\\]|\\.)*"|[{}[\]]|[:,])/g;
 
 /**
@@ -134,17 +137,18 @@ export function McpClientSetup({ token }: { token?: string }) {
   const id = useId();
   const [client, setClient] = useState<McpClient>("codex");
   const [copyState, setCopyState] = useState("");
-  const config = mcpConfigSample(mcpEndpoint(), token, client);
+  const endpoint = useSyncExternalStore(subscribeToOrigin, mcpEndpoint, serverEndpoint);
+  const config = mcpConfigSample(endpoint, token, client);
   const locations = { codex: "~/.codex/config.toml", "claude-code": "~/.claude.json",
     opencode: "~/.config/opencode/opencode.json",
     antigravity: "~/.gemini/config/mcp_config.json" };
   const prompt = `Set up the nen-tang-hoc-tap MCP server for ${client} on this machine.
 Personal configuration file: ${locations[client]} (~ means the current user's home directory).
-${client === "antigravity" ? "Confirm the active file through MCP Servers → Manage MCP Servers → View raw config; older versions may use ~/.gemini/antigravity/mcp_config.json.\n" : ""}Read the existing file before editing. Add or update only nen-tang-hoc-tap; preserve all other servers and settings. If the file is invalid, report the problem instead of overwriting it. Make a private local backup before editing. Keep configuration files and backups containing tokens out of Git.
+${client === "antigravity" ? "Confirm the active file through Settings → Customizations → Installed MCP Servers → Open MCP Config; older versions may use MCP Servers → Manage MCP Servers → View raw config and ~/.gemini/antigravity/mcp_config.json.\n" : ""}Read the existing file before editing. Add or update only nen-tang-hoc-tap; preserve all other servers and settings. If the file is invalid, report the problem instead of overwriting it. Make a private local backup before editing. Keep configuration files and backups containing tokens out of Git.
 ${token ? "The configuration below contains the real token I explicitly provided. Do not repeat it in your response, log it, or commit it." : "No real token is provided. Guide me to create one under AI Connections → Agent MCP (Kết nối AI → Agent MCP) and enter it directly in my personal configuration file; do not ask me to paste the token into chat. Never authenticate with a placeholder token."}
 Merge this configuration using the exact client-specific format${client === "claude-code" ? "; place mcpServers at the top level of ~/.claude.json" : ""}:
 
-${mcpConfigSample(mcpEndpoint(), token ?? "<your MCP token>", client)}
+${mcpConfigSample(endpoint, token ?? "<your MCP token>", client)}
 
 After saving, reload MCP if supported. If restarting the application is required, explain what I need to do and wait; do not close my running session. Check the connection, then call get_my_capabilities and one read-only tool allowed by the returned capabilities. Do not create assignments, save proposals, or publish grades to test the connection. Report success only after an actual read succeeds. If the token is missing or you cannot verify the connection, clearly state the remaining step. Never send the token to another endpoint.`;
   return <div className="space-y-3">
@@ -154,6 +158,7 @@ After saving, reload MCP if supported. If restarting the application is required
       <option value="claude-code">Claude Code</option>
       <option value="opencode">OpenCode</option><option value="antigravity">Antigravity</option>
     </Select>
+    {client !== "codex" && <p className="text-xs text-muted">Mẫu theo tài liệu chính thức; chưa kiểm chứng kết nối thực tế với ứng dụng này trong môi trường hiện tại.</p>}
     <div className="flex flex-wrap items-center gap-2">
       <Button size="sm" icon="copy" onClick={async () => {
         try {
@@ -172,30 +177,24 @@ After saving, reload MCP if supported. If restarting the application is required
     </details>
     <ol className="list-decimal space-y-2 pl-4 text-[13px] text-body">
       <li><strong>Tạo token.</strong> Bấm Kết nối agent mới. Chọn Chỉ đọc để xem dữ liệu, hoặc Đọc và ghi để tạo đề và lưu đề xuất chấm.</li>
-      <li><strong>Mở cấu hình.</strong> {client === "antigravity" ? "Mở MCP Servers → Manage MCP Servers → View raw config." : "Mở file bên dưới bằng trình soạn thảo; tạo file nếu chưa có."} <code className="break-words">{locations[client]}</code>. Dấu ~ là thư mục người dùng, trên Windows thường là C:\Users\tên-bạn.</li>
+      <li><strong>Mở cấu hình.</strong> {client === "antigravity" ? "Mở Settings → Customizations → Installed MCP Servers → Open MCP Config. Bản cũ: MCP Servers → Manage MCP Servers → View raw config." : "Mở file bên dưới bằng trình soạn thảo; tạo file nếu chưa có."} <code className="break-words">{locations[client]}</code>. Dấu ~ là thư mục người dùng, trên Windows thường là C:\Users\tên-bạn.</li>
       <li><strong>Dán cấu hình bên dưới.</strong> Ghép vào cấu hình hiện có, giữ nguyên các server khác. {token ? "Cấu hình đã chứa token vừa tạo." : "Thay <token của bạn> bằng token vừa tạo."} Lưu trong cấu hình cá nhân, không đưa file chứa token lên Git.</li>
     </ol>
     <JsonCode text={config} action={token ? <IconButton icon="copy" label="Sao chép cấu hình"
       className="text-[#d4dbe3] hover:bg-white/10 hover:text-white" onClick={() => {
         void navigator.clipboard.writeText(config).then(() => setCopyState("Đã sao chép"), () => setCopyState("Không sao chép được. Hãy chọn và sao chép đoạn cấu hình."));
       }} /> : undefined} />
-    <p className="text-[13px] text-body"><strong>4. Kiểm tra kết nối.</strong> Khởi động lại ứng dụng hoặc tải lại server. {client === "codex" || client === "claude-code" ? "Mở /mcp để xem trạng thái server. " : "Mở danh sách MCP Servers và kiểm tra server nen-tang-hoc-tap. "}Nhờ agent: “Gọi get_my_capabilities, sau đó đọc danh sách lớp tôi được phép xem.”</p>
+    <p className="text-[13px] text-body"><strong>4. Kiểm tra kết nối.</strong> Tải lại MCP trong ứng dụng; nếu phiên bản đang dùng yêu cầu khởi động lại, lưu công việc trước. Nhờ agent: “Gọi get_my_capabilities, sau đó dùng một tool chỉ đọc được tài khoản cho phép.” Chỉ xem là kết nối thành công khi đọc được dữ liệu thực tế.</p>
     <p role="status" className="text-xs text-muted">{copyState}</p>
   </div>;
 }
 
 export function McpSetupGuide() {
-  return <SettingsGroup title="Hướng dẫn kết nối agent">
-    <McpClientSetup />
-    <p className="mt-3 text-xs text-muted">Token MCP khác khóa API AI. Agent dùng mô hình của chính nó; điểm chỉ được công bố sau khi giảng viên duyệt trên hệ thống.</p>
-    <details className="mt-3 text-xs text-body">
-      <summary className="cursor-pointer font-semibold">Không kết nối được?</summary>
-      <ul className="mt-2 list-disc space-y-2 pl-4">
-        <li>HTTP 401: kiểm tra token còn hạn và chưa bị thu hồi. Không đưa token vào Git.</li>
-        <li>Không thấy tool ghi: kiểm tra token có quyền Đọc và ghi.</li>
-        <li>localhost là máy chạy agent. Nếu agent ở container hoặc máy khác, dùng địa chỉ nền tảng mà agent truy cập được.</li>
-        <li>Antigravity bản cũ có thể dùng ~/.gemini/antigravity/mcp_config.json. Mở View raw config để xác nhận đúng file.</li>
-      </ul>
-    </details>
-  </SettingsGroup>;
+  return <section aria-label="Trợ giúp MCP" className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line bg-surface p-5">
+    <div className="min-w-0">
+      <h2 className="text-sm font-semibold text-ink">Tài liệu MCP</h2>
+      <p className="mt-1 text-[13px] text-muted">Cách kết nối ứng dụng, tạo đề, chấm bài và sử dụng từng tool.</p>
+    </div>
+    <ButtonLink href="/ai/mcp-guide" size="sm">Xem tài liệu MCP</ButtonLink>
+  </section>;
 }

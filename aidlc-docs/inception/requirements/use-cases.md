@@ -1,5 +1,7 @@
 # Use case catalog — synchronized to the current UC table
 
+> UC40/42–45 latest decision 2026-11-02: finalized/published grades cannot be edited. Resubmission invalidates the old grade (individual SUPERSEDED, group reset to PENDING); no parallel group grading rounds or DB migration. [Decision](2026-11-02-locked-grades.md).
+
 **66 active UC; 50 MVP stories + 1 extension; 15 logical units.**
 
 Source: [English UC table](../../../docs/usecase_table.md). User-approved catalog changes are documented in sync plan. Documentation-only; code-derived documentation synchronized 2026-10-30; Jira/Google Reports are outside this local sync; source-observed is not runtime acceptance.

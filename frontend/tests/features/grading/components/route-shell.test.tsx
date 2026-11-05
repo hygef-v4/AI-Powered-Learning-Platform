@@ -10,13 +10,23 @@ vi.mock("@/features/identity/shell/components/AuthenticatedLayout", () => ({
   ),
 }));
 vi.mock("@/features/grading", () => ({
-  GradingWorkspacePage: ({ evaluationId, proposalId }: { evaluationId: string; proposalId?: string }) => (
-    <div data-testid="grading-workspace" data-evaluation-id={evaluationId} data-proposal-id={proposalId} />
+  GradingWorkspacePage: ({ evaluationId, proposalId, status, late }: { evaluationId: string; proposalId?: string; status?: string; late?: string }) => (
+    <div data-testid="grading-workspace" data-evaluation-id={evaluationId} data-proposal-id={proposalId} data-status={status} data-late={late} />
   ),
 }));
 
 afterEach(cleanup);
 describe("teaching evaluation route composition", () => {
+  it("forwards scalar navigation filters and ignores duplicate query parameters", async () => {
+    const page = await EvaluationPage({ params: Promise.resolve({ evaluationId: "e" }), searchParams: Promise.resolve({ status: "PENDING", late: "true" }) });
+    const view = render(page);
+    expect(screen.getByTestId("grading-workspace")).toHaveAttribute("data-status", "PENDING");
+    expect(screen.getByTestId("grading-workspace")).toHaveAttribute("data-late", "true");
+    view.unmount();
+    render(await EvaluationPage({ params: Promise.resolve({ evaluationId: "e" }), searchParams: Promise.resolve({ status: ["PENDING", "DRAFT"], late: ["true", "false"] }) }));
+    expect(screen.getByTestId("grading-workspace")).not.toHaveAttribute("data-status");
+    expect(screen.getByTestId("grading-workspace")).not.toHaveAttribute("data-late");
+  });
   it("uses one parent shell with both authorized roles and preserves the evaluation ID", async () => {
     const page = await EvaluationPage({ params: Promise.resolve({ evaluationId: "evaluation-123" }), searchParams: Promise.resolve({ proposalId: "proposal-1" }) });
     render(<TeachingLayout>{page}</TeachingLayout>);

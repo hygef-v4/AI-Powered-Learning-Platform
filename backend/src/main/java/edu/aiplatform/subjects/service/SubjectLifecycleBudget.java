@@ -10,15 +10,20 @@ final class SubjectLifecycleBudget {
 
     SubjectLifecycleBudget(Duration timeout) {
         if (timeout == null || timeout.isNegative() || timeout.isZero()) {
-            throw ApiException.badRequest("SUBJECT_TIMEOUT_INVALID", "Ngân sách thời gian phải dương");
+            throw ApiException.badRequest(
+                    "SUBJECT_TIMEOUT_INVALID", "Ngân sách thời gian phải dương");
         }
-        nanos = timeout.compareTo(Duration.ofSeconds(1)) > 0 ? Duration.ofSeconds(1).toNanos() : timeout.toNanos();
+        nanos =
+                timeout.compareTo(Duration.ofSeconds(1)) > 0
+                        ? Duration.ofSeconds(1).toNanos()
+                        : timeout.toNanos();
     }
 
     Duration remaining() {
         long left = nanos - (System.nanoTime() - start);
         if (left <= 0) {
-            throw ApiException.unavailable("SUBJECT_LIFECYCLE_TIMEOUT", "Kiểm tra môn quá thời gian, vui lòng thử lại");
+            throw ApiException.unavailable(
+                    "SUBJECT_LIFECYCLE_TIMEOUT", "Kiểm tra môn quá thời gian, vui lòng thử lại");
         }
         return Duration.ofNanos(left);
     }

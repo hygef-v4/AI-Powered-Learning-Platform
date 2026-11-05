@@ -30,15 +30,24 @@ public class SubjectMutationGuard implements ISubjectMutationGuard {
         SubjectLifecycleBudget budget = new SubjectLifecycleBudget(timeout);
         Subject subject;
         try {
-            subject = repository.findByIdForUpdate(subjectId, budget.remaining())
-                    .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
+            subject =
+                    repository
+                            .findByIdForUpdate(subjectId, budget.remaining())
+                            .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
         } catch (DataAccessException failure) {
-            throw ApiException.unavailable("SUBJECT_LIFECYCLE_UNAVAILABLE", "Chưa khóa được môn, vui lòng thử lại");
+            throw ApiException.unavailable(
+                    "SUBJECT_LIFECYCLE_UNAVAILABLE", "Chưa khóa được môn, vui lòng thử lại");
         }
         budget.remaining();
         if (subject.status() != SubjectStatus.ACTIVE) {
-            throw ApiException.conflict("SUBJECT_ARCHIVED", "Môn đã lưu trữ, không thể tạo hoặc mở lớp");
+            throw ApiException.conflict(
+                    "SUBJECT_ARCHIVED", "Môn đã lưu trữ, không thể tạo hoặc mở lớp");
         }
-        return new SubjectRef(subject.id(), subject.code().value(), subject.name(), subject.status(), subject.managerId());
+        return new SubjectRef(
+                subject.id(),
+                subject.code().value(),
+                subject.name(),
+                subject.status(),
+                subject.managerId());
     }
 }

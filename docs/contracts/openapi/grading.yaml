@@ -367,12 +367,25 @@ paths:
       tags:
       - U09
       description: Assigned Teacher/SubjectManager only. Admin and class-management-only
-        authority are denied.
+        authority are denied. Optional status/late filters restrict navigationIds to the
+        originating submission listing in listing order. Requests without filters retain
+        legacy navigation order. Filters never grant access or bypass grade write checks.
       parameters:
       - name: id
         in: path
         required: true
         schema: *id001
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [ALL, PENDING, DRAFT, FINALIZED, PUBLISHED, NOT_SUBMITTED, IN_PROGRESS]
+      - name: late
+        in: query
+        required: false
+        schema:
+          type: boolean
       security:
       - session: []
       responses:
@@ -393,7 +406,8 @@ paths:
       tags:
       - U09
       description: Assigned Teacher/SubjectManager only. Admin and class-management-only
-        authority are denied.
+        authority are denied. Only current PENDING/DRAFT grades are editable. FINALIZED/PUBLISHED
+        writes, including AI proposal application, return 409 GRADE_LOCKED even with a reason.
       parameters:
       - name: id
         in: path
@@ -427,7 +441,8 @@ paths:
       tags:
       - U09
       description: Assigned Teacher/SubjectManager only. Admin and class-management-only
-        authority are denied.
+        authority are denied. Both group root and member must be editable. FINALIZED/PUBLISHED
+        root or member returns 409 GRADE_LOCKED, including requests containing a reason.
       parameters:
       - name: id
         in: path
@@ -852,6 +867,8 @@ components:
             maxLength: 10000
           - type: 'null'
         changeReason:
+          deprecated: true
+          description: Legacy field retained for request compatibility. FINALIZED/PUBLISHED grades reject writes with HTTP 409 GRADE_LOCKED even when a reason is provided.
           anyOf:
           - type: string
             maxLength: 2000
@@ -981,6 +998,7 @@ components:
             pattern: '^\d+(\.\d{1,2})?$'
     Evaluation:
       type: object
+      description: FINALIZED/PUBLISHED grading content cannot be edited. Publishing changes visibility only. Resubmission invalidates the previous grade; individual grades are superseded and group grades reset to PENDING for the new submission.
       properties:
         id: *id001
         assignmentId: *id001

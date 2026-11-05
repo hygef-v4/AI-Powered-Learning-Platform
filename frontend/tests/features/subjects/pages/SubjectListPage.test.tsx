@@ -11,24 +11,60 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("@/features/subjects/api", () => ({ getSubjects: vi.fn(), createSubject: vi.fn() }));
 
 function item(overrides: Partial<SubjectListItem> = {}): SubjectListItem {
-  return { id: "subject-a", code: "ABC", name: "Môn A", status: "ACTIVE", managerId: null, manager: null, classCount: 0, ...overrides };
+  return {
+    id: "subject-a",
+    code: "ABC",
+    name: "Môn A",
+    status: "ACTIVE",
+    managerId: null,
+    manager: null,
+    classCount: 0,
+    ...overrides,
+  };
 }
 function page(items = [item()], overrides: Partial<SubjectPage> = {}): SubjectPage {
-  return { items, page: 0, size: 20, totalElements: items.length, statusCounts: { ACTIVE: items.length, ARCHIVED: 0 }, ...overrides };
+  return {
+    items,
+    page: 0,
+    size: 20,
+    totalElements: items.length,
+    statusCounts: { ACTIVE: items.length, ARCHIVED: 0 },
+    ...overrides,
+  };
 }
 function deferred<T>() {
   let resolve!: (value: T) => void;
-  const promise = new Promise<T>((done) => { resolve = done; });
+  const promise = new Promise<T>((done) => {
+    resolve = done;
+  });
   return { promise, resolve };
 }
 
 describe("SubjectListPage", () => {
-  beforeEach(() => { vi.mocked(getSubjects).mockReset().mockResolvedValue(page()); vi.mocked(createSubject).mockReset(); push.mockReset(); });
-  afterEach(() => { cleanup(); vi.useRealTimers(); });
+  beforeEach(() => {
+    vi.mocked(getSubjects).mockReset().mockResolvedValue(page());
+    vi.mocked(createSubject).mockReset();
+    push.mockReset();
+  });
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
 
   it("POST thành công mới đóng dialog/refetch; lỗi refetch không biến thành lỗi tạo và mở lại draft rỗng", async () => {
-    vi.mocked(createSubject).mockResolvedValue({ ...item(), description: null, version: 1, createdAt: "2026-10-18T00:00:00Z", updatedAt: "2026-10-18T00:00:00Z" } satisfies SubjectDetail);
-    render(<><SubjectListPage /><Toaster /></>);
+    vi.mocked(createSubject).mockResolvedValue({
+      ...item(),
+      description: null,
+      version: 1,
+      createdAt: "2026-10-18T00:00:00Z",
+      updatedAt: "2026-10-18T00:00:00Z",
+    } satisfies SubjectDetail);
+    render(
+      <>
+        <SubjectListPage />
+        <Toaster />
+      </>,
+    );
     await screen.findByRole("link", { name: "Môn A" });
     fireEvent.click(screen.getByTestId("subjects-create-open"));
     fireEvent.change(screen.getByTestId("subject-create-code"), { target: { value: "ABC" } });
@@ -46,7 +82,13 @@ describe("SubjectListPage", () => {
   });
 
   it("sau create/refetch thành công trả focus về nút mở khi nút đã hết disabled", async () => {
-    vi.mocked(createSubject).mockResolvedValue({ ...item(), description: null, version: 1, createdAt: "2026-10-18T00:00:00Z", updatedAt: "2026-10-18T00:00:00Z" });
+    vi.mocked(createSubject).mockResolvedValue({
+      ...item(),
+      description: null,
+      version: 1,
+      createdAt: "2026-10-18T00:00:00Z",
+      updatedAt: "2026-10-18T00:00:00Z",
+    });
     render(<SubjectListPage />);
     await screen.findByRole("link", { name: "Môn A" });
     fireEvent.click(screen.getByTestId("subjects-create-open"));
@@ -59,7 +101,10 @@ describe("SubjectListPage", () => {
   it("tải API thật qua boundary, hiển thị số liệu và link chi tiết", async () => {
     render(<SubjectListPage />);
     expect(screen.getByRole("status")).toHaveTextContent("Đang tải");
-    expect(await screen.findByRole("link", { name: "Môn A" })).toHaveAttribute("href", "/admin/subjects/subject-a");
+    expect(await screen.findByRole("link", { name: "Môn A" })).toHaveAttribute(
+      "href",
+      "/admin/subjects/subject-a",
+    );
     expect(getSubjects).toHaveBeenCalledWith({ q: "", status: undefined, page: 0, size: 20 });
     expect(screen.getByTestId("subjects-filter-ALL")).toHaveAttribute("aria-selected", "true");
     // Không còn dòng đếm số môn dưới tiêu đề.
@@ -69,10 +114,20 @@ describe("SubjectListPage", () => {
   });
 
   it("phân biệt chưa phân công và contact không tra được; không có cột Số lớp", async () => {
-    vi.mocked(getSubjects).mockResolvedValue(page([
-      item(), item({ id: "b", code: "DEF", name: "Môn B", managerId: "missing", classCount: null }),
-      item({ id: "c", code: "XYZ", name: "Môn C", managerId: "manager", manager: { accountId: "manager", displayName: "Chủ nhiệm", email: "m@example.test" }, classCount: 3 }),
-    ]));
+    vi.mocked(getSubjects).mockResolvedValue(
+      page([
+        item(),
+        item({ id: "b", code: "DEF", name: "Môn B", managerId: "missing", classCount: null }),
+        item({
+          id: "c",
+          code: "XYZ",
+          name: "Môn C",
+          managerId: "manager",
+          manager: { accountId: "manager", displayName: "Chủ nhiệm", email: "m@example.test" },
+          classCount: 3,
+        }),
+      ]),
+    );
     render(<SubjectListPage />);
     expect(await screen.findByText("Không tra được chủ nhiệm")).toBeInTheDocument();
     expect(screen.getByText("Chưa phân công")).toBeInTheDocument();
@@ -82,37 +137,73 @@ describe("SubjectListPage", () => {
 
   it("debounce300ms và response cũ không ghi đè kết quả mới", async () => {
     vi.useFakeTimers();
-    const first = deferred<SubjectPage>(), second = deferred<SubjectPage>();
+    const first = deferred<SubjectPage>(),
+      second = deferred<SubjectPage>();
     vi.mocked(getSubjects).mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
     render(<SubjectListPage />);
     await act(async () => {});
-    fireEvent.change(screen.getByLabelText("Lọc theo mã hoặc tên môn"), { target: { value: "  mới  " } });
-    await act(async () => { vi.advanceTimersByTime(299); });
+    fireEvent.change(screen.getByLabelText("Lọc theo mã hoặc tên môn"), {
+      target: { value: "  mới  " },
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(299);
+    });
     expect(getSubjects).toHaveBeenCalledTimes(1);
-    await act(async () => { vi.advanceTimersByTime(1); });
-    expect(getSubjects).toHaveBeenLastCalledWith({ q: "mới", status: undefined, page: 0, size: 20 });
-    await act(async () => { second.resolve(page([item({ name: "Kết quả mới" })])); });
+    await act(async () => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(getSubjects).toHaveBeenLastCalledWith({
+      q: "mới",
+      status: undefined,
+      page: 0,
+      size: 20,
+    });
+    await act(async () => {
+      second.resolve(page([item({ name: "Kết quả mới" })]));
+    });
     expect(screen.getByText("Kết quả mới")).toBeInTheDocument();
-    await act(async () => { first.resolve(page([item({ name: "Kết quả cũ" })])); });
+    await act(async () => {
+      first.resolve(page([item({ name: "Kết quả cũ" })]));
+    });
     expect(screen.queryByText("Kết quả cũ")).not.toBeInTheDocument();
     expect(screen.getByText("Kết quả mới")).toBeInTheDocument();
   });
 
   it("đổi tab reset trang, thanh trang dùng totalElements API và không có cột STT", async () => {
-    vi.mocked(getSubjects).mockImplementation(async (query) => page([item()], { page: query?.page ?? 0, size: query?.size ?? 20,
-      totalElements: 41, statusCounts: { ACTIVE: 41, ARCHIVED: 2 } }));
+    vi.mocked(getSubjects).mockImplementation(async (query) =>
+      page([item()], {
+        page: query?.page ?? 0,
+        size: query?.size ?? 20,
+        totalElements: 41,
+        statusCounts: { ACTIVE: 41, ARCHIVED: 2 },
+      }),
+    );
     render(<SubjectListPage />);
     await screen.findByText("Môn A");
     expect(screen.queryByRole("columnheader", { name: "STT" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Trang trước" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Trang sau" }));
-    await waitFor(() => expect(getSubjects).toHaveBeenLastCalledWith({ q: "", status: undefined, page: 1, size: 20 }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "Trang 2" })).toHaveAttribute("aria-current", "page"));
+    await waitFor(() =>
+      expect(getSubjects).toHaveBeenLastCalledWith({ q: "", status: undefined, page: 1, size: 20 }),
+    );
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Trang 2" })).toHaveAttribute(
+        "aria-current",
+        "page",
+      ),
+    );
     fireEvent.click(screen.getByTestId("subjects-filter-ARCHIVED"));
     // Đổi tab: bảng cũ vẫn ở đó (mờ đi) trong lúc tải, không thay bằng dòng "Đang tải".
     expect(screen.getByRole("table")).toBeInTheDocument();
     expect(screen.queryByText("Đang tải môn học…")).not.toBeInTheDocument();
-    await waitFor(() => expect(getSubjects).toHaveBeenLastCalledWith({ q: "", status: "ARCHIVED", page: 0, size: 20 }));
+    await waitFor(() =>
+      expect(getSubjects).toHaveBeenLastCalledWith({
+        q: "",
+        status: "ARCHIVED",
+        page: 0,
+        size: 20,
+      }),
+    );
   });
 
   it("empty không bị coi là lỗi và không bật trang sau", async () => {
@@ -124,7 +215,9 @@ describe("SubjectListPage", () => {
   });
 
   it("lỗi API hiện retry, không hiển thị mẫu hoặc kết quả rỗng giả", async () => {
-    vi.mocked(getSubjects).mockRejectedValueOnce(new ApiError({ status: 503, detail: "internal SQL" })).mockResolvedValueOnce(page([]));
+    vi.mocked(getSubjects)
+      .mockRejectedValueOnce(new ApiError({ status: 503, detail: "internal SQL" }))
+      .mockResolvedValueOnce(page([]));
     render(<SubjectListPage />);
     expect(await screen.findByRole("alert")).toHaveTextContent("Không tải được dữ liệu");
     expect(screen.queryByText("internal SQL")).not.toBeInTheDocument();
@@ -134,11 +227,14 @@ describe("SubjectListPage", () => {
     expect(getSubjects).toHaveBeenCalledTimes(2);
   });
 
-  it.each([401, 403])("HTTP%s không hiển thị dữ liệu hay dùng layout ADMIN làm quyền", async (status) => {
-    vi.mocked(getSubjects).mockRejectedValue(new ApiError({ status }));
-    render(<SubjectListPage />);
-    const error = await screen.findByRole("alert");
-    expect(error).toHaveTextContent(status === 401 ? "Vui lòng đăng nhập" : "không có quyền");
-    expect(screen.queryByRole("table")).not.toBeInTheDocument();
-  });
+  it.each([401, 403])(
+    "HTTP%s không hiển thị dữ liệu hay dùng layout ADMIN làm quyền",
+    async (status) => {
+      vi.mocked(getSubjects).mockRejectedValue(new ApiError({ status }));
+      render(<SubjectListPage />);
+      const error = await screen.findByRole("alert");
+      expect(error).toHaveTextContent(status === 401 ? "Vui lòng đăng nhập" : "không có quyền");
+      expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    },
+  );
 });

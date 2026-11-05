@@ -30,7 +30,7 @@ export function OpenGroupWorkButton({ assignmentId }: { assignmentId: string; cl
   if (message) return <p className="text-[13px] text-muted">{message}</p>;
   if (!view) return null;
   const leader = view.members.find((m) => m.leader)?.name ?? "chưa có";
-  const mine = view.sections.filter((s) => s.holderId === view.viewerId).map((s) => s.title);
+  const mine = view.sections.filter((s) => s.assigneeId === view.viewerId).map((s) => s.title);
   const done = view.sections.filter((s) => s.status === "DONE").length;
   return (
     <Section title="Bài nhóm" icon="groups" tone="accent">
@@ -40,7 +40,7 @@ export function OpenGroupWorkButton({ assignmentId }: { assignmentId: string; cl
           {view.groupName} · trưởng nhóm {leader}
         </dd>
         <dt className="text-muted">Mục của bạn</dt>
-        <dd>{mine.length ? mine.join(", ") : "Chưa giữ mục nào"}</dd>
+        <dd>{mine.length ? mine.join(", ") : "Chưa nhận mục nào"}</dd>
         <dt className="text-muted">Tiến độ</dt>
         <dd>
           {done} / {view.sections.length} mục Xong

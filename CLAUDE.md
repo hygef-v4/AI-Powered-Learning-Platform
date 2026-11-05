@@ -26,6 +26,8 @@ All subsequent rule detail file references (e.g., `common/process-overview.md`, 
 - Load `common/question-format-guide.md` for question formatting rules
 - Reference these throughout the workflow execution
 
+Before writing an audit entry, follow [Audit Requester Attribution](#audit-requester-attribution) below to record the requester's GitHub display name.
+
 ## MANDATORY: Extensions Loading (Context-Optimized)
 **CRITICAL**: At workflow start, scan the `extensions/` directory recursively but load ONLY lightweight opt-in files — NOT full rule files. Full rule files are loaded on-demand after the user opts in.
 
@@ -483,10 +485,21 @@ The Operations stage will eventually include:
 - Use ISO 8601 format for timestamps (YYYY-MM-DDTHH:MM:SSZ)
 - Include stage context for each entry
 
+### Audit Requester Attribution
+
+Use exactly one attribution line per audit entry:
+
+`**Requested by:** <GitHub display name>`
+
+- Fill this field immediately when recording the prompt, using the current requester's GitHub profile display name (`get_profile`'s `name` or `gh api user --jq .name`), or a display name explicitly confirmed by the user. Use the name verbatim, for example `Quang Hung`; do not substitute the username/login, email, Windows account or Git commit name. If the profile name is empty and no display name is confirmed, use `Unknown — GitHub display name not confirmed`.
+- Preserve existing historical requesters; never replace them all with the currently authenticated account. Historical identity conversion requires explicit user authorization and a verified account mapping. A commit-linked account is a migration source, not independent proof of who sent an old prompt.
+- Do not include commit hashes, commit times, emails, commit status or extra attribution fields. Keep the entry's normal Timestamp and original requests/actions unchanged. This field is independent of commits: no waiting, post-commit reconciliation, Git hook, Git configuration change or automatic commit/push is required.
+
 ### Audit Log Format:
 ```markdown
 ## [Stage Name or Interaction Type]
 **Timestamp**: [ISO timestamp]
+**Requested by:** [Confirmed GitHub display name, or explicit Unknown]
 **User Input**: "[Complete raw user input - never summarized]"
 **AI Response**: "[AI's response or action taken]"
 **Context**: [Stage, action, or decision made]

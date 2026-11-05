@@ -159,7 +159,7 @@ class GroupDocCollaborationServicesTest {
         assertThat(preview.sections()).hasSize(2);
         assertThat(preview.sections().get(0).blocks()).singleElement()
                 .satisfies(b -> assertThat(b.type()).isEqualTo(BlockType.DIAGRAM));
-        assertThat(preview.sections().get(1).skipReason()).isEqualTo("Mục đang có người giữ");
+        assertThat(preview.sections().get(1).skipReason()).isEqualTo("Mục đang có người soạn");
         assertThat(preview.unmatched()).containsExactly("Trang Draw.io “Lạ”");
         assertThatThrownBy(() -> imports.previewDocument(member, document.id(), new byte[] {1}, null))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_LEADER_ONLY"));
@@ -175,7 +175,7 @@ class GroupDocCollaborationServicesTest {
                 new ApplyItem(design.id(), 3L, List.of(paragraph("Lớp A")))));
 
         assertThat(result.applied()).isEqualTo(1);
-        assertThat(result.skipped()).containsExactly("Thiết kế › 2.1 Sơ đồ lớp: đang có người giữ");
+        assertThat(result.skipped()).containsExactly("Thiết kế › 2.1 Sơ đồ lớp: đang có người soạn");
         ArgumentCaptor<GroupSection> saved = ArgumentCaptor.forClass(GroupSection.class);
         verify(documents).updateSection(saved.capture());
         assertThat(saved.getValue().status()).isEqualTo(Status.DONE);
@@ -193,6 +193,8 @@ class GroupDocCollaborationServicesTest {
 
     @Test
     void sectionImportRequiresHoldingTheSectionAndTurnsHeadingsIntoBoldParagraphs() {
+        when(documents.assignmentLock(document.id()))
+                .thenReturn(Optional.of(new edu.aiplatform.groupdocs.model.AssignmentLock(leader.accountId(), NOW)));
         when(docx.importPreview(eq(member), any(), eq(BlockOrigin.STUDENT), eq(true), any())).thenReturn(
                 new DocxImportPreview(new DocumentModel(List.of(heading("Tiêu đề trong file"), paragraph("x"))), List.of()));
 

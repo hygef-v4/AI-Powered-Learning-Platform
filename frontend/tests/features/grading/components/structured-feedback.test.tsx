@@ -102,8 +102,8 @@ const baseDetail: Detail = {
   },
   document: {
     blocks: [
-      { id: "part-1", type: "HEADING", content: { text: "Câu 1: Thiết kế lớp" } },
-      { id: "block-text-1", type: "PARAGRAPH", content: { text: "Nội dung bài làm của học sinh" } },
+      { id: "part-1", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Câu 1: Thiết kế lớp" } },
+      { id: "block-text-1", origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{text: "Nội dung bài làm của học sinh"}] } },
     ],
   },
   rubrics,

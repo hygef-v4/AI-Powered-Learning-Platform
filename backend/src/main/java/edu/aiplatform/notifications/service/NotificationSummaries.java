@@ -6,7 +6,7 @@ import edu.aiplatform.notifications.model.NotificationType;
 final class NotificationSummaries {
     private static final String LEGACY_SIGN_IN_SUMMARY = "Đăng nhập để xem thông tin liên quan.";
 
-    private NotificationSummaries() { }
+    private NotificationSummaries() {}
 
     static String forType(NotificationType type) {
         return switch (type) {
