@@ -28,8 +28,9 @@ public class NotificationPreferenceService {
         };
     }
 
+    /** Mọi loại email của mọi vai trò mặc định bật (yêu cầu 2026-11-05); người dùng tự tắt nếu không cần. */
     public static boolean defaultEnabled(String type) {
-        return TYPES.contains(type) || "BACKUP_FAILED".equals(type);
+        return true;
     }
 
     private final INotificationRepository repository;

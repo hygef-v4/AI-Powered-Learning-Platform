@@ -29,8 +29,8 @@ export const workApi = {
     return apiFetch<ImportPreview>(`${base}/attempts/${enc(attemptId)}/docx:preview`, { method: "POST", body: form });
   },
   feedback: (attemptId: string, signal?: AbortSignal) => apiFetch<Feedback[]>(`${base}/attempts/${enc(attemptId)}/feedback`, { signal }),
-  requestFeedback: (attemptId: string, provider: string, requestRef: string) =>
-    write<Feedback>(`/attempts/${enc(attemptId)}/feedback`, "POST", { provider, requestRef }),
+  requestFeedback: (attemptId: string, requestRef: string) =>
+    write<Feedback>(`/attempts/${enc(attemptId)}/feedback`, "POST", { requestRef }),
   diagram: (attemptId: string, blockId: string, signal?: AbortSignal) =>
     apiFetch<AttemptDiagram>(`${base}/attempts/${enc(attemptId)}/diagrams/${enc(blockId)}`, { signal }),
   activity: (attemptId: string, events: ActivityEventInput[], keepalive: boolean) =>

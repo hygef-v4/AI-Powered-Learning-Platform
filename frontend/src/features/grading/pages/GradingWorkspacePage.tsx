@@ -125,8 +125,9 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
     `${row.student.name} ${row.student.email}`.toLocaleLowerCase("vi").includes(studentSearch.trim().toLocaleLowerCase("vi")));
   const paper = useMemo(() => toEditorDocument(detail.document), [detail.document]);
   const imageUrls = useSubmissionImages(evaluation.id, detail.document);
-  const partTitles = Object.fromEntries(detail.document.blocks.flatMap((block) =>
-    block.type === "HEADING" && typeof block.content.text === "string" ? [[block.id, block.content.text]] : []));
+  // Rubric "Toàn bài" (mã ASSIGNMENT) không gắn với mục nào.
+  const partTitles: Record<string, string> = { ASSIGNMENT: "Toàn bài", ...Object.fromEntries(detail.document.blocks.flatMap((block) =>
+    block.type === "HEADING" && typeof block.content.text === "string" ? [[block.id, block.content.text]] : [])) };
   const validBlockIds = useMemo(() => {
     const ids = new Set<string>();
     for (const block of detail.document.blocks) {

@@ -1,9 +1,10 @@
+import { templateFor } from "@/features/assignments/model/templateStore";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { rubricComplete, rubricTotal, type DocumentModel, type RubricCriterion } from "@/shared/document";
+import { RubricNote, rubricComplete, rubricTotal, type DocumentModel, type RubricCriterion } from "@/shared/document";
 import { assignmentsApi } from "@/features/assignments/api";
 import { AssignmentListCard } from "@/features/assignments/components/AssignmentListCard";
-import { mergeSaved, missingText } from "@/features/assignments/pages/AssignmentFormPage";
+import { WHOLE_PART, cardIssues, hasWholePart, mergeSaved, missingText, reappearedParts, rubricIssues } from "@/features/assignments/pages/AssignmentFormPage";
 import { CreateAssignmentDialog } from "@/features/assignments/components/CreateAssignmentDialog";
 import { fromLocalInput, toLocalInput } from "@/features/assignments/model/format";
 import { RubricEditor, cleanCriteria, rubricPointsMalformed } from "@/features/assignments/components/RubricEditor";
@@ -44,11 +45,11 @@ describe("RubricEditor", () => {
     expect(cleanCriteria(blank).map((criterion) => criterion.criterionId)).toEqual(["c"]);
   });
 
-  it("điểm gửi lên: số dương giữ nguyên, không làm tròn; 0 và số âm là chưa có điểm", () => {
+  it("điểm gửi lên: số dương và 0 giữ nguyên, không làm tròn; số âm là chưa có điểm", () => {
     const dirty: RubricCriterion[] = [{ ...criteria[0]!, items: [
       { itemId: "a", text: "x", points: 1.25 }, { itemId: "b", text: "y", points: 0 }, { itemId: "c", text: "z", points: -1 },
     ] }];
-    expect(cleanCriteria(dirty)[0]!.items.map((item) => item.points)).toEqual([1.25, null, null]);
+    expect(cleanCriteria(dirty)[0]!.items.map((item) => item.points)).toEqual([1.25, 0, null]);
   });
 
   it("điểm quá 2 chữ số thập phân là sai: ô điểm báo lỗi, rubric không lưu, không tính vào tổng", () => {
@@ -110,6 +111,8 @@ describe("CreateAssignmentDialog", () => {
     await waitFor(() => expect(onCreated).toHaveBeenCalledWith(saved));
     expect(create.mock.calls[0]![1]).toMatchObject({ submissionMode: "INDIVIDUAL", diagramEnabled: true });
     expect(importDocx).toHaveBeenCalledWith("a1", file);
+    // Đề mẫu được nhớ để Soạn bằng AI dùng làm Mẫu đề mặc định.
+    expect(await templateFor("a1")).toBe(file);
     expect(saveSkeleton).toHaveBeenCalledWith("a1", 0, document, { fromDocx: true });
     vi.restoreAllMocks();
   });
@@ -141,11 +144,25 @@ describe("CreateAssignmentDialog", () => {
     const copy = vi.spyOn(assignmentsApi, "copyToSubject").mockResolvedValue(created);
     const onCreated = vi.fn();
     render(<CreateAssignmentDialog target={{ kind: "subject", subjectId: "s1" }} onClose={vi.fn()} onCreated={onCreated} />);
-    const select = screen.getByRole("combobox", { name: "Copy bài có sẵn" });
-    fireEvent.focus(select);
+    const search = screen.getByRole("combobox", { name: "Copy bài có sẵn" });
+    expect(search).toHaveAttribute("placeholder", "Copy từ bài có sẵn");
+    fireEvent.focus(search);
     await screen.findByRole("option", { name: "Bài m1" });
-    expect(screen.getAllByRole("group").map((group) => group.getAttribute("label"))).toEqual(["Cùng môn · SWD392 · Thiết kế", "Lớp SE01 · Lớp 1"]);
-    fireEvent.change(select, { target: { value: "m1" } });
+    // Chỉ liệt kê bài, không chia nhóm cùng môn / lớp; gõ để tìm.
+    expect(screen.queryAllByRole("group")).toHaveLength(0);
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Bài m1", "Bài k1"]);
+    fireEvent.change(search, { target: { value: "k1" } });
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Bài k1"]);
+    fireEvent.change(search, { target: { value: "" } });
+    fireEvent.mouseDown(screen.getByRole("option", { name: "Bài m1" }));
+    // Chỉ chọn một bài: bài đã chọn hiện dưới ô tìm, chọn bài khác thì thay.
+    expect(screen.getByTestId("copy-source")).toHaveTextContent("Bài m1");
+    fireEvent.focus(search);
+    fireEvent.mouseDown(screen.getByRole("option", { name: "Bài k1" }));
+    expect(screen.getByTestId("copy-source")).toHaveTextContent("Bài k1");
+    fireEvent.click(screen.getByRole("button", { name: "Bỏ bài đã chọn" }));
+    fireEvent.focus(search);
+    fireEvent.mouseDown(screen.getByRole("option", { name: "Bài m1" }));
     fireEvent.click(screen.getByTestId("create-assignment-submit"));
     await waitFor(() => expect(onCreated).toHaveBeenCalledWith(created));
     expect(copy).toHaveBeenCalledWith("s1", "m1");
@@ -170,15 +187,42 @@ describe("không còn trạng thái Đã duyệt", () => {
 });
 
 describe("missingText", () => {
-  it("xếp lịch mà bài còn thiếu: báo chung chung, chỉ ghi kèm lỗi không đánh dấu được trong bài", () => {
+  it("xếp lịch mà bài còn thiếu: nói rõ thiếu gì, không ghi chung chung", () => {
     expect(missingText([
       { code: "RUBRIC_INCOMPLETE", blockId: "h1", message: "Mục chưa đủ rubric" },
       { code: "HEADING_EMPTY", blockId: "h2", message: "Tiêu đề trống" },
-    ])).toBe("Bài còn chỗ chưa đủ");
+    ])).toBe("1 rubric bị lỗi điểm; Đề còn chỗ lỗi");
     expect(missingText([
       { code: "TITLE_REQUIRED", blockId: null, message: "Bài cần tiêu đề" },
       { code: "ACTIVITY_NOTICE_REQUIRED", blockId: null, message: "Cần lời báo" },
-    ])).toBe("Bài còn chỗ chưa đủ; Cần lời báo");
+    ])).toBe("Bài cần tiêu đề; Cần lời báo");
+  });
+});
+
+describe("rubricIssues", () => {
+  const part = (id: string) => ({ partId: id, headingBlockId: `h-${id}`, ancestorHeadingIds: [], title: id });
+  const cards = [WHOLE_PART, part("p1"), part("p2")];
+  const rubric = (...items: { text: string; points: number | null }[]) => [{ criterionId: "c", title: "", description: "",
+    kind: "TEXT" as const, items: items.map((item, i) => ({ itemId: `i${i}`, ...item })) }];
+
+  it("cả bài tổng 0 điểm: chỉ báo chung, không tô đỏ thẻ nào, kể cả Toàn bài", () => {
+    const issues = rubricIssues(cards, { ASSIGNMENT: rubric({ text: "Trình bày", points: 0 }), p1: rubric({ text: "Có", points: null }) });
+    expect(issues).toEqual([{ code: "RUBRIC_MISSING", blockId: null, message: "Bài làm chưa có rubric chấm điểm" }]);
+    expect(cards.flatMap((card) => cardIssues(issues, card))).toEqual([]);
+    expect(missingText(issues)).toBe("Bài làm chưa có rubric chấm điểm");
+  });
+
+  it("thẻ tổng không quá 0 hoặc mục ghi dở thì thiếu điểm; dòng trống hẳn bỏ qua", () => {
+    const issues = rubricIssues(cards, {
+      ASSIGNMENT: rubric({ text: "Trình bày", points: null }),
+      p1: rubric({ text: "Đủ actor", points: 2 }, { text: "", points: null }),
+      p2: rubric({ text: "", points: 1 }),
+    });
+    expect(cardIssues(issues, WHOLE_PART).map((issue) => issue.message))
+      .toEqual(["Có mục chấm thiếu nội dung hoặc thiếu điểm", "Tổng điểm của rubric phải lớn hơn 0"]);
+    expect(cardIssues(issues, part("p1"))).toEqual([]);
+    expect(cardIssues(issues, part("p2")).map((issue) => issue.message)).toEqual(["Có mục chấm thiếu nội dung hoặc thiếu điểm"]);
+    expect(missingText(issues)).toBe("3 rubric bị lỗi điểm");
   });
 });
 
@@ -269,4 +313,23 @@ it("uses the first assignment page for invalid URL page numbers", () => {
   const page = { data: { items: [{ id: "a", title: "Open", status: "OPEN", scope: "CLASS", submissionMode: "GROUP", gradingMode: "GRADED", closesAt: null }] }, error: null, loading: false, reload: vi.fn() } as never;
   render(<AssignmentListCard page={page} />);
   expect(screen.getByTestId("assignment-row-a")).toBeInTheDocument();
+});
+
+it("mục thành phần chấm lại mà trang còn giữ tiêu chí cũ thì lưu lại rubric đó; mục mới chưa có tiêu chí thì không", () => {
+  const part = (partId: string) => ({ partId, headingBlockId: partId, ancestorHeadingIds: [], title: partId });
+  const criterion = { criterionId: "c", title: "Đúng", order: 0, atomic: true, points: 2, items: [] } as never;
+  expect(reappearedParts(new Set(["b"]), [part("a"), part("b"), part("n")], { a: [criterion], b: [criterion] })).toEqual(["a"]);
+});
+
+it("thẻ Toàn bài chỉ có ở bài có mục; thẻ soạn chỉ mở trình sửa khi bấm vào, thẻ Toàn bài ghi tổng điểm", () => {
+  const part = (id: string | null) => ({ partId: id ?? "DOCUMENT", headingBlockId: id, ancestorHeadingIds: [], title: id ?? "Toàn bài" });
+  expect(hasWholePart([part("h1")])).toBe(true);
+  expect(hasWholePart([part(null)])).toBe(false);
+  expect(WHOLE_PART.partId).toBe("ASSIGNMENT");
+  const list = [{ criterionId: "c", title: "Trình bày", description: "", kind: "TEXT", items: [{ itemId: "a", text: "Trình bày đúng mẫu báo cáo có đủ mục lục và tài liệu tham khảo", points: 0 }] }] as unknown as RubricCriterion[];
+  const { rerender } = render(<RubricNote title="Toàn bài" criteria={list} total={7.5} editOnActive editor={<p>Trình sửa</p>} />);
+  expect(screen.getByText("Tổng 7,5 điểm")).toBeInTheDocument();
+  expect(screen.queryByText("Trình sửa")).toBeNull();
+  rerender(<RubricNote title="Toàn bài" criteria={list} total={7.5} editOnActive active editor={<p>Trình sửa</p>} />);
+  expect(screen.getByText("Trình sửa")).toBeInTheDocument();
 });

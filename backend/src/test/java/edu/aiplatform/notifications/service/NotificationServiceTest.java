@@ -156,8 +156,8 @@ class NotificationServiceTest {
                     case ADMIN -> Set.of("BACKUP_FAILED");
                 };
         assertThat(values.keySet()).isEqualTo(expected);
-        assertThat(values.values())
-                .allMatch(enabled -> enabled == (role == Role.STUDENT || role == Role.ADMIN));
+        // Mọi vai trò mặc định bật hết (yêu cầu 2026-11-05).
+        assertThat(values.values()).allMatch(Boolean.TRUE::equals);
     }
 
     @ParameterizedTest

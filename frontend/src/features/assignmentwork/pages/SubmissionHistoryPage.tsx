@@ -134,7 +134,7 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
       {current?.warnings.length ? <Alert tone="warning">{current.warnings.map((w) => w.message).join("; ")}</Alert> : null}
       {aiOpen && current && practiceReady && (
         <PracticeFeedbackDialog attemptId={current.attemptId} onClose={() => setAiOpen(false)}
-          partTitles={shown ? Object.fromEntries(shown.parts.map((part) => [part.partId, part.title])) : undefined} />
+          partTitles={shown ? { ASSIGNMENT: "Toàn bài", ...Object.fromEntries(shown.parts.map((part) => [part.partId, part.title])) } : undefined} />
       )}
     </div>
   );

@@ -48,7 +48,9 @@ public class AiTaskRepository {
     }
 
     public boolean update(AiTask t) {
-        return jdbc.sql("update ai_tasks set state = :state, input_payload = cast(:input as jsonb), "
+        return jdbc.sql("update ai_tasks set state = :state, source = :source, connection_id = :connectionId, "
+                        + "provider = :provider, model = :model, max_output_tokens = :maxOutput, "
+                        + "reserved_tokens = :reserved, quota_day = :quotaDay, input_payload = cast(:input as jsonb), "
                         + "output_schema = cast(:schema as jsonb), result_payload = cast(:result as jsonb), "
                         + "dispatched_at = :dispatchedAt, provider_request_id = :providerRequestId, "
                         + "apply_result = :applyResult, handler_done = :handlerDone, safe_error = :safeError, "

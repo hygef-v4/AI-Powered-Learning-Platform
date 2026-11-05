@@ -38,7 +38,7 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
     { key: "students", label: "Sinh viên", count: students.filter((student) => student.status === "ACTIVE").length },
   ];
   return <>
-    <PageHeader backHref="/manager/classes" title={<span className="min-w-0 break-words [overflow-wrap:anywhere]">{value.name}</span>}
+    <PageHeader backHref="/manager/classes" title={<span className="min-w-0 break-words [overflow-wrap:anywhere]">{value.code}</span>}
       breadcrumb={[{ label: "Lớp học", href: "/manager/classes" }, { label: value.code }]} />
     {/* Nút thêm sinh viên của tab Sinh viên nằm cùng hàng tab, bên phải. */}
     <div className="relative">

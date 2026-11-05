@@ -1,7 +1,9 @@
 package edu.aiplatform.ai.contract.stub;
 
 import edu.aiplatform.ai.contract.AiProvider;
+import edu.aiplatform.ai.contract.AiPrompt;
 import edu.aiplatform.ai.contract.AiSource;
+import edu.aiplatform.ai.contract.AiSourceChoice;
 import edu.aiplatform.ai.contract.AiTaskRequest;
 import edu.aiplatform.ai.contract.AiTaskState;
 import edu.aiplatform.ai.contract.AiTaskView;
@@ -40,6 +42,11 @@ public class AiContractStubs {
 
             @Override
             public void requireSource(Actor actor, AiSource source, AiProvider provider) {
+            }
+
+            @Override
+            public java.util.List<AiSourceChoice> sourceOrder(Actor actor, AiPrompt prompt, int maxOutputTokens) {
+                return java.util.List.of(new AiSourceChoice(AiSource.SHARED, null));
             }
 
             @Override

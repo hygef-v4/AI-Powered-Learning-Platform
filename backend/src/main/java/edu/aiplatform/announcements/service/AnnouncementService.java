@@ -68,7 +68,7 @@ public class AnnouncementService {
                                         new AnnouncementViews.ClassOption(
                                                 c.classId(),
                                                 c.code(),
-                                                c.name(),
+                                                c.subjectCode(),
                                                 actor.role() != Role.STUDENT
                                                         && Objects.equals(
                                                                 c.teacherId(), actor.accountId()),
@@ -163,7 +163,7 @@ public class AnnouncementService {
         return new AnnouncementViews.Item(
                 a.id,
                 a.classId,
-                c.name(),
+                c.code(),
                 a.title,
                 a.body,
                 a.important,

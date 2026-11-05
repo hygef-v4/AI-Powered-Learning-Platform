@@ -19,14 +19,14 @@ it("keeps version conflict visible after reloading a newer info editor",async()=
  let version=1;
  vi.stubGlobal("fetch",vi.fn().mockImplementation((url:string,init:RequestInit)=>{
   if(init.method==="PATCH"){version=2;return Promise.resolve(Response.json({detail:"Changed"},{status:409}));}
-  return Promise.resolve(Response.json(url.includes("/students?")?[]:{...course,version,name:version===1?"Original":"Updated on server"}));
+  return Promise.resolve(Response.json(url.includes("/students?")?[]:{...course,version,description:version===1?"Original":"Updated on server"}));
  }));
  render(<ClassDetailRoute scope="manager" id="c"/>);
- fireEvent.change(await screen.findByLabelText(/Tên lớp/),{target:{value:"Local edit"}});
+ fireEvent.change(await screen.findByLabelText(/Mô tả/),{target:{value:"Local edit"}});
  fireEvent.click(screen.getByTestId("class-info-save"));
- await waitFor(()=>expect(screen.getByLabelText(/Tên lớp/)).toHaveValue("Updated on server"));
+ await waitFor(()=>expect(screen.getByLabelText(/Mô tả/)).toHaveValue("Updated on server"));
  expect(screen.getByTestId("class-mutation-conflict")).toHaveTextContent("Dữ liệu đã thay đổi");
- fireEvent.change(screen.getByLabelText(/Tên lớp/),{target:{value:"Second edit"}});
+ fireEvent.change(screen.getByLabelText(/Mô tả/),{target:{value:"Second edit"}});
  fireEvent.click(screen.getByTestId("class-info-save"));
- await waitFor(()=>expect(fetch).toHaveBeenCalledWith("/api/v1/manager/classes/c",expect.objectContaining({method:"PATCH",body:JSON.stringify({name:"Second edit",description:"",term:"1",version:2})})));
+ await waitFor(()=>expect(fetch).toHaveBeenCalledWith("/api/v1/manager/classes/c",expect.objectContaining({method:"PATCH",body:JSON.stringify({name:"Original",description:"Second edit",term:"1",version:2})})));
 });

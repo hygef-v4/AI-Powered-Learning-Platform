@@ -207,7 +207,7 @@ class AccountAdminServiceTest {
         assertThatThrownBy(() -> service.changeRole(admin, teacher.id(), Role.ADMIN, 3L))
                 .isInstanceOfSatisfying(RoleChangeBlockedException.class, e -> {
                     assertThat(e.taughtClasses()).containsExactly(clazz);
-                    assertThat(e.classes()).containsExactly(new RoleChangeBlockedException.Held(clazz, "SE1801", "Lớp SE1801"));
+                    assertThat(e.classes()).containsExactly(new RoleChangeBlockedException.Held(clazz, "SE1801", null));
                 });
         verify(accounts, never()).updateRole(any(), any(), anyLong(), any());
     }

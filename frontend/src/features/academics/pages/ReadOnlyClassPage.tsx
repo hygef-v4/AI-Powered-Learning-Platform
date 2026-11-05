@@ -3,7 +3,7 @@
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useCallback, useId, useState } from "react";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
-import { teacherClassInfoFields, teacherClassTabs } from "../slots";
+import { teacherClassTabs } from "../slots";
 import { StudentClassPage } from "./StudentClassPage";
 import { EnrollmentPanel } from "../components/EnrollmentPanel";
 import { Field, LockedInput, PageHeader, Section } from "@/shared/ui";
@@ -77,18 +77,14 @@ export function ReadOnlyClassPage({
         // Đổi tab thì dựng lại khung này để nội dung mới mờ vào, khớp với gạch chân đang trượt.
         <div key={tab} role="tabpanel" aria-label={tabs.find((t) => t.key === tab)?.label} className={styles.tabPanel}>
         {tab === "info" && (
-          // Thẻ Thông tin lớp như trang lớp của sinh viên, thêm ô Sinh viên (đang học) và Học liệu (U13, đang hoạt động); bên dưới
-          // hàng thẻ chia đôi do các unit gắn vào (Thông báo gần đây, Tiến độ nộp bài). Không có ô số liệu.
+          // Thẻ Thông tin lớp như trang lớp của sinh viên, thêm ô Sinh viên (đang học); không có tên lớp, học kỳ hay học liệu
+          // (yêu cầu 2026-11-02). Bên dưới hàng thẻ chia đôi do các unit gắn vào (Thông báo gần đây, Tiến độ nộp bài).
           <div className="flex flex-col gap-4" data-teacher-overview="true">
             <Section title="Thông tin lớp">
-              {/* Hai cột như thẻ của sinh viên, thêm cột thứ ba bên phải cho Sinh viên và Học liệu. */}
-              <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-flow-col lg:grid-cols-3 lg:grid-rows-2">
-                <Field label="Mã lớp" htmlFor={`${fieldId}-code`}><LockedInput id={`${fieldId}-code`} value={value.code} /></Field>
-                <Field label="Tên lớp" htmlFor={`${fieldId}-name`}><LockedInput id={`${fieldId}-name`} value={value.name} /></Field>
+              <div className="grid min-w-0 gap-4 sm:grid-cols-3">
                 <Field label="Mã môn" htmlFor={`${fieldId}-subject`}><LockedInput id={`${fieldId}-subject`} value={value.subject.code} /></Field>
-                <Field label="Học kỳ" htmlFor={`${fieldId}-term`}><LockedInput id={`${fieldId}-term`} value={value.term} /></Field>
+                <Field label="Mã lớp" htmlFor={`${fieldId}-code`}><LockedInput id={`${fieldId}-code`} value={value.code} /></Field>
                 <Field label="Sinh viên" htmlFor={`${fieldId}-students`}><LockedInput id={`${fieldId}-students`} value={String(studentSummaryCount)} /></Field>
-                <SlotOutlet slot={teacherClassInfoFields} props={{ classId: value.id }} />
               </div>
               <div>
                   <Field label="Mô tả" htmlFor={`${fieldId}-description`}>

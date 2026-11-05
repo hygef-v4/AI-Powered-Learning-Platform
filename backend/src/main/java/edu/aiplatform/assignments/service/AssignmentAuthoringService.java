@@ -229,8 +229,8 @@ public class AssignmentAuthoringService {
                                                AssignmentCommands.RubricUpdate command) {
         Assignment current = support.lockEditable(actor, id, command.version(), "RUBRIC_UPDATED");
         DocumentPart part = part(current, partId);
-        AssignmentRubric rubric = rubrics.forPart(current, part.partId())
-                .orElseThrow(() -> ApiException.notFound("RUBRIC_NOT_FOUND"));
+        AssignmentRubric rubric = RubricService.WHOLE.equals(part.partId()) ? rubrics.ensureWhole(current, clock.instant())
+                : rubrics.forPart(current, part.partId()).orElseThrow(() -> ApiException.notFound("RUBRIC_NOT_FOUND"));
         if (rubric.locked()) {
             throw ApiException.conflict("RUBRIC_LOCKED", "Rubric đã khóa khi phát hành");
         }
@@ -349,7 +349,11 @@ public class AssignmentAuthoringService {
 
     private AssignmentViews.Rubric rubricView(Actor actor, Assignment assignment, String partId) {
         DocumentPart part = part(assignment, partId);
+        // Toàn bài của bài cũ chưa có thì coi như trống (tạo khi sửa lần đầu).
         AssignmentRubric rubric = rubrics.forPart(assignment, part.partId())
+                .or(() -> RubricService.WHOLE.equals(part.partId())
+                        ? java.util.Optional.of(AssignmentRubric.empty(assignment.id(), RubricService.WHOLE, clock.instant()))
+                        : java.util.Optional.empty())
                 .orElseThrow(() -> ApiException.notFound("RUBRIC_NOT_FOUND"));
         boolean editable = assignment.editable() && !rubric.locked() && access.canManage(actor, assignment)
                 && !access.ownerArchived(assignment);
@@ -359,6 +363,9 @@ public class AssignmentAuthoringService {
     }
 
     private static DocumentPart part(Assignment assignment, String partId) {
+        if (RubricService.WHOLE.equals(partId) && RubricService.hasWhole(assignment.parts())) {
+            return RubricService.wholePart();
+        }
         return assignment.parts().stream().filter(p -> p.partId().equals(partId)).findFirst()
                 .orElseThrow(() -> ApiException.notFound("PART_NOT_FOUND"));
     }

@@ -28,7 +28,7 @@ export function ClassListPage({ classes, subjects, initialSubjectId, onOpen, onC
   const q = query.trim().toLocaleLowerCase("vi");
   const filtered = classes.filter((course) => course.subject.id === subjectId
     && (status === "ALL" || course.status === status)
-    && (!q || `${course.code} ${course.name}`.toLocaleLowerCase("vi").includes(q)));
+    && (!q || course.code.toLocaleLowerCase("vi").includes(q)));
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, totalPages - 1);
   const rows = filtered.slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE);
@@ -48,23 +48,21 @@ export function ClassListPage({ classes, subjects, initialSubjectId, onOpen, onC
           </button>)}
         </div>
         <div role="search" className="ml-auto w-full sm:w-72">
-          <TextInput type="search" icon="search" aria-label="Lọc theo mã hoặc tên lớp" placeholder="Lọc theo mã hoặc tên lớp"
+          <TextInput type="search" icon="search" aria-label="Lọc theo mã lớp" placeholder="Lọc theo mã lớp"
             value={query} maxLength={200} data-testid="class-search" onChange={(event) => { setQuery(event.target.value); setPage(0); }} />
         </div>
       </div>
-      <TableFrame filledHead className="[&_table]:min-w-[720px] [&_table]:table-fixed">
-        <colgroup><col className="w-[130px]" /><col /><col className="w-[110px]" /><col className="w-[24%]" /><col className="w-[130px]" /><col className="w-[48px]" /></colgroup><thead><tr><Th>Mã lớp</Th><Th>Tên lớp</Th><Th>Học kỳ</Th><Th>Giảng viên</Th><Th>Trạng thái</Th><Th className="w-10"><span className="sr-only">Chi tiết</span></Th></tr></thead>
+      <TableFrame filledHead className="[&_table]:min-w-[560px] [&_table]:table-fixed">
+        <colgroup><col className="w-[34%]" /><col /><col className="w-[130px]" /><col className="w-[48px]" /></colgroup><thead><tr><Th>Mã lớp</Th><Th>Giảng viên</Th><Th>Trạng thái</Th><Th className="w-10"><span className="sr-only">Chi tiết</span></Th></tr></thead>
         <tbody>
           {rows.map((course) => <ClickableRow key={course.id} onClick={() => onOpen(course.id)}>
-            <Td className="font-mono font-semibold">{course.code}</Td>
             <Td><button type="button" aria-label={`Xem lớp ${course.code}`} data-testid={`class-open-${course.id}`}
-              onClick={(event) => { event.stopPropagation(); onOpen(course.id); }} className="text-left font-semibold text-ink hover:text-primary-ink">{course.name}</button></Td>
-            <Td>{course.term}</Td>
+              onClick={(event) => { event.stopPropagation(); onOpen(course.id); }} className="text-left font-mono font-semibold text-ink hover:text-primary-ink">{course.code}</button></Td>
             <Td>{course.teacher?.name ?? <Pill>Chưa phân công</Pill>}</Td>
             <Td><Pill tone={TONES[course.status]}>{statusLabels[course.status]}</Pill></Td>
             <Td className="text-faint"><Icon name="chevron_right" size={18} /></Td>
           </ClickableRow>)}
-          {rows.length === 0 && <tr><Td colSpan={6} className="py-10 text-center! text-muted">Không có lớp phù hợp.</Td></tr>}
+          {rows.length === 0 && <tr><Td colSpan={4} className="py-10 text-center! text-muted">Không có lớp phù hợp.</Td></tr>}
         </tbody>
       </TableFrame>
       <PageNav page={current} size={PAGE_SIZE} total={filtered.length} onPage={setPage} />

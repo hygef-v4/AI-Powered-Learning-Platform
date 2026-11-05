@@ -59,7 +59,8 @@ describe("assignment/class grade distribution visibility", () => {
     render(<GradeDistributionSettings classId="c" assignmentId="a" gradingMode="GRADED" />);
     const toggle = await screen.findByRole("switch", { name: label });
     expect(toggle).toHaveAttribute("aria-checked", "false");
-    expect(screen.getByText(/ít nhất 20 kết quả/)).toHaveTextContent("điểm đã công bố");
+    // Chỉ chữ to của switch, không còn dòng giải thích nhỏ (yêu cầu 2026-11-04).
+    expect(screen.queryByText(/ít nhất 20 kết quả/)).toBeNull();
     fireEvent.click(toggle);
     expect(save).toHaveBeenCalledWith("c", "a", true, 0);
     // Gạt ngay sang bật và khóa lại trong lúc chờ server.

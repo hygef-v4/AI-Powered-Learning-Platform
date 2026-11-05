@@ -65,7 +65,7 @@ function nth(items: HTMLElement[], index: number): HTMLElement {
 afterEach(() => vi.clearAllMocks());
 
 describe("QuestionAiDraftDialog (F4)", () => {
-  it("gửi yêu cầu qua popup chọn nguồn của U06, chỉ kèm tài liệu đã có chữ", async () => {
+  it("gửi yêu cầu ngay, hệ thống tự chọn nguồn AI, chỉ kèm tài liệu đã có chữ", async () => {
     vi.mocked(getBankDrafts).mockResolvedValue([]);
     vi.mocked(getSubjectMaterials).mockResolvedValue([
       { materialId: "m1", title: "Chương 1", hasText: true },
@@ -84,31 +84,28 @@ describe("QuestionAiDraftDialog (F4)", () => {
     fireEvent.change(screen.getByTestId("ai-draft-instructions"), { target: { value: "Ôn tập chương 1" } });
     fireEvent.change(screen.getByTestId("ai-draft-count"), { target: { value: "3" } });
     fireEvent.click(screen.getByTestId("ai-draft-submit"));
-    expect(await screen.findByTestId("ai-source-picker")).toHaveTextContent("Sinh câu hỏi · Ngân hàng câu hỏi của môn · ~1800");
-    expect(screen.queryByTestId("ai-draft-dialog")).not.toBeInTheDocument();
-    expect(requestBankDraft).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByText("pick-gemini"));
+    // Không còn popup chọn nguồn (yêu cầu 2026-11-05).
+    expect(screen.queryByTestId("ai-source-picker")).not.toBeInTheDocument();
 
     await waitFor(() => expect(requestBankDraft).toHaveBeenCalledWith("s1", {
       instructions: "Ôn tập chương 1", count: 3, type: null, difficulty: null, materialIds: ["m1"],
-      choice: { source: "PERSONAL", provider: "GEMINI" },
     }));
     expect(await screen.findByText(/AI đang soạn đề xuất/)).toBeInTheDocument();
     expect(screen.getByTestId("ai-task-status")).toHaveTextContent("t1");
   });
 
-  it("hủy popup chọn nguồn thì quay lại form với nội dung đã nhập", async () => {
+  it("gửi lỗi thì vẫn ở form với nội dung đã nhập", async () => {
     vi.mocked(getBankDrafts).mockResolvedValue([]);
     vi.mocked(getSubjectMaterials).mockResolvedValue([]);
+    vi.mocked(requestBankDraft).mockRejectedValue(new Error("Không có nguồn AI dùng được"));
     render(<QuestionAiDraftDialog subjectId="s1" onClose={vi.fn()} onAccepted={vi.fn()} />);
     fireEvent.change(await screen.findByTestId("ai-draft-instructions"), { target: { value: "Chương 2" } });
     fireEvent.change(screen.getByTestId("ai-draft-count"), { target: { value: "7" } });
     fireEvent.click(screen.getByTestId("ai-draft-submit"));
-    fireEvent.click(await screen.findByText("pick-cancel"));
 
+    await waitFor(() => expect(requestBankDraft).toHaveBeenCalled());
     expect(await screen.findByTestId("ai-draft-instructions")).toHaveValue("Chương 2");
     expect(screen.getByTestId("ai-draft-count")).toHaveValue("7");
-    expect(requestBankDraft).not.toHaveBeenCalled();
   });
 
   it("sửa, bỏ, chấp nhận từng câu rồi lưu đúng các câu đã chấp nhận", async () => {
@@ -143,7 +140,6 @@ describe("QuestionAiDraftDialog (F4)", () => {
     render(<QuestionAiDraftDialog subjectId="s1" onClose={vi.fn()} onAccepted={vi.fn()} />);
     fireEvent.change(await screen.findByTestId("ai-draft-instructions"), { target: { value: "x" } });
     fireEvent.click(screen.getByTestId("ai-draft-submit"));
-    fireEvent.click(await screen.findByText("pick-shared"));
 
     expect(await screen.findByTestId("ai-draft-failed")).toHaveTextContent("AI chưa sẵn sàng");
     expect(screen.getByTestId("ai-draft-new")).toBeInTheDocument();

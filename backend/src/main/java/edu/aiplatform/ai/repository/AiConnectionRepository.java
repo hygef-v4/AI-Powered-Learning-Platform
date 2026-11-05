@@ -55,16 +55,17 @@ public class AiConnectionRepository {
                 .query(AiConnectionRepository::map).optional();
     }
 
-    /** Kết nối cá nhân chưa thu hồi của một người cho một provider. */
+    /** Một khóa cá nhân chưa thu hồi của một người cho provider (khóa đang bật thêm sớm nhất trước); có thể có nhiều khóa. */
     public Optional<AiConnection> findPersonal(UUID ownerId, AiProvider provider) {
         return jdbc.sql("select " + COLUMNS + " from ai_connections where scope = 'PERSONAL' and owner_id = :ownerId "
-                        + "and provider = :provider and status <> 'REVOKED'")
+                        + "and provider = :provider and status <> 'REVOKED' order by (status = 'ACTIVE') desc, created_at, id "
+                        + "limit 1")
                 .param("ownerId", ownerId).param("provider", provider.name()).query(AiConnectionRepository::map).optional();
     }
 
     public List<AiConnection> listPersonal(UUID ownerId) {
         return jdbc.sql("select " + COLUMNS + " from ai_connections where scope = 'PERSONAL' and owner_id = :ownerId "
-                        + "and status <> 'REVOKED' order by provider")
+                        + "and status <> 'REVOKED' order by provider, created_at, id")
                 .param("ownerId", ownerId).query(AiConnectionRepository::map).list();
     }
 

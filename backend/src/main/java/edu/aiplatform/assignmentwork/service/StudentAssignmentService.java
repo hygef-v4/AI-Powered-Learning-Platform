@@ -125,7 +125,7 @@ public class StudentAssignmentService {
                 : summary(list.get(0), graded, feedbackCounts.getOrDefault(list.get(0).id(), 0L));
         BigDecimal maxPoints = content.rubrics().stream().map(RubricView::maxPoints)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new WorkViews.Detail(view.assignmentId(), ref.classId(), ref.code(), ref.name(), view.scope(),
+        return new WorkViews.Detail(view.assignmentId(), ref.classId(), ref.code(), ref.subjectCode(), view.scope(),
                 view.title(), view.submissionMode(), view.gradingMode(), view.diagramEnabled(), view.status(),
                 view.opensAt(), view.closesAt(), view.lateUntil(), view.maxAttempts(), topLevelParts(content.parts(), content.rubrics()), maxPoints,
                 content.requiredDiagrams(), view.activityMonitoringEnabled(),
@@ -209,7 +209,7 @@ public class StudentAssignmentService {
         } else {
             status = "NOT_STARTED";
         }
-        return new WorkViews.Row(view.assignmentId(), ref.classId(), ref.code(), ref.name(), view.scope(), view.title(),
+        return new WorkViews.Row(view.assignmentId(), ref.classId(), ref.code(), ref.subjectCode(), view.scope(), view.title(),
                 view.submissionMode(), view.gradingMode(), view.diagramEnabled(), view.status(), view.opensAt(),
                 view.closesAt(), view.lateUntil(), view.maxAttempts(), status, list.size(), submitted.size(),
                 inProgress == null ? null : inProgress.id(), last == null ? null : last.submittedAt(),

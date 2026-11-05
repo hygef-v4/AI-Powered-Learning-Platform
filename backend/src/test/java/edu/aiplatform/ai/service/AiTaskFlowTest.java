@@ -103,6 +103,7 @@ class AiTaskFlowTest {
                 schemas, access, delivery, jobs, json, tx, clock);
         worker = new AiTaskJobHandler(tasks, connections, gateway, cipher, schemas, quota,
                 new AiUsageService(usageRepository, access, clock), delivery, properties, json, tx, clock);
+        worker.transientWaits = new Duration[] {Duration.ZERO, Duration.ZERO};
         when(authorization.authorize(eq(teacher), any(), any())).thenReturn(AuthorizationDecision.allow());
         when(authorization.authorize(eq(student), eq(Actions.AI_PERSONAL), any())).thenReturn(AuthorizationDecision.allow());
         when(authorization.authorize(eq(student), eq(Actions.AI_SHARED_USE), any()))
@@ -115,6 +116,8 @@ class AiTaskFlowTest {
         when(connections.findInstitutional(AiProvider.GEMINI)).thenReturn(Optional.of(shared));
         when(connections.findPersonal(any(), any())).thenReturn(Optional.empty());
         when(connections.findPersonal(teacher.accountId(), AiProvider.OPENAI)).thenReturn(Optional.of(personal));
+        when(connections.listInstitutional()).thenReturn(List.of(shared));
+        when(connections.listPersonal(teacher.accountId())).thenReturn(List.of(personal));
         when(connections.findById(shared.id())).thenReturn(Optional.of(shared));
         when(connections.findById(personal.id())).thenReturn(Optional.of(personal));
         when(quota.reserve(any(), anyLong())).thenAnswer(c -> new QuotaReservationService.Reservation(LocalDate.of(2026, 10, 21),
@@ -136,6 +139,21 @@ class AiTaskFlowTest {
     // ---- gửi task -----------------------------------------------------------------------------------------
 
     @Test
+    void sourceOrderPrefersSharedOnlyWhenTodaysQuotaCoversThisRun() {
+        AiPrompt prompt = new AiPrompt("sys", "x".repeat(1000));
+        when(quota.remaining(teacher.accountId())).thenReturn(new QuotaReservationService.Remaining(0, 10_000, 10_000,
+                null));
+        assertThat(service.sourceOrder(teacher, prompt, 500)).containsExactly(
+                new edu.aiplatform.ai.contract.AiSourceChoice(AiSource.SHARED, null),
+                new edu.aiplatform.ai.contract.AiSourceChoice(AiSource.PERSONAL, AiProvider.OPENAI));
+        when(quota.remaining(teacher.accountId())).thenReturn(new QuotaReservationService.Remaining(9_900, 10_000, 100,
+                null));
+        assertThat(service.sourceOrder(teacher, prompt, 500)).containsExactly(
+                new edu.aiplatform.ai.contract.AiSourceChoice(AiSource.PERSONAL, AiProvider.OPENAI));
+        assertThat(service.sourceOrder(student, prompt, 500)).isEmpty();
+    }
+
+    @Test
     void sharedSourceReservesQuotaAndQueuesAJob() {
         AiTaskView view = service.submit(request(teacher, AiSource.SHARED, null, "r1"));
 
@@ -152,6 +170,7 @@ class AiTaskFlowTest {
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_SHARED_NOT_ALLOWED"));
         when(connections.findInstitutional(AiProvider.GEMINI)).thenReturn(Optional.of(shared.withStatus(
                 AiConnection.Status.DISABLED, NOW)));
+        when(connections.listInstitutional()).thenReturn(List.of(shared.withStatus(AiConnection.Status.DISABLED, NOW)));
         assertThatThrownBy(() -> service.submit(request(teacher, AiSource.SHARED, null, "r2")))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_SHARED_NOT_CONFIGURED"));
         assertThatThrownBy(() -> service.submit(request(teacher, AiSource.PERSONAL, AiProvider.CLAUDE, "r3")))
@@ -165,8 +184,11 @@ class AiTaskFlowTest {
         service.requireSource(teacher, AiSource.PERSONAL, AiProvider.OPENAI);
         assertThatThrownBy(() -> service.requireSource(teacher, AiSource.PERSONAL, AiProvider.CLAUDE))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_PERSONAL_NOT_CONFIGURED"));
-        assertThatThrownBy(() -> service.requireSource(teacher, AiSource.PERSONAL, null))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_PROVIDER_REQUIRED"));
+        // Không chọn nhà cung cấp: tự chọn khóa cá nhân đang bật (yêu cầu 2026-11-05); không có khóa nào thì báo hết nguồn.
+        service.requireSource(teacher, AiSource.PERSONAL, null);
+        service.requireSource(teacher, null, null);
+        assertThatThrownBy(() -> service.requireSource(student, null, null))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_SOURCE_UNAVAILABLE"));
         assertThatThrownBy(() -> service.requireSource(student, AiSource.SHARED, null))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_SHARED_NOT_ALLOWED"));
         assertThat(tasks.rows).isEmpty();
@@ -333,19 +355,58 @@ class AiTaskFlowTest {
 
     @Test
     void rejectedCallReleasesQuotaAndUnknownCallChargesEstimate() {
+        // Mọi khóa đều lỗi: thử API chung rồi khóa cá nhân, hết khóa mới kết thúc task.
         AiTaskView rejected = service.submit(request(teacher, AiSource.SHARED, null, "r1"));
+        long reserved = tasks.rows.get(rejected.taskId()).reservedTokens();
         when(gateway.call(any(), any())).thenThrow(new ProviderException(FailureKind.REJECTED, 401, "Key API không hợp lệ", null));
         worker.handle(message(rejected.taskId()));
         AiTask first = tasks.rows.get(rejected.taskId());
         assertThat(first.state()).isEqualTo(AiTaskState.FAILED);
-        verify(quota).release(teacher.accountId(), first.quotaDay(), first.reservedTokens());
+        verify(quota).release(eq(teacher.accountId()), any(), eq(reserved));
+        verify(gateway).call(eq(AiProvider.GEMINI), any());
+        verify(gateway).call(eq(AiProvider.OPENAI), any());
 
         AiTaskView unknown = service.submit(request(teacher, AiSource.SHARED, null, "r2"));
+        long reservedSecond = tasks.rows.get(unknown.taskId()).reservedTokens();
         doThrow(new ProviderException(FailureKind.UNKNOWN, 0, "Hết giờ", null)).when(gateway).call(any(), any());
         worker.handle(message(unknown.taskId()));
         AiTask second = tasks.rows.get(unknown.taskId());
         assertThat(second.state()).isEqualTo(AiTaskState.UNKNOWN);
-        verify(quota).chargeReserved(teacher.accountId(), second.quotaDay(), second.reservedTokens());
+        verify(quota).chargeReserved(eq(teacher.accountId()), any(), eq(reservedSecond));
+    }
+
+    @Test
+    void overloadedProviderIsRetriedOnTheSameKeyBeforeSwitching() {
+        AiTaskView view = service.submit(request(teacher, AiSource.SHARED, null, "r1"));
+        when(gateway.call(eq(AiProvider.GEMINI), any()))
+                .thenThrow(new ProviderException(FailureKind.REJECTED, 503, "Nhà cung cấp AI đang quá tải (HTTP 503)", null))
+                .thenReturn(new Response("{\"score\":5}", "req", new Usage(3L, 2L, null, null)));
+
+        worker.handle(message(view.taskId()));
+
+        AiTask task = tasks.rows.get(view.taskId());
+        assertThat(task.state()).isEqualTo(AiTaskState.READY);
+        assertThat(task.connectionId()).isEqualTo(shared.id());
+        verify(gateway, times(2)).call(eq(AiProvider.GEMINI), any());
+        verify(gateway, never()).call(eq(AiProvider.OPENAI), any());
+    }
+
+    @Test
+    void sharedFailureFallsBackToPersonalKeyInTheSameRun() {
+        AiTaskView view = service.submit(request(teacher, AiSource.SHARED, null, "r1"));
+        when(gateway.call(eq(AiProvider.GEMINI), any()))
+                .thenThrow(new ProviderException(FailureKind.REJECTED, 503, "Không kết nối được", null));
+        when(gateway.call(eq(AiProvider.OPENAI), any()))
+                .thenReturn(new Response("{\"score\":7}", "req", new Usage(3L, 2L, null, null)));
+
+        worker.handle(message(view.taskId()));
+
+        AiTask task = tasks.rows.get(view.taskId());
+        assertThat(task.state()).isEqualTo(AiTaskState.READY);
+        assertThat(task.source()).isEqualTo(AiSource.PERSONAL);
+        assertThat(task.connectionId()).isEqualTo(personal.id());
+        assertThat(task.reservedTokens()).isNull();
+        verify(handler).onReady(any());
     }
 
     @Test
@@ -420,6 +481,8 @@ class AiTaskFlowTest {
     void disabledConnectionFailsBeforeDispatch() {
         AiTaskView view = service.submit(request(teacher, AiSource.SHARED, null, "r1"));
         when(connections.findById(shared.id())).thenReturn(Optional.of(shared.withStatus(AiConnection.Status.DISABLED, NOW)));
+        when(connections.listInstitutional()).thenReturn(List.of());
+        when(connections.listPersonal(teacher.accountId())).thenReturn(List.of());
 
         worker.handle(message(view.taskId()));
 

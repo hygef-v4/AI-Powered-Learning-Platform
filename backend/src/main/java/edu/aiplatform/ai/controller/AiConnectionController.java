@@ -12,6 +12,7 @@ import edu.aiplatform.ai.service.ProviderCatalog.ProviderInfo;
 import edu.aiplatform.identity.contract.Actor;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -63,25 +64,79 @@ public class AiConnectionController {
         return catalog.providers();
     }
 
+    /** Khóa không được in ra log. */
+    public record AddRequest(String provider, String apiKey, String model) {
+
+        @Override
+        public String toString() {
+            return "AddRequest[provider=" + provider + ", model=" + model + "]";
+        }
+    }
+
+    /** Khóa không được in ra log. */
+    public record TestRequest(String provider, String apiKey, String model, UUID id) {
+
+        @Override
+        public String toString() {
+            return "TestRequest[provider=" + provider + ", model=" + model + ", id=" + id + "]";
+        }
+    }
+
+    public record KeyResponse(String apiKey) {
+
+        @Override
+        public String toString() {
+            return "KeyResponse[***]";
+        }
+    }
+
+    public record StatusRequest(Boolean enabled, Long version) {
+    }
+
+    // Khóa API cá nhân: cùng kiểu với khóa của trường (yêu cầu 2026-11-05), nhiều khóa cho một nhà cung cấp, theo id.
+
     @GetMapping("/api/v1/me/ai-connections")
     public List<ConnectionView> list(@AuthenticationPrincipal Actor actor) {
         return connections.listPersonal(actor);
     }
 
-    @PutMapping("/api/v1/me/ai-connections/{provider}")
-    public ConnectionView save(@AuthenticationPrincipal Actor actor, @PathVariable String provider,
+    @PostMapping("/api/v1/me/ai-connections")
+    public ConnectionView add(@AuthenticationPrincipal Actor actor, @RequestBody AddRequest request) {
+        return connections.addPersonal(actor, AiWebSupport.provider(request.provider()),
+                new SaveCommand(request.apiKey(), request.model(), null));
+    }
+
+    @PostMapping("/api/v1/me/ai-connections:test")
+    public AiConnectionService.TestResult testDraft(@AuthenticationPrincipal Actor actor, @RequestBody TestRequest request) {
+        return connections.testPersonalDraft(actor, AiWebSupport.provider(request.provider()), request.id(),
+                new SaveCommand(request.apiKey(), request.model(), null));
+    }
+
+    @PutMapping("/api/v1/me/ai-connections/{id}")
+    public ConnectionView save(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                @RequestBody SaveCommand command) {
-        return connections.savePersonal(actor, AiWebSupport.provider(provider), command);
+        return connections.replacePersonal(actor, id, command);
     }
 
-    @PostMapping("/api/v1/me/ai-connections/{provider}:test")
-    public ConnectionView test(@AuthenticationPrincipal Actor actor, @PathVariable String provider) {
-        return connections.testPersonal(actor, AiWebSupport.provider(provider));
+    @GetMapping("/api/v1/me/ai-connections/{id}/key")
+    public KeyResponse key(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return new KeyResponse(connections.revealPersonal(actor, id));
     }
 
-    @DeleteMapping("/api/v1/me/ai-connections/{provider}")
+    @PostMapping("/api/v1/me/ai-connections/{id}:test")
+    public ConnectionView test(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return connections.testPersonal(actor, id);
+    }
+
+    @PutMapping("/api/v1/me/ai-connections/{id}/status")
+    public ConnectionView status(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+                                 @RequestBody StatusRequest request) {
+        return connections.setPersonalEnabled(actor, id, Boolean.TRUE.equals(request.enabled()), request.version());
+    }
+
+    @DeleteMapping("/api/v1/me/ai-connections/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void revoke(@AuthenticationPrincipal Actor actor, @PathVariable String provider) {
-        connections.revokePersonal(actor, AiWebSupport.provider(provider));
+    public void revoke(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        connections.revokePersonal(actor, id);
     }
 }

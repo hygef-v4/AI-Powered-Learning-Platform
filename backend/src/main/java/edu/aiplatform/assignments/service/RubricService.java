@@ -34,8 +34,23 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class RubricService implements IRubric {
 
+    /**
+     * Rubric "Toàn bài" (yêu cầu 2026-11-04): tiêu chí chấm cả bài, không gắn với mục nào; luôn có ở bài có mục, có thể trống.
+     * Bài không có mục thì phần duy nhất đã là cả bài nên không thêm.
+     */
+    public static final String WHOLE = "ASSIGNMENT";
+    public static final String WHOLE_TITLE = "Toàn bài";
+
     private final RubricRepository rubrics;
     private final AssignmentRepository assignments;
+
+    public static boolean hasWhole(List<DocumentPart> parts) {
+        return parts != null && !(parts.size() == 1 && parts.get(0).headingBlockId() == null);
+    }
+
+    public static DocumentPart wholePart() {
+        return new DocumentPart(WHOLE, null, List.of(), WHOLE_TITLE);
+    }
 
     public RubricService(RubricRepository rubrics, AssignmentRepository assignments) {
         this.rubrics = rubrics;
@@ -75,9 +90,15 @@ public class RubricService implements IRubric {
         Map<String, AssignmentRubric> byPart = all.stream()
                 .collect(Collectors.toMap(AssignmentRubric::partId, r -> r, (a, b) -> a));
         List<AssignmentRubric> result = new ArrayList<>();
+        // Toàn bài đứng đầu, chỉ khi đã có tiêu chí (chấm bài, điểm tối đa không có thẻ trống).
+        AssignmentRubric whole = byPart.get(WHOLE);
+        if (whole != null && hasWhole(assignment.parts()) && !whole.criteria().isEmpty()) {
+            result.add(whole);
+        }
+        // Mục không có mục chấm nào không phải phần chấm (yêu cầu 2026-11-05): không có trong bảng chấm, điểm tối đa.
         for (DocumentPart part : assignment.parts()) {
             AssignmentRubric rubric = byPart.get(part.partId());
-            if (rubric != null) {
+            if (rubric != null && !rubric.criteria().isEmpty()) {
                 result.add(rubric);
             }
         }
@@ -87,7 +108,10 @@ public class RubricService implements IRubric {
     /** P1: phần mới có rubric trống, phần mất thì xóa rubric, phần còn giữ rubric đã điền (BR-U07-20). */
     void syncParts(UUID assignmentId, List<DocumentPart> parts, Instant now) {
         List<AssignmentRubric> existing = rubrics.listByAssignment(assignmentId);
-        Set<String> wanted = parts.stream().map(DocumentPart::partId).collect(Collectors.toSet());
+        Set<String> wanted = parts.stream().map(DocumentPart::partId).collect(Collectors.toCollection(HashSet::new));
+        if (hasWhole(parts)) {
+            wanted.add(WHOLE);
+        }
         Set<String> present = new HashSet<>();
         List<String> gone = new ArrayList<>();
         for (AssignmentRubric rubric : existing) {
@@ -103,6 +127,18 @@ public class RubricService implements IRubric {
                 rubrics.insert(AssignmentRubric.empty(assignmentId, part.partId(), now));
             }
         }
+        if (hasWhole(parts) && !present.contains(WHOLE)) {
+            rubrics.insert(AssignmentRubric.empty(assignmentId, WHOLE, now));
+        }
+    }
+
+    /** Rubric Toàn bài của bài cũ chưa có thì tạo trống (khi người soạn sửa nó lần đầu). */
+    AssignmentRubric ensureWhole(Assignment assignment, Instant now) {
+        return forPart(assignment, WHOLE).orElseGet(() -> {
+            AssignmentRubric created = AssignmentRubric.empty(assignment.id(), WHOLE, now);
+            rubrics.insert(created);
+            return created;
+        });
     }
 
     /** Bỏ mọi rubric rồi tạo theo phần mới, điền gợi ý nếu có (áp dụng đề xuất AI). */
@@ -112,6 +148,10 @@ public class RubricService implements IRubric {
         for (DocumentPart part : assignment.parts()) {
             List<RubricCriterion> criteria = suggestions.getOrDefault(part.partId(), List.of());
             rubrics.insert(AssignmentRubric.empty(assignment.id(), part.partId(), now).withCriteria(criteria, now));
+        }
+        if (hasWhole(assignment.parts())) {
+            rubrics.insert(AssignmentRubric.empty(assignment.id(), WHOLE, now)
+                    .withCriteria(suggestions.getOrDefault(WHOLE, List.of()), now));
         }
     }
 
@@ -138,7 +178,7 @@ public class RubricService implements IRubric {
     }
 
     /**
-     * Chuẩn hóa tiêu chí khi lưu (BR-U07-21): giới hạn số lượng, độ dài; điểm nếu có phải > 0, tối đa 2 chữ số thập
+     * Chuẩn hóa tiêu chí khi lưu (BR-U07-21): giới hạn số lượng, độ dài; điểm nếu có phải ≥ 0 (0 điểm được, 2026-11-04), tối đa 2 chữ số thập
      * phân; {@code DIAGRAM} chỉ khi bật sơ đồ. Bản nháp được thiếu tiêu chí, mục, điểm. Cấp id cho mục mới.
      */
     static List<RubricCriterion> normalize(List<RubricCriterion> criteria, boolean diagramEnabled) {
@@ -171,7 +211,7 @@ public class RubricService implements IRubric {
                     throw ApiException.badRequest("RUBRIC_INVALID", "Mục chấm không hợp lệ");
                 }
                 BigDecimal points = item.points();
-                if (points != null && (points.signum() <= 0 || points.stripTrailingZeros().scale() > 2
+                if (points != null && (points.signum() < 0 || points.stripTrailingZeros().scale() > 2
                         || points.compareTo(AssignmentRubric.POINTS_MAX) > 0)) {
                     throw ApiException.badRequest("RUBRIC_POINTS_INVALID",
                             "Điểm mỗi mục phải lớn hơn 0, tối đa 2 chữ số thập phân");
@@ -187,22 +227,84 @@ public class RubricService implements IRubric {
         return List.copyOf(out);
     }
 
-    /** Lỗi chặn duyệt, phát hành: phần thiếu rubric hoặc rubric chưa đủ; tiêu chí sơ đồ khi tắt sơ đồ. */
+    static final String MISSING = "RUBRIC_MISSING";
+    static final String POINTS_MISSING = "RUBRIC_POINTS_MISSING";
+    static final String WHOLE_POINTS_MISSING = "RUBRIC_WHOLE_POINTS_MISSING";
+
+    /**
+     * Lỗi chặn phát hành về rubric (yêu cầu 2026-11-05):
+     * <ul>
+     * <li>Cả bài tổng điểm bằng 0: chỉ báo "Bài làm chưa có rubric chấm điểm", không tô đỏ thẻ nào (kể cả Toàn bài).</li>
+     * <li>Thẻ có mục chấm mà tổng điểm không quá 0, hoặc có mục ghi chữ chưa ghi điểm hay ghi điểm chưa ghi chữ: "Rubric
+     * thiếu điểm" trên thẻ đó.</li>
+     * <li>Dòng không chữ không điểm bỏ qua; thẻ chỉ có dòng như vậy coi như chưa có rubric.</li>
+     * </ul>
+     * Thẻ Toàn bài (và phần duy nhất của bài không có mục) báo không gắn tiêu đề, mã {@code RUBRIC_WHOLE_POINTS_MISSING}.
+     */
     List<ValidationIssue> readinessIssues(Assignment assignment) {
         Map<String, AssignmentRubric> byPart = new HashMap<>();
         rubrics.listByAssignment(assignment.id()).forEach(r -> byPart.put(r.partId(), r));
         List<ValidationIssue> issues = new ArrayList<>();
+        List<Card> cards = new ArrayList<>();
+        if (hasWhole(assignment.parts()) && byPart.containsKey(WHOLE)) {
+            cards.add(new Card(byPart.get(WHOLE), null, "Toàn bài"));
+        }
         for (DocumentPart part : assignment.parts()) {
             AssignmentRubric rubric = byPart.get(part.partId());
-            if (rubric == null || !rubric.complete()) {
-                issues.add(new ValidationIssue("RUBRIC_INCOMPLETE", part.headingBlockId(),
-                        "Mục \"" + part.title() + "\" chưa có rubric đủ tiêu chí và điểm"));
-            } else if (!assignment.diagramEnabled() && rubric.hasDiagramCriteria()) {
-                issues.add(new ValidationIssue("RUBRIC_DIAGRAM_DISABLED", part.headingBlockId(),
-                        "Mục \"" + part.title() + "\" có tiêu chí sơ đồ nhưng bài tắt sơ đồ"));
+            if (rubric != null) {
+                cards.add(new Card(rubric, part.headingBlockId(), part.title()));
+            }
+        }
+        BigDecimal total = cards.stream().map(card -> points(card.rubric())).reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (total.signum() <= 0) {
+            issues.add(new ValidationIssue(MISSING, null, "Bài làm chưa có rubric chấm điểm"));
+            return issues;
+        }
+        for (Card card : cards) {
+            if (pointsMissing(card.rubric())) {
+                String code = card.blockId() == null ? WHOLE_POINTS_MISSING : POINTS_MISSING;
+                // Ghi rõ lý do trên thẻ (yêu cầu 2026-11-05): mục ghi dở, tổng điểm không quá 0.
+                if (halfWritten(card.rubric())) {
+                    issues.add(new ValidationIssue(code, card.blockId(), "Có mục chấm thiếu nội dung hoặc thiếu điểm"));
+                }
+                if (points(card.rubric()).signum() <= 0) {
+                    issues.add(new ValidationIssue(code, card.blockId(), "Tổng điểm của rubric phải lớn hơn 0"));
+                }
+            } else if (!assignment.diagramEnabled() && card.rubric().hasDiagramCriteria()) {
+                issues.add(new ValidationIssue("RUBRIC_DIAGRAM_DISABLED", card.blockId(),
+                        "Mục \"" + card.title() + "\" có tiêu chí sơ đồ nhưng bài tắt sơ đồ"));
             }
         }
         return issues;
+    }
+
+    private record Card(AssignmentRubric rubric, UUID blockId, String title) {
+    }
+
+    /** Mục chấm có ghi gì đó (chữ hoặc điểm); dòng trống hẳn bỏ qua. */
+    private static List<RubricItem> written(AssignmentRubric rubric) {
+        return rubric.criteria().stream().flatMap(c -> c.items() == null ? java.util.stream.Stream.<RubricItem>empty()
+                : c.items().stream()).filter(item -> !(item.text() == null || item.text().isBlank()) || item.points() != null)
+                .toList();
+    }
+
+    private static BigDecimal points(AssignmentRubric rubric) {
+        return written(rubric).stream().map(RubricItem::points).filter(p -> p != null && p.signum() > 0)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /** Thẻ có mục chấm mà tổng điểm không quá 0, hoặc mục ghi dở (chữ thiếu điểm, điểm thiếu chữ). */
+    static boolean pointsMissing(AssignmentRubric rubric) {
+        List<RubricItem> items = written(rubric);
+        if (items.isEmpty()) {
+            return false;
+        }
+        return halfWritten(rubric) || points(rubric).signum() <= 0;
+    }
+
+    private static boolean halfWritten(AssignmentRubric rubric) {
+        return written(rubric).stream().anyMatch(item -> item.text() == null || item.text().isBlank()
+                || item.points() == null || item.points().signum() < 0);
     }
 
     private static UUID unique(UUID requested, Set<UUID> ids) {

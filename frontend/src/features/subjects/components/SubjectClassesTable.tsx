@@ -3,20 +3,16 @@ import type { SubjectClassSummary } from "../model/types";
 
 export function SubjectClassesTable({ items }: { items: SubjectClassSummary[] }) {
   return (
-    <TableFrame filledHead className="[&_table]:min-w-[640px] [&_table]:table-fixed">
+    <TableFrame filledHead className="[&_table]:min-w-[480px] [&_table]:table-fixed">
       <caption className="sr-only">Lớp của môn học, chỉ xem</caption>
       <colgroup>
-        <col className="w-[130px]" />
+        <col className="w-[34%]" />
         <col />
-        <col className="w-[110px]" />
-        <col className="w-[26%]" />
         <col className="w-[130px]" />
       </colgroup>
       <thead>
         <tr>
           <Th>Mã lớp</Th>
-          <Th>Tên lớp</Th>
-          <Th>Học kỳ</Th>
           <Th>Giảng viên</Th>
           <Th>Trạng thái</Th>
         </tr>
@@ -25,8 +21,6 @@ export function SubjectClassesTable({ items }: { items: SubjectClassSummary[] })
         {items.map((item) => (
           <tr key={item.classId}>
             <Td className="font-mono font-semibold">{item.code}</Td>
-            <Td>{item.name}</Td>
-            <Td>{item.term}</Td>
             <Td>{item.teacherName ?? <Pill>Chưa phân công</Pill>}</Td>
             <Td>
               <Pill
@@ -45,7 +39,7 @@ export function SubjectClassesTable({ items }: { items: SubjectClassSummary[] })
         ))}
         {items.length === 0 && (
           <tr>
-            <Td colSpan={5}>
+            <Td colSpan={3}>
               <p className="py-8 text-center text-muted">Không có lớp phù hợp.</p>
             </Td>
           </tr>

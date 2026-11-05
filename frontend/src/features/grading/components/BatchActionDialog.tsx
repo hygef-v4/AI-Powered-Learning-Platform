@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Alert, Button, Dialog } from "@/shared/ui";
 import { Icon } from "@/shared/ui/Icon";
 import { aiRequest } from "./AiProposalPanel";
-import { AiSourcePicker, type SourceChoice } from "@/shared/ai";
+import type { SourceChoice } from "@/shared/ai";
 import { gradingApi } from "../api";
 import { message } from "../hooks/useResource";
 import type { BatchResult, ItemVersion } from "../model/types";
@@ -26,7 +26,6 @@ export function BatchActionDialog({
   onClose: () => void;
   onDone: () => void;
 }) {
-  const [choosingSource, setChoosingSource] = useState(action === "ai");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<BatchResult | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
@@ -52,13 +51,12 @@ export function BatchActionDialog({
     };
   }, [action, items]);
   async function run(choice?: SourceChoice) {
-    if (busy || items.length === 0 || (action === "ai" && !choice)) return;
+    if (busy || items.length === 0) return;
     setBusy(true);
     setError("");
     try {
       let completed: BatchResult;
       if (action === "ai") {
-        if (!choice) return;
         completed = await gradingApi.requestBatch(items, aiRequest(choice));
       } else {
         completed = await gradingApi[action](items);
@@ -74,7 +72,6 @@ export function BatchActionDialog({
       setError(message(e));
     } finally {
       setBusy(false);
-      setChoosingSource(false);
     }
   }
   const title =
@@ -88,12 +85,6 @@ export function BatchActionDialog({
   if (successMessage) {
     return <SuccessNotice onDismiss={onClose} message={successMessage} />;
   }
-  if (action === "ai" && choosingSource && items.length > 0) {
-    return <AiSourcePicker open
-      task={`Đề xuất chấm ${items.length} bài đã chọn${estimateState === "loading" ? " · đang ước tính token" : estimateState === "failed" ? " · chưa ước tính được token" : ""}`}
-      estimatedTokens={estimateState === "ready" ? estimate.tokens : undefined}
-      busy={busy || estimateState === "loading"} onCancel={onClose} onSubmit={(choice) => void run(choice)} />;
-  }
   return (
     <Dialog
       open
@@ -105,7 +96,7 @@ export function BatchActionDialog({
           <Button
             variant="primary"
             disabled={busy || !!result || items.length === 0}
-            onClick={() => action === "ai" ? setChoosingSource(true) : void run()}
+            onClick={() => void run()}
           >
             {busy ? "Đang xử lý…" : "Xác nhận"}
           </Button>
@@ -113,6 +104,13 @@ export function BatchActionDialog({
       }
     >
       <p className="font-display text-[34px] leading-none text-ink">{items.length} <span className="font-sans text-[13.5px] text-muted">bài đã chọn</span></p>
+      {/* Nguồn AI do hệ thống tự chọn: API chung nếu còn đủ hạn mức cho lượt này, không thì khóa cá nhân (yêu cầu 2026-11-05). */}
+      {action === "ai" && (
+        <p className="text-xs text-muted">
+          {estimateState === "loading" ? "Đang ước tính token…" : estimateState === "ready" && estimate.tokens
+            ? `Ước tính khoảng ${estimate.tokens.toLocaleString("vi-VN")} token.` : "Chưa ước tính được token."}
+        </p>
+      )}
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {result && (
         <ul className="flex flex-col">

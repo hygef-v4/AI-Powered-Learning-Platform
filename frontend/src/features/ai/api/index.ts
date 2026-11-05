@@ -19,14 +19,30 @@ export const getSources = () => apiFetch<SourceOption[]>("/api/v1/ai/sources");
 
 export const getConnections = () => apiFetch<ConnectionView[]>(CONNECTIONS);
 
-export const saveConnection = (provider: AiProvider, body: SaveConnection) =>
-  apiFetch<ConnectionView>(`${CONNECTIONS}/${provider}`, { method: "PUT", body: JSON.stringify(body) });
+// Khóa API cá nhân: như khóa của trường (yêu cầu 2026-11-05), nhiều khóa cho một nhà cung cấp, thao tác theo id.
+const keyUrl = (id: string) => `${CONNECTIONS}/${encodeURIComponent(id)}`;
 
-export const testConnection = (provider: AiProvider) =>
-  apiFetch<ConnectionView>(`${CONNECTIONS}/${provider}:test`, { method: "POST" });
+export const addConnection = (provider: AiProvider, body: SaveConnection) =>
+  apiFetch<ConnectionView>(CONNECTIONS, { method: "POST", body: JSON.stringify({ provider, ...body }) });
 
-export const revokeConnection = (provider: AiProvider) =>
-  apiFetch<void>(`${CONNECTIONS}/${provider}`, { method: "DELETE" });
+export const testConnectionDraft = (provider: AiProvider, body: SaveConnection, id?: string | null) =>
+  apiFetch<{ ok: boolean; message: string }>(`${CONNECTIONS}:test`, {
+    method: "POST",
+    body: JSON.stringify({ provider, apiKey: body.apiKey, model: body.model, id: id ?? null }),
+  });
+
+export const saveConnection = (id: string, body: SaveConnection) =>
+  apiFetch<ConnectionView>(keyUrl(id), { method: "PUT", body: JSON.stringify(body) });
+
+export const revealConnection = (id: string) => apiFetch<{ apiKey: string }>(`${keyUrl(id)}/key`);
+
+export const testConnection = (id: string) => apiFetch<ConnectionView>(`${keyUrl(id)}:test`, { method: "POST" });
+
+/** Công tắc khóa cá nhân: tắt vẫn giữ khóa, không dùng khi gọi AI. */
+export const setConnectionEnabled = (id: string, enabled: boolean, version: number) =>
+  apiFetch<ConnectionView>(`${keyUrl(id)}/status`, { method: "PUT", body: JSON.stringify({ enabled, version }) });
+
+export const revokeConnection = (id: string) => apiFetch<void>(keyUrl(id), { method: "DELETE" });
 
 export const getMcpCredentials = () => apiFetch<McpCredential[]>(MCP);
 

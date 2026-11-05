@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Pill, type Tone } from "@/shared/ui";
-import { AiSourcePicker, type SourceChoice } from "@/shared/ai";
+import type { SourceChoice } from "@/shared/ai";
 import { checklistPoints, invalidItemScores, itemPoints, validItemScore } from "../model/rubricScores";
 import { GradingFeedbackSummary, RubricItemFeedback } from "./StructuredFeedbackSection";
 import type {
@@ -14,11 +14,11 @@ import type {
   StructuredFeedback,
 } from "../model/types";
 
-/** Preserve the U09 request DTO; shared provider choice remains implicit as before. */
-export function aiRequest(choice: SourceChoice): AiRequest {
+/** Yêu cầu AI: không chọn nguồn thì hệ thống tự chọn (API chung nếu đủ hạn mức, không thì khóa cá nhân; 2026-11-05). */
+export function aiRequest(choice?: SourceChoice): AiRequest {
   return {
-    source: choice.source,
-    ...(choice.source === "PERSONAL" && choice.provider ? { provider: choice.provider } : {}),
+    ...(choice ? { source: choice.source } : {}),
+    ...(choice?.source === "PERSONAL" && choice.provider ? { provider: choice.provider } : {}),
     requestRef: crypto.randomUUID(),
   };
 }
@@ -81,7 +81,6 @@ export function AiProposalPanel({
   pollExhausted?: boolean;
   onRecheck?: () => void;
 }) {
-  const [choosingSource, setChoosingSource] = useState(false);
   const [expandedOlder, setExpandedOlder] = useState<Record<string, boolean>>({});
 
   function renderProposalContent(p: Proposal, isLatest: boolean) {
@@ -290,24 +289,11 @@ export function AiProposalPanel({
           type="button"
           className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-on-primary disabled:opacity-40"
           disabled={disabled || proposals.some((proposal) => proposal.status === "PENDING")}
-          onClick={() => setChoosingSource(true)}
+          onClick={() => { if (!disabled) onRequest(aiRequest()); }}
         >
           Yêu cầu đề xuất mới
         </button>
       </div>
-      {choosingSource && (
-        <AiSourcePicker
-          open
-          task="Đề xuất chấm bài đang xem"
-          busy={disabled}
-          onCancel={() => setChoosingSource(false)}
-          onSubmit={(choice) => {
-            if (disabled) return;
-            setChoosingSource(false);
-            onRequest(aiRequest(choice));
-          }}
-        />
-      )}
       {proposals.length === 0 && <p className="mt-3 text-sm text-muted">Chưa có đề xuất. Bạn có thể tự chấm theo rubric hoặc yêu cầu AI hỗ trợ.</p>}
       {selectedProposalId && proposalsLoaded && !proposals.some((p) => p.id === selectedProposalId) && (
         <p role="alert" className="mt-3 text-sm text-danger">Không tìm thấy đề xuất từ liên kết. Kiểm tra lịch sử đề xuất bên dưới; điểm chưa bị thay đổi.</p>

@@ -67,6 +67,17 @@ public record AiTask(UUID id, String requestRef, String fingerprint, UUID actorI
                 dispatchedAt, providerRequestId, applyResult, handlerDone, safe, createdAt, finishedAt, version);
     }
 
+    /**
+     * Khóa vừa dùng lỗi: thử tiếp bằng khóa kế tiếp ngay trong lần chạy (yêu cầu 2026-11-05), task vẫn RUNNING với mốc
+     * gửi mới; giữ chỗ quota của lần trước đã quyết toán, {@code reserved} là giữ chỗ của khóa mới (API chung).
+     */
+    public AiTask retryWith(AiSource nextSource, UUID nextConnection, AiProvider nextProvider, String nextModel,
+                            int nextMaxOutput, Long reserved, LocalDate day, Instant now) {
+        return new AiTask(id, requestRef, fingerprint, actorId, nextSource, nextConnection, nextProvider, nextModel, taskType,
+                targetRef, inputVersion, state, inputPayload, outputSchema, resultPayload, nextMaxOutput, reserved, day, now,
+                providerRequestId, applyResult, handlerDone, safeError, createdAt, finishedAt, version);
+    }
+
     /** Đã chuyển cho handler: xóa prompt và kết quả, chỉ giữ thông tin task (P6). */
     public AiTask handled(ApplyOutcome outcome) {
         return new AiTask(id, requestRef, fingerprint, actorId, source, connectionId, provider, model, taskType, targetRef,

@@ -72,6 +72,15 @@ final class DocxImporter {
     private static final Pattern LINK = Pattern.compile("/(assignments|attempts)/([0-9a-fA-F-]{36})/diagrams/([0-9a-fA-F-]{36})");
     private static final Set<String> MONO = Set.of("consolas", "courier new", "courier", "monaco", "menlo",
             "source code pro", "roboto mono", "jetbrains mono", "fira code");
+    /**
+     * Dấu đánh số đầu mục viết tay (yêu cầu 2026-11-05): "1.1", "1.1.2" (có hoặc không dấu chấm cuối), "I.", "1.", "1)",
+     * "a.", "A)". Sau dấu là khoảng trắng hoặc hết dòng, để không nhầm "1.5kg".
+     */
+    static final Pattern MARKER = Pattern.compile(
+            "^\\s*(?:(?<multi>\\d{1,2}(?:\\.\\d{1,2})+)\\.?|(?<roman>[IVXLC]{1,6})[.)]|(?<lroman>[ivx]{2,6})[.)]"
+                    + "|(?<dec>\\d{1,2})[.)]|(?<letter>[A-Za-z])[.)])(?:\\s+(?<rest>\\S.*))?$");
+    static final int MAX_LEVEL = 3;
+    private static final int MAX_MARKED_CHARS = 200;
     private static final Map<String, String> UNSUPPORTED = Map.of("txbxContent", "hộp văn bản", "oMath", "công thức",
             "oMathPara", "công thức", "smartArt", "SmartArt", "chart", "biểu đồ");
 
@@ -142,6 +151,8 @@ final class DocxImporter {
         private final Map<String, Integer> unsupported = new LinkedHashMap<>();
         private ObjectNode list;
         private BigInteger listId;
+        /** Thứ bậc của từng kiểu đánh số theo lần đầu gặp: kiểu gặp trước là mục cha (I. rồi 1. rồi a.). */
+        private final Map<String, Integer> kindRank = new LinkedHashMap<>();
         private int skippedImages;
         private boolean truncated;
 
@@ -201,16 +212,34 @@ final class DocxImporter {
         private void paragraph(XWPFParagraph p) {
             countUnsupported(p.getCTP().getDomNode());
             String heading = headingStyle(p);
-            if (heading != null) {
+            String text = p.getText() == null ? "" : p.getText().replaceAll("\\s+", " ").strip();
+            // Mục có đánh số (I., 1., 1.1, a. viết tay hoặc đánh số tự động của Word) thành mục của cây; bỏ số gốc vì
+            // trình soạn tự đánh 1., 1.1. (yêu cầu 2026-11-05).
+            Marker marker = marker(p, heading != null, text);
+            if (marker != null) {
                 endList();
-                String text = p.getText() == null ? "" : p.getText().replaceAll("\\s+", " ").strip();
-                if (!text.isEmpty()) {
+                int level = levelOf(marker);
+                {
+                    // Mục chưa đặt tên ("2." đứng riêng) vẫn là một mục.
                     ObjectNode content = JsonNodeFactory.instance.objectNode();
-                    content.put("style", heading);
-                    content.put("text", text.length() > DocumentModelService.MAX_HEADING
-                            ? text.substring(0, DocumentModelService.MAX_HEADING) : text);
+                    content.put("style", "H" + level);
+                    content.put("text", marker.text().length() > DocumentModelService.MAX_HEADING
+                            ? marker.text().substring(0, DocumentModelService.MAX_HEADING) : marker.text());
                     add(BlockType.HEADING, content);
                 }
+                pictures(p);
+                return;
+            }
+            if (heading != null) {
+                // Tiêu đề không đánh số là văn bản thường (in đậm như trong tệp).
+                endList();
+                alignOf(p);
+                ArrayNode runs = JsonNodeFactory.instance.arrayNode();
+                for (XWPFRun run : p.getRuns()) {
+                    appendRun(runs, run);
+                }
+                runs.forEach(run -> ((ObjectNode) run).put("bold", true));
+                flushParagraph(runs);
                 pictures(p);
                 return;
             }
@@ -220,12 +249,7 @@ final class DocxImporter {
                 return;
             }
             endList();
-            align = switch (p.getAlignment()) {
-                case CENTER -> "CENTER";
-                case RIGHT -> "RIGHT";
-                case BOTH -> "JUSTIFY";
-                default -> null;
-            };
+            alignOf(p);
             ArrayNode runs = JsonNodeFactory.instance.arrayNode();
             for (XWPFRun run : p.getRuns()) {
                 if (!run.getEmbeddedPictures().isEmpty()) {
@@ -236,6 +260,57 @@ final class DocxImporter {
                 appendRun(runs, run);
             }
             flushParagraph(runs);
+        }
+
+        private void alignOf(XWPFParagraph p) {
+            align = switch (p.getAlignment()) {
+                case CENTER -> "CENTER";
+                case RIGHT -> "RIGHT";
+                case BOTH -> "JUSTIFY";
+                default -> null;
+            };
+        }
+
+        /**
+         * Dấu đánh số của đoạn nếu đoạn là đầu mục: đoạn kiểu tiêu đề có số; hoặc đoạn thường ngắn, in đậm cả đoạn, có số
+         * (đề thi hay viết "I. PHẦN 1" in đậm mà không dùng kiểu tiêu đề).
+         */
+        private Marker marker(XWPFParagraph p, boolean heading, String text) {
+            boolean candidate = heading || (allBold(p) && text.length() <= MAX_MARKED_CHARS);
+            if (!candidate || text.isEmpty()) {
+                return null;
+            }
+            if (p.getNumID() != null) {
+                String kind = kindOfFormat(p.getNumFmt());
+                if (kind == null) {
+                    return null;
+                }
+                int ilvl = p.getNumIlvl() == null ? 0 : p.getNumIlvl().intValue();
+                String levelText = p.getNumLevelText();
+                int extra = levelText != null && levelText.chars().filter(c -> c == '%').count() > 1 ? ilvl : 0;
+                return new Marker(kind, extra, text);
+            }
+            return parseMarker(text);
+        }
+
+        private boolean allBold(XWPFParagraph p) {
+            boolean any = false;
+            for (XWPFRun run : p.getRuns()) {
+                String t = run.text();
+                if (t == null || t.isBlank()) {
+                    continue;
+                }
+                if (!run.isBold()) {
+                    return false;
+                }
+                any = true;
+            }
+            return any;
+        }
+
+        private int levelOf(Marker marker) {
+            int rank = kindRank.computeIfAbsent(marker.kind(), k -> kindRank.size());
+            return Math.max(1, Math.min(MAX_LEVEL, rank + marker.extra() + 1));
         }
 
         private void flushParagraph(ArrayNode runs) {
@@ -615,6 +690,51 @@ final class DocxImporter {
     }
 
     private record DrawingInfo(String description, String link) {
+    }
+
+    /** Một dấu đánh số: kiểu (ROMAN, DEC, UPPER, LOWER, LROMAN), số cấp thêm ("1.2" sâu hơn "1." một cấp), chữ sau dấu. */
+    record Marker(String kind, int extra, String text) {
+    }
+
+    static Marker parseMarker(String text) {
+        Matcher m = MARKER.matcher(text);
+        if (!m.matches()) {
+            return null;
+        }
+        String rest = m.group("rest") == null ? "" : m.group("rest").strip();
+        if (m.group("multi") != null) {
+            return new Marker("DEC", (int) m.group("multi").chars().filter(c -> c == '.').count(), rest);
+        }
+        if (m.group("dec") != null) {
+            return new Marker("DEC", 0, rest);
+        }
+        if (m.group("roman") != null) {
+            String roman = m.group("roman");
+            // Một chữ cái khác I, V, X (ví dụ "C.") là chữ cái, không phải số La Mã.
+            if (roman.length() == 1 && "IVX".indexOf(roman.charAt(0)) < 0) {
+                return new Marker("UPPER", 0, rest);
+            }
+            return new Marker("ROMAN", 0, rest);
+        }
+        if (m.group("lroman") != null) {
+            return new Marker("LROMAN", 0, rest);
+        }
+        String letter = m.group("letter");
+        return new Marker(Character.isUpperCase(letter.charAt(0)) ? "UPPER" : "LOWER", 0, rest);
+    }
+
+    static String kindOfFormat(String numFmt) {
+        if (numFmt == null) {
+            return null;
+        }
+        return switch (numFmt) {
+            case "upperRoman" -> "ROMAN";
+            case "lowerRoman" -> "LROMAN";
+            case "decimal", "decimalZero" -> "DEC";
+            case "upperLetter" -> "UPPER";
+            case "lowerLetter" -> "LOWER";
+            default -> null;
+        };
     }
 
     private static boolean looksLikeSvg(byte[] data) {
