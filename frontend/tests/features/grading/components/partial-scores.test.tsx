@@ -1,7 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
-import { rubricValues, RubricChecklistPanel } from "@/features/grading/components/RubricChecklistPanel";
+import { RubricChecklistPanel } from "@/features/grading/components/RubricChecklistPanel";
+import { rubricValues } from "@/features/grading/model/rubricScores";
 import type { Checks, ItemScores } from "@/features/grading/model/types";
 
 const rubrics = [{ rubricId: "r", partId: "q1", maxPoints: 1, criteria: [{ criterionId: "c", title: "Thiết kế",

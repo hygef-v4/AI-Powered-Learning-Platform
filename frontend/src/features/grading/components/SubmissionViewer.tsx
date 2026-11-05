@@ -4,9 +4,9 @@ import { useMemo, useState } from "react";
 import { Button, Dialog } from "@/shared/ui";
 import { apiFetch } from "@/shared/api/client";
 import { message } from "../hooks/useResource";
-import type { DocumentModel } from "../model/types";
+import type { SubmissionDocumentDto } from "../model/submissionDocument";
 import { RunsView, alignClass } from "@/shared/document/DocumentViewer";
-import type { Align, Run } from "@/shared/document/types";
+import type { Align, Run, DiagramContent } from "@/shared/document/types";
 
 /** Only document text fields become visible content; formatting metadata stays in RunsView. */
 function contentRuns(value: unknown): Run[] {
@@ -154,7 +154,7 @@ function safeDiagramPreview(value: unknown): string {
     }
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(parsed))}`;
 }
-function Diagram({ blockId, content }: { blockId: string; content: Record<string, unknown> }) {
+function Diagram({ blockId, content }: { blockId: string; content: DiagramContent }) {
   const [expanded, setExpanded] = useState(false);
   const preview = useMemo(() => safeDiagramPreview(content.svgPreview), [content.svgPreview]);
   const title = typeof content.alt === "string" && content.alt ? content.alt : "Sơ đồ bài nộp";
@@ -180,7 +180,7 @@ export function SubmissionViewer({
   document,
   evaluationId,
 }: {
-  document: DocumentModel;
+  document: SubmissionDocumentDto;
   evaluationId?: string;
 }) {
   return (
@@ -192,18 +192,19 @@ export function SubmissionViewer({
       {document.blocks.map((block) => {
         const c = block.content;
         const anchorId = `submission-block-${block.id}`;
-        if (block.type === "DIAGRAM") return <Diagram key={block.id} blockId={block.id} content={c} />;
+        if (block.type === "DIAGRAM") return <Diagram key={block.id} blockId={block.id} content={block.content} />;
         if (block.type === "IMAGE")
           return (
             <SubmittedImage
               key={block.id}
               blockId={block.id}
               evaluationId={evaluationId}
-              fileId={String(c.fileId ?? "")}
-              alt={typeof c.alt === "string" ? c.alt : "Ảnh bài nộp"}
+              fileId={String(block.content.fileId ?? "")}
+              alt={typeof block.content.alt === "string" ? block.content.alt : "Ảnh bài nộp"}
             />
           );
-        if (block.type === "TABLE" && Array.isArray(c.rows))
+        if (block.type === "TABLE" && Array.isArray(block.content.rows)) {
+          const c = block.content;
           return (
             <div key={block.id} id={anchorId} className="scroll-mt-24 overflow-auto">
               <table className="my-4 border-collapse">
@@ -227,13 +228,15 @@ export function SubmissionViewer({
               </table>
             </div>
           );
+        }
         if (block.type === "HEADING")
           return (
             <h3 key={block.id} id={anchorId} className="my-4 scroll-mt-24 text-lg font-bold">
-              <RunsView runs={contentRuns(c.text)} />
+              <RunsView runs={contentRuns(block.content.text)} />
             </h3>
           );
-        if (block.type === "LIST" && Array.isArray(c.items)) {
+        if (block.type === "LIST" && Array.isArray(block.content.items)) {
+          const c = block.content;
           const items = c.items.map((item, i) => (
             <li key={i} style={{ marginLeft: `${listIndent(item)}px` }}><RunsView runs={contentRuns(item)} /></li>
           ));
@@ -248,7 +251,7 @@ export function SubmissionViewer({
           );
         }
         return (
-          <p key={block.id} id={anchorId} className={`mb-4 scroll-mt-24 ${contentAlignment(c.align)}`}>
+          <p key={block.id} id={anchorId} className={`mb-4 scroll-mt-24 ${contentAlignment("align" in c ? c.align : undefined)}`}>
             <RunsView runs={contentRuns(c)} />
           </p>
         );

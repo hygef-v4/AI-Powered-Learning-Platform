@@ -367,12 +367,25 @@ paths:
       tags:
       - U09
       description: Assigned Teacher/SubjectManager only. Admin and class-management-only
-        authority are denied.
+        authority are denied. Optional status/late filters restrict navigationIds to the
+        originating submission listing in listing order. Requests without filters retain
+        legacy navigation order. Filters never grant access or bypass grade write checks.
       parameters:
       - name: id
         in: path
         required: true
         schema: *id001
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [ALL, PENDING, DRAFT, FINALIZED, PUBLISHED, NOT_SUBMITTED, IN_PROGRESS]
+      - name: late
+        in: query
+        required: false
+        schema:
+          type: boolean
       security:
       - session: []
       responses:

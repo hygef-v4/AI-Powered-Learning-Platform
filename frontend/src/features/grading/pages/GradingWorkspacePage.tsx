@@ -7,11 +7,11 @@ import {
   RubricNote,
   ToolbarButton,
   type DocumentComment,
-  type DocumentModel as EditorDocument,
   type RubricCriterion,
 } from "@/shared/document";
 import { Alert, Button, Icon, IconButton, Pill } from "@/shared/ui";
-import { checklistPoints, RubricChecklist } from "../components/RubricChecklistPanel";
+import { RubricChecklist } from "../components/RubricChecklistPanel";
+import { checklistPoints } from "../model/rubricScores";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
 import { useSubmissionDirectory } from "../hooks/useSubmissionDirectory";
 import { gradingApi } from "../api";
@@ -23,14 +23,17 @@ import { AiProposalPanel } from "../components/AiProposalPanel";
 import { BatchActionDialog } from "../components/BatchActionDialog";
 import { MemberContributionPanel } from "../components/MemberContributionPanel";
 import { countUnresolvedReviews } from "../components/StructuredFeedbackSection";
-import { points, statusLabels, type Detail, type DocumentModel, type Rubric } from "../model/types";
+import { points, statusLabels, type Detail, type Rubric } from "../model/types";
+import { toEditorDocument, type SubmissionDocumentDto } from "../model/submissionDocument";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
+import type { NavigationFilters } from "../model/navigation";
 
-export function GradingWorkspacePage({ evaluationId, proposalId }: { evaluationId: string; proposalId?: string }) {
-  const load = useCallback(() => gradingApi.detail(evaluationId), [evaluationId]);
+export function GradingWorkspacePage({ evaluationId, proposalId, status, late }: { evaluationId: string; proposalId?: string } & NavigationFilters) {
+  const load = useCallback(() => status !== undefined || late !== undefined
+    ? gradingApi.detail(evaluationId, { status, late }) : gradingApi.detail(evaluationId), [evaluationId, status, late]);
   const resource = useResource(load);
   return resource.value ? (
-    <Workspace key={evaluationId} initial={resource.value} refresh={resource.refresh} proposalId={proposalId} />
+    <Workspace key={`${evaluationId}:${status ?? ""}:${late ?? ""}`} initial={resource.value} refresh={resource.refresh} proposalId={proposalId} status={status} late={late} />
   ) : resource.error ? (
     <PageLoadError onRetry={() => void resource.refresh()}>{resource.error}</PageLoadError>
   ) : (
@@ -38,25 +41,17 @@ export function GradingWorkspacePage({ evaluationId, proposalId }: { evaluationI
   );
 }
 
-/** Bài nộp hiện bằng trình soạn chỉ đọc như trang soạn bài; ảnh có fileId thì đánh dấu có tệp để lấy link. */
-function editorDocument(document: DocumentModel): EditorDocument {
-  return {
-    blocks: document.blocks.map((block) => block.type === "IMAGE"
-      ? { ...block, content: { ...block.content, hasFile: typeof block.content.fileId === "string" && block.content.fileId !== "" } }
-      : block),
-  } as unknown as EditorDocument;
-}
-
 /** Link tải có hạn cho từng ảnh trong bài nộp (U03 qua U09), lấy một lần khi mở bài. */
-function useSubmissionImages(evaluationId: string, document: DocumentModel): Record<string, string> {
+function useSubmissionImages(evaluationId: string, document: SubmissionDocumentDto): Record<string, string> {
   const [urls, setUrls] = useState<Record<string, string>>({});
   useEffect(() => {
     let active = true;
-    const images = document.blocks.filter((block) => block.type === "IMAGE" && typeof block.content.fileId === "string" && block.content.fileId);
+    const images = document.blocks.filter((block) => block.type === "IMAGE");
     void Promise.all(images.map(async (block): Promise<[string, string] | null> => {
+      if (!block.content.fileId) return null;
       try {
         const token = await apiFetch<{ url: string }>(
-          `/api/v1/evaluations/${evaluationId}/images/${encodeURIComponent(String(block.content.fileId))}`,
+          `/api/v1/evaluations/${evaluationId}/images/${encodeURIComponent(block.content.fileId)}`,
         );
         const parsed = new URL(token.url, window.location.origin);
         return ["https:", "http:"].includes(parsed.protocol) ? [block.id, parsed.href] : null;
@@ -83,8 +78,8 @@ function noteCriteria(rubric: Rubric): RubricCriterion[] {
   }));
 }
 
-function Workspace({ initial, refresh, proposalId }: { initial: Detail; refresh: () => Promise<Detail>; proposalId?: string }) {
-  const workspace = useGradingWorkspace(initial, refresh);
+function Workspace({ initial, refresh, proposalId, status, late }: { initial: Detail; refresh: () => Promise<Detail>; proposalId?: string } & NavigationFilters) {
+  const workspace = useGradingWorkspace(initial, refresh, { status, late });
   const {
     detail,
     evaluation,
@@ -128,10 +123,10 @@ function Workspace({ initial, refresh, proposalId }: { initial: Detail; refresh:
     (evaluation.kind === "GROUP_DOCUMENT" ? "Bài làm nhóm" : "Bài làm sinh viên");
   const studentMatches = (directory.value ?? []).filter((row) => row.evaluationId &&
     `${row.student.name} ${row.student.email}`.toLocaleLowerCase("vi").includes(studentSearch.trim().toLocaleLowerCase("vi")));
-  const paper = useMemo(() => editorDocument(detail.document), [detail.document]);
+  const paper = useMemo(() => toEditorDocument(detail.document), [detail.document]);
   const imageUrls = useSubmissionImages(evaluation.id, detail.document);
-  const partTitles = Object.fromEntries(detail.document.blocks.filter((block) => block.type === "HEADING" && typeof block.content.text === "string")
-    .map((block) => [block.id, block.content.text as string]));
+  const partTitles = Object.fromEntries(detail.document.blocks.flatMap((block) =>
+    block.type === "HEADING" && typeof block.content.text === "string" ? [[block.id, block.content.text]] : []));
   const validBlockIds = useMemo(() => {
     const ids = new Set<string>();
     for (const block of detail.document.blocks) {
@@ -209,7 +204,7 @@ function Workspace({ initial, refresh, proposalId }: { initial: Detail; refresh:
                 : !directory.value ? <p role="status" className="mt-3 text-sm text-muted">Đang tải sinh viên…</p>
                   : <ul aria-label="Bài nộp sinh viên" className="mt-2 max-h-64 overflow-y-auto">
                     {studentMatches.map((row) => <li key={row.student.accountId}>
-                      <button type="button" disabled={busy || row.evaluationId === evaluation.id} onClick={() => navigate(row.evaluationId!)}
+                      <button type="button" disabled={busy || row.evaluationId === evaluation.id} onClick={() => navigate(row.evaluationId!, false)}
                         className="w-full cursor-pointer rounded-lg px-2 py-2 text-left text-sm hover:bg-sunken disabled:cursor-default disabled:opacity-50">
                         <span className="block font-semibold">{row.student.name}</span><span className="block text-xs text-muted">{row.student.email}</span>
                       </button>

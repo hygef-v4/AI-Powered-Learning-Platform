@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Pill, type Tone } from "@/shared/ui";
 import { AiSourcePicker, type SourceChoice } from "@/shared/ai";
-import { checklistPoints, invalidItemScores, itemPoints, validItemScore } from "./RubricChecklistPanel";
+import { checklistPoints, invalidItemScores, itemPoints, validItemScore } from "../model/rubricScores";
 import { GradingFeedbackSummary, RubricItemFeedback } from "./StructuredFeedbackSection";
 import type {
   AiRequest,
