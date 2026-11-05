@@ -7,7 +7,7 @@ import { teacherClassInfoFields, teacherClassTabs } from "../slots";
 import { StudentClassPage } from "./StudentClassPage";
 import { EnrollmentPanel } from "../components/EnrollmentPanel";
 import { Field, LockedInput, PageHeader, Section } from "@/shared/ui";
-import { EmptyState, PageHeading, Tabs } from "../components/ui";
+import { EmptyState, PageHeading, Tabs } from "../components/AcademicsUi";
 import type { CourseClassView, EnrollmentView } from "../model/types";
 
 import styles from "../styles/academics.module.css";

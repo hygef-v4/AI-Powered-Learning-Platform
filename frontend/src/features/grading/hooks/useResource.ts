@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError } from "@/shared/api/client";
-export function message(error: unknown) {
+export function formatErrorMessage(error: unknown) {
   if (error instanceof ApiError && error.problem.status === 409) {
     switch (error.problem.code) {
       case "GRADE_LOCKED":
@@ -31,7 +31,7 @@ export function useResource<T>(load: () => Promise<T>) {
       if (sequence.current === current) setValue(next);
       return next;
     } catch (e) {
-      if (sequence.current === current) setError(message(e));
+      if (sequence.current === current) setError(formatErrorMessage(e));
       throw e;
     }
   }, [load]);

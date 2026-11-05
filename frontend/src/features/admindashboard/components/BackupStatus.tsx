@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Alert, Button, TableFrame, Td, Th } from "@/shared/ui";
 import { Pagination } from "@/shared/ui/Pagination";
-import { getBackupHistory } from "../api";
+import { listBackupHistory } from "../api";
 import type { BackupHistoryPage, BackupRunItem, BackupSectionView } from "../model/types";
 
 const states: Record<BackupRunItem["state"], string> = {
@@ -57,7 +57,7 @@ function BackupHistory() {
       if (controller.signal.aborted) return;
       setResult({ data: null, error: false });
       try {
-        const data = await getBackupHistory(page, 20, controller.signal);
+        const data = await listBackupHistory(page, 20, controller.signal);
         if (!controller.signal.aborted) setResult({ data, error: false });
       } catch {
         if (!controller.signal.aborted) setResult({ data: null, error: true });

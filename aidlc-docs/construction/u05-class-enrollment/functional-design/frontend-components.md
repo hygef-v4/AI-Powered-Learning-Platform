@@ -1,5 +1,7 @@
 # U05 Class & Enrollment — frontend-components
 
+**Naming update 2026-11-05:** UI modules now use `AcademicsUi.tsx`, `ClassNavContexts.tsx` and `ClassRoutes.tsx`; API action names use list/load/create/update/enroll verbs. Components, URLs, props and behavior remain unchanged; [current evidence](../../build-and-test/2026-11-05-u05-u09-u15-conventions-results.md).
+
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
 

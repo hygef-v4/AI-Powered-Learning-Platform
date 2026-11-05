@@ -13,15 +13,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/evaluations/{evaluationId}/images")
 public class SubmissionImageController {
-    private final SubmissionImageService images;
+    private final SubmissionImageService submissionImageService;
 
-    public SubmissionImageController(SubmissionImageService images) {
-        this.images = images;
+    public SubmissionImageController(SubmissionImageService submissionImageService) {
+        this.submissionImageService = submissionImageService;
     }
 
     @GetMapping("/{fileId}")
-    public DownloadToken download(@AuthenticationPrincipal Actor actor, @PathVariable UUID evaluationId,
+    public DownloadToken issueDownloadToken(@AuthenticationPrincipal Actor actor, @PathVariable UUID evaluationId,
             @PathVariable String fileId) {
-        return images.download(actor, evaluationId, fileId);
+        return submissionImageService.issueDownloadToken(actor, evaluationId, fileId);
     }
 }

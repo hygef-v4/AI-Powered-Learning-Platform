@@ -27,15 +27,15 @@ class GradingProposalServiceTest {
         when(evaluations.findById(e.id)).thenReturn(Optional.of(e));
         var p = new GradingProposal();
         p.status = "READY";
-        when(tx.prepare(any(), any(), any())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false, null));
+        when(tx.prepareProposal(any(), any(), any())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false, null));
         var actor = new Actor(UUID.randomUUID(), Role.TEACHER);
         var input = new AiBatch(List.of(new ItemVersion(e.id, 0)),
                 new AiRequest(AiSource.SHARED, null, "r".repeat(200)));
         var service = new GradingProposalService(tx, ai, evaluations, proposals, access);
-        service.requestBatch(actor, input);
-        service.requestBatch(actor, input);
+        service.requestProposals(actor, input);
+        service.requestProposals(actor, input);
         var captor = ArgumentCaptor.forClass(AiRequest.class);
-        verify(tx, times(2)).prepare(eq(actor), eq(e.id), captor.capture());
+        verify(tx, times(2)).prepareProposal(eq(actor), eq(e.id), captor.capture());
         assertThat(captor.getAllValues().get(0).requestRef()).hasSizeLessThanOrEqualTo(200)
                 .isEqualTo(captor.getAllValues().get(1).requestRef());
         verifyNoInteractions(ai);
@@ -49,7 +49,7 @@ class GradingProposalServiceTest {
         var p = new GradingProposal();
         p.status = "FAILED";
         p.safeError = "QUOTA_EXHAUSTED";
-        when(tx.prepare(any(), any(), any())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false, null));
+        when(tx.prepareProposal(any(), any(), any())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false, null));
         var e = new Evaluation();
         e.id = UUID.randomUUID();
         e.classId = UUID.randomUUID();
@@ -57,7 +57,7 @@ class GradingProposalServiceTest {
         var other = UUID.randomUUID();
         var service = new GradingProposalService(tx, ai, evaluations, mock(IGradingProposalRepository.class),
                 mock(GradingAccess.class));
-        var result = service.requestBatch(new Actor(UUID.randomUUID(), Role.TEACHER),
+        var result = service.requestProposals(new Actor(UUID.randomUUID(), Role.TEACHER),
                 new AiBatch(List.of(new ItemVersion(e.id, 0), new ItemVersion(other, 0)),
                         new AiRequest(AiSource.PERSONAL, AiProvider.OPENAI, "batch")));
         assertThat(result.items()).extracting(v -> v.outcome()).containsExactly("FAILED", "SKIPPED");
@@ -77,7 +77,7 @@ class GradingProposalServiceTest {
         var service = new GradingProposalService(tx, ai, mock(IEvaluationRepository.class),
                 mock(IGradingProposalRepository.class), mock(GradingAccess.class));
 
-        var estimate = service.estimateBatch(actor,
+        var estimate = service.estimateProposalTokens(actor,
                 new Batch(List.of(new ItemVersion(first, 2), new ItemVersion(second, 4), new ItemVersion(first, 2))));
 
         assertThat(estimate.estimatedTokens()).isEqualTo(11_300L);
@@ -121,17 +121,17 @@ class GradingProposalServiceTest {
 
         var service = new GradingProposalService(tx, ai, evaluations, proposals, access);
         var actor = new Actor(UUID.randomUUID(), Role.TEACHER);
-        var listed = service.list(actor, e.id);
+        var listed = service.listProposals(actor, e.id);
 
         assertThat(listed).extracting(p -> p.taskState).containsExactly("RUNNING", "READY");
-        verify(tx, never()).dispatched(any(), any(), any());
+        verify(tx, never()).recordDispatch(any(), any(), any());
 
         // When a READY task was rejected at delivery, list() reconciles it via dispatched().
         var rejectedTask = new AiTaskView(
                 pendingReadyUnapplied.taskId, AiTaskState.READY, AiSource.PERSONAL, AiProvider.GEMINI,
                 "gemini-2.5-flash", ApplyOutcome.REJECTED, "Tài khoản yêu cầu không còn hiệu lực", null);
         when(ai.get(pendingReadyUnapplied.taskId)).thenReturn(Optional.of(rejectedTask));
-        service.list(actor, e.id);
-        verify(tx).dispatched(pendingReadyUnapplied.id, rejectedTask, null);
+        service.listProposals(actor, e.id);
+        verify(tx).recordDispatch(pendingReadyUnapplied.id, rejectedTask, null);
     }
 }

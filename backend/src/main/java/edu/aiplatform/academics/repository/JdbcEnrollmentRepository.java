@@ -16,23 +16,23 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class JdbcEnrollmentRepository implements IEnrollmentRepository {
-    private final NamedParameterJdbcTemplate jdbc;
-    public JdbcEnrollmentRepository(NamedParameterJdbcTemplate jdbc) { this.jdbc = jdbc; }
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    public JdbcEnrollmentRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) { this.namedParameterJdbcTemplate = namedParameterJdbcTemplate; }
 
     @Override public Optional<Enrollment> find(UUID classId, UUID accountId) {
-        return jdbc.query("select * from enrollments where class_id = :classId and account_id = :accountId",
-                Map.of("classId", classId, "accountId", accountId), JdbcEnrollmentRepository::map).stream().findFirst();
+        return namedParameterJdbcTemplate.query("select * from enrollments where class_id = :classId and account_id = :accountId",
+                Map.of("classId", classId, "accountId", accountId), JdbcEnrollmentRepository::mapEnrollment).stream().findFirst();
     }
 
     @Override public List<Enrollment> listByClass(UUID classId, boolean activeOnly, int limit, int offset) {
-        PersistenceChecks.page(limit, offset);
-        return jdbc.query("select * from enrollments where class_id = :classId and (:allRows or status = 'ACTIVE') " +
+        PersistenceChecks.validatePage(limit, offset);
+        return namedParameterJdbcTemplate.query("select * from enrollments where class_id = :classId and (:allRows or status = 'ACTIVE') " +
                         "order by enrolled_at, account_id limit :limit offset :offset",
-                Map.of("classId", classId, "allRows", !activeOnly, "limit", limit, "offset", offset), JdbcEnrollmentRepository::map);
+                Map.of("classId", classId, "allRows", !activeOnly, "limit", limit, "offset", offset), JdbcEnrollmentRepository::mapEnrollment);
     }
 
     @Override public boolean activeInOtherClass(UUID accountId, UUID subjectId, UUID excludedClassId) {
-        Boolean result = jdbc.queryForObject("""
+        Boolean result = namedParameterJdbcTemplate.queryForObject("""
                 select exists (select 1 from enrollments e join course_classes c on c.id = e.class_id
                     where e.account_id = :accountId and e.status = 'ACTIVE' and c.status <> 'ARCHIVED'
                     and c.subject_id = :subjectId and c.id <> :classId)
@@ -41,7 +41,7 @@ public class JdbcEnrollmentRepository implements IEnrollmentRepository {
     }
 
     @Override public List<UUID> conflictingStudents(UUID classId, UUID subjectId) {
-        return jdbc.queryForList("""
+        return namedParameterJdbcTemplate.queryForList("""
                 select e.account_id from enrollments e where e.class_id = :classId and e.status = 'ACTIVE'
                     and exists (select 1 from enrollments other join course_classes c on c.id = other.class_id
                         where other.account_id = e.account_id and other.status = 'ACTIVE'
@@ -51,9 +51,9 @@ public class JdbcEnrollmentRepository implements IEnrollmentRepository {
     }
 
     @Override public void insert(Enrollment value) {
-        PersistenceChecks.writableTransaction();
+        PersistenceChecks.requireWritableTransaction();
         try {
-            jdbc.update("""
+            namedParameterJdbcTemplate.update("""
                     insert into enrollments (class_id, account_id, status, source, enrolled_at, removed_at)
                     values (:classId, :accountId, :status, :source, :enrolledAt, :removedAt)
                     """, params(value));
@@ -63,10 +63,10 @@ public class JdbcEnrollmentRepository implements IEnrollmentRepository {
     }
 
     @Override public void update(Enrollment value, EnrollmentStatus expectedStatus) {
-        PersistenceChecks.writableTransaction();
+        PersistenceChecks.requireWritableTransaction();
         var args = params(value);
         args.put("expectedStatus", expectedStatus.name());
-        int count = jdbc.update("""
+        int count = namedParameterJdbcTemplate.update("""
                 update enrollments set status = :status, source = :source, enrolled_at = :enrolledAt, removed_at = :removedAt
                 where class_id = :classId and account_id = :accountId and status = :expectedStatus
                 """, args);
@@ -82,7 +82,7 @@ public class JdbcEnrollmentRepository implements IEnrollmentRepository {
         return args;
     }
 
-    private static Enrollment map(ResultSet rs, int row) throws SQLException {
+    private static Enrollment mapEnrollment(ResultSet rs, int row) throws SQLException {
         Timestamp removed = rs.getTimestamp("removed_at");
         return new Enrollment(rs.getObject("class_id", UUID.class), rs.getObject("account_id", UUID.class),
                 EnrollmentStatus.valueOf(rs.getString("status")), EnrollmentSource.valueOf(rs.getString("source")),

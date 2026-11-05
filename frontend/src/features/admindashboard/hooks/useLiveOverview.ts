@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { getUsageSummary, type UsageSummary } from "@/features/ai/admin/api";
-import { getAdminDashboard, getBackupHistory, getDashboardActivity } from "../api";
+import { loadAdminDashboard, listBackupHistory, loadDashboardActivity } from "../api";
 import type { ActivityView, AdminDashboardView, BackupRunItem } from "../model/types";
 
 /** Số liệu của Tổng quan; ngoài số đếm chính, mỗi nguồn khác lỗi thì là `null` và chỉ thẻ của nó báo không khả dụng. */
@@ -20,7 +20,7 @@ export const REFRESH_MS = 30_000;
 export const SOURCE_TIMEOUT_MS = 5_000;
 
 /** Bound even a transport that does not settle its promise when aborted. */
-function request<T>(read: (signal: AbortSignal) => Promise<T>, parent: AbortSignal): Promise<T> {
+function requestSource<T>(read: (signal: AbortSignal) => Promise<T>, parent: AbortSignal): Promise<T> {
   const child = new AbortController();
   let timer: ReturnType<typeof setTimeout>;
   let cancel: () => void;
@@ -61,19 +61,19 @@ export function useLiveOverview() {
       loading: { activity: true, usage: true, backups: true },
     };
     let ready = false;
-    const optional = <K extends "activity" | "usage" | "backups">(key: K, read: (signal: AbortSignal) => Promise<Overview[K]>) => {
-      void request(read, current.signal).catch(() => null).then((value) => {
+    const loadOptionalSource = <K extends "activity" | "usage" | "backups">(key: K, read: (signal: AbortSignal) => Promise<Overview[K]>) => {
+      void requestSource(read, current.signal).catch(() => null).then((value) => {
         if (current.signal.aborted) return;
         partial[key] = value;
         partial.loading = { ...partial.loading, [key]: false };
         if (ready) setData((previous) => previous && ({ ...previous, [key]: value, loading: partial.loading }));
       });
     };
-    optional("activity", getDashboardActivity);
-    optional("usage", (signal) => getUsageSummary(7, signal));
-    optional("backups", async (signal) => (await getBackupHistory(0, 40, signal)).items);
+    loadOptionalSource("activity", loadDashboardActivity);
+    loadOptionalSource("usage", (signal) => getUsageSummary(7, signal));
+    loadOptionalSource("backups", async (signal) => (await listBackupHistory(0, 40, signal)).items);
     try {
-      const dashboard = await request(getAdminDashboard, current.signal);
+      const dashboard = await requestSource(loadAdminDashboard, current.signal);
       if (current.signal.aborted) return;
       ready = true;
       hasData.current = true;
@@ -104,12 +104,12 @@ export function useLiveOverview() {
   const stopped = isDenied(error);
   useEffect(() => {
     if (stopped) return;
-    const tick = () => { if (document.visibilityState === "visible") void refresh(); };
-    const timer = window.setInterval(tick, REFRESH_MS);
-    document.addEventListener("visibilitychange", tick);
+    const refreshVisibleOverview = () => { if (document.visibilityState === "visible") void refresh(); };
+    const timer = window.setInterval(refreshVisibleOverview, REFRESH_MS);
+    document.addEventListener("visibilitychange", refreshVisibleOverview);
     return () => {
       window.clearInterval(timer);
-      document.removeEventListener("visibilitychange", tick);
+      document.removeEventListener("visibilitychange", refreshVisibleOverview);
     };
   }, [refresh, stopped]);
 

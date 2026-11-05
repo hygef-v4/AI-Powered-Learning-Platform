@@ -12,9 +12,9 @@ class EnrollmentTest {
     private final Instant now = Instant.parse("2026-10-17T00:00:00Z");
 
     @Test void removesAndRestoresSameIdentityWithNewEnrollmentDate() {
-        var first = Enrollment.create(classId, student, EnrollmentSource.MANUAL, now);
-        var removed = first.remove(now.plusSeconds(1));
-        var restored = removed.restore(EnrollmentSource.LIST, now.plusSeconds(2));
+        var first = Enrollment.createEnrollment(classId, student, EnrollmentSource.MANUAL, now);
+        var removed = first.removeEnrollment(now.plusSeconds(1));
+        var restored = removed.restoreEnrollment(EnrollmentSource.LIST, now.plusSeconds(2));
         assertThat(removed.status()).isEqualTo(EnrollmentStatus.REMOVED);
         assertThat(removed.removedAt()).isEqualTo(now.plusSeconds(1));
         assertThat(restored.classId()).isEqualTo(classId);
@@ -27,20 +27,20 @@ class EnrollmentTest {
     }
 
     @Test void removalIsIdempotentAndRestoringActiveIsRejected() {
-        var value = Enrollment.create(classId, student, EnrollmentSource.MANUAL, now);
-        var removed = value.remove(now);
-        assertThat(removed.remove(now.plusSeconds(2))).isEqualTo(removed);
-        assertThatThrownBy(() -> value.restore(EnrollmentSource.LIST, now)).isInstanceOf(AcademicRuleException.class);
-        assertThatThrownBy(() -> value.remove(now.minusSeconds(1))).isInstanceOf(AcademicRuleException.class);
+        var value = Enrollment.createEnrollment(classId, student, EnrollmentSource.MANUAL, now);
+        var removed = value.removeEnrollment(now);
+        assertThat(removed.removeEnrollment(now.plusSeconds(2))).isEqualTo(removed);
+        assertThatThrownBy(() -> value.restoreEnrollment(EnrollmentSource.LIST, now)).isInstanceOf(AcademicRuleException.class);
+        assertThatThrownBy(() -> value.removeEnrollment(now.minusSeconds(1))).isInstanceOf(AcademicRuleException.class);
     }
 
     @Test void policyDistinguishesFirstEnrollmentRestoreDuplicateAndOtherClass() {
-        assertThat(EnrollmentPolicy.resultFor(ClassStatus.DRAFT, null, false)).isEqualTo(EnrollmentResult.ENROLLED);
-        var active = Enrollment.create(classId, student, EnrollmentSource.MANUAL, now);
-        assertThat(EnrollmentPolicy.resultFor(ClassStatus.OPEN, active, false)).isEqualTo(EnrollmentResult.ALREADY_ENROLLED);
-        assertThat(EnrollmentPolicy.resultFor(ClassStatus.OPEN, active.remove(now), false)).isEqualTo(EnrollmentResult.RESTORED);
-        assertThat(EnrollmentPolicy.resultFor(ClassStatus.OPEN, null, true)).isEqualTo(EnrollmentResult.IN_OTHER_CLASS);
-        assertThatThrownBy(() -> EnrollmentPolicy.resultFor(ClassStatus.ARCHIVED, null, false))
+        assertThat(EnrollmentPolicy.resolveEnrollmentResult(ClassStatus.DRAFT, null, false)).isEqualTo(EnrollmentResult.ENROLLED);
+        var active = Enrollment.createEnrollment(classId, student, EnrollmentSource.MANUAL, now);
+        assertThat(EnrollmentPolicy.resolveEnrollmentResult(ClassStatus.OPEN, active, false)).isEqualTo(EnrollmentResult.ALREADY_ENROLLED);
+        assertThat(EnrollmentPolicy.resolveEnrollmentResult(ClassStatus.OPEN, active.removeEnrollment(now), false)).isEqualTo(EnrollmentResult.RESTORED);
+        assertThat(EnrollmentPolicy.resolveEnrollmentResult(ClassStatus.OPEN, null, true)).isEqualTo(EnrollmentResult.IN_OTHER_CLASS);
+        assertThatThrownBy(() -> EnrollmentPolicy.resolveEnrollmentResult(ClassStatus.ARCHIVED, null, false))
                 .isInstanceOf(AcademicRuleException.class);
     }
 }

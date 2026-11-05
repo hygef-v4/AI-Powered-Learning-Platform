@@ -39,10 +39,10 @@ public class DashboardSourceReader implements AutoCloseable {
     public record TimedResult<T>(T value, long completedAt) { }
     public record PendingSource<T>(Future<TimedResult<T>> future, long deadline) { }
     public record SourceResult<T>(boolean available, T value) {
-        static <T> SourceResult<T> unavailable() { return new SourceResult<>(false, null); }
+        static <T> SourceResult<T> createUnavailableResult() { return new SourceResult<>(false, null); }
     }
 
-    public <T> PendingSource<T> submit(Callable<T> work) {
+    public <T> PendingSource<T> submitSource(Callable<T> work) {
         long deadline = ticker.getAsLong() + timeoutNanos;
         try {
             return new PendingSource<>(executor.submit(() -> new TimedResult<>(work.call(), ticker.getAsLong())), deadline);
@@ -51,23 +51,23 @@ public class DashboardSourceReader implements AutoCloseable {
         }
     }
 
-    public <T> SourceResult<T> await(PendingSource<T> pending) {
+    public <T> SourceResult<T> awaitSource(PendingSource<T> pending) {
         Future<TimedResult<T>> future = pending.future();
-        if (future == null) return SourceResult.unavailable();
+        if (future == null) return SourceResult.createUnavailableResult();
         try {
-            if (Thread.currentThread().isInterrupted()) return SourceResult.unavailable();
+            if (Thread.currentThread().isInterrupted()) return SourceResult.createUnavailableResult();
             long remaining = pending.deadline() - ticker.getAsLong();
             TimedResult<T> result;
             if (future.isDone()) result = future.get();
             else if (remaining > 0) result = future.get(remaining, TimeUnit.NANOSECONDS);
-            else return SourceResult.unavailable();
+            else return SourceResult.createUnavailableResult();
             return result.completedAt() - pending.deadline() <= 0
-                    ? new SourceResult<>(true, result.value()) : SourceResult.unavailable();
+                    ? new SourceResult<>(true, result.value()) : SourceResult.createUnavailableResult();
         } catch (InterruptedException interrupted) {
             Thread.currentThread().interrupt();
-            return SourceResult.unavailable();
+            return SourceResult.createUnavailableResult();
         } catch (ExecutionException | TimeoutException | CancellationException unavailable) {
-            return SourceResult.unavailable();
+            return SourceResult.createUnavailableResult();
         } finally {
             if (!future.isDone()) {
                 future.cancel(true);

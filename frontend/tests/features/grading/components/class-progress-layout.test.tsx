@@ -6,9 +6,9 @@ import type { AssignmentPage } from "@/features/assignments/model/types";
 
 
 const gradingMocks = vi.hoisted(() => ({
-  progress: vi.fn(),
-  gradebook: vi.fn(),
-  classDistribution: vi.fn(),
+  loadSubmissionProgress: vi.fn(),
+  loadGradebook: vi.fn(),
+  loadClassGradeDistribution: vi.fn(),
 }));
 
 const assignmentMocks = vi.hoisted(() => ({
@@ -67,7 +67,7 @@ describe("U09 ClassProgressSection layout and lazy distribution", () => {
     vi.resetAllMocks();
     window.history.replaceState(null, "", "/");
     assignmentMocks.listForClass.mockResolvedValue(emptyOpenPage);
-    gradingMocks.classDistribution.mockResolvedValue([]);
+    gradingMocks.loadClassGradeDistribution.mockResolvedValue([]);
   });
 
   afterEach(cleanup);
@@ -95,8 +95,8 @@ describe("U09 ClassProgressSection layout and lazy distribution", () => {
       "a-pending-early": makeSummaryPage({ PENDING: 1, deadline: "2026-11-02T10:00:00Z" }),
       "a-extra": makeSummaryPage({ PENDING: 0, deadline: "2026-11-20T10:00:00Z" }),
     };
-    gradingMocks.gradebook.mockResolvedValue(gradebook);
-    gradingMocks.progress.mockResolvedValue(progress);
+    gradingMocks.loadGradebook.mockResolvedValue(gradebook);
+    gradingMocks.loadSubmissionProgress.mockResolvedValue(progress);
 
     render(<ClassProgressSection classId="class-1" />);
 
@@ -133,8 +133,8 @@ describe("U09 ClassProgressSection layout and lazy distribution", () => {
       "a-zero": makeSummaryPage({ total: 0, submitted: 0, PENDING: 0, deadline: "2026-11-01T10:00:00Z" }),
       "a-group": makeSummaryPage({ total: 4, submitted: 3, PENDING: 1, deadline: "2026-11-02T10:00:00Z" }),
     };
-    gradingMocks.gradebook.mockResolvedValue(gradebook);
-    gradingMocks.progress.mockResolvedValue(progress);
+    gradingMocks.loadGradebook.mockResolvedValue(gradebook);
+    gradingMocks.loadSubmissionProgress.mockResolvedValue(progress);
 
     const { container } = render(<ClassProgressSection classId="class-1" />);
 
@@ -154,8 +154,8 @@ describe("U09 ClassProgressSection layout and lazy distribution", () => {
 
   it("shows loading then a retryable error without stat cards, and lists assignments after retry", async () => {
     const pendingProgress = deferred<Record<string, SubmissionPage>>();
-    gradingMocks.progress.mockReturnValueOnce(pendingProgress.promise);
-    gradingMocks.gradebook.mockResolvedValue({
+    gradingMocks.loadSubmissionProgress.mockReturnValueOnce(pendingProgress.promise);
+    gradingMocks.loadGradebook.mockResolvedValue({
       assignments: [{ id: "a-1", title: "Bài 1", maxScore: 10, submissionMode: "INDIVIDUAL" }],
       rows: [], total: 0, page: 1, size: 20,
     });
@@ -172,7 +172,7 @@ describe("U09 ClassProgressSection layout and lazy distribution", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Mất kết nối máy chủ");
 
-    gradingMocks.progress.mockResolvedValueOnce({ "a-1": makeSummaryPage({ PENDING: 4 }) });
+    gradingMocks.loadSubmissionProgress.mockResolvedValueOnce({ "a-1": makeSummaryPage({ PENDING: 4 }) });
     fireEvent.click(screen.getByRole("button", { name: "Thử tải lại" }));
 
     expect(await screen.findByText("Bài 1")).toBeInTheDocument();
@@ -183,7 +183,7 @@ describe("U09 ClassProgressSection layout and lazy distribution", () => {
     const cell = (assignmentId: string, status: string) => ({
       assignmentId, evaluationId: null, status, score: null, maxScore: 10, late: false, submittedAt: null, feedback: null,
     });
-    gradingMocks.gradebook.mockResolvedValue({
+    gradingMocks.loadGradebook.mockResolvedValue({
       assignments: [
         { id: "a-1", title: "Bài 1", maxScore: 10, submissionMode: "INDIVIDUAL" },
         { id: "a-2", title: "Bài 2", maxScore: 10, submissionMode: "INDIVIDUAL" },
@@ -194,11 +194,11 @@ describe("U09 ClassProgressSection layout and lazy distribution", () => {
       ],
       total: 2, page: 1, size: 100,
     } satisfies GradebookPage);
-    gradingMocks.progress.mockResolvedValue({});
+    gradingMocks.loadSubmissionProgress.mockResolvedValue({});
 
     render(<ClassProgressSection classId="class-1" />);
     await screen.findByText("Bài 1");
-    expect(gradingMocks.gradebook).toHaveBeenCalledWith("class-1", "", 1, 100);
+    expect(gradingMocks.loadGradebook).toHaveBeenCalledWith("class-1", "", 1, 100);
     expect(screen.queryByRole("button", { name: "Phân bố điểm" })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Theo sinh viên" }));

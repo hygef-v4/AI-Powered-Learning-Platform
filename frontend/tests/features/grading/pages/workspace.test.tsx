@@ -4,13 +4,13 @@ import { GradingWorkspacePage } from "@/features/grading/pages/GradingWorkspaceP
 import { ApiError } from "@/shared/api/client";
 import type { Detail } from "@/features/grading/model/types";
 const mocks = vi.hoisted(() => ({
-  detail: vi.fn(),
-  save: vi.fn(),
-  proposals: vi.fn(),
-  request: vi.fn(),
+  loadEvaluation: vi.fn(),
+  saveEvaluation: vi.fn(),
+  listProposals: vi.fn(),
+  requestProposal: vi.fn(),
   push: vi.fn(),
-  task: vi.fn(),
-  submissions: vi.fn(),
+  loadTask: vi.fn(),
+  listSubmissions: vi.fn(),
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock("@/features/grading/api", () => ({ gradingApi: mocks }));
@@ -48,9 +48,9 @@ const detail: Detail = {
 beforeEach(() => {
   vi.useRealTimers();
   vi.resetAllMocks();
-  mocks.detail.mockResolvedValue(detail);
-  mocks.proposals.mockResolvedValue([]);
-  mocks.submissions.mockResolvedValue({ rows: [
+  mocks.loadEvaluation.mockResolvedValue(detail);
+  mocks.listProposals.mockResolvedValue([]);
+  mocks.listSubmissions.mockResolvedValue({ rows: [
     { student: { accountId: "s", name: "Nguyễn An", email: "an@school.test" }, evaluationId: "e" },
   ], total: 1, page: 1, size: 20 });
 });
@@ -64,29 +64,29 @@ function openAi() {
 }
 describe("workspace save", () => {
   it("explains a concurrent grade lock without discarding unsaved checklist changes or retrying", async () => {
-    mocks.detail.mockResolvedValue({ ...detail, rubrics: [
+    mocks.loadEvaluation.mockResolvedValue({ ...detail, rubrics: [
       { rubricId: "r", partId: "p", maxPoints: 1, criteria: [{ criterionId: "c", title: "Đúng", items: [{ itemId: "i", text: "Đúng nội dung", points: 1 }] }] },
     ] });
-    mocks.save.mockRejectedValue(new ApiError({ status: 409, title: "Conflict", code: "GRADE_LOCKED" }));
+    mocks.saveEvaluation.mockRejectedValue(new ApiError({ status: 409, title: "Conflict", code: "GRADE_LOCKED" }));
     render(<GradingWorkspacePage evaluationId="e" />);
     fireEvent.click(await screen.findByRole("checkbox", { name: "Đúng nội dung" }));
     fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Điểm đã chốt");
     expect(screen.getByRole("checkbox", { name: "Đúng nội dung" })).toBeChecked();
-    expect(mocks.save).toHaveBeenCalledTimes(1);
+    expect(mocks.saveEvaluation).toHaveBeenCalledTimes(1);
     expect(mocks.push).not.toHaveBeenCalled();
   });
   it("preserves the originating queue for save-next and clears it for an explicit student switch", async () => {
-    mocks.save.mockResolvedValue({ ...detail.evaluation, version: 3 });
-    mocks.submissions.mockResolvedValue({ rows: [
+    mocks.saveEvaluation.mockResolvedValue({ ...detail.evaluation, version: 3 });
+    mocks.listSubmissions.mockResolvedValue({ rows: [
       { student: { accountId: "s2", name: "Trần Bình", email: "binh@school.test" }, evaluationId: "next" },
     ], total: 1 });
     render(<GradingWorkspacePage evaluationId="e" status="PENDING" late="true" />);
     fireEvent.click(await screen.findByRole("button", { name: "Bài sau" }));
     expect(mocks.push).toHaveBeenLastCalledWith("/teaching/evaluations/next?status=PENDING&late=true");
-    expect(mocks.detail).toHaveBeenCalledWith("e", { status: "PENDING", late: "true" });
+    expect(mocks.loadEvaluation).toHaveBeenCalledWith("e", { status: "PENDING", late: "true" });
     fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
-    await waitFor(() => expect(mocks.save).toHaveBeenCalled());
+    await waitFor(() => expect(mocks.saveEvaluation).toHaveBeenCalled());
     await waitFor(() => expect(mocks.push).toHaveBeenCalledTimes(2));
     expect(mocks.push).toHaveBeenLastCalledWith("/teaching/evaluations/next?status=PENDING&late=true");
     fireEvent.click(screen.getByLabelText("Chọn sinh viên"));
@@ -95,25 +95,25 @@ describe("workspace save", () => {
   });
 
   it("stays on the last filtered submission after saving", async () => {
-    mocks.detail.mockResolvedValue({ ...detail, navigationIds: ["e"] });
-    mocks.save.mockResolvedValue({ ...detail.evaluation, version: 3 });
+    mocks.loadEvaluation.mockResolvedValue({ ...detail, navigationIds: ["e"] });
+    mocks.saveEvaluation.mockResolvedValue({ ...detail.evaluation, version: 3 });
     render(<GradingWorkspacePage evaluationId="e" status="PENDING" />);
     fireEvent.click(await screen.findByRole("button", { name: "Lưu nháp / thay đổi" }));
-    await waitFor(() => expect(mocks.save).toHaveBeenCalled());
+    await waitFor(() => expect(mocks.saveEvaluation).toHaveBeenCalled());
     await waitFor(() => expect(screen.getByRole("button", { name: "Lưu nháp / thay đổi" })).toBeEnabled());
     expect(mocks.push).not.toHaveBeenCalled();
   });
   it("does not jump backwards when the current grade has left the filtered queue", async () => {
-    mocks.detail.mockResolvedValue({ ...detail, navigationIds: ["earlier-pending"] });
-    mocks.save.mockResolvedValue({ ...detail.evaluation, version: 3 });
+    mocks.loadEvaluation.mockResolvedValue({ ...detail, navigationIds: ["earlier-pending"] });
+    mocks.saveEvaluation.mockResolvedValue({ ...detail.evaluation, version: 3 });
     render(<GradingWorkspacePage evaluationId="e" status="PENDING" />);
     fireEvent.click(await screen.findByRole("button", { name: "Lưu nháp / thay đổi" }));
-    await waitFor(() => expect(mocks.save).toHaveBeenCalled());
+    await waitFor(() => expect(mocks.saveEvaluation).toHaveBeenCalled());
     await waitFor(() => expect(screen.getByRole("button", { name: "Lưu nháp / thay đổi" })).toBeEnabled());
     expect(mocks.push).not.toHaveBeenCalled();
   });
   it.each(["FINALIZED", "PUBLISHED"] as const)("shows %s grades read-only while allowing current FINALIZED publication", async (state) => {
-    mocks.detail.mockResolvedValue({ ...detail, evaluation: { ...detail.evaluation, state }, rubrics: [
+    mocks.loadEvaluation.mockResolvedValue({ ...detail, evaluation: { ...detail.evaluation, state }, rubrics: [
       { rubricId: "r", partId: "p", maxPoints: 1, criteria: [{ criterionId: "c", title: "Đúng", items: [{ itemId: "i", text: "Đúng nội dung", points: 1 }] }] },
     ] });
     render(<GradingWorkspacePage evaluationId="e" />);
@@ -122,7 +122,7 @@ describe("workspace save", () => {
     const save = screen.getByRole("button", { name: /Lưu nháp/ });
     expect(save).toBeDisabled();
     fireEvent.click(save);
-    expect(mocks.save).not.toHaveBeenCalled();
+    expect(mocks.saveEvaluation).not.toHaveBeenCalled();
     expect(screen.queryByLabelText(/Lý do sửa điểm/)).not.toBeInTheDocument();
     const publish = screen.getByRole("button", { name: "Công bố điểm" });
     if (state === "FINALIZED") expect(publish).toBeEnabled();
@@ -131,22 +131,22 @@ describe("workspace save", () => {
   it("reports an unavailable proposal link without creating or applying a replacement", async () => {
     render(<GradingWorkspacePage evaluationId="e" proposalId="missing" />);
     expect(await screen.findByText(/Không tìm thấy đề xuất từ liên kết/)).toBeInTheDocument();
-    expect(mocks.save).not.toHaveBeenCalled();
-    expect(mocks.request).not.toHaveBeenCalled();
+    expect(mocks.saveEvaluation).not.toHaveBeenCalled();
+    expect(mocks.requestProposal).not.toHaveBeenCalled();
   });
   it("opens the exact older proposal from an agent link without applying or saving it", async () => {
-    mocks.proposals.mockResolvedValue([
+    mocks.listProposals.mockResolvedValue([
       { id: "new", versionNo: 2, status: "READY", origin: "MCP", proposal: { checks: {}, score: 2, feedback: "Latest agent feedback" } },
       { id: "old", versionNo: 1, status: "READY", origin: "MCP", proposal: { checks: {}, score: 1, feedback: "Requested older feedback" } },
     ]);
     render(<GradingWorkspacePage evaluationId="e" proposalId="old" />);
     expect(await screen.findByText("Requested older feedback")).toBeVisible();
     expect(screen.getByRole("region", { name: "Chấm bằng AI" })).toBeInTheDocument();
-    expect(mocks.save).not.toHaveBeenCalled();
-    expect(mocks.request).not.toHaveBeenCalled();
+    expect(mocks.saveEvaluation).not.toHaveBeenCalled();
+    expect(mocks.requestProposal).not.toHaveBeenCalled();
   });
   it("names the current student and searches all pages before switching submissions", async () => {
-    mocks.submissions.mockResolvedValueOnce({ rows: [
+    mocks.listSubmissions.mockResolvedValueOnce({ rows: [
       { student: { accountId: "s", name: "Nguyễn An", email: "an@school.test" }, evaluationId: "e" },
     ], total: 2 }).mockResolvedValueOnce({ rows: [
       { student: { accountId: "s2", name: "Trần Bình", email: "binh@school.test" }, evaluationId: "next" },
@@ -157,17 +157,17 @@ describe("workspace save", () => {
     fireEvent.click(screen.getByLabelText("Chọn sinh viên"));
     fireEvent.change(screen.getByRole("searchbox", { name: "Tìm sinh viên" }), { target: { value: "binh@school.test" } });
     fireEvent.click(await screen.findByRole("button", { name: /Trần Bình/ }));
-    expect(mocks.submissions).toHaveBeenCalledWith("c", "a", "ALL", 2);
+    expect(mocks.listSubmissions).toHaveBeenCalledWith("c", "a", "ALL", 2);
     expect(mocks.push).toHaveBeenCalledWith("/teaching/evaluations/next");
-    expect(mocks.save).not.toHaveBeenCalled();
+    expect(mocks.saveEvaluation).not.toHaveBeenCalled();
   });
 
   it("keeps unsaved work when the teacher cancels switching students", async () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
-    mocks.submissions.mockResolvedValue({ rows: [
+    mocks.listSubmissions.mockResolvedValue({ rows: [
       { student: { accountId: "s2", name: "Trần Bình", email: "binh@school.test" }, evaluationId: "next" },
     ], total: 1 });
-    mocks.detail.mockResolvedValue({ ...detail, rubrics: [
+    mocks.loadEvaluation.mockResolvedValue({ ...detail, rubrics: [
       { rubricId: "r", partId: "p", maxPoints: 1, criteria: [{ criterionId: "c", title: "Đúng", items: [{ itemId: "i", text: "Đúng nội dung", points: 1 }] }] },
     ] });
     render(<GradingWorkspacePage evaluationId="e" />);
@@ -180,23 +180,23 @@ describe("workspace save", () => {
     confirm.mockRestore();
   });
   it("sends version and checklist, then moves to the next submission only after saving", async () => {
-    mocks.save.mockResolvedValue({ ...detail.evaluation, version: 3 });
+    mocks.saveEvaluation.mockResolvedValue({ ...detail.evaluation, version: 3 });
     render(<GradingWorkspacePage evaluationId="e" />);
     // Tạm thời không có ô nhận xét: nhận xét đã lưu được giữ nguyên khi lưu điểm.
     expect(screen.queryByRole("textbox", { name: /Nhận xét/ })).not.toBeInTheDocument();
     fireEvent.click(await screen.findByRole("button", { name: "Lưu nháp / thay đổi" }));
     await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/teaching/evaluations/next"));
-    expect(mocks.save.mock.calls[0]![1]).toMatchObject({
+    expect(mocks.saveEvaluation.mock.calls[0]![1]).toMatchObject({
       version: 2,
       checkedItemsByRubric: {},
       adjustment: "0",
       adjustmentReason: null,
       feedback: "original",
     });
-    expect(mocks.save.mock.calls[0]![1]).not.toHaveProperty("score");
+    expect(mocks.saveEvaluation.mock.calls[0]![1]).not.toHaveProperty("score");
   });
   it("stays on the submission after a version conflict", async () => {
-    mocks.save.mockRejectedValue(
+    mocks.saveEvaluation.mockRejectedValue(
       new ApiError({ status: 409, title: "Conflict", code: "GRADE_VERSION_CONFLICT" }),
     );
     render(<GradingWorkspacePage evaluationId="e" />);
@@ -209,9 +209,9 @@ describe("workspace save", () => {
 
 
 it("shows a live score and named sections while AI is unavailable, without saving any grade", async () => {
-  mocks.detail.mockResolvedValue({ ...detail, document: { blocks: [{ id: "part", type: "HEADING", content: { text: "Câu 1: Class Diagram" } }] },
+  mocks.loadEvaluation.mockResolvedValue({ ...detail, document: { blocks: [{ id: "part", type: "HEADING", content: { text: "Câu 1: Class Diagram" } }] },
     rubrics: [{ rubricId: "r", partId: "part", maxPoints: 10, criteria: [{ criterionId: "c", title: "Kiến trúc", items: [{ itemId: "i", text: "Đúng quan hệ", points: 2.5 }] }] }] });
-  mocks.proposals.mockResolvedValue([{ id: "p", versionNo: 1, origin: "AI_TASK", status: "FAILED", safeError: "AI task failed" }]);
+  mocks.listProposals.mockResolvedValue([{ id: "p", versionNo: 1, origin: "AI_TASK", status: "FAILED", safeError: "AI task failed" }]);
   render(<GradingWorkspacePage evaluationId="e" />);
   fireEvent.click(await screen.findByRole("checkbox", { name: /Đúng quan hệ/ }));
   expect(screen.getByLabelText("Điểm tạm tính")).toHaveTextContent("2.50 / 10.00");
@@ -220,15 +220,15 @@ it("shows a live score and named sections while AI is unavailable, without savin
   expect(screen.queryByText(/Điều chỉnh/)).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Lưu nháp / thay đổi" })).toBeEnabled();
   expect(screen.getByRole("button", { name: "Chốt điểm" })).toBeDisabled();
-  expect(mocks.save).not.toHaveBeenCalled();
+  expect(mocks.saveEvaluation).not.toHaveBeenCalled();
 });
 
 
 it("treats a saved fractional point as not achieved (checklist only) and ticking the item saves full points", async () => {
   const partialDetail = { ...detail, evaluation: { ...detail.evaluation, rubricItemScores: { r: { i: 0.5 } } },
     rubrics: [{ rubricId: "r", partId: "q", maxPoints: 1, criteria: [{ criterionId: "c", title: "Thiết kế", items: [{ itemId: "i", text: "Đạt một phần", points: 1 }] }] }] };
-  mocks.detail.mockResolvedValue(partialDetail);
-  mocks.save.mockResolvedValue({ ...partialDetail.evaluation, version: 3, score: 1 });
+  mocks.loadEvaluation.mockResolvedValue(partialDetail);
+  mocks.saveEvaluation.mockResolvedValue({ ...partialDetail.evaluation, version: 3, score: 1 });
   render(<GradingWorkspacePage evaluationId="e" />);
   const item = await screen.findByRole("checkbox", { name: /Đạt một phần/ });
   expect(item).not.toBeChecked();
@@ -236,34 +236,34 @@ it("treats a saved fractional point as not achieved (checklist only) and ticking
   fireEvent.click(item);
   expect(item).toBeChecked();
   fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
-  await waitFor(() => expect(mocks.save).toHaveBeenCalled());
-  expect(mocks.save.mock.calls[0]![1]).toMatchObject({ version: 2, checkedItemsByRubric: { r: ["i"] }, itemScoresByRubric: { r: { i: 1 } } });
-  expect(mocks.save.mock.calls[0]![1]).not.toHaveProperty("score");
+  await waitFor(() => expect(mocks.saveEvaluation).toHaveBeenCalled());
+  expect(mocks.saveEvaluation.mock.calls[0]![1]).toMatchObject({ version: 2, checkedItemsByRubric: { r: ["i"] }, itemScoresByRubric: { r: { i: 1 } } });
+  expect(mocks.saveEvaluation.mock.calls[0]![1]).not.toHaveProperty("score");
 });
 
 it("unticking an item gives it zero and a backend without item scores only gets the checklist", async () => {
-  mocks.detail.mockResolvedValue({ ...detail, evaluation: { ...detail.evaluation, rubricChecks: JSON.stringify({ r: ["i"] }) },
+  mocks.loadEvaluation.mockResolvedValue({ ...detail, evaluation: { ...detail.evaluation, rubricChecks: JSON.stringify({ r: ["i"] }) },
     rubrics: [{ rubricId: "r", partId: "q", maxPoints: 1, criteria: [{ criterionId: "c", title: "Thiết kế", items: [{ itemId: "i", text: "Đạt một phần", points: 1 }] }] }] });
-  mocks.save.mockResolvedValue({ ...detail.evaluation, version: 3 });
+  mocks.saveEvaluation.mockResolvedValue({ ...detail.evaluation, version: 3 });
   render(<GradingWorkspacePage evaluationId="e" />);
   const item = await screen.findByRole("checkbox", { name: /Đạt một phần/ });
   expect(item).toBeChecked();
   fireEvent.click(item);
   expect(screen.getByLabelText("Điểm tạm tính")).toHaveTextContent("0.00 / 10.00");
   fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
-  await waitFor(() => expect(mocks.save).toHaveBeenCalled());
-  expect(mocks.save.mock.calls[0]![1]).toMatchObject({ checkedItemsByRubric: { r: [] } });
-  expect(mocks.save.mock.calls[0]![1]).not.toHaveProperty("itemScoresByRubric");
+  await waitFor(() => expect(mocks.saveEvaluation).toHaveBeenCalled());
+  expect(mocks.saveEvaluation.mock.calls[0]![1]).toMatchObject({ checkedItemsByRubric: { r: [] } });
+  expect(mocks.saveEvaluation.mock.calls[0]![1]).not.toHaveProperty("itemScoresByRubric");
 });
 
 it("recovers the actual task error when an older backend only returns AI task failed", async () => {
-  mocks.proposals.mockResolvedValue([{ id: "p", taskId: "task", versionNo: 2, status: "FAILED", origin: "AI_TASK", safeError: "AI task failed" }]);
-  mocks.task.mockResolvedValue({ state: "FAILED", safeError: "Yêu cầu chấm không hợp lệ (HTTP 400)" });
+  mocks.listProposals.mockResolvedValue([{ id: "p", taskId: "task", versionNo: 2, status: "FAILED", origin: "AI_TASK", safeError: "AI task failed" }]);
+  mocks.loadTask.mockResolvedValue({ state: "FAILED", safeError: "Yêu cầu chấm không hợp lệ (HTTP 400)" });
   render(<GradingWorkspacePage evaluationId="e" />);
   await screen.findByRole("button", { name: "Chấm bằng AI" });
   openAi();
   expect(await screen.findByText("Yêu cầu chấm không hợp lệ (HTTP 400)")).toBeInTheDocument();
-  expect(mocks.task).toHaveBeenCalledWith("task");
+  expect(mocks.loadTask).toHaveBeenCalledWith("task");
   expect(screen.getByRole("button", { name: "Lưu nháp / thay đổi" })).toBeEnabled();
 });
 
@@ -287,7 +287,7 @@ describe("AI proposal comparison and draft application", () => {
   ];
 
   it("compares the current checklist with the AI proposal and applies only to the local draft", async () => {
-    mocks.detail.mockResolvedValue({
+    mocks.loadEvaluation.mockResolvedValue({
       ...detail,
       evaluation: {
         ...detail.evaluation,
@@ -300,7 +300,7 @@ describe("AI proposal comparison and draft application", () => {
       document: { blocks: [{ id: "part-1", type: "HEADING", content: { text: "Câu 1: Class Diagram" } }] },
       rubrics: sampleRubrics,
     });
-    mocks.proposals.mockResolvedValue([
+    mocks.listProposals.mockResolvedValue([
       {
         id: "prop-latest",
         versionNo: 2,
@@ -342,7 +342,7 @@ describe("AI proposal comparison and draft application", () => {
     expect(review).toHaveTextContent(/Lệch \+0\.50/);
 
     fireEvent.click(screen.getByRole("button", { name: "Áp dụng vào bản nháp" }));
-    expect(mocks.save).not.toHaveBeenCalled();
+    expect(mocks.saveEvaluation).not.toHaveBeenCalled();
     expect(screen.queryByRole("region", { name: "Chấm bằng AI" })).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
@@ -351,12 +351,12 @@ describe("AI proposal comparison and draft application", () => {
   });
 
   it("shows the AI comparison without NaN when a fractional point was saved before", async () => {
-    mocks.detail.mockResolvedValue({
+    mocks.loadEvaluation.mockResolvedValue({
       ...detail,
       evaluation: { ...detail.evaluation, maxScore: 3, rubricItemScores: { r1: { i1: 0.5, i2: 2 } } },
       rubrics: sampleRubrics,
     });
-    mocks.proposals.mockResolvedValue([
+    mocks.listProposals.mockResolvedValue([
       {
         id: "prop-latest",
         versionNo: 1,
@@ -388,7 +388,7 @@ describe("AI proposal comparison and draft application", () => {
     expect(screen.getByText(/nền tảng không kết luận gian lận/)).toBeInTheDocument();
     unmount();
 
-    mocks.detail.mockResolvedValue({
+    mocks.loadEvaluation.mockResolvedValue({
       ...detail,
       evaluation: {
         ...detail.evaluation,
@@ -420,12 +420,12 @@ describe("AI proposal polling resilience and progress states", () => {
 
   it("transitions QUEUED -> RUNNING -> READY task with PENDING proposal -> READY proposal while preserving a manual tick", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-    mocks.detail.mockResolvedValue({
+    mocks.loadEvaluation.mockResolvedValue({
       ...detail,
       evaluation: { ...detail.evaluation, maxScore: 1, rubricItemScores: {} },
       rubrics: rubricFixture,
     });
-    mocks.proposals
+    mocks.listProposals
       .mockResolvedValueOnce([
         { id: "p1", versionNo: 1, status: "PENDING", taskState: "QUEUED", origin: "AI_TASK", source: "PERSONAL" },
       ])
@@ -479,12 +479,12 @@ describe("AI proposal polling resilience and progress states", () => {
     expect(screen.getByText("Sẵn sàng để xem")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Áp dụng vào bản nháp" })).toBeEnabled();
     expect(scoreInput).toBeChecked();
-    expect(mocks.save).not.toHaveBeenCalled();
+    expect(mocks.saveEvaluation).not.toHaveBeenCalled();
   });
 
   it("recovers after a temporary network error without spamming duplicate error alerts", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-    mocks.proposals
+    mocks.listProposals
       .mockResolvedValueOnce([
         { id: "p1", versionNo: 1, status: "PENDING", taskState: "RUNNING", origin: "AI_TASK" },
       ])
@@ -520,7 +520,7 @@ describe("AI proposal polling resilience and progress states", () => {
 
   it("stops polling on 403 error and surfaces the error once", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-    mocks.proposals
+    mocks.listProposals
       .mockResolvedValueOnce([
         { id: "p1", versionNo: 1, status: "PENDING", taskState: "RUNNING", origin: "AI_TASK" },
       ])
@@ -535,17 +535,17 @@ describe("AI proposal polling resilience and progress states", () => {
       await vi.advanceTimersByTimeAsync(3000);
     });
     expect(screen.getByRole("alert")).toBeInTheDocument();
-    const callsAfter403 = mocks.proposals.mock.calls.length;
+    const callsAfter403 = mocks.listProposals.mock.calls.length;
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(15000);
     });
-    expect(mocks.proposals).toHaveBeenCalledTimes(callsAfter403);
+    expect(mocks.listProposals).toHaveBeenCalledTimes(callsAfter403);
   });
 
   it("surfaces delayed status and Kiểm tra lại button after repeated poll failures, resuming existing request without a new AI job", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-    mocks.proposals
+    mocks.listProposals
       .mockResolvedValueOnce([
         { id: "p1", versionNo: 1, status: "PENDING", taskState: "RUNNING", origin: "AI_TASK" },
       ])
@@ -582,12 +582,12 @@ describe("AI proposal polling resilience and progress states", () => {
     });
     expect(screen.getByText("Sẵn sàng để xem")).toBeInTheDocument();
     expect(screen.getByText("Hoàn tất sau khi kiểm tra lại")).toBeInTheDocument();
-    expect(mocks.request).not.toHaveBeenCalled();
+    expect(mocks.requestProposal).not.toHaveBeenCalled();
   });
 
   it("cleans up polling timers on unmount", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-    mocks.proposals.mockResolvedValue([
+    mocks.listProposals.mockResolvedValue([
       { id: "p1", versionNo: 1, status: "PENDING", taskState: "QUEUED", origin: "AI_TASK" },
     ]);
 
@@ -595,12 +595,12 @@ describe("AI proposal polling resilience and progress states", () => {
     await act(async () => {});
     openAi();
     expect(screen.getByText("Đang chờ xử lý")).toBeInTheDocument();
-    expect(mocks.proposals).toHaveBeenCalledTimes(1);
+    expect(mocks.listProposals).toHaveBeenCalledTimes(1);
 
     unmount();
     await act(async () => {
       await vi.advanceTimersByTimeAsync(15000);
     });
-    expect(mocks.proposals).toHaveBeenCalledTimes(1);
+    expect(mocks.listProposals).toHaveBeenCalledTimes(1);
   });
 });

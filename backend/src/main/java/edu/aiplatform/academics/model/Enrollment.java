@@ -18,20 +18,20 @@ public record Enrollment(UUID classId, UUID accountId, EnrollmentStatus status, 
         }
     }
 
-    public static Enrollment create(UUID classId, UUID accountId, EnrollmentSource source, Instant now) {
+    public static Enrollment createEnrollment(UUID classId, UUID accountId, EnrollmentSource source, Instant now) {
         return new Enrollment(classId, accountId, EnrollmentStatus.ACTIVE, source, now, null);
     }
 
-    public Enrollment remove(Instant now) {
+    public Enrollment removeEnrollment(Instant now) {
         return status == EnrollmentStatus.REMOVED ? this :
                 new Enrollment(classId, accountId, EnrollmentStatus.REMOVED, source, enrolledAt, Objects.requireNonNull(now));
     }
 
-    public Enrollment restore(EnrollmentSource source, Instant now) {
+    public Enrollment restoreEnrollment(EnrollmentSource source, Instant now) {
         if (status == EnrollmentStatus.ACTIVE) throw new AcademicRuleException("ALREADY_ENROLLED", "Sinh viên đã được ghi danh");
         if (Objects.requireNonNull(now).isBefore(removedAt)) {
             throw new AcademicRuleException("INVALID_ENROLLMENT_TIME", "Thời gian khôi phục không hợp lệ");
         }
-        return create(classId, accountId, source, now);
+        return createEnrollment(classId, accountId, source, now);
     }
 }

@@ -10328,3 +10328,32 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **AI Response**: Reviewed the five pending documentation files and prepared a descriptive English commit for project-wide source conventions. The canonical document covers backend/frontend names, service dependencies, action methods, files, framework/contract exceptions and refactor verification; README and CLAUDE.md link to it. Preserve historical requester fields. Verify local references, Markdown fences and whitespace; application tests are unnecessary for documentation-only changes.
 
 **Context**: Commit locally on the current fix/u05-u09-u15 branch. No application code, dependency, database, push, merge or deployment change requested.
+
+## Apply shared code conventions to U05/U09/U15 — 2026-11-05
+
+**Timestamp**: 2026-11-05T15:17:14Z
+**Requested by:** Quang Hung
+
+**User Input**: "đọc coding convention mới cập nhật và giúp tôi sửa các u05 u09 u15 theo convention mới"
+
+**AI Response**: Read the published shared convention and started a scoped naming/import refactor in academics, grading and admindashboard. Inventory dependencies/actions/files and all callers before changes; preserve public contracts, framework names, HTTP/JSON bindings, security and business behavior. Record the plan and fresh verification in AI-DLC. No commit or push requested.
+
+**Completion — 2026-11-05T16:21:32Z**: Applied the shared convention to concrete dependencies/actions, predicates/guards, frontend helpers/constants and four React module filenames, with bound Java/TypeScript references and tests updated. Public routes, JSON/data shapes, DB/event/MCP identifiers, contract overrides, transactions and business behavior retained. A new JSON regression first caught an intermediate bean-getter field change; corrected without changing the response contract. Independent review found no Critical/Important source defect; one minor boolean-name correction applied. Final backend verify: 1,783 passed, zero failures/errors/skips, production JAR built; required real PostgreSQL suites 31 + 2 passed. Frontend: 776 passed, full lint/typecheck/production build passed; generated TypeScript configuration restored and rechecked. Earlier JVM/Next native-memory failures resolved with per-command memory/worker settings, including bounded child JVMs; no product configuration change. Plan, results, six current unit notes and state synchronized. Historical reports/attribution preserved. Existing security/resiliency scope retained; PBT disabled. No manual browser/provider retest, live grade write, migration, restart, commit, push or deployment. Evidence: construction/build-and-test/2026-11-05-u05-u09-u15-conventions-results.md.
+
+## Restore compact Java imports — 2026-11-05
+
+**Timestamp**: 2026-11-05T16:42:02Z
+**Requested by:** Quang Hung
+
+**User Input**: "sửa cái contract mấy cái import để * như cũ cũng được cho gọn, code mới import hơi nhiều"
+
+**AI Response**: Updated the shared convention to permit wildcard/static wildcard imports, including contract types, with explicit imports retained when needed for collisions/clarity. Restored original import blocks in 71 changed U05/U09/U15 Java files (883 fewer import statements); self-check verifies all source bytes outside those blocks are preserved, including the prior naming changes. Fresh backend production/test compilation passed at 2026-11-05T16:43:51Z; full runtime tests and frontend build were not repeated for import-only edits. Updated current U05/U09 notes, appended the plan/results follow-up and updated state without rewriting historical verification. Security/resiliency scope unchanged; PBT disabled. No commit/push, behavior/contract/schema/dependency/frontend change, live write or restart. Evidence: construction/build-and-test/2026-11-05-u05-u09-u15-conventions-results.md, .tmp/conventions-wildcard-compile.log.
+
+## Commit U05/U09/U15 convention refactor locally — 2026-11-05
+
+**Timestamp**: 2026-11-05T16:53:23Z
+**Requested by:** Quang Hung
+
+**User Input**: "giúp tôi commit rõ ràng, chưa push"
+
+**AI Response**: Reviewed the pending convention refactor and wildcard-import follow-up for a single descriptive English commit on fix/u05-u09-u15. Include role-specific dependency names, verb-object actions/helpers, four PascalCase React module moves, all callers/mocks/tests, the JSON compatibility regression and synchronized AI-DLC records. Preserve contracts, business behavior and the user's compact import preference. Confirmed recorded backend verify 1,783 / frontend 776 passing before import restoration, lint/typecheck/production build passing, and fresh backend production/test compilation after import restoration. Check the staged diff and restrict staging to task-owned files. No new runtime test rerun, push, merge, deployment, live write or restart requested.

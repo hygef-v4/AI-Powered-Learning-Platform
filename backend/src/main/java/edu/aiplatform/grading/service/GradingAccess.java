@@ -18,26 +18,26 @@ import org.springframework.stereotype.Component;
 @Component
 public class GradingAccess {
     private final IAuthorization auth;
-    private final IClassAccess classes;
+    private final IClassAccess classAccess;
     private final IAudit audit;
     private final Clock clock;
 
-    public GradingAccess(IAuthorization auth, IClassAccess classes, IAudit audit, Clock clock) {
+    public GradingAccess(IAuthorization auth, IClassAccess classAccess, IAudit audit, Clock clock) {
         this.auth = auth;
-        this.classes = classes;
+        this.classAccess = classAccess;
         this.audit = audit;
         this.clock = clock;
     }
 
     public void requireTeacher(Actor actor, UUID classId, String action) {
-        require(actor, classId, action);
+        requireAuthorization(actor, classId, action);
     }
 
     public void requireStudent(Actor actor, UUID classId) {
-        require(actor, classId, Actions.MY_GRADE_READ);
+        requireAuthorization(actor, classId, Actions.MY_GRADE_READ);
         final boolean enrolled;
         try {
-            enrolled = classes.isActiveStudent(actor.accountId(), classId);
+            enrolled = classAccess.isActiveStudent(actor.accountId(), classId);
         } catch (RuntimeException ex) {
             throw ApiException.unavailable("GRADING_DEPENDENCY_UNAVAILABLE", "Enrollment service unavailable");
         }
@@ -49,7 +49,7 @@ public class GradingAccess {
         }
     }
 
-    private void require(Actor actor, UUID classId, String action) {
+    private void requireAuthorization(Actor actor, UUID classId, String action) {
         final AuthorizationDecision decision;
         try {
             decision = auth.authorize(actor, action, ResourceRef.courseClass(classId));

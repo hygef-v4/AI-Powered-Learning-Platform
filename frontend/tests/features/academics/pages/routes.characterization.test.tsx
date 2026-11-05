@@ -1,6 +1,6 @@
 import {act, fireEvent, render, screen, waitFor} from "@testing-library/react";
 import {afterEach, expect, it, vi} from "vitest";
-import {ClassDetailRoute, ClassesRoute} from "@/features/academics/pages/routes";
+import {ClassDetailRoute, ClassesRoute} from "@/features/academics/pages/ClassRoutes";
 import type {CourseClassView} from "@/features/academics/model/types";
 
 vi.mock("next/navigation", () => ({useRouter: () => ({push: vi.fn()}), useSearchParams: () => new URLSearchParams(window.location.search)}));

@@ -9,7 +9,7 @@ export function useSubmissionDirectory(classId: string, assignmentId: string) {
   const load = useCallback(async () => {
     const rows: SubmissionRow[] = [];
     for (let page = 1; ; page += 1) {
-      const result = await gradingApi.submissions(classId, assignmentId, "ALL", page);
+      const result = await gradingApi.listSubmissions(classId, assignmentId, "ALL", page);
       rows.push(...result.rows);
       if (!result.rows.length || rows.length >= result.total) return rows;
     }

@@ -20,12 +20,12 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/features/grading/api", () => ({
   gradingApi: {
-    detail: mocks.detail,
-    proposals: mocks.proposals,
-    save: mocks.save,
-    finalize: mocks.finalize,
-    attempt: mocks.attempt,
-    assignmentContext: mocks.assignmentContext,
+    loadEvaluation: mocks.detail,
+    listProposals: mocks.proposals,
+    saveEvaluation: mocks.save,
+    finalizeGrades: mocks.finalize,
+    loadAttemptGrade: mocks.attempt,
+    loadAssignmentContext: mocks.assignmentContext,
   },
 }));
 

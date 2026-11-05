@@ -9,7 +9,7 @@ import { ClassInfoForm } from "../components/ClassInfoForm";
 import { AssignTeacherDialog, ClassStateActions } from "../components/ClassDialogs";
 import { EnrollmentPanel } from "../components/EnrollmentPanel";
 import { formatDate } from "../model/format";
-import { statusLabels, type ClassInfoInput, type ClassStatus, type CourseClassView, type EnrollmentRowResult, type EnrollmentView, type PersonView } from "../model/types";
+import { CLASS_STATUS_LABELS, type ClassInfoInput, type ClassStatus, type CourseClassView, type EnrollmentRowResult, type EnrollmentView, type PersonView } from "../model/types";
 
 export type ManagedClassActions = {
   onSaveInfo: (input: ClassInfoInput) => Promise<void>;
@@ -50,7 +50,7 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
       <div className="flex flex-col gap-4">
         <Section title="Trạng thái">
           <dl className="flex flex-col gap-2.5 text-[13px]">
-            <div className="flex items-center justify-between"><dt className="text-muted">Trạng thái</dt><dd><Pill tone={TONES[value.status]}>{statusLabels[value.status]}</Pill></dd></div>
+            <div className="flex items-center justify-between"><dt className="text-muted">Trạng thái</dt><dd><Pill tone={TONES[value.status]}>{CLASS_STATUS_LABELS[value.status]}</Pill></dd></div>
             <div className="flex items-center justify-between"><dt className="text-muted">Ngày tạo</dt><dd className="text-ink">{formatDate(value.createdAt)}</dd></div>
           </dl>
           <div className="flex flex-col gap-2"><ClassStateActions value={value} onChange={actions.onChangeStatus}/></div>

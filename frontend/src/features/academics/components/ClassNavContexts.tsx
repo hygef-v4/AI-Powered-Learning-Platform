@@ -14,12 +14,12 @@ import { Menu } from "@/shared/ui/Menu";
 import { academicsApi, type Scope } from "../api";
 import type { CourseClassView, SubjectView } from "../model/types";
 
-const enc = encodeURIComponent;
+const encodeId = encodeURIComponent;
 
 /** Các màn quản lý một môn, gồm cả chi tiết một lớp của môn (`/manager/classes/{id}`, mục Lớp học). */
 const SUBJECT_ROOTS = ["/manager/subjects", "/manager/questions", "/manager/quizzes", "/manager/assignments", "/manager/materials", "/manager/classes"];
 
-function under(pathname: string, root: string) {
+function isUnderPath(pathname: string, root: string) {
   return pathname === root || pathname.startsWith(`${root}/`);
 }
 
@@ -32,18 +32,18 @@ function switcher(build: (id: string) => NavItem[], items: NavItem[]) {
 // Môn mở gần nhất: trang không mang `?subjectId=` (ví dụ chi tiết câu hỏi) vẫn giữ sidebar của môn đó.
 let lastSubjectId: string | null = null;
 
-export function subjectContext({ pathname, search }: NavLocation): NavContext | null {
-  if (!SUBJECT_ROOTS.some((root) => under(pathname, root))) return null;
+export function resolveSubjectContext({ pathname, search }: NavLocation): NavContext | null {
+  if (!SUBJECT_ROOTS.some((root) => isUnderPath(pathname, root))) return null;
   const fromPath = /^\/manager\/subjects\/([^/]+)/.exec(pathname)?.[1];
   const subjectId = (fromPath ? decodeURIComponent(fromPath) : search.get("subjectId")) || lastSubjectId;
   lastSubjectId = subjectId;
   const entries = subjectNavEntries.entries();
   const current = entries
-    .filter((entry) => under(pathname, entry.path))
+    .filter((entry) => isUnderPath(pathname, entry.path))
     .reduce<string | null>((best, entry) => (best === null || entry.path.length > best.length ? entry.path : best), null);
   const build = (id: string | null): NavItem[] =>
     entries.map((entry) => ({
-      href: id ? entry.href?.(id) ?? `${entry.path}?subjectId=${enc(id)}` : entry.path,
+      href: id ? entry.href?.(id) ?? `${entry.path}?subjectId=${encodeId(id)}` : entry.path,
       label: entry.title,
       icon: entry.icon,
       active: entry.path === current,
@@ -60,9 +60,9 @@ export function subjectContext({ pathname, search }: NavLocation): NavContext | 
 type ClassItem = { key: string; label: string; icon: IconName; href: (id: string) => string };
 type ClassScope = Extract<Scope, "teaching" | "me">;
 
-const teachingPage = (tab?: string) => (id: string) => `/teaching/classes/${enc(id)}${tab ? `?tab=${tab}` : ""}`;
-const teachingAnnouncements = (id: string) => `/teaching/classes/${enc(id)}/announcements`;
-const studentAnnouncements = (id: string) => `/classes/${enc(id)}/announcements`;
+const teachingPage = (tab?: string) => (id: string) => `/teaching/classes/${encodeId(id)}${tab ? `?tab=${tab}` : ""}`;
+const teachingAnnouncements = (id: string) => `/teaching/classes/${encodeId(id)}/announcements`;
+const studentAnnouncements = (id: string) => `/classes/${encodeId(id)}/announcements`;
 
 /** Các tab của trang lớp (`?tab=`) đưa ra sidebar, thêm Thông báo lớp của lớp đó. */
 const TEACHING_ITEMS: ClassItem[] = [
@@ -75,10 +75,10 @@ const TEACHING_ITEMS: ClassItem[] = [
 ];
 /** Các trang sinh viên vào được của một lớp. */
 const STUDENT_ITEMS: ClassItem[] = [
-  { key: "info", label: "Thông tin lớp", icon: "info", href: (id) => `/classes/${enc(id)}` },
-  { key: "group", label: "Nhóm của tôi", icon: "group", href: (id) => `/classes/${enc(id)}/group` },
-  { key: "materials", label: "Học liệu", icon: "folder_open", href: (id) => `/classes/${enc(id)}?tab=materials` },
-  { key: "assignments", label: "Bài tập", icon: "assignment", href: (id) => `/my-assignments?classId=${enc(id)}` },
+  { key: "info", label: "Thông tin lớp", icon: "info", href: (id) => `/classes/${encodeId(id)}` },
+  { key: "group", label: "Nhóm của tôi", icon: "group", href: (id) => `/classes/${encodeId(id)}/group` },
+  { key: "materials", label: "Học liệu", icon: "folder_open", href: (id) => `/classes/${encodeId(id)}?tab=materials` },
+  { key: "assignments", label: "Bài tập", icon: "assignment", href: (id) => `/my-assignments?classId=${encodeId(id)}` },
   { key: "announcements", label: "Thông báo lớp", icon: "campaign", href: studentAnnouncements },
 ];
 
@@ -101,7 +101,7 @@ function buildClass(scope: ClassScope, id: string, open: string): NavContext {
 }
 
 /** Lớp được phân công (`/teaching/classes/{id}`, kể cả Thông báo lớp `/teaching/classes/{id}/announcements`). Lớp học của môn (Chủ nhiệm môn) dùng sidebar của môn. */
-export function classContext({ pathname, search }: NavLocation): NavContext | null {
+export function resolveClassContext({ pathname, search }: NavLocation): NavContext | null {
   const match = /^\/teaching\/classes\/([^/]+)(\/.*)?$/.exec(pathname);
   if (!match) return null;
   const tabs = TEACHING_ITEMS.filter((item) => item.key !== "announcements");
@@ -111,14 +111,14 @@ export function classContext({ pathname, search }: NavLocation): NavContext | nu
 }
 
 /** Lớp của tôi (`/classes/{id}`, Học liệu, Nhóm của tôi, Thông báo lớp) và Bài tập, một học liệu của một lớp (`?classId=`). */
-export function studentClassContext({ pathname, search }: NavLocation): NavContext | null {
+export function resolveStudentClassContext({ pathname, search }: NavLocation): NavContext | null {
   const own = /^\/classes\/([^/]+)(\/group|\/announcements)?$/.exec(pathname);
   if (own) return buildClass("me", decodeURIComponent(own[1]!), own[2] ? own[2].slice(1) : search.get("tab") === "materials" ? "materials" : "info");
   const classId = search.get("classId");
   // Bài mở từ trang Bài tập chung (`from=all`) giữ menu chung, không đổi sang sidebar của lớp.
   if (!classId || search.get("from") === "all") return null;
-  if (under(pathname, "/my-assignments")) return buildClass("me", classId, "assignments");
-  if (under(pathname, "/materials")) return buildClass("me", classId, "materials");
+  if (isUnderPath(pathname, "/my-assignments")) return buildClass("me", classId, "assignments");
+  if (isUnderPath(pathname, "/materials")) return buildClass("me", classId, "materials");
   return null;
 }
 
@@ -128,12 +128,12 @@ function SubjectNavHeader({ subjectId, hrefFor }: { subjectId: string | null; hr
   useEffect(() => {
     if (!subjectId) return;
     const request = new AbortController();
-    academicsApi.subject(subjectId, request.signal).then(setSubject, () => {});
+    academicsApi.loadSubject(subjectId, request.signal).then(setSubject, () => {});
     return () => request.abort();
   }, [subjectId]);
   useEffect(() => {
     const request = new AbortController();
-    academicsApi.subjects(request.signal).then(setSubjects, () => {});
+    academicsApi.listSubjects(request.signal).then(setSubjects, () => {});
     return () => request.abort();
   }, []);
   const shown = subject?.id === subjectId ? subject : null;
@@ -157,13 +157,13 @@ function ClassNavHeader({ scope, id, hrefFor }: { scope: ClassScope; id: string;
   const [classes, setClasses] = useState<CourseClassView[]>([]);
   useEffect(() => {
     const request = new AbortController();
-    academicsApi.detail(scope, id, request.signal).then(setValue, () => {});
+    academicsApi.loadClass(scope, id, request.signal).then(setValue, () => {});
     return () => request.abort();
   }, [scope, id]);
   const shown = value?.id === id ? value : null;
   useEffect(() => {
     const request = new AbortController();
-    academicsApi.classes(scope, { size: 100 }, request.signal).then(setClasses, () => {});
+    academicsApi.listClasses(scope, { size: 100 }, request.signal).then(setClasses, () => {});
     return () => request.abort();
   }, [scope]);
   return (

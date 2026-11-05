@@ -15,16 +15,16 @@ public record CourseClass(UUID id, UUID subjectId, String code, String name, Str
         Objects.requireNonNull(status);
         Objects.requireNonNull(createdAt);
         Objects.requireNonNull(updatedAt);
-        code = text(code, "Mã lớp", 30, true);
-        name = text(name, "Tên lớp", 200, true);
-        description = text(description, "Mô tả", 2000, false);
-        term = text(term, "Học kỳ", 20, false);
+        code = requireText(code, "Mã lớp", 30, true);
+        name = requireText(name, "Tên lớp", 200, true);
+        description = requireText(description, "Mô tả", 2000, false);
+        term = requireText(term, "Học kỳ", 20, false);
         if (version < 0 || updatedAt.isBefore(createdAt)) {
             throw new AcademicRuleException("INVALID_CLASS_SNAPSHOT", "Version hoặc thời gian lớp không hợp lệ");
         }
     }
 
-    public static CourseClass create(UUID id, UUID subjectId, String code, String name, String description,
+    public static CourseClass createClass(UUID id, UUID subjectId, String code, String name, String description,
                                      String term, UUID teacherId, Instant now) {
         return new CourseClass(id, subjectId, code, name, description, term, ClassStatus.DRAFT, teacherId,
                 false, now, now, 0);
@@ -45,29 +45,29 @@ public record CourseClass(UUID id, UUID subjectId, String code, String name, Str
                 throw new AcademicRuleException("ENROLLMENT_CONFLICT", "Có sinh viên đang ở lớp khác cùng môn");
             }
         }
-        return changed(name, description, term, next, teacherId, showGradeDistribution, now);
+        return copyWithChanges(name, description, term, next, teacherId, showGradeDistribution, now);
     }
 
     public CourseClass updateInfo(String name, String description, String term, Instant now) {
         requireEditable();
-        return changed(name, description, term, status, teacherId, showGradeDistribution, now);
+        return copyWithChanges(name, description, term, status, teacherId, showGradeDistribution, now);
     }
 
     public CourseClass assignTeacher(UUID teacherId, Instant now) {
         requireEditable();
-        return changed(name, description, term, status, teacherId, showGradeDistribution, now);
+        return copyWithChanges(name, description, term, status, teacherId, showGradeDistribution, now);
     }
 
     public CourseClass setGradeDistribution(boolean enabled, Instant now) {
         requireEditable();
-        return changed(name, description, term, status, teacherId, enabled, now);
+        return copyWithChanges(name, description, term, status, teacherId, enabled, now);
     }
 
     private void requireEditable() {
         if (status == ClassStatus.ARCHIVED) throw new AcademicRuleException("CLASS_ARCHIVED", "Lớp đã lưu trữ chỉ được xem");
     }
 
-    private CourseClass changed(String name, String description, String term, ClassStatus status, UUID teacher,
+    private CourseClass copyWithChanges(String name, String description, String term, ClassStatus status, UUID teacher,
                                 boolean distribution, Instant now) {
         if (Objects.requireNonNull(now).isBefore(updatedAt)) {
             throw new AcademicRuleException("INVALID_CLASS_TIME", "Thời gian cập nhật không thể trước lần cập nhật trước");
@@ -76,7 +76,7 @@ public record CourseClass(UUID id, UUID subjectId, String code, String name, Str
                 createdAt, now, Math.addExact(version, 1));
     }
 
-    private static String text(String value, String label, int max, boolean required) {
+    private static String requireText(String value, String label, int max, boolean required) {
         String normalized = value == null ? null : value.strip();
         if ((required && (normalized == null || normalized.isEmpty())) ||
                 (normalized != null && normalized.length() > max) ||

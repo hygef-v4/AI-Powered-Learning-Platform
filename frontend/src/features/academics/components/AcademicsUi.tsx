@@ -6,7 +6,7 @@ import { Icon as SharedIcon, type IconName as SharedIconName } from "@/shared/ui
 import { Pill } from "@/shared/ui/Pill";
 import { EmptyState as SharedEmptyState } from "@/shared/ui/EmptyState";
 import type { Tone } from "@/shared/ui/tones";
-import { statusLabels, type ClassStatus } from "../model/types";
+import { CLASS_STATUS_LABELS, type ClassStatus } from "../model/types";
 import styles from "../styles/academics.module.css";
 
 export type IconName = "school" | "grid" | "book" | "users" | "folder" | "file" | "arrow" | "chevron" | "search" | "plus" | "close" | "lock" | "save" | "archive" | "person" | "info" | "check" | "clock";
@@ -29,7 +29,7 @@ export function Avatar({ name }: { name: string }) {
 const STATUS_TONES: Record<ClassStatus, Tone> = { DRAFT: "neutral", OPEN: "success", ARCHIVED: "danger" };
 
 export function StatusBadge({ status }: { status: ClassStatus }) {
-  return <Pill tone={STATUS_TONES[status]}>{statusLabels[status]}</Pill>;
+  return <Pill tone={STATUS_TONES[status]}>{CLASS_STATUS_LABELS[status]}</Pill>;
 }
 
 export function EmptyState({ title = "Chưa có dữ liệu", description }: { title?: string; description?: string }) {

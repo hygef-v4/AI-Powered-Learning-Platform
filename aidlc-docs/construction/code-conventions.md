@@ -89,7 +89,7 @@ Các ví dụ minh họa cách đặt tên, không xác nhận code hiện tại
 
 ## 6. Trình bày và trách nhiệm
 
-- Java thụt 4 spaces, import tường minh, một câu lệnh mỗi dòng. TypeScript/JSX thụt 2 spaces; giữ formatter/lint hiện tại, ưu tiên độ rộng 100 ký tự cho code mới khi hợp lý.
+- Java thụt 4 spaces, một câu lệnh mỗi dòng. Cho phép wildcard import (`import ...*;`, `import static ...*;`) để giữ danh sách import gọn, kể cả khi dùng kiểu từ `contract`; không bắt buộc bung wildcard hiện có thành từng dòng. Dùng import tường minh khi cần phân biệt tên trùng hoặc giúp làm rõ kiểu được sử dụng. TypeScript/JSX thụt 2 spaces; giữ formatter/lint hiện tại, ưu tiên độ rộng 100 ký tự cho code mới khi hợp lý.
 - Controller nhận/kiểm tra đầu vào HTTP và gọi service; service điều phối use case; model giữ quy tắc nghiệp vụ; repository giữ truy cập dữ liệu. Unit khác sử dụng public `contract`.
 - Tái sử dụng thành phần có sẵn. Chỉ comment lý do/giới hạn khó thể hiện bằng code; không thêm tầng hoặc comment lặp lại tên method.
 - Giữ validation, phân quyền, transaction, xử lý lỗi, audit/event, accessibility và các side effect khi đổi tên.

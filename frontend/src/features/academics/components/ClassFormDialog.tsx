@@ -5,7 +5,7 @@ import { useId, useState, type FormEvent } from "react";
 import { Button, Dialog, Field, TextInput, showToast } from "@/shared/ui";
 import { PersonPicker } from "./PersonPicker";
 import type { CreateClassInput, PersonView, SubjectView } from "../model/types";
-import { operationError } from "../model/format";
+import { formatOperationError } from "../model/format";
 
 type Errors = { code?: string; term?: string; name?: string };
 
@@ -24,7 +24,7 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
     setValues({ ...values, [key]: value });
     setErrors((current) => ({ ...current, [key]: undefined }));
   }
-  async function submit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (busy) return;
     const next: Errors = {};
@@ -38,11 +38,11 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
       await onSubmit({ subjectId: subject.id, code: values.code.trim(), name: values.name.trim(), term: values.term.trim(), description: values.description.trim(), teacherId: teacher?.id ?? null });
       showToast("Đã tạo lớp");
       onClose();
-    } catch (cause) { setError(operationError(cause)); } finally { setBusy(false); }
+    } catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
   }
   return <Dialog open title="Tạo lớp" size="lg" onClose={onClose} dismissible={!busy}
     footer={<Button type="submit" form={`${id}-form`} variant="primary" disabled={busy} data-testid="class-form-submit">Tạo lớp</Button>}>
-    <form id={`${id}-form`} onSubmit={(event) => void submit(event)} noValidate className="flex flex-col gap-3.5">
+    <form id={`${id}-form`} onSubmit={(event) => void handleSubmit(event)} noValidate className="flex flex-col gap-3.5">
       <fieldset disabled={busy} className="flex min-w-0 flex-col gap-3.5">
         <div className="grid gap-3.5 sm:grid-cols-2">
           <Field label="Mã lớp" htmlFor={`${id}-code`} required error={errors.code}>

@@ -18,16 +18,16 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 public class GradingBatchService {
-    private final GradingService grading;
-    private final TransactionTemplate tx;
+    private final GradingService gradingService;
+    private final TransactionTemplate transactionTemplate;
 
-    public GradingBatchService(GradingService grading, PlatformTransactionManager manager) {
-        this.grading = grading;
-        tx = new TransactionTemplate(manager);
-        tx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    public GradingBatchService(GradingService gradingService, PlatformTransactionManager manager) {
+        this.gradingService = gradingService;
+        transactionTemplate = new TransactionTemplate(manager);
+        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
-    public BatchResult run(Actor actor, Batch batch, boolean publish) {
+    public BatchResult executeBatch(Actor actor, Batch batch, boolean publish) {
         if (batch.items() == null || batch.items().isEmpty() || batch.items().size() > 200)
             throw ApiException.badRequest("INVALID_BATCH", "Batch must contain 1–200 items");
         var outcomes = new ArrayList<ItemResult>();
@@ -38,8 +38,8 @@ public class GradingBatchService {
                 continue;
             }
             try {
-                var evaluation = tx.execute(
-                        status -> publish ? grading.publishOne(actor, item) : grading.finalizeOne(actor, item));
+                var evaluation = transactionTemplate.execute(
+                        status -> publish ? gradingService.publishEvaluation(actor, item) : gradingService.finalizeEvaluation(actor, item));
                 outcomes.add(new ItemResult(item.evaluationId(), "SUCCESS", null, evaluation.version));
             } catch (ApiException ex) {
                 outcomes.add(new ItemResult(item.evaluationId(), "FAILED", ex.code(), null));

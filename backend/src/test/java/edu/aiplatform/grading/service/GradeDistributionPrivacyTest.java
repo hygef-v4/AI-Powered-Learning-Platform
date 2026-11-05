@@ -28,7 +28,7 @@ class GradeDistributionPrivacyTest {
         for (int i = 0; i < 20; i++) {
             var studentId = UUID.randomUUID();
             students.add(studentId);
-            var evaluation = Evaluation.pending(UUID.randomUUID(), assignmentId, classId, studentId,
+            var evaluation = Evaluation.createPendingEvaluation(UUID.randomUUID(), assignmentId, classId, studentId,
                     "hash", BigDecimal.TEN, "[]", Instant.now());
             evaluation.state = EvaluationStatus.PUBLISHED;
             evaluation.score = i < 4 ? BigDecimal.ONE : BigDecimal.TEN;
@@ -53,21 +53,21 @@ class GradeDistributionPrivacyTest {
                 AssignmentScope.SUBJECT, null, subjectId, 1, "Task", SubmissionMode.INDIVIDUAL, GradingMode.GRADED,
                 false, AssignmentStatus.OPEN, null, null, null, 1, false, null, List.of())));
         when(evaluations.findForAssignmentAndClass(assignmentId, classId)).thenReturn(values);
-        when(visibility.find(any(), eq(assignmentId))).thenReturn(new GradeDistributionVisibilityRepository.Visibility(false, 0));
+        when(visibility.findVisibility(any(), eq(assignmentId))).thenReturn(new GradeDistributionVisibilityRepository.Visibility(false, 0));
         var service = new GradebookService(evaluations, new GradingAccess(auth, classes, audit, Clock.systemUTC()),
                 assignments, mock(ISubmissionQuery.class), classes, mock(IAccountLookup.class), mock(IRubric.class),
                 audit, Clock.systemUTC(), mock(ObjectProvider.class), visibility);
-        assertThat(service.distribution(actor, classId, assignmentId, true)).isEmpty();
-        when(visibility.find(classId, assignmentId)).thenReturn(new GradeDistributionVisibilityRepository.Visibility(true, 1));
-        assertThat(service.distribution(actor, classId, assignmentId, true)).singleElement()
+        assertThat(service.loadDistribution(actor, classId, assignmentId, true)).isEmpty();
+        when(visibility.findVisibility(classId, assignmentId)).thenReturn(new GradeDistributionVisibilityRepository.Visibility(true, 1));
+        assertThat(service.loadDistribution(actor, classId, assignmentId, true)).singleElement()
                 .satisfies(bucket -> assertThat(bucket.count()).isEqualTo(16));
-        assertThat(service.distribution(actor, otherClass, assignmentId, true)).isEmpty();
+        assertThat(service.loadDistribution(actor, otherClass, assignmentId, true)).isEmpty();
         values.get(values.size() - 1).state = EvaluationStatus.FINALIZED;
-        assertThat(service.distribution(actor, classId, assignmentId, true)).isEmpty();
+        assertThat(service.loadDistribution(actor, classId, assignmentId, true)).isEmpty();
         values.get(values.size() - 1).state = EvaluationStatus.PUBLISHED;
         values.get(values.size() - 1).maxScore = BigDecimal.ZERO;
-        assertThat(service.distribution(actor, classId, assignmentId, true)).isEmpty();
+        assertThat(service.loadDistribution(actor, classId, assignmentId, true)).isEmpty();
         when(classes.isActiveStudent(actor.accountId(), classId)).thenReturn(false);
-        assertThatThrownBy(() -> service.distribution(actor, classId, assignmentId, true)).isInstanceOf(RuntimeException.class);
+        assertThatThrownBy(() -> service.loadDistribution(actor, classId, assignmentId, true)).isInstanceOf(RuntimeException.class);
     }
 }

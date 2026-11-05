@@ -3,7 +3,7 @@
 import { useId, useState, type FormEvent } from "react";
 import { Button, Field, LockedInput, Section, TextInput, showToast } from "@/shared/ui";
 import type { ClassInfoInput, CourseClassView } from "../model/types";
-import { operationError } from "../model/format";
+import { formatOperationError } from "../model/format";
 
 /**
  * Thẻ Thông tin lớp, cùng kiểu Thông tin môn học: sửa ngay trên thẻ. Hàng đầu Mã lớp và Mã môn (khóa), hàng hai Tên lớp và
@@ -21,7 +21,7 @@ function InfoEditor({ value, onSave }: { value: CourseClassView; onSave: (value:
   const [error, setError] = useState("");
   const archived = value.status === "ARCHIVED";
   const dirty = fields.name !== original.name || fields.term !== original.term || fields.description !== original.description;
-  async function save(event: FormEvent) {
+  async function handleSave(event: FormEvent) {
     event.preventDefault();
     if (busy || archived) return;
     if (!fields.name.trim() || !fields.term.trim()) { setError("Vui lòng điền tên lớp và học kỳ."); return; }
@@ -29,10 +29,10 @@ function InfoEditor({ value, onSave }: { value: CourseClassView; onSave: (value:
     try {
       await onSave({ name: fields.name.trim(), description: fields.description.trim(), term: fields.term.trim(), version: value.version });
       showToast("Đã lưu thay đổi");
-    } catch (cause) { setError(operationError(cause)); } finally { setBusy(false); }
+    } catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
   }
   return <Section title="Thông tin lớp">
-    <form onSubmit={save} aria-label="Thông tin lớp" noValidate className="flex flex-col gap-4">
+    <form onSubmit={handleSave} aria-label="Thông tin lớp" noValidate className="flex flex-col gap-4">
       <fieldset disabled={busy} className="grid min-w-0 gap-4 sm:grid-cols-2">
         <Field label="Mã lớp" htmlFor={`${id}-code`}><LockedInput id={`${id}-code`} value={value.code} /></Field>
         <Field label="Mã môn" htmlFor={`${id}-subject`}><LockedInput id={`${id}-subject`} value={value.subject.code} /></Field>

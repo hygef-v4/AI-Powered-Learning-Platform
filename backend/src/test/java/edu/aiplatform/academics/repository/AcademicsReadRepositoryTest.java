@@ -15,22 +15,22 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 class AcademicsReadRepositoryTest {
-    final NamedParameterJdbcTemplate jdbc = mock(NamedParameterJdbcTemplate.class);
-    final JdbcAcademicsReadRepository repository = new JdbcAcademicsReadRepository(jdbc);
+    final NamedParameterJdbcTemplate namedParameterJdbcTemplate = mock(NamedParameterJdbcTemplate.class);
+    final JdbcAcademicsReadRepository jdbcAcademicsReadRepository = new JdbcAcademicsReadRepository(namedParameterJdbcTemplate);
 
     @Test void emptyManagerScopeCannotBecomeUnscopedQuery() {
-        assertThat(repository.listForManager(List.of(), null, null, 20, 0)).isEmpty();
-        verifyNoInteractions(jdbc);
-        assertThatThrownBy(() -> repository.listForManager(List.of(), null, null, 101, 0)).isInstanceOf(IllegalArgumentException.class);
+        assertThat(jdbcAcademicsReadRepository.listForManager(List.of(), null, null, 20, 0)).isEmpty();
+        verifyNoInteractions(namedParameterJdbcTemplate);
+        assertThatThrownBy(() -> jdbcAcademicsReadRepository.listForManager(List.of(), null, null, 101, 0)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test void managerQueryBindsScopeAndEscapesSearchWildcards() {
         UUID subject = UUID.randomUUID();
-        when(jdbc.query(anyString(), anyMap(), any(RowMapper.class))).thenReturn(List.of());
-        repository.listForManager(List.of(subject), "50%_!'; drop table x", ClassStatus.OPEN, 25, 50);
+        when(namedParameterJdbcTemplate.query(anyString(), anyMap(), any(RowMapper.class))).thenReturn(List.of());
+        jdbcAcademicsReadRepository.listForManager(List.of(subject), "50%_!'; drop table x", ClassStatus.OPEN, 25, 50);
         var sql = ArgumentCaptor.forClass(String.class);
         var args = ArgumentCaptor.forClass(Map.class);
-        verify(jdbc).query(sql.capture(), args.capture(), any(RowMapper.class));
+        verify(namedParameterJdbcTemplate).query(sql.capture(), args.capture(), any(RowMapper.class));
         assertThat(sql.getValue()).contains("subject_id in (:subjectIds)", "c.status = :status", "limit :limit offset :offset", "escape '!'");
         assertThat(sql.getValue()).doesNotContain("drop table");
         assertThat(args.getValue()).containsEntry("subjectIds", List.of(subject)).containsEntry("limit", 25).containsEntry("offset", 50)
@@ -39,28 +39,28 @@ class AcademicsReadRepositoryTest {
 
     @Test void studentQueryAlwaysRequiresActiveEnrollmentAndVisibleStatus() {
         UUID student = UUID.randomUUID();
-        when(jdbc.query(anyString(), anyMap(), any(RowMapper.class))).thenReturn(List.of());
-        repository.listForStudent(student, null, null, 20, 0);
+        when(namedParameterJdbcTemplate.query(anyString(), anyMap(), any(RowMapper.class))).thenReturn(List.of());
+        jdbcAcademicsReadRepository.listForStudent(student, null, null, 20, 0);
         var sql = ArgumentCaptor.forClass(String.class);
         var args = ArgumentCaptor.forClass(Map.class);
-        verify(jdbc).query(sql.capture(), args.capture(), any(RowMapper.class));
+        verify(namedParameterJdbcTemplate).query(sql.capture(), args.capture(), any(RowMapper.class));
         assertThat(sql.getValue()).contains("exists", "e.status = 'ACTIVE'", "c.status in ('OPEN', 'ARCHIVED')", "e.account_id = :accountId");
         assertThat(args.getValue()).containsEntry("accountId", student);
     }
 
     @Test void teacherScopeAndPaginationAreBoundAndValidated() {
         UUID teacher = UUID.randomUUID();
-        when(jdbc.query(anyString(), anyMap(), any(RowMapper.class))).thenReturn(List.of());
-        repository.listForTeacher(teacher, "  ", null, 100, 0);
-        verify(jdbc).query(contains("c.teacher_id = :accountId"), argThat((Map<String,Object> args) -> teacher.equals(args.get("accountId"))), any(RowMapper.class));
-        reset(jdbc);
-        assertThatThrownBy(() -> repository.listForStudent(teacher, null, null, 20, -1)).isInstanceOf(IllegalArgumentException.class);
-        verifyNoInteractions(jdbc);
+        when(namedParameterJdbcTemplate.query(anyString(), anyMap(), any(RowMapper.class))).thenReturn(List.of());
+        jdbcAcademicsReadRepository.listForTeacher(teacher, "  ", null, 100, 0);
+        verify(namedParameterJdbcTemplate).query(contains("c.teacher_id = :accountId"), argThat((Map<String,Object> args) -> teacher.equals(args.get("accountId"))), any(RowMapper.class));
+        reset(namedParameterJdbcTemplate);
+        assertThatThrownBy(() -> jdbcAcademicsReadRepository.listForStudent(teacher, null, null, 20, -1)).isInstanceOf(IllegalArgumentException.class);
+        verifyNoInteractions(namedParameterJdbcTemplate);
     }
 
     @Test void emptyAggregateInputsDoNotGenerateInvalidInClause() {
-        assertThat(repository.countClassesOfSubjects(List.of())).isEmpty();
-        assertThat(repository.enrollmentCounts(List.of())).isEmpty();
-        verifyNoInteractions(jdbc);
+        assertThat(jdbcAcademicsReadRepository.countClassesOfSubjects(List.of())).isEmpty();
+        assertThat(jdbcAcademicsReadRepository.enrollmentCounts(List.of())).isEmpty();
+        verifyNoInteractions(namedParameterJdbcTemplate);
     }
 }

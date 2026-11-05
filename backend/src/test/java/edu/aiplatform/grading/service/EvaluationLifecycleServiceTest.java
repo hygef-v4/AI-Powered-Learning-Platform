@@ -42,12 +42,12 @@ class EvaluationLifecycleServiceTest {
         service.onSubmitted(id);
         verify(repo).save(argThat(e -> e.attemptId.equals(id) && e.state == EvaluationStatus.PENDING));
         when(repo.findByAttemptId(id)).thenReturn(
-                Optional.of(Evaluation.pending(id, aid, cid, sid, "hash", BigDecimal.TEN, "[]", Instant.now())));
+                Optional.of(Evaluation.createPendingEvaluation(id, aid, cid, sid, "hash", BigDecimal.TEN, "[]", Instant.now())));
         service.onSubmitted(id);
         verify(repo, times(1)).save(any());
         for (var state : List.of(EvaluationStatus.FINALIZED, EvaluationStatus.PUBLISHED)) {
             clearInvocations(repo);
-            var previous = Evaluation.pending(UUID.randomUUID(), aid, cid, sid, "old", BigDecimal.TEN, "[]", Instant.now());
+            var previous = Evaluation.createPendingEvaluation(UUID.randomUUID(), aid, cid, sid, "old", BigDecimal.TEN, "[]", Instant.now());
             previous.state = state;
             previous.score = new BigDecimal("7.50");
             when(repo.findByAttemptId(id)).thenReturn(Optional.empty());

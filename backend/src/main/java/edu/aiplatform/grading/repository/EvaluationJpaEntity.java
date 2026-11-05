@@ -18,7 +18,7 @@ import org.hibernate.type.SqlTypes;
 @Entity
 @Table(name = "evaluations")
 class EvaluationJpaEntity {
-    private static final ObjectMapper JSON = new ObjectMapper().findAndRegisterModules()
+    private static final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     @Id
     UUID id;
@@ -42,7 +42,7 @@ class EvaluationJpaEntity {
     protected EvaluationJpaEntity() {
     }
 
-    void apply(Evaluation e) {
+    void applyEvaluation(Evaluation e) {
         id = e.id;
         assignmentId = e.assignmentId;
         classId = e.classId;
@@ -55,15 +55,15 @@ class EvaluationJpaEntity {
         score = e.score;
         maxScore = e.maxScore;
         try {
-            document = JSON.writeValueAsString(e);
+            document = objectMapper.writeValueAsString(e);
         } catch (JsonProcessingException ex) {
             throw new IllegalStateException("Cannot serialize evaluation", ex);
         }
     }
 
-    Evaluation view() {
+    Evaluation mapEvaluation() {
         try {
-            var result = JSON.readValue(document, Evaluation.class);
+            var result = objectMapper.readValue(document, Evaluation.class);
             result.version = version == null ? 0 : version;
             return result;
         } catch (JsonProcessingException ex) {

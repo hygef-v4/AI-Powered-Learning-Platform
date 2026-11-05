@@ -15,11 +15,11 @@ public final class RubricScoring {
     private RubricScoring() {
     }
 
-    public static BigDecimal score(List<RubricView> rubrics, Map<UUID, Set<UUID>> checks) {
-        return score(rubrics, checks, Map.of());
+    public static BigDecimal calculateScore(List<RubricView> rubrics, Map<UUID, Set<UUID>> checks) {
+        return calculateScore(rubrics, checks, Map.of());
     }
 
-    public static BigDecimal score(List<RubricView> rubrics, Map<UUID, Set<UUID>> checks,
+    public static BigDecimal calculateScore(List<RubricView> rubrics, Map<UUID, Set<UUID>> checks,
             Map<UUID, Map<UUID, BigDecimal>> itemScores) {
         if (checks == null)
             throw ApiException.badRequest("INVALID_RUBRIC", "Missing rubric checks");
@@ -31,7 +31,7 @@ public final class RubricScoring {
             var selected = checks.getOrDefault(rubric.rubricId(), Set.of());
             var awarded = itemScores.getOrDefault(rubric.rubricId(), Map.of());
             if (selected == null || awarded == null)
-                throw invalidItemScore();
+                throw createInvalidItemScore();
             Set<UUID> allowed = new HashSet<>();
             for (var criterion : rubric.criteria()) {
                 for (var item : criterion.items()) {
@@ -40,7 +40,7 @@ public final class RubricScoring {
                         var points = awarded.get(item.itemId());
                         if (points == null || points.scale() > 2 || points.signum() < 0
                                 || points.compareTo(item.points()) > 0)
-                            throw invalidItemScore();
+                            throw createInvalidItemScore();
                         total = total.add(points);
                     } else if (selected.contains(item.itemId())) {
                         total = total.add(item.points());
@@ -55,7 +55,7 @@ public final class RubricScoring {
         return total;
     }
 
-    public static Map<UUID, Map<UUID, BigDecimal>> effectiveItemScores(List<RubricView> rubrics,
+    public static Map<UUID, Map<UUID, BigDecimal>> calculateEffectiveItemScores(List<RubricView> rubrics,
             Map<UUID, Set<UUID>> checks, Map<UUID, Map<UUID, BigDecimal>> itemScores) {
         if (rubrics == null || rubrics.isEmpty()) {
             return Map.of();
@@ -101,7 +101,7 @@ public final class RubricScoring {
         return Map.copyOf(copy);
     }
 
-    private static ApiException invalidItemScore() {
+    private static ApiException createInvalidItemScore() {
         return ApiException.badRequest("INVALID_RUBRIC_SCORE",
                 "Điểm từng mục phải từ 0 đến điểm tối đa, với tối đa 2 chữ số thập phân.");
     }

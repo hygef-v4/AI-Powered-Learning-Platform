@@ -11,26 +11,26 @@ import {
 } from "@/shared/document";
 import { Alert, Button, Icon, IconButton, Pill } from "@/shared/ui";
 import { RubricChecklist } from "../components/RubricChecklistPanel";
-import { checklistPoints } from "../model/rubricScores";
+import { calculateChecklistPoints } from "../model/rubricScores";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
 import { useSubmissionDirectory } from "../hooks/useSubmissionDirectory";
 import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
-import { checklistBindings, GradingNotes, needsGradingNotes } from "../components/GradingForm";
+import { buildChecklistBindings, GradingNotes, shouldShowGradingNotes } from "../components/GradingForm";
 import { useGradingWorkspace } from "../hooks/useGradingWorkspace";
 import { ActivityReview, GradeHistory, GroupSectionAuthors } from "../components/GradingReviewPanels";
 import { AiProposalPanel } from "../components/AiProposalPanel";
 import { BatchActionDialog } from "../components/BatchActionDialog";
 import { MemberContributionPanel } from "../components/MemberContributionPanel";
 import { countUnresolvedReviews } from "../components/StructuredFeedbackSection";
-import { points, statusLabels, type Detail, type Rubric } from "../model/types";
+import { formatPoints, GRADE_STATUS_LABELS, type Detail, type Rubric } from "../model/types";
 import { toEditorDocument, type SubmissionDocumentDto } from "../model/submissionDocument";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import type { NavigationFilters } from "../model/navigation";
 
 export function GradingWorkspacePage({ evaluationId, proposalId, status, late }: { evaluationId: string; proposalId?: string } & NavigationFilters) {
   const load = useCallback(() => status !== undefined || late !== undefined
-    ? gradingApi.detail(evaluationId, { status, late }) : gradingApi.detail(evaluationId), [evaluationId, status, late]);
+    ? gradingApi.loadEvaluation(evaluationId, { status, late }) : gradingApi.loadEvaluation(evaluationId), [evaluationId, status, late]);
   const resource = useResource(load);
   return resource.value ? (
     <Workspace key={`${evaluationId}:${status ?? ""}:${late ?? ""}`} initial={resource.value} refresh={resource.refresh} proposalId={proposalId} status={status} late={late} />
@@ -137,17 +137,17 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
     }
     return ids;
   }, [detail.document.blocks, detail.rubrics]);
-  const total = Math.min(Number(evaluation.maxScore), Math.max(0, checklistPoints(detail.rubrics, form.checks, form.itemScores) + Number(form.adjustment)));
+  const total = Math.min(Number(evaluation.maxScore), Math.max(0, calculateChecklistPoints(detail.rubrics, form.checks, form.itemScores) + Number(form.adjustment)));
   const unresolvedReviews = countUnresolvedReviews(detail.rubrics, form.checks, form.itemScores,
     form.structuredFeedback, form.reviewedItemScores, form.acknowledgedReviewItems).total;
-  const checklist = { ...checklistBindings(form, disabled, updateForm), validBlockIds };
+  const checklist = { ...buildChecklistBindings(form, disabled, updateForm), validBlockIds };
   const blockIds = new Set(paper.blocks.map((block) => block.id));
   const pending = proposals.some((proposal) => proposal.status === "PENDING");
   const ready = proposals[0]?.status === "READY";
 
   // Lề chỉ để điểm: mỗi phần một thẻ checklist gắn vào tiêu đề của phần; thẻ ghi chú ở đầu chỉ khi cần.
   const comments: DocumentComment[] = [
-    ...(needsGradingNotes(detail.rubrics, form, official) ? [{
+    ...(shouldShowGradingNotes(detail.rubrics, form, official) ? [{
       key: "grading-notes",
       anchorBlockId: null,
       content: <GradingNotes rubrics={detail.rubrics} values={form} />,
@@ -159,7 +159,7 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
       content: (
         <RubricNote title={partTitles[rubric.partId] || `Phần ${index + 1}`} criteria={noteCriteria(rubric)}
           active={activePart === rubric.rubricId} onActivate={() => setActivePart(rubric.rubricId)}
-          badge={<Pill tone="primary">Đạt {String(Number(checklistPoints([rubric], form.checks, form.itemScores).toFixed(2)))}</Pill>}
+          badge={<Pill tone="primary">Đạt {String(Number(calculateChecklistPoints([rubric], form.checks, form.itemScores).toFixed(2)))}</Pill>}
           editor={<RubricChecklist rubric={rubric} {...checklist} />} />
       ),
     })),
@@ -178,7 +178,7 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
           <h1 className="font-display text-[28px] leading-[1.1] tracking-[-0.025em] text-ink">{studentName}</h1>
           {context.value?.title && <p className="text-sm text-muted">{context.value.title}</p>}
           <div className="flex flex-wrap items-center gap-2.5 text-[13px] text-muted">
-            <Pill tone={evaluation.state === "PUBLISHED" ? "success" : evaluation.state === "FINALIZED" ? "info" : "neutral"}>{statusLabels[evaluation.state]}</Pill>
+            <Pill tone={evaluation.state === "PUBLISHED" ? "success" : evaluation.state === "FINALIZED" ? "info" : "neutral"}>{GRADE_STATUS_LABELS[evaluation.state]}</Pill>
             {context.value && <span className="font-semibold text-ink">{context.value.ownerName}</span>}
           </div>
         </div>
@@ -219,7 +219,7 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
             {total.toFixed(2)}<span className="text-[18px] text-muted"> / {Number(evaluation.maxScore).toFixed(2)}</span>
           </output>
           <p role="status" className={dirty ? "text-xs font-semibold text-warning" : "text-xs text-muted"}>
-            {busy ? "Đang xử lý…" : dirty ? "Chưa lưu" : `Đã lưu ${points(evaluation.score, evaluation.maxScore)}`}
+            {busy ? "Đang xử lý…" : dirty ? "Chưa lưu" : `Đã lưu ${formatPoints(evaluation.score, evaluation.maxScore)}`}
           </p>
           {Number(form.adjustment) !== 0 && <p className="text-xs text-muted">Điều chỉnh đã lưu: {form.adjustment} · {form.adjustmentReason}</p>}
         </div>

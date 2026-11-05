@@ -14,14 +14,14 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class AcademicsExceptionHandler {
     @ExceptionHandler(ApiException.class)
-    public ProblemDetail problem(ApiException exception) {
+    public ProblemDetail handleAcademicProblem(ApiException exception) {
         ProblemDetail problem=ProblemDetail.forStatusAndDetail(exception.status(),exception.getMessage());
         problem.setProperty("code",exception.code());
         if(exception instanceof AcademicsProblem academics) academics.properties().forEach(problem::setProperty);
         return problem;
     }
     @ExceptionHandler({MethodArgumentNotValidException.class,HttpMessageNotReadableException.class,MethodArgumentTypeMismatchException.class})
-    public ProblemDetail invalid(Exception exception) {
+    public ProblemDetail handleInvalidInput(Exception exception) {
         ProblemDetail problem=ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,"Dữ liệu yêu cầu không hợp lệ");
         problem.setProperty("code","INVALID_REQUEST");
         return problem;

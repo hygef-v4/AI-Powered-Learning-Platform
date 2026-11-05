@@ -34,23 +34,23 @@ public class AdminDashboardActivityService {
     static final int SECURITY_DAYS = 30;
     static final int SECURITY_LIMIT = 50;
 
-    private final AdminDashboardService dashboard;
+    private final AdminDashboardService adminDashboardService;
     private final IAuditStats audit;
-    private final IAssignmentQuery assignments;
-    private final DashboardSourceReader reader;
+    private final IAssignmentQuery assignmentQuery;
+    private final DashboardSourceReader dashboardSourceReader;
     private final Clock clock;
 
-    public AdminDashboardActivityService(AdminDashboardService dashboard, IAuditStats audit, IAssignmentQuery assignments,
-            DashboardSourceReader reader, Clock clock) {
-        this.dashboard = dashboard;
+    public AdminDashboardActivityService(AdminDashboardService adminDashboardService, IAuditStats audit, IAssignmentQuery assignmentQuery,
+            DashboardSourceReader dashboardSourceReader, Clock clock) {
+        this.adminDashboardService = adminDashboardService;
         this.audit = audit;
-        this.assignments = assignments;
-        this.reader = reader;
+        this.assignmentQuery = assignmentQuery;
+        this.dashboardSourceReader = dashboardSourceReader;
         this.clock = clock;
     }
 
-    public ActivityView activity(Actor actor) {
-        dashboard.requireAdmin(actor);
+    public ActivityView loadActivity(Actor actor) {
+        adminDashboardService.requireAdmin(actor);
         Instant now = clock.instant();
         LocalDate today = LocalDate.ofInstant(now, ZONE);
         Instant todayStart = today.atStartOfDay(ZONE).toInstant();
@@ -58,18 +58,18 @@ public class AdminDashboardActivityService {
         Instant assignmentsFrom = firstDay.atStartOfDay(ZONE).toInstant();
         Instant securityFrom = today.minusDays(SECURITY_DAYS - 1L).atStartOfDay(ZONE).toInstant();
 
-        var changeSource = reader.submit(() -> activeChange(todayStart, now));
-        var assignmentSource = reader.submit(() -> assignments.countGivenByDay(assignmentsFrom, now, ZONE));
-        var securitySource = reader.submit(() -> audit.recentSecurityEvents(securityFrom, SECURITY_LIMIT));
+        var changeSource = dashboardSourceReader.submitSource(() -> loadActiveAccountChange(todayStart, now));
+        var assignmentSource = dashboardSourceReader.submitSource(() -> assignmentQuery.countGivenByDay(assignmentsFrom, now, ZONE));
+        var securitySource = dashboardSourceReader.submitSource(() -> audit.recentSecurityEvents(securityFrom, SECURITY_LIMIT));
 
         return new ActivityView(now,
                 section(changeSource, Function.identity()),
-                section(assignmentSource, counts -> days(firstDay, counts)),
-                section(securitySource, events -> events.stream().map(this::securityItem).toList()));
+                section(assignmentSource, counts -> buildAssignmentDays(firstDay, counts)),
+                section(securitySource, events -> events.stream().map(this::mapSecurityItem).toList()));
     }
 
     /** Kích hoạt và mở lại về Hoạt động trừ vô hiệu hóa tài khoản đang hoạt động, từ đầu ngày tới giờ. */
-    private Long activeChange(Instant from, Instant to) {
+    private Long loadActiveAccountChange(Instant from, Instant to) {
         long gained = audit.countSucceeded("ACCOUNT_ACTIVATED", from, to, null, null)
                 + audit.countSucceeded("ACCOUNT_ENABLED", from, to, "status", "ACTIVE");
         long lost = audit.countSucceeded("ACCOUNT_DISABLED", from, to, "before", "ACTIVE");
@@ -77,7 +77,7 @@ public class AdminDashboardActivityService {
     }
 
     /** Đủ 7 ngày liền nhau (ngày không có bài là 0), mỗi ngày một dòng ba loại. */
-    private List<DayAssignments> days(LocalDate firstDay, List<AssignmentDayCount> counts) {
+    private List<DayAssignments> buildAssignmentDays(LocalDate firstDay, List<AssignmentDayCount> counts) {
         Map<LocalDate, long[]> byDay = new LinkedHashMap<>();
         for (int i = 0; i < ASSIGNMENT_DAYS; i++) {
             byDay.put(firstDay.plusDays(i), new long[3]);
@@ -98,7 +98,7 @@ public class AdminDashboardActivityService {
     }
 
     /** Tài khoản là người thực hiện, không có thì là tài khoản bị tác động; không rõ ai (sai email) thì để trống. */
-    private SecurityEventItem securityItem(AuditLogView view) {
+    private SecurityEventItem mapSecurityItem(AuditLogView view) {
         var event = view.event();
         String account = view.actorEmail() != null ? view.actorEmail()
                 : "ACCOUNT".equals(event.objectType()) ? view.objectLabel() : null;
@@ -106,7 +106,7 @@ public class AdminDashboardActivityService {
     }
 
     private <T, R> Section<R> section(PendingSource<T> pending, Function<T, R> map) {
-        var result = reader.await(pending);
+        var result = dashboardSourceReader.awaitSource(pending);
         if (!result.available() || result.value() == null) return Section.unavailable();
         try {
             return Section.available(map.apply(result.value()));

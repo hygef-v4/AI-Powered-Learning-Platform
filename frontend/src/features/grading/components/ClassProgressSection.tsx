@@ -38,7 +38,7 @@ function sortAssignmentsForProgress(
 }
 
 /** Đường dẫn sang tab Chấm điểm của lớp, mở sẵn một bài tập hoặc một sinh viên. */
-export function gradebookHref(classId: string, pick?: { assignment?: string; student?: string }) {
+export function buildGradebookHref(classId: string, pick?: { assignment?: string; student?: string }) {
   const params = new URLSearchParams({ tab: "gradebook" });
   if (pick?.assignment) params.set("assignment", pick.assignment);
   if (pick?.student) params.set("student", pick.student);
@@ -51,11 +51,11 @@ const SUBMITTED = new Set(["PENDING", "DRAFT", "FINALIZED", "PUBLISHED"]);
 type View = "assignment" | "student";
 
 /** Cả lớp trong sổ điểm (trang 100 sinh viên), để tính tiến độ theo từng sinh viên. */
-async function wholeGradebook(classId: string) {
-  const first = await gradingApi.gradebook(classId, "", 1, 100);
+async function loadWholeGradebook(classId: string) {
+  const first = await gradingApi.loadGradebook(classId, "", 1, 100);
   const rows = [...first.rows];
   for (let page = 2; rows.length < first.total && page <= 50; page++) {
-    const next = await gradingApi.gradebook(classId, "", page, 100);
+    const next = await gradingApi.loadGradebook(classId, "", page, 100);
     if (next.rows.length === 0) break;
     rows.push(...next.rows);
   }
@@ -71,7 +71,7 @@ async function wholeGradebook(classId: string) {
 export function ClassProgressSection({ classId }: { classId: string; layout?: "standalone" | "overview" }) {
   const [view, setView] = useUrlState<View>("progressView", "assignment", ["assignment", "student"]);
   const load = useCallback(async () => {
-    const [progress, gradebook] = await Promise.all([gradingApi.progress(classId), wholeGradebook(classId)]);
+    const [progress, gradebook] = await Promise.all([gradingApi.loadSubmissionProgress(classId), loadWholeGradebook(classId)]);
     return { progress, assignments: gradebook.assignments, rows: gradebook.rows };
   }, [classId]);
 
@@ -90,7 +90,7 @@ export function ClassProgressSection({ classId }: { classId: string; layout?: "s
 
   return (
     <Section title="Tiến độ nộp bài"
-      actions={<Link href={gradebookHref(classId)} className="text-[13px] font-semibold text-primary-ink hover:underline">Chấm điểm</Link>}>
+      actions={<Link href={buildGradebookHref(classId)} className="text-[13px] font-semibold text-primary-ink hover:underline">Chấm điểm</Link>}>
       <Segmented as="tab" ariaLabel="Xem tiến độ" value={view} onChange={setView} className="self-start"
         options={[{ value: "assignment", label: "Theo bài tập" }, { value: "student", label: "Theo sinh viên" }]} />
       {/* Cao bằng danh sách Thông báo gần đây bên cạnh; nhiều dòng thì cuộn trong vùng này. */}
@@ -115,7 +115,7 @@ export function ClassProgressSection({ classId }: { classId: string; layout?: "s
               const unit = assignment.submissionMode === "GROUP" ? "nhóm" : "sinh viên";
               return (
                 <ProgressRow key={assignment.id} testId="progress-assignment-row" dataId={assignment.id}
-                  href={gradebookHref(classId, { assignment: assignment.id })} title={assignment.title} meta={assignment.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}
+                  href={buildGradebookHref(classId, { assignment: assignment.id })} title={assignment.title} meta={assignment.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}
                   done={submitted} total={total} hint={`${submitted} / ${total} ${unit} đã nộp`} showBar={!!p} />
               );
             })}
@@ -124,7 +124,7 @@ export function ClassProgressSection({ classId }: { classId: string; layout?: "s
           <ul className="-my-1 flex flex-col">
             {students.map(({ student, submitted }) => (
               <ProgressRow key={student.accountId} testId="progress-student-row" dataId={student.accountId}
-                href={gradebookHref(classId, { student: student.accountId })} title={student.name} meta={student.email}
+                href={buildGradebookHref(classId, { student: student.accountId })} title={student.name} meta={student.email}
                 done={submitted} total={sortedAssignments.length} hint={`Đã nộp ${submitted} / ${sortedAssignments.length} bài`} showBar />
             ))}
           </ul>

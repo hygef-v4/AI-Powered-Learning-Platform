@@ -2,13 +2,13 @@
 
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { Button, ClickableRow, Icon, PageHeader, PageNav, Pill, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
-import { statusLabels, type ClassStatus, type CourseClassView, type SubjectView } from "../model/types";
+import { CLASS_STATUS_LABELS, type ClassStatus, type CourseClassView, type SubjectView } from "../model/types";
 
 const PAGE_SIZE = 20;
 const TABS: { value: ClassStatus | "ALL"; label: string }[] = [
   { value: "ALL", label: "Tất cả" },
-  { value: "OPEN", label: statusLabels.OPEN },
-  { value: "ARCHIVED", label: statusLabels.ARCHIVED },
+  { value: "OPEN", label: CLASS_STATUS_LABELS.OPEN },
+  { value: "ARCHIVED", label: CLASS_STATUS_LABELS.ARCHIVED },
 ];
 const TONES: Record<ClassStatus, "success" | "warning" | "danger"> = { OPEN: "success", DRAFT: "warning", ARCHIVED: "danger" };
 
@@ -61,7 +61,7 @@ export function ClassListPage({ classes, subjects, initialSubjectId, onOpen, onC
               onClick={(event) => { event.stopPropagation(); onOpen(course.id); }} className="text-left font-semibold text-ink hover:text-primary-ink">{course.name}</button></Td>
             <Td>{course.term}</Td>
             <Td>{course.teacher?.name ?? <Pill>Chưa phân công</Pill>}</Td>
-            <Td><Pill tone={TONES[course.status]}>{statusLabels[course.status]}</Pill></Td>
+            <Td><Pill tone={TONES[course.status]}>{CLASS_STATUS_LABELS[course.status]}</Pill></Td>
             <Td className="text-faint"><Icon name="chevron_right" size={18} /></Td>
           </ClickableRow>)}
           {rows.length === 0 && <tr><Td colSpan={6} className="py-10 text-center! text-muted">Không có lớp phù hợp.</Td></tr>}

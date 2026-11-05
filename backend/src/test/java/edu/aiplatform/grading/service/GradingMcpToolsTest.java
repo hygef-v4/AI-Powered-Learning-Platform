@@ -18,7 +18,7 @@ class GradingMcpToolsTest {
         var reads=mock(GradingMcpQueryService.class);var actor=new Actor(UUID.randomUUID(),Role.TEACHER);
         var e=new Evaluation();e.id=UUID.randomUUID();e.classId=UUID.randomUUID();e.assignmentId=UUID.randomUUID();
         var attempt=UUID.randomUUID();when(repo.findByAttemptId(attempt)).thenReturn(Optional.of(e));
-        doThrow(GradingMcpReadProgress.required()).when(reads).requireCompleteRead(actor,e.id,0,"hash","a".repeat(64));
+        doThrow(GradingMcpReadProgress.createReadRequiredError()).when(reads).requireCompleteRead(actor,e.id,0,"hash","a".repeat(64));
         var args=Map.<String,Object>of("submissionRef",Map.of("kind","ATTEMPT","id",attempt.toString(),
                 "classId",e.classId.toString(),"assignmentId",e.assignmentId.toString()),"expectedVersion",0,
                 "submissionHash","hash","requestRef","new","proposal",Map.of(),"snapshotFingerprint","a".repeat(64));
@@ -31,7 +31,7 @@ class GradingMcpToolsTest {
         var e=new Evaluation();e.id=UUID.randomUUID();e.classId=UUID.randomUUID();e.assignmentId=UUID.randomUUID();
         var attempt=UUID.randomUUID();when(repo.findByAttemptId(attempt)).thenReturn(Optional.of(e));
         var proposal=new GradingProposal();proposal.id=UUID.randomUUID();proposal.status="READY";
-        when(tx.recordMcp(any(),any(),anyLong(),any(),any(),any(),any())).thenReturn(proposal);
+        when(tx.recordMcpProposal(any(),any(),anyLong(),any(),any(),any(),any())).thenReturn(proposal);
         var args=Map.<String,Object>of("submissionRef",Map.of("kind","ATTEMPT","id",attempt.toString(),
                 "classId",e.classId.toString(),"assignmentId",e.assignmentId.toString()),
                 "expectedVersion",0,"submissionHash","hash","requestRef","new","proposal",Map.of());
@@ -61,7 +61,7 @@ class GradingMcpToolsTest {
         proposal.status = "READY";
         var json = new ObjectMapper();
         var payload = Map.of("checks", Map.of(), "score", "0");
-        when(tx.recordMcp(eq(actor), eq(evaluation.id), eq(0L), eq("hash"), eq("request"),
+        when(tx.recordMcpProposal(eq(actor), eq(evaluation.id), eq(0L), eq("hash"), eq("request"),
                 eq(json.valueToTree(payload)), eq("Agent"))).thenReturn(proposal);
         var arguments = Map.<String, Object>of("submissionRef", Map.of("kind", kind.name(),
                 "id", submissionId.toString(), "classId", evaluation.classId.toString(),
@@ -71,8 +71,8 @@ class GradingMcpToolsTest {
         var result = new GradingMcpTools(repo, tx, json, mock(GradingMcpQueryService.class)).call(actor, "record_grading_proposal", arguments);
 
         assertThat(result).isEqualTo(new McpToolResult(false,
-                Map.of("proposalId", proposal.id, "status", "READY", "evaluationId", evaluation.id, "reviewUrl", GradingMcpTools.reviewUrl(evaluation.id,proposal.id))));
-        verify(tx).recordMcp(actor, evaluation.id, 0L, "hash", "request", json.valueToTree(payload), "Agent");
+                Map.of("proposalId", proposal.id, "status", "READY", "evaluationId", evaluation.id, "reviewUrl", GradingMcpTools.buildReviewUrl(evaluation.id,proposal.id))));
+        verify(tx).recordMcpProposal(actor, evaluation.id, 0L, "hash", "request", json.valueToTree(payload), "Agent");
     }
 
     @Test
@@ -154,7 +154,7 @@ class GradingMcpToolsTest {
         e.classId = UUID.randomUUID();
         e.assignmentId = UUID.randomUUID();
         when(repo.findByAttemptId(e.attemptId)).thenReturn(Optional.of(e));
-        when(tx.recordMcp(any(), eq(e.id), eq(2L), any(), any(), any(), any()))
+        when(tx.recordMcpProposal(any(), eq(e.id), eq(2L), any(), any(), any(), any()))
                 .thenThrow(ApiException.conflict("GRADE_VERSION_CONFLICT", "Reload"));
         var args = Map.<String, Object>of("submissionRef",
                 Map.of("kind", "ATTEMPT", "id", e.attemptId.toString(), "classId", e.classId.toString(), "assignmentId",

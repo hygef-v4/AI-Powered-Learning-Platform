@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import { gradingApi } from "../api";
-import { message } from "../hooks/useResource";
-import { points, type Evaluation } from "../model/types";
+import { formatErrorMessage } from "../hooks/useResource";
+import { formatPoints, type Evaluation } from "../model/types";
 
 export function MemberContributionPanel({
   root,
@@ -19,7 +19,7 @@ export function MemberContributionPanel({
     <section className="rounded-xl border p-4">
       <h2 className="font-bold">Điểm nhóm và thành viên</h2>
       <p>
-        Điểm nhóm: {points(root.score, root.maxScore)}. Giảng viên xem xét đóng góp; hệ thống không
+        Điểm nhóm: {formatPoints(root.score, root.maxScore)}. Giảng viên xem xét đóng góp; hệ thống không
         suy điểm từ số thao tác.
       </p>
       {members.map((m) => (
@@ -53,14 +53,14 @@ function MemberRow({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const disabled = locked || busy || member.state === "FINALIZED" || member.state === "PUBLISHED" || member.state === "SUPERSEDED";
-  async function save() {
+  async function handleSave() {
     if (disabled) return;
     setBusy(true);
     try {
-      await gradingApi.member(rootId, member.accountId!, member.version, score, reason || null);
+      await gradingApi.saveMemberGrade(rootId, member.accountId!, member.version, score, reason || null);
       onSaved();
     } catch (e) {
-      setError(message(e));
+      setError(formatErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -92,7 +92,7 @@ function MemberRow({
       </label>
       <button
         disabled={disabled || rootId === member.id || score === ""}
-        onClick={() => void save()}
+        onClick={() => void handleSave()}
         className="ml-3 rounded border px-3 py-2"
       >
         Lưu điểm thành viên

@@ -49,28 +49,28 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class SubmissionReviewService {
-    private final IEvaluationRepository evaluations;
-    private final GradingAccess access;
-    private final IAssignmentQuery assignments;
-    private final ISubmissionQuery submissions;
-    private final IClassAccess classes;
-    private final IAccountLookup accounts;
-    private final IActivityQuery activity;
-    private final ObjectProvider<IGroupSubmissionSource> groups;
-    private final ObjectMapper json;
+    private final IEvaluationRepository evaluationRepository;
+    private final GradingAccess gradingAccess;
+    private final IAssignmentQuery assignmentQuery;
+    private final ISubmissionQuery submissionQuery;
+    private final IClassAccess classAccess;
+    private final IAccountLookup accountLookup;
+    private final IActivityQuery activityQuery;
+    private final ObjectProvider<IGroupSubmissionSource> groupSubmissionSourceProvider;
+    private final ObjectMapper objectMapper;
 
-    public SubmissionReviewService(IEvaluationRepository evaluations, GradingAccess access,
-            IAssignmentQuery assignments, ISubmissionQuery submissions, IClassAccess classes, IAccountLookup accounts,
-            IActivityQuery activity, ObjectProvider<IGroupSubmissionSource> groups, ObjectMapper json) {
-        this.evaluations = evaluations;
-        this.access = access;
-        this.assignments = assignments;
-        this.submissions = submissions;
-        this.classes = classes;
-        this.accounts = accounts;
-        this.activity = activity;
-        this.groups = groups;
-        this.json = json;
+    public SubmissionReviewService(IEvaluationRepository evaluationRepository, GradingAccess gradingAccess,
+            IAssignmentQuery assignmentQuery, ISubmissionQuery submissionQuery, IClassAccess classAccess, IAccountLookup accountLookup,
+            IActivityQuery activityQuery, ObjectProvider<IGroupSubmissionSource> groupSubmissionSourceProvider, ObjectMapper objectMapper) {
+        this.evaluationRepository = evaluationRepository;
+        this.gradingAccess = gradingAccess;
+        this.assignmentQuery = assignmentQuery;
+        this.submissionQuery = submissionQuery;
+        this.classAccess = classAccess;
+        this.accountLookup = accountLookup;
+        this.activityQuery = activityQuery;
+        this.groupSubmissionSourceProvider = groupSubmissionSourceProvider;
+        this.objectMapper = objectMapper;
     }
 
     public static void requireAssignment(AssignmentView assignment, ClassRef courseClass) {
@@ -80,19 +80,19 @@ public class SubmissionReviewService {
             throw ApiException.notFound("ASSIGNMENT_NOT_FOUND");
     }
 
-    public static void page(int page, int size) {
+    public static void validatePage(int page, int size) {
         if (page < 1 || size < 1 || size > 100 || page > 100000)
             throw ApiException.badRequest("INVALID_PAGE", "Invalid page or size");
     }
 
-    Person person(UUID id) {
-        return accounts.getContact(id).map(contact -> new Person(id, contact.displayName(), contact.email()))
+    Person mapPerson(UUID id) {
+        return accountLookup.getContact(id).map(contact -> new Person(id, contact.displayName(), contact.email()))
                 .orElse(new Person(id, "Unavailable", ""));
     }
 
-    public SubmissionPage list(Actor actor, UUID classId, UUID assignmentId, String filter, Boolean late, int page,
+    public SubmissionPage listSubmissions(Actor actor, UUID classId, UUID assignmentId, String filter, Boolean late, int page,
             int size) {
-        page(page, size);
+        validatePage(page, size);
         var listing = listRows(actor, classId, assignmentId, filter, late);
         return new SubmissionPage(listing.rows().stream().skip((long) (page - 1) * size).limit(size).toList(),
                 listing.rows().size(), page, size, listing.summary(), listing.closesAt());
@@ -102,14 +102,14 @@ public class SubmissionReviewService {
                    Map<String, Long> summary, java.time.Instant closesAt) {}
 
     Listing listRows(Actor actor, UUID classId, UUID assignmentId, String filter, Boolean late) {
-        access.requireTeacher(actor, classId, Actions.GRADING_REVIEW);
-        var courseClass = classes.getClassRef(classId).orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
-        var assignment = assignments.get(assignmentId).orElseThrow(() -> ApiException.notFound("ASSIGNMENT_NOT_FOUND"));
+        gradingAccess.requireTeacher(actor, classId, Actions.GRADING_REVIEW);
+        var courseClass = classAccess.getClassRef(classId).orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+        var assignment = assignmentQuery.get(assignmentId).orElseThrow(() -> ApiException.notFound("ASSIGNMENT_NOT_FOUND"));
         requireAssignment(assignment, courseClass);
-        var evals = evaluations.findForAssignmentAndClass(assignmentId, classId);
+        var evals = evaluationRepository.findForAssignmentAndClass(assignmentId, classId);
         List<SubmissionRow> rows = new ArrayList<>();
         if (assignment.submissionMode() == SubmissionMode.GROUP) {
-            var provider = groups.getIfAvailable();
+            var provider = groupSubmissionSourceProvider.getIfAvailable();
             if (provider == null)
                 throw ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE", "Group submission source unavailable");
             for (var submission : provider.listGroupSubmissions(assignmentId, classId)) {
@@ -128,10 +128,10 @@ public class SubmissionReviewService {
             }
         } else {
             Map<UUID, StudentSubmissionStatus> source = new HashMap<>();
-            for (var submission : submissions.listSubmissions(assignmentId, classId))
+            for (var submission : submissionQuery.listSubmissions(assignmentId, classId))
                 source.put(submission.accountId(), submission);
-            var students = classes.listActiveStudents(classId);
-            var contacts = accounts.getContacts(students);
+            var students = classAccess.listActiveStudents(classId);
+            var contacts = accountLookup.getContacts(students);
             for (var sid : students) {
                 var submission = source.get(sid);
                 var evaluation = submission == null ? null
@@ -170,16 +170,16 @@ public class SubmissionReviewService {
         return new Listing(filtered, evals, summary, assignment.closesAt());
     }
 
-    public EvaluationDetail detail(Actor actor, UUID id) {
-        return detail(actor, id, null, null);
+    public EvaluationDetail loadEvaluation(Actor actor, UUID id) {
+        return loadEvaluation(actor, id, null, null);
     }
 
-    public EvaluationDetail detail(Actor actor, UUID id, String status, Boolean late) {
-        var evaluation = evaluations.findById(id).orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
-        access.requireTeacher(actor, evaluation.classId, Actions.GRADING_REVIEW);
-        var assignment = assignments.get(evaluation.assignmentId)
+    public EvaluationDetail loadEvaluation(Actor actor, UUID id, String status, Boolean late) {
+        var evaluation = evaluationRepository.findById(id).orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
+        gradingAccess.requireTeacher(actor, evaluation.classId, Actions.GRADING_REVIEW);
+        var assignment = assignmentQuery.get(evaluation.assignmentId)
                 .orElseThrow(() -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
-        var courseClass = classes.getClassRef(evaluation.classId)
+        var courseClass = classAccess.getClassRef(evaluation.classId)
                 .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
         requireAssignment(assignment, courseClass);
         DocumentModel document;
@@ -187,14 +187,14 @@ public class SubmissionReviewService {
         WorkRef ref;
         List<GroupSectionAuthor> authors = List.of();
         if (evaluation.kind == EvaluationKind.ATTEMPT) {
-            var submission = submissions.getSubmission(evaluation.attemptId)
+            var submission = submissionQuery.getSubmission(evaluation.attemptId)
                     .orElseThrow(() -> ApiException.unavailable("SUBMISSION_UNAVAILABLE", "Submission unavailable"));
             if (!evaluation.submissionHash.equals(submission.receiptHash()))
                 throw ApiException.conflict("SUBMISSION_CHANGED", "Submitted snapshot changed");
             document = submission.content();
             ref = new WorkRef(WorkKind.ASSIGNMENT_ATTEMPT, evaluation.attemptId, evaluation.classId);
         } else {
-            var provider = groups.getIfAvailable();
+            var provider = groupSubmissionSourceProvider.getIfAvailable();
             if (provider == null)
                 throw ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE", "Group submission unavailable");
             var submission = provider.getGroupSubmission(evaluation.groupDocumentId).orElseThrow(
@@ -211,16 +211,16 @@ public class SubmissionReviewService {
         String activityState = "DISABLED";
         if (assignment.activityMonitoringEnabled() && activityOwner != null) {
             try {
-                activityValue = activity.summary(ref, activityOwner);
+                activityValue = activityQuery.summary(ref, activityOwner);
                 activityState = activityValue == null ? "UNAVAILABLE" : activityValue.policyState().name();
             } catch (RuntimeException ex) {
                 activityState = "UNAVAILABLE";
             }
         }
-        var all = evaluations.findForAssignmentAndClass(evaluation.assignmentId, evaluation.classId);
+        var all = evaluationRepository.findForAssignmentAndClass(evaluation.assignmentId, evaluation.classId);
         Set<UUID> latestAttempts = new HashSet<>();
         if (evaluation.kind == EvaluationKind.ATTEMPT)
-            for (var row : submissions.listSubmissions(evaluation.assignmentId, evaluation.classId))
+            for (var row : submissionQuery.listSubmissions(evaluation.assignmentId, evaluation.classId))
                 if (row.gradedAttemptId() != null)
                     latestAttempts.add(row.gradedAttemptId());
         boolean current = evaluation.state != EvaluationStatus.SUPERSEDED
@@ -248,16 +248,16 @@ public class SubmissionReviewService {
                 String state = "DISABLED";
                 if (assignment.activityMonitoringEnabled()) {
                     try {
-                        summary = activity.summary(ref, member.accountId);
+                        summary = activityQuery.summary(ref, member.accountId);
                         state = summary == null ? "UNAVAILABLE" : summary.policyState().name();
                     } catch (RuntimeException ex) {
                         state = "UNAVAILABLE";
                     }
                 }
-                memberActivities.add(new MemberActivity(person(member.accountId), summary, state));
+                memberActivities.add(new MemberActivity(mapPerson(member.accountId), summary, state));
             }
         }
-        return new EvaluationDetail(evaluation, document, GradingJson.rubrics(json, evaluation.rubricSnapshot),
+        return new EvaluationDetail(evaluation, document, GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot),
                 navigationIds, activityValue, activityState, members, memberActivities, authors, current);
     }
 }

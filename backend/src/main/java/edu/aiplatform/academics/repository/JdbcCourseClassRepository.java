@@ -18,26 +18,26 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class JdbcCourseClassRepository implements ICourseClassRepository {
-    private final NamedParameterJdbcTemplate jdbc;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    public JdbcCourseClassRepository(NamedParameterJdbcTemplate jdbc) { this.jdbc = jdbc; }
+    public JdbcCourseClassRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) { this.namedParameterJdbcTemplate = namedParameterJdbcTemplate; }
 
     @Override public Optional<CourseClass> find(UUID classId) {
-        return jdbc.query("select * from course_classes where id = :id", Map.of("id", classId), JdbcCourseClassRepository::map)
+        return namedParameterJdbcTemplate.query("select * from course_classes where id = :id", Map.of("id", classId), JdbcCourseClassRepository::mapCourseClass)
                 .stream().findFirst();
     }
 
     @Override public List<CourseClass> listBySubject(UUID subjectId, int limit, int offset) {
-        PersistenceChecks.page(limit, offset);
-        return jdbc.query("select * from course_classes where subject_id = :subjectId order by code, id limit :limit offset :offset",
-                Map.of("subjectId", subjectId, "limit", limit, "offset", offset), JdbcCourseClassRepository::map);
+        PersistenceChecks.validatePage(limit, offset);
+        return namedParameterJdbcTemplate.query("select * from course_classes where subject_id = :subjectId order by code, id limit :limit offset :offset",
+                Map.of("subjectId", subjectId, "limit", limit, "offset", offset), JdbcCourseClassRepository::mapCourseClass);
     }
 
     @Override public void insert(CourseClass value) {
-        PersistenceChecks.writableTransaction();
+        PersistenceChecks.requireWritableTransaction();
         if (value.version() != 0) throw new IllegalArgumentException("New class version must be zero");
         try {
-            jdbc.update("""
+            namedParameterJdbcTemplate.update("""
                     insert into course_classes (id, subject_id, code, name, description, term, status, teacher_id,
                         show_grade_distribution, created_at, updated_at, version)
                     values (:id, :subjectId, :code, :name, :description, :term, :status, :teacherId,
@@ -49,13 +49,13 @@ public class JdbcCourseClassRepository implements ICourseClassRepository {
     }
 
     @Override public void update(CourseClass value, long expectedVersion) {
-        PersistenceChecks.writableTransaction();
+        PersistenceChecks.requireWritableTransaction();
         if (expectedVersion < 0 || expectedVersion == Long.MAX_VALUE || value.version() != expectedVersion + 1) {
             throw new IllegalArgumentException("Updated class must advance expected version by one");
         }
         var args = params(value);
         args.put("expectedVersion", expectedVersion);
-        int count = jdbc.update("""
+        int count = namedParameterJdbcTemplate.update("""
                 update course_classes set name = :name, description = :description, term = :term,
                     status = :status, teacher_id = :teacherId, show_grade_distribution = :distribution,
                     updated_at = :updatedAt, version = :version
@@ -74,7 +74,7 @@ public class JdbcCourseClassRepository implements ICourseClassRepository {
         return args;
     }
 
-    static CourseClass map(ResultSet rs, int row) throws SQLException {
+    static CourseClass mapCourseClass(ResultSet rs, int row) throws SQLException {
         return new CourseClass(rs.getObject("id", UUID.class), rs.getObject("subject_id", UUID.class),
                 rs.getString("code"), rs.getString("name"), rs.getString("description"), rs.getString("term"),
                 ClassStatus.valueOf(rs.getString("status")), rs.getObject("teacher_id", UUID.class),
