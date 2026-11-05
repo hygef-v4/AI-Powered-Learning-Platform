@@ -168,12 +168,14 @@ function ClassNavHeader({ scope, id, hrefFor }: { scope: ClassScope; id: string;
   }, [scope]);
   return (
     <NavHeader back={BACK[scope]}>
+      {/* Lớp không còn tên (yêu cầu 2026-11-02): mã môn nhỏ ở trên, mã lớp ở dưới; thu gọn thì chỉ mã lớp. */}
       <Switcher
         label="Chọn lớp"
         loading={!shown}
-        code={shown?.code}
-        name={shown?.name}
-        options={classes.map((item) => ({ id: item.id, href: hrefFor(item.id), code: item.code, name: item.name, selected: item.id === id }))}
+        code={shown?.subject.code}
+        name={shown?.code}
+        short={shown?.code}
+        options={classes.map((item) => ({ id: item.id, href: hrefFor(item.id), code: item.subject.code, name: item.code, selected: item.id === id }))}
       />
     </NavHeader>
   );
@@ -211,7 +213,7 @@ const WHEN_OPEN = "md:group-data-[collapsed]/sidebar:hidden";
  * Ô thả xuống: hiện môn, lớp đang mở; mở ra là danh sách để chuyển sang môn, lớp khác. Cao cố định ở cả hai trạng thái của
  * sidebar; thu gọn thì danh sách tràn ra bên phải sidebar.
  */
-function Switcher({ label, code, name, loading, options }: { label: string; code?: string; name?: string; loading: boolean; options: SwitchOption[] }) {
+function Switcher({ label, code, name, short = code, loading, options }: { label: string; code?: string; name?: string; short?: string; loading: boolean; options: SwitchOption[] }) {
   return (
     <Menu
       ariaLabel={label}
@@ -235,7 +237,7 @@ function Switcher({ label, code, name, loading, options }: { label: string; code
               <span className="mt-[3px] block truncate text-[13px] leading-[1.15] font-semibold text-ink">{name}</span>
             </span>
             {/* Thu gọn: mã dài chỉ hiện mấy chữ đầu, cắt gọn không có dấu ... */}
-            <span className={cx(WHEN_COLLAPSED, "overflow-hidden text-center font-mono text-[10px] leading-tight font-bold tracking-[-0.04em] whitespace-nowrap text-ink")}>{code}</span>
+            <span className={cx(WHEN_COLLAPSED, "overflow-hidden text-center font-mono text-[10px] leading-tight font-bold tracking-[-0.04em] whitespace-nowrap text-ink")}>{short}</span>
           </span>
         )
       }

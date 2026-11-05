@@ -174,9 +174,10 @@ export function RichText({ runs, onChange, onKey, onFocus, className, placeholde
     else if (caret) setCaret(root, Math.min(caret.start, length), Math.min(caret.end, length));
   }, [runs]);
 
-  function input() {
+  function input(composing = false) {
     const root = ref.current;
-    if (!root) return;
+    // Bộ gõ đang ghép chữ (gõ dấu tiếng Việt): đợi ghép xong mới báo, để ô không bị vẽ lại hay đổi chỗ giữa chừng.
+    if (!root || composing) return;
     const before = shown.current ?? runs;
     let next = readRuns(root);
     if (runsLength(before) === 0 && hasFormat(before[0]) && next.length === 1 && !hasFormat(next[0])) {
@@ -205,7 +206,7 @@ export function RichText({ runs, onChange, onKey, onFocus, className, placeholde
       data-editable data-rich spellCheck aria-placeholder={placeholder}
       data-placeholder={placeholder} data-empty={runs.every((run) => !run.text) || undefined}
       className={cx("min-h-[1.65em] w-full cursor-text break-words whitespace-pre-wrap outline-none", placeholder && "relative", className)}
-      onInput={input} onPaste={paste} onDrop={(event) => event.preventDefault()} onFocus={onFocus}
+      onInput={(event) => input((event.nativeEvent as InputEvent).isComposing)} onCompositionEnd={() => input()} onPaste={paste} onDrop={(event) => event.preventDefault()} onFocus={onFocus}
       onKeyDown={(event) => {
         if (!event.nativeEvent.isComposing && onKey && ref.current) onKey(event, getCaret(ref.current));
       }} />

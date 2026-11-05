@@ -90,7 +90,7 @@ export function BlockView({ block, imageUrl, previewUrl, onOpenDiagram }: {
 }) {
   switch (block.type) {
     case "HEADING":
-      return <p className={cx(HEADING_CLASS[block.content.style] ?? HEADING_CLASS.H1, alignClass(block.content.align))}>{block.content.text || "(Chưa đặt tên)"}</p>;
+      return <p className={cx(HEADING_CLASS[block.content.style] ?? HEADING_CLASS.H1, alignClass(block.content.align))}>{block.content.runs ? <RunsView runs={block.content.runs} /> : block.content.text}</p>;
     case "PARAGRAPH":
       return <p className={cx("whitespace-pre-wrap", PARAGRAPH_CLASS, alignClass(block.content.align))}><RunsView runs={block.content.runs} /></p>;
     case "LIST":
@@ -98,15 +98,17 @@ export function BlockView({ block, imageUrl, previewUrl, onOpenDiagram }: {
     case "TABLE":
       return (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-[13px]">
+          <table className={cx("w-full border-collapse text-[13px]", block.content.widths && "table-fixed")}>
+            {block.content.widths && <colgroup>{block.content.widths.map((width, c) => <col key={c} style={{ width: `${width}%` }} />)}</colgroup>}
             <tbody>
               {block.content.rows.map((row, r) => (
                 <tr key={r}>
                   {row.map((cell, c) => {
                     const Cell = block.content.headerRow && r === 0 ? "th" : "td";
                     return (
-                      <Cell key={c} className={cx("border border-line-strong px-2.5 py-1.5 text-left align-top whitespace-pre-wrap", Cell === "th" && "bg-canvas font-semibold")}>
-                        <RunsView runs={cell.runs} />
+                      <Cell key={c} className={cx("border border-line-strong px-2.5 py-1.5 align-top whitespace-pre-wrap", alignClass(cell.align) || "text-left", Cell === "th" && "bg-canvas font-semibold")}>
+                        {/* Ô trống vẫn cao một dòng, hàng không bị xẹp. */}
+                        <span className="block min-h-[1.4em]"><RunsView runs={cell.runs} /></span>
                       </Cell>
                     );
                   })}

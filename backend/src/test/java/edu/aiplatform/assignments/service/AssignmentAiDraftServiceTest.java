@@ -140,7 +140,8 @@ class AssignmentAiDraftServiceTest {
         assertThat(applied.skeleton().blocks()).filteredOn(b -> b.type() == BlockType.HEADING).hasSize(3);
         assertThat(applied.skeleton().blocks().get(0).type()).isEqualTo(BlockType.PARAGRAPH);
         List<AssignmentRubric> rubrics = f.rubricsOf(a.id());
-        assertThat(rubrics).hasSize(2);
+        // Hai mục chấm và rubric Toàn bài (trống).
+        assertThat(rubrics).hasSize(3);
         assertThat(rubrics).filteredOn(r -> !r.criteria().isEmpty()).hasSize(2)
                 .extracting(AssignmentRubric::totalPoints).containsExactlyInAnyOrder(
                         new java.math.BigDecimal("2.00"), new java.math.BigDecimal("3.00"));

@@ -122,12 +122,27 @@ public class DocumentModelService implements IDocumentModel {
         for (DocumentBlock block : document.blocks()) {
             if (!whole && PartCalculator.level(block) > 0) {
                 inside = leaves.contains(block.id());
+            } else if (!whole && under(block) >= 0) {
+                // Đoạn viết ở dòng cuối của mục cha (sau các mục con): thuộc mục cha, không thuộc phần lá nào.
+                inside = false;
             }
             if (inside && block.id() != null) {
                 result.add(block.id());
             }
         }
         return result;
+    }
+
+    /**
+     * Đoạn viết ở dòng cuối của một mục cha, sau các mục con (yêu cầu 2026-11-02): {@code under} là cấp tiêu đề của mục
+     * đó (0: cả tài liệu). Không có thì -1.
+     */
+    static int under(DocumentBlock block) {
+        if (block.type() == BlockType.HEADING || block.content() == null) {
+            return -1;
+        }
+        JsonNode under = block.content().get("under");
+        return under != null && under.canConvertToInt() ? under.asInt() : -1;
     }
 
     @Override
@@ -254,7 +269,7 @@ public class DocumentModelService implements IDocumentModel {
             }
             blocks.add(new DocumentBlock(block.id(), block.origin(), block.type(), clean(block.type(), content)));
         }
-        return new DocumentModel(blocks);
+        return new DocumentModel(blocks, cleanTitle(document.title()));
     }
 
     /** Chữ của một block, dùng cho prompt AI, kiểm bài trống và DOCX. */
@@ -337,6 +352,15 @@ public class DocumentModelService implements IDocumentModel {
             add(errors, "TOO_MANY_BLOCKS", null, "Tài liệu tối đa " + MAX_BLOCKS + " block");
             return errors;
         }
+        JsonNode title = document.title();
+        if (title != null && !title.isNull()) {
+            JsonNode align = title.get("align");
+            if (!title.isObject() || (align != null && !align.isNull() && !ALIGNS.contains(align.asText("")))) {
+                add(errors, "DOCUMENT_INVALID", null, "Tên bài không hợp lệ");
+            } else {
+                runs(title.get("runs"), null, errors);
+            }
+        }
         Set<UUID> ids = new HashSet<>();
         int diagrams = 0;
         for (DocumentBlock block : document.blocks()) {
@@ -369,12 +393,22 @@ public class DocumentModelService implements IDocumentModel {
         if (align != null && !align.isNull() && !ALIGNS.contains(align.asText(""))) {
             add(errors, "BLOCK_INVALID", id, "Căn lề không hợp lệ");
         }
+        // Khối viết sau các mục con của một mục cha (yêu cầu 2026-11-02, 2026-11-04: mọi khối không phải tiêu đề).
+        JsonNode under = c.get("under");
+        if (block.type() != BlockType.HEADING && under != null && !under.isNull()
+                && (!under.canConvertToInt() || under.asInt() < 0 || under.asInt() > 6)) {
+            add(errors, "BLOCK_INVALID", id, "Mục chứa khối không hợp lệ");
+        }
         switch (block.type()) {
             case HEADING -> {
                 if (!HEADING_STYLES.contains(c.path("style").asText(""))) {
                     add(errors, "HEADING_STYLE_INVALID", id, "Kiểu tiêu đề không hợp lệ");
                 }
                 text(c.get("text"), MAX_HEADING, id, errors);
+                // Chữ có định dạng của tiêu đề (yêu cầu 2026-11-04), không bắt buộc.
+                if (c.get("runs") != null && !c.get("runs").isNull()) {
+                    runs(c.get("runs"), id, errors);
+                }
             }
             case PARAGRAPH -> runs(c.get("runs"), id, errors);
             case LIST -> {
@@ -396,6 +430,17 @@ public class DocumentModelService implements IDocumentModel {
             }
             case TABLE -> {
                 flag(c.get("headerRow"), id, errors);
+                // Độ rộng các cột theo phần trăm bề ngang bảng (yêu cầu 2026-11-04), không bắt buộc.
+                JsonNode widths = c.get("widths");
+                if (widths != null && !widths.isNull()) {
+                    boolean valid = widths.isArray() && widths.size() <= MAX_CELLS;
+                    for (JsonNode width : valid ? widths : JsonNodeFactory.instance.arrayNode()) {
+                        valid &= width.isNumber() && width.asDouble() >= 1 && width.asDouble() <= 100;
+                    }
+                    if (!valid) {
+                        add(errors, "TABLE_INVALID", id, "Độ rộng cột không hợp lệ");
+                    }
+                }
                 JsonNode rows = c.get("rows");
                 if (rows == null || !rows.isArray() || rows.isEmpty() || rows.size() > MAX_ROWS) {
                     add(errors, "TABLE_INVALID", id, "Bảng không hợp lệ");
@@ -413,6 +458,10 @@ public class DocumentModelService implements IDocumentModel {
                         }
                         runs(cell.get("runs"), id, errors);
                         flag(cell.get("added"), id, errors);
+                        JsonNode cellAlign = cell.get("align");
+                        if (cellAlign != null && !cellAlign.isNull() && !ALIGNS.contains(cellAlign.asText(""))) {
+                            add(errors, "TABLE_INVALID", id, "Căn lề của ô không hợp lệ");
+                        }
                     }
                 }
             }
@@ -536,6 +585,17 @@ public class DocumentModelService implements IDocumentModel {
         return true;
     }
 
+    /** Tên bài có định dạng: chỉ giữ run đã làm sạch và căn lề. */
+    private JsonNode cleanTitle(JsonNode title) {
+        if (!(title instanceof ObjectNode source)) {
+            return null;
+        }
+        ObjectNode out = JsonNodeFactory.instance.objectNode();
+        out.set("runs", cleanRuns(source.get("runs")));
+        copy(source, out, "align");
+        return out;
+    }
+
     private ObjectNode clean(BlockType type, ObjectNode c) {
         ObjectNode out = JsonNodeFactory.instance.objectNode();
         switch (type) {
@@ -543,6 +603,9 @@ public class DocumentModelService implements IDocumentModel {
                 copy(c, out, "style");
                 copy(c, out, "text");
                 copy(c, out, "align");
+                if (c.get("runs") instanceof ArrayNode) {
+                    out.set("runs", cleanRuns(c.get("runs")));
+                }
             }
             case PARAGRAPH -> {
                 out.set("runs", cleanRuns(c.get("runs")));
@@ -564,6 +627,7 @@ public class DocumentModelService implements IDocumentModel {
             }
             case TABLE -> {
                 copy(c, out, "headerRow");
+                copy(c, out, "widths");
                 if (c.get("rows") instanceof ArrayNode rows) {
                     ArrayNode cleaned = out.putArray("rows");
                     for (JsonNode row : rows) {
@@ -572,6 +636,8 @@ public class DocumentModelService implements IDocumentModel {
                             for (JsonNode cell : cells) {
                                 ObjectNode cleanCell = next.addObject();
                                 cleanCell.set("runs", cleanRuns(cell.get("runs")));
+                                // Căn lề từng ô (yêu cầu 2026-11-04).
+                                copy(cell, cleanCell, "align");
                                 if (cell.path("added").asBoolean(false)) {
                                     cleanCell.put("added", true);
                                 }
@@ -608,6 +674,9 @@ public class DocumentModelService implements IDocumentModel {
                     SvgSanitizer.sanitize(svg.asText()).ifPresent(clean -> out.put("svgPreview", clean));
                 }
             }
+        }
+        if (type != BlockType.HEADING) {
+            copy(c, out, "under");
         }
         return out;
     }

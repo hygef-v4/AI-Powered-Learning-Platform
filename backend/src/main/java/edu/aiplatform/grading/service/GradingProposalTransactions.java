@@ -122,16 +122,16 @@ public class GradingProposalTransactions {
     }
 
     private void requireAiSource(AiRequest request) {
-        if (request == null || request.source() == null || Evaluation.isBlankText(request.requestRef())
-                || request.requestRef().length() > 200
-                || request.source() == AiSource.PERSONAL && request.provider() == null)
-            throw ApiException.badRequest("AI_SOURCE_REQUIRED", "Choose an AI source and provider");
+        // Nguồn bỏ trống: hệ thống tự chọn (yêu cầu 2026-11-05).
+        if (request == null || Evaluation.isBlankText(request.requestRef()) || request.requestRef().length() > 200
+                || request.provider() != null && request.source() != AiSource.PERSONAL)
+            throw ApiException.badRequest("AI_SOURCE_REQUIRED", "Invalid AI source");
     }
 
     private void requireSameRequest(Actor actor, Evaluation evaluation, AiRequest request, GradingProposal proposal) {
         if (!proposal.requesterId.equals(actor.accountId()) || !proposal.evaluationId.equals(evaluation.id)
                 || !proposal.submissionHash.equals(evaluation.submissionHash)
-                || !Objects.equals(proposal.source, request.source().name())
+                || !Objects.equals(proposal.source, request.source() == null ? "AUTO" : request.source().name())
                 || !Objects.equals(proposal.provider, request.provider() == null ? null : request.provider().name()))
             throw ApiException.conflict("REQUEST_REF_CONFLICT", "Request reference already used");
     }
@@ -146,7 +146,7 @@ public class GradingProposalTransactions {
                 .orElse(0) + 1;
         proposal.submissionHash = evaluation.submissionHash;
         proposal.rubricFingerprint = evaluation.rubricSnapshot;
-        proposal.source = request.source().name();
+        proposal.source = request.source() == null ? "AUTO" : request.source().name();
         proposal.provider = request.provider() == null ? null : request.provider().name();
         proposal.createdAt = clock.instant();
         return proposal;

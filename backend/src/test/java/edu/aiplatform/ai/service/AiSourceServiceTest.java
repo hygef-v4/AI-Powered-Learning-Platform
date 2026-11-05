@@ -56,6 +56,7 @@ class AiSourceServiceTest {
         when(connections.findInstitutional(AiProvider.GEMINI)).thenReturn(Optional.of(shared));
         when(connections.findPersonal(any(), any())).thenReturn(Optional.empty());
         when(connections.findPersonal(teacher.accountId(), AiProvider.CLAUDE)).thenReturn(Optional.of(mine));
+        when(connections.listInstitutional()).thenReturn(java.util.List.of(shared));
         when(quota.remaining(teacher.accountId())).thenReturn(new QuotaReservationService.Remaining(4_000, 10_000, 6_000,
                 ZonedDateTime.parse("2026-10-22T00:00+07:00")));
 

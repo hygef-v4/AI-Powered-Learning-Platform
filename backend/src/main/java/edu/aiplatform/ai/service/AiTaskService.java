@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.ai.contract.AiPrompt;
 import edu.aiplatform.ai.contract.AiProvider;
 import edu.aiplatform.ai.contract.AiSource;
+import edu.aiplatform.ai.contract.AiSourceChoice;
 import edu.aiplatform.ai.contract.AiTaskRequest;
 import edu.aiplatform.ai.contract.AiTaskState;
 import edu.aiplatform.ai.contract.AiTaskView;
@@ -26,9 +27,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -86,14 +89,15 @@ public class AiTaskService implements IAiTask {
 
     @Override
     @Transactional
-    public AiTaskView submit(AiTaskRequest request) {
-        validate(request);
-        Actor actor = request.actor();
-        String fingerprint = fingerprint(request);
-        Optional<AiTask> existing = tasks.findByRequestRef(request.requestRef());
+    public AiTaskView submit(AiTaskRequest requested) {
+        validate(requested);
+        String fingerprint = fingerprint(requested);
+        Optional<AiTask> existing = tasks.findByRequestRef(requested.requestRef());
         if (existing.isPresent()) {
             return sameOrConflict(existing.get(), fingerprint);
         }
+        AiTaskRequest request = resolveSource(requested);
+        Actor actor = request.actor();
         AiConnection connection = connectionFor(actor, request.source(), request.provider());
         int max = Math.min(request.maxOutputTokens(), catalog.maxOutputTokens(connection.provider()));
         tasks.lockActor(actor.accountId());
@@ -166,10 +170,71 @@ public class AiTaskService implements IAiTask {
 
     @Override
     public void requireSource(Actor actor, AiSource source, AiProvider provider) {
-        if (actor == null || source == null) {
+        if (actor == null) {
             throw ApiException.badRequest("AI_TASK_INVALID", "Yêu cầu AI thiếu thông tin");
         }
+        if (source == null || source == AiSource.PERSONAL && provider == null) {
+            if (candidates(actor, source, new AiPrompt(null, "x"), 1).isEmpty()) {
+                throw unavailable();
+            }
+            return;
+        }
         connectionFor(actor, source, provider);
+    }
+
+    /**
+     * Nguồn tự chọn (yêu cầu 2026-11-05) khi bên gọi để trống nguồn ({@code PERSONAL} không kèm provider là chỉ khóa cá
+     * nhân): API chung nếu người gọi được dùng và hạn mức còn đủ cho ước tính token của lượt này, không thì khóa cá nhân
+     * tốt nhất; lỗi lúc chạy thì worker tự thử các khóa kế tiếp.
+     */
+    private AiTaskRequest resolveSource(AiTaskRequest request) {
+        if (request.source() == AiSource.SHARED || request.provider() != null) {
+            return request;
+        }
+        List<AiSourceChoice> order = candidates(request.actor(), request.source(), request.prompt(), request.maxOutputTokens());
+        if (order.isEmpty()) {
+            throw unavailable();
+        }
+        AiSourceChoice choice = order.get(0);
+        return new AiTaskRequest(request.actor(), choice.source(), choice.provider(), request.taskType(),
+                request.targetRef(), request.inputVersion(), request.requestRef(), request.prompt(), request.outputSchema(),
+                request.maxOutputTokens());
+    }
+
+    private List<AiSourceChoice> candidates(Actor actor, AiSource only, AiPrompt prompt, int maxOutputTokens) {
+        List<AiSourceChoice> order = sourceOrder(actor, prompt, maxOutputTokens);
+        return only == null ? order : order.stream().filter(choice -> choice.source() == only).toList();
+    }
+
+    private static ApiException unavailable() {
+        return ApiException.badRequest("AI_SOURCE_UNAVAILABLE",
+                "Không có nguồn AI dùng được: API chung không đủ hạn mức cho lượt này và chưa có khóa API cá nhân đang bật");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AiSourceChoice> sourceOrder(Actor actor, AiPrompt prompt, int maxOutputTokens) {
+        List<AiSourceChoice> order = new ArrayList<>();
+        if (actor == null || prompt == null || prompt.user() == null) {
+            return order;
+        }
+        if (access.allowed(actor, Actions.AI_SHARED_USE)) {
+            Optional<AiConnection> shared = ConnectionOrder.active(connections.listInstitutional(), catalog).stream()
+                    .findFirst();
+            if (shared.isPresent()) {
+                int max = Math.min(maxOutputTokens, catalog.maxOutputTokens(shared.get().provider()));
+                QuotaReservationService.Remaining left = quota.remaining(actor.accountId());
+                if (left != null && left.limit() > 0
+                        && left.left() >= QuotaReservationService.estimate(promptChars(prompt), max)) {
+                    order.add(new AiSourceChoice(AiSource.SHARED, null));
+                }
+            }
+        }
+        if (access.allowed(actor, Actions.AI_PERSONAL)) {
+            ConnectionOrder.active(connections.listPersonal(actor.accountId()), catalog)
+                    .forEach(c -> order.add(new AiSourceChoice(AiSource.PERSONAL, c.provider())));
+        }
+        return order;
     }
 
     /** Nguồn đúng như người dùng chọn; không có hoặc không dùng được thì báo lỗi, không đổi nguồn (BR-U06-10). */
@@ -178,8 +243,8 @@ public class AiTaskService implements IAiTask {
             if (!access.allowed(actor, Actions.AI_SHARED_USE)) {
                 throw ApiException.forbidden("AI_SHARED_NOT_ALLOWED");
             }
-            return Arrays.stream(AiProvider.values()).map(connections::findInstitutional)
-                    .flatMap(Optional::stream).filter(c -> c.status() == Status.ACTIVE).findFirst()
+            // Khóa chung tốt nhất theo thứ tự thử: Claude, GPT, Gemini; mô hình tốt trước (yêu cầu 2026-11-05).
+            return ConnectionOrder.active(connections.listInstitutional(), catalog).stream().findFirst()
                     .orElseThrow(() -> ApiException.badRequest("AI_SHARED_NOT_CONFIGURED",
                             "API của trường chưa được bật; hãy chọn API cá nhân"));
         }
@@ -189,14 +254,16 @@ public class AiTaskService implements IAiTask {
         if (provider == null) {
             throw ApiException.badRequest("AI_PROVIDER_REQUIRED", "Cần chọn nhà cung cấp cho API cá nhân");
         }
-        return connections.findPersonal(actor.accountId(), provider)
+        // Khóa cá nhân tốt nhất của provider (một provider có thể có nhiều khóa).
+        return ConnectionOrder.active(connections.listPersonal(actor.accountId()), catalog).stream()
+                .filter(c -> c.provider() == provider).findFirst()
                 .filter(c -> c.status() == Status.ACTIVE)
                 .orElseThrow(() -> ApiException.badRequest("AI_PERSONAL_NOT_CONFIGURED",
                         "Bạn chưa lưu khóa API cho nhà cung cấp này"));
     }
 
     private void validate(AiTaskRequest request) {
-        if (request == null || request.actor() == null || request.source() == null || request.prompt() == null
+        if (request == null || request.actor() == null || request.prompt() == null
                 || request.prompt().user() == null || request.taskType() == null || request.targetRef() == null) {
             throw ApiException.badRequest("AI_TASK_INVALID", "Yêu cầu AI thiếu thông tin");
         }

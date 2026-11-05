@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Pill, TableFrame, Td, Th, cx } from "@/shared/ui";
-import { atomicItems, rubricComplete, rubricTotal, type RubricCriterion } from "./types";
+import { atomicItems, rubricTotal, type RubricCriterion } from "./types";
 
 export function formatPoints(points: number | null | undefined): string {
   if (points === null || points === undefined) return "–";
@@ -36,10 +36,12 @@ export function RubricViewer({ title, criteria, total }: { title?: string; crite
 }
 
 /**
- * Thẻ rubric bên lề của một mục (kiểu comment Google Docs): tên mục, tổng điểm, các mục chấm atomic; thẻ đang chọn
- * hiện đủ nội dung từng mục, hoặc hiện trình sửa {@code editor} khi người soạn sửa được.
+ * Thẻ rubric bên lề của một mục (kiểu comment Google Docs): tên mục, tổng điểm, các mục chấm atomic. Thẻ chưa chọn ghi mỗi
+ * mục một dòng (dài thì cắt); bấm vào thẻ thì hiện đủ nội dung từng mục, hay trình sửa {@code editor} (cũng hiện đủ chữ) khi
+ * người soạn sửa được (yêu cầu 2026-11-05). {@code total}: điểm ghi trên thẻ thay cho tổng của chính thẻ (thẻ Toàn bài ghi
+ * tổng điểm cả bài).
  */
-export function RubricNote({ title, criteria, active = false, onActivate, issues = [], badge, editor }: {
+export function RubricNote({ title, criteria, active = false, onActivate, issues = [], badge, editor, editOnActive = false, total }: {
   title: string;
   criteria: RubricCriterion[];
   active?: boolean;
@@ -47,8 +49,10 @@ export function RubricNote({ title, criteria, active = false, onActivate, issues
   issues?: string[];
   badge?: ReactNode;
   editor?: ReactNode;
+  /** Chỉ hiện trình sửa khi thẻ đang chọn (trang soạn bài); không thì trình sửa luôn hiện (bảng chấm). */
+  editOnActive?: boolean;
+  total?: number;
 }) {
-  const complete = rubricComplete(criteria);
   const path = title.split(" › ");
   const name = path.at(-1) ?? title;
   return (
@@ -59,13 +63,17 @@ export function RubricNote({ title, criteria, active = false, onActivate, issues
         !active && onActivate && "cursor-pointer hover:shadow-[var(--shadow-float)]")}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          {path.length > 1 && <p className="truncate text-[10.5px] text-faint">{path.slice(0, -1).join(" › ")}</p>}
+          {/* Chỉ tên mục (dòng cuối của đường dẫn), không ghi các mục cha phía trên (yêu cầu 2026-11-04). */}
           <p className={cx("text-[13px] font-semibold text-ink", !active && "truncate")} title={title}>{name}</p>
         </div>
         {badge}
-        <Pill tone={complete ? "neutral" : "warning"}>{formatPoints(rubricTotal(criteria))} điểm</Pill>
+        {/* Mục chưa có mục chấm không phải phần chấm: không ghi "0 điểm"; ghi dở cũng không tô vàng, chỉ báo khi xếp lịch
+            (yêu cầu 2026-11-05). */}
+        {(total !== undefined || criteria.length > 0) && (
+          <Pill>{total !== undefined ? `Tổng ${formatPoints(total)} điểm` : `${formatPoints(rubricTotal(criteria))} điểm`}</Pill>
+        )}
       </div>
-      {editor ?? <RubricLines criteria={criteria} expanded={active} />}
+      {editor && (active || !editOnActive) ? editor : <RubricLines criteria={criteria} expanded={active} />}
       {issues.map((issue, i) => <p key={i} role="alert" className="text-[11px] text-danger">{issue}</p>)}
     </section>
   );

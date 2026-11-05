@@ -9,7 +9,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), back: vi.
 vi.mock("@/features/assignmentwork/api", async (original) => ({ ...await original<typeof import("@/features/assignmentwork/api")>(), workApi: { list: vi.fn() } }));
 
 const row = (patch: Partial<StudentRow>): StudentRow => ({
-  assignmentId: "a", classId: "c1", classCode: "SE1901", className: "Kiến trúc phần mềm", scope: "CLASS", title: "Bài", submissionMode: "INDIVIDUAL",
+  assignmentId: "a", classId: "c1", classCode: "SE1901", subjectCode: "SWD392", scope: "CLASS", title: "Bài", submissionMode: "INDIVIDUAL",
   gradingMode: "GRADED", diagramEnabled: false, status: "OPEN", opensAt: null, closesAt: null, lateUntil: null, maxAttempts: 1,
   myStatus: "NOT_STARTED", attemptCount: 0, submittedCount: 0, inProgressAttemptId: null, lastSubmittedAt: null, group: null, ...patch,
 });
@@ -19,7 +19,7 @@ beforeEach(() => {
   window.history.replaceState(null, "", "/my-assignments");
   vi.mocked(workApi.list).mockResolvedValue([
     row({ assignmentId: "a1", title: "Sơ đồ lớp" }),
-    row({ assignmentId: "a2", title: "Ca kiểm thử", classId: "c2", classCode: "SE1903", className: "Kiểm thử phần mềm" }),
+    row({ assignmentId: "a2", title: "Ca kiểm thử", classId: "c2", classCode: "SE1903", subjectCode: "SWT301" }),
   ]);
 });
 
@@ -31,7 +31,7 @@ it("trang chung có ô lọc lớp cạnh tiêu đề; chọn một lớp thì c
   fireEvent.click(within(filter).getByRole("menuitem", { name: /SE1903/, hidden: true }));
   expect(screen.queryByText("Sơ đồ lớp")).not.toBeInTheDocument();
   expect(screen.getByText("Ca kiểm thử")).toBeInTheDocument();
-  expect(filter).toHaveTextContent("Kiểm thử phần mềm");
+  expect(filter).toHaveTextContent("SWT301");
 });
 
 it("trang bài tập của một lớp (?classId=) không có ô lọc lớp", async () => {

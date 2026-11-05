@@ -83,7 +83,7 @@ describe("sidebar của lớp", () => {
 });
 
 describe("AppShell với sidebar theo ngữ cảnh", () => {
-  it("ô chọn lớp hiện mã nhỏ và tên lớp to (không có tên môn), chọn lớp khác thì giữ đúng mục đang mở", async () => {
+  it("ô chọn lớp hiện mã môn nhỏ trên mã lớp (không có tên lớp, tên môn), chọn lớp khác thì giữ đúng mục đang mở", async () => {
     const value = { id: "c-1", code: "SE1801", name: "Lớp chiều thứ Hai", subject: { id: "s-1", code: "SWR302", name: "Software Requirement" } };
     vi.stubGlobal("fetch", vi.fn().mockImplementation((url: string) =>
       Promise.resolve(Response.json(url.includes("/classes/c-1") ? value : [value, { ...value, id: "c-2", code: "SE1802" }]))));
@@ -92,7 +92,8 @@ describe("AppShell với sidebar theo ngữ cảnh", () => {
 
     await waitFor(() => expect(screen.getByLabelText("Chọn lớp")).toHaveTextContent("SE1801"));
     expect(screen.queryByText("Software Requirement")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Chọn lớp")).toHaveTextContent("Lớp chiều thứ Hai");
+    expect(screen.getByLabelText("Chọn lớp")).toHaveTextContent("SWR302");
+    expect(screen.getByLabelText("Chọn lớp")).not.toHaveTextContent("Lớp chiều thứ Hai");
     expect(await screen.findByRole("menuitem", { name: /SE1802/ })).toHaveAttribute("href", "/teaching/classes/c-2?tab=gradebook");
     expect(screen.getByRole("link", { name: "Lớp được phân công" })).toHaveAttribute("href", "/teaching/classes");
   });

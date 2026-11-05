@@ -60,7 +60,7 @@ export function StudentAssignmentsPage() {
   // Trang chung (không có `?classId=`) lọc theo lớp ngay trên trang, không đổi sang sidebar của lớp.
   const [classFilter, setClassFilter] = useUrlState<string>("classFilter", "", undefined, "replace");
   const { rows: allRows, error, loading } = useStudentAssignments(classId);
-  const classes = [...new Map((allRows ?? []).map((row) => [row.classId, { classId: row.classId, code: row.classCode, name: row.className }])).values()]
+  const classes = [...new Map((allRows ?? []).map((row) => [row.classId, { classId: row.classId, code: row.classCode, subjectCode: row.subjectCode }])).values()]
     .sort((a, b) => a.code.localeCompare(b.code, "vi"));
   const rows = allRows && classFilter ? allRows.filter((row) => row.classId === classFilter) : allRows;
 

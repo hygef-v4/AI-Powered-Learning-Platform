@@ -246,7 +246,8 @@ public class AccountAdminService {
                     subjects.stream().map(subjectId -> held(subjectId, () -> subjectQuery.getObject().getSubject(subjectId)
                             .map(s -> new RoleChangeBlockedException.Held(subjectId, s.code(), s.name())))).toList(),
                     classes.stream().map(classId -> held(classId, () -> classAccess.getObject().getClassRef(classId)
-                            .map(c -> new RoleChangeBlockedException.Held(classId, c.code(), c.name())))).toList());
+                            .map(c -> new RoleChangeBlockedException.Held(classId, c.code(),
+                                    c.subjectCode() == null ? null : "Môn " + c.subjectCode())))).toList());
         }
     }
 

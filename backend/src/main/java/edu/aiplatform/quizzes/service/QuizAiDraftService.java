@@ -440,8 +440,9 @@ public class QuizAiDraftService {
                 || new HashSet<>(r.materialIds()).size() != r.materialIds().size()) {
             throw invalidRequest("Chọn tối đa 10 tài liệu, không trùng");
         }
-        if (r.source() == null || (r.source() == AiSource.PERSONAL) != (r.provider() != null)) {
-            throw invalidRequest("Chọn nguồn AI; API cá nhân cần chọn nhà cung cấp");
+        // Nguồn bỏ trống: hệ thống tự chọn (yêu cầu 2026-11-05); nhà cung cấp chỉ đi với API cá nhân.
+        if (r.provider() != null && r.source() != AiSource.PERSONAL) {
+            throw invalidRequest("Nguồn AI không hợp lệ");
         }
         if (r.requestRef() == null || r.requestRef().isBlank() || r.requestRef().length() > MAX_REQUEST_REF) {
             throw invalidRequest("Mã yêu cầu không hợp lệ");
@@ -467,7 +468,7 @@ public class QuizAiDraftService {
     private static Map<String, Object> provenance(DraftRequest request, List<SelectableMaterial> chosen) {
         Map<String, Object> p = new LinkedHashMap<>();
         p.put(QuizAiDraft.REQUEST_REF, request.requestRef());
-        p.put(AiDraftViews.SOURCE, request.source().name());
+        p.put(AiDraftViews.SOURCE, request.source() == null ? "AUTO" : request.source().name());
         if (request.provider() != null) {
             p.put(AiDraftViews.PROVIDER, request.provider().name());
         }

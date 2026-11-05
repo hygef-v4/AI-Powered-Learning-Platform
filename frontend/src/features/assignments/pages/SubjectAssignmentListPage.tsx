@@ -8,7 +8,8 @@ import { assignmentsApi, type ListFilter } from "../api";
 import { ALL_ASSIGNMENTS, AssignmentListCard } from "../components/AssignmentListCard";
 import { CreateAssignmentDialog } from "../components/CreateAssignmentDialog";
 import { errorMessage } from "../model/format";
-import { useAssignmentPage } from "../hooks/useAssignmentPage";
+import { useAssignmentPage } from "../hooks/useAssignmentPage";
+import { rememberAssignmentsPage } from "../model/outline";
 
 type ManagedSubject = { id: string; code: string; name: string };
 
@@ -48,7 +49,7 @@ export function SubjectAssignmentListPage() {
       {subjectId && <AssignmentListCard page={page} />}
       {creating && subjectId && (
         <CreateAssignmentDialog target={{ kind: "subject", subjectId }} onClose={() => setCreating(false)}
-          onCreated={(created) => { setCreating(false); router.push(`/assignments/${encodeURIComponent(created.id)}`); }} />
+          onCreated={(created) => { setCreating(false); rememberAssignmentsPage(); router.push(`/assignments/${encodeURIComponent(created.id)}`); }} />
       )}
     </div>
   );

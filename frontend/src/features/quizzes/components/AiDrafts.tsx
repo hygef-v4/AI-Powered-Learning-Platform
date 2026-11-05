@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { AiSourcePicker, AiTaskStatus, PROVIDER_LABEL, type AiProvider, type SourceChoice } from "@/shared/ai";
+import { AiTaskStatus, PROVIDER_LABEL, type AiProvider, type SourceChoice } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
 import { Alert, Button, cx, Dialog, Field, Icon, Pill, Select, TextInput } from "@/shared/ui";
 import { DIFFICULTY_LABELS, errorMessage, failureLabel, formatDateTime, TYPE_LABELS } from "../model/labels";
@@ -16,7 +16,6 @@ const POLL_MS = 3000;
 const MAX_COUNT = 50;
 const MAX_MATERIALS = 10;
 /** Trần token đầu ra của một câu (giống backend `QuizDraftPrompt.maxOutputTokens`), để popup U06 hiện ước tính. */
-const TOKENS_PER_QUESTION = 600;
 
 /** Cách gọi API của một đích (ngân hàng môn hoặc một Quiz); dialog không cần biết đích là gì. */
 export type DraftTargetApi = {
@@ -26,7 +25,7 @@ export type DraftTargetApi = {
   acceptNote: string;
   loadMaterials: (signal: AbortSignal) => Promise<SelectableMaterial[]>;
   list: (signal: AbortSignal) => Promise<AiDraft[]>;
-  request: (input: AiDraftRequest & { choice: SourceChoice }) => Promise<AiDraft>;
+  request: (input: AiDraftRequest & { choice?: SourceChoice }) => Promise<AiDraft>;
   get: (draftId: string) => Promise<AiDraft>;
   /** Ném lỗi khi không chấp nhận được (409, 422…); thành công thì dialog đóng. */
   accept: (draftId: string, questions: QuestionContent[]) => Promise<void>;
@@ -56,9 +55,8 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted }: {
   const [error, setError] = useState<string | null>(null);
   const [problems, setProblems] = useState<Violation[]>([]);
   const [busy, setBusy] = useState(false);
-  // M1: form đã kiểm chờ chọn nguồn; `picking` thì thay popup U10 bằng AiSourcePicker để hai Dialog không tranh focus.
+  // Yêu cầu vừa gửi, giữ lại để mở lại form khi lỗi; nguồn AI do hệ thống tự chọn (yêu cầu 2026-11-05).
   const [request, setRequest] = useState<AiDraftRequest | null>(null);
-  const [picking, setPicking] = useState(false);
   const shown = useRef<AiDraft | null>(null);
 
   /** Chỉ dựng lại danh sách câu khi đổi đề xuất hoặc trạng thái, để không mất phần người soạn đang sửa. */
@@ -122,13 +120,9 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted }: {
     }
   };
 
-  const send = (choice: SourceChoice) => request && void run(async () => {
-    try {
-      showDraft(await api.request({ ...request, choice }));
-      setRequest(null);
-    } finally {
-      setPicking(false);
-    }
+  const send = (values: AiDraftRequest) => void run(async () => {
+    showDraft(await api.request(values));
+    setRequest(null);
   });
   const refresh = (draftId: string) => {
     api.get(draftId).then(showDraft).catch((failure: unknown) => setError(errorMessage(failure)));
@@ -160,13 +154,6 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted }: {
     </>
   );
 
-  if (picking && request) {
-    return (
-      <AiSourcePicker open task={api.taskLabel} estimatedTokens={TOKENS_PER_QUESTION * request.count} busy={busy}
-        onCancel={() => setPicking(false)} onSubmit={send} />
-    );
-  }
-
   return (
     <Dialog open onClose={onClose} dismissible={!busy} size="lg" icon="smart_toy" title={api.title} footer={footer}>
       <div className="flex flex-col gap-4" data-testid="ai-draft-dialog">
@@ -181,7 +168,7 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted }: {
           <DraftRequestForm api={api} busy={busy} initial={request}
             onSubmit={(values) => {
               setRequest(values);
-              setPicking(true);
+              send(values);
             }} />
         )}
         {mode === "draft" && draft && (

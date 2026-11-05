@@ -159,7 +159,8 @@ class AssignmentSupport {
         try {
             if (a.scope() == AssignmentScope.CLASS) {
                 var ref = access.classRef(a.classId());
-                return ref.code() + " · " + ref.name();
+                // Lớp không còn tên (yêu cầu 2026-11-02): mã môn rồi mã lớp.
+                return ref.subjectCode() == null ? ref.code() : ref.subjectCode() + " · " + ref.code();
             }
             return subjects.getSubject(a.subjectId()).map(s -> s.code() + " · " + s.name()).orElse("");
         } catch (RuntimeException e) {

@@ -1,5 +1,9 @@
 # AI-DLC State Tracking
 
+## Merge staging into U05/U09/U15 — 2026-11-06
+
+Resolved the user's existing local merge of `staging` at `b91413ca` into `fix/u05-u09-u15` at `2440cbe4`. Six conflicts resolved by retaining staging behavior and the branch's convention names; all incoming staged changes preserved. Fixed the directly related inherited `@NotNull source` mismatch after reproducing HTTP 400 for single/batch automatic AI requests; added seven HTTP cases and synchronized grading OpenAPI. Independent reviews found no remaining introduced or follow-up issue. Final backend verify **1,804 passed, zero failures/errors/skips**, required PostgreSQL guard **31 + 2 passed**, JAR built. Frontend **799 passed / 116 files**, lint/typecheck/production build passed; generated configuration restored and typechecked again. Deliver through the authorized local merge commit; [plan, evidence and memory constraints](construction/build-and-test/2026-11-06-merge-staging-u05-u09-u15.md). No push, live migration, application restart or deployment; manual UI/provider acceptance not repeated. Existing security/resiliency scope retained; PBT disabled.
+
 ## Wildcard import preference — 2026-11-05
 
 Delivery follow-up: user authorized a descriptive local commit of the convention refactor and compact-import follow-up on the current branch. No push requested; this supersedes the prior no-commit scope. Reuse the recorded full verification and subsequent import-only compilation; no further source changes.

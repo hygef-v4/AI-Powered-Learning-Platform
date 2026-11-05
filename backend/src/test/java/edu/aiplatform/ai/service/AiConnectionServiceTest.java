@@ -77,7 +77,7 @@ class AiConnectionServiceTest {
 
     @Test
     void newKeyIsEncryptedAndOnlyLastFourCharactersAreShownOrAudited() {
-        var view = service.savePersonal(teacher, AiProvider.GEMINI, new SaveCommand(" AIzaSyD-secret-3kQf ",
+        var view = service.addPersonal(teacher, AiProvider.GEMINI, new SaveCommand(" AIzaSyD-secret-3kQf ",
                 "gemini-2.5-flash", null));
 
         ArgumentCaptor<AiConnection> saved = ArgumentCaptor.forClass(AiConnection.class);
@@ -94,13 +94,13 @@ class AiConnectionServiceTest {
 
     @Test
     void modelOutsideTheAllowedListAndBadKeysAreRejected() {
-        assertThatThrownBy(() -> service.savePersonal(teacher, AiProvider.GEMINI, new SaveCommand("AIzaSy-key-123",
+        assertThatThrownBy(() -> service.addPersonal(teacher, AiProvider.GEMINI, new SaveCommand("AIzaSy-key-123",
                 "gemini-ultra", null)))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_MODEL_NOT_ALLOWED"));
-        assertThatThrownBy(() -> service.savePersonal(teacher, AiProvider.GEMINI, new SaveCommand("short",
+        assertThatThrownBy(() -> service.addPersonal(teacher, AiProvider.GEMINI, new SaveCommand("short",
                 "gemini-2.5-flash", null)))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_KEY_INVALID"));
-        assertThatThrownBy(() -> service.savePersonal(teacher, AiProvider.GEMINI, new SaveCommand(null,
+        assertThatThrownBy(() -> service.addPersonal(teacher, AiProvider.GEMINI, new SaveCommand(null,
                 "gemini-2.5-flash", null)))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_KEY_REQUIRED"));
         verify(repository, never()).insert(any());
@@ -109,13 +109,13 @@ class AiConnectionServiceTest {
     @Test
     void replacingNeedsMatchingVersion() {
         AiConnection existing = existing(AiConnection.Scope.PERSONAL);
-        when(repository.findPersonal(teacher.accountId(), AiProvider.GEMINI)).thenReturn(Optional.of(existing));
+        when(repository.findById(existing.id())).thenReturn(Optional.of(existing));
 
-        assertThatThrownBy(() -> service.savePersonal(teacher, AiProvider.GEMINI, new SaveCommand("AIzaSy-new-key-9999",
+        assertThatThrownBy(() -> service.replacePersonal(teacher, existing.id(), new SaveCommand("AIzaSy-new-key-9999",
                 "gemini-2.5-pro", 9L)))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status()).isEqualTo(HttpStatus.CONFLICT));
 
-        service.savePersonal(teacher, AiProvider.GEMINI, new SaveCommand(null, "gemini-2.5-pro", 2L));
+        service.replacePersonal(teacher, existing.id(), new SaveCommand(null, "gemini-2.5-pro", 2L));
         ArgumentCaptor<AiConnection> updated = ArgumentCaptor.forClass(AiConnection.class);
         verify(repository).update(updated.capture());
         assertThat(updated.getValue().model()).isEqualTo("gemini-2.5-pro");
@@ -124,10 +124,10 @@ class AiConnectionServiceTest {
 
     @Test
     void revokeDropsCiphertext() {
-        when(repository.findPersonal(teacher.accountId(), AiProvider.GEMINI))
-                .thenReturn(Optional.of(existing(AiConnection.Scope.PERSONAL)));
+        AiConnection mine = existing(AiConnection.Scope.PERSONAL);
+        when(repository.findById(mine.id())).thenReturn(Optional.of(mine));
 
-        service.revokePersonal(teacher, AiProvider.GEMINI);
+        service.revokePersonal(teacher, mine.id());
 
         ArgumentCaptor<AiConnection> updated = ArgumentCaptor.forClass(AiConnection.class);
         verify(repository).update(updated.capture());
@@ -137,12 +137,12 @@ class AiConnectionServiceTest {
 
     @Test
     void connectionTestUsesFixedPromptAndRecordsSanitizedResult() {
-        when(repository.findPersonal(teacher.accountId(), AiProvider.GEMINI))
-                .thenReturn(Optional.of(existing(AiConnection.Scope.PERSONAL)));
+        AiConnection mine = existing(AiConnection.Scope.PERSONAL);
+        when(repository.findById(mine.id())).thenReturn(Optional.of(mine));
         when(gateway.call(eq(AiProvider.GEMINI), any())).thenThrow(new ProviderException(
                 IProviderGateway.FailureKind.REJECTED, 401, "Key API không hợp lệ hoặc không có quyền (HTTP 401)", null));
 
-        var view = service.testPersonal(teacher, AiProvider.GEMINI);
+        var view = service.testPersonal(teacher, mine.id());
 
         assertThat(view.lastTestResult()).contains("401");
         ArgumentCaptor<IProviderGateway.Request> request = ArgumentCaptor.forClass(IProviderGateway.Request.class);

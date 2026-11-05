@@ -40,6 +40,10 @@ type Dialogs =
 const TOOL =
   "flex size-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-sunken hover:text-ink md:group-data-[collapsed]/sidebar:hidden";
 
+/** Mũi tên đóng / mở của module: vẫn hiện khi thu gọn sidebar (đứng giữa), để đầu module không trống trơn. */
+const CHEVRON =
+  "flex size-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-sunken hover:text-ink md:group-data-[collapsed]/sidebar:mx-auto";
+
 function sourceOf(pathname: string, classId?: string): Source | null {
   const material = /^\/materials\/([^/]+)(\/view)?$/.exec(pathname);
   if (material) return { kind: "material", id: decodeURIComponent(material[1]!) };
@@ -129,7 +133,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                     <span
                       title={module.title}
                       className={cx(
-                        "line-clamp-2 min-w-0 flex-1 text-[11.5px] font-semibold text-muted",
+                        "line-clamp-2 min-w-0 flex-1 text-[11.5px] font-semibold text-muted md:group-data-[collapsed]/sidebar:hidden",
                         FADE_LABEL,
                       )}
                     >
@@ -151,7 +155,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                     )}
                     <button
                       type="button"
-                      className={TOOL}
+                      className={CHEVRON}
                       aria-expanded={open}
                       aria-controls={`nav-module-${module.id}`}
                       aria-label={open ? `Thu gọn ${module.title}` : `Mở ${module.title}`}

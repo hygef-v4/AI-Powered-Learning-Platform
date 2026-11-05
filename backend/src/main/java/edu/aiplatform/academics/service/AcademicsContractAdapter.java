@@ -12,6 +12,7 @@ import edu.aiplatform.identity.contract.IClassScope;
 import edu.aiplatform.subjects.contract.ISubjectClasses;
 import edu.aiplatform.subjects.contract.ISubjectQuery;
 import edu.aiplatform.subjects.contract.SubjectClassSummary;
+import edu.aiplatform.subjects.contract.SubjectRef;
 import java.time.Clock;
 import java.util.*;
 import java.util.function.IntFunction;
@@ -32,7 +33,7 @@ public class AcademicsContractAdapter implements IClassAccess,IClassScope,ISubje
     public AcademicsContractAdapter(ICourseClassRepository courseClassRepository,IEnrollmentRepository enrollmentRepository,IAcademicsReadRepository academicsReadRepository,ISubjectQuery subjectQuery,IAccountLookup accountLookup,IAudit audit,Clock clock) {
         this.courseClassRepository=courseClassRepository;this.enrollmentRepository=enrollmentRepository;this.academicsReadRepository=academicsReadRepository;this.subjectQuery=subjectQuery;this.accountLookup=accountLookup;this.audit=audit;this.clock=clock;
     }
-    @Override public Optional<ClassRef> getClassRef(UUID classId) { return courseClassRepository.find(classId).map(AcademicsContractAdapter::mapClassReference); }
+    @Override public Optional<ClassRef> getClassRef(UUID classId) { return courseClassRepository.find(classId).map(this::mapClassReference); }
     @Override public boolean isTeacherOf(UUID accountId,UUID classId) {
         return accountId!=null && courseClassRepository.find(classId).map(c->accountId.equals(c.teacherId())).orElse(false);
     }
@@ -56,7 +57,7 @@ public class AcademicsContractAdapter implements IClassAccess,IClassScope,ISubje
         return List.copyOf(combined.values());
     }
     @Override public List<ClassRef> listOpenClassesOfSubject(UUID subjectId) {
-        return academicsReadRepository.listOfSubject(subjectId).stream().filter(c->c.status()==ClassStatus.OPEN).map(AcademicsContractAdapter::mapClassReference).toList();
+        return academicsReadRepository.listOfSubject(subjectId).stream().filter(c->c.status()==ClassStatus.OPEN).map(this::mapClassReference).toList();
     }
     @Override public Map<ClassStatus,Long> countClassesByStatus() { return academicsReadRepository.countClassesByStatus(); }
     @Override public long countActiveEnrollments() { return academicsReadRepository.countActiveEnrollments(); }
@@ -88,7 +89,10 @@ public class AcademicsContractAdapter implements IClassAccess,IClassScope,ISubje
         }
         return List.copyOf(archived);
     }
-    private static ClassRef mapClassReference(CourseClass c) { return new ClassRef(c.id(),c.subjectId(),c.code(),c.name(),c.status(),c.teacherId(),c.showGradeDistribution()); }
+    private ClassRef mapClassReference(CourseClass c) {
+        String subjectCode=subjectQuery.getSubject(c.subjectId()).map(SubjectRef::code).orElse(null);
+        return new ClassRef(c.id(),c.subjectId(),c.code(),c.name(),c.status(),c.teacherId(),c.showGradeDistribution(),subjectCode);
+    }
     private static <T> List<T> allPages(IntFunction<List<T>> fetch) {
         var all=new ArrayList<T>();
         for (int offset=0;;offset=Math.addExact(offset,100)) {

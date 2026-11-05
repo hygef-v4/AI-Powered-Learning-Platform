@@ -69,7 +69,7 @@ public final class GradingCommands {
     public record Batch(@NotEmpty @Size(max = 200) List<@Valid ItemVersion> items) implements IStrictInput {
     }
 
-    public record AiRequest(@NotNull AiSource source, AiProvider provider, @NotBlank @Size(max = 200) String requestRef)
+    public record AiRequest(AiSource source, AiProvider provider, @NotBlank @Size(max = 200) String requestRef)
             implements IStrictInput {
     }
 

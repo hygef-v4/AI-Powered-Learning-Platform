@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { atomicItems, criteriaOf, newId, pointsMalformed, type AtomicItem, type RubricCriterion } from "@/shared/document";
+import { AutoTextarea, atomicItems, criteriaOf, newId, pointsMalformed, type AtomicItem, type RubricCriterion } from "@/shared/document";
 import { cx } from "@/shared/ui";
 
 const FIELD = "min-w-0 rounded-md border bg-transparent px-1.5 py-1 text-xs text-ink outline-none hover:border-line focus:border-focus focus:bg-surface";
@@ -14,8 +14,8 @@ const POINTS_INVALID = "min-w-0 rounded-md border border-danger bg-danger-soft p
 const LIMIT = 20;
 
 /**
- * Rubric gửi lên server: bỏ dòng vừa thêm mà chưa gõ gì (chưa có chữ, chưa có điểm); ô trống, 0 hoặc số âm là chưa có
- * điểm. Không làm tròn: điểm quá 2 chữ số thập phân thì trang không lưu và báo lỗi (xem {@link rubricPointsMalformed}).
+ * Rubric gửi lên server: bỏ dòng vừa thêm mà chưa gõ gì (chưa có chữ, chưa có điểm); ô trống hoặc số âm là chưa có điểm,
+ * 0 điểm là hợp lệ (yêu cầu 2026-11-05). Không làm tròn: điểm quá 2 chữ số thập phân thì trang không lưu và báo lỗi (xem {@link rubricPointsMalformed}).
  */
 export function cleanCriteria(criteria: RubricCriterion[]): RubricCriterion[] {
   return criteria
@@ -25,7 +25,7 @@ export function cleanCriteria(criteria: RubricCriterion[]): RubricCriterion[] {
         .filter((item) => item.text.trim() !== "" || item.points !== null)
         .map((item) => ({
           ...item,
-          points: item.points !== null && Number.isFinite(item.points) && item.points > 0 ? item.points : null,
+          points: item.points !== null && Number.isFinite(item.points) && item.points >= 0 ? item.points : null,
         })),
     }))
     .filter((criterion) => criterion.items.length > 0);
@@ -56,7 +56,7 @@ export function RubricEditor({ criteria, onChange }: {
     const index = focus.current;
     if (index === null) return;
     focus.current = null;
-    root.current?.querySelectorAll<HTMLInputElement>("[data-atomic-text]")[index]?.focus();
+    root.current?.querySelectorAll<HTMLElement>("[data-atomic-text]")[index]?.focus();
   });
 
   function set(next: AtomicItem[]) {
@@ -74,10 +74,11 @@ export function RubricEditor({ criteria, onChange }: {
   return (
     <div ref={root} className="flex flex-col" data-testid="rubric-editor">
       {items.map((item, i) => (
-        <div key={item.itemId ?? i} className="group/row flex items-center gap-0.5">
-          <span aria-hidden className="w-3 text-center text-[11px] text-muted">☐</span>
-          <input data-atomic-text aria-label={`Mục chấm ${i + 1}`} value={item.text} maxLength={1000} className={cx(INPUT, "flex-1")}
-            onChange={(e) => edit(i, { text: e.target.value })}
+        <div key={item.itemId ?? i} className="group/row flex items-start gap-0.5">
+          <span aria-hidden className="w-3 pt-1 text-center text-[11px] text-muted">☐</span>
+          {/* Ô nhiều dòng, tự cao theo chữ: lúc sửa thấy đủ nội dung mục, không bị cắt (yêu cầu 2026-11-05). */}
+          <AutoTextarea data-atomic-text aria-label={`Mục chấm ${i + 1}`} value={item.text} maxLength={1000} className={cx(INPUT, "flex-1 leading-snug")}
+            onChange={(e) => edit(i, { text: e.target.value.replace(/\n/g, " ") })}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.nativeEvent.isComposing) {
                 e.preventDefault();
@@ -89,7 +90,7 @@ export function RubricEditor({ criteria, onChange }: {
             aria-invalid={pointsMalformed(item.points) || undefined}
             title={pointsMalformed(item.points) ? "Điểm tối đa 2 chữ số thập phân" : undefined}
             className={cx(pointsMalformed(item.points) ? POINTS_INVALID : POINTS,
-              "w-12 text-right [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none")}
+              "w-9 shrink-0 px-1 text-right [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none")}
             onChange={(e) => edit(i, { points: parsePoints(e.target.value) })}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.nativeEvent.isComposing) {

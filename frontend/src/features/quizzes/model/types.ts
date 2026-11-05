@@ -232,6 +232,7 @@ export type AiDraftRequest = {
 };
 
 /** Yêu cầu kèm nguồn đã chọn ở `AiSourcePicker` của U06 (M2). */
-export type AiDraftInput = AiDraftRequest & { choice: SourceChoice };
+/** {@code choice} bỏ trống: hệ thống tự chọn nguồn AI (yêu cầu 2026-11-05). */
+export type AiDraftInput = AiDraftRequest & { choice?: SourceChoice };
 
 export type BankAcceptResult = { draft: AiDraft; questionIds: string[] };

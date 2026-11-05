@@ -8,24 +8,28 @@ import {
   useState,
   type ButtonHTMLAttributes,
   type KeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
   type TextareaHTMLAttributes,
 } from "react";
+import { createPortal } from "react-dom";
 import { Icon, cx, type IconName } from "@/shared/ui";
 import { CommentRail, useWideLayout, type DocumentComment } from "./CommentRail";
 import { DiagramEditor } from "./DiagramEditor";
-import { BlockView, HEADING_CLASS, PARAGRAPH_CLASS, alignClass, type ImageUrl } from "./DocumentViewer";
+import { BlockView, HEADING_CLASS, PARAGRAPH_CLASS, RunsView, alignClass, type ImageUrl } from "./DocumentViewer";
 import { RichText, getCaret, setCaret, type Caret } from "./RichText";
 import { colorRange, formatOf, joinLines, runLines, sliceRuns, splitRuns, toggleFlagRange, type RunFlag } from "./runs";
 import {
   blockText,
   computeParts,
   documentTree,
-  headingLabels,
   newBlock,
   newId,
   runsText,
   sectionsOf,
+  type TitleContent,
+  MAX_SECTION_DEPTH,
+  underOf,
   type Align,
   type BlockOrigin,
   type DocSection,
@@ -39,6 +43,12 @@ import {
 } from "./types";
 
 type Mode = "author" | "student";
+
+/** Mục có chữ riêng (ngoài các mục con): có khối khác đoạn trống. */
+function hasOwnText(section: DocSection): boolean {
+  return [...section.blocks, ...section.after].some((block) => block.type !== "PARAGRAPH"
+    || block.content.runs.some((run) => run.text.trim() !== ""));
+}
 
 type Props = {
   document: DocumentModel;
@@ -55,6 +65,13 @@ type Props = {
   header?: ReactNode;
   /** Nút thêm ở cuối thanh công cụ; có nút thì thanh công cụ vẫn hiện khi chỉ đọc. */
   toolbarExtra?: ReactNode;
+  /**
+   * Tên bài (khung đề): trình soạn vẽ ở đầu trang giấy để định dạng được bằng thanh công cụ; định dạng lưu ở
+   * {@code document.title}, chữ thuần báo qua {@code onText} (yêu cầu 2026-11-04).
+   */
+  titleField?: { text: string; placeholder?: string; invalid?: boolean; readOnly?: boolean; onText: (text: string) => void };
+  /** Chỗ trên header của trang để đặt nút chọn cách đọc (Cả trang / Từng phần); không có thì nút nằm trên thanh công cụ. */
+  viewSlot?: HTMLElement | null;
   /** Chỉ đọc: nút đặt giữa thanh công cụ, thẳng giữa trang giấy (vd. chuyển lượt nộp). */
   toolbarCenter?: ReactNode;
   /** Ghi chú bên lề gắn với block (rubric của từng mục), kiểu comment Google Docs. */
@@ -69,6 +86,11 @@ type Props = {
   answerGuidance?: boolean;
   fullWidth?: boolean;
   matchCommentHeight?: boolean;
+  /**
+   * Trang thay cả tài liệu từ ngoài (AI soạn ghi thẳng lên trang): mỗi {@code id} mới đưa {@code before} vào lịch sử để
+   * Ctrl+Z quay về bản trước, Ctrl+Y tiến lại (yêu cầu 2026-11-05).
+   */
+  externalEdit?: { id: number; before: DocumentModel } | null;
 };
 
 type StyleValue = "P" | "UL" | "OL" | HeadingStyle;
@@ -77,9 +99,11 @@ type FocusTarget = { id: string; at: "start" | "end"; field?: number };
 /** Vùng chọn trong ô chữ có định dạng: block, ô thứ {@code field} (đoạn: 0; danh sách: mục), vị trí theo ký tự. */
 type Selected = { blockId: string; field: number; start: number; end: number };
 
-const STYLE_LABELS: Record<StyleValue, string> = { P: "Văn bản thường", UL: "Danh sách chấm", OL: "Danh sách số", ...headingLabels };
-/** Kiểu đoạn trên thanh công cụ (yêu cầu 2026-10-22): văn bản thường và 4 cấp tiêu đề. */
-const AUTHOR_STYLES: StyleValue[] = ["P", "H1", "H2", "H3", "H4"];
+/*
+ * Nghiệp vụ soạn (yêu cầu 2026-11-02): chỉ có một loại khung là Mục (Tiêu đề 1–6, đánh số 1., 1.1., 1.1.1.); tiêu đề mục
+ * chỉ ghi chữ, nội dung viết trong Ô văn bản (giấy trắng, luôn có Dòng cuối ở đáy). Nút "+ Mục" trên thanh công cụ thêm mục
+ * cùng tầng; thanh "+" ở đáy mỗi ô văn bản (cả ô ngoài cùng) thêm mục nằm trong ô đó.
+ */
 
 const FLAGS: { key: RunFlag; label: string; title: string; className: string }[] = [
   { key: "bold", label: "B", title: "Đậm (Ctrl+B)", className: "font-bold" },
@@ -106,25 +130,60 @@ const LOCKED_LABELS: Partial<Record<DocumentBlock["type"], string>> = { DIAGRAM:
 const IMAGE_TYPES = ".png,.jpg,.jpeg";
 const HISTORY_GAP_MS = 700;
 
+/** Run của tiêu đề mục: tiêu đề cũ chỉ có chữ thì coi như một run. */
+function headingRuns(block: Extract<DocumentBlock, { type: "HEADING" }>): Run[] {
+  return block.content.runs ?? [{ text: block.content.text }];
+}
+
 function runsOf(block: DocumentBlock | undefined): Run[] {
+  if (block?.type === "HEADING") return headingRuns(block);
   if (block?.type === "PARAGRAPH") return block.content.runs;
   if (block?.type === "LIST") return block.content.items.flatMap((item) => item.runs);
   return [];
 }
 
+function tableCell(block: Extract<DocumentBlock, { type: "TABLE" }>, field: number): TableCell | undefined {
+  const columns = tableColumns(block);
+  return block.content.rows[Math.floor(field / columns)]?.[field % columns];
+}
+
+/** Số cột của bảng (hàng thiếu ô vẫn vẽ đủ cột): ô thứ {@code field} là hàng {@code field / cột}, cột {@code field % cột}. */
+function tableColumns(block: Extract<DocumentBlock, { type: "TABLE" }>): number {
+  return Math.max(1, ...block.content.rows.map((row) => row.length));
+}
+
 /** Run của ô thứ {@code field} trong block chữ (đoạn: ô 0; danh sách: mục thứ field). */
 function fieldRuns(block: DocumentBlock, field: number): Run[] {
+  if (block.type === "HEADING") return headingRuns(block);
   if (block.type === "PARAGRAPH") return block.content.runs;
   if (block.type === "LIST") return block.content.items[field]?.runs ?? [];
+  if (block.type === "TABLE") {
+    const columns = tableColumns(block);
+    return block.content.rows[Math.floor(field / columns)]?.[field % columns]?.runs ?? [];
+  }
   return [];
 }
 
 function mapField(block: DocumentBlock, field: number, change: (runs: Run[]) => Run[]): DocumentBlock {
+  if (block.type === "HEADING") return withHeadingRuns(block, change(headingRuns(block)));
   if (block.type === "PARAGRAPH") return { ...block, content: { ...block.content, runs: change(block.content.runs) } };
   if (block.type === "LIST") {
     return { ...block, content: { ...block.content, items: block.content.items.map((item, i) => (i === field ? { ...item, runs: change(item.runs) } : item)) } };
   }
+  if (block.type === "TABLE") return mapCell(block, field, (cell) => ({ ...cell, runs: change(cell.runs) }));
   return block;
+}
+
+/** Đổi ô thứ {@code field} của bảng (hàng rồi cột). */
+function mapCell(block: Extract<DocumentBlock, { type: "TABLE" }>, field: number, change: (cell: TableCell) => TableCell): DocumentBlock {
+  const columns = tableColumns(block);
+  const row = Math.floor(field / columns);
+  const column = field % columns;
+  return { ...block, content: { ...block.content, rows: block.content.rows.map((cells, r) => r !== row ? cells
+    : Array.from({ length: Math.max(cells.length, column + 1) }, (_, c) => {
+      const cell = cells[c] ?? { runs: [{ text: "" }] };
+      return c === column ? change(cell) : cell;
+    })) } };
 }
 
 function styleOf(block: DocumentBlock | undefined): StyleValue | "" {
@@ -158,7 +217,13 @@ export function convertBlock(block: DocumentBlock, style: StyleValue): DocumentB
   return { id, origin, type: "HEADING", content: { style, text: runsText(runs).replace(/\s*\n\s*/g, " ").slice(0, 500), ...keep } };
 }
 
+/** Tiêu đề giữ cả chữ thuần (đánh số, dàn ý, xuất file dùng) và run có định dạng. */
+function withHeadingRuns(block: Extract<DocumentBlock, { type: "HEADING" }>, runs: Run[]): DocumentBlock {
+  return { ...block, content: { ...block.content, runs, text: runsText(runs).replace(/\s*\n\s*/g, " ").slice(0, 500) } };
+}
+
 function mapRuns(block: DocumentBlock, change: (run: Run) => Run): DocumentBlock {
+  if (block.type === "HEADING") return withHeadingRuns(block, headingRuns(block).map(change));
   if (block.type === "PARAGRAPH") return { ...block, content: { ...block.content, runs: block.content.runs.map(change) } };
   if (block.type === "LIST") return { ...block, content: { ...block.content, items: block.content.items.map((item) => ({ ...item, runs: item.runs.map(change) })) } };
   return block;
@@ -221,13 +286,6 @@ type KeyHandlers = {
   removeEmpty?: () => void;
   step?: (direction: -1 | 1) => void;
 };
-
-/** Phím kiểu trình soạn văn bản ở ô tiêu đề: Enter mở đoạn mới, Backspace ở ô trống thì xóa, mũi tên ở mép thì sang block bên cạnh. */
-function textKeys(event: KeyboardEvent<HTMLTextAreaElement>, handlers: KeyHandlers) {
-  if (event.nativeEvent.isComposing) return;
-  const field = event.currentTarget;
-  keys(event, { start: field.selectionStart, end: field.selectionEnd, length: field.value.length }, handlers);
-}
 
 /** Phím của ô chữ: Enter tách tại con trỏ, Backspace ở ô trống thì xóa block, mũi tên ở mép thì sang block bên cạnh. */
 function keys(event: KeyboardEvent<HTMLElement>, caret: Caret, handlers: KeyHandlers) {
@@ -296,11 +354,88 @@ export function ToolbarButton({ icon, active, className, children, ...rest }: Bu
   );
 }
 
+const EMPTY_RUNS: Run[] = [{ text: "" }];
+const TITLE_CLASS = "font-display text-[28px] leading-tight tracking-[-0.025em] text-ink";
+
+type TailStyle = { format: Omit<Run, "text">; align?: Align; list?: "UL" | "OL" };
+const EMPTY_TAIL: TailStyle = { format: {} };
+
+/** Khối (không phải tiêu đề) mang dấu thuộc lại mục cấp {@code level} sau các mục con. */
+function withUnder(block: DocumentBlock, level: number): DocumentBlock {
+  return block.type === "HEADING" ? block : { ...block, content: { ...block.content, under: level } } as DocumentBlock;
+}
+
+/** Run của tên bài: định dạng trong JSON nếu cùng chữ với tên đang có, không thì chữ thuần (tên đổi ở chỗ khác, bài cũ). */
+function currentTitleRuns(document: DocumentModel, text: string): Run[] {
+  const runs = document.title?.runs;
+  return runs && runsText(runs) === text ? runs : [{ text }];
+}
+
+/** Dòng cuối đã chọn kiểu danh sách: hiện dấu đầu dòng trước chỗ gõ. */
+function TailList({ list, children }: { list?: "UL" | "OL"; children: ReactNode }) {
+  if (!list) return <>{children}</>;
+  const Tag = list === "OL" ? "ol" : "ul";
+  return <Tag className={cx(list === "OL" ? "list-decimal" : "list-disc", "pl-6")}><li>{children}</li></Tag>;
+}
+
+/** Danh sách trong ô bảng: mỗi dòng của ô thêm (hoặc bỏ, nếu dòng nào cũng có) dấu "• " hay "1. ", "2. "… ở đầu. */
+function toggleCellList(runs: Run[], kind: "UL" | "OL"): Run[] {
+  const marker = kind === "UL" ? /^• / : /^\d+\. /;
+  const lines = runLines(runs);
+  const marked = lines.every((line) => marker.test(runsText(line)));
+  const plain = (line: Run[]) => {
+    const text = runsText(line);
+    const found = /^• |^\d+\. /.exec(text);
+    return found ? sliceRuns(line, found[0].length, text.length) : line;
+  };
+  return joinLines(lines.map((line, i) => {
+    const rest = plain(line);
+    if (marked) return rest;
+    const prefix = kind === "UL" ? "• " : `${i + 1}. `;
+    return [{ ...formatOf(rest[0]), text: prefix }, ...rest];
+  }));
+}
+
+function ViewButton({ label, on, onClick, children }: { label: string; on: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button type="button" role="radio" aria-checked={on} aria-label={label} title={label} onClick={onClick} onMouseDown={(event) => event.preventDefault()}
+      className={cx("flex size-7 items-center justify-center rounded-md transition-colors", on ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink")}>
+      {children}
+    </button>
+  );
+}
+
+function PageGlyph() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" width={17} height={17} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="5" y="3" width="14" height="18" rx="2" /><path d="M8.5 8h7M8.5 12h7M8.5 16h4" />
+    </svg>
+  );
+}
+
+function StepGlyph() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" width={17} height={17} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="6" y="5" width="12" height="14" rx="2" /><path d="M3 9v6M21 9v6" />
+    </svg>
+  );
+}
+
+/** Nút thêm mục: chỉ một dấu "+" kéo dài hết bề ngang, nhạt cho tới khi rê chuột (yêu cầu 2026-11-02). */
+function AddBar({ title, onClick }: { title: string; onClick: () => void }) {
+  return (
+    <button type="button" aria-label="Thêm mục" title={title} onClick={onClick}
+      className="flex h-6 w-full items-center justify-center rounded-md text-faint transition-colors hover:bg-primary-soft hover:text-primary-ink focus-visible:bg-primary-soft focus-visible:text-primary-ink">
+      <Icon name="add" size={16} />
+    </button>
+  );
+}
+
 function Separator() {
   return <span aria-hidden className="mx-1 h-5 w-px bg-line-strong" />;
 }
 
-type GlyphName = "undo" | "redo" | "alignLeft" | "alignCenter" | "alignRight" | "justify" | "bullets" | "numbers" | "indent" | "outdent"
+type GlyphName = "undo" | "redo" | "alignLeft" | "alignCenter" | "alignRight" | "justify" | "bullets" | "numbers"
   | "image" | "table" | "diagram" | "highlight";
 
 const GLYPHS: Record<GlyphName, ReactNode> = {
@@ -312,8 +447,6 @@ const GLYPHS: Record<GlyphName, ReactNode> = {
   justify: <><path d="M4 6h16M4 10h16M4 14h16M4 18h16" /></>,
   bullets: <><path d="M10 7h10M10 12h10M10 17h10" /><circle cx="5" cy="7" r="1" /><circle cx="5" cy="12" r="1" /><circle cx="5" cy="17" r="1" /></>,
   numbers: <><path d="M10 7h10M10 12h10M10 17h10M4 5h1.5v4M4 9h3M4 15.5c.5-.8 2.5-.8 2.5.5S4 17.5 4 19h3" /></>,
-  indent: <><path d="M4 6h16M11 10h9M11 14h9M4 18h16" /><path d="m4 9.5 3 2.5-3 2.5" /></>,
-  outdent: <><path d="M4 6h16M11 10h9M11 14h9M4 18h16" /><path d="m7 9.5-3 2.5 3 2.5" /></>,
   image: <><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" /><path d="m21 16-5-5L6 20" /></>,
   table: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 10h18M3 15h18M9 4v16M15 4v16" /></>,
   diagram: <><rect x="3" y="3" width="7" height="6" rx="1" /><rect x="14" y="15" width="7" height="6" rx="1" /><path d="M6.5 9v4.5a1.5 1.5 0 0 0 1.5 1.5h6" /></>,
@@ -414,9 +547,25 @@ function Square({ label, danger = false, disabled = false, onClick, children }: 
 }
 
 /** Nút xóa cả block (sơ đồ, ảnh) nổi ở góc trên trái khi trỏ vào block (yêu cầu 2026-10-22, thay menu "⋮"); không được xóa thì mờ. */
-function CornerDelete({ label, disabled = false, onClick }: { label: string; disabled?: boolean; onClick: () => void }) {
+/** Nút của mục ở mép trái, lệch ra ngoài khung để không chạm các mục con: ✕ xóa, bên dưới ↑ ↓ đổi chỗ trong cùng cha. */
+function SectionTools({ shown, onRemove, onUp, onDown }: { shown: boolean; onRemove: () => void; onUp?: () => void; onDown?: () => void }) {
   return (
-    <span className="pointer-events-none absolute -top-2 -left-2 z-20 opacity-0 transition-opacity group-focus-within/block:pointer-events-auto group-focus-within/block:opacity-100 group-hover/block:pointer-events-auto group-hover/block:opacity-100">
+    <span className={cx("absolute top-0 -left-7 z-10 flex flex-col gap-1 py-1 pr-2.5 pl-1 transition-opacity", shown ? "opacity-100" : "pointer-events-none opacity-0")}>
+      <Square danger label="Xóa mục" onClick={onRemove}>✕</Square>
+      <Square label="Đưa mục lên" disabled={!onUp} onClick={() => onUp?.()}>↑</Square>
+      <Square label="Đưa mục xuống" disabled={!onDown} onClick={() => onDown?.()}>↓</Square>
+    </span>
+  );
+}
+
+const CORNER_REVEAL = {
+  block: "group-focus-within/block:pointer-events-auto group-focus-within/block:opacity-100 group-hover/block:pointer-events-auto group-hover/block:opacity-100",
+  section: "group-focus-within/section:pointer-events-auto group-focus-within/section:opacity-100 group-hover/section:pointer-events-auto group-hover/section:opacity-100",
+};
+
+function CornerDelete({ label, disabled = false, scope = "block", always = false, onClick }: { label: string; disabled?: boolean; scope?: keyof typeof CORNER_REVEAL; always?: boolean; onClick: () => void }) {
+  return (
+    <span className={cx("absolute -top-2 -left-2 z-10 transition-opacity", always ? "opacity-60 hover:opacity-100" : "pointer-events-none opacity-0", CORNER_REVEAL[scope])}>
       <Square danger label={label} disabled={disabled} onClick={onClick}>✕</Square>
     </span>
   );
@@ -434,14 +583,47 @@ const TOOLBAR_COVER = "shadow-[0_-0.75rem_0_0.25rem_var(--c-bg)]";
 
 export function DocumentEditor({
   document, onChange, mode, diagramEnabled, readOnly = false, imageUrl, uploadImage, issues = [],
-  header, toolbarExtra, toolbarCenter, comments, activeComment, highlightBlockId, onFocusBlock, emptyLeafLabel, answerGuidance = false, fullWidth = false, matchCommentHeight = false,
+  header, titleField, toolbarExtra, viewSlot, toolbarCenter, comments, activeComment, highlightBlockId, onFocusBlock, emptyLeafLabel, answerGuidance = false, fullWidth = false, matchCommentHeight = false,
+  externalEdit = null,
 }: Props) {
   const origin: BlockOrigin = mode === "author" ? "TEACHER" : "STUDENT";
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [diagram, setDiagram] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<Record<string, string>>({});
   const [focusedId, setFocusedId] = useState<string | null>(null);
+  /** Con trỏ đang ở dòng cuối của một ô trắng: thêm ngay sau {@code afterId}, trong phần {@code sectionKey}. */
+  const [cursorLine, setCursorLine] = useState<{ afterId: string | null; sectionKey: string; tailKey: string } | null>(null);
+  /** Định dạng, căn lề, kiểu danh sách đặt sẵn cho dòng cuối (chưa có chữ); gõ vào thì đoạn mới mang theo. */
+  const [tailStyles, setTailStyles] = useState<Record<string, TailStyle>>({});
+  const tailRuns = (key: string): Run[] => {
+    const format = tailStyles[key]?.format;
+    return format && Object.values(format).some((value) => value !== undefined) ? [{ ...format, text: "" }] : EMPTY_RUNS;
+  };
+  /** Con trỏ ở phần đầu trang do trang đưa vào (tên bài): thanh công cụ chỉ còn hoàn tác, làm lại. */
+  const [inHeader, setInHeader] = useState(false);
+  /** Kéo thả mục: mục đang kéo và chỗ thả (trước, sau một mục cùng cha). */
+  const [dragKey, setDragKey] = useState<string | null>(null);
+  /** Mục đang rê chuột (mục trong cùng), để chỉ mục đó hiện nút ✕ ↑ ↓. */
+  const [hoverSection, setHoverSection] = useState<string | null>(null);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Rê vào một mục: hiện nút ngay; rời ra: đợi một lúc mới ẩn, để kịp đưa chuột tới nút ở ngoài khung. */
+  function hoverOn(key: string) {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    hoverTimer.current = null;
+    if (hoverSection !== key) setHoverSection(key);
+  }
+  function hoverOff() {
+    if (hoverTimer.current || !hoverSection) return;
+    hoverTimer.current = setTimeout(() => { hoverTimer.current = null; setHoverSection(null); }, 700);
+  }
+  const [dropAt, setDropAt] = useState<{ key: string; place: "before" | "after" } | null>(null);
   const [selected, setSelected] = useState<Selected | null>(null);
+  const [view, setView] = useState<"page" | "step">("page");
+  const [stepAt, setStepAt] = useState(0);
+  const latestLeaves = useRef<DocSection[]>([]);
+  /** Thêm mục con từ sidebar của bài (sự kiện `document:add-part`); null là mục ngoài cùng. Chỉ người soạn. */
+  const addPartFrom = useRef<(parentId: string | null) => void>(() => {});
+  const latestBlocks = useRef<DocumentBlock[]>([]);
   const [history, setHistory] = useState({ past: 0, future: 0 });
   const paper = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
@@ -458,6 +640,15 @@ export function DocumentEditor({
   useEffect(() => {
     latest.current = document;
   }, [document]);
+  const seenExternal = useRef(externalEdit?.id ?? null);
+  useEffect(() => {
+    if (!externalEdit || externalEdit.id === seenExternal.current) return;
+    seenExternal.current = externalEdit.id;
+    past.current = [...past.current.slice(-99), externalEdit.before];
+    future.current = [];
+    lastPush.current = 0;
+    setHistory({ past: past.current.length, future: 0 });
+  }, [externalEdit]);
   useEffect(() => () => Object.values(previewsRef.current).forEach((url) => URL.revokeObjectURL(url)), []);
 
   useEffect(() => {
@@ -466,6 +657,75 @@ export function DocumentEditor({
     pendingFocus.current = null;
     focusField(paper.current, target);
   });
+
+  // Sidebar của bài bấm vào một phần (sự kiện `document:show-part`): ở chế độ Từng phần thì chuyển sang phần chứa nó, rồi cuộn tới.
+  useEffect(() => {
+    const show = (event: Event) => {
+      const id = (event as CustomEvent<{ headingId: string }>).detail?.headingId;
+      if (!id) return;
+      // Mục được bấm trên Mục lục là mục đang xem (sáng trên Mục lục), kể cả khi trang không cuộn tới được mép trên (mục
+      // cuối thấp); giữ tới khi người dùng tự cuộn (yêu cầu 2026-11-05).
+      pinned.current = id;
+      // Mỗi mục là một trang: mở đúng trang của mục được bấm (bấm 1 khi đang ở 1.2 thì về trang 1).
+      // "DOCUMENT": văn bản ngoài mọi mục (trang gốc), cuộn tới khối đầu tiên của nó.
+      const root = id === "DOCUMENT";
+      const pages = latestLeaves.current;
+      let page = pages.findIndex((leaf) => (root ? !leaf.heading : leaf.heading?.id === id));
+      if (latestView.current === "step" && page >= 0) {
+        // Mục cha chưa có chữ riêng (chỉ chứa mục con): mở trang mục con đầu tiên, ví dụ bấm 1.2 thì sang 1.2.1; trang ngay
+        // sau mục cha luôn là mục con đầu của nó (yêu cầu 2026-11-05).
+        while (pages[page]?.heading && pages[page]!.children.length > 0 && !hasOwnText(pages[page]!) && pages[page + 1]) page++;
+        pinned.current = pages[page]!.heading?.id ?? "DOCUMENT";
+        // Ở chế độ Từng phần luôn chuyển trang rồi lên đầu trang, kể cả khi mục cha đang hiện trên trang mục con.
+        setStepAt(page);
+        requestAnimationFrame(() => {
+          const top = paper.current ? paper.current.getBoundingClientRect().top + window.scrollY - 140 : 0;
+          if (typeof window.scrollTo === "function") window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+        });
+        return;
+      }
+      if (page >= 0) setStepAt(page);
+      const first = root ? latestLeaves.current.find((leaf) => !leaf.heading) : undefined;
+      const scrollId = root ? (first?.blocks[0] ?? first?.after[0])?.id : id;
+      requestAnimationFrame(() => paper.current?.querySelector(`[data-block-id="${scrollId}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
+    };
+    window.addEventListener("document:show-part", show);
+    return () => window.removeEventListener("document:show-part", show);
+  }, []);
+  // Báo cho Mục lục mục đang xem (sự kiện `document:current-part`): cả trang thì là mục cuối cùng đã cuộn qua mép trên.
+  const lastCurrent = useRef<string | null>(null);
+  const latestView = useRef(view);
+  useEffect(() => { latestView.current = view; }, [view]);
+  const pinned = useRef<string | null>(null);
+  const reportCurrent = useRef<() => void>(() => {});
+  // Người dùng tự cuộn (con lăn, chạm, phím) thì bỏ mục ghim, lại theo chỗ cuộn tới.
+  useEffect(() => {
+    const release = (event: Event) => {
+      if (event instanceof KeyboardEvent && !["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key)) return;
+      if (event instanceof KeyboardEvent && (event.target as HTMLElement | null)?.closest?.("[contenteditable], textarea, input")) return;
+      pinned.current = null;
+    };
+    window.addEventListener("wheel", release, { passive: true });
+    window.addEventListener("touchmove", release, { passive: true });
+    window.addEventListener("keydown", release);
+    return () => { window.removeEventListener("wheel", release); window.removeEventListener("touchmove", release); window.removeEventListener("keydown", release); };
+  }, []);
+  useEffect(() => {
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => { frame = 0; reportCurrent.current(); });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); if (frame) cancelAnimationFrame(frame); };
+  }, []);
+  // Sau mỗi lần vẽ (đổi trang, đổi chế độ xem, thêm bớt mục) báo lại mục đang xem; trùng mục cũ thì không báo.
+  useEffect(() => { reportCurrent.current(); });
+  useEffect(() => {
+    const add = (event: Event) => addPartFrom.current((event as CustomEvent<{ parentId: string | null }>).detail?.parentId ?? null);
+    window.addEventListener("document:add-part", add);
+    return () => window.removeEventListener("document:add-part", add);
+  }, []);
 
   // Vùng bôi đen để thanh công cụ hiện đúng định dạng của phần đang chọn.
   useEffect(() => {
@@ -480,7 +740,9 @@ export function DocumentEditor({
   }, []);
 
   const blocks = document.blocks;
+  latestBlocks.current = blocks;
   const student = mode === "student";
+  const authoring = !student && !readOnly;
   const guided = student && answerGuidance;
   // Người học chỉ viết trong phần: block nằm từ tiêu đề lá tới tiêu đề kế; khung không có tiêu đề thì cả bài.
   const sections = student ? sectionsOf(document, computeParts(document)) : null;
@@ -491,15 +753,33 @@ export function DocumentEditor({
   const fillable = (block: DocumentBlock) => student && !readOnly && block.origin === "TEACHER" && block.type === "TABLE" && inPart(block.id);
   const locked = (block: DocumentBlock) => readOnly || (student && block.origin === "TEACHER" && !fillable(block));
   const focused = blocks.find((b) => b.id === focusedId);
-  const insertAllowed = focused ? inPart(focused.id) : atEndInPart;
-  const target = focused && !locked(focused) ? focused : undefined;
+  // Thanh công cụ theo chỗ con trỏ (yêu cầu 2026-11-04): + Mục chỉ ở đoạn văn và dòng cuối; chèn bảng, ảnh, sơ đồ ở đoạn văn,
+  // danh sách, dòng cuối; không ở tên bài, tiêu đề mục, ô bảng, ảnh, sơ đồ.
+  const onText = !focused || focused.type === "PARAGRAPH";
+  const addSectionAllowed = !inHeader && (cursorLine !== null || onText);
+  const insertAllowed = !inHeader && (cursorLine !== null || onText) && (focused ? inPart(focused.id) : atEndInPart);
+  // Ở tên bài hay ở dòng cuối (chưa phải đoạn văn) thì không có khối nào để định dạng.
+  const target = focused && !locked(focused) && !inHeader && !cursorLine ? focused : undefined;
   const style = styleOf(target);
   const textTarget = target?.type === "PARAGRAPH" || target?.type === "LIST";
-  // Định dạng hiện trên thanh công cụ: của vùng bôi đen nếu có, không thì của cả đoạn (đúng phần mà nút sẽ đổi).
-  const shownRuns = target && textTarget && selected?.blockId === target.id && selected.start !== selected.end
-    ? sliceRuns(fieldRuns(target, selected.field), selected.start, selected.end) : runsOf(target);
+  // Ô bảng đang trỏ (theo vùng chọn): căn lề từng ô (yêu cầu 2026-11-04).
+  const cellField = target?.type === "TABLE" && selected?.blockId === target.id ? selected.field : null;
+  const cellAlign = target?.type === "TABLE" && cellField !== null ? tableCell(target, cellField)?.align : undefined;
+  // Đậm, nghiêng, màu… dùng được cả trong ô bảng (yêu cầu 2026-11-04); danh sách, căn lề thì không.
+  const titleOn = inHeader && !!titleField && !titleField.readOnly;
+  const tailStyle = cursorLine ? tailStyles[cursorLine.tailKey] ?? EMPTY_TAIL : null;
+  // Chữ, căn lề: đoạn văn, danh sách, tiêu đề mục, ô bảng, dòng cuối, tên bài. Danh sách: đoạn văn, danh sách, ô bảng, dòng cuối.
+  const formatTarget = textTarget || target?.type === "TABLE" || target?.type === "HEADING" || titleOn || !!tailStyle;
+  const listAllowed = textTarget || target?.type === "TABLE" || !!tailStyle;
+  // Định dạng hiện trên thanh công cụ: của vùng bôi đen nếu có, không thì của cả đoạn (ô bảng: cả ô đang trỏ).
+  const titleRuns = currentTitleRuns(document, titleField?.text ?? "");
+  const shownRuns = titleOn ? (selected?.blockId === "TITLE" && selected.start !== selected.end ? sliceRuns(titleRuns, selected.start, selected.end) : titleRuns)
+    : tailStyle ? [{ ...tailStyle.format, text: "" }]
+    : !target || !formatTarget ? [] : selected?.blockId === target.id && (selected.start !== selected.end || target.type === "TABLE")
+    ? (selected.start !== selected.end ? sliceRuns(fieldRuns(target, selected.field), selected.start, selected.end) : fieldRuns(target, selected.field))
+    : runsOf(target);
 
-  function update(next: DocumentBlock[], focus?: FocusTarget) {
+  function remember() {
     const now = Date.now();
     if (now - lastPush.current > HISTORY_GAP_MS) {
       past.current = [...past.current.slice(-99), document];
@@ -507,8 +787,22 @@ export function DocumentEditor({
       setHistory({ past: past.current.length, future: 0 });
     }
     lastPush.current = now;
+  }
+  function update(next: DocumentBlock[], focus?: FocusTarget) {
+    remember();
     if (focus) pendingFocus.current = focus;
-    onChange({ blocks: next });
+    onChange({ ...document, blocks: next });
+  }
+  /** Đổi tên bài có định dạng: lưu vào JSON khung đề, chữ thuần báo cho trang. */
+  function setTitle(next: TitleContent) {
+    remember();
+    onChange({ ...document, title: next });
+    titleField?.onText(runsText(next.runs).replace(/\s*\n\s*/g, " "));
+  }
+  /** Hoàn tác, làm lại đổi cả tên bài thì báo lại chữ thuần cho trang. */
+  function restore(model: DocumentModel) {
+    onChange(model);
+    if (titleField && model.title && runsText(model.title.runs) !== titleField.text) titleField.onText(runsText(model.title.runs));
   }
   function undo() {
     const previous = past.current.at(-1);
@@ -517,7 +811,7 @@ export function DocumentEditor({
     future.current = [...future.current, document];
     lastPush.current = 0;
     setHistory({ past: past.current.length, future: future.current.length });
-    onChange(previous);
+    restore(previous);
   }
   function redo() {
     const next = future.current.at(-1);
@@ -526,7 +820,7 @@ export function DocumentEditor({
     past.current = [...past.current, document];
     lastPush.current = 0;
     setHistory({ past: past.current.length, future: future.current.length });
-    onChange(next);
+    restore(next);
   }
   function replace(id: string, block: DocumentBlock, focus?: FocusTarget) {
     update(blocks.map((b) => (b.id === id ? block : b)), focus);
@@ -552,7 +846,7 @@ export function DocumentEditor({
   }
   function remove(id: string, focusPrevious = false) {
     const index = blocks.findIndex((b) => b.id === id);
-    const next = blocks.filter((b) => b.id !== id);
+    const next = without(blocks, id);
     const previous = focusPrevious ? neighbour(next, index - 1, -1) ?? neighbour(next, index, 1) : undefined;
     update(next, previous ? { id: previous.id, at: index > 0 ? "end" : "start" } : undefined);
   }
@@ -563,6 +857,8 @@ export function DocumentEditor({
   }
   function focusBlock(id: string) {
     if (id !== focusedId) setFocusedId(id);
+    if (cursorLine) setCursorLine(null);
+    if (inHeader) setInHeader(false);
     onFocusBlock?.(id);
   }
   /** Viết tiếp ở cuối một phần: đoạn trống cuối cùng của mình thì đặt con trỏ vào, không thì thêm đoạn mới. */
@@ -577,10 +873,99 @@ export function DocumentEditor({
     if (last) continueAfter(last.id);
     else insertAfter(null, newBlock("PARAGRAPH", origin));
   }
-  /** Chèn sau block đang chọn (hoặc cuối bài); người học chỉ chèn trong phần. */
+  /**
+   * Thêm tiêu đề mục ngay sau {@code afterId} (cuối bài nếu null); con trỏ vào ô tiêu đề. Nội dung viết ở dòng cuối của ô
+   * văn bản, luôn có sẵn nên không cần thêm đoạn văn.
+   */
+  function addHeading(afterId: string | null, style: HeadingStyle) {
+    const heading: DocumentBlock = { id: newId(), origin, type: "HEADING", content: { style, text: "" } };
+    const index = afterId ? blocks.findIndex((b) => b.id === afterId) : blocks.length - 1;
+    const at = index + 1;
+    setFocusedId(heading.id);
+    update([...blocks.slice(0, at), heading, ...blocks.slice(at)], { id: heading.id, at: "start" });
+  }
+  /** Dải block liền nhau của cả mục (tiêu đề, văn bản, mục con, văn bản sau mục con). */
+  function rangeOf(section: DocSection): [number, number] {
+    const start = blocks.findIndex((block) => block.id === section.heading?.id);
+    const last = lastOf(section);
+    return [start, last ? blocks.findIndex((block) => block.id === last.id) : start];
+  }
+  /** Đưa mục {@code section} tới trước hoặc sau mục {@code target} cùng cha (yêu cầu 2026-11-04). */
+  function moveSection(section: DocSection, target: DocSection, place: "before" | "after") {
+    if (section === target) return;
+    const [from, to] = rangeOf(section);
+    if (from < 0) return;
+    const moving = blocks.slice(from, to + 1);
+    const rest = [...blocks.slice(0, from), ...blocks.slice(to + 1)];
+    const targetLast = lastOf(target);
+    const anchor = place === "before" ? target.heading?.id : targetLast?.id;
+    const index = rest.findIndex((block) => block.id === anchor);
+    if (index < 0) return;
+    const at = place === "before" ? index : index + 1;
+    update([...rest.slice(0, at), ...moving, ...rest.slice(at)]);
+  }
+  /** Thả mục đang kéo vào chỗ đang xem trước (trước, sau một mục cùng cha). */
+  function commitDrop() {
+    const dragged = dragKey ? sectionByKey.get(dragKey) : undefined;
+    const target = dropAt ? sectionByKey.get(dropAt.key) : undefined;
+    if (dragged && target && dropAt && parentOf.get(dragged) === parentOf.get(target)) moveSection(dragged, target, dropAt.place);
+    setDragKey(null);
+    setDropAt(null);
+  }
+  function stepSection(section: DocSection, direction: -1 | 1) {
+    const siblings = parentOf.get(section)?.children ?? [];
+    const index = siblings.indexOf(section);
+    const other = siblings[index + direction];
+    if (other) moveSection(section, other, direction < 0 ? "before" : "after");
+  }
+  /** Xóa cả mục (tiêu đề, văn bản và các mục con); con trỏ về chỗ viết ngay trước mục. Hoàn tác được. */
+  function removeSection(section: DocSection) {
+    const ids = new Set<string>();
+    const walk = (part: DocSection) => {
+      if (part.heading) ids.add(part.heading.id);
+      part.blocks.forEach((block) => ids.add(block.id));
+      part.after.forEach((block) => ids.add(block.id));
+      part.children.forEach(walk);
+    };
+    walk(section);
+    const index = blocks.findIndex((block) => block.id === section.heading?.id);
+    const next = blocks.filter((block) => !ids.has(block.id));
+    const previous = neighbour(next, index - 1, -1);
+    update(next, previous ? { id: previous.id, at: "end" } : undefined);
+  }
+  /** Bỏ block {@code id}; nếu đó là khối đầu của phần viết sau các mục con thì khối kế tiếp nhận dấu {@code under}. */
+  function without(list: DocumentBlock[], id: string): DocumentBlock[] {
+    const index = list.findIndex((b) => b.id === id);
+    const removed = list[index];
+    const under = removed ? underOf(removed) : null;
+    const next = list.filter((b) => b.id !== id);
+    const follower = next[index];
+    if (under === null || !follower || follower.type === "HEADING" || underOf(follower) !== null) return next;
+    return next.map((b, i) => (i === index ? withUnder(b, under) : b));
+  }
+
+  /**
+   * Chèn bảng, ảnh, sơ đồ sau block đang chọn (hoặc cuối bài); người học chỉ chèn trong phần. Chèn xong con trỏ xuống dòng
+   * ngay sau (yêu cầu 2026-11-04): đoạn văn kế tiếp nếu có, dòng cuối nếu khối mới là cuối văn bản của mục, không thì một
+   * đoạn trống mới.
+   */
   function insert(block: DocumentBlock) {
     if (!insertAllowed) return;
-    insertAfter(focused?.id ?? null, block);
+    const afterId = cursorLine ? cursorLine.afterId : focused?.id ?? null;
+    const index = afterId ? blocks.findIndex((b) => b.id === afterId) : -1;
+    const at = index < 0 ? blocks.length : index + 1;
+    const next = blocks[at];
+    const sectionKey = cursorLine?.sectionKey ?? cursorSection?.heading?.id ?? "DOCUMENT";
+    const ownTail = cursorLine?.tailKey ?? (cursorSection && cursorSection.children.length === 0 ? `tail-${sectionKey}` : null);
+    setFocusedId(block.id);
+    if (next && (next.type === "PARAGRAPH" || next.type === "LIST") && underOf(next) === null) {
+      update([...blocks.slice(0, at), block, ...blocks.slice(at)], { id: next.id, at: "start" });
+    } else if (ownTail && (!next || next.type === "HEADING")) {
+      update([...blocks.slice(0, at), block, ...blocks.slice(at)], { id: ownTail, at: "start" });
+    } else {
+      const line = paragraph(origin);
+      update([...blocks.slice(0, at), block, line, ...blocks.slice(at)], { id: line.id, at: "start" });
+    }
   }
   async function upload(blockId: string, file: File) {
     if (!uploadImage) return;
@@ -594,7 +979,7 @@ export function DocumentEditor({
         return { ...current, [blockId]: url };
       });
       const now = latest.current;
-      onChange({ blocks: now.blocks.map((b) => (b.id === blockId && b.type === "IMAGE" ? { ...b, content: { ...b.content, fileRef, hasFile: false } } : b)) });
+      onChange({ ...now, blocks: now.blocks.map((b) => (b.id === blockId && b.type === "IMAGE" ? { ...b, content: { ...b.content, fileRef, hasFile: false } } : b)) });
     } catch (error) {
       setUploadError((current) => ({ ...current, [blockId]: error instanceof Error ? error.message : "Tải ảnh không thành công" }));
     }
@@ -609,41 +994,119 @@ export function DocumentEditor({
     const empty = (): TableCell => ({ runs: [{ text: "" }] });
     insert({ id: newId(), origin, type: "TABLE", content: { rows: Array.from({ length: rows }, () => Array.from({ length: cols }, empty)) } });
   }
-  /** Chèn sơ đồ là mở luôn Draw.io, không chọn loại hay mẫu (yêu cầu 2026-10-22; loại do server suy từ hình vẽ). */
+  /** Chèn khung sơ đồ trống; Draw.io chỉ mở khi người dùng bấm vào khung (yêu cầu 2026-11-04). */
   function insertDiagram() {
     if (!insertAllowed) return;
-    const block = newBlock("DIAGRAM", origin);
-    insert(block);
-    setDiagram(block.id);
-  }
-  /** Thụt lề mục danh sách đang gõ (Tab, Shift+Tab làm tương tự trong ô). */
-  function indentList(delta: -1 | 1) {
-    if (target?.type !== "LIST") return;
-    const fields = Array.from(paper.current?.querySelectorAll<HTMLElement>(`[data-block-id="${target.id}"] [data-editable]`) ?? []);
-    const index = Math.max(0, fields.findIndex((field) => field === globalThis.document.activeElement));
-    replace(target.id, { ...target, content: { ...target.content, items: target.content.items.map((item, i) => (i === index
-      ? { ...item, level: Math.min(4, Math.max(0, (item.level ?? 0) + delta)) } : item)) } });
+    insert(newBlock("DIAGRAM", origin));
   }
   /** Định dạng chữ (yêu cầu 2026-10-22): có vùng bôi đen trong ô thì chỉ đổi phần bôi đen, không thì cả đoạn. */
   function formatText(range: (runs: Run[], start: number, end: number) => Run[], whole: (block: DocumentBlock) => DocumentBlock) {
-    if (!target || !textTarget) return;
+    if (!target || !formatTarget) return;
     const selection = selectionIn(paper.current);
+    if (target.type === "TABLE") {
+      // Ô bảng: bôi đen thì chỉ phần đó, không thì cả ô đang trỏ.
+      if (!selection || selection.blockId !== target.id) return;
+      const length = runsText(fieldRuns(target, selection.field)).length;
+      const [start, end] = selection.start !== selection.end ? [selection.start, selection.end] : [0, length];
+      replace(target.id, mapField(target, selection.field, (runs) => range(runs, start, end)));
+      return;
+    }
     if (selection && selection.blockId === target.id && selection.start !== selection.end) {
       replace(target.id, mapField(target, selection.field, (runs) => range(runs, selection.start, selection.end)));
     } else {
       replace(target.id, whole(target));
     }
   }
+  /** Tên bài: bôi đen thì chỉ phần đó, không thì cả tên. */
+  function formatTitle(range: (runs: Run[], start: number, end: number) => Run[]) {
+    const selection = selectionIn(paper.current);
+    const [start, end] = selection?.blockId === "TITLE" && selection.start !== selection.end ? [selection.start, selection.end] : [0, runsText(titleRuns).length];
+    setTitle({ ...document.title, runs: range(titleRuns, start, end) });
+  }
+  function setTail(change: (style: TailStyle) => TailStyle) {
+    if (!cursorLine) return;
+    const key = cursorLine.tailKey;
+    setTailStyles((current) => ({ ...current, [key]: change(current[key] ?? EMPTY_TAIL) }));
+  }
   function toggle(flag: RunFlag) {
+    if (titleOn) return formatTitle((runs, start, end) => toggleFlagRange(runs, start, end, flag));
+    if (tailStyle) return setTail((style) => ({ ...style, format: { ...style.format, [flag]: !style.format[flag] || undefined } }));
     formatText((runs, start, end) => toggleFlagRange(runs, start, end, flag), (block) => toggleFlag(block, flag));
   }
   function paint(key: "color" | "highlight", value: string | undefined) {
+    if (titleOn) return formatTitle((runs, start, end) => colorRange(runs, start, end, key, value));
+    if (tailStyle) return setTail((style) => ({ ...style, format: { ...style.format, [key]: value } }));
     formatText((runs, start, end) => colorRange(runs, start, end, key, value), (block) => setRunColor(block, key, value));
   }
+  /** Danh sách: đoạn văn, danh sách đổi kiểu; ô bảng thêm/bỏ dấu đầu dòng từng dòng; dòng cuối đặt sẵn kiểu cho chữ sắp gõ. */
+  function toggleList(kind: "UL" | "OL") {
+    if (tailStyle && cursorLine) {
+      // Dòng cuối: tạo ngay danh sách một mục trống ở chỗ dòng cuối, con trỏ vào mục đó; dòng cuối xuống dưới. Backspace ở mục
+      // trống xóa danh sách (yêu cầu 2026-11-04).
+      const section = sectionByKey.get(cursorLine.sectionKey);
+      const end = cursorLine.tailKey.startsWith("tail-end-");
+      const list: DocumentBlock = { id: newId(), origin, type: "LIST", content: {
+        ordered: kind === "OL", items: [{ level: 0, runs: [{ ...tailStyle.format, text: "" }] }],
+        ...(tailStyle.align ? { align: tailStyle.align } : {}), ...(end && section ? { under: section.level } : {}) } };
+      const at = cursorLine.afterId ? blocks.findIndex((b) => b.id === cursorLine.afterId) + 1 : 0;
+      const key = cursorLine.tailKey;
+      setTailStyles((current) => { const next = { ...current }; delete next[key]; return next; });
+      setCursorLine(null);
+      setFocusedId(list.id);
+      update([...blocks.slice(0, at), list, ...blocks.slice(at)], { id: list.id, at: "start" });
+      return;
+    }
+    if (!target) return;
+    if (target.type === "TABLE") {
+      const field = selectionIn(paper.current)?.field ?? cellField;
+      if (field === null || field < 0) return;
+      replace(target.id, mapField(target, field, (runs) => toggleCellList(runs, kind)));
+      return;
+    }
+    replace(target.id, convertBlock(target, style === kind ? "P" : kind), { id: target.id, at: "end" });
+  }
+  function alignTo(value: Align) {
+    const align = value === "LEFT" ? undefined : value;
+    if (titleOn) return setTitle({ ...document.title, runs: titleRuns, align });
+    if (tailStyle) return setTail((style) => ({ ...style, align }));
+    if (!target) return;
+    if (target.type !== "TABLE") { replace(target.id, setAlign(target, value)); return; }
+    const field = selectionIn(paper.current)?.field ?? cellField;
+    if (field === null || field < 0) return;
+    replace(target.id, mapCell(target, field, (cell) => ({ ...cell, align })));
+  }
+  const shownAlign: Align | undefined = titleOn ? document.title?.align : tailStyle ? tailStyle.align
+    : target?.type === "TABLE" ? cellAlign : alignOf(target);
+  const alignAllowed = titleOn || !!tailStyle || (!!target && target.type !== "IMAGE" && target.type !== "DIAGRAM" && (target.type !== "TABLE" || cellField !== null));
 
+  const tree = documentTree(document);
+  // Chế độ Từng phần (yêu cầu 2026-11-04): mỗi mục là một trang (văn bản của riêng mục, kèm khung các mục cha), theo thứ tự
+  // trong bài; văn bản ở ngoài mọi mục là một trang riêng ở đầu.
+  const leaves: DocSection[] = [];
+  const collect = (section: DocSection) => {
+    if (section.heading) leaves.push(section);
+    section.children.forEach(collect);
+  };
+  if (tree.blocks.length > 0 || tree.after.length > 0) leaves.push(tree);
+  collect(tree);
+  const stepping = view === "step" && tree.children.length > 0;
+  const stepIndex = Math.min(stepAt, Math.max(0, leaves.length - 1));
+  const currentLeaf = stepping ? leaves[stepIndex]! : null;
+  // Từng phần: chỉ các mục đang hiện (mục của trang và các mục cha) mới có ghi chú bên lề, không để cột ghi chú kéo dài trang.
+  const shownHeadings = new Set<string>();
+  if (currentLeaf) {
+    const reaches = (section: DocSection): boolean => section === currentLeaf || section.children.some(reaches);
+    const mark = (section: DocSection) => {
+      if (!reaches(section)) return;
+      if (section.heading) shownHeadings.add(section.heading.id);
+      section.children.forEach(mark);
+    };
+    mark(tree);
+  }
   const editing = blocks.find((b) => b.id === diagram && b.type === "DIAGRAM");
   // Đang vẽ (Draw.io chiếm cột phải, trang hẹp lại) thì ẩn ghi chú bên lề như bản demo ẩn cột mục lục.
-  const visible = editing ? [] : (comments ?? []).filter((c) => !c.anchorBlockId || blocks.some((b) => b.id === c.anchorBlockId));
+  const visible = editing ? [] : (comments ?? []).filter((c) => !c.anchorBlockId
+    || (currentLeaf ? shownHeadings.has(c.anchorBlockId) : blocks.some((b) => b.id === c.anchorBlockId)));
   const rail = wide && visible.length > 0;
   const inlineComments = (anchor: string | null) => rail ? null : visible.filter((c) => c.anchorBlockId === anchor).map((c) => (
     <div key={c.key} className="my-2" data-comment={c.key}>{c.content}</div>
@@ -661,11 +1124,13 @@ export function DocumentEditor({
       <div key={block.id} data-testid={`block-${block.id}`} data-block-id={block.id} tabIndex={-1}
         title={muted && !readOnly ? "Đề của giảng viên, không sửa được" : undefined}
         onFocusCapture={() => focusBlock(block.id)} onMouseDownCapture={() => focusBlock(block.id)}
+        onKeyDown={removeLabel ? (event) => { if ((event.key === "Delete" || event.key === "Backspace") && event.target === event.currentTarget) { event.preventDefault(); remove(block.id, true); } } : undefined}
         className={cx("group/block relative -mx-1 rounded px-1 py-0.5 outline-none",
           fullWidth && (block.type === "PARAGRAPH" || block.type === "LIST") && "[&_.text-sm]:text-base [&_.text-sm]:leading-7",
           muted && "opacity-70", muted && !readOnly && "cursor-not-allowed",
           blockIssues.length > 0 && "shadow-[inset_3px_0_0_var(--color-danger)]")}>
-        {removeLabel && <CornerDelete label={removeLabel} onClick={() => remove(block.id)} />}
+        {/* Ảnh, sơ đồ: nút ✕ luôn hiện mờ ở góc (rê vào thì rõ), để xóa được cả khung chưa vẽ (yêu cầu 2026-11-04). */}
+        {removeLabel && <CornerDelete always label={removeLabel} onClick={() => remove(block.id)} />}
         {lockedLabel && <CornerDelete label={lockedLabel} disabled onClick={() => {}} />}
         {isLocked ? (
           <BlockView block={block} imageUrl={imageUrl} previewUrl={previews[block.id]}
@@ -675,7 +1140,15 @@ export function DocumentEditor({
             placeholder={guided && block.origin === "STUDENT" ? "Nhập bài làm của bạn tại đây…" : undefined}
             onUpload={uploadImage ? (file) => void upload(block.id, file) : undefined} guard={teacherBlock}
             ops={{
-              change: (next, focus) => replace(block.id, next, focus),
+              change: (next, focus) => {
+                // Đoạn cuối của khung bị xóa hết chữ: bỏ đoạn đó, con trỏ về dòng cuối (luôn có) của khung.
+                const tail = authoring ? tailOf.get(block.id) : undefined;
+                if (tail && next.type === "PARAGRAPH" && !runsText(next.content.runs)) {
+                  update(without(blocks, block.id), { id: tail, at: "start" });
+                  return;
+                }
+                replace(block.id, next, focus);
+              },
               split,
               removeEmpty: () => remove(block.id, true),
               remove: () => remove(block.id, true),
@@ -697,7 +1170,7 @@ export function DocumentEditor({
     const last = section.blocks.at(-1) ?? section.heading;
     if (!last) return null;
     if (student && section.blocks.some((b) => b.origin === "STUDENT" && (!guided || b.type === "PARAGRAPH" || b.type === "LIST"))) return null;
-    if (!student && section.blocks.length > 0) return null;
+    if (authoring || (!student && section.blocks.length > 0)) return null;
     if (readOnly) {
       return student && emptyLeafLabel
         ? <p data-testid={`empty-part-${key}`} className="py-1 text-xs text-muted">{emptyLeafLabel}</p>
@@ -727,7 +1200,6 @@ export function DocumentEditor({
               if (!last) return;
               const block = newBlock("DIAGRAM", "STUDENT");
               insertAfter(last.id, block);
-              setDiagram(block.id);
             }}>Thêm sơ đồ cho câu này</button>}
         </div>
         {section.blocks.slice(splitAt).map(renderBlock)}
@@ -736,9 +1208,119 @@ export function DocumentEditor({
     </>;
   }
 
-  function renderSection(section: DocSection): ReactNode {
+  /** Khối cuối cùng của cả phần (kể cả các phần con). */
+  const lastOf = (section: DocSection): DocumentBlock | null => {
+    const child = section.children.at(-1);
+    return section.after.at(-1) ?? (child && lastOf(child)) ?? section.blocks.at(-1) ?? section.heading;
+  };
+  /** Khối cuối của riêng phần (chưa tính phần con): đoạn gõ ở dòng cuối của khung chèn ngay sau nó. */
+  const ownEnd = (section: DocSection) => section.blocks.at(-1) ?? section.heading;
+  const contains = (section: DocSection, target: DocSection): boolean => section === target || section.children.some((child) => contains(child, target));
+
+  /**
+   * Dòng cuối của khung văn bản (người soạn, yêu cầu 2026-11-02): luôn có một dòng trống ở cuối khung; gõ gì vào là thành
+   * đoạn mới cuối phần (và lại có dòng cuối mới); xóa hết chữ của đoạn cuối thì đoạn đó mất, chỉ còn dòng cuối.
+   */
+  function tailLine(section: DocSection, key: string, end = false): ReactNode {
+    const anchor = end ? lastOf(section) : ownEnd(section);
+    const tailKey = end ? `tail-end-${key}` : `tail-${key}`;
+    return (
+      <div key={`${tailKey}-${blocks.length}`} data-block-id={tailKey} data-testid={tailKey}
+        className="border-b border-dashed border-line-strong py-0.5 transition-colors focus-within:border-primary"
+        onFocusCapture={() => {
+          if (anchor) focusBlock(anchor.id);
+          setCursorLine({ afterId: anchor?.id ?? null, sectionKey: key, tailKey });
+        }}>
+        <TailList list={tailStyles[tailKey]?.list}>
+        <RichText runs={tailRuns(tailKey)} aria-label="Dòng cuối" className={cx(PARAGRAPH_CLASS, alignClass(tailStyles[tailKey]?.align))}
+          onChange={(runs) => {
+            if (!runsText(runs)) return;
+            const preset = tailStyles[tailKey];
+            const align = preset?.align ? { align: preset.align } : {};
+            // Dòng cuối ở đáy ô (sau các mục con): đoạn mang cấp của phần để vẫn thuộc phần này. Đã chọn danh sách thì thành
+            // danh sách một mục.
+            const block: DocumentBlock = preset?.list
+              ? { id: newId(), origin, type: "LIST", content: { ordered: preset.list === "OL", items: [{ level: 0, runs }], ...align } }
+              : { id: newId(), origin, type: "PARAGRAPH", content: { runs, ...align, ...(end ? { under: section.level } : {}) } };
+            if (preset) setTailStyles((current) => { const next = { ...current }; delete next[tailKey]; return next; });
+            const at = anchor ? blocks.findIndex((b) => b.id === anchor.id) + 1 : 0;
+            setFocusedId(block.id);
+            update([...blocks.slice(0, at), block, ...blocks.slice(at)], { id: block.id, at: "end" });
+          }}
+          onKey={(event, caret) => {
+            if (event.key === "Enter") {
+              // Enter ở dòng cuối: thêm một dòng trống, dòng cuối xuống dưới (yêu cầu 2026-11-04).
+              event.preventDefault();
+              const line: DocumentBlock = { id: newId(), origin, type: "PARAGRAPH", content: { runs: EMPTY_RUNS, ...(end ? { under: section.level } : {}) } };
+              const at = anchor ? blocks.findIndex((b) => b.id === anchor.id) + 1 : 0;
+              update([...blocks.slice(0, at), line, ...blocks.slice(at)], { id: tailKey, at: "start" });
+            } else if (event.key === "Backspace" && caret.start === 0 && caret.end === 0 && tailStyles[tailKey]) {
+              // Dòng cuối chưa có chữ mà đã đặt định dạng, căn lề: Backspace bỏ các thứ đặt sẵn.
+              event.preventDefault();
+              setTailStyles((current) => { const next = { ...current }; delete next[tailKey]; return next; });
+            } else if ((event.key === "Backspace" || event.key === "ArrowUp") && caret.start === 0 && caret.end === 0 && anchor) {
+              event.preventDefault();
+              focusField(paper.current, { id: anchor.id, at: "end" });
+            }
+          }} />
+        </TailList>
+      </div>
+    );
+  }
+
+  /** Cấp tiêu đề của mục con trong {@code section}: theo mục con đang có, không thì sâu hơn một cấp (tối đa Tiêu đề 6). */
+  const childLevel = (section: DocSection) => section.children[0]?.level ?? section.level + 1;
+  /** Mục lồng tối đa 3 tầng (1.1.1.), yêu cầu 2026-11-04: mục tầng 3 không thêm mục con. */
+  const canAddChild = (section: DocSection) => section.depth < MAX_SECTION_DEPTH && childLevel(section) <= 6;
+  /** Thêm mục con vào cuối {@code section} (sau các mục con đang có); gốc tài liệu thì là mục ngoài cùng. */
+  function addChild(section: DocSection) {
+    const level = childLevel(section);
+    if (!canAddChild(section)) return;
+    addHeading(lastOf(section)?.id ?? null, `H${level}` as HeadingStyle);
+  }
+  /**
+   * "+ Mục" trên thanh công cụ (yêu cầu 2026-11-04): thêm mục con của mục đang có con trỏ, ngay tại chỗ con trỏ (phần viết sau
+   * con trỏ thành của mục con). Ngoài mọi mục thì là mục ngoài cùng; chưa đặt con trỏ thì thêm cuối tài liệu.
+   */
+  function addAtCursor(section: DocSection | undefined) {
+    const parent = section ?? tree;
+    if (!canAddChild(parent)) return;
+    const afterId = cursorLine ? cursorLine.afterId : focused?.id ?? blocks.at(-1)?.id ?? null;
+    // Văn bản, bảng, ảnh, sơ đồ nằm dưới con trỏ vẫn thuộc mục cha, hiện dưới mục con mới (yêu cầu 2026-11-04).
+    const index = afterId ? blocks.findIndex((b) => b.id === afterId) : blocks.length - 1;
+    const next = blocks[index + 1];
+    const keep = next && next.type !== "HEADING" && underOf(next) === null && sectionOfBlock.get(next.id) === parent;
+    const heading: DocumentBlock = { id: newId(), origin, type: "HEADING", content: { style: `H${childLevel(parent)}` as HeadingStyle, text: "" } };
+    const rest = blocks.slice(index + 1).map((b, i) => (i === 0 && keep ? withUnder(b, parent.level) : b));
+    setFocusedId(heading.id);
+    update([...blocks.slice(0, index + 1), heading, ...rest], { id: heading.id, at: "start" });
+  }
+
+  /**
+   * Thanh "+" ở đáy mỗi ô văn bản (cả ô ngoài cùng của tài liệu): thêm mục nằm trong ô văn bản đó, tức nhánh
+   * con của mục (ở ô ngoài cùng là mục ngoài cùng).
+   */
+  function quickAdd(section: DocSection): ReactNode {
+    // Ẩn cho tới khi con trỏ ở trong ô văn bản này (tiêu đề, văn bản hay dòng cuối của mục).
+    if (!canAddChild(section) || cursorSection !== section) return null;
+    return (
+      <div className="flex flex-wrap items-center gap-1 pt-1" data-testid={`quick-add-${section.heading?.id ?? "DOCUMENT"}`}
+        onMouseDown={(event) => event.preventDefault()}>
+        <AddBar title={section.heading ? "Thêm mục vào trong mục này" : "Thêm mục"} onClick={() => addChild(section)} />
+      </div>
+    );
+  }
+
+  /**
+   * Một mục: khung màu theo tầng có số và tiêu đề (chỉ ghi chữ tiêu đề) và luôn một ô văn bản (giấy trắng) chứa văn bản của
+   * mục; mục con nằm trong ô văn bản đó. Người soạn có một dòng cuối và một thanh "+" ở đáy mỗi ô văn bản; mục đã có mục
+   * con thì dòng cuối nằm dưới các mục con, không còn dòng cuối hay "+" nào ở giữa (yêu cầu 2026-11-02).
+   * {@code only}: chế độ Từng phần, chỉ vẽ nhánh dẫn tới phần đó.
+   */
+  function renderSection(section: DocSection, problem: DocSection | null = null, only: DocSection | null = null): ReactNode {
     const heading = section.heading;
     const key = heading?.id ?? "DOCUMENT";
+    const children = only ? section.children.filter((child) => contains(child, only)) : section.children;
     if (!heading) {
       return (
         <Fragment key={key}>
@@ -746,35 +1328,185 @@ export function DocumentEditor({
             {section.blocks.map(renderBlock)}
             {section.leaf && blocks.length > 0 && emptyLeaf(section, key)}
           </>}
-          {section.children.map(renderSection)}
+          {authoring && section.children.length === 0 && <>{tailLine(section, key)}{quickAdd(section)}</>}
+          {children.map((child) => renderSection(child, null, only))}
+          {section.after.map(renderBlock)}
+          {authoring && !only && section.children.length > 0 && <>{tailLine(section, key, true)}{quickAdd(section)}</>}
         </Fragment>
       );
     }
+    const owner = heading.type === "HEADING" && heading.content.style === "H1" ? section : problem;
     const active = highlightBlockId === heading.id;
     const writable = !readOnly && (!student || inPart(heading.id));
+    const headingStyle = heading.type === "HEADING" ? heading.content.style : "H1";
+    // Kéo một mục cùng cha qua mục này: hiện bản xem trước mờ ở chỗ sẽ thả.
+    const dragged = dragKey ? sectionByKey.get(dragKey) : undefined;
+    const droppable = !!dragged && dragged !== section && parentOf.get(dragged) === parentOf.get(section);
+    const ghost = (place: "before" | "after") => droppable && dropAt?.key === key && dropAt.place === place && dragged?.heading ? (
+      <div data-testid="drop-preview" aria-hidden className="my-2 rounded-lg border-2 border-dashed border-primary/60 px-3 py-2 opacity-50"
+        onDragOver={(event) => { event.preventDefault(); event.stopPropagation(); }}
+        onDrop={(event) => { event.preventDefault(); event.stopPropagation(); commitDrop(); }}
+        style={{ backgroundColor: SECTION_BG[Math.min(dragged.depth - 1, SECTION_BG.length - 1)] }}>
+        <span className={cx(HEADING_CLASS[dragged.heading.type === "HEADING" ? dragged.heading.content.style : "H1"] ?? HEADING_CLASS.H1)}>
+          {numbers.get(dragKey!)} {blockText(dragged.heading)}
+        </span>
+      </div>
+    ) : null;
     return (
-      <section key={key} data-section={key} data-leaf={section.leaf || undefined}
+      <Fragment key={key}>
+      {ghost("before")}
+      <section data-section={key} data-leaf={section.leaf || undefined}
         style={{ backgroundColor: SECTION_BG[Math.min(section.depth - 1, SECTION_BG.length - 1)] }}
-        className={cx("my-2 rounded-lg px-3 py-2", active && "ring-2 ring-primary/50")}>
-        {renderBlock(heading)}
-        {section.leaf ? (
-          // Lá: khung mang màu của tầng, ruột trắng là chỗ viết; bấm vào chỗ trống trong ruột là viết tiếp cuối phần.
-          <div data-leaf-body className="mt-1 mb-1 rounded-md border border-black/10 bg-surface px-3 py-1.5"
-            onClick={(event) => { if (writable && event.target === event.currentTarget) continueAfter((section.blocks.at(-1) ?? heading).id); }}>
-            {leafContent(section, key)}
-          </div>
-        ) : (
-          <>
-            {section.blocks.map(renderBlock)}
-            {section.children.map(renderSection)}
-          </>
-        )}
+        onMouseOver={authoring ? (event) => { event.stopPropagation(); hoverOn(key); } : undefined}
+        onDragOver={droppable ? (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const box = event.currentTarget.getBoundingClientRect();
+          const place = event.clientY < box.top + box.height / 2 ? "before" : "after";
+          if (dropAt?.key !== key || dropAt.place !== place) setDropAt({ key, place });
+        } : undefined}
+        onDrop={droppable ? (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          commitDrop();
+        } : undefined}
+        className={cx("group/section relative my-2 rounded-lg px-3 py-2", active && "ring-2 ring-primary/50", dragKey === key && "opacity-40")}>
+        {authoring && (() => {
+          const siblings = parentOf.get(section)?.children ?? [];
+          const index = siblings.indexOf(section);
+          // Chỉ mục đang rê chuột hay đang có con trỏ hiện nút (mục cha, mục con không hiện theo).
+          return <SectionTools shown={hoverSection === key || cursorSection === section} onRemove={() => removeSection(section)}
+            onUp={index > 0 ? () => stepSection(section, -1) : undefined}
+            onDown={index >= 0 && index < siblings.length - 1 ? () => stepSection(section, 1) : undefined} />;
+        })()}
+        {/* Số thứ tự 1., 1.1., 2. đứng trước tiêu đề, không sửa được; người soạn kéo số để đổi chỗ mục trong cùng cha. */}
+        <div className="flex items-start gap-1.5">
+          <span data-testid={`number-${key}`} draggable={authoring || undefined}
+            title={authoring ? "Kéo để đổi chỗ mục" : undefined}
+            onDragStart={authoring ? (event) => { event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", key); setDragKey(key); } : undefined}
+            onDragEnd={authoring ? () => { setDragKey(null); setDropAt(null); } : undefined}
+            className={cx(HEADING_CLASS[headingStyle] ?? HEADING_CLASS.H1, "shrink-0 py-0.5 tabular-nums", authoring && "cursor-grab active:cursor-grabbing")}>{numbers.get(key)}</span>
+          <div className="min-w-0 flex-1">{renderBlock(heading)}</div>
+        </div>
+        {/* Ô trắng của phần; bấm vào chỗ trống là viết tiếp ở dòng cuối. */}
+        <div data-leaf-body className="mt-1 mb-1 rounded-md border border-black/10 bg-surface px-3 py-1.5"
+          onClick={(event) => {
+            if (event.target !== event.currentTarget) return;
+            if (authoring) focusField(paper.current, { id: children.length > 0 ? `tail-end-${key}` : `tail-${key}`, at: "end" });
+            else if (section.leaf && writable) continueAfter((section.blocks.at(-1) ?? heading).id);
+          }}>
+          {section.leaf ? leafContent(section, key) : section.blocks.map(renderBlock)}
+          {authoring && children.length === 0 && tailLine(section, key)}
+          {children.map((child) => renderSection(child, owner, only))}
+          {section.after.map(renderBlock)}
+          {authoring && children.length > 0 && tailLine(section, key, true)}
+          {authoring && quickAdd(section)}
+        </div>
       </section>
+      {ghost("after")}
+      </Fragment>
     );
   }
 
-  const tree = documentTree(document);
-  const currentStyle = style === "UL" || style === "OL" ? "P" : style;
+  const topOf = (target: DocSection) => tree.children.find((child) => contains(child, target)) ?? target;
+  latestLeaves.current = leaves;
+  reportCurrent.current = () => {
+    let current: string | null = currentLeaf ? currentLeaf.heading?.id ?? "DOCUMENT" : pinned.current;
+    if (!currentLeaf && !current) {
+      const sections = Array.from(paper.current?.querySelectorAll<HTMLElement>("section[data-section]") ?? []);
+      for (const section of sections) if (section.getBoundingClientRect().top <= 200) current = section.dataset.section ?? null;
+      if (!current && (tree.blocks.length > 0 || tree.after.length > 0)) current = "DOCUMENT";
+    }
+    if (current === lastCurrent.current) return;
+    lastCurrent.current = current;
+    window.dispatchEvent(new CustomEvent("document:current-part", { detail: { headingId: current } }));
+  };
+  /** Cuộn để mục {@code id} nằm ngay dưới thanh công cụ dính. */
+  function scrollToSection(id: string) {
+    const element = paper.current?.querySelector(`[data-section="${id}"]`);
+    if (!element || typeof window.scrollTo !== "function") return;
+    window.scrollTo({ top: Math.max(0, element.getBoundingClientRect().top + window.scrollY - 170) });
+  }
+  /** Sang trang khác ở chế độ Từng phần rồi cuộn lên đầu trang (yêu cầu 2026-11-04). */
+  function goPage(index: number) {
+    setStepAt(index);
+    requestAnimationFrame(() => {
+      const top = paper.current ? paper.current.getBoundingClientRect().top + window.scrollY - 140 : 0;
+      if (typeof window.scrollTo === "function") window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    });
+  }
+  /** Hai mũi tên chuyển trang, không ghi tên phần; có ở trên đầu (trên tên bài) và cuối trang. */
+  const stepNav = (place: "top" | "bottom") => (
+    <nav aria-label={place === "top" ? "Chuyển phần (đầu trang)" : "Chuyển phần"} data-testid={place === "top" ? "step-nav-top" : "step-nav"}
+      className={cx("flex items-center justify-between gap-2", place === "top" ? "-mt-6 mb-4 border-b border-line pb-3 sm:-mt-8" : "mt-4 border-t border-line pt-3")}>
+      <button type="button" aria-label="Phần trước" title="Phần trước" disabled={stepIndex === 0} onClick={() => goPage(stepIndex - 1)}
+        className="inline-flex size-8 items-center justify-center rounded-lg text-body hover:bg-sunken disabled:opacity-35">
+        <Icon name="arrow_back" size={17} />
+      </button>
+      {place === "bottom" && <span className="sr-only" role="status">Phần {stepIndex + 1} / {leaves.length}</span>}
+      <button type="button" aria-label="Phần sau" title="Phần sau" disabled={stepIndex >= leaves.length - 1} onClick={() => goPage(stepIndex + 1)}
+        className="inline-flex size-8 items-center justify-center rounded-lg text-body hover:bg-sunken disabled:opacity-35">
+        <Icon name="arrow_forward" size={17} />
+      </button>
+    </nav>
+  );
+  // Nút chọn cách đọc (Cả trang / Từng phần): trên header của trang nếu trang đưa chỗ ({@code viewSlot}), không thì trên thanh
+  // công cụ.
+  const viewToggle = tree.children.length > 0 ? (
+    <span role="radiogroup" aria-label="Chế độ xem" className="flex items-center gap-0.5 rounded-lg bg-line/60 p-0.5">
+      <ViewButton label="Cả trang" on={!stepping} onClick={() => {
+        pinned.current = currentLeaf ? currentLeaf.heading?.id ?? "DOCUMENT" : null;
+        // Về Cả trang thì cuộn tới đúng mục đang xem, không về đầu trang.
+        const id = currentLeaf?.heading?.id;
+        setView("page");
+        if (id) requestAnimationFrame(() => scrollToSection(id));
+      }}><PageGlyph /></ViewButton>
+      <ViewButton label="Từng phần" on={stepping} onClick={() => {
+        // Mở đúng trang của mục đang xem (theo chỗ đã cuộn tới), không thì theo chỗ con trỏ (yêu cầu 2026-11-05).
+        const viewing = lastCurrent.current ? leaves.findIndex((leaf) => (leaf.heading?.id ?? "DOCUMENT") === lastCurrent.current) : -1;
+        const at = viewing >= 0 ? viewing
+          : focused ? leaves.findIndex((leaf) => leaf.heading?.id === focused.id || leaf.blocks.some((b) => b.id === focused.id)) : -1;
+        if (at >= 0) setStepAt(at);
+        setView("step");
+      }}><StepGlyph /></ViewButton>
+    </span>
+  ) : null;
+  addPartFrom.current = (parentId) => {
+    if (!authoring) return;
+    const parent = parentId ? sectionByKey.get(parentId) : tree;
+    if (parent) addChild(parent);
+  };
+  // Số thứ tự của từng phần theo cây: 1., 1.1., 1.2., 2.
+  const numbers = new Map<string, string>();
+  const numberParts = (section: DocSection, prefix: string) => section.children.forEach((child, i) => {
+    const number = `${prefix}${i + 1}.`;
+    if (child.heading) numbers.set(child.heading.id, number);
+    numberParts(child, number);
+  });
+  numberParts(tree, "");
+  // Đoạn văn cuối của mỗi khung có dòng cuối: id đoạn -> id dòng cuối.
+  const tailOf = new Map<string, string>();
+  const mapTails = (section: DocSection) => {
+    const hasTail = section.children.length === 0;
+    const last = section.blocks.at(-1);
+    if (hasTail && last?.type === "PARAGRAPH") tailOf.set(last.id, `tail-${section.heading?.id ?? "DOCUMENT"}`);
+    const lastAfter = section.after.at(-1);
+    if (section.children.length > 0 && lastAfter?.type === "PARAGRAPH") tailOf.set(lastAfter.id, `tail-end-${section.heading?.id ?? "DOCUMENT"}`);
+    section.children.forEach(mapTails);
+  };
+  if (authoring) mapTails(tree);
+  const sectionOfBlock = new Map<string, DocSection>();
+  const parentOf = new Map<DocSection, DocSection>();
+  const sectionByKey = new Map<string, DocSection>();
+  const mapSections = (section: DocSection) => {
+    sectionByKey.set(section.heading?.id ?? "DOCUMENT", section);
+    section.children.forEach((child) => parentOf.set(child, section));
+    [section.heading, ...section.blocks, ...section.after].forEach((block) => { if (block) sectionOfBlock.set(block.id, section); });
+    section.children.forEach(mapSections);
+  };
+  mapSections(tree);
+  const cursorSection = cursorLine ? sectionByKey.get(cursorLine.sectionKey) : focused ? sectionOfBlock.get(focused.id) : undefined;
+
 
   return (
     <div className="flex flex-col gap-3" data-testid="document-editor"
@@ -783,16 +1515,17 @@ export function DocumentEditor({
         const key = event.key.toLowerCase();
         if (key === "z" && !event.shiftKey) { event.preventDefault(); undo(); }
         else if (key === "y" || (key === "z" && event.shiftKey)) { event.preventDefault(); redo(); }
-        else if ((key === "b" || key === "i" || key === "u") && textTarget) {
+        else if ((key === "b" || key === "i" || key === "u") && formatTarget) {
           event.preventDefault();
           toggle(key === "b" ? "bold" : key === "i" ? "italic" : "underline");
         }
       }}>
+      {viewSlot && viewToggle && createPortal(viewToggle, viewSlot)}
       {guided && !readOnly && <p className="text-xs text-muted">Chọn vùng bài làm để định dạng chữ.{diagramEnabled && " Dùng nút trong từng câu để thêm sơ đồ đúng vị trí."}</p>}
       {readOnly && toolbarCenter && (
         // Cùng lưới với trang giấy và cột ghi chú bên dưới, để nút giữa nằm thẳng giữa trang giấy.
         <div role="toolbar" aria-label="Thanh công cụ"
-          className={`sticky top-16 z-20 rounded-xl border border-line bg-sunken px-3 py-1 ${TOOLBAR_COVER}`}>
+          className={`sticky top-[var(--doc-toolbar-top,4rem)] z-20 rounded-xl border border-line bg-sunken px-3 py-1 ${TOOLBAR_COVER}`}>
           <div className={rail ? "grid grid-cols-[minmax(0,816px)_300px] items-center justify-center gap-5" : "grid grid-cols-[1fr_auto_1fr] items-center"}>
             {!rail && <span />}
             <div className="flex items-center justify-center gap-0.5">{toolbarCenter}</div>
@@ -802,7 +1535,7 @@ export function DocumentEditor({
       )}
       {(!readOnly || (toolbarExtra && !toolbarCenter)) && (
         <div role="toolbar" aria-label="Định dạng và chèn"
-          className={`sticky top-16 z-20 flex flex-wrap items-center gap-0.5 rounded-xl bg-sunken px-3 py-1 border border-line ${TOOLBAR_COVER}`}>
+          className={`sticky top-[var(--doc-toolbar-top,4rem)] z-20 flex flex-wrap items-center gap-0.5 rounded-xl bg-sunken px-3 py-1 border border-line ${TOOLBAR_COVER}`}>
           {!readOnly && (
             <>
               <ToolbarButton title="Hoàn tác (Ctrl+Z)" aria-label="Hoàn tác" disabled={history.past === 0} onClick={undo}><Glyph name="undo" /></ToolbarButton>
@@ -810,48 +1543,40 @@ export function DocumentEditor({
               <Separator />
               {!student && (
                 <>
-                  <select aria-label="Kiểu đoạn" value={currentStyle} disabled={!style}
-                    onChange={(event) => {
-                      if (!target || !event.target.value) return;
-                      replace(target.id, convertBlock(target, event.target.value as StyleValue), { id: target.id, at: "end" });
-                    }}
-                    className="h-7 w-36 rounded-md bg-transparent px-1.5 text-[13px] text-ink transition-colors enabled:cursor-pointer enabled:hover:bg-line-strong enabled:focus-visible:bg-line-strong disabled:cursor-default disabled:opacity-40">
-                    {style === "" && <option value="">Kiểu chữ</option>}
-                    {currentStyle !== "" && !AUTHOR_STYLES.includes(currentStyle) && <option value={currentStyle}>{STYLE_LABELS[currentStyle]}</option>}
-                    {AUTHOR_STYLES.map((value) => <option key={value} value={value}>{STYLE_LABELS[value]}</option>)}
-                  </select>
+                  <ToolbarButton title="Thêm mục con tại chỗ con trỏ" aria-label="Thêm mục" className="gap-1 pr-2"
+                    data-testid="add-block" disabled={!addSectionAllowed || !canAddChild(cursorSection ?? tree)} onClick={() => addAtCursor(cursorSection)}>
+                    <Icon name="add" size={16} />Mục
+                  </ToolbarButton>
                   <Separator />
                 </>
               )}
               {FLAGS.map((flag) => (
-                <ToolbarButton key={flag.key} title={flag.title} aria-label={flag.title} disabled={!textTarget}
-                  active={textTarget ? shownRuns.length > 0 && shownRuns.every((run) => run[flag.key]) : undefined}
+                <ToolbarButton key={flag.key} title={flag.title} aria-label={flag.title} disabled={!formatTarget}
+                  active={formatTarget ? shownRuns.length > 0 && shownRuns.every((run) => run[flag.key]) : undefined}
                   onClick={() => toggle(flag.key)}>
                   <span className={flag.className}>{flag.label}</span>
                 </ToolbarButton>
               ))}
-              <ToolPopover title="Màu chữ" disabled={!textTarget}
+              <ToolPopover title="Màu chữ" disabled={!formatTarget}
                 label={<span className="flex flex-col items-center leading-none"><span className="font-semibold">A</span><span className="mt-0.5 h-1 w-4 rounded-sm" style={{ backgroundColor: shownRuns[0]?.color ?? "#202124" }} /></span>}>
                 {(close) => <Swatches colors={TEXT_COLORS} noneLabel="Mặc định" onPick={(color) => { paint("color", color); close(); }} />}
               </ToolPopover>
-              <ToolPopover title="Màu tô nền" disabled={!textTarget} label={<Glyph name="highlight" />}>
+              <ToolPopover title="Màu tô nền" disabled={!formatTarget} label={<Glyph name="highlight" />}>
                 {(close) => <Swatches colors={HIGHLIGHTS} noneLabel="Không tô" onPick={(color) => { paint("highlight", color); close(); }} />}
               </ToolPopover>
               <Separator />
               {ALIGNS.map((align) => (
-                <ToolbarButton key={align.value} title={align.title} aria-label={align.title} disabled={!target || target.type === "TABLE" || target.type === "IMAGE" || target.type === "DIAGRAM"}
-                  active={!!target && (alignOf(target) ?? "LEFT") === align.value && target.type !== "TABLE" && target.type !== "IMAGE" && target.type !== "DIAGRAM"}
-                  onClick={() => target && replace(target.id, setAlign(target, align.value))}>
+                <ToolbarButton key={align.value} title={align.title} aria-label={align.title} disabled={!alignAllowed}
+                  active={alignAllowed && (shownAlign ?? "LEFT") === align.value}
+                  onClick={() => alignTo(align.value)}>
                   <Glyph name={align.glyph} />
                 </ToolbarButton>
               ))}
               <Separator />
-              <ToolbarButton title="Danh sách chấm" aria-label="Danh sách chấm" disabled={!textTarget} active={style === "UL"}
-                onClick={() => target && replace(target.id, convertBlock(target, style === "UL" ? "P" : "UL"), { id: target.id, at: "end" })}><Glyph name="bullets" /></ToolbarButton>
-              <ToolbarButton title="Danh sách số" aria-label="Danh sách số" disabled={!textTarget} active={style === "OL"}
-                onClick={() => target && replace(target.id, convertBlock(target, style === "OL" ? "P" : "OL"), { id: target.id, at: "end" })}><Glyph name="numbers" /></ToolbarButton>
-              <ToolbarButton title="Giảm thụt lề" aria-label="Giảm thụt lề" disabled={target?.type !== "LIST"} onClick={() => indentList(-1)}><Glyph name="outdent" /></ToolbarButton>
-              <ToolbarButton title="Tăng thụt lề" aria-label="Tăng thụt lề" disabled={target?.type !== "LIST"} onClick={() => indentList(1)}><Glyph name="indent" /></ToolbarButton>
+              <ToolbarButton title="Danh sách chấm" aria-label="Danh sách chấm" disabled={!listAllowed} active={tailStyle ? tailStyle.list === "UL" : style === "UL"}
+                onClick={() => toggleList("UL")}><Glyph name="bullets" /></ToolbarButton>
+              <ToolbarButton title="Danh sách số" aria-label="Danh sách số" disabled={!listAllowed} active={tailStyle ? tailStyle.list === "OL" : style === "OL"}
+                onClick={() => toggleList("OL")}><Glyph name="numbers" /></ToolbarButton>
               <Separator />
               <ToolPopover title="Chèn bảng" disabled={!insertAllowed} label={<Glyph name="table" />}>
                 {(close) => <TablePicker onPick={(rows, cols) => { insertTable(rows, cols); close(); }} />}
@@ -870,26 +1595,45 @@ export function DocumentEditor({
               )}
             </>
           )}
-          {toolbarExtra && <div className="ml-auto flex flex-wrap items-center gap-0.5">{toolbarExtra}</div>}
+          {(toolbarExtra || (viewToggle && !viewSlot)) && (
+            <div className="ml-auto flex flex-wrap items-center gap-0.5">
+              {!viewSlot && viewToggle}
+              {toolbarExtra}
+            </div>
+          )}
         </div>
       )}
 
       <div className={rail ? cx("grid items-start gap-5", fullWidth ? "grid-cols-[minmax(0,1fr)_300px]" : "grid-cols-[minmax(0,816px)_300px] justify-center") : cx("mx-auto w-full", !fullWidth && "max-w-[816px]")}>
-        <div ref={paper} data-testid="document-paper"
+        <div ref={paper} data-testid="document-paper" onMouseLeave={hoverOff} onMouseOver={hoverOff}
+          onDragOver={(event) => { if (dragKey && dropAt) event.preventDefault(); }}
+          onDrop={(event) => { if (!dragKey) return; event.preventDefault(); commitDrop(); }}
           className={cx("min-h-[60vh] min-w-0 rounded-lg border border-line bg-surface px-5 pt-10 pb-4 shadow-[var(--shadow-lift)] sm:pt-12", fullWidth ? "sm:px-8" : "sm:px-14")}>
           {/* Khung bọc nội dung (không có min-height) để cột ghi chú biết khi nào block đổi chỗ. */}
+          {stepping && stepNav("top")}
           <div ref={content}>
+            {titleField && (
+              <div data-block-id="TITLE" className="mb-2" onFocusCapture={() => { setInHeader(true); if (cursorLine) setCursorLine(null); }}>
+                {titleField.readOnly || readOnly
+                  ? <h2 className={cx(TITLE_CLASS, alignClass(document.title?.align))}>{titleField.text ? <RunsView runs={titleRuns} /> : "Bài chưa đặt tên"}</h2>
+                  : <RichText aria-label="Tên bài" runs={titleRuns} placeholder={titleField.placeholder}
+                      className={cx(TITLE_CLASS, alignClass(document.title?.align), titleField.invalid && "rounded-md bg-danger-soft")}
+                      onChange={(runs) => setTitle({ ...document.title, runs })}
+                      onKey={(event) => { if (event.key === "Enter") event.preventDefault(); }} />}
+              </div>
+            )}
             {header}
             {inlineComments(null)}
             {blocks.length === 0 && (readOnly
               ? <div className="h-16" />
-              : <button type="button" aria-label="Bắt đầu viết" data-testid="write-document"
+              : student && <button type="button" aria-label="Bắt đầu viết" data-testid="write-document"
                 onClick={() => insertAfter(null, newBlock("PARAGRAPH", origin))} className="block h-16 w-full cursor-text" />)}
-            {renderSection(tree)}
+            {currentLeaf ? renderSection(topOf(currentLeaf), null, currentLeaf) : renderSection(tree)}
           </div>
-          {!readOnly && blocks.length > 0 && atEndInPart && (
+          {student && !readOnly && !stepping && blocks.length > 0 && atEndInPart && (
             <button type="button" aria-label="Viết tiếp ở cuối tài liệu" onClick={continueAtEnd} className="block h-14 w-full cursor-text" />
           )}
+          {stepping && stepNav("bottom")}
         </div>
         {rail && <CommentRail paper={content} comments={visible} activeKey={activeComment} matchSectionHeight={matchCommentHeight} />}
       </div>
@@ -914,7 +1658,6 @@ type Ops = {
   openDiagram: () => void;
 };
 
-const CAPTION = "text-center text-xs text-muted italic";
 
 function BlockEditor({ block, ops, imageUrl, previewUrl, onUpload, uploadError, guard, placeholder }: {
   block: DocumentBlock;
@@ -929,12 +1672,12 @@ function BlockEditor({ block, ops, imageUrl, previewUrl, onUpload, uploadError, 
 }) {
   switch (block.type) {
     case "HEADING":
+      // Tiêu đề mục định dạng được (đậm, nghiêng, màu…, yêu cầu 2026-11-04), một dòng: Enter mở đoạn mới bên dưới.
       return (
-        <AutoTextarea aria-label="Nội dung tiêu đề" value={block.content.text} maxLength={500}
+        <RichText aria-label="Nội dung tiêu đề" runs={headingRuns(block)}
           className={cx(HEADING_CLASS[block.content.style] ?? HEADING_CLASS.H1, alignClass(block.content.align))}
-          onChange={(event) => ops.change({ ...block, content: { ...block.content, text: event.target.value.replace(/\n/g, " ") } })}
-          onKeyDown={(event) => textKeys(event, {
-            // Enter ở tiêu đề mở đoạn mới bên dưới, không cắt tiêu đề.
+          onChange={(runs) => ops.change(withHeadingRuns(block, runs))}
+          onKey={(event, caret) => keys(event, caret, {
             enter: () => ops.split(block, paragraph(block.origin)),
             removeEmpty: ops.removeEmpty,
             step: ops.step,
@@ -959,9 +1702,11 @@ function BlockEditor({ block, ops, imageUrl, previewUrl, onUpload, uploadError, 
       return <TableEditor block={block} onChange={(next) => ops.change(next)} onRemove={ops.remove} guard={guard} />;
     case "IMAGE": {
       const src = previewUrl ?? (block.content.hasFile ? imageUrl?.(block.id) : null);
+      // Ảnh tải lên một lần lúc chèn (yêu cầu 2026-11-04): bấm vào ảnh không mở chọn file; chỉ ô chưa có ảnh mới chọn được.
+      const pick = onUpload && !src && !block.content.fileRef ? onUpload : undefined;
       return (
         <figure className="flex flex-col items-center gap-1 py-1">
-          <label title={onUpload ? (src ? "Bấm để đổi ảnh" : "Chọn ảnh") : undefined} className={cx("block w-full", onUpload && "cursor-pointer")}>
+          <label title={pick ? "Chọn ảnh" : undefined} className={cx("block w-full", pick && "cursor-pointer")}>
             {src ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={src} alt={block.content.alt ?? ""} style={{ width: block.content.width ? `${block.content.width}px` : undefined }} className="mx-auto max-w-full" />
@@ -970,24 +1715,20 @@ function BlockEditor({ block, ops, imageUrl, previewUrl, onUpload, uploadError, 
                 <Icon name="upload_file" size={20} />{block.content.fileRef ? "Đang tải ảnh…" : "Chọn ảnh"}
               </span>
             )}
-            {onUpload && (
+            {pick && (
               <input type="file" accept={IMAGE_TYPES} className="sr-only"
-                onChange={(event) => { const file = event.target.files?.[0]; if (file) onUpload(file); event.target.value = ""; }} />
+                onChange={(event) => { const file = event.target.files?.[0]; if (file) pick(file); event.target.value = ""; }} />
             )}
           </label>
-          <AutoTextarea aria-label="Chú thích ảnh" value={block.content.alt ?? ""} maxLength={500} className={CAPTION}
-            onChange={(event) => ops.change({ ...block, content: { ...block.content, alt: event.target.value.replace(/\n/g, " ") } })} />
           {uploadError && <p role="alert" className="text-xs text-danger">{uploadError}</p>}
         </figure>
       );
     }
     case "DIAGRAM":
-      // Khung vẽ trải hết bề ngang trang như bản demo (yêu cầu 2026-10-22); chú thích căn giữa dưới khung.
+      // Khung vẽ trải hết bề ngang trang như bản demo (yêu cầu 2026-10-22); không có dòng chú thích bên dưới (2026-11-04).
       return (
-        <figure className="flex flex-col gap-1 py-1">
+        <figure className="py-1">
           <BlockView block={{ ...block, content: { ...block.content, alt: "" } }} onOpenDiagram={ops.openDiagram} />
-          <AutoTextarea aria-label="Chú thích sơ đồ" value={block.content.alt ?? ""} maxLength={500} className={CAPTION}
-            onChange={(event) => ops.change({ ...block, content: { ...block.content, alt: event.target.value.replace(/\n/g, " ") } })} />
         </figure>
       );
   }
@@ -1069,8 +1810,31 @@ function TableEditor({ block, onChange, onRemove, guard }: {
   const empty = (): TableCell => ({ runs: [{ text: "" }] });
   const fresh = (): TableCell => (guard ? { runs: [{ text: "" }], added: true } : empty());
   const full = (cells: TableCell[]) => Array.from({ length: columns }, (_, j) => cells[j] ?? empty());
+  // Đổi số cột thì bỏ độ rộng đã kéo, các cột lại bằng nhau.
   function set(next: TableCell[][]) {
-    onChange({ ...block, content: { ...block.content, rows: next } });
+    const count = Math.max(1, ...next.map((row) => row.length));
+    const { widths, ...rest } = block.content;
+    onChange({ ...block, content: { ...rest, rows: next, ...(widths && widths.length === count ? { widths } : {}) } });
+  }
+  // Kéo mép phải của cột (ở hàng đầu) để đổi độ rộng cột đó và cột bên cạnh; mỗi cột tối thiểu 5% (yêu cầu 2026-11-04).
+  const tableRef = useRef<HTMLTableElement>(null);
+  const widths = block.content.widths?.length === columns ? block.content.widths : Array.from({ length: columns }, () => 100 / columns);
+  function startResize(c: number, event: ReactMouseEvent) {
+    event.preventDefault();
+    const width = tableRef.current?.getBoundingClientRect().width ?? 1;
+    const startX = event.clientX;
+    const start = [...widths];
+    const move = (moveEvent: MouseEvent) => {
+      const delta = ((moveEvent.clientX - startX) / width) * 100;
+      const left = Math.min(start[c]! + start[c + 1]! - 5, Math.max(5, start[c]! + delta));
+      const next = [...start];
+      next[c] = Math.round(left * 10) / 10;
+      next[c + 1] = Math.round((start[c]! + start[c + 1]! - left) * 10) / 10;
+      onChange({ ...block, content: { ...block.content, widths: next } });
+    };
+    const up = () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
   }
   const canDeleteRow = (r: number) => !guard || rows[r]!.every((cell) => cell.added);
   const canDeleteColumn = (c: number) => !guard || rows.every((cells) => !cells[c] || cells[c]!.added);
@@ -1083,17 +1847,24 @@ function TableEditor({ block, onChange, onRemove, guard }: {
   return (
     <div className="py-1" onMouseLeave={() => setHoverCol(null)}
       onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocusCol(null); }}>
-      <table className="w-full table-fixed border-collapse">
+      <table ref={tableRef} className="w-full table-fixed border-collapse">
+        <colgroup>{widths.map((width, c) => <col key={c} style={{ width: `${width}%` }} />)}</colgroup>
         <tbody>
           {rows.map((row, r) => (
             <tr key={r} className="group/row">
               {Array.from({ length: columns }, (_, c) => (
                 <td key={c} onMouseEnter={() => setHoverCol(c)}
                   className={cx("relative border border-line-strong align-top break-words", header && r === 0 && "bg-canvas")}>
-                  <AutoTextarea aria-label={`Ô ${r + 1}-${c + 1}`} value={runsText(row[c]?.runs)} onFocus={() => setFocusCol(c)}
-                    className={cx("px-2 py-1.5 text-[13px] leading-snug text-ink", header && r === 0 && "font-semibold")}
-                    onChange={(event) => set(rows.map((cells, i) => i !== r ? cells : full(cells).map((cell, j) =>
-                      j === c ? { ...cell, runs: [{ ...(cell.runs[0] ?? { text: "" }), text: event.target.value }] } : cell)))} />
+                  {/* Ô chữ định dạng được như đoạn văn: bôi đen rồi đậm, nghiêng, màu (yêu cầu 2026-11-04). */}
+                  <RichText aria-label={`Ô ${r + 1}-${c + 1}`} runs={row[c]?.runs ?? EMPTY_RUNS} onFocus={() => setFocusCol(c)}
+                    className={cx("px-2 py-1.5 text-[13px] leading-snug text-ink", header && r === 0 && "font-semibold", alignClass(row[c]?.align))}
+                    onChange={(runs) => set(rows.map((cells, i) => i !== r ? cells : full(cells).map((cell, j) =>
+                      j === c ? { ...cell, runs } : cell)))} />
+                  {r === 0 && c < columns - 1 && (
+                    <span role="separator" aria-orientation="vertical" aria-label={`Kéo để đổi độ rộng cột ${c + 1}`} data-testid={`column-resize-${c}`}
+                      onMouseDown={(event) => startResize(c, event)}
+                      className="absolute top-0 -right-[3px] z-10 h-full w-1.5 cursor-col-resize hover:bg-primary/40" />
+                  )}
                   {r === 0 && (
                     // Đệm thay cho lề để không có khe giữa ô và nút: rê từ ô lên nút không làm nút ẩn đi.
                     <span data-testid={`column-tools-${c}`}

@@ -92,19 +92,22 @@ class AiControllersTest {
     void personalConnectionRoutesUseServerActorAndColonActions() throws Exception {
         ConnectionView view = new ConnectionView(AiProvider.CLAUDE, true, "claude-sonnet-5-5", "3kQf",
                 AiConnection.Status.ACTIVE, null, null, 2, UUID.randomUUID());
-        when(connections.savePersonal(eq(actor), eq(AiProvider.CLAUDE), any())).thenReturn(view);
-        when(connections.testPersonal(actor, AiProvider.CLAUDE)).thenReturn(view);
+        when(connections.addPersonal(eq(actor), eq(AiProvider.CLAUDE), any())).thenReturn(view);
+        when(connections.replacePersonal(eq(actor), eq(view.id()), any())).thenReturn(view);
+        when(connections.testPersonal(actor, view.id())).thenReturn(view);
 
-        mvc.perform(put("/api/v1/me/ai-connections/claude").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"apiKey\":\"sk-ant-secret-0000\",\"model\":\"claude-sonnet-5-5\",\"version\":1}"))
+        // Nhiều khóa cho một nhà cung cấp: thêm bằng POST, sửa, kiểm tra, bật tắt, thu hồi theo id.
+        mvc.perform(post("/api/v1/me/ai-connections").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"provider\":\"claude\",\"apiKey\":\"sk-ant-secret-0000\",\"model\":\"claude-sonnet-5-5\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.keyHint").value("3kQf"))
                 .andExpect(content().string(not(containsString("secret"))));
-        verify(connections).savePersonal(actor, AiProvider.CLAUDE,
-                new SaveCommand("sk-ant-secret-0000", "claude-sonnet-5-5", 1L));
-        mvc.perform(post("/api/v1/me/ai-connections/CLAUDE:test")).andExpect(status().isOk());
-        mvc.perform(delete("/api/v1/me/ai-connections/claude")).andExpect(status().isNoContent());
-        mvc.perform(delete("/api/v1/me/ai-connections/mistral")).andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value(AiAccess.NOT_FOUND));
+        verify(connections).addPersonal(actor, AiProvider.CLAUDE, new SaveCommand("sk-ant-secret-0000", "claude-sonnet-5-5", null));
+        mvc.perform(put("/api/v1/me/ai-connections/" + view.id()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"model\":\"claude-sonnet-5-5\",\"version\":2}"))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/v1/me/ai-connections/" + view.id() + ":test")).andExpect(status().isOk());
+        mvc.perform(delete("/api/v1/me/ai-connections/" + view.id())).andExpect(status().isNoContent());
+        verify(connections).revokePersonal(actor, view.id());
     }
 
     @Test

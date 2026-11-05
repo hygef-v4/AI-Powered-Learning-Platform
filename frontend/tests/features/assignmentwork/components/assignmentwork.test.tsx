@@ -67,7 +67,7 @@ describe("insertIntoPart", () => {
 
 describe("danh sách bài", () => {
   const row = (patch: Partial<StudentRow>): StudentRow => ({
-    assignmentId: "a", classId: "c", classCode: "C1", className: "Lớp", scope: "CLASS", title: "Bài", submissionMode: "INDIVIDUAL",
+    assignmentId: "a", classId: "c", classCode: "C1", subjectCode: "SWD", scope: "CLASS", title: "Bài", submissionMode: "INDIVIDUAL",
     gradingMode: "GRADED", diagramEnabled: false, status: "OPEN", opensAt: null, closesAt: null, lateUntil: null, maxAttempts: 1,
     myStatus: "NOT_STARTED", attemptCount: 0, submittedCount: 0, inProgressAttemptId: null, lastSubmittedAt: null, group: null, ...patch,
   });

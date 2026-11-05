@@ -22,7 +22,7 @@ public final class AnnouncementViews {
             boolean canManage) {}
 
     public record ClassOption(
-            UUID classId, String code, String name, boolean canManage, int studentCount) {}
+            UUID classId, String code, String subjectCode, boolean canManage, int studentCount) {}
 
     public record Feed(
             List<Item> items, List<ClassOption> classes, int page, int size, boolean hasMore) {}
