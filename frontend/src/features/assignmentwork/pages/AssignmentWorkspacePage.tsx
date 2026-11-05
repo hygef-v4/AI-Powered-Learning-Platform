@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { uploadFile } from "@/features/files/api";
 import { ApiError } from "@/shared/api/client";
@@ -8,8 +8,9 @@ import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/u
 import {
   DocumentEditor,
   DocxImportDialog,
-  ToolbarButton,
   diagramTypeLabels,
+  outlineOf,
+  publishOutline,
   sectionsOf,
   type DiagramType,
   type DocumentBlock,
@@ -17,12 +18,15 @@ import {
   type DocumentPart,
   type ValidationIssue,
 } from "@/shared/document";
-import { Alert, Button, Dialog, Icon, PageHeader, Pill, TableFrame, Td, Th } from "@/shared/ui";
+import { Alert, Button, Dialog, Menu, MenuItem, Pill, TableFrame, Td, Th } from "@/shared/ui";
 import { attemptImageUrl, exportUrl, workApi } from "../api";
 import { errorCode, errorMessage, formatDateTime, formatTime, problemIssues, remaining } from "../model/format";
+
+const NOOP = () => {};
 import type { Attempt } from "../model/types";
 
-export const AUTOSAVE_MS = 10_000;
+/** Tự lưu mỗi 5 phút khi có thay đổi (yêu cầu 2026-11-05), và khi rời trang, trước khi nộp. */
+export const AUTOSAVE_MS = 5 * 60_000;
 /** Trình duyệt giới hạn body của yêu cầu {@code keepalive} khoảng 64 KB; bài lớn hơn thì lưu bằng yêu cầu thường. */
 const KEEPALIVE_MAX = 60_000;
 
@@ -88,9 +92,13 @@ export function submitCheck(attempt: Pick<Attempt, "requiredDiagrams">, content:
 type Halt = "conflict" | "closed" | "invalid" | null;
 
 /**
- * #40 Assignment Workspace (F4–F6, UC 39): trang giấy kiểu Google Docs. Đề (hướng dẫn, các phần do giảng viên soạn)
+ * #40 Assignment Workspace (F4–F6, UC 39). Giống hệt trang xem trước bài tập của giảng viên (yêu cầu 2026-11-05): thanh trên
+ * cùng có tên bài và trạng thái, nút Cả trang / Từng phần ở giữa, thao tác bên phải; trang giấy có tên bài và loại bài;
+ * sidebar là mục lục của bài. Khác duy nhất: sinh viên làm bài được.
+ *
+ * Trang giấy kiểu Google Docs. Đề (hướng dẫn, các phần do giảng viên soạn)
  * hiện ở đây lần đầu; người học chỉ viết trong các phần (ruột trắng của phần lá), không thấy rubric (yêu cầu 2026-10-21). Tự lưu
- * 10 giây sau lần sửa cuối và khi rời trang; lỗi mạng giữ trạng thái chưa lưu và thử lại, nên Nộp không nộp bản cũ.
+ * mỗi 5 phút khi có thay đổi và khi rời trang; lỗi mạng giữ trạng thái chưa lưu và thử lại, nên Nộp không nộp bản cũ.
  */
 export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   const router = useRouter();
@@ -107,7 +115,17 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   const [dialog, setDialog] = useState<"submit" | "docx" | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [offset, setOffset] = useState(0);
-  const [focusMode, setFocusMode] = useState(false);
+  const [viewSlot, setViewSlot] = useState<HTMLElement | null>(null);
+  const [headerHeight, setHeaderHeight] = useState(64);
+  const headerObserver = useRef<ResizeObserver | null>(null);
+  const headerRef = useCallback((element: HTMLElement | null) => {
+    headerObserver.current?.disconnect();
+    headerObserver.current = null;
+    if (!element || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => setHeaderHeight(element.offsetHeight));
+    observer.observe(element);
+    headerObserver.current = observer;
+  }, []);
   const [activePart, setActivePart] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
   const version = useRef(0);
@@ -195,11 +213,12 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
     }
   }, [attemptId]);
 
+  // Đếm từ lần sửa đầu tiên chưa lưu, không dời theo từng lần gõ: gõ liên tục vẫn lưu đều mỗi 5 phút.
   useEffect(() => {
     if (!dirty || halt.current) return;
     const timer = setTimeout(() => void save(), AUTOSAVE_MS);
     return () => clearTimeout(timer);
-  }, [dirty, content, retry, save]);
+  }, [dirty, retry, save]);
 
   useEffect(() => {
     const leave = () => { void save(true); };
@@ -213,6 +232,14 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
 
   const sections = useMemo(() => sectionsOf(content, attempt?.parts ?? []), [content, attempt?.parts]);
 
+  // Sidebar mục lục của bài, như trang soạn của giảng viên; lối về trang bài tập.
+  useEffect(() => {
+    if (!attempt) return;
+    const backHref = `/my-assignments/${encodeURIComponent(attempt.assignmentId)}?classId=${encodeURIComponent(attempt.classId)}`;
+    publishOutline({ assignmentId: attempt.assignmentId, backHref, backLabel: "Bài tập", entries: outlineOf(content.blocks) });
+  }, [attempt, content.blocks]);
+  useEffect(() => () => publishOutline(null), []);
+
   function edit(next: DocumentModel) {
     edits.current += 1;
     if (halt.current === "invalid") halt.current = null;
@@ -224,19 +251,51 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   if (!attempt) return <p role="status" className="text-sm text-muted">Đang mở bài làm…</p>;
 
   const editable = attempt.editable && attempt.status === "IN_PROGRESS";
-  const detailHref = `/my-assignments/${encodeURIComponent(attempt.assignmentId)}?classId=${encodeURIComponent(attempt.classId)}`;
   const left = remaining(attempt.deadlineAt, now + offset);
-  const required = Object.entries(attempt.requiredDiagrams) as [DiagramType, number][];
+  const beforeDeadline = new Date(attempt.deadlineAt).getTime() > now + offset;
   const active = attempt.parts.find((part) => part.partId === activePart);
+  const saveText = saving ? "Đang lưu…" : dirty ? "Có thay đổi chưa lưu" : savedAt ? `Đã lưu lúc ${formatTime(savedAt)}` : "Đã lưu";
+
+  // Dòng dưới tên bài như trang xem trước: chỉ ghi loại bài (Luyện tập, hoặc Cá nhân / Nhóm).
+  const header = (
+    <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
+      <p className="text-[13px] text-muted" data-testid="assignment-kind">
+        {attempt.gradingMode === "PRACTICE" ? "Luyện tập" : attempt.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}
+      </p>
+    </div>
+  );
 
   return (
-    <div data-wide-workspace data-workspace-focus={focusMode} className="flex flex-col gap-3">
-      <PageHeader backHref={detailHref} title={<>{attempt.title}<Pill>Lượt {attempt.attemptNo}/{attempt.maxAttempts}</Pill></>}
-        subtitle={`Hạn nộp: ${formatDateTime(attempt.deadlineAt)}${editable ? ` · ${new Date(attempt.deadlineAt).getTime() > now + offset ? `Còn ${left} đến hạn nộp` : "Đã đến hạn nộp"}` : ""}`}
-        actions={<>
-          <Button aria-pressed={focusMode} onClick={() => setFocusMode((value) => !value)}>{focusMode ? "Thoát tập trung" : "Chế độ tập trung"}</Button>
-          {attempt.status === "SUBMITTED" && <Button variant="primary" onClick={() => router.push(`/attempts/${encodeURIComponent(attempt.attemptId)}/receipt`)}>Xem biên nhận</Button>}
-        </>} />
+    <div data-wide-workspace className="flex flex-col gap-4" style={{ "--doc-toolbar-top": `${56 + headerHeight}px` } as CSSProperties}>
+      <header ref={headerRef} className="sticky top-14 z-30 -mx-4 -mt-8 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] px-4 py-3 backdrop-blur-md sm:-mx-8 sm:px-8 md:-mt-10">
+        {/* Quay lại nằm ở sidebar của bài; đầu trang chỉ còn tên bài và trạng thái, như trang xem trước của giảng viên. */}
+        <div className="flex min-w-0 flex-1 items-center gap-x-3">
+          <h1 className="min-w-0 truncate text-[15px] font-semibold text-ink" title={attempt.title}>{attempt.title}</h1>
+          {/* Cạnh tên bài chỉ có thời gian còn lại (yêu cầu 2026-11-05). */}
+          {editable && beforeDeadline && (
+            <span title={`Hạn nộp: ${formatDateTime(attempt.deadlineAt)}`}><Pill tone="warning">Còn {left}</Pill></span>
+          )}
+          <span data-testid="save-state" className="sr-only" role="status">{saveText}</span>
+        </div>
+        <div ref={setViewSlot} data-testid="view-slot" className="flex justify-center" />
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Menu label="" icon="more_horiz" ariaLabel="Thao tác khác" align="right">
+            <MenuItem icon="download" onClick={() => { window.location.href = exportUrl(attempt.attemptId); }}>Tải DOCX</MenuItem>
+            {editable && <MenuItem icon="upload_file" onClick={() => setDialog("docx")}>Nhập DOCX</MenuItem>}
+          </Menu>
+          {attempt.status === "SUBMITTED" && (
+            <Button icon="visibility" onClick={() => router.push(`/attempts/${encodeURIComponent(attempt.attemptId)}/receipt`)}>Xem biên nhận</Button>
+          )}
+          {editable && (
+            <Button variant="primary" icon="check_circle" data-testid="open-submit" onClick={() => {
+              // Lưu ngay khi mở popup: lưu xong thì popup dùng kết quả kiểm nộp của server cho đúng bản đang có.
+              setDialog("submit");
+              void save();
+            }}>Nộp bài</Button>
+          )}
+        </div>
+      </header>
+
       {banner && <Alert tone={banner.tone} role="alert" action={banner.reload ? <Button size="sm" onClick={() => window.location.reload()}>Tải lại</Button> : undefined}>
         {banner.text}
         {issues.length > 0 && <ul className="mt-1 list-disc pl-4">{issues.slice(0, 8).map((issue, i) => <li key={i}>{issue.message}</li>)}</ul>}
@@ -244,45 +303,16 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
       {attempt.status === "SUBMITTED" && <Alert tone="info">Đã nộp lúc {formatTime(attempt.submittedAt)} · chỉ xem</Alert>}
       {!attempt.editable && attempt.status === "IN_PROGRESS" && <Alert tone="warning">Đã quá hạn</Alert>}
       {attempt.activityMonitoringEnabled && attempt.activityNotice && <Alert tone="info" title="Bài có ghi nhận hoạt động">{attempt.activityNotice}</Alert>}
+
       <DocumentEditor fullWidth document={content} mode="student" answerGuidance diagramEnabled={attempt.diagramEnabled} readOnly={!editable}
         imageUrl={attemptImageUrl(attempt.attemptId)} issues={issues}
         uploadImage={async (file) => (await uploadFile(file, "DOCUMENT_IMAGE", () => {}).promise).fileRef.value}
         onChange={edit}
-        highlightBlockId={active?.headingBlockId ?? null}
+        titleField={{ text: attempt.title, readOnly: true, onText: NOOP }}
+        header={header}
+        highlightBlockId={null}
         onFocusBlock={(blockId) => setActivePart(sections.get(blockId) ?? null)}
-        header={
-          <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
-            <h2 className="text-[26px] leading-tight font-bold text-ink">{attempt.title}</h2>
-            {attempt.instructions && <p className="text-sm leading-[1.65] whitespace-pre-wrap text-body">{attempt.instructions}</p>}
-            <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
-              <Pill>{attempt.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}</Pill>
-              <Pill tone={attempt.gradingMode === "GRADED" ? "info" : "accent"}>{attempt.gradingMode === "GRADED" ? "Graded" : "Practice"}</Pill>
-              {required.length > 0 && <span>· Sơ đồ cần có: {required.map(([type, count]) => `${count} ${diagramTypeLabels[type]}`).join(", ")}</span>}
-            </p>
-          </div>
-        }
-        toolbarExtra={
-          <details className="relative ml-auto">
-            <summary className="cursor-pointer rounded-md px-2 py-1 text-sm font-medium text-body hover:bg-sunken">Tệp DOCX</summary>
-            <div className="absolute right-0 z-30 mt-2 flex min-w-40 flex-col gap-1 rounded-lg border border-line bg-surface p-2 shadow-[var(--shadow-float)]">
-              {editable && <ToolbarButton icon="upload_file" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setDialog("docx"); }}>Nhập DOCX</ToolbarButton>}
-              <a href={exportUrl(attempt.attemptId)} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-body hover:bg-sunken">
-                <Icon name="download" size={18} />Tải DOCX
-              </a>
-            </div>
-          </details>
-        } />
-      {editable && <div role="region" aria-label="Lưu và nộp bài" className="sticky bottom-0 z-20 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3 shadow-[var(--shadow-float)]">
-        <p role="status" className="text-sm text-muted">{saving ? "Đang lưu…" : dirty ? "Có thay đổi chưa lưu" : savedAt ? `Đã lưu lúc ${formatTime(savedAt)}` : "Tự lưu 10 giây sau lần sửa cuối"}</p>
-        <div className="flex items-center gap-2">
-          <Button disabled={saving || !dirty} onClick={() => void save()}>Lưu bài</Button>
-          <Button variant="primary" icon="check_circle" data-testid="open-submit" onClick={() => {
-            // Lưu ngay khi mở popup: lưu xong thì popup dùng kết quả kiểm nộp của server cho đúng bản đang có.
-            setDialog("submit");
-            void save();
-          }}>Nộp bài</Button>
-        </div>
-      </div>}
+        viewSlot={viewSlot} />
 
       {dialog === "submit" && (
         <SubmitDialog attempt={attempt} content={content} serverIssues={dirty ? null : submitIssues} onClose={() => setDialog(null)}
