@@ -13,7 +13,7 @@ export function GroupSectionAuthors({ detail }: { detail: Detail }) {
                 ?.student.name ?? "Thành viên";
             return (
               <p key={i}>
-                {typeof block?.content.text === "string" ? block.content.text : "Phần tài liệu"}:{" "}
+                {block && "text" in block.content && typeof block.content.text === "string" ? block.content.text : "Phần tài liệu"}:{" "}
                 {name}
               </p>
             );

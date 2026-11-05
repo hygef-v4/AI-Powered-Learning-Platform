@@ -1,5 +1,6 @@
 package edu.aiplatform.grading.service;
 
+import edu.aiplatform.grading.model.RubricScoring;
 import edu.aiplatform.grading.dto.GradingViews;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -95,18 +96,26 @@ public class GradebookService {
     public GradebookPage list(Actor actor, UUID classId, String query, int page, int size) {
         SubmissionReviewService.page(page, size);
         access.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
-        var data = loadGradebook(classId);
+        var data = loadGradebook(classId, null);
         var students = data.students().stream().filter(student -> matchesQuery(student, query)).toList();
         var rows = students.stream().skip((long) (page - 1) * size).limit(size)
                 .map(student -> gradebookRow(student, data)).toList();
         return new GradebookPage(rows, data.columns(), students.size(), page, size);
     }
 
+    public GradebookRow student(Actor actor, UUID classId, UUID accountId) {
+        access.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
+        var data = loadGradebook(classId, accountId);
+        var student = data.students().stream().findFirst()
+                .orElseThrow(() -> ApiException.notFound("STUDENT_NOT_FOUND"));
+        return gradebookRow(student, data);
+    }
+
     private record GradeKey(UUID assignmentId, UUID studentId) { }
     private record GradebookData(List<AssignmentColumn> columns, List<Person> students,
             Map<GradeKey, Evaluation> evaluations, SubmissionProgress progress) { }
 
-    private GradebookData loadGradebook(UUID classId) {
+    private GradebookData loadGradebook(UUID classId, UUID accountId) {
         var courseClass = classes.getClassRef(classId).orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
         var columns = assignmentColumns(courseClass);
         var progress = submissionProgress(classId, columns);
@@ -122,7 +131,8 @@ public class GradebookService {
                 if (previous == null || evaluation.createdAt.isAfter(previous.createdAt)) current.put(key, evaluation);
             }
         }
-        var studentIds = classes.listActiveStudents(classId);
+        var studentIds = classes.listActiveStudents(classId).stream()
+                .filter(id -> accountId == null || id.equals(accountId)).toList();
         var contacts = accounts.getContacts(studentIds);
         var students = studentIds.stream().map(id -> {
             var contact = contacts.get(id);
@@ -247,7 +257,7 @@ public class GradebookService {
             }
         }
         var checks = GradingJson.readChecks(JSON, evaluation.rubricChecks);
-        var effectiveScores = GradingJson.effectiveItemScores(rubrics, checks, evaluation.rubricItemScores);
+        var effectiveScores = RubricScoring.effectiveItemScores(rubrics, checks, evaluation.rubricItemScores);
         Map<UUID, GradingFeedback.Item> feedbackByItem = new HashMap<>();
         if (evaluation.structuredFeedback != null && evaluation.structuredFeedback.items() != null) {
             for (var item : evaluation.structuredFeedback.items()) {
@@ -341,7 +351,7 @@ public class GradebookService {
         output.add(List.of("Student", "Email", "Assignment", "Status", "Submitted at", "Late", "Score", "Maximum",
                 "Feedback"));
         access.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
-        var data = loadGradebook(classId);
+        var data = loadGradebook(classId, null);
         if (assignmentId != null
                 && data.columns().stream().noneMatch(assignment -> assignmentId.equals(assignment.id())))
             throw ApiException.notFound("ASSIGNMENT_NOT_FOUND");

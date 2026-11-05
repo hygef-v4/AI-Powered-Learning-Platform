@@ -5,7 +5,7 @@ import { useId, useState, type FormEvent } from "react";
 import { Button, Dialog, Field, TextInput, showToast } from "@/shared/ui";
 import { PersonPicker } from "./PersonPicker";
 import type { CreateClassInput, PersonView, SubjectView } from "../model/types";
-import { operationError } from "./ui";
+import { operationError } from "../model/format";
 
 type Errors = { code?: string; term?: string; name?: string };
 
