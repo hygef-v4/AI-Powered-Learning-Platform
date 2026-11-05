@@ -80,4 +80,4 @@ export const deleteTeacherQuota = (accountId: string) =>
 export const findTeachers = (q: string) =>
   apiFetch<TeacherCandidate[]>(`${BASE}/teacher-candidates?q=${encodeURIComponent(q)}`);
 
-export const getUsageSummary = (days: 7 | 30) => apiFetch<UsageSummary>(`${BASE}/usage-summary?days=${days}`);
+export const getUsageSummary = (days: 7 | 30, signal?: AbortSignal) => apiFetch<UsageSummary>(`${BASE}/usage-summary?days=${days}`, { signal });

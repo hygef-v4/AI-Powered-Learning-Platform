@@ -7,7 +7,6 @@ import {
   RubricNote,
   ToolbarButton,
   type DocumentComment,
-  type DocumentModel as EditorDocument,
   type RubricCriterion,
 } from "@/shared/document";
 import { Alert, Button, Icon, IconButton, Pill } from "@/shared/ui";
@@ -24,7 +23,8 @@ import { AiProposalPanel } from "../components/AiProposalPanel";
 import { BatchActionDialog } from "../components/BatchActionDialog";
 import { MemberContributionPanel } from "../components/MemberContributionPanel";
 import { countUnresolvedReviews } from "../components/StructuredFeedbackSection";
-import { points, statusLabels, type Detail, type DocumentModel, type Rubric } from "../model/types";
+import { points, statusLabels, type Detail, type Rubric } from "../model/types";
+import { toEditorDocument, type SubmissionDocumentDto } from "../model/submissionDocument";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import type { NavigationFilters } from "../model/navigation";
 
@@ -41,25 +41,17 @@ export function GradingWorkspacePage({ evaluationId, proposalId, status, late }:
   );
 }
 
-/** Bài nộp hiện bằng trình soạn chỉ đọc như trang soạn bài; ảnh có fileId thì đánh dấu có tệp để lấy link. */
-function editorDocument(document: DocumentModel): EditorDocument {
-  return {
-    blocks: document.blocks.map((block) => block.type === "IMAGE"
-      ? { ...block, content: { ...block.content, hasFile: typeof block.content.fileId === "string" && block.content.fileId !== "" } }
-      : block),
-  } as unknown as EditorDocument;
-}
-
 /** Link tải có hạn cho từng ảnh trong bài nộp (U03 qua U09), lấy một lần khi mở bài. */
-function useSubmissionImages(evaluationId: string, document: DocumentModel): Record<string, string> {
+function useSubmissionImages(evaluationId: string, document: SubmissionDocumentDto): Record<string, string> {
   const [urls, setUrls] = useState<Record<string, string>>({});
   useEffect(() => {
     let active = true;
-    const images = document.blocks.filter((block) => block.type === "IMAGE" && typeof block.content.fileId === "string" && block.content.fileId);
+    const images = document.blocks.filter((block) => block.type === "IMAGE");
     void Promise.all(images.map(async (block): Promise<[string, string] | null> => {
+      if (!block.content.fileId) return null;
       try {
         const token = await apiFetch<{ url: string }>(
-          `/api/v1/evaluations/${evaluationId}/images/${encodeURIComponent(String(block.content.fileId))}`,
+          `/api/v1/evaluations/${evaluationId}/images/${encodeURIComponent(block.content.fileId)}`,
         );
         const parsed = new URL(token.url, window.location.origin);
         return ["https:", "http:"].includes(parsed.protocol) ? [block.id, parsed.href] : null;
@@ -131,10 +123,10 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
     (evaluation.kind === "GROUP_DOCUMENT" ? "Bài làm nhóm" : "Bài làm sinh viên");
   const studentMatches = (directory.value ?? []).filter((row) => row.evaluationId &&
     `${row.student.name} ${row.student.email}`.toLocaleLowerCase("vi").includes(studentSearch.trim().toLocaleLowerCase("vi")));
-  const paper = useMemo(() => editorDocument(detail.document), [detail.document]);
+  const paper = useMemo(() => toEditorDocument(detail.document), [detail.document]);
   const imageUrls = useSubmissionImages(evaluation.id, detail.document);
-  const partTitles = Object.fromEntries(detail.document.blocks.filter((block) => block.type === "HEADING" && typeof block.content.text === "string")
-    .map((block) => [block.id, block.content.text as string]));
+  const partTitles = Object.fromEntries(detail.document.blocks.flatMap((block) =>
+    block.type === "HEADING" && typeof block.content.text === "string" ? [[block.id, block.content.text]] : []));
   const validBlockIds = useMemo(() => {
     const ids = new Set<string>();
     for (const block of detail.document.blocks) {

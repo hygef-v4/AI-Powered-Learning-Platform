@@ -1,5 +1,7 @@
 # U05 Class & Enrollment — AS-BUILT 2026-10-30
 
+**Follow-up delta 2026-11-05:** moved `formatDate`/`operationError` from UI components to `model/format.ts`, updating callers. Vietnam dates, invalid-date fallback, conflict copy and suppression of unsafe API details remain unchanged. Removed one unused controller repository import; no authorization, lock, contract or schema change. [Current verification and limits](../../build-and-test/2026-11-05-u05-u09-u15-followup-results.md).
+
 **Cleanup delta 2026-11-04:** removed one consecutive duplicate manager-scope check in class creation. Checks before account locking and after subject locking remain; no authorization/transaction or schema change. [Evidence](../../build-and-test/2026-11-04-u05-u09-u15-cleanup-results.md).
 
 Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership unchanged.

@@ -6,7 +6,6 @@ import edu.aiplatform.academics.service.*;
 import edu.aiplatform.academics.dto.AcademicsDtos.*;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.model.*;
-import edu.aiplatform.academics.repository.*;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.shared.error.ApiException;
 import jakarta.validation.Valid;

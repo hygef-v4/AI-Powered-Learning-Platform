@@ -2,7 +2,6 @@
 
 import { Tabs as SharedTabs } from "@/shared/ui/Tabs";
 import { useEffect, useId, useRef, type ReactNode } from "react";
-import { ApiError } from "@/shared/api/client";
 import { Icon as SharedIcon, type IconName as SharedIconName } from "@/shared/ui/Icon";
 import { Pill } from "@/shared/ui/Pill";
 import { EmptyState as SharedEmptyState } from "@/shared/ui/EmptyState";
@@ -70,15 +69,4 @@ export function Modal({ title, description, onClose, children, footer, busy = fa
     <header className={styles.modalHeader}><div><h2 id={titleId}>{title}</h2>{description && <p>{description}</p>}</div><button className={styles.closeButton} type="button" aria-label="Đóng" onClick={onClose} disabled={busy} data-testid="class-dialog-close"><SharedIcon name="close" size={16}/></button></header>
     <div className={styles.modalBody}>{children}</div>{footer && <footer className={styles.modalFooter}>{footer}</footer>}
   </dialog>;
-}
-
-export function operationError(cause: unknown) {
-  if (cause instanceof ApiError && cause.problem.status === 409) return "Dữ liệu đã thay đổi. Vui lòng tải lại trước khi tiếp tục.";
-  // Nội dung server chưa kiểm chứng không được hiển thị SQL/stack trace cho người dùng.
-  return cause instanceof ApiError ? "Không thể hoàn tất thao tác. Vui lòng thử lại." : cause instanceof Error ? cause.message : "Không thể hoàn tất thao tác. Vui lòng thử lại.";
-}
-
-export function formatDate(value: string) {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
 }

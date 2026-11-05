@@ -10269,3 +10269,43 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **AI Response**: Changed requester fields and the CLAUDE.md rule to GitHub profile display names instead of login usernames. Confirmed Quang Hung from the authenticated profile and the user statement; resolved the other historical accounts through public GitHub profiles. Preserve profile spelling and case, original prompts/actions and normal entry timestamps. Keep only the Requested by line, without commit metadata or extra identity fields.
 
 **Validation**: Verified all five profile-name mappings and one display-name-only attribution per entry. Documentation-only; no application tests, commit or push.
+## U05/U09/U15 follow-up planning — 2026-11-05
+
+**Timestamp**: 2026-11-04T18:14:10Z
+**Requested by:** Quang Hung
+
+**User Input**: "giúp tôi lập plan triển khai"
+
+**AI Response**: Prepared the six-task follow-up plan for the scoped review. Prioritize independent dashboard requests/cancellation and single-student grade lookup, then typed submission adaptation, rubric scoring in the model, and U05 helper/import cleanup. Specify files/interfaces, observable behavior, regression cases, documentation and full build/test gates. Retain current unit folders, public APIs, grade locks/resubmission and authorization; no database/dependency change. Source implementation, commits and push are not part of this planning turn.
+
+**Context**: Brownfield follow-up planning; existing design and verification artifacts reused. Plan: construction/plans/code-generation-plan/2026-11-05-u05-u09-u15-followup.md. Requester uses the confirmed GitHub profile display name without commit metadata.
+
+## U05/U09/U15 follow-up implementation — 2026-11-05
+
+**Requested by:** Quang Hung
+
+**User Input**: "giúp tôi triển khai theo kế hoạch $ponytail:ponytail"
+
+**AI Response**: Started the approved six-task follow-up plan in the existing feature checkout. Preserve public contracts, grade and authorization rules; record regression evidence, decisions and documentation in the follow-up results. No commit or push requested.
+
+**Completion — 2026-11-04T18:44:59Z**: Implemented all six scoped findings and synchronized U05/U09/U15 AI-DLC documents. Original dashboard hanging-source/cancellation and 501-student repeated-read regressions failed before fixes. A single independent final review identified stale pending flags after replacement-primary failure; that regression also failed first and now passes. Scoring and date/error helper bodies match the baseline exactly. Final backend Maven verify: 1,782 passed, zero failures/errors/skips, required real PostgreSQL suites passed, production JAR built. Frontend: 776 passed, full lint/typecheck/production build passed; generated TypeScript config restored and checked. Windows verification required elevated Docker/JVM access, UTF-8 startup and normalized absolute cache paths; no source change outside scope. Manual Orca browser acceptance unavailable because the executable could not be resolved. No DB schema/live grade mutation, commit, push or deployment. Evidence: construction/build-and-test/2026-11-05-u05-u09-u15-followup-results.md.
+
+## U05/U09/U15 change summary — 2026-11-05
+
+**Timestamp**: 2026-11-05T03:29:36Z
+**Requested by:** Quang Hung
+
+**User Input**: "tóm tắt thay đổi"
+
+**AI Response**: Summarized independent dashboard loading/cancellation, single-student gradebook reads, typed submission adaptation, preserved rubric arithmetic and U05 helper cleanup. Reported the recorded backend 1,782/frontend 776 passing results and the manual-browser limitation. No source changes.
+
+## U05/U09/U15 commit and staging PR — 2026-11-05
+
+**Timestamp**: 2026-11-05T03:29:36Z
+**Requested by:** Quang Hung
+
+**User Input**: "giúp tôi commit sau đó chạy ci pr lên staging"
+
+**AI Response**: Preparing an English commit for the verified follow-up, pushing the existing feature branch and opening a pull request targeting staging. Confirmed requester GitHub display name Quang Hung, no existing open PR for this head, and staging/head both at the same baseline before this commit. CI will run on the pull request; its current head/check links and outcome are reported through the PR and final response. No merge or deployment requested.
+
+**Context**: Source unchanged since the recorded backend/frontend verification. Public contracts, database schema, grade locks/resubmission and authorization remain unchanged. Manual browser acceptance is still deferred.

@@ -11,6 +11,7 @@ import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.grading.model.*;
 import edu.aiplatform.grading.repository.*;
 import edu.aiplatform.identity.contract.*;
+import edu.aiplatform.grading.controller.GradebookController;
 import java.math.BigDecimal;
 import java.time.*;
 import java.util.*;
@@ -27,8 +28,10 @@ class GradebookAssemblyTest {
     final IAccountLookup accounts = mock(IAccountLookup.class);
     final IRubric rubric = mock(IRubric.class);
     final IAudit audit = mock(IAudit.class);
-    final GradebookService service = new GradebookService(repo, mock(GradingAccess.class), assignments,
-            submissions, classes, accounts, rubric, audit, Clock.systemUTC(), mock(ObjectProvider.class),
+    final ObjectProvider<edu.aiplatform.grading.contract.IGroupSubmissionSource> groups = mock(ObjectProvider.class);
+    final GradingAccess access = mock(GradingAccess.class);
+    final GradebookService service = new GradebookService(repo, access, assignments,
+            submissions, classes, accounts, rubric, audit, Clock.systemUTC(), groups,
             mock(GradeDistributionVisibilityRepository.class));
 
     List<Evaluation> fixture(int size) {
@@ -65,10 +68,86 @@ class GradebookAssemblyTest {
                     Instant.parse("2026-11-01T01:00:00Z"), false));
         }
         when(classes.listActiveStudents(classId)).thenReturn(students);
-        when(accounts.getContacts(students)).thenReturn(contacts);
+        when(accounts.getContacts(anyCollection())).thenAnswer(invocation -> {
+            Map<UUID, AccountContact> selected = new HashMap<>();
+            for (UUID id : invocation.<Collection<UUID>>getArgument(0))
+                if (contacts.containsKey(id)) selected.put(id, contacts.get(id));
+            return selected;
+        });
         when(repo.findForClass(classId)).thenReturn(values);
         when(submissions.listSubmissions(assignmentId, classId)).thenReturn(statuses);
         return values;
+    }
+
+    @Test void studentAtEndOf501LearnerRosterLoadsSourcesOnce() {
+        var values = fixture(501);
+        var target = values.get(500).accountId;
+        var row = new GradebookController(service, mock(GradebookExporter.class)).student(actor, classId, target);
+        assertThat(row.student().accountId()).isEqualTo(target);
+        assertThat(row.student().name()).isEqualTo("Student 500");
+        assertThat(row.grades()).hasSize(1);
+        assertThat(row.grades().get(0).score()).isEqualByComparingTo("7.50");
+        verify(repo).findForClass(classId);
+        verify(submissions).listSubmissions(assignmentId, classId);
+        verify(accounts).getContacts(List.of(target));
+    }
+
+    @Test void studentLookupKeepsReceiptSelectionAndMissingContactFallback() {
+        var values = fixture(2);
+        var target = values.get(1).accountId;
+        var old = Evaluation.pending(UUID.randomUUID(), assignmentId, classId, target,
+                "old", BigDecimal.TEN, "[]", values.get(1).createdAt.plusSeconds(10));
+        old.state = EvaluationStatus.PUBLISHED;
+        old.score = BigDecimal.ONE;
+        values.add(old);
+        when(accounts.getContacts(List.of(target))).thenReturn(Map.of());
+        var row = service.student(actor, classId, target);
+        assertThat(row.student().name()).isEqualTo("Unavailable");
+        assertThat(row.grades().get(0).score()).isEqualByComparingTo("7.50");
+        values.get(1).state = EvaluationStatus.SUPERSEDED;
+        assertThat(service.student(actor, classId, target).grades().get(0).evaluationId()).isNull();
+    }
+
+    @Test void studentLookupRejectsAbsentOrRemovedLearnersAndMissingClass() {
+        var values = fixture(1);
+        assertThatThrownBy(() -> service.student(actor, classId, UUID.randomUUID()))
+                .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
+                        ex -> assertThat(ex.code()).isEqualTo("STUDENT_NOT_FOUND"));
+        when(classes.listActiveStudents(classId)).thenReturn(List.of());
+        assertThatThrownBy(() -> service.student(actor, classId, values.get(0).accountId))
+                .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
+                        ex -> assertThat(ex.code()).isEqualTo("STUDENT_NOT_FOUND"));
+        when(classes.getClassRef(classId)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.student(actor, classId, values.get(0).accountId))
+                .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
+                        ex -> assertThat(ex.code()).isEqualTo("CLASS_NOT_FOUND"));
+    }
+
+    @Test void studentLookupAuthorizesBeforeReadingAnyGrades() {
+        doThrow(edu.aiplatform.shared.error.ApiException.forbidden("CLASS_FORBIDDEN"))
+                .when(access).requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
+        assertThatThrownBy(() -> service.student(actor, classId, UUID.randomUUID()))
+                .isInstanceOf(edu.aiplatform.shared.error.ApiException.class);
+        verifyNoInteractions(repo, classes, accounts, assignments, submissions);
+    }
+
+    @Test void studentLookupKeepsGroupMemberOverrideWithoutIndividualReceipt() {
+        var values = fixture(2);
+        var member = values.get(1);
+        member.kind = EvaluationKind.MEMBER;
+        member.groupDocumentId = UUID.randomUUID();
+        member.score = new BigDecimal("8.25");
+        when(assignments.get(assignmentId).orElseThrow().submissionMode()).thenReturn(SubmissionMode.GROUP);
+        var source = mock(edu.aiplatform.grading.contract.IGroupSubmissionSource.class);
+        when(groups.getIfAvailable()).thenReturn(source);
+        when(source.listGroupSubmissions(assignmentId, classId)).thenReturn(List.of(
+                new edu.aiplatform.grading.contract.GroupSubmissionStatus(member.groupDocumentId,
+                        UUID.randomUUID(), "Group", true, Instant.parse("2026-11-01T01:00:00Z"), true)));
+        var row = service.student(actor, classId, member.accountId);
+        assertThat(row.grades().get(0).score()).isEqualByComparingTo("8.25");
+        assertThat(row.grades().get(0).late()).isTrue();
+        verify(source).listGroupSubmissions(assignmentId, classId);
+        verify(submissions, never()).listSubmissions(any(), any());
     }
 
     @Test void exportLoadsA201StudentClassOnceAndKeepsOfficialScores() {

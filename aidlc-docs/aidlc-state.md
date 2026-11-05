@@ -1,5 +1,11 @@
 # AI-DLC State Tracking
 
+## U05/U09/U15 follow-up implementation — 2026-11-05
+
+Delivery follow-up: user requested an English commit, push of the existing feature branch and PR into `staging`, with CI verification. Current PR head and remote check results are tracked on GitHub and reported with delivery; no merge/deployment requested. This supersedes the implementation-only no-commit scope below.
+
+Implemented the [follow-up plan](construction/plans/code-generation-plan/2026-11-05-u05-u09-u15-followup.md) in existing `fix/u05-u09-u15`: independent/bounded U15 loading and cancellation, one-student gradebook lookup, typed submission adapter, rubric scoring in the model, and U05 presentation helper/import cleanup. Independent review found one stale-loading P2; regression reproduced and fixed, no other confirmed source finding. Fresh backend **1,782 passed/zero skipped**, required PostgreSQL guard passed; frontend **776 passed**, full lint/TypeScript/production build passed. [Evidence, environment setup and limits](construction/build-and-test/2026-11-05-u05-u09-u15-followup-results.md). Manual Orca browser acceptance deferred because `orca tab list` could not resolve the executable. Public contracts, grade locks/resubmission, authorization, unit folders and DB schema unchanged. No commit/push/deployment. Existing security/resiliency scope retained; PBT disabled.
+
 ## U05/U09/U15 audit remediation — 2026-11-04
 
 Follow-up: on user request, started the existing Frontend :3000 and Backend :8080 Orca terminals; login returned HTTP 200 and backend health UP. Local backend includes its worker; the old Docker worker was stopped to avoid duplicate task consumers. User subsequently requested a descriptive local commit in English; no push/merge/deployment requested. Keep the verified cleanup as one atomic commit because navigation/scoring imports and workspace regression changes share files.

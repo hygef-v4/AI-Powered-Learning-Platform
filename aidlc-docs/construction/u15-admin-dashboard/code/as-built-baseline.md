@@ -1,5 +1,7 @@
 # U15 Admin Dashboard — AS-BUILT 2026-10-30
 
+**Follow-up delta 2026-11-05:** independent frontend sources render counts without waiting for activity/usage/history. Each request has a five-second deadline and linked cancellation; optional cards distinguish pending from unavailable. Thirty-second visible-tab refresh, stale-primary behavior and denial clearing remain. Backend fan-out/contracts are unchanged. [Current verification and limits](../../build-and-test/2026-11-05-u05-u09-u15-followup-results.md); older dated evidence below remains historical.
+
 Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership and public contracts unchanged.
 
 Admin Dashboard có counts, backup metadata/history và GET /activity. Activity gồm biến động ACTIVE accounts hôm nay, số Assignment 7 ngày (individual/group/practice), tối đa 50 security events trong 30 ngày; ngày Asia/Ho_Chi_Minh. Các nguồn lỗi/timeout trả từng Section UNAVAILABLE/data null; no-store, chỉ ADMIN, query lạ bị từ chối. Không lộ archive/secrets hoặc cấp quyền học vụ.

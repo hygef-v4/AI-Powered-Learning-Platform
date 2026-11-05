@@ -1,5 +1,7 @@
 # U09 Assignment Grading — AS-BUILT 2026-10-30
 
+**Follow-up delta 2026-11-05:** one-student grade lookup now delegates once to the service and reads class metadata once, selecting only the target contact/row. Backend rubric arithmetic/copy helpers moved unchanged to `model/RubricScoring`; JSON parsing remains in `GradingJson`. Frontend submitted documents derive shared block types and adapt image flags in `model/submissionDocument`, replacing unchecked workspace casting. Public API, grading/authorization/resubmission rules and database schema are unchanged. [Current verification and limits](../../build-and-test/2026-11-05-u05-u09-u15-followup-results.md).
+
 **Cleanup delta 2026-11-04:** optional evaluation navigation filters preserve the originating submission queue; direct/MCP calls remain compatible. Gradebook uses batched contacts and request-local indexes, and export loads sources once. Frontend scoring helpers are in `model/rubricScores.ts`; conflict messages use business error codes. Grade locks, resubmission policy and public unit contracts are unchanged. [Evidence and limits](../../build-and-test/2026-11-04-u05-u09-u15-cleanup-results.md).
 
 Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership unchanged.

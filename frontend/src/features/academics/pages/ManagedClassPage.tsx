@@ -8,7 +8,7 @@ import { initials } from "@/shared/layout/navigation";
 import { ClassInfoForm } from "../components/ClassInfoForm";
 import { AssignTeacherDialog, ClassStateActions } from "../components/ClassDialogs";
 import { EnrollmentPanel } from "../components/EnrollmentPanel";
-import { formatDate } from "../components/ui";
+import { formatDate } from "../model/format";
 import { statusLabels, type ClassInfoInput, type ClassStatus, type CourseClassView, type EnrollmentRowResult, type EnrollmentView, type PersonView } from "../model/types";
 
 export type ManagedClassActions = {

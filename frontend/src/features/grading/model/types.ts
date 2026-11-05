@@ -1,3 +1,5 @@
+import type { SubmissionDocumentDto } from "./submissionDocument";
+
 export type Decimal = string | number;
 export type GradeStatus = "PENDING" | "DRAFT" | "FINALIZED" | "PUBLISHED" | "SUPERSEDED";
 export type Checks = Record<string, string[]>;
@@ -44,9 +46,6 @@ export type Rubric = {
     items: { itemId: string; text: string; points: Decimal }[];
   }[];
 };
-export type DocumentModel = {
-  blocks: { id: string; type: string; content: Record<string, unknown> }[];
-};
 export type Evaluation = {
   id: string;
   assignmentId: string;
@@ -82,7 +81,7 @@ export type Evaluation = {
 };
 export type Detail = {
   evaluation: Evaluation;
-  document: DocumentModel;
+  document: SubmissionDocumentDto;
   rubrics: Rubric[];
   navigationIds: string[];
   activityState: string;

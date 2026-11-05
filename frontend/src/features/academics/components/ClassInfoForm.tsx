@@ -3,7 +3,7 @@
 import { useId, useState, type FormEvent } from "react";
 import { Button, Field, LockedInput, Section, TextInput, showToast } from "@/shared/ui";
 import type { ClassInfoInput, CourseClassView } from "../model/types";
-import { operationError } from "./ui";
+import { operationError } from "../model/format";
 
 /**
  * Thẻ Thông tin lớp, cùng kiểu Thông tin môn học: sửa ngay trên thẻ. Hàng đầu Mã lớp và Mã môn (khóa), hàng hai Tên lớp và
