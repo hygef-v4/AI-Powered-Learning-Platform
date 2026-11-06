@@ -1,4 +1,6 @@
-# U10 Quiz Authoring — Code Generation Plan
+# U10 Quiz Authoring — Code Generation Plan — persistence theo quyết định 2026-11-06
+
+> Lựa chọn persistence JPA/ORM trong kế hoạch cũ, nếu có, được thay bởi [quy định Spring JDBC toàn dự án](../../persistence-conventions.md). Các checklist/evidence đã thực hiện vẫn là lịch sử; unit chưa chuyển cần kế hoạch migration riêng, không tự coi code hiện tại đã JDBC.
 
 > Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U10 Quiz Authoring thuộc Iter 2, người code: Người 1; UC 46–48. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
 

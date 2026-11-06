@@ -55,8 +55,9 @@ public final class RubricScoring {
         return total;
     }
 
-    public static Map<UUID, Map<UUID, BigDecimal>> calculateEffectiveItemScores(List<RubricView> rubrics,
-            Map<UUID, Set<UUID>> checks, Map<UUID, Map<UUID, BigDecimal>> itemScores) {
+    public static Map<UUID, Map<UUID, BigDecimal>> calculateEffectiveItemScores(
+            List<RubricView> rubrics, Map<UUID, Set<UUID>> checks,
+            Map<UUID, Map<UUID, BigDecimal>> itemScores) {
         if (rubrics == null || rubrics.isEmpty()) {
             return Map.of();
         }
@@ -85,11 +86,13 @@ public final class RubricScoring {
         return Map.copyOf(result);
     }
 
-    public static Map<UUID, Map<UUID, BigDecimal>> copyItemScores(Map<UUID, Map<UUID, BigDecimal>> scores) {
+    public static Map<UUID, Map<UUID, BigDecimal>> copyItemScores(
+            Map<UUID, Map<UUID, BigDecimal>> scores) {
         if (scores == null || scores.isEmpty())
             return Map.of();
         var copy = new LinkedHashMap<UUID, Map<UUID, BigDecimal>>();
-        scores.forEach((id, values) -> copy.put(id, values == null ? Map.of() : Map.copyOf(values)));
+        scores.forEach(
+                (id, values) -> copy.put(id, values == null ? Map.of() : Map.copyOf(values)));
         return Map.copyOf(copy);
     }
 
@@ -97,7 +100,8 @@ public final class RubricScoring {
         if (checks == null || checks.isEmpty())
             return Map.of();
         var copy = new LinkedHashMap<UUID, Set<UUID>>();
-        checks.forEach((id, values) -> copy.put(id, values == null ? Set.of() : Set.copyOf(values)));
+        checks.forEach(
+                (id, values) -> copy.put(id, values == null ? Set.of() : Set.copyOf(values)));
         return Map.copyOf(copy);
     }
 

@@ -1,4 +1,6 @@
-# U05 Class & Enrollment — Code Generation Plan
+# U05 Class & Enrollment — Code Generation Plan — persistence theo quyết định 2026-11-06
+
+> Lựa chọn persistence JPA/ORM trong kế hoạch cũ, nếu có, được thay bởi [quy định Spring JDBC toàn dự án](../../persistence-conventions.md). Các checklist/evidence đã thực hiện vẫn là lịch sử; unit chưa chuyển cần kế hoạch migration riêng, không tự coi code hiện tại đã JDBC.
 
 > **Latest user instruction, 2026-10-18:** "giúp tôi haonf thiện u05" authorizes completing U05 against the existing unit contracts before cross-unit merge. It supersedes the former domain-only scope described below. Current implementation and remaining integration gates: [completion handoff](../../u05-class-enrollment/code/code-summary.md); [execution plan](../u05-completion-2026-10-18.md). The original integration checklists below remain historical and are not a statement that current services/controllers are absent.
 

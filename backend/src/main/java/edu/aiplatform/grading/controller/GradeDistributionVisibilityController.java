@@ -12,23 +12,28 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/classes/{classId}/assignments/{assignmentId}/grade-distribution-visibility")
 public class GradeDistributionVisibilityController {
-    public record Input(@NotNull Boolean enabled, @NotNull @Min(0) Long version) { }
+    public record Input(@NotNull Boolean enabled, @NotNull @Min(0) Long version) {
+    }
 
     private final GradeDistributionVisibilityService gradeDistributionVisibilityService;
 
-    public GradeDistributionVisibilityController(GradeDistributionVisibilityService gradeDistributionVisibilityService) {
+    public GradeDistributionVisibilityController(
+            GradeDistributionVisibilityService gradeDistributionVisibilityService) {
         this.gradeDistributionVisibilityService = gradeDistributionVisibilityService;
     }
 
     @GetMapping
-    public GradeDistributionVisibilityService.View loadVisibility(@AuthenticationPrincipal Actor actor,
-            @PathVariable UUID classId, @PathVariable UUID assignmentId) {
+    public GradeDistributionVisibilityService.View loadVisibility(
+            @AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
+            @PathVariable UUID assignmentId) {
         return gradeDistributionVisibilityService.loadVisibility(actor, classId, assignmentId);
     }
 
     @PutMapping
-    public GradeDistributionVisibilityService.View updateVisibility(@AuthenticationPrincipal Actor actor,
-            @PathVariable UUID classId, @PathVariable UUID assignmentId, @Valid @RequestBody Input input) {
-        return gradeDistributionVisibilityService.updateVisibility(actor, classId, assignmentId, input.enabled(), input.version());
+    public GradeDistributionVisibilityService.View updateVisibility(
+            @AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
+            @PathVariable UUID assignmentId, @Valid @RequestBody Input input) {
+        return gradeDistributionVisibilityService.updateVisibility(actor, classId, assignmentId,
+                input.enabled(), input.version());
     }
 }

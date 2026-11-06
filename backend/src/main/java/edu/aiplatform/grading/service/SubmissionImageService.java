@@ -13,7 +13,8 @@ public class SubmissionImageService {
     private final SubmissionReviewService submissionReviewService;
     private final IArtifact artifacts;
 
-    public SubmissionImageService(SubmissionReviewService submissionReviewService, IArtifact artifacts) {
+    public SubmissionImageService(SubmissionReviewService submissionReviewService,
+            IArtifact artifacts) {
         this.submissionReviewService = submissionReviewService;
         this.artifacts = artifacts;
     }
@@ -21,7 +22,8 @@ public class SubmissionImageService {
     public DownloadToken issueDownloadToken(Actor actor, UUID evaluationId, String fileId) {
         var detail = submissionReviewService.loadEvaluation(actor, evaluationId);
         boolean attached = detail.document().blocks().stream()
-                .anyMatch(b -> b.type() == BlockType.IMAGE && fileId.equals(b.content().path("fileId").asText()));
+                .anyMatch(b -> b.type() == BlockType.IMAGE
+                        && fileId.equals(b.content().path("fileId").asText()));
         if (!attached)
             throw ApiException.notFound("SUBMISSION_IMAGE_NOT_FOUND");
         return artifacts.issueDownloadToken(fileId, actor.accountId());

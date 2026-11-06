@@ -1,4 +1,6 @@
-# U06 AI Connections — logical-components
+# U06 AI Connections — logical-components — chuẩn JDBC
+
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code còn JPA được ghi là khoảng cách migration.
 
 > Current structure: parent HEAD 5a76e428 + working-tree refactor, 2026-10-30. Unit ownership unchanged; runtime/provider acceptance remains separate.
 
@@ -10,7 +12,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|
 | [ai/controller](../../../../backend/src/main/java/edu/aiplatform/ai/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [ai/service](../../../../backend/src/main/java/edu/aiplatform/ai/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [ai/repository](../../../../backend/src/main/java/edu/aiplatform/ai/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [ai/repository](../../../../backend/src/main/java/edu/aiplatform/ai/repository) | Repository interface/implementation, SQL và persistence mapping; JDBC là chuẩn đích toàn dự án. |
 | [ai/model](../../../../backend/src/main/java/edu/aiplatform/ai/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [ai/integration](../../../../backend/src/main/java/edu/aiplatform/ai/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [ai/config](../../../../backend/src/main/java/edu/aiplatform/ai/config) | Properties, cấu hình bean và topology. |

@@ -1,4 +1,6 @@
-# U07 Assignment Authoring — tech-stack-decisions
+# U07 Assignment Authoring — tech-stack-decisions — chuẩn JDBC
+
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code còn JPA được ghi là khoảng cách migration.
 
 > Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
@@ -8,7 +10,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
-| Lưu trữ | PostgreSQL + Spring Data JPA; khung và rubric dạng `jsonb` | Khung là cây block, đọc ghi cả khối |
+| Lưu trữ | PostgreSQL + Spring JDBC (JdbcTemplate/NamedParameterJdbcTemplate/JdbcClient); khung và rubric dạng `jsonb` | Khung là cây block, đọc ghi cả khối |
 | DOCX | Apache POI (XWPF) để đọc, ghi | Thư viện Java phổ biến cho DOCX |
 | Ảnh sơ đồ khi xuất | Apache Batik dựng PNG từ SVG; ghi chunk `tEXt` `mxfile` bằng `javax.imageio` | Không cần trình duyệt phía server |
 | XML | Parser của JDK với `disallow-doctype-decl` và tắt entity ngoài | Chặn XXE |

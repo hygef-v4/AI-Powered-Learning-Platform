@@ -15,6 +15,7 @@
 |---|---|---|
 | Java class, record, enum | `PascalCase`, diễn đạt vai trò | `EvaluationController`, `BatchResult` |
 | Java interface | Tiền tố `I`, không dùng hậu tố `Port` | `IAuthorization`, `IEvaluationRepository` |
+| Repository concrete | Đặt tên theo nghiệp vụ, không thêm tiền tố `Jdbc`/`JDBC`; không đổi tên type framework như JdbcTemplate | `CourseClassRepository`, `EnrollmentRepository` |
 | File Java chứa public top-level type | Trùng tên type | `EvaluationController.java` |
 | Package Java | Chữ thường, theo nghiệp vụ và tầng | `grading.service`, `subjects.repository` |
 | React component và file component | `PascalCase` | `SubjectTable`, `SubjectTable.tsx` |
@@ -89,6 +90,9 @@ Các ví dụ minh họa cách đặt tên, không xác nhận code hiện tại
 
 ## 6. Trình bày và trách nhiệm
 
+- Thân method/constructor có câu lệnh phải xuống dòng riêng; không viết cả khai báo và `return` trên một dòng. Tách các câu lệnh và các method bằng khoảng trắng phù hợp để dễ đọc.
+- Ưu tiên dòng khoảng 100 ký tự: xuống dòng danh sách tham số, lời gọi nhiều đối số, biểu thức và chuỗi gọi method khi dài. Không bắt buộc tách literal, regex, SQL, schema hoặc URL chỉ để đạt giới hạn cột; giữ nội dung dữ liệu và contract.
+
 - Java thụt 4 spaces, một câu lệnh mỗi dòng. Cho phép wildcard import (`import ...*;`, `import static ...*;`) để giữ danh sách import gọn, kể cả khi dùng kiểu từ `contract`; không bắt buộc bung wildcard hiện có thành từng dòng. Dùng import tường minh khi cần phân biệt tên trùng hoặc giúp làm rõ kiểu được sử dụng. TypeScript/JSX thụt 2 spaces; giữ formatter/lint hiện tại, ưu tiên độ rộng 100 ký tự cho code mới khi hợp lý.
 - Controller nhận/kiểm tra đầu vào HTTP và gọi service; service điều phối use case; model giữ quy tắc nghiệp vụ; repository giữ truy cập dữ liệu. Unit khác sử dụng public `contract`.
 - Tái sử dụng thành phần có sẵn. Chỉ comment lý do/giới hạn khó thể hiện bằng code; không thêm tầng hoặc comment lặp lại tên method.
@@ -103,4 +107,8 @@ Các ví dụ minh họa cách đặt tên, không xác nhận code hiện tại
 - [ ] Chạy compile/typecheck và test phù hợp với phần code đã sửa; kiểm tra lint khi liên quan frontend.
 - [ ] Kiểm tra diff, cập nhật tài liệu hiện hành có tham chiếu tên cũ; báo rõ phần chưa kiểm tra.
 
-Quy ước này được review bằng checklist; chưa có lint rule tự động bảo đảm mọi tên tuân thủ. Thay đổi chỉ tài liệu cần kiểm tra liên kết/nội dung, không cần chạy toàn bộ test ứng dụng.
+Quy ước được review bằng checklist; chưa có lint rule tự động bảo đảm mọi tên tuân thủ. Thay đổi chỉ tài liệu cần kiểm tra liên kết/nội dung, không cần chạy toàn bộ test ứng dụng.
+
+## 8. Persistence bằng JDBC
+
+Toàn bộ unit dùng Spring JDBC (`JdbcTemplate`, `NamedParameterJdbcTemplate` hoặc `JdbcClient`) cho persistence PostgreSQL theo [quy định persistence chung](persistence-conventions.md). Không thêm JPA/Hibernate/Spring Data JPA/EntityManager cho truy cập DB mới, kể cả chạy native SQL qua JPA. SQL/binding/row mapping thuộc repository; giữ transaction, khóa, CAS/version, schema, JSONB và public contract. Các unit còn JPA là khoảng cách migration được ghi rõ trong quy định, không phải ngoại lệ cho phát triển mới.

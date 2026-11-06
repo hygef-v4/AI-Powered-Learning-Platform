@@ -249,6 +249,53 @@ class AcademicsServiceTest {
         assertThatThrownBy(() -> academicsService.enrollStudents(manager,classId,"one@a.com")).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(503));
         verify(enrollmentRepository,never()).insert(any());
     }
+    @Test
+    void updatingClassPreservesVersionAndAuditsInsideTheTransaction() {
+        doAnswer(invocation -> {
+            AuditEvent event = invocation.getArgument(0);
+            if (event.result() == AuditResult.SUCCESS) {
+                assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
+            }
+            return null;
+        }).when(audit).record(any());
+
+        var result = academicsService.updateClassInfo(manager, classId, "Updated", "Description",
+                "Term", 0);
+
+        assertThat(result.name()).isEqualTo("Updated");
+        assertThat(result.version()).isEqualTo(1);
+        var order = inOrder(subjectMutationGuard, courseClassRepository, audit);
+        order.verify(subjectMutationGuard).lockActive(subjectId, Duration.ofSeconds(1));
+        order.verify(courseClassRepository).update(argThat(value -> value.name().equals("Updated")
+                && value.description().equals("Description") && value.term().equals("Term")
+                && value.version() == 1), eq(0L));
+        order.verify(audit).record(argThat(event -> event.action().equals("CLASS_UPDATED")
+                && event.result() == AuditResult.SUCCESS && event.details().isEmpty()));
+        verifyNoInteractions(eventPublisher);
+    }
+
+    @Test
+    void staleVersionIsRejectedBeforeInvalidClassInformation() {
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager, classId, "", null,
+                null, 99)).isInstanceOfSatisfying(ApiException.class,
+                        error -> assertThat(error.code()).isEqualTo("CLASS_VERSION_CONFLICT"));
+
+        verify(courseClassRepository, never()).update(any(), anyLong());
+        verify(audit, never()).record(argThat(event -> event.result() == AuditResult.SUCCESS));
+        verifyNoInteractions(eventPublisher);
+    }
+
+    @Test
+    void invalidClassInformationDoesNotWriteOrAuditSuccess() {
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager, classId, "", null,
+                null, 0)).isInstanceOfSatisfying(ApiException.class,
+                        error -> assertThat(error.code()).isEqualTo("INVALID_CLASS_FIELD"));
+
+        verify(subjectMutationGuard).lockActive(subjectId, Duration.ofSeconds(1));
+        verify(courseClassRepository, never()).update(any(), anyLong());
+        verify(audit, never()).record(argThat(event -> event.result() == AuditResult.SUCCESS));
+    }
+
     @Test void pagingRejectsOverflowAndOversizedPage() {
         assertThatThrownBy(() -> academicsService.listClasses(manager,"manager",null,null,null,Integer.MAX_VALUE,100)).isInstanceOf(ApiException.class);
         assertThatThrownBy(() -> academicsService.listClasses(manager,"manager",null,null,null,1,101)).isInstanceOf(ApiException.class);

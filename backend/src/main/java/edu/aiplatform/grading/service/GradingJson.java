@@ -27,7 +27,8 @@ final class GradingJson {
             return json.readValue(value, new TypeReference<List<RubricView>>() {
             });
         } catch (Exception ex) {
-            throw ApiException.unavailable("INVALID_RUBRIC_SNAPSHOT", "Rubric snapshot unavailable");
+            throw ApiException.unavailable("INVALID_RUBRIC_SNAPSHOT",
+                    "Rubric snapshot unavailable");
         }
     }
 
@@ -36,8 +37,9 @@ final class GradingJson {
             return Map.of();
         }
         try {
-            Map<UUID, Set<UUID>> parsed = json.readValue(value, new TypeReference<Map<UUID, Set<UUID>>>() {
-            });
+            Map<UUID, Set<UUID>> parsed = json.readValue(value,
+                    new TypeReference<Map<UUID, Set<UUID>>>() {
+                    });
             return parsed == null ? Map.of() : RubricScoring.copyChecks(parsed);
         } catch (Exception ex) {
             return Map.of();

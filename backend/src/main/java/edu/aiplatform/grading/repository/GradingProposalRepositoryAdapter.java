@@ -1,41 +1,84 @@
 package edu.aiplatform.grading.repository;
 
 import edu.aiplatform.grading.model.GradingProposal;
-import edu.aiplatform.grading.repository.IGradingProposalRepository;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public class GradingProposalRepositoryAdapter implements IGradingProposalRepository {
-    private final IGradingProposalJpaRepository gradingProposalJpaRepository;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    public GradingProposalRepositoryAdapter(IGradingProposalJpaRepository gradingProposalJpaRepository) {
-        this.gradingProposalJpaRepository = gradingProposalJpaRepository;
+    public GradingProposalRepositoryAdapter(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
     public Optional<UUID> findEvaluationId(UUID id) {
-        return gradingProposalJpaRepository.findEvaluationIdById(id);
+        return namedParameterJdbcTemplate
+                .queryForList("select evaluation_id from grading_proposals where id=:id",
+                        Map.of("id", id), UUID.class)
+                .stream().findFirst();
     }
 
     public Optional<GradingProposal> findById(UUID id) {
-        return gradingProposalJpaRepository.findById(id).map(GradingProposalJpaEntity::mapProposal);
+        return namedParameterJdbcTemplate
+                .query("select proposal_document from grading_proposals where id=:id",
+                        Map.of("id", id), GradingProposalRepositoryAdapter::mapProposal)
+                .stream().findFirst();
     }
 
     public Optional<GradingProposal> findByRequestRef(String ref) {
-        return gradingProposalJpaRepository.findByRequestRef(ref).map(GradingProposalJpaEntity::mapProposal);
+        return namedParameterJdbcTemplate
+                .query("select proposal_document from grading_proposals where request_ref=:ref",
+                        Map.of("ref", ref), GradingProposalRepositoryAdapter::mapProposal)
+                .stream().findFirst();
     }
 
     public List<GradingProposal> findForEvaluation(UUID id) {
-        return gradingProposalJpaRepository.findByEvaluationIdOrderByVersionNoDesc(id).stream()
-                .map(GradingProposalJpaEntity::mapProposal)
-                .toList();
+        return namedParameterJdbcTemplate.query(
+                """
+                        select proposal_document from grading_proposals where evaluation_id=:id order by version_no desc
+                        """,
+                Map.of("id", id), GradingProposalRepositoryAdapter::mapProposal);
     }
 
-    public GradingProposal save(GradingProposal p) {
-        var e = gradingProposalJpaRepository.findById(p.id).orElseGet(GradingProposalJpaEntity::new);
-        e.applyProposal(p);
-        return gradingProposalJpaRepository.saveAndFlush(e).mapProposal();
+    @Transactional
+    public GradingProposal save(GradingProposal proposal) {
+        var versions = namedParameterJdbcTemplate.queryForList(
+                "select version from grading_proposals where id=:id for update",
+                Map.of("id", proposal.id), Long.class);
+        var row = new GradingProposalRow();
+        row.applyProposal(proposal);
+        var args = Map.of("id", row.id, "evaluationId", row.evaluationId, "versionNo",
+                row.versionNo, "requestRef", row.requestRef, "status", row.status, "document",
+                row.document, "expectedVersion", versions.isEmpty() ? 0 : versions.get(0));
+        String sql = versions.isEmpty()
+                ? """
+                        insert into grading_proposals (id, evaluation_id, version_no, request_ref, status, proposal_document, version)
+                        values (:id, :evaluationId, :versionNo, :requestRef, :status, cast(:document as jsonb), 0)
+                        """
+                : """
+                        update grading_proposals set evaluation_id=:evaluationId, version_no=:versionNo,
+                            request_ref=:requestRef, status=:status, proposal_document=cast(:document as jsonb), version=version+1
+                        where id=:id and version=:expectedVersion
+                        """;
+        if (namedParameterJdbcTemplate.update(sql, args) != 1) {
+            throw new OptimisticLockingFailureException(
+                    "Grading proposal changed; reload and retry");
+        }
+        return row.mapProposal();
+    }
+
+    private static GradingProposal mapProposal(ResultSet rs, int index) throws SQLException {
+        var row = new GradingProposalRow();
+        row.document = rs.getString("proposal_document");
+        return row.mapProposal();
     }
 }

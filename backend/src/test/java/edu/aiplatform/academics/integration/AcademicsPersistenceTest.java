@@ -1,7 +1,7 @@
 package edu.aiplatform.academics.integration;
 
-import edu.aiplatform.academics.repository.JdbcCourseClassRepository;
-import edu.aiplatform.academics.repository.JdbcEnrollmentRepository;
+import edu.aiplatform.academics.repository.CourseClassRepository;
+import edu.aiplatform.academics.repository.EnrollmentRepository;
 
 import edu.aiplatform.academics.model.CourseClass;
 import edu.aiplatform.academics.model.AcademicRuleException;
@@ -29,7 +29,7 @@ class AcademicsPersistenceTest {
 
     @Test void updatingStaleVersionRaisesConflictAndNeverChangesIdentity() {
         TransactionSynchronizationManager.setActualTransactionActive(true);
-        var repository = new JdbcCourseClassRepository(namedParameterJdbcTemplate);
+        var repository = new CourseClassRepository(namedParameterJdbcTemplate);
         var original = CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C1", "Class", null, null, null, now);
         when(namedParameterJdbcTemplate.update(anyString(), anyMap())).thenReturn(0);
         assertThatThrownBy(() -> repository.update(original.updateInfo("New", null, null, now), 0))
@@ -40,7 +40,7 @@ class AcademicsPersistenceTest {
     }
 
     @Test void rejectsUncoordinatedWritesAndInvalidVersion() {
-        var repository = new JdbcCourseClassRepository(namedParameterJdbcTemplate);
+        var repository = new CourseClassRepository(namedParameterJdbcTemplate);
         var original = CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C1", "Class", null, null, null, now);
         assertThatThrownBy(() -> repository.insert(original)).isInstanceOf(IllegalStateException.class);
         TransactionSynchronizationManager.setActualTransactionActive(true);
@@ -51,7 +51,7 @@ class AcademicsPersistenceTest {
     }
 
     @Test void enforcesPaginationBoundsBeforeQueryingDatabase() {
-        var repository = new JdbcCourseClassRepository(namedParameterJdbcTemplate);
+        var repository = new CourseClassRepository(namedParameterJdbcTemplate);
         assertThatThrownBy(() -> repository.listBySubject(UUID.randomUUID(), 101, 0)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> repository.listBySubject(UUID.randomUUID(), 0, 0)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> repository.listBySubject(UUID.randomUUID(), 20, -1)).isInstanceOf(IllegalArgumentException.class);
@@ -60,16 +60,16 @@ class AcademicsPersistenceTest {
 
     @Test void persistenceBeansAreRegistered() {
         var runner = new ApplicationContextRunner().withBean(NamedParameterJdbcTemplate.class, () -> namedParameterJdbcTemplate)
-                .withUserConfiguration(JdbcCourseClassRepository.class, JdbcEnrollmentRepository.class);
+                .withUserConfiguration(CourseClassRepository.class, EnrollmentRepository.class);
         runner.run(context -> {
-            assertThat(context).hasSingleBean(JdbcCourseClassRepository.class);
-            assertThat(context).hasSingleBean(JdbcEnrollmentRepository.class);
+            assertThat(context).hasSingleBean(CourseClassRepository.class);
+            assertThat(context).hasSingleBean(EnrollmentRepository.class);
         });
     }
 
     @Test void duplicateEnrollmentAndConcurrentStatusChangeAreReported() {
         TransactionSynchronizationManager.setActualTransactionActive(true);
-        var repository = new JdbcEnrollmentRepository(namedParameterJdbcTemplate);
+        var repository = new EnrollmentRepository(namedParameterJdbcTemplate);
         var value = Enrollment.createEnrollment(UUID.randomUUID(), UUID.randomUUID(), EnrollmentSource.MANUAL, now);
         when(namedParameterJdbcTemplate.update(anyString(), anyMap())).thenThrow(new DuplicateKeyException("SQL details"));
         assertThatThrownBy(() -> repository.insert(value)).isInstanceOf(AcademicRuleException.class)
@@ -81,7 +81,7 @@ class AcademicsPersistenceTest {
     }
 
     @Test void enrollmentWritesRequireTransactionAndReadQueriesAreNotCached() {
-        var repository = new JdbcEnrollmentRepository(namedParameterJdbcTemplate);
+        var repository = new EnrollmentRepository(namedParameterJdbcTemplate);
         var accountId = UUID.randomUUID();
         var subjectId = UUID.randomUUID();
         var classId = UUID.randomUUID();
