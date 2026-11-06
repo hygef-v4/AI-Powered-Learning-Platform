@@ -10433,3 +10433,51 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **User Input**: "giúp tôi commit chưa push"
 **AI Response**: Reviewed current diff, whitespace and verified-source hashes; staging the scoped U05/U09/U15 formatting/refactor, three characterization test files and corresponding AI-DLC documentation as one descriptive local commit on fix/u05-u09-u15. Source unchanged since the passing backend 1,822/frontend 799 checks; no redundant runtime rerun required. Preserve ignored logs/credentials and leave local apps running.
 **Context**: Explicit local commit authorization only. No push, remote write, PR, merge or deployment.
+
+## U05/U09 JDBC direction confirmed — 2026-11-06
+
+**Timestamp**: 2026-11-06T08:52:10Z
+**Requested by:** Quang Hung
+**User Input**: "tôi vừa discard changes, h tôi k muốn u05 u09 dùng hết jdbc, nhớ sửa lại cả dự án chỉ dùng jdbc trong doc aidlc"
+**AI Response**: Verified a clean checkout after discard and asked to resolve conflicting wording before editing. Stopped the prior JPA migration; no discarded changes restored.
+**Context**: Direction clarification.
+
+## U05/U09 JDBC clarification answer — 2026-11-06
+
+**Timestamp**: 2026-11-06T08:52:10Z
+**Requested by:** Quang Hung
+**User Input**: "Chuyển U05/U09 sang JDBC và sửa AI-DLC quy định toàn dự án dùng JDBC"
+**AI Response**: Proceed with U05/U09 JDBC-only code and project-wide JDBC policy in AI-DLC. U05 already uses JDBC; migrate U09 evaluation/proposal adapters, preserve contracts/schema/locks/versions, characterize on PostgreSQL before editing and run fresh verification. Document other units' remaining JPA as migration gaps.
+**Context**: Other unit code/global JPA infrastructure/frontend, live migrations/restarts and commit/push outside scope. Security/resiliency retained; PBT disabled.
+
+## U05/U09 JDBC implementation completed — 2026-11-06
+
+**Timestamp**: 2026-11-06T09:27:28Z
+**Requested by:** Quang Hung
+**User Input**: "Chuyển U05/U09 sang JDBC và sửa AI-DLC quy định toàn dự án dùng JDBC"
+**AI Response**: Kept U05 JDBC unchanged; migrated U09 evaluation/proposal adapters to NamedParameterJdbcTemplate, replaced JPA mappings with plain JSON rows and removed Spring Data interfaces. Preserved contracts/schema/JSONB, locks, explicit CAS/version and transaction/audit boundaries. Added a scoped JDBC architecture rule and full-migration PostgreSQL regressions. Updated global conventions, all unit tech-stack/logical-component descriptions, affected historical-plan override notices, current baseline/decision register, U09 current implementation and remaining JPA gaps. Baseline 209 behavior/other-rule cases passed with JDBC rule RED; after migration 210 passed, expanded focused 446 passed. Final isolated full verify: 1,830 tests in 236 suites, zero failures/errors/skips, executable JAR built; required PostgreSQL 31 + 2 + 10 + 1 passed. Independent review documentation finding fixed; explicit no-op save/version difference characterized and documented. Verified 1,008 input hashes, artifact manifest, obsolete JPA class removal, whitespace and local links.
+**Context**: Standard target repackage failed while the local backend held the JAR; app was not stopped/restarted. Executable artifact is .tmp/jdbc-transition-20261106/target/platform-backend-0.1.0-SNAPSHOT.jar; backend/target currently contains a thin JAR and must be rebuilt when unlocked for a normal launch. One isolated full attempt hit an AI fixture PostgreSQL EOF; separate five-case rerun and final full rerun passed without source fixes. U04/U13/U14 code remains JPA pending separate migration. No frontend test, authenticated UI/provider/load acceptance, live migration, commit or push. Security/resiliency scope retained; PBT disabled. Evidence: construction/build-and-test/2026-11-06-u05-u09-jdbc-results.md.
+
+## Restart JDBC backend/frontend and rerun tests — 2026-11-06
+
+**Timestamp**: 2026-11-06T09:36:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi restart fe,be chạy test"
+**AI Response**: Verified app process ownership on ports 8080/3000, captured 1,572 source/config hashes and generated-config backups, stopped only the identified backend and frontend processes, restarted existing Mailpit and launched fresh full backend verify plus frontend test/lint/typecheck/build. Rebuild the standard executable JAR now that the old process released its lock, then start both apps and verify HTTP readiness. Preserve all pending JDBC/doc changes.
+**Context**: Explicit restart/test authorization; no source/dependency/schema change, commit/push or deployment. Existing Docker data/services retained; security/resiliency scope retained, PBT disabled. Evidence in progress: construction/build-and-test/2026-11-06-jdbc-restart-test-results.md.
+
+## JDBC restart/test completion — 2026-11-06
+
+**Timestamp**: 2026-11-06T09:47:58Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi restart fe,be chạy test"
+**AI Response**: Fresh backend normal-target Maven verify passed all 1,830 tests/236 suites with no failures/errors/skips; executable JAR repackage now succeeds. Required PostgreSQL suites 31 + 2 + 10 + 1 passed. Frontend 799 tests/116 files plus lint/typecheck/production build and final typecheck passed. Restarted backend PID 50084 on 8080 with local,worker and frontend listener 3184/launcher 43712 on 3000. Seven HTTP checks passed: backend health/liveness/readiness UP, frontend root/login 200, protected API direct/via frontend 401. Live Flyway validated 32 migrations with no new migration. Restored Next-generated next-env.d.ts/AGENTS.md to exact snapshots; 1,572 source/config hashes unchanged. Preserved pending JDBC changes, existing data and other processes; left apps/dependencies running.
+**Context**: Restart/test request completed. No product source/dependency/schema change, authenticated UI/provider/load acceptance, commit, push or deployment. Mailpit healthy; old Docker worker remains stopped. Security/resiliency retained, PBT disabled. Evidence: construction/build-and-test/2026-11-06-jdbc-restart-test-results.md.
+
+## Clear local JDBC commits requested — 2026-11-06
+
+**Timestamp**: 2026-11-06T09:55:36Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit rõ ràng"
+**AI Response**: Reviewed the scoped production/test/script and documentation diffs, whitespace and fresh verification evidence. Prepared two descriptive local changesets: U09 JPA-to-JDBC persistence with regression/architecture/DB guards, then project-wide AI-DLC JDBC policy and migration/restart evidence. Verified all 1,572 source/config hashes still match the successful 1,830 backend and 799 frontend checks; required PostgreSQL suites 31 + 2 + 10 + 1 pass. No additional runtime rerun needed for staging/metadata-only work. Exclude scratch logs, credentials and generated artifacts; leave local services running.
+**Context**: Explicit local commit authorization only; no push, remote action, merge, deploy or Git configuration change. All pending paths are classified within the requested JDBC work and documentation scope.

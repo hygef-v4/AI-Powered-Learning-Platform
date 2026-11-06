@@ -1,4 +1,6 @@
-# Current code baseline — structure refactor 2026-10-30
+# Current code baseline — structure 2026-10-30, persistence delta 2026-11-06
+
+**Persistence decision 2026-11-06:** [Spring JDBC cho toàn dự án](../../construction/persistence-conventions.md). U05 đã JDBC; U09 evaluation/proposal nay chuyển JDBC. U04/U13/U14 còn JPA, cần migration riêng; hạ tầng JPA chung chỉ được giữ trong giai đoạn chuyển tiếp. Inventory/các kết quả có ngày cũ dưới đây không phải kiểm chứng runtime mới. [U05/U09 JDBC evidence](../../construction/build-and-test/2026-11-06-u05-u09-jdbc-results.md).
 
 Frontend layout follow-up: parent HEAD `5480c267` + working-tree CSS/test relocation. Tests and fixtures: [frontend/tests](../../../frontend/tests); shared/global CSS: [shared/styles](../../../frontend/src/shared/styles); feature CSS: each feature styles directory. [Fresh verification and limits](../../construction/build-and-test/2026-10-30-frontend-styles-tests-results.md).
 
@@ -14,7 +16,7 @@ Primary UC 01–12; FR-001, FR-002, FR-015.
 |---|---|
 | [identity/controller](../../../backend/src/main/java/edu/aiplatform/identity/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [identity/service](../../../backend/src/main/java/edu/aiplatform/identity/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [identity/repository](../../../backend/src/main/java/edu/aiplatform/identity/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [identity/repository](../../../backend/src/main/java/edu/aiplatform/identity/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [identity/model](../../../backend/src/main/java/edu/aiplatform/identity/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [identity/integration](../../../backend/src/main/java/edu/aiplatform/identity/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [identity/config](../../../backend/src/main/java/edu/aiplatform/identity/config) | Properties, cấu hình bean và topology. |
@@ -76,7 +78,7 @@ Primary UC 13; FR-014.
 |---|---|
 | [audit/controller](../../../backend/src/main/java/edu/aiplatform/audit/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [audit/service](../../../backend/src/main/java/edu/aiplatform/audit/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [audit/repository](../../../backend/src/main/java/edu/aiplatform/audit/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [audit/repository](../../../backend/src/main/java/edu/aiplatform/audit/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [audit/model](../../../backend/src/main/java/edu/aiplatform/audit/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [audit/contract](../../../backend/src/main/java/edu/aiplatform/audit/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
@@ -119,11 +121,11 @@ Primary UC 14–15; FR-013, FR-033, FR-038.
 | [jobs/contract](../../../backend/src/main/java/edu/aiplatform/jobs/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 | [settings/controller](../../../backend/src/main/java/edu/aiplatform/settings/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [settings/service](../../../backend/src/main/java/edu/aiplatform/settings/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [settings/repository](../../../backend/src/main/java/edu/aiplatform/settings/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [settings/repository](../../../backend/src/main/java/edu/aiplatform/settings/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [settings/model](../../../backend/src/main/java/edu/aiplatform/settings/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [settings/contract](../../../backend/src/main/java/edu/aiplatform/settings/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 | [backup/service](../../../backend/src/main/java/edu/aiplatform/backup/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [backup/repository](../../../backend/src/main/java/edu/aiplatform/backup/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [backup/repository](../../../backend/src/main/java/edu/aiplatform/backup/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [backup/model](../../../backend/src/main/java/edu/aiplatform/backup/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [backup/integration](../../../backend/src/main/java/edu/aiplatform/backup/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [backup/config](../../../backend/src/main/java/edu/aiplatform/backup/config) | Properties, cấu hình bean và topology. |
@@ -187,7 +189,7 @@ Primary UC 16–19; FR-003.
 |---|---|
 | [subjects/controller](../../../backend/src/main/java/edu/aiplatform/subjects/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [subjects/service](../../../backend/src/main/java/edu/aiplatform/subjects/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [subjects/repository](../../../backend/src/main/java/edu/aiplatform/subjects/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [subjects/repository](../../../backend/src/main/java/edu/aiplatform/subjects/repository) | Repository interface/implementation, JPA hiện tại; cần chuyển JDBC theo quyết định chung. |
 | [subjects/model](../../../backend/src/main/java/edu/aiplatform/subjects/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [subjects/dto](../../../backend/src/main/java/edu/aiplatform/subjects/dto) | Kiểu dữ liệu request/response riêng. |
 | [subjects/contract](../../../backend/src/main/java/edu/aiplatform/subjects/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
@@ -230,7 +232,7 @@ Primary UC 20–30; FR-003, FR-005, FR-024.
 |---|---|
 | [academics/controller](../../../backend/src/main/java/edu/aiplatform/academics/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [academics/service](../../../backend/src/main/java/edu/aiplatform/academics/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [academics/repository](../../../backend/src/main/java/edu/aiplatform/academics/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [academics/repository](../../../backend/src/main/java/edu/aiplatform/academics/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [academics/model](../../../backend/src/main/java/edu/aiplatform/academics/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [academics/dto](../../../backend/src/main/java/edu/aiplatform/academics/dto) | Kiểu dữ liệu request/response riêng. |
 | [academics/contract](../../../backend/src/main/java/edu/aiplatform/academics/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
@@ -273,7 +275,7 @@ Primary UC 31–33; FR-012, FR-021, FR-034, FR-035, FR-036, FR-037.
 |---|---|
 | [ai/controller](../../../backend/src/main/java/edu/aiplatform/ai/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [ai/service](../../../backend/src/main/java/edu/aiplatform/ai/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [ai/repository](../../../backend/src/main/java/edu/aiplatform/ai/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [ai/repository](../../../backend/src/main/java/edu/aiplatform/ai/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [ai/model](../../../backend/src/main/java/edu/aiplatform/ai/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [ai/integration](../../../backend/src/main/java/edu/aiplatform/ai/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [ai/config](../../../backend/src/main/java/edu/aiplatform/ai/config) | Properties, cấu hình bean và topology. |
@@ -331,7 +333,7 @@ Primary UC 34–36; FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 |---|---|
 | [assignments/controller](../../../backend/src/main/java/edu/aiplatform/assignments/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [assignments/service](../../../backend/src/main/java/edu/aiplatform/assignments/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [assignments/repository](../../../backend/src/main/java/edu/aiplatform/assignments/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [assignments/repository](../../../backend/src/main/java/edu/aiplatform/assignments/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [assignments/model](../../../backend/src/main/java/edu/aiplatform/assignments/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [assignments/dto](../../../backend/src/main/java/edu/aiplatform/assignments/dto) | Kiểu dữ liệu request/response riêng. |
 | [assignments/contract](../../../backend/src/main/java/edu/aiplatform/assignments/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
@@ -378,7 +380,7 @@ Primary UC 37–41; FR-018, FR-030, FR-039.
 |---|---|
 | [assignmentwork/controller](../../../backend/src/main/java/edu/aiplatform/assignmentwork/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [assignmentwork/service](../../../backend/src/main/java/edu/aiplatform/assignmentwork/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [assignmentwork/repository](../../../backend/src/main/java/edu/aiplatform/assignmentwork/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [assignmentwork/repository](../../../backend/src/main/java/edu/aiplatform/assignmentwork/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [assignmentwork/model](../../../backend/src/main/java/edu/aiplatform/assignmentwork/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [assignmentwork/dto](../../../backend/src/main/java/edu/aiplatform/assignmentwork/dto) | Kiểu dữ liệu request/response riêng. |
 | [assignmentwork/contract](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
@@ -415,7 +417,7 @@ Primary UC 42–45; FR-008, FR-009, FR-020, FR-024.
 |---|---|
 | [grading/controller](../../../backend/src/main/java/edu/aiplatform/grading/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [grading/service](../../../backend/src/main/java/edu/aiplatform/grading/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [grading/repository](../../../backend/src/main/java/edu/aiplatform/grading/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [grading/repository](../../../backend/src/main/java/edu/aiplatform/grading/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [grading/model](../../../backend/src/main/java/edu/aiplatform/grading/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [grading/dto](../../../backend/src/main/java/edu/aiplatform/grading/dto) | Kiểu dữ liệu request/response riêng. |
 | [grading/contract](../../../backend/src/main/java/edu/aiplatform/grading/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
@@ -473,7 +475,7 @@ Primary UC 46–48; FR-006, FR-007, FR-016, FR-017, FR-028.
 |---|---|
 | [quizzes/controller](../../../backend/src/main/java/edu/aiplatform/quizzes/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [quizzes/service](../../../backend/src/main/java/edu/aiplatform/quizzes/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [quizzes/repository](../../../backend/src/main/java/edu/aiplatform/quizzes/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [quizzes/repository](../../../backend/src/main/java/edu/aiplatform/quizzes/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [quizzes/model](../../../backend/src/main/java/edu/aiplatform/quizzes/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [quizzes/contract](../../../backend/src/main/java/edu/aiplatform/quizzes/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
@@ -522,7 +524,7 @@ Primary UC 49–52; FR-017, FR-018, FR-039.
 |---|---|
 | [quizpractice/controller](../../../backend/src/main/java/edu/aiplatform/quizpractice/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [quizpractice/service](../../../backend/src/main/java/edu/aiplatform/quizpractice/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [quizpractice/repository](../../../backend/src/main/java/edu/aiplatform/quizpractice/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [quizpractice/repository](../../../backend/src/main/java/edu/aiplatform/quizpractice/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [quizpractice/model](../../../backend/src/main/java/edu/aiplatform/quizpractice/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [quizpractice/dto](../../../backend/src/main/java/edu/aiplatform/quizpractice/dto) | Kiểu dữ liệu request/response riêng. |
 
@@ -556,11 +558,11 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 |---|---|
 | [groups/controller](../../../backend/src/main/java/edu/aiplatform/groups/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [groups/service](../../../backend/src/main/java/edu/aiplatform/groups/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [groups/repository](../../../backend/src/main/java/edu/aiplatform/groups/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [groups/repository](../../../backend/src/main/java/edu/aiplatform/groups/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [groups/model](../../../backend/src/main/java/edu/aiplatform/groups/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [groupdocs/controller](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [groupdocs/service](../../../backend/src/main/java/edu/aiplatform/groupdocs/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [groupdocs/repository](../../../backend/src/main/java/edu/aiplatform/groupdocs/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [groupdocs/repository](../../../backend/src/main/java/edu/aiplatform/groupdocs/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [groupdocs/model](../../../backend/src/main/java/edu/aiplatform/groupdocs/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [groupdocs/integration](../../../backend/src/main/java/edu/aiplatform/groupdocs/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [groupdocs/contract](../../../backend/src/main/java/edu/aiplatform/groupdocs/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
@@ -611,7 +613,7 @@ Primary UC 58–62; FR-004, FR-005.
 |---|---|
 | [materials/controller](../../../backend/src/main/java/edu/aiplatform/materials/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [materials/service](../../../backend/src/main/java/edu/aiplatform/materials/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [materials/repository](../../../backend/src/main/java/edu/aiplatform/materials/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [materials/repository](../../../backend/src/main/java/edu/aiplatform/materials/repository) | Repository interface/implementation, JPA hiện tại; cần chuyển JDBC theo quyết định chung. |
 | [materials/model](../../../backend/src/main/java/edu/aiplatform/materials/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [materials/integration](../../../backend/src/main/java/edu/aiplatform/materials/integration) | Adapter hạ tầng/provider, listener và sender. |
 
@@ -655,12 +657,12 @@ Primary UC 63–65; FR-011, FR-019, FR-023.
 |---|---|
 | [announcements/controller](../../../backend/src/main/java/edu/aiplatform/announcements/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [announcements/service](../../../backend/src/main/java/edu/aiplatform/announcements/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [announcements/repository](../../../backend/src/main/java/edu/aiplatform/announcements/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [announcements/repository](../../../backend/src/main/java/edu/aiplatform/announcements/repository) | Repository interface/implementation, JPA hiện tại; cần chuyển JDBC theo quyết định chung. |
 | [announcements/model](../../../backend/src/main/java/edu/aiplatform/announcements/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [announcements/dto](../../../backend/src/main/java/edu/aiplatform/announcements/dto) | Kiểu dữ liệu request/response riêng. |
 | [notifications/controller](../../../backend/src/main/java/edu/aiplatform/notifications/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [notifications/service](../../../backend/src/main/java/edu/aiplatform/notifications/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [notifications/repository](../../../backend/src/main/java/edu/aiplatform/notifications/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [notifications/repository](../../../backend/src/main/java/edu/aiplatform/notifications/repository) | Repository interface/implementation, JPA hiện tại; cần chuyển JDBC theo quyết định chung. |
 | [notifications/model](../../../backend/src/main/java/edu/aiplatform/notifications/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [notifications/integration](../../../backend/src/main/java/edu/aiplatform/notifications/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [notifications/config](../../../backend/src/main/java/edu/aiplatform/notifications/config) | Properties, cấu hình bean và topology. |

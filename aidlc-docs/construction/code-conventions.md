@@ -106,4 +106,8 @@ Các ví dụ minh họa cách đặt tên, không xác nhận code hiện tại
 - [ ] Chạy compile/typecheck và test phù hợp với phần code đã sửa; kiểm tra lint khi liên quan frontend.
 - [ ] Kiểm tra diff, cập nhật tài liệu hiện hành có tham chiếu tên cũ; báo rõ phần chưa kiểm tra.
 
-Quy ước này được review bằng checklist; chưa có lint rule tự động bảo đảm mọi tên tuân thủ. Thay đổi chỉ tài liệu cần kiểm tra liên kết/nội dung, không cần chạy toàn bộ test ứng dụng.
+Quy ước được review bằng checklist; chưa có lint rule tự động bảo đảm mọi tên tuân thủ. Thay đổi chỉ tài liệu cần kiểm tra liên kết/nội dung, không cần chạy toàn bộ test ứng dụng.
+
+## 8. Persistence bằng JDBC
+
+Toàn bộ unit dùng Spring JDBC (`JdbcTemplate`, `NamedParameterJdbcTemplate` hoặc `JdbcClient`) cho persistence PostgreSQL theo [quy định persistence chung](persistence-conventions.md). Không thêm JPA/Hibernate/Spring Data JPA/EntityManager cho truy cập DB mới, kể cả chạy native SQL qua JPA. SQL/binding/row mapping thuộc repository; giữ transaction, khóa, CAS/version, schema, JSONB và public contract. Các unit còn JPA là khoảng cách migration được ghi rõ trong quy định, không phải ngoại lệ cho phát triển mới.
