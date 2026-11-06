@@ -18,7 +18,6 @@ export const STATUS_TONES: Record<AccountStatus, Tone> = {
 export const IMPORT_REASON_LABELS: Record<string, string> = {
   MISSING_FIELD: "thiếu email, họ tên hoặc vai trò",
   INVALID_EMAIL: "email không hợp lệ",
-  EMAIL_DOMAIN_NOT_ALLOWED: "email không thuộc tên miền trường",
   DUPLICATE_IN_FILE: "email trùng dòng khác trong tệp",
   EMAIL_EXISTS: "email đã tồn tại",
   INVALID_DISPLAY_NAME: "họ tên quá dài",
@@ -28,7 +27,6 @@ export const IMPORT_REASON_LABELS: Record<string, string> = {
 /** Lỗi nghiệp vụ khi Admin thao tác tài khoản. */
 export const ADMIN_ERROR_LABELS: Record<string, string> = {
   EMAIL_EXISTS: "Email đã có tài khoản.",
-  EMAIL_DOMAIN_NOT_ALLOWED: "Email phải thuộc tên miền của trường.",
   INVALID_EMAIL: "Email không hợp lệ.",
   VERSION_CONFLICT: "Dữ liệu đã được thay đổi ở phiên khác. Đã tải lại, hãy sửa lại.",
   LAST_ADMIN: "Phải còn ít nhất một Quản trị viên đang hoạt động.",

@@ -42,7 +42,7 @@ class OtpServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new OtpService(accounts, IdentityTestData.properties(), throttle, challenges, tickets, jobs);
+        service = new OtpService(accounts, throttle, challenges, tickets, jobs);
         when(throttle.tryOtpRequest(anyString(), anyString())).thenReturn(true);
         when(throttle.tryOtpVerify(anyString())).thenReturn(true);
         when(accounts.findByEmail("taivm@fpt.edu.vn")).thenReturn(Optional.of(pending));

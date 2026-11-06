@@ -131,7 +131,7 @@ class RequestThrottleIntegrationTest {
 
     private static IdentityProperties properties() {
         IdentityProperties base = IdentityTestData.properties();
-        return new IdentityProperties(base.allowedEmailDomains(), base.jwtSecret(), base.accessTtl(),
+        return new IdentityProperties(base.jwtSecret(), base.accessTtl(),
                 base.refreshIdleTtl(), base.refreshMaxTtl(), base.bcryptCost(), base.otpTtl(), base.otpMaxAttempts(),
                 base.loginLockThreshold(), base.loginLockDuration(), base.cookieSecure(), base.mailFrom(),
                 base.bootstrapAdminEmail(), base.bootstrapAdminName(),

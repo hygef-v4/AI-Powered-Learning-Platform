@@ -53,7 +53,7 @@ Hệ thống phải dùng email do trường cấp làm định danh đăng nh�
 - Người dùng đã xác thực có thể đăng nhập và đăng xuất an toàn.
 - Phiên hết hạn theo cấu hình và bị vô hiệu hóa khi đăng xuất.
 - Luồng khôi phục mật khẩu không tiết lộ tài khoản có tồn tại hay không.
-- Email đăng nhập của người học/giảng viên phải thuộc miền email trường được cấu hình; người dùng không thể tự đăng ký bằng email ngoài miền.
+- Email đăng nhập thuộc tên miền nào cũng được (thay đổi ngày 2026-11-06, trước đây giới hạn theo miền email trường). Người dùng vẫn không thể tự đăng ký: Admin tạo tài khoản, người dùng kích hoạt bằng OTP gửi tới chính email đó.
 
 ### FR-002 - Phân quyền và nguồn AI
 

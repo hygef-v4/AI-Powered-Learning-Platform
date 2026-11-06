@@ -79,7 +79,7 @@ describe("ImportAccountsPanel", () => {
   it("kiểm tệp rồi xác nhận gửi lại cùng tệp", async () => {
     const rows = [
       { rowNumber: 2, email: "sv01@fpt.edu.vn", displayName: "A", role: "STUDENT", outcome: "VALID" as const, reason: null },
-      { rowNumber: 3, email: "x@gmail.com", displayName: "B", role: "STUDENT", outcome: "REJECTED" as const, reason: "EMAIL_DOMAIN_NOT_ALLOWED" },
+      { rowNumber: 3, email: "x@gmail", displayName: "B", role: "STUDENT", outcome: "REJECTED" as const, reason: "INVALID_EMAIL" },
     ];
     vi.mocked(validateImport).mockResolvedValue({ fileChecksum: "c", rows, validCount: 1, rejectedCount: 1, committed: false });
     vi.mocked(commitImport).mockResolvedValue({
@@ -96,7 +96,7 @@ describe("ImportAccountsPanel", () => {
 
     fireEvent.change(screen.getByLabelText("Chọn tệp CSV"), { target: { files: [file] } });
 
-    expect(await screen.findByText("Email không thuộc tên miền trường")).toBeInTheDocument();
+    expect(await screen.findByText("Email không hợp lệ")).toBeInTheDocument();
     expect(validateImport).toHaveBeenCalledWith(file);
     fireEvent.click(screen.getByRole("button", { name: "Nhập 1 tài khoản" }));
 
