@@ -119,10 +119,9 @@ export function buildChecklistBindings(values: GradingFormValues, disabled: bool
   };
 }
 
-/** Only drafts can resolve outstanding AI review notes. */
-export function shouldShowGradingNotes(rubrics: Rubric[], values: GradingFormValues, official: boolean) {
-  return !official && countUnresolvedReviews(rubrics, values.checks, values.itemScores, values.structuredFeedback,
-    values.reviewedItemScores, values.acknowledgedReviewItems).total > 0;
+/** Tạm thời ẩn ghi chú nhắc kiểm tra AI do chưa có phương án (yêu cầu 2026-11-07). */
+export function shouldShowGradingNotes(_rubrics: Rubric[], _values: GradingFormValues, _official: boolean) {
+  return false;
 }
 
 /**

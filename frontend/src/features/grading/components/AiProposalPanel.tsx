@@ -16,10 +16,13 @@ import type {
 
 /** Yêu cầu AI: không chọn nguồn thì hệ thống tự chọn (API chung nếu đủ hạn mức, không thì khóa cá nhân; 2026-11-05). */
 export function buildAiRequest(choice?: SourceChoice): AiRequest {
+  const reqRef = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   return {
     ...(choice ? { source: choice.source } : {}),
     ...(choice?.source === "PERSONAL" && choice.provider ? { provider: choice.provider } : {}),
-    requestRef: crypto.randomUUID(),
+    requestRef: reqRef,
   };
 }
 

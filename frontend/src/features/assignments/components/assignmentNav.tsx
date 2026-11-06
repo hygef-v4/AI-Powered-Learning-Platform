@@ -10,9 +10,9 @@ import { addPart, showPart, useAssignmentOutline } from "../model/outline";
 const WHEN_OPEN = "md:group-data-[collapsed]/sidebar:hidden";
 const WHEN_COLLAPSED = "hidden md:group-data-[collapsed]/sidebar:block";
 
-/** Trang soạn một bài tập (`/assignments/{id}`): sidebar là các phần của bài thay cho menu chung. */
+/** Trang soạn một bài tập (`/assignments/{id}`) hoặc trang chấm bài (`/teaching/evaluations/{id}`): sidebar là các phần của bài thay cho menu chung. */
 export function assignmentContext({ pathname }: NavLocation): NavContext | null {
-  const match = /^\/assignments\/([^/]+)$/.exec(pathname);
+  const match = /^\/assignments\/([^/]+)$/.exec(pathname) ?? /^\/teaching\/evaluations\/([^/]+)$/.exec(pathname);
   if (!match) return null;
   return { key: `assignment:${match[1]}`, label: "Các phần của bài", header: <AssignmentNav />, items: [] };
 }

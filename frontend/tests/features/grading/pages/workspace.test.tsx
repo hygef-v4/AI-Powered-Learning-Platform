@@ -60,7 +60,8 @@ afterEach(() => {
 });
 /** Đề xuất AI mở bằng nút trên thanh công cụ của tài liệu. */
 function openAi() {
-  fireEvent.click(screen.getByRole("button", { name: "Chấm bằng AI" }));
+  const btn = screen.queryByRole("button", { name: "Xem đề xuất AI" }) || screen.getByRole("button", { name: "Chấm bằng AI" });
+  fireEvent.click(btn);
 }
 describe("workspace save", () => {
   it("explains a concurrent grade lock without discarding unsaved checklist changes or retrying", async () => {
@@ -117,8 +118,8 @@ describe("workspace save", () => {
       { rubricId: "r", partId: "p", maxPoints: 1, criteria: [{ criterionId: "c", title: "Đúng", items: [{ itemId: "i", text: "Đúng nội dung", points: 1 }] }] },
     ] });
     render(<GradingWorkspacePage evaluationId="e" />);
-    expect(await screen.findByText(/Điểm đã chốt. Bản chấm chỉ có thể xem/)).toBeVisible();
-    expect(screen.getByRole("checkbox", { name: "Đúng nội dung" })).toBeDisabled();
+    expect(await screen.findByRole("checkbox", { name: "Đúng nội dung" })).toBeDisabled();
+    expect(screen.queryByText(/Điểm đã chốt. Bản chấm chỉ có thể xem/)).not.toBeInTheDocument();
     const save = screen.getByRole("button", { name: /Lưu nháp/ });
     expect(save).toBeDisabled();
     fireEvent.click(save);
@@ -332,7 +333,8 @@ describe("AI proposal comparison and draft application", () => {
     ]);
 
     render(<GradingWorkspacePage evaluationId="e" />);
-    expect(await screen.findByText("Có đề xuất AI")).toBeInTheDocument();
+    await screen.findByRole("button", { name: "Xem đề xuất AI" });
+    expect(screen.queryByText("Có đề xuất AI")).not.toBeInTheDocument();
     openAi();
     const review = screen.getByRole("region", { name: "Chấm bằng AI" });
     expect(screen.queryByRole("dialog", { name: "Chấm bằng AI" })).not.toBeInTheDocument();
@@ -373,7 +375,8 @@ describe("AI proposal comparison and draft application", () => {
     render(<GradingWorkspacePage evaluationId="e" />);
     await screen.findByRole("checkbox", { name: /Thực thể chính/ });
     // Đề xuất AI tải bằng yêu cầu riêng, có thể về sau phần chấm điểm: chờ có đề xuất rồi mới mở popup.
-    expect(await screen.findByText("Có đề xuất AI")).toBeInTheDocument();
+    await screen.findByRole("button", { name: "Xem đề xuất AI" });
+    expect(screen.queryByText("Có đề xuất AI")).not.toBeInTheDocument();
     openAi();
     expect(screen.getByRole("region", { name: "Chấm bằng AI" })).toHaveTextContent(/Điểm đang chấm: 2\.50/);
     expect(document.body.textContent).not.toContain("NaN");

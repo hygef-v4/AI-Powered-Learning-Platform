@@ -10513,3 +10513,43 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **User Input**: "giúp tôi tạo pull request lên staging"
 **AI Response**: Refreshed origin refs, confirmed staging is an ancestor of the current feature branch and found no open PR for this head. Prepare a review-ready PR from fix/u05-u09-u15 to staging, covering the U05/U09/U15 formatting/simplification, U09 JDBC migration, project-wide JDBC documentation and U05 repository names. Distinguish the passing full JDBC verification (1,830 backend/799 frontend) from the latest naming-only 200-case focused run. Include the explicit no-op-save version behavior, remaining U04/U13/U14 JPA migration debt and verification limits in the description. Push only the scoped branch/doc delivery record if needed, then create and verify the PR.
 **Context**: User explicitly authorizes PR creation and the necessary branch push; supersedes the prior local-only delivery scope. No merge, deploy, reviewer message, app restart or forced push. CI results remain pending until observed.
+
+## Grading UI and AI Grading Fixes — 2026-11-06
+
+**Timestamp**: 2026-11-06T18:45:00Z
+**Requested by:** Quang Hung
+**User Input**: "sửa một số thứ:
+- cái chấm AI bị lỗi, nó vẫn hiện card và ko chấm đc bằng AI, nó báo lôi Invalid request content.
+- lúc tích một rubric nào đó thì ko disable nút công bố, cứ để able khi bấm vào sẽ luôn lưu và công bố bản hiện tại
+- Những bài đã công bố thì bỏ cái dòng info màu xanh nước biển đi, chỉ để mấy cái rubric disable thôi
+- xoá trang bài nộp, kiểm tra xem cái nào redirect tới trang đấy thì sửa lại link tới trang chấm, các bài chưa nộp thì thì ko có cái > để bấm vào redirect tới trang chấm
+- Bỏ trạng thái, đã chốt với đang làm đi, đang làm coi như là chưa nộp"
+**AI Response**: Fixed backend Jackson deserialization issue on `AiRequest` record by adding `@JsonProperty` annotations, resolving the 400 "Invalid request content." error. Updated frontend AI grading action to directly trigger background proposal generation with the loading popup without opening the comparison card, auto-applying upon completion. Allowed "Công bố điểm" to remain enabled when rubric items change and auto-save before publishing. Removed the blue alert banner on published/finalized grades while keeping rubrics read-only. Redirected the submissions route directly to the gradebook tab, updated SubmissionsLink button label to "Chấm điểm", and removed navigation link and chevron for unsubmitted student rows. Simplified status filters and displays by removing "Đã chốt" (mapped to "Đã chấm") and "Đang làm" (treated as "Chưa nộp"). Rebuilt backend, worker, and frontend Docker containers and verified all 16 Vitest test suites (134 tests) and TypeScript type checks pass.
+**Context**: UI/UX adjustments and AI grading fixes per user feedback. Rebuilt services exclusively via Docker Compose.
+
+## Grading Feedback Hiding, Score Mismatch Fix, Status Pill and Publish Dialog Updates — 2026-11-06
+
+**Timestamp**: 2026-11-06T19:00:00Z
+**Requested by:** Quang Hung
+**User Input**: "2 card liên quan tới comment này tạm thời ẩn đi do chưa có phương án, với lại bị lỗi gì đó mà nó ghi điểm mục rubric đã thay đổi liên tục, sửa lỗi đấy, để cho nó thay đổi ko cần giải thích. Bỏ cái status có đề xuất AI đi, popup công bố điểm bỏ phần nội dung đi"
+**AI Response**:
+1. Temporarily hid the two comment/feedback cards: Card 1 (`GradingNotes`: "Còn 1 mục AI cần kiểm tra hoặc xác nhận lại trước khi chốt điểm.") and Card 2 (`RubricItemFeedback`: "Chi tiết nhận xét & minh chứng" / "Điểm đã đổi, cần xác nhận giải thích").
+2. Resolved rubric item score change blocker: removed the explanation requirement and score mismatch detection (`isScoreChangedAfterReview` returns false, `countUnresolvedReviews` returns 0 mismatches), allowing teachers to modify rubric points freely without justification or confirmation checkboxes.
+3. Removed the visible "Có đề xuất AI" pill status in the grading toolbar while retaining the "AI đang chấm…" status when pending.
+4. Simplified the "Công bố điểm" confirmation popup by removing the redundant "{N} bài đã chọn" content body paragraph.
+5. Synchronized tests across `structured-feedback.test.tsx` and `workspace.test.tsx`. Verified all 16 test files (134 tests) and TypeScript checks pass.
+6. Rebuilt the frontend Docker image (`platform-frontend:local`) and restarted container `platform-frontend-1` in healthy status.
+**Context**: UI simplification and grading workflow ergonomics per user specifications.
+
+## Restore AI Grading Loading Modal and Remove Toolbar Pending Pill — 2026-11-06
+
+**Timestamp**: 2026-11-06T19:22:00Z
+**Requested by:** Quang Hung
+**User Input**: "bỏ cái AI đang chấm đi, để lại thành popup loading giống bên tạo bài như cũ đi, t có bảo xoá cái đấy đâu"
+**AI Response**:
+1. Removed the `<Pill tone="warning">AI đang chấm…</Pill>` indicator from the document editor top toolbar.
+2. Restored and fixed the AI grading centered loading modal (`alertdialog`, `Đang chấm bằng AI…` with spinner and frosted backdrop, matching `AiDraftDialog` from assignment authoring).
+3. Fixed the race condition in `GradingWorkspacePage` where an existing proposal in `proposals[0]` caused `aiGenerating` to prematurely dismiss the loading modal before the new AI request could complete. Now strictly tracks `generatingProposalId` and automatically applies the completed proposal upon `READY` status, closing the modal smoothly.
+4. Passed all 16 Vitest test suites (134 tests) and TypeScript type checks. Rebuilt and redeployed the frontend Docker container.
+**Context**: Restoring standard AI loading popup dialog and removing extraneous toolbar badge.
+

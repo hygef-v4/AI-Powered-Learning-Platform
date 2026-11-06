@@ -1,9 +1,11 @@
-import { SubmissionDetailPage } from "@/features/grading";
+import { redirect } from "next/navigation";
+import { buildGradebookHref } from "@/features/grading/components/ClassProgressSection";
+
 export default async function Page({
   params,
 }: {
   params: Promise<{ id: string; assignmentId: string }>;
 }) {
   const { id, assignmentId } = await params;
-  return <SubmissionDetailPage classId={id} assignmentId={assignmentId} />;
+  redirect(buildGradebookHref(id, { assignment: assignmentId }));
 }

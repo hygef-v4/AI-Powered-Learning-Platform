@@ -15,18 +15,17 @@ type Assignment = GradebookPage["assignments"][number];
 type Mode = "assignment" | "student";
 
 /** Trạng thái lọc được trên bảng điểm, theo thứ tự công việc của giảng viên. */
-const STATUS_FILTERS = ["NOT_SUBMITTED", "IN_PROGRESS", "PENDING", "DRAFT", "FINALIZED", "PUBLISHED"] as const;
+const STATUS_FILTERS = ["NOT_SUBMITTED", "PENDING", "DRAFT", "PUBLISHED"] as const;
 
 function statusTone(status: string): Tone {
   if (status === "PUBLISHED") return "success";
-  if (status === "FINALIZED") return "primary";
-  if (status === "DRAFT") return "info";
+  if (status === "DRAFT" || status === "FINALIZED") return "info";
   if (status === "PENDING") return "warning";
   return "neutral";
 }
 
 function actionLabel(status: string, evaluated: boolean) {
-  if (!evaluated) return "Xem bài nộp";
+  if (!evaluated) return "Chưa nộp bài";
   if (status === "PENDING") return "Chấm bài";
   if (status === "DRAFT") return "Tiếp tục chấm";
   return "Xem điểm";
@@ -35,7 +34,12 @@ function actionLabel(status: string, evaluated: boolean) {
 const kindLabel = (assignment: Assignment) => (assignment.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân");
 /** Số điểm bỏ số 0 thừa ở cuối: 8.50 → 8.5, 10.00 → 10. */
 const trim = (value: Decimal) => String(Number(Number(value).toFixed(2)));
-const statusOf = (grade: GradeCell | undefined) => grade?.status ?? "NOT_SUBMITTED";
+const statusOf = (grade: GradeCell | undefined) => {
+  const raw = grade?.status ?? "NOT_SUBMITTED";
+  if (raw === "IN_PROGRESS" || raw === "NOT_SUBMITTED") return "NOT_SUBMITTED";
+  if (raw === "FINALIZED") return "DRAFT";
+  return raw;
+};
 
 export function ClassGradebookTab({ classId, headerActions }: { classId: string; headerActions?: HTMLElement | null }) {
   return <GradebookContent key={classId} classId={classId} headerActions={headerActions} />;
@@ -151,7 +155,6 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
                   <GradeTable first="Sinh viên">
                     {assignmentRows.map(({ row, grade }) => (
                       <GradeRow key={row.student.accountId} grade={grade} maxScore={activeAssignment.maxScore}
-                        fallback={submissionsHref(classId, activeAssignment.id)}
                         label={<><strong className="block truncate text-ink">{row.student.name}</strong><p className="truncate text-xs text-muted">{row.student.email}</p></>} />
                     ))}
                     {!assignmentRows.length && <EmptyRow text="Không có sinh viên phù hợp." />}
@@ -165,7 +168,6 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
                   <GradeTable first="Bài tập">
                     {studentRows.map(({ assignment, grade }) => (
                       <GradeRow key={assignment.id} grade={grade} maxScore={assignment.maxScore}
-                        fallback={submissionsHref(classId, assignment.id)}
                         label={<><strong className="block truncate text-ink" title={assignment.title}>{assignment.title}</strong><p className="text-xs text-muted">{kindLabel(assignment)}</p></>} />
                     ))}
                     {!studentRows.length && <EmptyRow text="Không có bài phù hợp." />}
@@ -229,20 +231,19 @@ function PickItem({ title, meta, active, onPick }: { title: string; meta: string
   );
 }
 
-const submissionsHref = (classId: string, assignmentId: string) =>
-  `/teaching/classes/${encodeURIComponent(classId)}/assignments/${encodeURIComponent(assignmentId)}/submissions`;
-
 /**
- * Một dòng điểm: điểm (bỏ số 0 thừa), trạng thái (kèm Trễ), nút ›. Bấm dòng nào cũng sang trang kế: có lượt chấm thì trang
- * chấm hoặc xem điểm, chưa có thì danh sách bài nộp của bài đó.
+ * Một dòng điểm: điểm (bỏ số 0 thừa), trạng thái (kèm Trễ), nút ›.
+ * Chỉ bài đã nộp mới có link tới trang chấm điểm và hiện nút ›. Bài chưa nộp không có link hay nút ›.
  */
-function GradeRow({ label, grade, maxScore, fallback }: { label: ReactNode; grade: GradeCell | undefined; maxScore: Assignment["maxScore"]; fallback: string }) {
+function GradeRow({ label, grade, maxScore }: { label: ReactNode; grade: GradeCell | undefined; maxScore: Assignment["maxScore"] }) {
   const router = useRouter();
   const status = statusOf(grade);
-  const href = grade?.evaluationId ? `/teaching/evaluations/${grade.evaluationId}` : fallback;
-  const action = actionLabel(status, !!grade?.evaluationId);
+  const evaluationId = grade?.evaluationId;
+  const hasEvaluation = Boolean(evaluationId && status !== "NOT_SUBMITTED");
+  const href = hasEvaluation ? `/teaching/evaluations/${evaluationId}` : undefined;
+  const action = actionLabel(status, hasEvaluation);
   return (
-    <ClickableRow onClick={() => router.push(href)}>
+    <ClickableRow onClick={href ? () => router.push(href) : undefined}>
       <Td className="min-w-0">{label}</Td>
       <Td className="font-semibold whitespace-nowrap tabular-nums">
         {grade?.score == null ? "—" : `${trim(grade.score)} / ${trim(grade.maxScore ?? maxScore)}`}
@@ -254,10 +255,12 @@ function GradeRow({ label, grade, maxScore, fallback }: { label: ReactNode; grad
         </div>
       </Td>
       <Td className="text-right">
-        <Link href={href} aria-label={action} title={action} onClick={(event) => event.stopPropagation()}
-          className="inline-flex size-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary-ink">
-          <Icon name="chevron_right" size={20} />
-        </Link>
+        {href ? (
+          <Link href={href} aria-label={action} title={action} onClick={(event) => event.stopPropagation()}
+            className="inline-flex size-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary-ink">
+            <Icon name="chevron_right" size={20} />
+          </Link>
+        ) : null}
       </Td>
     </ClickableRow>
   );

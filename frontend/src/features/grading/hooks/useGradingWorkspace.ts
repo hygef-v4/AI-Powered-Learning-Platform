@@ -13,6 +13,7 @@ import type {
   Evaluation,
   GradingFormValues,
   ItemScores,
+  Proposal,
   Rubric,
   StructuredFeedback,
 } from "../model/types";
@@ -100,8 +101,8 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     if (confirmNavigation()) router.push(buildEvaluationHref(id, keepFilters ? filters : {}));
   }
 
-  async function saveEvaluation() {
-    if (disabled) return;
+  async function saveEvaluation(advance = false): Promise<Evaluation | null> {
+    if (disabled) return null;
     const currentIndex = detail.navigationIds.indexOf(evaluation.id);
     const next = currentIndex >= 0 ? detail.navigationIds[currentIndex + 1] : undefined;
     setBusy(true);
@@ -124,15 +125,15 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
         ...(supportsItemScores ? { itemScoresByRubric: form.itemScores ?? {} } : {}),
         ...(hasStructuredPayload
           ? {
-              ...(form.structuredFeedback ? { structuredFeedback: form.structuredFeedback } : {}),
-              ...(form.clearStructuredFeedback ? { clearStructuredFeedback: true } : {}),
-              ...(form.acknowledgedReviewItems && Object.keys(form.acknowledgedReviewItems).length > 0
-                ? { acknowledgedReviewItems: form.acknowledgedReviewItems }
-                : {}),
-              ...(form.reviewedItemScores && Object.keys(form.reviewedItemScores).length > 0
-                ? { reviewedItemScores: form.reviewedItemScores }
-                : {}),
-            }
+            ...(form.structuredFeedback ? { structuredFeedback: form.structuredFeedback } : {}),
+            ...(form.clearStructuredFeedback ? { clearStructuredFeedback: true } : {}),
+            ...(form.acknowledgedReviewItems && Object.keys(form.acknowledgedReviewItems).length > 0
+              ? { acknowledgedReviewItems: form.acknowledgedReviewItems }
+              : {}),
+            ...(form.reviewedItemScores && Object.keys(form.reviewedItemScores).length > 0
+              ? { reviewedItemScores: form.reviewedItemScores }
+              : {}),
+          }
           : {}),
         version: evaluation.version,
         checkedItemsByRubric: form.checks,
@@ -142,33 +143,41 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
         changeReason: form.changeReason || null,
         usedProposalId: form.usedProposalId,
       });
-      setDetail({ ...detail, evaluation: saved });
-      setDirty(false);
-      dirtyRef.current = false;
-      setForm((current) => ({
-        ...current,
-        structuredFeedback: saved.structuredFeedback ?? current.structuredFeedback ?? null,
-        clearStructuredFeedback: false,
-        acknowledgedReviewItems: saved.acknowledgedReviewItems ?? current.acknowledgedReviewItems ?? {},
-        reviewedItemScores: saved.reviewedItemScores ?? current.reviewedItemScores ?? {},
-        usedProposalId: null,
-      }));
-      if (next) router.push(buildEvaluationHref(next, filters));
+      if (saved) {
+        setDetail({ ...detail, evaluation: saved });
+        setForm((current) => ({
+          ...current,
+          structuredFeedback: saved.structuredFeedback ?? current.structuredFeedback ?? null,
+          clearStructuredFeedback: false,
+          acknowledgedReviewItems: saved.acknowledgedReviewItems ?? current.acknowledgedReviewItems ?? {},
+          reviewedItemScores: saved.reviewedItemScores ?? current.reviewedItemScores ?? {},
+          usedProposalId: null,
+        }));
+        setDirty(false);
+        dirtyRef.current = false;
+        if (advance && next) router.push(buildEvaluationHref(next, filters));
+        return saved;
+      }
+      return null;
     } catch (error) {
       setError(formatErrorMessage(error));
+      return null;
     } finally {
       setBusy(false);
     }
   }
 
-  async function requestProposal(input: AiRequest) {
-    if (disabled) return;
+  async function requestProposal(input: AiRequest): Promise<Proposal | null> {
+    if (disabled) return null;
     setBusy(true);
     setError("");
     try {
-      addProposal(await gradingApi.requestProposal(evaluation.id, input));
+      const created = await gradingApi.requestProposal(evaluation.id, input);
+      if (created) addProposal(created);
+      return created ?? null;
     } catch (error) {
       setError(formatErrorMessage(error));
+      return null;
     } finally {
       setBusy(false);
     }
