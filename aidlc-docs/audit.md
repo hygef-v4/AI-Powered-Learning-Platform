@@ -10505,3 +10505,11 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **User Input**: "giúp tôi commit"
 **AI Response**: Reviewed the naming-only diff and confirmed all five Java files still match the exact intended identifier replacements validated by the successful 200 Academics/Architecture tests. Prepare one descriptive local commit with the three repository renames, synchronized tests and corresponding AI-DLC naming/verification documentation. No redundant test rerun for unchanged source; exclude scratch artifacts and retain running apps.
 **Context**: Explicit local commit authorization supersedes the prior no-automatic-commit naming scope. No push, remote write, restart, merge, deployment or Git configuration change.
+
+## Staging pull request requested — 2026-11-06
+
+**Timestamp**: 2026-11-06T10:39:52Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi tạo pull request lên staging"
+**AI Response**: Refreshed origin refs, confirmed staging is an ancestor of the current feature branch and found no open PR for this head. Prepare a review-ready PR from fix/u05-u09-u15 to staging, covering the U05/U09/U15 formatting/simplification, U09 JDBC migration, project-wide JDBC documentation and U05 repository names. Distinguish the passing full JDBC verification (1,830 backend/799 frontend) from the latest naming-only 200-case focused run. Include the explicit no-op-save version behavior, remaining U04/U13/U14 JPA migration debt and verification limits in the description. Push only the scoped branch/doc delivery record if needed, then create and verify the PR.
+**Context**: User explicitly authorizes PR creation and the necessary branch push; supersedes the prior local-only delivery scope. No merge, deploy, reviewer message, app restart or forced push. CI results remain pending until observed.

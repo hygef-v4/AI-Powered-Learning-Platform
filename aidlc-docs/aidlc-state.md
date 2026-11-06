@@ -1,5 +1,9 @@
 # AI-DLC State Tracking
 
+## Staging pull request delivery scope — 2026-11-06
+
+User requested a PR from fix/u05-u09-u15 to staging, authorizing the needed push. Refreshed refs: staging is an ancestor, the feature branch was synchronized and no open PR existed for it. Reviewed scope includes U05/U09/U15 readability/simplification, U09 JDBC persistence, global AI-DLC JDBC policy and U05 repository names. PR evidence distinguishes the full JDBC 1,830-backend/799-frontend checks from the latest naming-only 200 Academics/Architecture run; no product changes or redundant runtime tests for delivery metadata. Document no-op save/version distinction and remaining JPA owners; create the PR for review without merging/deploying or claiming CI success in advance.
+
 ## U05 repository names simplified — 2026-11-06
 
 At the user's screenshot/naming request, removed Jdbc from the three U05 concrete repository class/file names: AcademicsReadRepository, CourseClassRepository and EnrollmentRepository. Updated constructor/method-reference/test callers and the test dependency field, current U05 summary and shared naming conventions; interfaces and NamedParameterJdbcTemplate remain unchanged. No named qualifier references found. Verified all five Java files differ only by the requested identifier replacements, preserving SQL/transactions/API and behavior text. Fresh compilation of 718 main/246 test files and focused Academics/Architecture run passed all 200 cases, zero failures/errors/skips; stale old-name class output absent, whitespace check passed. [Plan and evidence](construction/plans/code-generation-plan/2026-11-06-u05-repository-names.md). Other units, frontend, runtime restart and automatic commit/push outside this naming-only scope. Security/resiliency retained; PBT disabled.
