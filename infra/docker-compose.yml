@@ -178,11 +178,14 @@ services:
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     networks: [internal]
+    # CLI Erlang khởi động chậm khi giới hạn 0.5 CPU (đo trên VPS: khoảng 7 giây); timeout ngắn báo unhealthy giả và
+    # chặn backend, worker khởi động lại.
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 15s
-      timeout: 5s
-      retries: 10
+      interval: 30s
+      timeout: 20s
+      start_period: 60s
+      retries: 5
     deploy:
       resources: { limits: { cpus: "0.5", memory: 512M } }
     logging: *logging

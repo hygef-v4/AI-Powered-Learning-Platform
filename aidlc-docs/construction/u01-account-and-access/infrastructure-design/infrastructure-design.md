@@ -43,7 +43,7 @@ Redis **không bật persistence**: VPS khởi động lại thì mọi người
 
 ## 4. Cấu hình
 
-Biến môi trường như `logical-components.md` mục 4; giá trị bí mật lấy từ CI/CD.
+Biến môi trường như `logical-components.md` mục 4; giá trị bí mật nằm trong `infra/.env` trên VPS (quyền 600), CI/CD không giữ secret. Từ 2026-11-06 VPS tự deploy bản mới trên `main` và tự quay về khi lỗi (`docs/runbooks/deploy-vps.md` mục 10).
 
 ## 5. Quan sát riêng U01
 
