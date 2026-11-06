@@ -91,6 +91,9 @@ platform:
     login-lock-duration: ${U01_LOGIN_LOCK_DURATION:15m}
     cookie-secure: ${U01_COOKIE_SECURE:true}
     mail-from: ${SMTP_FROM:}
+    # smtp (mặc định) hoặc brevo-api: gửi qua API HTTPS của Brevo khi mạng chặn SMTP đi ra ngoài.
+    mail-transport: ${MAIL_TRANSPORT:smtp}
+    brevo-api-key: ${BREVO_API_KEY:}
     bootstrap-admin-email: ${U01_BOOTSTRAP_ADMIN_EMAIL:}
     bootstrap-admin-name: ${U01_BOOTSTRAP_ADMIN_NAME:Quản trị viên}
     rate-limit:
