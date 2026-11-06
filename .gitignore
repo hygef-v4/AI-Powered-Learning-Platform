@@ -16,3 +16,5 @@ infra/.env
 frontend/next-env.d.ts
 frontend/*.tsbuildinfo
 infra/.env.local
+infra/cloudflare.ini
+infra/docker-compose.override.yml
