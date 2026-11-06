@@ -49,7 +49,7 @@ Lỗi: Problem Detail có `code`; `PASSWORD_POLICY` kèm `violations`; Redis/DB 
 
 ## Cấu hình
 
-`U01_ALLOWED_EMAIL_DOMAINS`, `U01_JWT_SECRET` (bắt buộc, ≥ 32 byte; thiếu thì backend và worker không khởi động), `U01_BOOTSTRAP_ADMIN_EMAIL`/`_NAME`, `U01_COOKIE_SECURE` (`false` chỉ ở local), các ngưỡng `U01_*`, `SMTP_FROM`. `server.forward-headers-strategy: native` để lấy IP client sau Nginx.
+`U01_JWT_SECRET` (bắt buộc, ≥ 32 byte; thiếu thì backend và worker không khởi động), `U01_BOOTSTRAP_ADMIN_EMAIL`/`_NAME`, `U01_COOKIE_SECURE` (`false` chỉ ở local), các ngưỡng `U01_*`, `SMTP_FROM`. `server.forward-headers-strategy: native` để lấy IP client sau Nginx.
 
 ## Unit test
 

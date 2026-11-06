@@ -34,7 +34,7 @@ U01 **không** sở hữu: phân công Chủ nhiệm môn (U04), lớp, giảng 
 | Thuộc tính | Ý nghĩa | Ràng buộc |
 |---|---|---|
 | `accountId` | Định danh | Bất biến |
-| `schoolEmail` | Email trường, dùng đăng nhập | Bắt buộc; chuẩn hóa chữ thường, bỏ khoảng trắng; duy nhất toàn hệ thống; thuộc tên miền trong biến triển khai `U01_ALLOWED_EMAIL_DOMAINS`; **không đổi sau khi tạo** |
+| `schoolEmail` | Email đăng nhập (giữ tên cũ, thuộc tên miền nào cũng được) | Bắt buộc; chuẩn hóa chữ thường, bỏ khoảng trắng; đúng định dạng, tối đa 254 ký tự; duy nhất toàn hệ thống; **không đổi sau khi tạo** |
 | `role` | Vai trò cao nhất | `STUDENT`, `TEACHER`, `SUBJECT_MANAGER`, `ADMIN`; `ADMIN` không nhận phân công môn/lớp (BR-U01-60) |
 | `status` | Trạng thái vòng đời | `PENDING`, `ACTIVE`, `DISABLED` |
 | `credential` | `PasswordCredential` | Rỗng khi `PENDING` |
@@ -83,7 +83,7 @@ Không số dư credit hoặc ví trong Account. U06 lưu quota educator, usage 
 
 ## 7. Cấu hình U01
 
-Không có bảng cấu hình (database chỉ gồm bảng của ERD). Tên miền email trường là biến triển khai `U01_ALLOWED_EMAIL_DOMAINS` (BR-U01-03).
+Không có bảng cấu hình (database chỉ gồm bảng của ERD). Email không giới hạn tên miền (BR-U01-03); biến `U01_ALLOWED_EMAIL_DOMAINS` đã bỏ ngày 2026-11-06.
 
 ## 8. `OtpChallenge`
 
@@ -137,7 +137,7 @@ Không có use case xem lại lịch sử nhập nên kết quả không lưu. B
 | `rowNumber` | Số dòng trong CSV |
 | `schoolEmail`, `displayName`, `role` | Dữ liệu đọc được |
 | `outcome` | `CREATED`, `REJECTED` |
-| `reason` | Mã lỗi: `EMAIL_EXISTS`, `EMAIL_DOMAIN_NOT_ALLOWED`, `INVALID_EMAIL`, `INVALID_ROLE`, `DUPLICATE_IN_FILE`, `MISSING_FIELD` |
+| `reason` | Mã lỗi: `EMAIL_EXISTS`, `INVALID_EMAIL`, `INVALID_ROLE`, `DUPLICATE_IN_FILE`, `MISSING_FIELD` |
 
 ## 12. `AuthorizationDecision`
 

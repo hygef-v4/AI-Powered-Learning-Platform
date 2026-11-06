@@ -2,13 +2,9 @@ package edu.aiplatform.identity.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import edu.aiplatform.identity.model.EmailPolicy.EmailCheck;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class EmailPolicyTest {
-
-    private final EmailPolicy policy = new EmailPolicy(List.of(" FPT.edu.vn ", "@fe.edu.vn"));
 
     @Test
     void normalizesBeforeComparing() {
@@ -16,25 +12,20 @@ class EmailPolicyTest {
         assertThat(EmailPolicy.normalize(null)).isEmpty();
     }
 
+    /** BR-U01-03: không giới hạn tên miền. */
     @Test
-    void acceptsOnlyConfiguredDomains() {
-        assertThat(policy.check("taivm@fpt.edu.vn")).isEqualTo(EmailCheck.OK);
-        assertThat(policy.check("gv@fe.edu.vn")).isEqualTo(EmailCheck.OK);
-        assertThat(policy.check("taivm@gmail.com")).isEqualTo(EmailCheck.EMAIL_DOMAIN_NOT_ALLOWED);
-        assertThat(policy.check("taivm@sub.fpt.edu.vn")).isEqualTo(EmailCheck.EMAIL_DOMAIN_NOT_ALLOWED);
+    void acceptsAnyDomain() {
+        assertThat(EmailPolicy.isValid("taivm@fpt.edu.vn")).isTrue();
+        assertThat(EmailPolicy.isValid("taivm@gmail.com")).isTrue();
+        assertThat(EmailPolicy.isValid("taivm@sub.fpt.edu.vn")).isTrue();
     }
 
     @Test
-    void rejectsMalformedEmail() {
-        assertThat(policy.check("")).isEqualTo(EmailCheck.INVALID_EMAIL);
-        assertThat(policy.check("taivm")).isEqualTo(EmailCheck.INVALID_EMAIL);
-        assertThat(policy.check("tai vm@fpt.edu.vn")).isEqualTo(EmailCheck.INVALID_EMAIL);
-        assertThat(policy.check("a".repeat(250) + "@fpt.edu.vn")).isEqualTo(EmailCheck.INVALID_EMAIL);
-    }
-
-    @Test
-    void emptyConfigurationAllowsNoDomain() {
-        assertThat(new EmailPolicy(List.of()).check("taivm@fpt.edu.vn"))
-                .isEqualTo(EmailCheck.EMAIL_DOMAIN_NOT_ALLOWED);
+    void rejectsMalformedOrTooLongEmail() {
+        assertThat(EmailPolicy.isValid("")).isFalse();
+        assertThat(EmailPolicy.isValid("taivm")).isFalse();
+        assertThat(EmailPolicy.isValid("taivm@gmail")).isFalse();
+        assertThat(EmailPolicy.isValid("tai vm@fpt.edu.vn")).isFalse();
+        assertThat(EmailPolicy.isValid("a".repeat(250) + "@fpt.edu.vn")).isFalse();
     }
 }

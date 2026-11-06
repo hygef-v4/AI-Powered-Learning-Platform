@@ -1,6 +1,5 @@
 package edu.aiplatform.identity.service;
 
-import edu.aiplatform.identity.config.IdentityProperties;
 
 import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.audit.contract.AuditEvent;
@@ -59,14 +58,12 @@ public class AccountAdminService {
     private final VerificationTicketStore tickets;
     private final IAudit audit;
     private final TransactionOperations transactions;
-    private final EmailPolicy emailPolicy;
     private final Clock clock;
 
     public AccountAdminService(AccountRepository accounts, IAuthorization authorization, ISubjectScope subjectScope,
                                IClassScope classScope, ObjectProvider<ISubjectQuery> subjectQuery,
                                ObjectProvider<IClassAccess> classAccess, SessionStore sessions, OtpChallengeStore otpChallenges,
-                               VerificationTicketStore tickets, IAudit audit, TransactionOperations transactions, IdentityProperties properties,
-                               Clock clock) {
+                               VerificationTicketStore tickets, IAudit audit, TransactionOperations transactions, Clock clock) {
         this.accounts = accounts;
         this.authorization = authorization;
         this.subjectScope = subjectScope;
@@ -78,7 +75,6 @@ public class AccountAdminService {
         this.tickets = tickets;
         this.audit = audit;
         this.transactions = transactions;
-        this.emailPolicy = new EmailPolicy(properties.allowedEmailDomains());
         this.clock = clock;
     }
 
@@ -100,12 +96,8 @@ public class AccountAdminService {
     public AccountViews.Detail create(Actor actor, String rawEmail, String rawDisplayName, Role role) {
         require(actor, Actions.ACCOUNT_CREATE, null);
         String email = EmailPolicy.normalize(rawEmail);
-        switch (emailPolicy.check(email)) {
-            case INVALID_EMAIL -> throw ApiException.badRequest("INVALID_EMAIL", "Email không hợp lệ");
-            case EMAIL_DOMAIN_NOT_ALLOWED -> throw ApiException.badRequest("EMAIL_DOMAIN_NOT_ALLOWED",
-                    "Email phải thuộc tên miền của trường");
-            case OK -> {
-            }
+        if (!EmailPolicy.isValid(email)) {
+            throw ApiException.badRequest("INVALID_EMAIL", "Email không hợp lệ");
         }
         String displayName = ProfilePolicy.normalizeDisplayName(rawDisplayName);
         ProfilePolicy.checkDisplayName(displayName).ifPresent(code -> {

@@ -79,7 +79,6 @@ management:
 platform:
   # U01 Account & Access (logical-components mục 4)
   identity:
-    allowed-email-domains: ${U01_ALLOWED_EMAIL_DOMAINS:}
     jwt-secret: ${U01_JWT_SECRET:}
     access-ttl: ${U01_ACCESS_TTL:15m}
     refresh-idle-ttl: ${U01_REFRESH_IDLE_TTL:2h}
