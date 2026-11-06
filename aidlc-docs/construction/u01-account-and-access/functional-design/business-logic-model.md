@@ -39,7 +39,7 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 
 1. Chuẩn hóa email (BR-U01-02).
 2. Kiểm `RequestThrottle` theo email và client. Vượt ngưỡng → sang bước 6 (BR-U01-25).
-3. Tìm tài khoản. Không có, ngoài domain, hoặc không ở `PENDING` → sang bước 6 (BR-U01-12).
+3. Tìm tài khoản. Email sai định dạng, không có tài khoản, hoặc không ở `PENDING` → sang bước 6 (BR-U01-12).
 4. Gửi việc `OTP_DELIVERY(ACTIVATION)` qua `IJob.enqueue` (yêu cầu không ghi database nên message gửi ngay, BR-U03-50).
 5. Worker sinh `OtpChallenge`, xóa challenge cũ, lưu băm và gửi mail (BR-U01-20, 21, 23). Mã rõ không đi qua queue hay DB.
 6. Trả **`Accepted`** với cùng một thông báo cho mọi trường hợp.
@@ -145,7 +145,7 @@ Màn New Account mở từ nút "Thêm tài khoản" trên Account List; tạo x
 **Vào**: `schoolEmail`, `displayName`, `role`.
 
 1. Kiểm quyền admin (BR-U01-67).
-2. Kiểm email (BR-U01-02, 03). Trùng → lỗi rõ cho admin.
+2. Kiểm email (BR-U01-02, 03): đúng định dạng, không giới hạn tên miền. Trùng → lỗi rõ cho admin.
 3. Tạo tài khoản `PENDING`, không mật khẩu, **không gửi mail** (BR-U01-10).
 4. Tạo `ADMIN` bắt buộc qua luồng này, không qua nhập hàng loạt (BR-U01-84).
 5. Ghi audit `ACCOUNT_CREATED`.

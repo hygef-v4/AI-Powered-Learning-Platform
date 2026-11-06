@@ -53,8 +53,8 @@ public class BootstrapAdminInitializer implements ApplicationRunner {
         if (email.isEmpty() || accounts.anyAdminExists()) {
             return;
         }
-        if (new EmailPolicy(properties.allowedEmailDomains()).check(email) != EmailPolicy.EmailCheck.OK) {
-            log.error("U01_BOOTSTRAP_ADMIN_EMAIL không thuộc U01_ALLOWED_EMAIL_DOMAINS; không tạo Admin đầu tiên");
+        if (!EmailPolicy.isValid(email)) {
+            log.error("U01_BOOTSTRAP_ADMIN_EMAIL không phải email hợp lệ; không tạo Admin đầu tiên");
             return;
         }
         String name = ProfilePolicy.normalizeDisplayName(properties.bootstrapAdminName());

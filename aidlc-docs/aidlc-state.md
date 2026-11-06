@@ -1,5 +1,17 @@
 # AI-DLC State Tracking
 
+## Continuous deployment to the VPS — 2026-11-06
+
+User-chosen pull model: GitHub-hosted runners cannot reach the VPS, which blocks international inbound traffic, and a self-hosted runner cannot reach the Actions broker. `platform-deploy` (systemd timer, 2 min) asks the GitHub API for the latest successful `ci.yml` push run on `main`. For each new SHA it pulls images, dumps the database (keeps 5), checks out the SHA, sets `IMAGE_TAG`, runs `up -d` and gates on container health plus HTTPS 200. On failure it rolls back automatically and skips that SHA. Manual `rollback`, `status` and `unskip` commands are available. Database migrations are not reversed; the runbook covers dump restore. The RabbitMQ healthcheck timeout was raised: the 7 s ping made it falsely unhealthy, which would block every restart. CI gains a `deploy-script` job and drops the placeholder deploy job. Fake-command tests 11/11 passed, shellcheck clean. Installed and enabled on the VPS; a same-SHA deploy passed in 28 s. [Plan and results](construction/plans/code-generation-plan/2026-11-06-continuous-deployment.md), runbook section 10. Not yet seen: a real deploy from a new `main` commit; no commit.
+
+## Any email domain — 2026-11-06
+
+At the user's request, BR-U01-03 no longer restricts the domain. Admin create, CSV import, OTP requests and the bootstrap Admin accept any well-formed email of at most 254 characters. Uniqueness and normalization are unchanged, and there is still no self-registration. `U01_ALLOWED_EMAIL_DOMAINS` and `EMAIL_DOMAIN_NOT_ALLOWED` were removed. Schema unchanged; `school_email` is kept as the field name. Requirements, US-IAM-001, U01 design docs, code summary, main business flows, E2E README and deploy runbook were synced. Backend 1,776 passed, zero skips, required PostgreSQL suites passed; frontend identity 38 passed, typecheck and lint passed. [Plan and results](construction/plans/code-generation-plan/2026-11-06-any-email-domain.md). No commit or deployment.
+
+## Brevo HTTPS API mail transport — 2026-11-06
+
+Requested because the production VPS provider blocks all outbound SMTP while `api.brevo.com:443` is reachable. `MAIL_TRANSPORT=brevo-api` with `BREVO_API_KEY` selects the new `BrevoApiMailAdapter`. `smtp` stays the default, and Mailpit stays the local default. An unknown value stops startup. The fixed endpoint is used; logs and errors carry only the HTTP status and Brevo error code. Compose, `.env.example` and the deploy runbook have been updated. Fresh full backend run: 1,773 passed, zero skips; required PostgreSQL suites passed. [Plan and results](construction/plans/code-generation-plan/2026-11-06-brevo-api-mail.md). Not yet done: real Brevo call, image build and deployment, commit. Security/resiliency scope retained; PBT disabled.
+
 ## Staging pull request delivery scope — 2026-11-06
 
 User requested a PR from fix/u05-u09-u15 to staging, authorizing the needed push. Refreshed refs: staging is an ancestor, the feature branch was synchronized and no open PR existed for it. Reviewed scope includes U05/U09/U15 readability/simplification, U09 JDBC persistence, global AI-DLC JDBC policy and U05 repository names. PR evidence distinguishes the full JDBC 1,830-backend/799-frontend checks from the latest naming-only 200 Academics/Architecture run; no product changes or redundant runtime tests for delivery metadata. Document no-op save/version distinction and remaining JPA owners; create the PR for review without merging/deploying or claiming CI success in advance.

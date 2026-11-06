@@ -156,7 +156,7 @@ Nút "Nhập CSV" mở vùng nhập ngay trên Account List; danh sách tải l�
 | Mục | Nội dung |
 |---|---|
 | Trường | Email trường* (gợi ý "Dùng làm định danh đăng nhập, không đổi được sau khi tạo."), Họ và tên*, Vai trò* (Sinh viên, Giảng viên, Chủ nhiệm môn, Quản trị viên) |
-| Validation | Email đúng định dạng và domain trường; tên không rỗng |
+| Validation | Email đúng định dạng (tên miền nào cũng được); tên không rỗng |
 | Ghi chú | "Tài khoản ở trạng thái Chờ kích hoạt. Người dùng tự kích hoạt bằng email trường và mã OTP; số điện thoại sửa sau ở Chi tiết tài khoản." |
 | API | `createAccount`; xong thì đóng popup và tải lại Account List. Không có nút gửi mail |
 
