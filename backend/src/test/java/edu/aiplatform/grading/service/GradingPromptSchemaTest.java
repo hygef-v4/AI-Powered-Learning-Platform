@@ -29,7 +29,7 @@ class GradingPromptSchemaTest {
         var document = new edu.aiplatform.assignments.contract.DocumentModel(java.util.List.of());
         var assignment = new edu.aiplatform.assignments.contract.AssignmentContent(id, 3, "Instructions", document,
                 java.util.List.of(), java.util.Map.of(edu.aiplatform.assignments.contract.DiagramType.CLASS, 1), java.util.List.of());
-        var payload = mapper.readTree(builder.build(e, document, assignment).user());
+        var payload = mapper.readTree(builder.buildPrompt(e, document, assignment).user());
         org.assertj.core.api.Assertions.assertThat(payload.path("assignmentId").asText()).isEqualTo(id.toString());
         org.assertj.core.api.Assertions.assertThat(payload.path("versionNo").asInt()).isEqualTo(3);
         org.assertj.core.api.Assertions.assertThat(payload.path("requiredDiagrams").path("CLASS").asInt()).isEqualTo(1);
@@ -46,8 +46,8 @@ class GradingPromptSchemaTest {
                 {"itemId":"%s","text":"Correct","points":2.5}]}]}]
             """.formatted(rubricId, UUID.randomUUID(), UUID.randomUUID(), itemId);
         var builder = new GradingPromptBuilder(mock(IDocumentModel.class), json);
-        var schemaText = builder.outputSchema(evaluation);
-        var prompt = builder.build(evaluation,
+        var schemaText = builder.buildOutputSchema(evaluation);
+        var prompt = builder.buildPrompt(evaluation,
                 new edu.aiplatform.assignments.contract.DocumentModel(List.of()),
                 mock(edu.aiplatform.assignments.contract.AssignmentContent.class));
         assertThat(prompt.system()).contains("Keep summary.nextSteps empty", "every item below its maximum");
@@ -109,7 +109,7 @@ class GradingPromptSchemaTest {
         feedbackItem.put("requiresReview", true);
         feedbackItem.put("reviewReason", "Không đọc được nội dung sơ đồ; cần giáo viên kiểm tra.");
         assertThat(checker.check(schemaText, missingEvidence)).isEmpty();
-        var validatedReview = new GradingProposalValidator(json).validate(missingEvidence, GradingJson.rubrics(json,
+        var validatedReview = new GradingProposalValidator(json).validateProposal(missingEvidence, GradingJson.readRubrics(json,
                 evaluation.rubricSnapshot), java.util.Set.of("q1"));
         assertThat(validatedReview.structuredFeedback().items().get(0).requiresReview()).isTrue();
         feedbackItem.put("reviewReason", "");
@@ -131,9 +131,9 @@ class GradingPromptSchemaTest {
                 UUID.randomUUID(), assignmentId, "q1",
                 List.of(new RubricCriterion(UUID.randomUUID(), "C", "", CriterionKind.values()[0], thirtyItems)),
                 new BigDecimal("30"))));
-        int tokens = builder.maxOutputTokens(maxSupportedEval);
+        int tokens = builder.calculateMaxOutputTokens(maxSupportedEval);
         assertThat(tokens).isBetween(4096, 8192).isEqualTo(7624);
-        assertThat(new JsonSchemaChecker(json).validSchema(builder.outputSchema(maxSupportedEval))).isTrue();
+        assertThat(new JsonSchemaChecker(json).validSchema(builder.buildOutputSchema(maxSupportedEval))).isTrue();
 
         var thirtyOneItems = new ArrayList<>(thirtyItems);
         thirtyOneItems.add(new RubricItem(UUID.randomUUID(), "Item 30", BigDecimal.ONE));
@@ -142,9 +142,9 @@ class GradingPromptSchemaTest {
                 UUID.randomUUID(), assignmentId, "q1",
                 List.of(new RubricCriterion(UUID.randomUUID(), "C", "", CriterionKind.values()[0], thirtyOneItems)),
                 new BigDecimal("31"))));
-        assertThatThrownBy(() -> builder.maxOutputTokens(oversizedEval))
+        assertThatThrownBy(() -> builder.calculateMaxOutputTokens(oversizedEval))
                 .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("RUBRIC_TOO_LARGE_FOR_AI"));
-        assertThatThrownBy(() -> builder.outputSchema(oversizedEval))
+        assertThatThrownBy(() -> builder.buildOutputSchema(oversizedEval))
                 .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("RUBRIC_TOO_LARGE_FOR_AI"));
     }
 }

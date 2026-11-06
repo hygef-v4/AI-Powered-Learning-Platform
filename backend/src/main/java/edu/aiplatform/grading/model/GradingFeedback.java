@@ -12,41 +12,44 @@ import java.util.UUID;
 public record GradingFeedback(int schemaVersion, Summary summary, List<Item> items) {
 
     @JsonAnySetter
-    public void unknown(String key, Object value) {
-        throw ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK", "Unknown structuredFeedback field: " + key);
+    public void createUnknownFeedback(String key, Object value) {
+        throw ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK",
+                "Unknown structuredFeedback field: " + key);
     }
 
-    public GradingFeedback copy() {
-        return new GradingFeedback(
-                schemaVersion,
+    public GradingFeedback copyFeedback() {
+        return new GradingFeedback(schemaVersion,
                 summary == null ? new Summary(List.of(), List.of(), List.of()) : summary.copy(),
                 items == null ? List.of() : items.stream().map(Item::copy).toList());
     }
 
-    public record Summary(List<String> strengths, List<String> improvements, List<String> nextSteps) {
+    public record Summary(List<String> strengths, List<String> improvements,
+            List<String> nextSteps) {
         @JsonAnySetter
         public void unknown(String key, Object value) {
-            throw ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK", "Unknown summary field: " + key);
+            throw ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK",
+                    "Unknown summary field: " + key);
         }
 
         public Summary copy() {
-            return new Summary(
-                    strengths == null ? List.of() : List.copyOf(strengths),
+            return new Summary(strengths == null ? List.of() : List.copyOf(strengths),
                     improvements == null ? List.of() : List.copyOf(improvements),
                     nextSteps == null ? List.of() : List.copyOf(nextSteps));
         }
     }
 
-    public record Item(UUID rubricId, UUID itemId, String evidence, String reason, String suggestion,
-            String evidenceBlockId, boolean requiresReview, String reviewReason) {
+    public record Item(UUID rubricId, UUID itemId, String evidence, String reason,
+            String suggestion, String evidenceBlockId, boolean requiresReview,
+            String reviewReason) {
         @JsonAnySetter
         public void unknown(String key, Object value) {
-            throw ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK", "Unknown item field: " + key);
+            throw ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK",
+                    "Unknown item field: " + key);
         }
 
         public Item copy() {
-            return new Item(rubricId, itemId, evidence, reason, suggestion, evidenceBlockId, requiresReview,
-                    reviewReason);
+            return new Item(rubricId, itemId, evidence, reason, suggestion, evidenceBlockId,
+                    requiresReview, reviewReason);
         }
     }
 }

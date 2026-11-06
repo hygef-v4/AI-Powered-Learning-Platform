@@ -19,12 +19,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 class AdminDashboardControllerTest {
-    AdminDashboardService service = mock(AdminDashboardService.class);
+    AdminDashboardService adminDashboardService = mock(AdminDashboardService.class);
     Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
     MockMvc mvc;
     @BeforeEach void setup() {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(admin, null));
-        mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(service, null))
+        mvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(adminDashboardService, null))
                 .setControllerAdvice(new AdminDashboardExceptionHandler())
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
     }
@@ -33,7 +33,7 @@ class AdminDashboardControllerTest {
     @Test void returnsPublicProjectionAndNoStoreIncludingNullableEmptyBackup() throws Exception {
         var backup = new BackupSection(Section.available(null), Section.unavailable(), Section.available(List.of()),
                 Section.unavailable(), Section.unavailable());
-        when(service.dashboard(admin)).thenReturn(new AdminDashboardView(Instant.parse("2026-10-20T00:00:00Z"),
+        when(adminDashboardService.loadDashboard(admin)).thenReturn(new AdminDashboardView(Instant.parse("2026-10-20T00:00:00Z"),
                 Section.available(new AccountCounts(Map.of(), 5, 3)), Section.unavailable(), Section.unavailable(),
                 Section.available(7L), backup));
         mvc.perform(get("/api/v1/admin/dashboard")).andExpect(status().isOk())
@@ -43,30 +43,30 @@ class AdminDashboardControllerTest {
                 .andExpect(jsonPath("$.backup.latest.data").isEmpty())
                 .andExpect(jsonPath("$.backup.latest.data.id").doesNotExist())
                 .andExpect(jsonPath("$.subjects.availability").value("UNAVAILABLE"));
-        verify(service).dashboard(admin);
+        verify(adminDashboardService).loadDashboard(admin);
     }
     @Test void historyDefaultsAndExplicitPageUseServerPrincipal() throws Exception {
-        when(service.backups(admin, 0, 20)).thenReturn(new BackupHistoryPage(List.of(), 0, 20, 0, 0));
-        when(service.backups(admin, 1, 10)).thenReturn(new BackupHistoryPage(List.of(), 1, 10, 11, 2));
+        when(adminDashboardService.listBackups(admin, 0, 20)).thenReturn(new BackupHistoryPage(List.of(), 0, 20, 0, 0));
+        when(adminDashboardService.listBackups(admin, 1, 10)).thenReturn(new BackupHistoryPage(List.of(), 1, 10, 11, 2));
         mvc.perform(get("/api/v1/admin/dashboard/backups")).andExpect(status().isOk()).andExpect(jsonPath("$.page").value(0));
         mvc.perform(get("/api/v1/admin/dashboard/backups?page=1&size=10")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(11)).andExpect(jsonPath("$.totalPages").value(2));
-        verify(service).backups(admin, 0, 20);
-        verify(service).backups(admin, 1, 10);
+        verify(adminDashboardService).listBackups(admin, 0, 20);
+        verify(adminDashboardService).listBackups(admin, 1, 10);
     }
     @ParameterizedTest @ValueSource(strings = {"page=2147483648", "page=x", "page=1&page=2", "actor=forged", "sort=id"})
     void invalidQueriesAreSafeAndNeverCallService(String query) throws Exception {
         mvc.perform(get("/api/v1/admin/dashboard/backups?" + query)).andExpect(status().isBadRequest())
                 .andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.code").value("DASHBOARD_PAGE_INVALID"));
-        verify(service).requireAdmin(admin);
-        verify(service, never()).backups(any(), anyInt(), anyInt());
-        verifyNoMoreInteractions(service);
+        verify(adminDashboardService).requireAdmin(admin);
+        verify(adminDashboardService, never()).listBackups(any(), anyInt(), anyInt());
+        verifyNoMoreInteractions(adminDashboardService);
     }
     @Test void deniedAndUnexpectedErrorsNeverExposeProviderExceptions() throws Exception {
-        when(service.dashboard(admin)).thenThrow(ApiException.forbidden("DASHBOARD_FORBIDDEN"));
+        when(adminDashboardService.loadDashboard(admin)).thenThrow(ApiException.forbidden("DASHBOARD_FORBIDDEN"));
         mvc.perform(get("/api/v1/admin/dashboard")).andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DASHBOARD_FORBIDDEN"));
-        doThrow(new IllegalStateException("secret")).when(service).dashboard(admin);
+        doThrow(new IllegalStateException("secret")).when(adminDashboardService).loadDashboard(admin);
         mvc.perform(get("/api/v1/admin/dashboard")).andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.detail").value("Không đọc được tổng quan hệ thống"));
     }

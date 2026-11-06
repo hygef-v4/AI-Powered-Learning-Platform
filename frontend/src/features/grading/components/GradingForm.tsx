@@ -21,7 +21,7 @@ function ensureStructuredFeedback(current?: StructuredFeedback | null): Structur
 }
 
 /** Nối checklist của mọi phần với biểu mẫu chấm: tích mục, nhận xét từng mục, xác nhận mục AI cần kiểm tra. */
-export function checklistBindings(values: GradingFormValues, disabled: boolean, onChange: OnChange): ChecklistProps {
+export function buildChecklistBindings(values: GradingFormValues, disabled: boolean, onChange: OnChange): ChecklistProps {
   function handleScoresChange(
     nextScores: GradingFormValues["itemScores"],
     changedRubricId?: string,
@@ -120,7 +120,7 @@ export function checklistBindings(values: GradingFormValues, disabled: boolean, 
 }
 
 /** Only drafts can resolve outstanding AI review notes. */
-export function needsGradingNotes(rubrics: Rubric[], values: GradingFormValues, official: boolean) {
+export function shouldShowGradingNotes(rubrics: Rubric[], values: GradingFormValues, official: boolean) {
   return !official && countUnresolvedReviews(rubrics, values.checks, values.itemScores, values.structuredFeedback,
     values.reviewedItemScores, values.acknowledgedReviewItems).total > 0;
 }

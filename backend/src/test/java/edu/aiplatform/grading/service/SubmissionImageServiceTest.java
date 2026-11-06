@@ -20,13 +20,13 @@ class SubmissionImageServiceTest {
         var actor = new Actor(UUID.randomUUID(), Role.TEACHER);
         var block = new DocumentBlock(UUID.randomUUID(), BlockOrigin.values()[0], BlockType.IMAGE,
                 new ObjectMapper().readTree("{\"fileId\":\"attached\"}"));
-        when(review.detail(actor, eid))
+        when(review.loadEvaluation(actor, eid))
                 .thenReturn(new GradingViews.EvaluationDetail(null, new DocumentModel(List.of(block)), List.of(),
                         List.of(), null, "DISABLED", List.of(), List.of(), List.of(), true));
         var service = new SubmissionImageService(review, files);
-        assertThatThrownBy(() -> service.download(actor, eid, "other")).isInstanceOf(RuntimeException.class);
+        assertThatThrownBy(() -> service.issueDownloadToken(actor, eid, "other")).isInstanceOf(RuntimeException.class);
         verifyNoInteractions(files);
-        service.download(actor, eid, "attached");
+        service.issueDownloadToken(actor, eid, "attached");
         verify(files).issueDownloadToken("attached", actor.accountId());
     }
 }

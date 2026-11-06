@@ -1,4 +1,6 @@
-# U12 Group Assignment — logical-components
+# U12 Group Assignment — logical-components — chuẩn JDBC
+
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code còn JPA được ghi là khoảng cách migration.
 
 > Current structure: parent HEAD 5a76e428 + working-tree refactor, 2026-10-30. Unit ownership unchanged; runtime/provider acceptance remains separate.
 
@@ -10,11 +12,11 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|
 | [groups/controller](../../../../backend/src/main/java/edu/aiplatform/groups/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [groups/service](../../../../backend/src/main/java/edu/aiplatform/groups/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [groups/repository](../../../../backend/src/main/java/edu/aiplatform/groups/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [groups/repository](../../../../backend/src/main/java/edu/aiplatform/groups/repository) | Repository interface/implementation, SQL và persistence mapping; JDBC là chuẩn đích toàn dự án. |
 | [groups/model](../../../../backend/src/main/java/edu/aiplatform/groups/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [groupdocs/controller](../../../../backend/src/main/java/edu/aiplatform/groupdocs/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [groupdocs/service](../../../../backend/src/main/java/edu/aiplatform/groupdocs/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [groupdocs/repository](../../../../backend/src/main/java/edu/aiplatform/groupdocs/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [groupdocs/repository](../../../../backend/src/main/java/edu/aiplatform/groupdocs/repository) | Repository interface/implementation, SQL và persistence mapping; JDBC là chuẩn đích toàn dự án. |
 | [groupdocs/model](../../../../backend/src/main/java/edu/aiplatform/groupdocs/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [groupdocs/integration](../../../../backend/src/main/java/edu/aiplatform/groupdocs/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [groupdocs/contract](../../../../backend/src/main/java/edu/aiplatform/groupdocs/contract) | Public interface/DTO xuyên unit; giữ nguyên. |

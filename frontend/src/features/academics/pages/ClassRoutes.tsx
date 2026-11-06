@@ -3,7 +3,7 @@
 import {useCallback, useEffect, useRef, useState, type ReactNode} from "react";
 import {useRouter} from "next/navigation";
 import {ApiError} from "@/shared/api/client";
-import {academicsApi, classCapability, type Scope} from "../api";
+import {academicsApi, loadClassCapability, type Scope} from "../api";
 import {ClassDashboardPage} from "./ClassDashboardPage";
 import {ClassListPage} from "./ClassListPage";
 import {ReadOnlyClassPage} from "./ReadOnlyClassPage";
@@ -11,8 +11,8 @@ import {ManagedClassPage, type ManagedClassActions} from "./ManagedClassPage";
 import {ManagerDashboardPage, MySubjectPage} from "./ManagerDashboardPage";
 import {ClassFormDialog} from "../components/ClassFormDialog";
 import {ReopenConflictError} from "../components/ClassDialogs";
-import { EmptyState } from "../components/ui";
-import { operationError } from "../model/format";
+import { EmptyState } from "../components/AcademicsUi";
+import { formatOperationError } from "../model/format";
 import type {SubjectView, CourseClassView, EnrollmentView} from "../model/types";
 import styles from "../styles/academics.module.css";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
@@ -61,7 +61,7 @@ function useResource<T>(load: ResourceLoader<T>) {
 async function allClasses(scope: Scope, signal: AbortSignal) {
   const rows: CourseClassView[] = [];
   for (let page = 1; ; page++) {
-    const next = await academicsApi.classes(scope, {page, size: 100}, signal);
+    const next = await academicsApi.listClasses(scope, {page, size: 100}, signal);
     rows.push(...next);
     if (next.length < 100) return rows;
   }
@@ -70,7 +70,7 @@ async function allClasses(scope: Scope, signal: AbortSignal) {
 async function allStudents(scope: "manager" | "teaching", id: string, signal: AbortSignal) {
   const rows: EnrollmentView[] = [];
   for (let page = 1; ; page++) {
-    const next = await academicsApi.students(scope, id, {page, size: 100}, signal);
+    const next = await academicsApi.listStudents(scope, id, {page, size: 100}, signal);
     rows.push(...next);
     if (next.length < 100) return rows;
   }
@@ -78,7 +78,7 @@ async function allStudents(scope: "manager" | "teaching", id: string, signal: Ab
 
 function Pending({error, retry}: {error?: unknown; retry: () => void}) {
   if (!error) return <PageLoading/>;
-  return <PageLoadError onRetry={() => void Promise.resolve(retry()).catch(() => {})}>{operationError(error)}</PageLoadError>;
+  return <PageLoadError onRetry={() => void Promise.resolve(retry()).catch(() => {})}>{formatOperationError(error)}</PageLoadError>;
 }
 
 // Khung trang (thanh trên, menu bên theo role của phiên, hồ sơ, đăng xuất) do AuthenticatedLayout của U01 vẽ ở layout route.
@@ -86,8 +86,8 @@ export function ClassesRoute({teaching = false}: {teaching?: boolean}) {
   const router = useRouter();
   const load = useCallback(async (signal: AbortSignal) => {
     const mode = teaching
-      ? {audience: "teacher" as const, classes: await academicsApi.classes("teaching", {}, signal)}
-      : await classCapability(signal);
+      ? {audience: "teacher" as const, classes: await academicsApi.listClasses("teaching", {}, signal)}
+      : await loadClassCapability(signal);
     return {
       ...mode,
       classes: mode.classes.length === 100
@@ -106,12 +106,12 @@ export function ClassesRoute({teaching = false}: {teaching?: boolean}) {
 export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
   const router = useRouter();
   const load = useCallback(async (signal: AbortSignal) => ({
-    value: await academicsApi.detail(scope, id, signal),
+    value: await academicsApi.loadClass(scope, id, signal),
     students: scope === "me" ? [] : await allStudents(scope, id, signal),
   }), [id, scope]);
   const state = useResource(load);
-  const loadTeachers = useCallback((q: string, signal: AbortSignal) => academicsApi.candidates("teacher", q, signal), []);
-  const loadCandidates = useCallback((q: string, signal: AbortSignal) => academicsApi.studentCandidates(id, q, signal), [id]);
+  const loadTeachers = useCallback((q: string, signal: AbortSignal) => academicsApi.listCandidates("teacher", q, signal), []);
+  const loadCandidates = useCallback((q: string, signal: AbortSignal) => academicsApi.listStudentCandidates(id, q, signal), [id]);
   const [mutationConflict, setMutationConflict] = useState<{classId: string; message: string} | null>(null);
   if (!state.data) return <Pending error={state.error} retry={state.refresh}/>;
 
@@ -136,12 +136,12 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
 
   const {value, students} = state.data;
   const actions: ManagedClassActions = {
-    onSaveInfo: async input => { await mutate(() => academicsApi.info(id, input)); },
-    onAssign: async (teacherId, version) => { await mutate(() => academicsApi.teacher(id, teacherId, version)); },
-    onChangeStatus: async (status, version) => { await mutate(() => academicsApi.status(id, status, version)); },
-    onEnrollmentStatus: async (accountId, status) => { await mutate(() => academicsApi.enrollmentStatus(id, accountId, status)); },
-    onEnroll: async accountId => { await mutate(() => academicsApi.enroll(id, accountId)); },
-    onBatch: async text => await mutate(() => academicsApi.batch(id, text)),
+    onSaveInfo: async input => { await mutate(() => academicsApi.updateClassInfo(id, input)); },
+    onAssign: async (teacherId, version) => { await mutate(() => academicsApi.assignTeacher(id, teacherId, version)); },
+    onChangeStatus: async (status, version) => { await mutate(() => academicsApi.changeClassStatus(id, status, version)); },
+    onEnrollmentStatus: async (accountId, status) => { await mutate(() => academicsApi.changeEnrollmentStatus(id, accountId, status)); },
+    onEnroll: async accountId => { await mutate(() => academicsApi.enrollStudent(id, accountId)); },
+    onBatch: async text => await mutate(() => academicsApi.enrollStudents(id, text)),
   };
 
   let content: ReactNode;
@@ -165,12 +165,12 @@ export function ManagerRoute({view, id, initialSubjectId}: {view: "overview" | "
   const router = useRouter();
   const [creating, setCreating] = useState<SubjectView | null>(null);
   const load = useCallback(async (signal: AbortSignal) => {
-    const subjects = await academicsApi.subjects(signal);
+    const subjects = await academicsApi.listSubjects(signal);
     const classes = await allClasses("manager", signal);
-    return {subjects, classes, subject: id ? await academicsApi.subject(id, signal) : subjects[0]};
+    return {subjects, classes, subject: id ? await academicsApi.loadSubject(id, signal) : subjects[0]};
   }, [id]);
   const state = useResource(load);
-  const loadTeachers = useCallback((q: string, signal: AbortSignal) => academicsApi.candidates("teacher", q, signal), []);
+  const loadTeachers = useCallback((q: string, signal: AbortSignal) => academicsApi.listCandidates("teacher", q, signal), []);
   if (!state.data) return <Pending error={state.error} retry={state.refresh}/>;
 
   const {subjects, classes, subject} = state.data;
@@ -191,8 +191,8 @@ export function ManagerRoute({view, id, initialSubjectId}: {view: "overview" | "
       onClose={() => setCreating(null)}
       onSubmit={async input => {
         // Không còn lớp nháp: tạo xong thì mở lớp luôn.
-        const created = await academicsApi.create(input);
-        await academicsApi.status(created.id, "OPEN", created.version);
+        const created = await academicsApi.createClass(input);
+        await academicsApi.changeClassStatus(created.id, "OPEN", created.version);
         await state.refresh();
       }}/>}
   </>;

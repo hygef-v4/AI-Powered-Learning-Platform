@@ -22,30 +22,33 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1")
 public class GradingProposalController {
-    private final GradingProposalService service;
+    private final GradingProposalService gradingProposalService;
 
-    public GradingProposalController(GradingProposalService service) {
-        this.service = service;
+    public GradingProposalController(GradingProposalService gradingProposalService) {
+        this.gradingProposalService = gradingProposalService;
     }
 
     @PostMapping("/evaluations/{id}/ai-proposals")
-    public GradingProposal request(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
-            @Valid @RequestBody AiRequest input) {
-        return service.request(actor, id, input);
+    public GradingProposal requestProposal(@AuthenticationPrincipal Actor actor,
+            @PathVariable UUID id, @Valid @RequestBody AiRequest input) {
+        return gradingProposalService.requestProposal(actor, id, input);
     }
 
     @GetMapping("/evaluations/{id}/ai-proposals")
-    public List<GradingProposal> list(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return service.list(actor, id);
+    public List<GradingProposal> listProposals(@AuthenticationPrincipal Actor actor,
+            @PathVariable UUID id) {
+        return gradingProposalService.listProposals(actor, id);
     }
 
     @PostMapping("/evaluations:ai-proposals")
-    public BatchResult batch(@AuthenticationPrincipal Actor actor, @Valid @RequestBody AiBatch input) {
-        return service.requestBatch(actor, input);
+    public BatchResult requestProposals(@AuthenticationPrincipal Actor actor,
+            @Valid @RequestBody AiBatch input) {
+        return gradingProposalService.requestProposals(actor, input);
     }
 
     @PostMapping("/evaluations:ai-proposal-estimate")
-    public AiEstimate estimateBatch(@AuthenticationPrincipal Actor actor, @Valid @RequestBody Batch input) {
-        return service.estimateBatch(actor, input);
+    public AiEstimate estimateProposalTokens(@AuthenticationPrincipal Actor actor,
+            @Valid @RequestBody Batch input) {
+        return gradingProposalService.estimateProposalTokens(actor, input);
     }
 }

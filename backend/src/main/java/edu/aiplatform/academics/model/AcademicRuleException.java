@@ -9,5 +9,7 @@ public class AcademicRuleException extends RuntimeException {
         this.code = code;
     }
 
-    public String code() { return code; }
+    public String code() {
+        return code;
+    }
 }

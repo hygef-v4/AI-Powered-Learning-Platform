@@ -10309,3 +10309,207 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **AI Response**: Preparing an English commit for the verified follow-up, pushing the existing feature branch and opening a pull request targeting staging. Confirmed requester GitHub display name Quang Hung, no existing open PR for this head, and staging/head both at the same baseline before this commit. CI will run on the pull request; its current head/check links and outcome are reported through the PR and final response. No merge or deployment requested.
 
 **Context**: Source unchanged since the recorded backend/frontend verification. Public contracts, database schema, grade locks/resubmission and authorization remain unchanged. Manual browser acceptance is still deferred.
+
+## Shared source code conventions — 2026-11-05
+
+**Timestamp**: 2026-11-05T14:58:46Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "ok giúp tôi tạo doc quy ước trong aidlc như kế hoạch k chỉ cho mỗi u09 riêng mà là cả src code chung"
+**AI Response**: Created construction/code-conventions.md for all backend/frontend units, tests and project scripts. Linked README and CLAUDE.md and updated state. Defined dependency naming, verb-object action methods, file names, framework/contract exceptions and verification checklist. Documentation references, migration link, Markdown fences and whitespace diff checked. No source code rename or application tests.
+**Context**: Approved documentation-only proposal; implementation stages unnecessary. GitHub CLI configuration could not be read, so current requester display name is unverified. Historical attribution preserved. No commit/push or tooling changes.
+
+## Commit shared source code conventions — 2026-11-05
+
+**Timestamp**: 2026-11-05T15:05:00Z
+**Requested by:** Quang Hung
+
+**User Input**: "giúp tôi commit rõ ràng"
+
+**AI Response**: Reviewed the five pending documentation files and prepared a descriptive English commit for project-wide source conventions. The canonical document covers backend/frontend names, service dependencies, action methods, files, framework/contract exceptions and refactor verification; README and CLAUDE.md link to it. Preserve historical requester fields. Verify local references, Markdown fences and whitespace; application tests are unnecessary for documentation-only changes.
+
+**Context**: Commit locally on the current fix/u05-u09-u15 branch. No application code, dependency, database, push, merge or deployment change requested.
+
+## Apply shared code conventions to U05/U09/U15 — 2026-11-05
+
+**Timestamp**: 2026-11-05T15:17:14Z
+**Requested by:** Quang Hung
+
+**User Input**: "đọc coding convention mới cập nhật và giúp tôi sửa các u05 u09 u15 theo convention mới"
+
+**AI Response**: Read the published shared convention and started a scoped naming/import refactor in academics, grading and admindashboard. Inventory dependencies/actions/files and all callers before changes; preserve public contracts, framework names, HTTP/JSON bindings, security and business behavior. Record the plan and fresh verification in AI-DLC. No commit or push requested.
+
+**Completion — 2026-11-05T16:21:32Z**: Applied the shared convention to concrete dependencies/actions, predicates/guards, frontend helpers/constants and four React module filenames, with bound Java/TypeScript references and tests updated. Public routes, JSON/data shapes, DB/event/MCP identifiers, contract overrides, transactions and business behavior retained. A new JSON regression first caught an intermediate bean-getter field change; corrected without changing the response contract. Independent review found no Critical/Important source defect; one minor boolean-name correction applied. Final backend verify: 1,783 passed, zero failures/errors/skips, production JAR built; required real PostgreSQL suites 31 + 2 passed. Frontend: 776 passed, full lint/typecheck/production build passed; generated TypeScript configuration restored and rechecked. Earlier JVM/Next native-memory failures resolved with per-command memory/worker settings, including bounded child JVMs; no product configuration change. Plan, results, six current unit notes and state synchronized. Historical reports/attribution preserved. Existing security/resiliency scope retained; PBT disabled. No manual browser/provider retest, live grade write, migration, restart, commit, push or deployment. Evidence: construction/build-and-test/2026-11-05-u05-u09-u15-conventions-results.md.
+
+## Restore compact Java imports — 2026-11-05
+
+**Timestamp**: 2026-11-05T16:42:02Z
+**Requested by:** Quang Hung
+
+**User Input**: "sửa cái contract mấy cái import để * như cũ cũng được cho gọn, code mới import hơi nhiều"
+
+**AI Response**: Updated the shared convention to permit wildcard/static wildcard imports, including contract types, with explicit imports retained when needed for collisions/clarity. Restored original import blocks in 71 changed U05/U09/U15 Java files (883 fewer import statements); self-check verifies all source bytes outside those blocks are preserved, including the prior naming changes. Fresh backend production/test compilation passed at 2026-11-05T16:43:51Z; full runtime tests and frontend build were not repeated for import-only edits. Updated current U05/U09 notes, appended the plan/results follow-up and updated state without rewriting historical verification. Security/resiliency scope unchanged; PBT disabled. No commit/push, behavior/contract/schema/dependency/frontend change, live write or restart. Evidence: construction/build-and-test/2026-11-05-u05-u09-u15-conventions-results.md, .tmp/conventions-wildcard-compile.log.
+
+## Commit U05/U09/U15 convention refactor locally — 2026-11-05
+
+**Timestamp**: 2026-11-05T16:53:23Z
+**Requested by:** Quang Hung
+
+**User Input**: "giúp tôi commit rõ ràng, chưa push"
+
+**AI Response**: Reviewed the pending convention refactor and wildcard-import follow-up for a single descriptive English commit on fix/u05-u09-u15. Include role-specific dependency names, verb-object actions/helpers, four PascalCase React module moves, all callers/mocks/tests, the JSON compatibility regression and synchronized AI-DLC records. Preserve contracts, business behavior and the user's compact import preference. Confirmed recorded backend verify 1,783 / frontend 776 passing before import restoration, lint/typecheck/production build passing, and fresh backend production/test compilation after import restoration. Check the staged diff and restrict staging to task-owned files. No new runtime test rerun, push, merge, deployment, live write or restart requested.
+
+## Resolve staging merge into U05/U09/U15 — 2026-11-06
+
+**Timestamp**: 2026-11-05T16:56:25Z
+**Requested by:** Quang Hung
+
+**User Input**: "giúp tôi resolve conflict merge staging vào nhánh này"
+
+**AI Response**: Continued the existing local merge on fix/u05-u09-u15 (HEAD 2440cbe4, MERGE_HEAD/local staging/origin staging b91413ca), preserving all staged incoming changes. Resolve six files by combining staging's subject-code mapping, description-only class editing, automatic AI source and compact grading settings with the branch's standardized dependency/helper/callback/API names. Independent review found no introduced merge defect, but identified an inherited DTO annotation that makes automatic-source requests fail HTTP 400. Reproduced both single and batch failures, removed only source @NotNull, retained other validation/permissions and synchronized grading OpenAPI. Added seven HTTP regression cases; final verification and local merge commit in progress. No push, live migration, application restart or deployment requested. Existing security/resiliency scope retained; PBT disabled. Evidence: construction/build-and-test/2026-11-06-merge-staging-u05-u09-u15.md.
+
+**Verification — 2026-11-05T17:22:23Z**: Six conflicts resolved and no unmerged index entries remain. Final backend verify passed 1,804 tests, zero failures/errors/skips, built the JAR and passed required PostgreSQL guard (31 + 2). Seven new HTTP cases pass after the two reproduced failures. Frontend passed all 799 tests / 116 files with a single thread worker; full lint/typecheck/production build passed, generated TypeScript configuration restored and typechecked again. Earlier heap/metaspace/native-memory failures are retained as failed attempts; final heavy checks run sequentially with bounded memory. Two independent read-only reviews found no remaining introduced/follow-up defect. OpenAPI and documentation links validated; resolution files have no whitespace errors, while three untouched incoming whitespace cases are byte-identical to staging. Prepare the authorized local merge commit only. No push, live migration, restart, deployment or manual UI/provider acceptance; security/resiliency scope unchanged and PBT disabled.
+
+## Open staging PR and check CI for U05/U09/U15 — 2026-11-06
+
+**Timestamp**: 2026-11-05T17:46:57Z
+**Requested by:** Quang Hung
+
+**User Input**: "giúp tôi tạo pr ci lên staging trước khi merger"
+
+**AI Response**: Preparing the existing fix/u05-u09-u15 branch for a PR into staging and monitoring its CI before merge. GitHub profile confirms display name Quang Hung; initial local/remote head b466400b matches, comparison is three commits ahead/zero behind staging, and no matching open PR exists. Source is unchanged from the recorded backend 1,804 / frontend 799 passing verification, lint/typecheck/production build and required PostgreSQL guard. Record delivery in audit/state, verify only these documentation changes, commit/push the branch normally, then open a descriptive English PR through the GitHub plugin. The existing pull_request workflow runs backend/frontend checks; inspect the final head's CI and report its PR/check links and actual outcome. Do not merge or enable auto-merge. No new runtime source edit, local test rerun, deployment or unrelated branch push; security/resiliency scope unchanged and PBT disabled.
+
+## U05/U09/U15 Java readability formatting — 2026-11-06
+
+**Timestamp**: 2026-11-06T06:46:41Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "soát lại code u05 u09 u15 format lại code cho dễ đọc hơn, hjienej tại để return hết cùng 1 dòng trông khó đọc quá"
+**AI Response**: Formatted 71 Java source files across academics/grading/admindashboard; checked all 85 against Git tokens and formatter idempotence. Expanded inline bodies, signatures and calls with approximately 100-column wrapping and four-space indentation. Preserved names, comments, literals, wildcard imports, contracts and behavior. Fresh isolated compilation passed for 720 production and 246 test source files; tests not executed. Updated shared conventions, plan, evidence and state.
+**Context**: Screenshot targets backend Java readability; frontend unchanged. JVM sandbox/security and initial heap reservation limitations resolved with approved execution and bounded memory. No commit/push, app restart or migration. Current requester display name not independently verified; historical attribution preserved.
+
+## U05/U09/U15 simplification planning — 2026-11-06
+
+**Timestamp**: 2026-11-06T06:57:45Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi lập kế hoạch tối ưu code"
+**AI Response**: Reviewed current source, callers and tests and created a behavior-preserving backend refactor plan for U05/U09/U15. Proposes inlining the single-caller mutateClass helper, sharing identical batch-size validation and consolidating source-to-section mapping in the existing U15 reader. Includes exact files, boundaries, baseline characterization, focused/full verification commands and rollback preserving the existing format diff. Updated state; implementation pending. No production/test source edit or runtime test run for planning.
+**Context**: Continues the Java readability discussion and existing dirty formatting baseline. Current GitHub profile confirms requester display name Quang Hung. Plan retains security/resiliency scope, PBT disabled and existing public contracts. No commit, push, PR, restart, migration or deployment.
+
+## U05/U09/U15 simplification implementation — 2026-11-06
+
+**Timestamp**: 2026-11-06T07:15:37Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi triển khai theo kế hoạch vừa duyệt"
+**AI Response**: Executed the approved three-task refactor, preserving the existing formatted worktree through a 1,581-file snapshot. U05 single-use mutation helper inlined; U09 identical batch-size validation shared; U15 identical source-to-section helpers consolidated in the existing reader. Three U05 and fifteen U09 characterization cases passed before production edits and remained green afterward; reused existing U15 protection. Scoped runs passed 175/30/59 cases. Independent review found no actionable findings. Full verification initially encountered unavailable Docker; started Docker Desktop and reran with disposable database containers. Final full result pending in the linked evidence.
+**Context**: Seven production/three test files changed versus snapshot, no frontend or public contract change. No commit/push, app restart, live migration or deployment. Evidence: construction/build-and-test/2026-11-06-u05-u09-u15-simplification-results.md.
+
+## Continue simplification execution — 2026-11-06
+
+**Timestamp**: 2026-11-06T07:15:37Z
+**Requested by:** Quang Hung
+**User Input**: "continue"
+**AI Response**: Continued the same approved implementation without restarting or replacing the prior formatting baseline. Runtime verification and final documentation remain part of the active task.
+
+**Final verification — 2026-11-06T07:17:44Z**: All three approved tasks complete. Fresh backend verify passed 1,822 tests with zero failures/errors/skips and packaged the executable JAR; required real PostgreSQL suites passed 31 + 2 tests. Independent read-only reviewer found no actionable findings. Snapshot comparison confirms only seven production/three test files changed and existing formatting preserved. Initial Docker-not-running attempt is recorded separately; final rerun succeeded after starting Docker Desktop. Plan/state/evidence synchronized. No commit/push/PR, frontend change, live database migration, app restart or deployment.
+
+## Restart backend/frontend and rerun tests — 2026-11-06
+
+**Timestamp**: 2026-11-06T07:32:13Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi chạy lại backend frontend , chạy test"
+**AI Response**: Fresh backend verify passed 1,822 tests without failures/errors/skips and built the JAR; required PostgreSQL guard passed 31 + 2 cases. Frontend 799 tests / 116 files, lint, typecheck and production build passed. Restored generated tsconfig/next-env/AGENTS changes from pre-run snapshots and typechecked again. Started backend local,worker on 8080 and frontend dev Webpack on 3000 as hidden background processes, with logs/PIDs in ignored scratch; restarted existing Mailpit, preserved databases/volumes and left old Docker worker stopped. Both health endpoints return UP/200, login 200 and protected API through frontend returns 401 without credentials. Source/config hashes unchanged; services left running.
+**Context**: Operational verification authorized by user, no product code/dependency change, commit/push or deployment. Live startup validated 32 migrations and found no pending migrations. No authenticated business-data writes, manual UI/provider acceptance or load test. Evidence: construction/build-and-test/2026-11-06-restart-test-results.md.
+
+## Change summary — 2026-11-06
+
+**Timestamp**: 2026-11-06T07:37:14Z
+**Requested by:** Quang Hung
+**User Input**: "tóm tắt lại thay đổi"
+**AI Response**: Summarized U05 helper inlining, U09 shared batch validation, U15 shared source mapping, prior Java formatting and AI-DLC conventions/evidence. Reported unchanged public behavior/contracts and the latest successful 1,822 backend/799 frontend verification plus local runtime startup. No source edit.
+
+## Local commit without push — 2026-11-06
+
+**Timestamp**: 2026-11-06T07:37:14Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit chưa push"
+**AI Response**: Reviewed current diff, whitespace and verified-source hashes; staging the scoped U05/U09/U15 formatting/refactor, three characterization test files and corresponding AI-DLC documentation as one descriptive local commit on fix/u05-u09-u15. Source unchanged since the passing backend 1,822/frontend 799 checks; no redundant runtime rerun required. Preserve ignored logs/credentials and leave local apps running.
+**Context**: Explicit local commit authorization only. No push, remote write, PR, merge or deployment.
+
+## U05/U09 JDBC direction confirmed — 2026-11-06
+
+**Timestamp**: 2026-11-06T08:52:10Z
+**Requested by:** Quang Hung
+**User Input**: "tôi vừa discard changes, h tôi k muốn u05 u09 dùng hết jdbc, nhớ sửa lại cả dự án chỉ dùng jdbc trong doc aidlc"
+**AI Response**: Verified a clean checkout after discard and asked to resolve conflicting wording before editing. Stopped the prior JPA migration; no discarded changes restored.
+**Context**: Direction clarification.
+
+## U05/U09 JDBC clarification answer — 2026-11-06
+
+**Timestamp**: 2026-11-06T08:52:10Z
+**Requested by:** Quang Hung
+**User Input**: "Chuyển U05/U09 sang JDBC và sửa AI-DLC quy định toàn dự án dùng JDBC"
+**AI Response**: Proceed with U05/U09 JDBC-only code and project-wide JDBC policy in AI-DLC. U05 already uses JDBC; migrate U09 evaluation/proposal adapters, preserve contracts/schema/locks/versions, characterize on PostgreSQL before editing and run fresh verification. Document other units' remaining JPA as migration gaps.
+**Context**: Other unit code/global JPA infrastructure/frontend, live migrations/restarts and commit/push outside scope. Security/resiliency retained; PBT disabled.
+
+## U05/U09 JDBC implementation completed — 2026-11-06
+
+**Timestamp**: 2026-11-06T09:27:28Z
+**Requested by:** Quang Hung
+**User Input**: "Chuyển U05/U09 sang JDBC và sửa AI-DLC quy định toàn dự án dùng JDBC"
+**AI Response**: Kept U05 JDBC unchanged; migrated U09 evaluation/proposal adapters to NamedParameterJdbcTemplate, replaced JPA mappings with plain JSON rows and removed Spring Data interfaces. Preserved contracts/schema/JSONB, locks, explicit CAS/version and transaction/audit boundaries. Added a scoped JDBC architecture rule and full-migration PostgreSQL regressions. Updated global conventions, all unit tech-stack/logical-component descriptions, affected historical-plan override notices, current baseline/decision register, U09 current implementation and remaining JPA gaps. Baseline 209 behavior/other-rule cases passed with JDBC rule RED; after migration 210 passed, expanded focused 446 passed. Final isolated full verify: 1,830 tests in 236 suites, zero failures/errors/skips, executable JAR built; required PostgreSQL 31 + 2 + 10 + 1 passed. Independent review documentation finding fixed; explicit no-op save/version difference characterized and documented. Verified 1,008 input hashes, artifact manifest, obsolete JPA class removal, whitespace and local links.
+**Context**: Standard target repackage failed while the local backend held the JAR; app was not stopped/restarted. Executable artifact is .tmp/jdbc-transition-20261106/target/platform-backend-0.1.0-SNAPSHOT.jar; backend/target currently contains a thin JAR and must be rebuilt when unlocked for a normal launch. One isolated full attempt hit an AI fixture PostgreSQL EOF; separate five-case rerun and final full rerun passed without source fixes. U04/U13/U14 code remains JPA pending separate migration. No frontend test, authenticated UI/provider/load acceptance, live migration, commit or push. Security/resiliency scope retained; PBT disabled. Evidence: construction/build-and-test/2026-11-06-u05-u09-jdbc-results.md.
+
+## Restart JDBC backend/frontend and rerun tests — 2026-11-06
+
+**Timestamp**: 2026-11-06T09:36:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi restart fe,be chạy test"
+**AI Response**: Verified app process ownership on ports 8080/3000, captured 1,572 source/config hashes and generated-config backups, stopped only the identified backend and frontend processes, restarted existing Mailpit and launched fresh full backend verify plus frontend test/lint/typecheck/build. Rebuild the standard executable JAR now that the old process released its lock, then start both apps and verify HTTP readiness. Preserve all pending JDBC/doc changes.
+**Context**: Explicit restart/test authorization; no source/dependency/schema change, commit/push or deployment. Existing Docker data/services retained; security/resiliency scope retained, PBT disabled. Evidence in progress: construction/build-and-test/2026-11-06-jdbc-restart-test-results.md.
+
+## JDBC restart/test completion — 2026-11-06
+
+**Timestamp**: 2026-11-06T09:47:58Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi restart fe,be chạy test"
+**AI Response**: Fresh backend normal-target Maven verify passed all 1,830 tests/236 suites with no failures/errors/skips; executable JAR repackage now succeeds. Required PostgreSQL suites 31 + 2 + 10 + 1 passed. Frontend 799 tests/116 files plus lint/typecheck/production build and final typecheck passed. Restarted backend PID 50084 on 8080 with local,worker and frontend listener 3184/launcher 43712 on 3000. Seven HTTP checks passed: backend health/liveness/readiness UP, frontend root/login 200, protected API direct/via frontend 401. Live Flyway validated 32 migrations with no new migration. Restored Next-generated next-env.d.ts/AGENTS.md to exact snapshots; 1,572 source/config hashes unchanged. Preserved pending JDBC changes, existing data and other processes; left apps/dependencies running.
+**Context**: Restart/test request completed. No product source/dependency/schema change, authenticated UI/provider/load acceptance, commit, push or deployment. Mailpit healthy; old Docker worker remains stopped. Security/resiliency retained, PBT disabled. Evidence: construction/build-and-test/2026-11-06-jdbc-restart-test-results.md.
+
+## Clear local JDBC commits requested — 2026-11-06
+
+**Timestamp**: 2026-11-06T09:55:36Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit rõ ràng"
+**AI Response**: Reviewed the scoped production/test/script and documentation diffs, whitespace and fresh verification evidence. Prepared two descriptive local changesets: U09 JPA-to-JDBC persistence with regression/architecture/DB guards, then project-wide AI-DLC JDBC policy and migration/restart evidence. Verified all 1,572 source/config hashes still match the successful 1,830 backend and 799 frontend checks; required PostgreSQL suites 31 + 2 + 10 + 1 pass. No additional runtime rerun needed for staging/metadata-only work. Exclude scratch logs, credentials and generated artifacts; leave local services running.
+**Context**: Explicit local commit authorization only; no push, remote action, merge, deploy or Git configuration change. All pending paths are classified within the requested JDBC work and documentation scope.
+
+## Simplify U05 repository names — 2026-11-06
+
+**Timestamp**: 2026-11-06T10:23:47Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] chỉ cần để tên repository như bthg là được k cần thêm prefix JDBC đâu"
+**AI Response**: Rename the three concrete U05 repository classes/files shown in the screenshot to AcademicsReadRepository, CourseClassRepository and EnrollmentRepository; update all constructor/method-reference/test callers and the related test field. Keep interfaces, JDBC, SQL, transaction and public behavior unchanged. Add the no-Jdbc-prefix naming rule to shared AI-DLC conventions and update the current U05 summary; run existing focused tests rather than adding tests that mirror a rename.
+**Context**: Naming-only scope in U05; other unit repositories remain outside this edit. No automatic app restart, commit, push, dependency/schema change or historical evidence rewrite. Security/resiliency scope retained, PBT disabled.
+
+## U05 repository naming verification completed — 2026-11-06
+
+**Timestamp**: 2026-11-06T10:29:01Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] chỉ cần để tên repository như bthg là được k cần thêm prefix JDBC đâu"
+**AI Response**: Renamed the three concrete U05 repositories/files to AcademicsReadRepository, CourseClassRepository and EnrollmentRepository; synchronized all test/constructor/method-reference callers and naming documentation. Verified the five Java files match exactly the planned identifier substitutions, leaving SQL, guards, transaction/API and behavior text unchanged. Fresh compilation of 718 main/246 test sources and 200 Academics/Architecture cases passed with zero failures/errors/skips. Old source references/class output absent; whitespace and documentation checklist validation passed.
+**Context**: No new implementation-mirroring tests, full backend/frontend/runtime rerun, dependency/schema change, restart, commit or push. Existing local apps retained. Evidence: construction/plans/code-generation-plan/2026-11-06-u05-repository-names.md; scratch logs excluded from source control.
+
+## U05 repository naming local commit requested — 2026-11-06
+
+**Timestamp**: 2026-11-06T10:33:03Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit"
+**AI Response**: Reviewed the naming-only diff and confirmed all five Java files still match the exact intended identifier replacements validated by the successful 200 Academics/Architecture tests. Prepare one descriptive local commit with the three repository renames, synchronized tests and corresponding AI-DLC naming/verification documentation. No redundant test rerun for unchanged source; exclude scratch artifacts and retain running apps.
+**Context**: Explicit local commit authorization supersedes the prior no-automatic-commit naming scope. No push, remote write, restart, merge, deployment or Git configuration change.
+
+## Staging pull request requested — 2026-11-06
+
+**Timestamp**: 2026-11-06T10:39:52Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi tạo pull request lên staging"
+**AI Response**: Refreshed origin refs, confirmed staging is an ancestor of the current feature branch and found no open PR for this head. Prepare a review-ready PR from fix/u05-u09-u15 to staging, covering the U05/U09/U15 formatting/simplification, U09 JDBC migration, project-wide JDBC documentation and U05 repository names. Distinguish the passing full JDBC verification (1,830 backend/799 frontend) from the latest naming-only 200-case focused run. Include the explicit no-op-save version behavior, remaining U04/U13/U14 JPA migration debt and verification limits in the description. Push only the scoped branch/doc delivery record if needed, then create and verify the PR.
+**Context**: User explicitly authorizes PR creation and the necessary branch push; supersedes the prior local-only delivery scope. No merge, deploy, reviewer message, app restart or forced push. CI results remain pending until observed.

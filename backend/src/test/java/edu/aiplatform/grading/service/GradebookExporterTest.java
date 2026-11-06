@@ -12,7 +12,7 @@ class GradebookExporterTest {
     @Test
     void csvQuotesTextAndNeutralizesFormulas() throws Exception {
         var out = new ByteArrayOutputStream();
-        new GradebookExporter().write(List.of(List.of("Name", "Feedback"), List.of("=SUM(1,2)", " \t@evil\n\"quote\"")),
+        new GradebookExporter().writeGradebook(List.of(List.of("Name", "Feedback"), List.of("=SUM(1,2)", " \t@evil\n\"quote\"")),
                 "csv", out);
         var value = out.toString(StandardCharsets.UTF_8);
         assertThat(value).contains("'=SUM(1,2)").contains("' \t@evil").contains("\"\"quote\"\"");
@@ -21,7 +21,7 @@ class GradebookExporterTest {
     @Test
     void xlsxIsWellFormedAndUsesTextCellsInsteadOfFormula() throws Exception {
         var out = new ByteArrayOutputStream();
-        new GradebookExporter().write(List.of(List.of("=1+1", "Tiếng Việt & < >")), "xlsx", out);
+        new GradebookExporter().writeGradebook(List.of(List.of("=1+1", "Tiếng Việt & < >")), "xlsx", out);
         var entries = new HashMap<String, String>();
         try (var zip = new ZipInputStream(new ByteArrayInputStream(out.toByteArray()))) {
             for (var e = zip.getNextEntry(); e != null; e = zip.getNextEntry()) {

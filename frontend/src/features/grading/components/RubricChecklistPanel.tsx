@@ -8,7 +8,7 @@ import type {
   StructuredFeedbackItem,
 } from "../model/types";
 
-import { itemPoints, checklistPoints } from "../model/rubricScores";
+import { resolveItemPoints, calculateChecklistPoints } from "../model/rubricScores";
 
 export type ChecklistProps = {
   checks: Checks;
@@ -55,7 +55,7 @@ export function RubricChecklist({
     <ul className="flex flex-col gap-1.5">
       {items.map(({ criterion, item }) => {
         const max = Number(item.points);
-        const value = Number(itemPoints(rubric.rubricId, item.itemId, max, checks, itemScores));
+        const value = Number(resolveItemPoints(rubric.rubricId, item.itemId, max, checks, itemScores));
         const achieved = value === max;
         const fbItem = structuredFeedback?.items?.find(
           (entry) => entry.rubricId === rubric.rubricId && entry.itemId === item.itemId,
@@ -121,7 +121,7 @@ export function RubricChecklistPanel({ rubrics, partTitles = {}, ...props }: Che
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <span className="min-w-0 flex-1 break-words text-sm font-semibold text-ink">{title}</span>
           <span className="shrink-0 text-sm font-bold tabular-nums text-primary-ink">
-            {checklistPoints([rubric], props.checks, props.itemScores).toFixed(2)} / {Number(rubric.maxPoints).toFixed(2)} điểm
+            {calculateChecklistPoints([rubric], props.checks, props.itemScores).toFixed(2)} / {Number(rubric.maxPoints).toFixed(2)} điểm
           </span>
         </div>
         <RubricChecklist rubric={rubric} {...props} />

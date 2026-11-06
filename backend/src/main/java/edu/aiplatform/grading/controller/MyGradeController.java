@@ -16,25 +16,28 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/me")
 public class MyGradeController {
-    private final GradebookService grades;
+    private final GradebookService gradebookService;
 
-    public MyGradeController(GradebookService grades) {
-        this.grades = grades;
+    public MyGradeController(GradebookService gradebookService) {
+        this.gradebookService = gradebookService;
     }
 
     @GetMapping("/grades")
-    public List<StudentGradeView> list(@AuthenticationPrincipal Actor actor, @RequestParam UUID classId) {
-        return grades.myGrades(actor, classId);
+    public List<StudentGradeView> listMyGrades(@AuthenticationPrincipal Actor actor,
+            @RequestParam UUID classId) {
+        return gradebookService.listMyGrades(actor, classId);
     }
 
     @GetMapping("/grades/attempts/{attemptId}")
-    public StudentGradeView attempt(@AuthenticationPrincipal Actor actor, @PathVariable UUID attemptId) {
-        return grades.forAttempt(actor, attemptId);
+    public StudentGradeView loadAttemptGrade(@AuthenticationPrincipal Actor actor,
+            @PathVariable UUID attemptId) {
+        return gradebookService.loadAttemptGrade(actor, attemptId);
     }
 
     @GetMapping("/grade-distributions")
-    public List<GradeDistributionCalculator.Bucket> distributions(@AuthenticationPrincipal Actor actor,
-            @RequestParam UUID classId, @RequestParam UUID assignmentId) {
-        return grades.distribution(actor, classId, assignmentId, true);
+    public List<GradeDistributionCalculator.Bucket> loadGradeDistribution(
+            @AuthenticationPrincipal Actor actor, @RequestParam UUID classId,
+            @RequestParam UUID assignmentId) {
+        return gradebookService.loadDistribution(actor, classId, assignmentId, true);
     }
 }

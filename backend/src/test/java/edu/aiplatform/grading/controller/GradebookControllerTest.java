@@ -20,10 +20,10 @@ class GradebookControllerTest {
         var classId = UUID.randomUUID();
         var student = UUID.randomUUID();
         var row = new GradebookRow(new Person(student, "Student", "s@school.test"), List.of());
-        when(service.student(actor, classId, student)).thenReturn(row);
+        when(service.loadStudentGrades(actor, classId, student)).thenReturn(row);
         assertThat(new GradebookController(service, mock(GradebookExporter.class))
-                .student(actor, classId, student)).isSameAs(row);
-        verify(service).student(actor, classId, student);
+                .loadStudentGrades(actor, classId, student)).isSameAs(row);
+        verify(service).loadStudentGrades(actor, classId, student);
         verifyNoMoreInteractions(service);
     }
 }

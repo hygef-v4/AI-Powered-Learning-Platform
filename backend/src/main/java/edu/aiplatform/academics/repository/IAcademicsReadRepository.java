@@ -10,16 +10,29 @@ import java.util.UUID;
 
 /** U05-only scoped read queries; limits/offsets validated by persistence. */
 public interface IAcademicsReadRepository {
-    List<CourseClass> listForManager(Collection<UUID> subjectIds, String query, ClassStatus status, int limit, int offset);
-    List<CourseClass> listForTeacher(UUID accountId, String query, ClassStatus status, int limit, int offset);
-    List<CourseClass> listForStudent(UUID accountId, String query, ClassStatus status, int limit, int offset);
+    List<CourseClass> listForManager(Collection<UUID> subjectIds, String query, ClassStatus status,
+            int limit, int offset);
+
+    List<CourseClass> listForTeacher(UUID accountId, String query, ClassStatus status, int limit,
+            int offset);
+
+    List<CourseClass> listForStudent(UUID accountId, String query, ClassStatus status, int limit,
+            int offset);
+
     List<CourseClass> listTaught(UUID accountId);
+
     List<CourseClass> listOfSubject(UUID subjectId);
+
     Map<ClassStatus, Long> countClassesByStatus();
+
     Map<UUID, Integer> countClassesOfSubjects(Collection<UUID> subjectIds);
+
     int countUnarchivedClasses(UUID subjectId);
+
     long countActiveEnrollments();
+
     Map<UUID, EnrollmentCounts> enrollmentCounts(Collection<UUID> classIds);
 
-    record EnrollmentCounts(long active, long removed) { }
+    record EnrollmentCounts(long active, long removed) {
+    }
 }

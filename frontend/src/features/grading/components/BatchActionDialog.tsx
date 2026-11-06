@@ -2,10 +2,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Alert, Button, Dialog } from "@/shared/ui";
 import { Icon } from "@/shared/ui/Icon";
-import { aiRequest } from "./AiProposalPanel";
+import { buildAiRequest } from "./AiProposalPanel";
 import type { SourceChoice } from "@/shared/ai";
 import { gradingApi } from "../api";
-import { message } from "../hooks/useResource";
+import { formatErrorMessage } from "../hooks/useResource";
 import type { BatchResult, ItemVersion } from "../model/types";
 
 const OUTCOME_CODE_MESSAGES: Record<string, string> = {
@@ -38,7 +38,7 @@ export function BatchActionDialog({
     if (action !== "ai" || items.length === 0) return;
     let active = true;
     const key = JSON.stringify(items);
-    void gradingApi.estimateBatch(items).then(
+    void gradingApi.estimateProposalTokens(items).then(
       (value) => {
         if (active) setEstimate({ key, state: "ready", tokens: value.estimatedTokens });
       },
@@ -57,9 +57,9 @@ export function BatchActionDialog({
     try {
       let completed: BatchResult;
       if (action === "ai") {
-        completed = await gradingApi.requestBatch(items, aiRequest(choice));
+        completed = await gradingApi.requestProposals(items, buildAiRequest(choice));
       } else {
-        completed = await gradingApi[action](items);
+        completed = await gradingApi[action === "finalize" ? "finalizeGrades" : "publishGrades"](items);
       }
       setResult(completed);
       // Snapshot success before refreshing: a filtered list can remove the completed rows.
@@ -69,7 +69,7 @@ export function BatchActionDialog({
       }
       onDone();
     } catch (e) {
-      setError(message(e));
+      setError(formatErrorMessage(e));
     } finally {
       setBusy(false);
     }

@@ -11,13 +11,16 @@ import java.util.regex.Pattern;
 public final class EnrollmentListParser {
     public static final int MAX_ROWS = 200;
     public static final int MAX_BYTES = 100 * 1024;
-    private static final Pattern EMAIL = Pattern.compile("^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$");
+    private static final Pattern EMAIL = Pattern.compile(
+            "^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$");
 
-    private EnrollmentListParser() { }
+    private EnrollmentListParser() {
+    }
 
-    public record Row(int lineNumber, String email, EnrollmentResult error) { }
+    public record Row(int lineNumber, String email, EnrollmentResult error) {
+    }
 
-    public static List<Row> parse(String input) {
+    public static List<Row> parseEnrollmentRows(String input) {
         if (input == null || input.getBytes(StandardCharsets.UTF_8).length > MAX_BYTES) {
             throw new AcademicRuleException("LIST_TOO_LARGE", "Danh sách tối đa 100 KB");
         }
@@ -28,19 +31,26 @@ public final class EnrollmentListParser {
         boolean first = true;
         for (int i = 0; i < lines.length; i++) {
             String value = lines[i].strip();
-            if (value.isEmpty()) continue;
+            if (value.isEmpty())
+                continue;
             if (value.startsWith("\"") && value.endsWith("\"") && value.length() >= 2) {
                 value = value.substring(1, value.length() - 1).replace("\"\"", "\"").strip();
             }
-            if (first && value.equalsIgnoreCase("email")) { first = false; continue; }
+            if (first && value.equalsIgnoreCase("email")) {
+                first = false;
+                continue;
+            }
             first = false;
-            if (rows.size() == MAX_ROWS) throw new AcademicRuleException("TOO_MANY_ROWS", "Danh sách tối đa 200 dòng");
+            if (rows.size() == MAX_ROWS)
+                throw new AcademicRuleException("TOO_MANY_ROWS", "Danh sách tối đa 200 dòng");
             String email = value.toLowerCase(Locale.ROOT);
-            EnrollmentResult error = email.length() > 254 || !EMAIL.matcher(email).matches() ? EnrollmentResult.INVALID_EMAIL :
-                    !seen.add(email) ? EnrollmentResult.DUPLICATE_IN_LIST : null;
+            EnrollmentResult error = email.length() > 254 || !EMAIL.matcher(email).matches()
+                    ? EnrollmentResult.INVALID_EMAIL
+                    : !seen.add(email) ? EnrollmentResult.DUPLICATE_IN_LIST : null;
             rows.add(new Row(i + 1, email, error));
         }
-        if (rows.isEmpty()) throw new AcademicRuleException("EMPTY_LIST", "Danh sách cần ít nhất một email");
+        if (rows.isEmpty())
+            throw new AcademicRuleException("EMPTY_LIST", "Danh sách cần ít nhất một email");
         return List.copyOf(rows);
     }
 }

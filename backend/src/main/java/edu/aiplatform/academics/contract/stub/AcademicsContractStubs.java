@@ -24,8 +24,8 @@ public class AcademicsContractStubs {
         return Stubs.announce(IClassAccess.class, new IClassAccess() {
             @Override
             public Optional<ClassRef> getClassRef(UUID classId) {
-                return Optional.of(new ClassRef(classId, Stubs.derivedId("subject", classId), "MAU", "Lớp mẫu",
-                        ClassStatus.OPEN, null, false));
+                return Optional.of(new ClassRef(classId, Stubs.derivedId("subject", classId), "MAU",
+                        "Lớp mẫu", ClassStatus.OPEN, null, false));
             }
 
             @Override

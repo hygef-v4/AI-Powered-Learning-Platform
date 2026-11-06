@@ -5,9 +5,9 @@ import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button, ClickableRow, Dialog, Icon, IconButton, PageNav, Pill, Section, Select, TableFrame, Td, TextInput, Th, cx, showToast } from "@/shared/ui";
 import { PersonPicker } from "./PersonPicker";
-import { formatDate, operationError } from "../model/format";
+import { formatDate, formatOperationError } from "../model/format";
 import { parseEnrollmentList, type EnrollmentPreviewRow } from "../model/enrollmentList";
-import { resultLabels, type EnrollmentRowResult, type EnrollmentView, type PersonView } from "../model/types";
+import { ENROLLMENT_RESULT_LABELS, type EnrollmentRowResult, type EnrollmentView, type PersonView } from "../model/types";
 
 const PAGE_SIZE = 20;
 const PREVIEW_SIZE = 10;
@@ -23,7 +23,7 @@ export function EnrollmentResultTable({ rows }: { rows: EnrollmentRowResult[] })
     <tbody>{rows.map((row) => <tr key={row.line}>
       <Td className="text-muted">{row.line}</Td>
       <Td>{row.email}</Td>
-      <Td><Pill tone={OK_RESULTS.has(row.result) ? "success" : "danger"}>{resultLabels[row.result]}</Pill></Td>
+      <Td><Pill tone={OK_RESULTS.has(row.result) ? "success" : "danger"}>{ENROLLMENT_RESULT_LABELS[row.result]}</Pill></Td>
     </tr>)}</tbody>
   </TableFrame>;
 }
@@ -62,11 +62,11 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
   // Trang giảng viên (chỉ xem) không có cột STT.
   const numbered = editable || includeRemoved;
   const columns = 3 + (numbered ? 1 : 0) + (groupNames !== undefined ? 1 : 0) + (actions ? 1 : 0);
-  async function change(student: EnrollmentView, next: "ACTIVE" | "REMOVED") {
+  async function handleEnrollmentChange(student: EnrollmentView, next: "ACTIVE" | "REMOVED") {
     if (!onStatusChange || busy) return;
     setBusy(true); setError("");
     try { await onStatusChange(student.accountId, next); setRemoving(null); if (next === "REMOVED") showToast("Đã gỡ sinh viên", "danger"); else showToast("Đã thêm lại sinh viên"); }
-    catch (cause) { setError(operationError(cause)); } finally { setBusy(false); }
+    catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
   }
   const addButtons = editable && (onEnroll || onBatch) ? <div className="flex flex-wrap gap-2">
     {onBatch && <Button icon="upload_file" onClick={() => setImporting((open) => !open)} aria-expanded={importing}>Thêm theo danh sách</Button>}
@@ -119,7 +119,7 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
               <Td className="text-muted">{formatDate(student.enrolledAt)}</Td>
               {actions && <Td className="text-right">{student.status === "ACTIVE"
                 ? <IconButton icon="trash" label={`Gỡ ${student.name}`} disabled={busy} className="text-danger! hover:bg-danger-soft" onClick={() => { setError(""); setRemoving(student); }} />
-                : <IconButton icon="person_add" label={`Thêm lại ${student.name}`} disabled={busy} className="text-primary-ink! hover:bg-primary-soft" onClick={() => void change(student, "ACTIVE")} />}</Td>}
+                : <IconButton icon="person_add" label={`Thêm lại ${student.name}`} disabled={busy} className="text-primary-ink! hover:bg-primary-soft" onClick={() => void handleEnrollmentChange(student, "ACTIVE")} />}</Td>}
             </>;
             return onView ? <ClickableRow key={student.accountId} onClick={() => onView(student)}>{cells}</ClickableRow> : <tr key={student.accountId}>{cells}</tr>;
           })}
@@ -130,7 +130,7 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
     </section>
     {adding && onEnroll && <AddStudentDialog candidates={candidates} loadCandidates={loadCandidates} onEnroll={onEnroll} onClose={() => setAdding(false)} />}
     <Dialog open={removing !== null} title="Gỡ sinh viên khỏi lớp?" onClose={() => setRemoving(null)} dismissible={!busy}
-      footer={<Button variant="danger" disabled={busy} onClick={() => removing && void change(removing, "REMOVED")} data-testid="enrollment-remove-confirm">Gỡ sinh viên</Button>}>
+      footer={<Button variant="danger" disabled={busy} onClick={() => removing && void handleEnrollmentChange(removing, "REMOVED")} data-testid="enrollment-remove-confirm">Gỡ sinh viên</Button>}>
       <p>Bạn có chắc muốn gỡ {removing?.name} khỏi lớp không?</p>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
     </Dialog>
@@ -146,7 +146,7 @@ function AddStudentDialog({ candidates, loadCandidates, onEnroll, onClose }: { c
     if (!selected || busy) return;
     setBusy(true); setError("");
     try { await onEnroll(selected.id); showToast("Đã thêm sinh viên"); onClose(); }
-    catch (cause) { setError(operationError(cause)); } finally { setBusy(false); }
+    catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
   }
   return <Dialog open title="Thêm sinh viên" size="lg" onClose={onClose} dismissible={!busy}
     footer={<Button variant="primary" disabled={busy || !selected} onClick={() => void add()} data-testid="enrollment-add-submit">Thêm</Button>}>
@@ -173,7 +173,7 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
   function edit(text: string) { setInput(text); setPreview(null); setResults(null); setError(""); }
   function review(text = input) {
     try { setPreview(parseEnrollmentList(text)); setPage(0); setError(""); }
-    catch (cause) { setPreview(null); setError(operationError(cause)); }
+    catch (cause) { setPreview(null); setError(formatOperationError(cause)); }
   }
   async function choose(next: File | undefined) {
     if (file.current) file.current.value = "";
@@ -184,7 +184,7 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
     edit(text);
     review(text);
   }
-  async function submit() {
+  async function handleSubmit() {
     if (busy || !valid) return;
     setBusy(true); setError("");
     try {
@@ -193,7 +193,7 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
       if (added) showToast(`Đã thêm ${added} sinh viên`);
       if (rows.every((row) => OK_RESULTS.has(row.result))) { onClose(); return; }
       setResults(rows); setPreview(null);
-    } catch (cause) { setError(operationError(cause)); } finally { setBusy(false); }
+    } catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
   }
   const shown = preview?.slice(page * PREVIEW_SIZE, (page + 1) * PREVIEW_SIZE) ?? [];
   return <Section title="Thêm sinh viên theo danh sách" icon="upload_file"
@@ -225,13 +225,13 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
         <tbody>{shown.map((row) => <tr key={row.line}>
           <Td className="text-muted">{row.line}</Td>
           <Td>{row.email}</Td>
-          <Td>{row.error ? <Pill tone="danger">{resultLabels[row.error]}</Pill> : <Pill tone="success">Hợp lệ</Pill>}</Td>
+          <Td>{row.error ? <Pill tone="danger">{ENROLLMENT_RESULT_LABELS[row.error]}</Pill> : <Pill tone="success">Hợp lệ</Pill>}</Td>
         </tr>)}</tbody>
       </TableFrame>
       <PageNav page={page} size={PREVIEW_SIZE} total={preview.length} onPage={setPage} />
       <div className="flex justify-end gap-2 border-t border-line pt-3.5">
         <Button disabled={busy} onClick={onClose}>Hủy</Button>
-        <Button variant="primary" icon="check" disabled={busy || !valid} onClick={() => void submit()} data-testid="enrollment-list-submit">{`Thêm ${valid} sinh viên`}</Button>
+        <Button variant="primary" icon="check" disabled={busy || !valid} onClick={() => void handleSubmit()} data-testid="enrollment-list-submit">{`Thêm ${valid} sinh viên`}</Button>
       </div>
     </>}
     {results && <EnrollmentResultTable rows={results} />}
