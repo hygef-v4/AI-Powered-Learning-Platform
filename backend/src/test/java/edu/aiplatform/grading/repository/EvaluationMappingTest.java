@@ -17,9 +17,9 @@ import org.junit.jupiter.api.Test;
 class EvaluationMappingTest {
     @Test
     void aggregateMutationsCannotAutoFlushStaleIndexColumns() {
-        var aggregate = Evaluation.createPendingEvaluation(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
-                "hash", BigDecimal.TEN, "[]", Instant.now());
-        var row = new EvaluationJpaEntity();
+        var aggregate = Evaluation.createPendingEvaluation(UUID.randomUUID(), UUID.randomUUID(),
+                UUID.randomUUID(), UUID.randomUUID(), "hash", BigDecimal.TEN, "[]", Instant.now());
+        var row = new EvaluationRow();
         row.applyEvaluation(aggregate);
         row.version = 3L;
         aggregate.feedback = "mutated after save";
@@ -36,19 +36,21 @@ class EvaluationMappingTest {
     }
 
     @Test
-    void fractionalScoresAndStructuredFeedbackRoundTripInsideExistingJsonDocumentAndOldRowsDefaultEmpty() throws Exception {
-        var aggregate = Evaluation.createPendingEvaluation(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
-                "hash", BigDecimal.TEN, "[]", Instant.now());
+    void fractionalScoresAndStructuredFeedbackRoundTripInsideExistingJsonDocumentAndOldRowsDefaultEmpty()
+            throws Exception {
+        var aggregate = Evaluation.createPendingEvaluation(UUID.randomUUID(), UUID.randomUUID(),
+                UUID.randomUUID(), UUID.randomUUID(), "hash", BigDecimal.TEN, "[]", Instant.now());
         var rubric = UUID.randomUUID();
         var item = UUID.randomUUID();
         aggregate.rubricItemScores = Map.of(rubric, Map.of(item, new BigDecimal("0.50")));
-        aggregate.structuredFeedback = new GradingFeedback(
-                1,
-                new GradingFeedback.Summary(List.of("Tốt"), List.of("Cần sửa"), List.of("Bước tiếp")),
-                List.of(new GradingFeedback.Item(rubric, item, "Minh chứng", "Lý do", "Gợi ý", "q1", false, null)));
+        aggregate.structuredFeedback = new GradingFeedback(1,
+                new GradingFeedback.Summary(List.of("Tốt"), List.of("Cần sửa"),
+                        List.of("Bước tiếp")),
+                List.of(new GradingFeedback.Item(rubric, item, "Minh chứng", "Lý do", "Gợi ý", "q1",
+                        false, null)));
         aggregate.reviewedItemScores = Map.of(rubric, Map.of(item, new BigDecimal("0.50")));
         aggregate.acknowledgedReviewItems = Map.of(rubric, Set.of(item));
-        var row = new EvaluationJpaEntity();
+        var row = new EvaluationRow();
         row.applyEvaluation(aggregate);
         row.version = 1L;
         var viewed = row.mapEvaluation();
@@ -72,11 +74,12 @@ class EvaluationMappingTest {
     }
 
     @Test
-    void proposalDocumentStoresImmutableJsonTextAndIgnoresUnknownPropertiesInBothEntities() throws Exception {
+    void proposalDocumentStoresImmutableJsonTextAndIgnoresUnknownPropertiesInBothEntities()
+            throws Exception {
         var json = new ObjectMapper().findAndRegisterModules();
-        var evaluation = Evaluation.createPendingEvaluation(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
-                "hash", BigDecimal.TEN, "[]", Instant.now());
-        var evalRow = new EvaluationJpaEntity();
+        var evaluation = Evaluation.createPendingEvaluation(UUID.randomUUID(), UUID.randomUUID(),
+                UUID.randomUUID(), UUID.randomUUID(), "hash", BigDecimal.TEN, "[]", Instant.now());
+        var evalRow = new EvaluationRow();
         evalRow.applyEvaluation(evaluation);
         var evalJson = (ObjectNode) json.readTree(evalRow.document);
         evalJson.put("futureEvaluationField", "ignored-safely");
@@ -91,7 +94,7 @@ class EvaluationMappingTest {
         proposal.requestRef = "req-1";
         proposal.status = "PENDING";
         proposal.taskState = "QUEUED";
-        var proposalRow = new GradingProposalJpaEntity();
+        var proposalRow = new GradingProposalRow();
         proposalRow.applyProposal(proposal);
         proposal.status = "MUTATED_IN_MEMORY";
         assertThat(proposalRow.mapProposal().status).isEqualTo("PENDING");
