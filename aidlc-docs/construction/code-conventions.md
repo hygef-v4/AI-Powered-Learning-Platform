@@ -15,6 +15,7 @@
 |---|---|---|
 | Java class, record, enum | `PascalCase`, diễn đạt vai trò | `EvaluationController`, `BatchResult` |
 | Java interface | Tiền tố `I`, không dùng hậu tố `Port` | `IAuthorization`, `IEvaluationRepository` |
+| Repository concrete | Đặt tên theo nghiệp vụ, không thêm tiền tố `Jdbc`/`JDBC`; không đổi tên type framework như JdbcTemplate | `CourseClassRepository`, `EnrollmentRepository` |
 | File Java chứa public top-level type | Trùng tên type | `EvaluationController.java` |
 | Package Java | Chữ thường, theo nghiệp vụ và tầng | `grading.service`, `subjects.repository` |
 | React component và file component | `PascalCase` | `SubjectTable`, `SubjectTable.tsx` |

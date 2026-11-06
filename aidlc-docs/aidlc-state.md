@@ -1,5 +1,9 @@
 # AI-DLC State Tracking
 
+## U05 repository names simplified — 2026-11-06
+
+At the user's screenshot/naming request, removed Jdbc from the three U05 concrete repository class/file names: AcademicsReadRepository, CourseClassRepository and EnrollmentRepository. Updated constructor/method-reference/test callers and the test dependency field, current U05 summary and shared naming conventions; interfaces and NamedParameterJdbcTemplate remain unchanged. No named qualifier references found. Verified all five Java files differ only by the requested identifier replacements, preserving SQL/transactions/API and behavior text. Fresh compilation of 718 main/246 test files and focused Academics/Architecture run passed all 200 cases, zero failures/errors/skips; stale old-name class output absent, whitespace check passed. [Plan and evidence](construction/plans/code-generation-plan/2026-11-06-u05-repository-names.md). Other units, frontend, runtime restart and automatic commit/push outside this naming-only scope. Security/resiliency retained; PBT disabled.
+
 ## JDBC local commit scope — 2026-11-06
 
 User requested clear local commits for the verified JDBC work. Delivery grouping: one U09 JDBC code/test/required-DB-guard commit, followed by one project-wide AI-DLC policy/implementation/verification documentation commit. U05 remains JDBC unchanged; U04/U13/U14 remain separately documented JPA migration debt. Reviewed scoped diff and whitespace; 1,572 source/config hashes match the passing 1,830-backend/799-frontend verification, so no redundant runtime rerun. Exclude ignored scratch logs, credentials and build artifacts; retain running local apps. No push, remote write, merge, deployment or Git configuration change authorized by this request.

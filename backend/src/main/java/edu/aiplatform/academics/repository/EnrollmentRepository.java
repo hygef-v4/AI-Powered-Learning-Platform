@@ -15,10 +15,10 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class JdbcEnrollmentRepository implements IEnrollmentRepository {
+public class EnrollmentRepository implements IEnrollmentRepository {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    public JdbcEnrollmentRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+    public EnrollmentRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
@@ -27,7 +27,7 @@ public class JdbcEnrollmentRepository implements IEnrollmentRepository {
         return namedParameterJdbcTemplate.query(
                 "select * from enrollments where class_id = :classId and account_id = :accountId",
                 Map.of("classId", classId, "accountId", accountId),
-                JdbcEnrollmentRepository::mapEnrollment).stream().findFirst();
+                EnrollmentRepository::mapEnrollment).stream().findFirst();
     }
 
     @Override
@@ -38,7 +38,7 @@ public class JdbcEnrollmentRepository implements IEnrollmentRepository {
                         + "order by enrolled_at, account_id limit :limit offset :offset",
                 Map.of("classId", classId, "allRows", !activeOnly, "limit", limit, "offset",
                         offset),
-                JdbcEnrollmentRepository::mapEnrollment);
+                EnrollmentRepository::mapEnrollment);
     }
 
     @Override

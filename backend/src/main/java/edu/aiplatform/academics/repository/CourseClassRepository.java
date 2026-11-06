@@ -17,17 +17,17 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class JdbcCourseClassRepository implements ICourseClassRepository {
+public class CourseClassRepository implements ICourseClassRepository {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    public JdbcCourseClassRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+    public CourseClassRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
     @Override
     public Optional<CourseClass> find(UUID classId) {
         return namedParameterJdbcTemplate.query("select * from course_classes where id = :id",
-                Map.of("id", classId), JdbcCourseClassRepository::mapCourseClass).stream()
+                Map.of("id", classId), CourseClassRepository::mapCourseClass).stream()
                 .findFirst();
     }
 
@@ -37,7 +37,7 @@ public class JdbcCourseClassRepository implements ICourseClassRepository {
         return namedParameterJdbcTemplate.query(
                 "select * from course_classes where subject_id = :subjectId order by code, id limit :limit offset :offset",
                 Map.of("subjectId", subjectId, "limit", limit, "offset", offset),
-                JdbcCourseClassRepository::mapCourseClass);
+                CourseClassRepository::mapCourseClass);
     }
 
     @Override

@@ -10481,3 +10481,27 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **User Input**: "giúp tôi commit rõ ràng"
 **AI Response**: Reviewed the scoped production/test/script and documentation diffs, whitespace and fresh verification evidence. Prepared two descriptive local changesets: U09 JPA-to-JDBC persistence with regression/architecture/DB guards, then project-wide AI-DLC JDBC policy and migration/restart evidence. Verified all 1,572 source/config hashes still match the successful 1,830 backend and 799 frontend checks; required PostgreSQL suites 31 + 2 + 10 + 1 pass. No additional runtime rerun needed for staging/metadata-only work. Exclude scratch logs, credentials and generated artifacts; leave local services running.
 **Context**: Explicit local commit authorization only; no push, remote action, merge, deploy or Git configuration change. All pending paths are classified within the requested JDBC work and documentation scope.
+
+## Simplify U05 repository names — 2026-11-06
+
+**Timestamp**: 2026-11-06T10:23:47Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] chỉ cần để tên repository như bthg là được k cần thêm prefix JDBC đâu"
+**AI Response**: Rename the three concrete U05 repository classes/files shown in the screenshot to AcademicsReadRepository, CourseClassRepository and EnrollmentRepository; update all constructor/method-reference/test callers and the related test field. Keep interfaces, JDBC, SQL, transaction and public behavior unchanged. Add the no-Jdbc-prefix naming rule to shared AI-DLC conventions and update the current U05 summary; run existing focused tests rather than adding tests that mirror a rename.
+**Context**: Naming-only scope in U05; other unit repositories remain outside this edit. No automatic app restart, commit, push, dependency/schema change or historical evidence rewrite. Security/resiliency scope retained, PBT disabled.
+
+## U05 repository naming verification completed — 2026-11-06
+
+**Timestamp**: 2026-11-06T10:29:01Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] chỉ cần để tên repository như bthg là được k cần thêm prefix JDBC đâu"
+**AI Response**: Renamed the three concrete U05 repositories/files to AcademicsReadRepository, CourseClassRepository and EnrollmentRepository; synchronized all test/constructor/method-reference callers and naming documentation. Verified the five Java files match exactly the planned identifier substitutions, leaving SQL, guards, transaction/API and behavior text unchanged. Fresh compilation of 718 main/246 test sources and 200 Academics/Architecture cases passed with zero failures/errors/skips. Old source references/class output absent; whitespace and documentation checklist validation passed.
+**Context**: No new implementation-mirroring tests, full backend/frontend/runtime rerun, dependency/schema change, restart, commit or push. Existing local apps retained. Evidence: construction/plans/code-generation-plan/2026-11-06-u05-repository-names.md; scratch logs excluded from source control.
+
+## U05 repository naming local commit requested — 2026-11-06
+
+**Timestamp**: 2026-11-06T10:33:03Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit"
+**AI Response**: Reviewed the naming-only diff and confirmed all five Java files still match the exact intended identifier replacements validated by the successful 200 Academics/Architecture tests. Prepare one descriptive local commit with the three repository renames, synchronized tests and corresponding AI-DLC naming/verification documentation. No redundant test rerun for unchanged source; exclude scratch artifacts and retain running apps.
+**Context**: Explicit local commit authorization supersedes the prior no-automatic-commit naming scope. No push, remote write, restart, merge, deployment or Git configuration change.

@@ -8,10 +8,10 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class JdbcAcademicsReadRepository implements IAcademicsReadRepository {
+public class AcademicsReadRepository implements IAcademicsReadRepository {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    public JdbcAcademicsReadRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+    public AcademicsReadRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
@@ -65,21 +65,21 @@ public class JdbcAcademicsReadRepository implements IAcademicsReadRepository {
         return namedParameterJdbcTemplate.query(
                 "select c.* from course_classes c where " + scope + filter
                         + " order by c.code, c.id limit :limit offset :offset",
-                args, JdbcCourseClassRepository::mapCourseClass);
+                args, CourseClassRepository::mapCourseClass);
     }
 
     @Override
     public List<CourseClass> listTaught(UUID accountId) {
         return namedParameterJdbcTemplate.query(
                 "select c.* from course_classes c where c.teacher_id = :accountId order by c.code,c.id",
-                Map.of("accountId", accountId), JdbcCourseClassRepository::mapCourseClass);
+                Map.of("accountId", accountId), CourseClassRepository::mapCourseClass);
     }
 
     @Override
     public List<CourseClass> listOfSubject(UUID subjectId) {
         return namedParameterJdbcTemplate.query(
                 "select c.* from course_classes c where c.subject_id = :subjectId order by c.code,c.id",
-                Map.of("subjectId", subjectId), JdbcCourseClassRepository::mapCourseClass);
+                Map.of("subjectId", subjectId), CourseClassRepository::mapCourseClass);
     }
 
     @Override
