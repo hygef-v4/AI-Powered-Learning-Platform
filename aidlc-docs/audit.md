@@ -10746,3 +10746,11 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 > Ghi chú: các mục deploy VPS ngày 2026-11-05 và 2026-11-06 đã thay IP VPS, IP cũ và email Admin bằng `<VPS_IP>`, `<IP_CŨ>`, `<ADMIN_EMAIL>` vì repo public.
 
 ---
+
+## Delivery - Pull Request Into Staging
+**Timestamp**: 2026-11-06T17:20:00Z
+**User Input**: "Chỉ qua staging"
+**AI Response**: "Tạo nhánh feat/vps-auto-deploy từ origin/staging (--no-track), áp lại thay đổi chưa commit; gỡ xung đột audit.md và aidlc-state.md bằng cách giữ bản staging và thêm các mục của phiên này. Năm commit: Brevo API, bỏ giới hạn tên miền, tự động deploy, runbook, ghi AI-DLC. Thay IP VPS và email Admin trong audit bằng ký hiệu thay thế trước khi push vì repo public. Push nhánh và mở PR #52 vào staging. Không merge; merge staging vào main sẽ tự deploy production."
+**Context**: Đưa thay đổi lên staging trước, main sau.
+
+---
