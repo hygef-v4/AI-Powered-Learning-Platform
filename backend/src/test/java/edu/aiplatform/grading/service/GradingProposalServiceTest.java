@@ -11,9 +11,76 @@ import edu.aiplatform.grading.repository.*;
 import edu.aiplatform.identity.contract.*;
 import java.util.*;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import edu.aiplatform.shared.error.ApiException;
 import org.mockito.ArgumentCaptor;
 
 class GradingProposalServiceTest {
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 0, 201})
+    void invalidBatchSizeFailsBeforeProposalOrEstimateWork(int size) {
+        var transactions = mock(GradingProposalTransactions.class);
+        var aiTask = mock(IAiTask.class);
+        var evaluations = mock(IEvaluationRepository.class);
+        var proposals = mock(IGradingProposalRepository.class);
+        var access = mock(GradingAccess.class);
+        var service = new GradingProposalService(transactions, aiTask, evaluations, proposals, access);
+        var actor = new Actor(UUID.randomUUID(), Role.TEACHER);
+        List<ItemVersion> items = size < 0 ? null
+                : Collections.nCopies(size, new ItemVersion(UUID.randomUUID(), 0));
+
+        assertThatThrownBy(() -> service.requestProposals(actor,
+                new AiBatch(items, new AiRequest(null, null, "batch"))))
+                .isInstanceOfSatisfying(ApiException.class, error -> {
+                    assertThat(error.status().value()).isEqualTo(400);
+                    assertThat(error.code()).isEqualTo("INVALID_BATCH");
+                    assertThat(error.getMessage()).isEqualTo("Batch must contain 1–200 items");
+                });
+        assertThatThrownBy(() -> service.estimateProposalTokens(actor, new Batch(items)))
+                .isInstanceOfSatisfying(ApiException.class, error -> {
+                    assertThat(error.status().value()).isEqualTo(400);
+                    assertThat(error.code()).isEqualTo("INVALID_BATCH");
+                    assertThat(error.getMessage()).isEqualTo("Batch must contain 1–200 items");
+                });
+        verifyNoInteractions(transactions, aiTask, evaluations, proposals, access);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 200})
+    void boundaryBatchSizesPreserveProposalAndEstimateResults(int size) {
+        var transactions = mock(GradingProposalTransactions.class);
+        var aiTask = mock(IAiTask.class);
+        var evaluations = mock(IEvaluationRepository.class);
+        var proposal = new GradingProposal();
+        proposal.status = "READY";
+        when(transactions.prepareProposal(any(), any(), any())).thenReturn(
+                new GradingProposalTransactions.Prepared(proposal, null, false, null));
+        when(transactions.estimateTokens(any(), any(), anyLong())).thenReturn(5L);
+        var items = java.util.stream.IntStream.range(0, size).mapToObj(index -> {
+            var evaluation = new Evaluation();
+            evaluation.id = UUID.randomUUID();
+            evaluation.classId = UUID.randomUUID();
+            when(evaluations.findById(evaluation.id)).thenReturn(Optional.of(evaluation));
+            return new ItemVersion(evaluation.id, 0);
+        }).toList();
+        var service = new GradingProposalService(transactions, aiTask, evaluations,
+                mock(IGradingProposalRepository.class), mock(GradingAccess.class));
+        var actor = new Actor(UUID.randomUUID(), Role.TEACHER);
+
+        var result = service.requestProposals(actor,
+                new AiBatch(items, new AiRequest(null, null, "batch")));
+        var estimate = service.estimateProposalTokens(actor, new Batch(items));
+
+        assertThat(result.items()).hasSize(size)
+                .allSatisfy(item -> assertThat(item.outcome()).isEqualTo("READY"));
+        assertThat(estimate.items()).isEqualTo(size);
+        assertThat(estimate.estimatedTokens()).isEqualTo(size * 5L);
+        verify(transactions, times(size)).prepareProposal(eq(actor), any(), any());
+        verify(transactions, times(size)).estimateTokens(eq(actor), any(), eq(0L));
+        verifyNoInteractions(aiTask);
+    }
+
     @Test
     void longestBatchReferenceDerivesBoundedStablePerItemReference() {
         var tx = mock(GradingProposalTransactions.class);

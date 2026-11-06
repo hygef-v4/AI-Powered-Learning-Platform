@@ -20,8 +20,8 @@ public class SubmissionImageController {
     }
 
     @GetMapping("/{fileId}")
-    public DownloadToken issueDownloadToken(@AuthenticationPrincipal Actor actor, @PathVariable UUID evaluationId,
-            @PathVariable String fileId) {
+    public DownloadToken issueDownloadToken(@AuthenticationPrincipal Actor actor,
+            @PathVariable UUID evaluationId, @PathVariable String fileId) {
         return submissionImageService.issueDownloadToken(actor, evaluationId, fileId);
     }
 }

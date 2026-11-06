@@ -23,18 +23,21 @@ public class MyGradeController {
     }
 
     @GetMapping("/grades")
-    public List<StudentGradeView> listMyGrades(@AuthenticationPrincipal Actor actor, @RequestParam UUID classId) {
+    public List<StudentGradeView> listMyGrades(@AuthenticationPrincipal Actor actor,
+            @RequestParam UUID classId) {
         return gradebookService.listMyGrades(actor, classId);
     }
 
     @GetMapping("/grades/attempts/{attemptId}")
-    public StudentGradeView loadAttemptGrade(@AuthenticationPrincipal Actor actor, @PathVariable UUID attemptId) {
+    public StudentGradeView loadAttemptGrade(@AuthenticationPrincipal Actor actor,
+            @PathVariable UUID attemptId) {
         return gradebookService.loadAttemptGrade(actor, attemptId);
     }
 
     @GetMapping("/grade-distributions")
-    public List<GradeDistributionCalculator.Bucket> loadGradeDistribution(@AuthenticationPrincipal Actor actor,
-            @RequestParam UUID classId, @RequestParam UUID assignmentId) {
+    public List<GradeDistributionCalculator.Bucket> loadGradeDistribution(
+            @AuthenticationPrincipal Actor actor, @RequestParam UUID classId,
+            @RequestParam UUID assignmentId) {
         return gradebookService.loadDistribution(actor, classId, assignmentId, true);
     }
 }

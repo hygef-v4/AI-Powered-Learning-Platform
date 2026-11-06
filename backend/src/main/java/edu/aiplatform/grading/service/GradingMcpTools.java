@@ -20,15 +20,17 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class GradingMcpTools implements IMcpToolProvider {
-    private static final Set<String> ARGUMENT_FIELDS = Set.of("submissionRef", "submissionHash", "proposal",
-            "requestRef", "expectedVersion", "agentLabel", "snapshotFingerprint");
-    private static final Set<String> REFERENCE_FIELDS = Set.of("kind", "id", "classId", "assignmentId");
+    private static final Set<String> ARGUMENT_FIELDS = Set.of("submissionRef", "submissionHash",
+            "proposal", "requestRef", "expectedVersion", "agentLabel", "snapshotFingerprint");
+    private static final Set<String> REFERENCE_FIELDS = Set.of("kind", "id", "classId",
+            "assignmentId");
     private final IEvaluationRepository evaluationRepository;
     private final GradingProposalTransactions gradingProposalTransactions;
     private final ObjectMapper objectMapper;
     private final GradingMcpQueryService gradingMcpQueryService;
 
-    public GradingMcpTools(IEvaluationRepository evaluationRepository, GradingProposalTransactions gradingProposalTransactions, ObjectMapper objectMapper,
+    public GradingMcpTools(IEvaluationRepository evaluationRepository,
+            GradingProposalTransactions gradingProposalTransactions, ObjectMapper objectMapper,
             GradingMcpQueryService gradingMcpQueryService) {
         this.evaluationRepository = evaluationRepository;
         this.gradingProposalTransactions = gradingProposalTransactions;
@@ -64,29 +66,37 @@ public class GradingMcpTools implements IMcpToolProvider {
             var evaluation = findEvaluation(kind, submissionId, classId, assignmentId);
             if (!classId.equals(evaluation.classId) || !assignmentId.equals(evaluation.assignmentId)
                     || !root.has("expectedVersion")
-                    || !root.path("expectedVersion").isIntegralNumber() || root.path("expectedVersion").asLong() < 0)
-                throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid submission reference or version");
+                    || !root.path("expectedVersion").isIntegralNumber()
+                    || root.path("expectedVersion").asLong() < 0)
+                throw ApiException.badRequest("INVALID_MCP_ARGUMENTS",
+                        "Invalid submission reference or version");
             String requestRef = root.path("requestRef").asText();
             if (requestRef.isBlank() || requestRef.length() > 200)
                 throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid request reference");
-            String fingerprint=root.path("snapshotFingerprint").asText();
-            if(!fingerprint.matches("[0-9a-f]{64}"))throw GradingMcpReadProgress.createReadRequiredError();
-            gradingMcpQueryService.requireCompleteRead(actor,evaluation.id,root.path("expectedVersion").asLong(),
-                    root.path("submissionHash").asText(),fingerprint);
-            var proposal = gradingProposalTransactions.recordMcpProposal(actor, evaluation.id, root.path("expectedVersion").asLong(),
-                    root.path("submissionHash").asText(), requestRef, root.get("proposal"),
-                    root.path("agentLabel").asText("Agent"));
-            return new McpToolResult(false, Map.of("proposalId", proposal.id, "status", proposal.status,
-                    "evaluationId",evaluation.id,"reviewUrl",buildReviewUrl(evaluation.id,proposal.id)));
+            String fingerprint = root.path("snapshotFingerprint").asText();
+            if (!fingerprint.matches("[0-9a-f]{64}"))
+                throw GradingMcpReadProgress.createReadRequiredError();
+            gradingMcpQueryService.requireCompleteRead(actor, evaluation.id,
+                    root.path("expectedVersion").asLong(), root.path("submissionHash").asText(),
+                    fingerprint);
+            var proposal = gradingProposalTransactions.recordMcpProposal(actor, evaluation.id,
+                    root.path("expectedVersion").asLong(), root.path("submissionHash").asText(),
+                    requestRef, root.get("proposal"), root.path("agentLabel").asText("Agent"));
+            return new McpToolResult(false,
+                    Map.of("proposalId", proposal.id, "status", proposal.status, "evaluationId",
+                            evaluation.id, "reviewUrl",
+                            buildReviewUrl(evaluation.id, proposal.id)));
         } catch (ApiException ex) {
             throw ex;
         } catch (RuntimeException ex) {
-            throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid grading proposal arguments");
+            throw ApiException.badRequest("INVALID_MCP_ARGUMENTS",
+                    "Invalid grading proposal arguments");
         }
     }
 
-    static String buildReviewUrl(UUID evaluationId,UUID proposalId) {
-        return "/teaching/evaluations/"+evaluationId+"?proposalId="+proposalId+"#grading-ai-review";
+    static String buildReviewUrl(UUID evaluationId, UUID proposalId) {
+        return "/teaching/evaluations/" + evaluationId + "?proposalId=" + proposalId
+                + "#grading-ai-review";
     }
 
     private JsonNode readSubmissionReference(JsonNode arguments) {
@@ -99,15 +109,17 @@ public class GradingMcpTools implements IMcpToolProvider {
             throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid submission reference");
         reference.fieldNames().forEachRemaining(field -> {
             if (!REFERENCE_FIELDS.contains(field))
-                throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Unknown submission reference argument");
+                throw ApiException.badRequest("INVALID_MCP_ARGUMENTS",
+                        "Unknown submission reference argument");
         });
-        if (arguments.has("agentLabel")
-                && (!arguments.get("agentLabel").isTextual() || arguments.get("agentLabel").asText().length() > 200))
+        if (arguments.has("agentLabel") && (!arguments.get("agentLabel").isTextual()
+                || arguments.get("agentLabel").asText().length() > 200))
             throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid agent label");
         return reference;
     }
 
-    private Evaluation findEvaluation(String kind, UUID submissionId, UUID classId, UUID assignmentId) {
+    private Evaluation findEvaluation(String kind, UUID submissionId, UUID classId,
+            UUID assignmentId) {
         if (kind.equals("ATTEMPT"))
             return evaluationRepository.findByAttemptId(submissionId)
                     .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));

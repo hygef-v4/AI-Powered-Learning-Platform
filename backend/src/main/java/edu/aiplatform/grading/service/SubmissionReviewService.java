@@ -59,9 +59,12 @@ public class SubmissionReviewService {
     private final ObjectProvider<IGroupSubmissionSource> groupSubmissionSourceProvider;
     private final ObjectMapper objectMapper;
 
-    public SubmissionReviewService(IEvaluationRepository evaluationRepository, GradingAccess gradingAccess,
-            IAssignmentQuery assignmentQuery, ISubmissionQuery submissionQuery, IClassAccess classAccess, IAccountLookup accountLookup,
-            IActivityQuery activityQuery, ObjectProvider<IGroupSubmissionSource> groupSubmissionSourceProvider, ObjectMapper objectMapper) {
+    public SubmissionReviewService(IEvaluationRepository evaluationRepository,
+            GradingAccess gradingAccess, IAssignmentQuery assignmentQuery,
+            ISubmissionQuery submissionQuery, IClassAccess classAccess,
+            IAccountLookup accountLookup, IActivityQuery activityQuery,
+            ObjectProvider<IGroupSubmissionSource> groupSubmissionSourceProvider,
+            ObjectMapper objectMapper) {
         this.evaluationRepository = evaluationRepository;
         this.gradingAccess = gradingAccess;
         this.assignmentQuery = assignmentQuery;
@@ -75,7 +78,8 @@ public class SubmissionReviewService {
 
     public static void requireAssignment(AssignmentView assignment, ClassRef courseClass) {
         if (assignment.gradingMode() != GradingMode.GRADED
-                || !(assignment.scope() == AssignmentScope.CLASS ? courseClass.classId().equals(assignment.classId())
+                || !(assignment.scope() == AssignmentScope.CLASS
+                        ? courseClass.classId().equals(assignment.classId())
                         : courseClass.subjectId().equals(assignment.subjectId())))
             throw ApiException.notFound("ASSIGNMENT_NOT_FOUND");
     }
@@ -86,44 +90,53 @@ public class SubmissionReviewService {
     }
 
     Person mapPerson(UUID id) {
-        return accountLookup.getContact(id).map(contact -> new Person(id, contact.displayName(), contact.email()))
+        return accountLookup.getContact(id)
+                .map(contact -> new Person(id, contact.displayName(), contact.email()))
                 .orElse(new Person(id, "Unavailable", ""));
     }
 
-    public SubmissionPage listSubmissions(Actor actor, UUID classId, UUID assignmentId, String filter, Boolean late, int page,
-            int size) {
+    public SubmissionPage listSubmissions(Actor actor, UUID classId, UUID assignmentId,
+            String filter, Boolean late, int page, int size) {
         validatePage(page, size);
         var listing = listRows(actor, classId, assignmentId, filter, late);
-        return new SubmissionPage(listing.rows().stream().skip((long) (page - 1) * size).limit(size).toList(),
+        return new SubmissionPage(
+                listing.rows().stream().skip((long) (page - 1) * size).limit(size).toList(),
                 listing.rows().size(), page, size, listing.summary(), listing.closesAt());
     }
 
-    record Listing(List<SubmissionRow> rows, List<edu.aiplatform.grading.model.Evaluation> evaluations,
-                   Map<String, Long> summary, java.time.Instant closesAt) {}
+    record Listing(List<SubmissionRow> rows,
+            List<edu.aiplatform.grading.model.Evaluation> evaluations, Map<String, Long> summary,
+            java.time.Instant closesAt) {
+    }
 
     Listing listRows(Actor actor, UUID classId, UUID assignmentId, String filter, Boolean late) {
         gradingAccess.requireTeacher(actor, classId, Actions.GRADING_REVIEW);
-        var courseClass = classAccess.getClassRef(classId).orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
-        var assignment = assignmentQuery.get(assignmentId).orElseThrow(() -> ApiException.notFound("ASSIGNMENT_NOT_FOUND"));
+        var courseClass = classAccess.getClassRef(classId)
+                .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+        var assignment = assignmentQuery.get(assignmentId)
+                .orElseThrow(() -> ApiException.notFound("ASSIGNMENT_NOT_FOUND"));
         requireAssignment(assignment, courseClass);
         var evals = evaluationRepository.findForAssignmentAndClass(assignmentId, classId);
         List<SubmissionRow> rows = new ArrayList<>();
         if (assignment.submissionMode() == SubmissionMode.GROUP) {
             var provider = groupSubmissionSourceProvider.getIfAvailable();
             if (provider == null)
-                throw ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE", "Group submission source unavailable");
+                throw ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE",
+                        "Group submission source unavailable");
             for (var submission : provider.listGroupSubmissions(assignmentId, classId)) {
                 var evaluation = evals.stream()
                         .filter(candidate -> candidate.kind == EvaluationKind.GROUP_DOCUMENT
                                 && submission.groupDocumentId().equals(candidate.groupDocumentId)
                                 && candidate.state != EvaluationStatus.SUPERSEDED)
                         .findFirst().orElse(null);
-                rows.add(new SubmissionRow(new Person(submission.groupId(), submission.groupName(), ""),
+                rows.add(new SubmissionRow(
+                        new Person(submission.groupId(), submission.groupName(), ""),
                         evaluation == null ? null : evaluation.id, null,
                         evaluation == null ? (submission.submitted() ? "PENDING" : "NOT_SUBMITTED")
                                 : evaluation.state.name(),
-                        evaluation == null ? null : evaluation.score, evaluation == null ? null : evaluation.maxScore,
-                        submission.late(), submission.submittedAt(), submission.submitted() ? 1 : 0,
+                        evaluation == null ? null : evaluation.score,
+                        evaluation == null ? null : evaluation.maxScore, submission.late(),
+                        submission.submittedAt(), submission.submitted() ? 1 : 0,
                         evaluation == null ? 0 : evaluation.version));
             }
         } else {
@@ -135,20 +148,24 @@ public class SubmissionReviewService {
             for (var sid : students) {
                 var submission = source.get(sid);
                 var evaluation = submission == null ? null
-                        : evals.stream()
-                                .filter(candidate -> candidate.kind == EvaluationKind.ATTEMPT
-                                        && Objects.equals(candidate.attemptId, submission.gradedAttemptId()))
+                        : evals.stream().filter(
+                                candidate -> candidate.kind == EvaluationKind.ATTEMPT && Objects
+                                        .equals(candidate.attemptId, submission.gradedAttemptId()))
                                 .findFirst().orElse(null);
                 String status = evaluation != null ? evaluation.state.name()
                         : submission == null || submission.latestStatus() == null ? "NOT_SUBMITTED"
-                                : submission.latestStatus() == AttemptStatus.IN_PROGRESS ? "IN_PROGRESS" : "PENDING";
+                                : submission.latestStatus() == AttemptStatus.IN_PROGRESS
+                                        ? "IN_PROGRESS"
+                                        : "PENDING";
                 var contact = contacts.get(sid);
                 var student = contact == null ? new Person(sid, "Unavailable", "")
                         : new Person(sid, contact.displayName(), contact.email());
                 rows.add(new SubmissionRow(student, evaluation == null ? null : evaluation.id,
                         submission == null ? null : submission.gradedAttemptId(), status,
-                        evaluation == null ? null : evaluation.score, evaluation == null ? null : evaluation.maxScore,
-                        submission != null && submission.late(), submission == null ? null : submission.submittedAt(),
+                        evaluation == null ? null : evaluation.score,
+                        evaluation == null ? null : evaluation.maxScore,
+                        submission != null && submission.late(),
+                        submission == null ? null : submission.submittedAt(),
                         submission == null ? 0 : submission.attemptCount(),
                         evaluation == null ? 0 : evaluation.version));
             }
@@ -156,16 +173,21 @@ public class SubmissionReviewService {
         Map<String, Long> summary = new LinkedHashMap<>();
         summary.put("total", (long) rows.size());
         summary.put("submitted", rows.stream().filter(r -> r.submittedAt() != null).count());
-        summary.put("inProgress", rows.stream().filter(r -> r.status().equals("IN_PROGRESS")).count());
-        summary.put("notSubmitted", rows.stream().filter(r -> r.status().equals("NOT_SUBMITTED")).count());
+        summary.put("inProgress",
+                rows.stream().filter(r -> r.status().equals("IN_PROGRESS")).count());
+        summary.put("notSubmitted",
+                rows.stream().filter(r -> r.status().equals("NOT_SUBMITTED")).count());
         summary.put("late", rows.stream().filter(SubmissionRow::late).count());
         for (var state : EvaluationStatus.values())
-            summary.put(state.name(), rows.stream().filter(r -> r.status().equals(state.name())).count());
+            summary.put(state.name(),
+                    rows.stream().filter(r -> r.status().equals(state.name())).count());
         if (filter != null && !filter.isBlank() && !filter.equals("ALL") && !Set
-                .of("PENDING", "DRAFT", "FINALIZED", "PUBLISHED", "NOT_SUBMITTED", "IN_PROGRESS").contains(filter))
+                .of("PENDING", "DRAFT", "FINALIZED", "PUBLISHED", "NOT_SUBMITTED", "IN_PROGRESS")
+                .contains(filter))
             throw ApiException.badRequest("INVALID_FILTER", "Unknown status filter");
         var filtered = rows.stream()
-                .filter(r -> filter == null || filter.isBlank() || filter.equals("ALL") || r.status().equals(filter))
+                .filter(r -> filter == null || filter.isBlank() || filter.equals("ALL")
+                        || r.status().equals(filter))
                 .filter(r -> late == null || r.late() == late).toList();
         return new Listing(filtered, evals, summary, assignment.closesAt());
     }
@@ -175,10 +197,11 @@ public class SubmissionReviewService {
     }
 
     public EvaluationDetail loadEvaluation(Actor actor, UUID id, String status, Boolean late) {
-        var evaluation = evaluationRepository.findById(id).orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
+        var evaluation = evaluationRepository.findById(id)
+                .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
         gradingAccess.requireTeacher(actor, evaluation.classId, Actions.GRADING_REVIEW);
-        var assignment = assignmentQuery.get(evaluation.assignmentId)
-                .orElseThrow(() -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
+        var assignment = assignmentQuery.get(evaluation.assignmentId).orElseThrow(
+                () -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
         var courseClass = classAccess.getClassRef(evaluation.classId)
                 .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
         requireAssignment(assignment, courseClass);
@@ -188,50 +211,62 @@ public class SubmissionReviewService {
         List<GroupSectionAuthor> authors = List.of();
         if (evaluation.kind == EvaluationKind.ATTEMPT) {
             var submission = submissionQuery.getSubmission(evaluation.attemptId)
-                    .orElseThrow(() -> ApiException.unavailable("SUBMISSION_UNAVAILABLE", "Submission unavailable"));
+                    .orElseThrow(() -> ApiException.unavailable("SUBMISSION_UNAVAILABLE",
+                            "Submission unavailable"));
             if (!evaluation.submissionHash.equals(submission.receiptHash()))
                 throw ApiException.conflict("SUBMISSION_CHANGED", "Submitted snapshot changed");
             document = submission.content();
-            ref = new WorkRef(WorkKind.ASSIGNMENT_ATTEMPT, evaluation.attemptId, evaluation.classId);
+            ref = new WorkRef(WorkKind.ASSIGNMENT_ATTEMPT, evaluation.attemptId,
+                    evaluation.classId);
         } else {
             var provider = groupSubmissionSourceProvider.getIfAvailable();
             if (provider == null)
-                throw ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE", "Group submission unavailable");
-            var submission = provider.getGroupSubmission(evaluation.groupDocumentId).orElseThrow(
-                    () -> ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE", "Group submission unavailable"));
+                throw ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE",
+                        "Group submission unavailable");
+            var submission = provider.getGroupSubmission(evaluation.groupDocumentId)
+                    .orElseThrow(() -> ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE",
+                            "Group submission unavailable"));
             if (!evaluation.submissionHash.equals(submission.submissionHash())
                     || !evaluation.classId.equals(submission.classId())
                     || !evaluation.assignmentId.equals(submission.assignmentId()))
                 throw ApiException.conflict("SUBMISSION_CHANGED", "Group submission changed");
             document = submission.content();
             authors = submission.sectionAuthors();
-            ref = new WorkRef(WorkKind.GROUP_DOCUMENT, evaluation.groupDocumentId, evaluation.classId);
+            ref = new WorkRef(WorkKind.GROUP_DOCUMENT, evaluation.groupDocumentId,
+                    evaluation.classId);
         }
         ActivitySummary activityValue = null;
         String activityState = "DISABLED";
         if (assignment.activityMonitoringEnabled() && activityOwner != null) {
             try {
                 activityValue = activityQuery.summary(ref, activityOwner);
-                activityState = activityValue == null ? "UNAVAILABLE" : activityValue.policyState().name();
+                activityState = activityValue == null ? "UNAVAILABLE"
+                        : activityValue.policyState().name();
             } catch (RuntimeException ex) {
                 activityState = "UNAVAILABLE";
             }
         }
-        var all = evaluationRepository.findForAssignmentAndClass(evaluation.assignmentId, evaluation.classId);
+        var all = evaluationRepository.findForAssignmentAndClass(evaluation.assignmentId,
+                evaluation.classId);
         Set<UUID> latestAttempts = new HashSet<>();
         if (evaluation.kind == EvaluationKind.ATTEMPT)
-            for (var row : submissionQuery.listSubmissions(evaluation.assignmentId, evaluation.classId))
+            for (var row : submissionQuery.listSubmissions(evaluation.assignmentId,
+                    evaluation.classId))
                 if (row.gradedAttemptId() != null)
                     latestAttempts.add(row.gradedAttemptId());
         boolean current = evaluation.state != EvaluationStatus.SUPERSEDED
-                && (evaluation.kind != EvaluationKind.ATTEMPT || latestAttempts.contains(evaluation.attemptId));
+                && (evaluation.kind != EvaluationKind.ATTEMPT
+                        || latestAttempts.contains(evaluation.attemptId));
         var navigationIds = all.stream()
                 .filter(candidate -> candidate.kind != EvaluationKind.MEMBER
                         && candidate.state != EvaluationStatus.SUPERSEDED
-                        && (candidate.kind != EvaluationKind.ATTEMPT || latestAttempts.contains(candidate.attemptId)))
-                .sorted(Comparator.comparing(candidate -> candidate.id)).map(candidate -> candidate.id).toList();
+                        && (candidate.kind != EvaluationKind.ATTEMPT
+                                || latestAttempts.contains(candidate.attemptId)))
+                .sorted(Comparator.comparing(candidate -> candidate.id))
+                .map(candidate -> candidate.id).toList();
         if (status != null || late != null) {
-            navigationIds = listRows(actor, evaluation.classId, evaluation.assignmentId, status, late).rows().stream()
+            navigationIds = listRows(actor, evaluation.classId, evaluation.assignmentId, status,
+                    late).rows().stream()
                     .filter(row -> row.evaluationId() != null && !row.status().equals("SUPERSEDED"))
                     .map(SubmissionRow::evaluationId).toList();
         }
@@ -254,10 +289,12 @@ public class SubmissionReviewService {
                         state = "UNAVAILABLE";
                     }
                 }
-                memberActivities.add(new MemberActivity(mapPerson(member.accountId), summary, state));
+                memberActivities
+                        .add(new MemberActivity(mapPerson(member.accountId), summary, state));
             }
         }
-        return new EvaluationDetail(evaluation, document, GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot),
-                navigationIds, activityValue, activityState, members, memberActivities, authors, current);
+        return new EvaluationDetail(evaluation, document,
+                GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot), navigationIds,
+                activityValue, activityState, members, memberActivities, authors, current);
     }
 }

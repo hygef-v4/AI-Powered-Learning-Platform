@@ -5,7 +5,6 @@ import edu.aiplatform.admindashboard.dto.AdminDashboardViews;
 import static edu.aiplatform.admindashboard.dto.AdminDashboardViews.*;
 
 import edu.aiplatform.admindashboard.integration.DashboardSourceReader;
-import edu.aiplatform.admindashboard.integration.DashboardSourceReader.PendingSource;
 import edu.aiplatform.assignments.contract.AssignmentDayCount;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.audit.contract.AuditLogView;
@@ -40,7 +39,8 @@ public class AdminDashboardActivityService {
     private final DashboardSourceReader dashboardSourceReader;
     private final Clock clock;
 
-    public AdminDashboardActivityService(AdminDashboardService adminDashboardService, IAuditStats audit, IAssignmentQuery assignmentQuery,
+    public AdminDashboardActivityService(AdminDashboardService adminDashboardService,
+            IAuditStats audit, IAssignmentQuery assignmentQuery,
             DashboardSourceReader dashboardSourceReader, Clock clock) {
         this.adminDashboardService = adminDashboardService;
         this.audit = audit;
@@ -58,14 +58,19 @@ public class AdminDashboardActivityService {
         Instant assignmentsFrom = firstDay.atStartOfDay(ZONE).toInstant();
         Instant securityFrom = today.minusDays(SECURITY_DAYS - 1L).atStartOfDay(ZONE).toInstant();
 
-        var changeSource = dashboardSourceReader.submitSource(() -> loadActiveAccountChange(todayStart, now));
-        var assignmentSource = dashboardSourceReader.submitSource(() -> assignmentQuery.countGivenByDay(assignmentsFrom, now, ZONE));
-        var securitySource = dashboardSourceReader.submitSource(() -> audit.recentSecurityEvents(securityFrom, SECURITY_LIMIT));
+        var changeSource = dashboardSourceReader
+                .submitSource(() -> loadActiveAccountChange(todayStart, now));
+        var assignmentSource = dashboardSourceReader
+                .submitSource(() -> assignmentQuery.countGivenByDay(assignmentsFrom, now, ZONE));
+        var securitySource = dashboardSourceReader
+                .submitSource(() -> audit.recentSecurityEvents(securityFrom, SECURITY_LIMIT));
 
         return new ActivityView(now,
-                section(changeSource, Function.identity()),
-                section(assignmentSource, counts -> buildAssignmentDays(firstDay, counts)),
-                section(securitySource, events -> events.stream().map(this::mapSecurityItem).toList()));
+                dashboardSourceReader.readSection(changeSource, Function.identity()),
+                dashboardSourceReader.readSection(assignmentSource,
+                        counts -> buildAssignmentDays(firstDay, counts)),
+                dashboardSourceReader.readSection(securitySource,
+                        events -> events.stream().map(this::mapSecurityItem).toList()));
     }
 
     /** Kích hoạt và mở lại về Hoạt động trừ vô hiệu hóa tài khoản đang hoạt động, từ đầu ngày tới giờ. */
@@ -77,23 +82,27 @@ public class AdminDashboardActivityService {
     }
 
     /** Đủ 7 ngày liền nhau (ngày không có bài là 0), mỗi ngày một dòng ba loại. */
-    private List<DayAssignments> buildAssignmentDays(LocalDate firstDay, List<AssignmentDayCount> counts) {
+    private List<DayAssignments> buildAssignmentDays(LocalDate firstDay,
+            List<AssignmentDayCount> counts) {
         Map<LocalDate, long[]> byDay = new LinkedHashMap<>();
         for (int i = 0; i < ASSIGNMENT_DAYS; i++) {
             byDay.put(firstDay.plusDays(i), new long[3]);
         }
         for (AssignmentDayCount count : counts) {
             long[] slot = byDay.get(count.day());
-            if (slot == null || count.count() < 0) continue;
+            if (slot == null || count.count() < 0)
+                continue;
             switch (count.kind()) {
-                case "INDIVIDUAL" -> slot[0] += count.count();
-                case "GROUP" -> slot[1] += count.count();
-                case "PRACTICE" -> slot[2] += count.count();
-                default -> { }
+            case "INDIVIDUAL" -> slot[0] += count.count();
+            case "GROUP" -> slot[1] += count.count();
+            case "PRACTICE" -> slot[2] += count.count();
+            default -> {
+            }
             }
         }
         List<DayAssignments> result = new ArrayList<>();
-        byDay.forEach((day, slot) -> result.add(new DayAssignments(day, slot[0], slot[1], slot[2])));
+        byDay.forEach(
+                (day, slot) -> result.add(new DayAssignments(day, slot[0], slot[1], slot[2])));
         return result;
     }
 
@@ -102,16 +111,8 @@ public class AdminDashboardActivityService {
         var event = view.event();
         String account = view.actorEmail() != null ? view.actorEmail()
                 : "ACCOUNT".equals(event.objectType()) ? view.objectLabel() : null;
-        return new SecurityEventItem(event.occurredAt(), event.action(), event.result().name(), account, event.reason());
+        return new SecurityEventItem(event.occurredAt(), event.action(), event.result().name(),
+                account, event.reason());
     }
 
-    private <T, R> Section<R> section(PendingSource<T> pending, Function<T, R> map) {
-        var result = dashboardSourceReader.awaitSource(pending);
-        if (!result.available() || result.value() == null) return Section.unavailable();
-        try {
-            return Section.available(map.apply(result.value()));
-        } catch (RuntimeException invalidData) {
-            return Section.unavailable();
-        }
-    }
 }

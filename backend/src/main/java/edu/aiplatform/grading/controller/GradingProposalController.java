@@ -29,23 +29,26 @@ public class GradingProposalController {
     }
 
     @PostMapping("/evaluations/{id}/ai-proposals")
-    public GradingProposal requestProposal(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
-            @Valid @RequestBody AiRequest input) {
+    public GradingProposal requestProposal(@AuthenticationPrincipal Actor actor,
+            @PathVariable UUID id, @Valid @RequestBody AiRequest input) {
         return gradingProposalService.requestProposal(actor, id, input);
     }
 
     @GetMapping("/evaluations/{id}/ai-proposals")
-    public List<GradingProposal> listProposals(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+    public List<GradingProposal> listProposals(@AuthenticationPrincipal Actor actor,
+            @PathVariable UUID id) {
         return gradingProposalService.listProposals(actor, id);
     }
 
     @PostMapping("/evaluations:ai-proposals")
-    public BatchResult requestProposals(@AuthenticationPrincipal Actor actor, @Valid @RequestBody AiBatch input) {
+    public BatchResult requestProposals(@AuthenticationPrincipal Actor actor,
+            @Valid @RequestBody AiBatch input) {
         return gradingProposalService.requestProposals(actor, input);
     }
 
     @PostMapping("/evaluations:ai-proposal-estimate")
-    public AiEstimate estimateProposalTokens(@AuthenticationPrincipal Actor actor, @Valid @RequestBody Batch input) {
+    public AiEstimate estimateProposalTokens(@AuthenticationPrincipal Actor actor,
+            @Valid @RequestBody Batch input) {
         return gradingProposalService.estimateProposalTokens(actor, input);
     }
 }

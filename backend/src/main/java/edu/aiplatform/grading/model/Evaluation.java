@@ -45,8 +45,9 @@ public class Evaluation {
     public boolean memberOverride;
     public List<EvaluationHistory> changes = new ArrayList<>();
 
-    public static Evaluation createPendingEvaluation(UUID attemptId, UUID assignmentId, UUID classId, UUID accountId, String hash,
-            BigDecimal max, String rubrics, Instant now) {
+    public static Evaluation createPendingEvaluation(UUID attemptId, UUID assignmentId,
+            UUID classId, UUID accountId, String hash, BigDecimal max, String rubrics,
+            Instant now) {
         var evaluation = new Evaluation();
         evaluation.id = UUID.randomUUID();
         evaluation.attemptId = attemptId;
@@ -65,11 +66,12 @@ public class Evaluation {
 
     public void checkVersion(long expected) {
         if (version != expected)
-            throw ApiException.conflict("GRADE_VERSION_CONFLICT", "Reload the evaluation before saving");
+            throw ApiException.conflict("GRADE_VERSION_CONFLICT",
+                    "Reload the evaluation before saving");
     }
 
-    public void saveGrade(String checks, BigDecimal rubricScore, BigDecimal delta, String deltaReason, String feedback,
-            String changeReason, UUID actor, Instant now) {
+    public void saveGrade(String checks, BigDecimal rubricScore, BigDecimal delta,
+            String deltaReason, String feedback, String changeReason, UUID actor, Instant now) {
         requireMutableGrade();
         if (feedback != null && feedback.length() > 10000)
             throw ApiException.badRequest("FEEDBACK_TOO_LONG", "Feedback exceeds 10000 characters");
@@ -77,8 +79,10 @@ public class Evaluation {
         if (delta.scale() > 2 || delta.abs().compareTo(new BigDecimal("9999.99")) > 0)
             throw ApiException.badRequest("INVALID_ADJUSTMENT", "Invalid adjustment");
         if (delta.signum() != 0 && isBlankText(deltaReason))
-            throw ApiException.badRequest("ADJUSTMENT_REASON_REQUIRED", "Adjustment requires a reason");
-        var next = rubricScore.add(delta).max(BigDecimal.ZERO).min(maxScore).setScale(2, RoundingMode.HALF_UP);
+            throw ApiException.badRequest("ADJUSTMENT_REASON_REQUIRED",
+                    "Adjustment requires a reason");
+        var next = rubricScore.add(delta).max(BigDecimal.ZERO).min(maxScore).setScale(2,
+                RoundingMode.HALF_UP);
         rubricChecks = checks;
         score = next;
         adjustment = delta;
@@ -91,7 +95,8 @@ public class Evaluation {
 
     public void finalizeGrade(UUID actor, Instant now) {
         if (state != EvaluationStatus.DRAFT || score == null)
-            throw ApiException.conflict("INVALID_GRADE_STATE", "Only DRAFT grades can be finalized");
+            throw ApiException.conflict("INVALID_GRADE_STATE",
+                    "Only DRAFT grades can be finalized");
         state = EvaluationStatus.FINALIZED;
         gradedBy = actor;
         gradedAt = now;
@@ -99,7 +104,8 @@ public class Evaluation {
 
     public void publishGrade(UUID actor, Instant now) {
         if (state != EvaluationStatus.FINALIZED)
-            throw ApiException.conflict("INVALID_GRADE_STATE", "Only FINALIZED grades can be published");
+            throw ApiException.conflict("INVALID_GRADE_STATE",
+                    "Only FINALIZED grades can be published");
         state = EvaluationStatus.PUBLISHED;
         publishedAt = now;
     }
@@ -110,23 +116,27 @@ public class Evaluation {
 
     public boolean isCurrentMemberOf(Evaluation root) {
         return kind == EvaluationKind.MEMBER && root.groupDocumentId.equals(groupDocumentId)
-                && root.submissionHash.equals(submissionHash) && state != EvaluationStatus.SUPERSEDED;
+                && root.submissionHash.equals(submissionHash)
+                && state != EvaluationStatus.SUPERSEDED;
     }
 
     public void inheritGroupGrade(Evaluation root, String reason, UUID actorId, Instant now) {
         requireMutableGrade();
         if (!memberOverride) {
-            saveGrade(root.rubricChecks, root.score, BigDecimal.ZERO, null, root.feedback, reason, actorId, now);
+            saveGrade(root.rubricChecks, root.score, BigDecimal.ZERO, null, root.feedback, reason,
+                    actorId, now);
         } else {
             rubricChecks = root.rubricChecks;
         }
         rubricItemScores = copyItemScores(root.rubricItemScores);
-        structuredFeedback = root.structuredFeedback == null ? null : root.structuredFeedback.copyFeedback();
+        structuredFeedback = root.structuredFeedback == null ? null
+                : root.structuredFeedback.copyFeedback();
         reviewedItemScores = copyItemScores(root.reviewedItemScores);
         acknowledgedReviewItems = copyChecks(root.acknowledgedReviewItems);
     }
 
-    public void overrideMemberScore(BigDecimal memberScore, String reason, UUID actorId, Instant now) {
+    public void overrideMemberScore(BigDecimal memberScore, String reason, UUID actorId,
+            Instant now) {
         requireMutableGrade();
         if (memberScore == null || memberScore.signum() < 0 || memberScore.compareTo(maxScore) > 0
                 || memberScore.scale() > 2) {
@@ -136,10 +146,11 @@ public class Evaluation {
         saveGrade(rubricChecks, memberScore, BigDecimal.ZERO, null, feedback, reason, actorId, now);
     }
 
-    public void resetForGroupSubmission(String hash, BigDecimal maximum, String rubrics, Instant now) {
+    public void resetForGroupSubmission(String hash, BigDecimal maximum, String rubrics,
+            Instant now) {
         if (score != null) {
-            changes.add(new EvaluationHistory(null, now, score, null, "GROUP_RESUBMITTED", rubricChecks, feedback,
-                    copyItemScores(rubricItemScores),
+            changes.add(new EvaluationHistory(null, now, score, null, "GROUP_RESUBMITTED",
+                    rubricChecks, feedback, copyItemScores(rubricItemScores),
                     structuredFeedback == null ? null : structuredFeedback.copyFeedback()));
         }
         memberOverride = false;
@@ -192,11 +203,13 @@ public class Evaluation {
         return value == null || value.isBlank();
     }
 
-    private static Map<UUID, Map<UUID, BigDecimal>> copyItemScores(Map<UUID, Map<UUID, BigDecimal>> scores) {
+    private static Map<UUID, Map<UUID, BigDecimal>> copyItemScores(
+            Map<UUID, Map<UUID, BigDecimal>> scores) {
         if (scores == null || scores.isEmpty())
             return Map.of();
         var copy = new LinkedHashMap<UUID, Map<UUID, BigDecimal>>();
-        scores.forEach((id, values) -> copy.put(id, values == null ? Map.of() : Map.copyOf(values)));
+        scores.forEach(
+                (id, values) -> copy.put(id, values == null ? Map.of() : Map.copyOf(values)));
         return Map.copyOf(copy);
     }
 
@@ -204,7 +217,8 @@ public class Evaluation {
         if (checks == null || checks.isEmpty())
             return Map.of();
         var copy = new LinkedHashMap<UUID, Set<UUID>>();
-        checks.forEach((id, values) -> copy.put(id, values == null ? Set.of() : Set.copyOf(values)));
+        checks.forEach(
+                (id, values) -> copy.put(id, values == null ? Set.of() : Set.copyOf(values)));
         return Map.copyOf(copy);
     }
 }

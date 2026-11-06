@@ -13,7 +13,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class GradebookExporter {
-    public void writeGradebook(List<List<String>> rows, String format, OutputStream output) throws IOException {
+    public void writeGradebook(List<List<String>> rows, String format, OutputStream output)
+            throws IOException {
         if ("csv".equals(format)) {
             var writer = new OutputStreamWriter(output, StandardCharsets.UTF_8);
             writer.write('\uFEFF');
@@ -43,11 +44,12 @@ public class GradebookExporter {
     private static String escapeXml(String s) {
         if (s == null)
             return "";
-        return s.replaceAll("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]", "").replace("&", "&amp;").replace("<", "&lt;")
-                .replace(">", "&gt;").replace("\"", "&quot;");
+        return s.replaceAll("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]", "").replace("&", "&amp;")
+                .replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
     }
 
-    private static void writePart(ZipOutputStream zip, String path, String text) throws IOException {
+    private static void writePart(ZipOutputStream zip, String path, String text)
+            throws IOException {
         zip.putNextEntry(new ZipEntry(path));
         zip.write(text.getBytes(StandardCharsets.UTF_8));
         zip.closeEntry();
@@ -77,7 +79,8 @@ public class GradebookExporter {
                         + "ksheet\" Target=\"worksheets/sheet1.xml\"/></Relationships>");
         zip.putNextEntry(new ZipEntry("xl/worksheets/sheet1.xml"));
         var writer = new OutputStreamWriter(zip, StandardCharsets.UTF_8);
-        writer.write("<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><sheetData>");
+        writer.write(
+                "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><sheetData>");
         for (var row : rows) {
             writer.write("<row>");
             for (var cell : row) {

@@ -22,28 +22,33 @@ public class SubmissionReviewController {
     private final IAssignmentQuery assignmentQuery;
     private final GradebookService gradebookService;
 
-    public SubmissionReviewController(SubmissionReviewService submissionReviewService, IAssignmentQuery assignmentQuery,
-            GradebookService gradebookService) {
+    public SubmissionReviewController(SubmissionReviewService submissionReviewService,
+            IAssignmentQuery assignmentQuery, GradebookService gradebookService) {
         this.submissionReviewService = submissionReviewService;
         this.assignmentQuery = assignmentQuery;
         this.gradebookService = gradebookService;
     }
 
     @GetMapping("/assignments/{assignmentId}/submissions")
-    public SubmissionPage listSubmissions(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
-            @PathVariable UUID assignmentId, @RequestParam(required = false) String status,
-            @RequestParam(required = false) Boolean late, @RequestParam(defaultValue = "1") int page,
+    public SubmissionPage listSubmissions(@AuthenticationPrincipal Actor actor,
+            @PathVariable UUID classId, @PathVariable UUID assignmentId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Boolean late,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return submissionReviewService.listSubmissions(actor, classId, assignmentId, status, late, page, size);
+        return submissionReviewService.listSubmissions(actor, classId, assignmentId, status, late,
+                page, size);
     }
 
     @GetMapping("/submission-progress")
-    public Map<UUID, SubmissionPage> progress(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId) {
+    public Map<UUID, SubmissionPage> progress(@AuthenticationPrincipal Actor actor,
+            @PathVariable UUID classId) {
         gradebookService.listGrades(actor, classId, null, 1, 1);
         var result = new LinkedHashMap<UUID, SubmissionPage>();
         for (var a : assignmentQuery.listForClass(classId))
             if (GradebookService.isGradable(a))
-                result.put(a.assignmentId(), submissionReviewService.listSubmissions(actor, classId, a.assignmentId(), null, null, 1, 1));
+                result.put(a.assignmentId(), submissionReviewService.listSubmissions(actor, classId,
+                        a.assignmentId(), null, null, 1, 1));
         return result;
     }
 }

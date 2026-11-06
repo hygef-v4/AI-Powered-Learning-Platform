@@ -1,5 +1,25 @@
 # AI-DLC State Tracking
 
+## Local commit delivery — 2026-11-06
+
+User requested one local commit of the verified U05/U09/U15 formatting, behavior-preserving simplification, characterization tests and AI-DLC documentation; explicitly **no push**. Source/config hashes match the successful backend 1,822 and frontend 799 test/lint/typecheck/build verification. This delivery authorization supersedes the earlier no-commit scope; no source change, test rerun, remote write, merge or deployment is included.
+
+## Local backend/frontend restart and tests — 2026-11-06
+
+At the user's request, reran backend verify: **1,822 passed, zero failures/errors/skips**, JAR packaged; required PostgreSQL guard **31 + 2 passed**. Frontend: **799 passed / 116 files**, full lint/typecheck/production build passed; generated config restored from snapshots and typechecked again. Started backend on :8080 with local,worker and frontend dev Webpack on :3000, restarted existing Mailpit and retained the stopped old Docker worker. HTTP health for both services UP/200, login 200 and unauthenticated protected API via frontend 401. Source/config hashes unchanged. [Evidence and limits](construction/build-and-test/2026-11-06-restart-test-results.md). Processes left running; no dependency/source edit, new live migration, authenticated UI mutation, commit/push or deployment. Existing security/resiliency scope retained; PBT disabled.
+
+## U05/U09/U15 simplification completed — 2026-11-06
+
+Implemented the approved [plan](construction/plans/code-generation-plan/2026-11-06-u05-u09-u15-simplification.md) on the existing formatted checkout: inline U05's single-use mutation helper, share U09's identical batch-size guards and consolidate U15 source-to-section mapping. Exactly seven production/three test files changed versus the pre-refactor snapshot; frontend, contracts and config unchanged. Added 18 characterization cases green before production edits; focused U05/U09/U15 runs pass before and after. Independent read-only review found no actionable findings. Final backend verify: **1,822 passed, zero failures/errors/skips**, executable JAR built; required real PostgreSQL guard **31 + 2 passed**. Initial full attempt failed because Docker Desktop was stopped; started it and reran successfully without source changes. [Evidence and limits](construction/build-and-test/2026-11-06-u05-u09-u15-simplification-results.md). No commit/push/PR, live migration, app restart or frontend/manual UI/provider rerun. Security/resiliency scope retained; PBT disabled.
+
+## U05/U09/U15 simplification plan — 2026-11-06
+
+Created a [scoped refactor plan](construction/plans/code-generation-plan/2026-11-06-u05-u09-u15-simplification.md) at the user's planning-only request. Source review identified one single-caller U05 mutation helper, three identical U09 batch-size guards, and two identical U15 source-to-section mappings. Plan preserves API/DTOs, transaction/lock/error order, audit/events and dashboard deadlines/cancellation; protects all three changes with existing tests plus characterization only where needed. The prior 71-file formatting work remains the baseline. Implementation and fresh runtime tests are pending review; no source code edited for this plan. Security/resiliency scope retained; PBT remains disabled.
+
+## U05/U09/U15 Java readability formatting — 2026-11-06
+
+Completed the requested formatting in `academics`, `grading`, `admindashboard`: 71 Java files changed, all 85 checked; inline returns 37 to zero. Preserved exact source tokens/comments/literals and existing wildcard imports, with CRLF/LF normalization only for Git baseline comparison. Formatter second run changes zero files, whitespace diff check passes, fresh isolated JDK 17 compilation succeeds for 720 main + 246 test source files. Shared conventions now explicitly separate method bodies from declarations and wrap long calls. [Plan](construction/plans/code-generation-plan/2026-11-06-u05-u09-u15-format.md), [evidence and memory limits](construction/build-and-test/2026-11-06-u05-u09-u15-format-results.md). Frontend/runtime tests not rerun; no behavior change, commit/push, restart or migration. Existing security/resiliency scope unchanged.
+
 ## U05/U09/U15 staging PR and CI delivery — 2026-11-06
 
 User authorized publishing the current `fix/u05-u09-u15` branch as a PR into `staging` and checking CI before any PR merge. Initial remote head `b466400b` matches the clean local checkout; GitHub comparison is ahead by three commits, behind zero, and no open PR exists for this head/base. Reuse the unchanged source's [verified merge results](construction/build-and-test/2026-11-06-merge-staging-u05-u09-u15.md): backend 1,804 / frontend 799 passing, lint/typecheck/build passing and required real PostgreSQL guard passing. Commit only this delivery record before publishing; no new source changes or local test rerun needed. GitHub PR creation triggers the existing backend/frontend CI jobs; check the final PR head and report its live results. Images/deploy do not run on this PR. No PR merge, auto-merge or deployment authorized; existing security/resiliency scope retained and PBT disabled.

@@ -14,11 +14,13 @@ public class AdminDashboardExceptionHandler {
     public ResponseEntity<ProblemDetail> handleApiProblem(ApiException error) {
         ProblemDetail detail = ProblemDetail.forStatusAndDetail(error.status(), error.getMessage());
         detail.setProperty("code", error.code());
-        return ResponseEntity.status(error.status()).cacheControl(CacheControl.noStore()).body(detail);
+        return ResponseEntity.status(error.status()).cacheControl(CacheControl.noStore())
+                .body(detail);
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ProblemDetail> handleUnexpectedError(RuntimeException error) {
-        return handleApiProblem(ApiException.unavailable("DASHBOARD_UNAVAILABLE", "Không đọc được tổng quan hệ thống"));
+        return handleApiProblem(ApiException.unavailable("DASHBOARD_UNAVAILABLE",
+                "Không đọc được tổng quan hệ thống"));
     }
 }

@@ -10377,3 +10377,59 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **User Input**: "giúp tôi tạo pr ci lên staging trước khi merger"
 
 **AI Response**: Preparing the existing fix/u05-u09-u15 branch for a PR into staging and monitoring its CI before merge. GitHub profile confirms display name Quang Hung; initial local/remote head b466400b matches, comparison is three commits ahead/zero behind staging, and no matching open PR exists. Source is unchanged from the recorded backend 1,804 / frontend 799 passing verification, lint/typecheck/production build and required PostgreSQL guard. Record delivery in audit/state, verify only these documentation changes, commit/push the branch normally, then open a descriptive English PR through the GitHub plugin. The existing pull_request workflow runs backend/frontend checks; inspect the final head's CI and report its PR/check links and actual outcome. Do not merge or enable auto-merge. No new runtime source edit, local test rerun, deployment or unrelated branch push; security/resiliency scope unchanged and PBT disabled.
+
+## U05/U09/U15 Java readability formatting — 2026-11-06
+
+**Timestamp**: 2026-11-06T06:46:41Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "soát lại code u05 u09 u15 format lại code cho dễ đọc hơn, hjienej tại để return hết cùng 1 dòng trông khó đọc quá"
+**AI Response**: Formatted 71 Java source files across academics/grading/admindashboard; checked all 85 against Git tokens and formatter idempotence. Expanded inline bodies, signatures and calls with approximately 100-column wrapping and four-space indentation. Preserved names, comments, literals, wildcard imports, contracts and behavior. Fresh isolated compilation passed for 720 production and 246 test source files; tests not executed. Updated shared conventions, plan, evidence and state.
+**Context**: Screenshot targets backend Java readability; frontend unchanged. JVM sandbox/security and initial heap reservation limitations resolved with approved execution and bounded memory. No commit/push, app restart or migration. Current requester display name not independently verified; historical attribution preserved.
+
+## U05/U09/U15 simplification planning — 2026-11-06
+
+**Timestamp**: 2026-11-06T06:57:45Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi lập kế hoạch tối ưu code"
+**AI Response**: Reviewed current source, callers and tests and created a behavior-preserving backend refactor plan for U05/U09/U15. Proposes inlining the single-caller mutateClass helper, sharing identical batch-size validation and consolidating source-to-section mapping in the existing U15 reader. Includes exact files, boundaries, baseline characterization, focused/full verification commands and rollback preserving the existing format diff. Updated state; implementation pending. No production/test source edit or runtime test run for planning.
+**Context**: Continues the Java readability discussion and existing dirty formatting baseline. Current GitHub profile confirms requester display name Quang Hung. Plan retains security/resiliency scope, PBT disabled and existing public contracts. No commit, push, PR, restart, migration or deployment.
+
+## U05/U09/U15 simplification implementation — 2026-11-06
+
+**Timestamp**: 2026-11-06T07:15:37Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi triển khai theo kế hoạch vừa duyệt"
+**AI Response**: Executed the approved three-task refactor, preserving the existing formatted worktree through a 1,581-file snapshot. U05 single-use mutation helper inlined; U09 identical batch-size validation shared; U15 identical source-to-section helpers consolidated in the existing reader. Three U05 and fifteen U09 characterization cases passed before production edits and remained green afterward; reused existing U15 protection. Scoped runs passed 175/30/59 cases. Independent review found no actionable findings. Full verification initially encountered unavailable Docker; started Docker Desktop and reran with disposable database containers. Final full result pending in the linked evidence.
+**Context**: Seven production/three test files changed versus snapshot, no frontend or public contract change. No commit/push, app restart, live migration or deployment. Evidence: construction/build-and-test/2026-11-06-u05-u09-u15-simplification-results.md.
+
+## Continue simplification execution — 2026-11-06
+
+**Timestamp**: 2026-11-06T07:15:37Z
+**Requested by:** Quang Hung
+**User Input**: "continue"
+**AI Response**: Continued the same approved implementation without restarting or replacing the prior formatting baseline. Runtime verification and final documentation remain part of the active task.
+
+**Final verification — 2026-11-06T07:17:44Z**: All three approved tasks complete. Fresh backend verify passed 1,822 tests with zero failures/errors/skips and packaged the executable JAR; required real PostgreSQL suites passed 31 + 2 tests. Independent read-only reviewer found no actionable findings. Snapshot comparison confirms only seven production/three test files changed and existing formatting preserved. Initial Docker-not-running attempt is recorded separately; final rerun succeeded after starting Docker Desktop. Plan/state/evidence synchronized. No commit/push/PR, frontend change, live database migration, app restart or deployment.
+
+## Restart backend/frontend and rerun tests — 2026-11-06
+
+**Timestamp**: 2026-11-06T07:32:13Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi chạy lại backend frontend , chạy test"
+**AI Response**: Fresh backend verify passed 1,822 tests without failures/errors/skips and built the JAR; required PostgreSQL guard passed 31 + 2 cases. Frontend 799 tests / 116 files, lint, typecheck and production build passed. Restored generated tsconfig/next-env/AGENTS changes from pre-run snapshots and typechecked again. Started backend local,worker on 8080 and frontend dev Webpack on 3000 as hidden background processes, with logs/PIDs in ignored scratch; restarted existing Mailpit, preserved databases/volumes and left old Docker worker stopped. Both health endpoints return UP/200, login 200 and protected API through frontend returns 401 without credentials. Source/config hashes unchanged; services left running.
+**Context**: Operational verification authorized by user, no product code/dependency change, commit/push or deployment. Live startup validated 32 migrations and found no pending migrations. No authenticated business-data writes, manual UI/provider acceptance or load test. Evidence: construction/build-and-test/2026-11-06-restart-test-results.md.
+
+## Change summary — 2026-11-06
+
+**Timestamp**: 2026-11-06T07:37:14Z
+**Requested by:** Quang Hung
+**User Input**: "tóm tắt lại thay đổi"
+**AI Response**: Summarized U05 helper inlining, U09 shared batch validation, U15 shared source mapping, prior Java formatting and AI-DLC conventions/evidence. Reported unchanged public behavior/contracts and the latest successful 1,822 backend/799 frontend verification plus local runtime startup. No source edit.
+
+## Local commit without push — 2026-11-06
+
+**Timestamp**: 2026-11-06T07:37:14Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit chưa push"
+**AI Response**: Reviewed current diff, whitespace and verified-source hashes; staging the scoped U05/U09/U15 formatting/refactor, three characterization test files and corresponding AI-DLC documentation as one descriptive local commit on fix/u05-u09-u15. Source unchanged since the passing backend 1,822/frontend 799 checks; no redundant runtime rerun required. Preserve ignored logs/credentials and leave local apps running.
+**Context**: Explicit local commit authorization only. No push, remote write, PR, merge or deployment.

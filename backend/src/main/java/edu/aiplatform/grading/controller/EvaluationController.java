@@ -31,7 +31,9 @@ public class EvaluationController {
     private final GradingBatchService gradingBatchService;
     private final GradingProposalTransactions gradingProposalTransactions;
 
-    public EvaluationController(GradingService gradingService, SubmissionReviewService submissionReviewService, GradingBatchService gradingBatchService,
+    public EvaluationController(GradingService gradingService,
+            SubmissionReviewService submissionReviewService,
+            GradingBatchService gradingBatchService,
             GradingProposalTransactions gradingProposalTransactions) {
         this.gradingService = gradingService;
         this.submissionReviewService = submissionReviewService;
@@ -40,8 +42,9 @@ public class EvaluationController {
     }
 
     @GetMapping("/evaluations/{id}")
-    public EvaluationDetail loadEvaluation(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
-            @RequestParam(required = false) String status, @RequestParam(required = false) Boolean late) {
+    public EvaluationDetail loadEvaluation(@AuthenticationPrincipal Actor actor,
+            @PathVariable UUID id, @RequestParam(required = false) String status,
+            @RequestParam(required = false) Boolean late) {
         return submissionReviewService.loadEvaluation(actor, id, status, late);
     }
 
@@ -53,18 +56,20 @@ public class EvaluationController {
     }
 
     @PutMapping("/evaluations/{id}/members/{accountId}")
-    public Evaluation saveMemberGrade(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID accountId,
-            @Valid @RequestBody MemberSave input) {
+    public Evaluation saveMemberGrade(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+            @PathVariable UUID accountId, @Valid @RequestBody MemberSave input) {
         return gradingService.saveMemberGrade(actor, id, accountId, input);
     }
 
     @PostMapping("/evaluations:finalize")
-    public BatchResult finalizeGrades(@AuthenticationPrincipal Actor actor, @Valid @RequestBody Batch input) {
+    public BatchResult finalizeGrades(@AuthenticationPrincipal Actor actor,
+            @Valid @RequestBody Batch input) {
         return gradingBatchService.executeBatch(actor, input, false);
     }
 
     @PostMapping("/evaluations:publish")
-    public BatchResult publishGrades(@AuthenticationPrincipal Actor actor, @Valid @RequestBody Batch input) {
+    public BatchResult publishGrades(@AuthenticationPrincipal Actor actor,
+            @Valid @RequestBody Batch input) {
         return gradingBatchService.executeBatch(actor, input, true);
     }
 }

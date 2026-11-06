@@ -17,66 +17,94 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class JdbcEnrollmentRepository implements IEnrollmentRepository {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    public JdbcEnrollmentRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) { this.namedParameterJdbcTemplate = namedParameterJdbcTemplate; }
 
-    @Override public Optional<Enrollment> find(UUID classId, UUID accountId) {
-        return namedParameterJdbcTemplate.query("select * from enrollments where class_id = :classId and account_id = :accountId",
-                Map.of("classId", classId, "accountId", accountId), JdbcEnrollmentRepository::mapEnrollment).stream().findFirst();
+    public JdbcEnrollmentRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
-    @Override public List<Enrollment> listByClass(UUID classId, boolean activeOnly, int limit, int offset) {
+    @Override
+    public Optional<Enrollment> find(UUID classId, UUID accountId) {
+        return namedParameterJdbcTemplate.query(
+                "select * from enrollments where class_id = :classId and account_id = :accountId",
+                Map.of("classId", classId, "accountId", accountId),
+                JdbcEnrollmentRepository::mapEnrollment).stream().findFirst();
+    }
+
+    @Override
+    public List<Enrollment> listByClass(UUID classId, boolean activeOnly, int limit, int offset) {
         PersistenceChecks.validatePage(limit, offset);
-        return namedParameterJdbcTemplate.query("select * from enrollments where class_id = :classId and (:allRows or status = 'ACTIVE') " +
-                        "order by enrolled_at, account_id limit :limit offset :offset",
-                Map.of("classId", classId, "allRows", !activeOnly, "limit", limit, "offset", offset), JdbcEnrollmentRepository::mapEnrollment);
+        return namedParameterJdbcTemplate.query(
+                "select * from enrollments where class_id = :classId and (:allRows or status = 'ACTIVE') "
+                        + "order by enrolled_at, account_id limit :limit offset :offset",
+                Map.of("classId", classId, "allRows", !activeOnly, "limit", limit, "offset",
+                        offset),
+                JdbcEnrollmentRepository::mapEnrollment);
     }
 
-    @Override public boolean activeInOtherClass(UUID accountId, UUID subjectId, UUID excludedClassId) {
-        Boolean result = namedParameterJdbcTemplate.queryForObject("""
-                select exists (select 1 from enrollments e join course_classes c on c.id = e.class_id
-                    where e.account_id = :accountId and e.status = 'ACTIVE' and c.status <> 'ARCHIVED'
-                    and c.subject_id = :subjectId and c.id <> :classId)
-                """, Map.of("accountId", accountId, "subjectId", subjectId, "classId", excludedClassId), Boolean.class);
+    @Override
+    public boolean activeInOtherClass(UUID accountId, UUID subjectId, UUID excludedClassId) {
+        Boolean result = namedParameterJdbcTemplate.queryForObject(
+                """
+                        select exists (select 1 from enrollments e join course_classes c on c.id = e.class_id
+                            where e.account_id = :accountId and e.status = 'ACTIVE' and c.status <> 'ARCHIVED'
+                            and c.subject_id = :subjectId and c.id <> :classId)
+                        """,
+                Map.of("accountId", accountId, "subjectId", subjectId, "classId", excludedClassId),
+                Boolean.class);
         return Boolean.TRUE.equals(result);
     }
 
-    @Override public List<UUID> conflictingStudents(UUID classId, UUID subjectId) {
-        return namedParameterJdbcTemplate.queryForList("""
-                select e.account_id from enrollments e where e.class_id = :classId and e.status = 'ACTIVE'
-                    and exists (select 1 from enrollments other join course_classes c on c.id = other.class_id
-                        where other.account_id = e.account_id and other.status = 'ACTIVE'
-                        and c.subject_id = :subjectId and c.status <> 'ARCHIVED' and c.id <> :classId)
-                order by e.account_id
-                """, Map.of("classId", classId, "subjectId", subjectId), UUID.class);
+    @Override
+    public List<UUID> conflictingStudents(UUID classId, UUID subjectId) {
+        return namedParameterJdbcTemplate.queryForList(
+                """
+                        select e.account_id from enrollments e where e.class_id = :classId and e.status = 'ACTIVE'
+                            and exists (select 1 from enrollments other join course_classes c on c.id = other.class_id
+                                where other.account_id = e.account_id and other.status = 'ACTIVE'
+                                and c.subject_id = :subjectId and c.status <> 'ARCHIVED' and c.id <> :classId)
+                        order by e.account_id
+                        """,
+                Map.of("classId", classId, "subjectId", subjectId), UUID.class);
     }
 
-    @Override public void insert(Enrollment value) {
+    @Override
+    public void insert(Enrollment value) {
         PersistenceChecks.requireWritableTransaction();
         try {
-            namedParameterJdbcTemplate.update("""
-                    insert into enrollments (class_id, account_id, status, source, enrolled_at, removed_at)
-                    values (:classId, :accountId, :status, :source, :enrolledAt, :removedAt)
-                    """, params(value));
+            namedParameterJdbcTemplate.update(
+                    """
+                            insert into enrollments (class_id, account_id, status, source, enrolled_at, removed_at)
+                            values (:classId, :accountId, :status, :source, :enrolledAt, :removedAt)
+                            """,
+                    params(value));
         } catch (DuplicateKeyException ex) {
-            throw new AcademicRuleException("ENROLLMENT_EXISTS", "Ghi danh đã tồn tại; tải lại dữ liệu trước khi thêm lại");
+            throw new AcademicRuleException("ENROLLMENT_EXISTS",
+                    "Ghi danh đã tồn tại; tải lại dữ liệu trước khi thêm lại");
         }
     }
 
-    @Override public void update(Enrollment value, EnrollmentStatus expectedStatus) {
+    @Override
+    public void update(Enrollment value, EnrollmentStatus expectedStatus) {
         PersistenceChecks.requireWritableTransaction();
         var args = params(value);
         args.put("expectedStatus", expectedStatus.name());
-        int count = namedParameterJdbcTemplate.update("""
-                update enrollments set status = :status, source = :source, enrolled_at = :enrolledAt, removed_at = :removedAt
-                where class_id = :classId and account_id = :accountId and status = :expectedStatus
-                """, args);
-        if (count != 1) throw new AcademicRuleException("ENROLLMENT_CONFLICT", "Ghi danh đã thay đổi. Hãy tải lại");
+        int count = namedParameterJdbcTemplate.update(
+                """
+                        update enrollments set status = :status, source = :source, enrolled_at = :enrolledAt, removed_at = :removedAt
+                        where class_id = :classId and account_id = :accountId and status = :expectedStatus
+                        """,
+                args);
+        if (count != 1)
+            throw new AcademicRuleException("ENROLLMENT_CONFLICT",
+                    "Ghi danh đã thay đổi. Hãy tải lại");
     }
 
     private static Map<String, Object> params(Enrollment value) {
         var args = new HashMap<String, Object>();
-        args.put("classId", value.classId()); args.put("accountId", value.accountId());
-        args.put("status", value.status().name()); args.put("source", value.source().name());
+        args.put("classId", value.classId());
+        args.put("accountId", value.accountId());
+        args.put("status", value.status().name());
+        args.put("source", value.source().name());
         args.put("enrolledAt", Timestamp.from(value.enrolledAt()));
         args.put("removedAt", value.removedAt() == null ? null : Timestamp.from(value.removedAt()));
         return args;
@@ -84,8 +112,11 @@ public class JdbcEnrollmentRepository implements IEnrollmentRepository {
 
     private static Enrollment mapEnrollment(ResultSet rs, int row) throws SQLException {
         Timestamp removed = rs.getTimestamp("removed_at");
-        return new Enrollment(rs.getObject("class_id", UUID.class), rs.getObject("account_id", UUID.class),
-                EnrollmentStatus.valueOf(rs.getString("status")), EnrollmentSource.valueOf(rs.getString("source")),
-                rs.getTimestamp("enrolled_at").toInstant(), removed == null ? null : removed.toInstant());
+        return new Enrollment(rs.getObject("class_id", UUID.class),
+                rs.getObject("account_id", UUID.class),
+                EnrollmentStatus.valueOf(rs.getString("status")),
+                EnrollmentSource.valueOf(rs.getString("source")),
+                rs.getTimestamp("enrolled_at").toInstant(),
+                removed == null ? null : removed.toInstant());
     }
 }

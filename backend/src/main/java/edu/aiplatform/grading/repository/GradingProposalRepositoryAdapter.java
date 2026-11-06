@@ -11,7 +11,8 @@ import org.springframework.stereotype.Repository;
 public class GradingProposalRepositoryAdapter implements IGradingProposalRepository {
     private final IGradingProposalJpaRepository gradingProposalJpaRepository;
 
-    public GradingProposalRepositoryAdapter(IGradingProposalJpaRepository gradingProposalJpaRepository) {
+    public GradingProposalRepositoryAdapter(
+            IGradingProposalJpaRepository gradingProposalJpaRepository) {
         this.gradingProposalJpaRepository = gradingProposalJpaRepository;
     }
 
@@ -24,17 +25,18 @@ public class GradingProposalRepositoryAdapter implements IGradingProposalReposit
     }
 
     public Optional<GradingProposal> findByRequestRef(String ref) {
-        return gradingProposalJpaRepository.findByRequestRef(ref).map(GradingProposalJpaEntity::mapProposal);
+        return gradingProposalJpaRepository.findByRequestRef(ref)
+                .map(GradingProposalJpaEntity::mapProposal);
     }
 
     public List<GradingProposal> findForEvaluation(UUID id) {
         return gradingProposalJpaRepository.findByEvaluationIdOrderByVersionNoDesc(id).stream()
-                .map(GradingProposalJpaEntity::mapProposal)
-                .toList();
+                .map(GradingProposalJpaEntity::mapProposal).toList();
     }
 
     public GradingProposal save(GradingProposal p) {
-        var e = gradingProposalJpaRepository.findById(p.id).orElseGet(GradingProposalJpaEntity::new);
+        var e = gradingProposalJpaRepository.findById(p.id)
+                .orElseGet(GradingProposalJpaEntity::new);
         e.applyProposal(p);
         return gradingProposalJpaRepository.saveAndFlush(e).mapProposal();
     }

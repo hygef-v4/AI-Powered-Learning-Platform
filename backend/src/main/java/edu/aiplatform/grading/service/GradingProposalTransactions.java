@@ -54,9 +54,12 @@ public class GradingProposalTransactions {
     private final ObjectMapper objectMapper;
     private final Clock clock;
 
-    public GradingProposalTransactions(IEvaluationRepository evaluationRepository, IGradingProposalRepository gradingProposalRepository,
-            GradingService gradingService, GradingAccess gradingAccess, SubmissionReviewService submissionReviewService, IAssignmentQuery assignmentQuery,
-            GradingPromptBuilder gradingPromptBuilder, GradingProposalValidator gradingProposalValidator, ObjectMapper objectMapper, Clock clock) {
+    public GradingProposalTransactions(IEvaluationRepository evaluationRepository,
+            IGradingProposalRepository gradingProposalRepository, GradingService gradingService,
+            GradingAccess gradingAccess, SubmissionReviewService submissionReviewService,
+            IAssignmentQuery assignmentQuery, GradingPromptBuilder gradingPromptBuilder,
+            GradingProposalValidator gradingProposalValidator, ObjectMapper objectMapper,
+            Clock clock) {
         this.evaluationRepository = evaluationRepository;
         this.gradingProposalRepository = gradingProposalRepository;
         this.gradingService = gradingService;
@@ -69,8 +72,10 @@ public class GradingProposalTransactions {
         this.clock = clock;
     }
 
-    public record Prepared(GradingProposal proposal, AiPrompt prompt, boolean dispatch, String outputSchema, int maxOutputTokens) {
-        public Prepared(GradingProposal proposal, AiPrompt prompt, boolean dispatch, String outputSchema) {
+    public record Prepared(GradingProposal proposal, AiPrompt prompt, boolean dispatch,
+            String outputSchema, int maxOutputTokens) {
+        public Prepared(GradingProposal proposal, AiPrompt prompt, boolean dispatch,
+                String outputSchema) {
             this(proposal, prompt, dispatch, outputSchema, 4096);
         }
     }
@@ -78,12 +83,15 @@ public class GradingProposalTransactions {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Prepared prepareProposal(Actor actor, UUID evaluationId, AiRequest request) {
         requireAiSource(request);
-        var evaluation = evaluationRepository.lockById(evaluationId).orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
+        var evaluation = evaluationRepository.lockById(evaluationId)
+                .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
         gradingService.requireCurrent(actor, evaluation.id, evaluation.version);
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Use the group document");
-        if (evaluation.state != EvaluationStatus.PENDING && evaluation.state != EvaluationStatus.DRAFT)
-            throw ApiException.conflict("INVALID_GRADE_STATE", "AI requests require a pending or draft grade");
+        if (evaluation.state != EvaluationStatus.PENDING
+                && evaluation.state != EvaluationStatus.DRAFT)
+            throw ApiException.conflict("INVALID_GRADE_STATE",
+                    "AI requests require a pending or draft grade");
         var existing = gradingProposalRepository.findByRequestRef(request.requestRef());
         if (existing.isPresent()) {
             var proposal = existing.get();
@@ -104,35 +112,46 @@ public class GradingProposalTransactions {
         var evaluation = gradingService.requireCurrent(actor, evaluationId, version);
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Use the group document");
-        if (evaluation.state != EvaluationStatus.PENDING && evaluation.state != EvaluationStatus.DRAFT)
-            throw ApiException.conflict("INVALID_GRADE_STATE", "AI proposals require a pending or draft grade");
+        if (evaluation.state != EvaluationStatus.PENDING
+                && evaluation.state != EvaluationStatus.DRAFT)
+            throw ApiException.conflict("INVALID_GRADE_STATE",
+                    "AI proposals require a pending or draft grade");
         int maxOutputTokens = gradingPromptBuilder.calculateMaxOutputTokens(evaluation);
         var prompt = buildPrompt(actor, evaluation);
-        int promptChars = (prompt.system() == null ? 0 : prompt.system().length()) + prompt.user().length();
+        int promptChars = (prompt.system() == null ? 0 : prompt.system().length())
+                + prompt.user().length();
         return AiTokenEstimate.estimate(promptChars, maxOutputTokens);
     }
 
     private edu.aiplatform.ai.contract.AiPrompt buildPrompt(Actor actor, Evaluation evaluation) {
-        var content = assignmentQuery.getContent(evaluation.assignmentId).orElseThrow(
-                () -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE", "Assignment content unavailable"));
-        if (!GradingJson.writeSnapshot(objectMapper, content.rubrics()).equals(evaluation.rubricSnapshot))
-            throw ApiException.conflict("RUBRIC_CHANGED", "Locked rubric no longer matches submitted snapshot");
+        var content = assignmentQuery.getContent(evaluation.assignmentId)
+                .orElseThrow(() -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE",
+                        "Assignment content unavailable"));
+        if (!GradingJson.writeSnapshot(objectMapper, content.rubrics())
+                .equals(evaluation.rubricSnapshot))
+            throw ApiException.conflict("RUBRIC_CHANGED",
+                    "Locked rubric no longer matches submitted snapshot");
         var detail = submissionReviewService.loadEvaluation(actor, evaluation.id);
         return gradingPromptBuilder.buildPrompt(evaluation, detail.document(), content);
     }
 
     private void requireAiSource(AiRequest request) {
         // Nguồn bỏ trống: hệ thống tự chọn (yêu cầu 2026-11-05).
-        if (request == null || Evaluation.isBlankText(request.requestRef()) || request.requestRef().length() > 200
+        if (request == null || Evaluation.isBlankText(request.requestRef())
+                || request.requestRef().length() > 200
                 || request.provider() != null && request.source() != AiSource.PERSONAL)
             throw ApiException.badRequest("AI_SOURCE_REQUIRED", "Invalid AI source");
     }
 
-    private void requireSameRequest(Actor actor, Evaluation evaluation, AiRequest request, GradingProposal proposal) {
-        if (!proposal.requesterId.equals(actor.accountId()) || !proposal.evaluationId.equals(evaluation.id)
+    private void requireSameRequest(Actor actor, Evaluation evaluation, AiRequest request,
+            GradingProposal proposal) {
+        if (!proposal.requesterId.equals(actor.accountId())
+                || !proposal.evaluationId.equals(evaluation.id)
                 || !proposal.submissionHash.equals(evaluation.submissionHash)
-                || !Objects.equals(proposal.source, request.source() == null ? "AUTO" : request.source().name())
-                || !Objects.equals(proposal.provider, request.provider() == null ? null : request.provider().name()))
+                || !Objects.equals(proposal.source,
+                        request.source() == null ? "AUTO" : request.source().name())
+                || !Objects.equals(proposal.provider,
+                        request.provider() == null ? null : request.provider().name()))
             throw ApiException.conflict("REQUEST_REF_CONFLICT", "Request reference already used");
     }
 
@@ -142,8 +161,8 @@ public class GradingProposalTransactions {
         proposal.evaluationId = evaluation.id;
         proposal.requesterId = actor.accountId();
         proposal.requestRef = request.requestRef();
-        proposal.versionNo = gradingProposalRepository.findForEvaluation(evaluation.id).stream().mapToLong(v -> v.versionNo).max()
-                .orElse(0) + 1;
+        proposal.versionNo = gradingProposalRepository.findForEvaluation(evaluation.id).stream()
+                .mapToLong(v -> v.versionNo).max().orElse(0) + 1;
         proposal.submissionHash = evaluation.submissionHash;
         proposal.rubricFingerprint = evaluation.rubricSnapshot;
         proposal.source = request.source() == null ? "AUTO" : request.source().name();
@@ -162,31 +181,38 @@ public class GradingProposalTransactions {
                 proposal.status = "REJECTED";
                 proposal.safeError = "Task correlation mismatch";
                 proposal.taskState = null;
-                if (proposal.completedAt == null) proposal.completedAt = clock.instant();
+                if (proposal.completedAt == null)
+                    proposal.completedAt = clock.instant();
             } else {
                 proposal.taskId = task.taskId();
                 if (task.model() != null) {
                     proposal.model = task.model();
                 }
-                if (proposal.usage == null || proposal.usage.isNull() || task.state() == AiTaskState.READY) {
+                if (proposal.usage == null || proposal.usage.isNull()
+                        || task.state() == AiTaskState.READY) {
                     proposal.usage = objectMapper.valueToTree(task.usage());
                 }
                 if ((proposal.status.equals("PENDING") || isLegacyFailure(proposal))
-                        && Set.of(AiTaskState.FAILED, AiTaskState.CANCELLED, AiTaskState.UNKNOWN).contains(task.state())) {
+                        && Set.of(AiTaskState.FAILED, AiTaskState.CANCELLED, AiTaskState.UNKNOWN)
+                                .contains(task.state())) {
                     proposal.status = "FAILED";
                     proposal.safeError = formatTaskError(task.safeError());
                     proposal.taskState = null;
-                    if (proposal.completedAt == null) proposal.completedAt = clock.instant();
+                    if (proposal.completedAt == null)
+                        proposal.completedAt = clock.instant();
                 } else if (proposal.status.equals("PENDING") && task.state() == AiTaskState.READY
-                        && task.applyResult() != null && task.applyResult() != ApplyOutcome.APPLIED) {
-                    proposal.status = task.applyResult() == ApplyOutcome.STALE ? "STALE" : "REJECTED";
+                        && task.applyResult() != null
+                        && task.applyResult() != ApplyOutcome.APPLIED) {
+                    proposal.status = task.applyResult() == ApplyOutcome.STALE ? "STALE"
+                            : "REJECTED";
                     if ("REJECTED".equals(proposal.status)) {
                         proposal.safeError = task.safeError() == null || task.safeError().isBlank()
                                 ? "AI proposal cannot be applied to this submission"
                                 : formatTaskError(task.safeError());
                     }
                     proposal.taskState = null;
-                    if (proposal.completedAt == null) proposal.completedAt = clock.instant();
+                    if (proposal.completedAt == null)
+                        proposal.completedAt = clock.instant();
                 } else if (proposal.status.equals("PENDING")) {
                     proposal.taskState = task.state().name();
                 } else {
@@ -204,8 +230,8 @@ public class GradingProposalTransactions {
 
     @Transactional
     public ApplyOutcome acceptProposal(AiTaskResult result) {
-        if (!"GRADING_PROPOSAL".equals(result.taskType()) || result.actor() == null || result.targetRef() == null
-                || !result.targetRef().startsWith("evaluation:"))
+        if (!"GRADING_PROPOSAL".equals(result.taskType()) || result.actor() == null
+                || result.targetRef() == null || !result.targetRef().startsWith("evaluation:"))
             return ApplyOutcome.REJECTED;
         UUID evaluationId;
         try {
@@ -240,13 +266,15 @@ public class GradingProposalTransactions {
                     : proposal.status.equals("STALE") ? ApplyOutcome.STALE : ApplyOutcome.REJECTED;
         if (!proposal.submissionHash.equals(evaluation.submissionHash)
                 || !proposal.rubricFingerprint.equals(evaluation.rubricSnapshot)
-                || evaluation.state != EvaluationStatus.PENDING && evaluation.state != EvaluationStatus.DRAFT) {
+                || evaluation.state != EvaluationStatus.PENDING
+                        && evaluation.state != EvaluationStatus.DRAFT) {
             proposal.status = "STALE";
             proposal.taskId = result.taskId();
             proposal.taskState = null;
             proposal.completedAt = clock.instant();
             gradingProposalRepository.save(proposal);
-            log.info("AI grading proposal stale evaluationId={} proposalId={} taskId={} versionNo={}",
+            log.info(
+                    "AI grading proposal stale evaluationId={} proposalId={} taskId={} versionNo={}",
                     evaluationId, proposal.id, result.taskId(), proposal.versionNo);
             return ApplyOutcome.STALE;
         }
@@ -263,7 +291,8 @@ public class GradingProposalTransactions {
             proposal.taskState = null;
             proposal.completedAt = clock.instant();
             gradingProposalRepository.save(proposal);
-            log.info("AI grading proposal ready evaluationId={} proposalId={} taskId={} versionNo={}",
+            log.info(
+                    "AI grading proposal ready evaluationId={} proposalId={} taskId={} versionNo={}",
                     evaluationId, proposal.id, result.taskId(), proposal.versionNo);
             return ApplyOutcome.APPLIED;
         } catch (ApiException ex) {
@@ -274,19 +303,22 @@ public class GradingProposalTransactions {
             proposal.taskId = result.taskId();
             proposal.taskState = null;
             proposal.safeError = "INVALID_AI_PROPOSAL".equals(ex.code())
-                    ? "Phản hồi AI chưa hợp lệ (" + GradingProposalValidator.buildRejectionDiagnostic(ex)
+                    ? "Phản hồi AI chưa hợp lệ ("
+                            + GradingProposalValidator.buildRejectionDiagnostic(ex)
                             + "). Bạn vẫn có thể chấm thủ công."
                     : "AI proposal cannot be applied to this submission";
             proposal.completedAt = clock.instant();
             gradingProposalRepository.save(proposal);
-            log.warn("AI grading proposal rejected evaluationId={} proposalId={} taskId={} versionNo={} status={} code={} diagnostic={}",
-                    evaluationId, proposal.id, result.taskId(), proposal.versionNo, proposal.status, ex.code(),
-                    GradingProposalValidator.buildRejectionDiagnostic(ex));
+            log.warn(
+                    "AI grading proposal rejected evaluationId={} proposalId={} taskId={} versionNo={} status={} code={} diagnostic={}",
+                    evaluationId, proposal.id, result.taskId(), proposal.versionNo, proposal.status,
+                    ex.code(), GradingProposalValidator.buildRejectionDiagnostic(ex));
             return proposal.status.equals("STALE") ? ApplyOutcome.STALE : ApplyOutcome.REJECTED;
         }
     }
 
-    private Set<String> resolveValidBlockIds(Actor actor, Evaluation evaluation, List<RubricView> rubrics) {
+    private Set<String> resolveValidBlockIds(Actor actor, Evaluation evaluation,
+            List<RubricView> rubrics) {
         if (submissionReviewService == null) {
             return GradingFeedbackValidator.listValidBlockIds(rubrics, null);
         }
@@ -297,11 +329,13 @@ public class GradingProposalTransactions {
 
     @Transactional
     public void invalidateChangedSnapshot(UUID evaluationId) {
-        var evaluation = evaluationRepository.lockById(evaluationId).orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
+        var evaluation = evaluationRepository.lockById(evaluationId)
+                .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
         for (var proposal : gradingProposalRepository.findForEvaluation(evaluationId))
             if (Set.of("PENDING", "READY").contains(proposal.status)
                     && (!Objects.equals(proposal.submissionHash, evaluation.submissionHash)
-                            || !Objects.equals(proposal.rubricFingerprint, evaluation.rubricSnapshot)
+                            || !Objects.equals(proposal.rubricFingerprint,
+                                    evaluation.rubricSnapshot)
                             || evaluation.state == EvaluationStatus.SUPERSEDED)) {
                 proposal.status = "STALE";
                 proposal.taskState = null;
@@ -336,20 +370,24 @@ public class GradingProposalTransactions {
                 proposal.safeError = formatTaskError(failure.safeError());
                 proposal.completedAt = clock.instant();
                 gradingProposalRepository.save(proposal);
-                log.info("AI grading proposal failed evaluationId={} proposalId={} taskId={} versionNo={} status={}",
-                        evaluationId, proposal.id, failure.taskId(), proposal.versionNo, proposal.status);
+                log.info(
+                        "AI grading proposal failed evaluationId={} proposalId={} taskId={} versionNo={} status={}",
+                        evaluationId, proposal.id, failure.taskId(), proposal.versionNo,
+                        proposal.status);
             }
         }
     }
 
     static boolean isLegacyFailure(GradingProposal proposal) {
         return "FAILED".equals(proposal.status) && (proposal.safeError == null
-                || Set.of("AI task failed", "AI task unavailable or failed").contains(proposal.safeError));
+                || Set.of("AI task failed", "AI task unavailable or failed")
+                        .contains(proposal.safeError));
     }
 
     private static String formatTaskError(String diagnostic) {
         return diagnostic == null || diagnostic.isBlank()
-                ? "Không thể tạo đề xuất AI. Bạn vẫn có thể chấm thủ công." : diagnostic;
+                ? "Không thể tạo đề xuất AI. Bạn vẫn có thể chấm thủ công."
+                : diagnostic;
     }
 
     @Transactional
@@ -368,23 +406,28 @@ public class GradingProposalTransactions {
     }
 
     @Transactional
-    public GradingProposal recordMcpProposal(Actor actor, UUID evaluationId, long expectedVersion, String hash,
-            String requestRef, JsonNode payload, String agentLabel) {
+    public GradingProposal recordMcpProposal(Actor actor, UUID evaluationId, long expectedVersion,
+            String hash, String requestRef, JsonNode payload, String agentLabel) {
         var evaluation = gradingService.requireCurrent(actor, evaluationId, expectedVersion);
         if (!evaluation.submissionHash.equals(hash))
             throw ApiException.conflict("STALE_PROPOSAL", "Submission changed");
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Use the group document");
-        if (evaluation.state != EvaluationStatus.PENDING && evaluation.state != EvaluationStatus.DRAFT)
-            throw ApiException.conflict("INVALID_GRADE_STATE", "AI proposals require a pending or draft grade");
+        if (evaluation.state != EvaluationStatus.PENDING
+                && evaluation.state != EvaluationStatus.DRAFT)
+            throw ApiException.conflict("INVALID_GRADE_STATE",
+                    "AI proposals require a pending or draft grade");
         var existing = gradingProposalRepository.findByRequestRef(requestRef);
         if (existing.isPresent()) {
             var proposal = existing.get();
             if (!Objects.equals(proposal.rubricFingerprint, evaluation.rubricSnapshot))
                 throw ApiException.conflict("STALE_PROPOSAL", "Rubric snapshot changed");
-            if (!evaluationId.equals(proposal.evaluationId) || !proposal.requesterId.equals(actor.accountId())
-                    || !Objects.equals(proposal.submissionHash, hash) || !Objects.equals(proposal.proposal, payload))
-                throw ApiException.conflict("REQUEST_REF_CONFLICT", "Request reference already used");
+            if (!evaluationId.equals(proposal.evaluationId)
+                    || !proposal.requesterId.equals(actor.accountId())
+                    || !Objects.equals(proposal.submissionHash, hash)
+                    || !Objects.equals(proposal.proposal, payload))
+                throw ApiException.conflict("REQUEST_REF_CONFLICT",
+                        "Request reference already used");
             return proposal;
         }
         var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
@@ -393,8 +436,8 @@ public class GradingProposalTransactions {
         var proposal = new GradingProposal();
         proposal.id = UUID.randomUUID();
         proposal.evaluationId = evaluationId;
-        proposal.versionNo = gradingProposalRepository.findForEvaluation(evaluationId).stream().mapToLong(v -> v.versionNo).max()
-                .orElse(0) + 1;
+        proposal.versionNo = gradingProposalRepository.findForEvaluation(evaluationId).stream()
+                .mapToLong(v -> v.versionNo).max().orElse(0) + 1;
         proposal.requesterId = actor.accountId();
         proposal.requestRef = requestRef;
         proposal.submissionHash = hash;

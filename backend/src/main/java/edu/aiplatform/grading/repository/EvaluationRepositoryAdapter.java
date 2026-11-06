@@ -14,7 +14,8 @@ public class EvaluationRepositoryAdapter implements IEvaluationRepository {
     private final IEvaluationJpaRepository evaluationJpaRepository;
     private final EntityManager entityManager;
 
-    public EvaluationRepositoryAdapter(IEvaluationJpaRepository evaluationJpaRepository, EntityManager entityManager) {
+    public EvaluationRepositoryAdapter(IEvaluationJpaRepository evaluationJpaRepository,
+            EntityManager entityManager) {
         this.evaluationJpaRepository = evaluationJpaRepository;
         this.entityManager = entityManager;
     }
@@ -32,12 +33,13 @@ public class EvaluationRepositoryAdapter implements IEvaluationRepository {
     }
 
     public List<Evaluation> findForAssignmentAndClass(UUID assignmentId, UUID classId) {
-        return evaluationJpaRepository.findByAssignmentIdAndClassId(assignmentId, classId).stream().map(EvaluationJpaEntity::mapEvaluation)
-                .toList();
+        return evaluationJpaRepository.findByAssignmentIdAndClassId(assignmentId, classId).stream()
+                .map(EvaluationJpaEntity::mapEvaluation).toList();
     }
 
     public List<Evaluation> findForClass(UUID classId) {
-        return evaluationJpaRepository.findByClassId(classId).stream().map(EvaluationJpaEntity::mapEvaluation).toList();
+        return evaluationJpaRepository.findByClassId(classId).stream()
+                .map(EvaluationJpaEntity::mapEvaluation).toList();
     }
 
     public Evaluation save(Evaluation e) {
@@ -54,7 +56,9 @@ public class EvaluationRepositoryAdapter implements IEvaluationRepository {
         // Advisory transaction lock also serializes first submissions before a row
         // exists.
         String key = classId + ":" + assignmentId + ":" + subjectId;
-        entityManager.createNativeQuery("select pg_advisory_xact_lock(hashtextextended(cast(:key as text), 0))")
+        entityManager
+                .createNativeQuery(
+                        "select pg_advisory_xact_lock(hashtextextended(cast(:key as text), 0))")
                 .setParameter("key", key).getSingleResult();
     }
 }

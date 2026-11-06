@@ -89,6 +89,9 @@ Các ví dụ minh họa cách đặt tên, không xác nhận code hiện tại
 
 ## 6. Trình bày và trách nhiệm
 
+- Thân method/constructor có câu lệnh phải xuống dòng riêng; không viết cả khai báo và `return` trên một dòng. Tách các câu lệnh và các method bằng khoảng trắng phù hợp để dễ đọc.
+- Ưu tiên dòng khoảng 100 ký tự: xuống dòng danh sách tham số, lời gọi nhiều đối số, biểu thức và chuỗi gọi method khi dài. Không bắt buộc tách literal, regex, SQL, schema hoặc URL chỉ để đạt giới hạn cột; giữ nội dung dữ liệu và contract.
+
 - Java thụt 4 spaces, một câu lệnh mỗi dòng. Cho phép wildcard import (`import ...*;`, `import static ...*;`) để giữ danh sách import gọn, kể cả khi dùng kiểu từ `contract`; không bắt buộc bung wildcard hiện có thành từng dòng. Dùng import tường minh khi cần phân biệt tên trùng hoặc giúp làm rõ kiểu được sử dụng. TypeScript/JSX thụt 2 spaces; giữ formatter/lint hiện tại, ưu tiên độ rộng 100 ký tự cho code mới khi hợp lý.
 - Controller nhận/kiểm tra đầu vào HTTP và gọi service; service điều phối use case; model giữ quy tắc nghiệp vụ; repository giữ truy cập dữ liệu. Unit khác sử dụng public `contract`.
 - Tái sử dụng thành phần có sẵn. Chỉ comment lý do/giới hạn khó thể hiện bằng code; không thêm tầng hoặc comment lặp lại tên method.

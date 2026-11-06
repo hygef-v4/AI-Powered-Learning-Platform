@@ -28,23 +28,26 @@ public class GradingBatchService {
     }
 
     public BatchResult executeBatch(Actor actor, Batch batch, boolean publish) {
-        if (batch.items() == null || batch.items().isEmpty() || batch.items().size() > 200)
-            throw ApiException.badRequest("INVALID_BATCH", "Batch must contain 1–200 items");
+        GradingCommands.validateBatchItems(batch.items());
         var outcomes = new ArrayList<ItemResult>();
         Set<UUID> seen = new HashSet<>();
         for (var item : batch.items()) {
             if (!seen.add(item.evaluationId())) {
-                outcomes.add(new ItemResult(item.evaluationId(), "SKIPPED", "DUPLICATE_ITEM", null));
+                outcomes.add(
+                        new ItemResult(item.evaluationId(), "SKIPPED", "DUPLICATE_ITEM", null));
                 continue;
             }
             try {
-                var evaluation = transactionTemplate.execute(
-                        status -> publish ? gradingService.publishEvaluation(actor, item) : gradingService.finalizeEvaluation(actor, item));
-                outcomes.add(new ItemResult(item.evaluationId(), "SUCCESS", null, evaluation.version));
+                var evaluation = transactionTemplate
+                        .execute(status -> publish ? gradingService.publishEvaluation(actor, item)
+                                : gradingService.finalizeEvaluation(actor, item));
+                outcomes.add(
+                        new ItemResult(item.evaluationId(), "SUCCESS", null, evaluation.version));
             } catch (ApiException ex) {
                 outcomes.add(new ItemResult(item.evaluationId(), "FAILED", ex.code(), null));
             } catch (RuntimeException ex) {
-                outcomes.add(new ItemResult(item.evaluationId(), "FAILED", "GRADING_WRITE_FAILED", null));
+                outcomes.add(new ItemResult(item.evaluationId(), "FAILED", "GRADING_WRITE_FAILED",
+                        null));
             }
         }
         return new BatchResult(outcomes);

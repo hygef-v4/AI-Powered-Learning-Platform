@@ -25,42 +25,46 @@ public class GradebookController {
     private final GradebookService gradebookService;
     private final GradebookExporter gradebookExporter;
 
-    public GradebookController(GradebookService gradebookService, GradebookExporter gradebookExporter) {
+    public GradebookController(GradebookService gradebookService,
+            GradebookExporter gradebookExporter) {
         this.gradebookService = gradebookService;
         this.gradebookExporter = gradebookExporter;
     }
 
     @GetMapping("/gradebook")
-    public GradebookPage listGrades(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
-            @RequestParam(required = false) String q, @RequestParam(defaultValue = "1") int page,
+    public GradebookPage listGrades(@AuthenticationPrincipal Actor actor,
+            @PathVariable UUID classId, @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
         return gradebookService.listGrades(actor, classId, q, page, size);
     }
 
     @GetMapping("/gradebook/export")
     public void exportGrades(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
-            @RequestParam(required = false) UUID assignmentId, @RequestParam(defaultValue = "csv") String format,
-            HttpServletResponse response) throws IOException {
+            @RequestParam(required = false) UUID assignmentId,
+            @RequestParam(defaultValue = "csv") String format, HttpServletResponse response)
+            throws IOException {
         var rows = gradebookService.buildExportRows(actor, classId, assignmentId, format); // Complete authorization before
-                                                                             // headers/bytes.
+        // headers/bytes.
         response.setContentType(format.equals("csv") ? "text/csv; charset=UTF-8"
                 : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Cache-Control", "no-store");
         response.setHeader("X-Content-Type-Options", "nosniff");
-        response.setHeader("Content-Disposition", "attachment; filename=\"gradebook-" + classId + "-"
-                + LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")) + "." + format + "\"");
+        response.setHeader("Content-Disposition", "attachment; filename=\"gradebook-" + classId
+                + "-" + LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")) + "." + format + "\"");
         gradebookExporter.writeGradebook(rows, format, response.getOutputStream());
     }
 
     @GetMapping("/grade-distribution")
-    public List<GradeDistributionCalculator.Bucket> loadDistribution(@AuthenticationPrincipal Actor actor,
-            @PathVariable UUID classId, @RequestParam UUID assignmentId) {
+    public List<GradeDistributionCalculator.Bucket> loadDistribution(
+            @AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
+            @RequestParam UUID assignmentId) {
         return gradebookService.loadDistribution(actor, classId, assignmentId, false);
     }
 
     @GetMapping("/students/{accountId}/grades")
-    public GradebookRow loadStudentGrades(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
-            @PathVariable UUID accountId) {
+    public GradebookRow loadStudentGrades(@AuthenticationPrincipal Actor actor,
+            @PathVariable UUID classId, @PathVariable UUID accountId) {
         return gradebookService.loadStudentGrades(actor, classId, accountId);
     }
 }

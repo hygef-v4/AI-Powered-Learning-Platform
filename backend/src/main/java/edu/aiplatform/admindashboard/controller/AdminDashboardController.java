@@ -20,7 +20,8 @@ public class AdminDashboardController {
     private final AdminDashboardService adminDashboardService;
     private final AdminDashboardActivityService adminDashboardActivityService;
 
-    public AdminDashboardController(AdminDashboardService adminDashboardService, AdminDashboardActivityService adminDashboardActivityService) {
+    public AdminDashboardController(AdminDashboardService adminDashboardService,
+            AdminDashboardActivityService adminDashboardActivityService) {
         this.adminDashboardService = adminDashboardService;
         this.adminDashboardActivityService = adminDashboardActivityService;
     }
@@ -30,7 +31,8 @@ public class AdminDashboardController {
             @RequestParam MultiValueMap<String, String> query) {
         adminDashboardService.requireAdmin(actor);
         validateKeys(query, Set.of());
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(adminDashboardService.loadDashboard(actor));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(adminDashboardService.loadDashboard(actor));
     }
 
     @GetMapping("/activity")
@@ -38,7 +40,8 @@ public class AdminDashboardController {
             @RequestParam MultiValueMap<String, String> query) {
         adminDashboardService.requireAdmin(actor);
         validateKeys(query, Set.of());
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(adminDashboardActivityService.loadActivity(actor));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(adminDashboardActivityService.loadActivity(actor));
     }
 
     @GetMapping("/backups")
@@ -48,20 +51,24 @@ public class AdminDashboardController {
         validateKeys(query, Set.of("page", "size"));
         int page = readInteger(query, "page", 0);
         int size = readInteger(query, "size", 20);
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(adminDashboardService.listBackups(actor, page, size));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(adminDashboardService.listBackups(actor, page, size));
     }
 
     private void validateKeys(MultiValueMap<String, String> query, Set<String> allowed) {
-        if (!allowed.containsAll(query.keySet()) || query.values().stream().anyMatch(values -> values.size() != 1)) {
+        if (!allowed.containsAll(query.keySet())
+                || query.values().stream().anyMatch(values -> values.size() != 1)) {
             throw createInvalidQuery();
         }
     }
 
     private int readInteger(MultiValueMap<String, String> query, String key, int fallback) {
-        if (!query.containsKey(key)) return fallback;
+        if (!query.containsKey(key))
+            return fallback;
         try {
             String value = query.getFirst(key);
-            if (value == null || !value.matches("-?[0-9]+")) throw createInvalidQuery();
+            if (value == null || !value.matches("-?[0-9]+"))
+                throw createInvalidQuery();
             return Integer.parseInt(value);
         } catch (NumberFormatException invalid) {
             throw createInvalidQuery();
