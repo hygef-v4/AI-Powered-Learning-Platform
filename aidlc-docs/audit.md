@@ -10754,3 +10754,21 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Đưa thay đổi lên staging trước, main sau.
 
 ---
+
+## Delivery - Merge Readiness Check
+**Timestamp**: 2026-11-07T00:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem merge được chưa"
+**AI Response**: "PR #52 trên head 323f513a: backend, frontend, deploy-script, GitGuardian đều SUCCESS; images SKIPPED (chỉ chạy khi push main); mergeable, mergeStateStatus CLEAN; staging chưa có commit mới so với nhánh. Không merge."
+**Context**: Kiểm tra trước khi merge vào staging.
+
+---
+
+## Delivery - Final Review and Merge to Staging
+**Timestamp**: 2026-11-07T01:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem còn lỗi gì không, sau đó đưa lên staging cho tôi"
+**AI Response**: "Rà lại toàn bộ diff của PR #52 so với staging: không còn tham chiếu tới giới hạn tên miền trong code; stub IMail là auto-configuration nên không đè adapter; không có IP, khóa hay email cá nhân trong diff. Sửa hai chỗ: platform-deploy.sh xóa LAST_PROBLEM mỗi lần chuyển bản, để khi quay về cũng lỗi thì thông báo nêu đúng lỗi của lần quay về thay vì lỗi cũ (thêm test t_failed_rollback_reports_its_own_problem, bỏ bản sửa thì test báo lỗi); bỏ dòng trống thừa sau package ở ba service. Shellcheck sạch, 12 test script deploy qua. Commit, push, chờ CI xanh rồi merge PR #52 vào staging theo yêu cầu."
+**Context**: Rà soát cuối và merge vào staging; không đụng main.
+
+---

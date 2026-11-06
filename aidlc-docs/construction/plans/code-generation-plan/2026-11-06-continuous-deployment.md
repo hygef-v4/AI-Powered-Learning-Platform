@@ -74,5 +74,5 @@ Yêu cầu ngày 2026-11-06: "tôi muốn setup ci cd để khi code được đ
 - Chưa kiểm:
   - Chưa thấy một deploy thật từ commit mới trên `main`, vì cần merge.
   - Chưa thử một lần quay về thật trên VPS; đường này chỉ test bằng lệnh giả.
-  - Job `deploy-script` chưa chạy trên GitHub.
   - Bản dump nằm trên cùng đĩa VPS, không phải bản sao lưu ngoài máy.
+- Rà soát trước khi merge vào `staging` (2026-11-07): thông báo khi quay về cũng lỗi từng có thể nêu lỗi của lần deploy trước; đã sửa và thêm test (12 test). Job `deploy-script` đã chạy trên GitHub và qua. Script đã cài trên VPS là bản trước bản sửa này; cài lại theo runbook mục 10 khi tiện.
