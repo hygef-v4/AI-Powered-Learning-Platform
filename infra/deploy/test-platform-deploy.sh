@@ -101,6 +101,12 @@ t_compose_up_failure_rolls_back() {
     [[ $(tag) == "$A" ]] && grep -qxF "$B" "$STATE_DIR/skip"
 }
 
+t_failed_rollback_reports_its_own_problem() {
+    setup
+    BAD_TAGS="$B up:$A" LATEST=$B run check && return 1
+    grep -q "quay về aaaaaaaaaaaa cũng lỗi (docker compose up lỗi)" "$ROOT/out" && grep -qxF "$B" "$STATE_DIR/skip"
+}
+
 t_pull_failure_changes_nothing() {
     setup
     FAIL_PULL=$B LATEST=$B run check && return 1
@@ -151,7 +157,7 @@ t_status_and_bad_input() {
     ! run deploy not-a-sha && ! run unknown
 }
 
-for t in t_check_noop t_check_deploys_new t_unhealthy_rolls_back_and_skips t_compose_up_failure_rolls_back \
+for t in t_check_noop t_check_deploys_new t_unhealthy_rolls_back_and_skips t_compose_up_failure_rolls_back t_failed_rollback_reports_its_own_problem \
     t_pull_failure_changes_nothing t_missing_commit_changes_nothing t_api_failure_changes_nothing \
     t_manual_rollback_twice t_rollback_to_sha_and_unskip t_keeps_latest_dumps t_status_and_bad_input; do
     check "$t" "$t"

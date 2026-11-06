@@ -1,6 +1,5 @@
 package edu.aiplatform.identity.service;
 
-
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;

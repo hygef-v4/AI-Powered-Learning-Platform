@@ -1,6 +1,5 @@
 package edu.aiplatform.identity.service;
 
-
 import edu.aiplatform.identity.model.Account;
 import edu.aiplatform.identity.repository.AccountRepository;
 import edu.aiplatform.identity.model.EmailPolicy;

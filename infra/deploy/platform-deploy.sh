@@ -118,6 +118,7 @@ dump_database() {
 }
 
 switch_to() {
+    LAST_PROBLEM=""
     git -C "$PLATFORM_DIR" checkout -q --detach "$1" &&
         set_image_tag "$1" &&
         compose up -d --remove-orphans
