@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { Alert, Button, ClickableRow, Dialog, IconButton, PageNav, Pill, TableFrame, Td, TextInput, Th, cx, showToast } from "@/shared/ui";
 import { getGroups, saveGroups } from "../api";
 import { GroupFormDialog } from "./GroupFormDialog";
+import { GroupProgressCard } from "./GroupProgressCard";
 import { byGroupName, draftsFrom, personLabel, saveErrorText, UNGROUPED, type StudentRow } from "../model/groupDrafts";
 import { LeaderRequestList } from "./LeaderRequestList";
 import { RandomSplitDialog } from "./RandomSplitDialog";
@@ -27,6 +28,7 @@ const formatDate = (value?: string | null) => {
  *   và lưu ngay;
  * - bảng sinh viên (phải) chỉ để xem: tiêu đề là mục đang lọc, tìm theo tên hoặc email, bấm dòng để mở Student Detail; cột cuối
  *   có nút Bảng điểm sang trang Chấm điểm của người đó.
+ * Dưới yêu cầu đổi trưởng nhóm là thẻ Tiến độ bài nhóm (BR-U12-52) khi lớp có bài nhóm.
  * Báo trang lớp qua `onStudentTable` để trang ẩn bảng sinh viên của mình; không tải được nhóm thì trang giữ bảng đó.
  */
 export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded, onStudentTable }: {
@@ -152,6 +154,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
   return (
     <div className="flex flex-col gap-4">
       <LeaderRequestList set={set} groupId={filter || undefined} onChanged={() => void load()} />
+      <GroupProgressCard classId={classId} set={set} />
       <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">
         {/* Thẻ Nhóm: mọi việc với nhóm ở đây, mỗi nhóm có sẵn nút sửa, xóa; bấm nhóm để lọc bảng bên cạnh. */}
         <section aria-label="Nhóm" className="flex min-w-0 flex-col gap-3 rounded-xl border border-line bg-surface p-4">
