@@ -1,4 +1,6 @@
-# U11 Quiz Practice — tech-stack-decisions
+# U11 Quiz Practice — tech-stack-decisions — chuẩn JDBC
+
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code còn JPA được ghi là khoảng cách migration.
 
 > Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
@@ -8,7 +10,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
-| Lưu trữ | PostgreSQL + Spring Data JPA; câu trả lời, ảnh chụp, kết quả dạng `jsonb` | Như các unit khác |
+| Lưu trữ | PostgreSQL + Spring JDBC (JdbcTemplate/NamedParameterJdbcTemplate/JdbcClient); câu trả lời, ảnh chụp, kết quả dạng `jsonb` | Như các unit khác |
 | Trộn câu, đáp án | Seed lưu trên lượt, trộn bằng thuật toán Fisher–Yates có seed | Mở lại lượt vẫn đúng thứ tự |
 | Theo dõi hoạt động | `useActivityTracker`, `ActivityTimeline` của U08 | Dùng chung |
 | Test | JUnit 5, Vitest; Testcontainers cho integration test do tester viết | Theo NFR-004 |

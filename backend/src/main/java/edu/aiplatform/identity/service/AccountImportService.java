@@ -1,7 +1,5 @@
 package edu.aiplatform.identity.service;
 
-import edu.aiplatform.identity.config.IdentityProperties;
-
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
@@ -59,16 +57,14 @@ public class AccountImportService {
     private final IAuthorization authorization;
     private final IAudit audit;
     private final TransactionOperations transactions;
-    private final EmailPolicy emailPolicy;
     private final Clock clock;
 
     public AccountImportService(AccountRepository accounts, IAuthorization authorization, IAudit audit,
-                                TransactionOperations transactions, IdentityProperties properties, Clock clock) {
+                                TransactionOperations transactions, Clock clock) {
         this.accounts = accounts;
         this.authorization = authorization;
         this.audit = audit;
         this.transactions = transactions;
-        this.emailPolicy = new EmailPolicy(properties.allowedEmailDomains());
         this.clock = clock;
     }
 
@@ -157,9 +153,8 @@ public class AccountImportService {
         if (email.isEmpty() || displayName.isEmpty() || role.isEmpty()) {
             return "MISSING_FIELD";
         }
-        EmailPolicy.EmailCheck emailCheck = emailPolicy.check(email);
-        if (emailCheck != EmailPolicy.EmailCheck.OK) {
-            return emailCheck.name();
+        if (!EmailPolicy.isValid(email)) {
+            return "INVALID_EMAIL";
         }
         if (seen.contains(email)) {
             return "DUPLICATE_IN_FILE";

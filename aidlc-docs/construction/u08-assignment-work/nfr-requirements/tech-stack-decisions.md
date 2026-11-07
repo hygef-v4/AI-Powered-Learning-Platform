@@ -1,4 +1,6 @@
-# U08 Assignment Work — tech-stack-decisions
+# U08 Assignment Work — tech-stack-decisions — chuẩn JDBC
+
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code còn JPA được ghi là khoảng cách migration.
 
 > Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
@@ -8,7 +10,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
-| Lưu trữ | PostgreSQL + Spring Data JPA; nội dung lượt dạng `jsonb` | Cùng mô hình tài liệu của U07 |
+| Lưu trữ | PostgreSQL + Spring JDBC (JdbcTemplate/NamedParameterJdbcTemplate/JdbcClient); nội dung lượt dạng `jsonb` | Cùng mô hình tài liệu của U07 |
 | Nén | Gzip cho body lưu nháp | Tài liệu có sơ đồ khá lớn |
 | Giới hạn tần suất | Bucket4j + Redis (đã có trong `pom.xml`) | Dùng chung cho nhiều instance |
 | Theo dõi trang | Page Visibility API (`visibilitychange`), không dùng `blur` | Không tính iframe Draw.io là rời trang |

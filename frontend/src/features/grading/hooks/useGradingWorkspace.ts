@@ -2,10 +2,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { gradingApi } from "../api";
-import { rubricValues, hasPartialPoints, invalidItemScores } from "../model/rubricScores";
-import { message } from "./useResource";
+import { buildRubricValues, hasPartialPoints, hasInvalidItemScores } from "../model/rubricScores";
+import { formatErrorMessage } from "../model/format";
 import { useGradingProposals } from "./useGradingProposals";
-import { evaluationHref, type NavigationFilters } from "../model/navigation";
+import { buildEvaluationHref, type NavigationFilters } from "../model/navigation";
 import type {
   AiRequest,
   Checks,
@@ -20,14 +20,14 @@ import type {
 const UNSAVED_CHANGES_MESSAGE = "Bạn có thay đổi chưa lưu. Rời bài này?";
 
 /** Opening a grade preserves explicit item scores and historical adjustments. */
-function initialForm(evaluation: Evaluation, rubrics: Rubric[]): GradingFormValues {
+function createInitialForm(evaluation: Evaluation, rubrics: Rubric[]): GradingFormValues {
   let checks: Checks;
   try {
     checks = JSON.parse(evaluation.rubricChecks);
   } catch {
     checks = {};
   }
-  const normalized = rubricValues(rubrics, checks, evaluation.rubricItemScores ?? {});
+  const normalized = buildRubricValues(rubrics, checks, evaluation.rubricItemScores ?? {});
   return {
     checks: normalized.checks,
     itemScores: normalized.itemScores,
@@ -46,7 +46,7 @@ function initialForm(evaluation: Evaluation, rubrics: Rubric[]): GradingFormValu
 export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Detail>, filters: NavigationFilters = {}) {
   const router = useRouter();
   const [detail, setDetail] = useState(initial);
-  const [form, setForm] = useState(() => initialForm(initial.evaluation, initial.rubrics));
+  const [form, setForm] = useState(() => createInitialForm(initial.evaluation, initial.rubrics));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [dirty, setDirty] = useState(false);
@@ -76,38 +76,38 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     setDirty(true);
   }
 
-  async function reload() {
+  async function reloadEvaluation() {
     try {
       // Preserve unsaved edits only while grading the same submitted receipt.
       const refreshed = await refresh();
       setDetail(refreshed);
       const receiptChanged = refreshed.evaluation.submissionHash !== evaluation.submissionHash;
       if (receiptChanged || refreshed.evaluation.state === "FINALIZED" || refreshed.evaluation.state === "PUBLISHED") {
-        setForm(initialForm(refreshed.evaluation, refreshed.rubrics));
+        setForm(createInitialForm(refreshed.evaluation, refreshed.rubrics));
         setDirty(false);
         dirtyRef.current = false;
       }
       if (receiptChanged) resumePolling();
     } catch (error) {
-      setError(message(error));
+      setError(formatErrorMessage(error));
     }
   }
 
   function confirmNavigation() {
     return !dirty || window.confirm(UNSAVED_CHANGES_MESSAGE);
   }
-  function navigate(id: string, keepFilters = true) {
-    if (confirmNavigation()) router.push(evaluationHref(id, keepFilters ? filters : {}));
+  function navigateEvaluation(id: string, keepFilters = true) {
+    if (confirmNavigation()) router.push(buildEvaluationHref(id, keepFilters ? filters : {}));
   }
 
-  async function save() {
+  async function saveEvaluation() {
     if (disabled) return;
     const currentIndex = detail.navigationIds.indexOf(evaluation.id);
     const next = currentIndex >= 0 ? detail.navigationIds[currentIndex + 1] : undefined;
     setBusy(true);
     setError("");
     try {
-      if (invalidItemScores(detail.rubrics, form.itemScores)) {
+      if (hasInvalidItemScores(detail.rubrics, form.itemScores)) {
         throw new Error("Kiểm tra điểm từng mục: từ 0 đến điểm tối đa, với tối đa 2 chữ số thập phân.");
       }
       const supportsItemScores = evaluation.rubricItemScores !== undefined;
@@ -120,7 +120,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
         (form.acknowledgedReviewItems && Object.keys(form.acknowledgedReviewItems).length > 0) ||
         (form.reviewedItemScores && Object.keys(form.reviewedItemScores).length > 0),
       );
-      const saved = await gradingApi.save(evaluation.id, {
+      const saved = await gradingApi.saveEvaluation(evaluation.id, {
         ...(supportsItemScores ? { itemScoresByRubric: form.itemScores ?? {} } : {}),
         ...(hasStructuredPayload
           ? {
@@ -153,9 +153,9 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
         reviewedItemScores: saved.reviewedItemScores ?? current.reviewedItemScores ?? {},
         usedProposalId: null,
       }));
-      if (next) router.push(evaluationHref(next, filters));
+      if (next) router.push(buildEvaluationHref(next, filters));
     } catch (error) {
-      setError(message(error));
+      setError(formatErrorMessage(error));
     } finally {
       setBusy(false);
     }
@@ -166,9 +166,9 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     setBusy(true);
     setError("");
     try {
-      addProposal(await gradingApi.request(evaluation.id, input));
+      addProposal(await gradingApi.requestProposal(evaluation.id, input));
     } catch (error) {
-      setError(message(error));
+      setError(formatErrorMessage(error));
     } finally {
       setBusy(false);
     }
@@ -183,7 +183,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     structuredFeedback?: StructuredFeedback | null,
   ) {
     if (disabled) return;
-    const normalized = rubricValues(detail.rubrics, checks, itemScores);
+    const normalized = buildRubricValues(detail.rubrics, checks, itemScores);
     const retainedFeedback = structuredFeedback ?? form.structuredFeedback ?? evaluation.structuredFeedback ?? null;
     const reviewedItemScores: ItemScores = {};
     // Legacy proposals contain no new explanations: keep only the old text's item/score baselines.
@@ -219,10 +219,10 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     official,
     currentIndex: detail.navigationIds.indexOf(evaluation.id),
     updateForm,
-    reload,
-    navigate,
+    reload: reloadEvaluation,
+    navigate: navigateEvaluation,
     confirmNavigation,
-    save,
+    save: saveEvaluation,
     requestProposal,
     resumePolling,
     applyProposal,

@@ -1,6 +1,6 @@
 # Build and test evidence — consolidated source baseline
 
-**Documentation baseline 2026-10-30: staging@794a405304bf02dd2593a9fa2c88662d7cd52845**. The initial documentation-only sync performed no application run; the subsequent approved remediation now has fresh automated verification below. All 15 units have source; full platform acceptance and NFR certification remain pending.
+**Current source inventory: `f68a6ec5`, 2026-11-07**, after the staging merge. This documentation-only sync performs no application run. All 15 units have source; full platform acceptance and NFR certification remain pending. The dated evidence below belongs to its recorded source/scope, not automatically to current HEAD.
 
 ## Evidence matrix
 
@@ -18,10 +18,16 @@
 
 ## Current gates
 
-Current move-only working tree at parent HEAD `5a76e428`: backend 1,611 passed/0 skipped and required DB guard passed; frontend 599 passed/94 files, typecheck/build passed, lint exit 0 with two existing warnings. All original source/resource files retained; broader refactor edits withdrawn. See [package/file move results](2026-10-30-package-moves-only-results.md). No stage, commit, push or history rewrite.
+Fresh full application verification after merge `f68a6ec5` is not established by this documentation update. Source inventory and link checks are separate from runtime/test acceptance. CI commands and the four required PostgreSQL suites are specified in [build instructions](build-instructions.md) and the guard script.
 
-Fresh local automated verification: backend 1,611 passed/0 skipped, required DB guard passed, frontend 599 passed/94 files, lint/typecheck/build passed (2 existing lint warnings). See [2026-10-30-remediation-student-mcp-results.md](2026-10-30-remediation-student-mcp-results.md). CI, browser/runtime/provider/restore/security/performance acceptance remains pending. Docker and disposable PostgreSQL migrations were exercised in the remediation; the older “Docker stopped”, skipped-suite and missing-schema statements describe earlier runs. No live application database migration, provider call, email/grade publication or deployment was performed.
+| Recorded scope | Evidence | Result and limit |
+|---|---|---|
+| U09 move/rename, 06/11; delivered in `1cddff35` before the staging merge | [Full verification](2026-11-06-u09-structure-full-verification.md) | Backend 1,830 passed/0 skipped; all four required PostgreSQL suites passed; frontend 799 passed/116 files; lint without warnings, typecheck and production build passed. Not a new run on `f68a6ec5`. |
+| Move-only refactor, 30/10 | [Package/file moves](2026-10-30-package-moves-only-results.md) | Historical 1,611 backend/599 frontend; no conversion into current HEAD acceptance. |
+| Remediation, 30/10 | [Remediation result](2026-10-30-remediation-student-mcp-results.md) | Historical 1,611 backend/599 frontend and two lint warnings; original scope/limits retained. |
+
+CI execution status, browser/provider/restore/security/performance acceptance are not inferred from local logs. Disposable PostgreSQL migrations in dated reports do not certify a live migration or restore.
 
 ## Runbooks
 
-[Build](build-instructions.md), [automated tests](unit-test-instructions.md), [integration](integration-test-instructions.md), [E2E](e2e-test-instructions.md), [security](security-test-instructions.md), [performance](performance-test-instructions.md). CI source and required DB-suite guard are linked in build instructions; deploy job remains disabled. Historical instructions and results are preserved with dates.
+[Build](build-instructions.md), [automated tests](unit-test-instructions.md), [integration](integration-test-instructions.md), [E2E](e2e-test-instructions.md), [security](security-test-instructions.md), [performance](performance-test-instructions.md). CI tests the deploy script; VPS pulls successful main builds using the [deployment runbook](../../../docs/runbooks/deploy-vps.md). This document does not assert live VPS state. Historical instructions/results retain their dates.

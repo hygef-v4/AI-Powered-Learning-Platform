@@ -5,7 +5,7 @@ import { useEffect, useRef, type ReactNode, type CSSProperties } from "react";
 import { actionLabel, shortReason } from "@/features/audit/model/labels";
 import { Alert, PageHeader, TableFrame, Td, Th, cx } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
-import { Donut, LineChart, Legend, Reveal, SegmentBar, StackedColumns, formatNumber, type Series } from "../components/charts";
+import { Donut, LineChart, Legend, Reveal, SegmentBar, StackedColumns, formatNumber, type Series } from "../components/DashboardCharts";
 import type { BackupRunItem, SecurityEventItem } from "../model/types";
 import { isDenied, useLiveOverview, type Overview } from "../hooks/useLiveOverview";
 import { BackupStatus } from "../components/BackupStatus";
@@ -41,14 +41,14 @@ const SECURITY_LABELS: Record<string, string> = {
 };
 
 /** Ngày yyyy-mm-dd theo giờ Việt Nam, lùi `back` ngày. */
-function vnDay(back = 0) {
+function formatVietnamDay(back = 0) {
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: ZONE }).format(new Date());
   const date = new Date(`${today}T00:00:00Z`);
   date.setUTCDate(date.getUTCDate() - back);
   return date.toISOString().slice(0, 10);
 }
-const shortDay = (day: string) => `${day.slice(8, 10)}/${day.slice(5, 7)}`;
-const shortTime = (iso: string) => new Intl.DateTimeFormat("vi-VN", { timeZone: ZONE, hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })
+const formatShortDay = (day: string) => `${day.slice(8, 10)}/${day.slice(5, 7)}`;
+const formatShortTime = (iso: string) => new Intl.DateTimeFormat("vi-VN", { timeZone: ZONE, hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })
   .formatToParts(new Date(iso)).reduce((acc, part) => ({ ...acc, [part.type]: part.value }), {} as Record<string, string>);
 
 /**
@@ -122,7 +122,7 @@ function Board({ data }: { data: Overview }) {
             <Legend series={KINDS} className="mb-2" />
             <Reveal label="Số bài tập được giao mỗi ngày theo loại">
               {(shown) => <StackedColumns shown={shown} series={KINDS}
-                days={activity.assignmentsByDay.data!.map((d) => ({ label: shortDay(d.day), values: [d.individual, d.group, d.practice] }))} />}
+                days={activity.assignmentsByDay.data!.map((d) => ({ label: formatShortDay(d.day), values: [d.individual, d.group, d.practice] }))} />}
             </Reveal>
           </> : <Unavailable loading={loading.activity} />}
         </Panel>
@@ -159,7 +159,7 @@ function Board({ data }: { data: Overview }) {
         <Panel title="Token AI Hệ thống" subtitle="Theo ngày" testId="dashboard-token-trend" order={8}>
           {usage ? (
             <Reveal label="Token AI hệ thống theo ngày">
-              {(shown) => <LineChart shown={shown} color="var(--c-info)" points={usage.byDay.map((d) => ({ label: shortDay(d.day), value: d.tokens }))} />}
+              {(shown) => <LineChart shown={shown} color="var(--c-info)" points={usage.byDay.map((d) => ({ label: formatShortDay(d.day), value: d.tokens }))} />}
             </Reveal>
           ) : <Unavailable loading={loading.usage} />}
         </Panel>
@@ -182,7 +182,7 @@ const KPI_TONES = {
 
 /** Hiện lần lượt lúc mới vào trang: mỗi khối trễ hơn khối trước 60ms (máy bật giảm chuyển động thì hiện ngay). */
 const ENTER = "animate-rise motion-reduce:animate-none";
-const enterDelay = (order: number): CSSProperties => ({ animationDelay: `${order * 60}ms` });
+const createEnterDelay = (order: number): CSSProperties => ({ animationDelay: `${order * 60}ms` });
 
 /**
  * Số đếm lên từ 0 trong lần hiện đầu tiên (đổi giá trị trực tiếp trên nút chữ React đã tạo nên React vẫn cập nhật đúng ở các
@@ -218,7 +218,7 @@ function CountUp({ value }: { value: number }) {
 /** Ô số tô màu: nhãn, số lớn, một dòng phụ; chữ lấy màu của chính ô. */
 function Kpi({ tone, label, value, loading, testId, order, children }: { tone: keyof typeof KPI_TONES; label: string; value: number | undefined; loading?: boolean; testId: string; order: number; children?: ReactNode }) {
   return (
-    <section aria-label={label} data-testid={testId} style={enterDelay(order)}
+    <section aria-label={label} data-testid={testId} style={createEnterDelay(order)}
       className={cx("flex min-w-0 flex-col gap-1 rounded-xl px-5 py-4", ENTER, KPI_TONES[tone])}>
       <h2 className="text-[13px] font-semibold">{label}</h2>
       <p className="font-display text-[34px] leading-none font-bold tracking-[-0.02em] tabular-nums">{value === undefined ? "—" : <CountUp value={value} />}</p>
@@ -229,7 +229,7 @@ function Kpi({ tone, label, value, loading, testId, order, children }: { tone: k
 
 function Panel({ title, subtitle, action, testId, order, children }: { title: string; subtitle: string; action?: ReactNode; testId: string; order: number; children: ReactNode }) {
   return (
-    <section aria-label={title} data-testid={testId} style={enterDelay(order)}
+    <section aria-label={title} data-testid={testId} style={createEnterDelay(order)}
       className={cx("flex min-w-0 flex-col gap-3 rounded-xl border border-line bg-surface p-5", ENTER)}>
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -250,7 +250,7 @@ function Unavailable({ loading = false }: { loading?: boolean }) {
 /** Mỗi ô một ngày trong 30 ngày gần nhất (7 ô một hàng, cũ trước), màu theo kết quả sao lưu của ngày đó. */
 function BackupCalendar({ runs }: { runs: BackupRunItem[] }) {
   const byDay = new Map(runs.map((run) => [run.scheduledFor, run]));
-  const days = Array.from({ length: 30 }, (_, i) => vnDay(29 - i));
+  const days = Array.from({ length: 30 }, (_, i) => formatVietnamDay(29 - i));
   const stateOf = (day: string) => {
     const run = byDay.get(day);
     if (!run) return BACKUP.none;
@@ -262,7 +262,7 @@ function BackupCalendar({ runs }: { runs: BackupRunItem[] }) {
         {days.map((day, i) => {
           const state = stateOf(day);
           return (
-            <li key={day} title={`${shortDay(day)}: ${state.name}`} aria-label={`${shortDay(day)}: ${state.name}`}
+            <li key={day} title={`${formatShortDay(day)}: ${state.name}`} aria-label={`${formatShortDay(day)}: ${state.name}`}
               className="aspect-square animate-pop rounded-md transition-transform duration-150 hover:scale-110 motion-reduce:animate-none motion-reduce:transition-none"
               style={{ background: state.color, animationDelay: `${300 + i * 18}ms` }} />
           );
@@ -281,7 +281,7 @@ function SecurityTable({ events }: { events: SecurityEventItem[] }) {
       <thead><tr><Th>Thời gian</Th><Th>Sự việc</Th><Th>Tài khoản</Th><Th>Lý do</Th></tr></thead>
       <tbody>
         {events.slice(0, 10).map((event, i) => {
-          const time = shortTime(event.occurredAt);
+          const time = formatShortTime(event.occurredAt);
           const label = SECURITY_LABELS[event.action] ?? `Bị từ chối: ${actionLabel(event.action)}`;
           return (
             <tr key={`${event.occurredAt}-${i}`}>

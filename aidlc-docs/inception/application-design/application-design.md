@@ -1,6 +1,6 @@
-# Application Design — AS-BUILT 2026-10-30
+# Application Design — AS-BUILT 2026-11-07
 
-Baseline `staging@794a405304bf02dd2593a9fa2c88662d7cd52845`; source-observed, không phải runtime acceptance. 66 active UC, 50 MVP stories + 1 extension, 15 logical units.
+Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; source-observed, not runtime acceptance. 66 active UC and 15 logical units.
 
 | Unit | Trách nhiệm hiện hành | UC | Packages |
 |---|---|---|---|
@@ -22,7 +22,9 @@ Baseline `staging@794a405304bf02dd2593a9fa2c88662d7cd52845`; source-observed, kh
 
 ## Kiến trúc triển khai
 
-Một backend Spring Boot và một worker dùng chung code/module; frontend Next.js; không phải 15 microservice. PostgreSQL/Flyway quản lý schema; Redis cho phiên/rate limit; RabbitMQ cho job/events; private Google Drive cho tệp/backup; SMTP Brevo demo/production và Mailpit local. Adapter availability phụ thuộc cấu hình/profile; có lớp fallback không chứng minh runtime đang dùng stub.
+Một backend Spring Boot và một worker dùng chung code/module; frontend Next.js; không phải 15 microservice. PostgreSQL/Flyway quản lý schema; Redis cho phiên/rate limit; RabbitMQ cho job/events; private Google Drive cho tệp/backup; U01 IMail qua SMTP (mặc định, Mailpit local) hoặc Brevo HTTPS API (`MAIL_TRANSPORT=brevo-api`, `BREVO_API_KEY`). Adapter availability phụ thuộc cấu hình/profile; có lớp fallback không chứng minh runtime đang dùng stub.
+
+VPS tự poll workflow `ci.yml` thành công trên `main`, kéo image theo SHA và chạy deploy/health gate, rollback khi lỗi. CI có job `deploy-script` để kiểm script, không SSH deploy. [Runbook triển khai](../../../docs/runbooks/deploy-vps.md). Không xác nhận VPS/provider đang hoạt động từ source inventory.
 
 ## Quyền và ranh giới
 

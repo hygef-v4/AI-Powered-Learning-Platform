@@ -24,8 +24,9 @@ public class GradingContractStubs {
     @Bean
     @ConditionalOnMissingBean
     IGroupEvaluation groupEvaluationStub() {
-        return Stubs.announce(IGroupEvaluation.class, (groupDocumentId, submissionHash, assignmentId, classId,
-                memberIds) -> Stubs.called(IGroupEvaluation.class, "bỏ qua nộp bài nhóm " + groupDocumentId));
+        return Stubs.announce(IGroupEvaluation.class,
+                (groupDocumentId, submissionHash, assignmentId, classId, memberIds) -> Stubs
+                        .called(IGroupEvaluation.class, "bỏ qua nộp bài nhóm " + groupDocumentId));
     }
 
     @Bean
@@ -34,13 +35,16 @@ public class GradingContractStubs {
         return Stubs.announce(IGroupSubmissionSource.class, new IGroupSubmissionSource() {
             @Override
             public Optional<GroupSubmissionView> getGroupSubmission(UUID groupDocumentId) {
-                throw edu.aiplatform.shared.error.ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE",
+                throw edu.aiplatform.shared.error.ApiException.unavailable(
+                        "GROUP_SUBMISSIONS_UNAVAILABLE",
                         "Group submission provider is not implemented");
             }
 
             @Override
-            public List<GroupSubmissionStatus> listGroupSubmissions(UUID assignmentId, UUID classId) {
-                throw edu.aiplatform.shared.error.ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE",
+            public List<GroupSubmissionStatus> listGroupSubmissions(UUID assignmentId,
+                    UUID classId) {
+                throw edu.aiplatform.shared.error.ApiException.unavailable(
+                        "GROUP_SUBMISSIONS_UNAVAILABLE",
                         "Group submission provider is not implemented");
             }
         });

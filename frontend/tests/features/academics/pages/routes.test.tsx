@@ -1,6 +1,6 @@
 import {render,screen,fireEvent,waitFor} from "@testing-library/react";
 import {afterEach,it,expect,vi} from "vitest";
-import {ClassesRoute,ClassDetailRoute} from "@/features/academics/pages/routes";
+import {ClassesRoute,ClassDetailRoute} from "@/features/academics/pages/ClassRoutes";
 vi.mock("next/navigation",()=>({useRouter:()=>({push:vi.fn()}),useSearchParams:()=>new URLSearchParams(window.location.search)}));
 vi.mock("@/shared/auth/useCurrentUser",()=>({useCurrentUser:()=>({displayName:"User"})}));
 afterEach(()=>vi.unstubAllGlobals());

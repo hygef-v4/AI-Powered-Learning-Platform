@@ -4,9 +4,9 @@ import { SubmissionDetailPage } from "@/features/grading/pages/SubmissionDetailP
 import type { SubmissionPage } from "@/features/grading/model/types";
 import { ApiError } from "@/shared/api/client";
 
-const mocks = vi.hoisted(() => ({ submissions: vi.fn(), assignmentContext: vi.fn(), classDetail: vi.fn() }));
+const mocks = vi.hoisted(() => ({ listSubmissions: vi.fn(), loadAssignmentContext: vi.fn(), classDetail: vi.fn() }));
 vi.mock("@/features/grading/api", () => ({ gradingApi: mocks }));
-vi.mock("@/features/academics/api", () => ({ academicsApi: { detail: mocks.classDetail } }));
+vi.mock("@/features/academics/api", () => ({ academicsApi: { loadClass: mocks.classDetail } }));
 vi.mock("@/features/grading/components/BatchActionDialog", () => ({
   BatchActionDialog: ({ items, onDone }: { items: unknown; onDone: () => void }) => (
     <div role="dialog" aria-label="Batch preview">
@@ -31,8 +31,8 @@ function deferred<T>() {
 }
 beforeEach(() => {
   vi.resetAllMocks();
-  mocks.submissions.mockResolvedValue(page);
-  mocks.assignmentContext.mockResolvedValue(context);
+  mocks.listSubmissions.mockResolvedValue(page);
+  mocks.loadAssignmentContext.mockResolvedValue(context);
 });
 afterEach(cleanup);
 
@@ -49,7 +49,7 @@ describe("submission assignment context", () => {
     expect(screen.getByRole("link", { name: "Tiếp tục chấm" })).toHaveAttribute("href", "/teaching/evaluations/e?status=DRAFT&late=true");
   });
   it("labels subject-scoped work using the authorized class in the same subject", async () => {
-    mocks.assignmentContext.mockResolvedValue({ ...context, scope: "SUBJECT", classId: null, subjectId: "subject", ownerName: "Subject name" });
+    mocks.loadAssignmentContext.mockResolvedValue({ ...context, scope: "SUBJECT", classId: null, subjectId: "subject", ownerName: "Subject name" });
     mocks.classDetail.mockResolvedValue({ id: "c", subject: { id: "subject" }, code: "SE_JS", name: "Software Design" });
     render(<SubmissionDetailPage classId="c" assignmentId="a" />);
     expect(await screen.findByText("Lớp: SE_JS — Software Design")).toBeInTheDocument();
@@ -60,14 +60,14 @@ describe("submission assignment context", () => {
     { id: "c", subject: { id: "other" }, code: "OTHER", name: "Other subject" },
     { id: "other", subject: { id: "subject" }, code: "OTHER", name: "Other class" },
   ])("rejects subject work with a mismatched authorized class: %j", async (courseClass) => {
-    mocks.assignmentContext.mockResolvedValue({ ...context, scope: "SUBJECT", classId: null, subjectId: "subject" });
+    mocks.loadAssignmentContext.mockResolvedValue({ ...context, scope: "SUBJECT", classId: null, subjectId: "subject" });
     mocks.classDetail.mockResolvedValue(courseClass);
     render(<SubmissionDetailPage classId="c" assignmentId="a" />);
     await screen.findByText("Không tải được thông tin bài tập/lớp.");
     expect(screen.queryByText(/Lớp: OTHER/)).not.toBeInTheDocument();
   });
   it("does not expose subject context when the teaching class lookup is unavailable", async () => {
-    mocks.assignmentContext.mockResolvedValue({ ...context, scope: "SUBJECT", classId: null, subjectId: "subject" });
+    mocks.loadAssignmentContext.mockResolvedValue({ ...context, scope: "SUBJECT", classId: null, subjectId: "subject" });
     mocks.classDetail.mockRejectedValue(new ApiError({ status: 503, title: "Unavailable" }));
     render(<SubmissionDetailPage classId="c" assignmentId="a" />);
     await screen.findByText("Không tải được thông tin bài tập/lớp.");
@@ -76,7 +76,7 @@ describe("submission assignment context", () => {
   });
   it("ignores a subject class lookup that finishes after navigating to another assignment", async () => {
     const oldClass = deferred<{ id: string; subject: { id: string }; code: string; name: string }>();
-    mocks.assignmentContext.mockImplementation((id: string) => Promise.resolve(id === "a"
+    mocks.loadAssignmentContext.mockImplementation((id: string) => Promise.resolve(id === "a"
       ? { ...context, scope: "SUBJECT", classId: null, subjectId: "subject" }
       : { ...context, id, title: "Bài mới" }));
     mocks.classDetail.mockReturnValue(oldClass.promise);
@@ -92,12 +92,12 @@ describe("submission assignment context", () => {
     render(<SubmissionDetailPage classId="c" assignmentId="a" />);
     expect(await screen.findByRole("heading", { level: 1, name: "Bài nộp — Phân tích yêu cầu" })).toBeInTheDocument();
     expect(screen.getByText("Lớp: SE01 — Lớp một")).toBeInTheDocument();
-    expect(mocks.assignmentContext).toHaveBeenCalledWith("a");
+    expect(mocks.loadAssignmentContext).toHaveBeenCalledWith("a");
   });
 
   it("loads rows independently while metadata is pending", async () => {
     const pending = deferred<typeof context>();
-    mocks.assignmentContext.mockReturnValue(pending.promise);
+    mocks.loadAssignmentContext.mockReturnValue(pending.promise);
     render(<SubmissionDetailPage classId="c" assignmentId="a" />);
     await ready();
     expect(screen.getByRole("heading", { level: 1, name: "Bài nộp" })).toBeInTheDocument();
@@ -107,15 +107,15 @@ describe("submission assignment context", () => {
   });
 
   it.each([403, 404, 503])("isolates metadata HTTP %i and retries it without reloading submissions", async (status) => {
-    mocks.assignmentContext.mockRejectedValueOnce(new ApiError({ status, title: "Unavailable" }));
+    mocks.loadAssignmentContext.mockRejectedValueOnce(new ApiError({ status, title: "Unavailable" }));
     render(<SubmissionDetailPage classId="c" assignmentId="a" />);
     await ready();
     expect(await screen.findByText("Không tải được thông tin bài tập/lớp.")).toBeInTheDocument();
     expect(screen.queryByText(context.ownerName, { exact: false })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Thử tải lại thông tin bài tập/lớp" }));
     await screen.findByText("Lớp: SE01 — Lớp một");
-    expect(mocks.assignmentContext).toHaveBeenCalledTimes(2);
-    expect(mocks.submissions).toHaveBeenCalledTimes(1);
+    expect(mocks.loadAssignmentContext).toHaveBeenCalledTimes(2);
+    expect(mocks.listSubmissions).toHaveBeenCalledTimes(1);
   });
 
   it.each([
@@ -123,7 +123,7 @@ describe("submission assignment context", () => {
     { ...context, classId: "wrong" },
     { ...context, scope: "SUBJECT", classId: null },
   ])("does not label rows using mismatched metadata: %j", async (metadata) => {
-    mocks.assignmentContext.mockResolvedValue(metadata);
+    mocks.loadAssignmentContext.mockResolvedValue(metadata);
     render(<SubmissionDetailPage classId="c" assignmentId="a" />);
     await ready();
     await screen.findByText("Không tải được thông tin bài tập/lớp.");
@@ -132,7 +132,7 @@ describe("submission assignment context", () => {
   });
 
   it("uses readable fallbacks for empty names rather than IDs", async () => {
-    mocks.assignmentContext.mockResolvedValue({ ...context, title: "   ", ownerName: "" });
+    mocks.loadAssignmentContext.mockResolvedValue({ ...context, title: "   ", ownerName: "" });
     render(<SubmissionDetailPage classId="c" assignmentId="a" />);
     await screen.findByRole("heading", { name: "Bài nộp — Bài tập chưa có tiêu đề" });
     expect(screen.getByText("Chưa có thông tin lớp")).toBeInTheDocument();
@@ -140,7 +140,7 @@ describe("submission assignment context", () => {
 
   it("renders long metadata and HTML-looking titles as text", async () => {
     const title = '<img src=x onerror="alert(1)">' + " Tên bài tập dài".repeat(30);
-    mocks.assignmentContext.mockResolvedValue({ ...context, title });
+    mocks.loadAssignmentContext.mockResolvedValue({ ...context, title });
     const { container } = render(<SubmissionDetailPage classId="c" assignmentId="a" />);
     expect(await screen.findByRole("heading", { name: `Bài nộp — ${title}` })).toBeInTheDocument();
     expect(container.querySelector("img")).toBeNull();
@@ -148,9 +148,9 @@ describe("submission assignment context", () => {
 
   it("ignores an earlier response after navigating to another assignment", async () => {
     const pending = deferred<typeof context>();
-    mocks.assignmentContext.mockImplementation((id: string) => id === "a" ? pending.promise : Promise.resolve({ ...context, id, title: "Bài mới" }));
+    mocks.loadAssignmentContext.mockImplementation((id: string) => id === "a" ? pending.promise : Promise.resolve({ ...context, id, title: "Bài mới" }));
     const { rerender } = render(<SubmissionDetailPage classId="c" assignmentId="a" />);
-    await waitFor(() => expect(mocks.assignmentContext).toHaveBeenCalledWith("a"));
+    await waitFor(() => expect(mocks.loadAssignmentContext).toHaveBeenCalledWith("a"));
     rerender(<SubmissionDetailPage classId="c" assignmentId="b" />);
     await screen.findByRole("heading", { name: "Bài nộp — Bài mới" });
     await act(async () => pending.resolve(context));
@@ -161,7 +161,7 @@ describe("submission assignment context", () => {
     const pending = deferred<typeof context>();
     const { rerender } = render(<SubmissionDetailPage classId="c" assignmentId="a" />);
     await screen.findByText("Lớp: SE01 — Lớp một");
-    mocks.assignmentContext.mockReturnValue(pending.promise);
+    mocks.loadAssignmentContext.mockReturnValue(pending.promise);
     rerender(<SubmissionDetailPage classId="other" assignmentId="b" />);
     expect(screen.queryByText("Lớp: SE01 — Lớp một")).not.toBeInTheDocument();
     await act(async () => pending.resolve({ ...context, id: "b", classId: "other" }));
@@ -176,24 +176,24 @@ describe("submission filters and batch behavior", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: "Chọn Sinh viên A" }));
     expect(screen.getByRole("button", { name: "Chốt điểm" })).toBeEnabled();
     fireEvent.click(screen.getByTestId("pagination-page-2-button"));
-    await waitFor(() => expect(mocks.submissions).toHaveBeenLastCalledWith("c", "a", "ALL", 2, ""));
+    await waitFor(() => expect(mocks.listSubmissions).toHaveBeenLastCalledWith("c", "a", "ALL", 2, ""));
     await ready();
     expect(screen.queryByRole("button", { name: "Chốt điểm" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox", { name: "Chọn Sinh viên A" }));
     expect(screen.getByRole("button", { name: "Chốt điểm" })).toBeEnabled();
     fireEvent.change(screen.getByRole("combobox", { name: "Trạng thái" }), { target: { value: "DRAFT" } });
-    await waitFor(() => expect(mocks.submissions).toHaveBeenLastCalledWith("c", "a", "DRAFT", 1, ""));
+    await waitFor(() => expect(mocks.listSubmissions).toHaveBeenLastCalledWith("c", "a", "DRAFT", 1, ""));
     await ready();
     expect(screen.queryByRole("button", { name: "Chốt điểm" })).not.toBeInTheDocument();
     fireEvent.change(screen.getByRole("combobox", { name: "Nộp bài" }), { target: { value: "true" } });
-    await waitFor(() => expect(mocks.submissions).toHaveBeenLastCalledWith("c", "a", "DRAFT", 1, "true"));
+    await waitFor(() => expect(mocks.listSubmissions).toHaveBeenLastCalledWith("c", "a", "DRAFT", 1, "true"));
     await ready();
-    expect(mocks.assignmentContext).toHaveBeenCalledTimes(1);
+    expect(mocks.loadAssignmentContext).toHaveBeenCalledTimes(1);
     expect(screen.getByText("Lớp: SE01 — Lớp một")).toBeInTheDocument();
   });
 
   it("renders state-specific action links, single-line tabular scores, and clear-selection control", async () => {
-    mocks.submissions.mockResolvedValue({
+    mocks.listSubmissions.mockResolvedValue({
       ...page,
       rows: [
         { student: { accountId: "s1", name: "SV Pending", email: "p@example.test" }, evaluationId: "e-pending", attemptId: "a1", status: "PENDING", score: null, maxScore: 10, late: false, submittedAt: "2026-10-25T01:00:00Z", attemptCount: 1, version: 1 },
@@ -221,10 +221,10 @@ describe("submission filters and batch behavior", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: "Chọn tất cả bài trong trang" }));
     fireEvent.click(screen.getByRole("button", { name: "Chốt điểm" }));
     expect(screen.getByTestId("batch-items")).toHaveTextContent(JSON.stringify([{ evaluationId: "e", version: 7 }]));
-    mocks.submissions.mockRejectedValueOnce(new Error("List refresh failed"));
+    mocks.listSubmissions.mockRejectedValueOnce(new Error("List refresh failed"));
     fireEvent.click(screen.getByRole("button", { name: "Refresh list" }));
     await screen.findByText("List refresh failed", { exact: false });
     expect(screen.getByText("Lớp: SE01 — Lớp một")).toBeInTheDocument();
-    expect(mocks.assignmentContext).toHaveBeenCalledTimes(1);
+    expect(mocks.loadAssignmentContext).toHaveBeenCalledTimes(1);
   });
 });

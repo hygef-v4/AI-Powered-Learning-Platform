@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 class GradeDistributionVisibilityControllerTest {
-    final GradeDistributionVisibilityService service = mock(GradeDistributionVisibilityService.class);
+    final GradeDistributionVisibilityService gradeDistributionVisibilityService = mock(GradeDistributionVisibilityService.class);
     final UUID classId = UUID.randomUUID(), assignmentId = UUID.randomUUID();
     final Actor actor = new Actor(UUID.randomUUID(), Role.TEACHER);
     final String path = "/api/v1/classes/" + classId + "/assignments/" + assignmentId + "/grade-distribution-visibility";
@@ -26,27 +26,27 @@ class GradeDistributionVisibilityControllerTest {
 
     @BeforeEach void setup() {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(actor, null));
-        mvc = MockMvcBuilders.standaloneSetup(new GradeDistributionVisibilityController(service))
+        mvc = MockMvcBuilders.standaloneSetup(new GradeDistributionVisibilityController(gradeDistributionVisibilityService))
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
     }
 
     @AfterEach void clear() { SecurityContextHolder.clearContext(); }
 
     @Test void getAndPutUseServerActorAndExposeVersionAndCanEdit() throws Exception {
-        when(service.get(actor, classId, assignmentId)).thenReturn(new GradeDistributionVisibilityService.View(false, 0, true));
-        when(service.update(actor, classId, assignmentId, true, 0)).thenReturn(new GradeDistributionVisibilityService.View(true, 1, true));
+        when(gradeDistributionVisibilityService.loadVisibility(actor, classId, assignmentId)).thenReturn(new GradeDistributionVisibilityService.View(false, 0, true));
+        when(gradeDistributionVisibilityService.updateVisibility(actor, classId, assignmentId, true, 0)).thenReturn(new GradeDistributionVisibilityService.View(true, 1, true));
         mvc.perform(get(path)).andExpect(status().isOk()).andExpect(jsonPath("$.enabled").value(false))
                 .andExpect(jsonPath("$.version").value(0)).andExpect(jsonPath("$.canEdit").value(true));
         mvc.perform(put(path).contentType("application/json").content("{\"enabled\":true,\"version\":0}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.enabled").value(true))
                 .andExpect(jsonPath("$.version").value(1));
-        verify(service).update(actor, classId, assignmentId, true, 0);
+        verify(gradeDistributionVisibilityService).updateVisibility(actor, classId, assignmentId, true, 0);
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"{}", "{\"version\":0}", "{\"enabled\":true}", "{\"enabled\":true,\"version\":-1}"})
     void rejectsMissingOrNegativeFields(String body) throws Exception {
         mvc.perform(put(path).contentType("application/json").content(body)).andExpect(status().isBadRequest());
-        verifyNoInteractions(service);
+        verifyNoInteractions(gradeDistributionVisibilityService);
     }
 }

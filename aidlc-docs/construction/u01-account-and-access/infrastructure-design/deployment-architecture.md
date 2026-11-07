@@ -24,12 +24,12 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
  |   [postgres]           [redis]                      [rabbitmq]     |
  |        ^                   ^                             |         |
  |        |                   |                             v         |
- |        +-------------------+--------------------- [worker] --------+--> Brevo SMTP
+ |        +-------------------+--------------------- [worker] --------+--> Brevo mail
  |                                                                    |
  +--------------------------------------------------------------------+
 ```
 
-**Text alternative**: Internet chỉ vào được cổng 80/443 của Nginx. Nginx nằm trên mạng `edge` cùng frontend và backend. Backend và worker nằm trên mạng `internal` cùng PostgreSQL, Redis và RabbitMQ; ba datastore này không có cổng public. Worker đọc RabbitMQ và gửi mail tới Brevo SMTP.
+**Text alternative**: Internet chỉ vào được cổng 80/443 của Nginx. Nginx nằm trên mạng `edge` cùng frontend và backend. Backend và worker nằm trên mạng `internal` cùng PostgreSQL, Redis và RabbitMQ; ba datastore này không có cổng public. Worker đọc RabbitMQ và gọi IMail: SMTP mặc định hoặc Brevo HTTPS API (`MAIL_TRANSPORT=brevo-api`, `BREVO_API_KEY`) khi mạng chặn SMTP.
 
 ## 2. Local/demo
 
@@ -41,7 +41,7 @@ Cùng `docker-compose.yml` với file override `docker-compose.local.yml`:
 
 1. Trình duyệt → Nginx (TLS) → backend `/api/v1/auth/login`.
 2. Backend: `RateLimitFilter` → Redis; kiểm mật khẩu → PostgreSQL; tạo refresh → Redis; trả cookie.
-3. Request sau: Nginx → backend, `JwtAuthFilter` chỉ kiểm chữ ký, không gọi datastore.
+3. Request sau: Nginx → backend, `JwtAuthFilter` gọi `SessionAuthority.authenticate` để kiểm chữ ký và quyền/phiên/tài khoản hiện hành; không chỉ tin role trong JWT.
 
 ## 4. Luồng OTP qua hạ tầng
 

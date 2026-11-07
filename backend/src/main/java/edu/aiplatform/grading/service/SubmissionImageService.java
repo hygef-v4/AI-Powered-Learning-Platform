@@ -10,18 +10,20 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class SubmissionImageService {
-    private final SubmissionReviewService review;
+    private final SubmissionReviewService submissionReviewService;
     private final IArtifact artifacts;
 
-    public SubmissionImageService(SubmissionReviewService review, IArtifact artifacts) {
-        this.review = review;
+    public SubmissionImageService(SubmissionReviewService submissionReviewService,
+            IArtifact artifacts) {
+        this.submissionReviewService = submissionReviewService;
         this.artifacts = artifacts;
     }
 
-    public DownloadToken download(Actor actor, UUID evaluationId, String fileId) {
-        var detail = review.detail(actor, evaluationId);
+    public DownloadToken issueDownloadToken(Actor actor, UUID evaluationId, String fileId) {
+        var detail = submissionReviewService.loadEvaluation(actor, evaluationId);
         boolean attached = detail.document().blocks().stream()
-                .anyMatch(b -> b.type() == BlockType.IMAGE && fileId.equals(b.content().path("fileId").asText()));
+                .anyMatch(b -> b.type() == BlockType.IMAGE
+                        && fileId.equals(b.content().path("fileId").asText()));
         if (!attached)
             throw ApiException.notFound("SUBMISSION_IMAGE_NOT_FOUND");
         return artifacts.issueDownloadToken(fileId, actor.accountId());

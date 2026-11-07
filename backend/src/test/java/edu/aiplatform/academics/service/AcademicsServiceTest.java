@@ -19,20 +19,20 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class AcademicsServiceTest {
-    ICourseClassRepository classes = mock(ICourseClassRepository.class);
-    IEnrollmentRepository enrollments = mock(IEnrollmentRepository.class);
-    IAcademicsReadRepository reads = mock(IAcademicsReadRepository.class);
-    ISubjectMutationGuard lock = mock(ISubjectMutationGuard.class);
-    IAccountLookup accounts = mock(IAccountLookup.class);
-    ISubjectQuery subjects = mock(ISubjectQuery.class);
+    ICourseClassRepository courseClassRepository = mock(ICourseClassRepository.class);
+    IEnrollmentRepository enrollmentRepository = mock(IEnrollmentRepository.class);
+    IAcademicsReadRepository academicsReadRepository = mock(IAcademicsReadRepository.class);
+    ISubjectMutationGuard subjectMutationGuard = mock(ISubjectMutationGuard.class);
+    IAccountLookup accountLookup = mock(IAccountLookup.class);
+    ISubjectQuery subjectQuery = mock(ISubjectQuery.class);
     ISubjectScope scope = mock(ISubjectScope.class);
     IAuthorization authorization = mock(IAuthorization.class);
     IAudit audit = mock(IAudit.class);
-    IEventPublisher events = mock(IEventPublisher.class);
+    IEventPublisher eventPublisher = mock(IEventPublisher.class);
     UUID managerId = UUID.randomUUID(), subjectId = UUID.randomUUID(), classId = UUID.randomUUID(), studentId = UUID.randomUUID(), teacherId = UUID.randomUUID();
     Instant now = Instant.parse("2026-10-18T00:00:00Z");
     Actor manager = new Actor(managerId, Role.SUBJECT_MANAGER);
-    AcademicsService service;
+    AcademicsService academicsService;
     @BeforeEach void setup() {
         PlatformTransactionManager tx = new AbstractPlatformTransactionManager() {
             protected Object doGetTransaction() { return new Object(); }
@@ -40,124 +40,124 @@ class AcademicsServiceTest {
             protected void doCommit(DefaultTransactionStatus status) { }
             protected void doRollback(DefaultTransactionStatus status) { }
         };
-        service = new AcademicsService(classes,enrollments,reads,lock,accounts,subjects,scope,authorization,audit,events,tx,Clock.fixed(now,ZoneOffset.UTC));
-        when(accounts.getContact(managerId)).thenReturn(Optional.of(contact(managerId,Role.SUBJECT_MANAGER,AccountStatus.ACTIVE)));
-        when(accounts.getContact(teacherId)).thenReturn(Optional.of(contact(teacherId,Role.TEACHER,AccountStatus.ACTIVE)));
-        when(accounts.lockContact(teacherId)).thenReturn(Optional.of(contact(teacherId,Role.TEACHER,AccountStatus.ACTIVE)));
+        academicsService = new AcademicsService(courseClassRepository,enrollmentRepository,academicsReadRepository,subjectMutationGuard,accountLookup,subjectQuery,scope,authorization,audit,eventPublisher,tx,Clock.fixed(now,ZoneOffset.UTC));
+        when(accountLookup.getContact(managerId)).thenReturn(Optional.of(contact(managerId,Role.SUBJECT_MANAGER,AccountStatus.ACTIVE)));
+        when(accountLookup.getContact(teacherId)).thenReturn(Optional.of(contact(teacherId,Role.TEACHER,AccountStatus.ACTIVE)));
+        when(accountLookup.lockContact(teacherId)).thenReturn(Optional.of(contact(teacherId,Role.TEACHER,AccountStatus.ACTIVE)));
         when(scope.isSubjectManager(managerId,subjectId)).thenReturn(true);
         when(authorization.authorize(any(),anyString(),any())).thenReturn(AuthorizationDecision.allow());
-        when(subjects.getSubject(subjectId)).thenReturn(Optional.of(new SubjectRef(subjectId,"S","Subject",SubjectStatus.ACTIVE,managerId)));
-        when(subjects.isActive(subjectId)).thenReturn(true);
-        when(classes.find(classId)).thenReturn(Optional.of(course(ClassStatus.DRAFT,0)));
+        when(subjectQuery.getSubject(subjectId)).thenReturn(Optional.of(new SubjectRef(subjectId,"S","Subject",SubjectStatus.ACTIVE,managerId)));
+        when(subjectQuery.isActive(subjectId)).thenReturn(true);
+        when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(ClassStatus.DRAFT,0)));
     }
     AccountContact contact(UUID id, Role role, AccountStatus status) { return new AccountContact(id,id+"@example.com","Person",role,status); }
     CourseClass course(ClassStatus status,long version) { return new CourseClass(classId,subjectId,"C","Class",null,null,status,teacherId,false,now,now,version); }
     @Test void studentCannotReadDraftClassAndDenialIsAudited() {
         var actor = new Actor(studentId,Role.STUDENT);
-        when(accounts.getContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.ACTIVE)));
-        when(enrollments.find(classId,studentId)).thenReturn(Optional.of(Enrollment.create(classId,studentId,EnrollmentSource.MANUAL,now)));
-        assertThatThrownBy(() -> service.detail(actor,"student",classId)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(404));
+        when(accountLookup.getContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.ACTIVE)));
+        when(enrollmentRepository.find(classId,studentId)).thenReturn(Optional.of(Enrollment.createEnrollment(classId,studentId,EnrollmentSource.MANUAL,now)));
+        assertThatThrownBy(() -> academicsService.loadClass(actor,"student",classId)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(404));
         verify(audit).record(argThat(e -> e.result()==AuditResult.DENIED));
     }
     @Test void createLocksTheSubjectRowThroughU04AndArchivedSubjectBlocksTheClass() {
-        doThrow(ApiException.conflict("SUBJECT_ARCHIVED","Môn đã lưu trữ")).when(lock).lockActive(eq(subjectId),any());
-        assertThatThrownBy(() -> service.create(manager,subjectId,"NEW","New class",null,null,null))
+        doThrow(ApiException.conflict("SUBJECT_ARCHIVED","Môn đã lưu trữ")).when(subjectMutationGuard).lockActive(eq(subjectId),any());
+        assertThatThrownBy(() -> academicsService.createClass(manager,subjectId,"NEW","New class",null,null,null))
                 .isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.code()).isEqualTo("SUBJECT_ARCHIVED"));
-        verify(lock).lockActive(eq(subjectId),eq(java.time.Duration.ofSeconds(1)));
-        verify(classes,never()).insert(any());
+        verify(subjectMutationGuard).lockActive(eq(subjectId),eq(java.time.Duration.ofSeconds(1)));
+        verify(courseClassRepository,never()).insert(any());
     }
     @Test void adminCannotListClasses() {
         Actor admin = new Actor(UUID.randomUUID(),Role.ADMIN);
-        assertThatThrownBy(() -> service.list(admin,"manager",null,null,null,1,20)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(403));
-        verifyNoInteractions(reads);
+        assertThatThrownBy(() -> academicsService.listClasses(admin,"manager",null,null,null,1,20)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(403));
+        verifyNoInteractions(academicsReadRepository);
     }
     @Test void unauthorizedCallerWithInvalidPagingIsRejectedWithForbiddenAndDeniedAudit() {
         Actor student = new Actor(studentId, Role.STUDENT);
-        assertThatThrownBy(() -> service.list(student, "manager", null, null, null, 0, 20))
+        assertThatThrownBy(() -> academicsService.listClasses(student, "manager", null, null, null, 0, 20))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status().value()).isEqualTo(403));
         verify(audit).record(argThat(e -> e.action().equals("ACCESS_DENIED") && e.result() == AuditResult.DENIED));
 
-        assertThatThrownBy(() -> service.students(student, "manager", classId, 0, 20))
+        assertThatThrownBy(() -> academicsService.listStudents(student, "manager", classId, 0, 20))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status().value()).isEqualTo(403));
         verify(audit, times(2)).record(argThat(e -> e.action().equals("ACCESS_DENIED") && e.result() == AuditResult.DENIED));
     }
     @Test void staleVersionDoesNotWrite() {
-        assertThatThrownBy(() -> service.updateInfo(manager,classId,"New",null,null,2)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(409));
-        verify(classes,never()).update(any(),anyLong());
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,null,2)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(409));
+        verify(courseClassRepository,never()).update(any(),anyLong());
     }
     @Test void updateLocksSubjectBeforeRereadingAndPreservesCode() {
-        var result = service.updateInfo(manager,classId,"New",null,"2026",0);
+        var result = academicsService.updateClassInfo(manager,classId,"New",null,"2026",0);
         assertThat(result.name()).isEqualTo("New");
         assertThat(result.description()).isEmpty();
         assertThat(result.code()).isEqualTo("C");
-        var order = inOrder(classes,lock);
-        order.verify(classes).find(classId); order.verify(lock).lockActive(org.mockito.ArgumentMatchers.eq(subjectId),org.mockito.ArgumentMatchers.any()); order.verify(classes).find(classId);
+        var order = inOrder(courseClassRepository,subjectMutationGuard);
+        order.verify(courseClassRepository).find(classId); order.verify(subjectMutationGuard).lockActive(org.mockito.ArgumentMatchers.eq(subjectId),org.mockito.ArgumentMatchers.any()); order.verify(courseClassRepository).find(classId);
         verify(audit).record(argThat(e -> e.action().equals("CLASS_UPDATED") && e.result()==AuditResult.SUCCESS));
     }
     @Test void dependencyFailureIsUnavailableAndWritesNothing() {
         when(scope.isSubjectManager(managerId,subjectId)).thenThrow(new IllegalStateException("internal secret"));
-        assertThatThrownBy(() -> service.updateInfo(manager,classId,"New",null,null,0)).isInstanceOfSatisfying(ApiException.class,e -> {assertThat(e.status().value()).isEqualTo(503);assertThat(e.getMessage()).doesNotContain("secret");});
-        verify(classes,never()).update(any(),anyLong());
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,null,0)).isInstanceOfSatisfying(ApiException.class,e -> {assertThat(e.status().value()).isEqualTo(503);assertThat(e.getMessage()).doesNotContain("secret");});
+        verify(courseClassRepository,never()).update(any(),anyLong());
     }
     @Test void reopenReturnsConflictingStudents() {
-        when(classes.find(classId)).thenReturn(Optional.of(course(ClassStatus.ARCHIVED,0)));
-        when(enrollments.conflictingStudents(classId,subjectId)).thenReturn(List.of(studentId));
+        when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(ClassStatus.ARCHIVED,0)));
+        when(enrollmentRepository.conflictingStudents(classId,subjectId)).thenReturn(List.of(studentId));
         var studentName = "Nguyen Van A";
-        when(accounts.getContact(studentId)).thenReturn(Optional.of(
+        when(accountLookup.getContact(studentId)).thenReturn(Optional.of(
                 new AccountContact(studentId,"student@example.com",studentName,Role.STUDENT,AccountStatus.ACTIVE)));
-        assertThatThrownBy(() -> service.changeStatus(manager,classId,ClassStatus.OPEN,0)).isInstanceOfSatisfying(AcademicsProblem.class,e -> assertThat(e.properties().get("conflictingStudents")).isEqualTo(List.of(studentName)));
-        verify(classes,never()).update(any(),anyLong());
+        assertThatThrownBy(() -> academicsService.changeClassStatus(manager,classId,ClassStatus.OPEN,0)).isInstanceOfSatisfying(AcademicsProblem.class,e -> assertThat(e.properties().get("conflictingStudents")).isEqualTo(List.of(studentName)));
+        verify(courseClassRepository,never()).update(any(),anyLong());
     }
     @Test void openDraftPublishesActivationForAllActiveStudents() {
-        when(enrollments.listByClass(classId,true,100,0)).thenReturn(List.of(Enrollment.create(classId,studentId,EnrollmentSource.MANUAL,now)));
-        service.changeStatus(manager,classId,ClassStatus.OPEN,0);
-        verify(events).publish(argThat(e -> e.eventType().equals("enrollment.activated") && e.payload().get("accountId").equals(studentId.toString())));
+        when(enrollmentRepository.listByClass(classId,true,100,0)).thenReturn(List.of(Enrollment.createEnrollment(classId,studentId,EnrollmentSource.MANUAL,now)));
+        academicsService.changeClassStatus(manager,classId,ClassStatus.OPEN,0);
+        verify(eventPublisher).publish(argThat(e -> e.eventType().equals("enrollment.activated") && e.payload().get("accountId").equals(studentId.toString())));
     }
     @Test void outOfScopeManualAndRestoreRequestsNeverLockTheTargetAccount() {
         when(scope.isSubjectManager(managerId,subjectId)).thenReturn(false);
-        assertThatThrownBy(() -> service.enroll(manager,classId,studentId)).isInstanceOf(ApiException.class);
-        assertThatThrownBy(() -> service.enrollmentStatus(manager,classId,studentId,EnrollmentStatus.ACTIVE)).isInstanceOf(ApiException.class);
-        verify(accounts,never()).lockContact(studentId);
-        verifyNoInteractions(lock);
-        verify(enrollments,never()).insert(any());
+        assertThatThrownBy(() -> academicsService.enrollStudent(manager,classId,studentId)).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> academicsService.changeEnrollmentStatus(manager,classId,studentId,EnrollmentStatus.ACTIVE)).isInstanceOf(ApiException.class);
+        verify(accountLookup,never()).lockContact(studentId);
+        verifyNoInteractions(subjectMutationGuard);
+        verify(enrollmentRepository,never()).insert(any());
     }
     @Test void manualEnrollmentLocksTheTargetBeforeTheSubject() {
-        when(accounts.lockContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.ACTIVE)));
-        assertThat(service.enroll(manager,classId,studentId)).isEqualTo(EnrollmentResult.ENROLLED);
-        var order=inOrder(accounts,lock,enrollments);
-        order.verify(accounts).lockContact(studentId);
-        order.verify(lock).lockActive(eq(subjectId),any());
-        order.verify(enrollments).insert(any());
+        when(accountLookup.lockContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.ACTIVE)));
+        assertThat(academicsService.enrollStudent(manager,classId,studentId)).isEqualTo(EnrollmentResult.ENROLLED);
+        var order=inOrder(accountLookup,subjectMutationGuard,enrollmentRepository);
+        order.verify(accountLookup).lockContact(studentId);
+        order.verify(subjectMutationGuard).lockActive(eq(subjectId),any());
+        order.verify(enrollmentRepository).insert(any());
     }
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.CsvSource({"STUDENT,DISABLED,DISABLED","TEACHER,ACTIVE,NOT_STUDENT"})
     void manualAndRestoreUseLockedEligibilityRatherThanAnOlderRead(Role role,AccountStatus status,EnrollmentResult expected) {
-        when(accounts.getContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.ACTIVE)));
-        when(accounts.lockContact(studentId)).thenReturn(Optional.of(contact(studentId,role,status)));
-        assertThat(service.enroll(manager,classId,studentId)).isEqualTo(expected);
-        assertThatThrownBy(() -> service.enrollmentStatus(manager,classId,studentId,EnrollmentStatus.ACTIVE))
+        when(accountLookup.getContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.ACTIVE)));
+        when(accountLookup.lockContact(studentId)).thenReturn(Optional.of(contact(studentId,role,status)));
+        assertThat(academicsService.enrollStudent(manager,classId,studentId)).isEqualTo(expected);
+        assertThatThrownBy(() -> academicsService.changeEnrollmentStatus(manager,classId,studentId,EnrollmentStatus.ACTIVE))
                 .isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.code()).isEqualTo(expected.name()));
-        verify(enrollments,never()).insert(any());
-        verify(enrollments,never()).update(any(),any());
-        verify(accounts,never()).getContact(studentId);
+        verify(enrollmentRepository,never()).insert(any());
+        verify(enrollmentRepository,never()).update(any(),any());
+        verify(accountLookup,never()).getContact(studentId);
     }
     @Test void restoringEnrollmentLocksTheTargetBeforeTheSubject() {
-        when(accounts.lockContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.PENDING)));
-        when(enrollments.find(classId,studentId)).thenReturn(Optional.of(Enrollment.create(classId,studentId,EnrollmentSource.MANUAL,now.minusSeconds(2)).remove(now.minusSeconds(1))));
-        assertThat(service.enrollmentStatus(manager,classId,studentId,EnrollmentStatus.ACTIVE)).isEqualTo(EnrollmentResult.RESTORED);
-        var order=inOrder(accounts,lock,enrollments);
-        order.verify(accounts).lockContact(studentId);
-        order.verify(lock).lockActive(eq(subjectId),any());
-        order.verify(enrollments).update(any(),eq(EnrollmentStatus.REMOVED));
+        when(accountLookup.lockContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.PENDING)));
+        when(enrollmentRepository.find(classId,studentId)).thenReturn(Optional.of(Enrollment.createEnrollment(classId,studentId,EnrollmentSource.MANUAL,now.minusSeconds(2)).removeEnrollment(now.minusSeconds(1))));
+        assertThat(academicsService.changeEnrollmentStatus(manager,classId,studentId,EnrollmentStatus.ACTIVE)).isEqualTo(EnrollmentResult.RESTORED);
+        var order=inOrder(accountLookup,subjectMutationGuard,enrollmentRepository);
+        order.verify(accountLookup).lockContact(studentId);
+        order.verify(subjectMutationGuard).lockActive(eq(subjectId),any());
+        order.verify(enrollmentRepository).update(any(),eq(EnrollmentStatus.REMOVED));
     }
     @Test void pendingStudentCanEnrollAndDuplicateDoesNotRepublish() {
-        when(classes.find(classId)).thenReturn(Optional.of(course(ClassStatus.OPEN,0)));
-        when(accounts.lockContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.PENDING)));
-        assertThat(service.enroll(manager,classId,studentId)).isEqualTo(EnrollmentResult.ENROLLED);
-        verify(enrollments).insert(any()); verify(events).publish(any());
-        when(enrollments.find(classId,studentId)).thenReturn(Optional.of(Enrollment.create(classId,studentId,EnrollmentSource.MANUAL,now)));
-        assertThat(service.enroll(manager,classId,studentId)).isEqualTo(EnrollmentResult.ALREADY_ENROLLED);
-        verify(events,times(1)).publish(any());
+        when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(ClassStatus.OPEN,0)));
+        when(accountLookup.lockContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.PENDING)));
+        assertThat(academicsService.enrollStudent(manager,classId,studentId)).isEqualTo(EnrollmentResult.ENROLLED);
+        verify(enrollmentRepository).insert(any()); verify(eventPublisher).publish(any());
+        when(enrollmentRepository.find(classId,studentId)).thenReturn(Optional.of(Enrollment.createEnrollment(classId,studentId,EnrollmentSource.MANUAL,now)));
+        assertThat(academicsService.enrollStudent(manager,classId,studentId)).isEqualTo(EnrollmentResult.ALREADY_ENROLLED);
+        verify(eventPublisher,times(1)).publish(any());
     }
     @Test void batchLooksUpOnceAndReturnsAllNineResultTypes() {
         var restored = UUID.randomUUID(); var duplicate = UUID.randomUUID(); var other = UUID.randomUUID(); var wrong = UUID.randomUUID(); var disabled = UUID.randomUUID();
@@ -165,35 +165,35 @@ class AcademicsServiceTest {
             new AccountContact(studentId,"new@a.com","N",Role.STUDENT,AccountStatus.ACTIVE),new AccountContact(restored,"restore@a.com","N",Role.STUDENT,AccountStatus.PENDING),
             new AccountContact(duplicate,"has@a.com","N",Role.STUDENT,AccountStatus.ACTIVE),new AccountContact(other,"other@a.com","N",Role.STUDENT,AccountStatus.ACTIVE),
             new AccountContact(wrong,"teacher@a.com","N",Role.TEACHER,AccountStatus.ACTIVE),new AccountContact(disabled,"disabled@a.com","N",Role.STUDENT,AccountStatus.DISABLED));
-        when(accounts.findByEmails(any())).thenReturn(found);
-        when(accounts.lockContact(any())).thenAnswer(call->found.stream()
+        when(accountLookup.findByEmails(any())).thenReturn(found);
+        when(accountLookup.lockContact(any())).thenAnswer(call->found.stream()
                 .filter(account->account.accountId().equals(call.getArgument(0))).findFirst());
-        when(enrollments.find(classId,restored)).thenReturn(Optional.of(Enrollment.create(classId,restored,EnrollmentSource.MANUAL,now.minusSeconds(10)).remove(now.minusSeconds(5))));
-        when(enrollments.find(classId,duplicate)).thenReturn(Optional.of(Enrollment.create(classId,duplicate,EnrollmentSource.MANUAL,now)));
-        when(enrollments.activeInOtherClass(other,subjectId,classId)).thenReturn(true);
-        var rows = service.enrollBatch(manager,classId,"email\nnew@a.com\nrestore@a.com\nhas@a.com\nmissing@a.com\nteacher@a.com\ndisabled@a.com\nother@a.com\nbad\nnew@a.com");
+        when(enrollmentRepository.find(classId,restored)).thenReturn(Optional.of(Enrollment.createEnrollment(classId,restored,EnrollmentSource.MANUAL,now.minusSeconds(10)).removeEnrollment(now.minusSeconds(5))));
+        when(enrollmentRepository.find(classId,duplicate)).thenReturn(Optional.of(Enrollment.createEnrollment(classId,duplicate,EnrollmentSource.MANUAL,now)));
+        when(enrollmentRepository.activeInOtherClass(other,subjectId,classId)).thenReturn(true);
+        var rows = academicsService.enrollStudents(manager,classId,"email\nnew@a.com\nrestore@a.com\nhas@a.com\nmissing@a.com\nteacher@a.com\ndisabled@a.com\nother@a.com\nbad\nnew@a.com");
         assertThat(rows).extracting(AcademicsDtos.RowResult::result).containsExactly(EnrollmentResult.ENROLLED,EnrollmentResult.RESTORED,EnrollmentResult.ALREADY_ENROLLED,EnrollmentResult.NOT_FOUND,EnrollmentResult.NOT_STUDENT,EnrollmentResult.DISABLED,EnrollmentResult.IN_OTHER_CLASS,EnrollmentResult.INVALID_EMAIL,EnrollmentResult.DUPLICATE_IN_LIST);
         assertThat(rows.get(0).line()).isEqualTo(2);
-        verify(accounts,times(1)).findByEmails(any());
+        verify(accountLookup,times(1)).findByEmails(any());
     }
     @Test void removedStudentImmediatelyLosesAccess() {
         var actor = new Actor(studentId,Role.STUDENT);
-        when(accounts.getContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.ACTIVE)));
-        when(classes.find(classId)).thenReturn(Optional.of(course(ClassStatus.OPEN,0)));
-        when(enrollments.find(classId,studentId)).thenReturn(Optional.of(Enrollment.create(classId,studentId,EnrollmentSource.MANUAL,now).remove(now)));
-        assertThatThrownBy(() -> service.detail(actor,"student",classId)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(404));
+        when(accountLookup.getContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.ACTIVE)));
+        when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(ClassStatus.OPEN,0)));
+        when(enrollmentRepository.find(classId,studentId)).thenReturn(Optional.of(Enrollment.createEnrollment(classId,studentId,EnrollmentSource.MANUAL,now).removeEnrollment(now)));
+        assertThatThrownBy(() -> academicsService.loadClass(actor,"student",classId)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(404));
     }
     @Test void viewPermissionDoesNotGrantWritePermission() {
         when(authorization.authorize(eq(manager),eq("CLASS_MANAGE"),any())).thenReturn(AuthorizationDecision.deny("readonly"));
-        assertThatThrownBy(() -> service.updateInfo(manager,classId,"New",null,null,0)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(404));
-        verify(classes,never()).update(any(),anyLong());
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,null,0)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(404));
+        verify(courseClassRepository,never()).update(any(),anyLong());
         verify(audit).record(argThat(e -> e.result()==AuditResult.DENIED));
     }
     @Test void restoringUnknownStudentDoesNotReportSuccess() {
-        assertThatThrownBy(() -> service.enrollmentStatus(manager,classId,studentId,EnrollmentStatus.ACTIVE))
+        assertThatThrownBy(() -> academicsService.changeEnrollmentStatus(manager,classId,studentId,EnrollmentStatus.ACTIVE))
             .isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(400));
-        verify(enrollments,never()).insert(any());
-        verify(enrollments,never()).update(any(),any());
+        verify(enrollmentRepository,never()).insert(any());
+        verify(enrollmentRepository,never()).update(any(),any());
     }
     @Test void createStartsDraftAndAuditsTeacherAssignmentInTransaction() {
         doAnswer(invocation -> {
@@ -201,56 +201,103 @@ class AcademicsServiceTest {
             if(event.result()==AuditResult.SUCCESS) assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
             return null;
         }).when(audit).record(any());
-        var result=service.create(manager,subjectId,"NEW","New class",null,null,teacherId);
+        var result=academicsService.createClass(manager,subjectId,"NEW","New class",null,null,teacherId);
         assertThat(result.status()).isEqualTo(ClassStatus.DRAFT);
         assertThat(result.version()).isZero();
-        verify(classes).insert(argThat(c -> c.code().equals("NEW") && !c.showGradeDistribution()));
+        verify(courseClassRepository).insert(argThat(c -> c.code().equals("NEW") && !c.showGradeDistribution()));
         verify(audit).record(argThat(e -> e.action().equals("CLASS_CREATED")));
         verify(audit).record(argThat(e -> e.action().equals("CLASS_TEACHER_CHANGED")));
     }
     @Test void inactiveTeacherCannotBeAssigned() {
-        when(accounts.lockContact(teacherId)).thenReturn(Optional.of(contact(teacherId,Role.TEACHER,AccountStatus.DISABLED)));
-        assertThatThrownBy(() -> service.assignTeacher(manager,classId,teacherId,0)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.code()).isEqualTo("INVALID_TEACHER"));
-        verify(classes,never()).update(any(),anyLong());
+        when(accountLookup.lockContact(teacherId)).thenReturn(Optional.of(contact(teacherId,Role.TEACHER,AccountStatus.DISABLED)));
+        assertThatThrownBy(() -> academicsService.assignClassTeacher(manager,classId,teacherId,0)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.code()).isEqualTo("INVALID_TEACHER"));
+        verify(courseClassRepository,never()).update(any(),anyLong());
     }
     @Test void teacherLosesReadAccessAfterReassignment() {
         Actor teacher=new Actor(teacherId,Role.TEACHER);
-        when(classes.find(classId)).thenReturn(Optional.of(CourseClass.create(classId,subjectId,"C","Name",null,null,UUID.randomUUID(),now)));
-        assertThatThrownBy(() -> service.detail(teacher,"teacher",classId)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(404));
+        when(courseClassRepository.find(classId)).thenReturn(Optional.of(CourseClass.createClass(classId,subjectId,"C","Name",null,null,UUID.randomUUID(),now)));
+        assertThatThrownBy(() -> academicsService.loadClass(teacher,"teacher",classId)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(404));
     }
     @Test void archivedClassCannotRemoveStudents() {
-        when(classes.find(classId)).thenReturn(Optional.of(course(ClassStatus.ARCHIVED,0)));
-        assertThatThrownBy(() -> service.enrollmentStatus(manager,classId,studentId,EnrollmentStatus.REMOVED)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.code()).isEqualTo("CLASS_ARCHIVED"));
-        verify(enrollments,never()).update(any(),any());
+        when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(ClassStatus.ARCHIVED,0)));
+        assertThatThrownBy(() -> academicsService.changeEnrollmentStatus(manager,classId,studentId,EnrollmentStatus.REMOVED)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.code()).isEqualTo("CLASS_ARCHIVED"));
+        verify(enrollmentRepository,never()).update(any(),any());
     }
     @Test void removedEnrollmentIsPreservedAndFailureAuditRunsAfterRollback() {
-        when(enrollments.find(classId,studentId)).thenReturn(Optional.of(Enrollment.create(classId,studentId,EnrollmentSource.MANUAL,now.minusSeconds(10))));
-        service.enrollmentStatus(manager,classId,studentId,EnrollmentStatus.REMOVED);
-        verify(enrollments).update(argThat(e -> e.status()==EnrollmentStatus.REMOVED && e.enrolledAt().equals(now.minusSeconds(10))),eq(EnrollmentStatus.ACTIVE));
+        when(enrollmentRepository.find(classId,studentId)).thenReturn(Optional.of(Enrollment.createEnrollment(classId,studentId,EnrollmentSource.MANUAL,now.minusSeconds(10))));
+        academicsService.changeEnrollmentStatus(manager,classId,studentId,EnrollmentStatus.REMOVED);
+        verify(enrollmentRepository).update(argThat(e -> e.status()==EnrollmentStatus.REMOVED && e.enrolledAt().equals(now.minusSeconds(10))),eq(EnrollmentStatus.ACTIVE));
         doAnswer(invocation -> {
             AuditEvent event=invocation.getArgument(0);
             if(event.result()==AuditResult.FAILURE) assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             return null;
         }).when(audit).record(any());
-        assertThatThrownBy(() -> service.updateInfo(manager,classId,"New",null,null,99)).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,null,99)).isInstanceOf(ApiException.class);
         verify(audit).record(argThat(e -> e.result()==AuditResult.FAILURE));
     }
     @Test void reopeningDoesNotDuplicateOriginalActivationNotifications() {
-        when(classes.find(classId)).thenReturn(Optional.of(course(ClassStatus.ARCHIVED,0)));
-        service.changeStatus(manager,classId,ClassStatus.OPEN,0);
-        verifyNoInteractions(events);
+        when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(ClassStatus.ARCHIVED,0)));
+        academicsService.changeClassStatus(manager,classId,ClassStatus.OPEN,0);
+        verifyNoInteractions(eventPublisher);
     }
     @Test void teacherCandidatesFilterWrongRoleAndDisabledAccounts() {
-        when(accounts.findAccounts(anyString(),anySet(),eq(20))).thenReturn(List.of(contact(teacherId,Role.TEACHER,AccountStatus.ACTIVE),contact(studentId,Role.STUDENT,AccountStatus.ACTIVE),contact(UUID.randomUUID(),Role.SUBJECT_MANAGER,AccountStatus.DISABLED)));
-        assertThat(service.teacherCandidates(manager,"Person")).extracting(AcademicsDtos.Person::id).containsExactly(teacherId);
+        when(accountLookup.findAccounts(anyString(),anySet(),eq(20))).thenReturn(List.of(contact(teacherId,Role.TEACHER,AccountStatus.ACTIVE),contact(studentId,Role.STUDENT,AccountStatus.ACTIVE),contact(UUID.randomUUID(),Role.SUBJECT_MANAGER,AccountStatus.DISABLED)));
+        assertThat(academicsService.listTeacherCandidates(manager,"Person")).extracting(AcademicsDtos.Person::id).containsExactly(teacherId);
     }
     @Test void batchInfrastructureFailureIsNotMisreportedAsStudentError() {
-        when(accounts.findByEmails(any())).thenThrow(new IllegalStateException("upstream secret"));
-        assertThatThrownBy(() -> service.enrollBatch(manager,classId,"one@a.com")).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(503));
-        verify(enrollments,never()).insert(any());
+        when(accountLookup.findByEmails(any())).thenThrow(new IllegalStateException("upstream secret"));
+        assertThatThrownBy(() -> academicsService.enrollStudents(manager,classId,"one@a.com")).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(503));
+        verify(enrollmentRepository,never()).insert(any());
     }
+    @Test
+    void updatingClassPreservesVersionAndAuditsInsideTheTransaction() {
+        doAnswer(invocation -> {
+            AuditEvent event = invocation.getArgument(0);
+            if (event.result() == AuditResult.SUCCESS) {
+                assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
+            }
+            return null;
+        }).when(audit).record(any());
+
+        var result = academicsService.updateClassInfo(manager, classId, "Updated", "Description",
+                "Term", 0);
+
+        assertThat(result.name()).isEqualTo("Updated");
+        assertThat(result.version()).isEqualTo(1);
+        var order = inOrder(subjectMutationGuard, courseClassRepository, audit);
+        order.verify(subjectMutationGuard).lockActive(subjectId, Duration.ofSeconds(1));
+        order.verify(courseClassRepository).update(argThat(value -> value.name().equals("Updated")
+                && value.description().equals("Description") && value.term().equals("Term")
+                && value.version() == 1), eq(0L));
+        order.verify(audit).record(argThat(event -> event.action().equals("CLASS_UPDATED")
+                && event.result() == AuditResult.SUCCESS && event.details().isEmpty()));
+        verifyNoInteractions(eventPublisher);
+    }
+
+    @Test
+    void staleVersionIsRejectedBeforeInvalidClassInformation() {
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager, classId, "", null,
+                null, 99)).isInstanceOfSatisfying(ApiException.class,
+                        error -> assertThat(error.code()).isEqualTo("CLASS_VERSION_CONFLICT"));
+
+        verify(courseClassRepository, never()).update(any(), anyLong());
+        verify(audit, never()).record(argThat(event -> event.result() == AuditResult.SUCCESS));
+        verifyNoInteractions(eventPublisher);
+    }
+
+    @Test
+    void invalidClassInformationDoesNotWriteOrAuditSuccess() {
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager, classId, "", null,
+                null, 0)).isInstanceOfSatisfying(ApiException.class,
+                        error -> assertThat(error.code()).isEqualTo("INVALID_CLASS_FIELD"));
+
+        verify(subjectMutationGuard).lockActive(subjectId, Duration.ofSeconds(1));
+        verify(courseClassRepository, never()).update(any(), anyLong());
+        verify(audit, never()).record(argThat(event -> event.result() == AuditResult.SUCCESS));
+    }
+
     @Test void pagingRejectsOverflowAndOversizedPage() {
-        assertThatThrownBy(() -> service.list(manager,"manager",null,null,null,Integer.MAX_VALUE,100)).isInstanceOf(ApiException.class);
-        assertThatThrownBy(() -> service.list(manager,"manager",null,null,null,1,101)).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> academicsService.listClasses(manager,"manager",null,null,null,Integer.MAX_VALUE,100)).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> academicsService.listClasses(manager,"manager",null,null,null,1,101)).isInstanceOf(ApiException.class);
     }
 }

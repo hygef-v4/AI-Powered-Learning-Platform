@@ -10309,3 +10309,516 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **AI Response**: Preparing an English commit for the verified follow-up, pushing the existing feature branch and opening a pull request targeting staging. Confirmed requester GitHub display name Quang Hung, no existing open PR for this head, and staging/head both at the same baseline before this commit. CI will run on the pull request; its current head/check links and outcome are reported through the PR and final response. No merge or deployment requested.
 
 **Context**: Source unchanged since the recorded backend/frontend verification. Public contracts, database schema, grade locks/resubmission and authorization remain unchanged. Manual browser acceptance is still deferred.
+
+## Shared source code conventions — 2026-11-05
+
+**Timestamp**: 2026-11-05T14:58:46Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "ok giúp tôi tạo doc quy ước trong aidlc như kế hoạch k chỉ cho mỗi u09 riêng mà là cả src code chung"
+**AI Response**: Created construction/code-conventions.md for all backend/frontend units, tests and project scripts. Linked README and CLAUDE.md and updated state. Defined dependency naming, verb-object action methods, file names, framework/contract exceptions and verification checklist. Documentation references, migration link, Markdown fences and whitespace diff checked. No source code rename or application tests.
+**Context**: Approved documentation-only proposal; implementation stages unnecessary. GitHub CLI configuration could not be read, so current requester display name is unverified. Historical attribution preserved. No commit/push or tooling changes.
+
+## Commit shared source code conventions — 2026-11-05
+
+**Timestamp**: 2026-11-05T15:05:00Z
+**Requested by:** Quang Hung
+
+**User Input**: "giúp tôi commit rõ ràng"
+
+**AI Response**: Reviewed the five pending documentation files and prepared a descriptive English commit for project-wide source conventions. The canonical document covers backend/frontend names, service dependencies, action methods, files, framework/contract exceptions and refactor verification; README and CLAUDE.md link to it. Preserve historical requester fields. Verify local references, Markdown fences and whitespace; application tests are unnecessary for documentation-only changes.
+
+**Context**: Commit locally on the current fix/u05-u09-u15 branch. No application code, dependency, database, push, merge or deployment change requested.
+
+## Apply shared code conventions to U05/U09/U15 — 2026-11-05
+
+**Timestamp**: 2026-11-05T15:17:14Z
+**Requested by:** Quang Hung
+
+**User Input**: "đọc coding convention mới cập nhật và giúp tôi sửa các u05 u09 u15 theo convention mới"
+
+**AI Response**: Read the published shared convention and started a scoped naming/import refactor in academics, grading and admindashboard. Inventory dependencies/actions/files and all callers before changes; preserve public contracts, framework names, HTTP/JSON bindings, security and business behavior. Record the plan and fresh verification in AI-DLC. No commit or push requested.
+
+**Completion — 2026-11-05T16:21:32Z**: Applied the shared convention to concrete dependencies/actions, predicates/guards, frontend helpers/constants and four React module filenames, with bound Java/TypeScript references and tests updated. Public routes, JSON/data shapes, DB/event/MCP identifiers, contract overrides, transactions and business behavior retained. A new JSON regression first caught an intermediate bean-getter field change; corrected without changing the response contract. Independent review found no Critical/Important source defect; one minor boolean-name correction applied. Final backend verify: 1,783 passed, zero failures/errors/skips, production JAR built; required real PostgreSQL suites 31 + 2 passed. Frontend: 776 passed, full lint/typecheck/production build passed; generated TypeScript configuration restored and rechecked. Earlier JVM/Next native-memory failures resolved with per-command memory/worker settings, including bounded child JVMs; no product configuration change. Plan, results, six current unit notes and state synchronized. Historical reports/attribution preserved. Existing security/resiliency scope retained; PBT disabled. No manual browser/provider retest, live grade write, migration, restart, commit, push or deployment. Evidence: construction/build-and-test/2026-11-05-u05-u09-u15-conventions-results.md.
+
+## Restore compact Java imports — 2026-11-05
+
+**Timestamp**: 2026-11-05T16:42:02Z
+**Requested by:** Quang Hung
+
+**User Input**: "sửa cái contract mấy cái import để * như cũ cũng được cho gọn, code mới import hơi nhiều"
+
+**AI Response**: Updated the shared convention to permit wildcard/static wildcard imports, including contract types, with explicit imports retained when needed for collisions/clarity. Restored original import blocks in 71 changed U05/U09/U15 Java files (883 fewer import statements); self-check verifies all source bytes outside those blocks are preserved, including the prior naming changes. Fresh backend production/test compilation passed at 2026-11-05T16:43:51Z; full runtime tests and frontend build were not repeated for import-only edits. Updated current U05/U09 notes, appended the plan/results follow-up and updated state without rewriting historical verification. Security/resiliency scope unchanged; PBT disabled. No commit/push, behavior/contract/schema/dependency/frontend change, live write or restart. Evidence: construction/build-and-test/2026-11-05-u05-u09-u15-conventions-results.md, .tmp/conventions-wildcard-compile.log.
+
+## Commit U05/U09/U15 convention refactor locally — 2026-11-05
+
+**Timestamp**: 2026-11-05T16:53:23Z
+**Requested by:** Quang Hung
+
+**User Input**: "giúp tôi commit rõ ràng, chưa push"
+
+**AI Response**: Reviewed the pending convention refactor and wildcard-import follow-up for a single descriptive English commit on fix/u05-u09-u15. Include role-specific dependency names, verb-object actions/helpers, four PascalCase React module moves, all callers/mocks/tests, the JSON compatibility regression and synchronized AI-DLC records. Preserve contracts, business behavior and the user's compact import preference. Confirmed recorded backend verify 1,783 / frontend 776 passing before import restoration, lint/typecheck/production build passing, and fresh backend production/test compilation after import restoration. Check the staged diff and restrict staging to task-owned files. No new runtime test rerun, push, merge, deployment, live write or restart requested.
+
+## Resolve staging merge into U05/U09/U15 — 2026-11-06
+
+**Timestamp**: 2026-11-05T16:56:25Z
+**Requested by:** Quang Hung
+
+**User Input**: "giúp tôi resolve conflict merge staging vào nhánh này"
+
+**AI Response**: Continued the existing local merge on fix/u05-u09-u15 (HEAD 2440cbe4, MERGE_HEAD/local staging/origin staging b91413ca), preserving all staged incoming changes. Resolve six files by combining staging's subject-code mapping, description-only class editing, automatic AI source and compact grading settings with the branch's standardized dependency/helper/callback/API names. Independent review found no introduced merge defect, but identified an inherited DTO annotation that makes automatic-source requests fail HTTP 400. Reproduced both single and batch failures, removed only source @NotNull, retained other validation/permissions and synchronized grading OpenAPI. Added seven HTTP regression cases; final verification and local merge commit in progress. No push, live migration, application restart or deployment requested. Existing security/resiliency scope retained; PBT disabled. Evidence: construction/build-and-test/2026-11-06-merge-staging-u05-u09-u15.md.
+
+**Verification — 2026-11-05T17:22:23Z**: Six conflicts resolved and no unmerged index entries remain. Final backend verify passed 1,804 tests, zero failures/errors/skips, built the JAR and passed required PostgreSQL guard (31 + 2). Seven new HTTP cases pass after the two reproduced failures. Frontend passed all 799 tests / 116 files with a single thread worker; full lint/typecheck/production build passed, generated TypeScript configuration restored and typechecked again. Earlier heap/metaspace/native-memory failures are retained as failed attempts; final heavy checks run sequentially with bounded memory. Two independent read-only reviews found no remaining introduced/follow-up defect. OpenAPI and documentation links validated; resolution files have no whitespace errors, while three untouched incoming whitespace cases are byte-identical to staging. Prepare the authorized local merge commit only. No push, live migration, restart, deployment or manual UI/provider acceptance; security/resiliency scope unchanged and PBT disabled.
+
+## Open staging PR and check CI for U05/U09/U15 — 2026-11-06
+
+**Timestamp**: 2026-11-05T17:46:57Z
+**Requested by:** Quang Hung
+
+**User Input**: "giúp tôi tạo pr ci lên staging trước khi merger"
+
+**AI Response**: Preparing the existing fix/u05-u09-u15 branch for a PR into staging and monitoring its CI before merge. GitHub profile confirms display name Quang Hung; initial local/remote head b466400b matches, comparison is three commits ahead/zero behind staging, and no matching open PR exists. Source is unchanged from the recorded backend 1,804 / frontend 799 passing verification, lint/typecheck/production build and required PostgreSQL guard. Record delivery in audit/state, verify only these documentation changes, commit/push the branch normally, then open a descriptive English PR through the GitHub plugin. The existing pull_request workflow runs backend/frontend checks; inspect the final head's CI and report its PR/check links and actual outcome. Do not merge or enable auto-merge. No new runtime source edit, local test rerun, deployment or unrelated branch push; security/resiliency scope unchanged and PBT disabled.
+
+## U05/U09/U15 Java readability formatting — 2026-11-06
+
+**Timestamp**: 2026-11-06T06:46:41Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "soát lại code u05 u09 u15 format lại code cho dễ đọc hơn, hjienej tại để return hết cùng 1 dòng trông khó đọc quá"
+**AI Response**: Formatted 71 Java source files across academics/grading/admindashboard; checked all 85 against Git tokens and formatter idempotence. Expanded inline bodies, signatures and calls with approximately 100-column wrapping and four-space indentation. Preserved names, comments, literals, wildcard imports, contracts and behavior. Fresh isolated compilation passed for 720 production and 246 test source files; tests not executed. Updated shared conventions, plan, evidence and state.
+**Context**: Screenshot targets backend Java readability; frontend unchanged. JVM sandbox/security and initial heap reservation limitations resolved with approved execution and bounded memory. No commit/push, app restart or migration. Current requester display name not independently verified; historical attribution preserved.
+
+## U05/U09/U15 simplification planning — 2026-11-06
+
+**Timestamp**: 2026-11-06T06:57:45Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi lập kế hoạch tối ưu code"
+**AI Response**: Reviewed current source, callers and tests and created a behavior-preserving backend refactor plan for U05/U09/U15. Proposes inlining the single-caller mutateClass helper, sharing identical batch-size validation and consolidating source-to-section mapping in the existing U15 reader. Includes exact files, boundaries, baseline characterization, focused/full verification commands and rollback preserving the existing format diff. Updated state; implementation pending. No production/test source edit or runtime test run for planning.
+**Context**: Continues the Java readability discussion and existing dirty formatting baseline. Current GitHub profile confirms requester display name Quang Hung. Plan retains security/resiliency scope, PBT disabled and existing public contracts. No commit, push, PR, restart, migration or deployment.
+
+## U05/U09/U15 simplification implementation — 2026-11-06
+
+**Timestamp**: 2026-11-06T07:15:37Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi triển khai theo kế hoạch vừa duyệt"
+**AI Response**: Executed the approved three-task refactor, preserving the existing formatted worktree through a 1,581-file snapshot. U05 single-use mutation helper inlined; U09 identical batch-size validation shared; U15 identical source-to-section helpers consolidated in the existing reader. Three U05 and fifteen U09 characterization cases passed before production edits and remained green afterward; reused existing U15 protection. Scoped runs passed 175/30/59 cases. Independent review found no actionable findings. Full verification initially encountered unavailable Docker; started Docker Desktop and reran with disposable database containers. Final full result pending in the linked evidence.
+**Context**: Seven production/three test files changed versus snapshot, no frontend or public contract change. No commit/push, app restart, live migration or deployment. Evidence: construction/build-and-test/2026-11-06-u05-u09-u15-simplification-results.md.
+
+## Continue simplification execution — 2026-11-06
+
+**Timestamp**: 2026-11-06T07:15:37Z
+**Requested by:** Quang Hung
+**User Input**: "continue"
+**AI Response**: Continued the same approved implementation without restarting or replacing the prior formatting baseline. Runtime verification and final documentation remain part of the active task.
+
+**Final verification — 2026-11-06T07:17:44Z**: All three approved tasks complete. Fresh backend verify passed 1,822 tests with zero failures/errors/skips and packaged the executable JAR; required real PostgreSQL suites passed 31 + 2 tests. Independent read-only reviewer found no actionable findings. Snapshot comparison confirms only seven production/three test files changed and existing formatting preserved. Initial Docker-not-running attempt is recorded separately; final rerun succeeded after starting Docker Desktop. Plan/state/evidence synchronized. No commit/push/PR, frontend change, live database migration, app restart or deployment.
+
+## Restart backend/frontend and rerun tests — 2026-11-06
+
+**Timestamp**: 2026-11-06T07:32:13Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi chạy lại backend frontend , chạy test"
+**AI Response**: Fresh backend verify passed 1,822 tests without failures/errors/skips and built the JAR; required PostgreSQL guard passed 31 + 2 cases. Frontend 799 tests / 116 files, lint, typecheck and production build passed. Restored generated tsconfig/next-env/AGENTS changes from pre-run snapshots and typechecked again. Started backend local,worker on 8080 and frontend dev Webpack on 3000 as hidden background processes, with logs/PIDs in ignored scratch; restarted existing Mailpit, preserved databases/volumes and left old Docker worker stopped. Both health endpoints return UP/200, login 200 and protected API through frontend returns 401 without credentials. Source/config hashes unchanged; services left running.
+**Context**: Operational verification authorized by user, no product code/dependency change, commit/push or deployment. Live startup validated 32 migrations and found no pending migrations. No authenticated business-data writes, manual UI/provider acceptance or load test. Evidence: construction/build-and-test/2026-11-06-restart-test-results.md.
+
+## Change summary — 2026-11-06
+
+**Timestamp**: 2026-11-06T07:37:14Z
+**Requested by:** Quang Hung
+**User Input**: "tóm tắt lại thay đổi"
+**AI Response**: Summarized U05 helper inlining, U09 shared batch validation, U15 shared source mapping, prior Java formatting and AI-DLC conventions/evidence. Reported unchanged public behavior/contracts and the latest successful 1,822 backend/799 frontend verification plus local runtime startup. No source edit.
+
+## Local commit without push — 2026-11-06
+
+**Timestamp**: 2026-11-06T07:37:14Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit chưa push"
+**AI Response**: Reviewed current diff, whitespace and verified-source hashes; staging the scoped U05/U09/U15 formatting/refactor, three characterization test files and corresponding AI-DLC documentation as one descriptive local commit on fix/u05-u09-u15. Source unchanged since the passing backend 1,822/frontend 799 checks; no redundant runtime rerun required. Preserve ignored logs/credentials and leave local apps running.
+**Context**: Explicit local commit authorization only. No push, remote write, PR, merge or deployment.
+
+## U05/U09 JDBC direction confirmed — 2026-11-06
+
+**Timestamp**: 2026-11-06T08:52:10Z
+**Requested by:** Quang Hung
+**User Input**: "tôi vừa discard changes, h tôi k muốn u05 u09 dùng hết jdbc, nhớ sửa lại cả dự án chỉ dùng jdbc trong doc aidlc"
+**AI Response**: Verified a clean checkout after discard and asked to resolve conflicting wording before editing. Stopped the prior JPA migration; no discarded changes restored.
+**Context**: Direction clarification.
+
+## U05/U09 JDBC clarification answer — 2026-11-06
+
+**Timestamp**: 2026-11-06T08:52:10Z
+**Requested by:** Quang Hung
+**User Input**: "Chuyển U05/U09 sang JDBC và sửa AI-DLC quy định toàn dự án dùng JDBC"
+**AI Response**: Proceed with U05/U09 JDBC-only code and project-wide JDBC policy in AI-DLC. U05 already uses JDBC; migrate U09 evaluation/proposal adapters, preserve contracts/schema/locks/versions, characterize on PostgreSQL before editing and run fresh verification. Document other units' remaining JPA as migration gaps.
+**Context**: Other unit code/global JPA infrastructure/frontend, live migrations/restarts and commit/push outside scope. Security/resiliency retained; PBT disabled.
+
+## U05/U09 JDBC implementation completed — 2026-11-06
+
+**Timestamp**: 2026-11-06T09:27:28Z
+**Requested by:** Quang Hung
+**User Input**: "Chuyển U05/U09 sang JDBC và sửa AI-DLC quy định toàn dự án dùng JDBC"
+**AI Response**: Kept U05 JDBC unchanged; migrated U09 evaluation/proposal adapters to NamedParameterJdbcTemplate, replaced JPA mappings with plain JSON rows and removed Spring Data interfaces. Preserved contracts/schema/JSONB, locks, explicit CAS/version and transaction/audit boundaries. Added a scoped JDBC architecture rule and full-migration PostgreSQL regressions. Updated global conventions, all unit tech-stack/logical-component descriptions, affected historical-plan override notices, current baseline/decision register, U09 current implementation and remaining JPA gaps. Baseline 209 behavior/other-rule cases passed with JDBC rule RED; after migration 210 passed, expanded focused 446 passed. Final isolated full verify: 1,830 tests in 236 suites, zero failures/errors/skips, executable JAR built; required PostgreSQL 31 + 2 + 10 + 1 passed. Independent review documentation finding fixed; explicit no-op save/version difference characterized and documented. Verified 1,008 input hashes, artifact manifest, obsolete JPA class removal, whitespace and local links.
+**Context**: Standard target repackage failed while the local backend held the JAR; app was not stopped/restarted. Executable artifact is .tmp/jdbc-transition-20261106/target/platform-backend-0.1.0-SNAPSHOT.jar; backend/target currently contains a thin JAR and must be rebuilt when unlocked for a normal launch. One isolated full attempt hit an AI fixture PostgreSQL EOF; separate five-case rerun and final full rerun passed without source fixes. U04/U13/U14 code remains JPA pending separate migration. No frontend test, authenticated UI/provider/load acceptance, live migration, commit or push. Security/resiliency scope retained; PBT disabled. Evidence: construction/build-and-test/2026-11-06-u05-u09-jdbc-results.md.
+
+## Restart JDBC backend/frontend and rerun tests — 2026-11-06
+
+**Timestamp**: 2026-11-06T09:36:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi restart fe,be chạy test"
+**AI Response**: Verified app process ownership on ports 8080/3000, captured 1,572 source/config hashes and generated-config backups, stopped only the identified backend and frontend processes, restarted existing Mailpit and launched fresh full backend verify plus frontend test/lint/typecheck/build. Rebuild the standard executable JAR now that the old process released its lock, then start both apps and verify HTTP readiness. Preserve all pending JDBC/doc changes.
+**Context**: Explicit restart/test authorization; no source/dependency/schema change, commit/push or deployment. Existing Docker data/services retained; security/resiliency scope retained, PBT disabled. Evidence in progress: construction/build-and-test/2026-11-06-jdbc-restart-test-results.md.
+
+## JDBC restart/test completion — 2026-11-06
+
+**Timestamp**: 2026-11-06T09:47:58Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi restart fe,be chạy test"
+**AI Response**: Fresh backend normal-target Maven verify passed all 1,830 tests/236 suites with no failures/errors/skips; executable JAR repackage now succeeds. Required PostgreSQL suites 31 + 2 + 10 + 1 passed. Frontend 799 tests/116 files plus lint/typecheck/production build and final typecheck passed. Restarted backend PID 50084 on 8080 with local,worker and frontend listener 3184/launcher 43712 on 3000. Seven HTTP checks passed: backend health/liveness/readiness UP, frontend root/login 200, protected API direct/via frontend 401. Live Flyway validated 32 migrations with no new migration. Restored Next-generated next-env.d.ts/AGENTS.md to exact snapshots; 1,572 source/config hashes unchanged. Preserved pending JDBC changes, existing data and other processes; left apps/dependencies running.
+**Context**: Restart/test request completed. No product source/dependency/schema change, authenticated UI/provider/load acceptance, commit, push or deployment. Mailpit healthy; old Docker worker remains stopped. Security/resiliency retained, PBT disabled. Evidence: construction/build-and-test/2026-11-06-jdbc-restart-test-results.md.
+
+## Clear local JDBC commits requested — 2026-11-06
+
+**Timestamp**: 2026-11-06T09:55:36Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit rõ ràng"
+**AI Response**: Reviewed the scoped production/test/script and documentation diffs, whitespace and fresh verification evidence. Prepared two descriptive local changesets: U09 JPA-to-JDBC persistence with regression/architecture/DB guards, then project-wide AI-DLC JDBC policy and migration/restart evidence. Verified all 1,572 source/config hashes still match the successful 1,830 backend and 799 frontend checks; required PostgreSQL suites 31 + 2 + 10 + 1 pass. No additional runtime rerun needed for staging/metadata-only work. Exclude scratch logs, credentials and generated artifacts; leave local services running.
+**Context**: Explicit local commit authorization only; no push, remote action, merge, deploy or Git configuration change. All pending paths are classified within the requested JDBC work and documentation scope.
+
+## Simplify U05 repository names — 2026-11-06
+
+**Timestamp**: 2026-11-06T10:23:47Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] chỉ cần để tên repository như bthg là được k cần thêm prefix JDBC đâu"
+**AI Response**: Rename the three concrete U05 repository classes/files shown in the screenshot to AcademicsReadRepository, CourseClassRepository and EnrollmentRepository; update all constructor/method-reference/test callers and the related test field. Keep interfaces, JDBC, SQL, transaction and public behavior unchanged. Add the no-Jdbc-prefix naming rule to shared AI-DLC conventions and update the current U05 summary; run existing focused tests rather than adding tests that mirror a rename.
+**Context**: Naming-only scope in U05; other unit repositories remain outside this edit. No automatic app restart, commit, push, dependency/schema change or historical evidence rewrite. Security/resiliency scope retained, PBT disabled.
+
+## U05 repository naming verification completed — 2026-11-06
+
+**Timestamp**: 2026-11-06T10:29:01Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] chỉ cần để tên repository như bthg là được k cần thêm prefix JDBC đâu"
+**AI Response**: Renamed the three concrete U05 repositories/files to AcademicsReadRepository, CourseClassRepository and EnrollmentRepository; synchronized all test/constructor/method-reference callers and naming documentation. Verified the five Java files match exactly the planned identifier substitutions, leaving SQL, guards, transaction/API and behavior text unchanged. Fresh compilation of 718 main/246 test sources and 200 Academics/Architecture cases passed with zero failures/errors/skips. Old source references/class output absent; whitespace and documentation checklist validation passed.
+**Context**: No new implementation-mirroring tests, full backend/frontend/runtime rerun, dependency/schema change, restart, commit or push. Existing local apps retained. Evidence: construction/plans/code-generation-plan/2026-11-06-u05-repository-names.md; scratch logs excluded from source control.
+
+## U05 repository naming local commit requested — 2026-11-06
+
+**Timestamp**: 2026-11-06T10:33:03Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit"
+**AI Response**: Reviewed the naming-only diff and confirmed all five Java files still match the exact intended identifier replacements validated by the successful 200 Academics/Architecture tests. Prepare one descriptive local commit with the three repository renames, synchronized tests and corresponding AI-DLC naming/verification documentation. No redundant test rerun for unchanged source; exclude scratch artifacts and retain running apps.
+**Context**: Explicit local commit authorization supersedes the prior no-automatic-commit naming scope. No push, remote write, restart, merge, deployment or Git configuration change.
+
+## Staging pull request requested — 2026-11-06
+
+**Timestamp**: 2026-11-06T10:39:52Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi tạo pull request lên staging"
+**AI Response**: Refreshed origin refs, confirmed staging is an ancestor of the current feature branch and found no open PR for this head. Prepare a review-ready PR from fix/u05-u09-u15 to staging, covering the U05/U09/U15 formatting/simplification, U09 JDBC migration, project-wide JDBC documentation and U05 repository names. Distinguish the passing full JDBC verification (1,830 backend/799 frontend) from the latest naming-only 200-case focused run. Include the explicit no-op-save version behavior, remaining U04/U13/U14 JPA migration debt and verification limits in the description. Push only the scoped branch/doc delivery record if needed, then create and verify the PR.
+**Context**: User explicitly authorizes PR creation and the necessary branch push; supersedes the prior local-only delivery scope. No merge, deploy, reviewer message, app restart or forced push. CI results remain pending until observed.
+
+## Pull Request 45 - Auto-fix And Merge Check
+**Timestamp**: 2026-11-03T10:38:00Z
+**User Input**: "Bật Auto-fix"
+**AI Response**: "Bật Auto-fix cho PR 45."
+**Context**: Theo dõi CI và review của PR.
+
+---
+
+## Pull Request 45 - Merge Check
+**Timestamp**: 2026-11-03T10:38:00Z
+**User Input**: "kiểm tra xem merge được chưa"
+**AI Response**: "Đọc trạng thái PR, CI và review trên GitHub; không merge."
+**Context**: Kiểm tra trước khi merge PR.
+
+---
+
+## Deployment Question - VPS Plan
+**Timestamp**: 2026-11-05T19:53:11Z
+**User Input**: "nên đăng ký gói nào để deploy" (kèm ảnh chụp bảng giá NVMe VPS Việt Nam của xvps.vn)
+**AI Response**: "Đối chiếu giới hạn tài nguyên trong infra/docker-compose.yml (tổng khoảng 4,9 GB RAM, 4,5 CPU) và khuyên chọn PLATIUM 6-6-80; 4-4-40 chỉ đủ cho demo nếu thêm swap và hạ giới hạn bộ nhớ."
+**Context**: Chọn gói VPS để deploy, không đổi code.
+
+---
+
+## Deployment Question - VPS Operating System
+**Timestamp**: 2026-11-05T19:55:46Z
+**User Input**: "nên chọn hệ điều hành nào" (kèm ảnh chụp bước chọn hệ điều hành trên xvps.vn, đang chọn ubuntu-24.04_x86_64)
+**AI Response**: "Khuyên giữ Ubuntu 24.04 x86_64; Debian 12 là lựa chọn thay thế; không chọn Windows, CentOS, AlmaLinux."
+**Context**: Chọn hệ điều hành cho VPS deploy, không đổi code.
+
+---
+
+## Deployment Question - NVMe
+**Timestamp**: 2026-11-05T19:57:44Z
+**User Input**: "nvme là gì" (kèm ảnh chụp bảng giá NVMe VPS Việt Nam trên xvps.vn, gói PLATIUM 6-6-80, chu kỳ 3 tháng, mã FLASH-SALE50)
+**AI Response**: "Giải thích NVMe là chuẩn ổ SSD cắm thẳng vào PCIe, nhanh hơn SSD SATA và HDD, và lợi ích cho Postgres, RabbitMQ, Docker."
+**Context**: Hỏi khái niệm khi chọn VPS, không đổi code.
+
+---
+
+## Deployment - VPS Runbook
+**Timestamp**: 2026-11-05T20:03:00Z
+**User Input**: "tôi đã thuê vps này, hướng dẫn tôi deploy" (kèm ảnh chụp đơn hàng VPS KVM trên xvps.vn: Ubuntu 24.04 x86_64, 6 CPU, 6 GB RAM, 80 GB đĩa, thuê 3 tháng)
+**AI Response**: "Kiểm tra CI, image GHCR (công khai, có tag b91413ca... của main), cấu hình compose, Nginx, Postgres init và yêu cầu Drive; viết docs/runbooks/deploy-vps.md (SSH, tường lửa, swap, Docker, .env, lưu tệp Drive hoặc local, cấp chứng chỉ standalone lần đầu, khởi động, kiểm tra, cập nhật). Không đăng nhập vào VPS."
+**Context**: Hướng dẫn deploy production/demo, chỉ thêm tài liệu, không đổi code.
+
+---
+
+## Deployment - Request To Deploy On User's Behalf
+**Timestamp**: 2026-11-05T20:21:29Z
+**User Input**: "tôi có thể đưa cho bạn thông tin vps và bạn deploy cho tôi được không"
+**AI Response**: "Từ chối dùng mật khẩu root; tạo khóa SSH riêng ~/.ssh/alap_vps_deploy trên máy người dùng và đề nghị người dùng tự thêm public key vào VPS. AI sẽ làm các bước deploy qua SSH; người dùng tự điền SMTP và Google Drive vào .env, xác nhận điều khoản Let's Encrypt, cung cấp tên miền, email Admin và tên miền email được phép."
+**Context**: Chuẩn bị deploy qua SSH bằng khóa, chưa kết nối VPS.
+
+---
+
+## Deployment - How To Add SSH Key
+**Timestamp**: 2026-11-05T20:28:16Z
+**User Input**: "làm sao để thêm khoá ssh vào vps"
+**AI Response**: "Hướng dẫn chạy một lệnh PowerShell gửi alap_vps_deploy.pub lên VPS qua SSH (người dùng tự nhập mật khẩu root), cách dự phòng qua console web, và lệnh kiểm tra đăng nhập bằng khóa."
+**Context**: Chuẩn bị quyền SSH bằng khóa cho deploy.
+
+---
+
+## Deployment - SSH Key Added
+**Timestamp**: 2026-11-05T20:40:12Z
+**User Input**: (ảnh chụp PowerShell: lệnh thêm alap_vps_deploy.pub vào VPS chạy xong, không báo lỗi)
+**AI Response**: "Đăng nhập thử bằng khóa thành công (BatchMode, không mật khẩu). VPS: Ubuntu 24.04 LTS x86_64, 6 CPU, 5,8 GiB RAM, 79 GB đĩa, chưa có Docker. Chờ người dùng gửi tên miền, email Admin, tên miền email, email Let's Encrypt và lựa chọn lưu tệp."
+**Context**: Xác nhận quyền SSH bằng khóa, chưa thay đổi gì trên VPS.
+
+---
+
+## Deployment - Waiting For Deploy Info
+**Timestamp**: 2026-11-05T20:42:04Z
+**User Input**: "Gửi thông tin"
+**AI Response**: "Tin nhắn chưa có thông tin cụ thể; gửi mẫu để người dùng điền tên miền, email Admin, tên miền email, email Let's Encrypt, đồng ý điều khoản và cách lưu tệp."
+**Context**: Chờ thông tin deploy.
+
+---
+
+## Deployment - VPS Preparation
+**Timestamp**: 2026-11-05T21:05:15Z
+**User Input**: "Tên miền: alapedu.online
+Email Admin đầu tiên: <ADMIN_EMAIL>
+Tên miền email được phép đăng ký: tạm thời bỏ qua, cho tên miền nào cũng đăng ký được
+Email nhận thông báo Let's Encrypt: là sao, giải thích kỹ hơn, nhưng tạm thời để là <ADMIN_EMAIL>
+Đồng ý điều khoản Let's Encrypt: có
+Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trên Hostinger)
+**AI Response**: "Qua SSH: cập nhật Ubuntu, bật ufw (22, 80, 443), swap 4 GB có sẵn, cài Docker 29.1.3 và Compose 2.40.3 từ kho Ubuntu (download.docker.com và registry-1.docker.io bị chặn từ VPS), đặt mirror.gcr.io làm registry mirror, clone repo ở b91413ca, tạo infra/.env (quyền 600, mật khẩu và khóa sinh trên VPS), kéo đủ image, khởi động lại VPS. Chưa chạy container. Còn chờ: bản ghi A trỏ alapedu.online về <VPS_IP> (đang trỏ <IP_CŨ>), SMTP Brevo, quyết định lưu tệp (Drive cần Shared Drive của Google Workspace). U01_ALLOWED_EMAIL_DOMAINS đặt gmail.com vì danh sách rỗng chặn mọi email. Thêm dòng sự cố mirror vào docs/runbooks/deploy-vps.md."
+**Context**: Chuẩn bị VPS cho deploy.
+
+---
+
+## Deployment - Local Storage And HTTPS Attempt
+**Timestamp**: 2026-11-05T21:12:46Z
+**User Input**: "Đĩa VPS trước"
+**AI Response**: "Tạo infra/docker-compose.override.yml trên VPS (U03_REQUIRE_DRIVE=false, volume files-data và backups-data). Khởi động postgres, redis, rabbitmq, backend, worker, frontend: tất cả healthy, Flyway chạy xong, Admin đầu tiên được tạo ở trạng thái chờ kích hoạt. DNS alapedu.online đã trỏ <VPS_IP>. Cấp chứng chỉ Let's Encrypt thất bại (Timeout during connect). Kiểm tra từ nhiều quốc gia: cổng 22, 80, 443 đều quá thời gian từ nước ngoài, chỉ nút Việt Nam tới được, tức nhà cung cấp chặn kết nối quốc tế vào VPS. Có chạy python http.server ở cổng 80 khoảng 40 giây (phục vụ thư mục /root) để thử, đã dừng. SMTP vẫn trống. Nginx chưa chạy."
+**Context**: Chặn ở bước HTTPS, cần người dùng liên hệ nhà cung cấp hoặc chọn DNS-01.
+
+---
+
+## Deployment - Switch To DNS-01 Via Cloudflare
+**Timestamp**: 2026-11-05T21:16:31Z
+**User Input**: "Dùng DNS-01 qua Cloudflare"
+**AI Response**: "Kéo certbot/dns-cloudflare:v4.1.1 về VPS, xác nhận VPS gọi được API Cloudflare. Cập nhật infra/docker-compose.override.yml trên VPS: certbot dùng image Cloudflare, gắn infra/cloudflare.ini, gia hạn bằng cấu hình đã lưu. Tạo cron nạp lại Nginx bị bộ phân loại chặn (persistence), để người dùng quyết định. Thêm mục 7b DNS-01 và ghi chú nạp lại Nginx vào docs/runbooks/deploy-vps.md; thêm infra/cloudflare.ini và infra/docker-compose.override.yml vào .gitignore. Chờ người dùng chuyển nameserver sang Cloudflare và tự lưu API token vào VPS."
+**Context**: Chuẩn bị cấp chứng chỉ qua DNS-01.
+
+---
+
+## Deployment - Cloudflare DNS Records Step
+**Timestamp**: 2026-11-05T21:26:22Z
+**User Input**: "bước này làm gì tiếp" (kèm ảnh chụp bước DNS records khi thêm alapedu.online vào Cloudflare: A alapedu.online <VPS_IP> và CNAME www alapedu.online, cả hai đang bật Proxied)
+**AI Response**: "Hướng dẫn tắt proxy (chuyển DNS only) cho cả hai bản ghi, rồi bấm Continue to activation và đổi nameserver trên Hostinger."
+**Context**: Thêm tên miền vào Cloudflare cho DNS-01.
+
+---
+
+## Deployment - Waiting For Cloudflare Activation
+**Timestamp**: 2026-11-05T21:29:44Z
+**User Input**: (ảnh chụp trang Overview của alapedu.online trên Cloudflare: "Waiting for your registrar to propagate your new nameservers", có nhãn "Proxy DNS records")
+**AI Response**: "Kiểm tra nameserver công khai của alapedu.online, giải thích trạng thái chờ và các bước tiếp theo."
+**Context**: Chờ Cloudflare kích hoạt cho DNS-01.
+
+---
+
+## Deployment - Cloudflare API Token Options
+**Timestamp**: 2026-11-05T21:32:20Z
+**User Input**: "nên chọn gì" (kèm ảnh chụp trang Create Token trên Cloudflare: Zone DNS Edit, Zone Resources Include Specific zone chưa chọn, Token expiration)
+**AI Response**: "Kiểm tra IP ra ngoài của VPS và hướng dẫn chọn zone alapedu.online, không hết hạn, lọc IP client theo IP VPS."
+**Context**: Tạo API token cho DNS-01.
+
+---
+
+## Deployment - Request To Enter Cloudflare Token
+**Timestamp**: 2026-11-05T21:35:52Z
+**User Input**: "bạn hãy điểm token vào cho tôi"
+**AI Response**: "Từ chối nhập API token thay người dùng; đưa lệnh một dòng để người dùng tự dán token (không hiện ra màn hình) và lưu vào /opt/platform/infra/cloudflare.ini quyền 600."
+**Context**: Lưu token Cloudflare cho DNS-01.
+
+---
+
+## Deployment - HTTPS Live
+**Timestamp**: 2026-11-05T21:41:13Z
+**User Input**: "đã lưu"
+**AI Response**: "Kiểm tra cloudflare.ini (quyền 600, đúng định dạng, không in token); Cloudflare xác nhận token active và zone alapedu.online active (howard/treasure.ns.cloudflare.com). Cấp chứng chỉ Let's Encrypt qua DNS-01 (hạn 2027-02-03), renew --dry-run thành công. Khởi động nginx và certbot. https://alapedu.online trả 200, HTTP chuyển 301 sang HTTPS, có HSTS và CSP; trang đăng nhập hiển thị. Còn trống: SMTP Brevo; cron nạp lại Nginx chưa tạo."
+**Context**: Web đã chạy qua HTTPS.
+
+---
+
+## Deployment - SMTP Not Set Up
+**Timestamp**: 2026-11-05T21:58:16Z
+**User Input**: "Chưa có Brevo"
+**AI Response**: "Kiểm tra từ VPS: mọi cổng SMTP ra ngoài (587, 465, 2525 của Brevo, Gmail, Resend, SendGrid) đều bị chặn; api.brevo.com:443 mở. Hướng dẫn tạo tài khoản Brevo, xác thực tên miền alapedu.online qua Cloudflare, tạo SMTP key; đề nghị nhờ xvps mở cổng 587 ra ngoài, phương án dự phòng là thêm gửi mail qua HTTP API của Brevo (thay đổi code)."
+**Context**: Gửi email OTP cho production.
+
+---
+
+## Deployment - SMTP Unblock Request
+**Timestamp**: 2026-11-06T02:10:00Z
+**User Input**: "Nhờ xvps mở 587"
+**AI Response**: "Soạn sẵn tin nhắn để người dùng tự gửi hỗ trợ xvps, xin mở cổng SMTP 587 đi ra smtp-relay.brevo.com. Thêm mục SMTP bị chặn vào bảng xử lý sự cố của docs/runbooks/deploy-vps.md. Hướng dẫn các bước sau khi xvps mở cổng: tạo Brevo, xác thực tên miền, điền SMTP_* vào .env, khởi động lại backend và worker, kiểm OTP. Không đổi code."
+**Context**: Gửi email OTP cho production; chờ xvps mở cổng.
+
+---
+
+## Code Generation - Brevo HTTPS API Mail Transport
+**Timestamp**: 2026-11-06T02:30:00Z
+**User Input**: "sửa backend để gửi mail qua api https của brevo cho tôi"
+**AI Response**: "Phân tích yêu cầu mức tối giản: chỉ thêm một adapter thứ hai cho cổng IMail sẵn có của U01, nên bỏ qua user story, thiết kế ứng dụng và chia unit. Kế hoạch: aidlc-docs/construction/plans/code-generation-plan/2026-11-06-brevo-api-mail.md. Thêm BrevoApiMailAdapter (POST https://api.brevo.com/v3/smtp/email, header api-key) và bộ chọn MAIL_TRANSPORT (smtp mặc định, brevo-api; giá trị khác làm backend không khởi động); thêm biến vào application.yml, infra/docker-compose.yml, infra/.env.example; thêm test adapter và test chọn bean; cập nhật runbook deploy-vps.md."
+**Context**: VPS xvps chặn SMTP đi ra ngoài; gửi OTP qua cổng 443.
+
+---
+
+## Build and Test - Brevo HTTPS API Mail Transport
+**Timestamp**: 2026-11-06T06:45:00Z
+**User Input**: "(không có, tiếp tục yêu cầu trước)"
+**AI Response**: "Test liên quan 41/41 qua. mvn -B clean verify toàn backend: 1.773 qua, không lỗi, không bỏ qua; suite PostgreSQL bắt buộc qua. Lần chạy đầu có 9 lỗi do chỉ mount thư mục backend; chạy lại với cả repo thì qua. Ghi kết quả vào plan và aidlc-state.md. Chưa commit, chưa build image, chưa deploy."
+**Context**: Kiểm tra trước khi chọn cách đưa lên VPS.
+
+---
+
+## Delivery Path Question
+**Timestamp**: 2026-11-06T07:00:00Z
+**User Input**: "tại sao không lên staging trước sau đó mới mở pr vào main"
+**AI Response**: "origin/staging hơn origin/main 8 commit (refactor lớn: grading JPA sang JDBC, đổi tên repository, 279 file), chưa có trên production. Đi staging rồi PR staging vào main sẽ đưa cả refactor đó lên VPS cùng lúc. Đề xuất: theo quy trình staging trước nếu nhóm yêu cầu; hoặc hotfix: một PR vào staging và một PR cherry-pick cùng thay đổi vào main. Chờ người dùng chọn."
+**Context**: Chọn đường đưa thay đổi Brevo API lên production.
+
+---
+
+## Requirements Analysis - Allow Any Email Domain
+**Timestamp**: 2026-11-06T07:20:00Z
+**User Input**: "tôi muốn bỏ phần tên miền email được phép đăng ký, cho phép bất kỳ email nào. sửa cả code và đồng bộ doc luôn cho tôi\"
+**AI Response**: "Phân tích yêu cầu mức tối giản: bỏ phần tên miền của BR-U01-03, bỏ biến U01_ALLOWED_EMAIL_DOMAINS và mã EMAIL_DOMAIN_NOT_ALLOWED; giữ duy nhất, chuẩn hóa và định dạng email; không thêm tự đăng ký (Admin vẫn tạo tài khoản, người dùng kích hoạt bằng OTP); không đổi schema. Kế hoạch: aidlc-docs/construction/plans/code-generation-plan/2026-11-06-any-email-domain.md."
+**Context**: Thay đổi quy tắc nghiệp vụ U01 theo yêu cầu người dùng.
+
+---
+
+## Build and Test - Allow Any Email Domain
+**Timestamp**: 2026-11-06T16:35:00Z
+**User Input**: "(không có, tiếp tục yêu cầu trước)"
+**AI Response**: "Backend clean verify 1.776 qua, không bỏ qua; suite PostgreSQL bắt buộc qua. Frontend identity 38 qua, typecheck và lint qua. Đồng bộ requirements, US-IAM-001, business rules, domain entities, business logic model, frontend components, code summary U01, main business flows, README E2E, runbook deploy và aidlc-state. Chưa commit, chưa deploy."
+**Context**: Hoàn tất thay đổi BR-U01-03.
+
+---
+
+## Requirements Analysis - Continuous Deployment
+**Timestamp**: 2026-11-06T17:00:00Z
+**User Input**: "tôi muốn setup ci cd để khi code được đẩy lên main sẽ tự động deploy lại ở vps (nhưng có thể rollback lại bản gần nhất nếu lỗi)"
+**AI Response**: "Kiểm tra mạng: GitHub-hosted runner không SSH được vào VPS (xvps chặn kết nối quốc tế vào cổng 22); runner tự cài cũng không chạy được vì VPS không tới được pipelines/broker.actions.githubusercontent.com; VPS vẫn gọi được api.github.com, github.com và ghcr.io. Phát hiện healthcheck RabbitMQ trên VPS báo unhealthy giả (rabbitmq-diagnostics ping mất khoảng 7 giây, timeout là 5 giây), làm backend và worker không khởi động lại được qua compose. Hỏi người dùng chọn cách deploy."
+**Context**: Thiết kế CD cho VPS production.
+
+---
+
+## Requirements Analysis - Deployment Approach Answer
+**Timestamp**: 2026-11-06T17:05:00Z
+**User Input**: "VPS tự kéo bản mới (Recommended)"
+**AI Response**: "Chọn deploy theo kiểu kéo: systemd timer trên VPS hỏi GitHub API tìm lần chạy CI thành công mới nhất trên main, sao lưu database, kéo image, khởi động lại, kiểm tra sức khỏe, lỗi thì tự quay về bản trước. Có lệnh rollback thủ công."
+**Context**: Chốt cách deploy.
+
+---
+
+## Build and Test - Continuous Deployment
+**Timestamp**: 2026-11-06T16:50:00Z
+**User Input**: "(không có, tiếp tục yêu cầu trước)"
+**AI Response**: "Viết infra/deploy/platform-deploy.sh, unit systemd service và timer, bộ test lệnh giả (11/11 qua, kiểm chéo bằng lỗi cố ý), shellcheck sạch. Sửa healthcheck RabbitMQ (timeout 20s, start_period 60s), bỏ job deploy mẫu trong CI và thêm job deploy-script. Cài lên VPS: script, unit, healthcheck RabbitMQ tạm trong override của VPS; deploy lại SHA đang chạy thành công trong 28 giây (dump 188 KB, RabbitMQ khỏe lại); bật timer 2 phút, lần chạy đầu thành công. Viết runbook mục 10 (cài, theo dõi, rollback, khôi phục database). Chưa commit."
+**Context**: Hoàn tất CD theo kiểu VPS tự kéo bản mới.
+
+---
+
+> Ghi chú: các mục deploy VPS ngày 2026-11-05 và 2026-11-06 đã thay IP VPS, IP cũ và email Admin bằng ký hiệu thay thế vì repo public.
+
+---
+
+## Delivery - Pull Request Into Staging
+**Timestamp**: 2026-11-06T17:20:00Z
+**User Input**: "Chỉ qua staging"
+**AI Response**: "Tạo nhánh feat/vps-auto-deploy từ origin/staging (--no-track), áp lại thay đổi chưa commit; gỡ xung đột audit.md và aidlc-state.md bằng cách giữ bản staging và thêm các mục của phiên này. Năm commit: Brevo API, bỏ giới hạn tên miền, tự động deploy, runbook, ghi AI-DLC. Thay IP VPS và email Admin trong audit bằng ký hiệu thay thế trước khi push vì repo public. Push nhánh và mở PR #52 vào staging. Không merge; merge staging vào main sẽ tự deploy production."
+**Context**: Đưa thay đổi lên staging trước, main sau.
+
+---
+
+## Delivery - Merge Readiness Check
+**Timestamp**: 2026-11-07T00:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem merge được chưa"
+**AI Response**: "PR #52 trên head 323f513a: backend, frontend, deploy-script, GitGuardian đều SUCCESS; images SKIPPED (chỉ chạy khi push main); mergeable, mergeStateStatus CLEAN; staging chưa có commit mới so với nhánh. Không merge."
+**Context**: Kiểm tra trước khi merge vào staging.
+
+---
+
+## Delivery - Final Review and Merge to Staging
+**Timestamp**: 2026-11-07T01:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem còn lỗi gì không, sau đó đưa lên staging cho tôi"
+**AI Response**: "Rà lại toàn bộ diff của PR #52 so với staging: không còn tham chiếu tới giới hạn tên miền trong code; stub IMail là auto-configuration nên không đè adapter; không có IP, khóa hay email cá nhân trong diff. Sửa hai chỗ: platform-deploy.sh xóa LAST_PROBLEM mỗi lần chuyển bản, để khi quay về cũng lỗi thì thông báo nêu đúng lỗi của lần quay về thay vì lỗi cũ (thêm test t_failed_rollback_reports_its_own_problem, bỏ bản sửa thì test báo lỗi); bỏ dòng trống thừa sau package ở ba service. Shellcheck sạch, 12 test script deploy qua. Commit, push, chờ CI xanh rồi merge PR #52 vào staging theo yêu cầu."
+**Context**: Rà soát cuối và merge vào staging; không đụng main.
+
+---
+
+## U05/U09/U15 structure review — 2026-11-06
+
+**Timestamp**: 2026-11-06T12:06:03Z
+**Requested by:** Quang Hung
+**User Input**: "xem lại cấu trúc file thư mục của u05 u09 u15 đã ổn chưa"
+**AI Response**: Reviewed current HEAD 0996df4e, shared conventions, latest unit baselines, file inventories, ArchitectureTest and representative responsibilities/callers. U05 has 26 backend/24 frontend files; U09 50/29; U15 7/8. Static scan of explicit imports in the 83 backend files found zero cross-unit non-contract imports, excluding shared infrastructure. Main structure is suitable; no mandatory relocation found. Optional cleanup: move grading formatErrorMessage from hooks/useResource.ts to a model utility with its six external consumers/tests; optionally align two U09 RepositoryAdapter names with U05 naming. Neither is a demonstrated runtime bug. Keep mapping rows in repository and avoid artificial U15 model/repository folders.
+**Context**: Application review only, directly without subagents; no source/test/config changes or fresh build/test/runtime run, commit or push. Historical passing evidence is not fresh verification. Security/resiliency implementation assessment is outside directory scope; configuration retained; PBT disabled. Append-only audit record required by CLAUDE.md.
+
+---
+
+## Approved U09 structure cleanup completed — 2026-11-06
+
+**Timestamp**: 2026-11-06T12:13:17Z
+**Requested by:** Quang Hung
+**User Input**: "ok giúp tôi sửa"
+**AI Response**: Applied the two concrete review recommendations. Moved formatErrorMessage unchanged to grading/model/format.ts, updated six external consumer files plus useResource, and moved the existing formatter test to model/format.test.ts. Renamed EvaluationRepositoryAdapter and GradingProposalRepositoryAdapter to EvaluationRepository and GradingProposalRepository; synchronized constructors, method references, integration wiring and current documentation. Exact snapshot comparisons verified intended moves/renames only. Fresh frontend: 134 tests across 16 files passed; typecheck and scoped ESLint exit 0. Backend compiled 718 main/246 test sources. Initial sandbox test run had 13 Docker skips; after starting Docker Desktop, the final mapping/PostgreSQL/architecture run passed 19 tests, zero failures/errors/skips, BUILD SUCCESS. Whitespace check passed; no old source/config references or stale Adapter classes remain.
+**Context**: Approved internal refactor executed directly without subagents; plan and state updated. Shell document writes required sandbox escalation; authorized retry succeeded. Existing prior audit entry preserved. No business logic/SQL/public contract/schema/dependency changes, full-suite/production-build/manual acceptance rerun, application restart, commit or push. Tests used disposable PostgreSQL; Docker Desktop remains running. Security/resiliency scope unchanged; PBT disabled. Details: construction/plans/code-generation-plan/2026-11-06-u09-structure-cleanup.md.
+
+---
+
+## Full test and build rerun completed — 2026-11-06
+
+**Timestamp**: 2026-11-06T13:33:59Z
+**Requested by:** Quang Hung
+**User Input**: "chạy lại toàn bộ test/build"
+**AI Response**: Executed full backend/frontend automated verification. Final backend Maven verify: 1,830 tests, zero failures/errors/skips, executable Spring Boot JAR built; independently summed fresh XML totals and passed the four-suite required PostgreSQL guard. Frontend: 799 tests across 116 files passed with two workers, full lint without warnings, production build and post-build typecheck exit 0. Initial frontend default-worker run had four timeouts; retry retained original timeouts/code. Backend retries addressed missing offline clean plugin, shared target interference associated with a Java language server, a 256 MB heap exhaustion in ArchUnit, and a scratch output directory name that did not match ArchUnit's target/test-classes exclusion. Final scratch configuration used isolated target output and 768 MB test heap; original POM/dependencies/test rules unchanged. All earlier failed logs/reports retained; no failed run counted as success.
+**Context**: Work executed directly without subagents. User authorized full verification and necessary environment retries; escalation allowed Docker/cache access. No application/test/config/dependency changes during verification; scratch POM removed from backend and archived under .tmp. Disposable PostgreSQL/Redis only; Docker Desktop and language server left running. No manual UI/provider/performance/restore acceptance, app restart, commit, push, migration or deployment. Security/resiliency scope retained; PBT disabled. Fresh report: construction/build-and-test/2026-11-06-u09-structure-full-verification.md; plan/state updated.
+
+---
+
+## U09 structure cleanup local commit requested — 2026-11-07
+
+**Timestamp**: 2026-11-07T04:26:42Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit"
+**AI Response**: Reviewed current diff and confirmed scope remains the approved U09 formatter relocation, two repository renames, synchronized consumers/test wiring and AI-DLC review/verification records. Prepare one local commit with those changes. Prior full verification remains applicable: 1,830 backend tests with no skips, required PostgreSQL guard, 799 frontend tests, lint/typecheck/production build passed; no application changes since that verification. Exclude ignored logs, generated build output and scratch files.
+**Context**: Explicit local commit authorization; no push, merge, deployment, application restart or redundant full test rerun. Existing audit history retained. Manual UI/provider/performance/restore limits remain as recorded in the verification report.
+
+---
+
+## AI-DLC source synchronization local commit requested — 2026-11-07
+
+**Timestamp**: 2026-11-07T05:59:21Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi tạo commit"
+**AI Response**: Reviewed and prepared one documentation-only commit for the AI-DLC consistency review, synchronization plan/results, refreshed API/source/service/contract inventories, mail/deploy/AI behavior documentation, required PostgreSQL guidance and dated evidence separation at source f68a6ec5. Fresh static validation passed: 49 controllers/334 mapping annotations, 320 source inventory entries, four required suite names/thresholds, four preserved diagram blocks, current/new relative links and Markdown fences/whitespace. All 220 current-document candidates have existing relative-link targets; no controller/migration inventory omissions. Application/config/test files unchanged.
+**Context**: Explicit local commit authorization supersedes the earlier no-automatic-commit scope. Preserve current audit/history content; exclude ignored scratch scripts/logs/generated artifacts. No full application test/build rerun for documentation, push, merge, deployment, provider/VPS call or restart. Prior test results remain dated evidence rather than fresh post-merge acceptance.
+
+---

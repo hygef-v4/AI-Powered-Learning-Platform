@@ -6,8 +6,8 @@ import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Button, Dialog, showToast } from "@/shared/ui";
 import { studentDetailSections } from "../slots";
 import { PersonPicker } from "./PersonPicker";
-import { Avatar, Modal } from "./ui";
-import { formatDate, operationError } from "../model/format";
+import { Avatar, Modal } from "./AcademicsUi";
+import { formatDate, formatOperationError } from "../model/format";
 import type { ClassStatus, CourseClassView, EnrollmentView, PersonView } from "../model/types";
 import styles from "../styles/academics.module.css";
 
@@ -34,7 +34,7 @@ export function ClassStateActions({ value, onChange }: { value: CourseClassView;
       if (target === "ARCHIVED") showToast("Đã lưu trữ lớp", "danger"); else showToast("Đã mở lớp");
       setTarget(null);
     }
-    catch (cause) { setError(operationError(cause)); if (cause instanceof ReopenConflictError) setConflicts(cause.students); }
+    catch (cause) { setError(formatOperationError(cause)); if (cause instanceof ReopenConflictError) setConflicts(cause.students); }
     finally { setBusy(false); }
   }
   function choose(status: ClassStatus) { setTarget(status); setError(""); setConflicts([]); }
@@ -62,7 +62,7 @@ export function AssignTeacherDialog({ value, teachers, onAssign, onClose, loadTe
     if (busy || unchanged) return;
     setBusy(true); setError("");
     try { await onAssign(selected?.id ?? null, value.version); if (selected) showToast("Đã đổi giảng viên"); else showToast("Đã bỏ phân công giảng viên", "danger"); onClose(); }
-    catch (cause) { setError(operationError(cause)); } finally { setBusy(false); }
+    catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
   }
   return <Dialog open title="Đổi giảng viên" size="lg" onClose={onClose} dismissible={!busy}
     footer={<Button variant="primary" disabled={busy || unchanged} onClick={() => void assign()} data-testid="class-teacher-save">Lưu</Button>}>

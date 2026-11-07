@@ -1,4 +1,6 @@
-# U14 Announcements & Notifications — tech-stack-decisions
+# U14 Announcements & Notifications — tech-stack-decisions — chuẩn JDBC
+
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code còn JPA được ghi là khoảng cách migration.
 
 > Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
@@ -8,7 +10,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
-| Lưu trữ | PostgreSQL + Spring Data JPA | Như các unit khác |
+| Lưu trữ | PostgreSQL + Spring JDBC (JdbcTemplate/NamedParameterJdbcTemplate/JdbcClient) | Như các unit khác |
 | Nhận sự kiện | Listener trên queue `jobs.notification` bind `platform.events` | Hạ tầng của U03 |
 | Email | Job `EMAIL_SEND` trên `jobs.email`, gửi bằng `IMail` của U01 (Brevo, Mailpit) | Dùng chung SMTP |
 | Trần email | Biến `U14_EMAIL_DAILY_CAP` (mặc định 300, bằng hạn mức gói miễn phí của Brevo) | Đổi được khi đổi gói |

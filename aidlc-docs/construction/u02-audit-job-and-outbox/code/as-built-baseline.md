@@ -1,6 +1,6 @@
-# U02 Audit — AS-BUILT 2026-10-30
+# U02 Audit — AS-BUILT source snapshot 2026-11-07
 
-Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership and public contracts unchanged.
+Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths are catalogued in [current-code-baseline](../../../inception/reverse-engineering/current-code-baseline.md). Dated deltas/test results below retain their original scope; this update is not runtime acceptance.
 
 Audit append-only và Admin query có source; AuditQueryService/IAuditQuery/IAuditStats đã phục vụ filter, label và tổng hợp U15. Actor/object labels là projection; không cấp quyền đọc học vụ. Các kết quả truy vấn/audit trước 30/10 là historical evidence.
 
@@ -10,7 +10,7 @@ Audit append-only và Admin query có source; AuditQueryService/IAuditQuery/IAud
 |---|---|
 | [audit/controller](../../../../backend/src/main/java/edu/aiplatform/audit/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [audit/service](../../../../backend/src/main/java/edu/aiplatform/audit/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [audit/repository](../../../../backend/src/main/java/edu/aiplatform/audit/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [audit/repository](../../../../backend/src/main/java/edu/aiplatform/audit/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [audit/model](../../../../backend/src/main/java/edu/aiplatform/audit/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [audit/contract](../../../../backend/src/main/java/edu/aiplatform/audit/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 

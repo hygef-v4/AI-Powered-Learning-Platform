@@ -6,6 +6,8 @@ $ErrorActionPreference = 'Stop'
 $requiredSuites = @{
     'edu.aiplatform.subjects.repository.SubjectRepositoryIntegrationTest' = 31
     'edu.aiplatform.notifications.integration.NotificationDeliveryIntegrationTest' = 2
+    'edu.aiplatform.grading.repository.EvaluationVersionIntegrationTest' = 10
+    'edu.aiplatform.grading.repository.GradeDistributionVisibilityRepositoryTest' = 1
 }
 
 foreach ($suiteName in $requiredSuites.Keys) {

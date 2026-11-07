@@ -13,7 +13,7 @@ class CourseClassTest {
     private final UUID teacher = UUID.randomUUID();
 
     private CourseClass draft() {
-        return CourseClass.create(UUID.randomUUID(), UUID.randomUUID(), " SE01 ", " Lớp 1 ", null, "2026-1", teacher, now);
+        return CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), " SE01 ", " Lớp 1 ", null, "2026-1", teacher, now);
     }
 
     @Test void createsDraftWithDistributionDisabled() {
@@ -48,7 +48,7 @@ class CourseClassTest {
     }
 
     @Test void openingNeedsActiveSubjectButNotTeacher() {
-        var noTeacher = CourseClass.create(UUID.randomUUID(), UUID.randomUUID(), "C", "Class", null, null, null, now);
+        var noTeacher = CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C", "Class", null, null, null, now);
         assertThat(noTeacher.changeStatus(ClassStatus.OPEN, true, false, now).status()).isEqualTo(ClassStatus.OPEN);
         assertThatThrownBy(() -> draft().changeStatus(ClassStatus.OPEN, false, false, now))
                 .isInstanceOf(AcademicRuleException.class).hasMessageContaining("môn");
@@ -88,7 +88,7 @@ class CourseClassTest {
         assertThatThrownBy(() -> draft().updateInfo("x", "x".repeat(2001), null, now)).isInstanceOf(AcademicRuleException.class);
         assertThatThrownBy(() -> draft().updateInfo("x", null, "x".repeat(21), now)).isInstanceOf(AcademicRuleException.class);
         assertThatThrownBy(() -> draft().updateInfo("x", null, null, now.minusSeconds(1))).isInstanceOf(AcademicRuleException.class);
-        assertThatThrownBy(() -> CourseClass.create(UUID.randomUUID(), UUID.randomUUID(), "x".repeat(31), "X", null, null, teacher, now))
+        assertThatThrownBy(() -> CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "x".repeat(31), "X", null, null, teacher, now))
                 .isInstanceOf(AcademicRuleException.class);
     }
 }

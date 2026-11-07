@@ -9,6 +9,6 @@ import java.util.UUID;
  */
 public interface IGroupEvaluation {
 
-    void onGroupSubmitted(UUID groupDocumentId, String submissionHash, UUID assignmentId, UUID classId,
-            List<UUID> memberIds);
+    void onGroupSubmitted(UUID groupDocumentId, String submissionHash, UUID assignmentId,
+            UUID classId, List<UUID> memberIds);
 }

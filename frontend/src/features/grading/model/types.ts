@@ -209,7 +209,7 @@ export type StudentGrade = {
   rubricScore?: Decimal | null;
   memberOverride?: boolean;
 };
-export const statusLabels: Record<string, string> = {
+export const GRADE_STATUS_LABELS: Record<string, string> = {
   PENDING: "Chờ chấm",
   DRAFT: "Đã chấm (nháp)",
   FINALIZED: "Đã chốt",
@@ -218,11 +218,11 @@ export const statusLabels: Record<string, string> = {
   NOT_SUBMITTED: "Chưa nộp",
   IN_PROGRESS: "Đang làm",
 };
-export function points(score: Decimal | null | undefined, max: Decimal | null | undefined) {
+export function formatPoints(score: Decimal | null | undefined, max: Decimal | null | undefined) {
   return score == null ? "—" : `${Number(score).toFixed(2)} / ${Number(max ?? 0).toFixed(2)}`;
 }
 
-export const activityLabels: Record<string, string> = {
+export const ACTIVITY_LABELS: Record<string, string> = {
   DISABLED: "Không bật theo dõi hoạt động",
   NO_DATA: "Chưa có dữ liệu hoạt động",
   AVAILABLE: "Có dữ liệu hoạt động",

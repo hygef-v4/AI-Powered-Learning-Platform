@@ -18,32 +18,37 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/classes/{classId}")
 public class SubmissionReviewController {
-    private final SubmissionReviewService review;
-    private final IAssignmentQuery assignments;
-    private final GradebookService gradebook;
+    private final SubmissionReviewService submissionReviewService;
+    private final IAssignmentQuery assignmentQuery;
+    private final GradebookService gradebookService;
 
-    public SubmissionReviewController(SubmissionReviewService review, IAssignmentQuery assignments,
-            GradebookService gradebook) {
-        this.review = review;
-        this.assignments = assignments;
-        this.gradebook = gradebook;
+    public SubmissionReviewController(SubmissionReviewService submissionReviewService,
+            IAssignmentQuery assignmentQuery, GradebookService gradebookService) {
+        this.submissionReviewService = submissionReviewService;
+        this.assignmentQuery = assignmentQuery;
+        this.gradebookService = gradebookService;
     }
 
     @GetMapping("/assignments/{assignmentId}/submissions")
-    public SubmissionPage submissions(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
-            @PathVariable UUID assignmentId, @RequestParam(required = false) String status,
-            @RequestParam(required = false) Boolean late, @RequestParam(defaultValue = "1") int page,
+    public SubmissionPage listSubmissions(@AuthenticationPrincipal Actor actor,
+            @PathVariable UUID classId, @PathVariable UUID assignmentId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Boolean late,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return review.list(actor, classId, assignmentId, status, late, page, size);
+        return submissionReviewService.listSubmissions(actor, classId, assignmentId, status, late,
+                page, size);
     }
 
     @GetMapping("/submission-progress")
-    public Map<UUID, SubmissionPage> progress(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId) {
-        gradebook.list(actor, classId, null, 1, 1);
+    public Map<UUID, SubmissionPage> progress(@AuthenticationPrincipal Actor actor,
+            @PathVariable UUID classId) {
+        gradebookService.listGrades(actor, classId, null, 1, 1);
         var result = new LinkedHashMap<UUID, SubmissionPage>();
-        for (var a : assignments.listForClass(classId))
-            if (GradebookService.gradable(a))
-                result.put(a.assignmentId(), review.list(actor, classId, a.assignmentId(), null, null, 1, 1));
+        for (var a : assignmentQuery.listForClass(classId))
+            if (GradebookService.isGradable(a))
+                result.put(a.assignmentId(), submissionReviewService.listSubmissions(actor, classId,
+                        a.assignmentId(), null, null, 1, 1));
         return result;
     }
 }

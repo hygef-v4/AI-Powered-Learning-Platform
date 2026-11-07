@@ -1,3 +1,5 @@
 package edu.aiplatform.academics.model;
 
-public enum EnrollmentStatus { ACTIVE, REMOVED }
+public enum EnrollmentStatus {
+    ACTIVE, REMOVED
+}

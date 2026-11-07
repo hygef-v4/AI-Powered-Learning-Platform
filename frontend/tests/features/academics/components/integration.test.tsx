@@ -1,7 +1,7 @@
 import {render,screen,fireEvent} from "@testing-library/react";
 import {it,expect,afterEach} from "vitest";
 import {ReadOnlyClassPage} from "@/features/academics/pages/ReadOnlyClassPage";
-import {classCapability} from "@/features/academics/api";
+import {loadClassCapability} from "@/features/academics/api";
 import {vi} from "vitest";
 import {teacherClassTabs,classCardSections} from "@/features/academics/slots";
 import {ClassDashboardPage} from "@/features/academics/pages/ClassDashboardPage";
@@ -25,9 +25,9 @@ it("hosts every teacher tab including info and gradebook",()=>{
 });
 it("accepts empty authorized classes and never falls back on server failure",async()=>{
  const fn=vi.fn().mockImplementation(()=>Promise.resolve(Response.json([])));vi.stubGlobal("fetch",fn);
- await expect(classCapability()).resolves.toEqual({audience:"student",classes:[]});expect(fn).toHaveBeenCalledTimes(1);
+ await expect(loadClassCapability()).resolves.toEqual({audience:"student",classes:[]});expect(fn).toHaveBeenCalledTimes(1);
  fn.mockReset().mockImplementation(()=>Promise.resolve(Response.json({}, {status:503})));
- await expect(classCapability()).rejects.toMatchObject({problem:{status:503}});expect(fn).toHaveBeenCalledTimes(1);vi.unstubAllGlobals();
+ await expect(loadClassCapability()).rejects.toMatchObject({problem:{status:503}});expect(fn).toHaveBeenCalledTimes(1);vi.unstubAllGlobals();
 });
 
 it("restores dashboard filters without sharing their query parameter", () => {

@@ -8,10 +8,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class GradingProposalResultHandler implements IAiTaskResultHandler {
-    private final GradingProposalTransactions tx;
+    private final GradingProposalTransactions gradingProposalTransactions;
 
-    public GradingProposalResultHandler(GradingProposalTransactions tx) {
-        this.tx = tx;
+    public GradingProposalResultHandler(GradingProposalTransactions gradingProposalTransactions) {
+        this.gradingProposalTransactions = gradingProposalTransactions;
     }
 
     public String taskType() {
@@ -19,10 +19,10 @@ public class GradingProposalResultHandler implements IAiTaskResultHandler {
     }
 
     public ApplyOutcome onReady(AiTaskResult result) {
-        return tx.accept(result);
+        return gradingProposalTransactions.acceptProposal(result);
     }
 
     public void onFailed(AiTaskFailure failure) {
-        tx.failed(failure);
+        gradingProposalTransactions.recordFailure(failure);
     }
 }

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Pill, type Tone } from "@/shared/ui";
 import type { SourceChoice } from "@/shared/ai";
-import { checklistPoints, invalidItemScores, itemPoints, validItemScore } from "../model/rubricScores";
+import { calculateChecklistPoints, hasInvalidItemScores, resolveItemPoints, isValidItemScore } from "../model/rubricScores";
 import { GradingFeedbackSummary, RubricItemFeedback } from "./StructuredFeedbackSection";
 import type {
   AiRequest,
@@ -15,7 +15,7 @@ import type {
 } from "../model/types";
 
 /** Yêu cầu AI: không chọn nguồn thì hệ thống tự chọn (API chung nếu đủ hạn mức, không thì khóa cá nhân; 2026-11-05). */
-export function aiRequest(choice?: SourceChoice): AiRequest {
+export function buildAiRequest(choice?: SourceChoice): AiRequest {
   return {
     ...(choice ? { source: choice.source } : {}),
     ...(choice?.source === "PERSONAL" && choice.provider ? { provider: choice.provider } : {}),
@@ -88,8 +88,8 @@ export function AiProposalPanel({
     const aiScores = p.proposal?.itemScoresByRubric ?? {};
     const aiStructured = p.proposal?.structuredFeedback ?? null;
     const hasComparison = Boolean(isLatest && p.proposal && rubrics.length > 0 && currentValues);
-    const hasInvalidCurrent = Boolean(currentValues && invalidItemScores(rubrics, currentValues.itemScores));
-    const currentSubtotal = currentValues ? checklistPoints(rubrics, currentValues.checks, currentValues.itemScores) : 0;
+    const hasInvalidCurrent = Boolean(currentValues && hasInvalidItemScores(rubrics, currentValues.itemScores));
+    const currentSubtotal = currentValues ? calculateChecklistPoints(rubrics, currentValues.checks, currentValues.itemScores) : 0;
     const aiTotal = p.proposal ? Number(p.proposal.score) : 0;
     const totalDiff = !hasInvalidCurrent && Number.isFinite(aiTotal) ? Math.round((aiTotal - currentSubtotal) * 100) / 100 : 0;
     const reviewFlagCount = aiStructured?.items?.filter((item) => item.requiresReview).length ?? 0;
@@ -167,9 +167,9 @@ export function AiProposalPanel({
               {rubrics.map((rubric, rIdx) => {
                 const secTitle = partTitles[rubric.partId] || `Phần ${rIdx + 1}`;
                 const hasAiRubric = Object.prototype.hasOwnProperty.call(aiScores, rubric.rubricId) || Object.prototype.hasOwnProperty.call(aiChecks, rubric.rubricId);
-                const secAi = hasAiRubric ? checklistPoints([rubric], aiChecks, aiScores).toFixed(2) : "Chưa có dữ liệu";
-                const secCurInvalid = invalidItemScores([rubric], currentValues.itemScores);
-                const secCur = secCurInvalid ? "Chưa hợp lệ" : checklistPoints([rubric], currentValues.checks, currentValues.itemScores).toFixed(2);
+                const secAi = hasAiRubric ? calculateChecklistPoints([rubric], aiChecks, aiScores).toFixed(2) : "Chưa có dữ liệu";
+                const secCurInvalid = hasInvalidItemScores([rubric], currentValues.itemScores);
+                const secCur = secCurInvalid ? "Chưa hợp lệ" : calculateChecklistPoints([rubric], currentValues.checks, currentValues.itemScores).toFixed(2);
                 return (
                   <div key={rubric.rubricId} className="rounded-lg border border-line bg-shell p-3">
                     <div className="flex flex-wrap items-center justify-between gap-1 font-semibold text-ink">
@@ -181,13 +181,13 @@ export function AiProposalPanel({
                     <div className="mt-1.5 space-y-1">
                       {rubric.criteria.flatMap((c) => c.items).map((item) => {
                         const max = Number(item.points);
-                        const curRaw = itemPoints(rubric.rubricId, item.itemId, max, currentValues.checks, currentValues.itemScores);
-                        const curValid = validItemScore(curRaw, max);
+                        const curRaw = resolveItemPoints(rubric.rubricId, item.itemId, max, currentValues.checks, currentValues.itemScores);
+                        const curValid = isValidItemScore(curRaw, max);
                         const hasAiItem = Boolean(
                           (aiScores[rubric.rubricId] && Object.prototype.hasOwnProperty.call(aiScores[rubric.rubricId], item.itemId)) ||
                           Object.prototype.hasOwnProperty.call(aiChecks, rubric.rubricId),
                         );
-                        const aiVal = hasAiItem ? Number(itemPoints(rubric.rubricId, item.itemId, max, aiChecks, aiScores)) : null;
+                        const aiVal = hasAiItem ? Number(resolveItemPoints(rubric.rubricId, item.itemId, max, aiChecks, aiScores)) : null;
                         const itemDiff = curValid && aiVal !== null ? Math.round((aiVal - Number(curRaw)) * 100) / 100 : 0;
                         const changed = !curValid || (aiVal !== null && itemDiff !== 0);
                         const fbItem = aiStructured?.items?.find(
@@ -289,7 +289,7 @@ export function AiProposalPanel({
           type="button"
           className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-on-primary disabled:opacity-40"
           disabled={disabled || proposals.some((proposal) => proposal.status === "PENDING")}
-          onClick={() => { if (!disabled) onRequest(aiRequest()); }}
+          onClick={() => { if (!disabled) onRequest(buildAiRequest()); }}
         >
           Yêu cầu đề xuất mới
         </button>

@@ -8,7 +8,7 @@ import { Button, ClickableRow, Icon, Pill, Segmented, Select, TableFrame, Td, Te
 import { Pagination } from "@/shared/ui/Pagination";
 import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
-import { statusLabels, type Decimal, type GradebookPage, type GradeCell } from "../model/types";
+import { GRADE_STATUS_LABELS, type Decimal, type GradebookPage, type GradeCell } from "../model/types";
 import { GradebookExportDialog } from "./GradebookExportDialog";
 
 type Assignment = GradebookPage["assignments"][number];
@@ -67,7 +67,7 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
     const timer = setTimeout(() => setSearch(query.trim()), 300);
     return () => clearTimeout(timer);
   }, [query]);
-  const load = useCallback(() => gradingApi.gradebook(classId, search, page), [classId, search, page]);
+  const load = useCallback(() => gradingApi.loadGradebook(classId, search, page), [classId, search, page]);
   const resource = useResource(load);
   // Giữ bảng đang hiện trong lúc tải kết quả mới, để ô tìm không bị dựng lại giữa chừng.
   const [kept, setKept] = useState<GradebookPage | null>(null);
@@ -95,7 +95,7 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
   const statusFilter = (
     <Select aria-label="Lọc theo trạng thái" value={status} wrapperClassName="w-44 shrink-0" onChange={(e) => setStatus(e.target.value)}>
       <option value="">Mọi trạng thái</option>
-      {STATUS_FILTERS.map((value) => <option key={value} value={value}>{statusLabels[value]}</option>)}
+      {STATUS_FILTERS.map((value) => <option key={value} value={value}>{GRADE_STATUS_LABELS[value]}</option>)}
     </Select>
   );
   const pager = data && <Pagination page={page - 1} pageSize={20} total={data.total} summary={false} onPageChange={(p) => setPage(p + 1)} />;
@@ -249,7 +249,7 @@ function GradeRow({ label, grade, maxScore, fallback }: { label: ReactNode; grad
       </Td>
       <Td>
         <div className="flex flex-wrap items-center gap-1.5">
-          <Pill tone={statusTone(status)}>{statusLabels[status] ?? status}</Pill>
+          <Pill tone={statusTone(status)}>{GRADE_STATUS_LABELS[status] ?? status}</Pill>
           {grade?.late && <Pill tone="danger">Trễ</Pill>}
         </div>
       </Td>

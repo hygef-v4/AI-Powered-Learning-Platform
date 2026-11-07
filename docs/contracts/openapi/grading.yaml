@@ -921,12 +921,12 @@ components:
           minLength: 1
           maxLength: 200
       required:
-      - source
       - requestRef
       additionalProperties: false
-      description: PERSONAL requires provider. Caller chooses source explicitly; no
-        fallback. requestRef is idempotent within its evaluation/requester/source/snapshot
-        scope.
+      description: Omit source for automatic selection through U06 (eligible shared
+        API first, then configured personal keys). An explicit source remains supported;
+        provider is optional for PERSONAL and must be absent for other sources.
+        requestRef is idempotent within its evaluation/requester/source/snapshot scope.
     Batch:
       type: object
       properties:

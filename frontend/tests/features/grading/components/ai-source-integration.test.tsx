@@ -8,8 +8,8 @@ vi.mock("@/shared/api/client", async (importOriginal) => ({
   ...await importOriginal<typeof import("@/shared/api/client")>(), apiFetch: mocks.fetch,
 }));
 vi.mock("@/features/grading/api", () => ({ gradingApi: {
-  requestBatch: mocks.requestBatch,
-  estimateBatch: mocks.estimateBatch,
+  requestProposals: mocks.requestBatch,
+  estimateProposalTokens: mocks.estimateBatch,
 } }));
 
 const items = [{ evaluationId: "e", version: 7 }];
@@ -37,7 +37,7 @@ describe("U09 AI requests choose their source automatically", () => {
   it.each(["finalize", "publish"] as const)("preserves the %s batch action", async (action) => {
     const api = await import("@/features/grading/api");
     const perform = vi.fn().mockResolvedValue({ items: [{ evaluationId: "e", outcome: "SUCCESS" }] });
-    Object.assign(api.gradingApi, { [action]: perform });
+    Object.assign(api.gradingApi, { [action === "finalize" ? "finalizeGrades" : "publishGrades"]: perform });
     render(<BatchActionDialog action={action} items={items} onClose={vi.fn()} onDone={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }));
     expect(await screen.findByRole("status")).toHaveTextContent(action === "publish" ? "Đã công bố điểm cho 1 bài." : "Đã chốt điểm cho 1 bài.");

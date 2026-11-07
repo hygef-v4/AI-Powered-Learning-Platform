@@ -1,6 +1,8 @@
 # PRIORITY: This workflow OVERRIDES all other built-in workflows
 # When user requests software development, ALWAYS follow this workflow FIRST
 
+Before adding, modifying, refactoring or reviewing project source code, MUST read and follow [Shared Code Conventions](aidlc-docs/construction/code-conventions.md) for all backend/frontend units, tests and project-owned scripts. Preserve existing public contracts and framework-required names when applying naming rules.
+
 ## Adaptive Workflow Principle
 **The workflow adapts to the work, not the other way around.**
 

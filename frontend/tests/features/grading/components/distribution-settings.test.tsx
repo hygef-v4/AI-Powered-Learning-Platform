@@ -45,14 +45,14 @@ describe("assignment/class grade distribution visibility", () => {
   it("uses the versioned GET/PUT contract and encodes both path identifiers", async () => {
     const fetch = vi.fn().mockImplementation(() => Promise.resolve(new Response(JSON.stringify(initial))));
     vi.stubGlobal("fetch", fetch);
-    expect(await gradingApi.distributionVisibility("c/1", "a/1")).toEqual(initial);
+    expect(await gradingApi.loadDistributionVisibility("c/1", "a/1")).toEqual(initial);
     expect(fetch.mock.calls[0]![0]).toBe("/api/v1/classes/c%2F1/assignments/a%2F1/grade-distribution-visibility");
     expect(await gradingApi.saveDistributionVisibility("c/1", "a/1", true, 7)).toEqual(initial);
     expect(fetch.mock.calls[1]![1]).toMatchObject({ method: "PUT", body: JSON.stringify({ enabled: true, version: 7 }) });
   });
 
   it("starts off, saves immediately, waits for confirmation, and uses the returned version for the next save", async () => {
-    vi.spyOn(gradingApi, "distributionVisibility").mockResolvedValue(initial);
+    vi.spyOn(gradingApi, "loadDistributionVisibility").mockResolvedValue(initial);
     let confirm!: (value: typeof initial) => void;
     const save = vi.spyOn(gradingApi, "saveDistributionVisibility").mockImplementationOnce(() => new Promise((resolve) => { confirm = resolve; }))
       .mockResolvedValue({ ...initial, version: 2 });
@@ -73,27 +73,27 @@ describe("assignment/class grade distribution visibility", () => {
   });
 
   it("does not load PRACTICE settings", () => {
-    const load = vi.spyOn(gradingApi, "distributionVisibility");
+    const load = vi.spyOn(gradingApi, "loadDistributionVisibility");
     render(<GradeDistributionSettings classId="c" assignmentId="a" gradingMode="PRACTICE" />);
     expect(load).not.toHaveBeenCalled();
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
   });
 
   it.each([403, 404])("hides an unauthorized GET (%s) without an editable default", async (status) => {
-    vi.spyOn(gradingApi, "distributionVisibility").mockRejectedValue(new ApiError({ status }));
+    vi.spyOn(gradingApi, "loadDistributionVisibility").mockRejectedValue(new ApiError({ status }));
     await act(async () => { render(<GradeDistributionSettings classId="c" assignmentId="a" gradingMode="GRADED" />); });
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("hides the control when the server denies editing", async () => {
-    vi.spyOn(gradingApi, "distributionVisibility").mockResolvedValue({ ...initial, canEdit: false });
+    vi.spyOn(gradingApi, "loadDistributionVisibility").mockResolvedValue({ ...initial, canEdit: false });
     await act(async () => { render(<GradeDistributionSettings classId="c" assignmentId="a" gradingMode="GRADED" />); });
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
   });
 
   it("offers GET retry on server/network failure without exposing an unverified switch", async () => {
-    const load = vi.spyOn(gradingApi, "distributionVisibility").mockRejectedValueOnce(new Error("offline")).mockResolvedValue(initial);
+    const load = vi.spyOn(gradingApi, "loadDistributionVisibility").mockRejectedValueOnce(new Error("offline")).mockResolvedValue(initial);
     render(<GradeDistributionSettings classId="c" assignmentId="a" gradingMode="GRADED" />);
     expect(await screen.findByRole("alert")).toHaveTextContent("Không tải được");
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
@@ -103,7 +103,7 @@ describe("assignment/class grade distribution visibility", () => {
   });
 
   it.each([409, 500, 0])("reports failed PUT (%s; 0 is offline), retains confirmed state and reloads before retrying", async (status) => {
-    const load = vi.spyOn(gradingApi, "distributionVisibility").mockResolvedValueOnce(initial)
+    const load = vi.spyOn(gradingApi, "loadDistributionVisibility").mockResolvedValueOnce(initial)
       .mockResolvedValue({ ...initial, enabled: true, version: 5 });
     const save = vi.spyOn(gradingApi, "saveDistributionVisibility").mockRejectedValueOnce(status ? new ApiError({ status }) : new Error("offline"))
       .mockResolvedValue({ ...initial, version: 6 });
@@ -123,7 +123,7 @@ describe("assignment/class grade distribution visibility", () => {
 
   it("isolates shared SUBJECT settings by class and ignores an old class response", async () => {
     let oldResponse!: (value: typeof initial) => void;
-    const load = vi.spyOn(gradingApi, "distributionVisibility").mockImplementationOnce(() => new Promise((resolve) => { oldResponse = resolve; }))
+    const load = vi.spyOn(gradingApi, "loadDistributionVisibility").mockImplementationOnce(() => new Promise((resolve) => { oldResponse = resolve; }))
       .mockResolvedValue(initial);
     const save = vi.spyOn(gradingApi, "saveDistributionVisibility").mockResolvedValue({ ...initial, enabled: true, version: 1 });
     const props = { detail: subjectAssignment, value: settingsOf(subjectAssignment), onChange: vi.fn(), readOnly: true };
@@ -140,7 +140,7 @@ describe("assignment/class grade distribution visibility", () => {
   });
 
   it("loads no settings for a SUBJECT assignment without a class context", () => {
-    const load = vi.spyOn(gradingApi, "distributionVisibility");
+    const load = vi.spyOn(gradingApi, "loadDistributionVisibility");
     render(<AssignmentSettingsPanel detail={subjectAssignment} value={settingsOf(subjectAssignment)} onChange={vi.fn()} readOnly />);
     expect(load).not.toHaveBeenCalled();
   });
@@ -148,7 +148,7 @@ describe("assignment/class grade distribution visibility", () => {
   it("passes the page's query class context into settings even when SUBJECT content is read-only", async () => {
     vi.spyOn(assignmentsApi, "detail").mockResolvedValue(subjectAssignment);
     const update = vi.spyOn(assignmentsApi, "updateDetails");
-    const load = vi.spyOn(gradingApi, "distributionVisibility").mockResolvedValue(initial);
+    const load = vi.spyOn(gradingApi, "loadDistributionVisibility").mockResolvedValue(initial);
     const save = vi.spyOn(gradingApi, "saveDistributionVisibility").mockResolvedValue({ ...initial, enabled: true, version: 1 });
     render(<AssignmentFormPage id="a" />);
     fireEvent.click(await screen.findByRole("button", { name: "Cài đặt bài" }));

@@ -53,7 +53,7 @@ Hệ thống phải dùng email do trường cấp làm định danh đăng nh�
 - Người dùng đã xác thực có thể đăng nhập và đăng xuất an toàn.
 - Phiên hết hạn theo cấu hình và bị vô hiệu hóa khi đăng xuất.
 - Luồng khôi phục mật khẩu không tiết lộ tài khoản có tồn tại hay không.
-- Email đăng nhập của người học/giảng viên phải thuộc miền email trường được cấu hình; người dùng không thể tự đăng ký bằng email ngoài miền.
+- Email đăng nhập thuộc tên miền nào cũng được (thay đổi ngày 2026-11-06, trước đây giới hạn theo miền email trường). Người dùng vẫn không thể tự đăng ký: Admin tạo tài khoản, người dùng kích hoạt bằng OTP gửi tới chính email đó.
 
 ### FR-002 - Phân quyền và nguồn AI
 
@@ -448,7 +448,7 @@ Backup tối thiểu và kiểm thử restore thuộc FR-038; cảnh báo backup
 
 ### REL-005 - Không phát sinh chi phí
 
-Mọi thành phần bảo mật và vận hành phải miễn phí: thư viện mã nguồn mở, Let's Encrypt, GitHub Actions và GHCR với repository public, Mailpit khi phát triển, Brevo SMTP khi demo/production (trong hạn mức gói miễn phí).
+Mọi thành phần bảo mật và vận hành phải miễn phí: thư viện mã nguồn mở, Let's Encrypt, GitHub Actions và GHCR với repository public, Mailpit khi phát triển, Brevo SMTP hoặc Brevo HTTPS API khi demo/production (trong hạn mức gói miễn phí); chọn bằng MAIL_TRANSPORT, SMTP là mặc định và HTTPS dùng khi mạng chặn SMTP.
 
 AI API chung do đơn vị vận hành cung cấp/tài trợ có quota và kill-switch; personal API/agent theo tài khoản người dùng. Không mặc định API miễn phí hoặc ngân sách trường đã có. Embedding/RAG chỉ extension với nguồn chi phí riêng.
 

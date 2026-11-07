@@ -17,7 +17,7 @@ File này chỉ ghi phần hạ tầng U01 dùng.
 | Bảng `accounts` (gồm `email_preferences` do U14 ghi; quota/usage ở bảng riêng U06) | Container `postgres` | Migration Flyway trong thư mục của U01 |
 | Refresh token, OTP, bucket rate limit | Container `redis`, database 0 | Khóa theo mục 3 |
 | Việc nền | Message RabbitMQ gửi sau commit, không có bảng job | U03 sở hữu |
-| Gửi mail | Brevo SMTP ở demo/production; Mailpit ở local/test | Cấu hình `SMTP_*` |
+| Gửi mail | SMTP mặc định (Mailpit local/test) hoặc Brevo HTTPS API | `MAIL_TRANSPORT`, `SMTP_*`; `BREVO_API_KEY` chỉ cho `brevo-api` |
 
 ## 2. RabbitMQ
 
@@ -43,7 +43,7 @@ Redis **không bật persistence**: VPS khởi động lại thì mọi người
 
 ## 4. Cấu hình
 
-Biến môi trường như `logical-components.md` mục 4; giá trị bí mật lấy từ CI/CD.
+Biến môi trường như `logical-components.md` mục 4; giá trị bí mật nằm trong `infra/.env` trên VPS (quyền 600), CI/CD không giữ secret. Từ 2026-11-06 VPS tự deploy bản mới trên `main` và tự quay về khi lỗi (`docs/runbooks/deploy-vps.md` mục 10).
 
 ## 5. Quan sát riêng U01
 

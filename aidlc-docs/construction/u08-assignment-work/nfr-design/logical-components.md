@@ -1,4 +1,6 @@
-# U08 Assignment Work — logical-components
+# U08 Assignment Work — logical-components — chuẩn JDBC
+
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code còn JPA được ghi là khoảng cách migration.
 
 > Current structure: parent HEAD 5a76e428 + working-tree refactor, 2026-10-30. Unit ownership unchanged; runtime/provider acceptance remains separate.
 
@@ -10,7 +12,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|
 | [assignmentwork/controller](../../../../backend/src/main/java/edu/aiplatform/assignmentwork/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [assignmentwork/service](../../../../backend/src/main/java/edu/aiplatform/assignmentwork/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [assignmentwork/repository](../../../../backend/src/main/java/edu/aiplatform/assignmentwork/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [assignmentwork/repository](../../../../backend/src/main/java/edu/aiplatform/assignmentwork/repository) | Repository interface/implementation, SQL và persistence mapping; JDBC là chuẩn đích toàn dự án. |
 | [assignmentwork/model](../../../../backend/src/main/java/edu/aiplatform/assignmentwork/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [assignmentwork/dto](../../../../backend/src/main/java/edu/aiplatform/assignmentwork/dto) | Kiểu dữ liệu request/response riêng. |
 | [assignmentwork/contract](../../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract) | Public interface/DTO xuyên unit; giữ nguyên. |

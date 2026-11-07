@@ -1,14 +1,11 @@
 package edu.aiplatform.identity.model;
 
-import java.util.Collection;
 import java.util.Locale;
-import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
- * Chuẩn hóa và kiểm email trường (BR-U01-02, 03). Danh sách tên miền rỗng thì không email nào hợp lệ
- * (mặc định từ chối khi quên cấu hình {@code U01_ALLOWED_EMAIL_DOMAINS}).
+ * Chuẩn hóa và kiểm email đăng nhập (BR-U01-02, 03). Chỉ kiểm định dạng và độ dài, chấp nhận mọi tên miền; tài khoản vẫn
+ * do Admin tạo và chỉ kích hoạt được bằng OTP gửi tới chính email đó.
  */
 public final class EmailPolicy {
 
@@ -16,14 +13,7 @@ public final class EmailPolicy {
 
     private static final Pattern FORMAT = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
-    private final Set<String> allowedDomains;
-
-    public EmailPolicy(Collection<String> allowedDomains) {
-        this.allowedDomains = allowedDomains.stream()
-                .map(EmailPolicy::normalize)
-                .filter(domain -> !domain.isEmpty())
-                .map(domain -> domain.startsWith("@") ? domain.substring(1) : domain)
-                .collect(Collectors.toUnmodifiableSet());
+    private EmailPolicy() {
     }
 
     /** Cắt khoảng trắng và đổi chữ thường trước mọi so sánh (BR-U01-02). */
@@ -37,16 +27,9 @@ public final class EmailPolicy {
         return at < 0 ? email : email.substring(0, at);
     }
 
-    public EmailCheck check(String normalizedEmail) {
-        if (normalizedEmail.isEmpty() || normalizedEmail.length() > MAX_LENGTH
-                || !FORMAT.matcher(normalizedEmail).matches()) {
-            return EmailCheck.INVALID_EMAIL;
-        }
-        String domain = normalizedEmail.substring(normalizedEmail.lastIndexOf('@') + 1);
-        return allowedDomains.contains(domain) ? EmailCheck.OK : EmailCheck.EMAIL_DOMAIN_NOT_ALLOWED;
-    }
-
-    public enum EmailCheck {
-        OK, INVALID_EMAIL, EMAIL_DOMAIN_NOT_ALLOWED
+    /** {@code true} khi email đã chuẩn hóa không rỗng, tối đa {@value #MAX_LENGTH} ký tự và đúng dạng {@code a@b.c}. */
+    public static boolean isValid(String normalizedEmail) {
+        return !normalizedEmail.isEmpty() && normalizedEmail.length() <= MAX_LENGTH
+                && FORMAT.matcher(normalizedEmail).matches();
     }
 }
