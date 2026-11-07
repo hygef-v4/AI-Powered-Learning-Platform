@@ -262,6 +262,17 @@ HEAD `11df6307` contains documentation only; code remains staged as 1,066 rename
 
 User requested “giúp tôi commit”. Include the verified file/package relocation and latest verification/audit notes in this commit. Pre-commit comparison confirms all 1,501 original source/resource files retained, 908 Java bodies and 506 TypeScript/TSX ASTs unchanged except necessary package/import/reference updates. Backend/frontend source matches the tested tree; test/build evidence above applies. No push, deployment or history rewrite.
 
+## U09 scoped structure cleanup — 2026-11-06
+
+**Subsequent full verification requested and completed:** final isolated Maven verify passed 1,830 tests with zero failures/errors/skips and packaged the executable JAR; all four required PostgreSQL suites passed. Frontend 799 tests/116 files, full lint, production build and typecheck passed. [Fresh results, environment corrections and limits](construction/build-and-test/2026-11-06-u09-structure-full-verification.md). No application/config/dependency changes from verification; temporary backend POM removed. No commit, push, restart or deployment.
+
+- [x] User approved two concrete review recommendations with “ok giúp tôi sửa”; implemented directly without subagents.
+- [x] Moved frontend error formatter/test into model; updated all six external consumers. Renamed two concrete JDBC repositories without Adapter suffix; updated integration wiring and current documentation.
+- [x] Fresh frontend 134 tests/16 files, typecheck and scoped lint passed. Backend compiled all main/test sources; final repository/PostgreSQL/architecture run passed 19 tests with zero skips after starting Docker Desktop.
+- [x] Exact move/rename comparisons and whitespace check passed; no business logic, SQL, contracts, dependencies or schema changes.
+
+[Execution and verification details](construction/plans/code-generation-plan/2026-11-06-u09-structure-cleanup.md). No full-suite/production-build/manual acceptance rerun, application restart, commit, push or deployment; Docker Desktop remains running. Security/resiliency scope retained; PBT disabled.
+
 ## Bug remediation and doc sync — 2026-11-01
 
 Commit `1cd58c02` on local branch `fix/review-bugs-2026-11-01` fixes 26 review bugs plus the DOCX preview CSP issue. Business rules, frontend components, API inventory, contracts and decision register were synchronized to the new behavior; summary in [review-bugs remediation](construction/remediation/review-bugs-2026-11-01/README.md). Frontend lint/typecheck/605 tests/build passed; backend compiled and unit-tested without Maven (environment-caused failures only). `mvn verify` and Testcontainers suites not run; nothing pushed.

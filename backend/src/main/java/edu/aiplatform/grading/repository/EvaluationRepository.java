@@ -11,17 +11,17 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-public class EvaluationRepositoryAdapter implements IEvaluationRepository {
+public class EvaluationRepository implements IEvaluationRepository {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    public EvaluationRepositoryAdapter(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+    public EvaluationRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
     public Optional<Evaluation> findById(UUID id) {
         return namedParameterJdbcTemplate
                 .query("select grading_document, version from evaluations where id=:id",
-                        Map.of("id", id), EvaluationRepositoryAdapter::mapEvaluation)
+                        Map.of("id", id), EvaluationRepository::mapEvaluation)
                 .stream().findFirst();
     }
 
@@ -29,14 +29,14 @@ public class EvaluationRepositoryAdapter implements IEvaluationRepository {
     public Optional<Evaluation> lockById(UUID id) {
         return namedParameterJdbcTemplate
                 .query("select grading_document, version from evaluations where id=:id for update",
-                        Map.of("id", id), EvaluationRepositoryAdapter::mapEvaluation)
+                        Map.of("id", id), EvaluationRepository::mapEvaluation)
                 .stream().findFirst();
     }
 
     public Optional<Evaluation> findByAttemptId(UUID id) {
         return namedParameterJdbcTemplate
                 .query("select grading_document, version from evaluations where attempt_id=:id",
-                        Map.of("id", id), EvaluationRepositoryAdapter::mapEvaluation)
+                        Map.of("id", id), EvaluationRepository::mapEvaluation)
                 .stream().findFirst();
     }
 
@@ -45,13 +45,13 @@ public class EvaluationRepositoryAdapter implements IEvaluationRepository {
                 select grading_document, version from evaluations
                 where assignment_id=:assignmentId and class_id=:classId
                 """, Map.of("assignmentId", assignmentId, "classId", classId),
-                EvaluationRepositoryAdapter::mapEvaluation);
+                EvaluationRepository::mapEvaluation);
     }
 
     public List<Evaluation> findForClass(UUID classId) {
         return namedParameterJdbcTemplate.query(
                 "select grading_document, version from evaluations where class_id=:classId",
-                Map.of("classId", classId), EvaluationRepositoryAdapter::mapEvaluation);
+                Map.of("classId", classId), EvaluationRepository::mapEvaluation);
     }
 
     @Transactional

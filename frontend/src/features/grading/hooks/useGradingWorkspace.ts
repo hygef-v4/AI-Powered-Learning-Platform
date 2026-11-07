@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { gradingApi } from "../api";
 import { buildRubricValues, hasPartialPoints, hasInvalidItemScores } from "../model/rubricScores";
-import { formatErrorMessage } from "./useResource";
+import { formatErrorMessage } from "../model/format";
 import { useGradingProposals } from "./useGradingProposals";
 import { buildEvaluationHref, type NavigationFilters } from "../model/navigation";
 import type {

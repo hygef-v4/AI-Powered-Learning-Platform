@@ -3,7 +3,7 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { Button, Dialog } from "@/shared/ui";
 import { apiFetch } from "@/shared/api/client";
-import { formatErrorMessage } from "../hooks/useResource";
+import { formatErrorMessage } from "../model/format";
 import type { SubmissionDocumentDto } from "../model/submissionDocument";
 import { RunsView, alignClass } from "@/shared/document/DocumentViewer";
 import type { Align, Run, DiagramContent } from "@/shared/document/types";

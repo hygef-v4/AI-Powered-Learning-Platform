@@ -5,7 +5,7 @@ import { Icon } from "@/shared/ui/Icon";
 import { buildAiRequest } from "./AiProposalPanel";
 import type { SourceChoice } from "@/shared/ai";
 import { gradingApi } from "../api";
-import { formatErrorMessage } from "../hooks/useResource";
+import { formatErrorMessage } from "../model/format";
 import type { BatchResult, ItemVersion } from "../model/types";
 
 const OUTCOME_CODE_MESSAGES: Record<string, string> = {

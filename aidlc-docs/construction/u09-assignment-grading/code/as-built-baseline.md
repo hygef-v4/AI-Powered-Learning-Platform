@@ -1,5 +1,7 @@
 # U09 Assignment Grading — AS-BUILT, persistence cập nhật 2026-11-06
 
+**Structure cleanup 2026-11-06:** concrete JDBC repositories are `EvaluationRepository` and `GradingProposalRepository`; interfaces and SQL remain unchanged. Frontend `formatErrorMessage` lives in `model/format.ts`, with all consumers and its existing test relocated accordingly. [Scope and verification](../../plans/code-generation-plan/2026-11-06-u09-structure-cleanup.md).
+
 **JDBC delta 2026-11-06:** Evaluation/GradingProposal adapters chuyển từ JPA sang Spring JDBC; visibility giữ JDBC. Hai mapping type là `EvaluationRow`/`GradingProposalRow`, hai Spring Data interface đã bỏ. Giữ contract/schema/JSONB, explicit CAS/version và row/advisory transaction locks. [Persistence hiện hành](jdbc-persistence.md); các snapshot/evidence có ngày bên dưới giữ phạm vi lịch sử.
 
 **Merge delta 2026-11-06:** grading uses staging's automatic AI source selection when `AiRequest.source` is omitted, for both single and batch requests. The HTTP DTO no longer requires source, while requestRef and the nested batch request remain mandatory. Explicit PERSONAL requests still work; provider/source consistency, teacher authorization, grade locks and rubric validation remain enforced. Frontend sends through `buildAiRequest`/`requestProposals` without a source-picker dialog. The grading OpenAPI schema is synchronized. [Merge verification and regression](../../build-and-test/2026-11-06-merge-staging-u05-u09-u15.md).

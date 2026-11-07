@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Alert, Button, Dialog, Field, Segmented, Select } from "@/shared/ui";
 import { gradingApi } from "../api";
-import { formatErrorMessage } from "../hooks/useResource";
+import { formatErrorMessage } from "../model/format";
 export function GradebookExportDialog({
   classId,
   assignments,

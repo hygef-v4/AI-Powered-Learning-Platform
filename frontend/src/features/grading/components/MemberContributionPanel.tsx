@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { gradingApi } from "../api";
-import { formatErrorMessage } from "../hooks/useResource";
+import { formatErrorMessage } from "../model/format";
 import { formatPoints, type Evaluation } from "../model/types";
 
 export function MemberContributionPanel({

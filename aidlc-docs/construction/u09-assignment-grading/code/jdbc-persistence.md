@@ -4,8 +4,8 @@ U09 truy cập PostgreSQL hoàn toàn qua Spring JDBC theo [quy định toàn d�
 
 | Thành phần | Hiện tại |
 |---|---|
-| `EvaluationRepositoryAdapter` | NamedParameterJdbcTemplate; JSONB và indexed columns cập nhật cùng statement; insert storage/public version 0, update có CAS/version và RETURNING |
-| `GradingProposalRepositoryAdapter` | NamedParameterJdbcTemplate; lookup ID/requestRef, danh sách version_no DESC; khóa row/cập nhật storage version tường minh |
+| `EvaluationRepository` | NamedParameterJdbcTemplate; JSONB và indexed columns cập nhật cùng statement; insert storage/public version 0, update có CAS/version và RETURNING |
+| `GradingProposalRepository` | NamedParameterJdbcTemplate; lookup ID/requestRef, danh sách version_no DESC; khóa row/cập nhật storage version tường minh |
 | `EvaluationRow`, `GradingProposalRow` | Mapping JSON text thuần, không annotation/entity/ORM; trả aggregate snapshot độc lập |
 | `GradeDistributionVisibilityRepository` | JdbcTemplate hiện hữu; giữ mặc định off/version 0 và INSERT ON CONFLICT/CAS theo bài–lớp |
 

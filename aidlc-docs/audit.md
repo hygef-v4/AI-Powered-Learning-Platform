@@ -10513,3 +10513,43 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **User Input**: "giúp tôi tạo pull request lên staging"
 **AI Response**: Refreshed origin refs, confirmed staging is an ancestor of the current feature branch and found no open PR for this head. Prepare a review-ready PR from fix/u05-u09-u15 to staging, covering the U05/U09/U15 formatting/simplification, U09 JDBC migration, project-wide JDBC documentation and U05 repository names. Distinguish the passing full JDBC verification (1,830 backend/799 frontend) from the latest naming-only 200-case focused run. Include the explicit no-op-save version behavior, remaining U04/U13/U14 JPA migration debt and verification limits in the description. Push only the scoped branch/doc delivery record if needed, then create and verify the PR.
 **Context**: User explicitly authorizes PR creation and the necessary branch push; supersedes the prior local-only delivery scope. No merge, deploy, reviewer message, app restart or forced push. CI results remain pending until observed.
+
+## U05/U09/U15 structure review — 2026-11-06
+
+**Timestamp**: 2026-11-06T12:06:03Z
+**Requested by:** Quang Hung
+**User Input**: "xem lại cấu trúc file thư mục của u05 u09 u15 đã ổn chưa"
+**AI Response**: Reviewed current HEAD 0996df4e, shared conventions, latest unit baselines, file inventories, ArchitectureTest and representative responsibilities/callers. U05 has 26 backend/24 frontend files; U09 50/29; U15 7/8. Static scan of explicit imports in the 83 backend files found zero cross-unit non-contract imports, excluding shared infrastructure. Main structure is suitable; no mandatory relocation found. Optional cleanup: move grading formatErrorMessage from hooks/useResource.ts to a model utility with its six external consumers/tests; optionally align two U09 RepositoryAdapter names with U05 naming. Neither is a demonstrated runtime bug. Keep mapping rows in repository and avoid artificial U15 model/repository folders.
+**Context**: Application review only, directly without subagents; no source/test/config changes or fresh build/test/runtime run, commit or push. Historical passing evidence is not fresh verification. Security/resiliency implementation assessment is outside directory scope; configuration retained; PBT disabled. Append-only audit record required by CLAUDE.md.
+
+---
+
+## Approved U09 structure cleanup completed — 2026-11-06
+
+**Timestamp**: 2026-11-06T12:13:17Z
+**Requested by:** Quang Hung
+**User Input**: "ok giúp tôi sửa"
+**AI Response**: Applied the two concrete review recommendations. Moved formatErrorMessage unchanged to grading/model/format.ts, updated six external consumer files plus useResource, and moved the existing formatter test to model/format.test.ts. Renamed EvaluationRepositoryAdapter and GradingProposalRepositoryAdapter to EvaluationRepository and GradingProposalRepository; synchronized constructors, method references, integration wiring and current documentation. Exact snapshot comparisons verified intended moves/renames only. Fresh frontend: 134 tests across 16 files passed; typecheck and scoped ESLint exit 0. Backend compiled 718 main/246 test sources. Initial sandbox test run had 13 Docker skips; after starting Docker Desktop, the final mapping/PostgreSQL/architecture run passed 19 tests, zero failures/errors/skips, BUILD SUCCESS. Whitespace check passed; no old source/config references or stale Adapter classes remain.
+**Context**: Approved internal refactor executed directly without subagents; plan and state updated. Shell document writes required sandbox escalation; authorized retry succeeded. Existing prior audit entry preserved. No business logic/SQL/public contract/schema/dependency changes, full-suite/production-build/manual acceptance rerun, application restart, commit or push. Tests used disposable PostgreSQL; Docker Desktop remains running. Security/resiliency scope unchanged; PBT disabled. Details: construction/plans/code-generation-plan/2026-11-06-u09-structure-cleanup.md.
+
+---
+
+## Full test and build rerun completed — 2026-11-06
+
+**Timestamp**: 2026-11-06T13:33:59Z
+**Requested by:** Quang Hung
+**User Input**: "chạy lại toàn bộ test/build"
+**AI Response**: Executed full backend/frontend automated verification. Final backend Maven verify: 1,830 tests, zero failures/errors/skips, executable Spring Boot JAR built; independently summed fresh XML totals and passed the four-suite required PostgreSQL guard. Frontend: 799 tests across 116 files passed with two workers, full lint without warnings, production build and post-build typecheck exit 0. Initial frontend default-worker run had four timeouts; retry retained original timeouts/code. Backend retries addressed missing offline clean plugin, shared target interference associated with a Java language server, a 256 MB heap exhaustion in ArchUnit, and a scratch output directory name that did not match ArchUnit's target/test-classes exclusion. Final scratch configuration used isolated target output and 768 MB test heap; original POM/dependencies/test rules unchanged. All earlier failed logs/reports retained; no failed run counted as success.
+**Context**: Work executed directly without subagents. User authorized full verification and necessary environment retries; escalation allowed Docker/cache access. No application/test/config/dependency changes during verification; scratch POM removed from backend and archived under .tmp. Disposable PostgreSQL/Redis only; Docker Desktop and language server left running. No manual UI/provider/performance/restore acceptance, app restart, commit, push, migration or deployment. Security/resiliency scope retained; PBT disabled. Fresh report: construction/build-and-test/2026-11-06-u09-structure-full-verification.md; plan/state updated.
+
+---
+
+## U09 structure cleanup local commit requested — 2026-11-07
+
+**Timestamp**: 2026-11-07T04:26:42Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit"
+**AI Response**: Reviewed current diff and confirmed scope remains the approved U09 formatter relocation, two repository renames, synchronized consumers/test wiring and AI-DLC review/verification records. Prepare one local commit with those changes. Prior full verification remains applicable: 1,830 backend tests with no skips, required PostgreSQL guard, 799 frontend tests, lint/typecheck/production build passed; no application changes since that verification. Exclude ignored logs, generated build output and scratch files.
+**Context**: Explicit local commit authorization; no push, merge, deployment, application restart or redundant full test rerun. Existing audit history retained. Manual UI/provider/performance/restore limits remain as recorded in the verification report.
+
+---

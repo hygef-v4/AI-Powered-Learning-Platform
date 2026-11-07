@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "@/shared/api/client";
-import { formatErrorMessage } from "@/features/grading/hooks/useResource";
+import { formatErrorMessage } from "@/features/grading/model/format";
 
 describe("grading conflict explanations", () => {
   it.each([

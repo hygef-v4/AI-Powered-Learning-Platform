@@ -53,7 +53,7 @@ class EvaluationVersionIntegrationTest {
 
     @Configuration
     @EnableTransactionManagement
-    @Import({ EvaluationRepositoryAdapter.class, GradingProposalRepositoryAdapter.class })
+    @Import({ EvaluationRepository.class, GradingProposalRepository.class })
     static class Config {
         @Bean
         DataSource dataSource() {
@@ -391,7 +391,7 @@ class EvaluationVersionIntegrationTest {
 
     @Configuration
     @EnableTransactionManagement
-    @Import({ EvaluationRepositoryAdapter.class, GradingProposalRepositoryAdapter.class,
+    @Import({ EvaluationRepository.class, GradingProposalRepository.class,
             GradeDistributionVisibilityRepository.class })
     static class InteropConfig {
         @Bean

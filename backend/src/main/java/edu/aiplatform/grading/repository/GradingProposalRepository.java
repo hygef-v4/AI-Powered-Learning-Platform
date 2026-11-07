@@ -13,10 +13,10 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-public class GradingProposalRepositoryAdapter implements IGradingProposalRepository {
+public class GradingProposalRepository implements IGradingProposalRepository {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    public GradingProposalRepositoryAdapter(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+    public GradingProposalRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
@@ -30,14 +30,14 @@ public class GradingProposalRepositoryAdapter implements IGradingProposalReposit
     public Optional<GradingProposal> findById(UUID id) {
         return namedParameterJdbcTemplate
                 .query("select proposal_document from grading_proposals where id=:id",
-                        Map.of("id", id), GradingProposalRepositoryAdapter::mapProposal)
+                        Map.of("id", id), GradingProposalRepository::mapProposal)
                 .stream().findFirst();
     }
 
     public Optional<GradingProposal> findByRequestRef(String ref) {
         return namedParameterJdbcTemplate
                 .query("select proposal_document from grading_proposals where request_ref=:ref",
-                        Map.of("ref", ref), GradingProposalRepositoryAdapter::mapProposal)
+                        Map.of("ref", ref), GradingProposalRepository::mapProposal)
                 .stream().findFirst();
     }
 
@@ -46,7 +46,7 @@ public class GradingProposalRepositoryAdapter implements IGradingProposalReposit
                 """
                         select proposal_document from grading_proposals where evaluation_id=:id order by version_no desc
                         """,
-                Map.of("id", id), GradingProposalRepositoryAdapter::mapProposal);
+                Map.of("id", id), GradingProposalRepository::mapProposal);
     }
 
     @Transactional

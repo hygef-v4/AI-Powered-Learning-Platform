@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { gradingApi } from "../api";
-import { formatErrorMessage } from "./useResource";
+import { formatErrorMessage } from "../model/format";
 import type { Proposal } from "../model/types";
 
 export const POLL_INTERVAL_MS = 3000;
