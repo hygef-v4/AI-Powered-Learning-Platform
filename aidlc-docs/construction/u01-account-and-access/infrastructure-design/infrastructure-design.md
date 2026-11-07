@@ -17,7 +17,7 @@ File này chỉ ghi phần hạ tầng U01 dùng.
 | Bảng `accounts` (gồm `email_preferences` do U14 ghi; quota/usage ở bảng riêng U06) | Container `postgres` | Migration Flyway trong thư mục của U01 |
 | Refresh token, OTP, bucket rate limit | Container `redis`, database 0 | Khóa theo mục 3 |
 | Việc nền | Message RabbitMQ gửi sau commit, không có bảng job | U03 sở hữu |
-| Gửi mail | Brevo SMTP ở demo/production; Mailpit ở local/test | Cấu hình `SMTP_*` |
+| Gửi mail | SMTP mặc định (Mailpit local/test) hoặc Brevo HTTPS API | `MAIL_TRANSPORT`, `SMTP_*`; `BREVO_API_KEY` chỉ cho `brevo-api` |
 
 ## 2. RabbitMQ
 

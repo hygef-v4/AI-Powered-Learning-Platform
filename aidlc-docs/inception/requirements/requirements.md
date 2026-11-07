@@ -448,7 +448,7 @@ Backup tối thiểu và kiểm thử restore thuộc FR-038; cảnh báo backup
 
 ### REL-005 - Không phát sinh chi phí
 
-Mọi thành phần bảo mật và vận hành phải miễn phí: thư viện mã nguồn mở, Let's Encrypt, GitHub Actions và GHCR với repository public, Mailpit khi phát triển, Brevo SMTP khi demo/production (trong hạn mức gói miễn phí).
+Mọi thành phần bảo mật và vận hành phải miễn phí: thư viện mã nguồn mở, Let's Encrypt, GitHub Actions và GHCR với repository public, Mailpit khi phát triển, Brevo SMTP hoặc Brevo HTTPS API khi demo/production (trong hạn mức gói miễn phí); chọn bằng MAIL_TRANSPORT, SMTP là mặc định và HTTPS dùng khi mạng chặn SMTP.
 
 AI API chung do đơn vị vận hành cung cấp/tài trợ có quota và kill-switch; personal API/agent theo tài khoản người dùng. Không mặc định API miễn phí hoặc ngân sách trường đã có. Embedding/RAG chỉ extension với nguồn chi phí riêng.
 

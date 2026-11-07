@@ -1,4 +1,4 @@
-# U09 Assignment Grading — AS-BUILT, persistence cập nhật 2026-11-06
+# U09 Assignment Grading — AS-BUILT source snapshot 2026-11-07
 
 **Structure cleanup 2026-11-06:** concrete JDBC repositories are `EvaluationRepository` and `GradingProposalRepository`; interfaces and SQL remain unchanged. Frontend `formatErrorMessage` lives in `model/format.ts`, with all consumers and its existing test relocated accordingly. [Scope and verification](../../plans/code-generation-plan/2026-11-06-u09-structure-cleanup.md).
 
@@ -12,7 +12,7 @@
 
 **Cleanup delta 2026-11-04:** optional evaluation navigation filters preserve the originating submission queue; direct/MCP calls remain compatible. Gradebook uses batched contacts and request-local indexes, and export loads sources once. Frontend scoring helpers are in `model/rubricScores.ts`; conflict messages use business error codes. Grade locks, resubmission policy and public unit contracts are unchanged. [Evidence and limits](../../build-and-test/2026-11-04-u05-u09-u15-cleanup-results.md).
 
-Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership unchanged.
+Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths are catalogued in [current-code-baseline](../../../inception/reverse-engineering/current-code-baseline.md). Dated deltas/test results below retain their original scope; this update is not runtime acceptance.
 
 **Rule delta 2026-11-02 (latest decision):** FINALIZED/PUBLISHED rejects manual/AI/member grade edits with GRADE_LOCKED, even with a reason; FINALIZED publication remains allowed. Resubmission invalidates the previous grade: individual evaluations become SUPERSEDED including published ones; group root/member evaluations are reused and reset to PENDING. Existing audit/history remains; no group revision snapshot or schema/index migration is added. [Decision](../../../inception/requirements/2026-11-02-locked-grades.md).
 
@@ -26,7 +26,7 @@ grading có submission review, AI proposal và structured feedback với evidenc
 |---|---|
 | [grading/controller](../../../../backend/src/main/java/edu/aiplatform/grading/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [grading/service](../../../../backend/src/main/java/edu/aiplatform/grading/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [grading/repository](../../../../backend/src/main/java/edu/aiplatform/grading/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [grading/repository](../../../../backend/src/main/java/edu/aiplatform/grading/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [grading/model](../../../../backend/src/main/java/edu/aiplatform/grading/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [grading/dto](../../../../backend/src/main/java/edu/aiplatform/grading/dto) | Kiểu dữ liệu request/response riêng. |
 | [grading/contract](../../../../backend/src/main/java/edu/aiplatform/grading/contract) | Public interface/DTO xuyên unit; giữ nguyên. |

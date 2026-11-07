@@ -1,12 +1,12 @@
-# Current code baseline — structure 2026-10-30, persistence delta 2026-11-06
+# Current code baseline — source snapshot 2026-11-07
 
-**Persistence decision 2026-11-06:** [Spring JDBC cho toàn dự án](../../construction/persistence-conventions.md). U05 đã JDBC; U09 evaluation/proposal nay chuyển JDBC. U04/U13/U14 còn JPA, cần migration riêng; hạ tầng JPA chung chỉ được giữ trong giai đoạn chuyển tiếp. Inventory/các kết quả có ngày cũ dưới đây không phải kiểm chứng runtime mới. [U05/U09 JDBC evidence](../../construction/build-and-test/2026-11-06-u05-u09-jdbc-results.md).
+**Source:** `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`, branch `fix/u05-u09-u15`; static source inventory after the staging merge. 66 active UC and 15 logical units retain their ownership. Java 17/Spring Boot modular monolith plus worker; Next.js/React/TypeScript frontend. This documentation update does not run application tests or certify post-merge runtime acceptance.
 
-Frontend layout follow-up: parent HEAD `5480c267` + working-tree CSS/test relocation. Tests and fixtures: [frontend/tests](../../../frontend/tests); shared/global CSS: [shared/styles](../../../frontend/src/shared/styles); feature CSS: each feature styles directory. [Fresh verification and limits](../../construction/build-and-test/2026-10-30-frontend-styles-tests-results.md).
+**Persistence:** [Spring JDBC policy](../../construction/persistence-conventions.md). U05/U09 use JDBC; U04/U13/U14 still use JPA during migration. [U09 current mapping](../../construction/u09-assignment-grading/code/jdbc-persistence.md).
 
-Parent HEAD `5a76e428` + working-tree refactor on branch `aidlc-docs`; no new commit. 66 UC, 15 logical units and their ownership are retained. Java 17/Spring Boot modular monolith + worker; Next.js/React/TypeScript frontend.
+**Mail/deploy:** U01 supports SMTP (default, Mailpit locally) or Brevo HTTPS API via MAIL_TRANSPORT. VPS pulls successful main CI builds; [runbook](../../../docs/runbooks/deploy-vps.md). Source/config presence is not live provider/VPS verification.
 
-Verification: [refactor results and limits](../../construction/build-and-test/2026-10-30-package-moves-only-results.md). Source inventory does not imply full UC/runtime/provider acceptance.
+**Evidence:** [dated test/build matrix](../../construction/build-and-test/build-and-test-summary.md). The 1,830 backend / 799 frontend results precede this staging merge; do not relabel them as a fresh run on this SHA. Frontend tests/fixtures are under [frontend/tests](../../../frontend/tests); styles under shared/styles or the owning feature.
 
 ## U01 — Account & Access
 
@@ -32,7 +32,9 @@ Primary UC 01–12; FR-001, FR-002, FR-015.
 ### Tests
 
 - [IdentityWebSecurityTest.java](../../../backend/src/test/java/edu/aiplatform/identity/controller/IdentityWebSecurityTest.java)
+- [BrevoApiMailAdapterTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/BrevoApiMailAdapterTest.java)
 - [JwtServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/JwtServiceTest.java)
+- [MailTransportSelectionTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/MailTransportSelectionTest.java)
 - [OtpStoresTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/OtpStoresTest.java)
 - [RequestThrottleIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/RequestThrottleIntegrationTest.java)
 - [SessionStoreIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/SessionStoreIntegrationTest.java)
@@ -47,8 +49,9 @@ Primary UC 01–12; FR-001, FR-002, FR-015.
 - [AccountImportServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AccountImportServiceTest.java)
 - [AccountLookupAndPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AccountLookupAndPolicyTest.java)
 - [AdminDashboardPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AdminDashboardPolicyTest.java)
-- [AuthorizationServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AuthorizationServiceTest.java)
 - [AuthServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AuthServiceTest.java)
+- [AuthorizationServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AuthorizationServiceTest.java)
+- [BootstrapAdminInitializerTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/BootstrapAdminInitializerTest.java)
 - [GradingPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/GradingPolicyTest.java)
 - [McpPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/McpPolicyTest.java)
 - [McpRolePolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/McpRolePolicyTest.java)
@@ -304,7 +307,9 @@ Primary UC 31–33; FR-012, FR-021, FR-034, FR-035, FR-036, FR-037.
 - [AiTaskFlowTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AiTaskFlowTest.java)
 - [AiTaskResultHandlerRegistryTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AiTaskResultHandlerRegistryTest.java)
 - [AiUsageServiceTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AiUsageServiceTest.java)
+- [ConnectionOrderTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/ConnectionOrderTest.java)
 - [KeyCipherAndCatalogTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/KeyCipherAndCatalogTest.java)
+- [McpAgentWorkflowToolsTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/McpAgentWorkflowToolsTest.java)
 - [McpCredentialServiceTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/McpCredentialServiceTest.java)
 - [McpServerTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/McpServerTest.java)
 - [McpStaffAdmissionTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/McpStaffAdmissionTest.java)
@@ -318,6 +323,9 @@ Primary UC 31–33; FR-012, FR-021, FR-034, FR-035, FR-036, FR-037.
 - [V20261026_1800__create_mcp_write_requests.sql](../../../backend/src/main/resources/db/migration/ai/V20261026_1800__create_mcp_write_requests.sql)
 - [V20261027_0900__allow_many_institutional_keys.sql](../../../backend/src/main/resources/db/migration/ai/V20261027_0900__allow_many_institutional_keys.sql)
 - [V20261027_1000__store_mcp_token_ciphertext.sql](../../../backend/src/main/resources/db/migration/ai/V20261027_1000__store_mcp_token_ciphertext.sql)
+- [V20261102_0900__create_ai_source_preferences.sql](../../../backend/src/main/resources/db/migration/ai/V20261102_0900__create_ai_source_preferences.sql)
+- [V20261105_1200__personal_connection_switch.sql](../../../backend/src/main/resources/db/migration/ai/V20261105_1200__personal_connection_switch.sql)
+- [V20261105_1300__allow_many_personal_keys.sql](../../../backend/src/main/resources/db/migration/ai/V20261105_1300__allow_many_personal_keys.sql)
 
 ### Frontend
 
@@ -349,6 +357,7 @@ Primary UC 34–36; FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 ### Tests
 
 - [PartCalculatorTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/model/PartCalculatorTest.java)
+- [RubricRepositoryTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/repository/RubricRepositoryTest.java)
 - [AssignmentAiDraftServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentAiDraftServiceTest.java)
 - [AssignmentAuthoringServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentAuthoringServiceTest.java)
 - [AssignmentCopyServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentCopyServiceTest.java)
@@ -425,6 +434,7 @@ Primary UC 42–45; FR-008, FR-009, FR-020, FR-024.
 ### Controllers
 
 - [EvaluationController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/EvaluationController.java)
+- [GradeDistributionVisibilityController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/GradeDistributionVisibilityController.java)
 - [GradebookController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/GradebookController.java)
 - [GradingProposalController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/GradingProposalController.java)
 - [MyGradeController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/MyGradeController.java)
@@ -434,12 +444,21 @@ Primary UC 42–45; FR-008, FR-009, FR-020, FR-024.
 ### Tests
 
 - [GroupSourceUnavailableTest.java](../../../backend/src/test/java/edu/aiplatform/grading/contract/stub/GroupSourceUnavailableTest.java)
+- [GradeDistributionVisibilityControllerTest.java](../../../backend/src/test/java/edu/aiplatform/grading/controller/GradeDistributionVisibilityControllerTest.java)
+- [GradebookControllerTest.java](../../../backend/src/test/java/edu/aiplatform/grading/controller/GradebookControllerTest.java)
+- [GradingProposalApiContractTest.java](../../../backend/src/test/java/edu/aiplatform/grading/controller/GradingProposalApiContractTest.java)
 - [GradingPersistenceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/integration/GradingPersistenceTest.java)
+- [EvaluationJsonContractTest.java](../../../backend/src/test/java/edu/aiplatform/grading/model/EvaluationJsonContractTest.java)
 - [EvaluationTest.java](../../../backend/src/test/java/edu/aiplatform/grading/model/EvaluationTest.java)
 - [GradeDistributionCalculatorTest.java](../../../backend/src/test/java/edu/aiplatform/grading/model/GradeDistributionCalculatorTest.java)
+- [RubricScoringTest.java](../../../backend/src/test/java/edu/aiplatform/grading/model/RubricScoringTest.java)
 - [EvaluationMappingTest.java](../../../backend/src/test/java/edu/aiplatform/grading/repository/EvaluationMappingTest.java)
 - [EvaluationVersionIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/grading/repository/EvaluationVersionIntegrationTest.java)
+- [GradeDistributionVisibilityRepositoryTest.java](../../../backend/src/test/java/edu/aiplatform/grading/repository/GradeDistributionVisibilityRepositoryTest.java)
 - [EvaluationLifecycleServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/EvaluationLifecycleServiceTest.java)
+- [GradeDistributionPrivacyTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradeDistributionPrivacyTest.java)
+- [GradeDistributionVisibilityServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradeDistributionVisibilityServiceTest.java)
+- [GradebookAssemblyTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradebookAssemblyTest.java)
 - [GradebookExporterTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradebookExporterTest.java)
 - [GradebookServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradebookServiceTest.java)
 - [GradingAccessTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingAccessTest.java)
@@ -447,6 +466,7 @@ Primary UC 42–45; FR-008, FR-009, FR-020, FR-024.
 - [GradingCommandsTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingCommandsTest.java)
 - [GradingMcpBatchServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingMcpBatchServiceTest.java)
 - [GradingMcpQueryServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingMcpQueryServiceTest.java)
+- [GradingMcpReadProgressTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingMcpReadProgressTest.java)
 - [GradingMcpReplayTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingMcpReplayTest.java)
 - [GradingMcpToolsTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingMcpToolsTest.java)
 - [GradingPromptSchemaTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingPromptSchemaTest.java)
@@ -456,10 +476,13 @@ Primary UC 42–45; FR-008, FR-009, FR-020, FR-024.
 - [GradingServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingServiceTest.java)
 - [GroupEvaluationTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GroupEvaluationTest.java)
 - [SubmissionImageServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/SubmissionImageServiceTest.java)
+- [SubmissionReviewMcpListingTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/SubmissionReviewMcpListingTest.java)
+- [SubmissionReviewNavigationTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/SubmissionReviewNavigationTest.java)
 
 ### Migrations
 
 - [V20260925_1500__create_grading_tables.sql](../../../backend/src/main/resources/db/migration/grading/V20260925_1500__create_grading_tables.sql)
+- [V20261101_0900__assignment_grade_distribution_visibility.sql](../../../backend/src/main/resources/db/migration/grading/V20261101_0900__assignment_grade_distribution_visibility.sql)
 
 ### Frontend
 
@@ -491,6 +514,7 @@ Primary UC 46–48; FR-006, FR-007, FR-016, FR-017, FR-028.
 - [QuestionControllerTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/controller/QuestionControllerTest.java)
 - [QuizControllersTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/controller/QuizControllersTest.java)
 - [QuizPublicationMigrationIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/integration/QuizPublicationMigrationIntegrationTest.java)
+- [QuestionFingerprintTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/model/QuestionFingerprintTest.java)
 - [QuestionRulesTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/model/QuestionRulesTest.java)
 - [QuestionTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/model/QuestionTest.java)
 - [QuizTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/model/QuizTest.java)
@@ -503,12 +527,15 @@ Primary UC 46–48; FR-006, FR-007, FR-016, FR-017, FR-028.
 - [QuizDraftPromptTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizDraftPromptTest.java)
 - [QuizMcpAuthoringServiceTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizMcpAuthoringServiceTest.java)
 - [QuizMcpToolsSchemaTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizMcpToolsSchemaTest.java)
+- [QuizPaperPlannerTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizPaperPlannerTest.java)
+- [QuizRework2026Test.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizRework2026Test.java)
 - [QuizServicesTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizServicesTest.java)
 
 ### Migrations
 
 - [V20260925_1600__create_quiz_tables.sql](../../../backend/src/main/resources/db/migration/quizzes/V20260925_1600__create_quiz_tables.sql)
 - [V20261030_1810__preserve_unpublished_quiz_retirement.sql](../../../backend/src/main/resources/db/migration/quizzes/V20261030_1810__preserve_unpublished_quiz_retirement.sql)
+- [V20261101_1200__quiz_rework.sql](../../../backend/src/main/resources/db/migration/quizzes/V20261101_1200__quiz_rework.sql)
 
 ### Frontend
 
@@ -538,11 +565,13 @@ Primary UC 49–52; FR-017, FR-018, FR-039.
 - [QuizPracticeControllerTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/controller/QuizPracticeControllerTest.java)
 - [QuizAttemptTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/model/QuizAttemptTest.java)
 - [JdbcQuizAttemptRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/repository/JdbcQuizAttemptRepositoryIntegrationTest.java)
+- [AttemptActivityAssessorTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/service/AttemptActivityAssessorTest.java)
 - [QuizPracticeServicesTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/service/QuizPracticeServicesTest.java)
 
 ### Migrations
 
 - [V20260925_1700__create_quiz_attempts.sql](../../../backend/src/main/resources/db/migration/quizpractice/V20260925_1700__create_quiz_attempts.sql)
+- [V20261101_1210__quiz_attempt_activity_penalty.sql](../../../backend/src/main/resources/db/migration/quizpractice/V20261101_1210__quiz_attempt_activity_penalty.sql)
 
 ### Frontend
 
@@ -569,6 +598,7 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 
 ### Controllers
 
+- [GroupDocCollaborationController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocCollaborationController.java)
 - [GroupDocController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocController.java)
 - [GroupDocImageController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocImageController.java)
 - [GroupController.java](../../../backend/src/main/java/edu/aiplatform/groups/controller/GroupController.java)
@@ -579,6 +609,7 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 - [GroupRepositoriesIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/model/GroupRepositoriesIntegrationTest.java)
 - [GroupSectionTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/model/GroupSectionTest.java)
 - [GroupAutoSubmitScannerTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupAutoSubmitScannerTest.java)
+- [GroupDocCollaborationServicesTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupDocCollaborationServicesTest.java)
 - [GroupDocumentServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupDocumentServiceTest.java)
 - [GroupSectionServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupSectionServiceTest.java)
 - [GroupSubmissionServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupSubmissionServiceTest.java)
@@ -597,6 +628,8 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 - [V20260925_1800__create_group_tables.sql](../../../backend/src/main/resources/db/migration/groups/V20260925_1800__create_group_tables.sql)
 - [V20261025_1800__add_group_documents_assignment_fk.sql](../../../backend/src/main/resources/db/migration/groups/V20261025_1800__add_group_documents_assignment_fk.sql)
 - [V20261029_1100__make_leader_request_reason_optional.sql](../../../backend/src/main/resources/db/migration/groups/V20261029_1100__make_leader_request_reason_optional.sql)
+- [V20261102_1000__group_section_collaboration.sql](../../../backend/src/main/resources/db/migration/groups/V20261102_1000__group_section_collaboration.sql)
+- [V20261102_1200__group_assignment_phase.sql](../../../backend/src/main/resources/db/migration/groups/V20261102_1200__group_assignment_phase.sql)
 
 ### Frontend
 
@@ -727,7 +760,7 @@ Primary UC 66; FR-024, FR-038.
 
 ### Migrations
 
-
+- Không có file thuộc nhóm này trong source snapshot.
 
 ### Frontend
 
@@ -738,6 +771,9 @@ Primary UC 66; FR-024, FR-038.
 ## Shared verification
 
 - [ArchitectureTest.java](../../../backend/src/test/java/edu/aiplatform/ArchitectureTest.java)
+- [GlobalExceptionHandlerTest.java](../../../backend/src/test/java/edu/aiplatform/shared/error/GlobalExceptionHandlerTest.java)
+- [ForbiddenKeyGuardTest.java](../../../backend/src/test/java/edu/aiplatform/shared/security/ForbiddenKeyGuardTest.java)
+- [ContractStubsTest.java](../../../backend/src/test/java/edu/aiplatform/shared/stub/ContractStubsTest.java)
 
 ## Delta 2026-11-01: làm lại Quiz
 

@@ -6,4 +6,4 @@ Use isolated representative data; record commit/config/topology, concurrency/car
 
 Priority scenarios: module list/Quiz visibility and reorder CAS; dashboard activity independent timeout/UNAVAILABLE; AI quota/idempotency/batch partial outcomes and continuation; notification fanout/SSE/email retry; submission/deadline scanners and activity one-day retention; DB backup/isolated restore. Keep unknown/unavailable data visible; do not replace it with zero.
 
-The older U14-specific procedure and targets are preserved in [historical instructions](../../history/build-and-test-before-2026-10-30/performance-test-instructions.md); validate target applicability before reusing them across all units. CI deployment is disabled; this document does not enable it.
+The older U14-specific procedure and targets are preserved in [historical instructions](../../history/build-and-test-before-2026-10-30/performance-test-instructions.md); validate target applicability before reusing them across all units. VPS deployment uses the pull mechanism in the [runbook](../../../docs/runbooks/deploy-vps.md); performance tests are not deployment approval and are not run by this document sync.

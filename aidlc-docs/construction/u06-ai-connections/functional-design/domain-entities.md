@@ -36,17 +36,17 @@ U06 không sở hữu: tài khoản và role (U01), cài đặt khóa–giá tr�
 | `model` | chuỗi ≤ 100 | Thuộc danh sách cho phép của provider |
 | `keyCiphertext`, `keyIv`, `keyVersion` | bytes, bytes, số | Không bao giờ trả qua API |
 | `keyHint` | chuỗi 4 | 4 ký tự cuối |
-| `status` | enum | `ACTIVE`, `DISABLED` (chỉ `INSTITUTIONAL`), `REVOKED` |
+| `status` | enum | `ACTIVE`, `DISABLED` (cả `INSTITUTIONAL` và `PERSONAL`), `REVOKED` |
 | `lastTestAt`, `lastTestResult` | thời gian, chuỗi | Kết quả đã làm sạch |
 | `createdAt`, `updatedAt`, `version` | | Khóa lạc quan |
 
-Duy nhất: một kết nối chưa `REVOKED` cho mỗi `(ownerId, provider)` với `PERSONAL`, INSTITUTIONAL cho phép nhiều kết nối cho mỗi `provider` (migration 27/10).
+PERSONAL và INSTITUTIONAL đều cho nhiều kết nối/provider; PERSONAL giới hạn theo owner. Migration `V20261105_1300` bỏ unique index PERSONAL, thay bằng index owner/provider/created_at; `V20261105_1200` hỗ trợ công tắc key cá nhân. Chỉ ACTIVE được chọn.
 
 ```mermaid
 stateDiagram-v2
     [*] --> ACTIVE: Lưu key và model
-    ACTIVE --> DISABLED: Admin tắt API chung
-    DISABLED --> ACTIVE: Admin bật lại
+    ACTIVE --> DISABLED: Owner/Admin tắt key
+    DISABLED --> ACTIVE: Owner/Admin bật lại
     ACTIVE --> REVOKED: Thu hồi, xóa bản mã
     DISABLED --> REVOKED: Thu hồi, xóa bản mã
 ```
@@ -159,12 +159,12 @@ Tool giai đoạn đầu theo FR-035:
 | API | UC |
 |---|---|
 | `GET /api/v1/ai/providers` | 14, 31 |
-| `GET /api/v1/me/ai-connections`, `PUT /api/v1/me/ai-connections/{provider}`, `POST .../{provider}:test`, `DELETE .../{provider}` | 31 |
+| `GET/POST /api/v1/me/ai-connections`, `POST ...:test`, `PUT/DELETE .../{id}`, `GET .../{id}/key`, `POST .../{id}:test`, `PUT .../{id}/status` | 31; owner scope |
 | `GET /api/v1/me/mcp-credentials`, `POST /api/v1/me/mcp-credentials`, `DELETE /api/v1/me/mcp-credentials/{id}` | 32 |
 | `POST /mcp` | 32 |
 | `GET /api/v1/me/ai-usage` | 33 |
 | `GET /api/v1/ai/sources`, `GET /api/v1/ai/tasks/{id}`, `POST /api/v1/ai/tasks/{id}:cancel` | UC của U07–U10; 33 |
-| `GET /api/v1/admin/ai/connections`, `PUT /api/v1/admin/ai/connections/{provider}`, `POST .../{provider}:test`, `PUT .../{provider}/status`, `DELETE .../{provider}` | 14, 15 |
+| `GET/POST /api/v1/admin/ai/connections`, `POST ...:test`, `PUT/DELETE .../{id}`, `GET .../{id}/key`, `POST .../{id}:test`, `PUT .../{id}/status` | 14, 15; key chung theo ID |
 | `GET`, `PUT /api/v1/admin/ai/quota-policy`; `GET /api/v1/admin/ai/teacher-quotas`, `PUT`, `DELETE /api/v1/admin/ai/teacher-quotas/{accountId}` | 14, 15 |
 | `GET /api/v1/admin/ai/usage-summary` | 33 |
 

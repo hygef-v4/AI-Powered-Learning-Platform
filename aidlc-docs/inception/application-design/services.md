@@ -1,6 +1,6 @@
-# Services — AS-BUILT 2026-10-30
+# Services — source snapshot 2026-11-07
 
-Current source: parent HEAD `5a76e428` + working-tree package/file moves only; source-observed, không phải runtime acceptance. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Baseline `794a4053` là snapshot tài liệu trước đó.
+Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; source-observed, not runtime acceptance. Ownership remains 66 UC / 15 units. Historical dated reports retain their original scope.
 
 | Unit | Trách nhiệm hiện hành | UC | Packages |
 |---|---|---|---|
@@ -22,7 +22,7 @@ Current source: parent HEAD `5a76e428` + working-tree package/file moves only; s
 
 ## Application service inventory
 
-Current working-tree structure at parent HEAD `5a76e428`; use-case ownership is unchanged.
+Generated from the current service directories; includes use-case services and their local helpers.
 
 ### U01 — Account & Access
 
@@ -32,8 +32,8 @@ Current working-tree structure at parent HEAD `5a76e428`; use-case ownership is 
 - [AccountLookupService](../../../backend/src/main/java/edu/aiplatform/identity/service/AccountLookupService.java)
 - [AccountViews](../../../backend/src/main/java/edu/aiplatform/identity/service/AccountViews.java)
 - [ActivationService](../../../backend/src/main/java/edu/aiplatform/identity/service/ActivationService.java)
-- [AuthorizationService](../../../backend/src/main/java/edu/aiplatform/identity/service/AuthorizationService.java)
 - [AuthService](../../../backend/src/main/java/edu/aiplatform/identity/service/AuthService.java)
+- [AuthorizationService](../../../backend/src/main/java/edu/aiplatform/identity/service/AuthorizationService.java)
 - [BootstrapAdminInitializer](../../../backend/src/main/java/edu/aiplatform/identity/service/BootstrapAdminInitializer.java)
 - [HomePaths](../../../backend/src/main/java/edu/aiplatform/identity/service/HomePaths.java)
 - [OtpMailHandler](../../../backend/src/main/java/edu/aiplatform/identity/service/OtpMailHandler.java)
@@ -54,6 +54,17 @@ Current working-tree structure at parent HEAD `5a76e428`; use-case ownership is 
 
 ### U03 — Job and Settings
 
+- [BackupCleanupTarget](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupCleanupTarget.java)
+- [BackupEncryptor](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupEncryptor.java)
+- [BackupFailure](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupFailure.java)
+- [BackupJobHandler](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupJobHandler.java)
+- [BackupPendingSweeper](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupPendingSweeper.java)
+- [BackupRetentionService](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupRetentionService.java)
+- [BackupScheduleScanner](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupScheduleScanner.java)
+- [BackupSettingDefinitions](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupSettingDefinitions.java)
+- [BackupStatusService](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupStatusService.java)
+- [IBackupStore](../../../backend/src/main/java/edu/aiplatform/backup/service/IBackupStore.java)
+- [IDumpRunner](../../../backend/src/main/java/edu/aiplatform/backup/service/IDumpRunner.java)
 - [ArtifactService](../../../backend/src/main/java/edu/aiplatform/files/service/ArtifactService.java)
 - [ContentInspector](../../../backend/src/main/java/edu/aiplatform/files/service/ContentInspector.java)
 - [DownloadService](../../../backend/src/main/java/edu/aiplatform/files/service/DownloadService.java)
@@ -68,6 +79,7 @@ Current working-tree structure at parent HEAD `5a76e428`; use-case ownership is 
 - [IStorage](../../../backend/src/main/java/edu/aiplatform/files/service/IStorage.java)
 - [StorageUnavailableException](../../../backend/src/main/java/edu/aiplatform/files/service/StorageUnavailableException.java)
 - [StoredMetadata](../../../backend/src/main/java/edu/aiplatform/files/service/StoredMetadata.java)
+- [UnattachedFileScanner.java](../../../backend/src/main/java/edu/aiplatform/files/service/UnattachedFileScanner.java)
 - [UploadResult](../../../backend/src/main/java/edu/aiplatform/files/service/UploadResult.java)
 - [UploadService](../../../backend/src/main/java/edu/aiplatform/files/service/UploadService.java)
 - [AfterCommitExecutor](../../../backend/src/main/java/edu/aiplatform/jobs/service/AfterCommitExecutor.java)
@@ -82,17 +94,6 @@ Current working-tree structure at parent HEAD `5a76e428`; use-case ownership is 
 - [SettingDefinitionRegistry](../../../backend/src/main/java/edu/aiplatform/settings/service/SettingDefinitionRegistry.java)
 - [SettingsSectionRegistry](../../../backend/src/main/java/edu/aiplatform/settings/service/SettingsSectionRegistry.java)
 - [SettingsService](../../../backend/src/main/java/edu/aiplatform/settings/service/SettingsService.java)
-- [BackupCleanupTarget](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupCleanupTarget.java)
-- [BackupEncryptor](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupEncryptor.java)
-- [BackupFailure](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupFailure.java)
-- [BackupJobHandler](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupJobHandler.java)
-- [BackupPendingSweeper](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupPendingSweeper.java)
-- [BackupRetentionService](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupRetentionService.java)
-- [BackupScheduleScanner](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupScheduleScanner.java)
-- [BackupSettingDefinitions](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupSettingDefinitions.java)
-- [BackupStatusService](../../../backend/src/main/java/edu/aiplatform/backup/service/BackupStatusService.java)
-- [IBackupStore](../../../backend/src/main/java/edu/aiplatform/backup/service/IBackupStore.java)
-- [IDumpRunner](../../../backend/src/main/java/edu/aiplatform/backup/service/IDumpRunner.java)
 
 ### U04 — Subject Administration
 
@@ -126,11 +127,13 @@ Current working-tree structure at parent HEAD `5a76e428`; use-case ownership is 
 - [AiTaskResultHandlerRegistry](../../../backend/src/main/java/edu/aiplatform/ai/service/AiTaskResultHandlerRegistry.java)
 - [AiTaskService](../../../backend/src/main/java/edu/aiplatform/ai/service/AiTaskService.java)
 - [AiUsageService](../../../backend/src/main/java/edu/aiplatform/ai/service/AiUsageService.java)
+- [ConnectionOrder.java](../../../backend/src/main/java/edu/aiplatform/ai/service/ConnectionOrder.java)
 - [ConnectionTestService](../../../backend/src/main/java/edu/aiplatform/ai/service/ConnectionTestService.java)
 - [IMcpRateLimiter](../../../backend/src/main/java/edu/aiplatform/ai/service/IMcpRateLimiter.java)
 - [IProviderGateway](../../../backend/src/main/java/edu/aiplatform/ai/service/IProviderGateway.java)
 - [JsonSchemaChecker](../../../backend/src/main/java/edu/aiplatform/ai/service/JsonSchemaChecker.java)
 - [KeyCipher](../../../backend/src/main/java/edu/aiplatform/ai/service/KeyCipher.java)
+- [McpAgentWorkflowTools.java](../../../backend/src/main/java/edu/aiplatform/ai/service/McpAgentWorkflowTools.java)
 - [McpAuthoringRequirementsTools](../../../backend/src/main/java/edu/aiplatform/ai/service/McpAuthoringRequirementsTools.java)
 - [McpCapabilitiesTools](../../../backend/src/main/java/edu/aiplatform/ai/service/McpCapabilitiesTools.java)
 - [McpCredentialService](../../../backend/src/main/java/edu/aiplatform/ai/service/McpCredentialService.java)
@@ -196,6 +199,7 @@ Current working-tree structure at parent HEAD `5a76e428`; use-case ownership is 
 ### U09 — Assignment Grading
 
 - [EvaluationLifecycleService](../../../backend/src/main/java/edu/aiplatform/grading/service/EvaluationLifecycleService.java)
+- [GradeDistributionVisibilityService.java](../../../backend/src/main/java/edu/aiplatform/grading/service/GradeDistributionVisibilityService.java)
 - [GradebookExporter](../../../backend/src/main/java/edu/aiplatform/grading/service/GradebookExporter.java)
 - [GradebookService](../../../backend/src/main/java/edu/aiplatform/grading/service/GradebookService.java)
 - [GradingAccess](../../../backend/src/main/java/edu/aiplatform/grading/service/GradingAccess.java)
@@ -205,6 +209,7 @@ Current working-tree structure at parent HEAD `5a76e428`; use-case ownership is 
 - [GradingJson](../../../backend/src/main/java/edu/aiplatform/grading/service/GradingJson.java)
 - [GradingMcpBatchService](../../../backend/src/main/java/edu/aiplatform/grading/service/GradingMcpBatchService.java)
 - [GradingMcpQueryService](../../../backend/src/main/java/edu/aiplatform/grading/service/GradingMcpQueryService.java)
+- [GradingMcpReadProgress.java](../../../backend/src/main/java/edu/aiplatform/grading/service/GradingMcpReadProgress.java)
 - [GradingMcpTools](../../../backend/src/main/java/edu/aiplatform/grading/service/GradingMcpTools.java)
 - [GradingPromptBuilder](../../../backend/src/main/java/edu/aiplatform/grading/service/GradingPromptBuilder.java)
 - [GradingProposalResultHandler](../../../backend/src/main/java/edu/aiplatform/grading/service/GradingProposalResultHandler.java)
@@ -221,8 +226,11 @@ Current working-tree structure at parent HEAD `5a76e428`; use-case ownership is 
 - [AiDraftViews](../../../backend/src/main/java/edu/aiplatform/quizzes/service/AiDraftViews.java)
 - [QuestionBankMcpTools](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuestionBankMcpTools.java)
 - [QuestionBankService](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuestionBankService.java)
+- [QuestionDuplicates.java](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuestionDuplicates.java)
+- [QuestionFingerprintBackfill.java](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuestionFingerprintBackfill.java)
 - [QuestionImporter](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuestionImporter.java)
 - [QuestionInvalidException](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuestionInvalidException.java)
+- [QuestionProposalService.java](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuestionProposalService.java)
 - [QuestionViews](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuestionViews.java)
 - [QuizAccess](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuizAccess.java)
 - [QuizAiDraftService](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuizAiDraftService.java)
@@ -234,6 +242,8 @@ Current working-tree structure at parent HEAD `5a76e428`; use-case ownership is 
 - [QuizMcpAuthoringService](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuizMcpAuthoringService.java)
 - [QuizMcpQueryTools](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuizMcpQueryTools.java)
 - [QuizMcpTools](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuizMcpTools.java)
+- [QuizPaperPlanner.java](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuizPaperPlanner.java)
+- [QuizPaperService.java](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuizPaperService.java)
 - [QuizPublicationService](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuizPublicationService.java)
 - [QuizQueryService](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuizQueryService.java)
 - [QuizReferenceMaterials](../../../backend/src/main/java/edu/aiplatform/quizzes/service/QuizReferenceMaterials.java)
@@ -244,9 +254,11 @@ Current working-tree structure at parent HEAD `5a76e428`; use-case ownership is 
 
 ### U11 — Quiz Practice
 
+- [AttemptActivityAssessor.java](../../../backend/src/main/java/edu/aiplatform/quizpractice/service/AttemptActivityAssessor.java)
 - [PracticeAccess](../../../backend/src/main/java/edu/aiplatform/quizpractice/service/PracticeAccess.java)
 - [PracticeSupport](../../../backend/src/main/java/edu/aiplatform/quizpractice/service/PracticeSupport.java)
 - [QuizActivityService](../../../backend/src/main/java/edu/aiplatform/quizpractice/service/QuizActivityService.java)
+- [QuizAttemptPresence.java](../../../backend/src/main/java/edu/aiplatform/quizpractice/service/QuizAttemptPresence.java)
 - [QuizAttemptService](../../../backend/src/main/java/edu/aiplatform/quizpractice/service/QuizAttemptService.java)
 - [QuizAutoSubmitScanner](../../../backend/src/main/java/edu/aiplatform/quizpractice/service/QuizAutoSubmitScanner.java)
 - [QuizPracticeQueryService](../../../backend/src/main/java/edu/aiplatform/quizpractice/service/QuizPracticeQueryService.java)
@@ -255,6 +267,21 @@ Current working-tree structure at parent HEAD `5a76e428`; use-case ownership is 
 
 ### U12 — Group Assignment
 
+- [GroupAssignmentLifecycle](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupAssignmentLifecycle.java)
+- [GroupAutoSubmitScanner](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupAutoSubmitScanner.java)
+- [GroupDocAccess](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupDocAccess.java)
+- [GroupDocContext](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupDocContext.java)
+- [GroupDocCreateJobHandler](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupDocCreateJobHandler.java)
+- [GroupDocImageService.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupDocImageService.java)
+- [GroupDocImportService.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupDocImportService.java)
+- [GroupDocumentService](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupDocumentService.java)
+- [GroupPeerReviewService.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupPeerReviewService.java)
+- [GroupSectionService](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupSectionService.java)
+- [GroupSnapshot](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupSnapshot.java)
+- [GroupSubmissionService](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupSubmissionService.java)
+- [GroupWorkQueryService](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupWorkQueryService.java)
+- [GroupWorkspaceService](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupWorkspaceService.java)
+- [IGroupDocStreams](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/IGroupDocStreams.java)
 - [ClassGroupService](../../../backend/src/main/java/edu/aiplatform/groups/service/ClassGroupService.java)
 - [GroupAccess](../../../backend/src/main/java/edu/aiplatform/groups/service/GroupAccess.java)
 - [GroupReadinessService](../../../backend/src/main/java/edu/aiplatform/groups/service/GroupReadinessService.java)
@@ -263,18 +290,6 @@ Current working-tree structure at parent HEAD `5a76e428`; use-case ownership is 
 - [LeaderRequestService](../../../backend/src/main/java/edu/aiplatform/groups/service/LeaderRequestService.java)
 - [MyGroupService](../../../backend/src/main/java/edu/aiplatform/groups/service/MyGroupService.java)
 - [RandomGroupSplitter](../../../backend/src/main/java/edu/aiplatform/groups/service/RandomGroupSplitter.java)
-- [GroupAssignmentLifecycle](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupAssignmentLifecycle.java)
-- [GroupAutoSubmitScanner](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupAutoSubmitScanner.java)
-- [GroupDocAccess](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupDocAccess.java)
-- [GroupDocContext](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupDocContext.java)
-- [GroupDocCreateJobHandler](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupDocCreateJobHandler.java)
-- [GroupDocumentService](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupDocumentService.java)
-- [GroupSectionService](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupSectionService.java)
-- [GroupSnapshot](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupSnapshot.java)
-- [GroupSubmissionService](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupSubmissionService.java)
-- [GroupWorkQueryService](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupWorkQueryService.java)
-- [GroupWorkspaceService](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupWorkspaceService.java)
-- [IGroupDocStreams](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/IGroupDocStreams.java)
 
 ### U13 — Reference Materials
 
@@ -313,7 +328,3 @@ Current working-tree structure at parent HEAD `5a76e428`; use-case ownership is 
 - [AdminDashboardActivityService](../../../backend/src/main/java/edu/aiplatform/admindashboard/service/AdminDashboardActivityService.java)
 - [AdminDashboardMcpTools](../../../backend/src/main/java/edu/aiplatform/admindashboard/service/AdminDashboardMcpTools.java)
 - [AdminDashboardService](../../../backend/src/main/java/edu/aiplatform/admindashboard/service/AdminDashboardService.java)
-
-## Nguồn chi tiết
-
-[Current source/test inventory](../reverse-engineering/current-code-baseline.md); [verification and limits](../../construction/build-and-test/2026-10-30-package-moves-only-results.md).

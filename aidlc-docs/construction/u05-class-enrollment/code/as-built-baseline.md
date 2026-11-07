@@ -1,4 +1,4 @@
-# U05 Class & Enrollment — AS-BUILT 2026-10-30
+# U05 Class & Enrollment — AS-BUILT source snapshot 2026-11-07
 
 **Convention delta 2026-11-05:** concrete actions use verb-object names (`loadClass`, `listStudents`, `createClass`, `enrollStudents`); dependency fields/constructor arguments identify their service/repository roles. `transactionTemplate` and `lineTransactionTemplate` remain separate; the latter retains per-line REQUIRES_NEW behavior. Frontend API actions use explicit names, component modules are `AcademicsUi.tsx`, `ClassNavContexts.tsx`, `ClassRoutes.tsx`, with all imports/mocks updated. Java wildcard imports retained per the user's follow-up preference; explicit imports are allowed where names collide. DTO/record fields, contract overrides, routes, parameter bindings and behavior remain unchanged. [Naming verification and exceptions](../../build-and-test/2026-11-05-u05-u09-u15-conventions-results.md).
 
@@ -6,7 +6,7 @@
 
 **Cleanup delta 2026-11-04:** removed one consecutive duplicate manager-scope check in class creation. Checks before account locking and after subject locking remain; no authorization/transaction or schema change. [Evidence](../../build-and-test/2026-11-04-u05-u09-u15-cleanup-results.md).
 
-Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership unchanged.
+Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths are catalogued in [current-code-baseline](../../../inception/reverse-engineering/current-code-baseline.md). Dated deltas/test results below retain their original scope; this update is not runtime acceptance.
 
 **Contract delta 2026-11-01:** U05 no longer exposes the manager class-wide distribution mutation. Historical `course_classes.show_grade_distribution` and the retained `showGradeDistribution` DTO/`ClassRef` field remain dormant; no true flags migrate to the new settings. U09 owns assignment-class visibility and never uses this field as a gate; U05 supplies current teaching scope and active enrollment. Verification for this delta belongs to the current change, not the older reports below.
 
@@ -18,7 +18,7 @@ CourseClass.create tạo DRAFT. OPEN không bắt buộc teacher: domain, Academ
 |---|---|
 | [academics/controller](../../../../backend/src/main/java/edu/aiplatform/academics/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [academics/service](../../../../backend/src/main/java/edu/aiplatform/academics/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [academics/repository](../../../../backend/src/main/java/edu/aiplatform/academics/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [academics/repository](../../../../backend/src/main/java/edu/aiplatform/academics/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [academics/model](../../../../backend/src/main/java/edu/aiplatform/academics/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [academics/dto](../../../../backend/src/main/java/edu/aiplatform/academics/dto) | Kiểu dữ liệu request/response riêng. |
 | [academics/contract](../../../../backend/src/main/java/edu/aiplatform/academics/contract) | Public interface/DTO xuyên unit; giữ nguyên. |

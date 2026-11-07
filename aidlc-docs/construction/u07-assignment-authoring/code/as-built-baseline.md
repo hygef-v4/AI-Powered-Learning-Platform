@@ -1,6 +1,6 @@
-# U07 Assignment Authoring — AS-BUILT 2026-10-30
+# U07 Assignment Authoring — AS-BUILT source snapshot 2026-11-07
 
-Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership unchanged.
+Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths are catalogued in [current-code-baseline](../../../inception/reverse-engineering/current-code-baseline.md). Dated deltas/test results below retain their original scope; this update is not runtime acceptance.
 
 **Contract delta 2026-11-01:** `AssignmentSettingsSection` / `assignmentSettingsSections` provides U09 a separate assignment-class settings area with class context. Content authoring readOnly does not gate this section: a teacher assigned to the class can configure histogram visibility for a shared SUBJECT assignment while its content remains readOnly. `AssignmentFormSection` remains the existing U12 group slot. Verification for this delta belongs to the current change, not the older reports below.
 
@@ -14,7 +14,7 @@ assignments sở hữu document/rubric/authoring/AI draft/publication/copy. UI e
 |---|---|
 | [assignments/controller](../../../../backend/src/main/java/edu/aiplatform/assignments/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [assignments/service](../../../../backend/src/main/java/edu/aiplatform/assignments/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [assignments/repository](../../../../backend/src/main/java/edu/aiplatform/assignments/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [assignments/repository](../../../../backend/src/main/java/edu/aiplatform/assignments/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [assignments/model](../../../../backend/src/main/java/edu/aiplatform/assignments/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [assignments/dto](../../../../backend/src/main/java/edu/aiplatform/assignments/dto) | Kiểu dữ liệu request/response riêng. |
 | [assignments/contract](../../../../backend/src/main/java/edu/aiplatform/assignments/contract) | Public interface/DTO xuyên unit; giữ nguyên. |

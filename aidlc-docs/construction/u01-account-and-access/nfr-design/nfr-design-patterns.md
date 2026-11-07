@@ -57,7 +57,7 @@ Mỗi pattern ghi yêu cầu nó phục vụ (`NFR-U01-xx`, `BR-U01-xx`).
 | PostgreSQL | Kết nối 2 s, truy vấn 3 s | Lỗi an toàn `503` | NFR-U01-41 |
 | Redis | Kết nối 1 s, lệnh 500 ms | Đăng nhập, refresh, OTP trả `503` "hệ thống tạm bận"; access còn hạn vẫn chạy | NFR-U01-40 |
 | U04, U05 (phạm vi) | 1 s | Từ chối quyền | NFR-U01-42 |
-| SMTP | Kết nối 5 s, gửi 10 s | Worker retry, không ảnh hưởng người dùng | NFR-U01-31 |
+| SMTP / Brevo HTTPS API | Kết nối 5 s, gửi/request 10 s | Worker retry, không ảnh hưởng người dùng | NFR-U01-31 |
 
 - **Không dùng circuit breaker** (Câu D2): quy mô ≤ 100 người đồng thời, timeout ngắn và pool hữu hạn là đủ.
 
@@ -67,9 +67,9 @@ Mỗi pattern ghi yêu cầu nó phục vụ (`NFR-U01-xx`, `BR-U01-xx`).
 
 ### P9 - Gửi OTP qua job U03
 - Request không ghi database: gọi `IJob.enqueue` gửi message `OTP_DELIVERY(accountId, purpose)` sang queue `jobs.email` của RabbitMQ (không có bảng job) rồi trả `202`. Không sinh mã ở request.
-- Worker nhận job, **sinh mã tại chỗ**, ghi băm vào Redis (xóa mã cũ), gửi SMTP. Mã rõ chỉ tồn tại trong bộ nhớ worker và trong email; không nằm trong queue, DB hay log.
-- SMTP lỗi → retry 5 lần, backoff 30 s, 1 phút, 2 phút, 4 phút, 8 phút; mỗi lần retry sinh mã mới. Hết lượt → bỏ message, log ERROR `OTP_DELIVERY_FAILED` (U03 không có dead-letter); người dùng yêu cầu OTP lại (NFR-U01-31).
-- Redis lỗi lúc worker chạy → message retry như lỗi SMTP.
+- Worker nhận job, **sinh mã tại chỗ**, ghi băm vào Redis (xóa mã cũ), gửi qua IMail (SMTP hoặc Brevo HTTPS API). Mã rõ chỉ tồn tại trong bộ nhớ worker và trong email; không nằm trong queue, DB hay log.
+- IMail lỗi (SMTP hoặc API) → retry 5 lần, backoff 30 s, 1 phút, 2 phút, 4 phút, 8 phút; mỗi lần retry sinh mã mới. Hết lượt → bỏ message, log ERROR `OTP_DELIVERY_FAILED` (U03 không có dead-letter); người dùng yêu cầu OTP lại (NFR-U01-31).
+- Redis lỗi lúc worker chạy → message retry như lỗi IMail.
 - Hạn 10 phút của OTP tính từ lúc worker ghi mã, không phải lúc người dùng bấm.
 
 ## 4. Quan sát

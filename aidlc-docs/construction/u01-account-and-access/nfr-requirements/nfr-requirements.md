@@ -43,8 +43,8 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test.
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U01-30 | Gửi mail qua Mail Port dùng SMTP. Local/test dùng Mailpit, không gửi mail thật. Demo/production dùng Brevo SMTP với SMTP login và SMTP key, cấu hình bằng biến môi trường; không dùng API key cho SMTP. | Câu N8, NFR-005 |
-| NFR-U01-31 | Kết nối SMTP có timeout; lỗi thì message retry tối đa 5 lần với backoff tăng dần qua queue retry của U03; hết lượt thì ghi log ERROR, không báo lỗi cho người dùng. | REL-003, BR-U01-92 |
+| NFR-U01-30 | Gửi mail qua U01 IMail. `MAIL_TRANSPORT=smtp` là default, local/test dùng Mailpit; SMTP production dùng SMTP login/key. `brevo-api` dùng Brevo HTTPS API và `BREVO_API_KEY` khi mạng chặn SMTP; SMTP_FROM là địa chỉ gửi chung. Không dùng API key làm SMTP key. | Câu N8, NFR-005; source delta 06/11 |
+| NFR-U01-31 | SMTP và Brevo HTTPS API có timeout; lỗi thì message retry tối đa 5 lần với backoff tăng dần qua queue retry của U03; hết lượt thì ghi log ERROR, không báo lỗi cho người dùng. | REL-003, BR-U01-92 |
 | NFR-U01-32 | Nội dung mail chỉ chứa mã OTP và thời hạn; không chứa mật khẩu, link đăng nhập hay thông tin tài khoản khác. | SEC-005 |
 
 ## 5. Khả dụng và lỗi phụ thuộc
@@ -55,14 +55,14 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test.
 | NFR-U01-41 | PostgreSQL không khả dụng: mọi thao tác ghi và đăng nhập trả lỗi an toàn. | SEC-006 |
 | NFR-U01-42 | U04 hoặc U05 không trả lời khi kiểm phạm vi: từ chối quyền. | BR-U01-93 |
 | NFR-U01-43 | Hồ sơ không gọi U03 (không có ảnh đại diện). U03 lỗi chỉ ảnh hưởng việc gửi OTP, xử lý theo NFR-U01-31. | BR-U01-52 |
-| NFR-U01-44 | Mọi lời gọi Redis, database, U03, U04, U05, SMTP có timeout hữu hạn. | NFR-003, REL-003 |
+| NFR-U01-44 | Mọi lời gọi Redis, database, U03, U04, U05, IMail có timeout hữu hạn. | NFR-003, REL-003 |
 
 ## 6. Bảo mật dữ liệu và log
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
 | NFR-U01-50 | Log có cấu trúc gồm timestamp, correlation ID, level, message; không chứa mật khẩu, OTP, token, số điện thoại. | SEC-005, BR-U01-91 |
-| NFR-U01-51 | Khóa ký JWT và thông tin SMTP chỉ lấy từ biến môi trường/secret store. | NFR-005 |
+| NFR-U01-51 | Khóa ký JWT, thông tin SMTP và BREVO_API_KEY chỉ lấy từ biến môi trường/secret store. | NFR-005 |
 | NFR-U01-53 | Endpoint public (đăng nhập, yêu cầu OTP, kích hoạt, đặt lại) có rate limit; mọi endpoint khác yêu cầu access token. | SEC-002, SEC-003 |
 
 ## 7. Khả năng kiểm thử và dùng được

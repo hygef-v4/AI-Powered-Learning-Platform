@@ -30,12 +30,12 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
  +---------------------------------------------------------------------------+
         |                 |                     |
         v                 v                     v
-   PostgreSQL           Redis              Worker: OtpMailHandler --> SMTP
+   PostgreSQL           Redis              Worker: OtpMailHandler --> IMail
    accounts          refresh, OTP,                                (Mailpit local)
                      rate buckets
 ```
 
-**Text alternative**: Trình duyệt gửi cookie tới backend. Request đi qua `RateLimitFilter`, rồi `JwtAuthFilter`, rồi controller. Controller gọi `AuthService`, `ActivationService`, `AccountAdminService` hoặc `ProfileService`. Các service dùng `AuthorizationService` (hỏi U04 qua `ISubjectScope` và U05 qua `IClassScope`; U01 khai báo, U04 và U05 cài) và `OtpService` (gửi việc qua U03). ProfileService chỉ sửa displayName/phoneNumber. Dữ liệu tài khoản ở PostgreSQL; refresh token, OTP và bucket rate limit ở Redis. Worker `OtpMailHandler` nhận việc từ RabbitMQ và gửi SMTP, local dùng Mailpit.
+**Text alternative**: Trình duyệt gửi cookie tới backend. Request đi qua `RateLimitFilter`, rồi `JwtAuthFilter`, rồi controller. Controller gọi `AuthService`, `ActivationService`, `AccountAdminService` hoặc `ProfileService`. Các service dùng `AuthorizationService` (hỏi U04 qua `ISubjectScope` và U05 qua `IClassScope`; U01 khai báo, U04 và U05 cài) và `OtpService` (gửi việc qua U03). ProfileService chỉ sửa displayName/phoneNumber. Dữ liệu tài khoản ở PostgreSQL; refresh token, OTP và bucket rate limit ở Redis. Worker `OtpMailHandler` nhận việc từ RabbitMQ và gọi U01 `IMail`: SMTP mặc định (Mailpit local/test), hoặc Brevo HTTPS API khi `MAIL_TRANSPORT=brevo-api`.
 
 ## 2. Thành phần
 
@@ -71,7 +71,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
 | `U01_OTP_TTL` / `U01_OTP_MAX_ATTEMPTS` | 10m / 5 | Không |
 | `U01_LOGIN_LOCK_THRESHOLD` / `U01_LOGIN_LOCK_DURATION` | 5 / 15m | Không |
 | `U01_RL_*` | Theo bảng P6 | Không |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_STARTTLS_ENABLED`, `SMTP_FROM` | Mailpit local/test; Brevo SMTP demo/production | SMTP_PASSWORD là SMTP key của Brevo; không dùng API key |
+| `MAIL_TRANSPORT` | `smtp` (default) hoặc `brevo-api`; giá trị khác làm startup thất bại | Không |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_STARTTLS_ENABLED`, `SMTP_FROM` | SMTP adapter; SMTP_FROM cũng là người gửi của API | SMTP_PASSWORD là SMTP key, không phải API key |
+| `BREVO_API_KEY` | Bắt buộc khi `MAIL_TRANSPORT=brevo-api`; endpoint cố định https://api.brevo.com/v3/smtp/email | Có |
 
 ## 5. Compliance
 

@@ -10812,3 +10812,13 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Explicit local commit authorization; no push, merge, deployment, application restart or redundant full test rerun. Existing audit history retained. Manual UI/provider/performance/restore limits remain as recorded in the verification report.
 
 ---
+
+## AI-DLC source synchronization local commit requested — 2026-11-07
+
+**Timestamp**: 2026-11-07T05:59:21Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi tạo commit"
+**AI Response**: Reviewed and prepared one documentation-only commit for the AI-DLC consistency review, synchronization plan/results, refreshed API/source/service/contract inventories, mail/deploy/AI behavior documentation, required PostgreSQL guidance and dated evidence separation at source f68a6ec5. Fresh static validation passed: 49 controllers/334 mapping annotations, 320 source inventory entries, four required suite names/thresholds, four preserved diagram blocks, current/new relative links and Markdown fences/whitespace. All 220 current-document candidates have existing relative-link targets; no controller/migration inventory omissions. Application/config/test files unchanged.
+**Context**: Explicit local commit authorization supersedes the earlier no-automatic-commit scope. Preserve current audit/history content; exclude ignored scratch scripts/logs/generated artifacts. No full application test/build rerun for documentation, push, merge, deployment, provider/VPS call or restart. Prior test results remain dated evidence rather than fresh post-merge acceptance.
+
+---

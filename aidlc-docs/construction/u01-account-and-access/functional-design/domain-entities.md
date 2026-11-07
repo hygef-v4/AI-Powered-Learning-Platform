@@ -157,7 +157,7 @@ Phạm vi môn đến từ `ISubjectScope` (U04 cài), phạm vi lớp và ghi d
 |---|---|---|---|
 | `IAuthorization` | `authorize(actor, action, resourceRef)` | Mọi unit; tool MCP của U06 | Quyết định quyền phía server, mặc định từ chối: kiểm token, phiên `sid` còn, trạng thái `ACTIVE`, role, rồi phạm vi môn/lớp qua U04/U05 (F13) |
 | `IAccountLookup` | `findStudents(query, limit)`, `findAccounts(query, roles, limit)` (thêm mới), `findByEmails(emails)`, `getContact(accountId)`, `countByRoleAndStatus()` | U02 (email người thực hiện trên Audit Log), U04 (chọn Chủ nhiệm môn), U05 (thêm sinh viên, chọn giảng viên), U14 (địa chỉ nhận email), U15 (số đếm Admin Dashboard) | Tra thông tin liên hệ tối thiểu (email, tên hiển thị, role, trạng thái); không trả mật khẩu, số điện thoại; tối đa 20 kết quả mỗi lần tìm |
-| `IMail` | `send(MailMessage)` | U01 (OTP), U14 (email thông báo) | Gửi email qua SMTP (Brevo ở demo/production, Mailpit ở local/test) bằng `SmtpMailAdapter`, có timeout |
+| `IMail` | `send(MailMessage)` | U01 (OTP), U14 (email thông báo) | Gửi email qua `SmtpMailAdapter` (SMTP mặc định, Mailpit local/test) hoặc `BrevoApiMailAdapter` (HTTPS); chọn bằng `MAIL_TRANSPORT`, timeout hữu hạn |
 
 ### Interface U01 khai báo, unit khác cài
 

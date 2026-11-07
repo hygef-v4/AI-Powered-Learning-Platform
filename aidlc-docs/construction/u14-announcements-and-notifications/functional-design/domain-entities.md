@@ -21,7 +21,7 @@ Thiết kế độc lập công nghệ.
 | `NotificationPreference` | Tùy chọn email theo loại | `notification_preferences` |
 | `DeadlineReminder` | Dấu đã nhắc theo (bài, lớp, hạn) | `deadline_reminders` |
 
-U14 không sở hữu: tài khoản, gửi SMTP (U01), sự kiện nguồn (U03, U05, U07, U09, U10, U12), lớp, ghi danh (U05), bài, bài nộp (U07, U08).
+U14 không sở hữu: tài khoản, gửi email qua IMail (U01; SMTP hoặc Brevo HTTPS API), sự kiện nguồn (U03, U05, U07, U09, U10, U12), lớp, ghi danh (U05), bài, bài nộp (U07, U08).
 
 ## 2. Thuộc tính
 

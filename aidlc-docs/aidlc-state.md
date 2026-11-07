@@ -1,5 +1,11 @@
 # AI-DLC State Tracking
 
+## Current documentation/source index — 2026-11-07
+
+Source snapshot `f68a6ec5` on `fix/u05-u09-u15`; documentation synchronized by the user's request. [Source inventory](inception/reverse-engineering/current-code-baseline.md), [API mappings](inception/reverse-engineering/api-inventory.md), [services](inception/application-design/services.md), [contract types](inception/application-design/component-methods.md) and 15 as-built summaries reflect current file/type ownership. Mail/deploy/AI-key/source behavior and required-test guidance were updated from source; [results and verification limits](construction/build-and-test/2026-11-07-aidlc-code-sync-results.md).
+
+No application/config/test changes or fresh application run during this sync. The earlier 1,830-backend/799-frontend evidence predates the staging merge and is not current-HEAD acceptance. Dated sections below are historical records of their original scope, including statements about commit/deployment status at that time. Existing security/resiliency configuration remains; PBT disabled. No commit, push or deployment.
+
 ## Continuous deployment to the VPS — 2026-11-06
 
 User-chosen pull model: GitHub-hosted runners cannot reach the VPS, which blocks international inbound traffic, and a self-hosted runner cannot reach the Actions broker. `platform-deploy` (systemd timer, 2 min) asks the GitHub API for the latest successful `ci.yml` push run on `main`. For each new SHA it pulls images, dumps the database (keeps 5), checks out the SHA, sets `IMAGE_TAG`, runs `up -d` and gates on container health plus HTTPS 200. On failure it rolls back automatically and skips that SHA. Manual `rollback`, `status` and `unskip` commands are available. Database migrations are not reversed; the runbook covers dump restore. The RabbitMQ healthcheck timeout was raised: the 7 s ping made it falsely unhealthy, which would block every restart. CI gains a `deploy-script` job and drops the placeholder deploy job. Fake-command tests 11/11 passed, shellcheck clean. Installed and enabled on the VPS; a same-SHA deploy passed in 28 s. [Plan and results](construction/plans/code-generation-plan/2026-11-06-continuous-deployment.md), runbook section 10. Not yet seen: a real deploy from a new `main` commit; no commit.

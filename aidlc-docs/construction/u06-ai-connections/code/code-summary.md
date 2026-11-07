@@ -1,5 +1,8 @@
 # U06 AI Connections — code summary
 
+**Source delta 2026-11-07 (`f68a6ec5`):** PERSONAL/INSTITUTIONAL hỗ trợ nhiều key/provider và ACTIVE/DISABLED/REVOKED; CRUD/test/reveal/status theo connection ID. AiTaskService tự chọn nguồn khi caller để trống: shared nếu có quyền/đủ quota, rồi personal. ConnectionOrder: CLAUDE → OPENAI → GEMINI, model catalog, createdAt, id. Worker retry cùng key với lỗi tạm 429/503/529 (đợi 2 s, 5 s), sau đó xét key kế tiếp; settlement usage/quota giữ riêng REJECTED/UNKNOWN. UNKNOWN vẫn có thể phát sinh chi phí và không tự hoàn reserved usage. Redelivery guard và fallback trong một task là hai trường hợp khác nhau. Các mô tả lịch sử “không tự đổi nguồn/không retry” bên dưới không thay quy tắc source hiện hành này.
+
+
 **Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
 
 ## Ghi nhận trước baseline 2026-10-30 (lịch sử)
@@ -48,12 +51,12 @@ Code viết ngày 2026-10-21 đến 2026-10-22 theo [plan](../../plans/code-gene
 | Endpoint | UC |
 |---|---|
 | `GET /api/v1/ai/providers` | 14, 31 |
-| `GET /api/v1/me/ai-connections`, `PUT`, `DELETE /{provider}`, `POST /{provider}:test` | 31 |
-| `GET`, `POST /api/v1/me/mcp-credentials`, `DELETE /{id}` | 32 |
+| `GET/POST /api/v1/me/ai-connections`, `POST ...:test`, `PUT/DELETE /{id}`, `GET /{id}/key`, `POST /{id}:test`, `PUT /{id}/status` | 31; nhiều key/provider, owner scope |
+| `GET/POST /api/v1/me/mcp-credentials`, `PATCH/DELETE /{id}`, `GET /{id}/token` | 32; owner-only, token reveal có guard |
 | `POST /mcp` (Bearer; `GET` 405; có `Origin` thì 403) | 32 |
 | `GET /api/v1/me/ai-usage` | 33 |
 | `GET /api/v1/ai/sources`, `GET /api/v1/ai/tasks/{id}`, `POST /{id}:cancel` | U07–U10 |
-| `GET /api/v1/admin/ai/connections`, `PUT /{provider}`, `POST /{provider}:test`, `PUT /{provider}/status`, `DELETE /{provider}` | 14, 15 |
+| `GET/POST /api/v1/admin/ai/connections`, `POST ...:test`, `PUT/DELETE /{id}`, `GET /{id}/key`, `POST /{id}:test`, `PUT /{id}/status` | 14, 15; Admin quản lý key chung theo ID |
 | `GET`, `PUT /api/v1/admin/ai/quota-policy`; `GET /api/v1/admin/ai/teacher-quotas`, `PUT`, `DELETE /{accountId}`; `GET /api/v1/admin/ai/teacher-candidates` | 14, 15 |
 | `GET /api/v1/admin/ai/usage-summary?days=7\|30` | 33 |
 

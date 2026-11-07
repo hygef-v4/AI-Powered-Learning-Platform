@@ -1,6 +1,6 @@
-# U11 Quiz Practice — AS-BUILT 2026-10-30
+# U11 Quiz Practice — AS-BUILT source snapshot 2026-11-07
 
-Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership and public contracts unchanged.
+Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths are catalogued in [current-code-baseline](../../../inception/reverse-engineering/current-code-baseline.md). Dated deltas/test results below retain their original scope; this update is not runtime acceptance.
 
 quizpractice lưu attempt/snapshot/answers/result/activity; frontend QuizTakingPage/QuizResultPage. Quiz Practice không vào gradebook Assignment. Tác động retire/reopen phải đối chiếu publication callback và snapshot; source của state change không chứng minh mọi E2E case đã pass.
 
@@ -10,7 +10,7 @@ quizpractice lưu attempt/snapshot/answers/result/activity; frontend QuizTakingP
 |---|---|
 | [quizpractice/controller](../../../../backend/src/main/java/edu/aiplatform/quizpractice/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [quizpractice/service](../../../../backend/src/main/java/edu/aiplatform/quizpractice/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [quizpractice/repository](../../../../backend/src/main/java/edu/aiplatform/quizpractice/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [quizpractice/repository](../../../../backend/src/main/java/edu/aiplatform/quizpractice/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [quizpractice/model](../../../../backend/src/main/java/edu/aiplatform/quizpractice/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [quizpractice/dto](../../../../backend/src/main/java/edu/aiplatform/quizpractice/dto) | Kiểu dữ liệu request/response riêng. |
 

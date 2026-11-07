@@ -1,12 +1,14 @@
 # Integration instructions — current source
 
-Source-observed baseline 2026-10-30. U07/U08 owner migrations are present; the “missing assignments/assignment_attempts schema” statement from the U14 21/10 checkout is historical. Docker Engine/current bean/provider availability has not been checked in this doc sync.
+Source snapshot `f68a6ec5`, 2026-11-07. The [current source manifest](../../inception/reverse-engineering/current-code-baseline.md) lists migrations per owner. U07/U08 owner migrations are present; the “missing assignments/assignment_attempts schema” statement from the U14 21/10 checkout is historical. Docker Engine/current bean/provider availability is not checked by this doc sync.
 
 ## Isolated prerequisites
 
-Use isolated PostgreSQL/Redis/RabbitMQ and authorized local configuration. Flyway scans db/migration recursively (out-of-order enabled), JPA validates schema. Never point test JDBC variables at live data. Check conditional fallback beans rather than assuming all providers are stubs from the old checkout. SMTP local testing uses Mailpit; real Brevo/Drive/AI requires separate credentials/acceptance. Do not put secret values in reports.
+Use isolated PostgreSQL/Redis/RabbitMQ and authorized local configuration. Flyway scans db/migration recursively (out-of-order enabled); JPA validates the remaining U04/U13/U14 mappings while Spring JDBC is the project persistence policy. Never point test JDBC variables at live data. Check conditional fallback beans instead of assuming all providers are stubs. Local SMTP testing uses Mailpit; Brevo HTTPS API (`MAIL_TRANSPORT=brevo-api`) and SMTP/Drive/AI require separate provider configuration and acceptance. Do not put secret values in reports.
 
 ## Current schema deltas
+
+- November: AI source preference, personal-key enabled/disabled state and multiple keys/provider; assignment-class grade-distribution visibility; group collaboration/assignment phase; Quiz rework and attempt activity penalty. Exact migration names/paths are in the current source manifest. Do not infer live upgrade acceptance from their presence.
 
 - AI27/10: multiple institutional keys/provider and nullable MCP ciphertext/IV/key version. Check legacy credentials and wrong-owner reveal.
 - Classes27/10: OPEN teacher constraint removed; create domain still DRAFT.

@@ -1,6 +1,6 @@
-# U06 AI Connections — AS-BUILT 2026-10-30
+# U06 AI Connections — AS-BUILT source snapshot 2026-11-07
 
-Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership and public contracts unchanged.
+Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths are catalogued in [current-code-baseline](../../../inception/reverse-engineering/current-code-baseline.md). Dated deltas/test results below retain their original scope; this update is not runtime acceptance.
 
 **Documentation UI delta 2026-11-02:** /ai/mcp-guide under the existing authenticated AI layout replaces the long inline MCP setup guide with a persistent connection-tab link. Reuses McpClientSetup for four native formats/English prompt, stable SSR endpoint and placeholder-only docs. Includes per-role workflows, 29 source-aligned non-Admin tools, proposal/apply and grading-quality limits, retries, disconnect/revoke and official references. No backend/API/schema changes. [Verification](../../../construction/build-and-test/2026-11-02-mcp-documentation-results.md).
 
@@ -12,7 +12,7 @@ MCP credential dành ACTIVE Student/Teacher/Subject Manager; Admin bị từ ch�
 |---|---|
 | [ai/controller](../../../../backend/src/main/java/edu/aiplatform/ai/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [ai/service](../../../../backend/src/main/java/edu/aiplatform/ai/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [ai/repository](../../../../backend/src/main/java/edu/aiplatform/ai/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [ai/repository](../../../../backend/src/main/java/edu/aiplatform/ai/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [ai/model](../../../../backend/src/main/java/edu/aiplatform/ai/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [ai/integration](../../../../backend/src/main/java/edu/aiplatform/ai/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [ai/config](../../../../backend/src/main/java/edu/aiplatform/ai/config) | Properties, cấu hình bean và topology. |
