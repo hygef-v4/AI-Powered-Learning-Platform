@@ -10856,3 +10856,18 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Code Generation (bug fix, U12), branch `fix/u12-overlay-audit-labels`.
 
 ---
+
+## U09 lint fix — AI grading state without setState in effects — 2026-11-08
+
+**Timestamp**: 2026-11-08T01:00:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> sửa luôn 2 lỗi lint u09 đi
+
+**AI Response**: `npm run lint` failed with two `react-hooks/set-state-in-effect` errors in `GradingWorkspacePage.tsx` (from `1b509cdb`): two effects called `setAiGenerating`/`setGeneratingProposalId` to finish an AI grading run. The run state is now adjusted during render from the latest proposals, poll status and error (same pattern as the existing `reviewSelection`), and `aiGenerating` is derived from the request in flight and the proposal being awaited. One effect keeps only the external work (apply a READY proposal or show the error toast), once per outcome. Behaviour unchanged: READY proposals are applied to the local draft, FAILED/REJECTED and poll timeout show a toast, a failed request stops the progress overlay. Added three lifecycle tests in `workspace.test.tsx`. Lint 0 errors (24 existing warnings), typecheck clean, frontend 808/808. Not verified in a live browser because AI grading needs a real provider key.
+
+**Context**: Code Generation (lint fix, U09), branch `fix/u09-ai-grading-lint`.
+
+---

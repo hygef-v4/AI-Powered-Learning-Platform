@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor, cleanup, act } from "@testing-libra
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { GradingWorkspacePage } from "@/features/grading/pages/GradingWorkspacePage";
 import { ApiError } from "@/shared/api/client";
+import { Toaster } from "@/shared/ui";
 import type { Detail } from "@/features/grading/model/types";
 const mocks = vi.hoisted(() => ({
   loadEvaluation: vi.fn(),
@@ -605,5 +606,71 @@ describe("AI proposal polling resilience and progress states", () => {
       await vi.advanceTimersByTimeAsync(15000);
     });
     expect(mocks.listProposals).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("AI grading request lifecycle", () => {
+  const rubrics = [
+    {
+      rubricId: "r1",
+      partId: "part-1",
+      maxPoints: 1,
+      criteria: [{ criterionId: "c1", title: "Kiến trúc", items: [{ itemId: "i1", text: "Thực thể chính", points: 1 }] }],
+    },
+  ];
+  const pending = { id: "p9", versionNo: 1, status: "PENDING", taskState: "QUEUED", origin: "AI_TASK", source: "PERSONAL" };
+
+  async function requestAiGrade() {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    mocks.loadEvaluation.mockResolvedValue({ ...detail, evaluation: { ...detail.evaluation, maxScore: 1, rubricItemScores: {} }, rubrics });
+    mocks.requestProposal.mockResolvedValue(pending);
+    render(<><GradingWorkspacePage evaluationId="e" /><Toaster /></>);
+    await act(async () => {});
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Chấm bằng AI" }));
+    });
+    expect(screen.getByRole("alertdialog", { name: "Đang chấm bằng AI" })).toBeInTheDocument();
+  }
+
+  it("applies a proposal that becomes READY while polling and closes the progress overlay once", async () => {
+    mocks.listProposals.mockResolvedValueOnce([]).mockResolvedValueOnce([pending]).mockResolvedValue([
+      { ...pending, status: "READY", taskState: undefined, proposal: { checks: { r1: ["i1"] }, itemScoresByRubric: { r1: { i1: 1 } }, score: 1, feedback: "AI xong" } },
+    ]);
+    await requestAiGrade();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    expect(screen.queryByRole("alertdialog", { name: "Đang chấm bằng AI" })).not.toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
+    expect(mocks.saveEvaluation).not.toHaveBeenCalled();
+  });
+
+  it("reports a proposal that FAILED while polling and lets the teacher request again", async () => {
+    mocks.listProposals.mockResolvedValueOnce([]).mockResolvedValueOnce([pending]).mockResolvedValue([
+      { ...pending, status: "FAILED", taskState: undefined, safeError: "Nhà cung cấp AI từ chối yêu cầu" },
+    ]);
+    await requestAiGrade();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    expect(screen.queryByRole("alertdialog", { name: "Đang chấm bằng AI" })).not.toBeInTheDocument();
+    expect(screen.getAllByText("Nhà cung cấp AI từ chối yêu cầu").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Chấm bằng AI" })).toBeEnabled();
+    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).not.toBeChecked();
+  });
+
+  it("stops waiting and reports the error when the request itself fails", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    mocks.loadEvaluation.mockResolvedValue({ ...detail, evaluation: { ...detail.evaluation, maxScore: 1, rubricItemScores: {} }, rubrics });
+    mocks.requestProposal.mockRejectedValue(new ApiError({ status: 503, title: "Unavailable", detail: "Dịch vụ AI tạm thời không khả dụng" }));
+    render(<><GradingWorkspacePage evaluationId="e" /><Toaster /></>);
+    await act(async () => {});
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Chấm bằng AI" }));
+    });
+    expect(screen.queryByRole("alertdialog", { name: "Đang chấm bằng AI" })).not.toBeInTheDocument();
+    expect(screen.getAllByText(/Dịch vụ AI tạm thời không khả dụng/).length).toBeGreaterThan(0);
   });
 });
