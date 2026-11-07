@@ -27,7 +27,10 @@ import { BatchActionDialog } from "../components/BatchActionDialog";
 import { MemberContributionPanel } from "../components/MemberContributionPanel";
 import { countUnresolvedReviews } from "../components/StructuredFeedbackSection";
 import { buildGradebookHref } from "../components/ClassProgressSection";
-import { formatPoints, GRADE_STATUS_LABELS, type AiRequest, type Detail, type Rubric } from "../model/types";
+import { formatPoints, GRADE_STATUS_LABELS, type AiRequest, type Detail, type Proposal, type Rubric } from "../model/types";
+
+/** Kết quả một lượt chấm AI cần xử lý một lần: áp đề xuất READY hoặc báo lỗi. */
+type AiOutcome = { proposal?: Proposal; message?: string };
 import { toEditorDocument, type SubmissionDocumentDto } from "../model/submissionDocument";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import type { NavigationFilters } from "../model/navigation";
@@ -158,50 +161,54 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
   } = workspace;
   const [action, setAction] = useState<"finalize" | "publish" | null>(null);
   const [aiOpen, setAiOpen] = useState(Boolean(proposalId));
-  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiRequesting, setAiRequesting] = useState(false);
   const [generatingProposalId, setGeneratingProposalId] = useState<string | null>(null);
+  const [aiOutcome, setAiOutcome] = useState<AiOutcome | null>(null);
+  const [seenPollExhausted, setSeenPollExhausted] = useState(pollExhausted);
+  const aiGenerating = aiRequesting || generatingProposalId !== null;
   const [reviewSelection, setReviewSelection] = useState(proposalId);
   if (reviewSelection !== proposalId) {
     setReviewSelection(proposalId);
     setAiOpen(Boolean(proposalId));
   }
-  // Lắng nghe kết quả của đề xuất AI đang tạo
-  useEffect(() => {
-    if (!aiGenerating || !generatingProposalId) return;
+  // Kết thúc lượt chấm AI theo dữ liệu mới nhất ngay khi render; effect bên dưới chỉ áp đề xuất và báo lỗi.
+  const pollJustExhausted = pollExhausted && !seenPollExhausted;
+  if (pollExhausted !== seenPollExhausted) setSeenPollExhausted(pollExhausted);
+  if (pollJustExhausted || (aiGenerating && error)) {
+    setAiRequesting(false);
+    setGeneratingProposalId(null);
+    setAiOutcome({ message: error || "Quá thời gian chờ phản hồi từ AI" });
+  } else if (generatingProposalId) {
     const target = proposals.find((p) => p.id === generatingProposalId);
-    if (!target) return;
-
-    if (target.status === "READY" && target.proposal) {
-      applyProposal(
-        target.proposal.checks ?? {},
-        target.proposal.feedback ?? "",
-        target.id,
-        target.proposal.itemScoresByRubric ?? {},
-        target.proposal.structuredFeedback ?? null,
-      );
-      setAiGenerating(false);
+    if (target && ((target.status === "READY" && target.proposal) || target.status === "FAILED" || target.status === "REJECTED")) {
       setGeneratingProposalId(null);
-    } else if (target.status === "FAILED" || target.status === "REJECTED") {
-      setAiGenerating(false);
-      setGeneratingProposalId(null);
-      if (target.safeError) showToast(target.safeError, "danger");
+      setAiOutcome(target.status === "READY" ? { proposal: target } : { message: target.safeError ?? undefined });
     }
-  }, [aiGenerating, generatingProposalId, proposals, applyProposal]);
-
+  }
+  const handledAiOutcome = useRef<AiOutcome | null>(null);
   useEffect(() => {
-    if (pollExhausted || (aiGenerating && error)) {
-      setAiGenerating(false);
-      setGeneratingProposalId(null);
-      if (error) showToast(error, "danger");
-      else if (pollExhausted) showToast("Quá thời gian chờ phản hồi từ AI", "danger");
+    if (!aiOutcome || handledAiOutcome.current === aiOutcome) return;
+    handledAiOutcome.current = aiOutcome;
+    const ready = aiOutcome.proposal;
+    if (ready?.proposal) {
+      applyProposal(
+        ready.proposal.checks ?? {},
+        ready.proposal.feedback ?? "",
+        ready.id,
+        ready.proposal.itemScoresByRubric ?? {},
+        ready.proposal.structuredFeedback ?? null,
+      );
+    } else if (aiOutcome.message) {
+      showToast(aiOutcome.message, "danger");
     }
-  }, [pollExhausted, error, aiGenerating]);
+  }, [aiOutcome, applyProposal]);
 
   const handleAiGrade = async (input?: AiRequest) => {
     if (disabled || official || busy || aiGenerating) return;
     setAiOpen(false);
-    setAiGenerating(true);
+    setAiRequesting(true);
     const created = await requestProposal(input ?? buildAiRequest());
+    setAiRequesting(false);
     if (created) {
       if (created.status === "READY" && created.proposal) {
         applyProposal(
@@ -211,18 +218,11 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
           created.proposal.itemScoresByRubric ?? {},
           created.proposal.structuredFeedback ?? null,
         );
-        setAiGenerating(false);
-        setGeneratingProposalId(null);
       } else if (created.status === "FAILED" || created.status === "REJECTED") {
-        setAiGenerating(false);
-        setGeneratingProposalId(null);
         if (created.safeError) showToast(created.safeError, "danger");
       } else {
         setGeneratingProposalId(created.id);
       }
-    } else {
-      setAiGenerating(false);
-      setGeneratingProposalId(null);
     }
   };
 

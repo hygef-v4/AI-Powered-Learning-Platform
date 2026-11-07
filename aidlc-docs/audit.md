@@ -10863,3 +10863,18 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **AI Response**: Prepared the sixteen pending documentation files from this session for one documentation commit, covering AI-DLC business-flow diagrams, SRS/SDS review notes, Report 3 conceptual model, Report 4 architecture/class/sequence sources and semantic specs, the completed Report 4 plan and audit trail. Corrected twelve mojibake arrow/dash tokens in the diagram README before staging.
 **Verification**: Parsed all changed Draw.io XML and semantic JSON. Re-ran source-signature checks for 160 class signatures and 122 displayed Java calls, confirmed Authentication preservation and cross-diagram coverage. Class and sequence geometry validators have zero errors/warnings. git diff --check passed aside from Git's existing LF-to-CRLF normalization notice for this audit file. All changed files are under docs or aidlc-docs.
 **Context**: Documentation commit only. No application test/build rerun for this commit request. No push requested.
+
+## U09 lint fix — AI grading state without setState in effects — 2026-11-08
+
+**Timestamp**: 2026-11-08T01:00:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> sửa luôn 2 lỗi lint u09 đi
+
+**AI Response**: `npm run lint` failed with two `react-hooks/set-state-in-effect` errors in `GradingWorkspacePage.tsx` (from `1b509cdb`): two effects called `setAiGenerating`/`setGeneratingProposalId` to finish an AI grading run. The run state is now adjusted during render from the latest proposals, poll status and error (same pattern as the existing `reviewSelection`), and `aiGenerating` is derived from the request in flight and the proposal being awaited. One effect keeps only the external work (apply a READY proposal or show the error toast), once per outcome. Behaviour unchanged: READY proposals are applied to the local draft, FAILED/REJECTED and poll timeout show a toast, a failed request stops the progress overlay. Added three lifecycle tests in `workspace.test.tsx`. Lint 0 errors (24 existing warnings), typecheck clean, frontend 808/808. Not verified in a live browser because AI grading needs a real provider key.
+
+**Context**: Code Generation (lint fix, U09), branch `fix/u09-ai-grading-lint`.
+
+---
