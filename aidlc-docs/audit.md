@@ -10823,6 +10823,40 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ---
 
+## Staging check after teammates' merges — 2026-11-07
+
+**Timestamp**: 2026-11-07T10:00:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> check lai merch moi cho toi di
+
+> xong thì báo kết quả test cho tôi
+
+> xong chua
+
+**AI Response**: Staging `c9b7ce96` (63 commits after PR #43). Backend `mvn -B clean verify` 1,842 tests, 0 failures; frontend vitest 803/803, typecheck clean, lint 2 errors in `features/grading/pages/GradingWorkspacePage.tsx` (U09, `1b509cdb`). E2E on fresh class SE-TEST16: U02 16/16, U06 24/24, U12 59/59, U12b 36/36, u12c 32/32, notify 3/3; `u06b` skipped because the new automatic key fallback could spend the user's real Gemini key. Findings: `ca45304e` reworked U06 (automatic source choice and key fallback, multiple personal keys, removed the default-source UI FB-U06-01 while its backend API remains); `2ee1a095` edited frozen BR-U06-02, 05, 10, 25 to match. U12 code unchanged; shared editor overhaul did not break U12 tests.
+
+**Context**: Build and Test (staging check).
+
+---
+
+## U12 bug fix — section editor overlay and assignment-lock audit labels — 2026-11-07
+
+**Timestamp**: 2026-11-07T16:30:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> sửa luôn 2 lỗi u12 đó đi
+
+**AI Response**: Found while re-capturing Report-3 screens. (1) The full-page section editor (`SectionEditorDialog`) and the "Đang nộp" auto-submit lock in `GroupWorkspacePage` were `fixed` overlays rendered inside the page, so the app top bar and sidebar covered their header (Đóng / Xong not visible). Both now render through `createPortal` to `document.body` like the shared `Dialog` and the grading AI overlay. (2) Audit Log showed the raw codes `GROUP_ASSIGNMENT_LOCKED` / `GROUP_ASSIGNMENT_UNLOCKED` recorded by the assignment-phase change (FB-U12-01); added Vietnamese labels. Regression assertions added to `GroupWorkspacePage.test.tsx` and `labels.test.ts`. No backend, API or business-rule change.
+
+**Context**: Code Generation (bug fix, U12), branch `fix/u12-overlay-audit-labels`.
+
+---
+
 ## Commit reviewed documentation changes - 2026-11-07
 **Requester**: Quang Hung
 **User Request**: "giúp tôi commit change"

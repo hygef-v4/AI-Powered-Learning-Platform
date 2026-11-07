@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { formatDateTime } from "@/features/groups/model/format";
 import { ApiError } from "@/shared/api/client";
@@ -420,8 +421,8 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
       >
         <p>Bản nháp chưa Xong sẽ bị bỏ. Mục về Xong nếu đã có nội dung đã Xong, không thì về Mở.</p>
       </Dialog>
-      {autoSubmitting && (
-        <div role="alertdialog" aria-label="Đang nộp" className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45">
+      {autoSubmitting && typeof document !== "undefined" && createPortal(
+        <div role="alertdialog" aria-label="Đang nộp" className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/45">
           <div className="max-w-[420px] rounded-xl bg-surface p-6 text-center">
             <p className="text-[16px] font-bold text-ink">Đang nộp…</p>
             <p className="mt-2 text-[13px] text-body">
@@ -429,7 +430,8 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
               lúc nộp.
             </p>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
