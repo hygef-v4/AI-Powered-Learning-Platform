@@ -101,12 +101,12 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
     expect(within(rowBinh).getByRole("link", { name: "Tiếp tục chấm" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: new RegExp(longTitle2) }));
-    // Chưa có lượt chấm: dòng vẫn bấm được, sang danh sách bài nộp của bài.
+    // Chưa có lượt chấm: dòng không có link hay nút điều hướng.
     const rowAn2 = screen.getByText("Nguyễn Văn An").closest("tr")!;
-    expect(within(rowAn2).getByRole("link", { name: "Xem bài nộp" })).toHaveAttribute("href", "/teaching/classes/class-1/assignments/a-2/submissions");
+    expect(within(rowAn2).queryByRole("link")).not.toBeInTheDocument();
     expect(within(rowAn2).getByText("Chưa nộp")).toBeInTheDocument();
     fireEvent.click(rowAn2);
-    expect(push).toHaveBeenLastCalledWith("/teaching/classes/class-1/assignments/a-2/submissions");
+    expect(push).not.toHaveBeenCalledWith(expect.stringContaining("submissions"));
     fireEvent.click(screen.getByRole("button", { name: new RegExp(longTitle1) }));
     fireEvent.click(screen.getByText("Nguyễn Văn An").closest("tr")!);
     expect(push).toHaveBeenLastCalledWith("/teaching/evaluations/eval-a1-s1");

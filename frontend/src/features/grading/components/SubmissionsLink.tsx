@@ -3,7 +3,7 @@ import Link from "next/link";
 import { buildGradebookHref } from "./ClassProgressSection";
 
 /**
- * Nút Bài nộp trên bảng Bài tập của lớp, chỉ ở bài cá nhân và bài nhóm (bài luyện tập không chấm nên không có): sang trang
+ * Nút Chấm điểm trên bảng Bài tập của lớp, chỉ ở bài cá nhân và bài nhóm (bài luyện tập không chấm nên không có): sang trang
  * Chấm điểm mở sẵn bài đó. Bấm nút không kích hoạt bấm dòng.
  */
 export function SubmissionsLink({ assignmentId, classId, practice }: { assignmentId: string; classId?: string; practice?: boolean }) {
@@ -11,7 +11,7 @@ export function SubmissionsLink({ assignmentId, classId, practice }: { assignmen
   return (
     <Link href={buildGradebookHref(classId, { assignment: assignmentId })} onClick={(event) => event.stopPropagation()}
       className="inline-flex h-8 items-center justify-center rounded-lg border border-line-strong bg-surface px-2.5 text-xs font-semibold whitespace-nowrap text-ink transition-colors hover:border-primary hover:bg-primary-soft hover:text-primary-ink">
-      Bài nộp
+      Chấm điểm
     </Link>
   );
 }

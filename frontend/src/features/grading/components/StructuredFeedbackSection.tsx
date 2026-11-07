@@ -17,53 +17,25 @@ export function isItemAcknowledged(acknowledged: Checks | undefined, rubricId: s
 }
 
 export function isScoreChangedAfterReview(
-  feedbackItem: StructuredFeedbackItem | undefined | null,
-  reviewedScore: Decimal | undefined,
-  awardedPoints: number,
-  acknowledged: boolean,
+  _feedbackItem: StructuredFeedbackItem | undefined | null,
+  _reviewedScore: Decimal | undefined,
+  _awardedPoints: number,
+  _acknowledged: boolean,
 ): boolean {
-  if (!feedbackItem || acknowledged) return false;
-  if (reviewedScore === undefined || reviewedScore === null || String(reviewedScore).trim() === "") {
-    return false;
-  }
-  const rev = Number(reviewedScore);
-  if (!Number.isFinite(rev) || !Number.isFinite(awardedPoints)) return false;
-  return Math.round(rev * 100) !== Math.round(awardedPoints * 100);
+  // Thay đổi điểm rubric tự do không cần giải thích hay cảnh báo (yêu cầu 2026-11-07).
+  return false;
 }
 
 export function countUnresolvedReviews(
-  rubrics: Rubric[],
-  checks: Checks,
-  itemScores: ItemScores = {},
-  structuredFeedback?: StructuredFeedback | null,
-  reviewedItemScores: ItemScores = {},
-  acknowledgedReviewItems: Checks = {},
+  _rubrics: Rubric[],
+  _checks: Checks,
+  _itemScores: ItemScores = {},
+  _structuredFeedback?: StructuredFeedback | null,
+  _reviewedItemScores: ItemScores = {},
+  _acknowledgedReviewItems: Checks = {},
 ): { unacknowledgedFlags: number; scoreMismatches: number; total: number } {
-  if (!structuredFeedback?.items?.length) {
-    return { unacknowledgedFlags: 0, scoreMismatches: 0, total: 0 };
-  }
-  let unacknowledgedFlags = 0;
-  let scoreMismatches = 0;
-  for (const fbItem of structuredFeedback.items) {
-    const rubric = rubrics.find((r) => r.rubricId === fbItem.rubricId);
-    const rubricItem = rubric?.criteria.flatMap((c) => c.items).find((i) => i.itemId === fbItem.itemId);
-    const max = rubricItem ? Number(rubricItem.points) : 0;
-    const rawAwarded = resolveItemPoints(fbItem.rubricId, fbItem.itemId, max, checks, itemScores);
-    const awarded = isValidItemScore(rawAwarded, max) ? Number(rawAwarded) : NaN;
-    const ack = isItemAcknowledged(acknowledgedReviewItems, fbItem.rubricId, fbItem.itemId);
-    if (fbItem.requiresReview && !ack) {
-      unacknowledgedFlags += 1;
-    }
-    const revScore = reviewedItemScores?.[fbItem.rubricId]?.[fbItem.itemId];
-    if (isScoreChangedAfterReview(fbItem, revScore, awarded, ack)) {
-      scoreMismatches += 1;
-    }
-  }
-  return {
-    unacknowledgedFlags,
-    scoreMismatches,
-    total: unacknowledgedFlags + scoreMismatches,
-  };
+  // Bỏ chặn chốt điểm / giải thích khi sửa điểm (yêu cầu 2026-11-07).
+  return { unacknowledgedFlags: 0, scoreMismatches: 0, total: 0 };
 }
 
 function cleanSuggestionText(suggestion: string, isFullMarks: boolean): string {

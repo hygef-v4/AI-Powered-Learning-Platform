@@ -32,7 +32,7 @@ export function StudentGradesSection({
             return <tr key={assignment.id} className="border-t">
               <th scope="row" className="p-2 font-medium">{assignment.title}</th>
               <td className="p-2">{assignment.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}</td>
-              <td className="p-2">{grade?.submittedAt ? <>{grade.late ? "Trễ" : "Đúng hạn"}<br/>{new Date(grade.submittedAt).toLocaleString("vi-VN")}</> : grade?.status === "IN_PROGRESS" ? "Đang làm" : "Chưa nộp"}</td>
+              <td className="p-2">{grade?.submittedAt ? <>{grade.late ? "Trễ" : "Đúng hạn"}<br/>{new Date(grade.submittedAt).toLocaleString("vi-VN")}</> : "Chưa nộp"}</td>
               <td className="p-2">{formatPoints(grade?.score, grade?.maxScore ?? assignment.maxScore)}<br/>{GRADE_STATUS_LABELS[grade?.status ?? "NOT_SUBMITTED"] ?? grade?.status}</td>
             </tr>;
           })}</tbody>

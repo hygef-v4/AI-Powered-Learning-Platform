@@ -62,21 +62,25 @@ public final class GradingCommands {
         }
     }
 
-    public record ItemVersion(@NotNull UUID evaluationId,
-            @JsonProperty(required = true) @JsonSetter(nulls = Nulls.FAIL) @PositiveOrZero long version)
+    public record ItemVersion(
+            @JsonProperty("evaluationId") @NotNull UUID evaluationId,
+            @JsonProperty(value = "version", required = true) @JsonSetter(nulls = Nulls.FAIL) @PositiveOrZero long version)
             implements IStrictInput {
     }
 
-    public record Batch(@NotEmpty @Size(max = 200) List<@Valid ItemVersion> items)
+    public record Batch(@JsonProperty("items") @NotEmpty @Size(max = 200) List<@Valid ItemVersion> items)
             implements IStrictInput {
     }
 
-    public record AiRequest(AiSource source, AiProvider provider,
-            @NotBlank @Size(max = 200) String requestRef) implements IStrictInput {
+    public record AiRequest(
+            @JsonProperty("source") AiSource source,
+            @JsonProperty("provider") AiProvider provider,
+            @JsonProperty("requestRef") @NotBlank @Size(max = 200) String requestRef) implements IStrictInput {
     }
 
-    public record AiBatch(@NotEmpty @Size(max = 200) List<@Valid ItemVersion> items,
-            @NotNull @Valid AiRequest request) implements IStrictInput {
+    public record AiBatch(
+            @JsonProperty("items") @NotEmpty @Size(max = 200) List<@Valid ItemVersion> items,
+            @JsonProperty("request") @NotNull @Valid AiRequest request) implements IStrictInput {
     }
 
     public record MemberSave(

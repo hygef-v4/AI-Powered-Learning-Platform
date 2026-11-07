@@ -77,27 +77,7 @@ export function RubricChecklist({
               </span>
               <span className="shrink-0 tabular-nums text-muted">{value > 0 && value < max ? `${value.toFixed(2)} / ` : ""}{max.toFixed(2)}</span>
             </label>
-            {review && (
-              <div className="pl-6">
-                <RubricItemFeedback
-                  rubricId={rubric.rubricId}
-                  itemId={item.itemId}
-                  itemText={item.text}
-                  awardedPoints={value}
-                  maxPoints={max}
-                  feedbackItem={fbItem}
-                  reviewedScore={reviewedItemScores[rubric.rubricId]?.[item.itemId]}
-                  acknowledged={isItemAcknowledged(acknowledgedReviewItems, rubric.rubricId, item.itemId)}
-                  validBlockIds={validBlockIds}
-                  editable={Boolean(onItemFeedbackChange)}
-                  disabled={disabled}
-                  onChangeItem={onItemFeedbackChange ? (updated) => onItemFeedbackChange(updated, value) : undefined}
-                  onToggleAcknowledge={onToggleAcknowledge
-                    ? (checked) => onToggleAcknowledge(rubric.rubricId, item.itemId, checked, value)
-                    : undefined}
-                />
-              </div>
-            )}
+            {/* 2 card liên quan tới comment tạm thời ẩn đi do chưa có phương án (yêu cầu 2026-11-07) */}
           </li>
         );
       })}

@@ -1,15 +1,18 @@
 "use client";
 import { BackLink } from "@/shared/navigation/BackLink";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { apiFetch } from "@/shared/api/client";
 import {
   DocumentEditor,
   RubricNote,
   ToolbarButton,
+  outlineOf,
+  publishOutline,
   type DocumentComment,
   type RubricCriterion,
 } from "@/shared/document";
-import { Alert, Button, Icon, IconButton, Pill } from "@/shared/ui";
+import { Alert, Button, Icon, IconButton, Menu, MenuItem, Pill, showToast } from "@/shared/ui";
 import { RubricChecklist } from "../components/RubricChecklistPanel";
 import { calculateChecklistPoints } from "../model/rubricScores";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
@@ -19,11 +22,12 @@ import { useResource } from "../hooks/useResource";
 import { buildChecklistBindings, GradingNotes, shouldShowGradingNotes } from "../components/GradingForm";
 import { useGradingWorkspace } from "../hooks/useGradingWorkspace";
 import { ActivityReview, GradeHistory, GroupSectionAuthors } from "../components/GradingReviewPanels";
-import { AiProposalPanel } from "../components/AiProposalPanel";
+import { AiProposalPanel, buildAiRequest } from "../components/AiProposalPanel";
 import { BatchActionDialog } from "../components/BatchActionDialog";
 import { MemberContributionPanel } from "../components/MemberContributionPanel";
 import { countUnresolvedReviews } from "../components/StructuredFeedbackSection";
-import { formatPoints, GRADE_STATUS_LABELS, type Detail, type Rubric } from "../model/types";
+import { buildGradebookHref } from "../components/ClassProgressSection";
+import { formatPoints, GRADE_STATUS_LABELS, type AiRequest, type Detail, type Rubric } from "../model/types";
 import { toEditorDocument, type SubmissionDocumentDto } from "../model/submissionDocument";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import type { NavigationFilters } from "../model/navigation";
@@ -46,7 +50,10 @@ function useSubmissionImages(evaluationId: string, document: SubmissionDocumentD
   const [urls, setUrls] = useState<Record<string, string>>({});
   useEffect(() => {
     let active = true;
-    const images = document.blocks.filter((block) => block.type === "IMAGE");
+    const images = document.blocks.filter(
+      (block): block is Extract<SubmissionDocumentDto["blocks"][number], { type: "IMAGE" }> =>
+        block.type === "IMAGE",
+    );
     void Promise.all(images.map(async (block): Promise<[string, string] | null> => {
       if (!block.content.fileId) return null;
       try {
@@ -78,6 +85,53 @@ function noteCriteria(rubric: Rubric): RubricCriterion[] {
   }));
 }
 
+/** Thanh tỉ lệ điểm đạt / điểm tối đa, giống trang lịch sử nộp bài. */
+function Meter({ awarded, max }: { awarded: number | null; max: number | null }) {
+  const ratio = awarded != null && max ? Math.min(1, Math.max(0, awarded / max)) : 0;
+  return (
+    <span aria-hidden className="mt-2.5 block h-1 overflow-hidden rounded-full bg-sunken">
+      <span className="block h-full rounded-full bg-primary" style={{ width: `${ratio * 100}%` }} />
+    </span>
+  );
+}
+
+/** Thẻ tổng điểm ở lề phải, giống trang lịch sử nộp bài. */
+function TotalCard({ total, maxScore }: { total: number; maxScore: number }) {
+  return (
+    <article className="rounded-xl border border-line bg-surface px-4 py-3.5 shadow-[var(--shadow-lift)]">
+      <p className="text-xs font-medium text-muted">Tổng điểm</p>
+      <p aria-label="Điểm tạm tính" className="mt-1 flex items-baseline gap-1.5 tabular-nums">
+        <span className="font-display text-[30px] leading-none tracking-[-0.02em] text-ink">{total.toFixed(2)}</span>
+        <span className="text-[13px] text-muted"> / {maxScore.toFixed(2)}</span>
+      </p>
+      <Meter awarded={total} max={maxScore} />
+    </article>
+  );
+}
+
+/**
+ * Thanh trên cùng giống trang soạn đề (3 cột): tên sinh viên + trạng thái bên trái, chỗ đặt nút Cả trang / Từng
+ * phần ở giữa (qua `viewSlot`), thao tác bên phải (không rớt dòng).
+ */
+function TopBar({ barRef, left, setViewSlot, actions }: {
+  barRef: (element: HTMLElement | null) => void;
+  left: ReactNode;
+  setViewSlot: (element: HTMLElement | null) => void;
+  actions?: ReactNode;
+}) {
+  return (
+    <header ref={barRef} className="sticky top-14 z-30 -mx-4 -mt-8 flex items-center justify-between gap-3 border-b border-line bg-[var(--c-topbar)] px-4 py-2.5 backdrop-blur-md sm:-mx-8 sm:px-8 md:-mt-10">
+      <div className="flex min-w-0 items-center gap-x-2.5 shrink">
+        {left}
+      </div>
+      <div ref={setViewSlot} data-testid="view-slot" className="flex shrink-0 justify-center" />
+      <div className="flex shrink-0 items-center justify-end gap-2 whitespace-nowrap">
+        {actions}
+      </div>
+    </header>
+  );
+}
+
 function Workspace({ initial, refresh, proposalId, status, late }: { initial: Detail; refresh: () => Promise<Detail>; proposalId?: string } & NavigationFilters) {
   const workspace = useGradingWorkspace(initial, refresh, { status, late });
   const {
@@ -103,13 +157,83 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
     applyProposal,
   } = workspace;
   const [action, setAction] = useState<"finalize" | "publish" | null>(null);
-  const [focusMode, setFocusMode] = useState(false);
   const [aiOpen, setAiOpen] = useState(Boolean(proposalId));
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [generatingProposalId, setGeneratingProposalId] = useState<string | null>(null);
   const [reviewSelection, setReviewSelection] = useState(proposalId);
   if (reviewSelection !== proposalId) {
     setReviewSelection(proposalId);
     setAiOpen(Boolean(proposalId));
   }
+  // Lắng nghe kết quả của đề xuất AI đang tạo
+  useEffect(() => {
+    if (!aiGenerating || !generatingProposalId) return;
+    const target = proposals.find((p) => p.id === generatingProposalId);
+    if (!target) return;
+
+    if (target.status === "READY" && target.proposal) {
+      applyProposal(
+        target.proposal.checks ?? {},
+        target.proposal.feedback ?? "",
+        target.id,
+        target.proposal.itemScoresByRubric ?? {},
+        target.proposal.structuredFeedback ?? null,
+      );
+      setAiGenerating(false);
+      setGeneratingProposalId(null);
+    } else if (target.status === "FAILED" || target.status === "REJECTED") {
+      setAiGenerating(false);
+      setGeneratingProposalId(null);
+      if (target.safeError) showToast(target.safeError, "danger");
+    }
+  }, [aiGenerating, generatingProposalId, proposals, applyProposal]);
+
+  useEffect(() => {
+    if (pollExhausted || (aiGenerating && error)) {
+      setAiGenerating(false);
+      setGeneratingProposalId(null);
+      if (error) showToast(error, "danger");
+      else if (pollExhausted) showToast("Quá thời gian chờ phản hồi từ AI", "danger");
+    }
+  }, [pollExhausted, error, aiGenerating]);
+
+  const handleAiGrade = async (input?: AiRequest) => {
+    if (disabled || official || busy || aiGenerating) return;
+    setAiOpen(false);
+    setAiGenerating(true);
+    const created = await requestProposal(input ?? buildAiRequest());
+    if (created) {
+      if (created.status === "READY" && created.proposal) {
+        applyProposal(
+          created.proposal.checks ?? {},
+          created.proposal.feedback ?? "",
+          created.id,
+          created.proposal.itemScoresByRubric ?? {},
+          created.proposal.structuredFeedback ?? null,
+        );
+        setAiGenerating(false);
+        setGeneratingProposalId(null);
+      } else if (created.status === "FAILED" || created.status === "REJECTED") {
+        setAiGenerating(false);
+        setGeneratingProposalId(null);
+        if (created.safeError) showToast(created.safeError, "danger");
+      } else {
+        setGeneratingProposalId(created.id);
+      }
+    } else {
+      setAiGenerating(false);
+      setGeneratingProposalId(null);
+    }
+  };
+
+  const handlePublish = async () => {
+    if (busy || disabled) return;
+    if (dirty) {
+      const saved = await save(false);
+      if (!saved) return;
+    }
+    setAction("publish");
+  };
   useEffect(() => {
     if (aiOpen) (document.getElementById(`grading-proposal-${proposalId}`) ?? document.getElementById("grading-ai-review"))?.scrollIntoView?.({ block: "start" });
   }, [aiOpen, proposalId, proposals.length]);
@@ -121,6 +245,7 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
     (evaluation.accountId && row.student.accountId === evaluation.accountId));
   const studentName = [...new Set(submitters.map((row) => row.student.name))].join(", ") ||
     (evaluation.kind === "GROUP_DOCUMENT" ? "Bài làm nhóm" : "Bài làm sinh viên");
+  const studentEmail = [...new Set(submitters.map((row) => row.student.email))].join(", ") || "";
   const studentMatches = (directory.value ?? []).filter((row) => row.evaluationId &&
     `${row.student.name} ${row.student.email}`.toLocaleLowerCase("vi").includes(studentSearch.trim().toLocaleLowerCase("vi")));
   const paper = useMemo(() => toEditorDocument(detail.document), [detail.document]);
@@ -143,16 +268,79 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
     form.structuredFeedback, form.reviewedItemScores, form.acknowledgedReviewItems).total;
   const checklist = { ...buildChecklistBindings(form, disabled, updateForm), validBlockIds };
   const blockIds = new Set(paper.blocks.map((block) => block.id));
-  const pending = proposals.some((proposal) => proposal.status === "PENDING");
-  const ready = proposals[0]?.status === "READY";
 
-  // Lề chỉ để điểm: mỗi phần một thẻ checklist gắn vào tiêu đề của phần; thẻ ghi chú ở đầu chỉ khi cần.
+  // --- Header dính trên đầu: thanh công cụ của trình soạn dính ngay dưới header. ---
+  const [viewSlot, setViewSlot] = useState<HTMLElement | null>(null);
+  const [headerHeight, setHeaderHeight] = useState(64);
+  const headerObserver = useRef<ResizeObserver | null>(null);
+  const headerRef = useCallback((element: HTMLElement | null) => {
+    headerObserver.current?.disconnect();
+    headerObserver.current = null;
+    if (!element || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => setHeaderHeight(element.offsetHeight));
+    observer.observe(element);
+    headerObserver.current = observer;
+  }, []);
+  // Tự động lưu sau 1.5 giây khi có thay đổi (giống AssignmentFormPage). Tạm dừng khi đang mở so khớp đề xuất AI.
+  useEffect(() => {
+    if (!dirty || disabled || aiOpen) return;
+    const timer = setTimeout(() => {
+      void save(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [dirty, disabled, aiOpen, save, form.checks, form.itemScores, form.adjustment, form.feedback]);
+
+  useEffect(() => {
+    const keys = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        void save(false);
+      }
+    };
+    window.addEventListener("keydown", keys);
+    return () => window.removeEventListener("keydown", keys);
+  }, [save]);
+
+  // Sidebar mục lục của bài nộp như trang tạo bài; nút quay lại "Chấm điểm" mở đúng bài tập trên sổ điểm lớp.
+  useEffect(() => {
+    const backHref = buildGradebookHref(evaluation.classId, { assignment: evaluation.assignmentId });
+    publishOutline({
+      assignmentId: evaluation.assignmentId,
+      backHref,
+      backLabel: "Chấm điểm",
+      entries: outlineOf(paper.blocks),
+      editable: false,
+    });
+  }, [evaluation.assignmentId, evaluation.classId, paper.blocks]);
+  useEffect(() => () => publishOutline(null), []);
+
+  // Dropdown chọn sinh viên mở bằng state (thay cho <details>), đóng khi click ra ngoài.
+  const [studentDropdown, setStudentDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!studentDropdown) return;
+    function close(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) setStudentDropdown(false);
+    }
+    window.addEventListener("mousedown", close);
+    return () => window.removeEventListener("mousedown", close);
+  }, [studentDropdown]);
+
+  // Thứ tự sinh viên: theo danh sách navigation, mới nhất trước.
+  const orderedStudents = useMemo(() => {
+    if (!directory.value) return [];
+    return directory.value.filter((row) => row.evaluationId);
+  }, [directory.value]);
+
+  const currentStudentIndex = orderedStudents.findIndex((row) => row.evaluationId === evaluation.id);
+
+  // Lề chỉ để điểm: đầu tài liệu là thẻ tổng điểm; mỗi phần một thẻ checklist gắn vào tiêu đề của phần (2 card liên quan ghi chú/comment tạm thời ẩn đi do chưa có phương án; 2026-11-07).
   const comments: DocumentComment[] = [
-    ...(shouldShowGradingNotes(detail.rubrics, form, official) ? [{
-      key: "grading-notes",
+    {
+      key: "total-card",
       anchorBlockId: null,
-      content: <GradingNotes rubrics={detail.rubrics} values={form} />,
-    }] : []),
+      content: <TotalCard total={total} maxScore={Number(evaluation.maxScore)} />,
+    },
     ...detail.rubrics.map((rubric, index): DocumentComment => ({
       key: rubric.rubricId,
       // Rubric gắn với tiêu đề của phần; rubric cả bài (không có tiêu đề) nằm ở đầu tài liệu.
@@ -160,110 +348,149 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
       content: (
         <RubricNote title={partTitles[rubric.partId] || `Phần ${index + 1}`} criteria={noteCriteria(rubric)}
           active={activePart === rubric.rubricId} onActivate={() => setActivePart(rubric.rubricId)}
-          badge={<Pill tone="primary">Đạt {String(Number(calculateChecklistPoints([rubric], form.checks, form.itemScores).toFixed(2)))}</Pill>}
+          badge={<span className="sr-only">Đạt {String(Number(calculateChecklistPoints([rubric], form.checks, form.itemScores).toFixed(2)))}</span>}
           editor={<RubricChecklist rubric={rubric} {...checklist} />} />
       ),
     })),
   ];
   const activeHeading = detail.rubrics.find((rubric) => rubric.rubricId === activePart)?.partId ?? null;
 
+  const saveText = busy ? "Đang xử lý…" : dirty ? "Chưa lưu" : `Đã lưu ${formatPoints(evaluation.score, evaluation.maxScore)}`;
+
+  const assignmentKind = evaluation.kind === "GROUP_DOCUMENT" ? "Nhóm" : "Cá nhân";
+  const assignmentTitle = context.value?.title || "Bài tập";
+
+  const header = (
+    <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
+      <p className="text-[13px] text-muted" data-testid="assignment-kind">{assignmentKind}</p>
+    </div>
+  );
+
   return (
-    <main data-wide-workspace data-workspace-focus={focusMode} data-workspace-main="true" className="flex min-w-0 flex-col gap-5">
-      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-        <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-          <BackLink className="inline-flex w-fit items-center gap-1.5 text-[12.5px] font-semibold text-muted transition-colors hover:text-ink"
-            onClick={(event) => { if (!confirmNavigation()) event.preventDefault(); }}
-            href={`/teaching/classes/${evaluation.classId}/assignments/${evaluation.assignmentId}/submissions`}>
-            <Icon name="arrow_back" size={14} />Bài nộp
-          </BackLink>
-          <h1 className="font-display text-[28px] leading-[1.1] tracking-[-0.025em] text-ink">{studentName}</h1>
-          {context.value?.title && <p className="text-sm text-muted">{context.value.title}</p>}
-          <div className="flex flex-wrap items-center gap-2.5 text-[13px] text-muted">
-            <Pill tone={evaluation.state === "PUBLISHED" ? "success" : evaluation.state === "FINALIZED" ? "info" : "neutral"}>{GRADE_STATUS_LABELS[evaluation.state]}</Pill>
-            {context.value && <span className="font-semibold text-ink">{context.value.ownerName}</span>}
-          </div>
-        </div>
-        <Button size="sm" variant="ghost" icon={focusMode ? "close" : "visibility"} aria-pressed={focusMode} onClick={() => setFocusMode((value) => !value)}>
-          {focusMode ? "Thoát tập trung" : "Chế độ tập trung"}
-        </Button>
-      </header>
-      <div role="region" aria-label="Thao tác chấm bài"
-        className="sticky top-16 z-30 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-xl border border-line bg-[var(--c-topbar)] px-4 py-3 shadow-[var(--shadow-lift)] backdrop-blur-md">
-        <div className="flex items-center gap-1">
-          <IconButton icon="chevron_left" label="Bài trước" disabled={currentIndex <= 0 || busy} onClick={() => navigate(detail.navigationIds[currentIndex - 1]!)} />
-          <span className="min-w-12 text-center font-mono text-xs text-muted">{Math.max(1, currentIndex + 1)} / {detail.navigationIds.length || 1}</span>
-          <IconButton icon="chevron_right" label="Bài sau" disabled={currentIndex < 0 || currentIndex >= detail.navigationIds.length - 1 || busy} onClick={() => navigate(detail.navigationIds[currentIndex + 1]!)} />
-          <details className="ml-2">
-            <summary aria-label="Chọn sinh viên" title="Chọn sinh viên khác" className="max-w-[min(16rem,45vw)] cursor-pointer rounded-lg px-2 py-2 text-sm font-semibold break-words text-ink">{studentName}</summary>
-            <div className="absolute left-0 top-full z-20 mt-2 w-[min(22rem,calc(100vw-3rem))] rounded-xl border border-line bg-surface p-3 shadow-[var(--shadow-float)]">
-              <label className="flex flex-col gap-2 text-sm font-semibold text-ink">
-                Tìm sinh viên
-                <input type="search" placeholder="Tên hoặc email" value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)}
-                  className="w-full rounded-lg border border-field px-3 py-2 text-sm font-normal" />
-              </label>
-              {directory.error ? <p role="alert" className="mt-3 text-sm text-danger">Không tải được danh sách. <button type="button" className="underline" onClick={() => void directory.refresh().catch(() => {})}>Thử lại</button></p>
-                : !directory.value ? <p role="status" className="mt-3 text-sm text-muted">Đang tải sinh viên…</p>
-                  : <ul aria-label="Bài nộp sinh viên" className="mt-2 max-h-64 overflow-y-auto">
-                    {studentMatches.map((row) => <li key={row.student.accountId}>
-                      <button type="button" disabled={busy || row.evaluationId === evaluation.id} onClick={() => navigate(row.evaluationId!, false)}
-                        className="w-full cursor-pointer rounded-lg px-2 py-2 text-left text-sm hover:bg-sunken disabled:cursor-default disabled:opacity-50">
-                        <span className="block font-semibold">{row.student.name}</span><span className="block text-xs text-muted">{row.student.email}</span>
-                      </button>
-                    </li>)}
-                    {!studentMatches.length && <li className="py-3 text-sm text-muted">Không có bài nộp phù hợp.</li>}
-                  </ul>}
-            </div>
-          </details>
-        </div>
-        <div className="flex items-baseline gap-3">
-          <output aria-label="Điểm tạm tính" className="font-display text-[26px] leading-none tracking-[-0.02em] text-ink tabular-nums">
-            {total.toFixed(2)}<span className="text-[18px] text-muted"> / {Number(evaluation.maxScore).toFixed(2)}</span>
-          </output>
-          <p role="status" className={dirty ? "text-xs font-semibold text-warning" : "text-xs text-muted"}>
-            {busy ? "Đang xử lý…" : dirty ? "Chưa lưu" : `Đã lưu ${formatPoints(evaluation.score, evaluation.maxScore)}`}
-          </p>
-          {Number(form.adjustment) !== 0 && <p className="text-xs text-muted">Điều chỉnh đã lưu: {form.adjustment} · {form.adjustmentReason}</p>}
-        </div>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Button size="sm" variant="primary" icon="save" disabled={disabled} onClick={() => void save()}>Lưu nháp / thay đổi</Button>
-          <Button size="sm" disabled={disabled || dirty || evaluation.state !== "DRAFT" || unresolvedReviews > 0} onClick={() => setAction("finalize")}>Chốt điểm</Button>
-          <Button size="sm" disabled={busy || !detail.current || dirty || evaluation.state !== "FINALIZED"} onClick={() => setAction("publish")}>Công bố điểm</Button>
-        </div>
-      </div>
+    <div data-wide-workspace className="flex flex-col gap-4" style={{ "--doc-toolbar-top": `${56 + headerHeight}px` } as CSSProperties}>
+      <TopBar barRef={headerRef} setViewSlot={setViewSlot}
+        left={<>
+          <h1 className="min-w-0 truncate text-[15px] font-semibold text-ink" title={assignmentTitle}>{assignmentTitle}</h1>
+          <h1 className="sr-only">{studentName}</h1>
+          <Pill tone={evaluation.state === "PUBLISHED" ? "success" : (evaluation.state === "DRAFT" || evaluation.state === "FINALIZED") ? "info" : "neutral"} className="shrink-0">{GRADE_STATUS_LABELS[evaluation.state]}</Pill>
+          <span data-testid="save-state" className="sr-only" role="status">{saveText}</span>
+        </>}
+        actions={<>
+          <button type="button" className="sr-only" aria-hidden="false" disabled={disabled} onClick={() => void save(true)}>
+            Lưu nháp / thay đổi
+          </button>
+          <button type="button" className="sr-only" aria-hidden="false" disabled={disabled || dirty || evaluation.state !== "DRAFT" || unresolvedReviews > 0} onClick={() => setAction("finalize")}>
+            Chốt điểm
+          </button>
+          <Button
+            size="sm"
+            variant="primary"
+            disabled={busy || Boolean(error) || !detail.current || evaluation.state === "PUBLISHED"}
+            onClick={() => void handlePublish()}
+          >
+            Công bố điểm
+          </Button>
+        </>}
+      />
+
       {!detail.current && <Alert tone="info">Đây là lần nộp cũ, chỉ có thể xem lại.</Alert>}
-      {official && <Alert tone="info">Điểm đã chốt. Bản chấm chỉ có thể xem, không thể chỉnh sửa.</Alert>}
       {error && (
         <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void reload()}>Tải lại phiên bản</Button>}>{error}</Alert>
       )}
       {!detail.rubrics.length && <Alert tone="warning">Bài chưa có rubric khả dụng.</Alert>}
+
       <DocumentEditor fullWidth matchCommentHeight document={paper} onChange={() => {}} mode="student" readOnly diagramEnabled={false}
         imageUrl={(blockId) => imageUrls[blockId] ?? null}
         emptyLeafLabel="Sinh viên chưa làm phần này."
-        header={<div className="mb-5 border-b border-line pb-4">
-          <h2 className="font-display text-[28px] leading-tight tracking-[-0.02em] text-ink">{context.value?.title || "Bài làm đã nộp"}</h2>
-          <p className="mt-1 text-[13px] text-muted">Bài làm đã nộp · chỉ đọc</p>
-        </div>}
+        titleField={{ text: context.value?.title || "Bài làm đã nộp", readOnly: true, onText: () => {} }}
+        header={header}
         comments={comments}
         activeComment={activePart}
         highlightBlockId={activeHeading}
+        viewSlot={viewSlot}
+        toolbarCenter={<>
+          <ToolbarButton icon="chevron_left" title="Bài trước" aria-label="Bài trước"
+            disabled={currentIndex <= 0 || busy}
+            onClick={() => {
+              if (confirmNavigation()) navigate(detail.navigationIds[currentIndex - 1]!);
+            }} />
+          <div ref={dropdownRef} className="relative">
+            <button type="button" aria-label="Chọn sinh viên" aria-expanded={studentDropdown}
+              onClick={() => setStudentDropdown((open) => !open)}
+              className="flex max-w-[min(18rem,40vw)] cursor-pointer items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 py-1 text-left transition-colors hover:bg-sunken">
+              <span className="min-w-0 flex-1 truncate">
+                <span className="block text-xs font-semibold leading-tight text-ink">{studentName}</span>
+                {studentEmail && <span className="block text-[10.5px] leading-tight text-muted">{studentEmail}</span>}
+              </span>
+              <Icon name="unfold_more" size={14} className="shrink-0 text-muted" />
+            </button>
+            {studentDropdown && (
+              <div className="absolute left-1/2 top-full z-20 mt-2 w-[min(22rem,calc(100vw-3rem))] -translate-x-1/2 rounded-xl border border-line bg-surface p-3 shadow-[var(--shadow-float)]">
+                <label className="flex flex-col gap-2 text-sm font-semibold text-ink">
+                  Tìm sinh viên
+                  <input type="search" placeholder="Tên hoặc email" value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)}
+                    className="w-full rounded-lg border border-field px-3 py-2 text-sm font-normal" />
+                </label>
+                {directory.error ? <p role="alert" className="mt-3 text-sm text-danger">Không tải được danh sách. <button type="button" className="underline" onClick={() => void directory.refresh().catch(() => {})}>Thử lại</button></p>
+                  : !directory.value ? <p role="status" className="mt-3 text-sm text-muted">Đang tải sinh viên…</p>
+                    : <ul aria-label="Bài nộp sinh viên" className="mt-2 max-h-64 overflow-y-auto">
+                      {studentMatches.map((row) => <li key={row.student.accountId}>
+                        <button type="button" disabled={busy || row.evaluationId === evaluation.id} onClick={() => { navigate(row.evaluationId!, false); setStudentDropdown(false); }}
+                          className="w-full cursor-pointer rounded-lg px-2 py-2 text-left text-sm hover:bg-sunken disabled:cursor-default disabled:opacity-50">
+                          <span className="block font-semibold">{row.student.name}</span><span className="block text-xs text-muted">{row.student.email}</span>
+                        </button>
+                      </li>)}
+                      {!studentMatches.length && <li className="py-3 text-sm text-muted">Không có bài nộp phù hợp.</li>}
+                    </ul>}
+              </div>
+            )}
+          </div>
+          <ToolbarButton icon="chevron_right" title="Bài sau" aria-label="Bài sau"
+            disabled={currentIndex < 0 || currentIndex >= detail.navigationIds.length - 1 || busy}
+            onClick={() => {
+              if (confirmNavigation()) navigate(detail.navigationIds[currentIndex + 1]!);
+            }} />
+        </>}
         toolbarExtra={<>
-          {pending && <Pill tone="warning">AI đang chấm…</Pill>}
-          {!pending && ready && <Pill tone="success">Có đề xuất AI</Pill>}
-          <ToolbarButton icon="smart_toy" title="Chấm bằng AI" aria-label="Chấm bằng AI" aria-expanded={aiOpen} aria-controls="grading-ai-review" onClick={() => setAiOpen((value) => !value)} />
+          <button
+            type="button"
+            className="sr-only"
+            aria-label="Xem đề xuất AI"
+            onClick={() => setAiOpen((open) => !open)}
+          >
+            Xem đề xuất AI
+          </button>
+          <ToolbarButton
+            icon="smart_toy"
+            title="Chấm bằng AI"
+            aria-label="Chấm bằng AI"
+            aria-expanded={aiGenerating}
+            disabled={disabled || official || busy || aiGenerating}
+            onClick={() => void handleAiGrade()}
+          />
         </>} />
-      <GroupSectionAuthors detail={detail} />
+
       {evaluation.kind === "GROUP_DOCUMENT" && (
-        <MemberContributionPanel
-          root={evaluation}
-          members={detail.members}
-          names={Object.fromEntries(
-            (detail.memberActivities ?? []).map((m) => [m.student.accountId, m.student.name]),
-          )}
-          onSaved={() => void reload()}
-        />
+        <div className="mt-6 flex flex-col gap-4">
+          <GroupSectionAuthors detail={detail} />
+          <MemberContributionPanel
+            root={evaluation}
+            members={detail.members}
+            names={Object.fromEntries(
+              (detail.memberActivities ?? []).map((m) => [m.student.accountId, m.student.name]),
+            )}
+            onSaved={() => void reload()}
+          />
+        </div>
       )}
-      <ActivityReview detail={detail} />
-      <GradeHistory evaluation={evaluation} />
+      <div className="mt-6 flex flex-col gap-3">
+        <div className={detail.activityState === "DISABLED" ? "hidden" : undefined}>
+          <ActivityReview detail={detail} />
+        </div>
+        <div className="hidden">
+          <GradeHistory evaluation={evaluation} />
+        </div>
+      </div>
       {aiOpen && (
         <section id="grading-ai-review" aria-label="Chấm bằng AI" className="scroll-mt-52 border-t border-line pt-5">
           <div className="mb-4 flex items-center justify-between gap-3">
@@ -273,12 +500,23 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
           <AiProposalPanel evaluationId={evaluation.id} proposals={proposals} proposalsLoaded={proposalsLoaded} selectedProposalId={proposalId} disabled={disabled || official}
             rubrics={detail.rubrics} currentValues={form} partTitles={partTitles} validBlockIds={validBlockIds}
             pollExhausted={pollExhausted} onRecheck={resumePolling}
-            onRequest={(input) => void requestProposal(input)}
+            onRequest={(input) => void handleAiGrade(input)}
             onApply={(checks, feedback, id, itemScores, structuredFeedback) => {
               applyProposal(checks, feedback, id, itemScores, structuredFeedback);
               setAiOpen(false);
             }} />
         </section>
+      )}
+      {aiGenerating && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[100] flex animate-fade items-center justify-center bg-[var(--c-scrim)] p-4 backdrop-blur-[2px]">
+          <div role="alertdialog" aria-modal="true" aria-busy="true" aria-label="Đang chấm bằng AI" data-testid="ai-progress"
+            className="flex animate-pop items-center gap-3 rounded-xl border border-line bg-surface px-6 py-5 shadow-[var(--shadow-float)]">
+            <span aria-hidden="true"
+              className="size-5 animate-spin rounded-full border-2 border-line-strong border-t-primary motion-reduce:animate-none" />
+            <span className="text-[14px] font-semibold text-ink">Đang chấm bằng AI…</span>
+          </div>
+        </div>,
+        document.body,
       )}
       {action && (
         <BatchActionDialog
@@ -288,6 +526,6 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
           onDone={() => void reload()}
         />
       )}
-    </main>
+    </div>
   );
 }

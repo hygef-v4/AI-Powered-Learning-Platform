@@ -58,8 +58,22 @@ export function BatchActionDialog({
       let completed: BatchResult;
       if (action === "ai") {
         completed = await gradingApi.requestProposals(items, buildAiRequest(choice));
+      } else if (action === "finalize") {
+        completed = await gradingApi.finalizeGrades(items);
       } else {
-        completed = await gradingApi[action === "finalize" ? "finalizeGrades" : "publishGrades"](items);
+        const initial = await gradingApi.publishGrades(items);
+        const unfinalized = initial.items.filter((r) => r.outcome === "FAILED" && r.code === "INVALID_GRADE_STATE");
+        if (unfinalized.length > 0) {
+          const toFinalize = items.filter((it) => unfinalized.some((u) => u.evaluationId === it.evaluationId));
+          const finalized = await gradingApi.finalizeGrades(toFinalize);
+          const retryItems = items.map((item) => {
+            const fin = finalized.items.find((r) => r.evaluationId === item.evaluationId);
+            return fin && fin.newVersion != null ? { evaluationId: item.evaluationId, version: fin.newVersion } : item;
+          });
+          completed = await gradingApi.publishGrades(retryItems);
+        } else {
+          completed = initial;
+        }
       }
       setResult(completed);
       // Snapshot success before refreshing: a filtered list can remove the completed rows.
@@ -103,7 +117,10 @@ export function BatchActionDialog({
         </>
       }
     >
-      <p className="font-display text-[34px] leading-none text-ink">{items.length} <span className="font-sans text-[13.5px] text-muted">bài đã chọn</span></p>
+      {/* Popup công bố điểm bỏ phần nội dung (yêu cầu 2026-11-07). */}
+      {action !== "publish" && (
+        <p className="font-display text-[34px] leading-none text-ink">{items.length} <span className="font-sans text-[13.5px] text-muted">bài đã chọn</span></p>
+      )}
       {/* Nguồn AI do hệ thống tự chọn: API chung nếu còn đủ hạn mức cho lượt này, không thì khóa cá nhân (yêu cầu 2026-11-05). */}
       {action === "ai" && (
         <p className="text-xs text-muted">
