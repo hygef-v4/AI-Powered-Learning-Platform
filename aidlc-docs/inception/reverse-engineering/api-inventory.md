@@ -290,16 +290,6 @@ Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`. 49 controller files
 @GetMapping("/submission-progress")
 ```
 
-## [groupdocs/controller/GroupDocCollaborationController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocCollaborationController.java)
-
-```java
-@PostMapping(value = "/api/v1/group-docs/{id}/sections/{sectionId}/docx:preview", consumes = "multipart/form-data")
-@PostMapping(value = "/api/v1/group-docs/{id}/import:preview", consumes = "multipart/form-data")
-@PostMapping("/api/v1/group-docs/{id}/import:apply")
-@GetMapping("/api/v1/group-docs/{id}/peer-reviews")
-@PutMapping("/api/v1/group-docs/{id}/peer-reviews")
-```
-
 ## [groupdocs/controller/GroupDocController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocController.java)
 
 ```java
@@ -311,10 +301,8 @@ Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`. 49 controller files
 @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:assign")
 @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:release")
 @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:done")
-@PostMapping("/api/v1/group-docs/{id}/assignment:lock")
-@PostMapping("/api/v1/group-docs/{id}/assignment:unlock")
 @GetMapping("/api/v1/group-docs/{id}/sections/{sectionId}/revisions")
-@PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:restore")
+@PostMapping(value = "/api/v1/group-docs/{id}/sections/{sectionId}/docx:preview", consumes = "multipart/form-data")
 @PutMapping("/api/v1/group-docs/{id}/sections/{sectionId}/draft")
 @PostMapping("/api/v1/group-docs/{id}/submit")
 @GetMapping("/api/v1/group-docs/{id}/export.docx")

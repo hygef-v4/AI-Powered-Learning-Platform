@@ -1,6 +1,5 @@
 package edu.aiplatform.groupdocs.repository;
 
-import edu.aiplatform.groupdocs.model.AssignmentLock;
 import edu.aiplatform.groupdocs.model.GroupDocument;
 import edu.aiplatform.groupdocs.model.GroupSection;
 import edu.aiplatform.groupdocs.model.SectionRevision;
@@ -46,8 +45,7 @@ public class GroupDocumentRepository {
             + "warnings::text as warnings, last_changed_at, version, created_at";
     private static final String SECTION_COLUMNS = "id, group_document_id, part_id, heading_block_id, "
             + "ancestor_heading_ids::text as ancestors, order_no, title, status, claimed_by, claimed_at, assigned_by, "
-            + "published_blocks::text as published, draft_blocks::text as draft, draft_saved_at, last_author_id, version, "
-            + "assignee_id";
+            + "published_blocks::text as published, draft_blocks::text as draft, draft_saved_at, last_author_id, version";
 
     private final JdbcClient jdbc;
     private final ObjectMapper json;
@@ -206,7 +204,7 @@ public class GroupDocumentRepository {
         return jdbc.sql("select s.id, s.group_document_id, s.part_id, s.heading_block_id, s.ancestor_heading_ids::text as ancestors, "
                         + "s.order_no, s.title, s.status, s.claimed_by, s.claimed_at, s.assigned_by, "
                         + "s.published_blocks::text as published, s.draft_blocks::text as draft, s.draft_saved_at, "
-                        + "s.last_author_id, s.version, s.assignee_id from group_document_sections s join group_documents d "
+                        + "s.last_author_id, s.version from group_document_sections s join group_documents d "
                         + "on d.id = s.group_document_id where d.group_id = :groupId and s.claimed_by = :accountId for update of s")
                 .param("groupId", groupId).param("accountId", accountId).query(this::section).list();
     }
@@ -224,11 +222,10 @@ public class GroupDocumentRepository {
         p.put("draft", s.draftBlocks() == null ? null : write(s.draftBlocks()));
         p.put("draftSavedAt", ts(s.draftSavedAt()));
         p.put("lastAuthor", s.lastAuthorId());
-        p.put("assignee", s.assigneeId());
         return jdbc.sql("update group_document_sections set status = :status, claimed_by = :claimedBy, "
                         + "claimed_at = :claimedAt, assigned_by = :assignedBy, published_blocks = cast(:published as jsonb), "
                         + "draft_blocks = cast(:draft as jsonb), draft_saved_at = :draftSavedAt, last_author_id = :lastAuthor, "
-                        + "assignee_id = :assignee, version = version + 1 "
+                        + "version = version + 1 "
                         + "where id = :id and version = :version")
                 .params(p).update() == 1;
     }
@@ -241,43 +238,11 @@ public class GroupDocumentRepository {
                 .update();
     }
 
-    // ---- phân công (FB-U12-01) --------------------------------------------------------------------------------
-
-    public Optional<AssignmentLock> assignmentLock(UUID documentId) {
-        return jdbc.sql("select assignment_locked_by, assignment_locked_at from group_documents where id = :id "
-                        + "and assignment_locked_by is not null")
-                .param("id", documentId)
-                .query((rs, n) -> new AssignmentLock(rs.getObject("assignment_locked_by", UUID.class),
-                        instant(rs.getTimestamp("assignment_locked_at"))))
-                .optional();
-    }
-
-    /** Chốt ({@code lock} khác null) hoặc mở chốt phân công. */
-    public void setAssignmentLock(UUID documentId, AssignmentLock lock) {
-        jdbc.sql("update group_documents set assignment_locked_by = :by, assignment_locked_at = :at where id = :id")
-                .param("id", documentId).param("by", lock == null ? null : lock.lockedBy())
-                .param("at", lock == null ? null : ts(lock.lockedAt())).update();
-    }
-
-    /** Người rời nhóm không còn phụ trách mục nào trong các tài liệu của nhóm. */
-    public int clearAssignee(UUID groupId, UUID accountId) {
-        return jdbc.sql("update group_document_sections s set assignee_id = null, version = s.version + 1 "
-                        + "from group_documents d where d.id = s.group_document_id and d.group_id = :groupId "
-                        + "and s.assignee_id = :accountId")
-                .param("groupId", groupId).param("accountId", accountId).update();
-    }
-
     /** Lịch sử của mục, mới nhất trước, tối đa {@code limit} bản. */
     public List<SectionRevision> listRevisions(UUID sectionId, int limit) {
         return jdbc.sql("select id, section_id, author_id, blocks::text as blocks, created_at, kind "
                         + "from group_document_revisions where section_id = :id order by created_at desc, id limit :limit")
                 .param("id", sectionId).param("limit", limit).query(this::revision).list();
-    }
-
-    public Optional<SectionRevision> findRevision(UUID sectionId, UUID revisionId) {
-        return jdbc.sql("select id, section_id, author_id, blocks::text as blocks, created_at, kind "
-                        + "from group_document_revisions where section_id = :sectionId and id = :id")
-                .param("sectionId", sectionId).param("id", revisionId).query(this::revision).optional();
     }
 
     // ---- ánh xạ ----------------------------------------------------------------------------------------------
@@ -307,7 +272,7 @@ public class GroupDocumentRepository {
                 instant(rs.getTimestamp("claimed_at")), rs.getObject("assigned_by", UUID.class),
                 published == null ? null : readList(published, BLOCKS), draft == null ? null : readList(draft, BLOCKS),
                 instant(rs.getTimestamp("draft_saved_at")), rs.getObject("last_author_id", UUID.class),
-                rs.getLong("version"), rs.getObject("assignee_id", UUID.class));
+                rs.getLong("version"));
     }
 
     private SectionRevision revision(ResultSet rs, int n) throws SQLException {

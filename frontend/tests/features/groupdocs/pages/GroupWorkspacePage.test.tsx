@@ -29,7 +29,6 @@ function section(id: string, status: SectionView["status"], holderId: string | n
     draftSavedAt: null,
     lastAuthorId: null,
     version: 2,
-    assigneeId: holderId,
     ...extra,
   };
 }
@@ -55,11 +54,10 @@ function workspace(viewerId: string, overrides: Partial<WorkspaceView> = {}): Wo
     sections: [
       section("s1", "DONE", null, {
         lastAuthorId: LEADER,
-        assigneeId: LEADER,
         publishedBlocks: [{ id: "b1", origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: "Nội dung đã xong" }] } }],
       }),
       section("s2", "CLAIMED", MEMBER),
-      section("s3", "OPEN", null, { assigneeId: viewerId }),
+      section("s3", "OPEN", null),
     ],
     role: { member: true, leader: viewerId === LEADER, teacher: false },
     lastSubmission: null,
@@ -67,8 +65,6 @@ function workspace(viewerId: string, overrides: Partial<WorkspaceView> = {}): Wo
     diagramEnabled: false,
     version: 5,
     viewerId,
-    assignmentLockedBy: LEADER,
-    assignmentLockedAt: "2026-10-21T03:00:00Z",
     ...overrides,
   };
 }
@@ -86,28 +82,17 @@ function backend(view: WorkspaceView) {
       const method = init?.method ?? "GET";
       calls.push({ url, method, body: typeof init?.body === "string" ? JSON.parse(init.body) : init?.body });
       if (url === "/api/v1/group-docs/doc1" && method === "GET") return json(view);
-      if (url.endsWith(":claim")) return json(section("s3", "CLAIMED", view.viewerId));
-      if (url.endsWith("/assignment:lock")) return json({ lockedBy: view.viewerId, lockedAt: "2026-10-22T03:00:00Z" });
-      if (url.endsWith("/assignment:unlock")) return Promise.resolve(new Response(null, { status: 204 }));
+      if (url.endsWith(":claim")) {
+        const id = url.match(/sections\/([^/:]+):claim/)![1]!;
+        return json(section(id, "CLAIMED", view.viewerId));
+      }
+      if (url.endsWith(":release")) return json(section("s2", "OPEN", null));
+      if (url.endsWith(":assign")) return json(section("s3", "CLAIMED", MEMBER));
       if (url.endsWith("/revisions"))
         return json([
-          { id: "r2", authorId: MEMBER, kind: "IMPORT", createdAt: "2026-10-22T04:00:00Z", blocks: [{ id: "x2", origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: "Bản nháp cũ" }] } }] },
+          { id: "r2", authorId: MEMBER, kind: "DONE", createdAt: "2026-10-22T04:00:00Z", blocks: [{ id: "x2", origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: "Bản nháp cũ" }] } }] },
           { id: "r1", authorId: LEADER, kind: "DONE", createdAt: "2026-10-22T03:00:00Z", blocks: [] },
         ]);
-      if (url.endsWith("/peer-reviews") && method === "GET")
-        return json(view.role.teacher
-          ? { open: true, closedReason: null, closesAt: "2026-11-06T10:00:00Z", mine: [], reviewers: 1, members: 2,
-              summary: [{ accountId: LEADER, average: 4.5, outOfTen: 9, count: 2, reviews: [{ reviewerId: MEMBER, score: 5, comment: "Gánh team", updatedAt: "2026-10-22T03:00:00Z" }] },
-                        { accountId: MEMBER, average: null, outOfTen: null, count: 0, reviews: [] }] }
-          : { open: true, closedReason: null, closesAt: "2026-11-06T10:00:00Z", mine: [], summary: [], reviewers: 0, members: 2 });
-      if (url.endsWith("/peer-reviews") && method === "PUT")
-        return json({ open: true, closedReason: null, closesAt: null, mine: [{ revieweeId: LEADER, score: 4, comment: "Ổn" }], summary: [], reviewers: 0, members: 2 });
-      if (url.endsWith("/import:preview"))
-        return json({ sections: [
-          { sectionId: "s3", title: "Mục s3", version: 2, blocks: [{ id: "n1", origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: "Từ Word" }] } }], skipReason: null, replaces: false },
-          { sectionId: "s2", title: "Mục s2", version: 2, blocks: [], skipReason: "Mục đang có người giữ", replaces: false },
-        ], unmatched: ["Tiêu đề “Phụ lục”"], warnings: [] });
-      if (url.endsWith("/import:apply")) return json({ applied: 1, skipped: [] });
       if (url.endsWith("/submit"))
         return json({ documentId: "doc1", mode: "MANUAL", submittedAt: "2026-10-22T03:00:00Z", late: false, receiptHash: "sha256:abc", submittedBy: LEADER, warnings: [] });
       return json({ status: 404 }, 404);
@@ -122,85 +107,71 @@ describe("GroupWorkspacePage", () => {
     vi.useRealTimers();
   });
 
-  it("đã chốt phân công: thành viên thấy nội dung đã Xong, soạn mục mình phụ trách, không có nút nộp", async () => {
+  it("thành viên thấy nội dung đã Xong, nhận mục Mở là soạn ngay, không có nút nộp", async () => {
     const calls = backend(workspace(MEMBER));
     render(<GroupWorkspacePage documentId="doc1" />);
 
     expect(await screen.findByText("Nội dung đã xong")).toBeInTheDocument();
     expect(screen.getByText("Trưởng nhóm nộp bài")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Nộp tài liệu/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Chốt phân công|Nhập từ file/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Đánh giá chéo" })).not.toBeInTheDocument();
     const item = (title: string) => screen.getAllByRole("listitem").find((li) => within(li).queryByText(title))!;
-    const mine = item("Mục s2");
-    expect(within(mine).getByText("Đang soạn: Bạn")).toBeInTheDocument();
-    expect(within(mine).getByRole("button", { name: "Làm" })).toBeInTheDocument();
+    expect(within(item("Mục s1")).getByText("Viết bởi: An")).toBeInTheDocument();
+    expect(within(item("Mục s2")).getByText("Đang soạn: Bạn")).toBeInTheDocument();
+    expect(within(item("Mục s2")).getByRole("button", { name: "Soạn tiếp" })).toBeInTheDocument();
 
-    fireEvent.click(within(item("Mục s3")).getByRole("button", { name: "Làm" }));
+    fireEvent.click(within(item("Mục s3")).getByRole("button", { name: "Nhận mục" }));
     await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s3:claim"))).toBe(true));
     expect(await screen.findByText("Bạn đang giữ")).toBeInTheDocument();
     // Trình soạn toàn trang gắn thẳng vào body, không bị thanh trên và sidebar của khung trang che.
     expect(screen.getByRole("dialog", { name: /Soạn Mục s3/ }).parentElement).toBe(document.body);
   });
 
-  it("đã chốt phân công: bấm vào mục mình phụ trách thì mở trình soạn", async () => {
-    const calls = backend(workspace(LEADER));
+  it("mục đã Xong vẫn nhận lại để sửa (BR-U12-33)", async () => {
+    const calls = backend(workspace(MEMBER));
     render(<GroupWorkspacePage documentId="doc1" />);
+    const item = (await screen.findAllByRole("listitem")).find((li) => within(li).queryByText("Mục s1"))!;
 
-    fireEvent.click(await screen.findByRole("button", { name: /Mục s3 · Mở · Bấm để soạn/ }));
-    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s3:claim"))).toBe(true));
-    expect(await screen.findByText("Bạn đang giữ")).toBeInTheDocument();
+    fireEvent.click(within(item).getByRole("button", { name: "Sửa mục" }));
+
+    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s1:claim"))).toBe(true));
+    expect(await screen.findByRole("dialog", { name: /Soạn Mục s1/ })).toBeInTheDocument();
   });
 
-  it("mục người khác phụ trách chỉ xem, không có tiếp quản (kể cả trưởng nhóm)", async () => {
+  it("mục người khác đang soạn: thành viên chỉ xem; trưởng nhóm nhả mục sau khi xác nhận", async () => {
     const view = workspace(LEADER, { sections: [section("s2", "CLAIMED", MEMBER)] });
     const calls = backend(view);
     render(<GroupWorkspacePage documentId="doc1" />);
 
     fireEvent.click(await screen.findByRole("button", { name: /Mục s2 · Đang làm · Xem nội dung/ }));
-    expect(screen.queryByRole("button", { name: "Tiếp quản" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("dialog", { name: /Tiếp quản/ })).not.toBeInTheDocument();
-    expect(calls.some((c) => c.url.endsWith(":take-over"))).toBe(false);
+    expect(calls.some((c) => c.url.endsWith(":claim"))).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Nhả mục" }));
+    const dialog = await screen.findByRole("dialog", { name: /Nhả mục Mục s2/ });
+    expect(within(dialog).getByText(/Bản nháp chưa Xong sẽ bị bỏ/)).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Nhả mục" }));
+    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s2:release"))).toBe(true));
   });
 
-  it("đang phân công: thành viên chỉ nhận mục, chưa mở trình soạn; trưởng nhóm chưa chốt được khi còn mục trống", async () => {
-    const planning = { assignmentLockedBy: null, assignmentLockedAt: null };
-    const view = workspace(MEMBER, { ...planning, sections: [section("s1", "OPEN", null), section("s2", "OPEN", null, { assigneeId: LEADER })] });
-    const calls = backend(view);
-    const { unmount } = render(<GroupWorkspacePage documentId="doc1" />);
-
-    expect(await screen.findByText("Đang phân công")).toBeInTheDocument();
-    expect(screen.getByText(/0\/2 mục|1\/2 mục đã có người phụ trách/)).toBeInTheDocument();
+  it("trưởng nhóm giao mục: người được giao soạn ngay; mục đang có người giữ thì cảnh báo nhả trước", async () => {
+    const calls = backend(workspace(LEADER));
+    render(<GroupWorkspacePage documentId="doc1" />);
     const item = (title: string) => screen.getAllByRole("listitem").find((li) => within(li).queryByText(title))!;
-    expect(within(item("Mục s2")).getByText("Phụ trách: An")).toBeInTheDocument();
-    expect(within(item("Mục s2")).queryByRole("button", { name: "Nhận mục" })).not.toBeInTheDocument();
-    fireEvent.click(within(item("Mục s1")).getByRole("button", { name: "Nhận mục" }));
-    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s1:claim"))).toBe(true));
-    expect(screen.queryByText("Bạn đang giữ")).not.toBeInTheDocument();
-    unmount();
+    await screen.findByText("Nội dung đã xong");
 
-    backend(workspace(LEADER, { ...planning, sections: [section("s1", "OPEN", null), section("s2", "OPEN", null, { assigneeId: LEADER })] }));
-    render(<GroupWorkspacePage documentId="doc1" />);
-    expect(await screen.findByRole("button", { name: "Chốt phân công" })).toBeDisabled();
+    fireEvent.click(within(item("Mục s2")).getByRole("button", { name: "Giao mục" }));
+    const held = await screen.findByRole("dialog", { name: /Giao mục Mục s2/ });
+    expect(within(held).getByText(/Bình đang giữ mục này/)).toBeInTheDocument();
+    fireEvent.click(within(held).getByRole("button", { name: "Đóng" }));
+
+    fireEvent.click(within(item("Mục s3")).getByRole("button", { name: "Giao mục" }));
+    const dialog = await screen.findByRole("dialog", { name: /Giao mục Mục s3/ });
+    fireEvent.change(within(dialog).getByLabelText("Thành viên nhận mục"), { target: { value: MEMBER } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Giao mục" }));
+    await waitFor(() => expect(calls.find((c) => c.url.endsWith("/sections/s3:assign"))?.body).toEqual({ assigneeId: MEMBER, replaceHolder: false }));
   });
 
-  it("trưởng nhóm chốt phân công khi mọi mục có người phụ trách, mở chốt phải xác nhận", async () => {
-    const planning = { assignmentLockedBy: null, assignmentLockedAt: null };
-    const calls = backend(workspace(LEADER, { ...planning, sections: [section("s1", "OPEN", null, { assigneeId: MEMBER })] }));
-    const { unmount } = render(<GroupWorkspacePage documentId="doc1" />);
-    fireEvent.click(await screen.findByRole("button", { name: "Chốt phân công" }));
-    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/assignment:lock"))).toBe(true));
-    unmount();
-
-    const after = backend(workspace(LEADER));
-    render(<GroupWorkspacePage documentId="doc1" />);
-    expect(await screen.findByText("Đã chốt phân công")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Giao mục" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Mở chốt" }));
-    const dialog = await screen.findByRole("dialog", { name: /Mở chốt phân công/ });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Mở chốt" }));
-    await waitFor(() => expect(after.some((c) => c.url.endsWith("/assignment:unlock"))).toBe(true));
-  });
-
-  it("lịch sử mục hiện từng bản với loại và tác giả", async () => {
+  it("lịch sử mục chỉ xem: hiện từng bản với tác giả, không có khôi phục", async () => {
     backend(workspace(LEADER));
     render(<GroupWorkspacePage documentId="doc1" />);
     const item = (await screen.findAllByRole("listitem")).find((li) => within(li).queryByText("Mục s2"))!;
@@ -208,59 +179,9 @@ describe("GroupWorkspacePage", () => {
     fireEvent.click(within(item).getByRole("button", { name: "Lịch sử" }));
 
     const dialog = await screen.findByRole("dialog", { name: /Lịch sử · Mục s2/ });
-    expect(await within(dialog).findByText(/Nhập từ file · Bình/)).toBeInTheDocument();
+    expect(await within(dialog).findByText(/Xong · Bình/)).toBeInTheDocument();
     expect(within(dialog).getByText("Bản nháp cũ")).toBeInTheDocument();
     expect(within(dialog).queryByRole("button", { name: /Dùng bản này/ })).not.toBeInTheDocument();
-  });
-
-  it("thành viên chấm đánh giá chéo cho thành viên khác", async () => {
-    const calls = backend(workspace(MEMBER));
-    render(<GroupWorkspacePage documentId="doc1" />);
-    fireEvent.click(await screen.findByRole("tab", { name: "Đánh giá chéo" }));
-
-    const save = await screen.findByRole("button", { name: "Lưu đánh giá" });
-    expect(save).toBeDisabled();
-    fireEvent.change(screen.getByLabelText("Điểm cho An"), { target: { value: "4" } });
-    fireEvent.change(screen.getByLabelText("Nhận xét cho An"), { target: { value: "Ổn" } });
-    fireEvent.click(save);
-
-    expect(await screen.findByText("Đã lưu đánh giá.")).toBeInTheDocument();
-    expect(calls.find((c) => c.method === "PUT" && c.url.endsWith("/peer-reviews"))?.body).toEqual({
-      reviews: [{ revieweeId: LEADER, score: 4, comment: "Ổn" }],
-    });
-  });
-
-  it("giảng viên xem trung bình đánh giá chéo theo thang 10", async () => {
-    backend(workspace("teacher", { role: { member: false, leader: false, teacher: true } }));
-    render(<GroupWorkspacePage documentId="doc1" />);
-    fireEvent.click(await screen.findByRole("tab", { name: "Đánh giá chéo" }));
-
-    expect(await screen.findByText("1/2 thành viên đã đánh giá", { exact: false })).toBeInTheDocument();
-    expect(screen.getByText("4.5 (2 người)")).toBeInTheDocument();
-    expect(screen.getByText("9.0")).toBeInTheDocument();
-    expect(screen.getByText(/Gánh team/)).toBeInTheDocument();
-  });
-
-  it("trưởng nhóm nhập file: xem trước theo mục, bỏ qua mục đang giữ, áp dụng mục đã chọn", async () => {
-    const calls = backend(workspace(LEADER));
-    render(<GroupWorkspacePage documentId="doc1" />);
-    fireEvent.click(await screen.findByRole("button", { name: "Nhập từ file" }));
-    const dialog = await screen.findByRole("dialog", { name: /Nhập tài liệu nhóm từ file/ });
-
-    fireEvent.change(within(dialog).getByLabelText("Chọn tệp DOCX"), {
-      target: { files: [new File(["x"], "nhom.docx", { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" })] },
-    });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Xem trước" }));
-
-    expect(await within(dialog).findByText("Mục đang có người giữ")).toBeInTheDocument();
-    expect(within(dialog).getByText("Tiêu đề “Phụ lục”")).toBeInTheDocument();
-    expect(within(dialog).getByLabelText("Nhập vào Mục s2")).toBeDisabled();
-    fireEvent.click(within(dialog).getByRole("button", { name: "Nhập vào 1 mục" }));
-
-    expect(await screen.findByText("Đã nhập vào 1 mục.")).toBeInTheDocument();
-    expect(calls.find((c) => c.url.endsWith("/import:apply"))?.body).toEqual({
-      sections: [{ sectionId: "s3", version: 2, blocks: [{ id: "n1", origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: "Từ Word" }] } }] }],
-    });
   });
 
   it("giảng viên bấm mục không nhận được", async () => {
@@ -406,32 +327,6 @@ describe("GroupWorkspacePage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Mục vừa được thay đổi ở nơi khác");
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByText("Đoạn chưa lưu")).toBeInTheDocument();
-  });
-
-  it("người giữ khôi phục một bản lịch sử vào bản nháp", async () => {
-    const calls: { url: string; method: string; body?: unknown }[] = [];
-    vi.stubGlobal("fetch", vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-      calls.push({ url, method: init?.method ?? "GET", body: typeof init?.body === "string" ? JSON.parse(init.body) : undefined });
-      if (url.endsWith("/revisions"))
-        return json([{ id: "r1", authorId: LEADER, kind: "DONE", createdAt: "2026-10-22T03:00:00Z",
-          blocks: [{ id: "old", origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: "Bản cũ của An" }] } }] }]);
-      if (url.endsWith(":restore"))
-        return json(section("s2", "CLAIMED", MEMBER, { version: 3, draftSavedAt: "2026-10-22T05:00:00Z",
-          draftBlocks: [{ id: "old", origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: "Bản cũ của An" }] } }] }));
-      return json({});
-    }));
-    const shared = { blocks: [{ id: "s2", origin: "TEACHER" as const, type: "HEADING" as const, content: { style: "H1" as const, text: "Mục s2" } }] };
-    render(<SectionEditorDialog documentId="doc1" section={section("s2", "CLAIMED", MEMBER)} shared={shared} diagramEnabled={false}
-      members={[{ accountId: LEADER, name: "An", leader: true }]} viewerId={MEMBER} onClose={() => undefined} onChanged={() => undefined} />);
-
-    fireEvent.click(screen.getByRole("button", { name: "Lịch sử" }));
-    const dialog = await screen.findByRole("dialog", { name: /Lịch sử · Mục s2/ });
-    fireEvent.click(await within(dialog).findByRole("button", { name: "Dùng bản này làm bản nháp" }));
-
-    await waitFor(() => expect(screen.queryByRole("dialog", { name: /Lịch sử/ })).not.toBeInTheDocument());
-    expect(calls.find((c) => c.url.endsWith(":restore"))?.body).toEqual({ revisionId: "r1", version: 2 });
-    expect(screen.getByText("Bản cũ của An")).toBeInTheDocument();
   });
 
   it("partOf lấy heading và hướng dẫn của phần; không có heading thì dựng theo tên mục", () => {

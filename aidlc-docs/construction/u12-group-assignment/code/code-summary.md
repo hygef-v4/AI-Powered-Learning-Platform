@@ -202,3 +202,14 @@ Thay chốt từng mục. Nhánh `fix/u12-follow-frozen-br`.
 - **Backend:** `SectionRules` theo giai đoạn (`canClaim/canAssign/canRelease/canEdit` nhận `working`); `GroupSectionService.claim` (phân công: nhận làm người phụ trách; đã chốt: người phụ trách bắt đầu soạn), `assign` chỉ khi chưa chốt, `release`, `lockAssignment` (đủ người phụ trách mới chốt), `unlockAssignment`; API `POST /group-docs/{id}/assignment:lock|:unlock`; `WorkspaceView.assignmentLockedBy/At`, `SectionView.assigneeId`; người rời nhóm thôi phụ trách (`clearAssignee`).
 - **Frontend:** thanh "Đang phân công / Đã chốt phân công" với nút Chốt phân công (khóa khi còn mục trống) và Mở chốt (hỏi xác nhận); mục hiện "Phụ trách / Đang soạn / Chưa có người nhận"; nút Nhận mục, Bỏ nhận, Bỏ giao, Giao mục (khi phân công), Làm (khi đã chốt).
 - **Test:** backend 1749/1749; frontend 735/735 (5 test chậm của unit khác chạy lại đạt); e2e lớp SE-TEST15: U12 59/59, U12b 36/36, u12c 32/32, notify 3/3; U02 16/16, U06 24/24.
+
+## Tối giản theo BR đã chốt (2026-11-08)
+
+Người dùng chọn giữ luồng bài nhóm tối giản: sinh viên làm bài nhóm, giảng viên chấm, không thêm luồng phức tạp. Bỏ FB-U12-01..04 (ngoài BR), quay về BR-U12-33, 34, 36. Nhánh `refactor/u12-simplify`. Không đổi schema: cột và bảng của các tính năng đã bỏ còn trong CSDL (migration đã chạy), code không dùng.
+
+- **Bỏ:** phân công rồi chốt (`assignment:lock/unlock`, `AssignmentLock`, `GroupSection.assigneeId`, các mã `ASSIGNMENT_*`, `SECTION_ASSIGNED_TO_OTHER`); khôi phục bản lịch sử (`:restore`); nhập DOCX/Draw.io cho cả tài liệu (`import:preview`, `import:apply`); đánh giá chéo (`GroupPeerReviewService`, `GroupPeerReviewRepository`, `PeerReview`, `GET/PUT /peer-reviews`). `GroupDocCollaborationController` bỏ; xem trước DOCX vào mục chuyển sang `GroupDocController`.
+- **Giữ:** nhận mục Mở hoặc Xong là soạn ngay; trưởng nhóm giao mục (mục đang giữ thì nhả trước khi `replaceHolder`); người giữ, trưởng nhóm, giảng viên nhả mục; lịch sử mục chỉ xem; nhập DOCX vào mục đang soạn; nộp, nộp lại, tự nộp, Bản nộp.
+- **Bổ sung lại:** `GroupProgressCard` trên trang Sinh viên của giảng viên (BR-U12-52): từng nhóm, trưởng nhóm, mục Xong, trạng thái nộp, mục đang soạn, link Xem tài liệu. Bảng tiến độ cũ (`GroupProgressView`) đã bị bỏ trong commit giao diện `da0be0d8`.
+- **Frontend:** `GroupWorkspacePage` còn 2 thẻ (Tài liệu, Bản nộp); mỗi mục có Nhận mục / Sửa mục / Soạn tiếp, Giao mục (trưởng nhóm), Nhả mục, Lịch sử. `SectionHistoryDialog.tsx` chỉ xem; bỏ `CollaborationPanels.tsx`.
+- **Test:** backend `GroupSectionServiceTest`, `GroupSectionTest`, `GroupRepositoriesIntegrationTest`, `GroupControllersTest` trả về bản theo BR và thêm ca nhận lại mục Xong, lịch sử, ảnh; `GroupDocImportServiceTest` mới; bỏ `GroupDocCollaborationServicesTest`. Frontend `GroupWorkspacePage.test.tsx` viết lại theo luồng mới, `GroupProgressCard.test.tsx` mới. E2E `u12`, `u12b`, `u12c` theo luồng mới; `u12c` kiểm các API đã bỏ trả 404.
+

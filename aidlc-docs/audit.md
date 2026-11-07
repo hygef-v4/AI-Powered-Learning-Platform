@@ -10878,3 +10878,24 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Code Generation (lint fix, U09), branch `fix/u09-ai-grading-lint`.
 
 ---
+
+## U12 simplification — back to the frozen business rules — 2026-11-08
+
+**Timestamp**: 2026-11-08T03:30:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> xem lại toàn bộ, tôi muốn u12 tối giản và dễ hiểu nhất nhưng vẫn đảm bảo luồng nghiệp vụ chắc là sinh viên làm bài nhóm, và giảng viên chấm bài nhóm thì nên sửa thế nào, không cần thêm các lường phức tạp
+
+> nhưng nếu không chốt thì nếu 1 người nhận rồi bắt đầu làm là phần đấy sẽ không thể sửa nữa à
+
+> như thế nào là oke nhất'
+
+> oke làm theo hướng 1 rồi gộp vào staging luôn
+
+**AI Response**: Recommended option 1 (drop the feedback additions, follow BR-U12-33, 34, 36, keep section history read-only); user approved and asked to merge into staging. Removed FB-U12-01 assignment phase (`assignment:lock/unlock`, `AssignmentLock`, `assigneeId`, `ASSIGNMENT_*` codes), FB-U12-02 restore, FB-U12-03 whole-document import (section DOCX import kept, moved to `GroupDocController`), FB-U12-04 peer review (service, repository, endpoints, tab). Claiming an OPEN or DONE section starts editing at once; leader assigns; holder, leader or teacher releases. Re-added the teacher progress card (BR-U12-52) lost in UI commit `da0be0d8`. No schema change (unused columns/table stay). Tests: backend `mvn -B verify` 1,831/1,831; frontend 805/805, lint 0 errors (24 existing warnings), typecheck clean; e2e on fresh class SE-TEST17: U12 58/58, U12b 35/35, U12c 19/19. Docs: FB file (FB-U12-01..04 moved to "Đã bỏ"), U12 code summary, user guide, API inventory.
+
+**Context**: Code Generation (U12 refactor), branch `refactor/u12-simplify`.
+
+---
