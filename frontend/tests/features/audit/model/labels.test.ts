@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ACTION_LABELS, actionLabel, objectTypeLabel } from "@/features/audit/model/labels";
 
 describe("nhãn nhật ký", () => {
-  it.each(["QUIZ_PUBLISHED", "GROUP_DOC_IMPORTED", "GROUP_PEER_REVIEW_SAVED", "LOGIN_FAILED", "CLASS_CREATED", "MATERIAL_MODULE_CREATED"])(
+  it.each(["QUIZ_PUBLISHED", "GROUP_DOC_IMPORTED", "GROUP_PEER_REVIEW_SAVED", "GROUP_ASSIGNMENT_LOCKED", "GROUP_ASSIGNMENT_UNLOCKED", "LOGIN_FAILED", "CLASS_CREATED", "MATERIAL_MODULE_CREATED"])(
     "hành động %s có nhãn tiếng Việt", (code) => {
       expect(actionLabel(code)).not.toBe(code);
     });

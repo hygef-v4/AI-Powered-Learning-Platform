@@ -137,6 +137,8 @@ describe("GroupWorkspacePage", () => {
     fireEvent.click(within(item("Mục s3")).getByRole("button", { name: "Làm" }));
     await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s3:claim"))).toBe(true));
     expect(await screen.findByText("Bạn đang giữ")).toBeInTheDocument();
+    // Trình soạn toàn trang gắn thẳng vào body, không bị thanh trên và sidebar của khung trang che.
+    expect(screen.getByRole("dialog", { name: /Soạn Mục s3/ }).parentElement).toBe(document.body);
   });
 
   it("đã chốt phân công: bấm vào mục mình phụ trách thì mở trình soạn", async () => {
@@ -308,6 +310,7 @@ describe("GroupWorkspacePage", () => {
     act(() => source!.onmessage!({ data: JSON.stringify({ type: "document.auto-submitted" }) }));
     const lock = await screen.findByRole("alertdialog", { name: "Đang nộp" });
     expect(lock).toHaveTextContent(/Đã hết hạn nộp lúc 30\/10\/2026 17:00/);
+    expect(lock.parentElement).toBe(document.body);
     await act(async () => resolveReload!());
     await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
   });

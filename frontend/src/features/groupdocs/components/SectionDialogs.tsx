@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { formatDateTime } from "@/features/groups/model/format";
 import { ApiError } from "@/shared/api/client";
 import { uploadFile } from "@/features/files/api";
@@ -117,8 +118,9 @@ export function SectionEditorDialog({
     }
   };
 
-  return (
-    <div role="dialog" aria-modal="true" aria-label={`Soạn ${section.title}`} className="fixed inset-0 z-50 flex flex-col bg-surface">
+  // Portal ra body: render tại chỗ thì lớp phủ bị kẹt dưới thanh trên và sidebar của khung trang.
+  const editor = (
+    <div role="dialog" aria-modal="true" aria-label={`Soạn ${section.title}`} className="fixed inset-0 z-[90] flex flex-col bg-surface">
       <div className="flex items-center gap-3 border-b border-line px-6 py-3">
         <h2 className="text-[16px] font-bold text-ink">{section.title}</h2>
         <Pill tone="info">Bạn đang giữ</Pill>
@@ -191,6 +193,7 @@ export function SectionEditorDialog({
       )}
     </div>
   );
+  return typeof document === "undefined" ? editor : createPortal(editor, document.body);
 }
 
 /** Trưởng nhóm giao mục (s18f, BR-U12-33): mục đang do người khác giữ thì cảnh báo nhả trước. */
