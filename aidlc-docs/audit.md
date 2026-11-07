@@ -10822,3 +10822,10 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Explicit local commit authorization supersedes the earlier no-automatic-commit scope. Preserve current audit/history content; exclude ignored scratch scripts/logs/generated artifacts. No full application test/build rerun for documentation, push, merge, deployment, provider/VPS call or restart. Prior test results remain dated evidence rather than fresh post-merge acceptance.
 
 ---
+
+## Commit reviewed documentation changes - 2026-11-07
+**Requester**: Quang Hung
+**User Request**: "giúp tôi commit change"
+**AI Response**: Prepared the sixteen pending documentation files from this session for one documentation commit, covering AI-DLC business-flow diagrams, SRS/SDS review notes, Report 3 conceptual model, Report 4 architecture/class/sequence sources and semantic specs, the completed Report 4 plan and audit trail. Corrected twelve mojibake arrow/dash tokens in the diagram README before staging.
+**Verification**: Parsed all changed Draw.io XML and semantic JSON. Re-ran source-signature checks for 160 class signatures and 122 displayed Java calls, confirmed Authentication preservation and cross-diagram coverage. Class and sequence geometry validators have zero errors/warnings. git diff --check passed aside from Git's existing LF-to-CRLF normalization notice for this audit file. All changed files are under docs or aidlc-docs.
+**Context**: Documentation commit only. No application test/build rerun for this commit request. No push requested.
