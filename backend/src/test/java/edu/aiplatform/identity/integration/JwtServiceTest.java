@@ -58,7 +58,7 @@ class JwtServiceTest {
 
     private static IdentityProperties withSecret(String secret) {
         IdentityProperties p = IdentityTestData.properties();
-        return new IdentityProperties(p.allowedEmailDomains(), secret, p.accessTtl(), p.refreshIdleTtl(),
+        return new IdentityProperties(secret, p.accessTtl(), p.refreshIdleTtl(),
                 p.refreshMaxTtl(), p.bcryptCost(), p.otpTtl(), p.otpMaxAttempts(), p.loginLockThreshold(),
                 p.loginLockDuration(), p.cookieSecure(), p.mailFrom(), p.bootstrapAdminEmail(),
                 p.bootstrapAdminName(), p.rateLimit());

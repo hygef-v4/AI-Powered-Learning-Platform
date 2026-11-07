@@ -41,14 +41,14 @@ class AccountImportServiceTest {
     private final List<AuditEvent> audits = new ArrayList<>();
     private final IAudit audit = audits::add;
     private final AccountImportService service = new AccountImportService(accounts, authorization, audit,
-            TransactionOperations.withoutTransaction(), IdentityTestData.properties(),
+            TransactionOperations.withoutTransaction(),
             Clock.fixed(NOW, ZoneOffset.UTC));
     private final Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
 
     private static final String CSV = """
             ﻿email,display_name,role
             sv01@fpt.edu.vn,"Nguyễn Văn A, K17",student
-            sv02@gmail.com,Ngoài trường,STUDENT
+            sv02@,Sai định dạng,STUDENT
             sv01@fpt.edu.vn,Trùng trong tệp,STUDENT
             gv01@fpt.edu.vn,Đã có,TEACHER
             ad01@fpt.edu.vn,Admin,ADMIN
@@ -73,7 +73,7 @@ class AccountImportServiceTest {
         assertThat(result.rows()).extracting(RowResult::rowNumber, RowResult::outcome, RowResult::reason)
                 .containsExactly(
                         org.assertj.core.groups.Tuple.tuple(2L, Outcome.VALID, null),
-                        org.assertj.core.groups.Tuple.tuple(3L, Outcome.REJECTED, "EMAIL_DOMAIN_NOT_ALLOWED"),
+                        org.assertj.core.groups.Tuple.tuple(3L, Outcome.REJECTED, "INVALID_EMAIL"),
                         org.assertj.core.groups.Tuple.tuple(4L, Outcome.REJECTED, "DUPLICATE_IN_FILE"),
                         org.assertj.core.groups.Tuple.tuple(5L, Outcome.REJECTED, "EMAIL_EXISTS"),
                         org.assertj.core.groups.Tuple.tuple(6L, Outcome.REJECTED, "INVALID_ROLE"),
@@ -83,6 +83,21 @@ class AccountImportServiceTest {
         assertThat(result.validCount()).isEqualTo(1);
         verify(accounts, never()).insert(any());
         assertThat(audits).isEmpty();
+    }
+
+    /** BR-U01-03: không giới hạn tên miền, chỉ kiểm định dạng. */
+    @Test
+    void acceptsEmailFromAnyDomain() {
+        String csv = """
+                email,display_name,role
+                sv@gmail.com,Gmail,STUDENT
+                gv@school.example.org,Trường khác,TEACHER
+                """;
+
+        AccountImportService.ImportResult result = service.validate(admin, bytes(csv));
+
+        assertThat(result.rows()).extracting(RowResult::outcome).containsOnly(Outcome.VALID);
+        assertThat(result.validCount()).isEqualTo(2);
     }
 
     /** Hai lần xác nhận cùng tệp chạy song song: bên ghi sau đụng unique key, trả 409 thay vì 500. */

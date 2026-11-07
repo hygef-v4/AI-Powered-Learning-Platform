@@ -6,7 +6,6 @@ import edu.aiplatform.identity.contract.Role;
 import edu.aiplatform.identity.model.Account;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 /** Dữ liệu dùng chung cho test U01. */
@@ -19,7 +18,7 @@ public final class IdentityTestData {
     }
 
     public static IdentityProperties properties() {
-        return new IdentityProperties(List.of("fpt.edu.vn"), SECRET, Duration.ofMinutes(15), Duration.ofHours(2),
+        return new IdentityProperties(SECRET, Duration.ofMinutes(15), Duration.ofHours(2),
                 Duration.ofDays(7), 4, Duration.ofMinutes(10), 5, 5, Duration.ofMinutes(15), true,
                 "no-reply@fpt.edu.vn", "", "Quản trị viên",
                 new IdentityProperties.RateLimit(5, Duration.ofSeconds(60), 20, 30, Duration.ofMinutes(5), 5,

@@ -17,7 +17,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 |---|---|---|
 | BR-U01-01 | Không có đăng ký công khai. Chỉ admin tạo hoặc nhập tài khoản. | US-IAM-001, FR-001 |
 | BR-U01-02 | Email được chuẩn hóa (cắt khoảng trắng, chữ thường) trước mọi so sánh. | US-IAM-007 |
-| BR-U01-03 | Email phải duy nhất và thuộc tên miền trong cấu hình triển khai `U01_ALLOWED_EMAIL_DOMAINS`; sai thì từ chối tạo. | US-IAM-001 S2, US-IAM-007 |
+| BR-U01-03 | Email phải duy nhất, đúng định dạng và dài tối đa 254 ký tự; thuộc tên miền nào cũng được (2026-11-06 bỏ giới hạn `U01_ALLOWED_EMAIL_DOMAINS`). Sai thì từ chối tạo. | US-IAM-001 S2, US-IAM-007 |
 | BR-U01-04 | Email là định danh đăng nhập, không ai sửa được sau khi tạo, kể cả admin. | UC 06, 07, 09, 11 |
 
 ## 2. Kích hoạt

@@ -386,7 +386,7 @@ Daily email priority when the cap is reached: BACKUP_FAILED > DEADLINE_REMINDER 
 | No. | Lane | Type | Activity | Description | UC |
 |---|---|---|---|---|---|
 | 1 | Administrator | Human | Add account or import CSV | The Administrator adds one account (email, display name, role) or imports a CSV of up to 1,000 rows. ADMIN accounts are created one at a time only. There is no public sign-up. | 08, 09 |
-| 2 | System | Automatic check | Data valid? | The System normalises emails and checks the allowed email domain, unique email and a valid role; for a CSV it checks every row first and shows a result per row. The Administrator corrects the input or confirms only the valid rows (back to 1). | 09 |
+| 2 | System | Automatic check | Data valid? | The System normalises emails and checks the email format (any domain), unique email and a valid role; for a CSV it checks every row first and shows a result per row. The Administrator corrects the input or confirms only the valid rows (back to 1). | 09 |
 | 3 | System | Automated | Create PENDING accounts | The System creates the accounts as PENDING without a password, sends no email and records audit. The Administrator tells users to activate their account through the school's usual channel. | 09 |
 | 4 | User | Human | Request activation code | The user opens "Activate account for the first time" and enters their school email. | 01 |
 | 5 | System | Automated | Send OTP if PENDING | The System always shows the same neutral response; only for a PENDING account, and within rate limits, it creates a 6-digit OTP valid for 10 minutes (stored hashed) and queues the email. | 01 |

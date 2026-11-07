@@ -866,7 +866,7 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 **Current UC trace**: UC 01. Source: [current UC table](../../../docs/usecase_table.md).
 
 
-**Story**: Là người học hoặc giảng viên, tôi muốn kích hoạt tài khoản gắn với email trường để bắt đầu sử dụng nền tảng mà không cần tự đăng ký.
+**Story**: Là người học hoặc giảng viên, tôi muốn kích hoạt tài khoản gắn với email đăng nhập do trường cấp để bắt đầu sử dụng nền tảng mà không cần tự đăng ký.
 
 **Truy vết**: FR-001, FR-011, NFR-002, SEC-001, SEC-002, SEC-003, SEC-006.
 
@@ -874,8 +874,8 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 
 #### Scenario 1 - Kích hoạt thành công
 
-- **Given** tài khoản đã được cấp/import ở trạng thái chờ kích hoạt với email thuộc miền của trường
-- **When** ở lần đăng nhập đầu người dùng nhập email trường, yêu cầu kích hoạt, nhập OTP hệ thống gửi qua email và sau khi OTP được xác minh thì đặt mật khẩu đạt chính sách
+- **Given** tài khoản đã được cấp/import ở trạng thái chờ kích hoạt (email thuộc tên miền nào cũng được)
+- **When** ở lần đăng nhập đầu người dùng nhập email đăng nhập, yêu cầu kích hoạt, nhập OTP hệ thống gửi qua email và sau khi OTP được xác minh thì đặt mật khẩu đạt chính sách
 - **Then** tài khoản được kích hoạt, OTP bị vô hiệu và người dùng được tự đăng nhập, vào thẳng dashboard theo vai trò
 
 #### Scenario 1a - OTP sai
@@ -884,9 +884,9 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 - **When** người dùng nhập sai hoặc mã đã hết hạn
 - **Then** hệ thống báo "mã không hợp lệ hoặc đã hết hạn", không mở bước nhập mật khẩu và trừ lượt thử
 
-#### Scenario 2 - Email chưa được cấp hoặc ngoài miền trường
+#### Scenario 2 - Email chưa được cấp hoặc sai định dạng
 
-- **Given** email chưa có tài khoản chờ kích hoạt hoặc ngoài allowlist miền trường
+- **Given** email chưa có tài khoản chờ kích hoạt hoặc sai định dạng
 - **When** người dùng yêu cầu kích hoạt
 - **Then** hệ thống trả phản hồi trung tính giống trường hợp hợp lệ, không gửi email, không tạo tài khoản công khai và hướng dẫn liên hệ quản trị nếu không nhận được mã
 
