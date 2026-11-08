@@ -33,7 +33,7 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
     if (Object.keys(next).length) return;
     setBusy(true); setError("");
     try {
-      await onSubmit({ subjectId: subject.id, code: values.code.trim(), name: values.code.trim(), term: "", description: values.description.trim(), teacherId: teacher?.id ?? null });
+      await onSubmit({ subjectId: subject.id, code: values.code.trim(), name: values.code.trim(), description: values.description.trim(), teacherId: teacher?.id ?? null });
       showToast("Đã tạo lớp");
       onClose();
     } catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }

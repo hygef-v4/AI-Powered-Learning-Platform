@@ -11,6 +11,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 Thiết kế độc lập công nghệ.
 
+**Quyết định 2026-11-07 — D-U04-04:** Bỏ học kỳ lớp khỏi UI, request/response, domain và dữ liệu hiện hành; xem [quyết định đã duyệt](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Migration mới `V20261107_2200__remove_class_term.sql` xóa cột cũ khi áp dụng; không sửa migration hoặc bằng chứng lịch sử. Các quy tắc khác giữ nguyên phạm vi đã chốt.
+
 ## 1. Tổng quan
 
 | Entity | Loại | Lưu ở | Unit ghi |
@@ -29,7 +31,6 @@ U05 không sở hữu: tài khoản và role (U01), môn và Chủ nhiệm môn 
 | `code` | chuỗi ≤ 30 | Duy nhất trong môn; không đổi |
 | `name` | chuỗi ≤ 200 | Bắt buộc |
 | `description` | chuỗi ≤ 2.000 | Tùy chọn |
-| `term` | chuỗi ≤ 20 | Học kỳ, ví dụ `2026-1` |
 | `status` | enum | `DRAFT`, `OPEN`, `ARCHIVED` |
 | `teacherId` | UUID | FK `accounts`; `TEACHER` hoặc `SUBJECT_MANAGER`; nullable, kể cả khi OPEN; nếu có phải ACTIVE/đúng role |
 | `showGradeDistribution` (cột lịch sử `course_classes.show_grade_distribution`) | bool | Giữ trong model/DTO/ClassRef để tương thích; dormant, không dùng quyết định phân bố của U09 |

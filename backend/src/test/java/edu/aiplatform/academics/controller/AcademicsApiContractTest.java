@@ -59,13 +59,13 @@ class AcademicsApiContractTest {
 
     private ClassView course() {
         return new ClassView(classId, new Subject(subjectId, "CS101", "Computing"), "C01", "Morning class",
-                "Description", "2026-1", ClassStatus.OPEN, teacher, 2, 1, timestamp, true, 7);
+                "Description", ClassStatus.OPEN, teacher, 2, 1, timestamp, true, 7);
     }
 
-    private ClassView mutationResult(String name, String description, String term, ClassStatus status,
+    private ClassView mutationResult(String name, String description, ClassStatus status,
                                      Person assignedTeacher, boolean distribution, long version) {
         return new ClassView(classId, new Subject(subjectId, "CS101", "Computing"), "C01", name,
-                description, term, status, assignedTeacher, 2, 1, timestamp, distribution, version);
+                description, status, assignedTeacher, 2, 1, timestamp, distribution, version);
     }
 
     private Student student() {
@@ -84,6 +84,7 @@ class AcademicsApiContractTest {
         if (requestedSubject != null) request.param("subjectId", requestedSubject.toString());
         mvc.perform(request).andExpect(status().isOk()).andExpect(jsonPath("$[0].id").value(classId.toString()))
                 .andExpect(jsonPath("$[0].subject.code").value("CS101"))
+                .andExpect(jsonPath("$[0].term").doesNotHaveJsonPath())
                 .andExpect(jsonPath("$[0].teacher.email").value("teacher@example.test"))
                 .andExpect(jsonPath("$[0].activeStudentCount").value(2))
                 .andExpect(jsonPath("$[0].showGradeDistribution").value(true));
@@ -98,6 +99,7 @@ class AcademicsApiContractTest {
         mvc.perform(get("/api/v1/" + route + "/classes/" + classId))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(classId.toString()))
                 .andExpect(jsonPath("$.version").value(7)).andExpect(jsonPath("$.status").value("OPEN"))
+                .andExpect(jsonPath("$.term").doesNotHaveJsonPath())
                 .andExpect(jsonPath("$.removedStudentCount").value(1));
         verify(academicsService).loadClass(serverActor, audience, classId);
         verifyNoMoreInteractions(academicsService);
@@ -157,31 +159,46 @@ class AcademicsApiContractTest {
         verifyNoInteractions(academicsService);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"create", "edit"})
+    void removedSemesterInputIsRejected(String operation) throws Exception {
+        var request = operation.equals("create")
+                ? post("/api/v1/manager/classes").content("{\"subjectId\":\"" + subjectId
+                        + "\",\"code\":\"C01\",\"name\":\"Class\",\"term\":\"2026-1\"}")
+                : patch("/api/v1/manager/classes/" + classId)
+                        .content("{\"name\":\"Class\",\"term\":\"2026-1\",\"version\":0}");
+        mvc.perform(request.contentType("application/json"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+        verifyNoInteractions(academicsService);
+    }
+
     @Test void createReturns201AndMapsOptionalTeacher() throws Exception {
-        when(academicsService.createClass(serverActor, subjectId, "C01", "Morning class", "Description", "2026-1", accountId))
-                .thenReturn(mutationResult("Morning class", "Description", "2026-1", ClassStatus.DRAFT, teacher, false, 0));
-        String body = "{\"subjectId\":\"" + subjectId + "\",\"code\":\"C01\",\"name\":\"Morning class\",\"description\":\"Description\",\"term\":\"2026-1\",\"teacherId\":\"" + accountId + "\"}";
+        when(academicsService.createClass(serverActor, subjectId, "C01", "Morning class", "Description", accountId))
+                .thenReturn(mutationResult("Morning class", "Description", ClassStatus.DRAFT, teacher, false, 0));
+        String body = "{\"subjectId\":\"" + subjectId + "\",\"code\":\"C01\",\"name\":\"Morning class\",\"description\":\"Description\",\"teacherId\":\"" + accountId + "\"}";
         mvc.perform(post("/api/v1/manager/classes").contentType("application/json").content(body))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.version").value(0))
+                .andExpect(jsonPath("$.term").doesNotHaveJsonPath())
                 .andExpect(jsonPath("$.status").value("DRAFT"))
                 .andExpect(jsonPath("$.teacher.id").value(accountId.toString()));
-        verify(academicsService).createClass(serverActor, subjectId, "C01", "Morning class", "Description", "2026-1", accountId);
+        verify(academicsService).createClass(serverActor, subjectId, "C01", "Morning class", "Description", accountId);
         verifyNoMoreInteractions(academicsService);
     }
 
     @Test void classMutationsForwardVersionAndTypedValues() throws Exception {
-        when(academicsService.updateClassInfo(serverActor, classId, "Renamed", "Updated", "2027-1", 6))
-                .thenReturn(mutationResult("Renamed", "Updated", "2027-1", ClassStatus.OPEN, teacher, true, 7));
+        when(academicsService.updateClassInfo(serverActor, classId, "Renamed", "Updated", 6))
+                .thenReturn(mutationResult("Renamed", "Updated", ClassStatus.OPEN, teacher, true, 7));
         when(academicsService.assignClassTeacher(serverActor, classId, null, 7))
-                .thenReturn(mutationResult("Renamed", "Updated", "2027-1", ClassStatus.OPEN, null, true, 8));
+                .thenReturn(mutationResult("Renamed", "Updated", ClassStatus.OPEN, null, true, 8));
         when(academicsService.changeClassStatus(serverActor, classId, ClassStatus.ARCHIVED, 9))
-                .thenReturn(mutationResult("Renamed", "Updated", "2027-1", ClassStatus.ARCHIVED, null, false, 10));
+                .thenReturn(mutationResult("Renamed", "Updated", ClassStatus.ARCHIVED, null, false, 10));
         mvc.perform(patch("/api/v1/manager/classes/" + classId).contentType("application/json")
-                .content("{\"name\":\"Renamed\",\"description\":\"Updated\",\"term\":\"2027-1\",\"version\":6}"))
+                .content("{\"name\":\"Renamed\",\"description\":\"Updated\",\"version\":6}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(classId.toString()))
                 .andExpect(jsonPath("$.name").value("Renamed"))
                 .andExpect(jsonPath("$.description").value("Updated"))
-                .andExpect(jsonPath("$.term").value("2027-1"))
+                .andExpect(jsonPath("$.term").doesNotHaveJsonPath())
                 .andExpect(jsonPath("$.version").value(7));
         mvc.perform(put("/api/v1/manager/classes/" + classId + "/teacher").contentType("application/json")
                 .content("{\"teacherId\":null,\"version\":7}"))
@@ -192,7 +209,7 @@ class AcademicsApiContractTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.code").value("C01"))
                 .andExpect(jsonPath("$.status").value("ARCHIVED"))
                 .andExpect(jsonPath("$.version").value(10));
-        verify(academicsService).updateClassInfo(serverActor, classId, "Renamed", "Updated", "2027-1", 6);
+        verify(academicsService).updateClassInfo(serverActor, classId, "Renamed", "Updated", 6);
         verify(academicsService).assignClassTeacher(serverActor, classId, null, 7);
         verify(academicsService).changeClassStatus(serverActor, classId, ClassStatus.ARCHIVED, 9);
         verifyNoMoreInteractions(academicsService);

@@ -169,7 +169,7 @@ class MaterialAccessPolicyTest {
         when(classes.getClassRef(classId))
                 .thenReturn(Optional.of(courseClass(ClassStatus.ARCHIVED, account)));
         policy.read(
-                new Actor(account, Role.TEACHER), material(false, Material.Status.ACTIVE), null);
+                new Actor(account, Role.TEACHER), material(false, Material.Status.ARCHIVED), null);
     }
 
     @Test
@@ -182,6 +182,40 @@ class MaterialAccessPolicyTest {
         assertThatThrownBy(() -> policy.write(actor, m))
                 .isInstanceOfSatisfying(
                         ApiException.class, e -> assertThat(e.status().value()).isEqualTo(409));
+    }
+
+    @Test
+    void archivedSubjectBlocksWritesEvenWhenAuthorizationAllowsAndRetainsTeacherRead() {
+        when(subjects.getSubject(subject)).thenReturn(Optional.of(new SubjectRef(
+                subject, "S", "Subject", SubjectStatus.ARCHIVED, null)));
+        Actor manager = new Actor(account, Role.SUBJECT_MANAGER);
+        Material active = material(false, Material.Status.ACTIVE);
+        policy.read(new Actor(account, Role.TEACHER), active, classId);
+        assertThatThrownBy(() -> policy.write(manager, active))
+                .isInstanceOfSatisfying(ApiException.class, e -> {
+                    assertThat(e.status().value()).isEqualTo(409);
+                    assertThat(e.code()).isEqualTo("MATERIAL_SCOPE_READ_ONLY");
+                });
+        assertThatThrownBy(() -> policy.manageModules(manager, subject))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("MATERIAL_SCOPE_READ_ONLY"));
+        verifyNoInteractions(audit);
+    }
+
+    @Test
+    void unavailableSubjectAndClassFailClosedWithoutPrivateDetails() {
+        when(subjects.getSubject(subject)).thenThrow(new IllegalStateException("private-subject"));
+        assertThatThrownBy(() -> policy.subjectList(new Actor(account, Role.SUBJECT_MANAGER), subject))
+                .isInstanceOfSatisfying(ApiException.class, e -> {
+                    assertThat(e.status().value()).isEqualTo(503);
+                    assertThat(e.getMessage()).doesNotContain("private-subject");
+                });
+        when(classes.getClassRef(classId)).thenThrow(new IllegalStateException("private-class"));
+        assertThatThrownBy(() -> policy.classList(new Actor(account, Role.TEACHER), classId, false))
+                .isInstanceOfSatisfying(ApiException.class, e -> {
+                    assertThat(e.status().value()).isEqualTo(503);
+                    assertThat(e.getMessage()).doesNotContain("private-class");
+                });
     }
 
     @Test

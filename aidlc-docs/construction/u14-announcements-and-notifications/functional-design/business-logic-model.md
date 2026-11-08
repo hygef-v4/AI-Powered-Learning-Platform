@@ -9,6 +9,8 @@
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
 
+**Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
+
 ## 1. Truy vết
 
 | Luồng | UC | Màn |
@@ -77,7 +79,7 @@ Refinement B8 được duyệt 2026-10-25: mỗi lớp xử lý trong transactio
 
 ### F8 - Tùy chọn email (UC 65)
 1. Mọi vai trò mở phần Cài đặt email trong popup: `GET /api/v1/me/notification-preferences`.
-2. Bật, tắt từng loại email phù hợp role (Student mặc định bật, staff mới mặc định tắt; Admin backup luôn bật): `PUT /api/v1/me/notification-preferences`; áp cho email tạo sau đó (BR-U14-21).
+2. Bật, tắt từng loại email phù hợp role (Student và staff mặc định bật khi chưa có tùy chọn lưu; giữ nguyên lựa chọn đã lưu; Admin backup luôn bật): `PUT /api/v1/me/notification-preferences`; áp cho email tạo sau đó (BR-U14-21).
 3. Mọi role thấy phần này; không hiển thị loại của role khác. Admin thấy cảnh báo backup bắt buộc, không có quyền tắt.
 
 ### F9 - Dọn dữ liệu, gửi email đã hoãn

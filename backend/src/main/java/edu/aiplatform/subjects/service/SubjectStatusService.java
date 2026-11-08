@@ -45,7 +45,7 @@ public class SubjectStatusService {
 
     public record ChangeStatus(SubjectStatus status, Long version) {}
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional(isolation = Isolation.READ_COMMITTED, timeout = 1)
     public Subject changeStatus(Actor actor, UUID subjectId, ChangeStatus command) {
         access.require(actor, Actions.SUBJECT_STATUS_CHANGE, ResourceRef.subject(subjectId));
         if (subjectId == null || command == null || command.status() == null) {
@@ -78,7 +78,9 @@ public class SubjectStatusService {
             // BR-U04-04: lưu trữ môn thì lưu trữ luôn mọi lớp của môn; U05 lỗi thì cả thao tác
             // rollback.
             try {
-                provider.archiveClassesOfSubject(subjectId, actor);
+                if (provider.archiveClassesOfSubject(subjectId, actor) == null) {
+                    throw classesUnavailable();
+                }
             } catch (RuntimeException failure) {
                 throw classesUnavailable();
             }

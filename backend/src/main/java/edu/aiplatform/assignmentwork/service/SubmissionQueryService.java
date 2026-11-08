@@ -86,12 +86,8 @@ public class SubmissionQueryService implements ISubmissionQuery {
         if (view.isPresent() && view.get().submissionMode() == SubmissionMode.GROUP) {
             List<UUID> missing = new ArrayList<>();
             for (UUID accountId : students) {
-                GroupWorkStatus status;
-                try {
-                    status = groupWork.statusFor(accountId, List.of(assignmentId)).get(assignmentId);
-                } catch (RuntimeException e) {
-                    status = null;
-                }
+                GroupWorkStatus status = groupWork.statusFor(accountId, List.of(assignmentId))
+                        .get(assignmentId);
                 if (status == null || !status.submitted()) {
                     missing.add(accountId);
                 }

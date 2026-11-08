@@ -18,7 +18,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: 
 
 const subject = { id: "subject-1", code: "SWP391", name: "Software Development Project", description: "Môn học dự án" };
 const teacher = { id: "teacher-1", name: "Nguyễn Minh Kiên", email: "kien@example.test" };
-const course: CourseClassView = { id: "class-1", subject, code: "SE1801", name: "Nhóm thứ Hai", term: "2026-1", description: "Lớp sáng thứ Hai",
+const course: CourseClassView = { id: "class-1", subject, code: "SE1801", name: "Nhóm thứ Hai", description: "Lớp sáng thứ Hai",
   status: "OPEN", teacher, activeStudentCount: 2, removedStudentCount: 1, createdAt: "2026-09-01", showGradeDistribution: false, version: 3 };
 const student: EnrollmentView = { accountId: "student-1", name: "Nguyễn Văn An", email: "an@example.test", enrolledAt: "2026-09-05", status: "ACTIVE" };
 
@@ -57,7 +57,7 @@ describe("U05 reference UI", () => {
     expect(screen.queryByLabelText(/Học kỳ/)).toBeNull();
     fireEvent.change(screen.getByLabelText(/Mã lớp/), { target: { value: " SE1902 " } });
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Tạo lớp" }));
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ subjectId: subject.id, code: "SE1902", name: "SE1902", term: "", description: "", teacherId: null }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ subjectId: subject.id, code: "SE1902", name: "SE1902", description: "", teacherId: null }));
   });
 
   it("sends the chosen teacher when creating a class", async () => {
@@ -77,7 +77,7 @@ describe("U05 reference UI", () => {
     expect(screen.queryByLabelText(/Học kỳ/)).toBeNull();
     fireEvent.change(screen.getByLabelText(/Mô tả/), { target: { value: "Mô tả mới" } });
     fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
-    await waitFor(() => expect(onSave).toHaveBeenCalledWith({ name: course.name, description: "Mô tả mới", term: course.term, version: 3 }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith({ name: course.name, description: "Mô tả mới", version: 3 }));
     expect(await screen.findByRole("alert")).toHaveTextContent("tải lại");
     expect(screen.getByLabelText(/Mô tả/)).toHaveValue("Mô tả mới");
   });

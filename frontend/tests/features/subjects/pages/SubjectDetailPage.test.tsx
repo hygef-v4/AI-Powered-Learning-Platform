@@ -45,6 +45,14 @@ describe("SubjectDetailPage", () => {
   });
   afterEach(cleanup);
 
+  it.each([0, 7])("hiển thị tổng số lớp %s cạnh tab Lớp học", async (classCount) => {
+    vi.mocked(getSubject).mockResolvedValue(detail({ classCount }));
+    render(<SubjectDetailPage subjectId="a" />);
+    const classesTab = await screen.findByRole("tab", { name: /Lớp học/ });
+    expect(classesTab).toHaveTextContent(`Lớp học${classCount}`);
+    expect(getSubjectClasses).not.toHaveBeenCalled();
+  });
+
   it("đọc detail, ngày Việt Nam, unknown count và chỉ tải lớp khi mở tab", async () => {
     render(<SubjectDetailPage subjectId="a" />);
     expect(await screen.findByDisplayValue("Mô tả môn")).toBeInTheDocument();

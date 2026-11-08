@@ -204,8 +204,12 @@ public class MaterialModuleService {
             throw ApiException.badRequest(
                     "MATERIAL_QUIZ_INVALID", "Quiz không thuộc môn của module");
         if (!access.canManageQuiz(
-                actor, quiz.subjectId(), quiz.scope() == QuizScope.CLASS ? quiz.classId() : null))
+                actor, quiz.subjectId(), quiz.scope() == QuizScope.CLASS ? quiz.classId() : null)) {
+            audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(),
+                    "ACCESS_DENIED", "MATERIAL_MODULE", module.id().toString(), AuditResult.DENIED,
+                    "QUIZ_MANAGE_DENIED", Map.of("quizId", quizId.toString()), clock.instant()));
             throw ApiException.notFound("MATERIAL_QUIZ_NOT_FOUND");
+        }
         return quiz;
     }
 

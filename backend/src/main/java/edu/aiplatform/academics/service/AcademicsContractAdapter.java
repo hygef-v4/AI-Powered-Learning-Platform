@@ -144,7 +144,7 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
             long active = counts
                     .getOrDefault(c.id(), new IAcademicsReadRepository.EnrollmentCounts(0, 0))
                     .active();
-            return new SubjectClassSummary(c.id(), c.code(), c.name(), c.term(), c.status().name(),
+            return new SubjectClassSummary(c.id(), c.code(), c.name(), c.status().name(),
                     teacher, Math.toIntExact(active));
         }).toList();
     }

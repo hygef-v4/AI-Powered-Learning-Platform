@@ -191,6 +191,15 @@ class NotificationServiceTest {
     }
 
     @Test
+    void storedOptOutIsPreservedWhileOtherDefaultsStayEnabled() {
+        var prefs = new NotificationPreferenceService(repo, access);
+        when(repo.preferences(account)).thenReturn(Map.of("QUESTION_REVIEWED", false));
+        assertThat(prefs.get(new Actor(account, Role.TEACHER))).containsExactlyInAnyOrderEntriesOf(
+                Map.of("QUESTION_REVIEWED", false, "LEADER_CHANGE_REQUESTED", true));
+        verify(repo, never()).preference(any(), anyString(), anyBoolean());
+    }
+
+    @Test
     void teacherCannotEnableManagerOnlyQuestionProposals() {
         var prefs = new NotificationPreferenceService(repo, access);
         assertThatThrownBy(

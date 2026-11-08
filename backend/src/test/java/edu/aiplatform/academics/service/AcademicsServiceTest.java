@@ -51,7 +51,7 @@ class AcademicsServiceTest {
         when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(ClassStatus.DRAFT,0)));
     }
     AccountContact contact(UUID id, Role role, AccountStatus status) { return new AccountContact(id,id+"@example.com","Person",role,status); }
-    CourseClass course(ClassStatus status,long version) { return new CourseClass(classId,subjectId,"C","Class",null,null,status,teacherId,false,now,now,version); }
+    CourseClass course(ClassStatus status,long version) { return new CourseClass(classId,subjectId,"C","Class",null,status,teacherId,false,now,now,version); }
     @Test void studentCannotReadDraftClassAndDenialIsAudited() {
         var actor = new Actor(studentId,Role.STUDENT);
         when(accountLookup.getContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.ACTIVE)));
@@ -61,7 +61,7 @@ class AcademicsServiceTest {
     }
     @Test void createLocksTheSubjectRowThroughU04AndArchivedSubjectBlocksTheClass() {
         doThrow(ApiException.conflict("SUBJECT_ARCHIVED","Môn đã lưu trữ")).when(subjectMutationGuard).lockActive(eq(subjectId),any());
-        assertThatThrownBy(() -> academicsService.createClass(manager,subjectId,"NEW","New class",null,null,null))
+        assertThatThrownBy(() -> academicsService.createClass(manager,subjectId,"NEW","New class",null,null))
                 .isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.code()).isEqualTo("SUBJECT_ARCHIVED"));
         verify(subjectMutationGuard).lockActive(eq(subjectId),eq(java.time.Duration.ofSeconds(1)));
         verify(courseClassRepository,never()).insert(any());
@@ -82,11 +82,11 @@ class AcademicsServiceTest {
         verify(audit, times(2)).record(argThat(e -> e.action().equals("ACCESS_DENIED") && e.result() == AuditResult.DENIED));
     }
     @Test void staleVersionDoesNotWrite() {
-        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,null,2)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(409));
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,2)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(409));
         verify(courseClassRepository,never()).update(any(),anyLong());
     }
     @Test void updateLocksSubjectBeforeRereadingAndPreservesCode() {
-        var result = academicsService.updateClassInfo(manager,classId,"New",null,"2026",0);
+        var result = academicsService.updateClassInfo(manager,classId,"New",null,0);
         assertThat(result.name()).isEqualTo("New");
         assertThat(result.description()).isEmpty();
         assertThat(result.code()).isEqualTo("C");
@@ -96,7 +96,7 @@ class AcademicsServiceTest {
     }
     @Test void dependencyFailureIsUnavailableAndWritesNothing() {
         when(scope.isSubjectManager(managerId,subjectId)).thenThrow(new IllegalStateException("internal secret"));
-        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,null,0)).isInstanceOfSatisfying(ApiException.class,e -> {assertThat(e.status().value()).isEqualTo(503);assertThat(e.getMessage()).doesNotContain("secret");});
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,0)).isInstanceOfSatisfying(ApiException.class,e -> {assertThat(e.status().value()).isEqualTo(503);assertThat(e.getMessage()).doesNotContain("secret");});
         verify(courseClassRepository,never()).update(any(),anyLong());
     }
     @Test void reopenReturnsConflictingStudents() {
@@ -185,7 +185,7 @@ class AcademicsServiceTest {
     }
     @Test void viewPermissionDoesNotGrantWritePermission() {
         when(authorization.authorize(eq(manager),eq("CLASS_MANAGE"),any())).thenReturn(AuthorizationDecision.deny("readonly"));
-        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,null,0)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(404));
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,0)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(404));
         verify(courseClassRepository,never()).update(any(),anyLong());
         verify(audit).record(argThat(e -> e.result()==AuditResult.DENIED));
     }
@@ -201,7 +201,7 @@ class AcademicsServiceTest {
             if(event.result()==AuditResult.SUCCESS) assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
             return null;
         }).when(audit).record(any());
-        var result=academicsService.createClass(manager,subjectId,"NEW","New class",null,null,teacherId);
+        var result=academicsService.createClass(manager,subjectId,"NEW","New class",null,teacherId);
         assertThat(result.status()).isEqualTo(ClassStatus.DRAFT);
         assertThat(result.version()).isZero();
         verify(courseClassRepository).insert(argThat(c -> c.code().equals("NEW") && !c.showGradeDistribution()));
@@ -215,7 +215,7 @@ class AcademicsServiceTest {
     }
     @Test void teacherLosesReadAccessAfterReassignment() {
         Actor teacher=new Actor(teacherId,Role.TEACHER);
-        when(courseClassRepository.find(classId)).thenReturn(Optional.of(CourseClass.createClass(classId,subjectId,"C","Name",null,null,UUID.randomUUID(),now)));
+        when(courseClassRepository.find(classId)).thenReturn(Optional.of(CourseClass.createClass(classId,subjectId,"C","Name",null,UUID.randomUUID(),now)));
         assertThatThrownBy(() -> academicsService.loadClass(teacher,"teacher",classId)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(404));
     }
     @Test void archivedClassCannotRemoveStudents() {
@@ -232,7 +232,7 @@ class AcademicsServiceTest {
             if(event.result()==AuditResult.FAILURE) assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             return null;
         }).when(audit).record(any());
-        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,null,99)).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,99)).isInstanceOf(ApiException.class);
         verify(audit).record(argThat(e -> e.result()==AuditResult.FAILURE));
     }
     @Test void reopeningDoesNotDuplicateOriginalActivationNotifications() {
@@ -259,15 +259,14 @@ class AcademicsServiceTest {
             return null;
         }).when(audit).record(any());
 
-        var result = academicsService.updateClassInfo(manager, classId, "Updated", "Description",
-                "Term", 0);
+        var result = academicsService.updateClassInfo(manager, classId, "Updated", "Description", 0);
 
         assertThat(result.name()).isEqualTo("Updated");
         assertThat(result.version()).isEqualTo(1);
         var order = inOrder(subjectMutationGuard, courseClassRepository, audit);
         order.verify(subjectMutationGuard).lockActive(subjectId, Duration.ofSeconds(1));
         order.verify(courseClassRepository).update(argThat(value -> value.name().equals("Updated")
-                && value.description().equals("Description") && value.term().equals("Term")
+                && value.description().equals("Description")
                 && value.version() == 1), eq(0L));
         order.verify(audit).record(argThat(event -> event.action().equals("CLASS_UPDATED")
                 && event.result() == AuditResult.SUCCESS && event.details().isEmpty()));
@@ -276,8 +275,7 @@ class AcademicsServiceTest {
 
     @Test
     void staleVersionIsRejectedBeforeInvalidClassInformation() {
-        assertThatThrownBy(() -> academicsService.updateClassInfo(manager, classId, "", null,
-                null, 99)).isInstanceOfSatisfying(ApiException.class,
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager, classId, "", null, 99)).isInstanceOfSatisfying(ApiException.class,
                         error -> assertThat(error.code()).isEqualTo("CLASS_VERSION_CONFLICT"));
 
         verify(courseClassRepository, never()).update(any(), anyLong());
@@ -287,8 +285,7 @@ class AcademicsServiceTest {
 
     @Test
     void invalidClassInformationDoesNotWriteOrAuditSuccess() {
-        assertThatThrownBy(() -> academicsService.updateClassInfo(manager, classId, "", null,
-                null, 0)).isInstanceOfSatisfying(ApiException.class,
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager, classId, "", null, 0)).isInstanceOfSatisfying(ApiException.class,
                         error -> assertThat(error.code()).isEqualTo("INVALID_CLASS_FIELD"));
 
         verify(subjectMutationGuard).lockActive(subjectId, Duration.ofSeconds(1));

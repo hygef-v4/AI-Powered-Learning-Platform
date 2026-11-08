@@ -9,6 +9,8 @@
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md).
 
+**Quyết định 2026-11-07 — D-U04-04:** Bỏ học kỳ lớp khỏi UI, request/response, domain và dữ liệu hiện hành; xem [quyết định đã duyệt](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Migration mới `V20261107_2200__remove_class_term.sql` xóa cột cũ khi áp dụng; không sửa migration hoặc bằng chứng lịch sử. Các quy tắc khác giữ nguyên phạm vi đã chốt.
+
 ## 1. Truy vết
 
 | Luồng | UC | Màn |
@@ -66,12 +68,12 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 4. Bấm một môn mở My Subject: `GET /api/v1/manager/subjects/{id}` kiểm người gọi là Chủ nhiệm môn; trả thông tin môn và số lớp theo trạng thái.
 
 ### F6 - Lớp của môn (UC 24)
-1. Mở Class List; frontend gọi `GET /api/v1/manager/classes` kèm môn, trạng thái, học kỳ, từ khóa.
+1. Mở Class List; frontend gọi `GET /api/v1/manager/classes` kèm môn, trạng thái, từ khóa.
 2. Chỉ trả lớp của các môn người gọi đang quản lý; tối đa 100 dòng (BR-U05-50).
 
 ### F7 - Tạo lớp (UC 26)
 1. Trên Class List bấm "Tạo lớp"; popup mở.
-2. Chọn môn, nhập mã, tên, mô tả, học kỳ; tùy chọn chọn giảng viên (ô tìm gọi `GET /api/v1/manager/teacher-candidates`; U05 gọi `IAccountLookup.findAccounts` với role `TEACHER`, `SUBJECT_MANAGER` và chỉ giữ người `ACTIVE`).
+2. Chọn môn, nhập mã, tên, mô tả; tùy chọn chọn giảng viên (ô tìm gọi `GET /api/v1/manager/teacher-candidates`; U05 gọi `IAccountLookup.findAccounts` với role `TEACHER`, `SUBJECT_MANAGER` và chỉ giữ người `ACTIVE`).
 3. Kiểm người gọi là Chủ nhiệm môn của môn và môn `ACTIVE` (BR-U05-10).
 4. Kiểm mã trong môn (BR-U05-11); kiểm giảng viên nếu có (BR-U05-12).
 5. Tạo lớp `DRAFT`; ghi audit `CLASS_CREATED` (và `CLASS_TEACHER_CHANGED` nếu có giảng viên).
@@ -110,7 +112,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 4. Thêm lại người đã gỡ: cùng API với `ACTIVE`, chạy F10 bước 3–6.
 
 ### F13 - Sửa thông tin lớp (UC 29)
-1. Sửa tên, mô tả, học kỳ kèm `version`: `PATCH /api/v1/manager/classes/{id}`; mã lớp và môn không sửa được.
+1. Sửa tên, mô tả kèm `version`: `PATCH /api/v1/manager/classes/{id}`; mã lớp và môn không sửa được.
 2. Kiểm quyền Chủ nhiệm môn và lớp chưa lưu trữ (BR-U05-16); cập nhật có điều kiện `version`, lệch thì `409`.
 3. Ghi audit `CLASS_UPDATED`. Cài đặt phân bố thuộc U09 theo bài–lớp; endpoint manager cũ bị gỡ.
 

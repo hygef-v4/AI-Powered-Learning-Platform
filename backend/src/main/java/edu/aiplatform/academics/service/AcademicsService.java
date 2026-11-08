@@ -184,7 +184,7 @@ public class AcademicsService {
      * Creates a new class within a subject managed by the caller.
      */
     public ClassView createClass(Actor actor, UUID subjectId, String code, String name,
-            String description, String term, UUID teacherId) {
+            String description, UUID teacherId) {
         return executeCommand(actor, "CLASS_CREATED", subjectId, () -> {
             requireAudience(actor, "manager");
             requireManager(actor, subjectId);
@@ -193,7 +193,7 @@ public class AcademicsService {
             subjectMutationGuard.lockActive(subjectId, SUBJECT_LOCK_WAIT);
             requireManager(actor, subjectId);
             CourseClass value = CourseClass.createClass(UUID.randomUUID(), subjectId, code, name,
-                    description, term, teacherId, clock.instant());
+                    description, teacherId, clock.instant());
             courseClassRepository.insert(value);
             recordSuccess(actor, "CLASS_CREATED", value.id(), Map.of());
             if (teacherId != null)
@@ -204,13 +204,13 @@ public class AcademicsService {
     }
 
     /**
-     * Updates class name, description, and term with optimistic version concurrency control.
+     * Updates the class name and description after checking the expected version.
      */
     public ClassView updateClassInfo(Actor actor, UUID id, String name, String description,
-            String term, long version) {
+            long version) {
         return executeCommand(actor, "CLASS_UPDATED", id, () -> {
             CourseClass current = loadLockedClass(actor, id, version);
-            CourseClass changed = current.updateInfo(name, description, term, clock.instant());
+            CourseClass changed = current.updateInfo(name, description, clock.instant());
             courseClassRepository.update(changed, version);
             recordSuccess(actor, "CLASS_UPDATED", id, Map.of());
             return mapClassView(changed);
@@ -530,8 +530,7 @@ public class AcademicsService {
         return new ClassView(courseClass.id(),
                 new Subject(subject.subjectId(), subject.code(), subject.name()),
                 courseClass.code(), courseClass.name(),
-                Objects.requireNonNullElse(courseClass.description(), ""),
-                Objects.requireNonNullElse(courseClass.term(), ""), courseClass.status(), teacher,
+                Objects.requireNonNullElse(courseClass.description(), ""), courseClass.status(), teacher,
                 counts.active(), counts.removed(), courseClass.createdAt(),
                 courseClass.showGradeDistribution(), courseClass.version());
     }

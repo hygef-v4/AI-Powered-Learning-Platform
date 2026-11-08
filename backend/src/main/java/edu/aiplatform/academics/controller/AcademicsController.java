@@ -129,15 +129,14 @@ public class AcademicsController {
     public ClassView createClass(@AuthenticationPrincipal Actor actor,
             @Valid @RequestBody CreateInput input) {
         return academicsService.createClass(actor, input.subjectId(), input.code(), input.name(),
-                input.description(), input.term(), input.teacherId());
+                input.description(), input.teacherId());
     }
 
-    /** Updates class basic information (name, description, term) with optimistic locking. */
+    /** Updates the class name and description using the supplied version. */
     @PatchMapping("/manager/classes/{id}")
     public ClassView updateClassInfo(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
             @Valid @RequestBody InfoInput input) {
-        return academicsService.updateClassInfo(actor, id, input.name(), input.description(),
-                input.term(), input.version());
+        return academicsService.updateClassInfo(actor, id, input.name(), input.description(), input.version());
     }
 
     /** Assigns or reassigns the responsible teacher to a class. */
@@ -186,12 +185,11 @@ public class AcademicsController {
 
     public record CreateInput(@NotNull UUID subjectId, @NotBlank @Size(max = 30) String code,
             @NotBlank @Size(max = 200) String name, @Size(max = 2000) String description,
-            @Size(max = 20) String term, UUID teacherId) implements IStrictInput {
+            UUID teacherId) implements IStrictInput {
     }
 
     public record InfoInput(@NotBlank @Size(max = 200) String name,
-            @Size(max = 2000) String description, @Size(max = 20) String term,
-            @NotNull @PositiveOrZero Long version) implements IStrictInput {
+            @Size(max = 2000) String description, @NotNull @PositiveOrZero Long version) implements IStrictInput {
     }
 
     public record TeacherInput(UUID teacherId, @NotNull @PositiveOrZero Long version)
