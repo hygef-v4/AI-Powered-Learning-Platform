@@ -15,7 +15,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
    | cookie access_token / refresh_token
    v
  +-------------------- Backend (Spring Boot, package identity) --------------+
- |  RateLimitFilter --> JwtAuthFilter --> Controllers                        |
+ |                     JwtAuthFilter --> Controllers                         |
  |                                         |                                 |
  |        +--------------------------------+---------------------------+     |
  |        v                v                v                          v     |
@@ -35,7 +35,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
                      rate buckets
 ```
 
-**Text alternative**: Trình duyệt gửi cookie tới backend. Request đi qua `RateLimitFilter`, rồi `JwtAuthFilter`, rồi controller. Controller gọi `AuthService`, `ActivationService`, `AccountAdminService` hoặc `ProfileService`. Các service dùng `AuthorizationService` (hỏi U04 qua `ISubjectScope` và U05 qua `IClassScope`; U01 khai báo, U04 và U05 cài) và `OtpService` (gửi việc qua U03). ProfileService chỉ sửa displayName/phoneNumber. Dữ liệu tài khoản ở PostgreSQL; refresh token, OTP và bucket rate limit ở Redis. Worker `OtpMailHandler` nhận việc từ RabbitMQ và gọi U01 `IMail`: SMTP mặc định (Mailpit local/test), hoặc Brevo HTTPS API khi `MAIL_TRANSPORT=brevo-api`.
+**Text alternative**: Trình duyệt gửi cookie tới backend. Request đi qua `JwtAuthFilter`, rồi controller. Không có filter rate limit riêng: `AuthService` (đăng nhập) và `OtpService` (yêu cầu và nhập OTP) gọi `RequestThrottle`, dùng bucket trên Redis. Controller gọi `AuthService`, `ActivationService`, `AccountAdminService` hoặc `ProfileService`. Các service dùng `AuthorizationService` (hỏi U04 qua `ISubjectScope` và U05 qua `IClassScope`; U01 khai báo, U04 và U05 cài) và `OtpService` (gửi việc qua U03). ProfileService chỉ sửa displayName/phoneNumber. Dữ liệu tài khoản ở PostgreSQL; refresh token, OTP và bucket rate limit ở Redis. Worker `OtpMailHandler` nhận việc từ RabbitMQ và gọi U01 `IMail`: SMTP mặc định (Mailpit local/test), hoặc Brevo HTTPS API khi `MAIL_TRANSPORT=brevo-api`.
 
 ## 2. Thành phần
 

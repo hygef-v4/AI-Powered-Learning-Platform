@@ -21,9 +21,9 @@ Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://clau
 | 21 | Quiz List (`m12`) | `SubjectQuizListPage` | 48 | Subject Manager |
 | 22 | Quiz Detail (`t10`), popup Lấy từ ngân hàng: chọn tay (`t10b`), bốc ngẫu nhiên (`t10d`) | `QuizDetailPage`, `BankQuestionPicker` | 48 | Người có quyền với Quiz; giảng viên lớp chỉ xem Quiz của môn |
 | 32 | Teacher Class Detail tab Đánh giá, phần Quiz (`t21`) | `ClassQuizzesSection` | 48 | Teacher, Subject Manager được giao dạy |
-| 17, 18 | Số câu hỏi, Quiz trên Manager Dashboard, My Subject (`m11`, `m01`) | `QuizBankSummary` | 46, 48 | Subject Manager |
+| 17, 18 | Số câu hỏi, Quiz trên Manager Dashboard, My Subject (`m11`, `m01`) | Không có component riêng: số liệu xem ở `QuestionListPage`, `SubjectQuizListPage` | 46, 48 | Subject Manager |
 
-Tab "Lượt làm của sinh viên" trên Quiz Detail (`t10c`) do U11 gắn. U10 đăng ký `NavEntry` "Ngân hàng câu hỏi" và "Quiz" (Subject Manager).
+Tab "Lượt làm của sinh viên" trên Quiz Detail (`t10c`) do U11 gắn. U10 đăng ký `NavEntry` "Ngân hàng câu hỏi" (Subject Manager); trang Quiz không còn trên menu bên (yêu cầu 29/10). `ClassQuizzesSection` tạm không gắn vào trang lớp; tab Học liệu của lớp gắn `QuestionProposalsSection`.
 
 ## 2. Cây component
 
@@ -38,16 +38,14 @@ app/manager/quizzes/             SubjectQuizListPage  #21 Quiz List
 (TeacherClassTab "evals" của U05)
   ClassQuizzesSection                                 dòng Quiz của lớp và của môn trong bảng tab Đánh giá; Tạo Quiz, Copy Quiz lớp khác
     (vùng QuizRowAction cho U11)
-(SubjectSummarySection của U05)
-  QuizBankSummary                                     số câu hỏi, số Quiz theo trạng thái
 app/quizzes/[id]/                QuizDetailPage       #22 Quiz Detail
-  QuizTopBar                                          tên, nhãn trạng thái, phiên bản, "Đã lưu", nút thao tác, Thao tác khác
+  (thanh trên của QuizDetailPage)                     tên, nhãn trạng thái, phiên bản, "Đã lưu", nút thao tác, Thao tác khác
   QuizItemList                                        thứ tự, nguồn câu, điểm, tổng điểm
   BankQuestionPicker                                  chọn tay, bốc ngẫu nhiên
-  InlineQuestionEditor                                dùng McqEditor
+  InlineQuestionDialog                                dùng McqEditor
   QuizAiDraftPanel                                    AiSourcePicker, AiTaskStatus (U06), chấp nhận từng câu
-  QuizSettingsPanel, MaterialRefPicker (khi U13 có)
-  QuizPreviewDialog, ReviewButton, PublishButton, RetireDialog, CloneButton, NewVersionButton, DeleteButton
+  QuizSettingsPanel, DrawRulesPanel
+  QuizPreviewDialog; nút Phát hành, Lưu trữ, Mở lại, Nhân bản, Tạo version mới, Xóa (viết trong QuizDetailPage)
   (vùng QuizDetailSection cho U11: tab Lượt làm của sinh viên)
 ```
 
@@ -61,15 +59,14 @@ app/quizzes/[id]/                QuizDetailPage       #22 Quiz Detail
 | `QuestionDetailPage` | `GET`, `PATCH`, `DELETE /api/v1/questions/{id}`; `POST .../versions`, `/activate`, `/retire` | Nút quay lại; "Chi tiết câu hỏi" kèm nhãn trạng thái và phiên bản; đường dẫn; nút Kích hoạt (câu Nháp) hoặc Ngưng (câu Đang dùng), Lưu thay đổi. Câu đang dùng: hộp "Câu này đang dùng trong n quiz. Lưu thay đổi sẽ mở bản nháp mới; quiz đã phát hành vẫn dùng phiên bản đã ghim." |
 | `McqEditor` | như trên | Loại câu hỏi (Một đáp án, Nhiều đáp án), Nội dung câu hỏi*, Các lựa chọn (2–6) có nút chọn đáp án đúng, Thêm lựa chọn, Điểm (mặc định), Giải thích (tùy chọn); kiểm số lựa chọn, đáp án ngay trên form |
 | `QuestionMetaPanel`, `QuestionVersionPanel` | như trên | "Phân loại": Độ khó (Dễ, Trung bình, Khó), Thẻ (tối đa 10). "Trạng thái": trạng thái, phiên bản · ngày, người tạo, số quiz đang dùng |
-| `SubjectQuizListPage` | `GET /api/v1/subjects/{subjectId}/quizzes` | "Quiz", ghi chú "Quiz của môn chỉ dùng để luyện tập (Practice): không có lịch, không vào sổ điểm."; nút chọn môn, Tạo quiz; tab Tất cả, Nháp, Đã duyệt, Đang mở, Ngưng; ô tìm; cột Quiz, Số câu, Thời gian, Trạng thái, Cập nhật |
+| `SubjectQuizListPage` | `GET /api/v1/subjects/{subjectId}/quizzes` | "Quiz", ghi chú "Quiz của môn chỉ dùng để luyện tập (Practice): không có lịch, không vào sổ điểm."; nút chọn môn, Tạo quiz; tab Tất cả, Nháp, Đang mở, Lưu trữ; ô tìm; cột Quiz, Số câu, Thời gian, Trạng thái, Cập nhật |
 | `ClassQuizzesSection` | `GET /api/v1/classes/{classId}/quizzes`, `GET .../quiz-copy-sources`, `POST .../quizzes:copy` | Trong bảng chung của tab Đánh giá (cùng phần Bài tập của U07): nút Tạo Quiz, Copy Quiz từ lớp khác; dòng Quiz (tên, "Quiz · Practice"), Phạm vi (Của môn, Của lớp), Trạng thái, cột Bài nộp do U11 gắn (số sinh viên đã làm); Quiz của môn chỉ xem |
-| `QuizTopBar`, `QuizDetailPage` | `GET`, `PATCH /api/v1/quizzes/{id}`; `/review`, `/publish`, `/retire`, `/clone`, `/versions` | Đường dẫn "Quiz", tên, nhãn trạng thái, phiên bản, "Đã lưu hh:mm"; Xem trước, Lưu, Duyệt (Nháp) hoặc Phát hành (Đã duyệt); "Thao tác khác": Lưu trữ (lý do trống mặc định Lưu trữ), Nhân bản, Tạo version mới, Xóa (chỉ bản nháp); lỗi duyệt hiện theo câu; giảng viên có thêm tab Lượt làm của sinh viên (U11) |
-| `QuizItemList`, `InlineQuestionEditor` | `PUT .../items`, `.../inline-questions` | "Câu hỏi (n)", tổng điểm; mỗi câu: thứ tự, loại, nguồn ("Từ ngân hàng · vN" hoặc câu riêng của Quiz), điểm, nội dung, lựa chọn và đáp án đúng; Thêm câu, Lấy từ ngân hàng, Tạo nháp bằng AI; `409` báo tải lại |
+| `QuizDetailPage` | `GET`, `PATCH /api/v1/quizzes/{id}`; `/publish`, `/retire`, `/reopen`, `/clone`, `/versions` | Đường dẫn "Quiz", tên, nhãn trạng thái, phiên bản, "Đã lưu hh:mm"; Xem trước, Lưu, Phát hành thẳng từ Nháp (BR-U10-21); Mở lại Quiz đã lưu trữ; "Thao tác khác": Lưu trữ (lý do trống mặc định Lưu trữ), Nhân bản, Tạo version mới, Xóa (chỉ bản nháp); lỗi phát hành hiện theo câu; giảng viên có thêm tab Lượt làm của sinh viên (U11) |
+| `QuizItemList`, `InlineQuestionDialog` | `PUT .../items`, `.../inline-questions` | "Câu hỏi (n)", tổng điểm; mỗi câu: thứ tự, loại, nguồn ("Từ ngân hàng · vN" hoặc câu riêng của Quiz), điểm, nội dung, lựa chọn và đáp án đúng; Thêm câu, Lấy từ ngân hàng, Tạo nháp bằng AI; `409` báo tải lại |
 | `BankQuestionPicker` | `GET /api/v1/subjects/{subjectId}/questions`, `POST .../items:random-preview` | Popup "Lấy câu hỏi từ ngân hàng", hai tab. Chọn tay: lọc Độ khó, Thẻ, ô tìm; bảng chọn nhiều (Câu hỏi, Loại, Độ khó, Thẻ); chỉ câu Đang dùng, ẩn câu đã có trong quiz; "Đã chọn n câu"; Thêm n câu. Bốc ngẫu nhiên: Số câu, Độ khó, Thẻ, Bốc thử ("Có n câu phù hợp"), bảng xem trước; Lưu n câu vào quiz (chỉ xem trước, lưu mới ghim phiên bản) |
-| `QuizSettingsPanel`, `MaterialRefPicker` | `PATCH /api/v1/quizzes/{id}` | "Cấu hình": Hướng dẫn (tùy chọn), Thời gian làm bài (phút, 1–300 hoặc để trống), Số lượt tối đa (1–10 hoặc không giới hạn), Hiện điểm sau khi nộp (công tắc), Hiện đáp án (Không bao giờ, Sau khi nộp), Đảo thứ tự câu, Đảo thứ tự lựa chọn, Ghi nhận hoạt động kèm Lời báo cho sinh viên, Gắn với học liệu (tối đa 10, khi U13 có), Tổng điểm |
+| `QuizSettingsPanel` | `PATCH /api/v1/quizzes/{id}` | "Cấu hình": Hướng dẫn (tùy chọn), Thời gian làm bài (phút, 1–300 hoặc để trống), Số lượt tối đa (1–10 hoặc không giới hạn), Hiện điểm sau khi nộp (công tắc), Hiện đáp án (Không bao giờ, Sau khi nộp), Đảo thứ tự câu, Đảo thứ tự lựa chọn, Ghi nhận hoạt động kèm Lời báo cho sinh viên, Tổng điểm. Không còn Gắn với học liệu (BR-U10-11) |
 | `QuizAiDraftPanel` | `.../ai-drafts` | Chấp nhận từng câu; không tự kích hoạt |
 | `QuizPreviewDialog` | `GET /api/v1/quizzes/{id}` | Xem như sinh viên, không hiện đáp án |
-| `QuizBankSummary` | `GET .../questions`, `GET .../quizzes` (đếm) | Dòng tóm tắt trên thẻ môn (Manager Dashboard); thẻ số liệu "Câu hỏi trắc nghiệm" (n đang dùng · n nháp) và "Quiz" (n đang mở · n đã duyệt · n nháp) trên My Subject |
 
 Route `/manager/*` cho Subject Manager, `/quizzes/*` cho Teacher, Subject Manager (dùng `RoleGuard` của U01). Backend vẫn kiểm quyền thật.
 

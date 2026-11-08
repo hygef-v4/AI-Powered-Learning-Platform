@@ -40,12 +40,12 @@ Cùng `docker-compose.yml` với file override `docker-compose.local.yml`:
 ## 3. Luồng đăng nhập qua hạ tầng
 
 1. Trình duyệt → Nginx (TLS) → backend `/api/v1/auth/login`.
-2. Backend: `RateLimitFilter` → Redis; kiểm mật khẩu → PostgreSQL; tạo refresh → Redis; trả cookie.
+2. Backend: `AuthService` hỏi `RequestThrottle` (bucket trên Redis) trước khi kiểm mật khẩu; kiểm mật khẩu → PostgreSQL; tạo refresh → Redis; trả cookie.
 3. Request sau: Nginx → backend, `JwtAuthFilter` gọi `SessionAuthority.authenticate` để kiểm chữ ký và quyền/phiên/tài khoản hiện hành; không chỉ tin role trong JWT.
 
 ## 4. Luồng OTP qua hạ tầng
 
-1. Trình duyệt → backend `/api/v1/auth/activation-requests` → kiểm tài khoản, trả `202`.
+1. Trình duyệt → backend `POST /api/v1/auth/activation/request` → kiểm tài khoản, trả `202`.
 2. U03 gửi `JobMessage` `OTP_DELIVERY` sang RabbitMQ ngay (yêu cầu không ghi database), vào queue `jobs.email`.
 3. Worker nhận, sinh mã, ghi băm vào Redis, gửi SMTP.
 4. Lỗi → U03 gửi lại qua queue thử lại theo backoff; hết lượt → log ERROR, người dùng yêu cầu OTP lại.

@@ -43,7 +43,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U10-20 | Có `DRAFT`, `OPEN`, `RETIRED`; bỏ `REVIEWED` từ 2026-11-01 (dòng cũ về `DRAFT` khi migrate). Quiz.edited giữ nguyên trạng thái; `OPEN` sửa giữ `OPEN` theo service guards; `RETIRED` không editable. | FR-007, góp ý 29/10 |
 | BR-U10-21 | Điều kiện phát hành, kiểm ngay khi bấm Phát hành: đề cố định có 1–200 câu, câu riêng hợp lệ, câu ngân hàng còn `ACTIVE`, điểm hợp lệ; Quiz sinh đề có quy tắc hợp lệ và kho đủ câu; cài đặt hợp lệ. Lỗi trả `QUIZ_PUBLISH_FAILED` kèm danh sách theo câu hoặc quy tắc. Giao diện xác nhận số câu và tổng điểm trước khi phát hành. | US-ASM-001 |
 | BR-U10-22 | Phát hành từ `DRAFT`: Quiz của lớp cần lớp `OPEN`, Quiz của môn cần môn `ACTIVE`; chuyển `OPEN` ngay. Phát hành version mới thì version cũ chuyển `RETIRED` trong cùng transaction. Sau commit phát `quiz.published`. | US-ASM-001 S2 |
-| BR-U10-23 | Retire mọi trạng thái chưa RETIRED, reason trống mặc định Lưu trữ, kiểm version/callback. Never-published giữ publishedAt=null; reopen về DRAFT nếu null, ngược lại OPEN với container active và không có version khác cùng chuỗi đang OPEN (409 QUIZ_OTHER_VERSION_OPEN). Migration cũ equal timestamps chỉ giữ publication khi có SUCCESS QUIZ_PUBLISHED audit đúng object; không có proof thì null/review. Không suy ra đã phát hành chỉ từ RETIRED hoặc timestamp equality. | FR-028 |
+| BR-U10-23 | Retire mọi trạng thái chưa RETIRED, reason trống mặc định Lưu trữ, kiểm version/callback. Never-published giữ publishedAt=null; reopen về DRAFT nếu null, ngược lại OPEN với container active và không có version khác cùng chuỗi đang OPEN (409 QUIZ_OTHER_VERSION_OPEN). Migration cũ equal timestamps chỉ giữ publication khi có SUCCESS QUIZ_PUBLISHED audit đúng object; không có bằng chứng thì `publishedAt = null`. Không suy ra đã phát hành chỉ từ RETIRED hoặc timestamp equality. | FR-028 |
 | BR-U10-24 | Xóa: Quiz `DRAFT` chưa từng phát hành, xóa hẳn kèm câu riêng, quy tắc và đề xuất AI. | UC 48 |
 | BR-U10-25 | Người học thấy Quiz `OPEN` của lớp `OPEN` mình đang ghi danh, gồm Quiz của lớp và Quiz của môn chứa lớp. | FR-007 |
 
@@ -51,8 +51,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U10-30 | Nhân bản (cùng lớp hoặc môn), version mới (từ Quiz `OPEN` hoặc `RETIRED`; mỗi Quiz nguồn tối đa một version đang `DRAFT` hoặc `REVIEWED`), copy giữa lớp (chỉ Quiz của lớp; giảng viên phải dạy cả hai lớp). | FR-028 |
-| BR-U10-31 | Cả ba cách sao tiêu đề, hướng dẫn, cài đặt, theo dõi hoạt động, tài liệu gắn kèm và câu (câu ngân hàng giữ phiên bản đã ghim, câu riêng sao thành câu riêng mới). Không sao lượt làm, kết quả, đề xuất AI. | FR-028 |
+| BR-U10-30 | Nhân bản (cùng lớp hoặc môn), version mới (từ Quiz `OPEN` hoặc `RETIRED`; mỗi Quiz nguồn tối đa một version đang `DRAFT`), copy giữa lớp (chỉ Quiz của lớp; giảng viên phải dạy cả hai lớp). | FR-028 |
+| BR-U10-31 | Cả ba cách sao tiêu đề, hướng dẫn, cài đặt, theo dõi hoạt động và câu (Quiz không gắn tài liệu, BR-U10-11) (câu ngân hàng giữ phiên bản đã ghim, câu riêng sao thành câu riêng mới). Không sao lượt làm, kết quả, đề xuất AI. | FR-028 |
 
 ## 5. AI và MCP
 
@@ -60,13 +60,13 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U10-40 | AI soạn câu cho Quiz `DRAFT` (giảng viên, Chủ nhiệm môn) hoặc cho ngân hàng (Chủ nhiệm môn): nhập số câu (1–50), loại, độ khó, chủ đề; chọn tài liệu tham khảo qua `IReferenceMaterial` (U06 khai báo, U13 cài); chọn nguồn AI trong popup của U06. | FR-006, US-AIG-001, 002 |
 | BR-U10-41 | Đề xuất gồm câu, lựa chọn, đáp án, giải thích, kèm provenance. Người soạn chọn, sửa rồi chấp nhận: câu thành câu riêng của Quiz hoặc câu `DRAFT` của ngân hàng. AI không tự kích hoạt câu, không duyệt, không phát hành. Prompt không có dữ liệu người học. Không có AI vẫn soạn tay được. | FR-006 |
-| BR-U10-42 | Tool MCP chỉ cho giảng viên, Chủ nhiệm môn có quyền với Quiz: `read_quiz_context` (Quiz kèm đáp án) và `save_quiz_draft` (Quiz `DRAFT`, kèm `expectedVersion`); tool ghi chỉ lưu đề xuất chờ người soạn chấp nhận như BR-U10-41. Người học không có tool đọc Quiz. | FR-035 |
+| BR-U10-42 | Tool MCP chỉ cho giảng viên, Chủ nhiệm môn có quyền với Quiz: `list_quizzes` (tìm Quiz theo lớp hoặc môn được phép, lọc trạng thái), `read_quiz_context` (Quiz kèm đáp án), `save_quiz_draft` (Quiz `DRAFT`, kèm `expectedVersion`) và `create_quiz_draft` (tạo Quiz `DRAFT` mới trong lớp hoặc môn, `requestRef` chống tạo trùng); tool ghi chỉ lưu đề xuất chờ người soạn chấp nhận như BR-U10-41. Người học không có tool đọc Quiz. | FR-035 |
 
 ## 6. Phân quyền, audit và lỗi
 
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U10-50 | Mọi API kiểm quyền phía server; ngoài phạm vi trả `404` và ghi audit `ACCESS_DENIED`. Sửa câu, Quiz kèm `version`; lệch thì `409`. | SEC-002 |
-| BR-U10-51 | Audit: `QUESTION_CREATED`, `QUESTION_ACTIVATED`, `QUESTION_RETIRED`, `QUESTION_DELETED`, `QUESTION_PROPOSED`, `QUESTION_APPROVED`, `QUESTION_REJECTED`, `QUESTIONS_IMPORTED` (một sự kiện mỗi lần nhập), `QUIZ_CREATED`, `QUIZ_DELETED`, `QUIZ_PUBLISHED`, `QUIZ_RETIRED` (lý do), `QUIZ_CLONED`, `QUIZ_VERSION_CREATED`, `QUIZ_COPIED`, `QUIZ_AI_DRAFT_ACCEPTED`. | FR-014 |
+| BR-U10-51 | Audit: `QUESTION_CREATED`, `QUESTION_ACTIVATED`, `QUESTION_RETIRED`, `QUESTION_DELETED`, `QUESTION_PROPOSED`, `QUESTION_APPROVED`, `QUESTION_REJECTED`, `QUESTIONS_IMPORTED` (một sự kiện mỗi lần nhập), `QUIZ_CREATED`, `QUIZ_DELETED`, `QUIZ_PUBLISHED`, `QUIZ_RETIRED` (lý do), `QUIZ_REOPENED`, `QUIZ_CLONED`, `QUIZ_VERSION_CREATED`, `QUIZ_COPIED`, `QUIZ_AI_DRAFT_ACCEPTED`. | FR-014 |
 | BR-U10-52 | U01, U04, U05 không trả lời thì từ chối (fail closed); AI, U11, U13 lỗi không chặn soạn tay. | BR-U01-93 |
 | BR-U10-53 | Phân tích độ khó, độ phân biệt câu hỏi từ kết quả làm bài nằm ngoài phạm vi. | Phạm vi 2026-09-25 |
