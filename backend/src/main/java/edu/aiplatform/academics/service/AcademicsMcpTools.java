@@ -1,7 +1,6 @@
 package edu.aiplatform.academics.service;
 
 import edu.aiplatform.ai.contract.*;
-import edu.aiplatform.academics.model.*;
 import edu.aiplatform.academics.repository.*;
 import edu.aiplatform.identity.contract.*;
 import edu.aiplatform.subjects.contract.*;

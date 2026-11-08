@@ -1,6 +1,5 @@
 package edu.aiplatform.academics.service;
 
-import edu.aiplatform.academics.dto.AcademicsDtos;
 
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.model.*;

@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.aiplatform.grading.model.*;
-import edu.aiplatform.grading.repository.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;

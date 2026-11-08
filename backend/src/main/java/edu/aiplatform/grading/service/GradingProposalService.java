@@ -1,6 +1,5 @@
 package edu.aiplatform.grading.service;
 
-import edu.aiplatform.grading.dto.GradingViews;
 
 import edu.aiplatform.ai.contract.AiTaskRequest;
 import edu.aiplatform.ai.contract.AiTaskState;

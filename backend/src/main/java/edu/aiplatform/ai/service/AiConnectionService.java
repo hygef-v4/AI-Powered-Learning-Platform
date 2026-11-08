@@ -14,7 +14,6 @@ import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.ai.contract.AiPrompt;
 import edu.aiplatform.ai.contract.MaterialText;
-import edu.aiplatform.assignments.contract.DiagramType;
 import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignments.model.Assignment;
 import java.util.List;

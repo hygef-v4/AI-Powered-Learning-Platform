@@ -5,7 +5,6 @@ import edu.aiplatform.ai.contract.*;
 import edu.aiplatform.identity.contract.*;
 import edu.aiplatform.quizzes.contract.QuestionType;
 import edu.aiplatform.quizzes.model.*;
-import edu.aiplatform.quizzes.repository.*;
 import java.util.*;
 import org.springframework.stereotype.Component;
 

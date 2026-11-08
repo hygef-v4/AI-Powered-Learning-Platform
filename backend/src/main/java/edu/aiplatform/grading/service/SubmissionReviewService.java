@@ -1,6 +1,5 @@
 package edu.aiplatform.grading.service;
 
-import edu.aiplatform.grading.dto.GradingViews;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.academics.contract.ClassRef;

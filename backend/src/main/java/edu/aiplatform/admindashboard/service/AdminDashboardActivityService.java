@@ -1,6 +1,5 @@
 package edu.aiplatform.admindashboard.service;
 
-import edu.aiplatform.admindashboard.dto.AdminDashboardViews;
 
 import static edu.aiplatform.admindashboard.dto.AdminDashboardViews.*;
 

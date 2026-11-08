@@ -10920,3 +10920,22 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **AI Response**: 225 tests passed across 30 files. Scoped ESLint passed with zero warnings. Compared request traces with HEAD. U05 first-page refetch remains covered by the existing characterization test. Existing security and resiliency scope retained. Property-based testing remains disabled. No live backend or browser verification.
 
 ---
+
+## Remove unused source imports — 2026-11-08
+
+**Timestamp**: 2026-11-08T08:12:12Z
+**Requested by:** Quang Hung
+**User Input (complete raw)**:
+
+> dọn giúp tôi mấy import thừa trong cả src code đi, giữ nguyên hành vi hiện tại, chưa nâng Spring Boot nhé
+
+**Context**: Mechanical source cleanup only. Spring Boot 3.5.6 and product behavior retained.
+
+- [x] Remove 45 unused main Java imports and 47 unused test Java imports identified by Eclipse JDT. Confirm that the source diff contains only these 92 deletions across 85 files.
+- [x] Scan frontend source with TypeScript and ESLint. No unused imports found and no frontend changes.
+- [x] Recompile with Eclipse JDT. Zero remaining unused-import warnings. All 1,182 production classes are byte-identical without debug data. Of 291 test classes, 276 are byte-identical and 15 differ only in equivalent inherited Mockito matcher references.
+- [x] Run targeted Maven tests. CourseClass, Enrollment and EnrollmentListParser tests passed 22/22.
+
+**AI Response**: Existing security and resiliency scope retained. Property-based testing remains disabled. Full backend test suite and browser verification are outside the confirmed results.
+
+---

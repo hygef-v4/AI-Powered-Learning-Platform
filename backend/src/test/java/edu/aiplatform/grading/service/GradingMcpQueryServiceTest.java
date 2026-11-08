@@ -7,7 +7,6 @@ import static org.mockito.Mockito.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.assignments.contract.*;
 import edu.aiplatform.grading.model.*;
-import edu.aiplatform.grading.repository.*;
 import edu.aiplatform.identity.contract.*;
 import edu.aiplatform.shared.error.ApiException;
 import java.math.BigDecimal;

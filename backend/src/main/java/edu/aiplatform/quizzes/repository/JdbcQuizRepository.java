@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.quizzes.contract.QuizScope;
 import edu.aiplatform.quizzes.contract.QuizSettings;
 import edu.aiplatform.quizzes.contract.QuizStatus;
-import edu.aiplatform.quizzes.repository.IQuizRepository;
 import edu.aiplatform.quizzes.model.Difficulty;
 import edu.aiplatform.quizzes.model.DrawRule;
 import edu.aiplatform.quizzes.model.Quiz;
