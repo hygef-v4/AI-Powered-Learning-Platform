@@ -156,7 +156,7 @@ Hỗ trợ hai kênh: ALAP gọi API (Gemini/OpenAI/Claude), và agent riêng g�
 
 ### FR-013 - Lưu trữ tệp
 
-Hệ thống phải lưu tệp học tập qua một dịch vụ lưu trữ riêng tư, cấp quyền truy cập ngắn hạn và không công khai trực tiếp object chứa dữ liệu học tập. Dung lượng tối đa và loại tệp cho phép theo mục đích do Administrator chỉnh trên Settings trong giới hạn hệ thống (FR-033).
+Hệ thống phải lưu tệp học tập qua một dịch vụ lưu trữ riêng tư, cấp quyền truy cập ngắn hạn và không công khai trực tiếp object chứa dữ liệu học tập. Dung lượng tối đa theo mục đích do Administrator chỉnh trên Settings trong giới hạn hệ thống (FR-033). Riêng học liệu MATERIAL có định dạng cố định PDF, DOCX, PPTX, XLSX; Admin không bật/tắt từng định dạng học liệu. Các purpose khác giữ chính sách riêng. XLSX được xem/tải và trích nội dung làm nguồn AI theo quyền; không tự gọi AI khi upload.
 
 ### FR-014 - Audit nghiệp vụ và bảo mật
 

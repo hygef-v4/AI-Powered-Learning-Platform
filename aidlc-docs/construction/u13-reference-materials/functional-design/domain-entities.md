@@ -11,6 +11,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 Thiết kế độc lập công nghệ.
 
+**Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
+
 ## 1. Tổng quan
 
 | Entity | Loại | Lưu ở |
@@ -38,7 +40,7 @@ stateDiagram-v2
     ACTIVE --> ARCHIVED: Xóa (lưu trữ)
 ```
 
-**Text alternative**: Tài liệu tạo ra ở `ACTIVE` với phiên bản 1. Sửa tiêu đề, mô tả, thứ tự không đổi phiên bản; thay tệp hoặc link tạo phiên bản mới và giữ phiên bản cũ. Xóa chuyển `ARCHIVED`: ẩn với người học, tham chiếu cũ vẫn đọc được.
+**Text alternative**: Tài liệu tạo ra ở `ACTIVE` với phiên bản 1. Sửa tiêu đề, mô tả, thứ tự không đổi phiên bản; thay tệp hoặc link tạo phiên bản mới và giữ phiên bản cũ. Xóa chuyển `ARCHIVED`: ẩn với người học và khỏi danh sách module Đang dùng; staff còn quyền hiện hành vẫn xem/tải tham chiếu và phiên bản cũ. Không cho sửa hoặc chọn làm nguồn AI mới.
 
 ## 3. Contract
 
