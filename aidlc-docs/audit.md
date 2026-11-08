@@ -11235,3 +11235,10 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Publication**: Normal push advanced origin/fix/remove-term from fc31721b through44b5781d, including merge6007c5fb of origin/staging528cc50e and the reviewed test-only integration repairs. Current source/config1,625 hashes match verification. This final documentation-only change records the already completed code publication and will be pushed to the same branch. Existing platform containers preserved, own E2E containers/frontend stopped, fixtures/logs retained ignored. No force-push, merge into staging, live data/provider write, production deployment, new report or100% requirements acceptance claim. Security/resiliency retained; PBT disabled.
 
 ---
+## Pull request to staging — conditional merge authorized
+**Timestamp**: 2026-11-08T10:33:00Z
+**Requested by:** Vu Hai Nam
+**User Input**: "giúp tôi tạo pull request vào branch staging, check CI xanh thì merge vào staging"
+**AI Response**: User explicitly authorizes creating a ready PR from fix/remove-term into staging and merging it once GitHub CI is green. Verify the exact current PR head, latest CI workflow and required checks before normal merge; preserve scoped commit history using the repository-supported merge-commit method. Local code already passed2,004 backend tests,286 postmerge frontend tests/build/lint and168 isolated API E2E checks. Record this request before opening PR; GitHub PR/check/merge responses and final chat provide the authoritative remote completion status. No new implementation or unit-test report is requested. Current GitHub profile display name verified by authenticated API; historical requester attributions remain unchanged.
+
+---
