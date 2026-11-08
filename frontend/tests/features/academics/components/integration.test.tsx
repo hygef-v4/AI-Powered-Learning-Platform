@@ -9,7 +9,7 @@ import {ManagerDashboardPage,MySubjectPage} from "@/features/academics/pages/Man
 import type {CourseClassView} from "@/features/academics/model/types";
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(window.location.search) }));
 afterEach(() => window.history.replaceState(null, "", "/"));
-const value:CourseClassView={id:"c",subject:{id:"s",code:"S",name:"Subject"},code:"C",name:"Class",description:"",term:"1",status:"OPEN",teacher:null,version:1,activeStudentCount:0,removedStudentCount:0,showGradeDistribution:false,createdAt:"2026-01-01"};
+const value:CourseClassView={id:"c",subject:{id:"s",code:"S",name:"Subject"},code:"C",name:"Class",description:"",status:"OPEN",teacher:null,version:1,activeStudentCount:0,removedStudentCount:0,showGradeDistribution:false,createdAt:"2026-01-01"};
 it("hosts student card extension and lists managed subjects without stat extensions",()=>{
  classCardSections.register({key:"test-card",order:1,component:()=> <p>Card extension</p>});
  render(<><ClassDashboardPage audience="student" classes={[value]} onOpen={()=>{}}/><ManagerDashboardPage subjects={[value.subject]} onSubject={()=>{}}/><MySubjectPage subject={value.subject} classes={[value]}/></>);

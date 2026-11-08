@@ -123,7 +123,7 @@ class AcademicsAccessAndReadTest {
 
     @Test void stalePrincipalRoleCannotElevateCurrentAccount() {
         when(accountLookup.getContact(managerId)).thenReturn(Optional.of(contact(managerId,Role.TEACHER,AccountStatus.ACTIVE)));
-        assertProblem(() -> academicsService.updateClassInfo(actor(Role.SUBJECT_MANAGER),classId,"Changed",null,null,7),403,"ACCOUNT_INACTIVE");
+        assertProblem(() -> academicsService.updateClassInfo(actor(Role.SUBJECT_MANAGER),classId,"Changed",null,7),403,"ACCOUNT_INACTIVE");
         verifyNoInteractions(authorization,courseClassRepository,enrollmentRepository,academicsReadRepository,subjectQuery,scope,subjectMutationGuard);
         assertDenialAudit();
     }
@@ -173,7 +173,7 @@ class AcademicsAccessAndReadTest {
 
     @Test void currentSubjectOwnerMustMatchBeforeMutationEvenWhenScopeAllows() {
         when(subjectQuery.getSubject(subjectId)).thenReturn(Optional.of(subject(subjectId,UUID.randomUUID())));
-        assertProblem(() -> academicsService.updateClassInfo(actor(Role.SUBJECT_MANAGER),classId,"Changed",null,null,7),404,"SUBJECT_OUT_OF_SCOPE");
+        assertProblem(() -> academicsService.updateClassInfo(actor(Role.SUBJECT_MANAGER),classId,"Changed",null,7),404,"SUBJECT_OUT_OF_SCOPE");
         verify(subjectMutationGuard).lockActive(org.mockito.ArgumentMatchers.eq(subjectId),org.mockito.ArgumentMatchers.any());
         verify(courseClassRepository,never()).update(any(),anyLong());
         verifyNoInteractions(academicsReadRepository);
@@ -446,8 +446,8 @@ class AcademicsAccessAndReadTest {
 
     private void invokeMutation(String operation,Actor actor) {
         switch(operation) {
-            case "create" -> academicsService.createClass(actor,subjectId,"CS101-B","New class",null,null,teacherId);
-            case "updateInfo" -> academicsService.updateClassInfo(actor,classId,"Changed",null,null,7);
+            case "create" -> academicsService.createClass(actor,subjectId,"CS101-B","New class",null,teacherId);
+            case "updateInfo" -> academicsService.updateClassInfo(actor,classId,"Changed",null,7);
             case "assignTeacher" -> academicsService.assignClassTeacher(actor,classId,managerId,7);
             case "changeStatus" -> academicsService.changeClassStatus(actor,classId,ClassStatus.ARCHIVED,7);
             case "enroll" -> academicsService.enrollStudent(actor,classId,studentId);
@@ -466,11 +466,11 @@ class AcademicsAccessAndReadTest {
     private Person person(AccountContact contact) {return new Person(contact.accountId(),contact.displayName(),contact.email());}
     private SubjectRef subject(UUID id,UUID owner) {return new SubjectRef(id,"CS101","Computer Science",SubjectStatus.ACTIVE,owner);}
     private CourseClass course(UUID id,ClassStatus status,UUID assignedTeacher) {
-        return new CourseClass(id,subjectId,"CS101-A","Algorithms",null,null,status,assignedTeacher,true,now.minusSeconds(3600),now,7);
+        return new CourseClass(id,subjectId,"CS101-A","Algorithms",null,status,assignedTeacher,true,now.minusSeconds(3600),now,7);
     }
     private Enrollment enrollment(UUID id) {return Enrollment.createEnrollment(classId,id,EnrollmentSource.MANUAL,now.minusSeconds(120));}
     private void assertClassDto(ClassView view,long active,long removed) {
-        assertThat(view).isEqualTo(new ClassView(classId,new AcademicsDtos.Subject(subjectId,"CS101","Computer Science"),"CS101-A","Algorithms","","",ClassStatus.OPEN,
+        assertThat(view).isEqualTo(new ClassView(classId,new AcademicsDtos.Subject(subjectId,"CS101","Computer Science"),"CS101-A","Algorithms","",ClassStatus.OPEN,
                 new Person(teacherId,"TEACHER name","teacher@example.com"),active,removed,now.minusSeconds(3600),true,7));
     }
     private void assertProblem(Runnable call,int status,String code) {

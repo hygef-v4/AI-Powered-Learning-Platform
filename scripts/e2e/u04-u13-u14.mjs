@@ -179,7 +179,6 @@ async function main() {
       code: `E2E-${runId}`.toUpperCase(),
       name: `E2E ${runId}`,
       description: "isolated API E2E",
-      term: "2026-1",
       teacherId,
     }),
     201,

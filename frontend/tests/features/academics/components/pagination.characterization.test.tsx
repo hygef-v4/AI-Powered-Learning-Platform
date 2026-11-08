@@ -6,8 +6,7 @@ import type {CourseClassView, EnrollmentView} from "@/features/academics/model/t
 
 const subject = {id: "s", code: "S", name: "Subject"};
 const classes: CourseClassView[] = Array.from({length: 65}, (_, index) => ({
-  id: `c${index}`, subject, code: `C${index}`, name: `Class ${index}`, term: "1",
-  description: "", status: index < 40 ? "OPEN" : "ARCHIVED", teacher: null,
+  id: `c${index}`, subject, code: `C${index}`, name: `Class ${index}`, description: "", status: index < 40 ? "OPEN" : "ARCHIVED", teacher: null,
   activeStudentCount: 0, removedStudentCount: 0, createdAt: "2026-01-01",
   showGradeDistribution: false, version: 1,
 }));

@@ -9,13 +9,13 @@ it("routes an empty authorized teacher list through server capability",async()=>
  render(<ClassesRoute/>);expect(await screen.findByRole("heading",{name:"Lớp được phân công"})).toBeInTheDocument();expect(fn).toHaveBeenCalledTimes(2);
 });
 it("reloads a conflicting manager mutation and retains its actionable error",async()=>{
- const course={id:"c",subject:{id:"s",code:"S",name:"Subject"},code:"C",name:"Class",description:"",term:"1",status:"DRAFT",teacher:{id:"t",name:"Teacher",email:"t@test.test"},version:1,activeStudentCount:0,removedStudentCount:0,showGradeDistribution:false,createdAt:"2026-01-01"};
+ const course={id:"c",subject:{id:"s",code:"S",name:"Subject"},code:"C",name:"Class",description:"",status:"DRAFT",teacher:{id:"t",name:"Teacher",email:"t@test.test"},version:1,activeStudentCount:0,removedStudentCount:0,showGradeDistribution:false,createdAt:"2026-01-01"};
  const fn=vi.fn().mockImplementation((url:string,init:RequestInit)=>Promise.resolve(init.method==="PUT"?Response.json({detail:"Version changed"},{status:409}):url.includes("/students?")?Response.json([]):Response.json(course)));vi.stubGlobal("fetch",fn);
  render(<ClassDetailRoute scope="manager" id="c"/>);fireEvent.click(await screen.findByTestId("class-state-open"));fireEvent.click(screen.getByTestId("class-state-confirm"));
  expect((await screen.findAllByRole("alert")).length).toBeGreaterThan(0);await waitFor(()=>expect(fn.mock.calls.filter(call=>call[0]==="/api/v1/manager/classes/c").length).toBe(2));
 });
 it("keeps version conflict visible after reloading a newer info editor",async()=>{
- const course={id:"c",subject:{id:"s",code:"S",name:"Subject"},code:"C",name:"Original",description:"",term:"1",status:"DRAFT",teacher:null,version:1,activeStudentCount:0,removedStudentCount:0,showGradeDistribution:false,createdAt:"2026-01-01"};
+ const course={id:"c",subject:{id:"s",code:"S",name:"Subject"},code:"C",name:"Original",description:"",status:"DRAFT",teacher:null,version:1,activeStudentCount:0,removedStudentCount:0,showGradeDistribution:false,createdAt:"2026-01-01"};
  let version=1;
  vi.stubGlobal("fetch",vi.fn().mockImplementation((url:string,init:RequestInit)=>{
   if(init.method==="PATCH"){version=2;return Promise.resolve(Response.json({detail:"Changed"},{status:409}));}
@@ -28,5 +28,5 @@ it("keeps version conflict visible after reloading a newer info editor",async()=
  expect(screen.getByTestId("class-mutation-conflict")).toHaveTextContent("Dữ liệu đã thay đổi");
  fireEvent.change(screen.getByLabelText(/Mô tả/),{target:{value:"Second edit"}});
  fireEvent.click(screen.getByTestId("class-info-save"));
- await waitFor(()=>expect(fetch).toHaveBeenCalledWith("/api/v1/manager/classes/c",expect.objectContaining({method:"PATCH",body:JSON.stringify({name:"Original",description:"Second edit",term:"1",version:2})})));
+ await waitFor(()=>expect(fetch).toHaveBeenCalledWith("/api/v1/manager/classes/c",expect.objectContaining({method:"PATCH",body:JSON.stringify({name:"Original",description:"Second edit",version:2})})));
 });
