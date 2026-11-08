@@ -22,7 +22,6 @@ export const workApi = {
   save: (attemptId: string, contentVersion: number, content: DocumentModel, keepalive = false) =>
     write<Saved>(`/attempts/${enc(attemptId)}/content`, "PUT", { contentVersion, content }, { keepalive }),
   submit: (attemptId: string, contentVersion: number) => write<Receipt>(`/attempts/${enc(attemptId)}/submit`, "POST", { contentVersion }),
-  receipt: (attemptId: string, signal?: AbortSignal) => apiFetch<Receipt>(`${base}/attempts/${enc(attemptId)}/receipt`, { signal }),
   importDocx: (attemptId: string, file: File) => {
     const form = new FormData();
     form.append("file", file);
