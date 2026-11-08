@@ -10974,3 +10974,17 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Continued the existing documentation update. Luna 6 High agents handled the delegated work. Existing security and resiliency behavior is unchanged. Property-based testing remains disabled.
 
 ---
+
+
+## Internal step-by-step method comments in U09 Service classes — 2026-11-08
+
+**Timestamp**: 2026-11-08T10:52:00Z
+**Requested by:** Quang Hung
+**User Input (complete raw)**:
+
+> comment các method mà có tên file là service, comment bên trong cacs method cho tôi đoc dễ hiểu
+
+**Context**: Documentation-only update. Add internal step-by-step English comments within core service methods across U09 (`GradingProposalService`, `GradingBatchService`, `GradeDistributionVisibilityService`, `SubmissionImageService`, `GradebookService`, `EvaluationLifecycleService`, `SubmissionReviewService`, `GradingService`, `GradingMcpBatchService`, `GradingMcpQueryService`) to enhance code readability.
+
+- [x] Add step-by-step internal comments inside core methods across all 10 Service classes.
+- [x] Verify compilation with `mvn test-compile` (BUILD SUCCESS, 0 errors).

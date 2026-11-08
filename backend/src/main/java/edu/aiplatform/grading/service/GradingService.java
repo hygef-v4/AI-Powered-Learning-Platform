@@ -125,11 +125,14 @@ public class GradingService {
      */
     Evaluation saveCheckedEvaluation(Actor actor, UUID id, Save input,
             GradingProposal usedProposal) {
+        // Step 1: Validate teacher rights, lock evaluation, verify version concurrency, and ensure grade is not locked
         var evaluation = requireCurrent(actor, id, input.version());
         evaluation.requireMutableGrade();
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.badRequest("MEMBER_ENDPOINT_REQUIRED",
                     "Use member grading endpoint");
+
+        // Step 2: Compute rubric score points and compare current vs previous effective item scores
         var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
         var points = RubricScoring.calculateScore(rubrics, input.checkedItemsByRubric(),
                 input.itemScoresByRubric());
@@ -142,6 +145,7 @@ public class GradingService {
                         GradingJson.readChecks(objectMapper, evaluation.rubricChecks),
                         evaluation.rubricItemScores);
 
+        // Step 3: Collect valid document block IDs to prevent ghost evidence citations
         DocumentModel submittedDocument = null;
         if (evaluation.kind == EvaluationKind.ATTEMPT && evaluation.attemptId != null) {
             submittedDocument = submissionQuery.getSubmission(evaluation.attemptId)
@@ -150,9 +154,11 @@ public class GradingService {
         Set<String> validBlockIds = GradingFeedbackValidator.listValidBlockIds(rubrics,
                 submittedDocument);
 
+        // Step 4: Resolve and validate feedback state, ensuring modifications to AI scores have acknowledged reviews
         var feedbackState = resolveFeedbackState(evaluation, input, usedProposal, rubrics,
                 validBlockIds, currentEffectiveScores, previousEffectiveScores);
 
+        // Step 5: Update evaluation to DRAFT status and set total score, adjustment, and structured feedback
         evaluation.saveGrade(GradingJson.writeSnapshot(objectMapper, input.checkedItemsByRubric()),
                 points, input.adjustment(), input.adjustmentReason(), input.feedback(),
                 input.changeReason(), actor.accountId(), clock.instant());
@@ -160,6 +166,8 @@ public class GradingService {
         evaluation.structuredFeedback = feedbackState.feedback();
         evaluation.reviewedItemScores = feedbackState.reviewedScores();
         evaluation.acknowledgedReviewItems = feedbackState.acknowledgedItems();
+
+        // Step 6: Propagate grade to all group members (if group submission), persist to DB, and record audit event
         propagateGroupGrade(evaluation, actor, GroupOperation.SAVE, input.changeReason());
         evaluationRepository.save(evaluation);
         recordAudit(actor, evaluation, "GRADE_SAVED", null);
@@ -171,9 +179,12 @@ public class GradingService {
      */
     @Transactional
     public Evaluation finalizeEvaluation(Actor actor, ItemVersion item) {
+        // Step 1: Lock evaluation, verify teacher permission, and ensure it is not a group member sub-record
         var evaluation = requireCurrent(actor, item.evaluationId(), item.version());
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Finalize the group document");
+
+        // Step 2: Ensure any feedback items flagged for review or score-modified items are acknowledged
         if (evaluation.structuredFeedback != null) {
             var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
             var currentEffectiveScores = RubricScoring.calculateEffectiveItemScores(rubrics,
@@ -183,6 +194,8 @@ public class GradingService {
                     evaluation.reviewedItemScores, evaluation.acknowledgedReviewItems,
                     currentEffectiveScores);
         }
+
+        // Step 3: Transition state to FINALIZED, propagate to group members, and record audit event
         evaluation.finalizeGrade(actor.accountId(), clock.instant());
         propagateGroupGrade(evaluation, actor, GroupOperation.FINALIZE, null);
         evaluationRepository.save(evaluation);
@@ -195,15 +208,20 @@ public class GradingService {
      */
     @Transactional
     public Evaluation publishEvaluation(Actor actor, ItemVersion item) {
+        // Step 1: Lock evaluation and ensure publication is performed on root evaluation
         var evaluation = requireCurrent(actor, item.evaluationId(), item.version());
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Publish the group document");
+
+        // Step 2: Transition state to PUBLISHED and propagate to group members
         evaluation.publishGrade(actor.accountId(), clock.instant());
         var recipients = propagateGroupGrade(evaluation, actor, GroupOperation.PUBLISH, null);
         if (evaluation.kind == EvaluationKind.ATTEMPT)
             recipients = List.of(evaluation.accountId);
         evaluationRepository.save(evaluation);
         recordAudit(actor, evaluation, "GRADE_PUBLISHED", null);
+
+        // Step 3: Broadcast domain event to notify students
         eventPublisher.publish(new DomainEvent(1, UUID.randomUUID(), EventTypes.GRADE_PUBLISHED,
                 "U09", clock.instant(), evaluation.id.toString(),
                 Map.of("assignmentId", evaluation.assignmentId.toString(), "classId",
@@ -217,6 +235,7 @@ public class GradingService {
      */
     @Transactional
     public Evaluation saveMemberGrade(Actor actor, UUID rootId, UUID accountId, MemberSave input) {
+        // Step 1: Lock group root evaluation and assert it has already been graded
         var root = evaluationRepository.findById(rootId)
                 .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
         gradingAccess.requireTeacher(actor, root.classId, Actions.GRADING_WRITE);
@@ -224,6 +243,8 @@ public class GradingService {
         root.requireMutableGrade();
         if (root.kind != EvaluationKind.GROUP_DOCUMENT || root.score == null)
             throw ApiException.conflict("GROUP_NOT_GRADED", "Grade group document first");
+
+        // Step 2: Locate matching member evaluation record and check version concurrency
         final UUID documentId = root.groupDocumentId;
         final String hash = root.submissionHash;
         var candidate = evaluationRepository
@@ -236,6 +257,8 @@ public class GradingService {
                 .findFirst().orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
         var member = evaluationRepository.lockById(candidate.id).orElseThrow();
         member.checkVersion(input.version());
+
+        // Step 3: Set overridden member score, save to DB, and record audit event
         member.overrideMemberScore(input.score(), input.reason(), actor.accountId(),
                 clock.instant());
         evaluationRepository.save(member);

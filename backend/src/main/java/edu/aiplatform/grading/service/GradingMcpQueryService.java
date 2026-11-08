@@ -73,8 +73,11 @@ public class GradingMcpQueryService implements IMcpToolProvider {
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ, timeout = 20)
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
+        // Step 1: Verify teacher credentials and parse MCP arguments
         McpInput.teaching(actor);
         var in = new McpInput(args);
+
+        // Step 2: Route request to the appropriate read tool handler
         return new McpToolResult(false, switch (name) {
         case "read_grading_context" -> loadGradingContext(actor, args);
         case "list_submissions" -> listSubmissions(actor, in);

@@ -52,6 +52,7 @@ public class GradingMcpBatchService implements IMcpToolProvider {
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
+        // Step 1: Validate teacher authentication and MCP batch tool name
         McpInput.teaching(actor);
         boolean write = "record_grading_proposals_batch".equals(name);
         if (!write && !"read_grading_batch".equals(name))
@@ -59,6 +60,8 @@ public class GradingMcpBatchService implements IMcpToolProvider {
         if (args == null || !(args.get("items") instanceof List<?> items) || items.isEmpty()
                 || items.size() > 20)
             throw McpInput.invalid();
+
+        // Step 2: Iterate and process each batch item independently (max 20 items)
         List<Map<String, Object>> results = new ArrayList<>();
         Set<String> seen = new HashSet<>();
         for (int n = 0; n < items.size(); n++) {
@@ -79,12 +82,15 @@ public class GradingMcpBatchService implements IMcpToolProvider {
                     outcome.put("evaluationId", input.get("evaluationId"));
                 if (input.containsKey("requestRef"))
                     outcome.put("requestRef", input.get("requestRef"));
+
+                // Step 3: Dispatch single item to read context or record proposal
                 var result = write
                         ? gradingMcpTools.call(actor, "record_grading_proposal", input).content()
                         : gradingMcpQueryService.loadGradingContext(actor, input, false);
                 outcome.put("outcome", "OK");
                 outcome.put("result", result);
-                // Leave space for bounded outcomes for all remaining items.
+
+                // Step 4: Ensure output stays within safe MCP response payload limits (180KB / 240KB)
                 if (!isWithinBatchLimit(results, outcome)) {
                     outcome.remove("result");
                     outcome.put("outcome", "ERROR");
@@ -92,6 +98,7 @@ public class GradingMcpBatchService implements IMcpToolProvider {
                 } else if (!write)
                     gradingMcpQueryService.recordRead(actor, (Map<String, Object>) result);
             } catch (ApiException e) {
+                // Item level failure isolation
                 outcome.remove("result");
                 outcome.put("outcome", "ERROR");
                 outcome.put("code", e.code());

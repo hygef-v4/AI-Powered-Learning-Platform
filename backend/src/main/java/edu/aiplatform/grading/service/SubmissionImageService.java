@@ -22,12 +22,17 @@ public class SubmissionImageService {
 
     /** Issues a download token after confirming the image belongs to the evaluation submission. */
     public DownloadToken issueDownloadToken(Actor actor, UUID evaluationId, String fileId) {
+        // Step 1: Load evaluation details and verify teacher access
         var detail = submissionReviewService.loadEvaluation(actor, evaluationId);
+
+        // Step 2: Ensure fileId is actually attached as an IMAGE block in the student's submission document
         boolean attached = detail.document().blocks().stream()
                 .anyMatch(b -> b.type() == BlockType.IMAGE
                         && fileId.equals(b.content().path("fileId").asText()));
         if (!attached)
             throw ApiException.notFound("SUBMISSION_IMAGE_NOT_FOUND");
+
+        // Step 3: Issue authorized temporary download token from artifact storage
         return artifacts.issueDownloadToken(fileId, actor.accountId());
     }
 }

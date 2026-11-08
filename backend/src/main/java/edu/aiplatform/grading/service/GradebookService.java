@@ -97,11 +97,18 @@ public class GradebookService {
 
     /** Returns a page of gradebook rows after filtering active students by name or email. */
     public GradebookPage listGrades(Actor actor, UUID classId, String query, int page, int size) {
+        // Step 1: Validate page arguments and verify teacher gradebook access
         SubmissionReviewService.validatePage(page, size);
         gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
+
+        // Step 2: Load complete gradebook data (columns, students, latest evaluations)
         var data = loadGradebook(classId, null);
+
+        // Step 3: Filter active students by optional search query (name or email)
         var students = data.students().stream().filter(student -> matchesQuery(student, query))
                 .toList();
+
+        // Step 4: Apply pagination and map student grades for each assignment column
         var rows = students.stream().skip((long) (page - 1) * size).limit(size)
                 .map(student -> mapGradebookRow(student, data)).toList();
         return new GradebookPage(rows, data.columns(), students.size(), page, size);
@@ -109,8 +116,11 @@ public class GradebookService {
 
     /** Returns the gradebook row for one active student in the class. */
     public GradebookRow loadStudentGrades(Actor actor, UUID classId, UUID accountId) {
+        // Step 1: Verify teacher access and load gradebook scoped to this single student
         gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
         var data = loadGradebook(classId, accountId);
+
+        // Step 2: Find the matching student and map their gradebook row
         var student = data.students().stream().findFirst()
                 .orElseThrow(() -> ApiException.notFound("STUDENT_NOT_FOUND"));
         return mapGradebookRow(student, data);
@@ -125,11 +135,16 @@ public class GradebookService {
 
     /** Assembles assignment columns, active students, and evaluations for current submissions. */
     private GradebookData loadGradebook(UUID classId, UUID accountId) {
+        // Step 1: Verify course class exists and load gradable assignment columns
         var courseClass = classAccess.getClassRef(classId)
                 .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
         var columns = listAssignmentColumns(courseClass);
+
+        // Step 2: Index current submission progress (individual and group submissions)
         var progress = loadSubmissionProgress(classId, columns);
         Map<GradeKey, Evaluation> current = new HashMap<>();
+
+        // Step 3: Match evaluations against latest student attempts or group documents
         for (var evaluation : evaluationRepository.findForClass(classId)) {
             if (evaluation.kind == EvaluationKind.GROUP_DOCUMENT
                     || evaluation.state == EvaluationStatus.SUPERSEDED)
@@ -143,6 +158,8 @@ public class GradebookService {
                     current.put(key, evaluation);
             }
         }
+
+        // Step 4: Resolve active student profiles and contact information
         var studentIds = classAccess.listActiveStudents(classId).stream()
                 .filter(id -> accountId == null || id.equals(accountId)).toList();
         var contacts = accountLookup.getContacts(studentIds);
@@ -248,8 +265,11 @@ public class GradebookService {
 
     /** Returns the student's latest non-superseded grade per assignment if published. */
     public List<StudentGradeView> listMyGrades(Actor actor, UUID classId) {
+        // Step 1: Verify student enrollment in the course class
         gradingAccess.requireStudent(actor, classId);
         Map<UUID, Evaluation> latest = new HashMap<>();
+
+        // Step 2: Filter the student's latest non-superseded evaluation for each assignment
         for (var evaluation : evaluationRepository.findForClass(classId))
             if (actor.accountId().equals(evaluation.accountId)
                     && evaluation.state != EvaluationStatus.SUPERSEDED) {
@@ -257,6 +277,8 @@ public class GradebookService {
                 if (previous == null || evaluation.createdAt.isAfter(previous.createdAt))
                     latest.put(evaluation.assignmentId, evaluation);
             }
+
+        // Step 3: Only expose published evaluations to students
         return latest.values().stream()
                 .filter(evaluation -> evaluation.state == EvaluationStatus.PUBLISHED)
                 .map(this::mapStudentView).toList();
@@ -264,11 +286,14 @@ public class GradebookService {
 
     /** Returns the caller's attempt grade and hides its details until publication. */
     public StudentGradeView loadAttemptGrade(Actor actor, UUID attemptId) {
+        // Step 1: Locate evaluation and verify that the caller is the student owner
         var evaluation = evaluationRepository.findByAttemptId(attemptId)
                 .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
         gradingAccess.requireStudent(actor, evaluation.classId);
         if (!actor.accountId().equals(evaluation.accountId))
             throw ApiException.notFound("GRADE_NOT_FOUND");
+
+        // Step 2: Hide score and feedback breakdown if grade is still DRAFT/FINALIZED (not yet PUBLISHED)
         if (evaluation.state != EvaluationStatus.PUBLISHED)
             return new StudentGradeView(evaluation.assignmentId, evaluation.attemptId, null, null,
                     null, null, false, null);
@@ -333,10 +358,13 @@ public class GradebookService {
     /** Buckets one published score per active student, subject to student visibility. */
     public List<GradeDistributionCalculator.Bucket> loadDistribution(Actor actor, UUID classId,
             UUID assignmentId, boolean student) {
+        // Step 1: Verify role access (student or teacher)
         if (student)
             gradingAccess.requireStudent(actor, classId);
         else
             gradingAccess.requireTeacher(actor, classId, Actions.GRADING_REVIEW);
+
+        // Step 2: Validate class and assignment scope
         var courseClass = classAccess.getClassRef(classId)
                 .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
         var assignment = assignmentQuery.get(assignmentId)
@@ -346,10 +374,13 @@ public class GradebookService {
                 && (assignment.status() == AssignmentStatus.DRAFT
                         || assignment.status() == AssignmentStatus.REVIEWED))
             throw ApiException.notFound("ASSIGNMENT_NOT_FOUND");
+
+        // Step 3: For students, check whether the teacher enabled grade distribution visibility
         if (student && !gradeDistributionVisibilityRepository.findVisibility(classId, assignmentId)
                 .enabled())
             return List.of();
-        // One published value per active learner, never one value per attempt.
+
+        // Step 4: Collect latest published scores across active learners and compute histogram buckets
         var active = new HashSet<>(classAccess.listActiveStudents(classId));
         Map<UUID, Evaluation> latest = new HashMap<>();
         for (var evaluation : evaluationRepository.findForAssignmentAndClass(assignmentId, classId))
@@ -370,12 +401,17 @@ public class GradebookService {
     @Transactional
     public List<List<String>> buildExportRows(Actor actor, UUID classId, UUID assignmentId,
             String format) {
+        // Step 1: Check teacher export permission and format parameter (csv or xlsx)
         gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_EXPORT);
         if (!Set.of("csv", "xlsx").contains(format))
             throw ApiException.badRequest("INVALID_EXPORT_FORMAT", "Choose csv or xlsx");
+
+        // Step 2: Write standard header row
         List<List<String>> output = new ArrayList<>();
         output.add(List.of("Student", "Email", "Assignment", "Status", "Submitted at", "Late",
                 "Score", "Maximum", "Feedback"));
+
+        // Step 3: Load gradebook data and format export rows for each student and assignment
         gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
         var data = loadGradebook(classId, null);
         if (assignmentId != null && data.columns().stream()
@@ -388,6 +424,8 @@ public class GradebookService {
                             data.evaluations(), data.progress()), column.title()));
             }
         }
+
+        // Step 4: Record audit log event for gradebook export
         audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "GRADEBOOK_EXPORTED",
                 "CLASS", classId.toString(), AuditResult.SUCCESS, null, Map.of("format", format),
                 clock.instant()));
