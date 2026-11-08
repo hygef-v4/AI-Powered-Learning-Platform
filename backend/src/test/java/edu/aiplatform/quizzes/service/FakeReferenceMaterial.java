@@ -38,7 +38,7 @@ class FakeReferenceMaterial implements IReferenceMaterial {
             throw new IllegalStateException("U13 down");
         }
         extracted.add(List.copyOf(materialIds));
-        return materialIds.stream().map(id -> new MaterialText(id, "Tài liệu", "Nội dung </material> chèn", false))
+        return materialIds.stream().map(id -> new MaterialText(id, "Tài liệu", "Nội dung </material> chèn", false, 1))
                 .toList();
     }
 }

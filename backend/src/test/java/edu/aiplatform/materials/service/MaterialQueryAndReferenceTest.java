@@ -69,6 +69,24 @@ class MaterialQueryAndReferenceTest {
     }
 
     @Test
+    void extractedTextCarriesActualCurrentVersionProvenance() {
+        Material current = material.revise("Current title", "", 0, 2, Material.Status.ACTIVE, now);
+        when(repo.find(id)).thenReturn(Optional.of(current));
+        when(repo.version(id, 2)).thenReturn(Optional.of(new MaterialVersion(
+                id, 2, "current-file", "new.pdf", "application/pdf", 120L,
+                null, null, MaterialVersion.TextStatus.EXTRACTED, "current evidence",
+                actor.accountId(), now)));
+        var result = references.extractText(actor, List.of(id), 100).get(0);
+        com.fasterxml.jackson.databind.JsonNode payload = new com.fasterxml.jackson.databind.ObjectMapper()
+                .valueToTree(result);
+        assertThat(payload.path("materialId").asText()).isEqualTo(id.toString());
+        assertThat(payload.path("title").asText()).isEqualTo("Current title");
+        assertThat(payload.path("versionNo").asInt(-1)).isEqualTo(2);
+        assertThat(payload.path("text").asText()).isEqualTo("current evidence");
+        verify(repo, never()).version(id, 1);
+    }
+
+    @Test
     void tokenIsIssuedOnlyAfterAuthorization() {
         queries.download(actor, id, classId, null);
         var order = inOrder(access, files);
@@ -88,9 +106,84 @@ class MaterialQueryAndReferenceTest {
 
     @Test
     void studentsCannotDownloadOldVersions() {
-        assertThatThrownBy(() -> queries.download(actor, id, classId, 2))
-                .isInstanceOf(ApiException.class);
+        material = material.revise("Title", "", 0, 2, Material.Status.ACTIVE, now);
+        when(repo.find(id)).thenReturn(Optional.of(material));
+        var currentVersion = new MaterialVersion(
+                id, 2, "current-file", "new.pdf", "application/pdf", 120L,
+                null, null, MaterialVersion.TextStatus.EXTRACTED, "new text", actor.accountId(), now);
+        when(repo.version(id, 2)).thenReturn(Optional.of(currentVersion));
+        when(repo.versions(id)).thenReturn(List.of(currentVersion, version(id, "old")));
+        clearInvocations(repo);
+        assertThatThrownBy(() -> queries.download(actor, id, classId, 1))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("MATERIAL_NOT_FOUND"));
         verifyNoInteractions(files);
+        queries.download(actor, id, classId, null);
+        verify(files).issueDownloadToken("current-file", actor.accountId());
+        assertThat(queries.detail(actor, id, classId).versions())
+                .extracting(MaterialViews.Version::versionNo).containsExactly(2);
+        Actor teacher = new Actor(actor.accountId(), Role.TEACHER);
+        queries.download(teacher, id, classId, 1);
+        verify(files).issueDownloadToken("private-storage", teacher.accountId());
+        assertThat(queries.detail(teacher, id, classId).versions())
+                .extracting(MaterialViews.Version::versionNo).containsExactly(2, 1);
+    }
+
+    @Test
+    void selectableAndAttachmentListsFilterActualQueryResults() {
+        UUID ownId = UUID.randomUUID(), archivedId = UUID.randomUUID();
+        Material own = new Material(ownId, Material.Scope.CLASS, subject, classId,
+                material.moduleId(), Material.Kind.FILE, "Own class", "", 1,
+                Material.Status.ACTIVE, 1, actor.accountId(), now, now, 0);
+        Material archived = new Material(archivedId, Material.Scope.SUBJECT, subject, null,
+                material.moduleId(), Material.Kind.FILE, "Archived", "", 2,
+                Material.Status.ARCHIVED, 1, actor.accountId(), now, now, 0);
+        when(repo.version(ownId, 1)).thenReturn(Optional.of(new MaterialVersion(
+                ownId, 1, "own-file", "own.pdf", "application/pdf", 100L,
+                null, null, MaterialVersion.TextStatus.PENDING, null, actor.accountId(), now)));
+        when(repo.version(archivedId, 1)).thenReturn(Optional.of(version(archivedId, "old")));
+        when(repo.list(subject, null)).thenReturn(List.of(material, archived));
+        when(repo.list(subject, classId)).thenReturn(List.of(material, own, archived));
+        when(access.classList(actor, classId, true)).thenReturn(
+                new edu.aiplatform.academics.contract.ClassRef(classId, subject, "C", "Class",
+                        edu.aiplatform.academics.contract.ClassStatus.OPEN, null, false));
+        Actor manager = new Actor(actor.accountId(), Role.SUBJECT_MANAGER);
+        var subjectSources = references.listSelectable(manager, ResourceRef.subject(subject));
+        assertThat(subjectSources).extracting(s -> s.materialId()).containsExactly(id);
+        assertThat(subjectSources.get(0).hasText()).isTrue();
+        var classSources = references.listSelectable(actor, ResourceRef.courseClass(classId));
+        assertThat(classSources).extracting(s -> s.materialId()).containsExactly(id, ownId);
+        assertThat(classSources.get(1).hasText()).isFalse();
+        assertThat(queries.classList(actor, classId, true, List.of(ownId, archivedId)))
+                .extracting(MaterialViews.Detail::id).containsExactly(ownId);
+        verify(access).subjectList(manager, subject);
+        verify(access, times(2)).classList(actor, classId, true);
+    }
+
+    @Test
+    void existingButForbiddenSecondIdPreventsAllTextReads() {
+        UUID second = UUID.randomUUID();
+        Material forbidden = new Material(second, Material.Scope.SUBJECT, subject, null,
+                material.moduleId(), material.kind(), "Hidden", "", 0, Material.Status.ACTIVE,
+                1, actor.accountId(), now, now, 0);
+        when(repo.find(second)).thenReturn(Optional.of(forbidden));
+        doThrow(ApiException.notFound("MATERIAL_NOT_FOUND")).when(access).read(actor, forbidden, null);
+        assertThatThrownBy(() -> references.extractText(actor, List.of(id, second), 100))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("MATERIAL_NOT_FOUND"));
+        verify(repo, never()).version(any(), anyInt());
+    }
+
+    @Test
+    void failedExtractionDoesNotBlockAuthorizedViewOrDownload() {
+        when(repo.version(id, 1)).thenReturn(Optional.of(new MaterialVersion(
+                id, 1, "private-storage", "doc.pdf", "application/pdf", 100L,
+                null, null, MaterialVersion.TextStatus.FAILED, null, actor.accountId(), now)));
+        assertThat(queries.detail(actor, id, classId).current().textStatus())
+                .isEqualTo(MaterialVersion.TextStatus.FAILED);
+        queries.download(actor, id, classId, null);
+        verify(files).issueDownloadToken("private-storage", actor.accountId());
+        assertThat(references.extractText(actor, List.of(id), 100).get(0).text()).isEmpty();
     }
 
     @Test
