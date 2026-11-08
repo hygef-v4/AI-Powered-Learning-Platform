@@ -1,5 +1,13 @@
 # AI-DLC State Tracking
 
+## fix/remove-term delivery and staging merge — 2026-11-08
+
+User explicitly authorized scoped commits, push, staging→current-branch merge and E2E. Six scoped commits pushed to origin/fix/remove-term through fc31721b, then origin/staging528cc50e merged at6007c5fb. Only audit history conflicted; all lines from both branches preserved. Test-only integration repairs committed at44b5781d: restore three needed imports removed by staging cleanup and align the staff-email E2E oracle with BR-U14-21/D-U14-09. Verified merge/test integration through44b5781d has also been normally pushed to the same branch. No postmerge production behavior change.
+
+Fresh premerge complete backend2,015/2,015 and frontend805/805 passed. Postmerge frontend affected suites286/286, scoped lint and build31pages passed. Isolated API E2E168/168 (40 U04/U13/U14,16 U02,58 U12,35 U12b,19 U12c) passed with actual Nginx/auth/OTP/worker/Mailpit and separate data. First full postmerge backend2,003/2,004 passed, one load-sensitive U14 p95 assertion368.3049ms exceeded300ms during concurrent E2E; unchanged isolated benchmark then passed120.9493ms. Final complete retry without E2E load **2,004/2,004**, zero failures/errors/skips, BUILD SUCCESS17:21:26+07; announcements p95 **83.9347ms**, required PostgreSQL31/7/10/1 passed. All1,625 source/config hashes match final verification; see [delivery plan and evidence](construction/plans/code-generation-plan/2026-11-08-remove-term-staging-e2e.md).
+
+E2E resources stopped with volumes retained; existing platform stack preserved. API E2E does not close browser/proxy deployment capacity/provider acceptance or all requirements gates. Report drafting remains paused; historical draft contents preserved. Existing security/resiliency retained; PBT disabled.
+
 ## U04/U13/U14 expanded clause remediation — 2026-11-08
 
 Continued the user's explicit expanded review request on `fix/remove-term`, using current `aidlc-docs` and the settled reconciliation decisions. [Current clause map, evidence and open acceptance gates](construction/plans/code-generation-plan/2026-11-08-u04-u13-u14-clause-closure.md). Fixed demonstrated missing U13 current-version provenance, U04 null archive-result handling and blocked normal lifecycle transaction, missing module denial audit, swallowed GROUP submission dependency failure, and reminder truncation after500 candidates. Added real owner PostgreSQL/security/JWT/audit composition, Redis token expiry, Rabbit two-hub delivery, parser and local performance tests without new dependencies or a persistence migration.
