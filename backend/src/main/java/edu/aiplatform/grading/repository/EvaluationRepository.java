@@ -14,10 +14,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class EvaluationRepository implements IEvaluationRepository {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
+    /** Creates the repository with named-parameter JDBC access. */
     public EvaluationRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
+    /** Loads an evaluation by its identifier. */
     public Optional<Evaluation> findById(UUID id) {
         return namedParameterJdbcTemplate
                 .query("select grading_document, version from evaluations where id=:id",
@@ -25,6 +27,7 @@ public class EvaluationRepository implements IEvaluationRepository {
                 .stream().findFirst();
     }
 
+    /** Locks and loads an evaluation within the current transaction. */
     @Transactional(propagation = Propagation.MANDATORY)
     public Optional<Evaluation> lockById(UUID id) {
         return namedParameterJdbcTemplate
@@ -33,6 +36,7 @@ public class EvaluationRepository implements IEvaluationRepository {
                 .stream().findFirst();
     }
 
+    /** Loads the evaluation for a submission attempt. */
     public Optional<Evaluation> findByAttemptId(UUID id) {
         return namedParameterJdbcTemplate
                 .query("select grading_document, version from evaluations where attempt_id=:id",
@@ -40,6 +44,7 @@ public class EvaluationRepository implements IEvaluationRepository {
                 .stream().findFirst();
     }
 
+    /** Lists evaluations for an assignment in a class. */
     public List<Evaluation> findForAssignmentAndClass(UUID assignmentId, UUID classId) {
         return namedParameterJdbcTemplate.query("""
                 select grading_document, version from evaluations
@@ -48,12 +53,14 @@ public class EvaluationRepository implements IEvaluationRepository {
                 EvaluationRepository::mapEvaluation);
     }
 
+    /** Lists evaluations in a class. */
     public List<Evaluation> findForClass(UUID classId) {
         return namedParameterJdbcTemplate.query(
                 "select grading_document, version from evaluations where class_id=:classId",
                 Map.of("classId", classId), EvaluationRepository::mapEvaluation);
     }
 
+    /** Inserts or updates an evaluation using its current version for concurrency control. */
     @Transactional
     public Evaluation save(Evaluation evaluation) {
         var versions = namedParameterJdbcTemplate.queryForList(
@@ -89,6 +96,7 @@ public class EvaluationRepository implements IEvaluationRepository {
         return row.mapEvaluation();
     }
 
+    /** Locks the identity used to coordinate evaluations for a submission subject. */
     @Transactional(propagation = Propagation.MANDATORY)
     public void lockIdentity(UUID classId, UUID assignmentId, UUID subjectId) {
         String key = classId + ":" + assignmentId + ":" + subjectId;
@@ -97,6 +105,7 @@ public class EvaluationRepository implements IEvaluationRepository {
                 Map.of("key", key), (rs, index) -> rs.getObject(1));
     }
 
+    /** Maps a database row to its evaluation document and version. */
     private static Evaluation mapEvaluation(ResultSet rs, int index) throws SQLException {
         var row = new EvaluationRow();
         row.document = rs.getString("grading_document");
@@ -104,10 +113,12 @@ public class EvaluationRepository implements IEvaluationRepository {
         return row.mapEvaluation();
     }
 
+    /** Creates the error raised when a concurrent update changes the evaluation version. */
     private static ApiException createVersionConflict() {
         return ApiException.conflict("GRADE_VERSION_CONFLICT", "Reload evaluation");
     }
 
+    /** Maps indexed evaluation fields to SQL parameters. */
     private static Map<String, Object> mapParameters(EvaluationRow row) {
         var args = new HashMap<String, Object>();
         args.put("id", row.id);

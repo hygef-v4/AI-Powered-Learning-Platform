@@ -9,10 +9,12 @@ import org.springframework.stereotype.Component;
 public class AdminDashboardMcpTools implements IMcpToolProvider {
     private final AdminDashboardService adminDashboardService;
 
+    /** Connects the dashboard reader to the MCP tool. */
     public AdminDashboardMcpTools(AdminDashboardService adminDashboardService) {
         this.adminDashboardService = adminDashboardService;
     }
 
+    /** Exposes the read-only platform health summary to administrators. */
     @Override
     public List<McpToolDefinition> tools() {
         return List.of(new McpToolDefinition("read_platform_health_summary",
@@ -20,6 +22,7 @@ public class AdminDashboardMcpTools implements IMcpToolProvider {
                 McpSchemas.schema(""), McpToolKind.READ, Set.of(Role.ADMIN)));
     }
 
+    /** Checks the caller and tool name before loading the dashboard summary. */
     @Override
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
         McpInput.admin(actor);

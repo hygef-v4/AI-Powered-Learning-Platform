@@ -23,6 +23,7 @@ public class DashboardSourceReader implements AutoCloseable {
     private final long timeoutNanos;
     private final LongSupplier ticker;
 
+    /** Creates a bounded worker pool with a two-second deadline per source. */
     public DashboardSourceReader() {
         this(new ThreadPoolExecutor(8, 8, 0, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(32),
                 task -> {
@@ -32,6 +33,7 @@ public class DashboardSourceReader implements AutoCloseable {
                 }, new ThreadPoolExecutor.AbortPolicy()), Duration.ofSeconds(2), System::nanoTime);
     }
 
+    /** Uses the supplied worker pool and monotonic clock with a positive timeout. */
     DashboardSourceReader(ThreadPoolExecutor executor, Duration timeout, LongSupplier ticker) {
         if (timeout.isNegative() || timeout.isZero())
             throw new IllegalArgumentException("Timeout must be positive");
@@ -47,11 +49,13 @@ public class DashboardSourceReader implements AutoCloseable {
     }
 
     public record SourceResult<T>(boolean available, T value) {
+        /** Represents a source result that could not be read. */
         static <T> SourceResult<T> createUnavailableResult() {
             return new SourceResult<>(false, null);
         }
     }
 
+    /** Queues a source read with a deadline that includes time spent waiting for a worker. */
     public <T> PendingSource<T> submitSource(Callable<T> work) {
         long deadline = ticker.getAsLong() + timeoutNanos;
         try {
@@ -63,6 +67,7 @@ public class DashboardSourceReader implements AutoCloseable {
         }
     }
 
+    /** Returns results completed by the deadline and cancels unfinished reads. */
     public <T> SourceResult<T> awaitSource(PendingSource<T> pending) {
         Future<TimedResult<T>> future = pending.future();
         if (future == null)
@@ -94,6 +99,7 @@ public class DashboardSourceReader implements AutoCloseable {
         }
     }
 
+    /** Marks missing or invalid source data as unavailable without failing other sections. */
     public <T, R> Section<R> readSection(PendingSource<T> pending, Function<T, R> mapper) {
         var result = awaitSource(pending);
         if (!result.available() || result.value() == null)
@@ -105,6 +111,7 @@ public class DashboardSourceReader implements AutoCloseable {
         }
     }
 
+    /** Interrupts running reads and shuts down the worker pool. */
     @Override
     @PreDestroy
     public void close() {

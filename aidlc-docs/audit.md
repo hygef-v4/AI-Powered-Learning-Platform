@@ -10939,3 +10939,38 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **AI Response**: Existing security and resiliency scope retained. Property-based testing remains disabled. Full backend test suite and browser verification are outside the confirmed results.
 
 ---
+
+## Method documentation comments for U05, U09, U15 — 2026-11-08
+
+**Timestamp**: 2026-11-08T08:32:00Z
+**Requested by:** Quang Hung
+**User Input (complete raw)**:
+
+> giúp tôi thêm comment vào backend u05 u09 u15 là mỗi method làm những gì đi, comment ngắn gọn dễ hiểu
+
+> comment bwangf tiếng anh
+
+**Context**: Documentation-only update. Add concise English method comments/Javadoc across backend U15 (Admin Dashboard), U05 (Academics) and U09 (Grading) without changing behavior or signatures.
+
+- [x] Add concise English comments to U15 (admindashboard) methods.
+- [x] Add concise English comments to U05 (academics) methods.
+- [x] Add concise English comments to U09 (grading) methods.
+- [x] Verify compilation with `mvn test-compile`.
+
+---
+
+## Verify method documentation coverage for U05, U09, and U15 — 2026-11-08
+
+**Timestamp**: 2026-11-08T09:06:11Z
+**Requested by:** Quang Hung
+**User Input (complete raw)**:
+
+> giúp tôi thêm comment vào backend u05 u09 u15 là mỗi method làm những gì đi, comment ngắn gọn dễ hiểu, bằng tiếng anh
+
+> nếu chia subagent thì để luna 6 high
+
+**AI Response**: Completed concise English Javadoc for all 491 explicitly declared methods and constructors across the three production packages. Java tokens match HEAD across all 83 Java files after line-ending normalization. Maven `test-compile` compiled 715 main and 249 test files successfully. The runtime suite was not run for this comment-only update.
+
+**Context**: Continued the existing documentation update. Luna 6 High agents handled the delegated work. Existing security and resiliency behavior is unchanged. Property-based testing remains disabled.
+
+---

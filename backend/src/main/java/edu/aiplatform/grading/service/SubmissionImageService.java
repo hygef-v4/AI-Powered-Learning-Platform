@@ -13,12 +13,14 @@ public class SubmissionImageService {
     private final SubmissionReviewService submissionReviewService;
     private final IArtifact artifacts;
 
+    /** Creates the image access service with review and artifact dependencies. */
     public SubmissionImageService(SubmissionReviewService submissionReviewService,
             IArtifact artifacts) {
         this.submissionReviewService = submissionReviewService;
         this.artifacts = artifacts;
     }
 
+    /** Issues a download token after confirming the image belongs to the evaluation submission. */
     public DownloadToken issueDownloadToken(Actor actor, UUID evaluationId, String fileId) {
         var detail = submissionReviewService.loadEvaluation(actor, evaluationId);
         boolean attached = detail.document().blocks().stream()

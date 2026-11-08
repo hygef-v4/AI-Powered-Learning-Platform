@@ -58,6 +58,7 @@ public class AdminDashboardService {
     private final DashboardSourceReader dashboardSourceReader;
     private final Clock clock;
 
+    /** Connects the dashboard data sources and authorization dependencies. */
     public AdminDashboardService(IAccountLookup accountLookup, ISubjectQuery subjectQuery,
             IClassAccess classAccess, IBackupDashboardStatus backups, ISettings settings,
             IAuthorization authorization, IAudit audit, DashboardSourceReader dashboardSourceReader,
@@ -73,6 +74,7 @@ public class AdminDashboardService {
         this.clock = clock;
     }
 
+    /** Loads dashboard totals and backup status while isolating individual source failures. */
     public AdminDashboardView loadDashboard(Actor actor) {
         requireAdmin(actor);
         Instant calculatedAt = clock.instant();
@@ -117,6 +119,7 @@ public class AdminDashboardService {
                 enrollmentCount, backup);
     }
 
+    /** Checks admin access and pagination before loading a page of backup history. */
     public BackupHistoryPage listBackups(Actor actor, int page, int size) {
         requireAdmin(actor);
         if (page < 0 || size < 1 || size > 100) {
@@ -134,12 +137,14 @@ public class AdminDashboardService {
         return result.data();
     }
 
+    /** Converts a backup history page while preserving its pagination totals. */
     private BackupHistoryPage mapBackupHistory(Page<BackupDashboardRunView> found, int page,
             int size) {
         return new BackupHistoryPage(found.getContent().stream().map(this::mapBackupItem).toList(),
                 page, size, found.getTotalElements(), found.getTotalPages());
     }
 
+    /** Requires dashboard authorization and audits denied requests. */
     public void requireAdmin(Actor actor) {
         ApiException failure = null;
         if (actor == null || actor.accountId() == null) {
@@ -150,7 +155,7 @@ public class AdminDashboardService {
         } else {
             try {
                 AuthorizationDecision decision = authorization.authorize(actor,
-                        Actions.ADMIN_DASHBOARD_VIEW, ResourceRef.none());
+                    Actions.ADMIN_DASHBOARD_VIEW, ResourceRef.none());
                 if (decision == null || (!decision.allowed()
                         && "DEPENDENCY_UNAVAILABLE".equals(decision.reason()))) {
                     failure = createAuthorizationUnavailable();
@@ -174,11 +179,13 @@ public class AdminDashboardService {
         throw failure;
     }
 
+    /** Builds the service error for an unavailable authorization check. */
     private ApiException createAuthorizationUnavailable() {
         return ApiException.unavailable("DASHBOARD_AUTHORIZATION_UNAVAILABLE",
                 "Không kiểm tra được quyền truy cập");
     }
 
+    /** Totals accounts by role and status, with a separate active account count. */
     private AccountCounts calculateAccountCounts(Map<Role, Map<AccountStatus, Long>> raw) {
         var breakdown = new EnumMap<Role, Map<AccountStatus, Long>>(Role.class);
         raw.forEach((role, statuses) -> {
@@ -197,6 +204,7 @@ public class AdminDashboardService {
         return new AccountCounts(Map.copyOf(breakdown), total, active);
     }
 
+    /** Validates enum counts and fills missing entries with zero. */
     private <E extends Enum<E>> Map<E, Long> completeCounts(Class<E> type, Map<E, Long> raw) {
         Objects.requireNonNull(raw);
         raw.forEach((status, count) -> {
@@ -213,12 +221,14 @@ public class AdminDashboardService {
         return Map.copyOf(counts);
     }
 
+    /** Rejects missing or negative counts and returns the validated value. */
     private long requireNonNegativeCount(Long count) {
         if (count == null || count < 0)
             throw new IllegalArgumentException("Invalid count");
         return count;
     }
 
+    /** Validates the run state, schedule date, and optional size before mapping it. */
     private BackupRunItem mapBackupItem(BackupDashboardRunView run) {
         Objects.requireNonNull(run.state());
         Objects.requireNonNull(run.scheduledFor());
@@ -228,6 +238,7 @@ public class AdminDashboardService {
                 run.completedAt(), run.byteSize(), run.safeError(), run.purgedAt());
     }
 
+    /** Checks that the backup summary matches the requested window and failure details. */
     private BackupDashboardSummary validateBackupSummary(BackupDashboardSummary value, Instant from,
             Instant to) {
         if (!from.equals(value.fromInclusive()) || !to.equals(value.toExclusive())
@@ -241,6 +252,7 @@ public class AdminDashboardService {
         return value;
     }
 
+    /** Reads backup settings and calculates the next enabled run in Vietnam time. */
     private BackupSchedule loadSchedule(Instant now) {
         boolean enabled = settings.get(BACKUP_ENABLED).orElse(false);
         LocalTime dailyAt = settings.get(BACKUP_DAILY_AT).orElse(null);

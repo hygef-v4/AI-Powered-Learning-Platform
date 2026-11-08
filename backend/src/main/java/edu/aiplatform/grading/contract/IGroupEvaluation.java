@@ -9,6 +9,7 @@ import java.util.UUID;
  */
 public interface IGroupEvaluation {
 
+    /** Creates or resets group and member evaluations after a group submission. */
     void onGroupSubmitted(UUID groupDocumentId, String submissionHash, UUID assignmentId,
             UUID classId, List<UUID> memberIds);
 }

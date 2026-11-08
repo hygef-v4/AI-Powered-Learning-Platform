@@ -10,10 +10,14 @@ import org.springframework.stereotype.Repository;
 public class AcademicsReadRepository implements IAcademicsReadRepository {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
+    /** Creates the academic read repository with its named JDBC template. */
     public AcademicsReadRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
+    /**
+     * Finds course classes belonging to managed subjects matching optional query and status filters.
+     */
     @Override
     public List<CourseClass> listForManager(Collection<UUID> subjectIds, String query,
             ClassStatus status, int limit, int offset) {
@@ -24,6 +28,9 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
                 Map.of("subjectIds", List.copyOf(subjectIds)), query, status, limit, offset);
     }
 
+    /**
+     * Finds course classes assigned to a specific teacher matching optional query and status filters.
+     */
     @Override
     public List<CourseClass> listForTeacher(UUID accountId, String query, ClassStatus status,
             int limit, int offset) {
@@ -31,6 +38,9 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
                 status, limit, offset);
     }
 
+    /**
+     * Finds visible course classes where the student has an active enrollment.
+     */
     @Override
     public List<CourseClass> listForStudent(UUID accountId, String query, ClassStatus status,
             int limit, int offset) {
@@ -42,6 +52,9 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
                 Map.of("accountId", accountId), query, status, limit, offset);
     }
 
+    /**
+     * Executes a paginated SQL query for classes under a given scope condition with keyword filtering.
+     */
     private List<CourseClass> validatePage(String scope, Map<String, Object> scopeArgs,
             String query, ClassStatus status, int limit, int offset) {
         PersistenceChecks.validatePage(limit, offset);
@@ -67,6 +80,9 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
                 args, CourseClassRepository::mapCourseClass);
     }
 
+    /**
+     * Returns all classes assigned to a teacher ordered by class code.
+     */
     @Override
     public List<CourseClass> listTaught(UUID accountId) {
         return namedParameterJdbcTemplate.query(
@@ -74,6 +90,9 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
                 Map.of("accountId", accountId), CourseClassRepository::mapCourseClass);
     }
 
+    /**
+     * Returns all classes created under a subject ordered by class code.
+     */
     @Override
     public List<CourseClass> listOfSubject(UUID subjectId) {
         return namedParameterJdbcTemplate.query(
@@ -81,6 +100,9 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
                 Map.of("subjectId", subjectId), CourseClassRepository::mapCourseClass);
     }
 
+    /**
+     * Computes the total count of classes grouped by their lifecycle status.
+     */
     @Override
     public Map<ClassStatus, Long> countClassesByStatus() {
         var counts = new EnumMap<ClassStatus, Long>(ClassStatus.class);
@@ -95,6 +117,9 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
         return Map.copyOf(counts);
     }
 
+    /**
+     * Counts the total number of classes belonging to each specified subject ID.
+     */
     @Override
     public Map<UUID, Integer> countClassesOfSubjects(Collection<UUID> subjectIds) {
         if (subjectIds.isEmpty())
@@ -110,6 +135,9 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
         return Map.copyOf(counts);
     }
 
+    /**
+     * Counts non-archived classes for a given subject to ensure subjects are not modified/deleted while active.
+     */
     @Override
     public int countUnarchivedClasses(UUID subjectId) {
         Long value = namedParameterJdbcTemplate.queryForObject(
@@ -118,6 +146,9 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
         return Math.toIntExact(value == null ? 0 : value);
     }
 
+    /**
+     * Counts the global total of currently active student enrollments.
+     */
     @Override
     public long countActiveEnrollments() {
         Long value = namedParameterJdbcTemplate.queryForObject(
@@ -125,6 +156,9 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
         return value == null ? 0 : value;
     }
 
+    /**
+     * Returns active and removed enrollment totals for each specified class ID.
+     */
     @Override
     public Map<UUID, EnrollmentCounts> enrollmentCounts(Collection<UUID> classIds) {
         if (classIds.isEmpty())

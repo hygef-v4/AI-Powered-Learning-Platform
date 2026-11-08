@@ -36,6 +36,7 @@ public class GradingProposalService {
     private final IGradingProposalRepository gradingProposalRepository;
     private final GradingAccess gradingAccess;
 
+    /** Creates the proposal service with AI task, repository, and grading access dependencies. */
     public GradingProposalService(GradingProposalTransactions gradingProposalTransactions,
             IAiTask aiTask, IEvaluationRepository evaluationRepository,
             IGradingProposalRepository gradingProposalRepository, GradingAccess gradingAccess) {
@@ -46,6 +47,7 @@ public class GradingProposalService {
         this.gradingAccess = gradingAccess;
     }
 
+    /** Prepares and dispatches an AI grading proposal for an evaluation. */
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public GradingProposal requestProposal(Actor actor, UUID evaluationId, AiRequest input) {
         var prepared = gradingProposalTransactions.prepareProposal(actor, evaluationId, input);
@@ -67,6 +69,7 @@ public class GradingProposalService {
         return gradingProposalTransactions.recordDispatch(proposal.id, task, null);
     }
 
+    /** Lists an evaluation's proposals and reconciles their current AI task state. */
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public List<GradingProposal> listProposals(Actor actor, UUID evaluationId) {
         var evaluation = evaluationRepository.findById(evaluationId)
@@ -111,6 +114,7 @@ public class GradingProposalService {
         return listed;
     }
 
+    /** Requests AI grading proposals for each valid, unique evaluation in the batch. */
     public BatchResult requestProposals(Actor actor, AiBatch batch) {
         GradingCommands.validateBatchItems(batch.items());
         List<ItemResult> outcomes = new ArrayList<>();
@@ -153,6 +157,7 @@ public class GradingProposalService {
         return new BatchResult(outcomes);
     }
 
+    /** Estimates the total AI token usage for the unique evaluations in a batch. */
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public AiEstimate estimateProposalTokens(Actor actor, Batch batch) {
         GradingCommands.validateBatchItems(batch.items());

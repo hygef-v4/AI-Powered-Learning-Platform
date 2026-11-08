@@ -24,10 +24,12 @@ public class GradingMcpReadProgress {
             Long.class);
     private final StringRedisTemplate stringRedisTemplate;
 
+    /** Creates the progress tracker backed by shared Redis state. */
     public GradingMcpReadProgress(StringRedisTemplate stringRedisTemplate) {
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
+    /** Advances the actor's served-page offset when the supplied read position is current. */
     public void advanceProgress(UUID actorId, UUID evaluationId, String fingerprint, int offset,
             int next) {
         try {
@@ -43,6 +45,7 @@ public class GradingMcpReadProgress {
         }
     }
 
+    /** Requires the actor to have read every block for the current evaluation fingerprint. */
     public void requireCompleteRead(UUID actorId, UUID evaluationId, String fingerprint,
             int totalBlocks) {
         try {
@@ -57,15 +60,18 @@ public class GradingMcpReadProgress {
         }
     }
 
+    /** Builds the Redis key for one actor's read progress on an evaluation snapshot. */
     static String buildProgressKey(UUID actorId, UUID evaluationId, String fingerprint) {
         return "mcp:grading-read:" + actorId + ":" + evaluationId + ":" + fingerprint;
     }
 
+    /** Creates the conflict returned when grading context pages have not all been read. */
     static ApiException createReadRequiredError() {
         return ApiException.conflict("MCP_CONTEXT_READ_REQUIRED",
                 "Read every grading context page from offset 0 with the current fingerprint, then retry");
     }
 
+    /** Creates the service error returned when read progress cannot be verified. */
     private static ApiException createUnavailableError() {
         return ApiException.unavailable("MCP_CONTEXT_READ_UNAVAILABLE",
                 "Cannot verify grading context reads; retry after the service recovers");

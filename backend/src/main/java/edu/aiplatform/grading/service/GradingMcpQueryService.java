@@ -28,6 +28,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
     private final IAssignmentQuery assignmentQuery;
     private final GradingMcpReadProgress progress;
 
+    /** Creates the MCP query service with review, progress, and JSON dependencies. */
     public GradingMcpQueryService(SubmissionReviewService submissionReviewService,
             GradingPromptBuilder gradingPromptBuilder,
             GradingProposalService gradingProposalService, GradebookService gradebookService,
@@ -42,6 +43,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         this.progress = progress;
     }
 
+    /** Defines the MCP tools for grading context, submissions, and assignment summaries. */
     @Override
     public List<McpToolDefinition> tools() {
         String scope = "\"classId\":" + McpSchemas.UUID + ",\"assignmentId\":" + McpSchemas.UUID;
@@ -67,6 +69,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
                         "assignmentId"));
     }
 
+    /** Dispatches a grading read tool and returns its bounded result. */
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ, timeout = 20)
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
@@ -124,11 +127,13 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         });
     }
 
+    /** Loads a page of grading context and records the served portion for read tracking. */
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ, timeout = 20)
     public Map<String, Object> loadGradingContext(Actor actor, Map<String, Object> args) {
         return loadGradingContext(actor, args, true);
     }
 
+    /** Loads a grading context page, optionally omitting read-progress recording. */
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ, timeout = 20)
     public Map<String, Object> loadGradingContext(Actor actor, Map<String, Object> args,
             boolean recordRead) {
@@ -188,6 +193,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         return out;
     }
 
+    /** Records the block range served to the actor for this context page. */
     void recordRead(Actor actor, Map<String, Object> context) {
         int offset = (Integer) context.get("offset");
         progress.advanceProgress(actor.accountId(),
@@ -196,6 +202,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
                 offset + ((List<?>) context.get("documentBlocks")).size());
     }
 
+    /** Verifies the complete context was read for the current evaluation version and snapshot. */
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ, timeout = 20)
     public void requireCompleteRead(Actor actor, UUID evaluationId, long version, String hash,
             String fingerprint) {
@@ -212,6 +219,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
             Map<String, Object> assignmentContext, String policy, String fingerprint) {
     }
 
+    /** Loads the evaluation details and fingerprinted snapshot used by grading context reads. */
     private Snapshot loadSnapshot(Actor actor, Map<String, Object> args) {
         McpInput.teaching(actor);
         var in = new McpInput(args);
@@ -254,6 +262,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         return new Snapshot(detail, assignmentContext, policy, fingerprint);
     }
 
+    /** Lists submission review rows using the supplied MCP filters and pagination. */
     private Map<String, Object> listSubmissions(Actor actor, McpInput in) {
         UUID classId = in.uuid("classId"), assignmentId = in.uuid("assignmentId");
         int page = in.page(), size = in.size();
@@ -300,6 +309,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         return out;
     }
 
+    /** Builds an aggregate summary of published grades for the assignment. */
     private Map<String, Object> buildAssignmentSummary(Actor actor, UUID classId, UUID assignmentId,
             int limit) {
         var page = submissionReviewService.listSubmissions(actor, classId, assignmentId, "ALL",
@@ -334,12 +344,14 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         return out;
     }
 
+    /** Adds normalized feedback reasons to their occurrence counts. */
     private static void countFeedbackReasons(Map<String, Long> counts, List<String> values) {
         if (values != null)
             values.stream().filter(Objects::nonNull).map(String::trim).filter(s -> !s.isEmpty())
                     .distinct().forEach(s -> counts.merge(s, 1L, Long::sum));
     }
 
+    /** Sorts feedback reasons by occurrence count and maps them to result entries. */
     private static List<Map<String, Object>> rankFeedbackReasons(Map<String, Long> counts) {
         return counts.entrySet().stream()
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed()
@@ -351,18 +363,21 @@ public class GradingMcpQueryService implements IMcpToolProvider {
                 .toList();
     }
 
+    /** Parses supported boolean input values and rejects values with other types. */
     private static boolean readBoolean(Object value) {
         if (!(value instanceof Boolean b))
             throw McpInput.invalid();
         return b;
     }
 
+    /** Creates the continuation data needed to fetch the next grading context page. */
     private static Map<String, Object> buildContinuation(UUID id, long version, String hash,
             String fingerprint, int offset) {
         return Map.of("evaluationId", id.toString(), "expectedVersion", version, "submissionHash",
                 hash, "snapshotFingerprint", fingerprint, "offset", offset);
     }
 
+    /** Measures the serialized JSON size of an MCP result. */
     private int measureJsonBytes(Object value) {
         try {
             return objectMapper.writeValueAsBytes(value).length;
@@ -371,6 +386,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         }
     }
 
+    /** Creates the error returned when the requested MCP result exceeds its size limit. */
     private static ApiException createResultLimitError() {
         return ApiException.badRequest("MCP_CONTEXT_TOO_LARGE",
                 "Rubric, schema or one document block is too large; manual review is required");

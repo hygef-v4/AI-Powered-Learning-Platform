@@ -19,6 +19,7 @@ public class AcademicsMcpTools implements IMcpToolProvider {
         this.subjectQuery = subjectQuery;
     }
 
+    /** Exposes MCP tools for teaching classes and subjects. */
     @Override
     public List<McpToolDefinition> tools() {
         return List.of(
@@ -31,6 +32,7 @@ public class AcademicsMcpTools implements IMcpToolProvider {
                         McpSchemas.PAGE + ",\"query\":" + McpSchemas.TEXT));
     }
 
+    /** Handles MCP tool execution for class and subject lookups. */
     @Override
     @Transactional(readOnly = true)
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {

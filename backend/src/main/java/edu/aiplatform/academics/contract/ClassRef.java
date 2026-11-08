@@ -9,6 +9,7 @@ import java.util.UUID;
 public record ClassRef(UUID classId, UUID subjectId, String code, String name, ClassStatus status,
         UUID teacherId, boolean showGradeDistribution, String subjectCode) {
 
+    /** Validates the class identity and normalizes its display fields. */
     public ClassRef(UUID classId, UUID subjectId, String code, String name, ClassStatus status,
             UUID teacherId, boolean showGradeDistribution) {
         this(classId, subjectId, code, name, status, teacherId, showGradeDistribution, null);

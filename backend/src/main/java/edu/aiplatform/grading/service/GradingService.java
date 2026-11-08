@@ -53,6 +53,7 @@ public class GradingService {
     private final Clock clock;
     private final GradingFeedbackValidator gradingFeedbackValidator;
 
+    /** Creates the grading service with evaluation, authorization, and audit dependencies. */
     public GradingService(IEvaluationRepository evaluationRepository, GradingAccess gradingAccess,
             IAudit audit, IEventPublisher eventPublisher, ISubmissionQuery submissionQuery,
             ObjectMapper objectMapper, Clock clock) {
@@ -66,6 +67,9 @@ public class GradingService {
         this.gradingFeedbackValidator = new GradingFeedbackValidator(objectMapper);
     }
 
+    /**
+     * Validates teacher rights, locks the evaluation, checks version concurrency, and verifies attempt recency.
+     */
     public Evaluation requireCurrent(Actor actor, UUID id, long version) {
         var evaluation = evaluationRepository.lockById(id)
                 .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
@@ -78,6 +82,9 @@ public class GradingService {
         return evaluation;
     }
 
+    /**
+     * Verifies submission snapshot consistency and ensures only the latest student attempt is evaluated.
+     */
     private SubmissionView requireLatestSubmission(Evaluation evaluation) {
         var submission = submissionQuery.getSubmission(evaluation.attemptId).orElseThrow(
                 () -> ApiException.unavailable("SUBMISSION_UNAVAILABLE", "Submission unavailable"));
@@ -95,6 +102,9 @@ public class GradingService {
         return submission;
     }
 
+    /**
+     * Saves manual grades and rubric scores for an evaluation without applying an AI proposal.
+     */
     @Transactional
     public Evaluation saveEvaluation(Actor actor, UUID id, Save input) {
         if (input.usedProposalId() != null)
@@ -103,10 +113,16 @@ public class GradingService {
         return saveCheckedEvaluation(actor, id, input, null);
     }
 
+    /**
+     * Internal overload saving evaluation without an AI proposal baseline.
+     */
     Evaluation saveCheckedEvaluation(Actor actor, UUID id, Save input) {
         return saveCheckedEvaluation(actor, id, input, null);
     }
 
+    /**
+     * Core grading logic updating rubric scores, adjustments, structured feedback, and propagating to group members.
+     */
     Evaluation saveCheckedEvaluation(Actor actor, UUID id, Save input,
             GradingProposal usedProposal) {
         var evaluation = requireCurrent(actor, id, input.version());
@@ -150,6 +166,9 @@ public class GradingService {
         return evaluation;
     }
 
+    /**
+     * Finalizes an evaluation draft after validating that all required structured feedback reviews are resolved.
+     */
     @Transactional
     public Evaluation finalizeEvaluation(Actor actor, ItemVersion item) {
         var evaluation = requireCurrent(actor, item.evaluationId(), item.version());
@@ -171,6 +190,9 @@ public class GradingService {
         return evaluation;
     }
 
+    /**
+     * Publishes a finalized evaluation to students and emits the GRADE_PUBLISHED domain event.
+     */
     @Transactional
     public Evaluation publishEvaluation(Actor actor, ItemVersion item) {
         var evaluation = requireCurrent(actor, item.evaluationId(), item.version());
@@ -190,6 +212,9 @@ public class GradingService {
         return evaluation;
     }
 
+    /**
+     * Overrides an individual member's score in a group document submission with a recorded reason.
+     */
     @Transactional
     public Evaluation saveMemberGrade(Actor actor, UUID rootId, UUID accountId, MemberSave input) {
         var root = evaluationRepository.findById(rootId)
@@ -223,6 +248,9 @@ public class GradingService {
             Map<UUID, Set<UUID>> acknowledgedItems) {
     }
 
+    /**
+     * Resolves and validates structured feedback state, accounting for clear requests and AI proposal baselines.
+     */
     private ResolvedFeedbackState resolveFeedbackState(Evaluation evaluation, Save input,
             GradingProposal usedProposal, List<RubricView> rubrics, Set<String> validBlockIds,
             Map<UUID, Map<UUID, BigDecimal>> currentEffectiveScores,
@@ -270,6 +298,9 @@ public class GradingService {
                 currentEffectiveScores, fromProposal);
     }
 
+    /**
+     * Calculates reviewed scores and reviewer acknowledgment tracking by comparing against baseline scores/text.
+     */
     private ResolvedFeedbackState computeReviewMetadata(Evaluation evaluation,
             GradingFeedback target, GradingFeedback baselineFeedback, Save input,
             Map<UUID, Map<UUID, BigDecimal>> baselineScores,
@@ -366,6 +397,9 @@ public class GradingService {
                 RubricScoring.copyChecks(nextAck));
     }
 
+    /**
+     * Validates that all acknowledged and reviewed item references belong to known feedback and rubric items.
+     */
     private void validateMetadataEmptyOrKnown(Map<UUID, Set<UUID>> acknowledged,
             Map<UUID, Map<UUID, BigDecimal>> reviewedScores, GradingFeedback feedback,
             Map<UUID, Map<UUID, BigDecimal>> currentEffectiveScores) {
@@ -409,6 +443,9 @@ public class GradingService {
         }
     }
 
+    /**
+     * Asserts that all feedback items flagged for manual review or affected by score changes have been reviewed.
+     */
     private static void requireStructuredFeedbackReviewed(GradingFeedback feedback,
             Map<UUID, Map<UUID, BigDecimal>> reviewedScores, Map<UUID, Set<UUID>> acknowledgedItems,
             Map<UUID, Map<UUID, BigDecimal>> currentEffectiveScores) {
@@ -419,7 +456,7 @@ public class GradingService {
             UUID r = item.rubricId();
             UUID i = item.itemId();
             boolean ack = acknowledgedItems != null
-                    && acknowledgedItems.getOrDefault(r, Set.of()).contains(i);
+            && acknowledgedItems.getOrDefault(r, Set.of()).contains(i);
             if (item.requiresReview() && !ack) {
                 throw ApiException.conflict("STRUCTURED_FEEDBACK_REVIEW_REQUIRED",
                         "Cần xác nhận hoặc chỉnh sửa các mục nhận xét được đánh dấu cần giảng viên kiểm tra trước khi chốt điểm.");
@@ -436,6 +473,9 @@ public class GradingService {
         }
     }
 
+    /**
+     * Extracts rubric check states and item scores from proposal JSON to calculate effective scores.
+     */
     private Map<UUID, Map<UUID, BigDecimal>> extractProposalEffectiveScores(JsonNode proposalNode,
             List<RubricView> rubrics) {
         try {
@@ -457,6 +497,9 @@ public class GradingService {
         SAVE, FINALIZE, PUBLISH
     }
 
+    /**
+     * Propagates grade actions (save, finalize, publish) from a group root evaluation to each member's evaluation.
+     */
     private List<UUID> propagateGroupGrade(Evaluation root, Actor actor, GroupOperation operation,
             String reason) {
         if (root.kind != EvaluationKind.GROUP_DOCUMENT)
@@ -482,6 +525,9 @@ public class GradingService {
         return recipients;
     }
 
+    /**
+     * Logs an audit record for grading operations.
+     */
     void recordAudit(Actor actor, Evaluation evaluation, String action, String reason) {
         audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), action, "EVALUATION",
                 evaluation.id.toString(), AuditResult.SUCCESS, reason,

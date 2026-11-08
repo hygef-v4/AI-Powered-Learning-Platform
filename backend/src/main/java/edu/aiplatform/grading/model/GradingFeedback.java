@@ -11,12 +11,14 @@ import java.util.UUID;
  */
 public record GradingFeedback(int schemaVersion, Summary summary, List<Item> items) {
 
+    /** Rejects unknown fields in structured feedback. */
     @JsonAnySetter
     public void createUnknownFeedback(String key, Object value) {
         throw ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK",
                 "Unknown structuredFeedback field: " + key);
     }
 
+    /** Returns a defensive copy with empty collections in place of null values. */
     public GradingFeedback copyFeedback() {
         return new GradingFeedback(schemaVersion,
                 summary == null ? new Summary(List.of(), List.of(), List.of()) : summary.copy(),
@@ -25,12 +27,14 @@ public record GradingFeedback(int schemaVersion, Summary summary, List<Item> ite
 
     public record Summary(List<String> strengths, List<String> improvements,
             List<String> nextSteps) {
+        /** Rejects unknown fields in a feedback summary. */
         @JsonAnySetter
         public void unknown(String key, Object value) {
             throw ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK",
                     "Unknown summary field: " + key);
         }
 
+        /** Returns a defensive copy of the summary lists. */
         public Summary copy() {
             return new Summary(strengths == null ? List.of() : List.copyOf(strengths),
                     improvements == null ? List.of() : List.copyOf(improvements),
@@ -41,12 +45,14 @@ public record GradingFeedback(int schemaVersion, Summary summary, List<Item> ite
     public record Item(UUID rubricId, UUID itemId, String evidence, String reason,
             String suggestion, String evidenceBlockId, boolean requiresReview,
             String reviewReason) {
+        /** Rejects unknown fields in a rubric feedback item. */
         @JsonAnySetter
         public void unknown(String key, Object value) {
             throw ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK",
                     "Unknown item field: " + key);
         }
 
+        /** Returns a copy of this rubric feedback item. */
         public Item copy() {
             return new Item(rubricId, itemId, evidence, reason, suggestion, evidenceBlockId,
                     requiresReview, reviewReason);

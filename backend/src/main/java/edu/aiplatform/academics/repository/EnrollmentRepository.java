@@ -21,6 +21,7 @@ public class EnrollmentRepository implements IEnrollmentRepository {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
+    /** Finds an enrollment record by class ID and account ID. */
     @Override
     public Optional<Enrollment> find(UUID classId, UUID accountId) {
         return namedParameterJdbcTemplate.query(
@@ -29,6 +30,7 @@ public class EnrollmentRepository implements IEnrollmentRepository {
                 EnrollmentRepository::mapEnrollment).stream().findFirst();
     }
 
+    /** Lists paginated enrollments for a class, optionally filtering for active students only. */
     @Override
     public List<Enrollment> listByClass(UUID classId, boolean activeOnly, int limit, int offset) {
         PersistenceChecks.validatePage(limit, offset);
@@ -40,6 +42,7 @@ public class EnrollmentRepository implements IEnrollmentRepository {
                 EnrollmentRepository::mapEnrollment);
     }
 
+    /** Checks if a student is already actively enrolled in another open class of the same subject. */
     @Override
     public boolean activeInOtherClass(UUID accountId, UUID subjectId, UUID excludedClassId) {
         Boolean result = namedParameterJdbcTemplate.queryForObject(
@@ -53,6 +56,7 @@ public class EnrollmentRepository implements IEnrollmentRepository {
         return Boolean.TRUE.equals(result);
     }
 
+    /** Finds student IDs in this class who are concurrently active in another class of the same subject. */
     @Override
     public List<UUID> conflictingStudents(UUID classId, UUID subjectId) {
         return namedParameterJdbcTemplate.queryForList(
@@ -66,6 +70,7 @@ public class EnrollmentRepository implements IEnrollmentRepository {
                 Map.of("classId", classId, "subjectId", subjectId), UUID.class);
     }
 
+    /** Inserts a new student enrollment record into the database. */
     @Override
     public void insert(Enrollment value) {
         PersistenceChecks.requireWritableTransaction();
@@ -82,6 +87,7 @@ public class EnrollmentRepository implements IEnrollmentRepository {
         }
     }
 
+    /** Updates an enrollment record checking expected previous status for concurrency safety. */
     @Override
     public void update(Enrollment value, EnrollmentStatus expectedStatus) {
         PersistenceChecks.requireWritableTransaction();

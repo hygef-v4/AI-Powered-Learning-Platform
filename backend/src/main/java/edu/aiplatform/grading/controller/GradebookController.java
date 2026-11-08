@@ -25,12 +25,14 @@ public class GradebookController {
     private final GradebookService gradebookService;
     private final GradebookExporter gradebookExporter;
 
+    /** Connects gradebook queries and file export to the HTTP endpoints. */
     public GradebookController(GradebookService gradebookService,
             GradebookExporter gradebookExporter) {
         this.gradebookService = gradebookService;
         this.gradebookExporter = gradebookExporter;
     }
 
+    /** Returns a page of the class gradebook, optionally filtered by student name or email. */
     @GetMapping("/gradebook")
     public GradebookPage listGrades(@AuthenticationPrincipal Actor actor,
             @PathVariable UUID classId, @RequestParam(required = false) String q,
@@ -39,6 +41,9 @@ public class GradebookController {
         return gradebookService.listGrades(actor, classId, q, page, size);
     }
 
+    /**
+     * Exports class gradebook data to a downloadable CSV or Excel (.xlsx) file.
+     */
     @GetMapping("/gradebook/export")
     public void exportGrades(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
             @RequestParam(required = false) UUID assignmentId,
@@ -55,6 +60,7 @@ public class GradebookController {
         gradebookExporter.writeGradebook(rows, format, response.getOutputStream());
     }
 
+    /** Returns grade distribution buckets for the teacher's view of an assignment. */
     @GetMapping("/grade-distribution")
     public List<GradeDistributionCalculator.Bucket> loadDistribution(
             @AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
@@ -62,6 +68,7 @@ public class GradebookController {
         return gradebookService.loadDistribution(actor, classId, assignmentId, false);
     }
 
+    /** Returns a student's gradebook row with current grades and submission status. */
     @GetMapping("/students/{accountId}/grades")
     public GradebookRow loadStudentGrades(@AuthenticationPrincipal Actor actor,
             @PathVariable UUID classId, @PathVariable UUID accountId) {

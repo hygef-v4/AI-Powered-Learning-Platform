@@ -76,6 +76,7 @@ public class GradebookService {
     private final IAudit audit;
     private final Clock clock;
 
+    /** Connects gradebook queries to evaluation, submission, access, and audit services. */
     public GradebookService(IEvaluationRepository evaluationRepository, GradingAccess gradingAccess,
             IAssignmentQuery assignmentQuery, ISubmissionQuery submissionQuery,
             IClassAccess classAccess, IAccountLookup accountLookup, IRubric rubric, IAudit audit,
@@ -94,6 +95,7 @@ public class GradebookService {
         this.clock = clock;
     }
 
+    /** Returns a page of gradebook rows after filtering active students by name or email. */
     public GradebookPage listGrades(Actor actor, UUID classId, String query, int page, int size) {
         SubmissionReviewService.validatePage(page, size);
         gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
@@ -105,6 +107,7 @@ public class GradebookService {
         return new GradebookPage(rows, data.columns(), students.size(), page, size);
     }
 
+    /** Returns the gradebook row for one active student in the class. */
     public GradebookRow loadStudentGrades(Actor actor, UUID classId, UUID accountId) {
         gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
         var data = loadGradebook(classId, accountId);
@@ -120,6 +123,7 @@ public class GradebookService {
             Map<GradeKey, Evaluation> evaluations, SubmissionProgress progress) {
     }
 
+    /** Assembles assignment columns, active students, and evaluations for current submissions. */
     private GradebookData loadGradebook(UUID classId, UUID accountId) {
         var courseClass = classAccess.getClassRef(classId)
                 .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
@@ -150,16 +154,14 @@ public class GradebookService {
         return new GradebookData(columns, students, current, progress);
     }
 
+    /** Builds one grade cell per assignment column for the student. */
     private GradebookRow mapGradebookRow(Person student, GradebookData data) {
         return new GradebookRow(student,
                 data.columns().stream().map(column -> mapGradeCell(student.accountId(), column,
                         data.evaluations(), data.progress())).toList());
     }
 
-    /**
-     * Bài có điểm đã giao cho sinh viên: {@code IAssignmentQuery.listForClass} trả cả bài lớp còn nháp, đã duyệt, chờ mở;
-     * những bài đó chưa có ai nộp nên không thành cột bảng điểm.
-     */
+    /** Includes only graded assignments that have opened, excluding drafts and scheduled work. */
     public static boolean isGradable(AssignmentView assignment) {
         return assignment.gradingMode() == GradingMode.GRADED
                 && (assignment.status() == AssignmentStatus.OPEN
@@ -167,6 +169,7 @@ public class GradebookService {
                         || assignment.status() == AssignmentStatus.RETIRED);
     }
 
+    /** Builds columns for gradable class assignments with their rubric totals. */
     private List<AssignmentColumn> listAssignmentColumns(ClassRef courseClass) {
         return assignmentQuery.listForClass(courseClass.classId()).stream()
                 .filter(GradebookService::isGradable)
@@ -182,6 +185,7 @@ public class GradebookService {
             Map<UUID, GroupSubmissionStatus> groups) {
     }
 
+    /** Indexes individual submissions by learner and group submissions by document. */
     private SubmissionProgress loadSubmissionProgress(UUID classId,
             List<AssignmentColumn> columns) {
         Map<GradeKey, StudentSubmissionStatus> individual = new HashMap<>();
@@ -204,11 +208,13 @@ public class GradebookService {
         return new SubmissionProgress(individual, groupProgress);
     }
 
+    /** Matches a case-insensitive name or email search, with blank queries matching all. */
     private boolean matchesQuery(Person student, String query) {
         return query == null || query.isBlank() || (student.name() + " " + student.email())
                 .toLowerCase(Locale.ROOT).contains(query.toLowerCase(Locale.ROOT));
     }
 
+    /** Combines evaluation scores and status with individual or group submission timing. */
     private GradeCell mapGradeCell(UUID studentId, AssignmentColumn column,
             Map<GradeKey, Evaluation> evaluations, SubmissionProgress progress) {
         var key = new GradeKey(column.id(), studentId);
@@ -232,6 +238,7 @@ public class GradebookService {
                 evaluation == null ? null : evaluation.feedback);
     }
 
+    /** Distinguishes missing, in-progress, and pending submissions before grading. */
     private String resolveUngradedStatus(Optional<StudentSubmissionStatus> submission) {
         if (submission.isEmpty() || submission.get().latestStatus() == null)
             return "NOT_SUBMITTED";
@@ -239,6 +246,7 @@ public class GradebookService {
                 : "PENDING";
     }
 
+    /** Returns the student's latest non-superseded grade per assignment if published. */
     public List<StudentGradeView> listMyGrades(Actor actor, UUID classId) {
         gradingAccess.requireStudent(actor, classId);
         Map<UUID, Evaluation> latest = new HashMap<>();
@@ -254,6 +262,7 @@ public class GradebookService {
                 .map(this::mapStudentView).toList();
     }
 
+    /** Returns the caller's attempt grade and hides its details until publication. */
     public StudentGradeView loadAttemptGrade(Actor actor, UUID attemptId) {
         var evaluation = evaluationRepository.findByAttemptId(attemptId)
                 .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
@@ -266,6 +275,7 @@ public class GradebookService {
         return mapStudentView(evaluation);
     }
 
+    /** Shows published scores, rubric item evidence, and feedback from the saved evaluation. */
     private StudentGradeView mapStudentView(Evaluation evaluation) {
         List<RubricView> rubrics = List.of();
         if (evaluation.rubricSnapshot != null && !evaluation.rubricSnapshot.isBlank()) {
@@ -320,6 +330,7 @@ public class GradebookService {
                 evaluation.memberOverride);
     }
 
+    /** Buckets one published score per active student, subject to student visibility. */
     public List<GradeDistributionCalculator.Bucket> loadDistribution(Actor actor, UUID classId,
             UUID assignmentId, boolean student) {
         if (student)
@@ -353,7 +364,9 @@ public class GradebookService {
                 latest.values().stream().map(evaluation -> evaluation.maxScore).toList());
     }
 
-    // A successful export also writes its audit event in this transaction.
+    /**
+     * Builds CSV or Excel gradebook rows and records the successful export in the same transaction.
+     */
     @Transactional
     public List<List<String>> buildExportRows(Actor actor, UUID classId, UUID assignmentId,
             String format) {
@@ -381,6 +394,7 @@ public class GradebookService {
         return output;
     }
 
+    /** Formats one export row and includes scores and feedback only for official grades. */
     private List<String> buildExportRow(Person student, GradeCell grade, String assignmentTitle) {
         boolean official = grade.status().equals("FINALIZED") || grade.status().equals("PUBLISHED");
         String score = official && grade.score() != null ? grade.score().toPlainString() : "";

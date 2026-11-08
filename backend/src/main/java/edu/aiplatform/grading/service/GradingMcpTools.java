@@ -29,6 +29,7 @@ public class GradingMcpTools implements IMcpToolProvider {
     private final ObjectMapper objectMapper;
     private final GradingMcpQueryService gradingMcpQueryService;
 
+    /** Creates the grading proposal MCP provider with evaluation and proposal services. */
     public GradingMcpTools(IEvaluationRepository evaluationRepository,
             GradingProposalTransactions gradingProposalTransactions, ObjectMapper objectMapper,
             GradingMcpQueryService gradingMcpQueryService) {
@@ -38,6 +39,7 @@ public class GradingMcpTools implements IMcpToolProvider {
         this.gradingMcpQueryService = gradingMcpQueryService;
     }
 
+    /** Defines the MCP tool that records a grading proposal for teacher review. */
     public List<McpToolDefinition> tools() {
         return List.of(new McpToolDefinition("record_grading_proposal",
                 "Record a rubric proposal after reading every current read_grading_context page. Pass its snapshotFingerprint; return reviewUrl to the user. Cannot save or publish official grades.",
@@ -52,6 +54,7 @@ public class GradingMcpTools implements IMcpToolProvider {
                 McpToolKind.WRITE, Set.of(Role.TEACHER, Role.SUBJECT_MANAGER)));
     }
 
+    /** Validates the submission reference and records its grading proposal. */
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
         edu.aiplatform.ai.contract.McpInput.teaching(actor);
         if (!"record_grading_proposal".equals(name))
@@ -94,11 +97,13 @@ public class GradingMcpTools implements IMcpToolProvider {
         }
     }
 
+    /** Builds the teacher review link for a proposal. */
     static String buildReviewUrl(UUID evaluationId, UUID proposalId) {
         return "/teaching/evaluations/" + evaluationId + "?proposalId=" + proposalId
                 + "#grading-ai-review";
     }
 
+    /** Validates allowed tool arguments and returns the submission reference object. */
     private JsonNode readSubmissionReference(JsonNode arguments) {
         arguments.fieldNames().forEachRemaining(field -> {
             if (!ARGUMENT_FIELDS.contains(field))
@@ -118,6 +123,7 @@ public class GradingMcpTools implements IMcpToolProvider {
         return reference;
     }
 
+    /** Finds the evaluation identified by an attempt or group document reference. */
     private Evaluation findEvaluation(String kind, UUID submissionId, UUID classId,
             UUID assignmentId) {
         if (kind.equals("ATTEMPT"))

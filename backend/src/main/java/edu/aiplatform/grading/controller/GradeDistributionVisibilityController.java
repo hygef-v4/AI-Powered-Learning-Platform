@@ -17,11 +17,15 @@ public class GradeDistributionVisibilityController {
 
     private final GradeDistributionVisibilityService gradeDistributionVisibilityService;
 
+    /** Creates the controller with grade distribution visibility services. */
     public GradeDistributionVisibilityController(
             GradeDistributionVisibilityService gradeDistributionVisibilityService) {
         this.gradeDistributionVisibilityService = gradeDistributionVisibilityService;
     }
 
+    /**
+     * Checks whether students are allowed to view the class grade distribution for an assignment.
+     */
     @GetMapping
     public GradeDistributionVisibilityService.View loadVisibility(
             @AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
@@ -29,6 +33,9 @@ public class GradeDistributionVisibilityController {
         return gradeDistributionVisibilityService.loadVisibility(actor, classId, assignmentId);
     }
 
+    /**
+     * Toggles student visibility for assignment grade distribution using optimistic locking.
+     */
     @PutMapping
     public GradeDistributionVisibilityService.View updateVisibility(
             @AuthenticationPrincipal Actor actor, @PathVariable UUID classId,

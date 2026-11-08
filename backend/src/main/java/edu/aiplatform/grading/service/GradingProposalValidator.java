@@ -24,12 +24,13 @@ public class GradingProposalValidator {
     private final ObjectMapper objectMapper;
     private final GradingFeedbackValidator gradingFeedbackValidator;
 
+    /** Creates the validator with the JSON parser used for proposal payloads. */
     public GradingProposalValidator(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
         this.gradingFeedbackValidator = new GradingFeedbackValidator(objectMapper);
     }
 
-    /** Classify validation failures without exposing provider-authored field values. */
+    /** Maps proposal errors to diagnostic codes without exposing provider values. */
     public static String buildRejectionDiagnostic(ApiException error) {
         String detail = error.getMessage() == null ? "" : error.getMessage();
         if (detail.startsWith("Unknown evidenceBlockId:"))
@@ -59,16 +60,19 @@ public class GradingProposalValidator {
     public record Validated(Map<UUID, Set<UUID>> checks, BigDecimal score, String feedback,
             JsonNode sections, Map<UUID, Map<UUID, BigDecimal>> itemScoresByRubric,
             GradingFeedback structuredFeedback) {
+        /** Preserves callers that provide checklist scores without newer feedback fields. */
         public Validated(Map<UUID, Set<UUID>> checks, BigDecimal score, String feedback,
                 JsonNode sections, Map<UUID, Map<UUID, BigDecimal>> itemScoresByRubric) {
             this(checks, score, feedback, sections, itemScoresByRubric, null);
         }
     }
 
+    /** Validates a proposal against its rubric and derives checklist scores. */
     public Validated validateProposal(JsonNode payload, List<RubricView> rubrics) {
         return validateProposal(payload, rubrics, null);
     }
 
+    /** Validates a proposal against its rubric, submission blocks, and structured feedback. */
     public Validated validateProposal(JsonNode payload, List<RubricView> rubrics,
             Set<String> validBlockIds) {
         try {
@@ -99,6 +103,7 @@ public class GradingProposalValidator {
         }
     }
 
+    /** Requires each rubric item to have a valid fractional score. */
     private void requireCompleteScores(List<RubricView> rubrics, Map<UUID, Set<UUID>> checks,
             Map<UUID, Map<UUID, BigDecimal>> scores) {
         for (var rubric : rubrics) {
@@ -119,6 +124,7 @@ public class GradingProposalValidator {
         }
     }
 
+    /** Rejects proposal payloads with an invalid shape or undeclared fields. */
     private void requireProposalObject(JsonNode payload) {
         if (payload == null || !payload.isObject()) {
             throw new IllegalArgumentException();
@@ -130,6 +136,7 @@ public class GradingProposalValidator {
         });
     }
 
+    /** Reads and validates selected rubric item IDs from the proposal payload. */
     private Map<UUID, Set<UUID>> readChecks(JsonNode payload) {
         var node = payload.get("checks");
         if (node == null || !node.isObject() || !payload.hasNonNull("score")) {
@@ -153,6 +160,7 @@ public class GradingProposalValidator {
         return checks;
     }
 
+    /** Requires the reported proposal score to match the score derived from rubric items. */
     private void requireMatchingScore(JsonNode scoreNode, BigDecimal computedScore) {
         var suppliedScore = new BigDecimal(scoreNode.asText());
         if (suppliedScore.scale() > 2 || computedScore.compareTo(suppliedScore) != 0) {
@@ -161,6 +169,7 @@ public class GradingProposalValidator {
         }
     }
 
+    /** Reads optional feedback text while enforcing its size limit. */
     private String readFeedback(JsonNode node) {
         if (node != null && !node.isNull() && !node.isTextual()) {
             throw new IllegalArgumentException();
@@ -172,6 +181,7 @@ public class GradingProposalValidator {
         return feedback;
     }
 
+    /** Validates section feedback entries against the parts in the rubric. */
     private void validateSections(JsonNode sections, List<RubricView> rubrics) {
         if (sections == null) {
             return;
@@ -193,6 +203,7 @@ public class GradingProposalValidator {
         }
     }
 
+    /** Parses proposal JSON and rejects malformed or oversized payloads. */
     public JsonNode parseProposal(String value) {
         if (value == null || value.length() > MAX_PAYLOAD_LENGTH)
             throw ApiException.badRequest("INVALID_AI_PROPOSAL", "AI proposal too large");

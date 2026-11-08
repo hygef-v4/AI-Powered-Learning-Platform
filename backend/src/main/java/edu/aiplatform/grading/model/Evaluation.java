@@ -45,6 +45,7 @@ public class Evaluation {
     public boolean memberOverride;
     public List<EvaluationHistory> changes = new ArrayList<>();
 
+    /** Creates a pending evaluation for a submitted attempt. */
     public static Evaluation createPendingEvaluation(UUID attemptId, UUID assignmentId,
             UUID classId, UUID accountId, String hash, BigDecimal max, String rubrics,
             Instant now) {
@@ -64,12 +65,14 @@ public class Evaluation {
         return evaluation;
     }
 
+    /** Rejects a write when the evaluation version has changed. */
     public void checkVersion(long expected) {
         if (version != expected)
             throw ApiException.conflict("GRADE_VERSION_CONFLICT",
                     "Reload the evaluation before saving");
     }
 
+    /** Saves rubric results, an optional adjustment, and feedback as a draft grade. */
     public void saveGrade(String checks, BigDecimal rubricScore, BigDecimal delta,
             String deltaReason, String feedback, String changeReason, UUID actor, Instant now) {
         requireMutableGrade();
@@ -93,6 +96,7 @@ public class Evaluation {
         state = EvaluationStatus.DRAFT;
     }
 
+    /** Finalizes a draft grade. */
     public void finalizeGrade(UUID actor, Instant now) {
         if (state != EvaluationStatus.DRAFT || score == null)
             throw ApiException.conflict("INVALID_GRADE_STATE",
@@ -102,6 +106,7 @@ public class Evaluation {
         gradedAt = now;
     }
 
+    /** Publishes a finalized grade to the student. */
     public void publishGrade(UUID actor, Instant now) {
         if (state != EvaluationStatus.FINALIZED)
             throw ApiException.conflict("INVALID_GRADE_STATE",
@@ -110,16 +115,19 @@ public class Evaluation {
         publishedAt = now;
     }
 
+    /** Reports whether the grade has been finalized or published. */
     public boolean hasOfficialGrade() {
         return state == EvaluationStatus.FINALIZED || state == EvaluationStatus.PUBLISHED;
     }
 
+    /** Checks whether this member evaluation belongs to the current group submission. */
     public boolean isCurrentMemberOf(Evaluation root) {
         return kind == EvaluationKind.MEMBER && root.groupDocumentId.equals(groupDocumentId)
                 && root.submissionHash.equals(submissionHash)
                 && state != EvaluationStatus.SUPERSEDED;
     }
 
+    /** Copies the group grade and review data to a member unless their score is overridden. */
     public void inheritGroupGrade(Evaluation root, String reason, UUID actorId, Instant now) {
         requireMutableGrade();
         if (!memberOverride) {
@@ -135,6 +143,7 @@ public class Evaluation {
         acknowledgedReviewItems = copyChecks(root.acknowledgedReviewItems);
     }
 
+    /** Sets an individual member score and records the override reason. */
     public void overrideMemberScore(BigDecimal memberScore, String reason, UUID actorId,
             Instant now) {
         requireMutableGrade();
@@ -146,6 +155,7 @@ public class Evaluation {
         saveGrade(rubricChecks, memberScore, BigDecimal.ZERO, null, feedback, reason, actorId, now);
     }
 
+    /** Resets grading state after a group submits a new version. */
     public void resetForGroupSubmission(String hash, BigDecimal maximum, String rubrics,
             Instant now) {
         if (score != null) {
@@ -172,37 +182,45 @@ public class Evaluation {
         publishedAt = null;
     }
 
+    /** Marks this evaluation as superseded. */
     public void supersede() {
         state = EvaluationStatus.SUPERSEDED;
     }
 
+    /** Ensures the grade is not locked and the evaluation is editable. */
     public void requireMutableGrade() {
         if (hasOfficialGrade())
             throw ApiException.conflict("GRADE_LOCKED", "Điểm đã chốt không thể chỉnh sửa.");
         requireEditableGrade();
     }
 
+    /** Rejects edits to a superseded evaluation. */
     public void requireEditableGrade() {
         if (state == EvaluationStatus.SUPERSEDED)
             throw ApiException.conflict("SUPERSEDED", "Evaluation is superseded");
     }
 
+    /** Returns the current evaluation status. */
     public EvaluationStatus status() {
         return state;
     }
 
+    /** Returns the current score. */
     public BigDecimal score() {
         return score;
     }
 
+    /** Returns an immutable view of grade change history. */
     public List<EvaluationHistory> history() {
         return List.copyOf(changes);
     }
 
+    /** Checks whether text is null or contains only whitespace. */
     public static boolean isBlankText(String value) {
         return value == null || value.isBlank();
     }
 
+    /** Copies rubric item scores into immutable nested maps. */
     private static Map<UUID, Map<UUID, BigDecimal>> copyItemScores(
             Map<UUID, Map<UUID, BigDecimal>> scores) {
         if (scores == null || scores.isEmpty())
@@ -213,6 +231,7 @@ public class Evaluation {
         return Map.copyOf(copy);
     }
 
+    /** Copies rubric checks into immutable nested sets. */
     private static Map<UUID, Set<UUID>> copyChecks(Map<UUID, Set<UUID>> checks) {
         if (checks == null || checks.isEmpty())
             return Map.of();

@@ -11,10 +11,12 @@ public class GradeDistributionVisibilityRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
+    /** Creates the repository with JDBC access. */
     public GradeDistributionVisibilityRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    /** Loads visibility settings or returns the disabled default. */
     public Visibility findVisibility(UUID classId, UUID assignmentId) {
         return jdbcTemplate.query(
                 "SELECT enabled, version FROM grade_distribution_visibility WHERE class_id=? AND assignment_id=?",
@@ -22,6 +24,7 @@ public class GradeDistributionVisibilityRepository {
                 classId, assignmentId).stream().findFirst().orElse(new Visibility(false, 0));
     }
 
+    /** Updates visibility only when the supplied version still matches. */
     public boolean updateVisibility(UUID classId, UUID assignmentId, boolean enabled,
             long version) {
         if (version == 0) {

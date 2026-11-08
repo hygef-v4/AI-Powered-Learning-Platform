@@ -24,28 +24,37 @@ import org.springframework.web.bind.annotation.RestController;
 public class GradingProposalController {
     private final GradingProposalService gradingProposalService;
 
+    /** Creates the controller with the grading proposal service. */
     public GradingProposalController(GradingProposalService gradingProposalService) {
         this.gradingProposalService = gradingProposalService;
     }
 
+    /**
+     * Generates an asynchronous AI rubric grading proposal for a single submission.
+     */
     @PostMapping("/evaluations/{id}/ai-proposals")
     public GradingProposal requestProposal(@AuthenticationPrincipal Actor actor,
             @PathVariable UUID id, @Valid @RequestBody AiRequest input) {
         return gradingProposalService.requestProposal(actor, id, input);
     }
 
+    /**
+     * Lists all historical AI grading proposals generated for a submission.
+     */
     @GetMapping("/evaluations/{id}/ai-proposals")
     public List<GradingProposal> listProposals(@AuthenticationPrincipal Actor actor,
             @PathVariable UUID id) {
         return gradingProposalService.listProposals(actor, id);
     }
 
+    /** Requests AI grading proposals for a batch of evaluations. */
     @PostMapping("/evaluations:ai-proposals")
     public BatchResult requestProposals(@AuthenticationPrincipal Actor actor,
             @Valid @RequestBody AiBatch input) {
         return gradingProposalService.requestProposals(actor, input);
     }
 
+    /** Estimates token usage for a batch without requesting AI proposals. */
     @PostMapping("/evaluations:ai-proposal-estimate")
     public AiEstimate estimateProposalTokens(@AuthenticationPrincipal Actor actor,
             @Valid @RequestBody Batch input) {

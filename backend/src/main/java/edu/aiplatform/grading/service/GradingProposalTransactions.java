@@ -54,6 +54,7 @@ public class GradingProposalTransactions {
     private final ObjectMapper objectMapper;
     private final Clock clock;
 
+    /** Creates proposal transaction operations with grading, persistence, AI, and clock dependencies. */
     public GradingProposalTransactions(IEvaluationRepository evaluationRepository,
             IGradingProposalRepository gradingProposalRepository, GradingService gradingService,
             GradingAccess gradingAccess, SubmissionReviewService submissionReviewService,
@@ -74,12 +75,14 @@ public class GradingProposalTransactions {
 
     public record Prepared(GradingProposal proposal, AiPrompt prompt, boolean dispatch,
             String outputSchema, int maxOutputTokens) {
+        /** Defaults the output token budget for callers using the earlier prepared shape. */
         public Prepared(GradingProposal proposal, AiPrompt prompt, boolean dispatch,
                 String outputSchema) {
             this(proposal, prompt, dispatch, outputSchema, 4096);
         }
     }
 
+    /** Creates or reuses a proposal and prepares its AI prompt for dispatch. */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Prepared prepareProposal(Actor actor, UUID evaluationId, AiRequest request) {
         requireAiSource(request);
@@ -107,6 +110,7 @@ public class GradingProposalTransactions {
         return new Prepared(proposal, prompt, true, outputSchema, maxOutputTokens);
     }
 
+    /** Estimates prompt and output tokens for the current evaluation version. */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public long estimateTokens(Actor actor, UUID evaluationId, long version) {
         var evaluation = gradingService.requireCurrent(actor, evaluationId, version);
@@ -123,6 +127,7 @@ public class GradingProposalTransactions {
         return AiTokenEstimate.estimate(promptChars, maxOutputTokens);
     }
 
+    /** Builds a prompt after confirming the assignment rubric matches the locked snapshot. */
     private edu.aiplatform.ai.contract.AiPrompt buildPrompt(Actor actor, Evaluation evaluation) {
         var content = assignmentQuery.getContent(evaluation.assignmentId)
                 .orElseThrow(() -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE",
@@ -135,6 +140,7 @@ public class GradingProposalTransactions {
         return gradingPromptBuilder.buildPrompt(evaluation, detail.document(), content);
     }
 
+    /** Validates the AI source and request reference before proposal creation. */
     private void requireAiSource(AiRequest request) {
         // Nguồn bỏ trống: hệ thống tự chọn (yêu cầu 2026-11-05).
         if (request == null || Evaluation.isBlankText(request.requestRef())
@@ -143,6 +149,7 @@ public class GradingProposalTransactions {
             throw ApiException.badRequest("AI_SOURCE_REQUIRED", "Invalid AI source");
     }
 
+    /** Ensures an existing request reference belongs to the same actor and evaluation snapshot. */
     private void requireSameRequest(Actor actor, Evaluation evaluation, AiRequest request,
             GradingProposal proposal) {
         if (!proposal.requesterId.equals(actor.accountId())
@@ -155,6 +162,7 @@ public class GradingProposalTransactions {
             throw ApiException.conflict("REQUEST_REF_CONFLICT", "Request reference already used");
     }
 
+    /** Creates a pending proposal record linked to the current evaluation snapshot. */
     private GradingProposal createProposal(Actor actor, Evaluation evaluation, AiRequest request) {
         var proposal = new GradingProposal();
         proposal.id = UUID.randomUUID();
@@ -171,6 +179,7 @@ public class GradingProposalTransactions {
         return proposal;
     }
 
+    /** Records dispatch state or a safe failure outcome for an AI proposal. */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public GradingProposal recordDispatch(UUID proposalId, AiTaskView task, String error) {
         var evaluationId = gradingProposalRepository.findEvaluationId(proposalId).orElseThrow();
@@ -228,6 +237,7 @@ public class GradingProposalTransactions {
         return gradingProposalRepository.save(proposal);
     }
 
+    /** Validates and stores a completed AI proposal, returning its application outcome. */
     @Transactional
     public ApplyOutcome acceptProposal(AiTaskResult result) {
         if (!"GRADING_PROPOSAL".equals(result.taskType()) || result.actor() == null
@@ -317,6 +327,7 @@ public class GradingProposalTransactions {
         }
     }
 
+    /** Resolves submitted document block IDs for feedback evidence validation. */
     private Set<String> resolveValidBlockIds(Actor actor, Evaluation evaluation,
             List<RubricView> rubrics) {
         if (submissionReviewService == null) {
@@ -327,6 +338,7 @@ public class GradingProposalTransactions {
         return GradingFeedbackValidator.listValidBlockIds(rubrics, doc);
     }
 
+    /** Marks proposals stale when their evaluation snapshot has changed. */
     @Transactional
     public void invalidateChangedSnapshot(UUID evaluationId) {
         var evaluation = evaluationRepository.lockById(evaluationId)
@@ -344,6 +356,7 @@ public class GradingProposalTransactions {
             }
     }
 
+    /** Records an AI task failure against its matching pending proposal. */
     @Transactional
     public void recordFailure(AiTaskFailure failure) {
         if (failure.targetRef() == null || !failure.targetRef().startsWith("evaluation:")
@@ -378,18 +391,21 @@ public class GradingProposalTransactions {
         }
     }
 
+    /** Identifies failed proposals that predate explicit task state tracking. */
     static boolean isLegacyFailure(GradingProposal proposal) {
         return "FAILED".equals(proposal.status) && (proposal.safeError == null
                 || Set.of("AI task failed", "AI task unavailable or failed")
                         .contains(proposal.safeError));
     }
 
+    /** Supplies a fallback message when the AI task has no diagnostic. */
     private static String formatTaskError(String diagnostic) {
         return diagnostic == null || diagnostic.isBlank()
                 ? "Không thể tạo đề xuất AI. Bạn vẫn có thể chấm thủ công."
                 : diagnostic;
     }
 
+    /** Saves a grade using its ready proposal and marks that proposal as used. */
     @Transactional
     public Evaluation saveUsingProposal(Actor actor, UUID evaluationId, Save input) {
         var evaluation = gradingService.requireCurrent(actor, evaluationId, input.version());
@@ -405,6 +421,7 @@ public class GradingProposalTransactions {
         return saved;
     }
 
+    /** Validates and stores an MCP proposal for teacher review. */
     @Transactional
     public GradingProposal recordMcpProposal(Actor actor, UUID evaluationId, long expectedVersion,
             String hash, String requestRef, JsonNode payload, String agentLabel) {

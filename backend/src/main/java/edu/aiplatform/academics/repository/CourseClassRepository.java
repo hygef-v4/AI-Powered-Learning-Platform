@@ -19,10 +19,12 @@ import org.springframework.stereotype.Repository;
 public class CourseClassRepository implements ICourseClassRepository {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
+    /** Creates the class repository with its named JDBC template. */
     public CourseClassRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
+    /** Finds a course class by its unique ID. */
     @Override
     public Optional<CourseClass> find(UUID classId) {
         return namedParameterJdbcTemplate.query("select * from course_classes where id = :id",
@@ -30,6 +32,7 @@ public class CourseClassRepository implements ICourseClassRepository {
                 .findFirst();
     }
 
+    /** Lists paginated course classes belonging to a subject. */
     @Override
     public List<CourseClass> listBySubject(UUID subjectId, int limit, int offset) {
         PersistenceChecks.validatePage(limit, offset);
@@ -39,6 +42,7 @@ public class CourseClassRepository implements ICourseClassRepository {
                 CourseClassRepository::mapCourseClass);
     }
 
+    /** Inserts a new course class record with initial version 0. */
     @Override
     public void insert(CourseClass value) {
         PersistenceChecks.requireWritableTransaction();
@@ -59,6 +63,7 @@ public class CourseClassRepository implements ICourseClassRepository {
         }
     }
 
+    /** Updates course class fields checking for version concurrency conflict. */
     @Override
     public void update(CourseClass value, long expectedVersion) {
         PersistenceChecks.requireWritableTransaction();
@@ -82,6 +87,7 @@ public class CourseClassRepository implements ICourseClassRepository {
                     "Dữ liệu lớp đã thay đổi. Hãy tải lại");
     }
 
+    /** Builds the named SQL parameters for the supplied record. */
     private static Map<String, Object> params(CourseClass value) {
         var args = new HashMap<String, Object>();
         args.put("id", value.id());
@@ -99,6 +105,7 @@ public class CourseClassRepository implements ICourseClassRepository {
         return args;
     }
 
+    /** Maps a database row to a course class. */
     static CourseClass mapCourseClass(ResultSet rs, int row) throws SQLException {
         return new CourseClass(rs.getObject("id", UUID.class),
                 rs.getObject("subject_id", UUID.class), rs.getString("code"), rs.getString("name"),

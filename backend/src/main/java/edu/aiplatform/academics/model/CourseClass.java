@@ -9,6 +9,7 @@ import java.util.UUID;
 public record CourseClass(UUID id, UUID subjectId, String code, String name, String description,
         String term, ClassStatus status, UUID teacherId, boolean showGradeDistribution,
         Instant createdAt, Instant updatedAt, long version) {
+    /** Validates and normalizes the immutable class snapshot. */
     public CourseClass {
         Objects.requireNonNull(id);
         Objects.requireNonNull(subjectId);
@@ -25,13 +26,14 @@ public record CourseClass(UUID id, UUID subjectId, String code, String name, Str
         }
     }
 
+    /** Creates a draft class with version zero and grade distribution hidden. */
     public static CourseClass createClass(UUID id, UUID subjectId, String code, String name,
             String description, String term, UUID teacherId, Instant now) {
         return new CourseClass(id, subjectId, code, name, description, term, ClassStatus.DRAFT,
                 teacherId, false, now, now, 0);
     }
 
-    /** Hai dữ kiện cross-unit phải được lấy trong transaction có khóa; không phải bằng chứng authorization. */
+    /** Changes class status using locked subject and enrollment facts after authorization. */
     public CourseClass changeStatus(ClassStatus next, boolean subjectActive,
             boolean conflictingEnrollments, Instant now) {
         Objects.requireNonNull(next);
@@ -56,28 +58,33 @@ public record CourseClass(UUID id, UUID subjectId, String code, String name, Str
                 now);
     }
 
+    /** Updates basic class metadata (name, description, term) while incrementing version. */
     public CourseClass updateInfo(String name, String description, String term, Instant now) {
         requireEditable();
         return copyWithChanges(name, description, term, status, teacherId, showGradeDistribution,
                 now);
     }
 
+    /** Reassigns the responsible teacher to this class while incrementing version. */
     public CourseClass assignTeacher(UUID teacherId, Instant now) {
         requireEditable();
         return copyWithChanges(name, description, term, status, teacherId, showGradeDistribution,
                 now);
     }
 
+    /** Sets whether students can see the grade distribution. */
     public CourseClass setGradeDistribution(boolean enabled, Instant now) {
         requireEditable();
         return copyWithChanges(name, description, term, status, teacherId, enabled, now);
     }
 
+    /** Enforces that the class is in a mutable status (not ARCHIVED). */
     private void requireEditable() {
         if (status == ClassStatus.ARCHIVED)
             throw new AcademicRuleException("CLASS_ARCHIVED", "Lớp đã lưu trữ chỉ được xem");
     }
 
+    /** Copies the class with updated fields and refreshed modification metadata. */
     private CourseClass copyWithChanges(String name, String description, String term,
             ClassStatus status, UUID teacher, boolean distribution, Instant now) {
         if (Objects.requireNonNull(now).isBefore(updatedAt)) {
@@ -88,6 +95,7 @@ public record CourseClass(UUID id, UUID subjectId, String code, String name, Str
                 distribution, createdAt, now, Math.addExact(version, 1));
     }
 
+    /** Validates required and maximum-length text fields. */
     private static String requireText(String value, String label, int max, boolean required) {
         String normalized = value == null ? null : value.strip();
         if ((required && (normalized == null || normalized.isEmpty()))

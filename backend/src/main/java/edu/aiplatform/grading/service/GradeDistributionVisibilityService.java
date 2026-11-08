@@ -31,6 +31,7 @@ public class GradeDistributionVisibilityService {
     private final IAudit audit;
     private final Clock clock;
 
+    /** Creates the visibility service with its access and persistence dependencies. */
     public GradeDistributionVisibilityService(
             GradeDistributionVisibilityRepository gradeDistributionVisibilityRepository,
             GradingAccess gradingAccess, IClassAccess classAccess, IAssignmentQuery assignmentQuery,
@@ -43,12 +44,14 @@ public class GradeDistributionVisibilityService {
         this.clock = clock;
     }
 
+    /** Loads grade distribution visibility and whether the actor can edit it. */
     public View loadVisibility(Actor actor, UUID classId, UUID assignmentId) {
         boolean canEdit = requireAssignedTeacher(actor, classId, assignmentId);
         var current = gradeDistributionVisibilityRepository.findVisibility(classId, assignmentId);
         return new View(current.enabled(), current.version(), canEdit);
     }
 
+    /** Updates visibility when the actor is the assigned teacher and the version matches. */
     @Transactional
     public View updateVisibility(Actor actor, UUID classId, UUID assignmentId, boolean enabled,
             long version) {
@@ -68,6 +71,7 @@ public class GradeDistributionVisibilityService {
         return new View(enabled, version + 1, true);
     }
 
+    /** Checks whether the actor is the teacher assigned to the requested class assignment. */
     private boolean requireAssignedTeacher(Actor actor, UUID classId, UUID assignmentId) {
         gradingAccess.requireTeacher(actor, classId, Actions.GRADING_WRITE);
         var courseClass = classAccess.getClassRef(classId)

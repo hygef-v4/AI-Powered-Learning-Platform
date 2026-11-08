@@ -33,10 +33,12 @@ public class GradingFeedbackValidator {
 
     private final ObjectMapper objectMapper;
 
+    /** Uses the supplied JSON mapper to check serialized feedback size. */
     public GradingFeedbackValidator(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
+    /** Collects rubric part IDs and document block IDs that feedback can reference. */
     public static Set<String> listValidBlockIds(List<RubricView> rubrics, DocumentModel document) {
         Set<String> ids = new HashSet<>();
         if (rubrics != null) {
@@ -56,6 +58,7 @@ public class GradingFeedbackValidator {
         return ids;
     }
 
+    /** Parses feedback JSON, checks its shape and limits, then validates rubric references. */
     public GradingFeedback validateNode(JsonNode node, List<RubricView> rubrics,
             Set<String> validBlockIds, boolean requireAllItems) {
         if (node == null || node.isNull()) {
@@ -124,6 +127,7 @@ public class GradingFeedbackValidator {
         return validateFeedback(feedback, rubrics, validBlockIds, requireAllItems);
     }
 
+    /** Validates feedback coverage, evidence, and block references, then returns a copy. */
     public GradingFeedback validateFeedback(GradingFeedback feedback, List<RubricView> rubrics,
             Set<String> validBlockIds, boolean requireAllItems) {
         if (feedback == null) {
@@ -202,6 +206,7 @@ public class GradingFeedbackValidator {
         return feedback.copyFeedback();
     }
 
+    /** Indexes rubric items by rubric ID and item ID for validation. */
     private static Map<UUID, Map<UUID, RubricItem>> indexRubrics(List<RubricView> rubrics) {
         Map<UUID, Map<UUID, RubricItem>> map = new HashMap<>();
         if (rubrics == null) {
@@ -223,6 +228,7 @@ public class GradingFeedbackValidator {
         return map;
     }
 
+    /** Rejects unknown JSON fields and checks that every required field is present. */
     private static void requireFields(JsonNode node, Set<String> allowed, Set<String> required) {
         var names = new HashSet<String>();
         node.fieldNames().forEachRemaining(field -> {
@@ -236,6 +242,7 @@ public class GradingFeedbackValidator {
         }
     }
 
+    /** Reads a bounded array of nonblank summary strings. */
     private static List<String> readSummaryList(JsonNode node, String field) {
         if (node == null || !node.isArray() || node.size() > MAX_SUMMARY_ITEMS) {
             throw createInvalidFeedback("Invalid summary list: " + field);
@@ -254,6 +261,7 @@ public class GradingFeedbackValidator {
         return List.copyOf(values);
     }
 
+    /** Checks the count and length of already parsed summary entries. */
     private static void validateSummaryList(List<String> list, String field) {
         if (list == null || list.size() > MAX_SUMMARY_ITEMS) {
             throw createInvalidFeedback("Invalid summary list: " + field);
@@ -265,6 +273,7 @@ public class GradingFeedbackValidator {
         }
     }
 
+    /** Parses a UUID from a JSON string or reports the invalid field. */
     private static UUID readUuid(JsonNode node, String field) {
         if (node == null || !node.isTextual()) {
             throw createInvalidFeedback("Expected UUID string for " + field);
@@ -276,6 +285,7 @@ public class GradingFeedbackValidator {
         }
     }
 
+    /** Reads a required nonblank JSON string within the field limit. */
     private static String readRequiredText(JsonNode node, int maxLength, String field) {
         if (node == null || !node.isTextual()) {
             throw createInvalidFeedback("Expected string for " + field);
@@ -285,6 +295,7 @@ public class GradingFeedbackValidator {
         return text;
     }
 
+    /** Reads a bounded JSON string, allowing missing or null values. */
     private static String readOptionalText(JsonNode node, int maxLength, String field) {
         if (node == null || node.isNull()) {
             return null;
@@ -297,6 +308,7 @@ public class GradingFeedbackValidator {
         return text;
     }
 
+    /** Rejects missing, blank, or oversized required text. */
     private static void validateRequiredText(String value, int maxLength, String field) {
         if (value == null || value.isBlank() || value.length() > maxLength) {
             throw createInvalidFeedback("Field " + field + " is required and must be at most "
@@ -304,12 +316,14 @@ public class GradingFeedbackValidator {
         }
     }
 
+    /** Checks the length of optional text when supplied. */
     private static void validateOptionalText(String value, int maxLength, String field) {
         if (value != null && value.length() > maxLength) {
             throw createInvalidFeedback("Field " + field + " exceeds " + maxLength + " characters");
         }
     }
 
+    /** Builds the client error for invalid structured feedback. */
     private static ApiException createInvalidFeedback(String detail) {
         return ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK", detail);
     }

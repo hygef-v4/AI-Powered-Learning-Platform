@@ -19,6 +19,9 @@ public class SubmissionImageController {
         this.submissionImageService = submissionImageService;
     }
 
+    /**
+     * Issues an authorized temporary download token for submission attachment images.
+     */
     @GetMapping("/{fileId}")
     public DownloadToken issueDownloadToken(@AuthenticationPrincipal Actor actor,
             @PathVariable UUID evaluationId, @PathVariable String fileId) {

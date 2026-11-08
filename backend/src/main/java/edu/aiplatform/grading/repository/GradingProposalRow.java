@@ -17,6 +17,7 @@ class GradingProposalRow {
     // JSON text keeps saved snapshots independent of mutable proposals.
     String document;
 
+    /** Copies indexed proposal fields and serializes the proposal document. */
     void applyProposal(GradingProposal p) {
         id = p.id;
         evaluationId = p.evaluationId;
@@ -30,6 +31,7 @@ class GradingProposalRow {
         }
     }
 
+    /** Deserializes the proposal document. */
     GradingProposal mapProposal() {
         try {
             return objectMapper.readValue(document, GradingProposal.class);

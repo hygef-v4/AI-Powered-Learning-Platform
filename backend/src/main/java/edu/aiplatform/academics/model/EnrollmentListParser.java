@@ -14,12 +14,16 @@ public final class EnrollmentListParser {
     private static final Pattern EMAIL = Pattern.compile(
             "^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$");
 
+    /** Prevents instantiation of this static enrollment parser. */
     private EnrollmentListParser() {
     }
 
     public record Row(int lineNumber, String email, EnrollmentResult error) {
     }
 
+    /**
+     * Parses a single-column CSV of email addresses, validating syntax, UTF-8 size, and in-list duplicates.
+     */
     public static List<Row> parseEnrollmentRows(String input) {
         if (input == null || input.getBytes(StandardCharsets.UTF_8).length > MAX_BYTES) {
             throw new AcademicRuleException("LIST_TOO_LARGE", "Danh sách tối đa 100 KB");

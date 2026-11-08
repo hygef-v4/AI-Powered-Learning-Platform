@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.*;
 
 public final class AcademicsDtos {
+    /** Prevents instantiation of this DTO container. */
     private AcademicsDtos() {
     }
 

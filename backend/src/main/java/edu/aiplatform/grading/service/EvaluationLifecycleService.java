@@ -36,6 +36,7 @@ public class EvaluationLifecycleService implements ISubmissionListener, IGroupEv
     private final ObjectMapper objectMapper;
     private final Clock clock;
 
+    /** Creates the lifecycle listener with submission, assignment, rubric, and evaluation services. */
     public EvaluationLifecycleService(IEvaluationRepository evaluationRepository,
             ISubmissionQuery submissionQuery, IAssignmentQuery assignmentQuery, IRubric rubric,
             ObjectMapper objectMapper, Clock clock, IClassAccess classAccess) {
@@ -48,6 +49,9 @@ public class EvaluationLifecycleService implements ISubmissionListener, IGroupEv
         this.clock = clock;
     }
 
+    /**
+     * Handles individual student attempt submissions by superseding prior attempts and registering a pending evaluation.
+     */
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public void onSubmitted(UUID attemptId) {
@@ -79,6 +83,9 @@ public class EvaluationLifecycleService implements ISubmissionListener, IGroupEv
                 clock.instant()));
     }
 
+    /**
+     * Handles group document submissions by creating/updating the root group evaluation and syncing member evaluations.
+     */
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public void onGroupSubmitted(UUID documentId, String hash, UUID assignmentId, UUID classId,
@@ -136,6 +143,9 @@ public class EvaluationLifecycleService implements ISubmissionListener, IGroupEv
             }
     }
 
+    /**
+     * Resets evaluation state and refreshes submission hash, max score, and rubric snapshot for a new group submission.
+     */
     private void resetEvaluation(Evaluation evaluation, String hash, BigDecimal maxScore,
             String rubricSnapshot) {
         evaluation.resetForGroupSubmission(hash, maxScore, rubricSnapshot, clock.instant());

@@ -61,6 +61,9 @@ public class AcademicsService {
                 .setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
+    /**
+     * Lists course classes filtered by audience perspective (student, teacher, manager), query, and status.
+     */
     public List<ClassView> listClasses(Actor actor, String audience, UUID subjectId, String query,
             ClassStatus status, int page, int size) {
         return executeGuarded(actor, "CLASS_LIST", null, () -> {
@@ -87,6 +90,9 @@ public class AcademicsService {
         });
     }
 
+    /**
+     * Loads a single class details view after checking caller audience authorization.
+     */
     public ClassView loadClass(Actor actor, String audience, UUID id) {
         return executeGuarded(actor, "CLASS_VIEW", id, () -> {
             requireAudience(actor, audience);
@@ -94,6 +100,9 @@ public class AcademicsService {
         });
     }
 
+    /**
+     * Lists paginated students enrolled in a class for teachers or subject managers.
+     */
     public List<Student> listStudents(Actor actor, String audience, UUID id, int page, int size) {
         return executeGuarded(actor, "CLASS_STUDENTS_VIEW", id, () -> {
             requireAudience(actor, audience);
@@ -107,6 +116,9 @@ public class AcademicsService {
         });
     }
 
+    /**
+     * Loads details of an active enrolled student within a class for the teacher.
+     */
     public Student loadStudent(Actor actor, UUID id, UUID studentId) {
         return executeGuarded(actor, "CLASS_STUDENT_VIEW", id, () -> {
             requireAudience(actor, "teacher");
@@ -118,6 +130,9 @@ public class AcademicsService {
         });
     }
 
+    /**
+     * Lists all subjects managed by the authenticated subject manager.
+     */
     public List<SubjectSummary> listManagedSubjects(Actor actor) {
         return executeGuarded(actor, "MANAGED_SUBJECTS_VIEW", null, () -> {
             requireAudience(actor, "manager");
@@ -127,6 +142,9 @@ public class AcademicsService {
         });
     }
 
+    /**
+     * Loads summary details of a specific subject assigned to the subject manager.
+     */
     public SubjectSummary loadManagedSubject(Actor actor, UUID id) {
         return executeGuarded(actor, "MANAGED_SUBJECT_VIEW", id, () -> {
             requireAudience(actor, "manager");
@@ -135,6 +153,9 @@ public class AcademicsService {
         });
     }
 
+    /**
+     * Searches eligible teacher accounts for class assignment.
+     */
     public List<Person> listTeacherCandidates(Actor actor, String query) {
         return executeGuarded(actor, "TEACHER_CANDIDATES_VIEW", null, () -> {
             requireAudience(actor, "manager");
@@ -145,6 +166,9 @@ public class AcademicsService {
         });
     }
 
+    /**
+     * Searches active student accounts eligible for enrollment in a class.
+     */
     public List<Person> listStudentCandidates(Actor actor, UUID id, String query) {
         return executeGuarded(actor, "STUDENT_CANDIDATES_VIEW", id, () -> {
             requireAudience(actor, "manager");
@@ -156,6 +180,9 @@ public class AcademicsService {
         });
     }
 
+    /**
+     * Creates a new class within a subject managed by the caller.
+     */
     public ClassView createClass(Actor actor, UUID subjectId, String code, String name,
             String description, String term, UUID teacherId) {
         return executeCommand(actor, "CLASS_CREATED", subjectId, () -> {
@@ -176,6 +203,9 @@ public class AcademicsService {
         });
     }
 
+    /**
+     * Updates class name, description, and term with optimistic version concurrency control.
+     */
     public ClassView updateClassInfo(Actor actor, UUID id, String name, String description,
             String term, long version) {
         return executeCommand(actor, "CLASS_UPDATED", id, () -> {
@@ -187,6 +217,9 @@ public class AcademicsService {
         });
     }
 
+    /**
+     * Assigns or updates the assigned teacher for a class.
+     */
     public ClassView assignClassTeacher(Actor actor, UUID id, UUID teacherId, long version) {
         return executeCommand(actor, "CLASS_TEACHER_CHANGED", id, () -> {
             // Kiểm quyền trên lớp trước (giữ 403/404), rồi khóa tài khoản giảng viên trước dòng môn trong locked():
@@ -203,6 +236,9 @@ public class AcademicsService {
         });
     }
 
+    /**
+     * Transitions class status (OPEN, ARCHIVED) while validating conflicts and notifying enrolled students.
+     */
     public ClassView changeClassStatus(Actor actor, UUID id, ClassStatus status, long version) {
         return executeCommand(actor, "CLASS_STATUS_CHANGED", id, () -> {
             if (status == null)
@@ -216,7 +252,7 @@ public class AcademicsService {
                 if (!conflicting.isEmpty()) {
                     var conflictingNames = conflicting.stream()
                             .map(studentId -> accountLookup.getContact(studentId)
-                                    .map(AccountContact::displayName)
+                                     .map(AccountContact::displayName)
                                     .filter(name -> !name.isBlank())
                                     .orElse("Sinh viên không còn thông tin tài khoản"))
                             .toList();
@@ -243,6 +279,9 @@ public class AcademicsService {
         });
     }
 
+    /**
+     * Enrolls an individual student into a class.
+     */
     public EnrollmentResult enrollStudent(Actor actor, UUID id, UUID accountId) {
         return executeCommand(actor, "STUDENT_ENROLLED", id, () -> {
             requireAudience(actor, "manager");
@@ -255,6 +294,9 @@ public class AcademicsService {
         });
     }
 
+    /**
+     * Batch enrolls multiple students from raw text / email list with per-row transactional isolation.
+     */
     public List<RowResult> enrollStudents(Actor actor, UUID id, String text) {
         return executeGuarded(actor, "STUDENT_ENROLLED", id, () -> {
             requireAudience(actor, "manager");
@@ -284,6 +326,9 @@ public class AcademicsService {
         });
     }
 
+    /**
+     * Modifies student enrollment status (e.g. restoring or removing/dropping a student).
+     */
     public EnrollmentResult changeEnrollmentStatus(Actor actor, UUID id, UUID accountId,
             EnrollmentStatus status) {
         if (status == EnrollmentStatus.ACTIVE)

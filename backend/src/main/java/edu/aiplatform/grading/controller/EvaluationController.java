@@ -41,6 +41,9 @@ public class EvaluationController {
         this.gradingProposalTransactions = gradingProposalTransactions;
     }
 
+    /**
+     * Retrieves detailed evaluation information for a submission, including rubric scores and adjacent navigation.
+     */
     @GetMapping("/evaluations/{id}")
     public EvaluationDetail loadEvaluation(@AuthenticationPrincipal Actor actor,
             @PathVariable UUID id, @RequestParam(required = false) String status,
@@ -48,6 +51,9 @@ public class EvaluationController {
         return submissionReviewService.loadEvaluation(actor, id, status, late);
     }
 
+    /**
+     * Updates an evaluation with manual scores or via an approved AI grading proposal.
+     */
     @PutMapping("/evaluations/{id}")
     public Evaluation saveEvaluation(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
             @Valid @RequestBody Save input) {
@@ -55,18 +61,27 @@ public class EvaluationController {
                 : gradingProposalTransactions.saveUsingProposal(actor, id, input);
     }
 
+    /**
+     * Updates individual grade adjustments or feedback for a specific member of a group submission.
+     */
     @PutMapping("/evaluations/{id}/members/{accountId}")
     public Evaluation saveMemberGrade(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
             @PathVariable UUID accountId, @Valid @RequestBody MemberSave input) {
         return gradingService.saveMemberGrade(actor, id, accountId, input);
     }
 
+    /**
+     * Finalizes multiple draft evaluations in batch mode.
+     */
     @PostMapping("/evaluations:finalize")
     public BatchResult finalizeGrades(@AuthenticationPrincipal Actor actor,
             @Valid @RequestBody Batch input) {
         return gradingBatchService.executeBatch(actor, input, false);
     }
 
+    /**
+     * Publishes multiple finalized evaluations in batch mode to make them visible to students.
+     */
     @PostMapping("/evaluations:publish")
     public BatchResult publishGrades(@AuthenticationPrincipal Actor actor,
             @Valid @RequestBody Batch input) {

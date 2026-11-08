@@ -20,12 +20,14 @@ public class GradingBatchService {
     private final GradingService gradingService;
     private final TransactionTemplate transactionTemplate;
 
+    /** Creates the batch executor with grading and transaction dependencies. */
     public GradingBatchService(GradingService gradingService, PlatformTransactionManager manager) {
         this.gradingService = gradingService;
         transactionTemplate = new TransactionTemplate(manager);
         transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
+    /** Applies each grading item independently and optionally publishes successful grades. */
     public BatchResult executeBatch(Actor actor, Batch batch, boolean publish) {
         GradingCommands.validateBatchItems(batch.items());
         var outcomes = new ArrayList<ItemResult>();
