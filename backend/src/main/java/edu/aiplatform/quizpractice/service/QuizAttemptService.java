@@ -1,6 +1,5 @@
 package edu.aiplatform.quizpractice.service;
 
-import edu.aiplatform.quizpractice.dto.PracticeViews;
 
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;

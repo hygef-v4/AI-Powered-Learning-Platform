@@ -7,13 +7,13 @@ import { Pagination } from "@/shared/ui/Pagination";
 import { listBackupHistory } from "../api";
 import type { BackupHistoryPage, BackupRunItem, BackupSectionView } from "../model/types";
 
-const states: Record<BackupRunItem["state"], string> = {
+const BACKUP_STATE_LABELS: Record<BackupRunItem["state"], string> = {
   CREATED: "Đang chờ", RUNNING: "Đang chạy", SUCCESS: "Thành công", FAILED: "Thất bại",
 };
-const dateTime = (value: string | null) => value
+const formatDateTime = (value: string | null) => value
   ? new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", dateStyle: "short", timeStyle: "short" }).format(new Date(value))
   : "—";
-const bytes = (value: number | null) => value === null ? "—" : `${new Intl.NumberFormat("vi-VN").format(value)} B`;
+const formatBytes = (value: number | null) => value === null ? "—" : `${new Intl.NumberFormat("vi-VN").format(value)} B`;
 
 /** Operational metadata is independent of the calendar's available history. */
 export function BackupStatus({ backup }: { backup: BackupSectionView }) {
@@ -26,17 +26,17 @@ export function BackupStatus({ backup }: { backup: BackupSectionView }) {
         <Link href="/admin/settings" className="font-semibold text-primary-ink underline underline-offset-2">Cài đặt sao lưu</Link>
       </div>
       {schedule?.enabled && (
-        <p className="text-muted">Hằng ngày {schedule.dailyAt ?? "—"} ({schedule.timeZone}) · Lần tới: {dateTime(schedule.nextPlannedAt)}</p>
+        <p className="text-muted">Hằng ngày {schedule.dailyAt ?? "—"} ({schedule.timeZone}) · Lần tới: {formatDateTime(schedule.nextPlannedAt)}</p>
       )}
       <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1.5 [&_dd]:break-words [&_dd]:text-right">
-        <dt>Lần gần nhất</dt><dd>{backup.latest.availability === "UNAVAILABLE" ? "Không khả dụng" : latest ? states[latest.state] : "Chưa có lần sao lưu nào"}</dd>
+        <dt>Lần gần nhất</dt><dd>{backup.latest.availability === "UNAVAILABLE" ? "Không khả dụng" : latest ? BACKUP_STATE_LABELS[latest.state] : "Chưa có lần sao lưu nào"}</dd>
         {latest && <>
-          <dt>Bắt đầu</dt><dd>{dateTime(latest.startedAt)}</dd>
-          <dt>Kết thúc</dt><dd>{dateTime(latest.completedAt)}</dd>
-          <dt>Dung lượng</dt><dd>{bytes(latest.byteSize)}</dd>
+          <dt>Bắt đầu</dt><dd>{formatDateTime(latest.startedAt)}</dd>
+          <dt>Kết thúc</dt><dd>{formatDateTime(latest.completedAt)}</dd>
+          <dt>Dung lượng</dt><dd>{formatBytes(latest.byteSize)}</dd>
         </>}
         <dt>Thành công gần nhất</dt>
-        <dd>{backup.latestSuccessfulAt.availability === "UNAVAILABLE" ? "Không khả dụng" : backup.latestSuccessfulAt.data ? dateTime(backup.latestSuccessfulAt.data) : "Chưa có bản sao lưu thành công"}</dd>
+        <dd>{backup.latestSuccessfulAt.availability === "UNAVAILABLE" ? "Không khả dụng" : backup.latestSuccessfulAt.data ? formatDateTime(backup.latestSuccessfulAt.data) : "Chưa có bản sao lưu thành công"}</dd>
       </dl>
       {latest?.safeError && <p className="break-words text-danger" role="status">{latest.safeError}</p>}
       <p className="text-muted">Thất bại trong 7 ngày: {backup.failuresLast7Days.data?.count ?? "Không khả dụng"}</p>
@@ -77,8 +77,8 @@ function BackupHistory() {
               <caption className="sr-only">Các lần sao lưu</caption>
               <thead><tr><Th>Ngày</Th><Th>Trạng thái</Th><Th>Bắt đầu / kết thúc</Th><Th>Dung lượng</Th><Th>Lỗi</Th></tr></thead>
               <tbody>{result.data.items.map((run) => <tr key={run.scheduledFor}>
-                <Td>{run.scheduledFor}</Td><Td>{states[run.state]}</Td>
-                <Td>{dateTime(run.startedAt)} / {dateTime(run.completedAt)}</Td><Td>{bytes(run.byteSize)}</Td>
+                <Td>{run.scheduledFor}</Td><Td>{BACKUP_STATE_LABELS[run.state]}</Td>
+                <Td>{formatDateTime(run.startedAt)} / {formatDateTime(run.completedAt)}</Td><Td>{formatBytes(run.byteSize)}</Td>
                 <Td className="max-w-64 whitespace-normal break-words">{run.safeError ?? "—"}</Td>
               </tr>)}</tbody>
             </TableFrame>}

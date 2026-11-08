@@ -11101,5 +11101,119 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Timestamp**: 2026-11-08T09:42:48Z
 **Requested by:** Unknown — GitHub display name not confirmed
 **AI Response**: Fresh full frontend805/805, zero failed/pending, exit0. Together with backend2,015/2,015 and PostgreSQL guard31/7/10/1, precommit verification is green. Proceeding with the six reviewed groups and normal push before merging current staging, as explicitly requested. Full frontend emitted expected jsdom scroll/navigation capability warnings; no test failures. No business/source edits after passing verification; only execution metadata updated. Report drafts retain original contents/status.
+## Staging check after teammates' merges — 2026-11-07
+
+**Timestamp**: 2026-11-07T10:00:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> check lai merch moi cho toi di
+
+> xong thì báo kết quả test cho tôi
+
+> xong chua
+
+**AI Response**: Staging `c9b7ce96` (63 commits after PR #43). Backend `mvn -B clean verify` 1,842 tests, 0 failures; frontend vitest 803/803, typecheck clean, lint 2 errors in `features/grading/pages/GradingWorkspacePage.tsx` (U09, `1b509cdb`). E2E on fresh class SE-TEST16: U02 16/16, U06 24/24, U12 59/59, U12b 36/36, u12c 32/32, notify 3/3; `u06b` skipped because the new automatic key fallback could spend the user's real Gemini key. Findings: `ca45304e` reworked U06 (automatic source choice and key fallback, multiple personal keys, removed the default-source UI FB-U06-01 while its backend API remains); `2ee1a095` edited frozen BR-U06-02, 05, 10, 25 to match. U12 code unchanged; shared editor overhaul did not break U12 tests.
+
+**Context**: Build and Test (staging check).
+
+---
+
+## U12 bug fix — section editor overlay and assignment-lock audit labels — 2026-11-07
+
+**Timestamp**: 2026-11-07T16:30:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> sửa luôn 2 lỗi u12 đó đi
+
+**AI Response**: Found while re-capturing Report-3 screens. (1) The full-page section editor (`SectionEditorDialog`) and the "Đang nộp" auto-submit lock in `GroupWorkspacePage` were `fixed` overlays rendered inside the page, so the app top bar and sidebar covered their header (Đóng / Xong not visible). Both now render through `createPortal` to `document.body` like the shared `Dialog` and the grading AI overlay. (2) Audit Log showed the raw codes `GROUP_ASSIGNMENT_LOCKED` / `GROUP_ASSIGNMENT_UNLOCKED` recorded by the assignment-phase change (FB-U12-01); added Vietnamese labels. Regression assertions added to `GroupWorkspacePage.test.tsx` and `labels.test.ts`. No backend, API or business-rule change.
+
+**Context**: Code Generation (bug fix, U12), branch `fix/u12-overlay-audit-labels`.
+
+---
+
+## Commit reviewed documentation changes - 2026-11-07
+**Requester**: Quang Hung
+**User Request**: "giúp tôi commit change"
+**AI Response**: Prepared the sixteen pending documentation files from this session for one documentation commit, covering AI-DLC business-flow diagrams, SRS/SDS review notes, Report 3 conceptual model, Report 4 architecture/class/sequence sources and semantic specs, the completed Report 4 plan and audit trail. Corrected twelve mojibake arrow/dash tokens in the diagram README before staging.
+**Verification**: Parsed all changed Draw.io XML and semantic JSON. Re-ran source-signature checks for 160 class signatures and 122 displayed Java calls, confirmed Authentication preservation and cross-diagram coverage. Class and sequence geometry validators have zero errors/warnings. git diff --check passed aside from Git's existing LF-to-CRLF normalization notice for this audit file. All changed files are under docs or aidlc-docs.
+**Context**: Documentation commit only. No application test/build rerun for this commit request. No push requested.
+
+## U09 lint fix — AI grading state without setState in effects — 2026-11-08
+
+**Timestamp**: 2026-11-08T01:00:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> sửa luôn 2 lỗi lint u09 đi
+
+**AI Response**: `npm run lint` failed with two `react-hooks/set-state-in-effect` errors in `GradingWorkspacePage.tsx` (from `1b509cdb`): two effects called `setAiGenerating`/`setGeneratingProposalId` to finish an AI grading run. The run state is now adjusted during render from the latest proposals, poll status and error (same pattern as the existing `reviewSelection`), and `aiGenerating` is derived from the request in flight and the proposal being awaited. One effect keeps only the external work (apply a READY proposal or show the error toast), once per outcome. Behaviour unchanged: READY proposals are applied to the local draft, FAILED/REJECTED and poll timeout show a toast, a failed request stops the progress overlay. Added three lifecycle tests in `workspace.test.tsx`. Lint 0 errors (24 existing warnings), typecheck clean, frontend 808/808. Not verified in a live browser because AI grading needs a real provider key.
+
+**Context**: Code Generation (lint fix, U09), branch `fix/u09-ai-grading-lint`.
+
+---
+
+## U12 simplification — back to the frozen business rules — 2026-11-08
+
+**Timestamp**: 2026-11-08T03:30:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> xem lại toàn bộ, tôi muốn u12 tối giản và dễ hiểu nhất nhưng vẫn đảm bảo luồng nghiệp vụ chắc là sinh viên làm bài nhóm, và giảng viên chấm bài nhóm thì nên sửa thế nào, không cần thêm các lường phức tạp
+
+> nhưng nếu không chốt thì nếu 1 người nhận rồi bắt đầu làm là phần đấy sẽ không thể sửa nữa à
+
+> như thế nào là oke nhất'
+
+> oke làm theo hướng 1 rồi gộp vào staging luôn
+
+**AI Response**: Recommended option 1 (drop the feedback additions, follow BR-U12-33, 34, 36, keep section history read-only); user approved and asked to merge into staging. Removed FB-U12-01 assignment phase (`assignment:lock/unlock`, `AssignmentLock`, `assigneeId`, `ASSIGNMENT_*` codes), FB-U12-02 restore, FB-U12-03 whole-document import (section DOCX import kept, moved to `GroupDocController`), FB-U12-04 peer review (service, repository, endpoints, tab). Claiming an OPEN or DONE section starts editing at once; leader assigns; holder, leader or teacher releases. Re-added the teacher progress card (BR-U12-52) lost in UI commit `da0be0d8`. No schema change (unused columns/table stay). Tests: backend `mvn -B verify` 1,831/1,831; frontend 805/805, lint 0 errors (24 existing warnings), typecheck clean; e2e on fresh class SE-TEST17: U12 58/58, U12b 35/35, U12c 19/19. Docs: FB file (FB-U12-01..04 moved to "Đã bỏ"), U12 code summary, user guide, API inventory.
+
+**Context**: Code Generation (U12 refactor), branch `refactor/u12-simplify`.
+
+---
+
+## U05/U09/U15 frontend formatting and cleanup — 2026-11-08
+
+**Timestamp**: 2026-11-08T07:53:08Z
+**Requested by:** Quang Hung
+**User Input (complete raw)**:
+
+> giúp tôi chỉnh lại các vấn đề trên [$ponytail:ponytail](<C:\Users\Quang Hung\\.codex\plugins\cache\ponytail\ponytail\5.3.3\skills\ponytail\SKILL.md>) , format cho dễ đọc
+
+> nhớ đừng làm thay đổi hành vi hiên jtaij
+
+**Context**: Existing frontend units. Keep API contracts, grading persistence, current UI behavior and U05 pagination request sequence.
+
+- [x] Format the three API modules and group U09 methods by use case.
+- [x] Remove inactive U09 rubric review paths and unused imports. Keep saved review and feedback fields.
+- [x] Rename the local U15 backup formatters and status labels.
+- [x] Verify the three feature suites, scoped lint and before/after request traces for 41 API methods.
+
+**AI Response**: 225 tests passed across 30 files. Scoped ESLint passed with zero warnings. Compared request traces with HEAD. U05 first-page refetch remains covered by the existing characterization test. Existing security and resiliency scope retained. Property-based testing remains disabled. No live backend or browser verification.
+
+---
+
+## Remove unused source imports — 2026-11-08
+
+**Timestamp**: 2026-11-08T08:12:12Z
+**Requested by:** Quang Hung
+**User Input (complete raw)**:
+
+> dọn giúp tôi mấy import thừa trong cả src code đi, giữ nguyên hành vi hiện tại, chưa nâng Spring Boot nhé
+
+**Context**: Mechanical source cleanup only. Spring Boot 3.5.6 and product behavior retained.
+
+- [x] Remove 45 unused main Java imports and 47 unused test Java imports identified by Eclipse JDT. Confirm that the source diff contains only these 92 deletions across 85 files.
+- [x] Scan frontend source with TypeScript and ESLint. No unused imports found and no frontend changes.
+- [x] Recompile with Eclipse JDT. Zero remaining unused-import warnings. All 1,182 production classes are byte-identical without debug data. Of 291 test classes, 276 are byte-identical and 15 differ only in equivalent inherited Mockito matcher references.
+- [x] Run targeted Maven tests. CourseClass, Enrollment and EnrollmentListParser tests passed 22/22.
+
+**AI Response**: Existing security and resiliency scope retained. Property-based testing remains disabled. Full backend test suite and browser verification are outside the confirmed results.
 
 ---

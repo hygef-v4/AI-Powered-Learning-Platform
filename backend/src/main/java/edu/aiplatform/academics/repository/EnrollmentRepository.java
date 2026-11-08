@@ -1,7 +1,6 @@
 package edu.aiplatform.academics.repository;
 
 import edu.aiplatform.academics.model.*;
-import edu.aiplatform.academics.repository.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;

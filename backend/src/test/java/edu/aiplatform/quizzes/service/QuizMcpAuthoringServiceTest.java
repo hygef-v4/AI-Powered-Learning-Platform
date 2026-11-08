@@ -2,7 +2,6 @@ package edu.aiplatform.quizzes.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.ai.contract.*;
 import edu.aiplatform.identity.contract.*;

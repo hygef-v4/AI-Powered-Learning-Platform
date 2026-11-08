@@ -1,0 +1,6005 @@
+[
+  {
+    "diagram": "sequence",
+    "title": "Activate Account",
+    "useCase": "Activate Account",
+    "elements": [
+      {
+        "id": "u",
+        "type": "actor",
+        "name": "User"
+      },
+      {
+        "id": "ui",
+        "type": "object",
+        "class": "ActivationUI",
+        "stereotype": "user interaction",
+        "displayStereotype": "boundary"
+      },
+      {
+        "id": "c",
+        "type": "object",
+        "class": "OtpFlowController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "s",
+        "type": "object",
+        "class": "ActivationService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "r",
+        "type": "object",
+        "class": "AccountRepository",
+        "stereotype": "business logic",
+        "displayStereotype": "repository"
+      },
+      {
+        "id": "db",
+        "type": "object",
+        "class": "Database",
+        "stereotype": "business logic",
+        "displayStereotype": "database"
+      }
+    ],
+    "messages": [
+      {
+        "from": "u",
+        "to": "ui",
+        "name": "Set password",
+        "type": "sync",
+        "id": "m1",
+        "seq": "1",
+        "codeCall": "Set password",
+        "displayCall": "Set password"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "completeActivation(passwordData)",
+        "type": "sync",
+        "id": "m2",
+        "seq": "2",
+        "codeCall": "completeActivation(passwordData)",
+        "displayCall": "completeActivation(passwordData)"
+      },
+      {
+        "from": "c",
+        "to": "s",
+        "name": "complete(ticket, newPassword)",
+        "type": "sync",
+        "id": "m3",
+        "seq": "3",
+        "codeCall": "complete(ticket, password)",
+        "displayCall": "complete(ticket, newPassword)"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "findById(accountId)",
+        "type": "sync",
+        "id": "m4",
+        "seq": "4",
+        "codeCall": "findById(accountId)",
+        "displayCall": "findById(accountId)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "SELECT account",
+        "type": "sync",
+        "id": "m5",
+        "seq": "5",
+        "codeCall": "SELECT account",
+        "displayCall": "SELECT account"
+      },
+      {
+        "from": "db",
+        "to": "r",
+        "name": "Account",
+        "type": "reply",
+        "id": "m6",
+        "seq": "6",
+        "codeCall": "Account"
+      },
+      {
+        "from": "r",
+        "to": "s",
+        "name": "Account",
+        "type": "reply",
+        "id": "m7",
+        "seq": "7",
+        "codeCall": "Account"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Validate password and ticket",
+        "type": "sync",
+        "id": "m8",
+        "seq": "8",
+        "codeCall": "Validate password and ticket",
+        "displayCall": "Validate password and ticket"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "activate(accountId, passwordHash, now)",
+        "type": "sync",
+        "id": "m9",
+        "seq": "9",
+        "codeCall": "activate(id, hash, now)",
+        "displayCall": "activate(accountId, passwordHash, now)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE account: ACTIVE",
+        "type": "sync",
+        "id": "m10",
+        "seq": "10",
+        "codeCall": "UPDATE account: ACTIVE",
+        "displayCall": "UPDATE account: ACTIVE"
+      },
+      {
+        "from": "r",
+        "to": "s",
+        "name": "Account activated",
+        "type": "reply",
+        "id": "m11",
+        "seq": "11",
+        "codeCall": "Account activated"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Create session; issue tokens",
+        "type": "sync",
+        "id": "m12",
+        "seq": "12",
+        "codeCall": "Create session; issue tokens",
+        "displayCall": "Create session; issue tokens"
+      },
+      {
+        "from": "s",
+        "to": "c",
+        "name": "LoginResult",
+        "type": "reply",
+        "id": "m13",
+        "seq": "13",
+        "codeCall": "LoginResult"
+      },
+      {
+        "from": "c",
+        "to": "ui",
+        "name": "Set cookies",
+        "type": "reply",
+        "id": "m14",
+        "seq": "14",
+        "codeCall": "Set cookies; SessionInfo"
+      },
+      {
+        "from": "ui",
+        "to": "u",
+        "name": "Open home page",
+        "type": "reply",
+        "id": "m15",
+        "seq": "15",
+        "codeCall": "Open home page"
+      }
+    ],
+    "notes": [],
+    "layoutAuthority": "docs/sequence-diagrams.drawio",
+    "scope": "Main flow; explicitly named helper calls are summarized without additional lifelines.",
+    "internalCollaborators": [
+      "AuthService",
+      "SessionStore"
+    ],
+    "messagePolicy": "Show complete named parameters without types or ellipses; keep helper chains as explicit action summaries."
+  },
+  {
+    "diagram": "sequence",
+    "title": "Login",
+    "useCase": "Login",
+    "elements": [
+      {
+        "id": "u",
+        "type": "actor",
+        "name": "User"
+      },
+      {
+        "id": "ui",
+        "type": "object",
+        "class": "LoginUI",
+        "stereotype": "user interaction",
+        "displayStereotype": "boundary"
+      },
+      {
+        "id": "c",
+        "type": "object",
+        "class": "AuthController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "s",
+        "type": "object",
+        "class": "AuthService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "r",
+        "type": "object",
+        "class": "AccountRepository",
+        "stereotype": "business logic",
+        "displayStereotype": "repository"
+      },
+      {
+        "id": "db",
+        "type": "object",
+        "class": "Database",
+        "stereotype": "business logic",
+        "displayStereotype": "database"
+      }
+    ],
+    "messages": [
+      {
+        "from": "u",
+        "to": "ui",
+        "name": "Enter credentials",
+        "type": "sync",
+        "id": "m1",
+        "seq": "1",
+        "codeCall": "Enter email and password",
+        "displayCall": "Enter credentials"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "login(loginData, httpRequest)",
+        "type": "sync",
+        "id": "m2",
+        "seq": "2",
+        "codeCall": "login(loginData, httpRequest)",
+        "displayCall": "login(loginData, httpRequest)"
+      },
+      {
+        "from": "c",
+        "to": "s",
+        "name": "login(rawEmail, rawPassword, clientIp)",
+        "type": "sync",
+        "id": "m3",
+        "seq": "3",
+        "codeCall": "login(email, password, ip)",
+        "displayCall": "login(rawEmail, rawPassword, clientIp)"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "findByEmail(schoolEmail)",
+        "type": "sync",
+        "id": "m4",
+        "seq": "4",
+        "codeCall": "findByEmail(email)",
+        "displayCall": "findByEmail(schoolEmail)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "SELECT account",
+        "type": "sync",
+        "id": "m5",
+        "seq": "5",
+        "codeCall": "SELECT account",
+        "displayCall": "SELECT account"
+      },
+      {
+        "from": "db",
+        "to": "r",
+        "name": "Account",
+        "type": "reply",
+        "id": "m6",
+        "seq": "6",
+        "codeCall": "Account"
+      },
+      {
+        "from": "r",
+        "to": "s",
+        "name": "Account",
+        "type": "reply",
+        "id": "m7",
+        "seq": "7",
+        "codeCall": "Account"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Verify password, ACTIVE status and login lock",
+        "type": "sync",
+        "id": "m8",
+        "seq": "8",
+        "codeCall": "Check password and account state",
+        "displayCall": "Verify password, ACTIVE status and login lock"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Create Redis session; issue access and refresh tokens",
+        "type": "sync",
+        "id": "m9",
+        "seq": "9",
+        "codeCall": "Create session; issue tokens",
+        "displayCall": "Create Redis session; issue access and refresh tokens"
+      },
+      {
+        "from": "s",
+        "to": "c",
+        "name": "LoginResult",
+        "type": "reply",
+        "id": "m10",
+        "seq": "10",
+        "codeCall": "LoginResult"
+      },
+      {
+        "from": "c",
+        "to": "ui",
+        "name": "Set cookies",
+        "type": "reply",
+        "id": "m11",
+        "seq": "11",
+        "codeCall": "Set cookies; SessionInfo"
+      },
+      {
+        "from": "ui",
+        "to": "u",
+        "name": "Open home page",
+        "type": "reply",
+        "id": "m12",
+        "seq": "12",
+        "codeCall": "Open home page"
+      }
+    ],
+    "notes": [],
+    "layoutAuthority": "docs/sequence-diagrams.drawio",
+    "scope": "Main flow; explicitly named helper calls are summarized without additional lifelines.",
+    "internalCollaborators": [
+      "SessionStore"
+    ],
+    "messagePolicy": "Show complete named parameters without types or ellipses; keep helper chains as explicit action summaries."
+  },
+  {
+    "diagram": "sequence",
+    "title": "Logout",
+    "useCase": "Logout",
+    "elements": [
+      {
+        "id": "u",
+        "type": "actor",
+        "name": "User"
+      },
+      {
+        "id": "ui",
+        "type": "object",
+        "class": "LogoutUI",
+        "stereotype": "user interaction",
+        "displayStereotype": "boundary"
+      },
+      {
+        "id": "c",
+        "type": "object",
+        "class": "AuthController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "s",
+        "type": "object",
+        "class": "AuthService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "r",
+        "type": "object",
+        "class": "SessionStore",
+        "stereotype": "business logic",
+        "displayStereotype": "repository"
+      },
+      {
+        "id": "db",
+        "type": "object",
+        "class": "Redis",
+        "stereotype": "business logic",
+        "displayStereotype": "session store"
+      }
+    ],
+    "messages": [
+      {
+        "from": "u",
+        "to": "ui",
+        "name": "Click Logout",
+        "type": "sync",
+        "id": "m1",
+        "seq": "1",
+        "codeCall": "Click Logout",
+        "displayCall": "Click Logout"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "logout(httpRequest)",
+        "type": "sync",
+        "id": "m2",
+        "seq": "2",
+        "codeCall": "logout(httpRequest)",
+        "displayCall": "logout(httpRequest)"
+      },
+      {
+        "from": "c",
+        "to": "s",
+        "name": "logout(sessionId, refreshToken)",
+        "type": "sync",
+        "id": "m3",
+        "seq": "3",
+        "codeCall": "logout(sessionId, refreshToken)",
+        "displayCall": "logout(sessionId, refreshToken)"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "delete(sessionId)",
+        "type": "sync",
+        "id": "m4",
+        "seq": "4",
+        "codeCall": "delete(sessionId)",
+        "displayCall": "delete(sessionId)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "DELETE session and refresh index",
+        "type": "sync",
+        "id": "m5",
+        "seq": "5",
+        "codeCall": "DELETE session and refresh index",
+        "displayCall": "DELETE session and refresh index"
+      },
+      {
+        "from": "r",
+        "to": "s",
+        "name": "Session revoked",
+        "type": "reply",
+        "id": "m6",
+        "seq": "6",
+        "codeCall": "Session revoked"
+      },
+      {
+        "from": "s",
+        "to": "c",
+        "name": "Done",
+        "type": "reply",
+        "id": "m7",
+        "seq": "7",
+        "codeCall": "Done"
+      },
+      {
+        "from": "c",
+        "to": "ui",
+        "name": "Clear cookies",
+        "type": "reply",
+        "id": "m8",
+        "seq": "8",
+        "codeCall": "Clear cookies"
+      },
+      {
+        "from": "ui",
+        "to": "u",
+        "name": "Return to Login",
+        "type": "reply",
+        "id": "m9",
+        "seq": "9",
+        "codeCall": "Return to Login"
+      }
+    ],
+    "notes": [],
+    "layoutAuthority": "docs/sequence-diagrams.drawio",
+    "scope": "Main flow; explicitly named helper calls are summarized without additional lifelines.",
+    "internalCollaborators": [],
+    "messagePolicy": "Show complete named parameters without types or ellipses; keep helper chains as explicit action summaries."
+  },
+  {
+    "diagram": "sequence",
+    "title": "Reset Password",
+    "useCase": "Reset Password",
+    "elements": [
+      {
+        "id": "u",
+        "type": "actor",
+        "name": "User"
+      },
+      {
+        "id": "ui",
+        "type": "object",
+        "class": "PasswordRecoveryUI",
+        "stereotype": "user interaction",
+        "displayStereotype": "boundary"
+      },
+      {
+        "id": "c",
+        "type": "object",
+        "class": "OtpFlowController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "s",
+        "type": "object",
+        "class": "PasswordResetService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "r",
+        "type": "object",
+        "class": "AccountRepository",
+        "stereotype": "business logic",
+        "displayStereotype": "repository"
+      },
+      {
+        "id": "db",
+        "type": "object",
+        "class": "Database",
+        "stereotype": "business logic",
+        "displayStereotype": "database"
+      }
+    ],
+    "messages": [
+      {
+        "from": "u",
+        "to": "ui",
+        "name": "New password",
+        "type": "sync",
+        "id": "m1",
+        "seq": "1",
+        "codeCall": "Enter new password",
+        "displayCall": "New password"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "completePasswordReset(passwordData)",
+        "type": "sync",
+        "id": "m2",
+        "seq": "2",
+        "codeCall": "completePasswordReset(passwordData)",
+        "displayCall": "completePasswordReset(passwordData)"
+      },
+      {
+        "from": "c",
+        "to": "s",
+        "name": "complete(ticket, newPassword)",
+        "type": "sync",
+        "id": "m3",
+        "seq": "3",
+        "codeCall": "complete(ticket, password)",
+        "displayCall": "complete(ticket, newPassword)"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "findById(accountId)",
+        "type": "sync",
+        "id": "m4",
+        "seq": "4",
+        "codeCall": "findById(accountId)",
+        "displayCall": "findById(accountId)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "SELECT account",
+        "type": "sync",
+        "id": "m5",
+        "seq": "5",
+        "codeCall": "SELECT account",
+        "displayCall": "SELECT account"
+      },
+      {
+        "from": "r",
+        "to": "s",
+        "name": "Account",
+        "type": "reply",
+        "id": "m6",
+        "seq": "6",
+        "codeCall": "Account"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Validate password and ticket",
+        "type": "sync",
+        "id": "m7",
+        "seq": "7",
+        "codeCall": "Validate password and ticket",
+        "displayCall": "Validate password and ticket"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "updatePassword(accountId, passwordHash, now)",
+        "type": "sync",
+        "id": "m8",
+        "seq": "8",
+        "codeCall": "updatePassword(id, hash, now)",
+        "displayCall": "updatePassword(accountId, passwordHash, now)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE password hash",
+        "type": "sync",
+        "id": "m9",
+        "seq": "9",
+        "codeCall": "UPDATE password hash",
+        "displayCall": "UPDATE password hash"
+      },
+      {
+        "from": "r",
+        "to": "s",
+        "name": "Password updated",
+        "type": "reply",
+        "id": "m10",
+        "seq": "10",
+        "codeCall": "Password updated"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Revoke sessions; clear OTP state",
+        "type": "sync",
+        "id": "m11",
+        "seq": "11",
+        "codeCall": "Revoke sessions; clear OTP state",
+        "displayCall": "Revoke sessions; clear OTP state"
+      },
+      {
+        "from": "s",
+        "to": "c",
+        "name": "Done",
+        "type": "reply",
+        "id": "m12",
+        "seq": "12",
+        "codeCall": "Done"
+      },
+      {
+        "from": "c",
+        "to": "ui",
+        "name": "204 No Content",
+        "type": "reply",
+        "id": "m13",
+        "seq": "13",
+        "codeCall": "204 No Content"
+      },
+      {
+        "from": "ui",
+        "to": "u",
+        "name": "Return to Login",
+        "type": "reply",
+        "id": "m14",
+        "seq": "14",
+        "codeCall": "Return to Login"
+      }
+    ],
+    "notes": [],
+    "layoutAuthority": "docs/sequence-diagrams.drawio",
+    "scope": "Main flow; explicitly named helper calls are summarized without additional lifelines.",
+    "internalCollaborators": [
+      "SessionStore",
+      "OtpChallengeStore"
+    ],
+    "messagePolicy": "Show complete named parameters without types or ellipses; keep helper chains as explicit action summaries."
+  },
+  {
+    "diagram": "sequence",
+    "title": "UC 35 - Create/Update/Delete Individual Assignment",
+    "useCase": "Create/Update/Delete Individual Assignment",
+    "elements": [
+      {
+        "id": "u",
+        "type": "actor",
+        "name": "Teacher"
+      },
+      {
+        "id": "ui",
+        "type": "object",
+        "class": "AssignmentUI",
+        "stereotype": "user interaction",
+        "displayStereotype": "boundary"
+      },
+      {
+        "id": "c",
+        "type": "object",
+        "class": "ClassAssignmentController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "edit",
+        "type": "object",
+        "class": "AssignmentController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "s",
+        "type": "object",
+        "class": "AssignmentAuthoringService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "r",
+        "type": "object",
+        "class": "AssignmentRepository",
+        "stereotype": "business logic",
+        "displayStereotype": "repository"
+      },
+      {
+        "id": "db",
+        "type": "object",
+        "class": "Database",
+        "stereotype": "business logic",
+        "displayStereotype": "database"
+      }
+    ],
+    "messages": [
+      {
+        "from": "u",
+        "to": "ui",
+        "name": "Manage assignment",
+        "type": "sync",
+        "id": "m1",
+        "seq": "1",
+        "codeCall": "Manage assignment",
+        "displayCall": "Manage assignment"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "create(actor, classId, assignmentData)",
+        "type": "sync",
+        "id": "m2",
+        "seq": "2",
+        "codeCall": "create()",
+        "displayCall": "create(actor, classId, assignmentData)"
+      },
+      {
+        "from": "c",
+        "to": "s",
+        "name": "createForClass(actor, classId, createCommand)",
+        "type": "sync",
+        "id": "m3",
+        "seq": "3",
+        "codeCall": "createForClass(actor, classId, command); submissionMode=INDIVIDUAL",
+        "displayCall": "createForClass(actor, classId, createCommand)"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Check class manager, active class and submission mode",
+        "type": "sync",
+        "id": "m4",
+        "seq": "4",
+        "codeCall": "AssignmentAccess.requireClassManager; reject archived class; modes(INDIVIDUAL, gradingMode)",
+        "displayCall": "Check class manager, active class and submission mode"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "insert(assignment)",
+        "type": "sync",
+        "id": "m5",
+        "seq": "5",
+        "codeCall": "AssignmentRepository.insert(assignment): DRAFT, version=0, empty skeleton",
+        "displayCall": "insert(assignment)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "INSERT DRAFT",
+        "type": "sync",
+        "id": "m6",
+        "seq": "6",
+        "codeCall": "INSERT DRAFT",
+        "displayCall": "INSERT DRAFT"
+      },
+      {
+        "id": "return_m6",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m6",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "7"
+      },
+      {
+        "id": "return_m5",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m5",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "8"
+      },
+      {
+        "from": "s",
+        "to": "c",
+        "name": "Assignment detail",
+        "type": "reply",
+        "id": "m7",
+        "seq": "9",
+        "codeCall": "Assignment detail",
+        "replyTo": "m3"
+      },
+      {
+        "from": "c",
+        "to": "ui",
+        "name": "201 Created",
+        "type": "reply",
+        "id": "m8",
+        "seq": "10",
+        "codeCall": "201 Created",
+        "replyTo": "m2"
+      },
+      {
+        "from": "ui",
+        "to": "edit",
+        "name": "update(actor, assignmentId, assignmentDetails)",
+        "type": "sync",
+        "id": "m9",
+        "seq": "11",
+        "codeCall": "update()",
+        "displayCall": "update(actor, assignmentId, assignmentDetails)"
+      },
+      {
+        "from": "edit",
+        "to": "s",
+        "name": "updateDetails(actor, assignmentId, detailsCommand)",
+        "type": "sync",
+        "id": "m10",
+        "seq": "12",
+        "codeCall": "updateDetails(actor, id, command)",
+        "displayCall": "updateDetails(actor, assignmentId, detailsCommand)"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "findForUpdate(assignmentId)",
+        "type": "sync",
+        "id": "m11",
+        "seq": "13",
+        "codeCall": "AssignmentSupport.lockEditable -> lock -> AssignmentRepository.findForUpdate(id)",
+        "displayCall": "findForUpdate(assignmentId)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "SELECT FOR UPDATE",
+        "type": "sync",
+        "id": "m12",
+        "seq": "14",
+        "codeCall": "SELECT FOR UPDATE",
+        "displayCall": "SELECT FOR UPDATE"
+      },
+      {
+        "id": "return_m12",
+        "from": "db",
+        "to": "r",
+        "name": "Rows",
+        "type": "reply",
+        "replyTo": "m12",
+        "displayCall": "Rows",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "15"
+      },
+      {
+        "id": "return_m11",
+        "from": "r",
+        "to": "s",
+        "name": "Current record",
+        "type": "reply",
+        "replyTo": "m11",
+        "displayCall": "Current record",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "16"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Check access, version and editable state",
+        "type": "sync",
+        "id": "m13",
+        "seq": "17",
+        "codeCall": "Check access, version and editable state",
+        "displayCall": "Check access, version and editable state"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "save(updatedAssignment)",
+        "type": "sync",
+        "id": "m14",
+        "seq": "18",
+        "codeCall": "AssignmentRepository.save(current.withDetails)",
+        "displayCall": "save(updatedAssignment)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE details",
+        "type": "sync",
+        "id": "m15",
+        "seq": "19",
+        "codeCall": "UPDATE details",
+        "displayCall": "UPDATE details"
+      },
+      {
+        "id": "return_m15",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m15",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "20"
+      },
+      {
+        "id": "return_m14",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m14",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "21"
+      },
+      {
+        "from": "s",
+        "to": "edit",
+        "name": "Updated detail",
+        "type": "reply",
+        "id": "m16",
+        "seq": "22",
+        "codeCall": "Updated detail",
+        "replyTo": "m10"
+      },
+      {
+        "from": "edit",
+        "to": "ui",
+        "name": "Show saved changes",
+        "type": "reply",
+        "id": "m17",
+        "seq": "23",
+        "codeCall": "Show saved changes",
+        "replyTo": "m9"
+      },
+      {
+        "from": "ui",
+        "to": "edit",
+        "name": "delete(actor, assignmentId, version)",
+        "type": "sync",
+        "id": "m18",
+        "seq": "24",
+        "codeCall": "delete()",
+        "displayCall": "delete(actor, assignmentId, version)"
+      },
+      {
+        "from": "edit",
+        "to": "s",
+        "name": "delete(actor, assignmentId, version)",
+        "type": "sync",
+        "id": "m19",
+        "seq": "25",
+        "codeCall": "delete(actor, id, version)",
+        "displayCall": "delete(actor, assignmentId, version)"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "findForUpdate(assignmentId)",
+        "type": "sync",
+        "id": "m20",
+        "seq": "26",
+        "codeCall": "AssignmentSupport.lockEditable -> lock -> AssignmentRepository.findForUpdate(id)",
+        "displayCall": "findForUpdate(assignmentId)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "SELECT FOR UPDATE",
+        "type": "sync",
+        "id": "m21",
+        "seq": "27",
+        "codeCall": "SELECT FOR UPDATE",
+        "displayCall": "SELECT FOR UPDATE"
+      },
+      {
+        "id": "return_m21",
+        "from": "db",
+        "to": "r",
+        "name": "Rows",
+        "type": "reply",
+        "replyTo": "m21",
+        "displayCall": "Rows",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "28"
+      },
+      {
+        "id": "return_m20",
+        "from": "r",
+        "to": "s",
+        "name": "Current record",
+        "type": "reply",
+        "replyTo": "m20",
+        "displayCall": "Current record",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "29"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Check access, version and editable state",
+        "type": "sync",
+        "id": "m22",
+        "seq": "30",
+        "codeCall": "Check access, version and editable state",
+        "displayCall": "Check access, version and editable state"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "delete(assignmentId, expectedVersion)",
+        "type": "sync",
+        "id": "m23",
+        "seq": "31",
+        "codeCall": "AssignmentRepository.delete(id, expectedVersion)",
+        "displayCall": "delete(assignmentId, expectedVersion)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "DELETE with version",
+        "type": "sync",
+        "id": "m24",
+        "seq": "32",
+        "codeCall": "DELETE with version",
+        "displayCall": "DELETE with version"
+      },
+      {
+        "id": "return_m24",
+        "from": "db",
+        "to": "r",
+        "name": "Deleted",
+        "type": "reply",
+        "replyTo": "m24",
+        "displayCall": "Deleted",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "33"
+      },
+      {
+        "id": "return_m23",
+        "from": "r",
+        "to": "s",
+        "name": "Deleted",
+        "type": "reply",
+        "replyTo": "m23",
+        "displayCall": "Deleted",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "34"
+      },
+      {
+        "from": "s",
+        "to": "edit",
+        "name": "Deleted",
+        "type": "reply",
+        "id": "m25",
+        "seq": "35",
+        "codeCall": "Deleted",
+        "replyTo": "m19"
+      },
+      {
+        "from": "edit",
+        "to": "ui",
+        "name": "204 No Content",
+        "type": "reply",
+        "id": "m26",
+        "seq": "36",
+        "codeCall": "204 No Content",
+        "replyTo": "m18"
+      },
+      {
+        "from": "ui",
+        "to": "u",
+        "name": "Show assignment list",
+        "type": "reply",
+        "id": "m27",
+        "seq": "37",
+        "codeCall": "Show assignment list"
+      }
+    ],
+    "notes": [],
+    "layoutAuthority": "docs/sequence-diagrams.drawio",
+    "scope": "One successful class-scoped CRUD lifecycle. Optional skeleton authoring uses AssignmentController.skeleton -> AssignmentAuthoringService.saveSkeleton; omitted from the main CRUD flow.",
+    "useCaseId": "UC35",
+    "submissionMode": "INDIVIDUAL",
+    "guards": "Require class manager and non-archived class. Update and delete lock the assignment, checks access and expected version, and requires editable state. Delete checks the affected row count.",
+    "internalCollaborators": [
+      "AssignmentAccess",
+      "AssignmentSupport",
+      "RubricService",
+      "AssignmentAudit"
+    ],
+    "transactionalEffects": "Create initializes an empty skeleton, synchronizes rubric parts and audits creation. Update/delete audit within their service transaction.",
+    "alternativeScope": "Subject managers create individual assignments through SubjectAssignmentController.create -> AssignmentAuthoringService.createForSubject; subject-scoped group assignments are rejected.",
+    "messagePolicy": "Full named parameters and explicit concise call-return pairs for displayed synchronous calls. Internal helpers remain summarized. Lifelines and replies retain standard dashed notation.",
+    "reportSection": "2.2",
+    "authoringAlternatives": "Individual subject-scope creation uses SubjectAssignmentController and createForSubject. AI API/MCP authoring and rubric/publication have their own continuous shared flows in 2.4–2.6."
+  },
+  {
+    "diagram": "sequence",
+    "title": "UC 53 - Create/Update/Delete Group Assignment",
+    "useCase": "Create/Update/Delete Group Assignment",
+    "elements": [
+      {
+        "id": "u",
+        "type": "actor",
+        "name": "Teacher"
+      },
+      {
+        "id": "ui",
+        "type": "object",
+        "class": "AssignmentUI",
+        "stereotype": "user interaction",
+        "displayStereotype": "boundary"
+      },
+      {
+        "id": "c",
+        "type": "object",
+        "class": "ClassAssignmentController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "edit",
+        "type": "object",
+        "class": "AssignmentController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "s",
+        "type": "object",
+        "class": "AssignmentAuthoringService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "r",
+        "type": "object",
+        "class": "AssignmentRepository",
+        "stereotype": "business logic",
+        "displayStereotype": "repository"
+      },
+      {
+        "id": "db",
+        "type": "object",
+        "class": "Database",
+        "stereotype": "business logic",
+        "displayStereotype": "database"
+      }
+    ],
+    "messages": [
+      {
+        "from": "u",
+        "to": "ui",
+        "name": "Manage assignment",
+        "type": "sync",
+        "id": "m1",
+        "seq": "1",
+        "codeCall": "Manage assignment",
+        "displayCall": "Manage assignment"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "create(actor, classId, assignmentData)",
+        "type": "sync",
+        "id": "m2",
+        "seq": "2",
+        "codeCall": "create()",
+        "displayCall": "create(actor, classId, assignmentData)"
+      },
+      {
+        "from": "c",
+        "to": "s",
+        "name": "createForClass(actor, classId, createCommand)",
+        "type": "sync",
+        "id": "m3",
+        "seq": "3",
+        "codeCall": "createForClass(actor, classId, command); submissionMode=GROUP",
+        "displayCall": "createForClass(actor, classId, createCommand)"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Check class manager, group support and GRADED mode",
+        "type": "sync",
+        "id": "m4",
+        "seq": "4",
+        "codeCall": "AssignmentAccess.requireClassManager; reject archived class; modes(GROUP, GRADED); AssignmentSupport.groupSupported(classId)",
+        "displayCall": "Check class manager, group support and GRADED mode"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "insert(assignment)",
+        "type": "sync",
+        "id": "m5",
+        "seq": "5",
+        "codeCall": "AssignmentRepository.insert(assignment): DRAFT, version=0, empty skeleton",
+        "displayCall": "insert(assignment)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "INSERT DRAFT",
+        "type": "sync",
+        "id": "m6",
+        "seq": "6",
+        "codeCall": "INSERT DRAFT",
+        "displayCall": "INSERT DRAFT"
+      },
+      {
+        "id": "return_m6",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m6",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "7"
+      },
+      {
+        "id": "return_m5",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m5",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "8"
+      },
+      {
+        "from": "s",
+        "to": "c",
+        "name": "Assignment detail",
+        "type": "reply",
+        "id": "m7",
+        "seq": "9",
+        "codeCall": "Assignment detail",
+        "replyTo": "m3"
+      },
+      {
+        "from": "c",
+        "to": "ui",
+        "name": "201 Created",
+        "type": "reply",
+        "id": "m8",
+        "seq": "10",
+        "codeCall": "201 Created",
+        "replyTo": "m2"
+      },
+      {
+        "from": "ui",
+        "to": "edit",
+        "name": "update(actor, assignmentId, assignmentDetails)",
+        "type": "sync",
+        "id": "m9",
+        "seq": "11",
+        "codeCall": "update()",
+        "displayCall": "update(actor, assignmentId, assignmentDetails)"
+      },
+      {
+        "from": "edit",
+        "to": "s",
+        "name": "updateDetails(actor, assignmentId, detailsCommand)",
+        "type": "sync",
+        "id": "m10",
+        "seq": "12",
+        "codeCall": "updateDetails(actor, id, command)",
+        "displayCall": "updateDetails(actor, assignmentId, detailsCommand)"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "findForUpdate(assignmentId)",
+        "type": "sync",
+        "id": "m11",
+        "seq": "13",
+        "codeCall": "AssignmentSupport.lockEditable -> lock -> AssignmentRepository.findForUpdate(id)",
+        "displayCall": "findForUpdate(assignmentId)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "SELECT FOR UPDATE",
+        "type": "sync",
+        "id": "m12",
+        "seq": "14",
+        "codeCall": "SELECT FOR UPDATE",
+        "displayCall": "SELECT FOR UPDATE"
+      },
+      {
+        "id": "return_m12",
+        "from": "db",
+        "to": "r",
+        "name": "Rows",
+        "type": "reply",
+        "replyTo": "m12",
+        "displayCall": "Rows",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "15"
+      },
+      {
+        "id": "return_m11",
+        "from": "r",
+        "to": "s",
+        "name": "Current record",
+        "type": "reply",
+        "replyTo": "m11",
+        "displayCall": "Current record",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "16"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Check access, version and editable state",
+        "type": "sync",
+        "id": "m13",
+        "seq": "17",
+        "codeCall": "Check access, version and editable state",
+        "displayCall": "Check access, version and editable state"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "save(updatedAssignment)",
+        "type": "sync",
+        "id": "m14",
+        "seq": "18",
+        "codeCall": "AssignmentRepository.save(current.withDetails)",
+        "displayCall": "save(updatedAssignment)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE details",
+        "type": "sync",
+        "id": "m15",
+        "seq": "19",
+        "codeCall": "UPDATE details",
+        "displayCall": "UPDATE details"
+      },
+      {
+        "id": "return_m15",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m15",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "20"
+      },
+      {
+        "id": "return_m14",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m14",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "21"
+      },
+      {
+        "from": "s",
+        "to": "edit",
+        "name": "Updated detail",
+        "type": "reply",
+        "id": "m16",
+        "seq": "22",
+        "codeCall": "Updated detail",
+        "replyTo": "m10"
+      },
+      {
+        "from": "edit",
+        "to": "ui",
+        "name": "Show saved changes",
+        "type": "reply",
+        "id": "m17",
+        "seq": "23",
+        "codeCall": "Show saved changes",
+        "replyTo": "m9"
+      },
+      {
+        "from": "ui",
+        "to": "edit",
+        "name": "delete(actor, assignmentId, version)",
+        "type": "sync",
+        "id": "m18",
+        "seq": "24",
+        "codeCall": "delete()",
+        "displayCall": "delete(actor, assignmentId, version)"
+      },
+      {
+        "from": "edit",
+        "to": "s",
+        "name": "delete(actor, assignmentId, version)",
+        "type": "sync",
+        "id": "m19",
+        "seq": "25",
+        "codeCall": "delete(actor, id, version)",
+        "displayCall": "delete(actor, assignmentId, version)"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "findForUpdate(assignmentId)",
+        "type": "sync",
+        "id": "m20",
+        "seq": "26",
+        "codeCall": "AssignmentSupport.lockEditable -> lock -> AssignmentRepository.findForUpdate(id)",
+        "displayCall": "findForUpdate(assignmentId)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "SELECT FOR UPDATE",
+        "type": "sync",
+        "id": "m21",
+        "seq": "27",
+        "codeCall": "SELECT FOR UPDATE",
+        "displayCall": "SELECT FOR UPDATE"
+      },
+      {
+        "id": "return_m21",
+        "from": "db",
+        "to": "r",
+        "name": "Rows",
+        "type": "reply",
+        "replyTo": "m21",
+        "displayCall": "Rows",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "28"
+      },
+      {
+        "id": "return_m20",
+        "from": "r",
+        "to": "s",
+        "name": "Current record",
+        "type": "reply",
+        "replyTo": "m20",
+        "displayCall": "Current record",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "29"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Check access, version and editable state",
+        "type": "sync",
+        "id": "m22",
+        "seq": "30",
+        "codeCall": "Check access, version and editable state",
+        "displayCall": "Check access, version and editable state"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "delete(assignmentId, expectedVersion)",
+        "type": "sync",
+        "id": "m23",
+        "seq": "31",
+        "codeCall": "AssignmentRepository.delete(id, expectedVersion)",
+        "displayCall": "delete(assignmentId, expectedVersion)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "DELETE with version",
+        "type": "sync",
+        "id": "m24",
+        "seq": "32",
+        "codeCall": "DELETE with version",
+        "displayCall": "DELETE with version"
+      },
+      {
+        "id": "return_m24",
+        "from": "db",
+        "to": "r",
+        "name": "Deleted",
+        "type": "reply",
+        "replyTo": "m24",
+        "displayCall": "Deleted",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "33"
+      },
+      {
+        "id": "return_m23",
+        "from": "r",
+        "to": "s",
+        "name": "Deleted",
+        "type": "reply",
+        "replyTo": "m23",
+        "displayCall": "Deleted",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "34"
+      },
+      {
+        "from": "s",
+        "to": "edit",
+        "name": "Deleted",
+        "type": "reply",
+        "id": "m25",
+        "seq": "35",
+        "codeCall": "Deleted",
+        "replyTo": "m19"
+      },
+      {
+        "from": "edit",
+        "to": "ui",
+        "name": "204 No Content",
+        "type": "reply",
+        "id": "m26",
+        "seq": "36",
+        "codeCall": "204 No Content",
+        "replyTo": "m18"
+      },
+      {
+        "from": "ui",
+        "to": "u",
+        "name": "Show assignment list",
+        "type": "reply",
+        "id": "m27",
+        "seq": "37",
+        "codeCall": "Show assignment list"
+      }
+    ],
+    "notes": [],
+    "layoutAuthority": "docs/sequence-diagrams.drawio",
+    "scope": "One successful class-scoped CRUD lifecycle. Optional skeleton authoring uses AssignmentController.skeleton -> AssignmentAuthoringService.saveSkeleton; omitted from the main CRUD flow.",
+    "useCaseId": "UC53",
+    "submissionMode": "GROUP",
+    "guards": "Require class manager and non-archived class. Update and delete lock the assignment, checks access and expected version, and requires editable state. Delete checks the affected row count. Require group support availability and GROUP with GRADED mode.",
+    "internalCollaborators": [
+      "AssignmentAccess",
+      "AssignmentSupport",
+      "RubricService",
+      "AssignmentAudit"
+    ],
+    "transactionalEffects": "Create initializes an empty skeleton, synchronizes rubric parts and audits creation. Update/delete audit within their service transaction.",
+    "messagePolicy": "Full named parameters and explicit concise call-return pairs for displayed synchronous calls. Internal helpers remain summarized. Lifelines and replies retain standard dashed notation.",
+    "reportSection": "2.3",
+    "authoringAlternatives": "Group creation is class-scoped and GRADED. AI API/MCP authoring and rubric/publication have their own continuous shared flows in 2.4–2.6."
+  },
+  {
+    "diagram": "sequence",
+    "title": "Generate Assignment Draft — AI API",
+    "useCase": "Generate Assignment Draft — AI API",
+    "reportSection": "2.4",
+    "elements": [
+      {
+        "id": "u",
+        "type": "actor",
+        "name": "Teacher"
+      },
+      {
+        "id": "ui",
+        "type": "object",
+        "class": "AssignmentAuthoringUI",
+        "stereotype": "user interaction",
+        "displayStereotype": "boundary"
+      },
+      {
+        "id": "c",
+        "type": "object",
+        "class": "AssignmentAiDraftController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "s",
+        "type": "object",
+        "class": "AssignmentAiDraftService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "ai",
+        "type": "object",
+        "class": "AiTaskService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "r",
+        "type": "object",
+        "class": "AiDraftRepository",
+        "stereotype": "business logic",
+        "displayStereotype": "repository"
+      },
+      {
+        "id": "db",
+        "type": "object",
+        "class": "Database",
+        "stereotype": "business logic",
+        "displayStereotype": "database"
+      }
+    ],
+    "messages": [
+      {
+        "id": "m1",
+        "seq": "1",
+        "from": "u",
+        "to": "ui",
+        "name": "Generate with AI",
+        "type": "sync",
+        "displayCall": "Generate with AI",
+        "codeCall": "Select Generate with AI; choose requirements and sources"
+      },
+      {
+        "id": "m2",
+        "seq": "2",
+        "from": "ui",
+        "to": "c",
+        "name": "request(actor, assignmentId, draftOptions)",
+        "type": "sync",
+        "displayCall": "request(actor, assignmentId, draftOptions)",
+        "codeCall": "request(actor, assignmentId, draftOptions)",
+        "sourceClass": "AssignmentAiDraftController",
+        "sourceMethod": "request",
+        "sourceOperations": [
+          "+request(actor: Actor, id: UUID, body: AssignmentRequests.AiDraft): AssignmentViews.AiDraft"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m3",
+        "seq": "3",
+        "from": "c",
+        "to": "s",
+        "name": "request(actor, assignmentId, draftCommand)",
+        "type": "sync",
+        "displayCall": "request(actor, assignmentId, draftCommand)",
+        "codeCall": "request(actor, assignmentId, draftCommand)",
+        "sourceClass": "AssignmentAiDraftService",
+        "sourceMethod": "request",
+        "sourceOperations": [
+          "+request(actor: Actor, id: UUID, command: AssignmentCommands.AiDraftRequest): AssignmentViews.AiDraft"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m4",
+        "seq": "4",
+        "from": "s",
+        "to": "r",
+        "name": "insert(pendingDraft)",
+        "type": "sync",
+        "displayCall": "insert(pendingDraft)",
+        "codeCall": "insert(pendingDraft)",
+        "sourceClass": "AiDraftRepository",
+        "sourceMethod": "insert",
+        "sourceOperations": [
+          "+insert(d: AssignmentAiDraft): void"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m5",
+        "seq": "5",
+        "from": "r",
+        "to": "db",
+        "name": "INSERT assignment_ai_drafts: PENDING",
+        "type": "sync",
+        "displayCall": "INSERT assignment_ai_drafts: PENDING",
+        "codeCall": "INSERT assignment_ai_drafts: PENDING",
+        "callKind": "database"
+      },
+      {
+        "id": "return_m5",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m5",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "6"
+      },
+      {
+        "id": "return_m4",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m4",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "7"
+      },
+      {
+        "id": "m6",
+        "seq": "8",
+        "from": "s",
+        "to": "ai",
+        "name": "submit(taskRequest)",
+        "type": "sync",
+        "displayCall": "submit(taskRequest)",
+        "codeCall": "submit(taskRequest)",
+        "sourceClass": "AiTaskService",
+        "sourceMethod": "submit",
+        "sourceOperations": [
+          "+submit(requested: AiTaskRequest): AiTaskView"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "return_m6",
+        "from": "ai",
+        "to": "s",
+        "name": "Task reference",
+        "type": "reply",
+        "replyTo": "m6",
+        "displayCall": "Task reference",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "9"
+      },
+      {
+        "id": "return_m3",
+        "from": "s",
+        "to": "c",
+        "name": "Draft reference",
+        "type": "reply",
+        "replyTo": "m3",
+        "displayCall": "Draft reference",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "10"
+      },
+      {
+        "id": "m7",
+        "seq": "11",
+        "from": "c",
+        "to": "ui",
+        "name": "Show pending status",
+        "type": "reply",
+        "displayCall": "Show pending status",
+        "codeCall": "Show pending status",
+        "replyTo": "m2"
+      },
+      {
+        "id": "m8",
+        "seq": "12",
+        "from": "ai",
+        "to": "ai",
+        "name": "Worker calls AI → READY",
+        "type": "sync",
+        "displayCall": "Worker calls AI → READY",
+        "codeCall": "After commit: worker calls provider; result handler validates and stores READY",
+        "callKind": "action-summary"
+      },
+      {
+        "id": "m9",
+        "seq": "13",
+        "from": "ui",
+        "to": "c",
+        "name": "get(actor, assignmentId, draftId)",
+        "type": "sync",
+        "displayCall": "get(actor, assignmentId, draftId)",
+        "codeCall": "get(actor, assignmentId, draftId)",
+        "sourceClass": "AssignmentAiDraftController",
+        "sourceMethod": "get",
+        "sourceOperations": [
+          "+get(actor: Actor, id: UUID, draftId: UUID): AssignmentViews.AiDraft"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m10",
+        "seq": "14",
+        "from": "c",
+        "to": "s",
+        "name": "get(actor, assignmentId, draftId)",
+        "type": "sync",
+        "displayCall": "get(actor, assignmentId, draftId)",
+        "codeCall": "get(actor, assignmentId, draftId)",
+        "sourceClass": "AssignmentAiDraftService",
+        "sourceMethod": "get",
+        "sourceOperations": [
+          "+get(actor: Actor, id: UUID, draftId: UUID): AssignmentViews.AiDraft"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m11",
+        "seq": "15",
+        "from": "s",
+        "to": "r",
+        "name": "find(draftId)",
+        "type": "sync",
+        "displayCall": "find(draftId)",
+        "codeCall": "find(draftId)",
+        "sourceClass": "AiDraftRepository",
+        "sourceMethod": "find",
+        "sourceOperations": [
+          "+find(id: UUID): Optional<AssignmentAiDraft>"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "return_m11",
+        "from": "r",
+        "to": "s",
+        "name": "Draft",
+        "type": "reply",
+        "replyTo": "m11",
+        "displayCall": "Draft",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "16"
+      },
+      {
+        "id": "return_m10",
+        "from": "s",
+        "to": "c",
+        "name": "Draft and status",
+        "type": "reply",
+        "replyTo": "m10",
+        "displayCall": "Draft and status",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "17"
+      },
+      {
+        "id": "m12",
+        "seq": "18",
+        "from": "c",
+        "to": "ui",
+        "name": "Show PENDING / READY / FAILED status",
+        "type": "reply",
+        "displayCall": "Show PENDING / READY / FAILED status",
+        "codeCall": "Show PENDING / READY / FAILED status",
+        "replyTo": "m9"
+      },
+      {
+        "id": "m13",
+        "seq": "19",
+        "from": "u",
+        "to": "ui",
+        "name": "Review proposal",
+        "type": "sync",
+        "displayCall": "Review proposal",
+        "codeCall": "Review proposal; choose Apply or Discard"
+      },
+      {
+        "id": "m14",
+        "seq": "20",
+        "from": "ui",
+        "to": "c",
+        "name": "apply(actor, assignmentId, draftId, applyData)",
+        "type": "sync",
+        "displayCall": "apply(actor, assignmentId, draftId, applyData)",
+        "codeCall": "apply(actor, assignmentId, draftId, applyData)",
+        "sourceClass": "AssignmentAiDraftController",
+        "sourceMethod": "apply",
+        "sourceOperations": [
+          "+apply(actor: Actor, id: UUID, draftId: UUID, body: AssignmentRequests.Apply): AssignmentViews.Detail"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m15",
+        "seq": "21",
+        "from": "c",
+        "to": "s",
+        "name": "apply(actor, assignmentId, draftId, applyCommand)",
+        "type": "sync",
+        "displayCall": "apply(actor, assignmentId, draftId, applyCommand)",
+        "codeCall": "apply(actor, assignmentId, draftId, applyCommand)",
+        "sourceClass": "AssignmentAiDraftService",
+        "sourceMethod": "apply",
+        "sourceOperations": [
+          "+apply(actor: Actor, id: UUID, draftId: UUID, command: AssignmentCommands.ApplyDraft): AssignmentViews.Detail"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m16",
+        "seq": "22",
+        "from": "s",
+        "to": "s",
+        "name": "Validate and apply draft",
+        "type": "sync",
+        "displayCall": "Validate and apply draft",
+        "codeCall": "Check READY/version; save assignment and owned rubrics atomically",
+        "callKind": "action-summary"
+      },
+      {
+        "id": "m17",
+        "seq": "23",
+        "from": "s",
+        "to": "r",
+        "name": "markApplied(draftId, now)",
+        "type": "sync",
+        "displayCall": "markApplied(draftId, now)",
+        "codeCall": "markApplied(draftId, now)",
+        "sourceClass": "AiDraftRepository",
+        "sourceMethod": "markApplied",
+        "sourceOperations": [
+          "+markApplied(id: UUID, now: Instant): int"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m18",
+        "seq": "24",
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE assignment_ai_drafts: APPLIED",
+        "type": "sync",
+        "displayCall": "UPDATE assignment_ai_drafts: APPLIED",
+        "codeCall": "UPDATE assignment_ai_drafts: APPLIED",
+        "callKind": "database"
+      },
+      {
+        "id": "return_m18",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m18",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "25"
+      },
+      {
+        "id": "return_m17",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m17",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "26"
+      },
+      {
+        "id": "return_m15",
+        "from": "s",
+        "to": "c",
+        "name": "Assignment detail",
+        "type": "reply",
+        "replyTo": "m15",
+        "displayCall": "Assignment detail",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "27"
+      },
+      {
+        "id": "m19",
+        "seq": "28",
+        "from": "c",
+        "to": "ui",
+        "name": "Show editable Assignment",
+        "type": "reply",
+        "displayCall": "Show editable Assignment",
+        "codeCall": "Show editable Assignment",
+        "replyTo": "m14"
+      },
+      {
+        "id": "m20",
+        "seq": "29",
+        "from": "ui",
+        "to": "c",
+        "name": "discard(actor, assignmentId, draftId)",
+        "type": "sync",
+        "displayCall": "discard(actor, assignmentId, draftId)",
+        "codeCall": "discard(actor, assignmentId, draftId)",
+        "sourceClass": "AssignmentAiDraftController",
+        "sourceMethod": "discard",
+        "sourceOperations": [
+          "+discard(actor: Actor, id: UUID, draftId: UUID): AssignmentViews.AiDraft"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m21",
+        "seq": "30",
+        "from": "c",
+        "to": "s",
+        "name": "discard(actor, assignmentId, draftId)",
+        "type": "sync",
+        "displayCall": "discard(actor, assignmentId, draftId)",
+        "codeCall": "discard(actor, assignmentId, draftId)",
+        "sourceClass": "AssignmentAiDraftService",
+        "sourceMethod": "discard",
+        "sourceOperations": [
+          "+discard(actor: Actor, id: UUID, draftId: UUID): AssignmentViews.AiDraft"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m22",
+        "seq": "31",
+        "from": "s",
+        "to": "r",
+        "name": "markDiscarded(draftId, now)",
+        "type": "sync",
+        "displayCall": "markDiscarded(draftId, now)",
+        "codeCall": "markDiscarded(draftId, now)",
+        "sourceClass": "AiDraftRepository",
+        "sourceMethod": "markDiscarded",
+        "sourceOperations": [
+          "+markDiscarded(id: UUID, now: Instant): int"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m23",
+        "seq": "32",
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE proposal: DISCARDED",
+        "type": "sync",
+        "displayCall": "UPDATE proposal: DISCARDED",
+        "codeCall": "UPDATE proposal: DISCARDED; keep Assignment",
+        "callKind": "database"
+      },
+      {
+        "id": "return_m23",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m23",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "33"
+      },
+      {
+        "id": "return_m22",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m22",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "34"
+      },
+      {
+        "id": "return_m21",
+        "from": "s",
+        "to": "c",
+        "name": "Discarded draft",
+        "type": "reply",
+        "replyTo": "m21",
+        "displayCall": "Discarded draft",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "35"
+      },
+      {
+        "id": "m24",
+        "seq": "36",
+        "from": "c",
+        "to": "ui",
+        "name": "Proposal discarded",
+        "type": "reply",
+        "displayCall": "Proposal discarded",
+        "codeCall": "Proposal discarded",
+        "replyTo": "m20"
+      }
+    ],
+    "fragments": [
+      {
+        "type": "alt",
+        "operands": [
+          {
+            "guard": "Apply and valid READY proposal",
+            "from": "m14",
+            "to": "m19"
+          },
+          {
+            "guard": "Discard",
+            "from": "m20",
+            "to": "m24"
+          }
+        ]
+      }
+    ],
+    "internalCollaborators": [
+      "AssignmentSupport",
+      "AssignmentRepository",
+      "RubricService",
+      "AiTaskJobHandler",
+      "AiTaskDelivery",
+      "AssignmentDraftResultHandler"
+    ],
+    "preconditions": "An editable individual/group Assignment already exists. Actor can author it.",
+    "transactionalEffects": "Apply saves Assignment, replaces owned rubrics, marks proposal APPLIED and audits in one transaction. No automatic publication.",
+    "messagePolicy": "Full named parameters and explicit concise call-return pairs for displayed synchronous calls. Internal helpers remain summarized. Lifelines and replies retain standard dashed notation."
+  },
+  {
+    "diagram": "sequence",
+    "title": "Create Assignment Draft — External MCP",
+    "useCase": "Create Assignment Draft — External MCP",
+    "reportSection": "2.5",
+    "elements": [
+      {
+        "id": "u",
+        "type": "actor",
+        "name": "Teacher"
+      },
+      {
+        "id": "ui",
+        "type": "object",
+        "class": "AuthoringClient",
+        "stereotype": "user interaction",
+        "displayStereotype": "boundary"
+      },
+      {
+        "id": "c",
+        "type": "object",
+        "class": "McpController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "s",
+        "type": "object",
+        "class": "AssignmentMcpAuthoringService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "review",
+        "type": "object",
+        "class": "AssignmentAiDraftController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "draft",
+        "type": "object",
+        "class": "AssignmentAiDraftService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "r",
+        "type": "object",
+        "class": "AiDraftRepository",
+        "stereotype": "business logic",
+        "displayStereotype": "repository"
+      },
+      {
+        "id": "db",
+        "type": "object",
+        "class": "Database",
+        "stereotype": "business logic",
+        "displayStereotype": "database"
+      }
+    ],
+    "messages": [
+      {
+        "id": "m1",
+        "seq": "1",
+        "from": "u",
+        "to": "ui",
+        "name": "Create with own agent",
+        "type": "sync",
+        "displayCall": "Create with own agent",
+        "codeCall": "Ask own MCP agent to create Assignment"
+      },
+      {
+        "id": "m2",
+        "seq": "2",
+        "from": "ui",
+        "to": "c",
+        "name": "read_agent_workflow(workflowRequest)",
+        "type": "sync",
+        "displayCall": "read_agent_workflow(workflowRequest)",
+        "codeCall": "read_agent_workflow(workflowRequest)"
+      },
+      {
+        "id": "m3",
+        "seq": "3",
+        "from": "c",
+        "to": "c",
+        "name": "Dispatch AUTHOR_ASSIGNMENT and context tools",
+        "type": "sync",
+        "displayCall": "Dispatch AUTHOR_ASSIGNMENT and context tools",
+        "codeCall": "Dispatch AUTHOR_ASSIGNMENT workflow and required context tools",
+        "callKind": "action-summary"
+      },
+      {
+        "id": "return_m2",
+        "from": "c",
+        "to": "ui",
+        "name": "Workflow and schema",
+        "type": "reply",
+        "replyTo": "m2",
+        "displayCall": "Workflow and schema",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "4"
+      },
+      {
+        "id": "m4",
+        "seq": "5",
+        "from": "ui",
+        "to": "ui",
+        "name": "Generate with own model",
+        "type": "sync",
+        "displayCall": "Generate with own model",
+        "codeCall": "Agent generates draft with its own model",
+        "callKind": "action-summary"
+      },
+      {
+        "id": "m5",
+        "seq": "6",
+        "from": "ui",
+        "to": "c",
+        "name": "create_assignment_draft(createDraftRequest)",
+        "type": "sync",
+        "displayCall": "create_assignment_draft(createDraftRequest)",
+        "codeCall": "create_assignment_draft(createDraftRequest)"
+      },
+      {
+        "id": "m6",
+        "seq": "7",
+        "from": "c",
+        "to": "s",
+        "name": "call(actor, toolName, arguments)",
+        "type": "sync",
+        "displayCall": "call(actor, toolName, arguments)",
+        "codeCall": "call(actor, toolName, arguments)",
+        "sourceClass": "AssignmentMcpAuthoringService",
+        "sourceMethod": "call",
+        "sourceOperations": [
+          "+call(actor: Actor, name: String, args: Map<String,Object>): McpToolResult"
+        ],
+        "callKind": "java",
+        "via": [
+          "McpServer",
+          "McpToolRegistry"
+        ]
+      },
+      {
+        "id": "m7",
+        "seq": "8",
+        "from": "s",
+        "to": "s",
+        "name": "Check scope/mode; create DRAFT via authoring service",
+        "type": "sync",
+        "displayCall": "Check scope/mode; create DRAFT via authoring service",
+        "codeCall": "Validate class/subject scope, mode and requestRef; create DRAFT via authoring service",
+        "callKind": "action-summary"
+      },
+      {
+        "id": "m8",
+        "seq": "9",
+        "from": "s",
+        "to": "draft",
+        "name": "saveFromAgent(actor, assignmentId, version, draft, agentLabel)",
+        "type": "sync",
+        "displayCall": "saveFromAgent(actor, assignmentId, version, draft, agentLabel)",
+        "codeCall": "saveFromAgent(actor, assignmentId, version, draft, agentLabel)",
+        "sourceClass": "AssignmentAiDraftService",
+        "sourceMethod": "saveFromAgent",
+        "sourceOperations": [
+          "~saveFromAgent(actor: Actor, id: UUID, expectedVersion: long, raw: JsonNode, agentLabel: String): AssignmentAiDraft"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m9",
+        "seq": "10",
+        "from": "draft",
+        "to": "r",
+        "name": "insert(readyProposal)",
+        "type": "sync",
+        "displayCall": "insert(readyProposal)",
+        "codeCall": "insert(readyProposal)",
+        "sourceClass": "AiDraftRepository",
+        "sourceMethod": "insert",
+        "sourceOperations": [
+          "+insert(d: AssignmentAiDraft): void"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m10",
+        "seq": "11",
+        "from": "r",
+        "to": "db",
+        "name": "INSERT assignment_ai_drafts: READY / MCP",
+        "type": "sync",
+        "displayCall": "INSERT assignment_ai_drafts: READY / MCP",
+        "codeCall": "INSERT assignment_ai_drafts: READY / MCP",
+        "callKind": "database"
+      },
+      {
+        "id": "return_m10",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m10",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "12"
+      },
+      {
+        "id": "return_m9",
+        "from": "r",
+        "to": "draft",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m9",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "13"
+      },
+      {
+        "id": "return_m8",
+        "from": "draft",
+        "to": "s",
+        "name": "Draft reference",
+        "type": "reply",
+        "replyTo": "m8",
+        "displayCall": "Draft reference",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "14"
+      },
+      {
+        "id": "return_m6",
+        "from": "s",
+        "to": "c",
+        "name": "Draft and reviewUrl",
+        "type": "reply",
+        "replyTo": "m6",
+        "displayCall": "Draft and reviewUrl",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "15"
+      },
+      {
+        "id": "m11",
+        "seq": "16",
+        "from": "c",
+        "to": "ui",
+        "name": "Show review link",
+        "type": "reply",
+        "displayCall": "Show review link",
+        "codeCall": "Show review link",
+        "replyTo": "m5"
+      },
+      {
+        "id": "m12",
+        "seq": "17",
+        "from": "u",
+        "to": "ui",
+        "name": "Open reviewUrl",
+        "type": "sync",
+        "displayCall": "Open reviewUrl",
+        "codeCall": "Open reviewUrl; review proposal"
+      },
+      {
+        "id": "m13",
+        "seq": "18",
+        "from": "ui",
+        "to": "review",
+        "name": "apply(actor, assignmentId, draftId, applyData)",
+        "type": "sync",
+        "displayCall": "apply(actor, assignmentId, draftId, applyData)",
+        "codeCall": "apply(actor, assignmentId, draftId, applyData)",
+        "sourceClass": "AssignmentAiDraftController",
+        "sourceMethod": "apply",
+        "sourceOperations": [
+          "+apply(actor: Actor, id: UUID, draftId: UUID, body: AssignmentRequests.Apply): AssignmentViews.Detail"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m14",
+        "seq": "19",
+        "from": "review",
+        "to": "draft",
+        "name": "apply(actor, assignmentId, draftId, applyCommand)",
+        "type": "sync",
+        "displayCall": "apply(actor, assignmentId, draftId, applyCommand)",
+        "codeCall": "apply(actor, assignmentId, draftId, applyCommand)",
+        "sourceClass": "AssignmentAiDraftService",
+        "sourceMethod": "apply",
+        "sourceOperations": [
+          "+apply(actor: Actor, id: UUID, draftId: UUID, command: AssignmentCommands.ApplyDraft): AssignmentViews.Detail"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m15",
+        "seq": "20",
+        "from": "draft",
+        "to": "draft",
+        "name": "Check READY/version; save document and rubrics",
+        "type": "sync",
+        "displayCall": "Check READY/version; save document and rubrics",
+        "codeCall": "Require current access, READY and version; save document/rubrics atomically",
+        "callKind": "action-summary"
+      },
+      {
+        "id": "m16",
+        "seq": "21",
+        "from": "draft",
+        "to": "r",
+        "name": "markApplied(draftId, now)",
+        "type": "sync",
+        "displayCall": "markApplied(draftId, now)",
+        "codeCall": "markApplied(draftId, now)",
+        "sourceClass": "AiDraftRepository",
+        "sourceMethod": "markApplied",
+        "sourceOperations": [
+          "+markApplied(id: UUID, now: Instant): int"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m17",
+        "seq": "22",
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE assignment_ai_drafts: APPLIED",
+        "type": "sync",
+        "displayCall": "UPDATE assignment_ai_drafts: APPLIED",
+        "codeCall": "UPDATE assignment_ai_drafts: APPLIED",
+        "callKind": "database"
+      },
+      {
+        "id": "return_m17",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m17",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "23"
+      },
+      {
+        "id": "return_m16",
+        "from": "r",
+        "to": "draft",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m16",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "24"
+      },
+      {
+        "id": "return_m14",
+        "from": "draft",
+        "to": "review",
+        "name": "Assignment detail",
+        "type": "reply",
+        "replyTo": "m14",
+        "displayCall": "Assignment detail",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "25"
+      },
+      {
+        "id": "m18",
+        "seq": "26",
+        "from": "review",
+        "to": "ui",
+        "name": "Updated editable Assignment",
+        "type": "reply",
+        "displayCall": "Updated editable Assignment",
+        "codeCall": "Updated editable Assignment",
+        "replyTo": "m13"
+      },
+      {
+        "id": "m19",
+        "seq": "27",
+        "from": "ui",
+        "to": "review",
+        "name": "discard(actor, assignmentId, draftId)",
+        "type": "sync",
+        "displayCall": "discard(actor, assignmentId, draftId)",
+        "codeCall": "discard(actor, assignmentId, draftId)",
+        "sourceClass": "AssignmentAiDraftController",
+        "sourceMethod": "discard",
+        "sourceOperations": [
+          "+discard(actor: Actor, id: UUID, draftId: UUID): AssignmentViews.AiDraft"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m20",
+        "seq": "28",
+        "from": "review",
+        "to": "draft",
+        "name": "discard(actor, assignmentId, draftId)",
+        "type": "sync",
+        "displayCall": "discard(actor, assignmentId, draftId)",
+        "codeCall": "discard(actor, assignmentId, draftId)",
+        "sourceClass": "AssignmentAiDraftService",
+        "sourceMethod": "discard",
+        "sourceOperations": [
+          "+discard(actor: Actor, id: UUID, draftId: UUID): AssignmentViews.AiDraft"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m21",
+        "seq": "29",
+        "from": "draft",
+        "to": "r",
+        "name": "markDiscarded(draftId, now)",
+        "type": "sync",
+        "displayCall": "markDiscarded(draftId, now)",
+        "codeCall": "markDiscarded(draftId, now)",
+        "sourceClass": "AiDraftRepository",
+        "sourceMethod": "markDiscarded",
+        "sourceOperations": [
+          "+markDiscarded(id: UUID, now: Instant): int"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "return_m21",
+        "from": "r",
+        "to": "draft",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m21",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "30"
+      },
+      {
+        "id": "return_m20",
+        "from": "draft",
+        "to": "review",
+        "name": "Discarded draft",
+        "type": "reply",
+        "replyTo": "m20",
+        "displayCall": "Discarded draft",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "31"
+      },
+      {
+        "id": "m22",
+        "seq": "32",
+        "from": "review",
+        "to": "ui",
+        "name": "Proposal discarded; Assignment stays DRAFT",
+        "type": "reply",
+        "displayCall": "Proposal discarded; Assignment stays DRAFT",
+        "codeCall": "Proposal discarded; Assignment stays DRAFT",
+        "replyTo": "m19"
+      }
+    ],
+    "fragments": [
+      {
+        "type": "alt",
+        "operands": [
+          {
+            "guard": "Apply",
+            "from": "m13",
+            "to": "m18"
+          },
+          {
+            "guard": "Discard",
+            "from": "m19",
+            "to": "m22"
+          }
+        ]
+      }
+    ],
+    "internalCollaborators": [
+      "McpServer",
+      "McpToolRegistry",
+      "McpAgentWorkflowTools",
+      "AssignmentMcpQueryTools",
+      "AssignmentMcpTools",
+      "AssignmentAuthoringService",
+      "McpWriteRequestService",
+      "AssignmentRepository",
+      "RubricService"
+    ],
+    "clientMeaning": "AuthoringClient represents the teacher agent client and the review web UI, shown as one boundary to keep the continuous flow compact.",
+    "alternatives": "For an existing Assignment, read_assignment_context then save_assignment_draft uses AssignmentMcpTools.call and the same saveFromAgent/review/apply flow.",
+    "messagePolicy": "Full named parameters and explicit concise call-return pairs for displayed synchronous calls. Internal helpers remain summarized. Lifelines and replies retain standard dashed notation."
+  },
+  {
+    "diagram": "sequence",
+    "title": "Configure Rubric and Publish Assignment",
+    "useCase": "Configure Rubric and Publish Assignment",
+    "reportSection": "2.6",
+    "elements": [
+      {
+        "id": "u",
+        "type": "actor",
+        "name": "Teacher"
+      },
+      {
+        "id": "ui",
+        "type": "object",
+        "class": "AssignmentAuthoringUI",
+        "stereotype": "user interaction",
+        "displayStereotype": "boundary"
+      },
+      {
+        "id": "c",
+        "type": "object",
+        "class": "RubricController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "s",
+        "type": "object",
+        "class": "AssignmentAuthoringService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "pub",
+        "type": "object",
+        "class": "AssignmentController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "ps",
+        "type": "object",
+        "class": "AssignmentPublicationService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "r",
+        "type": "object",
+        "class": "AssignmentRepository",
+        "stereotype": "business logic",
+        "displayStereotype": "repository"
+      },
+      {
+        "id": "db",
+        "type": "object",
+        "class": "Database",
+        "stereotype": "business logic",
+        "displayStereotype": "database"
+      }
+    ],
+    "messages": [
+      {
+        "id": "m1",
+        "seq": "1",
+        "from": "u",
+        "to": "ui",
+        "name": "Open part rubric",
+        "type": "sync",
+        "displayCall": "Open part rubric",
+        "codeCall": "Open owned rubric for an Assignment part"
+      },
+      {
+        "id": "m2",
+        "seq": "2",
+        "from": "ui",
+        "to": "c",
+        "name": "get(actor, assignmentId, partId)",
+        "type": "sync",
+        "displayCall": "get(actor, assignmentId, partId)",
+        "codeCall": "get(actor, assignmentId, partId)",
+        "sourceClass": "RubricController",
+        "sourceMethod": "get",
+        "sourceOperations": [
+          "+get(actor: Actor, id: UUID, partId: String): AssignmentViews.Rubric"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m3",
+        "seq": "3",
+        "from": "c",
+        "to": "s",
+        "name": "rubric(actor, assignmentId, partId)",
+        "type": "sync",
+        "displayCall": "rubric(actor, assignmentId, partId)",
+        "codeCall": "rubric(actor, assignmentId, partId)",
+        "sourceClass": "AssignmentAuthoringService",
+        "sourceMethod": "rubric",
+        "sourceOperations": [
+          "+rubric(actor: Actor, id: UUID, partId: String): AssignmentViews.Rubric"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "return_m3",
+        "from": "s",
+        "to": "c",
+        "name": "Rubric and version",
+        "type": "reply",
+        "replyTo": "m3",
+        "displayCall": "Rubric and version",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "4"
+      },
+      {
+        "id": "m4",
+        "seq": "5",
+        "from": "c",
+        "to": "ui",
+        "name": "Rubric and Assignment version",
+        "type": "reply",
+        "displayCall": "Rubric and Assignment version",
+        "codeCall": "Rubric and Assignment version",
+        "replyTo": "m2"
+      },
+      {
+        "id": "m5",
+        "seq": "6",
+        "from": "u",
+        "to": "ui",
+        "name": "Edit scoring rows",
+        "type": "sync",
+        "displayCall": "Edit scoring rows",
+        "codeCall": "Edit scoring rows and save"
+      },
+      {
+        "id": "m6",
+        "seq": "7",
+        "from": "ui",
+        "to": "c",
+        "name": "update(actor, assignmentId, partId, rubricData)",
+        "type": "sync",
+        "displayCall": "update(actor, assignmentId, partId, rubricData)",
+        "codeCall": "update(actor, assignmentId, partId, rubricData)",
+        "sourceClass": "RubricController",
+        "sourceMethod": "update",
+        "sourceOperations": [
+          "+update(actor: Actor, id: UUID, partId: String, body: AssignmentRequests.Rubric): AssignmentViews.Rubric"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m7",
+        "seq": "8",
+        "from": "c",
+        "to": "s",
+        "name": "updateRubric(actor, assignmentId, partId, rubricCommand)",
+        "type": "sync",
+        "displayCall": "updateRubric(actor, assignmentId, partId, rubricCommand)",
+        "codeCall": "updateRubric(actor, assignmentId, partId, rubricCommand)",
+        "sourceClass": "AssignmentAuthoringService",
+        "sourceMethod": "updateRubric",
+        "sourceOperations": [
+          "+updateRubric(actor: Actor, id: UUID, partId: String, command: AssignmentCommands.RubricUpdate): AssignmentViews.Rubric"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m8",
+        "seq": "9",
+        "from": "s",
+        "to": "r",
+        "name": "findForUpdate(assignmentId)",
+        "type": "sync",
+        "displayCall": "findForUpdate(assignmentId)",
+        "codeCall": "findForUpdate(assignmentId)",
+        "sourceClass": "AssignmentRepository",
+        "sourceMethod": "findForUpdate",
+        "sourceOperations": [
+          "+findForUpdate(id: UUID): Optional<Assignment>"
+        ],
+        "callKind": "java",
+        "via": [
+          "AssignmentSupport"
+        ]
+      },
+      {
+        "id": "m9",
+        "seq": "10",
+        "from": "r",
+        "to": "db",
+        "name": "SELECT Assignment FOR UPDATE",
+        "type": "sync",
+        "displayCall": "SELECT Assignment FOR UPDATE",
+        "codeCall": "SELECT Assignment FOR UPDATE",
+        "callKind": "database"
+      },
+      {
+        "id": "return_m9",
+        "from": "db",
+        "to": "r",
+        "name": "Rows",
+        "type": "reply",
+        "replyTo": "m9",
+        "displayCall": "Rows",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "11"
+      },
+      {
+        "id": "return_m8",
+        "from": "r",
+        "to": "s",
+        "name": "Current record",
+        "type": "reply",
+        "replyTo": "m8",
+        "displayCall": "Current record",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "12"
+      },
+      {
+        "id": "m10",
+        "seq": "13",
+        "from": "s",
+        "to": "s",
+        "name": "Check part/version; save owned rubric",
+        "type": "sync",
+        "displayCall": "Check part/version; save owned rubric",
+        "codeCall": "Validate editable part/rows; save owned rubric through RubricService",
+        "callKind": "action-summary"
+      },
+      {
+        "id": "m11",
+        "seq": "14",
+        "from": "s",
+        "to": "r",
+        "name": "save(touchedAssignment)",
+        "type": "sync",
+        "displayCall": "save(touchedAssignment)",
+        "codeCall": "save(touchedAssignment)",
+        "sourceClass": "AssignmentRepository",
+        "sourceMethod": "save",
+        "sourceOperations": [
+          "+save(a: Assignment): Assignment"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m12",
+        "seq": "15",
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE Assignment version; audit same transaction",
+        "type": "sync",
+        "displayCall": "UPDATE Assignment version; audit same transaction",
+        "codeCall": "UPDATE Assignment version; audit same transaction",
+        "callKind": "database"
+      },
+      {
+        "id": "return_m12",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m12",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "16"
+      },
+      {
+        "id": "return_m11",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m11",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "17"
+      },
+      {
+        "id": "return_m7",
+        "from": "s",
+        "to": "c",
+        "name": "Saved rubric",
+        "type": "reply",
+        "replyTo": "m7",
+        "displayCall": "Saved rubric",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "18"
+      },
+      {
+        "id": "m13",
+        "seq": "19",
+        "from": "c",
+        "to": "ui",
+        "name": "Saved rubric and current version",
+        "type": "reply",
+        "displayCall": "Saved rubric and current version",
+        "codeCall": "Saved rubric and current version",
+        "replyTo": "m6"
+      },
+      {
+        "id": "m14",
+        "seq": "20",
+        "from": "u",
+        "to": "ui",
+        "name": "Publish or schedule",
+        "type": "sync",
+        "displayCall": "Publish or schedule",
+        "codeCall": "Publish now or schedule opening"
+      },
+      {
+        "id": "m15",
+        "seq": "21",
+        "from": "ui",
+        "to": "pub",
+        "name": "publish(actor, assignmentId, publishData)",
+        "type": "sync",
+        "displayCall": "publish(actor, assignmentId, publishData)",
+        "codeCall": "publish(actor, assignmentId, publishData)",
+        "sourceClass": "AssignmentController",
+        "sourceMethod": "publish",
+        "sourceOperations": [
+          "+publish(actor: Actor, id: UUID, body: AssignmentRequests.Publish): AssignmentViews.Detail"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m16",
+        "seq": "22",
+        "from": "pub",
+        "to": "ps",
+        "name": "publish(actor, assignmentId, publishCommand)",
+        "type": "sync",
+        "displayCall": "publish(actor, assignmentId, publishCommand)",
+        "codeCall": "publish(actor, assignmentId, publishCommand)",
+        "sourceClass": "AssignmentPublicationService",
+        "sourceMethod": "publish",
+        "sourceOperations": [
+          "+publish(actor: Actor, id: UUID, command: AssignmentCommands.Publish): AssignmentViews.Detail"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m17",
+        "seq": "23",
+        "from": "ps",
+        "to": "r",
+        "name": "findForUpdate(assignmentId)",
+        "type": "sync",
+        "displayCall": "findForUpdate(assignmentId)",
+        "codeCall": "findForUpdate(assignmentId)",
+        "sourceClass": "AssignmentRepository",
+        "sourceMethod": "findForUpdate",
+        "sourceOperations": [
+          "+findForUpdate(id: UUID): Optional<Assignment>"
+        ],
+        "callKind": "java",
+        "via": [
+          "AssignmentSupport"
+        ]
+      },
+      {
+        "id": "m18",
+        "seq": "24",
+        "from": "r",
+        "to": "db",
+        "name": "SELECT Assignment FOR UPDATE",
+        "type": "sync",
+        "displayCall": "SELECT Assignment FOR UPDATE",
+        "codeCall": "SELECT Assignment FOR UPDATE",
+        "callKind": "database"
+      },
+      {
+        "id": "return_m18",
+        "from": "db",
+        "to": "r",
+        "name": "Rows",
+        "type": "reply",
+        "replyTo": "m18",
+        "displayCall": "Rows",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "25"
+      },
+      {
+        "id": "return_m17",
+        "from": "r",
+        "to": "ps",
+        "name": "Current record",
+        "type": "reply",
+        "replyTo": "m17",
+        "displayCall": "Current record",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "26"
+      },
+      {
+        "id": "m19",
+        "seq": "27",
+        "from": "ps",
+        "to": "ps",
+        "name": "Check readiness, schedule and group support",
+        "type": "sync",
+        "displayCall": "Check readiness, schedule and group support",
+        "codeCall": "Check readiness, schedule and group support",
+        "callKind": "action-summary"
+      },
+      {
+        "id": "m20",
+        "seq": "28",
+        "from": "ps",
+        "to": "r",
+        "name": "save(scheduledAssignment)",
+        "type": "sync",
+        "displayCall": "save(scheduledAssignment)",
+        "codeCall": "save(scheduledAssignment)",
+        "sourceClass": "AssignmentRepository",
+        "sourceMethod": "save",
+        "sourceOperations": [
+          "+save(a: Assignment): Assignment"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m21",
+        "seq": "29",
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE Assignment: SCHEDULED",
+        "type": "sync",
+        "displayCall": "UPDATE Assignment: SCHEDULED",
+        "codeCall": "UPDATE Assignment: SCHEDULED",
+        "callKind": "database"
+      },
+      {
+        "id": "return_m21",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m21",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "30"
+      },
+      {
+        "id": "return_m20",
+        "from": "r",
+        "to": "ps",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m20",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "31"
+      },
+      {
+        "id": "m22",
+        "seq": "32",
+        "from": "ps",
+        "to": "ps",
+        "name": "Lock all owned rubrics; open immediately if due",
+        "type": "sync",
+        "displayCall": "Lock all owned rubrics; open immediately if due",
+        "codeCall": "Lock all owned rubrics; open immediately if due",
+        "callKind": "action-summary"
+      },
+      {
+        "id": "m23",
+        "seq": "33",
+        "from": "ps",
+        "to": "pub",
+        "name": "SCHEDULED or OPEN Assignment",
+        "type": "reply",
+        "displayCall": "SCHEDULED or OPEN Assignment",
+        "codeCall": "SCHEDULED or OPEN Assignment",
+        "replyTo": "m16"
+      },
+      {
+        "id": "m24",
+        "seq": "34",
+        "from": "pub",
+        "to": "ui",
+        "name": "Show published state",
+        "type": "reply",
+        "displayCall": "Show published state",
+        "codeCall": "Show published state",
+        "replyTo": "m15"
+      }
+    ],
+    "fragments": [],
+    "internalCollaborators": [
+      "AssignmentSupport",
+      "RubricService",
+      "RubricRepository",
+      "AssignmentLifecycle",
+      "AssignmentAudit"
+    ],
+    "guards": "Rubrics are created/deleted with draft parts. Invalid rows, stale versions and incomplete publication readiness reject mutation. Published content and rubrics lock.",
+    "messagePolicy": "Full named parameters and explicit concise call-return pairs for displayed synchronous calls. Internal helpers remain summarized. Lifelines and replies retain standard dashed notation."
+  },
+  {
+    "diagram": "sequence",
+    "title": "Complete Individual Assignment",
+    "useCase": "Complete Individual Assignment",
+    "elements": [
+      {
+        "id": "u",
+        "type": "actor",
+        "name": "Student"
+      },
+      {
+        "id": "ui",
+        "type": "object",
+        "class": "AssignmentUI",
+        "stereotype": "user interaction",
+        "displayStereotype": "boundary"
+      },
+      {
+        "id": "c",
+        "type": "object",
+        "class": "AttemptController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "s",
+        "type": "object",
+        "class": "AttemptService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "r",
+        "type": "object",
+        "class": "AttemptRepository",
+        "stereotype": "business logic",
+        "displayStereotype": "repository"
+      },
+      {
+        "id": "db",
+        "type": "object",
+        "class": "Database",
+        "stereotype": "business logic",
+        "displayStereotype": "database"
+      }
+    ],
+    "messages": [
+      {
+        "id": "m1",
+        "seq": "1",
+        "from": "u",
+        "to": "ui",
+        "name": "Start / Resume",
+        "type": "sync",
+        "displayCall": "Start / Resume",
+        "codeCall": "Start or resume Assignment"
+      },
+      {
+        "id": "m2",
+        "seq": "2",
+        "from": "ui",
+        "to": "c",
+        "name": "start(actor, assignmentId, startData)",
+        "type": "sync",
+        "displayCall": "start(actor, assignmentId, startData)",
+        "codeCall": "start(actor, assignmentId, startData)",
+        "sourceClass": "AttemptController",
+        "sourceMethod": "start",
+        "sourceOperations": [
+          "+start(actor: Actor, assignmentId: UUID, body: StartRequest): ResponseEntity<WorkViews.Attempt>"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m3",
+        "seq": "3",
+        "from": "c",
+        "to": "s",
+        "name": "start(actor, assignmentId, classId)",
+        "type": "sync",
+        "displayCall": "start(actor, assignmentId, classId)",
+        "codeCall": "start(actor, assignmentId, classId)",
+        "sourceClass": "AttemptService",
+        "sourceMethod": "start",
+        "sourceOperations": [
+          "+start(actor: Actor, assignmentId: UUID, classId: UUID): Started"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m4",
+        "seq": "4",
+        "from": "s",
+        "to": "r",
+        "name": "lockStart(assignmentId, accountId)",
+        "type": "sync",
+        "displayCall": "lockStart(assignmentId, accountId)",
+        "codeCall": "lockStart(assignmentId, accountId)",
+        "sourceClass": "AttemptRepository",
+        "sourceMethod": "lockStart",
+        "sourceOperations": [
+          "+lockStart(assignmentId: UUID, accountId: UUID): void"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "return_m4",
+        "from": "r",
+        "to": "s",
+        "name": "Lock acquired",
+        "type": "reply",
+        "replyTo": "m4",
+        "displayCall": "Lock acquired",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "5"
+      },
+      {
+        "id": "m5",
+        "seq": "6",
+        "from": "s",
+        "to": "r",
+        "name": "inProgress(assignmentId, accountId)",
+        "type": "sync",
+        "displayCall": "inProgress(assignmentId, accountId)",
+        "codeCall": "inProgress(assignmentId, accountId)",
+        "sourceClass": "AttemptRepository",
+        "sourceMethod": "inProgress",
+        "sourceOperations": [
+          "+inProgress(assignmentId: UUID, accountId: UUID): Optional<AssignmentAttempt>"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "return_m5",
+        "from": "r",
+        "to": "s",
+        "name": "Current attempt",
+        "type": "reply",
+        "replyTo": "m5",
+        "displayCall": "Current attempt",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "7"
+      },
+      {
+        "id": "m6",
+        "seq": "8",
+        "from": "s",
+        "to": "s",
+        "name": "Resume or create snapshot",
+        "type": "sync",
+        "displayCall": "Resume or create snapshot",
+        "codeCall": "Resume existing attempt; otherwise validate access/window/limit and create snapshot",
+        "callKind": "action-summary"
+      },
+      {
+        "id": "m7",
+        "seq": "9",
+        "from": "s",
+        "to": "r",
+        "name": "insert(attempt)",
+        "type": "sync",
+        "displayCall": "insert(attempt)",
+        "codeCall": "insert(attempt)",
+        "sourceClass": "AttemptRepository",
+        "sourceMethod": "insert",
+        "sourceOperations": [
+          "+insert(a: AssignmentAttempt): void"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "return_m7",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m7",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "10"
+      },
+      {
+        "id": "return_m3",
+        "from": "s",
+        "to": "c",
+        "name": "Attempt workspace",
+        "type": "reply",
+        "replyTo": "m3",
+        "displayCall": "Attempt workspace",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "11"
+      },
+      {
+        "id": "return_m2",
+        "from": "c",
+        "to": "ui",
+        "name": "Attempt workspace",
+        "type": "reply",
+        "replyTo": "m2",
+        "displayCall": "Attempt workspace",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "12"
+      },
+      {
+        "from": "u",
+        "to": "ui",
+        "name": "Save draft",
+        "type": "sync",
+        "id": "m8",
+        "seq": "13",
+        "codeCall": "Save draft",
+        "displayCall": "Save draft"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "save(actor, attemptId, draftData)",
+        "type": "sync",
+        "id": "m9",
+        "seq": "14",
+        "codeCall": "save(draftData)",
+        "displayCall": "save(actor, attemptId, draftData)"
+      },
+      {
+        "from": "c",
+        "to": "s",
+        "name": "save(actor, attemptId, contentVersion, content)",
+        "type": "sync",
+        "id": "m10",
+        "seq": "15",
+        "codeCall": "save(actor, id, version, content)",
+        "displayCall": "save(actor, attemptId, contentVersion, content)"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "findForUpdate(attemptId)",
+        "type": "sync",
+        "id": "m11",
+        "seq": "16",
+        "codeCall": "findForUpdate(id)",
+        "displayCall": "findForUpdate(attemptId)"
+      },
+      {
+        "id": "return_m11",
+        "from": "r",
+        "to": "s",
+        "name": "Current record",
+        "type": "reply",
+        "replyTo": "m11",
+        "displayCall": "Current record",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "17"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Check edit access / version",
+        "type": "sync",
+        "id": "m12",
+        "seq": "18",
+        "codeCall": "Validate edit access and version",
+        "displayCall": "Check edit access / version"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "saveContent(attemptId, content, expectedVersion, now)",
+        "type": "sync",
+        "id": "m13",
+        "seq": "19",
+        "codeCall": "saveContent(id, content, version, now)",
+        "displayCall": "saveContent(attemptId, content, expectedVersion, now)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE draft and version",
+        "type": "sync",
+        "id": "m14",
+        "seq": "20",
+        "codeCall": "UPDATE draft and version",
+        "displayCall": "UPDATE draft and version"
+      },
+      {
+        "id": "return_m14",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m14",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "21"
+      },
+      {
+        "id": "return_m13",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m13",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "22"
+      },
+      {
+        "id": "return_m10",
+        "from": "s",
+        "to": "c",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m10",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "23"
+      },
+      {
+        "id": "return_m9",
+        "from": "c",
+        "to": "ui",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m9",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "24"
+      },
+      {
+        "from": "u",
+        "to": "ui",
+        "name": "Submit assignment",
+        "type": "sync",
+        "id": "m15",
+        "seq": "25",
+        "codeCall": "Submit assignment",
+        "displayCall": "Submit assignment"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "submit(actor, attemptId, submissionData)",
+        "type": "sync",
+        "id": "m16",
+        "seq": "26",
+        "codeCall": "submit(submissionData)",
+        "displayCall": "submit(actor, attemptId, submissionData)"
+      },
+      {
+        "from": "c",
+        "to": "s",
+        "name": "submit(actor, attemptId, contentVersion)",
+        "type": "sync",
+        "id": "m17",
+        "seq": "27",
+        "codeCall": "submit(actor, id, version)",
+        "displayCall": "submit(actor, attemptId, contentVersion)"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Validate submission",
+        "type": "sync",
+        "id": "m18",
+        "seq": "28",
+        "codeCall": "Validate submission",
+        "displayCall": "Validate submission"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "submit(attemptId, mode, late, receiptHash, submittedAt, warnings)",
+        "type": "sync",
+        "id": "m19",
+        "seq": "29",
+        "codeCall": "submit(id, mode, late, hash, now, warnings)",
+        "displayCall": "submit(attemptId, mode, late, receiptHash, submittedAt, warnings)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE submitted attempt",
+        "type": "sync",
+        "id": "m20",
+        "seq": "30",
+        "codeCall": "UPDATE submitted attempt",
+        "displayCall": "UPDATE submitted attempt"
+      },
+      {
+        "id": "return_m20",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m20",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "31"
+      },
+      {
+        "id": "return_m19",
+        "from": "r",
+        "to": "s",
+        "name": "Receipt",
+        "type": "reply",
+        "replyTo": "m19",
+        "displayCall": "Receipt",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "32"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Create evaluation and audit",
+        "type": "sync",
+        "id": "m21",
+        "seq": "33",
+        "codeCall": "Create evaluation; audit submission",
+        "displayCall": "Create evaluation and audit"
+      },
+      {
+        "from": "s",
+        "to": "c",
+        "name": "Receipt",
+        "type": "reply",
+        "id": "m22",
+        "seq": "34",
+        "codeCall": "Receipt",
+        "displayCall": "Receipt",
+        "replyTo": "m17"
+      },
+      {
+        "from": "c",
+        "to": "ui",
+        "name": "Receipt",
+        "type": "reply",
+        "id": "m23",
+        "seq": "35",
+        "codeCall": "Receipt",
+        "displayCall": "Receipt",
+        "replyTo": "m16"
+      },
+      {
+        "from": "ui",
+        "to": "u",
+        "name": "Show submitted work",
+        "type": "reply",
+        "id": "m24",
+        "seq": "36",
+        "codeCall": "Show submitted work",
+        "displayCall": "Show submitted work"
+      },
+      {
+        "id": "m25",
+        "seq": "37",
+        "from": "s",
+        "to": "s",
+        "name": "Auto-submit saved work",
+        "type": "sync",
+        "displayCall": "Auto-submit saved work",
+        "codeCall": "Auto-submit saved work",
+        "callKind": "action-summary"
+      }
+    ],
+    "notes": [],
+    "layoutAuthority": "docs/sequence-diagrams.drawio",
+    "scope": "Main flow; explicitly named helper calls are summarized without additional lifelines.",
+    "internalCollaborators": [
+      "AttemptSubmitter",
+      "ISubmissionListener"
+    ],
+    "messagePolicy": "Full named parameters and explicit concise call-return pairs for displayed synchronous calls. Internal helpers remain summarized. Lifelines and replies retain standard dashed notation.",
+    "reportSection": "3.2",
+    "guards": "Resume reuses IN_PROGRESS without consuming another attempt. Save/Submit require current scope, state and version. Deadline plus 30-second grace or retirement triggers automatic submission of saved content.",
+    "transactionalEffects": "Submission snapshot, receipt and required evaluation creation commit together via AttemptSubmitter and ISubmissionListener.",
+    "fragments": [
+      {
+        "type": "opt",
+        "operands": [
+          {
+            "guard": "No resumable attempt and Start allowed",
+            "from": "m7",
+            "to": "return_m7"
+          }
+        ]
+      },
+      {
+        "type": "opt",
+        "operands": [
+          {
+            "guard": "IN_PROGRESS at deadline plus grace or retirement",
+            "from": "m25",
+            "to": "m25"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "diagram": "sequence",
+    "title": "Complete Group Assignment",
+    "useCase": "Complete Group Assignment",
+    "elements": [
+      {
+        "id": "u",
+        "type": "actor",
+        "name": "Student"
+      },
+      {
+        "id": "ui",
+        "type": "object",
+        "class": "GroupUI",
+        "stereotype": "user interaction",
+        "displayStereotype": "boundary"
+      },
+      {
+        "id": "c",
+        "type": "object",
+        "class": "GroupDocController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "s",
+        "type": "object",
+        "class": "GroupSectionService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "submission",
+        "type": "object",
+        "class": "GroupSubmissionService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "r",
+        "type": "object",
+        "class": "GroupDocumentRepository",
+        "stereotype": "business logic",
+        "displayStereotype": "repository"
+      },
+      {
+        "id": "db",
+        "type": "object",
+        "class": "Database",
+        "stereotype": "business logic",
+        "displayStereotype": "database"
+      }
+    ],
+    "messages": [
+      {
+        "id": "m1",
+        "seq": "1",
+        "from": "u",
+        "to": "ui",
+        "name": "Assign / Claim section",
+        "type": "sync",
+        "displayCall": "Assign / Claim section",
+        "codeCall": "Assign or claim a group section"
+      },
+      {
+        "id": "m2",
+        "seq": "2",
+        "from": "ui",
+        "to": "c",
+        "name": "assign(actor, documentId, sectionId, assignmentData)",
+        "type": "sync",
+        "displayCall": "assign(actor, documentId, sectionId, assignmentData)",
+        "codeCall": "assign(actor, documentId, sectionId, assignmentData)",
+        "sourceClass": "GroupDocController",
+        "sourceMethod": "assign",
+        "sourceOperations": [
+          "+assign(actor: Actor, id: UUID, sectionId: UUID, request: AssignRequest): SectionView"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m3",
+        "seq": "3",
+        "from": "c",
+        "to": "s",
+        "name": "assign(actor, documentId, sectionId, assigneeId, replaceHolder)",
+        "type": "sync",
+        "displayCall": "assign(actor, documentId, sectionId, assigneeId, replaceHolder)",
+        "codeCall": "assign(actor, documentId, sectionId, assigneeId, replaceHolder)",
+        "sourceClass": "GroupSectionService",
+        "sourceMethod": "assign",
+        "sourceOperations": [
+          "+assign(actor: Actor, documentId: UUID, sectionId: UUID, assigneeId: UUID, replaceHolder: boolean): SectionView"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m4",
+        "seq": "4",
+        "from": "s",
+        "to": "r",
+        "name": "lockSection(documentId, sectionId)",
+        "type": "sync",
+        "displayCall": "lockSection(documentId, sectionId)",
+        "codeCall": "lockSection(documentId, sectionId)",
+        "sourceClass": "GroupDocumentRepository",
+        "sourceMethod": "lockSection",
+        "sourceOperations": [
+          "+lockSection(documentId: UUID, sectionId: UUID): Optional<GroupSection>"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "return_m4",
+        "from": "r",
+        "to": "s",
+        "name": "Lock acquired",
+        "type": "reply",
+        "replyTo": "m4",
+        "displayCall": "Lock acquired",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "5"
+      },
+      {
+        "id": "m5",
+        "seq": "6",
+        "from": "s",
+        "to": "r",
+        "name": "updateSection(assignedSection)",
+        "type": "sync",
+        "displayCall": "updateSection(assignedSection)",
+        "codeCall": "updateSection(assignedSection)",
+        "sourceClass": "GroupDocumentRepository",
+        "sourceMethod": "updateSection",
+        "sourceOperations": [
+          "+updateSection(s: GroupSection): boolean"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "return_m5",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m5",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "7"
+      },
+      {
+        "id": "return_m3",
+        "from": "s",
+        "to": "c",
+        "name": "Assigned section",
+        "type": "reply",
+        "replyTo": "m3",
+        "displayCall": "Assigned section",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "8"
+      },
+      {
+        "id": "return_m2",
+        "from": "c",
+        "to": "ui",
+        "name": "Assigned section",
+        "type": "reply",
+        "replyTo": "m2",
+        "displayCall": "Assigned section",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "9"
+      },
+      {
+        "id": "m6",
+        "seq": "10",
+        "from": "ui",
+        "to": "c",
+        "name": "lockAssignment(actor, documentId)",
+        "type": "sync",
+        "displayCall": "lockAssignment(actor, documentId)",
+        "codeCall": "lockAssignment(actor, documentId)",
+        "sourceClass": "GroupDocController",
+        "sourceMethod": "lockAssignment",
+        "sourceOperations": [
+          "+lockAssignment(actor: Actor, id: UUID): AssignmentLock"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m7",
+        "seq": "11",
+        "from": "c",
+        "to": "s",
+        "name": "lockAssignment(actor, documentId)",
+        "type": "sync",
+        "displayCall": "lockAssignment(actor, documentId)",
+        "codeCall": "lockAssignment(actor, documentId)",
+        "sourceClass": "GroupSectionService",
+        "sourceMethod": "lockAssignment",
+        "sourceOperations": [
+          "+lockAssignment(actor: Actor, documentId: UUID): AssignmentLock"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m8",
+        "seq": "12",
+        "from": "s",
+        "to": "s",
+        "name": "Require complete valid allocation",
+        "type": "sync",
+        "displayCall": "Require complete valid allocation",
+        "codeCall": "Require leader and eligible assignees for all sections",
+        "callKind": "action-summary"
+      },
+      {
+        "id": "m9",
+        "seq": "13",
+        "from": "s",
+        "to": "r",
+        "name": "setAssignmentLock(documentId, allocationLock)",
+        "type": "sync",
+        "displayCall": "setAssignmentLock(documentId, allocationLock)",
+        "codeCall": "setAssignmentLock(documentId, allocationLock)",
+        "sourceClass": "GroupDocumentRepository",
+        "sourceMethod": "setAssignmentLock",
+        "sourceOperations": [
+          "+setAssignmentLock(documentId: UUID, lock: AssignmentLock): void"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m10",
+        "seq": "14",
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE allocation lock",
+        "type": "sync",
+        "displayCall": "UPDATE allocation lock",
+        "codeCall": "UPDATE allocation lock",
+        "callKind": "database"
+      },
+      {
+        "id": "return_m10",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m10",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "15"
+      },
+      {
+        "id": "return_m9",
+        "from": "r",
+        "to": "s",
+        "name": "Allocation locked",
+        "type": "reply",
+        "replyTo": "m9",
+        "displayCall": "Allocation locked",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "16"
+      },
+      {
+        "id": "return_m7",
+        "from": "s",
+        "to": "c",
+        "name": "Allocation locked",
+        "type": "reply",
+        "replyTo": "m7",
+        "displayCall": "Allocation locked",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "17"
+      },
+      {
+        "id": "return_m6",
+        "from": "c",
+        "to": "ui",
+        "name": "Allocation locked",
+        "type": "reply",
+        "replyTo": "m6",
+        "displayCall": "Allocation locked",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "18"
+      },
+      {
+        "id": "m11",
+        "seq": "19",
+        "from": "ui",
+        "to": "c",
+        "name": "draft(actor, documentId, sectionId, draftData)",
+        "type": "sync",
+        "displayCall": "draft(actor, documentId, sectionId, draftData)",
+        "codeCall": "draft(actor, documentId, sectionId, draftData)",
+        "sourceClass": "GroupDocController",
+        "sourceMethod": "draft",
+        "sourceOperations": [
+          "+draft(actor: Actor, id: UUID, sectionId: UUID, request: DraftRequest): SectionView"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m12",
+        "seq": "20",
+        "from": "c",
+        "to": "s",
+        "name": "saveDraft(actor, documentId, sectionId, version, blocks)",
+        "type": "sync",
+        "displayCall": "saveDraft(actor, documentId, sectionId, version, blocks)",
+        "codeCall": "saveDraft(actor, documentId, sectionId, version, blocks)",
+        "sourceClass": "GroupSectionService",
+        "sourceMethod": "saveDraft",
+        "sourceOperations": [
+          "+saveDraft(actor: Actor, documentId: UUID, sectionId: UUID, version: Long, blocks: List<DocumentBlock>): SectionView"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m13",
+        "seq": "21",
+        "from": "s",
+        "to": "r",
+        "name": "updateSection(savedSection)",
+        "type": "sync",
+        "displayCall": "updateSection(savedSection)",
+        "codeCall": "updateSection(savedSection)",
+        "sourceClass": "GroupDocumentRepository",
+        "sourceMethod": "updateSection",
+        "sourceOperations": [
+          "+updateSection(s: GroupSection): boolean"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "return_m13",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m13",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "22"
+      },
+      {
+        "id": "return_m12",
+        "from": "s",
+        "to": "c",
+        "name": "Saved draft version",
+        "type": "reply",
+        "replyTo": "m12",
+        "displayCall": "Saved draft version",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "23"
+      },
+      {
+        "id": "return_m11",
+        "from": "c",
+        "to": "ui",
+        "name": "Saved draft version",
+        "type": "reply",
+        "replyTo": "m11",
+        "displayCall": "Saved draft version",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "24"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "done(actor, documentId, sectionId)",
+        "type": "sync",
+        "id": "m14",
+        "seq": "25",
+        "codeCall": "done(documentId, sectionId)",
+        "displayCall": "done(actor, documentId, sectionId)"
+      },
+      {
+        "from": "c",
+        "to": "s",
+        "name": "done(actor, documentId, sectionId)",
+        "type": "sync",
+        "id": "m15",
+        "seq": "26",
+        "codeCall": "done(actor, documentId, sectionId)",
+        "displayCall": "done(actor, documentId, sectionId)"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "findById(documentId); lockSection(documentId, sectionId)",
+        "type": "sync",
+        "id": "m16",
+        "seq": "27",
+        "codeCall": "Load document; lock section",
+        "displayCall": "findById(documentId); lockSection(documentId, sectionId)"
+      },
+      {
+        "id": "return_m16",
+        "from": "r",
+        "to": "s",
+        "name": "Current record",
+        "type": "reply",
+        "replyTo": "m16",
+        "displayCall": "Current record",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "28"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "updateSection(completedSection); insertRevision(sectionRevision)",
+        "type": "sync",
+        "id": "m17",
+        "seq": "29",
+        "codeCall": "updateSection(done); insertRevision(revision)",
+        "displayCall": "updateSection(completedSection); insertRevision(sectionRevision)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE section; INSERT revision",
+        "type": "sync",
+        "id": "m18",
+        "seq": "30",
+        "codeCall": "UPDATE section; INSERT revision",
+        "displayCall": "UPDATE section; INSERT revision"
+      },
+      {
+        "id": "return_m18",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m18",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "31"
+      },
+      {
+        "id": "return_m17",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m17",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "32"
+      },
+      {
+        "id": "return_m15",
+        "from": "s",
+        "to": "c",
+        "name": "Completed section",
+        "type": "reply",
+        "replyTo": "m15",
+        "displayCall": "Completed section",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "33"
+      },
+      {
+        "id": "return_m14",
+        "from": "c",
+        "to": "ui",
+        "name": "Completed section",
+        "type": "reply",
+        "replyTo": "m14",
+        "displayCall": "Completed section",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "34"
+      },
+      {
+        "from": "u",
+        "to": "ui",
+        "name": "Submit group assignment",
+        "type": "sync",
+        "id": "m19",
+        "seq": "35",
+        "codeCall": "Submit group assignment",
+        "displayCall": "Submit group assignment"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "submit(actor, documentId, submissionData)",
+        "type": "sync",
+        "id": "m20",
+        "seq": "36",
+        "codeCall": "submit(submissionData)",
+        "displayCall": "submit(actor, documentId, submissionData)"
+      },
+      {
+        "from": "c",
+        "to": "submission",
+        "name": "submit(actor, documentId, version)",
+        "type": "sync",
+        "id": "m21",
+        "seq": "37",
+        "codeCall": "submit(actor, documentId, version)",
+        "displayCall": "submit(actor, documentId, version)"
+      },
+      {
+        "from": "submission",
+        "to": "submission",
+        "name": "Check leader, window and version",
+        "type": "sync",
+        "id": "m22",
+        "seq": "38",
+        "codeCall": "Check leader, window and version",
+        "displayCall": "Check leader, window and version"
+      },
+      {
+        "from": "submission",
+        "to": "r",
+        "name": "update(submittedDocument)",
+        "type": "sync",
+        "id": "m23",
+        "seq": "39",
+        "codeCall": "update(submittedSnapshot)",
+        "displayCall": "update(submittedDocument)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE document receipt and snapshot",
+        "type": "sync",
+        "id": "m24",
+        "seq": "40",
+        "codeCall": "UPDATE document receipt and snapshot",
+        "displayCall": "UPDATE document receipt and snapshot"
+      },
+      {
+        "id": "return_m24",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m24",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "41"
+      },
+      {
+        "id": "return_m23",
+        "from": "r",
+        "to": "submission",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m23",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "42"
+      },
+      {
+        "from": "submission",
+        "to": "submission",
+        "name": "Create evaluation and audit",
+        "type": "sync",
+        "id": "m25",
+        "seq": "43",
+        "codeCall": "Create evaluation; audit submission",
+        "displayCall": "Create evaluation and audit"
+      },
+      {
+        "from": "submission",
+        "to": "c",
+        "name": "Receipt",
+        "type": "reply",
+        "id": "m26",
+        "seq": "44",
+        "codeCall": "Receipt",
+        "displayCall": "Receipt",
+        "replyTo": "m21"
+      },
+      {
+        "from": "c",
+        "to": "ui",
+        "name": "Show group receipt",
+        "type": "reply",
+        "id": "m27",
+        "seq": "45",
+        "codeCall": "Show group receipt",
+        "displayCall": "Show group receipt",
+        "replyTo": "m20"
+      },
+      {
+        "id": "m28",
+        "seq": "46",
+        "from": "submission",
+        "to": "submission",
+        "name": "Auto-submit saved CLAIMED drafts",
+        "type": "sync",
+        "displayCall": "Auto-submit saved CLAIMED drafts",
+        "codeCall": "Auto-submit saved CLAIMED drafts",
+        "callKind": "action-summary"
+      }
+    ],
+    "notes": [],
+    "layoutAuthority": "docs/sequence-diagrams.drawio",
+    "scope": "Main flow; explicitly named helper calls are summarized without additional lifelines.",
+    "internalCollaborators": [
+      "IGroupEvaluation"
+    ],
+    "messagePolicy": "Full named parameters and explicit concise call-return pairs for displayed synchronous calls. Internal helpers remain summarized. Lifelines and replies retain standard dashed notation.",
+    "reportSection": "3.3",
+    "alternatives": "Members may claim an available section through claim(actor, documentId, sectionId). Unlock pauses writing and preserves drafts; Release discards the working draft. Deadline/retirement closure includes saved CLAIMED drafts, while manual leader submission includes Done sections.",
+    "transactionalEffects": "Group receipt/snapshot and required group/member evaluations commit in the submission transaction.",
+    "fragments": [
+      {
+        "type": "opt",
+        "operands": [
+          {
+            "guard": "Final deadline plus grace or retirement; changed work",
+            "from": "m28",
+            "to": "m28"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "diagram": "sequence",
+    "title": "Request Practice Feedback",
+    "useCase": "Request Practice Feedback",
+    "elements": [
+      {
+        "id": "u",
+        "type": "actor",
+        "name": "Student"
+      },
+      {
+        "id": "ui",
+        "type": "object",
+        "class": "PracticeUI",
+        "stereotype": "user interaction",
+        "displayStereotype": "boundary"
+      },
+      {
+        "id": "c",
+        "type": "object",
+        "class": "AttemptController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "mcp",
+        "type": "object",
+        "class": "McpController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "s",
+        "type": "object",
+        "class": "PracticeFeedbackService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "ai",
+        "type": "object",
+        "class": "AiTaskService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "r",
+        "type": "object",
+        "class": "PracticeFeedbackRepository",
+        "stereotype": "business logic",
+        "displayStereotype": "repository"
+      },
+      {
+        "id": "db",
+        "type": "object",
+        "class": "Database",
+        "stereotype": "business logic",
+        "displayStereotype": "database"
+      }
+    ],
+    "messages": [
+      {
+        "from": "u",
+        "to": "ui",
+        "name": "Request private feedback",
+        "type": "sync",
+        "id": "m1",
+        "seq": "1",
+        "codeCall": "Request private feedback",
+        "displayCall": "Request private feedback"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "requestFeedback(actor, attemptId, feedbackOptions)",
+        "type": "sync",
+        "id": "m2",
+        "seq": "2",
+        "codeCall": "requestFeedback(feedbackOptions)",
+        "displayCall": "requestFeedback(actor, attemptId, feedbackOptions)"
+      },
+      {
+        "from": "c",
+        "to": "s",
+        "name": "request(actor, attemptId, provider, requestRef)",
+        "type": "sync",
+        "id": "m3",
+        "seq": "3",
+        "codeCall": "request(actor, id, provider, ref)",
+        "displayCall": "request(actor, attemptId, provider, requestRef)"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Load and validate own attempt",
+        "type": "sync",
+        "id": "m4",
+        "seq": "4",
+        "codeCall": "Load and validate own attempt",
+        "displayCall": "Load and validate own attempt"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "insert(pendingFeedback)",
+        "type": "sync",
+        "id": "m5",
+        "seq": "5",
+        "codeCall": "insert(pendingFeedback)",
+        "displayCall": "insert(pendingFeedback)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "INSERT practice_feedback: PENDING",
+        "type": "sync",
+        "id": "m6",
+        "seq": "6",
+        "codeCall": "INSERT practice_feedback: PENDING",
+        "displayCall": "INSERT practice_feedback: PENDING"
+      },
+      {
+        "id": "return_m6",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m6",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "7"
+      },
+      {
+        "id": "return_m5",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m5",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "8"
+      },
+      {
+        "from": "s",
+        "to": "ai",
+        "name": "submit(taskRequest)",
+        "type": "sync",
+        "id": "m7",
+        "seq": "9",
+        "codeCall": "submit(taskRequest)",
+        "displayCall": "submit(taskRequest)"
+      },
+      {
+        "id": "return_m7",
+        "from": "ai",
+        "to": "s",
+        "name": "Task reference",
+        "type": "reply",
+        "replyTo": "m7",
+        "displayCall": "Task reference",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "10"
+      },
+      {
+        "id": "return_m3",
+        "from": "s",
+        "to": "c",
+        "name": "Pending feedback",
+        "type": "reply",
+        "replyTo": "m3",
+        "displayCall": "Pending feedback",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "11"
+      },
+      {
+        "from": "c",
+        "to": "ui",
+        "name": "Show pending status",
+        "type": "reply",
+        "id": "m8",
+        "seq": "12",
+        "codeCall": "Show pending status",
+        "displayCall": "Show pending status",
+        "replyTo": "m2"
+      },
+      {
+        "from": "ai",
+        "to": "ai",
+        "name": "Background AI: call provider, validate result, store READY",
+        "type": "sync",
+        "id": "m9",
+        "seq": "13",
+        "codeCall": "Background AI: call provider, validate result, store READY",
+        "displayCall": "Background AI: call provider, validate result, store READY"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "listFeedback(actor, attemptId)",
+        "type": "sync",
+        "id": "m10",
+        "seq": "14",
+        "codeCall": "listFeedback(id)",
+        "displayCall": "listFeedback(actor, attemptId)"
+      },
+      {
+        "from": "c",
+        "to": "s",
+        "name": "list(actor, attemptId)",
+        "type": "sync",
+        "id": "m11",
+        "seq": "15",
+        "codeCall": "list(actor, id)",
+        "displayCall": "list(actor, attemptId)"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "listByAttempt(attemptId)",
+        "type": "sync",
+        "id": "m12",
+        "seq": "16",
+        "codeCall": "listByAttempt(id)",
+        "displayCall": "listByAttempt(attemptId)"
+      },
+      {
+        "id": "return_m12",
+        "from": "r",
+        "to": "s",
+        "name": "Feedback list",
+        "type": "reply",
+        "replyTo": "m12",
+        "displayCall": "Feedback list",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "17"
+      },
+      {
+        "id": "return_m11",
+        "from": "s",
+        "to": "c",
+        "name": "Feedback list",
+        "type": "reply",
+        "replyTo": "m11",
+        "displayCall": "Feedback list",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "18"
+      },
+      {
+        "from": "c",
+        "to": "ui",
+        "name": "Show feedback",
+        "type": "reply",
+        "id": "m13",
+        "seq": "19",
+        "codeCall": "Display private feedback",
+        "displayCall": "Show feedback",
+        "replyTo": "m10"
+      },
+      {
+        "id": "m14",
+        "seq": "20",
+        "from": "u",
+        "to": "ui",
+        "name": "Use own MCP agent",
+        "type": "sync",
+        "displayCall": "Use own MCP agent",
+        "codeCall": "Use own MCP agent for submitted Practice work"
+      },
+      {
+        "id": "m15",
+        "seq": "21",
+        "from": "ui",
+        "to": "mcp",
+        "name": "read_own_work(ownWorkRequest)",
+        "type": "sync",
+        "displayCall": "read_own_work(ownWorkRequest)",
+        "codeCall": "read_own_work(ownWorkRequest)"
+      },
+      {
+        "id": "m16",
+        "seq": "22",
+        "from": "mcp",
+        "to": "s",
+        "name": "readOwnWork(actor, attemptId)",
+        "type": "sync",
+        "displayCall": "readOwnWork(actor, attemptId)",
+        "codeCall": "readOwnWork(actor, attemptId)",
+        "sourceClass": "PracticeFeedbackService",
+        "sourceMethod": "readOwnWork",
+        "sourceOperations": [
+          "~readOwnWork(actor: Actor, attemptId: UUID): Map<String, Object>"
+        ],
+        "callKind": "java",
+        "via": [
+          "McpServer",
+          "AssignmentWorkMcpTools"
+        ]
+      },
+      {
+        "id": "return_m16",
+        "from": "s",
+        "to": "mcp",
+        "name": "Own work context",
+        "type": "reply",
+        "replyTo": "m16",
+        "displayCall": "Own work context",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "23"
+      },
+      {
+        "id": "m17",
+        "seq": "24",
+        "from": "mcp",
+        "to": "ui",
+        "name": "Private context for agent",
+        "type": "reply",
+        "displayCall": "Private context for agent",
+        "codeCall": "Private context for agent",
+        "replyTo": "m15"
+      },
+      {
+        "id": "m18",
+        "seq": "25",
+        "from": "ui",
+        "to": "ui",
+        "name": "Agent generates feedback with own model",
+        "type": "sync",
+        "displayCall": "Agent generates feedback with own model",
+        "codeCall": "Agent generates feedback with own model",
+        "callKind": "action-summary"
+      },
+      {
+        "id": "m19",
+        "seq": "26",
+        "from": "ui",
+        "to": "mcp",
+        "name": "record_private_feedback(feedbackRequest)",
+        "type": "sync",
+        "displayCall": "record_private_feedback(feedbackRequest)",
+        "codeCall": "record_private_feedback(feedbackRequest)"
+      },
+      {
+        "id": "m20",
+        "seq": "27",
+        "from": "mcp",
+        "to": "s",
+        "name": "recordFromAgent(actor, attemptId, submissionHash, feedback, agentLabel)",
+        "type": "sync",
+        "displayCall": "recordFromAgent(actor, attemptId, submissionHash, feedback, agentLabel)",
+        "codeCall": "recordFromAgent(actor, attemptId, submissionHash, feedback, agentLabel)",
+        "sourceClass": "PracticeFeedbackService",
+        "sourceMethod": "recordFromAgent",
+        "sourceOperations": [
+          "~recordFromAgent(actor: Actor, attemptId: UUID, submissionHash: String, raw: JsonNode, agentLabel: String): PracticeFeedback"
+        ],
+        "callKind": "java",
+        "via": [
+          "McpServer",
+          "AssignmentWorkMcpTools"
+        ]
+      },
+      {
+        "id": "m21",
+        "seq": "28",
+        "from": "s",
+        "to": "s",
+        "name": "Recheck own SUBMITTED PRACTICE/hash and daily limit",
+        "type": "sync",
+        "displayCall": "Recheck own SUBMITTED PRACTICE/hash and daily limit",
+        "codeCall": "Recheck own SUBMITTED PRACTICE/hash and daily limit",
+        "callKind": "action-summary"
+      },
+      {
+        "id": "m22",
+        "seq": "29",
+        "from": "s",
+        "to": "r",
+        "name": "insert(privateFeedback)",
+        "type": "sync",
+        "displayCall": "insert(privateFeedback)",
+        "codeCall": "insert(privateFeedback)",
+        "sourceClass": "PracticeFeedbackRepository",
+        "sourceMethod": "insert",
+        "sourceOperations": [
+          "+insert(f: PracticeFeedback): void"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m23",
+        "seq": "30",
+        "from": "r",
+        "to": "db",
+        "name": "INSERT practice_feedback: READY / MCP",
+        "type": "sync",
+        "displayCall": "INSERT practice_feedback: READY / MCP",
+        "codeCall": "INSERT practice_feedback: READY / MCP",
+        "callKind": "database"
+      },
+      {
+        "id": "return_m23",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m23",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "31"
+      },
+      {
+        "id": "return_m22",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m22",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "32"
+      },
+      {
+        "id": "return_m20",
+        "from": "s",
+        "to": "mcp",
+        "name": "Feedback reference",
+        "type": "reply",
+        "replyTo": "m20",
+        "displayCall": "Feedback reference",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "33"
+      },
+      {
+        "id": "m24",
+        "seq": "34",
+        "from": "mcp",
+        "to": "ui",
+        "name": "Private feedback reference",
+        "type": "reply",
+        "displayCall": "Private feedback reference",
+        "codeCall": "Private feedback reference",
+        "replyTo": "m19"
+      }
+    ],
+    "notes": [],
+    "layoutAuthority": "docs/sequence-diagrams.drawio",
+    "scope": "Main flow; explicitly named helper calls are summarized without additional lifelines.",
+    "internalCollaborators": [
+      "AttemptRepository",
+      "AiTaskJobHandler",
+      "AiTaskDelivery",
+      "PracticeFeedbackResultHandler"
+    ],
+    "messagePolicy": "Full named parameters and explicit concise call-return pairs for displayed synchronous calls. Internal helpers remain summarized. Lifelines and replies retain standard dashed notation.",
+    "reportSection": "4.2",
+    "fragments": [
+      {
+        "type": "alt",
+        "operands": [
+          {
+            "guard": "Personal AI API",
+            "from": "m1",
+            "to": "m13"
+          },
+          {
+            "guard": "Own MCP agent",
+            "from": "m14",
+            "to": "m24"
+          }
+        ]
+      }
+    ],
+    "guards": "Own submitted Practice only. One pending feedback per attempt, 20 requests/day, personal source only. No official grade."
+  },
+  {
+    "diagram": "sequence",
+    "title": "Grade Submission With AI — Direct API",
+    "useCase": "Grade Submission With AI — Direct API",
+    "elements": [
+      {
+        "id": "u",
+        "type": "actor",
+        "name": "Teacher"
+      },
+      {
+        "id": "ui",
+        "type": "object",
+        "class": "GradingUI",
+        "stereotype": "user interaction",
+        "displayStereotype": "boundary"
+      },
+      {
+        "id": "c",
+        "type": "object",
+        "class": "GradingProposalController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "s",
+        "type": "object",
+        "class": "GradingProposalService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "review",
+        "type": "object",
+        "class": "EvaluationController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "apply",
+        "type": "object",
+        "class": "GradingProposalTransactions",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "er",
+        "type": "object",
+        "class": "EvaluationRepository",
+        "stereotype": "business logic",
+        "displayStereotype": "repository"
+      },
+      {
+        "id": "db",
+        "type": "object",
+        "class": "Database",
+        "stereotype": "business logic",
+        "displayStereotype": "database"
+      }
+    ],
+    "messages": [
+      {
+        "from": "u",
+        "to": "ui",
+        "name": "Request AI proposal",
+        "type": "sync",
+        "id": "m1",
+        "seq": "1",
+        "codeCall": "Request AI proposal",
+        "displayCall": "Request AI proposal"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "requestProposal(actor, evaluationId, aiOptions)",
+        "type": "sync",
+        "id": "m2",
+        "seq": "2",
+        "codeCall": "requestProposal(aiOptions)",
+        "displayCall": "requestProposal(actor, evaluationId, aiOptions)"
+      },
+      {
+        "from": "c",
+        "to": "s",
+        "name": "requestProposal(actor, evaluationId, aiOptions)",
+        "type": "sync",
+        "id": "m3",
+        "seq": "3",
+        "codeCall": "requestProposal(actor, id, aiOptions)",
+        "displayCall": "requestProposal(actor, evaluationId, aiOptions)"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Check scope/snapshot",
+        "type": "sync",
+        "id": "m4",
+        "seq": "4",
+        "codeCall": "Validate scope and snapshot",
+        "displayCall": "Check scope/snapshot",
+        "expandedDescription": "Validate scope and snapshot"
+      },
+      {
+        "id": "m5",
+        "seq": "5",
+        "from": "s",
+        "to": "s",
+        "name": "Prepare PENDING proposal",
+        "type": "sync",
+        "displayCall": "Prepare PENDING proposal",
+        "codeCall": "Prepare PENDING proposal via transaction service",
+        "callKind": "action-summary",
+        "expandedDescription": "Prepare PENDING proposal via transaction service"
+      },
+      {
+        "id": "m6",
+        "seq": "6",
+        "from": "s",
+        "to": "s",
+        "name": "Submit background AI task",
+        "type": "sync",
+        "displayCall": "Submit background AI task",
+        "codeCall": "Dispatch task through IAiTask; retain PENDING reference",
+        "callKind": "action-summary",
+        "expandedDescription": "Dispatch task through IAiTask; retain PENDING reference"
+      },
+      {
+        "from": "s",
+        "to": "c",
+        "name": "PENDING record",
+        "type": "reply",
+        "id": "m7",
+        "seq": "7",
+        "codeCall": "PENDING record",
+        "displayCall": "PENDING record",
+        "replyTo": "m3"
+      },
+      {
+        "from": "c",
+        "to": "ui",
+        "name": "Show pending status",
+        "type": "reply",
+        "id": "m8",
+        "seq": "8",
+        "codeCall": "Show pending status",
+        "displayCall": "Show pending status",
+        "replyTo": "m2"
+      },
+      {
+        "id": "m9",
+        "seq": "9",
+        "from": "s",
+        "to": "s",
+        "name": "Worker calls AI → READY",
+        "type": "sync",
+        "displayCall": "Worker calls AI → READY",
+        "codeCall": "After commit: worker calls AI; result handler stores READY proposal",
+        "callKind": "action-summary"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "listProposals(actor, evaluationId)",
+        "type": "sync",
+        "id": "m10",
+        "seq": "10",
+        "codeCall": "listProposals(id)",
+        "displayCall": "listProposals(actor, evaluationId)"
+      },
+      {
+        "from": "c",
+        "to": "s",
+        "name": "listProposals(actor, evaluationId)",
+        "type": "sync",
+        "id": "m11",
+        "seq": "11",
+        "codeCall": "listProposals(actor, id)",
+        "displayCall": "listProposals(actor, evaluationId)"
+      },
+      {
+        "id": "m12",
+        "seq": "12",
+        "from": "s",
+        "to": "s",
+        "name": "Load proposals",
+        "type": "sync",
+        "displayCall": "Load proposals",
+        "codeCall": "Load current proposals through GradingProposalRepository",
+        "callKind": "action-summary",
+        "expandedDescription": "Load current proposals through GradingProposalRepository"
+      },
+      {
+        "from": "s",
+        "to": "c",
+        "name": "Proposals",
+        "type": "reply",
+        "id": "m13",
+        "seq": "13",
+        "codeCall": "Proposal for review",
+        "displayCall": "Proposals",
+        "replyTo": "m11",
+        "expandedDescription": "Proposal for review"
+      },
+      {
+        "from": "c",
+        "to": "ui",
+        "name": "AI proposal",
+        "type": "reply",
+        "id": "m14",
+        "seq": "14",
+        "codeCall": "Display proposal; no official grade",
+        "displayCall": "AI proposal",
+        "replyTo": "m10",
+        "expandedDescription": "Show AI proposal"
+      },
+      {
+        "id": "m15",
+        "seq": "15",
+        "from": "u",
+        "to": "ui",
+        "name": "Review items / scores",
+        "type": "sync",
+        "displayCall": "Review items / scores",
+        "codeCall": "Review and acknowledge proposal items/scores"
+      },
+      {
+        "id": "m16",
+        "seq": "16",
+        "from": "ui",
+        "to": "review",
+        "name": "saveEvaluation(actor, evaluationId, gradeData)",
+        "type": "sync",
+        "displayCall": "saveEvaluation(actor, evaluationId, gradeData)",
+        "codeCall": "saveEvaluation(actor, evaluationId, gradeData)",
+        "sourceClass": "EvaluationController",
+        "sourceMethod": "saveEvaluation",
+        "sourceOperations": [
+          "+saveEvaluation(actor: Actor, id: UUID, input: Save): Evaluation"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m17",
+        "seq": "17",
+        "from": "review",
+        "to": "apply",
+        "name": "saveUsingProposal(actor, evaluationId, gradeData)",
+        "type": "sync",
+        "displayCall": "saveUsingProposal(actor, evaluationId, gradeData)",
+        "codeCall": "saveUsingProposal(actor, evaluationId, gradeData)",
+        "sourceClass": "GradingProposalTransactions",
+        "sourceMethod": "saveUsingProposal",
+        "sourceOperations": [
+          "+saveUsingProposal(actor: Actor, evaluationId: UUID, input: Save): Evaluation"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m18",
+        "seq": "18",
+        "from": "apply",
+        "to": "apply",
+        "name": "Check reviews/version/hash",
+        "type": "sync",
+        "displayCall": "Check reviews/version/hash",
+        "codeCall": "Require usedProposalId, reviewed items, current scope/hash/version",
+        "callKind": "action-summary",
+        "expandedDescription": "Check proposal, reviews and version/hash"
+      },
+      {
+        "id": "m19",
+        "seq": "19",
+        "from": "apply",
+        "to": "er",
+        "name": "save(draftEvaluation)",
+        "type": "sync",
+        "displayCall": "save(draftEvaluation)",
+        "codeCall": "save(draftEvaluation)",
+        "sourceClass": "EvaluationRepository",
+        "sourceMethod": "save",
+        "sourceOperations": [
+          "+save(evaluation: Evaluation): Evaluation"
+        ],
+        "callKind": "java",
+        "via": [
+          "GradingService"
+        ]
+      },
+      {
+        "id": "m20",
+        "seq": "20",
+        "from": "er",
+        "to": "db",
+        "name": "UPDATE evaluation: DRAFT; record proposal usage",
+        "type": "sync",
+        "displayCall": "UPDATE evaluation: DRAFT; record proposal usage",
+        "codeCall": "UPDATE evaluation: DRAFT; record proposal usage",
+        "callKind": "database"
+      },
+      {
+        "id": "return_m20",
+        "from": "db",
+        "to": "er",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m20",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "21"
+      },
+      {
+        "id": "return_m19",
+        "from": "er",
+        "to": "apply",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m19",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "22"
+      },
+      {
+        "id": "return_m17",
+        "from": "apply",
+        "to": "review",
+        "name": "Evaluation",
+        "type": "reply",
+        "replyTo": "m17",
+        "displayCall": "Evaluation",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "23"
+      },
+      {
+        "id": "m21",
+        "seq": "24",
+        "from": "review",
+        "to": "ui",
+        "name": "Saved DRAFT",
+        "type": "reply",
+        "displayCall": "Saved DRAFT",
+        "codeCall": "Saved DRAFT; Finalize/Publish remain explicit",
+        "replyTo": "m16",
+        "expandedDescription": "Saved DRAFT; Finalize/Publish remain explicit"
+      }
+    ],
+    "notes": [],
+    "layoutAuthority": "docs/sequence-diagrams.drawio",
+    "scope": "Main flow; explicitly named helper calls are summarized without additional lifelines.",
+    "internalCollaborators": [
+      "GradingProposalTransactions",
+      "EvaluationRepository",
+      "AiTaskJobHandler",
+      "AiTaskDelivery",
+      "GradingProposalResultHandler",
+      "EvaluationController",
+      "GradingService"
+    ],
+    "messagePolicy": "Full named parameters and explicit concise call-return pairs for displayed synchronous calls. Internal helpers remain summarized. Lifelines and replies retain standard dashed notation.",
+    "reportSection": "4.3",
+    "layoutPolicy": "Compact vertical spacing, unchanged method font and full parameters; preserve all calls and replies."
+  },
+  {
+    "diagram": "sequence",
+    "title": "Grade Submission With AI — External MCP",
+    "useCase": "Grade Submission With AI — External MCP",
+    "reportSection": "4.4",
+    "elements": [
+      {
+        "id": "u",
+        "type": "actor",
+        "name": "Teacher"
+      },
+      {
+        "id": "ui",
+        "type": "object",
+        "class": "GradingClient",
+        "stereotype": "user interaction",
+        "displayStereotype": "boundary"
+      },
+      {
+        "id": "c",
+        "type": "object",
+        "class": "McpController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "s",
+        "type": "object",
+        "class": "McpServer",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "review",
+        "type": "object",
+        "class": "EvaluationController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "apply",
+        "type": "object",
+        "class": "GradingProposalTransactions",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "r",
+        "type": "object",
+        "class": "EvaluationRepository",
+        "stereotype": "business logic",
+        "displayStereotype": "repository"
+      },
+      {
+        "id": "db",
+        "type": "object",
+        "class": "Database",
+        "stereotype": "business logic",
+        "displayStereotype": "database"
+      }
+    ],
+    "messages": [
+      {
+        "id": "m1",
+        "seq": "1",
+        "from": "u",
+        "to": "ui",
+        "name": "Grade with own agent",
+        "type": "sync",
+        "displayCall": "Grade with own agent",
+        "codeCall": "Ask own MCP agent to grade submission"
+      },
+      {
+        "id": "m2",
+        "seq": "2",
+        "from": "ui",
+        "to": "c",
+        "name": "read_agent_workflow(workflowRequest)",
+        "type": "sync",
+        "displayCall": "read_agent_workflow(workflowRequest)",
+        "codeCall": "read_agent_workflow(workflowRequest)"
+      },
+      {
+        "id": "m3",
+        "seq": "3",
+        "from": "c",
+        "to": "s",
+        "name": "handle(principal, workflowMessage)",
+        "type": "sync",
+        "displayCall": "handle(principal, workflowMessage)",
+        "codeCall": "handle(principal, workflowMessage)",
+        "sourceClass": "McpServer",
+        "sourceMethod": "handle",
+        "sourceOperations": [
+          "+handle(principal: McpPrincipal, message: JsonNode): Optional<ObjectNode>"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m4",
+        "seq": "4",
+        "from": "s",
+        "to": "c",
+        "name": "GRADE_WITH_RUBRIC workflow",
+        "type": "reply",
+        "displayCall": "GRADE_WITH_RUBRIC workflow",
+        "codeCall": "GRADE_WITH_RUBRIC workflow",
+        "replyTo": "m3"
+      },
+      {
+        "id": "m5",
+        "seq": "5",
+        "from": "c",
+        "to": "ui",
+        "name": "Workflow instructions",
+        "type": "reply",
+        "displayCall": "Workflow instructions",
+        "codeCall": "Required read/review instructions",
+        "replyTo": "m2",
+        "expandedDescription": "Required read/review instructions"
+      },
+      {
+        "id": "m6",
+        "seq": "6",
+        "from": "ui",
+        "to": "c",
+        "name": "read_grading_context(contextRequest)",
+        "type": "sync",
+        "displayCall": "read_grading_context(contextRequest)",
+        "codeCall": "read_grading_context(contextRequest)"
+      },
+      {
+        "id": "m7",
+        "seq": "7",
+        "from": "c",
+        "to": "s",
+        "name": "handle(principal, contextMessage)",
+        "type": "sync",
+        "displayCall": "handle(principal, contextMessage)",
+        "codeCall": "handle(principal, contextMessage)",
+        "sourceClass": "McpServer",
+        "sourceMethod": "handle",
+        "sourceOperations": [
+          "+handle(principal: McpPrincipal, message: JsonNode): Optional<ObjectNode>"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m8",
+        "seq": "8",
+        "from": "s",
+        "to": "s",
+        "name": "Check scope; track pages",
+        "type": "sync",
+        "displayCall": "Check scope; track pages",
+        "codeCall": "Query tools check teaching scope and track every contiguous context page",
+        "callKind": "action-summary",
+        "expandedDescription": "Check teaching scope; track contiguous context pages"
+      },
+      {
+        "id": "return_m7",
+        "from": "s",
+        "to": "c",
+        "name": "MCP result",
+        "type": "reply",
+        "replyTo": "m7",
+        "displayCall": "MCP result",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "9"
+      },
+      {
+        "id": "m9",
+        "seq": "10",
+        "from": "c",
+        "to": "ui",
+        "name": "Context and fingerprint",
+        "type": "reply",
+        "displayCall": "Context and fingerprint",
+        "codeCall": "Complete context, version/hash and snapshotFingerprint",
+        "replyTo": "m6",
+        "expandedDescription": "Complete context, version/hash and snapshotFingerprint"
+      },
+      {
+        "id": "m10",
+        "seq": "11",
+        "from": "ui",
+        "to": "ui",
+        "name": "Generate proposal with own AI",
+        "type": "sync",
+        "displayCall": "Generate proposal with own AI",
+        "codeCall": "Agent generates proposal with its own AI",
+        "callKind": "action-summary",
+        "expandedDescription": "Agent generates proposal with its own AI"
+      },
+      {
+        "id": "m11",
+        "seq": "12",
+        "from": "ui",
+        "to": "c",
+        "name": "record_grading_proposal(proposalRequest)",
+        "type": "sync",
+        "displayCall": "record_grading_proposal(proposalRequest)",
+        "codeCall": "record_grading_proposal(proposalRequest)"
+      },
+      {
+        "id": "m12",
+        "seq": "13",
+        "from": "c",
+        "to": "s",
+        "name": "handle(principal, proposalMessage)",
+        "type": "sync",
+        "displayCall": "handle(principal, proposalMessage)",
+        "codeCall": "handle(principal, proposalMessage)",
+        "sourceClass": "McpServer",
+        "sourceMethod": "handle",
+        "sourceOperations": [
+          "+handle(principal: McpPrincipal, message: JsonNode): Optional<ObjectNode>"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m13",
+        "seq": "14",
+        "from": "s",
+        "to": "s",
+        "name": "Check reads/fingerprint; save",
+        "type": "sync",
+        "displayCall": "Check reads/fingerprint; save",
+        "codeCall": "Grading tools verify complete reads/fingerprint; save proposal idempotently",
+        "callKind": "action-summary",
+        "expandedDescription": "Check complete reads/fingerprint; save proposal"
+      },
+      {
+        "id": "m14",
+        "seq": "15",
+        "from": "s",
+        "to": "c",
+        "name": "Proposal and reviewUrl",
+        "type": "reply",
+        "displayCall": "Proposal and reviewUrl",
+        "codeCall": "Proposal reference and reviewUrl",
+        "replyTo": "m12",
+        "expandedDescription": "Proposal reference and reviewUrl"
+      },
+      {
+        "id": "m15",
+        "seq": "16",
+        "from": "c",
+        "to": "ui",
+        "name": "Review link",
+        "type": "reply",
+        "displayCall": "Review link",
+        "codeCall": "Open proposal review link",
+        "replyTo": "m11",
+        "expandedDescription": "Open proposal review link"
+      },
+      {
+        "id": "m16",
+        "seq": "17",
+        "from": "u",
+        "to": "ui",
+        "name": "Review items / scores",
+        "type": "sync",
+        "displayCall": "Review items / scores",
+        "codeCall": "Review and acknowledge required items/scores"
+      },
+      {
+        "id": "m17",
+        "seq": "18",
+        "from": "ui",
+        "to": "review",
+        "name": "saveEvaluation(actor, evaluationId, gradeData)",
+        "type": "sync",
+        "displayCall": "saveEvaluation(actor, evaluationId, gradeData)",
+        "codeCall": "saveEvaluation(actor, evaluationId, gradeData)",
+        "sourceClass": "EvaluationController",
+        "sourceMethod": "saveEvaluation",
+        "sourceOperations": [
+          "+saveEvaluation(actor: Actor, id: UUID, input: Save): Evaluation"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m18",
+        "seq": "19",
+        "from": "review",
+        "to": "apply",
+        "name": "saveUsingProposal(actor, evaluationId, gradeData)",
+        "type": "sync",
+        "displayCall": "saveUsingProposal(actor, evaluationId, gradeData)",
+        "codeCall": "saveUsingProposal(actor, evaluationId, gradeData)",
+        "sourceClass": "GradingProposalTransactions",
+        "sourceMethod": "saveUsingProposal",
+        "sourceOperations": [
+          "+saveUsingProposal(actor: Actor, evaluationId: UUID, input: Save): Evaluation"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m19",
+        "seq": "20",
+        "from": "apply",
+        "to": "apply",
+        "name": "Check reviews/version/hash",
+        "type": "sync",
+        "displayCall": "Check reviews/version/hash",
+        "codeCall": "Validate proposal, current version/hash, reviewed scores and teacher authority",
+        "callKind": "action-summary",
+        "expandedDescription": "Check proposal, version/hash and reviewed scores"
+      },
+      {
+        "id": "m20",
+        "seq": "21",
+        "from": "apply",
+        "to": "r",
+        "name": "save(draftEvaluation)",
+        "type": "sync",
+        "displayCall": "save(draftEvaluation)",
+        "codeCall": "save(draftEvaluation)",
+        "sourceClass": "EvaluationRepository",
+        "sourceMethod": "save",
+        "sourceOperations": [
+          "+save(evaluation: Evaluation): Evaluation"
+        ],
+        "callKind": "java",
+        "via": [
+          "GradingService"
+        ]
+      },
+      {
+        "id": "m21",
+        "seq": "22",
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE evaluation: DRAFT and audit",
+        "type": "sync",
+        "displayCall": "UPDATE evaluation: DRAFT and audit",
+        "codeCall": "UPDATE evaluation: DRAFT and audit",
+        "callKind": "database"
+      },
+      {
+        "id": "return_m21",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m21",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "23"
+      },
+      {
+        "id": "return_m20",
+        "from": "r",
+        "to": "apply",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m20",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "24"
+      },
+      {
+        "id": "return_m18",
+        "from": "apply",
+        "to": "review",
+        "name": "Evaluation",
+        "type": "reply",
+        "replyTo": "m18",
+        "displayCall": "Evaluation",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "25"
+      },
+      {
+        "id": "m22",
+        "seq": "26",
+        "from": "review",
+        "to": "ui",
+        "name": "Saved DRAFT",
+        "type": "reply",
+        "displayCall": "Saved DRAFT",
+        "codeCall": "DRAFT result; teacher may Finalize/Publish",
+        "replyTo": "m17",
+        "expandedDescription": "DRAFT result; teacher may Finalize/Publish"
+      }
+    ],
+    "fragments": [
+      {
+        "type": "loop",
+        "operands": [
+          {
+            "guard": "Until all contiguous context pages have been read",
+            "from": "m6",
+            "to": "m9"
+          }
+        ]
+      }
+    ],
+    "internalCollaborators": [
+      "McpAgentWorkflowTools",
+      "McpToolRegistry",
+      "GradingMcpQueryService",
+      "GradingMcpTools",
+      "GradingMcpReadProgress",
+      "GradingProposalRepository",
+      "GradingService"
+    ],
+    "clientMeaning": "GradingClient represents the agent client followed by the teacher web review UI.",
+    "guards": "read_grading_context repeats for all contiguous pages; write verifies current snapshotFingerprint, version/hash, read progress and request idempotency. Agent cannot finalize/publish.",
+    "messagePolicy": "Full named parameters and explicit concise call-return pairs for displayed synchronous calls. Internal helpers remain summarized. Lifelines and replies retain standard dashed notation.",
+    "layoutPolicy": "Compact vertical spacing, unchanged method font and full parameters; preserve all calls and replies."
+  },
+  {
+    "diagram": "sequence",
+    "title": "Grade Manually, Finalize and Publish",
+    "useCase": "Grade Manually, Finalize and Publish",
+    "elements": [
+      {
+        "id": "u",
+        "type": "actor",
+        "name": "Teacher"
+      },
+      {
+        "id": "ui",
+        "type": "object",
+        "class": "GradingUI",
+        "stereotype": "user interaction",
+        "displayStereotype": "boundary"
+      },
+      {
+        "id": "c",
+        "type": "object",
+        "class": "EvaluationController",
+        "stereotype": "coordinator",
+        "displayStereotype": "control"
+      },
+      {
+        "id": "s",
+        "type": "object",
+        "class": "GradingService",
+        "stereotype": "business logic",
+        "displayStereotype": "service"
+      },
+      {
+        "id": "r",
+        "type": "object",
+        "class": "EvaluationRepository",
+        "stereotype": "business logic",
+        "displayStereotype": "repository"
+      },
+      {
+        "id": "db",
+        "type": "object",
+        "class": "Database",
+        "stereotype": "business logic",
+        "displayStereotype": "database"
+      }
+    ],
+    "messages": [
+      {
+        "from": "u",
+        "to": "ui",
+        "name": "Save draft",
+        "type": "sync",
+        "id": "m1",
+        "seq": "1",
+        "codeCall": "Save draft",
+        "displayCall": "Save draft"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "saveEvaluation(actor, evaluationId, gradeData)",
+        "type": "sync",
+        "id": "m2",
+        "seq": "2",
+        "codeCall": "saveEvaluation(gradeData)",
+        "displayCall": "saveEvaluation(actor, evaluationId, gradeData)"
+      },
+      {
+        "from": "c",
+        "to": "s",
+        "name": "saveEvaluation(actor, evaluationId, gradeData)",
+        "type": "sync",
+        "id": "m3",
+        "seq": "3",
+        "codeCall": "saveEvaluation(actor, id, gradeData)",
+        "displayCall": "saveEvaluation(actor, evaluationId, gradeData)"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "lockById(evaluationId)",
+        "type": "sync",
+        "id": "m4",
+        "seq": "4",
+        "codeCall": "lockById(id)",
+        "displayCall": "lockById(evaluationId)"
+      },
+      {
+        "id": "return_m4",
+        "from": "r",
+        "to": "s",
+        "name": "Evaluation",
+        "type": "reply",
+        "replyTo": "m4",
+        "displayCall": "Evaluation",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "5"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Check state/reviews/scores",
+        "type": "sync",
+        "id": "m5",
+        "seq": "6",
+        "codeCall": "Check mutable state, review items and score bounds",
+        "displayCall": "Check state/reviews/scores",
+        "expandedDescription": "Check mutable state, review items and score bounds"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "save(evaluation)",
+        "type": "sync",
+        "id": "m6",
+        "seq": "7",
+        "codeCall": "save(evaluation)",
+        "displayCall": "save(evaluation)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE evaluation: DRAFT",
+        "type": "sync",
+        "id": "m7",
+        "seq": "8",
+        "codeCall": "UPDATE evaluation: DRAFT",
+        "displayCall": "UPDATE evaluation: DRAFT"
+      },
+      {
+        "id": "return_m7",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m7",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "9"
+      },
+      {
+        "id": "return_m6",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m6",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "10"
+      },
+      {
+        "id": "return_m3",
+        "from": "s",
+        "to": "c",
+        "name": "Evaluation",
+        "type": "reply",
+        "replyTo": "m3",
+        "displayCall": "Evaluation",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "11"
+      },
+      {
+        "from": "c",
+        "to": "ui",
+        "name": "Show DRAFT",
+        "type": "reply",
+        "id": "m8",
+        "seq": "12",
+        "codeCall": "Show DRAFT",
+        "displayCall": "Show DRAFT",
+        "replyTo": "m2"
+      },
+      {
+        "id": "m9",
+        "seq": "13",
+        "from": "ui",
+        "to": "c",
+        "name": "saveMemberGrade(actor, groupEvaluationId, accountId, memberGrade)",
+        "type": "sync",
+        "displayCall": "saveMemberGrade(actor, groupEvaluationId, accountId, memberGrade)",
+        "codeCall": "saveMemberGrade(actor, groupEvaluationId, accountId, memberGrade)",
+        "sourceClass": "EvaluationController",
+        "sourceMethod": "saveMemberGrade",
+        "sourceOperations": [
+          "+saveMemberGrade(actor: Actor, id: UUID, accountId: UUID, input: MemberSave): Evaluation"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "m10",
+        "seq": "14",
+        "from": "c",
+        "to": "s",
+        "name": "saveMemberGrade(actor, groupEvaluationId, accountId, memberGrade)",
+        "type": "sync",
+        "displayCall": "saveMemberGrade(actor, groupEvaluationId, accountId, memberGrade)",
+        "codeCall": "saveMemberGrade(actor, groupEvaluationId, accountId, memberGrade)",
+        "sourceClass": "GradingService",
+        "sourceMethod": "saveMemberGrade",
+        "sourceOperations": [
+          "+saveMemberGrade(actor: Actor, rootId: UUID, accountId: UUID, input: MemberSave): Evaluation"
+        ],
+        "callKind": "java"
+      },
+      {
+        "id": "return_m10",
+        "from": "s",
+        "to": "c",
+        "name": "Member grade saved",
+        "type": "reply",
+        "replyTo": "m10",
+        "displayCall": "Member grade saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "15"
+      },
+      {
+        "id": "return_m9",
+        "from": "c",
+        "to": "ui",
+        "name": "Member grade saved",
+        "type": "reply",
+        "replyTo": "m9",
+        "displayCall": "Member grade saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "16"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "finalizeGrades(actor, gradeBatch)",
+        "type": "sync",
+        "id": "m11",
+        "seq": "17",
+        "codeCall": "finalizeGrades(gradeBatch)",
+        "displayCall": "finalizeGrades(actor, gradeBatch)"
+      },
+      {
+        "from": "c",
+        "to": "s",
+        "name": "finalizeEvaluation(actor, itemVersion)",
+        "type": "sync",
+        "id": "m12",
+        "seq": "18",
+        "codeCall": "finalizeEvaluation(actor, item)",
+        "displayCall": "finalizeEvaluation(actor, itemVersion)",
+        "via": [
+          "GradingBatchService.executeBatch"
+        ]
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "lockById(evaluationId)",
+        "type": "sync",
+        "id": "m13",
+        "seq": "19",
+        "codeCall": "lockById(id)",
+        "displayCall": "lockById(evaluationId)"
+      },
+      {
+        "id": "return_m13",
+        "from": "r",
+        "to": "s",
+        "name": "Evaluation",
+        "type": "reply",
+        "replyTo": "m13",
+        "displayCall": "Evaluation",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "20"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Validate DRAFT",
+        "type": "sync",
+        "id": "m14",
+        "seq": "21",
+        "codeCall": "Require complete valid DRAFT",
+        "displayCall": "Validate DRAFT",
+        "expandedDescription": "Require complete valid DRAFT"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "save(evaluation)",
+        "type": "sync",
+        "id": "m15",
+        "seq": "22",
+        "codeCall": "save(evaluation)",
+        "displayCall": "save(evaluation)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE evaluation: FINALIZED",
+        "type": "sync",
+        "id": "m16",
+        "seq": "23",
+        "codeCall": "UPDATE evaluation: FINALIZED",
+        "displayCall": "UPDATE evaluation: FINALIZED"
+      },
+      {
+        "id": "return_m16",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m16",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "24"
+      },
+      {
+        "id": "return_m15",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m15",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "25"
+      },
+      {
+        "id": "return_m12",
+        "from": "s",
+        "to": "c",
+        "name": "Evaluation",
+        "type": "reply",
+        "replyTo": "m12",
+        "displayCall": "Evaluation",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "26"
+      },
+      {
+        "from": "c",
+        "to": "ui",
+        "name": "Show FINALIZED",
+        "type": "reply",
+        "id": "m17",
+        "seq": "27",
+        "codeCall": "Show FINALIZED",
+        "displayCall": "Show FINALIZED",
+        "replyTo": "m11"
+      },
+      {
+        "from": "ui",
+        "to": "c",
+        "name": "publishGrades(actor, gradeBatch)",
+        "type": "sync",
+        "id": "m18",
+        "seq": "28",
+        "codeCall": "publishGrades(gradeBatch)",
+        "displayCall": "publishGrades(actor, gradeBatch)"
+      },
+      {
+        "from": "c",
+        "to": "s",
+        "name": "publishEvaluation(actor, itemVersion)",
+        "type": "sync",
+        "id": "m19",
+        "seq": "29",
+        "codeCall": "publishEvaluation(actor, item)",
+        "displayCall": "publishEvaluation(actor, itemVersion)",
+        "via": [
+          "GradingBatchService.executeBatch"
+        ]
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "lockById(evaluationId)",
+        "type": "sync",
+        "id": "m20",
+        "seq": "30",
+        "codeCall": "lockById(id)",
+        "displayCall": "lockById(evaluationId)"
+      },
+      {
+        "id": "return_m20",
+        "from": "r",
+        "to": "s",
+        "name": "Evaluation",
+        "type": "reply",
+        "replyTo": "m20",
+        "displayCall": "Evaluation",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "31"
+      },
+      {
+        "from": "s",
+        "to": "s",
+        "name": "Check FINALIZED/version",
+        "type": "sync",
+        "id": "m21",
+        "seq": "32",
+        "codeCall": "Require FINALIZED and current version",
+        "displayCall": "Check FINALIZED/version",
+        "expandedDescription": "Require FINALIZED and current version"
+      },
+      {
+        "from": "s",
+        "to": "r",
+        "name": "save(evaluation)",
+        "type": "sync",
+        "id": "m22",
+        "seq": "33",
+        "codeCall": "save(evaluation)",
+        "displayCall": "save(evaluation)"
+      },
+      {
+        "from": "r",
+        "to": "db",
+        "name": "UPDATE evaluation: PUBLISHED",
+        "type": "sync",
+        "id": "m23",
+        "seq": "34",
+        "codeCall": "UPDATE evaluation: PUBLISHED",
+        "displayCall": "UPDATE evaluation: PUBLISHED"
+      },
+      {
+        "id": "return_m23",
+        "from": "db",
+        "to": "r",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m23",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "35"
+      },
+      {
+        "id": "return_m22",
+        "from": "r",
+        "to": "s",
+        "name": "Saved",
+        "type": "reply",
+        "replyTo": "m22",
+        "displayCall": "Saved",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "36"
+      },
+      {
+        "id": "return_m19",
+        "from": "s",
+        "to": "c",
+        "name": "Evaluation",
+        "type": "reply",
+        "replyTo": "m19",
+        "displayCall": "Evaluation",
+        "returnPolicy": "Explicit response for displayed synchronous call; concise label.",
+        "seq": "37"
+      },
+      {
+        "from": "c",
+        "to": "ui",
+        "name": "Show PUBLISHED",
+        "type": "reply",
+        "id": "m24",
+        "seq": "38",
+        "codeCall": "Show PUBLISHED",
+        "displayCall": "Show PUBLISHED",
+        "replyTo": "m18"
+      }
+    ],
+    "notes": [],
+    "layoutAuthority": "docs/sequence-diagrams.drawio",
+    "scope": "Main flow; explicitly named helper calls are summarized without additional lifelines.",
+    "internalCollaborators": [
+      "GradingBatchService",
+      "IAudit"
+    ],
+    "transactionalEffects": "Audit and required member-grade changes remain in the same service transactions.",
+    "guards": "Draft score adjustment requires a reason. Member contribution adjustments follow saveMemberGrade and its own optional reason policy. FINALIZED/PUBLISHED are locked. Batch controller dispatches through GradingBatchService.",
+    "messagePolicy": "Full named parameters and explicit concise call-return pairs for displayed synchronous calls. Internal helpers remain summarized. Lifelines and replies retain standard dashed notation.",
+    "reportSection": "4.5",
+    "alternatives": "Group member grade adjustment uses EvaluationController.saveMemberGrade(actor, evaluationId, accountId, memberGrade), then GradingService.saveMemberGrade(actor, evaluationId, accountId, memberGrade).",
+    "fragments": [
+      {
+        "type": "opt",
+        "operands": [
+          {
+            "guard": "Teacher adjusts a group member contribution",
+            "from": "m9",
+            "to": "return_m9"
+          }
+        ]
+      }
+    ],
+    "layoutPolicy": "Compact vertical spacing, unchanged method font and full parameters; preserve all calls and replies."
+  }
+]

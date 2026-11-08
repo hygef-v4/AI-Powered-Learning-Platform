@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import edu.aiplatform.academics.model.*;
 import edu.aiplatform.academics.repository.*;
-import edu.aiplatform.academics.contract.*;
 import edu.aiplatform.subjects.contract.*;
 import edu.aiplatform.identity.contract.*;
 import edu.aiplatform.shared.error.ApiException;

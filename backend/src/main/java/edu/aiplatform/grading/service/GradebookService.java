@@ -1,7 +1,6 @@
 package edu.aiplatform.grading.service;
 
 import edu.aiplatform.grading.model.RubricScoring;
-import edu.aiplatform.grading.dto.GradingViews;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

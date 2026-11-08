@@ -1,7 +1,6 @@
 package edu.aiplatform.notifications.repository;
 
 import edu.aiplatform.notifications.model.*;
-import edu.aiplatform.notifications.repository.*;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.*;

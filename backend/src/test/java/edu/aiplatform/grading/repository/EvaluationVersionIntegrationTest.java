@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.grading.model.Evaluation;
 import edu.aiplatform.grading.model.GradingFeedback;
 import edu.aiplatform.grading.model.GradingProposal;
-import edu.aiplatform.grading.repository.IEvaluationRepository;
-import edu.aiplatform.grading.repository.IGradingProposalRepository;
 import edu.aiplatform.shared.error.ApiException;
 import org.flywaydb.core.Flyway;
 import org.testcontainers.images.builder.Transferable;

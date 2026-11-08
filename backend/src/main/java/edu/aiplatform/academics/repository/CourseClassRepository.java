@@ -3,7 +3,6 @@ package edu.aiplatform.academics.repository;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.model.AcademicRuleException;
 import edu.aiplatform.academics.model.CourseClass;
-import edu.aiplatform.academics.repository.ICourseClassRepository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;

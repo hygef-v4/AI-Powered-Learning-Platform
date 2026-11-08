@@ -1,6 +1,5 @@
 package edu.aiplatform.admindashboard.service;
 
-import edu.aiplatform.admindashboard.dto.AdminDashboardViews;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;

@@ -12,7 +12,6 @@ import edu.aiplatform.shared.error.ApiException;
 import java.time.*;
 import java.util.*;
 import org.junit.jupiter.api.*;
-import org.mockito.ArgumentCaptor;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import org.junit.jupiter.params.ParameterizedTest;

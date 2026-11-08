@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.quizzes.contract.QuestionType;
 import edu.aiplatform.quizzes.model.Difficulty;
-import edu.aiplatform.quizzes.repository.IQuestionRepository;
 import edu.aiplatform.quizzes.model.Question;
 import edu.aiplatform.quizzes.model.QuestionContent;
 import edu.aiplatform.quizzes.model.QuestionFingerprint;

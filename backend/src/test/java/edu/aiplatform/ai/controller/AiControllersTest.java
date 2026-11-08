@@ -18,7 +18,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import edu.aiplatform.ai.service.AiAccess;
 import edu.aiplatform.ai.service.AiConnectionService;
 import edu.aiplatform.ai.service.AiConnectionService.ConnectionView;
 import edu.aiplatform.ai.service.AiConnectionService.SaveCommand;

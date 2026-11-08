@@ -1,6 +1,5 @@
 package edu.aiplatform.assignmentwork.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.ai.contract.IMcpToolProvider;
 import edu.aiplatform.ai.contract.McpToolDefinition;

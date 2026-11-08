@@ -14,7 +14,6 @@ import static org.mockito.Mockito.when;
 
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.IAudit;
-import edu.aiplatform.identity.IdentityTestData;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAuthorization;

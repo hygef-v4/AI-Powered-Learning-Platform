@@ -1,5 +1,4 @@
 "use client";
-import { BackLink } from "@/shared/navigation/BackLink";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { apiFetch } from "@/shared/api/client";
@@ -12,22 +11,24 @@ import {
   type DocumentComment,
   type RubricCriterion,
 } from "@/shared/document";
-import { Alert, Button, Icon, IconButton, Menu, MenuItem, Pill, showToast } from "@/shared/ui";
+import { Alert, Button, Icon, Pill, showToast } from "@/shared/ui";
 import { RubricChecklist } from "../components/RubricChecklistPanel";
 import { calculateChecklistPoints } from "../model/rubricScores";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
 import { useSubmissionDirectory } from "../hooks/useSubmissionDirectory";
 import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
-import { buildChecklistBindings, GradingNotes, shouldShowGradingNotes } from "../components/GradingForm";
+import { buildChecklistBindings } from "../components/GradingForm";
 import { useGradingWorkspace } from "../hooks/useGradingWorkspace";
 import { ActivityReview, GradeHistory, GroupSectionAuthors } from "../components/GradingReviewPanels";
 import { AiProposalPanel, buildAiRequest } from "../components/AiProposalPanel";
 import { BatchActionDialog } from "../components/BatchActionDialog";
 import { MemberContributionPanel } from "../components/MemberContributionPanel";
-import { countUnresolvedReviews } from "../components/StructuredFeedbackSection";
 import { buildGradebookHref } from "../components/ClassProgressSection";
-import { formatPoints, GRADE_STATUS_LABELS, type AiRequest, type Detail, type Rubric } from "../model/types";
+import { formatPoints, GRADE_STATUS_LABELS, type AiRequest, type Detail, type Proposal, type Rubric } from "../model/types";
+
+/** Kết quả một lượt chấm AI cần xử lý một lần: áp đề xuất READY hoặc báo lỗi. */
+type AiOutcome = { proposal?: Proposal; message?: string };
 import { toEditorDocument, type SubmissionDocumentDto } from "../model/submissionDocument";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import type { NavigationFilters } from "../model/navigation";
@@ -158,50 +159,54 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
   } = workspace;
   const [action, setAction] = useState<"finalize" | "publish" | null>(null);
   const [aiOpen, setAiOpen] = useState(Boolean(proposalId));
-  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiRequesting, setAiRequesting] = useState(false);
   const [generatingProposalId, setGeneratingProposalId] = useState<string | null>(null);
+  const [aiOutcome, setAiOutcome] = useState<AiOutcome | null>(null);
+  const [seenPollExhausted, setSeenPollExhausted] = useState(pollExhausted);
+  const aiGenerating = aiRequesting || generatingProposalId !== null;
   const [reviewSelection, setReviewSelection] = useState(proposalId);
   if (reviewSelection !== proposalId) {
     setReviewSelection(proposalId);
     setAiOpen(Boolean(proposalId));
   }
-  // Lắng nghe kết quả của đề xuất AI đang tạo
-  useEffect(() => {
-    if (!aiGenerating || !generatingProposalId) return;
+  // Kết thúc lượt chấm AI theo dữ liệu mới nhất ngay khi render; effect bên dưới chỉ áp đề xuất và báo lỗi.
+  const pollJustExhausted = pollExhausted && !seenPollExhausted;
+  if (pollExhausted !== seenPollExhausted) setSeenPollExhausted(pollExhausted);
+  if (pollJustExhausted || (aiGenerating && error)) {
+    setAiRequesting(false);
+    setGeneratingProposalId(null);
+    setAiOutcome({ message: error || "Quá thời gian chờ phản hồi từ AI" });
+  } else if (generatingProposalId) {
     const target = proposals.find((p) => p.id === generatingProposalId);
-    if (!target) return;
-
-    if (target.status === "READY" && target.proposal) {
-      applyProposal(
-        target.proposal.checks ?? {},
-        target.proposal.feedback ?? "",
-        target.id,
-        target.proposal.itemScoresByRubric ?? {},
-        target.proposal.structuredFeedback ?? null,
-      );
-      setAiGenerating(false);
+    if (target && ((target.status === "READY" && target.proposal) || target.status === "FAILED" || target.status === "REJECTED")) {
       setGeneratingProposalId(null);
-    } else if (target.status === "FAILED" || target.status === "REJECTED") {
-      setAiGenerating(false);
-      setGeneratingProposalId(null);
-      if (target.safeError) showToast(target.safeError, "danger");
+      setAiOutcome(target.status === "READY" ? { proposal: target } : { message: target.safeError ?? undefined });
     }
-  }, [aiGenerating, generatingProposalId, proposals, applyProposal]);
-
+  }
+  const handledAiOutcome = useRef<AiOutcome | null>(null);
   useEffect(() => {
-    if (pollExhausted || (aiGenerating && error)) {
-      setAiGenerating(false);
-      setGeneratingProposalId(null);
-      if (error) showToast(error, "danger");
-      else if (pollExhausted) showToast("Quá thời gian chờ phản hồi từ AI", "danger");
+    if (!aiOutcome || handledAiOutcome.current === aiOutcome) return;
+    handledAiOutcome.current = aiOutcome;
+    const ready = aiOutcome.proposal;
+    if (ready?.proposal) {
+      applyProposal(
+        ready.proposal.checks ?? {},
+        ready.proposal.feedback ?? "",
+        ready.id,
+        ready.proposal.itemScoresByRubric ?? {},
+        ready.proposal.structuredFeedback ?? null,
+      );
+    } else if (aiOutcome.message) {
+      showToast(aiOutcome.message, "danger");
     }
-  }, [pollExhausted, error, aiGenerating]);
+  }, [aiOutcome, applyProposal]);
 
   const handleAiGrade = async (input?: AiRequest) => {
     if (disabled || official || busy || aiGenerating) return;
     setAiOpen(false);
-    setAiGenerating(true);
+    setAiRequesting(true);
     const created = await requestProposal(input ?? buildAiRequest());
+    setAiRequesting(false);
     if (created) {
       if (created.status === "READY" && created.proposal) {
         applyProposal(
@@ -211,18 +216,11 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
           created.proposal.itemScoresByRubric ?? {},
           created.proposal.structuredFeedback ?? null,
         );
-        setAiGenerating(false);
-        setGeneratingProposalId(null);
       } else if (created.status === "FAILED" || created.status === "REJECTED") {
-        setAiGenerating(false);
-        setGeneratingProposalId(null);
         if (created.safeError) showToast(created.safeError, "danger");
       } else {
         setGeneratingProposalId(created.id);
       }
-    } else {
-      setAiGenerating(false);
-      setGeneratingProposalId(null);
     }
   };
 
@@ -264,9 +262,7 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
     return ids;
   }, [detail.document.blocks, detail.rubrics]);
   const total = Math.min(Number(evaluation.maxScore), Math.max(0, calculateChecklistPoints(detail.rubrics, form.checks, form.itemScores) + Number(form.adjustment)));
-  const unresolvedReviews = countUnresolvedReviews(detail.rubrics, form.checks, form.itemScores,
-    form.structuredFeedback, form.reviewedItemScores, form.acknowledgedReviewItems).total;
-  const checklist = { ...buildChecklistBindings(form, disabled, updateForm), validBlockIds };
+  const checklist = buildChecklistBindings(form, disabled, updateForm);
   const blockIds = new Set(paper.blocks.map((block) => block.id));
 
   // --- Header dính trên đầu: thanh công cụ của trình soạn dính ngay dưới header. ---
@@ -326,14 +322,6 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
     return () => window.removeEventListener("mousedown", close);
   }, [studentDropdown]);
 
-  // Thứ tự sinh viên: theo danh sách navigation, mới nhất trước.
-  const orderedStudents = useMemo(() => {
-    if (!directory.value) return [];
-    return directory.value.filter((row) => row.evaluationId);
-  }, [directory.value]);
-
-  const currentStudentIndex = orderedStudents.findIndex((row) => row.evaluationId === evaluation.id);
-
   // Lề chỉ để điểm: đầu tài liệu là thẻ tổng điểm; mỗi phần một thẻ checklist gắn vào tiêu đề của phần (2 card liên quan ghi chú/comment tạm thời ẩn đi do chưa có phương án; 2026-11-07).
   const comments: DocumentComment[] = [
     {
@@ -379,7 +367,7 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
           <button type="button" className="sr-only" aria-hidden="false" disabled={disabled} onClick={() => void save(true)}>
             Lưu nháp / thay đổi
           </button>
-          <button type="button" className="sr-only" aria-hidden="false" disabled={disabled || dirty || evaluation.state !== "DRAFT" || unresolvedReviews > 0} onClick={() => setAction("finalize")}>
+          <button type="button" className="sr-only" aria-hidden="false" disabled={disabled || dirty || evaluation.state !== "DRAFT"} onClick={() => setAction("finalize")}>
             Chốt điểm
           </button>
           <Button

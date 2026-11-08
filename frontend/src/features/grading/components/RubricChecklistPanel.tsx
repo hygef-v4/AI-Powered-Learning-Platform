@@ -1,12 +1,5 @@
 "use client";
-import { RubricItemFeedback, isItemAcknowledged, isScoreChangedAfterReview } from "./StructuredFeedbackSection";
-import type {
-  Checks,
-  ItemScores,
-  Rubric,
-  StructuredFeedback,
-  StructuredFeedbackItem,
-} from "../model/types";
+import type { Checks, ItemScores, Rubric } from "../model/types";
 
 import { resolveItemPoints, calculateChecklistPoints } from "../model/rubricScores";
 
@@ -16,17 +9,11 @@ export type ChecklistProps = {
   disabled?: boolean;
   itemScores?: ItemScores;
   onScoresChange?: (value: ItemScores, changedRubricId?: string, changedItemId?: string) => void;
-  structuredFeedback?: StructuredFeedback | null;
-  reviewedItemScores?: ItemScores;
-  acknowledgedReviewItems?: Checks;
-  validBlockIds?: Set<string>;
-  onItemFeedbackChange?: (item: StructuredFeedbackItem, currentAwardedPoints: number) => void;
-  onToggleAcknowledge?: (rubricId: string, itemId: string, acknowledged: boolean, currentAwardedPoints: number) => void;
+
 };
 
 /**
  * Checkbox edits award full/zero points; previously stored or proposed partial values remain visible until edited.
- * Review controls appear for flagged explanations or scores changed since their last review.
  */
 export function RubricChecklist({
   rubric,
@@ -35,12 +22,6 @@ export function RubricChecklist({
   disabled = false,
   itemScores = {},
   onScoresChange,
-  structuredFeedback,
-  reviewedItemScores = {},
-  acknowledgedReviewItems = {},
-  validBlockIds,
-  onItemFeedbackChange,
-  onToggleAcknowledge,
 }: ChecklistProps & { rubric: Rubric }) {
   function award(itemId: string, max: number, achieved: boolean) {
     const selected = new Set(checks[rubric.rubricId] ?? []);
@@ -57,13 +38,7 @@ export function RubricChecklist({
         const max = Number(item.points);
         const value = Number(resolveItemPoints(rubric.rubricId, item.itemId, max, checks, itemScores));
         const achieved = value === max;
-        const fbItem = structuredFeedback?.items?.find(
-          (entry) => entry.rubricId === rubric.rubricId && entry.itemId === item.itemId,
-        );
         const showCriterion = criterion.title.trim() !== "" && criterion.title.trim() !== item.text.trim();
-        const review = Boolean(fbItem?.requiresReview || isScoreChangedAfterReview(fbItem,
-          reviewedItemScores[rubric.rubricId]?.[item.itemId], value,
-          isItemAcknowledged(acknowledgedReviewItems, rubric.rubricId, item.itemId)));
         return (
           <li key={item.itemId} data-testid={`rubric-item-${item.itemId}`}
             className={`rounded-lg border px-2 py-1.5 text-xs leading-snug ${achieved ? "border-primary/30 bg-primary/5" : "border-line bg-surface"}`}>
@@ -77,7 +52,6 @@ export function RubricChecklist({
               </span>
               <span className="shrink-0 tabular-nums text-muted">{value > 0 && value < max ? `${value.toFixed(2)} / ` : ""}{max.toFixed(2)}</span>
             </label>
-            {/* 2 card liên quan tới comment tạm thời ẩn đi do chưa có phương án (yêu cầu 2026-11-07) */}
           </li>
         );
       })}

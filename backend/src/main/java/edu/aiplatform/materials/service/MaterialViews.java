@@ -1,7 +1,6 @@
 package edu.aiplatform.materials.service;
 
 import edu.aiplatform.materials.model.*;
-import edu.aiplatform.materials.repository.*;
 import edu.aiplatform.quizzes.contract.QuizScope;
 import edu.aiplatform.quizzes.contract.QuizStatus;
 import java.time.Instant;

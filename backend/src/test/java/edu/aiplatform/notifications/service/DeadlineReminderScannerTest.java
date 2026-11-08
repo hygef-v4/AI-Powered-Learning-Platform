@@ -1,6 +1,5 @@
 package edu.aiplatform.notifications.service;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import edu.aiplatform.academics.contract.*;
 import edu.aiplatform.assignments.contract.*;

@@ -2,7 +2,6 @@ package edu.aiplatform.academics.repository;
 
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.model.CourseClass;
-import edu.aiplatform.academics.repository.IAcademicsReadRepository;
 import java.util.*;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;

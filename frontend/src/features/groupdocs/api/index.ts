@@ -1,17 +1,7 @@
 import { apiDownload, apiFetch } from "@/shared/api/client";
 import type { ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import type { DocxPreview } from "@/shared/document";
-import type {
-  ApplyResult,
-  DocumentBlock,
-  DocumentImport,
-  PeerGiven,
-  PeerReviewView,
-  Receipt,
-  RevisionView,
-  SectionView,
-  WorkspaceView,
-} from "../model/types";
+import type { DocumentBlock, Receipt, RevisionView, SectionView, WorkspaceView } from "../model/types";
 
 const doc = (id: string) => `/api/v1/group-docs/${encodeURIComponent(id)}`;
 const section = (id: string, sectionId: string) => `${doc(id)}/sections/${encodeURIComponent(sectionId)}`;
@@ -36,15 +26,8 @@ export const saveDraft = (id: string, sectionId: string, version: number, blocks
 export const finishSection = (id: string, sectionId: string) =>
   apiFetch<SectionView>(`${section(id, sectionId)}:done`, { method: "POST" });
 
-/** Trưởng nhóm chốt phân công cho cả tài liệu (FB-U12-01). */
-export const lockAssignment = (id: string) => apiFetch<{ lockedBy: string; lockedAt: string }>(`${doc(id)}/assignment:lock`, { method: "POST" });
-
-export const unlockAssignment = (id: string) => apiFetch<void>(`${doc(id)}/assignment:unlock`, { method: "POST" });
-
+/** Lịch sử mục chỉ xem, mới nhất trước (BR-U12-35). */
 export const getRevisions = (id: string, sectionId: string) => apiFetch<RevisionView[]>(`${section(id, sectionId)}/revisions`);
-
-export const restoreRevision = (id: string, sectionId: string, revisionId: string, version: number) =>
-  apiFetch<SectionView>(`${section(id, sectionId)}:restore`, { method: "POST", body: JSON.stringify({ revisionId, version }) });
 
 /** Người giữ nhập DOCX vào mục; chỉ xem trước, trình soạn chèn rồi tự lưu. */
 export const previewSectionDocx = async (id: string, sectionId: string, file: File): Promise<DocxPreview> => {
@@ -56,22 +39,6 @@ export const previewSectionDocx = async (id: string, sectionId: string, file: Fi
   );
   return { document: r.document, warnings: r.warnings, imageCount: r.images, diagramCount: r.diagrams };
 };
-
-/** Trưởng nhóm nhập DOCX và/hoặc Draw.io cho cả tài liệu: xem trước theo mục (FB-U12-03). */
-export const previewImport = (id: string, files: { docx?: File | null; drawio?: File | null }) => {
-  const form = new FormData();
-  if (files.docx) form.append("docx", files.docx);
-  if (files.drawio) form.append("drawio", files.drawio);
-  return apiFetch<DocumentImport>(`${doc(id)}/import:preview`, { method: "POST", body: form });
-};
-
-export const applyImport = (id: string, sections: { sectionId: string; version: number; blocks: DocumentBlock[] }[]) =>
-  apiFetch<ApplyResult>(`${doc(id)}/import:apply`, { method: "POST", body: JSON.stringify({ sections }) });
-
-export const getPeerReviews = (id: string) => apiFetch<PeerReviewView>(`${doc(id)}/peer-reviews`);
-
-export const savePeerReviews = (id: string, reviews: PeerGiven[]) =>
-  apiFetch<PeerReviewView>(`${doc(id)}/peer-reviews`, { method: "PUT", body: JSON.stringify({ reviews }) });
 
 export const submitDocument = (id: string, version: number) =>
   apiFetch<Receipt>(`${doc(id)}/submit`, { method: "POST", body: JSON.stringify({ version }) });

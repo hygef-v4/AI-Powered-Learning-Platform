@@ -14,7 +14,6 @@ import edu.aiplatform.quizzes.repository.IQuizAiDraftRepository;
 import edu.aiplatform.quizzes.repository.IQuizRepository;
 import edu.aiplatform.quizzes.model.Question;
 import edu.aiplatform.quizzes.model.QuestionScope;
-import edu.aiplatform.quizzes.model.QuestionStatus;
 import edu.aiplatform.quizzes.model.Quiz;
 import edu.aiplatform.quizzes.model.QuizAiDraft;
 import edu.aiplatform.quizzes.model.QuizItem;
