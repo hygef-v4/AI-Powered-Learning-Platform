@@ -56,6 +56,12 @@ export function SubjectStatusActions({
       <p>
         Bạn có chắc muốn {archived ? "mở lại" : "lưu trữ"} môn học {subject.name} không?
       </p>
+      {!archived && (
+        <p>
+          Các lớp Nháp và Đang mở sẽ được lưu trữ theo. Chủ nhiệm môn sẽ bị gỡ.
+          Ghi danh và lịch sử học tập được giữ nguyên.
+        </p>
+      )}
       {mutation.error !== null && (
         <SubjectMutationFeedback error={mutation.error} onReload={onReload} />
       )}

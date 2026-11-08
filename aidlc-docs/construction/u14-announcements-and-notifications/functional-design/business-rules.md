@@ -9,6 +9,8 @@
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
 
+**Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
+
 ## 1. Thông báo lớp (UC 63, 64)
 
 | Mã | Rule | Nguồn |
@@ -37,7 +39,7 @@ Refinement approved 2026-10-24: mô tả trong chuông dùng lời dẫn hành �
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U14-20 | Email Student: `ENROLLED`, `ASSIGNMENT_OPENED`, `GRADE_PUBLISHED`, `DEADLINE_REMINDER`, `ANNOUNCEMENT_IMPORTANT` (thông báo lớp quan trọng có chọn email). Teacher: `LEADER_CHANGE_REQUESTED`, `QUESTION_REVIEWED`. Subject Manager: các loại Teacher và `QUESTION_PROPOSED`. Admin: `BACKUP_FAILED`. Các loại khác chỉ trong app; không mở rộng người nhận sự kiện. | FR-011; sửa lỗi 2026-11-02 |
-| BR-U14-21 | Mọi vai trò có cài đặt email trong popup; UI hiển thị các loại backend trả về theo role hiện hành. Student mặc định bật năm loại học tập; ba loại email staff mới mặc định tắt đến khi bật. Chỉ cập nhật tùy chọn của chính mình và loại phù hợp role. Tắt thì email mới `SKIPPED`, thông báo trong app vẫn có. Admin thấy `BACKUP_FAILED` luôn bật, bị khóa và có giải thích cảnh báo bắt buộc; server từ chối tắt kể cả gọi API trực tiếp. | US-NTF-001, FR-011; sửa lỗi 2026-11-02 |
+| BR-U14-21 | Mọi vai trò có cài đặt email trong popup; UI hiển thị các loại backend trả về theo role hiện hành. Student mặc định bật năm loại học tập; các loại email staff phù hợp role mặc định bật khi chưa có tùy chọn lưu; không ghi đè lựa chọn đã lưu. Chỉ cập nhật tùy chọn của chính mình và loại phù hợp role. Tắt thì email mới `SKIPPED`, thông báo trong app vẫn có. Admin thấy `BACKUP_FAILED` luôn bật, bị khóa và có giải thích cảnh báo bắt buộc; server từ chối tắt kể cả gọi API trực tiếp. | US-NTF-001, FR-011; sửa lỗi 2026-11-02 |
 | BR-U14-22 | Trần 300 email thông báo mỗi ngày (giờ Việt Nam, đặt bằng biến môi trường); vượt thì `DEFERRED` sang ngày sau theo thứ tự ưu tiên `BACKUP_FAILED` > `DEADLINE_REMINDER` > `ANNOUNCEMENT_IMPORTANT` > `ASSIGNMENT_OPENED` > `GRADE_PUBLISHED` > `ENROLLED` và ba loại staff mới (cùng mức thấp nhất). Email OTP của U01 không tính. | FR-011 |
 | BR-U14-23 | Gửi qua job `EMAIL_SEND` (queue `jobs.email` của U03) bằng `IMail` của U01; lỗi thử lại theo U03 tối đa 5 lần rồi `FAILED`; không gửi trùng. `SENT` chỉ nghĩa là nhà cung cấp đã nhận. Nội dung tối thiểu kèm link cần đăng nhập. | US-NTF-001 S2, S4 |
 | BR-U14-24 | Email nhắc hạn đã bị hoãn mà tới lúc gửi đã qua hạn thì `SKIPPED`. | Thiết kế |

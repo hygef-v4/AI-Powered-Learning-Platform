@@ -1,6 +1,7 @@
 package edu.aiplatform.notifications.integration;
 
 import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.rabbitmq.client.Channel;
@@ -11,6 +12,9 @@ import java.util.*;
 import org.junit.jupiter.api.*;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.core.RabbitOperations;
+import edu.aiplatform.notifications.config.NotificationTopology;
+import org.mockito.ArgumentCaptor;
 
 class NotificationEventListenerTest {
     NotificationEventService service;
@@ -71,9 +75,42 @@ class NotificationEventListenerTest {
     @Test
     void temporaryFailureSchedulesBoundedRetry() throws Exception {
         doThrow(new IllegalStateException("unavailable")).when(service).accept(any());
-        listener.receive(message(1, 0), channel);
-        verify(rabbit).invoke(any());
-        verify(channel).basicAck(1, false);
+        RabbitOperations operations = mock(RabbitOperations.class);
+        doAnswer(call -> {
+            RabbitOperations.OperationsCallback<?> callback = call.getArgument(0);
+            return callback.doInRabbit(operations);
+        }).when(rabbit).invoke(any());
+        Message original = message(1, 0);
+        listener.receive(original, channel);
+        var published = ArgumentCaptor.forClass(Message.class);
+        var order = inOrder(operations, channel);
+        order.verify(operations).send(eq(NotificationTopology.retryExchange(0)),
+                eq(EventTypes.BACKUP_FAILED), published.capture());
+        order.verify(operations).waitForConfirmsOrDie(5000);
+        order.verify(channel).basicAck(1, false);
+        assertThat(published.getValue().getBody()).isEqualTo(original.getBody());
+        assertThat(published.getValue().getMessageProperties().getHeaders())
+                .containsEntry("u14-attempt", 1);
+        assertThat(published.getValue().getMessageProperties().getDeliveryMode())
+                .isEqualTo(MessageDeliveryMode.PERSISTENT);
+        verify(channel, never()).basicNack(anyLong(), anyBoolean(), anyBoolean());
+    }
+
+    @Test
+    void failedRetryConfirmationRequeuesOriginalWithoutAck() throws Exception {
+        doThrow(new IllegalStateException("unavailable")).when(service).accept(any());
+        RabbitOperations operations = mock(RabbitOperations.class);
+        doThrow(new IllegalStateException("confirm failed")).when(operations).waitForConfirmsOrDie(5000);
+        doAnswer(call -> {
+            RabbitOperations.OperationsCallback<?> callback = call.getArgument(0);
+            return callback.doInRabbit(operations);
+        }).when(rabbit).invoke(any());
+        listener.receive(message(1, 4), channel);
+        verify(operations).send(eq(NotificationTopology.retryExchange(4)),
+                eq(EventTypes.BACKUP_FAILED), argThat(m -> Integer.valueOf(5).equals(
+                        m.getMessageProperties().getHeaders().get("u14-attempt"))));
+        verify(channel).basicNack(1, false, true);
+        verify(channel, never()).basicAck(anyLong(), anyBoolean());
     }
 
     @Test

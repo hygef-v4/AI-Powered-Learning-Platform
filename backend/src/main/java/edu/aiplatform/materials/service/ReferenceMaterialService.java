@@ -79,7 +79,8 @@ public class ReferenceMaterialService implements IReferenceMaterial {
             int length = Math.min(remaining, text.length());
             result.add(
                     new MaterialText(
-                            m.id(), m.title(), text.substring(0, length), length < text.length()));
+                            m.id(), m.title(), text.substring(0, length), length < text.length(),
+                            v.versionNo()));
             remaining -= length;
         }
         return result;

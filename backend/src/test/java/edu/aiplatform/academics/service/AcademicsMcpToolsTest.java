@@ -19,8 +19,8 @@ class AcademicsMcpToolsTest {
     @Test void onlyTaughtClassesArePagedAndSubjectsAreDeduplicated() {
         UUID subject = UUID.randomUUID();
         var now=Instant.now();
-        var one=CourseClass.createClass(UUID.randomUUID(),subject,"C1","First","","",teacher.accountId(),now);
-        var two=CourseClass.createClass(UUID.randomUUID(),subject,"C2","Second","","",teacher.accountId(),now);
+        var one=CourseClass.createClass(UUID.randomUUID(),subject,"C1","First","",teacher.accountId(),now);
+        var two=CourseClass.createClass(UUID.randomUUID(),subject,"C2","Second","",teacher.accountId(),now);
         when(academicsReadRepository.listTaught(teacher.accountId())).thenReturn(List.of(one,two));
         when(subjectQuery.getSubject(subject)).thenReturn(Optional.of(new SubjectRef(subject,"S","Subject",SubjectStatus.ACTIVE,UUID.randomUUID())));
         var tools=new AcademicsMcpTools(academicsReadRepository,subjectQuery);

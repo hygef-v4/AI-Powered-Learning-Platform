@@ -12,6 +12,7 @@ import edu.aiplatform.shared.error.ApiException;
 import java.time.*;
 import java.util.*;
 import org.junit.jupiter.api.*;
+import org.mockito.ArgumentCaptor;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -153,6 +154,49 @@ class MaterialServiceTest {
         assertThat(material.currentVersionNo()).isEqualTo(1);
         verify(repo).insertVersion(argThat(v -> v.versionNo() == 2));
         verify(repo, never()).completeText(any(), anyInt(), any(), any());
+    }
+
+    @Test
+    void metadataAcceptsDocumentedBoundsAndRejectsOverflowWithoutWrites() {
+        var next = service.update(actor, id, new MaterialCommands.Update(
+                "t".repeat(200), "d".repeat(2000), 0, 0L, null));
+        assertThat(next.title()).hasSize(200);
+        assertThat(next.description()).hasSize(2000);
+        clearInvocations(repo, audit);
+        for (var input : List.of(
+                new MaterialCommands.Update("t".repeat(201), "", 0, 0L, null),
+                new MaterialCommands.Update("Title", "d".repeat(2001), 0, 0L, null),
+                new MaterialCommands.Update("Title", "", -1, 0L, null))) {
+            assertThatThrownBy(() -> service.update(actor, id, input))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+        verify(repo, never()).update(any(), anyLong());
+        verifyNoInteractions(audit, files, jobs);
+    }
+
+    @Test
+    void mutationsAuditExactActionActorObjectTimeAndVersion() {
+        service.update(actor, id, new MaterialCommands.Update("New", "", 0, 0L, null));
+        service.replace(actor, id, new MaterialCommands.Replace(0L, new MaterialCommands.Source("signed", null)));
+        service.archive(actor, id, 0L);
+        var events = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(audit, times(3)).record(events.capture());
+        assertThat(events.getAllValues()).extracting(AuditEvent::action)
+                .containsExactly("MATERIAL_UPDATED", "MATERIAL_VERSION_CREATED", "MATERIAL_ARCHIVED");
+        assertThat(events.getAllValues()).allSatisfy(event -> {
+            assertThat(event.actorId()).isEqualTo(actor.accountId());
+            assertThat(event.objectId()).isEqualTo(id.toString());
+            assertThat(event.result()).isEqualTo(AuditResult.SUCCESS);
+            assertThat(event.occurredAt()).isEqualTo(now);
+            assertThat(event.details()).containsEntry("version", 1L);
+        });
+        clearInvocations(audit);
+        when(repo.update(any(), anyLong())).thenReturn(false);
+        assertThatThrownBy(() -> service.update(actor, id,
+                new MaterialCommands.Update("Rejected", "", 0, 0L, null)))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
+        verifyNoInteractions(audit);
     }
 
     @Test

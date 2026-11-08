@@ -7,7 +7,7 @@ import { formatOperationError } from "../model/format";
 
 /**
  * Thẻ Thông tin lớp, cùng kiểu Thông tin môn học: sửa ngay trên thẻ. Hàng đầu Mã môn và Mã lớp (khóa), rồi Mô tả; không còn
- * tên lớp, học kỳ (yêu cầu 2026-11-02, giữ nguyên giá trị cũ khi lưu). Hủy về giá trị đang lưu; lớp lưu trữ chỉ xem.
+ * tên lớp, học kỳ. API không còn học kỳ; tên lớp hiện có được giữ khi lưu. Hủy về giá trị đang lưu; lớp lưu trữ chỉ xem.
  */
 export function ClassInfoForm(props: { value: CourseClassView; onSave: (value: ClassInfoInput) => Promise<void> }) {
   return <InfoEditor key={`${props.value.id}-${props.value.version}`} {...props}/>;
@@ -26,7 +26,7 @@ function InfoEditor({ value, onSave }: { value: CourseClassView; onSave: (value:
     if (busy || archived) return;
     setBusy(true); setError("");
     try {
-      await onSave({ name: value.name || value.code, description: fields.description.trim(), term: value.term, version: value.version });
+      await onSave({ name: value.name || value.code, description: fields.description.trim(), version: value.version });
       showToast("Đã lưu thay đổi");
     } catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
   }

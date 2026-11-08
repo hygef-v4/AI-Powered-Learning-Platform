@@ -25,7 +25,7 @@ public final class AcademicsDtos {
     }
 
     public record ClassView(UUID id, Subject subject, String code, String name, String description,
-            String term, ClassStatus status, Person teacher, long activeStudentCount,
+            ClassStatus status, Person teacher, long activeStudentCount,
             long removedStudentCount, Instant createdAt, boolean showGradeDistribution,
             long version) {
     }

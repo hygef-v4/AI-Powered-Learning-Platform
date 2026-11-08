@@ -9,7 +9,7 @@ afterEach(() => vi.unstubAllGlobals());
 function course(id = "c"): CourseClassView {
   return {
     id, subject: {id: "s", code: "S", name: "Subject"}, code: id,
-    name: `Class ${id}`, description: `Mô tả ${id}`, term: "1", status: "DRAFT",
+    name: `Class ${id}`, description: `Mô tả ${id}`, status: "DRAFT",
     teacher: {id: "t", name: "Teacher", email: "t@example.test"},
     version: 1, activeStudentCount: 0, removedStudentCount: 0,
     showGradeDistribution: false, createdAt: "2026-01-01",

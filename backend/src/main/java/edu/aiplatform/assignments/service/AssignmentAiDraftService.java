@@ -220,11 +220,11 @@ public class AssignmentAiDraftService {
         }
         List<MaterialText> texts = new java.util.ArrayList<>(materialIds.isEmpty() ? List.of() : texts(actor, materialIds));
         sourceTexts.forEach(source -> texts.add(new MaterialText(UUID.randomUUID(), source.fileName(), source.text(),
-                source.truncated())));
+                source.truncated(), null)));
         boolean hasFormat = formatText != null;
         if (hasFormat) {
             texts.add(new MaterialText(UUID.randomUUID(), FORMAT_TITLE_PREFIX + "template", formatText,
-                    command.formatText().strip().length() > MAX_FORMAT_CHARS));
+                    command.formatText().strip().length() > MAX_FORMAT_CHARS, null));
         }
         String finalPrompt = hasFormat ? effectivePrompt + FORMAT_INSTRUCTION : effectivePrompt;
         AiPrompt aiPrompt = AssignmentDraftPromptBuilder.build(prepared.assignment(), finalPrompt, texts, draftOptions);

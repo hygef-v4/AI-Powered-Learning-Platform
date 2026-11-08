@@ -30,9 +30,9 @@ class AcademicsPersistenceTest {
     @Test void updatingStaleVersionRaisesConflictAndNeverChangesIdentity() {
         TransactionSynchronizationManager.setActualTransactionActive(true);
         var repository = new CourseClassRepository(namedParameterJdbcTemplate);
-        var original = CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C1", "Class", null, null, null, now);
+        var original = CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C1", "Class", null, null, now);
         when(namedParameterJdbcTemplate.update(anyString(), anyMap())).thenReturn(0);
-        assertThatThrownBy(() -> repository.update(original.updateInfo("New", null, null, now), 0))
+        assertThatThrownBy(() -> repository.update(original.updateInfo("New", null, now), 0))
                 .isInstanceOf(AcademicRuleException.class).hasMessageContaining("tải lại");
         verify(namedParameterJdbcTemplate).update(argThat(sql -> sql.contains("where id = :id and version = :expectedVersion") &&
                 !sql.contains("set subject_id") && !sql.contains("set code")),
@@ -41,7 +41,7 @@ class AcademicsPersistenceTest {
 
     @Test void rejectsUncoordinatedWritesAndInvalidVersion() {
         var repository = new CourseClassRepository(namedParameterJdbcTemplate);
-        var original = CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C1", "Class", null, null, null, now);
+        var original = CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C1", "Class", null, null, now);
         assertThatThrownBy(() -> repository.insert(original)).isInstanceOf(IllegalStateException.class);
         TransactionSynchronizationManager.setActualTransactionActive(true);
         assertThatThrownBy(() -> repository.update(original, 5)).isInstanceOf(IllegalArgumentException.class);

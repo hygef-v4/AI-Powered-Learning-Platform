@@ -16,6 +16,29 @@ class ContentInspectorTest {
     final ContentInspector inspector = new ContentInspector();
 
     @Test
+    void detectsRealXlsxFromPackageContentDespiteMisleadingExtension() throws Exception {
+        try (var workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook();
+                var output = new java.io.ByteArrayOutputStream()) {
+            workbook.createSheet("Evidence").createRow(0).createCell(0).setCellValue("Workbook source");
+            workbook.write(output);
+            assertThat(inspector.detect(write("renamed.pdf", output.toByteArray()), "renamed.pdf"))
+                    .contains(FileType.XLSX);
+        }
+    }
+
+    @Test
+    void macroEnabledWorkbookCannotEnterFixedMaterialWhitelistByRenamingToXlsx() throws Exception {
+        try (var workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook();
+                var output = new java.io.ByteArrayOutputStream()) {
+            workbook.setWorkbookType(org.apache.poi.xssf.usermodel.XSSFWorkbookType.XLSM);
+            workbook.createSheet("Evidence").createRow(0).createCell(0).setCellValue("Macro-enabled package");
+            workbook.write(output);
+            assertThat(inspector.detect(write("renamed.xlsx", output.toByteArray()), "renamed.xlsx"))
+                    .isEmpty();
+        }
+    }
+
+    @Test
     void detectsByContentNotByExtension() throws Exception {
         assertThat(inspector.detect(write("anh.pdf", TestFiles.PNG), "anh.pdf")).contains(FileType.PNG);
         assertThat(inspector.detect(write("de.pdf", TestFiles.PDF), "de.pdf")).contains(FileType.PDF);

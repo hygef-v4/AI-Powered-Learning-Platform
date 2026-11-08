@@ -78,6 +78,27 @@ class MaterialTextExtractJobHandlerTest {
     }
 
     @Test
+    void textDensityBoundaryRequiresFiftyCharactersPerPage() {
+        when(extractor.extract("file"))
+                .thenReturn(new MaterialTextExtractor.Result("a".repeat(98), 2));
+        handler.handle(message());
+        verify(repo).completeText(id, 1, MaterialVersion.TextStatus.NO_TEXT, null);
+        clearInvocations(repo);
+        when(extractor.extract("file"))
+                .thenReturn(new MaterialTextExtractor.Result("a".repeat(100), 2));
+        handler.handle(message());
+        verify(repo).completeText(id, 1, MaterialVersion.TextStatus.EXTRACTED, "a".repeat(100));
+    }
+
+    @Test
+    void extractedTextIsCappedAtOneMillionCharacters() {
+        when(extractor.extract("file"))
+                .thenReturn(new MaterialTextExtractor.Result("a".repeat(1_000_001), 1));
+        handler.handle(message());
+        verify(repo).completeText(id, 1, MaterialVersion.TextStatus.EXTRACTED, "a".repeat(1_000_000));
+    }
+
+    @Test
     void sparsePagesProduceNoText() {
         when(extractor.extract("file"))
                 .thenReturn(new MaterialTextExtractor.Result("a".repeat(100), 3));

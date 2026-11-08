@@ -47,9 +47,9 @@ public class CourseClassRepository implements ICourseClassRepository {
         try {
             namedParameterJdbcTemplate.update(
                     """
-                            insert into course_classes (id, subject_id, code, name, description, term, status, teacher_id,
+                            insert into course_classes (id, subject_id, code, name, description, status, teacher_id,
                                 show_grade_distribution, created_at, updated_at, version)
-                            values (:id, :subjectId, :code, :name, :description, :term, :status, :teacherId,
+                            values (:id, :subjectId, :code, :name, :description, :status, :teacherId,
                                 :distribution, :createdAt, :updatedAt, :version)
                             """,
                     params(value));
@@ -71,7 +71,7 @@ public class CourseClassRepository implements ICourseClassRepository {
         args.put("expectedVersion", expectedVersion);
         int count = namedParameterJdbcTemplate.update(
                 """
-                        update course_classes set name = :name, description = :description, term = :term,
+                        update course_classes set name = :name, description = :description,
                             status = :status, teacher_id = :teacherId, show_grade_distribution = :distribution,
                             updated_at = :updatedAt, version = :version
                         where id = :id and version = :expectedVersion
@@ -89,7 +89,6 @@ public class CourseClassRepository implements ICourseClassRepository {
         args.put("code", value.code());
         args.put("name", value.name());
         args.put("description", value.description());
-        args.put("term", value.term());
         args.put("status", value.status().name());
         args.put("teacherId", value.teacherId());
         args.put("distribution", value.showGradeDistribution());
@@ -102,7 +101,7 @@ public class CourseClassRepository implements ICourseClassRepository {
     static CourseClass mapCourseClass(ResultSet rs, int row) throws SQLException {
         return new CourseClass(rs.getObject("id", UUID.class),
                 rs.getObject("subject_id", UUID.class), rs.getString("code"), rs.getString("name"),
-                rs.getString("description"), rs.getString("term"),
+                rs.getString("description"),
                 ClassStatus.valueOf(rs.getString("status")), rs.getObject("teacher_id", UUID.class),
                 rs.getBoolean("show_grade_distribution"), rs.getTimestamp("created_at").toInstant(),
                 rs.getTimestamp("updated_at").toInstant(), rs.getLong("version"));

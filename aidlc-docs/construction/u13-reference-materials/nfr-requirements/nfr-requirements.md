@@ -13,9 +13,11 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | NFR-U13-03 | `extractText` cho tối đa 10 tài liệu p95 ≤ 1 giây (đọc chữ đã trích sẵn). | BR-U13-31 |
 | NFR-U13-10 | Khóa lạc quan `version`; phiên bản mới và lưu trữ là câu lệnh có điều kiện. | BR-U13-12 |
 | NFR-U13-11 | Job trích chữ idempotent theo (`materialId`, `versionNo`). | BR-U13-30 |
-| NFR-U13-30 | Tệp kiểm loại theo nội dung ở U03; trình trích chữ chạy với giới hạn thời gian và bộ nhớ, không chạy macro. URL YouTube kiểm bằng biểu thức chặt, chỉ lưu id video. | SEC-003 |
+| NFR-U13-30 | Tệp kiểm loại theo nội dung ở U03; trình trích chữ chạy với giới hạn thời gian và bộ nhớ, không chạy macro. URL YouTube kiểm bằng biểu thức chặt, lưu id video và URL HTTPS chuẩn của một video theo BR-U13-10; không giữ ngữ cảnh playlist không cần thiết. | SEC-003 |
 | NFR-U13-31 | Không log nội dung tài liệu. | SEC-005 |
 | NFR-U13-40 | Người code viết unit test cho mọi `BR-U13-xx`; tester viết integration test, gồm người học lớp khác mở tài liệu, tải bằng token hết hạn, thay phiên bản khi job trích chữ đang chạy, và phân quyền 4 role trên mọi endpoint. | NFR-004 |
+
+**Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
 
 ## Compliance
 
