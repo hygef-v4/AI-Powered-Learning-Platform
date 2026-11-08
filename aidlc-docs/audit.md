@@ -10899,3 +10899,24 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Code Generation (U12 refactor), branch `refactor/u12-simplify`.
 
 ---
+
+## U05/U09/U15 frontend formatting and cleanup — 2026-11-08
+
+**Timestamp**: 2026-11-08T07:53:08Z
+**Requested by:** Quang Hung
+**User Input (complete raw)**:
+
+> giúp tôi chỉnh lại các vấn đề trên [$ponytail:ponytail](<C:\Users\Quang Hung\\.codex\plugins\cache\ponytail\ponytail\5.3.3\skills\ponytail\SKILL.md>) , format cho dễ đọc
+
+> nhớ đừng làm thay đổi hành vi hiên jtaij
+
+**Context**: Existing frontend units. Keep API contracts, grading persistence, current UI behavior and U05 pagination request sequence.
+
+- [x] Format the three API modules and group U09 methods by use case.
+- [x] Remove inactive U09 rubric review paths and unused imports. Keep saved review and feedback fields.
+- [x] Rename the local U15 backup formatters and status labels.
+- [x] Verify the three feature suites, scoped lint and before/after request traces for 41 API methods.
+
+**AI Response**: 225 tests passed across 30 files. Scoped ESLint passed with zero warnings. Compared request traces with HEAD. U05 first-page refetch remains covered by the existing characterization test. Existing security and resiliency scope retained. Property-based testing remains disabled. No live backend or browser verification.
+
+---

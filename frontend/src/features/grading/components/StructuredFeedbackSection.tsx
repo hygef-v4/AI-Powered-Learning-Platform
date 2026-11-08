@@ -1,42 +1,10 @@
 "use client";
 import { useState } from "react";
 import { Pill } from "@/shared/ui";
-import { resolveItemPoints, isValidItemScore } from "../model/rubricScores";
 import type {
-  Checks,
-  Decimal,
-  ItemScores,
-  Rubric,
-  StructuredFeedback,
   StructuredFeedbackItem,
   StructuredFeedbackSummary,
 } from "../model/types";
-
-export function isItemAcknowledged(acknowledged: Checks | undefined, rubricId: string, itemId: string): boolean {
-  return Boolean(acknowledged?.[rubricId]?.includes(itemId));
-}
-
-export function isScoreChangedAfterReview(
-  _feedbackItem: StructuredFeedbackItem | undefined | null,
-  _reviewedScore: Decimal | undefined,
-  _awardedPoints: number,
-  _acknowledged: boolean,
-): boolean {
-  // Thay đổi điểm rubric tự do không cần giải thích hay cảnh báo (yêu cầu 2026-11-07).
-  return false;
-}
-
-export function countUnresolvedReviews(
-  _rubrics: Rubric[],
-  _checks: Checks,
-  _itemScores: ItemScores = {},
-  _structuredFeedback?: StructuredFeedback | null,
-  _reviewedItemScores: ItemScores = {},
-  _acknowledgedReviewItems: Checks = {},
-): { unacknowledgedFlags: number; scoreMismatches: number; total: number } {
-  // Bỏ chặn chốt điểm / giải thích khi sửa điểm (yêu cầu 2026-11-07).
-  return { unacknowledgedFlags: 0, scoreMismatches: 0, total: 0 };
-}
 
 function cleanSuggestionText(suggestion: string, isFullMarks: boolean): string {
   if (!isFullMarks) return suggestion;
@@ -154,7 +122,6 @@ export function RubricItemFeedback({
   awardedPoints,
   maxPoints,
   feedbackItem,
-  reviewedScore,
   acknowledged = false,
   validBlockIds,
   editable = false,
@@ -168,7 +135,6 @@ export function RubricItemFeedback({
   awardedPoints: number;
   maxPoints: number;
   feedbackItem?: StructuredFeedbackItem | null;
-  reviewedScore?: Decimal;
   acknowledged?: boolean;
   validBlockIds?: Set<string>;
   editable?: boolean;
@@ -212,14 +178,7 @@ export function RubricItemFeedback({
     maxPoints > 0 &&
     Math.round(awardedPoints * 100) === Math.round(maxPoints * 100);
   const needsAiReview = Boolean(feedbackItem.requiresReview && !acknowledged);
-  const scoreMismatch = isScoreChangedAfterReview(
-    feedbackItem,
-    reviewedScore,
-    awardedPoints,
-    acknowledged,
-  );
-  const needsAttention = needsAiReview || scoreMismatch;
-  const showAckControl = editable && Boolean(onToggleAcknowledge) && (feedbackItem.requiresReview || scoreMismatch || acknowledged);
+  const showAckControl = editable && Boolean(onToggleAcknowledge) && (feedbackItem.requiresReview || acknowledged);
 
   const blockId = feedbackItem.evidenceBlockId?.trim() || null;
   const canNavigateToBlock = Boolean(blockId && validBlockIds?.has(blockId));
@@ -227,9 +186,9 @@ export function RubricItemFeedback({
 
   return (
     <details
-      open={needsAttention || editing}
+      open={needsAiReview || editing}
       className={`mt-2 rounded-lg border p-2.5 text-xs leading-relaxed ${
-        needsAttention
+        needsAiReview
           ? "border-warning bg-warning-soft/50 text-ink"
           : "border-line-soft bg-surface text-ink"
       }`}
@@ -243,13 +202,7 @@ export function RubricItemFeedback({
               <span>Cần giảng viên kiểm tra</span>
             </Pill>
           )}
-          {scoreMismatch && (
-            <Pill tone="warning">
-              <span aria-hidden="true">⚠</span>
-              <span>Điểm đã đổi, cần xác nhận giải thích</span>
-            </Pill>
-          )}
-          {!needsAttention && acknowledged && (
+          {!needsAiReview && acknowledged && (
             <Pill tone="success">
               <span aria-hidden="true">✓</span>
               <span>Đã xác nhận</span>
@@ -270,21 +223,6 @@ export function RubricItemFeedback({
                 {feedbackItem.reviewReason ||
                   "Minh chứng chưa đọc rõ hoặc có hướng thiết kế thay thế hợp lệ."}
               </span>
-            </p>
-          </div>
-        )}
-
-        {scoreMismatch && (
-          <div
-            role="alert"
-            className="rounded-md border border-warning bg-surface px-2.5 py-2 text-xs text-ink"
-          >
-            <p className="font-semibold text-warning">
-              ⚠ Điểm mục này đã thay đổi sau khi tạo nhận xét ({Number(reviewedScore).toFixed(2)} →{" "}
-              {Number.isFinite(awardedPoints) ? awardedPoints.toFixed(2) : "—"}).
-            </p>
-            <p className="mt-0.5 text-muted">
-              Hãy sửa lại giải thích bên dưới hoặc đánh dấu xác nhận nếu giải thích hiện tại vẫn phù hợp trước khi chốt điểm.
             </p>
           </div>
         )}

@@ -1,5 +1,4 @@
 "use client";
-import { BackLink } from "@/shared/navigation/BackLink";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { apiFetch } from "@/shared/api/client";
@@ -12,20 +11,19 @@ import {
   type DocumentComment,
   type RubricCriterion,
 } from "@/shared/document";
-import { Alert, Button, Icon, IconButton, Menu, MenuItem, Pill, showToast } from "@/shared/ui";
+import { Alert, Button, Icon, Pill, showToast } from "@/shared/ui";
 import { RubricChecklist } from "../components/RubricChecklistPanel";
 import { calculateChecklistPoints } from "../model/rubricScores";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
 import { useSubmissionDirectory } from "../hooks/useSubmissionDirectory";
 import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
-import { buildChecklistBindings, GradingNotes, shouldShowGradingNotes } from "../components/GradingForm";
+import { buildChecklistBindings } from "../components/GradingForm";
 import { useGradingWorkspace } from "../hooks/useGradingWorkspace";
 import { ActivityReview, GradeHistory, GroupSectionAuthors } from "../components/GradingReviewPanels";
 import { AiProposalPanel, buildAiRequest } from "../components/AiProposalPanel";
 import { BatchActionDialog } from "../components/BatchActionDialog";
 import { MemberContributionPanel } from "../components/MemberContributionPanel";
-import { countUnresolvedReviews } from "../components/StructuredFeedbackSection";
 import { buildGradebookHref } from "../components/ClassProgressSection";
 import { formatPoints, GRADE_STATUS_LABELS, type AiRequest, type Detail, type Proposal, type Rubric } from "../model/types";
 
@@ -264,9 +262,7 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
     return ids;
   }, [detail.document.blocks, detail.rubrics]);
   const total = Math.min(Number(evaluation.maxScore), Math.max(0, calculateChecklistPoints(detail.rubrics, form.checks, form.itemScores) + Number(form.adjustment)));
-  const unresolvedReviews = countUnresolvedReviews(detail.rubrics, form.checks, form.itemScores,
-    form.structuredFeedback, form.reviewedItemScores, form.acknowledgedReviewItems).total;
-  const checklist = { ...buildChecklistBindings(form, disabled, updateForm), validBlockIds };
+  const checklist = buildChecklistBindings(form, disabled, updateForm);
   const blockIds = new Set(paper.blocks.map((block) => block.id));
 
   // --- Header dính trên đầu: thanh công cụ của trình soạn dính ngay dưới header. ---
@@ -326,14 +322,6 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
     return () => window.removeEventListener("mousedown", close);
   }, [studentDropdown]);
 
-  // Thứ tự sinh viên: theo danh sách navigation, mới nhất trước.
-  const orderedStudents = useMemo(() => {
-    if (!directory.value) return [];
-    return directory.value.filter((row) => row.evaluationId);
-  }, [directory.value]);
-
-  const currentStudentIndex = orderedStudents.findIndex((row) => row.evaluationId === evaluation.id);
-
   // Lề chỉ để điểm: đầu tài liệu là thẻ tổng điểm; mỗi phần một thẻ checklist gắn vào tiêu đề của phần (2 card liên quan ghi chú/comment tạm thời ẩn đi do chưa có phương án; 2026-11-07).
   const comments: DocumentComment[] = [
     {
@@ -379,7 +367,7 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
           <button type="button" className="sr-only" aria-hidden="false" disabled={disabled} onClick={() => void save(true)}>
             Lưu nháp / thay đổi
           </button>
-          <button type="button" className="sr-only" aria-hidden="false" disabled={disabled || dirty || evaluation.state !== "DRAFT" || unresolvedReviews > 0} onClick={() => setAction("finalize")}>
+          <button type="button" className="sr-only" aria-hidden="false" disabled={disabled || dirty || evaluation.state !== "DRAFT"} onClick={() => setAction("finalize")}>
             Chốt điểm
           </button>
           <Button
