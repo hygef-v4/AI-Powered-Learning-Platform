@@ -129,6 +129,54 @@ class SubjectScopeServiceTest {
     }
 
     @Test
+    void releasesLockInIdOrderAndSecondRepositoryFailurePropagates() {
+        UUID manager = UUID.randomUUID();
+        List<Subject> subjects = managedPair(manager);
+        var failure = new IllegalStateException("second update unavailable");
+        when(repository.update(any(), anyLong())).thenAnswer(call -> {
+            Subject value = call.getArgument(0);
+            if (value.id().equals(subjects.get(1).id())) throw failure;
+            return true;
+        });
+
+        assertThatThrownBy(() -> service.releaseManagerAssignments(manager, admin)).isSameAs(failure);
+
+        var order = org.mockito.Mockito.inOrder(repository, audit);
+        order.verify(repository).findManagedBy(manager);
+        order.verify(repository).findByIdForUpdate(subjects.get(0).id());
+        order.verify(repository).update(argThat(s -> s.id().equals(subjects.get(0).id())), anyLong());
+        order.verify(audit).record(argThat(e -> e.objectId().equals(subjects.get(0).id().toString())));
+        order.verify(repository).findByIdForUpdate(subjects.get(1).id());
+        order.verify(repository).update(argThat(s -> s.id().equals(subjects.get(1).id())), anyLong());
+        verify(audit, times(1)).record(any());
+    }
+
+    @Test
+    void secondReleaseAuditFailureIsNotConvertedIntoSuccessfulResult() {
+        UUID manager = UUID.randomUUID();
+        List<Subject> subjects = managedPair(manager);
+        var failure = new IllegalStateException("second audit unavailable");
+        when(repository.update(any(), anyLong())).thenReturn(true);
+        org.mockito.Mockito.doAnswer(call -> {
+            AuditEvent event = call.getArgument(0);
+            if (event.objectId().equals(subjects.get(1).id().toString())) throw failure;
+            return null;
+        }).when(audit).record(any());
+        assertThatThrownBy(() -> service.releaseManagerAssignments(manager, admin)).isSameAs(failure);
+        verify(repository, times(2)).update(any(), anyLong());
+        verify(audit, times(2)).record(any());
+    }
+
+    private List<Subject> managedPair(UUID manager) {
+        Subject first = Subject.create(new UUID(0, 1), "FIRST", "A", null, manager, NOW.minusSeconds(60));
+        Subject second = Subject.create(new UUID(0, 2), "SECOND", "B", null, manager, NOW.minusSeconds(60));
+        when(repository.findManagedBy(manager)).thenReturn(List.of(second, first));
+        when(repository.findByIdForUpdate(first.id())).thenReturn(Optional.of(first));
+        when(repository.findByIdForUpdate(second.id())).thenReturn(Optional.of(second));
+        return List.of(first, second);
+    }
+
+    @Test
     void nullIdsFailClosedWithoutQueryingTheDatabase() {
         assertThat(service.isSubjectManager(null, UUID.randomUUID())).isFalse();
         assertThat(service.isSubjectManager(UUID.randomUUID(), null)).isFalse();

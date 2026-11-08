@@ -86,6 +86,25 @@ class AssignmentAuthoringServiceTest {
     }
 
     @Test
+    void archivedSubjectRejectsCreateAndEditEvenWhenManagerAuthorizationAllows() {
+        Assignment original = f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT,
+                new DocumentModel(List.of()), false);
+        when(f.subjects.getSubject(f.subjectId)).thenReturn(Optional.of(
+                new edu.aiplatform.subjects.contract.SubjectRef(f.subjectId, "S1", "Subject",
+                        edu.aiplatform.subjects.contract.SubjectStatus.ARCHIVED, null)));
+        when(f.subjects.isActive(f.subjectId)).thenReturn(false);
+        assertThat(code(() -> f.authoring.createForSubject(f.manager, f.subjectId,
+                new AssignmentCommands.Create(SubmissionMode.INDIVIDUAL, GradingMode.GRADED, true, null))))
+                .isEqualTo("ASSIGNMENT_READ_ONLY");
+        assertThat(code(() -> f.authoring.saveSkeleton(f.manager, original.id(),
+                new AssignmentCommands.Skeleton(original.version(), new DocumentModel(List.of()), null, false))))
+                .isEqualTo("ASSIGNMENT_READ_ONLY");
+        assertThat(f.store).containsOnlyKeys(original.id());
+        assertThat(f.store.get(original.id())).isEqualTo(original);
+        verify(f.audit, never()).record(argThat(e -> e.result() == AuditResult.SUCCESS));
+    }
+
+    @Test
     void groupNeedsU12AndOnlyClassScope() {
         assertThat(code(() -> f.authoring.createForClass(f.teacher, f.classId,
                 new AssignmentCommands.Create(SubmissionMode.GROUP, GradingMode.GRADED, false, null))))
