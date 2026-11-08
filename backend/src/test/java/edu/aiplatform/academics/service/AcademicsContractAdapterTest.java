@@ -26,7 +26,7 @@ class AcademicsContractAdapterTest {
     final UUID classId=UUID.randomUUID(), subjectId=UUID.randomUUID(), teacher=UUID.randomUUID(), student=UUID.randomUUID();
     final Instant now=Instant.parse("2026-10-18T00:00:00Z");
     CourseClass course(UUID teacherId, ClassStatus status) {
-        return new CourseClass(classId, subjectId, "SE01", "Lop", null, "2026", status, teacherId, false, now, now, 0);
+        return new CourseClass(classId, subjectId, "SE01", "Lop", null, status, teacherId, false, now, now, 0);
     }
 
     @Test void realCrossUnitContractsReplaceTheirStubs() {
@@ -100,13 +100,13 @@ class AcademicsContractAdapterTest {
         when(academicsReadRepository.listOfSubject(subjectId)).thenReturn(List.of(course));
         when(academicsReadRepository.enrollmentCounts(List.of(classId))).thenReturn(Map.of(classId,new IAcademicsReadRepository.EnrollmentCounts(3,1)));
         when(accountLookup.getContact(teacher)).thenReturn(Optional.of(new AccountContact(teacher,"hidden@example.test","Teacher",Role.TEACHER,AccountStatus.ACTIVE)));
-        assertThat(adapter.listClassesOfSubject(subjectId)).containsExactly(new SubjectClassSummary(classId,"SE01","Lop","2026","OPEN","Teacher",3));
+        assertThat(adapter.listClassesOfSubject(subjectId)).containsExactly(new SubjectClassSummary(classId,"SE01","Lop","OPEN","Teacher",3));
     }
 
     @Test void archivingSubjectArchivesDraftAndOpenClassesKeepsArchivedAndAuditsEach() {
-        var draft=new CourseClass(UUID.randomUUID(), subjectId, "D1", "Draft", null, "2026", ClassStatus.DRAFT, null, false, now, now, 0);
-        var open=new CourseClass(UUID.randomUUID(), subjectId, "O1", "Open", null, "2026", ClassStatus.OPEN, teacher, false, now, now, 3);
-        var archived=new CourseClass(UUID.randomUUID(), subjectId, "A1", "Old", null, "2025", ClassStatus.ARCHIVED, teacher, false, now, now, 5);
+        var draft=new CourseClass(UUID.randomUUID(), subjectId, "D1", "Draft", null, ClassStatus.DRAFT, null, false, now, now, 0);
+        var open=new CourseClass(UUID.randomUUID(), subjectId, "O1", "Open", null, ClassStatus.OPEN, teacher, false, now, now, 3);
+        var archived=new CourseClass(UUID.randomUUID(), subjectId, "A1", "Old", null, ClassStatus.ARCHIVED, teacher, false, now, now, 5);
         when(academicsReadRepository.listOfSubject(subjectId)).thenReturn(List.of(draft, open, archived));
         var admin=new edu.aiplatform.identity.contract.Actor(UUID.randomUUID(), edu.aiplatform.identity.contract.Role.ADMIN);
         assertThat(adapter.archiveClassesOfSubject(subjectId, admin)).containsExactly(draft.id(), open.id());

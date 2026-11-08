@@ -9,6 +9,8 @@
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md).
 
+**Quyết định 2026-11-07 — D-U04-04:** Bỏ học kỳ lớp khỏi UI, request/response, domain và dữ liệu hiện hành; xem [quyết định đã duyệt](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Migration mới `V20261107_2200__remove_class_term.sql` xóa cột cũ khi áp dụng; không sửa migration hoặc bằng chứng lịch sử. Các quy tắc khác giữ nguyên phạm vi đã chốt.
+
 ## 1. Lớp học (Subject Manager)
 
 | Mã | Rule | Nguồn |
@@ -16,7 +18,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U05-10 | Chỉ Chủ nhiệm môn của môn tạo lớp (UC 26) trên Class List; môn phải `ACTIVE` (hỏi U04); lớp bắt đầu ở `DRAFT`. | UC 26 |
 | BR-U05-11 | `code` lớp duy nhất trong môn, tối đa 30 ký tự, không đổi; `subjectId` không đổi. | Thiết kế |
 | BR-U05-12 | Teacher được gán phải ACTIVE và role TEACHER/SUBJECT_MANAGER; chỉ Chủ nhiệm môn của môn gán/đổi. OPEN được phép thiếu teacher. teacher_id hiện hành là căn cứ teaching scope; chưa gán thì không có educator nhận quyền từ phân công đó. Đổi teacher mất quyền ở request tiếp theo. | FR-003, UC 27 |
-| BR-U05-13 | Chỉ Chủ nhiệm môn của môn sửa `name`, `description`, `term`, mở, lưu trữ, mở lại lớp (UC 29). Giảng viên được giao chỉ xem thông tin lớp và danh sách sinh viên trong U05; quyền cài đặt phân bố theo bài–lớp thuộc U09. | FR-003, UC 29 |
+| BR-U05-13 | Chỉ Chủ nhiệm môn của môn sửa `name`, `description`, mở, lưu trữ, mở lại lớp (UC 29). Giảng viên được giao chỉ xem thông tin lớp và danh sách sinh viên trong U05; quyền cài đặt phân bố theo bài–lớp thuộc U09. | FR-003, UC 29 |
 | BR-U05-14 | Chuyển DRAFT→OPEN, DRAFT→ARCHIVED, OPEN→ARCHIVED, ARCHIVED→OPEN. Create vẫn DRAFT. Mở/mở lại cần môn ACTIVE và kiểm enrollment conflict; teacher có thể null, nếu đã gán phải còn hợp lệ. Source-observed thay quy tắc bắt buộc teacher trước 27/10. | UC 29 |
 | BR-U05-15 | Mở lại lớp `ARCHIVED` bị từ chối nếu có sinh viên `ACTIVE` của lớp đang ở lớp chưa lưu trữ khác cùng môn; trả danh sách người vướng. | BR-U05-22 |
 | BR-U05-16 | Lưu trữ lớp giữ nguyên ghi danh và dữ liệu học tập; lớp `ARCHIVED` chỉ đọc. Khi U04 lưu trữ môn, U05 lưu trữ mọi lớp `DRAFT`, `OPEN` của môn qua `ISubjectClasses.archiveClassesOfSubject` (BR-U04-04), ghi audit từng lớp. | UC 29, BR-U04-04 |

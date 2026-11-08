@@ -1,6 +1,5 @@
 package edu.aiplatform.admindashboard.service;
 
-import edu.aiplatform.admindashboard.dto.AdminDashboardViews;
 
 import static edu.aiplatform.admindashboard.dto.AdminDashboardViews.*;
 
@@ -39,6 +38,7 @@ public class AdminDashboardActivityService {
     private final DashboardSourceReader dashboardSourceReader;
     private final Clock clock;
 
+    /** Connects the audit and assignment sources used to build activity metrics. */
     public AdminDashboardActivityService(AdminDashboardService adminDashboardService,
             IAuditStats audit, IAssignmentQuery assignmentQuery,
             DashboardSourceReader dashboardSourceReader, Clock clock) {
@@ -49,6 +49,7 @@ public class AdminDashboardActivityService {
         this.clock = clock;
     }
 
+    /** Loads today's account change, seven days of assignments, and up to 50 security events. */
     public ActivityView loadActivity(Actor actor) {
         adminDashboardService.requireAdmin(actor);
         Instant now = clock.instant();
@@ -73,7 +74,7 @@ public class AdminDashboardActivityService {
                         events -> events.stream().map(this::mapSecurityItem).toList()));
     }
 
-    /** Kích hoạt và mở lại về Hoạt động trừ vô hiệu hóa tài khoản đang hoạt động, từ đầu ngày tới giờ. */
+    /** Counts activations and re-enables to active, then subtracts disables of active accounts. */
     private Long loadActiveAccountChange(Instant from, Instant to) {
         long gained = audit.countSucceeded("ACCOUNT_ACTIVATED", from, to, null, null)
                 + audit.countSucceeded("ACCOUNT_ENABLED", from, to, "status", "ACTIVE");
@@ -81,7 +82,7 @@ public class AdminDashboardActivityService {
         return gained - lost;
     }
 
-    /** Đủ 7 ngày liền nhau (ngày không có bài là 0), mỗi ngày một dòng ba loại. */
+    /** Builds seven daily assignment totals by kind, filling missing days with zeroes. */
     private List<DayAssignments> buildAssignmentDays(LocalDate firstDay,
             List<AssignmentDayCount> counts) {
         Map<LocalDate, long[]> byDay = new LinkedHashMap<>();
@@ -106,7 +107,7 @@ public class AdminDashboardActivityService {
         return result;
     }
 
-    /** Tài khoản là người thực hiện, không có thì là tài khoản bị tác động; không rõ ai (sai email) thì để trống. */
+    /** Uses the actor's email or the affected account label when available. */
     private SecurityEventItem mapSecurityItem(AuditLogView view) {
         var event = view.event();
         String account = view.actorEmail() != null ? view.actorEmail()

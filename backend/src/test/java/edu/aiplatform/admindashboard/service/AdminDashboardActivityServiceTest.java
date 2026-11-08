@@ -1,6 +1,5 @@
 package edu.aiplatform.admindashboard.service;
 
-import edu.aiplatform.admindashboard.dto.AdminDashboardViews;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

@@ -4,7 +4,6 @@ import edu.aiplatform.quizzes.model.Difficulty;
 import edu.aiplatform.quizzes.model.Question;
 import edu.aiplatform.quizzes.model.QuestionReview;
 import edu.aiplatform.quizzes.model.QuestionStatus;
-import edu.aiplatform.quizzes.model.Quiz;
 
 import edu.aiplatform.quizzes.contract.QuestionType;
 import java.time.Instant;

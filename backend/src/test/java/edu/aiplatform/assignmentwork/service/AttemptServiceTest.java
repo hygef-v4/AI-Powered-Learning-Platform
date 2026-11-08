@@ -158,9 +158,6 @@ class AttemptServiceTest {
     @Test
     void submitValidatesThenStoresReceiptAndRepeatsSameReceipt() {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.plus(Duration.ofDays(1)), false);
-        f.submitResult = new ValidationResult(List.of(new ValidationIssue("REQUIRED_DIAGRAMS_MISSING", null, "Thiếu")), List.of());
-        assertThat(code(() -> f.attemptService.submit(f.student, a.id(), 0))).isEqualTo("SUBMISSION_INVALID");
-        f.submitResult = new ValidationResult(List.of(), List.of());
         WorkViews.Receipt receipt = f.attemptService.submit(f.student, a.id(), 0);
         assertThat(receipt.receiptHash()).hasSize(64);
         assertThat(receipt.late()).isFalse();

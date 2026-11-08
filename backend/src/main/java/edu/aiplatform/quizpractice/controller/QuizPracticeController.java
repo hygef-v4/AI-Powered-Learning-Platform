@@ -10,7 +10,6 @@ import edu.aiplatform.quizpractice.dto.PracticeViews.TakingView;
 import edu.aiplatform.quizpractice.service.QuizActivityService;
 import edu.aiplatform.quizpractice.service.QuizAttemptService;
 import edu.aiplatform.quizpractice.service.QuizPracticeQueryService;
-import edu.aiplatform.shared.error.ApiException;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;

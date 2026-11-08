@@ -13,7 +13,6 @@ import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;

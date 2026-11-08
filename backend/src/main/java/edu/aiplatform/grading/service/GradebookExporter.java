@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class GradebookExporter {
+    /** Writes gradebook rows as CSV or XLSX to the supplied output stream. */
     public void writeGradebook(List<List<String>> rows, String format, OutputStream output)
             throws IOException {
         if ("csv".equals(format)) {
@@ -33,6 +34,7 @@ public class GradebookExporter {
             throw ApiException.badRequest("INVALID_EXPORT_FORMAT", "Choose csv or xlsx");
     }
 
+    /** Escapes CSV cell content and prefixes formula-like values to prevent spreadsheet execution. */
     static String writeCsv(String value) {
         value = value == null ? "" : value;
         String start = value.stripLeading().replaceAll("^[\\p{Cntrl}\\s]+", "");
@@ -41,6 +43,7 @@ public class GradebookExporter {
         return "\"" + value.replace("\"", "\"\"") + "\"";
     }
 
+    /** Escapes text for inclusion in an XML document. */
     private static String escapeXml(String s) {
         if (s == null)
             return "";
@@ -48,6 +51,7 @@ public class GradebookExporter {
                 .replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
     }
 
+    /** Adds one UTF-8 XML file to the XLSX archive. */
     private static void writePart(ZipOutputStream zip, String path, String text)
             throws IOException {
         zip.putNextEntry(new ZipEntry(path));
@@ -55,6 +59,7 @@ public class GradebookExporter {
         zip.closeEntry();
     }
 
+    /** Builds a minimal XLSX workbook from the supplied gradebook rows. */
     private static void writeXlsx(List<List<String>> rows, OutputStream output) throws IOException {
         // finish(), not close(): ownership of the HTTP stream remains with Spring.
         var zip = new ZipOutputStream(output, StandardCharsets.UTF_8);

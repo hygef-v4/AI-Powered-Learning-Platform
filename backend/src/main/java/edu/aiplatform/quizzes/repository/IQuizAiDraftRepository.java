@@ -1,7 +1,6 @@
 package edu.aiplatform.quizzes.repository;
 
 import edu.aiplatform.quizzes.model.DraftStatus;
-import edu.aiplatform.quizzes.model.Quiz;
 import edu.aiplatform.quizzes.model.QuizAiDraft;
 
 import java.util.List;

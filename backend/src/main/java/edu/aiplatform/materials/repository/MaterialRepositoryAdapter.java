@@ -1,7 +1,6 @@
 package edu.aiplatform.materials.repository;
 
 import edu.aiplatform.materials.model.*;
-import edu.aiplatform.materials.repository.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.time.Instant;

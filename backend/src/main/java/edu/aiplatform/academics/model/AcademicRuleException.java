@@ -4,11 +4,13 @@ package edu.aiplatform.academics.model;
 public class AcademicRuleException extends RuntimeException {
     private final String code;
 
+    /** Creates a domain exception with its stable error code and message. */
     public AcademicRuleException(String code, String message) {
         super(message);
         this.code = code;
     }
 
+    /** Returns the domain error code. */
     public String code() {
         return code;
     }

@@ -1,13 +1,21 @@
-import {apiFetch} from "@/shared/api/client";
-import type {ActivityView, AdminDashboardView, BackupHistoryPage} from "../model/types";
+import { apiFetch } from "@/shared/api/client";
+import type { ActivityView, AdminDashboardView, BackupHistoryPage } from "../model/types";
 
 const BASE = "/api/v1/admin/dashboard";
+
 export function loadAdminDashboard(signal?: AbortSignal): Promise<AdminDashboardView> {
-  return apiFetch(BASE, {signal, cache: "no-store"});
+  return apiFetch(BASE, { signal, cache: "no-store" });
 }
+
 export function loadDashboardActivity(signal?: AbortSignal): Promise<ActivityView> {
-  return apiFetch(`${BASE}/activity`, {signal, cache: "no-store"});
+  return apiFetch(`${BASE}/activity`, { signal, cache: "no-store" });
 }
-export function listBackupHistory(page: number, size: number, signal?: AbortSignal): Promise<BackupHistoryPage> {
-  return apiFetch(`${BASE}/backups?${new URLSearchParams({page: String(page), size: String(size)})}`, {signal, cache: "no-store"});
+
+export function listBackupHistory(
+  page: number,
+  size: number,
+  signal?: AbortSignal,
+): Promise<BackupHistoryPage> {
+  const params = new URLSearchParams({ page: String(page), size: String(size) });
+  return apiFetch(`${BASE}/backups?${params}`, { signal, cache: "no-store" });
 }

@@ -97,36 +97,14 @@ const ctl = new AbortController();
 })();
 await new Promise((x) => setTimeout(x, 1000));
 
-// Giai đoạn phân công (FB-U12-01): nhận mục chỉ là đăng ký người phụ trách, chưa soạn.
+// Mục theo BR-U12-33, 36: nhận là soạn ngay; mỗi mục một người sửa tại một thời điểm.
 const sec = (id) => `/api/v1/group-docs/${D1}/sections/${id}`;
 let c = await S.sv1.post(`${sec(s1.id)}:claim`);
-check(R, "FB-U12-01 phân công: nhận mục thành người phụ trách, chưa giữ để soạn", c.status === 200 && c.data?.assigneeId === A.sv1.id && !c.data?.holderId, brief(c));
-let r2 = await S.sv2.post(`${sec(s1.id)}:claim`);
-check(R, "U12-33 mục đã có người nhận thì người khác không nhận được", r2.status === 409, brief(r2));
-const early = await S.sv1.put(`${sec(s1.id)}/draft`, { version: c.data.version, blocks: [] });
-check(R, "FB-U12-01 chưa chốt phân công thì chưa soạn được", early.status === 409 && early.data?.code === "ASSIGNMENT_NOT_LOCKED", brief(early));
-const lockEarly = await S.sv2.post(`/api/v1/group-docs/${D1}/assignment:lock`);
-check(R, "FB-U12-01 còn mục chưa có người phụ trách thì chưa chốt được", lockEarly.status === 409 && lockEarly.data?.code === "ASSIGNMENT_INCOMPLETE", brief(lockEarly));
-const asMember = await S.sv1.post(`${sec(s2.id)}:assign`, { assigneeId: A.sv2.id, replaceHolder: false });
-check(R, "Thành viên không phải trưởng không giao được", asMember.status >= 400, brief(asMember));
-let as = await S.sv2.post(`${sec(s2.id)}:assign`, { assigneeId: A.sv2.id, replaceHolder: false });
-check(R, "U12-10 trưởng nhóm giao mục", as.status === 200 && as.data?.assigneeId === A.sv2.id, brief(as));
-as = await S.sv2.post(`${sec(s3.id)}:assign`, { assigneeId: A.sv1.id, replaceHolder: false });
-const rel1 = await S.sv1.post(`${sec(s3.id)}:release`);
-check(R, "U12-27 người phụ trách tự bỏ nhận khi đang phân công", rel1.status === 200 && !rel1.data?.assigneeId, brief(rel1));
-as = await S.sv2.post(`${sec(s3.id)}:assign`, { assigneeId: A.sv1.id, replaceHolder: false });
-const lock = await S.sv2.post(`/api/v1/group-docs/${D1}/assignment:lock`);
-check(R, "FB-U12-01 trưởng nhóm chốt phân công khi mọi mục có người phụ trách", lock.status === 200 && lock.data?.lockedBy === A.sv2.id, brief(lock));
-const asLate = await S.sv2.post(`${sec(s3.id)}:assign`, { assigneeId: A.sv2.id, replaceHolder: true });
-check(R, "FB-U12-01 đã chốt thì không giao lại được", asLate.status === 409 && asLate.data?.code === "ASSIGNMENT_LOCKED", brief(asLate));
-
-// Đã chốt: mỗi người soạn mục mình phụ trách.
-c = await S.sv1.post(`${sec(s1.id)}:claim`);
-check(R, "U12-08 người phụ trách bắt đầu soạn", c.status === 200 && c.data?.holderId === A.sv1.id, brief(c));
+check(R, "U12-08 nhận mục là soạn ngay", c.status === 200 && c.data?.status === "CLAIMED" && c.data?.holderId === A.sv1.id, brief(c));
+const r2 = await S.sv2.post(`${sec(s1.id)}:claim`);
+check(R, "U12-09 mục người khác đang giữ thì không nhận được", r2.status === 409 && r2.data?.code === "SECTION_CLAIMED_BY_OTHER", brief(r2));
 const otherDraft = await S.sv2.put(`${sec(s1.id)}/draft`, { version: c.data.version, blocks: [] });
-check(R, "U12-09 thành viên khác không sửa được mục người khác", otherDraft.status >= 400, brief(otherDraft));
-r2 = await S.sv2.post(`${sec(s1.id)}:claim`);
-check(R, "FB-U12-01 trưởng nhóm cũng không soạn mục người khác phụ trách", r2.status === 409 && r2.data?.code === "SECTION_ASSIGNED_TO_OTHER", brief(r2));
+check(R, "U12-09 thành viên khác không sửa được mục người khác giữ", otherDraft.status >= 400, brief(otherDraft));
 const blk = [{ id: crypto.randomUUID(), origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: "Phân tích của Sinh viên 1" }] } }];
 const dr = await S.sv1.put(`${sec(s1.id)}/draft`, { version: c.data.version, blocks: blk });
 check(R, "U12-08 tự lưu bản nháp", dr.status === 200, brief(dr));
@@ -138,12 +116,28 @@ await new Promise((x) => setTimeout(x, 2500));
 const ev = events.slice(before)[0];
 check(R, "U12-24 B nhận cập nhật trong 2 giây sau khi A bấm Xong", ev && ev.at - doneAt <= 2000, ev ? `${ev.at - doneAt} ms ${ev.data.slice(0, 80)}` : "không có sự kiện");
 check(R, "U12-24 lúc A gõ nháp B không nhận nội dung", !events.slice(0, before).some((e) => e.data.includes("Phân tích của")), `events trước Xong=${before}`);
-c = await S.sv1.post(`${sec(s3.id)}:claim`);
-const rel2 = await S.sv2.post(`${sec(s3.id)}:release`);
-check(R, "U12-27 trưởng nhóm dừng phần đang soạn của thành viên, người phụ trách giữ nguyên", rel2.status === 200 && rel2.data?.status === "OPEN" && rel2.data?.assigneeId === A.sv1.id, brief(rel2));
-c = await S.sv1.post(`${sec(s1.id)}:claim`);
-const relDone = await S.sv1.post(`${sec(s1.id)}:release`);
+const hist = await S.sv2.get(`${sec(s1.id)}/revisions`);
+check(R, "U12-35 lịch sử mục có bản Xong kèm tác giả", hist.status === 200 && hist.data?.[0]?.authorId === A.sv1.id, brief(hist));
+const reclaim = await S.sv2.post(`${sec(s1.id)}:claim`);
+check(R, "U12-33 mục đã Xong được thành viên khác nhận lại để sửa, bản nháp từ nội dung đã đăng", reclaim.status === 200 && reclaim.data?.holderId === A.sv2.id && JSON.stringify(reclaim.data?.draftBlocks).includes("Phân tích của"), brief(reclaim));
+const relDone = await S.sv2.post(`${sec(s1.id)}:release`);
 check(R, "U12-27 nhả mục đã có nội dung Xong: về Xong", relDone.status === 200 && relDone.data?.status === "DONE", brief(relDone));
+
+c = await S.sv1.post(`${sec(s2.id)}:claim`);
+let as = await S.sv2.post(`${sec(s2.id)}:assign`, { assigneeId: A.sv2.id, replaceHolder: false });
+check(R, "U12-10 giao mục đang có người giữ: cần nhả trước", as.status === 409, brief(as));
+as = await S.sv2.post(`${sec(s3.id)}:assign`, { assigneeId: A.sv1.id, replaceHolder: false });
+check(R, "U12-10 trưởng nhóm giao mục trống: người được giao soạn ngay", as.status === 200 && as.data?.holderId === A.sv1.id, brief(as));
+const asMember = await S.sv1.post(`${sec(s2.id)}:assign`, { assigneeId: A.sv2.id, replaceHolder: true });
+check(R, "Thành viên không phải trưởng không giao được", asMember.status >= 400, brief(asMember));
+const rel1 = await S.sv1.post(`${sec(s3.id)}:release`);
+check(R, "U12-27 người giữ tự nhả: về Mở", rel1.status === 200 && rel1.data?.status === "OPEN", brief(rel1));
+const rel2 = await S.sv2.post(`${sec(s2.id)}:release`);
+check(R, "U12-27 trưởng nhóm nhả mục của thành viên", rel2.status === 200 && rel2.data?.status === "OPEN", brief(rel2));
+for (const gone of ["assignment:lock", "assignment:unlock"]) {
+  const r = await S.sv2.post(`/api/v1/group-docs/${D1}/${gone}`);
+  check(R, `Đã bỏ chốt phân công: ${gone} không còn`, r.status === 404 || r.status === 405, r.status);
+}
 
 w = await S.sv1.get(`/api/v1/group-docs/${D1}`);
 const subMember = await S.sv1.post(`/api/v1/group-docs/${D1}/submit`, { version: w.data.version });
@@ -165,8 +159,6 @@ check(R, "U12-26 sửa tiếp và nộp lại: mã biên nhận mới", sub2.sta
 const prog = await T.get(`/api/v1/classes/${C}/group-assignments/${AID}/progress`);
 check(R, "U12-14 bảng tiến độ có từng nhóm và trạng thái", prog.status === 200 && JSON.stringify(prog.data).includes("Nhóm A"), `${prog.status} ${JSON.stringify(prog.data).slice(0, 200)}`);
 const d2Sections = (await S.sv4.get(`/api/v1/group-docs/${D2}`)).data.sections;
-for (const x of d2Sections) await S.sv4.post(`/api/v1/group-docs/${D2}/sections/${x.id}:claim`);
-await S.sv4.post(`/api/v1/group-docs/${D2}/assignment:lock`);
 const cl = await S.sv4.post(`/api/v1/group-docs/${D2}/sections/${d2Sections[0].id}:claim`);
 const tRel = await T.post(`/api/v1/group-docs/${D2}/sections/${cl.data?.id}:release`);
 check(R, "U12-15 giảng viên nhả mục đang giữ", tRel.status === 200 && tRel.data?.status === "OPEN", brief(tRel));

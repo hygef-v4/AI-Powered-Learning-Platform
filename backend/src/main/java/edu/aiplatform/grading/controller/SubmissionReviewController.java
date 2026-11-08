@@ -22,6 +22,7 @@ public class SubmissionReviewController {
     private final IAssignmentQuery assignmentQuery;
     private final GradebookService gradebookService;
 
+    /** Creates the controller with review and gradebook services. */
     public SubmissionReviewController(SubmissionReviewService submissionReviewService,
             IAssignmentQuery assignmentQuery, GradebookService gradebookService) {
         this.submissionReviewService = submissionReviewService;
@@ -29,6 +30,9 @@ public class SubmissionReviewController {
         this.gradebookService = gradebookService;
     }
 
+    /**
+     * Lists submissions for an assignment with optional status and late filters, supporting pagination.
+     */
     @GetMapping("/assignments/{assignmentId}/submissions")
     public SubmissionPage listSubmissions(@AuthenticationPrincipal Actor actor,
             @PathVariable UUID classId, @PathVariable UUID assignmentId,
@@ -40,6 +44,9 @@ public class SubmissionReviewController {
                 page, size);
     }
 
+    /**
+     * Aggregates grading progress summaries for all gradable assignments in a course class.
+     */
     @GetMapping("/submission-progress")
     public Map<UUID, SubmissionPage> progress(@AuthenticationPrincipal Actor actor,
             @PathVariable UUID classId) {

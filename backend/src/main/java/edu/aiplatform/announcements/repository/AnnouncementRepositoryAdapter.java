@@ -1,7 +1,6 @@
 package edu.aiplatform.announcements.repository;
 
 import edu.aiplatform.announcements.model.*;
-import edu.aiplatform.announcements.repository.*;
 import jakarta.persistence.EntityManager;
 import java.util.*;
 import org.springframework.stereotype.Repository;

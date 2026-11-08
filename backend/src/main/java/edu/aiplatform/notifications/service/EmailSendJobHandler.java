@@ -1,7 +1,6 @@
 package edu.aiplatform.notifications.service;
 
 import edu.aiplatform.jobs.contract.*;
-import edu.aiplatform.notifications.model.*;
 import edu.aiplatform.notifications.repository.*;
 import java.time.*;
 import java.util.*;

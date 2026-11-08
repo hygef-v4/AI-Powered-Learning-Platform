@@ -11,9 +11,11 @@ import java.util.Set;
 import java.util.UUID;
 
 final class GradingJson {
+    /** Prevents instantiation of this JSON utility class. */
     private GradingJson() {
     }
 
+    /** Serializes a value into the JSON format used for grading snapshots. */
     static String writeSnapshot(ObjectMapper json, Object value) {
         try {
             return json.writeValueAsString(value);
@@ -22,6 +24,7 @@ final class GradingJson {
         }
     }
 
+    /** Reads rubric data from an evaluation snapshot. */
     static List<RubricView> readRubrics(ObjectMapper json, String value) {
         try {
             return json.readValue(value, new TypeReference<List<RubricView>>() {
@@ -32,6 +35,7 @@ final class GradingJson {
         }
     }
 
+    /** Reads checked rubric item IDs from stored JSON, returning an empty map when absent or invalid. */
     static Map<UUID, Set<UUID>> readChecks(ObjectMapper json, String value) {
         if (value == null || value.isBlank()) {
             return Map.of();

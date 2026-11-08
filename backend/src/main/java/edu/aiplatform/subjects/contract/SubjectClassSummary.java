@@ -7,7 +7,6 @@ public record SubjectClassSummary(
         UUID classId,
         String code,
         String name,
-        String term,
         String status,
         String teacherName,
         int activeStudentCount) {}

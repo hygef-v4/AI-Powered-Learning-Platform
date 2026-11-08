@@ -12,13 +12,16 @@ import java.util.Set;
 import java.util.UUID;
 
 public final class RubricScoring {
+    /** Prevents instantiation of this scoring utility. */
     private RubricScoring() {
     }
 
+    /** Totals selected rubric item points. */
     public static BigDecimal calculateScore(List<RubricView> rubrics, Map<UUID, Set<UUID>> checks) {
         return calculateScore(rubrics, checks, Map.of());
     }
 
+    /** Totals awarded item scores, falling back to selected rubric point values. */
     public static BigDecimal calculateScore(List<RubricView> rubrics, Map<UUID, Set<UUID>> checks,
             Map<UUID, Map<UUID, BigDecimal>> itemScores) {
         if (checks == null)
@@ -55,6 +58,7 @@ public final class RubricScoring {
         return total;
     }
 
+    /** Resolves each rubric item to its awarded score or zero. */
     public static Map<UUID, Map<UUID, BigDecimal>> calculateEffectiveItemScores(
             List<RubricView> rubrics, Map<UUID, Set<UUID>> checks,
             Map<UUID, Map<UUID, BigDecimal>> itemScores) {
@@ -86,6 +90,7 @@ public final class RubricScoring {
         return Map.copyOf(result);
     }
 
+    /** Copies rubric item scores into immutable nested maps. */
     public static Map<UUID, Map<UUID, BigDecimal>> copyItemScores(
             Map<UUID, Map<UUID, BigDecimal>> scores) {
         if (scores == null || scores.isEmpty())
@@ -96,6 +101,7 @@ public final class RubricScoring {
         return Map.copyOf(copy);
     }
 
+    /** Copies rubric checks into immutable nested sets. */
     public static Map<UUID, Set<UUID>> copyChecks(Map<UUID, Set<UUID>> checks) {
         if (checks == null || checks.isEmpty())
             return Map.of();
@@ -105,6 +111,7 @@ public final class RubricScoring {
         return Map.copyOf(copy);
     }
 
+    /** Creates the validation error used for invalid rubric item scores. */
     private static ApiException createInvalidItemScore() {
         return ApiException.badRequest("INVALID_RUBRIC_SCORE",
                 "Điểm từng mục phải từ 0 đến điểm tối đa, với tối đa 2 chữ số thập phân.");

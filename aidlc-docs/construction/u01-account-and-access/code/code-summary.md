@@ -43,7 +43,7 @@ Lỗi: Problem Detail có `code`; `PASSWORD_POLICY` kèm `violations`; Redis/DB 
 ## Frontend
 
 - Route: `(auth)/login`, `(auth)/activate`, `(auth)/reset-password`, `/`, `/post-login`, `/profile`, `/admin/accounts`, `/admin/accounts/[id]`; `app/admin/layout.tsx` bọc cả Settings của U03 bằng `AuthenticatedLayout` (chỉ ADMIN).
-- `features/identity`: `LoginPage`/`LoginForm`, `otp/OtpFlow` (email → OTP 10 phút, gửi lại sau 60 giây → mật khẩu), `ActivationPage`, `PasswordResetPage`, `profile/*`, `admin/*`, `shell/*` (`AppShell`, `AccountMenu` vẽ `accountMenuEntries`/`headerWidgets`, `SignOutDialog`, `RoleGuard`), `session.tsx`, `components/*` (AuthLayout, Stepper, OtpInput, PasswordField, PasswordChecklist).
+- `features/identity`: `LoginPage`/`LoginForm`, `otp/OtpFlow` (email → OTP 10 phút, gửi lại sau 60 giây → mật khẩu), `ActivationPage`, `PasswordResetPage`, `profile/*`, `admin/*`, `shell/*` (`AuthenticatedLayout`, `RoleGuard`; `AppShell`, `AccountMenu` vẽ `accountMenuEntries`/`headerWidgets` và `LogoutDialog` nằm ở `shared/layout`), `session.tsx`, `components/*` (AuthLayout, Stepper, OtpInput, PasswordField, PasswordChecklist).
 - `shared/api/client.ts`: header `X-XSRF-TOKEN` cho request đổi trạng thái; 401 thì refresh rồi gửi lại (409 chờ cookie của tab kia 500 ms, vẫn 401 thì refresh lại một lần; refresh 503/mất mạng → `SYSTEM_BUSY`, không về đăng nhập); `setUnauthenticatedHandler` đưa về `/login?next=...`.
 - `app/not-found.tsx`: trang 404 chung có link về `/`.
 

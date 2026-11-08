@@ -1,7 +1,6 @@
 package edu.aiplatform.academics.controller;
 
 
-import edu.aiplatform.academics.dto.*;
 import edu.aiplatform.academics.service.*;
 import edu.aiplatform.identity.contract.*;
 import edu.aiplatform.shared.error.ApiException;

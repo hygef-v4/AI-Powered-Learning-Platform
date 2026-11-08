@@ -16,10 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class GradingProposalRepository implements IGradingProposalRepository {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
+    /** Creates the repository with named-parameter JDBC access. */
     public GradingProposalRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
+    /** Finds the evaluation identifier linked to a proposal. */
     public Optional<UUID> findEvaluationId(UUID id) {
         return namedParameterJdbcTemplate
                 .queryForList("select evaluation_id from grading_proposals where id=:id",
@@ -27,6 +29,7 @@ public class GradingProposalRepository implements IGradingProposalRepository {
                 .stream().findFirst();
     }
 
+    /** Loads a grading proposal by its identifier. */
     public Optional<GradingProposal> findById(UUID id) {
         return namedParameterJdbcTemplate
                 .query("select proposal_document from grading_proposals where id=:id",
@@ -34,6 +37,7 @@ public class GradingProposalRepository implements IGradingProposalRepository {
                 .stream().findFirst();
     }
 
+    /** Loads a grading proposal by its request reference. */
     public Optional<GradingProposal> findByRequestRef(String ref) {
         return namedParameterJdbcTemplate
                 .query("select proposal_document from grading_proposals where request_ref=:ref",
@@ -41,6 +45,7 @@ public class GradingProposalRepository implements IGradingProposalRepository {
                 .stream().findFirst();
     }
 
+    /** Lists proposals for an evaluation from newest to oldest. */
     public List<GradingProposal> findForEvaluation(UUID id) {
         return namedParameterJdbcTemplate.query(
                 """
@@ -49,6 +54,7 @@ public class GradingProposalRepository implements IGradingProposalRepository {
                 Map.of("id", id), GradingProposalRepository::mapProposal);
     }
 
+    /** Inserts or updates a grading proposal using optimistic version checks. */
     @Transactional
     public GradingProposal save(GradingProposal proposal) {
         var versions = namedParameterJdbcTemplate.queryForList(
@@ -76,6 +82,7 @@ public class GradingProposalRepository implements IGradingProposalRepository {
         return row.mapProposal();
     }
 
+    /** Maps a database row to its grading proposal document. */
     private static GradingProposal mapProposal(ResultSet rs, int index) throws SQLException {
         var row = new GradingProposalRow();
         row.document = rs.getString("proposal_document");

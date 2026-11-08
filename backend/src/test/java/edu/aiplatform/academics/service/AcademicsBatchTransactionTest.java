@@ -49,7 +49,7 @@ class AcademicsBatchTransactionTest {
         when(authorization.authorize(any(),anyString(),any())).thenReturn(AuthorizationDecision.allow());
         when(scope.isSubjectManager(managerId,subjectId)).thenReturn(true);
         when(subjectQuery.getSubject(subjectId)).thenReturn(Optional.of(new SubjectRef(subjectId,"S","Subject",SubjectStatus.ACTIVE,managerId)));
-        when(courseClassRepository.find(classId)).thenReturn(Optional.of(new CourseClass(classId,subjectId,"C","Class","","2026",ClassStatus.OPEN,managerId,false,now,now,0)));
+        when(courseClassRepository.find(classId)).thenReturn(Optional.of(new CourseClass(classId,subjectId,"C","Class","",ClassStatus.OPEN,managerId,false,now,now,0)));
         var students=List.of(contact(first,"first@example.test",Role.STUDENT),contact(second,"second@example.test",Role.STUDENT),contact(third,"third@example.test",Role.STUDENT));
         when(accountLookup.findByEmails(any())).thenReturn(students);
         when(accountLookup.lockContact(any())).thenAnswer(call->students.stream()

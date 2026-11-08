@@ -1,70 +1,10 @@
 "use client";
 import { useState } from "react";
 import { Pill } from "@/shared/ui";
-import { resolveItemPoints, isValidItemScore } from "../model/rubricScores";
 import type {
-  Checks,
-  Decimal,
-  ItemScores,
-  Rubric,
-  StructuredFeedback,
   StructuredFeedbackItem,
   StructuredFeedbackSummary,
 } from "../model/types";
-
-export function isItemAcknowledged(acknowledged: Checks | undefined, rubricId: string, itemId: string): boolean {
-  return Boolean(acknowledged?.[rubricId]?.includes(itemId));
-}
-
-export function isScoreChangedAfterReview(
-  feedbackItem: StructuredFeedbackItem | undefined | null,
-  reviewedScore: Decimal | undefined,
-  awardedPoints: number,
-  acknowledged: boolean,
-): boolean {
-  if (!feedbackItem || acknowledged) return false;
-  if (reviewedScore === undefined || reviewedScore === null || String(reviewedScore).trim() === "") {
-    return false;
-  }
-  const rev = Number(reviewedScore);
-  if (!Number.isFinite(rev) || !Number.isFinite(awardedPoints)) return false;
-  return Math.round(rev * 100) !== Math.round(awardedPoints * 100);
-}
-
-export function countUnresolvedReviews(
-  rubrics: Rubric[],
-  checks: Checks,
-  itemScores: ItemScores = {},
-  structuredFeedback?: StructuredFeedback | null,
-  reviewedItemScores: ItemScores = {},
-  acknowledgedReviewItems: Checks = {},
-): { unacknowledgedFlags: number; scoreMismatches: number; total: number } {
-  if (!structuredFeedback?.items?.length) {
-    return { unacknowledgedFlags: 0, scoreMismatches: 0, total: 0 };
-  }
-  let unacknowledgedFlags = 0;
-  let scoreMismatches = 0;
-  for (const fbItem of structuredFeedback.items) {
-    const rubric = rubrics.find((r) => r.rubricId === fbItem.rubricId);
-    const rubricItem = rubric?.criteria.flatMap((c) => c.items).find((i) => i.itemId === fbItem.itemId);
-    const max = rubricItem ? Number(rubricItem.points) : 0;
-    const rawAwarded = resolveItemPoints(fbItem.rubricId, fbItem.itemId, max, checks, itemScores);
-    const awarded = isValidItemScore(rawAwarded, max) ? Number(rawAwarded) : NaN;
-    const ack = isItemAcknowledged(acknowledgedReviewItems, fbItem.rubricId, fbItem.itemId);
-    if (fbItem.requiresReview && !ack) {
-      unacknowledgedFlags += 1;
-    }
-    const revScore = reviewedItemScores?.[fbItem.rubricId]?.[fbItem.itemId];
-    if (isScoreChangedAfterReview(fbItem, revScore, awarded, ack)) {
-      scoreMismatches += 1;
-    }
-  }
-  return {
-    unacknowledgedFlags,
-    scoreMismatches,
-    total: unacknowledgedFlags + scoreMismatches,
-  };
-}
 
 function cleanSuggestionText(suggestion: string, isFullMarks: boolean): string {
   if (!isFullMarks) return suggestion;
@@ -182,7 +122,6 @@ export function RubricItemFeedback({
   awardedPoints,
   maxPoints,
   feedbackItem,
-  reviewedScore,
   acknowledged = false,
   validBlockIds,
   editable = false,
@@ -196,7 +135,6 @@ export function RubricItemFeedback({
   awardedPoints: number;
   maxPoints: number;
   feedbackItem?: StructuredFeedbackItem | null;
-  reviewedScore?: Decimal;
   acknowledged?: boolean;
   validBlockIds?: Set<string>;
   editable?: boolean;
@@ -240,14 +178,7 @@ export function RubricItemFeedback({
     maxPoints > 0 &&
     Math.round(awardedPoints * 100) === Math.round(maxPoints * 100);
   const needsAiReview = Boolean(feedbackItem.requiresReview && !acknowledged);
-  const scoreMismatch = isScoreChangedAfterReview(
-    feedbackItem,
-    reviewedScore,
-    awardedPoints,
-    acknowledged,
-  );
-  const needsAttention = needsAiReview || scoreMismatch;
-  const showAckControl = editable && Boolean(onToggleAcknowledge) && (feedbackItem.requiresReview || scoreMismatch || acknowledged);
+  const showAckControl = editable && Boolean(onToggleAcknowledge) && (feedbackItem.requiresReview || acknowledged);
 
   const blockId = feedbackItem.evidenceBlockId?.trim() || null;
   const canNavigateToBlock = Boolean(blockId && validBlockIds?.has(blockId));
@@ -255,9 +186,9 @@ export function RubricItemFeedback({
 
   return (
     <details
-      open={needsAttention || editing}
+      open={needsAiReview || editing}
       className={`mt-2 rounded-lg border p-2.5 text-xs leading-relaxed ${
-        needsAttention
+        needsAiReview
           ? "border-warning bg-warning-soft/50 text-ink"
           : "border-line-soft bg-surface text-ink"
       }`}
@@ -271,13 +202,7 @@ export function RubricItemFeedback({
               <span>Cần giảng viên kiểm tra</span>
             </Pill>
           )}
-          {scoreMismatch && (
-            <Pill tone="warning">
-              <span aria-hidden="true">⚠</span>
-              <span>Điểm đã đổi, cần xác nhận giải thích</span>
-            </Pill>
-          )}
-          {!needsAttention && acknowledged && (
+          {!needsAiReview && acknowledged && (
             <Pill tone="success">
               <span aria-hidden="true">✓</span>
               <span>Đã xác nhận</span>
@@ -298,21 +223,6 @@ export function RubricItemFeedback({
                 {feedbackItem.reviewReason ||
                   "Minh chứng chưa đọc rõ hoặc có hướng thiết kế thay thế hợp lệ."}
               </span>
-            </p>
-          </div>
-        )}
-
-        {scoreMismatch && (
-          <div
-            role="alert"
-            className="rounded-md border border-warning bg-surface px-2.5 py-2 text-xs text-ink"
-          >
-            <p className="font-semibold text-warning">
-              ⚠ Điểm mục này đã thay đổi sau khi tạo nhận xét ({Number(reviewedScore).toFixed(2)} →{" "}
-              {Number.isFinite(awardedPoints) ? awardedPoints.toFixed(2) : "—"}).
-            </p>
-            <p className="mt-0.5 text-muted">
-              Hãy sửa lại giải thích bên dưới hoặc đánh dấu xác nhận nếu giải thích hiện tại vẫn phù hợp trước khi chốt điểm.
             </p>
           </div>
         )}

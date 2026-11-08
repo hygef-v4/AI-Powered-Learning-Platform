@@ -10,11 +10,21 @@ import { addPart, showPart, useAssignmentOutline } from "../model/outline";
 const WHEN_OPEN = "md:group-data-[collapsed]/sidebar:hidden";
 const WHEN_COLLAPSED = "hidden md:group-data-[collapsed]/sidebar:block";
 
-/** Trang soạn một bài tập (`/assignments/{id}`): sidebar là các phần của bài thay cho menu chung. */
+/** Trang soạn một bài tập (`/assignments/{id}`) hoặc trang chấm bài (`/teaching/evaluations/{id}`): sidebar là các phần của bài thay cho menu chung. */
 export function assignmentContext({ pathname }: NavLocation): NavContext | null {
-  const match = /^\/assignments\/([^/]+)$/.exec(pathname);
+  const match = /^\/assignments\/([^/]+)$/.exec(pathname) ?? /^\/teaching\/evaluations\/([^/]+)$/.exec(pathname);
   if (!match) return null;
   return { key: `assignment:${match[1]}`, label: "Các phần của bài", header: <AssignmentNav />, items: [] };
+}
+
+/**
+ * Trang làm bài (`/attempts/{id}`) và lịch sử nộp bài (`/my-assignments/{id}/history`) của sinh viên: cùng sidebar mục lục
+ * với trang soạn, xem trước của giảng viên, chỉ không có nút thêm mục (yêu cầu 2026-11-05).
+ */
+export function studentAssignmentContext({ pathname }: NavLocation): NavContext | null {
+  const match = /^\/attempts\/([^/]+)$/.exec(pathname) ?? /^\/my-assignments\/([^/]+)\/history$/.exec(pathname);
+  if (!match) return null;
+  return { key: `assignment-work:${match[1]}`, label: "Các phần của bài", header: <AssignmentNav />, items: [] };
 }
 
 /** Nút "+" nhỏ trên sidebar: thêm mục con (hàng của mục) hoặc mục ngoài cùng (header Mục lục). */

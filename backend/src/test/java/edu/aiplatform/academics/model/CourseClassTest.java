@@ -13,7 +13,7 @@ class CourseClassTest {
     private final UUID teacher = UUID.randomUUID();
 
     private CourseClass draft() {
-        return CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), " SE01 ", " Lớp 1 ", null, "2026-1", teacher, now);
+        return CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), " SE01 ", " Lớp 1 ", null, teacher, now);
     }
 
     @Test void createsDraftWithDistributionDisabled() {
@@ -29,7 +29,7 @@ class CourseClassTest {
     @CsvSource({"DRAFT,OPEN", "DRAFT,ARCHIVED", "OPEN,ARCHIVED", "ARCHIVED,OPEN"})
     void allowsOnlySpecifiedTransitions(ClassStatus from, ClassStatus to) {
         var base = draft();
-        var value = new CourseClass(base.id(), base.subjectId(), base.code(), base.name(), null, base.term(),
+        var value = new CourseClass(base.id(), base.subjectId(), base.code(), base.name(), null,
                 from, teacher, false, now, now, 7);
         var changed = value.changeStatus(to, true, false, now.plusSeconds(1));
         assertThat(changed.status()).isEqualTo(to);
@@ -41,14 +41,14 @@ class CourseClassTest {
     @CsvSource({"DRAFT,DRAFT", "OPEN,DRAFT", "OPEN,OPEN", "ARCHIVED,DRAFT", "ARCHIVED,ARCHIVED"})
     void rejectsOtherTransitions(ClassStatus from, ClassStatus to) {
         var base = draft();
-        var value = new CourseClass(base.id(), base.subjectId(), base.code(), base.name(), null, base.term(),
+        var value = new CourseClass(base.id(), base.subjectId(), base.code(), base.name(), null,
                 from, teacher, false, now, now, 0);
         assertThatThrownBy(() -> value.changeStatus(to, true, false, now)).isInstanceOf(AcademicRuleException.class)
                 .hasMessageContaining("trạng thái");
     }
 
     @Test void openingNeedsActiveSubjectButNotTeacher() {
-        var noTeacher = CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C", "Class", null, null, null, now);
+        var noTeacher = CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C", "Class", null, null, now);
         assertThat(noTeacher.changeStatus(ClassStatus.OPEN, true, false, now).status()).isEqualTo(ClassStatus.OPEN);
         assertThatThrownBy(() -> draft().changeStatus(ClassStatus.OPEN, false, false, now))
                 .isInstanceOf(AcademicRuleException.class).hasMessageContaining("môn");
@@ -62,7 +62,7 @@ class CourseClassTest {
 
     @Test void archivedIsReadOnlyAndOpenTeacherCanBeCleared() {
         var archived = draft().changeStatus(ClassStatus.ARCHIVED, true, false, now);
-        assertThatThrownBy(() -> archived.updateInfo("New", null, null, now)).isInstanceOf(AcademicRuleException.class);
+        assertThatThrownBy(() -> archived.updateInfo("New", null, now)).isInstanceOf(AcademicRuleException.class);
         assertThatThrownBy(() -> archived.assignTeacher(teacher, now)).isInstanceOf(AcademicRuleException.class);
         assertThatThrownBy(() -> archived.setGradeDistribution(true, now)).isInstanceOf(AcademicRuleException.class);
         var open = draft().changeStatus(ClassStatus.OPEN, true, false, now);
@@ -71,7 +71,7 @@ class CourseClassTest {
 
     @Test void updatesPreserveIdentityAndAdvanceVersion() {
         var before = draft();
-        var after = before.updateInfo(" Updated ", "Description", "2026-2", now.plusSeconds(1));
+        var after = before.updateInfo(" Updated ", "Description", now.plusSeconds(1));
         assertThat(after.id()).isEqualTo(before.id());
         assertThat(after.subjectId()).isEqualTo(before.subjectId());
         assertThat(after.code()).isEqualTo(before.code());
@@ -83,12 +83,11 @@ class CourseClassTest {
     }
 
     @Test void rejectsInvalidTextAndTimestamps() {
-        assertThatThrownBy(() -> draft().updateInfo(" ", null, null, now)).isInstanceOf(AcademicRuleException.class);
-        assertThatThrownBy(() -> draft().updateInfo("x".repeat(201), null, null, now)).isInstanceOf(AcademicRuleException.class);
-        assertThatThrownBy(() -> draft().updateInfo("x", "x".repeat(2001), null, now)).isInstanceOf(AcademicRuleException.class);
-        assertThatThrownBy(() -> draft().updateInfo("x", null, "x".repeat(21), now)).isInstanceOf(AcademicRuleException.class);
-        assertThatThrownBy(() -> draft().updateInfo("x", null, null, now.minusSeconds(1))).isInstanceOf(AcademicRuleException.class);
-        assertThatThrownBy(() -> CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "x".repeat(31), "X", null, null, teacher, now))
+        assertThatThrownBy(() -> draft().updateInfo(" ", null, now)).isInstanceOf(AcademicRuleException.class);
+        assertThatThrownBy(() -> draft().updateInfo("x".repeat(201), null, now)).isInstanceOf(AcademicRuleException.class);
+        assertThatThrownBy(() -> draft().updateInfo("x", "x".repeat(2001), now)).isInstanceOf(AcademicRuleException.class);
+        assertThatThrownBy(() -> draft().updateInfo("x", null, now.minusSeconds(1))).isInstanceOf(AcademicRuleException.class);
+        assertThatThrownBy(() -> CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "x".repeat(31), "X", null, teacher, now))
                 .isInstanceOf(AcademicRuleException.class);
     }
 }

@@ -7,7 +7,6 @@ import edu.aiplatform.quizzes.model.DraftOrigin;
 import edu.aiplatform.quizzes.model.DraftQuestion;
 import edu.aiplatform.quizzes.model.DraftStatus;
 import edu.aiplatform.quizzes.model.DraftTarget;
-import edu.aiplatform.quizzes.repository.IQuizAiDraftRepository;
 import edu.aiplatform.quizzes.model.QuizAiDraft;
 import java.sql.ResultSet;
 import java.sql.SQLException;

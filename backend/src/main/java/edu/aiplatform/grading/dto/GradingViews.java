@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class GradingViews {
+    /** Prevents instantiation of this DTO container. */
     private GradingViews() {
     }
 
@@ -72,6 +73,7 @@ public final class GradingViews {
             String rubricChecks, GradingFeedback.Summary structuredSummary,
             List<StudentRubricItemView> rubricItems, BigDecimal rubricScore,
             boolean memberOverride) {
+        /** Creates a student grade view without structured rubric details. */
         public StudentGradeView(UUID assignmentId, UUID attemptId, BigDecimal score,
                 BigDecimal maxScore, String feedback, Instant publishedAt, boolean updated,
                 String rubricChecks) {

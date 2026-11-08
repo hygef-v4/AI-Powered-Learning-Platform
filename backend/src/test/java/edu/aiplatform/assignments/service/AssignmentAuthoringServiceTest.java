@@ -6,7 +6,6 @@ import static edu.aiplatform.assignments.service.AssignmentFixtures.diagram;
 import static edu.aiplatform.assignments.service.AssignmentFixtures.heading;
 import static edu.aiplatform.assignments.service.AssignmentFixtures.paragraph;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
@@ -83,6 +82,25 @@ class AssignmentAuthoringServiceTest {
         assertThat(created.parts()).singleElement().satisfies(p -> assertThat(p.partId()).isEqualTo(PartCalculator.WHOLE_DOCUMENT));
         assertThat(f.rubricsOf(created.id())).singleElement().satisfies(r -> assertThat(r.criteria()).isEmpty());
         verify(f.audit).record(argThat(e -> e.action().equals("ASSIGNMENT_CREATED") && e.result() == AuditResult.SUCCESS));
+    }
+
+    @Test
+    void archivedSubjectRejectsCreateAndEditEvenWhenManagerAuthorizationAllows() {
+        Assignment original = f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT,
+                new DocumentModel(List.of()), false);
+        when(f.subjects.getSubject(f.subjectId)).thenReturn(Optional.of(
+                new edu.aiplatform.subjects.contract.SubjectRef(f.subjectId, "S1", "Subject",
+                        edu.aiplatform.subjects.contract.SubjectStatus.ARCHIVED, null)));
+        when(f.subjects.isActive(f.subjectId)).thenReturn(false);
+        assertThat(code(() -> f.authoring.createForSubject(f.manager, f.subjectId,
+                new AssignmentCommands.Create(SubmissionMode.INDIVIDUAL, GradingMode.GRADED, true, null))))
+                .isEqualTo("ASSIGNMENT_READ_ONLY");
+        assertThat(code(() -> f.authoring.saveSkeleton(f.manager, original.id(),
+                new AssignmentCommands.Skeleton(original.version(), new DocumentModel(List.of()), null, false))))
+                .isEqualTo("ASSIGNMENT_READ_ONLY");
+        assertThat(f.store).containsOnlyKeys(original.id());
+        assertThat(f.store.get(original.id())).isEqualTo(original);
+        verify(f.audit, never()).record(argThat(e -> e.result() == AuditResult.SUCCESS));
     }
 
     @Test

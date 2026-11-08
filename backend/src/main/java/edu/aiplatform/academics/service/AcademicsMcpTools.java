@@ -1,7 +1,6 @@
 package edu.aiplatform.academics.service;
 
 import edu.aiplatform.ai.contract.*;
-import edu.aiplatform.academics.model.*;
 import edu.aiplatform.academics.repository.*;
 import edu.aiplatform.identity.contract.*;
 import edu.aiplatform.subjects.contract.*;
@@ -20,6 +19,7 @@ public class AcademicsMcpTools implements IMcpToolProvider {
         this.subjectQuery = subjectQuery;
     }
 
+    /** Exposes MCP tools for teaching classes and subjects. */
     @Override
     public List<McpToolDefinition> tools() {
         return List.of(
@@ -32,6 +32,7 @@ public class AcademicsMcpTools implements IMcpToolProvider {
                         McpSchemas.PAGE + ",\"query\":" + McpSchemas.TEXT));
     }
 
+    /** Handles MCP tool execution for class and subject lookups. */
     @Override
     @Transactional(readOnly = true)
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {

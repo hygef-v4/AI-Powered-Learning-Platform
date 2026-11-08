@@ -22,6 +22,7 @@ public class GradingAccess {
     private final IAudit audit;
     private final Clock clock;
 
+    /** Creates the authorization helper with access, audit, and time dependencies. */
     public GradingAccess(IAuthorization auth, IClassAccess classAccess, IAudit audit, Clock clock) {
         this.auth = auth;
         this.classAccess = classAccess;
@@ -29,10 +30,12 @@ public class GradingAccess {
         this.clock = clock;
     }
 
+    /** Requires the actor to have the requested permission for the class. */
     public void requireTeacher(Actor actor, UUID classId, String action) {
         requireAuthorization(actor, classId, action);
     }
 
+    /** Requires the actor to have grade access and active enrollment in the class. */
     public void requireStudent(Actor actor, UUID classId) {
         requireAuthorization(actor, classId, Actions.MY_GRADE_READ);
         final boolean enrolled;
@@ -50,6 +53,7 @@ public class GradingAccess {
         }
     }
 
+    /** Authorizes a class action and records denied access before returning an error. */
     private void requireAuthorization(Actor actor, UUID classId, String action) {
         final AuthorizationDecision decision;
         try {

@@ -13,6 +13,9 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice(assignableTypes = AcademicsController.class)
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class AcademicsExceptionHandler {
+    /**
+     * Translates domain ApiException and AcademicsProblem into structured RFC 7807 ProblemDetail responses.
+     */
     @ExceptionHandler(ApiException.class)
     public ProblemDetail handleAcademicProblem(ApiException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(exception.status(),
@@ -23,6 +26,9 @@ public class AcademicsExceptionHandler {
         return problem;
     }
 
+    /**
+     * Translates Spring input validation, parsing, and type mismatch exceptions into BAD_REQUEST ProblemDetail.
+     */
     @ExceptionHandler({ MethodArgumentNotValidException.class,
             HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class })
     public ProblemDetail handleInvalidInput(Exception exception) {

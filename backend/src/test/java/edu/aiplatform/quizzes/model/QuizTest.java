@@ -8,7 +8,6 @@ import edu.aiplatform.quizzes.contract.QuizSettings;
 import edu.aiplatform.quizzes.contract.QuizStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 

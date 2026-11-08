@@ -22,18 +22,27 @@ public class MyGradeController {
         this.gradebookService = gradebookService;
     }
 
+    /**
+     * Retrieves all published grades and feedback for the authenticated student in a class.
+     */
     @GetMapping("/grades")
     public List<StudentGradeView> listMyGrades(@AuthenticationPrincipal Actor actor,
             @RequestParam UUID classId) {
         return gradebookService.listMyGrades(actor, classId);
     }
 
+    /**
+     * Retrieves the published evaluation details and rubric breakdown for a specific submission attempt.
+     */
     @GetMapping("/grades/attempts/{attemptId}")
     public StudentGradeView loadAttemptGrade(@AuthenticationPrincipal Actor actor,
             @PathVariable UUID attemptId) {
         return gradebookService.loadAttemptGrade(actor, attemptId);
     }
 
+    /**
+     * Retrieves the grade distribution histogram for an assignment if teacher visibility is enabled.
+     */
     @GetMapping("/grade-distributions")
     public List<GradeDistributionCalculator.Bucket> loadGradeDistribution(
             @AuthenticationPrincipal Actor actor, @RequestParam UUID classId,

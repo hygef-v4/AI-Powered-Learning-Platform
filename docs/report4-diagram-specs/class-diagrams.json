@@ -1,0 +1,2344 @@
+[
+  {
+    "diagram": "class",
+    "title": "Authentication - Layered Design Classes",
+    "direction": "TB",
+    "elements": [
+      {
+        "id": "AuthController",
+        "name": "AuthController",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+login(loginData, httpRequest):ResponseEntity<SessionInfo>",
+          "+refresh(httpRequest):ResponseEntity<Void>",
+          "+logout(httpRequest):ResponseEntity<Void>"
+        ],
+        "stereotype": "controller",
+        "sourceOperations": [
+          "+login(request: LoginRequest, http: HttpServletRequest): ResponseEntity<SessionInfo>",
+          "+refresh(http: HttpServletRequest): ResponseEntity<Void>",
+          "+logout(http: HttpServletRequest): ResponseEntity<Void>"
+        ],
+        "displayParameterNames": "Descriptive parameter names only; sourceOperations retain the exact Java declarations."
+      },
+      {
+        "id": "OtpFlowController",
+        "name": "OtpFlowController",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+requestActivation(emailData, httpRequest):ResponseEntity<Map<String, String>>",
+          "+verifyActivation(otpData, httpRequest):TicketResponse",
+          "+completeActivation(passwordData):ResponseEntity<SessionInfo>",
+          "+requestPasswordReset(emailData, httpRequest):ResponseEntity<Map<String, String>>",
+          "+verifyPasswordReset(otpData, httpRequest):TicketResponse",
+          "+completePasswordReset(passwordData):ResponseEntity<Void>"
+        ],
+        "stereotype": "controller",
+        "sourceOperations": [
+          "+requestActivation(request: EmailRequest, http: HttpServletRequest): ResponseEntity<Map<String, String>>",
+          "+verifyActivation(request: VerifyRequest, http: HttpServletRequest): TicketResponse",
+          "+completeActivation(request: CompleteRequest): ResponseEntity<SessionInfo>",
+          "+requestPasswordReset(request: EmailRequest, http: HttpServletRequest): ResponseEntity<Map<String, String>>",
+          "+verifyPasswordReset(request: VerifyRequest, http: HttpServletRequest): TicketResponse",
+          "+completePasswordReset(request: CompleteRequest): ResponseEntity<Void>"
+        ],
+        "displayParameterNames": "Descriptive parameter names only; sourceOperations retain the exact Java declarations."
+      },
+      {
+        "id": "AuthService",
+        "name": "AuthService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+login(email, password, ip):LoginResult",
+          "+startSession(account):LoginResult",
+          "+refresh(token):RefreshResult",
+          "+logout(sid, token):void"
+        ],
+        "stereotype": "service",
+        "sourceOperations": [
+          "+login(rawEmail: String, rawPassword: String, clientIp: String): LoginResult",
+          "+startSession(account: Account): LoginResult",
+          "+refresh(refreshToken: String): RefreshResult",
+          "+logout(sid: String, refreshToken: String): void"
+        ],
+        "displayParameterNames": "Descriptive parameter names only; sourceOperations retain the exact Java declarations."
+      },
+      {
+        "id": "OtpService",
+        "name": "OtpService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+request(email, purpose, ip):void",
+          "+verify(email, purpose, code, ip):String"
+        ],
+        "stereotype": "service",
+        "sourceOperations": [
+          "+request(rawEmail: String, purpose: OtpPurpose, clientIp: String): void",
+          "+verify(rawEmail: String, purpose: OtpPurpose, code: String, clientIp: String): String"
+        ],
+        "displayParameterNames": "Descriptive parameter names only; sourceOperations retain the exact Java declarations."
+      },
+      {
+        "id": "ActivationService",
+        "name": "ActivationService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+complete(ticket, password):AuthService.LoginResult"
+        ],
+        "stereotype": "service",
+        "sourceOperations": [
+          "+complete(ticket: String, newPassword: String): AuthService.LoginResult"
+        ],
+        "displayParameterNames": "Descriptive parameter names only; sourceOperations retain the exact Java declarations."
+      },
+      {
+        "id": "PasswordResetService",
+        "name": "PasswordResetService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+complete(ticket, password):void"
+        ],
+        "stereotype": "service",
+        "sourceOperations": [
+          "+complete(ticket: String, newPassword: String): void"
+        ],
+        "displayParameterNames": "Descriptive parameter names only; sourceOperations retain the exact Java declarations."
+      },
+      {
+        "id": "AccountRepository",
+        "name": "AccountRepository",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+findByEmail(schoolEmail):Optional<Account>",
+          "+findById(id):Optional<Account>",
+          "+activate(id, passwordHash, now):int",
+          "+updatePassword(id, passwordHash, now):int"
+        ],
+        "stereotype": "repository",
+        "sourceOperations": [
+          "+findByEmail(schoolEmail: String): Optional<Account>",
+          "+findById(id: UUID): Optional<Account>",
+          "+activate(id: UUID, passwordHash: String, now: Instant): int",
+          "+updatePassword(id: UUID, passwordHash: String, now: Instant): int"
+        ],
+        "displayParameterNames": "Descriptive parameter names only; sourceOperations retain the exact Java declarations."
+      },
+      {
+        "id": "SessionStore",
+        "name": "SessionStore",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+create(accountId):IssuedSession",
+          "+find(sid):Optional<SessionRecord>",
+          "+rotate(token):IRotateResult",
+          "+delete(sid):void",
+          "+deleteAll(accountId):void"
+        ],
+        "stereotype": "repository",
+        "sourceOperations": [
+          "+create(accountId: UUID): IssuedSession",
+          "+find(sid: String): Optional<SessionRecord>",
+          "+rotate(refreshToken: String): IRotateResult",
+          "+delete(sid: String): void",
+          "+deleteAll(accountId: UUID): void"
+        ],
+        "displayParameterNames": "Descriptive parameter names only; sourceOperations retain the exact Java declarations."
+      },
+      {
+        "id": "OtpChallengeStore",
+        "name": "OtpChallengeStore",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+issue(accountId, purpose, code, jobKey):Issue",
+          "+verify(accountId, purpose, code):Verification",
+          "+deleteAll(accountId):void"
+        ],
+        "stereotype": "repository",
+        "sourceOperations": [
+          "+issue(accountId: UUID, purpose: OtpPurpose, code: String, jobKey: String): Issue",
+          "+verify(accountId: UUID, purpose: OtpPurpose, code: String): Verification",
+          "+deleteAll(accountId: UUID): void"
+        ],
+        "displayParameterNames": "Descriptive parameter names only; sourceOperations retain the exact Java declarations."
+      },
+      {
+        "id": "VerificationTicketStore",
+        "name": "VerificationTicketStore",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+issue(accountId, purpose):String",
+          "+peek(ticket, purpose):Optional<UUID>",
+          "+take(ticket, purpose, accountId):boolean",
+          "+revokeAll(accountId):void"
+        ],
+        "stereotype": "repository",
+        "sourceOperations": [
+          "+issue(accountId: UUID, purpose: OtpPurpose): String",
+          "+peek(ticket: String, purpose: OtpPurpose): Optional<UUID>",
+          "+take(ticket: String, purpose: OtpPurpose, accountId: UUID): boolean",
+          "+revokeAll(accountId: UUID): void"
+        ],
+        "displayParameterNames": "Descriptive parameter names only; sourceOperations retain the exact Java declarations."
+      },
+      {
+        "id": "IJob",
+        "name": "IJob",
+        "type": "interface",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+enqueue(jobType, payload, key):void"
+        ],
+        "sourceOperations": [
+          "+enqueue(jobType: String, payload: Map<String, Object>, idempotencyKey: String): void"
+        ],
+        "displayParameterNames": "Descriptive parameter names only; sourceOperations retain the exact Java declarations."
+      },
+      {
+        "id": "JobDispatcher",
+        "name": "JobDispatcher",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+dispatch(message):Outcome"
+        ],
+        "stereotype": "service",
+        "sourceOperations": [
+          "+dispatch(message: JobMessage): Outcome"
+        ],
+        "displayParameterNames": "Descriptive parameter names only; sourceOperations retain the exact Java declarations."
+      },
+      {
+        "id": "OtpMailHandler",
+        "name": "OtpMailHandler",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+handle(message):void",
+          "+onFailed(message, error):void"
+        ],
+        "stereotype": "service",
+        "sourceOperations": [
+          "+handle(message: JobMessage): void",
+          "+onFailed(message: JobMessage, error: String): void"
+        ],
+        "displayParameterNames": "Descriptive parameter names only; sourceOperations retain the exact Java declarations."
+      },
+      {
+        "id": "IMail",
+        "name": "IMail",
+        "type": "interface",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+send(message):void"
+        ],
+        "sourceOperations": [
+          "+send(message: MailMessage): void"
+        ],
+        "displayParameterNames": "Descriptive parameter names only; sourceOperations retain the exact Java declarations."
+      },
+      {
+        "id": "Account",
+        "name": "Account",
+        "type": "class",
+        "compartments": true,
+        "attributes": [
+          "-id: UUID",
+          "-schoolEmail: String",
+          "-role: Role",
+          "-status: AccountStatus",
+          "-passwordHash: String",
+          "-version: long"
+        ],
+        "operations": [],
+        "stereotype": "entity",
+        "sourceOperations": [],
+        "displayParameterNames": "Descriptive parameter names only; sourceOperations retain the exact Java declarations."
+      },
+      {
+        "id": "SessionRecord",
+        "name": "SessionStore.SessionRecord",
+        "type": "class",
+        "compartments": true,
+        "attributes": [
+          "-accountId: UUID",
+          "-issuedAt: Instant",
+          "-lastUsedAt: Instant",
+          "-refreshHash: String"
+        ],
+        "operations": [],
+        "sourceOperations": [],
+        "displayParameterNames": "Descriptive parameter names only; sourceOperations retain the exact Java declarations.",
+        "stereotype": "record"
+      }
+    ],
+    "relations": [
+      {
+        "type": "dependency",
+        "from": "AuthController",
+        "to": "AuthService"
+      },
+      {
+        "type": "dependency",
+        "from": "OtpFlowController",
+        "to": "OtpService"
+      },
+      {
+        "type": "dependency",
+        "from": "OtpFlowController",
+        "to": "ActivationService"
+      },
+      {
+        "type": "dependency",
+        "from": "OtpFlowController",
+        "to": "PasswordResetService"
+      },
+      {
+        "type": "dependency",
+        "from": "AuthService",
+        "to": "AccountRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "AuthService",
+        "to": "SessionStore"
+      },
+      {
+        "type": "dependency",
+        "from": "OtpService",
+        "to": "AccountRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "OtpService",
+        "to": "OtpChallengeStore"
+      },
+      {
+        "type": "dependency",
+        "from": "OtpService",
+        "to": "VerificationTicketStore"
+      },
+      {
+        "type": "dependency",
+        "from": "OtpService",
+        "to": "IJob"
+      },
+      {
+        "type": "dependency",
+        "from": "ActivationService",
+        "to": "VerificationTicketStore"
+      },
+      {
+        "type": "dependency",
+        "from": "ActivationService",
+        "to": "AccountRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "ActivationService",
+        "to": "AuthService"
+      },
+      {
+        "type": "dependency",
+        "from": "PasswordResetService",
+        "to": "VerificationTicketStore"
+      },
+      {
+        "type": "dependency",
+        "from": "PasswordResetService",
+        "to": "AccountRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "PasswordResetService",
+        "to": "SessionStore"
+      },
+      {
+        "type": "dependency",
+        "from": "PasswordResetService",
+        "to": "OtpChallengeStore"
+      },
+      {
+        "type": "dependency",
+        "from": "OtpMailHandler",
+        "to": "AccountRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "OtpMailHandler",
+        "to": "OtpChallengeStore"
+      },
+      {
+        "type": "dependency",
+        "from": "OtpMailHandler",
+        "to": "IMail"
+      },
+      {
+        "type": "dependency",
+        "from": "AccountRepository",
+        "to": "Account"
+      },
+      {
+        "type": "dependency",
+        "from": "SessionStore",
+        "to": "SessionRecord"
+      },
+      {
+        "type": "dependency",
+        "from": "JobDispatcher",
+        "to": "OtpMailHandler",
+        "label": "dispatches OTP_DELIVERY"
+      }
+    ]
+  },
+  {
+    "diagram": "class",
+    "title": "Assignment Authoring and Publication - Design Classes",
+    "reportSection": "2.1",
+    "direction": "TB",
+    "elements": [
+      {
+        "id": "ClassAssignmentController",
+        "name": "ClassAssignmentController",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+create(actor, classId, assignmentData):ResponseEntity<AssignmentViews.Detail>"
+        ],
+        "stereotype": "controller",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/controller/ClassAssignmentController.java",
+        "sourceOperations": [
+          "+create(actor: Actor, classId: UUID, body: AssignmentRequests.Create): ResponseEntity<AssignmentViews.Detail>"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "SubjectAssignmentController",
+        "name": "SubjectAssignmentController",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+create(actor, subjectId, assignmentData):ResponseEntity<AssignmentViews.Detail>"
+        ],
+        "stereotype": "controller",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/controller/SubjectAssignmentController.java",
+        "sourceOperations": [
+          "+create(actor: Actor, subjectId: UUID, body: AssignmentRequests.Create): ResponseEntity<AssignmentViews.Detail>"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AssignmentController",
+        "name": "AssignmentController",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+update(actor, assignmentId, assignmentDetails):AssignmentViews.Detail",
+          "+skeleton(actor, assignmentId, skeletonData):AssignmentViews.Detail",
+          "+delete(actor, assignmentId, version):ResponseEntity<Void>",
+          "+publish(actor, assignmentId, publishData):AssignmentViews.Detail"
+        ],
+        "stereotype": "controller",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/controller/AssignmentController.java",
+        "sourceOperations": [
+          "+update(actor: Actor, id: UUID, body: AssignmentRequests.Details): AssignmentViews.Detail",
+          "+skeleton(actor: Actor, id: UUID, body: AssignmentRequests.Skeleton): AssignmentViews.Detail",
+          "+delete(actor: Actor, id: UUID, version: Long): ResponseEntity<Void>",
+          "+publish(actor: Actor, id: UUID, body: AssignmentRequests.Publish): AssignmentViews.Detail"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "RubricController",
+        "name": "RubricController",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+get(actor, assignmentId, partId):AssignmentViews.Rubric",
+          "+update(actor, assignmentId, partId, rubricData):AssignmentViews.Rubric"
+        ],
+        "stereotype": "controller",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/controller/RubricController.java",
+        "sourceOperations": [
+          "+get(actor: Actor, id: UUID, partId: String): AssignmentViews.Rubric",
+          "+update(actor: Actor, id: UUID, partId: String, body: AssignmentRequests.Rubric): AssignmentViews.Rubric"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AssignmentAuthoringService",
+        "name": "AssignmentAuthoringService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+createForClass(actor, classId, command):AssignmentViews.Detail",
+          "+createForSubject(actor, subjectId, command):AssignmentViews.Detail",
+          "+updateDetails(actor, assignmentId, command):AssignmentViews.Detail",
+          "+saveSkeleton(actor, assignmentId, command):AssignmentViews.Detail",
+          "+delete(actor, assignmentId, version):void",
+          "+rubric(actor, assignmentId, partId):AssignmentViews.Rubric",
+          "+updateRubric(actor, assignmentId, partId, command):AssignmentViews.Rubric"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/service/AssignmentAuthoringService.java",
+        "sourceOperations": [
+          "+createForClass(actor: Actor, classId: UUID, command: AssignmentCommands.Create): AssignmentViews.Detail",
+          "+createForSubject(actor: Actor, subjectId: UUID, command: AssignmentCommands.Create): AssignmentViews.Detail",
+          "+updateDetails(actor: Actor, id: UUID, command: AssignmentCommands.Details): AssignmentViews.Detail",
+          "+saveSkeleton(actor: Actor, id: UUID, command: AssignmentCommands.Skeleton): AssignmentViews.Detail",
+          "+delete(actor: Actor, id: UUID, version: long): void",
+          "+rubric(actor: Actor, id: UUID, partId: String): AssignmentViews.Rubric",
+          "+updateRubric(actor: Actor, id: UUID, partId: String, command: AssignmentCommands.RubricUpdate): AssignmentViews.Rubric"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AssignmentPublicationService",
+        "name": "AssignmentPublicationService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+publish(actor, assignmentId, command):AssignmentViews.Detail"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/service/AssignmentPublicationService.java",
+        "sourceOperations": [
+          "+publish(actor: Actor, id: UUID, command: AssignmentCommands.Publish): AssignmentViews.Detail"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "RubricService",
+        "name": "RubricService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "~syncParts(assignmentId, parts, now):void",
+          "~save(rubric):AssignmentRubric",
+          "~lockAll(assignmentId, now):void"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/service/RubricService.java",
+        "sourceOperations": [
+          "~syncParts(assignmentId: UUID, parts: List<DocumentPart>, now: Instant): void",
+          "~save(rubric: AssignmentRubric): AssignmentRubric",
+          "~lockAll(assignmentId: UUID, now: Instant): void"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AssignmentRepository",
+        "name": "AssignmentRepository",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+insert(assignment):void",
+          "+findForUpdate(assignmentId):Optional<Assignment>",
+          "+save(assignment):Assignment",
+          "+delete(assignmentId, version):int"
+        ],
+        "stereotype": "repository",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/repository/AssignmentRepository.java",
+        "sourceOperations": [
+          "+insert(a: Assignment): void",
+          "+findForUpdate(id: UUID): Optional<Assignment>",
+          "+save(a: Assignment): Assignment",
+          "+delete(id: UUID, version: long): int"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "RubricRepository",
+        "name": "RubricRepository",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+listByAssignment(assignmentId):List<AssignmentRubric>",
+          "+save(rubric):AssignmentRubric",
+          "+lockAll(assignmentId, now):int"
+        ],
+        "stereotype": "repository",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/repository/RubricRepository.java",
+        "sourceOperations": [
+          "+listByAssignment(assignmentId: UUID): List<AssignmentRubric>",
+          "+save(r: AssignmentRubric): AssignmentRubric",
+          "+lockAll(assignmentId: UUID, now: Instant): int"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "Assignment",
+        "name": "Assignment",
+        "type": "class",
+        "compartments": true,
+        "attributes": [
+          "+id: UUID",
+          "+submissionMode: SubmissionMode",
+          "+gradingMode: GradingMode",
+          "+status: AssignmentStatus",
+          "+skeleton: DocumentModel",
+          "+parts: List<DocumentPart>",
+          "+version: long"
+        ],
+        "operations": [],
+        "stereotype": "entity",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/model/Assignment.java",
+        "sourceOperations": [],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AssignmentRubric",
+        "name": "AssignmentRubric",
+        "type": "class",
+        "compartments": true,
+        "attributes": [
+          "+id: UUID",
+          "+assignmentId: UUID",
+          "+partId: String",
+          "+criteria: List<RubricCriterion>",
+          "+totalPoints: BigDecimal",
+          "+lockedAt: Instant"
+        ],
+        "operations": [],
+        "stereotype": "entity",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/model/AssignmentRubric.java",
+        "sourceOperations": [],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "DocumentPart",
+        "name": "DocumentPart",
+        "type": "class",
+        "compartments": true,
+        "attributes": [
+          "+partId: String",
+          "+title: String"
+        ],
+        "operations": [],
+        "stereotype": "entity",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/contract/DocumentPart.java",
+        "sourceOperations": [],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      }
+    ],
+    "relations": [
+      {
+        "type": "dependency",
+        "from": "ClassAssignmentController",
+        "to": "AssignmentAuthoringService"
+      },
+      {
+        "type": "dependency",
+        "from": "SubjectAssignmentController",
+        "to": "AssignmentAuthoringService"
+      },
+      {
+        "type": "dependency",
+        "from": "AssignmentController",
+        "to": "AssignmentAuthoringService"
+      },
+      {
+        "type": "dependency",
+        "from": "AssignmentController",
+        "to": "AssignmentPublicationService"
+      },
+      {
+        "type": "dependency",
+        "from": "RubricController",
+        "to": "AssignmentAuthoringService"
+      },
+      {
+        "type": "dependency",
+        "from": "AssignmentAuthoringService",
+        "to": "AssignmentRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "AssignmentAuthoringService",
+        "to": "RubricService"
+      },
+      {
+        "type": "dependency",
+        "from": "AssignmentPublicationService",
+        "to": "AssignmentRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "AssignmentPublicationService",
+        "to": "AssignmentAuthoringService"
+      },
+      {
+        "type": "dependency",
+        "from": "AssignmentPublicationService",
+        "to": "RubricService"
+      },
+      {
+        "type": "dependency",
+        "from": "RubricService",
+        "to": "RubricRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "RubricService",
+        "to": "AssignmentRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "AssignmentRepository",
+        "to": "Assignment"
+      },
+      {
+        "type": "dependency",
+        "from": "RubricRepository",
+        "to": "AssignmentRubric"
+      },
+      {
+        "type": "composition",
+        "from": "Assignment",
+        "to": "DocumentPart",
+        "fromMult": "1",
+        "toMult": "0..*"
+      },
+      {
+        "type": "association",
+        "from": "Assignment",
+        "to": "AssignmentRubric",
+        "fromMult": "1",
+        "toMult": "0..*",
+        "label": "owns"
+      }
+    ]
+  },
+  {
+    "diagram": "class",
+    "title": "Assignment Workspace and Submission - Design Classes",
+    "reportSection": "3.1",
+    "direction": "TB",
+    "elements": [
+      {
+        "id": "AttemptController",
+        "name": "AttemptController",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+start(actor, assignmentId, startData):ResponseEntity<WorkViews.Attempt>",
+          "+get(actor, attemptId):WorkViews.Attempt",
+          "+save(actor, attemptId, draftData):WorkViews.Saved",
+          "+submit(actor, attemptId, submissionData):WorkViews.Receipt"
+        ],
+        "stereotype": "controller",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+start(actor: Actor, assignmentId: UUID, body: StartRequest): ResponseEntity<WorkViews.Attempt>",
+          "+get(actor: Actor, attemptId: UUID): WorkViews.Attempt",
+          "+save(actor: Actor, attemptId: UUID, body: SaveRequest): WorkViews.Saved",
+          "+submit(actor: Actor, attemptId: UUID, body: SubmitRequest): WorkViews.Receipt"
+        ]
+      },
+      {
+        "id": "GroupDocController",
+        "name": "GroupDocController",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+claim(actor, id, sectionId):SectionView",
+          "+assign(actor, id, sectionId, assignmentData):SectionView",
+          "+lockAssignment(actor, id):AssignmentLock",
+          "+draft(actor, id, sectionId, draftData):SectionView",
+          "+done(actor, id, sectionId):SectionView",
+          "+submit(actor, id, submissionData):Receipt"
+        ],
+        "stereotype": "controller",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+claim(actor: Actor, id: UUID, sectionId: UUID): SectionView",
+          "+assign(actor: Actor, id: UUID, sectionId: UUID, request: AssignRequest): SectionView",
+          "+lockAssignment(actor: Actor, id: UUID): AssignmentLock",
+          "+draft(actor: Actor, id: UUID, sectionId: UUID, request: DraftRequest): SectionView",
+          "+done(actor: Actor, id: UUID, sectionId: UUID): SectionView",
+          "+submit(actor: Actor, id: UUID, request: SubmitRequest): Receipt"
+        ]
+      },
+      {
+        "id": "AttemptService",
+        "name": "AttemptService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+start(actor, assignmentId, classId):Started",
+          "+get(actor, attemptId):WorkViews.Attempt",
+          "+save(actor, attemptId, version, content):WorkViews.Saved",
+          "+submit(actor, attemptId, version):WorkViews.Receipt"
+        ],
+        "stereotype": "service",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+start(actor: Actor, assignmentId: UUID, classId: UUID): Started",
+          "+get(actor: Actor, attemptId: UUID): WorkViews.Attempt",
+          "+save(actor: Actor, attemptId: UUID, contentVersion: long, content: DocumentModel): WorkViews.Saved",
+          "+submit(actor: Actor, attemptId: UUID, contentVersion: long): WorkViews.Receipt"
+        ]
+      },
+      {
+        "id": "AttemptSubmitter",
+        "name": "AttemptSubmitter",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "~submit(attempt, mode, actorId, now, closesAt, warnings):boolean",
+          "~autoSubmit(attemptId, mode, now):boolean"
+        ],
+        "stereotype": "service",
+        "sourceOperations": [
+          "~submit(attempt: AssignmentAttempt, mode: SubmitMode, actorId: UUID, now: Instant, closesAt: Instant, warnings: List<ValidationIssue>): boolean",
+          "~autoSubmit(attemptId: UUID, mode: SubmitMode, now: Instant): boolean"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "GroupSectionService",
+        "name": "GroupSectionService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+claim(actor, documentId, sectionId):SectionView",
+          "+assign(actor, documentId, sectionId, assigneeId, replaceHolder):SectionView",
+          "+lockAssignment(actor, documentId):AssignmentLock",
+          "+saveDraft(actor, documentId, sectionId, version, blocks):SectionView",
+          "+done(actor, documentId, sectionId):SectionView"
+        ],
+        "stereotype": "service",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+claim(actor: Actor, documentId: UUID, sectionId: UUID): SectionView",
+          "+assign(actor: Actor, documentId: UUID, sectionId: UUID, assigneeId: UUID, replaceHolder: boolean): SectionView",
+          "+lockAssignment(actor: Actor, documentId: UUID): AssignmentLock",
+          "+saveDraft(actor: Actor, documentId: UUID, sectionId: UUID, version: Long, blocks: List<DocumentBlock>): SectionView",
+          "+done(actor: Actor, documentId: UUID, sectionId: UUID): SectionView"
+        ]
+      },
+      {
+        "id": "GroupSubmissionService",
+        "name": "GroupSubmissionService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+submit(actor, documentId, version):Receipt",
+          "+autoSubmit(documentId):Optional<Receipt>"
+        ],
+        "stereotype": "service",
+        "sourceOperations": [
+          "+submit(actor: Actor, documentId: UUID, version: Long): Receipt",
+          "+autoSubmit(documentId: UUID): Optional<Receipt>"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AttemptRepository",
+        "name": "AttemptRepository",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+lockStart(assignmentId, accountId):void",
+          "+inProgress(assignmentId, accountId):Optional<AssignmentAttempt>",
+          "+insert(a):void",
+          "+findForUpdate(id):Optional<AssignmentAttempt>",
+          "+saveContent(id, content, version, now):int",
+          "+submit(id, mode, late, hash, at, warnings):int"
+        ],
+        "stereotype": "repository",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+lockStart(assignmentId: UUID, accountId: UUID): void",
+          "+inProgress(assignmentId: UUID, accountId: UUID): Optional<AssignmentAttempt>",
+          "+insert(a: AssignmentAttempt): void",
+          "+findForUpdate(id: UUID): Optional<AssignmentAttempt>",
+          "+saveContent(id: UUID, content: DocumentModel, expectedVersion: long, now: Instant): int",
+          "+submit(id: UUID, mode: SubmitMode, late: boolean, receiptHash: String, submittedAt: Instant, warnings: List<ValidationIssue>): int"
+        ]
+      },
+      {
+        "id": "GroupDocumentRepository",
+        "name": "GroupDocumentRepository",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+findById(id):Optional<GroupDocument>",
+          "+lockDocument(id):Optional<GroupDocument>",
+          "+lockSection(documentId, sectionId):Optional<GroupSection>",
+          "+assignmentLock(documentId):Optional<AssignmentLock>",
+          "+setAssignmentLock(documentId, lock):void",
+          "+updateSection(section):boolean",
+          "+insertRevision(revision):void",
+          "+update(document):boolean"
+        ],
+        "stereotype": "repository",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+findById(id: UUID): Optional<GroupDocument>",
+          "+lockDocument(id: UUID): Optional<GroupDocument>",
+          "+lockSection(documentId: UUID, sectionId: UUID): Optional<GroupSection>",
+          "+assignmentLock(documentId: UUID): Optional<AssignmentLock>",
+          "+setAssignmentLock(documentId: UUID, lock: AssignmentLock): void",
+          "+updateSection(s: GroupSection): boolean",
+          "+insertRevision(r: SectionRevision): void",
+          "+update(d: GroupDocument): boolean"
+        ]
+      },
+      {
+        "id": "ISseHub",
+        "name": "ISseHub",
+        "type": "interface",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+publish(channelKey, event):void"
+        ],
+        "sourceOperations": [
+          "+publish(channelKey: String, event: Object): void"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AssignmentAttempt",
+        "name": "AssignmentAttempt",
+        "type": "class",
+        "compartments": true,
+        "attributes": [
+          "-id: UUID",
+          "-assignmentId: UUID",
+          "-classId: UUID",
+          "-accountId: UUID",
+          "-status: AttemptStatus",
+          "-content: DocumentModel",
+          "-contentVersion: long",
+          "-receiptHash: String"
+        ],
+        "operations": [],
+        "stereotype": "entity",
+        "sourceOperations": [],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "GroupDocument",
+        "name": "GroupDocument",
+        "type": "class",
+        "compartments": true,
+        "attributes": [
+          "-id: UUID",
+          "-groupId: UUID",
+          "-assignmentId: UUID",
+          "-status: GroupDocument.Status",
+          "-sharedBlocks: DocumentModel",
+          "-submittedDocument: DocumentModel",
+          "-receiptHash: String",
+          "-version: long"
+        ],
+        "operations": [],
+        "stereotype": "entity",
+        "sourceOperations": [],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "GroupSection",
+        "name": "GroupSection",
+        "type": "class",
+        "compartments": true,
+        "attributes": [
+          "-id: UUID",
+          "-documentId: UUID",
+          "-partId: String",
+          "-status: GroupSection.Status",
+          "-claimedBy: UUID",
+          "-assigneeId: UUID",
+          "-draftBlocks: List<DocumentBlock>",
+          "-publishedBlocks: List<DocumentBlock>",
+          "-version: long"
+        ],
+        "operations": [],
+        "stereotype": "entity",
+        "sourceOperations": [],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      }
+    ],
+    "relations": [
+      {
+        "type": "dependency",
+        "from": "AttemptController",
+        "to": "AttemptService"
+      },
+      {
+        "type": "dependency",
+        "from": "GroupDocController",
+        "to": "GroupSectionService"
+      },
+      {
+        "type": "dependency",
+        "from": "GroupDocController",
+        "to": "GroupSubmissionService"
+      },
+      {
+        "type": "dependency",
+        "from": "AttemptService",
+        "to": "AttemptRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "AttemptService",
+        "to": "AttemptSubmitter"
+      },
+      {
+        "type": "dependency",
+        "from": "AttemptSubmitter",
+        "to": "AttemptRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "GroupSectionService",
+        "to": "GroupDocumentRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "GroupSectionService",
+        "to": "ISseHub"
+      },
+      {
+        "type": "dependency",
+        "from": "GroupSubmissionService",
+        "to": "GroupDocumentRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "GroupSubmissionService",
+        "to": "ISseHub"
+      },
+      {
+        "type": "dependency",
+        "from": "AttemptRepository",
+        "to": "AssignmentAttempt"
+      },
+      {
+        "type": "dependency",
+        "from": "GroupDocumentRepository",
+        "to": "GroupDocument"
+      },
+      {
+        "type": "dependency",
+        "from": "GroupDocumentRepository",
+        "to": "GroupSection"
+      },
+      {
+        "type": "association",
+        "from": "GroupDocument",
+        "to": "GroupSection",
+        "label": "Has sections",
+        "fromMult": "1",
+        "toMult": "1..*"
+      }
+    ]
+  },
+  {
+    "diagram": "class",
+    "title": "Grading and Practice Feedback - Design Classes",
+    "reportSection": "4.1",
+    "direction": "TB",
+    "elements": [
+      {
+        "id": "EvaluationController",
+        "name": "EvaluationController",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+saveEvaluation(actor, id, gradeData):Evaluation",
+          "+saveMemberGrade(actor, id, accountId, memberGrade):Evaluation",
+          "+finalizeGrades(actor, gradeBatch):BatchResult",
+          "+publishGrades(actor, gradeBatch):BatchResult"
+        ],
+        "stereotype": "controller",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+saveEvaluation(actor: Actor, id: UUID, input: Save): Evaluation",
+          "+saveMemberGrade(actor: Actor, id: UUID, accountId: UUID, input: MemberSave): Evaluation",
+          "+finalizeGrades(actor: Actor, input: Batch): BatchResult",
+          "+publishGrades(actor: Actor, input: Batch): BatchResult"
+        ]
+      },
+      {
+        "id": "GradingProposalController",
+        "name": "GradingProposalController",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+requestProposal(actor, id, aiOptions):GradingProposal",
+          "+listProposals(actor, id):List<GradingProposal>"
+        ],
+        "stereotype": "controller",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+requestProposal(actor: Actor, id: UUID, input: AiRequest): GradingProposal",
+          "+listProposals(actor: Actor, id: UUID): List<GradingProposal>"
+        ]
+      },
+      {
+        "id": "AttemptController",
+        "name": "AttemptController",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+requestFeedback(actor, attemptId, feedbackOptions):WorkViews.Feedback",
+          "+listFeedback(actor, attemptId):List<WorkViews.Feedback>"
+        ],
+        "stereotype": "controller",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+requestFeedback(actor: Actor, attemptId: UUID, body: FeedbackRequest): WorkViews.Feedback",
+          "+listFeedback(actor: Actor, attemptId: UUID): List<WorkViews.Feedback>"
+        ]
+      },
+      {
+        "id": "GradingService",
+        "name": "GradingService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+saveEvaluation(actor, id, gradeData):Evaluation",
+          "+saveMemberGrade(actor, rootId, accountId, memberGrade):Evaluation",
+          "+finalizeEvaluation(actor, item):Evaluation",
+          "+publishEvaluation(actor, item):Evaluation"
+        ],
+        "stereotype": "service",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+saveEvaluation(actor: Actor, id: UUID, input: Save): Evaluation",
+          "+saveMemberGrade(actor: Actor, rootId: UUID, accountId: UUID, input: MemberSave): Evaluation",
+          "+finalizeEvaluation(actor: Actor, item: ItemVersion): Evaluation",
+          "+publishEvaluation(actor: Actor, item: ItemVersion): Evaluation"
+        ]
+      },
+      {
+        "id": "GradingProposalService",
+        "name": "GradingProposalService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+requestProposal(actor, evaluationId, aiOptions):GradingProposal",
+          "+listProposals(actor, evaluationId):List<GradingProposal>"
+        ],
+        "stereotype": "service",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+requestProposal(actor: Actor, evaluationId: UUID, input: AiRequest): GradingProposal",
+          "+listProposals(actor: Actor, evaluationId: UUID): List<GradingProposal>"
+        ]
+      },
+      {
+        "id": "GradingProposalTransactions",
+        "name": "GradingProposalTransactions",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+prepareProposal(actor, evaluationId, aiOptions):Prepared",
+          "+saveUsingProposal(actor, evaluationId, gradeData):Evaluation",
+          "+recordMcpProposal(actor, evaluationId, version, hash, requestRef, payload, agentLabel):GradingProposal"
+        ],
+        "stereotype": "service",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+prepareProposal(actor: Actor, evaluationId: UUID, request: AiRequest): Prepared",
+          "+saveUsingProposal(actor: Actor, evaluationId: UUID, input: Save): Evaluation",
+          "+recordMcpProposal(actor: Actor, evaluationId: UUID, expectedVersion: long, hash: String, requestRef: String, payload: JsonNode, agentLabel: String): GradingProposal"
+        ]
+      },
+      {
+        "id": "PracticeFeedbackService",
+        "name": "PracticeFeedbackService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+request(actor, attemptId, provider, requestRef):WorkViews.Feedback",
+          "+list(actor, attemptId):List<WorkViews.Feedback>",
+          "~readOwnWork(actor, attemptId):Map<String, Object>",
+          "~recordFromAgent(actor, attemptId, submissionHash, raw, agentLabel):PracticeFeedback"
+        ],
+        "stereotype": "service",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+request(actor: Actor, attemptId: UUID, provider: AiProvider, requestRef: String): WorkViews.Feedback",
+          "+list(actor: Actor, attemptId: UUID): List<WorkViews.Feedback>",
+          "~readOwnWork(actor: Actor, attemptId: UUID): Map<String, Object>",
+          "~recordFromAgent(actor: Actor, attemptId: UUID, submissionHash: String, raw: JsonNode, agentLabel: String): PracticeFeedback"
+        ]
+      },
+      {
+        "id": "EvaluationRepository",
+        "name": "EvaluationRepository",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+findById(id):Optional<Evaluation>",
+          "+lockById(id):Optional<Evaluation>",
+          "+save(evaluation):Evaluation"
+        ],
+        "stereotype": "repository",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+findById(id: UUID): Optional<Evaluation>",
+          "+lockById(id: UUID): Optional<Evaluation>",
+          "+save(evaluation: Evaluation): Evaluation"
+        ]
+      },
+      {
+        "id": "GradingProposalRepository",
+        "name": "GradingProposalRepository",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+save(proposal):GradingProposal"
+        ],
+        "stereotype": "repository",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+save(proposal: GradingProposal): GradingProposal"
+        ]
+      },
+      {
+        "id": "AttemptRepository",
+        "name": "AttemptRepository",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+find(id):Optional<AssignmentAttempt>"
+        ],
+        "stereotype": "repository",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+find(id: UUID): Optional<AssignmentAttempt>"
+        ]
+      },
+      {
+        "id": "PracticeFeedbackRepository",
+        "name": "PracticeFeedbackRepository",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+insert(feedback):void",
+          "+listByAttempt(attemptId):List<PracticeFeedback>",
+          "+markReady(id, feedback, provenance, now):int",
+          "+markFailed(id, safeError, now):int"
+        ],
+        "stereotype": "repository",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+insert(f: PracticeFeedback): void",
+          "+listByAttempt(attemptId: UUID): List<PracticeFeedback>",
+          "+markReady(id: UUID, feedback: JsonNode, provenance: JsonNode, now: Instant): int",
+          "+markFailed(id: UUID, safeError: String, now: Instant): int"
+        ]
+      },
+      {
+        "id": "Evaluation",
+        "name": "Evaluation",
+        "type": "class",
+        "compartments": true,
+        "attributes": [
+          "+id: UUID",
+          "+kind: EvaluationKind",
+          "+submissionHash: String",
+          "+rubricChecks: String",
+          "+score: BigDecimal",
+          "+adjustment: BigDecimal",
+          "+state: EvaluationStatus",
+          "+version: long"
+        ],
+        "operations": [],
+        "stereotype": "entity",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": []
+      },
+      {
+        "id": "GradingProposal",
+        "name": "GradingProposal",
+        "type": "class",
+        "compartments": true,
+        "attributes": [
+          "+id: UUID",
+          "+evaluationId: UUID",
+          "+versionNo: long",
+          "+submissionHash: String",
+          "+status: String",
+          "+origin: String",
+          "+proposal: JsonNode"
+        ],
+        "operations": [],
+        "stereotype": "entity",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": []
+      },
+      {
+        "id": "PracticeFeedback",
+        "name": "PracticeFeedback",
+        "type": "class",
+        "compartments": true,
+        "attributes": [
+          "-id: UUID",
+          "-attemptId: UUID",
+          "-submissionHash: String",
+          "-status: PracticeFeedback.Status",
+          "-feedback: JsonNode"
+        ],
+        "operations": [],
+        "stereotype": "entity",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": []
+      },
+      {
+        "id": "EvaluationHistory",
+        "name": "EvaluationHistory",
+        "type": "class",
+        "compartments": true,
+        "attributes": [
+          "-actorId: UUID",
+          "-at: Instant",
+          "-before: BigDecimal",
+          "-after: BigDecimal",
+          "-reason: String"
+        ],
+        "operations": [],
+        "stereotype": "entity",
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": []
+      },
+      {
+        "id": "IAiTask",
+        "name": "IAiTask",
+        "type": "interface",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+submit(taskRequest):AiTaskView"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+submit(request: AiTaskRequest): AiTaskView"
+        ]
+      },
+      {
+        "id": "IEvaluationRepository",
+        "name": "IEvaluationRepository",
+        "type": "interface",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+findById(id):Optional<Evaluation>",
+          "+lockById(id):Optional<Evaluation>",
+          "+save(evaluation):Evaluation"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+findById(id: UUID): Optional<Evaluation>",
+          "+lockById(id: UUID): Optional<Evaluation>",
+          "+save(evaluation: Evaluation): Evaluation"
+        ]
+      },
+      {
+        "id": "IGradingProposalRepository",
+        "name": "IGradingProposalRepository",
+        "type": "interface",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+save(proposal):GradingProposal"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations.",
+        "sourceOperations": [
+          "+save(proposal: GradingProposal): GradingProposal"
+        ]
+      },
+      {
+        "id": "GradingBatchService",
+        "name": "GradingBatchService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+executeBatch(actor, batch, publish):BatchResult"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/grading/service/GradingBatchService.java",
+        "sourceOperations": [
+          "+executeBatch(actor: Actor, batch: Batch, publish: boolean): BatchResult"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      }
+    ],
+    "relations": [
+      {
+        "type": "dependency",
+        "from": "EvaluationController",
+        "to": "GradingService"
+      },
+      {
+        "type": "dependency",
+        "from": "EvaluationController",
+        "to": "GradingBatchService"
+      },
+      {
+        "type": "dependency",
+        "from": "EvaluationController",
+        "to": "GradingProposalTransactions"
+      },
+      {
+        "type": "dependency",
+        "from": "GradingProposalController",
+        "to": "GradingProposalService"
+      },
+      {
+        "type": "dependency",
+        "from": "AttemptController",
+        "to": "PracticeFeedbackService"
+      },
+      {
+        "type": "dependency",
+        "from": "GradingService",
+        "to": "IEvaluationRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "GradingProposalService",
+        "to": "GradingProposalTransactions"
+      },
+      {
+        "type": "dependency",
+        "from": "GradingProposalService",
+        "to": "IAiTask"
+      },
+      {
+        "type": "dependency",
+        "from": "GradingProposalService",
+        "to": "IEvaluationRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "GradingProposalService",
+        "to": "IGradingProposalRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "GradingProposalTransactions",
+        "to": "IEvaluationRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "GradingProposalTransactions",
+        "to": "IGradingProposalRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "GradingProposalTransactions",
+        "to": "GradingService"
+      },
+      {
+        "type": "dependency",
+        "from": "PracticeFeedbackService",
+        "to": "AttemptRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "PracticeFeedbackService",
+        "to": "PracticeFeedbackRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "PracticeFeedbackService",
+        "to": "IAiTask"
+      },
+      {
+        "type": "realization",
+        "from": "EvaluationRepository",
+        "to": "IEvaluationRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "EvaluationRepository",
+        "to": "Evaluation"
+      },
+      {
+        "type": "realization",
+        "from": "GradingProposalRepository",
+        "to": "IGradingProposalRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "GradingProposalRepository",
+        "to": "GradingProposal"
+      },
+      {
+        "type": "dependency",
+        "from": "PracticeFeedbackRepository",
+        "to": "PracticeFeedback"
+      },
+      {
+        "type": "dependency",
+        "from": "Evaluation",
+        "to": "EvaluationHistory"
+      },
+      {
+        "type": "dependency",
+        "from": "IEvaluationRepository",
+        "to": "Evaluation"
+      },
+      {
+        "type": "dependency",
+        "from": "IGradingProposalRepository",
+        "to": "GradingProposal"
+      },
+      {
+        "type": "dependency",
+        "from": "GradingBatchService",
+        "to": "GradingService"
+      },
+      {
+        "type": "association",
+        "from": "Evaluation",
+        "to": "GradingProposal",
+        "label": "Has proposals",
+        "fromMult": "1",
+        "toMult": "0..*"
+      },
+      {
+        "type": "composition",
+        "from": "Evaluation",
+        "to": "EvaluationHistory",
+        "toRole": "changes",
+        "fromMult": "1",
+        "toMult": "0..*"
+      }
+    ]
+  },
+  {
+    "diagram": "class",
+    "title": "AI API Task Processing - Design Classes",
+    "reportSection": "5.1",
+    "direction": "TB",
+    "elements": [
+      {
+        "id": "AssignmentAiDraftController",
+        "name": "AssignmentAiDraftController",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+request(actor, assignmentId, draftOptions):AssignmentViews.AiDraft",
+          "+get(actor, assignmentId, draftId):AssignmentViews.AiDraft",
+          "+apply(actor, assignmentId, draftId, applyData):AssignmentViews.Detail",
+          "+discard(actor, assignmentId, draftId):AssignmentViews.AiDraft"
+        ],
+        "stereotype": "controller",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/controller/AssignmentAiDraftController.java",
+        "sourceOperations": [
+          "+request(actor: Actor, id: UUID, body: AssignmentRequests.AiDraft): AssignmentViews.AiDraft",
+          "+get(actor: Actor, id: UUID, draftId: UUID): AssignmentViews.AiDraft",
+          "+apply(actor: Actor, id: UUID, draftId: UUID, body: AssignmentRequests.Apply): AssignmentViews.Detail",
+          "+discard(actor: Actor, id: UUID, draftId: UUID): AssignmentViews.AiDraft"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AssignmentAiDraftService",
+        "name": "AssignmentAiDraftService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+request(actor, assignmentId, command):AssignmentViews.AiDraft",
+          "+get(actor, assignmentId, draftId):AssignmentViews.AiDraft",
+          "+apply(actor, assignmentId, draftId, command):AssignmentViews.Detail",
+          "+discard(actor, assignmentId, draftId):AssignmentViews.AiDraft",
+          "~onReady(result):ApplyOutcome"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/service/AssignmentAiDraftService.java",
+        "sourceOperations": [
+          "+request(actor: Actor, id: UUID, command: AssignmentCommands.AiDraftRequest): AssignmentViews.AiDraft",
+          "+get(actor: Actor, id: UUID, draftId: UUID): AssignmentViews.AiDraft",
+          "+apply(actor: Actor, id: UUID, draftId: UUID, command: AssignmentCommands.ApplyDraft): AssignmentViews.Detail",
+          "+discard(actor: Actor, id: UUID, draftId: UUID): AssignmentViews.AiDraft",
+          "~onReady(result: AiTaskResult): ApplyOutcome"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AiDraftRepository",
+        "name": "AiDraftRepository",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+insert(draft):void",
+          "+find(draftId):Optional<AssignmentAiDraft>",
+          "+markReady(draftId, proposal, provenance):int",
+          "+markApplied(draftId, now):int",
+          "+markDiscarded(draftId, now):int"
+        ],
+        "stereotype": "repository",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/repository/AiDraftRepository.java",
+        "sourceOperations": [
+          "+insert(d: AssignmentAiDraft): void",
+          "+find(id: UUID): Optional<AssignmentAiDraft>",
+          "+markReady(id: UUID, proposal: JsonNode, provenance: JsonNode): int",
+          "+markApplied(id: UUID, now: Instant): int",
+          "+markDiscarded(id: UUID, now: Instant): int"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AssignmentAiDraft",
+        "name": "AssignmentAiDraft",
+        "type": "class",
+        "compartments": true,
+        "attributes": [
+          "+id: UUID",
+          "+assignmentId: UUID",
+          "+taskId: UUID",
+          "+origin: Origin",
+          "+status: Status",
+          "+proposal: JsonNode",
+          "+baseVersion: long"
+        ],
+        "operations": [],
+        "stereotype": "entity",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/model/AssignmentAiDraft.java",
+        "sourceOperations": [],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "IAiTask",
+        "name": "IAiTask",
+        "type": "interface",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+submit(taskRequest):AiTaskView",
+          "+get(taskId):Optional<AiTaskView>",
+          "+cancel(actor, taskId):void"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/ai/contract/IAiTask.java",
+        "sourceOperations": [
+          "+submit(request: AiTaskRequest): AiTaskView",
+          "+get(taskId: UUID): Optional<AiTaskView>",
+          "+cancel(actor: Actor, taskId: UUID): void"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AiTaskService",
+        "name": "AiTaskService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+submit(taskRequest):AiTaskView",
+          "+get(taskId):Optional<AiTaskView>",
+          "+cancel(actor, taskId):void"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/ai/service/AiTaskService.java",
+        "sourceOperations": [
+          "+submit(requested: AiTaskRequest): AiTaskView",
+          "+get(taskId: UUID): Optional<AiTaskView>",
+          "+cancel(actor: Actor, taskId: UUID): void"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AiTaskJobHandler",
+        "name": "AiTaskJobHandler",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+handle(message):void"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/ai/service/AiTaskJobHandler.java",
+        "sourceOperations": [
+          "+handle(message: JobMessage): void"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AiTaskDelivery",
+        "name": "AiTaskDelivery",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+deliver(taskId):boolean"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/ai/service/AiTaskDelivery.java",
+        "sourceOperations": [
+          "+deliver(taskId: UUID): boolean"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AiTaskResultHandlerRegistry",
+        "name": "AiTaskResultHandlerRegistry",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+find(taskType):Optional<IAiTaskResultHandler>"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/ai/service/AiTaskResultHandlerRegistry.java",
+        "sourceOperations": [
+          "+find(taskType: String): Optional<IAiTaskResultHandler>"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AiTaskRepository",
+        "name": "AiTaskRepository",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+insert(task):void",
+          "+lock(id):Optional<AiTask>",
+          "+update(task):boolean"
+        ],
+        "stereotype": "repository",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/ai/repository/AiTaskRepository.java",
+        "sourceOperations": [
+          "+insert(t: AiTask): void",
+          "+lock(id: UUID): Optional<AiTask>",
+          "+update(t: AiTask): boolean"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "IProviderGateway",
+        "name": "IProviderGateway",
+        "type": "interface",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+call(provider, providerRequest):Response"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/ai/service/IProviderGateway.java",
+        "sourceOperations": [
+          "+call(provider: AiProvider, request: Request): Response"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "IAiTaskResultHandler",
+        "name": "IAiTaskResultHandler",
+        "type": "interface",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+taskType():String",
+          "+onReady(result):ApplyOutcome",
+          "+onFailed(failure):void"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/ai/contract/IAiTaskResultHandler.java",
+        "sourceOperations": [
+          "+taskType(): String",
+          "+onReady(result: AiTaskResult): ApplyOutcome",
+          "+onFailed(failure: AiTaskFailure): void"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AssignmentDraftResultHandler",
+        "name": "AssignmentDraftResultHandler",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+taskType():String",
+          "+onReady(result):ApplyOutcome",
+          "+onFailed(failure):void"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/service/AssignmentDraftResultHandler.java",
+        "sourceOperations": [
+          "+taskType(): String",
+          "+onReady(result: AiTaskResult): ApplyOutcome",
+          "+onFailed(failure: AiTaskFailure): void"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "GradingProposalResultHandler",
+        "name": "GradingProposalResultHandler",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+taskType():String",
+          "+onReady(result):ApplyOutcome",
+          "+onFailed(failure):void"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/grading/service/GradingProposalResultHandler.java",
+        "sourceOperations": [
+          "+taskType(): String",
+          "+onReady(result: AiTaskResult): ApplyOutcome",
+          "+onFailed(failure: AiTaskFailure): void"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "PracticeFeedbackResultHandler",
+        "name": "PracticeFeedbackResultHandler",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+taskType():String",
+          "+onReady(result):ApplyOutcome",
+          "+onFailed(failure):void"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignmentwork/service/PracticeFeedbackResultHandler.java",
+        "sourceOperations": [
+          "+taskType(): String",
+          "+onReady(result: AiTaskResult): ApplyOutcome",
+          "+onFailed(failure: AiTaskFailure): void"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AiTask",
+        "name": "AiTask",
+        "type": "class",
+        "compartments": true,
+        "attributes": [
+          "-id: UUID",
+          "-inputVersion: long",
+          "-state: AiTaskState",
+          "-dispatchedAt: Instant"
+        ],
+        "operations": [],
+        "stereotype": "entity",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/ai/model/AiTask.java",
+        "sourceOperations": [],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      }
+    ],
+    "relations": [
+      {
+        "type": "dependency",
+        "from": "AssignmentAiDraftController",
+        "to": "AssignmentAiDraftService"
+      },
+      {
+        "type": "dependency",
+        "from": "AssignmentAiDraftService",
+        "to": "AiDraftRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "AssignmentAiDraftService",
+        "to": "IAiTask"
+      },
+      {
+        "type": "dependency",
+        "from": "AiDraftRepository",
+        "to": "AssignmentAiDraft"
+      },
+      {
+        "type": "dependency",
+        "from": "AiTaskService",
+        "to": "AiTaskRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "AiTaskService",
+        "to": "AiTaskResultHandlerRegistry"
+      },
+      {
+        "type": "dependency",
+        "from": "AiTaskService",
+        "to": "AiTaskDelivery"
+      },
+      {
+        "type": "realization",
+        "from": "AiTaskService",
+        "to": "IAiTask"
+      },
+      {
+        "type": "dependency",
+        "from": "AiTaskJobHandler",
+        "to": "AiTaskRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "AiTaskJobHandler",
+        "to": "IProviderGateway"
+      },
+      {
+        "type": "dependency",
+        "from": "AiTaskJobHandler",
+        "to": "AiTaskDelivery"
+      },
+      {
+        "type": "dependency",
+        "from": "AiTaskDelivery",
+        "to": "AiTaskRepository"
+      },
+      {
+        "type": "dependency",
+        "from": "AiTaskDelivery",
+        "to": "AiTaskResultHandlerRegistry"
+      },
+      {
+        "type": "dependency",
+        "from": "AiTaskResultHandlerRegistry",
+        "to": "IAiTaskResultHandler"
+      },
+      {
+        "type": "dependency",
+        "from": "AiTaskRepository",
+        "to": "AiTask"
+      },
+      {
+        "type": "dependency",
+        "from": "AssignmentDraftResultHandler",
+        "to": "AssignmentAiDraftService"
+      },
+      {
+        "type": "realization",
+        "from": "AssignmentDraftResultHandler",
+        "to": "IAiTaskResultHandler"
+      },
+      {
+        "type": "realization",
+        "from": "GradingProposalResultHandler",
+        "to": "IAiTaskResultHandler"
+      },
+      {
+        "type": "realization",
+        "from": "PracticeFeedbackResultHandler",
+        "to": "IAiTaskResultHandler"
+      }
+    ]
+  },
+  {
+    "diagram": "class",
+    "title": "MCP Integration - Design Classes",
+    "reportSection": "5.2",
+    "direction": "TB",
+    "elements": [
+      {
+        "id": "McpController",
+        "name": "McpController",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+post(authorization, origin, protocol, length, body):ResponseEntity<?>"
+        ],
+        "stereotype": "controller",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/ai/controller/McpController.java",
+        "sourceOperations": [
+          "+post(authorization: String, origin: String, protocol: String, length: Long, body: String): ResponseEntity<?>"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "McpServer",
+        "name": "McpServer",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+handle(principal, message):Optional<ObjectNode>"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/ai/service/McpServer.java",
+        "sourceOperations": [
+          "+handle(principal: McpPrincipal, message: JsonNode): Optional<ObjectNode>"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "McpToolRegistry",
+        "name": "McpToolRegistry",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+find(name, role, access):Optional<Entry>"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/ai/service/McpToolRegistry.java",
+        "sourceOperations": [
+          "+find(name: String, role: Role, access: Access): Optional<Entry>"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "IMcpToolProvider",
+        "name": "IMcpToolProvider",
+        "type": "interface",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+tools():List<McpToolDefinition>",
+          "+call(actor, toolName, arguments):McpToolResult"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/ai/contract/IMcpToolProvider.java",
+        "sourceOperations": [
+          "+tools(): List<McpToolDefinition>",
+          "+call(actor: Actor, toolName: String, args: Map<String, Object>): McpToolResult"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "McpAgentWorkflowTools",
+        "name": "McpAgentWorkflowTools",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+call(actor, name, arguments):McpToolResult"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/ai/service/McpAgentWorkflowTools.java",
+        "sourceOperations": [
+          "+call(actor: Actor, name: String, args: Map<String,Object>): McpToolResult"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AssignmentMcpAuthoringService",
+        "name": "AssignmentMcpAuthoringService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+call(actor, name, arguments):McpToolResult"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/service/AssignmentMcpAuthoringService.java",
+        "sourceOperations": [
+          "+call(actor: Actor, name: String, args: Map<String,Object>): McpToolResult"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AssignmentMcpTools",
+        "name": "AssignmentMcpTools",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+call(actor, toolName, arguments):McpToolResult"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/service/AssignmentMcpTools.java",
+        "sourceOperations": [
+          "+call(actor: Actor, toolName: String, args: Map<String, Object>): McpToolResult"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AssignmentWorkMcpTools",
+        "name": "AssignmentWorkMcpTools",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+call(actor, toolName, arguments):McpToolResult"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignmentwork/service/AssignmentWorkMcpTools.java",
+        "sourceOperations": [
+          "+call(actor: Actor, toolName: String, args: Map<String, Object>): McpToolResult"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "GradingMcpQueryService",
+        "name": "GradingMcpQueryService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+call(actor, name, arguments):McpToolResult",
+          "+requireCompleteRead(actor, evaluationId, version, hash, fingerprint):void"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/grading/service/GradingMcpQueryService.java",
+        "sourceOperations": [
+          "+call(actor: Actor, name: String, args: Map<String, Object>): McpToolResult",
+          "+requireCompleteRead(actor: Actor, evaluationId: UUID, version: long, hash: String, fingerprint: String): void"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "GradingMcpTools",
+        "name": "GradingMcpTools",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+call(actor, name, arguments):McpToolResult"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/grading/service/GradingMcpTools.java",
+        "sourceOperations": [
+          "+call(actor: Actor, name: String, args: Map<String, Object>): McpToolResult"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AssignmentAuthoringService",
+        "name": "AssignmentAuthoringService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+createForClass(actor, classId, command):AssignmentViews.Detail",
+          "+createForSubject(actor, subjectId, command):AssignmentViews.Detail"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/service/AssignmentAuthoringService.java",
+        "sourceOperations": [
+          "+createForClass(actor: Actor, classId: UUID, command: AssignmentCommands.Create): AssignmentViews.Detail",
+          "+createForSubject(actor: Actor, subjectId: UUID, command: AssignmentCommands.Create): AssignmentViews.Detail"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "AssignmentAiDraftService",
+        "name": "AssignmentAiDraftService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "~saveFromAgent(actor, assignmentId, version, raw, agentLabel):AssignmentAiDraft",
+          "+apply(actor, assignmentId, draftId, command):AssignmentViews.Detail",
+          "+discard(actor, assignmentId, draftId):AssignmentViews.AiDraft"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignments/service/AssignmentAiDraftService.java",
+        "sourceOperations": [
+          "~saveFromAgent(actor: Actor, id: UUID, expectedVersion: long, raw: JsonNode, agentLabel: String): AssignmentAiDraft",
+          "+apply(actor: Actor, id: UUID, draftId: UUID, command: AssignmentCommands.ApplyDraft): AssignmentViews.Detail",
+          "+discard(actor: Actor, id: UUID, draftId: UUID): AssignmentViews.AiDraft"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "PracticeFeedbackService",
+        "name": "PracticeFeedbackService",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "~readOwnWork(actor, attemptId):Map<String, Object>",
+          "~recordFromAgent(actor, attemptId, submissionHash, raw, agentLabel):PracticeFeedback"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/assignmentwork/service/PracticeFeedbackService.java",
+        "sourceOperations": [
+          "~readOwnWork(actor: Actor, attemptId: UUID): Map<String, Object>",
+          "~recordFromAgent(actor: Actor, attemptId: UUID, submissionHash: String, raw: JsonNode, agentLabel: String): PracticeFeedback"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      },
+      {
+        "id": "GradingProposalTransactions",
+        "name": "GradingProposalTransactions",
+        "type": "class",
+        "compartments": true,
+        "attributes": [],
+        "operations": [
+          "+recordMcpProposal(actor, evaluationId, version, hash, requestRef, payload, agentLabel):GradingProposal",
+          "+saveUsingProposal(actor, evaluationId, gradeData):Evaluation"
+        ],
+        "stereotype": "service",
+        "sourceFile": "backend/src/main/java/edu/aiplatform/grading/service/GradingProposalTransactions.java",
+        "sourceOperations": [
+          "+recordMcpProposal(actor: Actor, evaluationId: UUID, expectedVersion: long, hash: String, requestRef: String, payload: JsonNode, agentLabel: String): GradingProposal",
+          "+saveUsingProposal(actor: Actor, evaluationId: UUID, input: Save): Evaluation"
+        ],
+        "displayParameterNames": "Named parameters without types; full Java signatures retained in sourceOperations."
+      }
+    ],
+    "relations": [
+      {
+        "type": "dependency",
+        "from": "McpController",
+        "to": "McpServer"
+      },
+      {
+        "type": "dependency",
+        "from": "McpServer",
+        "to": "McpToolRegistry"
+      },
+      {
+        "type": "dependency",
+        "from": "McpToolRegistry",
+        "to": "IMcpToolProvider"
+      },
+      {
+        "type": "realization",
+        "from": "McpAgentWorkflowTools",
+        "to": "IMcpToolProvider"
+      },
+      {
+        "type": "dependency",
+        "from": "AssignmentMcpAuthoringService",
+        "to": "AssignmentAuthoringService"
+      },
+      {
+        "type": "dependency",
+        "from": "AssignmentMcpAuthoringService",
+        "to": "AssignmentAiDraftService"
+      },
+      {
+        "type": "realization",
+        "from": "AssignmentMcpAuthoringService",
+        "to": "IMcpToolProvider"
+      },
+      {
+        "type": "dependency",
+        "from": "AssignmentMcpTools",
+        "to": "AssignmentAiDraftService"
+      },
+      {
+        "type": "realization",
+        "from": "AssignmentMcpTools",
+        "to": "IMcpToolProvider"
+      },
+      {
+        "type": "dependency",
+        "from": "AssignmentWorkMcpTools",
+        "to": "PracticeFeedbackService"
+      },
+      {
+        "type": "realization",
+        "from": "AssignmentWorkMcpTools",
+        "to": "IMcpToolProvider"
+      },
+      {
+        "type": "realization",
+        "from": "GradingMcpQueryService",
+        "to": "IMcpToolProvider"
+      },
+      {
+        "type": "dependency",
+        "from": "GradingMcpTools",
+        "to": "GradingProposalTransactions"
+      },
+      {
+        "type": "dependency",
+        "from": "GradingMcpTools",
+        "to": "GradingMcpQueryService"
+      },
+      {
+        "type": "realization",
+        "from": "GradingMcpTools",
+        "to": "IMcpToolProvider"
+      },
+      {
+        "type": "dependency",
+        "from": "McpToolRegistry",
+        "to": "McpAgentWorkflowTools",
+        "label": "dispatches"
+      },
+      {
+        "type": "dependency",
+        "from": "McpToolRegistry",
+        "to": "AssignmentMcpAuthoringService",
+        "label": "dispatches"
+      },
+      {
+        "type": "dependency",
+        "from": "McpToolRegistry",
+        "to": "AssignmentMcpTools",
+        "label": "dispatches"
+      },
+      {
+        "type": "dependency",
+        "from": "McpToolRegistry",
+        "to": "AssignmentWorkMcpTools",
+        "label": "dispatches"
+      },
+      {
+        "type": "dependency",
+        "from": "McpToolRegistry",
+        "to": "GradingMcpQueryService",
+        "label": "dispatches"
+      },
+      {
+        "type": "dependency",
+        "from": "McpToolRegistry",
+        "to": "GradingMcpTools",
+        "label": "dispatches"
+      }
+    ]
+  }
+]

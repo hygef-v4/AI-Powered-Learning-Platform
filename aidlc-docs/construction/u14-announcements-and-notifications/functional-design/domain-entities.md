@@ -11,6 +11,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 Thiết kế độc lập công nghệ.
 
+**Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
+
 ## 1. Tổng quan
 
 | Entity | Loại | Lưu ở |
@@ -30,7 +32,7 @@ U14 không sở hữu: tài khoản, gửi email qua IMail (U01; SMTP hoặc Bre
 | `Announcement` | `id`, `classId`, `title` (≤ 200), `body` (≤ 5.000), `important`, `sendEmail`, `status` (`ACTIVE`, `DELETED`), `createdBy`, `createdAt`, `updatedBy`, `updatedAt`, `deletedBy`, `deletedAt`, `version` |
 | `Notification` | `id`, `recipientId`, `type`, `sourceEventId`, `title`, `summary`, `link`, `readAt`, `createdAt`; duy nhất (`sourceEventId`, `recipientId`, `type`) |
 | `EmailDelivery` | `id`, `notificationId` (duy nhất), `recipientId`, `type`, `status` (`PENDING`, `SENT`, `FAILED`, `SKIPPED`, `DEFERRED`), `priority`, `scheduledFor`, `attempts`, `lastError`, `createdAt`, `sentAt` |
-| `NotificationPreference` | `accountId`, `type`, `emailEnabled`; khóa (`accountId`, `type`); không có dòng: loại học tập Student mặc định bật, loại staff mới mặc định tắt; BACKUP_FAILED luôn bật |
+| `NotificationPreference` | `accountId`, `type`, `emailEnabled`; khóa (`accountId`, `type`); không có dòng: các loại phù hợp role của Student/Teacher/Subject Manager mặc định bật; giữ tùy chọn đã lưu; BACKUP_FAILED luôn bật |
 | `DeadlineReminder` | `assignmentId`, `classId`, `closesAt`, `status` (`SENT`, `SKIPPED`), `processedAt`; khóa (`assignmentId`, `classId`, `closesAt`) |
 
 ```mermaid

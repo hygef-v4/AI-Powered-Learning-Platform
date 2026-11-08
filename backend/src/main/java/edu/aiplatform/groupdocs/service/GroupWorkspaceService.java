@@ -6,7 +6,6 @@ import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.SubmissionWindow;
 import edu.aiplatform.groupdocs.service.GroupSectionService.SectionView;
-import edu.aiplatform.groupdocs.model.AssignmentLock;
 import edu.aiplatform.groupdocs.model.GroupDocument;
 import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
 import edu.aiplatform.groups.service.GroupAccess;
@@ -76,7 +75,6 @@ public class GroupWorkspaceService {
         List<Member> members = ctx.group().memberIds().stream().map(id -> member(id, ctx.group())).toList();
         SubmissionWindow window = assignment == null ? SubmissionWindow.CLOSED
                 : docAccess.window(d.assignmentId(), false);
-        AssignmentLock lock = documents.assignmentLock(d.id()).orElse(null);
         Submission submission = d.submittedAt() == null ? null : new Submission(d.submittedBy(), d.submitMode().name(),
                 d.submittedAt(), d.late(), d.receiptHash());
         return new WorkspaceView(d.id(), d.assignmentId(), assignment == null ? null : assignment.title(),
@@ -85,7 +83,7 @@ public class GroupWorkspaceService {
                 window.name(), DocumentFiles.hideFiles(d.sharedBlocks()), sections,
                 new Role(ctx.member(), ctx.leader(), ctx.teacher()),
                 submission, d.activityMonitoring(), assignment != null && assignment.diagramEnabled(), d.version(),
-                ctx.actorId(), lock == null ? null : lock.lockedBy(), lock == null ? null : lock.lockedAt());
+                ctx.actorId());
     }
 
     private Member member(UUID id, ClassGroup group) {
@@ -102,8 +100,7 @@ public class GroupWorkspaceService {
                                 Instant lateUntil, UUID classId, UUID groupId, String groupName, UUID leaderId,
                                 List<Member> members, String status, String window, DocumentModel sharedBlocks,
                                 List<SectionView> sections, Role role, Submission lastSubmission,
-                                boolean activityMonitoring, boolean diagramEnabled, long version, UUID viewerId,
-                                UUID assignmentLockedBy, Instant assignmentLockedAt) {
+                                boolean activityMonitoring, boolean diagramEnabled, long version, UUID viewerId) {
     }
 
     public record Member(UUID accountId, String name, boolean leader) {

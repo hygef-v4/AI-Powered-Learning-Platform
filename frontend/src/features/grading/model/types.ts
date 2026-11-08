@@ -211,12 +211,12 @@ export type StudentGrade = {
 };
 export const GRADE_STATUS_LABELS: Record<string, string> = {
   PENDING: "Chờ chấm",
-  DRAFT: "Đã chấm (nháp)",
-  FINALIZED: "Đã chốt",
+  DRAFT: "Đã chấm",
+  FINALIZED: "Đã chấm",
   PUBLISHED: "Đã công bố",
   SUPERSEDED: "Lượt cũ",
   NOT_SUBMITTED: "Chưa nộp",
-  IN_PROGRESS: "Đang làm",
+  IN_PROGRESS: "Chưa nộp",
 };
 export function formatPoints(score: Decimal | null | undefined, max: Decimal | null | undefined) {
   return score == null ? "—" : `${Number(score).toFixed(2)} / ${Number(max ?? 0).toFixed(2)}`;

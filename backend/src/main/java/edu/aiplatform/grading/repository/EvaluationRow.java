@@ -26,6 +26,7 @@ class EvaluationRow {
     // JSON text keeps saved snapshots independent of mutable aggregates.
     String document;
 
+    /** Copies aggregate fields and serializes the evaluation document. */
     void applyEvaluation(Evaluation e) {
         id = e.id;
         assignmentId = e.assignmentId;
@@ -45,6 +46,7 @@ class EvaluationRow {
         }
     }
 
+    /** Deserializes the evaluation document and restores its database version. */
     Evaluation mapEvaluation() {
         try {
             var result = objectMapper.readValue(document, Evaluation.class);

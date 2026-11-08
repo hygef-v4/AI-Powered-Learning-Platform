@@ -8,7 +8,6 @@ export type CourseClassView = {
   code: string;
   name: string;
   description: string;
-  term: string;
   status: ClassStatus;
   teacher: PersonView | null;
   activeStudentCount: number;
@@ -24,7 +23,7 @@ export type EnrollmentView = {
   enrolledAt: string;
   status: "ACTIVE" | "REMOVED";
 };
-export type ClassInfoInput = Pick<CourseClassView, "name" | "description" | "term" | "version">;
+export type ClassInfoInput = Pick<CourseClassView, "name" | "description" | "version">;
 export type CreateClassInput = Omit<ClassInfoInput, "version"> & { subjectId: string; code: string; teacherId: string | null };
 export type EnrollmentResult = "ENROLLED" | "RESTORED" | "ALREADY_ENROLLED" | "NOT_FOUND" | "NOT_STUDENT" | "DISABLED" | "IN_OTHER_CLASS" | "INVALID_EMAIL" | "DUPLICATE_IN_LIST";
 export type EnrollmentRowResult = { line: number; email: string; result: EnrollmentResult };

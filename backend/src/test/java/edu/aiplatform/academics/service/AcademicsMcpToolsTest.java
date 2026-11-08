@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import edu.aiplatform.academics.model.*;
 import edu.aiplatform.academics.repository.*;
-import edu.aiplatform.academics.contract.*;
 import edu.aiplatform.subjects.contract.*;
 import edu.aiplatform.identity.contract.*;
 import edu.aiplatform.shared.error.ApiException;
@@ -20,8 +19,8 @@ class AcademicsMcpToolsTest {
     @Test void onlyTaughtClassesArePagedAndSubjectsAreDeduplicated() {
         UUID subject = UUID.randomUUID();
         var now=Instant.now();
-        var one=CourseClass.createClass(UUID.randomUUID(),subject,"C1","First","","",teacher.accountId(),now);
-        var two=CourseClass.createClass(UUID.randomUUID(),subject,"C2","Second","","",teacher.accountId(),now);
+        var one=CourseClass.createClass(UUID.randomUUID(),subject,"C1","First","",teacher.accountId(),now);
+        var two=CourseClass.createClass(UUID.randomUUID(),subject,"C2","Second","",teacher.accountId(),now);
         when(academicsReadRepository.listTaught(teacher.accountId())).thenReturn(List.of(one,two));
         when(subjectQuery.getSubject(subject)).thenReturn(Optional.of(new SubjectRef(subject,"S","Subject",SubjectStatus.ACTIVE,UUID.randomUUID())));
         var tools=new AcademicsMcpTools(academicsReadRepository,subjectQuery);

@@ -3,7 +3,6 @@ package edu.aiplatform.academics.repository;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.model.AcademicRuleException;
 import edu.aiplatform.academics.model.CourseClass;
-import edu.aiplatform.academics.repository.ICourseClassRepository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -20,10 +19,12 @@ import org.springframework.stereotype.Repository;
 public class CourseClassRepository implements ICourseClassRepository {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
+    /** Creates the class repository with its named JDBC template. */
     public CourseClassRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
+    /** Finds a course class by its unique ID. */
     @Override
     public Optional<CourseClass> find(UUID classId) {
         return namedParameterJdbcTemplate.query("select * from course_classes where id = :id",
@@ -31,6 +32,7 @@ public class CourseClassRepository implements ICourseClassRepository {
                 .findFirst();
     }
 
+    /** Lists paginated course classes belonging to a subject. */
     @Override
     public List<CourseClass> listBySubject(UUID subjectId, int limit, int offset) {
         PersistenceChecks.validatePage(limit, offset);
@@ -40,6 +42,7 @@ public class CourseClassRepository implements ICourseClassRepository {
                 CourseClassRepository::mapCourseClass);
     }
 
+    /** Inserts a new course class record with initial version 0. */
     @Override
     public void insert(CourseClass value) {
         PersistenceChecks.requireWritableTransaction();
@@ -48,9 +51,9 @@ public class CourseClassRepository implements ICourseClassRepository {
         try {
             namedParameterJdbcTemplate.update(
                     """
-                            insert into course_classes (id, subject_id, code, name, description, term, status, teacher_id,
+                            insert into course_classes (id, subject_id, code, name, description, status, teacher_id,
                                 show_grade_distribution, created_at, updated_at, version)
-                            values (:id, :subjectId, :code, :name, :description, :term, :status, :teacherId,
+                            values (:id, :subjectId, :code, :name, :description, :status, :teacherId,
                                 :distribution, :createdAt, :updatedAt, :version)
                             """,
                     params(value));
@@ -60,6 +63,7 @@ public class CourseClassRepository implements ICourseClassRepository {
         }
     }
 
+    /** Updates course class fields checking for version concurrency conflict. */
     @Override
     public void update(CourseClass value, long expectedVersion) {
         PersistenceChecks.requireWritableTransaction();
@@ -72,7 +76,7 @@ public class CourseClassRepository implements ICourseClassRepository {
         args.put("expectedVersion", expectedVersion);
         int count = namedParameterJdbcTemplate.update(
                 """
-                        update course_classes set name = :name, description = :description, term = :term,
+                        update course_classes set name = :name, description = :description,
                             status = :status, teacher_id = :teacherId, show_grade_distribution = :distribution,
                             updated_at = :updatedAt, version = :version
                         where id = :id and version = :expectedVersion
@@ -83,6 +87,7 @@ public class CourseClassRepository implements ICourseClassRepository {
                     "Dữ liệu lớp đã thay đổi. Hãy tải lại");
     }
 
+    /** Builds the named SQL parameters for the supplied record. */
     private static Map<String, Object> params(CourseClass value) {
         var args = new HashMap<String, Object>();
         args.put("id", value.id());
@@ -90,7 +95,6 @@ public class CourseClassRepository implements ICourseClassRepository {
         args.put("code", value.code());
         args.put("name", value.name());
         args.put("description", value.description());
-        args.put("term", value.term());
         args.put("status", value.status().name());
         args.put("teacherId", value.teacherId());
         args.put("distribution", value.showGradeDistribution());
@@ -100,10 +104,11 @@ public class CourseClassRepository implements ICourseClassRepository {
         return args;
     }
 
+    /** Maps a database row to a course class. */
     static CourseClass mapCourseClass(ResultSet rs, int row) throws SQLException {
         return new CourseClass(rs.getObject("id", UUID.class),
                 rs.getObject("subject_id", UUID.class), rs.getString("code"), rs.getString("name"),
-                rs.getString("description"), rs.getString("term"),
+                rs.getString("description"),
                 ClassStatus.valueOf(rs.getString("status")), rs.getObject("teacher_id", UUID.class),
                 rs.getBoolean("show_grade_distribution"), rs.getTimestamp("created_at").toInstant(),
                 rs.getTimestamp("updated_at").toInstant(), rs.getLong("version"));

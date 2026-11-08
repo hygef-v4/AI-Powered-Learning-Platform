@@ -2,12 +2,12 @@ package edu.aiplatform.academics.dto;
 
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.model.*;
-import edu.aiplatform.academics.repository.*;
 import edu.aiplatform.subjects.contract.SubjectStatus;
 import java.time.Instant;
 import java.util.*;
 
 public final class AcademicsDtos {
+    /** Prevents instantiation of this DTO container. */
     private AcademicsDtos() {
     }
 
@@ -26,7 +26,7 @@ public final class AcademicsDtos {
     }
 
     public record ClassView(UUID id, Subject subject, String code, String name, String description,
-            String term, ClassStatus status, Person teacher, long activeStudentCount,
+            ClassStatus status, Person teacher, long activeStudentCount,
             long removedStudentCount, Instant createdAt, boolean showGradeDistribution,
             long version) {
     }

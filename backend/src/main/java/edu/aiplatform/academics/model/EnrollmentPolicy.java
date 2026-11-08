@@ -5,9 +5,13 @@ import java.util.Objects;
 
 /** Chỉ đánh giá dữ kiện U05; caller chịu trách nhiệm khóa, kiểm quyền và điều kiện tài khoản. */
 public final class EnrollmentPolicy {
+    /** Prevents instantiation of this static policy utility. */
     private EnrollmentPolicy() {
     }
 
+    /**
+     * Determines the outcome of an enrollment attempt based on class status and existing student enrollments.
+     */
     public static EnrollmentResult resolveEnrollmentResult(ClassStatus status, Enrollment current,
             boolean activeInOtherClass) {
         Objects.requireNonNull(status);

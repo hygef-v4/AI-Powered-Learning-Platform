@@ -31,6 +31,7 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
     private final IAudit audit;
     private final Clock clock;
 
+    /** Connects academic repositories and subject data to shared platform contracts. */
     public AcademicsContractAdapter(ICourseClassRepository courseClassRepository,
             IEnrollmentRepository enrollmentRepository,
             IAcademicsReadRepository academicsReadRepository, ISubjectQuery subjectQuery,
@@ -44,44 +45,52 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
         this.clock = clock;
     }
 
+    /** Returns a lightweight ClassRef object by class ID. */
     @Override
     public Optional<ClassRef> getClassRef(UUID classId) {
         return courseClassRepository.find(classId).map(this::mapClassReference);
     }
 
+    /** Checks whether the account is the designated teacher of a class. */
     @Override
     public boolean isTeacherOf(UUID accountId, UUID classId) {
         return accountId != null && courseClassRepository.find(classId)
                 .map(c -> accountId.equals(c.teacherId())).orElse(false);
     }
 
+    /** Checks whether the account is an actively enrolled student in a class. */
     @Override
     public boolean isEnrolledStudent(UUID accountId, UUID classId) {
         return accountId != null && enrollmentRepository.find(classId, accountId)
                 .map(e -> e.status() == EnrollmentStatus.ACTIVE).orElse(false);
     }
 
+    /** Returns the parent subject ID for a course class. */
     @Override
     public Optional<UUID> subjectOfClass(UUID classId) {
         return courseClassRepository.find(classId).map(CourseClass::subjectId);
     }
 
+    /** Returns all class IDs taught by a specific teacher account. */
     @Override
     public List<UUID> listTaughtClasses(UUID accountId) {
         return academicsReadRepository.listTaught(accountId).stream().map(CourseClass::id).toList();
     }
 
+    /** Alias for checking if an account is an active student in a class. */
     @Override
     public boolean isActiveStudent(UUID accountId, UUID classId) {
         return isEnrolledStudent(accountId, classId);
     }
 
+    /** Lists all active student account IDs currently enrolled in a class. */
     @Override
     public List<UUID> listActiveStudents(UUID classId) {
         return allPages(offset -> enrollmentRepository.listByClass(classId, true, 100, offset))
                 .stream().map(Enrollment::accountId).toList();
     }
 
+    /** Checks if the account is the subject manager of the subject that owns the class. */
     @Override
     public boolean isClassManager(UUID accountId, UUID classId) {
         if (accountId == null)
@@ -91,6 +100,7 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
                 .map(s -> accountId.equals(s.managerId())).orElse(false);
     }
 
+    /** Lists all open classes where the account is either the assigned teacher or an enrolled student. */
     @Override
     public List<ClassRef> listOpenClassesOf(UUID accountId) {
         var combined = new LinkedHashMap<UUID, ClassRef>();
@@ -101,22 +111,26 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
         return List.copyOf(combined.values());
     }
 
+    /** Lists open classes belonging to a specific subject. */
     @Override
     public List<ClassRef> listOpenClassesOfSubject(UUID subjectId) {
         return academicsReadRepository.listOfSubject(subjectId).stream()
                 .filter(c -> c.status() == ClassStatus.OPEN).map(this::mapClassReference).toList();
     }
 
+    /** Aggregates class counts grouped by ClassStatus for dashboard metrics. */
     @Override
     public Map<ClassStatus, Long> countClassesByStatus() {
         return academicsReadRepository.countClassesByStatus();
     }
 
+    /** Counts total active student enrollments platform-wide. */
     @Override
     public long countActiveEnrollments() {
         return academicsReadRepository.countActiveEnrollments();
     }
 
+    /** Returns class summaries under a subject including teacher name and active student count. */
     @Override
     public List<SubjectClassSummary> listClassesOfSubject(UUID subjectId) {
         var rows = academicsReadRepository.listOfSubject(subjectId);
@@ -130,22 +144,26 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
             long active = counts
                     .getOrDefault(c.id(), new IAcademicsReadRepository.EnrollmentCounts(0, 0))
                     .active();
-            return new SubjectClassSummary(c.id(), c.code(), c.name(), c.term(), c.status().name(),
+            return new SubjectClassSummary(c.id(), c.code(), c.name(), c.status().name(),
                     teacher, Math.toIntExact(active));
         }).toList();
     }
 
+    /** Counts classes belonging to multiple subject IDs. */
     @Override
     public Map<UUID, Integer> countClasses(Collection<UUID> subjectIds) {
         return academicsReadRepository.countClassesOfSubjects(subjectIds);
     }
 
+    /** Counts active or draft classes (non-archived) under a subject. */
     @Override
     public int countUnarchivedClasses(UUID subjectId) {
         return academicsReadRepository.countUnarchivedClasses(subjectId);
     }
 
-    /** U04 đã khóa dòng môn trong cùng transaction, nên không thao tác ghi lớp nào của U05 chạy chồng (BR-U04-04). */
+    /**
+     * Cascades archiving to all classes under a subject when the subject is archived by an admin.
+     */
     @Override
     @Transactional
     public List<UUID> archiveClassesOfSubject(UUID subjectId, Actor actor) {
@@ -169,6 +187,7 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
         return List.copyOf(archived);
     }
 
+    /** Maps a class record to the shared class reference contract. */
     private ClassRef mapClassReference(CourseClass c) {
         String subjectCode = subjectQuery.getSubject(c.subjectId()).map(SubjectRef::code)
                 .orElse(null);
@@ -176,6 +195,7 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
                 c.showGradeDistribution(), subjectCode);
     }
 
+    /** Fetches every page from the supplied repository query. */
     private static <T> List<T> allPages(IntFunction<List<T>> fetch) {
         var all = new ArrayList<T>();
         for (int offset = 0;; offset = Math.addExact(offset, 100)) {

@@ -1,6 +1,5 @@
 package edu.aiplatform.grading.service;
 
-import edu.aiplatform.grading.dto.GradingViews;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.academics.contract.ClassRef;
@@ -59,6 +58,7 @@ public class SubmissionReviewService {
     private final ObjectProvider<IGroupSubmissionSource> groupSubmissionSourceProvider;
     private final ObjectMapper objectMapper;
 
+    /** Creates the review service with evaluation, assignment, submission, roster, and activity services. */
     public SubmissionReviewService(IEvaluationRepository evaluationRepository,
             GradingAccess gradingAccess, IAssignmentQuery assignmentQuery,
             ISubmissionQuery submissionQuery, IClassAccess classAccess,
@@ -76,6 +76,9 @@ public class SubmissionReviewService {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Asserts that the assignment is graded and belongs to the given class or subject scope.
+     */
     public static void requireAssignment(AssignmentView assignment, ClassRef courseClass) {
         if (assignment.gradingMode() != GradingMode.GRADED
                 || !(assignment.scope() == AssignmentScope.CLASS
@@ -84,17 +87,26 @@ public class SubmissionReviewService {
             throw ApiException.notFound("ASSIGNMENT_NOT_FOUND");
     }
 
+    /**
+     * Validates that pagination page and size numbers are positive and within upper bounds.
+     */
     public static void validatePage(int page, int size) {
         if (page < 1 || size < 1 || size > 100 || page > 100000)
             throw ApiException.badRequest("INVALID_PAGE", "Invalid page or size");
     }
 
+    /**
+     * Resolves an account ID to a displayable Person record with name and email.
+     */
     Person mapPerson(UUID id) {
         return accountLookup.getContact(id)
                 .map(contact -> new Person(id, contact.displayName(), contact.email()))
                 .orElse(new Person(id, "Unavailable", ""));
     }
 
+    /**
+     * Returns a paginated list of submissions for an assignment with status filter and summary counts.
+     */
     public SubmissionPage listSubmissions(Actor actor, UUID classId, UUID assignmentId,
             String filter, Boolean late, int page, int size) {
         validatePage(page, size);
@@ -109,6 +121,9 @@ public class SubmissionReviewService {
             java.time.Instant closesAt) {
     }
 
+    /**
+     * Queries and maps all submission rows and evaluation states for either individual or group assignments.
+     */
     Listing listRows(Actor actor, UUID classId, UUID assignmentId, String filter, Boolean late) {
         gradingAccess.requireTeacher(actor, classId, Actions.GRADING_REVIEW);
         var courseClass = classAccess.getClassRef(classId)
@@ -192,10 +207,16 @@ public class SubmissionReviewService {
         return new Listing(filtered, evals, summary, assignment.closesAt());
     }
 
+    /**
+     * Loads full evaluation details without filtering adjacent navigation links.
+     */
     public EvaluationDetail loadEvaluation(Actor actor, UUID id) {
         return loadEvaluation(actor, id, null, null);
     }
 
+    /**
+     * Loads comprehensive evaluation details including rubric breakdown, submitted document, activity monitoring, and navigation.
+     */
     public EvaluationDetail loadEvaluation(Actor actor, UUID id, String status, Boolean late) {
         var evaluation = evaluationRepository.findById(id)
                 .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));

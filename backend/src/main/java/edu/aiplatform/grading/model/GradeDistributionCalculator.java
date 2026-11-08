@@ -8,6 +8,7 @@ public class GradeDistributionCalculator {
     public record Bucket(String label, int count) {
     }
 
+    /** Builds visible score bands when the class has enough data to protect student privacy. */
     public List<Bucket> calculate(List<BigDecimal> scores, List<BigDecimal> maxScores) {
         int[] counts = new int[5];
         int n = 0;

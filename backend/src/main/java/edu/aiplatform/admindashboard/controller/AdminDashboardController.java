@@ -20,12 +20,14 @@ public class AdminDashboardController {
     private final AdminDashboardService adminDashboardService;
     private final AdminDashboardActivityService adminDashboardActivityService;
 
+    /** Connects the dashboard and activity services to the admin HTTP endpoints. */
     public AdminDashboardController(AdminDashboardService adminDashboardService,
             AdminDashboardActivityService adminDashboardActivityService) {
         this.adminDashboardService = adminDashboardService;
         this.adminDashboardActivityService = adminDashboardActivityService;
     }
 
+    /** Returns account, subject, class, enrollment, and backup summaries without caching. */
     @GetMapping
     public ResponseEntity<AdminDashboardView> loadDashboard(@AuthenticationPrincipal Actor actor,
             @RequestParam MultiValueMap<String, String> query) {
@@ -35,6 +37,7 @@ public class AdminDashboardController {
                 .body(adminDashboardService.loadDashboard(actor));
     }
 
+    /** Returns activity metrics with separate windows for accounts, assignments, and security. */
     @GetMapping("/activity")
     public ResponseEntity<ActivityView> loadActivity(@AuthenticationPrincipal Actor actor,
             @RequestParam MultiValueMap<String, String> query) {
@@ -44,6 +47,7 @@ public class AdminDashboardController {
                 .body(adminDashboardActivityService.loadActivity(actor));
     }
 
+    /** Returns backup history using the requested page and size. */
     @GetMapping("/backups")
     public ResponseEntity<BackupHistoryPage> listBackups(@AuthenticationPrincipal Actor actor,
             @RequestParam MultiValueMap<String, String> query) {
@@ -55,6 +59,7 @@ public class AdminDashboardController {
                 .body(adminDashboardService.listBackups(actor, page, size));
     }
 
+    /** Rejects unknown or repeated query parameters. */
     private void validateKeys(MultiValueMap<String, String> query, Set<String> allowed) {
         if (!allowed.containsAll(query.keySet())
                 || query.values().stream().anyMatch(values -> values.size() != 1)) {
@@ -62,6 +67,7 @@ public class AdminDashboardController {
         }
     }
 
+    /** Parses a single integer query value or uses the default when absent. */
     private int readInteger(MultiValueMap<String, String> query, String key, int fallback) {
         if (!query.containsKey(key))
             return fallback;
@@ -75,6 +81,7 @@ public class AdminDashboardController {
         }
     }
 
+    /** Builds the client error for invalid dashboard query parameters. */
     private ApiException createInvalidQuery() {
         return ApiException.badRequest("DASHBOARD_PAGE_INVALID", "Trang hoặc tham số không hợp lệ");
     }

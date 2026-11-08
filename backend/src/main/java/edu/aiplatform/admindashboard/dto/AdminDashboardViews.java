@@ -21,10 +21,12 @@ public final class AdminDashboardViews {
     }
 
     public record Section<T>(Availability availability, T data) {
+        /** Creates a successful dashboard section with available data. */
         public static <T> Section<T> available(T data) {
             return new Section<>(Availability.AVAILABLE, data);
         }
 
+        /** Creates a degraded dashboard section indicating dependency failure. */
         public static <T> Section<T> unavailable() {
             return new Section<>(Availability.UNAVAILABLE, null);
         }

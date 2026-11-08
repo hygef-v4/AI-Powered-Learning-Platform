@@ -10822,3 +10822,560 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Explicit local commit authorization supersedes the earlier no-automatic-commit scope. Preserve current audit/history content; exclude ignored scratch scripts/logs/generated artifacts. No full application test/build rerun for documentation, push, merge, deployment, provider/VPS call or restart. Prior test results remain dated evidence rather than fresh post-merge acceptance.
 
 ---
+
+## U04/U13/U14 requirements-only coverage recheck
+**Timestamp**: 2026-11-07T13:55:49Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "hãy check lại requirements trong aidlc-docs, đừng check trong folder doc, xem xem các test case đã cover đầy đủ các yêu cầu của aidlc-docs chưa"
+**AI Response**: Rechecking current aidlc-docs requirements, UC catalog, stories, three units' functional design and NFR requirements against actual current assertions, including cross-unit dependencies. Do not read docs/ or doc/ as requirement sources, even when linked by aidlc-docs. Workspace now staging c9b7ce96; preserve user's staged draft report and plan. No further report drafting, application/test edits, staging/commit or new live/test execution. Delegated read-only per-unit coverage matrices under the already selected Superpowers parallel review workflow. Shared code conventions loaded as required by updated CLAUDE.md.
+**Context**: Distinguish missing unit scenarios, partial assertions, conflicts within aidlc-docs and requirements needing integration/manual/performance evidence. Previous run counts are historical, not fresh evidence for the new HEAD. Security/resiliency scope retained; disabled PBT remains skipped. Current requester profile display name is not available/confirmed; do not infer it from historical audit entries or git identity.
+
+---
+
+## U04/U13/U14 aidlc-only coverage recheck results
+**Timestamp**: 2026-11-07T13:59:51Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**AI Response**: Completed current-HEAD assertion mapping of all three units' BR/NFR IDs, relevant FR/UC/story scenarios and functional-design clauses using only aidlc-docs as requirement sources. No docs/ or doc/ source opened. Coverage is incomplete even at unit level: U04 archived-subject U07/U13 branches and multi-release/dual-audit subcases; U13 real listSelectable, success update/version/archive audit, real historical-version fixture, text thresholds/cap and metadata/module boundaries; U14 group non-submitter contract, retention boundary, deleted/ordered feeds, exact audit and retry callback. Existing shared U03 job retry, U01 CSRF/auth and U12 SSE tests credited without treating mocked checks as real full-stack evidence.
+**Context**: Current U14 tests now expect staff email default-on (NotificationServiceTest159/EmailDeliveryServiceTest180), conflicting with aidlc BR21 default-off; previous-head conclusion is superseded for this detail. Additional conflicts: U04 class-count UI assertion vs BR50, U13 fixed/XLSX policy vs BR10/FR013, internal U04 archive precondition vs cascading rule. No automatic changes to tests/requirements justified by inconsistency. Performance and mandatory integration4role/SSE requirements remain distinct from unit coverage; advanced Lesson/RAG extension and staged persistence migrations excluded from mandatory missing-case claims. No fresh test runs, coverage percentage, report drafting, source edits, commit/push/deploy. Preserved staged draft/plan exactly; only audit appended.
+
+---
+
+## Latest remote baseline and aidlc coverage verification
+**Timestamp**: 2026-11-07T14:04:49Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "HEAD `c9b7ce96`  có phải mới nhất 6 tiếng trước hay không, kiểm tra lại giúp tôi test case với yêu cầu trong aidlc-docs bản mới nhất"
+**AI Response**: Executed git fetch origin successfully after default sandbox denied writing .git/FETCH_HEAD. Fresh remote origin/staging equals local HEAD c9b7ce96c5d31d066cec724389dc7c6956f05436; ahead/behind0/0. Commit dated2026-11-07T14:49:49+07:00, about6h15m before verification around21:04 local. origin/main remains e3ad250c dated13:48:37+07. Latest aidlc-docs commit on staging is2ee1a095 dated13:00:10+07, already an ancestor of c9b7ce96. No diff between local and fetched staging for aidlc-docs or backend/frontend tests; no uncommitted changes in authoritative requirements or test files. Therefore prior exhaustive current-HEAD requirements-only coverage mapping applies to latest remote staging, not a stale local-only snapshot.
+**Context**: Reconfirmed current U04 BR50 vs absent class-count UI assertion; U13 BR31 real selectable-list and BR41 three success-audit gaps; U14 BR21 default-off vs default-on tests, BR31 group recipients, BR14 retention and BR42 mocked retry callback limitations. Latest BR21 file change is6ee10fc2 onNov2; Nov7 documentation sync did not update that rule. No requirement source outside aidlc-docs, no fresh application test run or pass claim, no source/test/report edit, checkout/pull/merge/commit/push/deploy. Existing staged draft/plan preserved; only audit appended.
+
+---
+
+## U04/U13/U14 proposed remediation approaches
+**Timestamp**: 2026-11-07T14:06:47Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "đề xuất các hướng sửa"
+**AI Response**: Applied Superpowers brainstorming to propose two approaches: strictly implement current aidlc-docs despite unresolved conflicting historical wording, or reconcile contradictory requirements using confirmed decisions then repair weak tests and add missing business scenarios. Recommend controlled requirement reconciliation followed by focused test-first repairs, cross-unit integration and measured NFR checks. Do not treat current code as requirement authority, do not remove valuable technical tests, and do not claim retrospective TDD. No implementation, test edit, report/design/plan drafting, commit or deployment performed; requested delivery is proposals only.
+**Context**: Current fetched origin/staging c9b7ce96. Preserve existing staged draft/plan and user's pause on report drafting.
+
+---
+
+## Stepwise U04/U13/U14 requirements reconciliation started
+**Timestamp**: 2026-11-07T14:11:51Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tôi muốn sửa theo hướng 2, bắt đầu theo từng câu hỏi cần chốt và đi từng bước"
+**AI Response**: User selected controlled requirement reconciliation and one-question-at-a-time execution. Rechecked BR-U04-04/F6 versus domain archive precondition. Created inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md with only question1: cascade archive subject/classes atomically (recommended) versus block until classes archived, plus Other and blank Answer. This file records no selected business answer; no requirement/code/test/report change or implementation approval inferred. Preserve existing staged draft/plan. Common question-format guide loaded; Markdown/link content validated.
+**Context**: Continue after explicit answer to question1, recording each decision before the next question. This is requested requirements clarification, not a report or code-generation step.
+
+---
+
+## Stepwise reconciliation — answer1 confirmed, question2 opened
+**Timestamp**: 2026-11-07T14:29:57Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tôi đã trả lời"
+**User File Input**: "[Answer]: a"
+**AI Response**: Read the edited question file, validated answer A without ambiguity, and recorded D-U04-01: atomic cascading archive of DRAFT/OPEN classes with subject; preserve enrollment/history, remove manager, no automatic class reopen/manager restore. Opened only question2 about class-count display on the Admin subject list: show count (recommended, matching BR50), omit on list and view class information in detail, or Other. Answer2 remains blank. No implementation/authoritative-requirement/test/report changes, no automatic answer, no commit/push.
+**Context**: User-selected approach2; one question at a time. Preserve raw answer and staged draft/plan. Decision record is not full integration acceptance or implementation approval.
+
+---
+
+## Current frontend subject class-count inspection
+**Timestamp**: 2026-11-07T14:54:18Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "check giúp tôi xem frontend hiện tại đang ghi số lớp như thế nào"
+**AI Response**: Read current U04 frontend source/components/types and supporting query data path. Admin subject list SubjectTable renders code/name/manager/status/navigation, no class-count column. SubjectDetailPage77 passes API data.classCount into Lớp học tab; Tabs64 renders numeric count including0, hides it when null maps to undefined. SubjectClassesTab renders status filter labels only, no per-status/filtered count; SubjectMetaCard shows status/creation date only. Classes unavailable has explicit message/retry in detail, whereas unknown tab classCount itself is simply hidden. This is source inspection, not a live-browser observation. Question2 remains unanswered; no choice inferred from this information request. No code/test/requirement/report edits.
+**Context**: Side question supports ongoing one-question-at-a-time requirements reconciliation. Return current UI behavior before the user chooses class-count policy.
+
+---
+
+## Stepwise reconciliation — answer2 recorded, question3 opened
+**Timestamp**: 2026-11-07T14:57:39Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "ghi nhận thay tôi câu hỏi này"
+**AI Response**: Recorded question2 answer B on the user's behalf, as requested after inspecting/explaining current frontend: omit class count on list, show API total by detail Lớp học tab, display0 and hide unavailable count. Recorded D-U04-02 for later BR50/design synchronization; no new counters/backend-contract change. Opened only question3: explain cascading class archive/manager removal in existing confirmation popup (recommended) versus keep current short name-only confirmation, plus Other. Answer3 blank. Rechecked actual component/test and aidlc design before drafting question. No code/test/authoritative requirement/report changes or commit/push.
+**Context**: User chose approach2, one question at a time; recording selected behavior does not auto-answer the next question or authorize implementation before requirements clarification is finished.
+
+---
+
+## Stepwise reconciliation — answer3 confirmed, question4 opened
+**Timestamp**: 2026-11-07T14:59:52Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tôi đã chọn a"
+**User File Input**: "[Answer]: a"
+**AI Response**: Validated question3 answer A from user message and question file. Recorded D-U04-03: existing archive confirmation must briefly explain cascading archive of DRAFT/OPEN classes, manager removal and retained enrollment/history; no extra confirmation step. Rechecked current SubjectClassesTab and aidlc frontend design; opened only question4 on semester filtering: add semester selector combined with existing filters (recommended) or keep current filters/remove design requirement, plus Other. Answer4 blank. No application/test/report/authoritative requirement edits, implementation or commit/push.
+**Context**: Continue one-question-at-a-time reconciliation; decisions1A,2B,3A recorded; user input needed only for question4.
+
+---
+
+## Frontend semester field clarification
+**Timestamp**: 2026-11-07T15:04:43Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "TÔi muốn hỏi hiện frontend còn giữ học kỳ không"
+**AI Response**: Read current subjects and academics frontend source. U04 class table no longer displays semester or semester filter; only class code/teacher/status and status/code filters. U05 ClassFormDialog explicitly removed semester, submits term empty; ClassInfoForm has no semester field and preserves existing value.term on save. Types/API still retain term for compatibility. This is source inspection, not live UI observation. Question4 remains unanswered; do not infer choice from clarification request. No code/test/requirement/report changes.
+**Context**: Clarification supporting the pending semester-filter decision.
+
+---
+
+## Remove class term — clarified scope and concrete implementation plan
+**Timestamp**: 2026-11-07T15:12:39Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tôi muốn chọn B: giữ giao diện và cập nhật tài liệu, đồng thời có thể sửa lại code phần đó luôn"
+**Additional User Input**: "ý tôi là có thể sửa code để bỏ phần term khỏi API/dữ liệu và những phần liên quan"
+**AI Response**: Recorded question4=B and D-U04-04 with expanded removal of class semester from API/domain/contracts/JDBC/frontend/persisted schema. Supersedes assistant's earlier conservative suggestion to retain term; actual authoritative requirements/application/tests not yet changed. Inspected all term references, record constructors, strict-input behavior and classes Flyway history. Prepared construction/plans/code-generation-plan/2026-11-07-remove-class-term.md with exact production paths, affected tests/scripts, new migration without rewriting old checksums, RED/GREEN API/frontend/migration verification, isolated DB limits and current-doc updates. Added question5 with executable-local plan approval versus changes/Other; answer blank. Updated planning state. Applied brainstorming/ponytail and writing-plans; AI-DLC plan location takes precedence over skill default.
+**Approval Prompt**: Review the concrete removal plan and answer question5 A to implement locally, B to request changes, or C Other. AI-DLC construction/code-generation.md Part1 Step7 requires explicit approval before code generation. This checkpoint is required by CLAUDE.md and the loaded rule, not inferred from hypothetical risk. The migration will discard old class semester values when eventually applied; live application/database execution/deployment is excluded.
+**Context**: Work remains one requested slice; no report drafting, source/test edits, live migration, commit/push/deploy. Preserved staged report/plan and all user changes. Markdown links validated. Arbitrary search terms and TERM signals are not class semester fields.
+
+---
+
+## Remove class term — implementation approval and branch
+**Timestamp**: 2026-11-07T15:20:36Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "chọn A nhưng hãy sửa trên 1 branch mới tạo từ staging tên fix/remove-term"
+**AI Response**: Recorded plan approval/question5=A. Created and switched to fix/remove-term from staging c9b7ce96 with all staged/dirty decision/report artifacts preserved. Executing approved plan inline using executing-plans/TDD/ponytail; no further business question needed within this slice. Ruling: honor explicit branch-in-workspace request instead of introducing an unrequested worktree. Baseline backend/API and frontend affected test runs started. Docker npipe access denied under sandbox, so real isolated PostgreSQL checks will use reviewed elevated execution; no live DB access.
+**Context**: No commit/push/merge/deploy/live migration authorized. Existing report drafts stay paused and excluded from implementation changes.
+
+---
+
+## Remove class term — completed and verified
+**Timestamp**: 2026-11-07T15:49:33Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**AI Response**: Implemented approved removal on fix/remove-term, created from staging c9b7ce96. No term in active class API/domain/contract/JDBC/frontend payloads; legacy term request bodies receive existing strict400/INVALID_REQUEST. Added new V20261107_2200 column-drop migration without rewriting applied migration. Updated constructor/caller fixtures, E2E seeds and current aidlc semester requirements. First scoped backend406 cases exposed one obsolete term-length assertion after its argument was removed; verified now-valid inputs and removed only that obsolete assertion. Reviewer independently confirmed no remaining findings. Other business decisions/coverage gaps remain separate.
+**Verification**: Baseline API35/frontend36 passed. Observed expected RED frontend3/32 and backend12/39, including2 real PostgreSQL migration failures. Final Maven verify BUILD SUCCESS1,846 tests, zero failures/errors/skips. Required PostgreSQL guard31+2+10+1 passed; new migration suite2/2 verified seeded pre-upgrade semester removal, retained metadata/version/enrollment, fresh installation, real JDBC reads/updates/inserts and replay. Frontend affected149/149, TypeScript/scoped lint/build31static pages passed. Initial sandbox build interrupted due prolonged no progress; identical elevated build passed with no config/dependency changes. E2E seed/script node --check passed; no live acceptance claimed. Plan checkboxes/state finalized; report drafting paused.
+**Context**: All changes remain local/uncommitted on requested branch. No push/merge/deploy/restart/live migration or application data write. Tests used disposable PostgreSQL containers; historical migrations/audit/backups retained. Pre-existing staged report drafts preserved163/16 lines and index unchanged. Current-source term search found no class-semester remnants outside intentional historical migration/test rejection/upgrade evidence. Final diff/link checks completed. Security/Resiliency scope unchanged; PBT disabled.
+
+---
+
+## Stepwise reconciliation resumed — question6 opened
+**Timestamp**: 2026-11-08T02:27:56Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tiếp tục"
+**AI Response**: Verified workspace remains fix/remove-term at base c9b7ce96 with local implementation and existing staged drafts preserved. Read state/completed plan and previous dated verification; did not rerun or present prior test results as a fresh run. Term-removal slice completed; original requirements reconciliation continues. Rechecked SubjectFormDialog test X/Escape/no mutation/no cancel and aidlc frontend-components requirement for Hủy. Opened only question6: keep existing X/Escape (recommended) versus add explicit Hủy button, plus Other; Answer blank. No code/test/report change or implementation of unselected UI option.
+**Context**: User requested one decision at a time. No commit/push/deploy/live migration. Previous07/11 evidence remains backend1846 zero skips, frontend149/typecheck/lint/build passed; report drafting remains paused.
+
+---
+
+## Stepwise reconciliation — answer6 confirmed, question7 opened
+**Timestamp**: 2026-11-08T02:30:32Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tôi đã chọn a"
+**User File Input**: "[Answer]: a"
+**AI Response**: Validated question6=A from file and message; recorded D-U04-06 retaining X/Escape without separate Hủy and no mutation on closing. Authoritative SubjectFormDialog design sync remains a later step, current UI/test unchanged. Rechecked current PurposePolicy supported MATERIAL enum (PDF/DOCX/PPTX/XLSX), corresponding tests and frontend XLSX viewer against aidlc BR-U13-10 PDF/DOCX/PPTX. Opened only question7 on allowed formats: retain4 supported types (recommended), restrict new uploads to3 while preserving existing XLSX access, or Other. Answer7 blank. Configurability through Settings is explicitly deferred to a separate question; no bundled decision inferred. No code/test/report changes, commit/push/deploy/live migration.
+**Context**: Continue one question at a time on fix/remove-term; prior approved semester removal complete and existing staged drafts preserved.
+
+---
+
+## XLSX support clarification during question7
+**Timestamp**: 2026-11-08T02:31:56Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "hiện tại code có hỗ trợ xlsx không?"
+**AI Response**: Inspected current PurposePolicy/FileType, content-based UploadService/ContentInspector, dynamic frontend file policy and DocumentViewer/readWorkbook. XLSX is allowed for MATERIAL; upload validation uses detected MIME; frontend has an XLSX viewer with sheet selection, formatted cell values and5000rows/200columns per sheet. Existing PurposePolicy and readWorkbook tests directly cover whitelist and actual workbook parsing. XLSX-specific end-to-end upload/extraction regression is not present in inspected suites; do not certify end-to-end or AI extraction from generic parser presence. Question7 remains unanswered; no choice inferred, no code/test/report change.
+**Context**: Explain actual implemented support to help choose formats; static inspection only, no new runtime test executed.
+
+---
+
+## Stepwise reconciliation — answer7 confirmed, question8 opened
+**Timestamp**: 2026-11-08T02:33:31Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tôi đã chọn A"
+**User File Input**: "[Answer]: a"
+**AI Response**: Validated question7=A from file/message and recorded D-U13-07 retaining PDF/DOCX/PPTX/XLSX for FILE materials. Existing XLSX support is retained; no claim of complete XLSX extraction/E2E test coverage. Rechecked PurposePolicy fixed whitelist versus FR013/U13BR10/U03BR03/87 settings wording. Opened only question8: fixed4-format material list with configurable size (recommended) versus Admin-managed nonempty subset of supported4 formats, or Other. Answer8 blank. Decision scope is MATERIAL only; other purpose policies and size/access/content controls remain outside this question. No code/test/report change, commit/push/deploy/live write.
+**Context**: One-question-at-a-time reconciliation continues on fix/remove-term. Only approved semester slice implemented so far; existing report drafts stay paused.
+
+---
+
+## Stepwise reconciliation — answer8 confirmed, question9 opened
+**Timestamp**: 2026-11-08T02:35:35Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tôi đã chọn a"
+**User File Input**: "[Answer]: a"
+**AI Response**: Validated question8=A from file/message; recorded D-U13-08 fixed MATERIAL types PDF/DOCX/PPTX/XLSX, configurable size only within existing cap, no inferred change to other purposes. Rechecked U14 BR21/F8 default-off wording versus current NotificationPreferenceService default-on and tests. Opened only question9 for no-stored-preference staff defaults: enabled by default (recommended), disabled until opt-in, or Other. Preserved explicit existing user preferences, Student defaults, mandatory Admin backup, role recipients and in-app/cap policy in both options. Answer9 blank; no decision inferred. No code/test/authoritative-requirement/report changes, commit/push/deploy/live write.
+**Context**: Continue one question at a time on fix/remove-term; only semester-removal implementation complete so far.
+
+---
+
+## Stepwise reconciliation — answer9 confirmed, question10 opened
+**Timestamp**: 2026-11-08T02:38:12Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tôi đã chọn a"
+**User File Input**: "[Answer]: a"
+**AI Response**: Validated question9=A from file/message; recorded D-U14-09 staff email enabled by default only when no preference stored, preserving existing preferences/Student defaults/mandatory Admin backup and role-recipient/cap policy. Rechecked U13 BR12/13, archive-dialog design, MaterialAccessPolicy.read and archived-reference MCP test. Opened only question10: preserve current authorized staff read/download of archived material including inherited subject read (recommended) versus management-only archived access, plus Other. Student/Admin restrictions, current scope recheck, historical references and no new AI/Quiz selection remain common constraints; no edit/restore feature inferred. Answer10 blank. No code/test/authoritative-requirement/report change, commit/push/deploy/live write.
+**Context**: One-question-at-a-time requirements reconciliation on fix/remove-term; only semester slice implemented so far, report drafting paused.
+
+---
+
+## Archived-material current behavior clarification
+**Timestamp**: 2026-11-08T02:40:07Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "hiện code đang xử lý cái này như thế nào"
+**AI Response**: Traced actual U13 access, query/download, reference-selection and MCP services plus module outline UI. Archiving persists ARCHIVED, retaining versions/file references. Student archive read denied with404; Admin denied. Current assigned Teacher/Subject Manager can still read/download archived materials within current subject/class scope, including inherited subject materials; history detail and older file tokens allowed for staff. Writes blocked for archived material. Backend staff lists can include ARCHIVED but frontend module outline filters ACTIVE, so invisibility on main list is not loss of backend read permission. Platform listSelectable/extractText excludes archived sources for new AI selection; read_authorized_material MCP intentionally still authorizes existing archived references. Question10 remains unanswered; no option inferred. Static inspection only, no runtime/code/test/report change.
+**Context**: Clarify existing behavior corresponding to question10 A, with distinction between UI filtering and access denial; don't imply every Teacher can access every subject or universal AI prohibition outside platform selection.
+
+---
+
+## Stepwise reconciliation — answer10 recorded, question11 opened
+**Timestamp**: 2026-11-08T02:43:08Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "vậy nó giống với phương án a đúng không? ghi nhận câu 10 thay tôi"
+**AI Response**: Confirmed actual U13 archived-read policy corresponds to optionA and recorded answer10 on user's behalf as explicitly requested. D-U13-10 preserves authorized staff direct/history/MCP reading, Student/Admin/current-scope restrictions, ACTIVE-only main UI and new AI-source selection ban. Identified one remaining format-scope clarification after adding XLSX: BR30 only promises PDF/DOCX/PPTX extraction while job currently parses all FILE types generically. Opened only question11 on XLSX AI-source extraction (recommended) versus view/download-only, plus Other; requires real workbook tests and does not infer support from whitelist. Answer11 blank. No code/test/authoritative-requirement/report change, commit/push/deploy/live write.
+**Context**: Continue one decision at a time; source authority is aidlc-docs. Existing explicit retired/later decisions can be synchronized without re-asking settled choices. Only approved semester slice implemented so far.
+
+---
+
+## Stepwise reconciliation — answer11 and confirmed requirement baseline
+**Timestamp**: 2026-11-08T02:54:36Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tôi đã chọn A"
+**User File Input**: "[Answer]: a"
+**AI Response**: Validated question11=A; recorded D-U13-11 XLSX text extraction as authorized AI source without automatic AI/macro/formula execution/OCR. Synchronized16 current requirement files from explicit decisions1–11, plus current U14 code-summary policy note/row, preserving dated historical reports/plans and evidence. Aligned U04 cascading archive/class count/X-Escape/semester UI descriptions, fixed4-format MATERIAL policy and XLSX extraction, archived current-scope staff access, staff email default-on with stored choices preserved. U03/FR013 changes scoped to MATERIAL; other purpose policies unchanged. Resolved obsolete Learning Material Quiz embedding and id-only YouTube wording using already dated BR22/BR10 decisions, without new behavior. Mermaid state transition structure preserved and label/text brought into agreement with confirmed archive decision.
+**Approval Prompt**: Concrete plan construction/plans/code-generation-plan/2026-11-08-u04-u13-u14-requirements-tests.md maps scenario groups to requirements/files, separates coverage-only tests from real RED/GREEN fixes, and retains pending measured/integration gates. Question12 asks A execute locally on fix/remove-term, B request changes, or C Other; answer blank. Required by CLAUDE.md / construction/code-generation.md Part1 Step7 explicit plan approval, not an inferred new business ambiguity.
+**Verification**: Checked217 Markdown relative-link targets and git diff whitespace. Staged draft artifacts preserved163/16 lines. No new application/test edit or runtime test run in this turn; no current full-coverage/latency claim. Earlier semester1846/149 evidence remains dated to its run. Requirements sync does not prove original test authorship/TDD. Report drafting paused, no commit/push/deploy/live data writes. Updated state and plan checkboxes for actual completed preparation only.
+**Context**: All principal business choices now recorded; no additional technical-choice questions needed before planned implementation. Code/test remediation beyond approved semester slice awaits concrete Code Generation plan approval.
+
+---
+
+## Requirements test remediation — plan approved, execution started
+**Timestamp**: 2026-11-08T02:58:32Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "phase 5 là sao"
+**AI Response**: Explained Phase5 as final verification/review/requirement mapping; green unit tests do not certify missing E2E/performance evidence, and it does not authorize commit/push/deploy/report drafting.
+
+---
+
+## Requirements test remediation — question12 approval
+**Timestamp**: 2026-11-08T02:58:32Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tôi đã chọn a"
+**User File Input**: "[Answer]: a"
+**AI Response**: Validated question12=A, confirmed fix/remove-term and preserved dirty/index state. Starting approved inline execution U04 then U13 then U14 and Phase5. Recorded c9b7ce96 baseline/SHA256 requirement snapshot and explicit per-case U04 expected outcomes before test edits. Only aidlc-docs is requirement authority. No report, commit/push/deploy/live writes. Coverage-only PASS will not be called RED/GREEN; production defects require actual expected RED before fix.
+**Context**: Existing semester-removal changes and staged drafts remain intact. Continuous execution authorized; routine implementation choices need no repeated approval.
+
+---
+
+## Requirements test remediation — implementation and verification
+**Timestamp**: 2026-11-08T03:40:25Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**Authorization reference**: User input "tôi đã chọn a" and question12 answer a, recorded above; continued approved plan without routine approval questions.
+**AI Response**: Executed U04→U13→U14 on fix/remove-term using aidlc-docs as requirements authority. Added archive/audit/release/archived-subject guards, actual selectable-list service filtering, genuine current-v2/history-v1 fixtures, metadata/module/validator boundaries, real two-sheet XLSX parsing, density/cap/failure fallback, exact material audit actions, U14 retry callback payload/confirm ordering, actual U08/U12 group-recipient calculation, deadline/time/privacy cases, saved opt-outs and owner read state. Disposable PostgreSQL verifies material backfill/unique Quiz links/cascade, announcement feed filtering/order,180-day cutoff and delivery cascade, concurrent email reservation cap and full priority order. Added direct0/7 tab-count assertions. Only new application behavior in this test slice is the approved archive popup explanation; semester-removal code remains intact and PurposePolicy format comment corrected.
+**TDD evidence**: Observed expected popup RED before UI fix and GREEN afterwards. Existing-behavior additions are coverage-only. Java syntax/generic/Mockito fixture errors were repaired and are not business RED evidence. Original-suite TDD or code-independent authorship is not inferred.
+**Verification**: Full Maven verify BUILD SUCCESS1,879 tests, zero failures/errors/skips; required PostgreSQL31/7/10/1 and new/earlier migration1/2 no skips. Final material-query fixture-only correction15/15. Frontend full affected231/231, followed by complete detail-page13/13 including2new assertions; initial3timeouts resolved with unchanged21/21 file rerun then231/231 full rerun. TypeScript/scoped ESLint/build31pages and E2E script syntax passed. Independent reviewer findings fixed and verified; no actionable delta findings remain.227 relative links checked before final evidence append; whitespace and changed diagram checked. Two pre-existing staged drafts unchanged163/16.
+**Limits**: Plan working map retains partial provenance-version contract (MaterialText lacks versionNo), actual material owner SQL filtering, complete cross-unit archive/disable/security/API flows, real browser/provider/two-instance SSE and measured performance gates. No full requirement coverage percentage or formula non-execution proof from XLSX text assertions. No unit-test report created/finalized, commit/push/merge/deploy/live data/provider action.
+
+---
+## Expanded requirements clause remediation — continued implementation
+**Timestamp**: 2026-11-08T09:02:41Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tiếp tục rà soát để cover hết theo requirements của aidlc-docs cho unit 4, 13, 14 đi"
+**User Input**: "tiếp tục phần còn dở"
+**AI Response**: Continued the explicitly requested expanded scope on fix/remove-term with current aidlc-docs as authority and all settled decisions retained. Wrote the clause-closure execution plan/map, audited clauses independently, then implemented inline. Actual business REDs established missing U13 current-version metadata, U04 null archive result, swallowed U08 GROUP lookup failure, missing U13 module deny audit, blocked normal U04 lifecycle JDBC query, and two silently truncated501-candidate reminder lists. Corrected those production defects and adapted MaterialText constructor consumers; null versionNo remains appropriate for unversioned uploads. Setup/compiler/Jackson and late HTTP-advice oracle failures are not counted as business RED/TDD. Original tests' historical TDD or fully code-independent authorship is not inferred.
+**Verification**: Fresh full Maven verify BUILD SUCCESS2,010 tests, zero failures/errors/skips,15:52:14+07. Actual PostgreSQL owner HTTP/security matrix119 cases, required guard31/7/10/1, term/material migrations2/1, Redis grant1 and Rabbit two-hub1 all pass without skips. Later test-only content/retention refinements6/6 passed at15:55:01+07. Latest frontend run exited0 with233/233, zero pending/failures; TypeScript/scoped ESLint exited0. Final module rollback tests and production frontend build remain tracked in the execution plan until their commands finish.
+**Evidence quality**: Real JWT/current-account authorization, U04/U05/U13/U14 owner repositories and U02 audit use disposable production-migration PostgreSQL. Nontransactional sequence witnesses prove injected rollback failures were reached after business writes. Redis checks actual300-second TTL and expired/wrong-owner denial. Rabbit connects two actual hubs/listener subscriptions with account isolation and commit/rollback; this is not a multiple-process browser/proxy deployment. Local50-sample p95,200-recipient fanout3010ms and genuine51,197,757-byte65-page PDF6534ms meet their declared local thresholds. Cached formula/no-OCR/content-based renamed XLSX/macro-enabled XLSM rejection are discriminating assertions, not a claim of complete adversarial parser isolation. Independent review of production changes and late module/retention oracles found no further actionable findings after rollback witness correction.
+**Limits and preservation**: No100% coverage/production acceptance claim: representative concurrent load, browser/proxy/private video, external provider crash windows, broader parser process/memory isolation and longer caller-owned lifecycle deadlines remain explicit gates. U13 returned version metadata does not establish U07/U10 persisted end-to-end provenance. Current35-file requirement SHA256 capture is honestly dated after verification. Staged historical drafts preserved163/16; no unit-test report drafted/finalized, commit/push/merge/deploy/live DB/provider writes. Security/resiliency retained; PBT disabled.
+
+---
+## Expanded clause remediation — final local verification
+**Timestamp**: 2026-11-08T09:07:30Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**Authorization reference**: Expanded review/continuation requests recorded above; no new approval requested.
+**AI Response**: Final module delete/relocation rollback and archive/reopen retention tests3/3 passed at16:03:03+07. Final real multirow reorder CAS-loss/rollback/identical-retry test1/1 passed at16:06:51+07; trigger witness proves second update reached. Independent reviewer confirmed no actionable findings, explicitly distinguishing fault injection from concurrent clients. Frontend production build exited0,31 pages;233 affected tests/typecheck/scoped lint and E2E script syntax checks passed. No frontend generated tracked config changes. Required PostgreSQL guard repeated31/7/10/1 no skips;230 relative links/29 files resolve; whitespace check passed.35 requirement hashes and67 changed source/test/script hashes match final verification. Two staged historical drafts remain163/16 unchanged.
+**Outcome and limits**: Local implementation/verification steps in the clause plan are complete; five explicit acceptance gates remain unchecked. Full backend2,010 evidence predates late test-only additions;6/3/1 targeted passes are separate and overlapping, not a fabricated fresh full-suite total. No100% requirement coverage, production load, browser/proxy/provider or universal lifecycle deadline claim. Report drafting remains paused; no commit/push/merge/deploy/live DB/provider writes.
+
+---
+## Git delivery and staging integration — requested
+**Timestamp**: 2026-11-08T09:17:45Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "vậy giúp tôi chia nhỏ các commit, push lên branch hiện tại, sau đó merge từ branch staging vào branch hiện tại  rồi chạy e2e để xem có bị lỗi không"
+**AI Response**: Continuing on fix/remove-term. Explicit authorization now includes logical local commits, push of this branch, merging current origin/staging into this branch and E2E execution. This supersedes prior no-commit/no-push limits for this delivery only. Plan: six scoped commits (semester removal; subject archive; material fixes/tests; notification fixes/tests; cross-unit integration coverage; AI-DLC decisions/evidence), push before merge, merge staging, rebuild and run isolated E2E. Existing staged historical drafts stay unchanged in content and remain drafts; no new unit-test report is being authored. No merge into staging, force-push or production deployment. Full backend verification running before delivery. Remote branch matches original HEAD; origin/staging is11 commits ahead. GitHub CLI unavailable, so requester attribution remains explicitly Unknown.
+
+---
+## Git delivery — precommit broker readiness failure
+**Timestamp**: 2026-11-08T09:28:03Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**AI Response**: Fresh full backend verification executed2,015 cases: zero assertion failures, one error at initial AMQP handshake in RabbitSseMultiInstanceIntegrationTest; remaining2,014 passed. No commits/push performed. GenericContainer waited only for the exposed TCP port, whereas actual Rabbit4.1 logs show startup completion after TCP listener startup. Added explicit startup-complete log readiness without changing measured delivery deadlines, retries or production code. Focused test and full retry required before delivery. Independent read-only review found no actionable problem with the readiness change. Isolated E2E dependencies temporarily stopped to avoid extra test load; volumes preserved, existing platform stack untouched.
+
+---
+## Git delivery — fresh full backend retry passed
+**Timestamp**: 2026-11-08T09:39:41Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**AI Response**: Explicit Rabbit startup-complete readiness passed focused1/1 and fresh full Maven verify2,015/2,015, zero failures/errors/skips, BUILD SUCCESS16:38:43+07; executable JAR packaged. Required PostgreSQL guard31/7/10/1 all passed. Full frontend still running before commits. Source behavior unchanged by readiness repair; failed first-run evidence retained. Six scoped commit groups prepared with no credentials/scratch artifacts. Existing staged draft contents preserved; their index placement is being regrouped under the user's commit authorization.
+
+---
+## Git delivery — precommit complete verification
+**Timestamp**: 2026-11-08T09:42:48Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**AI Response**: Fresh full frontend805/805, zero failed/pending, exit0. Together with backend2,015/2,015 and PostgreSQL guard31/7/10/1, precommit verification is green. Proceeding with the six reviewed groups and normal push before merging current staging, as explicitly requested. Full frontend emitted expected jsdom scroll/navigation capability warnings; no test failures. No business/source edits after passing verification; only execution metadata updated. Report drafts retain original contents/status.
+## Staging check after teammates' merges — 2026-11-07
+
+**Timestamp**: 2026-11-07T10:00:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> check lai merch moi cho toi di
+
+> xong thì báo kết quả test cho tôi
+
+> xong chua
+
+**AI Response**: Staging `c9b7ce96` (63 commits after PR #43). Backend `mvn -B clean verify` 1,842 tests, 0 failures; frontend vitest 803/803, typecheck clean, lint 2 errors in `features/grading/pages/GradingWorkspacePage.tsx` (U09, `1b509cdb`). E2E on fresh class SE-TEST16: U02 16/16, U06 24/24, U12 59/59, U12b 36/36, u12c 32/32, notify 3/3; `u06b` skipped because the new automatic key fallback could spend the user's real Gemini key. Findings: `ca45304e` reworked U06 (automatic source choice and key fallback, multiple personal keys, removed the default-source UI FB-U06-01 while its backend API remains); `2ee1a095` edited frozen BR-U06-02, 05, 10, 25 to match. U12 code unchanged; shared editor overhaul did not break U12 tests.
+
+**Context**: Build and Test (staging check).
+
+---
+
+## U12 bug fix — section editor overlay and assignment-lock audit labels — 2026-11-07
+
+**Timestamp**: 2026-11-07T16:30:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> sửa luôn 2 lỗi u12 đó đi
+
+**AI Response**: Found while re-capturing Report-3 screens. (1) The full-page section editor (`SectionEditorDialog`) and the "Đang nộp" auto-submit lock in `GroupWorkspacePage` were `fixed` overlays rendered inside the page, so the app top bar and sidebar covered their header (Đóng / Xong not visible). Both now render through `createPortal` to `document.body` like the shared `Dialog` and the grading AI overlay. (2) Audit Log showed the raw codes `GROUP_ASSIGNMENT_LOCKED` / `GROUP_ASSIGNMENT_UNLOCKED` recorded by the assignment-phase change (FB-U12-01); added Vietnamese labels. Regression assertions added to `GroupWorkspacePage.test.tsx` and `labels.test.ts`. No backend, API or business-rule change.
+
+**Context**: Code Generation (bug fix, U12), branch `fix/u12-overlay-audit-labels`.
+
+---
+
+## Commit reviewed documentation changes - 2026-11-07
+**Requester**: Quang Hung
+**User Request**: "giúp tôi commit change"
+**AI Response**: Prepared the sixteen pending documentation files from this session for one documentation commit, covering AI-DLC business-flow diagrams, SRS/SDS review notes, Report 3 conceptual model, Report 4 architecture/class/sequence sources and semantic specs, the completed Report 4 plan and audit trail. Corrected twelve mojibake arrow/dash tokens in the diagram README before staging.
+**Verification**: Parsed all changed Draw.io XML and semantic JSON. Re-ran source-signature checks for 160 class signatures and 122 displayed Java calls, confirmed Authentication preservation and cross-diagram coverage. Class and sequence geometry validators have zero errors/warnings. git diff --check passed aside from Git's existing LF-to-CRLF normalization notice for this audit file. All changed files are under docs or aidlc-docs.
+**Context**: Documentation commit only. No application test/build rerun for this commit request. No push requested.
+
+## U09 lint fix — AI grading state without setState in effects — 2026-11-08
+
+**Timestamp**: 2026-11-08T01:00:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> sửa luôn 2 lỗi lint u09 đi
+
+**AI Response**: `npm run lint` failed with two `react-hooks/set-state-in-effect` errors in `GradingWorkspacePage.tsx` (from `1b509cdb`): two effects called `setAiGenerating`/`setGeneratingProposalId` to finish an AI grading run. The run state is now adjusted during render from the latest proposals, poll status and error (same pattern as the existing `reviewSelection`), and `aiGenerating` is derived from the request in flight and the proposal being awaited. One effect keeps only the external work (apply a READY proposal or show the error toast), once per outcome. Behaviour unchanged: READY proposals are applied to the local draft, FAILED/REJECTED and poll timeout show a toast, a failed request stops the progress overlay. Added three lifecycle tests in `workspace.test.tsx`. Lint 0 errors (24 existing warnings), typecheck clean, frontend 808/808. Not verified in a live browser because AI grading needs a real provider key.
+
+**Context**: Code Generation (lint fix, U09), branch `fix/u09-ai-grading-lint`.
+
+---
+
+## U12 simplification — back to the frozen business rules — 2026-11-08
+
+**Timestamp**: 2026-11-08T03:30:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> xem lại toàn bộ, tôi muốn u12 tối giản và dễ hiểu nhất nhưng vẫn đảm bảo luồng nghiệp vụ chắc là sinh viên làm bài nhóm, và giảng viên chấm bài nhóm thì nên sửa thế nào, không cần thêm các lường phức tạp
+
+> nhưng nếu không chốt thì nếu 1 người nhận rồi bắt đầu làm là phần đấy sẽ không thể sửa nữa à
+
+> như thế nào là oke nhất'
+
+> oke làm theo hướng 1 rồi gộp vào staging luôn
+
+**AI Response**: Recommended option 1 (drop the feedback additions, follow BR-U12-33, 34, 36, keep section history read-only); user approved and asked to merge into staging. Removed FB-U12-01 assignment phase (`assignment:lock/unlock`, `AssignmentLock`, `assigneeId`, `ASSIGNMENT_*` codes), FB-U12-02 restore, FB-U12-03 whole-document import (section DOCX import kept, moved to `GroupDocController`), FB-U12-04 peer review (service, repository, endpoints, tab). Claiming an OPEN or DONE section starts editing at once; leader assigns; holder, leader or teacher releases. Re-added the teacher progress card (BR-U12-52) lost in UI commit `da0be0d8`. No schema change (unused columns/table stay). Tests: backend `mvn -B verify` 1,831/1,831; frontend 805/805, lint 0 errors (24 existing warnings), typecheck clean; e2e on fresh class SE-TEST17: U12 58/58, U12b 35/35, U12c 19/19. Docs: FB file (FB-U12-01..04 moved to "Đã bỏ"), U12 code summary, user guide, API inventory.
+
+**Context**: Code Generation (U12 refactor), branch `refactor/u12-simplify`.
+
+---
+
+## U05/U09/U15 frontend formatting and cleanup — 2026-11-08
+
+**Timestamp**: 2026-11-08T07:53:08Z
+**Requested by:** Quang Hung
+**User Input (complete raw)**:
+
+> giúp tôi chỉnh lại các vấn đề trên [$ponytail:ponytail](<C:\Users\Quang Hung\\.codex\plugins\cache\ponytail\ponytail\5.3.3\skills\ponytail\SKILL.md>) , format cho dễ đọc
+
+> nhớ đừng làm thay đổi hành vi hiên jtaij
+
+**Context**: Existing frontend units. Keep API contracts, grading persistence, current UI behavior and U05 pagination request sequence.
+
+- [x] Format the three API modules and group U09 methods by use case.
+- [x] Remove inactive U09 rubric review paths and unused imports. Keep saved review and feedback fields.
+- [x] Rename the local U15 backup formatters and status labels.
+- [x] Verify the three feature suites, scoped lint and before/after request traces for 41 API methods.
+
+**AI Response**: 225 tests passed across 30 files. Scoped ESLint passed with zero warnings. Compared request traces with HEAD. U05 first-page refetch remains covered by the existing characterization test. Existing security and resiliency scope retained. Property-based testing remains disabled. No live backend or browser verification.
+
+---
+
+## Remove unused source imports — 2026-11-08
+
+**Timestamp**: 2026-11-08T08:12:12Z
+**Requested by:** Quang Hung
+**User Input (complete raw)**:
+
+> dọn giúp tôi mấy import thừa trong cả src code đi, giữ nguyên hành vi hiện tại, chưa nâng Spring Boot nhé
+
+**Context**: Mechanical source cleanup only. Spring Boot 3.5.6 and product behavior retained.
+
+- [x] Remove 45 unused main Java imports and 47 unused test Java imports identified by Eclipse JDT. Confirm that the source diff contains only these 92 deletions across 85 files.
+- [x] Scan frontend source with TypeScript and ESLint. No unused imports found and no frontend changes.
+- [x] Recompile with Eclipse JDT. Zero remaining unused-import warnings. All 1,182 production classes are byte-identical without debug data. Of 291 test classes, 276 are byte-identical and 15 differ only in equivalent inherited Mockito matcher references.
+- [x] Run targeted Maven tests. CourseClass, Enrollment and EnrollmentListParser tests passed 22/22.
+
+**AI Response**: Existing security and resiliency scope retained. Property-based testing remains disabled. Full backend test suite and browser verification are outside the confirmed results.
+
+---
+
+## Method documentation comments for U05, U09, U15 — 2026-11-08
+
+**Timestamp**: 2026-11-08T08:32:00Z
+**Requested by:** Quang Hung
+**User Input (complete raw)**:
+
+> giúp tôi thêm comment vào backend u05 u09 u15 là mỗi method làm những gì đi, comment ngắn gọn dễ hiểu
+
+> comment bwangf tiếng anh
+
+**Context**: Documentation-only update. Add concise English method comments/Javadoc across backend U15 (Admin Dashboard), U05 (Academics) and U09 (Grading) without changing behavior or signatures.
+
+- [x] Add concise English comments to U15 (admindashboard) methods.
+- [x] Add concise English comments to U05 (academics) methods.
+- [x] Add concise English comments to U09 (grading) methods.
+- [x] Verify compilation with `mvn test-compile`.
+
+---
+
+## Verify method documentation coverage for U05, U09, and U15 — 2026-11-08
+
+**Timestamp**: 2026-11-08T09:06:11Z
+**Requested by:** Quang Hung
+**User Input (complete raw)**:
+
+> giúp tôi thêm comment vào backend u05 u09 u15 là mỗi method làm những gì đi, comment ngắn gọn dễ hiểu, bằng tiếng anh
+
+> nếu chia subagent thì để luna 6 high
+
+**AI Response**: Completed concise English Javadoc for all 491 explicitly declared methods and constructors across the three production packages. Java tokens match HEAD across all 83 Java files after line-ending normalization. Maven `test-compile` compiled 715 main and 249 test files successfully. The runtime suite was not run for this comment-only update.
+
+**Context**: Continued the existing documentation update. Luna 6 High agents handled the delegated work. Existing security and resiliency behavior is unchanged. Property-based testing remains disabled.
+
+---
+
+
+## Internal step-by-step method comments in U09 Service classes — 2026-11-08
+
+**Timestamp**: 2026-11-08T10:52:00Z
+**Requested by:** Quang Hung
+**User Input (complete raw)**:
+
+> comment các method mà có tên file là service, comment bên trong cacs method cho tôi đoc dễ hiểu
+
+**Context**: Documentation-only update. Add internal step-by-step English comments within core service methods across U09 (`GradingProposalService`, `GradingBatchService`, `GradeDistributionVisibilityService`, `SubmissionImageService`, `GradebookService`, `EvaluationLifecycleService`, `SubmissionReviewService`, `GradingService`, `GradingMcpBatchService`, `GradingMcpQueryService`) to enhance code readability.
+
+- [x] Add step-by-step internal comments inside core methods across all 10 Service classes.
+- [x] Verify compilation with `mvn test-compile` (BUILD SUCCESS, 0 errors).
+
+---
+
+## Staging integration — merge, test repairs and E2E
+**Timestamp**: 2026-11-08T10:15:52Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**Authorization reference**: Explicit scoped commit/push/staging-merge/E2E request recorded above.
+**AI Response**: Created and normally pushed six scoped commits through fc31721b to fix/remove-term, then refetched/merged origin/staging528cc50e at6007c5fb. Only audit append history conflicted; removed markers and proved all lines from both sides retained in order. Postmerge test compilation exposed three imports removed by staging cleanup but required by added tests; restored them. Isolated U04/U13/U14 E2E first38/40 exposed stale staff-default OFF expectations; BR-U14-21/D-U14-09 require ON, so corrected only the oracle and retained opt-out/relogin/mandatory Admin checks. Independent review found no actionable issue. Four test-only repairs committed at44b5781d; no postmerge production-code change.
+**Verification**: Premerge full backend2,015 and frontend805 passed. Postmerge build31pages/TypeScript and286 affected frontend tests passed. Actual isolated API E2E final40/40 U04/U13/U14,16/16 U02,58/58 U12,35/35 U12b,19/19 U12c:168 passed checks. U12 includes real server SSE through Nginx and actual deadline auto-submission. U02 initially15/16 was run before its cross-unit audit fixture existed; original assertions rerun after U12 passed16/16. Legacy scripts' zero exit codes were not accepted without inspecting every JSON assertion. Both failed initial E2E results retained. Backend startup exceeded an initial health window under builds, then became healthy without source/config/threshold changes; waited for backend and worker before OTP fixtures.
+**Observed NFR limit**: Complete postmerge Maven run2,004 cases:2,003 passed/one p95 failure, zero errors/skips. Announcements p95 368.3049ms exceeded300ms during concurrent E2E. Preserved full failed log; no requirement/threshold changed. After stopping the E2E project and its verified frontend PID, identical isolated benchmark passed1/1 with120.9493ms. Final complete backend retry without E2E load is running. This is not concurrent production-load certification.
+**Preservation**: Separate PostgreSQL/Rabbit volumes, Redis, Mailpit, copied merged JAR and generated local credentials only; all scratch/credentials remain ignored. Original script seed.json untouched via copied broader scripts. Own E2E containers/frontend stopped, volumes/logs retained, existing platform stack untouched.1,625 source/config hashes match reviewed merge/test refinements. No merge into staging, force-push, provider delivery, production deployment or new unit-test report.
+
+---
+## Staging integration — final verification and code publication
+**Timestamp**: 2026-11-08T10:23:38Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**Authorization reference**: Explicit commit/push/staging-merge/E2E request recorded above; continued without repeated routine approvals.
+**AI Response**: Final controlled full Maven verify2,004/2,004 passed, zero failures/errors/skips, BUILD SUCCESS17:21:26+07; executable JAR packaged. Required PostgreSQL31/7/10/1 passed again. Every local p95 criterion passed, announcements83.9347ms≤300ms. Prior concurrent-E2E368.3049ms failure and isolated120.9493ms pass remain recorded; no threshold, skip or production-code change was used to obtain the final result. This does not certify concurrent load. Frontend postmerge286/286 plus scoped lint/typecheck/build31pages passed; premerge complete805/805 remains separate evidence. Actual isolated API E2E168/168 passed across five suites, with required fixture ordering and JSON results checked.
+**Publication**: Normal push advanced origin/fix/remove-term from fc31721b through44b5781d, including merge6007c5fb of origin/staging528cc50e and the reviewed test-only integration repairs. Current source/config1,625 hashes match verification. This final documentation-only change records the already completed code publication and will be pushed to the same branch. Existing platform containers preserved, own E2E containers/frontend stopped, fixtures/logs retained ignored. No force-push, merge into staging, live data/provider write, production deployment, new report or100% requirements acceptance claim. Security/resiliency retained; PBT disabled.
+
+---
+## Pull request to staging — conditional merge authorized
+**Timestamp**: 2026-11-08T10:33:00Z
+**Requested by:** Vu Hai Nam
+**User Input**: "giúp tôi tạo pull request vào branch staging, check CI xanh thì merge vào staging"
+**AI Response**: User explicitly authorizes creating a ready PR from fix/remove-term into staging and merging it once GitHub CI is green. Verify the exact current PR head, latest CI workflow and required checks before normal merge; preserve scoped commit history using the repository-supported merge-commit method. Local code already passed2,004 backend tests,286 postmerge frontend tests/build/lint and168 isolated API E2E checks. Record this request before opening PR; GitHub PR/check/merge responses and final chat provide the authoritative remote completion status. No new implementation or unit-test report is requested. Current GitHub profile display name verified by authenticated API; historical requester attributions remain unchanged.
+
+---
+
+## U01/U10/U11 documentation sync — 2026-11-08
+
+**Timestamp**: 2026-11-08T03:00:00Z
+**Requested by:** Đào Chí Cường
+
+**User Input (complete raw)**:
+
+> Sửa tài liệu
+
+**AI Response**: Applied the documentation fixes D1–D16 from the 08/11 U01/U10/U11 code–documentation sync review (code on `staging` 511956d2; 411 backend + 120 frontend tests pass). U01: activation endpoint path, rate limiting via `RequestThrottle` inside services instead of a non-existent `RateLimitFilter`, `LogoutDialog`/`OtpFlow` names, BR-U01-20 now describes the HMAC-derived OTP code. U10: removed `REVIEWED` from BR-U10-30, attached materials from BR-U10-31 and "review" from BR-U10-23; BR-U10-42 lists all four MCP tools; BR-U10-51 adds `QUIZ_REOPENED`; removed `/quizzes/{id}/review` and `MaterialRefPicker`; updated component names; annotated stale history lines in code-summary. U11: frontend component names marked as inline UI parts of the pages; removed `QuizMaterialSection` slot. Documentation only; no code, API or behaviour change.
+
+**Context**: Documentation sync (Construction docs, U01/U10/U11). No commit requested.
+
+---
+
+## Report 3/4/5.0/5.1 updates for U01/U10/U11 tasks — 2026-11-08
+
+**Timestamp**: 2026-11-08T12:00:00Z
+**Requested by:** Đào Chí Cường
+
+**User Input (complete raw)**:
+
+> @"D:\Downloads\Report-5.1_Unit Test.xlsx" @"D:\Downloads\Report-5.0_Test Documentation.docx" @"D:\Downloads\Report-4_Software Design Specification (1).docx" @"D:\Downloads\Report-3_Software Requirement Specification (5).docx"
+> sửa các các file báo cáo này sau đó gửi lại tôi để tôi đẩy lên drive
+
+**AI Response**: Report 5.1 v1.2: added U01_Account_Access (18), U10_Quiz_Authoring (18), U11_Quiz_Practice (16) unit-test sheets from the 08/11 JUnit run on staging 511956d2 (all Passed), Test Cases rows, Test Statistics rows/totals (92 cases) and rebuilt the two pie charts. Report 5.0: Round 1 UT summary (92/92) and UT defect counts (KAN-157/171/175, all Done) in 3. Test Reports. Report 4 II.1: class diagram adds missing methods, JwtService and RequestThrottle; the four Authentication sequence diagrams now show VerificationTicketStore/RequestThrottle/SessionStore calls, transaction and alt/opt error branches; `docs/class-diagrams.drawio` and `docs/sequence-diagrams.drawio` updated to match. Report 3: V. Requirement Appendix re-checked (BR21/BR22 match the code: same-key retries 2 s/5 s and key fallback exist in AiTaskJobHandler, correcting the earlier review); Table of Contents page numbers updated. Change Log rows added in each report. Report 4 I.3 stale tables left unchanged (outside U01/U10/U11).
+
+**Context**: Documentation (Reports), tasks KAN-152, KAN-188, KAN-193, KAN-195. No commit requested.
+
+---
+
+## Documentation - Check Drive reports and merge Report 5.1
+**Timestamp**: 2026-11-08T14:40:00Z
+**Requested by:** Đào Chí Cường
+
+**User Input (complete raw)**:
+
+> https://drive.google.com/drive/u/2/folders/1v2O9IUkvhbtseyDxSrHEj82mkj-p2AIu
+> kiểm tra lại doc mới nhất trên drive xem có thay đổi gì không, tôi nên đẩy bản doc bạn vừa sửa lên chưa
+
+> Gộp và cập nhật
+
+**AI Response**: Drive check: Report 3, Report 4 and Report 5.0 on Drive are byte-size identical to the edited bases; Report 5.1 on Drive gained U04_Subject_Administration (24), U13_Reference_Materials (25) and U14_Announcements_Notifications (25) as v1.2, colliding with the local v1.2 rows. Merged onto the Drive copy as v1.3: U01/U10/U11 sheets added at Test Cases rows 15-17, Test Statistics now covers all nine units (166 cases, 166 Passed; N/A/B 66/72/28) with rebuilt pie charts, Cover change log row 14; removed two U13 rows (U13-UTC024/025) left in the U14 sheet by a sheet copy. Report 5.0 Round 1 UT updated to 166/166 and the change log/defect notes now name U04/U13/U14.
+
+**Context**: Documentation (Reports), tasks KAN-188, KAN-193. No commit requested.
+
+---
+
+## Documentation - Verify Drive upload and update Jira tasks
+**Timestamp**: 2026-11-08T15:05:00Z
+**Requested by:** Đào Chí Cường
+
+**User Input (complete raw)**:
+
+> https://drive.google.com/drive/u/2/folders/1v2O9IUkvhbtseyDxSrHEj82mkj-p2AIu
+> tôi đã đưa 3 bản doc mới lên (tạm thời report 4 tôi chưa đưa lên vội). Kiểm tra xem được chưa sau đó check các task jira còn lại và báo cáo tôi
+> https://sep490-g21-fall26.atlassian.net/jira/software/projects/KAN/list?jql=project%20%3D%20KAN%20ORDER%20BY%20cf%5B10019%5D%20ASC
+
+> Viết và chuyển
+
+**AI Response**: Drive copies of Report 3, Report 5.0 and Report 5.1 are byte-size identical to the delivered files; Report 4 on Drive is still the old version. Reported open KAN tasks. Posted result comments on KAN-152, KAN-188, KAN-193 and KAN-195; moved KAN-152, KAN-188 and KAN-193 to In Review (team convention, as KAN-185/KAN-186) and KAN-195 to In Progress until Report 4 is uploaded and the two draw.io files are committed. KAN-193: no new Bug; KAN-182 and KAN-180 fixes (eab37de4, 76ccc114) confirmed on staging 511956d2.
+
+**Context**: Documentation (Reports) and Jira tracking, tasks KAN-152, KAN-188, KAN-193, KAN-195. No commit requested.
+
+---
+
+## Jira review tasks KAN-198, KAN-200 — 2026-11-09
+
+**Timestamp**: 2026-11-09T02:00:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> check jira phần tôi xem cần làm gì k
+
+> toi dang nhap r
+
+> làm hết theo thứ tự đó luôn
+
+**AI Response**: Read the user's five open KAN tasks (KAN-14, 189, 194, 198, 200). KAN-198: Report 4 U12 diagrams (baseline `fb57dc92`) still showed the assignment lock removed on 2026-11-08; updated `docs/class-diagrams.drawio` (GroupDocController, GroupSectionService: `lockAssignment` → `release`; GroupDocumentRepository without `assignmentLock`/`setAssignmentLock`; GroupSection without `assigneeId`) and `docs/sequence-diagrams.drawio` "Complete Group Assignment" messages 10–18 (allocation lock → release by holder/leader/teacher), same layout. UC 53 authoring diagrams match code. KAN-200: AI API class diagram and the draft/practice/grading sequences match code except the automatic source selection added 2026-11-05 (`IAiTask.requireSource/sourceOrder`, `previewSources`, `AiDraftRepository.attachTask/markFailed`); recorded on the Jira task as proposed fixes for the owners.
+
+**Context**: Report 4 diagram review (documentation), branch `docs/u12-diagrams-simplify`.
+
+---
