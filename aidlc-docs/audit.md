@@ -11360,3 +11360,22 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Documentation (Reports) and Jira tracking, tasks KAN-152, KAN-188, KAN-193, KAN-195. No commit requested.
 
 ---
+
+## Jira review tasks KAN-198, KAN-200 — 2026-11-09
+
+**Timestamp**: 2026-11-09T02:00:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> check jira phần tôi xem cần làm gì k
+
+> toi dang nhap r
+
+> làm hết theo thứ tự đó luôn
+
+**AI Response**: Read the user's five open KAN tasks (KAN-14, 189, 194, 198, 200). KAN-198: Report 4 U12 diagrams (baseline `fb57dc92`) still showed the assignment lock removed on 2026-11-08; updated `docs/class-diagrams.drawio` (GroupDocController, GroupSectionService: `lockAssignment` → `release`; GroupDocumentRepository without `assignmentLock`/`setAssignmentLock`; GroupSection without `assigneeId`) and `docs/sequence-diagrams.drawio` "Complete Group Assignment" messages 10–18 (allocation lock → release by holder/leader/teacher), same layout. UC 53 authoring diagrams match code. KAN-200: AI API class diagram and the draft/practice/grading sequences match code except the automatic source selection added 2026-11-05 (`IAiTask.requireSource/sourceOrder`, `previewSources`, `AiDraftRepository.attachTask/markFailed`); recorded on the Jira task as proposed fixes for the owners.
+
+**Context**: Report 4 diagram review (documentation), branch `docs/u12-diagrams-simplify`.
+
+---
