@@ -21,7 +21,7 @@ import org.w3c.dom.NodeList;
  * XML Draw.io (BR-U07-12): gốc {@code mxfile} hoặc {@code mxGraphModel}; trang nén (base64, deflate, URL-encode)
  * được giải có trần. Dùng để kiểm, đếm hình, rút gọn cho prompt AI ({@code compactDiagramXml}).
  */
-public final class DiagramXml {
+final class DiagramXml {
 
     static final int MAX_XML_BYTES = 2 * 1024 * 1024;
     private static final int MAX_INFLATED_BYTES = 10 * 1024 * 1024;
@@ -47,7 +47,7 @@ public final class DiagramXml {
     }
 
     /** Số hình và đường nối; 0 là sơ đồ rỗng. XML lỗi trả 0. */
-    public static int cellCount(String xml) {
+    static int cellCount(String xml) {
         try {
             int count = 0;
             for (Element model : graphModels(xml)) {

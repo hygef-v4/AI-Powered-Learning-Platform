@@ -11,10 +11,8 @@ import edu.aiplatform.ai.contract.AiTaskView;
 import edu.aiplatform.ai.contract.AiTokenEstimate;
 import edu.aiplatform.ai.contract.ApplyOutcome;
 import edu.aiplatform.assignments.contract.DocumentModel;
-import edu.aiplatform.assignments.contract.DocumentPart;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.RubricView;
-import edu.aiplatform.assignments.model.PartCalculator;
 import edu.aiplatform.grading.service.GradingCommands.AiRequest;
 import edu.aiplatform.grading.service.GradingCommands.Save;
 import edu.aiplatform.grading.model.Evaluation;
@@ -115,12 +113,8 @@ public class GradingProposalTransactions {
         DocumentModel document = detail == null ? null : detail.document();
         var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
 
-        List<DocumentPart> parts = PartCalculator.compute(content.skeleton() != null ? content.skeleton() : document);
-        Set<String> emptyPartIds = gradingPromptBuilder.findEmptyPartIds(document, content.skeleton(), parts);
-        boolean allPartsEmpty = parts.isEmpty() || parts.stream().allMatch(p -> emptyPartIds.contains(p.partId()));
-        List<RubricView> activeRubrics = allPartsEmpty ? List.of() : rubrics.stream()
-                .filter(r -> r.partId() == null || !emptyPartIds.contains(r.partId()))
-                .toList();
+        List<RubricView> activeRubrics = gradingPromptBuilder.findActiveRubrics(document, content.skeleton(), rubrics);
+        Set<String> emptyPartIds = gradingPromptBuilder.findEmptyPartIds(document, content.skeleton());
 
         if (activeRubrics.isEmpty()) {
             var zeroPayload = GradingPromptBuilder.createZeroProposal(rubrics, objectMapper);
@@ -166,20 +160,12 @@ public class GradingProposalTransactions {
         DocumentModel document = detail == null ? null : detail.document();
         var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
 
-        List<DocumentPart> parts = PartCalculator.compute(content.skeleton() != null ? content.skeleton() : document);
-        Set<String> emptyPartIds = gradingPromptBuilder.findEmptyPartIds(document, content.skeleton(), parts);
-        boolean allPartsEmpty = parts.isEmpty() || parts.stream().allMatch(p -> emptyPartIds.contains(p.partId()));
-        if (allPartsEmpty) {
-            return 0L;
-        }
-
-        List<RubricView> activeRubrics = rubrics.stream()
-                .filter(r -> r.partId() == null || !emptyPartIds.contains(r.partId()))
-                .toList();
+        List<RubricView> activeRubrics = gradingPromptBuilder.findActiveRubrics(document, content.skeleton(), rubrics);
         if (activeRubrics.isEmpty()) {
             return 0L;
         }
 
+        Set<String> emptyPartIds = gradingPromptBuilder.findEmptyPartIds(document, content.skeleton());
         int maxOutputTokens = gradingPromptBuilder.calculateMaxOutputTokens(activeRubrics);
         var prompt = gradingPromptBuilder.buildPrompt(evaluation, document, content, activeRubrics, emptyPartIds);
         int promptChars = (prompt.system() == null ? 0 : prompt.system().length())
@@ -360,11 +346,7 @@ public class GradingProposalTransactions {
                 var content = contentOpt.get();
                 var detail = submissionReviewService.loadEvaluation(result.actor(), evaluation.id);
                 DocumentModel document = detail == null ? null : detail.document();
-                List<DocumentPart> parts = PartCalculator.compute(content.skeleton() != null ? content.skeleton() : document);
-                Set<String> emptyPartIds = gradingPromptBuilder.findEmptyPartIds(document, content.skeleton(), parts);
-                List<RubricView> emptyRubrics = rubrics.stream()
-                        .filter(r -> r.partId() != null && emptyPartIds.contains(r.partId()))
-                        .toList();
+                List<RubricView> emptyRubrics = gradingPromptBuilder.findEmptyRubrics(document, content.skeleton(), rubrics);
                 if (!emptyRubrics.isEmpty()) {
                     payload = GradingPromptBuilder.mergeProposalWithEmptyRubrics(payload, rubrics, emptyRubrics, objectMapper);
                 }

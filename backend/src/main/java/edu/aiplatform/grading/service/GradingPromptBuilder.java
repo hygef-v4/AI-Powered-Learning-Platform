@@ -13,8 +13,6 @@ import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.contract.DocumentPart;
 import edu.aiplatform.assignments.contract.IDocumentModel;
 import edu.aiplatform.assignments.contract.RubricView;
-import edu.aiplatform.assignments.model.PartCalculator;
-import edu.aiplatform.assignments.service.DiagramXml;
 import edu.aiplatform.grading.model.Evaluation;
 import edu.aiplatform.shared.error.ApiException;
 import java.math.BigDecimal;
@@ -255,7 +253,7 @@ public class GradingPromptBuilder {
         if (document == null || document.blocks() == null || emptyPartIds.isEmpty()) {
             return document != null ? document : new DocumentModel(List.of());
         }
-        List<DocumentPart> parts = PartCalculator.compute(document);
+        List<DocumentPart> parts = documentModel.computeParts(document);
         boolean whole = parts.size() == 1 && parts.get(0).headingBlockId() == null;
         Set<UUID> leaves = new HashSet<>();
         parts.forEach(p -> {
@@ -265,7 +263,7 @@ public class GradingPromptBuilder {
         List<DocumentBlock> filtered = new ArrayList<>();
         String currentPartId = whole ? parts.get(0).partId() : null;
         for (DocumentBlock block : document.blocks()) {
-            if (!whole && PartCalculator.level(block) > 0) {
+            if (!whole && headingLevel(block) > 0) {
                 currentPartId = leaves.contains(block.id()) ? block.id().toString() : null;
             } else if (!whole && under(block) >= 0) {
                 currentPartId = null;
@@ -275,6 +273,38 @@ public class GradingPromptBuilder {
             }
         }
         return new DocumentModel(List.copyOf(filtered));
+    }
+
+    /** Returns rubrics that belong to non-empty parts or the whole document. */
+    public List<RubricView> findActiveRubrics(DocumentModel document, DocumentModel skeleton, List<RubricView> rubrics) {
+        List<DocumentPart> parts = documentModel.computeParts(skeleton != null ? skeleton : document);
+        Set<String> emptyPartIds = findEmptyPartIds(document, skeleton, parts);
+        boolean allPartsEmpty = parts.isEmpty() || parts.stream().allMatch(p -> emptyPartIds.contains(p.partId()));
+        if (allPartsEmpty) {
+            return List.of();
+        }
+        return rubrics.stream()
+                .filter(r -> r.partId() == null || !emptyPartIds.contains(r.partId()))
+                .toList();
+    }
+
+    /** Returns rubrics that belong to empty parts. */
+    public List<RubricView> findEmptyRubrics(DocumentModel document, DocumentModel skeleton, List<RubricView> rubrics) {
+        List<DocumentPart> parts = documentModel.computeParts(skeleton != null ? skeleton : document);
+        Set<String> emptyPartIds = findEmptyPartIds(document, skeleton, parts);
+        boolean allPartsEmpty = parts.isEmpty() || parts.stream().allMatch(p -> emptyPartIds.contains(p.partId()));
+        if (allPartsEmpty) {
+            return rubrics;
+        }
+        return rubrics.stream()
+                .filter(r -> r.partId() != null && emptyPartIds.contains(r.partId()))
+                .toList();
+    }
+
+    /** Identifies part IDs that contain no meaningful student work (empty or placeholder only). */
+    public Set<String> findEmptyPartIds(DocumentModel document, DocumentModel skeleton) {
+        List<DocumentPart> parts = documentModel.computeParts(skeleton != null ? skeleton : document);
+        return findEmptyPartIds(document, skeleton, parts);
     }
 
     /** Identifies part IDs that contain no meaningful student work (empty or placeholder only). */
@@ -295,7 +325,7 @@ public class GradingPromptBuilder {
             });
 
             for (DocumentBlock block : document.blocks()) {
-                if (!whole && PartCalculator.level(block) > 0) {
+                if (!whole && headingLevel(block) > 0) {
                     currentPartId = leaves.contains(block.id()) ? block.id().toString() : null;
                 } else if (!whole && under(block) >= 0) {
                     currentPartId = null;
@@ -337,7 +367,7 @@ public class GradingPromptBuilder {
                 if (block.type() == BlockType.DIAGRAM) {
                     String xml = block.content().path("xml").asText("");
                     String orig = skeletonXml.getOrDefault(block.id(), "");
-                    if (DiagramXml.cellCount(xml) > 0 && !xml.equals(orig)) {
+                    if (hasDiagramCells(xml) && !xml.equals(orig)) {
                         return true;
                     }
                 } else if (block.type() == BlockType.TABLE) {
@@ -355,7 +385,7 @@ public class GradingPromptBuilder {
             if (block.origin() == BlockOrigin.STUDENT) {
                 if (block.type() == BlockType.DIAGRAM) {
                     String xml = block.content().path("xml").asText("");
-                    if (DiagramXml.cellCount(xml) > 0) {
+                    if (hasDiagramCells(xml)) {
                         return true;
                     }
                 } else if (block.type() == BlockType.IMAGE) {
@@ -369,6 +399,26 @@ public class GradingPromptBuilder {
             }
         }
         return false;
+    }
+
+    private static boolean hasDiagramCells(String xml) {
+        if (xml == null || xml.isBlank()) return false;
+        String stripped = xml.replaceAll("<mxCell\\s+id=[\"']0[\"'][^>]*/>", "")
+                             .replaceAll("<mxCell\\s+id=[\"']1[\"'][^>]*/>", "")
+                             .replaceAll("<mxCell\\s+id=[\"']0[\"'][^>]*>.*?</mxCell>", "")
+                             .replaceAll("<mxCell\\s+id=[\"']1[\"'][^>]*>.*?</mxCell>", "");
+        return stripped.contains("<mxCell") || stripped.contains("<UserObject");
+    }
+
+    private static int headingLevel(DocumentBlock block) {
+        if (block.type() != BlockType.HEADING || block.content() == null) {
+            return 0;
+        }
+        String style = block.content().path("style").asText("");
+        if (style.length() == 2 && style.charAt(0) == 'H' && style.charAt(1) >= '1' && style.charAt(1) <= '6') {
+            return style.charAt(1) - '0';
+        }
+        return 0;
     }
 
     private static boolean hasNonEmptyText(DocumentBlock block) {
