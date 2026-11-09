@@ -22,7 +22,7 @@ class SubmissionImageServiceTest {
                 new ObjectMapper().readTree("{\"fileId\":\"attached\"}"));
         when(review.loadEvaluation(actor, eid))
                 .thenReturn(new GradingViews.EvaluationDetail(null, new DocumentModel(List.of(block)), List.of(),
-                        List.of(), null, "DISABLED", List.of(), List.of(), List.of(), true));
+                        List.of(), null, "DISABLED", List.of(), List.of(), List.of(), true, null));
         var service = new SubmissionImageService(review, files);
         assertThatThrownBy(() -> service.issueDownloadToken(actor, eid, "other")).isInstanceOf(RuntimeException.class);
         verifyNoInteractions(files);

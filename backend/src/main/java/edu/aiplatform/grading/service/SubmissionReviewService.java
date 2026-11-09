@@ -314,8 +314,16 @@ public class SubmissionReviewService {
                         .add(new MemberActivity(mapPerson(member.accountId), summary, state));
             }
         }
+        UUID groupEvaluationId = evaluation.kind == EvaluationKind.MEMBER
+                ? all.stream()
+                        .filter(candidate -> candidate.kind == EvaluationKind.GROUP_DOCUMENT
+                                && candidate.state != EvaluationStatus.SUPERSEDED
+                                && evaluation.isCurrentMemberOf(candidate))
+                        .map(candidate -> candidate.id).findFirst().orElse(null)
+                : null;
         return new EvaluationDetail(evaluation, document,
                 GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot), navigationIds,
-                activityValue, activityState, members, memberActivities, authors, current);
+                activityValue, activityState, members, memberActivities, authors, current,
+                groupEvaluationId);
     }
 }

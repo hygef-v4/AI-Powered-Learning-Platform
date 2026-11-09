@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import "@/features/register";
 import { AppShell } from "@/shared/layout/AppShell";
@@ -17,8 +17,8 @@ const labels = (items: NavItem[]) => items.map((item) => item.label);
 const activeLabel = (items: NavItem[]) => items.find((item) => item.active)?.label;
 
 describe("sidebar của môn", () => {
-  it("chỉ hiện ở các màn của một môn, mọi link mang môn đang mở", () => {
-    expect(resolveSubjectContext(at("/manager"))).toBeNull();
+  it("mở nhánh môn ở các màn của một môn, mọi link mang môn đang mở", () => {
+    expect(resolveSubjectContext(at("/manager"))!.items).toEqual([]);
     expect(resolveSubjectContext(at("/teaching/classes"))).toBeNull();
 
     const subject = resolveSubjectContext(at("/manager/subjects/s-1"))!;
@@ -52,7 +52,7 @@ describe("sidebar của lớp", () => {
     expect(activeLabel(teaching.items)).toBe("Học liệu");
     expect(activeLabel(resolveClassContext(at("/teaching/classes/c-1", "tab=nope"))!.items)).toBe("Thông tin lớp");
     expect(activeLabel(resolveClassContext(at("/teaching/classes/c-1/assignments/a-1/submissions"))!.items)).toBe("Bài tập");
-    expect(resolveClassContext(at("/teaching/classes"))).toBeNull();
+    expect(resolveClassContext(at("/teaching/classes"))!.items).toEqual([]);
   });
 
   it("Thông báo lớp của một lớp vẫn ở sidebar của lớp đó", () => {
@@ -72,7 +72,7 @@ describe("sidebar của lớp", () => {
     expect(activeLabel(resolveStudentClassContext(at("/classes/c-4", "tab=materials"))!.items)).toBe("Học liệu");
     expect(activeLabel(resolveStudentClassContext(at("/materials/m-1", "classId=c-4"))!.items)).toBe("Học liệu");
     expect(activeLabel(resolveStudentClassContext(at("/my-assignments/a-1", "classId=c-4"))!.items)).toBe("Bài tập");
-    expect(resolveStudentClassContext(at("/classes"))).toBeNull();
+    expect(resolveStudentClassContext(at("/classes"))!.items).toEqual([]);
     expect(resolveStudentClassContext(at("/my-assignments"))).toBeNull();
   });
 
@@ -82,22 +82,7 @@ describe("sidebar của lớp", () => {
   });
 });
 
-describe("AppShell với sidebar theo ngữ cảnh", () => {
-  it("ô chọn lớp hiện mã môn nhỏ trên mã lớp (không có tên lớp, tên môn), chọn lớp khác thì giữ đúng mục đang mở", async () => {
-    const value = { id: "c-1", code: "SE1801", name: "Lớp chiều thứ Hai", subject: { id: "s-1", code: "SWR302", name: "Software Requirement" } };
-    vi.stubGlobal("fetch", vi.fn().mockImplementation((url: string) =>
-      Promise.resolve(Response.json(url.includes("/classes/c-1") ? value : [value, { ...value, id: "c-2", code: "SE1802" }]))));
-    location = { pathname: "/teaching/classes/c-1", search: "tab=gradebook" };
-    render(<AppShell role="TEACHER" nav={nav} user={null} context={resolve}><p>Nội dung</p></AppShell>);
-
-    await waitFor(() => expect(screen.getByLabelText("Chọn lớp")).toHaveTextContent("SE1801"));
-    expect(screen.queryByText("Software Requirement")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Chọn lớp")).toHaveTextContent("SWR302");
-    expect(screen.getByLabelText("Chọn lớp")).not.toHaveTextContent("Lớp chiều thứ Hai");
-    expect(await screen.findByRole("menuitem", { name: /SE1802/ })).toHaveAttribute("href", "/teaching/classes/c-2?tab=gradebook");
-    expect(screen.getByRole("link", { name: "Lớp được phân công" })).toHaveAttribute("href", "/teaching/classes");
-  });
-
+describe("AppShell với cây môn, lớp trên sidebar", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   const nav: NavItem[] = [
@@ -106,24 +91,47 @@ describe("AppShell với sidebar theo ngữ cảnh", () => {
   ];
   const resolve = (where: { pathname: string; search: URLSearchParams }) => resolveClassContext(where) ?? resolveSubjectContext(where);
 
-  it("ở trang của môn thì thay menu của role bằng menu môn, có lối về và tên môn", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ id: "s-1", code: "SWR302", name: "Software Requirement" })));
+  it("ở trang của lớp thì giữ menu role, cây lớp mở dưới Lớp được phân công với lớp đang mở", async () => {
+    const value = { id: "c-1", code: "SE1801", name: "Lớp chiều thứ Hai", subject: { id: "s-1", code: "SWR302", name: "Software Requirement" } };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json([value, { ...value, id: "c-2", code: "SE1802" }])));
+    location = { pathname: "/teaching/classes/c-1", search: "tab=gradebook" };
+    render(<AppShell role="TEACHER" nav={nav} user={null} context={resolve}><p>Nội dung</p></AppShell>);
+
+    expect(screen.getByRole("navigation", { name: "Menu Giảng viên" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Lớp được phân công/ })).toHaveAttribute("href", "/teaching/classes");
+    const tree = screen.getByRole("list", { name: "Các lớp được phân công" });
+    await waitFor(() => expect(tree).toHaveTextContent("SE1802"));
+    expect(screen.getByRole("button", { name: /SE1801/ })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: /SE1802/ })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("link", { name: "Chấm điểm" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Chấm điểm" })).toHaveAttribute("href", "/teaching/classes/c-1?tab=gradebook");
+
+    fireEvent.click(screen.getByRole("button", { name: /SE1802/ }));
+    expect(screen.getAllByRole("link", { name: "Chấm điểm" }).map((link) => link.getAttribute("href"))).toEqual([
+      "/teaching/classes/c-1?tab=gradebook",
+      "/teaching/classes/c-2?tab=gradebook",
+    ]);
+  });
+
+  it("ở trang của môn thì giữ menu role, nhánh môn mở dưới Môn được phân công", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json([{ id: "s-1", code: "SWR302", name: "Software Requirement" }])));
     location = { pathname: "/manager/subjects/s-1", search: "" };
     render(<AppShell role="SUBJECT_MANAGER" nav={nav} user={null} context={resolve}><p>Nội dung</p></AppShell>);
 
-    const menu = screen.getByRole("navigation", { name: "Menu môn học" });
-    expect(screen.queryByRole("navigation", { name: "Menu Chủ nhiệm môn" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Môn được phân công" })).toHaveAttribute("href", "/manager");
+    expect(screen.getByRole("navigation", { name: "Menu Chủ nhiệm môn" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Môn được phân công/ })).toHaveAttribute("href", "/manager");
+    expect(screen.getByRole("link", { name: /Môn được phân công/ })).not.toHaveAttribute("aria-current");
     expect(screen.getByRole("link", { name: "Thông tin môn" })).toHaveAttribute("aria-current", "page");
     expect(await screen.findByText("Software Requirement")).toBeInTheDocument();
-    expect(menu).toBeInTheDocument();
-    expect(screen.getByLabelText("Chọn môn")).toHaveTextContent("SWR302");
+    expect(screen.getByRole("link", { name: /Lớp được phân công/ })).toBeInTheDocument();
   });
 
-  it("ngoài trang môn, lớp thì vẫn là menu của role", () => {
+  it("trang Môn được phân công hiện cây các môn, chưa môn nào mở", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json([{ id: "s-1", code: "SWR302", name: "Software Requirement" }])));
     location = { pathname: "/manager", search: "" };
     render(<AppShell role="SUBJECT_MANAGER" nav={nav} user={null} context={resolve}><p>Nội dung</p></AppShell>);
-    expect(screen.getByRole("navigation", { name: "Menu Chủ nhiệm môn" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Môn được phân công" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: /Môn được phân công/ })).toHaveAttribute("aria-current", "page");
+    expect(await screen.findByRole("button", { name: /SWR302/ })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("link", { name: "Thông tin môn" })).not.toBeInTheDocument();
   });
 });

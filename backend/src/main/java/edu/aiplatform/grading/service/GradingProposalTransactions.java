@@ -468,14 +468,21 @@ public class GradingProposalTransactions {
     /** Saves a grade using its ready proposal and marks that proposal as used. */
     @Transactional
     public Evaluation saveUsingProposal(Actor actor, UUID evaluationId, Save input) {
+        // Step 1: Enforce optimistic lock checking on the current evaluation version
         var evaluation = gradingService.requireCurrent(actor, evaluationId, input.version());
+
+        // Step 2: Validate that proposal exists, is in READY state, and matches submission & rubric hashes
         var proposal = gradingProposalRepository.findById(input.usedProposalId())
                 .orElseThrow(() -> ApiException.notFound("PROPOSAL_NOT_FOUND"));
         if (!evaluationId.equals(proposal.evaluationId) || !"READY".equals(proposal.status)
                 || !evaluation.submissionHash.equals(proposal.submissionHash)
                 || !evaluation.rubricSnapshot.equals(proposal.rubricFingerprint))
             throw ApiException.conflict("STALE_PROPOSAL", "Proposal is stale or unavailable");
+
+        // Step 3: Apply proposal scores to evaluation draft and save
         var saved = gradingService.saveCheckedEvaluation(actor, evaluationId, input, proposal);
+
+        // Step 4: Mark proposal as consumed and update timestamp in database
         proposal.usedAt = clock.instant();
         gradingProposalRepository.save(proposal);
         return saved;
@@ -485,6 +492,7 @@ public class GradingProposalTransactions {
     @Transactional
     public GradingProposal recordMcpProposal(Actor actor, UUID evaluationId, long expectedVersion,
             String hash, String requestRef, JsonNode payload, String agentLabel) {
+        // Step 1: Verify caller access and validate current evaluation state and submission hash
         var evaluation = gradingService.requireCurrent(actor, evaluationId, expectedVersion);
         if (!evaluation.submissionHash.equals(hash))
             throw ApiException.conflict("STALE_PROPOSAL", "Submission changed");
@@ -494,6 +502,8 @@ public class GradingProposalTransactions {
                 && evaluation.state != EvaluationStatus.DRAFT)
             throw ApiException.conflict("INVALID_GRADE_STATE",
                     "AI proposals require a pending or draft grade");
+
+        // Step 2: Ensure idempotency via requestRef - return existing proposal if identical
         var existing = gradingProposalRepository.findByRequestRef(requestRef);
         if (existing.isPresent()) {
             var proposal = existing.get();
@@ -507,9 +517,13 @@ public class GradingProposalTransactions {
                         "Request reference already used");
             return proposal;
         }
+
+        // Step 3: Parse rubrics and validate proposal structure against rubric items and block IDs
         var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
         var validBlockIds = resolveValidBlockIds(actor, evaluation, rubrics);
         gradingProposalValidator.validateProposal(payload, rubrics, validBlockIds);
+
+        // Step 4: Build proposal entity with origin MCP and READY status
         var proposal = new GradingProposal();
         proposal.id = UUID.randomUUID();
         proposal.evaluationId = evaluationId;
@@ -526,6 +540,8 @@ public class GradingProposalTransactions {
         proposal.status = "READY";
         proposal.createdAt = clock.instant();
         proposal.completedAt = proposal.createdAt;
+
+        // Step 5: Record audit event and persist proposal entity in repository
         gradingService.recordAudit(actor, evaluation, "AI_GRADING_REQUESTED", null);
         return gradingProposalRepository.save(proposal);
     }

@@ -56,10 +56,12 @@ public class GradingMcpTools implements IMcpToolProvider {
 
     /** Validates the submission reference and records its grading proposal. */
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
+        // Step 1: Verify caller holds active teacher or subject manager permission
         edu.aiplatform.ai.contract.McpInput.teaching(actor);
         if (!"record_grading_proposal".equals(name))
             throw ApiException.notFound("MCP_TOOL_NOT_FOUND");
         try {
+            // Step 2: Parse and validate submission reference (kind, id, classId, assignmentId)
             var root = objectMapper.valueToTree(args);
             var reference = readSubmissionReference(root);
             var kind = reference.path("kind").asText();
@@ -73,18 +75,26 @@ public class GradingMcpTools implements IMcpToolProvider {
                     || root.path("expectedVersion").asLong() < 0)
                 throw ApiException.badRequest("INVALID_MCP_ARGUMENTS",
                         "Invalid submission reference or version");
+
+            // Step 3: Check request reference and snapshot fingerprint format (64-char hex)
             String requestRef = root.path("requestRef").asText();
             if (requestRef.isBlank() || requestRef.length() > 200)
                 throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid request reference");
             String fingerprint = root.path("snapshotFingerprint").asText();
             if (!fingerprint.matches("[0-9a-f]{64}"))
                 throw GradingMcpReadProgress.createReadRequiredError();
+
+            // Step 4: Enforce complete read requirement - verify agent read 100% of submission blocks
             gradingMcpQueryService.requireCompleteRead(actor, evaluation.id,
                     root.path("expectedVersion").asLong(), root.path("submissionHash").asText(),
                     fingerprint);
+
+            // Step 5: Store proposal idempotently in database via transaction service
             var proposal = gradingProposalTransactions.recordMcpProposal(actor, evaluation.id,
                     root.path("expectedVersion").asLong(), root.path("submissionHash").asText(),
                     requestRef, root.get("proposal"), root.path("agentLabel").asText("Agent"));
+
+            // Step 6: Construct teacher review link and return proposal reference to caller
             return new McpToolResult(false,
                     Map.of("proposalId", proposal.id, "status", proposal.status, "evaluationId",
                             evaluation.id, "reviewUrl",
