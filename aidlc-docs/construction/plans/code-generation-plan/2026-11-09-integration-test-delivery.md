@@ -2,9 +2,9 @@
 
 User explicitly authorizes committing/pushing the current integration-test branch, then merging staging into that branch and creating a PR to staging only after E2E succeeds. This supersedes the previous no-commit/no-push limit for delivery. Do not merge the PR or deploy.
 
-- [ ] Verify that the reviewed source still matches the successful2,028-test/57-case snapshot; inspect scoped changes and commit them in reviewable groups.
-- [ ] Push integration-test normally, preserving any existing remote work.
-- [ ] Fetch current staging and merge origin/staging into integration-test; preserve both sides of any conflict.
+- [x] Verify that the reviewed source still matches the successful2,028-test/57-case snapshot; inspect scoped changes and commit them in reviewable groups.
+- [x] Push integration-test normally, preserving any existing remote work.
+- [x] Fetch current staging and merge origin/staging into integration-test; preserve both sides of any conflict.
 - [ ] Assess the merge delta and verify applicable backend/frontend changes. Run Maven sequentially and before starting the E2E stack to avoid contention with local latency checks.
 - [ ] Start a separate local E2E project with disposable database/Rabbit volumes, Redis and Mailpit, current merged JAR and loopback Nginx. Wait for backend and worker health. Preserve original platform data/containers.
 - [ ] Run the existing U04/U13/U14, U12/U12b/U12c and U02 API E2E suites with the required fixture ordering; inspect result JSON as well as process exit codes. These are API/proxy/SSE checks, not complete browser journeys. No real AI key or external email provider calls.
@@ -12,3 +12,13 @@ User explicitly authorizes committing/pushing the current integration-test branc
 - [ ] Verify the remote head matches the tested head and create/update one PR from integration-test to staging; report its URL. No PR merge.
 
 Pre-delivery evidence: full backend2,028/2,028 passed, zero failures/errors/skips; required guard57 cases/62 mapped invocations and four negative guard checks passed. English workbook57 cases, preserving49 original rows/styles/dates. The workbook remains the separately delivered artifact; repository evidence includes its SHA256. Existing security/resiliency retained; PBT disabled.
+
+Initial commits15400ac2 (tests/guard/scenario manifest) and8d53a1c6 (design/report/evidence) were pushed normally to the newly created origin/integration-test. Fetched origin/staging atfb20c6bc and merged it as a55f8426, with both parents verified. Only audit.md conflicted: concatenated the append-only histories and verified every original line from both sides remained in order. Corrected the new delivery entry's timestamp placement separately, retaining its original timestamp and verified requester.
+
+Staging contributes changes to individual submission flow and grading prompt/proposal handling, plus frontend submission/receipt changes and requirement alignment. No source conflicts. Fresh complete backend and frontend checks are in progress before E2E. E2E project platform-integration-test-e2e-20261109 uses a new ignored directory, fresh generated credentials and loopback proxy19088/Mailpit19025/production frontend19030; existing platform containers on8088 and their data remain separate. Broader suite order is U12→U12b→U12c→U02, after fresh seed, so U02 has the required group audit fixtures. Legacy result JSON counts are checked independently of process exit codes.
+
+First merged candidate a55f8426: complete backend2,028/2,028 passed, zero failures/errors/skips, JAR packaged and57-case guard passed. Frontend build/lint/typecheck passed. Default parallel frontend run completed793/800 with seven5000ms timeouts in unchanged pagination/editor/OTP/announcement/material/layout/MCP cases. No assertion, timeout or application code was changed. Without the backend run competing, maxWorkers=2 verified the seven files40/40, then the complete frontend800/800 with zero pending/failures. Both original and retry JSON/logs are preserved; this is a resource-sensitive observation, not a weakened oracle.
+
+The first isolated stack became healthy and proxy smoke passed200/200/401. Before business E2E started, staging advanced to198b796f with08c35f42: U12 lost-hold editor closure and submit-time authors, touching one backend workspace service and three frontend files plus tests/docs. Stop only the task stack/frontend, preserve its fresh volumes, and integrate this delta before E2E.
+
+Ruling: retain the complete backend/frontend evidence for the first staging snapshot, then verify the second, narrowly scoped U12 increment with all Group/ClassGroup tests, the composed24-case integration suite, architecture checks, and current frontend build/typecheck/scoped lint/U12 tests. Rebuild the JAR from that tree and run all168 existing API/proxy/SSE assertions against it. This avoids representing cumulative runs as a fresh full-platform result. Cost if wrong: a regression outside those changed U12 dependencies could remain; the PR's CI will run the complete backend/frontend suites on the final merge candidate.

@@ -11374,8 +11374,8 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ---
 
-**Timestamp**: 2026-11-09T04:31:56.2950085Z
 ## Integration-test delivery — authorized Git and E2E operations
+**Timestamp**: 2026-11-09T04:31:56.2950085Z
 **Requested by:** Vu Hai Nam
 **User Input**: "giúp tôi commit và push lên branch hiện tại, sau đó merge staging vào branch hiện tại, kiểm tra lại e2e không vấn đề gì thì tạo pr vào staging"
 **AI Response**: Continue on integration-test. User explicitly authorizes scoped commits, normal push, merging origin/staging into the current branch, isolated E2E and a PR targeting staging if checks pass. No PR merge or deployment is authorized. Verified all1,031 backend source hashes still match the successful2,028-test snapshot; the actual57-case guard passed again. Plan records disposable local fixtures, required backend/worker health, API/proxy/SSE boundaries and no live provider calls. Existing security/resiliency retained; PBT disabled. Authenticated GitHub profile display name verified via API; historical requester attribution remains unchanged.
