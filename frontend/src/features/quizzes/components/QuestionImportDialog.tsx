@@ -7,7 +7,7 @@ import { errorMessage } from "../model/labels";
 import type { ImportResult } from "../model/types";
 
 const MAX_BYTES = 5 * 1024 * 1024;
-export const TEMPLATE_HREF = "/templates/question-import.csv";
+export const TEMPLATE_HREF = "/templates/question-import.xlsx";
 
 type Props = { subjectId: string; onClose: () => void; onImported: (created: number) => void };
 
@@ -55,7 +55,7 @@ export function QuestionImportDialog({ subjectId, onClose, onImported }: Props) 
   };
 
   return (
-    <Dialog open onClose={onClose} dismissible={!busy} size="lg" icon="upload_file" title="Nhập câu hỏi từ tệp"
+    <Dialog open onClose={onClose} dismissible={!busy} size="lg" icon="upload_file" title="Nhập câu hỏi từ Excel"
       footer={<>
         <Button variant="primary" disabled={busy || !preview || preview.valid === 0} onClick={() => void commit()} data-testid="question-import-commit">
           Nhập {preview?.valid ?? 0} câu hợp lệ
@@ -63,11 +63,11 @@ export function QuestionImportDialog({ subjectId, onClose, onImported }: Props) 
       </>}>
       <div className="flex flex-col gap-3 text-[13px]">
         <p className="text-body">
-          Tệp .xlsx hoặc .csv theo mẫu: nội dung, loại, các lựa chọn, đáp án đúng, độ khó, thẻ. Tối đa 500 dòng, 5 MB.{" "}
+          Tệp Excel .xlsx theo mẫu: nội dung, loại, các lựa chọn, đáp án đúng, độ khó, thẻ. Tối đa 500 dòng, 5 MB.{" "}
           <a href={TEMPLATE_HREF} download className="font-semibold text-primary-ink hover:underline" data-testid="question-import-template">Tải tệp mẫu</a>
         </p>
         <label htmlFor={`${id}-file`} className="text-xs font-semibold text-body">Tệp câu hỏi</label>
-        <input id={`${id}-file`} type="file" accept=".xlsx,.csv,text/csv" disabled={busy} data-testid="question-import-file"
+        <input id={`${id}-file`} type="file" accept=".xlsx" disabled={busy} data-testid="question-import-file"
           onChange={(event) => void choose(event.target.files?.[0] ?? null)} className="text-[13px]" />
         {busy && <p role="status" className="text-muted">Đang kiểm tệp…</p>}
         {error && <Alert tone="danger" role="alert">{error}</Alert>}
