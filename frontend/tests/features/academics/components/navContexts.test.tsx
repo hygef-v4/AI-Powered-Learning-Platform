@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import "@/features/register";
 import { AppShell } from "@/shared/layout/AppShell";
@@ -91,7 +91,7 @@ describe("AppShell với cây môn, lớp trên sidebar", () => {
   ];
   const resolve = (where: { pathname: string; search: URLSearchParams }) => resolveClassContext(where) ?? resolveSubjectContext(where);
 
-  it("ở trang của lớp thì giữ menu role, cây lớp mở dưới Lớp được phân công với lớp đang mở", async () => {
+  it("ở trang của lớp thì giữ menu role; dưới Lớp được phân công là ô chọn lớp rồi các mục của lớp đang mở", async () => {
     const value = { id: "c-1", code: "SE1801", name: "Lớp chiều thứ Hai", subject: { id: "s-1", code: "SWR302", name: "Software Requirement" } };
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json([value, { ...value, id: "c-2", code: "SE1802" }])));
     location = { pathname: "/teaching/classes/c-1", search: "tab=gradebook" };
@@ -99,18 +99,14 @@ describe("AppShell với cây môn, lớp trên sidebar", () => {
 
     expect(screen.getByRole("navigation", { name: "Menu Giảng viên" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Lớp được phân công/ })).toHaveAttribute("href", "/teaching/classes");
-    const tree = screen.getByRole("list", { name: "Các lớp được phân công" });
-    await waitFor(() => expect(tree).toHaveTextContent("SE1802"));
-    expect(screen.getByRole("button", { name: /SE1801/ })).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("button", { name: /SE1802/ })).toHaveAttribute("aria-expanded", "false");
+    const branch = screen.getByRole("group", { name: "Các lớp được phân công" });
+    // Ô thả xuống hiện lớp đang mở, nhánh là các mục của lớp đó.
+    await waitFor(() => expect(branch).toHaveTextContent("SE1801"));
+    expect(screen.getByRole("menuitemradio", { name: /SE1801/ })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByRole("link", { name: "Chấm điểm" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Chấm điểm" })).toHaveAttribute("href", "/teaching/classes/c-1?tab=gradebook");
-
-    fireEvent.click(screen.getByRole("button", { name: /SE1802/ }));
-    expect(screen.getAllByRole("link", { name: "Chấm điểm" }).map((link) => link.getAttribute("href"))).toEqual([
-      "/teaching/classes/c-1?tab=gradebook",
-      "/teaching/classes/c-2?tab=gradebook",
-    ]);
+    // Đang ở Chấm điểm của lớp này: chọn lớp khác trong ô thì sang luôn Chấm điểm của lớp đó.
+    expect(screen.getByRole("menuitemradio", { name: /SE1802/ })).toHaveAttribute("href", "/teaching/classes/c-2?tab=gradebook");
   });
 
   it("ở trang của môn thì giữ menu role, nhánh môn mở dưới Môn được phân công", async () => {
@@ -122,16 +118,35 @@ describe("AppShell với cây môn, lớp trên sidebar", () => {
     expect(screen.getByRole("link", { name: /Môn được phân công/ })).toHaveAttribute("href", "/manager");
     expect(screen.getByRole("link", { name: /Môn được phân công/ })).not.toHaveAttribute("aria-current");
     expect(screen.getByRole("link", { name: "Thông tin môn" })).toHaveAttribute("aria-current", "page");
-    expect(await screen.findByText("Software Requirement")).toBeInTheDocument();
+    // Ô chọn môn hiện môn đang mở.
+    await waitFor(() => expect(screen.getByRole("group", { name: "Các môn được phân công" })).toHaveTextContent("Software Requirement"));
     expect(screen.getByRole("link", { name: /Lớp được phân công/ })).toBeInTheDocument();
   });
 
-  it("trang Môn được phân công hiện cây các môn, chưa môn nào mở", async () => {
+  it("mũi tên của mục cha chỉ mở, đóng nhánh, không chuyển trang: đang ở lớp vẫn mở được nhánh môn để vào Bài tập của môn", async () => {
+    const subject = { id: "s-1", code: "SWR302", name: "Software Requirement" };
+    const value = { id: "c-1", code: "SE1801", name: "Lớp", subject };
+    vi.stubGlobal("fetch", vi.fn().mockImplementation((url: string) =>
+      Promise.resolve(Response.json(String(url).includes("subjects") ? [subject] : [value]))));
+    location = { pathname: "/teaching/classes/c-1", search: "" };
+    render(<AppShell role="SUBJECT_MANAGER" nav={nav} user={null} context={resolve}><p>Nội dung</p></AppShell>);
+    // Tên mục cha vẫn là link sang trang danh sách; mũi tên ở cuối hàng mới là chỗ mở nhánh.
+    expect(screen.getByRole("link", { name: /Môn được phân công/ })).toHaveAttribute("href", "/manager");
+    const toggle = screen.getByRole("button", { name: "Mở Môn được phân công" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(toggle);
+    expect(screen.getByRole("button", { name: "Thu gọn Môn được phân công" })).toHaveAttribute("aria-expanded", "true");
+    fireEvent.click(await within(screen.getByRole("group", { name: "Các môn được phân công" })).findByRole("menuitemradio", { name: /Software Requirement/ }));
+    expect(within(screen.getByRole("group", { name: "Các môn được phân công" })).getByRole("link", { name: "Bài tập" })).toHaveAttribute("href", expect.stringContaining("s-1"));
+  });
+
+  it("trang Môn được phân công hiện ô Chọn môn, chưa môn nào mở", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json([{ id: "s-1", code: "SWR302", name: "Software Requirement" }])));
     location = { pathname: "/manager", search: "" };
     render(<AppShell role="SUBJECT_MANAGER" nav={nav} user={null} context={resolve}><p>Nội dung</p></AppShell>);
     expect(screen.getByRole("link", { name: /Môn được phân công/ })).toHaveAttribute("aria-current", "page");
-    expect(await screen.findByRole("button", { name: /SWR302/ })).toHaveAttribute("aria-expanded", "false");
+    expect(await screen.findByRole("menuitemradio", { name: /SWR302/ })).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByRole("group", { name: "Các môn được phân công" })).toHaveTextContent("Chọn môn");
     expect(screen.queryByRole("link", { name: "Thông tin môn" })).not.toBeInTheDocument();
   });
 });
