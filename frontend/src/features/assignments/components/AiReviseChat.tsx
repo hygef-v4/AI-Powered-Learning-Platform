@@ -8,6 +8,8 @@ import type { AiDraft } from "../model/types";
 
 const POLL_MS = 2000;
 const MAX_REQUEST = 4000;
+const MAX_WARNINGS = 3;
+const MAX_WAIT_MS = 3 * 60 * 1000;
 
 type Message = { id: number; role: "user" | "ai"; text: string; tone?: "danger" };
 
@@ -43,7 +45,12 @@ export function AiReviseChat({ assignmentId, prepare, onApplied }: {
 
   async function waitForResult(draft: AiDraft): Promise<AiDraft> {
     let current = draft;
+    const deadline = Date.now() + MAX_WAIT_MS;
     while (current.status === "PENDING" && alive.current) {
+      if (Date.now() > deadline) {
+        void assignmentsApi.discardAiDraft(assignmentId, current.draftId).catch(() => {});
+        return { ...current, status: "FAILED", safeError: "AI phản hồi quá lâu." };
+      }
       await new Promise((resolve) => setTimeout(resolve, POLL_MS));
       current = await assignmentsApi.aiDraft(assignmentId, current.draftId);
     }
@@ -66,6 +73,11 @@ export function AiReviseChat({ assignmentId, prepare, onApplied }: {
         say("ai", `${draft.safeError ?? "AI không trả kết quả."} Đề chưa thay đổi.`, "danger");
         return;
       }
+      if (draft.proposal.unchanged) {
+        say("ai", "AI chưa thay đổi gì. Hãy nói rõ hơn, ví dụ: \"Thêm 10 câu hỏi về thiết kế cơ sở dữ liệu, mỗi câu 10 điểm\".");
+        void assignmentsApi.discardAiDraft(assignmentId, draft.draftId).catch(() => {});
+        return;
+      }
       const validation = draft.proposal.validation;
       if (validation?.status === "INVALID") {
         say("ai", `Không áp dụng được: ${validation.issues.map((issue) => issue.message).join(" ")}`, "danger");
@@ -76,8 +88,9 @@ export function AiReviseChat({ assignmentId, prepare, onApplied }: {
       await assignmentsApi.applyAiDraft(assignmentId, draft.draftId, version, true, true);
       await onApplied();
       const warnings = validation?.issues.filter((issue) => issue.severity === "WARNING") ?? [];
-      say("ai", ["Đã sửa đề theo yêu cầu. Nhấn Ctrl+Z để quay lại bản trước.",
-        ...warnings.map((issue) => `Lưu ý: ${issue.message}`)].join("\n"));
+      const shown = warnings.slice(0, MAX_WARNINGS).map((issue) => `Lưu ý: ${issue.message}`);
+      if (warnings.length > MAX_WARNINGS) shown.push(`…và ${warnings.length - MAX_WARNINGS} lưu ý khác.`);
+      say("ai", ["Đã sửa đề theo yêu cầu. Nhấn Ctrl+Z để quay lại bản trước.", ...shown].join("\n"));
     } catch (error) {
       if (!alive.current) return;
       say("ai", `${errorMessage(error)} Đề chưa thay đổi.`, "danger");

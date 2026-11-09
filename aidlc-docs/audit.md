@@ -11625,3 +11625,21 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Kiểm thử end-to-end local và sửa lỗi; không commit.
 
 ---
+
+## Sửa lỗi: khung chat AI báo "Kết quả AI không đúng định dạng"
+**Timestamp**: 2026-11-09T17:10:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tại sao bị lỗi này" (kèm ảnh khung chat: "tạo cho tôi 10 bài" báo Mục "" chưa có tiêu chí chấm; "tạo cho tôi 10 yêu cầu" báo "Kết quả AI không đúng định dạng yêu cầu Đề chưa thay đổi.")
+**AI Response**: "Nguyên nhân: AI (gemini-3.5-flash-lite, tối đa 8.192 token đầu ra) phải chép lại toàn bộ đề nên bị lặp tới hết token (JSON bị cắt), làm rơi khối, hoặc thêm tiêu đề rỗng. Sửa: AI chỉ trả các thao tác UPDATE/INSERT/DELETE theo mã khối, máy chủ ghép vào đề đã gửi (AssignmentDraftRevision.merge, lưu snapshot trong provenance, ẩn khỏi API); khối và rubric không nhắc tới giữ nguyên; bỏ tiêu đề rỗng; prompt hiểu 'tạo N yêu cầu/bài/câu' là thêm N câu; đánh dấu unchanged khi AI không đổi gì và khung chat báo rõ thay vì áp dụng; gộp lưu ý quá 3 dòng. Kiểm thử thật: 10/10 lượt thành công, 'tạo cho tôi 10 yêu cầu' thêm đủ 10 mục qua giao diện. Backend assignments + ai + ArchitectureTest 238/238; frontend assignments 44/44, lint sạch. Câu mới có thể chưa có rubric do mô hình nhỏ bỏ qua (hiện thành lưu ý)."
+**Context**: Sửa lỗi sau kiểm thử thật; không commit.
+
+---
+
+## Rà soát trước khi đưa lên staging: khung chat AI sửa đề
+**Timestamp**: 2026-11-09T17:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Kiểm tra xem có thể đưa lên staging chưa, còn lỗi nào không"
+**AI Response**: "Rà toàn bộ thay đổi từ 80dfc026, sửa 3 lỗi: (1) áp dụng bản sửa khi đề đã đổi phiên bản trong lúc AI xử lý sẽ ghi đè phần vừa gõ — máy chủ từ chối với AI_DRAFT_STALE; (2) AI trả hướng dẫn rỗng sẽ xóa hướng dẫn — rỗng coi là giữ nguyên; (3) khung chat có thể chờ mãi — giới hạn 3 phút rồi bỏ đề xuất. Thêm 2 test backend. Kiểm tra: backend mvn verify 2.038/2.038, BUILD SUCCESS; frontend 804/804 test, eslint toàn bộ sạch, tsc không lỗi mới (3 file test materials không chạy do máy local thiếu package xlsx/pdfjs-dist/docx-preview, lỗi có sẵn). Docker local đã cập nhật bản cuối."
+**Context**: Rà soát sẵn sàng staging; chưa commit.
+
+---

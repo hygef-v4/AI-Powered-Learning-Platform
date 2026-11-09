@@ -209,6 +209,7 @@ public class AssignmentAiDraftService {
                 provenance.put("mode", AssignmentDraftRevision.MODE);
                 provenance.put("instruction", prompt);
                 provenance.set("blockRefs", snapshot.blockRefs());
+                provenance.set("snapshot", snapshot.document());
             }
             AssignmentAiDraft draft = new AssignmentAiDraft(UUID.randomUUID(), id, AssignmentAiDraft.Origin.AI_TASK,
                     null, requestRef, AssignmentAiDraft.Status.PENDING, null, provenance, assignment.version(), null,
@@ -360,6 +361,11 @@ public class AssignmentAiDraftService {
     /** Áp dụng bản sửa đề (yêu cầu 2026-11-09): khối giữ mã cũ giữ id, ảnh, sơ đồ và định dạng chữ không đổi. */
     private AssignmentViews.Detail applyRevision(Actor actor, Assignment current, AssignmentAiDraft draft,
                                                  AssignmentCommands.ApplyDraft command) {
+        // Bản sửa dựa trên đề lúc gửi; đề đã đổi sau đó thì áp dụng sẽ ghi đè phần vừa sửa.
+        if (current.version() != draft.baseVersion()) {
+            throw ApiException.conflict("AI_DRAFT_STALE",
+                    "Đề đã thay đổi trong lúc AI xử lý nên chưa áp dụng; hãy gửi lại yêu cầu");
+        }
         ObjectNode validation = AssignmentDraftRevision.validate(draft.proposal(), current.gradingMode());
         if ("INVALID".equals(validation.path("status").asText())) {
             throw ApiException.conflict("AI_DRAFT_INVALID", "Đề sau khi sửa không hợp lệ; gửi lại yêu cầu khác");
@@ -479,8 +485,16 @@ public class AssignmentAiDraftService {
             JsonNode raw;
             try {
                 raw = json.readTree(result.output());
-                proposal = revise ? AssignmentDraftRevision.normalize(raw, assignment.diagramEnabled())
-                        : AiDraftProposal.normalize(raw, assignment.diagramEnabled());
+                if (revise) {
+                    JsonNode sent = draft.provenance().path("snapshot");
+                    JsonNode merged = AssignmentDraftRevision.merge(raw, sent);
+                    proposal = AssignmentDraftRevision.normalize(merged, assignment.diagramEnabled());
+                    if (proposal != null && sent.equals(merged)) {
+                        proposal.put("unchanged", true);
+                    }
+                } else {
+                    proposal = AiDraftProposal.normalize(raw, assignment.diagramEnabled());
+                }
             } catch (JsonProcessingException | RuntimeException e) {
                 raw = null;
                 proposal = null;
@@ -645,6 +659,7 @@ public class AssignmentAiDraftService {
                 ? ((ObjectNode) provenance).deepCopy() : JsonNodeFactory.instance.objectNode();
         safe.remove("materialIds");
         safe.remove("blockRefs");
+        safe.remove("snapshot");
         JsonNode sourceFiles = safe.path("sourceFiles");
         if (sourceFiles.isArray()) {
             ArrayNode visible = JsonNodeFactory.instance.arrayNode();

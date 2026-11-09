@@ -55,6 +55,20 @@ describe("AiReviseChat", () => {
     await waitFor(() => expect(screen.getByTestId("ai-revise-input")).not.toBeDisabled());
   });
 
+  it("says when the AI changed nothing instead of applying", async () => {
+    const ready = draft("READY");
+    vi.spyOn(assignmentsApi, "requestAiRevision").mockResolvedValue({ ...ready, proposal: { ...ready.proposal!, unchanged: true } });
+    const apply = vi.spyOn(assignmentsApi, "applyAiDraft");
+    const discard = vi.spyOn(assignmentsApi, "discardAiDraft").mockResolvedValue(ready);
+    render(<AiReviseChat assignmentId="a1" prepare={vi.fn().mockResolvedValue(3)} onApplied={vi.fn()} />);
+
+    send("tạo cho tôi 10 yêu cầu");
+
+    expect(await screen.findByText(/AI chưa thay đổi gì/)).toBeInTheDocument();
+    expect(apply).not.toHaveBeenCalled();
+    expect(discard).toHaveBeenCalledWith("a1", "d1");
+  });
+
   it("does not send an empty instruction", () => {
     const request = vi.spyOn(assignmentsApi, "requestAiRevision");
     render(<AiReviseChat assignmentId="a1" prepare={vi.fn()} onApplied={vi.fn()} />);

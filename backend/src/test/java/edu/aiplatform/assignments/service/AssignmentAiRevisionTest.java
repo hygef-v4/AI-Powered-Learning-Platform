@@ -127,6 +127,35 @@ class AssignmentAiRevisionTest {
     }
 
     @Test
+    void operationsChangeOnlyMentionedBlocksAndKeepUntouchedRubrics() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, chineseSkeleton(), true);
+        var snapshot = AssignmentDraftRevision.snapshot(a, f.rubricsOf(a.id()));
+        JsonNode raw = read("""
+                {"title":"","instructions":"Hướng dẫn","operations":[
+                 {"op":"UPDATE","ref":"b2","type":"PARAGRAPH","text":"Liệt kê các ca sử dụng"},
+                 {"op":"DELETE","ref":"b5","type":"PARAGRAPH","text":""},
+                 {"op":"INSERT","ref":"b5","type":"HEADING","style":"H1","text":"Câu mới","rubric":[
+                  {"title":"Đúng","items":[{"text":"Trả lời đúng","points":10}]}]},
+                 {"op":"INSERT","ref":"b5","type":"PARAGRAPH","text":"Nội dung câu mới"},
+                 {"op":"INSERT","ref":"b0","type":"HEADING","style":"H1","text":""},
+                 {"op":"UPDATE","ref":"b42","type":"PARAGRAPH","text":"ref lạ bị bỏ qua"}]}
+                """);
+
+        ObjectNode merged = AssignmentDraftRevision.merge(raw, snapshot.document());
+        ObjectNode proposal = AssignmentDraftRevision.normalize(merged, true);
+
+        assertThat(proposal.path("title").asText()).isEqualTo("Bài 1");
+        JsonNode blocks = proposal.path("blocks");
+        assertThat(blocks).extracting(b -> b.path("ref").asText("-") + ":" + b.path("text").asText())
+                .containsExactly("b1:系统用例分析", "b2:Liệt kê các ca sử dụng", "b3:图", "b4:数据模型设计",
+                        "-:Câu mới", "-:Nội dung câu mới");
+        assertThat(blocks.get(0).path("rubric")).isNotEmpty();
+        assertThat(blocks.get(3).path("rubric")).isNotEmpty();
+        assertThat(blocks.get(4).path("rubric").get(0).path("title").asText()).isEqualTo("Đúng");
+        assertThat(AssignmentDraftRevision.merge(read("{\"blocks\":[]}"), snapshot.document())).isNull();
+    }
+
+    @Test
     void listItemsTravelAsLinesAndKeepTheirFormatting() {
         ObjectNode list = JsonNodeFactory.instance.objectNode().put("ordered", true);
         list.putArray("items").addObject().put("level", 1).putArray("runs").addObject().put("text", "墓位").put("italic", true);
@@ -160,6 +189,35 @@ class AssignmentAiRevisionTest {
                 " ", List.of(), List.of(), null, null, "r1", null, null, AssignmentDraftRevision.MODE)))
                 .isInstanceOf(ApiException.class).extracting("code").isEqualTo("AI_REQUEST_INVALID");
         verify(f.aiTasks, never()).submit(any());
+    }
+
+    @Test
+    void revisionIsNotAppliedOverEditsMadeWhileAiWasWorking() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, chineseSkeleton(), true);
+        var snapshot = AssignmentDraftRevision.snapshot(a, f.rubricsOf(a.id()));
+        ObjectNode proposal = AssignmentDraftRevision.normalize(snapshot.document(), true);
+        AssignmentAiDraft stale = new AssignmentAiDraft(UUID.randomUUID(), a.id(), AssignmentAiDraft.Origin.AI_TASK,
+                null, "r1", AssignmentAiDraft.Status.READY, proposal, JsonNodeFactory.instance.objectNode()
+                .put("mode", AssignmentDraftRevision.MODE), a.version() - 1, null, f.teacher.accountId(),
+                AssignmentFixtures.NOW, null);
+        when(f.drafts.find(stale.id())).thenReturn(Optional.of(stale));
+
+        assertThatThrownBy(() -> f.aiDrafts.apply(f.teacher, a.id(), stale.id(),
+                new AssignmentCommands.ApplyDraft(a.version(), true, true)))
+                .isInstanceOf(ApiException.class).extracting("code").isEqualTo("AI_DRAFT_STALE");
+        assertThat(f.store.get(a.id()).skeleton()).isEqualTo(a.skeleton());
+    }
+
+    @Test
+    void blankInstructionsFromAiKeepTheCurrentOnes() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, chineseSkeleton(), false);
+        var snapshot = AssignmentDraftRevision.snapshot(a, f.rubricsOf(a.id()));
+
+        ObjectNode merged = AssignmentDraftRevision.merge(
+                read("{\"title\":\"\",\"instructions\":\" \",\"operations\":[]}"), snapshot.document());
+
+        assertThat(merged.path("instructions").asText()).isEqualTo("Hướng dẫn");
+        assertThat(merged).isEqualTo(snapshot.document());
     }
 
     @Test
