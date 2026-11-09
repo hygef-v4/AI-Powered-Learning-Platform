@@ -11815,3 +11815,12 @@ sửa soạn câu hỏi từ popup về flat
 **AI Response**: Created local code commits5d628228 (20 Excel paths), b1729529 (84 integrated material/quiz paths) and0df689df (subject exception diagnostics). Final documentation commit carries this receipt and all45 reviewed AI-DLC paths.
 **Verification**: Fresh changed backend suites239tests/19suites0fail/error/skip (.tmp/commit-final-backend-tests.log); separate subject54tests/2suites0fail/error/skip (.tmp/commit-final-subject-tests.log). Full frontend849tests/124files passed (.tmp/commit-final-frontend-tests.log); full ESLint and standalone typecheck passed (.tmp/commit-final-frontend-lint.log, .tmp/commit-final-frontend-typecheck.log). Application/staged code whitespace passed. Preserve two trailing-whitespace lines in original raw user audit text; check other documentation strictly. Prior build/provider/UI reports retain their dated scope, not rerun claims.
 **Context**: User accepted current behavior and explicitly requested clear commits. No source/config/dependency/migration/runtime change in this delivery turn; no push/PR/deploy. Backend test scope is focused, not a full-backend-suite claim. No new remote provider or manual UI run. Security/Resiliency retained; PBT disabled.
+
+---
+
+## Prepare pull request into staging
+**Timestamp**: 2026-11-10T00:23:59.7652239+07:00
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi tạo pr trước khi merge staginfg"
+**AI Response**: User authorizes publishing the current branch and creating a PR into staging, not merging. Fetched origin; feature headfb8846ad contains the four reviewed commits, staginga35d9854 is ahead by5 while feature is ahead by4. git merge-tree computed a clean merge (77f503aaca9323236dd30232f16bad32ce36493b) without changing either branch. No open PR found for this head/base. Remote feature branch is an ancestor, so normal fast-forward push is sufficient. Add only this delivery receipt before publishing; source/config unchanged from final239+54 backend and849 frontend/lint/typecheck verification. PR body follows mattpocock-skills:pr template, explains two additive migrations, source-only retry limit/cost and evidence scope. CI verifies the current merged PR tree; no merge, auto-merge, reviewer messages or deployment authorized.
+**Context**: Publish branch via Git transport and create/check PR with GitHub connector. Existing Security/Resiliency scope retained; PBT disabled. This entry records preparation; live PR URL/check status will be reported from GitHub rather than guessed in this commit.

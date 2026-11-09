@@ -471,3 +471,7 @@ No additional migration or real provider/UI acceptance. Extra retry costs at mos
 - [x] Fresh backend239/19suites0skip plus separate subject54/2suites0skip; full frontend849/124files, full lint and typecheck passed.
 
 Logs .tmp/commit-final-backend-tests.log, commit-final-subject-tests.log, commit-final-frontend-tests.log, commit-final-frontend-lint.log and commit-final-frontend-typecheck.log. No source/runtime change, push, PR or deployment in this delivery turn; no new real-provider/UI acceptance. Focused backend scope only. Security/Resiliency retained; PBT disabled.
+
+## PR preparation — 2026-11-10
+
+User requested a PR before merge into staging. Source headfb8846ad has four feature/documentation commits; current origin/staginga35d9854 is5commits ahead and feature4ahead. Merge preview clean; no existing open head/base PR. Publish the current branch via normal fast-forward push and create PR targeting staging; do not merge or enable auto-merge. Only this preparation receipt changes after verified source: backend239 plus subject54, frontend849/124files, lint/typecheck passed. GitHub CI provides merged-tree validation. Live PR URL/status is reported separately from GitHub; no deployment is triggered by this PR under current CI configuration. Security/Resiliency retained; PBT disabled.
