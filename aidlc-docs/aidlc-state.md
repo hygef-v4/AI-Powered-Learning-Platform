@@ -1,5 +1,32 @@
 # AI-DLC State Tracking
 
+## Integration-test Git/E2E/PR delivery — in progress, 2026-11-09
+
+The user authorizes scoped commits and a normal push of integration-test, then merging current origin/staging into that branch, local E2E regression checks, and a PR targeting staging if E2E succeeds. Do not merge the PR or deploy. Follow the [delivery plan](construction/plans/code-generation-plan/2026-11-09-integration-test-delivery.md). Preserve the historical integration report/evidence below; any postmerge verification is recorded separately. Use a separate disposable local stack and Mailpit; existing security/resiliency retained, PBT disabled.
+
+## Prioritized integration completion — verified, 2026-11-09
+
+Task8 is complete on integration-test. Eight additional methods extend the composed suite from16 to24. Final sequential backend verify passed2,028/2,028 with zero failures/errors/skips at2026-11-09T11:18:00+07 and packaged the executable JAR. All seven unchanged local latency checks passed; earlier failed attempts remain preserved. Current required guard passed57 mapped report cases/62 executions, with all four negative QA fixtures rejected. Independent review's quota-clock and grading-lock findings were addressed; no deferred findings remain.
+
+The English integration report now contains57 representative cases across15 units:49 original case cells/styles/execution dates and the Cover revision preserved, eight cases appended. Source template/native styles/drawings/widths/hidden groups remain intact. Five affected unit tabs and summaries/trace/header views were visually reviewed; eleven unchanged unit/security sheets compared with the baseline. Reopened formula recalculation passed. Scenario/evidence/results and Task8 ledger contain source hashes, workbook hash, actual boundaries and remaining per-unit exclusions.
+
+Only the composed backend test source changed from the historical1,031-file source snapshot. No production source/schema/dependency/frontend change, live provider call, commit, push, PR or merge. Reports5.3–5.5 remain untouched. External mail is controlled; deployed browser/proxy/provider acceptance and exhaustive requirements coverage remain outside this report. Existing security/resiliency retained; PBT disabled. Historical49-case results below describe the preceding phase.
+
+## Integration tests and English report — design review, 2026-11-08
+
+User selected scope B: representative automated integration coverage across all15 units, delivered in groups, plus an English report preserving `Report-5.2_Integration Test_Template.xlsx` styling. Created `integration-test` from freshly fetched `origin/staging`321f8892 with a clean starting checkout. [Scope answer and design review](inception/requirements/2026-11-08-integration-test-questions.md); [concrete design](inception/application-design/2026-11-08-integration-test-design.md).
+
+- [x] Workspace detection and branch setup.
+- [x] Confirm all15-unit scope and inspect initial requirements/test/template structure.
+- [x] Write implementation-aware, requirement-grounded design with per-unit coverage targets and existing evidence candidates.
+- [x] Independent builder check: no important unanswered planning questions.
+- [x] User approval of the concrete design (question2=A), including planning and sequential implementation.
+- [x] Detailed implementation plan and per-group execution:16 new real-component integration methods, production source unchanged.
+- [x] Fresh full backend verification:2,020 passed, zero failures/errors/skips;49 traced report cases resolve to54 passing executions. Guard and four negative checks passed; independent review found no actionable findings.
+- [x] English report authored/recalculated/exported/reopened and all19 sheets visually reviewed;49 cases, accurate execution statistics, traceable methods/requirements and preserved template styling/native parts.
+
+Initial search found24 Testcontainers/composed-context candidates; classification inspected actual collaborators rather than filenames. New composed tests use production owners, disposable PostgreSQL/Redis/Rabbit and current Flyway. Existing focused suites are reused with explicit mocked/persistence-only boundaries. [Plan](construction/plans/code-generation-plan/2026-11-08-integration-test.md), [results/gaps](construction/build-and-test/2026-11-08-integration-test-results.md), [scenario manifest](construction/build-and-test/2026-11-08-integration-test-cases.json) and [source-hashed execution evidence](construction/build-and-test/2026-11-08-integration-test-evidence.json). Final Maven verify completed19:47:22+07 on2026-11-08. The early overlapping-compile baseline was invalidated and is not acceptance evidence. Existing Maven/CI entry point, public contracts, migrations, dependency versions and production persistence choices preserved. Final English workbook has19 sheets and49 Passed Round1 cases; later rounds remain Pending. It was reopened, visually reviewed and checked for formula reactivity, source/template SHA, style/native-part preservation and navigation. Existing security/resiliency scope retained; PBT disabled. Branch remains uncommitted/unpushed; no PR, deployment, live data/provider writes or full-requirements acceptance claim.
+
 ## fix/remove-term delivery and staging merge — 2026-11-08
 
 User explicitly authorized scoped commits, push, staging→current-branch merge and E2E. Six scoped commits pushed to origin/fix/remove-term through fc31721b, then origin/staging528cc50e merged at6007c5fb. Only audit history conflicted; all lines from both branches preserved. Test-only integration repairs committed at44b5781d: restore three needed imports removed by staging cleanup and align the staff-email E2E oracle with BR-U14-21/D-U14-09. Verified merge/test integration through44b5781d has also been normally pushed to the same branch. No postmerge production behavior change.
