@@ -11511,6 +11511,88 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ---
 
+## U12 section workflow improvements — 2026-11-09
+
+**Timestamp**: 2026-11-09T05:50:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> luồng sinh viên làm bài gồm nhận mục hay nhả mục, .... có nên cải thiện gì không
+
+**AI Response**: Reviewed the claim/edit/release flow against the frozen BRs and proposed five improvements that do not change any BR: (1) confirm before taking a Done section written by someone else, (2) warn on leaving the page with unsaved edits, (3) offer "Xong rồi trả mục" in the release dialog, (4) a deadline banner when 30 minutes or less remain, (5) show when the holder claimed or last saved the section. Changes outside the frozen BRs (keeping drafts on release, auto-release of idle holds, viewing others' drafts, concurrent editing) were advised against.
+
+**Context**: Construction — U12 Group Assignment, UX review.
+
+---
+
+## U12 section workflow improvements — implementation — 2026-11-09
+
+**Timestamp**: 2026-11-09T05:55:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> làm 1, 2, 4,5 di
+
+**AI Response**: Implemented items 1, 2, 4 and 5 on branch `feat/u12-section-ux` (item 3 not requested). Frontend: confirm dialog before claiming a Done section last written by another member; `beforeunload` warning while the section editor has unsaved edits; deadline banner on the workspace and in the editor when ≤ 30 minutes remain or during the late window, listing sections not Done; holder line shows "lưu lần cuối N phút trước" or "nhận … , chưa lưu", with a 60-second refresh while another member holds a section. Backend: `SectionView` gains additive `claimedAt` and `holderSavedAt` (timestamps only, set while CLAIMED); drafts stay holder-only (BR-U12-34). No BR, schema or existing field change.
+
+**Context**: Construction — U12 Group Assignment, UX improvements.
+
+---
+
+## U12 feedback 2026-11-09 meeting — scope decisions
+
+**Timestamp**: 2026-11-09T16:20:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> mục 3 thực ra thầy muốn khi 1 người bỏ mục thì khi nhả mục sẽ chọn 1 người khác để đưa mục cho
+
+> chưa cần làm
+> gửi lại tôi bản kế hoạch đã
+
+> ý 1 k can lam
+
+**AI Response**: Recorded the meeting feedback for groups: item 1 (groups per assignment) dropped by the user; item 2 (latest version as result) already met; item 3 planned as FB-U12-06 (release may hand the section to another member; draft still dropped per BR-U12-36; leader's assign kept; who may release unchanged), awaiting approval; item 4 (history: latest revision per author) pending. Partial backend edits for item 3 remain uncommitted.
+
+**Context**: Construction — U12 Group Assignment, feedback triage.
+
+---
+
+## U12 group document outline sidebar — 2026-11-09
+
+**Timestamp**: 2026-11-09T16:30:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> khoan đã, trước hết hãy làm phần group assignment có slidebar giống phần asignment này được không
+
+> duyệt
+
+**AI Response**: The group document page (`/group-docs/{id}`) now replaces the general menu with the same outline sidebar as the individual assignment pages: back link "Bài tập", numbered headings from the assignment skeleton, no "+" buttons (BR-U12-30). Clicking an entry switches to the Tài liệu tab and scrolls to the section containing that heading; the entry of the section on screen is highlighted. The page's "Thoát" button was removed (the sidebar back link replaces it). `AssignmentNav` is exported for reuse; no backend, BR or API change.
+
+**Context**: Construction — U12 Group Assignment, UI.
+
+---
+
+## U12 merge of 2026-11-09 changes to staging
+
+**Timestamp**: 2026-11-09T17:10:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> thế cứ merch những thay đổi hôm nay lên stagging đi
+
+**AI Response**: Merged `feat/u12-section-ux` (confirm before editing others' sections, deadline banner, holder activity timestamps, unsaved-changes warning, outline sidebar) into `staging` after bringing in the latest `origin/staging` and re-running tests. The meeting items 3 (release with handover) and 4 (latest revision per author) are not included; the item 3 draft was set aside in a git stash.
+
+**Context**: Construction — U12 Group Assignment, merge to staging.
+
+---
+
 ## U09 — Open group submission from a member evaluation
 **Timestamp**: 2026-11-09T04:24:31Z
 **Requested by**: Quang Hung

@@ -5,14 +5,18 @@ import { createPortal } from "react-dom";
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { formatDateTime } from "@/features/groups/model/format";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, ButtonLink, Dialog, Pill, Section, TableFrame, Td, Th, cx, type Tone } from "@/shared/ui";
+import { Alert, Button, Dialog, Pill, Section, TableFrame, Td, Th, cx, type Tone } from "@/shared/ui";
 import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import { DocumentViewer } from "@/shared/document";
+import { DOCUMENT_ENTRY, outlineOf, publishOutline } from "@/shared/document/outline";
 import { claimSection, downloadDocx, getWorkspace, groupDocImageUrl, releaseSection, sendActivity } from "../api";
 import { AssignSectionDialog, SectionEditorDialog, SubmitGroupDialog } from "../components/SectionDialogs";
 import { SectionHistoryDialog } from "../components/SectionHistoryDialog";
 import type { Receipt, SectionView, StreamEvent, WorkspaceView } from "../model/types";
 import { useGroupDocStream } from "../hooks/useGroupDocStream";
+import { useClock } from "../hooks/useClock";
+import { describeDeadline, formatAgo } from "../model/deadline";
+import { findSectionForHeading } from "../model/outline";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 const STATUS: Record<SectionView["status"], { text: string; tone: Tone }> = {
@@ -20,6 +24,9 @@ const STATUS: Record<SectionView["status"], { text: string; tone: Tone }> = {
   CLAIMED: { text: "Đang làm", tone: "info" },
   DONE: { text: "Xong", tone: "success" },
 };
+
+// Có mục người khác đang giữ thì tải lại định kỳ: lưu nháp không đẩy SSE (BR-U12-37) nên "lưu lần cuối" cần làm mới.
+const HOLDER_REFRESH_MS = 60_000;
 
 function dateTime(iso: string | null | undefined): string {
   return iso ? formatDateTime(iso) : "—";
@@ -39,6 +46,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   const [editing, setEditing] = useState<SectionView | null>(null);
   const [assigning, setAssigning] = useState<SectionView | null>(null);
   const [releasing, setReleasing] = useState<SectionView | null>(null);
+  const [confirmingEdit, setConfirmingEdit] = useState<SectionView | null>(null);
   const [history, setHistory] = useState<SectionView | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [autoSubmitting, setAutoSubmitting] = useState(false);
@@ -85,6 +93,20 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     [reload, setTab],
   );
   useGroupDocStream(view ? documentId : null, onEvent, () => void reload());
+  const now = useClock();
+
+  const watchHolders =
+    !!view &&
+    view.status === "IN_PROGRESS" &&
+    view.window !== "CLOSED" &&
+    view.sections.some((s) => s.status === "CLAIMED" && s.holderId !== view.viewerId);
+  useEffect(() => {
+    if (!watchHolders) return;
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void reload();
+    }, HOLDER_REFRESH_MS);
+    return () => window.clearInterval(timer);
+  }, [watchHolders, reload]);
 
   const send = useCallback(
     (events: ActivityEventInput[], options: { keepalive: boolean }) => sendActivity(documentId, events, options.keepalive),
@@ -94,6 +116,60 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     enabled: !!view && view.activityMonitoring && view.role.member && view.status === "IN_PROGRESS" && view.window !== "CLOSED",
     send,
   });
+
+  // Sidebar mục lục như trang làm bài cá nhân: đăng dàn ý của khung đề, lối về Bài tập.
+  useEffect(() => {
+    if (!view) return;
+    const backHref = view.role.teacher
+      ? `/teaching/classes/${encodeURIComponent(view.classId)}?tab=students`
+      : `/my-assignments/${encodeURIComponent(view.assignmentId)}?classId=${encodeURIComponent(view.classId)}`;
+    // Đề có heading tự gõ số ("1. Đặc tả") thì bỏ số trùng với số sidebar tự đánh, tránh "1. 1. Đặc tả".
+    const entries = outlineOf(view.sharedBlocks.blocks).map((entry) =>
+      entry.number && entry.title.startsWith(entry.number) ? { ...entry, title: entry.title.slice(entry.number.length).trim() } : entry,
+    );
+    publishOutline({ assignmentId: view.assignmentId, backHref, backLabel: "Bài tập", entries });
+  }, [view]);
+  useEffect(() => () => publishOutline(null), []);
+
+  // Bấm một dòng trên sidebar: về thẻ Tài liệu và cuộn tới mục chứa heading đó.
+  useEffect(() => {
+    if (!view) return;
+    const handleShowPart = (event: Event) => {
+      const headingId = (event as CustomEvent<{ headingId: string }>).detail?.headingId;
+      setTab("work");
+      const target =
+        headingId === DOCUMENT_ENTRY
+          ? "group-doc-content"
+          : (() => {
+              const found = findSectionForHeading(view.sharedBlocks.blocks, view.sections, headingId);
+              return found ? `section-${found.id}` : null;
+            })();
+      if (!target) return;
+      // Đợi thẻ Tài liệu vẽ xong nếu vừa chuyển từ thẻ Bản nộp.
+      window.setTimeout(() => document.getElementById(target)?.scrollIntoView?.({ behavior: "smooth", block: "start" }), 0);
+    };
+    window.addEventListener("document:show-part", handleShowPart);
+    return () => window.removeEventListener("document:show-part", handleShowPart);
+  }, [view, setTab]);
+
+  // Sidebar sáng theo mục đang hiện trên màn hình khi cuộn.
+  const sectionKey = view?.sections.map((s) => s.id).join(",") ?? "";
+  useEffect(() => {
+    if (!sectionKey || tab !== "work" || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (records) => {
+        const shown = records.filter((r) => r.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        const headingId = (shown?.target as HTMLElement | undefined)?.dataset.partId;
+        if (headingId) window.dispatchEvent(new CustomEvent("document:current-part", { detail: { headingId } }));
+      },
+      { rootMargin: "0px 0px -60% 0px" },
+    );
+    sectionKey.split(",").forEach((id) => {
+      const element = document.getElementById(`section-${id}`);
+      if (element) observer.observe(element);
+    });
+    return () => observer.disconnect();
+  }, [sectionKey, tab]);
 
   const openEditor = (s: SectionView) => setEditing(s);
 
@@ -141,22 +217,34 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     }
   }
   const done = view.sections.filter((s) => s.status === "DONE").length;
+  const deadline = describeDeadline(view, now);
   const leaderName = view.members.find((m) => m.accountId === view.leaderId)?.name ?? "chưa có";
   const myId = view.viewerId;
   const name = (id: string | null) =>
     id === null ? "Chưa ai nhận" : id === myId ? "Bạn" : (view.members.find((m) => m.accountId === id)?.name ?? "Thành viên");
   const isMine = (s: SectionView) => s.status === "CLAIMED" && s.holderId === myId;
   const claimable = (s: SectionView) => editable && me.member && s.status !== "CLAIMED";
+  // Mục Xong do người khác viết: hỏi lại trước khi nhận, vì người nhận khóa mục và thành người viết khi bấm Xong.
+  const handleClaim = (s: SectionView) => {
+    if (s.status === "DONE" && s.lastAuthorId && s.lastAuthorId !== myId) setConfirmingEdit(s);
+    else void claimAndEdit(s);
+  };
   const openSection = (s: SectionView) => {
     if (editable && isMine(s)) openEditor(s);
-    else if (claimable(s)) void claimAndEdit(s);
+    else if (claimable(s)) handleClaim(s);
     else document.getElementById(`section-${s.id}`)?.scrollIntoView?.({ behavior: "smooth", block: "start" });
   };
   const sectionHint = (s: SectionView) =>
     editable && isMine(s) ? "Bấm để soạn tiếp" : claimable(s) ? "Bấm để nhận và soạn" : "Xem nội dung";
+  const holderActivity = (s: SectionView) =>
+    s.holderSavedAt
+      ? ` · lưu lần cuối ${formatAgo(s.holderSavedAt, now)}`
+      : s.claimedAt
+        ? ` · nhận ${formatAgo(s.claimedAt, now)}, chưa lưu`
+        : "";
   const holderLine = (s: SectionView) =>
     s.status === "CLAIMED"
-      ? `Đang soạn: ${name(s.holderId)}`
+      ? `Đang soạn: ${name(s.holderId)}${holderActivity(s)}`
       : s.status === "DONE"
         ? `Viết bởi: ${s.lastAuthorId ? name(s.lastAuthorId) : "—"}`
         : "Chưa ai nhận";
@@ -164,9 +252,6 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3">
-        <ButtonLink back href={me.teacher ? `/teaching/classes/${view.classId}` : `/classes/${view.classId}`} icon="arrow_back" size="sm">
-          Thoát
-        </ButtonLink>
         <div className="min-w-0">
           <h1 className="text-[17px] font-bold text-ink">
             {view.assignmentTitle ?? "Bài nhóm"} · {view.groupName}
@@ -208,6 +293,15 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         </Alert>
       )}
       {!editable && view.status === "IN_PROGRESS" && <Alert tone="info">Đã hết hạn nộp; tài liệu chỉ còn xem.</Alert>}
+      {deadline && !me.teacher && (
+        <Alert tone={deadline.tone} title={deadline.title}>
+          <ul className="list-disc pl-4">
+            {deadline.details.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </Alert>
+      )}
 
       {tab === "work" ? (
         <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
@@ -241,7 +335,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
                     </button>
                     <div className="flex flex-wrap gap-1.5">
                       {claimable(s) && (
-                        <Button size="sm" variant="primary" onClick={() => void claimAndEdit(s)}>
+                        <Button size="sm" variant="primary" onClick={() => handleClaim(s)}>
                           {s.status === "DONE" ? "Sửa mục" : "Nhận mục"}
                         </Button>
                       )}
@@ -269,6 +363,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
               })}
             </ul>
           </Section>
+          <div id="group-doc-content" className="min-w-0 scroll-mt-4">
           <Section title="Tài liệu nhóm" icon="description">
             {view.sharedBlocks.blocks.length > 0 && (
               <div className="rounded-xl bg-shell p-3">
@@ -277,12 +372,13 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
               </div>
             )}
             {view.sections.map((s) => (
-              <article key={s.id} id={`section-${s.id}`} aria-label={s.title} className="scroll-mt-4">
+              <article key={s.id} id={`section-${s.id}`} data-part-id={s.partId} aria-label={s.title} className="scroll-mt-4">
                 <h3 className="mt-2 text-[14px] font-bold text-ink">{s.title}</h3>
                 <DocumentViewer document={{ blocks: s.publishedBlocks ?? [] }} imageUrl={groupDocImageUrl(documentId)} empty="Chưa có nội dung đã Xong." />
               </article>
             ))}
           </Section>
+          </div>
         </div>
       ) : (
         <GroupSubmissionTab view={view} />
@@ -294,6 +390,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
           section={editing}
           shared={view.sharedBlocks}
           diagramEnabled={view.diagramEnabled}
+          deadlineNotice={deadline?.title ?? null}
           onClose={() => setEditing(null)}
           onChanged={() => void reload()}
         />
@@ -334,6 +431,32 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         }
       >
         <p>Bản nháp chưa Xong sẽ bị bỏ. Mục về Xong nếu đã có nội dung đã Xong, không thì về Mở.</p>
+      </Dialog>
+      <Dialog
+        open={confirmingEdit !== null}
+        title={`Sửa mục ${confirmingEdit?.title ?? ""}?`}
+        icon="edit"
+        onClose={() => setConfirmingEdit(null)}
+        footer={
+          <>
+            <Button onClick={() => setConfirmingEdit(null)}>Quay lại</Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                const s = confirmingEdit;
+                setConfirmingEdit(null);
+                if (s) void claimAndEdit(s);
+              }}
+            >
+              Sửa mục
+            </Button>
+          </>
+        }
+      >
+        <p>
+          Mục này do {name(confirmingEdit?.lastAuthorId ?? null)} viết. Bạn sẽ giữ mục, người khác không sửa được cho tới khi
+          bạn bấm Xong hoặc nhả mục; bấm Xong thì bạn thành người viết mục.
+        </p>
       </Dialog>
       {autoSubmitting && typeof document !== "undefined" && createPortal(
         <div role="alertdialog" aria-label="Đang nộp" className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/45">
