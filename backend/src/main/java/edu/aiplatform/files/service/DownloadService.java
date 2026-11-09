@@ -1,10 +1,14 @@
 package edu.aiplatform.files.service;
 
 import edu.aiplatform.files.model.FileType;
+import edu.aiplatform.files.contract.ArtifactPurpose;
+import edu.aiplatform.files.contract.IArtifactDownloadPolicy;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.shared.error.ApiException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -18,11 +22,19 @@ public class DownloadService {
     private final DownloadTokenService tokens;
     private final IStorage storage;
     private final FileAudit fileAudit;
+    private final List<IArtifactDownloadPolicy> policies;
 
     public DownloadService(DownloadTokenService tokens, IStorage storage, FileAudit fileAudit) {
+        this(tokens, storage, fileAudit, List.of());
+    }
+
+    @Autowired
+    public DownloadService(DownloadTokenService tokens, IStorage storage, FileAudit fileAudit,
+                           List<IArtifactDownloadPolicy> policies) {
         this.tokens = tokens;
         this.storage = storage;
         this.fileAudit = fileAudit;
+        this.policies = List.copyOf(policies);
     }
 
     public record Download(StoredMetadata metadata, InputStream content, HttpHeaders headers) {
@@ -38,6 +50,20 @@ public class DownloadService {
         try {
             StoredMetadata metadata = storage.metadata(grant.fileId())
                     .orElseThrow(() -> ApiException.notFound("FILE_NOT_FOUND"));
+            if (metadata.purpose() == ArtifactPurpose.MATERIAL) {
+                IArtifactDownloadPolicy policy = policies.stream()
+                        .filter(candidate -> candidate.purpose() == metadata.purpose()).findFirst()
+                        .orElseThrow(() -> ApiException.unavailable("FILE_ACCESS_UNAVAILABLE",
+                                "Chưa kiểm tra được quyền tải học liệu, vui lòng thử lại"));
+                try {
+                    policy.requireDownload(actor, grant.fileId());
+                } catch (ApiException rejected) {
+                    throw rejected;
+                } catch (RuntimeException unavailable) {
+                    throw ApiException.unavailable("FILE_ACCESS_UNAVAILABLE",
+                            "Chưa kiểm tra được quyền tải học liệu, vui lòng thử lại");
+                }
+            }
             InputStream content = storage.open(grant.fileId());
             return new Download(metadata, content, headers(metadata));
         } catch (FileAbusiveException e) {

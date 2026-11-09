@@ -38,7 +38,7 @@ Mã lỗi khác: `QUESTION_NOT_FOUND`, `SUBJECT_NOT_FOUND`, `SUBJECT_NOT_ACTIVE`
 
 - Route: `app/manager/questions` (Question List), `app/manager/questions/[id]` (Question Detail; `new?subjectId=` để thêm câu). Menu "Ngân hàng câu hỏi" đã đăng ký sẵn trong `features/quizzes/register.ts`.
 - `features/quizzes`: `api.ts`, `types.ts`, `labels.ts`, `questionForm.ts` (trạng thái form và kiểm theo BR-U10-02, 03), `McqEditor`, `QuestionSidePanels` (`QuestionMetaPanel`, `QuestionVersionPanel`), `QuestionListPage`, `QuestionImportDialog`, `QuestionDetailPage`.
-- Tệp mẫu: `public/templates/question-import.csv` (UTF-8 có BOM).
+- Tệp mẫu hiện tại: `public/templates/question-import.xlsx` (workbook Excel thật; chuyển từ CSV theo yêu cầu 2026-11-09). Các kết quả kiểm thử CSV có ngày bên dưới là lịch sử.
 - Chọn môn qua `GET /api/v1/manager/subjects` của U05. Nội dung hiển thị dạng văn bản thuần (D5).
 
 ## Unit test

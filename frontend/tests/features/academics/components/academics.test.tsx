@@ -1,5 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { ClassListPage } from "@/features/academics/pages/ClassListPage";
 import { ClassDashboardPage } from "@/features/academics/pages/ClassDashboardPage";
 import { ClassFormDialog } from "@/features/academics/components/ClassFormDialog";
@@ -102,15 +104,15 @@ describe("U05 reference UI", () => {
     expect(within(row).getByText("Đang ở lớp khác cùng môn")).toBeInTheDocument();
   });
 
-  it("rejects oversized CSV files before reading or submitting them", () => {
+  it("rejects oversized Excel files before reading or submitting them", async () => {
     const onBatch = vi.fn();
     render(<EnrollmentPanel students={[]} editable onBatch={onBatch} />);
     fireEvent.click(screen.getByRole("button", { name: "Thêm theo danh sách" }));
-    const file = new File(["a".repeat(102_401)], "list.csv", { type: "text/csv" });
+    const file = new File(["a".repeat(102_401)], "list.xlsx");
     const read = vi.fn();
     Object.defineProperty(file, "text", { value: read });
-    fireEvent.change(screen.getByLabelText("Chọn tệp CSV"),{ target: { files: [file] } });
-    expect(screen.getByRole("alert")).toHaveTextContent("100 KB");
+    fireEvent.change(screen.getByLabelText("Chọn tệp Excel"),{ target: { files: [file] } });
+    expect(await screen.findByRole("alert")).toHaveTextContent("100 KB");
     expect(read).not.toHaveBeenCalled();
     expect(onBatch).not.toHaveBeenCalled();
   });
@@ -123,6 +125,20 @@ describe("U05 reference UI", () => {
     fireEvent.click(screen.getByRole("button", { name: "Xem trước" }));
     expect(screen.getByRole("button", { name: "Thêm 0 sinh viên" })).toBeDisabled();
     expect(onBatch).not.toHaveBeenCalled();
+  });
+
+  it("previews an Excel template and waits for confirmation before enrollment", async () => {
+    const onBatch = vi.fn().mockResolvedValue([{ line: 2, email: "masv@fpt.edu.vn", result: "ENROLLED" }]);
+    render(<EnrollmentPanel students={[]} editable onBatch={onBatch} />);
+    fireEvent.click(screen.getByRole("button", { name: "Thêm theo danh sách" }));
+    const bytes = readFileSync(resolve("public/templates/enrollment-import.xlsx"));
+    const file = new File([bytes], "students.xlsx");
+    Object.defineProperty(file, "arrayBuffer", { value: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) });
+    fireEvent.change(screen.getByLabelText("Chọn tệp Excel"), { target: { files: [file] } });
+    expect(await screen.findByRole("button", { name: "Thêm 1 sinh viên" })).toBeEnabled();
+    expect(onBatch).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Thêm 1 sinh viên" }));
+    await waitFor(() => expect(onBatch).toHaveBeenCalledWith("email\nmasv@fpt.edu.vn"));
   });
 
   it("requires confirmation for archiving and sends the version", async () => {

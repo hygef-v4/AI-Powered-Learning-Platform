@@ -25,7 +25,7 @@
 
 ## Phạm vi triển khai và khoảng cách hiện tại
 
-Quy định áp dụng toàn bộ backend; yêu cầu đổi code hiện tại chỉ bao gồm U05/U09. Không tuyên bố toàn dự án đã JDBC chỉ từ việc sửa tài liệu.
+Quy định áp dụng toàn bộ backend. Đợt 2026-11-06 chuyển U05/U09; đợt học liệu 2026-11-09 chuyển thêm material/version adapter của U13. Không tuyên bố toàn dự án đã JDBC chỉ từ việc sửa tài liệu.
 
 | Unit | Hiện trạng và cập nhật đợt U05/U09 | Việc còn lại |
 |---|---|---|
@@ -35,7 +35,7 @@ Quy định áp dụng toàn bộ backend; yêu cầu đổi code hiện tại c
 | U06/U07/U08 | JDBC | Duy trì quy định |
 | U09 grading | Đã chuyển evaluation/proposal sang JDBC; visibility giữ JDBC | Duy trì [implementation và kiểm chứng U05/U09](plans/code-generation-plan/2026-11-06-u05-u09-jdbc.md) |
 | U10/U11/U12 | JDBC | Duy trì quy định |
-| U13 materials | JPA | Cần migration riêng |
+| U13 materials | MaterialRepositoryAdapter và material_versions đã JDBC (2026-11-09); MaterialModuleRepositoryAdapter còn JPA | Module persistence cần migration riêng; không xóa hạ tầng ORM chung |
 | U14 announcements/notifications | JPA | Cần migration riêng |
 | U15 dashboard | Đọc qua contract của owner, không truy cập DB trực tiếp | Giữ ranh giới unit |
 

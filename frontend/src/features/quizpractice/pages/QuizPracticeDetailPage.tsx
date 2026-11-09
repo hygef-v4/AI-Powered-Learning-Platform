@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { FormattedTextView } from "@/shared/document/FormattedTextView";
 import { ModuleNeighbours, useModulePlace, useModuleScope } from "@/features/materials/components/ModulePlace";
 import { Alert, Button, ClickableRow, Icon, PageHeader, Section, TableFrame, Td, Th } from "@/shared/ui";
 import { getPracticeHistory, getPracticeQuiz, startAttempt } from "../api";
@@ -121,7 +122,7 @@ function PracticeDetail({ quizId, classId }: { quizId: string; classId: string }
               <div><dt className="text-xs text-muted">Thời gian</dt><dd className="mt-0.5 font-semibold text-ink">{detail.timeLimitMinutes ? `${detail.timeLimitMinutes} phút` : "Không giới hạn"}</dd></div>
             </dl>
           </Section>
-          {detail.instructions && <Section title="Mô tả"><p className="text-[13.5px] leading-relaxed whitespace-pre-wrap text-body">{detail.instructions}</p></Section>}
+          {detail.instructions && <Section title="Mô tả"><FormattedTextView text={detail.instructions} document={detail.instructionsDocument} /></Section>}
         </div>
         <div className="flex min-w-0 flex-col gap-4">
           <Section title="Làm bài" className={action || detail.activityNotice ? undefined : "gap-0"}

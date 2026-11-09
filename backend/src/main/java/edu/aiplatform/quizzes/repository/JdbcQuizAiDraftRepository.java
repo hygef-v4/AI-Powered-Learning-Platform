@@ -69,6 +69,12 @@ public class JdbcQuizAiDraftRepository implements IQuizAiDraftRepository {
     }
 
     @Override
+    public Optional<QuizAiDraft> findForUpdate(UUID id) {
+        return jdbc.sql("select " + COLUMNS + " from quiz_ai_drafts where id = :id for update")
+                .param("id", id).query(this::map).optional();
+    }
+
+    @Override
     public Optional<QuizAiDraft> findByRequest(UUID createdBy, String requestRef) {
         return jdbc.sql("select " + COLUMNS + " from quiz_ai_drafts where created_by = :createdBy"
                         + " and provenance ->> 'requestRef' = :requestRef order by created_at limit 1")

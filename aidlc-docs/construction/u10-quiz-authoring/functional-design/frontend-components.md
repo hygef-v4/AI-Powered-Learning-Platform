@@ -16,7 +16,7 @@ Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://clau
 
 | # | Màn (artboard) | Component | UC | Role |
 |---|---|---|---|---|
-| 19 | Question List (`m07`), popup Nhập từ tệp (`m07b`), Tạo nháp bằng AI (`m07c`) | `QuestionListPage`, `QuestionImportDialog`, `QuestionAiDraftDialog` | 46, 47 | Subject Manager |
+| 19 | Question List (`m07`), popup Nhập Excel (`m07b`), Tạo nháp bằng AI (`m07c`) | `QuestionListPage`, `QuestionImportDialog`, `QuestionAiDraftDialog` | 46, 47 | Subject Manager |
 | 20 | Question Detail (`m08`) | `QuestionDetailPage` | 46, 47 | Subject Manager |
 | 21 | Quiz List (`m12`) | `SubjectQuizListPage` | 48 | Subject Manager |
 | 22 | Quiz Detail (`t10`), popup Lấy từ ngân hàng: chọn tay (`t10b`), bốc ngẫu nhiên (`t10d`) | `QuizDetailPage`, `BankQuestionPicker` | 48 | Người có quyền với Quiz; giảng viên lớp chỉ xem Quiz của môn |
@@ -53,8 +53,8 @@ app/quizzes/[id]/                QuizDetailPage       #22 Quiz Detail
 
 | Component | API | Hành vi |
 |---|---|---|
-| `QuestionListPage` | `GET /api/v1/subjects/{subjectId}/questions` | "Ngân hàng câu hỏi"; đường dẫn "Ngân hàng câu hỏi môn › mã môn"; nút chọn môn; Nhập từ tệp, Tạo nháp bằng AI, Thêm câu hỏi; tab Tất cả, Một đáp án, Nhiều đáp án; lọc Độ khó, Trạng thái; ô "Lọc theo nội dung hoặc thẻ"; cột Câu hỏi, Loại, Độ khó, Trạng thái (Nháp, Đang dùng, Ngưng; cờ "có bản nháp mới"), Cập nhật; phân trang; ghi chú "Sửa câu đang dùng sẽ mở bản nháp mới; quiz đã phát hành giữ phiên bản đã ghim." |
-| `QuestionImportDialog` | `POST .../questions:import` | "Tệp .xlsx hoặc .csv theo mẫu: nội dung, loại, các lựa chọn, đáp án đúng, độ khó, thẻ"; ô tệp, Chọn tệp khác, Tải tệp mẫu; nhãn đếm số dòng, hợp lệ, lỗi; "Câu nhập vào ở trạng thái Nháp."; bảng Dòng, Câu hỏi, Số lựa chọn, Kết quả (Hợp lệ, hoặc lý do như cần 2–6 lựa chọn, loại không hỗ trợ); Hủy, Nhập n câu hợp lệ |
+| `QuestionListPage` | `GET /api/v1/subjects/{subjectId}/questions` | "Ngân hàng câu hỏi"; đường dẫn "Ngân hàng câu hỏi môn › mã môn"; nút chọn môn; Nhập Excel, Tạo nháp bằng AI, Thêm câu hỏi; tab Tất cả, Một đáp án, Nhiều đáp án; lọc Độ khó, Trạng thái; ô "Lọc theo nội dung hoặc thẻ"; cột Câu hỏi, Loại, Độ khó, Trạng thái (Nháp, Đang dùng, Ngưng; cờ "có bản nháp mới"), Cập nhật; phân trang; ghi chú "Sửa câu đang dùng sẽ mở bản nháp mới; quiz đã phát hành giữ phiên bản đã ghim." |
+| `QuestionImportDialog` | `POST .../questions:import` | "Tệp Excel .xlsx theo mẫu: nội dung, loại, các lựa chọn, đáp án đúng, độ khó, thẻ"; ô tệp, Chọn tệp khác, Tải tệp mẫu; nhãn đếm số dòng, hợp lệ, lỗi; "Câu nhập vào ở trạng thái Nháp."; bảng Dòng, Câu hỏi, Số lựa chọn, Kết quả (Hợp lệ, hoặc lý do như cần 2–6 lựa chọn, loại không hỗ trợ); Hủy, Nhập n câu hợp lệ |
 | `QuestionAiDraftDialog` | `POST .../question-ai-drafts` | Yêu cầu*, Tài liệu tham khảo (chỉ học liệu đã trích chữ), Nguồn AI đang chọn kèm "Đổi nguồn" (`AiSourcePicker`); Đề xuất (đã chấp nhận / tổng): mỗi câu có nội dung, lựa chọn, đáp án đúng, nút Bỏ, Chấp nhận; "Câu được chấp nhận vào ngân hàng ở trạng thái Nháp; bạn kiểm tra lại trước khi kích hoạt."; Đóng, Lưu n câu đã chấp nhận; không tự kích hoạt |
 | `QuestionDetailPage` | `GET`, `PATCH`, `DELETE /api/v1/questions/{id}`; `POST .../versions`, `/activate`, `/retire` | Nút quay lại; "Chi tiết câu hỏi" kèm nhãn trạng thái và phiên bản; đường dẫn; nút Kích hoạt (câu Nháp) hoặc Ngưng (câu Đang dùng), Lưu thay đổi. Câu đang dùng: hộp "Câu này đang dùng trong n quiz. Lưu thay đổi sẽ mở bản nháp mới; quiz đã phát hành vẫn dùng phiên bản đã ghim." |
 | `McqEditor` | như trên | Loại câu hỏi (Một đáp án, Nhiều đáp án), Nội dung câu hỏi*, Các lựa chọn (2–6) có nút chọn đáp án đúng, Thêm lựa chọn, Điểm (mặc định), Giải thích (tùy chọn); kiểm số lựa chọn, đáp án ngay trên form |
@@ -97,3 +97,26 @@ QuizController POST `/api/v1/quizzes/{id}/reopen` nhận expected version; front
 | `QuizDetailPage`, slot `QuizDetailSection` | Slot này trước đây đăng ký mà chưa render nên giảng viên không thấy lượt làm; nay render theo lớp của Quiz hoặc `classId` |
 | `QuestionProposalsSection` | Tab Học liệu của lớp (`teacherClassTabs`): đề xuất câu, xem kết quả, sửa và gửi lại, rút đề xuất; nút "Đề xuất vào ngân hàng" trên câu riêng của Quiz lớp |
 | `AiDrafts` | Đổi nhãn thành "Tài liệu nguồn cho AI" |
+
+
+## Soạn tại chỗ và nguồn AI — 2026-11-09
+
+QuizDetailPage đặt soạn tay, chọn ngân hàng và soạn AI ngay trong khung Câu hỏi; sửa câu mở trong chính thẻ câu đó. Dùng lại validation và API cũ, không mở modal ở các đường soạn của quiz. Đang lưu thì khóa đổi chế độ; lỗi giữ form và yêu cầu AI để thử lại. Bảo vệ nội dung chưa lưu khi chuyển mode, bấm liên kết, đóng trang hoặc Back/Forward. Hộp xem trước/phát hành và các popup ngoài phạm vi vẫn giữ.
+
+Dropdown tài liệu AI có tìm kiếm, chọn nhiều, chip bỏ chọn, bộ đếm 10 và lý do tài liệu không dùng được. Nguồn API AI vẫn tự chọn, không hứa mở popup chọn nguồn. AI draft trả sourceWarnings đã lưu trong provenance cho nguồn bị cắt/bỏ trống; tất cả nguồn hết chữ thì FAILED/MATERIAL_TEXT_UNAVAILABLE trước khi gửi provider. instructionsDocument an toàn được giữ khi sửa cấu hình, clone/reopen và chuyển tới trang sinh viên.
+
+## Nhãn nguồn AI tự chọn — 2026-11-09
+
+DraftView dùng chung cho quiz/ngân hàng hiển thị source AUTO hoặc null là "Hệ thống tự chọn nguồn AI"; PERSONAL thiếu provider là "API cá nhân", có provider thì giữ tên hãng. SHARED và MCP giữ nhãn riêng. Nhãn phản ánh provenance của yêu cầu, không suy đoán provider thực tế khi U06 tự chọn/chuyển nguồn. Sửa lỗi nội suy null thành "null cá nhân"; không đổi request, lựa chọn nguồn hoặc kết quả sinh câu. Năm case nhãn hồi quy đã tái hiện ba failure trước fix; sau fix37 tests liên quan/2files qua, scoped ESLint và diff whitespace qua. Không thử UI theo lựa chọn người dùng.
+
+## Yêu cầu chỉ tài liệu, cảnh báo và chấp nhận tất cả — 2026-11-09
+
+Form AI không bắt buộc Yêu cầu khi đã chọn tài liệu nguồn; để trống thì backend dùng “Tạo quiz theo nội dung tài liệu đã chọn.” Không có tài liệu vẫn phải nhập yêu cầu. Danh sách đề xuất dùng Xem/Thu gọn theo draft thực sự đang mở, có aria-expanded; đóng/chuyển draft vẫn bảo vệ chỉnh sửa chưa lưu.
+
+AI đánh giá requestMatchesSources trong cùng response sinh câu. Nếu đánh giá không liên quan và có tài liệu, hiển thị cảnh báo vàng cố định trước các câu hỏi; yêu cầu sinh câu ưu tiên nội dung nguồn. Cảnh báo là đánh giá của AI, được lưu cùng sourceWarnings và không thay thế việc kiểm tra của người soạn.
+
+Chấp nhận tất cả lưu một lần toàn bộ câu chưa Bỏ, gồm nội dung đã sửa; nếu có câu lỗi thì mở câu đó để sửa và chưa gọi API. Giữ chấp nhận từng câu; khóa thao tác đề xuất khi lưu, giữ version/error checks phía server. [Kết quả và giới hạn](../../build-and-test/2026-11-09-ai-quiz-review-followup.md).
+
+## Cảnh báo và tạo lại theo nguồn — 2026-11-10
+
+Kết quả AI báo lệch tài liệu không còn hiện thành câu chờ chấp nhận như delta trước: backend giữ proposal rỗng/PENDING trong lượt tạo lại theo nguồn, vẫn hiện cảnh báo vàng và trạng thái task mới. Tạo lại thất bại hoặc tiếp tục báo lệch thì FAILED, không có thao tác nhận câu. Đề xuất cũ đã READY giữ nguyên lịch sử; người soạn cần bỏ và tạo yêu cầu mới. Không thêm API/UI option. [Kết quả](../../build-and-test/2026-11-10-ai-source-grounding-fix.md).

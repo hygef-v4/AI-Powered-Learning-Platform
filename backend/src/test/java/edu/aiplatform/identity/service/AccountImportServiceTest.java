@@ -23,6 +23,8 @@ import edu.aiplatform.identity.service.AccountImportService.Outcome;
 import edu.aiplatform.identity.service.AccountImportService.RowResult;
 import edu.aiplatform.shared.error.ApiException;
 import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.Clock;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -31,6 +33,7 @@ import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.transaction.support.TransactionOperations;
 
 class AccountImportServiceTest {
@@ -149,5 +152,92 @@ class AccountImportServiceTest {
             csv.append("sv").append(i).append("@fpt.edu.vn,SV ").append(i).append(",STUDENT\n");
         }
         assertThat(service.validate(admin, bytes(csv.toString())).validCount()).isEqualTo(1000);
+    }
+
+    private static byte[] workbook(String[]... rows) throws IOException {
+        try (var workbook = new XSSFWorkbook(); var output = new ByteArrayOutputStream()) {
+            var sheet = workbook.createSheet("Tài khoản");
+            for (int i = 0; i < rows.length; i++) {
+                var row = sheet.createRow(i);
+                for (int j = 0; j < rows[i].length; j++) {
+                    row.createCell(j).setCellValue(rows[i][j]);
+                }
+            }
+            workbook.write(output);
+            return output.toByteArray();
+        }
+    }
+
+    @Test
+    void validatesExcelUsingTheSameRulesAndCommitsOnlyValidRows() throws IOException {
+        byte[] file = workbook(new String[] {"role", "display_name", "email"},
+                new String[] {"student", "Nguyễn Văn A", "sv01@fpt.edu.vn"},
+                new String[] {"STUDENT", "Trùng", "sv01@fpt.edu.vn"},
+                new String[] {"ADMIN", "Admin", "admin@fpt.edu.vn"},
+                new String[] {"TEACHER", "Đã có", "gv01@fpt.edu.vn"},
+                new String[] {"STUDENT", "Sai", "bad@"});
+        var preview = service.validate(admin, file);
+        assertThat(preview.validCount()).isEqualTo(1);
+        assertThat(preview.rows()).extracting(RowResult::reason)
+                .containsExactly(null, "DUPLICATE_IN_FILE", "INVALID_ROLE", "EMAIL_EXISTS", "INVALID_EMAIL");
+        assertThat(preview.rows().get(0).rowNumber()).isEqualTo(2);
+        assertThat(preview.rows().get(0).displayName()).isEqualTo("Nguyễn Văn A");
+        verify(accounts, never()).insert(any());
+        assertThat(audits).isEmpty();
+
+        assertThat(service.commit(admin, file).validCount()).isEqualTo(1);
+        verify(accounts).insert(org.mockito.ArgumentMatchers.argThat(
+                account -> account.schoolEmail().equals("sv01@fpt.edu.vn")
+                        && account.role() == Role.STUDENT && account.passwordHash() == null));
+        assertThat(audits).singleElement().satisfies(event ->
+                assertThat(event.details()).containsEntry("checksum", preview.fileChecksum()));
+    }
+
+    @Test
+    void rejectsExcelWithMissingHeadersAndTooManyRows() throws IOException {
+        byte[] missing = workbook(new String[] {"email", "display_name"}, new String[] {"sv@fpt.edu.vn", "SV"});
+        assertThatThrownBy(() -> service.validate(admin, missing)).isInstanceOf(ApiException.class);
+        String[][] rows = new String[AccountImportService.MAX_ROWS + 2][];
+        rows[0] = new String[] {"email", "display_name", "role"};
+        for (int i = 1; i < rows.length; i++) {
+            rows[i] = new String[] {"sv" + i + "@fpt.edu.vn", "SV " + i, "STUDENT"};
+        }
+        byte[] tooMany = workbook(rows);
+        assertThatThrownBy(() -> service.validate(admin, tooMany))
+                .isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.getMessage()).contains("1000"));
+        assertThat(service.validate(admin, workbook(java.util.Arrays.copyOf(rows, rows.length - 1))).validCount())
+                .isEqualTo(1000);
+    }
+
+    @Test
+    void deniesUnauthorizedExcelImportBeforeReadingTheWorkbook() {
+        when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.deny("ROLE"));
+        assertThatThrownBy(() -> service.validate(new Actor(UUID.randomUUID(), Role.STUDENT), new byte[] {1}))
+                .isInstanceOfSatisfying(ApiException.class, error ->
+                        assertThat(error.status()).isEqualTo(org.springframework.http.HttpStatus.FORBIDDEN));
+        verify(accounts, never()).existingEmails(anyCollection());
+    }
+
+    @Test
+    void rejectsCorruptOversizedAndFormulaWorkbooks() throws IOException {
+        assertThatThrownBy(() -> service.validate(admin, new byte[] {'P', 'K', 3, 4, 0}))
+                .isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.code()).isEqualTo("IMPORT_FILE_INVALID"));
+        assertThatThrownBy(() -> service.validate(admin, new byte[AccountImportService.MAX_BYTES + 1]))
+                .isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.getMessage()).contains("1 MB"));
+        try (var workbook = new XSSFWorkbook(); var output = new ByteArrayOutputStream()) {
+            var sheet = workbook.createSheet("Tài khoản");
+            var header = sheet.createRow(0);
+            header.createCell(0).setCellValue("email");
+            header.createCell(1).setCellValue("display_name");
+            header.createCell(2).setCellValue("role");
+            var row = sheet.createRow(1);
+            row.createCell(0).setCellFormula("\"sv@fpt.edu.vn\"");
+            row.createCell(1).setCellValue("SV");
+            row.createCell(2).setCellValue("STUDENT");
+            workbook.write(output);
+            assertThatThrownBy(() -> service.validate(admin, output.toByteArray()))
+                    .isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.getMessage()).contains("công thức"));
+        }
+        verify(accounts, never()).insert(any());
     }
 }

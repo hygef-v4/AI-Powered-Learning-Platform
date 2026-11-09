@@ -15,6 +15,17 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 class MaterialAccessPolicyTest {
+    @Test
+    void disabledMaterialIsPrivateToStaffUntilEnabled() {
+        var disabled = material(false, Material.Status.ACTIVE).withPresentation(false, null);
+        assertThatThrownBy(() -> policy.read(new Actor(account, Role.STUDENT), disabled, classId))
+                .isInstanceOf(ApiException.class);
+        assertThatCode(() -> policy.read(new Actor(account, Role.SUBJECT_MANAGER), disabled, null))
+                .doesNotThrowAnyException();
+        assertThatCode(() -> policy.read(new Actor(account, Role.STUDENT),
+                disabled.withPresentation(true, null), classId)).doesNotThrowAnyException();
+    }
+
     final UUID account = UUID.randomUUID(),
             subject = UUID.randomUUID(),
             classId = UUID.randomUUID(),

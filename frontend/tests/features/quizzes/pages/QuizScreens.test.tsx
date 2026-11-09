@@ -1,8 +1,8 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import {
-  createSubjectQuiz, getBankQuestionsForQuiz, getClassQuizzes, getManagedSubjects, getQuiz, getSubjectQuizzes, previewRandomItems,
+  addInlineQuestion, createSubjectQuiz, getBankQuestionsForQuiz, getClassQuizzes, getManagedSubjects, getQuiz, getSubjectQuizzes, previewRandomItems,
   previewPaper, proposeQuestion, publishQuiz, reopenQuiz, saveDrawRules, saveQuizItems, updateQuizDetails,
 } from "@/features/quizzes/api";
 import { BankQuestionPicker } from "@/features/quizzes/components/BankQuestionPicker";
@@ -106,6 +106,85 @@ it("restores quiz status tab after remount and ignores invalid status", async ()
 });
 
 describe("QuizDetailPage", () => {
+  it("keeps formatted description including blank paragraphs when only settings change", () => {
+    const document = { blocks: [
+      { type: "PARAGRAPH" as const, align: "LEFT" as const, indent: 0, runs: [{ text: "Mô tả", bold: true }] },
+      { type: "PARAGRAPH" as const, align: "LEFT" as const, indent: 0, runs: [{ text: "" }] },
+    ] };
+    const form = settingsFormOf({ ...INFO, instructions: "Mô tả\n", instructionsDocument: document });
+    const result = settingsInput({ ...form, timeLimit: "10" });
+    expect(result.input?.instructionsDocument).toEqual(document);
+  });
+
+  it("locks mode switching until an inline save finishes", async () => {
+    let finish!: (value: QuizDetail) => void;
+    vi.mocked(getQuiz).mockResolvedValue(detail());
+    vi.mocked(addInlineQuestion).mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+    render(<QuizDetailPage id="z1" />);
+    fireEvent.click(await screen.findByLabelText("Thêm câu hỏi"));
+    fireEvent.click(screen.getByTestId("quiz-detail-add-inline"));
+    fireEvent.change(screen.getByTestId("mcq-editor-stem"), { target: { value: "Câu hỏi mới" } });
+    fireEvent.change(screen.getByTestId("mcq-editor-option-0"), { target: { value: "A" } });
+    fireEvent.change(screen.getByTestId("mcq-editor-option-1"), { target: { value: "B" } });
+    fireEvent.click(screen.getByTestId("mcq-editor-correct-0"));
+    fireEvent.click(screen.getByTestId("inline-question-save"));
+    await waitFor(() => expect(addInlineQuestion).toHaveBeenCalled());
+    expect(screen.getByRole("button", { name: "Ngân hàng" })).toBeDisabled();
+    expect(screen.getByTestId("quiz-detail-edit")).toBeDisabled();
+    finish(detail({ version: 4 }));
+    await waitFor(() => expect(screen.queryByTestId("mcq-editor-stem")).not.toBeInTheDocument());
+  });
+
+  it("authors and edits inside the question section without a dialog", async () => {
+    vi.mocked(getQuiz).mockResolvedValue({ ...detail(), items: [{ ...detail().items[0]!, inline: true }] });
+    render(<QuizDetailPage id="z1" />);
+    fireEvent.click(await screen.findByTestId("quiz-item-edit-0"));
+    const card = screen.getByTestId("quiz-item");
+    expect(within(card).getByTestId("mcq-editor-stem")).toHaveValue(QUESTION.stem);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Hủy soạn câu" }));
+    fireEvent.click(screen.getByLabelText("Thêm câu hỏi"));
+    fireEvent.click(screen.getByTestId("quiz-detail-add-inline"));
+    const section = screen.getByRole("heading", { name: "Câu hỏi" }).closest("section")!;
+    expect(within(section).getByTestId("mcq-editor-stem")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("keeps an unsaved inline question when changing modes is canceled", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    vi.mocked(getQuiz).mockResolvedValue(detail());
+    render(<QuizDetailPage id="z1" />);
+    fireEvent.click(await screen.findByLabelText("Thêm câu hỏi"));
+    fireEvent.click(screen.getByTestId("quiz-detail-add-inline"));
+    fireEvent.change(screen.getByTestId("mcq-editor-stem"), { target: { value: "Câu đang soạn" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ngân hàng" }));
+    expect(confirm).toHaveBeenCalled();
+    expect(screen.getByTestId("mcq-editor-stem")).toHaveValue("Câu đang soạn");
+    const leaving = new Event("beforeunload", { cancelable: true });
+    expect(window.dispatchEvent(leaving)).toBe(false);
+    confirm.mockReturnValue(true);
+    fireEvent.click(screen.getByRole("button", { name: "Hủy soạn câu" }));
+    expect(screen.queryByTestId("mcq-editor-stem")).not.toBeInTheDocument();
+    confirm.mockRestore();
+  });
+
+  it("keeps the inline form and shows the error when saving fails", async () => {
+    vi.mocked(getQuiz).mockResolvedValue(detail());
+    vi.mocked(addInlineQuestion).mockRejectedValue(new Error("offline"));
+    render(<QuizDetailPage id="z1" />);
+    fireEvent.click(await screen.findByLabelText("Thêm câu hỏi"));
+    fireEvent.click(screen.getByTestId("quiz-detail-add-inline"));
+    fireEvent.change(screen.getByTestId("mcq-editor-stem"), { target: { value: "Câu hỏi mới" } });
+    fireEvent.change(screen.getByTestId("mcq-editor-option-0"), { target: { value: "A" } });
+    fireEvent.change(screen.getByTestId("mcq-editor-option-1"), { target: { value: "B" } });
+    fireEvent.click(screen.getByTestId("mcq-editor-correct-0"));
+    fireEvent.click(screen.getByTestId("inline-question-save"));
+    await waitFor(() => expect(addInlineQuestion).toHaveBeenCalledWith("z1", expect.objectContaining({ stem: "Câu hỏi mới" }), 3));
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(screen.getByTestId("mcq-editor-stem")).toHaveValue("Câu hỏi mới");
+    expect(screen.getByTestId("inline-question-save")).toBeEnabled();
+  });
+
   it("lưu điểm câu kèm version của quiz", async () => {
     vi.mocked(getQuiz).mockResolvedValue(detail());
     vi.mocked(saveQuizItems).mockResolvedValue(detail({ version: 4 }));

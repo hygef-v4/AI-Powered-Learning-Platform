@@ -104,7 +104,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U01-80 | Nút "Nhập CSV" trên Account List. Chỉ nhận CSV, tối đa 1000 dòng; cột bắt buộc `email`, `display_name`, `role`. | Câu 13; người dùng chốt giữ 2026-10-09 |
+| BR-U01-80 | Nút "Nhập Excel" trên Account List. Nhận .xlsx trên UI, API giữ tương thích CSV cũ; tối đa 1 MB và 1000 dòng; cột bắt buộc `email`, `display_name`, `role`. | Câu 13; cập nhật định dạng theo yêu cầu 2026-11-09 |
 | BR-U01-81 | Kiểm tra toàn bộ file trước, trả kết quả từng dòng; admin xác nhận thì mới tạo các dòng hợp lệ. | US-IAM-007 S2 |
 | BR-U01-82 | Email đã tồn tại hoặc trùng trong file bị báo lỗi dòng, không ghi đè. | Câu 13 |
 | BR-U01-83 | Nhập lại cùng file không tạo trùng: email đã tồn tại bị báo lỗi dòng (BR-U01-82). Kết quả nhập không lưu; audit ghi checksum file. | US-IAM-007 S2 |

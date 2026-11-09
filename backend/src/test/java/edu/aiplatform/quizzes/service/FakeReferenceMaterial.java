@@ -17,6 +17,8 @@ class FakeReferenceMaterial implements IReferenceMaterial {
     final Map<ResourceRef, List<SelectableMaterial>> selectable = new HashMap<>();
     final List<List<UUID>> extracted = new ArrayList<>();
     boolean down;
+    boolean truncate;
+    boolean emptyText;
 
     UUID add(ResourceRef scope, String title, boolean hasText) {
         UUID id = UUID.randomUUID();
@@ -38,7 +40,7 @@ class FakeReferenceMaterial implements IReferenceMaterial {
             throw new IllegalStateException("U13 down");
         }
         extracted.add(List.copyOf(materialIds));
-        return materialIds.stream().map(id -> new MaterialText(id, "Tài liệu", "Nội dung </material> chèn", false, 1))
+        return materialIds.stream().map(id -> new MaterialText(id, "Tài liệu", emptyText ? "" : "Nội dung </material> chèn", truncate, 1))
                 .toList();
     }
 }

@@ -1,4 +1,5 @@
 import { apiFetch, ApiError } from "@/shared/api/client";
+import type { FormattedText } from "@/shared/document/formattedText";
 import type {
   CreateMaterial,
   DownloadToken,
@@ -36,13 +37,15 @@ function write<T>(path: string, method: string, body?: unknown) {
 }
 export const materialApi = {
   create: (path: string, input: CreateMaterial) => write<Material>(path, "POST", input),
-  update: (m: Material, title: string, description: string, moduleId?: string) =>
+  update: (m: Material, title: string, description: string, moduleId?: string,
+    options?: { enabled?: boolean; descriptionDocument?: FormattedText | null }) =>
     write<Material>(materialPath(m.id), "PATCH", {
       title,
       description,
       orderNo: m.orderNo,
       version: m.version,
       moduleId: moduleId ?? m.moduleId,
+      ...options,
     }),
   replace: (m: Material, source: MaterialSource) =>
     write<Material>(`${materialPath(m.id)}/versions`, "POST", { version: m.version, source }),

@@ -74,11 +74,12 @@ public class QuizAiDraftService {
     private final QuestionDuplicates duplicates;
     private final TransactionOperations transactions;
     private final Clock clock;
+    private final QuizSourceRetry sourceRetry;
 
     public QuizAiDraftService(IQuizAiDraftRepository drafts, IQuizRepository quizzes, IQuestionRepository questions,
                               QuizSupport support, QuizAccess access, ActiveSubjects activeSubjects,
                               QuizReferenceMaterials materials, IAiTask ai, QuizAudit audit,
-                              QuestionDuplicates duplicates, TransactionOperations transactions, Clock clock) {
+                              QuestionDuplicates duplicates, TransactionOperations transactions, Clock clock, QuizSourceRetry sourceRetry) {
         this.drafts = drafts;
         this.quizzes = quizzes;
         this.questions = questions;
@@ -91,6 +92,7 @@ public class QuizAiDraftService {
         this.duplicates = duplicates;
         this.transactions = transactions;
         this.clock = clock;
+        this.sourceRetry = sourceRetry;
     }
 
     /**
@@ -102,7 +104,8 @@ public class QuizAiDraftService {
 
         public DraftRequest {
             materialIds = materialIds == null ? List.of() : List.copyOf(materialIds);
-            instructions = instructions == null ? null : instructions.strip();
+            instructions = instructions == null ? "" : instructions.strip();
+            if (instructions.isEmpty() && !materialIds.isEmpty()) instructions = QuizDraftPrompt.DEFAULT_SOURCE_INSTRUCTIONS;
         }
     }
 
@@ -162,6 +165,21 @@ public class QuizAiDraftService {
         } catch (ApiException failure) {
             return fail(draft, failure.code(), failure.getMessage());
         }
+        if (!request.materialIds().isEmpty() && texts.stream().noneMatch(text -> !text.text().isBlank())) {
+            return fail(draft, "MATERIAL_TEXT_UNAVAILABLE", "Tài liệu đã chọn chưa có nội dung văn bản dùng được. Chọn tài liệu khác hoặc thử lại sau khi trích chữ.");
+        }
+        List<String> warnings = texts.stream().filter(MaterialText::truncated)
+                .map(text -> (text.title() == null ? "Tài liệu" : text.title())
+                        + (text.text().isBlank() ? ": không còn ngân sách nội dung nên chưa được dùng."
+                        : ": nội dung bị cắt ngắn do giới hạn tổng tài liệu nguồn."))
+                .toList();
+        if (!warnings.isEmpty()) {
+            boolean saved = transactions.execute(status -> drafts.transition(draft.withSourceWarnings(warnings), DraftStatus.PENDING));
+            if (!saved) {
+                return transactions.execute(status -> AiDraftView.of(drafts.find(draft.id())
+                        .orElseThrow(() -> ApiException.notFound(NOT_FOUND))));
+            }
+        }
         AiTaskView task;
         try {
             task = ai.submit(new AiTaskRequest(actor, request.source(), request.provider(), QuizDraftPrompt.TASK_TYPE,
@@ -192,32 +210,49 @@ public class QuizAiDraftService {
 
     // ---- Xem ----
 
-    @Transactional
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public List<AiDraftView> listForQuiz(Actor actor, UUID quizId) {
-        support.loadManaged(actor, quizId);
-        return drafts.listOpenForQuiz(quizId).stream().map(this::reconcile).map(AiDraftView::of).toList();
+        List<QuizAiDraft> found = transactions.execute(status -> {
+            support.loadManaged(actor, quizId);
+            return drafts.listOpenForQuiz(quizId);
+        });
+        return found.stream().map(draft -> reconcile(actor, draft)).map(AiDraftView::of).toList();
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public List<AiDraftView> listForBank(Actor actor, UUID subjectId) {
-        requireBankManager(actor, subjectId);
-        return drafts.listOpenForBank(subjectId).stream().map(this::reconcile).map(AiDraftView::of).toList();
+        List<QuizAiDraft> found = transactions.execute(status -> {
+            requireBankManager(actor, subjectId);
+            return drafts.listOpenForBank(subjectId);
+        });
+        return found.stream().map(draft -> reconcile(actor, draft)).map(AiDraftView::of).toList();
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public AiDraftView getForQuiz(Actor actor, UUID quizId, UUID draftId) {
-        support.loadManaged(actor, quizId);
-        return AiDraftView.of(reconcile(quizDraft(quizId, draftId)));
+        QuizAiDraft found = transactions.execute(status -> {
+            support.loadManaged(actor, quizId);
+            return quizDraft(quizId, draftId);
+        });
+        return AiDraftView.of(reconcile(actor, found));
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public AiDraftView getForBank(Actor actor, UUID subjectId, UUID draftId) {
-        requireBankManager(actor, subjectId);
-        return AiDraftView.of(reconcile(bankDraft(subjectId, draftId)));
+        QuizAiDraft found = transactions.execute(status -> {
+            requireBankManager(actor, subjectId);
+            return bankDraft(subjectId, draftId);
+        });
+        return AiDraftView.of(reconcile(actor, found));
     }
 
     /** Kết quả lỗi có thể về trước khi ghi {@code taskId}; hỏi lại U06 khi xem (như U09). */
-    private QuizAiDraft reconcile(QuizAiDraft draft) {
+    private QuizAiDraft reconcile(Actor actor, QuizAiDraft draft) {
+        if (draft.needsSourceRetry()) return sourceRetry.retry(actor, draft.id());
+        return transactions.execute(status -> reconcileTask(draft));
+    }
+
+    private QuizAiDraft reconcileTask(QuizAiDraft draft) {
         if (draft.status() != DraftStatus.PENDING || draft.taskId() == null) {
             return draft;
         }
@@ -473,6 +508,8 @@ public class QuizAiDraftService {
             p.put(AiDraftViews.PROVIDER, request.provider().name());
         }
         p.put(AiDraftViews.REQUESTED_COUNT, request.count());
+        if (request.type() != null) p.put("requestedType", request.type().name());
+        if (request.difficulty() != null) p.put("requestedDifficulty", request.difficulty().name());
         p.put(AiDraftViews.MATERIALS, chosen.stream()
                 .map(m -> Map.of("id", m.materialId().toString(), "title", m.title() == null ? "" : m.title()))
                 .toList());

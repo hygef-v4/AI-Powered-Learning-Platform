@@ -92,9 +92,10 @@ describe("ImportAccountsPanel", () => {
     const onImported = vi.fn();
     const onClose = vi.fn();
     render(<ImportAccountsPanel onImported={onImported} onClose={onClose} />);
-    const file = new File(["email,display_name,role\n"], "tk.csv", { type: "text/csv" });
+    const file = new File(["workbook"], "tk.xlsx", { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
 
-    fireEvent.change(screen.getByLabelText("Chọn tệp CSV"), { target: { files: [file] } });
+    expect(screen.getByLabelText("Chọn tệp Excel")).toHaveAttribute("accept", ".xlsx");
+    fireEvent.change(screen.getByLabelText("Chọn tệp Excel"), { target: { files: [file] } });
 
     expect(await screen.findByText("Email không hợp lệ")).toBeInTheDocument();
     expect(validateImport).toHaveBeenCalledWith(file);

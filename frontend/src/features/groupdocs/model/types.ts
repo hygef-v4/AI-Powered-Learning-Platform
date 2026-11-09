@@ -19,6 +19,9 @@ export type SectionView = {
   draftSavedAt: string | null;
   lastAuthorId: string | null;
   version: number;
+  /** Mục đang giữ: lúc nhận và lần lưu nháp cuối của người giữ (chỉ mốc giờ, mọi người thấy). */
+  claimedAt?: string | null;
+  holderSavedAt?: string | null;
 };
 
 export type RevisionKind = "DONE" | "TAKEOVER" | "IMPORT";

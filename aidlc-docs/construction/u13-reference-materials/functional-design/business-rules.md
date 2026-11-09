@@ -66,3 +66,10 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U13-M06 | Reorder items không rỗng, tối đa 500, mỗi item id/version; trùng id hoặc stale version bị từ chối. Source không buộc gửi đủ toàn bộ module. |
 
 Negative tests/source: MaterialModuleServiceTest, MaterialModuleService và migration 29/10; chưa chạy lại ở baseline.
+
+
+## Enabled và mô tả có định dạng — 2026-11-09
+
+`enabled` là boolean độc lập ACTIVE/ARCHIVED, mặc định true cho bản ghi và yêu cầu tạo cũ. Disabled ẩn danh sách sinh viên, chặn xem trực tiếp/cấp token và kiểm lại khi đổi token lấy nội dung; staff vẫn quản lý/bật lại theo quyền. Tài liệu disabled không được chọn/trích làm nguồn AI mới. Không xóa version/lịch sử.
+
+`descriptionDocument` là FormattedText tùy chọn; server lấy plain description từ document, tối đa 2.000 ký tự. Chỉ paragraph/danh sách, căn lề, indent 0–6 và run đậm/nghiêng/gạch chân; tối đa 100 block, 200 run/block, 1.000 run tổng. Không nhận HTML để render. Text cũ vẫn tương thích. MaterialRepositoryAdapter dùng JDBC; hai row JPA cũ đã bỏ, module repository giữ ngoài phạm vi.
