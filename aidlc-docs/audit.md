@@ -11476,3 +11476,18 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Construction — U12 Group Assignment, UI.
 
 ---
+
+## U12 merge of 2026-11-09 changes to staging
+
+**Timestamp**: 2026-11-09T17:10:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> thế cứ merch những thay đổi hôm nay lên stagging đi
+
+**AI Response**: Merged `feat/u12-section-ux` (confirm before editing others' sections, deadline banner, holder activity timestamps, unsaved-changes warning, outline sidebar) into `staging` after bringing in the latest `origin/staging` and re-running tests. The meeting items 3 (release with handover) and 4 (latest revision per author) are not included; the item 3 draft was set aside in a git stash.
+
+**Context**: Construction — U12 Group Assignment, merge to staging.
+
+---
