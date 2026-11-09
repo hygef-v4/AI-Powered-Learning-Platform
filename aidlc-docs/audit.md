@@ -11409,3 +11409,33 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Construction — U12 Group Assignment, merge of bug fixes to staging.
 
 ---
+
+## U12 section workflow improvements — 2026-11-09
+
+**Timestamp**: 2026-11-09T05:50:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> luồng sinh viên làm bài gồm nhận mục hay nhả mục, .... có nên cải thiện gì không
+
+**AI Response**: Reviewed the claim/edit/release flow against the frozen BRs and proposed five improvements that do not change any BR: (1) confirm before taking a Done section written by someone else, (2) warn on leaving the page with unsaved edits, (3) offer "Xong rồi trả mục" in the release dialog, (4) a deadline banner when 30 minutes or less remain, (5) show when the holder claimed or last saved the section. Changes outside the frozen BRs (keeping drafts on release, auto-release of idle holds, viewing others' drafts, concurrent editing) were advised against.
+
+**Context**: Construction — U12 Group Assignment, UX review.
+
+---
+
+## U12 section workflow improvements — implementation — 2026-11-09
+
+**Timestamp**: 2026-11-09T05:55:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> làm 1, 2, 4,5 di
+
+**AI Response**: Implemented items 1, 2, 4 and 5 on branch `feat/u12-section-ux` (item 3 not requested). Frontend: confirm dialog before claiming a Done section last written by another member; `beforeunload` warning while the section editor has unsaved edits; deadline banner on the workspace and in the editor when ≤ 30 minutes remain or during the late window, listing sections not Done; holder line shows "lưu lần cuối N phút trước" or "nhận … , chưa lưu", with a 60-second refresh while another member holds a section. Backend: `SectionView` gains additive `claimedAt` and `holderSavedAt` (timestamps only, set while CLAIMED); drafts stay holder-only (BR-U12-34). No BR, schema or existing field change.
+
+**Context**: Construction — U12 Group Assignment, UX improvements.
+
+---

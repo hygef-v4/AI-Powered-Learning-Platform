@@ -13,6 +13,8 @@ import { AssignSectionDialog, SectionEditorDialog, SubmitGroupDialog } from "../
 import { SectionHistoryDialog } from "../components/SectionHistoryDialog";
 import type { Receipt, SectionView, StreamEvent, WorkspaceView } from "../model/types";
 import { useGroupDocStream } from "../hooks/useGroupDocStream";
+import { useClock } from "../hooks/useClock";
+import { describeDeadline, formatAgo } from "../model/deadline";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 
 const STATUS: Record<SectionView["status"], { text: string; tone: Tone }> = {
@@ -20,6 +22,9 @@ const STATUS: Record<SectionView["status"], { text: string; tone: Tone }> = {
   CLAIMED: { text: "Đang làm", tone: "info" },
   DONE: { text: "Xong", tone: "success" },
 };
+
+// Có mục người khác đang giữ thì tải lại định kỳ: lưu nháp không đẩy SSE (BR-U12-37) nên "lưu lần cuối" cần làm mới.
+const HOLDER_REFRESH_MS = 60_000;
 
 function dateTime(iso: string | null | undefined): string {
   return iso ? formatDateTime(iso) : "—";
@@ -39,6 +44,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   const [editing, setEditing] = useState<SectionView | null>(null);
   const [assigning, setAssigning] = useState<SectionView | null>(null);
   const [releasing, setReleasing] = useState<SectionView | null>(null);
+  const [confirmingEdit, setConfirmingEdit] = useState<SectionView | null>(null);
   const [history, setHistory] = useState<SectionView | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [autoSubmitting, setAutoSubmitting] = useState(false);
@@ -85,6 +91,20 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     [reload, setTab],
   );
   useGroupDocStream(view ? documentId : null, onEvent, () => void reload());
+  const now = useClock();
+
+  const watchHolders =
+    !!view &&
+    view.status === "IN_PROGRESS" &&
+    view.window !== "CLOSED" &&
+    view.sections.some((s) => s.status === "CLAIMED" && s.holderId !== view.viewerId);
+  useEffect(() => {
+    if (!watchHolders) return;
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void reload();
+    }, HOLDER_REFRESH_MS);
+    return () => window.clearInterval(timer);
+  }, [watchHolders, reload]);
 
   const send = useCallback(
     (events: ActivityEventInput[], options: { keepalive: boolean }) => sendActivity(documentId, events, options.keepalive),
@@ -141,22 +161,34 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     }
   }
   const done = view.sections.filter((s) => s.status === "DONE").length;
+  const deadline = describeDeadline(view, now);
   const leaderName = view.members.find((m) => m.accountId === view.leaderId)?.name ?? "chưa có";
   const myId = view.viewerId;
   const name = (id: string | null) =>
     id === null ? "Chưa ai nhận" : id === myId ? "Bạn" : (view.members.find((m) => m.accountId === id)?.name ?? "Thành viên");
   const isMine = (s: SectionView) => s.status === "CLAIMED" && s.holderId === myId;
   const claimable = (s: SectionView) => editable && me.member && s.status !== "CLAIMED";
+  // Mục Xong do người khác viết: hỏi lại trước khi nhận, vì người nhận khóa mục và thành người viết khi bấm Xong.
+  const handleClaim = (s: SectionView) => {
+    if (s.status === "DONE" && s.lastAuthorId && s.lastAuthorId !== myId) setConfirmingEdit(s);
+    else void claimAndEdit(s);
+  };
   const openSection = (s: SectionView) => {
     if (editable && isMine(s)) openEditor(s);
-    else if (claimable(s)) void claimAndEdit(s);
+    else if (claimable(s)) handleClaim(s);
     else document.getElementById(`section-${s.id}`)?.scrollIntoView?.({ behavior: "smooth", block: "start" });
   };
   const sectionHint = (s: SectionView) =>
     editable && isMine(s) ? "Bấm để soạn tiếp" : claimable(s) ? "Bấm để nhận và soạn" : "Xem nội dung";
+  const holderActivity = (s: SectionView) =>
+    s.holderSavedAt
+      ? ` · lưu lần cuối ${formatAgo(s.holderSavedAt, now)}`
+      : s.claimedAt
+        ? ` · nhận ${formatAgo(s.claimedAt, now)}, chưa lưu`
+        : "";
   const holderLine = (s: SectionView) =>
     s.status === "CLAIMED"
-      ? `Đang soạn: ${name(s.holderId)}`
+      ? `Đang soạn: ${name(s.holderId)}${holderActivity(s)}`
       : s.status === "DONE"
         ? `Viết bởi: ${s.lastAuthorId ? name(s.lastAuthorId) : "—"}`
         : "Chưa ai nhận";
@@ -208,6 +240,15 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         </Alert>
       )}
       {!editable && view.status === "IN_PROGRESS" && <Alert tone="info">Đã hết hạn nộp; tài liệu chỉ còn xem.</Alert>}
+      {deadline && !me.teacher && (
+        <Alert tone={deadline.tone} title={deadline.title}>
+          <ul className="list-disc pl-4">
+            {deadline.details.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </Alert>
+      )}
 
       {tab === "work" ? (
         <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
@@ -241,7 +282,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
                     </button>
                     <div className="flex flex-wrap gap-1.5">
                       {claimable(s) && (
-                        <Button size="sm" variant="primary" onClick={() => void claimAndEdit(s)}>
+                        <Button size="sm" variant="primary" onClick={() => handleClaim(s)}>
                           {s.status === "DONE" ? "Sửa mục" : "Nhận mục"}
                         </Button>
                       )}
@@ -294,6 +335,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
           section={editing}
           shared={view.sharedBlocks}
           diagramEnabled={view.diagramEnabled}
+          deadlineNotice={deadline?.title ?? null}
           onClose={() => setEditing(null)}
           onChanged={() => void reload()}
         />
@@ -334,6 +376,32 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         }
       >
         <p>Bản nháp chưa Xong sẽ bị bỏ. Mục về Xong nếu đã có nội dung đã Xong, không thì về Mở.</p>
+      </Dialog>
+      <Dialog
+        open={confirmingEdit !== null}
+        title={`Sửa mục ${confirmingEdit?.title ?? ""}?`}
+        icon="edit"
+        onClose={() => setConfirmingEdit(null)}
+        footer={
+          <>
+            <Button onClick={() => setConfirmingEdit(null)}>Quay lại</Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                const s = confirmingEdit;
+                setConfirmingEdit(null);
+                if (s) void claimAndEdit(s);
+              }}
+            >
+              Sửa mục
+            </Button>
+          </>
+        }
+      >
+        <p>
+          Mục này do {name(confirmingEdit?.lastAuthorId ?? null)} viết. Bạn sẽ giữ mục, người khác không sửa được cho tới khi
+          bạn bấm Xong hoặc nhả mục; bấm Xong thì bạn thành người viết mục.
+        </p>
       </Dialog>
       {autoSubmitting && typeof document !== "undefined" && createPortal(
         <div role="alertdialog" aria-label="Đang nộp" className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/45">
