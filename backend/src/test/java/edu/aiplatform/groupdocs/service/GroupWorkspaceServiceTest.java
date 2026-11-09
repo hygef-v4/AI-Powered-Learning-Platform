@@ -19,6 +19,8 @@ import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignments.contract.SubmissionWindow;
 import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groupdocs.model.GroupDocument;
+import edu.aiplatform.groupdocs.model.GroupDocument.SectionAuthor;
+import edu.aiplatform.groupdocs.model.GroupDocument.SubmitMode;
 import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
 import edu.aiplatform.groups.service.GroupAccess;
 import edu.aiplatform.groups.model.ClassGroup;
@@ -80,6 +82,22 @@ class GroupWorkspaceServiceTest {
 
         when(assignments.get(assignmentId)).thenReturn(Optional.of(assignment(false)));
         assertThat(service.workspace(member, document.id()).diagramEnabled()).isFalse();
+    }
+
+    @Test
+    void lastSubmissionCarriesSectionAuthorsCapturedAtSubmit() {
+        when(assignments.get(assignmentId)).thenReturn(Optional.of(assignment(false)));
+        assertThat(service.workspace(member, document.id()).lastSubmission()).isNull();
+
+        List<SectionAuthor> authors = List.of(new SectionAuthor("p1", "Mục 1", member.accountId(), true),
+                new SectionAuthor("p2", "Mục 2", null, false));
+        GroupDocument submitted = document.withSubmission(new DocumentModel(List.of()), authors, member.accountId(),
+                SubmitMode.MANUAL, NOW, false, "sha256:abc", List.of(), GroupDocument.Status.IN_PROGRESS);
+        when(documents.findById(document.id())).thenReturn(Optional.of(submitted));
+
+        var submission = service.workspace(member, document.id()).lastSubmission();
+        assertThat(submission.authors()).containsExactlyElementsOf(authors);
+        assertThat(submission.receiptHash()).isEqualTo("sha256:abc");
     }
 
     private AssignmentView assignment(boolean diagramEnabled) {

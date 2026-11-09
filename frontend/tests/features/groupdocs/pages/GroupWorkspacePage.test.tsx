@@ -84,7 +84,9 @@ function backend(view: WorkspaceView) {
       if (url === "/api/v1/group-docs/doc1" && method === "GET") return json(view);
       if (url.endsWith(":claim")) {
         const id = url.match(/sections\/([^/:]+):claim/)![1]!;
-        return json(section(id, "CLAIMED", view.viewerId));
+        // Như server: nhận mục tăng version.
+        const version = (view.sections.find((s) => s.id === id)?.version ?? 1) + 1;
+        return json(section(id, "CLAIMED", view.viewerId, { version }));
       }
       if (url.endsWith(":release")) return json(section("s2", "OPEN", null));
       if (url.endsWith(":assign")) return json(section("s3", "CLAIMED", MEMBER));
@@ -263,6 +265,30 @@ describe("GroupWorkspacePage", () => {
     expect(screen.queryByRole("button", { name: "Nhận mục" })).not.toBeInTheDocument();
   });
 
+  it("thẻ Bản nộp hiện tác giả lúc nộp, không đổi khi mục được sửa sau đó (BR-U12-44)", async () => {
+    backend(workspace(MEMBER, {
+      lastSubmission: {
+        submittedBy: LEADER,
+        mode: "MANUAL",
+        submittedAt: "2026-10-22T03:00:00Z",
+        late: false,
+        receiptHash: "sha256:abc",
+        authors: [
+          { partId: "s1", title: "Mục s1", accountId: MEMBER, done: true },
+          { partId: "s3", title: "Mục s3", accountId: null, done: false },
+        ],
+      },
+    }));
+    render(<GroupWorkspacePage documentId="doc1" />);
+    fireEvent.click(await screen.findByRole("tab", { name: "Bản nộp" }));
+
+    // Mục s1 hiện do An viết lại sau khi nộp, nhưng bản nộp vẫn của Bình.
+    const row = (title: string) => screen.getAllByRole("row").find((r) => within(r).queryByText(title))!;
+    expect(within(row("Mục s1")).getByText("Bình")).toBeInTheDocument();
+    expect(within(row("Mục s1")).getByText("Xong")).toBeInTheDocument();
+    expect(within(row("Mục s3")).getByText("Chưa Xong, không vào bản nộp")).toBeInTheDocument();
+  });
+
   it("trình soạn dùng DocumentEditor: chỉ lưu block của người học, tự lưu sau 10 giây kèm version", async () => {
     vi.useFakeTimers();
     const calls: { url: string; body: unknown }[] = [];
@@ -327,6 +353,64 @@ describe("GroupWorkspacePage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Mục vừa được thay đổi ở nơi khác");
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByText("Đoạn chưa lưu")).toBeInTheDocument();
+
+    // Bấm lần nữa thì thoát, không bị kẹt trong trình soạn toàn trang.
+    fireEvent.click(screen.getByRole("button", { name: "Đóng, bỏ phần chưa lưu" }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("đang soạn mà mục bị giao cho người khác hoặc tài liệu bị khóa thì đóng trình soạn và báo", async () => {
+    let source: { onmessage: ((m: { data: string }) => void) | null } | null = null;
+    vi.stubGlobal(
+      "EventSource",
+      class {
+        onmessage: ((m: { data: string }) => void) | null = null;
+        onerror = null;
+        onopen = null;
+        constructor() {
+          // eslint-disable-next-line @typescript-eslint/no-this-alias
+          source = this;
+        }
+        close() {}
+      },
+    );
+    let view = workspace(MEMBER);
+    vi.stubGlobal("fetch", vi.fn(() => json(view)));
+    render(<GroupWorkspacePage documentId="doc1" />);
+    const item = (await screen.findAllByRole("listitem")).find((li) => within(li).queryByText("Mục s2"))!;
+    await waitFor(() => expect(source?.onmessage).toBeTypeOf("function"));
+
+    fireEvent.click(within(item).getByRole("button", { name: "Soạn tiếp" }));
+    expect(screen.getByRole("dialog", { name: /Soạn Mục s2/ })).toBeInTheDocument();
+
+    // Trưởng nhóm giao lại mục s2 cho người khác: version tăng, người giữ đổi.
+    view = workspace(MEMBER, { sections: [section("s2", "CLAIMED", LEADER, { version: 4 })] });
+    act(() => source!.onmessage!({ data: JSON.stringify({ type: "section.assigned", sectionId: "s2" }) }));
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: /Soạn Mục s2/ })).not.toBeInTheDocument());
+    expect(screen.getByRole("alert")).toHaveTextContent("Bạn không còn giữ mục “Mục s2”");
+
+    // Hết hạn, hệ thống tự nộp: trình soạn của mục đang giữ cũng đóng.
+    view = workspace(MEMBER, { sections: [section("s3", "CLAIMED", MEMBER, { version: 3 })] });
+    act(() => source!.onmessage!({ data: JSON.stringify({ type: "section.claimed", sectionId: "s3" }) }));
+    fireEvent.click(await screen.findByRole("button", { name: "Soạn tiếp" }));
+    expect(screen.getByRole("dialog", { name: /Soạn Mục s3/ })).toBeInTheDocument();
+    view = workspace(MEMBER, { status: "CLOSED", window: "CLOSED", sections: [section("s3", "DONE", null, { version: 4 })] });
+    act(() => source!.onmessage!({ data: JSON.stringify({ type: "document.auto-submitted" }) }));
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: /Soạn Mục s3/ })).not.toBeInTheDocument());
+    expect(screen.getByRole("alert")).toHaveTextContent("Đã hết hạn nộp nên trình soạn mục “Mục s3” đã đóng.");
+  });
+
+  it("vừa nhận mục mà bản xem chưa tải lại thì trình soạn vẫn mở", async () => {
+    // Nhận mục tăng version; GET vẫn trả bản xem cũ (mục Mở) như lần tải lại chưa kịp về.
+    const calls = backend(workspace(MEMBER));
+    render(<GroupWorkspacePage documentId="doc1" />);
+    const item = (await screen.findAllByRole("listitem")).find((li) => within(li).queryByText("Mục s3"))!;
+
+    fireEvent.click(within(item).getByRole("button", { name: "Nhận mục" }));
+
+    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s3:claim"))).toBe(true));
+    expect(await screen.findByRole("dialog", { name: /Soạn Mục s3/ })).toBeInTheDocument();
+    expect(screen.queryByText(/Bạn không còn giữ mục/)).not.toBeInTheDocument();
   });
 
   it("partOf lấy heading và hướng dẫn của phần; không có heading thì dựng theo tên mục", () => {

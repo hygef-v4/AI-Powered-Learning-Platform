@@ -11311,6 +11311,121 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ---
 
+## U01/U10/U11 documentation sync — 2026-11-08
+
+**Timestamp**: 2026-11-08T03:00:00Z
+**Requested by:** Đào Chí Cường
+
+**User Input (complete raw)**:
+
+> Sửa tài liệu
+
+**AI Response**: Applied the documentation fixes D1–D16 from the 08/11 U01/U10/U11 code–documentation sync review (code on `staging` 511956d2; 411 backend + 120 frontend tests pass). U01: activation endpoint path, rate limiting via `RequestThrottle` inside services instead of a non-existent `RateLimitFilter`, `LogoutDialog`/`OtpFlow` names, BR-U01-20 now describes the HMAC-derived OTP code. U10: removed `REVIEWED` from BR-U10-30, attached materials from BR-U10-31 and "review" from BR-U10-23; BR-U10-42 lists all four MCP tools; BR-U10-51 adds `QUIZ_REOPENED`; removed `/quizzes/{id}/review` and `MaterialRefPicker`; updated component names; annotated stale history lines in code-summary. U11: frontend component names marked as inline UI parts of the pages; removed `QuizMaterialSection` slot. Documentation only; no code, API or behaviour change.
+
+**Context**: Documentation sync (Construction docs, U01/U10/U11). No commit requested.
+
+---
+
+## Report 3/4/5.0/5.1 updates for U01/U10/U11 tasks — 2026-11-08
+
+**Timestamp**: 2026-11-08T12:00:00Z
+**Requested by:** Đào Chí Cường
+
+**User Input (complete raw)**:
+
+> @"D:\Downloads\Report-5.1_Unit Test.xlsx" @"D:\Downloads\Report-5.0_Test Documentation.docx" @"D:\Downloads\Report-4_Software Design Specification (1).docx" @"D:\Downloads\Report-3_Software Requirement Specification (5).docx"
+> sửa các các file báo cáo này sau đó gửi lại tôi để tôi đẩy lên drive
+
+**AI Response**: Report 5.1 v1.2: added U01_Account_Access (18), U10_Quiz_Authoring (18), U11_Quiz_Practice (16) unit-test sheets from the 08/11 JUnit run on staging 511956d2 (all Passed), Test Cases rows, Test Statistics rows/totals (92 cases) and rebuilt the two pie charts. Report 5.0: Round 1 UT summary (92/92) and UT defect counts (KAN-157/171/175, all Done) in 3. Test Reports. Report 4 II.1: class diagram adds missing methods, JwtService and RequestThrottle; the four Authentication sequence diagrams now show VerificationTicketStore/RequestThrottle/SessionStore calls, transaction and alt/opt error branches; `docs/class-diagrams.drawio` and `docs/sequence-diagrams.drawio` updated to match. Report 3: V. Requirement Appendix re-checked (BR21/BR22 match the code: same-key retries 2 s/5 s and key fallback exist in AiTaskJobHandler, correcting the earlier review); Table of Contents page numbers updated. Change Log rows added in each report. Report 4 I.3 stale tables left unchanged (outside U01/U10/U11).
+
+**Context**: Documentation (Reports), tasks KAN-152, KAN-188, KAN-193, KAN-195. No commit requested.
+
+---
+
+## Documentation - Check Drive reports and merge Report 5.1
+**Timestamp**: 2026-11-08T14:40:00Z
+**Requested by:** Đào Chí Cường
+
+**User Input (complete raw)**:
+
+> https://drive.google.com/drive/u/2/folders/1v2O9IUkvhbtseyDxSrHEj82mkj-p2AIu
+> kiểm tra lại doc mới nhất trên drive xem có thay đổi gì không, tôi nên đẩy bản doc bạn vừa sửa lên chưa
+
+> Gộp và cập nhật
+
+**AI Response**: Drive check: Report 3, Report 4 and Report 5.0 on Drive are byte-size identical to the edited bases; Report 5.1 on Drive gained U04_Subject_Administration (24), U13_Reference_Materials (25) and U14_Announcements_Notifications (25) as v1.2, colliding with the local v1.2 rows. Merged onto the Drive copy as v1.3: U01/U10/U11 sheets added at Test Cases rows 15-17, Test Statistics now covers all nine units (166 cases, 166 Passed; N/A/B 66/72/28) with rebuilt pie charts, Cover change log row 14; removed two U13 rows (U13-UTC024/025) left in the U14 sheet by a sheet copy. Report 5.0 Round 1 UT updated to 166/166 and the change log/defect notes now name U04/U13/U14.
+
+**Context**: Documentation (Reports), tasks KAN-188, KAN-193. No commit requested.
+
+---
+
+## Documentation - Verify Drive upload and update Jira tasks
+**Timestamp**: 2026-11-08T15:05:00Z
+**Requested by:** Đào Chí Cường
+
+**User Input (complete raw)**:
+
+> https://drive.google.com/drive/u/2/folders/1v2O9IUkvhbtseyDxSrHEj82mkj-p2AIu
+> tôi đã đưa 3 bản doc mới lên (tạm thời report 4 tôi chưa đưa lên vội). Kiểm tra xem được chưa sau đó check các task jira còn lại và báo cáo tôi
+> https://sep490-g21-fall26.atlassian.net/jira/software/projects/KAN/list?jql=project%20%3D%20KAN%20ORDER%20BY%20cf%5B10019%5D%20ASC
+
+> Viết và chuyển
+
+**AI Response**: Drive copies of Report 3, Report 5.0 and Report 5.1 are byte-size identical to the delivered files; Report 4 on Drive is still the old version. Reported open KAN tasks. Posted result comments on KAN-152, KAN-188, KAN-193 and KAN-195; moved KAN-152, KAN-188 and KAN-193 to In Review (team convention, as KAN-185/KAN-186) and KAN-195 to In Progress until Report 4 is uploaded and the two draw.io files are committed. KAN-193: no new Bug; KAN-182 and KAN-180 fixes (eab37de4, 76ccc114) confirmed on staging 511956d2.
+
+**Context**: Documentation (Reports) and Jira tracking, tasks KAN-152, KAN-188, KAN-193, KAN-195. No commit requested.
+
+---
+
+## Jira review tasks KAN-198, KAN-200 — 2026-11-09
+
+**Timestamp**: 2026-11-09T02:00:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> check jira phần tôi xem cần làm gì k
+
+> toi dang nhap r
+
+> làm hết theo thứ tự đó luôn
+
+**AI Response**: Read the user's five open KAN tasks (KAN-14, 189, 194, 198, 200). KAN-198: Report 4 U12 diagrams (baseline `fb57dc92`) still showed the assignment lock removed on 2026-11-08; updated `docs/class-diagrams.drawio` (GroupDocController, GroupSectionService: `lockAssignment` → `release`; GroupDocumentRepository without `assignmentLock`/`setAssignmentLock`; GroupSection without `assigneeId`) and `docs/sequence-diagrams.drawio` "Complete Group Assignment" messages 10–18 (allocation lock → release by holder/leader/teacher), same layout. UC 53 authoring diagrams match code. KAN-200: AI API class diagram and the draft/practice/grading sequences match code except the automatic source selection added 2026-11-05 (`IAiTask.requireSource/sourceOrder`, `previewSources`, `AiDraftRepository.attachTask/markFailed`); recorded on the Jira task as proposed fixes for the owners.
+
+**Context**: Report 4 diagram review (documentation), branch `docs/u12-diagrams-simplify`.
+
+---
+
+## U12 re-test and fixes — 2026-11-09
+
+**Timestamp**: 2026-11-09T03:20:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> gio test lai va xem u12 con gi can sua khong
+
+**AI Response**: Re-tested U12 on staging `fb20c6bc` (includes teammates' receipt-page removal, which U12 does not use): backend U12 unit and integration tests, frontend groupdocs/groups tests, lint and type check all pass. Code review found two defects, fixed on branch `fix/u12-editor-lost-hold`: (1) the holder's full-page section editor stayed open after the leader reassigned or someone released the section, or after auto-submit, and with unsaved edits "Đóng" failed to save and could not close; the page now closes the editor with a notice when the refreshed view shows the section is no longer held or the document is locked, and a second "Đóng" discards unsaved edits; (2) the Bản nộp card showed the sections' current authors instead of the authors captured at submit (BR-U12-44); `WorkspaceView.lastSubmission.authors` now returns the stored `section_authors` and the card uses them. Added backend and frontend tests; verified on the local stack.
+
+**Context**: Construction — U12 Group Assignment, bug fixes (no BR, schema or existing API change; additive `authors` field).
+
+---
+
+## U12 fixes merged to staging — 2026-11-09
+
+**Timestamp**: 2026-11-09T03:40:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> gộp vào staging luôn đi
+
+**AI Response**: Committed the two U12 fixes on `fix/u12-editor-lost-hold`, merged the branch into `staging` and pushed `staging` to origin.
+
+**Context**: Construction — U12 Group Assignment, merge of bug fixes to staging.
+
+---
+
 ## U09 — Open group submission from a member evaluation
 **Timestamp**: 2026-11-09T04:24:31Z
 **Requested by**: Quang Hung

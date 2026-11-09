@@ -101,9 +101,37 @@ public class GradingProposalTransactions {
             requireSameRequest(actor, evaluation, request, proposal);
             return new Prepared(proposal, null, false, null, 4096);
         }
-        int maxOutputTokens = gradingPromptBuilder.calculateMaxOutputTokens(evaluation);
-        var prompt = buildPrompt(actor, evaluation);
-        var outputSchema = gradingPromptBuilder.buildOutputSchema(evaluation);
+
+        var content = assignmentQuery.getContent(evaluation.assignmentId)
+                .orElseThrow(() -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE",
+                        "Assignment content unavailable"));
+        if (!GradingJson.writeSnapshot(objectMapper, content.rubrics())
+                .equals(evaluation.rubricSnapshot))
+            throw ApiException.conflict("RUBRIC_CHANGED",
+                    "Locked rubric no longer matches submitted snapshot");
+        var detail = submissionReviewService.loadEvaluation(actor, evaluation.id);
+        DocumentModel document = detail == null ? null : detail.document();
+        var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
+
+        List<RubricView> activeRubrics = gradingPromptBuilder.findActiveRubrics(document, content.skeleton(), rubrics);
+        Set<String> emptyPartIds = gradingPromptBuilder.findEmptyPartIds(document, content.skeleton());
+
+        if (activeRubrics.isEmpty()) {
+            var zeroPayload = GradingPromptBuilder.createZeroProposal(rubrics, objectMapper);
+            var proposal = createProposal(actor, evaluation, request);
+            proposal.proposal = zeroPayload;
+            proposal.status = "READY";
+            proposal.completedAt = clock.instant();
+            gradingProposalRepository.save(proposal);
+            gradingService.recordAudit(actor, evaluation, "AI_GRADING_REQUESTED", null);
+            log.info("AI grading proposal completed immediately for empty submission evaluationId={} proposalId={}",
+                    evaluationId, proposal.id);
+            return new Prepared(proposal, null, false, null, 0);
+        }
+
+        int maxOutputTokens = gradingPromptBuilder.calculateMaxOutputTokens(activeRubrics);
+        var prompt = gradingPromptBuilder.buildPrompt(evaluation, document, content, activeRubrics, emptyPartIds);
+        var outputSchema = gradingPromptBuilder.buildOutputSchema(activeRubrics);
         var proposal = createProposal(actor, evaluation, request);
         gradingProposalRepository.save(proposal);
         gradingService.recordAudit(actor, evaluation, "AI_GRADING_REQUESTED", null);
@@ -120,8 +148,26 @@ public class GradingProposalTransactions {
                 && evaluation.state != EvaluationStatus.DRAFT)
             throw ApiException.conflict("INVALID_GRADE_STATE",
                     "AI proposals require a pending or draft grade");
-        int maxOutputTokens = gradingPromptBuilder.calculateMaxOutputTokens(evaluation);
-        var prompt = buildPrompt(actor, evaluation);
+
+        var content = assignmentQuery.getContent(evaluation.assignmentId)
+                .orElseThrow(() -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE",
+                        "Assignment content unavailable"));
+        if (!GradingJson.writeSnapshot(objectMapper, content.rubrics())
+                .equals(evaluation.rubricSnapshot))
+            throw ApiException.conflict("RUBRIC_CHANGED",
+                    "Locked rubric no longer matches submitted snapshot");
+        var detail = submissionReviewService.loadEvaluation(actor, evaluation.id);
+        DocumentModel document = detail == null ? null : detail.document();
+        var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
+
+        List<RubricView> activeRubrics = gradingPromptBuilder.findActiveRubrics(document, content.skeleton(), rubrics);
+        if (activeRubrics.isEmpty()) {
+            return 0L;
+        }
+
+        Set<String> emptyPartIds = gradingPromptBuilder.findEmptyPartIds(document, content.skeleton());
+        int maxOutputTokens = gradingPromptBuilder.calculateMaxOutputTokens(activeRubrics);
+        var prompt = gradingPromptBuilder.buildPrompt(evaluation, document, content, activeRubrics, emptyPartIds);
         int promptChars = (prompt.system() == null ? 0 : prompt.system().length())
                 + prompt.user().length();
         return AiTokenEstimate.estimate(promptChars, maxOutputTokens);
@@ -294,6 +340,20 @@ public class GradingProposalTransactions {
             var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
             var validBlockIds = resolveValidBlockIds(result.actor(), evaluation, rubrics);
             var payload = gradingProposalValidator.parseProposal(result.output());
+
+            var contentOpt = assignmentQuery.getContent(evaluation.assignmentId);
+            if (contentOpt.isPresent()) {
+                var content = contentOpt.get();
+                var detail = submissionReviewService.loadEvaluation(result.actor(), evaluation.id);
+                DocumentModel document = detail == null ? null : detail.document();
+                List<RubricView> emptyRubrics = gradingPromptBuilder.findEmptyRubrics(document, content.skeleton(), rubrics);
+                if (!emptyRubrics.isEmpty()) {
+                    payload = GradingPromptBuilder.mergeProposalWithEmptyRubrics(payload, rubrics, emptyRubrics, objectMapper);
+                }
+            }
+
+            payload = GradingPromptBuilder.sanitizeAndNormalizeProposal(payload, rubrics, validBlockIds, objectMapper);
+
             gradingProposalValidator.validateProposal(payload, rubrics, validBlockIds);
             proposal.proposal = payload;
             proposal.status = "READY";
@@ -320,9 +380,9 @@ public class GradingProposalTransactions {
             proposal.completedAt = clock.instant();
             gradingProposalRepository.save(proposal);
             log.warn(
-                    "AI grading proposal rejected evaluationId={} proposalId={} taskId={} versionNo={} status={} code={} diagnostic={}",
+                    "AI grading proposal rejected evaluationId={} proposalId={} taskId={} versionNo={} status={} code={} diagnostic={} reason={}",
                     evaluationId, proposal.id, result.taskId(), proposal.versionNo, proposal.status,
-                    ex.code(), GradingProposalValidator.buildRejectionDiagnostic(ex));
+                    ex.code(), GradingProposalValidator.buildRejectionDiagnostic(ex), ex.getMessage());
             return proposal.status.equals("STALE") ? ApplyOutcome.STALE : ApplyOutcome.REJECTED;
         }
     }

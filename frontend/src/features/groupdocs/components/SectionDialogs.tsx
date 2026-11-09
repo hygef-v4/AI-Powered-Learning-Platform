@@ -66,6 +66,8 @@ export function SectionEditorDialog({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [importing, setImporting] = useState(false);
+  // Đóng mà lưu lỗi thì giữ trình soạn; bấm Đóng lần nữa thì thoát và bỏ phần chưa lưu (không bị kẹt).
+  const [discardOnClose, setDiscardOnClose] = useState(false);
 
   const save = useCallback(async () => {
     try {
@@ -73,6 +75,7 @@ export function SectionEditorDialog({
       setVersion(saved.version);
       setSavedAt(saved.draftSavedAt);
       setDirty(false);
+      setDiscardOnClose(false);
       setError(null);
       return true;
     } catch (e) {
@@ -90,6 +93,12 @@ export function SectionEditorDialog({
   const edit = (next: DocumentModel) => {
     setDoc(next);
     setDirty(true);
+  };
+
+  const handleClose = async () => {
+    if (!dirty || discardOnClose) return onClose();
+    if (await save()) onClose();
+    else setDiscardOnClose(true);
   };
 
   const done = async () => {
@@ -121,8 +130,8 @@ export function SectionEditorDialog({
           <Button icon="upload_file" onClick={() => setImporting(true)} disabled={busy}>
             Nhập DOCX
           </Button>
-          <Button onClick={() => void (dirty ? save().then((ok) => ok && onClose()) : onClose())} disabled={busy}>
-            Đóng
+          <Button onClick={() => void handleClose()} disabled={busy}>
+            {discardOnClose ? "Đóng, bỏ phần chưa lưu" : "Đóng"}
           </Button>
           <Button variant="primary" icon="check" onClick={() => void done()} disabled={busy}>
             Xong

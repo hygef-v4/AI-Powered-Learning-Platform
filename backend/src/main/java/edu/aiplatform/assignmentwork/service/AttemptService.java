@@ -152,12 +152,6 @@ public class AttemptService {
         if (current.contentVersion() != contentVersion) {
             throw versionConflict();
         }
-        AssignmentContent content = WorkAccess.call(() -> assignments.getContent(current.assignmentId()))
-                .orElseThrow(() -> ApiException.notFound("NOT_FOUND"));
-        List<ValidationIssue> errors = submitIssues(current, content.skeleton(), current.content());
-        if (!errors.isEmpty()) {
-            throw WorkProblem.issues(HttpStatus.CONFLICT, "SUBMISSION_INVALID", "Bài chưa đủ điều kiện nộp", errors);
-        }
         submitter.submit(current, SubmitMode.MANUAL, actor.accountId(), now, view.closesAt(), List.of());
         return receipt(attempts.find(current.id()).orElseThrow());
     }

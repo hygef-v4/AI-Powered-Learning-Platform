@@ -213,3 +213,11 @@ Người dùng chọn giữ luồng bài nhóm tối giản: sinh viên làm bà
 - **Frontend:** `GroupWorkspacePage` còn 2 thẻ (Tài liệu, Bản nộp); mỗi mục có Nhận mục / Sửa mục / Soạn tiếp, Giao mục (trưởng nhóm), Nhả mục, Lịch sử. `SectionHistoryDialog.tsx` chỉ xem; bỏ `CollaborationPanels.tsx`.
 - **Test:** backend `GroupSectionServiceTest`, `GroupSectionTest`, `GroupRepositoriesIntegrationTest`, `GroupControllersTest` trả về bản theo BR và thêm ca nhận lại mục Xong, lịch sử, ảnh; `GroupDocImportServiceTest` mới; bỏ `GroupDocCollaborationServicesTest`. Frontend `GroupWorkspacePage.test.tsx` viết lại theo luồng mới, `GroupProgressCard.test.tsx` mới. E2E `u12`, `u12b`, `u12c` theo luồng mới; `u12c` kiểm các API đã bỏ trả 404.
 
+
+## Sửa 2 lỗi khi kiểm lại (2026-11-09)
+
+Nhánh `fix/u12-editor-lost-hold`. Không đổi BR, schema hay API cũ; chỉ thêm trường `authors` vào `WorkspaceView.lastSubmission`.
+
+- **Trình soạn bị kẹt khi mất mục:** trưởng nhóm giao lại mục, người khác nhả mục hoặc hệ thống tự nộp thì trình soạn toàn trang của người đang giữ vẫn mở; còn phần chưa lưu thì Đóng lưu thất bại và không thoát được. `GroupWorkspacePage` đóng trình soạn khi bản xem mới cho thấy người dùng không còn giữ mục (bỏ qua bản xem cũ hơn mục đang soạn) hoặc tài liệu đã khóa, và báo lý do. `SectionEditorDialog`: lưu lỗi khi Đóng thì nút thành "Đóng, bỏ phần chưa lưu", bấm lần nữa là thoát.
+- **Tác giả ở thẻ Bản nộp (BR-U12-44):** thẻ lấy `lastAuthorId` hiện tại nên mục sửa sau khi nộp làm đổi tác giả của bản nộp. `WorkspaceView.lastSubmission.authors` trả `section_authors` đã lưu lúc nộp; thẻ hiện cột "Tác giả trong bản nộp", mục chưa Xong lúc nộp ghi "Chưa Xong, không vào bản nộp".
+- **Test:** `GroupWorkspaceServiceTest.lastSubmissionCarriesSectionAuthorsCapturedAtSubmit`; `GroupWorkspacePage.test.tsx` thêm ca giao lại mục và tự nộp đóng trình soạn, ca vừa nhận mục vẫn mở, Đóng lần hai, tác giả bản nộp; mock nhận mục tăng `version` như server.

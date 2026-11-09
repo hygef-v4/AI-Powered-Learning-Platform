@@ -8,17 +8,15 @@ import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/u
 import {
   DocumentEditor,
   DocxImportDialog,
-  diagramTypeLabels,
   outlineOf,
   publishOutline,
   sectionsOf,
-  type DiagramType,
   type DocumentBlock,
   type DocumentModel,
   type DocumentPart,
   type ValidationIssue,
 } from "@/shared/document";
-import { Alert, Button, Dialog, Menu, MenuItem, Pill, TableFrame, Td, Th } from "@/shared/ui";
+import { Alert, Button, Dialog, Menu, MenuItem, Pill } from "@/shared/ui";
 import { attemptImageUrl, exportUrl, workApi } from "../api";
 import { errorCode, errorMessage, formatDateTime, formatTime, problemIssues, remaining } from "../model/format";
 
@@ -51,43 +49,6 @@ export function insertIntoPart(content: DocumentModel, parts: DocumentPart[], pa
   return { blocks: [...content.blocks.slice(0, at + 1), ...added, ...content.blocks.slice(at + 1)] };
 }
 
-/**
- * Kiểm sơ bộ trước khi nộp (server kiểm lại bằng validateForSubmit), không chặn bài server sẽ nhận: đủ tổng số sơ đồ bắt
- * buộc, có nội dung của người học. Sơ đồ của giảng viên có ảnh xem trước tính như đã vẽ, bảng của giảng viên có chữ
- * tính như đã điền; server phân biệt chính xác phần đã làm và phần có sẵn của đề.
- */
-export function precheck(attempt: Pick<Attempt, "requiredDiagrams">, content: DocumentModel): ValidationIssue[] {
-  const mine = content.blocks.filter((b) => b.origin === "STUDENT");
-  const drawn = content.blocks.filter((b) => b.origin === "TEACHER" && b.type === "DIAGRAM" && !!b.content.svgPreview);
-  const filled = content.blocks.some((b) => b.origin === "TEACHER" && b.type === "TABLE"
-    && b.content.rows.some((row) => row.some((cell) => cell.runs.some((r) => r.text.trim()))));
-  const issues: ValidationIssue[] = [];
-  // Loại sơ đồ do server suy từ hình vẽ khi lưu (yêu cầu 2026-10-22), bản trên máy có thể chưa có loại mới: chỉ kiểm
-  // tổng số sơ đồ (điều kiện cần), loại từng sơ đồ để server kiểm.
-  const required = Object.entries(attempt.requiredDiagrams).filter(([, count]) => count > 0) as [DiagramType, number][];
-  const total = required.reduce((sum, [, count]) => sum + count, 0);
-  const have = [...mine, ...drawn].filter((b) => b.type === "DIAGRAM").length;
-  if (have < total) {
-    issues.push({ code: "REQUIRED_DIAGRAMS_MISSING", blockId: null,
-      message: `Cần ít nhất ${total} sơ đồ (${required.map(([type, count]) => `${count} ${diagramTypeLabels[type]}`).join(", ")}), bài mới có ${have}` });
-  }
-  const hasContent = drawn.length > 0 || filled || mine.some((b) => b.type === "IMAGE" || b.type === "DIAGRAM"
-    || (b.type === "PARAGRAPH" && b.content.runs.some((r) => r.text.trim()))
-    || (b.type === "LIST" && b.content.items.some((i) => i.runs.some((r) => r.text.trim())))
-    || (b.type === "TABLE" && b.content.rows.some((row) => row.some((cell) => cell.runs.some((r) => r.text.trim())))));
-  if (!hasContent) issues.push({ code: "SUBMISSION_EMPTY", blockId: null, message: "Bài làm chưa có nội dung của bạn" });
-  return issues;
-}
-
-/**
- * Kiểm trong popup Nộp: bản đã lưu có kết quả của server (biết sơ đồ, bảng của đề đã sửa khác đề chưa) thì dùng kết quả
- * đó; chưa có (mất mạng, bản chưa lưu) thì tự kiểm sơ bộ bằng {@link precheck}.
- */
-export function submitCheck(attempt: Pick<Attempt, "requiredDiagrams">, content: DocumentModel,
-                            serverIssues: ValidationIssue[] | null): ValidationIssue[] {
-  return serverIssues ?? precheck(attempt, content);
-}
-
 /** Lý do dừng tự lưu: lệch phiên bản, lượt đã đóng (chờ tải lại); bài không hợp lệ (chờ người học sửa). */
 type Halt = "conflict" | "closed" | "invalid" | null;
 
@@ -111,7 +72,6 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   const [banner, setBanner] = useState<{ tone: "danger" | "warning"; text: string; reload?: boolean } | null>(null);
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
   /** Kiểm nộp của bản đã lưu do server trả (biết bản đề gốc); null khi chưa có, lúc đó tự kiểm sơ bộ. */
-  const [submitIssues, setSubmitIssues] = useState<ValidationIssue[] | null>(null);
   const [dialog, setDialog] = useState<"submit" | "docx" | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [offset, setOffset] = useState(0);
@@ -144,7 +104,6 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
       setAttempt(value);
       setContent(value.content);
       setSavedAt(value.lastSavedAt);
-      setSubmitIssues(value.submitIssues ?? null);
       version.current = value.contentVersion;
       setOffset(new Date(value.serverTime).getTime() - Date.now());
     }, (error) => { if (!controller.signal.aborted) setLoadError(error); });
@@ -170,7 +129,6 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
         const saved = await workApi.save(attemptId, version.current, body, small);
         version.current = saved.contentVersion;
         setSavedAt(saved.lastSavedAt);
-        setSubmitIssues(saved.submitIssues ?? null);
         if (edits.current === startEdits) {
           setContent(saved.content);
           setDirty(false);
@@ -283,9 +241,6 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
             <MenuItem icon="download" onClick={() => { window.location.href = exportUrl(attempt.attemptId); }}>Tải DOCX</MenuItem>
             {editable && <MenuItem icon="upload_file" onClick={() => setDialog("docx")}>Nhập DOCX</MenuItem>}
           </Menu>
-          {attempt.status === "SUBMITTED" && (
-            <Button icon="visibility" onClick={() => router.push(`/attempts/${encodeURIComponent(attempt.attemptId)}/receipt`)}>Xem biên nhận</Button>
-          )}
           {editable && (
             <Button variant="primary" icon="check_circle" data-testid="open-submit" onClick={() => {
               // Lưu ngay khi mở popup: lưu xong thì popup dùng kết quả kiểm nộp của server cho đúng bản đang có.
@@ -315,11 +270,14 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
         viewSlot={viewSlot} />
 
       {dialog === "submit" && (
-        <SubmitDialog attempt={attempt} content={content} serverIssues={dirty ? null : submitIssues} onClose={() => setDialog(null)}
+        <SubmitDialog onClose={() => setDialog(null)}
           onSubmit={async () => {
             if (!(await save())) throw new Error("Bài chưa lưu");
-            const receipt = await workApi.submit(attempt.attemptId, version.current);
-            router.push(`/attempts/${encodeURIComponent(receipt.attemptId)}/receipt`);
+            await workApi.submit(attempt.attemptId, version.current);
+            const target = attempt.classId
+              ? `/my-assignments/${encodeURIComponent(attempt.assignmentId)}?classId=${encodeURIComponent(attempt.classId)}`
+              : `/my-assignments/${encodeURIComponent(attempt.assignmentId)}`;
+            router.push(target);
           }} />
       )}
       {dialog === "docx" && (
@@ -333,42 +291,27 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   );
 }
 
-function SubmitDialog({ attempt, content, serverIssues, onClose, onSubmit }: {
-  attempt: Attempt;
-  content: DocumentModel;
-  serverIssues: ValidationIssue[] | null;
+function SubmitDialog({ onClose, onSubmit }: {
   onClose: () => void;
   onSubmit: () => Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
-  const [errors, setErrors] = useState<ValidationIssue[]>(() => submitCheck(attempt, content, serverIssues));
   const [message, setMessage] = useState<string | null>(null);
-  const left = attempt.maxAttempts - attempt.attemptNo;
   return (
-    <Dialog open size="lg" icon="assignment" title={`Nộp bài lượt ${attempt.attemptNo}?`} onClose={onClose} dismissible={!busy}
-      footer={errors.length > 0 ? <Button onClick={onClose}>Quay lại sửa</Button> : <>
+    <Dialog open title="Nộp bài" onClose={onClose} dismissible={!busy}
+      footer={<>
         <Button variant="primary" disabled={busy} data-testid="confirm-submit" onClick={async () => {
           setBusy(true);
           setMessage(null);
           try {
             await onSubmit();
           } catch (error) {
-            const issues = problemIssues(error);
-            if (issues.length > 0) setErrors(issues);
             setMessage(errorMessage(error));
             setBusy(false);
           }
         }}>Nộp bài</Button>
       </>}>
       {message && <Alert tone="danger" role="alert">{message}</Alert>}
-      <TableFrame className="[&_table]:table-fixed">
-        <colgroup><col /><col className="w-[40%]" /></colgroup><thead><tr><Th>Mục</Th><Th>Kiểm tra</Th></tr></thead>
-        <tbody>
-          {errors.length === 0 ? <tr><Td>Toàn bài</Td><Td className="text-success">Hợp lệ</Td></tr>
-            : errors.map((issue, i) => <tr key={i}><Td>{attempt.parts.find((p) => p.headingBlockId === issue.blockId)?.title ?? "Toàn bài"}</Td><Td className="text-danger">{issue.message}</Td></tr>)}
-        </tbody>
-      </TableFrame>
-      <p>Sau khi nộp, lượt này không sửa được. Bạn còn {Math.max(0, left)} lượt sau lượt này.</p>
     </Dialog>
   );
 }

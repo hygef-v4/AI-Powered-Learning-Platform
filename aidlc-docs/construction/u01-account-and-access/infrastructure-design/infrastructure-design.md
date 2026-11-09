@@ -12,7 +12,7 @@ File này chỉ ghi phần hạ tầng U01 dùng.
 
 | Thành phần (NFR Design) | Chạy ở | Ghi chú |
 |---|---|---|
-| `RateLimitFilter`, `JwtAuthFilter`, các service U01 | Container `backend`, package `edu.aiplatform.identity` | Một backend modular monolith |
+| `JwtAuthFilter`, các service U01 (giới hạn tần suất qua `RequestThrottle` trong service) | Container `backend`, package `edu.aiplatform.identity` | Một backend modular monolith |
 | `OtpMailHandler` | Container `worker` | Handler của việc `OTP_DELIVERY`, nhận từ queue `jobs.email` |
 | Bảng `accounts` (gồm `email_preferences` do U14 ghi; quota/usage ở bảng riêng U06) | Container `postgres` | Migration Flyway trong thư mục của U01 |
 | Refresh token, OTP, bucket rate limit | Container `redis`, database 0 | Khóa theo mục 3 |

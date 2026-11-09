@@ -60,13 +60,13 @@ describe("assignment workspace UI", () => {
     expect(savedContent.blocks[1]).toMatchObject({ content: { runs: [{ text: "Bài làm mới" }] } });
     finish({ attemptId: "a", contentVersion: 2, lastSavedAt: "2026-10-25T01:00:00Z", content: savedContent });
     await waitFor(() => expect(workApi.submit).toHaveBeenCalledWith("a", 2));
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/attempts/a/receipt"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/my-assignments/assignment?classId=class"));
   });
 
   it("submitted attempt remains read-only", async () => {
     vi.mocked(workApi.attempt).mockResolvedValue({ ...attempt, editable: false, status: "SUBMITTED", submittedAt: "2026-10-25T01:00:00Z" });
     render(<AssignmentWorkspacePage attemptId="a" />);
-    expect(await screen.findByRole("button", { name: "Xem biên nhận" })).toBeInTheDocument();
+    expect(await screen.findByText(/Đã nộp lúc/)).toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "Lưu và nộp bài" })).toBeNull();
     expect(screen.queryByTestId("open-submit")).toBeNull();
     expect(screen.queryByRole("textbox")).toBeNull();
