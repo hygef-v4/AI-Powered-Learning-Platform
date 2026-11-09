@@ -11607,3 +11607,21 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Commit thay đổi giao diện sidebar dạng cây.
 
 ---
+
+## Tính năng: khung chat AI sửa đề đang có
+**Timestamp**: 2026-11-09T16:10:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi muốn thêm 1 khung chat nhỏ với AI (như ảnh 2) để sửa đề đang sẵn có (để ở trên phần Toàn bài) để khi tạo đề xong rồi có thể sửa lại đề đó bằng AI (chẳng hạn như ảnh 3 tôi đã tạo xong đề bằng tiếng trung nhưng tôi muốn đổi lại thành tiếng anh thì phải tạo lại từ đầu, việc này rất mất công nên tôi muốn thêm box chat với AI, gửi cho AI toàn bộ context và nó có thể sửa trực tiếp theo yêu cầu của người dùng)" (kèm 3 ảnh: trang soạn bài có thẻ rubric bên phải, thẻ rubric phóng to, đề tiếng Trung đã tạo bằng AI)
+**AI Response**: "Thêm chế độ REVISE cho luồng AI soạn đề (POST /assignments/{id}/ai-drafts, trường mode): máy chủ gửi AI toàn bộ đề đã lưu (tên, hướng dẫn, mọi khối, rubric từng mục, rubric Toàn bài) với mã khối ngắn, AI trả bản đầy đủ đã sửa (schema riêng); áp dụng giữ id, ảnh, sơ đồ và định dạng chữ của khối giữ mã, kiểm tra khung bằng DocumentModelService, ghi lại rubric theo mục. Mới: AssignmentDraftRevision.java; sửa AssignmentAiDraftService, AiDraftProposal (tách chuẩn hóa rubric), AssignmentCommands/AssignmentRequests (mode). Frontend: AiReviseChat.tsx đặt trên thẻ Toàn bài (chỉ khi bài nháp, sửa được), lưu trước khi gửi, ghi thẳng kết quả lên trang, Ctrl+Z quay lại; API requestAiRevision. Test: backend AssignmentAiRevisionTest 5 ca, gói assignments + ArchitectureTest 96/96; frontend assignments 43/43, lint các file sửa sạch, typecheck chỉ còn lỗi sẵn có (thiếu package materials). Chưa chạy thử với AI thật trên trình duyệt (stack Docker đang chạy image backend cũ)."
+**Context**: Tính năng thêm vào U07 trong phạm vi thành phần hiện có (minimal depth); không commit.
+
+---
+
+## Kiểm thử thật khung chat AI sửa đề
+**Timestamp**: 2026-11-09T16:55:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Rebuild and test" rồi "tôi không có tài khoản, bạn hãy tự seed và đăng nhập vào cho tôi"
+**AI Response**: "Build lại image platform-backend:local, khởi động lại backend/worker (cổng 8081) và Mailpit; frontend dev trỏ BACKEND_URL tới 8081 (thêm cấu hình frontend-dev-docker-backend vào .claude/launch.json). Đặt mật khẩu thử mới cho tài khoản local gv.test@fpt.edu.vn (lưu ở .tmp/local-test-accounts.md, không commit), đăng nhập, tạo bài nháp 'Đề 1' tiếng Trung ở lớp SE-DEMO1. Lỗi thật tìm được: Gemini đôi khi lặp vô tận khi text là trường tùy chọn (8.192 token, kết quả không phải JSON) và làm rơi khối LIST. Sửa: schema bắt buộc ref/type/text và đặt chúng đầu, danh sách gửi mỗi mục một dòng trong text; thêm log WARN lý do kết quả AI lệch schema (không ghi nội dung) trong AiTaskJobHandler. Sau sửa: 12/12 lượt dịch thành công, đủ khối và ref; thử qua giao diện: đề được dịch, giữ in đậm, danh sách và điểm rubric; Ctrl+Z trả lại nội dung trang (rubric không hoàn tác, như luồng Soạn bằng AI). Test assignments + ai + ArchitectureTest 237/237."
+**Context**: Kiểm thử end-to-end local và sửa lỗi; không commit.
+
+---

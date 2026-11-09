@@ -88,6 +88,9 @@ export const assignmentsApi = {
     /** Bỏ trống: hệ thống tự chọn nguồn; PERSONAL không kèm provider: chỉ API cá nhân. */
     source?: "SHARED" | "PERSONAL"; provider?: string; requestRef: string; formatText?: string }) =>
     write<AiDraft>(`/assignments/${enc(id)}/ai-drafts`, "POST", input),
+  /** AI sửa đề đang có theo yêu cầu; máy chủ gửi kèm toàn bộ đề và rubric đã lưu (yêu cầu 2026-11-09). */
+  requestAiRevision: (id: string, request: string, requestRef: string) =>
+    write<AiDraft>(`/assignments/${enc(id)}/ai-drafts`, "POST", { request, mode: "REVISE", requestRef }),
   aiDraft: (id: string, draftId: string, signal?: AbortSignal) =>
     apiFetch<AiDraft>(`${base}/assignments/${enc(id)}/ai-drafts/${enc(draftId)}`, { signal }),
   previewAiSources: (id: string, sourceFileRefs: string[], signal?: AbortSignal) =>
