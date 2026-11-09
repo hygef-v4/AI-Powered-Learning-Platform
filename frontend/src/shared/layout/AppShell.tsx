@@ -197,15 +197,23 @@ function ContextualNav({ resolve, nav, label, pathname, collapsed }: { resolve: 
   const params = useSearchParams();
   const found = resolve({ pathname, search: new URLSearchParams(params?.toString() ?? "") });
   if (!found) return <NavList key="role" label={label} items={nav} pathname={pathname} collapsed={collapsed} />;
+  if (found.parentHref) {
+    return (
+      <NavList key="role" label={label} items={nav} pathname={pathname} collapsed={collapsed} branch={{ href: found.parentHref, content: found.header }} />
+    );
+  }
   return <NavList key={found.key} label={found.label} items={found.items} pathname={pathname} header={found.header} collapsed={collapsed} />;
 }
 
+type NavBranch = { href: string; content: ReactNode };
+
 /**
  * Danh sách mục sidebar; đổi sang ngữ cảnh khác thì dựng lại để mờ vào. Sidebar thu gọn (chỉ màn rộng) thì còn biểu
- * tượng, tên mục vẫn đọc được qua `title` và trình đọc màn hình.
+ * tượng, tên mục vẫn đọc được qua `title` và trình đọc màn hình. `branch`: nhánh cây (môn, lớp) mở ngay dưới mục cha; mục
+ * cha chỉ tô như mục đang mở khi đang ở đúng trang của nó hoặc khi sidebar thu gọn (nhánh bị ẩn).
  */
-function NavList({ label, items, pathname, header, collapsed }: { label: string; items: NavItem[]; pathname: string; header?: ReactNode; collapsed: boolean }) {
-  const current = activeHref(items, pathname);
+function NavList({ label, items, pathname, header, collapsed, branch }: { label: string; items: NavItem[]; pathname: string; header?: ReactNode; collapsed: boolean; branch?: NavBranch }) {
+  const current = branch ? branch.href : activeHref(items, pathname);
   // Phần đầu (lối về, ô chọn môn hay lớp) nằm ngoài vùng cuộn để danh sách thả xuống của ô chọn tràn ra được khi sidebar thu gọn.
   return (
     <div className="flex min-h-0 flex-1 animate-fade flex-col">
@@ -213,6 +221,9 @@ function NavList({ label, items, pathname, header, collapsed }: { label: string;
       {/* Ngữ cảnh tự vẽ danh sách trong phần đầu (ví dụ danh sách module) thì không có mục riêng. */}
       {items.length > 0 && <nav aria-label={label} className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-x-hidden overflow-y-auto">
       {items.map((item, index) => {
+        const isParent = branch?.href === item.href;
+        // Mục cha của nhánh khi đang ở trang con: chỉ tô khi sidebar thu gọn (màn rộng), lúc mục con bị ẩn.
+        const ancestor = isParent && pathname !== item.href;
         const active = item.active ?? item.href === current;
         const heading = item.section && item.section !== items[index - 1]?.section ? item.section : null;
         return (
@@ -225,14 +236,24 @@ function NavList({ label, items, pathname, header, collapsed }: { label: string;
             <Link
               href={item.href}
               title={collapsed ? item.label : undefined}
-              aria-current={active ? "page" : undefined}
+              aria-current={active && !ancestor ? "page" : undefined}
               className={cx(
                 "group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] font-semibold whitespace-nowrap transition-colors duration-200",
-                active ? "bg-surface text-ink shadow-[0_1px_2px_rgb(60_38_14/0.08)]" : "text-body hover:bg-surface/60 hover:text-ink",
+                ancestor
+                  ? "text-ink hover:bg-surface/60 md:group-data-[collapsed]/sidebar:bg-surface md:group-data-[collapsed]/sidebar:shadow-[0_1px_2px_rgb(60_38_14/0.08)]"
+                  : active
+                    ? "bg-surface text-ink shadow-[0_1px_2px_rgb(60_38_14/0.08)]"
+                    : "text-body hover:bg-surface/60 hover:text-ink",
               )}
             >
               {active && (
-                <span aria-hidden className="absolute top-2 bottom-2 -left-3 w-[3px] animate-fade rounded-r bg-primary" />
+                <span
+                  aria-hidden
+                  className={cx(
+                    "absolute top-2 bottom-2 -left-3 w-[3px] animate-fade rounded-r bg-primary",
+                    ancestor && "hidden md:group-data-[collapsed]/sidebar:block",
+                  )}
+                />
               )}
               <Icon
                 name={item.icon}
@@ -241,7 +262,9 @@ function NavList({ label, items, pathname, header, collapsed }: { label: string;
                 className={cx("shrink-0 transition-colors", active ? "text-primary-ink" : "text-muted group-hover:text-ink")}
               />
               <span className={FADE_LABEL}>{item.label}</span>
+              {isParent && <Icon name="expand_more" size={14} className={cx("ml-auto shrink-0 text-muted", FADE_LABEL)} />}
             </Link>
+            {isParent && branch?.content}
           </Fragment>
         );
       })}

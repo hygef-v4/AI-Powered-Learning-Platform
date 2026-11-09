@@ -11511,3 +11511,21 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Thay đổi nhỏ trong giao diện (minimal depth); không commit.
 
 ---
+
+## Thay đổi giao diện: sidebar dạng cây
+**Timestamp**: 2026-11-09T12:40:58Z
+**Requested by:** Đào Chí Cường
+**User Input**: "sửa lại thanh sibebar hiển thị theo dạng tree (như trang fap) thay vì đổi sidebar mới" (kèm 3 ảnh: trang Lớp được phân công và trang Thông tin môn PRN212 của Chủ nhiệm môn, và trang chủ FAP có menu dạng cây)
+**AI Response**: "Sidebar của môn và lớp không còn thay menu của role: thêm parentHref vào NavContext (frontend/src/shared/layout/navigation.ts); AppShell giữ menu role và vẽ nhánh cây ngay dưới mục cha (Môn được phân công, Lớp được phân công, Lớp của tôi), mục cha chỉ tô khi đúng trang của nó hoặc khi sidebar thu gọn; thêm component NavTree (frontend/src/shared/layout/NavTree.tsx) với các nút môn/lớp bấm để mở/đóng, nút của trang đang mở mở sẵn; ClassNavContexts dựng cây môn/lớp thay cho lối về + ô chọn, và hiện cây cả ở trang danh sách (/manager, /teaching/classes, /classes). Cập nhật test navContexts; typecheck các file sửa, lint và 797 test qua (3 file test materials lỗi sẵn do thiếu package xlsx/pdfjs-dist/docx-preview); đã kiểm tra trên dev server với API giả."
+**Context**: Thay đổi nhỏ trong giao diện (minimal depth); không commit.
+
+---
+
+## Commit: sidebar dạng cây
+**Timestamp**: 2026-11-09T12:45:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
+**AI Response**: "Commit thay đổi sidebar dạng cây (navigation.ts, NavTree.tsx, AppShell.tsx, ClassNavContexts.tsx, navContexts.test.tsx) cùng audit.md lên nhánh staging; không push."
+**Context**: Commit thay đổi giao diện sidebar dạng cây.
+
+---
