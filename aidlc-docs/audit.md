@@ -11494,3 +11494,11 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Construction — U12 Group Assignment, merge of bug fixes to staging.
 
 ---
+
+## Integration-test delivery — final E2E verification and publication preparation
+**Timestamp**: 2026-11-09T05:43:33.061972+00:00
+**Requested by:** Vu Hai Nam
+**User Input**: "tiếp tục"
+**AI Response**: Completed the authorized staging integration and verification. First full merged snapshot passed2,028 backend tests and800 frontend tests; preserved seven earlier5000ms timeouts and successful isolated40/40/full800 reruns with two workers and unchanged oracles. Staging advanced to198b796f before business E2E; merged its U12 fix as65f86a6c and verified95/95 backend, current frontend build/typecheck/scoped lint and15/15 U12 tests. All168 authenticated API/proxy/SSE assertions passed on that latest rebuilt code. Stopped only the task stack/frontend and verified7 original platform container IDs unchanged; volumes/logs preserved. Exact source/artifact/result hashes and scopes recorded. Preparing the final evidence commit, normal push and one PR to staging; no PR merge/deploy. PR/CI state will be reported from GitHub rather than guessed in this pre-publication snapshot. Existing security/resiliency retained; PBT disabled.
+
+---

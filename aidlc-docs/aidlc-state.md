@@ -1,8 +1,12 @@
 # AI-DLC State Tracking
 
-## Integration-test Git/E2E/PR delivery — in progress, 2026-11-09
+## Integration-test delivery — regressions verified, publication ready, 2026-11-09
 
-The user authorizes scoped commits and a normal push of integration-test, then merging current origin/staging into that branch, local E2E regression checks, and a PR targeting staging if E2E succeeds. Do not merge the PR or deploy. Follow the [delivery plan](construction/plans/code-generation-plan/2026-11-09-integration-test-delivery.md). Preserve the historical integration report/evidence below; any postmerge verification is recorded separately. Use a separate disposable local stack and Mailpit; existing security/resiliency retained, PBT disabled.
+Initial commits15400ac2/8d53a1c6 pushed normally. Staging fb20c6bc merged as a55f8426; later staging198b796f merged as65f86a6c. Complete first-merge checks: backend2,028/2,028 plus57-case guard; frontend build/lint/typecheck and800/800 tests. Latest U12 increment:95/95 backend, current frontend build/typecheck/scoped lint and15/15 tests. Keep those scopes separate; no summed or fresh-final-full-run claim.
+
+All168 actual API/proxy/SSE E2E assertions passed against `65f86a6c432c63e318737cef88195ad5ffd30ab1` with local Mailpit OTP/SMTP and isolated services. Only the task stack/frontend stopped; original7 platform container IDs preserved. [Delivery results](construction/build-and-test/2026-11-09-integration-test-delivery-results.md) and [evidence](construction/build-and-test/2026-11-09-integration-test-delivery-evidence.json) record exact snapshots, hashes and earlier resource-sensitive timeouts. No assertion/timeout or production behavior was changed to obtain a pass.
+
+Final evidence is ready for commit/push, then the authorized PR to staging. PR/CI publication state is recorded externally on GitHub and in the final response; no PR merge or deployment is authorized. Existing security/resiliency retained; PBT disabled. The57-case workbook remains unchanged and separately delivered. Prior no-commit/no-push statements below are historical.
 
 ## Prioritized integration completion — verified, 2026-11-09
 
