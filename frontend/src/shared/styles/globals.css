@@ -11,6 +11,12 @@
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  /*
+   * Số La Mã của câu hỏi (I., II.): chữ hoa có chân kiểu chữ khắc (Palatino của Zapf) để "I" không lẫn với chữ i, l của
+   * phông không chân. Dùng phông có sẵn của hệ điều hành (Windows: Palatino Linotype, Book Antiqua; macOS, iOS: Palatino;
+   * Linux: P052, URW Palladio), không tải thêm tệp; máy không có thì về Georgia rồi serif mặc định.
+   */
+  --font-roman: "Palatino Linotype", Palatino, "Book Antiqua", "URW Palladio L", P052, Georgia, serif;
 
   --color-ink: var(--c-ink);
   --color-body: var(--c-body);

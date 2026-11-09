@@ -1,13 +1,13 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { blockText, documentTree, type DocSection, type DocumentBlock } from "./types";
+import { blockText, documentTree, sectionNumber, type DocSection, type DocumentBlock } from "./types";
 
 /**
  * Mục lục của một bài trên sidebar (dùng chung cho trang soạn, xem trước của giảng viên và trang làm bài, lịch sử nộp
  * của sinh viên — yêu cầu 2026-11-05): trang đăng dàn ý, sidebar vẽ; bấm một mục thì trình soạn chuyển tới mục đó.
  */
-/** Một dòng trong sidebar của bài: một mục (tầng {@code depth}, 1 là ngoài cùng), kèm số thứ tự như trong trang (1., 1.1.). */
+/** Một dòng trong sidebar của bài: một mục (tầng {@code depth}, 1 là ngoài cùng), kèm số thứ tự như trong trang (I., I.1.). */
 export type OutlineEntry = { id: string; depth: number; title: string; number: string };
 /** {@code editable}: người soạn đang sửa được bài, sidebar có nút "+" thêm mục. */
 export type AssignmentOutline = { assignmentId: string; backHref: string; backLabel: string; entries: OutlineEntry[]; editable?: boolean };
@@ -33,7 +33,7 @@ export function useAssignmentOutline(): AssignmentOutline | null {
 export const DOCUMENT_ENTRY = "DOCUMENT";
 
 /**
- * Dàn ý từ khung đề theo cây mục, đánh số như trong trang: 1., 1.1., 1.1.1.; đoạn văn trong mục không ghi. Văn bản ở ngoài
+ * Dàn ý từ khung đề theo cây mục, đánh số như trong trang: I., I.1., I.1.a., I.1.a.aa.; đoạn văn trong mục không ghi. Văn bản ở ngoài
  * mọi mục (yêu cầu 2026-11-04) là một dòng tầng 0, ghi mấy chữ đầu, không số.
  */
 export function outlineOf(blocks: DocumentBlock[]): OutlineEntry[] {
@@ -42,13 +42,15 @@ export function outlineOf(blocks: DocumentBlock[]): OutlineEntry[] {
   const rootText = [...tree.blocks, ...tree.after].map((block) => blockText(block).trim()).find(Boolean);
   const rootEntry: OutlineEntry | null = tree.blocks.length > 0 || tree.after.length > 0
     ? { id: DOCUMENT_ENTRY, depth: 0, title: rootText ?? "", number: "" } : null;
-  const walk = (section: DocSection, prefix: string, depth: number) => section.children.forEach((child, i) => {
-    const number = `${prefix}${i + 1}.`;
+  const walk = (section: DocSection, path: number[]) => section.children.forEach((child, i) => {
+    const counters = [...path, i + 1];
     const heading = child.heading;
-    if (heading?.type === "HEADING") entries.push({ id: heading.id, depth, title: heading.content.text.trim(), number });
-    walk(child, number, depth + 1);
+    if (heading?.type === "HEADING") {
+      entries.push({ id: heading.id, depth: counters.length, title: heading.content.text.trim(), number: sectionNumber(counters) });
+    }
+    walk(child, counters);
   });
-  walk(tree, "", 1);
+  walk(tree, []);
   if (!rootEntry) return entries;
   return tree.blocks.length > 0 ? [rootEntry, ...entries] : [...entries, rootEntry];
 }
