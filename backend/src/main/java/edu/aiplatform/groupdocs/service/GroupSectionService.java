@@ -283,16 +283,22 @@ public class GroupSectionService {
                 AuditResult.SUCCESS, null, details, clock.instant()));
     }
 
-    /** Mục trả ra ngoài; bản nháp chỉ người giữ thấy (BR-U12-34). */
+    /**
+     * Mục trả ra ngoài; bản nháp chỉ người giữ thấy (BR-U12-34). {@code claimedAt} và {@code holderSavedAt} (lần lưu nháp
+     * cuối của người giữ) chỉ là mốc giờ, mọi người thấy để trưởng nhóm biết mục còn được soạn hay bị bỏ quên.
+     */
     public record SectionView(UUID id, String partId, String title, int orderNo, GroupSection.Status status, UUID holderId,
                               UUID assignedBy, List<DocumentBlock> publishedBlocks, List<DocumentBlock> draftBlocks,
-                              Instant draftSavedAt, UUID lastAuthorId, long version) {
+                              Instant draftSavedAt, UUID lastAuthorId, long version, Instant claimedAt,
+                              Instant holderSavedAt) {
 
         public static SectionView of(GroupSection s, UUID viewer) {
             boolean holder = viewer != null && viewer.equals(s.claimedBy());
+            boolean claimed = s.status() == GroupSection.Status.CLAIMED;
             return new SectionView(s.id(), s.partId(), s.title(), s.orderNo(), s.status(), s.claimedBy(), s.assignedBy(),
                     hideFiles(s.publishedBlocks()), holder ? hideFiles(s.draftBlocks()) : null,
-                    holder ? s.draftSavedAt() : null, s.lastAuthorId(), s.version());
+                    holder ? s.draftSavedAt() : null, s.lastAuthorId(), s.version(), claimed ? s.claimedAt() : null,
+                    claimed ? s.draftSavedAt() : null);
         }
 
         /** Không trả {@code fileId} của U03 cho trình duyệt; ảnh mở theo id block (như bài cá nhân). */
