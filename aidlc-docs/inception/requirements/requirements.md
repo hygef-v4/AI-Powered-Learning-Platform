@@ -274,6 +274,7 @@ Student chỉ yêu cầu phản hồi trên Assignment PRACTICE đã nộp (UC41
 - Lưu lịch sử nhiều feedback hợp lệ với provenance/rate limits/idempotency; stale version không apply nhầm hoặc ghi đè bài nộp/điểm.
 - Không xuất key, đáp án ẩn hoặc dữ liệu người khác; không auto-call mỗi keystroke.
 - Student thiếu kết nối vẫn viết/lưu/nộp được. Bài nhóm không có phản hồi AI cho Student.
+- Trên Lịch sử nộp bài, thẻ Góp ý AI luôn hiện với lượt Practice đã nộp đang xem. Thẻ nằm cạnh bài làm trên màn hình rộng và nằm trong luồng đọc trên màn hình hẹp. Yêu cầu mới chỉ được gửi khi sinh viên bấm nút trong thẻ.
 
 ### FR-031 - Đã rút: quản trị gói credit
 

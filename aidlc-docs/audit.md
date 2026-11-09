@@ -11511,6 +11511,88 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ---
 
+## U12 section workflow improvements — 2026-11-09
+
+**Timestamp**: 2026-11-09T05:50:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> luồng sinh viên làm bài gồm nhận mục hay nhả mục, .... có nên cải thiện gì không
+
+**AI Response**: Reviewed the claim/edit/release flow against the frozen BRs and proposed five improvements that do not change any BR: (1) confirm before taking a Done section written by someone else, (2) warn on leaving the page with unsaved edits, (3) offer "Xong rồi trả mục" in the release dialog, (4) a deadline banner when 30 minutes or less remain, (5) show when the holder claimed or last saved the section. Changes outside the frozen BRs (keeping drafts on release, auto-release of idle holds, viewing others' drafts, concurrent editing) were advised against.
+
+**Context**: Construction — U12 Group Assignment, UX review.
+
+---
+
+## U12 section workflow improvements — implementation — 2026-11-09
+
+**Timestamp**: 2026-11-09T05:55:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> làm 1, 2, 4,5 di
+
+**AI Response**: Implemented items 1, 2, 4 and 5 on branch `feat/u12-section-ux` (item 3 not requested). Frontend: confirm dialog before claiming a Done section last written by another member; `beforeunload` warning while the section editor has unsaved edits; deadline banner on the workspace and in the editor when ≤ 30 minutes remain or during the late window, listing sections not Done; holder line shows "lưu lần cuối N phút trước" or "nhận … , chưa lưu", with a 60-second refresh while another member holds a section. Backend: `SectionView` gains additive `claimedAt` and `holderSavedAt` (timestamps only, set while CLAIMED); drafts stay holder-only (BR-U12-34). No BR, schema or existing field change.
+
+**Context**: Construction — U12 Group Assignment, UX improvements.
+
+---
+
+## U12 feedback 2026-11-09 meeting — scope decisions
+
+**Timestamp**: 2026-11-09T16:20:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> mục 3 thực ra thầy muốn khi 1 người bỏ mục thì khi nhả mục sẽ chọn 1 người khác để đưa mục cho
+
+> chưa cần làm
+> gửi lại tôi bản kế hoạch đã
+
+> ý 1 k can lam
+
+**AI Response**: Recorded the meeting feedback for groups: item 1 (groups per assignment) dropped by the user; item 2 (latest version as result) already met; item 3 planned as FB-U12-06 (release may hand the section to another member; draft still dropped per BR-U12-36; leader's assign kept; who may release unchanged), awaiting approval; item 4 (history: latest revision per author) pending. Partial backend edits for item 3 remain uncommitted.
+
+**Context**: Construction — U12 Group Assignment, feedback triage.
+
+---
+
+## U12 group document outline sidebar — 2026-11-09
+
+**Timestamp**: 2026-11-09T16:30:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> khoan đã, trước hết hãy làm phần group assignment có slidebar giống phần asignment này được không
+
+> duyệt
+
+**AI Response**: The group document page (`/group-docs/{id}`) now replaces the general menu with the same outline sidebar as the individual assignment pages: back link "Bài tập", numbered headings from the assignment skeleton, no "+" buttons (BR-U12-30). Clicking an entry switches to the Tài liệu tab and scrolls to the section containing that heading; the entry of the section on screen is highlighted. The page's "Thoát" button was removed (the sidebar back link replaces it). `AssignmentNav` is exported for reuse; no backend, BR or API change.
+
+**Context**: Construction — U12 Group Assignment, UI.
+
+---
+
+## U12 merge of 2026-11-09 changes to staging
+
+**Timestamp**: 2026-11-09T17:10:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> thế cứ merch những thay đổi hôm nay lên stagging đi
+
+**AI Response**: Merged `feat/u12-section-ux` (confirm before editing others' sections, deadline banner, holder activity timestamps, unsaved-changes warning, outline sidebar) into `staging` after bringing in the latest `origin/staging` and re-running tests. The meeting items 3 (release with handover) and 4 (latest revision per author) are not included; the item 3 draft was set aside in a git stash.
+
+**Context**: Construction — U12 Group Assignment, merge to staging.
+
+---
+
 ## U09 — Open group submission from a member evaluation
 **Timestamp**: 2026-11-09T04:24:31Z
 **Requested by**: Quang Hung
@@ -11605,6 +11687,37 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
 **AI Response**: "Commit thay đổi sidebar dạng cây (navigation.ts, NavTree.tsx, AppShell.tsx, ClassNavContexts.tsx, navContexts.test.tsx) cùng audit.md lên nhánh staging; không push."
 **Context**: Commit thay đổi giao diện sidebar dạng cây.
+
+---
+
+## Lịch sử nộp bài — đề xuất thẻ Góp ý AI
+**Timestamp**: 2026-11-09T16:17:19Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**:
+> tạo 1 nhánh mới từ staging tên fix/student-ai-grading. Tôi muốn sửa popup góp ý AI này thành 1 thẻ ở bên cạnh thẻ bài làm (giống như chấm bài của giảng viên nhưng thay vì rubric thì nó là góp ý và nhận xét của AI). Bạn có đề xuất gì không?
+
+Ảnh tham chiếu: `codex-clipboard-64bcd4ce-fda5-40db-bae5-3a3843546525.png` và `codex-clipboard-9789afcc-201c-47eb-aa72-86c0e4a8a7e6.png`.
+
+**AI Response**: Đã tạo và chuyển sang nhánh `fix/student-ai-grading` từ `staging`. Đã xác định ứng dụng hiện hữu và dùng lại tài liệu reverse engineering có sẵn. Đề xuất tận dụng cột nhận xét của trình xem bài nộp để hiển thị thẻ Góp ý AI theo từng lượt Practice đã nộp. Đề xuất thẻ luôn hiện, với nút gửi yêu cầu trong thẻ, và trình bày nội tuyến trên màn hình hẹp. Cân nhắc phương án mở/thu gọn nếu ưu tiên chiều rộng bài làm.
+**Context**: Phạm vi hiện tại là tạo nhánh và tư vấn bố cục. Chờ chốt hướng trước khi triển khai. Giữ cấu hình extension đã ghi nhận cho dự án.
+
+---
+
+## Lịch sử nộp bài — triển khai thẻ Góp ý AI
+**Timestamp**: 2026-11-09T16:20:13Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "Giúp tôi sửa theo như bạn đề xuất, đồng thời sửa cả các doc trong aidlc-docs nếu có liên quan đến phần này"
+**AI Response**: Đã đưa thẻ Góp ý AI vào cột nhận xét của Lịch sử nộp bài Practice và đồng bộ UC 41, FR-030, US-ASM-012 cùng tài liệu U08. 71 ca trong phạm vi liên quan, lint, TypeScript và build đã qua. Lượt chạy toàn bộ Vitest được dừng do lỗi đọc tệp tạm của sandbox. Chi tiết kiểm tra được ghi trong kế hoạch.
+**Context**: Yêu cầu triển khai đã được xác nhận. Dùng lại các điều kiện truy cập, API và trạng thái của U08. Security và Resiliency giữ phạm vi đã duyệt, PBT tắt theo cấu hình dự án.
+
+---
+
+## Lịch sử nộp bài — bàn giao vào staging
+**Timestamp**: 2026-11-09T17:07:03Z
+**Requested by:** Vu Hai Nam
+**User Input**: "giúp tôi chia thành các commit nhỏ, push lên branch hiện tại rồi merge staging vào branch này. Sau đó check e2e rồi tạo pr vào staging, khi nào CI xanh thì merge branch hiện tại vào staging"
+**AI Response**: Chia thay đổi giao diện và kiểm thử thành một commit, tài liệu AI-DLC thành một commit. Đồng bộ staging sau khi push, xác minh E2E trên mã đã đồng bộ và kiểm tra CI của PR trước khi merge.
+**Context**: Bàn giao U08 trên nhánh fix/student-ai-grading.
 
 ---
 
@@ -11824,3 +11937,16 @@ sửa soạn câu hỏi từ popup về flat
 **User Input**: "giúp tôi tạo pr trước khi merge staginfg"
 **AI Response**: User authorizes publishing the current branch and creating a PR into staging, not merging. Fetched origin; feature headfb8846ad contains the four reviewed commits, staginga35d9854 is ahead by5 while feature is ahead by4. git merge-tree computed a clean merge (77f503aaca9323236dd30232f16bad32ce36493b) without changing either branch. No open PR found for this head/base. Remote feature branch is an ancestor, so normal fast-forward push is sufficient. Add only this delivery receipt before publishing; source/config unchanged from final239+54 backend and849 frontend/lint/typecheck verification. PR body follows mattpocock-skills:pr template, explains two additive migrations, source-only retry limit/cost and evidence scope. CI verifies the current merged PR tree; no merge, auto-merge, reviewer messages or deployment authorized.
 **Context**: Publish branch via Git transport and create/check PR with GitHub connector. Existing Security/Resiliency scope retained; PBT disabled. This entry records preparation; live PR URL/check status will be reported from GitHub rather than guessed in this commit.
+
+---
+
+## Resolve PR59 conflicts and prepare staging merge
+**Timestamp**: 2026-11-10T00:33:47.9482154+07:00
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi resolve conflict pr vừa tạo merge vào staging"
+**AI Response**: User now explicitly authorizes conflict resolution and merge of PR59 into staging. Latest staging9a07e1e includes PR58 student feedback and U12 changes; original feature head5576222a CI backend/frontend/deploy-script passed. Merged origin/staging into the feature branch without rewriting existing commits. Only audit.md conflicted: retained both conflict blocks verbatim, including historical requester attribution/raw whitespace. All application changes merged automatically. Verify code preservation and local merged checks, commit/push resolution, then require latest-head CI green and merge PR with expected-head protection. No force push, branch deletion or production deploy.
+**Context**: Current approval supersedes the earlier PR-only/no-merge instruction. Keep Security/Resiliency scope and PBT disabled. Original CI is historical evidence until refreshed for the resolution head.
+
+## PR59 resolution checkpoint
+
+Only audit.md required manual resolution; both branch blocks retained verbatim. Verified all105 feature and17 incoming staging application paths match their respective parent blobs exactly. Merged frontend861tests/125files, full lint and typecheck passed. Full local backend verification is running; one pre-existing backup assertion decodes UTF-8 bytes using Java17's Windows default charset. Confirm with UTF-8 separately without changing unrelated source. Latest-head GitHub Linux full CI must pass before the authorized staging merge; original PR CI is not reused for the resolution head.

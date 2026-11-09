@@ -326,6 +326,10 @@ Given draft/IN_PROGRESS, bài GRADED hoặc dữ liệu ngoài quyền, When web
 
 Given AI lỗi/stale hoặc submissionVersion không khớp, When nhận kết quả, Then không apply sai snapshot và không thay đổi bài nộp/điểm.
 
+#### Scenario 5
+
+Given sinh viên đang xem Lịch sử nộp bài Practice, When mở hoặc đổi lượt nộp, Then thẻ Góp ý AI hiển thị lịch sử của lượt đang chọn. Thẻ nằm cạnh bài trên màn hình rộng và nằm trong luồng đọc trên màn hình hẹp. Sinh viên gửi yêu cầu bằng nút trong thẻ.
+
 ### US-AUD-001 - Tra cứu audit nghiệp vụ và bảo mật
 
 **Primary unit**: U02; **Scope**: MVP.

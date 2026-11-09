@@ -39,13 +39,15 @@ export function partOf(shared: DocumentModel, section: Pick<SectionView, "partId
  * Trình soạn mục che kín trang (s18b, BR-U12-34) dùng `DocumentEditor` chung ở chế độ người học: chỉ người giữ; heading
  * của phần là block khóa, hướng dẫn của giảng viên trong phần chỉ xem; chỉ block của người học được lưu. Tự lưu 10 giây
  * sau lần sửa cuối kèm `version` của mục; `409` báo tải lại; Xong đăng nội dung và đóng. Draw.io theo cài đặt của bài.
- * Chèn ảnh (BR-U12-35) và nhập DOCX vào mục như trình soạn bài cá nhân.
+ * Chèn ảnh (BR-U12-35) và nhập DOCX vào mục như trình soạn bài cá nhân. Còn phần chưa lưu thì trình duyệt hỏi lại khi
+ * đóng tab hoặc tải lại trang; sắp hết hạn thì hiện nhắc hạn ngay trong trình soạn.
  */
 export function SectionEditorDialog({
   documentId,
   section,
   shared,
   diagramEnabled,
+  deadlineNotice = null,
   onClose,
   onChanged,
 }: {
@@ -53,6 +55,7 @@ export function SectionEditorDialog({
   section: SectionView;
   shared: DocumentModel;
   diagramEnabled: boolean;
+  deadlineNotice?: string | null;
   onClose: () => void;
   onChanged: () => void;
 }) {
@@ -89,6 +92,16 @@ export function SectionEditorDialog({
     const timer = setTimeout(() => void save(), AUTOSAVE_MS);
     return () => clearTimeout(timer);
   }, [dirty, save]);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [dirty]);
 
   const edit = (next: DocumentModel) => {
     setDoc(next);
@@ -141,6 +154,11 @@ export function SectionEditorDialog({
       {error && (
         <Alert tone="danger" role="alert" className="mx-6 mt-3">
           {error}
+        </Alert>
+      )}
+      {deadlineNotice && (
+        <Alert tone="warning" className="mx-6 mt-3">
+          {deadlineNotice} Nên bấm Xong trước hạn.
         </Alert>
       )}
       <div className="min-h-0 flex-1 overflow-y-auto bg-shell px-6 py-4">
