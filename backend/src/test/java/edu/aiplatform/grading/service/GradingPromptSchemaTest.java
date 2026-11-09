@@ -11,6 +11,7 @@ import edu.aiplatform.assignments.contract.RubricCriterion;
 import edu.aiplatform.assignments.contract.RubricItem;
 import edu.aiplatform.assignments.contract.RubricView;
 import edu.aiplatform.grading.model.Evaluation;
+import edu.aiplatform.grading.model.EvaluationKind;
 import edu.aiplatform.shared.error.ApiException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -127,13 +128,34 @@ class GradingPromptSchemaTest {
             thirtyItems.add(new RubricItem(UUID.randomUUID(), "Item " + i, BigDecimal.ONE));
         }
         var maxSupportedEval = new Evaluation();
+        maxSupportedEval.kind = EvaluationKind.ATTEMPT;
         maxSupportedEval.rubricSnapshot = json.writeValueAsString(List.of(new RubricView(
                 UUID.randomUUID(), assignmentId, "q1",
                 List.of(new RubricCriterion(UUID.randomUUID(), "C", "", CriterionKind.values()[0], thirtyItems)),
                 new BigDecimal("30"))));
         int tokens = builder.calculateMaxOutputTokens(maxSupportedEval);
-        assertThat(tokens).isBetween(4096, 8192).isEqualTo(7624);
+        assertThat(tokens).isEqualTo(8192);
         assertThat(new JsonSchemaChecker(json).validSchema(builder.buildOutputSchema(maxSupportedEval))).isTrue();
+
+        var groupEval = new Evaluation();
+        groupEval.kind = EvaluationKind.GROUP_DOCUMENT;
+        groupEval.rubricSnapshot = json.writeValueAsString(List.of(new RubricView(
+                UUID.randomUUID(), assignmentId, "q1",
+                List.of(new RubricCriterion(UUID.randomUUID(), "C", "", CriterionKind.values()[0],
+                        thirtyItems.subList(0, 10))),
+                BigDecimal.TEN)));
+        assertThat(builder.calculateMaxOutputTokens(groupEval)).isEqualTo(6296);
+        groupEval.rubricSnapshot = maxSupportedEval.rubricSnapshot;
+        assertThat(builder.calculateMaxOutputTokens(groupEval)).isEqualTo(8192);
+
+        var individualEval = new Evaluation();
+        individualEval.kind = EvaluationKind.ATTEMPT;
+        individualEval.rubricSnapshot = json.writeValueAsString(List.of(new RubricView(
+                UUID.randomUUID(), assignmentId, "q1",
+                List.of(new RubricCriterion(UUID.randomUUID(), "C", "", CriterionKind.values()[0],
+                        thirtyItems.subList(0, 16))),
+                BigDecimal.valueOf(16))));
+        assertThat(builder.calculateMaxOutputTokens(individualEval)).isEqualTo(7616);
 
         var thirtyOneItems = new ArrayList<>(thirtyItems);
         thirtyOneItems.add(new RubricItem(UUID.randomUUID(), "Item 30", BigDecimal.ONE));

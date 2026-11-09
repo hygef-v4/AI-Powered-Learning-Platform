@@ -11294,3 +11294,62 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **AI Response**: User explicitly authorizes creating a ready PR from fix/remove-term into staging and merging it once GitHub CI is green. Verify the exact current PR head, latest CI workflow and required checks before normal merge; preserve scoped commit history using the repository-supported merge-commit method. Local code already passed2,004 backend tests,286 postmerge frontend tests/build/lint and168 isolated API E2E checks. Record this request before opening PR; GitHub PR/check/merge responses and final chat provide the authoritative remote completion status. No new implementation or unit-test report is requested. Current GitHub profile display name verified by authenticated API; historical requester attributions remain unchanged.
 
 ---
+
+## U09 — Open group submission from a member evaluation
+**Timestamp**: 2026-11-09T04:24:31Z
+**Requested by**: Quang Hung
+**User Input**: "vậy sửa giúp tôi để bấm Chấm bằng AI ở dòng điểm thành viên thì tự mở đúng bản nộp chung của nhóm đi"
+**AI Response**: Return the current group evaluation ID in member review details using the existing group submission identity check. The grading workspace opens that evaluation with the current queue filters and unsaved-change confirmation.
+**Verification**: 138 grading frontend tests and 15 targeted backend tests passed. Frontend type checking and scoped lint passed. The restarted local backend returned the expected GROUP_DOCUMENT evaluation for the SE_JS member fixture, and the frontend login endpoint responded with HTTP 200. No external AI request was made.
+
+## U09 — Group AI grading output budget
+**Timestamp**: 2026-11-09T04:29:38Z
+**Requested by**: Quang Hung
+**User Input**: "lỗi k chấm đc ai bài nhóm"
+**AI Response**: The failed SE_JS task used 4,079 output tokens against a 4,096-token budget and failed output validation. Increased the budget for group documents using the rubric item count, retaining the 8,192-token ceiling and existing validation.
+**Verification**: 11 focused backend tests passed. Local backend repackaged and restarted. The SE_JS token estimate API returned 11,644 including prompt and output. An automated approval review rejected a new Gemini request because it would send submission and rubric data to an external provider and could consume quota. Provider output after the change remains unverified.
+
+## U09 — Group grading workspace layout
+**Timestamp**: 2026-11-09T04:38:21Z
+**Requested by**: Quang Hung
+**User Input**: "giúp tôi sửa giao diện chấm điểm của bài tập nhốm giống kiểu style với bài tập cá nhân"
+**User Input**: "b xem giao diện chấm nhóm nào dễ dùng cho giáo viên nhât thì sửa cho tôi"
+**AI Response**: Kept the shared document, rubric, and toolbar layout. Moved author names beside their section headings, with a header fallback for submissions without matching headings. Added a toolbar shortcut to the member grades and restyled the rows using the shared field and button components.
+**Verification**: Verified the five author labels, focus transfer to the five-member panel, and no panel overflow on the local SE_JS submission at the default width and 390 px. All 139 grading frontend tests, TypeScript, and scoped ESLint passed. No grade was written during browser verification.
+
+## U09 — Open group submissions from the gradebook
+**Timestamp**: 2026-11-09T04:45:12Z
+**Requested by**: Quang Hung
+**User Input**: "sao bấm nút robot lại hiện, thêm nút Xem bản nộp chung ngay ở bảng điểm của bài nhóm giúp tôi, để bấm vào xem luôn cho tiện"
+**AI Response**: Added a direct link for each group's available evaluation above the student grade table for the selected group assignment. Reused the submission directory and existing evaluation route.
+**Verification**: Clicked the direct link in the local SE_JS gradebook and verified it opened the group evaluation. TypeScript and scoped ESLint passed. All 11 gradebook layout tests passed after adjusting link-label spacing. The other 129 grading tests passed in the preceding run.
+
+## U09 — Individual AI grading output budget
+**Timestamp**: 2026-11-09T04:52:52Z
+**Requested by**: Quang Hung
+**User Input**: "sao h chấm bài cá nhân lại bị như này"
+**Attachment**: Screenshot shows the grading message "Kết quả AI không đúng định dạng yêu cầu".
+**AI Response**: Two failed individual grading tasks used 4,526 of 4,544 output tokens before schema rejection. The evidence suggests truncation near the limit. Reused the group budget formula for all grading proposals, increasing the affected 16-item evaluation to 7,616 output tokens while retaining the 8,192 ceiling.
+**Verification**: 20 focused backend tests passed. Repackaged and restarted the local backend. Verified that the affected evaluation estimate increased from 13,043 to 16,115 total tokens. No new Gemini request was made during this verification.
+
+## U09 — Show AI proposal history after reopening grading
+**Timestamp**: 2026-11-09T04:57:29Z
+**Requested by**: Quang Hung
+**User Input**: "b nhìn màn hình này lúc mà thoát ra vào lại làm gì có"
+**AI Response**: Replaced the visually hidden history control with a visible toolbar button that toggles the existing AI proposal panel.
+**Verification**: Reloaded the SWD392 grading workspace and opened previous proposals from the visible toolbar control. All 29 workspace tests passed.
+
+## U09 — Show applied grading feedback in the draft
+**Timestamp**: 2026-11-09T05:03:28Z
+**Requested by**: Quang Hung
+**User Input**: "làm gì có, bấm áp dụng r vẫn trắng trơn này"
+**Attachment**: The grading workspace shows rubric checkboxes without the saved feedback.
+**AI Response**: Show the saved general feedback and summary in the document header, and render the existing feedback disclosure beside each matching rubric item. Show awarded points including zero when the item has feedback.
+**Verification**: Reloaded the saved SWD392 draft and verified the general feedback, 16 matching disclosures, and the point explanation after expanding a criterion. All 140 grading frontend tests, TypeScript and scoped ESLint passed.
+
+## U09 — Full test run and local commit
+**Timestamp**: 2026-11-09T05:11:36Z
+**Requested by**: Quang Hung
+**User Input**: "giúp tôi chạy test be fe sau đó commit"
+**AI Response**: Verified the grading changes for group submission navigation, AI output budgets and proposal history, and draft feedback display. Kept the separate MCP comment edits outside this commit.
+**Verification**: Backend 2,004 passed with no failures, errors, or skips. All four required PostgreSQL suites passed. Frontend 810 passed. The first backend run encountered Windows loopback and relative-path errors. The rerun from the backend directory with a forked JVM and workspace socket directory passed.

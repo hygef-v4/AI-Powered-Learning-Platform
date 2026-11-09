@@ -41,7 +41,7 @@ public class GradingPromptBuilder {
                     "Rubric exceeds maximum item count (" + MAX_AI_RUBRIC_ITEMS
                             + ") for a single AI grading request");
         }
-        return Math.min(8192, Math.max(4096, 1024 + totalItems * 220));
+        return Math.min(8192, 4096 + totalItems * 220);
     }
 
     /** Counts rubric items across all criteria. */

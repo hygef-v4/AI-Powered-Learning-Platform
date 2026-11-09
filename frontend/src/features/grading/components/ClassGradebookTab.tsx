@@ -4,10 +4,12 @@ import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Button, ClickableRow, Icon, Pill, Segmented, Select, TableFrame, Td, TextInput, Th, cx, type Tone } from "@/shared/ui";
+import { Button, ButtonLink, ClickableRow, Icon, Pill, Segmented, Select, TableFrame, Td, TextInput, Th, cx, type Tone } from "@/shared/ui";
 import { Pagination } from "@/shared/ui/Pagination";
 import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
+import { useSubmissionDirectory } from "../hooks/useSubmissionDirectory";
+import { buildEvaluationHref } from "../model/navigation";
 import { GRADE_STATUS_LABELS, type Decimal, type GradebookPage, type GradeCell } from "../model/types";
 import { GradebookExportDialog } from "./GradebookExportDialog";
 
@@ -152,6 +154,9 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
               {mode === "assignment" && activeAssignment && (
                 <>
                   <DetailHead title={activeAssignment.title} meta={kindLabel(activeAssignment)} search={studentSearch} filter={statusFilter} />
+                  {activeAssignment.submissionMode === "GROUP" && (
+                    <GroupSubmissionLinks key={activeAssignment.id} classId={classId} assignmentId={activeAssignment.id} />
+                  )}
                   <GradeTable first="Sinh viên">
                     {assignmentRows.map(({ row, grade }) => (
                       <GradeRow key={row.student.accountId} grade={grade} maxScore={activeAssignment.maxScore}
@@ -181,6 +186,37 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
       </section>
       {exporting && data && <GradebookExportDialog classId={classId} assignments={data.assignments} onClose={() => setExporting(false)} />}
     </div>
+  );
+}
+
+function GroupSubmissionLinks({ classId, assignmentId }: { classId: string; assignmentId: string }) {
+  const { value, error, refresh } = useSubmissionDirectory(classId, assignmentId);
+  if (error) {
+    return (
+      <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-danger">
+        Không tải được bản nộp nhóm.
+        <Button size="sm" onClick={() => void refresh().catch(() => {})}>Thử lại</Button>
+      </div>
+    );
+  }
+  if (!value) return <p role="status" className="text-xs text-muted">Đang tải bản nộp nhóm…</p>;
+  const submissions = value.flatMap(({ student, evaluationId }) =>
+    evaluationId ? [{ group: student, evaluationId }] : []);
+  if (!submissions.length) return <p className="text-xs text-muted">Chưa có bản nộp chung để xem.</p>;
+
+  return (
+    <ul aria-label="Bản nộp chung theo nhóm"
+      className="max-h-64 divide-y divide-line-soft overflow-y-auto rounded-lg border border-line">
+      {submissions.map(({ group, evaluationId }) => (
+        <li key={group.accountId} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+          <span className="min-w-0 wrap-break-word text-sm font-semibold text-ink">{group.name}</span>
+          <ButtonLink size="sm" href={buildEvaluationHref(evaluationId)}>
+            Xem bản nộp chung{" "}
+            <span className="sr-only">của {group.name}</span>
+          </ButtonLink>
+        </li>
+      ))}
+    </ul>
   );
 }
 

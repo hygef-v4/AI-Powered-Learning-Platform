@@ -108,5 +108,10 @@ class SubmissionReviewNavigationTest {
                 new GroupSubmissionStatus(otherRoot.groupDocumentId, UUID.randomUUID(), "On-time group", true, Instant.now(), false)));
         assertThat(submissionReviewService.loadEvaluation(actor, root.id, "PENDING", true).navigationIds()).containsExactly(root.id);
         assertThat(submissionReviewService.loadEvaluation(actor, root.id, "PENDING", null).navigationIds()).containsExactly(root.id, otherRoot.id);
+        assertThat(submissionReviewService.loadEvaluation(actor, values.get(2).id).groupEvaluationId())
+                .isEqualTo(root.id);
+        root.state = EvaluationStatus.SUPERSEDED;
+        assertThat(submissionReviewService.loadEvaluation(actor, values.get(2).id).groupEvaluationId())
+                .isNull();
     }
 }

@@ -26,7 +26,7 @@ class GradingMcpQueryServiceTest {
     final Actor teacher=new Actor(UUID.randomUUID(),Role.TEACHER);
     Evaluation evaluation() {return Evaluation.createPendingEvaluation(UUID.randomUUID(),UUID.randomUUID(),UUID.randomUUID(),UUID.randomUUID(),"hash",BigDecimal.TEN,"[]",Instant.now());}
     void setup(Evaluation e,List<DocumentBlock> blocks) {
-        when(submissionReviewService.loadEvaluation(teacher,e.id)).thenReturn(new GradingViews.EvaluationDetail(e,new DocumentModel(blocks),List.of(),List.of(),null,"DISABLED",List.of(),List.of(),List.of(),true));
+        when(submissionReviewService.loadEvaluation(teacher,e.id)).thenReturn(new GradingViews.EvaluationDetail(e,new DocumentModel(blocks),List.of(),List.of(),null,"DISABLED",List.of(),List.of(),List.of(),true,null));
         when(assignmentQuery.getContent(e.assignmentId)).thenReturn(Optional.of(new AssignmentContent(e.assignmentId,1,"Read the case",new DocumentModel(List.of()),List.of(),Map.of(),List.of())));
         when(gradingPromptBuilder.buildGradingInstructions()).thenReturn("Grade only the locked rubric");
         when(gradingPromptBuilder.buildOutputSchema(e)).thenReturn("{\"type\":\"object\"}");
