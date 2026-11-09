@@ -147,7 +147,7 @@ public class MaterialAccessPolicy {
             return;
         }
         if (actor.role() == Role.STUDENT) {
-            if (m.status() != Material.Status.ACTIVE) {
+            if (m.status() != Material.Status.ACTIVE || !m.enabled()) {
                 deny(actor, m.id());
                 return;
             }

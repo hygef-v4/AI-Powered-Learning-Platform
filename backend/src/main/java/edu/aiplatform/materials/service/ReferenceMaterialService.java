@@ -39,7 +39,7 @@ public class ReferenceMaterialService implements IReferenceMaterial {
                                     "MATERIAL_SCOPE_INVALID", "Chọn môn hoặc lớp");
                 };
         return items.stream()
-                .filter(m -> m.status() == Material.Status.ACTIVE)
+                .filter(m -> m.status() == Material.Status.ACTIVE && m.enabled())
                 .map(
                         m ->
                                 new SelectableMaterial(
@@ -61,7 +61,7 @@ public class ReferenceMaterialService implements IReferenceMaterial {
         // Authorize every ID before reading or exposing any text.
         List<Material> materials =
                 ids.stream().distinct().map(id -> queries.authorized(actor, id, null)).toList();
-        if (materials.stream().anyMatch(m -> m.status() != Material.Status.ACTIVE))
+        if (materials.stream().anyMatch(m -> m.status() != Material.Status.ACTIVE || !m.enabled()))
             throw ApiException.notFound("MATERIAL_NOT_FOUND");
         int remaining = Math.min(maxChars, MAX_CHARS);
         List<MaterialText> result = new ArrayList<>();

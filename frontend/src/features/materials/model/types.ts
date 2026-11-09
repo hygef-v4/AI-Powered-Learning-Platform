@@ -1,3 +1,5 @@
+import type { FormattedText } from "@/shared/document/formattedText";
+
 export type MaterialKind = "FILE" | "YOUTUBE_LINK";
 export type TextStatus = "PENDING" | "EXTRACTED" | "NO_TEXT" | "FAILED";
 export type MaterialVersion = {
@@ -20,6 +22,8 @@ export type Material = {
   kind: MaterialKind;
   title: string;
   description: string;
+  descriptionDocument?: FormattedText | null;
+  enabled?: boolean;
   orderNo: number;
   status: "ACTIVE" | "ARCHIVED";
   currentVersionNo: number;
@@ -34,6 +38,8 @@ export type CreateMaterial = {
   kind: MaterialKind;
   title: string;
   description: string;
+  descriptionDocument?: FormattedText | null;
+  enabled?: boolean;
   orderNo: number;
   source: MaterialSource;
   moduleId: string;

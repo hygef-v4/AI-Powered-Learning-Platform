@@ -111,7 +111,7 @@ public class QuizPracticeQueryService {
                 quiz.activityMonitoringEnabled() ? quiz.settings().leavePenalty() : null,
                 own.stream().sorted(Comparator.comparingInt(QuizAttempt::attemptNo).reversed())
                         .map(a -> PracticeSupport.row(a, a.snapshot().settings().showScoreAfterSubmit())).toList(),
-                inProgress, blocked == null, blocked);
+                inProgress, blocked == null, blocked, view.instructionsDocument());
     }
 
     private static PracticeQuizRow row(QuizView quiz, ClassRef ref, List<QuizAttempt> own) {

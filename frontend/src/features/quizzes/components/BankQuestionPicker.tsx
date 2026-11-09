@@ -6,7 +6,8 @@ import { getBankQuestionsForQuiz, previewRandomItems } from "../api";
 import { DIFFICULTY_LABELS, DIFFICULTY_TONES, errorMessage, TYPE_LABELS } from "../model/labels";
 import type { Difficulty, QuestionPage, QuestionView } from "../model/types";
 
-type Props = { quizId: string; freeSlots: number; onClose: () => void; onAdd: (questionIds: string[]) => Promise<void> };
+type Props = { quizId: string; freeSlots: number; onClose: () => void; onAdd: (questionIds: string[]) => Promise<void>;
+  inline?: boolean; onDirtyChange?: (dirty: boolean) => void };
 type Tab = "manual" | "random";
 type Row = { id: string; stem: string; type: QuestionView["type"]; difficulty: Difficulty; tags: string[] };
 
@@ -14,7 +15,7 @@ type Row = { id: string; stem: string; type: QuestionView["type"]; difficulty: D
  * Popup "Lấy câu hỏi từ ngân hàng" (BR-U10-14): chọn tay hoặc bốc ngẫu nhiên câu Đang dùng của môn, ẩn câu đã có
  * trong quiz. Chỉ là xem trước; lưu vào quiz mới ghim phiên bản.
  */
-export function BankQuestionPicker({ quizId, freeSlots, onClose, onAdd }: Props) {
+export function BankQuestionPicker({ quizId, freeSlots, onClose, onAdd, inline = false, onDirtyChange }: Props) {
   const [tab, setTab] = useState<Tab>("manual");
   const [difficulty, setDifficulty] = useState<Difficulty | "">("");
   const [tag, setTag] = useState("");
@@ -64,6 +65,8 @@ export function BankQuestionPicker({ quizId, freeSlots, onClose, onAdd }: Props)
 
   const ids = tab === "manual" ? selected : random?.rows.map((row) => row.id) ?? [];
   const tooMany = ids.length > freeSlots;
+  useEffect(() => { onDirtyChange?.(ids.length > 0); }, [ids.length, onDirtyChange]);
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
   const add = async () => {
     setBusy(true);
     setError(null);
@@ -77,13 +80,13 @@ export function BankQuestionPicker({ quizId, freeSlots, onClose, onAdd }: Props)
 
   const toggle = (id: string) => setSelected((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
 
-  return (
-    <Dialog open onClose={onClose} dismissible={!busy} size="lg" icon="help_center" title="Lấy câu hỏi từ ngân hàng"
-      footer={<>
+  const footer = <>
+        {inline && <Button onClick={onClose} disabled={busy}>Hủy chọn câu</Button>}
         <Button variant="primary" disabled={busy || ids.length === 0 || tooMany} onClick={() => void add()} data-testid="bank-picker-add">
           {tab === "manual" ? `Thêm ${ids.length} câu` : `Lưu ${ids.length} câu vào quiz`}
         </Button>
-      </>}>
+      </>;
+  const body = (
       <div className="flex flex-col gap-3 text-[13px]">
         <div role="tablist" aria-label="Cách lấy câu" className="flex gap-1">
           {([["manual", "Chọn tay"], ["random", "Bốc ngẫu nhiên"]] as const).map(([key, label]) => (
@@ -132,6 +135,9 @@ export function BankQuestionPicker({ quizId, freeSlots, onClose, onAdd }: Props)
           </tbody>
         </TableFrame>
       </div>
-    </Dialog>
   );
+  if (inline) return <div role="region" aria-label="Lấy câu hỏi từ ngân hàng" className="flex min-w-0 flex-col gap-3">
+    {body}<div className="flex justify-end gap-2 border-t border-line pt-3">{footer}</div>
+  </div>;
+  return <Dialog open onClose={onClose} dismissible={!busy} size="lg" icon="help_center" title="Lấy câu hỏi từ ngân hàng" footer={footer}>{body}</Dialog>;
 }

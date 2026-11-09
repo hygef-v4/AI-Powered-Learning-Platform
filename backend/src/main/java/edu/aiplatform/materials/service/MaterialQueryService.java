@@ -38,7 +38,7 @@ public class MaterialQueryService {
             throw ApiException.badRequest("MATERIAL_IDS_LIMIT", "Tối đa 100 học liệu");
         var c = access.classList(actor, classId, student);
         return repository.list(c.subjectId(), classId).stream()
-                .filter(m -> !student || m.status() == Material.Status.ACTIVE)
+                .filter(m -> !student || m.status() == Material.Status.ACTIVE && m.enabled())
                 .filter(m -> ids == null || ids.contains(m.id()))
                 .map(m -> view(actor, m, false, classId))
                 .toList();
@@ -107,6 +107,8 @@ public class MaterialQueryService {
                 m.updatedAt(),
                 editable,
                 MaterialViews.Version.of(current),
-                versions);
+                versions,
+                m.enabled(),
+                m.descriptionDocument());
     }
 }

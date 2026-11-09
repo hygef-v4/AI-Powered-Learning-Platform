@@ -1,5 +1,6 @@
 package edu.aiplatform.materials.model;
 
+import edu.aiplatform.shared.content.FormattedText;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -19,7 +20,15 @@ public record Material(
         UUID createdBy,
         Instant createdAt,
         Instant updatedAt,
-        long version) {
+        long version,
+        boolean enabled,
+        FormattedText descriptionDocument) {
+    public Material(UUID id, Scope scope, UUID subjectId, UUID classId, UUID moduleId, Kind kind,
+                    String title, String description, int orderNo, Status status, int currentVersionNo,
+                    UUID createdBy, Instant createdAt, Instant updatedAt, long version) {
+        this(id, scope, subjectId, classId, moduleId, kind, title, description, orderNo, status,
+                currentVersionNo, createdBy, createdAt, updatedAt, version, true, null);
+    }
     public enum Scope {
         SUBJECT,
         CLASS
@@ -49,7 +58,8 @@ public record Material(
                 || currentVersionNo < 1
                 || version < 0) throw new IllegalArgumentException("Invalid material");
         title = title == null ? "" : title.strip();
-        description = description == null ? "" : description.strip();
+        description = descriptionDocument != null ? descriptionDocument.validateLength(2000)
+                : description == null ? "" : description.strip();
         if (title.isEmpty() || title.length() > 200 || description.length() > 2000 || orderNo < 0)
             throw new IllegalArgumentException("Invalid material information");
     }
@@ -76,7 +86,10 @@ public record Material(
                 createdBy,
                 createdAt,
                 now,
-                version + 1);
+                version + 1,
+                enabled,
+                java.util.Objects.toString(this.description, "").strip()
+                        .equals(java.util.Objects.toString(description, "").strip()) ? descriptionDocument : null);
     }
 
     /** Cùng học liệu ở module khác của cùng môn; gọi {@link #revise} sau đó để tăng version. */
@@ -96,6 +109,13 @@ public record Material(
                 createdBy,
                 createdAt,
                 updatedAt,
-                version);
+                version,
+                enabled,
+                descriptionDocument);
+    }
+
+    public Material withPresentation(boolean enabled, FormattedText document) {
+        return new Material(id, scope, subjectId, classId, moduleId, kind, title, description, orderNo, status,
+                currentVersionNo, createdBy, createdAt, updatedAt, version, enabled, document);
     }
 }
