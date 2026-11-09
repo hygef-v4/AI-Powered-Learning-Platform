@@ -134,7 +134,7 @@ Không có use case xem lại lịch sử nhập nên kết quả không lưu. B
 
 | Thuộc tính | Ý nghĩa |
 |---|---|
-| `rowNumber` | Số dòng trong CSV |
+| `rowNumber` | Số dòng trong tệp nhập Excel (hoặc CSV qua API tương thích cũ) |
 | `schoolEmail`, `displayName`, `role` | Dữ liệu đọc được |
 | `outcome` | `CREATED`, `REJECTED` |
 | `reason` | Mã lỗi: `EMAIL_EXISTS`, `INVALID_EMAIL`, `INVALID_ROLE`, `DUPLICATE_IN_FILE`, `MISSING_FIELD` |
@@ -195,7 +195,7 @@ U02 và U03 cùng ở Iter 1 và được code trước hoặc song song với U
 | `PATCH /api/v1/admin/accounts/{id}` | 11 | `displayName`, `phoneNumber`, `version`; không email/role/status |
 | `PUT /api/v1/admin/accounts/{id}/role` | 11 | Đổi role theo F11 |
 | `PUT /api/v1/admin/accounts/{id}/status` | 12 | Vô hiệu hóa hoặc mở lại theo F12 |
-| `POST /api/v1/admin/accounts/imports:validate`, `imports:commit` | Luồng phụ của 09 | Kiểm rồi xác nhận nhập CSV theo F10 |
+| `POST /api/v1/admin/accounts/imports:validate`, `imports:commit` | Luồng phụ của 09 | Kiểm rồi xác nhận nhập Excel `.xlsx` theo F10; API vẫn nhận CSV UTF-8 cũ |
 
 Không có API ảnh đại diện. Cột avatar cũ nếu đã tồn tại có thể giữ tương thích, không đưa vào DTO; không tự xóa dữ liệu/schema đang có.
 

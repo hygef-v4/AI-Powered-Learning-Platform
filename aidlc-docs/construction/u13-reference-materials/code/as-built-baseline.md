@@ -29,3 +29,9 @@ Kiểm tra của đợt refactor được ghi trong [refactor results](../../bui
 ### Ghi nhận kiểm thử trước baseline
 
 - [aidlc-docs/construction/build-and-test/u13-verification.md](../../build-and-test/u13-verification.md)
+
+## Delta working tree — 2026-11-09
+
+Thêm enabled độc lập status, descriptionDocument và kiểm lại quyền đổi token tải; sinh viên/nguồn AI bị chặn khi tắt. Material/version adapter đã JDBC, module adapter còn JPA. Hai row JPA của material/version đã xóa. UI nhãn Bật/Tắt, rich description và sửa gutter bullet/số.
+
+Delta này bổ sung snapshot commit có ngày phía trên, chưa tạo commit mới và không sửa lại evidence lịch sử. [Kết quả và giới hạn](../../build-and-test/2026-11-09-material-quiz-ui-results.md); [đối chiếu tài liệu](../../build-and-test/2026-11-09-aidlc-doc-sync.md).

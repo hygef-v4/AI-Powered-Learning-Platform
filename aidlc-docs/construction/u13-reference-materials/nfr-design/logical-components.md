@@ -23,3 +23,7 @@ Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evid
 ## Structure refactor — 2026-10-30
 
 Đường dẫn hiện hành theo bảng trên; [unit source inventory](../code/as-built-baseline.md). Public contract, quyền, transaction và cấu hình chạy giữ nguyên; [automated verification and limits](../../build-and-test/2026-10-30-package-moves-only-results.md).
+
+## Persistence thực tế — 2026-11-09
+
+MaterialRepositoryAdapter dùng JdbcTemplate cho materials/material_versions, giữ transaction/CAS và mapping JSONB. MaterialRow/MaterialVersionRow đã bỏ; MaterialModuleRepositoryAdapter còn JPA ngoài phạm vi. Không coi toàn U13 hoặc toàn backend đã chuyển JDBC. Quyền tải hiện hành được kiểm qua MaterialDownloadPolicy do U03 gọi trước khi mở bytes. [Chi tiết backend và evidence](../code/2026-11-09-presentation-backend.md).

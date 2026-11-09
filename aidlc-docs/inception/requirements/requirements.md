@@ -484,3 +484,11 @@ Source và yêu cầu cũ: [decision-register.md](../reverse-engineering/decisio
 ## MCP correction and audit remediation — 2026-10-30
 
 Student/Teacher/Subject Manager ACTIVE manage own MCP credentials; Admin is denied, including pre-existing tokens. UC41 personal API and MCP share own/SUBMITTED/PRACTICE/current-enrollment/hash/schema/pending/daily-budget restrictions. MCP READ_ONLY cannot record feedback; READ_WRITE can. API and MCP quota checks are serialized per account inside a transaction. UC52 remains deterministic permitted Quiz result/explanation, not an AI generation service. Current code is a remediation working tree on794a4053; dated initial audit and staff-expansion docs are historical where superseded.
+
+## Delta đã được người dùng duyệt — 2026-11-09
+
+- UC09/28/46: giao diện nhập tài khoản, ghi danh và câu hỏi chuyển sang Excel .xlsx kèm mẫu thật; giữ API tương thích cũ theo từng unit, không đổi xuất báo cáo CSV.
+- FR-004/005/013: học liệu có Bật/Tắt độc lập lưu trữ; chặn sinh viên cả direct view và token tải cũ khi tắt, chặn chọn nguồn AI; staff quản lý theo quyền. Mô tả học liệu có định dạng giới hạn, tương thích plain text.
+- FR-006/007/017: mô tả quiz có định dạng; soạn câu tay/ngân hàng/AI tại chỗ; dropdown chọn nhiều tài liệu nguồn; nguồn API tự chọn khi thiếu/null source. AI chỉ đề xuất, người soạn vẫn xem/chấp nhận, không tự phát hành.
+
+Thiết kế được duyệt ở [proposal](2026-11-09-material-quiz-ui-proposal.md); [đối chiếu unit và bằng chứng](../../construction/build-and-test/2026-11-09-aidlc-doc-sync.md). Không thêm UC/role mới hoặc thay quyết định YouTube đã hủy; runtime provider acceptance còn giới hạn trong báo cáo.

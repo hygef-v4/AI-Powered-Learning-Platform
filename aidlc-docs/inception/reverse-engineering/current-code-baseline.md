@@ -646,7 +646,7 @@ Primary UC 58–62; FR-004, FR-005.
 |---|---|
 | [materials/controller](../../../backend/src/main/java/edu/aiplatform/materials/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [materials/service](../../../backend/src/main/java/edu/aiplatform/materials/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [materials/repository](../../../backend/src/main/java/edu/aiplatform/materials/repository) | Repository interface/implementation, JPA hiện tại; cần chuyển JDBC theo quyết định chung. |
+| [materials/repository](../../../backend/src/main/java/edu/aiplatform/materials/repository) | MaterialRepositoryAdapter dùng JDBC cho material/version từ 2026-11-09; module adapter còn JPA và cần chuyển riêng. |
 | [materials/model](../../../backend/src/main/java/edu/aiplatform/materials/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [materials/integration](../../../backend/src/main/java/edu/aiplatform/materials/integration) | Adapter hạ tầng/provider, listener và sender. |
 
