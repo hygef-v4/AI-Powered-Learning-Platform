@@ -1,0 +1,462 @@
+{
+  "baseline": "321f88929360a4bf3c733a26a4a0f06a15ecb323",
+  "scope": "Representative automated integration scenarios across U01–U15; not exhaustive requirements coverage.",
+  "cases": [
+    {
+      "id": "IT-U01-001",
+      "requirements": "BR-U01-40, BR-U01-62",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "redisSessionAndCurrentAccountStatusProtectRealSecurityFilter",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Production JWT and security filters, real Redis session store and PostgreSQL account lookup. The account initially has ACTIVE status."
+    },
+    {
+      "id": "IT-U01-002",
+      "requirements": "BR-U01-44, BR-U01-46",
+      "suite": "edu.aiplatform.identity.integration.SessionStoreIntegrationTest",
+      "method": "concurrentRefreshesWithSameTokenRotateExactlyOnce",
+      "source": "backend/src/test/java/edu/aiplatform/identity/integration/SessionStoreIntegrationTest.java",
+      "boundary": "Real Redis and production session scripts. Both requests use the same live refresh token."
+    },
+    {
+      "id": "IT-U01-003",
+      "requirements": "BR-U01-41, BR-U01-42",
+      "suite": "edu.aiplatform.identity.repository.AccountRepositoryIntegrationTest",
+      "method": "failedLoginsLockAtThresholdThenResetCounterWithoutBumpingVersion",
+      "source": "backend/src/test/java/edu/aiplatform/identity/repository/AccountRepositoryIntegrationTest.java",
+      "boundary": "Production account repository and real PostgreSQL. This case checks persistence, not the complete login endpoint."
+    },
+    {
+      "id": "IT-U02-001",
+      "requirements": "BR-U02-02, BR-U02-03",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "auditSuccessCommitsOnceAndRollsBackWithCaller",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Real production services and PostgreSQL; isolated fixtures. External provider calls are excluded."
+    },
+    {
+      "id": "IT-U02-002",
+      "requirements": "BR-U02-02, BR-U02-05",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "deniedAuditSurvivesCallerRollbackAndSensitiveDetailsAreRejected",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Real production services and PostgreSQL; isolated fixtures. External provider calls are excluded."
+    },
+    {
+      "id": "IT-U02-003",
+      "requirements": "BR-U02-04",
+      "suite": "edu.aiplatform.requirements.RequirementsCoverageIntegrationTest",
+      "method": "actualAuditFailureRollsBackSubjectClassAndManagerTogether",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/RequirementsCoverageIntegrationTest.java",
+      "boundary": "Real U01/U04/U05/U02 services, PostgreSQL and transactions. Other remote ports are mocked outside this boundary."
+    },
+    {
+      "id": "IT-U03-001",
+      "requirements": "BR-U03-82, BR-U03-83, BR-U03-86",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "settingUpdateInvalidatesConsumerCacheAndRejectsStaleVersion",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Real production services and PostgreSQL; isolated fixtures. External provider calls are excluded."
+    },
+    {
+      "id": "IT-U03-002",
+      "requirements": "BR-U03-50",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "actualRabbitJobAppearsOnlyAfterCommitAndRollbackPublishesNothing",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Production job publisher and Rabbit sender, real PostgreSQL transaction and RabbitMQ. No worker consumes this test queue; email delivery is not claimed."
+    },
+    {
+      "id": "IT-U03-003",
+      "requirements": "BR-U03-20, BR-U03-21",
+      "suite": "edu.aiplatform.files.service.DownloadGrantExpiryIntegrationTest",
+      "method": "grantUsesFiveMinuteRedisTtlAndExpiredOrForeignGrantCannotOpenStorage",
+      "source": "backend/src/test/java/edu/aiplatform/files/service/DownloadGrantExpiryIntegrationTest.java",
+      "boundary": "Real Redis and production grant handling. Storage and audit ports are mocked; actual Drive download is excluded."
+    },
+    {
+      "id": "IT-U03-004",
+      "requirements": "BR-U03-51, BR-U03-53",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "rabbitDeliveryPassesRealListenerDispatcherAndAcknowledgesMissingTerminalWork",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Real Rabbit channel, production listener, dispatcher, email handler and PostgreSQL. The listener is invoked directly; scheduled worker polling and actual mail delivery are excluded."
+    },
+    {
+      "id": "IT-U03-005",
+      "requirements": "FR-038",
+      "suite": "edu.aiplatform.backup.integration.BackupConcurrentDeliveryIntegrationTest",
+      "method": "concurrentDeliveryRunsOnlyOneDumpAndPreservesItsSuccessfulArchive",
+      "source": "backend/src/test/java/edu/aiplatform/backup/integration/BackupConcurrentDeliveryIntegrationTest.java",
+      "boundary": "Real backup state persistence and isolated local archive. The dump/provider boundary is controlled; this is not a production restore test."
+    },
+    {
+      "id": "IT-U04-001",
+      "requirements": "BR-U04-03, BR-U04-04",
+      "suite": "edu.aiplatform.requirements.RequirementsCoverageIntegrationTest",
+      "method": "composedArchiveAndReopenPreserveEnrollmentsAndLearningReferences",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/RequirementsCoverageIntegrationTest.java",
+      "boundary": "Real U01/U04/U05/U02 production composition and PostgreSQL. Remote file, mail and queue ports are outside the tested boundary."
+    },
+    {
+      "id": "IT-U04-002",
+      "requirements": "BR-U04-03",
+      "suite": "edu.aiplatform.requirements.RequirementsCoverageIntegrationTest",
+      "method": "realManagerScopeChangesOnNextAuthorizationWithoutCachedGrant",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/RequirementsCoverageIntegrationTest.java",
+      "boundary": "Real current-account authorization and subject scope provider backed by PostgreSQL."
+    },
+    {
+      "id": "IT-U04-003",
+      "requirements": "BR-U04-02",
+      "suite": "edu.aiplatform.subjects.repository.SubjectRepositoryIntegrationTest",
+      "method": "twoConcurrentInsertsWithOneCodeHaveExactlyOneWinner",
+      "source": "backend/src/test/java/edu/aiplatform/subjects/repository/SubjectRepositoryIntegrationTest.java",
+      "boundary": "Production subject persistence and actual PostgreSQL concurrency. Account/class/audit ports use the suite fixtures."
+    },
+    {
+      "id": "IT-U05-001",
+      "requirements": "BR-U05-10, BR-U05-21",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "classCreationEnrollmentRemovalAndReactivationUseActualOwners",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Real production services and PostgreSQL; isolated fixtures. External provider calls are excluded."
+    },
+    {
+      "id": "IT-U05-002",
+      "requirements": "BR-U05-13, BR-U05-20",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "staleClassWriteAndUnauthorizedEnrollmentLeaveCommittedStateUnchanged",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Real production services and PostgreSQL; isolated fixtures. External provider calls are excluded."
+    },
+    {
+      "id": "IT-U05-003",
+      "requirements": "BR-U05-11",
+      "suite": "edu.aiplatform.academics.integration.ClassTermMigrationIntegrationTest",
+      "method": "upgradeDropsOnlySemesterAndPreservesClassAndEnrollment",
+      "source": "backend/src/test/java/edu/aiplatform/academics/integration/ClassTermMigrationIntegrationTest.java",
+      "boundary": "Real PostgreSQL, actual Flyway migration history and production JDBC class repository."
+    },
+    {
+      "id": "IT-U06-001",
+      "requirements": "BR-U06-03, BR-U06-05",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "personalAiConnectionEncryptsAtRestAndRejectsForeignOwner",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Real production services and PostgreSQL; isolated fixtures. External provider calls are excluded."
+    },
+    {
+      "id": "IT-U06-002",
+      "requirements": "BR-U06-21",
+      "suite": "edu.aiplatform.ai.service.McpWriteRequestIntegrationTest",
+      "method": "concurrentRetryCreatesOneDraftAndReturnsSameResult",
+      "source": "backend/src/test/java/edu/aiplatform/ai/service/McpWriteRequestIntegrationTest.java",
+      "boundary": "Real PostgreSQL idempotency and mutation transactions. The draft operation is a controlled fixture, not a remote agent call."
+    },
+    {
+      "id": "IT-U06-003",
+      "requirements": "BR-U06-21",
+      "suite": "edu.aiplatform.ai.service.McpWriteRequestIntegrationTest",
+      "method": "failedMutationRollsBackBothDraftAndRetryRecord",
+      "source": "backend/src/test/java/edu/aiplatform/ai/service/McpWriteRequestIntegrationTest.java",
+      "boundary": "Real PostgreSQL and production MCP idempotency transaction boundary; controlled mutation failure."
+    },
+    {
+      "id": "IT-U06-004",
+      "requirements": "BR-U06-13, BR-U06-14",
+      "suite": "edu.aiplatform.ai.model.AiRepositoriesIntegrationTest",
+      "method": "tasksQuotaUsageAndCredentials",
+      "source": "backend/src/test/java/edu/aiplatform/ai/model/AiRepositoriesIntegrationTest.java",
+      "boundary": "Actual PostgreSQL and production AI task/quota/usage repositories with restricted runtime credentials. Provider calls and quota-service concurrency are outside this persistence case."
+    },
+    {
+      "id": "IT-U06-005",
+      "requirements": "BR-U06-13, BR-U06-14",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "sameAccountQuotaRaceAllowsOneReservationThenSettles",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Actual U06 quota policy/reservation services and PostgreSQL row locking. Two threads use separate transactions and a synchronized start. Business time is frozen within one day; no AI provider call."
+    },
+    {
+      "id": "IT-U06-006",
+      "requirements": "BR-U06-13, BR-U06-14",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "globalQuotaRaceAcrossAccountsHonorsCapAndRollbackReleases",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Actual U06 quota services and PostgreSQL transactions. Teacher and Subject Manager contend for one global window. Business time is frozen within one day; no AI provider call."
+    },
+    {
+      "id": "IT-U07-001",
+      "requirements": "BR-U07-23, BR-U07-33, BR-U03-64",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "gradedAssignmentPublicationSubmissionAndEvaluationUseRealContracts",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Real U01/U05/U07/U08/U09/U02 providers, PostgreSQL and Rabbit publisher. Remote AI/email/Drive acceptance is excluded."
+    },
+    {
+      "id": "IT-U07-002",
+      "requirements": "BR-U07-24, BR-U07-32",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "invalidAssignmentPublicationLeavesDraftAndNoRubricLock",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Real production services and PostgreSQL; isolated fixtures. External provider calls are excluded."
+    },
+    {
+      "id": "IT-U07-003",
+      "requirements": "BR-U07-21",
+      "suite": "edu.aiplatform.assignments.repository.RubricRepositoryTest",
+      "method": "currentArrayRoundTripsWithoutChangingCriteriaOrPoints",
+      "source": "backend/src/test/java/edu/aiplatform/assignments/repository/RubricRepositoryTest.java",
+      "boundary": "Actual PostgreSQL and production rubric repository. This case checks persistence, not all publication guards."
+    },
+    {
+      "id": "IT-U08-001",
+      "requirements": "BR-U08-10, BR-U08-13, BR-U08-15",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "practiceSaveRejectsStaleContentAndRemovedEnrollmentWithoutChangingAnswer",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Real production services and PostgreSQL; isolated fixtures. External provider calls are excluded."
+    },
+    {
+      "id": "IT-U08-002",
+      "requirements": "BR-U08-44",
+      "suite": "edu.aiplatform.assignmentwork.service.PracticeFeedbackConcurrencyIntegrationTest",
+      "method": "apiAndMcpConcurrentRequestsForDifferentAttemptsShareOneDailySlot",
+      "source": "backend/src/test/java/edu/aiplatform/assignmentwork/service/PracticeFeedbackConcurrencyIntegrationTest.java",
+      "boundary": "Actual PostgreSQL feedback/reservation code and concurrency. Assignment/auth/AI ports are controlled fixtures; no provider request is made."
+    },
+    {
+      "id": "IT-U08-003",
+      "requirements": "BR-U08-44",
+      "suite": "edu.aiplatform.assignmentwork.service.PracticeFeedbackConcurrencyIntegrationTest",
+      "method": "separateAccountsCanReserveIndependentlyWhileFirstAccountIsPaused",
+      "source": "backend/src/test/java/edu/aiplatform/assignmentwork/service/PracticeFeedbackConcurrencyIntegrationTest.java",
+      "boundary": "Real PostgreSQL concurrency and reservation service; AI/auth boundaries are fixture-controlled."
+    },
+    {
+      "id": "IT-U08-004",
+      "requirements": "BR-U08-21, BR-U03-64",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "individualEvaluationFailureRollsBackSubmissionAndRetriesOnce",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Actual U07/U08/U09 services, PostgreSQL and transactions. An isolated database trigger injects the failure and is removed in finally."
+    },
+    {
+      "id": "IT-U09-001",
+      "requirements": "BR-U09-71",
+      "suite": "edu.aiplatform.grading.repository.EvaluationVersionIntegrationTest",
+      "method": "concurrentWritersCannotBothSaveOneExpectedVersion",
+      "source": "backend/src/test/java/edu/aiplatform/grading/repository/EvaluationVersionIntegrationTest.java",
+      "boundary": "Actual PostgreSQL and production grading repositories/transactions. Service authorization is outside this focused persistence case."
+    },
+    {
+      "id": "IT-U09-002",
+      "requirements": "BR-U09-71",
+      "suite": "edu.aiplatform.grading.repository.EvaluationVersionIntegrationTest",
+      "method": "jdbcWritesJoinApplicationJpaManagerAndRollbackTogether",
+      "source": "backend/src/test/java/edu/aiplatform/grading/repository/EvaluationVersionIntegrationTest.java",
+      "boundary": "Real PostgreSQL, actual JDBC grading adapters and shared JpaTransactionManager."
+    },
+    {
+      "id": "IT-U09-003",
+      "requirements": "BR-U09-62, BR-U09-63",
+      "suite": "edu.aiplatform.grading.repository.GradeDistributionVisibilityRepositoryTest",
+      "method": "migrationDefaultsOffAndConcurrentWritersCannotOverwriteAcrossClasses",
+      "source": "backend/src/test/java/edu/aiplatform/grading/repository/GradeDistributionVisibilityRepositoryTest.java",
+      "boundary": "Real PostgreSQL migration and production visibility repository."
+    },
+    {
+      "id": "IT-U09-004",
+      "requirements": "BR-U09-04, BR-U09-10, BR-U09-20, BR-U09-22, BR-U09-40, BR-U09-41, BR-U09-42, BR-U09-70",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "individualGradingPublicationAndResubmissionInvalidatePriorStudentScore",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Actual U07/U08/U09 services, PostgreSQL and the Student grade lookup service. The assignment allows two attempts."
+    },
+    {
+      "id": "IT-U10-001",
+      "requirements": "BR-U10-04",
+      "suite": "edu.aiplatform.quizzes.repository.JdbcQuestionRepositoryIntegrationTest",
+      "method": "lineageKeepsAtMostOneDraftAndVersionsInOrder",
+      "source": "backend/src/test/java/edu/aiplatform/quizzes/repository/JdbcQuestionRepositoryIntegrationTest.java",
+      "boundary": "Production question repository and actual PostgreSQL constraints."
+    },
+    {
+      "id": "IT-U10-002",
+      "requirements": "BR-U10-23",
+      "suite": "edu.aiplatform.quizzes.repository.JdbcQuizRepositoryIntegrationTest",
+      "method": "retiringUnpublishedQuizKeepsPublicationNullAndReopensAsDeletableDraft",
+      "source": "backend/src/test/java/edu/aiplatform/quizzes/repository/JdbcQuizRepositoryIntegrationTest.java",
+      "boundary": "Actual PostgreSQL and production quiz persistence/domain transitions."
+    },
+    {
+      "id": "IT-U10-003",
+      "requirements": "BR-U10-21, BR-U10-22",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "emptyQuizCannotPublishOrCreateStudentAttempt",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Real production services and PostgreSQL; isolated fixtures. External provider calls are excluded."
+    },
+    {
+      "id": "IT-U11-001",
+      "requirements": "BR-U11-11, BR-U11-12, BR-U11-15, BR-U11-21",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "quizPublicationPinsQuestionsAndRealAttemptScoresWithoutGradebookEntry",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Real production services and PostgreSQL; isolated fixtures. External provider calls are excluded."
+    },
+    {
+      "id": "IT-U11-002",
+      "requirements": "BR-U11-10",
+      "suite": "edu.aiplatform.quizpractice.repository.JdbcQuizAttemptRepositoryIntegrationTest",
+      "method": "onlyOneAttemptInProgressPerQuizAndStudent",
+      "source": "backend/src/test/java/edu/aiplatform/quizpractice/repository/JdbcQuizAttemptRepositoryIntegrationTest.java",
+      "boundary": "Actual PostgreSQL and production quiz-attempt repository."
+    },
+    {
+      "id": "IT-U11-003",
+      "requirements": "BR-U11-33",
+      "suite": "edu.aiplatform.quizpractice.repository.JdbcQuizAttemptRepositoryIntegrationTest",
+      "method": "penaltyDecisionChangesScoreAndCanBeRevised",
+      "source": "backend/src/test/java/edu/aiplatform/quizpractice/repository/JdbcQuizAttemptRepositoryIntegrationTest.java",
+      "boundary": "Actual PostgreSQL and production attempt repository. Teacher authorization and browser activity capture are outside this persistence case."
+    },
+    {
+      "id": "IT-U12-001",
+      "requirements": "BR-U12-01, BR-U12-02, BR-U12-04",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "groupSetUsesEnrollmentAndRejectsStaleWholeSetWrite",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Real production services and PostgreSQL; isolated fixtures. External provider calls are excluded."
+    },
+    {
+      "id": "IT-U12-002",
+      "requirements": "BR-U12-30, BR-U12-34, BR-U12-41",
+      "suite": "edu.aiplatform.groupdocs.model.GroupRepositoriesIntegrationTest",
+      "method": "documentsSectionsLocksAndSubmission",
+      "source": "backend/src/test/java/edu/aiplatform/groupdocs/model/GroupRepositoriesIntegrationTest.java",
+      "boundary": "Production group repositories and real PostgreSQL with restricted runtime credentials. This is persistence evidence, not a full group submission-to-grading flow."
+    },
+    {
+      "id": "IT-U12-003",
+      "requirements": "BR-U12-37",
+      "suite": "edu.aiplatform.groupdocs.integration.RabbitSseMultiInstanceIntegrationTest",
+      "method": "committedNoticeReachesBothInstancesOnlyForItsAccountAndRollbackPublishesNothing",
+      "source": "backend/src/test/java/edu/aiplatform/groupdocs/integration/RabbitSseMultiInstanceIntegrationTest.java",
+      "boundary": "Actual RabbitMQ, PostgreSQL transaction and production server-side SSE hubs. Browser/proxy transport is excluded."
+    },
+    {
+      "id": "IT-U12-004",
+      "requirements": "BR-U12-40, BR-U12-41, BR-U12-42, BR-U09-40, BR-U09-41, BR-U09-42, BR-U09-50, BR-U09-51",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "groupSubmissionCreatesMemberGradesAndResubmissionResetsThem",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Actual U05/U07/U12/U09 services and PostgreSQL. Two active enrolled students belong to one group; the leader submits."
+    },
+    {
+      "id": "IT-U12-005",
+      "requirements": "BR-U12-40, BR-U12-41, BR-U03-64",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "groupEvaluationFailureRollsBackSnapshotAndRetriesOnce",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Actual U12/U09 services, PostgreSQL and transactions. A test-only database trigger fails a member insert after the root insert and is removed in finally."
+    },
+    {
+      "id": "IT-U13-001",
+      "requirements": "BR-U13-01, BR-U13-02",
+      "suite": "edu.aiplatform.requirements.RequirementsCoverageIntegrationTest",
+      "method": "realMaterialQueriesFilterForeignSubjectsClassesAndArchivedAttachments",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/RequirementsCoverageIntegrationTest.java",
+      "boundary": "Actual PostgreSQL material repositories and owner access providers. Artifact storage is mocked outside this boundary."
+    },
+    {
+      "id": "IT-U13-002",
+      "requirements": "BR-U13-12",
+      "suite": "edu.aiplatform.requirements.RequirementsCoverageIntegrationTest",
+      "method": "materialHistoryAndConditionalTextCompletionSurviveMetadataReplaceArchiveAndStaleCas",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/RequirementsCoverageIntegrationTest.java",
+      "boundary": "Real material/version services, PostgreSQL and transactions. Artifact attach is a controlled port; remote storage/extraction job delivery is not claimed."
+    },
+    {
+      "id": "IT-U13-003",
+      "requirements": "BR-U13-11",
+      "suite": "edu.aiplatform.requirements.RequirementsCoverageIntegrationTest",
+      "method": "moduleDeleteAuditFailureRollsBackDeleteAndArchivedSourceMove",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/RequirementsCoverageIntegrationTest.java",
+      "boundary": "Real module/material repositories, owner services, PostgreSQL and audit fault injection."
+    },
+    {
+      "id": "IT-U14-001",
+      "requirements": "BR-U14-01, BR-U14-04, BR-U14-05",
+      "suite": "edu.aiplatform.requirements.RequirementsCoverageIntegrationTest",
+      "method": "announcementEndpointsEnforceTeachingEnrollmentVersionAndSoftDelete",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/RequirementsCoverageIntegrationTest.java",
+      "boundary": "Real security filters, JWT/current database authority and announcement persistence. Session/queue/mail ports are mocked outside this boundary."
+    },
+    {
+      "id": "IT-U14-002",
+      "requirements": "BR-U14-21, BR-U14-23",
+      "suite": "edu.aiplatform.notifications.integration.NotificationDeliveryIntegrationTest",
+      "method": "savedOptOutPersistsWhileInAppNoticeAndOwnerOnlyReadStateRemain",
+      "source": "backend/src/test/java/edu/aiplatform/notifications/integration/NotificationDeliveryIntegrationTest.java",
+      "boundary": "Real notification service/repository and PostgreSQL. Class/account, job, mail and SSE ports are bounded by suite fixtures."
+    },
+    {
+      "id": "IT-U14-003",
+      "requirements": "BR-U14-23",
+      "suite": "edu.aiplatform.requirements.RequirementsCoverageIntegrationTest",
+      "method": "concurrentDeliveryAndDuplicateJobsSendOnceAndSentRemainsTerminal",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/RequirementsCoverageIntegrationTest.java",
+      "boundary": "Actual delivery state service and PostgreSQL. IMail is mocked; real SMTP/Brevo delivery is excluded."
+    },
+    {
+      "id": "IT-U14-004",
+      "requirements": "BR-U14-14",
+      "suite": "edu.aiplatform.notifications.integration.NotificationDeliveryIntegrationTest",
+      "method": "retentionDeletesOnlyOlderThan180DaysAndCascadesOnlyTheirDeliveries",
+      "source": "backend/src/test/java/edu/aiplatform/notifications/integration/NotificationDeliveryIntegrationTest.java",
+      "boundary": "Real notification repository, PostgreSQL and controlled business time."
+    },
+    {
+      "id": "IT-U14-005",
+      "requirements": "BR-U03-50, BR-U03-51, BR-U03-53, BR-U03-59, BR-U14-23",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "queuedNotificationSendsOnceAndDuplicateDeliveryIsAcknowledged",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Actual U14 producer, PostgreSQL, RabbitMQ, automatic consumer and production listener/dispatcher/handler. Only the external IMail provider is controlled; no real email is sent."
+    },
+    {
+      "id": "IT-U14-006",
+      "requirements": "BR-U03-51, BR-U03-56, BR-U03-59, BR-U14-23, NFR-U03-44",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "queuedNotificationRetriesThroughRealRabbitDelayThenSends",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Actual U14 producer, PostgreSQL, RabbitMQ, automatic consumer and production listener/dispatcher/handler. Only the external IMail provider is controlled; no real email is sent."
+    },
+    {
+      "id": "IT-U15-001",
+      "requirements": "BR-U15-01, BR-U15-10, BR-U15-11",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "dashboardReadsActualOwnersAndRejectsNonAdmin",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Real production services and PostgreSQL; isolated fixtures. External provider calls are excluded."
+    },
+    {
+      "id": "IT-U15-002",
+      "requirements": "BR-U15-20, BR-U15-21",
+      "suite": "edu.aiplatform.backup.integration.BackupDashboardStatusIntegrationTest",
+      "method": "emptyDataIsAvailableButMissingTerminalTimeIsUnavailable",
+      "source": "backend/src/test/java/edu/aiplatform/backup/integration/BackupDashboardStatusIntegrationTest.java",
+      "boundary": "Actual U03 backup provider, PostgreSQL repository and Spring transactions. The U15 consumer composition is covered separately."
+    },
+    {
+      "id": "IT-U15-003",
+      "requirements": "BR-U15-20",
+      "suite": "edu.aiplatform.backup.integration.BackupDashboardStatusIntegrationTest",
+      "method": "concurrentUpdatesNeverMixCountWithSuccessFromAnotherSnapshot",
+      "source": "backend/src/test/java/edu/aiplatform/backup/integration/BackupDashboardStatusIntegrationTest.java",
+      "boundary": "Actual U03 backup status provider and PostgreSQL transactional reads."
+    }
+  ]
+}
