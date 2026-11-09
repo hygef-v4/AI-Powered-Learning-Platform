@@ -231,3 +231,12 @@ Nhánh `feat/u12-section-ux`. Không đổi BR, schema hay trường cũ; chỉ 
 - **Nhắc hạn:** `model/deadline.ts` (`describeDeadline`, `formatAgo`), `hooks/useClock.ts`. Còn ≤ 30 phút tới `closesAt`, hoặc đang trong khoảng nộp trễ tới `lateUntil`, workspace hiện banner: còn bao lâu, số mục chưa ai làm (không vào bản nộp), số mục đang soạn (tự chốt bằng bản nháp khi đóng nhận bài, BR-U12-43), nhóm chưa nộp. Trình soạn hiện cùng dòng nhắc hạn. Giảng viên không thấy banner.
 - **Người giữ mục còn soạn không:** dòng mục đang giữ hiện "Đang soạn: Bình · lưu lần cuối 3 phút trước" hoặc "· nhận 2 giờ trước, chưa lưu". Backend `SectionView.of` trả `claimedAt`, `holderSavedAt` (= `draftSavedAt` khi `CLAIMED`) cho mọi người; `draftBlocks`, `draftSavedAt` vẫn chỉ người giữ thấy (BR-U12-34). Lưu nháp không đẩy SSE (BR-U12-37) nên trang tải lại mỗi 60 giây khi có mục người khác đang giữ và tab đang hiện.
 - **Test:** `GroupWorkspaceServiceTest.everyoneSeesWhenTheHolderClaimedAndLastSavedButOnlyTheHolderSeesTheDraft`; `GroupControllersTest` theo constructor mới; `GroupWorkspacePage.test.tsx` thêm hỏi lại khi sửa mục người khác, mục của mình không hỏi, dòng người giữ, tải lại mỗi phút, nhắc hạn đúng hạn và trong khoảng trễ, `beforeunload` và nhắc hạn trong trình soạn.
+
+## Sidebar mục lục cho tài liệu nhóm (2026-11-09)
+
+Nhánh `feat/u12-section-ux`. Chỉ frontend.
+
+- `features/groupdocs/components/groupDocNav.tsx` (`groupDocContext`) đăng ký ở `register.ts` cho Sinh viên, Giảng viên, Chủ nhiệm môn: ở `/group-docs/{id}` sidebar là `AssignmentNav` của U07 (đã `export`), cùng kiểu trang làm bài cá nhân; không có nút "+" (BR-U12-30).
+- `GroupWorkspacePage` đăng dàn ý `outlineOf(sharedBlocks)` qua `publishOutline`; lối về: sinh viên `/my-assignments/{assignmentId}?classId=`, giảng viên `/teaching/classes/{classId}?tab=students`. Bỏ nút Thoát.
+- Bấm dòng (`document:show-part`): về thẻ Tài liệu, cuộn tới mục chứa heading (`model/outline.ts` `findSectionForHeading`: chính mục, mục cha gần nhất, hoặc mục đầu tiên sau heading cha). Cuộn trang thì báo `document:current-part` để sidebar sáng đúng mục.
+- **Test:** `tests/features/groupdocs/model/outline.test.tsx` (ánh xạ heading → mục, ngữ cảnh sidebar, trang đăng mục lục, lối về, không có "+", bấm dòng cuộn tới mục).

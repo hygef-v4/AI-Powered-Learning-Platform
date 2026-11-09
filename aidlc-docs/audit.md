@@ -11439,3 +11439,40 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Construction — U12 Group Assignment, UX improvements.
 
 ---
+
+## U12 feedback 2026-11-09 meeting — scope decisions
+
+**Timestamp**: 2026-11-09T16:20:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> mục 3 thực ra thầy muốn khi 1 người bỏ mục thì khi nhả mục sẽ chọn 1 người khác để đưa mục cho
+
+> chưa cần làm
+> gửi lại tôi bản kế hoạch đã
+
+> ý 1 k can lam
+
+**AI Response**: Recorded the meeting feedback for groups: item 1 (groups per assignment) dropped by the user; item 2 (latest version as result) already met; item 3 planned as FB-U12-06 (release may hand the section to another member; draft still dropped per BR-U12-36; leader's assign kept; who may release unchanged), awaiting approval; item 4 (history: latest revision per author) pending. Partial backend edits for item 3 remain uncommitted.
+
+**Context**: Construction — U12 Group Assignment, feedback triage.
+
+---
+
+## U12 group document outline sidebar — 2026-11-09
+
+**Timestamp**: 2026-11-09T16:30:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> khoan đã, trước hết hãy làm phần group assignment có slidebar giống phần asignment này được không
+
+> duyệt
+
+**AI Response**: The group document page (`/group-docs/{id}`) now replaces the general menu with the same outline sidebar as the individual assignment pages: back link "Bài tập", numbered headings from the assignment skeleton, no "+" buttons (BR-U12-30). Clicking an entry switches to the Tài liệu tab and scrolls to the section containing that heading; the entry of the section on screen is highlighted. The page's "Thoát" button was removed (the sidebar back link replaces it). `AssignmentNav` is exported for reuse; no backend, BR or API change.
+
+**Context**: Construction — U12 Group Assignment, UI.
+
+---
