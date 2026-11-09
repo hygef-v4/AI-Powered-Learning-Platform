@@ -88,8 +88,8 @@ stateDiagram-v2
 | `IQuizQuery` | `listForClass(classId)` → Quiz `OPEN` của lớp và của môn; `getStudentView(quizId)` → câu, lựa chọn, cài đặt, không có đáp án (Quiz sinh đề không có câu, chỉ có số câu); `drawPaper(quizId, seenQuestionIds, seed)` → đề cho lượt mới; `getPaper(quizId, questionPoints)` → đề theo câu đã lưu trong lượt; `get(quizId)` | U11 | Hiện Quiz và lập đề cho người học |
 | `IQuizScoring` | `score(quizId, answers)` → đúng sai và điểm từng câu, tổng; `answerReview(quizId)` → đáp án, giải thích | U11 | Chấm theo đáp án ghim mà đáp án không rời U10; hiện đáp án sau khi nộp theo cài đặt |
 | Sự kiện `quiz.published` | - | U14 | Báo Quiz mới trong app |
-| `TeacherClassTab`, `SubjectSummarySection` (contract của U05, U10 cài); `NavEntry` (contract của U01, U10 cài) | - | U05, U01 | Phần Quiz trong tab Đánh giá; số câu hỏi, Quiz của môn trên Manager Dashboard, My Subject; mục Ngân hàng câu hỏi, Quiz trên menu bên của Subject Manager |
-| `IAiTaskResultHandler` cho `QUIZ_QUESTION_DRAFT`, `IMcpToolProvider` (contract của U06, U10 cài) | - | U06 | Nhận câu đề xuất; tool `read_quiz_context`, `save_quiz_draft` |
+| `TeacherClassTab` (contract của U05, U10 cài); `NavEntry` (contract của U01, U10 cài) | - | U05, U01 | Phần đề xuất câu vào ngân hàng ở tab Học liệu của lớp (`QuestionProposalsSection`); mục Ngân hàng câu hỏi trên menu bên của Subject Manager. Không cài `SubjectSummarySection`: số câu hỏi, Quiz xem ở Question List, Quiz List |
+| `IAiTaskResultHandler` cho `QUIZ_QUESTION_DRAFT`, `IMcpToolProvider` (contract của U06, U10 cài) | - | U06 | Nhận câu đề xuất; tool `list_quizzes`, `read_quiz_context`, `save_quiz_draft`, `create_quiz_draft` |
 | Component `McqEditor` | - | Frontend U10 | Soạn câu trắc nghiệm, dùng ở Question Detail và câu riêng của Quiz |
 
 ### Contract U10 khai báo (unit khác cài)
@@ -124,7 +124,7 @@ Chưa có U11 thì listener rỗng và Quiz Detail không có phần lượt là
 | `GET /api/v1/classes/{classId}/quiz-copy-sources`, `POST .../quizzes:copy` | 48 |
 | `GET`, `PATCH`, `DELETE /api/v1/quizzes/{id}`; `PUT .../items`; `POST .../items:random-preview`; `POST .../inline-questions`, `PATCH`, `DELETE .../inline-questions/{questionId}` | 48 |
 | `POST /api/v1/quizzes/{id}/ai-drafts`, `GET .../ai-drafts/{draftId}`, `POST .../ai-drafts/{draftId}:accept`, `:discard` | 47, 48 |
-| `POST /api/v1/quizzes/{id}/review`, `/publish`, `/retire`, `/clone`, `/versions` | 48 |
+| `POST /api/v1/quizzes/{id}/publish`, `/retire`, `/reopen`, `/clone`, `/versions` | 48 |
 
 ## Source behavior delta — 2026-10-30
 
@@ -134,7 +134,7 @@ Quiz có DRAFT/OPEN/RETIRED (bỏ REVIEWED 2026-11-01). Quiz.edited giữ OPEN k
 
 ## Legacy publication reconciliation
 
-V20261030_1810 permits RETIRED with null publishedAt. Old equal-time retired rows require successful QUIZ_PUBLISHED audit for the exact QUIZ object to keep publication; unproven rows become null/review. New real same-instant publication stays non-null. QuizView now carries nullable publishedAt; subject teacher/module visibility and new-version require actual publication for RETIRED.
+V20261030_1810 permits RETIRED with null publishedAt. Old equal-time retired rows require successful QUIZ_PUBLISHED audit for the exact QUIZ object to keep publication; unproven rows get `publishedAt = null`. New real same-instant publication stays non-null. QuizView now carries nullable publishedAt; subject teacher/module visibility and new-version require actual publication for RETIRED.
 
 ## Delta 2026-11-01: câu đề xuất và chống trùng
 

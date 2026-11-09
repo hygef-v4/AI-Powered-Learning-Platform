@@ -116,7 +116,7 @@ Mã lỗi mới: `QUIZ_NOT_FOUND`, `QUIZ_INVALID`, `QUIZ_PUBLISH_FAILED` (kèm `
 ## Frontend (giai đoạn 2)
 
 - Route: `app/manager/quizzes` (Quiz List), `app/quizzes/[id]` + `app/quizzes/layout.tsx` (Teacher, Subject Manager).
-- `features/quizzes`: `SubjectQuizListPage`, `CreateQuizDialog`, `QuizDetailPage`, `QuizDetailParts` (`QuizItemList`, `InlineQuestionDialog`, `QuizSettingsPanel`, `QuizPreviewDialog`), `BankQuestionPicker`, `ClassQuizzesSection` (đăng ký `teacherClassTabs` tab `evals`), `QuizBankSummary` (đăng ký `subjectSummarySections`), slot mới `quizRowActions` cho U11.
+- `features/quizzes`: `SubjectQuizListPage`, `CreateQuizDialog`, `QuizDetailPage`, `QuizDetailParts` (`QuizItemList`, `InlineQuestionDialog`, `QuizSettingsPanel`, `QuizPreviewDialog`), `BankQuestionPicker`, `ClassQuizzesSection` (đăng ký `teacherClassTabs` tab `evals`), `QuizBankSummary` (đăng ký `subjectSummarySections`), slot mới `quizRowActions` cho U11. (Lịch sử: hiện `register.ts` chỉ đăng ký `QuestionProposalsSection` ở tab Học liệu và mục menu Ngân hàng câu hỏi; `QuizBankSummary` đã bỏ.)
 - Ghi nhận hoạt động hiện công tắc tắt kèm ghi chú (E3); không có `MaterialRefPicker` (E4).
 
 ## Unit test (giai đoạn 2)
@@ -134,7 +134,7 @@ Mã lỗi mới: `QUIZ_NOT_FOUND`, `QUIZ_INVALID`, `QUIZ_PUBLISH_FAILED` (kèm `
 - Chọn câu ngân hàng cho giảng viên qua `GET /api/v1/quizzes/{id}/bank-questions` thay vì API ngân hàng của Chủ nhiệm môn (E2).
 - Tab Đánh giá hiện Quiz của môn ở trạng thái `OPEN` và `RETIRED` (chỉ xem); bản nháp của môn không hiện ở lớp.
 - `QuizItemView` có cờ `inline` để frontend phân biệt câu riêng và câu ngân hàng.
-- `QuizBankSummary` đếm bằng tổng của các API danh sách (5 lời gọi), không có API đếm riêng.
+- (Lịch sử, component đã bỏ) `QuizBankSummary` đếm bằng tổng của các API danh sách (5 lời gọi), không có API đếm riêng.
 - Version mới lấy `version_no` lớn nhất của cả chuỗi + 1; phát hành ngưng version khác đang mở trong chuỗi.
 
 ## Đối chiếu UC 48 (bước 2.13)
@@ -208,12 +208,12 @@ Mã lỗi mới: `AI_DRAFT_NOT_FOUND`, `AI_DRAFT_CLOSED`, `AI_DRAFT_NOT_READY`, 
 ### Frontend
 
 - `AiDrafts.tsx`:
-  - `AiSourceSelect`: nguồn AI theo H1, cùng dạng `SourceChoice` của U06.
+  - `AiSourceSelect`: nguồn AI theo H1, cùng dạng `SourceChoice` của U06. (Lịch sử: sau đã thay bằng `AiSourcePicker` của U06.)
   - `AiDraftDialog`: form yêu cầu; chờ AI, hỏi lại mỗi 3 giây; danh sách câu sửa / bỏ / chấp nhận từng câu; "Lưu n câu đã chấp nhận".
 - `AiDraftTargets.tsx`:
   - `QuestionAiDraftDialog`: nút "Tạo nháp bằng AI" trên Question List.
   - `QuizAiDraftPanel`: phần "Đề xuất AI" trên Quiz Detail, gồm cả đề xuất từ agent MCP.
-  - `MaterialRefPicker`: trong `QuizSettingsPanel`, tối đa 10, giữ cả tài liệu không còn truy cập được.
+  - `MaterialRefPicker`: trong `QuizSettingsPanel`, tối đa 10, giữ cả tài liệu không còn truy cập được. (Lịch sử: đã bỏ theo BR-U10-11, KAN-182.)
 - `SettingsForm` thêm `materialIds`; `settingsInput(form)` bỏ tham số thứ hai.
 
 ### Unit test
@@ -256,7 +256,7 @@ Mã lỗi mới: `AI_DRAFT_NOT_FOUND`, `AI_DRAFT_CLOSED`, `AI_DRAFT_NOT_READY`, 
 
 Làm cùng G3 của U11 (plan U11 giai đoạn 6, K1–K3).
 
-- **Kiểm thời hạn lưu (K1):** `QuizActivityPolicy` đọc `ISettings` khóa `activity.retentionDays` (U08 khai báo). U03 lỗi thì coi như chưa đặt.
+- **Kiểm thời hạn lưu (K1)** (lịch sử, `QuizActivityPolicy` sau đã bỏ): `QuizActivityPolicy` đọc `ISettings` khóa `activity.retentionDays` (U08 khai báo). U03 lỗi thì coi như chưa đặt.
 - **Bật và tắt (K1, K2):**
   - `updateDetails`: bật mới khi chưa đặt thời hạn thì `409 ACTIVITY_RETENTION_NOT_SET`; bật mà thiếu lời báo thì `ACTIVITY_NOTICE_REQUIRED` theo trường. Tắt luôn được.
   - Duyệt (`QuizRules.validateActivity` trong `QuizPublicationService`) kiểm lại lời báo và thời hạn.

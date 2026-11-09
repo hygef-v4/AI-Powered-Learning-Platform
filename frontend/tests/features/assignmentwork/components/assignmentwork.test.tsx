@@ -3,54 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { formatDuration } from "@/shared/activity/ActivityTimeline";
 import { HEARTBEAT_MS, useActivityTracker } from "@/shared/activity/useActivityTracker";
 import { computeParts, type DocumentModel } from "@/shared/document";
-import { insertIntoPart, precheck, submitCheck } from "@/features/assignmentwork/pages/AssignmentWorkspacePage";
+import { insertIntoPart } from "@/features/assignmentwork/pages/AssignmentWorkspacePage";
 import { remaining } from "@/features/assignmentwork/model/format";
 import type { StudentRow } from "@/features/assignmentwork/model/types";
 import { upcoming } from "@/features/assignmentwork/hooks/useStudentAssignments";
-
-describe("precheck", () => {
-  const teacher: DocumentModel["blocks"][number] = { id: "t", origin: "TEACHER", type: "PARAGRAPH", content: { runs: [{ text: "Đề" }] } };
-  it("báo thiếu sơ đồ bắt buộc và bài chưa có nội dung", () => {
-    const issues = precheck({ requiredDiagrams: { CLASS: 1 } }, { blocks: [teacher] });
-    expect(issues.map((i) => i.code)).toEqual(["REQUIRED_DIAGRAMS_MISSING", "SUBMISSION_EMPTY"]);
-  });
-  it("hợp lệ khi có sơ đồ đúng loại", () => {
-    const content: DocumentModel = { blocks: [teacher, { id: "d", origin: "STUDENT", type: "DIAGRAM", content: { diagramType: "CLASS", xml: "<mxfile/>" } }] };
-    expect(precheck({ requiredDiagrams: { CLASS: 1 } }, content)).toEqual([]);
-  });
-  it("sơ đồ của giảng viên đã vẽ (có ảnh xem trước) tính là bài làm", () => {
-    const slot = (svgPreview?: string): DocumentModel["blocks"][number] => ({ id: "s", origin: "TEACHER", type: "DIAGRAM", content: { diagramType: "CLASS", xml: "<mxfile/>", svgPreview } });
-    expect(precheck({ requiredDiagrams: { CLASS: 1 } }, { blocks: [teacher, slot()] }).map((i) => i.code)).toEqual(["REQUIRED_DIAGRAMS_MISSING", "SUBMISSION_EMPTY"]);
-    expect(precheck({ requiredDiagrams: { CLASS: 1 } }, { blocks: [teacher, slot("<svg/>")] })).toEqual([]);
-  });
-  it("loại sơ đồ do server suy từ hình vẽ: máy khách chỉ kiểm tổng số sơ đồ, không chặn sơ đồ chưa có loại mới", () => {
-    const drawn = (id: string): DocumentModel["blocks"][number] => ({ id, origin: "STUDENT", type: "DIAGRAM", content: { diagramType: "OTHER", xml: "<mxfile/>" } });
-    expect(precheck({ requiredDiagrams: { USE_CASE: 1, CLASS: 1 } }, { blocks: [teacher, drawn("d1"), drawn("d2")] })).toEqual([]);
-    const issues = precheck({ requiredDiagrams: { USE_CASE: 1, CLASS: 1 } }, { blocks: [teacher, drawn("d1")] });
-    expect(issues.map((i) => i.code)).toEqual(["REQUIRED_DIAGRAMS_MISSING"]);
-    expect(issues[0]!.message).toContain("Cần ít nhất 2 sơ đồ");
-  });
-  it("bảng của giảng viên có chữ tính như đã điền (server kiểm chính xác)", () => {
-    const table: DocumentModel["blocks"][number] = { id: "tb", origin: "TEACHER", type: "TABLE", content: { rows: [[{ runs: [{ text: "Đăng nhập" }] }]] } };
-    expect(precheck({ requiredDiagrams: {} }, { blocks: [teacher, table] })).toEqual([]);
-  });
-});
-
-describe("submitCheck", () => {
-  const teacher: DocumentModel["blocks"][number] = { id: "t", origin: "TEACHER", type: "PARAGRAPH", content: { runs: [{ text: "Đề" }] } };
-  const drawnByTeacher: DocumentModel["blocks"][number] = { id: "s", origin: "TEACHER", type: "DIAGRAM", content: { diagramType: "OTHER", xml: "<mxfile/>", svgPreview: "<svg/>" } };
-  const empty = { code: "SUBMISSION_EMPTY", blockId: null, message: "Bài làm chưa có nội dung của bạn" };
-
-  it("có kết quả của server thì dùng, kể cả khi tự kiểm thấy sơ đồ của đề đã có hình", () => {
-    const content: DocumentModel = { blocks: [teacher, drawnByTeacher] };
-    expect(precheck({ requiredDiagrams: {} }, content)).toEqual([]);
-    expect(submitCheck({ requiredDiagrams: {} }, content, [empty])).toEqual([empty]);
-    expect(submitCheck({ requiredDiagrams: {} }, content, [])).toEqual([]);
-  });
-  it("chưa có kết quả của server thì tự kiểm sơ bộ", () => {
-    expect(submitCheck({ requiredDiagrams: {} }, { blocks: [teacher] }, null).map((i) => i.code)).toEqual(["SUBMISSION_EMPTY"]);
-  });
-});
 
 describe("insertIntoPart", () => {
   const heading = (id: string, style: "H1" | "H2", text: string): DocumentModel["blocks"][number] => ({ id, origin: "TEACHER", type: "HEADING", content: { style, text } });

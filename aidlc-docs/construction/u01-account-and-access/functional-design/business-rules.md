@@ -33,7 +33,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U01-20 | OTP gồm 6 chữ số, sinh ngẫu nhiên an toàn, chỉ lưu dạng băm. | Câu 4 |
+| BR-U01-20 | OTP gồm 6 chữ số, chỉ lưu dạng băm. Mã của mỗi lần gửi được suy ra bằng HMAC-SHA256 từ khóa job (UUID ngẫu nhiên do server tạo, không lộ ra ngoài) và khóa ký của U01, nên job gửi lại sau lỗi mail vẫn gửi đúng mã đã ghi. Thiếu khóa job thì sinh mã bằng `SecureRandom`. | Câu 4 |
 | BR-U01-21 | OTP hết hạn sau 10 phút. | Câu 4 |
 | BR-U01-22 | Nhập sai 5 lần thì hủy OTP; phải yêu cầu mã mới. Trừ lượt và so mã là một bước nguyên tử trên Redis (Lua), nên gửi song song không vượt 5 lượt. Mỗi IP nhập OTP tối đa 30 lần mỗi 15 phút; vượt thì 429 `OTP_TOO_MANY_ATTEMPTS`. | Câu 4 |
 | BR-U01-23 | Mỗi tài khoản và mục đích chỉ có một OTP hiệu lực; mã mới làm mã cũ mất hiệu lực. | Câu 4 |
