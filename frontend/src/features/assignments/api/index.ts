@@ -49,12 +49,12 @@ export const assignmentsApi = {
     write<AssignmentDetail>(`/subjects/${enc(subjectId)}/assignments`, "POST", input),
   copySources: (classId: string, signal?: AbortSignal) =>
     apiFetch<CopySource[]>(`${base}/classes/${enc(classId)}/assignment-copy-sources`, { signal }),
-  copy: (classId: string, sourceAssignmentId: string) =>
-    write<AssignmentDetail>(`/classes/${enc(classId)}/assignments:copy`, "POST", { sourceAssignmentId }),
+  copy: (classId: string, sourceAssignmentId: string, title?: string) =>
+    write<AssignmentDetail>(`/classes/${enc(classId)}/assignments:copy`, "POST", { sourceAssignmentId, title }),
   subjectCopySources: (subjectId: string, signal?: AbortSignal) =>
     apiFetch<CopySource[]>(`${base}/subjects/${enc(subjectId)}/assignments/copy-sources`, { signal }),
-  copyToSubject: (subjectId: string, sourceAssignmentId: string) =>
-    write<AssignmentDetail>(`/subjects/${enc(subjectId)}/assignments/copies`, "POST", { sourceAssignmentId }),
+  copyToSubject: (subjectId: string, sourceAssignmentId: string, title?: string) =>
+    write<AssignmentDetail>(`/subjects/${enc(subjectId)}/assignments/copies`, "POST", { sourceAssignmentId, title }),
   detail: (id: string, signal?: AbortSignal) => apiFetch<AssignmentDetail>(`${base}/assignments/${enc(id)}`, { signal }),
   updateDetails: (id: string, version: number, input: DetailsInput) =>
     write<AssignmentDetail>(`/assignments/${enc(id)}`, "PATCH", { ...input, version }),
@@ -74,6 +74,11 @@ export const assignmentsApi = {
     apiFetch<RubricDetail>(`${base}/assignments/${enc(id)}/parts/${enc(partId)}/rubric`, { signal }),
   saveRubric: (id: string, partId: string, version: number, criteria: RubricCriterion[]) =>
     write<RubricDetail>(`/assignments/${enc(id)}/parts/${enc(partId)}/rubric`, "PUT", { version, criteria }),
+  /** Tài liệu tham khảo cho Tạo từ AI trong popup tạo bài, lúc bài chưa có (yêu cầu 2026-11-10). */
+  classMaterials: (classId: string, signal?: AbortSignal) =>
+    apiFetch<Material[]>(`${base}/classes/${enc(classId)}/assignment-materials`, { signal }),
+  subjectMaterials: (subjectId: string, signal?: AbortSignal) =>
+    apiFetch<Material[]>(`${base}/subjects/${enc(subjectId)}/assignments/materials`, { signal }),
   materials: (id: string, signal?: AbortSignal) =>
     apiFetch<Material[]>(`${base}/assignments/${enc(id)}/selectable-materials`, { signal }),
   diagram: (id: string, blockId: string, signal?: AbortSignal) =>
@@ -86,10 +91,14 @@ export const assignmentsApi = {
   requestAiDraft: (id: string, input: { request: string; materialIds: string[]; sourceFileRefs: string[];
     options: { profile: "AUTO" | "GENERAL" | "SWR" | "SWD"; language: "VI" | "EN" | "AUTO"; questionCount?: number; targetPoints?: number };
     /** Bỏ trống: hệ thống tự chọn nguồn; PERSONAL không kèm provider: chỉ API cá nhân. */
-    source?: "SHARED" | "PERSONAL"; provider?: string; requestRef: string; formatText?: string }) =>
+    source?: "SHARED" | "PERSONAL"; provider?: string; requestRef: string; formatText?: string;
+    templateAssignmentId?: string }) =>
     write<AiDraft>(`/assignments/${enc(id)}/ai-drafts`, "POST", input),
   aiDraft: (id: string, draftId: string, signal?: AbortSignal) =>
     apiFetch<AiDraft>(`${base}/assignments/${enc(id)}/ai-drafts/${enc(draftId)}`, { signal }),
+  /** Đề mẫu của môn (bài do chủ nhiệm môn tạo) để chọn khi soạn bằng AI. */
+  listAiTemplates: (id: string, signal?: AbortSignal) =>
+    apiFetch<{ assignmentId: string; title: string }[]>(`${base}/assignments/${enc(id)}/ai-drafts/templates`, { signal }),
   previewAiSources: (id: string, sourceFileRefs: string[], signal?: AbortSignal) =>
     apiFetch<AiSourcePreview[]>(`${base}/assignments/${enc(id)}/ai-drafts/sources:preview`, {
       method: "POST", body: JSON.stringify({ sourceFileRefs }), signal,
