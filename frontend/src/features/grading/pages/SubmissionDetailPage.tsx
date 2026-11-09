@@ -171,7 +171,7 @@ export function SubmissionDetailPage({
                       onChange={(e) => setSelected(e.target.checked ? selectable.map((r) => r.evaluationId!) : [])}
                     />
                   </th>
-                  {["Sinh viên / nhóm", "Nộp lúc", "Lượt", "Trạng thái", "Điểm", ""].map((s, i) => (
+                  {["Sinh viên / nhóm", "Nộp lúc", "Trạng thái", "Điểm", ""].map((s, i) => (
                     <th key={i} className={HEAD}>
                       {s}
                     </th>
@@ -205,7 +205,6 @@ export function SubmissionDetailPage({
                       {r.submittedAt ? new Date(r.submittedAt).toLocaleString("vi-VN") : "—"}
                       {r.late && <span className="ml-2 font-sans font-semibold text-danger">Trễ</span>}
                     </td>
-                    <td className={`${CELL} tabular-nums`}>{r.attemptCount}</td>
                     <td className={CELL}>
                       <Pill tone={STATUS_TONES[r.status] ?? "neutral"}>{GRADE_STATUS_LABELS[r.status] ?? r.status}</Pill>
                     </td>

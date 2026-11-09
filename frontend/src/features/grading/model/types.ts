@@ -214,7 +214,7 @@ export const GRADE_STATUS_LABELS: Record<string, string> = {
   DRAFT: "Đã chấm",
   FINALIZED: "Đã chấm",
   PUBLISHED: "Đã công bố",
-  SUPERSEDED: "Lượt cũ",
+  SUPERSEDED: "Bài nộp cũ",
   NOT_SUBMITTED: "Chưa nộp",
   IN_PROGRESS: "Chưa nộp",
 };

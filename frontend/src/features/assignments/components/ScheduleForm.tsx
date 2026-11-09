@@ -44,6 +44,8 @@ function DateTime({ id, label, value, disabled, onChange }: { id: string; label:
  */
 export function ScheduleForm({ assignment, mode, onSubmit }: Props) {
   const open = assignment.status === "OPEN";
+  // Chỉ bài Luyện tập có số lượt; bài có chấm nộp bao nhiêu lần cũng được khi còn hạn (yêu cầu 2026-11-10).
+  const practice = assignment.gradingMode === "PRACTICE";
   const [scheduled, setScheduled] = useState(mode === "change" && !!assignment.opensAt);
   const [opens, setOpens] = useState<When>(split(assignment.opensAt, "07:00"));
   const [closes, setCloses] = useState<When>(split(assignment.closesAt, "23:59"));
@@ -69,7 +71,7 @@ export function ScheduleForm({ assignment, mode, onSubmit }: Props) {
       if (gap > 30 * 24 * 3600 * 1000) return "Hạn nộp muộn quá 30 ngày sau hạn nộp";
     }
     const attempts = Number(maxAttempts);
-    if (!Number.isInteger(attempts) || attempts < 1 || attempts > 10) return "Số lượt ngoài 1–10";
+    if (practice && (!Number.isInteger(attempts) || attempts < 1 || attempts > 10)) return "Số lượt ngoài 1–10";
     return null;
   }
 
@@ -86,7 +88,7 @@ export function ScheduleForm({ assignment, mode, onSubmit }: Props) {
         opensAt: open ? null : scheduled ? join(opens) : mode === "change" ? new Date().toISOString() : null,
         closesAt: join(closes)!,
         lateUntil: allowLate ? join(late) : null,
-        maxAttempts: Number(maxAttempts),
+        maxAttempts: practice ? Number(maxAttempts) : null,
         confirmUngroupedStudents: confirmGroups,
       });
     } catch (e) {
@@ -113,10 +115,12 @@ export function ScheduleForm({ assignment, mode, onSubmit }: Props) {
         <input type="checkbox" checked={allowLate} onChange={(e) => setAllowLate(e.target.checked)} data-testid="schedule-late" />Cho nộp muộn
       </label>
       {allowLate && <DateTime id="schedule-late-until" label="Nộp muộn đến" value={late} onChange={setLate} />}
-      <Field label="Số lượt nộp" htmlFor="schedule-attempts">
-        <TextInput id="schedule-attempts" type="number" min={1} max={10} value={maxAttempts} disabled={open} wrapperClassName="w-24"
-          onChange={(e) => setMaxAttempts(e.target.value)} />
-      </Field>
+      {practice && (
+        <Field label="Số lượt làm" htmlFor="schedule-attempts">
+          <TextInput id="schedule-attempts" type="number" min={1} max={10} value={maxAttempts} disabled={open} wrapperClassName="w-24"
+            onChange={(e) => setMaxAttempts(e.target.value)} />
+        </Field>
+      )}
       {groupWarnings.length > 0 && (
         <Alert tone="warning" title="Có sinh viên chưa có nhóm">
           <ul className="list-disc pl-4">{groupWarnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
