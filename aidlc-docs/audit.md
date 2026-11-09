@@ -11689,3 +11689,34 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Commit thay đổi giao diện sidebar dạng cây.
 
 ---
+
+## Lịch sử nộp bài — đề xuất thẻ Góp ý AI
+**Timestamp**: 2026-11-09T16:17:19Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**:
+> tạo 1 nhánh mới từ staging tên fix/student-ai-grading. Tôi muốn sửa popup góp ý AI này thành 1 thẻ ở bên cạnh thẻ bài làm (giống như chấm bài của giảng viên nhưng thay vì rubric thì nó là góp ý và nhận xét của AI). Bạn có đề xuất gì không?
+
+Ảnh tham chiếu: `codex-clipboard-64bcd4ce-fda5-40db-bae5-3a3843546525.png` và `codex-clipboard-9789afcc-201c-47eb-aa72-86c0e4a8a7e6.png`.
+
+**AI Response**: Đã tạo và chuyển sang nhánh `fix/student-ai-grading` từ `staging`. Đã xác định ứng dụng hiện hữu và dùng lại tài liệu reverse engineering có sẵn. Đề xuất tận dụng cột nhận xét của trình xem bài nộp để hiển thị thẻ Góp ý AI theo từng lượt Practice đã nộp. Đề xuất thẻ luôn hiện, với nút gửi yêu cầu trong thẻ, và trình bày nội tuyến trên màn hình hẹp. Cân nhắc phương án mở/thu gọn nếu ưu tiên chiều rộng bài làm.
+**Context**: Phạm vi hiện tại là tạo nhánh và tư vấn bố cục. Chờ chốt hướng trước khi triển khai. Giữ cấu hình extension đã ghi nhận cho dự án.
+
+---
+
+## Lịch sử nộp bài — triển khai thẻ Góp ý AI
+**Timestamp**: 2026-11-09T16:20:13Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "Giúp tôi sửa theo như bạn đề xuất, đồng thời sửa cả các doc trong aidlc-docs nếu có liên quan đến phần này"
+**AI Response**: Đã đưa thẻ Góp ý AI vào cột nhận xét của Lịch sử nộp bài Practice và đồng bộ UC 41, FR-030, US-ASM-012 cùng tài liệu U08. 71 ca trong phạm vi liên quan, lint, TypeScript và build đã qua. Lượt chạy toàn bộ Vitest được dừng do lỗi đọc tệp tạm của sandbox. Chi tiết kiểm tra được ghi trong kế hoạch.
+**Context**: Yêu cầu triển khai đã được xác nhận. Dùng lại các điều kiện truy cập, API và trạng thái của U08. Security và Resiliency giữ phạm vi đã duyệt, PBT tắt theo cấu hình dự án.
+
+---
+
+## Lịch sử nộp bài — bàn giao vào staging
+**Timestamp**: 2026-11-09T17:07:03Z
+**Requested by:** Vu Hai Nam
+**User Input**: "giúp tôi chia thành các commit nhỏ, push lên branch hiện tại rồi merge staging vào branch này. Sau đó check e2e rồi tạo pr vào staging, khi nào CI xanh thì merge branch hiện tại vào staging"
+**AI Response**: Chia thay đổi giao diện và kiểm thử thành một commit, tài liệu AI-DLC thành một commit. Đồng bộ staging sau khi push, xác minh E2E trên mã đã đồng bộ và kiểm tra CI của PR trước khi merge.
+**Context**: Bàn giao U08 trên nhánh fix/student-ai-grading.
+
+---
