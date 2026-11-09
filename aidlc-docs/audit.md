@@ -11502,3 +11502,12 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **AI Response**: Completed the authorized staging integration and verification. First full merged snapshot passed2,028 backend tests and800 frontend tests; preserved seven earlier5000ms timeouts and successful isolated40/40/full800 reruns with two workers and unchanged oracles. Staging advanced to198b796f before business E2E; merged its U12 fix as65f86a6c and verified95/95 backend, current frontend build/typecheck/scoped lint and15/15 U12 tests. All168 authenticated API/proxy/SSE assertions passed on that latest rebuilt code. Stopped only the task stack/frontend and verified7 original platform container IDs unchanged; volumes/logs preserved. Exact source/artifact/result hashes and scopes recorded. Preparing the final evidence commit, normal push and one PR to staging; no PR merge/deploy. PR/CI state will be reported from GitHub rather than guessed in this pre-publication snapshot. Existing security/resiliency retained; PBT disabled.
 
 ---
+
+## Frontend - Link preview metadata
+**Timestamp**: 2026-11-09T05:50:27Z
+**Requested by:** Đào Chí Cường
+**User Input**: "sửa link được gửi để đẹp và chuyên nghiệp hơn" (kèm ảnh chụp bản xem trước link https://alapedu.online/manager/questions/new?subjectId=... trong ứng dụng chat: tiêu đề "Nền tảng học tập", mô tả "Nền tảng học tập có hỗ trợ AI", không có ảnh)
+**AI Response**: "Thêm metadata Open Graph/Twitter trong frontend/src/app/layout.tsx (metadataBase, tiêu đề 'Nền tảng học tập – Dạy và học hiệu quả hơn cùng trợ lý AI', mô tả mới, site name, locale vi_VN, thẻ summary_large_image), hằng số chung frontend/src/shared/siteMetadata.ts (SITE_URL lấy từ biến môi trường SITE_URL, mặc định https://alapedu.online), ảnh xem trước 1200x630 frontend/src/app/opengraph-image.tsx theo logo và màu thương hiệu, font TTF tĩnh frontend/assets/og (tách từ Plus Jakarta Sans, kèm OFL), loại /opengraph-image khỏi proxy để không bị no-store. Đã kiểm tra thẻ meta và ảnh trên dev server."
+**Context**: Thay đổi nhỏ trong giao diện (minimal depth); không commit.
+
+---
