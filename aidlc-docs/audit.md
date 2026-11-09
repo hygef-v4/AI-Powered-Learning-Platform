@@ -11464,3 +11464,33 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Context**: Report 4 diagram review (documentation), branch `docs/u12-diagrams-simplify`.
 
 ---
+
+## U12 re-test and fixes — 2026-11-09
+
+**Timestamp**: 2026-11-09T03:20:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> gio test lai va xem u12 con gi can sua khong
+
+**AI Response**: Re-tested U12 on staging `fb20c6bc` (includes teammates' receipt-page removal, which U12 does not use): backend U12 unit and integration tests, frontend groupdocs/groups tests, lint and type check all pass. Code review found two defects, fixed on branch `fix/u12-editor-lost-hold`: (1) the holder's full-page section editor stayed open after the leader reassigned or someone released the section, or after auto-submit, and with unsaved edits "Đóng" failed to save and could not close; the page now closes the editor with a notice when the refreshed view shows the section is no longer held or the document is locked, and a second "Đóng" discards unsaved edits; (2) the Bản nộp card showed the sections' current authors instead of the authors captured at submit (BR-U12-44); `WorkspaceView.lastSubmission.authors` now returns the stored `section_authors` and the card uses them. Added backend and frontend tests; verified on the local stack.
+
+**Context**: Construction — U12 Group Assignment, bug fixes (no BR, schema or existing API change; additive `authors` field).
+
+---
+
+## U12 fixes merged to staging — 2026-11-09
+
+**Timestamp**: 2026-11-09T03:40:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> gộp vào staging luôn đi
+
+**AI Response**: Committed the two U12 fixes on `fix/u12-editor-lost-hold`, merged the branch into `staging` and pushed `staging` to origin.
+
+**Context**: Construction — U12 Group Assignment, merge of bug fixes to staging.
+
+---

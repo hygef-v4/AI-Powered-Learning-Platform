@@ -42,7 +42,15 @@ export type WorkspaceView = {
   sharedBlocks: DocumentModel;
   sections: SectionView[];
   role: { member: boolean; leader: boolean; teacher: boolean };
-  lastSubmission: { submittedBy: string | null; mode: string; submittedAt: string; late: boolean; receiptHash: string } | null;
+  lastSubmission: {
+    submittedBy: string | null;
+    mode: string;
+    submittedAt: string;
+    late: boolean;
+    receiptHash: string;
+    /** Tác giả từng mục lúc nộp (BR-U12-44); mục chưa Xong thì `done` false, không vào bản nộp. */
+    authors?: { partId: string; title: string; accountId: string | null; done: boolean }[];
+  } | null;
   activityMonitoring: boolean;
   /** Bài cho phép Draw.io (U07): trình soạn mục có nút chèn sơ đồ. */
   diagramEnabled: boolean;
