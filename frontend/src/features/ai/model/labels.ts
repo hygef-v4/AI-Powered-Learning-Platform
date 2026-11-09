@@ -8,6 +8,16 @@ export const PROVIDER_CONSOLE: Record<AiProvider, string> = {
   CLAUDE: "console.anthropic.com",
 };
 
+/** Mô hình chọn sẵn khi thêm khóa; không có trong danh sách thì lấy mô hình đầu tiên. */
+const PROVIDER_DEFAULT_MODEL: Partial<Record<AiProvider, string>> = {
+  GEMINI: "gemini-3.1-flash-lite",
+};
+
+export function defaultModel(provider: AiProvider, models: string[]): string {
+  const preferred = PROVIDER_DEFAULT_MODEL[provider];
+  return preferred && models.includes(preferred) ? preferred : (models[0] ?? "");
+}
+
 export const ACCESS_LABEL: Record<McpAccess, string> = {
   READ_ONLY: "Chỉ đọc",
   READ_WRITE: "Đọc và ghi",

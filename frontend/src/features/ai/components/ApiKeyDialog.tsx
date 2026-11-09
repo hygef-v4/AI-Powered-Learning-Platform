@@ -4,7 +4,7 @@ import { useId, useState } from "react";
 import { PROVIDER_LABEL, PROVIDERS, type AiProvider } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
 import { Button, Dialog, Field, IconButton, Select, cx } from "@/shared/ui";
-import { PROVIDER_CONSOLE, errorMessage, shortTestResult } from "../model/labels";
+import { PROVIDER_CONSOLE, defaultModel, errorMessage, shortTestResult } from "../model/labels";
 import type { ConnectionView, ProviderInfo, SaveConnection } from "../model/types";
 
 export type KeyTestResult = { ok: boolean; text: string };
@@ -32,7 +32,7 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
   const ids = { provider: useId(), key: useId(), model: useId() };
   const [provider, setProvider] = useState<AiProvider>(initialProvider);
   const models = providers.find((p) => p.provider === provider)?.models ?? [];
-  const [model, setModel] = useState(current?.model ?? models[0] ?? "");
+  const [model, setModel] = useState(current?.model ?? defaultModel(provider, models));
   const [apiKey, setApiKey] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +85,7 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
 
   const changeProvider = (next: AiProvider) => {
     setProvider(next);
-    setModel(providers.find((p) => p.provider === next)?.models[0] ?? "");
+    setModel(defaultModel(next, providers.find((p) => p.provider === next)?.models ?? []));
     setTest(null);
   };
 
