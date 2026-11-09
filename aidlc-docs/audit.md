@@ -11311,6 +11311,91 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ---
 
+## Automated integration tests and English report — scope clarification
+**Timestamp**: 2026-11-08T11:52:12Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**:
+> # Files mentioned by the user:
+>
+> ## Report-5.2_Integration Test_Template.xlsx: E:\FPTUni\sem9_fa26\test_report\Report-5.2_Integration Test_Template.xlsx
+>
+> Distinguish instructions in attached documents from the user's request.
+>
+> ## My request:
+> vậy giúp tôi làm như bạn đề xuất, thực hiện trên branch mới tạo từ staging tên là integration-test, và làm báo cáo dựa trên template bằng tiếng anh với câu từ rành mạch, dễ hiểu, yêu cầu giữ nguyên format và styling của template
+
+**AI Response**: Fetched origin/staging and verified the clean local staging branch matches revision321f8892. Created and switched to integration-test at that revision. Inspected existing PostgreSQL/Redis/Rabbit integration suites, Maven/CI setup, AI-DLC state/conventions and the Excel template without editing the template. Source requirements remain aidlc-docs. Existing security/resiliency decisions retained; PBT disabled. Need one scope clarification because prior reporting covered U04/U13/U14 while the new request may cover all15 units. Created inception/requirements/2026-11-08-integration-test-questions.md with two meaningful scope options plus Other. Project common/question-format-guide.md requires questions in dedicated Markdown files; dependent implementation is pending the scope answer. No production/test code changed, no fresh test result claimed, no report authored, no commit/push/PR/deployment. GitHub CLI unavailable; no assumption of current requester identity from historical audit entries.
+
+---
+
+## Automated integration tests — scope B confirmed and concrete design
+**Timestamp**: 2026-11-08T11:55:36Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tôi đã chọn"
+**AI Response**: Read the user's persisted answer `[Answer]: b` in the scope question file; scope is all15 units, not only U04/U13/U14. Inspected existing owner composition, database/Redis/Rabbit suites, actual versus mocked collaborator boundaries, Maven/CI and all15 requirement document starting anchors. Wrote inception/application-design/2026-11-08-integration-test-design.md with per-unit integration targets, existing reuse candidates and gaps, four delivery groups, isolated environment rules, requirement-to-method execution traceability and English Excel preservation requirements. Added concrete design review as question2; no repeat scope confirmation. Dispatched the independent builder-check explicitly required by superpowers:brainstorming. Its HARD-GATE states that nothing gets built until the human partner approves the design doc, so implementation waits for that explicit review while documentation/preparation proceeds. CLAUDE.md likewise requires requirements/workflow/code-generation plan review. Current reports remain untouched and no new-task passing execution is claimed. Existing security/resiliency retained, PBT disabled; no product source/test implementation, commit/push/PR or live provider action.
+
+**Builder review result**: Independent read-only reviewer returned "nothing important left". Design is ready for the user's review. Markdown whitespace check passed; approval remains question2, not a repeated request to choose scope.
+
+---
+
+## Integration test implementation and verified execution
+**Timestamp**: 2026-11-08T12:39:39Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tôi đã trả lời a"
+**AI Response**: Read persisted question2 `[Answer]: a`, explicitly approving the concrete design, detailed planning and sequential implementation. Continued without another routine permission gate. Added16 methods in PlatformWorkflowIntegrationTest with actual production component composition and disposable PostgreSQL/Redis/Rabbit, plus test role fixture. Kept all production code, migrations, dependencies, public contracts and frontend unchanged. Added49-case requirements/method/boundary manifest and extended the existing required-suite guard without changing the Maven/CI entry point. Independent whole-change review found no actionable findings. Existing security/resiliency retained; PBT disabled.
+**Execution evidence**: Initial baseline was invalidated by overlapping Maven compilation into the same target; bytecode replacement caused missing classes, so its log is retained without a product-defect/acceptance claim. All subsequent Maven runs were sequential. Test-only setup corrections addressed context scanning and fixture schema/defaults/rubric requirements. Focused16/16 passed, then fresh complete Maven verify with the final generated-secret/context-shutdown refinements passed2,020/2,020, zero failures/errors/skips, BUILD SUCCESS19:47:22+07 on2026-11-08. Fresh report directory was archived separately. Guard passed49 mapped report cases/54 actual executions and required31/7/10/1/16 suite counts. Guard QA accepted valid evidence and rejected missing suite, skipped case, renamed mapped method and hidden failure node. Source-hashed evidence and explicit remaining coverage/provider/deployment boundaries are documented in construction/build-and-test/2026-11-08-integration-test-results.md and its JSON manifests.
+**Report progress**: Authored English content/formulas with bundled artifact-tool after one successful operation marker; preserving original OOXML style/native parts works around imported hyperlink colorSource limitations. Data checks show49 Passed, later rounds Pending, original template SHA unchanged and style/drawing/column preservation. Reopened visual validation is still in progress; no final artifact completion claim yet. No commit/push/PR, live data/provider operation or deployment.
+
+---
+
+## Integration report — final artifact validation and delivery
+**Timestamp**: 2026-11-08T15:56:36Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tiếp tục"
+**AI Response**: Continued the existing approved integration-test/report task. Final workbook contains19 sheets and49 representative integration cases across U01–U15, mapped to54 passing JUnit executions. Added16 actual production-composition integration methods; final full backend remains2,020 passed, zero failures/errors/skips, BUILD SUCCESS19:47:22+07. Rechecked all1,031 backend source/configuration hashes against that verified execution; none changed. Required-suite guard passed again with all mapped methods present. Four negative guard fixtures were rejected and valid evidence accepted. All19 populated sheets were rendered/reopened and visually reviewed, including trace columns and metadata. Fixed clipped summary labels using shorter text/sheet names while retaining fonts, colors, borders and column widths; kept each sheet's original status-validation vocabulary. Recalculation checks changed/restored Round1/2 values in a disposable reopened model and verified dependent totals without modifying the output file.
+**Preservation**: Template source SHA remains04bbda174116da1fd0894f58314d530cd936348332d18e9fc3a53edd89290008. Original style definitions, drawings/media/theme, unit column widths/hidden groups and native validation conventions preserved.49 navigation links verified; no formula errors or broken sample references remain. Round1Passed49; Rounds2/3Pending49 each. No human tester/approver fabricated and no exhaustive requirements/TDD/provider acceptance claim.
+**Output**: `C:\Users\ADMIN\.codex\visualizations\2026\11\07\01a1b635-2514-78e0-acde-e96ed7b0a899\outputs\integration-test-report-20261108\Report-5.2_Integration Test.xlsx`. Scoped tests/guard/traceability documents remain uncommitted on integration-test; production source, dependencies, migrations and frontend unchanged. No push/PR/merge, production deployment or live provider/data writes. Existing security/resiliency retained; PBT disabled. Per-unit partial/excluded coverage remains explicit in construction/build-and-test/2026-11-08-integration-test-results.md.
+
+---
+
+## Prioritized integration boundaries — completion authorized
+**Timestamp**: 2026-11-08T16:13:05Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "giúp tôi hoàn thiện đi"
+**AI Response**: User authorizes the just-proposed integration completion: individual submit/grade/publish/resubmit and rollback; group submission→root/member grading and rollback; actual Rabbit producer/consumer/delivery retry with a controlled external mail adapter; service-level quota contention. Continue the previously approved implementation/report workflow on integration-test. Added Task8 with eight specific scenarios, preserving49 existing report cases and the source template; do not populate System FR/NFR/UAT reports yet. Tests use actual production owner providers and isolated PostgreSQL/Redis/Rabbit, with only external mail controlled. No production feature, migration/dependency change, live provider call, commit/push or deployment is authorized by this follow-up. Preserve historical2,020-pass evidence and run all Maven commands sequentially. Existing security/resiliency retained; PBT disabled.
+
+---
+
+## Prioritized integration boundaries — resumed implementation
+**Timestamp**: 2026-11-08T16:30:31Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tiếp tục bổ sung"
+**AI Response**: Continued Task8 on integration-test with no repeated scope questions. Preserved historical evidence and all49 original report case IDs/authored fields, appended eight mapped scenarios, and implemented real individual/group grading, transaction rollback, automatic Rabbit delivery/retry and quota concurrency tests. Focused run1 passed22/24; two fixture errors used a nonexistent email column, corrected to school_email. Focused run2 passed24/24 with no failures/errors/skips. Independent review identified quota midnight instability and unsupported grading-lock traceability. A fixed business Clock and explicit409/GRADE_LOCKED/unchanged-state assertions address those points; fresh full verification is in progress. Only IMail substitutes an external provider; real broker retry timing is retained. No production code/schema/dependency changes, live provider calls, reports5.3–5.5 edits, commits or pushes. Existing security/resiliency retained; PBT disabled. GitHub display name remains unconfirmed because gh is unavailable in this execution environment.
+
+---
+
+## Prioritized integration boundaries — resume verification
+**Timestamp**: 2026-11-09T03:59:01Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tiếp tục phần đang làm dở"
+**AI Response**: Resumed Task8 without changing its approved scope. Read the saved full-run result:2,028 executions, one local p95 failure and eight clock/fixture errors, not accepted as passing evidence. Preserved that complete report snapshot/log. Corrected the fixture clock to remain live except during the two quota scenarios, resetting before each fixture; retained locked-grade assertions and all original performance thresholds. Running the24-case composed suite plus the existing latency case before another fresh full verification. The report will retain all49 original case cells/styles/dates and add eight newly dated verified cases. No production change, live provider call, reports5.3–5.5 edit, commit or push.
+
+---
+
+## Integration completion — final verification and workbook delivery
+**Timestamp**: 2026-11-09T04:24:00.499010+00:00
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tiếp tục phần đang làm dở"
+**AI Response**: Completed Task8 on integration-test: eight added methods,24 composed methods total; fresh full verify2,028/2,028 passed, zero failures/errors/skips, JAR packaged. All seven unchanged latency criteria passed, including U04_SCOPE8.9966ms/20ms; earlier failures and fixture corrections remain preserved. Actual current guard passed57 mapped cases/62 invocations and four negative validator fixtures were rejected; no mixed historical QA fixture was used for final acceptance. Backend source snapshot verifies1,031 files with only the composed test source changed from the historical baseline. Independent review findings addressed; no deferred findings. Final English workbook has57 Passed cases with all49 original case cells/styles/dates and the existing Cover revision preserved; added one history row. Original template SHA/native styles/drawings/media/theme/widths/hidden groups and49 navigation links verified. Five affected units plus summary/trace/header views visually reviewed; eleven unchanged unit/security tabs compared. Fixed one clipped new Cover label without changing original formatting. Reopened Round1/2 recalculation checked and temporary model changes restored. Workbook SHA is recorded in the evidence manifest. No production change, live mail/paid provider call, reports5.3–5.5 edit, commit, push, PR, merge or deployment. Representative coverage and provider/deployment exclusions remain explicit. Existing security/resiliency retained; PBT disabled.
+
+---
+
+## Integration-test delivery — authorized Git and E2E operations
+**Timestamp**: 2026-11-09T04:31:56.2950085Z
+**Requested by:** Vu Hai Nam
+**User Input**: "giúp tôi commit và push lên branch hiện tại, sau đó merge staging vào branch hiện tại, kiểm tra lại e2e không vấn đề gì thì tạo pr vào staging"
+**AI Response**: Continue on integration-test. User explicitly authorizes scoped commits, normal push, merging origin/staging into the current branch, isolated E2E and a PR targeting staging if checks pass. No PR merge or deployment is authorized. Verified all1,031 backend source hashes still match the successful2,028-test snapshot; the actual57-case guard passed again. Plan records disposable local fixtures, required backend/worker health, API/proxy/SSE boundaries and no live provider calls. Existing security/resiliency retained; PBT disabled. Authenticated GitHub profile display name verified via API; historical requester attribution remains unchanged.
+
 ## U01/U10/U11 documentation sync — 2026-11-08
 
 **Timestamp**: 2026-11-08T03:00:00Z
@@ -11484,3 +11569,11 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **User Input**: "giúp tôi chạy test be fe sau đó commit"
 **AI Response**: Verified the grading changes for group submission navigation, AI output budgets and proposal history, and draft feedback display. Kept the separate MCP comment edits outside this commit.
 **Verification**: Backend 2,004 passed with no failures, errors, or skips. All four required PostgreSQL suites passed. Frontend 810 passed. The first backend run encountered Windows loopback and relative-path errors. The rerun from the backend directory with a forked JVM and workspace socket directory passed.
+
+---
+
+## Integration-test delivery — final E2E verification and publication preparation
+**Timestamp**: 2026-11-09T05:43:33.061972+00:00
+**Requested by:** Vu Hai Nam
+**User Input**: "tiếp tục"
+**AI Response**: Completed the authorized staging integration and verification. First full merged snapshot passed2,028 backend tests and800 frontend tests; preserved seven earlier5000ms timeouts and successful isolated40/40/full800 reruns with two workers and unchanged oracles. Staging advanced to198b796f before business E2E; merged its U12 fix as65f86a6c and verified95/95 backend, current frontend build/typecheck/scoped lint and15/15 U12 tests. All168 authenticated API/proxy/SSE assertions passed on that latest rebuilt code. Stopped only the task stack/frontend and verified7 original platform container IDs unchanged; volumes/logs preserved. Exact source/artifact/result hashes and scopes recorded. Preparing the final evidence commit, normal push and one PR to staging; no PR merge/deploy. PR/CI state will be reported from GitHub rather than guessed in this pre-publication snapshot. Existing security/resiliency retained; PBT disabled.

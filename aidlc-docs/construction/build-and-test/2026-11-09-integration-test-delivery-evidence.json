@@ -1,0 +1,117 @@
+{
+  "branch": "integration-test",
+  "target": "staging",
+  "verifiedCodeHead": "65f86a6c432c63e318737cef88195ad5ffd30ab1",
+  "verifiedStagingHead": "198b796f281d6a41adc15b04a4e58998fc14c73b",
+  "recordedAt": "2026-11-09T05:43:33.034683+00:00",
+  "requester": "Vu Hai Nam",
+  "testedGitTrees": {
+    "backend": "dd26db1ec25f2225bf0804b304584c89e577fc2b",
+    "frontend": "c78d8da1a8a05c8e1d9927b79afec80a565964a5",
+    "scripts/e2e": "f07086975af974d371018beba459b521c296f131"
+  },
+  "initialCommits": [
+    "15400ac2",
+    "8d53a1c6"
+  ],
+  "firstMerge": "a55f84264cac623b65a404eda250d33a966783ae",
+  "firstStagingHead": "fb20c6bc0e17e9ef0eacb3f5cbc607725aa2359d",
+  "completeFirstMergeVerification": {
+    "head": "a55f84264cac623b65a404eda250d33a966783ae",
+    "backend": {
+      "tests": 2028,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "frontendPassed": 800,
+    "frontendCommand": "vitest run --maxWorkers=2; default5000ms timeout unchanged",
+    "requiredManifestCases": 57,
+    "backendLogSha256": "0109a42d4b516ac7eca75d75a49ec63bba2165550a14a71b2a0f8b26e2ec1e52",
+    "frontendResultSha256": "ac9f5ac96bc5a483d9c46a13df163680ab780973294b16bc34b8c1f6c63d8e7f"
+  },
+  "latestU12Increment": {
+    "head": "65f86a6c432c63e318737cef88195ad5ffd30ab1",
+    "backend": {
+      "tests": 95,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "backendCommand": "mvn -B -f backend/pom.xml '-Dtest=Group*Test,ClassGroup*Test,PlatformWorkflowIntegrationTest,ArchitectureTest' verify",
+    "frontendPassed": 15,
+    "frontendChecks": "Current production build, complete typecheck, lint of all changed U12 files and15 workspace tests",
+    "backendLogSha256": "a53021f9d12c34d81aca42717edb1f326e9b4c86f36a0807b8e9204216ae3fdf",
+    "frontendResultSha256": "23107ca9b8b31fff438e5b3186a3bdcc54ae3748b25cc45cdb0285e767e370ba"
+  },
+  "e2e": {
+    "totalPassed": 168,
+    "suites": [
+      {
+        "passed": 40,
+        "exitCode": 0,
+        "expected": 40,
+        "failed": 0,
+        "suite": "u04-u13-u14"
+      },
+      {
+        "passed": 58,
+        "exitCode": 0,
+        "expected": 58,
+        "failed": 0,
+        "suite": "u12"
+      },
+      {
+        "passed": 35,
+        "exitCode": 0,
+        "expected": 35,
+        "failed": 0,
+        "suite": "u12b"
+      },
+      {
+        "passed": 19,
+        "exitCode": 0,
+        "expected": 19,
+        "failed": 0,
+        "suite": "u12c"
+      },
+      {
+        "passed": 16,
+        "exitCode": 0,
+        "expected": 16,
+        "failed": 0,
+        "suite": "u02"
+      }
+    ],
+    "project": "platform-integration-test-e2e-20261109",
+    "proxyPort": 19088,
+    "mailpitPort": 19025,
+    "runtimeArtifact": {
+      "startedAt": "2026-11-09T12:25:10.7401889+07:00",
+      "jarSha256": "4910732b174023892d45b3943acc15667f786ec3808918158650e3d09e7ecc47",
+      "head": "65f86a6c432c63e318737cef88195ad5ffd30ab1",
+      "frontendPid": 14324
+    },
+    "cleanup": {
+      "volumesPreserved": true,
+      "head": "65f86a6c432c63e318737cef88195ad5ffd30ab1",
+      "originalPlatformContainersUnchanged": 7,
+      "taskStackStopped": true,
+      "stoppedAt": "2026-11-09T12:42:47.2181454+07:00",
+      "frontendStopped": true
+    },
+    "scope": "Actual authenticated API/cookie/CSRF/OTP, local SMTP/Mailpit, PostgreSQL/Redis/RabbitMQ, Nginx proxy and group SSE; not a full browser journey or live-provider acceptance.",
+    "resultSha256": {
+      "u04-u13-u14-result.json": "d9fbf3593d0ad35802158dd983618862e73937ee2d7e62fb132db7b68de41609",
+      "scripts/u12-result.json": "d8c1bcbd5c564936c3c3f01ebc5b669b87b20782a53fde659d754ad3cd586a41",
+      "scripts/u12b-result.json": "7e83e2e4244d9fc4c9ddc88942a7bc30d7b12dd4afb9c7e3a96da9f074691afc",
+      "scripts/u12c-result.json": "df3dc179a84a7c3e3a5de562279484d3bff1853fb7bcfe3362832589334a201f",
+      "scripts/u02-result.json": "afb7f56f60a753549acc9e19b1190b5d60d45ffdf2681954ef68b9c49bc240a9"
+    }
+  },
+  "earlierAttempts": {
+    "frontendDefaultWorkers": "793/800 passed; seven unchanged cases timed out at5000ms while backend verification also ran. All seven files40/40 and full800/800 subsequently passed with two workers and the unchanged timeout; original logs retained.",
+    "stagingRefresh": "Second staging update arrived before business E2E. Initial healthy smoke-only stack was stopped; current JAR/frontend rebuilt before all168 assertions."
+  },
+  "publication": "Final evidence commit preserves these application trees; normal push and PR creation follow. PR/CI state is recorded on GitHub and in the final chat response, not retroactively guessed in this immutable execution snapshot."
+}
