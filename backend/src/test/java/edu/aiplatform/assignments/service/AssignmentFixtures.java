@@ -115,7 +115,7 @@ final class AssignmentFixtures {
     final AssignmentCopyService copies = new AssignmentCopyService(assignments, rubrics, access, support,
             assignmentAudit, classScope, materials, clock);
     final AssignmentAiDraftService aiDrafts = new AssignmentAiDraftService(assignments, drafts, rubrics, support, access,
-            assignmentAudit, aiTasks, materials, json, artifacts, sourceTexts, transactions, clock);
+            assignmentAudit, aiTasks, materials, json, artifacts, sourceTexts, transactions, clock, documents);
 
     AssignmentFixtures() {
         when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());

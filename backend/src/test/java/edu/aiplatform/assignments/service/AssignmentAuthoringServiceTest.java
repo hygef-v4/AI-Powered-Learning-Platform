@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import edu.aiplatform.academics.contract.ClassStatus;
+import edu.aiplatform.ai.contract.SelectableMaterial;
 import edu.aiplatform.assignments.contract.AssignmentScope;
 import edu.aiplatform.assignments.contract.AssignmentStatus;
 import edu.aiplatform.assignments.contract.BlockType;
@@ -30,6 +31,7 @@ import edu.aiplatform.assignments.model.Assignment;
 import edu.aiplatform.assignments.model.AssignmentRubric;
 import edu.aiplatform.assignments.model.PartCalculator;
 import edu.aiplatform.audit.contract.AuditResult;
+import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.shared.error.ApiException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -104,13 +106,31 @@ class AssignmentAuthoringServiceTest {
     }
 
     @Test
-    void groupNeedsU12AndOnlyClassScope() {
+    void materialsForAiCreateComeFromTheClassOrSubjectBeforeTheAssignmentExists() {
+        UUID uml = UUID.randomUUID();
+        UUID erd = UUID.randomUUID();
+        when(f.materials.listSelectable(any(), argThat(ref -> ResourceRef.courseClass(f.classId).equals(ref))))
+                .thenReturn(List.of(new SelectableMaterial(uml, "UML", true)));
+        when(f.materials.listSelectable(any(), argThat(ref -> ResourceRef.subject(f.subjectId).equals(ref))))
+                .thenReturn(List.of(new SelectableMaterial(erd, "ERD", false)));
+
+        assertThat(f.authoring.selectableMaterialsForClass(f.teacher, f.classId))
+                .containsExactly(new AssignmentViews.Material(uml, "UML", true));
+        assertThat(f.authoring.selectableMaterialsForSubject(f.manager, f.subjectId))
+                .containsExactly(new AssignmentViews.Material(erd, "ERD", false));
+    }
+
+    @Test
+    void groupNeedsU12InClassButSubjectTemplateMayBeGroup() {
         assertThat(code(() -> f.authoring.createForClass(f.teacher, f.classId,
                 new AssignmentCommands.Create(SubmissionMode.GROUP, GradingMode.GRADED, false, null))))
                 .isEqualTo("GROUP_NOT_SUPPORTED");
-        assertThat(code(() -> f.authoring.createForSubject(f.manager, f.subjectId,
-                new AssignmentCommands.Create(SubmissionMode.GROUP, GradingMode.GRADED, false, null))))
-                .isEqualTo("GROUP_NOT_ALLOWED");
+        AssignmentViews.Detail template = f.authoring.createForSubject(f.manager, f.subjectId,
+                new AssignmentCommands.Create(SubmissionMode.GROUP, GradingMode.GRADED, false, "Đồ án nhóm"));
+        assertThat(template.submissionMode()).isEqualTo(SubmissionMode.GROUP);
+        assertThat(template.warnings()).extracting(ValidationIssue::code).doesNotContain("GROUP_NOT_SUPPORTED");
+        assertThat(code(() -> f.copies.copyToClass(f.teacher, f.classId, template.id(), null)))
+                .as("lớp chưa dùng được bài nhóm thì không copy đề mẫu nhóm về").isEqualTo("GROUP_NOT_SUPPORTED");
         assertThat(code(() -> AssignmentAuthoringService.modes(SubmissionMode.GROUP, GradingMode.PRACTICE)))
                 .isEqualTo("GROUP_MUST_BE_GRADED");
     }
