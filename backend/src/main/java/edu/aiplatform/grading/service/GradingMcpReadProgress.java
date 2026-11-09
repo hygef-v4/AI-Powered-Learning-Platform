@@ -32,12 +32,14 @@ public class GradingMcpReadProgress {
     /** Advances the actor's served-page offset when the supplied read position is current. */
     public void advanceProgress(UUID actorId, UUID evaluationId, String fingerprint, int offset,
             int next) {
+        // Step 1: Execute atomic Redis Lua script to advance read offset without gaps
         try {
             Long result = stringRedisTemplate.execute(ADVANCE,
                     List.of(buildProgressKey(actorId, evaluationId, fingerprint)),
                     String.valueOf(offset), String.valueOf(next), String.valueOf(TTL_SECONDS));
             if (result == null)
                 throw createUnavailableError();
+            // Step 2: Negative result means caller skipped an intermediate block range
             if (result < 0)
                 throw createReadRequiredError();
         } catch (DataAccessException ex) {
@@ -48,9 +50,11 @@ public class GradingMcpReadProgress {
     /** Requires the actor to have read every block for the current evaluation fingerprint. */
     public void requireCompleteRead(UUID actorId, UUID evaluationId, String fingerprint,
             int totalBlocks) {
+        // Step 1: Fetch cumulative read progress offset stored in Redis
         try {
             String value = stringRedisTemplate.opsForValue()
                     .get(buildProgressKey(actorId, evaluationId, fingerprint));
+            // Step 2: Validate that reading has started and reached the final block count
             if (value == null)
                 throw createReadRequiredError();
             if (Integer.parseInt(value) < totalBlocks)

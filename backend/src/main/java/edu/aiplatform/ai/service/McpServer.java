@@ -76,10 +76,10 @@ public class McpServer {
     }
 
     /**
-     * Xử lý một thông điệp; rỗng khi là notification hoặc response từ client (HTTP {@code 202}, không thân). Không
-     * nhận batch (MCP 2025-06-18 bỏ batch).
+     * Processes an incoming JSON-RPC 2.0 message according to MCP specification.
      */
     public Optional<ObjectNode> handle(McpPrincipal principal, JsonNode message) {
+        // Step 1: Validate root JSON-RPC structure and format
         if (message == null || !message.isObject()) {
             return Optional.of(error(null, INVALID_REQUEST, "Cần một thông điệp JSON-RPC"));
         }
@@ -89,7 +89,6 @@ public class McpServer {
             return Optional.of(error(id, INVALID_REQUEST, "Cần jsonrpc 2.0"));
         }
         if (method == null) {
-            // response hoặc lỗi từ client cho yêu cầu của server; server này không gửi yêu cầu nên bỏ qua
             return message.has("result") || message.has("error") ? Optional.empty()
                     : Optional.of(error(id, INVALID_REQUEST, "Thiếu method"));
         }
@@ -102,6 +101,8 @@ public class McpServer {
         if (!(id.isTextual() || id.isIntegralNumber())) {
             return Optional.of(error(null, INVALID_REQUEST, "id phải là chuỗi hoặc số"));
         }
+
+        // Step 2: Route request by method: initialize, ping, tools/list, or tools/call
         JsonNode params = message.path("params");
         return Optional.of(switch (method.asText()) {
             case "initialize" -> result(id, initialize(params));
@@ -112,6 +113,9 @@ public class McpServer {
         });
     }
 
+    /**
+     * Handles MCP handshake initialization and announces supported server capabilities.
+     */
     private ObjectNode initialize(JsonNode params) {
         String requested = params.path("protocolVersion").asText("");
         ObjectNode out = json.createObjectNode();
@@ -123,6 +127,9 @@ public class McpServer {
         return out;
     }
 
+    /**
+     * Lists all tools accessible to the caller based on their role and credential access level.
+     */
     private ObjectNode toolsList(McpPrincipal principal) {
         ObjectNode out = json.createObjectNode();
         ArrayNode tools = out.putArray("tools");
@@ -136,7 +143,11 @@ public class McpServer {
         return out;
     }
 
+    /**
+     * Dispatches an individual tool call with rate limiting, schema verification, and auditing.
+     */
     private ObjectNode toolsCall(McpPrincipal principal, JsonNode id, JsonNode params) {
+        // Step 1: Validate tool name format and length constraints
         UUID accountId = principal.actor().accountId();
         UUID credentialId = principal.credential().id();
         JsonNode nameNode = params.path("name");
@@ -144,6 +155,8 @@ public class McpServer {
             return error(id, INVALID_PARAMS, "Thiếu hoặc sai tên tool");
         }
         String name = nameNode.asText();
+
+        // Step 2: Enforce per-credential rate limiting (maximum 60 calls per minute)
         boolean allowed;
         try {
             allowed = rateLimiter.tryAcquire(credentialId);
@@ -155,12 +168,16 @@ public class McpServer {
             record(accountId, name, AuditResult.DENIED, "RATE_LIMITED");
             return error(id, RATE_LIMITED, "Vượt 60 lời gọi mỗi phút; hãy thử lại sau");
         }
+
+        // Step 3: Lookup tool definition in registry matching caller role and access permission
         Optional<McpToolRegistry.Entry> entry = registry.find(name, principal.actor().role(),
                 principal.credential().access());
         if (entry.isEmpty()) {
             denied(accountId, name);
             return error(id, INVALID_PARAMS, "Không có tool này");
         }
+
+        // Step 4: Validate arguments object size (max 64 KB) and JSON schema compliance
         JsonNode args = params.has("arguments") ? params.get("arguments") : json.createObjectNode();
         if (!args.isObject()) {
             return error(id, INVALID_PARAMS, "arguments phải là object");
@@ -176,6 +193,7 @@ public class McpServer {
         Long inputTokens = reported(params.path("_meta").path("inputTokens"));
         Long outputTokens = reported(params.path("_meta").path("outputTokens"));
 
+        // Step 5: Execute domain tool provider call and catch domain/runtime exceptions
         McpToolResult result;
         try {
             @SuppressWarnings("unchecked")
@@ -195,12 +213,13 @@ public class McpServer {
             record(accountId, name, AuditResult.FAILURE, e.code());
             return result(id, toolResult(text(Map.of("code", e.code(), "message", e.getMessage())), true));
         } catch (RuntimeException e) {
-            // chỉ ghi loại lỗi: thông điệp có thể chứa dữ liệu học vụ (SECURITY-03)
             log.warn("Tool MCP {} lỗi: {}", name, e.getClass().getName());
             usage.recordMcp(accountId, credentialId, name, "ERROR", inputTokens, outputTokens);
             record(accountId, name, AuditResult.FAILURE, "TOOL_ERROR");
             return result(id, toolResult("Tool gặp lỗi; hãy thử lại sau", true));
         }
+
+        // Step 6: Verify result size limit (max 256 KB) and record usage and audit metrics
         boolean isError = result == null || result.error();
         Object content = result == null ? null : result.content();
         String text = text(content);

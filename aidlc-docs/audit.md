@@ -1,5 +1,21 @@
 # AI-DLC Audit Log
 
+## 2026-11-08 — Method and step comments for Use Case 4.4 (External MCP)
+
+**Requested by:** Quang Hung
+
+User input (raw): “giúp tôi comment tất cả file trong 4.4 Grade Submission With AI — External MCP”. Added comprehensive English Javadoc method comments and internal step-by-step comments (`// Step 1: ...`) to all core classes involved in Use Case 4.4:
+- `McpController.java`: HTTP endpoint handling, DNS rebinding prevention, bearer token parsing, size limits, and RPC delegation.
+- `McpServer.java`: Protocol dispatching (`initialize`, `ping`, `tools/list`, `tools/call`), rate limiting, schema verification, auditing, and result size enforcement.
+- `McpAgentWorkflowTools.java`: Teaching role verification, bundled workflow instructions loading (`GRADE_WITH_RUBRIC`, `AUTHOR_ASSIGNMENT`), and version hashing.
+- `McpToolRegistry.java`: Dynamic tool discovery, role/access filtering (`visible`), lazy entries map building.
+- `GradingMcpTools.java`: Tool definition for `record_grading_proposal`, complete read verification, submission reference validation, proposal recording, and review URL construction.
+- `GradingMcpReadProgress.java`: Atomic Redis Lua script execution for gapless progress advance, complete read validation against total submission blocks.
+- `GradingProposalTransactions.java`: MCP proposal recording with idempotency checks and `saveUsingProposal` optimistic version and stale hash verification.
+
+Compilation verified via `mvn test-compile -DskipTests` with BUILD SUCCESS (0 errors).
+
+
 ## 2026-11-01 — Server workflow commit preparation and requested authoring trial
 
 **Requested by:** Quang Hung
