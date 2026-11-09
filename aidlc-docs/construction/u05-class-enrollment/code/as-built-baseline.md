@@ -40,3 +40,9 @@ Kiểm tra của đợt refactor được ghi trong [refactor results](../../bui
 - [aidlc-docs/construction/build-and-test/2026-10-25-u05-u15-audit-report.md](../../build-and-test/2026-10-25-u05-u15-audit-report.md)
 - [aidlc-docs/construction/build-and-test/2026-10-25-u05-u15-manual-test-guide.md](../../build-and-test/2026-10-25-u05-u15-manual-test-guide.md)
 - [aidlc-docs/construction/build-and-test/2026-10-26-u05-u15-followup-report.md](../../build-and-test/2026-10-26-u05-u15-followup-report.md)
+
+## Delta working tree — 2026-11-09
+
+EnrollmentPanel đọc Excel .xlsx một cột email qua enrollmentWorkbook, tối đa 100 KB/200 dòng, mẫu enrollment-import.xlsx. Vẫn cho dán email và dùng API danh sách text; server kiểm lại quyền và từng dòng.
+
+Delta này bổ sung snapshot commit có ngày phía trên, chưa tạo commit mới và không sửa lại evidence lịch sử. [Kết quả và giới hạn](../../build-and-test/2026-11-09-excel-import-results.md); [đối chiếu tài liệu](../../build-and-test/2026-11-09-aidlc-doc-sync.md).

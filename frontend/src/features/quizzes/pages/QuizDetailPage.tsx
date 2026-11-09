@@ -5,6 +5,7 @@ import { ArchiveItemDialog, ModuleItemDialog } from "@/features/materials/compon
 import { ModuleNeighbours, useModulePlace, useModuleScope } from "@/features/materials/components/ModulePlace";
 import { notifyOutlineChanged, useOutlineChanged } from "@/features/materials/model/outline";
 import { ApiError } from "@/shared/api/client";
+import { FormattedTextView } from "@/shared/document/FormattedTextView";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Alert, Button, Dialog, Menu, MenuItem, PageHeader, Pill, Section, showToast } from "@/shared/ui";
 import { addInlineQuestion, getQuiz, proposeQuestion, reopenQuiz, publishQuiz, saveQuizItems, updateInlineQuestion, updateQuizDetails } from "../api";
@@ -19,9 +20,10 @@ import {
 } from "../components/QuizDetailParts";
 import type { QuizDetail, QuizItemView, Violation } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
+import { useAuthoringGuard } from "../hooks/useAuthoringGuard";
 
 const MAX_ITEMS = 200;
-type Dialogs = "picker" | "inline" | "preview" | "edit" | "archive" | "publish" | null;
+type Dialogs = "picker" | "inline" | "ai" | "preview" | "edit" | "archive" | "publish" | null;
 
 const draftItems = (detail: QuizDetail): DraftItem[] => detail.items.map((item) => ({ item, points: String(item.points) }));
 const validPoints = (value: string) => /^\d+([.,]\d{1,2})?$/.test(value.trim()) && Number(value.replace(",", ".")) > 0
@@ -41,8 +43,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
   const [settingsErrors, setSettingsErrors] = useState<Record<string, string>>({});
   const [violations, setViolations] = useState<Violation[]>([]);
   const [error, setError] = useState<string | null>(null);
-  // Mỗi lần chọn "Soạn bằng AI" trong nút Thêm câu hỏi thì tăng để panel AI mở popup.
-  const [aiRequest, setAiRequest] = useState(0);
+  const [authorDirty, setAuthorDirty] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [dialog, setDialog] = useState<Dialogs>(null);
@@ -80,6 +81,16 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
     !== JSON.stringify(draftItems(detail).map((d) => [d.item.question.id, d.points])), [items, detail]);
   const settingsDirty = useMemo(() => !!quiz && !!settings && JSON.stringify(settings) !== JSON.stringify(settingsFormOf(quiz)), [settings, quiz]);
   const dirty = itemsDirty || settingsDirty;
+  const confirmDiscard = useAuthoringGuard(authorDirty || dirty);
+  const chooseDialog = (next: Dialogs, item: QuizItemView | null = null) => {
+    if (busy) return false;
+    if (next === dialog && item?.question.id === editing?.question.id) return true;
+    if (!confirmDiscard()) return false;
+    setAuthorDirty(false);
+    setEditing(item);
+    setDialog(next);
+    return true;
+  };
 
   const run = async (action: () => Promise<void>) => {
     setBusy(true);
@@ -120,30 +131,36 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
   const reload = useCallback(() => setReloadKey((k) => k + 1), []);
   useOutlineChanged(reload);
   const acceptedFromAi = useCallback((next: QuizDetail) => {
+    setAuthorDirty(false);
+    setDialog(null);
     show(next);
     showToast("Đã thêm câu từ đề xuất AI");
   }, [show]);
 
   const addFromBank = async (questionIds: string[]) => {
-    if (!detail) return;
-    const next = await saveQuizItems(detail.quiz.id, [
-      ...detail.items.map((item) => ({ questionId: item.question.id, points: item.points })),
-      ...questionIds.map((questionId) => ({ questionId, points: null })),
-    ], detail.quiz.version);
-    show(next);
-    setDialog(null);
-    showToast(`Đã thêm ${questionIds.length} câu từ ngân hàng`);
+    if (!detail || busy) return;
+    setBusy(true);
+    try {
+      const next = await saveQuizItems(detail.quiz.id, [
+        ...detail.items.map((item) => ({ questionId: item.question.id, points: item.points })),
+        ...questionIds.map((questionId) => ({ questionId, points: null })),
+      ], detail.quiz.version);
+      show(next);
+      setDialog(null);
+      showToast(`Đã thêm ${questionIds.length} câu từ ngân hàng`);
+    } finally { setBusy(false); }
   };
 
   const saveInline = async (content: Parameters<typeof addInlineQuestion>[1]) => {
-    if (!detail) return;
+    if (!detail || busy) return;
+    setBusy(true);
     try {
       show(editing
         ? await updateInlineQuestion(detail.quiz.id, editing.question.id, content, detail.quiz.version)
         : await addInlineQuestion(detail.quiz.id, content, detail.quiz.version));
     } catch (failure) {
       throw new Error(errorMessage(failure));
-    }
+    } finally { setBusy(false); }
     setDialog(null);
     setEditing(null);
   };
@@ -168,6 +185,8 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
   if (!detail || !quiz || !settings) return <PageLoading label="Đang tải quiz…" />;
 
   const free = MAX_ITEMS - detail.items.length;
+  const questionEditor = dialog === "inline" ? <InlineQuestionDialog key={editing?.question.id ?? "new"}
+    inline initial={editing} onClose={() => chooseDialog(null)} onSave={saveInline} onDirtyChange={setAuthorDirty} /> : null;
   const generated = quiz.paperMode === "GENERATED";
   const questionCount = generated ? detail.drawRules.reduce((sum, r) => sum + r.questionCount, 0) : detail.items.length;
   const editScope = classId ? { kind: "class" as const, classId } : quiz.scope === "CLASS" && quiz.classId
@@ -180,19 +199,19 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
         title={<><span className="min-w-0 [overflow-wrap:anywhere]">{quiz.title}</span><Pill tone={QUIZ_STATUS_TONES[quiz.status]}>{QUIZ_STATUS_LABELS[quiz.status]}</Pill></>}
         breadcrumb={place.moduleTitle ? [{ label: place.moduleTitle }, { label: quiz.title }] : undefined}
         actions={<>
-          {!generated && <Button icon="visibility" onClick={() => setDialog("preview")} data-testid="quiz-detail-preview">Xem trước</Button>}
-          {editable && dirty && <Button icon="save" disabled={busy} onClick={save} data-testid="quiz-detail-save">Lưu thay đổi</Button>}
+          {!generated && <Button icon="visibility" disabled={busy} onClick={() => chooseDialog("preview")} data-testid="quiz-detail-preview">Xem trước</Button>}
+          {editable && dirty && <Button icon="save" disabled={busy || authorDirty} onClick={save} data-testid="quiz-detail-save">Lưu thay đổi</Button>}
           {detail.canManage && quiz.status === "DRAFT" && (
-            <Button variant="primary" disabled={busy || dirty} title={dirty ? "Lưu thay đổi trước khi phát hành" : undefined}
-              onClick={() => setDialog("publish")} data-testid="quiz-detail-publish">Phát hành</Button>
+            <Button variant="primary" disabled={busy || dirty || authorDirty} title={dirty || authorDirty ? "Lưu thay đổi trước khi phát hành" : undefined}
+              onClick={() => chooseDialog("publish")} data-testid="quiz-detail-publish">Phát hành</Button>
           )}
           {detail.canManage && quiz.status === "RETIRED" && (
             <Button variant="primary" icon="lock_open" disabled={busy} data-testid="quiz-detail-reopen"
               onClick={() => void run(async () => { show(await reopenQuiz(quiz.id, quiz.version)); showToast("Đã mở lại quiz"); notifyOutlineChanged(); })}>Mở lại</Button>
           )}
           {editable && <>
-            <Button icon="edit" disabled={busy} onClick={() => setDialog("edit")} data-testid="quiz-detail-edit">Sửa</Button>
-            <Button variant="danger" icon="archive" disabled={busy} onClick={() => setDialog("archive")} data-testid="quiz-detail-archive">Lưu trữ</Button>
+            <Button icon="edit" disabled={busy} onClick={() => chooseDialog("edit")} data-testid="quiz-detail-edit">Sửa</Button>
+            <Button variant="danger" icon="archive" disabled={busy} onClick={() => chooseDialog("archive")} data-testid="quiz-detail-archive">Lưu trữ</Button>
           </>}
         </>}
       />
@@ -207,7 +226,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(360px,40%)]">
         <div className="flex min-w-0 flex-col gap-4">
         {(editable || generated) && (
-          <DrawRulesPanel key={quiz.version} detail={detail} editable={editable} disabled={dirty} onSaved={show}
+          <DrawRulesPanel key={quiz.version} detail={detail} editable={editable} disabled={dirty || !!dialog} onSaved={show}
             onError={(failure) => {
               const problem = failure instanceof ApiError ? (failure.problem as { violations?: Violation[] }) : {};
               setViolations(problem.violations ?? []);
@@ -218,28 +237,40 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
         {!generated && <Section title="Câu hỏi"
           actions={editable && (
             <Menu align="right" icon="add" label="Thêm câu hỏi" ariaLabel="Thêm câu hỏi">
-              <MenuItem icon="edit" disabled={busy || itemsDirty || free <= 0} onClick={() => { setEditing(null); setDialog("inline"); }}
+              <MenuItem icon="edit" disabled={busy || dirty || free <= 0} onClick={() => chooseDialog("inline")}
                 data-testid="quiz-detail-add-inline">Soạn câu mới</MenuItem>
-              <MenuItem icon="help_center" disabled={busy || itemsDirty || free <= 0} onClick={() => setDialog("picker")}
+              <MenuItem icon="help_center" disabled={busy || dirty || free <= 0} onClick={() => chooseDialog("picker")}
                 data-testid="quiz-detail-add-bank">Lấy từ ngân hàng</MenuItem>
-              <MenuItem icon="sparkle" disabled={busy || dirty} onClick={() => setAiRequest((n) => n + 1)}
+              <MenuItem icon="sparkle" disabled={busy || dirty || free <= 0} onClick={() => chooseDialog("ai")}
                 data-testid="quiz-ai-draft-open">Soạn bằng AI</MenuItem>
             </Menu>
           )}>
-          <QuizItemList items={items} onChange={setItems} editable={editable}
-            onEditInline={(item) => { setEditing(item); setDialog("inline"); }}
+          {(dialog === "inline" || dialog === "picker" || dialog === "ai") && <div role="group" aria-label="Cách thêm câu hỏi" className="mb-4 flex flex-wrap gap-1 border-b border-line pb-3">
+            {([["inline", "Soạn câu mới"], ["picker", "Ngân hàng"], ["ai", "Soạn bằng AI"]] as const).map(([mode, label]) =>
+              <Button key={mode} size="sm" variant={dialog === mode ? "primary" : "ghost"} disabled={busy}
+                aria-pressed={dialog === mode} onClick={() => chooseDialog(mode)}>{label}</Button>)}
+          </div>}
+          <QuizItemList items={items} onChange={setItems} editable={editable && !dialog}
+            onEditInline={(item) => chooseDialog("inline", item)} editingId={editing?.question.id} editor={questionEditor}
             onPropose={quiz.scope === "CLASS" ? propose : undefined} />
+          {dialog === "inline" && !editing && <div className="mt-4">{questionEditor}</div>}
+          {dialog === "picker" && <BankQuestionPicker inline quizId={quiz.id} freeSlots={free}
+            onClose={() => chooseDialog(null)} onAdd={addFromBank} onDirtyChange={setAuthorDirty} />}
+          {editable && <QuizAiDraftPanel inline detail={detail} disabled={busy || dirty}
+            onConflict={reload} onQuizChange={acceptedFromAi} requestOpen={dialog === "ai"}
+            onRequestOpen={() => chooseDialog("ai")}
+            onRequestClose={() => chooseDialog(null)} onDirtyChange={setAuthorDirty} onBusyChange={setBusy} />}
         </Section>}
-        {quiz.instructions && <Section title="Mô tả"><p className="text-[14px] leading-relaxed whitespace-pre-wrap text-body">{quiz.instructions}</p></Section>}
+        {quiz.instructions && <Section title="Mô tả"><FormattedTextView text={quiz.instructions} document={quiz.instructionsDocument} /></Section>}
         </div>
         <div className="flex min-w-0 flex-col gap-4">
-          <QuizSettingsPanel value={settings} onChange={setSettings} errors={settingsErrors} readOnly={!editable} />
+          <QuizSettingsPanel value={settings} onChange={setSettings} errors={settingsErrors} readOnly={!editable || !!dialog} />
           <SlotOutlet slot={quizDetailSections} props={{ quizId: quiz.id, classId: classId ?? quiz.classId ?? undefined }} />
         </div>
       </div>
-      {editable && (
+      {editable && generated && (
         <QuizAiDraftPanel detail={detail} disabled={busy || dirty} onConflict={reload}
-          onQuizChange={acceptedFromAi} openRequest={aiRequest} />
+          onQuizChange={acceptedFromAi} />
       )}
       <ModuleNeighbours scope={scope} previous={place.previous} next={place.next} />
 
@@ -251,8 +282,6 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
           </p>
         </Dialog>
       )}
-      {dialog === "picker" && <BankQuestionPicker quizId={quiz.id} freeSlots={free} onClose={() => setDialog(null)} onAdd={addFromBank} />}
-      {dialog === "inline" && <InlineQuestionDialog initial={editing} onClose={() => { setDialog(null); setEditing(null); }} onSave={saveInline} />}
       {dialog === "preview" && <QuizPreviewDialog title={quiz.title} items={detail.items} onClose={() => setDialog(null)} />}
       {dialog === "edit" && <ModuleItemDialog scope={editScope} moduleId="" item={{ kind: "quiz", quiz: moduleQuiz }}
         onClose={() => setDialog(null)} onSaved={(message) => { setDialog(null); showToast(message); notifyOutlineChanged(); }} />}

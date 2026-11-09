@@ -58,6 +58,20 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 /** HTTP của ngân hàng câu hỏi; principal giả đặt phía server, service là mock (kiểm riêng ở application). */
 class QuestionControllerTest {
 
+    @Test
+    void bankAiDraftAllowsAutomaticSourceWithSelectedMaterials() throws Exception {
+        UUID material = UUID.randomUUID();
+        for (String sourceField : List.of("", "\"source\":null,")) {
+            mvc.perform(post("/api/v1/subjects/{s}/question-ai-drafts", subject).contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"instructions\":\"Tạo theo tài liệu\",\"count\":5," + sourceField
+                                    + "\"materialIds\":[\"" + material + "\"],\"provider\":null,\"requestRef\":\"auto\"}"))
+                    .andExpect(status().isCreated());
+        }
+        verify(drafts, org.mockito.Mockito.times(2)).requestForBank(eq(manager), eq(subject),
+                org.mockito.ArgumentMatchers.argThat(request -> request.source() == null && request.provider() == null
+                        && request.materialIds().equals(List.of(material))));
+    }
+
     private static final Instant NOW = Instant.parse("2026-10-20T08:00:00Z");
     private static final String BODY = """
             {"type":"MCQ_SINGLE","stem":"Thủ đô?","options":[{"id":"1","text":"Hà Nội"},{"id":"2","text":"Huế"}],

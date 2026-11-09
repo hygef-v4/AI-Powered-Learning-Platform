@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import edu.aiplatform.files.contract.ArtifactPurpose;
+import edu.aiplatform.files.contract.IArtifactDownloadPolicy;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.Role;
 import edu.aiplatform.shared.error.ApiException;
@@ -21,8 +22,34 @@ class DownloadServiceTest {
     final DownloadTokenService tokens = mock(DownloadTokenService.class);
     final IStorage storage = mock(IStorage.class);
     final FileAudit fileAudit = mock(FileAudit.class);
-    final DownloadService service = new DownloadService(tokens, storage, fileAudit);
+    final IArtifactDownloadPolicy policy = mock(IArtifactDownloadPolicy.class);
+    final DownloadService service = new DownloadService(tokens, storage, fileAudit, java.util.List.of(policy));
     final Actor student = new Actor(UUID.randomUUID(), Role.STUDENT);
+
+    @org.junit.jupiter.api.BeforeEach
+    void setupPolicy() {
+        when(policy.purpose()).thenReturn(ArtifactPurpose.MATERIAL);
+    }
+
+    @Test
+    void materialDownloadFailsClosedWithoutAnOwnerPolicy() {
+        when(tokens.resolve("tok")).thenReturn(Optional.of(new DownloadTokenService.Grant("f", student.accountId())));
+        when(storage.metadata("f")).thenReturn(Optional.of(meta("application/pdf", "a.pdf")));
+        assertThatThrownBy(() -> new DownloadService(tokens, storage, fileAudit).open(student, "tok"))
+                .isInstanceOfSatisfying(ApiException.class, failure -> assertThat(failure.code()).isEqualTo("FILE_ACCESS_UNAVAILABLE"));
+        org.mockito.Mockito.verify(storage, org.mockito.Mockito.never()).open("f");
+    }
+
+    @Test
+    void rechecksMaterialPolicyBeforeOpeningPreviouslyGrantedFile() {
+        when(tokens.resolve("tok")).thenReturn(Optional.of(new DownloadTokenService.Grant("f", student.accountId())));
+        when(storage.metadata("f")).thenReturn(Optional.of(meta("application/pdf", "a.pdf")));
+        org.mockito.Mockito.doThrow(ApiException.notFound("MATERIAL_NOT_FOUND"))
+                .when(policy).requireDownload(student, "f");
+        assertThatThrownBy(() -> service.open(student, "tok"))
+                .isInstanceOfSatisfying(ApiException.class, failure -> assertThat(failure.code()).isEqualTo("MATERIAL_NOT_FOUND"));
+        org.mockito.Mockito.verify(storage, org.mockito.Mockito.never()).open("f");
+    }
 
     static StoredMetadata meta(String mediaType, String name) {
         return new StoredMetadata(UUID.randomUUID(), ArtifactPurpose.MATERIAL, name, mediaType, 1, "sha");

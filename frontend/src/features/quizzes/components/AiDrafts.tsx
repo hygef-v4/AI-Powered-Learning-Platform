@@ -6,6 +6,7 @@ import { ApiError } from "@/shared/api/client";
 import { Alert, Button, cx, Dialog, Field, Icon, Pill, Select, TextInput } from "@/shared/ui";
 import { DIFFICULTY_LABELS, errorMessage, failureLabel, formatDateTime, TYPE_LABELS } from "../model/labels";
 import { McqEditor } from "./McqEditor";
+import { MaterialSourceSelect } from "./MaterialSourceSelect";
 import { formOf, toContent, validateForm, type FormErrors, type QuestionForm } from "../model/questionForm";
 import type {
   AiDraft, AiDraftRequest, Difficulty, QuestionContent, QuestionType, SelectableMaterial, Violation,
@@ -43,11 +44,15 @@ const entriesOf = (draft: AiDraft): ProposalEntry[] => draft.questions.map((q) =
  * Popup "Tạo nháp bằng AI" (F4, F8): gửi yêu cầu, chờ AI, rồi sửa, bỏ, chấp nhận từng câu (BR-U10-41).
  * Mở lại thì hiện đề xuất đang chờ hoặc đã xong gần nhất; AI không tự thêm câu.
  */
-export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted }: {
+export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline = false, onDirtyChange, onBusyChange, onDraftShown }: {
   api: DraftTargetApi;
   initialDraftId?: string | null;
   onClose: () => void;
   onAccepted: (count: number) => void;
+  inline?: boolean;
+  onDirtyChange?: (dirty: boolean) => void;
+  onBusyChange?: (busy: boolean) => void;
+  onDraftShown?: (draftId: string | null) => void;
 }) {
   const [draft, setDraft] = useState<AiDraft | null>(null);
   const [entries, setEntries] = useState<ProposalEntry[]>([]);
@@ -58,6 +63,11 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted }: {
   // Yêu cầu vừa gửi, giữ lại để mở lại form khi lỗi; nguồn AI do hệ thống tự chọn (yêu cầu 2026-11-05).
   const [request, setRequest] = useState<AiDraftRequest | null>(null);
   const shown = useRef<AiDraft | null>(null);
+  useEffect(() => { onDraftShown?.(draft?.id ?? null); }, [draft?.id, onDraftShown]);
+  useEffect(() => {
+    if (mode !== "form") onDirtyChange?.(draft?.status === "READY" && JSON.stringify(entries) !== JSON.stringify(entriesOf(draft)));
+  }, [draft, entries, mode, onDirtyChange]);
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
 
   /** Chỉ dựng lại danh sách câu khi đổi đề xuất hoặc trạng thái, để không mất phần người soạn đang sửa. */
   const showDraft = (next: AiDraft | null) => {
@@ -107,6 +117,7 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted }: {
 
   const run = async (action: () => Promise<void>) => {
     setBusy(true);
+    onBusyChange?.(true);
     setError(null);
     setProblems([]);
     try {
@@ -117,36 +128,55 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted }: {
       setError(errorMessage(failure));
     } finally {
       setBusy(false);
+      onBusyChange?.(false);
     }
   };
 
   const send = (values: AiDraftRequest) => void run(async () => {
     showDraft(await api.request(values));
-    setRequest(null);
   });
   const refresh = (draftId: string) => {
     api.get(draftId).then(showDraft).catch((failure: unknown) => setError(errorMessage(failure)));
   };
 
   const accepted = entries.filter((e) => e.state === "accepted");
-  const acceptAll = () => draft && void run(async () => {
+  const saveAccepted = () => draft && void run(async () => {
     await api.accept(draft.id, accepted.map((e) => toContent(e.form)));
     onAccepted(accepted.length);
   });
+  const acceptAll = () => {
+    if (!draft) return;
+    const checked = entries.map((entry) => entry.state === "dropped" ? entry : { ...entry, errors: validateForm(entry.form) });
+    if (checked.some((entry) => entry.state !== "dropped" && Object.keys(entry.errors).length > 0)) {
+      setEntries(checked.map((entry) => Object.keys(entry.errors).length ? { ...entry, editing: true } : entry));
+      setError("Có câu chưa hợp lệ. Hãy sửa các câu được đánh dấu trước khi chấp nhận tất cả.");
+      return;
+    }
+    const questions = checked.filter((entry) => entry.state !== "dropped").map((entry) => toContent(entry.form));
+    void run(async () => { await api.accept(draft.id, questions); onAccepted(questions.length); });
+  };
   const discard = () => draft && void run(async () => {
     await api.discard(draft.id);
+    setRequest(null);
     showDraft(null);
   });
 
   const footer = mode === "form" ? undefined : (
     <>
       {draft && draft.status !== "PENDING" && (
-        <Button onClick={() => showDraft(null)} disabled={busy} data-testid="ai-draft-new">Yêu cầu mới</Button>
+        <Button onClick={() => {
+          if (draft.status === "READY" && JSON.stringify(entries) !== JSON.stringify(entriesOf(draft))
+            && !window.confirm("Bỏ các chỉnh sửa đề xuất chưa lưu để tạo yêu cầu mới?")) return;
+          if (draft.status !== "FAILED") setRequest(null);
+          showDraft(null);
+        }} disabled={busy} data-testid="ai-draft-new">{draft.status === "FAILED" && request ? "Thử lại yêu cầu" : "Yêu cầu mới"}</Button>
       )}
       {draft?.status === "READY" && (
         <>
           <Button variant="danger" onClick={discard} disabled={busy} data-testid="ai-draft-discard">Bỏ đề xuất</Button>
-          <Button variant="primary" onClick={acceptAll} disabled={busy || accepted.length === 0} data-testid="ai-draft-accept">
+          <Button onClick={acceptAll} disabled={busy || entries.every((entry) => entry.state === "dropped")}
+            data-testid="ai-draft-accept-all">Chấp nhận tất cả</Button>
+          <Button variant="primary" onClick={saveAccepted} disabled={busy || accepted.length === 0} data-testid="ai-draft-accept">
             Lưu {accepted.length} câu đã chấp nhận
           </Button>
         </>
@@ -154,8 +184,7 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted }: {
     </>
   );
 
-  return (
-    <Dialog open onClose={onClose} dismissible={!busy} size="lg" icon="smart_toy" title={api.title} footer={footer}>
+  const body = (
       <div className="flex flex-col gap-4" data-testid="ai-draft-dialog">
         {error && (
           <Alert tone="danger" role="alert">
@@ -165,30 +194,37 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted }: {
         )}
         {mode === "loading" && <p role="status" className="py-6 text-center text-sm text-muted">Đang tải…</p>}
         {mode === "form" && (
-          <DraftRequestForm api={api} busy={busy} initial={request}
+          <DraftRequestForm api={api} busy={busy} initial={request} onDirtyChange={onDirtyChange}
             onSubmit={(values) => {
               setRequest(values);
               send(values);
             }} />
         )}
         {mode === "draft" && draft && (
-          <DraftView draft={draft} entries={entries} onEntries={setEntries} note={api.acceptNote}
-            onTaskFinished={() => refresh(draft.id)} />
+          <fieldset disabled={busy} className="min-w-0">
+            <DraftView draft={draft} entries={entries} onEntries={setEntries} note={api.acceptNote}
+              onTaskFinished={() => refresh(draft.id)} />
+          </fieldset>
         )}
       </div>
-    </Dialog>
   );
+  if (inline) return <div role="region" aria-label="Soạn bằng AI" className="mt-3 flex min-w-0 flex-col gap-3">
+    {body}<div className="flex flex-wrap justify-end gap-2 border-t border-line pt-3">
+      <Button onClick={onClose} disabled={busy}>Đóng soạn AI</Button>{footer}
+    </div>
+  </div>;
+  return <Dialog open onClose={onClose} dismissible={!busy} size="lg" icon="smart_toy" title={api.title} footer={footer}>{body}</Dialog>;
 }
 
 /**
- * Yêu cầu, số câu, loại, độ khó, tài liệu đã có chữ (BR-U10-40). Nguồn AI chọn ở popup U06 sau khi bấm "Gửi yêu cầu";
- * hủy popup thì form mở lại với `initial`.
+ * Yêu cầu hoặc tài liệu có chữ; nguồn API tự chọn. Lỗi giữ form để thử lại.
  */
-function DraftRequestForm({ api, busy, initial, onSubmit }: {
+function DraftRequestForm({ api, busy, initial, onSubmit, onDirtyChange }: {
   api: DraftTargetApi;
   busy: boolean;
   initial: AiDraftRequest | null;
   onSubmit: (values: AiDraftRequest) => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const id = useId();
   const [instructions, setInstructions] = useState(initial?.instructions ?? "");
@@ -199,6 +235,10 @@ function DraftRequestForm({ api, busy, initial, onSubmit }: {
   const [materials, setMaterials] = useState<SelectableMaterial[] | null>(null);
   const [materialsError, setMaterialsError] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [materialsReload, setMaterialsReload] = useState(0);
+  useEffect(() => {
+    onDirtyChange?.(!!instructions.trim() || count !== "5" || !!type || !!difficulty || materialIds.length > 0);
+  }, [instructions, count, type, difficulty, materialIds, onDirtyChange]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -207,26 +247,27 @@ function DraftRequestForm({ api, busy, initial, onSubmit }: {
       .catch(() => !controller.signal.aborted && setMaterialsError(true));
     return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [materialsReload]);
 
   const submit = () => {
     const found: Record<string, string> = {};
     const n = Number(count);
-    if (!instructions.trim() || instructions.trim().length > 2000) found.instructions = "Nhập yêu cầu, tối đa 2.000 ký tự";
+    if ((!instructions.trim() && materialIds.length === 0) || instructions.trim().length > 2000) found.instructions = "Nhập yêu cầu hoặc chọn tài liệu nguồn, tối đa 2.000 ký tự";
     if (!Number.isInteger(n) || n < 1 || n > MAX_COUNT) found.count = "Từ 1 đến 50 câu";
+    if (materialIds.length > MAX_MATERIALS || materialIds.some((id) => !materials?.some((material) => material.materialId === id && material.hasText))) {
+      found.materialIds = "Có tài liệu nguồn không còn dùng được. Bỏ chọn tài liệu đó hoặc tải lại danh sách.";
+    }
     setErrors(found);
     if (Object.keys(found).length > 0) return;
     onSubmit({ instructions: instructions.trim(), count: n, type: type || null, difficulty: difficulty || null, materialIds });
   };
 
-  const toggle = (materialId: string) => setMaterialIds((current) => current.includes(materialId)
-    ? current.filter((m) => m !== materialId) : [...current, materialId]);
-
   return (
     <fieldset disabled={busy} className="flex flex-col gap-3" data-testid="ai-draft-form">
-      <Field label="Yêu cầu" htmlFor={`${id}-instructions`} required error={errors.instructions}
-        hint="Ví dụ: chủ đề, chương, kiểu câu cần soạn. Không đưa thông tin sinh viên.">
+      <Field label="Yêu cầu" htmlFor={`${id}-instructions`} required={materialIds.length === 0} error={errors.instructions}
+        hint="Khi đã chọn tài liệu, có thể để trống: AI mặc định tạo quiz theo nội dung tài liệu. Không đưa thông tin sinh viên.">
         <textarea id={`${id}-instructions`} rows={3} maxLength={2000} value={instructions} className={TEXTAREA}
+          placeholder="Tạo quiz theo nội dung tài liệu đã chọn."
           onChange={(event) => setInstructions(event.target.value)} data-testid="ai-draft-instructions" />
       </Field>
       <div className="grid gap-3 sm:grid-cols-3">
@@ -249,25 +290,15 @@ function DraftRequestForm({ api, busy, initial, onSubmit }: {
       </div>
       <div className="flex flex-col gap-1.5">
         <p className="text-xs font-semibold text-body">Tài liệu nguồn cho AI <span className="font-normal text-muted">· tối đa 10, chỉ học liệu đã trích chữ</span></p>
-        {materialsError && <p className="text-[11px] text-muted">Chưa lấy được danh sách tài liệu; vẫn gửi được yêu cầu không kèm tài liệu.</p>}
+        {materialsError && <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-muted">
+          Chưa lấy được danh sách tài liệu; vẫn gửi được yêu cầu không kèm tài liệu.
+          <Button size="sm" onClick={() => { setMaterialsError(false); setMaterials(null); setMaterialsReload((value) => value + 1); }}>Tải lại tài liệu</Button>
+        </div>}
         {materials?.length === 0 && <p className="text-[11px] text-muted">Chưa có học liệu nào.</p>}
-        <ul className="flex flex-col gap-1" aria-label="Tài liệu nguồn cho AI">
-          {materials?.map((m) => {
-            const checked = materialIds.includes(m.materialId);
-            const blocked = !m.hasText || (!checked && materialIds.length >= MAX_MATERIALS);
-            return (
-              <li key={m.materialId}>
-                <label className={cx("inline-flex items-center gap-2 text-[13px]", blocked && !checked && "text-faint")}>
-                  <input type="checkbox" checked={checked} disabled={blocked && !checked} onChange={() => toggle(m.materialId)}
-                    data-testid="ai-draft-material" />
-                  {m.title}{!m.hasText && " (chưa trích được chữ)"}
-                </label>
-              </li>
-            );
-          })}
-        </ul>
+        <MaterialSourceSelect materials={materialsError ? [] : materials} value={materialIds} onChange={setMaterialIds} disabled={busy} />
+        {errors.materialIds && <p role="alert" className="text-xs text-danger">{errors.materialIds}</p>}
       </div>
-      <p className="text-[11px] text-muted">Bấm “Gửi yêu cầu” để chọn nguồn AI; hết hạn mức hay lỗi nguồn sẽ không tự đổi sang nguồn khác.</p>
+      <p className="text-[11px] text-muted">Hệ thống tự chọn nguồn AI khả dụng. Chỉ các tài liệu đã chọn và có nội dung văn bản được đưa vào yêu cầu.</p>
       <div className="flex justify-end">
         <Button variant="primary" icon="smart_toy" onClick={submit} data-testid="ai-draft-submit">Gửi yêu cầu</Button>
       </div>
@@ -284,7 +315,10 @@ function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
   onTaskFinished: () => void;
 }) {
   const origin = draft.origin === "MCP" ? `Agent: ${draft.agentLabel ?? "Agent"}`
-    : draft.source === "SHARED" ? "API của trường" : `${PROVIDER_LABEL[draft.provider as AiProvider] ?? draft.provider} cá nhân`;
+    : draft.source === "SHARED" ? "API của trường"
+    : draft.source === "PERSONAL"
+      ? draft.provider ? `${PROVIDER_LABEL[draft.provider as AiProvider] ?? draft.provider} cá nhân` : "API cá nhân"
+      : "Hệ thống tự chọn nguồn AI";
   const update = (index: number, change: Partial<ProposalEntry>) =>
     onEntries(entries.map((entry, i) => (i === index ? { ...entry, ...change } : entry)));
   const accept = (index: number) => {
@@ -297,13 +331,16 @@ function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
 
   return (
     <div className="flex flex-col gap-3" data-testid="ai-draft-view">
+      {!!draft.sourceWarnings?.length && <Alert tone="warning" role="status">
+        <ul className="list-disc pl-4">{draft.sourceWarnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>
+      </Alert>}
       <p className="text-[12px] text-muted">
         {origin} · gửi lúc {formatDateTime(draft.createdAt)}
         {draft.materials.length > 0 && <> · tài liệu: {draft.materials.map((m) => m.title).join(", ")}</>}
       </p>
       {draft.status === "PENDING" && (
         <>
-          <Alert tone="info" role="status">AI đang soạn đề xuất… Bạn có thể đóng popup, đề xuất vẫn được giữ.</Alert>
+          <Alert tone="info" role="status">AI đang soạn đề xuất… Bạn có thể đóng phần soạn AI, đề xuất vẫn được giữ.</Alert>
           {/* M3: trạng thái task của U06 (cho hủy khi còn chờ); xong thì tải lại đề xuất ngay. */}
           {draft.taskId && <AiTaskStatus taskId={draft.taskId} onFinished={onTaskFinished} />}
         </>

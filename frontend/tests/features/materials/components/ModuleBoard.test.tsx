@@ -68,6 +68,15 @@ function backend(modules: MaterialModule[], materials: Material[]) {
     return String(path).includes("/modules") ? modules : materials;
   });
 }
+
+it("shows disabled material to staff with a state label but hides it from students", async () => {
+  backend([mod("m1", "Module 1")], [row("off", { enabled: false })]);
+  const { rerender } = render(<ModuleBoard scope={{ kind: "subject", subjectId: "subject" }} />);
+  expect(await screen.findByText("Document off")).toBeInTheDocument();
+  expect(screen.getByText("Tắt")).toBeInTheDocument();
+  rerender(<ModuleBoard scope={{ kind: "student", classId: "class" }} />);
+  await waitFor(() => expect(screen.queryByText("Document off")).not.toBeInTheDocument());
+});
 beforeEach(() => {
   vi.mocked(apiFetch).mockReset();
 });

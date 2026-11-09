@@ -44,7 +44,7 @@ final class QuizRequests {
 
     static Details details(JsonNode body) {
         fields(body, Set.of("title", "instructions", "settings", "activityMonitoringEnabled", "activityNotice",
-                "version"));
+                "version", "instructionsDocument"));
         JsonNode settings = body.get("settings");
         if (settings == null || !settings.isObject()) {
             throw invalid("settings cần là object");
@@ -56,7 +56,8 @@ final class QuizRequests {
                 bool(settings, "showScoreAfterSubmit"), bool(settings, "showCorrectAnswers"),
                 leavePenalty(settings.get("leavePenalty")));
         return new Details(new QuizAuthoringService.Details(text(body, "title", true), text(body, "instructions", false),
-                parsed, bool(body, "activityMonitoringEnabled"), text(body, "activityNotice", false)),
+                parsed, bool(body, "activityMonitoringEnabled"), text(body, "activityNotice", false),
+                edu.aiplatform.shared.content.FormattedText.parseDocument(body.get("instructionsDocument"))),
                 version(body));
     }
 

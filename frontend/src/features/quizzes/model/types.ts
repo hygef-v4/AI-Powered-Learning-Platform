@@ -1,6 +1,7 @@
 // Kiểu dữ liệu ngân hàng câu hỏi (U10, UC 46, 47), khớp DTO của QuestionController.
 
 import type { SourceChoice } from "@/shared/ai";
+import type { FormattedText } from "@/shared/document/formattedText";
 
 export type QuestionType = "MCQ_SINGLE" | "MCQ_MULTI";
 export type Difficulty = "EASY" | "MEDIUM" | "HARD";
@@ -125,6 +126,7 @@ export type QuizInfo = {
   versionNo: number;
   title: string;
   instructions: string | null;
+  instructionsDocument?: FormattedText | null;
   settings: QuizSettings;
   activityMonitoringEnabled: boolean;
   activityNotice: string | null;
@@ -182,6 +184,7 @@ export type QuizPage = { items: QuizRow[]; total: number; page: number; size: nu
 export type QuizDetailsInput = {
   title: string;
   instructions: string | null;
+  instructionsDocument?: FormattedText | null;
   settings: QuizSettings;
   activityMonitoringEnabled: boolean;
   activityNotice: string | null;
@@ -213,6 +216,7 @@ export type AiDraft = {
   source: string | null;
   provider: string | null;
   materials: { id: string; title: string | null }[];
+  sourceWarnings?: string[];
   agentLabel: string | null;
   baseVersion: number | null;
   failureCode: string | null;

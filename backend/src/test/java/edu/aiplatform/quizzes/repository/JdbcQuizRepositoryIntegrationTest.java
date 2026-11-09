@@ -142,6 +142,28 @@ class JdbcQuizRepositoryIntegrationTest {
     }
 
     @Test
+    void richInstructionsRoundTripThroughInsertUpdateAndClone() {
+        var document = new edu.aiplatform.shared.content.FormattedText(List.of(
+                new edu.aiplatform.shared.content.FormattedText.Block(
+                        edu.aiplatform.shared.content.FormattedText.Type.UL,
+                        edu.aiplatform.shared.content.FormattedText.Align.CENTER, 1,
+                        List.of(new edu.aiplatform.shared.content.FormattedText.Run("Mô tả quiz", true, null, null)))));
+        Quiz original = Quiz.create(QuizScope.SUBJECT, null, subject, "Rich quiz", author, NOW)
+                .withInstructionsDocument(document);
+        quizzes.insert(original);
+        Quiz stored = quizzes.find(original.id()).orElseThrow();
+        assertThat(stored.instructions()).isEqualTo("Mô tả quiz");
+        assertThat(stored.instructionsDocument()).isEqualTo(document);
+        assertThat(quizzes.update(stored.withDetails("Renamed", stored.instructions(), stored.settings(), false,
+                null, NOW))).isTrue();
+        Quiz updated = quizzes.find(original.id()).orElseThrow();
+        assertThat(updated.instructionsDocument()).isEqualTo(document);
+        Quiz copy = updated.copyAs(QuizOrigin.CLONE, 1, null, author, NOW);
+        quizzes.insert(copy);
+        assertThat(quizzes.find(copy.id()).orElseThrow().instructionsDocument()).isEqualTo(document);
+    }
+
+    @Test
     void retiringUnpublishedQuizKeepsPublicationNullAndReopensAsDeletableDraft() {
         Quiz draft = subjectQuiz();
         assertThat(quizzes.update(draft.retired("Lưu trữ", NOW))).isTrue();
@@ -292,6 +314,36 @@ class JdbcQuizRepositoryIntegrationTest {
         assertThat(drafts.transition(ready.decided(DraftStatus.ACCEPTED, NOW), DraftStatus.READY)).isTrue();
         assertThat(drafts.listOpenForQuiz(quiz.id())).isEmpty();
         assertThat(drafts.find(pending.id()).orElseThrow().decidedAt()).isEqualTo(NOW);
+    }
+
+    @Test
+    void sourceRetryDraftLockSerializesSubmissionsAndRetryMetadataRollsBack() throws Exception {
+        Quiz quiz = subjectQuiz();
+        QuizAiDraft pending = QuizAiDraft.pending(DraftTarget.QUIZ, quiz.id(), subject, 0L,
+                Map.of("requestedCount", 5), author, NOW).retryFromSources(List.of("Nguồn không khớp"));
+        drafts.insert(pending);
+        try (var first = appDataSource.getConnection(); var second = appDataSource.getConnection()) {
+            first.setAutoCommit(false);
+            second.setAutoCommit(false);
+            var lockedRepository = new JdbcQuizAiDraftRepository(JdbcClient.create(
+                    new org.springframework.jdbc.datasource.SingleConnectionDataSource(first, true)), new ObjectMapper());
+            assertThat(lockedRepository.findForUpdate(pending.id())).isPresent();
+            try (var timeout = second.createStatement()) { timeout.execute("set local lock_timeout='100ms'"); }
+            try (var query = second.prepareStatement("select id from quiz_ai_drafts where id=? for update")) {
+                query.setObject(1, pending.id());
+                org.assertj.core.api.Assertions.assertThatThrownBy(query::executeQuery)
+                        .isInstanceOf(java.sql.SQLException.class)
+                        .satisfies(failure -> assertThat(((java.sql.SQLException) failure).getSQLState()).isEqualTo("55P03"));
+            }
+            second.rollback();
+            UUID retryTask = UUID.randomUUID();
+            assertThat(lockedRepository.transition(pending.withSourceRetryTask(retryTask), DraftStatus.PENDING)).isTrue();
+            first.rollback();
+        }
+        QuizAiDraft restored = drafts.find(pending.id()).orElseThrow();
+        assertThat(restored.needsSourceRetry()).isTrue();
+        assertThat(restored.sourceRetryAttempted()).isFalse();
+        assertThat(restored.taskId()).isNull();
     }
 
     @Test

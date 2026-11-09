@@ -12,6 +12,22 @@ import java.util.*;
 import org.junit.jupiter.api.*;
 
 class MaterialQueryAndReferenceTest {
+    @Test
+    void disabledMaterialsDisappearFromStudentListsAndNewAiSources() {
+        var disabled = material.withPresentation(false, null);
+        when(repo.find(id)).thenReturn(Optional.of(disabled));
+        when(repo.list(subject, classId)).thenReturn(List.of(disabled));
+        when(repo.list(subject, null)).thenReturn(List.of(disabled));
+        when(access.classList(actor, classId, true)).thenReturn(new edu.aiplatform.academics.contract.ClassRef(
+                classId, subject, "C", "Class", edu.aiplatform.academics.contract.ClassStatus.OPEN, null, false));
+        assertThat(queries.classList(actor, classId, true, null)).isEmpty();
+        assertThat(queries.subjectList(new Actor(actor.accountId(), Role.SUBJECT_MANAGER), subject))
+                .singleElement().satisfies(view -> assertThat(view.enabled()).isFalse());
+        assertThat(references.listSelectable(new Actor(actor.accountId(), Role.SUBJECT_MANAGER),
+                ResourceRef.subject(subject))).isEmpty();
+        assertThatThrownBy(() -> references.extractText(actor, List.of(id), 100)).isInstanceOf(ApiException.class);
+    }
+
     IMaterialRepository repo;
     IMaterialModuleRepository modules;
     MaterialAccessPolicy access;

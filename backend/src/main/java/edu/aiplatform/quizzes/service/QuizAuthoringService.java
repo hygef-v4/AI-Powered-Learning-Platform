@@ -70,7 +70,11 @@ public class QuizAuthoringService {
 
     /** Thông tin, cài đặt Quiz (F7 bước 5). */
     public record Details(String title, String instructions, QuizSettings settings, boolean activityMonitoringEnabled,
-                          String activityNotice) {
+                          String activityNotice, edu.aiplatform.shared.content.FormattedText instructionsDocument) {
+        public Details(String title, String instructions, QuizSettings settings, boolean activityMonitoringEnabled,
+                       String activityNotice) {
+            this(title, instructions, settings, activityMonitoringEnabled, activityNotice, null);
+        }
     }
 
     /** Một câu khi lưu danh sách câu; {@code points} trống thì lấy điểm mặc định của câu. */
@@ -135,14 +139,17 @@ public class QuizAuthoringService {
     public QuizDetail updateDetails(Actor actor, UUID id, Details details, long version) {
         Quiz quiz = support.loadEditable(actor, id, version);
         String title = details.title() == null ? null : details.title().strip();
-        List<Violation> violations = new ArrayList<>(QuizRules.validateDetails(title, details.instructions(),
+        String instructions = details.instructionsDocument() == null ? details.instructions()
+                : details.instructionsDocument().validateLength(5000);
+        List<Violation> violations = new ArrayList<>(QuizRules.validateDetails(title, instructions,
                 details.settings(), details.activityNotice()));
         // K2: bật thì phải có lời báo cho sinh viên; thời hạn giữ dữ liệu cố định 1 ngày nên luôn bật được (BR-U10-15).
         violations.addAll(QuizRules.validateActivity(details.activityMonitoringEnabled(), details.activityNotice()));
         violations.addAll(QuizRules.validatePenaltyNeedsMonitoring(details.activityMonitoringEnabled(), details.settings()));
         reject(violations);
-        Quiz changed = quiz.withDetails(title, blankToNull(details.instructions()), details.settings(),
+        Quiz changed = quiz.withDetails(title, blankToNull(instructions), details.settings(),
                 details.activityMonitoringEnabled(), blankToNull(details.activityNotice()), clock.instant());
+        if (details.instructionsDocument() != null) changed = changed.withInstructionsDocument(details.instructionsDocument());
         return support.detail(support.save(changed), true);
     }
 

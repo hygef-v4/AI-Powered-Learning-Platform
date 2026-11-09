@@ -34,7 +34,7 @@ const STATUSES: AccountStatus[] = ["ACTIVE", "PENDING", "DISABLED"];
 /**
  * Account List (UC 08, design `a02`): ô tìm email/tên ở hàng trên (gõ tới đâu lọc tới đó), tab vai trò, lọc trạng thái bên
  * phải, phân trang; bộ lọc nằm trên URL để Back
- * giữ trạng thái. Mở New Account (UC 09, `a03`), Nhập CSV (`a02b`) và Account Detail (UC 10, `a04`).
+ * giữ trạng thái. Mở New Account (UC 09, `a03`), Nhập Excel (`a02b`) và Account Detail (UC 10, `a04`).
  */
 export function AccountListPage() {
   const router = useRouter();
@@ -93,7 +93,7 @@ export function AccountListPage() {
         actions={
           <>
             <Button icon="upload_file" onClick={() => setImporting((v) => !v)} aria-expanded={importing}>
-              Nhập CSV
+              Nhập Excel
             </Button>
             <Button variant="primary" icon="add" onClick={() => setCreating(true)}>
               Thêm tài khoản

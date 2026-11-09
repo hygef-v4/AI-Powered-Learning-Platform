@@ -1,6 +1,7 @@
 package edu.aiplatform.materials.service;
 
 import edu.aiplatform.materials.model.Material;
+import edu.aiplatform.shared.content.FormattedText;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import java.util.List;
@@ -17,7 +18,13 @@ public final class MaterialCommands {
             @Size(max = 2000) String description,
             @Min(0) int orderNo,
             @NotNull @Valid Source source,
-            @NotNull UUID moduleId) {}
+            @NotNull UUID moduleId,
+            Boolean enabled,
+            FormattedText descriptionDocument) {
+        public Create(Material.Kind kind, String title, String description, int orderNo, Source source, UUID moduleId) {
+            this(kind, title, description, orderNo, source, moduleId, null, null);
+        }
+    }
 
     /** {@code moduleId} khác module hiện tại thì chuyển học liệu sang module đó; bỏ trống là giữ nguyên. */
     public record Update(
@@ -25,7 +32,13 @@ public final class MaterialCommands {
             @Size(max = 2000) String description,
             @Min(0) int orderNo,
             @NotNull @Min(0) Long version,
-            UUID moduleId) {}
+            UUID moduleId,
+            Boolean enabled,
+            FormattedText descriptionDocument) {
+        public Update(String title, String description, int orderNo, Long version, UUID moduleId) {
+            this(title, description, orderNo, version, moduleId, null, null);
+        }
+    }
 
     public record ModuleInput(@NotBlank @Size(max = 200) String title) {}
 

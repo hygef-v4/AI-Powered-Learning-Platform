@@ -78,3 +78,8 @@ Module cơ bản của môn đã triển khai. Học liệu môn/lớp bắt bu�
 ## ModuleBoard — current UI contract
 
 ModuleBoard groups subject/class materials by moduleId and shows scoped Quiz links. Manager module create/rename/delete/reorder differs from educator Quiz attach/detach permission. Material create requires moduleId; update may move to another module of the same subject. Render availability/version/scope errors, including module not empty and last-module restrictions. Server canManage fields are projections, not a replacement for backend checks.
+
+
+## Giao diện cập nhật 2026-11-09
+
+Form tạo/sửa học liệu và trang chi tiết có công tắc Bật/Tắt (field API `enabled`). Staff thấy nhãn Tắt trong danh sách; sinh viên không thấy tài liệu đã tắt. Mô tả dùng FormattedTextEditor/View dùng chung, giữ plain fallback. Quiz trong cùng form dùng instructionsDocument và giới hạn 5.000 ký tự. User tự kiểm tra UI; không có nghiệm thu hình ảnh trong lượt triển khai này.

@@ -27,3 +27,9 @@ Tests: [identity](../../../../backend/src/test/java/edu/aiplatform/identity).
 ## Evidence và giới hạn
 
 Kiểm tra của đợt refactor được ghi trong [refactor results](../../build-and-test/2026-10-30-package-moves-only-results.md). Những báo cáo có ngày trước đó là bằng chứng lịch sử. Có source/test không đồng nghĩa test pass hoặc runtime/provider healthy. Negative cases cần kiểm trong test nguồn: actor sai role/scope, không có dữ liệu, stale version, unavailable provider; chi tiết thật theo assertions của từng file test.
+
+## Delta working tree — 2026-11-09
+
+UI Admin nhập Excel .xlsx và tải account-import.xlsx; backend đọc sheet đầu, giữ validate/commit và CSV API cũ. Giới hạn 1 MB/1.000 dòng, không nhận công thức hoặc macro. Không đổi rule tạo tài khoản/phân quyền.
+
+Delta này bổ sung snapshot commit có ngày phía trên, chưa tạo commit mới và không sửa lại evidence lịch sử. [Kết quả và giới hạn](../../build-and-test/2026-11-09-excel-import-results.md); [đối chiếu tài liệu](../../build-and-test/2026-11-09-aidlc-doc-sync.md).

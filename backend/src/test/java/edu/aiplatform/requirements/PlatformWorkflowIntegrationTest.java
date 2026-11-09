@@ -207,6 +207,8 @@ class PlatformWorkflowIntegrationTest {
     @Autowired QuizAuthoringService quizAuthoringService;
     @Autowired QuizPublicationService quizPublicationService;
     @Autowired QuizAttemptService quizAttemptService;
+    @Autowired edu.aiplatform.quizzes.service.QuizAiDraftService quizDrafts;
+    @Autowired edu.aiplatform.quizzes.service.QuizDraftResultHandler quizDraftResults;
     @Autowired ClassGroupService classGroupService;
     @Autowired GradingService gradingService;
     @Autowired GradebookService gradebookService;
@@ -359,6 +361,71 @@ class PlatformWorkflowIntegrationTest {
         assertThat(disabled.status().name()).isEqualTo("DISABLED");
         assertThat(jdbc.queryForObject("select row_to_json(c)::text from ai_connections c where id=?",
                 String.class, saved.id())).doesNotContain(key);
+    }
+
+    @Test
+    void sourceMismatchCommitsEmptyDraftThenQueuesOneSourceOnlyRetry() {
+        aiConnectionService.addPersonal(actor(Role.TEACHER), AiProvider.OPENAI,
+                new AiConnectionService.SaveCommand("integration-key-never-sent", "gpt-6.1-sol", null));
+        var quiz = quizAuthoringService.createForClass(actor(Role.TEACHER), classId, "Source quiz");
+        UUID material = seedQuizSource();
+        var pending = quizDrafts.requestForQuiz(actor(Role.TEACHER), quiz.quiz().id(),
+                new edu.aiplatform.quizzes.service.QuizAiDraftService.DraftRequest("Liên Quân", 2, QuestionType.MCQ_SINGLE,
+                        Difficulty.EASY, List.of(material), edu.aiplatform.ai.contract.AiSource.PERSONAL, AiProvider.OPENAI, "source-guard"),
+                quiz.quiz().version());
+        var result = new edu.aiplatform.ai.contract.AiTaskResult(pending.taskId(), "QUIZ_QUESTION_DRAFT", actor(Role.TEACHER),
+                "quiz-ai-draft:" + pending.id(), quiz.quiz().version(), """
+                {"requestMatchesSources":false,"questionsMatchSources":false,
+                 "questions":[{"type":"MCQ_SINGLE","stem":"Wrong topic","options":["A","B"],"correct":[1]}]}
+                """);
+        transaction.executeWithoutResult(status -> {
+            assertThat(quizDraftResults.onReady(result)).isEqualTo(edu.aiplatform.ai.contract.ApplyOutcome.APPLIED);
+            assertThat(count("ai_tasks")).isEqualTo(1);
+        });
+        var retry = quizDrafts.getForQuiz(actor(Role.TEACHER), quiz.quiz().id(), pending.id());
+        assertThat(retry.status()).isEqualTo(DraftStatus.PENDING);
+        assertThat(retry.questions()).isEmpty();
+        assertThat(retry.taskId()).isNotEqualTo(pending.taskId());
+        assertThat(count("ai_tasks")).isEqualTo(2);
+        assertThat(jdbc.queryForObject("select input_payload::text from ai_tasks where id=?", String.class, retry.taskId()))
+                .contains("Tạo quiz theo nội dung tài liệu đã chọn", "Quang Trung").doesNotContain("Liên Quân");
+        transaction.executeWithoutResult(status -> assertThat(quizDraftResults.onReady(result))
+                .isEqualTo(edu.aiplatform.ai.contract.ApplyOutcome.STALE));
+        assertThat(count("ai_tasks")).isEqualTo(2);
+    }
+
+    @Test
+    void failedSourceRetrySubmissionRollsBackBeforeRecordingDraftFailure() {
+        var connection = aiConnectionService.addPersonal(actor(Role.TEACHER), AiProvider.OPENAI,
+                new AiConnectionService.SaveCommand("integration-key-never-sent", "gpt-6.1-sol", null));
+        var quiz = quizAuthoringService.createForClass(actor(Role.TEACHER), classId, "Source quiz");
+        var pending = quizDrafts.requestForQuiz(actor(Role.TEACHER), quiz.quiz().id(),
+                new edu.aiplatform.quizzes.service.QuizAiDraftService.DraftRequest("Other topic", 2, null, null,
+                        List.of(seedQuizSource()), edu.aiplatform.ai.contract.AiSource.PERSONAL, AiProvider.OPENAI, "retry-failure"),
+                quiz.quiz().version());
+        aiConnectionService.setPersonalEnabled(actor(Role.TEACHER), connection.id(), false, connection.version());
+        transaction.executeWithoutResult(status -> quizDraftResults.onReady(new edu.aiplatform.ai.contract.AiTaskResult(
+                pending.taskId(), "QUIZ_QUESTION_DRAFT", actor(Role.TEACHER), "quiz-ai-draft:" + pending.id(), quiz.quiz().version(), """
+                {"requestMatchesSources":false,"questions":[{"type":"MCQ_SINGLE","stem":"x","options":["A","B"],"correct":[1]}]}
+                """)));
+        var failed = quizDrafts.getForQuiz(actor(Role.TEACHER), quiz.quiz().id(), pending.id());
+        assertThat(failed.status()).isEqualTo(DraftStatus.FAILED);
+        assertThat(failed.questions()).isEmpty();
+        assertThat(failed.sourceWarnings()).hasSize(1);
+        assertThat(count("ai_tasks")).isEqualTo(1);
+    }
+
+    private UUID seedQuizSource() {
+        UUID module = UUID.randomUUID(), material = UUID.randomUUID();
+        jdbc.update("insert into material_modules(id,subject_id,title,order_no,created_by,created_at,updated_at) "
+                + "values (?,?,'Module',0,?,now(),now())", module, subjectId, actor(Role.TEACHER).accountId());
+        jdbc.update("insert into materials(id,scope,subject_id,class_id,module_id,kind,title,order_no,status,current_version_no,"
+                + "created_by,created_at,updated_at) values (?,'CLASS',?,?,?,'FILE','Lịch sử',0,'ACTIVE',1,?,now(),now())",
+                material, subjectId, classId, module, actor(Role.TEACHER).accountId());
+        jdbc.update("insert into material_versions(material_id,version_no,file_id,file_name,mime_type,byte_size,text_status,"
+                + "extracted_text,created_by,created_at) values (?,1,'test-only-file','source.pdf','application/pdf',100,'EXTRACTED',"
+                + "'Quang Trung đại phá quân Thanh năm 1789.',?,now())", material, actor(Role.TEACHER).accountId());
+        return material;
     }
 
     @Test
