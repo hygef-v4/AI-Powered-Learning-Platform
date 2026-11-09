@@ -124,6 +124,22 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
 
   const me = view.role;
   const editable = view.status === "IN_PROGRESS" && view.window !== "CLOSED";
+
+  // Mất mục đang soạn (người khác nhả hoặc giao lại, BR-U12-36) hoặc tài liệu đã khóa (hết hạn, tự nộp): đóng trình
+  // soạn vì bản nháp sẽ bị từ chối. Bỏ qua bản xem cũ hơn mục đang soạn (vừa nhận, chưa tải lại).
+  if (editing) {
+    const current = view.sections.find((s) => s.id === editing.id);
+    const held = current?.status === "CLAIMED" && current.holderId === view.viewerId;
+    const lost = !current || (current.version >= editing.version && !held);
+    if (!editable || lost) {
+      setEditing(null);
+      setNotice(
+        !editable
+          ? `Đã hết hạn nộp nên trình soạn mục “${editing.title}” đã đóng.`
+          : `Bạn không còn giữ mục “${editing.title}” (đã được nhả hoặc giao cho người khác); phần chưa lưu không được giữ.`,
+      );
+    }
+  }
   const done = view.sections.filter((s) => s.status === "DONE").length;
   const leaderName = view.members.find((m) => m.accountId === view.leaderId)?.name ?? "chưa có";
   const myId = view.viewerId;
@@ -352,7 +368,17 @@ function GroupSubmissionTab({ view }: { view: WorkspaceView }) {
       setError("Không tải được DOCX.");
     }
   };
+  const memberName = (id: string | null) => view.members.find((m) => m.accountId === id)?.name ?? "—";
   const submitter = view.members.find((m) => m.accountId === s?.submittedBy)?.name;
+  // Tác giả lấy theo bản nộp, không theo mục hiện tại: mục sửa sau khi nộp không đổi người viết bản nộp.
+  const rows = s?.authors?.length
+    ? s.authors.map((a) => ({
+        key: a.partId,
+        title: a.title,
+        author: a.done ? memberName(a.accountId) : "Chưa Xong, không vào bản nộp",
+        current: view.sections.find((sec) => sec.partId === a.partId)?.status,
+      }))
+    : view.sections.map((sec) => ({ key: sec.id, title: sec.title, author: memberName(sec.lastAuthorId), current: sec.status }));
   return (
     <Section title="Bản nộp" icon="receipt_long">
       {!s ? (
@@ -370,16 +396,16 @@ function GroupSubmissionTab({ view }: { view: WorkspaceView }) {
             <colgroup><col /><col className="w-[30%]" /><col className="w-[170px]" /></colgroup><thead>
               <tr>
                 <Th>Mục</Th>
-                <Th>Tác giả</Th>
+                <Th>Tác giả trong bản nộp</Th>
                 <Th>Trạng thái hiện tại</Th>
               </tr>
             </thead>
             <tbody>
-              {view.sections.map((sec) => (
-                <tr key={sec.id}>
-                  <Td>{sec.title}</Td>
-                  <Td>{view.members.find((m) => m.accountId === sec.lastAuthorId)?.name ?? "—"}</Td>
-                  <Td>{STATUS[sec.status].text}</Td>
+              {rows.map((row) => (
+                <tr key={row.key}>
+                  <Td>{row.title}</Td>
+                  <Td>{row.author}</Td>
+                  <Td>{row.current ? STATUS[row.current].text : "—"}</Td>
                 </tr>
               ))}
             </tbody>

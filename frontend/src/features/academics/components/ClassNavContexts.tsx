@@ -1,20 +1,19 @@
 "use client";
 
-// U05: sidebar của một môn (Chủ nhiệm môn) và của một lớp (Giảng viên, Chủ nhiệm môn, Sinh viên), thay menu của role khi
-// đang ở trang của môn hay lớp đó. Đầu sidebar là ô chọn để chuyển sang môn, lớp khác mà vẫn ở đúng mục đang mở.
+// U05: cây môn (Chủ nhiệm môn) và cây lớp (Giảng viên, Chủ nhiệm môn, Sinh viên) trên sidebar, kiểu cây thư mục: menu của
+// role giữ nguyên, các môn, lớp mở ra ngay dưới mục cha (Môn được phân công, Lớp được phân công, Lớp của tôi); môn, lớp
+// của trang đang mở mở sẵn các mục của nó.
 
-import Link from "next/link";
-import { BackLink } from "@/shared/navigation/BackLink";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { subjectNavEntries } from "@/features/identity/slots";
-import { FADE_LABEL, type NavContext, type NavItem, type NavLocation } from "@/shared/layout/navigation";
-import { cx } from "@/shared/ui/cx";
-import { Icon, type IconName } from "@/shared/ui/Icon";
-import { Menu } from "@/shared/ui/Menu";
+import type { NavContext, NavItem, NavLocation } from "@/shared/layout/navigation";
+import { NavTree, type NavTreeNode } from "@/shared/layout/NavTree";
+import type { IconName } from "@/shared/ui/Icon";
 import { academicsApi, type Scope } from "../api";
-import type { CourseClassView, SubjectView } from "../model/types";
 
 const encodeId = encodeURIComponent;
+
+const SUBJECTS_HREF = "/manager";
 
 /** Các màn quản lý một môn, gồm cả chi tiết một lớp của môn (`/manager/classes/{id}`, mục Lớp học). */
 const SUBJECT_ROOTS = ["/manager/subjects", "/manager/questions", "/manager/quizzes", "/manager/assignments", "/manager/materials", "/manager/classes"];
@@ -23,37 +22,35 @@ function isUnderPath(pathname: string, root: string) {
   return pathname === root || pathname.startsWith(`${root}/`);
 }
 
-/** Đổi môn, lớp mà giữ mục đang mở: dựng lại các mục cho id mới rồi lấy link của mục đang mở. */
-function switcher(build: (id: string) => NavItem[], items: NavItem[]) {
-  const index = Math.max(0, items.findIndex((item) => item.active));
-  return (id: string) => build(id)[index]!.href;
-}
-
-// Môn mở gần nhất: trang không mang `?subjectId=` (ví dụ chi tiết câu hỏi) vẫn giữ sidebar của môn đó.
+// Môn mở gần nhất: trang không mang `?subjectId=` (ví dụ chi tiết câu hỏi) vẫn mở nhánh của môn đó.
 let lastSubjectId: string | null = null;
 
+/** Trang Môn được phân công: cây các môn, chưa môn nào mở; trang của một môn: nhánh môn đó mở sẵn. */
 export function resolveSubjectContext({ pathname, search }: NavLocation): NavContext | null {
-  if (!SUBJECT_ROOTS.some((root) => isUnderPath(pathname, root))) return null;
+  const onList = pathname === SUBJECTS_HREF;
+  if (!onList && !SUBJECT_ROOTS.some((root) => isUnderPath(pathname, root))) return null;
   const fromPath = /^\/manager\/subjects\/([^/]+)/.exec(pathname)?.[1];
-  const subjectId = (fromPath ? decodeURIComponent(fromPath) : search.get("subjectId")) || lastSubjectId;
-  lastSubjectId = subjectId;
+  const subjectId = onList ? null : (fromPath ? decodeURIComponent(fromPath) : search.get("subjectId")) || lastSubjectId;
+  if (!onList) lastSubjectId = subjectId;
   const entries = subjectNavEntries.entries();
-  const current = entries
-    .filter((entry) => isUnderPath(pathname, entry.path))
-    .reduce<string | null>((best, entry) => (best === null || entry.path.length > best.length ? entry.path : best), null);
-  const build = (id: string | null): NavItem[] =>
+  const current = onList
+    ? null
+    : entries
+        .filter((entry) => isUnderPath(pathname, entry.path))
+        .reduce<string | null>((best, entry) => (best === null || entry.path.length > best.length ? entry.path : best), null);
+  const build = (id: string): NavItem[] =>
     entries.map((entry) => ({
-      href: id ? entry.href?.(id) ?? `${entry.path}?subjectId=${encodeId(id)}` : entry.path,
+      href: entry.href?.(id) ?? `${entry.path}?subjectId=${encodeId(id)}`,
       label: entry.title,
       icon: entry.icon,
-      active: entry.path === current,
+      active: id === subjectId && entry.path === current,
     }));
-  const items = build(subjectId);
   return {
-    key: `subject:${subjectId ?? ""}`,
-    label: "Menu môn học",
-    header: <SubjectNavHeader subjectId={subjectId} hrefFor={switcher(build, items)} />,
-    items,
+    key: "subject",
+    label: "Môn được phân công",
+    parentHref: SUBJECTS_HREF,
+    header: <SubjectNavTree subjectId={subjectId} itemsFor={build} />,
+    items: subjectId ? build(subjectId) : [],
   };
 }
 
@@ -82,26 +79,32 @@ const STUDENT_ITEMS: ClassItem[] = [
   { key: "announcements", label: "Thông báo lớp", icon: "campaign", href: studentAnnouncements },
 ];
 
-const BACK: Record<ClassScope, { href: string; label: string }> = {
+/** Mục cha của cây lớp trên menu role. */
+const CLASS_ROOTS: Record<ClassScope, { href: string; label: string }> = {
   teaching: { href: "/teaching/classes", label: "Lớp được phân công" },
   me: { href: "/classes", label: "Lớp của tôi" },
 };
 
-function buildClass(scope: ClassScope, id: string, open: string): NavContext {
+/** `id` rỗng: trang danh sách lớp, cây chưa mở lớp nào. */
+function buildClass(scope: ClassScope, id: string | null, open: string | null): NavContext {
   const list = scope === "teaching" ? TEACHING_ITEMS : STUDENT_ITEMS;
   const build = (classId: string): NavItem[] =>
-    list.map((item) => ({ href: item.href(classId), label: item.label, icon: item.icon, active: item.key === open }));
-  const items = build(id);
+    list.map((item) => ({ href: item.href(classId), label: item.label, icon: item.icon, active: classId === id && item.key === open }));
   return {
-    key: `class:${scope}:${id}`,
-    label: "Menu lớp học",
-    header: <ClassNavHeader scope={scope} id={id} hrefFor={switcher(build, items)} />,
-    items,
+    key: `class:${scope}`,
+    label: CLASS_ROOTS[scope].label,
+    parentHref: CLASS_ROOTS[scope].href,
+    header: <ClassNavTree scope={scope} id={id} itemsFor={build} />,
+    items: id ? build(id) : [],
   };
 }
 
-/** Lớp được phân công (`/teaching/classes/{id}`, kể cả Thông báo lớp `/teaching/classes/{id}/announcements`). Lớp học của môn (Chủ nhiệm môn) dùng sidebar của môn. */
+/**
+ * Lớp được phân công (`/teaching/classes`, `/teaching/classes/{id}`, kể cả Thông báo lớp `/teaching/classes/{id}/announcements`).
+ * Lớp học của môn (Chủ nhiệm môn) nằm trong cây môn.
+ */
 export function resolveClassContext({ pathname, search }: NavLocation): NavContext | null {
+  if (pathname === CLASS_ROOTS.teaching.href) return buildClass("teaching", null, null);
   const match = /^\/teaching\/classes\/([^/]+)(\/.*)?$/.exec(pathname);
   if (!match) return null;
   const tabs = TEACHING_ITEMS.filter((item) => item.key !== "announcements");
@@ -110,161 +113,64 @@ export function resolveClassContext({ pathname, search }: NavLocation): NavConte
   return buildClass("teaching", decodeURIComponent(match[1]!), open);
 }
 
-/** Lớp của tôi (`/classes/{id}`, Học liệu, Nhóm của tôi, Thông báo lớp) và Bài tập, một học liệu của một lớp (`?classId=`). */
+/** Lớp của tôi (`/classes`, `/classes/{id}`, Học liệu, Nhóm của tôi, Thông báo lớp) và Bài tập, một học liệu của một lớp (`?classId=`). */
 export function resolveStudentClassContext({ pathname, search }: NavLocation): NavContext | null {
+  if (pathname === CLASS_ROOTS.me.href) return buildClass("me", null, null);
   const own = /^\/classes\/([^/]+)(\/group|\/announcements)?$/.exec(pathname);
   if (own) return buildClass("me", decodeURIComponent(own[1]!), own[2] ? own[2].slice(1) : search.get("tab") === "materials" ? "materials" : "info");
   const classId = search.get("classId");
-  // Bài mở từ trang Bài tập chung (`from=all`) giữ menu chung, không đổi sang sidebar của lớp.
+  // Bài mở từ trang Bài tập chung (`from=all`) giữ menu chung, không mở cây lớp.
   if (!classId || search.get("from") === "all") return null;
   if (isUnderPath(pathname, "/my-assignments")) return buildClass("me", classId, "assignments");
   if (isUnderPath(pathname, "/materials")) return buildClass("me", classId, "materials");
   return null;
 }
 
-function SubjectNavHeader({ subjectId, hrefFor }: { subjectId: string | null; hrefFor: (id: string) => string }) {
-  const [subject, setSubject] = useState<SubjectView | null>(null);
-  const [subjects, setSubjects] = useState<SubjectView[]>([]);
+/** Thêm nút của trang đang mở khi danh sách chưa tải xong hay không có nó, để nhánh đang mở luôn hiện. */
+function withCurrent(nodes: NavTreeNode[], currentId: string | null): NavTreeNode[] {
+  if (!currentId || nodes.some((node) => node.id === currentId)) return nodes;
+  return [{ id: currentId }, ...nodes];
+}
+
+function SubjectNavTree({ subjectId, itemsFor }: { subjectId: string | null; itemsFor: (id: string) => NavItem[] }) {
+  const [subjects, setSubjects] = useState<NavTreeNode[] | null>(null);
   useEffect(() => {
-    if (!subjectId) return;
     const request = new AbortController();
-    academicsApi.loadSubject(subjectId, request.signal).then(setSubject, () => {});
-    return () => request.abort();
-  }, [subjectId]);
-  useEffect(() => {
-    const request = new AbortController();
-    academicsApi.listSubjects(request.signal).then(setSubjects, () => {});
+    academicsApi.listSubjects(request.signal).then(
+      (list) => setSubjects(list.map((item) => ({ id: item.id, code: item.code, name: item.name }))),
+      () => setSubjects((previous) => previous ?? []),
+    );
     return () => request.abort();
   }, []);
-  const shown = subject?.id === subjectId ? subject : null;
   return (
-    <NavHeader back={{ href: "/manager", label: "Môn được phân công" }}>
-      {subjectId && (
-        <Switcher
-          label="Chọn môn"
-          loading={!shown}
-          code={shown?.code}
-          name={shown?.name}
-          options={subjects.map((item) => ({ id: item.id, href: hrefFor(item.id), code: item.code, name: item.name, selected: item.id === subjectId }))}
-        />
-      )}
-    </NavHeader>
+    <NavTree
+      label="Các môn được phân công"
+      nodes={withCurrent(subjects ?? [], subjectId)}
+      currentId={subjectId}
+      itemsFor={itemsFor}
+      loading={subjects === null}
+    />
   );
 }
 
-function ClassNavHeader({ scope, id, hrefFor }: { scope: ClassScope; id: string; hrefFor: (id: string) => string }) {
-  const [value, setValue] = useState<CourseClassView | null>(null);
-  const [classes, setClasses] = useState<CourseClassView[]>([]);
+function ClassNavTree({ scope, id, itemsFor }: { scope: ClassScope; id: string | null; itemsFor: (id: string) => NavItem[] }) {
+  const [classes, setClasses] = useState<NavTreeNode[] | null>(null);
   useEffect(() => {
     const request = new AbortController();
-    academicsApi.loadClass(scope, id, request.signal).then(setValue, () => {});
-    return () => request.abort();
-  }, [scope, id]);
-  const shown = value?.id === id ? value : null;
-  useEffect(() => {
-    const request = new AbortController();
-    academicsApi.listClasses(scope, { size: 100 }, request.signal).then(setClasses, () => {});
+    // Lớp không còn tên (yêu cầu 2026-11-02): mã môn nhỏ ở trên, mã lớp ở dưới.
+    academicsApi.listClasses(scope, { size: 100 }, request.signal).then(
+      (list) => setClasses(list.map((item) => ({ id: item.id, code: item.subject.code, name: item.code }))),
+      () => setClasses((previous) => previous ?? []),
+    );
     return () => request.abort();
   }, [scope]);
   return (
-    <NavHeader back={BACK[scope]}>
-      {/* Lớp không còn tên (yêu cầu 2026-11-02): mã môn nhỏ ở trên, mã lớp ở dưới; thu gọn thì chỉ mã lớp. */}
-      <Switcher
-        label="Chọn lớp"
-        loading={!shown}
-        code={shown?.subject.code}
-        name={shown?.code}
-        short={shown?.code}
-        options={classes.map((item) => ({ id: item.id, href: hrefFor(item.id), code: item.subject.code, name: item.code, selected: item.id === id }))}
-      />
-    </NavHeader>
-  );
-}
-
-/**
- * Lối về trang danh sách, rồi ô chọn môn hay lớp đang mở. Hai phần giữ chiều cao cố định cả khi sidebar thu gọn nên các mục
- * bên dưới đứng yên chỗ cũ.
- */
-function NavHeader({ back, children }: { back: { href: string; label: string }; children?: ReactNode }) {
-  return (
-    <div className="mb-3 flex shrink-0 flex-col gap-2.5 border-b border-line pb-3.5">
-      <div className="overflow-hidden">
-        <BackLink
-          href={back.href}
-          title={back.label}
-          className="inline-flex max-w-full items-center gap-2.5 rounded-md px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-muted transition-colors hover:text-ink"
-        >
-          <Icon name="arrow_back" size={17} className="shrink-0" />
-          <span className={FADE_LABEL}>{back.label}</span>
-        </BackLink>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-type SwitchOption = { id: string; href: string; code: string; name: string; selected: boolean };
-
-/** Sidebar thu gọn (chỉ màn rộng): ô chọn chỉ còn mã; mở đủ: mã nhỏ sát trên tên, hai dòng đọc như một nhãn. */
-const WHEN_COLLAPSED = "hidden md:group-data-[collapsed]/sidebar:block";
-const WHEN_OPEN = "md:group-data-[collapsed]/sidebar:hidden";
-
-/**
- * Ô thả xuống: hiện môn, lớp đang mở; mở ra là danh sách để chuyển sang môn, lớp khác. Cao cố định ở cả hai trạng thái của
- * sidebar; thu gọn thì danh sách tràn ra bên phải sidebar.
- */
-function Switcher({ label, code, name, short = code, loading, options }: { label: string; code?: string; name?: string; short?: string; loading: boolean; options: SwitchOption[] }) {
-  return (
-    <Menu
-      ariaLabel={label}
-      variant="tool"
-      className="w-full"
-      summaryClassName={cx(
-        "!h-11 w-full !whitespace-normal rounded-lg border border-line bg-surface !px-2.5 !py-1 text-left hover:!bg-surface hover:border-line-strong",
-        "[&>svg:last-child]:ml-auto [&>svg:last-child]:shrink-0",
-        "md:group-data-[collapsed]/sidebar:!px-0 md:group-data-[collapsed]/sidebar:[&>svg:last-child]:hidden",
-      )}
-      label={
-        loading ? (
-          <span aria-hidden className="flex flex-1 flex-col gap-1">
-            <span className="h-2 w-10 rounded bg-sunken" />
-            <span className="h-3 w-28 max-w-full rounded bg-sunken" />
-          </span>
-        ) : (
-          <span className="min-w-0 flex-1">
-            <span className={cx(WHEN_OPEN, "block leading-none")} title={name}>
-              <span className="block overflow-hidden font-mono text-[9.5px] leading-none tracking-wide whitespace-nowrap text-muted">{code}</span>
-              <span className="mt-[3px] block truncate text-[13px] leading-[1.15] font-semibold text-ink">{name}</span>
-            </span>
-            {/* Thu gọn: mã dài chỉ hiện mấy chữ đầu, cắt gọn không có dấu ... */}
-            <span className={cx(WHEN_COLLAPSED, "overflow-hidden text-center font-mono text-[10px] leading-tight font-bold tracking-[-0.04em] whitespace-nowrap text-ink")}>{short}</span>
-          </span>
-        )
-      }
-    >
-      <div className="flex max-h-72 w-[208px] flex-col gap-0.5 overflow-y-auto">
-        {options.length === 0 && <span className="px-2.5 py-2 text-[13px] text-muted">Đang tải…</span>}
-        {options.map((option) => (
-          <Link
-            key={option.id}
-            href={option.href}
-            role="menuitem"
-            data-menu-item
-            aria-current={option.selected ? "true" : undefined}
-            className={cx(
-              "flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] transition-colors hover:bg-sunken",
-              option.selected ? "bg-primary-soft text-ink" : "text-ink",
-            )}
-          >
-            {/* Cùng kiểu ô chọn: mã nhỏ sát trên tên một dòng, tên dài thì cắt và hiện đủ khi rê chuột. */}
-            <span className="min-w-0 flex-1 leading-none" title={option.name}>
-              <span className="block overflow-hidden font-mono text-[9.5px] leading-none tracking-wide whitespace-nowrap text-muted">{option.code}</span>
-              <span className="mt-[3px] block truncate text-[13px] leading-[1.15] font-semibold">{option.name}</span>
-            </span>
-            {option.selected && <Icon name="check" size={15} className="shrink-0 text-primary-ink" />}
-          </Link>
-        ))}
-      </div>
-    </Menu>
+    <NavTree
+      label={`Các ${CLASS_ROOTS[scope].label.toLowerCase()}`}
+      nodes={withCurrent(classes ?? [], id)}
+      currentId={id}
+      itemsFor={itemsFor}
+      loading={classes === null}
+    />
   );
 }

@@ -21,10 +21,11 @@ export const FADE_LABEL = "transition-opacity duration-200 md:group-data-[collap
 export type NavLocation = { pathname: string; search: URLSearchParams };
 
 /**
- * Sidebar theo ngữ cảnh (một môn, một lớp): thay menu của role khi đang ở trang của ngữ cảnh đó. `header` là lối về và
- * tên môn, lớp; `key` đổi thì menu mờ vào lại.
+ * Sidebar theo ngữ cảnh khi đang ở trang của ngữ cảnh đó; `key` đổi thì menu mờ vào lại.
+ * - Có `parentHref` (dạng cây: môn, lớp): giữ menu của role, `header` là nhánh cây vẽ ngay dưới mục role có href đó.
+ * - Không có `parentHref` (ví dụ đề cương bài tập, module học liệu): thay menu của role, `header` vẽ phía trên `items`.
  */
-export type NavContext = { key: string; label: string; header: ReactNode; items: NavItem[] };
+export type NavContext = { key: string; label: string; header: ReactNode; items: NavItem[]; parentHref?: string };
 
 export const ROLE_LABELS: Record<Role, string> = {
   STUDENT: "Sinh viên",

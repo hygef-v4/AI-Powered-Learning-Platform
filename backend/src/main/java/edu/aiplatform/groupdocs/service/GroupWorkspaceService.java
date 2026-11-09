@@ -7,6 +7,7 @@ import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.SubmissionWindow;
 import edu.aiplatform.groupdocs.service.GroupSectionService.SectionView;
 import edu.aiplatform.groupdocs.model.GroupDocument;
+import edu.aiplatform.groupdocs.model.GroupDocument.SectionAuthor;
 import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
 import edu.aiplatform.groups.service.GroupAccess;
 import edu.aiplatform.groups.model.ClassGroup;
@@ -76,7 +77,8 @@ public class GroupWorkspaceService {
         SubmissionWindow window = assignment == null ? SubmissionWindow.CLOSED
                 : docAccess.window(d.assignmentId(), false);
         Submission submission = d.submittedAt() == null ? null : new Submission(d.submittedBy(), d.submitMode().name(),
-                d.submittedAt(), d.late(), d.receiptHash());
+                d.submittedAt(), d.late(), d.receiptHash(),
+                d.sectionAuthors() == null ? List.of() : d.sectionAuthors());
         return new WorkspaceView(d.id(), d.assignmentId(), assignment == null ? null : assignment.title(),
                 assignment == null ? null : assignment.closesAt(), assignment == null ? null : assignment.lateUntil(),
                 d.classId(), ctx.group().id(), ctx.group().name(), ctx.group().leaderId(), members, d.status().name(),
@@ -109,6 +111,8 @@ public class GroupWorkspaceService {
     public record Role(boolean member, boolean leader, boolean teacher) {
     }
 
-    public record Submission(UUID submittedBy, String mode, Instant submittedAt, boolean late, String receiptHash) {
+    /** Bản nộp cuối; {@code authors} là tác giả từng mục lúc nộp, không đổi khi mục được sửa sau đó (BR-U12-44). */
+    public record Submission(UUID submittedBy, String mode, Instant submittedAt, boolean late, String receiptHash,
+                             List<SectionAuthor> authors) {
     }
 }
