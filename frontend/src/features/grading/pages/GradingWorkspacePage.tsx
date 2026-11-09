@@ -13,6 +13,7 @@ import {
 } from "@/shared/document";
 import { Alert, Button, Icon, Pill, showToast } from "@/shared/ui";
 import { RubricChecklist } from "../components/RubricChecklistPanel";
+import { GradingFeedbackSummary } from "../components/StructuredFeedbackSection";
 import { calculateChecklistPoints } from "../model/rubricScores";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
 import { useSubmissionDirectory } from "../hooks/useSubmissionDirectory";
@@ -20,7 +21,7 @@ import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
 import { buildChecklistBindings } from "../components/GradingForm";
 import { useGradingWorkspace } from "../hooks/useGradingWorkspace";
-import { ActivityReview, GradeHistory, GroupSectionAuthors } from "../components/GradingReviewPanels";
+import { ActivityReview, GradeHistory } from "../components/GradingReviewPanels";
 import { AiProposalPanel, buildAiRequest } from "../components/AiProposalPanel";
 import { BatchActionDialog } from "../components/BatchActionDialog";
 import { MemberContributionPanel } from "../components/MemberContributionPanel";
@@ -202,6 +203,10 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
   }, [aiOutcome, applyProposal]);
 
   const handleAiGrade = async (input?: AiRequest) => {
+    if (evaluation.kind === "MEMBER") {
+      if (detail.groupEvaluationId && !busy) navigate(detail.groupEvaluationId);
+      return;
+    }
     if (disabled || official || busy || aiGenerating) return;
     setAiOpen(false);
     setAiRequesting(true);
@@ -322,7 +327,6 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
     return () => window.removeEventListener("mousedown", close);
   }, [studentDropdown]);
 
-  // Lề chỉ để điểm: đầu tài liệu là thẻ tổng điểm; mỗi phần một thẻ checklist gắn vào tiêu đề của phần (2 card liên quan ghi chú/comment tạm thời ẩn đi do chưa có phương án; 2026-11-07).
   const comments: DocumentComment[] = [
     {
       key: "total-card",
@@ -337,7 +341,11 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
         <RubricNote title={partTitles[rubric.partId] || `Phần ${index + 1}`} criteria={noteCriteria(rubric)}
           active={activePart === rubric.rubricId} onActivate={() => setActivePart(rubric.rubricId)}
           badge={<span className="sr-only">Đạt {String(Number(calculateChecklistPoints([rubric], form.checks, form.itemScores).toFixed(2)))}</span>}
-          editor={<RubricChecklist rubric={rubric} {...checklist} />} />
+          editor={
+            <RubricChecklist rubric={rubric} {...checklist}
+              feedbackItems={form.structuredFeedback?.items}
+              acknowledgedReviewItems={form.acknowledgedReviewItems} />
+          } />
       ),
     })),
   ];
@@ -345,12 +353,40 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
 
   const saveText = busy ? "Đang xử lý…" : dirty ? "Chưa lưu" : `Đã lưu ${formatPoints(evaluation.score, evaluation.maxScore)}`;
 
-  const assignmentKind = evaluation.kind === "GROUP_DOCUMENT" ? "Nhóm" : "Cá nhân";
+  const isGroupSubmission = evaluation.kind === "GROUP_DOCUMENT";
+  const assignmentKind = isGroupSubmission ? "Nhóm" : "Cá nhân";
   const assignmentTitle = context.value?.title || "Bài tập";
+  const memberNames = Object.fromEntries(
+    (detail.memberActivities ?? []).map(({ student }) => [student.accountId, student.name]),
+  );
+  const sectionBylines: Record<string, string> = {};
+  const unanchoredAuthors = new Set<string>();
+  if (isGroupSubmission) {
+    const headings = new Set(paper.blocks.filter((block) => block.type === "HEADING").map((block) => block.id));
+    for (const { partId, accountId } of detail.sectionAuthors ?? []) {
+      const name = memberNames[accountId] ?? "Thành viên";
+      if (headings.has(partId)) {
+        sectionBylines[partId] = `Người thực hiện: ${name}`;
+      } else {
+        unanchoredAuthors.add(name);
+      }
+    }
+  }
 
   const header = (
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
       <p className="text-[13px] text-muted" data-testid="assignment-kind">{assignmentKind}</p>
+      {unanchoredAuthors.size > 0 && (
+        <p className="text-xs text-muted">Người thực hiện: {[...unanchoredAuthors].join(", ")}</p>
+      )}
+      {form.feedback.trim() && (
+        <section aria-label="Nhận xét chung" className="mt-2 text-sm leading-relaxed text-body">
+          <h3 className="mb-1 font-semibold text-ink">Nhận xét chung</h3>
+          <p className="whitespace-pre-wrap wrap-break-word">{form.feedback}</p>
+        </section>
+      )}
+      <GradingFeedbackSummary summary={form.structuredFeedback?.summary}
+        title="Điểm mạnh và điểm cần cải thiện" />
     </div>
   );
 
@@ -392,6 +428,7 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
         emptyLeafLabel="Sinh viên chưa làm phần này."
         titleField={{ text: context.value?.title || "Bài làm đã nộp", readOnly: true, onText: () => {} }}
         header={header}
+        sectionBylines={sectionBylines}
         comments={comments}
         activeComment={activePart}
         highlightBlockId={activeHeading}
@@ -440,33 +477,49 @@ function Workspace({ initial, refresh, proposalId, status, late }: { initial: De
             }} />
         </>}
         toolbarExtra={<>
-          <button
-            type="button"
-            className="sr-only"
+          {isGroupSubmission && detail.members.length > 0 && (
+            <ToolbarButton
+              icon="groups"
+              title="Điểm thành viên"
+              aria-label="Điểm thành viên"
+              aria-controls="group-member-grades"
+              onClick={() => {
+                const panel = document.getElementById("group-member-grades");
+                panel?.focus({ preventScroll: true });
+                panel?.scrollIntoView?.({ block: "start" });
+              }}
+            >
+              <span className="hidden xl:inline">Điểm thành viên</span>
+            </ToolbarButton>
+          )}
+          <ToolbarButton
+            icon="history"
+            title="Xem đề xuất AI"
             aria-label="Xem đề xuất AI"
+            aria-expanded={aiOpen}
+            aria-controls={aiOpen ? "grading-ai-review" : undefined}
             onClick={() => setAiOpen((open) => !open)}
           >
-            Xem đề xuất AI
-          </button>
+            <span className="hidden md:inline">Xem đề xuất AI</span>
+          </ToolbarButton>
           <ToolbarButton
             icon="smart_toy"
-            title="Chấm bằng AI"
+            title={evaluation.kind === "MEMBER" ? "Mở bài nộp nhóm để chấm bằng AI" : "Chấm bằng AI"}
             aria-label="Chấm bằng AI"
             aria-expanded={aiGenerating}
-            disabled={disabled || official || busy || aiGenerating}
+            disabled={evaluation.kind === "MEMBER"
+              ? busy || !detail.groupEvaluationId
+              : disabled || official || busy || aiGenerating}
             onClick={() => void handleAiGrade()}
           />
         </>} />
 
-      {evaluation.kind === "GROUP_DOCUMENT" && (
+      {isGroupSubmission && (
         <div className="mt-6 flex flex-col gap-4">
-          <GroupSectionAuthors detail={detail} />
           <MemberContributionPanel
             root={evaluation}
             members={detail.members}
-            names={Object.fromEntries(
-              (detail.memberActivities ?? []).map((m) => [m.student.accountId, m.student.name]),
-            )}
+            names={memberNames}
             onSaved={() => void reload()}
           />
         </div>

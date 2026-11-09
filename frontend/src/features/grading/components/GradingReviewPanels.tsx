@@ -1,29 +1,5 @@
 import { ACTIVITY_LABELS, type Detail, type Evaluation } from "../model/types";
 
-export function GroupSectionAuthors({ detail }: { detail: Detail }) {
-  return (
-    <>
-      {detail.evaluation.kind === "GROUP_DOCUMENT" && detail.sectionAuthors?.length > 0 && (
-        <section className="rounded-xl border p-4">
-          <h2 className="font-bold">Người thực hiện từng phần</h2>
-          {detail.sectionAuthors.map((author, i) => {
-            const block = detail.document.blocks.find((b) => b.id === author.partId);
-            const name =
-              detail.memberActivities?.find((m) => m.student.accountId === author.accountId)
-                ?.student.name ?? "Thành viên";
-            return (
-              <p key={i}>
-                {block && "text" in block.content && typeof block.content.text === "string" ? block.content.text : "Phần tài liệu"}:{" "}
-                {name}
-              </p>
-            );
-          })}
-        </section>
-      )}
-    </>
-  );
-}
-
 export function ActivityReview({ detail }: { detail: Detail }) {
   const hasData = Boolean(detail.activity || (detail.memberActivities && detail.memberActivities.length > 0));
   return (

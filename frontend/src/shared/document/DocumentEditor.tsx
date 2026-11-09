@@ -63,6 +63,8 @@ type Props = {
   issues?: ValidationIssue[];
   /** Phần đầu trang giấy, trên các block (tên bài, hướng dẫn). */
   header?: ReactNode;
+  /** Dòng thông tin chỉ đọc, gắn theo ID tiêu đề của từng phần. */
+  sectionBylines?: Readonly<Record<string, string>>;
   /** Nút thêm ở cuối thanh công cụ; có nút thì thanh công cụ vẫn hiện khi chỉ đọc. */
   toolbarExtra?: ReactNode;
   /**
@@ -583,7 +585,9 @@ const TOOLBAR_COVER = "shadow-[0_-0.75rem_0_0.25rem_var(--c-bg)]";
 
 export function DocumentEditor({
   document, onChange, mode, diagramEnabled, readOnly = false, imageUrl, uploadImage, issues = [],
-  header, titleField, toolbarExtra, viewSlot, toolbarCenter, comments, activeComment, highlightBlockId, onFocusBlock, emptyLeafLabel, answerGuidance = false, fullWidth = false, matchCommentHeight = false,
+  header, sectionBylines, titleField, toolbarExtra, viewSlot, toolbarCenter, comments, activeComment,
+  highlightBlockId, onFocusBlock, emptyLeafLabel, answerGuidance = false, fullWidth = false,
+  matchCommentHeight = false,
   externalEdit = null,
 }: Props) {
   const origin: BlockOrigin = mode === "author" ? "TEACHER" : "STUDENT";
@@ -1113,6 +1117,7 @@ export function DocumentEditor({
   ));
 
   function renderBlock(block: DocumentBlock): ReactNode {
+    const byline = block.type === "HEADING" ? sectionBylines?.[block.id] : undefined;
     const isLocked = locked(block);
     const teacherBlock = student && block.origin === "TEACHER";
     const drawable = !readOnly && teacherBlock && block.type === "DIAGRAM" && inPart(block.id);
@@ -1155,6 +1160,7 @@ export function DocumentEditor({
               openDiagram: () => setDiagram(block.id),
             }} />
         )}
+        {byline && <p className="mt-1 wrap-break-word text-xs text-muted">{byline}</p>}
         {blockIssues.map((issue, i) => <p key={i} role="alert" className="text-xs text-danger">{issue.message}</p>)}
         {inlineComments(block.id)}
       </div>
