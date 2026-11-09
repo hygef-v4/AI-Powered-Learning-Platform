@@ -1,5 +1,11 @@
 # AI-DLC State Tracking
 
+## U08 — Thẻ Góp ý AI trong Lịch sử nộp bài, 2026-11-09
+
+Đã triển khai trên `fix/student-ai-grading` và đồng bộ UC 41, FR-030, US-ASM-012 cùng tài liệu U08. Thẻ luôn hiện theo lượt Practice đã nộp, dùng cột nhận xét trên màn hình rộng và chuyển vào đầu nội dung bài làm trên màn hình hẹp. [Kế hoạch và kết quả kiểm tra](construction/plans/code-generation-plan/2026-11-09-student-ai-feedback-card.md).
+
+Đã xác nhận 71 kiểm thử trong phạm vi Assignment Work và trình xem tài liệu, lint, TypeScript trong production build và build. Lượt chạy toàn bộ Vitest bị dừng sau lỗi `ENOENT` ở thư mục tạm của sandbox. Lượt chạy phạm vi liên quan dùng thư mục tạm trong workspace. Build hoàn tất với cảnh báo tải font Google. Chưa xác nhận trên trình duyệt hoặc với nhà cung cấp AI trực tiếp. Security và Resiliency giữ phạm vi đã duyệt. PBT tắt theo cấu hình dự án.
+
 ## Integration-test delivery — regressions verified, publication ready, 2026-11-09
 
 Initial commits15400ac2/8d53a1c6 pushed normally. Staging fb20c6bc merged as a55f8426; later staging198b796f merged as65f86a6c. Complete first-merge checks: backend2,028/2,028 plus57-case guard; frontend build/lint/typecheck and800/800 tests. Latest U12 increment:95/95 backend, current frontend build/typecheck/scoped lint and15/15 tests. Keep those scopes separate; no summed or fresh-final-full-run claim.

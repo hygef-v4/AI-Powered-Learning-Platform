@@ -48,6 +48,7 @@ Gốc `/api/v1`.
 
 ## Frontend
 
+- `SubmissionHistoryPage` gắn `PracticeFeedbackPanel` vào cột nhận xét của `DocumentEditor` theo mã lượt Practice đã nộp. Thẻ tải lịch sử khi mở lượt, gửi yêu cầu khi sinh viên bấm và theo dõi bản ghi đang chờ. Thẻ chuyển vào đầu nội dung bài làm trên màn hình hẹp.
 - Route (chỉ Student): `/my-assignments` (#38), `/my-assignments/[assignmentId]` (#39), `/my-assignments/[assignmentId]/history` (#41), `/attempts/[attemptId]` (#40 Workspace), `/attempts/[attemptId]/receipt`, `/attempts/[attemptId]/diagrams/[blockId]`.
 - `features/assignmentwork`: `StudentAssignmentsPage`, `ClassAssignmentsCard` (gắn `StudentClassSection`), `ClassCardAssignments` (gắn `ClassCardSection`), `StudentAssignmentDetailPage`, `AssignmentWorkspacePage` (trang giấy dùng `DocumentEditor` của U07, đề bài ở đầu trang, rubric của mỗi mục ở lề phải ngang tiêu đề; tự lưu 10 giây sau lần sửa cuối và khi rời trang, đếm ngược theo giờ server, popup nộp có kiểm sơ bộ, nhập DOCX thêm vào cuối), `ReceiptPage`, `SubmissionHistoryPage`, `PracticeFeedbackPanel`, `AttemptDiagramPage`; host slot `StudentAssignmentResult`, `SubmissionResultSection`, `GroupWorkEntry`, `AssignmentMaterialSection`.
 - `shared/activity`: `useActivityTracker` (trạng thái hiển thị của trang, heartbeat 60 giây, gom lô, gửi lại khi lỗi), `ActivityTimeline` cho U09, U11.
