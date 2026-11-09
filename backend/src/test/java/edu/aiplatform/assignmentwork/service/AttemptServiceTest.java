@@ -76,8 +76,20 @@ class AttemptServiceTest {
         assertThat(code(() -> f.attemptService.start(f.student, f.assignmentId, f.classId))).isEqualTo("SUBMISSION_CLOSED");
         verify(f.audit).record(argThat(e -> e.action().equals("SUBMIT_REJECTED") && e.result() == AuditResult.FAILURE));
         f.window = SubmissionWindow.ON_TIME;
-        f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
+        AssignmentAttempt first = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
+        DocumentModel answered = new DocumentModel(List.of(f.teacherBlock, WorkFixtures.paragraph(BlockOrigin.STUDENT, "Bài làm")));
+        f.store.put(first.id(), new AssignmentAttempt(first.id(), first.assignmentId(), first.classId(), first.accountId(),
+                first.attemptNo(), first.snapshot(), answered, first.contentVersion(), first.status(), first.submitMode(),
+                first.late(), first.startedAt(), first.deadlineAt(), first.lastSavedAt(), first.submittedAt(),
+                first.receiptHash(), first.submitWarnings()));
+        // Bài có chấm nộp lại bao nhiêu lần cũng được khi còn hạn; chỉ bài Luyện tập hết lượt (yêu cầu 2026-11-10).
+        f.view = f.view(AssignmentStatus.OPEN, SubmissionMode.INDIVIDUAL, GradingMode.PRACTICE, NOW.plus(Duration.ofDays(1)), null, 1);
         assertThat(code(() -> f.attemptService.start(f.student, f.assignmentId, f.classId))).isEqualTo("ATTEMPTS_EXHAUSTED");
+        f.view = f.view(AssignmentStatus.OPEN, SubmissionMode.INDIVIDUAL, GradingMode.GRADED, NOW.plus(Duration.ofDays(1)), null, 1);
+        AttemptService.Started again = f.attemptService.start(f.student, f.assignmentId, f.classId);
+        assertThat(again.created()).isTrue();
+        // Lần nộp lại bắt đầu từ bài nộp gần nhất, không phải đề trống.
+        assertThat(again.attempt().content()).isEqualTo(answered);
     }
 
     @Test

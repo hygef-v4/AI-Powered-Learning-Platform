@@ -179,7 +179,8 @@ public class StudentAssignmentService {
         if (window == SubmissionWindow.CLOSED) {
             return "SUBMISSION_CLOSED";
         }
-        if (view.maxAttempts() != null && used >= view.maxAttempts()) {
+        // Chỉ bài Luyện tập giới hạn lượt; bài có chấm nộp không giới hạn khi còn hạn (yêu cầu 2026-11-10).
+        if (view.gradingMode() == GradingMode.PRACTICE && view.maxAttempts() != null && used >= view.maxAttempts()) {
             return "ATTEMPTS_EXHAUSTED";
         }
         return null;
