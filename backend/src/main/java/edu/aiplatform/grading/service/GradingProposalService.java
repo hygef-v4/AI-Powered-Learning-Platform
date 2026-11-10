@@ -55,8 +55,11 @@ public class GradingProposalService {
         var proposal = prepared.proposal();
 
         // Step 2: Check idempotency - return existing proposal if already dispatched or pending
-        if (!prepared.dispatch())
+        if (!prepared.dispatch()) {
+            if (proposal.safeError != null)
+                proposal.safeError = GradingProposalCallbackSupport.formatTaskError(proposal.safeError);
             return proposal;
+        }
 
         // Step 3: Submit asynchronous task to background AI engine (U06)
         AiTaskView task;
@@ -131,6 +134,10 @@ public class GradingProposalService {
                             .ifPresent(task -> proposal.taskState = task.state().name());
                 }
             }
+        }
+        for (var proposal : listed) {
+            if (proposal.safeError != null)
+                proposal.safeError = GradingProposalCallbackSupport.formatTaskError(proposal.safeError);
         }
         return listed;
     }

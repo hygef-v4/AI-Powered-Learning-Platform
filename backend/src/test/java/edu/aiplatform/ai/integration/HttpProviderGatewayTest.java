@@ -23,6 +23,41 @@ import org.junit.jupiter.api.Test;
 
 /** Adapter gọi HTTP server giả của JDK thay cho provider thật (NFR-U06-40). */
 class HttpProviderGatewayTest {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(AiProvider.class)
+    void tokenTruncationIsAnExplicitChargedFailureEvenWhenThePartialJsonParses(AiProvider provider) {
+        reply = switch (provider) {
+            case GEMINI -> "{\"candidates\":[{\"finishReason\":\"MAX_TOKENS\",\"content\":{\"parts\":[{\"text\":\"{}\"}]}}],\"usageMetadata\":{\"candidatesTokenCount\":500}}";
+            case OPENAI -> "{\"choices\":[{\"finish_reason\":\"length\",\"message\":{\"content\":\"{}\"}}],\"usage\":{\"completion_tokens\":500}}";
+            case CLAUDE -> "{\"stop_reason\":\"max_tokens\",\"content\":[{\"type\":\"text\",\"text\":\"{}\"}],\"usage\":{\"output_tokens\":500}}";
+        };
+        assertThatThrownBy(() -> gateway.call(provider, request(SCHEMA)))
+                .isInstanceOfSatisfying(ProviderException.class, e -> {
+                    assertThat(e.kind()).isEqualTo(FailureKind.CHARGED);
+                    assertThat(e.usage().outputTokens()).isEqualTo(500);
+                    assertThat(e.getMessage()).contains("giới hạn token", "phản hồi").doesNotContain("hạn mức");
+                });
+    }
+
+    @Test
+    void quotaAndRateLimitMessagesUseExplicitProviderCodesWithoutExposingTheBody() {
+        assertThat(gateway.safeMessage(429,
+                "{\"error\":{\"code\":\"insufficient_quota\",\"message\":\"secret-key\"}}"))
+                .contains("hạn mức", "số dư").doesNotContain("secret-key", "tần suất");
+        assertThat(gateway.safeMessage(429,
+                "{\"error\":{\"code\":\"rate_limit_exceeded\"}}"))
+                .contains("tần suất").doesNotContain("hết hạn mức");
+        assertThat(gateway.safeMessage(429, "{}"))
+                .contains("tần suất hoặc hết hạn mức");
+        assertThat(gateway.safeMessage(429, " ")).contains("HTTP 429");
+    }
+
+    @Test
+    void reachingTheTokenCountWithoutAnExplicitTruncationReasonDoesNotImplyFailure() {
+        reply = "{\"choices\":[{\"finish_reason\":\"stop\",\"message\":{\"content\":\"{}\"}}],\"usage\":{\"completion_tokens\":500}}";
+        assertThat(gateway.call(AiProvider.OPENAI, request(SCHEMA)).output()).isEqualTo("{}");
+    }
+
 
     private static final String SCHEMA = "{\"type\":\"object\",\"properties\":{\"score\":{\"type\":\"number\"}}}";
     private final JsonMapper json = JsonMapper.builder().build();

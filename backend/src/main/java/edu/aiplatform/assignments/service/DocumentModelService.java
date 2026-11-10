@@ -257,6 +257,11 @@ public class DocumentModelService implements IDocumentModel {
     }
 
     @Override
+    public boolean hasDiagramContent(String xml) {
+        return DiagramXml.cellCount(xml) > 0;
+    }
+
+    @Override
     public DocumentModel sanitize(DocumentModel document) {
         if (document == null || document.blocks() == null) {
             return document;

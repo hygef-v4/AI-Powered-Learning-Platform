@@ -578,3 +578,26 @@ User authorized publishing a staging-to-main PR and merging after CI passes. App
 - [x] Scoped workspace/export review and requirements documented in inception/requirements/2026-11-10-gradebook-export.md.
 - [x] User approved implementation; safe assignment filenames shared by API and UI. Backend14 tests, frontend183 tests plus final35-case subset, typecheck/scoped lint passed. Evidence: construction/build-and-test/2026-11-10-gradebook-export.md. No live Excel/browser acceptance, full suite/build, restart, deployment or commit/push. Security/Resiliency retained; PBT disabled.
 - [x] Screenshot follow-up: Vietnamese headers/statuses/late flags/time/sheet, active-assignment export default, single-assignment title and ID-free aggregate filenames. Backend15/15, frontend35/35, typecheck/lint passed. Local API/worker refreshed; two pending staging migrations applied on startup. Real local browser downloads and XLSX XML assertions passed for assignment5rows and aggregate20rows/4assignments. User's original tab retained. No VPS release, grade write, commit/push or subagents; current evidence/limits in the same report.
+
+## Diagram-only AI grading consistency — 2026-11-10
+
+- [x] Reproduced erroneous empty detection for real compressed Draw.io pages; grading now reuses the shared bounded document parser. Live heading/rubric snapshot mapping matches2+4+4=10.
+- [x] Full backend2116 tests/253suites0fail0error0skip/JAR and required guard passed. One successful live Gemini retry gives READY8.50 with all3 sections recognized; persisted grade remains DRAFT0.00/version1 and submission hash unchanged.
+
+Evidence: construction/build-and-test/2026-11-10-grading-diagram-parity.md. No grade save/finalize/publish, assignment/submission edit, migration, VPS update, commit/push or subagents. Qualitative scoring still needs teacher review. Existing Security/Resiliency retained; PBT disabled.
+
+## Accurate Vietnamese AI errors — 2026-11-10
+
+- [x] Translate actual grading validation failures and old proposal messages without exposing uppercase codes; preserve precise provider reasons and internal server diagnostics.
+- [x] Recognize explicit token-truncation metadata for3 providers with charged usage retained; distinguish known quota/rate errors without guessing from429 alone.
+- [x] Final343 connected tests0fail0error0skip and authenticated browser inspection pass. Local API/worker refreshed; original browser form retained and saved grade/version/hash unchanged. No paid model request, grade write, migration, commit/push or VPS update.
+
+Evidence and limits: construction/build-and-test/2026-11-10-grading-ai-errors.md. Existing diagram fix retained. Security/Resiliency retained; PBT disabled.
+
+
+## Deterministic AI grading totals — 2026-11-10
+
+- [x] Provider schema/prompt delegate totals to existing backend calculation; complete MCP contract and strict item/check/evidence validation retained.
+- [x] Final349 connected tests0fail0error0skip; local API/worker refreshed, health200. One live proposal READY7.50 matches12 item scores and section totals2+3+2.5 in storage/UI. Saved grade/state/version/hash unchanged.
+
+Evidence: construction/build-and-test/2026-11-10-grading-derived-total.md. Original tab retained; separate test tab shows unsaved proposal. No official grade action, commit/push or VPS update. Other providers not tested live; full suite/JAR not repeated. Security/Resiliency retained; PBT disabled.

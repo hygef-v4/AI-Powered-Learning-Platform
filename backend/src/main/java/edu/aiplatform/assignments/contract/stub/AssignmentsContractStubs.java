@@ -147,6 +147,11 @@ public class AssignmentsContractStubs {
             }
 
             @Override
+            public boolean hasDiagramContent(String xml) {
+                return false;
+            }
+
+            @Override
             public DocumentModel sanitize(DocumentModel document) {
                 return document;
             }

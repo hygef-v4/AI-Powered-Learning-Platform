@@ -19,8 +19,9 @@ import org.junit.jupiter.api.Test;
 class GradingPromptBuilderTest {
     private final ObjectMapper json = new ObjectMapper().findAndRegisterModules();
 
-    @Test
-    void providerSchemaUsesScoresWithoutContradictoryChecklistAndDerivesChecksAfterEmptyMerge() throws Exception {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void providerScoresDeriveTotalAndChecksWithOrWithoutEmptyRubrics(boolean includeEmpty) throws Exception {
         UUID rubricId = UUID.randomUUID();
         UUID zeroItem = UUID.randomUUID();
         UUID partialItem = UUID.randomUUID();
@@ -36,30 +37,66 @@ class GradingPromptBuilderTest {
         var builder = new GradingPromptBuilder(json);
         String schema = builder.buildProviderSchema(List.of(active));
         assertThat(json.readTree(schema).path("properties").has("checks")).isFalse();
+        assertThat(json.readTree(schema).path("properties").has("score")).isFalse();
         assertThat(json.readTree(builder.buildOutputSchema(List.of(active))).path("properties").has("checks")).isTrue();
+        assertThat(json.readTree(builder.buildOutputSchema(List.of(active))).path("properties").has("score")).isTrue();
         var payload = GradingPromptBuilder.createZeroProposal(List.of(active), json);
         payload.remove("checks");
+        payload.remove("score");
         ((com.fasterxml.jackson.databind.node.ObjectNode) payload.path("itemScoresByRubric").path(rubricId.toString()))
                 .put(partialItem.toString(), new BigDecimal("0.25")).put(fullItem.toString(), BigDecimal.ONE);
-        payload.put("score", "1.25");
         var checker = new edu.aiplatform.ai.service.JsonSchemaChecker(json);
         assertThat(checker.check(schema, payload)).isEmpty();
+        var wrongTotal = payload.deepCopy().put("score", "9.50");
+        assertThat(checker.check(schema, wrongTotal)).isPresent();
         var contradictory = payload.deepCopy();
         contradictory.putObject("checks").putArray(rubricId.toString()).add(zeroItem.toString());
         assertThat(checker.check(schema, contradictory)).isPresent();
+        contradictory.put("score", "1.25");
         assertThatThrownBy(() -> new GradingProposalValidator(json).validateProposal(
                 contradictory, List.of(active), Set.of("active")))
                 .isInstanceOf(ApiException.class).hasMessage("Checks must match full-credit item scores");
 
-        var rubrics = List.of(active, empty);
-        var merged = GradingPromptBuilder.mergeProposalWithEmptyRubrics(payload, rubrics, List.of(empty), json);
+        var rubrics = includeEmpty ? List.of(active, empty) : List.of(active);
+        var merged = GradingPromptBuilder.mergeProposalWithEmptyRubrics(
+                payload, rubrics, includeEmpty ? List.of(empty) : List.of(), json);
         var normalized = GradingPromptBuilder.sanitizeAndNormalizeProposal(merged, rubrics, Set.of("active", "empty"), json);
         var validated = new GradingProposalValidator(json).validateProposal(normalized, rubrics, Set.of("active", "empty"));
         assertThat(validated.score()).isEqualByComparingTo("1.25");
+        assertThat(normalized.path("score").asText()).isEqualTo("1.25");
         assertThat(validated.checks().get(rubricId)).containsExactly(fullItem);
-        assertThat(validated.checks().get(empty.rubricId())).isEmpty();
+        if (includeEmpty) {
+            assertThat(validated.checks().get(empty.rubricId())).isEmpty();
+        }
         assertThat(validated.itemScoresByRubric().get(rubricId)).containsEntry(zeroItem, BigDecimal.ZERO.setScale(2))
                 .containsEntry(partialItem, new BigDecimal("0.25"));
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"-0.01", "1.01", "0.001", "missing", "unknown"})
+    void derivedTotalsNeverMakeInvalidItemScoresAcceptable(String invalidScore) {
+        UUID rubricId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
+        var rubrics = List.of(new RubricView(rubricId, UUID.randomUUID(), "part-1",
+                List.of(new RubricCriterion(UUID.randomUUID(), "Design", "", CriterionKind.TEXT,
+                        List.of(new RubricItem(itemId, "Item", BigDecimal.ONE)))), BigDecimal.ONE));
+        var payload = GradingPromptBuilder.createZeroProposal(rubrics, json);
+        payload.remove("checks");
+        payload.remove("score");
+        var scores = (com.fasterxml.jackson.databind.node.ObjectNode)
+                payload.path("itemScoresByRubric").path(rubricId.toString());
+        if ("missing".equals(invalidScore)) {
+            scores.remove(itemId.toString());
+        } else if ("unknown".equals(invalidScore)) {
+            scores.put(UUID.randomUUID().toString(), BigDecimal.ONE);
+        } else {
+            scores.put(itemId.toString(), new BigDecimal(invalidScore));
+        }
+        var normalized = GradingPromptBuilder.sanitizeAndNormalizeProposal(
+                payload, rubrics, Set.of("part-1"), json);
+        assertThatThrownBy(() -> new GradingProposalValidator(json)
+                .validateProposal(normalized, rubrics, Set.of("part-1")))
+                .isInstanceOf(ApiException.class);
     }
 
     @Test

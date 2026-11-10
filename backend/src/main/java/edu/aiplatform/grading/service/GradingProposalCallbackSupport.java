@@ -34,7 +34,7 @@ final class GradingProposalCallbackSupport {
         if (task == null) {
             if ("PENDING".equals(proposal.status)) {
                 proposal.status = "FAILED";
-                proposal.safeError = error == null ? "AI service unavailable" : error;
+                proposal.safeError = formatTaskError(error);
                 proposal.taskState = null;
                 proposal.completedAt = clock.instant();
             }
@@ -42,7 +42,7 @@ final class GradingProposalCallbackSupport {
         }
         if (proposal.taskId != null && !proposal.taskId.equals(task.taskId())) {
             proposal.status = "REJECTED";
-            proposal.safeError = "Task correlation mismatch";
+            proposal.safeError = formatTaskError("Task correlation mismatch");
             proposal.taskState = null;
             if (proposal.completedAt == null) {
                 proposal.completedAt = clock.instant();
@@ -81,7 +81,7 @@ final class GradingProposalCallbackSupport {
             proposal.status = task.applyResult() == ApplyOutcome.STALE ? "STALE" : "REJECTED";
             if ("REJECTED".equals(proposal.status)) {
                 proposal.safeError = task.safeError() == null || task.safeError().isBlank()
-                        ? "AI proposal cannot be applied to this submission"
+                        ? formatTaskError("AI proposal cannot be applied to this submission")
                         : formatTaskError(task.safeError());
             }
             proposal.taskState = null;
@@ -118,10 +118,8 @@ final class GradingProposalCallbackSupport {
         proposal.taskId = taskId;
         proposal.taskState = null;
         proposal.safeError = "INVALID_AI_PROPOSAL".equals(ex.code())
-                ? "Phản hồi AI chưa hợp lệ ("
-                        + GradingProposalValidator.buildRejectionDiagnostic(ex)
-                        + "). Bạn vẫn có thể chấm thủ công."
-                : "AI proposal cannot be applied to this submission";
+                ? formatTaskError(GradingProposalValidator.buildRejectionDiagnostic(ex))
+                : formatTaskError(ex.code());
         proposal.completedAt = clock.instant();
     }
 
@@ -132,8 +130,32 @@ final class GradingProposalCallbackSupport {
     }
 
     static String formatTaskError(String diagnostic) {
-        return diagnostic == null || diagnostic.isBlank()
-                ? "Không thể tạo đề xuất AI. Bạn vẫn có thể chấm thủ công."
-                : diagnostic;
+        String fallback = "Không thể tạo đề xuất AI. Hãy thử lại hoặc chấm thủ công.";
+        if (diagnostic == null || diagnostic.isBlank()) return fallback;
+        var legacy = java.util.regex.Pattern.compile("(?:PROPOSAL|FEEDBACK)_[A-Z_]+").matcher(diagnostic);
+        boolean coded = legacy.find();
+        String code = coded ? legacy.group() : diagnostic;
+        return switch (code) {
+            case "PROPOSAL_TOTAL_MISMATCH" -> "Tổng điểm AI trả về không khớp với tổng điểm từng tiêu chí rubric. Hãy thử chấm lại bằng AI hoặc chấm thủ công.";
+            case "PROPOSAL_CHECKS_MISMATCH" -> "Các mục AI đánh dấu đạt không khớp với điểm chi tiết. Hãy thử chấm lại bằng AI hoặc chấm thủ công.";
+            case "PROPOSAL_SECTION_MISMATCH" -> "AI nhận xét nhầm phần của bài làm. Hãy thử chấm lại bằng AI.";
+            case "PROPOSAL_UNKNOWN_ITEM", "FEEDBACK_UNKNOWN_ITEM" -> "AI trả điểm hoặc nhận xét cho tiêu chí không có trong rubric. Hãy thử chấm lại bằng AI.";
+            case "FEEDBACK_ITEM_COVERAGE" -> "AI chưa nhận xét đầy đủ các tiêu chí rubric. Hãy thử chấm lại bằng AI.";
+            case "FEEDBACK_DUPLICATE_ITEM" -> "AI trả nhận xét trùng cho cùng một tiêu chí. Hãy thử chấm lại bằng AI.";
+            case "FEEDBACK_UNKNOWN_EVIDENCE_BLOCK" -> "AI dẫn minh chứng không có trong bài nộp. Hãy kiểm tra minh chứng hoặc chấm lại bằng AI.";
+            case "FEEDBACK_MISSING_EVIDENCE" -> "AI chưa cung cấp minh chứng để giải thích điểm. Hãy thử chấm lại bằng AI.";
+            case "FEEDBACK_MISSING_REVIEW_REASON" -> "AI yêu cầu giảng viên kiểm tra nhưng chưa giải thích lý do. Hãy thử chấm lại bằng AI.";
+            case "FEEDBACK_UNKNOWN_FIELD", "PROPOSAL_SCHEMA_MISMATCH" -> "Dữ liệu chấm điểm AI trả về không đúng cấu trúc yêu cầu. Hãy thử lại hoặc chấm thủ công.";
+            case "AI_QUOTA_EXCEEDED", "QUOTA_EXHAUSTED" -> "Bạn đã dùng hết hạn mức token hôm nay. Chờ hạn mức được đặt lại hoặc chọn API cá nhân.";
+            case "AI_QUOTA_GLOBAL_EXCEEDED" -> "API chung của trường đã hết hạn mức token hôm nay. Chờ hạn mức được đặt lại hoặc chọn API cá nhân.";
+            case "AI_QUOTA_BLOCKED" -> "Tài khoản này chưa được phép dùng API chung. Hãy chọn API cá nhân hoặc liên hệ quản trị viên.";
+            case "AI_QUOTA_NOT_CONFIGURED" -> "API chung chưa được cấu hình hạn mức. Hãy chọn API cá nhân hoặc liên hệ quản trị viên.";
+            case "AI_SERVICE_UNAVAILABLE", "AI service unavailable" -> "Không thể kết nối dịch vụ AI. Vui lòng thử lại sau.";
+            case "RUBRIC_CHANGED" -> "Rubric đã thay đổi. Hãy tải lại bài chấm trước khi tạo đề xuất AI.";
+            case "SUBMISSION_CHANGED", "NOT_LATEST_ATTEMPT", "Task correlation mismatch" -> "Kết quả AI không còn khớp với bài nộp hiện tại. Hãy tải lại và chấm lại bằng AI.";
+            case "AI proposal cannot be applied to this submission" -> "Không thể áp dụng kết quả AI cho bài nộp hiện tại. Hãy tải lại và thử lại.";
+            case "AI task failed", "AI task unavailable or failed" -> fallback;
+            default -> coded || diagnostic.matches("[A-Z][A-Z0-9_]+") ? fallback : diagnostic;
+        };
     }
 }

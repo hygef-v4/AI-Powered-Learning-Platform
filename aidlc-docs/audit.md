@@ -12466,3 +12466,57 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 **AI Response**: Confirmed local browser context. Final backend15/15, frontend35/35, typecheck and scoped lint passed. Restarted only the identified existing local API/worker launcher; health200, startup applied two pending staging assignment migrations20261109.2330 and20261110.1200. Downloaded SWD392 – Thiết kế hệ thống nhắn tin.xlsx from the authenticated UI and verified actual XLSX XML has9 Vietnamese headers, Bảng điểm sheet,5 rows for the selected assignment, localized statuses/flags and unchanged0.00 published score. Aggregate download Bảng điểm tổng hợp-2026-11-10.xlsx verified20rows/4assignments and no class ID. Temporary tab closed and original browser tab restored. Existing uncommitted changes preserved; no live grade/provider action, VPS update, commit/push, full-suite/build rerun or subagents. Updated the current requirements/plan/state and verification report.
 
 ---
+
+
+## Diagram-only AI grading investigation and consistency fix
+**Timestamp**: 2026-11-10T09:58:29Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] b thử check xem sao chấm bằng AI được có 2 điểm trên browser này, đồng thới rà saost lại code chấm điểm xem đã đồng nhất với tạo đề bài và rubric chưa"
+**AI Response**: Inspected the exact local Chrome evaluation dbbf3c65 and its READY2.00 proposal. Two diagram-only rubric sections were zeroed by deterministic blank detection before AI. All3 submitted diagrams are compressed Draw.io, while grading used a raw mxCell regex. Live rubric snapshot canonically matches2+4+4 maxima and3 heading IDs; criteria TEXT does not prohibit diagram evidence. Added real compressed-diagram fixtures and cross-module regressions (2 RED), then expose the existing bounded DiagramXml cellCount through IDocumentModel and use it in every empty-part grading path, including explicit-parts/MCP. Initial connected46 tests pass; final regression/full backend verification and local proposal acceptance pending. No original grade, rubric or student submission changed; no subagents or publish action. Plan: construction/plans/code-generation-plan/2026-11-10-grading-diagram-parity.md.
+
+---
+
+
+## Diagram-only grading verified
+**Timestamp**: 2026-11-10T10:04:22Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] b thử check xem sao chấm bằng AI được có 2 điểm trên browser này, đồng thới rà saost lại code chấm điểm xem đã đồng nhất với tạo đề bài và rubric chưa"
+**AI Response**: Fixed compressed Draw.io content detection via shared bounded assignments parser; no rubric or grading policy adjustment to target6points. Both RED regressions now pass; connected46 and full2116 tests/253suites0fail0error0skip/JAR plus required guard passed. Refreshed local API/worker. One successful Gemini request yields READY proposal379a92c1 at8.50(2+3.5+3), recognizing all diagrams. Initial UI request during restart failed500 without creating a proposal, then startup was verified before retry. Persisted grade verified DRAFT0.00/version1 and original submission hash unchanged; new proposal remains an unsaved form. No assignment/submission mutation, official grade action, new migration, frontend change, VPS release, commit/push or subagents. Results and model-judgment limits recorded in construction/build-and-test/2026-11-10-grading-diagram-parity.md.
+
+---
+
+
+## Accurate Vietnamese AI grading errors
+**Timestamp**: 2026-11-10T10:19:37Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] hình như log lỗi sai nếu hết token thì ghi hết token nếu lỗi gì thì ghi lỗi gì, đừng log tên lỗi in hoa như kia ra"
+**AI Response**: Actual two latest rejections have TOTAL validation diagnostics; not token exhaustion. Added6 failing cases across16 tests, then centralized Vietnamese proposal diagnostics, including old stored messages on read without a DB migration. Internal validator codes stay in server logs. Gateway now checks explicit Gemini/OpenAI/Claude completion reasons for token truncation before accepting output, preserving CHARGED usage; HTTP429 quota/rate distinction uses structured error codes only. Initial34 tests pass; final connected verification and local browser acceptance pending. Prior diagram fix retained, no grading policy change, paid retry, grade mutation or subagents. Plan: construction/plans/code-generation-plan/2026-11-10-grading-ai-errors.md.
+
+---
+
+
+## AI grading error presentation verified
+**Timestamp**: 2026-11-10T10:23:03Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] hình như log lỗi sai nếu hết token thì ghi hết token nếu lỗi gì thì ghi lỗi gì, đừng log tên lỗi in hoa như kia ra"
+**AI Response**: Final343 AI/grading/diagram/architecture cases pass0fail0error0skip. New/legacy grading errors use one Vietnamese formatter; validator codes remain in logs. Gateway reads explicit token-limit stop metadata for3 providers, preserves charged usage and distinguishes structured quota/rate codes without assuming429 means exhaustion. Refreshed local API/worker and inspected existing failure in a separate authenticated Chrome tab: exact Vietnamese total-mismatch explanation appears, PROPOSAL_ absent. Temporary tab closed and original form retained; before/after saved grade/state/version/submission hash unchanged. No paid model call, grading action, new migration, source dependency, commit/push, VPS update or subagents. Evidence: construction/build-and-test/2026-11-10-grading-ai-errors.md.
+
+---
+
+
+## Deterministic AI proposal totals — investigation
+**Timestamp**: 2026-11-10T10:30:02Z
+**Requested by:** Quang Hung
+**User Input**: "tại sao lại cộng điểm k khớp với tiêu chí? h vẫn bị lỗi đó b giúp tôi fix được k"
+**AI Response**: Confirmed newest local proposal version7 still rejected at TOTAL with saved grade DRAFT0.00/version1 unchanged. Provider schema redundantly requires score alongside every item score; normalizer preserves supplied totals for strict validation, so model arithmetic errors reject otherwise usable proposals. Scope: provider prompt/schema and regression tests; reuse existing absent-total derivation followed by strict rubric validator. Preserve full MCP contract, unknown/missing/range/precision/check/evidence validation, stored history and existing uncommitted work. User explicitly authorizes fixing this ongoing defect; no new approval gate, subagents, grade action or deployment. Security/Resiliency retained; PBT remains disabled.
+
+---
+
+
+## Deterministic AI totals verified
+**Timestamp**: 2026-11-10T10:35:42Z
+**Requested by:** Quang Hung
+**User Input**: "tại sao lại cộng điểm k khớp với tiêu chí? h vẫn bị lỗi đó b giúp tôi fix được k"
+**AI Response**: Provider prompt/schema now omit redundant score; existing normalization derives it from rubric item scores before strict validation. Full MCP contract unchanged. RED2/12; initial connected run exposed2 contradictory-check fixture failures because score was omitted from the full-validator fixture, corrected its setup. Final349 connected AI/grading/diagram/architecture tests pass0fail0error0skip. Refreshed local API/worker, health200, one paid Gemini request yields READY proposalc58454d1/version8 at7.50, independently verified12 item scores and section totals2+3+2.5 in DB and UI. Persisted grade remains DRAFT0.00/version1 with identical submission hash. Original browser form untouched; separate verification tab1728489459 remains open with7.50 unsaved after browser closeTab timed out. No official grade action, migration, dependency, frontend change, history rewrite, commit/push, VPS update or subagents. Evidence: construction/build-and-test/2026-11-10-grading-derived-total.md. Security/Resiliency retained; PBT disabled.
+
+---
