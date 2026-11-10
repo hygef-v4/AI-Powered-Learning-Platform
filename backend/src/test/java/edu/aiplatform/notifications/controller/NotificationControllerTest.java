@@ -4,7 +4,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import edu.aiplatform.announcements.controller.*;
-import edu.aiplatform.announcements.dto.*;
 import edu.aiplatform.announcements.service.*;
 import edu.aiplatform.notifications.service.*;
 import edu.aiplatform.identity.contract.*;

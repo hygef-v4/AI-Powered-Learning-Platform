@@ -11,13 +11,15 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 
 Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệp và việc nền giữ như bản 2026-10-09.
 
+**Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
+
 ## 1. Upload
 
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U03-01 | Upload đi qua backend trong một request multipart. | Thiết kế |
 | BR-U03-02 | Trần dung lượng theo `purpose` lấy từ Settings (BR-U03-87): `MATERIAL` mặc định và tối đa 50 MB, `DOCUMENT_IMAGE` mặc định và tối đa 5 MB. Vượt thì từ chối trước khi đọc hết. Không còn purpose `AVATAR` (hồ sơ không có ảnh đại diện, BR-U01-52). | FR-013, FR-033 |
-| BR-U03-03 | Loại tệp xác định bằng nội dung (magic bytes) và phải thuộc danh sách loại cho phép của `purpose` lấy từ Settings. Đuôi tệp và `Content-Type` của trình duyệt chỉ để tham khảo. | FR-033, SEC-003 |
+| BR-U03-03 | Loại tệp xác định bằng nội dung (magic bytes) và phải thuộc danh sách loại cho phép của `purpose`; riêng MATERIAL cố định PDF, DOCX, PPTX, XLSX, không lấy danh sách định dạng từ Settings. Các purpose khác giữ chính sách riêng. Đuôi tệp và `Content-Type` của trình duyệt chỉ để tham khảo. | FR-033, SEC-003 |
 | BR-U03-04 | `MATERIAL`: Teacher hoặc Subject Manager, U13 kiểm thêm phân công môn/lớp. `DOCUMENT_IMAGE`: Student, Teacher hoặc Subject Manager đang được sửa tài liệu đó; U07, U08, U12 kiểm thêm quyền sửa. Admin không upload. U03 chỉ kiểm role và `purpose`; unit sở hữu kiểm phạm vi. U01 báo `DEPENDENCY_UNAVAILABLE` (không kiểm được quyền) thì trả 503 `UPLOAD_AUTHORIZATION_UNAVAILABLE`, không ghi audit từ chối. | FR-002, SEC-002 |
 | BR-U03-05 | Tính SHA-256 khi nhận và lưu vào thuộc tính tệp trên Drive. | Thiết kế |
 | BR-U03-06 | Chỉ khi tệp và thuộc tính đã lên Drive mới trả `FileRef`. Lỗi ở bất kỳ bước nào thì xóa tệp Drive nếu đã tạo; xóa lỗi thì gửi việc `DRIVE_CLEANUP`. | REL-003 |
@@ -91,7 +93,7 @@ Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệ
 | BR-U03-84 | Không thêm hay xóa mục từ giao diện. Khi khởi động, mục đã khai báo mà chưa có trong bảng được tạo với giá trị mặc định (hoặc rỗng là "chưa cấu hình"); mục đã có giữ nguyên giá trị Admin đã sửa. | FR-033 |
 | BR-U03-85 | Bí mật (API key, mật khẩu SMTP, khóa Google Drive, khóa ký, khóa backup) không phải cài đặt khóa–giá trị: hoặc là biến môi trường, hoặc do unit sở hữu lưu dạng bảo vệ (API AI chung của U06). | SEC-006 |
 | BR-U03-86 | Cache thường refresh trong 30 giây; sửa cài đặt xóa cache của khóa đó sau khi transaction commit (không xóa trước commit để request khác đọc lại giá trị cũ vào cache). Khi DB lỗi và đã có cache, source tiếp tục dùng last-known value dù quá TTL; không có cache thì unavailable. Đây là ngoại lệ freshness trong outage, không hứa mọi instance luôn mới trong30 giây khi dependency lỗi. | FR-033 |
-| BR-U03-87 | Nhóm Tệp: `files.material.maxSizeMb` (1–50, mặc định 50), `files.material.allowedTypes` (tập con khác rỗng của PDF, DOCX, PPTX), `files.documentImage.maxSizeMb` (1–5, mặc định 5), `files.documentImage.allowedTypes` (tập con khác rỗng của PNG, JPEG, GIF, SVG). | FR-013, FR-033 |
+| BR-U03-87 | Nhóm Tệp: `files.material.maxSizeMb` (1–50, mặc định 50), MATERIAL có định dạng cố định PDF, DOCX, PPTX, XLSX (không có setting allowedTypes cho học liệu), `files.documentImage.maxSizeMb` (1–5, mặc định 5), `files.documentImage.allowedTypes` (tập con khác rỗng của PNG, JPEG, GIF, SVG). | FR-013, FR-033 |
 | BR-U03-88 | Nhóm Backup: `backup.enabled` (mặc định tắt), `backup.dailyAt` (giờ:phút theo Asia/Ho_Chi_Minh, không có mặc định). Chỉ bật được khi đã đặt giờ; giờ chạy phải được xác nhận trước triển khai, hệ thống không tự gán. Thời gian giữ bản cố định 7 ngày (BR-U03-96), không phải cài đặt. | FR-038, council features, chốt 2026-10-15 |
 | BR-U03-89 | Cài đặt không dạng khóa–giá trị (API AI chung, quota giảng viên) do unit sở hữu (U06) cung cấp qua `ISettingsSectionProvider`: U03 chỉ hiện tên và bản tóm tắt đã che trên Setting List; xem chi tiết, sửa, thử kết nối, thu hồi đi qua API của U06, U06 tự kiểm quyền, version và audit. U03 không đọc hay ghi bảng của U06, không giữ key rõ. Phần của U06 không trả lời thì hiện "không khả dụng", không bao giờ báo đã lưu. | FR-033, FR-034 |
 

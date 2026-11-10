@@ -8,6 +8,7 @@ import { Alert, Button, ClickableRow, Icon, PageNav, Pill, Segmented, Select, Ta
 import type { ListFilter } from "../api";
 import { errorMessage, formatDateTime } from "../model/format";
 import { assignmentRowActions } from "../slots";
+import { rememberAssignmentsPage } from "../model/outline";
 import { statusLabels, statusTones, type AssignmentRow, type AssignmentStatus } from "../model/types";
 import type { useAssignmentPage } from "../hooks/useAssignmentPage";
 
@@ -80,8 +81,8 @@ export function AssignmentListCard({ page, classId }: { page: ReturnType<typeof 
         </thead>
         <tbody>
           {shown.map((row) => (
-            <ClickableRow key={row.id} data-testid={`assignment-row-${row.id}`} onClick={() => router.push(href(row))}>
-              <Td><Link href={href(row)} onClick={(e) => e.stopPropagation()} className="block truncate font-semibold text-ink hover:text-primary-ink">{row.title}</Link></Td>
+            <ClickableRow key={row.id} data-testid={`assignment-row-${row.id}`} onClick={() => { rememberAssignmentsPage(); router.push(href(row)); }}>
+              <Td><Link href={href(row)} onClick={(e) => { e.stopPropagation(); rememberAssignmentsPage(); }} className="block truncate font-semibold text-ink hover:text-primary-ink">{row.title}</Link></Td>
               <Td className="whitespace-nowrap">{KIND_LABELS[kindOf(row)]}</Td>
               {classId && <Td className="whitespace-nowrap">{row.scope === "SUBJECT" ? "Môn" : "Lớp"}</Td>}
               <Td className="whitespace-nowrap"><span className="font-mono text-xs text-muted">{formatDateTime(row.closesAt)}</span></Td>

@@ -161,10 +161,10 @@ export function getQuiz(id: string, classId?: string | null, signal?: AbortSigna
 }
 
 export function updateQuizDetails(id: string, input: QuizDetailsInput, version: number): Promise<QuizDetail> {
-  const { title, instructions, settings, activityMonitoringEnabled, activityNotice } = input;
+  const { title, instructions, instructionsDocument, settings, activityMonitoringEnabled, activityNotice } = input;
   return apiFetch<QuizDetail>(quizPath(id), {
     method: "PATCH",
-    body: JSON.stringify({ title, instructions, settings, activityMonitoringEnabled, activityNotice, version }),
+    body: JSON.stringify({ title, instructions, instructionsDocument, settings, activityMonitoringEnabled, activityNotice, version }),
   });
 }
 
@@ -253,8 +253,8 @@ const quizDraftPath = (quizId: string) => `${quizPath(quizId)}/ai-drafts`;
 function draftBody(input: AiDraftInput) {
   const { instructions, count, type, difficulty, materialIds, choice } = input;
   return {
-    instructions, count, type, difficulty, materialIds, source: choice.source,
-    provider: choice.source === "PERSONAL" ? choice.provider : null, requestRef: crypto.randomUUID(),
+    instructions, count, type, difficulty, materialIds, source: choice?.source ?? null,
+    provider: choice?.source === "PERSONAL" ? choice.provider : null, requestRef: crypto.randomUUID(),
   };
 }
 

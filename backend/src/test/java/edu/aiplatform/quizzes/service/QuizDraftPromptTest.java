@@ -17,6 +17,29 @@ class QuizDraftPromptTest {
     private final ObjectMapper json = new ObjectMapper();
 
     @Test
+    void parsesRelevanceWithoutBreakingLegacyResultsAndRejectsWrongTypes() {
+        String legacy = "{\"questions\":[{\"type\":\"MCQ_SINGLE\",\"stem\":\"x\",\"options\":[\"a\",\"b\"],\"correct\":[1]}]}";
+        assertThat(QuizDraftPrompt.parseOutput(json, legacy).requestMatchesSources()).isTrue();
+        assertThat(QuizDraftPrompt.parseOutput(json, legacy.replace("{\"questions\":",
+                "{\"requestMatchesSources\":false,\"questions\":")).requestMatchesSources()).isFalse();
+        assertThatThrownBy(() -> QuizDraftPrompt.parseOutput(json, legacy.replace("{\"questions\":",
+                "{\"requestMatchesSources\":\"false\",\"questions\":"))).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> QuizDraftPrompt.parseOutput(json, legacy.replace("{\"questions\":",
+                "{\"questionsMatchSources\":\"true\",\"questions\":"))).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void requestsSourceGroundingAndSemanticRelevanceInTheSameGeneration() throws Exception {
+        var request = new QuizAiDraftService.DraftRequest("Soạn câu về bóng đá", 5, null, null,
+                List.of(java.util.UUID.randomUUID()), null, null, "sources");
+        var prompt = QuizDraftPrompt.prompt("quiz", request,
+                List.of(new edu.aiplatform.ai.contract.MaterialText(java.util.UUID.randomUUID(), "Toán", "Đạo hàm", false, 1)));
+        assertThat(prompt.system()).contains("requestMatchesSources", "ưu tiên tài liệu", "không liên quan");
+        assertThat(json.readTree(QuizDraftPrompt.schema(5)).at("/properties/requestMatchesSources/type").asText())
+                .isEqualTo("boolean");
+    }
+
+    @Test
     void schemaIsJsonAndCapsQuestionCount() throws Exception {
         JsonNode schema = json.readTree(QuizDraftPrompt.schema(7));
 

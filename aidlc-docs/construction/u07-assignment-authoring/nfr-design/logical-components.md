@@ -1,4 +1,6 @@
-# U07 Assignment Authoring — logical-components
+# U07 Assignment Authoring — logical-components — chuẩn JDBC
+
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code còn JPA được ghi là khoảng cách migration.
 
 > Current structure: parent HEAD 5a76e428 + working-tree refactor, 2026-10-30. Unit ownership unchanged; runtime/provider acceptance remains separate.
 
@@ -10,7 +12,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|
 | [assignments/controller](../../../../backend/src/main/java/edu/aiplatform/assignments/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [assignments/service](../../../../backend/src/main/java/edu/aiplatform/assignments/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [assignments/repository](../../../../backend/src/main/java/edu/aiplatform/assignments/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [assignments/repository](../../../../backend/src/main/java/edu/aiplatform/assignments/repository) | Repository interface/implementation, SQL và persistence mapping; JDBC là chuẩn đích toàn dự án. |
 | [assignments/model](../../../../backend/src/main/java/edu/aiplatform/assignments/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [assignments/dto](../../../../backend/src/main/java/edu/aiplatform/assignments/dto) | Kiểu dữ liệu request/response riêng. |
 | [assignments/contract](../../../../backend/src/main/java/edu/aiplatform/assignments/contract) | Public interface/DTO xuyên unit; giữ nguyên. |

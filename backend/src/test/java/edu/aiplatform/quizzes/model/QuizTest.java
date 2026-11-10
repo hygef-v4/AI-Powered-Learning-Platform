@@ -8,12 +8,45 @@ import edu.aiplatform.quizzes.contract.QuizSettings;
 import edu.aiplatform.quizzes.contract.QuizStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 /** BR-U10-20, 24, 31: vòng đời Quiz, xóa khi chưa phát hành, bản sao về nháp. */
 class QuizTest {
+    @Test
+    void legacySettingsUpdatePreservesFormattingWithTrailingBlankParagraphs() {
+        var document = new edu.aiplatform.shared.content.FormattedText(java.util.List.of(
+                new edu.aiplatform.shared.content.FormattedText.Block(
+                        edu.aiplatform.shared.content.FormattedText.Type.PARAGRAPH,
+                        edu.aiplatform.shared.content.FormattedText.Align.CENTER, 0,
+                        java.util.List.of(new edu.aiplatform.shared.content.FormattedText.Run("Nội dung", true, null, null))),
+                new edu.aiplatform.shared.content.FormattedText.Block(
+                        edu.aiplatform.shared.content.FormattedText.Type.PARAGRAPH,
+                        edu.aiplatform.shared.content.FormattedText.Align.LEFT, 0,
+                        java.util.List.of(new edu.aiplatform.shared.content.FormattedText.Run("", null, null, null)))));
+        Quiz quiz = draft().withInstructionsDocument(document);
+        Quiz edited = quiz.withDetails(quiz.title(), quiz.instructions().strip(), quiz.settings(), false, null, NOW);
+        assertThat(edited.instructionsDocument()).isEqualTo(document);
+        assertThat(edited.instructions()).isEqualTo("Nội dung\n");
+        assertThat(edited.published(NOW).retired("Archive", NOW).reopened(NOW).instructionsDocument()).isEqualTo(document);
+    }
+
+    @Test
+    void formattedInstructionsSurvivePublicationCopiesAndSettingsOnlyEdits() {
+        var document = new edu.aiplatform.shared.content.FormattedText(java.util.List.of(
+                new edu.aiplatform.shared.content.FormattedText.Block(
+                        edu.aiplatform.shared.content.FormattedText.Type.PARAGRAPH,
+                        edu.aiplatform.shared.content.FormattedText.Align.CENTER, 0,
+                        java.util.List.of(new edu.aiplatform.shared.content.FormattedText.Run("Nội dung", true, null, null)))));
+        Quiz quiz = draft().withInstructionsDocument(document);
+        assertThat(quiz.instructions()).isEqualTo("Nội dung");
+        assertThat(quiz.published(NOW).instructionsDocument()).isEqualTo(document);
+        assertThat(quiz.copyAs(QuizOrigin.CLONE, 1, null, author, NOW).instructionsDocument()).isEqualTo(document);
+        assertThat(quiz.withDetails(quiz.title(), quiz.instructions(), quiz.settings(), false, null, NOW)
+                .instructionsDocument()).isEqualTo(document);
+        assertThat(quiz.withDetails(quiz.title(), "Plain edit", quiz.settings(), false, null, NOW)
+                .instructionsDocument()).isNull();
+    }
 
     private static final Instant NOW = Instant.parse("2026-10-20T08:00:00Z");
     private final UUID subject = UUID.randomUUID();

@@ -2190,6 +2190,24 @@
           "moduleId": {
             "type": "string",
             "format": "uuid"
+          },
+          "enabled": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Independent of ACTIVE/ARCHIVED. Disabled hides student lists, denies direct read and download redemption, and excludes new AI references. Omitted create defaults true; omitted update preserves current value."
+          },
+          "descriptionDocument": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FormattedText"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional structured description; server derives legacy plain description. Unchanged plain updates preserve existing formatting."
           }
         },
         "required": [
@@ -2227,6 +2245,24 @@
             ],
             "format": "uuid",
             "description": "Optional; omitted or null keeps current module; otherwise same-subject module required."
+          },
+          "enabled": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Independent of ACTIVE/ARCHIVED. Disabled hides student lists, denies direct read and download redemption, and excludes new AI references. Omitted create defaults true; omitted update preserves current value."
+          },
+          "descriptionDocument": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FormattedText"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional structured description; server derives legacy plain description. Unchanged plain updates preserve existing formatting."
           }
         },
         "required": [
@@ -2438,6 +2474,21 @@
           "moduleId": {
             "type": "string",
             "format": "uuid"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Independent of ACTIVE/ARCHIVED. Disabled hides student lists, denies direct read and download redemption, and excludes new AI references. Omitted create defaults true; omitted update preserves current value."
+          },
+          "descriptionDocument": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FormattedText"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional structured description; server derives legacy plain description. Unchanged plain updates preserve existing formatting."
           }
         },
         "required": [
@@ -2456,7 +2507,8 @@
           "canManage",
           "current",
           "versions",
-          "moduleId"
+          "moduleId",
+          "enabled"
         ]
       },
       "DownloadToken": {
@@ -2601,6 +2653,89 @@
           "canManage",
           "quizzes"
         ]
+      },
+      "FormattedText": {
+        "type": "object",
+        "required": [
+          "blocks"
+        ],
+        "description": "Text-only formatting; no raw HTML. At most 1000 runs and 5000 plain characters in total; materials limit plain text to 2000.",
+        "properties": {
+          "blocks": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/FormattedBlock"
+            }
+          }
+        }
+      },
+      "FormattedBlock": {
+        "type": "object",
+        "required": [
+          "type",
+          "runs"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "PARAGRAPH",
+              "UL",
+              "OL"
+            ]
+          },
+          "align": {
+            "enum": [
+              "LEFT",
+              "CENTER",
+              "RIGHT",
+              "JUSTIFY"
+            ],
+            "default": "LEFT"
+          },
+          "indent": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6,
+            "default": 0
+          },
+          "runs": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 200,
+            "items": {
+              "type": "object",
+              "required": [
+                "text"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "maxLength": 5000
+                },
+                "bold": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "italic": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "underline": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

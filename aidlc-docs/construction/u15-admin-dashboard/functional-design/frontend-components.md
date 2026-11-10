@@ -1,5 +1,13 @@
 # U15 Admin Dashboard — frontend-components
 
+**Naming update 2026-11-05:** chart module is `DashboardCharts.tsx`; API reads are `loadAdminDashboard`, `loadDashboardActivity`, `listBackupHistory`. Internal helpers use verb-object names; pending/deadline/cancellation behavior and all response fields are unchanged. [Current evidence](../../build-and-test/2026-11-05-u05-u09-u15-conventions-results.md).
+
+## Independent source loading — 2026-11-05
+
+`hooks/useLiveOverview.ts` starts counts, activity, AI usage and backup history concurrently. Counts render immediately when available; each optional source has its own pending state, then data or “Không khả dụng”. Every client request has a five-second deadline and its own abort signal linked to the current refresh. Completion, refresh replacement and unmount clean up timers/listeners; older results cannot replace the current view. This implements BR-U15-12 without waiting for all optional promises. The backend's two-second source deadline is unchanged.
+
+Visible-tab refresh remains every 30 seconds, with immediate refresh on return. A failed primary refresh preserves previously displayed data and marks it disconnected; initial failure offers retry. Primary 401/403 clears data, cancels remaining requests and stops polling. Optional errors affect their own cards only. [Verification](../../build-and-test/2026-11-05-u05-u09-u15-followup-results.md).
+
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
 

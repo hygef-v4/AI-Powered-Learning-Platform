@@ -1,6 +1,7 @@
 // Kiểu dữ liệu Quiz Practice (U11, UC 49–52), khớp DTO của QuizPracticeController, TeacherQuizAttemptController.
 
 import type { ActivitySummary } from "@/shared/activity/ActivityTimeline";
+import type { FormattedText } from "@/shared/document/formattedText";
 
 export type QuizStatus = "DRAFT" | "OPEN" | "RETIRED";
 export type ActivitySignal = "DISABLED" | "OK" | "NO_SIGNAL" | "SIGNAL_LOST" | "UNAVAILABLE";
@@ -13,7 +14,7 @@ export type PracticeQuizRow = {
   quizId: string;
   classId: string;
   classCode: string;
-  className: string;
+  subjectCode: string | null;
   title: string;
   status: QuizStatus;
   timeLimitMinutes: number | null;
@@ -46,9 +47,10 @@ export type PracticeQuizDetail = {
   quizId: string;
   classId: string;
   classCode: string;
-  className: string;
+  subjectCode: string | null;
   title: string;
   instructions: string | null;
+  instructionsDocument?: FormattedText | null;
   status: QuizStatus;
   questionCount: number;
   maxScore: number;

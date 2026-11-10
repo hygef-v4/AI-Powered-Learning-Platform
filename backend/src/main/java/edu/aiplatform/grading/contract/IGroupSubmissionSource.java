@@ -10,7 +10,9 @@ import java.util.UUID;
  */
 public interface IGroupSubmissionSource {
 
+    /** Finds the submitted content and membership for a group document. */
     Optional<GroupSubmissionView> getGroupSubmission(UUID groupDocumentId);
 
+    /** Lists submission status for groups in an assignment and class. */
     List<GroupSubmissionStatus> listGroupSubmissions(UUID assignmentId, UUID classId);
 }

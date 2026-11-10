@@ -33,6 +33,7 @@ const CLAUDE: ConnectionView = {
   lastTestAt: "2026-10-21T03:00:00Z",
   lastTestResult: "Đạt",
   version: 2,
+  id: "k-claude",
 };
 
 const NOT_SET = (provider: ConnectionView["provider"]): ConnectionView => ({
@@ -92,6 +93,7 @@ function backend(overrides: { connections?: ConnectionView[]; credentials?: McpC
     if (url.startsWith("/api/v1/me/ai-usage"))
       return json({ items: [], page: 0, size: 50, total: 0, shared: { requests: 0, tokens: 0 }, personal: { requests: 3, tokens: 0 }, mcp: { requests: 2, tokens: 0 } });
     if (url.startsWith("/api/v1/me/ai-connections/") && method === "PUT") return json(CLAUDE);
+    if (url === "/api/v1/me/ai-connections" && method === "POST") return json({ ...CLAUDE, id: "k-new", provider: "GEMINI" });
     if (method === "DELETE") return json(null, 204);
     return json({ status: 404 }, 404);
   });
@@ -117,10 +119,11 @@ describe("AiConnectionPage", () => {
     expect(await screen.findByText("3")).toBeInTheDocument();
   });
 
-  it("tab Cài đặt chỉ liệt kê khóa đã thêm, khóa luôn che", async () => {
+  it("tab Cài đặt chỉ liệt kê khóa đã thêm, khóa luôn che, mỗi khóa có công tắc", async () => {
     backend();
     render(<AiConnectionPage initialTab="settings" />);
     expect(await screen.findByText("••••3kQf")).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Bật khóa Claude ••••3kQf" })).toBeChecked();
     expect(within(screen.getByRole("table")).queryByText("Gemini")).not.toBeInTheDocument();
   });
 
@@ -154,13 +157,12 @@ describe("AiConnectionPage", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: /Lưu khóa/ }));
 
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    const put = calls.find((c) => c.method === "PUT")!;
-    expect(put.url).toBe("/api/v1/me/ai-connections/GEMINI");
-    expect(put.body).toEqual({ apiKey: "AIzaSy-test-key-0000", model: "gemini-2.5-flash" });
+    const post = calls.find((c) => c.method === "POST" && c.url === "/api/v1/me/ai-connections")!;
+    expect(post.body).toEqual({ provider: "GEMINI", apiKey: "AIzaSy-test-key-0000", model: "gemini-2.5-flash" });
     expect(screen.queryByDisplayValue("AIzaSy-test-key-0000")).not.toBeInTheDocument();
   });
 
-  it("nút Thêm khóa không cho chọn nhà cung cấp đã có khóa (tránh 409, dùng Thay khóa)", async () => {
+  it("thêm được nhiều khóa cho cùng một nhà cung cấp, như khóa của trường", async () => {
     backend();
     render(<AiConnectionPage initialTab="settings" />);
     await screen.findByText("••••3kQf");
@@ -168,7 +170,7 @@ describe("AiConnectionPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /Thêm khóa/ }));
     const dialog = await screen.findByRole("dialog");
     const options = within(within(dialog).getByLabelText(/Nhà cung cấp/)).getAllByRole("option").map((o) => o.textContent);
-    expect(options.some((t) => t?.startsWith("Claude"))).toBe(false);
+    expect(options.some((t) => t?.startsWith("Claude"))).toBe(true);
     expect(options.some((t) => t?.startsWith("Gemini"))).toBe(true);
   });
 
@@ -183,7 +185,9 @@ describe("AiConnectionPage", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: /Lưu khóa/ }));
 
     await waitFor(() => expect(calls.some((c) => c.method === "PUT")).toBe(true));
-    expect(calls.find((c) => c.method === "PUT")!.body).toEqual({ model: "claude-haiku-5-5", version: 2 });
+    const put = calls.find((c) => c.method === "PUT")!;
+    expect(put.url).toBe("/api/v1/me/ai-connections/k-claude");
+    expect(put.body).toEqual({ model: "claude-haiku-5-5", version: 2 });
   });
 
   it("tạo agent hiện token một lần, đóng rồi không còn trên màn", async () => {

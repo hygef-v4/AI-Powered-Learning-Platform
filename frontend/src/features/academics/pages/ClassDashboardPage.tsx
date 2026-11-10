@@ -30,7 +30,7 @@ export function ClassDashboardPage({ audience, classes, onOpen }: { audience: "s
       {visible.map((course) => {
         const openable = !(student && course.status === "ARCHIVED");
         return (
-          <CourseCard key={course.id} code={course.code} name={course.name} band={course.subject.code} icon="class"
+          <CourseCard key={course.id} code={course.subject.code} name={course.code} band={course.subject.code} icon="class"
             extra={student && course.status === "OPEN" ? <SlotOutlet slot={classCardSections} props={{ classId: course.id }} /> : undefined}
             onOpen={openable ? () => onOpen(course.id) : undefined} label={`Xem lớp ${course.code}`} testId={`dashboard-open-${course.id}`} />
         );

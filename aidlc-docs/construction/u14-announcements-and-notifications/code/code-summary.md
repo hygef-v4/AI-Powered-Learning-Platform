@@ -1,5 +1,7 @@
 # U14 — Implementation handoff
 
+**Chốt chính sách 2026-11-08:** D-U14-09 thay default-off trong ghi chú02/11 bằng mặc định bật khi chưa lưu tùy chọn; không ghi đè lựa chọn đã lưu. Xem [quyết định](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đoạn ghi ngày02/11 và số test cũ giữ làm lịch sử.
+
 Sửa lỗi 2026-11-02: mọi role có phần cài đặt email, API trả loại phù hợp role; Teacher/Subject Manager có email tùy chọn cho sự kiện họ đã nhận trong app (mặc định tắt), Admin thấy cảnh báo backup bắt buộc. Student giữ năm loại và mặc định cũ. [Kế hoạch và kiểm chứng](../../plans/code-generation-plan/2026-11-02-u04-u13-u14.md). Các số test/fixture cũ bên dưới là lịch sử.
 
 **Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
@@ -14,10 +16,10 @@ Ngày2026-10-21, branch `announcements-and-notifications`, UC63–65. Kế hoạ
 |---|---|
 | UC63 / F1 | Feed thông báo của lớp OPEN đang học/dạy, lọc lớp, mới nhất trước, pagination≤50, card đăng ký StudentClassSection |
 | UC64 / F2–F3 | Giảng viên chính Teacher/Subject Manager tạo/sửa/xóa mềm; validate title/body, cấm raw HTML, giữ tác giả/thời điểm và important/email gốc; CAS version409; chỉ create phát class.announcement-posted sau commit; audit metadata/hash trước/sau |
-| UC65 / F5,F8 | Chuông HeaderWidget cho4role, popup tất cả/chưa đọc, load-more, own-only read/read-all, SSE account channel; cài đặt cho mọi role: Student5loại mặc định bật, staff theo role mặc định tắt, Admin backup bắt buộc |
+| UC65 / F5,F8 | Chuông HeaderWidget cho4role, popup tất cả/chưa đọc, load-more, own-only read/read-all, SSE account channel; cài đặt cho mọi role: Student5loại mặc định bật, staff theo role mặc định bật khi chưa lưu lựa chọn, Admin backup bắt buộc |
 | F4 | Event envelope/schema/source/type validation; recipients enrollment/assignment/quiz/grade/group/backup/announcement; notification+email atomic và unique dedup; SSE sau commit, read/read-all cũng invalidate các tab khác |
 | F6 | EMAIL_SEND qua U03 jobs.email, IMail U01, status/row lock/CAS/terminal SENT, cap300/day Asia/Ho_Chi_Minh, preference SKIPPED, cap DEFERRED, retry hữu hạn và IPendingSweeper |
-| F7 | IScheduledScanner Assignment reminder, cửa sổ5phút sau mốc24giờ, lớp/môn OPEN, non-submitters giao với active enrollment, unique bài/lớp/hạn, mở muộn SKIPPED, đổi hạn có dấu mới; email kiểm lại nguồn/hạn trước SMTP |
+| F7 | IScheduledScanner Assignment reminder, cửa sổ5phút sau mốc24giờ, lớp/môn OPEN, non-submitters giao với active enrollment, unique bài/lớp/hạn, mở muộn SKIPPED, đổi hạn có dấu mới; email kiểm lại nguồn/hạn trước IMail |
 | F9 | Deferred ưu tiên backup > deadline > important announcement > assignment > grade > enrollment; skip expired reminders; retention180ngày tối đa10.000 mỗi batch |
 
 ## Code và thay đổi liên unit
@@ -29,7 +31,7 @@ Ngày2026-10-21, branch `announcements-and-notifications`, UC63–65. Kế hoạ
 - Frontend `features/announcements`, `features/notifications`, route `/announcements`; dùng SessionProvider/CSRF/API/slots/shared Dialog, local fonts và icons. Dependency mới được duyệt: react-markdown10.1.0, rehype-sanitize6.0.0; raw HTML/unsafe links/images bị chặn. Không dùng raw HTML injection hay UI kit mới.
 - C07 áp riêng CSP solution từ U13 vào `src/proxy.ts`, `src/proxy.test.ts`, root layout request rendering; không merge U13 hoặc đổi branch history. Script nonce256bit theo request/strict-dynamic, DENY/frame-ancestors none và đủ HSTS/nosniff/referrer. Style attribute exception của React và eval/HMR chỉ development được ghi trong source; production script không unsafe-inline/eval.
 - API spec `docs/contracts/openapi/notifications.yaml` (OpenAPI3.1, JSON-compatible YAML1.2) khớp12operation/9path, cookie access_token, CSRF header, pagination/error/schema. File không được frontend gọi lúc runtime.
-- Config dùng `U14_EMAIL_DAILY_CAP` đã được compose truyền sẵn; link email dùng `APP_PUBLIC_URL` hiện có, không thêm localhost URL mặc định vào production config. SMTP vẫn do U01 cấu hình và gửi.
+- Config dùng `U14_EMAIL_DAILY_CAP` đã được compose truyền sẵn; link email dùng `APP_PUBLIC_URL` hiện có, không thêm localhost URL mặc định vào production config. Mail transport vẫn do U01 cấu hình và gửi: SMTP mặc định hoặc Brevo HTTPS API qua MAIL_TRANSPORT.
 
 ## Bằng chứng developer checks
 
@@ -53,7 +55,7 @@ UI lấy bố cục từ local UI-reference `s06`, `t08`, `t08b`, `t08c`, `c14`;
 1. U07 IAssignmentQuery, U08 ISubmissionQuery, U12 ISseHub hiện còn stub trên branch. Reminder/group submission thực, group event payload owner và SSE2instance cần providers thật. Stub rỗng/stream đóng ngay không chứng minh feature vận hành; frontend có fallback refresh.
 2. Chạy migration/boot/Hibernate validate trên PostgreSQL thật cùng migration prerequisites của các owner; SQL constraints, CAS/race, cap/advisory lock nhiều worker, dedup concurrent, retention cascade/grants và transaction rollback độc lập chưa được coder integration-test chứng nhận.
 3. Rabbit topology/TTL/routing/publisher confirms/retry parking và recovery cần broker thật. Republish lỗi có thể redeliver message; uniqueDB chống trùng notice nhưng hành vi recovery/monitor parking queue cần tester kiểm.
-4. SMTP thật/Mailpit/Brevo fault/retry/cancel và cap qua ngày cần tester. IMail không nhận provider idempotency key: SMTP accept rồi process crash trước SENT commit có crash window không thể bảo đảm exactly-once tuyệt đối. Row lock/SENT terminal chỉ xử lý duplicate delivery/concurrent worker trong DB; không che giới hạn này.
+4. SMTP thật/Mailpit/Brevo fault/retry/cancel và cap qua ngày cần tester. IMail không nhận provider idempotency key: Provider mail accept rồi process crash trước SENT commit có crash window không thể bảo đảm exactly-once tuyệt đối. Row lock/SENT terminal chỉ xử lý duplicate delivery/concurrent worker trong DB; không che giới hạn này.
 5. HTTP với current JWT/session/CSRF thật, đổi role/disable sau event, account channel isolation/expiry, denied/success audit rollback và scope lifecycle race cần full-stack tests.
 6. UI fixture không chứng minh quyền/provider thật. Cần browser/mobile acceptance, card trên U05 và header trên4role với API thật; chưa đo viewport mobile trong browser này hoặc chứng nhận NFR.
 7. Chưa đo p95≤300ms, fanout200student≤5s, SSE≤5s, reminder5phút và resource release dưới fault/stress. Contract listClosingBetween không pagination; scanner xử lý tối đa500candidate/500class mỗi batch, cần đo/đánh giá cardinality và owner paging khi scale vượt giới hạn này.

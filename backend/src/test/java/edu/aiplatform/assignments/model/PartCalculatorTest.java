@@ -63,8 +63,10 @@ class PartCalculatorTest {
     }
 
     @Test
-    void blankHeadingGetsPlaceholderTitle() {
+    void blankHeadingIsNamedByItsNumber() {
         assertThat(PartCalculator.compute(new DocumentModel(List.of(heading("H2", " ")))).get(0).title())
-                .isEqualTo(PartCalculator.UNTITLED);
+                .isEqualTo("1.");
+        var parts = PartCalculator.compute(new DocumentModel(List.of(heading("H1", "Bài"), heading("H2", ""), heading("H2", " "))));
+        assertThat(parts).extracting(DocumentPart::title).containsExactly("Bài › 1.1.", "Bài › 1.2.");
     }
 }

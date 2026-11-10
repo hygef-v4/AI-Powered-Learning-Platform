@@ -72,10 +72,10 @@ final class AiDraftRequests {
                 }
             }
         }
-        return new DraftRequest(QuestionRequests.text(body, "instructions", true), count.asInt(),
+        return new DraftRequest(QuestionRequests.text(body, "instructions", false), count.asInt(),
                 QuestionRequests.enumValue(body, "type", QuestionType.class, false),
                 QuestionRequests.enumValue(body, "difficulty", Difficulty.class, false), materials,
-                QuestionRequests.enumValue(body, "source", AiSource.class, true),
+                QuestionRequests.enumValue(body, "source", AiSource.class, false),
                 QuestionRequests.enumValue(body, "provider", AiProvider.class, false),
                 QuestionRequests.text(body, "requestRef", true));
     }

@@ -17,58 +17,72 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/admin/dashboard")
 public class AdminDashboardController {
-    private final AdminDashboardService service;
-    private final AdminDashboardActivityService activity;
+    private final AdminDashboardService adminDashboardService;
+    private final AdminDashboardActivityService adminDashboardActivityService;
 
-    public AdminDashboardController(AdminDashboardService service, AdminDashboardActivityService activity) {
-        this.service = service;
-        this.activity = activity;
+    /** Connects the dashboard and activity services to the admin HTTP endpoints. */
+    public AdminDashboardController(AdminDashboardService adminDashboardService,
+            AdminDashboardActivityService adminDashboardActivityService) {
+        this.adminDashboardService = adminDashboardService;
+        this.adminDashboardActivityService = adminDashboardActivityService;
     }
 
+    /** Returns account, subject, class, enrollment, and backup summaries without caching. */
     @GetMapping
-    public ResponseEntity<AdminDashboardView> dashboard(@AuthenticationPrincipal Actor actor,
+    public ResponseEntity<AdminDashboardView> loadDashboard(@AuthenticationPrincipal Actor actor,
             @RequestParam MultiValueMap<String, String> query) {
-        service.requireAdmin(actor);
+        adminDashboardService.requireAdmin(actor);
         validateKeys(query, Set.of());
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.dashboard(actor));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(adminDashboardService.loadDashboard(actor));
     }
 
+    /** Returns activity metrics with separate windows for accounts, assignments, and security. */
     @GetMapping("/activity")
-    public ResponseEntity<ActivityView> activity(@AuthenticationPrincipal Actor actor,
+    public ResponseEntity<ActivityView> loadActivity(@AuthenticationPrincipal Actor actor,
             @RequestParam MultiValueMap<String, String> query) {
-        service.requireAdmin(actor);
+        adminDashboardService.requireAdmin(actor);
         validateKeys(query, Set.of());
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(activity.activity(actor));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(adminDashboardActivityService.loadActivity(actor));
     }
 
+    /** Returns backup history using the requested page and size. */
     @GetMapping("/backups")
-    public ResponseEntity<BackupHistoryPage> backups(@AuthenticationPrincipal Actor actor,
+    public ResponseEntity<BackupHistoryPage> listBackups(@AuthenticationPrincipal Actor actor,
             @RequestParam MultiValueMap<String, String> query) {
-        service.requireAdmin(actor);
+        adminDashboardService.requireAdmin(actor);
         validateKeys(query, Set.of("page", "size"));
-        int page = integer(query, "page", 0);
-        int size = integer(query, "size", 20);
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.backups(actor, page, size));
+        int page = readInteger(query, "page", 0);
+        int size = readInteger(query, "size", 20);
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(adminDashboardService.listBackups(actor, page, size));
     }
 
+    /** Rejects unknown or repeated query parameters. */
     private void validateKeys(MultiValueMap<String, String> query, Set<String> allowed) {
-        if (!allowed.containsAll(query.keySet()) || query.values().stream().anyMatch(values -> values.size() != 1)) {
-            throw invalidQuery();
+        if (!allowed.containsAll(query.keySet())
+                || query.values().stream().anyMatch(values -> values.size() != 1)) {
+            throw createInvalidQuery();
         }
     }
 
-    private int integer(MultiValueMap<String, String> query, String key, int fallback) {
-        if (!query.containsKey(key)) return fallback;
+    /** Parses a single integer query value or uses the default when absent. */
+    private int readInteger(MultiValueMap<String, String> query, String key, int fallback) {
+        if (!query.containsKey(key))
+            return fallback;
         try {
             String value = query.getFirst(key);
-            if (value == null || !value.matches("-?[0-9]+")) throw invalidQuery();
+            if (value == null || !value.matches("-?[0-9]+"))
+                throw createInvalidQuery();
             return Integer.parseInt(value);
         } catch (NumberFormatException invalid) {
-            throw invalidQuery();
+            throw createInvalidQuery();
         }
     }
 
-    private ApiException invalidQuery() {
+    /** Builds the client error for invalid dashboard query parameters. */
+    private ApiException createInvalidQuery() {
         return ApiException.badRequest("DASHBOARD_PAGE_INVALID", "Trang hoặc tham số không hợp lệ");
     }
 }

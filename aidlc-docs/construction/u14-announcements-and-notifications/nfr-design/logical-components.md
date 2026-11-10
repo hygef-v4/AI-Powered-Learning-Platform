@@ -1,4 +1,6 @@
-# U14 Announcements & Notifications — logical-components
+# U14 Announcements & Notifications — logical-components — chuẩn JDBC
+
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code còn JPA được ghi là khoảng cách migration.
 
 > Current structure: parent HEAD 5a76e428 + working-tree refactor, 2026-10-30. Unit ownership unchanged; runtime/provider acceptance remains separate.
 
@@ -10,12 +12,12 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|
 | [announcements/controller](../../../../backend/src/main/java/edu/aiplatform/announcements/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [announcements/service](../../../../backend/src/main/java/edu/aiplatform/announcements/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [announcements/repository](../../../../backend/src/main/java/edu/aiplatform/announcements/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [announcements/repository](../../../../backend/src/main/java/edu/aiplatform/announcements/repository) | Repository interface/implementation, SQL và persistence mapping; JDBC là chuẩn đích toàn dự án. |
 | [announcements/model](../../../../backend/src/main/java/edu/aiplatform/announcements/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [announcements/dto](../../../../backend/src/main/java/edu/aiplatform/announcements/dto) | Kiểu dữ liệu request/response riêng. |
 | [notifications/controller](../../../../backend/src/main/java/edu/aiplatform/notifications/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [notifications/service](../../../../backend/src/main/java/edu/aiplatform/notifications/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [notifications/repository](../../../../backend/src/main/java/edu/aiplatform/notifications/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [notifications/repository](../../../../backend/src/main/java/edu/aiplatform/notifications/repository) | Repository interface/implementation, SQL và persistence mapping; JDBC là chuẩn đích toàn dự án. |
 | [notifications/model](../../../../backend/src/main/java/edu/aiplatform/notifications/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [notifications/integration](../../../../backend/src/main/java/edu/aiplatform/notifications/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [notifications/config](../../../../backend/src/main/java/edu/aiplatform/notifications/config) | Properties, cấu hình bean và topology. |

@@ -1,6 +1,5 @@
 package edu.aiplatform.ai.repository;
 
-import edu.aiplatform.ai.model.AiConnection;
 import edu.aiplatform.ai.model.McpCredential;
 
 import edu.aiplatform.ai.model.AiConnection.EncryptedKey;

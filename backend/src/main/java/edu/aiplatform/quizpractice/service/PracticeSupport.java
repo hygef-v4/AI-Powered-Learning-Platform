@@ -1,6 +1,5 @@
 package edu.aiplatform.quizpractice.service;
 
-import edu.aiplatform.quizpractice.dto.PracticeViews;
 
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.IClassAccess;
@@ -27,7 +26,6 @@ import edu.aiplatform.quizzes.contract.QuizView;
 import edu.aiplatform.shared.error.ApiException;
 import java.math.BigDecimal;
 import java.time.Clock;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

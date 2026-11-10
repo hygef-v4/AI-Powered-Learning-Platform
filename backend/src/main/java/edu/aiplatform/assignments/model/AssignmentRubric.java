@@ -60,7 +60,8 @@ public record AssignmentRubric(UUID id, UUID assignmentId, String partId, List<R
                 return false;
             }
             for (RubricItem item : criterion.items()) {
-                if (blank(item.text()) || item.points() == null || item.points().signum() <= 0) {
+                // Mục chấm 0 điểm được (yêu cầu 2026-11-04), chỉ không âm.
+                if (blank(item.text()) || item.points() == null || item.points().signum() < 0) {
                     return false;
                 }
             }

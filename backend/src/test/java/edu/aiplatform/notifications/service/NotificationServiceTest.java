@@ -156,8 +156,8 @@ class NotificationServiceTest {
                     case ADMIN -> Set.of("BACKUP_FAILED");
                 };
         assertThat(values.keySet()).isEqualTo(expected);
-        assertThat(values.values())
-                .allMatch(enabled -> enabled == (role == Role.STUDENT || role == Role.ADMIN));
+        // Mọi vai trò mặc định bật hết (yêu cầu 2026-11-05).
+        assertThat(values.values()).allMatch(Boolean.TRUE::equals);
     }
 
     @ParameterizedTest
@@ -187,6 +187,15 @@ class NotificationServiceTest {
         assertThat(prefs.get(admin)).containsExactlyEntriesOf(Map.of("BACKUP_FAILED", true));
         assertThatThrownBy(() -> prefs.put(admin, Map.of("BACKUP_FAILED", false)))
                 .isInstanceOf(ApiException.class);
+        verify(repo, never()).preference(any(), anyString(), anyBoolean());
+    }
+
+    @Test
+    void storedOptOutIsPreservedWhileOtherDefaultsStayEnabled() {
+        var prefs = new NotificationPreferenceService(repo, access);
+        when(repo.preferences(account)).thenReturn(Map.of("QUESTION_REVIEWED", false));
+        assertThat(prefs.get(new Actor(account, Role.TEACHER))).containsExactlyInAnyOrderEntriesOf(
+                Map.of("QUESTION_REVIEWED", false, "LEADER_CHANGE_REQUESTED", true));
         verify(repo, never()).preference(any(), anyString(), anyBoolean());
     }
 

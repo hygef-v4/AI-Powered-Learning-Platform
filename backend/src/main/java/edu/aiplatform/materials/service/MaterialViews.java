@@ -1,7 +1,7 @@
 package edu.aiplatform.materials.service;
 
 import edu.aiplatform.materials.model.*;
-import edu.aiplatform.materials.repository.*;
+import edu.aiplatform.shared.content.FormattedText;
 import edu.aiplatform.quizzes.contract.QuizScope;
 import edu.aiplatform.quizzes.contract.QuizStatus;
 import java.time.Instant;
@@ -51,7 +51,9 @@ public final class MaterialViews {
             Instant updatedAt,
             boolean canManage,
             Version current,
-            List<Version> versions) {}
+            List<Version> versions,
+            boolean enabled,
+            FormattedText descriptionDocument) {}
 
     /** Quiz gắn trong module; {@code canManage}: người xem gỡ được khỏi module. */
     public record ModuleQuiz(

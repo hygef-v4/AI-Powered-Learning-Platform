@@ -12,11 +12,11 @@ class AdminDashboardAccessTest {
         try (var fixture = new DashboardFixture()) {
             for (Role role : Role.values()) {
                 if (role == Role.ADMIN) continue;
-                assertProblem(() -> fixture.service.dashboard(new Actor(fixture.admin.accountId(), role)), 403);
-                assertProblem(() -> fixture.service.backups(new Actor(fixture.admin.accountId(), role), 0, 20), 403);
+                assertProblem(() -> fixture.adminDashboardService.loadDashboard(new Actor(fixture.admin.accountId(), role)), 403);
+                assertProblem(() -> fixture.adminDashboardService.listBackups(new Actor(fixture.admin.accountId(), role), 0, 20), 403);
             }
-            assertProblem(() -> fixture.service.dashboard(null), 401);
-            verifyNoInteractions(fixture.accounts, fixture.subjects, fixture.classes, fixture.backups, fixture.settings);
+            assertProblem(() -> fixture.adminDashboardService.loadDashboard(null), 401);
+            verifyNoInteractions(fixture.accountLookup, fixture.subjectQuery, fixture.classAccess, fixture.backups, fixture.settings);
             verify(fixture.audit, atLeastOnce()).record(argThat(event -> event.action().equals("ACCESS_DENIED")
                     && event.result() == AuditResult.DENIED && event.objectId() == null && event.details().isEmpty()));
         }
@@ -24,22 +24,22 @@ class AdminDashboardAccessTest {
     @Test void deniedNullAndUnavailableAuthorizationNeverFanOut() {
         try (var fixture = new DashboardFixture()) {
             when(fixture.authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.deny("ROLE_NOT_ALLOWED"));
-            assertProblem(() -> fixture.service.dashboard(fixture.admin), 403);
+            assertProblem(() -> fixture.adminDashboardService.loadDashboard(fixture.admin), 403);
             when(fixture.authorization.authorize(any(), anyString(), any())).thenReturn(null);
-            assertProblem(() -> fixture.service.dashboard(fixture.admin), 503);
+            assertProblem(() -> fixture.adminDashboardService.loadDashboard(fixture.admin), 503);
             when(fixture.authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.deny("DEPENDENCY_UNAVAILABLE"));
-            assertProblem(() -> fixture.service.backups(fixture.admin, 0, 20), 503);
+            assertProblem(() -> fixture.adminDashboardService.listBackups(fixture.admin, 0, 20), 503);
             when(fixture.authorization.authorize(any(), anyString(), any())).thenThrow(new IllegalStateException("secret"));
-            assertProblem(() -> fixture.service.dashboard(fixture.admin), 503);
-            verifyNoInteractions(fixture.accounts, fixture.subjects, fixture.classes, fixture.backups, fixture.settings);
+            assertProblem(() -> fixture.adminDashboardService.loadDashboard(fixture.admin), 503);
+            verifyNoInteractions(fixture.accountLookup, fixture.subjectQuery, fixture.classAccess, fixture.backups, fixture.settings);
         }
     }
     @Test void failedDeniedAuditStillCannotExposeData() {
         try (var fixture = new DashboardFixture()) {
             doThrow(new IllegalStateException("secret")).when(fixture.audit).record(any());
-            assertThatThrownBy(() -> fixture.service.dashboard(null)).isInstanceOfSatisfying(ApiException.class,
+            assertThatThrownBy(() -> fixture.adminDashboardService.loadDashboard(null)).isInstanceOfSatisfying(ApiException.class,
                     problem -> assertThat(problem.code()).isEqualTo("DASHBOARD_AUDIT_UNAVAILABLE"));
-            verifyNoInteractions(fixture.accounts, fixture.subjects, fixture.classes, fixture.backups, fixture.settings);
+            verifyNoInteractions(fixture.accountLookup, fixture.subjectQuery, fixture.classAccess, fixture.backups, fixture.settings);
         }
     }
     private void assertProblem(Runnable action, int status) {

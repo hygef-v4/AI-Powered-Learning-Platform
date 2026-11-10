@@ -5,7 +5,6 @@ import edu.aiplatform.files.integration.GoogleDriveStorageAdapter;
 import edu.aiplatform.files.integration.LocalFolderStorageAdapter;
 import edu.aiplatform.files.integration.UnconfiguredStorageAdapter;
 
-import edu.aiplatform.files.config.FilesProperties;
 import edu.aiplatform.files.service.IStorage;
 import java.nio.file.Path;
 import org.slf4j.Logger;

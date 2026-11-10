@@ -1,10 +1,12 @@
-# Current code baseline — structure refactor 2026-10-30
+# Current code baseline — source snapshot 2026-11-07
 
-Frontend layout follow-up: parent HEAD `5480c267` + working-tree CSS/test relocation. Tests and fixtures: [frontend/tests](../../../frontend/tests); shared/global CSS: [shared/styles](../../../frontend/src/shared/styles); feature CSS: each feature styles directory. [Fresh verification and limits](../../construction/build-and-test/2026-10-30-frontend-styles-tests-results.md).
+**Source:** `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`, branch `fix/u05-u09-u15`; static source inventory after the staging merge. 66 active UC and 15 logical units retain their ownership. Java 17/Spring Boot modular monolith plus worker; Next.js/React/TypeScript frontend. This documentation update does not run application tests or certify post-merge runtime acceptance.
 
-Parent HEAD `5a76e428` + working-tree refactor on branch `aidlc-docs`; no new commit. 66 UC, 15 logical units and their ownership are retained. Java 17/Spring Boot modular monolith + worker; Next.js/React/TypeScript frontend.
+**Persistence:** [Spring JDBC policy](../../construction/persistence-conventions.md). U05/U09 use JDBC; U04/U13/U14 still use JPA during migration. [U09 current mapping](../../construction/u09-assignment-grading/code/jdbc-persistence.md).
 
-Verification: [refactor results and limits](../../construction/build-and-test/2026-10-30-package-moves-only-results.md). Source inventory does not imply full UC/runtime/provider acceptance.
+**Mail/deploy:** U01 supports SMTP (default, Mailpit locally) or Brevo HTTPS API via MAIL_TRANSPORT. VPS pulls successful main CI builds; [runbook](../../../docs/runbooks/deploy-vps.md). Source/config presence is not live provider/VPS verification.
+
+**Evidence:** [dated test/build matrix](../../construction/build-and-test/build-and-test-summary.md). The 1,830 backend / 799 frontend results precede this staging merge; do not relabel them as a fresh run on this SHA. Frontend tests/fixtures are under [frontend/tests](../../../frontend/tests); styles under shared/styles or the owning feature.
 
 ## U01 — Account & Access
 
@@ -14,7 +16,7 @@ Primary UC 01–12; FR-001, FR-002, FR-015.
 |---|---|
 | [identity/controller](../../../backend/src/main/java/edu/aiplatform/identity/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [identity/service](../../../backend/src/main/java/edu/aiplatform/identity/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [identity/repository](../../../backend/src/main/java/edu/aiplatform/identity/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [identity/repository](../../../backend/src/main/java/edu/aiplatform/identity/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [identity/model](../../../backend/src/main/java/edu/aiplatform/identity/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [identity/integration](../../../backend/src/main/java/edu/aiplatform/identity/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [identity/config](../../../backend/src/main/java/edu/aiplatform/identity/config) | Properties, cấu hình bean và topology. |
@@ -30,7 +32,9 @@ Primary UC 01–12; FR-001, FR-002, FR-015.
 ### Tests
 
 - [IdentityWebSecurityTest.java](../../../backend/src/test/java/edu/aiplatform/identity/controller/IdentityWebSecurityTest.java)
+- [BrevoApiMailAdapterTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/BrevoApiMailAdapterTest.java)
 - [JwtServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/JwtServiceTest.java)
+- [MailTransportSelectionTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/MailTransportSelectionTest.java)
 - [OtpStoresTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/OtpStoresTest.java)
 - [RequestThrottleIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/RequestThrottleIntegrationTest.java)
 - [SessionStoreIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/identity/integration/SessionStoreIntegrationTest.java)
@@ -45,8 +49,9 @@ Primary UC 01–12; FR-001, FR-002, FR-015.
 - [AccountImportServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AccountImportServiceTest.java)
 - [AccountLookupAndPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AccountLookupAndPolicyTest.java)
 - [AdminDashboardPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AdminDashboardPolicyTest.java)
-- [AuthorizationServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AuthorizationServiceTest.java)
 - [AuthServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AuthServiceTest.java)
+- [AuthorizationServiceTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/AuthorizationServiceTest.java)
+- [BootstrapAdminInitializerTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/BootstrapAdminInitializerTest.java)
 - [GradingPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/GradingPolicyTest.java)
 - [McpPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/McpPolicyTest.java)
 - [McpRolePolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/McpRolePolicyTest.java)
@@ -76,7 +81,7 @@ Primary UC 13; FR-014.
 |---|---|
 | [audit/controller](../../../backend/src/main/java/edu/aiplatform/audit/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [audit/service](../../../backend/src/main/java/edu/aiplatform/audit/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [audit/repository](../../../backend/src/main/java/edu/aiplatform/audit/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [audit/repository](../../../backend/src/main/java/edu/aiplatform/audit/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [audit/model](../../../backend/src/main/java/edu/aiplatform/audit/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [audit/contract](../../../backend/src/main/java/edu/aiplatform/audit/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
@@ -119,11 +124,11 @@ Primary UC 14–15; FR-013, FR-033, FR-038.
 | [jobs/contract](../../../backend/src/main/java/edu/aiplatform/jobs/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 | [settings/controller](../../../backend/src/main/java/edu/aiplatform/settings/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [settings/service](../../../backend/src/main/java/edu/aiplatform/settings/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [settings/repository](../../../backend/src/main/java/edu/aiplatform/settings/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [settings/repository](../../../backend/src/main/java/edu/aiplatform/settings/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [settings/model](../../../backend/src/main/java/edu/aiplatform/settings/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [settings/contract](../../../backend/src/main/java/edu/aiplatform/settings/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 | [backup/service](../../../backend/src/main/java/edu/aiplatform/backup/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [backup/repository](../../../backend/src/main/java/edu/aiplatform/backup/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [backup/repository](../../../backend/src/main/java/edu/aiplatform/backup/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [backup/model](../../../backend/src/main/java/edu/aiplatform/backup/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [backup/integration](../../../backend/src/main/java/edu/aiplatform/backup/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [backup/config](../../../backend/src/main/java/edu/aiplatform/backup/config) | Properties, cấu hình bean và topology. |
@@ -187,7 +192,7 @@ Primary UC 16–19; FR-003.
 |---|---|
 | [subjects/controller](../../../backend/src/main/java/edu/aiplatform/subjects/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [subjects/service](../../../backend/src/main/java/edu/aiplatform/subjects/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [subjects/repository](../../../backend/src/main/java/edu/aiplatform/subjects/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [subjects/repository](../../../backend/src/main/java/edu/aiplatform/subjects/repository) | Repository interface/implementation, JPA hiện tại; cần chuyển JDBC theo quyết định chung. |
 | [subjects/model](../../../backend/src/main/java/edu/aiplatform/subjects/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [subjects/dto](../../../backend/src/main/java/edu/aiplatform/subjects/dto) | Kiểu dữ liệu request/response riêng. |
 | [subjects/contract](../../../backend/src/main/java/edu/aiplatform/subjects/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
@@ -230,7 +235,7 @@ Primary UC 20–30; FR-003, FR-005, FR-024.
 |---|---|
 | [academics/controller](../../../backend/src/main/java/edu/aiplatform/academics/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [academics/service](../../../backend/src/main/java/edu/aiplatform/academics/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [academics/repository](../../../backend/src/main/java/edu/aiplatform/academics/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [academics/repository](../../../backend/src/main/java/edu/aiplatform/academics/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [academics/model](../../../backend/src/main/java/edu/aiplatform/academics/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [academics/dto](../../../backend/src/main/java/edu/aiplatform/academics/dto) | Kiểu dữ liệu request/response riêng. |
 | [academics/contract](../../../backend/src/main/java/edu/aiplatform/academics/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
@@ -273,7 +278,7 @@ Primary UC 31–33; FR-012, FR-021, FR-034, FR-035, FR-036, FR-037.
 |---|---|
 | [ai/controller](../../../backend/src/main/java/edu/aiplatform/ai/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [ai/service](../../../backend/src/main/java/edu/aiplatform/ai/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [ai/repository](../../../backend/src/main/java/edu/aiplatform/ai/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [ai/repository](../../../backend/src/main/java/edu/aiplatform/ai/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [ai/model](../../../backend/src/main/java/edu/aiplatform/ai/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [ai/integration](../../../backend/src/main/java/edu/aiplatform/ai/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [ai/config](../../../backend/src/main/java/edu/aiplatform/ai/config) | Properties, cấu hình bean và topology. |
@@ -302,7 +307,9 @@ Primary UC 31–33; FR-012, FR-021, FR-034, FR-035, FR-036, FR-037.
 - [AiTaskFlowTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AiTaskFlowTest.java)
 - [AiTaskResultHandlerRegistryTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AiTaskResultHandlerRegistryTest.java)
 - [AiUsageServiceTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AiUsageServiceTest.java)
+- [ConnectionOrderTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/ConnectionOrderTest.java)
 - [KeyCipherAndCatalogTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/KeyCipherAndCatalogTest.java)
+- [McpAgentWorkflowToolsTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/McpAgentWorkflowToolsTest.java)
 - [McpCredentialServiceTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/McpCredentialServiceTest.java)
 - [McpServerTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/McpServerTest.java)
 - [McpStaffAdmissionTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/McpStaffAdmissionTest.java)
@@ -316,6 +323,9 @@ Primary UC 31–33; FR-012, FR-021, FR-034, FR-035, FR-036, FR-037.
 - [V20261026_1800__create_mcp_write_requests.sql](../../../backend/src/main/resources/db/migration/ai/V20261026_1800__create_mcp_write_requests.sql)
 - [V20261027_0900__allow_many_institutional_keys.sql](../../../backend/src/main/resources/db/migration/ai/V20261027_0900__allow_many_institutional_keys.sql)
 - [V20261027_1000__store_mcp_token_ciphertext.sql](../../../backend/src/main/resources/db/migration/ai/V20261027_1000__store_mcp_token_ciphertext.sql)
+- [V20261102_0900__create_ai_source_preferences.sql](../../../backend/src/main/resources/db/migration/ai/V20261102_0900__create_ai_source_preferences.sql)
+- [V20261105_1200__personal_connection_switch.sql](../../../backend/src/main/resources/db/migration/ai/V20261105_1200__personal_connection_switch.sql)
+- [V20261105_1300__allow_many_personal_keys.sql](../../../backend/src/main/resources/db/migration/ai/V20261105_1300__allow_many_personal_keys.sql)
 
 ### Frontend
 
@@ -331,7 +341,7 @@ Primary UC 34–36; FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 |---|---|
 | [assignments/controller](../../../backend/src/main/java/edu/aiplatform/assignments/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [assignments/service](../../../backend/src/main/java/edu/aiplatform/assignments/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [assignments/repository](../../../backend/src/main/java/edu/aiplatform/assignments/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [assignments/repository](../../../backend/src/main/java/edu/aiplatform/assignments/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [assignments/model](../../../backend/src/main/java/edu/aiplatform/assignments/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [assignments/dto](../../../backend/src/main/java/edu/aiplatform/assignments/dto) | Kiểu dữ liệu request/response riêng. |
 | [assignments/contract](../../../backend/src/main/java/edu/aiplatform/assignments/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
@@ -347,6 +357,7 @@ Primary UC 34–36; FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 ### Tests
 
 - [PartCalculatorTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/model/PartCalculatorTest.java)
+- [RubricRepositoryTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/repository/RubricRepositoryTest.java)
 - [AssignmentAiDraftServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentAiDraftServiceTest.java)
 - [AssignmentAuthoringServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentAuthoringServiceTest.java)
 - [AssignmentCopyServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentCopyServiceTest.java)
@@ -378,7 +389,7 @@ Primary UC 37–41; FR-018, FR-030, FR-039.
 |---|---|
 | [assignmentwork/controller](../../../backend/src/main/java/edu/aiplatform/assignmentwork/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [assignmentwork/service](../../../backend/src/main/java/edu/aiplatform/assignmentwork/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [assignmentwork/repository](../../../backend/src/main/java/edu/aiplatform/assignmentwork/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [assignmentwork/repository](../../../backend/src/main/java/edu/aiplatform/assignmentwork/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [assignmentwork/model](../../../backend/src/main/java/edu/aiplatform/assignmentwork/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [assignmentwork/dto](../../../backend/src/main/java/edu/aiplatform/assignmentwork/dto) | Kiểu dữ liệu request/response riêng. |
 | [assignmentwork/contract](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
@@ -415,7 +426,7 @@ Primary UC 42–45; FR-008, FR-009, FR-020, FR-024.
 |---|---|
 | [grading/controller](../../../backend/src/main/java/edu/aiplatform/grading/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [grading/service](../../../backend/src/main/java/edu/aiplatform/grading/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [grading/repository](../../../backend/src/main/java/edu/aiplatform/grading/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [grading/repository](../../../backend/src/main/java/edu/aiplatform/grading/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [grading/model](../../../backend/src/main/java/edu/aiplatform/grading/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [grading/dto](../../../backend/src/main/java/edu/aiplatform/grading/dto) | Kiểu dữ liệu request/response riêng. |
 | [grading/contract](../../../backend/src/main/java/edu/aiplatform/grading/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
@@ -423,6 +434,7 @@ Primary UC 42–45; FR-008, FR-009, FR-020, FR-024.
 ### Controllers
 
 - [EvaluationController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/EvaluationController.java)
+- [GradeDistributionVisibilityController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/GradeDistributionVisibilityController.java)
 - [GradebookController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/GradebookController.java)
 - [GradingProposalController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/GradingProposalController.java)
 - [MyGradeController.java](../../../backend/src/main/java/edu/aiplatform/grading/controller/MyGradeController.java)
@@ -432,12 +444,21 @@ Primary UC 42–45; FR-008, FR-009, FR-020, FR-024.
 ### Tests
 
 - [GroupSourceUnavailableTest.java](../../../backend/src/test/java/edu/aiplatform/grading/contract/stub/GroupSourceUnavailableTest.java)
+- [GradeDistributionVisibilityControllerTest.java](../../../backend/src/test/java/edu/aiplatform/grading/controller/GradeDistributionVisibilityControllerTest.java)
+- [GradebookControllerTest.java](../../../backend/src/test/java/edu/aiplatform/grading/controller/GradebookControllerTest.java)
+- [GradingProposalApiContractTest.java](../../../backend/src/test/java/edu/aiplatform/grading/controller/GradingProposalApiContractTest.java)
 - [GradingPersistenceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/integration/GradingPersistenceTest.java)
+- [EvaluationJsonContractTest.java](../../../backend/src/test/java/edu/aiplatform/grading/model/EvaluationJsonContractTest.java)
 - [EvaluationTest.java](../../../backend/src/test/java/edu/aiplatform/grading/model/EvaluationTest.java)
 - [GradeDistributionCalculatorTest.java](../../../backend/src/test/java/edu/aiplatform/grading/model/GradeDistributionCalculatorTest.java)
+- [RubricScoringTest.java](../../../backend/src/test/java/edu/aiplatform/grading/model/RubricScoringTest.java)
 - [EvaluationMappingTest.java](../../../backend/src/test/java/edu/aiplatform/grading/repository/EvaluationMappingTest.java)
 - [EvaluationVersionIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/grading/repository/EvaluationVersionIntegrationTest.java)
+- [GradeDistributionVisibilityRepositoryTest.java](../../../backend/src/test/java/edu/aiplatform/grading/repository/GradeDistributionVisibilityRepositoryTest.java)
 - [EvaluationLifecycleServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/EvaluationLifecycleServiceTest.java)
+- [GradeDistributionPrivacyTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradeDistributionPrivacyTest.java)
+- [GradeDistributionVisibilityServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradeDistributionVisibilityServiceTest.java)
+- [GradebookAssemblyTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradebookAssemblyTest.java)
 - [GradebookExporterTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradebookExporterTest.java)
 - [GradebookServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradebookServiceTest.java)
 - [GradingAccessTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingAccessTest.java)
@@ -445,6 +466,7 @@ Primary UC 42–45; FR-008, FR-009, FR-020, FR-024.
 - [GradingCommandsTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingCommandsTest.java)
 - [GradingMcpBatchServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingMcpBatchServiceTest.java)
 - [GradingMcpQueryServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingMcpQueryServiceTest.java)
+- [GradingMcpReadProgressTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingMcpReadProgressTest.java)
 - [GradingMcpReplayTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingMcpReplayTest.java)
 - [GradingMcpToolsTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingMcpToolsTest.java)
 - [GradingPromptSchemaTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingPromptSchemaTest.java)
@@ -454,10 +476,13 @@ Primary UC 42–45; FR-008, FR-009, FR-020, FR-024.
 - [GradingServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingServiceTest.java)
 - [GroupEvaluationTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GroupEvaluationTest.java)
 - [SubmissionImageServiceTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/SubmissionImageServiceTest.java)
+- [SubmissionReviewMcpListingTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/SubmissionReviewMcpListingTest.java)
+- [SubmissionReviewNavigationTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/SubmissionReviewNavigationTest.java)
 
 ### Migrations
 
 - [V20260925_1500__create_grading_tables.sql](../../../backend/src/main/resources/db/migration/grading/V20260925_1500__create_grading_tables.sql)
+- [V20261101_0900__assignment_grade_distribution_visibility.sql](../../../backend/src/main/resources/db/migration/grading/V20261101_0900__assignment_grade_distribution_visibility.sql)
 
 ### Frontend
 
@@ -473,7 +498,7 @@ Primary UC 46–48; FR-006, FR-007, FR-016, FR-017, FR-028.
 |---|---|
 | [quizzes/controller](../../../backend/src/main/java/edu/aiplatform/quizzes/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [quizzes/service](../../../backend/src/main/java/edu/aiplatform/quizzes/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [quizzes/repository](../../../backend/src/main/java/edu/aiplatform/quizzes/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [quizzes/repository](../../../backend/src/main/java/edu/aiplatform/quizzes/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [quizzes/model](../../../backend/src/main/java/edu/aiplatform/quizzes/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [quizzes/contract](../../../backend/src/main/java/edu/aiplatform/quizzes/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
@@ -489,6 +514,7 @@ Primary UC 46–48; FR-006, FR-007, FR-016, FR-017, FR-028.
 - [QuestionControllerTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/controller/QuestionControllerTest.java)
 - [QuizControllersTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/controller/QuizControllersTest.java)
 - [QuizPublicationMigrationIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/integration/QuizPublicationMigrationIntegrationTest.java)
+- [QuestionFingerprintTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/model/QuestionFingerprintTest.java)
 - [QuestionRulesTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/model/QuestionRulesTest.java)
 - [QuestionTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/model/QuestionTest.java)
 - [QuizTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/model/QuizTest.java)
@@ -501,12 +527,15 @@ Primary UC 46–48; FR-006, FR-007, FR-016, FR-017, FR-028.
 - [QuizDraftPromptTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizDraftPromptTest.java)
 - [QuizMcpAuthoringServiceTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizMcpAuthoringServiceTest.java)
 - [QuizMcpToolsSchemaTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizMcpToolsSchemaTest.java)
+- [QuizPaperPlannerTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizPaperPlannerTest.java)
+- [QuizRework2026Test.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizRework2026Test.java)
 - [QuizServicesTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuizServicesTest.java)
 
 ### Migrations
 
 - [V20260925_1600__create_quiz_tables.sql](../../../backend/src/main/resources/db/migration/quizzes/V20260925_1600__create_quiz_tables.sql)
 - [V20261030_1810__preserve_unpublished_quiz_retirement.sql](../../../backend/src/main/resources/db/migration/quizzes/V20261030_1810__preserve_unpublished_quiz_retirement.sql)
+- [V20261101_1200__quiz_rework.sql](../../../backend/src/main/resources/db/migration/quizzes/V20261101_1200__quiz_rework.sql)
 
 ### Frontend
 
@@ -522,7 +551,7 @@ Primary UC 49–52; FR-017, FR-018, FR-039.
 |---|---|
 | [quizpractice/controller](../../../backend/src/main/java/edu/aiplatform/quizpractice/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [quizpractice/service](../../../backend/src/main/java/edu/aiplatform/quizpractice/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [quizpractice/repository](../../../backend/src/main/java/edu/aiplatform/quizpractice/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [quizpractice/repository](../../../backend/src/main/java/edu/aiplatform/quizpractice/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [quizpractice/model](../../../backend/src/main/java/edu/aiplatform/quizpractice/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [quizpractice/dto](../../../backend/src/main/java/edu/aiplatform/quizpractice/dto) | Kiểu dữ liệu request/response riêng. |
 
@@ -536,11 +565,13 @@ Primary UC 49–52; FR-017, FR-018, FR-039.
 - [QuizPracticeControllerTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/controller/QuizPracticeControllerTest.java)
 - [QuizAttemptTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/model/QuizAttemptTest.java)
 - [JdbcQuizAttemptRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/repository/JdbcQuizAttemptRepositoryIntegrationTest.java)
+- [AttemptActivityAssessorTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/service/AttemptActivityAssessorTest.java)
 - [QuizPracticeServicesTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/service/QuizPracticeServicesTest.java)
 
 ### Migrations
 
 - [V20260925_1700__create_quiz_attempts.sql](../../../backend/src/main/resources/db/migration/quizpractice/V20260925_1700__create_quiz_attempts.sql)
+- [V20261101_1210__quiz_attempt_activity_penalty.sql](../../../backend/src/main/resources/db/migration/quizpractice/V20261101_1210__quiz_attempt_activity_penalty.sql)
 
 ### Frontend
 
@@ -556,17 +587,18 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 |---|---|
 | [groups/controller](../../../backend/src/main/java/edu/aiplatform/groups/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [groups/service](../../../backend/src/main/java/edu/aiplatform/groups/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [groups/repository](../../../backend/src/main/java/edu/aiplatform/groups/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [groups/repository](../../../backend/src/main/java/edu/aiplatform/groups/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [groups/model](../../../backend/src/main/java/edu/aiplatform/groups/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [groupdocs/controller](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [groupdocs/service](../../../backend/src/main/java/edu/aiplatform/groupdocs/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [groupdocs/repository](../../../backend/src/main/java/edu/aiplatform/groupdocs/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [groupdocs/repository](../../../backend/src/main/java/edu/aiplatform/groupdocs/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [groupdocs/model](../../../backend/src/main/java/edu/aiplatform/groupdocs/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [groupdocs/integration](../../../backend/src/main/java/edu/aiplatform/groupdocs/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [groupdocs/contract](../../../backend/src/main/java/edu/aiplatform/groupdocs/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 
 ### Controllers
 
+- [GroupDocCollaborationController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocCollaborationController.java)
 - [GroupDocController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocController.java)
 - [GroupDocImageController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocImageController.java)
 - [GroupController.java](../../../backend/src/main/java/edu/aiplatform/groups/controller/GroupController.java)
@@ -577,6 +609,7 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 - [GroupRepositoriesIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/model/GroupRepositoriesIntegrationTest.java)
 - [GroupSectionTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/model/GroupSectionTest.java)
 - [GroupAutoSubmitScannerTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupAutoSubmitScannerTest.java)
+- [GroupDocCollaborationServicesTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupDocCollaborationServicesTest.java)
 - [GroupDocumentServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupDocumentServiceTest.java)
 - [GroupSectionServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupSectionServiceTest.java)
 - [GroupSubmissionServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupSubmissionServiceTest.java)
@@ -595,6 +628,8 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 - [V20260925_1800__create_group_tables.sql](../../../backend/src/main/resources/db/migration/groups/V20260925_1800__create_group_tables.sql)
 - [V20261025_1800__add_group_documents_assignment_fk.sql](../../../backend/src/main/resources/db/migration/groups/V20261025_1800__add_group_documents_assignment_fk.sql)
 - [V20261029_1100__make_leader_request_reason_optional.sql](../../../backend/src/main/resources/db/migration/groups/V20261029_1100__make_leader_request_reason_optional.sql)
+- [V20261102_1000__group_section_collaboration.sql](../../../backend/src/main/resources/db/migration/groups/V20261102_1000__group_section_collaboration.sql)
+- [V20261102_1200__group_assignment_phase.sql](../../../backend/src/main/resources/db/migration/groups/V20261102_1200__group_assignment_phase.sql)
 
 ### Frontend
 
@@ -611,7 +646,7 @@ Primary UC 58–62; FR-004, FR-005.
 |---|---|
 | [materials/controller](../../../backend/src/main/java/edu/aiplatform/materials/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [materials/service](../../../backend/src/main/java/edu/aiplatform/materials/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [materials/repository](../../../backend/src/main/java/edu/aiplatform/materials/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [materials/repository](../../../backend/src/main/java/edu/aiplatform/materials/repository) | MaterialRepositoryAdapter dùng JDBC cho material/version từ 2026-11-09; module adapter còn JPA và cần chuyển riêng. |
 | [materials/model](../../../backend/src/main/java/edu/aiplatform/materials/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [materials/integration](../../../backend/src/main/java/edu/aiplatform/materials/integration) | Adapter hạ tầng/provider, listener và sender. |
 
@@ -655,12 +690,12 @@ Primary UC 63–65; FR-011, FR-019, FR-023.
 |---|---|
 | [announcements/controller](../../../backend/src/main/java/edu/aiplatform/announcements/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [announcements/service](../../../backend/src/main/java/edu/aiplatform/announcements/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [announcements/repository](../../../backend/src/main/java/edu/aiplatform/announcements/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [announcements/repository](../../../backend/src/main/java/edu/aiplatform/announcements/repository) | Repository interface/implementation, JPA hiện tại; cần chuyển JDBC theo quyết định chung. |
 | [announcements/model](../../../backend/src/main/java/edu/aiplatform/announcements/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [announcements/dto](../../../backend/src/main/java/edu/aiplatform/announcements/dto) | Kiểu dữ liệu request/response riêng. |
 | [notifications/controller](../../../backend/src/main/java/edu/aiplatform/notifications/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [notifications/service](../../../backend/src/main/java/edu/aiplatform/notifications/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [notifications/repository](../../../backend/src/main/java/edu/aiplatform/notifications/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [notifications/repository](../../../backend/src/main/java/edu/aiplatform/notifications/repository) | Repository interface/implementation, JPA hiện tại; cần chuyển JDBC theo quyết định chung. |
 | [notifications/model](../../../backend/src/main/java/edu/aiplatform/notifications/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [notifications/integration](../../../backend/src/main/java/edu/aiplatform/notifications/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [notifications/config](../../../backend/src/main/java/edu/aiplatform/notifications/config) | Properties, cấu hình bean và topology. |
@@ -725,7 +760,7 @@ Primary UC 66; FR-024, FR-038.
 
 ### Migrations
 
-
+- Không có file thuộc nhóm này trong source snapshot.
 
 ### Frontend
 
@@ -736,6 +771,9 @@ Primary UC 66; FR-024, FR-038.
 ## Shared verification
 
 - [ArchitectureTest.java](../../../backend/src/test/java/edu/aiplatform/ArchitectureTest.java)
+- [GlobalExceptionHandlerTest.java](../../../backend/src/test/java/edu/aiplatform/shared/error/GlobalExceptionHandlerTest.java)
+- [ForbiddenKeyGuardTest.java](../../../backend/src/test/java/edu/aiplatform/shared/security/ForbiddenKeyGuardTest.java)
+- [ContractStubsTest.java](../../../backend/src/test/java/edu/aiplatform/shared/stub/ContractStubsTest.java)
 
 ## Delta 2026-11-01: làm lại Quiz
 

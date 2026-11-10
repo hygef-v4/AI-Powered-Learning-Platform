@@ -1,12 +1,10 @@
 package edu.aiplatform.admindashboard.service;
 
-import edu.aiplatform.admindashboard.dto.AdminDashboardViews;
 
 import static edu.aiplatform.admindashboard.dto.AdminDashboardViews.*;
 
 import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.admindashboard.integration.DashboardSourceReader;
-import edu.aiplatform.admindashboard.integration.DashboardSourceReader.PendingSource;
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
@@ -46,122 +44,149 @@ import org.springframework.stereotype.Service;
 @Service
 public class AdminDashboardService {
     private static final ZoneId BACKUP_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
-    private static final SettingKey<Boolean> BACKUP_ENABLED = new SettingKey<>("backup.enabled", Boolean.class);
-    private static final SettingKey<LocalTime> BACKUP_DAILY_AT = new SettingKey<>("backup.dailyAt", LocalTime.class);
-    private final IAccountLookup accounts;
-    private final ISubjectQuery subjects;
-    private final IClassAccess classes;
+    private static final SettingKey<Boolean> BACKUP_ENABLED = new SettingKey<>("backup.enabled",
+            Boolean.class);
+    private static final SettingKey<LocalTime> BACKUP_DAILY_AT = new SettingKey<>("backup.dailyAt",
+            LocalTime.class);
+    private final IAccountLookup accountLookup;
+    private final ISubjectQuery subjectQuery;
+    private final IClassAccess classAccess;
     private final IBackupDashboardStatus backups;
     private final ISettings settings;
     private final IAuthorization authorization;
     private final IAudit audit;
-    private final DashboardSourceReader reader;
+    private final DashboardSourceReader dashboardSourceReader;
     private final Clock clock;
 
-    public AdminDashboardService(IAccountLookup accounts, ISubjectQuery subjects, IClassAccess classes,
-            IBackupDashboardStatus backups, ISettings settings, IAuthorization authorization, IAudit audit,
-            DashboardSourceReader reader, Clock clock) {
-        this.accounts = accounts;
-        this.subjects = subjects;
-        this.classes = classes;
+    /** Connects the dashboard data sources and authorization dependencies. */
+    public AdminDashboardService(IAccountLookup accountLookup, ISubjectQuery subjectQuery,
+            IClassAccess classAccess, IBackupDashboardStatus backups, ISettings settings,
+            IAuthorization authorization, IAudit audit, DashboardSourceReader dashboardSourceReader,
+            Clock clock) {
+        this.accountLookup = accountLookup;
+        this.subjectQuery = subjectQuery;
+        this.classAccess = classAccess;
         this.backups = backups;
         this.settings = settings;
         this.authorization = authorization;
         this.audit = audit;
-        this.reader = reader;
+        this.dashboardSourceReader = dashboardSourceReader;
         this.clock = clock;
     }
 
-    public AdminDashboardView dashboard(Actor actor) {
+    /** Loads dashboard totals and backup status while isolating individual source failures. */
+    public AdminDashboardView loadDashboard(Actor actor) {
         requireAdmin(actor);
         Instant calculatedAt = clock.instant();
-        var accountSource = reader.submit(accounts::countByRoleAndStatus);
-        var subjectSource = reader.submit(subjects::countSubjectsByStatus);
-        var classSource = reader.submit(classes::countClassesByStatus);
-        var enrollmentSource = reader.submit(classes::countActiveEnrollments);
-        var latestSource = reader.submit(backups::latestRun);
-        var recentSource = reader.submit(() -> backups.history(PageRequest.of(0, 3)));
-        var scheduleSource = reader.submit(() -> schedule(calculatedAt));
+        var accountSource = dashboardSourceReader.submitSource(accountLookup::countByRoleAndStatus);
+        var subjectSource = dashboardSourceReader.submitSource(subjectQuery::countSubjectsByStatus);
+        var classSource = dashboardSourceReader.submitSource(classAccess::countClassesByStatus);
+        var enrollmentSource = dashboardSourceReader
+                .submitSource(classAccess::countActiveEnrollments);
+        var latestSource = dashboardSourceReader.submitSource(backups::latestRun);
+        var recentSource = dashboardSourceReader
+                .submitSource(() -> backups.history(PageRequest.of(0, 3)));
+        var scheduleSource = dashboardSourceReader.submitSource(() -> loadSchedule(calculatedAt));
         Instant fromInclusive = calculatedAt.minus(Duration.ofDays(7));
-        var summarySource = reader.submit(() -> backups.summarize(fromInclusive, calculatedAt));
+        var summarySource = dashboardSourceReader
+                .submitSource(() -> backups.summarize(fromInclusive, calculatedAt));
 
-        var accountCounts = section(accountSource, this::accountCounts);
-        var subjectCounts = section(subjectSource, counts -> completeCounts(SubjectStatus.class, counts));
-        var classCounts = section(classSource, counts -> completeCounts(ClassStatus.class, counts));
-        var enrollmentCount = section(enrollmentSource, this::nonNegative);
-        var latest = section(latestSource, run -> run.map(this::backupItem).orElse(null));
-        var recent = section(recentSource, page -> page.getContent().stream().limit(3).map(this::backupItem).toList());
-        var summary = section(summarySource, value -> validSummary(value, fromInclusive, calculatedAt));
+        var accountCounts = dashboardSourceReader.readSection(accountSource,
+                this::calculateAccountCounts);
+        var subjectCounts = dashboardSourceReader.readSection(subjectSource,
+                counts -> completeCounts(SubjectStatus.class, counts));
+        var classCounts = dashboardSourceReader.readSection(classSource,
+                counts -> completeCounts(ClassStatus.class, counts));
+        var enrollmentCount = dashboardSourceReader.readSection(enrollmentSource,
+                this::requireNonNegativeCount);
+        var latest = dashboardSourceReader.readSection(latestSource,
+                run -> run.map(this::mapBackupItem).orElse(null));
+        var recent = dashboardSourceReader.readSection(recentSource,
+                page -> page.getContent().stream().limit(3).map(this::mapBackupItem).toList());
+        var summary = dashboardSourceReader.readSection(summarySource,
+                value -> validateBackupSummary(value, fromInclusive, calculatedAt));
         Section<Instant> lastSuccess = summary.availability() == Availability.AVAILABLE
-                ? Section.available(summary.data().latestSuccessfulAt()) : Section.unavailable();
-        Section<BackupFailureSummary> failures = summary.availability() == Availability.AVAILABLE
-                ? Section.available(new BackupFailureSummary(summary.data().failedRuns(), summary.data().latestSafeError()))
+                ? Section.available(summary.data().latestSuccessfulAt())
                 : Section.unavailable();
-        var backup = new BackupSection(latest, section(scheduleSource, Function.identity()), recent, lastSuccess, failures);
-        return new AdminDashboardView(calculatedAt, accountCounts, subjectCounts, classCounts, enrollmentCount, backup);
+        Section<BackupFailureSummary> failures = summary.availability() == Availability.AVAILABLE
+                ? Section.available(new BackupFailureSummary(summary.data().failedRuns(),
+                        summary.data().latestSafeError()))
+                : Section.unavailable();
+        var backup = new BackupSection(latest,
+                dashboardSourceReader.readSection(scheduleSource, Function.identity()), recent,
+                lastSuccess, failures);
+        return new AdminDashboardView(calculatedAt, accountCounts, subjectCounts, classCounts,
+                enrollmentCount, backup);
     }
 
-    public BackupHistoryPage backups(Actor actor, int page, int size) {
+    /** Checks admin access and pagination before loading a page of backup history. */
+    public BackupHistoryPage listBackups(Actor actor, int page, int size) {
         requireAdmin(actor);
         if (page < 0 || size < 1 || size > 100) {
-            throw ApiException.badRequest("DASHBOARD_PAGE_INVALID", "Trang hoặc kích thước trang không hợp lệ");
+            throw ApiException.badRequest("DASHBOARD_PAGE_INVALID",
+                    "Trang hoặc kích thước trang không hợp lệ");
         }
-        Section<BackupHistoryPage> result = section(reader.submit(() -> backups.history(PageRequest.of(page, size))),
-                found -> history(found, page, size));
+        Section<BackupHistoryPage> result = dashboardSourceReader.readSection(
+                dashboardSourceReader
+                        .submitSource(() -> backups.history(PageRequest.of(page, size))),
+                found -> mapBackupHistory(found, page, size));
         if (result.availability() == Availability.UNAVAILABLE) {
-            throw ApiException.unavailable("DASHBOARD_BACKUP_UNAVAILABLE", "Không đọc được lịch sử backup");
+            throw ApiException.unavailable("DASHBOARD_BACKUP_UNAVAILABLE",
+                    "Không đọc được lịch sử backup");
         }
         return result.data();
     }
 
-    private BackupHistoryPage history(Page<BackupDashboardRunView> found, int page, int size) {
-        return new BackupHistoryPage(found.getContent().stream().map(this::backupItem).toList(), page, size,
-                found.getTotalElements(), found.getTotalPages());
+    /** Converts a backup history page while preserving its pagination totals. */
+    private BackupHistoryPage mapBackupHistory(Page<BackupDashboardRunView> found, int page,
+            int size) {
+        return new BackupHistoryPage(found.getContent().stream().map(this::mapBackupItem).toList(),
+                page, size, found.getTotalElements(), found.getTotalPages());
     }
 
+    /** Requires dashboard authorization and audits denied requests. */
     public void requireAdmin(Actor actor) {
         ApiException failure = null;
         if (actor == null || actor.accountId() == null) {
-            failure = new ApiException(HttpStatus.UNAUTHORIZED, "AUTHENTICATION_REQUIRED", "Cần đăng nhập");
+            failure = new ApiException(HttpStatus.UNAUTHORIZED, "AUTHENTICATION_REQUIRED",
+                    "Cần đăng nhập");
         } else if (actor.role() != Role.ADMIN) {
             failure = ApiException.forbidden("DASHBOARD_FORBIDDEN");
         } else {
             try {
-                AuthorizationDecision decision = authorization.authorize(actor, Actions.ADMIN_DASHBOARD_VIEW, ResourceRef.none());
-                if (decision == null || (!decision.allowed() && "DEPENDENCY_UNAVAILABLE".equals(decision.reason()))) {
-                    failure = authorizationUnavailable();
+                AuthorizationDecision decision = authorization.authorize(actor,
+                    Actions.ADMIN_DASHBOARD_VIEW, ResourceRef.none());
+                if (decision == null || (!decision.allowed()
+                        && "DEPENDENCY_UNAVAILABLE".equals(decision.reason()))) {
+                    failure = createAuthorizationUnavailable();
                 } else if (!decision.allowed()) {
                     failure = ApiException.forbidden("DASHBOARD_FORBIDDEN");
                 }
             } catch (RuntimeException unavailable) {
-                failure = authorizationUnavailable();
+                failure = createAuthorizationUnavailable();
             }
         }
-        if (failure == null) return;
+        if (failure == null)
+            return;
         try {
-            audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
-                    "ADMIN_DASHBOARD", null, AuditResult.DENIED, failure.code(), Map.of(), clock.instant()));
+            audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(),
+                    "ACCESS_DENIED", "ADMIN_DASHBOARD", null, AuditResult.DENIED, failure.code(),
+                    Map.of(), clock.instant()));
         } catch (RuntimeException auditUnavailable) {
-            throw ApiException.unavailable("DASHBOARD_AUDIT_UNAVAILABLE", "Không ghi được nhật ký truy cập");
+            throw ApiException.unavailable("DASHBOARD_AUDIT_UNAVAILABLE",
+                    "Không ghi được nhật ký truy cập");
         }
         throw failure;
     }
 
-    private ApiException authorizationUnavailable() {
-        return ApiException.unavailable("DASHBOARD_AUTHORIZATION_UNAVAILABLE", "Không kiểm tra được quyền truy cập");
+    /** Builds the service error for an unavailable authorization check. */
+    private ApiException createAuthorizationUnavailable() {
+        return ApiException.unavailable("DASHBOARD_AUTHORIZATION_UNAVAILABLE",
+                "Không kiểm tra được quyền truy cập");
     }
 
-    private <T, R> Section<R> section(PendingSource<T> pending, Function<T, R> map) {
-        var result = reader.await(pending);
-        if (!result.available() || result.value() == null) return Section.unavailable();
-        try {
-            return Section.available(map.apply(result.value()));
-        } catch (RuntimeException invalidData) {
-            return Section.unavailable();
-        }
-    }
-
-    private AccountCounts accountCounts(Map<Role, Map<AccountStatus, Long>> raw) {
+    /** Totals accounts by role and status, with a separate active account count. */
+    private AccountCounts calculateAccountCounts(Map<Role, Map<AccountStatus, Long>> raw) {
         var breakdown = new EnumMap<Role, Map<AccountStatus, Long>>(Role.class);
         raw.forEach((role, statuses) -> {
             Objects.requireNonNull(role);
@@ -169,58 +194,74 @@ public class AdminDashboardService {
         });
         long total = 0, active = 0;
         for (Role role : Role.values()) {
-            Map<AccountStatus, Long> counts = completeCounts(AccountStatus.class, raw.getOrDefault(role, Map.of()));
+            Map<AccountStatus, Long> counts = completeCounts(AccountStatus.class,
+                    raw.getOrDefault(role, Map.of()));
             breakdown.put(role, counts);
-            for (long count : counts.values()) total = Math.addExact(total, count);
+            for (long count : counts.values())
+                total = Math.addExact(total, count);
             active = Math.addExact(active, counts.get(AccountStatus.ACTIVE));
         }
         return new AccountCounts(Map.copyOf(breakdown), total, active);
     }
 
+    /** Validates enum counts and fills missing entries with zero. */
     private <E extends Enum<E>> Map<E, Long> completeCounts(Class<E> type, Map<E, Long> raw) {
         Objects.requireNonNull(raw);
-        raw.forEach((status, count) -> { Objects.requireNonNull(status); nonNegative(count); });
+        raw.forEach((status, count) -> {
+            Objects.requireNonNull(status);
+            requireNonNegativeCount(count);
+        });
         var counts = new EnumMap<E, Long>(type);
         long total = 0;
         for (E status : type.getEnumConstants()) {
-            long count = nonNegative(raw.getOrDefault(status, 0L));
+            long count = requireNonNegativeCount(raw.getOrDefault(status, 0L));
             counts.put(status, count);
             total = Math.addExact(total, count);
         }
         return Map.copyOf(counts);
     }
 
-    private long nonNegative(Long count) {
-        if (count == null || count < 0) throw new IllegalArgumentException("Invalid count");
+    /** Rejects missing or negative counts and returns the validated value. */
+    private long requireNonNegativeCount(Long count) {
+        if (count == null || count < 0)
+            throw new IllegalArgumentException("Invalid count");
         return count;
     }
 
-    private BackupRunItem backupItem(BackupDashboardRunView run) {
+    /** Validates the run state, schedule date, and optional size before mapping it. */
+    private BackupRunItem mapBackupItem(BackupDashboardRunView run) {
         Objects.requireNonNull(run.state());
         Objects.requireNonNull(run.scheduledFor());
-        if (run.byteSize() != null) nonNegative(run.byteSize());
-        return new BackupRunItem(run.scheduledFor(), run.state(), run.snapshotAt(), run.startedAt(), run.completedAt(),
-                run.byteSize(), run.safeError(), run.purgedAt());
+        if (run.byteSize() != null)
+            requireNonNegativeCount(run.byteSize());
+        return new BackupRunItem(run.scheduledFor(), run.state(), run.snapshotAt(), run.startedAt(),
+                run.completedAt(), run.byteSize(), run.safeError(), run.purgedAt());
     }
 
-    private BackupDashboardSummary validSummary(BackupDashboardSummary value, Instant from, Instant to) {
-        if (!from.equals(value.fromInclusive()) || !to.equals(value.toExclusive()) || value.failedRuns() < 0
+    /** Checks that the backup summary matches the requested window and failure details. */
+    private BackupDashboardSummary validateBackupSummary(BackupDashboardSummary value, Instant from,
+            Instant to) {
+        if (!from.equals(value.fromInclusive()) || !to.equals(value.toExclusive())
+                || value.failedRuns() < 0
                 || (value.latestSuccessfulAt() != null && !value.latestSuccessfulAt().isBefore(to))
                 || (value.failedRuns() == 0 && value.latestSafeError() != null)
-                || (value.failedRuns() > 0 && (value.latestSafeError() == null || value.latestSafeError().isBlank()))) {
+                || (value.failedRuns() > 0 && (value.latestSafeError() == null
+                        || value.latestSafeError().isBlank()))) {
             throw new IllegalArgumentException("Invalid backup summary");
         }
         return value;
     }
 
-    private BackupSchedule schedule(Instant now) {
+    /** Reads backup settings and calculates the next enabled run in Vietnam time. */
+    private BackupSchedule loadSchedule(Instant now) {
         boolean enabled = settings.get(BACKUP_ENABLED).orElse(false);
         LocalTime dailyAt = settings.get(BACKUP_DAILY_AT).orElse(null);
         Instant next = null;
         if (enabled && dailyAt != null) {
             ZonedDateTime local = now.atZone(BACKUP_ZONE);
             ZonedDateTime slot = local.toLocalDate().atTime(dailyAt).atZone(BACKUP_ZONE);
-            if (slot.toInstant().isBefore(now)) slot = slot.plusDays(1);
+            if (slot.toInstant().isBefore(now))
+                slot = slot.plusDays(1);
             next = slot.toInstant();
         }
         return new BackupSchedule(enabled, dailyAt, BACKUP_ZONE.getId(), next);

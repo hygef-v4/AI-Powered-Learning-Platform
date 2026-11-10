@@ -177,7 +177,15 @@ class EmailDeliveryServiceTest {
     }
 
     @Test
-    void staffEmailsDefaultOffUntilOptedIn() {
+    void staffEmailsDefaultOnUntilTurnedOff() {
+        service.schedule(notice(), "QUESTION_REVIEWED", null);
+        assertThat(captured().status).isEqualTo(EmailDelivery.Status.PENDING);
+        verify(jobs).enqueue(eq(JobTypes.EMAIL_SEND), anyMap(), startsWith("email:"));
+    }
+
+    @Test
+    void staffCanTurnAnEmailOff() {
+        when(repo.preferences(recipient)).thenReturn(Map.of("QUESTION_REVIEWED", false));
         service.schedule(notice(), "QUESTION_REVIEWED", null);
         assertThat(captured().status).isEqualTo(EmailDelivery.Status.SKIPPED);
         verifyNoInteractions(jobs);

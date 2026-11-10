@@ -21,7 +21,7 @@ Code viết ngày 2026-10-18 theo [plan](../../plans/code-generation-plan/u05-cl
 | Khóa theo môn | `ISubjectMutationGuard.lockActive` của U04 (khóa dòng `subjects`, chờ tối đa 1 giây, môn không `ACTIVE` thì từ chối): mọi thao tác ghi lớp và ghi danh trong cùng môn chạy lần lượt, và không chạy chồng với việc U04 lưu trữ môn |
 | Contract cho unit khác | `AcademicsContractAdapter` cài `IClassAccess`, `IClassScope` (U01), `ISubjectClasses` (U04); đọc quan hệ hiện thời, không cache. `archiveClassesOfSubject`: U04 lưu trữ môn thì U05 lưu trữ mọi lớp `DRAFT`, `OPEN` của môn trong cùng transaction, ghi audit từng lớp |
 
-Domain: `CourseClass`, `Enrollment`, `EnrollmentPolicy`, `EnrollmentListParser`, `EnrollmentResult`. Hạ tầng: `JdbcCourseClassRepository`, `JdbcEnrollmentRepository`, `JdbcAcademicsReadRepository` (`NamedParameterJdbcTemplate`, tham số gắn tên, trang 1–100).
+Domain: `CourseClass`, `Enrollment`, `EnrollmentPolicy`, `EnrollmentListParser`, `EnrollmentResult`. Hạ tầng: `CourseClassRepository`, `EnrollmentRepository`, `AcademicsReadRepository` (`NamedParameterJdbcTemplate`, tham số gắn tên, trang 1–100). Concrete repository không thêm tiền tố Jdbc theo quy ước tên chung; cách truy cập JDBC giữ nguyên.
 
 Kiểm quyền: vai trò và trạng thái tài khoản qua `IAccountLookup`, rồi `IAuthorization` với action đăng ký trong `Actions`/`AccessPolicy` của U01: `CLASS_STUDENT`, `CLASS_TEACHER`, `CLASS_MANAGER` (vào màn theo vai trò), `CLASS_VIEW` (sinh viên, giảng viên xem một lớp, phạm vi lớp), `CLASS_MANAGE` (Chủ nhiệm xem và sửa lớp của môn mình, phạm vi môn). Sai phạm vi trả 404; U01/U04 lỗi thì từ chối. Audit thành công ghi cùng transaction; từ chối và lỗi ghi sau rollback. Ghi danh phát `enrollment.activated` qua `IEventPublisher` của U03.
 

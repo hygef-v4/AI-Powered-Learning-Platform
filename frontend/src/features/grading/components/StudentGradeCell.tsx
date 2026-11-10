@@ -11,7 +11,7 @@ export function StudentGradeCell({
   classId: string;
   assignmentId: string;
 }) {
-  const load = useCallback(() => gradingApi.myGrades(classId), [classId]);
+  const load = useCallback(() => gradingApi.listMyGrades(classId), [classId]);
   const { value, error } = useResource(load);
   const grade = value?.find((g) => g.assignmentId === assignmentId);
   return error || grade?.score == null

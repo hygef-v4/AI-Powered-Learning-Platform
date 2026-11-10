@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import edu.aiplatform.shared.content.FormattedText;
 
 /** Dữ liệu Quiz cho người soạn (giảng viên, Chủ nhiệm môn); có đáp án, không dùng cho người học (P2). */
 public final class QuizViews {
@@ -26,13 +27,13 @@ public final class QuizViews {
                            QuizOrigin origin, int versionNo, String title, String instructions, QuizSettings settings,
                            boolean activityMonitoringEnabled, String activityNotice, QuizPaperMode paperMode,
                            QuizStatus status, Instant publishedAt, Instant retiredAt, String retiredReason,
-                           Instant createdAt, Instant updatedAt, long version) {
+                           Instant createdAt, Instant updatedAt, long version, FormattedText instructionsDocument) {
 
         static QuizInfo of(Quiz q) {
             return new QuizInfo(q.id(), q.scope(), q.classId(), q.subjectId(), q.sourceQuizId(), q.origin(),
                     q.versionNo(), q.title(), q.instructions(), q.settings(), q.activityMonitoringEnabled(),
                     q.activityNotice(), q.paperMode(), q.status(), q.publishedAt(), q.retiredAt(),
-                    q.retiredReason(), q.createdAt(), q.updatedAt(), q.version());
+                    q.retiredReason(), q.createdAt(), q.updatedAt(), q.version(), q.instructionsDocument());
         }
     }
 

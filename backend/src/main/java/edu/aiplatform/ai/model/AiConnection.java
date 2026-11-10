@@ -37,9 +37,6 @@ public record AiConnection(UUID id, Scope scope, UUID ownerId, AiProvider provid
     }
 
     public AiConnection withStatus(Status next, Instant now) {
-        if (next == Status.DISABLED && scope != Scope.INSTITUTIONAL) {
-            throw new IllegalStateException("Chỉ API chung có trạng thái DISABLED");
-        }
         return new AiConnection(id, scope, ownerId, provider, model, keyCiphertext, keyIv, keyVersion, keyHint, next,
                 lastTestAt, lastTestResult, createdAt, now, version);
     }

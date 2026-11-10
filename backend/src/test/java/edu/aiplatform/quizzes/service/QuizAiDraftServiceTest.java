@@ -29,7 +29,6 @@ import edu.aiplatform.identity.contract.ScopeKind;
 import edu.aiplatform.quizzes.service.AiDraftViews.AiDraftView;
 import edu.aiplatform.quizzes.service.AiDraftViews.BankAcceptResult;
 import edu.aiplatform.quizzes.service.QuizAiDraftService.DraftRequest;
-import edu.aiplatform.quizzes.service.QuizAuthoringService.Details;
 import edu.aiplatform.quizzes.service.QuizViews.QuizDetail;
 import edu.aiplatform.quizzes.contract.IQuizLifecycleListener;
 import edu.aiplatform.quizzes.contract.QuestionType;
@@ -43,7 +42,6 @@ import edu.aiplatform.quizzes.model.QuestionContent;
 import edu.aiplatform.quizzes.model.QuestionOption;
 import edu.aiplatform.quizzes.model.QuestionScope;
 import edu.aiplatform.quizzes.model.QuestionStatus;
-import edu.aiplatform.quizzes.model.Quiz;
 import edu.aiplatform.quizzes.model.QuizItem;
 import edu.aiplatform.quizzes.model.QuizRules;
 import edu.aiplatform.shared.error.ApiException;
@@ -68,6 +66,181 @@ import org.springframework.transaction.support.TransactionOperations;
 
 /** F4, F8, F13 và tài liệu tham khảo (H1–H9) trên repository giả, U06 và U13 giả. */
 class QuizAiDraftServiceTest {
+
+    @Test
+    void documentOnlyRequestsUseDefaultInstructionsForQuizAndBank() {
+        QuizDetail quiz = classQuiz();
+        UUID material = u13.add(ResourceRef.courseClass(classA), "Toán", true);
+        drafts.requestForQuiz(teacher, quiz.quiz().id(), new DraftRequest(null, 5, null, null,
+                List.of(material), null, null, "document-only"), quiz.quiz().version());
+        assertThat(submitted.get(0).prompt().user()).contains("Tạo quiz theo nội dung tài liệu đã chọn.");
+        UUID bankMaterial = u13.add(ResourceRef.subject(subject), "Toán", true);
+        drafts.requestForBank(manager, subject, new DraftRequest("  ", 5, null, null,
+                List.of(bankMaterial), null, null, "bank-document-only"));
+        assertThat(submitted.get(1).prompt().user()).contains("Tạo quiz theo nội dung tài liệu đã chọn.");
+    }
+
+    @Test
+    void persistsRelevanceWarningAlongsideExistingSourceWarnings() {
+        QuizDetail quiz = classQuiz();
+        UUID source = u13.add(ResourceRef.courseClass(classA), "Tài liệu dài", true);
+        u13.truncate = true;
+        AiDraftView pending = drafts.requestForQuiz(teacher, quiz.quiz().id(), request("unrelated", List.of(source)),
+                quiz.quiz().version());
+        AiTaskRequest sent = submitted.get(0);
+        String unrelated = OUTPUT.replace("{\"questions\":", "{\"requestMatchesSources\":false,\"questions\":");
+        assertThat(handler.onReady(new AiTaskResult(UUID.randomUUID(), sent.taskType(), teacher, sent.targetRef(),
+                sent.inputVersion(), unrelated))).isEqualTo(ApplyOutcome.APPLIED);
+        var reopened = drafts.getForQuiz(teacher, quiz.quiz().id(), pending.id());
+        assertThat(reopened.status()).isEqualTo(DraftStatus.PENDING);
+        assertThat(reopened.questions()).isEmpty();
+        assertThat(reopened.sourceWarnings()).hasSize(2).anyMatch(message -> message.contains("không liên quan"))
+                .anyMatch(message -> message.contains("cắt"));
+        assertThat(submitted).hasSize(2);
+        assertThat(submitted.get(1).prompt().user()).contains("Tạo quiz theo nội dung tài liệu đã chọn.")
+                .doesNotContain("Ôn tập chương 1");
+    }
+
+    @Test
+    void sourceOnlyRetryIsBoundedAndNeverAcceptsAnotherMismatchedResult() {
+        QuizDetail quiz = classQuiz();
+        UUID source = u13.add(ResourceRef.courseClass(classA), "Lịch sử", true);
+        AiDraftView pending = drafts.requestForQuiz(teacher, quiz.quiz().id(),
+                new DraftRequest("Tạo câu hỏi Liên Quân", 2, QuestionType.MCQ_SINGLE, Difficulty.HARD,
+                        List.of(source), AiSource.PERSONAL, AiProvider.GEMINI, "wrong-topic"), quiz.quiz().version());
+        AiTaskRequest original = submitted.get(0);
+        String mismatch = OUTPUT.replace("{\"questions\":", "{\"requestMatchesSources\":false,\"questions\":");
+        handler.onReady(new AiTaskResult(pending.taskId(), original.taskType(), teacher, original.targetRef(), 0, mismatch));
+        AiDraftView retry = drafts.getForQuiz(teacher, quiz.quiz().id(), pending.id());
+        assertThat(retry.status()).isEqualTo(DraftStatus.PENDING);
+        assertThat(retry.questions()).isEmpty();
+        assertThat(retry.taskId()).isNotEqualTo(pending.taskId());
+        assertThat(submitted).hasSize(2);
+        AiTaskRequest next = submitted.get(1);
+        assertThat(next.prompt().user()).contains("MCQ_SINGLE", "HARD", "Tạo quiz theo nội dung tài liệu đã chọn.")
+                .doesNotContain("Liên Quân");
+        assertThat(next.source()).isEqualTo(AiSource.PERSONAL);
+        assertThat(next.provider()).isEqualTo(AiProvider.GEMINI);
+        drafts.getForQuiz(teacher, quiz.quiz().id(), pending.id());
+        assertThat(submitted).hasSize(2);
+        handler.onReady(new AiTaskResult(retry.taskId(), next.taskType(), teacher, next.targetRef(), 0, mismatch));
+        AiDraftView rejected = drafts.getForQuiz(teacher, quiz.quiz().id(), pending.id());
+        assertThat(rejected.status()).isEqualTo(DraftStatus.FAILED);
+        assertThat(rejected.failureCode()).isEqualTo("AI_SOURCE_MISMATCH");
+        assertThat(rejected.questions()).isEmpty();
+        assertThat(submitted).hasSize(2);
+    }
+
+    @Test
+    void sourceOnlyRetryCanBecomeReadyWithPersistentWarning() {
+        QuizDetail quiz = classQuiz();
+        UUID source = u13.add(ResourceRef.courseClass(classA), "Lịch sử", true);
+        AiDraftView pending = drafts.requestForQuiz(teacher, quiz.quiz().id(), request("recover-topic", List.of(source)),
+                quiz.quiz().version());
+        String mismatch = OUTPUT.replace("{\"questions\":", "{\"questionsMatchSources\":false,\"questions\":");
+        AiTaskRequest first = submitted.get(0);
+        handler.onReady(new AiTaskResult(pending.taskId(), first.taskType(), teacher, first.targetRef(), 0, mismatch));
+        AiDraftView retry = drafts.getForQuiz(teacher, quiz.quiz().id(), pending.id());
+        assertThat(retry.status()).isEqualTo(DraftStatus.PENDING);
+        assertThat(submitted).hasSize(2);
+        AiTaskRequest next = submitted.get(1);
+        handler.onReady(new AiTaskResult(retry.taskId(), next.taskType(), teacher, next.targetRef(), 0, OUTPUT));
+        AiDraftView ready = drafts.getForQuiz(teacher, quiz.quiz().id(), pending.id());
+        assertThat(ready.status()).isEqualTo(DraftStatus.READY);
+        assertThat(ready.questions()).hasSize(2);
+        assertThat(ready.sourceWarnings()).hasSize(1);
+    }
+
+    @Test
+    void mismatchSchedulesOnlyAfterDeliveryCommitAndCannotBeAcceptedMeanwhile() {
+        QuizDetail quiz = classQuiz();
+        UUID source = u13.add(ResourceRef.courseClass(classA), "Nguồn", true);
+        AiDraftView pending = drafts.requestForQuiz(teacher, quiz.quiz().id(), request("after-commit", List.of(source)), quiz.quiz().version());
+        AiTaskRequest sent = submitted.get(0);
+        String mismatch = OUTPUT.replace("{\"questions\":", "{\"requestMatchesSources\":false,\"questions\":");
+        org.springframework.transaction.support.TransactionSynchronizationManager.initSynchronization();
+        List<org.springframework.transaction.support.TransactionSynchronization> callbacks;
+        try {
+            handler.onReady(new AiTaskResult(pending.taskId(), sent.taskType(), teacher, sent.targetRef(), 0, mismatch));
+            assertThat(submitted).hasSize(1);
+            assertThat(store.drafts.get(pending.id()).proposal()).isEmpty();
+            assertThat(api(() -> drafts.acceptForQuiz(teacher, quiz.quiz().id(), pending.id(), List.of(valid("x")), quiz.quiz().version())).code())
+                    .isEqualTo("AI_DRAFT_NOT_READY");
+            callbacks = org.springframework.transaction.support.TransactionSynchronizationManager.getSynchronizations();
+        } finally {
+            org.springframework.transaction.support.TransactionSynchronizationManager.clearSynchronization();
+        }
+        callbacks.forEach(org.springframework.transaction.support.TransactionSynchronization::afterCommit);
+        assertThat(submitted).hasSize(2);
+    }
+
+    @Test
+    void ownerPollingRecoversRetryButOtherViewersDoNotSubmitAndRevokedSourcesFailClosed() {
+        QuizDetail quiz = classQuiz();
+        UUID source = u13.add(ResourceRef.courseClass(classA), "Nguồn", true);
+        AiDraftView pending = drafts.requestForQuiz(teacher, quiz.quiz().id(), request("recovery", List.of(source)), quiz.quiz().version());
+        store.drafts.put(pending.id(), store.drafts.get(pending.id()).retryFromSources(List.of("Cảnh báo")));
+        assertThat(sourceRetry.retry(otherTeacher, pending.id()).needsSourceRetry()).isTrue();
+        assertThat(submitted).hasSize(1);
+        u13.selectable.clear();
+        AiDraftView failed = drafts.getForQuiz(teacher, quiz.quiz().id(), pending.id());
+        assertThat(failed.status()).isEqualTo(DraftStatus.FAILED);
+        assertThat(failed.failureCode()).isEqualTo("MATERIAL_NOT_SELECTABLE");
+        assertThat(failed.questions()).isEmpty();
+        assertThat(submitted).hasSize(1);
+    }
+
+    @Test
+    void quotaFailureDuringRetryLeavesAnActionableFailedDraftAndNoRepeatedSubmission() {
+        QuizDetail quiz = classQuiz();
+        UUID source = u13.add(ResourceRef.courseClass(classA), "Nguồn", true);
+        AiDraftView pending = drafts.requestForQuiz(teacher, quiz.quiz().id(), request("quota", List.of(source)), quiz.quiz().version());
+        store.drafts.put(pending.id(), store.drafts.get(pending.id()).retryFromSources(List.of("Cảnh báo")));
+        aiAnswer = request -> { throw ApiException.badRequest("AI_QUOTA_EXCEEDED", "Quota hết"); };
+        AiDraftView failed = drafts.getForQuiz(teacher, quiz.quiz().id(), pending.id());
+        assertThat(failed.status()).isEqualTo(DraftStatus.FAILED);
+        assertThat(failed.failureCode()).isEqualTo("AI_QUOTA_EXCEEDED");
+        assertThat(failed.sourceWarnings()).containsExactly("Cảnh báo");
+        drafts.getForQuiz(teacher, quiz.quiz().id(), pending.id());
+        assertThat(submitted).hasSize(2);
+    }
+
+    @Test
+    void doesNotWarnAboutSourceMismatchWithoutSelectedSources() {
+        QuizDetail quiz = classQuiz();
+        AiDraftView pending = drafts.requestForQuiz(teacher, quiz.quiz().id(), request("no-sources", List.of()),
+                quiz.quiz().version());
+        AiTaskRequest sent = submitted.get(0);
+        String output = OUTPUT.replace("{\"questions\":", "{\"requestMatchesSources\":false,\"questions\":");
+        handler.onReady(new AiTaskResult(UUID.randomUUID(), sent.taskType(), teacher, sent.targetRef(), sent.inputVersion(), output));
+        assertThat(drafts.getForQuiz(teacher, quiz.quiz().id(), pending.id()).sourceWarnings()).isEmpty();
+    }
+
+    @Test
+    void reportsAndPersistsTruncatedSourceCoverage() {
+        QuizDetail quiz = classQuiz();
+        UUID source = u13.add(ResourceRef.courseClass(classA), "Tài liệu dài", true);
+        u13.truncate = true;
+        AiDraftView view = drafts.requestForQuiz(teacher, quiz.quiz().id(), request("truncated", List.of(source)),
+                quiz.quiz().version());
+        var json = new ObjectMapper().findAndRegisterModules();
+        assertThat(json.valueToTree(view).path("sourceWarnings").size()).isEqualTo(1);
+        assertThat(json.valueToTree(drafts.getForQuiz(teacher, quiz.quiz().id(), view.id()))
+                .path("sourceWarnings").get(0).asText()).contains("Tài liệu", "cắt");
+        assertThat(submitted).hasSize(1);
+    }
+
+    @Test
+    void doesNotSubmitWhenSelectedSourcesHaveNoTextAtDispatch() {
+        QuizDetail quiz = classQuiz();
+        UUID source = u13.add(ResourceRef.courseClass(classA), "Tài liệu đang thay phiên bản", true);
+        u13.emptyText = true;
+        AiDraftView view = drafts.requestForQuiz(teacher, quiz.quiz().id(), request("empty-text", List.of(source)),
+                quiz.quiz().version());
+        assertThat(view.status()).isEqualTo(DraftStatus.FAILED);
+        assertThat(view.failureCode()).isEqualTo("MATERIAL_TEXT_UNAVAILABLE");
+        assertThat(submitted).isEmpty();
+    }
 
     @Test void mcpBankProposalUsesExistingReviewLifecycleAndNeverCallsProvider() throws Exception {
         var questions = new ObjectMapper().readTree(OUTPUT).path("questions");
@@ -104,6 +277,7 @@ class QuizAiDraftServiceTest {
     private QuizDraftResultHandler handler;
     private QuizMcpTools mcp;
     private QuizAccess mcpAccess;
+    private QuizSourceRetry sourceRetry;
 
     @BeforeEach
     @SuppressWarnings("unchecked")
@@ -162,11 +336,13 @@ class QuizAiDraftServiceTest {
         publication = new QuizPublicationService(store.quizRepository, support,
                 new QuizPaperService(store.quizRepository, store.questionRepository, support, clock), listeners,
                 event -> { }, audit, clock);
+        sourceRetry = new QuizSourceRetry(store.draftRepository, support, access, active, materials, ai,
+                TransactionOperations.withoutTransaction(), clock);
         drafts = new QuizAiDraftService(store.draftRepository, store.quizRepository, store.questionRepository, support,
                 access, active, materials, ai, audit, new QuestionDuplicates(store.questionRepository),
-                TransactionOperations.withoutTransaction(), clock);
+                TransactionOperations.withoutTransaction(), clock, sourceRetry);
         handler = new QuizDraftResultHandler(store.draftRepository, store.quizRepository, support, access, active,
-                new ObjectMapper(), clock);
+                new ObjectMapper(), clock, sourceRetry);
         mcp = new QuizMcpTools(drafts, new ObjectMapper());
     }
 
@@ -299,14 +475,12 @@ class QuizAiDraftServiceTest {
         QuizDetail quiz = classQuiz();
         UUID id = quiz.quiz().id();
         long version = quiz.quiz().version();
-        DraftRequest personalWithoutProvider = new DraftRequest("x", 2, null, null, List.of(), AiSource.PERSONAL,
-                null, "r");
         DraftRequest sharedWithProvider = new DraftRequest("x", 2, null, null, List.of(), AiSource.SHARED,
                 AiProvider.OPENAI, "r");
         DraftRequest tooMany = new DraftRequest("x", 51, null, null, List.of(), AiSource.SHARED, null, "r");
         DraftRequest blank = new DraftRequest("  ", 2, null, null, List.of(), AiSource.SHARED, null, "r");
 
-        for (DraftRequest bad : List.of(personalWithoutProvider, sharedWithProvider, tooMany, blank)) {
+        for (DraftRequest bad : List.of(sharedWithProvider, tooMany, blank)) {
             assertThat(api(() -> drafts.requestForQuiz(teacher, id, bad, version)).code())
                     .isEqualTo("AI_DRAFT_REQUEST_INVALID");
         }

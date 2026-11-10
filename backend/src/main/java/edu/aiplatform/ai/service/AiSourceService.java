@@ -13,7 +13,6 @@ import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -93,8 +92,9 @@ public class AiSourceService {
     }
 
     private SourceOption shared(Actor actor, boolean preferred) {
-        Optional<AiConnection> connection = Arrays.stream(AiProvider.values()).map(connections::findInstitutional)
-                .flatMap(Optional::stream).filter(c -> c.status() == Status.ACTIVE).findFirst();
+        Optional<AiConnection> connection = connections.listInstitutional().stream()
+                .filter(c -> c.status() == Status.ACTIVE)
+                .min(java.util.Comparator.comparingInt(c -> ConnectionOrder.providerRank(c.provider())));
         if (connection.isEmpty()) {
             return new SourceOption(AiSource.SHARED, null, null, null, false, "API của trường chưa được bật", null,
                     "SCHOOL", preferred);

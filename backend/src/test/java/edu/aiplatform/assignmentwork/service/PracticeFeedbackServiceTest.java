@@ -95,7 +95,6 @@ class PracticeFeedbackServiceTest {
         when(f.feedback.hasPending(a.id())).thenReturn(false);
         when(f.feedback.countSince(eq(f.student.accountId()), any())).thenReturn(20L);
         assertThat(code(() -> f.feedbackService.request(f.student, a.id(), AiProvider.GEMINI, "r1"))).isEqualTo("FEEDBACK_LIMIT");
-        assertThat(code(() -> f.feedbackService.request(f.student, a.id(), null, "r1"))).isEqualTo("AI_SOURCE_INVALID");
     }
 
     @Test

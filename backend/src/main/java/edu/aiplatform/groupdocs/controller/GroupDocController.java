@@ -2,8 +2,9 @@ package edu.aiplatform.groupdocs.controller;
 
 import edu.aiplatform.assignments.contract.DocumentBlock;
 import edu.aiplatform.assignmentwork.contract.ActivityEventInput;
-import edu.aiplatform.groupdocs.model.AssignmentLock;
 import edu.aiplatform.groupdocs.service.GroupDocAccess;
+import edu.aiplatform.groupdocs.service.GroupDocImportService;
+import edu.aiplatform.groupdocs.service.GroupDocImportService.SectionImport;
 import edu.aiplatform.groupdocs.service.GroupSectionService;
 import edu.aiplatform.groupdocs.service.GroupSectionService.RevisionView;
 import edu.aiplatform.groupdocs.service.GroupSectionService.SectionView;
@@ -15,6 +16,8 @@ import edu.aiplatform.groupdocs.service.GroupWorkspaceService;
 import edu.aiplatform.groupdocs.service.GroupWorkspaceService.WorkspaceView;
 import edu.aiplatform.groupdocs.service.IGroupDocStreams;
 import edu.aiplatform.identity.contract.Actor;
+import edu.aiplatform.shared.error.ApiException;
+import java.io.IOException;
 import jakarta.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -31,16 +34,19 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-/** UC 56: workspace tài liệu nhóm, mục, nộp, DOCX, kênh SSE và dữ liệu hoạt động. */
+/** UC 56: workspace tài liệu nhóm, mục, lịch sử mục, nộp, DOCX, kênh SSE và dữ liệu hoạt động. */
 @RestController
 public class GroupDocController {
 
     static final MediaType DOCX = MediaType.parseMediaType(
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    static final long MAX_DOCX_BYTES = 20L * 1024 * 1024;
 
     private final GroupWorkspaceService workspace;
     private final GroupSectionService sections;
@@ -48,16 +54,18 @@ public class GroupDocController {
     private final GroupWorkQueryService work;
     private final GroupDocAccess access;
     private final IGroupDocStreams streams;
+    private final GroupDocImportService imports;
 
     public GroupDocController(GroupWorkspaceService workspace, GroupSectionService sections,
                               GroupSubmissionService submissions, GroupWorkQueryService work, GroupDocAccess access,
-                              IGroupDocStreams streams) {
+                              IGroupDocStreams streams, GroupDocImportService imports) {
         this.workspace = workspace;
         this.sections = sections;
         this.submissions = submissions;
         this.work = work;
         this.access = access;
         this.streams = streams;
+        this.imports = imports;
     }
 
     public record AssignRequest(UUID assigneeId, boolean replaceHolder) {
@@ -67,9 +75,6 @@ public class GroupDocController {
     }
 
     public record SubmitRequest(Long version) {
-    }
-
-    public record RestoreRequest(UUID revisionId, Long version) {
     }
 
     public record ActivityRequest(List<ActivityEventInput> events) {
@@ -121,28 +126,17 @@ public class GroupDocController {
         return sections.done(actor, id, sectionId);
     }
 
-    /** Trưởng nhóm chốt phân công cho cả tài liệu (FB-U12-01). */
-    @PostMapping("/api/v1/group-docs/{id}/assignment:lock")
-    public AssignmentLock lockAssignment(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return sections.lockAssignment(actor, id);
-    }
-
-    @PostMapping("/api/v1/group-docs/{id}/assignment:unlock")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void unlockAssignment(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        sections.unlockAssignment(actor, id);
-    }
-
     @GetMapping("/api/v1/group-docs/{id}/sections/{sectionId}/revisions")
     public List<RevisionView> revisions(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                         @PathVariable UUID sectionId) {
         return sections.revisions(actor, id, sectionId);
     }
 
-    @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:restore")
-    public SectionView restore(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId,
-                               @RequestBody RestoreRequest request) {
-        return sections.restore(actor, id, sectionId, request.revisionId(), request.version());
+    /** Người giữ xem trước DOCX để chèn vào mục đang soạn (BR-U12-34, như trình soạn bài cá nhân). */
+    @PostMapping(value = "/api/v1/group-docs/{id}/sections/{sectionId}/docx:preview", consumes = "multipart/form-data")
+    public SectionImport previewSectionDocx(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+                                            @PathVariable UUID sectionId, @RequestPart("file") MultipartFile file) {
+        return imports.previewSection(actor, id, sectionId, readDocx(file));
     }
 
     @PutMapping("/api/v1/group-docs/{id}/sections/{sectionId}/draft")
@@ -165,5 +159,19 @@ public class GroupDocController {
                         .filename(export.title() + ".docx", StandardCharsets.UTF_8).build().toString())
                 .header("X-Content-Type-Options", "nosniff")
                 .body(export.content());
+    }
+
+    private static byte[] readDocx(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw ApiException.badRequest("IMPORT_FILE_INVALID", "Chưa chọn tệp DOCX");
+        }
+        if (file.getSize() > MAX_DOCX_BYTES) {
+            throw ApiException.payloadTooLarge("IMPORT_FILE_TOO_LARGE", "Tệp DOCX tối đa 20 MB");
+        }
+        try {
+            return file.getBytes();
+        } catch (IOException e) {
+            throw ApiException.badRequest("IMPORT_FILE_INVALID", "Không đọc được tệp DOCX");
+        }
     }
 }

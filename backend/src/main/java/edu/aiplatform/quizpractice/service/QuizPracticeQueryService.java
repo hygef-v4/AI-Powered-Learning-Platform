@@ -1,6 +1,5 @@
 package edu.aiplatform.quizpractice.service;
 
-import edu.aiplatform.quizpractice.dto.PracticeViews;
 
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
@@ -104,7 +103,7 @@ public class QuizPracticeQueryService {
         int used = own.size();
         UUID inProgress = own.stream().filter(QuizAttempt::inProgress).map(QuizAttempt::id).findFirst().orElse(null);
         String blocked = blockedReason(quiz, ref, used, inProgress);
-        return new PracticeQuizDetail(quizId, classId, ref.code(), ref.name(), quiz.title(),
+        return new PracticeQuizDetail(quizId, classId, ref.code(), ref.subjectCode(), quiz.title(),
                 view.instructions(), quiz.status(), view.questionCount(), quiz.maxScore(),
                 quiz.settings().timeLimitMinutes(), used, max, max == null ? null : Math.max(max - used, 0),
                 showScore ? best(own) : null, showScore, quiz.settings().showCorrectAnswers(),
@@ -112,7 +111,7 @@ public class QuizPracticeQueryService {
                 quiz.activityMonitoringEnabled() ? quiz.settings().leavePenalty() : null,
                 own.stream().sorted(Comparator.comparingInt(QuizAttempt::attemptNo).reversed())
                         .map(a -> PracticeSupport.row(a, a.snapshot().settings().showScoreAfterSubmit())).toList(),
-                inProgress, blocked == null, blocked);
+                inProgress, blocked == null, blocked, view.instructionsDocument());
     }
 
     private static PracticeQuizRow row(QuizView quiz, ClassRef ref, List<QuizAttempt> own) {
@@ -121,7 +120,7 @@ public class QuizPracticeQueryService {
                 .max(Comparator.comparing(QuizAttempt::submittedAt)).orElse(null);
         UUID inProgress = own.stream().filter(QuizAttempt::inProgress).map(QuizAttempt::id).findFirst().orElse(null);
         Integer max = quiz.settings().maxAttempts();
-        return new PracticeQuizRow(quiz.quizId(), ref.classId(), ref.code(), ref.name(), quiz.title(), quiz.status(),
+        return new PracticeQuizRow(quiz.quizId(), ref.classId(), ref.code(), ref.subjectCode(), quiz.title(), quiz.status(),
                 quiz.settings().timeLimitMinutes(), own.size(), max, showScore ? best(own) : null,
                 showScore && last != null ? last.score() : null, quiz.maxScore(),
                 own.stream().map(QuizAttempt::startedAt).max(Comparator.naturalOrder()).orElse(null), inProgress,

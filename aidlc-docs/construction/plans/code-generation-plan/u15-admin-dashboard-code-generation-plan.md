@@ -1,4 +1,6 @@
-# U15 Admin Dashboard Implementation Plan
+# U15 Admin Dashboard Implementation Plan — persistence theo quyết định 2026-11-06
+
+> Lựa chọn persistence JPA/ORM trong kế hoạch cũ, nếu có, được thay bởi [quy định Spring JDBC toàn dự án](../../persistence-conventions.md). Các checklist/evidence đã thực hiện vẫn là lịch sử; unit chưa chuyển cần kế hoạch migration riêng, không tự coi code hiện tại đã JDBC.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: dùng superpowers:executing-plans để thực thi từng task, hoặc superpowers:subagent-driven-development nếu người dùng chọn khi duyệt. Mỗi bước dùng checkbox. Không bắt đầu code khi plan chưa được duyệt.
 

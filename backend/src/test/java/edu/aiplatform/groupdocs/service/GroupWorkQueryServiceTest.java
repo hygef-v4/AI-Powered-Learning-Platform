@@ -111,6 +111,38 @@ class GroupWorkQueryServiceTest {
     }
 
     @Test
+    void reminderProviderSelectsOnlyEnrolledMembersWhoseActualGroupHasNotSubmitted() {
+        UUID workingMember = UUID.randomUUID(), workingPeer = UUID.randomUUID();
+        UUID removedMember = UUID.randomUUID(), workingGroup = UUID.randomUUID();
+        GroupDocument submitted = doc(true);
+        GroupDocument working = GroupDocument.create(UUID.randomUUID(), workingGroup,
+                assignmentId, classId, new DocumentModel(List.of()), false, NOW);
+        when(groups.listGroupIdsOf(member.accountId())).thenReturn(List.of(g1.id()));
+        when(documents.listByGroups(List.of(g1.id()), List.of(assignmentId))).thenReturn(List.of(submitted));
+        for (UUID accountId : List.of(workingMember, workingPeer, removedMember)) {
+            when(groups.listGroupIdsOf(accountId)).thenReturn(List.of(workingGroup));
+        }
+        when(documents.listByGroups(List.of(workingGroup), List.of(assignmentId))).thenReturn(List.of(working));
+        when(classes.listActiveStudents(classId)).thenReturn(
+                List.of(member.accountId(), workingMember, workingPeer));
+        var assignmentQuery = mock(IAssignmentQuery.class);
+        when(assignmentQuery.get(assignmentId)).thenReturn(Optional.of(
+                new edu.aiplatform.assignments.contract.AssignmentView(assignmentId,
+                        edu.aiplatform.assignments.contract.AssignmentScope.CLASS, classId,
+                        UUID.randomUUID(), 1, "Group task",
+                        edu.aiplatform.assignments.contract.SubmissionMode.GROUP,
+                        edu.aiplatform.assignments.contract.GradingMode.GRADED, false,
+                        edu.aiplatform.assignments.contract.AssignmentStatus.OPEN,
+                        NOW.minusSeconds(60), NOW.plusSeconds(86400), null, null, false, null, List.of())));
+        var attempts = mock(edu.aiplatform.assignmentwork.repository.AttemptRepository.class);
+        var submissionQueryService = new edu.aiplatform.assignmentwork.service.SubmissionQueryService(
+                attempts, assignmentQuery, classes, service);
+        assertThat(submissionQueryService.listStudentsWithoutSubmission(assignmentId, classId))
+                .containsExactly(workingMember, workingPeer).doesNotContain(removedMember);
+        verify(attempts, never()).listOfClass(any(), any());
+    }
+
+    @Test
     void progressCountsSectionsPerGroupForTeacher() {
         GroupDocument d = doc(false);
         when(documents.listByAssignmentAndClass(assignmentId, classId)).thenReturn(List.of(d));

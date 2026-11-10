@@ -4,9 +4,10 @@ import { ClassGradebookTab } from "@/features/grading/components/ClassGradebookT
 import type { GradebookPage } from "@/features/grading/model/types";
 
 const mocks = vi.hoisted(() => ({
-  gradebook: vi.fn(),
-  progress: vi.fn(),
-  export: vi.fn(),
+  loadGradebook: vi.fn(),
+  listSubmissions: vi.fn(),
+  loadSubmissionProgress: vi.fn(),
+  exportGrades: vi.fn(),
 }));
 
 vi.mock("@/features/grading/api", () => ({ gradingApi: mocks }));
@@ -75,13 +76,39 @@ const samplePage: GradebookPage = {
 beforeEach(() => {
   vi.resetAllMocks();
   window.history.replaceState(null, "", "/");
-  mocks.gradebook.mockResolvedValue(samplePage);
-  mocks.progress.mockResolvedValue({ "a-1": { rows: [], total: 2, page: 1, size: 20, deadline: null, summary: { total: 2, submitted: 2, PENDING: 2 } } });
+  mocks.loadGradebook.mockResolvedValue(samplePage);
+  mocks.listSubmissions.mockResolvedValue({ rows: [], total: 0 });
+  mocks.loadSubmissionProgress.mockResolvedValue({ "a-1": { rows: [], total: 2, page: 1, size: 20, deadline: null, summary: { total: 2, submitted: 2, PENDING: 2 } } });
 });
 
 afterEach(cleanup);
 
 describe("ClassGradebookTab: danh sách – chi tiết", () => {
+  it("links directly to each submitted group's evaluation above the member grades", async () => {
+    mocks.listSubmissions.mockResolvedValue({
+      rows: [
+        { student: { accountId: "group-1", name: "Nhóm 1" }, evaluationId: "group-eval-1" },
+        { student: { accountId: "group-2", name: "Nhóm 2" }, evaluationId: "group-eval-2" },
+        { student: { accountId: "group-3", name: "Nhóm 3" }, evaluationId: null },
+      ],
+      total: 3,
+    });
+    render(<ClassGradebookTab classId="class-1" />);
+
+    const groupAssignment = await screen.findByRole("button", { name: new RegExp(longTitle2) });
+    expect(screen.queryByRole("link", { name: /Xem bản nộp chung/ })).not.toBeInTheDocument();
+    expect(mocks.listSubmissions).not.toHaveBeenCalled();
+    fireEvent.click(groupAssignment);
+
+    const groups = await screen.findByRole("list", { name: "Bản nộp chung theo nhóm" });
+    expect(within(groups).getByRole("link", { name: "Xem bản nộp chung của Nhóm 1" }))
+      .toHaveAttribute("href", "/teaching/evaluations/group-eval-1");
+    expect(within(groups).getByRole("link", { name: "Xem bản nộp chung của Nhóm 2" }))
+      .toHaveAttribute("href", "/teaching/evaluations/group-eval-2");
+    expect(within(groups).queryByText("Nhóm 3")).not.toBeInTheDocument();
+    expect(mocks.listSubmissions).toHaveBeenCalledWith("class-1", "a-2", "ALL", 1);
+  });
+
   it("Theo bài tập: danh sách bài bên trái (chỉ ghi loại), bảng điểm của bài đang chọn bên phải, căn theo assignmentId", async () => {
     render(<ClassGradebookTab classId="class-1" />);
 
@@ -101,12 +128,12 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
     expect(within(rowBinh).getByRole("link", { name: "Tiếp tục chấm" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: new RegExp(longTitle2) }));
-    // Chưa có lượt chấm: dòng vẫn bấm được, sang danh sách bài nộp của bài.
+    // Chưa có lượt chấm: dòng không có link hay nút điều hướng.
     const rowAn2 = screen.getByText("Nguyễn Văn An").closest("tr")!;
-    expect(within(rowAn2).getByRole("link", { name: "Xem bài nộp" })).toHaveAttribute("href", "/teaching/classes/class-1/assignments/a-2/submissions");
+    expect(within(rowAn2).queryByRole("link")).not.toBeInTheDocument();
     expect(within(rowAn2).getByText("Chưa nộp")).toBeInTheDocument();
     fireEvent.click(rowAn2);
-    expect(push).toHaveBeenLastCalledWith("/teaching/classes/class-1/assignments/a-2/submissions");
+    expect(push).not.toHaveBeenCalledWith(expect.stringContaining("submissions"));
     fireEvent.click(screen.getByRole("button", { name: new RegExp(longTitle1) }));
     fireEvent.click(screen.getByText("Nguyễn Văn An").closest("tr")!);
     expect(push).toHaveBeenLastCalledWith("/teaching/evaluations/eval-a1-s1");
@@ -139,7 +166,7 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
     fireEvent.change(screen.getByRole("searchbox", { name: "Tìm bài tập" }), { target: { value: "số 2" } });
     expect(screen.queryByRole("button", { name: new RegExp(longTitle1) })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: new RegExp(longTitle2) })).toBeInTheDocument();
-    expect(mocks.gradebook).toHaveBeenCalledTimes(1);
+    expect(mocks.loadGradebook).toHaveBeenCalledTimes(1);
   });
 
   it("Theo sinh viên: danh sách sinh viên, bảng điểm mọi bài của người đang chọn có ô tìm bài; tìm sinh viên hỏi máy chủ, về trang 1", async () => {
@@ -160,11 +187,11 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
     expect(screen.getByText(longTitle2)).toBeInTheDocument();
 
     fireEvent.change(screen.getByRole("searchbox", { name: "Tìm sinh viên" }), { target: { value: "Bình" } });
-    await waitFor(() => expect(mocks.gradebook).toHaveBeenLastCalledWith("class-1", "Bình", 1));
+    await waitFor(() => expect(mocks.loadGradebook).toHaveBeenLastCalledWith("class-1", "Bình", 1));
   });
 
   it("nút Xuất bảng điểm lên chỗ của dòng tiêu đề và giữ phạm vi xuất đã chọn", async () => {
-    mocks.export.mockResolvedValue(new Blob(["csv"], { type: "text/csv" }));
+    mocks.exportGrades.mockResolvedValue(new Blob(["csv"], { type: "text/csv" }));
     URL.createObjectURL = vi.fn(() => "blob:test");
     URL.revokeObjectURL = vi.fn();
     const host = document.createElement("div");
@@ -178,12 +205,12 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Xuất tệp" }));
     // Mặc định là Excel, đứng trước CSV.
     expect(within(dialog).getAllByRole("radio").map((r) => r.textContent)).toEqual(["Excel", "CSV"]);
-    await waitFor(() => expect(mocks.export).toHaveBeenCalledWith("class-1", "xlsx", "a-2"));
+    await waitFor(() => expect(mocks.exportGrades).toHaveBeenCalledWith("class-1", "xlsx", "a-2"));
     host.remove();
   });
 
   it("lỗi tải có Thử tải lại; lớp chưa có bài tính điểm; không có sinh viên phù hợp", async () => {
-    mocks.gradebook
+    mocks.loadGradebook
       .mockRejectedValueOnce(new Error("Mất kết nối máy chủ"))
       .mockResolvedValueOnce({ ...samplePage, assignments: [], rows: [], total: 0 });
 
@@ -194,7 +221,7 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
     expect(screen.getByRole("button", { name: "Xuất bảng điểm" })).toBeDisabled();
     unmount();
 
-    mocks.gradebook.mockResolvedValue({ ...samplePage, rows: [], total: 0 });
+    mocks.loadGradebook.mockResolvedValue({ ...samplePage, rows: [], total: 0 });
     render(<ClassGradebookTab classId="class-1" />);
     expect(await screen.findByText("Không có sinh viên phù hợp.")).toBeInTheDocument();
   });
@@ -221,7 +248,7 @@ it("validates gradebook URL pagination before calling the API", async () => {
   window.history.replaceState(null, "", "/?gradebookPage=NaN&gradebookMode=invalid");
   render(<ClassGradebookTab classId="class-1" />);
   await screen.findByRole("button", { name: new RegExp(longTitle1) });
-  expect(mocks.gradebook).toHaveBeenCalledWith("class-1", "", 1);
+  expect(mocks.loadGradebook).toHaveBeenCalledWith("class-1", "", 1);
   expect(screen.getByRole("tab", { name: "Theo bài tập" })).toHaveAttribute("aria-selected", "true");
 });
 
@@ -230,10 +257,10 @@ it("restores gradebook search and pagination while typing replaces the current e
   render(<ClassGradebookTab classId="class-1" />);
   expect(await screen.findByRole("button", { name: new RegExp(longTitle2) })).toHaveAttribute("aria-pressed", "true");
   expect(screen.getByRole("searchbox", { name: "Tìm sinh viên" })).toHaveValue("Bình");
-  await waitFor(() => expect(mocks.gradebook).toHaveBeenLastCalledWith("class-1", "Bình", 2));
+  await waitFor(() => expect(mocks.loadGradebook).toHaveBeenLastCalledWith("class-1", "Bình", 2));
   const length = window.history.length;
   fireEvent.change(screen.getByRole("searchbox", { name: "Tìm sinh viên" }), { target: { value: "An" } });
   expect(window.history.length).toBe(length);
   expect(new URLSearchParams(window.location.search).get("gradebookPage")).toBe("1");
-  await waitFor(() => expect(mocks.gradebook).toHaveBeenLastCalledWith("class-1", "An", 1));
+  await waitFor(() => expect(mocks.loadGradebook).toHaveBeenLastCalledWith("class-1", "An", 1));
 });

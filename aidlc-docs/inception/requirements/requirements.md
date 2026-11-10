@@ -53,7 +53,7 @@ Hệ thống phải dùng email do trường cấp làm định danh đăng nh�
 - Người dùng đã xác thực có thể đăng nhập và đăng xuất an toàn.
 - Phiên hết hạn theo cấu hình và bị vô hiệu hóa khi đăng xuất.
 - Luồng khôi phục mật khẩu không tiết lộ tài khoản có tồn tại hay không.
-- Email đăng nhập của người học/giảng viên phải thuộc miền email trường được cấu hình; người dùng không thể tự đăng ký bằng email ngoài miền.
+- Email đăng nhập thuộc tên miền nào cũng được (thay đổi ngày 2026-11-06, trước đây giới hạn theo miền email trường). Người dùng vẫn không thể tự đăng ký: Admin tạo tài khoản, người dùng kích hoạt bằng OTP gửi tới chính email đó.
 
 ### FR-002 - Phân quyền và nguồn AI
 
@@ -156,7 +156,7 @@ Hỗ trợ hai kênh: ALAP gọi API (Gemini/OpenAI/Claude), và agent riêng g�
 
 ### FR-013 - Lưu trữ tệp
 
-Hệ thống phải lưu tệp học tập qua một dịch vụ lưu trữ riêng tư, cấp quyền truy cập ngắn hạn và không công khai trực tiếp object chứa dữ liệu học tập. Dung lượng tối đa và loại tệp cho phép theo mục đích do Administrator chỉnh trên Settings trong giới hạn hệ thống (FR-033).
+Hệ thống phải lưu tệp học tập qua một dịch vụ lưu trữ riêng tư, cấp quyền truy cập ngắn hạn và không công khai trực tiếp object chứa dữ liệu học tập. Dung lượng tối đa theo mục đích do Administrator chỉnh trên Settings trong giới hạn hệ thống (FR-033). Riêng học liệu MATERIAL có định dạng cố định PDF, DOCX, PPTX, XLSX; Admin không bật/tắt từng định dạng học liệu. Các purpose khác giữ chính sách riêng. XLSX được xem/tải và trích nội dung làm nguồn AI theo quyền; không tự gọi AI khi upload.
 
 ### FR-014 - Audit nghiệp vụ và bảo mật
 
@@ -274,6 +274,7 @@ Student chỉ yêu cầu phản hồi trên Assignment PRACTICE đã nộp (UC41
 - Lưu lịch sử nhiều feedback hợp lệ với provenance/rate limits/idempotency; stale version không apply nhầm hoặc ghi đè bài nộp/điểm.
 - Không xuất key, đáp án ẩn hoặc dữ liệu người khác; không auto-call mỗi keystroke.
 - Student thiếu kết nối vẫn viết/lưu/nộp được. Bài nhóm không có phản hồi AI cho Student.
+- Trên Lịch sử nộp bài, thẻ Góp ý AI luôn hiện với lượt Practice đã nộp đang xem. Thẻ nằm cạnh bài làm trên màn hình rộng và nằm trong luồng đọc trên màn hình hẹp. Yêu cầu mới chỉ được gửi khi sinh viên bấm nút trong thẻ.
 
 ### FR-031 - Đã rút: quản trị gói credit
 
@@ -448,7 +449,7 @@ Backup tối thiểu và kiểm thử restore thuộc FR-038; cảnh báo backup
 
 ### REL-005 - Không phát sinh chi phí
 
-Mọi thành phần bảo mật và vận hành phải miễn phí: thư viện mã nguồn mở, Let's Encrypt, GitHub Actions và GHCR với repository public, Mailpit khi phát triển, Brevo SMTP khi demo/production (trong hạn mức gói miễn phí).
+Mọi thành phần bảo mật và vận hành phải miễn phí: thư viện mã nguồn mở, Let's Encrypt, GitHub Actions và GHCR với repository public, Mailpit khi phát triển, Brevo SMTP hoặc Brevo HTTPS API khi demo/production (trong hạn mức gói miễn phí); chọn bằng MAIL_TRANSPORT, SMTP là mặc định và HTTPS dùng khi mạng chặn SMTP.
 
 AI API chung do đơn vị vận hành cung cấp/tài trợ có quota và kill-switch; personal API/agent theo tài khoản người dùng. Không mặc định API miễn phí hoặc ngân sách trường đã có. Embedding/RAG chỉ extension với nguồn chi phí riêng.
 
@@ -484,3 +485,11 @@ Source và yêu cầu cũ: [decision-register.md](../reverse-engineering/decisio
 ## MCP correction and audit remediation — 2026-10-30
 
 Student/Teacher/Subject Manager ACTIVE manage own MCP credentials; Admin is denied, including pre-existing tokens. UC41 personal API and MCP share own/SUBMITTED/PRACTICE/current-enrollment/hash/schema/pending/daily-budget restrictions. MCP READ_ONLY cannot record feedback; READ_WRITE can. API and MCP quota checks are serialized per account inside a transaction. UC52 remains deterministic permitted Quiz result/explanation, not an AI generation service. Current code is a remediation working tree on794a4053; dated initial audit and staff-expansion docs are historical where superseded.
+
+## Delta đã được người dùng duyệt — 2026-11-09
+
+- UC09/28/46: giao diện nhập tài khoản, ghi danh và câu hỏi chuyển sang Excel .xlsx kèm mẫu thật; giữ API tương thích cũ theo từng unit, không đổi xuất báo cáo CSV.
+- FR-004/005/013: học liệu có Bật/Tắt độc lập lưu trữ; chặn sinh viên cả direct view và token tải cũ khi tắt, chặn chọn nguồn AI; staff quản lý theo quyền. Mô tả học liệu có định dạng giới hạn, tương thích plain text.
+- FR-006/007/017: mô tả quiz có định dạng; soạn câu tay/ngân hàng/AI tại chỗ; dropdown chọn nhiều tài liệu nguồn; nguồn API tự chọn khi thiếu/null source. AI chỉ đề xuất, người soạn vẫn xem/chấp nhận, không tự phát hành.
+
+Thiết kế được duyệt ở [proposal](2026-11-09-material-quiz-ui-proposal.md); [đối chiếu unit và bằng chứng](../../construction/build-and-test/2026-11-09-aidlc-doc-sync.md). Không thêm UC/role mới hoặc thay quyết định YouTube đã hủy; runtime provider acceptance còn giới hạn trong báo cáo.

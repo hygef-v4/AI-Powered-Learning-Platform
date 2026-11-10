@@ -1,13 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ApiError } from "@/shared/api/client";
-export function message(error: unknown) {
-  return error instanceof ApiError && error.problem.status === 409
-    ? "Dữ liệu đã thay đổi. Tải lại để kiểm tra phiên bản mới; nội dung bạn đang sửa vẫn được giữ."
-    : error instanceof Error
-      ? error.message
-      : "Không thể tải dữ liệu. Vui lòng thử lại.";
-}
+import { formatErrorMessage } from "../model/format";
 export function useResource<T>(load: () => Promise<T>) {
   const [value, setValue] = useState<T | null>(null);
   const [error, setError] = useState("");
@@ -20,7 +13,7 @@ export function useResource<T>(load: () => Promise<T>) {
       if (sequence.current === current) setValue(next);
       return next;
     } catch (e) {
-      if (sequence.current === current) setError(message(e));
+      if (sequence.current === current) setError(formatErrorMessage(e));
       throw e;
     }
   }, [load]);

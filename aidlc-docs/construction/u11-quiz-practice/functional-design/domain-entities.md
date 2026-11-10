@@ -53,7 +53,7 @@ stateDiagram-v2
 |---|---|---|---|
 | `IQuizLifecycleListener` (contract của U10, U11 cài) | `onRetired(quizId)` | U10 | Tự nộp và chấm lượt đang làm khi Quiz bị ngưng hoặc có version mới |
 | Slot `QuizDetailSection` (của U10, U11 cài) | - | U10 | Phần Lượt làm và hoạt động cho giảng viên trên Quiz Detail |
-| `NavEntry` (contract của U01, U11 cài) | - | U01 | Mục Luyện tập Quiz trên menu bên của Student |
+| `quizDetailSections`, `quizRowActions` (contract của U10, U11 cài) | - | U10 | Tab Lượt làm của sinh viên trên Quiz Detail; số sinh viên đã làm trên dòng Quiz. Không còn cài `NavEntry` Luyện tập Quiz (yêu cầu 29/10) |
 | Slot `QuizRowAction` (của U10, U11 cài) | - | U10 | Số sinh viên đã làm trên dòng Quiz ở tab Đánh giá |
 | `IScheduledScanner` (contract của U03, U11 cài) | - | U03 | Tự nộp khi hết giờ |
 
@@ -61,7 +61,7 @@ stateDiagram-v2
 
 | Contract | Unit cài | Dùng để |
 |---|---|---|
-| Slot frontend `QuizMaterialSection` | U13 | Tài liệu gắn kèm Quiz trên Quiz Practice Detail |
+| (không còn) Slot frontend `QuizMaterialSection` | U13 | Đã bỏ: Quiz không gắn tài liệu (BR-U10-11). Quiz Practice Detail chỉ hiện bài trước, bài sau trong module qua `ModuleNeighbours` của U13 |
 
 ### Interface U11 dùng
 

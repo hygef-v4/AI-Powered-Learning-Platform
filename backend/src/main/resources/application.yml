@@ -79,7 +79,6 @@ management:
 platform:
   # U01 Account & Access (logical-components mục 4)
   identity:
-    allowed-email-domains: ${U01_ALLOWED_EMAIL_DOMAINS:}
     jwt-secret: ${U01_JWT_SECRET:}
     access-ttl: ${U01_ACCESS_TTL:15m}
     refresh-idle-ttl: ${U01_REFRESH_IDLE_TTL:2h}
@@ -91,6 +90,9 @@ platform:
     login-lock-duration: ${U01_LOGIN_LOCK_DURATION:15m}
     cookie-secure: ${U01_COOKIE_SECURE:true}
     mail-from: ${SMTP_FROM:}
+    # smtp (mặc định) hoặc brevo-api: gửi qua API HTTPS của Brevo khi mạng chặn SMTP đi ra ngoài.
+    mail-transport: ${MAIL_TRANSPORT:smtp}
+    brevo-api-key: ${BREVO_API_KEY:}
     bootstrap-admin-email: ${U01_BOOTSTRAP_ADMIN_EMAIL:}
     bootstrap-admin-name: ${U01_BOOTSTRAP_ADMIN_NAME:Quản trị viên}
     rate-limit:
@@ -109,13 +111,14 @@ platform:
     test-timeout: ${U06_AI_TEST_TIMEOUT:20s}
     providers:
       gemini:
-        models: ${U06_GEMINI_MODELS:gemini-3.8-flash,gemini-3.6-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-4-argon}
+        models: ${U06_GEMINI_MODELS:gemini-4-argon,gemini-3.8-flash,gemini-3.6-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite}
         max-output-tokens: ${U06_GEMINI_MAX_OUTPUT:8192}
+      # Danh sách mô hình xếp từ tốt tới kém: thứ tự thử khóa dùng thứ tự này (yêu cầu 2026-11-05).
       openai:
-        models: ${U06_OPENAI_MODELS:gpt-6-luna,gpt-6.1-sol,gpt-5.4-mini,gpt-5-mini,gpt-4.1-mini}
+        models: ${U06_OPENAI_MODELS:gpt-6.1-sol,gpt-6-luna,gpt-5.4-mini,gpt-5-mini,gpt-4.1-mini}
         max-output-tokens: ${U06_OPENAI_MAX_OUTPUT:8192}
       claude:
-        models: ${U06_CLAUDE_MODELS:claude-sonnet-5-5,claude-haiku-5-5,claude-opus-5-5,claude-sonnet-4-6,claude-opus-4-6}
+        models: ${U06_CLAUDE_MODELS:claude-opus-5-5,claude-sonnet-5-5,claude-opus-4-6,claude-sonnet-4-6,claude-haiku-5-5}
         max-output-tokens: ${U06_CLAUDE_MAX_OUTPUT:8192}
   # U03 Job and Settings
   files:

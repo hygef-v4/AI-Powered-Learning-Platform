@@ -5,9 +5,10 @@ import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button, ClickableRow, Dialog, Icon, IconButton, PageNav, Pill, Section, Select, TableFrame, Td, TextInput, Th, cx, showToast } from "@/shared/ui";
 import { PersonPicker } from "./PersonPicker";
-import { formatDate, operationError } from "./ui";
+import { formatDate, formatOperationError } from "../model/format";
 import { parseEnrollmentList, type EnrollmentPreviewRow } from "../model/enrollmentList";
-import { resultLabels, type EnrollmentRowResult, type EnrollmentView, type PersonView } from "../model/types";
+import { readEnrollmentWorkbook } from "../model/enrollmentWorkbook";
+import { ENROLLMENT_RESULT_LABELS, type EnrollmentRowResult, type EnrollmentView, type PersonView } from "../model/types";
 
 const PAGE_SIZE = 20;
 const PREVIEW_SIZE = 10;
@@ -15,7 +16,7 @@ const STATUS_TABS = [{ value: "ACTIVE", label: "Đang học" }, { value: "REMOVE
 const OK_RESULTS = new Set(["ENROLLED", "RESTORED"]);
 const NO_GROUP = "__none";
 
-/** Kết quả từng dòng sau khi thêm theo danh sách, cùng kiểu bảng kiểm tra CSV ở trang Tài khoản. */
+/** Kết quả từng dòng sau khi thêm theo danh sách, cùng kiểu bảng kiểm tra Excel ở trang Tài khoản. */
 export function EnrollmentResultTable({ rows }: { rows: EnrollmentRowResult[] }) {
   return <TableFrame filledHead className="[&_table]:table-fixed">
     <caption className="sr-only">Kết quả từng dòng</caption>
@@ -23,7 +24,7 @@ export function EnrollmentResultTable({ rows }: { rows: EnrollmentRowResult[] })
     <tbody>{rows.map((row) => <tr key={row.line}>
       <Td className="text-muted">{row.line}</Td>
       <Td>{row.email}</Td>
-      <Td><Pill tone={OK_RESULTS.has(row.result) ? "success" : "danger"}>{resultLabels[row.result]}</Pill></Td>
+      <Td><Pill tone={OK_RESULTS.has(row.result) ? "success" : "danger"}>{ENROLLMENT_RESULT_LABELS[row.result]}</Pill></Td>
     </tr>)}</tbody>
   </TableFrame>;
 }
@@ -62,11 +63,11 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
   // Trang giảng viên (chỉ xem) không có cột STT.
   const numbered = editable || includeRemoved;
   const columns = 3 + (numbered ? 1 : 0) + (groupNames !== undefined ? 1 : 0) + (actions ? 1 : 0);
-  async function change(student: EnrollmentView, next: "ACTIVE" | "REMOVED") {
+  async function handleEnrollmentChange(student: EnrollmentView, next: "ACTIVE" | "REMOVED") {
     if (!onStatusChange || busy) return;
     setBusy(true); setError("");
     try { await onStatusChange(student.accountId, next); setRemoving(null); if (next === "REMOVED") showToast("Đã gỡ sinh viên", "danger"); else showToast("Đã thêm lại sinh viên"); }
-    catch (cause) { setError(operationError(cause)); } finally { setBusy(false); }
+    catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
   }
   const addButtons = editable && (onEnroll || onBatch) ? <div className="flex flex-wrap gap-2">
     {onBatch && <Button icon="upload_file" onClick={() => setImporting((open) => !open)} aria-expanded={importing}>Thêm theo danh sách</Button>}
@@ -119,7 +120,7 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
               <Td className="text-muted">{formatDate(student.enrolledAt)}</Td>
               {actions && <Td className="text-right">{student.status === "ACTIVE"
                 ? <IconButton icon="trash" label={`Gỡ ${student.name}`} disabled={busy} className="text-danger! hover:bg-danger-soft" onClick={() => { setError(""); setRemoving(student); }} />
-                : <IconButton icon="person_add" label={`Thêm lại ${student.name}`} disabled={busy} className="text-primary-ink! hover:bg-primary-soft" onClick={() => void change(student, "ACTIVE")} />}</Td>}
+                : <IconButton icon="person_add" label={`Thêm lại ${student.name}`} disabled={busy} className="text-primary-ink! hover:bg-primary-soft" onClick={() => void handleEnrollmentChange(student, "ACTIVE")} />}</Td>}
             </>;
             return onView ? <ClickableRow key={student.accountId} onClick={() => onView(student)}>{cells}</ClickableRow> : <tr key={student.accountId}>{cells}</tr>;
           })}
@@ -130,7 +131,7 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
     </section>
     {adding && onEnroll && <AddStudentDialog candidates={candidates} loadCandidates={loadCandidates} onEnroll={onEnroll} onClose={() => setAdding(false)} />}
     <Dialog open={removing !== null} title="Gỡ sinh viên khỏi lớp?" onClose={() => setRemoving(null)} dismissible={!busy}
-      footer={<Button variant="danger" disabled={busy} onClick={() => removing && void change(removing, "REMOVED")} data-testid="enrollment-remove-confirm">Gỡ sinh viên</Button>}>
+      footer={<Button variant="danger" disabled={busy} onClick={() => removing && void handleEnrollmentChange(removing, "REMOVED")} data-testid="enrollment-remove-confirm">Gỡ sinh viên</Button>}>
       <p>Bạn có chắc muốn gỡ {removing?.name} khỏi lớp không?</p>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
     </Dialog>
@@ -146,7 +147,7 @@ function AddStudentDialog({ candidates, loadCandidates, onEnroll, onClose }: { c
     if (!selected || busy) return;
     setBusy(true); setError("");
     try { await onEnroll(selected.id); showToast("Đã thêm sinh viên"); onClose(); }
-    catch (cause) { setError(operationError(cause)); } finally { setBusy(false); }
+    catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
   }
   return <Dialog open title="Thêm sinh viên" size="lg" onClose={onClose} dismissible={!busy}
     footer={<Button variant="primary" disabled={busy || !selected} onClick={() => void add()} data-testid="enrollment-add-submit">Thêm</Button>}>
@@ -156,7 +157,7 @@ function AddStudentDialog({ candidates, loadCandidates, onEnroll, onClose }: { c
 }
 
 /**
- * Thêm theo danh sách, cùng kiểu thẻ Nhập CSV ở trang Tài khoản: dán email hoặc chọn tệp CSV một cột, Xem trước kiểm từng
+ * Thêm theo danh sách: dán email hoặc chọn tệp Excel một cột, Xem trước kiểm từng
  * dòng, rồi Thêm N sinh viên. Thêm hết thì đóng thẻ; còn dòng không thêm được thì hiện bảng kết quả.
  */
 function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Promise<EnrollmentRowResult[]>; onClose: () => void }) {
@@ -173,18 +174,21 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
   function edit(text: string) { setInput(text); setPreview(null); setResults(null); setError(""); }
   function review(text = input) {
     try { setPreview(parseEnrollmentList(text)); setPage(0); setError(""); }
-    catch (cause) { setPreview(null); setError(operationError(cause)); }
+    catch (cause) { setPreview(null); setError(formatOperationError(cause)); }
   }
   async function choose(next: File | undefined) {
     if (file.current) file.current.value = "";
     if (!next) return;
-    if (next.size > 102400) { setError("Danh sách tối đa 100 KB."); setPreview(null); return; }
-    const text = await next.text();
-    setFileName(next.name);
-    edit(text);
-    review(text);
+    setBusy(true); setError(""); setPreview(null); setResults(null); setInput(""); setFileName("");
+    try {
+      const text = await readEnrollmentWorkbook(next);
+      setFileName(next.name);
+      edit(text);
+      review(text);
+    } catch (cause) { setError(formatOperationError(cause)); }
+    finally { setBusy(false); }
   }
-  async function submit() {
+  async function handleSubmit() {
     if (busy || !valid) return;
     setBusy(true); setError("");
     try {
@@ -193,13 +197,13 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
       if (added) showToast(`Đã thêm ${added} sinh viên`);
       if (rows.every((row) => OK_RESULTS.has(row.result))) { onClose(); return; }
       setResults(rows); setPreview(null);
-    } catch (cause) { setError(operationError(cause)); } finally { setBusy(false); }
+    } catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
   }
   const shown = preview?.slice(page * PREVIEW_SIZE, (page + 1) * PREVIEW_SIZE) ?? [];
   return <Section title="Thêm sinh viên theo danh sách" icon="upload_file"
     actions={<button type="button" onClick={onClose} aria-label="Đóng" className="text-muted hover:text-ink"><Icon name="close" /></button>}>
-    <input ref={file} type="file" accept=".csv,text/csv" aria-label="Chọn tệp CSV" className="sr-only" disabled={busy}
-      data-testid="enrollment-csv-input" onChange={(event) => void choose(event.target.files?.[0])} />
+    <input ref={file} type="file" accept=".xlsx" aria-label="Chọn tệp Excel" className="sr-only" disabled={busy}
+      data-testid="enrollment-excel-input" onChange={(event) => void choose(event.target.files?.[0])} />
     <div className="flex flex-col gap-1.5">
       <label htmlFor={`${id}-list`} className="text-xs font-semibold text-body">Danh sách email</label>
       <textarea id={`${id}-list`} value={input} disabled={busy} onChange={(event) => edit(event.target.value)} data-testid="enrollment-list-input"
@@ -211,6 +215,7 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
         <span className="min-w-0 truncate text-[13px] font-semibold text-ink">{fileName}</span>
       </div>}
       <Button icon="folder_open" disabled={busy} onClick={() => file.current?.click()}>{fileName ? "Chọn tệp khác" : "Chọn tệp"}</Button>
+      <a href="/templates/enrollment-import.xlsx" download="mau-sinh-vien.xlsx" className="text-xs font-semibold text-primary-ink hover:underline">Tải tệp mẫu Excel</a>
       <Button icon="check" disabled={busy || !input.trim()} onClick={() => review()} data-testid="enrollment-list-preview">Xem trước</Button>
     </div>
     {error && <p role="alert" className="text-sm text-danger">{error}</p>}
@@ -225,13 +230,13 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
         <tbody>{shown.map((row) => <tr key={row.line}>
           <Td className="text-muted">{row.line}</Td>
           <Td>{row.email}</Td>
-          <Td>{row.error ? <Pill tone="danger">{resultLabels[row.error]}</Pill> : <Pill tone="success">Hợp lệ</Pill>}</Td>
+          <Td>{row.error ? <Pill tone="danger">{ENROLLMENT_RESULT_LABELS[row.error]}</Pill> : <Pill tone="success">Hợp lệ</Pill>}</Td>
         </tr>)}</tbody>
       </TableFrame>
       <PageNav page={page} size={PREVIEW_SIZE} total={preview.length} onPage={setPage} />
       <div className="flex justify-end gap-2 border-t border-line pt-3.5">
         <Button disabled={busy} onClick={onClose}>Hủy</Button>
-        <Button variant="primary" icon="check" disabled={busy || !valid} onClick={() => void submit()} data-testid="enrollment-list-submit">{`Thêm ${valid} sinh viên`}</Button>
+        <Button variant="primary" icon="check" disabled={busy || !valid} onClick={() => void handleSubmit()} data-testid="enrollment-list-submit">{`Thêm ${valid} sinh viên`}</Button>
       </div>
     </>}
     {results && <EnrollmentResultTable rows={results} />}

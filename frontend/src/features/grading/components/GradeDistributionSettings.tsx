@@ -23,7 +23,7 @@ function VisibilitySetting({ classId, assignmentId }: { classId: string; assignm
 
   useEffect(() => {
     const controller = new AbortController();
-    gradingApi.distributionVisibility(classId, assignmentId, controller.signal).then(
+    gradingApi.loadDistributionVisibility(classId, assignmentId, controller.signal).then(
       (next) => { if (!controller.signal.aborted) { setValue(next); setError(null); } },
       (cause) => {
         if (controller.signal.aborted) return;
@@ -34,7 +34,7 @@ function VisibilitySetting({ classId, assignmentId }: { classId: string; assignm
     return () => controller.abort();
   }, [classId, assignmentId, epoch]);
 
-  async function save(enabled: boolean) {
+  async function handleSave(enabled: boolean) {
     if (!value?.canEdit || busy || error) return;
     setBusy(true);
     try {
@@ -53,8 +53,7 @@ function VisibilitySetting({ classId, assignmentId }: { classId: string; assignm
   return <div className="flex flex-col gap-1" data-testid="grade-distribution-settings">
     {value?.canEdit && <>
       <Switch checked={value.enabled} label="Cho sinh viên xem phổ điểm ẩn danh" ariaLabel="Cho sinh viên xem phổ điểm ẩn danh"
-        disabled={busy || !!error} onChange={(enabled) => save(enabled)} />
-      <p className="text-[11px] text-muted">Chỉ hiển thị điểm đã công bố khi có ít nhất 20 kết quả. Cài đặt riêng cho bài này trong lớp, được lưu ngay.</p>
+        disabled={busy || !!error} onChange={(enabled) => handleSave(enabled)} />
       {/* Công tắc tự cho thấy đang lưu; dòng báo chỉ cho trình đọc màn hình để thẻ không xô lên xuống khi lưu. */}
       <p className="sr-only" role="status">{busy ? "Đang lưu cài đặt phổ điểm…" : ""}</p>
     </>}

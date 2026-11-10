@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { gradingApi } from "../api";
-import { message } from "./useResource";
+import { formatErrorMessage } from "../model/format";
 import type { Proposal } from "../model/types";
 
 export const POLL_INTERVAL_MS = 3000;
@@ -60,7 +60,7 @@ export function useGradingProposals(
       if (stopped || inFlight) return;
       inFlight = true;
       try {
-        const listed = await gradingApi.proposals(evaluationId);
+        const listed = await gradingApi.listProposals(evaluationId);
         const next = await Promise.all(
           listed.map(async (proposal) => {
             if (
@@ -70,8 +70,8 @@ export function useGradingProposals(
             ) {
               try {
                 let reason = diagnostics.get(proposal.taskId);
-                if (!reason && typeof gradingApi.task === "function") {
-                  const task = await gradingApi.task(proposal.taskId);
+                if (!reason && typeof gradingApi.loadTask === "function") {
+                  const task = await gradingApi.loadTask(proposal.taskId);
                   reason = task?.safeError ?? undefined;
                   if (reason) diagnostics.set(proposal.taskId, reason);
                 }
@@ -84,10 +84,10 @@ export function useGradingProposals(
               proposal.status === "PENDING" &&
               !proposal.taskState &&
               proposal.taskId &&
-              typeof gradingApi.task === "function"
+              typeof gradingApi.loadTask === "function"
             ) {
               try {
-                const task = await gradingApi.task(proposal.taskId);
+                const task = await gradingApi.loadTask(proposal.taskId);
                 if (task?.state) {
                   return { ...proposal, taskState: task.state };
                 }
@@ -119,7 +119,7 @@ export function useGradingProposals(
             proposals: prev.evaluationId === evaluationId ? prev.proposals : [],
             pollExhausted: false,
           }));
-          onErrorRef.current(message(error));
+          onErrorRef.current(formatErrorMessage(error));
           return;
         }
         const hasPending = proposalsRef.current.some((proposal) => proposal.status === "PENDING");
@@ -134,10 +134,10 @@ export function useGradingProposals(
               proposals: prev.evaluationId === evaluationId ? prev.proposals : [],
               pollExhausted: true,
             }));
-            onErrorRef.current(message(error));
+            onErrorRef.current(formatErrorMessage(error));
           }
         } else {
-          onErrorRef.current(message(error));
+          onErrorRef.current(formatErrorMessage(error));
         }
       } finally {
         inFlight = false;

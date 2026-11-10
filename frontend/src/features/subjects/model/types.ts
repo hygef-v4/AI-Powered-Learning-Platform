@@ -47,7 +47,6 @@ export type SubjectClassSummary = {
   classId: string;
   code: string;
   name: string;
-  term: string;
   status: SubjectClassStatus;
   teacherName: string | null;
   activeStudentCount: number; // Giữ contract U05; UI Admin không có cột sĩ số (Q07).

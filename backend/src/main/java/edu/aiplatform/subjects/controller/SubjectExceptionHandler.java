@@ -1,6 +1,8 @@
 package edu.aiplatform.subjects.controller;
 
 import edu.aiplatform.shared.error.ApiException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataAccessException;
@@ -17,6 +19,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice(assignableTypes = SubjectAdminController.class)
 public class SubjectExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(SubjectExceptionHandler.class);
     @ExceptionHandler(ApiException.class)
     public ProblemDetail api(ApiException failure) {
         ProblemDetail result = problem(failure.status(), failure.code(), failure.getMessage());
@@ -62,6 +65,7 @@ public class SubjectExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail unexpected(Exception failure) {
+        log.error("Unexpected subject request failure", failure);
         return problem(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "SUBJECT_INTERNAL_ERROR",

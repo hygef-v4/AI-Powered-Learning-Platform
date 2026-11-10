@@ -157,3 +157,7 @@ Khai báo trong code của unit sở hữu: `key`, `group`, tên hiển thị, m
 |---|---|---|
 | `IAuthorization` | U01 | `C` - kiểm role upload và quyền `ADMIN` cho Settings; tới khi U01 xong, bản tạm trong khung luôn cho phép |
 | `IAudit` | U02 | `C` - audit; tới khi U02 xong, bản tạm trong khung chỉ ghi ra log |
+
+## Contract kiểm lại quyền tải học liệu — 2026-11-09
+
+U03 khai báo `files/contract/IArtifactDownloadPolicy`: `purpose()` và `requireDownload(actor, fileId)`; U13 cài `MaterialDownloadPolicy`. DownloadService gọi owner policy cho purpose MATERIAL trước khi mở bytes của token hợp lệ, kể cả token cấp trước lúc tắt học liệu. Thiếu/lỗi policy từ chối với FILE_ACCESS_UNAVAILABLE; lỗi quyền của owner giữ nguyên. Student phải còn quyền với học liệu đang bật và phiên bản nội dung hiện hành; staff xem phiên bản cũ theo quyền. Không đổi định dạng/thời hạn token hoặc chính sách purpose khác. [Bằng chứng](../../build-and-test/2026-11-09-material-quiz-ui-results.md).

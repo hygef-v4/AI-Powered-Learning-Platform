@@ -38,17 +38,17 @@ export function PersonPicker({ label, value, onChange, people = [], loader, clea
 
   useEffect(() => {
     if (!open) return;
-    const update = () => {
+    const updatePosition = () => {
       const rect = anchorRef.current?.getBoundingClientRect();
       if (rect) setPlace({ top: rect.bottom + 4, left: rect.left, width: rect.width });
     };
-    const frame = requestAnimationFrame(update);
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
+    const frame = requestAnimationFrame(updatePosition);
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
     return () => {
       cancelAnimationFrame(frame);
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
     };
   }, [open]);
 

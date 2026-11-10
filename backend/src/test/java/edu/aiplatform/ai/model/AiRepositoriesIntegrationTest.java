@@ -100,7 +100,7 @@ class AiRepositoriesIntegrationTest {
     }
 
     @Test
-    void connectionsAreUniquePerOwnerAndProviderAndKeepCiphertext() {
+    void personalKeysCanBeManyPerProviderAndKeepCiphertext() {
         AiConnectionRepository repo = new AiConnectionRepository(jdbc);
         AiConnection c = AiConnection.create(UUID.randomUUID(), Scope.PERSONAL, account, AiProvider.CLAUDE,
                 "claude-sonnet-5-5", new EncryptedKey(new byte[] {1, 2, 3}, new byte[] {9}, 1), "3kQf", NOW);
@@ -109,17 +109,15 @@ class AiRepositoriesIntegrationTest {
             assertThat(found.keyCiphertext()).containsExactly(1, 2, 3);
             assertThat(found.keyVersion()).isEqualTo(1);
         });
-        assertThatThrownBy(() -> repo.insert(AiConnection.create(UUID.randomUUID(), Scope.PERSONAL, account,
-                AiProvider.CLAUDE, "claude-sonnet-5-5", new EncryptedKey(new byte[] {1}, new byte[] {9}, 1), "zzzz", NOW)))
-                .isInstanceOf(DataIntegrityViolationException.class);
+        // Nhiều khóa cá nhân cho cùng một provider (yêu cầu 2026-11-05).
+        AiConnection second = AiConnection.create(UUID.randomUUID(), Scope.PERSONAL, account, AiProvider.CLAUDE,
+                "claude-sonnet-5-5", new EncryptedKey(new byte[] {1}, new byte[] {9}, 1), "zzzz", NOW.plusSeconds(1));
+        repo.insert(second);
+        assertThat(repo.listPersonal(account)).extracting(AiConnection::id).containsExactly(c.id(), second.id());
         assertThat(repo.update(c.revoked(NOW))).isTrue();
         assertThat(repo.update(c.revoked(NOW))).as("version cũ").isFalse();
-        assertThat(repo.findPersonal(account, AiProvider.CLAUDE)).isEmpty();
-        AiConnection replacement = AiConnection.create(UUID.randomUUID(), Scope.PERSONAL, account, AiProvider.CLAUDE,
-                "claude-sonnet-5-5", new EncryptedKey(new byte[] {4}, new byte[] {8}, 2), "next", NOW);
-        repo.insert(replacement);
         assertThat(repo.findPersonal(account, AiProvider.CLAUDE)).hasValueSatisfying(found ->
-                assertThat(found.id()).isEqualTo(replacement.id()));
+                assertThat(found.id()).isEqualTo(second.id()));
     }
 
     @Test

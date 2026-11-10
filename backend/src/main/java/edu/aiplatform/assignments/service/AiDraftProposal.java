@@ -81,30 +81,52 @@ final class AiDraftProposal {
             next.put("level", Math.max(1, Math.min(6, section.path("level").asInt(1))));
             next.put("title", title);
             next.put("guidance", cut(section.path("guidance").asText(""), DocumentModelService.MAX_TEXT));
-            ArrayNode rubric = next.putArray("rubric");
-            for (JsonNode criterion : section.path("rubric")) {
-                if (rubric.size() >= AssignmentRubric.CRITERIA_MAX) {
+            next.set("rubric", normalizeRubric(section.path("rubric"), diagramEnabled));
+        }
+        return out;
+    }
+
+    /** Tiêu chí rubric của đề xuất, cắt về giới hạn của rubric; điểm sai định dạng bị bỏ. */
+    static ArrayNode normalizeRubric(JsonNode rawRubric, boolean diagramEnabled) {
+        ArrayNode rubric = JsonNodeFactory.instance.arrayNode();
+        for (JsonNode criterion : rawRubric) {
+            if (rubric.size() >= AssignmentRubric.CRITERIA_MAX) {
+                break;
+            }
+            ObjectNode c = rubric.addObject();
+            c.put("title", cut(criterion.path("title").asText(""), AssignmentRubric.TITLE_MAX));
+            c.put("description", cut(criterion.path("description").asText(""), AssignmentRubric.DESCRIPTION_MAX));
+            c.put("kind", diagramEnabled && "DIAGRAM".equals(criterion.path("kind").asText()) ? "DIAGRAM" : "TEXT");
+            ArrayNode items = c.putArray("items");
+            for (JsonNode item : criterion.path("items")) {
+                if (items.size() >= AssignmentRubric.ITEMS_MAX) {
                     break;
                 }
-                ObjectNode c = rubric.addObject();
-                c.put("title", cut(criterion.path("title").asText(""), AssignmentRubric.TITLE_MAX));
-                c.put("description", cut(criterion.path("description").asText(""), AssignmentRubric.DESCRIPTION_MAX));
-                c.put("kind", diagramEnabled && "DIAGRAM".equals(criterion.path("kind").asText()) ? "DIAGRAM" : "TEXT");
-                ArrayNode items = c.putArray("items");
-                for (JsonNode item : criterion.path("items")) {
-                    if (items.size() >= AssignmentRubric.ITEMS_MAX) {
-                        break;
-                    }
-                    ObjectNode i = items.addObject();
-                    i.put("text", cut(item.path("text").asText(""), AssignmentRubric.ITEM_TEXT_MAX));
-                    BigDecimal points = points(item.path("points"));
-                    if (points != null) {
-                        i.put("points", points);
-                    }
+                ObjectNode i = items.addObject();
+                i.put("text", cut(item.path("text").asText(""), AssignmentRubric.ITEM_TEXT_MAX));
+                BigDecimal points = points(item.path("points"));
+                if (points != null) {
+                    i.put("points", points);
                 }
             }
         }
-        return out;
+        return rubric;
+    }
+
+    /** Tiêu chí chấm từ rubric đã chuẩn hóa. */
+    static List<RubricCriterion> criteria(JsonNode rubric) {
+        List<RubricCriterion> criteria = new ArrayList<>();
+        for (JsonNode criterion : rubric) {
+            List<RubricItem> items = new ArrayList<>();
+            for (JsonNode item : criterion.path("items")) {
+                items.add(new RubricItem(UUID.randomUUID(), item.path("text").asText(""),
+                        points(item.path("points"))));
+            }
+            criteria.add(new RubricCriterion(UUID.randomUUID(), criterion.path("title").asText(""),
+                    criterion.path("description").asText(""),
+                    CriterionKind.valueOf(criterion.path("kind").asText("TEXT")), List.copyOf(items)));
+        }
+        return List.copyOf(criteria);
     }
 
     /** Khung mới từ đề xuất và gợi ý rubric theo id block heading. */
@@ -125,19 +147,9 @@ final class AiDraftProposal {
             if (!guidance.isBlank()) {
                 addParagraphs(blocks, guidance);
             }
-            List<RubricCriterion> criteria = new ArrayList<>();
-            for (JsonNode criterion : section.path("rubric")) {
-                List<RubricItem> items = new ArrayList<>();
-                for (JsonNode item : criterion.path("items")) {
-                    items.add(new RubricItem(UUID.randomUUID(), item.path("text").asText(""),
-                            points(item.path("points"))));
-                }
-                criteria.add(new RubricCriterion(UUID.randomUUID(), criterion.path("title").asText(""),
-                        criterion.path("description").asText(""),
-                        CriterionKind.valueOf(criterion.path("kind").asText("TEXT")), List.copyOf(items)));
-            }
+            List<RubricCriterion> criteria = criteria(section.path("rubric"));
             if (!criteria.isEmpty()) {
-                suggestions.put(headingId, List.copyOf(criteria));
+                suggestions.put(headingId, criteria);
             }
         }
         return new Built(new DocumentModel(List.copyOf(blocks)), suggestions);
@@ -155,7 +167,7 @@ final class AiDraftProposal {
     record Built(DocumentModel skeleton, Map<UUID, List<RubricCriterion>> rubricByHeading) {
     }
 
-    private static BigDecimal points(JsonNode value) {
+    static BigDecimal points(JsonNode value) {
         if (value == null || !value.isNumber()) {
             return null;
         }
@@ -163,7 +175,7 @@ final class AiDraftProposal {
         return points.signum() <= 0 || points.compareTo(AssignmentRubric.POINTS_MAX) > 0 ? null : points;
     }
 
-    private static String cut(String value, int max) {
+    static String cut(String value, int max) {
         return value.length() > max ? value.substring(0, max) : value;
     }
 }

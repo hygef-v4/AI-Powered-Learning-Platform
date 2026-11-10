@@ -6,8 +6,10 @@ vi.mock("@/shared/api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/shared/api/client")>()),
   apiFetch: vi.fn(),
 }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+const { push } = vi.hoisted(() => ({ push: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 beforeEach(() => {
+  push.mockReset();
   vi.mocked(apiFetch).mockReset();
   vi.mocked(apiFetch).mockImplementation(async (path) =>
     String(path).includes("/files/") ? [] : {},
@@ -77,7 +79,7 @@ it("keeps the dialog open and shows conflict with reload guidance", async () => 
   expect(saved).not.toHaveBeenCalled();
 });
 
-it("creating a new quiz closes the popup before opening the quiz", async () => {
+it("creating a new quiz notifies the parent before navigating to the attached quiz", async () => {
   vi.mocked(apiFetch).mockImplementation(async (_path, init) =>
     !init?.method || init.method === "GET"
       ? []
@@ -101,4 +103,24 @@ it("creating a new quiz closes the popup before opening the quiz", async () => {
   fireEvent.change(screen.getByTestId("material-source-title"), { target: { value: "Quiz mới" } });
   fireEvent.click(screen.getByTestId("material-source-save"));
   await waitFor(() => expect(saved).toHaveBeenCalledWith("Đã tạo quiz"));
+  expect(push).toHaveBeenCalledExactlyOnceWith("/quizzes/q9");
+  expect(saved.mock.invocationCallOrder[0]).toBeLessThan(push.mock.invocationCallOrder[0]!);
+  expect(posts().map(([path]) => path)).toContain("/api/v1/material-modules/m1/quizzes");
+});
+
+it("creates disabled material with structured description and matching legacy plain text", async () => {
+  const saved = youtube();
+  fireEvent.change(screen.getByTestId("material-source-url"), { target: { value: "https://youtu.be/abcdefghijk" } });
+  fireEvent.click(screen.getByRole("switch", { name: "Bật học liệu" }));
+  const description = screen.getByRole("textbox", { name: "Mô tả" });
+  description.textContent = "Nội dung chính";
+  fireEvent.input(description);
+  fireEvent.focus(description);
+  fireEvent.click(screen.getByRole("button", { name: "Đậm" }));
+  fireEvent.click(screen.getByTestId("material-source-save"));
+  await waitFor(() => expect(saved).toHaveBeenCalledOnce());
+  expect(JSON.parse(String(posts()[0]![1]!.body))).toMatchObject({
+    description: "Nội dung chính", enabled: false,
+    descriptionDocument: { blocks: [{ runs: [{ text: "Nội dung chính", bold: true }] }] },
+  });
 });

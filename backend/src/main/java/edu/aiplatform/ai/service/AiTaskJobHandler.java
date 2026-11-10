@@ -30,6 +30,8 @@ import edu.aiplatform.jobs.contract.RetryableJobException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +69,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     private final AiUsageService usage;
     private final AiTaskDelivery delivery;
     private final AiProperties properties;
+    private final ProviderCatalog catalog;
     private final ObjectMapper json;
     private final TransactionTemplate transactions;
     private final Clock clock;
@@ -86,6 +89,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         this.usage = usage;
         this.delivery = delivery;
         this.properties = properties;
+        this.catalog = new ProviderCatalog(properties);
         this.json = json;
         this.transactions = new TransactionTemplate(transactionManager);
         this.clock = clock;
@@ -132,15 +136,26 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
                 // Lỗi trước mốc gửi (database tạm lỗi): cho U03 thử lại (P2).
                 throw new RetryableJobException("Không bắt đầu được task AI", e);
             }
-            if (dispatch != null) {
+            // Khóa lỗi thì finish trả lượt gọi bằng khóa kế tiếp (hệ thống rồi cá nhân; Claude, GPT, Gemini; mô hình tốt
+            // trước), gọi tiếp ngay tới khi có kết quả hoặc hết khóa.
+            while (dispatch != null) {
                 long callStartNanos = System.nanoTime();
                 Outcome outcome = callProvider(dispatch);
+                // Quá tải hoặc vượt tần suất (429, 503, 529) thường chỉ thoáng qua: đợi rồi gọi lại cùng khóa vài lần
+                // trước khi chuyển khóa (lỗi 2026-11-05: Gemini 503 dù kiểm tra khóa đạt).
+                for (int retry = 0; retry < transientWaits.length && transientFailure(outcome); retry++) {
+                    pause(transientWaits[retry]);
+                    outcome = callProvider(dispatch);
+                }
                 long callDurationMs = Duration.ofNanos(System.nanoTime() - callStartNanos).toMillis();
-                transactions.executeWithoutResult(status -> finish(taskId, outcome));
-                String outcomeKind = outcome.error() == null ? "READY" : outcome.error().kind().name();
-                log.info("AI task provider finished taskId={} requestRef={} taskType={} targetRef={} outcome={} durationMs={}",
-                        dispatch.task().id(), dispatch.task().requestRef(), dispatch.task().taskType(),
-                        dispatch.task().targetRef(), outcomeKind, callDurationMs);
+                Dispatch current = dispatch;
+                Outcome result = outcome;
+                dispatch = transactions.execute(status -> finish(taskId, result));
+                String outcomeKind = result.error() == null ? "READY" : result.error().kind().name() + "/" + result.error().status();
+                log.info("AI task provider finished taskId={} requestRef={} taskType={} targetRef={} provider={} outcome={} "
+                                + "durationMs={} fallback={}", current.task().id(), current.task().requestRef(),
+                        current.task().taskType(), current.task().targetRef(), current.connection().provider(), outcomeKind,
+                        callDurationMs, dispatch != null);
             }
         } finally {
             if (slot != null) {
@@ -189,15 +204,96 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         }
         AiConnection connection = task.connectionId() == null ? null
                 : connections.findById(task.connectionId()).orElse(null);
+        AiTask running = task.moveTo(AiTaskState.RUNNING, now);
         if (connection == null || connection.status() != Status.ACTIVE) {
-            fail(task, "Kết nối AI đã bị tắt hoặc thu hồi", false);
-            return null;
+            // Khóa đã tắt hoặc thu hồi sau khi gửi: dùng khóa kế tiếp nếu còn.
+            if (running.reservedTokens() != null) {
+                quota.release(running.actorId(), running.quotaDay(), running.reservedTokens());
+            }
+            Dispatch next = next(running.retryWith(running.source(), running.connectionId(), running.provider(),
+                    running.model(), running.maxOutputTokens(), null, null, now));
+            if (next == null) {
+                save(running.retryWith(running.source(), running.connectionId(), running.provider(), running.model(),
+                        running.maxOutputTokens(), null, null, now).moveTo(AiTaskState.FAILED, now)
+                        .withError("Kết nối AI đã bị tắt hoặc thu hồi"));
+            }
+            return next;
         }
+        save(running);
+        return dispatch(running, connection);
+    }
+
+    private Dispatch dispatch(AiTask task, AiConnection connection) {
         String key = cipher.decrypt(connection.encryptedKey());
         JsonNode prompt = readPrompt(task.inputPayload());
-        save(task.moveTo(AiTaskState.RUNNING, now));
         return new Dispatch(task, connection, new Request(task.model(), key, text(prompt, "system"), text(prompt, "user"),
                 task.outputSchema(), task.maxOutputTokens(), properties.requestTimeout()));
+    }
+
+    /**
+     * Khóa kế tiếp sau khóa của task (đã quyết toán quota lần trước): API chung theo thứ tự rồi API cá nhân của người
+     * gửi; khóa chung mà hết hạn mức thì bỏ qua. Lưu task với khóa mới; hết khóa thì trả rỗng, task chưa đổi.
+     */
+    private Dispatch next(AiTask task) {
+        List<AiConnection> order = new ArrayList<>();
+        if (task.source() == AiSource.SHARED) {
+            order.addAll(ConnectionOrder.active(connections.listInstitutional(), catalog));
+        }
+        order.addAll(ConnectionOrder.active(connections.listPersonal(task.actorId()), catalog));
+        int at = -1;
+        for (int i = 0; i < order.size(); i++) {
+            if (order.get(i).id().equals(task.connectionId())) {
+                at = i;
+            }
+        }
+        if (at < 0 && task.source() == AiSource.PERSONAL) {
+            // Khóa cá nhân đang dùng đã tắt: thử các khóa cá nhân xếp sau nó theo nhà cung cấp.
+            int rank = ConnectionOrder.providerRank(task.provider());
+            order.removeIf(c -> ConnectionOrder.providerRank(c.provider()) <= rank);
+        }
+        JsonNode prompt = readPrompt(task.inputPayload());
+        int promptChars = text(prompt, "system").length() + text(prompt, "user").length();
+        for (AiConnection candidate : order.subList(at + 1, order.size())) {
+            if (candidate.id().equals(task.connectionId())) {
+                continue;
+            }
+            int max = Math.min(task.maxOutputTokens(), catalog.maxOutputTokens(candidate.provider()));
+            Long reserved = null;
+            LocalDate day = null;
+            AiSource source = candidate.scope() == AiConnection.Scope.INSTITUTIONAL ? AiSource.SHARED : AiSource.PERSONAL;
+            if (source == AiSource.SHARED) {
+                try {
+                    QuotaReservationService.Reservation reservation = quota.reserve(task.actorId(),
+                            QuotaReservationService.estimate(promptChars, max));
+                    reserved = reservation.tokens();
+                    day = reservation.day();
+                } catch (RuntimeException e) {
+                    continue;
+                }
+            }
+            AiTask moved = task.retryWith(source, candidate.id(), candidate.provider(), candidate.model(), max, reserved,
+                    day, clock.instant());
+            save(moved);
+            return dispatch(tasks.findById(moved.id()).orElse(moved), candidate);
+        }
+        return null;
+    }
+
+    /** Thời gian đợi trước mỗi lần gọi lại khi nhà cung cấp quá tải; test đặt rỗng để không đợi. */
+    Duration[] transientWaits = {Duration.ofSeconds(2), Duration.ofSeconds(5)};
+
+    private static boolean transientFailure(Outcome outcome) {
+        ProviderException e = outcome.error();
+        return e != null && e.kind() == FailureKind.REJECTED
+                && (e.status() == 429 || e.status() == 503 || e.status() == 529);
+    }
+
+    private static void pause(Duration wait) {
+        try {
+            Thread.sleep(wait.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private Outcome callProvider(Dispatch dispatch) {
@@ -211,10 +307,10 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         }
     }
 
-    private void finish(UUID taskId, Outcome outcome) {
+    private Dispatch finish(UUID taskId, Outcome outcome) {
         AiTask task = tasks.lock(taskId).orElse(null);
         if (task == null || task.state() != AiTaskState.RUNNING) {
-            return;
+            return null;
         }
         if (outcome.error() == null) {
             Response response = outcome.response();
@@ -222,22 +318,43 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
                     : schemas.check(task.outputSchema(), response.output());
             settle(task, response.usage(), invalid.isEmpty() ? "READY" : "INVALID_OUTPUT");
             if (invalid.isPresent()) {
-                save(task.moveTo(AiTaskState.FAILED, clock.instant()).withResult(null, response.requestId())
+                // Chỉ ghi vị trí lệch schema để chẩn đoán, không ghi nội dung kết quả.
+                log.warn("AI task output rejected taskId={} taskType={} reason={}", task.id(), task.taskType(),
+                        invalid.get().length() > 300 ? invalid.get().substring(0, 300) : invalid.get());                save(task.moveTo(AiTaskState.FAILED, clock.instant()).withResult(null, response.requestId())
                         .withError("Kết quả AI không đúng định dạng yêu cầu"));
             } else {
                 save(task.withResult(response.output(), response.requestId()).moveTo(AiTaskState.READY, clock.instant()));
             }
-            return;
+            return null;
         }
         ProviderException e = outcome.error();
+        // Quyết toán lần gọi lỗi như trước, rồi thử khóa kế tiếp; hết khóa mới kết thúc task.
         switch (e.kind()) {
-            case REJECTED -> fail(task, e.getMessage(), true);
-            case CHARGED -> {
-                settle(task, e.usage(), "FAILED");
-                save(task.moveTo(AiTaskState.FAILED, clock.instant()).withError(e.getMessage()));
+            case REJECTED -> {
+                if (task.reservedTokens() != null) {
+                    quota.release(task.actorId(), task.quotaDay(), task.reservedTokens());
+                }
+                usage.recordProvider(task.actorId(), source(task), task.id(), task.provider(), task.model(), task.taskType(),
+                        "REJECTED", null, null);
             }
-            case UNKNOWN -> unknown(task, e.getMessage());
+            case CHARGED -> settle(task, e.usage(), "FAILED");
+            case UNKNOWN -> {
+                if (task.reservedTokens() != null) {
+                    quota.chargeReserved(task.actorId(), task.quotaDay(), task.reservedTokens());
+                }
+                usage.recordProvider(task.actorId(), source(task), task.id(), task.provider(), task.model(), task.taskType(),
+                        "UNKNOWN", null, task.reservedTokens());
+            }
         }
+        AiTask settled = task.retryWith(task.source(), task.connectionId(), task.provider(), task.model(),
+                task.maxOutputTokens(), null, null, task.dispatchedAt());
+        Dispatch next = next(settled);
+        if (next != null) {
+            return next;
+        }
+        AiTaskState end = e.kind() == FailureKind.UNKNOWN ? AiTaskState.UNKNOWN : AiTaskState.FAILED;
+        save(settled.moveTo(end, clock.instant()).withError(e.getMessage()));
+        return null;
     }
 
     /** Thất bại không tính token: giải phóng giữ chỗ (BR-U06-14). */

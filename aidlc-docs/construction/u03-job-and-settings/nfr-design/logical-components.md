@@ -1,4 +1,6 @@
-# U03 Job and Settings — logical-components
+# U03 Job and Settings — logical-components — chuẩn JDBC
+
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code còn JPA được ghi là khoảng cách migration.
 
 > Current structure: parent HEAD 5a76e428 + working-tree refactor, 2026-10-30. Unit ownership unchanged; runtime/provider acceptance remains separate.
 
@@ -22,11 +24,11 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 | [jobs/contract](../../../../backend/src/main/java/edu/aiplatform/jobs/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 | [settings/controller](../../../../backend/src/main/java/edu/aiplatform/settings/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [settings/service](../../../../backend/src/main/java/edu/aiplatform/settings/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [settings/repository](../../../../backend/src/main/java/edu/aiplatform/settings/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [settings/repository](../../../../backend/src/main/java/edu/aiplatform/settings/repository) | Repository interface/implementation, SQL và persistence mapping; JDBC là chuẩn đích toàn dự án. |
 | [settings/model](../../../../backend/src/main/java/edu/aiplatform/settings/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [settings/contract](../../../../backend/src/main/java/edu/aiplatform/settings/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 | [backup/service](../../../../backend/src/main/java/edu/aiplatform/backup/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [backup/repository](../../../../backend/src/main/java/edu/aiplatform/backup/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [backup/repository](../../../../backend/src/main/java/edu/aiplatform/backup/repository) | Repository interface/implementation, SQL và persistence mapping; JDBC là chuẩn đích toàn dự án. |
 | [backup/model](../../../../backend/src/main/java/edu/aiplatform/backup/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [backup/integration](../../../../backend/src/main/java/edu/aiplatform/backup/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [backup/config](../../../../backend/src/main/java/edu/aiplatform/backup/config) | Properties, cấu hình bean và topology. |

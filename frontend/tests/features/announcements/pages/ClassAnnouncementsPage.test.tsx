@@ -8,8 +8,8 @@ vi.mock("@/features/announcements/api", async (original) => ({
   announcementsApi: { list: vi.fn(), create: vi.fn() },
 }));
 const classes: ClassOption[] = [
-  { classId: "c1", code: "SE1801", name: "Thiết kế", canManage: true, studentCount: 30 },
-  { classId: "c2", code: "SE1802", name: "Thiết kế", canManage: true, studentCount: 28 },
+  { classId: "c1", code: "SE1801", subjectCode: "SWD392", canManage: true, studentCount: 30 },
+  { classId: "c2", code: "SE1802", subjectCode: "SWD392", canManage: true, studentCount: 28 },
 ];
 const item: Announcement = {
   id: "a",
@@ -142,7 +142,7 @@ it("100 lớp: ô Lớp đóng chỉ một dòng tóm tắt; mở ra tìm đư�
   const many = Array.from({ length: 100 }, (_, i) => ({
     classId: `k${i}`,
     code: `SE${1800 + i}`,
-    name: "Thiết kế",
+    subjectCode: "SWD392",
     canManage: true,
     studentCount: 30,
   }));

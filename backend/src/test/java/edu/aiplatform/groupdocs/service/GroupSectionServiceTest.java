@@ -31,7 +31,6 @@ import edu.aiplatform.files.contract.StoredFileInfo;
 import edu.aiplatform.groupdocs.contract.ISseHub;
 import edu.aiplatform.groupdocs.model.GroupDocument;
 import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
-import edu.aiplatform.groupdocs.model.AssignmentLock;
 import edu.aiplatform.groupdocs.model.GroupSection;
 import edu.aiplatform.groupdocs.model.GroupSection.Status;
 import edu.aiplatform.groupdocs.model.SectionRevision;
@@ -93,7 +92,6 @@ class GroupSectionServiceTest {
         when(groups.findGroup(group.id())).thenReturn(Optional.of(group));
         when(assignments.submissionWindow(eq(assignmentId), any())).thenReturn(SubmissionWindow.ON_TIME);
         when(documents.updateSection(any())).thenReturn(true);
-        when(documents.assignmentLock(document.id())).thenReturn(Optional.of(new AssignmentLock(leader.accountId(), NOW)));
         when(documentModel.validateForSave(any(), any())).thenReturn(new ValidationResult(List.of(), List.of()));
         when(documentModel.sanitize(any())).thenAnswer(call -> call.getArgument(0));
     }
@@ -103,13 +101,13 @@ class GroupSectionServiceTest {
         section(Status.CLAIMED, leader.accountId(), null, 2);
 
         assertThatThrownBy(() -> service.claim(member, document.id(), sectionId))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_ASSIGNED_TO_OTHER"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_CLAIMED_BY_OTHER"));
         verify(documents, never()).updateSection(any());
     }
 
     @Test
-    void ownerStartsEditingAfterAssignmentIsLockedAndEveryoneIsNotified() {
-        section(Status.OPEN, null, null, 0, member.accountId());
+    void memberClaimsOpenSectionAndEveryoneIsNotified() {
+        section(Status.OPEN, null, null, 0);
 
         var view = service.claim(member, document.id(), sectionId);
 
@@ -120,16 +118,15 @@ class GroupSectionServiceTest {
     }
 
     @Test
-    void leaderReassignsDuringPlanningDiscardingALeftoverDraftOnlyWhenConfirmed() {
-        planning();
+    void leaderMustReleaseBeforeReassigningAndAssignmentIsAudited() {
         section(Status.CLAIMED, leader.accountId(), null, 2);
         assertThatThrownBy(() -> service.assign(leader, document.id(), sectionId, member.accountId(), false))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_CLAIMED_BY_OTHER"));
 
         var view = service.assign(leader, document.id(), sectionId, member.accountId(), true);
 
-        assertThat(view.assigneeId()).isEqualTo(member.accountId());
-        assertThat(view.holderId()).isNull();
+        assertThat(view.holderId()).isEqualTo(member.accountId());
+        assertThat(view.assignedBy()).isEqualTo(leader.accountId());
         ArgumentCaptor<AuditEvent> events = ArgumentCaptor.forClass(AuditEvent.class);
         verify(audit, org.mockito.Mockito.times(2)).record(events.capture());
         assertThat(events.getAllValues()).extracting(AuditEvent::action)
@@ -229,81 +226,40 @@ class GroupSectionServiceTest {
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_DEADLINE_PASSED"));
     }
 
-    @Test
-    void planningOnlyReservesSectionsAndBlocksEditing() {
-        planning();
-        section(Status.OPEN, null, null, 0, null);
+    private static DocumentBlock heading(String text) {
+        return new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.HEADING,
+                JsonNodeFactory.instance.objectNode().put("style", "H1").put("text", text));
+    }
 
-        var reserved = service.claim(member, document.id(), sectionId);
-
-        assertThat(reserved.assigneeId()).isEqualTo(member.accountId());
-        assertThat(reserved.status()).isEqualTo(Status.OPEN);
-        assertThat(reserved.holderId()).isNull();
-        section(Status.OPEN, null, null, 1, member.accountId());
-        assertThatThrownBy(() -> service.claim(leader, document.id(), sectionId))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_CLAIMED_BY_OTHER"));
-        section(Status.CLAIMED, member.accountId(), null, 1);
-        assertThatThrownBy(() -> service.saveDraft(member, document.id(), sectionId, 1L, List.of(block())))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("ASSIGNMENT_NOT_LOCKED"));
-        section(Status.OPEN, null, null, 1, member.accountId());
-        var dropped = service.release(member, document.id(), sectionId);
-        assertThat(dropped.assigneeId()).isNull();
+    private static DocumentBlock paragraph(String text) {
+        var content = JsonNodeFactory.instance.objectNode();
+        content.putArray("runs").addObject().put("text", text);
+        return new DocumentBlock(UUID.randomUUID(), BlockOrigin.STUDENT, BlockType.PARAGRAPH, content);
     }
 
     @Test
-    void leaderLocksAssignmentOnlyWhenEverySectionHasAResponsibleMember() {
-        planning();
-        GroupSection free = new GroupSection(sectionId, document.id(), "p1", null, List.of(), 1, "1. Sơ đồ", Status.OPEN,
-                null, null, null, null, null, null, null, 0, null);
-        GroupSection taken = new GroupSection(UUID.randomUUID(), document.id(), "p2", null, List.of(), 2, "2. Lớp",
-                Status.OPEN, null, null, null, null, null, null, null, 0, member.accountId());
-        when(documents.lockSections(document.id())).thenReturn(List.of(free, taken));
-        assertThatThrownBy(() -> service.lockAssignment(member, document.id()))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_LEADER_ONLY"));
-        assertThatThrownBy(() -> service.lockAssignment(leader, document.id()))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("ASSIGNMENT_INCOMPLETE"));
-        verify(documents, never()).setAssignmentLock(any(), any());
+    void anotherMemberReclaimsADoneSectionStartingFromThePublishedContent() {
+        List<DocumentBlock> published = List.of(block());
+        section(Status.DONE, null, published, 3);
 
-        when(documents.lockSections(document.id())).thenReturn(List.of(free.withAssignee(leader.accountId()), taken));
-        var lock = service.lockAssignment(leader, document.id());
+        var view = service.claim(leader, document.id(), sectionId);
 
-        assertThat(lock.lockedBy()).isEqualTo(leader.accountId());
-        verify(documents).setAssignmentLock(document.id(), new AssignmentLock(leader.accountId(), NOW));
-        ArgumentCaptor<AuditEvent> event = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(audit).record(event.capture());
-        assertThat(event.getValue().action()).isEqualTo("GROUP_ASSIGNMENT_LOCKED");
+        assertThat(view.status()).isEqualTo(Status.CLAIMED);
+        assertThat(view.holderId()).isEqualTo(leader.accountId());
+        assertThat(view.draftBlocks()).isEqualTo(published);
     }
 
     @Test
-    void afterLockingOnlyTheOwnerEditsAndNobodyReassignsUntilUnlocked() {
-        section(Status.DONE, null, List.of(block()), 3, member.accountId());
-        assertThatThrownBy(() -> service.assign(leader, document.id(), sectionId, leader.accountId(), true))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("ASSIGNMENT_LOCKED"));
-        assertThatThrownBy(() -> service.claim(leader, document.id(), sectionId))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_ASSIGNED_TO_OTHER"));
+    void membersAndTeacherReadTheSectionHistoryNewestFirst() {
+        GroupSection done = new GroupSection(sectionId, document.id(), "p1", null, List.of(), 1, "1. Sơ đồ", Status.DONE,
+                null, null, null, List.of(block()), null, null, member.accountId(), 2);
+        when(documents.listSections(document.id())).thenReturn(List.of(done));
+        SectionRevision newer = new SectionRevision(UUID.randomUUID(), sectionId, member.accountId(), List.of(block()), NOW);
+        when(documents.listRevisions(sectionId, GroupSectionService.MAX_REVISIONS)).thenReturn(List.of(newer));
 
-        var reopened = service.claim(member, document.id(), sectionId);
-        assertThat(reopened.status()).isEqualTo(Status.CLAIMED);
-        assertThat(reopened.holderId()).isEqualTo(member.accountId());
-
-        service.unlockAssignment(leader, document.id());
-        verify(documents).setAssignmentLock(document.id(), null);
-    }
-
-    @Test
-    void holderRestoresARevisionIntoTheDraft() {
-        section(Status.CLAIMED, member.accountId(), null, 3);
-        UUID revisionId = UUID.randomUUID();
-        DocumentBlock old = block();
-        when(documents.findRevision(sectionId, revisionId)).thenReturn(Optional.of(
-                new SectionRevision(revisionId, sectionId, leader.accountId(), List.of(old), NOW.minusSeconds(60))));
-
-        assertThatThrownBy(() -> service.restore(leader, document.id(), sectionId, revisionId, 3L))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_NOT_HELD"));
-        var restored = service.restore(member, document.id(), sectionId, revisionId, 3L);
-
-        assertThat(restored.draftBlocks()).extracting(DocumentBlock::id).containsExactly(old.id());
-        assertThat(restored.status()).isEqualTo(Status.CLAIMED);
+        assertThat(service.revisions(member, document.id(), sectionId)).extracting(GroupSectionService.RevisionView::id)
+                .containsExactly(newer.id());
+        assertThat(service.revisions(teacher, document.id(), sectionId)).hasSize(1);
     }
 
     @Test
@@ -321,29 +277,10 @@ class GroupSectionServiceTest {
         assertThat(saved.getValue().draftBlocks().get(0).content().path("fileId").asText()).isEqualTo("file-1");
     }
 
-    private static DocumentBlock heading(String text) {
-        return new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.HEADING,
-                JsonNodeFactory.instance.objectNode().put("style", "H1").put("text", text));
-    }
-
-    private static DocumentBlock paragraph(String text) {
-        var content = JsonNodeFactory.instance.objectNode();
-        content.putArray("runs").addObject().put("text", text);
-        return new DocumentBlock(UUID.randomUUID(), BlockOrigin.STUDENT, BlockType.PARAGRAPH, content);
-    }
-
     private void section(Status status, UUID holder, List<DocumentBlock> published, long version) {
-        section(status, holder, published, version, holder);
-    }
-
-    private void section(Status status, UUID holder, List<DocumentBlock> published, long version, UUID assignee) {
         GroupSection section = new GroupSection(sectionId, document.id(), "p1", null, List.of(), 1, "1. Sơ đồ", status, holder,
-                holder == null ? null : NOW, null, published, null, null, null, version, assignee);
+                holder == null ? null : NOW, null, published, null, null, null, version);
         when(documents.lockSection(document.id(), sectionId)).thenReturn(Optional.of(section));
-    }
-
-    private void planning() {
-        when(documents.assignmentLock(document.id())).thenReturn(Optional.empty());
     }
 
     private static DocumentBlock block() {

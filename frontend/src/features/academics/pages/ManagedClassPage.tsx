@@ -8,8 +8,8 @@ import { initials } from "@/shared/layout/navigation";
 import { ClassInfoForm } from "../components/ClassInfoForm";
 import { AssignTeacherDialog, ClassStateActions } from "../components/ClassDialogs";
 import { EnrollmentPanel } from "../components/EnrollmentPanel";
-import { formatDate } from "../components/ui";
-import { statusLabels, type ClassInfoInput, type ClassStatus, type CourseClassView, type EnrollmentRowResult, type EnrollmentView, type PersonView } from "../model/types";
+import { formatDate } from "../model/format";
+import { CLASS_STATUS_LABELS, type ClassInfoInput, type ClassStatus, type CourseClassView, type EnrollmentRowResult, type EnrollmentView, type PersonView } from "../model/types";
 
 export type ManagedClassActions = {
   onSaveInfo: (input: ClassInfoInput) => Promise<void>;
@@ -38,7 +38,7 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
     { key: "students", label: "Sinh viên", count: students.filter((student) => student.status === "ACTIVE").length },
   ];
   return <>
-    <PageHeader backHref="/manager/classes" title={<span className="min-w-0 break-words [overflow-wrap:anywhere]">{value.name}</span>}
+    <PageHeader backHref="/manager/classes" title={<span className="min-w-0 break-words [overflow-wrap:anywhere]">{value.code}</span>}
       breadcrumb={[{ label: "Lớp học", href: "/manager/classes" }, { label: value.code }]} />
     {/* Nút thêm sinh viên của tab Sinh viên nằm cùng hàng tab, bên phải. */}
     <div className="relative">
@@ -50,7 +50,7 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
       <div className="flex flex-col gap-4">
         <Section title="Trạng thái">
           <dl className="flex flex-col gap-2.5 text-[13px]">
-            <div className="flex items-center justify-between"><dt className="text-muted">Trạng thái</dt><dd><Pill tone={TONES[value.status]}>{statusLabels[value.status]}</Pill></dd></div>
+            <div className="flex items-center justify-between"><dt className="text-muted">Trạng thái</dt><dd><Pill tone={TONES[value.status]}>{CLASS_STATUS_LABELS[value.status]}</Pill></dd></div>
             <div className="flex items-center justify-between"><dt className="text-muted">Ngày tạo</dt><dd className="text-ink">{formatDate(value.createdAt)}</dd></div>
           </dl>
           <div className="flex flex-col gap-2"><ClassStateActions value={value} onChange={actions.onChangeStatus}/></div>

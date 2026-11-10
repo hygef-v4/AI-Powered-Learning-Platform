@@ -29,7 +29,7 @@ export function QuizPracticeHistoryPage() {
 
   const classes = useMemo(() => {
     const seen = new Map<string, string>();
-    rows?.forEach((row) => seen.set(row.classId, `${row.classCode} · ${row.className}`));
+    rows?.forEach((row) => seen.set(row.classId, row.subjectCode ? `${row.subjectCode} · ${row.classCode}` : row.classCode));
     return [...seen.entries()];
   }, [rows]);
   const shown = rows?.filter((row) => !classId || row.classId === classId) ?? [];

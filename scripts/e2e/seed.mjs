@@ -51,7 +51,7 @@ await manager.login(out.accounts.manager.email, PW);
 const mine = await manager.get("/api/v1/manager/classes");
 let cls = (mine.data?.items || mine.data?.content || mine.data || []).find?.((c) => c.code === CLASS_CODE);
 if (!cls) {
-  const r = await manager.post("/api/v1/manager/classes", { subjectId: subject.id, code: CLASS_CODE, name: "Lớp chạy thử U06 U12 (" + CLASS_CODE + ")", description: "Lớp thử", term: "2026-1", teacherId: out.accounts.teacher.id });
+  const r = await manager.post("/api/v1/manager/classes", { subjectId: subject.id, code: CLASS_CODE, name: "Lớp chạy thử U06 U12 (" + CLASS_CODE + ")", description: "Lớp thử", teacherId: out.accounts.teacher.id });
   if (r.status >= 300) throw new Error(`class: ${r.status} ${JSON.stringify(r.data)}`);
   cls = r.data;
 }

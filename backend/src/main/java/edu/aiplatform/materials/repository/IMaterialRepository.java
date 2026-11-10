@@ -11,6 +11,8 @@ import java.util.UUID;
 public interface IMaterialRepository {
     Optional<Material> find(UUID id);
 
+    List<Material> findByFileId(String fileId);
+
     List<Material> list(UUID subjectId, UUID classId);
 
     void insert(Material material, MaterialVersion version);

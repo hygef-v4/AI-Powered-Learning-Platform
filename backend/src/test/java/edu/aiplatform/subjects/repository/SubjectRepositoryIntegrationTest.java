@@ -25,7 +25,6 @@ import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.shared.error.ApiException;
-import edu.aiplatform.subjects.repository.ISubjectRepository;
 import edu.aiplatform.subjects.model.Subject;
 import edu.aiplatform.subjects.model.SubjectCode;
 import jakarta.persistence.EntityManager;
@@ -1110,7 +1109,6 @@ class SubjectRepositoryIntegrationTest {
                                         row.getObject("id", UUID.class),
                                         "FIXTURE",
                                         "Fixture class",
-                                        "Fall26",
                                         row.getString("status"),
                                         null,
                                         0),

@@ -8,7 +8,7 @@ import { CourseCard, CourseGrid } from "../components/CourseCard";
 import type { CourseClassView, SubjectView } from "../model/types";
 
 /** Số lớp đang hoạt động (đang mở) của một môn. */
-function openClasses(subject: SubjectView, classes: CourseClassView[]) {
+function countOpenClasses(subject: SubjectView, classes: CourseClassView[]) {
   return classes.filter((course) => course.subject.id === subject.id && course.status === "OPEN").length;
 }
 
@@ -50,7 +50,7 @@ export function MySubjectPage({ subject, classes }: { subject: SubjectView; clas
       <div className="grid min-w-0 gap-4 sm:grid-cols-[1fr_2fr_1fr]">
         <Field label="Mã môn" htmlFor={`${id}-code`}><LockedInput id={`${id}-code`} value={subject.code} /></Field>
         <Field label="Tên môn học" htmlFor={`${id}-name`}><LockedInput id={`${id}-name`} value={subject.name} /></Field>
-        <Field label="Số lớp" htmlFor={`${id}-classes`}><LockedInput id={`${id}-classes`} value={String(openClasses(subject, classes))} /></Field>
+        <Field label="Số lớp" htmlFor={`${id}-classes`}><LockedInput id={`${id}-classes`} value={String(countOpenClasses(subject, classes))} /></Field>
         <div className="sm:col-span-3">
           <Field label="Mô tả" htmlFor={`${id}-description`}>
             <p id={`${id}-description`} className="min-h-28 rounded-lg border border-line bg-sunken px-3 py-2 text-[13.5px] whitespace-pre-line text-body [overflow-wrap:anywhere]">

@@ -1,7 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
-import { rubricValues, RubricChecklistPanel } from "@/features/grading/components/RubricChecklistPanel";
+import { RubricChecklistPanel } from "@/features/grading/components/RubricChecklistPanel";
+import { buildRubricValues } from "@/features/grading/model/rubricScores";
 import type { Checks, ItemScores } from "@/features/grading/model/types";
 
 const rubrics = [{ rubricId: "r", partId: "q1", maxPoints: 1, criteria: [{ criterionId: "c", title: "Thiết kế",
@@ -32,7 +33,7 @@ describe("rubric checklist (BR-U09-20)", () => {
   it("preserves saved or AI partial scores while deriving full-score checkboxes", () => {
     const two = [...rubrics, { rubricId: "r2", partId: "q2", maxPoints: 2, criteria: [{ criterionId: "c2", title: "", items: [
       { itemId: "a", text: "A", points: 1 }, { itemId: "b", text: "B", points: 1 }] }] }];
-    expect(rubricValues(two, { r2: ["b"] }, { r: { i: 0.5 }, r2: { a: 1 } })).toEqual({
+    expect(buildRubricValues(two, { r2: ["b"] }, { r: { i: 0.5 }, r2: { a: 1 } })).toEqual({
       checks: { r: [], r2: ["a", "b"] },
       itemScores: { r: { i: 0.5 }, r2: { a: 1, b: 1 } },
     });

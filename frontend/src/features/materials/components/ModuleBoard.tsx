@@ -429,6 +429,7 @@ function ModuleRow({
       {quiz && staff && (
         <Pill tone={QUIZ_STATUS_TONES[quiz.status]}>{QUIZ_STATUS_LABELS[quiz.status]}</Pill>
       )}
+      {material && staff && material.enabled === false && <Pill>Tắt</Pill>}
       {reopenable && (
         <span className="flex shrink-0 items-center" onClick={(event) => event.stopPropagation()}>
           <IconButton

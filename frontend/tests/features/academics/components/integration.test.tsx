@@ -1,7 +1,7 @@
 import {render,screen,fireEvent} from "@testing-library/react";
 import {it,expect,afterEach} from "vitest";
 import {ReadOnlyClassPage} from "@/features/academics/pages/ReadOnlyClassPage";
-import {classCapability} from "@/features/academics/api";
+import {loadClassCapability} from "@/features/academics/api";
 import {vi} from "vitest";
 import {teacherClassTabs,classCardSections} from "@/features/academics/slots";
 import {ClassDashboardPage} from "@/features/academics/pages/ClassDashboardPage";
@@ -9,7 +9,7 @@ import {ManagerDashboardPage,MySubjectPage} from "@/features/academics/pages/Man
 import type {CourseClassView} from "@/features/academics/model/types";
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(window.location.search) }));
 afterEach(() => window.history.replaceState(null, "", "/"));
-const value:CourseClassView={id:"c",subject:{id:"s",code:"S",name:"Subject"},code:"C",name:"Class",description:"",term:"1",status:"OPEN",teacher:null,version:1,activeStudentCount:0,removedStudentCount:0,showGradeDistribution:false,createdAt:"2026-01-01"};
+const value:CourseClassView={id:"c",subject:{id:"s",code:"S",name:"Subject"},code:"C",name:"Class",description:"",status:"OPEN",teacher:null,version:1,activeStudentCount:0,removedStudentCount:0,showGradeDistribution:false,createdAt:"2026-01-01"};
 it("hosts student card extension and lists managed subjects without stat extensions",()=>{
  classCardSections.register({key:"test-card",order:1,component:()=> <p>Card extension</p>});
  render(<><ClassDashboardPage audience="student" classes={[value]} onOpen={()=>{}}/><ManagerDashboardPage subjects={[value.subject]} onSubject={()=>{}}/><MySubjectPage subject={value.subject} classes={[value]}/></>);
@@ -25,9 +25,9 @@ it("hosts every teacher tab including info and gradebook",()=>{
 });
 it("accepts empty authorized classes and never falls back on server failure",async()=>{
  const fn=vi.fn().mockImplementation(()=>Promise.resolve(Response.json([])));vi.stubGlobal("fetch",fn);
- await expect(classCapability()).resolves.toEqual({audience:"student",classes:[]});expect(fn).toHaveBeenCalledTimes(1);
+ await expect(loadClassCapability()).resolves.toEqual({audience:"student",classes:[]});expect(fn).toHaveBeenCalledTimes(1);
  fn.mockReset().mockImplementation(()=>Promise.resolve(Response.json({}, {status:503})));
- await expect(classCapability()).rejects.toMatchObject({problem:{status:503}});expect(fn).toHaveBeenCalledTimes(1);vi.unstubAllGlobals();
+ await expect(loadClassCapability()).rejects.toMatchObject({problem:{status:503}});expect(fn).toHaveBeenCalledTimes(1);vi.unstubAllGlobals();
 });
 
 it("restores dashboard filters without sharing their query parameter", () => {

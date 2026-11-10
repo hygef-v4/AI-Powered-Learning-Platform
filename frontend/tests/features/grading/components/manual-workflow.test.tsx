@@ -4,13 +4,24 @@ import { RubricChecklistPanel } from "@/features/grading/components/RubricCheckl
 import { SubmissionViewer } from "@/features/grading/components/SubmissionViewer";
 import { AiProposalPanel } from "@/features/grading/components/AiProposalPanel";
 import type { Rubric } from "@/features/grading/model/types";
+import type { SubmissionDocumentDto } from "@/features/grading/model/submissionDocument";
 
 describe("grading review", () => {
+  it("keeps the existing rendering fallback for legacy JSON text and array-shaped table cells", () => {
+    const document = JSON.parse(JSON.stringify({blocks: [
+      {id: "legacy-text", type: "PARAGRAPH", content: {text: "Legacy answer"}},
+      {id: "legacy-table", type: "TABLE", content: {headerRow: true, rows: [[[{text: "Legacy header"}]], [[{text: "Legacy cell"}]]]}},
+    ]}));
+    render(<SubmissionViewer document={document}/>);
+    expect(screen.getByText("Legacy answer")).toBeInTheDocument();
+    expect(screen.getByRole("columnheader")).toHaveTextContent("Legacy header");
+    expect(screen.getByRole("cell")).toHaveTextContent("Legacy cell");
+  });
   it("renders current document runs, alignment, list levels and table cells without printing metadata", () => {
     const { container } = render(<SubmissionViewer document={{ blocks: [
-      { id: "p", type: "PARAGRAPH", content: { align: "CENTER", runs: [{ text: "Bài làm", color: "#ff0000", bold: true }] } },
-      { id: "l", type: "LIST", content: { ordered: true, items: [{ level: 2, runs: [{ text: "Mục con", italic: true }] }] } },
-      { id: "t", type: "TABLE", content: { headerRow: true, rows: [[{ runs: [{ text: "Ô bảng", highlight: "#00ff00" }] }]] } },
+      { id: "p", origin: "STUDENT", type: "PARAGRAPH", content: { align: "CENTER", runs: [{ text: "Bài làm", color: "#ff0000", bold: true }] } },
+      { id: "l", origin: "STUDENT", type: "LIST", content: { ordered: true, items: [{ level: 2, runs: [{ text: "Mục con", italic: true }] }] } },
+      { id: "t", origin: "STUDENT", type: "TABLE", content: { headerRow: true, rows: [[{ runs: [{ text: "Ô bảng", highlight: "#00ff00" }] }]] } },
     ] }} />);
     expect(screen.getByText("Bài làm")).toHaveStyle({ color: "#ff0000" });
     expect(screen.getByText("Bài làm")).toHaveClass("font-bold");
@@ -47,7 +58,7 @@ describe("grading review", () => {
       <SubmissionViewer
         document={{
           blocks: [
-            { id: "b", type: "PARAGRAPH", content: { text: '<img src=x onerror="alert(1)">' } },
+            { id: "b", origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{text: '<img src=x onerror="alert(1)">'}] } },
           ],
         }}
       />,
@@ -83,13 +94,16 @@ describe("grading review", () => {
           blocks: [
             {
               id: "table",
+              origin: "STUDENT",
               type: "TABLE",
-              content: { headerRow: true, rows: [[[{ text: "Header" }]], [[{ text: "Answer" }]]] },
+              content: { headerRow: true, rows: [[{runs: [{ text: "Header" }]}], [{runs: [{ text: "Answer" }]}]] },
             },
             {
               id: "diagram",
+              origin: "STUDENT",
               type: "DIAGRAM",
               content: {
+                diagramType: "OTHER", xml: "<mxfile/>",
                 svgPreview:
                   '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script><rect width="10" height="10" onclick="alert(2)"/><foreignObject><img src="https://bad.invalid"/></foreignObject></svg>',
               },
@@ -134,7 +148,7 @@ describe("U09 usability", () => {
     expect(screen.getByRole("link", { name: "Kiểm tra kết nối AI" })).toHaveAttribute("href", "/ai/connection");
   });
   it("shows a safe diagram preview immediately and opens a larger read-only view", () => {
-    render(<SubmissionViewer document={{ blocks: [{ id: "d", type: "DIAGRAM", content: { alt: "Sơ đồ Event",
+    render(<SubmissionViewer document={{ blocks: [{ id: "d", origin: "STUDENT", type: "DIAGRAM", content: { diagramType: "OTHER", xml: "<mxfile/>", alt: "Sơ đồ Event",
       svgPreview: '<svg xmlns="http://www.w3.org/2000/svg"><text x="5" y="20">Event</text></svg>' } }] }} />);
     expect(screen.getByRole("img", { name: "Sơ đồ Event" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Xem sơ đồ" }));
@@ -144,7 +158,7 @@ describe("U09 usability", () => {
 
 
 it("preserves Draw.io fallback labels while removing embedded HTML and scripts", () => {
-  render(<SubmissionViewer document={{ blocks: [{ id: "d", type: "DIAGRAM", content: {
+  render(<SubmissionViewer document={{ blocks: [{ id: "d", origin: "STUDENT", type: "DIAGRAM", content: { diagramType: "OTHER", xml: "<mxfile/>",
     svgPreview: '<svg xmlns="http://www.w3.org/2000/svg"><g><switch><foreignObject><div>HTML label</div></foreignObject><text x="0" y="20">- id: UUID</text></switch></g></svg>'
   } }] }} />);
   const svg = decodeURIComponent(screen.getByRole("img").getAttribute("src")!);
@@ -154,7 +168,7 @@ it("preserves Draw.io fallback labels while removing embedded HTML and scripts",
 
 
 it("refreshes the read-only diagram when a new snapshot supplies a changed SVG", () => {
-  const doc = (text: string) => ({ blocks: [{ id: "d", type: "DIAGRAM", content: { svgPreview: `<svg xmlns="http://www.w3.org/2000/svg"><text>${text}</text></svg>` } }] });
+  const doc = (text: string): SubmissionDocumentDto => ({ blocks: [{ id: "d", origin: "STUDENT", type: "DIAGRAM", content: { diagramType: "OTHER", xml: "<mxfile/>", svgPreview: `<svg xmlns="http://www.w3.org/2000/svg"><text>${text}</text></svg>` } }] });
   const { rerender } = render(<SubmissionViewer document={doc("Old diagram")} />);
   rerender(<SubmissionViewer document={doc("New diagram")} />);
   expect(decodeURIComponent(screen.getByRole("img").getAttribute("src")!)).toContain("New diagram");

@@ -6,6 +6,7 @@ import edu.aiplatform.identity.contract.MailMessage;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.nio.charset.StandardCharsets;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -13,9 +14,11 @@ import org.springframework.stereotype.Component;
 
 /**
  * Cài {@link IMail} bằng SMTP (NFR-U01-30): Mailpit ở local/test, Brevo SMTP ở demo/production. Timeout kết nối và gửi
- * cấu hình ở {@code spring.mail.properties}. Không log nội dung (có thể chứa OTP).
+ * cấu hình ở {@code spring.mail.properties}. Không log nội dung (có thể chứa OTP). Mặc định khi không đặt
+ * {@code MAIL_TRANSPORT}; mạng chặn SMTP thì dùng {@link BrevoApiMailAdapter}.
  */
 @Component
+@ConditionalOnProperty(name = MailTransport.PROPERTY, havingValue = MailTransport.SMTP, matchIfMissing = true)
 public class SmtpMailAdapter implements IMail {
 
     private final JavaMailSender sender;

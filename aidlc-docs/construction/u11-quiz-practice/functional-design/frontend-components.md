@@ -18,12 +18,14 @@ Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://clau
 |---|---|---|---|---|
 | 42 | Quiz Practice History (`s20`) | `QuizPracticeHistoryPage` | 49 | Student |
 | 43 | Quiz Practice Detail (`s21`), trạng thái hết lượt (`s21b`) | `QuizPracticeDetailPage` | 50 | Student |
-| 44 | Quiz Taking (`s14`), popup Nộp bài (`s14b`), Hết giờ tự nộp (`s14c`) | `QuizTakingPage`, `SubmitQuizDialog`, `TimeUpOverlay` | 51 | Student |
+| 44 | Quiz Taking (`s14`), popup Nộp bài (`s14b`), Hết giờ tự nộp (`s14c`) | `QuizTakingPage` (popup Nộp bài, Hết giờ viết trong trang) | 51 | Student |
 | 45 | Quiz Result (`s22`), Quiz không hiện điểm (`s22b`) | `QuizResultPage` | 52 | Student |
 | 22 | Quiz Detail, tab Lượt làm của sinh viên (`t10c`) | `QuizAttemptsSection` | 42 | Teacher, Subject Manager được giao dạy |
 | 32 | Tab Đánh giá, cột Bài nộp của dòng Quiz (`t21`) | `QuizAttemptCount` | 48 | Teacher, Subject Manager được giao dạy |
 
-U11 đăng ký `NavEntry` "Luyện tập Quiz" (Student).
+U11 không còn đăng ký `NavEntry` "Luyện tập Quiz": trang không còn trên menu bên của Student (yêu cầu 29/10). U11 gắn `QuizAttemptsSection` vào `quizDetailSections` và `QuizAttemptCount` vào `quizRowActions` của U10.
+
+Trong cây và bảng dưới, tên có dấu `*` là phần UI viết thẳng trong trang, không phải file component riêng.
 
 ## 2. Cây component
 
@@ -31,17 +33,17 @@ U11 đăng ký `NavEntry` "Luyện tập Quiz" (Student).
 app/quiz-practice/                        QuizPracticeHistoryPage   #42
   QuizPracticeFilters, QuizPracticeTable
 app/quiz-practice/[quizId]/               QuizPracticeDetailPage    #43
-  MyQuizAttempts, QuizInfoCard, ActivityNotice, StartQuizButton
-  (vùng QuizMaterialSection cho U13)
+  MyQuizAttempts*, QuizInfoCard*, ActivityNotice*, StartQuizButton* (nút Bắt đầu / Làm lại)
+  ModuleNeighbours (U13): bài trước, bài sau trong module học liệu
 app/quiz-attempts/[attemptId]/            QuizTakingPage            #44
-  QuizTopBar (đồng hồ, tự lưu, Nộp bài), QuestionView, QuestionNavigator, AutosaveStatus
-  SubmitQuizDialog, TimeUpOverlay
+  QuizTopBar* (đồng hồ, tự lưu, Nộp bài), QuestionView*, QuestionNav, QuestionPrevNext (components/QuestionPager), AutosaveStatus*
+  SubmitQuizDialog* (Dialog "Nộp bài?"), TimeUpOverlay* (Dialog "Hết thời gian…")
   (useActivityTracker của U08 khi bật theo dõi)
 app/quiz-attempts/[attemptId]/result/     QuizResultPage            #45
-  ScoreSummary, AnswerReview, RetryButton
+  ScoreSummary*, AnswerReview (components/ResultQuestions), RetryButton*
 (đăng ký vào slot)
-  QuizAttemptsSection                     QuizDetailSection của U10; ActivityTimeline (U08)
-  QuizAttemptCount                        QuizRowAction của U10
+  QuizAttemptsSection                     QuizDetailSection của U10; ActivityTimeline (U08)  (components/TeacherQuizSections)
+  QuizAttemptCount                        QuizRowAction của U10  (components/TeacherQuizSections)
 ```
 
 ## 3. Component và API
@@ -49,11 +51,11 @@ app/quiz-attempts/[attemptId]/result/     QuizResultPage            #45
 | Component | API | Hành vi |
 |---|---|---|
 | `QuizPracticeHistoryPage` | `GET /api/v1/me/quizzes` | "Luyện tập Quiz", "Quiz Practice không tính vào sổ điểm"; lọc theo lớp; cột Quiz, Lớp, Số lần làm, Điểm cao nhất, Lần gần nhất, thao tác Xem hoặc Bắt đầu (Quiz chưa làm) |
-| `QuizPracticeDetailPage`, `StartQuizButton` | `GET /api/v1/me/quizzes/{quizId}`, `POST /api/v1/quizzes/{quizId}/attempts` | Nút quay lại; tên kèm nhãn Practice; đường dẫn "Luyện tập Quiz › lớp"; "Các lần làm" (số lần đã hoàn thành): Lần làm, Bắt đầu, Thời gian, Điểm (ẩn khi Quiz không hiện điểm), Xem kết quả; Học liệu gắn kèm (U13); thẻ Thông tin: Số câu, Thời gian, Số lượt (đã dùng / tối đa hoặc không giới hạn), Điểm cao nhất, Đáp án (Hiện sau khi nộp hoặc Không hiện); nút Làm lại kèm "Còn x / y lượt · không tính vào sổ điểm"; không làm được thì ẩn nút và nêu lý do (ví dụ "Bạn đã dùng hết y/y lượt", Quiz đã ngưng); thông báo ghi nhận hoạt động khi Quiz bật theo dõi |
-| `QuizTakingPage`, `AutosaveStatus` | `GET /api/v1/quiz-attempts/{attemptId}`, `PUT .../answers` | Thanh trên: Thoát, tên, nhãn Practice, "Tự động lưu", đồng hồ "Còn mm:ss" (khi có giới hạn thời gian), Nộp bài; "Câu i / n" · loại · điểm; nội dung; lựa chọn (một hoặc nhiều đáp án); Câu trước, Câu tiếp; "Danh sách câu": số đã làm, nút từng câu theo trạng thái (đã trả lời, đang trả lời, chưa trả lời). Lưu 2 giây sau lần chọn cuối |
-| `SubmitQuizDialog` | `POST .../submit` | "Nộp bài?": số câu chưa trả lời và câu nào, "Câu chưa trả lời được tính sai", thời gian còn lại, "Sau khi nộp, lượt này kết thúc."; Làm tiếp, Nộp bài |
-| `TimeUpOverlay` | `POST .../submit` | Hết giờ thì lưu lần cuối, tự nộp, khóa trang: "Hết thời gian làm bài. Các câu đã chọn được tự lưu và nộp. Đang chuyển sang trang kết quả…" |
-| `QuizResultPage`, `ScoreSummary`, `AnswerReview` | `GET .../result` | Nút quay lại; "Kết quả · tên"; đường dẫn; "Lần n · nộp lúc … · làm trong n phút". Quiz hiện điểm: điểm x / y, Đúng, Sai, Bỏ trống, "Practice · không tính vào sổ điểm". Quiz hiện đáp án sau khi nộp: "Xem lại từng câu": trạng thái câu, lựa chọn có nhãn "Đáp án đúng" và "Bạn chọn", Giải thích. Quiz không hiện điểm: "Đã nộp bài", "Quiz này không hiện điểm và đáp án sau khi nộp." Nút Về danh sách, Làm lại (khi còn lượt) |
+| `QuizPracticeDetailPage`, `StartQuizButton*` | `GET /api/v1/me/quizzes/{quizId}`, `POST /api/v1/quizzes/{quizId}/attempts` | Nút quay lại; tên kèm nhãn Practice; đường dẫn "Luyện tập Quiz › lớp"; "Các lần làm" (số lần đã hoàn thành): Lần làm, Bắt đầu, Thời gian, Điểm (ẩn khi Quiz không hiện điểm), Xem kết quả; bài trước, bài sau trong module học liệu (U13); thẻ Thông tin: Số câu, Thời gian, Số lượt (đã dùng / tối đa hoặc không giới hạn), Điểm cao nhất, Đáp án (Hiện sau khi nộp hoặc Không hiện); nút Làm lại kèm "Còn x / y lượt · không tính vào sổ điểm"; không làm được thì ẩn nút và nêu lý do (ví dụ "Bạn đã dùng hết y/y lượt", Quiz đã ngưng); thông báo ghi nhận hoạt động khi Quiz bật theo dõi |
+| `QuizTakingPage`, `AutosaveStatus*` | `GET /api/v1/quiz-attempts/{attemptId}`, `PUT .../answers` | Thanh trên: Thoát, tên, nhãn Practice, "Tự động lưu", đồng hồ "Còn mm:ss" (khi có giới hạn thời gian), Nộp bài; "Câu i / n" · loại · điểm; nội dung; lựa chọn (một hoặc nhiều đáp án); Câu trước, Câu tiếp; "Danh sách câu": số đã làm, nút từng câu theo trạng thái (đã trả lời, đang trả lời, chưa trả lời). Lưu 2 giây sau lần chọn cuối |
+| `SubmitQuizDialog*` | `POST .../submit` | "Nộp bài?": số câu chưa trả lời và câu nào, "Câu chưa trả lời được tính sai", thời gian còn lại, "Sau khi nộp, lượt này kết thúc."; Làm tiếp, Nộp bài |
+| `TimeUpOverlay*` | `POST .../submit` | Hết giờ thì lưu lần cuối, tự nộp, khóa trang: "Hết thời gian làm bài. Các câu đã chọn được tự lưu và nộp. Đang chuyển sang trang kết quả…" |
+| `QuizResultPage`, `ScoreSummary*`, `ResultQuestions` | `GET .../result` | Nút quay lại; "Kết quả · tên"; đường dẫn; "Lần n · nộp lúc … · làm trong n phút". Quiz hiện điểm: điểm x / y, Đúng, Sai, Bỏ trống, "Practice · không tính vào sổ điểm". Quiz hiện đáp án sau khi nộp: "Xem lại từng câu": trạng thái câu, lựa chọn có nhãn "Đáp án đúng" và "Bạn chọn", Giải thích. Quiz không hiện điểm: "Đã nộp bài", "Quiz này không hiện điểm và đáp án sau khi nộp." Nút Về danh sách, Làm lại (khi còn lượt) |
 | `QuizAttemptsSection` | `GET /api/v1/classes/{classId}/quizzes/{quizId}/attempts`, `GET .../quiz-attempts/{attemptId}` | Tab "Lượt làm của sinh viên (n)": cột Sinh viên (avatar, tên, email), Lượt (x / y), Điểm cao nhất, Hoạt động (tóm tắt rời trang, ẩn tab hoặc "Không có"); "n / N sinh viên đã làm"; phân trang; "Chỉ đọc. Quiz Practice không vào sổ điểm."; chọn sinh viên hiện "Dòng thời gian hoạt động" của từng lượt (bắt đầu, rời trang kèm thời lượng, nộp bài kèm điểm), "Dữ liệu hoạt động chỉ để tham khảo; nền tảng không kết luận gian lận." |
 | `QuizAttemptCount` | `GET /api/v1/classes/{classId}/quizzes/{quizId}/attempts` (tóm tắt) | Cột Bài nộp của dòng Quiz: "n sinh viên đã làm" |
 
@@ -69,3 +71,7 @@ Route `/quiz-practice/*` và `/quiz-attempts/*` chỉ cho Student (dùng `RoleGu
 | `QuizAttemptsSection` | Cột Rời trang, cờ thiếu tín hiệu, nhãn "Chờ quyết định"; `AttemptPenaltyPanel` hiện mức gợi ý, ô số điểm và lý do, nút "Trừ điểm", "Không trừ"; xem bài của sinh viên mỗi câu một trang |
 | `QuizPracticeDetailPage` | Báo quy tắc gợi ý trừ điểm trước khi làm |
 | Đã bỏ | `MaterialQuizList`, slot `quizMaterialSections`, `LearningMaterialSection` |
+
+## Mô tả quiz có định dạng — 2026-11-09
+
+PracticeQuizDetail nhận thêm instructionsDocument tùy chọn từ U10; QuizPracticeDetailPage dùng shared FormattedTextView, fallback instructions plain text cho dữ liệu cũ. Giữ danh sách/bullet, căn lề và định dạng chữ; không render HTML tùy ý. Không đổi luồng bắt đầu/nộp/chấm hoặc chính sách đáp án. [Kiểm chứng liên quan](../../build-and-test/2026-11-09-material-quiz-ui-results.md).

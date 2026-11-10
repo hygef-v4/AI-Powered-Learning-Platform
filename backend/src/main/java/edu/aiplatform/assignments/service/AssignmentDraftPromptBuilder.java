@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.ai.contract.AiPrompt;
 import edu.aiplatform.ai.contract.MaterialText;
-import edu.aiplatform.assignments.contract.DiagramType;
 import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignments.model.Assignment;
 import java.util.List;
@@ -23,7 +22,8 @@ final class AssignmentDraftPromptBuilder {
         AssignmentCommands.DraftOptions options = requestedOptions == null
                 ? new AssignmentCommands.DraftOptions("AUTO", "VI", null, null) : requestedOptions;
         boolean english = "EN".equals(options.language());
-        String language = english ? "English" : "Vietnamese";
+        String language = english ? "English" : "AUTO".equals(options.language())
+                ? "the same language as the instructor's format template" : "Vietnamese";
         String system = "You help university instructors prepare assessment drafts. Write all student-facing content in "
                 + language + ". Return exactly one JSON object matching the schema. Use a coherent business context, "
                 + "clear numbered questions and actionable rubric items with positive point values. Put the business "

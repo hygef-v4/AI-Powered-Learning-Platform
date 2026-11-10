@@ -23,8 +23,8 @@ U01 nằm trong **Web Shell** (xác thực, hồ sơ, khung sau đăng nhập) v
 | 3 | Password Reset, bước 1–3 (`c03a`, `c03`, `c04`) | `PasswordResetPage` | 04 |
 | 4 | User Profile (`c05`) | `ProfilePage` | 06, 07 |
 | 5 | Password Change, popup (`c06`) | `PasswordChangeDialog` | 05 |
-| – | Khung sau đăng nhập: thanh trên cùng, menu bên, popup Đăng xuất (`c15`) | `AppShell`, `SignOutDialog`, `PostLoginRedirect`, `RoleGuard` | 01, 02, 03 |
-| 11 | Account List, vùng Nhập CSV (`a02`, `a02b`) | `AccountListPage`, `ImportAccountsPanel` | 08, luồng phụ của 09 |
+| – | Khung sau đăng nhập: thanh trên cùng, menu bên, popup Đăng xuất (`c15`) | `AppShell`, `LogoutDialog`, `PostLoginRedirect`, `RoleGuard` | 01, 02, 03 |
+| 11 | Account List, vùng Nhập Excel (`a02`, `a02b`) | `AccountListPage`, `ImportAccountsPanel` | 08, luồng phụ của 09 |
 | 12 | New Account, popup (`a03`) | `NewAccountDialog` | 09 |
 | 13 | Account Detail và popup Đổi vai trò, Đổi vai trò bị từ chối, Vô hiệu hóa / Mở lại (`a04`, `a04b`, `a04c`, `a04d`) | `AccountDetailPage`, `RoleChangeDialog`, `RoleChangeRejectedDialog`, `StatusToggleDialog` | 10, 11, 12 |
 
@@ -37,7 +37,7 @@ app/(auth)/                       (chưa đăng nhập; hai cột: form bên tr�
   login/            LoginPage             #1 User Login
     LoginForm
   activate/         ActivationPage        #2 Activate Account
-    OtpStepper                    thanh bước: 1 Email · 2 Mã OTP · 3 Đặt mật khẩu
+    OtpFlow                       thanh bước 1 Email · 2 Mã OTP · 3 Đặt mật khẩu và ba bước dưới đây
     RequestOtpStep                bước 1 (c02a)
     VerifyOtpStep                 bước 2 (c02b): chỉ nhập OTP
     SetNewPasswordStep            bước 3 (c02): chỉ mở sau khi OTP đúng
@@ -46,7 +46,7 @@ app/post-login/     PostLoginRedirect     chuyển tới dashboard theo role (BR
 shared/layout/      AppShell              khung sau đăng nhập (code đã có, làm cùng U03; U01 nối phiên thật)
   TopBar                          logo, lối vào AccountMenuEntry, vùng HeaderWidget, thẻ hồ sơ, nút Đăng xuất
   SideNav                         menu bên theo role, mục lấy từ NavEntry
-  SignOutDialog                   popup Đăng xuất (c15)
+  LogoutDialog                    popup Đăng xuất (c15)
   RoleGuard                       chặn route theo role
 app/profile/        ProfilePage           #4 User Profile
   ProfileForm
@@ -54,7 +54,7 @@ app/profile/        ProfilePage           #4 User Profile
 app/admin/accounts/ AccountListPage       #11 Account List
     AccountFilters                tab vai trò, lọc trạng thái, ô tìm
     AccountTable
-    ImportAccountsPanel           vùng Nhập CSV ngay trên trang (a02b)
+    ImportAccountsPanel           vùng Nhập Excel ngay trên trang (a02b)
     NewAccountDialog              #12 popup
   [id]/             AccountDetailPage     #13 Account Detail
     AccountInfoForm
@@ -82,7 +82,7 @@ shared/ui/                        bộ giao diện dùng chung (U03); U01 thêm 
 
 ### ActivationPage (#2) / PasswordResetPage (#3)
 
-Hai trang dùng chung `OtpStepper` và ba bước, khác `purpose` và chữ trên nút; ô mật khẩu chỉ hiện sau khi OTP được xác minh (BR-U01-28).
+Hai trang dùng chung `OtpFlow` (`features/identity/otp`) với thanh bước và ba bước, khác `purpose` và chữ trên nút; ô mật khẩu chỉ hiện sau khi OTP được xác minh (BR-U01-28).
 
 | Bước | Trường và thao tác | API | Hành vi |
 |---|---|---|---|
@@ -96,7 +96,7 @@ Hai trang dùng chung `OtpStepper` và ba bước, khác `purpose` và chữ tr�
 |---|---|
 | Thanh trên cùng | Logo "Nền tảng học tập" (về `homePath`); lối vào do unit khác đăng ký qua `AccountMenuEntry` theo role (U06: "Kết nối AI" cho Student, Teacher, Subject Manager; Admin không có); vùng `HeaderWidget` (U14: chuông thông báo kèm số chưa đọc); thẻ hồ sơ (avatar chữ viết tắt, màu theo role; họ tên; nhãn role) mở User Profile; nút "Đăng xuất" màu đỏ |
 | Menu bên | Mục theo role, lấy từ `NavEntry` do unit sở hữu màn đăng ký; mục đang mở tô nền xanh, icon đặc. Danh sách ở bảng dưới |
-| `SignOutDialog` (`c15`) | "Đăng xuất?" — "Bạn sẽ thoát khỏi phiên trên thiết bị này. Bài đang làm đã được tự lưu."; Hủy, Đăng xuất. Xác nhận thì gọi `logout`, xóa trạng thái phía client, về User Login (UC 03) |
+| `LogoutDialog` (`c15`) | "Đăng xuất?" — "Bạn sẽ thoát khỏi phiên trên thiết bị này. Bài đang làm đã được tự lưu."; Hủy, Đăng xuất. Xác nhận thì gọi `logout`, xóa trạng thái phía client, về User Login (UC 03) |
 | Thông tin người dùng | Họ tên, role lấy từ `SessionInfo`; tải lại trang thì gọi `GET /api/v1/me/profile` |
 | `PostLoginRedirect` | Sau đăng nhập, kích hoạt, hoặc khi mở `/`: lấy `homePath` rồi chuyển tới dashboard. Khi Admin Dashboard (U15, Iter 3) chưa có, `homePath` của Admin tạm là Account List |
 | `RoleGuard` | `/admin/*` chỉ `ADMIN`; `/manager/*` chỉ `SUBJECT_MANAGER`; `/classes/*` chỉ `STUDENT`, `TEACHER`, `SUBJECT_MANAGER`. Sai role thì chuyển về `homePath`. Admin không vào Manager Dashboard hay Class Dashboard (BR-U01-48). Backend vẫn tự kiểm quyền |
@@ -135,7 +135,7 @@ Menu bên theo design (mỗi unit đăng ký mục của màn mình qua `NavEntr
 
 | Mục | Nội dung |
 |---|---|
-| Đầu trang | "Tài khoản" kèm tổng số; nút Nhập CSV, Thêm tài khoản |
+| Đầu trang | "Tài khoản" kèm tổng số; nút Nhập Excel, Thêm tài khoản |
 | Bộ lọc | Tab vai trò: Tất cả, Sinh viên, Giảng viên, Chủ nhiệm môn, Quản trị viên; lọc Trạng thái (Chờ kích hoạt, Hoạt động, Vô hiệu hóa); ô "Lọc theo email hoặc tên" |
 | Cột | Họ tên (avatar chữ viết tắt), Email, Vai trò, Trạng thái (nhãn màu), Ngày tạo; bấm dòng mở Account Detail |
 | Phân trang | "Hiển thị a–b trong N tài khoản" |
@@ -143,11 +143,11 @@ Menu bên theo design (mỗi unit đăng ký mục của màn mình qua `NavEntr
 
 ### ImportAccountsPanel (`a02b`, luồng phụ của UC 09)
 
-Nút "Nhập CSV" mở vùng nhập ngay trên Account List; danh sách tải lại sau khi xác nhận.
+Nút "Nhập Excel" mở vùng nhập ngay trên Account List; danh sách tải lại sau khi xác nhận.
 
 | Bước | Nội dung | API |
 |---|---|---|
-| Chọn tệp | "Tệp .csv, mã UTF-8, dòng đầu là tiêu đề cột"; ô tệp (tên, dung lượng), nút "Chọn tệp khác", link "Tải tệp mẫu (email, họ tên, vai trò)" | `validateAccountImport` |
+| Chọn tệp | "Tệp Excel .xlsx, trang tính đầu tiên, dòng đầu là tiêu đề cột"; ô tệp (tên, dung lượng), nút "Chọn tệp khác", link "Tải tệp mẫu (email, họ tên, vai trò)" | `validateAccountImport` |
 | Xem trước | Nhãn đếm số dòng, hợp lệ, lỗi; "Chỉ nhập các dòng hợp lệ; dòng lỗi được bỏ qua."; bảng Dòng, Email, Họ tên, Vai trò, Kết quả kiểm tra (Hợp lệ, hoặc lý do dễ hiểu như email đã tồn tại, không phải email trường, vai trò không hợp lệ), có phân trang | - |
 | Xác nhận | Ghi chú "Tài khoản mới ở trạng thái Chờ kích hoạt. Hệ thống không gửi email; người dùng tự kích hoạt bằng email trường."; Hủy, "Xác nhận nhập N tài khoản" | `commitAccountImport` (gửi lại tệp; backend kiểm lại rồi chỉ tạo dòng hợp lệ) |
 
@@ -156,7 +156,7 @@ Nút "Nhập CSV" mở vùng nhập ngay trên Account List; danh sách tải l�
 | Mục | Nội dung |
 |---|---|
 | Trường | Email trường* (gợi ý "Dùng làm định danh đăng nhập, không đổi được sau khi tạo."), Họ và tên*, Vai trò* (Sinh viên, Giảng viên, Chủ nhiệm môn, Quản trị viên) |
-| Validation | Email đúng định dạng và domain trường; tên không rỗng |
+| Validation | Email đúng định dạng (tên miền nào cũng được); tên không rỗng |
 | Ghi chú | "Tài khoản ở trạng thái Chờ kích hoạt. Người dùng tự kích hoạt bằng email trường và mã OTP; số điện thoại sửa sau ở Chi tiết tài khoản." |
 | API | `createAccount`; xong thì đóng popup và tải lại Account List. Không có nút gửi mail |
 

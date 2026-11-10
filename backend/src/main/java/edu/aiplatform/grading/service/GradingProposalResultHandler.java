@@ -8,21 +8,25 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class GradingProposalResultHandler implements IAiTaskResultHandler {
-    private final GradingProposalTransactions tx;
+    private final GradingProposalTransactions gradingProposalTransactions;
 
-    public GradingProposalResultHandler(GradingProposalTransactions tx) {
-        this.tx = tx;
+    /** Creates the handler that forwards AI task results to proposal transactions. */
+    public GradingProposalResultHandler(GradingProposalTransactions gradingProposalTransactions) {
+        this.gradingProposalTransactions = gradingProposalTransactions;
     }
 
+    /** Returns the AI task type handled by this component. */
     public String taskType() {
         return "GRADING_PROPOSAL";
     }
 
+    /** Applies a completed AI result to its grading proposal. */
     public ApplyOutcome onReady(AiTaskResult result) {
-        return tx.accept(result);
+        return gradingProposalTransactions.acceptProposal(result);
     }
 
+    /** Records a failed AI task against its grading proposal. */
     public void onFailed(AiTaskFailure failure) {
-        tx.failed(failure);
+        gradingProposalTransactions.recordFailure(failure);
     }
 }

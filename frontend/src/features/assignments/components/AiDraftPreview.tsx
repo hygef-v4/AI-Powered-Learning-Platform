@@ -16,7 +16,7 @@ function points(section: AiProposalSection) {
 }
 
 /** Keep validation and questions visible before optional shared prose, even for malformed model output. */
-export function AiDraftPreview({ proposal, targetPoints }: { proposal: Proposal; targetPoints: number }) {
+export function AiDraftPreview({ proposal, targetPoints }: { proposal: Proposal; targetPoints?: number }) {
   const validation = proposal.validation;
   const empty = proposal.sections.length === 0;
   const invalid = empty || !validation || validation.status === "INVALID";
@@ -33,7 +33,7 @@ export function AiDraftPreview({ proposal, targetPoints }: { proposal: Proposal;
         </Pill>
         <span>{validation?.questionCount ?? proposal.sections.filter((section) => section.level === 1).length} câu</span>
         <span>· {covered}/{leaves.length} phần có rubric</span>
-        <strong className="sm:ml-auto">{Number(validation?.totalPoints ?? 0).toFixed(2)} / {targetPoints} điểm</strong>
+        <strong className="sm:ml-auto">{Number(validation?.totalPoints ?? 0).toFixed(2)}{targetPoints === undefined ? "" : ` / ${targetPoints}`} điểm</strong>
       </div>
       {validation?.issues.length ? <ul className="mt-3 space-y-1 text-sm">
         {validation.issues.map((issue, index) => <li key={`${issue.code}-${index}`} className={issue.severity === "ERROR" ? "text-danger" : "text-warning"}>{issue.message}</li>)}

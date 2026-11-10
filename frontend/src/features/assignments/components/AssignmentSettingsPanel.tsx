@@ -61,7 +61,6 @@ export function AssignmentSettingsPanel({ detail, value, onChange, readOnly, cla
         <Switch checked={value.activityMonitoringEnabled} label="Ghi nhận hoạt động"
           disabled={readOnly}
           onChange={(checked) => onChange({ ...value, activityMonitoringEnabled: checked })} />
-        <p className="text-[11px] text-muted">Dữ liệu hoạt động được giữ 1 ngày rồi tự xóa.</p>
       </div>
       {value.activityMonitoringEnabled && (
         <Field label="Lời báo cho sinh viên" htmlFor="activity-notice" required>

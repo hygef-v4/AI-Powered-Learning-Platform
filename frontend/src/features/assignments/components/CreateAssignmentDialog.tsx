@@ -1,10 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Alert, Button, Dialog, Field, Icon, IconButton, Select } from "@/shared/ui";
+import { Alert, Button, Dialog, Field, Icon, IconButton } from "@/shared/ui";
+import { SearchPicker } from "./SearchPicker";
+import { TemplateFileField } from "./TemplateFileField";
 import { assignmentsApi, type CreateInput } from "../api";
 import { Choice } from "./Choice";
 import { errorMessage } from "../model/format";
+import { rememberTemplate } from "../model/templateStore";
 import { type AssignmentDetail, type CopySource } from "../model/types";
 
 type Props = {
@@ -14,40 +17,6 @@ type Props = {
   /** Bài đã tạo (đã nhập sẵn tệp DOCX nếu người soạn chọn tệp); `startWithAi` khi bật Soạn bằng AI. */
   onCreated: (assignment: AssignmentDetail) => void;
 };
-
-/** Ô chọn tệp DOCX: kéo thả hoặc bấm để chọn; chọn xong chỉ hiện tên tệp và nút bỏ. */
-function DocxField({ file, onChange, disabled }: { file: File | null; onChange: (file: File | null) => void; disabled?: boolean }) {
-  const [over, setOver] = useState(false);
-  if (file) {
-    return (
-      <div className="flex animate-fade items-center gap-3 rounded-[10px] border border-line bg-sunken px-3.5 py-3 text-[13.5px]" data-testid="docx-file">
-        <Icon name="description" size={18} className="text-primary-ink" />
-        <span className="min-w-0 flex-1 truncate font-semibold text-ink" title={file.name}>{file.name}</span>
-        <IconButton icon="close" label="Bỏ tệp" size={28} disabled={disabled} onClick={() => onChange(null)} />
-      </div>
-    );
-  }
-  return (
-    <label
-      onDragOver={(event) => { event.preventDefault(); setOver(true); }}
-      onDragLeave={() => setOver(false)}
-      onDrop={(event) => {
-        event.preventDefault();
-        setOver(false);
-        const dropped = event.dataTransfer.files[0];
-        if (dropped && !disabled) onChange(dropped);
-      }}
-      className={`flex cursor-pointer items-center gap-3 rounded-[10px] border-[1.5px] border-dashed px-3.5 py-3.5 text-[13.5px] font-semibold transition-colors duration-200 ${
-        over ? "border-primary bg-primary-soft text-ink" : "border-line-strong text-body hover:border-primary hover:bg-sunken"
-      }`}
-    >
-      <Icon name="upload_file" size={18} className="text-primary-ink" />
-      Upload đề mẫu
-      <input type="file" accept=".docx" className="sr-only" aria-label="Upload đề mẫu" data-testid="create-docx" disabled={disabled}
-        onChange={(event) => { onChange(event.target.files?.[0] ?? null); event.target.value = ""; }} />
-    </label>
-  );
-}
 
 /**
  * t21b Tạo bài tập (F3, F13) gộp một form: Upload đề mẫu DOCX (tùy chọn, nhập luôn vào khung sau khi tạo) hoặc copy bài có
@@ -66,6 +35,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   const loadingSources = useRef(false);
   const groupAllowed = target.kind === "class" && target.groupSupported;
   const copying = !!sourceId;
+  const picked = sources?.flatMap((source) => source.assignments).find((item) => item.id === sourceId);
   const locked = busy || !!created;
 
   function loadSources() {
@@ -98,6 +68,8 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
         setCreated(made);
         const imported = await assignmentsApi.importDocx(made.id, file);
         assignment = await assignmentsApi.saveSkeleton(made.id, made.version, imported.document, { fromDocx: true });
+        // Đề mẫu vừa tải là Mẫu đề mặc định khi soạn bằng AI (copy từ bài có sẵn thì không).
+        await rememberTemplate(made.id, file).catch(() => {});
       }
       onCreated(assignment);
     } catch (e) {
@@ -129,23 +101,26 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
       </div>
       <Field label="Mẫu đề">
         {/* Tải tệp lên thì bỏ bài đã chọn copy và ẩn ô copy: bài tạo theo tệp vừa tải. */}
-        <DocxField file={file} disabled={locked} onChange={(next) => { setFile(next); if (next) setSourceId(""); }} />
+        <TemplateFileField file={file} disabled={locked} onChange={(next) => { setFile(next); if (next) setSourceId(""); }} />
         {!file && (
           <div aria-hidden className="flex items-center gap-3 text-xs font-semibold text-muted">
             <span className="h-px flex-1 bg-line" />hoặc<span className="h-px flex-1 bg-line" />
           </div>
         )}
         {!file && (
-          <Select aria-label="Copy bài có sẵn" value={sourceId} disabled={locked} data-testid="copy-sources"
-            onFocus={loadSources} onMouseDown={loadSources} onChange={(event) => setSourceId(event.target.value)}>
-            <option value="">Copy từ bài có sẵn</option>
-            {sources?.map((source) => (
-              <optgroup key={source.classId} label={source.kind === "SUBJECT" ? `Cùng môn · ${source.code} · ${source.name}`
-                : `Lớp ${source.code} · ${source.name}`}>
-                {source.assignments.map((assignment) => <option key={assignment.id} value={assignment.id}>{assignment.title}</option>)}
-              </optgroup>
-            ))}
-          </Select>
+          <SearchPicker id="copy-sources" label="Copy bài có sẵn" placeholder="Copy từ bài có sẵn" disabled={locked}
+            optionIcon="assignment" loading={sources === null} emptyText="Không có bài phù hợp." onOpen={loadSources}
+            options={(sources ?? []).flatMap((source) => source.assignments).filter((item) => item.id !== sourceId)
+              .map((item) => ({ id: item.id, label: item.title }))}
+            onPick={setSourceId} />
+        )}
+        {!file && picked && (
+          <div className="flex animate-fade items-center gap-3 rounded-[10px] border border-line bg-sunken px-3.5 py-3 text-[13.5px]"
+            data-testid="copy-source">
+            <Icon name="assignment" size={18} className="text-primary-ink" />
+            <span className="min-w-0 flex-1 truncate font-semibold text-ink" title={picked.title}>{picked.title}</span>
+            <IconButton icon="close" label="Bỏ bài đã chọn" size={28} disabled={locked} onClick={() => setSourceId("")} />
+          </div>
         )}
       </Field>
     </Dialog>

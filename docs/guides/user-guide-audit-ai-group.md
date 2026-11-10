@@ -4,7 +4,7 @@
 
 ## 1. Nhật ký (Quản trị viên)
 
-Nhật ký ghi lại các thao tác quan trọng: đăng nhập, đổi quyền, thay khóa AI, giao mục, nộp bài nhóm, nhập file, chốt mục, đánh giá chéo, v.v.
+Nhật ký ghi lại các thao tác quan trọng: đăng nhập, đổi quyền, thay khóa AI, giao mục, nhả mục, nộp bài nhóm, v.v.
 
 1. Vào menu quản trị › **Nhật ký**.
 2. Lọc theo **Từ ngày**, **Đến ngày**, **Người thực hiện**, **Hành động**, **Đối tượng**, **Kết quả**. Đổi bộ lọc là tra cứu ngay, không cần bấm nút.
@@ -58,35 +58,22 @@ Lỗi thường gặp: **Key API không hợp lệ (HTTP 400)** nghĩa là khóa
 
 ### 3.3 Sinh viên: làm tài liệu nhóm
 
-Mở bài tập nhóm › thẻ **Bài nhóm** › **Mở tài liệu nhóm**. Cột trái là danh sách mục, cột phải là toàn bộ tài liệu.
+Mở bài tập nhóm › thẻ **Bài nhóm** › **Mở tài liệu nhóm**. Cột trái là danh sách mục, cột phải là toàn bộ tài liệu. Mỗi mục có một trong ba trạng thái: **Mở** (chưa ai nhận), **Đang làm** (một người đang soạn), **Xong**.
 
-**Hai giai đoạn:**
-1. **Đang phân công:** mỗi người bấm **Nhận mục** cho mục chưa có ai, hoặc trưởng nhóm **Giao mục**. Lúc này chưa soạn được. Mục đã có người nhận thì người khác không nhận được; người nhận có thể **Bỏ nhận**.
-2. **Đã chốt phân công:** khi mọi mục đã có người phụ trách, trưởng nhóm bấm **Chốt phân công**. Từ đó mỗi người bấm **Làm** để soạn mục mình phụ trách; mục của người khác chỉ xem. Trưởng nhóm bấm **Mở chốt** nếu cần phân lại (nội dung đã Xong giữ nguyên).
-
-- **Soạn**: sau khi chốt phân công, bấm **Làm** ở mục của mình. Trình soạn mở toàn trang và tự lưu mỗi 10 giây.
-- **Soạn**: dùng như trình soạn bài cá nhân. Chèn ảnh, bảng, sơ đồ Draw.io (nếu bài bật sơ đồ).
-- **Nhập DOCX** (trong trình soạn): chọn tệp Word, xem trước, bấm **Nhập**. Nội dung được thêm vào cuối mục.
+- **Nhận mục**: bấm **Nhận mục** ở mục đang Mở. Trình soạn mở toàn trang ngay, tự lưu mỗi 10 giây. Mỗi mục chỉ một người soạn tại một thời điểm; mục người khác đang soạn thì chỉ xem.
+- **Soạn**: dùng như trình soạn bài cá nhân. Chèn ảnh, bảng, sơ đồ Draw.io (nếu bài bật sơ đồ). **Nhập DOCX** (trong trình soạn): chọn tệp Word, xem trước, bấm **Nhập**; nội dung được thêm vào cuối mục.
 - **Xong**: đăng nội dung cho cả nhóm thấy và nhả mục.
-- **Mục đã có người nhận**: người khác (kể cả trưởng nhóm) chỉ xem, không nhận được. Muốn đổi người làm thì người giữ tự **Nhả mục**, hoặc trưởng nhóm **Giao mục** cho người khác (bản nháp chưa Xong của người đang giữ sẽ bị bỏ).
-- **Lịch sử**: mỗi lần Xong hoặc nhập file đều có một bản. Người đang giữ mục bấm **Dùng bản này làm bản nháp** để khôi phục, rồi bấm **Xong** để đăng.
+- **Soạn tiếp / Sửa mục**: mục mình đang giữ thì bấm **Soạn tiếp**. Mục đã Xong vẫn sửa được: bấm **Sửa mục** để nhận lại, bản nháp bắt đầu từ nội dung đã đăng.
+- **Nhả mục**: không làm nữa thì bấm **Nhả mục**. Bản nháp chưa Xong bị bỏ; mục về Xong nếu đã có nội dung, không thì về Mở.
+- **Lịch sử**: mỗi lần bấm Xong là một bản kèm người viết và thời điểm; chỉ để xem.
 
 ### 3.4 Trưởng nhóm
 
-- **Giao mục** cho một thành viên. Thành viên cũng tự nhận được mục trống.
-- **Chốt phân công / Mở chốt**: xem "Hai giai đoạn" ở trên.
-- **Nhập từ file**: nhóm có thể soạn ngoài rồi nộp vào hệ thống.
-  1. Trong Word, đặt tiêu đề trùng tên mục (ví dụ `1. Phân tích yêu cầu`).
-  2. Trong Draw.io, mỗi trang là một sơ đồ, đặt tên trang trùng tên mục có sơ đồ.
-  3. Bấm **Nhập từ file**, chọn tệp DOCX và/hoặc tệp `.drawio`, bấm **Xem trước**.
-  4. Kiểm tra mục nào nhận nội dung, bỏ chọn mục không muốn, bấm **Nhập vào N mục**.
+- **Giao mục** cho một thành viên; người được giao soạn được ngay. Mục đang có người khác soạn thì hệ thống cảnh báo: giao tiếp sẽ nhả mục, bản nháp chưa Xong của người đó bị bỏ.
+- **Nhả mục** của thành viên đang giữ lâu để giao cho người khác.
+- **Nộp tài liệu**: chỉ trưởng nhóm. Mục chưa Xong không vào bản nộp. Nộp lại được trước hạn; thẻ **Bản nộp** có biên nhận, tác giả từng mục và tải DOCX. Hết hạn mà nhóm chưa nộp bản mới nhất thì hệ thống tự nộp.
 
-  Hệ thống chia theo tên, không dùng AI nên không tốn token. Mục đang có người giữ hoặc đã chốt được bỏ qua. Mỗi mục được nhập có thêm một bản trong lịch sử. Sơ đồ nhập từ Draw.io hiện hình sau khi mở sơ đồ và bấm Lưu trong Draw.io.
-- **Nộp tài liệu**: chỉ trưởng nhóm. Mục chưa Xong không vào bản nộp. Nộp lại được trước hạn; thẻ **Bản nộp** có biên nhận và tải DOCX.
+### 3.5 Giảng viên: theo dõi và chấm bài nhóm
 
-### 3.5 Đánh giá chéo
-
-- **Sinh viên**: sau khi nhóm nộp, mở thẻ **Đánh giá chéo**, chấm từng thành viên khác 1–5 kèm nhận xét, bấm **Lưu đánh giá**. Sửa được tới 7 ngày sau hạn cuối. Chỉ giảng viên thấy đánh giá của bạn.
-- **Giảng viên**: mở tài liệu của nhóm › thẻ **Đánh giá chéo** để xem điểm trung bình (1–5 và thang 10), số người đã chấm và nhận xét.
-
-Điểm đánh giá chéo hiện chỉ để giảng viên tham khảo khi chấm. Chưa tự cộng vào điểm cuối.
+- **Tiến độ bài nhóm**: ở trang **Sinh viên** của lớp, thẻ **Tiến độ bài nhóm** hiện từng nhóm với trưởng nhóm, số mục Xong, trạng thái (Chưa bắt đầu, Đang làm, Đã nộp, trễ) và mục đang có người soạn. Bấm **Xem tài liệu** để xem tài liệu nhóm (chỉ xem) và **Nhả mục** khi cần.
+- **Chấm**: vào **Chấm điểm**, chọn bài nhóm, mở bài nộp của nhóm. Tick mục chấm theo rubric, xem tác giả từng mục; điểm từng thành viên mặc định bằng điểm nhóm và chỉnh được. Bấm **Công bố điểm** để sinh viên xem.

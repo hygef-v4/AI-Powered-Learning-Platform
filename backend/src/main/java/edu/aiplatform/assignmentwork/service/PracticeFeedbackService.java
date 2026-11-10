@@ -87,9 +87,8 @@ public class PracticeFeedbackService {
 
     /** F9: yêu cầu bằng API cá nhân; {@code requestRef} chống gửi trùng. */
     public WorkViews.Feedback request(Actor actor, UUID attemptId, AiProvider provider, String requestRef) {
-        if (provider == null) {
-            throw ApiException.badRequest("AI_SOURCE_INVALID", "Chọn API cá nhân để nhận góp ý");
-        }
+        // Nhà cung cấp bỏ trống: hệ thống tự chọn nguồn (yêu cầu 2026-11-05).
+        AiSource source = provider == null ? null : AiSource.PERSONAL;
         if (requestRef == null || requestRef.isBlank() || requestRef.length() > 100) {
             throw ApiException.badRequest("REQUEST_REF_INVALID", "Thiếu mã yêu cầu");
         }
@@ -109,11 +108,13 @@ public class PracticeFeedbackService {
             requireDailyQuota(actor);
             // Chưa có khóa API cá nhân (hoặc chưa được dùng AI) thì yêu cầu chưa gửi đi được: báo lỗi ngay, không tạo
             // góp ý thất bại, không tính vào giới hạn mỗi ngày (BR-U08-41).
-            aiTasks.requireSource(actor, AiSource.PERSONAL, provider);
+            aiTasks.requireSource(actor, source, provider);
             ObjectNode provenance = JsonNodeFactory.instance.objectNode();
             provenance.put("origin", "AI_TASK");
-            provenance.put("source", AiSource.PERSONAL.name());
-            provenance.put("provider", provider.name());
+            provenance.put("source", source == null ? "AUTO" : source.name());
+            if (provider != null) {
+                provenance.put("provider", provider.name());
+            }
             PracticeFeedback created = new PracticeFeedback(UUID.randomUUID(), attemptId, actor.accountId(),
                     PracticeFeedback.Origin.AI_TASK, null, requestRef, PracticeFeedback.Status.PENDING,
                     attempt.receiptHash(), null, provenance, null, clock.instant(), null);
@@ -123,7 +124,8 @@ public class PracticeFeedbackService {
                 throw ApiException.conflict("FEEDBACK_PENDING", "Lượt này đang chờ góp ý");
             }
             audit.success(actor.accountId(), "PRACTICE_FEEDBACK_REQUESTED", WorkAudit.OBJECT_ATTEMPT, attemptId,
-                    WorkAudit.details("feedbackId", created.id(), "origin", "AI_TASK", "provider", provider));
+                    WorkAudit.details("feedbackId", created.id(), "origin", "AI_TASK", "provider",
+                            provider == null ? "AUTO" : provider));
             return created;
         });
         if (pending.taskId() != null || pending.status() != PracticeFeedback.Status.PENDING) {
@@ -132,7 +134,7 @@ public class PracticeFeedbackService {
         AssignmentAttempt attempt = attempts.find(attemptId).orElseThrow();
         AiTaskView task;
         try {
-            task = aiTasks.submit(new AiTaskRequest(actor, AiSource.PERSONAL, provider, TASK_TYPE,
+            task = aiTasks.submit(new AiTaskRequest(actor, source, provider, TASK_TYPE,
                     TARGET_PREFIX + pending.id(), attempt.contentVersion(), requestRef, prompt(attempt),
                     FeedbackFormat.OUTPUT_SCHEMA, MAX_OUTPUT_TOKENS));
         } catch (RuntimeException e) {
