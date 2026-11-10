@@ -4,6 +4,10 @@ Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths
 
 assignmentwork có start/save/submit/history, late/auto-submit, practice feedback và activity. ActivityService.RETENTION = 1 ngày; scanner xóa theo hằng này, không Settings activity.retentionDays 1–365. Theo dõi hoạt động không tự trừ điểm. Feedback Practice gắn submission/version và không vào gradebook.
 
+**Delta 2026-11-09 (`af69df96`, đối chiếu 2026-11-10):** `AttemptService.submit` không còn gọi `validateForSubmit`, nên nộp tay không trả `409 SUBMISSION_INVALID`; `SubmitDialog` chỉ còn xác nhận. Đã xóa `ReceiptPage` và route `/attempts/[attemptId]/receipt`; nộp xong về `/my-assignments/{assignmentId}`. Backend còn `GET /api/v1/attempts/{attemptId}/receipt` và `submitIssues` trong view đọc/lưu, frontend không dùng. [code-summary](code-summary.md) giữ mô tả cũ làm lịch sử.
+
+**Delta 2026-11-10 (`cdaf0f46`, `6a787e3f`):** `AttemptService.start` chỉ chặn hết lượt với bài `PRACTICE` và khởi tạo lượt mới của bài có chấm từ bài nộp gần nhất; `StudentAssignmentService` tính "còn lượt" tương tự. Frontend: `historyOpen`, `historyVersions`, `formatDateTimeSeconds` trong `model/format.ts`; trang chi tiết có "Sửa và nộp lại"; danh sách bài của sinh viên bỏ cột lượt. Rule BR-U08-70…74.
+
 ## Source và negative-test inventory
 
 | Source | Trách nhiệm |

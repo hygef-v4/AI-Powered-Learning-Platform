@@ -7,6 +7,12 @@
 > Cập nhật 2026-10-17 theo design G21 (bản 17/10, 123 artboard): màn, popup, trường và thao tác lấy theo design; chỗ design khác quy tắc nghiệp vụ thì giữ quy tắc. Chỉ sửa tài liệu.
 > Cập nhật 2026-10-22 theo code hiện tại (các yêu cầu của người dùng 2026-10-21, 2026-10-22; chi tiết từng vòng trong code-summary).
 
+**Delta 2026-11-10 (`6a787e3f`, BR-U08-70…74):** thay mô tả trái ngược ở các bảng bên dưới.
+
+- `StudentAssignmentsPage`: bỏ cột số lượt; trạng thái bài có chấm không còn "Đã nộp n lượt".
+- `StudentAssignmentDetailPage`: bài có chấm hiện một dòng (bản đang sửa, không thì bản nộp mới nhất) và nút "Sửa và nộp lại" khi đã nộp mà còn hạn; "Lượt" và bộ đếm đã dùng / tối đa chỉ có ở bài Luyện tập. Link lịch sử chỉ hiện khi `historyOpen` (đã nộp và qua hạn nộp đúng giờ; bài Luyện tập luôn hiện).
+- `SubmissionHistoryPage`: bài có chấm chỉ liệt kê bản đúng hạn và bản nộp muộn (`historyVersions`), chuyển qua lại khi có cả hai; chưa tới hạn thì báo lịch sử hiện sau khi đã nộp và qua hạn; thời điểm nộp ghi tới giây.
+
 **Primary UC:** 37, 38, 39, 40, 41. **Primary stories:** US-ASM-003 (phần Assignment cá nhân), US-ASM-012; dữ liệu hoạt động của US-INT-001. **Requirements:** FR-007, FR-008, FR-018, FR-030, FR-039.
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
@@ -21,7 +27,7 @@ Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://clau
 | 36 | Student Class Detail, phần Bài tập sắp đến hạn (`s02`) | `ClassAssignmentsCard` | 37 | Student |
 | 30 | Class Dashboard của Student, dòng bài trên thẻ lớp (`s01`) | `ClassCardAssignments` | 37 | Student |
 | 39 | Assignment Detail: bài Graded đang làm (`s12`), bài Practice (`s12b`), bài Graded đã công bố điểm (`s12c`), bài nhóm (`s12d`) | `StudentAssignmentDetailPage` | 38 | Student |
-| 40 | Assignment Workspace bài cá nhân (`s16`), popup Nộp bài (`s16b`), Biên nhận sau khi nộp (`s16c`) | `AssignmentWorkspacePage`, `SubmitDialog`, `ReceiptPage` | 39 | Student |
+| 40 | Assignment Workspace bài cá nhân (`s16`), popup Nộp bài (`s16b`); artboard Biên nhận (`s16c`) không còn màn tương ứng từ 2026-11-09 | `AssignmentWorkspacePage`, `SubmitDialog` | 39 | Student |
 | 41 | Submission History: bài Practice có thẻ Góp ý AI, bài Graded đã chấm (`s13b`). `s13` và `s13c` là mẫu tham chiếu trước khi chuyển sang thẻ. | `SubmissionHistoryPage`, `PracticeFeedbackPanel` | 40, 41 | Student |
 
 U08 đăng ký `NavEntry` "Bài tập" (Student). Chế độ nhóm của Assignment Workspace (UC 56) do U12 làm, dùng lại `DocumentEditor` của U07 và `useActivityTracker` của U08.
@@ -47,8 +53,7 @@ app/my-assignments/[assignmentId]/  StudentAssignmentDetailPage  #39 Assignment 
 app/attempts/[attemptId]/           AssignmentWorkspacePage      #40 Assignment Workspace
   PageHeader                                  tên · lượt, trạng thái lưu, đếm ngược, Nộp bài
   DocumentEditor (U07, chế độ người học)      thanh công cụ có Nhập DOCX, Tải DOCX; không có rubric
-  DocxImportDialog, SubmitDialog
-app/attempts/[attemptId]/receipt/   ReceiptPage                  biên nhận sau khi nộp
+  DocxImportDialog, SubmitDialog              nộp xong về Assignment Detail (không còn trang biên nhận)
 app/my-assignments/[assignmentId]/history/  SubmissionHistoryPage  #41 Submission History
   AttemptList, AttemptViewer, DocxDownloadButton
   PracticeFeedbackPanel                       thẻ góp ý AI của lượt Practice đã nộp trong cột nhận xét của DocumentEditor
@@ -69,8 +74,7 @@ shared/activity/
 | `StartAttemptButton` | `POST /api/v1/assignments/{assignmentId}/attempts` | Trả lượt đang làm nếu đã có |
 | `AssignmentWorkspacePage` | `GET /api/v1/attempts/{attemptId}`, `PUT .../content` | Đầu trang: tên · Lượt n, trạng thái lưu, đếm ngược tới hạn, Nộp bài. Trang tài liệu: tên bài, hướng dẫn, nhãn hình thức, chế độ (không ghi tổng điểm); các phần theo cây (cùng tầng cùng màu, lá khung màu ruột trắng); chữ của giảng viên nhạt, không sửa được; người học viết trong ruột trắng của phần lá, không có chữ gợi ý; bấm sơ đồ của đề để vẽ (Draw.io ở cột phải); điền bảng của đề (đủ nút "+ −", hàng, cột, ✕ của đề mờ, chỉ xóa phần mình thêm); sơ đồ, ảnh, bảng của mình có ✕ ở góc. Thanh công cụ: định dạng theo vùng bôi đen, chèn bảng, ảnh, sơ đồ, Nhập DOCX (chèn vào phần đang chọn), Tải DOCX. Thông báo chỉ ghi trạng thái ("Bài đang mở ở nơi khác, bản đang sửa chưa lưu", "Mất kết nối, chưa lưu", "Đã nộp lúc … · chỉ xem", "Đã quá hạn") |
 | `DocxImportDialog` | `POST .../docx:preview` | Xem trước rồi chèn vào cuối phần đang chọn |
-| `SubmitDialog` | `POST .../submit` | "Nộp bài lượt n?": bảng Mục, Kiểm tra (kiểm sơ bộ: tổng số sơ đồ bắt buộc, có nội dung; rồi lỗi `validateForSubmit` của server theo phần; hoặc Hợp lệ); còn lỗi thì chỉ có Quay lại sửa; "Sau khi nộp, lượt này không sửa được. Bạn còn n lượt sau lượt này." |
-| `ReceiptPage` | `GET /api/v1/attempts/{attemptId}` | "Đã nộp bài": tên · lượt x / y, Mã biên nhận, Thời gian nộp (giờ Việt Nam), Tình trạng (Đúng hạn hoặc Trễ), Nội dung (số mục, số sơ đồ); nút Tải DOCX, Xem lịch sử nộp bài, Về danh sách bài tập |
+| `SubmitDialog` | `POST .../submit` | Hộp xác nhận "Nộp bài", không có bảng kiểm (2026-11-09); xác nhận thì lưu lần cuối, nộp rồi về Assignment Detail; lỗi của server hiện ngay trong hộp. `ReceiptPage` đã xóa; mã biên nhận xem ở Submission History. |
 | `SubmissionHistoryPage`, `AttemptList`, `AttemptViewer`, `DocxDownloadButton` | `GET /api/v1/assignments/{assignmentId}/attempts/mine`, `GET /api/v1/attempts/{attemptId}`, `GET .../export.docx` | Đường dẫn "Bài tập › tên › Lịch sử nộp bài"; "Bài nộp · lượt n" (thời điểm nộp · mã biên nhận), Tải DOCX, nội dung chỉ đọc; "Các lượt nộp": mỗi lượt kèm thời điểm, bài Graded ghi "Được chấm" ở lượt nộp cuối và "Không chấm" ở lượt khác, bài Practice ghi đã có hoặc chưa có góp ý AI; bài Graded có phần Kết quả (U09) |
 | `PracticeFeedbackPanel` | `POST`, `GET .../feedback` | Luôn hiện với lượt `PRACTICE` đã nộp đang chọn. Thẻ nằm bên phải bài làm từ 1280px, ở đầu nội dung bài làm trên màn hình hẹp. Nút **Nhận góp ý AI** hoặc **Nhận góp ý lại** nằm trong thẻ. Thẻ hiển thị trạng thái tải, chờ, lỗi, thao tác tải lại khi lỗi đọc và liên kết **Kết nối AI**. Góp ý đã có hiển thị nhãn **Góp ý tham khảo**, nguồn, thời điểm, nhận xét chung, điểm mạnh, điểm cần cải thiện và nhận xét theo tên phần nếu có. Góp ý MCP có nhãn Agent. |
 | `useActivityTracker` | `POST .../activity` (hoặc API của U11, U12) | Dùng trạng thái hiển thị của trang, không dùng blur; heartbeat 60 giây; gom lô, gửi lại khi lỗi |

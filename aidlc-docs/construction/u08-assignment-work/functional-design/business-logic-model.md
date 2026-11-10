@@ -69,12 +69,14 @@ Xuất:
 1. Trên Workspace hoặc Submission History bấm Tải DOCX; frontend gọi `GET /api/v1/attempts/{attemptId}/export.docx`.
 2. Kiểm chủ lượt, hoặc giảng viên chính của lớp ghi trên lượt; gọi `IDocx.export` (sơ đồ kèm mã `[drawio:attemptId/blockId]`).
 
+**Delta 2026-11-10 cho F3 (BR-U08-70, 71):** kiểm "hết lượt" chỉ áp dụng cho bài `PRACTICE`; lượt mới của bài `GRADED` lấy nội dung bài nộp gần nhất còn khớp khung đề, không thì khung đề.
+
 ### F6 - Nộp bài (UC 39)
-1. Bấm Nộp: popup kiểm sơ bộ (tổng số sơ đồ bắt buộc, có nội dung; bảng của đề có chữ tính như đã điền), còn lỗi thì chỉ có Quay lại sửa; xác nhận thì frontend lưu lần cuối rồi gọi `POST /api/v1/attempts/{attemptId}/submit` kèm `contentVersion`.
+1. Bấm Nộp: popup chỉ hỏi xác nhận, không còn bảng kiểm sơ bộ (2026-11-09); xác nhận thì frontend lưu lần cuối rồi gọi `POST /api/v1/attempts/{attemptId}/submit` kèm `contentVersion`.
 2. Lượt đã `SUBMITTED` thì trả lại biên nhận cũ (BR-U08-22).
-3. Kiểm chủ lượt, `IN_PROGRESS`, trước `deadlineAt` cộng 30 giây, còn ghi danh; `validateForSubmit`. Có lỗi thì trả danh sách cần sửa; quá hạn thì ghi audit `SUBMIT_REJECTED`.
+3. Kiểm chủ lượt, `IN_PROGRESS`, trước `deadlineAt` cộng 30 giây, còn ghi danh, đúng `contentVersion`; không gọi `validateForSubmit` nên không còn `409 SUBMISSION_INVALID` (2026-11-09). Quá hạn thì ghi audit `SUBMIT_REJECTED`.
 4. Một transaction: `SUBMITTED`, `submittedAt`, `late`, `receiptHash`, `submitMode = MANUAL`; gọi `ISubmissionListener.onSubmitted` (U09); audit `ASSIGNMENT_SUBMITTED`.
-5. Trả biên nhận, mở Submission History.
+5. Trả biên nhận; trang chuyển về Assignment Detail (`/my-assignments/{assignmentId}`, kèm `classId` khi lượt có lớp).
 
 ### F7 - Tự nộp
 1. `IScheduledScanner` của U08 chạy mỗi phút: lượt `IN_PROGRESS` có `deadlineAt` cộng 30 giây đã qua được nộp bằng bản đã lưu gần nhất, `submitMode = AUTO_DEADLINE`, không kiểm điều kiện nộp, ghi cảnh báo (ví dụ thiếu sơ đồ bắt buộc); gọi `onSubmitted`; audit.

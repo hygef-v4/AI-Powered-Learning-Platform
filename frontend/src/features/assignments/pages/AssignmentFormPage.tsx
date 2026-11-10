@@ -51,6 +51,24 @@ export function reappearedParts(before: Set<string>, parts: DocumentPart[], crit
   return parts.filter((part) => !before.has(part.partId) && (criteria[part.partId]?.length ?? 0) > 0).map((part) => part.partId);
 }
 
+/** Hướng dẫn và tiêu chí đi cùng một bản đề; {@code criteria} trống khi rubric của bản đó chưa tải xong. */
+type AuthoringSnapshot = { instructions: string; criteria: Record<string, RubricCriterion[]> | null };
+
+/**
+ * Tiêu chí cần ghi lại khi Ctrl+Z, Ctrl+Y đưa đề về {@code parts} của một bản đã chụp: mọi phần của bản đó mà trang đã
+ * tải rubric, kể cả phần đang trống (AI có thể vừa điền). Phần chưa tải thì giữ nguyên.
+ */
+export function listRestoredCriteria(
+  parts: DocumentPart[],
+  snapshot: Record<string, RubricCriterion[]>,
+): [string, RubricCriterion[]][] {
+  const partIds = [...(hasWholePart(parts) ? [WHOLE_PART.partId] : []), ...parts.map((part) => part.partId)];
+  return partIds.flatMap((partId): [string, RubricCriterion[]][] => {
+    const criteria = snapshot[partId];
+    return criteria ? [[partId, criteria]] : [];
+  });
+}
+
 /**
  * Rubric "Toàn bài" (yêu cầu 2026-11-04): tiêu chí chấm cả bài, không gắn với mục nào, luôn có ở bài có mục (có thể trống);
  * thẻ của nó đứng đầu và ghi tổng điểm cả bài. Bài không có mục thì phần duy nhất đã là cả bài.
@@ -146,6 +164,14 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const [criteria, setCriteria] = useState<Record<string, RubricCriterion[]>>({});
   /** Đề AI vừa ghi thẳng lên trang: bản trước đó vào lịch sử của trình soạn để Ctrl+Z quay lại (yêu cầu 2026-11-05). */
   const [aiEdit, setAiEdit] = useState<{ id: number; before: DocumentModel } | null>(null);
+  /**
+   * AI ghi cả rubric và hướng dẫn, còn lịch sử của trình soạn chỉ giữ khung đề: chụp hai phần đó của bản trước AI và,
+   * lúc hoàn tác, của bản AI, để Ctrl+Z và Ctrl+Y đổi cả ba cùng lúc.
+   */
+  const aiRevision = useRef<{
+    before: DocumentModel; beforeState: AuthoringSnapshot; after: DocumentModel | null; afterState: AuthoringSnapshot | null;
+  } | null>(null);
+  const loadedRubricEpoch = useRef(-1);
   const [rubrics, setRubrics] = useState<Record<string, RubricDetail>>({});
   const [rubricLoadError, setRubricLoadError] = useState<string | null>(null);
   const [rubricEpoch, setRubricEpoch] = useState(0);
@@ -225,6 +251,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     Promise.all(missing.map((partId) => assignmentsApi.rubric(id, partId, controller.signal))).then((list) => {
       done = true;
       if (controller.signal.aborted) return;
+      loadedRubricEpoch.current = rubricEpoch;
       setRubricLoadError(null);
       setRubrics((current) => ({ ...current, ...Object.fromEntries(list.map((rubric) => [rubric.partId, rubric])) }));
       const fresh = Object.fromEntries(list.filter((rubric) => !dirty.current.rubrics.has(rubric.partId)).map((rubric) => [rubric.partId, rubric.criteria]));
@@ -387,6 +414,9 @@ export function AssignmentFormPage({ id }: { id: string }) {
     const values = latest.current;
     const before = { ...values.skeleton, title: values.skeleton.title ?? { runs: [{ text: values.title }] } };
     await reload();
+    aiRevision.current = {
+      before, beforeState: { instructions: values.instructions, criteria: values.criteria }, after: null, afterState: null,
+    };
     setAiEdit((current) => ({ id: (current?.id ?? 0) + 1, before }));
     notify(message, "success");
   }, [reload]);
@@ -411,7 +441,33 @@ export function AssignmentFormPage({ id }: { id: string }) {
     dirty.current.details = true;
     changed();
   }
+  /** Đưa hướng dẫn và tiêu chí về bản đã chụp, đánh dấu chưa lưu để lần lưu tới ghi lên máy chủ sau khung đề. */
+  function restoreAuthoring(document: DocumentModel, snapshot: AuthoringSnapshot) {
+    if (snapshot.instructions !== latest.current.instructions) {
+      setInstructions(snapshot.instructions);
+      latest.current = { ...latest.current, instructions: snapshot.instructions };
+      dirty.current.details = true;
+    }
+    if (!snapshot.criteria) return;
+    const restored = Object.fromEntries(listRestoredCriteria(computeParts(document), snapshot.criteria));
+    setCriteria((current) => ({ ...current, ...restored }));
+    latest.current = { ...latest.current, criteria: { ...latest.current.criteria, ...restored } };
+    Object.keys(restored).forEach((partId) => dirty.current.rubrics.add(partId));
+    setIssues((current) => current.filter((issue) => !issue.code.startsWith("RUBRIC")));
+  }
   function editSkeleton(value: DocumentModel) {
+    // Hoàn tác, làm lại trả đúng đối tượng đề đã vào lịch sử của trình soạn, nên so sánh theo tham chiếu.
+    const revision = aiRevision.current;
+    if (revision && value === revision.before) {
+      revision.after = skeleton;
+      revision.afterState = {
+        instructions: latest.current.instructions,
+        criteria: loadedRubricEpoch.current === rubricEpoch ? latest.current.criteria : null,
+      };
+      restoreAuthoring(value, revision.beforeState);
+    } else if (revision?.afterState && value === revision.after) {
+      restoreAuthoring(value, revision.afterState);
+    }
     setSkeleton(value);
     latest.current = { ...latest.current, skeleton: value };
     dirty.current.skeleton = true;

@@ -18,7 +18,7 @@ import {
   cx,
   showToast,
 } from "@/shared/ui";
-import { ArchiveItemDialog, ModuleItemDialog } from "./MaterialDialogs";
+import { ArchiveItemDialog, ModuleItemDialog, removalAction, removalMessage } from "./MaterialDialogs";
 import { materialError, moduleApi } from "../api";
 import { useModuleCollapse } from "../model/moduleCollapse";
 import {
@@ -333,9 +333,7 @@ export function ModuleBoard({
           }
           classId={scope.kind === "subject" ? undefined : scope.classId}
           onClose={closed}
-          onSaved={() =>
-            saved(dialog.item.kind === "quiz" ? "Đã lưu trữ quiz" : "Đã xóa học liệu", "danger")
-          }
+          onSaved={() => saved(removalMessage(dialog.item), "danger")}
         />
       )}
     </div>
@@ -366,7 +364,7 @@ export function CollapseBody({
   );
 }
 
-/** Một dòng: biểu tượng loại, tên; người quản lý thấy trạng thái Quiz, nút Sửa, Lưu trữ; cuối dòng là mũi tên, bấm cả dòng để mở. */
+/** Một dòng: biểu tượng loại, tên; người quản lý thấy trạng thái Quiz, nút Sửa, Xóa / Lưu trữ; cuối dòng là mũi tên, bấm cả dòng để mở. */
 /** Mở lại Quiz đã lưu trữ (lấy version hiện tại trước). */
 export async function reopen(quizId: string, scope: ModuleScope) {
   const detail = await getQuiz(quizId, scope.kind === "subject" ? null : scope.classId);
@@ -399,6 +397,7 @@ function ModuleRow({
   const quiz = item.kind === "quiz" ? item.quiz : null;
   const material = item.kind === "material" ? item.material : null;
   const title = itemTitle(item);
+  const removal = removalAction(item);
   return (
     <li
       onClick={() => router.push(href)}
@@ -447,21 +446,12 @@ function ModuleRow({
           onClick={(event) => event.stopPropagation()}
         >
           <IconButton icon="edit" label={`Sửa ${title}`} onClick={onEdit} />
-          {quiz ? (
-            <IconButton
-              icon="archive"
-              label={`Lưu trữ ${title}`}
-              className="text-danger! hover:bg-danger-soft"
-              onClick={onArchive}
-            />
-          ) : (
-            <IconButton
-              icon="trash"
-              label={`Xóa ${title}`}
-              className="text-danger! hover:bg-danger-soft"
-              onClick={onArchive}
-            />
-          )}
+          <IconButton
+            icon={removal.icon}
+            label={`${removal.label} ${title}`}
+            className="text-danger! hover:bg-danger-soft"
+            onClick={onArchive}
+          />
         </span>
       )}
       <Icon name="chevron_right" size={18} className="shrink-0 text-faint group-hover:text-ink" />

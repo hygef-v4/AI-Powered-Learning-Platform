@@ -1,5 +1,18 @@
 # AI-DLC State Tracking
 
+## Đồng bộ tài liệu với code staging — 2026-11-10
+
+Đối chiếu `staging@062a43f5` với aidlc-docs và sửa các chỗ lệch do commit code chưa kèm tài liệu: U07 sửa đề bằng AI (`REVISE`, `AI_DRAFT_STALE`), U08 bỏ kiểm nộp và trang biên nhận, U09 phần bỏ trống 0 điểm và điều hướng bản nộp nhóm, U10 số câu theo độ khó, U06 model Gemini chọn sẵn, cây điều hướng môn/lớp (U05/U01), log lỗi Admin môn học (U04). Bảng kê source trong current-code-baseline được bổ sung 15 mục, bỏ 2 liên kết hỏng; API inventory khớp 239 mapping. [Báo cáo](construction/build-and-test/2026-11-10-aidlc-code-sync-gaps.md).
+
+- [x] Đối chiếu commit code sau các đợt sync 2026-11-07 và 2026-11-09
+- [x] Sửa functional-design và as-built của unit bị lệch
+- [x] Cập nhật current-code-baseline, api-inventory, build-and-test-summary
+- [x] Kiểm liên kết cục bộ của các file đã sửa
+- [x] Đợt 2 sau merge tới `staging@1e77eb79`: PR #60 (đề mẫu của môn, nộp lại không giới hạn, đánh số câu hỏi, popup tạo bài) vào U07, U08, U09, U05; BR-U07-80…86, BR-U08-70…74; api-inventory 241 mapping, baseline thêm 6 mục
+- [ ] Inception (FR-027, US-ASM-009, số lượt nộp bài có chấm) còn mô tả hành vi cũ; chờ xác nhận yêu cầu trước khi sửa
+
+Chỉ sửa Markdown; không chạy application test, không đổi code/schema/config, không commit hay deploy. Thay đổi chưa commit ở `AssignmentFormPage` nằm ngoài phạm vi. Security/Resiliency giữ phạm vi đã duyệt, PBT disabled.
+
 ## U08 — Thẻ Góp ý AI trong Lịch sử nộp bài, 2026-11-09
 
 Đã triển khai trên `fix/student-ai-grading` và đồng bộ UC 41, FR-030, US-ASM-012 cùng tài liệu U08. Thẻ luôn hiện theo lượt Practice đã nộp, dùng cột nhận xét trên màn hình rộng và chuyển vào đầu nội dung bài làm trên màn hình hẹp. [Kế hoạch và kết quả kiểm tra](construction/plans/code-generation-plan/2026-11-09-student-ai-feedback-card.md).

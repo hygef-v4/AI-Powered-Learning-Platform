@@ -125,7 +125,7 @@ Quiz có DRAFT/OPEN/RETIRED (bỏ REVIEWED 2026-11-01). Quiz.edited giữ OPEN k
 
 ## Delta 2026-11-01: sinh đề, chống trùng, đề xuất câu
 
-- **Sinh đề (BR-U10-17):** `PUT /quizzes/{id}/draw-rules`, `GET /quizzes/{id}/bank-tags`, `POST /quizzes/{id}/paper-preview`. `QuizPaperPlanner` phân bổ câu bằng ghép cặp; U11 gọi `drawPaper` khi bắt đầu lượt và lưu câu, điểm vào snapshot.
+- **Sinh đề (BR-U10-17):** `PUT /quizzes/{id}/draw-rules`, `GET /quizzes/{id}/bank-tags`, `POST /quizzes/{id}/paper-preview`. `bank-tags` trả mỗi thẻ `tag`, `activeCount` và `byDifficulty` (số câu đang dùng theo độ khó, từ 2026-11-03) để trang cảnh báo quy tắc cần nhiều câu hơn kho; cảnh báo chỉ là ước tính, lưu vẫn được và backend quyết định khi phát hành. `QuizPaperPlanner` phân bổ câu bằng ghép cặp; U11 gọi `drawPaper` khi bắt đầu lượt và lưu câu, điểm vào snapshot.
 - **Chống trùng (BR-U10-08):** `QuestionDuplicates` khóa theo môn bằng advisory lock rồi kiểm hash; `GET /subjects/{id}/questions:duplicates` cho báo cáo. `QuestionFingerprintBackfill` điền dữ liệu cũ khi khởi động.
 - **Đề xuất (BR-U10-09):** `GET, POST, PATCH, DELETE /classes/{classId}/question-proposals`; `POST /questions/{id}/approve`, `/reject`; hàng loạt `POST /subjects/{id}/questions:approve`, `:reject`, `:activate`. Sự kiện `question.proposed`, `question.reviewed` cho U14.
 - Đã bỏ: `POST /quizzes/{id}/review`, gắn `referenceMaterialIds` khi lưu Quiz, `IQuizQuery.listByMaterial`.

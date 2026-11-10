@@ -4,6 +4,8 @@ Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths
 
 Quiz có DRAFT/OPEN/RETIRED (bỏ REVIEWED 2026-11-01). Quiz.edited giữ OPEN khi sửa quiz OPEN chưa có lượt làm; OPEN đã có lượt làm thì không sửa câu (409 QUIZ_HAS_ATTEMPTS, tạo version mới), thông tin chung vẫn sửa được; Retire mọi trạng thái chưa RETIRED, lý do trống mặc định Lưu trữ. Reopen RETIRED về DRAFT nếu publishedAt null, ngược lại OPEN; đã phát hành mà chuỗi version có bản khác đang OPEN thì 409 QUIZ_OTHER_VERSION_OPEN; điều kiện service vẫn áp dụng. Sinh đề theo tag: BR-U10-17.
 
+**Delta 2026-11-03 (`af5bb406`, vào staging qua PR #45 ngày 2026-11-10):** `QuizViews.BankTag` thêm `byDifficulty`; `DrawRulesPanel` hiện số câu trong kho theo thẻ và độ khó của quy tắc, cảnh báo "Cần n câu, kho chỉ có m câu" khi thiếu. Không chặn lưu; kiểm đủ câu vẫn ở bước phát hành. Tests nguồn: `QuizRework2026Test`, `QuizScreens.test.tsx`.
+
 ## Source và negative-test inventory
 
 | Source | Trách nhiệm |
