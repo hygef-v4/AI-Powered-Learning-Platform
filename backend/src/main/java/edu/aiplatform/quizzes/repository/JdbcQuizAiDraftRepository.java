@@ -7,7 +7,6 @@ import edu.aiplatform.quizzes.model.DraftOrigin;
 import edu.aiplatform.quizzes.model.DraftQuestion;
 import edu.aiplatform.quizzes.model.DraftStatus;
 import edu.aiplatform.quizzes.model.DraftTarget;
-import edu.aiplatform.quizzes.repository.IQuizAiDraftRepository;
 import edu.aiplatform.quizzes.model.QuizAiDraft;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -66,6 +65,12 @@ public class JdbcQuizAiDraftRepository implements IQuizAiDraftRepository {
     @Override
     public Optional<QuizAiDraft> find(UUID id) {
         return jdbc.sql("select " + COLUMNS + " from quiz_ai_drafts where id = :id")
+                .param("id", id).query(this::map).optional();
+    }
+
+    @Override
+    public Optional<QuizAiDraft> findForUpdate(UUID id) {
+        return jdbc.sql("select " + COLUMNS + " from quiz_ai_drafts where id = :id for update")
                 .param("id", id).query(this::map).optional();
     }
 

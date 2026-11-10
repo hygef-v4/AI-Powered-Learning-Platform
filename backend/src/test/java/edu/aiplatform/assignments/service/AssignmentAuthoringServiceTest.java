@@ -6,7 +6,6 @@ import static edu.aiplatform.assignments.service.AssignmentFixtures.diagram;
 import static edu.aiplatform.assignments.service.AssignmentFixtures.heading;
 import static edu.aiplatform.assignments.service.AssignmentFixtures.paragraph;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
@@ -23,6 +22,7 @@ import edu.aiplatform.assignments.contract.DocumentBlock;
 import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.assignments.contract.RubricCriterion;
+import edu.aiplatform.assignments.contract.RubricView;
 import edu.aiplatform.assignments.contract.RubricItem;
 import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignments.contract.ValidationIssue;
@@ -85,6 +85,25 @@ class AssignmentAuthoringServiceTest {
     }
 
     @Test
+    void archivedSubjectRejectsCreateAndEditEvenWhenManagerAuthorizationAllows() {
+        Assignment original = f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT,
+                new DocumentModel(List.of()), false);
+        when(f.subjects.getSubject(f.subjectId)).thenReturn(Optional.of(
+                new edu.aiplatform.subjects.contract.SubjectRef(f.subjectId, "S1", "Subject",
+                        edu.aiplatform.subjects.contract.SubjectStatus.ARCHIVED, null)));
+        when(f.subjects.isActive(f.subjectId)).thenReturn(false);
+        assertThat(code(() -> f.authoring.createForSubject(f.manager, f.subjectId,
+                new AssignmentCommands.Create(SubmissionMode.INDIVIDUAL, GradingMode.GRADED, true, null))))
+                .isEqualTo("ASSIGNMENT_READ_ONLY");
+        assertThat(code(() -> f.authoring.saveSkeleton(f.manager, original.id(),
+                new AssignmentCommands.Skeleton(original.version(), new DocumentModel(List.of()), null, false))))
+                .isEqualTo("ASSIGNMENT_READ_ONLY");
+        assertThat(f.store).containsOnlyKeys(original.id());
+        assertThat(f.store.get(original.id())).isEqualTo(original);
+        verify(f.audit, never()).record(argThat(e -> e.result() == AuditResult.SUCCESS));
+    }
+
+    @Test
     void groupNeedsU12AndOnlyClassScope() {
         assertThat(code(() -> f.authoring.createForClass(f.teacher, f.classId,
                 new AssignmentCommands.Create(SubmissionMode.GROUP, GradingMode.GRADED, false, null))))
@@ -116,7 +135,7 @@ class AssignmentAuthoringServiceTest {
         assertThat(saved.parts()).extracting(AssignmentViews.Part::partId)
                 .containsExactly(h2.id().toString(), h3.id().toString());
         assertThat(f.rubricsOf(a.id())).extracting(AssignmentRubric::partId)
-                .containsExactlyInAnyOrder(h2.id().toString(), h3.id().toString());
+                .containsExactlyInAnyOrder(h2.id().toString(), h3.id().toString(), RubricService.WHOLE);
         assertThat(saved.version()).isEqualTo(a.version() + 1);
     }
 
@@ -153,13 +172,59 @@ class AssignmentAuthoringServiceTest {
     }
 
     @Test
+    void sectionsWithoutRubricItemsAreNotGradedAndOnlyHalfWrittenItemsBlockReview() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT,
+                new DocumentModel(List.of(heading("H1", "Có chấm"), heading("H1", "Không chấm"))), false);
+        String graded = a.parts().get(0).partId();
+        f.authoring.updateRubric(f.teacher, a.id(), graded, new AssignmentCommands.RubricUpdate(a.version(), AssignmentFixtures.completeCriteria()));
+        Assignment current = f.store.get(a.id());
+        assertThat(f.authoring.review(f.teacher, a.id(), current.version()).status()).isEqualTo(AssignmentStatus.REVIEWED);
+        assertThat(f.rubrics.listRubrics(a.id())).extracting(RubricView::partId).containsExactly(graded);
+        Assignment half = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of(heading("H1", "Dở"))), false);
+        RubricCriterion noPoints = new RubricCriterion(null, "Đúng", "", CriterionKind.TEXT, List.of(new RubricItem(null, "Đúng", null)));
+        f.authoring.updateRubric(f.teacher, half.id(), half.parts().get(0).partId(), new AssignmentCommands.RubricUpdate(half.version(), List.of(noPoints)));
+        assertThat(issues(() -> f.authoring.review(f.teacher, half.id(), f.store.get(half.id()).version())))
+                .extracting(ValidationIssue::message).containsExactly("Bài làm chưa có rubric chấm điểm");
+    }
+
+    @Test
     void reviewNeedsCompleteRubricsThenAudits() {
         Assignment empty = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of(heading("H1", "Mục"))), false);
         assertThat(issues(() -> f.authoring.review(f.teacher, empty.id(), empty.version())))
-                .extracting(ValidationIssue::code).contains("RUBRIC_INCOMPLETE");
+                .extracting(ValidationIssue::code).contains("RUBRIC_MISSING");
         Assignment ready = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of(heading("H1", "Mục"))), true);
         assertThat(f.authoring.review(f.teacher, ready.id(), ready.version()).status()).isEqualTo(AssignmentStatus.REVIEWED);
         verify(f.audit).record(argThat(e -> e.action().equals("ASSIGNMENT_REVIEWED")));
+    }
+
+    @Test
+    void rubricWithZeroTotalOrHalfWrittenItemsIsMissingPointsButBlankRowsAreIgnored() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT,
+                new DocumentModel(List.of(heading("H1", "Một"), heading("H1", "Hai"))), false);
+        String one = a.parts().get(0).partId();
+        String two = a.parts().get(1).partId();
+        f.authoring.updateRubric(f.teacher, a.id(), one, new AssignmentCommands.RubricUpdate(a.version(),
+                AssignmentFixtures.completeCriteria()));
+        RubricCriterion zero = new RubricCriterion(null, "Đủ", "", CriterionKind.TEXT,
+                List.of(new RubricItem(null, "Có", BigDecimal.ZERO)));
+        f.authoring.updateRubric(f.teacher, a.id(), two, new AssignmentCommands.RubricUpdate(f.store.get(a.id()).version(),
+                List.of(zero)));
+        assertThat(issues(() -> f.authoring.review(f.teacher, a.id(), f.store.get(a.id()).version())))
+                .extracting(ValidationIssue::code, ValidationIssue::blockId)
+                .containsExactly(org.assertj.core.groups.Tuple.tuple("RUBRIC_POINTS_MISSING", a.parts().get(1).headingBlockId()));
+    }
+
+    @Test
+    void wholeAssignmentRubricAcceptsZeroPointsAndIsListedFirstOnlyWhenFilled() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of(heading("H1", "Mục"))), true);
+        assertThat(f.rubrics.listRubrics(a.id())).extracting(RubricView::partId).doesNotContain(RubricService.WHOLE);
+        RubricCriterion whole = new RubricCriterion(null, "Trình bày", "", CriterionKind.TEXT, List.of(
+                new RubricItem(null, "Đúng mẫu", new BigDecimal("1")), new RubricItem(null, "Có mục lục", BigDecimal.ZERO)));
+        AssignmentViews.Rubric saved = f.authoring.updateRubric(f.teacher, a.id(), RubricService.WHOLE,
+                new AssignmentCommands.RubricUpdate(a.version(), List.of(whole)));
+        assertThat(saved.partTitle()).isEqualTo("Toàn bài");
+        assertThat(saved.complete()).isTrue();
+        assertThat(f.rubrics.listRubrics(a.id()).get(0).partId()).isEqualTo(RubricService.WHOLE);
     }
 
     @Test

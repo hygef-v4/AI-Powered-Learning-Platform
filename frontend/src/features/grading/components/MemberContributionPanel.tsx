@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useId, useState } from "react";
+import { Button, Field, TextInput } from "@/shared/ui";
 import { gradingApi } from "../api";
-import { message } from "../hooks/useResource";
-import { points, type Evaluation } from "../model/types";
+import { formatErrorMessage } from "../model/format";
+import { formatPoints, type Evaluation } from "../model/types";
 
 export function MemberContributionPanel({
   root,
@@ -16,22 +17,33 @@ export function MemberContributionPanel({
   onSaved: () => void;
 }) {
   return (
-    <section className="rounded-xl border p-4">
-      <h2 className="font-bold">Điểm nhóm và thành viên</h2>
-      <p>
-        Điểm nhóm: {points(root.score, root.maxScore)}. Giảng viên xem xét đóng góp; hệ thống không
-        suy điểm từ số thao tác.
+    <section id="group-member-grades" aria-labelledby="group-member-grades-title" tabIndex={-1}
+      className="@container scroll-mt-36 rounded-xl border border-line bg-surface px-4 py-3 sm:px-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h2 id="group-member-grades-title" className="text-sm font-semibold text-ink">
+          Điểm nhóm và thành viên
+        </h2>
+        <p className="text-xs text-muted">
+          Điểm nhóm <span className="font-semibold tabular-nums text-ink">
+            {formatPoints(root.score, root.maxScore)}
+          </span>
+        </p>
+      </div>
+      <p className="mt-1 text-xs text-muted">
+        Giảng viên xem xét đóng góp; hệ thống không suy điểm từ số thao tác.
       </p>
-      {members.map((m) => (
-        <MemberRow
-          key={`${m.id}-${m.version}`}
-          rootId={root.id}
-          locked={root.state === "FINALIZED" || root.state === "PUBLISHED" || root.state === "SUPERSEDED"}
-          member={m}
-          name={names[m.accountId!] ?? "Thành viên"}
-          onSaved={onSaved}
-        />
-      ))}
+      <ul className="mt-3 divide-y divide-line-soft border-t border-line-soft">
+        {members.map((member) => (
+          <MemberRow
+            key={`${member.id}-${member.version}`}
+            rootId={root.id}
+            locked={root.state === "FINALIZED" || root.state === "PUBLISHED" || root.state === "SUPERSEDED"}
+            member={member}
+            name={names[member.accountId!] ?? "Thành viên"}
+            onSaved={onSaved}
+          />
+        ))}
+      </ul>
     </section>
   );
 }
@@ -48,56 +60,59 @@ function MemberRow({
   name: string;
   onSaved: () => void;
 }) {
+  const fieldId = useId();
   const [score, setScore] = useState(String(member.score ?? ""));
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const disabled = locked || busy || member.state === "FINALIZED" || member.state === "PUBLISHED" || member.state === "SUPERSEDED";
-  async function save() {
+  async function handleSave() {
     if (disabled) return;
     setBusy(true);
     try {
-      await gradingApi.member(rootId, member.accountId!, member.version, score, reason || null);
+      await gradingApi.saveMemberGrade(rootId, member.accountId!, member.version, score, reason || null);
       onSaved();
     } catch (e) {
-      setError(message(e));
+      setError(formatErrorMessage(e));
     } finally {
       setBusy(false);
     }
   }
   return (
-    <div className="mt-3 rounded-xl border border-line p-4">
-      <p>Thành viên {name}</p>
-      <label>
-        Điểm{" "}
-        <input
-          type="number"
-          disabled={disabled}
-          min="0"
-          max={Number(member.maxScore)}
-          step="0.01"
-          value={score}
-          onChange={(e) => setScore(e.target.value)}
-          className="h-10 rounded-lg border border-line-strong bg-surface px-3 text-ink"
-        />
-      </label>
-      <label className="ml-3">
-        Lý do{" "}
-        <input
-          value={reason}
-          disabled={disabled}
-          onChange={(e) => setReason(e.target.value)}
-          className="h-10 rounded-lg border border-line-strong bg-surface px-3 text-ink"
-        />
-      </label>
-      <button
-        disabled={disabled || rootId === member.id || score === ""}
-        onClick={() => void save()}
-        className="ml-3 rounded border px-3 py-2"
-      >
-        Lưu điểm thành viên
-      </button>
-      {error && <p role="alert">{error}</p>}
-    </div>
+    <li className="py-3">
+      <fieldset className="min-w-0">
+        <legend className="mb-2 wrap-break-word text-sm font-semibold text-ink">{name}</legend>
+        <div className="grid items-end gap-3 @lg:grid-cols-[7rem_minmax(0,1fr)_auto]">
+          <Field label="Điểm" htmlFor={`${fieldId}-score`}>
+            <TextInput
+              id={`${fieldId}-score`}
+              type="number"
+              disabled={disabled}
+              min="0"
+              max={Number(member.maxScore)}
+              step="0.01"
+              value={score}
+              onChange={(event) => setScore(event.target.value)}
+            />
+          </Field>
+          <Field label="Lý do" htmlFor={`${fieldId}-reason`}>
+            <TextInput
+              id={`${fieldId}-reason`}
+              value={reason}
+              disabled={disabled}
+              onChange={(event) => setReason(event.target.value)}
+            />
+          </Field>
+          <Button
+            disabled={disabled || rootId === member.id || score === ""}
+            onClick={() => void handleSave()}
+            className="h-10 justify-self-start"
+          >
+            Lưu điểm thành viên
+          </Button>
+        </div>
+        {error && <p role="alert" className="mt-2 text-xs text-danger">{error}</p>}
+      </fieldset>
+    </li>
   );
 }

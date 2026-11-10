@@ -8,7 +8,6 @@ import edu.aiplatform.quizpractice.model.ActivitySignal;
 import edu.aiplatform.quizpractice.model.PenaltyDecision;
 import edu.aiplatform.quizpractice.model.AttemptSnapshot;
 import edu.aiplatform.quizpractice.model.AttemptStatus;
-import edu.aiplatform.quizpractice.repository.IQuizAttemptRepository;
 import edu.aiplatform.quizpractice.model.QuestionResult;
 import edu.aiplatform.quizpractice.model.QuizAttempt;
 import edu.aiplatform.quizpractice.model.SubmitMode;

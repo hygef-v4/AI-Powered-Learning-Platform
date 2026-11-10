@@ -1,8 +1,6 @@
 package edu.aiplatform.assignments.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import edu.aiplatform.academics.contract.ClassStatus;
@@ -11,7 +9,6 @@ import edu.aiplatform.assignments.contract.AssignmentScope;
 import edu.aiplatform.assignments.contract.AssignmentStatus;
 import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.model.Assignment;
-import edu.aiplatform.audit.contract.AuditResult;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;

@@ -8,13 +8,15 @@ public class GradeDistributionCalculator {
     public record Bucket(String label, int count) {
     }
 
+    /** Builds visible score bands when the class has enough data to protect student privacy. */
     public List<Bucket> calculate(List<BigDecimal> scores, List<BigDecimal> maxScores) {
         int[] counts = new int[5];
         int n = 0;
         for (int i = 0; i < scores.size(); i++)
-            if (scores.get(i) != null && maxScores.get(i) != null && maxScores.get(i).signum() > 0) {
-                int bin = scores.get(i).multiply(BigDecimal.valueOf(5)).divide(maxScores.get(i), 0, RoundingMode.DOWN)
-                        .intValue();
+            if (scores.get(i) != null && maxScores.get(i) != null
+                    && maxScores.get(i).signum() > 0) {
+                int bin = scores.get(i).multiply(BigDecimal.valueOf(5))
+                        .divide(maxScores.get(i), 0, RoundingMode.DOWN).intValue();
                 counts[Math.min(4, Math.max(0, bin))]++;
                 n++;
             }

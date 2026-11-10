@@ -6,13 +6,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.quizzes.contract.QuizScope;
 import edu.aiplatform.quizzes.contract.QuizSettings;
 import edu.aiplatform.quizzes.contract.QuizStatus;
-import edu.aiplatform.quizzes.repository.IQuizRepository;
 import edu.aiplatform.quizzes.model.Difficulty;
 import edu.aiplatform.quizzes.model.DrawRule;
 import edu.aiplatform.quizzes.model.Quiz;
 import edu.aiplatform.quizzes.model.QuizItem;
 import edu.aiplatform.quizzes.model.QuizOrigin;
 import edu.aiplatform.quizzes.model.QuizPaperMode;
+import edu.aiplatform.shared.content.FormattedText;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -31,7 +31,7 @@ public class JdbcQuizRepository implements IQuizRepository {
     private static final String COLUMNS = """
             id, scope, class_id, subject_id, source_quiz_id, origin, version_no, title, instructions, settings,
             activity_monitoring_enabled, activity_notice, paper_mode, status, published_at, retired_at,
-            retired_reason, created_by, created_at, updated_at, version""";
+            retired_reason, created_by, created_at, updated_at, version, instructions_document""";
     /** Số câu và tổng điểm của Quiz (BR-U10-13); Quiz sinh đề tính theo quy tắc (BR-U10-17). */
     private static final String SUMMARY = COLUMNS + """
             , case when paper_mode = 'GENERATED'
@@ -75,11 +75,11 @@ public class JdbcQuizRepository implements IQuizRepository {
                         insert into quizzes (id, scope, class_id, subject_id, source_quiz_id, origin, version_no, title,
                             instructions, settings, activity_monitoring_enabled, activity_notice,
                             paper_mode, status, published_at, retired_at, retired_reason, created_by,
-                            created_at, updated_at, version)
+                            created_at, updated_at, version, instructions_document)
                         values (:id, :scope, :classId, :subjectId, :sourceQuizId, :origin, :versionNo, :title,
                             :instructions, cast(:settings as jsonb), :monitoring, :notice, :paperMode,
                             :status, :publishedAt, :retiredAt, :retiredReason, :createdBy, :createdAt, :updatedAt,
-                            :version)
+                            :version, cast(:instructionsDocument as jsonb))
                         """)
                 .param("id", q.id()).param("scope", q.scope().name()).param("classId", q.classId())
                 .param("subjectId", q.subjectId()).param("sourceQuizId", q.sourceQuizId())
@@ -90,7 +90,7 @@ public class JdbcQuizRepository implements IQuizRepository {
                 .param("publishedAt", timestamp(q.publishedAt())).param("retiredAt", timestamp(q.retiredAt()))
                 .param("retiredReason", q.retiredReason()).param("createdBy", q.createdBy())
                 .param("createdAt", timestamp(q.createdAt())).param("updatedAt", timestamp(q.updatedAt()))
-                .param("version", q.version())
+                .param("version", q.version()).param("instructionsDocument", write(q.instructionsDocument()))
                 .update();
     }
 
@@ -98,6 +98,7 @@ public class JdbcQuizRepository implements IQuizRepository {
     public boolean update(Quiz q) {
         return jdbc.sql("""
                         update quizzes set title = :title, instructions = :instructions,
+                            instructions_document = cast(:instructionsDocument as jsonb),
                             settings = cast(:settings as jsonb), activity_monitoring_enabled = :monitoring,
                             activity_notice = :notice, paper_mode = :paperMode,
                             status = :status, published_at = :publishedAt, retired_at = :retiredAt,
@@ -105,6 +106,7 @@ public class JdbcQuizRepository implements IQuizRepository {
                         where id = :id and version = :version
                         """)
                 .param("title", q.title()).param("instructions", q.instructions())
+                .param("instructionsDocument", write(q.instructionsDocument()))
                 .param("settings", write(q.settings())).param("monitoring", q.activityMonitoringEnabled())
                 .param("notice", q.activityNotice()).param("paperMode", q.paperMode().name())
                 .param("status", q.status().name()).param("publishedAt", timestamp(q.publishedAt()))
@@ -263,10 +265,13 @@ public class JdbcQuizRepository implements IQuizRepository {
                 QuizStatus.valueOf(rs.getString("status")), instant(rs.getTimestamp("published_at")),
                 instant(rs.getTimestamp("retired_at")), rs.getString("retired_reason"),
                 rs.getObject("created_by", UUID.class), instant(rs.getTimestamp("created_at")),
-                instant(rs.getTimestamp("updated_at")), rs.getLong("version"));
+                instant(rs.getTimestamp("updated_at")), rs.getLong("version"),
+                rs.getString("instructions_document") == null ? null
+                        : read(rs.getString("instructions_document"), FormattedText.class));
     }
 
     private String write(Object value) {
+        if (value == null) return null;
         try {
             return json.writeValueAsString(value);
         } catch (JsonProcessingException e) {

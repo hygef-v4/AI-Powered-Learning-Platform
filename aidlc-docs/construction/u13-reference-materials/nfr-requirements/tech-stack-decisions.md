@@ -1,4 +1,6 @@
-# U13 Reference Materials — tech-stack-decisions
+# U13 Reference Materials — tech-stack-decisions — chuẩn JDBC
+
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code còn JPA được ghi là khoảng cách migration.
 
 > Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
@@ -8,11 +10,13 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
-| Lưu trữ | PostgreSQL + Spring Data JPA; tệp trên Google Drive qua U03 | Như các unit khác |
-| Trích chữ | Apache Tika (bộ parser chuẩn: PDFBox, POI), không OCR | Một thư viện cho cả PDF, DOCX, PPTX; `tika-core` đã có |
+| Lưu trữ | PostgreSQL + Spring JDBC (JdbcTemplate/NamedParameterJdbcTemplate/JdbcClient); tệp trên Google Drive qua U03 | Như các unit khác |
+| Trích chữ | Apache Tika (bộ parser chuẩn: PDFBox, POI), không OCR | Một thư viện cho cả PDF, DOCX, PPTX, XLSX; `tika-core` đã có |
 | Xem PDF | Trình xem PDF của trình duyệt qua link token | Không thêm thư viện |
 | Video | Iframe `youtube-nocookie.com` (CSP đã cho phép) | Không gọi API YouTube |
 | Test | JUnit 5, Vitest; Testcontainers cho integration test do tester viết | Theo NFR-004 |
+
+**Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
 
 ## Design assessment scope — 2026-10-30
 

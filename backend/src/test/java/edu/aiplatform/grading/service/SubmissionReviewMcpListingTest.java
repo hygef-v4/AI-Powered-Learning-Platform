@@ -2,12 +2,10 @@ package edu.aiplatform.grading.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.academics.contract.*;
 import edu.aiplatform.assignments.contract.*;
 import edu.aiplatform.assignmentwork.contract.*;
-import edu.aiplatform.grading.contract.IGroupSubmissionSource;
 import edu.aiplatform.grading.model.Evaluation;
 import edu.aiplatform.grading.repository.IEvaluationRepository;
 import edu.aiplatform.identity.contract.*;
@@ -34,7 +32,7 @@ class SubmissionReviewMcpListingTest {
         List<UUID> students=new ArrayList<>();List<StudentSubmissionStatus> statuses=new ArrayList<>();List<Evaluation> evals=new ArrayList<>();
         for(int n=0;n<200;n++) {
             var student=UUID.randomUUID();students.add(student);
-            var e=Evaluation.pending(UUID.randomUUID(),assignmentId,classId,student,"hash",BigDecimal.TEN,"[]",Instant.now());evals.add(e);
+            var e=Evaluation.createPendingEvaluation(UUID.randomUUID(),assignmentId,classId,student,"hash",BigDecimal.TEN,"[]",Instant.now());evals.add(e);
             statuses.add(new StudentSubmissionStatus(student,e.attemptId,1,AttemptStatus.SUBMITTED,Instant.now(),n%2==0));
         }
         when(classes.listActiveStudents(classId)).thenReturn(students);

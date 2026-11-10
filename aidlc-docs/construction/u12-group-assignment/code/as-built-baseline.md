@@ -1,6 +1,6 @@
-# U12 Group Assignment — AS-BUILT 2026-10-30
+# U12 Group Assignment — AS-BUILT source snapshot 2026-11-07
 
-Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership and public contracts unchanged.
+Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths are catalogued in [current-code-baseline](../../../inception/reverse-engineering/current-code-baseline.md). Dated deltas/test results below retain their original scope; this update is not runtime acceptance.
 
 groups và groupdocs thuộc cùng U12. Leader request reason tùy chọn, null thành chuỗi rỗng, tối đa 1.000; reject reason tùy chọn, trống thành null. GroupRenameService cho đổi tên theo scope; editor hiển thị lỗi nhóm đã bị gỡ khỏi draft. Claims/locks/leader submit giữ theo SectionRules và services; không tự thêm peer assessment hay đổi AI Student GROUP.
 
@@ -10,11 +10,11 @@ groups và groupdocs thuộc cùng U12. Leader request reason tùy chọn, null 
 |---|---|
 | [groups/controller](../../../../backend/src/main/java/edu/aiplatform/groups/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [groups/service](../../../../backend/src/main/java/edu/aiplatform/groups/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [groups/repository](../../../../backend/src/main/java/edu/aiplatform/groups/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [groups/repository](../../../../backend/src/main/java/edu/aiplatform/groups/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [groups/model](../../../../backend/src/main/java/edu/aiplatform/groups/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [groupdocs/controller](../../../../backend/src/main/java/edu/aiplatform/groupdocs/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [groupdocs/service](../../../../backend/src/main/java/edu/aiplatform/groupdocs/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [groupdocs/repository](../../../../backend/src/main/java/edu/aiplatform/groupdocs/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [groupdocs/repository](../../../../backend/src/main/java/edu/aiplatform/groupdocs/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [groupdocs/model](../../../../backend/src/main/java/edu/aiplatform/groupdocs/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [groupdocs/integration](../../../../backend/src/main/java/edu/aiplatform/groupdocs/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [groupdocs/contract](../../../../backend/src/main/java/edu/aiplatform/groupdocs/contract) | Public interface/DTO xuyên unit; giữ nguyên. |

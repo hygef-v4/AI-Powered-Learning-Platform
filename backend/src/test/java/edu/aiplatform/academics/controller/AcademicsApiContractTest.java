@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /** Controller mapping/serialization tests only: service authorization and session filters are not exercised. */
 class AcademicsApiContractTest {
-    private final AcademicsService service = mock(AcademicsService.class);
+    private final AcademicsService academicsService = mock(AcademicsService.class);
     private final UUID classId = UUID.fromString("10000000-0000-0000-0000-000000000001");
     private final UUID subjectId = UUID.fromString("20000000-0000-0000-0000-000000000002");
     private final UUID accountId = UUID.fromString("30000000-0000-0000-0000-000000000003");
@@ -50,7 +50,7 @@ class AcademicsApiContractTest {
 
     @BeforeEach void setup() {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(serverActor, null));
-        mvc = MockMvcBuilders.standaloneSetup(new AcademicsController(service))
+        mvc = MockMvcBuilders.standaloneSetup(new AcademicsController(academicsService))
                 .setControllerAdvice(new AcademicsExceptionHandler())
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
     }
@@ -59,13 +59,13 @@ class AcademicsApiContractTest {
 
     private ClassView course() {
         return new ClassView(classId, new Subject(subjectId, "CS101", "Computing"), "C01", "Morning class",
-                "Description", "2026-1", ClassStatus.OPEN, teacher, 2, 1, timestamp, true, 7);
+                "Description", ClassStatus.OPEN, teacher, 2, 1, timestamp, true, 7);
     }
 
-    private ClassView mutationResult(String name, String description, String term, ClassStatus status,
+    private ClassView mutationResult(String name, String description, ClassStatus status,
                                      Person assignedTeacher, boolean distribution, long version) {
         return new ClassView(classId, new Subject(subjectId, "CS101", "Computing"), "C01", name,
-                description, term, status, assignedTeacher, 2, 1, timestamp, distribution, version);
+                description, status, assignedTeacher, 2, 1, timestamp, distribution, version);
     }
 
     private Student student() {
@@ -76,7 +76,7 @@ class AcademicsApiContractTest {
     @CsvSource({"me,student", "teaching,teacher", "manager,manager"})
     void listForwardsFiltersAndPaginationButNeverRequestActor(String route, String audience) throws Exception {
         UUID requestedSubject = route.equals("manager") ? subjectId : null;
-        when(service.list(serverActor, audience, requestedSubject, "morning", ClassStatus.OPEN, 3, 40))
+        when(academicsService.listClasses(serverActor, audience, requestedSubject, "morning", ClassStatus.OPEN, 3, 40))
                 .thenReturn(List.of(course()));
         var request = get("/api/v1/" + route + "/classes").param("q", "morning").param("status", "OPEN")
                 .param("page", "3").param("size", "40").param("actor", "forged")
@@ -84,104 +84,121 @@ class AcademicsApiContractTest {
         if (requestedSubject != null) request.param("subjectId", requestedSubject.toString());
         mvc.perform(request).andExpect(status().isOk()).andExpect(jsonPath("$[0].id").value(classId.toString()))
                 .andExpect(jsonPath("$[0].subject.code").value("CS101"))
+                .andExpect(jsonPath("$[0].term").doesNotHaveJsonPath())
                 .andExpect(jsonPath("$[0].teacher.email").value("teacher@example.test"))
                 .andExpect(jsonPath("$[0].activeStudentCount").value(2))
                 .andExpect(jsonPath("$[0].showGradeDistribution").value(true));
-        verify(service).list(serverActor, audience, requestedSubject, "morning", ClassStatus.OPEN, 3, 40);
-        verifyNoMoreInteractions(service);
+        verify(academicsService).listClasses(serverActor, audience, requestedSubject, "morning", ClassStatus.OPEN, 3, 40);
+        verifyNoMoreInteractions(academicsService);
     }
 
     @ParameterizedTest
     @CsvSource({"me,student", "teaching,teacher", "manager,manager"})
     void detailPreservesAudienceClassIdAndOptimisticVersion(String route, String audience) throws Exception {
-        when(service.detail(serverActor, audience, classId)).thenReturn(course());
+        when(academicsService.loadClass(serverActor, audience, classId)).thenReturn(course());
         mvc.perform(get("/api/v1/" + route + "/classes/" + classId))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(classId.toString()))
                 .andExpect(jsonPath("$.version").value(7)).andExpect(jsonPath("$.status").value("OPEN"))
+                .andExpect(jsonPath("$.term").doesNotHaveJsonPath())
                 .andExpect(jsonPath("$.removedStudentCount").value(1));
-        verify(service).detail(serverActor, audience, classId);
-        verifyNoMoreInteractions(service);
+        verify(academicsService).loadClass(serverActor, audience, classId);
+        verifyNoMoreInteractions(academicsService);
     }
 
     @Test void subjectSummariesExposeStatusCountsAndDetail() throws Exception {
         var summary = new SubjectSummary(subjectId, "CS101", "Computing", SubjectStatus.ACTIVE,
                 Map.of(ClassStatus.DRAFT, 1L, ClassStatus.OPEN, 2L, ClassStatus.ARCHIVED, 3L));
-        when(service.managedSubjects(serverActor)).thenReturn(List.of(summary));
-        when(service.managedSubject(serverActor, subjectId)).thenReturn(summary);
+        when(academicsService.listManagedSubjects(serverActor)).thenReturn(List.of(summary));
+        when(academicsService.loadManagedSubject(serverActor, subjectId)).thenReturn(summary);
         mvc.perform(get("/api/v1/manager/subjects")).andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].status").value("ACTIVE"))
                 .andExpect(jsonPath("$[0].classCounts.OPEN").value(2));
         mvc.perform(get("/api/v1/manager/subjects/" + subjectId)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(subjectId.toString()))
                 .andExpect(jsonPath("$.classCounts.ARCHIVED").value(3));
-        verify(service).managedSubjects(serverActor);
-        verify(service).managedSubject(serverActor, subjectId);
-        verifyNoMoreInteractions(service);
+        verify(academicsService).listManagedSubjects(serverActor);
+        verify(academicsService).loadManagedSubject(serverActor, subjectId);
+        verifyNoMoreInteractions(academicsService);
     }
 
     @ParameterizedTest
     @CsvSource({"teaching,teacher", "manager,manager"})
     void studentListForwardsClassAndPageWithoutInventingAnActor(String route, String audience) throws Exception {
-        when(service.students(serverActor, audience, classId, 2, 25)).thenReturn(List.of(student()));
+        when(academicsService.listStudents(serverActor, audience, classId, 2, 25)).thenReturn(List.of(student()));
         mvc.perform(get("/api/v1/" + route + "/classes/" + classId + "/students").param("page", "2").param("size", "25"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$[0].accountId").value(accountId.toString()))
                 .andExpect(jsonPath("$[0].status").value("ACTIVE"));
-        verify(service).students(serverActor, audience, classId, 2, 25);
-        verifyNoMoreInteractions(service);
+        verify(academicsService).listStudents(serverActor, audience, classId, 2, 25);
+        verifyNoMoreInteractions(academicsService);
     }
 
     @Test void teacherStudentDetailForwardsBothResourceIds() throws Exception {
-        when(service.student(serverActor, classId, accountId)).thenReturn(student());
+        when(academicsService.loadStudent(serverActor, classId, accountId)).thenReturn(student());
         mvc.perform(get("/api/v1/teaching/classes/" + classId + "/students/" + accountId))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.email").value("student@example.test"));
-        verify(service).student(serverActor, classId, accountId);
-        verifyNoMoreInteractions(service);
+        verify(academicsService).loadStudent(serverActor, classId, accountId);
+        verifyNoMoreInteractions(academicsService);
     }
 
     @Test void candidateSearchKeepsClassScopeAndQuery() throws Exception {
-        when(service.teacherCandidates(serverActor, "teacher & manager")).thenReturn(List.of(teacher));
-        when(service.studentCandidates(serverActor, classId, "student")).thenReturn(List.of(teacher));
+        when(academicsService.listTeacherCandidates(serverActor, "teacher & manager")).thenReturn(List.of(teacher));
+        when(academicsService.listStudentCandidates(serverActor, classId, "student")).thenReturn(List.of(teacher));
         mvc.perform(get("/api/v1/manager/teacher-candidates").param("q", "teacher & manager"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$[0].id").value(accountId.toString()));
         mvc.perform(get("/api/v1/manager/classes/" + classId + "/student-candidates").param("q", "student"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$[0].name").value("Teacher"));
-        verify(service).teacherCandidates(serverActor, "teacher & manager");
-        verify(service).studentCandidates(serverActor, classId, "student");
-        verifyNoMoreInteractions(service);
+        verify(academicsService).listTeacherCandidates(serverActor, "teacher & manager");
+        verify(academicsService).listStudentCandidates(serverActor, classId, "student");
+        verifyNoMoreInteractions(academicsService);
     }
 
     @Test void managerGradeDistributionMutationHasBeenRemoved() throws Exception {
         mvc.perform(put("/api/v1/manager/classes/" + classId + "/grade-distribution")
                 .contentType("application/json").content("{\"enabled\":true,\"version\":0}"))
                 .andExpect(status().isNotFound());
-        verifyNoInteractions(service);
+        verifyNoInteractions(academicsService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"create", "edit"})
+    void removedSemesterInputIsRejected(String operation) throws Exception {
+        var request = operation.equals("create")
+                ? post("/api/v1/manager/classes").content("{\"subjectId\":\"" + subjectId
+                        + "\",\"code\":\"C01\",\"name\":\"Class\",\"term\":\"2026-1\"}")
+                : patch("/api/v1/manager/classes/" + classId)
+                        .content("{\"name\":\"Class\",\"term\":\"2026-1\",\"version\":0}");
+        mvc.perform(request.contentType("application/json"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+        verifyNoInteractions(academicsService);
     }
 
     @Test void createReturns201AndMapsOptionalTeacher() throws Exception {
-        when(service.create(serverActor, subjectId, "C01", "Morning class", "Description", "2026-1", accountId))
-                .thenReturn(mutationResult("Morning class", "Description", "2026-1", ClassStatus.DRAFT, teacher, false, 0));
-        String body = "{\"subjectId\":\"" + subjectId + "\",\"code\":\"C01\",\"name\":\"Morning class\",\"description\":\"Description\",\"term\":\"2026-1\",\"teacherId\":\"" + accountId + "\"}";
+        when(academicsService.createClass(serverActor, subjectId, "C01", "Morning class", "Description", accountId))
+                .thenReturn(mutationResult("Morning class", "Description", ClassStatus.DRAFT, teacher, false, 0));
+        String body = "{\"subjectId\":\"" + subjectId + "\",\"code\":\"C01\",\"name\":\"Morning class\",\"description\":\"Description\",\"teacherId\":\"" + accountId + "\"}";
         mvc.perform(post("/api/v1/manager/classes").contentType("application/json").content(body))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.version").value(0))
+                .andExpect(jsonPath("$.term").doesNotHaveJsonPath())
                 .andExpect(jsonPath("$.status").value("DRAFT"))
                 .andExpect(jsonPath("$.teacher.id").value(accountId.toString()));
-        verify(service).create(serverActor, subjectId, "C01", "Morning class", "Description", "2026-1", accountId);
-        verifyNoMoreInteractions(service);
+        verify(academicsService).createClass(serverActor, subjectId, "C01", "Morning class", "Description", accountId);
+        verifyNoMoreInteractions(academicsService);
     }
 
     @Test void classMutationsForwardVersionAndTypedValues() throws Exception {
-        when(service.updateInfo(serverActor, classId, "Renamed", "Updated", "2027-1", 6))
-                .thenReturn(mutationResult("Renamed", "Updated", "2027-1", ClassStatus.OPEN, teacher, true, 7));
-        when(service.assignTeacher(serverActor, classId, null, 7))
-                .thenReturn(mutationResult("Renamed", "Updated", "2027-1", ClassStatus.OPEN, null, true, 8));
-        when(service.changeStatus(serverActor, classId, ClassStatus.ARCHIVED, 9))
-                .thenReturn(mutationResult("Renamed", "Updated", "2027-1", ClassStatus.ARCHIVED, null, false, 10));
+        when(academicsService.updateClassInfo(serverActor, classId, "Renamed", "Updated", 6))
+                .thenReturn(mutationResult("Renamed", "Updated", ClassStatus.OPEN, teacher, true, 7));
+        when(academicsService.assignClassTeacher(serverActor, classId, null, 7))
+                .thenReturn(mutationResult("Renamed", "Updated", ClassStatus.OPEN, null, true, 8));
+        when(academicsService.changeClassStatus(serverActor, classId, ClassStatus.ARCHIVED, 9))
+                .thenReturn(mutationResult("Renamed", "Updated", ClassStatus.ARCHIVED, null, false, 10));
         mvc.perform(patch("/api/v1/manager/classes/" + classId).contentType("application/json")
-                .content("{\"name\":\"Renamed\",\"description\":\"Updated\",\"term\":\"2027-1\",\"version\":6}"))
+                .content("{\"name\":\"Renamed\",\"description\":\"Updated\",\"version\":6}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(classId.toString()))
                 .andExpect(jsonPath("$.name").value("Renamed"))
                 .andExpect(jsonPath("$.description").value("Updated"))
-                .andExpect(jsonPath("$.term").value("2027-1"))
+                .andExpect(jsonPath("$.term").doesNotHaveJsonPath())
                 .andExpect(jsonPath("$.version").value(7));
         mvc.perform(put("/api/v1/manager/classes/" + classId + "/teacher").contentType("application/json")
                 .content("{\"teacherId\":null,\"version\":7}"))
@@ -192,16 +209,16 @@ class AcademicsApiContractTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.code").value("C01"))
                 .andExpect(jsonPath("$.status").value("ARCHIVED"))
                 .andExpect(jsonPath("$.version").value(10));
-        verify(service).updateInfo(serverActor, classId, "Renamed", "Updated", "2027-1", 6);
-        verify(service).assignTeacher(serverActor, classId, null, 7);
-        verify(service).changeStatus(serverActor, classId, ClassStatus.ARCHIVED, 9);
-        verifyNoMoreInteractions(service);
+        verify(academicsService).updateClassInfo(serverActor, classId, "Renamed", "Updated", 6);
+        verify(academicsService).assignClassTeacher(serverActor, classId, null, 7);
+        verify(academicsService).changeClassStatus(serverActor, classId, ClassStatus.ARCHIVED, 9);
+        verifyNoMoreInteractions(academicsService);
     }
 
     @Test void enrollmentOutcomeAndBatchRowsRemainExplicitJsonContracts() throws Exception {
-        when(service.enroll(serverActor, classId, accountId)).thenReturn(EnrollmentResult.IN_OTHER_CLASS);
+        when(academicsService.enrollStudent(serverActor, classId, accountId)).thenReturn(EnrollmentResult.IN_OTHER_CLASS);
         String text = "student@example.test\n\ninvalid";
-        when(service.enrollBatch(serverActor, classId, text)).thenReturn(List.of(
+        when(academicsService.enrollStudents(serverActor, classId, text)).thenReturn(List.of(
                 new RowResult(1, "student@example.test", EnrollmentResult.ENROLLED),
                 new RowResult(3, "invalid", EnrollmentResult.INVALID_EMAIL)));
         mvc.perform(post("/api/v1/manager/classes/" + classId + "/enrollments").contentType("application/json")
@@ -212,20 +229,20 @@ class AcademicsApiContractTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$[0].result").value("ENROLLED"))
                 .andExpect(jsonPath("$[1].line").value(3)).andExpect(jsonPath("$[1].email").value("invalid"))
                 .andExpect(jsonPath("$[1].result").value("INVALID_EMAIL"));
-        verify(service).enroll(serverActor, classId, accountId);
-        verify(service).enrollBatch(serverActor, classId, text);
-        verifyNoMoreInteractions(service);
+        verify(academicsService).enrollStudent(serverActor, classId, accountId);
+        verify(academicsService).enrollStudents(serverActor, classId, text);
+        verifyNoMoreInteractions(academicsService);
     }
 
     @ParameterizedTest @ValueSource(strings = {"ACTIVE", "REMOVED"})
     void removalAndRestorationReturn204WithoutLeakingServiceResult(String value) throws Exception {
         var enrollmentStatus = EnrollmentStatus.valueOf(value);
-        when(service.enrollmentStatus(serverActor, classId, accountId, enrollmentStatus)).thenReturn(EnrollmentResult.RESTORED);
+        when(academicsService.changeEnrollmentStatus(serverActor, classId, accountId, enrollmentStatus)).thenReturn(EnrollmentResult.RESTORED);
         mvc.perform(put("/api/v1/manager/classes/" + classId + "/enrollments/" + accountId + "/status")
                 .contentType("application/json").content("{\"status\":\"" + value + "\"}"))
                 .andExpect(status().isNoContent()).andExpect(content().string(""));
-        verify(service).enrollmentStatus(serverActor, classId, accountId, enrollmentStatus);
-        verifyNoMoreInteractions(service);
+        verify(academicsService).changeEnrollmentStatus(serverActor, classId, accountId, enrollmentStatus);
+        verifyNoMoreInteractions(academicsService);
     }
 
     static Stream<Arguments> malformedMutations() {
@@ -253,7 +270,7 @@ class AcademicsApiContractTest {
                 .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
                 .andExpect(content().string(not(containsString("internal-secret"))))
                 .andExpect(content().string(not(containsString("Exception"))));
-        verifyNoInteractions(service);
+        verifyNoInteractions(academicsService);
     }
 
     @ParameterizedTest
@@ -262,7 +279,7 @@ class AcademicsApiContractTest {
         mvc.perform(get("/api/v1" + path)).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
                 .andExpect(content().string(not(containsString("internal-secret"))));
-        verifyNoInteractions(service);
+        verifyNoInteractions(academicsService);
     }
 
     @ParameterizedTest @ValueSource(ints = {401, 403, 404, 409, 413, 503})
@@ -271,14 +288,14 @@ class AcademicsApiContractTest {
         Actor principal = httpStatus == 401 ? null : serverActor;
         var error = new ApiException(HttpStatus.valueOf(httpStatus), "EXPECTED_PROBLEM", "Safe client message");
         error.initCause(new IllegalStateException("SELECT password FROM internal_accounts; internal-secret"));
-        when(service.detail(principal, "manager", classId)).thenThrow(error);
+        when(academicsService.loadClass(principal, "manager", classId)).thenThrow(error);
         mvc.perform(get("/api/v1/manager/classes/" + classId)).andExpect(status().is(httpStatus))
                 .andExpect(jsonPath("$.status").value(httpStatus))
                 .andExpect(jsonPath("$.code").value("EXPECTED_PROBLEM"))
                 .andExpect(jsonPath("$.detail").value("Safe client message"))
                 .andExpect(content().string(not(containsString("internal-secret"))))
                 .andExpect(content().string(not(containsString("internal_accounts"))));
-        verify(service).detail(principal, "manager", classId);
-        verifyNoMoreInteractions(service);
+        verify(academicsService).loadClass(principal, "manager", classId);
+        verifyNoMoreInteractions(academicsService);
     }
 }

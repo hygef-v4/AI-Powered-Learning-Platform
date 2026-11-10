@@ -148,7 +148,7 @@ export function CreateAnnouncementDialog({
 }
 
 /**
- * Ô chọn nhiều lớp cùng kiểu ô chọn giảng viên: gõ mã hoặc tên lớp, gợi ý nổi đè lên phần bên dưới (vẽ ở body, bám theo ô
+ * Ô chọn nhiều lớp cùng kiểu ô chọn giảng viên: gõ mã lớp hoặc mã môn, gợi ý nổi đè lên phần bên dưới (vẽ ở body, bám theo ô
  * nhập) nên popup không đổi bố cục dù có bao nhiêu lớp. Bấm một lớp thì tích / bỏ tích mà danh sách vẫn mở; đầu danh sách có
  * Chọn tất cả theo kết quả đang hiện. Ô không gõ thì chỉ ghi tóm tắt các lớp đã chọn.
  */
@@ -187,7 +187,7 @@ function ClassPicker({
   const shown = useMemo(() => {
     const q = query.toLocaleLowerCase("vi").trim();
     return q
-      ? classes.filter((c) => `${c.code} ${c.name}`.toLocaleLowerCase("vi").includes(q))
+      ? classes.filter((c) => `${c.subjectCode ?? ""} ${c.code}`.toLocaleLowerCase("vi").includes(q))
       : classes;
   }, [classes, query]);
   const allShown = shown.length > 0 && shown.every((c) => chosen.includes(c.classId));
@@ -258,7 +258,7 @@ function ClassPicker({
           autoComplete="off"
           maxLength={100}
           disabled={disabled}
-          placeholder={open ? "Gõ mã hoặc tên lớp" : "Chọn lớp"}
+          placeholder={open ? "Gõ mã lớp hoặc mã môn" : "Chọn lớp"}
           data-testid="announcement-classes-input"
           value={open ? query : summary}
           title={codes.join(", ")}
@@ -313,7 +313,7 @@ function ClassPicker({
                 c.classId,
                 chosen.includes(c.classId),
                 () => toggle(c.classId),
-                <ClassLabel code={c.code} name={c.name} />,
+                <ClassLabel subjectCode={c.subjectCode} code={c.code} />,
               ),
             )}
             {!shown.length && <p className="px-3 py-2 text-xs text-muted">Không có lớp phù hợp</p>}

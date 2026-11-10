@@ -67,6 +67,125 @@ class MaterialModuleServiceTest {
     }
 
     @Test
+    void moduleNamesAndOrdersRespectDocumentedBounds() {
+        assertThat(module.revise("m".repeat(200), 0, now).title()).hasSize(200);
+        for (String title : List.of("", "   ", "m".repeat(201))) {
+            assertThatThrownBy(() -> module.revise(title, 0, now))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+        assertThatThrownBy(() -> module.revise("Valid", -1, now))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void managerDefaultModuleIsCreatedOnlyOnceAcrossRepeatedOpen() {
+        when(access.canManageModules(manager, subject)).thenReturn(true);
+        when(access.subject(subject)).thenReturn(new edu.aiplatform.subjects.contract.SubjectRef(
+                subject, "S", "Subject", edu.aiplatform.subjects.contract.SubjectStatus.ACTIVE, manager.accountId()));
+        var stored = new ArrayList<MaterialModule>();
+        when(repo.list(subject)).thenAnswer(call -> List.copyOf(stored));
+        doAnswer(call -> { stored.add(call.getArgument(0)); return null; }).when(repo).insert(any());
+        service.forSubject(manager, subject);
+        service.forSubject(manager, subject);
+        assertThat(stored).hasSize(1);
+        assertThat(stored.get(0).title()).isEqualTo("Module 1");
+        verify(repo).insert(any());
+        verify(audit).record(argThat(e -> e.action().equals("MATERIAL_MODULE_CREATED")));
+    }
+
+    @Test
+    void teacherOpeningArchivedSubjectDoesNotCreateDefaultModule() {
+        Actor teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
+        when(access.classList(teacher, classId, false)).thenReturn(new ClassRef(
+                classId, subject, "C", "Class", ClassStatus.ARCHIVED, teacher.accountId(), false));
+        when(access.subject(subject)).thenReturn(new edu.aiplatform.subjects.contract.SubjectRef(
+                subject, "S", "Subject", edu.aiplatform.subjects.contract.SubjectStatus.ARCHIVED, null));
+        when(repo.list(subject)).thenReturn(List.of());
+        assertThat(service.forClass(teacher, classId, false)).isEmpty();
+        verify(repo, never()).insert(any());
+        verifyNoInteractions(audit);
+    }
+
+    @Test
+    void lastEmptyModuleMayBeDeleted() {
+        when(repo.list(subject)).thenReturn(List.of(module));
+        service.delete(manager, moduleId, 0);
+        verify(repo).delete(moduleId, 0);
+        verify(repo, never()).moveArchivedMaterials(any(), any());
+    }
+
+    @Test
+    void reorderAcceptsProperSubsetWithoutChangingUnrequestedModule() {
+        when(repo.find(otherId)).thenReturn(Optional.of(other));
+        when(repo.update(any(), anyLong())).thenReturn(true);
+        service.reorder(manager, subject,
+                new MaterialCommands.Reorder(List.of(new MaterialCommands.Position(otherId, 0L))));
+        verify(repo).update(argThat(m -> m.id().equals(otherId) && m.orderNo() == 0), eq(0L));
+        verify(repo, never()).update(argThat(m -> m.id().equals(moduleId)), anyLong());
+    }
+
+    @Test
+    void reorderRequestValidationCoversEmptyMissingAndFiveHundredBoundary() {
+        try (var factory = jakarta.validation.Validation.buildDefaultValidatorFactory()) {
+            var validator = factory.getValidator();
+            assertThat(validator.validate(new MaterialCommands.Reorder(List.of()))).isNotEmpty();
+            assertThat(validator.validate(new MaterialCommands.Reorder(
+                    List.of(new MaterialCommands.Position(null, null))))).hasSize(2);
+            var rows = java.util.stream.IntStream.range(0, 500)
+                    .mapToObj(i -> new MaterialCommands.Position(UUID.randomUUID(), 0L)).toList();
+            assertThat(validator.validate(new MaterialCommands.Reorder(rows))).isEmpty();
+            var overflow = new ArrayList<>(rows);
+            overflow.add(new MaterialCommands.Position(UUID.randomUUID(), 0L));
+            assertThat(validator.validate(new MaterialCommands.Reorder(overflow))).hasSize(1);
+        }
+    }
+
+    @Test
+    void detachChecksCurrentQuizPermissionAndExactLinkBeforeSuccessAudit() {
+        UUID quizId = UUID.randomUUID();
+        when(quizzes.get(quizId)).thenReturn(Optional.of(
+                quiz(quizId, QuizScope.SUBJECT, subject, null, QuizStatus.DRAFT)));
+        when(access.canManageQuiz(manager, subject, null)).thenReturn(false);
+        assertThatThrownBy(() -> service.detach(manager, moduleId, quizId))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("MATERIAL_QUIZ_NOT_FOUND"));
+        verify(repo, never()).unlink(any(), any());
+        verify(audit).record(argThat(event -> event.action().equals("ACCESS_DENIED")
+                && event.result() == edu.aiplatform.audit.contract.AuditResult.DENIED));
+        clearInvocations(audit);
+        when(access.canManageQuiz(manager, subject, null)).thenReturn(true);
+        when(repo.unlink(moduleId, quizId)).thenReturn(false);
+        assertThatThrownBy(() -> service.detach(manager, moduleId, quizId))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("MATERIAL_NOT_FOUND"));
+        verifyNoInteractions(audit);
+        when(repo.unlink(moduleId, quizId)).thenReturn(true);
+        service.detach(manager, moduleId, quizId);
+        verify(audit).record(argThat(event -> event.action().equals("MATERIAL_MODULE_QUIZ_DETACHED")
+                && event.actorId().equals(manager.accountId()) && event.objectId().equals(moduleId.toString())));
+    }
+
+    @Test
+    void attachToSameModuleIsIdempotentButForeignDetachCannotWrite() {
+        UUID quizId = UUID.randomUUID();
+        when(quizzes.get(quizId)).thenReturn(Optional.of(
+                quiz(quizId, QuizScope.SUBJECT, subject, null, QuizStatus.DRAFT)));
+        when(access.canManageQuiz(manager, subject, null)).thenReturn(true);
+        when(repo.quizLink(quizId)).thenReturn(Optional.of(new MaterialModule.QuizLink(moduleId, quizId, 0)));
+        service.attach(manager, moduleId, quizId);
+        verify(repo, never()).link(any());
+        verify(repo, never()).unlink(any(), any());
+        verifyNoInteractions(audit);
+        when(quizzes.get(quizId)).thenReturn(Optional.of(
+                quiz(quizId, QuizScope.SUBJECT, UUID.randomUUID(), null, QuizStatus.DRAFT)));
+        assertThatThrownBy(() -> service.detach(manager, moduleId, quizId))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("MATERIAL_QUIZ_INVALID"));
+        verify(repo, never()).unlink(any(), any());
+        verifyNoInteractions(audit);
+    }
+
+    @Test
     void deleteRefusesModuleWithActiveMaterials() {
         when(repo.activeMaterials(moduleId)).thenReturn(2);
         assertThatThrownBy(() -> service.delete(manager, moduleId, 0))

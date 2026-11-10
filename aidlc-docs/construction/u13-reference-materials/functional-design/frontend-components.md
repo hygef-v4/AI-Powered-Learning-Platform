@@ -12,6 +12,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://claude.ai/artifact/M5RgKNauBqdxM7GUTRwau4), bản 17/10/2026; `#n` là số màn, mã trong ngoặc (ví dụ `a02`) là artboard.
 
+**Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
+
 ## 1. Màn hình theo design
 
 | # | Màn (artboard) | Component | UC | Role |
@@ -54,14 +56,14 @@ app/materials/[id]/view/          LearningMaterialPage      #37 Learning Materia
 | Component | API | Hành vi |
 |---|---|---|
 | `SubjectMaterialListPage`, `MaterialTable` | `GET /api/v1/subjects/{subjectId}/materials`, `PUT .../materials:reorder` | "Học liệu", "Học liệu của môn là một danh sách có thứ tự; sinh viên thấy đúng thứ tự này."; nút chọn môn, Thêm học liệu; tab Đang dùng, Lưu trữ (kèm số); "Kéo ở cột đầu tiên để sắp thứ tự"; cột kéo, #, Học liệu (tên; loại · dung lượng, video ghi "YouTube"), Trích chữ (Đang xử lý, Đã trích, Không có chữ, Lỗi; video "—"), Trạng thái; bấm dòng mở Material Detail; ghi chú "Chỉ tệp có trạng thái trích chữ. Link YouTube chỉ lưu đường dẫn video." |
-| `AddMaterialMenu`, `AddFileDialog`, `AddYoutubeLinkDialog` | `FileUploader` (U03), `POST .../materials` | Menu: Tải tệp (loại và dung lượng theo cài đặt hiện hành của U03, ví dụ "PDF, DOCX, PPTX · tối đa 50 MB"), Link YouTube ("Một video giáo dục · dán đường dẫn"). Popup: Tên học liệu*, Mô tả (tùy chọn), tệp qua `FileUploader` hoặc đường dẫn YouTube (kiểm dạng link một video) |
+| `AddMaterialMenu`, `AddFileDialog`, `AddYoutubeLinkDialog` | `FileUploader` (U03), `POST .../materials` | Menu: Tải tệp (định dạng cố định PDF, DOCX, PPTX, XLSX; dung lượng theo Settings của U03, mặc định tối đa 50 MB), Link YouTube ("Một video giáo dục · dán đường dẫn"). Popup: Tên học liệu*, Mô tả (tùy chọn), tệp qua `FileUploader` hoặc đường dẫn YouTube (kiểm dạng link một video) |
 | `MaterialDetailPage`, `MaterialPreview` | `GET /api/v1/materials/{id}` | Nút quay lại; tên kèm nhãn trạng thái; đường dẫn "Học liệu › mã môn"; nút Lưu trữ, Lưu thay đổi; "Xem trước": PDF xem ngay có chuyển trang, video nhúng |
 | `MaterialInfoForm`, `ReplaceVersionDialog` | `PATCH /api/v1/materials/{id}`, `POST .../versions` | "Thông tin": Tên học liệu*, Mô tả (tùy chọn), Tệp hiện hành (tên, dung lượng · phiên bản) kèm nút Thay tệp ("Thay tệp tạo phiên bản mới; phiên bản cũ vẫn xem được."), Trích chữ; `409` báo tải lại |
 | `VersionHistory` | `GET /api/v1/materials/{id}` | "Lịch sử phiên bản": Phiên bản, Người tạo, Thời điểm, Trích chữ, nhãn Hiện hành |
-| `ArchiveMaterialDialog` | `POST .../archive` | "Lưu trữ học liệu?": "X sẽ ẩn với sinh viên và giảng viên. Học liệu không bị xóa; bạn có thể mở lại ở tab Lưu trữ."; "Bài tập đang gắn học liệu này vẫn giữ liên kết nhưng sinh viên không mở được học liệu đã lưu trữ."; Hủy, Lưu trữ |
+| `ArchiveMaterialDialog` | `POST .../archive` | "Lưu trữ học liệu?": "Học liệu sẽ ẩn khỏi danh sách Đang dùng và sinh viên không mở được. Tệp/lịch sử không bị xóa; giảng viên hoặc Chủ nhiệm môn còn quyền hợp lệ vẫn xem/tải được qua tham chiếu. Không cho sửa hoặc chọn nguồn AI mới."; "Bài tập đang gắn học liệu này vẫn giữ liên kết nhưng sinh viên không mở được học liệu đã lưu trữ."; Hủy, Lưu trữ |
 | `ClassMaterialsTab` | `GET /api/v1/classes/{classId}/materials`, `POST .../materials` | Lọc Tất cả, Của lớp (n), Của môn (n), Lưu trữ; nút Thêm học liệu; cột #, Học liệu, Phạm vi (Của lớp, Của môn), Trích chữ, thao tác Xem, Lưu trữ (học liệu của lớp) hoặc "Chỉ xem" (học liệu của môn); "Học liệu của lớp chỉ sinh viên lớp này thấy. Học liệu của môn do Chủ nhiệm môn quản lý, bạn chỉ xem." |
 | `ClassMaterialsCard` | `GET /api/v1/me/classes/{classId}/materials` | "Học liệu" (số học liệu): danh sách có số thứ tự, tên, loại · dung lượng, nhãn "của lớp"; bấm mở Learning Material |
-| `LearningMaterialPage`, `PdfViewer`, `YoutubeEmbed`, `FileDownloadButton` | `GET .../view`, `POST .../download-token` | Nút quay lại; tên; đường dẫn "Lớp của tôi › lớp › Học liệu"; nút Tải xuống (tệp) hoặc Mở trên YouTube (video); cột trái: danh sách học liệu của lớp, mục đang xem tô đậm; phần Quiz gắn với học liệu (U11); "Mô tả" kèm loại · dung lượng · ngày cập nhật; vùng xem: PDF xem ngay có chuyển trang, video qua `youtube-nocookie.com`. Không hiện thời lượng hay tên kênh YouTube (không lưu) |
+| `LearningMaterialPage`, `PdfViewer`, `YoutubeEmbed`, `FileDownloadButton` | `GET .../view`, `POST .../download-token` | Nút quay lại; tên; đường dẫn "Lớp của tôi › lớp › Học liệu"; nút Tải xuống (tệp) hoặc Mở trên YouTube (video); cột trái: danh sách học liệu của lớp, mục đang xem tô đậm; Quiz nằm trong module học liệu, không nhúng phần Quiz riêng vào Learning Material (BR-U13-22); "Mô tả" kèm loại · dung lượng · ngày cập nhật; vùng xem: PDF xem ngay có chuyển trang, XLSX xem bảng theo sheet, video qua `youtube-nocookie.com`. Không hiện thời lượng hay tên kênh YouTube (không lưu) |
 | `MaterialLinkList` | - | "Học liệu gắn kèm": nhãn từng học liệu, bấm mở Learning Material |
 | `MaterialSummary` | `GET /api/v1/subjects/{subjectId}/materials` (đếm) | Dòng tóm tắt trên thẻ môn (Manager Dashboard); thẻ số liệu "Học liệu" (n đang dùng · n lưu trữ) trên My Subject |
 
@@ -76,3 +78,8 @@ Module cơ bản của môn đã triển khai. Học liệu môn/lớp bắt bu�
 ## ModuleBoard — current UI contract
 
 ModuleBoard groups subject/class materials by moduleId and shows scoped Quiz links. Manager module create/rename/delete/reorder differs from educator Quiz attach/detach permission. Material create requires moduleId; update may move to another module of the same subject. Render availability/version/scope errors, including module not empty and last-module restrictions. Server canManage fields are projections, not a replacement for backend checks.
+
+
+## Giao diện cập nhật 2026-11-09
+
+Form tạo/sửa học liệu và trang chi tiết có công tắc Bật/Tắt (field API `enabled`). Staff thấy nhãn Tắt trong danh sách; sinh viên không thấy tài liệu đã tắt. Mô tả dùng FormattedTextEditor/View dùng chung, giữ plain fallback. Quiz trong cùng form dùng instructionsDocument và giới hạn 5.000 ký tự. User tự kiểm tra UI; không có nghiệm thu hình ảnh trong lượt triển khai này.

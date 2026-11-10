@@ -1,5 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { ClassListPage } from "@/features/academics/pages/ClassListPage";
 import { ClassDashboardPage } from "@/features/academics/pages/ClassDashboardPage";
 import { ClassFormDialog } from "@/features/academics/components/ClassFormDialog";
@@ -18,7 +20,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: 
 
 const subject = { id: "subject-1", code: "SWP391", name: "Software Development Project", description: "Môn học dự án" };
 const teacher = { id: "teacher-1", name: "Nguyễn Minh Kiên", email: "kien@example.test" };
-const course: CourseClassView = { id: "class-1", subject, code: "SE1801", name: "Nhóm thứ Hai", term: "2026-1", description: "Lớp sáng thứ Hai",
+const course: CourseClassView = { id: "class-1", subject, code: "SE1801", name: "Nhóm thứ Hai", description: "Lớp sáng thứ Hai",
   status: "OPEN", teacher, activeStudentCount: 2, removedStudentCount: 1, createdAt: "2026-09-01", showGradeDistribution: false, version: 3 };
 const student: EnrollmentView = { accountId: "student-1", name: "Nguyễn Văn An", email: "an@example.test", enrolledAt: "2026-09-05", status: "ACTIVE" };
 
@@ -50,22 +52,20 @@ describe("U05 reference UI", () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
-  it("creates a class with an optional teacher and normalized text", async () => {
+  it("creates a class from its code only (no class name or term) with an optional teacher", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(<ClassFormDialog subject={subject} teachers={[teacher]} onSubmit={onSubmit} onClose={vi.fn()} />);
+    expect(screen.queryByLabelText(/Tên lớp/)).toBeNull();
+    expect(screen.queryByLabelText(/Học kỳ/)).toBeNull();
     fireEvent.change(screen.getByLabelText(/Mã lớp/), { target: { value: " SE1902 " } });
-    fireEvent.change(screen.getByLabelText(/Tên lớp/), { target: { value: " Lớp mới " } });
-    fireEvent.change(screen.getByLabelText(/Học kỳ/), { target: { value: "2026-2" } });
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Tạo lớp" }));
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ subjectId: subject.id, code: "SE1902", name: "Lớp mới", term: "2026-2", description: "", teacherId: null }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ subjectId: subject.id, code: "SE1902", name: "SE1902", description: "", teacherId: null }));
   });
 
   it("sends the chosen teacher when creating a class", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(<ClassFormDialog subject={subject} teachers={[teacher]} onSubmit={onSubmit} onClose={vi.fn()} />);
     fireEvent.change(screen.getByLabelText(/Mã lớp/), { target: { value: "SE1902" } });
-    fireEvent.change(screen.getByLabelText(/Tên lớp/), { target: { value: "Lớp mới" } });
-    fireEvent.change(screen.getByLabelText(/Học kỳ/), { target: { value: "2026-2" } });
     fireEvent.focus(screen.getByRole("combobox", { name: /Giảng viên/ }));
     fireEvent.click(await screen.findByRole("option", { name: new RegExp(teacher.name) }));
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Tạo lớp" }));
@@ -75,24 +75,26 @@ describe("U05 reference UI", () => {
   it("preserves unsaved info and displays version conflict", async () => {
     const onSave = vi.fn().mockRejectedValue(new Error("Dữ liệu đã thay đổi. Vui lòng tải lại."));
     render(<ClassInfoForm value={course} onSave={onSave} />);
-    fireEvent.change(screen.getByLabelText(/Tên lớp/), { target: { value: "Lớp mới" } });
+    expect(screen.queryByLabelText(/Tên lớp/)).toBeNull();
+    expect(screen.queryByLabelText(/Học kỳ/)).toBeNull();
+    fireEvent.change(screen.getByLabelText(/Mô tả/), { target: { value: "Mô tả mới" } });
     fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
-    await waitFor(() => expect(onSave).toHaveBeenCalledWith({ name: "Lớp mới", description: course.description, term: course.term, version: 3 }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith({ name: course.name, description: "Mô tả mới", version: 3 }));
     expect(await screen.findByRole("alert")).toHaveTextContent("tải lại");
-    expect(screen.getByLabelText(/Tên lớp/)).toHaveValue("Lớp mới");
+    expect(screen.getByLabelText(/Mô tả/)).toHaveValue("Mô tả mới");
   });
 
   it("does not offer editing for archived classes", () => {
     render(<ClassInfoForm value={{ ...course, status: "ARCHIVED" }} onSave={vi.fn()} />);
-    expect(screen.getByLabelText(/Tên lớp/)).toBeDisabled();
+    expect(screen.getByLabelText(/Mô tả/)).toBeDisabled();
     expect(screen.queryByRole("button", { name: "Lưu thay đổi" })).not.toBeInTheDocument();
   });
 
   it("refreshes unsaved info when a newer server version arrives", () => {
     const { rerender } = render(<ClassInfoForm value={course} onSave={vi.fn()} />);
-    fireEvent.change(screen.getByLabelText(/Tên lớp/), { target: { value: "Chưa lưu" } });
-    rerender(<ClassInfoForm value={{ ...course, name: "Mới từ server", version: 4 }} onSave={vi.fn()} />);
-    expect(screen.getByLabelText(/Tên lớp/)).toHaveValue("Mới từ server");
+    fireEvent.change(screen.getByLabelText(/Mô tả/), { target: { value: "Chưa lưu" } });
+    rerender(<ClassInfoForm value={{ ...course, description: "Mới từ server", version: 4 }} onSave={vi.fn()} />);
+    expect(screen.getByLabelText(/Mô tả/)).toHaveValue("Mới từ server");
   });
 
   it("shows server enrollment conflicts with their original row number", () => {
@@ -102,15 +104,15 @@ describe("U05 reference UI", () => {
     expect(within(row).getByText("Đang ở lớp khác cùng môn")).toBeInTheDocument();
   });
 
-  it("rejects oversized CSV files before reading or submitting them", () => {
+  it("rejects oversized Excel files before reading or submitting them", async () => {
     const onBatch = vi.fn();
     render(<EnrollmentPanel students={[]} editable onBatch={onBatch} />);
     fireEvent.click(screen.getByRole("button", { name: "Thêm theo danh sách" }));
-    const file = new File(["a".repeat(102_401)], "list.csv", { type: "text/csv" });
+    const file = new File(["a".repeat(102_401)], "list.xlsx");
     const read = vi.fn();
     Object.defineProperty(file, "text", { value: read });
-    fireEvent.change(screen.getByLabelText("Chọn tệp CSV"),{ target: { files: [file] } });
-    expect(screen.getByRole("alert")).toHaveTextContent("100 KB");
+    fireEvent.change(screen.getByLabelText("Chọn tệp Excel"),{ target: { files: [file] } });
+    expect(await screen.findByRole("alert")).toHaveTextContent("100 KB");
     expect(read).not.toHaveBeenCalled();
     expect(onBatch).not.toHaveBeenCalled();
   });
@@ -123,6 +125,20 @@ describe("U05 reference UI", () => {
     fireEvent.click(screen.getByRole("button", { name: "Xem trước" }));
     expect(screen.getByRole("button", { name: "Thêm 0 sinh viên" })).toBeDisabled();
     expect(onBatch).not.toHaveBeenCalled();
+  });
+
+  it("previews an Excel template and waits for confirmation before enrollment", async () => {
+    const onBatch = vi.fn().mockResolvedValue([{ line: 2, email: "masv@fpt.edu.vn", result: "ENROLLED" }]);
+    render(<EnrollmentPanel students={[]} editable onBatch={onBatch} />);
+    fireEvent.click(screen.getByRole("button", { name: "Thêm theo danh sách" }));
+    const bytes = readFileSync(resolve("public/templates/enrollment-import.xlsx"));
+    const file = new File([bytes], "students.xlsx");
+    Object.defineProperty(file, "arrayBuffer", { value: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) });
+    fireEvent.change(screen.getByLabelText("Chọn tệp Excel"), { target: { files: [file] } });
+    expect(await screen.findByRole("button", { name: "Thêm 1 sinh viên" })).toBeEnabled();
+    expect(onBatch).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Thêm 1 sinh viên" }));
+    await waitFor(() => expect(onBatch).toHaveBeenCalledWith("email\nmasv@fpt.edu.vn"));
   });
 
   it("requires confirmation for archiving and sends the version", async () => {

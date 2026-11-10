@@ -17,7 +17,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 |---|---|---|
 | BR-U01-01 | Không có đăng ký công khai. Chỉ admin tạo hoặc nhập tài khoản. | US-IAM-001, FR-001 |
 | BR-U01-02 | Email được chuẩn hóa (cắt khoảng trắng, chữ thường) trước mọi so sánh. | US-IAM-007 |
-| BR-U01-03 | Email phải duy nhất và thuộc tên miền trong cấu hình triển khai `U01_ALLOWED_EMAIL_DOMAINS`; sai thì từ chối tạo. | US-IAM-001 S2, US-IAM-007 |
+| BR-U01-03 | Email phải duy nhất, đúng định dạng và dài tối đa 254 ký tự; thuộc tên miền nào cũng được (2026-11-06 bỏ giới hạn `U01_ALLOWED_EMAIL_DOMAINS`). Sai thì từ chối tạo. | US-IAM-001 S2, US-IAM-007 |
 | BR-U01-04 | Email là định danh đăng nhập, không ai sửa được sau khi tạo, kể cả admin. | UC 06, 07, 09, 11 |
 
 ## 2. Kích hoạt
@@ -33,7 +33,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U01-20 | OTP gồm 6 chữ số, sinh ngẫu nhiên an toàn, chỉ lưu dạng băm. | Câu 4 |
+| BR-U01-20 | OTP gồm 6 chữ số, chỉ lưu dạng băm. Mã của mỗi lần gửi được suy ra bằng HMAC-SHA256 từ khóa job (UUID ngẫu nhiên do server tạo, không lộ ra ngoài) và khóa ký của U01, nên job gửi lại sau lỗi mail vẫn gửi đúng mã đã ghi. Thiếu khóa job thì sinh mã bằng `SecureRandom`. | Câu 4 |
 | BR-U01-21 | OTP hết hạn sau 10 phút. | Câu 4 |
 | BR-U01-22 | Nhập sai 5 lần thì hủy OTP; phải yêu cầu mã mới. Trừ lượt và so mã là một bước nguyên tử trên Redis (Lua), nên gửi song song không vượt 5 lượt. Mỗi IP nhập OTP tối đa 30 lần mỗi 15 phút; vượt thì 429 `OTP_TOO_MANY_ATTEMPTS`. | Câu 4 |
 | BR-U01-23 | Mỗi tài khoản và mục đích chỉ có một OTP hiệu lực; mã mới làm mã cũ mất hiệu lực. | Câu 4 |
@@ -104,7 +104,7 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U01-80 | Nút "Nhập CSV" trên Account List. Chỉ nhận CSV, tối đa 1000 dòng; cột bắt buộc `email`, `display_name`, `role`. | Câu 13; người dùng chốt giữ 2026-10-09 |
+| BR-U01-80 | Nút "Nhập Excel" trên Account List. Nhận .xlsx trên UI, API giữ tương thích CSV cũ; tối đa 1 MB và 1000 dòng; cột bắt buộc `email`, `display_name`, `role`. | Câu 13; cập nhật định dạng theo yêu cầu 2026-11-09 |
 | BR-U01-81 | Kiểm tra toàn bộ file trước, trả kết quả từng dòng; admin xác nhận thì mới tạo các dòng hợp lệ. | US-IAM-007 S2 |
 | BR-U01-82 | Email đã tồn tại hoặc trùng trong file bị báo lỗi dòng, không ghi đè. | Câu 13 |
 | BR-U01-83 | Nhập lại cùng file không tạo trùng: email đã tồn tại bị báo lỗi dòng (BR-U01-82). Kết quả nhập không lưu; audit ghi checksum file. | US-IAM-007 S2 |

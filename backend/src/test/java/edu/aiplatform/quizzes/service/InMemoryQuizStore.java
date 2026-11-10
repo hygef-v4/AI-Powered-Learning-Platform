@@ -14,7 +14,6 @@ import edu.aiplatform.quizzes.repository.IQuizAiDraftRepository;
 import edu.aiplatform.quizzes.repository.IQuizRepository;
 import edu.aiplatform.quizzes.model.Question;
 import edu.aiplatform.quizzes.model.QuestionScope;
-import edu.aiplatform.quizzes.model.QuestionStatus;
 import edu.aiplatform.quizzes.model.Quiz;
 import edu.aiplatform.quizzes.model.QuizAiDraft;
 import edu.aiplatform.quizzes.model.QuizItem;
@@ -180,7 +179,7 @@ class InMemoryQuizStore {
             return new Quiz(q.id(), q.scope(), q.classId(), q.subjectId(), q.sourceQuizId(), q.origin(), q.versionNo(),
                     q.title(), q.instructions(), q.settings(), q.activityMonitoringEnabled(), q.activityNotice(),
                     q.paperMode(), q.status(), q.publishedAt(), q.retiredAt(), q.retiredReason(), q.createdBy(),
-                    q.createdAt(), q.updatedAt(), version);
+                    q.createdAt(), q.updatedAt(), version, q.instructionsDocument());
         }
 
     }
@@ -373,6 +372,11 @@ class InMemoryQuizStore {
         @Override
         public Optional<QuizAiDraft> find(UUID id) {
             return Optional.ofNullable(drafts.get(id));
+        }
+
+        @Override
+        public Optional<QuizAiDraft> findForUpdate(UUID id) {
+            return find(id);
         }
 
         @Override

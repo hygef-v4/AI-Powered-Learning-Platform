@@ -1,7 +1,6 @@
 package edu.aiplatform.materials.repository;
 
 import edu.aiplatform.materials.model.*;
-import edu.aiplatform.materials.repository.*;
 import jakarta.persistence.*;
 import java.sql.Timestamp;
 import java.time.Instant;

@@ -29,16 +29,16 @@ class GradeDistributionVisibilityRepositoryTest {
         new ResourceDatabasePopulator(new ClassPathResource(
                 "db/migration/grading/V20261101_0900__assignment_grade_distribution_visibility.sql")).execute(source);
         var repository = new GradeDistributionVisibilityRepository(jdbc);
-        assertThat(repository.find(classId, assignmentId))
+        assertThat(repository.findVisibility(classId, assignmentId))
                 .isEqualTo(new GradeDistributionVisibilityRepository.Visibility(false, 0));
         race(repository, classId, assignmentId, 0);
-        assertThat(repository.find(classId, assignmentId).version()).isEqualTo(1);
-        assertThat(repository.find(secondClass, assignmentId).enabled()).isFalse();
-        assertThat(repository.update(secondClass, assignmentId, false, 0)).isTrue();
+        assertThat(repository.findVisibility(classId, assignmentId).version()).isEqualTo(1);
+        assertThat(repository.findVisibility(secondClass, assignmentId).enabled()).isFalse();
+        assertThat(repository.updateVisibility(secondClass, assignmentId, false, 0)).isTrue();
         race(repository, classId, assignmentId, 1);
-        assertThat(repository.find(classId, assignmentId).version()).isEqualTo(2);
-        assertThat(repository.find(secondClass, assignmentId).version()).isEqualTo(1);
-        assertThat(repository.update(classId, assignmentId, false, 1)).isFalse();
+        assertThat(repository.findVisibility(classId, assignmentId).version()).isEqualTo(2);
+        assertThat(repository.findVisibility(secondClass, assignmentId).version()).isEqualTo(1);
+        assertThat(repository.updateVisibility(classId, assignmentId, false, 1)).isFalse();
     }
 
     void race(GradeDistributionVisibilityRepository repository, UUID classId, UUID assignmentId, long version)
@@ -50,7 +50,7 @@ class GradeDistributionVisibilityRepositoryTest {
             Callable<Boolean> write = () -> {
                 ready.countDown();
                 if (!start.await(10, TimeUnit.SECONDS)) throw new IllegalStateException("Writer timed out");
-                return repository.update(classId, assignmentId, true, version);
+                return repository.updateVisibility(classId, assignmentId, true, version);
             };
             var first = workers.submit(write);
             var second = workers.submit(write);

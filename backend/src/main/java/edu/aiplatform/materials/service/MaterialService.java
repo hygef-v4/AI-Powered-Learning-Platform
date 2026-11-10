@@ -60,7 +60,7 @@ public class MaterialService {
                         actor.accountId(),
                         clock.instant(),
                         clock.instant(),
-                        0);
+                        0).withPresentation(!Boolean.FALSE.equals(input.enabled()), input.descriptionDocument());
         access.write(actor, material);
         MaterialVersion version = source(actor, material, 1, input.source());
         repository.insert(material, version);
@@ -82,7 +82,11 @@ public class MaterialService {
                         input.orderNo(),
                         m.currentVersionNo(),
                         m.status(),
-                        clock.instant());
+                        clock.instant()).withPresentation(input.enabled() == null ? m.enabled() : input.enabled(),
+                                input.descriptionDocument() != null ? input.descriptionDocument()
+                                        : Objects.toString(m.description(), "").strip()
+                                                .equals(Objects.toString(input.description(), "").strip())
+                                                        ? m.descriptionDocument() : null);
         save(next, m.version());
         record(actor, "MATERIAL_UPDATED", next);
         return next;

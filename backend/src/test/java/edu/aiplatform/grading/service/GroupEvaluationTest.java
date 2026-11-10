@@ -1,9 +1,7 @@
 package edu.aiplatform.grading.service;
 
-import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
 import edu.aiplatform.grading.model.*;
 import edu.aiplatform.grading.repository.*;
 import edu.aiplatform.assignments.contract.*;
@@ -36,12 +34,12 @@ class GroupEvaluationTest {
         when(assignments.get(aid)).thenReturn(Optional.of(a));
         when(rubric.maxPoints(aid)).thenReturn(BigDecimal.TEN);
         when(rubric.listRubrics(aid)).thenReturn(List.of());
-        var root = Evaluation.pending(null, aid, cid, null, "old", BigDecimal.TEN, "[]", Instant.now());
+        var root = Evaluation.createPendingEvaluation(null, aid, cid, null, "old", BigDecimal.TEN, "[]", Instant.now());
         root.kind = EvaluationKind.GROUP_DOCUMENT;
         root.groupDocumentId = doc;
         root.score = BigDecimal.ONE;
         root.state = state;
-        var member = Evaluation.pending(null, aid, cid, sid, "old", BigDecimal.TEN, "[]", Instant.now());
+        var member = Evaluation.createPendingEvaluation(null, aid, cid, sid, "old", BigDecimal.TEN, "[]", Instant.now());
         member.kind = EvaluationKind.MEMBER;
         member.groupDocumentId = doc;
         member.score = BigDecimal.ONE;

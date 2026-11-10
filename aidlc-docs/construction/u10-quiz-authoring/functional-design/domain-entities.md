@@ -53,7 +53,7 @@ stateDiagram-v2
 |---|---|
 | `id`, `scope` (`CLASS`, `SUBJECT`), `classId` (chỉ `CLASS`), `subjectId` (luôn có) | |
 | `sourceQuizId`, `origin` (`MANUAL`, `CLONE`, `NEW_VERSION`, `CLASS_COPY`), `versionNo` | |
-| `title` (≤ 200), `instructions` (≤ 5.000) | |
+| `title` (≤ 200), `instructions` (≤ 5.000), `instructionsDocument` (FormattedText tùy chọn) | Lưu plain text tương thích cùng JSONB định dạng; xem delta 2026-11-09 bên dưới |
 | `settings` | `shuffleQuestions`, `shuffleOptions`, `timeLimitMinutes` (trống hoặc 1–300), `maxAttempts` (1–10 hoặc trống là không giới hạn), `showScoreAfterSubmit`, `showCorrectAnswers` (`NEVER`, `AFTER_SUBMIT`) |
 | `activityMonitoringEnabled`, `activityNotice` | Mặc định tắt |
 | `paperMode` | `FIXED`, `GENERATED` (BR-U10-17) |
@@ -88,8 +88,8 @@ stateDiagram-v2
 | `IQuizQuery` | `listForClass(classId)` → Quiz `OPEN` của lớp và của môn; `getStudentView(quizId)` → câu, lựa chọn, cài đặt, không có đáp án (Quiz sinh đề không có câu, chỉ có số câu); `drawPaper(quizId, seenQuestionIds, seed)` → đề cho lượt mới; `getPaper(quizId, questionPoints)` → đề theo câu đã lưu trong lượt; `get(quizId)` | U11 | Hiện Quiz và lập đề cho người học |
 | `IQuizScoring` | `score(quizId, answers)` → đúng sai và điểm từng câu, tổng; `answerReview(quizId)` → đáp án, giải thích | U11 | Chấm theo đáp án ghim mà đáp án không rời U10; hiện đáp án sau khi nộp theo cài đặt |
 | Sự kiện `quiz.published` | - | U14 | Báo Quiz mới trong app |
-| `TeacherClassTab`, `SubjectSummarySection` (contract của U05, U10 cài); `NavEntry` (contract của U01, U10 cài) | - | U05, U01 | Phần Quiz trong tab Đánh giá; số câu hỏi, Quiz của môn trên Manager Dashboard, My Subject; mục Ngân hàng câu hỏi, Quiz trên menu bên của Subject Manager |
-| `IAiTaskResultHandler` cho `QUIZ_QUESTION_DRAFT`, `IMcpToolProvider` (contract của U06, U10 cài) | - | U06 | Nhận câu đề xuất; tool `read_quiz_context`, `save_quiz_draft` |
+| `TeacherClassTab` (contract của U05, U10 cài); `NavEntry` (contract của U01, U10 cài) | - | U05, U01 | Phần đề xuất câu vào ngân hàng ở tab Học liệu của lớp (`QuestionProposalsSection`); mục Ngân hàng câu hỏi trên menu bên của Subject Manager. Không cài `SubjectSummarySection`: số câu hỏi, Quiz xem ở Question List, Quiz List |
+| `IAiTaskResultHandler` cho `QUIZ_QUESTION_DRAFT`, `IMcpToolProvider` (contract của U06, U10 cài) | - | U06 | Nhận câu đề xuất; tool `list_quizzes`, `read_quiz_context`, `save_quiz_draft`, `create_quiz_draft` |
 | Component `McqEditor` | - | Frontend U10 | Soạn câu trắc nghiệm, dùng ở Question Detail và câu riêng của Quiz |
 
 ### Contract U10 khai báo (unit khác cài)
@@ -124,7 +124,7 @@ Chưa có U11 thì listener rỗng và Quiz Detail không có phần lượt là
 | `GET /api/v1/classes/{classId}/quiz-copy-sources`, `POST .../quizzes:copy` | 48 |
 | `GET`, `PATCH`, `DELETE /api/v1/quizzes/{id}`; `PUT .../items`; `POST .../items:random-preview`; `POST .../inline-questions`, `PATCH`, `DELETE .../inline-questions/{questionId}` | 48 |
 | `POST /api/v1/quizzes/{id}/ai-drafts`, `GET .../ai-drafts/{draftId}`, `POST .../ai-drafts/{draftId}:accept`, `:discard` | 47, 48 |
-| `POST /api/v1/quizzes/{id}/review`, `/publish`, `/retire`, `/clone`, `/versions` | 48 |
+| `POST /api/v1/quizzes/{id}/publish`, `/retire`, `/reopen`, `/clone`, `/versions` | 48 |
 
 ## Source behavior delta — 2026-10-30
 
@@ -134,8 +134,26 @@ Quiz có DRAFT/OPEN/RETIRED (bỏ REVIEWED 2026-11-01). Quiz.edited giữ OPEN k
 
 ## Legacy publication reconciliation
 
-V20261030_1810 permits RETIRED with null publishedAt. Old equal-time retired rows require successful QUIZ_PUBLISHED audit for the exact QUIZ object to keep publication; unproven rows become null/review. New real same-instant publication stays non-null. QuizView now carries nullable publishedAt; subject teacher/module visibility and new-version require actual publication for RETIRED.
+V20261030_1810 permits RETIRED with null publishedAt. Old equal-time retired rows require successful QUIZ_PUBLISHED audit for the exact QUIZ object to keep publication; unproven rows get `publishedAt = null`. New real same-instant publication stays non-null. QuizView now carries nullable publishedAt; subject teacher/module visibility and new-version require actual publication for RETIRED.
 
 ## Delta 2026-11-01: câu đề xuất và chống trùng
 
 `Question.status` thêm `PENDING`, `REJECTED` (câu giảng viên đề xuất, BR-U10-09). `questions` thêm `content_hash`, `normalized_stem` (BR-U10-08), repository tự ghi khi lưu nội dung. Bảng mới: `question_reviews` (mỗi lần duyệt hoặc từ chối), `question_proposals` (lớp gửi đề xuất), `quiz_draw_rules`. `QuizSettings` thêm `leavePenalty`. Tắt `Quiz.referenceMaterialIds`.
+
+## Delta mô tả và AI request — 2026-11-09
+
+`instructionsDocument` là shared FormattedText (schema/giới hạn block và run như U13, plain text tối đa 5.000 ký tự), lưu JSONB nullable qua `quizzes/V20261109_2201__quiz_formatted_instructions.sql`. Giữ plain instructions cho client cũ; giữ document khi sửa cấu hình, clone/version/copy và vòng đời quiz. `QuizStudentView` và U11 `PracticeQuizDetail` truyền document để hiển thị, không thay đổi chấm điểm hoặc snapshot câu của lượt làm.
+
+HTTP draft quiz và ngân hàng nhận source thiếu/null để U06 tự chọn nguồn API; provider null hợp lệ trong chế độ tự chọn. MaterialIds là tài liệu tham khảo riêng, không thay cho source. Provenance lưu source AUTO khi tự chọn và sourceWarnings cho nguồn bị cắt/bỏ trống; đây không phải bằng chứng về provider thực tế đã chạy. Mọi nguồn chọn đều hết chữ: FAILED/MATERIAL_TEXT_UNAVAILABLE trước provider. [HTTP regression](../../build-and-test/2026-11-09-quiz-http-auto-source-fix.md).
+
+## Draft request và metadata liên quan — 2026-11-09
+
+instructions thiếu/null/trống hợp lệ nếu materialIds không rỗng; DraftRequest chuẩn hóa thành “Tạo quiz theo nội dung tài liệu đã chọn.” Không có cả yêu cầu lẫn tài liệu vẫn bị từ chối. Không bỏ kiểm quyền/hasText/giới hạn nguồn.
+
+Schema kết quả cho task mới thêm requestMatchesSources boolean bắt buộc; parseOutput vẫn nhận task schema cũ thiếu field này. False cùng tài liệu đã chọn được ánh xạ thành sourceWarnings có nội dung cố định, giữ cảnh báo cắt nguồn và lưu trong provenance khi PENDING chuyển READY. Không thêm cột hoặc endpoint; task cũ không được đánh giá lại tự động. Chỉ là đánh giá model; người soạn kiểm nội dung trước khi chấp nhận. [Evidence](../../build-and-test/2026-11-09-ai-quiz-review-followup.md).
+
+## Mismatch retry state — 2026-11-10
+
+provenance thêm requestedType/requestedDifficulty khi có, sourceRetryPending và sourceRetryAttempted; tái dùng requestedCount, materials, source/provider. Không lưu thêm prompt tùy chỉnh. Output task mới có questionsMatchSources cùng requestMatchesSources; legacy thiếu field vẫn đọc được. Nhánh lệch: PENDING (proposal rỗng, retryPending) → task tạo lại PENDING (retryAttempted) → READY hoặc FAILED; retry tối đa một lần. taskId đổi sang task tạo lại, kết quả/lỗi trễ của task trước bị bỏ qua. Không thêm migration.
+
+QuizSourceRetry tách transaction khỏi callback/read caller, khóa qua IQuizAiDraftRepository.findForUpdate; AiTask submit/job và retry metadata commit cùng nhau. Catch lỗi sau rollback để lưu FAILED độc lập. [Test transaction/lock](../../build-and-test/2026-11-10-ai-source-grounding-fix.md).

@@ -1,7 +1,5 @@
 package edu.aiplatform.identity.service;
 
-import edu.aiplatform.identity.config.IdentityProperties;
-
 import edu.aiplatform.identity.model.Account;
 import edu.aiplatform.identity.repository.AccountRepository;
 import edu.aiplatform.identity.model.EmailPolicy;
@@ -31,16 +29,14 @@ public class OtpService {
     public static final String OTP_INVALID_MESSAGE = "Mã không hợp lệ hoặc đã hết hạn.";
 
     private final AccountRepository accounts;
-    private final EmailPolicy emailPolicy;
     private final RequestThrottle throttle;
     private final OtpChallengeStore challenges;
     private final VerificationTicketStore tickets;
     private final IJob jobs;
 
-    public OtpService(AccountRepository accounts, IdentityProperties properties, RequestThrottle throttle,
+    public OtpService(AccountRepository accounts, RequestThrottle throttle,
                       OtpChallengeStore challenges, VerificationTicketStore tickets, IJob jobs) {
         this.accounts = accounts;
-        this.emailPolicy = new EmailPolicy(properties.allowedEmailDomains());
         this.throttle = throttle;
         this.challenges = challenges;
         this.tickets = tickets;
@@ -50,7 +46,7 @@ public class OtpService {
     /** Chỉ gửi việc khi email hợp lệ, trong hạn mức, khớp tài khoản đúng trạng thái; mọi trường hợp đều im lặng. */
     public void request(String rawEmail, OtpPurpose purpose, String clientIp) {
         String email = EmailPolicy.normalize(rawEmail);
-        if (emailPolicy.check(email) != EmailPolicy.EmailCheck.OK || !throttle.tryOtpRequest(email, clientIp)) {
+        if (!EmailPolicy.isValid(email) || !throttle.tryOtpRequest(email, clientIp)) {
             return;
         }
         Optional<Account> account = accounts.findByEmail(email).filter(purpose::appliesTo);

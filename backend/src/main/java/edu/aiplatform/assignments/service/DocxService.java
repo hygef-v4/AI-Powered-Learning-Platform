@@ -82,6 +82,10 @@ public class DocxService implements IDocx {
         Map<String, AssignmentRubric> byPart = rubrics.all(assignment.id()).stream()
                 .collect(Collectors.toMap(AssignmentRubric::partId, r -> r, (a, b) -> a));
         List<DocxExporter.RubricSection> sections = new ArrayList<>();
+        AssignmentRubric whole = byPart.get(RubricService.WHOLE);
+        if (whole != null && RubricService.hasWhole(assignment.parts()) && !whole.criteria().isEmpty()) {
+            sections.add(new DocxExporter.RubricSection(RubricService.WHOLE_TITLE, whole.criteria(), whole.totalPoints()));
+        }
         for (DocumentPart part : assignment.parts()) {
             AssignmentRubric rubric = byPart.get(part.partId());
             if (rubric != null && !rubric.criteria().isEmpty()) {

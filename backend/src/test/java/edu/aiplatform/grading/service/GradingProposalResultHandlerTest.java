@@ -34,14 +34,14 @@ class GradingProposalResultHandlerTest {
                 mock(SubmissionReviewService.class), mock(IAssignmentQuery.class), mock(GradingPromptBuilder.class),
                 new GradingProposalValidator(json), json, Clock.systemUTC());
         String diagnostic = "Nhà cung cấp AI từ chối yêu cầu (HTTP 400): model hoặc tham số không hợp lệ";
-        tx.failed(new AiTaskFailure(p.taskId, "GRADING_PROPOSAL", new Actor(p.requesterId, Role.TEACHER),
+        tx.recordFailure(new AiTaskFailure(p.taskId, "GRADING_PROPOSAL", new Actor(p.requesterId, Role.TEACHER),
                 "evaluation:" + e.id, AiTaskState.FAILED, diagnostic));
         assertThat(p.safeError).isEqualTo(diagnostic);
         assertThat(p.status).isEqualTo("FAILED");
         assertThat(e.score).isNull();
         // Polling can recover the diagnostic for failures saved by an older U09 version.
         p.safeError = "AI task failed";
-        tx.dispatched(p.id, new AiTaskView(p.taskId, AiTaskState.FAILED, AiSource.PERSONAL, AiProvider.GEMINI,
+        tx.recordDispatch(p.id, new AiTaskView(p.taskId, AiTaskState.FAILED, AiSource.PERSONAL, AiProvider.GEMINI,
                 "model", null, diagnostic, null), null);
         assertThat(p.safeError).isEqualTo(diagnostic);
     }
@@ -70,7 +70,7 @@ class GradingProposalResultHandlerTest {
                 new GradingProposalValidator(json), json, Clock.systemUTC());
         UUID taskId = UUID.randomUUID();
         String diagnostic = "Nhà cung cấp AI quá hạn phản hồi";
-        tx.failed(new AiTaskFailure(taskId, "GRADING_PROPOSAL", new Actor(p.requesterId, Role.TEACHER),
+        tx.recordFailure(new AiTaskFailure(taskId, "GRADING_PROPOSAL", new Actor(p.requesterId, Role.TEACHER),
                 "evaluation:" + e.id, 2L, AiTaskState.UNKNOWN, diagnostic));
         assertThat(p.status).isEqualTo("FAILED");
         assertThat(p.taskId).isEqualTo(taskId);
@@ -80,7 +80,7 @@ class GradingProposalResultHandlerTest {
         // Subsequent dispatched() call with initial QUEUED view must not revert FAILED status.
         var queuedView = new AiTaskView(taskId, AiTaskState.QUEUED, AiSource.SHARED, AiProvider.GEMINI,
                 "gemini-2.5-flash", null, null, null);
-        var afterDispatch = tx.dispatched(p.id, queuedView, null);
+        var afterDispatch = tx.recordDispatch(p.id, queuedView, null);
         assertThat(afterDispatch.status).isEqualTo("FAILED");
         assertThat(afterDispatch.safeError).isEqualTo(diagnostic);
         assertThat(afterDispatch.taskState).isNull();
@@ -100,7 +100,7 @@ class GradingProposalResultHandlerTest {
                 List.of(new RubricCriterion(UUID.randomUUID(), "Kiến trúc", "", CriterionKind.values()[0],
                         List.of(new RubricItem(itemId, "Đúng quan hệ", new BigDecimal("2.50"))))),
                 new BigDecimal("2.50")));
-        var e = Evaluation.pending(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+        var e = Evaluation.createPendingEvaluation(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 "hash-1", new BigDecimal("2.50"), json.writeValueAsString(rubrics), Instant.now());
         var p = new GradingProposal();
         p.id = UUID.randomUUID();
@@ -144,7 +144,7 @@ class GradingProposalResultHandlerTest {
         var grading = mock(GradingService.class);
         var access = mock(GradingAccess.class);
         var json = new ObjectMapper().findAndRegisterModules();
-        var e = Evaluation.pending(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+        var e = Evaluation.createPendingEvaluation(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 "hash", BigDecimal.TEN, "[]", Instant.now());
         var p = new GradingProposal();
         p.id = UUID.randomUUID();
@@ -166,12 +166,12 @@ class GradingProposalResultHandlerTest {
                 "evaluation:" + e.id, 1, "{\"checks\":{},\"score\":0,\"feedback\":\"ok\",\"sections\":[]}");
 
         // First attempt: 503 rethrows so worker retries handler without losing proposal.
-        assertThatThrownBy(() -> tx.accept(result)).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> tx.acceptProposal(result)).isInstanceOf(ApiException.class);
         assertThat(p.status).isEqualTo("PENDING");
         verify(proposals, never()).save(any());
 
         // Second attempt: 403 marks proposal REJECTED and leaves official grade untouched.
-        assertThat(tx.accept(result)).isEqualTo(ApplyOutcome.REJECTED);
+        assertThat(tx.acceptProposal(result)).isEqualTo(ApplyOutcome.REJECTED);
         assertThat(p.status).isEqualTo("REJECTED");
         assertThat(p.taskId).isEqualTo(result.taskId());
         assertThat(p.completedAt).isNotNull();
@@ -185,7 +185,7 @@ class GradingProposalResultHandlerTest {
         var grading = mock(GradingService.class);
         var access = mock(GradingAccess.class);
         var json = new ObjectMapper().findAndRegisterModules();
-        var e = Evaluation.pending(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+        var e = Evaluation.createPendingEvaluation(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 "hash", BigDecimal.TEN, "[]", Instant.now());
         var p = new GradingProposal();
         p.id = UUID.randomUUID();
@@ -203,7 +203,7 @@ class GradingProposalResultHandlerTest {
         var result = new AiTaskResult(UUID.randomUUID(), "GRADING_PROPOSAL", new Actor(p.requesterId, Role.TEACHER),
                 "evaluation:" + e.id, 1, "{not-valid-json");
 
-        assertThat(tx.accept(result)).isEqualTo(ApplyOutcome.REJECTED);
+        assertThat(tx.acceptProposal(result)).isEqualTo(ApplyOutcome.REJECTED);
         assertThat(p.status).isEqualTo("REJECTED");
         assertThat(p.completedAt).isNotNull();
         assertThat(e.score).isNull();
@@ -218,7 +218,7 @@ class GradingProposalResultHandlerTest {
         var review = mock(SubmissionReviewService.class);
         var assignments = mock(IAssignmentQuery.class);
         var json = new ObjectMapper().findAndRegisterModules();
-        var e = Evaluation.pending(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+        var e = Evaluation.createPendingEvaluation(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 "new-hash", BigDecimal.TEN, "[]", Instant.now());
         var p = new GradingProposal();
         p.id = UUID.randomUUID();
@@ -235,7 +235,7 @@ class GradingProposalResultHandlerTest {
                 Clock.systemUTC());
         var result = new AiTaskResult(UUID.randomUUID(), "GRADING_PROPOSAL", new Actor(p.requesterId, Role.TEACHER),
                 "evaluation:" + e.id, 1, "{}");
-        assertThat(tx.accept(result)).isEqualTo(ApplyOutcome.STALE);
+        assertThat(tx.acceptProposal(result)).isEqualTo(ApplyOutcome.STALE);
         assertThat(e.score).isNull();
         assertThat(p.status).isEqualTo("STALE");
         assertThat(p.taskId).isEqualTo(result.taskId());
@@ -259,7 +259,7 @@ class GradingProposalResultHandlerTest {
                 mock(SubmissionReviewService.class), mock(IAssignmentQuery.class), mock(GradingPromptBuilder.class),
                 new GradingProposalValidator(json), json, Clock.systemUTC());
         var task = new AiTaskView(UUID.randomUUID(), AiTaskState.QUEUED, AiSource.SHARED, null, null, null, null, null);
-        assertThat(tx.dispatched(p.id, task, null).status).isEqualTo("READY");
+        assertThat(tx.recordDispatch(p.id, task, null).status).isEqualTo("READY");
         assertThat(p.taskState).isNull();
         var order = inOrder(proposals, repo);
         order.verify(proposals).findEvaluationId(p.id);

@@ -1,5 +1,8 @@
 # U06 AI Connections — business-logic-model
 
+**Source delta 2026-11-07 (`f68a6ec5`):** PERSONAL/INSTITUTIONAL hỗ trợ nhiều key/provider và ACTIVE/DISABLED/REVOKED; CRUD/test/reveal/status theo connection ID. AiTaskService tự chọn nguồn khi caller để trống: shared nếu có quyền/đủ quota, rồi personal. ConnectionOrder: CLAUDE → OPENAI → GEMINI, model catalog, createdAt, id. Worker retry cùng key với lỗi tạm 429/503/529 (đợi 2 s, 5 s), sau đó xét key kế tiếp; settlement usage/quota giữ riêng REJECTED/UNKNOWN. UNKNOWN vẫn có thể phát sinh chi phí và không tự hoàn reserved usage. Redelivery guard và fallback trong một task là hai trường hợp khác nhau. Các mô tả lịch sử “không tự đổi nguồn/không retry” bên dưới không thay quy tắc source hiện hành này.
+
+
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
 
@@ -32,22 +35,22 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F1 - Thêm hoặc thay API cá nhân (UC 31)
 1. Mở AI Connection từ menu tài khoản, tab API cá nhân; frontend gọi `GET /api/v1/me/ai-connections` và `GET /api/v1/ai/providers` (provider và model cho phép).
-2. Bấm Thêm (hoặc Thay) ở một provider, nhập key, chọn model; frontend gọi `PUT /api/v1/me/ai-connections/{provider}` (kèm `version` khi thay; đổi model không cần nhập lại key).
+2. Bấm Thêm để POST `/api/v1/me/ai-connections` với provider/key/model; mỗi provider có nhiều key. Thay một key dùng PUT `/api/v1/me/ai-connections/{id}` với version; đổi model không cần nhập lại key. Công tắc dùng PUT `/{id}/status` với enabled/version; owner reveal dùng GET `/{id}/key`.
 3. Kiểm người gọi là Student, Teacher hoặc Subject Manager đang `ACTIVE`, provider hợp lệ, model nằm trong danh sách cho phép, key đúng định dạng cơ bản (BR-U06-01, 02).
 4. Mã hóa key, lưu kết nối `PERSONAL` `ACTIVE` với 4 ký tự cuối; thay thì ghi đè bản mã, tăng `version`, xóa kết quả kiểm tra cũ (BR-U06-03, 06).
 5. Ghi audit `AI_CONNECTION_CHANGED`; trả kết nối dạng che, gợi ý bấm Kiểm tra.
 
 ### F2 - Kiểm tra API cá nhân (UC 31)
-1. Bấm Kiểm tra; UI báo có thể phát sinh chi phí nhỏ trên key; frontend gọi `POST /api/v1/me/ai-connections/{provider}:test`.
+1. Bấm Kiểm tra; UI báo có thể phát sinh chi phí nhỏ trên key; frontend gọi `POST /api/v1/me/ai-connections/{id}:test`.
 2. Kiểm chủ sở hữu và kết nối `ACTIVE`; giải mã key trong bộ nhớ.
 3. Gửi yêu cầu tổng hợp cố định, tối đa 5 token ra, timeout 20 giây (BR-U06-04).
 4. Lưu kết quả (`OK` hoặc lỗi đã làm sạch: key sai, hết hạn mức phía provider, model không hỗ trợ, không kết nối được) và thời điểm; có usage thì ghi bản ghi loại `CONNECTION_TEST`.
 5. Ghi audit `AI_CONNECTION_TESTED`; trả kết quả.
 
 ### F3 - Thu hồi API cá nhân (UC 31)
-1. Bấm Thu hồi, xác nhận; frontend gọi `DELETE /api/v1/me/ai-connections/{provider}`.
+1. Bấm Thu hồi, xác nhận; frontend gọi `DELETE /api/v1/me/ai-connections/{id}`.
 2. Kiểm chủ sở hữu; xóa bản mã, chuyển `REVOKED`; ghi audit `AI_CONNECTION_CHANGED`.
-3. Task chưa gửi đi dùng kết nối này chuyển `FAILED` khi tới lượt chạy; task đã gửi vẫn chạy xong (BR-U06-05).
+3. Worker xét các key ACTIVE kế tiếp theo ConnectionOrder khi key đang dùng không còn hợp lệ; settlement/fallback giữ accounting và quyền actor. Task đã gửi tuân theo xử lý kết quả hiện hành, không hủy lời gọi provider đã phát đi (BR-U06-05).
 
 ## 3. MCP (Student, Teacher, Subject Manager; Admin bị từ chối)
 
@@ -105,8 +108,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ## 6. Task AI cho unit khác
 
 ### F11 - Chọn nguồn và gửi task AI
-1. Ở màn của unit gọi (soạn Assignment, soạn Quiz, xin phản hồi AI, đề xuất chấm), người dùng bấm nút AI; `AiSourcePicker` gọi `GET /api/v1/ai/sources`: API chung theo từng provider (chỉ Teacher, Subject Manager; kèm quota còn lại hoặc lý do không dùng được) và các kết nối cá nhân `ACTIVE`.
-2. Người dùng chọn nguồn; UI hiện bên chịu chi phí và số token ước tính có nhãn "ước tính" (BR-U06-27); không tự chọn thay.
+1. Ở màn của unit gọi, caller có thể mở `AiSourcePicker` để chọn nguồn rõ hoặc gửi automatic mode không kèm source. Picker đọc `GET /api/v1/ai/sources`, hiển thị nguồn available và lý do không dùng được.
+2. Picker tự gửi preferred source nếu đang available; nếu không thì cho người dùng chọn. Với automatic mode, backend chọn shared nếu có quyền/đủ quota ước tính, rồi personal ACTIVE theo ConnectionOrder. Thông tin chi phí/quota phụ thuộc màn gọi, không được suy ra mọi màn đều mở picker (BR-U06-10, 27).
 3. Frontend gọi API của unit gọi; unit này kiểm quyền trên đích, dựng prompt tối thiểu, gọi `IAiTask.submit` kèm `requestRef` (BR-U06-20).
 4. U06 kiểm `requestRef`: trùng dấu vân tay thì trả task cũ, khác thì `409` (BR-U06-21).
 5. Kiểm nguồn: `SHARED` chỉ Teacher, Subject Manager `ACTIVE` và kết nối chung `ACTIVE`; `PERSONAL` đúng chủ và `ACTIVE`; người gọi có ít hơn 3 task đang chờ hoặc chạy (BR-U06-11, 17).

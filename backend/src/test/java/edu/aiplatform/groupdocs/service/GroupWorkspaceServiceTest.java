@@ -6,12 +6,16 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.assignments.contract.AssignmentScope;
 import edu.aiplatform.assignments.contract.AssignmentStatus;
 import edu.aiplatform.assignments.contract.AssignmentView;
+import edu.aiplatform.assignments.contract.BlockOrigin;
+import edu.aiplatform.assignments.contract.BlockType;
+import edu.aiplatform.assignments.contract.DocumentBlock;
 import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
@@ -19,6 +23,10 @@ import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignments.contract.SubmissionWindow;
 import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groupdocs.model.GroupDocument;
+import edu.aiplatform.groupdocs.model.GroupDocument.SectionAuthor;
+import edu.aiplatform.groupdocs.model.GroupDocument.SubmitMode;
+import edu.aiplatform.groupdocs.model.GroupSection;
+import edu.aiplatform.groupdocs.service.GroupSectionService.SectionView;
 import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
 import edu.aiplatform.groups.service.GroupAccess;
 import edu.aiplatform.groups.model.ClassGroup;
@@ -80,6 +88,44 @@ class GroupWorkspaceServiceTest {
 
         when(assignments.get(assignmentId)).thenReturn(Optional.of(assignment(false)));
         assertThat(service.workspace(member, document.id()).diagramEnabled()).isFalse();
+    }
+
+    @Test
+    void lastSubmissionCarriesSectionAuthorsCapturedAtSubmit() {
+        when(assignments.get(assignmentId)).thenReturn(Optional.of(assignment(false)));
+        assertThat(service.workspace(member, document.id()).lastSubmission()).isNull();
+
+        List<SectionAuthor> authors = List.of(new SectionAuthor("p1", "Mục 1", member.accountId(), true),
+                new SectionAuthor("p2", "Mục 2", null, false));
+        GroupDocument submitted = document.withSubmission(new DocumentModel(List.of()), authors, member.accountId(),
+                SubmitMode.MANUAL, NOW, false, "sha256:abc", List.of(), GroupDocument.Status.IN_PROGRESS);
+        when(documents.findById(document.id())).thenReturn(Optional.of(submitted));
+
+        var submission = service.workspace(member, document.id()).lastSubmission();
+        assertThat(submission.authors()).containsExactlyElementsOf(authors);
+        assertThat(submission.receiptHash()).isEqualTo("sha256:abc");
+    }
+
+    @Test
+    void everyoneSeesWhenTheHolderClaimedAndLastSavedButOnlyTheHolderSeesTheDraft() {
+        UUID holder = UUID.randomUUID();
+        Instant claimedAt = NOW.minusSeconds(600);
+        Instant savedAt = NOW.minusSeconds(120);
+        List<DocumentBlock> draft = List.of(new DocumentBlock(UUID.randomUUID(), BlockOrigin.STUDENT,
+                BlockType.PARAGRAPH, JsonNodeFactory.instance.objectNode().put("text", "nháp")));
+        GroupSection section = new GroupSection(UUID.randomUUID(), document.id(), "p1", UUID.randomUUID(), List.of(), 1,
+                "Mục 1", GroupSection.Status.CLAIMED, holder, claimedAt, null, null, draft, savedAt, null, 3);
+
+        SectionView other = SectionView.of(section, member.accountId());
+        assertThat(other.claimedAt()).isEqualTo(claimedAt);
+        assertThat(other.holderSavedAt()).isEqualTo(savedAt);
+        assertThat(other.draftBlocks()).isNull();
+        assertThat(other.draftSavedAt()).isNull();
+        assertThat(SectionView.of(section, holder).draftBlocks()).hasSize(1);
+
+        SectionView done = SectionView.of(section.done(NOW), member.accountId());
+        assertThat(done.claimedAt()).isNull();
+        assertThat(done.holderSavedAt()).isNull();
     }
 
     private AssignmentView assignment(boolean diagramEnabled) {

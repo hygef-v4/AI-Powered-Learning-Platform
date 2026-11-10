@@ -12,23 +12,35 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/classes/{classId}/assignments/{assignmentId}/grade-distribution-visibility")
 public class GradeDistributionVisibilityController {
-    public record Input(@NotNull Boolean enabled, @NotNull @Min(0) Long version) { }
-
-    private final GradeDistributionVisibilityService service;
-
-    public GradeDistributionVisibilityController(GradeDistributionVisibilityService service) {
-        this.service = service;
+    public record Input(@NotNull Boolean enabled, @NotNull @Min(0) Long version) {
     }
 
+    private final GradeDistributionVisibilityService gradeDistributionVisibilityService;
+
+    /** Creates the controller with grade distribution visibility services. */
+    public GradeDistributionVisibilityController(
+            GradeDistributionVisibilityService gradeDistributionVisibilityService) {
+        this.gradeDistributionVisibilityService = gradeDistributionVisibilityService;
+    }
+
+    /**
+     * Checks whether students are allowed to view the class grade distribution for an assignment.
+     */
     @GetMapping
-    public GradeDistributionVisibilityService.View get(@AuthenticationPrincipal Actor actor,
-            @PathVariable UUID classId, @PathVariable UUID assignmentId) {
-        return service.get(actor, classId, assignmentId);
+    public GradeDistributionVisibilityService.View loadVisibility(
+            @AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
+            @PathVariable UUID assignmentId) {
+        return gradeDistributionVisibilityService.loadVisibility(actor, classId, assignmentId);
     }
 
+    /**
+     * Toggles student visibility for assignment grade distribution using optimistic locking.
+     */
     @PutMapping
-    public GradeDistributionVisibilityService.View update(@AuthenticationPrincipal Actor actor,
-            @PathVariable UUID classId, @PathVariable UUID assignmentId, @Valid @RequestBody Input input) {
-        return service.update(actor, classId, assignmentId, input.enabled(), input.version());
+    public GradeDistributionVisibilityService.View updateVisibility(
+            @AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
+            @PathVariable UUID assignmentId, @Valid @RequestBody Input input) {
+        return gradeDistributionVisibilityService.updateVisibility(actor, classId, assignmentId,
+                input.enabled(), input.version());
     }
 }

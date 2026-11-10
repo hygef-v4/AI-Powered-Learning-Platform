@@ -25,7 +25,7 @@ public final class WorkViews {
     }
 
     /** {@code myStatus}: NOT_STARTED, IN_PROGRESS, SUBMITTED, SUBMITTED_LATE, MISSED, GROUP. */
-    public record Row(UUID assignmentId, UUID classId, String classCode, String className, AssignmentScope scope,
+    public record Row(UUID assignmentId, UUID classId, String classCode, String subjectCode, AssignmentScope scope,
                       String title, SubmissionMode submissionMode, GradingMode gradingMode, boolean diagramEnabled,
                       AssignmentStatus status, Instant opensAt, Instant closesAt, Instant lateUntil,
                       Integer maxAttempts, String myStatus, int attemptCount, int submittedCount,
@@ -45,7 +45,7 @@ public final class WorkViews {
      * Trang thông tin trước khi làm bài (yêu cầu 2026-10-21 thay BR-U08-03): chỉ thông tin, không có hướng dẫn, khung
      * đề và rubric; đề hiện trong lượt làm, rubric không hiện cho người học.
      */
-    public record Detail(UUID assignmentId, UUID classId, String classCode, String className, AssignmentScope scope,
+    public record Detail(UUID assignmentId, UUID classId, String classCode, String subjectCode, AssignmentScope scope,
                          String title, SubmissionMode submissionMode, GradingMode gradingMode, boolean diagramEnabled,
                          AssignmentStatus status, Instant opensAt, Instant closesAt, Instant lateUntil,
                          Integer maxAttempts, int partCount, BigDecimal maxPoints,

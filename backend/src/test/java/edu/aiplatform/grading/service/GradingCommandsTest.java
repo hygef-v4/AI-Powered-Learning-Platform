@@ -5,25 +5,25 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
 
 class GradingCommandsTest {
-    final ObjectMapper json = new ObjectMapper().findAndRegisterModules();
+    final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     @Test
     void missingAndNullVersionCannotMasqueradeAsVersionZero() {
         for (String input : new String[] { "{}", "{\"version\":null}" })
-            assertThatThrownBy(() -> json.readValue(input, GradingCommands.Save.class)).isInstanceOf(Exception.class);
+            assertThatThrownBy(() -> objectMapper.readValue(input, GradingCommands.Save.class)).isInstanceOf(Exception.class);
     }
 
     @Test
     void clientTotalCannotBeSmuggledIntoSave() {
-        assertThatThrownBy(() -> json.readValue("{\"version\":0,\"checkedItemsByRubric\":{},\"score\":10}",
+        assertThatThrownBy(() -> objectMapper.readValue("{\"version\":0,\"checkedItemsByRubric\":{},\"score\":10}",
                 GradingCommands.Save.class)).isInstanceOf(Exception.class);
-        assertThatCode(() -> json.readValue("{\"version\":0,\"checkedItemsByRubric\":{}}", GradingCommands.Save.class))
+        assertThatCode(() -> objectMapper.readValue("{\"version\":0,\"checkedItemsByRubric\":{}}", GradingCommands.Save.class))
                 .doesNotThrowAnyException();
     }
 
     @Test
     void unknownFieldsInsideStructuredFeedbackAreRejected() {
-        assertThatThrownBy(() -> json.readValue("""
+        assertThatThrownBy(() -> objectMapper.readValue("""
             {
               "version": 0,
               "checkedItemsByRubric": {},
@@ -36,7 +36,7 @@ class GradingCommandsTest {
             }
             """, GradingCommands.Save.class)).isInstanceOf(Exception.class);
 
-        assertThatThrownBy(() -> json.readValue("""
+        assertThatThrownBy(() -> objectMapper.readValue("""
             {
               "version": 0,
               "checkedItemsByRubric": {},

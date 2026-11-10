@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.identity.contract.*;
 import edu.aiplatform.shared.error.GlobalExceptionHandler;
-import edu.aiplatform.subjects.dto.*;
 import edu.aiplatform.subjects.service.*;
 import edu.aiplatform.subjects.contract.*;
 import edu.aiplatform.subjects.repository.ISubjectRepository;

@@ -1,62 +1,8 @@
 "use client";
-import { RubricItemFeedback, isItemAcknowledged, isScoreChangedAfterReview } from "./StructuredFeedbackSection";
-import type {
-  Checks,
-  ItemScores,
-  Rubric,
-  StructuredFeedback,
-  StructuredFeedbackItem,
-} from "../model/types";
+import type { Checks, ItemScores, Rubric, StructuredFeedbackItem } from "../model/types";
 
-export function itemPoints(rubricId: string, itemId: string, max: number, checks: Checks, scores: ItemScores = {}) {
-  return scores[rubricId]?.[itemId] ?? ((checks[rubricId] ?? []).includes(itemId) ? max : 0);
-}
-export function validItemScore(value: string | number, maximum: number) {
-  return /^\d+(?:\.\d{1,2})?$/.test(String(value)) && Number(value) >= 0 && Number(value) <= maximum;
-}
-export function invalidItemScores(rubrics: Rubric[], scores: ItemScores = {}) {
-  return rubrics.some((rubric) => rubric.criteria.some((criterion) => criterion.items.some((item) => {
-    const value = scores[rubric.rubricId]?.[item.itemId];
-    return value !== undefined && !validItemScore(value, Number(item.points));
-  })));
-}
-export function hasPartialPoints(rubrics: Rubric[], checks: Checks, scores: ItemScores = {}) {
-  return rubrics.some((rubric) => rubric.criteria.some((criterion) => criterion.items.some((item) => {
-    const value = Number(itemPoints(rubric.rubricId, item.itemId, Number(item.points), checks, scores));
-    return value > 0 && value < Number(item.points);
-  })));
-}
-/**
- * Explicit scores take precedence over legacy checkboxes, including partial points.
- */
-export function rubricValues(rubrics: Rubric[], checks: Checks, scores: ItemScores = {}): { checks: Checks; itemScores: ItemScores } {
-  const nextChecks: Checks = {};
-  const nextScores: ItemScores = {};
-  for (const rubric of rubrics) {
-    const ticked = new Set(checks[rubric.rubricId] ?? []);
-    const achieved: string[] = [];
-    const perItem: ItemScores[string] = {};
-    for (const item of rubric.criteria.flatMap((criterion) => criterion.items)) {
-      const max = Number(item.points);
-      const saved = scores[rubric.rubricId]?.[item.itemId];
-      const ok = saved !== undefined ? Number(saved) >= max && max > 0 : ticked.has(item.itemId);
-      if (ok) achieved.push(item.itemId);
-      perItem[item.itemId] = saved ?? (ok ? max : 0);
-    }
-    nextChecks[rubric.rubricId] = achieved;
-    nextScores[rubric.rubricId] = perItem;
-  }
-  return { checks: nextChecks, itemScores: nextScores };
-}
-
-/** Same decimal-cent sum as the backend; item overrides take precedence over legacy checks. */
-export function checklistPoints(rubrics: Rubric[], checks: Checks, scores: ItemScores = {}): number {
-  return rubrics.reduce((total, rubric) => total + rubric.criteria.reduce((sum, criterion) =>
-    sum + criterion.items.reduce((points, item) => {
-      const value = Number(itemPoints(rubric.rubricId, item.itemId, Number(item.points), checks, scores));
-      return points + (Number.isFinite(value) ? Math.round(value * 100) : 0);
-    }, 0), 0), 0) / 100;
-}
+import { resolveItemPoints, calculateChecklistPoints } from "../model/rubricScores";
+import { RubricItemFeedback } from "./StructuredFeedbackSection";
 
 export type ChecklistProps = {
   checks: Checks;
@@ -64,17 +10,12 @@ export type ChecklistProps = {
   disabled?: boolean;
   itemScores?: ItemScores;
   onScoresChange?: (value: ItemScores, changedRubricId?: string, changedItemId?: string) => void;
-  structuredFeedback?: StructuredFeedback | null;
-  reviewedItemScores?: ItemScores;
+  feedbackItems?: StructuredFeedbackItem[];
   acknowledgedReviewItems?: Checks;
-  validBlockIds?: Set<string>;
-  onItemFeedbackChange?: (item: StructuredFeedbackItem, currentAwardedPoints: number) => void;
-  onToggleAcknowledge?: (rubricId: string, itemId: string, acknowledged: boolean, currentAwardedPoints: number) => void;
 };
 
 /**
  * Checkbox edits award full/zero points; previously stored or proposed partial values remain visible until edited.
- * Review controls appear for flagged explanations or scores changed since their last review.
  */
 export function RubricChecklist({
   rubric,
@@ -83,12 +24,8 @@ export function RubricChecklist({
   disabled = false,
   itemScores = {},
   onScoresChange,
-  structuredFeedback,
-  reviewedItemScores = {},
-  acknowledgedReviewItems = {},
-  validBlockIds,
-  onItemFeedbackChange,
-  onToggleAcknowledge,
+  feedbackItems,
+  acknowledgedReviewItems,
 }: ChecklistProps & { rubric: Rubric }) {
   function award(itemId: string, max: number, achieved: boolean) {
     const selected = new Set(checks[rubric.rubricId] ?? []);
@@ -103,15 +40,12 @@ export function RubricChecklist({
     <ul className="flex flex-col gap-1.5">
       {items.map(({ criterion, item }) => {
         const max = Number(item.points);
-        const value = Number(itemPoints(rubric.rubricId, item.itemId, max, checks, itemScores));
+        const value = Number(resolveItemPoints(rubric.rubricId, item.itemId, max, checks, itemScores));
         const achieved = value === max;
-        const fbItem = structuredFeedback?.items?.find(
+        const showCriterion = criterion.title.trim() !== "" && criterion.title.trim() !== item.text.trim();
+        const feedback = feedbackItems?.find(
           (entry) => entry.rubricId === rubric.rubricId && entry.itemId === item.itemId,
         );
-        const showCriterion = criterion.title.trim() !== "" && criterion.title.trim() !== item.text.trim();
-        const review = Boolean(fbItem?.requiresReview || isScoreChangedAfterReview(fbItem,
-          reviewedItemScores[rubric.rubricId]?.[item.itemId], value,
-          isItemAcknowledged(acknowledgedReviewItems, rubric.rubricId, item.itemId)));
         return (
           <li key={item.itemId} data-testid={`rubric-item-${item.itemId}`}
             className={`rounded-lg border px-2 py-1.5 text-xs leading-snug ${achieved ? "border-primary/30 bg-primary/5" : "border-line bg-surface"}`}>
@@ -123,28 +57,20 @@ export function RubricChecklist({
                 {showCriterion && <span className="block text-[10.5px] text-faint">{criterion.title}</span>}
                 {item.text}
               </span>
-              <span className="shrink-0 tabular-nums text-muted">{value > 0 && value < max ? `${value.toFixed(2)} / ` : ""}{max.toFixed(2)}</span>
+              <span className="shrink-0 tabular-nums text-muted">
+                {feedback || (value > 0 && value < max) ? `${value.toFixed(2)} / ` : ""}{max.toFixed(2)}
+              </span>
             </label>
-            {review && (
-              <div className="pl-6">
-                <RubricItemFeedback
-                  rubricId={rubric.rubricId}
-                  itemId={item.itemId}
-                  itemText={item.text}
-                  awardedPoints={value}
-                  maxPoints={max}
-                  feedbackItem={fbItem}
-                  reviewedScore={reviewedItemScores[rubric.rubricId]?.[item.itemId]}
-                  acknowledged={isItemAcknowledged(acknowledgedReviewItems, rubric.rubricId, item.itemId)}
-                  validBlockIds={validBlockIds}
-                  editable={Boolean(onItemFeedbackChange)}
-                  disabled={disabled}
-                  onChangeItem={onItemFeedbackChange ? (updated) => onItemFeedbackChange(updated, value) : undefined}
-                  onToggleAcknowledge={onToggleAcknowledge
-                    ? (checked) => onToggleAcknowledge(rubric.rubricId, item.itemId, checked, value)
-                    : undefined}
-                />
-              </div>
+            {feedback && (
+              <RubricItemFeedback
+                rubricId={rubric.rubricId}
+                itemId={item.itemId}
+                itemText={item.text}
+                awardedPoints={value}
+                maxPoints={max}
+                feedbackItem={feedback}
+                acknowledged={acknowledgedReviewItems?.[rubric.rubricId]?.includes(item.itemId)}
+              />
             )}
           </li>
         );
@@ -169,7 +95,7 @@ export function RubricChecklistPanel({ rubrics, partTitles = {}, ...props }: Che
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <span className="min-w-0 flex-1 break-words text-sm font-semibold text-ink">{title}</span>
           <span className="shrink-0 text-sm font-bold tabular-nums text-primary-ink">
-            {checklistPoints([rubric], props.checks, props.itemScores).toFixed(2)} / {Number(rubric.maxPoints).toFixed(2)} điểm
+            {calculateChecklistPoints([rubric], props.checks, props.itemScores).toFixed(2)} / {Number(rubric.maxPoints).toFixed(2)} điểm
           </span>
         </div>
         <RubricChecklist rubric={rubric} {...props} />

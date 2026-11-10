@@ -177,7 +177,9 @@ describe("QuestionImportDialog (UC 47)", () => {
       .mockResolvedValueOnce({ dryRun: false, total: 2, valid: 1, invalid: 1, created: 1, rows: [] });
     const onImported = vi.fn();
     render(<QuestionImportDialog subjectId="s1" onClose={vi.fn()} onImported={onImported} />);
-    const file = new File(["x"], "cau-hoi.csv", { type: "text/csv" });
+    const file = new File(["x"], "cau-hoi.xlsx");
+    expect(screen.getByTestId("question-import-file")).toHaveAttribute("accept", ".xlsx");
+    expect(screen.getByTestId("question-import-template")).toHaveAttribute("href", "/templates/question-import.xlsx");
 
     fireEvent.change(screen.getByTestId("question-import-file"), { target: { files: [file] } });
 
@@ -190,7 +192,7 @@ describe("QuestionImportDialog (UC 47)", () => {
 
   it("tệp quá 5 MB bị chặn trước khi gửi", async () => {
     render(<QuestionImportDialog subjectId="s1" onClose={vi.fn()} onImported={vi.fn()} />);
-    const big = new File(["x"], "lon.csv");
+    const big = new File(["x"], "lon.xlsx");
     Object.defineProperty(big, "size", { value: 6 * 1024 * 1024 });
     fireEvent.change(screen.getByTestId("question-import-file"), { target: { files: [big] } });
     expect(await screen.findByText("Tệp tối đa 5 MB.")).toBeInTheDocument();

@@ -68,7 +68,7 @@ public class QuizQueryService implements IQuizQuery {
             if (quiz.generated()) {
                 List<DrawRule> rules = quizzes.drawRules(quizId);
                 return new QuizStudentView(view(quiz, QuizSupport.maxScoreOf(rules)), quiz.instructions(), List.of(),
-                        rules.stream().mapToInt(DrawRule::questionCount).sum(), true);
+                        rules.stream().mapToInt(DrawRule::questionCount).sum(), true, quiz.instructionsDocument());
             }
             List<QuizItem> items = quizzes.items(quizId);
             Map<UUID, Question> byId = questions.findAll(items.stream().map(QuizItem::questionId).toList()).stream()
@@ -77,7 +77,8 @@ public class QuizQueryService implements IQuizQuery {
                     .map(item -> questionView(byId.get(item.questionId()), item.points()))
                     .toList();
             BigDecimal max = items.stream().map(QuizItem::points).reduce(BigDecimal.ZERO, BigDecimal::add);
-            return new QuizStudentView(view(quiz, max), quiz.instructions(), views);
+            return new QuizStudentView(view(quiz, max), quiz.instructions(), views, views.size(), false,
+                    quiz.instructionsDocument());
         });
     }
 
@@ -107,7 +108,8 @@ public class QuizQueryService implements IQuizQuery {
                 .map(entry -> questionView(byId.get(entry.getKey()), entry.getValue()))
                 .toList();
         BigDecimal max = questionPoints.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new QuizStudentView(view(quiz, max), quiz.instructions(), views, views.size(), true);
+        return new QuizStudentView(view(quiz, max), quiz.instructions(), views, views.size(), true,
+                quiz.instructionsDocument());
     }
 
     private static QuizQuestionView questionView(Question q, BigDecimal points) {

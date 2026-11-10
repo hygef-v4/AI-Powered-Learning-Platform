@@ -1,6 +1,6 @@
-# U04 Subject Administration — AS-BUILT 2026-10-30
+# U04 Subject Administration — AS-BUILT source snapshot 2026-11-07
 
-Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership and public contracts unchanged.
+Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths are catalogued in [current-code-baseline](../../../inception/reverse-engineering/current-code-baseline.md). Dated deltas/test results below retain their original scope; this update is not runtime acceptance.
 
 subjects có quản trị danh sách/chi tiết/create/update, manager assignment, archive/reopen và version guards. UI tại admin/subjects; Subject Detail của Admin không cấp quyền chấm hoặc sửa lớp. Các handoff raw paths bị mất được thay bằng baseline này, không tạo lại nội dung approval giả.
 

@@ -179,7 +179,6 @@ async function main() {
       code: `E2E-${runId}`.toUpperCase(),
       name: `E2E ${runId}`,
       description: "isolated API E2E",
-      term: "2026-1",
       teacherId,
     }),
     201,
@@ -328,7 +327,8 @@ async function main() {
   for (const key of ["admin", "manager", "teacher", "student"]) {
     const person = people[key],
       session = person.session;
-    const defaults = person.role === "STUDENT" || person.role === "ADMIN";
+    // BR-U14-21: every role defaults to enabled; saved opt-outs must survive relogin.
+    const defaults = true;
     await test(`U14 ${key} exact keys/defaults`, async () => {
       const prefs = expect(await session.get(prefPath), 200);
       assert.deepEqual(Object.keys(prefs).sort(), [...keys[person.role]].sort());

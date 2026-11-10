@@ -1,6 +1,6 @@
-# U03 Job and Settings — AS-BUILT 2026-10-30
+# U03 Job and Settings — AS-BUILT source snapshot 2026-11-07
 
-Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership and public contracts unchanged.
+Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths are catalogued in [current-code-baseline](../../../inception/reverse-engineering/current-code-baseline.md). Dated deltas/test results below retain their original scope; this update is not runtime acceptance.
 
 files/jobs/settings/backup có source và Flyway schema. Settings hiện hành lấy từ SettingDefinition trong source, không từ danh sách cũ; activity.retentionDays không còn được khai báo. Drive private upload/download và backup encryption cần runtime secrets; không chứng nhận restore từ việc có script. CI deploy vẫn disabled.
 
@@ -20,11 +20,11 @@ files/jobs/settings/backup có source và Flyway schema. Settings hiện hành l
 | [jobs/contract](../../../../backend/src/main/java/edu/aiplatform/jobs/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 | [settings/controller](../../../../backend/src/main/java/edu/aiplatform/settings/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [settings/service](../../../../backend/src/main/java/edu/aiplatform/settings/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [settings/repository](../../../../backend/src/main/java/edu/aiplatform/settings/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [settings/repository](../../../../backend/src/main/java/edu/aiplatform/settings/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [settings/model](../../../../backend/src/main/java/edu/aiplatform/settings/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [settings/contract](../../../../backend/src/main/java/edu/aiplatform/settings/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
 | [backup/service](../../../../backend/src/main/java/edu/aiplatform/backup/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [backup/repository](../../../../backend/src/main/java/edu/aiplatform/backup/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [backup/repository](../../../../backend/src/main/java/edu/aiplatform/backup/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
 | [backup/model](../../../../backend/src/main/java/edu/aiplatform/backup/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [backup/integration](../../../../backend/src/main/java/edu/aiplatform/backup/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [backup/config](../../../../backend/src/main/java/edu/aiplatform/backup/config) | Properties, cấu hình bean và topology. |

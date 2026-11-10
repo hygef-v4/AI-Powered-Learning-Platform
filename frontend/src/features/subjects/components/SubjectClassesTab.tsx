@@ -25,9 +25,7 @@ export function SubjectClassesTab({ items }: { items: SubjectClassSummary[] }) {
   const filtered = items.filter(
     (item) =>
       (status === "ALL" || item.status === status) &&
-      (!q ||
-        item.code.toLocaleLowerCase("vi").includes(q) ||
-        item.name.toLocaleLowerCase("vi").includes(q)),
+      (!q || item.code.toLocaleLowerCase("vi").includes(q)),
   );
   return (
     <section className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
@@ -60,8 +58,8 @@ export function SubjectClassesTab({ items }: { items: SubjectClassSummary[] }) {
           <TextInput
             type="search"
             icon="search"
-            aria-label="Lọc theo mã hoặc tên lớp"
-            placeholder="Lọc theo mã hoặc tên lớp"
+            aria-label="Lọc theo mã lớp"
+            placeholder="Lọc theo mã lớp"
             value={search}
             maxLength={200}
             data-testid="subjects-classes-search"

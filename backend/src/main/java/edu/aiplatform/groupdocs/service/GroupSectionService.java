@@ -16,7 +16,6 @@ import edu.aiplatform.files.contract.FileRef;
 import edu.aiplatform.files.contract.IArtifact;
 import edu.aiplatform.groupdocs.contract.ISseHub;
 import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
-import edu.aiplatform.groupdocs.model.AssignmentLock;
 import edu.aiplatform.groupdocs.model.GroupSection;
 import edu.aiplatform.groupdocs.model.SectionRevision;
 import edu.aiplatform.groupdocs.model.SectionRules;
@@ -27,15 +26,14 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Thao tác trên mục của tài liệu nhóm (F9–F11; BR-U12-31–38; P1): nhận, giao, nhả, lưu nháp, Xong; phân công rồi chốt
- * và lịch sử theo góp ý 2026-11-02 (FB-U12-01, 02). Khóa dòng mục trước khi đổi; mọi sửa chỉ khi tài liệu còn mở và bài còn nhận bài. Đẩy SSE cho người đang
- * mở tài liệu.
+ * Thao tác trên mục của tài liệu nhóm (F9–F11; BR-U12-31–38; P1): nhận, giao, nhả, lưu nháp, Xong và xem lịch sử.
+ * Khóa dòng mục trước khi đổi; mọi sửa chỉ khi tài liệu còn mở và bài còn nhận bài. Đẩy SSE cho người đang mở tài
+ * liệu.
  */
 @Service
 public class GroupSectionService {
@@ -65,37 +63,25 @@ public class GroupSectionService {
         this.clock = clock;
     }
 
-    /**
-     * Nhận mục (BR-U12-33, FB-U12-01). Chưa chốt phân công: thành viên nhận làm người phụ trách mục chưa có ai, chưa soạn.
-     * Đã chốt: người phụ trách bắt đầu soạn mục của mình ({@code CLAIMED}, bản nháp từ nội dung đã đăng).
-     */
+    /** Thành viên nhận mục {@code OPEN} hoặc {@code DONE} và soạn ngay (BR-U12-33). */
     @Transactional
     public SectionView claim(Actor actor, UUID documentId, UUID sectionId) {
         GroupDocContext ctx = access.read(actor, documentId);
         GroupDocAccess.requireMember(ctx);
         access.requireEditable(ctx, false);
-        boolean working = working(documentId);
         GroupSection section = lockSection(documentId, sectionId);
-        refuse(SectionRules.canClaim(section, actor.accountId(), working));
-        if (!working) {
-            if (section.assignedTo(actor.accountId())) {
-                return SectionView.of(section, actor.accountId());
-            }
-            GroupSection reserved = save(section.withAssignee(actor.accountId()));
-            push(documentId, "section.claimed", reserved);
-            return SectionView.of(reserved, actor.accountId());
-        }
         if (actor.accountId().equals(section.claimedBy())) {
             return SectionView.of(section, actor.accountId());
         }
+        refuse(SectionRules.canClaim(section, actor.accountId()));
         GroupSection claimed = save(section.claimedBy(actor.accountId(), actor.accountId(), clock.instant()));
         push(documentId, "section.claimed", claimed);
         return SectionView.of(claimed, actor.accountId());
     }
 
     /**
-     * Trưởng nhóm giao hoặc đổi người phụ trách khi chưa chốt phân công (BR-U12-33, FB-U12-01). Mục còn bản nháp đang
-     * giữ (từ trước khi mở chốt) chỉ giao được khi {@code replaceHolder}; bản nháp đó bị bỏ (BR-U12-36).
+     * Trưởng nhóm giao mục cho một thành viên (BR-U12-33). Mục đang do người khác giữ chỉ giao được khi
+     * {@code replaceHolder} (giao diện đã cảnh báo bản nháp của người đó sẽ bị bỏ, BR-U12-36).
      */
     @Transactional
     public SectionView assign(Actor actor, UUID documentId, UUID sectionId, UUID assigneeId, boolean replaceHolder) {
@@ -105,84 +91,39 @@ public class GroupSectionService {
         if (assigneeId == null || !ctx.group().isMember(assigneeId)) {
             throw ApiException.badRequest("SECTION_ASSIGNEE_INVALID", "Chỉ giao được cho thành viên của nhóm");
         }
-        refuse(SectionRules.canAssign(working(documentId)));
         GroupSection section = lockSection(documentId, sectionId);
-        if (section.assignedTo(assigneeId)) {
+        if (assigneeId.equals(section.claimedBy())) {
             return SectionView.of(section, actor.accountId());
         }
-        if (section.status() == GroupSection.Status.CLAIMED && !assigneeId.equals(section.claimedBy())) {
+        if (section.status() == GroupSection.Status.CLAIMED) {
             if (!replaceHolder) {
-                throw ApiException.conflict("SECTION_CLAIMED_BY_OTHER", "Mục còn bản nháp của người khác, cần nhả trước");
+                throw ApiException.conflict("SECTION_CLAIMED_BY_OTHER", "Mục đang do người khác giữ, cần nhả trước");
             }
             UUID previous = section.claimedBy();
             section = save(section.released());
             record(actor, "GROUP_SECTION_RELEASED", section, Map.of("holder", previous.toString(), "cause", "REASSIGNED"));
         }
-        GroupSection assigned = save(section.withAssignee(assigneeId));
+        GroupSection assigned = save(section.claimedBy(assigneeId, actor.accountId(), clock.instant()));
         record(actor, "GROUP_SECTION_ASSIGNED", assigned, Map.of("assignee", assigneeId.toString()));
         push(documentId, "section.assigned", assigned);
         return SectionView.of(assigned, actor.accountId());
     }
 
-    /**
-     * Nhả mục (BR-U12-36, FB-U12-01). Chưa chốt phân công: bỏ người phụ trách (và bản nháp nếu còn). Đã chốt: dừng soạn,
-     * bản nháp bị bỏ, người phụ trách giữ nguyên.
-     */
+    /** Người giữ, trưởng nhóm hoặc giảng viên nhả mục; bản nháp bị bỏ (BR-U12-36). */
     @Transactional
     public SectionView release(Actor actor, UUID documentId, UUID sectionId) {
         GroupDocContext ctx = access.read(actor, documentId);
         access.requireEditable(ctx, false);
-        boolean working = working(documentId);
         GroupSection section = lockSection(documentId, sectionId);
-        refuse(SectionRules.canRelease(section, actor.accountId(), ctx.leader(), ctx.teacher(), working));
-        UUID holder = section.claimedBy() != null ? section.claimedBy() : section.assigneeId();
-        GroupSection next = section.status() == GroupSection.Status.CLAIMED ? section.released() : section;
-        GroupSection released = save(working ? next : next.withAssignee(null));
+        refuse(SectionRules.canRelease(section, actor.accountId(), ctx.leader(), ctx.teacher()));
+        UUID holder = section.claimedBy();
+        GroupSection released = save(section.released());
         if (!actor.accountId().equals(holder)) {
             record(actor, "GROUP_SECTION_RELEASED", released,
                     Map.of("holder", holder.toString(), "cause", ctx.teacher() ? "TEACHER" : "LEADER"));
         }
         push(documentId, "section.released", released);
         return SectionView.of(released, actor.accountId());
-    }
-
-    /**
-     * Trưởng nhóm chốt phân công cho cả tài liệu (FB-U12-01): mọi mục phải có người phụ trách là thành viên hiện tại;
-     * từ đó mỗi người soạn mục của mình, không nhận hay giao thêm.
-     */
-    @Transactional
-    public AssignmentLock lockAssignment(Actor actor, UUID documentId) {
-        GroupDocContext ctx = access.read(actor, documentId);
-        requireLeader(ctx);
-        access.requireEditable(ctx, false);
-        Optional<AssignmentLock> current = documents.assignmentLock(documentId);
-        if (current.isPresent()) {
-            return current.get();
-        }
-        long missing = documents.lockSections(documentId).stream()
-                .filter(s -> s.assigneeId() == null || !ctx.group().isMember(s.assigneeId())).count();
-        if (missing > 0) {
-            throw ApiException.conflict("ASSIGNMENT_INCOMPLETE", "Còn " + missing + " mục chưa có người phụ trách");
-        }
-        AssignmentLock lock = new AssignmentLock(actor.accountId(), clock.instant());
-        documents.setAssignmentLock(documentId, lock);
-        recordDocument(actor, "GROUP_ASSIGNMENT_LOCKED", documentId);
-        pushDocument(documentId, "assignment.locked");
-        return lock;
-    }
-
-    /** Trưởng nhóm mở chốt để phân lại (FB-U12-01); bản nháp và nội dung đã Xong giữ nguyên, tạm dừng soạn. */
-    @Transactional
-    public void unlockAssignment(Actor actor, UUID documentId) {
-        GroupDocContext ctx = access.read(actor, documentId);
-        requireLeader(ctx);
-        access.requireEditable(ctx, false);
-        if (documents.assignmentLock(documentId).isEmpty()) {
-            return;
-        }
-        documents.setAssignmentLock(documentId, null);
-        recordDocument(actor, "GROUP_ASSIGNMENT_UNLOCKED", documentId);
-        pushDocument(documentId, "assignment.unlocked");
     }
 
     /** Tự lưu bản nháp của người giữ kèm {@code version} của mục; lệch thì {@code 409} (BR-U12-34). */
@@ -192,7 +133,7 @@ public class GroupSectionService {
         GroupDocAccess.requireMember(ctx);
         access.requireEditable(ctx, true);
         GroupSection section = lockSection(documentId, sectionId);
-        refuse(SectionRules.canEdit(section, actor.accountId(), working(documentId)));
+        refuse(SectionRules.canEdit(section, actor.accountId()));
         if (version == null || version != section.version()) {
             throw ApiException.conflict("SECTION_VERSION_CONFLICT", "Mục vừa được thay đổi ở nơi khác, hãy tải lại");
         }
@@ -211,7 +152,7 @@ public class GroupSectionService {
         GroupDocAccess.requireMember(ctx);
         access.requireEditable(ctx, false);
         GroupSection section = lockSection(documentId, sectionId);
-        refuse(SectionRules.canEdit(section, actor.accountId(), working(documentId)));
+        refuse(SectionRules.canEdit(section, actor.accountId()));
         List<DocumentBlock> content = section.draftBlocks() != null ? section.draftBlocks()
                 : section.publishedBlocks() == null ? List.of() : section.publishedBlocks();
         rejectInvalid(validate(ctx, section, content));
@@ -223,34 +164,13 @@ public class GroupSectionService {
         return SectionView.of(finished, actor.accountId());
     }
 
-    /** Lịch sử mục, mới nhất trước (BR-U12-35, FB-U12-02): thành viên và giảng viên của lớp đọc được. */
+    /** Lịch sử mục chỉ xem, mới nhất trước (BR-U12-35): thành viên và giảng viên của lớp đọc được. */
     @Transactional(readOnly = true)
     public List<RevisionView> revisions(Actor actor, UUID documentId, UUID sectionId) {
         access.read(actor, documentId);
         GroupSection section = documents.listSections(documentId).stream().filter(s -> s.id().equals(sectionId))
                 .findFirst().orElseThrow(() -> ApiException.notFound("SECTION_NOT_FOUND"));
         return documents.listRevisions(section.id(), MAX_REVISIONS).stream().map(RevisionView::of).toList();
-    }
-
-    /** Người giữ đưa một bản lịch sử vào bản nháp (FB-U12-02); bấm Xong mới thành nội dung đã đăng. */
-    @Transactional
-    public SectionView restore(Actor actor, UUID documentId, UUID sectionId, UUID revisionId, Long version) {
-        GroupDocContext ctx = access.read(actor, documentId);
-        GroupDocAccess.requireMember(ctx);
-        access.requireEditable(ctx, false);
-        GroupSection section = lockSection(documentId, sectionId);
-        refuse(SectionRules.canEdit(section, actor.accountId(), working(documentId)));
-        if (version == null || version != section.version()) {
-            throw ApiException.conflict("SECTION_VERSION_CONFLICT", "Mục vừa được thay đổi ở nơi khác, hãy tải lại");
-        }
-        SectionRevision revision = documents.findRevision(section.id(), revisionId)
-                .orElseThrow(() -> ApiException.notFound("REVISION_NOT_FOUND"));
-        rejectInvalid(validate(ctx, section, revision.blocks()));
-        Instant now = clock.instant();
-        GroupSection restored = save(section.withDraft(revision.blocks(), now));
-        documents.touch(documentId, now);
-        record(actor, "GROUP_SECTION_RESTORED", restored, Map.of("revisionId", revisionId.toString()));
-        return SectionView.of(restored, actor.accountId());
     }
 
     // ---- tiện ích -----------------------------------------------------------------------------------------------
@@ -268,7 +188,7 @@ public class GroupSectionService {
         return new GroupSection(section.id(), section.documentId(), section.partId(), section.headingBlockId(),
                 section.ancestorHeadingIds(), section.orderNo(), section.title(), section.status(), section.claimedBy(),
                 section.claimedAt(), section.assignedBy(), section.publishedBlocks(), section.draftBlocks(),
-                section.draftSavedAt(), section.lastAuthorId(), section.version() + 1, section.assigneeId());
+                section.draftSavedAt(), section.lastAuthorId(), section.version() + 1);
     }
 
     /**
@@ -280,22 +200,6 @@ public class GroupSectionService {
                 : section.publishedBlocks() == null ? List.of() : section.publishedBlocks();
         return DocumentFiles.resolveFiles(new DocumentModel(previous), new DocumentModel(content),
                 ref -> artifacts.attach(new FileRef(ref), actor, ArtifactPurpose.DOCUMENT_IMAGE).fileId()).blocks();
-    }
-
-    private boolean working(UUID documentId) {
-        return documents.assignmentLock(documentId).isPresent();
-    }
-
-    private void recordDocument(Actor actor, String action, UUID documentId) {
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), action, "GROUP_DOCUMENT", documentId.toString(),
-                AuditResult.SUCCESS, null, Map.of(), clock.instant()));
-    }
-
-    private void pushDocument(UUID documentId, String type) {
-        Map<String, Object> event = new LinkedHashMap<>();
-        event.put("type", type);
-        event.put("documentId", documentId.toString());
-        sse.publish(channel(documentId), event);
     }
 
     private static void requireLeader(GroupDocContext ctx) {
@@ -351,9 +255,6 @@ public class GroupSectionService {
             case "SECTION_RELEASE_FORBIDDEN" -> throw ApiException.forbidden(code);
             case "SECTION_NOT_HELD" -> throw ApiException.conflict(code, "Bạn không giữ mục này");
             case "SECTION_NOT_CLAIMED" -> throw ApiException.conflict(code, "Mục không có ai giữ");
-            case "ASSIGNMENT_LOCKED" -> throw ApiException.conflict(code, "Phân công đã chốt, trưởng nhóm mở chốt để đổi");
-            case "ASSIGNMENT_NOT_LOCKED" -> throw ApiException.conflict(code, "Chờ trưởng nhóm chốt phân công rồi mới soạn");
-            case "SECTION_ASSIGNED_TO_OTHER" -> throw ApiException.conflict(code, "Mục do thành viên khác phụ trách");
             default -> throw ApiException.conflict(code, "Mục đã có người nhận");
         }
     }
@@ -382,16 +283,22 @@ public class GroupSectionService {
                 AuditResult.SUCCESS, null, details, clock.instant()));
     }
 
-    /** Mục trả ra ngoài; bản nháp chỉ người giữ thấy (BR-U12-34). */
+    /**
+     * Mục trả ra ngoài; bản nháp chỉ người giữ thấy (BR-U12-34). {@code claimedAt} và {@code holderSavedAt} (lần lưu nháp
+     * cuối của người giữ) chỉ là mốc giờ, mọi người thấy để trưởng nhóm biết mục còn được soạn hay bị bỏ quên.
+     */
     public record SectionView(UUID id, String partId, String title, int orderNo, GroupSection.Status status, UUID holderId,
                               UUID assignedBy, List<DocumentBlock> publishedBlocks, List<DocumentBlock> draftBlocks,
-                              Instant draftSavedAt, UUID lastAuthorId, long version, UUID assigneeId) {
+                              Instant draftSavedAt, UUID lastAuthorId, long version, Instant claimedAt,
+                              Instant holderSavedAt) {
 
         public static SectionView of(GroupSection s, UUID viewer) {
             boolean holder = viewer != null && viewer.equals(s.claimedBy());
+            boolean claimed = s.status() == GroupSection.Status.CLAIMED;
             return new SectionView(s.id(), s.partId(), s.title(), s.orderNo(), s.status(), s.claimedBy(), s.assignedBy(),
                     hideFiles(s.publishedBlocks()), holder ? hideFiles(s.draftBlocks()) : null,
-                    holder ? s.draftSavedAt() : null, s.lastAuthorId(), s.version(), s.assigneeId());
+                    holder ? s.draftSavedAt() : null, s.lastAuthorId(), s.version(), claimed ? s.claimedAt() : null,
+                    claimed ? s.draftSavedAt() : null);
         }
 
         /** Không trả {@code fileId} của U03 cho trình duyệt; ảnh mở theo id block (như bài cá nhân). */

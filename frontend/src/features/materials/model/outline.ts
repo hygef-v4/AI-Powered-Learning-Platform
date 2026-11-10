@@ -55,7 +55,8 @@ export function useModuleOutline(
           module,
           items: [
             ...materials
-              .data!.filter((m) => m.status === "ACTIVE" && m.moduleId === module.id)
+              .data!.filter((m) => m.status === "ACTIVE" && m.moduleId === module.id
+                && (scope?.kind !== "student" || m.enabled !== false))
               .sort((a, b) => a.orderNo - b.orderNo || a.title.localeCompare(b.title, "vi"))
               .map((material) => ({ kind: "material" as const, material })),
             ...module.quizzes.map((quiz) => ({ kind: "quiz" as const, quiz })),

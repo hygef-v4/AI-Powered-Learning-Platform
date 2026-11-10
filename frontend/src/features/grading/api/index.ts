@@ -1,4 +1,5 @@
 import { apiFetch, apiDownload } from "@/shared/api/client";
+import type { NavigationFilters } from "../model/navigation";
 import type {
   AiRequest,
   AssignmentContext,
@@ -14,60 +15,90 @@ import type {
   StudentGrade,
   SubmissionPage,
 } from "../model/types";
-const root = "/api/v1";
+
+const API_ROOT = "/api/v1";
+
 export type GradeDistributionVisibility = { enabled: boolean; version: number; canEdit: boolean };
-const visibilityPath = (classId: string, assignmentId: string) =>
+
+const buildVisibilityPath = (classId: string, assignmentId: string) =>
   `/classes/${encodeURIComponent(classId)}/assignments/${encodeURIComponent(assignmentId)}/grade-distribution-visibility`;
-const query = (values: Record<string, string | number | undefined>) => {
-  const q = new URLSearchParams();
-  Object.entries(values).forEach(([k, v]) => {
-    if (v !== undefined) q.set(k, String(v));
-  });
-  return q.toString();
+
+const buildQuery = (values: Record<string, string | number | undefined>) => {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(values)) {
+    if (value !== undefined) params.set(key, String(value));
+  }
+  return params.toString();
 };
-const write = <T>(path: string, body: unknown, method = "POST") =>
-  apiFetch<T>(root + path, { method, body: JSON.stringify(body) });
+
+const writeRequest = <T>(path: string, body: unknown, method = "POST") =>
+  apiFetch<T>(API_ROOT + path, { method, body: JSON.stringify(body) });
+
 export const gradingApi = {
-  distributionVisibility: (classId: string, assignmentId: string, signal?: AbortSignal) =>
-    apiFetch<GradeDistributionVisibility>(root + visibilityPath(classId, assignmentId), { signal }),
-  saveDistributionVisibility: (classId: string, assignmentId: string, enabled: boolean, version: number) =>
-    write<GradeDistributionVisibility>(visibilityPath(classId, assignmentId), { enabled, version }, "PUT"),
-  task: (id: string) => apiFetch<{ state: string; safeError: string | null }>(`${root}/ai/tasks/${encodeURIComponent(id)}`),
-  assignmentContext: (assignmentId: string) =>
-    apiFetch<AssignmentContext>(`${root}/assignments/${encodeURIComponent(assignmentId)}`),
-  submissions: (classId: string, assignmentId: string, status = "ALL", page = 1, late?: string) =>
-    apiFetch<SubmissionPage>(
-      `${root}/classes/${classId}/assignments/${assignmentId}/submissions?${query({ status, page, size: 20, late: late || undefined })}`,
+  loadAssignmentContext: (assignmentId: string) =>
+    apiFetch<AssignmentContext>(`${API_ROOT}/assignments/${encodeURIComponent(assignmentId)}`),
+  listSubmissions: (classId: string, assignmentId: string, status = "ALL", page = 1, late?: string) => {
+    const params = buildQuery({ status, page, size: 20, late: late || undefined });
+    return apiFetch<SubmissionPage>(
+      `${API_ROOT}/classes/${classId}/assignments/${assignmentId}/submissions?${params}`,
+    );
+  },
+  loadSubmissionProgress: (classId: string) =>
+    apiFetch<Record<string, SubmissionPage>>(`${API_ROOT}/classes/${classId}/submission-progress`),
+
+  loadEvaluation: (id: string, filters: NavigationFilters = {}) => {
+    const params = buildQuery(filters);
+    return apiFetch<Detail>(`${API_ROOT}/evaluations/${id}${params ? `?${params}` : ""}`);
+  },
+  saveEvaluation: (id: string, body: Save) => writeRequest<Evaluation>(`/evaluations/${id}`, body, "PUT"),
+  finalizeGrades: (items: ItemVersion[]) => writeRequest<BatchResult>("/evaluations:finalize", { items }),
+  publishGrades: (items: ItemVersion[]) => writeRequest<BatchResult>("/evaluations:publish", { items }),
+  saveMemberGrade: (id: string, accountId: string, version: number, score: string, reason: string | null) =>
+    writeRequest<Evaluation>(`/evaluations/${id}/members/${accountId}`, { version, score, reason }, "PUT"),
+
+  loadTask: (id: string) =>
+    apiFetch<{ state: string; safeError: string | null }>(
+      `${API_ROOT}/ai/tasks/${encodeURIComponent(id)}`,
     ),
-  detail: (id: string) => apiFetch<Detail>(`${root}/evaluations/${id}`),
-  save: (id: string, body: Save) => write<Evaluation>(`/evaluations/${id}`, body, "PUT"),
-  finalize: (items: ItemVersion[]) => write<BatchResult>("/evaluations:finalize", { items }),
-  publish: (items: ItemVersion[]) => write<BatchResult>("/evaluations:publish", { items }),
-  proposals: (id: string) => apiFetch<Proposal[]>(`${root}/evaluations/${id}/ai-proposals`),
-  request: (id: string, input: AiRequest) =>
-    write<Proposal>(`/evaluations/${id}/ai-proposals`, input),
-  requestBatch: (items: ItemVersion[], request: AiRequest) =>
-    write<BatchResult>("/evaluations:ai-proposals", { items, request }),
-  estimateBatch: (items: ItemVersion[]) =>
-    write<AiEstimate>("/evaluations:ai-proposal-estimate", { items }),
-  gradebook: (classId: string, q = "", page = 1, size = 20) =>
-    apiFetch<GradebookPage>(`${root}/classes/${classId}/gradebook?${query({ q, page, size })}`),
-  export: (classId: string, format: string, assignmentId?: string) =>
-    apiDownload(`${root}/classes/${classId}/gradebook/export?${query({ format, assignmentId })}`),
-  progress: (classId: string) =>
-    apiFetch<Record<string, SubmissionPage>>(`${root}/classes/${classId}/submission-progress`),
-  student: (classId: string, studentId: string) =>
-    apiFetch<GradebookRow>(`${root}/classes/${classId}/students/${studentId}/grades`),
-  myGrades: (classId: string) => apiFetch<StudentGrade[]>(`${root}/me/grades?classId=${classId}`),
-  attempt: (attemptId: string) => apiFetch<StudentGrade>(`${root}/me/grades/attempts/${attemptId}`),
-  distribution: (classId: string, assignmentId: string) =>
+  listProposals: (id: string) => apiFetch<Proposal[]>(`${API_ROOT}/evaluations/${id}/ai-proposals`),
+  requestProposal: (id: string, input: AiRequest) =>
+    writeRequest<Proposal>(`/evaluations/${id}/ai-proposals`, input),
+  requestProposals: (items: ItemVersion[], request: AiRequest) =>
+    writeRequest<BatchResult>("/evaluations:ai-proposals", { items, request }),
+  estimateProposalTokens: (items: ItemVersion[]) =>
+    writeRequest<AiEstimate>("/evaluations:ai-proposal-estimate", { items }),
+
+  loadGradebook: (classId: string, q = "", page = 1, size = 20) =>
+    apiFetch<GradebookPage>(`${API_ROOT}/classes/${classId}/gradebook?${buildQuery({ q, page, size })}`),
+  exportGrades: (classId: string, format: string, assignmentId?: string) =>
+    apiDownload(`${API_ROOT}/classes/${classId}/gradebook/export?${buildQuery({ format, assignmentId })}`),
+  loadStudentGrades: (classId: string, studentId: string) =>
+    apiFetch<GradebookRow>(`${API_ROOT}/classes/${classId}/students/${studentId}/grades`),
+  listMyGrades: (classId: string) => apiFetch<StudentGrade[]>(`${API_ROOT}/me/grades?classId=${classId}`),
+  loadAttemptGrade: (attemptId: string) => apiFetch<StudentGrade>(`${API_ROOT}/me/grades/attempts/${attemptId}`),
+
+  loadDistributionVisibility: (classId: string, assignmentId: string, signal?: AbortSignal) =>
+    apiFetch<GradeDistributionVisibility>(
+      API_ROOT + buildVisibilityPath(classId, assignmentId),
+      { signal },
+    ),
+  saveDistributionVisibility: (
+    classId: string,
+    assignmentId: string,
+    enabled: boolean,
+    version: number,
+  ) =>
+    writeRequest<GradeDistributionVisibility>(
+      buildVisibilityPath(classId, assignmentId),
+      { enabled, version },
+      "PUT",
+    ),
+  loadMyGradeDistribution: (classId: string, assignmentId: string) =>
     apiFetch<{ label: string; count: number }[]>(
-      `${root}/me/grade-distributions?${query({ classId, assignmentId })}`,
+      `${API_ROOT}/me/grade-distributions?${buildQuery({ classId, assignmentId })}`,
     ),
-  classDistribution: (classId: string, assignmentId: string) =>
+  loadClassGradeDistribution: (classId: string, assignmentId: string) =>
     apiFetch<{ label: string; count: number }[]>(
-      `${root}/classes/${classId}/grade-distribution?${query({ assignmentId })}`,
+      `${API_ROOT}/classes/${classId}/grade-distribution?${buildQuery({ assignmentId })}`,
     ),
-  member: (id: string, accountId: string, version: number, score: string, reason: string | null) =>
-    write<Evaluation>(`/evaluations/${id}/members/${accountId}`, { version, score, reason }, "PUT"),
 };

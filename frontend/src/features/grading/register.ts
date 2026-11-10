@@ -43,7 +43,7 @@ attemptResultSources.register({
   key: "u09-attempt-grade",
   order: 90,
   load: async (attemptId) => {
-    const grade = await gradingApi.attempt(attemptId);
+    const grade = await gradingApi.loadAttemptGrade(attemptId);
     return {
       score: grade.score == null ? null : Number(grade.score),
       maxScore: grade.maxScore == null ? null : Number(grade.maxScore),

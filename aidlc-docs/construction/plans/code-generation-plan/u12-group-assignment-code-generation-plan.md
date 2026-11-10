@@ -1,4 +1,6 @@
-# U12 Group Assignment — Code Generation Plan
+# U12 Group Assignment — Code Generation Plan — persistence theo quyết định 2026-11-06
+
+> Lựa chọn persistence JPA/ORM trong kế hoạch cũ, nếu có, được thay bởi [quy định Spring JDBC toàn dự án](../../persistence-conventions.md). Các checklist/evidence đã thực hiện vẫn là lịch sử; unit chưa chuyển cần kế hoạch migration riêng, không tự coi code hiện tại đã JDBC.
 
 > Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U12 Group Assignment thuộc Iter 3, người code: Người 2; UC 53–57. Chi tiết hóa ngày 2026-10-20 trước khi code (Part 1).
 

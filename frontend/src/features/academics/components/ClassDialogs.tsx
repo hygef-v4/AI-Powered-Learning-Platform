@@ -6,7 +6,8 @@ import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Button, Dialog, showToast } from "@/shared/ui";
 import { studentDetailSections } from "../slots";
 import { PersonPicker } from "./PersonPicker";
-import { Avatar, formatDate, Modal, operationError } from "./ui";
+import { Avatar, Modal } from "./AcademicsUi";
+import { formatDate, formatOperationError } from "../model/format";
 import type { ClassStatus, CourseClassView, EnrollmentView, PersonView } from "../model/types";
 import styles from "../styles/academics.module.css";
 
@@ -33,7 +34,7 @@ export function ClassStateActions({ value, onChange }: { value: CourseClassView;
       if (target === "ARCHIVED") showToast("Đã lưu trữ lớp", "danger"); else showToast("Đã mở lớp");
       setTarget(null);
     }
-    catch (cause) { setError(operationError(cause)); if (cause instanceof ReopenConflictError) setConflicts(cause.students); }
+    catch (cause) { setError(formatOperationError(cause)); if (cause instanceof ReopenConflictError) setConflicts(cause.students); }
     finally { setBusy(false); }
   }
   function choose(status: ClassStatus) { setTarget(status); setError(""); setConflicts([]); }
@@ -42,7 +43,7 @@ export function ClassStateActions({ value, onChange }: { value: CourseClassView;
     {value.status !== "ARCHIVED" && <Button variant="danger" icon="archive" onClick={() => choose("ARCHIVED")} data-testid="class-state-archive">Lưu trữ lớp</Button>}
     <Dialog open={target !== null} title={`${label}?`} icon={open ? "lock_open" : "archive"} tone={open ? "primary" : "danger"} onClose={() => setTarget(null)} dismissible={!busy}
       footer={<Button variant={open ? "primary" : "danger"} className="w-full" disabled={busy} onClick={() => void confirm()} data-testid="class-state-confirm">{open ? (value.status === "ARCHIVED" ? "Mở lại" : "Mở lớp") : "Lưu trữ"}</Button>}>
-      <p>Bạn có chắc muốn {label.toLocaleLowerCase("vi")} {value.name} không?</p>
+      <p>Bạn có chắc muốn {label.toLocaleLowerCase("vi")} lớp {value.code} không?</p>
       {error ? <div role="alert" className="text-sm text-danger">{error}{conflicts.length > 0 && <ul className="mt-1 list-disc pl-5">{conflicts.map((name, index) => <li key={`${name}-${index}`}>{name}</li>)}</ul>}</div> : null}
     </Dialog>
   </>;
@@ -61,7 +62,7 @@ export function AssignTeacherDialog({ value, teachers, onAssign, onClose, loadTe
     if (busy || unchanged) return;
     setBusy(true); setError("");
     try { await onAssign(selected?.id ?? null, value.version); if (selected) showToast("Đã đổi giảng viên"); else showToast("Đã bỏ phân công giảng viên", "danger"); onClose(); }
-    catch (cause) { setError(operationError(cause)); } finally { setBusy(false); }
+    catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
   }
   return <Dialog open title="Đổi giảng viên" size="lg" onClose={onClose} dismissible={!busy}
     footer={<Button variant="primary" disabled={busy || unchanged} onClick={() => void assign()} data-testid="class-teacher-save">Lưu</Button>}>

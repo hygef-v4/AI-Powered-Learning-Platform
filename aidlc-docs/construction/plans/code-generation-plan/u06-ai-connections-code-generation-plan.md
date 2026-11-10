@@ -1,4 +1,6 @@
-# U06 AI Connections — Code Generation Plan
+# U06 AI Connections — Code Generation Plan — persistence theo quyết định 2026-11-06
+
+> Lựa chọn persistence JPA/ORM trong kế hoạch cũ, nếu có, được thay bởi [quy định Spring JDBC toàn dự án](../../persistence-conventions.md). Các checklist/evidence đã thực hiện vẫn là lịch sử; unit chưa chuyển cần kế hoạch migration riêng, không tự coi code hiện tại đã JDBC.
 
 > Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U06 AI Connections thuộc Iter 2; UC 31–33 và phần API chung, quota của UC 14–15. Chi tiết hóa ngày 2026-10-21 trước khi code (Part 1). Jira ngày 2026-10-20 giao U06 cho Võ Minh Tài (Người 2), đổi với U09 sang Khuất Quang Hưng.
 

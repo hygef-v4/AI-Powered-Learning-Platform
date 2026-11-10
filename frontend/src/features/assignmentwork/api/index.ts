@@ -22,15 +22,14 @@ export const workApi = {
   save: (attemptId: string, contentVersion: number, content: DocumentModel, keepalive = false) =>
     write<Saved>(`/attempts/${enc(attemptId)}/content`, "PUT", { contentVersion, content }, { keepalive }),
   submit: (attemptId: string, contentVersion: number) => write<Receipt>(`/attempts/${enc(attemptId)}/submit`, "POST", { contentVersion }),
-  receipt: (attemptId: string, signal?: AbortSignal) => apiFetch<Receipt>(`${base}/attempts/${enc(attemptId)}/receipt`, { signal }),
   importDocx: (attemptId: string, file: File) => {
     const form = new FormData();
     form.append("file", file);
     return apiFetch<ImportPreview>(`${base}/attempts/${enc(attemptId)}/docx:preview`, { method: "POST", body: form });
   },
   feedback: (attemptId: string, signal?: AbortSignal) => apiFetch<Feedback[]>(`${base}/attempts/${enc(attemptId)}/feedback`, { signal }),
-  requestFeedback: (attemptId: string, provider: string, requestRef: string) =>
-    write<Feedback>(`/attempts/${enc(attemptId)}/feedback`, "POST", { provider, requestRef }),
+  requestFeedback: (attemptId: string, requestRef: string) =>
+    write<Feedback>(`/attempts/${enc(attemptId)}/feedback`, "POST", { requestRef }),
   diagram: (attemptId: string, blockId: string, signal?: AbortSignal) =>
     apiFetch<AttemptDiagram>(`${base}/attempts/${enc(attemptId)}/diagrams/${enc(blockId)}`, { signal }),
   activity: (attemptId: string, events: ActivityEventInput[], keepalive: boolean) =>

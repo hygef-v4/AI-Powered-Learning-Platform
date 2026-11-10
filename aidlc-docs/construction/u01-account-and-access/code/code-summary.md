@@ -43,13 +43,13 @@ Lỗi: Problem Detail có `code`; `PASSWORD_POLICY` kèm `violations`; Redis/DB 
 ## Frontend
 
 - Route: `(auth)/login`, `(auth)/activate`, `(auth)/reset-password`, `/`, `/post-login`, `/profile`, `/admin/accounts`, `/admin/accounts/[id]`; `app/admin/layout.tsx` bọc cả Settings của U03 bằng `AuthenticatedLayout` (chỉ ADMIN).
-- `features/identity`: `LoginPage`/`LoginForm`, `otp/OtpFlow` (email → OTP 10 phút, gửi lại sau 60 giây → mật khẩu), `ActivationPage`, `PasswordResetPage`, `profile/*`, `admin/*`, `shell/*` (`AppShell`, `AccountMenu` vẽ `accountMenuEntries`/`headerWidgets`, `SignOutDialog`, `RoleGuard`), `session.tsx`, `components/*` (AuthLayout, Stepper, OtpInput, PasswordField, PasswordChecklist).
+- `features/identity`: `LoginPage`/`LoginForm`, `otp/OtpFlow` (email → OTP 10 phút, gửi lại sau 60 giây → mật khẩu), `ActivationPage`, `PasswordResetPage`, `profile/*`, `admin/*`, `shell/*` (`AuthenticatedLayout`, `RoleGuard`; `AppShell`, `AccountMenu` vẽ `accountMenuEntries`/`headerWidgets` và `LogoutDialog` nằm ở `shared/layout`), `session.tsx`, `components/*` (AuthLayout, Stepper, OtpInput, PasswordField, PasswordChecklist).
 - `shared/api/client.ts`: header `X-XSRF-TOKEN` cho request đổi trạng thái; 401 thì refresh rồi gửi lại (409 chờ cookie của tab kia 500 ms, vẫn 401 thì refresh lại một lần; refresh 503/mất mạng → `SYSTEM_BUSY`, không về đăng nhập); `setUnauthenticatedHandler` đưa về `/login?next=...`.
 - `app/not-found.tsx`: trang 404 chung có link về `/`.
 
 ## Cấu hình
 
-`U01_ALLOWED_EMAIL_DOMAINS`, `U01_JWT_SECRET` (bắt buộc, ≥ 32 byte; thiếu thì backend và worker không khởi động), `U01_BOOTSTRAP_ADMIN_EMAIL`/`_NAME`, `U01_COOKIE_SECURE` (`false` chỉ ở local), các ngưỡng `U01_*`, `SMTP_FROM`. `server.forward-headers-strategy: native` để lấy IP client sau Nginx.
+`U01_JWT_SECRET` (bắt buộc, ≥ 32 byte; thiếu thì backend và worker không khởi động), `U01_BOOTSTRAP_ADMIN_EMAIL`/`_NAME`, `U01_COOKIE_SECURE` (`false` chỉ ở local), các ngưỡng `U01_*`, `SMTP_FROM`. `server.forward-headers-strategy: native` để lấy IP client sau Nginx.
 
 ## Unit test
 

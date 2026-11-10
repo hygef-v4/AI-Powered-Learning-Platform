@@ -14,7 +14,6 @@ import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,36 +55,74 @@ public class AiConnectionService {
     }
 
     // ---- API cá nhân ----------------------------------------------------------------------------------------
+    // Như khóa của trường (yêu cầu 2026-11-05): nhiều khóa cho một nhà cung cấp, mỗi khóa có công tắc, thay, kiểm tra,
+    // xem lại, thu hồi theo id; chỉ chủ khóa làm được.
 
+    /** Mọi khóa cá nhân chưa thu hồi của người dùng, theo nhà cung cấp rồi thời điểm thêm. */
     @Transactional(readOnly = true)
     public List<ConnectionView> listPersonal(Actor actor) {
         access.require(actor, Actions.AI_PERSONAL);
-        Map<AiProvider, AiConnection> saved = new LinkedHashMap<>();
-        repository.listPersonal(actor.accountId()).forEach(c -> saved.put(c.provider(), c));
-        return Arrays.stream(AiProvider.values()).map(p -> view(p, saved.get(p))).toList();
+        return repository.listPersonal(actor.accountId()).stream().map(c -> view(c.provider(), c)).toList();
     }
 
     @Transactional
-    public ConnectionView savePersonal(Actor actor, AiProvider provider, SaveCommand command) {
+    public ConnectionView addPersonal(Actor actor, AiProvider provider, SaveCommand command) {
         access.require(actor, Actions.AI_PERSONAL);
-        return save(actor, Scope.PERSONAL, actor.accountId(), provider, command,
-                repository.findPersonal(actor.accountId(), provider));
+        return save(actor, Scope.PERSONAL, actor.accountId(), provider, command, Optional.empty());
     }
 
     @Transactional
-    public void revokePersonal(Actor actor, AiProvider provider) {
+    public ConnectionView replacePersonal(Actor actor, UUID id, SaveCommand command) {
         access.require(actor, Actions.AI_PERSONAL);
-        AiConnection connection = repository.findPersonal(actor.accountId(), provider)
-                .orElseThrow(AiAccess::notFound);
+        AiConnection connection = personal(actor, id);
+        return save(actor, Scope.PERSONAL, actor.accountId(), connection.provider(), command, Optional.of(connection));
+    }
+
+    /** Công tắc khóa cá nhân: tắt vẫn giữ key, không dùng khi gọi AI. */
+    @Transactional
+    public ConnectionView setPersonalEnabled(Actor actor, UUID id, boolean enabled, Long version) {
+        access.require(actor, Actions.AI_PERSONAL);
+        AiConnection connection = personal(actor, id);
+        checkVersion(connection, version);
+        AiConnection next = connection.withStatus(enabled ? Status.ACTIVE : Status.DISABLED, clock.instant());
+        store(next);
+        auditChange(actor, connection, enabled ? "ENABLE" : "DISABLE");
+        return view(connection.provider(), repository.findById(connection.id()).orElse(next));
+    }
+
+    @Transactional
+    public void revokePersonal(Actor actor, UUID id) {
+        access.require(actor, Actions.AI_PERSONAL);
+        AiConnection connection = personal(actor, id);
         store(connection.revoked(clock.instant()));
         auditChange(actor, connection, "REVOKE");
     }
 
     @Transactional
-    public ConnectionView testPersonal(Actor actor, AiProvider provider) {
+    public ConnectionView testPersonal(Actor actor, UUID id) {
         access.require(actor, Actions.AI_PERSONAL);
-        AiConnection connection = repository.findPersonal(actor.accountId(), provider).orElseThrow(AiAccess::notFound);
-        return test(actor, connection, Source.PERSONAL);
+        return test(actor, personal(actor, id), Source.PERSONAL);
+    }
+
+    @Transactional
+    public TestResult testPersonalDraft(Actor actor, AiProvider provider, UUID id, SaveCommand command) {
+        access.require(actor, Actions.AI_PERSONAL);
+        return testDraft(actor, Scope.PERSONAL, actor.accountId(), provider,
+                id == null ? null : personal(actor, id), command, Source.PERSONAL);
+    }
+
+    /** Khóa rõ của chính mình, cho popup Sửa; mỗi lần xem ghi audit. */
+    @Transactional
+    public String revealPersonal(Actor actor, UUID id) {
+        access.require(actor, Actions.AI_PERSONAL);
+        return reveal(actor, personal(actor, id));
+    }
+
+    private AiConnection personal(Actor actor, UUID id) {
+        return repository.findById(id)
+                .filter(c -> c.scope() == Scope.PERSONAL && actor.accountId().equals(c.ownerId())
+                        && c.status() != Status.REVOKED)
+                .orElseThrow(AiAccess::notFound);
     }
 
     // ---- API chung của trường -------------------------------------------------------------------------------
@@ -145,15 +182,20 @@ public class AiConnectionService {
     @Transactional
     public TestResult testInstitutionalDraft(Actor actor, AiProvider provider, UUID id, SaveCommand command) {
         access.require(actor, Actions.AI_ADMIN);
+        return testDraft(actor, Scope.INSTITUTIONAL, null, provider, id == null ? null : institutional(id), command,
+                Source.SHARED);
+    }
+
+    private TestResult testDraft(Actor actor, Scope scope, UUID ownerId, AiProvider provider, AiConnection saved,
+                                 SaveCommand command, Source source) {
         String model = allowedModel(provider, command.model());
         String key = validKey(command.apiKey());
         Instant now = clock.instant();
         AiConnection probe;
         if (key != null) {
-            probe = AiConnection.create(id == null ? UUID.randomUUID() : id, Scope.INSTITUTIONAL, null, provider, model,
+            probe = AiConnection.create(saved == null ? UUID.randomUUID() : saved.id(), scope, ownerId, provider, model,
                     cipher.encrypt(key), KeyCipher.hint(key), now);
-        } else if (id != null) {
-            AiConnection saved = institutional(id);
+        } else if (saved != null) {
             if (saved.provider() != provider) {
                 throw ApiException.badRequest("AI_KEY_REQUIRED", "Cần nhập khóa API");
             }
@@ -162,11 +204,11 @@ public class AiConnectionService {
             throw ApiException.badRequest("AI_KEY_REQUIRED", "Cần nhập khóa API");
         }
         ConnectionTestService.Result result = tester.test(probe);
-        usage.recordProvider(actor.accountId(), Source.SHARED, null, provider, model, "CONNECTION_TEST",
+        usage.recordProvider(actor.accountId(), source, null, provider, model, "CONNECTION_TEST",
                 result.ok() ? "OK" : "FAILED", result.usage(), null);
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("provider", provider.name());
-        details.put("scope", Scope.INSTITUTIONAL.name());
+        details.put("scope", scope.name());
         details.put("ok", result.ok());
         details.put("draft", true);
         audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "AI_CONNECTION_TESTED", "AI_CONNECTION",
@@ -179,7 +221,10 @@ public class AiConnectionService {
     @Transactional
     public String revealInstitutional(Actor actor, UUID id) {
         access.require(actor, Actions.AI_ADMIN);
-        AiConnection connection = institutional(id);
+        return reveal(actor, institutional(id));
+    }
+
+    private String reveal(Actor actor, AiConnection connection) {
         String key = cipher.decrypt(connection.encryptedKey());
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("provider", connection.provider().name());

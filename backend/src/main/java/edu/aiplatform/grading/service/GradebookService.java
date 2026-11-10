@@ -1,6 +1,6 @@
 package edu.aiplatform.grading.service;
 
-import edu.aiplatform.grading.dto.GradingViews;
+import edu.aiplatform.grading.model.RubricScoring;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,7 +36,6 @@ import edu.aiplatform.grading.model.GradingFeedback;
 import edu.aiplatform.grading.repository.IEvaluationRepository;
 import edu.aiplatform.grading.repository.GradeDistributionVisibilityRepository;
 import edu.aiplatform.assignments.contract.AssignmentScope;
-import edu.aiplatform.identity.contract.AccountContact;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.IAccountLookup;
@@ -46,7 +45,6 @@ import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -63,90 +61,155 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class GradebookService {
-    private static final int EXPORT_PAGE_SIZE = 100;
-    private static final ObjectMapper JSON = new ObjectMapper().findAndRegisterModules()
+    private static final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-    private final ObjectProvider<IGroupSubmissionSource> groups;
-    private final IEvaluationRepository evaluations;
-    private final GradeDistributionVisibilityRepository visibility;
-    private final GradingAccess access;
-    private final IAssignmentQuery assignments;
-    private final ISubmissionQuery submissions;
-    private final IClassAccess classes;
-    private final IAccountLookup accounts;
+    private final ObjectProvider<IGroupSubmissionSource> groupSubmissionSourceProvider;
+    private final IEvaluationRepository evaluationRepository;
+    private final GradeDistributionVisibilityRepository gradeDistributionVisibilityRepository;
+    private final GradingAccess gradingAccess;
+    private final IAssignmentQuery assignmentQuery;
+    private final ISubmissionQuery submissionQuery;
+    private final IClassAccess classAccess;
+    private final IAccountLookup accountLookup;
     private final IRubric rubric;
     private final IAudit audit;
     private final Clock clock;
 
-    public GradebookService(IEvaluationRepository evaluations, GradingAccess access, IAssignmentQuery assignments,
-            ISubmissionQuery submissions, IClassAccess classes, IAccountLookup accounts, IRubric rubric, IAudit audit,
-            Clock clock, ObjectProvider<IGroupSubmissionSource> groups, GradeDistributionVisibilityRepository visibility) {
-        this.visibility = visibility;
-        this.groups = groups;
-        this.evaluations = evaluations;
-        this.access = access;
-        this.assignments = assignments;
-        this.submissions = submissions;
-        this.classes = classes;
-        this.accounts = accounts;
+    /** Connects gradebook queries to evaluation, submission, access, and audit services. */
+    public GradebookService(IEvaluationRepository evaluationRepository, GradingAccess gradingAccess,
+            IAssignmentQuery assignmentQuery, ISubmissionQuery submissionQuery,
+            IClassAccess classAccess, IAccountLookup accountLookup, IRubric rubric, IAudit audit,
+            Clock clock, ObjectProvider<IGroupSubmissionSource> groupSubmissionSourceProvider,
+            GradeDistributionVisibilityRepository gradeDistributionVisibilityRepository) {
+        this.gradeDistributionVisibilityRepository = gradeDistributionVisibilityRepository;
+        this.groupSubmissionSourceProvider = groupSubmissionSourceProvider;
+        this.evaluationRepository = evaluationRepository;
+        this.gradingAccess = gradingAccess;
+        this.assignmentQuery = assignmentQuery;
+        this.submissionQuery = submissionQuery;
+        this.classAccess = classAccess;
+        this.accountLookup = accountLookup;
         this.rubric = rubric;
         this.audit = audit;
         this.clock = clock;
     }
 
-    public GradebookPage list(Actor actor, UUID classId, String query, int page, int size) {
-        SubmissionReviewService.page(page, size);
-        access.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
-        var courseClass = classes.getClassRef(classId).orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
-        var columns = assignmentColumns(courseClass);
-        var classEvaluations = evaluations.findForClass(classId);
-        var progress = submissionProgress(classId, columns);
+    /** Returns a page of gradebook rows after filtering active students by name or email. */
+    public GradebookPage listGrades(Actor actor, UUID classId, String query, int page, int size) {
+        // Step 1: Validate page arguments and verify teacher gradebook access
+        SubmissionReviewService.validatePage(page, size);
+        gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
 
-        List<GradebookRow> rows = new ArrayList<>();
-        for (var studentId : classes.listActiveStudents(classId)) {
-            var student = studentPerson(studentId);
-            if (!matchesQuery(student, query)) {
+        // Step 2: Load complete gradebook data (columns, students, latest evaluations)
+        var data = loadGradebook(classId, null);
+
+        // Step 3: Filter active students by optional search query (name or email)
+        var students = data.students().stream().filter(student -> matchesQuery(student, query))
+                .toList();
+
+        // Step 4: Apply pagination and map student grades for each assignment column
+        var rows = students.stream().skip((long) (page - 1) * size).limit(size)
+                .map(student -> mapGradebookRow(student, data)).toList();
+        return new GradebookPage(rows, data.columns(), students.size(), page, size);
+    }
+
+    /** Returns the gradebook row for one active student in the class. */
+    public GradebookRow loadStudentGrades(Actor actor, UUID classId, UUID accountId) {
+        // Step 1: Verify teacher access and load gradebook scoped to this single student
+        gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
+        var data = loadGradebook(classId, accountId);
+
+        // Step 2: Find the matching student and map their gradebook row
+        var student = data.students().stream().findFirst()
+                .orElseThrow(() -> ApiException.notFound("STUDENT_NOT_FOUND"));
+        return mapGradebookRow(student, data);
+    }
+
+    private record GradeKey(UUID assignmentId, UUID studentId) {
+    }
+
+    private record GradebookData(List<AssignmentColumn> columns, List<Person> students,
+            Map<GradeKey, Evaluation> evaluations, SubmissionProgress progress) {
+    }
+
+    /** Assembles assignment columns, active students, and evaluations for current submissions. */
+    private GradebookData loadGradebook(UUID classId, UUID accountId) {
+        // Step 1: Verify course class exists and load gradable assignment columns
+        var courseClass = classAccess.getClassRef(classId)
+                .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+        var columns = listAssignmentColumns(courseClass);
+
+        // Step 2: Index current submission progress (individual and group submissions)
+        var progress = loadSubmissionProgress(classId, columns);
+        Map<GradeKey, Evaluation> current = new HashMap<>();
+
+        // Step 3: Match evaluations against latest student attempts or group documents
+        for (var evaluation : evaluationRepository.findForClass(classId)) {
+            if (evaluation.kind == EvaluationKind.GROUP_DOCUMENT
+                    || evaluation.state == EvaluationStatus.SUPERSEDED)
                 continue;
+            var key = new GradeKey(evaluation.assignmentId, evaluation.accountId);
+            var submission = progress.individual().get(key);
+            if (evaluation.kind == EvaluationKind.MEMBER || submission != null
+                    && Objects.equals(evaluation.attemptId, submission.gradedAttemptId())) {
+                var previous = current.get(key);
+                if (previous == null || evaluation.createdAt.isAfter(previous.createdAt))
+                    current.put(key, evaluation);
             }
-            var grades = columns.stream().map(column -> gradeCell(studentId, column, classEvaluations, progress))
-                    .toList();
-            rows.add(new GradebookRow(student, grades));
         }
-        var pageRows = rows.stream().skip((long) (page - 1) * size).limit(size).toList();
-        return new GradebookPage(pageRows, columns, rows.size(), page, size);
+
+        // Step 4: Resolve active student profiles and contact information
+        var studentIds = classAccess.listActiveStudents(classId).stream()
+                .filter(id -> accountId == null || id.equals(accountId)).toList();
+        var contacts = accountLookup.getContacts(studentIds);
+        var students = studentIds.stream().map(id -> {
+            var contact = contacts.get(id);
+            return new Person(id, contact == null ? "Unavailable" : contact.displayName(),
+                    contact == null ? "" : contact.email());
+        }).toList();
+        return new GradebookData(columns, students, current, progress);
     }
 
-    /**
-     * Bài có điểm đã giao cho sinh viên: {@code IAssignmentQuery.listForClass} trả cả bài lớp còn nháp, đã duyệt, chờ mở;
-     * những bài đó chưa có ai nộp nên không thành cột bảng điểm.
-     */
-    public static boolean gradable(AssignmentView assignment) {
-        return assignment.gradingMode() == GradingMode.GRADED && (assignment.status() == AssignmentStatus.OPEN
-                || assignment.status() == AssignmentStatus.CLOSED || assignment.status() == AssignmentStatus.RETIRED);
+    /** Builds one grade cell per assignment column for the student. */
+    private GradebookRow mapGradebookRow(Person student, GradebookData data) {
+        return new GradebookRow(student,
+                data.columns().stream().map(column -> mapGradeCell(student.accountId(), column,
+                        data.evaluations(), data.progress())).toList());
     }
 
-    private List<AssignmentColumn> assignmentColumns(ClassRef courseClass) {
-        return assignments.listForClass(courseClass.classId()).stream()
-                .filter(GradebookService::gradable)
-                .peek(assignment -> SubmissionReviewService.requireAssignment(assignment, courseClass))
-                .map(assignment -> new AssignmentColumn(assignment.assignmentId(), assignment.title(),
-                        rubric.maxPoints(assignment.assignmentId()), assignment.submissionMode()))
+    /** Includes only graded assignments that have opened, excluding drafts and scheduled work. */
+    public static boolean isGradable(AssignmentView assignment) {
+        return assignment.gradingMode() == GradingMode.GRADED
+                && (assignment.status() == AssignmentStatus.OPEN
+                        || assignment.status() == AssignmentStatus.CLOSED
+                        || assignment.status() == AssignmentStatus.RETIRED);
+    }
+
+    /** Builds columns for gradable class assignments with their rubric totals. */
+    private List<AssignmentColumn> listAssignmentColumns(ClassRef courseClass) {
+        return assignmentQuery.listForClass(courseClass.classId()).stream()
+                .filter(GradebookService::isGradable)
+                .peek(assignment -> SubmissionReviewService.requireAssignment(assignment,
+                        courseClass))
+                .map(assignment -> new AssignmentColumn(assignment.assignmentId(),
+                        assignment.title(), rubric.maxPoints(assignment.assignmentId()),
+                        assignment.submissionMode()))
                 .toList();
     }
 
-    private record SubmissionProgress(Map<UUID, List<StudentSubmissionStatus>> individual,
+    private record SubmissionProgress(Map<GradeKey, StudentSubmissionStatus> individual,
             Map<UUID, GroupSubmissionStatus> groups) {
     }
 
-    private SubmissionProgress submissionProgress(UUID classId, List<AssignmentColumn> columns) {
-        Map<UUID, List<StudentSubmissionStatus>> individual = new HashMap<>();
+    /** Indexes individual submissions by learner and group submissions by document. */
+    private SubmissionProgress loadSubmissionProgress(UUID classId,
+            List<AssignmentColumn> columns) {
+        Map<GradeKey, StudentSubmissionStatus> individual = new HashMap<>();
         Map<UUID, GroupSubmissionStatus> groupProgress = new HashMap<>();
         for (var column : columns) {
-            var assignment = assignments.get(column.id())
-                    .orElseThrow(() -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
-            if (assignment.submissionMode() == SubmissionMode.GROUP) {
-                var provider = groups.getIfAvailable();
+            if (column.submissionMode() == SubmissionMode.GROUP) {
+                var provider = groupSubmissionSourceProvider.getIfAvailable();
                 if (provider == null) {
                     throw ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE",
                             "Group submission source unavailable");
@@ -154,30 +217,26 @@ public class GradebookService {
                 for (var status : provider.listGroupSubmissions(column.id(), classId)) {
                     groupProgress.put(status.groupDocumentId(), status);
                 }
-                individual.put(column.id(), List.of());
             } else {
-                individual.put(column.id(), submissions.listSubmissions(column.id(), classId));
+                for (var status : submissionQuery.listSubmissions(column.id(), classId))
+                    individual.putIfAbsent(new GradeKey(column.id(), status.accountId()), status);
             }
         }
         return new SubmissionProgress(individual, groupProgress);
     }
 
-    private Person studentPerson(UUID studentId) {
-        var contact = accounts.getContact(studentId);
-        return new Person(studentId, contact.map(AccountContact::displayName).orElse("Unavailable"),
-                contact.map(AccountContact::email).orElse(""));
-    }
-
+    /** Matches a case-insensitive name or email search, with blank queries matching all. */
     private boolean matchesQuery(Person student, String query) {
-        return query == null || query.isBlank() || (student.name() + " " + student.email()).toLowerCase(Locale.ROOT)
-                .contains(query.toLowerCase(Locale.ROOT));
+        return query == null || query.isBlank() || (student.name() + " " + student.email())
+                .toLowerCase(Locale.ROOT).contains(query.toLowerCase(Locale.ROOT));
     }
 
-    private GradeCell gradeCell(UUID studentId, AssignmentColumn column, List<Evaluation> evaluations,
-            SubmissionProgress progress) {
-        var submission = progress.individual().get(column.id()).stream()
-                .filter(status -> studentId.equals(status.accountId())).findFirst();
-        var evaluation = currentEvaluation(studentId, column.id(), evaluations, submission).orElse(null);
+    /** Combines evaluation scores and status with individual or group submission timing. */
+    private GradeCell mapGradeCell(UUID studentId, AssignmentColumn column,
+            Map<GradeKey, Evaluation> evaluations, SubmissionProgress progress) {
+        var key = new GradeKey(column.id(), studentId);
+        var submission = Optional.ofNullable(progress.individual().get(key));
+        var evaluation = evaluations.get(key);
         boolean late;
         Instant submittedAt;
         if (evaluation != null && evaluation.kind == EvaluationKind.MEMBER) {
@@ -188,68 +247,75 @@ public class GradebookService {
             late = submission.map(StudentSubmissionStatus::late).orElse(false);
             submittedAt = submission.map(StudentSubmissionStatus::submittedAt).orElse(null);
         }
-        String status = evaluation == null ? ungradedStatus(submission) : evaluation.state.name();
+        String status = evaluation == null ? resolveUngradedStatus(submission)
+                : evaluation.state.name();
         return new GradeCell(column.id(), evaluation == null ? null : evaluation.id, status,
                 evaluation == null ? null : evaluation.score,
                 evaluation == null ? column.maxScore() : evaluation.maxScore, late, submittedAt,
                 evaluation == null ? null : evaluation.feedback);
     }
 
-    private Optional<Evaluation> currentEvaluation(UUID studentId, UUID assignmentId, List<Evaluation> evaluations,
-            Optional<StudentSubmissionStatus> submission) {
-        return evaluations.stream()
-                .filter(evaluation -> assignmentId.equals(evaluation.assignmentId)
-                        && studentId.equals(evaluation.accountId) && evaluation.kind != EvaluationKind.GROUP_DOCUMENT
-                        && evaluation.state != EvaluationStatus.SUPERSEDED)
-                .filter(evaluation -> evaluation.kind == EvaluationKind.MEMBER || submission.isPresent()
-                        && Objects.equals(evaluation.attemptId, submission.get().gradedAttemptId()))
-                .max(Comparator.comparing(evaluation -> evaluation.createdAt));
-    }
-
-    private String ungradedStatus(Optional<StudentSubmissionStatus> submission) {
+    /** Distinguishes missing, in-progress, and pending submissions before grading. */
+    private String resolveUngradedStatus(Optional<StudentSubmissionStatus> submission) {
         if (submission.isEmpty() || submission.get().latestStatus() == null)
             return "NOT_SUBMITTED";
-        return submission.get().latestStatus() == AttemptStatus.IN_PROGRESS ? "IN_PROGRESS" : "PENDING";
+        return submission.get().latestStatus() == AttemptStatus.IN_PROGRESS ? "IN_PROGRESS"
+                : "PENDING";
     }
 
-    public List<StudentGradeView> myGrades(Actor actor, UUID classId) {
-        access.requireStudent(actor, classId);
+    /** Returns the student's latest non-superseded grade per assignment if published. */
+    public List<StudentGradeView> listMyGrades(Actor actor, UUID classId) {
+        // Step 1: Verify student enrollment in the course class
+        gradingAccess.requireStudent(actor, classId);
         Map<UUID, Evaluation> latest = new HashMap<>();
-        for (var evaluation : evaluations.findForClass(classId))
-            if (actor.accountId().equals(evaluation.accountId) && evaluation.state != EvaluationStatus.SUPERSEDED) {
+
+        // Step 2: Filter the student's latest non-superseded evaluation for each assignment
+        for (var evaluation : evaluationRepository.findForClass(classId))
+            if (actor.accountId().equals(evaluation.accountId)
+                    && evaluation.state != EvaluationStatus.SUPERSEDED) {
                 var previous = latest.get(evaluation.assignmentId);
                 if (previous == null || evaluation.createdAt.isAfter(previous.createdAt))
                     latest.put(evaluation.assignmentId, evaluation);
             }
-        return latest.values().stream().filter(evaluation -> evaluation.state == EvaluationStatus.PUBLISHED)
-                .map(this::studentView).toList();
+
+        // Step 3: Only expose published evaluations to students
+        return latest.values().stream()
+                .filter(evaluation -> evaluation.state == EvaluationStatus.PUBLISHED)
+                .map(this::mapStudentView).toList();
     }
 
-    public StudentGradeView forAttempt(Actor actor, UUID attemptId) {
-        var evaluation = evaluations.findByAttemptId(attemptId)
+    /** Returns the caller's attempt grade and hides its details until publication. */
+    public StudentGradeView loadAttemptGrade(Actor actor, UUID attemptId) {
+        // Step 1: Locate evaluation and verify that the caller is the student owner
+        var evaluation = evaluationRepository.findByAttemptId(attemptId)
                 .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
-        access.requireStudent(actor, evaluation.classId);
+        gradingAccess.requireStudent(actor, evaluation.classId);
         if (!actor.accountId().equals(evaluation.accountId))
             throw ApiException.notFound("GRADE_NOT_FOUND");
+
+        // Step 2: Hide score and feedback breakdown if grade is still DRAFT/FINALIZED (not yet PUBLISHED)
         if (evaluation.state != EvaluationStatus.PUBLISHED)
-            return new StudentGradeView(evaluation.assignmentId, evaluation.attemptId, null, null, null, null, false,
-                    null);
-        return studentView(evaluation);
+            return new StudentGradeView(evaluation.assignmentId, evaluation.attemptId, null, null,
+                    null, null, false, null);
+        return mapStudentView(evaluation);
     }
 
-    private StudentGradeView studentView(Evaluation evaluation) {
+    /** Shows published scores, rubric item evidence, and feedback from the saved evaluation. */
+    private StudentGradeView mapStudentView(Evaluation evaluation) {
         List<RubricView> rubrics = List.of();
         if (evaluation.rubricSnapshot != null && !evaluation.rubricSnapshot.isBlank()) {
             try {
-                rubrics = GradingJson.rubrics(JSON, evaluation.rubricSnapshot);
+                rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
             } catch (RuntimeException ignored) {
                 rubrics = List.of();
             }
         }
-        var checks = GradingJson.readChecks(JSON, evaluation.rubricChecks);
-        var effectiveScores = GradingJson.effectiveItemScores(rubrics, checks, evaluation.rubricItemScores);
+        var checks = GradingJson.readChecks(objectMapper, evaluation.rubricChecks);
+        var effectiveScores = RubricScoring.calculateEffectiveItemScores(rubrics, checks,
+                evaluation.rubricItemScores);
         Map<UUID, GradingFeedback.Item> feedbackByItem = new HashMap<>();
-        if (evaluation.structuredFeedback != null && evaluation.structuredFeedback.items() != null) {
+        if (evaluation.structuredFeedback != null
+                && evaluation.structuredFeedback.items() != null) {
             for (var item : evaluation.structuredFeedback.items()) {
                 if (item != null && item.itemId() != null) {
                     feedbackByItem.put(item.itemId(), item);
@@ -270,16 +336,10 @@ public class GradebookService {
                             BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
                     rubricScore = rubricScore.add(awarded);
                     var fb = feedbackByItem.get(item.itemId());
-                    rubricItems.add(new StudentRubricItemView(
-                            rubricView.rubricId(),
-                            rubricView.partId(),
-                            criterion.title(),
-                            item.itemId(),
-                            item.text(),
-                            awarded,
-                            item.points().setScale(2, RoundingMode.HALF_UP),
-                            fb == null ? null : fb.evidence(),
-                            fb == null ? null : fb.reason(),
+                    rubricItems.add(new StudentRubricItemView(rubricView.rubricId(),
+                            rubricView.partId(), criterion.title(), item.itemId(), item.text(),
+                            awarded, item.points().setScale(2, RoundingMode.HALF_UP),
+                            fb == null ? null : fb.evidence(), fb == null ? null : fb.reason(),
                             fb == null ? null : fb.suggestion()));
                 }
             }
@@ -288,40 +348,44 @@ public class GradebookService {
                 && evaluation.structuredFeedback.summary() != null
                         ? evaluation.structuredFeedback.summary().copy()
                         : null;
-        return new StudentGradeView(
-                evaluation.assignmentId,
-                evaluation.attemptId,
-                evaluation.score,
-                evaluation.maxScore,
-                evaluation.feedback,
-                evaluation.publishedAt,
-                !evaluation.changes.isEmpty(),
-                evaluation.rubricChecks,
-                summary,
-                List.copyOf(rubricItems),
-                rubrics.isEmpty() ? evaluation.score : rubricScore,
+        return new StudentGradeView(evaluation.assignmentId, evaluation.attemptId, evaluation.score,
+                evaluation.maxScore, evaluation.feedback, evaluation.publishedAt,
+                !evaluation.changes.isEmpty(), evaluation.rubricChecks, summary,
+                List.copyOf(rubricItems), rubrics.isEmpty() ? evaluation.score : rubricScore,
                 evaluation.memberOverride);
     }
 
-    public List<GradeDistributionCalculator.Bucket> distribution(Actor actor, UUID classId, UUID assignmentId,
-            boolean student) {
+    /** Buckets one published score per active student, subject to student visibility. */
+    public List<GradeDistributionCalculator.Bucket> loadDistribution(Actor actor, UUID classId,
+            UUID assignmentId, boolean student) {
+        // Step 1: Verify role access (student or teacher)
         if (student)
-            access.requireStudent(actor, classId);
+            gradingAccess.requireStudent(actor, classId);
         else
-            access.requireTeacher(actor, classId, Actions.GRADING_REVIEW);
-        var courseClass = classes.getClassRef(classId).orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
-        var assignment = assignments.get(assignmentId).orElseThrow(() -> ApiException.notFound("ASSIGNMENT_NOT_FOUND"));
+            gradingAccess.requireTeacher(actor, classId, Actions.GRADING_REVIEW);
+
+        // Step 2: Validate class and assignment scope
+        var courseClass = classAccess.getClassRef(classId)
+                .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+        var assignment = assignmentQuery.get(assignmentId)
+                .orElseThrow(() -> ApiException.notFound("ASSIGNMENT_NOT_FOUND"));
         SubmissionReviewService.requireAssignment(assignment, courseClass);
         if (assignment.scope() == AssignmentScope.SUBJECT
-                && (assignment.status() == AssignmentStatus.DRAFT || assignment.status() == AssignmentStatus.REVIEWED))
+                && (assignment.status() == AssignmentStatus.DRAFT
+                        || assignment.status() == AssignmentStatus.REVIEWED))
             throw ApiException.notFound("ASSIGNMENT_NOT_FOUND");
-        if (student && !visibility.find(classId, assignmentId).enabled())
+
+        // Step 3: For students, check whether the teacher enabled grade distribution visibility
+        if (student && !gradeDistributionVisibilityRepository.findVisibility(classId, assignmentId)
+                .enabled())
             return List.of();
-        // One published value per active learner, never one value per attempt.
-        var active = new HashSet<>(classes.listActiveStudents(classId));
+
+        // Step 4: Collect latest published scores across active learners and compute histogram buckets
+        var active = new HashSet<>(classAccess.listActiveStudents(classId));
         Map<UUID, Evaluation> latest = new HashMap<>();
-        for (var evaluation : evaluations.findForAssignmentAndClass(assignmentId, classId))
-            if (evaluation.state == EvaluationStatus.PUBLISHED && active.contains(evaluation.accountId)) {
+        for (var evaluation : evaluationRepository.findForAssignmentAndClass(assignmentId, classId))
+            if (evaluation.state == EvaluationStatus.PUBLISHED
+                    && active.contains(evaluation.accountId)) {
                 var previous = latest.get(evaluation.accountId);
                 if (previous == null || evaluation.createdAt.isAfter(previous.createdAt))
                     latest.put(evaluation.accountId, evaluation);
@@ -331,48 +395,51 @@ public class GradebookService {
                 latest.values().stream().map(evaluation -> evaluation.maxScore).toList());
     }
 
-    // A successful export also writes its audit event in this transaction.
+    /**
+     * Builds CSV or Excel gradebook rows and records the successful export in the same transaction.
+     */
     @Transactional
-    public List<List<String>> exportRows(Actor actor, UUID classId, UUID assignmentId, String format) {
-        access.requireTeacher(actor, classId, Actions.GRADEBOOK_EXPORT);
+    public List<List<String>> buildExportRows(Actor actor, UUID classId, UUID assignmentId,
+            String format) {
+        // Step 1: Check teacher export permission and format parameter (csv or xlsx)
+        gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_EXPORT);
         if (!Set.of("csv", "xlsx").contains(format))
             throw ApiException.badRequest("INVALID_EXPORT_FORMAT", "Choose csv or xlsx");
+
+        // Step 2: Write standard header row
         List<List<String>> output = new ArrayList<>();
-        output.add(List.of("Student", "Email", "Assignment", "Status", "Submitted at", "Late", "Score", "Maximum",
-                "Feedback"));
-        var first = list(actor, classId, null, 1, EXPORT_PAGE_SIZE);
-        if (assignmentId != null
-                && first.assignments().stream().noneMatch(assignment -> assignmentId.equals(assignment.id())))
+        output.add(List.of("Student", "Email", "Assignment", "Status", "Submitted at", "Late",
+                "Score", "Maximum", "Feedback"));
+
+        // Step 3: Load gradebook data and format export rows for each student and assignment
+        gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
+        var data = loadGradebook(classId, null);
+        if (assignmentId != null && data.columns().stream()
+                .noneMatch(assignment -> assignmentId.equals(assignment.id())))
             throw ApiException.notFound("ASSIGNMENT_NOT_FOUND");
-        int pageCount = Math.max(1, (first.total() + EXPORT_PAGE_SIZE - 1) / EXPORT_PAGE_SIZE);
-        for (int page = 1; page <= pageCount; page++) {
-            var data = page == 1 ? first : list(actor, classId, null, page, EXPORT_PAGE_SIZE);
-            appendExportRows(output, data, assignmentId);
+        for (var student : data.students()) {
+            for (var column : data.columns()) {
+                if (assignmentId == null || assignmentId.equals(column.id()))
+                    output.add(buildExportRow(student, mapGradeCell(student.accountId(), column,
+                            data.evaluations(), data.progress()), column.title()));
+            }
         }
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "GRADEBOOK_EXPORTED", "CLASS",
-                classId.toString(), AuditResult.SUCCESS, null, Map.of("format", format), clock.instant()));
+
+        // Step 4: Record audit log event for gradebook export
+        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "GRADEBOOK_EXPORTED",
+                "CLASS", classId.toString(), AuditResult.SUCCESS, null, Map.of("format", format),
+                clock.instant()));
         return output;
     }
 
-    private void appendExportRows(List<List<String>> output, GradebookPage data, UUID assignmentId) {
-        for (var row : data.rows()) {
-            for (var grade : row.grades()) {
-                if (assignmentId == null || assignmentId.equals(grade.assignmentId())) {
-                    String title = data.assignments().stream()
-                            .filter(assignment -> assignment.id().equals(grade.assignmentId())).findFirst()
-                            .orElseThrow().title();
-                    output.add(exportRow(row.student(), grade, title));
-                }
-            }
-        }
-    }
-
-    private List<String> exportRow(Person student, GradeCell grade, String assignmentTitle) {
+    /** Formats one export row and includes scores and feedback only for official grades. */
+    private List<String> buildExportRow(Person student, GradeCell grade, String assignmentTitle) {
         boolean official = grade.status().equals("FINALIZED") || grade.status().equals("PUBLISHED");
         String score = official && grade.score() != null ? grade.score().toPlainString() : "";
         String feedback = official && grade.feedback() != null ? grade.feedback() : "";
         return List.of(student.name(), student.email(), assignmentTitle, grade.status(),
-                grade.submittedAt() == null ? "" : grade.submittedAt().toString(), Boolean.toString(grade.late()),
-                score, grade.maxScore() == null ? "" : grade.maxScore().toPlainString(), feedback);
+                grade.submittedAt() == null ? "" : grade.submittedAt().toString(),
+                Boolean.toString(grade.late()), score,
+                grade.maxScore() == null ? "" : grade.maxScore().toPlainString(), feedback);
     }
 }

@@ -202,3 +202,41 @@ Thay chốt từng mục. Nhánh `fix/u12-follow-frozen-br`.
 - **Backend:** `SectionRules` theo giai đoạn (`canClaim/canAssign/canRelease/canEdit` nhận `working`); `GroupSectionService.claim` (phân công: nhận làm người phụ trách; đã chốt: người phụ trách bắt đầu soạn), `assign` chỉ khi chưa chốt, `release`, `lockAssignment` (đủ người phụ trách mới chốt), `unlockAssignment`; API `POST /group-docs/{id}/assignment:lock|:unlock`; `WorkspaceView.assignmentLockedBy/At`, `SectionView.assigneeId`; người rời nhóm thôi phụ trách (`clearAssignee`).
 - **Frontend:** thanh "Đang phân công / Đã chốt phân công" với nút Chốt phân công (khóa khi còn mục trống) và Mở chốt (hỏi xác nhận); mục hiện "Phụ trách / Đang soạn / Chưa có người nhận"; nút Nhận mục, Bỏ nhận, Bỏ giao, Giao mục (khi phân công), Làm (khi đã chốt).
 - **Test:** backend 1749/1749; frontend 735/735 (5 test chậm của unit khác chạy lại đạt); e2e lớp SE-TEST15: U12 59/59, U12b 36/36, u12c 32/32, notify 3/3; U02 16/16, U06 24/24.
+
+## Tối giản theo BR đã chốt (2026-11-08)
+
+Người dùng chọn giữ luồng bài nhóm tối giản: sinh viên làm bài nhóm, giảng viên chấm, không thêm luồng phức tạp. Bỏ FB-U12-01..04 (ngoài BR), quay về BR-U12-33, 34, 36. Nhánh `refactor/u12-simplify`. Không đổi schema: cột và bảng của các tính năng đã bỏ còn trong CSDL (migration đã chạy), code không dùng.
+
+- **Bỏ:** phân công rồi chốt (`assignment:lock/unlock`, `AssignmentLock`, `GroupSection.assigneeId`, các mã `ASSIGNMENT_*`, `SECTION_ASSIGNED_TO_OTHER`); khôi phục bản lịch sử (`:restore`); nhập DOCX/Draw.io cho cả tài liệu (`import:preview`, `import:apply`); đánh giá chéo (`GroupPeerReviewService`, `GroupPeerReviewRepository`, `PeerReview`, `GET/PUT /peer-reviews`). `GroupDocCollaborationController` bỏ; xem trước DOCX vào mục chuyển sang `GroupDocController`.
+- **Giữ:** nhận mục Mở hoặc Xong là soạn ngay; trưởng nhóm giao mục (mục đang giữ thì nhả trước khi `replaceHolder`); người giữ, trưởng nhóm, giảng viên nhả mục; lịch sử mục chỉ xem; nhập DOCX vào mục đang soạn; nộp, nộp lại, tự nộp, Bản nộp.
+- **Bổ sung lại:** `GroupProgressCard` trên trang Sinh viên của giảng viên (BR-U12-52): từng nhóm, trưởng nhóm, mục Xong, trạng thái nộp, mục đang soạn, link Xem tài liệu. Bảng tiến độ cũ (`GroupProgressView`) đã bị bỏ trong commit giao diện `da0be0d8`.
+- **Frontend:** `GroupWorkspacePage` còn 2 thẻ (Tài liệu, Bản nộp); mỗi mục có Nhận mục / Sửa mục / Soạn tiếp, Giao mục (trưởng nhóm), Nhả mục, Lịch sử. `SectionHistoryDialog.tsx` chỉ xem; bỏ `CollaborationPanels.tsx`.
+- **Test:** backend `GroupSectionServiceTest`, `GroupSectionTest`, `GroupRepositoriesIntegrationTest`, `GroupControllersTest` trả về bản theo BR và thêm ca nhận lại mục Xong, lịch sử, ảnh; `GroupDocImportServiceTest` mới; bỏ `GroupDocCollaborationServicesTest`. Frontend `GroupWorkspacePage.test.tsx` viết lại theo luồng mới, `GroupProgressCard.test.tsx` mới. E2E `u12`, `u12b`, `u12c` theo luồng mới; `u12c` kiểm các API đã bỏ trả 404.
+
+
+## Sửa 2 lỗi khi kiểm lại (2026-11-09)
+
+Nhánh `fix/u12-editor-lost-hold`. Không đổi BR, schema hay API cũ; chỉ thêm trường `authors` vào `WorkspaceView.lastSubmission`.
+
+- **Trình soạn bị kẹt khi mất mục:** trưởng nhóm giao lại mục, người khác nhả mục hoặc hệ thống tự nộp thì trình soạn toàn trang của người đang giữ vẫn mở; còn phần chưa lưu thì Đóng lưu thất bại và không thoát được. `GroupWorkspacePage` đóng trình soạn khi bản xem mới cho thấy người dùng không còn giữ mục (bỏ qua bản xem cũ hơn mục đang soạn) hoặc tài liệu đã khóa, và báo lý do. `SectionEditorDialog`: lưu lỗi khi Đóng thì nút thành "Đóng, bỏ phần chưa lưu", bấm lần nữa là thoát.
+- **Tác giả ở thẻ Bản nộp (BR-U12-44):** thẻ lấy `lastAuthorId` hiện tại nên mục sửa sau khi nộp làm đổi tác giả của bản nộp. `WorkspaceView.lastSubmission.authors` trả `section_authors` đã lưu lúc nộp; thẻ hiện cột "Tác giả trong bản nộp", mục chưa Xong lúc nộp ghi "Chưa Xong, không vào bản nộp".
+- **Test:** `GroupWorkspaceServiceTest.lastSubmissionCarriesSectionAuthorsCapturedAtSubmit`; `GroupWorkspacePage.test.tsx` thêm ca giao lại mục và tự nộp đóng trình soạn, ca vừa nhận mục vẫn mở, Đóng lần hai, tác giả bản nộp; mock nhận mục tăng `version` như server.
+
+## Cải thiện luồng nhận, soạn mục (2026-11-09)
+
+Nhánh `feat/u12-section-ux`. Không đổi BR, schema hay trường cũ; chỉ thêm `SectionView.claimedAt`, `holderSavedAt`.
+
+- **Hỏi lại trước khi sửa mục người khác viết:** mục Xong có `lastAuthorId` khác người đang xem thì nút "Sửa mục" (và bấm vào tên mục) mở hộp "Sửa mục …?" nói rõ người nhận khóa mục và thành người viết khi bấm Xong. Mục do chính mình viết hoặc mục Mở thì nhận ngay như cũ.
+- **Cảnh báo rời trang:** `SectionEditorDialog` gắn `beforeunload` khi còn phần chưa lưu (tự lưu 10 giây sau lần sửa cuối).
+- **Nhắc hạn:** `model/deadline.ts` (`describeDeadline`, `formatAgo`), `hooks/useClock.ts`. Còn ≤ 30 phút tới `closesAt`, hoặc đang trong khoảng nộp trễ tới `lateUntil`, workspace hiện banner: còn bao lâu, số mục chưa ai làm (không vào bản nộp), số mục đang soạn (tự chốt bằng bản nháp khi đóng nhận bài, BR-U12-43), nhóm chưa nộp. Trình soạn hiện cùng dòng nhắc hạn. Giảng viên không thấy banner.
+- **Người giữ mục còn soạn không:** dòng mục đang giữ hiện "Đang soạn: Bình · lưu lần cuối 3 phút trước" hoặc "· nhận 2 giờ trước, chưa lưu". Backend `SectionView.of` trả `claimedAt`, `holderSavedAt` (= `draftSavedAt` khi `CLAIMED`) cho mọi người; `draftBlocks`, `draftSavedAt` vẫn chỉ người giữ thấy (BR-U12-34). Lưu nháp không đẩy SSE (BR-U12-37) nên trang tải lại mỗi 60 giây khi có mục người khác đang giữ và tab đang hiện.
+- **Test:** `GroupWorkspaceServiceTest.everyoneSeesWhenTheHolderClaimedAndLastSavedButOnlyTheHolderSeesTheDraft`; `GroupControllersTest` theo constructor mới; `GroupWorkspacePage.test.tsx` thêm hỏi lại khi sửa mục người khác, mục của mình không hỏi, dòng người giữ, tải lại mỗi phút, nhắc hạn đúng hạn và trong khoảng trễ, `beforeunload` và nhắc hạn trong trình soạn.
+
+## Sidebar mục lục cho tài liệu nhóm (2026-11-09)
+
+Nhánh `feat/u12-section-ux`. Chỉ frontend.
+
+- `features/groupdocs/components/groupDocNav.tsx` (`groupDocContext`) đăng ký ở `register.ts` cho Sinh viên, Giảng viên, Chủ nhiệm môn: ở `/group-docs/{id}` sidebar là `AssignmentNav` của U07 (đã `export`), cùng kiểu trang làm bài cá nhân; không có nút "+" (BR-U12-30).
+- `GroupWorkspacePage` đăng dàn ý `outlineOf(sharedBlocks)` qua `publishOutline`; lối về: sinh viên `/my-assignments/{assignmentId}?classId=`, giảng viên `/teaching/classes/{classId}?tab=students`. Bỏ nút Thoát.
+- Bấm dòng (`document:show-part`): về thẻ Tài liệu, cuộn tới mục chứa heading (`model/outline.ts` `findSectionForHeading`: chính mục, mục cha gần nhất, hoặc mục đầu tiên sau heading cha). Cuộn trang thì báo `document:current-part` để sidebar sáng đúng mục.
+- **Test:** `tests/features/groupdocs/model/outline.test.tsx` (ánh xạ heading → mục, ngữ cảnh sidebar, trang đăng mục lục, lối về, không có "+", bấm dòng cuộn tới mục).

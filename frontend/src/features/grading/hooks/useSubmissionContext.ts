@@ -17,12 +17,12 @@ export function useSubmissionContext(classId: string, assignmentId: string) {
     const current = ++sequence.current;
     setState({ key, value: null, error: "" });
     try {
-      let value = await gradingApi.assignmentContext(assignmentId);
+      let value = await gradingApi.loadAssignmentContext(assignmentId);
       if (value.id !== assignmentId) {
         throw new Error(CONTEXT_ERROR);
       }
       if (value.scope === "SUBJECT" && value.subjectId && value.classId === null) {
-        const courseClass = await academicsApi.detail("teaching", classId);
+        const courseClass = await academicsApi.loadClass("teaching", classId);
         if (courseClass.id !== classId || courseClass.subject.id !== value.subjectId) throw new Error(CONTEXT_ERROR);
         value = { ...value, ownerName: `${courseClass.code} — ${courseClass.name}` };
       } else if (value.scope !== "CLASS" || value.classId !== classId) {

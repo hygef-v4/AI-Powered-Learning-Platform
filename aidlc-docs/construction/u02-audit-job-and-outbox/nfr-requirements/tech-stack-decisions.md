@@ -1,4 +1,6 @@
-# U02 Audit — tech-stack-decisions
+# U02 Audit — tech-stack-decisions — chuẩn JDBC
+
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code còn JPA được ghi là khoảng cách migration.
 
 > Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
@@ -8,7 +10,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
 
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
-| Bảng `audit_logs` | PostgreSQL + Spring Data JPA | Đã chốt |
+| Bảng `audit_logs` | PostgreSQL + Spring JDBC (JdbcTemplate/NamedParameterJdbcTemplate/JdbcClient) | Đã chốt |
 | Lưu JSON audit | Cột `jsonb` | Đã chốt ở Application Design |
 | Test | JUnit 5, Testcontainers (PostgreSQL) | Theo NFR-004 |
 

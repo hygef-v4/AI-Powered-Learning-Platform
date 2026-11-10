@@ -4,29 +4,30 @@ import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Button, ClickableRow, Icon, Pill, Segmented, Select, TableFrame, Td, TextInput, Th, cx, type Tone } from "@/shared/ui";
+import { Button, ButtonLink, ClickableRow, Icon, Pill, Segmented, Select, TableFrame, Td, TextInput, Th, cx, type Tone } from "@/shared/ui";
 import { Pagination } from "@/shared/ui/Pagination";
 import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
-import { statusLabels, type Decimal, type GradebookPage, type GradeCell } from "../model/types";
+import { useSubmissionDirectory } from "../hooks/useSubmissionDirectory";
+import { buildEvaluationHref } from "../model/navigation";
+import { GRADE_STATUS_LABELS, type Decimal, type GradebookPage, type GradeCell } from "../model/types";
 import { GradebookExportDialog } from "./GradebookExportDialog";
 
 type Assignment = GradebookPage["assignments"][number];
 type Mode = "assignment" | "student";
 
 /** Trạng thái lọc được trên bảng điểm, theo thứ tự công việc của giảng viên. */
-const STATUS_FILTERS = ["NOT_SUBMITTED", "IN_PROGRESS", "PENDING", "DRAFT", "FINALIZED", "PUBLISHED"] as const;
+const STATUS_FILTERS = ["NOT_SUBMITTED", "PENDING", "DRAFT", "PUBLISHED"] as const;
 
 function statusTone(status: string): Tone {
   if (status === "PUBLISHED") return "success";
-  if (status === "FINALIZED") return "primary";
-  if (status === "DRAFT") return "info";
+  if (status === "DRAFT" || status === "FINALIZED") return "info";
   if (status === "PENDING") return "warning";
   return "neutral";
 }
 
 function actionLabel(status: string, evaluated: boolean) {
-  if (!evaluated) return "Xem bài nộp";
+  if (!evaluated) return "Chưa nộp bài";
   if (status === "PENDING") return "Chấm bài";
   if (status === "DRAFT") return "Tiếp tục chấm";
   return "Xem điểm";
@@ -35,7 +36,12 @@ function actionLabel(status: string, evaluated: boolean) {
 const kindLabel = (assignment: Assignment) => (assignment.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân");
 /** Số điểm bỏ số 0 thừa ở cuối: 8.50 → 8.5, 10.00 → 10. */
 const trim = (value: Decimal) => String(Number(Number(value).toFixed(2)));
-const statusOf = (grade: GradeCell | undefined) => grade?.status ?? "NOT_SUBMITTED";
+const statusOf = (grade: GradeCell | undefined) => {
+  const raw = grade?.status ?? "NOT_SUBMITTED";
+  if (raw === "IN_PROGRESS" || raw === "NOT_SUBMITTED") return "NOT_SUBMITTED";
+  if (raw === "FINALIZED") return "DRAFT";
+  return raw;
+};
 
 export function ClassGradebookTab({ classId, headerActions }: { classId: string; headerActions?: HTMLElement | null }) {
   return <GradebookContent key={classId} classId={classId} headerActions={headerActions} />;
@@ -67,7 +73,7 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
     const timer = setTimeout(() => setSearch(query.trim()), 300);
     return () => clearTimeout(timer);
   }, [query]);
-  const load = useCallback(() => gradingApi.gradebook(classId, search, page), [classId, search, page]);
+  const load = useCallback(() => gradingApi.loadGradebook(classId, search, page), [classId, search, page]);
   const resource = useResource(load);
   // Giữ bảng đang hiện trong lúc tải kết quả mới, để ô tìm không bị dựng lại giữa chừng.
   const [kept, setKept] = useState<GradebookPage | null>(null);
@@ -95,7 +101,7 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
   const statusFilter = (
     <Select aria-label="Lọc theo trạng thái" value={status} wrapperClassName="w-44 shrink-0" onChange={(e) => setStatus(e.target.value)}>
       <option value="">Mọi trạng thái</option>
-      {STATUS_FILTERS.map((value) => <option key={value} value={value}>{statusLabels[value]}</option>)}
+      {STATUS_FILTERS.map((value) => <option key={value} value={value}>{GRADE_STATUS_LABELS[value]}</option>)}
     </Select>
   );
   const pager = data && <Pagination page={page - 1} pageSize={20} total={data.total} summary={false} onPageChange={(p) => setPage(p + 1)} />;
@@ -148,10 +154,12 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
               {mode === "assignment" && activeAssignment && (
                 <>
                   <DetailHead title={activeAssignment.title} meta={kindLabel(activeAssignment)} search={studentSearch} filter={statusFilter} />
+                  {activeAssignment.submissionMode === "GROUP" && (
+                    <GroupSubmissionLinks key={activeAssignment.id} classId={classId} assignmentId={activeAssignment.id} />
+                  )}
                   <GradeTable first="Sinh viên">
                     {assignmentRows.map(({ row, grade }) => (
                       <GradeRow key={row.student.accountId} grade={grade} maxScore={activeAssignment.maxScore}
-                        fallback={submissionsHref(classId, activeAssignment.id)}
                         label={<><strong className="block truncate text-ink">{row.student.name}</strong><p className="truncate text-xs text-muted">{row.student.email}</p></>} />
                     ))}
                     {!assignmentRows.length && <EmptyRow text="Không có sinh viên phù hợp." />}
@@ -165,7 +173,6 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
                   <GradeTable first="Bài tập">
                     {studentRows.map(({ assignment, grade }) => (
                       <GradeRow key={assignment.id} grade={grade} maxScore={assignment.maxScore}
-                        fallback={submissionsHref(classId, assignment.id)}
                         label={<><strong className="block truncate text-ink" title={assignment.title}>{assignment.title}</strong><p className="text-xs text-muted">{kindLabel(assignment)}</p></>} />
                     ))}
                     {!studentRows.length && <EmptyRow text="Không có bài phù hợp." />}
@@ -179,6 +186,37 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
       </section>
       {exporting && data && <GradebookExportDialog classId={classId} assignments={data.assignments} onClose={() => setExporting(false)} />}
     </div>
+  );
+}
+
+function GroupSubmissionLinks({ classId, assignmentId }: { classId: string; assignmentId: string }) {
+  const { value, error, refresh } = useSubmissionDirectory(classId, assignmentId);
+  if (error) {
+    return (
+      <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-danger">
+        Không tải được bản nộp nhóm.
+        <Button size="sm" onClick={() => void refresh().catch(() => {})}>Thử lại</Button>
+      </div>
+    );
+  }
+  if (!value) return <p role="status" className="text-xs text-muted">Đang tải bản nộp nhóm…</p>;
+  const submissions = value.flatMap(({ student, evaluationId }) =>
+    evaluationId ? [{ group: student, evaluationId }] : []);
+  if (!submissions.length) return <p className="text-xs text-muted">Chưa có bản nộp chung để xem.</p>;
+
+  return (
+    <ul aria-label="Bản nộp chung theo nhóm"
+      className="max-h-64 divide-y divide-line-soft overflow-y-auto rounded-lg border border-line">
+      {submissions.map(({ group, evaluationId }) => (
+        <li key={group.accountId} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+          <span className="min-w-0 wrap-break-word text-sm font-semibold text-ink">{group.name}</span>
+          <ButtonLink size="sm" href={buildEvaluationHref(evaluationId)}>
+            Xem bản nộp chung{" "}
+            <span className="sr-only">của {group.name}</span>
+          </ButtonLink>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -229,35 +267,36 @@ function PickItem({ title, meta, active, onPick }: { title: string; meta: string
   );
 }
 
-const submissionsHref = (classId: string, assignmentId: string) =>
-  `/teaching/classes/${encodeURIComponent(classId)}/assignments/${encodeURIComponent(assignmentId)}/submissions`;
-
 /**
- * Một dòng điểm: điểm (bỏ số 0 thừa), trạng thái (kèm Trễ), nút ›. Bấm dòng nào cũng sang trang kế: có lượt chấm thì trang
- * chấm hoặc xem điểm, chưa có thì danh sách bài nộp của bài đó.
+ * Một dòng điểm: điểm (bỏ số 0 thừa), trạng thái (kèm Trễ), nút ›.
+ * Chỉ bài đã nộp mới có link tới trang chấm điểm và hiện nút ›. Bài chưa nộp không có link hay nút ›.
  */
-function GradeRow({ label, grade, maxScore, fallback }: { label: ReactNode; grade: GradeCell | undefined; maxScore: Assignment["maxScore"]; fallback: string }) {
+function GradeRow({ label, grade, maxScore }: { label: ReactNode; grade: GradeCell | undefined; maxScore: Assignment["maxScore"] }) {
   const router = useRouter();
   const status = statusOf(grade);
-  const href = grade?.evaluationId ? `/teaching/evaluations/${grade.evaluationId}` : fallback;
-  const action = actionLabel(status, !!grade?.evaluationId);
+  const evaluationId = grade?.evaluationId;
+  const hasEvaluation = Boolean(evaluationId && status !== "NOT_SUBMITTED");
+  const href = hasEvaluation ? `/teaching/evaluations/${evaluationId}` : undefined;
+  const action = actionLabel(status, hasEvaluation);
   return (
-    <ClickableRow onClick={() => router.push(href)}>
+    <ClickableRow onClick={href ? () => router.push(href) : undefined}>
       <Td className="min-w-0">{label}</Td>
       <Td className="font-semibold whitespace-nowrap tabular-nums">
         {grade?.score == null ? "—" : `${trim(grade.score)} / ${trim(grade.maxScore ?? maxScore)}`}
       </Td>
       <Td>
         <div className="flex flex-wrap items-center gap-1.5">
-          <Pill tone={statusTone(status)}>{statusLabels[status] ?? status}</Pill>
+          <Pill tone={statusTone(status)}>{GRADE_STATUS_LABELS[status] ?? status}</Pill>
           {grade?.late && <Pill tone="danger">Trễ</Pill>}
         </div>
       </Td>
       <Td className="text-right">
-        <Link href={href} aria-label={action} title={action} onClick={(event) => event.stopPropagation()}
-          className="inline-flex size-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary-ink">
-          <Icon name="chevron_right" size={20} />
-        </Link>
+        {href ? (
+          <Link href={href} aria-label={action} title={action} onClick={(event) => event.stopPropagation()}
+            className="inline-flex size-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary-ink">
+            <Icon name="chevron_right" size={20} />
+          </Link>
+        ) : null}
       </Td>
     </ClickableRow>
   );

@@ -2,7 +2,6 @@ package edu.aiplatform.subjects.repository;
 
 import edu.aiplatform.shared.error.ApiException;
 import edu.aiplatform.subjects.contract.SubjectStatus;
-import edu.aiplatform.subjects.repository.ISubjectRepository;
 import edu.aiplatform.subjects.model.Subject;
 import edu.aiplatform.subjects.model.SubjectCode;
 import jakarta.persistence.EntityManager;

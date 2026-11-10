@@ -1,5 +1,15 @@
 # U09 Assignment Grading — frontend-components
 
+**Naming update 2026-11-05:** internal API actions use explicit names such as `loadEvaluation`, `saveEvaluation`, `finalizeGrades`, `publishGrades`, `requestProposals` and `loadStudentGrades`; scoring/navigation/error helpers use verbs. Hook `save`/`reload`/`navigate` return keys remain stable through aliases, UI action values remain `finalize`/`publish`, and all mocks/imports are updated. [Current evidence](../../build-and-test/2026-11-05-u05-u09-u15-conventions-results.md).
+
+## Typed submitted document — 2026-11-05
+
+`model/submissionDocument.ts` derives `SubmissionDocumentDto` from the shared document block union, adding the submitted IMAGE `fileId`. `toEditorDocument` preserves block IDs/origins and content, derives image `hasFile` without mutating the input and replaces the workspace's unchecked double cast. `SubmissionViewer`, heading labels and image-link loading narrow by block kind. Image retrieval still uses the evaluation-authorized endpoint. This is compile-time typing, not a replacement for backend validation. [Verification](../../build-and-test/2026-11-05-u05-u09-u15-followup-results.md).
+
+## Audit remediation — 2026-11-04
+
+Submission links carry `status`/`late` into the evaluation page, detail request and previous/next/save-next links. Explicit student selection clears the queue context. Direct proposal links remain compatible. Conflict copy distinguishes locked grades, changed submissions, changed rubrics and version conflicts while retaining local edits. Pure rubric calculations live in `model/rubricScores.ts`; components and workspace hooks consume that module. Automated execution evidence is tracked in [cleanup results](../../build-and-test/2026-11-04-u05-u09-u15-cleanup-results.md); browser acceptance is separate.
+
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
 

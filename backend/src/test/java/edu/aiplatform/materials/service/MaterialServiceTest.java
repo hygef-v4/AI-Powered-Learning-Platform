@@ -19,6 +19,50 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class MaterialServiceTest {
+    @Test
+    void legacyTitleAndVisibilityUpdatePreservesFormattedTrailingBlankParagraph() {
+        var document = new edu.aiplatform.shared.content.FormattedText(List.of(
+                new edu.aiplatform.shared.content.FormattedText.Block(
+                        edu.aiplatform.shared.content.FormattedText.Type.PARAGRAPH,
+                        edu.aiplatform.shared.content.FormattedText.Align.CENTER, 0,
+                        List.of(new edu.aiplatform.shared.content.FormattedText.Run("Mô tả", true, null, null))),
+                new edu.aiplatform.shared.content.FormattedText.Block(
+                        edu.aiplatform.shared.content.FormattedText.Type.PARAGRAPH,
+                        edu.aiplatform.shared.content.FormattedText.Align.LEFT, 0,
+                        List.of(new edu.aiplatform.shared.content.FormattedText.Run("", null, null, null)))));
+        Material rich = material.withPresentation(false, document);
+        when(repo.find(id)).thenReturn(Optional.of(rich));
+        when(repo.update(any(), eq(0L))).thenReturn(true);
+        Material edited = service.update(actor, id,
+                new MaterialCommands.Update("New title", "Mô tả", 0, 0L, null, true, null));
+        assertThat(edited.descriptionDocument()).isEqualTo(document);
+        assertThat(edited.description()).isEqualTo("Mô tả\n");
+        assertThat(edited.enabled()).isTrue();
+    }
+
+    @Test
+    void presentationUpdatesDerivePlainTextAndPreserveDisabledAcrossRevisions() {
+        var document = new edu.aiplatform.shared.content.FormattedText(List.of(
+                new edu.aiplatform.shared.content.FormattedText.Block(
+                        edu.aiplatform.shared.content.FormattedText.Type.UL,
+                        edu.aiplatform.shared.content.FormattedText.Align.CENTER, 1,
+                        List.of(new edu.aiplatform.shared.content.FormattedText.Run("Mô tả", true, null, null)))));
+        when(repo.update(any(), eq(0L))).thenReturn(true);
+        Material changed = service.update(actor, id,
+                new MaterialCommands.Update("Title", "Ignored plain", 0, 0L, null, false, document));
+        assertThat(changed.enabled()).isFalse();
+        assertThat(changed.description()).isEqualTo("Mô tả");
+        assertThat(changed.descriptionDocument()).isEqualTo(document);
+        assertThat(changed.revise("Title", changed.description(), 0, 2, Material.Status.ACTIVE, now).enabled()).isFalse();
+        assertThat(changed.inModule(UUID.randomUUID()).descriptionDocument()).isEqualTo(document);
+        when(repo.find(id)).thenReturn(Optional.of(changed));
+        when(repo.update(any(), eq(changed.version()))).thenReturn(true);
+        Material enabled = service.update(actor, id,
+                new MaterialCommands.Update("Title", "Mô tả", 0, changed.version(), null, true, null));
+        assertThat(enabled.enabled()).isTrue();
+        assertThat(enabled.descriptionDocument()).isEqualTo(document);
+    }
+
     final UUID id = UUID.randomUUID(), subject = UUID.randomUUID();
     final Actor actor = new Actor(UUID.randomUUID(), Role.SUBJECT_MANAGER);
     final Instant now = Instant.parse("2026-10-21T00:00:00Z");
@@ -154,6 +198,49 @@ class MaterialServiceTest {
         assertThat(material.currentVersionNo()).isEqualTo(1);
         verify(repo).insertVersion(argThat(v -> v.versionNo() == 2));
         verify(repo, never()).completeText(any(), anyInt(), any(), any());
+    }
+
+    @Test
+    void metadataAcceptsDocumentedBoundsAndRejectsOverflowWithoutWrites() {
+        var next = service.update(actor, id, new MaterialCommands.Update(
+                "t".repeat(200), "d".repeat(2000), 0, 0L, null));
+        assertThat(next.title()).hasSize(200);
+        assertThat(next.description()).hasSize(2000);
+        clearInvocations(repo, audit);
+        for (var input : List.of(
+                new MaterialCommands.Update("t".repeat(201), "", 0, 0L, null),
+                new MaterialCommands.Update("Title", "d".repeat(2001), 0, 0L, null),
+                new MaterialCommands.Update("Title", "", -1, 0L, null))) {
+            assertThatThrownBy(() -> service.update(actor, id, input))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+        verify(repo, never()).update(any(), anyLong());
+        verifyNoInteractions(audit, files, jobs);
+    }
+
+    @Test
+    void mutationsAuditExactActionActorObjectTimeAndVersion() {
+        service.update(actor, id, new MaterialCommands.Update("New", "", 0, 0L, null));
+        service.replace(actor, id, new MaterialCommands.Replace(0L, new MaterialCommands.Source("signed", null)));
+        service.archive(actor, id, 0L);
+        var events = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(audit, times(3)).record(events.capture());
+        assertThat(events.getAllValues()).extracting(AuditEvent::action)
+                .containsExactly("MATERIAL_UPDATED", "MATERIAL_VERSION_CREATED", "MATERIAL_ARCHIVED");
+        assertThat(events.getAllValues()).allSatisfy(event -> {
+            assertThat(event.actorId()).isEqualTo(actor.accountId());
+            assertThat(event.objectId()).isEqualTo(id.toString());
+            assertThat(event.result()).isEqualTo(AuditResult.SUCCESS);
+            assertThat(event.occurredAt()).isEqualTo(now);
+            assertThat(event.details()).containsEntry("version", 1L);
+        });
+        clearInvocations(audit);
+        when(repo.update(any(), anyLong())).thenReturn(false);
+        assertThatThrownBy(() -> service.update(actor, id,
+                new MaterialCommands.Update("Rejected", "", 0, 0L, null)))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
+        verifyNoInteractions(audit);
     }
 
     @Test

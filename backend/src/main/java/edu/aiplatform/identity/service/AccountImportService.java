@@ -1,7 +1,5 @@
 package edu.aiplatform.identity.service;
 
-import edu.aiplatform.identity.config.IdentityProperties;
-
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
@@ -16,6 +14,7 @@ import edu.aiplatform.identity.repository.AccountRepository;
 import edu.aiplatform.identity.model.EmailPolicy;
 import edu.aiplatform.identity.model.ProfilePolicy;
 import edu.aiplatform.shared.error.ApiException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.ByteBuffer;
@@ -27,6 +26,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.List;
@@ -37,12 +37,16 @@ import java.util.UUID;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionOperations;
 
 /**
- * Nhập tài khoản từ CSV (F10, luồng phụ UC 09). Bước kiểm trả kết quả từng dòng, không ghi gì; bước xác nhận gửi lại
+ * Nhập tài khoản từ Excel, tương thích CSV cũ (F10, luồng phụ UC 09). Bước kiểm không ghi; xác nhận gửi lại
  * cùng file, kiểm lại rồi tạo các dòng hợp lệ ở {@code PENDING} trong một transaction, không gửi mail (BR-U01-80–85).
  * Kết quả không lưu; audit ghi checksum file và số dòng tạo/lỗi.
  */
@@ -59,16 +63,14 @@ public class AccountImportService {
     private final IAuthorization authorization;
     private final IAudit audit;
     private final TransactionOperations transactions;
-    private final EmailPolicy emailPolicy;
     private final Clock clock;
 
     public AccountImportService(AccountRepository accounts, IAuthorization authorization, IAudit audit,
-                                TransactionOperations transactions, IdentityProperties properties, Clock clock) {
+                                TransactionOperations transactions, Clock clock) {
         this.accounts = accounts;
         this.authorization = authorization;
         this.audit = audit;
         this.transactions = transactions;
-        this.emailPolicy = new EmailPolicy(properties.allowedEmailDomains());
         this.clock = clock;
     }
 
@@ -98,7 +100,7 @@ public class AccountImportService {
             return commitChecked(actor, file, now);
         } catch (DuplicateKeyException e) {
             // Email vừa được tạo ở request khác giữa lúc kiểm và lúc ghi (hai lần xác nhận cùng tệp): cả tệp rollback.
-            throw ApiException.conflict("IMPORT_CONFLICT", "Dữ liệu tài khoản vừa thay đổi, hãy kiểm lại tệp CSV");
+            throw ApiException.conflict("IMPORT_CONFLICT", "Dữ liệu tài khoản vừa thay đổi, hãy kiểm lại tệp nhập");
         }
     }
 
@@ -120,25 +122,26 @@ public class AccountImportService {
 
     private ImportResult check(byte[] file, boolean committing) {
         if (file == null || file.length == 0) {
-            throw invalidFile("Tệp CSV trống");
+            throw invalidFile("Tệp nhập trống");
         }
         if (file.length > MAX_BYTES) {
-            throw invalidFile("Tệp CSV vượt 1 MB");
+            throw invalidFile("Tệp nhập vượt 1 MB");
         }
-        List<CSVRecord> records = parse(decode(file));
+        List<ImportRow> records = file.length >= 4 && file[0] == 'P' && file[1] == 'K'
+                ? readWorkbook(file) : parse(decode(file));
         if (records.size() > MAX_ROWS) {
-            throw invalidFile("Tệp CSV có quá " + MAX_ROWS + " dòng dữ liệu");
+            throw invalidFile("Tệp nhập có quá " + MAX_ROWS + " dòng dữ liệu");
         }
-        List<String> normalizedEmails = records.stream().map(r -> EmailPolicy.normalize(value(r, "email"))).toList();
+        List<String> normalizedEmails = records.stream().map(r -> EmailPolicy.normalize(r.email())).toList();
         Set<String> existing = accounts.existingEmails(normalizedEmails.stream().filter(e -> !e.isEmpty()).toList());
         Set<String> seen = new HashSet<>();
         List<RowResult> rows = new ArrayList<>();
         int valid = 0;
         for (int i = 0; i < records.size(); i++) {
-            CSVRecord record = records.get(i);
+            ImportRow record = records.get(i);
             String email = normalizedEmails.get(i);
-            String displayName = ProfilePolicy.normalizeDisplayName(value(record, "display_name"));
-            String roleText = value(record, "role").strip().toUpperCase(Locale.ROOT);
+            String displayName = ProfilePolicy.normalizeDisplayName(record.displayName());
+            String roleText = record.role().strip().toUpperCase(Locale.ROOT);
             String reason = reason(email, displayName, roleText, existing, seen);
             if (!email.isEmpty()) {
                 seen.add(email);
@@ -148,7 +151,7 @@ public class AccountImportService {
                 valid++;
             }
             // Số dòng trong tệp: dòng tiêu đề là dòng 1.
-            rows.add(new RowResult(record.getRecordNumber() + 1, email, displayName, roleText, outcome, reason));
+            rows.add(new RowResult(record.rowNumber(), email, displayName, roleText, outcome, reason));
         }
         return new ImportResult(checksum(file), rows, valid, rows.size() - valid, committing);
     }
@@ -157,9 +160,8 @@ public class AccountImportService {
         if (email.isEmpty() || displayName.isEmpty() || role.isEmpty()) {
             return "MISSING_FIELD";
         }
-        EmailPolicy.EmailCheck emailCheck = emailPolicy.check(email);
-        if (emailCheck != EmailPolicy.EmailCheck.OK) {
-            return emailCheck.name();
+        if (!EmailPolicy.isValid(email)) {
+            return "INVALID_EMAIL";
         }
         if (seen.contains(email)) {
             return "DUPLICATE_IN_FILE";
@@ -195,7 +197,62 @@ public class AccountImportService {
         }
     }
 
-    private static List<CSVRecord> parse(String text) {
+    private record ImportRow(long rowNumber, String email, String displayName, String role) {
+    }
+
+    private static List<ImportRow> readWorkbook(byte[] file) {
+        try (var workbook = new XSSFWorkbook(new ByteArrayInputStream(file))) {
+            if (workbook.isMacroEnabled() || workbook.getNumberOfSheets() == 0) {
+                throw invalidFile("Chỉ nhận workbook .xlsx không có macro");
+            }
+            var sheet = workbook.getSheetAt(0);
+            var header = sheet.getRow(0);
+            if (header == null) {
+                throw invalidFile("Tệp Excel cần đủ cột email, display_name, role ở dòng đầu");
+            }
+            var formatter = new DataFormatter(Locale.ROOT);
+            Map<String, Integer> columns = new HashMap<>();
+            for (Cell cell : header) {
+                String name = readCell(cell, formatter).strip().toLowerCase(Locale.ROOT);
+                if (REQUIRED_COLUMNS.contains(name) && columns.putIfAbsent(name, cell.getColumnIndex()) != null) {
+                    throw invalidFile("Tệp Excel có cột trùng: " + name);
+                }
+            }
+            if (!columns.keySet().containsAll(REQUIRED_COLUMNS)) {
+                throw invalidFile("Tệp Excel cần đủ cột email, display_name, role");
+            }
+            List<ImportRow> rows = new ArrayList<>();
+            for (var row : sheet) {
+                if (row.getRowNum() == 0) {
+                    continue;
+                }
+                String email = readCell(row.getCell(columns.get("email")), formatter);
+                String name = readCell(row.getCell(columns.get("display_name")), formatter);
+                String role = readCell(row.getCell(columns.get("role")), formatter);
+                if (email.isBlank() && name.isBlank() && role.isBlank()) {
+                    continue;
+                }
+                rows.add(new ImportRow(row.getRowNum() + 1L, email, name, role));
+                if (rows.size() > MAX_ROWS) {
+                    throw invalidFile("Tệp nhập có quá " + MAX_ROWS + " dòng dữ liệu");
+                }
+            }
+            return rows;
+        } catch (ApiException rejected) {
+            throw rejected;
+        } catch (IOException | RuntimeException unreadable) {
+            throw invalidFile("Không đọc được tệp Excel .xlsx");
+        }
+    }
+
+    private static String readCell(Cell cell, DataFormatter formatter) {
+        if (cell != null && (cell.getCellType() == CellType.FORMULA || cell.getCellType() == CellType.ERROR)) {
+            throw invalidFile("Tệp Excel không được chứa ô công thức hoặc ô lỗi trong các cột nhập");
+        }
+        return formatter.formatCellValue(cell);
+    }
+
+    private static List<ImportRow> parse(String text) {
         CSVFormat format = CSVFormat.DEFAULT.builder()
                 .setHeader()
                 .setIgnoreHeaderCase(true)
@@ -209,12 +266,13 @@ public class AccountImportService {
             if (!header.containsAll(REQUIRED_COLUMNS)) {
                 throw invalidFile("Tệp CSV cần đủ cột email, display_name, role");
             }
-            List<CSVRecord> records = new ArrayList<>();
+            List<ImportRow> records = new ArrayList<>();
             for (CSVRecord record : parser) {
                 if (records.size() > MAX_ROWS) {
                     break;
                 }
-                records.add(record);
+                records.add(new ImportRow(record.getRecordNumber() + 1, value(record, "email"),
+                        value(record, "display_name"), value(record, "role")));
             }
             return records;
         } catch (IOException | IllegalArgumentException | IllegalStateException e) {

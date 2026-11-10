@@ -1,6 +1,6 @@
-# U14 Announcements & Notifications — AS-BUILT 2026-10-30
+# U14 Announcements & Notifications — AS-BUILT source snapshot 2026-11-07
 
-Current structure: parent HEAD `5a76e428` + working-tree refactor; unit ownership and public contracts unchanged.
+Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths are catalogued in [current-code-baseline](../../../inception/reverse-engineering/current-code-baseline.md). Dated deltas/test results below retain their original scope; this update is not runtime acceptance.
 
 announcements/notifications có CRUD, recipients, preference, in-app/SSE/email/reminder/retention. OTP gửi qua U01; U14 xử lý email học tập/cảnh báo. Remediation 23–26/10 giữ historical evidence; SENT chỉ là SMTP chấp nhận, không bảo đảm exactly-once hoặc inbox. Scope/privacy/version vẫn do backend kiểm.
 

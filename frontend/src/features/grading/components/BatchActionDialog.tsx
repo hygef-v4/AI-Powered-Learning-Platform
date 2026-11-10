@@ -2,10 +2,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Alert, Button, Dialog } from "@/shared/ui";
 import { Icon } from "@/shared/ui/Icon";
-import { aiRequest } from "./AiProposalPanel";
-import { AiSourcePicker, type SourceChoice } from "@/shared/ai";
+import { buildAiRequest } from "./AiProposalPanel";
+import type { SourceChoice } from "@/shared/ai";
 import { gradingApi } from "../api";
-import { message } from "../hooks/useResource";
+import { formatErrorMessage } from "../model/format";
 import type { BatchResult, ItemVersion } from "../model/types";
 
 const OUTCOME_CODE_MESSAGES: Record<string, string> = {
@@ -26,7 +26,6 @@ export function BatchActionDialog({
   onClose: () => void;
   onDone: () => void;
 }) {
-  const [choosingSource, setChoosingSource] = useState(action === "ai");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<BatchResult | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
@@ -39,7 +38,7 @@ export function BatchActionDialog({
     if (action !== "ai" || items.length === 0) return;
     let active = true;
     const key = JSON.stringify(items);
-    void gradingApi.estimateBatch(items).then(
+    void gradingApi.estimateProposalTokens(items).then(
       (value) => {
         if (active) setEstimate({ key, state: "ready", tokens: value.estimatedTokens });
       },
@@ -52,16 +51,29 @@ export function BatchActionDialog({
     };
   }, [action, items]);
   async function run(choice?: SourceChoice) {
-    if (busy || items.length === 0 || (action === "ai" && !choice)) return;
+    if (busy || items.length === 0) return;
     setBusy(true);
     setError("");
     try {
       let completed: BatchResult;
       if (action === "ai") {
-        if (!choice) return;
-        completed = await gradingApi.requestBatch(items, aiRequest(choice));
+        completed = await gradingApi.requestProposals(items, buildAiRequest(choice));
+      } else if (action === "finalize") {
+        completed = await gradingApi.finalizeGrades(items);
       } else {
-        completed = await gradingApi[action](items);
+        const initial = await gradingApi.publishGrades(items);
+        const unfinalized = initial.items.filter((r) => r.outcome === "FAILED" && r.code === "INVALID_GRADE_STATE");
+        if (unfinalized.length > 0) {
+          const toFinalize = items.filter((it) => unfinalized.some((u) => u.evaluationId === it.evaluationId));
+          const finalized = await gradingApi.finalizeGrades(toFinalize);
+          const retryItems = items.map((item) => {
+            const fin = finalized.items.find((r) => r.evaluationId === item.evaluationId);
+            return fin && fin.newVersion != null ? { evaluationId: item.evaluationId, version: fin.newVersion } : item;
+          });
+          completed = await gradingApi.publishGrades(retryItems);
+        } else {
+          completed = initial;
+        }
       }
       setResult(completed);
       // Snapshot success before refreshing: a filtered list can remove the completed rows.
@@ -71,10 +83,9 @@ export function BatchActionDialog({
       }
       onDone();
     } catch (e) {
-      setError(message(e));
+      setError(formatErrorMessage(e));
     } finally {
       setBusy(false);
-      setChoosingSource(false);
     }
   }
   const title =
@@ -88,12 +99,6 @@ export function BatchActionDialog({
   if (successMessage) {
     return <SuccessNotice onDismiss={onClose} message={successMessage} />;
   }
-  if (action === "ai" && choosingSource && items.length > 0) {
-    return <AiSourcePicker open
-      task={`Đề xuất chấm ${items.length} bài đã chọn${estimateState === "loading" ? " · đang ước tính token" : estimateState === "failed" ? " · chưa ước tính được token" : ""}`}
-      estimatedTokens={estimateState === "ready" ? estimate.tokens : undefined}
-      busy={busy || estimateState === "loading"} onCancel={onClose} onSubmit={(choice) => void run(choice)} />;
-  }
   return (
     <Dialog
       open
@@ -105,14 +110,24 @@ export function BatchActionDialog({
           <Button
             variant="primary"
             disabled={busy || !!result || items.length === 0}
-            onClick={() => action === "ai" ? setChoosingSource(true) : void run()}
+            onClick={() => void run()}
           >
             {busy ? "Đang xử lý…" : "Xác nhận"}
           </Button>
         </>
       }
     >
-      <p className="font-display text-[34px] leading-none text-ink">{items.length} <span className="font-sans text-[13.5px] text-muted">bài đã chọn</span></p>
+      {/* Popup công bố điểm bỏ phần nội dung (yêu cầu 2026-11-07). */}
+      {action !== "publish" && (
+        <p className="font-display text-[34px] leading-none text-ink">{items.length} <span className="font-sans text-[13.5px] text-muted">bài đã chọn</span></p>
+      )}
+      {/* Nguồn AI do hệ thống tự chọn: API chung nếu còn đủ hạn mức cho lượt này, không thì khóa cá nhân (yêu cầu 2026-11-05). */}
+      {action === "ai" && (
+        <p className="text-xs text-muted">
+          {estimateState === "loading" ? "Đang ước tính token…" : estimateState === "ready" && estimate.tokens
+            ? `Ước tính khoảng ${estimate.tokens.toLocaleString("vi-VN")} token.` : "Chưa ước tính được token."}
+        </p>
+      )}
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {result && (
         <ul className="flex flex-col">

@@ -6,18 +6,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import edu.aiplatform.groupdocs.controller.GroupDocCollaborationController;
 import edu.aiplatform.groupdocs.service.GroupDocAccess;
 import edu.aiplatform.groupdocs.service.GroupDocImportService;
-import edu.aiplatform.groupdocs.service.GroupPeerReviewService;
-import edu.aiplatform.groupdocs.service.GroupPeerReviewService.Given;
 import edu.aiplatform.groupdocs.service.GroupSectionService;
 import edu.aiplatform.groupdocs.service.GroupSectionService.SectionView;
 import edu.aiplatform.groupdocs.service.GroupSubmissionService;
@@ -65,15 +61,13 @@ class GroupControllersTest {
     private final GroupDocAccess docAccess = mock(GroupDocAccess.class);
     private final IGroupDocStreams streams = mock(IGroupDocStreams.class);
     private final GroupDocImportService imports = mock(GroupDocImportService.class);
-    private final GroupPeerReviewService peerReviews = mock(GroupPeerReviewService.class);
     private MockMvc mvc;
 
     @BeforeEach
     void setUp() {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(actor, null));
         mvc = MockMvcBuilders.standaloneSetup(new GroupController(classGroups, requests, myGroups, work, renames),
-                        new GroupDocController(workspace, sections, submissions, work, docAccess, streams),
-                        new GroupDocCollaborationController(imports, peerReviews))
+                        new GroupDocController(workspace, sections, submissions, work, docAccess, streams, imports))
                 .setControllerAdvice(new GroupExceptionHandler(), new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
     }
@@ -129,7 +123,7 @@ class GroupControllersTest {
         UUID section = UUID.randomUUID();
         UUID assignee = UUID.randomUUID();
         when(sections.claim(actor, doc, section)).thenReturn(new SectionView(section, "p1", "Mục 1", 1,
-                GroupSection.Status.CLAIMED, actor.accountId(), actor.accountId(), null, null, null, null, 1, null));
+                GroupSection.Status.CLAIMED, actor.accountId(), actor.accountId(), null, null, null, null, 1, null, null));
 
         mvc.perform(post("/api/v1/group-docs/" + doc + "/sections/" + section + ":claim")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CLAIMED"));
@@ -144,52 +138,6 @@ class GroupControllersTest {
         when(workspace.workspace(actor, doc)).thenThrow(ApiException.notFound("GROUP_NOT_FOUND"));
         mvc.perform(get("/api/v1/group-docs/" + doc)).andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("GROUP_NOT_FOUND"));
-    }
-
-    @Test
-    void lockHistoryAndRestoreAreMappedAndTakeOverIsGone() throws Exception {
-        UUID doc = UUID.randomUUID();
-        UUID section = UUID.randomUUID();
-        UUID revision = UUID.randomUUID();
-        String base = "/api/v1/group-docs/" + doc + "/sections/" + section;
-
-        mvc.perform(post(base + ":take-over")).andExpect(status().isNotFound());
-        mvc.perform(post("/api/v1/group-docs/" + doc + "/assignment:lock")).andExpect(status().isOk());
-        verify(sections).lockAssignment(actor, doc);
-        mvc.perform(post("/api/v1/group-docs/" + doc + "/assignment:unlock")).andExpect(status().isNoContent());
-        verify(sections).unlockAssignment(actor, doc);
-        when(sections.revisions(actor, doc, section)).thenReturn(List.of());
-        mvc.perform(get(base + "/revisions")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
-        mvc.perform(post(base + ":restore").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"revisionId\":\"" + revision + "\",\"version\":4}")).andExpect(status().isOk());
-        verify(sections).restore(actor, doc, section, revision, 4L);
-    }
-
-    @Test
-    void importAndPeerReviewRoutesAreMapped() throws Exception {
-        UUID doc = UUID.randomUUID();
-        UUID section = UUID.randomUUID();
-        UUID mate = UUID.randomUUID();
-
-        mvc.perform(multipart("/api/v1/group-docs/" + doc + "/sections/" + section + "/docx:preview")
-                .file("file", new byte[] {1, 2})).andExpect(status().isOk());
-        verify(imports).previewSection(actor, doc, section, new byte[] {1, 2});
-        mvc.perform(multipart("/api/v1/group-docs/" + doc + "/import:preview").file("drawio", new byte[] {3}))
-                .andExpect(status().isOk());
-        verify(imports).previewDocument(actor, doc, null, new byte[] {3});
-        mvc.perform(multipart("/api/v1/group-docs/" + doc + "/sections/" + section + "/docx:preview")
-                .file("file", new byte[0])).andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("IMPORT_FILE_INVALID"));
-        mvc.perform(post("/api/v1/group-docs/" + doc + "/import:apply").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"sections\":[]}")).andExpect(status().isOk());
-        verify(imports).applyDocument(actor, doc, List.of());
-
-        mvc.perform(get("/api/v1/group-docs/" + doc + "/peer-reviews")).andExpect(status().isOk());
-        verify(peerReviews).view(actor, doc);
-        mvc.perform(put("/api/v1/group-docs/" + doc + "/peer-reviews").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"reviews\":[{\"revieweeId\":\"" + mate + "\",\"score\":4,\"comment\":\"Tích cực\"}]}"))
-                .andExpect(status().isOk());
-        verify(peerReviews).save(actor, doc, List.of(new Given(mate, 4, "Tích cực")));
     }
 
     @Test

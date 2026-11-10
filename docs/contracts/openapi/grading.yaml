@@ -367,12 +367,25 @@ paths:
       tags:
       - U09
       description: Assigned Teacher/SubjectManager only. Admin and class-management-only
-        authority are denied.
+        authority are denied. Optional status/late filters restrict navigationIds to the
+        originating submission listing in listing order. Requests without filters retain
+        legacy navigation order. Filters never grant access or bypass grade write checks.
       parameters:
       - name: id
         in: path
         required: true
         schema: *id001
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [ALL, PENDING, DRAFT, FINALIZED, PUBLISHED, NOT_SUBMITTED, IN_PROGRESS]
+      - name: late
+        in: query
+        required: false
+        schema:
+          type: boolean
       security:
       - session: []
       responses:
@@ -908,12 +921,12 @@ components:
           minLength: 1
           maxLength: 200
       required:
-      - source
       - requestRef
       additionalProperties: false
-      description: PERSONAL requires provider. Caller chooses source explicitly; no
-        fallback. requestRef is idempotent within its evaluation/requester/source/snapshot
-        scope.
+      description: Omit source for automatic selection through U06 (eligible shared
+        API first, then configured personal keys). An explicit source remains supported;
+        provider is optional for PERSONAL and must be absent for other sources.
+        requestRef is idempotent within its evaluation/requester/source/snapshot scope.
     Batch:
       type: object
       properties:

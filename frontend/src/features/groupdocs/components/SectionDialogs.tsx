@@ -1,14 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { formatDateTime } from "@/features/groups/model/format";
 import { ApiError } from "@/shared/api/client";
 import { uploadFile } from "@/features/files/api";
 import { DocumentEditor, DocumentViewer, DocxImportDialog } from "@/shared/document";
 import { Alert, Button, Dialog, Pill, Select, TableFrame, Td, Th } from "@/shared/ui";
-import { assignSection, finishSection, groupDocImageUrl, previewSectionDocx, restoreRevision, saveDraft, submitDocument } from "../api";
+import { assignSection, finishSection, groupDocImageUrl, previewSectionDocx, saveDraft, submitDocument } from "../api";
 import type { DocumentBlock, DocumentModel, Receipt, SectionView, WorkspaceView } from "../model/types";
-import { SectionHistoryDialog } from "./CollaborationPanels";
 
 export const AUTOSAVE_MS = 10_000;
 
@@ -39,15 +39,15 @@ export function partOf(shared: DocumentModel, section: Pick<SectionView, "partId
  * Trình soạn mục che kín trang (s18b, BR-U12-34) dùng `DocumentEditor` chung ở chế độ người học: chỉ người giữ; heading
  * của phần là block khóa, hướng dẫn của giảng viên trong phần chỉ xem; chỉ block của người học được lưu. Tự lưu 10 giây
  * sau lần sửa cuối kèm `version` của mục; `409` báo tải lại; Xong đăng nội dung và đóng. Draw.io theo cài đặt của bài.
- * Chèn ảnh (BR-U12-35), nhập DOCX vào mục (FB-U12-03), xem và khôi phục lịch sử (FB-U12-02).
+ * Chèn ảnh (BR-U12-35) và nhập DOCX vào mục như trình soạn bài cá nhân. Còn phần chưa lưu thì trình duyệt hỏi lại khi
+ * đóng tab hoặc tải lại trang; sắp hết hạn thì hiện nhắc hạn ngay trong trình soạn.
  */
 export function SectionEditorDialog({
   documentId,
   section,
   shared,
   diagramEnabled,
-  members = [],
-  viewerId = "",
+  deadlineNotice = null,
   onClose,
   onChanged,
 }: {
@@ -55,8 +55,7 @@ export function SectionEditorDialog({
   section: SectionView;
   shared: DocumentModel;
   diagramEnabled: boolean;
-  members?: WorkspaceView["members"];
-  viewerId?: string;
+  deadlineNotice?: string | null;
   onClose: () => void;
   onChanged: () => void;
 }) {
@@ -65,23 +64,21 @@ export function SectionEditorDialog({
     blocks: [part.heading, ...(section.draftBlocks ?? section.publishedBlocks ?? [])],
   }));
   const [version, setVersion] = useState(section.version);
-  const latestVersion = useRef(section.version);
-  useEffect(() => {
-    latestVersion.current = version;
-  }, [version]);
   const [savedAt, setSavedAt] = useState<string | null>(section.draftSavedAt);
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [panel, setPanel] = useState<"docx" | "history" | null>(null);
+  const [importing, setImporting] = useState(false);
+  // Đóng mà lưu lỗi thì giữ trình soạn; bấm Đóng lần nữa thì thoát và bỏ phần chưa lưu (không bị kẹt).
+  const [discardOnClose, setDiscardOnClose] = useState(false);
 
   const save = useCallback(async () => {
     try {
       const saved = await saveDraft(documentId, section.id, version, doc.blocks.filter((b) => b.origin === "STUDENT"));
       setVersion(saved.version);
-      latestVersion.current = saved.version;
       setSavedAt(saved.draftSavedAt);
       setDirty(false);
+      setDiscardOnClose(false);
       setError(null);
       return true;
     } catch (e) {
@@ -96,9 +93,25 @@ export function SectionEditorDialog({
     return () => clearTimeout(timer);
   }, [dirty, save]);
 
+  useEffect(() => {
+    if (!dirty) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [dirty]);
+
   const edit = (next: DocumentModel) => {
     setDoc(next);
     setDirty(true);
+  };
+
+  const handleClose = async () => {
+    if (!dirty || discardOnClose) return onClose();
+    if (await save()) onClose();
+    else setDiscardOnClose(true);
   };
 
   const done = async () => {
@@ -117,8 +130,9 @@ export function SectionEditorDialog({
     }
   };
 
-  return (
-    <div role="dialog" aria-modal="true" aria-label={`Soạn ${section.title}`} className="fixed inset-0 z-50 flex flex-col bg-surface">
+  // Portal ra body: render tại chỗ thì lớp phủ bị kẹt dưới thanh trên và sidebar của khung trang.
+  const editor = (
+    <div role="dialog" aria-modal="true" aria-label={`Soạn ${section.title}`} className="fixed inset-0 z-[90] flex flex-col bg-surface">
       <div className="flex items-center gap-3 border-b border-line px-6 py-3">
         <h2 className="text-[16px] font-bold text-ink">{section.title}</h2>
         <Pill tone="info">Bạn đang giữ</Pill>
@@ -126,14 +140,11 @@ export function SectionEditorDialog({
           {dirty ? "Chưa lưu" : savedAt ? `Tự lưu lúc ${formatDateTime(savedAt).slice(-5)}` : "Chưa có bản nháp"} · mỗi 10 giây
         </span>
         <span className="ml-auto flex flex-wrap gap-2">
-          <Button icon="history" onClick={() => setPanel("history")} disabled={busy}>
-            Lịch sử
-          </Button>
-          <Button icon="upload_file" onClick={() => setPanel("docx")} disabled={busy}>
+          <Button icon="upload_file" onClick={() => setImporting(true)} disabled={busy}>
             Nhập DOCX
           </Button>
-          <Button onClick={() => void (dirty ? save().then((ok) => ok && onClose()) : onClose())} disabled={busy}>
-            Đóng
+          <Button onClick={() => void handleClose()} disabled={busy}>
+            {discardOnClose ? "Đóng, bỏ phần chưa lưu" : "Đóng"}
           </Button>
           <Button variant="primary" icon="check" onClick={() => void done()} disabled={busy}>
             Xong
@@ -143,6 +154,11 @@ export function SectionEditorDialog({
       {error && (
         <Alert tone="danger" role="alert" className="mx-6 mt-3">
           {error}
+        </Alert>
+      )}
+      {deadlineNotice && (
+        <Alert tone="warning" className="mx-6 mt-3">
+          {deadlineNotice} Nên bấm Xong trước hạn.
         </Alert>
       )}
       <div className="min-h-0 flex-1 overflow-y-auto bg-shell px-6 py-4">
@@ -163,34 +179,18 @@ export function SectionEditorDialog({
           }
         />
       </div>
-      {panel === "docx" && (
+      {importing && (
         <DocxImportDialog
           allowReplace={false}
           title={`Nhập DOCX vào mục “${section.title}”`}
           preview={(file) => previewSectionDocx(documentId, section.id, file)}
-          onClose={() => setPanel(null)}
+          onClose={() => setImporting(false)}
           onImport={(imported) => edit({ blocks: [...doc.blocks, ...imported.blocks] })}
-        />
-      )}
-      {panel === "history" && (
-        <SectionHistoryDialog
-          view={{ documentId, members, viewerId }}
-          section={section}
-          onClose={() => setPanel(null)}
-          onRestore={
-            async (revision) => {
-                  if (dirty && !(await save())) throw new Error("Chưa lưu được bản nháp hiện tại");
-                  const restored = await restoreRevision(documentId, section.id, revision.id, latestVersion.current);
-                  setDoc({ blocks: [part.heading, ...(restored.draftBlocks ?? [])] });
-                  setVersion(restored.version);
-                  setSavedAt(restored.draftSavedAt);
-                  setDirty(false);
-                }
-          }
         />
       )}
     </div>
   );
+  return typeof document === "undefined" ? editor : createPortal(editor, document.body);
 }
 
 /** Trưởng nhóm giao mục (s18f, BR-U12-33): mục đang do người khác giữ thì cảnh báo nhả trước. */
@@ -234,7 +234,7 @@ export function AssignSectionDialog({
     >
       <Select aria-label="Thành viên nhận mục" value={assignee} onChange={(e) => setAssignee(e.target.value)}>
         <option value="">Chọn thành viên</option>
-        {view.members.filter((m) => m.accountId !== section.assigneeId).map((m) => (
+        {view.members.filter((m) => m.accountId !== section.holderId).map((m) => (
           <option key={m.accountId} value={m.accountId}>
             {m.name ?? m.accountId}
           </option>
@@ -246,11 +246,7 @@ export function AssignSectionDialog({
           người đang giữ sẽ bị bỏ.
         </Alert>
       )}
-      <p className="text-xs text-muted">
-        {section.assigneeId
-          ? `Đang phụ trách: ${view.members.find((m) => m.accountId === section.assigneeId)?.name ?? "thành viên"}; giao sẽ đổi người phụ trách.`
-          : "Thành viên cũng có thể tự nhận mục."}
-      </p>
+      <p className="text-xs text-muted">Người được giao bắt đầu soạn ngay; thành viên cũng có thể tự nhận mục.</p>
       {error && (
         <Alert tone="danger" role="alert">
           {error}

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { headers } from "next/headers";
 import { connection } from "next/server";
 import "@/features/register";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/shared/siteMetadata";
 import { THEME_BOOT_SCRIPT } from "@/shared/themeBoot";
 import { Toaster } from "@/shared/ui/Toast";
 import { ClientRegistrations } from "./ClientRegistrations";
@@ -10,8 +11,18 @@ import "../shared/styles/globals.css";
 import "../shared/styles/fonts.css";
 
 export const metadata: Metadata = {
-  title: "Nền tảng học tập",
-  description: "Nền tảng học tập có hỗ trợ AI",
+  metadataBase: new URL(SITE_URL),
+  title: { default: SITE_TITLE, template: `%s · ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  openGraph: {
+    type: "website",
+    locale: "vi_VN",
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: { card: "summary_large_image", title: SITE_TITLE, description: SITE_DESCRIPTION },
 };
 
 const PRELOAD_FONTS = [

@@ -242,8 +242,9 @@ public class AuditQueryService implements IAuditQuery, IAuditStats {
         return join(subject.code(), subject.name());
     }
 
+    /** Lớp không còn tên (yêu cầu 2026-11-02): mã môn rồi mã lớp. */
     static String classLabel(ClassRef ref) {
-        return join(ref.code(), ref.name());
+        return ref.subjectCode() == null ? ref.code() : join(ref.subjectCode(), ref.code());
     }
 
     private static String join(String code, String name) {

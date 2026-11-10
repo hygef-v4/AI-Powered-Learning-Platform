@@ -16,7 +16,7 @@ export type Announcement = {
 export type ClassOption = {
   classId: string;
   code: string;
-  name: string;
+  subjectCode: string | null;
   canManage: boolean;
   studentCount: number;
 };

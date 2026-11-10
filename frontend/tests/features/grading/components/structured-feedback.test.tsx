@@ -20,12 +20,12 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/features/grading/api", () => ({
   gradingApi: {
-    detail: mocks.detail,
-    proposals: mocks.proposals,
-    save: mocks.save,
-    finalize: mocks.finalize,
-    attempt: mocks.attempt,
-    assignmentContext: mocks.assignmentContext,
+    loadEvaluation: mocks.detail,
+    listProposals: mocks.proposals,
+    saveEvaluation: mocks.save,
+    finalizeGrades: mocks.finalize,
+    loadAttemptGrade: mocks.attempt,
+    loadAssignmentContext: mocks.assignmentContext,
   },
 }));
 
@@ -102,8 +102,8 @@ const baseDetail: Detail = {
   },
   document: {
     blocks: [
-      { id: "part-1", type: "HEADING", content: { text: "Câu 1: Thiết kế lớp" } },
-      { id: "block-text-1", type: "PARAGRAPH", content: { text: "Nội dung bài làm của học sinh" } },
+      { id: "part-1", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Câu 1: Thiết kế lớp" } },
+      { id: "block-text-1", origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{text: "Nội dung bài làm của học sinh"}] } },
     ],
   },
   rubrics,
@@ -182,7 +182,7 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     ]);
 
     render(<GradingWorkspacePage evaluationId="eval-1" />);
-    fireEvent.click(await screen.findByRole("button", { name: "Chấm bằng AI" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Xem đề xuất AI" }));
 
     expect(await screen.findByText("Tóm tắt nhận xét cấu trúc từ AI")).toBeInTheDocument();
     expect(screen.getByText("Xác định đầy đủ các thực thể cốt lõi")).toBeInTheDocument();
@@ -207,7 +207,7 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     expect(screen.getByText(/Gợi ý thêm \(không trừ điểm\):/)).toBeInTheDocument();
   });
 
-  it("allows re-review of an unflagged AI explanation after its rubric score changes", async () => {
+  it("allows changing rubric score without requiring explanation or review blocker", async () => {
     mocks.detail.mockResolvedValue({ ...baseDetail, evaluation: { ...baseDetail.evaluation,
       rubricItemScores: { r1: { i1: 1, i2: 0.5 } }, structuredFeedback: sampleStructuredFeedback,
       reviewedItemScores: { r1: { i1: 1, i2: 0.5 } }, acknowledgedReviewItems: { r1: ["i2"] },
@@ -215,11 +215,11 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     mocks.proposals.mockResolvedValue([]);
     render(<GradingWorkspacePage evaluationId="e" />);
     const item = await screen.findByRole("checkbox", { name: "Xác định thực thể" });
-    expect(screen.queryByRole("checkbox", { name: /Đã kiểm tra và xác nhận giải thích: Xác định thực thể/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: /Đã kiểm tra và xác nhận giải thích/ })).not.toBeInTheDocument();
     fireEvent.click(item);
-    expect(screen.getByRole("checkbox", { name: /Đã kiểm tra và xác nhận giải thích: Xác định thực thể/ })).not.toBeChecked();
+    expect(screen.queryByRole("checkbox", { name: /Đã kiểm tra và xác nhận giải thích/ })).not.toBeInTheDocument();
   });
-  it("applies AI partial scores and structured feedback without dropping the mandatory review gate", async () => {
+  it("applies AI partial scores and structured feedback without review blocker", async () => {
     mocks.detail.mockResolvedValue(baseDetail);
     mocks.proposals.mockResolvedValue([
       {
@@ -239,12 +239,12 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     ]);
 
     render(<GradingWorkspacePage evaluationId="e" />);
-    fireEvent.click(await screen.findByRole("button", { name: "Chấm bằng AI" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Xem đề xuất AI" }));
     fireEvent.click(await screen.findByRole("button", { name: "Áp dụng vào bản nháp" }));
 
     expect(mocks.save).not.toHaveBeenCalled();
     expect(screen.queryByText("Làm tốt · Cần sửa")).not.toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: /Đã kiểm tra và xác nhận giải thích/ })).not.toBeChecked();
+    expect(screen.queryByRole("checkbox", { name: /Đã kiểm tra và xác nhận giải thích/ })).not.toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "Xác định thực thể" })).toBeChecked();
     expect(screen.getByRole("checkbox", { name: "Bội số quan hệ" })).not.toBeChecked();
 
@@ -259,7 +259,6 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
       usedProposalId: "prop-structured",
     });
     expect(body.structuredFeedback).toEqual(sampleStructuredFeedback);
-    expect(screen.getByRole("button", { name: "Chốt điểm" })).toBeDisabled();
   });
 
 });

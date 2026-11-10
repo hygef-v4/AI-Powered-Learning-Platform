@@ -1,6 +1,5 @@
 package edu.aiplatform.admindashboard.service;
 
-import edu.aiplatform.admindashboard.dto.AdminDashboardViews;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,10 +35,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class AdminDashboardActivityServiceTest {
     private final IAuditStats audit = mock(IAuditStats.class);
-    private final IAssignmentQuery assignments = mock(IAssignmentQuery.class);
+    private final IAssignmentQuery assignmentQuery = mock(IAssignmentQuery.class);
 
     private AdminDashboardActivityService service(DashboardFixture f) {
-        return new AdminDashboardActivityService(f.service, audit, assignments, f.reader, Clock.fixed(f.now, ZoneOffset.UTC));
+        return new AdminDashboardActivityService(f.adminDashboardService, audit, assignmentQuery, f.dashboardSourceReader, Clock.fixed(f.now, ZoneOffset.UTC));
     }
 
     @Test
@@ -51,7 +50,7 @@ class AdminDashboardActivityServiceTest {
             when(audit.countSucceeded("ACCOUNT_ENABLED", midnight, f.now, "status", "ACTIVE")).thenReturn(1L);
             when(audit.countSucceeded("ACCOUNT_DISABLED", midnight, f.now, "before", "ACTIVE")).thenReturn(6L);
 
-            var view = service(f).activity(f.admin);
+            var view = service(f).loadActivity(f.admin);
 
             assertThat(view.activeAccountChangeToday().availability()).isEqualTo(Availability.AVAILABLE);
             assertThat(view.activeAccountChangeToday().data()).isEqualTo(-2L);
@@ -61,19 +60,19 @@ class AdminDashboardActivityServiceTest {
     @Test
     void assignmentsCoverSevenDaysWithZerosForQuietDays() {
         try (var f = new DashboardFixture()) {
-            when(assignments.countGivenByDay(any(), any(), any())).thenReturn(List.of(
+            when(assignmentQuery.countGivenByDay(any(), any(), any())).thenReturn(List.of(
                     new AssignmentDayCount(LocalDate.parse("2026-10-14"), "INDIVIDUAL", 2),
                     new AssignmentDayCount(LocalDate.parse("2026-10-14"), "PRACTICE", 1),
                     new AssignmentDayCount(LocalDate.parse("2026-10-20"), "GROUP", 4),
                     new AssignmentDayCount(LocalDate.parse("2026-10-01"), "GROUP", 9)));
 
-            var days = service(f).activity(f.admin).assignmentsByDay().data();
+            var days = service(f).loadActivity(f.admin).assignmentsByDay().data();
 
             assertThat(days).hasSize(7);
             assertThat(days.get(0)).isEqualTo(new DayAssignments(LocalDate.parse("2026-10-14"), 2, 0, 1));
             assertThat(days.get(3)).isEqualTo(new DayAssignments(LocalDate.parse("2026-10-17"), 0, 0, 0));
             assertThat(days.get(6)).isEqualTo(new DayAssignments(LocalDate.parse("2026-10-20"), 0, 4, 0));
-            verify(assignments).countGivenByDay(Instant.parse("2026-10-13T17:00:00Z"), f.now,
+            verify(assignmentQuery).countGivenByDay(Instant.parse("2026-10-13T17:00:00Z"), f.now,
                     AdminDashboardActivityService.ZONE);
         }
     }
@@ -89,7 +88,7 @@ class AdminDashboardActivityServiceTest {
                     new AuditLogView(new AuditEvent(UUID.randomUUID(), null, "LOGIN_FAILED", null, null,
                             AuditResult.FAILURE, "UNKNOWN_EMAIL", Map.of(), f.now), null, null)));
 
-            var events = service(f).activity(f.admin).securityEvents().data();
+            var events = service(f).loadActivity(f.admin).securityEvents().data();
 
             assertThat(events).extracting(e -> e.account()).containsExactly("gv03@fpt.edu.vn", null);
             assertThat(events.get(0).result()).isEqualTo("DENIED");
@@ -100,10 +99,10 @@ class AdminDashboardActivityServiceTest {
     @Test
     void failingSourceOnlyHidesItsOwnSection() {
         try (var f = new DashboardFixture()) {
-            when(assignments.countGivenByDay(any(), any(), any())).thenThrow(new IllegalStateException("down"));
+            when(assignmentQuery.countGivenByDay(any(), any(), any())).thenThrow(new IllegalStateException("down"));
             when(audit.recentSecurityEvents(any(), anyInt())).thenReturn(List.of());
 
-            var view = service(f).activity(f.admin);
+            var view = service(f).loadActivity(f.admin);
 
             assertThat(view.assignmentsByDay().availability()).isEqualTo(Availability.UNAVAILABLE);
             assertThat(view.securityEvents().availability()).isEqualTo(Availability.AVAILABLE);
@@ -114,7 +113,7 @@ class AdminDashboardActivityServiceTest {
     @Test
     void onlyAdminsSeeActivity() {
         try (var f = new DashboardFixture()) {
-            assertThatThrownBy(() -> service(f).activity(new Actor(UUID.randomUUID(), Role.TEACHER)))
+            assertThatThrownBy(() -> service(f).loadActivity(new Actor(UUID.randomUUID(), Role.TEACHER)))
                     .isInstanceOf(ApiException.class);
         }
     }
@@ -123,14 +122,14 @@ class AdminDashboardActivityServiceTest {
     void assignmentRowsAccumulateDuplicatesAndIgnoreNegativeUnknownAndOutOfRangeCounts() {
         try (var f = new DashboardFixture()) {
             LocalDate today = LocalDate.parse("2026-10-20");
-            when(assignments.countGivenByDay(any(), any(), any())).thenReturn(List.of(
+            when(assignmentQuery.countGivenByDay(any(), any(), any())).thenReturn(List.of(
                     new AssignmentDayCount(today, "INDIVIDUAL", 2),
                     new AssignmentDayCount(today, "INDIVIDUAL", 3),
                     new AssignmentDayCount(today, "GROUP", -9),
                     new AssignmentDayCount(today, "UNKNOWN", 500),
                     new AssignmentDayCount(today.plusDays(1), "PRACTICE", 100)));
 
-            var section = service(f).activity(f.admin).assignmentsByDay();
+            var section = service(f).loadActivity(f.admin).assignmentsByDay();
 
             assertThat(section.availability()).isEqualTo(Availability.AVAILABLE);
             assertThat(section.data().get(6)).isEqualTo(new DayAssignments(today, 5, 0, 0));
@@ -140,10 +139,10 @@ class AdminDashboardActivityServiceTest {
     @ParameterizedTest @ValueSource(booleans = {false, true})
     void nullOrUnmappableAssignmentSourceOnlyHidesAssignmentSection(boolean unmappable) {
         try (var f = new DashboardFixture()) {
-            when(assignments.countGivenByDay(any(), any(), any())).thenReturn(unmappable
+            when(assignmentQuery.countGivenByDay(any(), any(), any())).thenReturn(unmappable
                     ? List.of(new AssignmentDayCount(LocalDate.parse("2026-10-20"), null, 1)) : null);
 
-            var view = service(f).activity(f.admin);
+            var view = service(f).loadActivity(f.admin);
 
             assertThat(view.assignmentsByDay().availability()).isEqualTo(Availability.UNAVAILABLE);
             assertThat(view.activeAccountChangeToday().availability()).isEqualTo(Availability.AVAILABLE);
@@ -157,7 +156,7 @@ class AdminDashboardActivityServiceTest {
             when(audit.countSucceeded(eq("ACCOUNT_ACTIVATED"), any(), any(), isNull(), isNull()))
                     .thenThrow(new IllegalStateException("counts unavailable"));
 
-            var view = service(f).activity(f.admin);
+            var view = service(f).loadActivity(f.admin);
 
             assertThat(view.activeAccountChangeToday().availability()).isEqualTo(Availability.UNAVAILABLE);
             assertThat(view.assignmentsByDay().availability()).isEqualTo(Availability.AVAILABLE);
@@ -174,7 +173,7 @@ class AdminDashboardActivityServiceTest {
                 when(audit.recentSecurityEvents(any(), anyInt())).thenThrow(new IllegalStateException("events unavailable"));
             }
 
-            var view = service(f).activity(f.admin);
+            var view = service(f).loadActivity(f.admin);
 
             assertThat(view.securityEvents().availability()).isEqualTo(Availability.UNAVAILABLE);
             assertThat(view.activeAccountChangeToday().availability()).isEqualTo(Availability.AVAILABLE);

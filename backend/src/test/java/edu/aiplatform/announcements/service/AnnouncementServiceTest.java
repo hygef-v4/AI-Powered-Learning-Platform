@@ -114,6 +114,40 @@ class AnnouncementServiceTest {
     }
 
     @Test
+    void consecutiveEditsUseReturnedVersionAndAuditExactMetadataWithoutContent() {
+        var announcement = item();
+        when(repo.update(eq(announcement), anyLong())).thenAnswer(call -> {
+            announcement.version = (Long) call.getArgument(1) + 1;
+            return true;
+        });
+        var first = service.edit(teacher, announcement.id,
+                new AnnouncementCommands.Edit("First", "private-body-sentinel", 0));
+        var second = service.edit(teacher, announcement.id,
+                new AnnouncementCommands.Edit("Second", "Second body", first.version()));
+        assertThat(second.version()).isEqualTo(2);
+        assertThat(second.createdBy()).isEqualTo(teacherId);
+        assertThat(second.createdAt()).isEqualTo(now.minusSeconds(60));
+        assertThat(announcement.updatedBy).isEqualTo(teacherId);
+        assertThat(announcement.updatedAt).isEqualTo(now);
+        var captured = org.mockito.ArgumentCaptor.forClass(AuditEvent.class);
+        verify(audit, times(2)).record(captured.capture());
+        for (int index = 0; index < 2; index++) {
+            var event = captured.getAllValues().get(index);
+            assertThat(event.action()).isEqualTo("ANNOUNCEMENT_UPDATED");
+            assertThat(event.actorId()).isEqualTo(teacherId);
+            assertThat(event.objectId()).isEqualTo(announcement.id.toString());
+            assertThat(event.occurredAt()).isEqualTo(now);
+            assertThat(event.result()).isEqualTo(AuditResult.SUCCESS);
+            assertThat(((Map<?, ?>) event.details().get("before")).get("version")).isEqualTo((long) index);
+            assertThat(((Map<?, ?>) event.details().get("after")).get("version")).isEqualTo((long) index + 1);
+            assertThat(event.details().toString()).doesNotContain("private-body-sentinel", "Second body");
+        }
+        verify(repo).update(announcement, 0);
+        verify(repo).update(announcement, 1);
+        verifyNoInteractions(events);
+    }
+
+    @Test
     void staleVersionDoesNotWrite() {
         var a = item();
         assertThatThrownBy(
@@ -144,6 +178,10 @@ class AnnouncementServiceTest {
         service.delete(teacher, a.id, 0);
         assertThat(a.status).isEqualTo(Announcement.Status.DELETED);
         assertThat(a.deletedBy).isEqualTo(teacherId);
+        assertThat(a.deletedAt).isEqualTo(now);
+        verify(audit).record(argThat(e -> e.action().equals("ANNOUNCEMENT_DELETED")
+                && e.actorId().equals(teacherId) && e.objectId().equals(a.id.toString())
+                && e.details().get("status").equals("DELETED")));
         verifyNoInteractions(events);
     }
 
@@ -154,7 +192,10 @@ class AnnouncementServiceTest {
     void cannotManage(Role role) {
         var actor = new Actor(UUID.randomUUID(), role);
         assertThatThrownBy(() -> access.require(actor, classId, true))
-                .isInstanceOf(ApiException.class);
+                .isInstanceOfSatisfying(ApiException.class, e -> {
+                    assertThat(e.status().value()).isEqualTo(404);
+                    assertThat(e.code()).isEqualTo("ANNOUNCEMENT_NOT_FOUND");
+                });
         verify(audit).record(argThat(e -> e.result() == AuditResult.DENIED));
     }
 
@@ -164,7 +205,8 @@ class AnnouncementServiceTest {
                         () ->
                                 access.require(
                                         new Actor(UUID.randomUUID(), Role.TEACHER), classId, true))
-                .isInstanceOf(ApiException.class);
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.status().value()).isEqualTo(404));
     }
 
     @Test

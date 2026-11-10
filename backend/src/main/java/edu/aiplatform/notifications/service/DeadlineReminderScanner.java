@@ -50,10 +50,7 @@ public class DeadlineReminderScanner implements IScheduledScanner {
                 assignments
                         .listClosingBetween(
                                 now.plus(Duration.ofHours(24)).minus(Duration.ofMinutes(5)),
-                                now.plus(Duration.ofHours(24)))
-                        .stream()
-                        .limit(500)
-                        .toList()) {
+                                now.plus(Duration.ofHours(24)))) {
             try {
                 var current = assignments.get(candidate.assignmentId()).orElse(null);
                 if (current == null || !eligible(current, now)) continue;
@@ -66,7 +63,6 @@ public class DeadlineReminderScanner implements IScheduledScanner {
                 for (var c :
                         targets.stream()
                                 .filter(c -> c.status() == ClassStatus.OPEN)
-                                .limit(500)
                                 .toList()) {
                     try {
                         transaction.executeWithoutResult(tx -> remind(current, c, now));

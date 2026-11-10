@@ -114,6 +114,21 @@ class StudentAssignmentServiceTest {
     }
 
     @Test
+    void groupSubmissionDependencyFailureDoesNotInventNonSubmitters() {
+        AssignmentView groupAssignment = new AssignmentView(f.assignmentId, AssignmentScope.CLASS,
+                f.classId, f.subjectId, 1, "Group task", SubmissionMode.GROUP,
+                GradingMode.GRADED, false, AssignmentStatus.OPEN, NOW.minusSeconds(60),
+                NOW.plusSeconds(86400), null, null, false, null, List.of());
+        when(f.assignments.get(f.assignmentId)).thenReturn(java.util.Optional.of(groupAssignment));
+        when(f.classes.listActiveStudents(f.classId)).thenReturn(List.of(f.student.accountId()));
+        var failure = new IllegalStateException("Group submission dependency unavailable");
+        when(f.groupWork.statusFor(f.student.accountId(), List.of(f.assignmentId))).thenThrow(failure);
+        var query = new SubmissionQueryService(f.attempts, f.assignments, f.classes, f.groupWork);
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                () -> query.listStudentsWithoutSubmission(f.assignmentId, f.classId)).isSameAs(failure);
+    }
+
+    @Test
     void submissionQueryGivesGradedAttemptAndMissingStudents() {
         SubmissionQueryService query = new SubmissionQueryService(f.attempts, f.assignments, f.classes, f.groupWork);
         UUID absent = UUID.randomUUID();

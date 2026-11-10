@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Alert, Button, Dialog, Field, Segmented, Select } from "@/shared/ui";
 import { gradingApi } from "../api";
-import { message } from "../hooks/useResource";
+import { formatErrorMessage } from "../model/format";
 export function GradebookExportDialog({
   classId,
   assignments,
@@ -16,10 +16,10 @@ export function GradebookExportDialog({
   const [assignment, setAssignment] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  async function download() {
+  async function handleDownload() {
     setBusy(true);
     try {
-      const blob = await gradingApi.export(classId, format, assignment || undefined);
+      const blob = await gradingApi.exportGrades(classId, format, assignment || undefined);
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
@@ -30,7 +30,7 @@ export function GradebookExportDialog({
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       onClose();
     } catch (e) {
-      setError(message(e));
+      setError(formatErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -43,7 +43,7 @@ export function GradebookExportDialog({
       dismissible={!busy}
       footer={
         <>
-          <Button variant="primary" icon="download" disabled={busy} onClick={() => void download()}>
+          <Button variant="primary" icon="download" disabled={busy} onClick={() => void handleDownload()}>
             {busy ? "Đang tạo tệp…" : "Xuất tệp"}
           </Button>
         </>

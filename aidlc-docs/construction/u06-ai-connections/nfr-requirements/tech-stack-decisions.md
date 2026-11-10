@@ -1,4 +1,6 @@
-# U06 AI Connections — tech-stack-decisions
+# U06 AI Connections — tech-stack-decisions — chuẩn JDBC
+
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code còn JPA được ghi là khoảng cách migration.
 
 > Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
@@ -13,7 +15,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Mã hóa key | JCA `AES/GCM/NoPadding`, khóa 256 bit từ biến môi trường | Có sẵn trong JDK |
 | MCP server | MCP Java SDK (`io.modelcontextprotocol.sdk`), transport Streamable HTTP trên Spring MVC | SDK chính thức, transport cho server từ xa |
 | Giới hạn lời gọi MCP | Đếm trong Redis theo credential và phút | Redis đã có trong hạ tầng |
-| Lưu trữ | PostgreSQL + Spring Data JPA, 7 bảng `ai_*`, `mcp_credentials` | Như các unit khác |
+| Lưu trữ | PostgreSQL + Spring JDBC (JdbcTemplate/NamedParameterJdbcTemplate/JdbcClient), 7 bảng `ai_*`, `mcp_credentials` | Như các unit khác |
 | Embedding, RAG | Không dùng trong MVP | RAG là phần mở rộng |
 | Test | JUnit 5; HTTP server giả cho adapter; Testcontainers cho integration test do tester viết | Theo NFR-004 |
 

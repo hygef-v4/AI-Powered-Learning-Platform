@@ -74,11 +74,12 @@ final class DocxExporter {
                 }
             }
             int listNumber = 0;
+            SectionNumbers numbers = new SectionNumbers();
             for (DocumentBlock block : blocks) {
                 if (block.type() == BlockType.LIST) {
                     listNumber++;
                 }
-                write(doc, block, linker, listNumber);
+                write(doc, block, linker, listNumber, numbers);
             }
             doc.write(out);
             return out.toByteArray();
@@ -106,7 +107,34 @@ final class DocxExporter {
         }
     }
 
-    private void write(XWPFDocument doc, DocumentBlock block, IDiagramLinker linker, int listNumber) {
+    /**
+     * Số mục như trình soạn hiển thị (1., 1.1., 1.1.1.), ghi vào đầu tiêu đề để mở lại tệp vẫn dựng đúng cây mục
+     * (yêu cầu 2026-11-05: nhập DOCX lấy cây theo số đầu mục).
+     */
+    static final class SectionNumbers {
+        private final java.util.ArrayDeque<Integer> open = new java.util.ArrayDeque<>();
+        private final int[] counters = new int[DocxImporter.MAX_LEVEL];
+
+        String next(int level) {
+            while (!open.isEmpty() && open.peekLast() >= level) {
+                open.pollLast();
+            }
+            open.addLast(level);
+            int depth = Math.min(open.size(), counters.length);
+            counters[depth - 1]++;
+            for (int i = depth; i < counters.length; i++) {
+                counters[i] = 0;
+            }
+            StringBuilder out = new StringBuilder();
+            for (int i = 0; i < depth; i++) {
+                out.append(Math.max(1, counters[i])).append('.');
+            }
+            return out.toString();
+        }
+    }
+
+    private void write(XWPFDocument doc, DocumentBlock block, IDiagramLinker linker, int listNumber,
+                       SectionNumbers numbers) {
         JsonNode c = block.content();
         switch (block.type()) {
             case HEADING -> {
@@ -115,7 +143,11 @@ final class DocxExporter {
                     case "SUBTITLE" -> "Subtitle";
                     default -> "Heading" + c.path("style").asText("H1").substring(1);
                 };
-                align(styled(doc, style, c.path("text").asText("")), c);
+                String text = c.path("text").asText("");
+                if (style.startsWith("Heading")) {
+                    text = numbers.next(Integer.parseInt(style.substring("Heading".length()))) + " " + text;
+                }
+                align(styled(doc, style, text.strip()), c);
             }
             case PARAGRAPH -> {
                 XWPFParagraph p = doc.createParagraph();

@@ -34,8 +34,8 @@ class GradebookServiceTest {
         var actor = new Actor(sid, Role.STUDENT);
         when(auth.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
         when(classes.isActiveStudent(sid, cid)).thenReturn(true);
-        var mine = Evaluation.pending(UUID.randomUUID(), aid, cid, sid, "hash", BigDecimal.TEN, "[]", Instant.now());
-        var other = Evaluation.pending(UUID.randomUUID(), aid, cid, UUID.randomUUID(), "hash", BigDecimal.TEN, "[]",
+        var mine = Evaluation.createPendingEvaluation(UUID.randomUUID(), aid, cid, sid, "hash", BigDecimal.TEN, "[]", Instant.now());
+        var other = Evaluation.createPendingEvaluation(UUID.randomUUID(), aid, cid, UUID.randomUUID(), "hash", BigDecimal.TEN, "[]",
                 Instant.now());
         other.score = BigDecimal.TEN;
         other.state = EvaluationStatus.PUBLISHED;
@@ -43,24 +43,24 @@ class GradebookServiceTest {
         var service = new GradebookService(repo, new GradingAccess(auth, classes, audit, Clock.systemUTC()),
                 assignments, subs, classes, contacts, rubric, audit, Clock.systemUTC(),
                 mock(org.springframework.beans.factory.ObjectProvider.class), mock(GradeDistributionVisibilityRepository.class));
-        assertThat(service.myGrades(actor, cid)).isEmpty();
+        assertThat(service.listMyGrades(actor, cid)).isEmpty();
         mine.score = BigDecimal.ONE;
         mine.state = EvaluationStatus.FINALIZED;
-        assertThat(service.myGrades(actor, cid)).isEmpty();
+        assertThat(service.listMyGrades(actor, cid)).isEmpty();
         mine.state = EvaluationStatus.PUBLISHED;
-        assertThat(service.myGrades(actor, cid)).hasSize(1);
-        assertThat(service.myGrades(actor, cid).get(0).score()).isEqualByComparingTo("1");
-        var next = Evaluation.pending(UUID.randomUUID(), aid, cid, sid, "new-hash", BigDecimal.TEN, "[]",
+        assertThat(service.listMyGrades(actor, cid)).hasSize(1);
+        assertThat(service.listMyGrades(actor, cid).get(0).score()).isEqualByComparingTo("1");
+        var next = Evaluation.createPendingEvaluation(UUID.randomUUID(), aid, cid, sid, "new-hash", BigDecimal.TEN, "[]",
                 mine.createdAt.plusSeconds(1));
         when(repo.findForClass(cid)).thenReturn(List.of(mine, next, other));
-        assertThat(service.myGrades(actor, cid)).isEmpty();
+        assertThat(service.listMyGrades(actor, cid)).isEmpty();
         when(repo.findByAttemptId(mine.attemptId)).thenReturn(Optional.of(mine));
-        assertThat(service.forAttempt(actor, mine.attemptId).score()).isEqualByComparingTo("1");
+        assertThat(service.loadAttemptGrade(actor, mine.attemptId).score()).isEqualByComparingTo("1");
         mine.supersede();
-        assertThat(service.forAttempt(actor, mine.attemptId).score()).isNull();
-        assertThat(service.myGrades(actor, cid)).isEmpty();
+        assertThat(service.loadAttemptGrade(actor, mine.attemptId).score()).isNull();
+        assertThat(service.listMyGrades(actor, cid)).isEmpty();
         when(classes.isActiveStudent(sid, cid)).thenReturn(false);
-        assertThatThrownBy(() -> service.myGrades(actor, cid)).isInstanceOf(RuntimeException.class);
+        assertThatThrownBy(() -> service.listMyGrades(actor, cid)).isInstanceOf(RuntimeException.class);
     }
 
     @Test
@@ -88,7 +88,7 @@ class GradebookServiceTest {
                 List.of(new RubricCriterion(UUID.randomUUID(), "Thiết kế lớp", "", CriterionKind.values()[0],
                         List.of(new RubricItem(iid, "Xác định đúng thuộc tính", new BigDecimal("2.00"))))),
                 new BigDecimal("2.00")));
-        var mine = Evaluation.pending(UUID.randomUUID(), aid, cid, sid, "hash", new BigDecimal("2.00"),
+        var mine = Evaluation.createPendingEvaluation(UUID.randomUUID(), aid, cid, sid, "hash", new BigDecimal("2.00"),
                 json.writeValueAsString(rubrics), Instant.now());
         mine.rubricItemScores = Map.of(rid, Map.of(iid, new BigDecimal("1.50")));
         mine.adjustment = new BigDecimal("-0.25");
@@ -111,7 +111,7 @@ class GradebookServiceTest {
                 assignments, subs, classes, contacts, rubric, audit, Clock.systemUTC(),
                 mock(org.springframework.beans.factory.ObjectProvider.class), mock(GradeDistributionVisibilityRepository.class));
 
-        var view = service.forAttempt(actor, mine.attemptId);
+        var view = service.loadAttemptGrade(actor, mine.attemptId);
         assertThat(view.score()).isEqualByComparingTo("1.25");
         assertThat(view.rubricScore()).isEqualByComparingTo("1.50");
         assertThat(view.structuredSummary()).isNotNull();
@@ -172,7 +172,7 @@ class GradebookServiceTest {
                 .thenReturn(Optional.of(new ClassRef(cid, subject, "C", "Class", null, null, false)));
         when(classes.listActiveStudents(cid)).thenReturn(List.of(sid));
         when(auth.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
-        var member = Evaluation.pending(null, aid, cid, sid, "hash", BigDecimal.TEN, "[]", Instant.now());
+        var member = Evaluation.createPendingEvaluation(null, aid, cid, sid, "hash", BigDecimal.TEN, "[]", Instant.now());
         member.kind = EvaluationKind.MEMBER;
         member.groupDocumentId = doc;
         member.score = BigDecimal.ONE;
@@ -184,7 +184,7 @@ class GradebookServiceTest {
         var service = new GradebookService(repo, new GradingAccess(auth, classes, audit, Clock.systemUTC()),
                 assignments, subs, classes, contacts, rubric, audit, Clock.systemUTC(), groups,
                 mock(GradeDistributionVisibilityRepository.class));
-        var cell = service.list(new Actor(UUID.randomUUID(), Role.TEACHER), cid, null, 1, 20).rows().get(0).grades()
+        var cell = service.listGrades(new Actor(UUID.randomUUID(), Role.TEACHER), cid, null, 1, 20).rows().get(0).grades()
                 .get(0);
         assertThat(cell.late()).isTrue();
         assertThat(cell.submittedAt()).isEqualTo(submittedAt);
@@ -203,6 +203,6 @@ class GradebookServiceTest {
             case OPEN, CLOSED, RETIRED -> true;
             default -> false;
         };
-        assertThat(GradebookService.gradable(view)).isEqualTo(expected);
+        assertThat(GradebookService.isGradable(view)).isEqualTo(expected);
     }
 }

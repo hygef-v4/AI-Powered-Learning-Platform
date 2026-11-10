@@ -64,8 +64,7 @@ class AccountAdminServiceTest {
     private final IClassAccess classAccess = mock(IClassAccess.class);
     private final AccountAdminService service = new AccountAdminService(accounts, authorization, subjectScope,
             classScope, provider(subjectQuery), provider(classAccess), sessions, otp, tickets, audit,
-            TransactionOperations.withoutTransaction(),
-            IdentityTestData.properties(), Clock.fixed(NOW, ZoneOffset.UTC));
+            TransactionOperations.withoutTransaction(), Clock.fixed(NOW, ZoneOffset.UTC));
     private final Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
 
     @BeforeEach
@@ -116,16 +115,26 @@ class AccountAdminServiceTest {
     }
 
     @Test
-    void createRejectsDuplicateAndForeignDomain() {
+    void createRejectsDuplicateAndMalformedEmail() {
         when(accounts.findByEmail("taivm@fpt.edu.vn"))
                 .thenReturn(Optional.of(IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, "h")));
 
         assertThatThrownBy(() -> service.create(admin, "taivm@fpt.edu.vn", "Tài", Role.STUDENT))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("EMAIL_EXISTS"));
-        assertThatThrownBy(() -> service.create(admin, "a@gmail.com", "A", Role.STUDENT))
-                .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("EMAIL_DOMAIN_NOT_ALLOWED"));
+        assertThatThrownBy(() -> service.create(admin, "a@gmail", "A", Role.STUDENT))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("INVALID_EMAIL"));
         verify(accounts, never()).insert(any());
+    }
+
+    /** BR-U01-03: email thuộc tên miền nào cũng tạo được. */
+    @Test
+    void createAcceptsEmailFromAnyDomain() {
+        when(accounts.findByEmail("a@gmail.com")).thenReturn(Optional.empty());
+
+        AccountViews.Detail created = service.create(admin, "A@Gmail.com", "A", Role.STUDENT);
+
+        assertThat(created.email()).isEqualTo("a@gmail.com");
+        verify(accounts).insert(any());
     }
 
     @Test
@@ -169,7 +178,6 @@ class AccountAdminServiceTest {
         };
         AccountAdminService transactional = new AccountAdminService(accounts, authorization, subjectScope,
                 classScope, provider(subjectQuery), provider(classAccess), sessions, otp, tickets, audit, tracking,
-                IdentityTestData.properties(),
                 Clock.fixed(NOW, ZoneOffset.UTC));
         when(subjectScope.listManagedSubjects(target.id())).thenAnswer(call -> {
             assertThat(inTransaction[0]).as("kiểm phân công trong transaction đổi role").isTrue();
@@ -207,7 +215,7 @@ class AccountAdminServiceTest {
         assertThatThrownBy(() -> service.changeRole(admin, teacher.id(), Role.ADMIN, 3L))
                 .isInstanceOfSatisfying(RoleChangeBlockedException.class, e -> {
                     assertThat(e.taughtClasses()).containsExactly(clazz);
-                    assertThat(e.classes()).containsExactly(new RoleChangeBlockedException.Held(clazz, "SE1801", "Lớp SE1801"));
+                    assertThat(e.classes()).containsExactly(new RoleChangeBlockedException.Held(clazz, "SE1801", null));
                 });
         verify(accounts, never()).updateRole(any(), any(), anyLong(), any());
     }

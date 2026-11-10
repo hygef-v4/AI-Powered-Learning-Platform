@@ -42,7 +42,7 @@ const TAKING: TakingView = {
   ],
 };
 const DETAIL: PracticeQuizDetail = {
-  quizId: "z1", classId: "c1", classCode: "SE1801", className: "Lớp", title: "Luyện tập", instructions: null, status: "OPEN",
+  quizId: "z1", classId: "c1", classCode: "SE1801", subjectCode: "SWD392", title: "Luyện tập", instructions: null, status: "OPEN",
   questionCount: 2, maxScore: 3, timeLimitMinutes: null, attemptsUsed: 2, maxAttempts: 2, attemptsLeft: 0, bestScore: 2,
   showScoreAfterSubmit: true, showCorrectAnswers: true, activityNotice: null, leavePenalty: null,
   attempts: [{ attemptId: "a2", attemptNo: 2, status: "SUBMITTED", startedAt: "2026-10-20T08:00:00Z", submittedAt: "2026-10-20T08:05:00Z", score: 2, maxScore: 3, leaveCount: null, activitySignal: null, suggestedPenalty: null, penaltyDecision: null }],
@@ -63,7 +63,7 @@ afterEach(() => {
 
 describe("QuizPracticeHistoryPage (UC 49)", () => {
   it("quiz chưa làm có nút Bắt đầu mở lượt mới", async () => {
-    vi.mocked(getPracticeHistory).mockResolvedValue([{ quizId: "z1", classId: "c1", classCode: "SE1801", className: "Lớp",
+    vi.mocked(getPracticeHistory).mockResolvedValue([{ quizId: "z1", classId: "c1", classCode: "SE1801", subjectCode: "SWD392",
       title: "Luyện tập", status: "OPEN", timeLimitMinutes: null, attemptsUsed: 0, maxAttempts: 2, bestScore: null, lastScore: null,
       maxScore: 3, lastAttemptAt: null, inProgressAttemptId: null, canStart: true }]);
     vi.mocked(startAttempt).mockResolvedValue(TAKING);
@@ -90,7 +90,7 @@ describe("QuizPracticeDetailPage (UC 50)", () => {
     expect(screen.getByTestId("practice-detail-attempt")).toHaveTextContent("2 / 3");
   });
 
-  const historyRow = (classId: string, classCode: string) => ({ quizId: "z1", classId, classCode, className: "Lớp",
+  const historyRow = (classId: string, classCode: string) => ({ quizId: "z1", classId, classCode, subjectCode: "SWD392",
     title: "Luyện tập", status: "OPEN" as const, timeLimitMinutes: null, attemptsUsed: 0, maxAttempts: 2, bestScore: null,
     lastScore: null, maxScore: 3, lastAttemptAt: null, inProgressAttemptId: null, canStart: true });
 

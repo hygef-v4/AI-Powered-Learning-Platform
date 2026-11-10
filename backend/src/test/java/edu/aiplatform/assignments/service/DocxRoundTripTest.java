@@ -79,7 +79,7 @@ class DocxRoundTripTest {
         assertThat(blocks).extracting(DocumentBlock::type).contains(BlockType.HEADING, BlockType.PARAGRAPH, BlockType.LIST,
                 BlockType.TABLE, BlockType.DIAGRAM);
         assertThat(blocks).filteredOn(b -> b.type() == BlockType.HEADING).extracting(b -> b.content().path("style").asText())
-                .containsExactly("TITLE", "H1", "H2");
+                .containsExactly("H1", "H2"); // Tên bài (Title, không đánh số) thành văn bản thường.
         assertThat(blocks).filteredOn(b -> b.type() == BlockType.DIAGRAM).singleElement().satisfies(b -> {
             assertThat(b.content().path("xml").asText()).isEqualTo(DocumentModelServiceTest.DIAGRAM);
             assertThat(b.content().path("alt").asText()).isEqualTo("Lớp");
@@ -136,6 +136,62 @@ class DocxRoundTripTest {
         assertThat(PngChunks.isPng(png)).isTrue();
         assertThat(PngChunks.readMxfile(png)).contains(DocumentModelServiceTest.DIAGRAM);
         assertThat(PngChunks.size(png)).hasValueSatisfying(size -> assertThat(size).containsExactly(480, 270));
+    }
+
+    private static byte[] docx(java.util.function.Consumer<XWPFDocument> build) {
+        try (XWPFDocument doc = new XWPFDocument(); java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream()) {
+            build.accept(doc);
+            doc.write(out);
+            return out.toByteArray();
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static void para(XWPFDocument doc, String style, String text, boolean bold) {
+        XWPFParagraph p = doc.createParagraph();
+        if (style != null) {
+            p.setStyle(style);
+        }
+        var run = p.createRun();
+        run.setText(text);
+        run.setBold(bold);
+    }
+
+    @Test
+    void numberedHeadingsBecomeTheSectionTreeWithoutTheirOriginalNumbers() {
+        byte[] file = docx(doc -> {
+            para(doc, "Heading1", "ĐỀ THI CUỐI KỲ", false);
+            para(doc, "Heading1", "Bối cảnh", false);
+            para(doc, "Heading1", "I. Phân tích", false);
+            para(doc, "Heading2", "1. Use case", false);
+            para(doc, "Heading2", "2) Class diagram", false);
+            para(doc, null, "II. THIẾT KẾ", true);
+            para(doc, null, "1.1 Kiến trúc", true);
+            para(doc, null, "1. Đây là một ý thường, không in đậm", false);
+        });
+        List<DocumentBlock> blocks = importer.preview(teacher, file, BlockOrigin.TEACHER, true, ref -> Optional.empty())
+                .document().blocks();
+        assertThat(blocks).extracting(b -> b.type() + ":" + (b.type() == BlockType.HEADING
+                        ? b.content().path("style").asText() + " " + b.content().path("text").asText()
+                        : b.content().path("runs").get(0).path("text").asText()))
+                .containsExactly("PARAGRAPH:ĐỀ THI CUỐI KỲ", "PARAGRAPH:Bối cảnh", "HEADING:H1 Phân tích",
+                        "HEADING:H2 Use case", "HEADING:H2 Class diagram", "HEADING:H1 THIẾT KẾ", "HEADING:H3 Kiến trúc",
+                        "PARAGRAPH:1. Đây là một ý thường, không in đậm");
+        // Tiêu đề không đánh số thành văn bản thường in đậm.
+        assertThat(blocks.get(0).content().path("runs").get(0).path("bold").asBoolean()).isTrue();
+    }
+
+    @Test
+    void exportedSectionNumbersRoundTripIntoTheSameTree() {
+        DocumentModel model = new DocumentModel(List.of(AssignmentFixtures.heading("H1", "Phân tích"),
+                AssignmentFixtures.heading("H2", "Use case"), AssignmentFixtures.heading("H2", "Class"),
+                AssignmentFixtures.heading("H1", "Thiết kế")));
+        byte[] file = exporter.export("Đề 1", "", model, linker);
+        List<DocumentBlock> blocks = importer.preview(teacher, file, BlockOrigin.TEACHER, true, ref -> Optional.empty())
+                .document().blocks().stream().filter(b -> b.type() == BlockType.HEADING).toList();
+        assertThat(blocks).extracting(b -> b.content().path("style").asText() + " " + b.content().path("text").asText())
+                .containsExactly("H1 Phân tích", "H2 Use case", "H2 Class", "H1 Thiết kế");
     }
 
     @Test

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { getUsageSummary, type UsageSummary } from "@/features/ai/admin/api";
-import { getAdminDashboard, getBackupHistory, getDashboardActivity } from "../api";
+import { loadAdminDashboard, listBackupHistory, loadDashboardActivity } from "../api";
 import type { ActivityView, AdminDashboardView, BackupRunItem } from "../model/types";
 
 /** Số liệu của Tổng quan; ngoài số đếm chính, mỗi nguồn khác lỗi thì là `null` và chỉ thẻ của nó báo không khả dụng. */
@@ -12,22 +12,28 @@ export type Overview = {
   activity: ActivityView | null;
   usage: UsageSummary | null;
   backups: BackupRunItem[] | null;
+  loading: { activity: boolean; usage: boolean; backups: boolean };
 };
 
 /** Tự tải lại mỗi 30 giây khi tab đang mở; quay lại tab thì tải ngay. */
 export const REFRESH_MS = 30_000;
+export const SOURCE_TIMEOUT_MS = 5_000;
 
-const settled = <T,>(result: PromiseSettledResult<T>) => (result.status === "fulfilled" ? result.value : null);
-
-async function loadOverview(signal: AbortSignal): Promise<Overview> {
-  const [dashboard, activity, usage, backups] = await Promise.allSettled([
-    getAdminDashboard(signal),
-    getDashboardActivity(signal),
-    getUsageSummary(7),
-    getBackupHistory(0, 40, signal),
-  ]);
-  if (dashboard.status === "rejected") throw dashboard.reason;
-  return { dashboard: dashboard.value, activity: settled(activity), usage: settled(usage), backups: settled(backups)?.items ?? null };
+/** Bound even a transport that does not settle its promise when aborted. */
+function requestSource<T>(read: (signal: AbortSignal) => Promise<T>, parent: AbortSignal): Promise<T> {
+  const child = new AbortController();
+  let timer: ReturnType<typeof setTimeout>;
+  let cancel: () => void;
+  return new Promise<T>((resolve, reject) => {
+    cancel = () => { child.abort(); reject(new DOMException("Cancelled", "AbortError")); };
+    parent.addEventListener("abort", cancel, { once: true });
+    timer = setTimeout(() => { child.abort(); reject(new Error("Dashboard source timed out")); }, SOURCE_TIMEOUT_MS);
+    if (parent.aborted) cancel();
+    else Promise.resolve().then(() => read(child.signal)).then(resolve, reject);
+  }).finally(() => {
+    clearTimeout(timer);
+    parent.removeEventListener("abort", cancel);
+  });
 }
 
 export const isDenied = (error: unknown) => error instanceof ApiError && [401, 403].includes(error.problem.status);
@@ -50,40 +56,60 @@ export function useLiveOverview() {
     controller.current?.abort();
     const current = new AbortController();
     controller.current = current;
+    const partial: Omit<Overview, "dashboard"> = {
+      activity: null, usage: null, backups: null,
+      loading: { activity: true, usage: true, backups: true },
+    };
+    let ready = false;
+    const loadOptionalSource = <K extends "activity" | "usage" | "backups">(key: K, read: (signal: AbortSignal) => Promise<Overview[K]>) => {
+      void requestSource(read, current.signal).catch(() => null).then((value) => {
+        if (current.signal.aborted) return;
+        partial[key] = value;
+        partial.loading = { ...partial.loading, [key]: false };
+        if (ready) setData((previous) => previous && ({ ...previous, [key]: value, loading: partial.loading }));
+      });
+    };
+    loadOptionalSource("activity", loadDashboardActivity);
+    loadOptionalSource("usage", (signal) => getUsageSummary(7, signal));
+    loadOptionalSource("backups", async (signal) => (await listBackupHistory(0, 40, signal)).items);
     try {
-      const next = await loadOverview(current.signal);
+      const dashboard = await requestSource(loadAdminDashboard, current.signal);
       if (current.signal.aborted) return;
+      ready = true;
       hasData.current = true;
-      setData(next);
+      setData({ dashboard, ...partial });
       setError(null);
       setLive(true);
     } catch (e) {
       if (current.signal.aborted) return;
+      current.abort();
       if (isDenied(e)) {
         hasData.current = false;
         setData(null);
         setError(e);
       } else {
         setLive(false);
+        setData((previous) => previous && ({...previous, loading: {activity: false, usage: false, backups: false}}));
         if (!hasData.current) setError(e);
       }
     }
   }, []);
 
   useEffect(() => {
-    queueMicrotask(() => void refresh());
-    return () => controller.current?.abort();
+    let active = true;
+    queueMicrotask(() => { if (active) void refresh(); });
+    return () => { active = false; controller.current?.abort(); };
   }, [refresh, attempt]);
 
   const stopped = isDenied(error);
   useEffect(() => {
     if (stopped) return;
-    const tick = () => { if (document.visibilityState === "visible") void refresh(); };
-    const timer = window.setInterval(tick, REFRESH_MS);
-    document.addEventListener("visibilitychange", tick);
+    const refreshVisibleOverview = () => { if (document.visibilityState === "visible") void refresh(); };
+    const timer = window.setInterval(refreshVisibleOverview, REFRESH_MS);
+    document.addEventListener("visibilitychange", refreshVisibleOverview);
     return () => {
       window.clearInterval(timer);
-      document.removeEventListener("visibilitychange", tick);
+      document.removeEventListener("visibilitychange", refreshVisibleOverview);
     };
   }, [refresh, stopped]);
 

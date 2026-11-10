@@ -1,6 +1,6 @@
 package edu.aiplatform.notifications.service;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import edu.aiplatform.academics.contract.*;
 import edu.aiplatform.assignments.contract.*;
@@ -82,6 +82,37 @@ class DeadlineReminderScannerTest {
     void source(AssignmentView a) {
         when(assignments.listClosingBetween(any(), any())).thenReturn(List.of(a));
         when(assignments.get(id)).thenReturn(Optional.of(a));
+    }
+
+    @Test
+    void windowTraversalDoesNotSilentlyDropTheFiveHundredAndFirstAssignment() {
+        var candidates = java.util.stream.IntStream.range(0, 501).mapToObj(index -> {
+            var original = assignment(now.minusSeconds(60), now.plus(Duration.ofHours(24)), classId);
+            return new AssignmentView(UUID.randomUUID(), original.scope(), classId, subject, 1,
+                    "Assignment " + index, SubmissionMode.INDIVIDUAL, GradingMode.GRADED, false,
+                    AssignmentStatus.OPEN, original.opensAt(), original.closesAt(), null, null, false, null, List.of());
+        }).toList();
+        var byId = candidates.stream().collect(java.util.stream.Collectors.toMap(AssignmentView::assignmentId,
+                java.util.function.Function.identity()));
+        when(assignments.listClosingBetween(any(), any())).thenReturn(candidates);
+        when(assignments.get(any())).thenAnswer(call -> Optional.ofNullable(byId.get(call.getArgument(0))));
+        scanner.scan(now);
+        verify(repo).reminder(candidates.get(500).assignmentId(), classId, candidates.get(500).closesAt(), "SENT", now);
+        verify(repo, times(501)).reminder(any(), eq(classId), any(), eq("SENT"), eq(now));
+    }
+
+    @Test
+    void subjectExpansionDoesNotSilentlyDropTheFiveHundredAndFirstOpenClass() {
+        var source = assignment(now.minusSeconds(60), now.plus(Duration.ofHours(24)), null);
+        source(source);
+        var targets = java.util.stream.IntStream.range(0, 501).mapToObj(index -> course(UUID.randomUUID())).toList();
+        var byId = targets.stream().collect(java.util.stream.Collectors.toMap(ClassRef::classId,
+                java.util.function.Function.identity()));
+        when(classes.listOpenClassesOfSubject(subject)).thenReturn(targets);
+        when(classes.getClassRef(any())).thenAnswer(call -> Optional.ofNullable(byId.get(call.getArgument(0))));
+        scanner.scan(now);
+        verify(repo).reminder(id, targets.get(500).classId(), source.closesAt(), "SENT", now);
+        verify(repo, times(501)).reminder(eq(id), any(), any(), eq("SENT"), eq(now));
     }
 
     @Test
@@ -331,6 +362,49 @@ class DeadlineReminderScannerTest {
         scanner.scan(now);
         verifyNoInteractions(notices);
         verifyNoInteractions(repo);
+    }
+
+    @Test
+    void reminderTimingWindowIncludesEndpointsAndExcludesOneInstantOutside() {
+        var assignment = assignment(now.minusSeconds(60), now.plus(Duration.ofHours(24)), classId);
+        assertThat(DeadlineReminderScanner.eligible(assignment, now.minusNanos(1))).isFalse();
+        assertThat(DeadlineReminderScanner.eligible(assignment, now)).isTrue();
+        assertThat(DeadlineReminderScanner.eligible(assignment, now.plusSeconds(300))).isTrue();
+        assertThat(DeadlineReminderScanner.eligible(assignment, now.plusSeconds(300).plusNanos(1))).isFalse();
+    }
+
+    @Test
+    void closedAssignmentCannotSendEvenWhenSelectedByEarlierQuery() {
+        var open = assignment(now.minusSeconds(60), now.plus(Duration.ofHours(24)), classId);
+        var closed = new AssignmentView(open.assignmentId(), open.scope(), open.classId(),
+                open.subjectId(), open.versionNo(), open.title(), open.submissionMode(), open.gradingMode(),
+                open.diagramEnabled(), AssignmentStatus.CLOSED, open.opensAt(), open.closesAt(),
+                null, null, false, null, List.of());
+        source(closed);
+        scanner.scan(now);
+        verifyNoInteractions(repo, notices, submissions);
+    }
+
+    @Test
+    void dependencyFailureLogContainsSafeCodeButNoPrivateExceptionContent() {
+        source(assignment(now.minusSeconds(60), now.plus(Duration.ofHours(24)), classId));
+        when(submissions.listStudentsWithoutSubmission(id, classId))
+                .thenThrow(new IllegalStateException("PRIVATE_RECIPIENT_BODY_SENTINEL"));
+        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(DeadlineReminderScanner.class);
+        var appender = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            scanner.scan(now);
+            assertThat(appender.list).hasSize(1);
+            assertThat(appender.list.get(0).getFormattedMessage())
+                    .contains("REMINDER_CLASS_FAILED").doesNotContain("PRIVATE_RECIPIENT_BODY_SENTINEL");
+            assertThat(appender.list.get(0).getThrowableProxy()).isNull();
+            verifyNoInteractions(notices);
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
     }
 
     @Test

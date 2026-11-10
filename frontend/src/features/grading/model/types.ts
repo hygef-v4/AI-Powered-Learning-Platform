@@ -1,3 +1,5 @@
+import type { SubmissionDocumentDto } from "./submissionDocument";
+
 export type Decimal = string | number;
 export type GradeStatus = "PENDING" | "DRAFT" | "FINALIZED" | "PUBLISHED" | "SUPERSEDED";
 export type Checks = Record<string, string[]>;
@@ -44,9 +46,6 @@ export type Rubric = {
     items: { itemId: string; text: string; points: Decimal }[];
   }[];
 };
-export type DocumentModel = {
-  blocks: { id: string; type: string; content: Record<string, unknown> }[];
-};
 export type Evaluation = {
   id: string;
   assignmentId: string;
@@ -82,7 +81,7 @@ export type Evaluation = {
 };
 export type Detail = {
   evaluation: Evaluation;
-  document: DocumentModel;
+  document: SubmissionDocumentDto;
   rubrics: Rubric[];
   navigationIds: string[];
   activityState: string;
@@ -96,6 +95,7 @@ export type Detail = {
   memberActivities: { student: Person; activity: Detail["activity"]; state: string }[];
   sectionAuthors: { partId: string; accountId: string }[];
   current: boolean;
+  groupEvaluationId?: string | null;
 };
 export type Person = { accountId: string; name: string; email: string };
 export type SubmissionRow = {
@@ -173,7 +173,8 @@ export type Proposal = {
   };
 };
 export type AiRequest = {
-  source: "SHARED" | "PERSONAL";
+  /** Bỏ trống: hệ thống tự chọn nguồn. */
+  source?: "SHARED" | "PERSONAL";
   provider?: "GEMINI" | "OPENAI" | "CLAUDE";
   requestRef: string;
 };
@@ -209,20 +210,20 @@ export type StudentGrade = {
   rubricScore?: Decimal | null;
   memberOverride?: boolean;
 };
-export const statusLabels: Record<string, string> = {
+export const GRADE_STATUS_LABELS: Record<string, string> = {
   PENDING: "Chờ chấm",
-  DRAFT: "Đã chấm (nháp)",
-  FINALIZED: "Đã chốt",
+  DRAFT: "Đã chấm",
+  FINALIZED: "Đã chấm",
   PUBLISHED: "Đã công bố",
   SUPERSEDED: "Lượt cũ",
   NOT_SUBMITTED: "Chưa nộp",
-  IN_PROGRESS: "Đang làm",
+  IN_PROGRESS: "Chưa nộp",
 };
-export function points(score: Decimal | null | undefined, max: Decimal | null | undefined) {
+export function formatPoints(score: Decimal | null | undefined, max: Decimal | null | undefined) {
   return score == null ? "—" : `${Number(score).toFixed(2)} / ${Number(max ?? 0).toFixed(2)}`;
 }
 
-export const activityLabels: Record<string, string> = {
+export const ACTIVITY_LABELS: Record<string, string> = {
   DISABLED: "Không bật theo dõi hoạt động",
   NO_DATA: "Chưa có dữ liệu hoạt động",
   AVAILABLE: "Có dữ liệu hoạt động",

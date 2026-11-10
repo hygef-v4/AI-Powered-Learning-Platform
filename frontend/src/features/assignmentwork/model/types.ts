@@ -13,7 +13,7 @@ export type StudentRow = {
   assignmentId: string;
   classId: string;
   classCode: string;
-  className: string;
+  subjectCode: string | null;
   scope: "CLASS" | "SUBJECT";
   title: string;
   submissionMode: SubmissionMode;
@@ -53,7 +53,7 @@ export type StudentDetail = {
   assignmentId: string;
   classId: string;
   classCode: string;
-  className: string;
+  subjectCode: string | null;
   scope: "CLASS" | "SUBJECT";
   title: string;
   submissionMode: SubmissionMode;

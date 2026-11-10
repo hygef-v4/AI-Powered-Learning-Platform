@@ -6,8 +6,8 @@ import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.SubmissionWindow;
 import edu.aiplatform.groupdocs.service.GroupSectionService.SectionView;
-import edu.aiplatform.groupdocs.model.AssignmentLock;
 import edu.aiplatform.groupdocs.model.GroupDocument;
+import edu.aiplatform.groupdocs.model.GroupDocument.SectionAuthor;
 import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
 import edu.aiplatform.groups.service.GroupAccess;
 import edu.aiplatform.groups.model.ClassGroup;
@@ -76,16 +76,16 @@ public class GroupWorkspaceService {
         List<Member> members = ctx.group().memberIds().stream().map(id -> member(id, ctx.group())).toList();
         SubmissionWindow window = assignment == null ? SubmissionWindow.CLOSED
                 : docAccess.window(d.assignmentId(), false);
-        AssignmentLock lock = documents.assignmentLock(d.id()).orElse(null);
         Submission submission = d.submittedAt() == null ? null : new Submission(d.submittedBy(), d.submitMode().name(),
-                d.submittedAt(), d.late(), d.receiptHash());
+                d.submittedAt(), d.late(), d.receiptHash(),
+                d.sectionAuthors() == null ? List.of() : d.sectionAuthors());
         return new WorkspaceView(d.id(), d.assignmentId(), assignment == null ? null : assignment.title(),
                 assignment == null ? null : assignment.closesAt(), assignment == null ? null : assignment.lateUntil(),
                 d.classId(), ctx.group().id(), ctx.group().name(), ctx.group().leaderId(), members, d.status().name(),
                 window.name(), DocumentFiles.hideFiles(d.sharedBlocks()), sections,
                 new Role(ctx.member(), ctx.leader(), ctx.teacher()),
                 submission, d.activityMonitoring(), assignment != null && assignment.diagramEnabled(), d.version(),
-                ctx.actorId(), lock == null ? null : lock.lockedBy(), lock == null ? null : lock.lockedAt());
+                ctx.actorId());
     }
 
     private Member member(UUID id, ClassGroup group) {
@@ -102,8 +102,7 @@ public class GroupWorkspaceService {
                                 Instant lateUntil, UUID classId, UUID groupId, String groupName, UUID leaderId,
                                 List<Member> members, String status, String window, DocumentModel sharedBlocks,
                                 List<SectionView> sections, Role role, Submission lastSubmission,
-                                boolean activityMonitoring, boolean diagramEnabled, long version, UUID viewerId,
-                                UUID assignmentLockedBy, Instant assignmentLockedAt) {
+                                boolean activityMonitoring, boolean diagramEnabled, long version, UUID viewerId) {
     }
 
     public record Member(UUID accountId, String name, boolean leader) {
@@ -112,6 +111,8 @@ public class GroupWorkspaceService {
     public record Role(boolean member, boolean leader, boolean teacher) {
     }
 
-    public record Submission(UUID submittedBy, String mode, Instant submittedAt, boolean late, String receiptHash) {
+    /** Bản nộp cuối; {@code authors} là tác giả từng mục lúc nộp, không đổi khi mục được sửa sau đó (BR-U12-44). */
+    public record Submission(UUID submittedBy, String mode, Instant submittedAt, boolean late, String receiptHash,
+                             List<SectionAuthor> authors) {
     }
 }

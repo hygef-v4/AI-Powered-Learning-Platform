@@ -283,7 +283,7 @@ class IdentityWebSecurityTest {
     }
 
     @Test
-    void importEndpointWithColonAcceptsCsvUpload() throws Exception {
+    void importEndpointAcceptsExcelAndLegacyCsvButRejectsOtherExtensions() throws Exception {
         signedIn();
         when(accountImportService.validate(eq(STUDENT), any())).thenReturn(
                 new AccountImportService.ImportResult("abc", java.util.List.of(), 0, 0, false));
@@ -296,7 +296,14 @@ class IdentityWebSecurityTest {
                 .andExpect(jsonPath("$.fileChecksum").value("abc"));
 
         mvc.perform(multipart("/api/v1/admin/accounts/imports:validate")
-                        .file(new MockMultipartFile("file", "tk.xlsx", "application/octet-stream", new byte[] {1}))
+                        .file(new MockMultipartFile("file", "tk.XLSX", "application/octet-stream", new byte[] {1}))
+                        .cookie(new Cookie(AuthCookies.ACCESS, "good"), new Cookie("XSRF-TOKEN", "abc"))
+                        .header("X-XSRF-TOKEN", "abc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fileChecksum").value("abc"));
+
+        mvc.perform(multipart("/api/v1/admin/accounts/imports:validate")
+                        .file(new MockMultipartFile("file", "tk.xls", "application/octet-stream", new byte[] {1}))
                         .cookie(new Cookie(AuthCookies.ACCESS, "good"), new Cookie("XSRF-TOKEN", "abc"))
                         .header("X-XSRF-TOKEN", "abc"))
                 .andExpect(status().isBadRequest())

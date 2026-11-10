@@ -50,7 +50,6 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.ObjectProvider;
@@ -58,6 +57,30 @@ import org.springframework.http.HttpStatus;
 
 /** UC 48 trên repository giả: soạn, duyệt, phát hành, ngưng, copy, chấm (BR-U10-10…31, P2, P3). */
 class QuizServicesTest {
+    @Test
+    void formattedInstructionsReachStudentsAndSurviveLegacySettingsOnlyUpdates() {
+        var document = new edu.aiplatform.shared.content.FormattedText(List.of(
+                new edu.aiplatform.shared.content.FormattedText.Block(
+                        edu.aiplatform.shared.content.FormattedText.Type.PARAGRAPH,
+                        edu.aiplatform.shared.content.FormattedText.Align.CENTER, 0,
+                        List.of(new edu.aiplatform.shared.content.FormattedText.Run("Nội dung", true, null, null))),
+                new edu.aiplatform.shared.content.FormattedText.Block(
+                        edu.aiplatform.shared.content.FormattedText.Type.PARAGRAPH,
+                        edu.aiplatform.shared.content.FormattedText.Align.LEFT, 0,
+                        List.of(new edu.aiplatform.shared.content.FormattedText.Run("", null, null, null)))));
+        QuizDetail created = authoring.createForSubject(manager, subject, "Quiz");
+        UUID id = created.quiz().id();
+        QuizDetail rich = authoring.updateDetails(manager, id, new Details("Quiz", "Ignored",
+                Quiz.DEFAULT_SETTINGS, false, null, document), created.quiz().version());
+        assertThat(rich.quiz().instructions()).isEqualTo("Nội dung\n");
+        assertThat(query.getStudentView(id).orElseThrow().instructionsDocument()).isEqualTo(document);
+        QuizDetail edited = authoring.updateDetails(manager, id, new Details("Quiz", "Nội dung",
+                Quiz.DEFAULT_SETTINGS, false, null), rich.quiz().version());
+        assertThat(edited.quiz().instructionsDocument()).isEqualTo(document);
+        assertThat(edited.quiz().instructions()).isEqualTo("Nội dung\n");
+        assertThat(query.getStudentView(id).orElseThrow().instructionsDocument()).isEqualTo(document);
+    }
+
 
     private static final Instant NOW = Instant.parse("2026-10-20T08:00:00Z");
     private final UUID subject = UUID.randomUUID();

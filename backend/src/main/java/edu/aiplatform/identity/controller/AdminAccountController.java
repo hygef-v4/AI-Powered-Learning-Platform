@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-/** UC 08–12 và nhập CSV (luồng phụ UC 09); chỉ ADMIN, kiểm ở service (BR-U01-67). */
+/** UC 08–12 và nhập Excel (luồng phụ UC 09); chỉ ADMIN, kiểm ở service (BR-U01-67). */
 @RestController
 @RequestMapping("/api/v1/admin/accounts")
 @Validated
@@ -134,19 +134,19 @@ public class AdminAccountController {
         return imports.commit(actor, read(file));
     }
 
-    /** Chỉ nhận tệp .csv, tối đa 1 MB (BR-U01-80). */
+    /** Nhận Excel .xlsx và CSV cũ, tối đa 1 MB. */
     private static byte[] read(MultipartFile file) {
         String name = file.getOriginalFilename() == null ? "" : file.getOriginalFilename().toLowerCase(Locale.ROOT);
-        if (!name.endsWith(".csv")) {
-            throw ApiException.badRequest("IMPORT_FILE_INVALID", "Chỉ nhận tệp .csv");
+        if (!name.endsWith(".xlsx") && !name.endsWith(".csv")) {
+            throw ApiException.badRequest("IMPORT_FILE_INVALID", "Chỉ nhận tệp .xlsx hoặc .csv");
         }
         if (file.getSize() > AccountImportService.MAX_BYTES) {
-            throw ApiException.badRequest("IMPORT_FILE_INVALID", "Tệp CSV vượt 1 MB");
+            throw ApiException.badRequest("IMPORT_FILE_INVALID", "Tệp nhập vượt 1 MB");
         }
         try {
             return file.getBytes();
         } catch (IOException e) {
-            throw ApiException.badRequest("IMPORT_FILE_INVALID", "Không đọc được tệp CSV");
+            throw ApiException.badRequest("IMPORT_FILE_INVALID", "Không đọc được tệp nhập");
         }
     }
 }

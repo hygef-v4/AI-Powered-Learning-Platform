@@ -1,7 +1,6 @@
 package edu.aiplatform.quizzes.repository;
 
 import edu.aiplatform.quizzes.model.DraftStatus;
-import edu.aiplatform.quizzes.model.Quiz;
 import edu.aiplatform.quizzes.model.QuizAiDraft;
 
 import java.util.List;
@@ -14,6 +13,9 @@ public interface IQuizAiDraftRepository {
     void insert(QuizAiDraft draft);
 
     Optional<QuizAiDraft> find(UUID id);
+
+    /** Giữ khóa trong transaction khi lên lịch tạo lại theo nguồn để không gửi trùng task. */
+    Optional<QuizAiDraft> findForUpdate(UUID id);
 
     /** Đề xuất người dùng đã gửi với cùng {@code requestRef} (chống gửi trùng). */
     Optional<QuizAiDraft> findByRequest(UUID createdBy, String requestRef);

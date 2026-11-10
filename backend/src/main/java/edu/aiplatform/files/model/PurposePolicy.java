@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Quy tắc theo {@code purpose}: role được tải lên (BR-U03-04), trần dung lượng lấy từ Settings (BR-U03-02, 87) và luôn
- * bị kẹp trong trần cứng 50 MB, 5 MB, 2 MB. Loại tệp cố định, không có trong Settings: học liệu PDF, DOCX, PPTX; ảnh
+ * bị kẹp trong trần cứng 50 MB, 5 MB, 2 MB. Loại tệp cố định, không có trong Settings: học liệu PDF, DOCX, PPTX, XLSX; ảnh
  * trong tài liệu PNG, JPEG; tệp nguồn soạn bài bằng AI TXT, DOCX, PDF.
  */
 @Component

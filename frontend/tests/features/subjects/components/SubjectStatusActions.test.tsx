@@ -40,12 +40,13 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("SubjectStatusActions/archive rejection", () => {
-  it("popup chỉ có tiêu đề và nút xác nhận; đóng bằng X không ghi", () => {
+  it("giải thích lưu trữ lớp, gỡ chủ nhiệm và giữ lịch sử; đóng bằng X không ghi", () => {
     const { onClose } = setup();
     expect(changeSubjectStatus).not.toHaveBeenCalled();
-    expect(screen.getByRole("dialog", { name: "Lưu trữ môn học?" })).not.toHaveTextContent(
-      /lớp|chủ nhiệm/i,
-    );
+    const dialog = screen.getByRole("dialog", { name: "Lưu trữ môn học?" });
+    expect(dialog).toHaveTextContent(/lớp.*Nháp.*Đang mở.*lưu trữ/i);
+    expect(dialog).toHaveTextContent(/Chủ nhiệm môn.*gỡ/i);
+    expect(dialog).toHaveTextContent(/ghi danh.*lịch sử học tập.*giữ/i);
     fireEvent.click(screen.getByRole("button", { name: "Đóng" }));
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(changeSubjectStatus).not.toHaveBeenCalled();

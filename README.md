@@ -36,6 +36,7 @@ Dự án đã có implementation của 15 unit theo quy trình AI-DLC. Backend v
 
 ## Quy ước
 
+- Code mới và code được refactor trong toàn bộ backend/frontend tuân theo [Quy ước mã nguồn chung](aidlc-docs/construction/code-conventions.md): dependency service có hậu tố `Service`, method hành động bắt đầu bằng động từ + đối tượng, ưu tiên khoảng hai từ; có ngoại lệ cho framework và contract hiện hữu.
 - Trong mỗi package nghiệp vụ, `controller` nhận HTTP, `service` xử lý use case, `repository` chứa SQL/JPA và persistence mapping, `model` chứa đối tượng/quy tắc nghiệp vụ, `dto` chứa kiểu request/response riêng. Cấu hình và adapter ngoài nằm ở `config`/`integration` khi cần. Unit khác chỉ import public `contract`; không thêm tầng rỗng hay interface/Impl cho mọi service.
 - Interface đặt tên dạng `Ixxx` (ví dụ `IAuthorization`, `IJobHandler`, `IAccountRepository`), không dùng đuôi `Port`. Class, record, enum đặt tên bình thường.
 - Unit gọi thẳng `contract` của unit khác, không theo thứ tự số unit (ví dụ U01 dùng `IAudit` của U02, `IJob` của U03). Khi unit cần dữ liệu mà unit sở hữu chưa có thì có thể khai báo interface trong `contract` của mình cho unit kia cài (ví dụ `ISubjectClasses` do U04 khai báo, U05 cài).
