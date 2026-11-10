@@ -285,7 +285,7 @@ export function QuizSettingsPanel({ value, onChange, errors, readOnly }: {
 /** Xem trước như sinh viên: câu và lựa chọn, không có đáp án (F9 bước 1). */
 export function QuizPreviewDialog({ title, items, onClose }: { title: string; items: QuizItemView[]; onClose: () => void }) {
   return (
-    <Dialog open onClose={onClose} size="lg" icon="visibility" title={`Xem trước: ${title}`} footer={<Button onClick={onClose}>Đóng</Button>}>
+    <Dialog open onClose={onClose} size="lg" icon="visibility" title={`Xem trước: ${title}`}>
       <ol className="flex flex-col gap-3 text-[13px]" data-testid="quiz-preview">
         {items.map((item, index) => (
           <li key={item.question.id}>

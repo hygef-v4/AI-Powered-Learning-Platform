@@ -170,6 +170,6 @@ export function FormattedTextEditor({ value, plainText, onChange, maxLength, dis
         </div>)}
       </div>}
     {error && <p role="alert" className="px-3 pb-2 text-xs text-danger">{error}</p>}
-    <p className="px-3 pb-2 text-right text-[11px] text-muted">{formattedTextPlain(document).length.toLocaleString("vi-VN")} / {maxLength.toLocaleString("vi-VN")}</p>
+    <p className="px-3 pb-2 text-right text-xs text-muted">{formattedTextPlain(document).length.toLocaleString("vi-VN")} / {maxLength.toLocaleString("vi-VN")}</p>
   </div>;
 }

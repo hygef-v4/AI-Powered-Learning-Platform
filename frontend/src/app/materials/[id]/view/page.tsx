@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { LearningMaterialPage } from "@/features/materials/pages/LearningMaterialPage";
+
+export const metadata: Metadata = { title: "Học liệu" };
 export default async function Page({
   params,
   searchParams,

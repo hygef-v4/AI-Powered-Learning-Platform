@@ -42,4 +42,16 @@ describe("Dialog focus và pending", () => {
     fireEvent.mouseDown(screen.getByRole("dialog").parentElement!);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it("khóa cuộn trang nền khi mở, popup cuối đóng mới trả lại", () => {
+    document.body.style.overflow = "auto";
+    const first = render(<Dialog open title="Một" onClose={vi.fn()} />);
+    const second = render(<Dialog open title="Hai" onClose={vi.fn()} />);
+    expect(document.body.style.overflow).toBe("hidden");
+    second.unmount();
+    expect(document.body.style.overflow).toBe("hidden");
+    first.unmount();
+    expect(document.body.style.overflow).toBe("auto");
+    document.body.style.overflow = "";
+  });
 });

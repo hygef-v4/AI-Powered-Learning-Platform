@@ -192,7 +192,7 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
           </tbody>
         </TableFrame>
       )}
-      <p className="pt-2 text-[11px] text-muted">Kiểm tra có thể tính phí nhỏ.</p>
+      <p className="pt-2 text-xs text-muted">Kiểm tra có thể tính phí nhỏ.</p>
       {editing && (
         <ApiKeyDialog
           key={current ? `${current.id}-${current.version}` : "new"}

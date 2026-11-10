@@ -57,7 +57,7 @@ export function NavTree({ label, nodes, currentId, itemsFor, loading = false }: 
             >
               <Icon name="chevron_right" size={13} className={cx("shrink-0 text-muted transition-transform duration-200", open && "rotate-90")} />
               <span className="min-w-0 flex-1 leading-none">
-                {node.code && <span className="block truncate font-mono text-[9.5px] leading-none tracking-wide text-muted">{node.code}</span>}
+                {node.code && <span className="block truncate font-mono text-xs leading-none tracking-wide text-muted">{node.code}</span>}
                 {node.name ? (
                   <span className={cx("block truncate text-[13px] leading-[1.15] font-semibold", node.code && "mt-[3px]")}>{node.name}</span>
                 ) : (

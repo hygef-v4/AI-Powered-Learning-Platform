@@ -74,7 +74,7 @@ export function RubricNote({ title, criteria, active = false, onActivate, issues
         )}
       </div>
       {editor && (active || !editOnActive) ? editor : <RubricLines criteria={criteria} expanded={active} />}
-      {issues.map((issue, i) => <p key={i} role="alert" className="text-[11px] text-danger">{issue}</p>)}
+      {issues.map((issue, i) => <p key={i} role="alert" className="text-xs text-danger">{issue}</p>)}
     </section>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Icon, cx } from "@/shared/ui";
+import { handleTabListKey } from "@/shared/ui/tabKeys";
 import { PdfPages } from "./PdfPages";
 import { readWorkbook, type Sheet } from "../model/xlsx";
 
@@ -188,23 +189,24 @@ export function DocumentViewer({
       ref={frame}
       aria-label={`Xem ${title}`}
       className={cx(
-        "flex flex-col overflow-hidden bg-[#525659] text-white",
+        "flex flex-col overflow-hidden bg-viewer text-white",
         !fullscreen && "rounded-xl shadow-[var(--shadow-float)]",
       )}
     >
-      <div className="flex h-12 shrink-0 items-center gap-2 bg-[#323639] px-3 text-[13px]">
+      <div className="flex h-12 shrink-0 items-center gap-2 bg-viewer-bar px-3 text-[13px]">
         <Icon name="description" size={18} className="shrink-0 text-white/70" />
         <span className="min-w-0 flex-1 truncate font-semibold text-white/90" title={title}>
           {title}
         </span>
         {kind === "xlsx" && sheets && sheets.length > 1 && (
-          <div role="tablist" aria-label="Sheet" className="flex max-w-[45%] gap-1 overflow-x-auto">
+          <div role="tablist" aria-label="Sheet" onKeyDown={handleTabListKey} className="flex max-w-[45%] gap-1 overflow-x-auto">
             {sheets.map((s, index) => (
               <button
                 key={`${index}-${s.sheet}`}
                 type="button"
                 role="tab"
                 aria-selected={index === active}
+                tabIndex={index === active ? 0 : -1}
                 onClick={() => setActive(index)}
                 className={cx(
                   "rounded-md px-2.5 py-1 text-xs font-semibold whitespace-nowrap transition-colors",
@@ -275,15 +277,15 @@ export function DocumentViewer({
               <table className="min-w-full border-collapse text-[13px]">
                 <tbody>
                   {sheet.data.map((row, r) => (
-                    <tr key={r} className={r === 0 ? "bg-[#f1f3f4] font-semibold" : undefined}>
+                    <tr key={r} className={r === 0 ? "bg-sheet-head font-semibold" : undefined}>
                       <th
                         scope="row"
-                        className="sticky left-0 w-10 border border-[#e0e0e0] bg-[#f1f3f4] px-2 py-1 text-right font-mono text-[11px] font-normal text-[#5f6368]"
+                        className="sticky left-0 w-10 border border-sheet-line bg-sheet-head px-2 py-1 text-right font-mono text-xs font-normal text-sheet-muted"
                       >
                         {r + 1}
                       </th>
                       {row.map((cell, c) => (
-                        <td key={c} className="border border-[#e0e0e0] px-2 py-1 whitespace-nowrap">
+                        <td key={c} className="border border-sheet-line px-2 py-1 whitespace-nowrap">
                           {cellText(cell)}
                         </td>
                       ))}
@@ -292,7 +294,7 @@ export function DocumentViewer({
                 </tbody>
               </table>
               {sheet.data.length === 0 && (
-                <p className="p-10 text-center text-sm text-[#5f6368]">Sheet trống</p>
+                <p className="p-10 text-center text-sm text-sheet-muted">Sheet trống</p>
               )}
             </div>
           ) : (

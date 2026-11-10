@@ -17,7 +17,7 @@ export function PasswordChecklist({ password, chips }: { password: string; chips
         chips ? (
           <li
             key={item.label}
-            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
               item.ok ? "bg-success-soft text-success" : "bg-neutral-soft text-muted"
             }`}
           >

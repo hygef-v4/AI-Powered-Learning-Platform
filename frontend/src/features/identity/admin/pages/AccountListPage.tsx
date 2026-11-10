@@ -9,7 +9,7 @@ import { Alert } from "@/shared/ui/Alert";
 import { Button } from "@/shared/ui/Button";
 import { cx } from "@/shared/ui/cx";
 import { Icon } from "@/shared/ui/Icon";
-import { Select, TextInput } from "@/shared/ui/inputs";
+import { Segmented, Select, TextInput } from "@/shared/ui/inputs";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { showToast } from "@/shared/ui/Toast";
 import { Pill } from "@/shared/ui/Pill";
@@ -124,23 +124,13 @@ export function AccountListPage() {
           />
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <div role="tablist" aria-label="Vai trò" className="flex flex-wrap gap-1 rounded-xl bg-shell p-1">
-            {ROLE_TABS.map((tab) => (
-              <button
-                key={tab.label}
-                type="button"
-                role="tab"
-                aria-selected={role === tab.value}
-                onClick={() => navigate({ role: tab.value, page: 0 })}
-                className={cx(
-                  "rounded-[7px] px-2.5 py-1.5 text-xs font-semibold transition-colors",
-                  role === tab.value ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink",
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            as="tab"
+            ariaLabel="Vai trò"
+            value={role}
+            onChange={(value) => navigate({ role: value, page: 0 })}
+            options={ROLE_TABS}
+          />
           <Select
             aria-label="Trạng thái"
             value={status}
@@ -197,7 +187,7 @@ export function AccountListPage() {
                       <span
                         aria-hidden
                         className={cx(
-                          "flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold",
+                          "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold",
                           SOFT_TONES[AVATAR_TONES[account.role]],
                         )}
                       >

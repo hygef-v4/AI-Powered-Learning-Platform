@@ -54,7 +54,7 @@ export function RubricChecklist({
                 onChange={(event) => award(item.itemId, max, event.target.checked)}
                 className="mt-0.5 size-4 shrink-0 accent-primary disabled:cursor-not-allowed" />
               <span className="min-w-0 flex-1 break-words text-ink">
-                {showCriterion && <span className="block text-[10.5px] text-faint">{criterion.title}</span>}
+                {showCriterion && <span className="block text-xs text-faint">{criterion.title}</span>}
                 {item.text}
               </span>
               <span className="shrink-0 tabular-nums text-muted">

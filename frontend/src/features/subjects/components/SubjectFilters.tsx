@@ -1,6 +1,6 @@
 "use client";
 
-import { TextInput, cx } from "@/shared/ui";
+import { Segmented, TextInput } from "@/shared/ui";
 import type { SubjectStatus } from "../model/types";
 
 type Props = {
@@ -21,28 +21,13 @@ const TABS: { value: SubjectStatus | undefined; key: string; label: string }[] =
 export function SubjectFilters({ search, status, onSearch, onStatus }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <div
-        role="tablist"
-        aria-label="Trạng thái môn học"
-        className="flex flex-wrap gap-1 rounded-xl bg-shell p-1"
-      >
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            role="tab"
-            aria-selected={status === tab.value}
-            data-testid={`subjects-filter-${tab.key}`}
-            onClick={() => onStatus(tab.value)}
-            className={cx(
-              "rounded-[7px] px-2.5 py-1.5 text-xs font-semibold transition-colors duration-200",
-              status === tab.value ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink",
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <Segmented
+        as="tab"
+        ariaLabel="Trạng thái môn học"
+        value={status ?? "ALL"}
+        onChange={(key) => onStatus(TABS.find((tab) => tab.key === key)?.value)}
+        options={TABS.map((tab) => ({ value: tab.key, label: tab.label, testId: `subjects-filter-${tab.key}` }))}
+      />
       <div role="search" className="ml-auto w-full sm:w-72">
         <TextInput
           type="search"

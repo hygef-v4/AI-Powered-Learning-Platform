@@ -74,7 +74,7 @@ export function McpAgentSection({ credentials, onCreate, onUpdate, onRevoke }: P
             <tr key={c.id}>
               <Td>
                 <p className="truncate font-semibold" title={c.label}>{c.label}</p>
-                <p className="font-mono text-[11px] text-muted">{masked(c.tokenHint)}</p>
+                <p className="font-mono text-xs text-muted">{masked(c.tokenHint)}</p>
               </Td>
               <Td className="whitespace-nowrap">{ACCESS_LABEL[c.access]}</Td>
               <Td className="whitespace-nowrap">{formatDate(c.expiresAt)}</Td>

@@ -57,6 +57,26 @@ describe("LoginForm", () => {
     expect(loginMock).not.toHaveBeenCalled();
   });
 
+  it("lỗi nằm dưới đúng ô, ô lỗi đầu tiên được đánh dấu và nhận focus", () => {
+    render(<LoginForm onSuccess={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Đăng nhập" }));
+
+    const email = screen.getByLabelText("Email");
+    const password = screen.getByLabelText("Mật khẩu");
+    expect(email).toHaveAttribute("aria-invalid", "true");
+    expect(email).toHaveAccessibleDescription("Nhập email trường hợp lệ.");
+    expect(password).toHaveAttribute("aria-invalid", "true");
+    expect(password).toHaveAccessibleDescription("Nhập mật khẩu.");
+    expect(email).toHaveFocus();
+
+    fireEvent.change(email, { target: { value: "taivm@fpt.edu.vn" } });
+    expect(email).not.toHaveAttribute("aria-invalid");
+    fireEvent.click(screen.getByRole("button", { name: "Đăng nhập" }));
+    expect(password).toHaveFocus();
+    expect(loginMock).not.toHaveBeenCalled();
+  });
+
   it("có lối sang kích hoạt và quên mật khẩu", () => {
     render(<LoginForm onSuccess={vi.fn()} />);
     expect(screen.getByRole("link", { name: "Kích hoạt tài khoản" })).toHaveAttribute("href", "/activate");

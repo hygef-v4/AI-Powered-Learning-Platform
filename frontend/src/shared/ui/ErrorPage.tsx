@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useTheme } from "@/shared/theme";
 import { ErrorMark, type ErrorKind } from "@/shared/ui/ErrorMark";
+import { Icon } from "@/shared/ui/Icon";
 import { Logo } from "@/shared/ui/Logo";
 import styles from "../styles/error-page.module.css";
 
@@ -28,18 +30,29 @@ const COPY: Record<ErrorKind, { code?: string; title: string; description: strin
 };
 
 /**
- * Trang lỗi cả màn: logo nền tảng ở góc, giữa trang là hình riêng của lỗi (bút và nghiên), mã lỗi nhỏ, tiêu đề, một dòng
+ * Trang lỗi cả màn: logo nền tảng và nút đổi giao diện sáng/tối ở hai góc trên, giữa trang là hình riêng của lỗi (bút và nghiên), mã lỗi nhỏ, tiêu đề, một dòng
  * giải thích và nút. Không tìm thấy trang chỉ có Về trang chủ (nút trắng); các lỗi khác có thêm Tải lại trang (`retry`,
  * mặc định tải lại cả trang) làm nút chính.
  */
 export function ErrorPage({ kind, retry }: { kind: ErrorKind; retry?: () => void }) {
   const copy = COPY[kind];
   const reloadable = kind !== "not-found";
+  const [theme, toggleTheme] = useTheme();
   return (
     <main className={styles.page}>
-      <Link className={styles.brand} href="/" aria-label="Nền tảng học tập - Trang chủ">
-        <Logo />
-      </Link>
+      <div className={styles.top}>
+        <Link className={styles.brand} href="/" aria-label="Nền tảng học tập - Trang chủ">
+          <Logo />
+        </Link>
+        <button
+          className={styles.themeToggle}
+          type="button"
+          onClick={toggleTheme}
+          aria-label={theme === "dark" ? "Chuyển giao diện sáng" : "Chuyển giao diện tối"}
+        >
+          <Icon name={theme === "dark" ? "sun" : "moon"} size={17} />
+        </button>
+      </div>
       <section className={styles.content} aria-labelledby="error-title">
         <ErrorMark kind={kind} />
         {copy.code && <span className={styles.code}>Lỗi {copy.code}</span>}

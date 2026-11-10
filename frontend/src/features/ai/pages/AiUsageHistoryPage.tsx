@@ -3,7 +3,7 @@
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useEffect, useRef, useState } from "react";
 import { PROVIDER_LABEL, formatDateTime, formatMaybeTokens, formatTokens, type SourceOption } from "@/shared/ai";
-import { Alert, PageNav, Pill, SettingsCard, SettingsGroup, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
+import { Alert, PageNav, Pill, Segmented, SettingsCard, SettingsGroup, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
 import { getSources, getUsage } from "../api";
 import { OUTCOME_LABEL, SOURCE_LABEL, TASK_LABEL } from "../model/labels";
 import type { UsagePage, UsageQuery, UsageSource } from "../model/types";
@@ -98,26 +98,16 @@ export function AiUsageHistoryPage({ mcpEnabled = true }: { mcpEnabled?: boolean
       <SettingsCard>
         <SettingsGroup title="Lịch sử sử dụng">
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-6">
-            <div role="tablist" aria-label="Nguồn" className="flex flex-wrap gap-1 rounded-xl bg-shell p-1">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  type="button"
-                  role="tab"
-                  aria-selected={source === tab.key}
-                  onClick={() => {
-                    setSource(tab.key);
-                    setPage(0);
-                  }}
-                  className={cx(
-                    "rounded-[7px] px-2.5 py-1.5 text-xs font-semibold transition-colors duration-200",
-                    source === tab.key ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink",
-                  )}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+            <Segmented
+              as="tab"
+              ariaLabel="Nguồn"
+              value={source}
+              onChange={(value) => {
+                setSource(value);
+                setPage(0);
+              }}
+              options={tabs.map((tab) => ({ value: tab.key, label: tab.label }))}
+            />
             {/* Nhãn ngày nằm ngay trên ô, tràn lên dòng tiêu đề nên hàng tab không bị đẩy xuống. */}
             <div className="flex items-center gap-2">
               <DateBox id="usage-from" label="Từ ngày" value={from} onChange={(value) => { setFrom(value); setPage(0); }} />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useUrlState } from "@/shared/navigation/useUrlState";
-import { Button, ClickableRow, Icon, PageHeader, PageNav, Pill, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
+import { Button, ClickableRow, Icon, PageHeader, PageNav, Pill, Segmented, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import { CLASS_STATUS_LABELS, type ClassStatus, type CourseClassView, type SubjectView } from "../model/types";
 
 const PAGE_SIZE = 20;
@@ -39,14 +39,13 @@ export function ClassListPage({ classes, subjects, initialSubjectId, onOpen, onC
     } />
     <section aria-label="Danh sách lớp" className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
       <div className="flex flex-wrap items-center gap-3">
-        <div role="tablist" aria-label="Trạng thái lớp" className="flex flex-wrap gap-1 rounded-xl bg-shell p-1">
-          {TABS.map((tab) => <button key={tab.value} type="button" role="tab" aria-selected={status === tab.value}
-            data-testid={`class-filter-${tab.value}`} onClick={() => { setStatus(tab.value); setPage(0); }}
-            className={cx("rounded-[7px] px-2.5 py-1.5 text-xs font-semibold transition-colors duration-200",
-              status === tab.value ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink")}>
-            {tab.label}
-          </button>)}
-        </div>
+        <Segmented
+          as="tab"
+          ariaLabel="Trạng thái lớp"
+          value={status}
+          onChange={(value) => { setStatus(value); setPage(0); }}
+          options={TABS.map((tab) => ({ ...tab, testId: `class-filter-${tab.value}` }))}
+        />
         <div role="search" className="ml-auto w-full sm:w-72">
           <TextInput type="search" icon="search" aria-label="Lọc theo mã lớp" placeholder="Lọc theo mã lớp"
             value={query} maxLength={200} data-testid="class-search" onChange={(event) => { setQuery(event.target.value); setPage(0); }} />

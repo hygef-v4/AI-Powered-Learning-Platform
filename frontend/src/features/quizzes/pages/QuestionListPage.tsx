@@ -3,7 +3,7 @@
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Alert, Button, ClickableRow, cx, Dialog, Field, Menu, MenuItem, PageHeader, Pagination, Pill, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
+import { Alert, Button, ClickableRow, Dialog, Field, Menu, MenuItem, PageHeader, Pagination, Pill, Segmented, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import { bulkQuestions, getDuplicateQuestions, getManagedSubjects, getQuestions } from "../api";
 import { DIFFICULTY_LABELS, DIFFICULTY_TONES, errorMessage, formatDateTime, STATUS_LABELS, STATUS_TONES, TYPE_LABELS } from "../model/labels";
 import { QuestionAiDraftDialog } from "../components/AiDraftTargets";
@@ -163,17 +163,13 @@ export function QuestionListPage() {
       {notice && <Alert tone="success" role="status">{notice}</Alert>}
 
       <div className="flex flex-wrap items-center gap-2">
-        <div role="tablist" aria-label="Loại câu" className="inline-flex gap-0.5 rounded-[10px] bg-sunken p-[3px]">
-          {TABS.map((tab) => (
-            <button key={tab.label} type="button" role="tab" aria-selected={(type || null) === tab.key}
-              onClick={() => { setType(tab.key ?? ""); setFilters((current) => ({ ...current, page: 0 })); }}
-              data-testid={`question-list-tab-${tab.key ?? "ALL"}`}
-              className={cx("rounded-[7px] px-3 py-1.5 text-[12.5px] font-semibold transition-[background-color,color] duration-200",
-                (type || null) === tab.key ? "bg-surface text-ink shadow-[0_1px_2px_rgb(0_0_0/0.06)]" : "text-muted hover:text-ink")}>
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <Segmented<QuestionType | "">
+          as="tab"
+          ariaLabel="Loại câu"
+          value={type}
+          onChange={(value) => { setType(value); setFilters((current) => ({ ...current, page: 0 })); }}
+          options={TABS.map((tab) => ({ value: tab.key ?? "", label: tab.label, testId: `question-list-tab-${tab.key ?? "ALL"}` }))}
+        />
         <Select aria-label="Độ khó" value={filters.difficulty} data-testid="question-list-difficulty"
           onChange={(event) => setFilters((current) => ({ ...current, difficulty: event.target.value as Difficulty | "", page: 0 }))}>
           <option value="">Mọi độ khó</option>
@@ -215,7 +211,7 @@ export function QuestionListPage() {
                   )}
                   <Td className="max-w-[28rem]">
                     <p className="line-clamp-2 whitespace-pre-wrap">{row.stem}</p>
-                    {row.tags.length > 0 && <p className="mt-1 text-[11px] text-muted">{row.tags.join(" · ")}</p>}
+                    {row.tags.length > 0 && <p className="mt-1 text-xs text-muted">{row.tags.join(" · ")}</p>}
                   </Td>
                   <Td>{TYPE_LABELS[row.type]}</Td>
                   <Td><Pill tone={DIFFICULTY_TONES[row.difficulty]}>{DIFFICULTY_LABELS[row.difficulty]}</Pill></Td>
@@ -245,7 +241,7 @@ export function QuestionListPage() {
         </Dialog>
       )}
       {duplicates && (
-        <Dialog open size="lg" onClose={() => setDuplicates(null)} title="Câu giống hệt nhau trong ngân hàng" footer={<Button onClick={() => setDuplicates(null)}>Đóng</Button>}>
+        <Dialog open size="lg" onClose={() => setDuplicates(null)} title="Câu giống hệt nhau trong ngân hàng">
           <div className="flex flex-col gap-3 text-[13px]" data-testid="question-duplicates">
             {duplicates.length === 0 && <p className="text-muted">Không có câu trùng.</p>}
             {duplicates.map((group, index) => (

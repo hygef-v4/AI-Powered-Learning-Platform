@@ -25,7 +25,7 @@ export function QuestionNav({ count, index, onChange, toneOf, labelOf }: {
       {Array.from({ length: count }, (_, i) => (
         <button key={i} type="button" onClick={() => onChange(i)} aria-current={i === index ? "true" : undefined}
           aria-label={labelOf ? labelOf(i) : `Câu ${i + 1}`}
-          className={cx("h-8 w-8 rounded-lg border text-xs font-semibold", TONES[toneOf(i)], i === index && "ring-2 ring-primary")}>
+          className={cx("h-8 w-8 rounded-lg border text-xs font-semibold pointer-coarse:size-11", TONES[toneOf(i)], i === index && "ring-2 ring-primary")}>
           {i + 1}
         </button>
       ))}

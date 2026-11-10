@@ -8,7 +8,7 @@ import {
   checkFile,
   type PurposePolicy,
 } from "@/features/files/model/purposes";
-import { Button, Dialog, Field, Icon, IconButton, Pill, Select, showToast } from "@/shared/ui";
+import { Button, Dialog, Field, Icon, IconButton, Pill, Select, showErrorToast } from "@/shared/ui";
 import { assignmentsApi } from "../api";
 import { AiDraftPreview } from "./AiDraftPreview";
 import { SearchPicker } from "./SearchPicker";
@@ -77,7 +77,7 @@ export function AiDraftDialog({
   /** Đang gửi yêu cầu hoặc đang ghi đề lên trang: hiện popup chờ riêng (yêu cầu 2026-11-05). */
   const [phase, setPhase] = useState<"idle" | "sending" | "applying">("idle");
   // Lỗi hiện thông báo đỏ ở góc trên bên phải, không hiện trong popup (yêu cầu 2026-11-05).
-  const setError = (message: string | null) => { if (message) showToast(message, "danger"); };
+  const setError = (message: string | null) => { if (message) showErrorToast(message); };
   const ref = useRef(requestRef());
   const applied = useRef(false);
   const awaiting = busy || draft?.status === "PENDING";
@@ -155,7 +155,7 @@ export function AiDraftDialog({
   // popup cũ, giữ nguyên mọi thứ đã nhập, báo lỗi ở góc.
   useEffect(() => {
     if (draft?.status !== "FAILED") return;
-    showToast(`${draft.safeError ?? "AI không trả kết quả."} Bạn vẫn soạn thủ công được.`, "danger");
+    showErrorToast(`${draft.safeError ?? "AI không trả kết quả."} Bạn vẫn soạn thủ công được.`);
     setDraft(null);
     ref.current = requestRef();
   }, [draft]);
