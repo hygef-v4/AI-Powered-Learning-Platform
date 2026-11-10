@@ -116,7 +116,7 @@ final class PracticeRequests {
             JsonNode eventId = node.get("clientEventId");
             JsonNode time = node.get("clientTime");
             if (sequence == null || !sequence.canConvertToExactIntegral() || kind == null || !kind.isTextual()
-                    || eventId == null || !eventId.isTextual() || eventId.asText().length() > 100
+                    || eventId == null || !eventId.isTextual() || eventId.asText().isBlank() || eventId.asText().length() > 64
                     || time == null || !time.isTextual()) {
                 throw invalid("Sự kiện hoạt động không hợp lệ");
             }

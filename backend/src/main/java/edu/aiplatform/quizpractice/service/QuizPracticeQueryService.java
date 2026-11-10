@@ -79,8 +79,7 @@ public class QuizPracticeQueryService {
                 .collect(Collectors.groupingBy(QuizAttempt::quizId));
         List<PracticeQuizRow> rows = new ArrayList<>();
         for (Entry entry : entries.values()) {
-            List<QuizAttempt> own = mine.getOrDefault(entry.quiz.quizId(), List.of()).stream()
-                    .filter(a -> a.classId().equals(entry.ref.classId())).toList();
+            List<QuizAttempt> own = mine.getOrDefault(entry.quiz.quizId(), List.of());
             rows.add(row(entry.quiz, entry.ref, own));
         }
         return rows;
@@ -92,8 +91,7 @@ public class QuizPracticeQueryService {
         access.requireClass(actor, Actions.QUIZ_PRACTICE, classId, "QUIZ", quizId, PracticeSupport.QUIZ_NOT_FOUND);
         ClassRef ref = support.classRef(classId);
         QuizView quiz = support.quizInClass(quizId, ref);
-        List<QuizAttempt> own = attempts.listByAccount(actor.accountId(), List.of(quizId)).stream()
-                .filter(a -> a.classId().equals(classId)).toList();
+        List<QuizAttempt> own = attempts.listByAccount(actor.accountId(), List.of(quizId));
         if (quiz.status() != QuizStatus.OPEN && own.isEmpty()) {
             throw ApiException.notFound(PracticeSupport.QUIZ_NOT_FOUND);
         }
@@ -106,7 +104,7 @@ public class QuizPracticeQueryService {
         return new PracticeQuizDetail(quizId, classId, ref.code(), ref.subjectCode(), quiz.title(),
                 view.instructions(), quiz.status(), view.questionCount(), quiz.maxScore(),
                 quiz.settings().timeLimitMinutes(), used, max, max == null ? null : Math.max(max - used, 0),
-                showScore ? best(own) : null, showScore, quiz.settings().showCorrectAnswers(),
+                best(own), showScore, quiz.settings().showCorrectAnswers(),
                 quiz.activityMonitoringEnabled() ? quiz.activityNotice() : null,
                 quiz.activityMonitoringEnabled() ? quiz.settings().leavePenalty() : null,
                 own.stream().sorted(Comparator.comparingInt(QuizAttempt::attemptNo).reversed())
@@ -115,14 +113,15 @@ public class QuizPracticeQueryService {
     }
 
     private static PracticeQuizRow row(QuizView quiz, ClassRef ref, List<QuizAttempt> own) {
-        boolean showScore = quiz.settings().showScoreAfterSubmit();
         QuizAttempt last = own.stream().filter(a -> !a.inProgress())
-                .max(Comparator.comparing(QuizAttempt::submittedAt)).orElse(null);
+                .max(Comparator.comparing(QuizAttempt::submittedAt).thenComparingInt(QuizAttempt::attemptNo)).orElse(null);
+        BigDecimal lastScore = last != null && last.snapshot() != null && last.snapshot().settings().showScoreAfterSubmit()
+                ? last.score() : null;
         UUID inProgress = own.stream().filter(QuizAttempt::inProgress).map(QuizAttempt::id).findFirst().orElse(null);
         Integer max = quiz.settings().maxAttempts();
         return new PracticeQuizRow(quiz.quizId(), ref.classId(), ref.code(), ref.subjectCode(), quiz.title(), quiz.status(),
-                quiz.settings().timeLimitMinutes(), own.size(), max, showScore ? best(own) : null,
-                showScore && last != null ? last.score() : null, quiz.maxScore(),
+                quiz.settings().timeLimitMinutes(), own.size(), max, best(own),
+                lastScore, quiz.maxScore(),
                 own.stream().map(QuizAttempt::startedAt).max(Comparator.naturalOrder()).orElse(null), inProgress,
                 blockedReason(quiz, ref, own.size(), inProgress) == null);
     }
@@ -145,8 +144,13 @@ public class QuizPracticeQueryService {
         return null;
     }
 
-    private static BigDecimal best(List<QuizAttempt> own) {
-        return own.stream().map(QuizAttempt::score).filter(Objects::nonNull).max(Comparator.naturalOrder()).orElse(null);
+    private static BigDecimal best(List<QuizAttempt> attempts) {
+        return attempts.stream()
+                .filter(a -> a.snapshot() != null && a.snapshot().settings().showScoreAfterSubmit())
+                .map(QuizAttempt::score)
+                .filter(Objects::nonNull)
+                .max(Comparator.naturalOrder())
+                .orElse(null);
     }
 
     private static String key(UUID quizId, UUID classId) {

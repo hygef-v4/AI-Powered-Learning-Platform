@@ -2,6 +2,7 @@ package edu.aiplatform.quizpractice.service;
 
 
 import edu.aiplatform.academics.contract.ClassRef;
+import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.quizpractice.dto.PracticeViews.AttemptRow;
@@ -115,10 +116,13 @@ class PracticeSupport {
         return attempt;
     }
 
-    /** Như {@link #ownAttempt} và người gọi còn học lớp của lượt (R5, như U08): làm bài, lưu, nộp, ghi hoạt động. */
+    /** Như {@link #ownAttempt} và người gọi còn học lớp đang mở của lượt (R5, như U08): làm bài, lưu, nộp, ghi hoạt động. */
     QuizAttempt ownActiveAttempt(Actor actor, UUID attemptId, String action) {
         QuizAttempt attempt = ownAttempt(actor, attemptId, action);
         access.requireClass(actor, action, attempt.classId(), PracticeAccess.OBJECT, attemptId, ATTEMPT_NOT_FOUND);
+        if (classRef(attempt.classId()).status() != ClassStatus.OPEN) {
+            throw ApiException.forbidden("CLASS_NOT_OPEN");
+        }
         return attempt;
     }
 
@@ -169,12 +173,7 @@ class PracticeSupport {
                 .collect(Collectors.toMap(QuizQuestionView::questionId, Function.identity()));
         Map<UUID, QuestionResult> results = attempt.result().stream()
                 .collect(Collectors.toMap(QuestionResult::questionId, Function.identity()));
-        Map<UUID, BigDecimal> paper = attempt.snapshot().questionPoints();
-        Map<UUID, AnswerKey> keys = showAnswers
-                ? call(() -> paper == null ? scoring.answerReview(attempt.quizId())
-                        : scoring.answerReview(attempt.quizId(), paper.keySet())).answers().stream()
-                        .collect(Collectors.toMap(AnswerKey::questionId, Function.identity()))
-                : Map.of();
+        Map<UUID, AnswerKey> keys = showAnswers ? answerKeys(attempt) : Map.of();
         int correct = 0;
         int blank = 0;
         List<ResultQuestion> questions = new ArrayList<>();
@@ -192,8 +191,7 @@ class PracticeSupport {
             }
             AnswerKey key = keys.get(questionId);
             questions.add(new ResultQuestion(questionId, q.type(), q.stem(), ordered(q, attempt), selected,
-                    revealCorrectness ? r.correct() : null,
-                    showScore ? r.points() : null, showScore ? r.maxPoints() : null,
+                    revealCorrectness ? r.correct() : null, showScore ? r.points() : null, showScore ? r.maxPoints() : null,
                     key == null ? null : List.copyOf(key.correctOptionIds()), key == null ? null : key.explanation()));
         }
         int wrong = questions.size() - correct - blank;
@@ -202,6 +200,13 @@ class PracticeSupport {
                 showAnswers, showScore ? attempt.score() : null, showScore ? attempt.maxScore() : null,
                 revealCorrectness ? correct : null, revealCorrectness ? wrong : null, blank, questions, canRetry,
                 showScore ? PenaltyView.of(attempt.outcome(), full) : null);
+    }
+
+    private Map<UUID, AnswerKey> answerKeys(QuizAttempt attempt) {
+        Map<UUID, BigDecimal> paper = attempt.snapshot().questionPoints();
+        return call(() -> paper == null ? scoring.answerReview(attempt.quizId())
+                : scoring.answerReview(attempt.quizId(), paper.keySet())).answers().stream()
+                .collect(Collectors.toMap(AnswerKey::questionId, Function.identity()));
     }
 
     /** Lựa chọn theo thứ tự đã trộn của lượt. */

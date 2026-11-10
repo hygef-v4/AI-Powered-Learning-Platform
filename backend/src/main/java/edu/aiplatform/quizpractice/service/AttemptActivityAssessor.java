@@ -12,6 +12,7 @@ import edu.aiplatform.quizpractice.model.QuizAttempt;
 import edu.aiplatform.quizzes.contract.LeavePenalty;
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.Instant;
 import org.springframework.stereotype.Component;
 
 /**
@@ -76,8 +77,12 @@ class AttemptActivityAssessor {
         if (summary.policyState() != ActivityPolicyState.AVAILABLE) {
             return ActivitySignal.NO_SIGNAL;
         }
-        boolean savedAfterSilence = summary.lastEventAt() != null && attempt.lastSavedAt() != null
-                && attempt.lastSavedAt().isAfter(summary.lastEventAt().plus(SIGNAL_GAP));
-        return summary.unknownGaps() > 0 || savedAfterSilence ? ActivitySignal.SIGNAL_LOST : ActivitySignal.OK;
+        Instant silenceCutoff = summary.lastEventAt() == null ? null : summary.lastEventAt().plus(SIGNAL_GAP);
+        boolean activeAfterSilence = silenceCutoff != null
+                && ((attempt.lastSavedAt() != null && attempt.lastSavedAt().isAfter(silenceCutoff))
+                || (attempt.submittedAt() != null && attempt.submittedAt().isAfter(silenceCutoff)));
+        boolean initialGap = summary.firstEventAt() != null && attempt.startedAt() != null
+                && summary.firstEventAt().isAfter(attempt.startedAt().plus(SIGNAL_GAP));
+        return summary.unknownGaps() > 0 || activeAfterSilence || initialGap ? ActivitySignal.SIGNAL_LOST : ActivitySignal.OK;
     }
 }

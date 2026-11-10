@@ -114,6 +114,9 @@ class AttemptActivityAssessorTest {
         summary(0, NOW.minus(Duration.ofMinutes(30)));
         assertThat(assessor.assess(scored(true, policy(), "8", NOW.minus(Duration.ofMinutes(5)))).outcome().signal())
                 .isEqualTo(ActivitySignal.SIGNAL_LOST);
+        assertThat(assessor.assess(scored(true, policy(), "8", null)).outcome().signal())
+                .as("nộp bài quá 2 phút sau sự kiện cuối cũng gắn cờ mất tín hiệu")
+                .isEqualTo(ActivitySignal.SIGNAL_LOST);
         summary(1, NOW);
         assertThat(assessor.assess(scored(true, policy(), "8", null)).outcome().signal()).isEqualTo(ActivitySignal.SIGNAL_LOST);
         summary(0, NOW.minus(Duration.ofMinutes(1)));
@@ -127,5 +130,13 @@ class AttemptActivityAssessorTest {
         assertThat(result.outcome().signal()).isEqualTo(ActivitySignal.UNAVAILABLE);
         assertThat(result.score()).isEqualByComparingTo("8");
         assertThat(result.outcome().leaveCount()).isNull();
+    }
+    @Test
+    void lateFirstEventFlagsInitialGapWithoutChangingScore() {
+        when(activity.summary(any(), any())).thenReturn(new ActivitySummary(ActivityPolicyState.AVAILABLE, 0,
+                Duration.ZERO, List.of(), 0, "", NOW, NOW.minusSeconds(60)));
+        var result = assessor.assess(scored(true, policy(), "8", null));
+        assertThat(result.outcome().signal()).isEqualTo(ActivitySignal.SIGNAL_LOST);
+        assertThat(result.score()).isEqualByComparingTo("8");
     }
 }
