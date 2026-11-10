@@ -12059,3 +12059,21 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 **Context**: Giải quyết conflict merge; chờ người dùng xác nhận commit.
 
 ---
+
+## Commit merge origin/staging vào staging
+**Timestamp**: 2026-11-10T02:48:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
+**AI Response**: "Commit merge 63e91aa0 (Merge remote-tracking branch 'origin/staging' into staging), thân thông điệp ghi cách giải quyết conflict import ở QuizScreens.test.tsx. Không push."
+**Context**: Commit merge; chưa push.
+
+---
+
+## Kiểm thử đầy đủ sau merge origin/staging
+**Timestamp**: 2026-11-10T03:16:44Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Chạy full test trước"
+**AI Response**: "Chạy trên 63e91aa0. Frontend: vitest 867/867 (126 file), eslint sạch, build thành công, tsc sạch sau khi build tạo lại .next/types. Backend: mvn -B verify trong maven:3.9-eclipse-temurin-17 với Testcontainers, 2.081 test, 0 failure, 0 error, 0 skipped, BUILD SUCCESS. Lần chạy backend đầu có 10 error NoSuchFile (../infra, ../agent-skills) do chỉ mount thư mục backend vào container; mount cả repo thì hết. Đã khởi động Docker Desktop để chạy. Không đổi mã nguồn."
+**Context**: Kiểm thử sau merge; mục audit này chưa commit, chưa push.
+
+---
