@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { RubricNote, rubricComplete, rubricTotal, type DocumentModel, type RubricCriterion } from "@/shared/document";
 import { assignmentsApi } from "@/features/assignments/api";
 import { AssignmentListCard } from "@/features/assignments/components/AssignmentListCard";
-import { WHOLE_PART, cardIssues, hasWholePart, mergeSaved, missingText, reappearedParts, rubricIssues } from "@/features/assignments/pages/AssignmentFormPage";
+import { WHOLE_PART, cardIssues, hasWholePart, listRestoredCriteria, mergeSaved, missingText, reappearedParts, rubricIssues } from "@/features/assignments/pages/AssignmentFormPage";
 import { CreateAssignmentDialog } from "@/features/assignments/components/CreateAssignmentDialog";
 import { fromLocalInput, toLocalInput } from "@/features/assignments/model/format";
 import { RubricEditor, cleanCriteria, rubricPointsMalformed } from "@/features/assignments/components/RubricEditor";
@@ -320,6 +320,16 @@ it("mục thành phần chấm lại mà trang còn giữ tiêu chí cũ thì l�
   const part = (partId: string) => ({ partId, headingBlockId: partId, ancestorHeadingIds: [], title: partId });
   const criterion = { criterionId: "c", title: "Đúng", order: 0, atomic: true, points: 2, items: [] } as never;
   expect(reappearedParts(new Set(["b"]), [part("a"), part("b"), part("n")], { a: [criterion], b: [criterion] })).toEqual(["a"]);
+});
+
+it("Ctrl+Z sau khi AI sửa đề: ghi lại tiêu chí của mọi phần đã tải trong bản trước, kể cả phần trống và Toàn bài", () => {
+  const part = (id: string | null) => ({ partId: id ?? "DOCUMENT", headingBlockId: id, ancestorHeadingIds: [], title: id ?? "Toàn bài" });
+  const criterion = { criterionId: "c", title: "Đúng", description: "", kind: "TEXT", items: [] } as unknown as RubricCriterion;
+  // "b" trống trước AI (AI có thể vừa điền) vẫn phải ghi lại; "n" chưa tải rubric thì giữ nguyên; "x" không còn trong đề.
+  expect(listRestoredCriteria([part("a"), part("b"), part("n")], { ASSIGNMENT: [criterion], a: [criterion], b: [], x: [criterion] }))
+    .toEqual([["ASSIGNMENT", [criterion]], ["a", [criterion]], ["b", []]]);
+  // Bài không có mục: phần duy nhất đã là cả bài, không có thẻ Toàn bài riêng.
+  expect(listRestoredCriteria([part(null)], { ASSIGNMENT: [criterion], DOCUMENT: [criterion] })).toEqual([["DOCUMENT", [criterion]]]);
 });
 
 it("thẻ Toàn bài chỉ có ở bài có mục; thẻ soạn chỉ mở trình sửa khi bấm vào, thẻ Toàn bài ghi tổng điểm", () => {
