@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Icon, type IconName } from "@/shared/ui";
+import { Icon, IconButton, type IconName } from "@/shared/ui";
 
 export type PickerOption = { id: string; label: string };
 
@@ -25,6 +25,8 @@ type Props = {
   multiple?: boolean;
   /** Các mục đã chọn, xếp hàng ngay trong thanh tìm (trước chỗ gõ), dài thì xuống dòng. */
   chips?: ReactNode;
+  /** Chọn một: mục đang chọn hiện ngay trong ô như dropdown (yêu cầu 2026-11-10), gõ để tìm mục khác, X để bỏ. */
+  selected?: { label: string; clearLabel: string; onClear: () => void };
 };
 
 const MAX_HEIGHT = 256;
@@ -35,7 +37,7 @@ const MAX_HEIGHT = 256;
  * Dùng cho Tài liệu tham khảo (Soạn bằng AI) và Copy từ bài có sẵn (Tạo bài tập).
  */
 export function SearchPicker({ id, label, placeholder, options, onPick, onOpen, disabled, loading, emptyText = "Không có kết quả.",
-  optionIcon, footer, multiple = false, chips }: Props) {
+  optionIcon, footer, multiple = false, chips, selected }: Props) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const anchor = useRef<HTMLDivElement>(null);
@@ -77,12 +79,14 @@ export function SearchPicker({ id, label, placeholder, options, onPick, onOpen, 
         + "focus-within:shadow-[0_0_0_3px_var(--c-primary-soft)] has-[:disabled]:bg-sunken has-[:disabled]:opacity-70"}>
         <Icon name="search" size={16} className="text-muted" />
         {chips}
-        <input id={id} aria-label={label} placeholder={placeholder} role="combobox" aria-expanded={open}
-          aria-controls={listId} autoComplete="off" value={query} disabled={disabled}
-          className="h-7 min-w-[8rem] flex-1 bg-transparent text-[13.5px] text-ink outline-none placeholder:text-muted disabled:cursor-not-allowed"
+        <input id={id} aria-label={label} placeholder={selected?.label ?? placeholder} role="combobox" aria-expanded={open}
+          aria-controls={listId} autoComplete="off" value={query} disabled={disabled} title={selected?.label}
+          className={`h-7 min-w-[8rem] flex-1 bg-transparent text-[13.5px] text-ink outline-none disabled:cursor-not-allowed ${
+            selected ? "placeholder:font-semibold placeholder:text-ink" : "placeholder:text-muted"}`}
           onChange={(e) => { setQuery(e.target.value); show(); }}
           onFocus={show} onMouseDown={show} onBlur={() => setOpen(false)}
           onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }} />
+        {selected && <IconButton icon="close" label={selected.clearLabel} size={26} disabled={disabled} onClick={selected.onClear} />}
       </div>
       {open && !disabled && typeof document !== "undefined" && createPortal(
         <ul id={listId} role="listbox" aria-label={`Gợi ý ${label.toLocaleLowerCase("vi")}`}

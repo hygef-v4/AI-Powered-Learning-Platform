@@ -86,9 +86,14 @@ public class Evaluation {
                     "Adjustment requires a reason");
         var next = rubricScore.add(delta).max(BigDecimal.ZERO).min(maxScore).setScale(2,
                 RoundingMode.HALF_UP);
+        if (gradedAt != null && score != null && score.compareTo(next) != 0) {
+            changes.add(new EvaluationHistory(actor, now, score, next, changeReason,
+                    rubricChecks, this.feedback, copyItemScores(rubricItemScores),
+                    structuredFeedback == null ? null : structuredFeedback.copyFeedback()));
+        }
         rubricChecks = checks;
         score = next;
-        adjustment = delta;
+        adjustment = next.subtract(rubricScore);
         adjustmentReason = deltaReason;
         this.feedback = feedback;
         gradedBy = actor;
@@ -131,10 +136,11 @@ public class Evaluation {
     public void inheritGroupGrade(Evaluation root, String reason, UUID actorId, Instant now) {
         requireMutableGrade();
         if (!memberOverride) {
-            saveGrade(root.rubricChecks, root.score, BigDecimal.ZERO, null, root.feedback, reason,
-                    actorId, now);
+            saveGrade(root.rubricChecks, root.score.subtract(root.adjustment), root.adjustment,
+                    root.adjustmentReason, root.feedback, reason, actorId, now);
         } else {
             rubricChecks = root.rubricChecks;
+            adjustment = score.subtract(root.score.subtract(root.adjustment));
         }
         rubricItemScores = copyItemScores(root.rubricItemScores);
         structuredFeedback = root.structuredFeedback == null ? null
@@ -144,15 +150,17 @@ public class Evaluation {
     }
 
     /** Sets an individual member score and records the override reason. */
-    public void overrideMemberScore(BigDecimal memberScore, String reason, UUID actorId,
-            Instant now) {
+    public void overrideMemberScore(BigDecimal memberScore, BigDecimal groupRubricScore,
+            String reason, UUID actorId, Instant now) {
         requireMutableGrade();
         if (memberScore == null || memberScore.signum() < 0 || memberScore.compareTo(maxScore) > 0
                 || memberScore.scale() > 2) {
             throw ApiException.badRequest("INVALID_MEMBER_SCORE", "Invalid member score");
         }
-        memberOverride = true;
         saveGrade(rubricChecks, memberScore, BigDecimal.ZERO, null, feedback, reason, actorId, now);
+        adjustment = memberScore.subtract(groupRubricScore);
+        adjustmentReason = reason == null ? null : reason.trim();
+        memberOverride = true;
     }
 
     /** Resets grading state after a group submits a new version. */

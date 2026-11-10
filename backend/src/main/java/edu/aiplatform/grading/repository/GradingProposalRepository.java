@@ -54,6 +54,13 @@ public class GradingProposalRepository implements IGradingProposalRepository {
                 Map.of("id", id), GradingProposalRepository::mapProposal);
     }
 
+    public List<GradingProposal> findForEvaluations(List<UUID> evaluationIds) {
+        if (evaluationIds.isEmpty()) return List.of();
+        return namedParameterJdbcTemplate.query(
+                "select proposal_document from grading_proposals where evaluation_id in (:ids) order by version_no desc",
+                Map.of("ids", evaluationIds), GradingProposalRepository::mapProposal);
+    }
+
     /** Inserts or updates a grading proposal using optimistic version checks. */
     @Transactional
     public GradingProposal save(GradingProposal proposal) {

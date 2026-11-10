@@ -998,7 +998,7 @@ components:
             pattern: '^\d+(\.\d{1,2})?$'
     Evaluation:
       type: object
-      description: FINALIZED/PUBLISHED grading content cannot be edited. Publishing changes visibility only. Resubmission invalidates the previous grade; individual grades are superseded and group grades reset to PENDING for the new submission.
+      description: FINALIZED/PUBLISHED grading content cannot be edited. Publishing changes visibility only. Individual resubmission supersedes the previous evaluation. Group resubmission resets unfinalized root/member drafts to PENDING; FINALIZED/PUBLISHED group grades retain their original receipt, scores and review snapshots.
       properties:
         id: *id001
         assignmentId: *id001

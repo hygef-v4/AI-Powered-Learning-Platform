@@ -45,6 +45,9 @@ class GradingProposalValidatorTest {
     @Test
     void rejectionDiagnosticsIdentifyValidationStageWithoutEchoingProviderContent() {
         assertThat(GradingProposalValidator.buildRejectionDiagnostic(
+                ApiException.badRequest("INVALID_AI_PROPOSAL", "Checks must match full-credit item scores")))
+                .isEqualTo("PROPOSAL_CHECKS_MISMATCH");
+        assertThat(GradingProposalValidator.buildRejectionDiagnostic(
                 ApiException.badRequest("INVALID_AI_PROPOSAL", "Unknown evidenceBlockId: private-provider-content")))
                 .isEqualTo("FEEDBACK_UNKNOWN_EVIDENCE_BLOCK");
         assertThat(GradingProposalValidator.buildRejectionDiagnostic(

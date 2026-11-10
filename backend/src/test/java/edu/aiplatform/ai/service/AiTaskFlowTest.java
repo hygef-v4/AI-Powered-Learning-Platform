@@ -136,6 +136,14 @@ class AiTaskFlowTest {
         return new JobMessage(1, "AI_TASK", taskId.toString(), Map.of("taskId", taskId.toString()), 1, null);
     }
 
+    @Test
+    void acceptsTwoHundredCharacterReferenceAndRejectsLongerInput() {
+        var task = service.submit(request(teacher, AiSource.PERSONAL, AiProvider.OPENAI, "r".repeat(200)));
+        assertThat(task.taskId()).isNotNull();
+        assertThatThrownBy(() -> service.submit(request(teacher, AiSource.PERSONAL, AiProvider.OPENAI, "r".repeat(201))))
+                .isInstanceOf(ApiException.class);
+    }
+
     // ---- gửi task -----------------------------------------------------------------------------------------
 
     @Test

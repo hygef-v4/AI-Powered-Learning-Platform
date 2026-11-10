@@ -6,21 +6,21 @@ import edu.aiplatform.ai.contract.AiPrompt;
 import edu.aiplatform.ai.contract.AiSource;
 import edu.aiplatform.ai.contract.AiTaskFailure;
 import edu.aiplatform.ai.contract.AiTaskResult;
-import edu.aiplatform.ai.contract.AiTaskState;
 import edu.aiplatform.ai.contract.AiTaskView;
 import edu.aiplatform.ai.contract.AiTokenEstimate;
 import edu.aiplatform.ai.contract.ApplyOutcome;
+import edu.aiplatform.assignments.contract.AssignmentContent;
 import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.RubricView;
-import edu.aiplatform.grading.service.GradingCommands.AiRequest;
-import edu.aiplatform.grading.service.GradingCommands.Save;
 import edu.aiplatform.grading.model.Evaluation;
 import edu.aiplatform.grading.model.EvaluationKind;
 import edu.aiplatform.grading.model.EvaluationStatus;
 import edu.aiplatform.grading.model.GradingProposal;
 import edu.aiplatform.grading.repository.IEvaluationRepository;
 import edu.aiplatform.grading.repository.IGradingProposalRepository;
+import edu.aiplatform.grading.service.GradingCommands.AiRequest;
+import edu.aiplatform.grading.service.GradingCommands.Save;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.shared.error.ApiException;
@@ -35,10 +35,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Separate bean: proposal is committed before U06 dispatch, and callbacks may
- * run immediately.
- */
+/** Separate bean: proposal is committed before U06 dispatch, and callbacks may run immediately. */
 @Service
 public class GradingProposalTransactions {
     private static final Logger log = LoggerFactory.getLogger(GradingProposalTransactions.class);
@@ -75,7 +72,6 @@ public class GradingProposalTransactions {
 
     public record Prepared(GradingProposal proposal, AiPrompt prompt, boolean dispatch,
             String outputSchema, int maxOutputTokens) {
-        /** Defaults the output token budget for callers using the earlier prepared shape. */
         public Prepared(GradingProposal proposal, AiPrompt prompt, boolean dispatch,
                 String outputSchema) {
             this(proposal, prompt, dispatch, outputSchema, 4096);
@@ -89,113 +85,97 @@ public class GradingProposalTransactions {
         var evaluation = evaluationRepository.lockById(evaluationId)
                 .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
         gradingService.requireCurrent(actor, evaluation.id, evaluation.version);
-        if (evaluation.kind == EvaluationKind.MEMBER)
-            throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Use the group document");
-        if (evaluation.state != EvaluationStatus.PENDING
-                && evaluation.state != EvaluationStatus.DRAFT)
-            throw ApiException.conflict("INVALID_GRADE_STATE",
-                    "AI requests require a pending or draft grade");
+        requireGradableTarget(evaluation, "AI requests require a pending or draft grade");
         var existing = gradingProposalRepository.findByRequestRef(request.requestRef());
         if (existing.isPresent()) {
-            var proposal = existing.get();
-            requireSameRequest(actor, evaluation, request, proposal);
-            return new Prepared(proposal, null, false, null, 4096);
+            requireSameRequest(actor, evaluation, request, existing.get());
+            return new Prepared(existing.get(), null, false, null, 4096);
         }
-
-        var content = assignmentQuery.getContent(evaluation.assignmentId)
-                .orElseThrow(() -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE",
-                        "Assignment content unavailable"));
-        if (!GradingJson.writeSnapshot(objectMapper, content.rubrics())
-                .equals(evaluation.rubricSnapshot))
-            throw ApiException.conflict("RUBRIC_CHANGED",
-                    "Locked rubric no longer matches submitted snapshot");
+        var content = loadValidatedAssignmentContent(evaluation);
         var detail = submissionReviewService.loadEvaluation(actor, evaluation.id);
         DocumentModel document = detail == null ? null : detail.document();
         var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
-
-        List<RubricView> activeRubrics = gradingPromptBuilder.findActiveRubrics(document, content.skeleton(), rubrics);
-        Set<String> emptyPartIds = gradingPromptBuilder.findEmptyPartIds(document, content.skeleton());
-
+        List<RubricView> activeRubrics = gradingPromptBuilder.findActiveRubrics(
+                document, content.skeleton(), rubrics);
         if (activeRubrics.isEmpty()) {
-            var zeroPayload = GradingPromptBuilder.createZeroProposal(rubrics, objectMapper);
-            var proposal = createProposal(actor, evaluation, request);
-            proposal.proposal = zeroPayload;
-            proposal.status = "READY";
-            proposal.completedAt = clock.instant();
-            gradingProposalRepository.save(proposal);
-            gradingService.recordAudit(actor, evaluation, "AI_GRADING_REQUESTED", null);
-            log.info("AI grading proposal completed immediately for empty submission evaluationId={} proposalId={}",
-                    evaluationId, proposal.id);
-            return new Prepared(proposal, null, false, null, 0);
+            return completeZeroProposal(actor, evaluation, request, rubrics);
         }
-
+        Set<String> emptyPartIds = gradingPromptBuilder.findEmptyPartIds(document, content.skeleton());
         int maxOutputTokens = gradingPromptBuilder.calculateMaxOutputTokens(activeRubrics);
-        var prompt = gradingPromptBuilder.buildPrompt(evaluation, document, content, activeRubrics, emptyPartIds);
-        var outputSchema = gradingPromptBuilder.buildOutputSchema(activeRubrics);
-        var proposal = createProposal(actor, evaluation, request);
-        gradingProposalRepository.save(proposal);
+        var prompt = gradingPromptBuilder.buildPrompt(
+                evaluation, document, content, activeRubrics, emptyPartIds);
+        var outputSchema = gradingPromptBuilder.buildProviderSchema(activeRubrics);
+        var proposal = gradingProposalRepository.save(createProposal(actor, evaluation, request));
         gradingService.recordAudit(actor, evaluation, "AI_GRADING_REQUESTED", null);
         return new Prepared(proposal, prompt, true, outputSchema, maxOutputTokens);
+    }
+
+    private Prepared completeZeroProposal(Actor actor, Evaluation evaluation, AiRequest request,
+            List<RubricView> rubrics) {
+        var proposal = createProposal(actor, evaluation, request);
+        proposal.proposal = GradingPromptBuilder.createZeroProposal(rubrics, objectMapper);
+        proposal.status = "READY";
+        proposal.completedAt = clock.instant();
+        gradingProposalRepository.save(proposal);
+        gradingService.recordAudit(actor, evaluation, "AI_GRADING_REQUESTED", null);
+        log.info("AI grading proposal completed immediately for empty submission evaluationId={} proposalId={}",
+                evaluation.id, proposal.id);
+        return new Prepared(proposal, null, false, null, 0);
     }
 
     /** Estimates prompt and output tokens for the current evaluation version. */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public long estimateTokens(Actor actor, UUID evaluationId, long version) {
         var evaluation = gradingService.requireCurrent(actor, evaluationId, version);
-        if (evaluation.kind == EvaluationKind.MEMBER)
-            throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Use the group document");
-        if (evaluation.state != EvaluationStatus.PENDING
-                && evaluation.state != EvaluationStatus.DRAFT)
-            throw ApiException.conflict("INVALID_GRADE_STATE",
-                    "AI proposals require a pending or draft grade");
-
-        var content = assignmentQuery.getContent(evaluation.assignmentId)
-                .orElseThrow(() -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE",
-                        "Assignment content unavailable"));
-        if (!GradingJson.writeSnapshot(objectMapper, content.rubrics())
-                .equals(evaluation.rubricSnapshot))
-            throw ApiException.conflict("RUBRIC_CHANGED",
-                    "Locked rubric no longer matches submitted snapshot");
+        requireGradableTarget(evaluation, "AI proposals require a pending or draft grade");
+        var content = loadValidatedAssignmentContent(evaluation);
         var detail = submissionReviewService.loadEvaluation(actor, evaluation.id);
         DocumentModel document = detail == null ? null : detail.document();
         var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
-
-        List<RubricView> activeRubrics = gradingPromptBuilder.findActiveRubrics(document, content.skeleton(), rubrics);
+        List<RubricView> activeRubrics = gradingPromptBuilder.findActiveRubrics(
+                document, content.skeleton(), rubrics);
         if (activeRubrics.isEmpty()) {
             return 0L;
         }
-
         Set<String> emptyPartIds = gradingPromptBuilder.findEmptyPartIds(document, content.skeleton());
         int maxOutputTokens = gradingPromptBuilder.calculateMaxOutputTokens(activeRubrics);
-        var prompt = gradingPromptBuilder.buildPrompt(evaluation, document, content, activeRubrics, emptyPartIds);
+        var prompt = gradingPromptBuilder.buildPrompt(
+                evaluation, document, content, activeRubrics, emptyPartIds);
         int promptChars = (prompt.system() == null ? 0 : prompt.system().length())
                 + prompt.user().length();
         return AiTokenEstimate.estimate(promptChars, maxOutputTokens);
     }
 
-    /** Builds a prompt after confirming the assignment rubric matches the locked snapshot. */
-    private edu.aiplatform.ai.contract.AiPrompt buildPrompt(Actor actor, Evaluation evaluation) {
+    private void requireGradableTarget(Evaluation evaluation, String stateMessage) {
+        if (evaluation.kind == EvaluationKind.MEMBER) {
+            throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Use the group document");
+        }
+        if (evaluation.state != EvaluationStatus.PENDING
+                && evaluation.state != EvaluationStatus.DRAFT) {
+            throw ApiException.conflict("INVALID_GRADE_STATE", stateMessage);
+        }
+    }
+
+    private AssignmentContent loadValidatedAssignmentContent(Evaluation evaluation) {
         var content = assignmentQuery.getContent(evaluation.assignmentId)
                 .orElseThrow(() -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE",
                         "Assignment content unavailable"));
         if (!GradingJson.writeSnapshot(objectMapper, content.rubrics())
-                .equals(evaluation.rubricSnapshot))
+                .equals(evaluation.rubricSnapshot)) {
             throw ApiException.conflict("RUBRIC_CHANGED",
                     "Locked rubric no longer matches submitted snapshot");
-        var detail = submissionReviewService.loadEvaluation(actor, evaluation.id);
-        return gradingPromptBuilder.buildPrompt(evaluation, detail.document(), content);
+        }
+        return content;
     }
 
-    /** Validates the AI source and request reference before proposal creation. */
     private void requireAiSource(AiRequest request) {
-        // Nguồn bỏ trống: hệ thống tự chọn (yêu cầu 2026-11-05).
         if (request == null || Evaluation.isBlankText(request.requestRef())
                 || request.requestRef().length() > 200
-                || request.provider() != null && request.source() != AiSource.PERSONAL)
+                || request.provider() != null && request.source() != AiSource.PERSONAL) {
             throw ApiException.badRequest("AI_SOURCE_REQUIRED", "Invalid AI source");
+        }
     }
 
-    /** Ensures an existing request reference belongs to the same actor and evaluation snapshot. */
     private void requireSameRequest(Actor actor, Evaluation evaluation, AiRequest request,
             GradingProposal proposal) {
         if (!proposal.requesterId.equals(actor.accountId())
@@ -204,11 +184,11 @@ public class GradingProposalTransactions {
                 || !Objects.equals(proposal.source,
                         request.source() == null ? "AUTO" : request.source().name())
                 || !Objects.equals(proposal.provider,
-                        request.provider() == null ? null : request.provider().name()))
+                        request.provider() == null ? null : request.provider().name())) {
             throw ApiException.conflict("REQUEST_REF_CONFLICT", "Request reference already used");
+        }
     }
 
-    /** Creates a pending proposal record linked to the current evaluation snapshot. */
     private GradingProposal createProposal(Actor actor, Evaluation evaluation, AiRequest request) {
         var proposal = new GradingProposal();
         proposal.id = UUID.randomUUID();
@@ -231,81 +211,42 @@ public class GradingProposalTransactions {
         var evaluationId = gradingProposalRepository.findEvaluationId(proposalId).orElseThrow();
         evaluationRepository.lockById(evaluationId).orElseThrow();
         var proposal = gradingProposalRepository.findById(proposalId).orElseThrow();
-        if (task != null) {
-            if (proposal.taskId != null && !proposal.taskId.equals(task.taskId())) {
-                proposal.status = "REJECTED";
-                proposal.safeError = "Task correlation mismatch";
-                proposal.taskState = null;
-                if (proposal.completedAt == null)
-                    proposal.completedAt = clock.instant();
-            } else {
-                proposal.taskId = task.taskId();
-                if (task.model() != null) {
-                    proposal.model = task.model();
-                }
-                if (proposal.usage == null || proposal.usage.isNull()
-                        || task.state() == AiTaskState.READY) {
-                    proposal.usage = objectMapper.valueToTree(task.usage());
-                }
-                if ((proposal.status.equals("PENDING") || isLegacyFailure(proposal))
-                        && Set.of(AiTaskState.FAILED, AiTaskState.CANCELLED, AiTaskState.UNKNOWN)
-                                .contains(task.state())) {
-                    proposal.status = "FAILED";
-                    proposal.safeError = formatTaskError(task.safeError());
-                    proposal.taskState = null;
-                    if (proposal.completedAt == null)
-                        proposal.completedAt = clock.instant();
-                } else if (proposal.status.equals("PENDING") && task.state() == AiTaskState.READY
-                        && task.applyResult() != null
-                        && task.applyResult() != ApplyOutcome.APPLIED) {
-                    proposal.status = task.applyResult() == ApplyOutcome.STALE ? "STALE"
-                            : "REJECTED";
-                    if ("REJECTED".equals(proposal.status)) {
-                        proposal.safeError = task.safeError() == null || task.safeError().isBlank()
-                                ? "AI proposal cannot be applied to this submission"
-                                : formatTaskError(task.safeError());
-                    }
-                    proposal.taskState = null;
-                    if (proposal.completedAt == null)
-                        proposal.completedAt = clock.instant();
-                } else if (proposal.status.equals("PENDING")) {
-                    proposal.taskState = task.state().name();
-                } else {
-                    proposal.taskState = null;
-                }
-            }
-        } else if (proposal.status.equals("PENDING")) {
-            proposal.status = "FAILED";
-            proposal.safeError = error == null ? "AI service unavailable" : error;
-            proposal.taskState = null;
-            proposal.completedAt = clock.instant();
-        }
+        GradingProposalCallbackSupport.applyDispatchState(
+                proposal, task, error, objectMapper, clock);
         return gradingProposalRepository.save(proposal);
     }
 
     /** Validates and stores a completed AI proposal, returning its application outcome. */
     @Transactional
     public ApplyOutcome acceptProposal(AiTaskResult result) {
-        if (!"GRADING_PROPOSAL".equals(result.taskType()) || result.actor() == null
-                || result.targetRef() == null || !result.targetRef().startsWith("evaluation:"))
-            return ApplyOutcome.REJECTED;
-        UUID evaluationId;
-        try {
-            evaluationId = UUID.fromString(result.targetRef().substring(11));
-        } catch (RuntimeException ex) {
+        UUID evaluationId = GradingProposalCallbackSupport.parseEvaluationTarget(
+                result.targetRef(), result.taskType());
+        if (evaluationId == null || result.actor() == null) {
             return ApplyOutcome.REJECTED;
         }
         var found = evaluationRepository.lockById(evaluationId);
-        if (found.isEmpty())
+        if (found.isEmpty()) {
             return ApplyOutcome.REJECTED;
+        }
         var evaluation = found.get();
         var match = gradingProposalRepository.findForEvaluation(evaluationId).stream()
-                .filter(proposal -> proposal.versionNo == result.inputVersion()).findFirst();
-        if (match.isEmpty())
+                .filter(p -> p.versionNo == result.inputVersion()).findFirst();
+        if (match.isEmpty()) {
             return ApplyOutcome.REJECTED;
+        }
         var proposal = match.get();
-        if (proposal.taskId != null && !proposal.taskId.equals(result.taskId()))
+        ApplyOutcome precheck = precheckProposalCallback(result, evaluation, proposal);
+        if (precheck != null) {
+            return precheck;
+        }
+        return validateAndStoreCallbackPayload(result, evaluation, proposal);
+    }
+
+    private ApplyOutcome precheckProposalCallback(AiTaskResult result, Evaluation evaluation,
+            GradingProposal proposal) {
+        if (proposal.taskId != null && !proposal.taskId.equals(result.taskId())) {
             return ApplyOutcome.REJECTED;
+        }
         if (!proposal.requesterId.equals(result.actor().accountId())) {
             if ("PENDING".equals(proposal.status)) {
                 proposal.status = "REJECTED";
@@ -317,43 +258,35 @@ public class GradingProposalTransactions {
             }
             return ApplyOutcome.REJECTED;
         }
-        if (!proposal.status.equals("PENDING"))
-            return proposal.status.equals("READY") ? ApplyOutcome.APPLIED
-                    : proposal.status.equals("STALE") ? ApplyOutcome.STALE : ApplyOutcome.REJECTED;
+        if (!"PENDING".equals(proposal.status)) {
+            return "READY".equals(proposal.status) ? ApplyOutcome.APPLIED
+                    : "STALE".equals(proposal.status) ? ApplyOutcome.STALE : ApplyOutcome.REJECTED;
+        }
         if (!proposal.submissionHash.equals(evaluation.submissionHash)
                 || !proposal.rubricFingerprint.equals(evaluation.rubricSnapshot)
-                || evaluation.state != EvaluationStatus.PENDING
-                        && evaluation.state != EvaluationStatus.DRAFT) {
+                || (evaluation.state != EvaluationStatus.PENDING
+                        && evaluation.state != EvaluationStatus.DRAFT)) {
             proposal.status = "STALE";
             proposal.taskId = result.taskId();
             proposal.taskState = null;
             proposal.completedAt = clock.instant();
             gradingProposalRepository.save(proposal);
-            log.info(
-                    "AI grading proposal stale evaluationId={} proposalId={} taskId={} versionNo={}",
-                    evaluationId, proposal.id, result.taskId(), proposal.versionNo);
             return ApplyOutcome.STALE;
         }
+        return null;
+    }
+
+    private ApplyOutcome validateAndStoreCallbackPayload(AiTaskResult result,
+            Evaluation evaluation, GradingProposal proposal) {
         try {
             gradingAccess.requireTeacher(result.actor(), evaluation.classId, Actions.GRADING_WRITE);
             gradingService.requireCurrent(result.actor(), evaluation.id, evaluation.version);
             var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
             var validBlockIds = resolveValidBlockIds(result.actor(), evaluation, rubrics);
             var payload = gradingProposalValidator.parseProposal(result.output());
-
-            var contentOpt = assignmentQuery.getContent(evaluation.assignmentId);
-            if (contentOpt.isPresent()) {
-                var content = contentOpt.get();
-                var detail = submissionReviewService.loadEvaluation(result.actor(), evaluation.id);
-                DocumentModel document = detail == null ? null : detail.document();
-                List<RubricView> emptyRubrics = gradingPromptBuilder.findEmptyRubrics(document, content.skeleton(), rubrics);
-                if (!emptyRubrics.isEmpty()) {
-                    payload = GradingPromptBuilder.mergeProposalWithEmptyRubrics(payload, rubrics, emptyRubrics, objectMapper);
-                }
-            }
-
-            payload = GradingPromptBuilder.sanitizeAndNormalizeProposal(payload, rubrics, validBlockIds, objectMapper);
-
+            payload = mergeEmptyRubricsIfNeeded(result.actor(), evaluation, rubrics, payload);
+            payload = GradingPromptBuilder.sanitizeAndNormalizeProposal(
+                    payload, rubrics, validBlockIds, objectMapper);
             gradingProposalValidator.validateProposal(payload, rubrics, validBlockIds);
             proposal.proposal = payload;
             proposal.status = "READY";
@@ -361,33 +294,36 @@ public class GradingProposalTransactions {
             proposal.taskState = null;
             proposal.completedAt = clock.instant();
             gradingProposalRepository.save(proposal);
-            log.info(
-                    "AI grading proposal ready evaluationId={} proposalId={} taskId={} versionNo={}",
-                    evaluationId, proposal.id, result.taskId(), proposal.versionNo);
             return ApplyOutcome.APPLIED;
         } catch (ApiException ex) {
             if (ex.status().is5xxServerError()) {
                 throw ex;
             }
-            proposal.status = ex.status().value() == 409 ? "STALE" : "REJECTED";
-            proposal.taskId = result.taskId();
-            proposal.taskState = null;
-            proposal.safeError = "INVALID_AI_PROPOSAL".equals(ex.code())
-                    ? "Phản hồi AI chưa hợp lệ ("
-                            + GradingProposalValidator.buildRejectionDiagnostic(ex)
-                            + "). Bạn vẫn có thể chấm thủ công."
-                    : "AI proposal cannot be applied to this submission";
-            proposal.completedAt = clock.instant();
+            GradingProposalCallbackSupport.applyRejectionFromException(
+                    proposal, result.taskId(), ex, clock);
             gradingProposalRepository.save(proposal);
-            log.warn(
-                    "AI grading proposal rejected evaluationId={} proposalId={} taskId={} versionNo={} status={} code={} diagnostic={} reason={}",
-                    evaluationId, proposal.id, result.taskId(), proposal.versionNo, proposal.status,
-                    ex.code(), GradingProposalValidator.buildRejectionDiagnostic(ex), ex.getMessage());
-            return proposal.status.equals("STALE") ? ApplyOutcome.STALE : ApplyOutcome.REJECTED;
+            return "STALE".equals(proposal.status) ? ApplyOutcome.STALE : ApplyOutcome.REJECTED;
         }
     }
 
-    /** Resolves submitted document block IDs for feedback evidence validation. */
+    private JsonNode mergeEmptyRubricsIfNeeded(Actor actor, Evaluation evaluation,
+            List<RubricView> rubrics, JsonNode payload) {
+        var contentOpt = assignmentQuery.getContent(evaluation.assignmentId);
+        if (contentOpt.isEmpty() || gradingPromptBuilder == null) {
+            return payload;
+        }
+        var content = contentOpt.get();
+        var detail = submissionReviewService.loadEvaluation(actor, evaluation.id);
+        DocumentModel document = detail == null ? null : detail.document();
+        List<RubricView> emptyRubrics = gradingPromptBuilder.findEmptyRubrics(
+                document, content.skeleton(), rubrics);
+        if (emptyRubrics != null && !emptyRubrics.isEmpty()) {
+            return GradingPromptBuilder.mergeProposalWithEmptyRubrics(
+                    payload, rubrics, emptyRubrics, objectMapper);
+        }
+        return payload;
+    }
+
     private Set<String> resolveValidBlockIds(Actor actor, Evaluation evaluation,
             List<RubricView> rubrics) {
         if (submissionReviewService == null) {
@@ -403,86 +339,51 @@ public class GradingProposalTransactions {
     public void invalidateChangedSnapshot(UUID evaluationId) {
         var evaluation = evaluationRepository.lockById(evaluationId)
                 .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
-        for (var proposal : gradingProposalRepository.findForEvaluation(evaluationId))
+        for (var proposal : gradingProposalRepository.findForEvaluation(evaluationId)) {
             if (Set.of("PENDING", "READY").contains(proposal.status)
                     && (!Objects.equals(proposal.submissionHash, evaluation.submissionHash)
-                            || !Objects.equals(proposal.rubricFingerprint,
-                                    evaluation.rubricSnapshot)
+                            || !Objects.equals(proposal.rubricFingerprint, evaluation.rubricSnapshot)
                             || evaluation.state == EvaluationStatus.SUPERSEDED)) {
                 proposal.status = "STALE";
                 proposal.taskState = null;
                 proposal.completedAt = clock.instant();
                 gradingProposalRepository.save(proposal);
             }
+        }
     }
 
     /** Records an AI task failure against its matching pending proposal. */
     @Transactional
     public void recordFailure(AiTaskFailure failure) {
-        if (failure.targetRef() == null || !failure.targetRef().startsWith("evaluation:")
-                || !"GRADING_PROPOSAL".equals(failure.taskType()))
-            return;
-        UUID evaluationId;
-        try {
-            evaluationId = UUID.fromString(failure.targetRef().substring(11));
-        } catch (RuntimeException ex) {
+        UUID evaluationId = GradingProposalCallbackSupport.parseEvaluationTarget(
+                failure.targetRef(), failure.taskType());
+        if (evaluationId == null || evaluationRepository.lockById(evaluationId).isEmpty()) {
             return;
         }
-        if (evaluationRepository.lockById(evaluationId).isEmpty())
-            return;
         for (var proposal : gradingProposalRepository.findForEvaluation(evaluationId)) {
-            boolean matchesTask = Objects.equals(proposal.taskId, failure.taskId())
-                    || (proposal.taskId == null && failure.inputVersion() != null
-                            && proposal.versionNo == failure.inputVersion());
-            boolean matchesActor = failure.actor() == null
-                    || proposal.requesterId.equals(failure.actor().accountId());
-            if (proposal.status.equals("PENDING") && matchesTask && matchesActor) {
-                proposal.taskId = failure.taskId();
-                proposal.status = failure.state() == AiTaskState.READY ? "REJECTED" : "FAILED";
-                proposal.taskState = null;
-                proposal.safeError = formatTaskError(failure.safeError());
-                proposal.completedAt = clock.instant();
+            if (GradingProposalCallbackSupport.matchesFailureTarget(proposal, failure)) {
+                GradingProposalCallbackSupport.applyFailure(proposal, failure, clock);
                 gradingProposalRepository.save(proposal);
-                log.info(
-                        "AI grading proposal failed evaluationId={} proposalId={} taskId={} versionNo={} status={}",
-                        evaluationId, proposal.id, failure.taskId(), proposal.versionNo,
-                        proposal.status);
             }
         }
     }
 
-    /** Identifies failed proposals that predate explicit task state tracking. */
     static boolean isLegacyFailure(GradingProposal proposal) {
-        return "FAILED".equals(proposal.status) && (proposal.safeError == null
-                || Set.of("AI task failed", "AI task unavailable or failed")
-                        .contains(proposal.safeError));
-    }
-
-    /** Supplies a fallback message when the AI task has no diagnostic. */
-    private static String formatTaskError(String diagnostic) {
-        return diagnostic == null || diagnostic.isBlank()
-                ? "Không thể tạo đề xuất AI. Bạn vẫn có thể chấm thủ công."
-                : diagnostic;
+        return GradingProposalCallbackSupport.isLegacyFailure(proposal);
     }
 
     /** Saves a grade using its ready proposal and marks that proposal as used. */
     @Transactional
     public Evaluation saveUsingProposal(Actor actor, UUID evaluationId, Save input) {
-        // Step 1: Enforce optimistic lock checking on the current evaluation version
         var evaluation = gradingService.requireCurrent(actor, evaluationId, input.version());
-
-        // Step 2: Validate that proposal exists, is in READY state, and matches submission & rubric hashes
         var proposal = gradingProposalRepository.findById(input.usedProposalId())
                 .orElseThrow(() -> ApiException.notFound("PROPOSAL_NOT_FOUND"));
         if (!evaluationId.equals(proposal.evaluationId) || !"READY".equals(proposal.status)
                 || !evaluation.submissionHash.equals(proposal.submissionHash)
-                || !evaluation.rubricSnapshot.equals(proposal.rubricFingerprint))
+                || !evaluation.rubricSnapshot.equals(proposal.rubricFingerprint)) {
             throw ApiException.conflict("STALE_PROPOSAL", "Proposal is stale or unavailable");
-
-        // Step 3: Apply proposal scores to evaluation draft and save
+        }
         var saved = gradingService.saveCheckedEvaluation(actor, evaluationId, input, proposal);
-
-        // Step 4: Mark proposal as consumed and update timestamp in database
         proposal.usedAt = clock.instant();
         gradingProposalRepository.save(proposal);
         return saved;
@@ -492,38 +393,41 @@ public class GradingProposalTransactions {
     @Transactional
     public GradingProposal recordMcpProposal(Actor actor, UUID evaluationId, long expectedVersion,
             String hash, String requestRef, JsonNode payload, String agentLabel) {
-        // Step 1: Verify caller access and validate current evaluation state and submission hash
         var evaluation = gradingService.requireCurrent(actor, evaluationId, expectedVersion);
-        if (!evaluation.submissionHash.equals(hash))
+        if (!evaluation.submissionHash.equals(hash)) {
             throw ApiException.conflict("STALE_PROPOSAL", "Submission changed");
-        if (evaluation.kind == EvaluationKind.MEMBER)
-            throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Use the group document");
-        if (evaluation.state != EvaluationStatus.PENDING
-                && evaluation.state != EvaluationStatus.DRAFT)
-            throw ApiException.conflict("INVALID_GRADE_STATE",
-                    "AI proposals require a pending or draft grade");
-
-        // Step 2: Ensure idempotency via requestRef - return existing proposal if identical
+        }
+        requireGradableTarget(evaluation, "AI proposals require a pending or draft grade");
         var existing = gradingProposalRepository.findByRequestRef(requestRef);
         if (existing.isPresent()) {
-            var proposal = existing.get();
-            if (!Objects.equals(proposal.rubricFingerprint, evaluation.rubricSnapshot))
-                throw ApiException.conflict("STALE_PROPOSAL", "Rubric snapshot changed");
-            if (!evaluationId.equals(proposal.evaluationId)
-                    || !proposal.requesterId.equals(actor.accountId())
-                    || !Objects.equals(proposal.submissionHash, hash)
-                    || !Objects.equals(proposal.proposal, payload))
-                throw ApiException.conflict("REQUEST_REF_CONFLICT",
-                        "Request reference already used");
-            return proposal;
+            return validateExistingMcpProposal(actor, evaluationId, hash, payload, evaluation,
+                    existing.get());
         }
-
-        // Step 3: Parse rubrics and validate proposal structure against rubric items and block IDs
         var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
         var validBlockIds = resolveValidBlockIds(actor, evaluation, rubrics);
         gradingProposalValidator.validateProposal(payload, rubrics, validBlockIds);
+        var proposal = buildMcpProposal(actor, evaluationId, hash, requestRef, payload,
+                agentLabel, evaluation);
+        gradingService.recordAudit(actor, evaluation, "AI_GRADING_REQUESTED", null);
+        return gradingProposalRepository.save(proposal);
+    }
 
-        // Step 4: Build proposal entity with origin MCP and READY status
+    private GradingProposal validateExistingMcpProposal(Actor actor, UUID evaluationId,
+            String hash, JsonNode payload, Evaluation evaluation, GradingProposal proposal) {
+        if (!Objects.equals(proposal.rubricFingerprint, evaluation.rubricSnapshot)) {
+            throw ApiException.conflict("STALE_PROPOSAL", "Rubric snapshot changed");
+        }
+        if (!evaluationId.equals(proposal.evaluationId)
+                || !proposal.requesterId.equals(actor.accountId())
+                || !Objects.equals(proposal.submissionHash, hash)
+                || !Objects.equals(proposal.proposal, payload)) {
+            throw ApiException.conflict("REQUEST_REF_CONFLICT", "Request reference already used");
+        }
+        return proposal;
+    }
+
+    private GradingProposal buildMcpProposal(Actor actor, UUID evaluationId, String hash,
+            String requestRef, JsonNode payload, String agentLabel, Evaluation evaluation) {
         var proposal = new GradingProposal();
         proposal.id = UUID.randomUUID();
         proposal.evaluationId = evaluationId;
@@ -540,9 +444,6 @@ public class GradingProposalTransactions {
         proposal.status = "READY";
         proposal.createdAt = clock.instant();
         proposal.completedAt = proposal.createdAt;
-
-        // Step 5: Record audit event and persist proposal entity in repository
-        gradingService.recordAudit(actor, evaluation, "AI_GRADING_REQUESTED", null);
-        return gradingProposalRepository.save(proposal);
+        return proposal;
     }
 }

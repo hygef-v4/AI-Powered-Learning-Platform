@@ -206,7 +206,6 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const conflictRef = useRef(false);
   const fetched = useRef({ epoch: -1, parts: new Set<string>() });
-  const startedAiFromCreate = useRef(false);
 
   const apply = useCallback((next: AssignmentDetail, replaceLocal: boolean) => {
     setDetail(next);
@@ -231,16 +230,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     return () => controller.abort();
   }, [apply, id]);
 
-  useEffect(() => {
-    if (params.get("startAI") !== "1" || !detail?.permissions.canEditContent || startedAiFromCreate.current) return;
-    startedAiFromCreate.current = true;
-    setDialog("ai");
-    const query = new URLSearchParams(params.toString());
-    query.delete("startAI");
-    const suffix = query.toString();
-    router.replace(`/assignments/${encodeURIComponent(id)}${suffix ? `?${suffix}` : ""}`, { scroll: false });
-  }, [detail, id, params, router]);
-
+  // Tạo đề bằng AI chỉ có ở popup tạo bài (yêu cầu 2026-11-10); trang soạn chỉ mở popup AI để duyệt đề xuất do agent MCP gửi.
   useEffect(() => {
     if (!proposalId || detail?.id !== id || !detail.permissions.canEditContent || detail.status !== "DRAFT") return;
     const key = `${id}:${proposalId}`;
@@ -710,7 +700,6 @@ export function AssignmentFormPage({ id }: { id: string }) {
         onFocusBlock={(blockId) => { const part = sections.get(blockId); if (part) setActivePart(part); }}
         viewSlot={viewSlot}
         toolbarExtra={preview ? undefined : <>
-          {editable && detail.status === "DRAFT" && <ToolbarButton icon="smart_toy" title="Soạn bằng AI" aria-label="Soạn bằng AI" onClick={() => setDialog("ai")} />}
           <ToolbarButton icon="tune" title="Cài đặt bài" aria-label="Cài đặt bài" onClick={() => setDialog("settings")} />
         </>} />
 
@@ -746,7 +735,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
           )}
         </Dialog>
       )}
-      {dialog === "ai" && detail.permissions.canEditContent && detail.status === "DRAFT" && (
+      {dialog === "ai" && proposalId && detail.permissions.canEditContent && detail.status === "DRAFT" && (
         <AiDraftDialog assignmentId={id} initialDraftId={proposalId} version={detail.version} currentPartCount={detail.parts.filter((p) => p.headingBlockId).length}
           currentTitle={title} currentInstructions={instructions} gradingMode={detail.gradingMode}
           prepareApply={saveForAi}

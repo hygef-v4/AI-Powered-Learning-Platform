@@ -74,12 +74,14 @@ final class DocxImporter {
             "source code pro", "roboto mono", "jetbrains mono", "fira code");
     /**
      * Dấu đánh số đầu mục viết tay (yêu cầu 2026-11-05): "1.1", "1.1.2" (có hoặc không dấu chấm cuối), "I.", "1.", "1)",
-     * "a.", "A)". Sau dấu là khoảng trắng hoặc hết dòng, để không nhầm "1.5kg".
+     * "a.", "A)"; và số câu hỏi của trình soạn "I.1.", "I.1.a.", "I.1.a.aa." (yêu cầu 2026-11-10). Sau dấu là khoảng trắng
+     * hoặc hết dòng, để không nhầm "1.5kg".
      */
     static final Pattern MARKER = Pattern.compile(
-            "^\\s*(?:(?<multi>\\d{1,2}(?:\\.\\d{1,2})+)\\.?|(?<roman>[IVXLC]{1,6})[.)]|(?<lroman>[ivx]{2,6})[.)]"
+            "^\\s*(?:(?<multi>\\d{1,2}(?:\\.\\d{1,2})+)\\.?|(?<compound>[IVXLC]{1,6}\\.\\d{1,3}(?:\\.[a-z]{1,3}(?:\\.[a-z]{2,6})?)?)\\.?"
+                    + "|(?<roman>[IVXLC]{1,6})[.)]|(?<lroman>[ivx]{2,6})[.)]"
                     + "|(?<dec>\\d{1,2})[.)]|(?<letter>[A-Za-z])[.)])(?:\\s+(?<rest>\\S.*))?$");
-    static final int MAX_LEVEL = 3;
+    static final int MAX_LEVEL = edu.aiplatform.assignments.model.SectionNumbering.MAX_DEPTH;
     private static final int MAX_MARKED_CHARS = 200;
     private static final Map<String, String> UNSUPPORTED = Map.of("txbxContent", "hộp văn bản", "oMath", "công thức",
             "oMathPara", "công thức", "smartArt", "SmartArt", "chart", "biểu đồ");
@@ -702,6 +704,9 @@ final class DocxImporter {
             return null;
         }
         String rest = m.group("rest") == null ? "" : m.group("rest").strip();
+        if (m.group("compound") != null) {
+            return new Marker("ROMAN", (int) m.group("compound").chars().filter(c -> c == '.').count(), rest);
+        }
         if (m.group("multi") != null) {
             return new Marker("DEC", (int) m.group("multi").chars().filter(c -> c == '.').count(), rest);
         }

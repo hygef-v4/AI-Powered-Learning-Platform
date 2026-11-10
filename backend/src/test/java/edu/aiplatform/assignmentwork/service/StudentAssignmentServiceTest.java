@@ -95,8 +95,9 @@ class StudentAssignmentServiceTest {
         f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
         AssignmentAttempt last = f.attempt(2, AttemptStatus.SUBMITTED, NOW, false);
         WorkViews.Detail detail = f.studentAssignments.detail(f.student, f.assignmentId, f.classId);
-        assertThat(detail.canStart()).isFalse();
-        assertThat(detail.startBlockedReason()).isEqualTo("ATTEMPTS_EXHAUSTED");
+        // Bài có chấm: đã nộp vẫn nộp lại được khi còn hạn (yêu cầu 2026-11-10).
+        assertThat(detail.canStart()).isTrue();
+        assertThat(detail.startBlockedReason()).isNull();
         assertThat(detail.latestAttempt().attemptId()).isEqualTo(last.id());
         assertThat(f.studentAssignments.history(f.student, f.assignmentId, f.classId))
                 .filteredOn(WorkViews.AttemptSummary::graded).extracting(WorkViews.AttemptSummary::attemptId)

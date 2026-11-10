@@ -211,6 +211,27 @@ class JdbcQuestionRepositoryIntegrationTest {
     }
 
     @Test
+    void retiredNewerVersionDoesNotHideActiveOlderVersionInLineage() {
+        Question v1 = activate(draft("Câu phiên bản 1 đang hoạt động"));
+        Question v2Draft = v1.nextDraft(2, author, NOW);
+        repository.insert(v2Draft);
+        Question v2Active = activate(v2Draft);
+        Question v2Retired = v2Active.retire(NOW.plusSeconds(10));
+        assertThat(repository.update(v2Retired)).isTrue();
+
+        var bankAll = repository.searchBank(subject, new BankQuery(null, null, null, null, 0, 20));
+        assertThat(bankAll.items()).singleElement().satisfies(row -> {
+            assertThat(row.question().id()).isEqualTo(v1.id());
+            assertThat(row.question().status()).isEqualTo(QuestionStatus.ACTIVE);
+        });
+        var bankActive = repository.searchBank(subject, new BankQuery(null, null, QuestionStatus.ACTIVE, null, 0, 20));
+        assertThat(bankActive.items()).extracting(r -> r.question().id()).containsExactly(v1.id());
+        assertThat(repository.activePool(subject)).extracting(IQuestionRepository.PoolEntry::id).containsExactly(v1.id());
+        assertThat(repository.countActive(subject, new IQuestionRepository.PickQuery(null, null, null, java.util.Set.of(), 0, 20)))
+                .isEqualTo(1);
+    }
+
+    @Test
     void databaseRejectsInvalidQuestionsEvenIfCodeIsBypassed() {
         Question q = Question.newBankDraft(subject, QuestionContent.of(QuestionType.MCQ_SINGLE, "Câu",
                 List.of(new QuestionOption("1", "A"), new QuestionOption("2", "B")), List.of("1", "2"), null,

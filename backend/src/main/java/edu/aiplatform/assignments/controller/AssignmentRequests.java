@@ -26,7 +26,8 @@ final class AssignmentRequests {
         }
     }
 
-    record Copy(UUID sourceAssignmentId) {
+    /** {@code title} bỏ trống thì giữ tên bài nguồn. */
+    record Copy(UUID sourceAssignmentId, String title) {
     }
 
     record Details(Long version, String title, String instructions, Boolean diagramEnabled, GradingMode gradingMode,
@@ -79,10 +80,10 @@ final class AssignmentRequests {
 
     record AiDraft(String request, List<UUID> materialIds, List<String> sourceFileRefs,
                    AssignmentCommands.DraftOptions options, AiSource source, AiProvider provider, String requestRef,
-                   String formatText, String mode) {
+                   String formatText, UUID templateAssignmentId, String mode) {
         AssignmentCommands.AiDraftRequest command() {
             return new AssignmentCommands.AiDraftRequest(request, materialIds, sourceFileRefs, source, provider,
-                    requestRef, options, formatText, mode);
+                    requestRef, options, formatText, templateAssignmentId, mode);
         }
     }
 

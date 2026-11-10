@@ -1,4 +1,13 @@
 import { ApiError } from "@/shared/api/client";
+
+const FEEDBACK_SENTENCES = new Intl.Segmenter("vi", { granularity: "sentence" });
+
+export function formatFeedbackParagraphs(value: string): string {
+  if (value.includes("\n")) return value;
+  return Array.from(FEEDBACK_SENTENCES.segment(value), ({ segment }) => segment.trim())
+    .filter(Boolean).join("\n\n");
+}
+
 export function formatErrorMessage(error: unknown) {
   if (error instanceof ApiError && error.problem.status === 409) {
     switch (error.problem.code) {
@@ -9,11 +18,16 @@ export function formatErrorMessage(error: unknown) {
         return "Bài nộp đã thay đổi. Mở bài nộp hiện tại để kiểm tra trước khi chấm tiếp; nội dung bạn đang sửa vẫn được giữ.";
       case "RUBRIC_CHANGED":
         return "Rubric đã thay đổi. Tải lại và kiểm tra rubric trước khi chấm tiếp; nội dung bạn đang sửa vẫn được giữ.";
+      case "GRADE_VERSION_CONFLICT":
+        return "Dữ liệu đã thay đổi. Tải lại để kiểm tra phiên bản mới; nội dung bạn đang sửa vẫn được giữ.";
     }
+    if (error.problem.detail) return error.problem.detail;
+    if (error.message && error.message !== "Conflict" && error.message !== "HTTP 409") {
+      return error.message;
+    }
+    return "Dữ liệu đã thay đổi. Tải lại để kiểm tra phiên bản mới; nội dung bạn đang sửa vẫn được giữ.";
   }
-  return error instanceof ApiError && error.problem.status === 409
-    ? "Dữ liệu đã thay đổi. Tải lại để kiểm tra phiên bản mới; nội dung bạn đang sửa vẫn được giữ."
-    : error instanceof Error
-      ? error.message
-      : "Không thể tải dữ liệu. Vui lòng thử lại.";
+  return error instanceof Error
+    ? error.message
+    : "Không thể tải dữ liệu. Vui lòng thử lại.";
 }

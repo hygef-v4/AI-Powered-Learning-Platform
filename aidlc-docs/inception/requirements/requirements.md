@@ -493,3 +493,11 @@ Student/Teacher/Subject Manager ACTIVE manage own MCP credentials; Admin is deni
 - FR-006/007/017: mô tả quiz có định dạng; soạn câu tay/ngân hàng/AI tại chỗ; dropdown chọn nhiều tài liệu nguồn; nguồn API tự chọn khi thiếu/null source. AI chỉ đề xuất, người soạn vẫn xem/chấp nhận, không tự phát hành.
 
 Thiết kế được duyệt ở [proposal](2026-11-09-material-quiz-ui-proposal.md); [đối chiếu unit và bằng chứng](../../construction/build-and-test/2026-11-09-aidlc-doc-sync.md). Không thêm UC/role mới hoặc thay quyết định YouTube đã hủy; runtime provider acceptance còn giới hạn trong báo cáo.
+
+## Approved grading remediation amendment — 2026-11-10
+
+Continuation of the reviewed Antigravity plan is authorized for sequential implementation without subagents. FR-008/009/019/020/024/030/039 retain existing role access, publication privacy and immutable official grades. Group resubmission preserves FINALIZED/PUBLISHED grading receipts and scores; only unofficial group drafts reset. Individual resubmission policy is unchanged.
+
+Teacher workflows include inline AI drafts with an explicit teacher action before saving, structured feedback review, partial rubric scores, group/member adjustment/history, and assignment-mode batch actions. Students see approved feedback/evidence and privacy-filtered distributions; Practice feedback observation is bounded and can be explicitly resumed. Quiz score visibility follows attempt snapshots, while current class/quiz state governs active work.
+
+[Execution plan](../../construction/plans/code-generation-plan/2026-11-10-grading-remediation-continuation.md) records implementation and verification separately.

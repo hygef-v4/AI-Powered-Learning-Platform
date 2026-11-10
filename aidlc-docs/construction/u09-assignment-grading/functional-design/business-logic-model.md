@@ -99,7 +99,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 1. `FINALIZED`/`PUBLISHED` chỉ đọc rubric, điểm, nhận xét và lịch sử, không có ô lý do sửa.
 2. Lưu trực tiếp, áp dụng AI hoặc sửa điểm thành viên bị từ chối `409 GRADE_LOCKED`, kể cả có lý do.
 3. `FINALIZED` hiện hành vẫn được công bố sang `PUBLISHED`; điểm và nội dung chấm không đổi.
-4. Nộp lại làm điểm cũ mất hiệu lực: cá nhân SUPERSEDED lượt cũ; nhóm reset bản chấm hiện có về PENDING. Không có mở khóa/sửa điểm cũ bằng lý do.
+4. Nộp lại làm điểm cũ mất hiệu lực: cá nhân SUPERSEDED lượt cũ; nhóm reset draft hiện có về PENDING, giữ nguyên điểm FINALIZED/PUBLISHED và receipt đã chốt. Không có mở khóa/sửa điểm cũ bằng lý do.
 
 ## 5. Sổ điểm và người học
 
@@ -128,8 +128,13 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 4. Mỗi lớp của bài SUBJECT độc lập; Quiz/Practice không có công tắc. Bật chưa đủ mẫu vẫn lưu ý định, chỉ hiện histogram khi đạt ngưỡng riêng tư.
 
 ### F14 - Bài nhóm (khi U12 có)
-1. U12 gọi IGroupEvaluation.onGroupSubmitted trong transaction nộp: dùng lại root/member, reset về PENDING cho receipt mới (BR-U09-50), bỏ điểm hiện hành trước đó.
+1. U12 gọi IGroupEvaluation.onGroupSubmitted trong transaction nộp: dùng lại root/member chưa chốt, reset về PENDING cho receipt mới; giữ nguyên điểm và snapshot FINALIZED/PUBLISHED (BR-U09-50).
 2. Submission Detail hiện nhóm thay cho sinh viên; Grading Workspace đọc tài liệu nhóm qua `IGroupSubmissionSource`, hiện từng phần kèm người làm.
 3. Chấm tài liệu nhóm như F4, F5; điểm thành viên mặc định bằng điểm tài liệu chung; giảng viên sửa từng người qua `PUT /api/v1/evaluations/{id}/members/{accountId}` (BR-U09-51).
 4. Chốt, công bố cả đánh giá tài liệu và đánh giá thành viên như F8, F9.
 5. Từ 2026-11-09: chi tiết đánh giá `MEMBER` trả `groupEvaluationId` (đánh giá `GROUP_DOCUMENT` hiện hành, chưa `SUPERSEDED`, mà thành viên thuộc về); nút chấm AI ở dòng thành viên mở bản nộp nhóm đó thay vì gửi AI cho riêng thành viên. Tab Sổ điểm liệt kê "Bản nộp chung theo nhóm" cho bài nhóm đang chọn.
+
+
+### AI provider checkbox derivation — 2026-11-10
+
+For F5/F6 provider tasks, GradingProposalTransactions uses the provider-specific schema, which omits checks. GradingPromptBuilder keeps its full schema/policy for F7 MCP. The existing callback merges genuinely empty parts and derives omitted checklist selections from item scores, then runs the same strict validator. No points, evidence or feedback are fabricated; explicit inconsistent checks remain invalid for full proposals. Validation-stage diagnostics contain fixed codes/class names only. See [verified live fix](../../build-and-test/2026-11-10-grading-ai-rejection-fix.md).

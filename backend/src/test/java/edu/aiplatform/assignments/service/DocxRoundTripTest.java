@@ -185,13 +185,14 @@ class DocxRoundTripTest {
     @Test
     void exportedSectionNumbersRoundTripIntoTheSameTree() {
         DocumentModel model = new DocumentModel(List.of(AssignmentFixtures.heading("H1", "Phân tích"),
-                AssignmentFixtures.heading("H2", "Use case"), AssignmentFixtures.heading("H2", "Class"),
+                AssignmentFixtures.heading("H2", "Use case"), AssignmentFixtures.heading("H3", "Actor"),
+                AssignmentFixtures.heading("H4", "Khách"), AssignmentFixtures.heading("H2", "Class"),
                 AssignmentFixtures.heading("H1", "Thiết kế")));
         byte[] file = exporter.export("Đề 1", "", model, linker);
         List<DocumentBlock> blocks = importer.preview(teacher, file, BlockOrigin.TEACHER, true, ref -> Optional.empty())
                 .document().blocks().stream().filter(b -> b.type() == BlockType.HEADING).toList();
         assertThat(blocks).extracting(b -> b.content().path("style").asText() + " " + b.content().path("text").asText())
-                .containsExactly("H1 Phân tích", "H2 Use case", "H2 Class", "H1 Thiết kế");
+                .containsExactly("H1 Phân tích", "H2 Use case", "H3 Actor", "H4 Khách", "H2 Class", "H1 Thiết kế");
     }
 
     @Test

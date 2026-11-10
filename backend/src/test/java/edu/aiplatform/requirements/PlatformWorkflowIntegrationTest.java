@@ -731,6 +731,16 @@ class PlatformWorkflowIntegrationTest {
         Set<UUID> identities = new HashSet<>(evaluations.stream().map(e -> e.id).toList());
         assertThat(evaluations.stream().filter(e -> e.kind.name().equals("MEMBER")).map(e -> e.accountId))
                 .containsExactlyInAnyOrder(actor(Role.STUDENT).accountId(), member.accountId());
+        gradingService.saveEvaluation(actor(Role.TEACHER), root, new GradingCommands.Save(
+                evaluationRepository.findById(root).orElseThrow().version, Map.of(), BigDecimal.ZERO,
+                null, "Draft grade", null, null));
+        workspace = prepareGroupSection(assignment.id());
+        var draftReceipt = groupSubmissionService.submit(actor(Role.STUDENT), workspace.documentId(), workspace.version());
+        assertThat(draftReceipt.receiptHash()).isNotEqualTo(firstReceipt.receiptHash());
+        assertThat(evaluationRepository.findForAssignmentAndClass(assignment.id(), classId)).allSatisfy(e -> {
+            assertThat(e.state.name()).isEqualTo("PENDING");
+            assertThat(e.score).isNull();
+        });
         publishGrade(root, assignment);
         assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId)).hasSize(1);
         assertThat(gradebookService.listMyGrades(member, classId)).hasSize(1);
@@ -743,9 +753,14 @@ class PlatformWorkflowIntegrationTest {
         assertThat(secondReceipt.receiptHash()).isNotEqualTo(firstReceipt.receiptHash());
         var reset = evaluationRepository.findForAssignmentAndClass(assignment.id(), classId);
         assertThat(reset.stream().map(e -> e.id)).containsExactlyInAnyOrderElementsOf(identities);
-        assertThat(reset).allSatisfy(e -> { assertThat(e.state.name()).isEqualTo("PENDING"); assertThat(e.score).isNull(); });
-        assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId)).isEmpty();
-        assertThat(gradebookService.listMyGrades(member, classId)).isEmpty();
+        assertThat(reset).allSatisfy(e -> {
+            assertThat(e.state.name()).isEqualTo("PUBLISHED");
+            assertThat(e.score).isEqualByComparingTo(BigDecimal.TEN);
+            assertThat(e.submissionHash).isEqualTo(draftReceipt.receiptHash());
+            assertThat(e.publishedAt).isNotNull();
+        });
+        assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId)).hasSize(1);
+        assertThat(gradebookService.listMyGrades(member, classId)).hasSize(1);
     }
 
     @Test

@@ -32,6 +32,8 @@ class GradingServiceTest {
     final Actor teacher = new Actor(teacherId, Role.TEACHER);
     final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
     final UUID rubricId = UUID.randomUUID(), itemId = UUID.randomUUID(), blockId = UUID.randomUUID();
+    final edu.aiplatform.grading.contract.IGroupSubmissionSource groupSource = mock(edu.aiplatform.grading.contract.IGroupSubmissionSource.class);
+    final org.springframework.beans.factory.ObjectProvider<edu.aiplatform.grading.contract.IGroupSubmissionSource> groupProvider = mock(org.springframework.beans.factory.ObjectProvider.class);
     Evaluation evaluation;
     GradingService gradingService;
 
@@ -56,7 +58,12 @@ class GradingServiceTest {
                 .thenReturn(List.of(new StudentSubmissionStatus(studentId, evaluation.attemptId, 1,
                         AttemptStatus.SUBMITTED, Instant.now(), false)));
         gradingService = new GradingService(evaluationRepository, new GradingAccess(auth, classAccess, audit, Clock.systemUTC()), audit, eventPublisher,
-                submissionQuery, objectMapper, Clock.systemUTC());
+                submissionQuery, objectMapper, Clock.systemUTC(), groupProvider);
+        when(groupProvider.getIfAvailable()).thenReturn(groupSource);
+        when(groupSource.getGroupSubmission(any())).thenAnswer(inv -> Optional.of(
+                new edu.aiplatform.grading.contract.GroupSubmissionView(evaluation.groupDocumentId, UUID.randomUUID(),
+                        assignmentId, classId, new DocumentModel(List.of()), List.of(studentId), List.of(),
+                        Instant.now(), false, "hash")));
     }
 
     @org.junit.jupiter.params.ParameterizedTest
@@ -398,5 +405,40 @@ class GradingServiceTest {
         assertThat(evaluation.structuredFeedback).isEqualTo(feedbackV1);
         assertThat(member.structuredFeedback).isEqualTo(feedbackV1);
         assertThat(member.state).isEqualTo(EvaluationStatus.FINALIZED);
+    }
+    @Test
+    void rejectsChangedGroupSubmissionBeforeSaving() {
+        evaluation.kind = EvaluationKind.GROUP_DOCUMENT;
+        evaluation.groupDocumentId = UUID.randomUUID();
+        evaluation.submissionHash = "older";
+        assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id, command(0)))
+                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("SUBMISSION_CHANGED"));
+        verify(evaluationRepository, never()).save(any());
+    }
+    @Test
+    void savedChecksFollowExplicitPartialScores() {
+        var input = new Save(0, Map.of(rubricId, Set.of(itemId)), BigDecimal.ZERO, null,
+                "partial", null, null, Map.of(rubricId, Map.of(itemId, new BigDecimal("1.25"))), null, null, null, null);
+        gradingService.saveEvaluation(teacher, evaluation.id, input);
+        assertThat(evaluation.score).isEqualByComparingTo("1.25");
+        assertThat(evaluation.rubricChecks).doesNotContain(itemId.toString());
+    }
+    @Test
+    void overridingLegacyMemberUsesTheGroupsRubricBreakdownAndAllowsOptionalReason() {
+        evaluation.kind = EvaluationKind.GROUP_DOCUMENT;
+        evaluation.groupDocumentId = UUID.randomUUID();
+        var member = Evaluation.createPendingEvaluation(null, assignmentId, classId, studentId, "hash",
+                new BigDecimal("4"), evaluation.rubricSnapshot, Instant.now());
+        member.kind = EvaluationKind.MEMBER;
+        member.groupDocumentId = evaluation.groupDocumentId;
+        when(evaluationRepository.findForAssignmentAndClass(assignmentId, classId)).thenReturn(List.of(evaluation, member));
+        when(evaluationRepository.lockById(member.id)).thenReturn(Optional.of(member));
+        gradingService.saveEvaluation(teacher, evaluation.id, command(0));
+        member.memberOverride = true;
+        member.score = BigDecimal.ONE;
+        member.adjustment = BigDecimal.ZERO;
+        gradingService.saveMemberGrade(teacher, evaluation.id, studentId, new MemberSave(0, new BigDecimal("2"), null));
+        assertThat(member.score).isEqualByComparingTo("2");
+        assertThat(member.adjustment).isEqualByComparingTo("-2");
     }
 }

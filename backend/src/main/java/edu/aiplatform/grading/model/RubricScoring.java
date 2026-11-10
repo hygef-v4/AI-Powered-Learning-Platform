@@ -38,6 +38,10 @@ public final class RubricScoring {
             Set<UUID> allowed = new HashSet<>();
             for (var criterion : rubric.criteria()) {
                 for (var item : criterion.items()) {
+                    if (item.points() == null) {
+                        if (item.text() == null || item.text().isBlank()) continue;
+                        throw ApiException.badRequest("INVALID_RUBRIC", "Rubric item is missing points");
+                    }
                     allowed.add(item.itemId());
                     if (awarded.containsKey(item.itemId())) {
                         var points = awarded.get(item.itemId());
@@ -74,6 +78,7 @@ public final class RubricScoring {
             var rubricMap = new LinkedHashMap<UUID, BigDecimal>();
             for (var criterion : rubric.criteria()) {
                 for (var item : criterion.items()) {
+                    if (item.points() == null) continue;
                     BigDecimal val;
                     if (awarded != null && awarded.get(item.itemId()) != null) {
                         val = awarded.get(item.itemId()).setScale(2, RoundingMode.HALF_UP);
@@ -86,6 +91,25 @@ public final class RubricScoring {
                 }
             }
             result.put(rubric.rubricId(), Map.copyOf(rubricMap));
+        }
+        return Map.copyOf(result);
+    }
+
+    /** Derives full-credit checks from validated effective item scores. */
+    public static Map<UUID, Set<UUID>> synchronizeChecks(List<RubricView> rubrics,
+            Map<UUID, Map<UUID, BigDecimal>> scores) {
+        var result = new LinkedHashMap<UUID, Set<UUID>>();
+        for (var rubric : rubrics) {
+            var selected = new HashSet<UUID>();
+            var awarded = scores.getOrDefault(rubric.rubricId(), Map.of());
+            for (var criterion : rubric.criteria()) {
+                for (var item : criterion.items()) {
+                    if (item.points() != null && item.points().signum() > 0
+                            && item.points().compareTo(awarded.getOrDefault(item.itemId(), BigDecimal.ZERO)) == 0)
+                        selected.add(item.itemId());
+                }
+            }
+            result.put(rubric.rubricId(), Set.copyOf(selected));
         }
         return Map.copyOf(result);
     }

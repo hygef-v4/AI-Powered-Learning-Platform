@@ -18,3 +18,5 @@ frontend/*.tsbuildinfo
 infra/.env.local
 infra/cloudflare.ini
 infra/docker-compose.override.yml
+
+team_db_key

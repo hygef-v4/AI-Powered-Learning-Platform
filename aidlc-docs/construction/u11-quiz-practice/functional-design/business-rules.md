@@ -51,3 +51,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U11-40 | Audit: `QUIZ_ATTEMPT_SUBMITTED` (tay hoặc tự), `QUIZ_SUBMIT_REJECTED` (quá giờ, hết lượt). Không audit từng lần lưu và từng sự kiện hoạt động. | FR-014 |
 | BR-U11-41 | Mọi API kiểm quyền phía server; ngoài phạm vi trả `404` và ghi audit `ACCESS_DENIED`. U01, U05, U10 không trả lời thì từ chối (fail closed). | SEC-002 |
+
+## Scoring/privacy remediation — 2026-11-10
+
+Best/last scores respect each submitted attempt's visibility snapshot; simultaneous submission timestamps use attempt number to identify the latest attempt. Subject quiz attempt counts are consistent across enrolled classes. Starting a new attempt rechecks OPEN after the identity lock; active operations require an OPEN class. Historical own results retain their existing access policy.
+
+Question lineage selection prefers ACTIVE over RETIRED versions. Quiz score columns widen to numeric(10,2) in a new migration. Activity batches enforce 1–50 events and IDs of at most 64 characters. ActivitySummary adds optional firstEventAt alongside lastEventAt; U11 flags gaps before the first event and after the last event as SIGNAL_LOST without changing the score or declaring cheating. Existing constructors remain compatible.

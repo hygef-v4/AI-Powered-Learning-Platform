@@ -96,7 +96,7 @@ app/teaching/evaluations/[evaluationId]/      GradingWorkspacePage   #35
 | `SubmissionsLink` | `GET .../assignments/{assignmentId}/submissions` (tóm tắt) | Cột Bài nộp: "x / N nộp · n chờ chấm", "đã công bố", bài nhóm "x / k nhóm nộp"; bấm mở Submission Detail |
 | `StudentGradesSection` | `GET /api/v1/classes/{classId}/students/{accountId}/grades` | Trong popup Student Detail: Đã nộp x / y bài Graded, Nộp trễ n; bảng Bài, Hình thức, Nộp (Đúng hạn, Trễ, Chưa nộp), Điểm ("x / tổng" hoặc Chờ chấm) |
 | `GradeDistributionSettings` (slot `AssignmentSettingsSection`) | `GET`, `PUT /api/v1/classes/{classId}/assignments/{assignmentId}/grade-distribution-visibility` | Trong popup Cài đặt bài GRADED của lớp: công tắc "Cho sinh viên xem phổ điểm ẩn danh", mặc định tắt. Đọc `{enabled,version,canEdit}`, ghi `{enabled,version}`; quyền dựa `canEdit`, độc lập với quyền sửa nội dung bài. Bài SUBJECT dùng lớp hiện tại; không có lớp thì không hiện công tắc. Quiz/Practice không hiện; `canEdit=false` ẩn control. Đang lưu khóa thao tác, lỗi giữ trạng thái đã xác nhận, `409` yêu cầu tải lại. Bật chưa đủ mẫu không vẽ histogram |
-| `StudentGradeCell`, `StudentGradePanel` | `GET /api/v1/me/grades`, `/me/grades/attempts/{attemptId}`, `/me/grade-distributions` | Chỉ điểm công bố của chính mình, x/tổng, ngày công bố, nhận xét và rubric. Phân bố theo BR-U09-62. Nhãn cập nhật/lịch sử sửa chỉ còn phục vụ dữ liệu legacy trước quy tắc khóa 2026-11-02; không có thao tác sửa điểm official mới. |
+| `StudentGradeCell`, `StudentGradePanel` | `GET /api/v1/me/grades`, `/me/grades/attempts/{attemptId}`, `/me/grade-distributions` | Chỉ điểm công bố của chính mình, x/tổng, ngày công bố, nhận xét và rubric. Phân bố theo BR-U09-62. Lịch sử gồm thay đổi điểm nháp và dữ liệu legacy; không có thao tác sửa điểm official mới. |
 
 Route `/teaching/*` cho Teacher, Subject Manager (dùng `RoleGuard` của U01). Backend vẫn kiểm phân công lớp thật.
 
@@ -106,3 +106,23 @@ Route `/teaching/*` cho Teacher, Subject Manager (dùng `RoleGuard` của U01). 
 - Applying an AI proposal fills the local draft with its item scores, general/structured feedback, evidence and review flags; it resets previous acknowledgements instead of clearing structured feedback. A legacy proposal without structured feedback preserves existing explanations for re-review. No automatic save/finalize/publish occurs.
 - Flagged items and scores changed after explanation review expose acknowledgement controls. Finalize stays disabled while unresolved reviews exist; server-side review/version checks remain authoritative. Removing a previous acknowledgement by editing points requires a fresh review.
 - SUBJECT assignment context loads the existing authorized teaching-class endpoint, requires matching class ID and subject ID, and uses that class's code/name rather than the subject label. CLASS context retains its exact class check. Failed/stale metadata never supplies a heading for another route or hides independently loaded submission rows.
+
+## Grading remediation — 2026-11-10
+
+READY proposals requested in the workspace fill the inline draft. They do not open a proposal popup or trigger the 1.5-second autosave until the teacher edits or explicitly saves. Direct historical proposal links still open the existing review panel without applying anything.
+
+Rubric items allow partial points; structured item explanations and review acknowledgements are editable, together with general feedback and score adjustment. Grade history remains visible, and official grades remain read-only. Saving a group reloads all member versions, including overrides; a receipt changed during reload resets the form instead of carrying old marks forward.
+
+ClassGradebookTab assignment mode exposes GradebookBatchControls with root submission selection and the existing BatchActionDialog. Publish retries only items successfully finalized and retains individual review/score errors. A missing publish result remains a failure. Zero-token estimates display normally.
+
+SubmissionHistoryPage renders approved general/structured feedback and per-item evidence/reasons/suggestions. StudentPublishedFeedback provides group results through the U08 slot in the U12 submitted tab. StudentGradeDistribution renders only the server's allowed anonymous buckets, retaining existing sample/privacy thresholds.
+
+
+### Feedback formatting follow-up — 2026-11-10
+
+GradingHeaderSection offers explicit Vietnamese sentence-to-paragraph formatting for general plain-text feedback and preserves existing multiline text. Editable summary groups use independent bulleted AutoTextarea entries, max5 per group/500 characters each, with add/remove/disabled states. A lone populated group uses full width; mobile stacks groups. Newlines remain during editing; only blank rows are excluded at the save boundary. Existing historical nextSteps and item/review data remain. No rich-text storage contract or automatic save. See [verification](../../build-and-test/2026-11-10-grading-feedback-format.md).
+
+
+### Repeated grade actions — 2026-11-10
+
+Gradebook and submission-detail batch selection share raw-state action eligibility: finalize DRAFT, publish DRAFT/FINALIZED, AI PENDING/DRAFT. Known completed grades are omitted and actions with no candidates disable. BatchActionDialog reconciles only INVALID_GRADE_STATE failures using a fresh read, skips already-completed grades, preserves original-version checks and never auto-finalizes an already published or unconfirmed grade. Outcomes are Vietnamese; mixed new/previously completed counts stay separate and result dialogs can close. [Verification](../../build-and-test/2026-11-10-grading-repeat-actions.md).

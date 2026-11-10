@@ -186,7 +186,7 @@ class AssignmentAiRevisionTest {
         Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, chineseSkeleton(), true);
 
         assertThatThrownBy(() -> f.aiDrafts.request(f.teacher, a.id(), new AssignmentCommands.AiDraftRequest(
-                " ", List.of(), List.of(), null, null, "r1", null, null, AssignmentDraftRevision.MODE)))
+                " ", List.of(), List.of(), null, null, "r1", null, null, null, AssignmentDraftRevision.MODE)))
                 .isInstanceOf(ApiException.class).extracting("code").isEqualTo("AI_REQUEST_INVALID");
         verify(f.aiTasks, never()).submit(any());
     }

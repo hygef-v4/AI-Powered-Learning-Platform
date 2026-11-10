@@ -1,6 +1,6 @@
 "use client";
 
-// U05: cây môn (Chủ nhiệm môn) và cây lớp (Giảng viên, Chủ nhiệm môn, Sinh viên) trên sidebar, kiểu cây thư mục: menu của
+// U05: nhánh môn (Chủ nhiệm môn) và nhánh lớp (Giảng viên, Chủ nhiệm môn, Sinh viên) trên sidebar: ô thả xuống chọn môn, lớp rồi các mục của nó (yêu cầu 2026-11-10); menu của
 // role giữ nguyên, các môn, lớp mở ra ngay dưới mục cha (Môn được phân công, Lớp được phân công, Lớp của tôi); môn, lớp
 // của trang đang mở mở sẵn các mục của nó.
 
@@ -145,6 +145,7 @@ function SubjectNavTree({ subjectId, itemsFor }: { subjectId: string | null; ite
   return (
     <NavTree
       label="Các môn được phân công"
+      placeholder="Chọn môn"
       nodes={withCurrent(subjects ?? [], subjectId)}
       currentId={subjectId}
       itemsFor={itemsFor}
@@ -167,6 +168,7 @@ function ClassNavTree({ scope, id, itemsFor }: { scope: ClassScope; id: string |
   return (
     <NavTree
       label={`Các ${CLASS_ROOTS[scope].label.toLowerCase()}`}
+      placeholder="Chọn lớp"
       nodes={withCurrent(classes ?? [], id)}
       currentId={id}
       itemsFor={itemsFor}

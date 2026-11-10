@@ -11,6 +11,7 @@ import { useResource } from "../hooks/useResource";
 import { useSubmissionDirectory } from "../hooks/useSubmissionDirectory";
 import { buildEvaluationHref } from "../model/navigation";
 import { GRADE_STATUS_LABELS, type Decimal, type GradebookPage, type GradeCell } from "../model/types";
+import { GradebookBatchControls } from "./GradebookBatchControls";
 import { GradebookExportDialog } from "./GradebookExportDialog";
 
 type Assignment = GradebookPage["assignments"][number];
@@ -154,6 +155,8 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
               {mode === "assignment" && activeAssignment && (
                 <>
                   <DetailHead title={activeAssignment.title} meta={kindLabel(activeAssignment)} search={studentSearch} filter={statusFilter} />
+                  <GradebookBatchControls key={`batch-${activeAssignment.id}`} classId={classId}
+                    assignmentId={activeAssignment.id} onDone={() => void resource.refresh().catch(() => {})} />
                   {activeAssignment.submissionMode === "GROUP" && (
                     <GroupSubmissionLinks key={activeAssignment.id} classId={classId} assignmentId={activeAssignment.id} />
                   )}

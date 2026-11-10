@@ -101,7 +101,7 @@ public class GradingMcpTools implements IMcpToolProvider {
                             buildReviewUrl(evaluation.id, proposal.id)));
         } catch (ApiException ex) {
             throw ex;
-        } catch (RuntimeException ex) {
+        } catch (IllegalArgumentException ex) {
             throw ApiException.badRequest("INVALID_MCP_ARGUMENTS",
                     "Invalid grading proposal arguments");
         }
