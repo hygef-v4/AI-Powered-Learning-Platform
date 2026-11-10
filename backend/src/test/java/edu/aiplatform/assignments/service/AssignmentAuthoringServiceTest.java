@@ -245,6 +245,30 @@ class AssignmentAuthoringServiceTest {
         assertThat(saved.partTitle()).isEqualTo("Toàn bài");
         assertThat(saved.complete()).isTrue();
         assertThat(f.rubrics.listRubrics(a.id()).get(0).partId()).isEqualTo(RubricService.WHOLE);
+        AssignmentViews.Detail detail = f.authoring.detail(f.teacher, a.id());
+        assertThat(detail.parts()).extracting(AssignmentViews.Part::partId)
+                .containsExactly(RubricService.WHOLE, a.parts().get(0).partId());
+        assertThat(detail.totalPoints()).isEqualByComparingTo("6.00");
+    }
+
+    @Test
+    void lockingRubricStripsTrailingBlankPlaceholderRows() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of(heading("H1", "Mục"))), false);
+        String partId = a.parts().get(0).partId();
+        RubricCriterion withBlankRow = new RubricCriterion(null, "Nội dung", "", CriterionKind.TEXT, List.of(
+                new RubricItem(null, "Đúng yêu cầu", new BigDecimal("5.00")),
+                new RubricItem(null, "", null)));
+        f.authoring.updateRubric(f.teacher, a.id(), partId,
+                new AssignmentCommands.RubricUpdate(a.version(), List.of(withBlankRow)));
+        f.rubrics.lockAll(a.id(), AssignmentFixtures.NOW);
+        List<RubricView> locked = f.rubrics.listRubrics(a.id());
+        assertThat(locked).singleElement().satisfies(r -> {
+            assertThat(r.criteria()).singleElement().satisfies(c ->
+                    assertThat(c.items()).singleElement().satisfies(i -> {
+                        assertThat(i.text()).isEqualTo("Đúng yêu cầu");
+                        assertThat(i.points()).isEqualByComparingTo("5.00");
+                    }));
+        });
     }
 
     @Test

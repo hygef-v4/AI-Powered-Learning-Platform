@@ -1,11 +1,8 @@
 package edu.aiplatform.grading.controller;
 
-import edu.aiplatform.assignments.contract.IAssignmentQuery;
-import edu.aiplatform.grading.service.GradebookService;
 import edu.aiplatform.grading.dto.GradingViews.SubmissionPage;
 import edu.aiplatform.grading.service.SubmissionReviewService;
 import edu.aiplatform.identity.contract.Actor;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,15 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/classes/{classId}")
 public class SubmissionReviewController {
     private final SubmissionReviewService submissionReviewService;
-    private final IAssignmentQuery assignmentQuery;
-    private final GradebookService gradebookService;
 
     /** Creates the controller with review and gradebook services. */
-    public SubmissionReviewController(SubmissionReviewService submissionReviewService,
-            IAssignmentQuery assignmentQuery, GradebookService gradebookService) {
+    public SubmissionReviewController(SubmissionReviewService submissionReviewService) {
         this.submissionReviewService = submissionReviewService;
-        this.assignmentQuery = assignmentQuery;
-        this.gradebookService = gradebookService;
     }
 
     /**
@@ -50,12 +42,6 @@ public class SubmissionReviewController {
     @GetMapping("/submission-progress")
     public Map<UUID, SubmissionPage> progress(@AuthenticationPrincipal Actor actor,
             @PathVariable UUID classId) {
-        gradebookService.listGrades(actor, classId, null, 1, 1);
-        var result = new LinkedHashMap<UUID, SubmissionPage>();
-        for (var a : assignmentQuery.listForClass(classId))
-            if (GradebookService.isGradable(a))
-                result.put(a.assignmentId(), submissionReviewService.listSubmissions(actor, classId,
-                        a.assignmentId(), null, null, 1, 1));
-        return result;
+        return submissionReviewService.loadProgress(actor, classId);
     }
 }

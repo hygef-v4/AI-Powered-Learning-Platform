@@ -4,36 +4,22 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.quizzes.contract.QuestionType;
-import edu.aiplatform.quizzes.model.Difficulty;
-import edu.aiplatform.quizzes.model.Question;
-import edu.aiplatform.quizzes.model.QuestionContent;
-import edu.aiplatform.quizzes.model.QuestionFingerprint;
-import edu.aiplatform.quizzes.model.QuestionOption;
-import edu.aiplatform.quizzes.model.QuestionReview;
-import edu.aiplatform.quizzes.model.QuestionScope;
-import edu.aiplatform.quizzes.model.QuestionStatus;
+import edu.aiplatform.quizzes.model.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /** {@code questions} bằng SQL viết tay; lựa chọn, đáp án, tag lưu {@code jsonb} (D1 của plan giai đoạn 1). */
 @Repository
 public class JdbcQuestionRepository implements IQuestionRepository {
-
-    private static final String COLUMNS = """
-            id, lineage_id, version_no, scope, subject_id, quiz_id, type, stem, explanation, options,
-            correct_option_ids, default_points, difficulty, tags, status, activated_at, created_by, created_at,
-            updated_at, version""";
+    private static final String COLUMNS = "id, lineage_id, version_no, scope, subject_id, quiz_id, type, stem, explanation,"
+            + " options, correct_option_ids, default_points, difficulty, tags, status, activated_at, created_by, created_at, updated_at, version";
+    private static final String LINEAGE_RANK = "row_number() over (partition by lineage_id"
+            + " order by case status when 'ACTIVE' then 2 when 'RETIRED' then 1 else 0 end desc, version_no desc) as rn";
     private static final TypeReference<List<QuestionOption>> OPTIONS = new TypeReference<>() { };
     private static final TypeReference<List<String>> STRINGS = new TypeReference<>() { };
 
@@ -47,14 +33,12 @@ public class JdbcQuestionRepository implements IQuestionRepository {
 
     @Override
     public Optional<Question> find(UUID id) {
-        return jdbc.sql("select " + COLUMNS + " from questions where id = :id")
-                .param("id", id).query(this::map).optional();
+        return jdbc.sql("select " + COLUMNS + " from questions where id = :id").param("id", id).query(this::map).optional();
     }
 
     @Override
     public Optional<Question> findBankDraft(UUID lineageId) {
-        return jdbc.sql("select " + COLUMNS + " from questions where lineage_id = :lineageId and scope = 'BANK'"
-                        + " and status = 'DRAFT'")
+        return jdbc.sql("select " + COLUMNS + " from questions where lineage_id = :lineageId and scope = 'BANK' and status = 'DRAFT'")
                 .param("lineageId", lineageId).query(this::map).optional();
     }
 
@@ -72,121 +56,63 @@ public class JdbcQuestionRepository implements IQuestionRepository {
 
     @Override
     public void insert(Question q) {
-        QuestionContent c = q.content();
-        jdbc.sql("""
-                        insert into questions (id, lineage_id, version_no, scope, subject_id, quiz_id, type, stem,
-                            explanation, options, correct_option_ids, default_points, difficulty, tags, status,
-                            activated_at, created_by, created_at, updated_at, version, content_hash, normalized_stem)
-                        values (:id, :lineageId, :versionNo, :scope, :subjectId, :quizId, :type, :stem, :explanation,
-                            cast(:options as jsonb), cast(:correct as jsonb), :points, :difficulty,
-                            cast(:tags as jsonb), :status, :activatedAt, :createdBy, :createdAt, :updatedAt, :version, :hash,
-                            :normalized)
-                        """)
-                .param("id", q.id()).param("lineageId", q.lineageId()).param("versionNo", q.versionNo())
-                .param("scope", q.scope().name()).param("subjectId", q.subjectId()).param("quizId", q.quizId())
-                .param("type", c.type().name()).param("stem", c.stem()).param("explanation", c.explanation())
-                .param("options", write(c.options())).param("correct", write(c.correctOptionIds()))
-                .param("points", c.defaultPoints()).param("difficulty", c.difficulty().name())
-                .param("tags", write(c.tags())).param("status", q.status().name())
-                .param("activatedAt", timestamp(q.activatedAt())).param("createdBy", q.createdBy())
-                .param("createdAt", timestamp(q.createdAt())).param("updatedAt", timestamp(q.updatedAt()))
-                .param("version", q.version()).param("hash", QuestionFingerprint.hash(c))
-                .param("normalized", QuestionFingerprint.normalize(c.stem()))
-                .update();
+        bindQuestion(jdbc.sql("insert into questions (id, lineage_id, version_no, scope, subject_id, quiz_id, type, stem,"
+                + " explanation, options, correct_option_ids, default_points, difficulty, tags, status, activated_at,"
+                + " created_by, created_at, updated_at, version, content_hash, normalized_stem) values (:id, :lineageId,"
+                + " :versionNo, :scope, :subjectId, :quizId, :type, :stem, :explanation, cast(:options as jsonb),"
+                + " cast(:correct as jsonb), :points, :difficulty, cast(:tags as jsonb), :status, :activatedAt,"
+                + " :createdBy, :createdAt, :updatedAt, :version, :hash, :normalized)"), q)
+                .param("lineageId", q.lineageId()).param("versionNo", q.versionNo()).param("scope", q.scope().name())
+                .param("subjectId", q.subjectId()).param("quizId", q.quizId()).param("createdBy", q.createdBy())
+                .param("createdAt", timestamp(q.createdAt())).update();
     }
 
     @Override
     public boolean update(Question q) {
+        return bindQuestion(jdbc.sql("update questions set type = :type, stem = :stem, explanation = :explanation,"
+                + " options = cast(:options as jsonb), correct_option_ids = cast(:correct as jsonb), default_points = :points,"
+                + " difficulty = :difficulty, tags = cast(:tags as jsonb), status = :status, activated_at = :activatedAt,"
+                + " updated_at = :updatedAt, content_hash = :hash, normalized_stem = :normalized, version = version + 1"
+                + " where id = :id and version = :version"), q).update() == 1;
+    }
+
+    private JdbcClient.StatementSpec bindQuestion(JdbcClient.StatementSpec spec, Question q) {
         QuestionContent c = q.content();
-        return jdbc.sql("""
-                        update questions set type = :type, stem = :stem, explanation = :explanation,
-                            options = cast(:options as jsonb), correct_option_ids = cast(:correct as jsonb),
-                            default_points = :points, difficulty = :difficulty, tags = cast(:tags as jsonb),
-                            status = :status, activated_at = :activatedAt, updated_at = :updatedAt,
-                            content_hash = :hash, normalized_stem = :normalized, version = version + 1
-                        where id = :id and version = :version
-                        """)
-                .param("type", c.type().name()).param("stem", c.stem()).param("explanation", c.explanation())
-                .param("options", write(c.options())).param("correct", write(c.correctOptionIds()))
-                .param("points", c.defaultPoints()).param("difficulty", c.difficulty().name())
-                .param("tags", write(c.tags())).param("status", q.status().name())
+        return spec.param("id", q.id()).param("type", c.type().name()).param("stem", c.stem())
+                .param("explanation", c.explanation()).param("options", write(c.options()))
+                .param("correct", write(c.correctOptionIds())).param("points", c.defaultPoints())
+                .param("difficulty", c.difficulty().name()).param("tags", write(c.tags())).param("status", q.status().name())
                 .param("activatedAt", timestamp(q.activatedAt())).param("updatedAt", timestamp(q.updatedAt()))
-                .param("id", q.id()).param("version", q.version())
-                .param("hash", QuestionFingerprint.hash(c)).param("normalized", QuestionFingerprint.normalize(c.stem()))
-                .update() == 1;
+                .param("version", q.version()).param("hash", QuestionFingerprint.hash(c))
+                .param("normalized", QuestionFingerprint.normalize(c.stem()));
     }
 
     @Override
     public boolean delete(UUID id, long version) {
-        return jdbc.sql("delete from questions where id = :id and version = :version and status = 'DRAFT'"
-                        + " and activated_at is null")
+        return jdbc.sql("delete from questions where id = :id and version = :version and status = 'DRAFT' and activated_at is null")
                 .param("id", id).param("version", version).update() == 1;
     }
 
     @Override
     public BankPage searchBank(UUID subjectId, BankQuery query) {
-        // Mỗi lineage lấy bản đã kích hoạt mới nhất (ACTIVE hoặc RETIRED); lineage chưa kích hoạt thì lấy bản nháp hoặc đề xuất.
-        StringBuilder where = new StringBuilder("rn = 1");
-        List<Object[]> params = new ArrayList<>();
-        params.add(new Object[] {"subjectId", subjectId});
-        if (query.type() != null) {
-            where.append(" and type = :type");
-            params.add(new Object[] {"type", query.type().name()});
-        }
-        if (query.difficulty() != null) {
-            where.append(" and difficulty = :difficulty");
-            params.add(new Object[] {"difficulty", query.difficulty().name()});
-        }
-        if (query.status() != null) {
-            where.append(" and status = :status");
-            params.add(new Object[] {"status", query.status().name()});
-        } else {
-            // Đề xuất bị từ chối là việc của người đề xuất; chỉ hiện khi lọc đúng trạng thái này.
-            where.append(" and status <> 'REJECTED'");
-        }
-        if (query.text() != null && !query.text().isBlank()) {
-            where.append(" and (stem ilike :text escape '\\' or exists (select 1 from jsonb_array_elements_text(tags) t"
-                    + " where t ilike :text escape '\\'))");
-            params.add(new Object[] {"text", "%" + escapeLike(query.text().strip()) + "%"});
-        }
-        String body = """
-                with ranked as (
-                    select %s,
-                        row_number() over (partition by lineage_id
-                            order by (status in ('ACTIVE', 'RETIRED')) desc, version_no desc) as rn,
-                        bool_or(status = 'DRAFT') over (partition by lineage_id) as lineage_has_draft
-                    from questions
-                    where scope = 'BANK' and subject_id = :subjectId
-                )
-                select %s, (lineage_has_draft and status <> 'DRAFT') as has_draft, count(*) over () as total
-                from ranked
-                where %s
-                order by updated_at desc, id
-                limit :limit offset :offset
-                """.formatted(COLUMNS, COLUMNS, where);
-        JdbcClient.StatementSpec sql = jdbc.sql(body);
-        for (Object[] p : params) {
-            sql = sql.param((String) p[0], p[1]);
-        }
+        Filter filter = bankFilter(subjectId, query);
+        String body = ("with ranked as (select %s, %s, bool_or(status = 'DRAFT') over (partition by lineage_id) as lineage_has_draft"
+                + " from questions where scope = 'BANK' and subject_id = :subjectId)"
+                + " select %s, (lineage_has_draft and status <> 'DRAFT') as has_draft, count(*) over () as total"
+                + " from ranked where %s order by updated_at desc, id limit :limit offset :offset")
+                .formatted(COLUMNS, LINEAGE_RANK, COLUMNS, filter.where);
         long[] total = {0};
-        List<BankRow> rows = sql.param("limit", query.size()).param("offset", (long) query.page() * query.size())
+        List<BankRow> rows = bind(jdbc.sql(body), filter.params)
+                .param("limit", query.size()).param("offset", (long) query.page() * query.size())
                 .query((rs, n) -> {
                     total[0] = rs.getLong("total");
                     return new BankRow(map(rs, n), rs.getBoolean("has_draft"));
-                })
-                .list();
+                }).list();
         if (rows.isEmpty() && query.page() > 0) {
-            total[0] = countBank(subjectId, body.replace("limit :limit offset :offset", ""), params);
+            String countSql = "select count(*) from (" + body.replace("limit :limit offset :offset", "") + ") counted";
+            total[0] = bind(jdbc.sql(countSql), filter.params).query(Long.class).single();
         }
         return new BankPage(rows, total[0], query.page(), query.size());
-    }
-
-    private long countBank(UUID subjectId, String body, List<Object[]> params) {
-        JdbcClient.StatementSpec sql = jdbc.sql("select count(*) from (" + body + ") counted");
-        for (Object[] p : params) {
-            sql = sql.param((String) p[0], p[1]);
-        }
-        return sql.query(Long.class).single();
     }
 
     @Override
@@ -197,10 +123,7 @@ public class JdbcQuestionRepository implements IQuestionRepository {
 
     @Override
     public List<Question> findAll(Collection<UUID> ids) {
-        if (ids.isEmpty()) {
-            return List.of();
-        }
-        return jdbc.sql("select " + COLUMNS + " from questions where id in (:ids)")
+        return ids.isEmpty() ? List.of() : jdbc.sql("select " + COLUMNS + " from questions where id in (:ids)")
                 .param("ids", List.copyOf(ids)).query(this::map).list();
     }
 
@@ -226,8 +149,7 @@ public class JdbcQuestionRepository implements IQuestionRepository {
                 .query((rs, n) -> {
                     total[0] = rs.getLong("total");
                     return new BankRow(map(rs, n), false);
-                })
-                .list();
+                }).list();
         if (rows.isEmpty() && query.page() > 0) {
             total[0] = countActive(subjectId, query);
         }
@@ -250,22 +172,13 @@ public class JdbcQuestionRepository implements IQuestionRepository {
 
     @Override
     public List<PoolEntry> activePool(UUID subjectId) {
-        return jdbc.sql("""
-                        with ranked as (
-                            select id, lineage_id, tags, difficulty, content_hash, status,
-                                row_number() over (partition by lineage_id
-                                    order by (status in ('ACTIVE', 'RETIRED')) desc, version_no desc) as rn
-                            from questions
-                            where scope = 'BANK' and subject_id = :subjectId
-                        )
-                        select id, lineage_id, tags, difficulty, content_hash from ranked
-                        where rn = 1 and status = 'ACTIVE'
-                        """)
-                .param("subjectId", subjectId)
+        String sql = "with ranked as (select id, lineage_id, tags, difficulty, content_hash, status, " + LINEAGE_RANK
+                + " from questions where scope = 'BANK' and subject_id = :subjectId)"
+                + " select id, lineage_id, tags, difficulty, content_hash from ranked where rn = 1 and status = 'ACTIVE'";
+        return jdbc.sql(sql).param("subjectId", subjectId)
                 .query((rs, n) -> new PoolEntry(rs.getObject("id", UUID.class), rs.getObject("lineage_id", UUID.class),
                         read(rs.getString("tags"), STRINGS), Difficulty.valueOf(rs.getString("difficulty")),
-                        rs.getString("content_hash")))
-                .list();
+                        rs.getString("content_hash"))).list();
     }
 
     @Override
@@ -276,50 +189,33 @@ public class JdbcQuestionRepository implements IQuestionRepository {
 
     @Override
     public Optional<Question> findDuplicate(UUID subjectId, String contentHash, UUID excludeLineage) {
-        StringBuilder sql = new StringBuilder("select " + COLUMNS + " from questions where scope = 'BANK'"
-                + " and subject_id = :subjectId and content_hash = :hash and status in ('DRAFT', 'PENDING', 'ACTIVE')");
-        if (excludeLineage != null) {
-            sql.append(" and lineage_id <> :lineage");
-        }
-        sql.append(" order by (status = 'ACTIVE') desc, updated_at desc limit 1");
-        JdbcClient.StatementSpec spec = jdbc.sql(sql.toString()).param("subjectId", subjectId).param("hash", contentHash);
-        if (excludeLineage != null) {
-            spec = spec.param("lineage", excludeLineage);
-        }
-        return spec.query(this::map).optional();
+        String sql = "select " + COLUMNS + " from questions where scope = 'BANK' and subject_id = :subjectId"
+                + " and content_hash = :hash and status in ('DRAFT', 'PENDING', 'ACTIVE')"
+                + (excludeLineage != null ? " and lineage_id <> :lineage" : "")
+                + " order by (status = 'ACTIVE') desc, updated_at desc limit 1";
+        JdbcClient.StatementSpec spec = jdbc.sql(sql).param("subjectId", subjectId).param("hash", contentHash);
+        return (excludeLineage != null ? spec.param("lineage", excludeLineage) : spec).query(this::map).optional();
     }
 
     @Override
     public List<StemEntry> bankStems(UUID subjectId, UUID excludeLineage) {
-        StringBuilder sql = new StringBuilder("select id, normalized_stem, left(stem, 300) as stem, status from questions"
-                + " where scope = 'BANK' and subject_id = :subjectId and status in ('DRAFT', 'PENDING', 'ACTIVE')"
-                + " and normalized_stem is not null");
-        if (excludeLineage != null) {
-            sql.append(" and lineage_id <> :lineage");
-        }
-        JdbcClient.StatementSpec spec = jdbc.sql(sql.toString()).param("subjectId", subjectId);
-        if (excludeLineage != null) {
-            spec = spec.param("lineage", excludeLineage);
-        }
-        return spec.query(this::stemEntry).list();
+        String sql = "select id, normalized_stem, left(stem, 300) as stem, status from questions where scope = 'BANK'"
+                + " and subject_id = :subjectId and status in ('DRAFT', 'PENDING', 'ACTIVE') and normalized_stem is not null"
+                + (excludeLineage != null ? " and lineage_id <> :lineage" : "");
+        JdbcClient.StatementSpec spec = jdbc.sql(sql).param("subjectId", subjectId);
+        return (excludeLineage != null ? spec.param("lineage", excludeLineage) : spec).query(this::stemEntry).list();
     }
 
     @Override
     public List<List<StemEntry>> duplicateGroups(UUID subjectId) {
         Map<String, List<StemEntry>> groups = new LinkedHashMap<>();
-        jdbc.sql("""
-                        select id, content_hash, normalized_stem, left(stem, 300) as stem, status from questions q
-                        where scope = 'BANK' and subject_id = :subjectId and status in ('DRAFT', 'PENDING', 'ACTIVE')
-                          and content_hash in (
-                            select content_hash from questions
-                            where scope = 'BANK' and subject_id = :subjectId and status in ('DRAFT', 'PENDING', 'ACTIVE')
-                              and content_hash is not null
-                            group by content_hash having count(distinct lineage_id) > 1)
-                        order by content_hash, updated_at desc
-                        """)
+        jdbc.sql("select id, content_hash, normalized_stem, left(stem, 300) as stem, status from questions q"
+                + " where scope = 'BANK' and subject_id = :subjectId and status in ('DRAFT', 'PENDING', 'ACTIVE')"
+                + " and content_hash in (select content_hash from questions where scope = 'BANK' and subject_id = :subjectId"
+                + " and status in ('DRAFT', 'PENDING', 'ACTIVE') and content_hash is not null"
+                + " group by content_hash having count(distinct lineage_id) > 1) order by content_hash, updated_at desc")
                 .param("subjectId", subjectId)
-                .query((rs, n) -> groups.computeIfAbsent(rs.getString("content_hash"), key -> new ArrayList<>())
-                        .add(stemEntry(rs, n)))
+                .query((rs, n) -> groups.computeIfAbsent(rs.getString("content_hash"), k -> new ArrayList<>()).add(stemEntry(rs, n)))
                 .list();
         return List.copyOf(groups.values());
     }
@@ -349,12 +245,10 @@ public class JdbcQuestionRepository implements IQuestionRepository {
     @Override
     public Optional<QuestionReview> latestReview(UUID questionId) {
         return jdbc.sql("select id, question_id, decision, reason, reviewer_id, created_at from question_reviews"
-                        + " where question_id = :id order by created_at desc, id limit 1")
-                .param("id", questionId)
+                        + " where question_id = :id order by created_at desc, id limit 1").param("id", questionId)
                 .query((rs, n) -> new QuestionReview(rs.getObject("id", UUID.class), rs.getObject("question_id", UUID.class),
                         rs.getString("decision"), rs.getString("reason"), rs.getObject("reviewer_id", UUID.class),
-                        instant(rs.getTimestamp("created_at"))))
-                .optional();
+                        instant(rs.getTimestamp("created_at")))).optional();
     }
 
     @Override
@@ -372,8 +266,7 @@ public class JdbcQuestionRepository implements IQuestionRepository {
     @Override
     public List<Question> listProposals(UUID classId, UUID createdBy) {
         return jdbc.sql("select " + COLUMNS + " from questions where created_by = :createdBy and id in"
-                        + " (select question_id from question_proposals where class_id = :classId)"
-                        + " order by updated_at desc, id")
+                        + " (select question_id from question_proposals where class_id = :classId) order by updated_at desc, id")
                 .param("createdBy", createdBy).param("classId", classId).query(this::map).list();
     }
 
@@ -388,10 +281,28 @@ public class JdbcQuestionRepository implements IQuestionRepository {
                 QuestionStatus.valueOf(rs.getString("status")));
     }
 
-    private record Filter(String where, List<Object[]> params) {
+    private record Filter(String where, List<Object[]> params) { }
+
+    private static Filter bankFilter(UUID subjectId, BankQuery query) {
+        StringBuilder where = new StringBuilder("rn = 1");
+        List<Object[]> params = new ArrayList<>();
+        params.add(new Object[] {"subjectId", subjectId});
+        if (query.type() != null) {
+            where.append(" and type = :type");
+            params.add(new Object[] {"type", query.type().name()});
+        }
+        if (query.difficulty() != null) {
+            where.append(" and difficulty = :difficulty");
+            params.add(new Object[] {"difficulty", query.difficulty().name()});
+        }
+        where.append(query.status() != null ? " and status = :status" : " and status <> 'REJECTED'");
+        if (query.status() != null) {
+            params.add(new Object[] {"status", query.status().name()});
+        }
+        appendTextFilter(where, params, query.text());
+        return new Filter(where.toString(), params);
     }
 
-    /** Bản đã kích hoạt mới nhất mỗi lineage còn {@code ACTIVE}; lọc độ khó, thẻ, từ khóa, bỏ lineage đã có. */
     private static Filter pickFilter(UUID subjectId, PickQuery query) {
         StringBuilder where = new StringBuilder("rn = 1 and status = 'ACTIVE'");
         List<Object[]> params = new ArrayList<>();
@@ -404,11 +315,7 @@ public class JdbcQuestionRepository implements IQuestionRepository {
             where.append(" and exists (select 1 from jsonb_array_elements_text(tags) t where lower(t) = lower(:tag))");
             params.add(new Object[] {"tag", query.tag().strip()});
         }
-        if (query.text() != null && !query.text().isBlank()) {
-            where.append(" and (stem ilike :text escape '\\' or exists (select 1 from jsonb_array_elements_text(tags) t"
-                    + " where t ilike :text escape '\\'))");
-            params.add(new Object[] {"text", "%" + escapeLike(query.text().strip()) + "%"});
-        }
+        appendTextFilter(where, params, query.text());
         if (query.excludeLineages() != null && !query.excludeLineages().isEmpty()) {
             where.append(" and lineage_id not in (:excluded)");
             params.add(new Object[] {"excluded", List.copyOf(query.excludeLineages())});
@@ -416,18 +323,17 @@ public class JdbcQuestionRepository implements IQuestionRepository {
         return new Filter(where.toString(), params);
     }
 
+    private static void appendTextFilter(StringBuilder where, List<Object[]> params, String text) {
+        if (text != null && !text.isBlank()) {
+            where.append(" and (stem ilike :text escape '\\' or exists (select 1 from jsonb_array_elements_text(tags) t"
+                    + " where t ilike :text escape '\\'))");
+            params.add(new Object[] {"text", "%" + escapeLike(text.strip()) + "%"});
+        }
+    }
+
     private static String activeSql(String where) {
-        return """
-                with ranked as (
-                    select %s,
-                        row_number() over (partition by lineage_id
-                            order by (status in ('ACTIVE', 'RETIRED')) desc, version_no desc) as rn
-                    from questions
-                    where scope = 'BANK' and subject_id = :subjectId
-                )
-                select %s, count(*) over () as total
-                from ranked
-                where %s""".formatted(COLUMNS, COLUMNS, where);
+        return "with ranked as (select %s, %s from questions where scope = 'BANK' and subject_id = :subjectId)"
+                .formatted(COLUMNS, LINEAGE_RANK) + " select " + COLUMNS + ", count(*) over () as total from ranked where " + where;
     }
 
     private static JdbcClient.StatementSpec bind(JdbcClient.StatementSpec sql, List<Object[]> params) {
@@ -470,11 +376,7 @@ public class JdbcQuestionRepository implements IQuestionRepository {
         return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
-    private static Timestamp timestamp(Instant value) {
-        return value == null ? null : Timestamp.from(value);
-    }
+    private static Timestamp timestamp(Instant value) { return value == null ? null : Timestamp.from(value); }
 
-    private static Instant instant(Timestamp value) {
-        return value == null ? null : value.toInstant();
-    }
+    private static Instant instant(Timestamp value) { return value == null ? null : value.toInstant(); }
 }

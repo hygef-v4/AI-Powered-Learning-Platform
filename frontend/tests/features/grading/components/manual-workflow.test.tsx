@@ -51,7 +51,7 @@ describe("grading review", () => {
     render(<RubricChecklistPanel rubrics={rubrics} checks={{}} onChange={onChange} />);
     fireEvent.click(screen.getByRole("checkbox", { name: /Đạt yêu cầu/ }));
     expect(onChange).toHaveBeenCalledWith({ r: ["i"] });
-    expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("spinbutton").length).toBeGreaterThan(0);
   });
   it("renders untrusted document text as text, never executable markup", () => {
     const { container } = render(
@@ -140,12 +140,27 @@ describe("U09 usability", () => {
     expect(screen.getByText("1.50 / 3.00 điểm")).toBeInTheDocument();
     expect(container.textContent).not.toContain(rubric.partId);
   });
-  it("explains AI failure and keeps a manual grading path visible", () => {
-    render(<AiProposalPanel evaluationId="e" proposals={[{ id: "p", versionNo: 1, origin: "AI_TASK", status: "FAILED",
+  it("explains the latest AI failure without saving a history card", () => {
+    const { container } = render(<AiProposalPanel evaluationId="e" proposals={[{ id: "p", versionNo: 1, origin: "AI_TASK", status: "FAILED",
       safeError: "Nhà cung cấp AI từ chối yêu cầu (HTTP 400): model hoặc tham số không hợp lệ" }]} onApply={vi.fn()} onRequest={vi.fn()} />);
     expect(screen.getByText("Không tạo được đề xuất")).toBeInTheDocument();
     expect(screen.getByText(/vẫn có thể chấm thủ công/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Kiểm tra kết nối AI" })).toHaveAttribute("href", "/ai/connection");
+    expect(container.querySelector("article")).toBeNull();
+    expect(screen.getByText(/Chưa có đề xuất/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Yêu cầu đề xuất mới" })).toBeEnabled();
+  });
+  it("dates successful proposal history in Vietnam time and excludes previous failed attempts", () => {
+    const { container } = render(<AiProposalPanel evaluationId="e" proposals={[
+      { id: "ready", versionNo: 4, origin: "AI_TASK", status: "READY", createdAt: "2026-11-10T04:21:00Z", proposal: { checks: {}, score: 1 } },
+      { id: "failed", versionNo: 3, origin: "AI_TASK", status: "FAILED", safeError: "old failure" },
+      { id: "rejected", versionNo: 2, origin: "AI_TASK", status: "REJECTED" },
+      { id: "older", versionNo: 1, origin: "MCP", status: "STALE", createdAt: "2026-11-09T01:05:00Z", proposal: { checks: {}, score: 0 } },
+    ]} onApply={vi.fn()} onRequest={vi.fn()} />);
+    expect(container.querySelectorAll("article")).toHaveLength(2);
+    expect(screen.queryByText("old failure")).not.toBeInTheDocument();
+    expect(screen.getByText("Tạo lúc 11:21 10/11/2026")).toHaveAttribute("datetime", "2026-11-10T04:21:00Z");
+    expect(screen.getByText("Tạo lúc 08:05 09/11/2026")).toBeVisible();
   });
   it("shows a safe diagram preview immediately and opens a larger read-only view", () => {
     render(<SubmissionViewer document={{ blocks: [{ id: "d", origin: "STUDENT", type: "DIAGRAM", content: { diagramType: "OTHER", xml: "<mxfile/>", alt: "Sơ đồ Event",

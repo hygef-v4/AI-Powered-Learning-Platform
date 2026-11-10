@@ -24,6 +24,17 @@ const page: SubmissionPage = {
   ],
   total: 21, page: 1, size: 20, summary: { submitted: 1, notSubmitted: 1 }, deadline: null,
 };
+
+it("excludes already published grades from a mixed publish selection", async () => {
+  mocks.listSubmissions.mockResolvedValue({ ...page, rows: [page.rows[0], {
+    ...page.rows[0], student: page.rows[1]!.student, evaluationId: "published", status: "PUBLISHED", version: 9,
+  }] });
+  render(<SubmissionDetailPage classId="c" assignmentId="a" />);
+  await screen.findByRole("checkbox", { name: "Chọn Sinh viên A" });
+  fireEvent.click(screen.getByRole("checkbox", { name: "Chọn tất cả bài trong trang" }));
+  fireEvent.click(screen.getByRole("button", { name: "Công bố điểm" }));
+  expect(screen.getByTestId("batch-items")).toHaveTextContent(JSON.stringify([{ evaluationId: "e", version: 7 }]));
+});
 function deferred<T>() {
   let resolve!: (value: T) => void;
   const promise = new Promise<T>((done) => { resolve = done; });

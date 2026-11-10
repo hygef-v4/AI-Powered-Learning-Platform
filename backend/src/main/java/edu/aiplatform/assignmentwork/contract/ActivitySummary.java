@@ -10,7 +10,12 @@ import java.util.List;
  */
 public record ActivitySummary(ActivityPolicyState policyState, int awayCount, Duration knownAwayDuration,
                               List<ActivityInterval> intervals, int unknownGaps, String reliabilityNote,
-                              Instant lastEventAt) {
+                              Instant lastEventAt, Instant firstEventAt) {
+
+    public ActivitySummary(ActivityPolicyState policyState, int awayCount, Duration knownAwayDuration,
+            List<ActivityInterval> intervals, int unknownGaps, String reliabilityNote, Instant lastEventAt) {
+        this(policyState, awayCount, knownAwayDuration, intervals, unknownGaps, reliabilityNote, lastEventAt, null);
+    }
 
     public ActivitySummary(ActivityPolicyState policyState, int awayCount, Duration knownAwayDuration,
                            List<ActivityInterval> intervals, int unknownGaps, String reliabilityNote) {

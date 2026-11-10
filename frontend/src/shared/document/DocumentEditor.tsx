@@ -3,6 +3,7 @@
 import { SectionNumber } from "./SectionNumber";
 import {
   Fragment,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -341,7 +342,7 @@ function fit(field: HTMLTextAreaElement) {
   // Thu về auto để đo lại chiều cao; giữ vị trí cuộn vì trang có thể ngắn lại trong chốc lát.
   const y = window.scrollY;
   field.style.height = "auto";
-  field.style.height = `${field.scrollHeight}px`;
+  field.style.height = `${field.scrollHeight + field.offsetHeight - field.clientHeight}px`;
   if (window.scrollY !== y) window.scrollTo({ top: y });
 }
 
@@ -639,6 +640,15 @@ export function DocumentEditor({
   const [history, setHistory] = useState({ past: 0, future: 0 });
   const paper = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
+  const measureToolbar = useCallback((toolbar: HTMLDivElement | null) => {
+    if (!toolbar) return;
+    const measure = () => toolbar.parentElement?.style.setProperty("--doc-toolbar-height", `${toolbar.offsetHeight}px`);
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(toolbar);
+    return () => observer.disconnect();
+  }, []);
   const pendingFocus = useRef<FocusTarget | null>(null);
   const latest = useRef(document);
   const past = useRef<DocumentModel[]>([]);
@@ -1550,10 +1560,10 @@ export function DocumentEditor({
       {viewSlot && viewToggle && createPortal(viewToggle, viewSlot)}
       {readOnly && toolbarCenter && (
         // Cùng lưới với trang giấy và cột ghi chú bên dưới, để nút giữa nằm thẳng giữa trang giấy.
-        <div role="toolbar" aria-label="Thanh công cụ"
+        <div ref={measureToolbar} role="toolbar" aria-label="Thanh công cụ"
           className={`sticky top-[var(--doc-toolbar-top,4rem)] z-20 rounded-xl border border-line bg-sunken px-3 py-1 ${TOOLBAR_COVER}`}>
-          <div className={rail ? "grid grid-cols-[minmax(0,816px)_300px] items-center justify-center gap-5" : "grid grid-cols-[1fr_auto_1fr] items-center"}>
-            {!rail && <span />}
+          <div className={rail ? "grid grid-cols-[minmax(0,816px)_300px] items-center justify-center gap-5" : "grid grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_auto_1fr] sm:gap-0"}>
+            {!rail && <span className="hidden sm:block" />}
             <div className="flex items-center justify-center gap-0.5">{toolbarCenter}</div>
             {/* Chỉ đọc (lịch sử nộp bài) cũng đổi được Cả trang / Từng phần (yêu cầu 2026-11-05). */}
             <div className="flex items-center justify-end gap-0.5">{!viewSlot && viewToggle}{toolbarExtra}</div>
@@ -1561,7 +1571,7 @@ export function DocumentEditor({
         </div>
       )}
       {(!readOnly || (toolbarExtra && !toolbarCenter)) && (
-        <div role="toolbar" aria-label="Định dạng và chèn"
+        <div ref={measureToolbar} role="toolbar" aria-label="Định dạng và chèn"
           className={`sticky top-[var(--doc-toolbar-top,4rem)] z-20 flex flex-wrap items-center gap-0.5 rounded-xl bg-sunken px-3 py-1 border border-line ${TOOLBAR_COVER}`}>
           {!readOnly && (
             <>

@@ -123,8 +123,8 @@ export function CommentRail({ paper, comments, activeKey, matchSectionHeight = f
       {comments.map((comment) => (
         <div key={comment.key} data-comment-band={comment.key} className="absolute inset-x-0 top-0"
           ref={(node) => { if (node) bands.current.set(comment.key, node); else bands.current.delete(comment.key); }}>
-          {/* Dính dưới thanh trên cùng (64px) và thanh công cụ của trang soạn. */}
-          <div data-comment={comment.key} className="sticky top-[7.25rem]"
+          <div data-comment={comment.key} className="sticky"
+            style={{ top: "calc(var(--doc-toolbar-top, 4rem) + var(--doc-toolbar-height, 2.25rem) + 0.5rem)" }}
             ref={(node) => { if (node) cards.current.set(comment.key, node); else cards.current.delete(comment.key); }}>
             {comment.content}
           </div>

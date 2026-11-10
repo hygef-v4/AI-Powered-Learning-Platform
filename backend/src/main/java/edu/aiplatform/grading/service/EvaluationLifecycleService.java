@@ -112,9 +112,11 @@ public class EvaluationLifecycleService implements ISubmissionListener, IGroupEv
             throw ApiException.badRequest("INVALID_GROUP_SUBMISSION", "Invalid group snapshot");
 
         // Step 2: Lock group document identity and load existing group evaluations
+        members.stream().sorted().forEach(member ->
+                evaluationRepository.lockIdentity(classId, assignmentId, member));
         evaluationRepository.lockIdentity(classId, assignmentId, documentId);
-        var previousEvaluations = evaluationRepository
-                .findForAssignmentAndClass(assignmentId, classId).stream()
+        var allEvaluations = evaluationRepository.findForAssignmentAndClass(assignmentId, classId);
+        var previousEvaluations = allEvaluations.stream()
                 .filter(evaluation -> documentId.equals(evaluation.groupDocumentId))
                 .sorted(Comparator.comparing(evaluation -> evaluation.id)).toList();
         var root = previousEvaluations.stream()
@@ -129,6 +131,18 @@ public class EvaluationLifecycleService implements ISubmissionListener, IGroupEv
         var group = root.isPresent() ? evaluationRepository.lockById(root.get().id).orElseThrow()
                 : Evaluation.createPendingEvaluation(null, assignmentId, classId, null, hash,
                         maxScore, rubricSnapshot, clock.instant());
+        if (group.hasOfficialGrade())
+            return;
+        for (var previous : allEvaluations.stream().sorted(Comparator.comparing(e -> e.id)).toList()) {
+            if (previous.kind == EvaluationKind.MEMBER && members.contains(previous.accountId)
+                    && !documentId.equals(previous.groupDocumentId)) {
+                var locked = evaluationRepository.lockById(previous.id).orElseThrow();
+                if (!locked.hasOfficialGrade() && locked.state != EvaluationStatus.SUPERSEDED) {
+                    locked.supersede();
+                    evaluationRepository.save(locked);
+                }
+            }
+        }
         group.kind = EvaluationKind.GROUP_DOCUMENT;
         group.groupDocumentId = documentId;
         resetEvaluation(group, hash, maxScore, rubricSnapshot);
@@ -139,6 +153,10 @@ public class EvaluationLifecycleService implements ISubmissionListener, IGroupEv
         for (var previous : previousEvaluations)
             if (previous.kind == EvaluationKind.MEMBER) {
                 var evaluation = evaluationRepository.lockById(previous.id).orElseThrow();
+                if (evaluation.hasOfficialGrade()) {
+                    retained.add(evaluation.accountId);
+                    continue;
+                }
                 if (members.contains(evaluation.accountId)) {
                     resetEvaluation(evaluation, hash, maxScore, rubricSnapshot);
                     retained.add(evaluation.accountId);

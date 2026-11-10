@@ -92,13 +92,13 @@ public class RubricService implements IRubric {
         List<AssignmentRubric> result = new ArrayList<>();
         // Toàn bài đứng đầu, chỉ khi đã có tiêu chí (chấm bài, điểm tối đa không có thẻ trống).
         AssignmentRubric whole = byPart.get(WHOLE);
-        if (whole != null && hasWhole(assignment.parts()) && !whole.criteria().isEmpty()) {
+        if (whole != null && hasWhole(assignment.parts()) && !written(whole).isEmpty()) {
             result.add(whole);
         }
         // Mục không có mục chấm nào không phải phần chấm (yêu cầu 2026-11-05): không có trong bảng chấm, điểm tối đa.
         for (DocumentPart part : assignment.parts()) {
             AssignmentRubric rubric = byPart.get(part.partId());
-            if (rubric != null && !rubric.criteria().isEmpty()) {
+            if (rubric != null && !written(rubric).isEmpty()) {
                 result.add(rubric);
             }
         }
@@ -174,7 +174,23 @@ public class RubricService implements IRubric {
     }
 
     void lockAll(UUID assignmentId, Instant now) {
+        for (AssignmentRubric r : rubrics.listByAssignment(assignmentId)) {
+            if (!r.locked()) {
+                List<RubricCriterion> cleaned = stripBlankItems(r.criteria());
+                if (!cleaned.equals(r.criteria())) {
+                    rubrics.save(r.withCriteria(cleaned, now));
+                }
+            }
+        }
         rubrics.lockAll(assignmentId, now);
+    }
+
+    static List<RubricCriterion> stripBlankItems(List<RubricCriterion> criteria) {
+        return criteria.stream()
+                .map(c -> new RubricCriterion(c.criterionId(), c.title(), c.description(), c.kind(),
+                        c.items() == null ? List.of() : c.items().stream().filter(RubricService::isWritten).toList()))
+                .filter(c -> !c.items().isEmpty())
+                .toList();
     }
 
     /**
@@ -201,30 +217,33 @@ public class RubricService implements IRubric {
             String title = limit(criterion.title(), AssignmentRubric.TITLE_MAX, "Tên tiêu chí tối đa 200 ký tự");
             String description = limit(criterion.description(), AssignmentRubric.DESCRIPTION_MAX,
                     "Mô tả tiêu chí tối đa 2.000 ký tự");
-            List<RubricItem> items = criterion.items() == null ? List.of() : criterion.items();
-            if (items.size() > AssignmentRubric.ITEMS_MAX) {
-                throw ApiException.badRequest("RUBRIC_TOO_MANY_ITEMS", "Mỗi tiêu chí tối đa 20 mục chấm");
-            }
-            List<RubricItem> cleanItems = new ArrayList<>();
-            for (RubricItem item : items) {
-                if (item == null) {
-                    throw ApiException.badRequest("RUBRIC_INVALID", "Mục chấm không hợp lệ");
-                }
-                BigDecimal points = item.points();
-                if (points != null && (points.signum() < 0 || points.stripTrailingZeros().scale() > 2
-                        || points.compareTo(AssignmentRubric.POINTS_MAX) > 0)) {
-                    throw ApiException.badRequest("RUBRIC_POINTS_INVALID",
-                            "Điểm mỗi mục phải lớn hơn 0, tối đa 2 chữ số thập phân");
-                }
-                UUID itemId = unique(item.itemId(), ids);
-                cleanItems.add(new RubricItem(itemId,
-                        limit(item.text(), AssignmentRubric.ITEM_TEXT_MAX, "Nội dung mục chấm tối đa 1.000 ký tự"),
-                        points == null ? null : points.setScale(2, java.math.RoundingMode.UNNECESSARY)));
-            }
             out.add(new RubricCriterion(unique(criterion.criterionId(), ids), title, description, kind,
-                    List.copyOf(cleanItems)));
+                    normalizeItems(criterion.items(), ids)));
         }
         return List.copyOf(out);
+    }
+
+    private static List<RubricItem> normalizeItems(List<RubricItem> raw, Set<UUID> ids) {
+        List<RubricItem> items = raw == null ? List.of() : raw;
+        if (items.size() > AssignmentRubric.ITEMS_MAX) {
+            throw ApiException.badRequest("RUBRIC_TOO_MANY_ITEMS", "Mỗi tiêu chí tối đa 20 mục chấm");
+        }
+        List<RubricItem> clean = new ArrayList<>();
+        for (RubricItem item : items) {
+            if (item == null) {
+                throw ApiException.badRequest("RUBRIC_INVALID", "Mục chấm không hợp lệ");
+            }
+            BigDecimal points = item.points();
+            if (points != null && (points.signum() < 0 || points.stripTrailingZeros().scale() > 2
+                    || points.compareTo(AssignmentRubric.POINTS_MAX) > 0)) {
+                throw ApiException.badRequest("RUBRIC_POINTS_INVALID",
+                        "Điểm mỗi mục phải lớn hơn 0, tối đa 2 chữ số thập phân");
+            }
+            clean.add(new RubricItem(unique(item.itemId(), ids),
+                    limit(item.text(), AssignmentRubric.ITEM_TEXT_MAX, "Nội dung mục chấm tối đa 1.000 ký tự"),
+                    points == null ? null : points.setScale(2, java.math.RoundingMode.UNNECESSARY)));
+        }
+        return List.copyOf(clean);
     }
 
     static final String MISSING = "RUBRIC_MISSING";
@@ -284,8 +303,11 @@ public class RubricService implements IRubric {
     /** Mục chấm có ghi gì đó (chữ hoặc điểm); dòng trống hẳn bỏ qua. */
     private static List<RubricItem> written(AssignmentRubric rubric) {
         return rubric.criteria().stream().flatMap(c -> c.items() == null ? java.util.stream.Stream.<RubricItem>empty()
-                : c.items().stream()).filter(item -> !(item.text() == null || item.text().isBlank()) || item.points() != null)
-                .toList();
+                : c.items().stream()).filter(RubricService::isWritten).toList();
+    }
+
+    private static boolean isWritten(RubricItem item) {
+        return !(item.text() == null || item.text().isBlank()) || item.points() != null;
     }
 
     private static BigDecimal points(AssignmentRubric rubric) {

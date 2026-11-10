@@ -89,6 +89,12 @@ class EvaluationVersionIntegrationTest {
             context.close();
     }
 
+    @Test
+    void applicationRoleCanReadAndWriteVisibilityButCannotDelete() {
+        assertThat(owner.queryForObject("select has_table_privilege('app', 'grade_distribution_visibility', 'SELECT,INSERT,UPDATE')", Boolean.class)).isTrue();
+        assertThat(owner.queryForObject("select has_table_privilege('app', 'grade_distribution_visibility', 'DELETE')", Boolean.class)).isFalse();
+    }
+
     Evaluation seed() {
         UUID account = UUID.randomUUID(), subject = UUID.randomUUID(), course = UUID.randomUUID();
         UUID assignment = UUID.randomUUID(), attempt = UUID.randomUUID();

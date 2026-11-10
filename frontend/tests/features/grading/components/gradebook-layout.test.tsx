@@ -264,3 +264,27 @@ it("restores gradebook search and pagination while typing replaces the current e
   expect(new URLSearchParams(window.location.search).get("gradebookPage")).toBe("1");
   await waitFor(() => expect(mocks.loadGradebook).toHaveBeenLastCalledWith("class-1", "An", 1));
 });
+
+
+it("offers batch selection with server versions in assignment mode", async () => {
+  mocks.listSubmissions.mockResolvedValue({ rows: [{ student: { accountId: "s1", name: "An" },
+    evaluationId: "batch-e1", version: 7, status: "DRAFT" }], total: 1 });
+  render(<ClassGradebookTab classId="class-1" />);
+  fireEvent.click(await screen.findByRole("button", { name: "Thao tác hàng loạt" }));
+  fireEvent.click(await screen.findByRole("checkbox", { name: "Chọn An" }));
+  expect(screen.getByRole("button", { name: "Chốt điểm đã chọn" })).toBeEnabled();
+});
+
+it.each([
+  ["FINALIZED", true, false], ["PUBLISHED", true, true], ["PENDING", true, true], ["DRAFT", false, false],
+] as const)("only offers valid grade actions for a %s submission", async (status, finalizeDisabled, publishDisabled) => {
+  mocks.listSubmissions.mockResolvedValue({ rows: [{ student: { accountId: "s1", name: "An" },
+    evaluationId: "batch-e1", version: 7, status }], total: 1 });
+  render(<ClassGradebookTab classId="class-1" />);
+  fireEvent.click(await screen.findByRole("button", { name: "Thao tác hàng loạt" }));
+  fireEvent.click(await screen.findByRole("checkbox", { name: "Chọn An" }));
+  const finalize = screen.getByRole("button", { name: "Chốt điểm đã chọn" });
+  const publish = screen.getByRole("button", { name: "Công bố đã chọn" });
+  expect(finalize).toHaveProperty("disabled", finalizeDisabled);
+  expect(publish).toHaveProperty("disabled", publishDisabled);
+});

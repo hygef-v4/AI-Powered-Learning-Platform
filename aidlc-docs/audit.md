@@ -12056,6 +12056,126 @@ sửa soạn câu hỏi từ popup về flat
 
 Only audit.md required manual resolution; both branch blocks retained verbatim. Verified all105 feature and17 incoming staging application paths match their respective parent blobs exactly. Merged frontend861tests/125files, full lint and typecheck passed. Full local backend verification is running; one pre-existing backup assertion decodes UTF-8 bytes using Java17's Windows default charset. Confirm with UTF-8 separately without changing unrelated source. Latest-head GitHub Linux full CI must pass before the authorized staging merge; original PR CI is not reused for the resolution head.
 
+
+## Grading remediation continuation
+**Timestamp**: 2026-11-10T03:40:11.360412+00:00
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi làm tiếp, tự làm đừng chia subagent"
+**AI Response**: Continue the reviewed Antigravity plan sequentially without subagents. Restored stash e9dd4bdd onto matching HEAD d0e56561; original stash retained. Track execution in construction/plans/code-generation-plan/2026-11-10-grading-remediation-continuation.md. No commit/push/deploy/live grade write.
+
+---
+
+
+## Grading remediation completed and verified
+**Timestamp**: 2026-11-10T04:24:57.656604+00:00
+**Requested by:** Quang Hung
+**AI Response**: Completed the reviewed Antigravity continuation sequentially without subagents. Full backend verify passed 2,095 tests with zero failures/errors/skips and packaged the JAR; five required suites and 57 traced cases passed. Full frontend passed 870 tests/127 files, lint, typecheck and production build. Source snapshot unchanged. Current docs/contracts and plan checkboxes synchronized; see construction/build-and-test/2026-11-10-grading-remediation-results.md.
+**Context**: Official grades remain locked; optional member reasons, privacy thresholds and individual resubmission semantics retained. The traced composed group test now checks draft resets and official preservation; historical reports unchanged. Original stash retained; changes unstaged. No subagents, authenticated browser/provider acceptance, live data writes, runtime restart, live migration, commit, push or deployment. Security/Resiliency retained; PBT disabled.
+
+---
+
+
+## UI acceptance instructions after user-reported restart
+**Timestamp**: 2026-11-10T04:34:09.986801+00:00
+**Requested by:** Quang Hung
+**User Input**: "tôi resrat rồi h đưa tooi quy  trình test trên ui , và ddauw tôi tóm tắt những gì đã sửa trong các changes hiện tại"
+**AI Response**: Rechecked current Git changes, exact UI labels and recorded evidence. Application source still matches the verified 1,637-file snapshot. Created construction/build-and-test/2026-11-10-grading-ui-acceptance.md with ordered teacher/student/group/quiz/deadline/Practice/privacy checks and expected outcomes. User reports restart; no runtime/artifact/migration verification or UI execution claimed.
+**Context**: Documentation only; no application changes, repeat test run, live grading/provider action, commit/push or delegation. Existing verification remains dated evidence.
+
+---
+
+
+## Grading UI screenshot follow-up
+**Timestamp**: 2026-11-10T04:55:57.799719+00:00
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] [Image #2] cái bar điểm số 0/10 đang bị che kuhaast ở phía trên, các chit tiết nhận xết các ô đang hơi nhỏ gv phải bấm vào cuộn xuống rất khó khăn, đi tới đoạn làm bài ko cần phải thêm id vào ui, k tạo được đề xuất k cần phải lưu lịch sử, lịch sử nên có giờ ngày tạo đề xuất ai"
+**AI Response**: Continue the existing authorized U09 remediation sequentially, without subagents. Fix toolbar-relative sticky score/comments, expanding readable feedback fields, clean evidence links and dated successful proposal history. Latest failure remains an actionable notice; internal task diagnostics and records remain intact. See construction/plans/code-generation-plan/2026-11-10-grading-ui-feedback-polish.md. No live provider request, grade write, backend change, migration, runtime restart, commit or push.
+
+---
+
+
+## Grading UI follow-up verification
+**Timestamp**: 2026-11-10T04:56:54.738909+00:00
+**Requested by:** Quang Hung
+**AI Response**: Completed screenshot follow-up. Affected205/20files and full frontend873/127files passed; lint/typecheck/production build passed. Inspected synthetic real-component fixtures at1440px and390px, including dynamic toolbar height and long feedback. Latest error notice retained without failed history cards; successful cards show backend creation dates in Vietnam time. See construction/build-and-test/2026-11-10-grading-ui-feedback-polish.md for evidence and limits. No authenticated/provider/live data action, backend change, migration, application restart, commit, push or delegation. Temporary fixture closed.
+
+---
+
+
+## AI grading button and error screenshot
+**Timestamp**: 2026-11-10T05:08:34.091244+00:00
+**Requested by:** Quang Hung
+**User Input**: "để nút chấm bằng ai to hơn chút [Image #1] với lại đang lỗi gì này, nút chấm bằng ai ghi rõ chấm bằng AI chứ ddwungf để mỗi cái icon"
+**AI Response**: Increase the existing control to36px and show its label permanently; wrap narrow read-only toolbar layout without changing action guards. Read-only Orca terminal and PostgreSQL evidence confirms two Gemini READY results rejected by grading validation with PROPOSAL_SCHEMA_MISMATCH. Past payloads are deliberately cleared after handling, so no exact field-level cause or backend fix is claimed. See construction/plans/code-generation-plan/2026-11-10-grading-ai-button-and-error.md and the corresponding build-and-test report. No subagents/provider retry/live grade write or backend change.
+
+---
+
+
+## AI grading action verification receipt
+**Timestamp**: 2026-11-10T05:09:17.714733+00:00
+**Requested by:** Quang Hung
+**AI Response**: UI label/size change and narrow toolbar wrapping verified:206 tests/20files, scoped ESLint, typecheck, production build and desktop/mobile component fixtures passed. Temporary fixture closed. Exact field-level cause of the two past AI rejections remains unproven because handled output has already been cleared; no provider rerun or backend fix claimed. Report: construction/build-and-test/2026-11-10-grading-ai-button-and-error.md.
+
+---
+
+
+## AI grading rejection fix requested
+**Timestamp**: 2026-11-10T05:18:18.948232+00:00
+**Requested by:** Quang Hung
+**User Input**: "check log đi giúp tôi sửa lỗi ai"
+**AI Response**: Investigate and fix sequentially without subagents. Read runtime logs and replayed last successful payload against current rubric; accepted. Added validation-stage-only diagnostics, checked zero queued/running AI tasks and gracefully refreshed the local API/worker. Authenticated teacher browser is available. Sent one controlled proposal request through the API with no application to draft and no save/finalize. A read-only in-memory probe watches the transient result and preserves only anonymized regression shape if rejected; raw output clearing remains intact. Plan: construction/plans/code-generation-plan/2026-11-10-grading-ai-rejection-fix.md.
+
+---
+
+
+## AI grading rejection fix verified
+**Timestamp**: 2026-11-10T05:28:24.051364+00:00
+**Requested by:** Quang Hung
+**AI Response**: Confirmed provider output selected full-credit checks for zero scores, reproducing strict rejection. Provider-only schema now omits checks; existing normalization derives them from points. Full MCP schema and strict checks/evidence/range/total guards retained. Added safe validation-stage and specific mismatch diagnostics. Connected210 tests/38classes0skip, final14 regression and Maven verify/JAR passed. Refreshed local API/worker and performed one post-fix real Gemini call: proposal23feea03-368d-4f6d-9e3b-97cc4643f28b READY, score0.00, zero checks,16 feedback items; task delivery APPLIED to proposal storage only. Evaluation remained DRAFT/version17 with identical grade fingerprint. Separate authenticated Chrome tab shows the new ready proposal/date; original tab preserved. Two provider calls total including reproduction; no grade save/finalize/publish, migration, commit/push or delegation. Full report: construction/build-and-test/2026-11-10-grading-ai-rejection-fix.md.
+
+---
+
+
+## Grading feedback formatting requested
+**Timestamp**: 2026-11-10T05:45:20.902234+00:00
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] giúp tôi format lạ phần nhậ xét chung , điểm mạnh và điểm cần cải thiện nên format chữ cho gọn gàng, xuống dòng các theuws"
+**AI Response**: Improve the existing teacher feedback layout: explicit paragraph action for general feedback; separate bulleted summary entries with add/remove controls and retained manual line breaks. Fix the old per-keystroke summary parsing that erased trailing newlines. Preserve plain text/array contracts, limits, historical nextSteps and save/review behavior. Remove only blank editing rows at save. No subagents/live grading/provider request/backend change or restart. Plan: construction/plans/code-generation-plan/2026-11-10-grading-feedback-format.md.
+
+---
+
+
+## Grading feedback formatting verified
+**Timestamp**: 2026-11-10T05:50:15.885670+00:00
+**Requested by:** Quang Hung
+**AI Response**: Completed plain-text paragraph action and per-idea summary editing/spacing; Enter no longer disappears through per-keystroke parsing. Existing array/text limits and historical/review fields retained; blank editing rows excluded at save. Grading/document210/20files and final grading154/17files, scoped ESLint, typecheck/build passed. Inspected synthetic real-component fixtures at1440px/390px, no inner/horizontal overflow. Temporary fixture closed. No live save/finalize/publish, provider call, backend change/restart, migration, commit/push or delegation. Report: construction/build-and-test/2026-11-10-grading-feedback-format.md.
+
+---
+
+
+## Repeated grade actions requested
+**Timestamp**: 2026-11-10T06:12:45.668064+00:00
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] nếu chốt điểm hoặc đã công bố điểm mà bấm vào chốt haowjc công bố lần nữa ở 1 student ở đây thì thông báo lỗi như này"
+**User Follow-up**: "xong chưa"
+**AI Response**: Trace repeat action UI. Known raw states now filter eligible items for gradebook and submission-detail batches; actions without candidates disable. On INVALID_GRADE_STATE, shared dialog reads only affected evaluations to recognize already-completed state; it never auto-finalizes an already published/unconfirmed grade. Preserve original-version and backend guards. Translate outcomes and allow closing result dialogs. Plan: construction/plans/code-generation-plan/2026-11-10-grading-repeat-actions.md. No live finalize/publish/backend change/restart or subagents.
+
+---
+
+
+## Repeated grade actions verified
+**Timestamp**: 2026-11-10T06:14:03.309523+00:00
+**Requested by:** Quang Hung
+**AI Response**: Completed raw-state candidate filtering and disabled actions for already-completed grades in gradebook/submission selection. Shared dialog reconciles INVALID_GRADE_STATE by read, skips completed grades and preserves original versions, genuine errors/review guards and draft-only publish fallback. Vietnamese outcomes/close action. Grading167 tests/18files, scoped ESLint, typecheck/build and authenticated read-only browser controls passed. Selected actual published student: AI/finalize/publish all disabled; no grade mutation sent. Existing CSP style console reports observed, unchanged. No backend change/restart, migration, commit/push or delegation. Report: construction/build-and-test/2026-11-10-grading-repeat-actions.md.
+
+---
+
+
+## Grading local commits requested and verified
+**Timestamp**: 2026-11-10T06:24:42.261637+00:00
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit rõ ràng, chưa push"
+**AI Response**: Reviewed119 changed files and explicit group manifests, checked added content for credential patterns and retained original stash. Created local source commits51428543 (rubric/deadline),66af2cd5 (quiz/activity),27ec9f0a (grading/group/AI backend),8f0ac9ea (grading UI). This documentation commit records the fifth group. Fresh full backend2096/0fail/0error/0skip plus executable JAR, five required suites/57 traced cases, full frontend891/128files, full lint/typecheck passed. Application source hashes unchanged during packaging. Combined final tree verified; intermediate commits not separately rebuilt. No push, GitHub CI, deployment, runtime restart, provider/live grade action or subagents. Receipt: construction/build-and-test/2026-11-10-grading-local-commits.md.
 ## Tính năng: khung chat AI sửa đề đang có
 **Timestamp**: 2026-11-09T16:10:00Z
 **Requested by:** Đào Chí Cường
@@ -12134,5 +12254,40 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 **User Input**: "kiểm tra và solve conflict cho tôi"
 **AI Response**: "Merge origin/staging (0deea035) vào feat/quiz-draw-rule-shortage-warning (490512b2). Conflict duy nhất ở aidlc-docs/audit.md do hai phía cùng nối thêm vào cuối file; giữ cả hai theo thứ tự thời gian: 5 mục ngày 2026-11-03 của nhánh PR trước, rồi các mục từ 2026-11-04 của staging. Kết quả khác origin/staging đúng ở audit.md, mã nguồn giống hệt bản staging đã kiểm thử đầy đủ."
 **Context**: Giải quyết conflict merge trên nhánh PR; chưa push.
+
+---
+
+
+## Staging merge check and authorized resolution
+**Timestamp**: 2026-11-10T06:45:33Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi check conflict merge với xem staging thay đổi gì"
+**AI Response**: Read-only comparison confirmed current MERGE_HEAD57b0bb8d matches fetched origin/staging,97 automatically staged paths and only audit.md unresolved. Frontend typecheck and59 backend tests passed; frontend284/285 exposed an old feedback fixture without closesAt/serverTime required by the new history gate. No merge commit or push during inspection.
+
+---
+
+## Resolve and merge staging
+**Timestamp**: 2026-11-10T06:45:33Z
+**Requested by:** Quang Hung
+**User Input**: "resolve và merge"
+**AI Response**: Authorized completion of the existing staging merge into fix/u05-u09-u15. Removed only the three audit conflict markers, preserving both histories verbatim. Updated the published-feedback test fixture to supply a post-deadline serverTime. No production behavior changed during resolution. Full merged-tree frontend/backend verification in progress before the local merge commit; no push, app restart or live data action.
+
+---
+
+
+## Staging merge verification and local delivery
+**Timestamp**: 2026-11-10T06:50:50Z
+**Requested by:** Quang Hung
+**User Input**: "resolve và merge"
+**AI Response**: Full merged-tree Maven verify passed2110 tests with0failures/errors/skips and executable JAR; full frontend908 tests/129files, lint and typecheck passed. Removed only three audit conflict markers and proved both histories retained exactly before appending this task. Compared every staged index entry to the initial user merge: only audit.md, aidlc-state.md and the one-line feedback fixture changed during manual resolution. CRLF-aware staged whitespace check passed; incoming line endings retained. Complete the authorized local merge using original parents b9bf1889 and57b0bb8d. No push, UI/provider acceptance, frontend production build, live migration, app restart, deployment or subagents. Logs retained under ignored .tmp/staging-final-*.log.
+
+---
+
+
+## Authorized staging-to-main pull request and CI gate
+**Timestamp**: 2026-11-10T06:55:26Z
+**Requested by:** Quang Hung
+**User Input**: "tạo pr từ staging lên main, chạy ci nếu pass thì merge vào main"
+**AI Response**: Confirmed remote main57b0bb8d is an ancestor of remote staging7fbf5703; release scope is five grading/quiz/assignment/UI documentation commits plus the previous merge. User explicitly authorizes creating the PR, running CI and merging only after success, superseding the earlier no-push restriction for this release. Record this request in a documentation-only staging commit, publish it without force, create staging-to-main PR and require successful backend/frontend/deploy-script jobs on its current head. PR images is intentionally skipped; main push builds and publishes SHA-tagged images, which existing VPS automation may deploy. Full local merged-source verification2110 backend tests/JAR and908 frontend tests/lint/typecheck passed before this documentation-only change. Final CI and merge receipt is recorded in the GitHub PR and chat; no infrastructure settings changed or branch deletion.
 
 ---

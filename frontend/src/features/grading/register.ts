@@ -2,7 +2,7 @@
 import { createElement } from "react";
 import { teacherClassTabs, studentDetailSections } from "@/features/academics/slots";
 import { assignmentRowActions, assignmentSettingsSections } from "@/features/assignments/slots";
-import { attemptResultSources, studentAssignmentResults } from "@/features/assignmentwork/slots";
+import { attemptResultSources, studentAssignmentResults, studentAssignmentFeedback, studentGradeDistributions } from "@/features/assignmentwork/slots";
 import { ClassGradebookTab } from "./components/ClassGradebookTab";
 import { ClassProgressSection } from "./components/ClassProgressSection";
 import { StudentGradesSection } from "./components/StudentGradesSection";
@@ -60,3 +60,7 @@ attemptResultSources.register({
     };
   },
 });
+
+import { StudentPublishedFeedback, StudentGradeDistribution } from "./components/StudentPublishedFeedback";
+studentAssignmentFeedback.register({ key: "u09-published-feedback", order: 90, component: StudentPublishedFeedback });
+studentGradeDistributions.register({ key: "u09-grade-distribution", order: 90, component: StudentGradeDistribution });

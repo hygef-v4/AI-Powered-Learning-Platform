@@ -65,6 +65,20 @@ function openAi() {
   fireEvent.click(btn);
 }
 describe("workspace save", () => {
+  it("separates general feedback into paragraphs without changing decimal points or saving automatically", async () => {
+    mocks.loadEvaluation.mockResolvedValue({ ...detail, evaluation: { ...detail.evaluation, feedback: "Đạt 1.25/2.00 điểm. Cần bổ sung sơ đồ. Hoàn thiện phần còn thiếu." } });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Tách đoạn" }));
+    expect(screen.getByRole("textbox", { name: "Nhận xét chung" })).toHaveValue("Đạt 1.25/2.00 điểm.\n\nCần bổ sung sơ đồ.\n\nHoàn thiện phần còn thiếu.");
+    expect(screen.getByRole("button", { name: "Tách đoạn" })).toBeDisabled();
+    expect(mocks.saveEvaluation).not.toHaveBeenCalled();
+  });
+  it("shows a larger AI grading button with a visible text label", async () => {
+    render(<GradingWorkspacePage evaluationId="e" />);
+    const button = await screen.findByRole("button", { name: "Chấm bằng AI" });
+    expect(button).toHaveTextContent("Chấm bằng AI");
+    expect(button).toHaveClass("h-9!", "px-3!", "text-sm!");
+  });
   it("shows the section author beside the heading and jumps to member grades", async () => {
     mocks.loadEvaluation.mockResolvedValue({
       ...detail,
@@ -252,7 +266,7 @@ it("shows a live score and named sections while AI is unavailable, without savin
   fireEvent.click(await screen.findByRole("checkbox", { name: /Đúng quan hệ/ }));
   expect(screen.getByLabelText("Điểm tạm tính")).toHaveTextContent("2.50 / 10.00");
   expect(screen.getByRole("region", { name: "Rubric: Câu 1: Class Diagram" })).toHaveTextContent("Đạt 2.5");
-  expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
+  expect(screen.getAllByRole("spinbutton").length).toBeGreaterThan(0);
   expect(screen.queryByText(/Điều chỉnh/)).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Lưu nháp / thay đổi" })).toBeEnabled();
   expect(screen.getByRole("button", { name: "Chốt điểm" })).toBeDisabled();

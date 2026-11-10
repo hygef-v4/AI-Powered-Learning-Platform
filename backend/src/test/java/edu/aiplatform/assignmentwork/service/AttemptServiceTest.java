@@ -207,6 +207,14 @@ class AttemptServiceTest {
     }
 
     @Test
+    void submittingWithinThirtySecondGraceWithoutLateWindowIsNotLate() {
+        f.view = f.view(AssignmentStatus.OPEN, SubmissionMode.INDIVIDUAL, GradingMode.GRADED,
+                NOW.minusSeconds(15), null, 2);
+        AssignmentAttempt a = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.minusSeconds(15), false);
+        assertThat(f.attemptService.submit(f.student, a.id(), 0).late()).isFalse();
+    }
+
+    @Test
     void autoSubmitAtDeadlineKeepsWarningsAndRunsOnce() {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.minus(Duration.ofMinutes(2)), false);
         f.view = f.view(AssignmentStatus.OPEN, SubmissionMode.INDIVIDUAL, GradingMode.GRADED, NOW.minus(Duration.ofMinutes(2)), null, 2);

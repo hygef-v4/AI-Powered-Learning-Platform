@@ -44,7 +44,7 @@ class EvaluationTest {
         assertThatThrownBy(() -> e.saveGrade("{}", new BigDecimal("6"), BigDecimal.ZERO, null, null, null, actor, now))
                 .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
                         ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
-        assertThatThrownBy(() -> e.overrideMemberScore(BigDecimal.TEN, "correction", actor, now));
+        assertThatThrownBy(() -> e.overrideMemberScore(BigDecimal.TEN, BigDecimal.ZERO, "correction", actor, now));
         assertThat(e.memberOverride).isFalse();
         assertThat(e.status()).isEqualTo(EvaluationStatus.PUBLISHED);
         assertThat(e.score()).isEqualByComparingTo("4");
@@ -74,5 +74,27 @@ class EvaluationTest {
         assertThatThrownBy(
                 () -> e.saveGrade("{}", BigDecimal.ONE, BigDecimal.ZERO, null, "x".repeat(10001), null, actor, now))
                 .hasMessageContaining("10000");
+    }
+    @Test
+    void draftScoreChangesKeepHistoryAndGroupAdjustment() {
+        var root = evaluation();
+        root.saveGrade("{}", new BigDecimal("6"), BigDecimal.ONE, "bonus", "old", null, actor, now);
+        root.saveGrade("{}", new BigDecimal("7"), BigDecimal.ONE, "bonus", "new", "correction", actor, now.plusSeconds(1));
+        assertThat(root.history()).singleElement().satisfies(h -> {
+            assertThat(h.before()).isEqualByComparingTo("7");
+            assertThat(h.after()).isEqualByComparingTo("8");
+            assertThat(h.previousFeedback()).isEqualTo("old");
+            assertThat(h.reason()).isEqualTo("correction");
+        });
+        var member = evaluation();
+        member.inheritGroupGrade(root, null, actor, now);
+        assertThat(member.score).isEqualByComparingTo("8");
+        assertThat(member.adjustment).isEqualByComparingTo("1");
+        member.overrideMemberScore(new BigDecimal("5"), new BigDecimal("7"), "contribution", actor, now);
+        assertThat(member.adjustment).isEqualByComparingTo("-2");
+        root.saveGrade("{}", new BigDecimal("8"), BigDecimal.ONE, "bonus", "new", null, actor, now);
+        member.inheritGroupGrade(root, null, actor, now);
+        assertThat(member.score).isEqualByComparingTo("5");
+        assertThat(member.adjustment).isEqualByComparingTo("-3");
     }
 }

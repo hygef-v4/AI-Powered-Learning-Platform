@@ -64,7 +64,8 @@ public class GroupDocumentRepository {
                         + "on conflict (group_id, assignment_id) do nothing")
                 .param("id", d.id()).param("groupId", d.groupId()).param("assignmentId", d.assignmentId())
                 .param("classId", d.classId()).param("status", d.status().name()).param("shared", write(d.sharedBlocks()))
-                .param("activity", d.activityMonitoring()).param("lastChangedAt", ts(d.lastChangedAt()))
+                .param("activity", d.activityMonitoring())
+                .param("lastChangedAt", ts(d.lastChangedAt() == null ? Instant.EPOCH : d.lastChangedAt()))
                 .param("createdAt", ts(d.createdAt())).update() == 1;
     }
 
@@ -146,7 +147,7 @@ public class GroupDocumentRepository {
         p.put("late", d.late());
         p.put("hash", d.receiptHash());
         p.put("warnings", write(d.warnings()));
-        p.put("lastChangedAt", ts(d.lastChangedAt()));
+        p.put("lastChangedAt", ts(d.lastChangedAt() == null ? Instant.EPOCH : d.lastChangedAt()));
         return jdbc.sql("update group_documents set status = :status, auto_submit_reason = :autoReason, "
                         + "submitted_document = cast(:submitted as jsonb), section_authors = cast(:authors as jsonb), "
                         + "submitted_by = :submittedBy, submit_mode = :mode, submitted_at = :submittedAt, late = :late, "
@@ -250,6 +251,7 @@ public class GroupDocumentRepository {
         String auto = rs.getString("auto_submit_reason");
         String mode = rs.getString("submit_mode");
         String submitted = rs.getString("submitted");
+        Instant lastChangedAt = instant(rs.getTimestamp("last_changed_at"));
         return new GroupDocument(rs.getObject("id", UUID.class), rs.getObject("group_id", UUID.class),
                 rs.getObject("assignment_id", UUID.class), rs.getObject("class_id", UUID.class),
                 GroupDocument.Status.valueOf(rs.getString("status")), read(rs.getString("shared"), DocumentModel.class),
@@ -257,7 +259,7 @@ public class GroupDocumentRepository {
                 submitted == null ? null : read(submitted, DocumentModel.class), readList(rs.getString("authors"), AUTHORS),
                 rs.getObject("submitted_by", UUID.class), mode == null ? null : GroupDocument.SubmitMode.valueOf(mode),
                 instant(rs.getTimestamp("submitted_at")), rs.getBoolean("late"), rs.getString("receipt_hash"),
-                readList(rs.getString("warnings"), STRINGS), instant(rs.getTimestamp("last_changed_at")),
+                readList(rs.getString("warnings"), STRINGS), Instant.EPOCH.equals(lastChangedAt) ? null : lastChangedAt,
                 rs.getLong("version"), instant(rs.getTimestamp("created_at")));
     }
 

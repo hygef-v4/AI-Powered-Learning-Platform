@@ -13,10 +13,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class GradingProposalValidator {
+    private static final Logger log = LoggerFactory.getLogger(GradingProposalValidator.class);
     private static final int MAX_FEEDBACK_LENGTH = 10000;
     private static final int MAX_PAYLOAD_LENGTH = 262144;
     private static final Set<String> PROPOSAL_FIELDS = Set.of("checks", "score", "feedback",
@@ -50,6 +53,8 @@ public class GradingProposalValidator {
             return "FEEDBACK_UNKNOWN_FIELD";
         if (detail.equals("AI total does not match rubric item scores"))
             return "PROPOSAL_TOTAL_MISMATCH";
+        if (detail.equals("Checks must match full-credit item scores"))
+            return "PROPOSAL_CHECKS_MISMATCH";
         if (detail.equals("Invalid section reference"))
             return "PROPOSAL_SECTION_MISMATCH";
         if (detail.equals("Unknown rubric item") || detail.equals("Unknown rubric"))
@@ -75,9 +80,12 @@ public class GradingProposalValidator {
     /** Validates a proposal against its rubric, submission blocks, and structured feedback. */
     public Validated validateProposal(JsonNode payload, List<RubricView> rubrics,
             Set<String> validBlockIds) {
+        String stage = "SHAPE";
         try {
             requireProposalObject(payload);
+            stage = "CHECKS";
             var checks = readChecks(payload);
+            stage = "ITEM_SCORES";
             Map<UUID, Map<UUID, BigDecimal>> itemScores = payload.has("itemScoresByRubric")
                     ? objectMapper.convertValue(payload.get("itemScoresByRubric"),
                             new com.fasterxml.jackson.core.type.TypeReference<Map<UUID, Map<UUID, BigDecimal>>>() {
@@ -87,17 +95,23 @@ public class GradingProposalValidator {
                 throw new IllegalArgumentException();
             requireCompleteScores(rubrics, checks, itemScores);
             var score = RubricScoring.calculateScore(rubrics, checks, itemScores);
+            stage = "TOTAL";
             requireMatchingScore(payload.get("score"), score);
+            stage = "FEEDBACK";
             var feedback = readFeedback(payload.get("feedback"));
             var sections = payload.get("sections");
+            stage = "SECTIONS";
             validateSections(sections, rubrics);
+            stage = "STRUCTURED_FEEDBACK";
             GradingFeedback structuredFeedback = gradingFeedbackValidator
                     .validateNode(payload.get("structuredFeedback"), rubrics, validBlockIds, true);
             return new Validated(checks, score, feedback, sections,
                     RubricScoring.copyItemScores(itemScores), structuredFeedback);
         } catch (ApiException ex) {
+            log.warn("AI proposal validation rejected stage={} diagnostic={}", stage, buildRejectionDiagnostic(ex));
             throw ApiException.badRequest("INVALID_AI_PROPOSAL", ex.getMessage());
         } catch (RuntimeException ex) {
+            log.warn("AI proposal validation rejected stage={} exception={}", stage, ex.getClass().getSimpleName());
             throw ApiException.badRequest("INVALID_AI_PROPOSAL",
                     "AI proposal does not match the rubric schema");
         }
@@ -209,9 +223,11 @@ public class GradingProposalValidator {
             throw ApiException.badRequest("INVALID_AI_PROPOSAL", "AI proposal too large");
         try {
             return objectMapper.reader()
+                    .with(com.fasterxml.jackson.databind.DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
                     .with(com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
                     .readTree(value);
         } catch (Exception ex) {
+            log.warn("AI proposal validation rejected stage=JSON_PARSE exception={}", ex.getClass().getSimpleName());
             throw ApiException.badRequest("INVALID_AI_PROPOSAL", "Invalid AI proposal JSON");
         }
     }

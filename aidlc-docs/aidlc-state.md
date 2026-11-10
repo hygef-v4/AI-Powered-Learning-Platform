@@ -485,3 +485,77 @@ User requested a PR before merge into staging. Source headfb8846ad has four feat
 ## PR59 conflict resolution / merge authorization — 2026-11-10
 
 User explicitly requested resolving PR59 and merging into staging. Latest staging9a07e1e introduces U08 feedback/U12 changes. Only audit.md had a textual conflict; preserve both histories, do not drop either side. Application changes merged automatically. Refresh checks on the resolution head and merge with exact-head protection only after CI passes; preserve feature commits/branch and do not deploy production. Previous PR-only authorization is superseded for this merge. Security/Resiliency retained; PBT disabled.
+
+
+## Grading remediation continuation — 2026-11-10
+
+- [x] Restored the 37-file Antigravity stash; completed the five-wave scope sequentially, without subagents.
+- [x] Official group-grade preservation, member history/transfer/adjustments (including legacy data), AI validation, group evidence/freshness, rubric/deadline/quiz fixes, query batching, student feedback, batch controls and bounded polling.
+- [x] Requirements/stories, affected unit docs, OpenAPI and the original/continuation plans synchronized.
+- [x] Final backend 2,095 tests with zero failures/errors/skips and executable JAR; required five-suite/57-case guard passed. Frontend 870 tests/127 files, full lint/typecheck/build passed. Source snapshot unchanged.
+
+[Results, evidence and applying migrations](construction/build-and-test/2026-11-10-grading-remediation-results.md). Original stash retained; changes unstaged, no commit/push/deploy. Existing browser was at login; no authenticated UI/mobile/provider acceptance or live grade write. No running API/worker restart or live migration. Update the local backend through the existing Flyway startup process to apply the two new migrations. Security/Resiliency retained; PBT disabled.
+
+
+## Grading UI screenshot follow-up — 2026-11-10
+
+- [x] Measured toolbar-relative score/comment offset, readable auto-growing feedback, clean evidence links, dated successful proposal cards; latest failure notice retained outside history. Internal diagnostics preserved.
+- [x] Full frontend873/127files, lint/typecheck/build; desktop/mobile real-component fixture inspected. No authenticated session/provider/live grade write or backend change/restart.
+
+[Results and acceptance](construction/build-and-test/2026-11-10-grading-ui-feedback-polish.md). Existing work retained, no subagents/commit/push. Security/Resiliency retained; PBT disabled.
+
+
+## AI grading action and reported rejection — 2026-11-10
+
+- [x] Larger36px AI grading action with permanent label; narrow read-only toolbar wraps. Regression206/20files, scoped lint, typecheck/build and synthetic desktop/mobile fixture passed.
+- [x] Read-only runtime diagnosis: two Gemini tasks READY then grading REJECTED. Output deliberately cleared after handling; exact invalid field remains unproven. No backend fix or successful new provider run claimed.
+
+[Evidence and limits](construction/build-and-test/2026-11-10-grading-ai-button-and-error.md). No subagents/live grade/provider retry/application restart/commit/push. Security/Resiliency retained; PBT disabled.
+
+
+## AI grading rejection fixed — 2026-11-10
+
+- [x] Reproduced zero-score/full-credit-check contradiction with controlled Gemini request; provider output now omits redundant checks and existing normalization derives them. Full MCP schema/strict validation retained.
+- [x] Red/green regression, connected210/38classes0skip, final14 regression, Maven verify/JAR and live Gemini READY with16 feedback items passed. Local API/worker refreshed; grade fingerprint/version unchanged in final verification.
+- [x] Opened new proposal in a separate authenticated Chrome tab; original tab preserved. Two provider calls; no grade apply/save/finalize/publish, migration, commit/push or subagents.
+
+[Results and limits](construction/build-and-test/2026-11-10-grading-ai-rejection-fix.md). Other models were not tested live; whole-backend suite not repeated. Security/Resiliency retained; PBT disabled.
+
+
+## Grading feedback formatting — 2026-11-10
+
+- [x] General paragraph action/readable type; strengths/improvements as separate editable bulleted ideas with retained newlines and add/remove/limit controls. Blank draft rows excluded only at save.
+- [x] Grading/document210/20files, final grading154/17files, scoped lint, typecheck/build and synthetic desktop/mobile inspection passed.
+
+[Evidence and acceptance](construction/build-and-test/2026-11-10-grading-feedback-format.md). No live grade save, provider call, backend/runtime change, commit/push or subagents. Security/Resiliency retained; PBT disabled.
+
+
+## Repeated grade actions — 2026-11-10
+
+- [x] Shared state eligibility for both batch selectors; readable completed/race feedback and safe draft-only publish fallback. Backend guards retained.
+- [x] Grading167/18files, scoped lint, typecheck/build; authenticated gradebook shows published student with all batch actions disabled.
+
+[Results and limits](construction/build-and-test/2026-11-10-grading-repeat-actions.md). No live finalize/publish, backend/runtime change, migration, commit/push or subagents. Security/Resiliency retained; PBT disabled.
+
+
+## Grading local commit delivery — 2026-11-10
+
+- [x] User requested clear local commits, explicitly no push. Five groups: rubric/deadline, quiz/activity, grading/group/AI backend, grading UI, then AI-DLC records.
+- [x] Fresh full backend2096 tests0skip/JAR and five-suite/57-case guard; full frontend891/128files, lint/typecheck passed. Source unchanged during packaging.
+- [x] Source commits51428543,66af2cd5,27ec9f0a,8f0ac9ea; this final documentation commit completes the series. Original Antigravity stash retained.
+
+[Commit receipt and limits](construction/build-and-test/2026-11-10-grading-local-commits.md). No push, GitHub CI, deployment, runtime restart, provider call, live grade write or subagents in this turn. Security/Resiliency retained; PBT disabled.
+
+
+## Staging merge resolution — 2026-11-10
+
+- [x] Resolve the existing merge of staging57b0bb8d, retaining both audit histories exactly.
+- [x] Align the published-feedback test fixture with the new deadline-gated history behavior.
+- [x] Verify the merged source and complete the authorized local merge delivery; no push. Full backend verify2110 tests0fail0error0skip/JAR; frontend908 tests/129files, full lint/typecheck passed.
+
+Existing Security/Resiliency scope retained; PBT disabled. No production behavior changed by manual resolution. No UI/provider acceptance, frontend production build, deployment, live migration or application restart in this merge task.
+
+
+## Authorized staging-to-main release — 2026-11-10
+
+User authorized publishing a staging-to-main PR and merging after CI passes. Application source is the verified7fbf5703 tree; this checkpoint only records authorization. The GitHub PR/workflow and final chat response carry the release outcome without adding another source commit after verification. Existing Security/Resiliency scope retained; PBT disabled.
