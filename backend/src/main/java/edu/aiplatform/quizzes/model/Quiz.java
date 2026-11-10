@@ -3,6 +3,7 @@ package edu.aiplatform.quizzes.model;
 import edu.aiplatform.quizzes.contract.QuizScope;
 import edu.aiplatform.quizzes.contract.QuizSettings;
 import edu.aiplatform.quizzes.contract.QuizStatus;
+import edu.aiplatform.shared.content.FormattedText;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -14,7 +15,16 @@ public record Quiz(UUID id, QuizScope scope, UUID classId, UUID subjectId, UUID 
                    int versionNo, String title, String instructions, QuizSettings settings,
                    boolean activityMonitoringEnabled, String activityNotice, QuizPaperMode paperMode,
                    QuizStatus status, Instant publishedAt, Instant retiredAt, String retiredReason, UUID createdBy,
-                   Instant createdAt, Instant updatedAt, long version) {
+                   Instant createdAt, Instant updatedAt, long version, FormattedText instructionsDocument) {
+    public Quiz(UUID id, QuizScope scope, UUID classId, UUID subjectId, UUID sourceQuizId, QuizOrigin origin,
+                int versionNo, String title, String instructions, QuizSettings settings,
+                boolean activityMonitoringEnabled, String activityNotice, QuizPaperMode paperMode,
+                QuizStatus status, Instant publishedAt, Instant retiredAt, String retiredReason, UUID createdBy,
+                Instant createdAt, Instant updatedAt, long version) {
+        this(id, scope, classId, subjectId, sourceQuizId, origin, versionNo, title, instructions, settings,
+                activityMonitoringEnabled, activityNotice, paperMode, status, publishedAt, retiredAt,
+                retiredReason, createdBy, createdAt, updatedAt, version, null);
+    }
 
     /** Mặc định F6: không trộn, không giới hạn giờ, 1 lượt, hiện điểm, không hiện đáp án; theo dõi tắt. */
     /** Quiz mới: không giới hạn thời gian và số lượt (người soạn tự đặt), hiện điểm sau khi nộp. */
@@ -22,6 +32,7 @@ public record Quiz(UUID id, QuizScope scope, UUID classId, UUID subjectId, UUID 
 
     public Quiz {
         paperMode = paperMode == null ? QuizPaperMode.FIXED : paperMode;
+        if (instructionsDocument != null) instructions = instructionsDocument.validateLength(5000);
     }
 
     public boolean generated() {
@@ -54,7 +65,7 @@ public record Quiz(UUID id, QuizScope scope, UUID classId, UUID subjectId, UUID 
         requireEditable();
         return new Quiz(id, scope, classId, subjectId, sourceQuizId, origin, versionNo, title, instructions, settings,
                 activityMonitoringEnabled, activityNotice, newMode, status, publishedAt, retiredAt, retiredReason,
-                createdBy, createdAt, now, version);
+                createdBy, createdAt, now, version, instructionsDocument);
     }
 
     public Quiz withDetails(String newTitle, String newInstructions, QuizSettings newSettings, boolean monitoring,
@@ -62,7 +73,9 @@ public record Quiz(UUID id, QuizScope scope, UUID classId, UUID subjectId, UUID 
         requireEditable();
         return new Quiz(id, scope, classId, subjectId, sourceQuizId, origin, versionNo, newTitle, newInstructions,
                 newSettings, monitoring, notice, paperMode, status, publishedAt, retiredAt, retiredReason,
-                createdBy, createdAt, now, version);
+                createdBy, createdAt, now, version,
+                java.util.Objects.toString(instructions, "").strip()
+                        .equals(java.util.Objects.toString(newInstructions, "").strip()) ? instructionsDocument : null);
     }
 
     public Quiz published(Instant now) {
@@ -95,13 +108,19 @@ public record Quiz(UUID id, QuizScope scope, UUID classId, UUID subjectId, UUID 
     public Quiz copyAs(QuizOrigin newOrigin, int newVersionNo, UUID targetClassId, UUID actorId, Instant now) {
         return new Quiz(UUID.randomUUID(), scope, targetClassId, subjectId, id, newOrigin, newVersionNo, title,
                 instructions, settings, activityMonitoringEnabled, activityNotice, paperMode,
-                QuizStatus.DRAFT, null, null, null, actorId, now, now, 0);
+                QuizStatus.DRAFT, null, null, null, actorId, now, now, 0, instructionsDocument);
     }
 
     private Quiz with(QuizStatus newStatus, Instant newPublishedAt, Instant newRetiredAt, String reason, Instant now) {
         return new Quiz(id, scope, classId, subjectId, sourceQuizId, origin, versionNo, title, instructions, settings,
                 activityMonitoringEnabled, activityNotice, paperMode, newStatus, newPublishedAt,
-                newRetiredAt, reason, createdBy, createdAt, now, version);
+                newRetiredAt, reason, createdBy, createdAt, now, version, instructionsDocument);
+    }
+
+    public Quiz withInstructionsDocument(FormattedText document) {
+        return new Quiz(id, scope, classId, subjectId, sourceQuizId, origin, versionNo, title, instructions,
+                settings, activityMonitoringEnabled, activityNotice, paperMode, status, publishedAt, retiredAt,
+                retiredReason, createdBy, createdAt, updatedAt, version, document);
     }
 
     private void requireEditable() {

@@ -15,7 +15,9 @@ import {
   updateQuizDetails,
 } from "@/features/quizzes/api";
 import type { QuizDetail, QuizRow } from "@/features/quizzes/model/types";
-import { Button, Dialog, Field, Segmented, Select, TextInput } from "@/shared/ui";
+import { Button, Dialog, Field, Segmented, Select, Switch, TextInput } from "@/shared/ui";
+import { FormattedTextEditor } from "@/shared/document/FormattedTextEditor";
+import type { FormattedText } from "@/shared/document/formattedText";
 import { materialApi, materialError, moduleApi, outlinePaths, validYoutube } from "../api";
 import type { OutlineItem } from "../model/outline";
 import type { Material, ModuleQuiz, ModuleScope } from "../model/types";
@@ -24,14 +26,13 @@ type Content = "FILE" | "YOUTUBE_LINK" | "QUIZ";
 type StaffScope = Extract<ModuleScope, { kind: "subject" } | { kind: "class" }>;
 const NEW_QUIZ = "";
 
-const TEXTAREA =
-  "min-h-24 w-full rounded-lg border border-field px-3 py-2 text-[13.5px] text-ink outline-none focus:border-focus disabled:cursor-not-allowed disabled:bg-sunken disabled:text-muted";
-
-function quizDetails(detail: QuizDetail, title: string, instructions: string, keep = false) {
+function quizDetails(detail: QuizDetail, title: string, instructions: string,
+  document: FormattedText | null, keep = false) {
   const q = detail.quiz;
   return {
     title,
     instructions: instructions.trim() || (keep ? q.instructions : null),
+    instructionsDocument: keep && !instructions.trim() ? q.instructionsDocument ?? null : document,
     settings: q.settings,
     activityMonitoringEnabled: q.activityMonitoringEnabled,
     activityNotice: q.activityNotice,
@@ -67,6 +68,8 @@ export function ModuleItemDialog({
   );
   const [title, setTitle] = useState(material?.title ?? quiz?.title ?? "");
   const [description, setDescription] = useState(material?.description ?? "");
+  const [descriptionDocument, setDescriptionDocument] = useState<FormattedText | null>(material?.descriptionDocument ?? null);
+  const [enabled, setEnabled] = useState(material?.enabled !== false);
   const [url, setUrl] = useState(
     material?.kind === "YOUTUBE_LINK" ? (material.current.videoUrl ?? "") : "",
   );
@@ -84,6 +87,7 @@ export function ModuleItemDialog({
       (value) => {
         setDetail(value);
         setDescription(value.quiz.instructions ?? "");
+        setDescriptionDocument(value.quiz.instructionsDocument ?? null);
       },
       (e: unknown) => setError(materialError(e)),
     );
@@ -146,13 +150,13 @@ export function ModuleItemDialog({
             current,
             fileRef ? { fileRef } : { videoUrl: url.trim() },
           );
-        await materialApi.update(current, title.trim(), description);
+        await materialApi.update(current, title.trim(), description, undefined, { enabled, descriptionDocument });
         onSaved("Đã lưu thay đổi");
       } else if (quiz) {
         if (!detail) return;
         await updateQuizDetails(
           quiz.quizId,
-          quizDetails(detail, title.trim(), description),
+          quizDetails(detail, title.trim(), description, descriptionDocument),
           detail.quiz.version,
         );
         onSaved("Đã lưu thay đổi");
@@ -166,7 +170,7 @@ export function ModuleItemDialog({
               : await cloneQuiz(template.id);
           created = await updateQuizDetails(
             created.quiz.id,
-            quizDetails(created, title.trim(), description, true),
+            quizDetails(created, title.trim(), description, descriptionDocument, true),
             created.quiz.version,
           );
         } else {
@@ -177,7 +181,7 @@ export function ModuleItemDialog({
           if (description.trim())
             created = await updateQuizDetails(
               created.quiz.id,
-              quizDetails(created, title.trim(), description),
+              quizDetails(created, title.trim(), description, descriptionDocument),
               created.quiz.version,
             );
         }
@@ -194,6 +198,8 @@ export function ModuleItemDialog({
           kind: content,
           title: title.trim(),
           description,
+          descriptionDocument,
+          enabled,
           orderNo: 0,
           source: content === "FILE" ? { fileRef } : { videoUrl: url.trim() },
           moduleId,
@@ -247,6 +253,11 @@ export function ModuleItemDialog({
             }}
           />
         </Field>
+        {content !== "QUIZ" && <div className="flex flex-wrap items-center justify-between gap-2">
+          <Switch checked={enabled} onChange={setEnabled} ariaLabel="Bật học liệu" disabled={busy}
+            label={enabled ? "Bật" : "Tắt"} />
+          <span className="text-xs text-muted">Tắt để ẩn với sinh viên và không dùng làm nguồn AI mới.</span>
+        </div>}
         <div className="flex flex-col gap-3">
           <span className="text-xs font-semibold text-body">
             Nội dung <span className="text-primary-ink">*</span>
@@ -323,15 +334,10 @@ export function ModuleItemDialog({
             </div>
           )}
         </div>
-        <Field label="Mô tả" htmlFor={`${id}-description`}>
-          <textarea
-            id={`${id}-description`}
-            maxLength={content === "QUIZ" ? 5000 : 2000}
-            value={description}
-            disabled={busy}
-            onChange={(e) => setDescription(e.target.value)}
-            className={TEXTAREA}
-          />
+        <Field label="Mô tả">
+          <FormattedTextEditor value={descriptionDocument} plainText={description}
+            maxLength={content === "QUIZ" ? 5000 : 2000} disabled={busy} aria-label="Mô tả"
+            onChange={(text, document) => { setDescription(text); setDescriptionDocument(document); }} />
         </Field>
         {error && (
           <p role="alert" className="text-sm text-danger">

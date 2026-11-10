@@ -107,7 +107,7 @@ class QuizControllersTest {
     private QuizDetail detail() {
         QuizInfo info = new QuizInfo(quizId, QuizScope.CLASS, classId, subjectId, null, QuizOrigin.MANUAL, 1, "Luyện tập",
                 null, new QuizSettings(false, false, null, 1, true, false), false, null, QuizPaperMode.FIXED, QuizStatus.DRAFT,
-                null, null, null, NOW, NOW, 0);
+                null, null, null, NOW, NOW, 0, null);
         return new QuizDetail(info, List.of(), List.of(), BigDecimal.ZERO, true);
     }
 
@@ -250,6 +250,45 @@ class QuizControllersTest {
                         .content("{\"instructions\":\"x\",\"count\":5,\"source\":\"SHARED\",\"requestRef\":\"r\","
                                 + "\"version\":3,\"studentId\":\"y\"}"))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("QUESTION_REQUEST_INVALID"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "\"source\":null,"})
+    void aiDraftRequestAllowsAutomaticSourceWithSelectedMaterials(String sourceField) throws Exception {
+        UUID material = UUID.randomUUID();
+        mvc.perform(post("/api/v1/quizzes/{id}/ai-drafts", quizId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"instructions\":\"Tạo theo tài liệu\",\"count\":5," + sourceField
+                                + "\"materialIds\":[\"" + material + "\"],\"provider\":null,\"requestRef\":\"auto\",\"version\":3}"))
+                .andExpect(status().isCreated());
+        ArgumentCaptor<DraftRequest> request = ArgumentCaptor.forClass(DraftRequest.class);
+        verify(drafts).requestForQuiz(eq(teacher), eq(quizId), request.capture(), eq(3L));
+        assertThat(request.getValue().source()).isNull();
+        assertThat(request.getValue().provider()).isNull();
+        assertThat(request.getValue().materialIds()).containsExactly(material);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "\"instructions\":null,", "\"instructions\":\"  \","})
+    void aiDraftAllowsMissingInstructionsWithDocuments(String instructionsField) throws Exception {
+        UUID material = UUID.randomUUID();
+        mvc.perform(post("/api/v1/quizzes/{id}/ai-drafts", quizId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{" + instructionsField + "\"count\":5,\"materialIds\":[\"" + material
+                                + "\"],\"requestRef\":\"documents\",\"version\":3}"))
+                .andExpect(status().isCreated());
+        ArgumentCaptor<DraftRequest> request = ArgumentCaptor.forClass(DraftRequest.class);
+        verify(drafts).requestForQuiz(eq(teacher), eq(quizId), request.capture(), eq(3L));
+        assertThat(request.getValue().instructions()).isEqualTo("Tạo quiz theo nội dung tài liệu đã chọn.");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"\"INVALID\"", "42"})
+    void aiDraftRequestStillRejectsInvalidExplicitSources(String source) throws Exception {
+        mvc.perform(post("/api/v1/quizzes/{id}/ai-drafts", quizId).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"instructions\":\"x\",\"count\":5,\"source\":" + source
+                                + ",\"requestRef\":\"invalid\",\"version\":3}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("QUESTION_REQUEST_INVALID"));
+        verify(drafts, never()).requestForQuiz(any(), any(), any(), anyLong());
     }
 
     @Test

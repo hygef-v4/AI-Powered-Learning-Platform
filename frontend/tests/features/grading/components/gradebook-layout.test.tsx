@@ -5,6 +5,7 @@ import type { GradebookPage } from "@/features/grading/model/types";
 
 const mocks = vi.hoisted(() => ({
   loadGradebook: vi.fn(),
+  listSubmissions: vi.fn(),
   loadSubmissionProgress: vi.fn(),
   exportGrades: vi.fn(),
 }));
@@ -76,12 +77,38 @@ beforeEach(() => {
   vi.resetAllMocks();
   window.history.replaceState(null, "", "/");
   mocks.loadGradebook.mockResolvedValue(samplePage);
+  mocks.listSubmissions.mockResolvedValue({ rows: [], total: 0 });
   mocks.loadSubmissionProgress.mockResolvedValue({ "a-1": { rows: [], total: 2, page: 1, size: 20, deadline: null, summary: { total: 2, submitted: 2, PENDING: 2 } } });
 });
 
 afterEach(cleanup);
 
 describe("ClassGradebookTab: danh sách – chi tiết", () => {
+  it("links directly to each submitted group's evaluation above the member grades", async () => {
+    mocks.listSubmissions.mockResolvedValue({
+      rows: [
+        { student: { accountId: "group-1", name: "Nhóm 1" }, evaluationId: "group-eval-1" },
+        { student: { accountId: "group-2", name: "Nhóm 2" }, evaluationId: "group-eval-2" },
+        { student: { accountId: "group-3", name: "Nhóm 3" }, evaluationId: null },
+      ],
+      total: 3,
+    });
+    render(<ClassGradebookTab classId="class-1" />);
+
+    const groupAssignment = await screen.findByRole("button", { name: new RegExp(longTitle2) });
+    expect(screen.queryByRole("link", { name: /Xem bản nộp chung/ })).not.toBeInTheDocument();
+    expect(mocks.listSubmissions).not.toHaveBeenCalled();
+    fireEvent.click(groupAssignment);
+
+    const groups = await screen.findByRole("list", { name: "Bản nộp chung theo nhóm" });
+    expect(within(groups).getByRole("link", { name: "Xem bản nộp chung của Nhóm 1" }))
+      .toHaveAttribute("href", "/teaching/evaluations/group-eval-1");
+    expect(within(groups).getByRole("link", { name: "Xem bản nộp chung của Nhóm 2" }))
+      .toHaveAttribute("href", "/teaching/evaluations/group-eval-2");
+    expect(within(groups).queryByText("Nhóm 3")).not.toBeInTheDocument();
+    expect(mocks.listSubmissions).toHaveBeenCalledWith("class-1", "a-2", "ALL", 1);
+  });
+
   it("Theo bài tập: danh sách bài bên trái (chỉ ghi loại), bảng điểm của bài đang chọn bên phải, căn theo assignmentId", async () => {
     render(<ClassGradebookTab classId="class-1" />);
 

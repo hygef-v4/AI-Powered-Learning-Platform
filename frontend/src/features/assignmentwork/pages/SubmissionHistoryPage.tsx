@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { DocumentEditor, ToolbarButton, outlineOf, publishOutline, type DocumentComment } from "@/shared/document";
-import { Alert, Button, Menu, MenuItem } from "@/shared/ui";
+import { Alert, Menu, MenuItem } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { attemptImageUrl, exportUrl, workApi } from "../api";
 import { formatPoints, resultByPart, useAttemptResult, type ResultPart } from "../model/attemptResult";
 import { errorMessage, formatDateTime, historyOpen, historyVersions } from "../model/format";
-import { PracticeFeedbackDialog } from "../components/PracticeFeedbackPanel";
+import { PracticeFeedbackPanel } from "../components/PracticeFeedbackPanel";
 import type { AttemptResult } from "../slots";
 import type { Attempt, AttemptSummary, StudentDetail } from "../model/types";
 
@@ -44,9 +44,8 @@ function TopBar({ barRef, title, status, setViewSlot, actions }: {
 /**
  * #41 Submission History (F8, UC 40): bài nộp hiện như trang tài liệu chỉ đọc (kiểu Docs ở chế độ chỉ xem):
  * giữa thanh công cụ, thẳng giữa trang giấy, là nút lượt trước / lượt sau và ô chọn lượt theo thời gian (mới nhất trước);
- * nút tải DOCX ở bên phải. Bên lề chỉ có điểm: tổng điểm ở đầu, điểm của từng bài gắn vào tiêu đề của bài; học sinh
- * không xem chi tiết các mục rubric. Bài luyện tập có nút Góp ý AI trên thanh công cụ (mở hộp thoại góp ý). `?attempt=` mở sẵn một lượt; quay lại về
- * đúng tab của bài trên trang Bài tập (`focus`).
+ * nút tải DOCX ở bên phải. Bên lề hiện góp ý AI của lượt luyện tập hoặc tổng điểm và điểm từng phần của bài đã chấm.
+ * `?attempt=` mở sẵn một lượt; quay lại về đúng tab của bài trên trang Bài tập (`focus`).
  */
 export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }) {
   const params = useSearchParams();
@@ -58,7 +57,6 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   const [selected, setSelected] = useState<string | null>(null);
   const [attempt, setAttempt] = useState<Attempt | null>(null);
   const [error, setError] = useState<unknown>(null);
-  const [aiOpen, setAiOpen] = useState(false);
   const [viewSlot, setViewSlot] = useState<HTMLElement | null>(null);
   const [headerHeight, setHeaderHeight] = useState(64);
   const headerObserver = useRef<ResizeObserver | null>(null);
@@ -134,17 +132,29 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   const index = ordered.findIndex((a) => a.attemptId === selected);
   const shown = attempt && attempt.attemptId === selected ? attempt : null;
   const comments = shown && shownResult ? scoreCards(shownResult, shown) : [];
-  // Bài luyện tập đã nộp: nút Góp ý AI trên thanh công cụ.
-  const practiceReady = detail.gradingMode === "PRACTICE" && current?.status === "SUBMITTED";
+  if (shown && detail.gradingMode === "PRACTICE" && current?.status === "SUBMITTED") {
+    comments.push({
+      key: `practice-feedback-${shown.attemptId}`,
+      anchorBlockId: null,
+      content: (
+        <PracticeFeedbackPanel
+          attemptId={shown.attemptId}
+          partTitles={{
+            ASSIGNMENT: "Toàn bài",
+            ...Object.fromEntries(shown.parts.map((part) => [part.partId, part.title])),
+          }}
+        />
+      ),
+    });
+  }
 
   const bar = (
     <TopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot}
-      actions={current && <>
-        {practiceReady && <Button icon="smart_toy" onClick={() => setAiOpen(true)}>Góp ý AI</Button>}
+      actions={current && (
         <Menu label="" icon="more_horiz" ariaLabel="Thao tác khác" align="right">
           <MenuItem icon="download" onClick={() => { window.location.href = exportUrl(current.attemptId); }}>Tải DOCX</MenuItem>
         </Menu>
-      </>} />
+      )} />
   );
   const kind = (
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
@@ -181,10 +191,6 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
       />
     )}
     {current?.warnings.length ? <Alert tone="warning">{current.warnings.map((w) => w.message).join("; ")}</Alert> : null}
-    {aiOpen && current && practiceReady && (
-      <PracticeFeedbackDialog attemptId={current.attemptId} onClose={() => setAiOpen(false)}
-        partTitles={shown ? { ASSIGNMENT: "Toàn bài", ...Object.fromEntries(shown.parts.map((part) => [part.partId, part.title])) } : undefined} />
-    )}
   </>);
 }
 

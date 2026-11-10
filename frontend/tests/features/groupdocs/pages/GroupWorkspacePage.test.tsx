@@ -130,12 +130,24 @@ describe("GroupWorkspacePage", () => {
     expect(screen.getByRole("dialog", { name: /Soạn Mục s3/ }).parentElement).toBe(document.body);
   });
 
-  it("mục đã Xong vẫn nhận lại để sửa (BR-U12-33)", async () => {
+  it("mục đã Xong vẫn nhận lại để sửa (BR-U12-33); mục người khác viết thì hỏi lại trước", async () => {
     const calls = backend(workspace(MEMBER));
     render(<GroupWorkspacePage documentId="doc1" />);
     const item = (await screen.findAllByRole("listitem")).find((li) => within(li).queryByText("Mục s1"))!;
 
     fireEvent.click(within(item).getByRole("button", { name: "Sửa mục" }));
+    const confirm = await screen.findByRole("dialog", { name: /Sửa mục Mục s1/ });
+    expect(confirm).toHaveTextContent("Mục này do An viết");
+    expect(calls.some((c) => c.url.endsWith(":claim"))).toBe(false);
+
+    // Quay lại thì không nhận mục.
+    fireEvent.click(within(confirm).getByRole("button", { name: "Quay lại" }));
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: /Sửa mục Mục s1/ })).not.toBeInTheDocument());
+    expect(calls.some((c) => c.url.endsWith(":claim"))).toBe(false);
+
+    // Bấm vào tên mục cũng hỏi lại; xác nhận thì nhận và mở trình soạn.
+    fireEvent.click(within(item).getByRole("button", { name: /Mục s1 · Xong/ }));
+    fireEvent.click(within(await screen.findByRole("dialog", { name: /Sửa mục Mục s1/ })).getByRole("button", { name: "Sửa mục" }));
 
     await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s1:claim"))).toBe(true));
     expect(await screen.findByRole("dialog", { name: /Soạn Mục s1/ })).toBeInTheDocument();
@@ -411,6 +423,110 @@ describe("GroupWorkspacePage", () => {
     await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s3:claim"))).toBe(true));
     expect(await screen.findByRole("dialog", { name: /Soạn Mục s3/ })).toBeInTheDocument();
     expect(screen.queryByText(/Bạn không còn giữ mục/)).not.toBeInTheDocument();
+  });
+
+  it("mục Xong do chính mình viết thì nhận lại ngay, không hỏi", async () => {
+    const calls = backend(workspace(LEADER));
+    render(<GroupWorkspacePage documentId="doc1" />);
+    const item = (await screen.findAllByRole("listitem")).find((li) => within(li).queryByText("Mục s1"))!;
+
+    fireEvent.click(within(item).getByRole("button", { name: "Sửa mục" }));
+
+    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s1:claim"))).toBe(true));
+    expect(screen.queryByRole("dialog", { name: /Sửa mục Mục s1/ })).not.toBeInTheDocument();
+  });
+
+  it("mục người khác đang giữ hiện lúc lưu nháp cuối hoặc lúc nhận, không lộ bản nháp", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, now: new Date("2026-10-30T08:00:00Z") });
+    backend(
+      workspace(LEADER, {
+        sections: [
+          section("s2", "CLAIMED", MEMBER, { claimedAt: "2026-10-30T07:30:00Z", holderSavedAt: "2026-10-30T07:57:00Z" }),
+          section("s3", "CLAIMED", MEMBER, { claimedAt: "2026-10-30T06:00:00Z", holderSavedAt: null }),
+        ],
+      }),
+    );
+    render(<GroupWorkspacePage documentId="doc1" />);
+    const item = (title: string) => screen.getAllByRole("listitem").find((li) => within(li).queryByText(title))!;
+
+    expect(await screen.findByText("Đang soạn: Bình · lưu lần cuối 3 phút trước")).toBeInTheDocument();
+    expect(within(item("Mục s3")).getByText("Đang soạn: Bình · nhận 2 giờ trước, chưa lưu")).toBeInTheDocument();
+  });
+
+  it("có mục người khác đang giữ thì tải lại mỗi phút để cập nhật lần lưu cuối", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, now: new Date("2026-10-30T08:00:00Z") });
+    const calls = backend(workspace(MEMBER, { sections: [section("s2", "CLAIMED", LEADER)] }));
+    render(<GroupWorkspacePage documentId="doc1" />);
+    await screen.findByText(/Đang soạn: An/);
+    const loads = () => calls.filter((c) => c.url === "/api/v1/group-docs/doc1" && c.method === "GET").length;
+    const before = loads();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_000);
+    });
+
+    expect(loads()).toBe(before + 1);
+  });
+
+  it("còn ≤ 30 phút thì nhắc hạn kèm mục chưa Xong; xa hạn thì không nhắc", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, now: new Date("2026-10-30T09:42:00Z") });
+    backend(workspace(MEMBER, { closesAt: "2026-10-30T10:00:00Z" }));
+    const { unmount } = render(<GroupWorkspacePage documentId="doc1" />);
+
+    expect(await screen.findByText(/Còn 18 phút tới hạn nộp/)).toBeInTheDocument();
+    expect(screen.getByText("1 mục chưa ai làm, sẽ không vào bản nộp.")).toBeInTheDocument();
+    expect(screen.getByText(/1 mục đang soạn: hãy bấm Xong/)).toBeInTheDocument();
+    expect(screen.getByText(/Nhóm chưa nộp bản nào/)).toBeInTheDocument();
+    unmount();
+
+    backend(workspace(MEMBER, { closesAt: "2026-10-30T12:00:00Z" }));
+    render(<GroupWorkspacePage documentId="doc1" />);
+    await screen.findByText("Nội dung đã xong");
+    expect(screen.queryByText(/tới hạn nộp/)).not.toBeInTheDocument();
+  });
+
+  it("trong khoảng nộp trễ thì báo bị tính trễ và còn bao lâu tới khi đóng nhận bài", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, now: new Date("2026-10-30T10:20:00Z") });
+    backend(
+      workspace(MEMBER, {
+        window: "LATE",
+        lateUntil: "2026-10-30T11:00:00Z",
+        sections: [section("s1", "DONE", null, { lastAuthorId: LEADER })],
+      }),
+    );
+    render(<GroupWorkspacePage documentId="doc1" />);
+
+    expect(await screen.findByText(/nộp bây giờ bị tính trễ\. Còn 40 phút tới khi đóng nhận bài/)).toBeInTheDocument();
+    expect(screen.getByText("Mọi mục đã Xong.")).toBeInTheDocument();
+  });
+
+  it("trình soạn hỏi lại khi rời trang lúc còn phần chưa lưu và hiện nhắc hạn", () => {
+    vi.stubGlobal("fetch", vi.fn(() => json({})));
+    const shared = { blocks: [{ id: "s2", origin: "TEACHER" as const, type: "HEADING" as const, content: { style: "H1" as const, text: "Mục s2" } }] };
+    render(
+      <SectionEditorDialog
+        documentId="doc1"
+        section={section("s2", "CLAIMED", MEMBER)}
+        shared={shared}
+        diagramEnabled={false}
+        deadlineNotice="Còn 5 phút tới hạn nộp (10:00)."
+        onClose={() => undefined}
+        onChanged={() => undefined}
+      />,
+    );
+    expect(screen.getByText(/Còn 5 phút tới hạn nộp \(10:00\)\. Nên bấm Xong trước hạn\./)).toBeInTheDocument();
+
+    const leave = () => {
+      const event = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    expect(leave()).toBe(false);
+    fireEvent.click(screen.getByTestId("write-part-s2"));
+    const field = screen.getByLabelText("Đoạn văn");
+    field.textContent = "Đoạn chưa lưu";
+    fireEvent.input(field);
+    expect(leave()).toBe(true);
   });
 
   it("partOf lấy heading và hướng dẫn của phần; không có heading thì dựng theo tên mục", () => {

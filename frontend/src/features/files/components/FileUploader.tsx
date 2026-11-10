@@ -21,7 +21,7 @@ function formatSize(bytes: number): string {
 }
 
 /**
- * Ô tải tệp một dòng, cùng kiểu ô chọn tệp CSV ở trang Tài khoản: ô tên tệp rồi nút Chọn tệp (kéo thả vào ô cũng được);
+ * Ô tải tệp một dòng, cùng kiểu ô chọn tệp Excel ở trang Tài khoản: ô tên tệp rồi nút Chọn tệp (kéo thả vào ô cũng được);
  * đang tải thì hiện phần trăm và nút Hủy. Kiểm sơ bộ theo giới hạn hiện hành.
  */
 export function FileUploader({ purpose, label = "Chọn tệp", currentName, onUploaded }: Props) {

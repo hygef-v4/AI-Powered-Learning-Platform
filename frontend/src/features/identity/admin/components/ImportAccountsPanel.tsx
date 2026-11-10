@@ -14,7 +14,6 @@ import { commitImport, validateImport, type ImportResult } from "../api";
 import { IMPORT_REASON_LABELS } from "../model/labels";
 import { Pagination } from "./Pagination";
 
-const TEMPLATE = "email,display_name,role\nmasv@fpt.edu.vn,Nguyễn Văn A,STUDENT\n";
 const ROWS_PER_PAGE = 10;
 
 /** Lý do lỗi viết hoa chữ cái đầu. */
@@ -23,7 +22,7 @@ function sentence(text: string) {
 }
 
 /**
- * Nhập CSV (luồng phụ UC 09, BR-U01-80–85; design `a02b`): chọn tệp → kiểm từng dòng (không ghi) → xác nhận gửi lại cùng
+ * Nhập Excel (luồng phụ UC 09): chọn tệp → kiểm từng dòng (không ghi) → xác nhận gửi lại cùng
  * tệp, backend kiểm lại và chỉ tạo dòng hợp lệ. Không có email nào được gửi. Nhập xong thì xóa tệp, bảng và đóng thẻ.
  * Cột Dòng đánh số từ 1 cho dòng dữ liệu đầu tiên (dòng tiêu đề của tệp không tính).
  */
@@ -34,15 +33,6 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
   const [page, setPage] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  function downloadTemplate() {
-    const url = URL.createObjectURL(new Blob([TEMPLATE], { type: "text/csv;charset=utf-8" }));
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "mau-tai-khoan.csv";
-    link.click();
-    URL.revokeObjectURL(url);
-  }
 
   async function run(action: (file: File) => Promise<ImportResult>, target: File) {
     setBusy(true);
@@ -80,7 +70,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
 
   return (
     <Section
-      title="Nhập tài khoản từ CSV"
+      title="Nhập tài khoản từ Excel"
       icon="upload_file"
       actions={
         <button type="button" onClick={onClose} aria-label="Đóng" className="text-muted hover:text-ink">
@@ -91,8 +81,9 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
       <input
         ref={input}
         type="file"
-        accept=".csv,text/csv"
-        aria-label="Chọn tệp CSV"
+        accept=".xlsx"
+        aria-label="Chọn tệp Excel"
+        disabled={busy}
         className="sr-only"
         onChange={(e) => choose(e.target.files?.[0] ?? null)}
       />
@@ -106,14 +97,14 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
         <Button icon="folder_open" onClick={() => input.current?.click()} disabled={busy}>
           {file ? "Chọn tệp khác" : "Chọn tệp"}
         </Button>
-        <button
-          type="button"
-          onClick={downloadTemplate}
+        <a
+          href="/templates/account-import.xlsx"
+          download="mau-tai-khoan.xlsx"
           className="inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline"
         >
           <Icon name="download" size={16} />
           Tải tệp mẫu
-        </button>
+        </a>
       </div>
 
       {busy && !preview && <p className="text-xs text-muted">Đang kiểm tra tệp...</p>}

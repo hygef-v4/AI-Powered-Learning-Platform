@@ -95,6 +95,7 @@ export type Detail = {
   memberActivities: { student: Person; activity: Detail["activity"]; state: string }[];
   sectionAuthors: { partId: string; accountId: string }[];
   current: boolean;
+  groupEvaluationId?: string | null;
 };
 export type Person = { accountId: string; name: string; email: string };
 export type SubmissionRow = {

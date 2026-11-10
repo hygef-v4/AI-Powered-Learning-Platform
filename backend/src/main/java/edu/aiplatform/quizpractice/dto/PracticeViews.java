@@ -61,7 +61,8 @@ public final class PracticeViews {
                                      Integer attemptsLeft, BigDecimal bestScore, boolean showScoreAfterSubmit,
                                      boolean showCorrectAnswers, String activityNotice, LeavePenalty leavePenalty,
                                      List<AttemptRow> attempts, UUID inProgressAttemptId, boolean canStart,
-                                     String blockedReason) {
+                                     String blockedReason,
+                                     edu.aiplatform.shared.content.FormattedText instructionsDocument) {
     }
 
     /** Câu khi đang làm: lựa chọn theo thứ tự đã trộn, không có đáp án. */

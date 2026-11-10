@@ -1,7 +1,8 @@
 "use client";
-import type { Checks, ItemScores, Rubric } from "../model/types";
+import type { Checks, ItemScores, Rubric, StructuredFeedbackItem } from "../model/types";
 
 import { resolveItemPoints, calculateChecklistPoints } from "../model/rubricScores";
+import { RubricItemFeedback } from "./StructuredFeedbackSection";
 
 export type ChecklistProps = {
   checks: Checks;
@@ -9,7 +10,8 @@ export type ChecklistProps = {
   disabled?: boolean;
   itemScores?: ItemScores;
   onScoresChange?: (value: ItemScores, changedRubricId?: string, changedItemId?: string) => void;
-
+  feedbackItems?: StructuredFeedbackItem[];
+  acknowledgedReviewItems?: Checks;
 };
 
 /**
@@ -22,6 +24,8 @@ export function RubricChecklist({
   disabled = false,
   itemScores = {},
   onScoresChange,
+  feedbackItems,
+  acknowledgedReviewItems,
 }: ChecklistProps & { rubric: Rubric }) {
   function award(itemId: string, max: number, achieved: boolean) {
     const selected = new Set(checks[rubric.rubricId] ?? []);
@@ -39,6 +43,9 @@ export function RubricChecklist({
         const value = Number(resolveItemPoints(rubric.rubricId, item.itemId, max, checks, itemScores));
         const achieved = value === max;
         const showCriterion = criterion.title.trim() !== "" && criterion.title.trim() !== item.text.trim();
+        const feedback = feedbackItems?.find(
+          (entry) => entry.rubricId === rubric.rubricId && entry.itemId === item.itemId,
+        );
         return (
           <li key={item.itemId} data-testid={`rubric-item-${item.itemId}`}
             className={`rounded-lg border px-2 py-1.5 text-xs leading-snug ${achieved ? "border-primary/30 bg-primary/5" : "border-line bg-surface"}`}>
@@ -50,8 +57,21 @@ export function RubricChecklist({
                 {showCriterion && <span className="block text-[10.5px] text-faint">{criterion.title}</span>}
                 {item.text}
               </span>
-              <span className="shrink-0 tabular-nums text-muted">{value > 0 && value < max ? `${value.toFixed(2)} / ` : ""}{max.toFixed(2)}</span>
+              <span className="shrink-0 tabular-nums text-muted">
+                {feedback || (value > 0 && value < max) ? `${value.toFixed(2)} / ` : ""}{max.toFixed(2)}
+              </span>
             </label>
+            {feedback && (
+              <RubricItemFeedback
+                rubricId={rubric.rubricId}
+                itemId={item.itemId}
+                itemText={item.text}
+                awardedPoints={value}
+                maxPoints={max}
+                feedbackItem={feedback}
+                acknowledged={acknowledgedReviewItems?.[rubric.rubricId]?.includes(item.itemId)}
+              />
+            )}
           </li>
         );
       })}

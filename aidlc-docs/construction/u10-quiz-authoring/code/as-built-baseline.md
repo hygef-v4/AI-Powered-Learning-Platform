@@ -29,3 +29,17 @@ Kiểm tra của đợt refactor được ghi trong [refactor results](../../bui
 ## Delta 2026-11-01
 
 Source trên nhánh `feat/quiz-rework-2026-11-01`: [roadmap](../../plans/code-generation-plan/2026-11-01-quiz-rework.md), [kết quả và giới hạn](../../build-and-test/2026-11-01-quiz-rework-results.md). Migration `quizzes/V20261101_1200__quiz_rework.sql`.
+
+## Delta working tree — 2026-11-09
+
+UI nhập câu hỏi dùng question-import.xlsx; API cũ vẫn tương thích CSV. Soạn tay/ngân hàng/AI trong khung câu hỏi, nguồn tài liệu dropdown nhiều lựa chọn; bảo vệ bản soạn chưa lưu và giữ input retry. Thêm instructionsDocument và sourceWarnings; sửa HTTP source thiếu/null cho tự chọn nguồn API.
+
+Delta này bổ sung snapshot commit có ngày phía trên, chưa tạo commit mới và không sửa lại evidence lịch sử. [Kết quả và giới hạn](../../build-and-test/2026-11-09-material-quiz-ui-results.md); [đối chiếu tài liệu](../../build-and-test/2026-11-09-aidlc-doc-sync.md).
+
+## AI review follow-up — 2026-11-09
+
+Xem/Thu gọn, document-only request/default instructions, model relevance warning persisted with sourceWarnings and one-request bulk acceptance are implemented. Existing drafts retain original metadata; semantic relevance is not backfilled. [Fresh focused evidence and limitations](../../build-and-test/2026-11-09-ai-quiz-review-followup.md).
+
+## Source grounding enforcement — 2026-11-10
+
+Warning-only behavior from09/11 is superseded: mismatch does not become READY, is discarded and receives one bounded source-only retry; second mismatch fails closed. New QuizSourceRetry service coordinates owner/access/version/text/quota checks, draft row lock, atomic task submission and after-commit/poll recovery. [Fresh evidence and limits](../../build-and-test/2026-11-10-ai-source-grounding-fix.md).

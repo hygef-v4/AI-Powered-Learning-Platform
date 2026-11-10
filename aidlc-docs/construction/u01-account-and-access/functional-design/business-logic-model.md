@@ -25,7 +25,7 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 | F7 Xem và sửa hồ sơ | UC 06, 07 | User Profile | US-IAM-004 |
 | F8 Xem danh sách tài khoản | UC 08 | Account List | US-IAM-007 |
 | F9 Tạo tài khoản | UC 09 | New Account | US-IAM-007 |
-| F10 Nhập hàng loạt | Luồng phụ của UC 09 | Account List (nút Nhập CSV) | US-IAM-007 |
+| F10 Nhập hàng loạt | Luồng phụ của UC 09 | Account List (nút Nhập Excel) | US-IAM-007 |
 | F14 Xem chi tiết và sửa thông tin tài khoản | UC 10, 11 | Account Detail | US-IAM-007 |
 | F11 Đổi role | UC 11 | Account Detail | US-IAM-005, US-IAM-007 |
 | F12 Vô hiệu hóa và mở lại | UC 12 | Account Detail | US-IAM-007 |
@@ -152,9 +152,9 @@ Màn New Account mở từ nút "Thêm tài khoản" trên Account List; tạo x
 
 ### F10 - Nhập hàng loạt (luồng phụ của UC 09)
 
-Nút "Nhập CSV" trên Account List; giữ theo quyết định của người dùng ngày 2026-10-09.
+Nút "Nhập Excel" trên Account List; chuyển sang Excel theo yêu cầu người dùng ngày 2026-11-09.
 
-1. Kiểm quyền admin; kiểm file là CSV, ≤ 1000 dòng (BR-U01-80).
+1. Kiểm quyền admin; kiểm file Excel .xlsx, tối đa 1 MB và 1000 dòng (API vẫn nhận CSV cũ) (BR-U01-80).
 2. Kiểm từng dòng, trả `AccountImportResult` trong response, không lưu (BR-U01-82, 84).
 3. Admin xem kết quả và xác nhận: frontend gửi lại cùng file.
 4. Kiểm lại toàn bộ file (dữ liệu có thể đã đổi), tạo các dòng hợp lệ ở `PENDING` trong một transaction, không gửi mail (BR-U01-85). Email đã tồn tại (kể cả do lần nhập trước) báo lỗi dòng nên nhập lại cùng file không tạo trùng (BR-U01-83).

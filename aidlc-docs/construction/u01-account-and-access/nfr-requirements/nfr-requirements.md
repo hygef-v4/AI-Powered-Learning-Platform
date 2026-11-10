@@ -16,7 +16,7 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test.
 | NFR-U01-02 | Đăng nhập, refresh, đăng xuất, hồ sơ, danh sách tài khoản: p95 ≤ 500 ms ở tải mục tiêu. Thời gian bcrypt được tính vào ngân sách này. | NFR-003 |
 | NFR-U01-03 | Yêu cầu OTP trả `Accepted` mà không chờ gửi mail; mail đi qua job U03. | NFR-003, BR-U01-92 |
 | NFR-U01-04 | Chữ ký JWT kiểm local; trước domain action kiểm current account/session authority qua server store, không trust JWT role/version cũ. Lỗi authority fail closed. | Câu N5 |
-| NFR-U01-05 | Nhập CSV 1000 dòng: bước kiểm tra xong trong ≤ 10 giây. | BR-U01-80 |
+| NFR-U01-05 | Nhập Excel 1000 dòng: bước kiểm tra xong trong ≤ 10 giây. | BR-U01-80 |
 
 ## 2. Phiên và xác thực
 

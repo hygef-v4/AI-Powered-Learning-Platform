@@ -42,7 +42,7 @@ public final class GradingViews {
     public record EvaluationDetail(Evaluation evaluation, DocumentModel document,
             List<RubricView> rubrics, List<UUID> navigationIds, ActivitySummary activity,
             String activityState, List<Evaluation> members, List<MemberActivity> memberActivities,
-            List<GroupSectionAuthor> sectionAuthors, boolean current) {
+            List<GroupSectionAuthor> sectionAuthors, boolean current, UUID groupEvaluationId) {
     }
 
     public record MemberActivity(Person student, ActivitySummary activity, String state) {

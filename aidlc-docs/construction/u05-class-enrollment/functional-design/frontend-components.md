@@ -109,3 +109,7 @@ Route theo `RoleGuard` của U01: `/classes/*` cho Student; `/teaching/*` cho Te
 CourseClass.create tạo DRAFT. OPEN không bắt buộc teacher: domain, AcademicsService và migration 27/10 đã bỏ guard. Nếu có teacher thì account vẫn phải ACTIVE và đúng role. Scope teaching dựa teacher_id hiện hành, manager dựa subject ownership, Student dựa enrollment/status; không tự cấp teaching cho manager chưa được giao.
 
 [Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.
+
+## Nhập Excel — cập nhật 2026-11-09
+
+Thêm sinh viên theo danh sách nhận tệp `.xlsx`, sheet đầu có một cột `email` ở A1; cung cấp mẫu `/templates/enrollment-import.xlsx`. Tối đa 100 KB và 200 dòng; từ chối tệp hỏng, công thức, ô lỗi, ô nhiều dòng và nhiều cột. Giữ dán email, xem trước rồi xác nhận; chuyển nội dung về danh sách text cho API hiện hữu, server kiểm lại quyền, tài khoản và kết quả ghi danh.

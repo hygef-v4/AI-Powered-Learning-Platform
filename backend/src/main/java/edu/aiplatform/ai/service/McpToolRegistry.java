@@ -23,25 +23,39 @@ public class McpToolRegistry {
     private final ObjectProvider<IMcpToolProvider> providers;
     private volatile Map<String, Entry> entries;
 
+    /**
+     * Initializes the tool registry with dynamic Spring providers.
+     */
     public McpToolRegistry(ObjectProvider<IMcpToolProvider> providers) {
         this.providers = providers;
     }
 
-    /** Tool người gọi thấy: role được dùng; credential {@code READ_ONLY} chỉ thấy tool đọc (F6 bước 4). */
+    /**
+     * Lists tool definitions visible to a specific caller role and access permission level.
+     */
     public List<McpToolDefinition> visible(Role role, Access access) {
         return entries().values().stream().map(Entry::definition).filter(d -> visible(d, role, access)).toList();
     }
 
+    /**
+     * Finds a tool entry by name if it is visible to the given caller role and access level.
+     */
     public Optional<Entry> find(String name, Role role, Access access) {
         return Optional.ofNullable(name == null ? null : entries().get(name))
                 .filter(e -> visible(e.definition(), role, access));
     }
 
+    /**
+     * Determines whether a tool definition is visible based on role restrictions and access level.
+     */
     static boolean visible(McpToolDefinition d, Role role, Access access) {
         return role != null && role != Role.ADMIN && d.allowedRoles() != null && d.allowedRoles().contains(role)
                 && (d.kind() == McpToolKind.READ || access == Access.READ_WRITE);
     }
 
+    /**
+     * Builds and lazily caches the tool map by scanning all registered IMcpToolProvider beans.
+     */
     private Map<String, Entry> entries() {
         Map<String, Entry> current = entries;
         if (current == null) {
@@ -61,6 +75,9 @@ public class McpToolRegistry {
         return current;
     }
 
+    /**
+     * Holds an individual tool definition and its backing domain provider instance.
+     */
     public record Entry(McpToolDefinition definition, IMcpToolProvider provider) {
     }
 }

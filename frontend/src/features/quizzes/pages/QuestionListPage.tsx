@@ -153,7 +153,7 @@ export function QuestionListPage() {
             <Menu align="right" icon="add" label="Thêm câu hỏi" ariaLabel="Thêm câu hỏi"
               summaryClassName="!border-primary !bg-primary !text-on-primary hover:!bg-primary-strong">
               <MenuItem icon="edit" onClick={() => router.push(`/manager/questions/new?subjectId=${encodeURIComponent(subject.id)}`)}>Soạn câu mới</MenuItem>
-              <MenuItem icon="upload_file" onClick={() => { setNotice(null); setImporting(true); }} data-testid="question-list-import">Nhập từ tệp</MenuItem>
+              <MenuItem icon="upload_file" onClick={() => { setNotice(null); setImporting(true); }} data-testid="question-list-import">Nhập Excel</MenuItem>
               <MenuItem icon="sparkle" onClick={() => { setNotice(null); setDrafting(true); }} data-testid="question-list-ai">Soạn bằng AI</MenuItem>
             </Menu>
           )}

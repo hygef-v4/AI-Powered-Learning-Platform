@@ -14,6 +14,9 @@ public interface IQuizAiDraftRepository {
 
     Optional<QuizAiDraft> find(UUID id);
 
+    /** Giữ khóa trong transaction khi lên lịch tạo lại theo nguồn để không gửi trùng task. */
+    Optional<QuizAiDraft> findForUpdate(UUID id);
+
     /** Đề xuất người dùng đã gửi với cùng {@code requestRef} (chống gửi trùng). */
     Optional<QuizAiDraft> findByRequest(UUID createdBy, String requestRef);
 

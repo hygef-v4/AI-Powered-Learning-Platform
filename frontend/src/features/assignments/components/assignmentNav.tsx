@@ -40,9 +40,9 @@ function AddButton({ label, onClick }: { label: string; onClick: () => void }) {
 /**
  * Sidebar của bài, cùng kiểu sidebar học liệu: lối về trang Bài tập ở đầu, rồi thẻ trắng có header Mục lục (nút "+" thêm mục
  * ngoài cùng) và các mục trên một dòng: mục ngoài cùng in đậm, mục con chữ thường lùi vào theo tầng, đoạn văn không ghi; mỗi
- * hàng có "+" thêm mục con (tới tầng I.1.a.aa.). Thu gọn sidebar thì chỉ còn số (I., I.1.).
+ * hàng có "+" thêm mục con (tới tầng I.1.a.aa.). Thu gọn sidebar thì chỉ còn số (I., I.1.). Tài liệu nhóm (U12) dùng lại.
  */
-function AssignmentNav() {
+export function AssignmentNav() {
   const outline = useAssignmentOutline();
   const [activeId, setActiveId] = useState<string | null>(null);
   // Sáng theo mục trình soạn đang hiện (cuộn tới hay đang mở ở chế độ Từng phần).

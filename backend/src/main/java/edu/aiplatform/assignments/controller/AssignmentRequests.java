@@ -80,10 +80,10 @@ final class AssignmentRequests {
 
     record AiDraft(String request, List<UUID> materialIds, List<String> sourceFileRefs,
                    AssignmentCommands.DraftOptions options, AiSource source, AiProvider provider, String requestRef,
-                   String formatText, UUID templateAssignmentId) {
+                   String formatText, UUID templateAssignmentId, String mode) {
         AssignmentCommands.AiDraftRequest command() {
             return new AssignmentCommands.AiDraftRequest(request, materialIds, sourceFileRefs, source, provider,
-                    requestRef, options, formatText, templateAssignmentId);
+                    requestRef, options, formatText, templateAssignmentId, mode);
         }
     }
 
