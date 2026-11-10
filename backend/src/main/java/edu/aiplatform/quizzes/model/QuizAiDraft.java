@@ -58,6 +58,31 @@ public record QuizAiDraft(UUID id, DraftTarget target, UUID quizId, UUID subject
                 merged(failure), baseVersion, createdBy, createdAt, now);
     }
 
+    public QuizAiDraft withSourceWarnings(List<String> warnings) {
+        return new QuizAiDraft(id, target, quizId, subjectId, origin, taskId, status, proposal,
+                merged(Map.of("sourceWarnings", List.copyOf(warnings))), baseVersion, createdBy, createdAt, decidedAt);
+    }
+
+    public boolean needsSourceRetry() {
+        return status == DraftStatus.PENDING && Boolean.TRUE.equals(provenance.get("sourceRetryPending"));
+    }
+
+    public boolean sourceRetryAttempted() {
+        return Boolean.TRUE.equals(provenance.get("sourceRetryAttempted"));
+    }
+
+    public QuizAiDraft retryFromSources(List<String> warnings) {
+        return new QuizAiDraft(id, target, quizId, subjectId, origin, taskId, DraftStatus.PENDING, List.of(),
+                merged(Map.of("sourceWarnings", List.copyOf(warnings), "sourceRetryPending", true)),
+                baseVersion, createdBy, createdAt, null);
+    }
+
+    public QuizAiDraft withSourceRetryTask(UUID nextTaskId) {
+        return new QuizAiDraft(id, target, quizId, subjectId, origin, nextTaskId, DraftStatus.PENDING, List.of(),
+                merged(Map.of("sourceRetryPending", false, "sourceRetryAttempted", true)),
+                baseVersion, createdBy, createdAt, null);
+    }
+
     public QuizAiDraft decided(DraftStatus decision, Instant now) {
         return new QuizAiDraft(id, target, quizId, subjectId, origin, taskId, decision, proposal, provenance,
                 baseVersion, createdBy, createdAt, now);

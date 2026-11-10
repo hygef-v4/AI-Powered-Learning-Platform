@@ -1,5 +1,21 @@
 # AI-DLC Audit Log
 
+## 2026-11-08 — Method and step comments for Use Case 4.4 (External MCP)
+
+**Requested by:** Quang Hung
+
+User input (raw): “giúp tôi comment tất cả file trong 4.4 Grade Submission With AI — External MCP”. Added comprehensive English Javadoc method comments and internal step-by-step comments (`// Step 1: ...`) to all core classes involved in Use Case 4.4:
+- `McpController.java`: HTTP endpoint handling, DNS rebinding prevention, bearer token parsing, size limits, and RPC delegation.
+- `McpServer.java`: Protocol dispatching (`initialize`, `ping`, `tools/list`, `tools/call`), rate limiting, schema verification, auditing, and result size enforcement.
+- `McpAgentWorkflowTools.java`: Teaching role verification, bundled workflow instructions loading (`GRADE_WITH_RUBRIC`, `AUTHOR_ASSIGNMENT`), and version hashing.
+- `McpToolRegistry.java`: Dynamic tool discovery, role/access filtering (`visible`), lazy entries map building.
+- `GradingMcpTools.java`: Tool definition for `record_grading_proposal`, complete read verification, submission reference validation, proposal recording, and review URL construction.
+- `GradingMcpReadProgress.java`: Atomic Redis Lua script execution for gapless progress advance, complete read validation against total submission blocks.
+- `GradingProposalTransactions.java`: MCP proposal recording with idempotency checks and `saveUsingProposal` optimistic version and stale hash verification.
+
+Compilation verified via `mvn test-compile -DskipTests` with BUILD SUCCESS (0 errors).
+
+
 ## 2026-11-01 — Server workflow commit preparation and requested authoring trial
 
 **Requested by:** Quang Hung
@@ -10013,6 +10029,70 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 
 ---
 
+## Local Run - Quiz Review
+**Timestamp**: 2026-11-02T11:38:07Z
+**User Input**: "chạy local dự án để tôi kiểm tra lại các thay đổi mới của phần quiz"
+**AI Response**: "Khởi động Docker Desktop, build và chạy stack local từ staging (047c2e5c) bằng docker compose; mọi container healthy, ứng dụng ở http://localhost:8088. Không đổi code và không đổi dữ liệu."
+**Context**: Chạy thử theo yêu cầu, không phải thay đổi phần mềm; không mở stage AI-DLC mới.
+
+---
+
+## Local Run - Quiz Sample Data
+**Timestamp**: 2026-11-02T11:54:19Z
+**User Input**: "Tạo dữ liệu mẫu"
+**AI Response**: "Tạo dữ liệu mẫu trên database local qua API thật: môn SWT301, lớp SE-MAU1, 25 câu hỏi (19 đang dùng, 2 nháp, 3 chờ duyệt, 1 bị từ chối), 4 quiz (2 đang mở, 2 nháp), 5 lượt làm đã nộp. Đã đọc lại dữ liệu trên giao diện của cả ba vai trò. Không đổi code."
+**Context**: Dữ liệu thử cho việc kiểm tra phần quiz; script nằm ngoài repo.
+
+---
+
+## Local Run - Test Account Passwords
+**Timestamp**: 2026-11-02T11:56:55Z
+**User Input**: "đặt mặt khẩu cho các tài khoản là [đã ẩn mật khẩu] cho tôi"
+**AI Response**: "Ghi trực tiếp hash bcrypt vào database local cho 4 tài khoản *@platform.local vì mật khẩu này không đạt chính sách mật khẩu của ứng dụng; không đổi code và không đổi chính sách."
+**Context**: Chỉ áp dụng cho tài khoản thử trên stack Docker local.
+
+---
+
+## Local Run - Quiz Creation Question
+**Timestamp**: 2026-11-02T12:23:43Z
+**User Input**: "làm sao để chủ nhiệm môn tạo quiz"
+**AI Response**: "Hướng dẫn tạo quiz qua mục Học liệu: Tạo học liệu, chọn nội dung Quiz. Không đổi code."
+**Context**: Câu hỏi khi kiểm tra phần quiz; mục ghi muộn cùng lúc với thay đổi bên dưới.
+
+---
+
+## Local Run - Draw Rule Shortage Question
+**Timestamp**: 2026-11-02T12:23:43Z
+**User Input**: "kho đang có 6 câu sao tôi nhập 7 vẫn nhận"
+**AI Response**: "Giải thích BR-U10-17: cho lưu quy tắc, chặn khi phát hành. Thử phát hành quiz thiếu câu qua API: trả 400 POOL_INSUFFICIENT, quiz vẫn là nháp."
+**Context**: Câu hỏi khi kiểm tra phần quiz; mục ghi muộn cùng lúc với thay đổi bên dưới.
+
+---
+
+## U10 Change - Draw Rule Shortage Warning
+**Timestamp**: 2026-11-02T12:23:43Z
+**User Input**: "Thêm cảnh báo"
+**AI Response**: "Thêm cảnh báo thiếu câu ngay trên từng quy tắc sinh đề, đếm theo thẻ và độ khó; vẫn cho lưu, backend vẫn quyết định khi phát hành. API bank-tags trả thêm byDifficulty. Chưa commit."
+**Context**: Thay đổi nhỏ trong phạm vi U10 (DrawRulesPanel, QuizPaperService); làm trực tiếp, không mở stage AI-DLC mới.
+
+---
+
+## Merge Readiness Check - origin/staging
+**Timestamp**: 2026-11-03T08:54:40Z
+**User Input**: "kiểm tra các thay đổi mới nhất trên staging xem có xung đột gì không, có thể merge vào chưa"
+**AI Response**: "Thử merge không đổi cây làm việc với origin/staging 1878da06: chỉ xung đột aidlc-docs/audit.md. Trên bản ghép: frontend typecheck, lint, 745 test đạt; backend chạy 1721 test có 9 lỗi do thiếu thư mục khi đóng gói, chạy lại đủ mã nguồn đều đạt. Chưa merge."
+**Context**: Kiểm tra trước khi merge; không đổi code.
+
+---
+
+## Merge origin/staging Into Local staging
+**Timestamp**: 2026-11-03T08:59:50Z
+**User Input**: "Merge vào local"
+**AI Response**: "Merge origin/staging vào staging local; xung đột aidlc-docs/audit.md xử lý bằng cách giữ cả hai bên. Không push."
+**Context**: Thực hiện sau kiểm tra sẵn sàng merge.
+
+---
+
 ## Dedicated MCP documentation — 2026-11-02
 
 **Requested by:** Quang Hung
@@ -10187,6 +10267,47 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **Context**: [CI run 41482601367](https://github.com/hygef-v4/AI-Powered-Learning-Platform/actions/runs/41482601367) completed successfully on 123fa1c19c4d15b2e3efb92becaaafc96f6a85ca: backend verify and required PostgreSQL guard passed; frontend install/lint/typecheck/tests/build passed; images/deploy skipped. The final documentation head will be checked separately. No PR merge, staging push, force-push or deployment. Unrelated DOCX retained outside commits; only task-owned temporary helpers will be removed after monitoring completes.
 
 ---
+
+## Local Run - Rebuild After Merge
+**Timestamp**: 2026-11-03T09:08:48Z
+**User Input**: "Build lại stack"
+**AI Response**: "Build lại stack local từ 5ff297b2; mọi container healthy, migration 20261102.1200 đã áp dụng, dữ liệu giữ nguyên. Thử lại đăng nhập, bank-tags, chặn phát hành thiếu câu và cảnh báo trên trang quiz: đều đúng. Không đổi code."
+**Context**: Chạy thử sau khi merge origin/staging vào staging local.
+
+---
+
+## Audit Log Redaction
+**Timestamp**: 2026-11-03T09:20:02Z
+**User Input**: "bỏ mật khẩu trong audit log cho tôi"
+**AI Response**: "Thay giá trị mật khẩu trong một dòng User Input bằng [đã ẩn mật khẩu], ở file và ở ba commit chưa push. Riêng dòng này không còn là nguyên văn, theo yêu cầu của người dùng."
+**Context**: Ngoại lệ có chủ ý với quy tắc ghi nguyên văn của audit log.
+
+---
+
+## Merge Readiness Check - Local staging
+**Timestamp**: 2026-11-03T10:02:45Z
+**User Input**: "kiểm tra xem có thể merge vào staging chưa"
+**AI Response**: "Không có commit mới trên origin/staging, không xung đột. Chạy các bước CI trên 841436e5 trong container: xem kết quả ở tin nhắn trả lời. Chưa push."
+**Context**: Kiểm tra trước khi đưa staging local lên remote.
+
+---
+
+## Merge Readiness Check - Progress Question
+**Timestamp**: 2026-11-03T10:02:45Z
+**User Input**: "được chưa"
+**AI Response**: "Báo backend đã đạt, frontend còn đang chạy."
+**Context**: Hỏi tiến độ khi đang chạy kiểm tra CI.
+
+---
+
+## Pull Request - Draw Rule Shortage Warning
+**Timestamp**: 2026-11-03T10:25:37Z
+**User Input**: "Mở PR vào staging"
+**AI Response**: "Tạo nhánh feat/quiz-draw-rule-shortage-warning không theo dõi upstream, commit các mục audit còn lại, push nhánh và mở PR vào staging."
+**Context**: Đưa cảnh báo thiếu câu lên staging qua PR để CI chạy.
+
+---
+
 ## U05/U09/U15 cleanup implementation — 2026-11-04
 
 **Requested by:** Quang Hung
@@ -11495,11 +11616,155 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ---
 
+## U12 section workflow improvements — 2026-11-09
+
+**Timestamp**: 2026-11-09T05:50:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> luồng sinh viên làm bài gồm nhận mục hay nhả mục, .... có nên cải thiện gì không
+
+**AI Response**: Reviewed the claim/edit/release flow against the frozen BRs and proposed five improvements that do not change any BR: (1) confirm before taking a Done section written by someone else, (2) warn on leaving the page with unsaved edits, (3) offer "Xong rồi trả mục" in the release dialog, (4) a deadline banner when 30 minutes or less remain, (5) show when the holder claimed or last saved the section. Changes outside the frozen BRs (keeping drafts on release, auto-release of idle holds, viewing others' drafts, concurrent editing) were advised against.
+
+**Context**: Construction — U12 Group Assignment, UX review.
+
+---
+
+## U12 section workflow improvements — implementation — 2026-11-09
+
+**Timestamp**: 2026-11-09T05:55:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> làm 1, 2, 4,5 di
+
+**AI Response**: Implemented items 1, 2, 4 and 5 on branch `feat/u12-section-ux` (item 3 not requested). Frontend: confirm dialog before claiming a Done section last written by another member; `beforeunload` warning while the section editor has unsaved edits; deadline banner on the workspace and in the editor when ≤ 30 minutes remain or during the late window, listing sections not Done; holder line shows "lưu lần cuối N phút trước" or "nhận … , chưa lưu", with a 60-second refresh while another member holds a section. Backend: `SectionView` gains additive `claimedAt` and `holderSavedAt` (timestamps only, set while CLAIMED); drafts stay holder-only (BR-U12-34). No BR, schema or existing field change.
+
+**Context**: Construction — U12 Group Assignment, UX improvements.
+
+---
+
+## U12 feedback 2026-11-09 meeting — scope decisions
+
+**Timestamp**: 2026-11-09T16:20:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> mục 3 thực ra thầy muốn khi 1 người bỏ mục thì khi nhả mục sẽ chọn 1 người khác để đưa mục cho
+
+> chưa cần làm
+> gửi lại tôi bản kế hoạch đã
+
+> ý 1 k can lam
+
+**AI Response**: Recorded the meeting feedback for groups: item 1 (groups per assignment) dropped by the user; item 2 (latest version as result) already met; item 3 planned as FB-U12-06 (release may hand the section to another member; draft still dropped per BR-U12-36; leader's assign kept; who may release unchanged), awaiting approval; item 4 (history: latest revision per author) pending. Partial backend edits for item 3 remain uncommitted.
+
+**Context**: Construction — U12 Group Assignment, feedback triage.
+
+---
+
+## U12 group document outline sidebar — 2026-11-09
+
+**Timestamp**: 2026-11-09T16:30:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> khoan đã, trước hết hãy làm phần group assignment có slidebar giống phần asignment này được không
+
+> duyệt
+
+**AI Response**: The group document page (`/group-docs/{id}`) now replaces the general menu with the same outline sidebar as the individual assignment pages: back link "Bài tập", numbered headings from the assignment skeleton, no "+" buttons (BR-U12-30). Clicking an entry switches to the Tài liệu tab and scrolls to the section containing that heading; the entry of the section on screen is highlighted. The page's "Thoát" button was removed (the sidebar back link replaces it). `AssignmentNav` is exported for reuse; no backend, BR or API change.
+
+**Context**: Construction — U12 Group Assignment, UI.
+
+---
+
+## U12 merge of 2026-11-09 changes to staging
+
+**Timestamp**: 2026-11-09T17:10:00Z
+**Requested by:** Vo Minh Tai
+
+**User Input (complete raw)**:
+
+> thế cứ merch những thay đổi hôm nay lên stagging đi
+
+**AI Response**: Merged `feat/u12-section-ux` (confirm before editing others' sections, deadline banner, holder activity timestamps, unsaved-changes warning, outline sidebar) into `staging` after bringing in the latest `origin/staging` and re-running tests. The meeting items 3 (release with handover) and 4 (latest revision per author) are not included; the item 3 draft was set aside in a git stash.
+
+**Context**: Construction — U12 Group Assignment, merge to staging.
+
+---
+
+## U09 — Open group submission from a member evaluation
+**Timestamp**: 2026-11-09T04:24:31Z
+**Requested by**: Quang Hung
+**User Input**: "vậy sửa giúp tôi để bấm Chấm bằng AI ở dòng điểm thành viên thì tự mở đúng bản nộp chung của nhóm đi"
+**AI Response**: Return the current group evaluation ID in member review details using the existing group submission identity check. The grading workspace opens that evaluation with the current queue filters and unsaved-change confirmation.
+**Verification**: 138 grading frontend tests and 15 targeted backend tests passed. Frontend type checking and scoped lint passed. The restarted local backend returned the expected GROUP_DOCUMENT evaluation for the SE_JS member fixture, and the frontend login endpoint responded with HTTP 200. No external AI request was made.
+
+## U09 — Group AI grading output budget
+**Timestamp**: 2026-11-09T04:29:38Z
+**Requested by**: Quang Hung
+**User Input**: "lỗi k chấm đc ai bài nhóm"
+**AI Response**: The failed SE_JS task used 4,079 output tokens against a 4,096-token budget and failed output validation. Increased the budget for group documents using the rubric item count, retaining the 8,192-token ceiling and existing validation.
+**Verification**: 11 focused backend tests passed. Local backend repackaged and restarted. The SE_JS token estimate API returned 11,644 including prompt and output. An automated approval review rejected a new Gemini request because it would send submission and rubric data to an external provider and could consume quota. Provider output after the change remains unverified.
+
+## U09 — Group grading workspace layout
+**Timestamp**: 2026-11-09T04:38:21Z
+**Requested by**: Quang Hung
+**User Input**: "giúp tôi sửa giao diện chấm điểm của bài tập nhốm giống kiểu style với bài tập cá nhân"
+**User Input**: "b xem giao diện chấm nhóm nào dễ dùng cho giáo viên nhât thì sửa cho tôi"
+**AI Response**: Kept the shared document, rubric, and toolbar layout. Moved author names beside their section headings, with a header fallback for submissions without matching headings. Added a toolbar shortcut to the member grades and restyled the rows using the shared field and button components.
+**Verification**: Verified the five author labels, focus transfer to the five-member panel, and no panel overflow on the local SE_JS submission at the default width and 390 px. All 139 grading frontend tests, TypeScript, and scoped ESLint passed. No grade was written during browser verification.
+
+## U09 — Open group submissions from the gradebook
+**Timestamp**: 2026-11-09T04:45:12Z
+**Requested by**: Quang Hung
+**User Input**: "sao bấm nút robot lại hiện, thêm nút Xem bản nộp chung ngay ở bảng điểm của bài nhóm giúp tôi, để bấm vào xem luôn cho tiện"
+**AI Response**: Added a direct link for each group's available evaluation above the student grade table for the selected group assignment. Reused the submission directory and existing evaluation route.
+**Verification**: Clicked the direct link in the local SE_JS gradebook and verified it opened the group evaluation. TypeScript and scoped ESLint passed. All 11 gradebook layout tests passed after adjusting link-label spacing. The other 129 grading tests passed in the preceding run.
+
+## U09 — Individual AI grading output budget
+**Timestamp**: 2026-11-09T04:52:52Z
+**Requested by**: Quang Hung
+**User Input**: "sao h chấm bài cá nhân lại bị như này"
+**Attachment**: Screenshot shows the grading message "Kết quả AI không đúng định dạng yêu cầu".
+**AI Response**: Two failed individual grading tasks used 4,526 of 4,544 output tokens before schema rejection. The evidence suggests truncation near the limit. Reused the group budget formula for all grading proposals, increasing the affected 16-item evaluation to 7,616 output tokens while retaining the 8,192 ceiling.
+**Verification**: 20 focused backend tests passed. Repackaged and restarted the local backend. Verified that the affected evaluation estimate increased from 13,043 to 16,115 total tokens. No new Gemini request was made during this verification.
+
+## U09 — Show AI proposal history after reopening grading
+**Timestamp**: 2026-11-09T04:57:29Z
+**Requested by**: Quang Hung
+**User Input**: "b nhìn màn hình này lúc mà thoát ra vào lại làm gì có"
+**AI Response**: Replaced the visually hidden history control with a visible toolbar button that toggles the existing AI proposal panel.
+**Verification**: Reloaded the SWD392 grading workspace and opened previous proposals from the visible toolbar control. All 29 workspace tests passed.
+
+## U09 — Show applied grading feedback in the draft
+**Timestamp**: 2026-11-09T05:03:28Z
+**Requested by**: Quang Hung
+**User Input**: "làm gì có, bấm áp dụng r vẫn trắng trơn này"
+**Attachment**: The grading workspace shows rubric checkboxes without the saved feedback.
+**AI Response**: Show the saved general feedback and summary in the document header, and render the existing feedback disclosure beside each matching rubric item. Show awarded points including zero when the item has feedback.
+**Verification**: Reloaded the saved SWD392 draft and verified the general feedback, 16 matching disclosures, and the point explanation after expanding a criterion. All 140 grading frontend tests, TypeScript and scoped ESLint passed.
+
+## U09 — Full test run and local commit
+**Timestamp**: 2026-11-09T05:11:36Z
+**Requested by**: Quang Hung
+**User Input**: "giúp tôi chạy test be fe sau đó commit"
+**AI Response**: Verified the grading changes for group submission navigation, AI output budgets and proposal history, and draft feedback display. Kept the separate MCP comment edits outside this commit.
+**Verification**: Backend 2,004 passed with no failures, errors, or skips. All four required PostgreSQL suites passed. Frontend 810 passed. The first backend run encountered Windows loopback and relative-path errors. The rerun from the backend directory with a forked JVM and workspace socket directory passed.
+
+---
+
 ## Integration-test delivery — final E2E verification and publication preparation
 **Timestamp**: 2026-11-09T05:43:33.061972+00:00
 **Requested by:** Vu Hai Nam
 **User Input**: "tiếp tục"
 **AI Response**: Completed the authorized staging integration and verification. First full merged snapshot passed2,028 backend tests and800 frontend tests; preserved seven earlier5000ms timeouts and successful isolated40/40/full800 reruns with two workers and unchanged oracles. Staging advanced to198b796f before business E2E; merged its U12 fix as65f86a6c and verified95/95 backend, current frontend build/typecheck/scoped lint and15/15 U12 tests. All168 authenticated API/proxy/SSE assertions passed on that latest rebuilt code. Stopped only the task stack/frontend and verified7 original platform container IDs unchanged; volumes/logs preserved. Exact source/artifact/result hashes and scopes recorded. Preparing the final evidence commit, normal push and one PR to staging; no PR merge/deploy. PR/CI state will be reported from GitHub rather than guessed in this pre-publication snapshot. Existing security/resiliency retained; PBT disabled.
+
 
 ---
 
@@ -11527,5 +11792,347 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
 **AI Response**: "Commit thay đổi sidebar dạng cây (navigation.ts, NavTree.tsx, AppShell.tsx, ClassNavContexts.tsx, navContexts.test.tsx) cùng audit.md lên nhánh staging; không push."
 **Context**: Commit thay đổi giao diện sidebar dạng cây.
+
+---
+
+## Lịch sử nộp bài — đề xuất thẻ Góp ý AI
+**Timestamp**: 2026-11-09T16:17:19Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**:
+> tạo 1 nhánh mới từ staging tên fix/student-ai-grading. Tôi muốn sửa popup góp ý AI này thành 1 thẻ ở bên cạnh thẻ bài làm (giống như chấm bài của giảng viên nhưng thay vì rubric thì nó là góp ý và nhận xét của AI). Bạn có đề xuất gì không?
+
+Ảnh tham chiếu: `codex-clipboard-64bcd4ce-fda5-40db-bae5-3a3843546525.png` và `codex-clipboard-9789afcc-201c-47eb-aa72-86c0e4a8a7e6.png`.
+
+**AI Response**: Đã tạo và chuyển sang nhánh `fix/student-ai-grading` từ `staging`. Đã xác định ứng dụng hiện hữu và dùng lại tài liệu reverse engineering có sẵn. Đề xuất tận dụng cột nhận xét của trình xem bài nộp để hiển thị thẻ Góp ý AI theo từng lượt Practice đã nộp. Đề xuất thẻ luôn hiện, với nút gửi yêu cầu trong thẻ, và trình bày nội tuyến trên màn hình hẹp. Cân nhắc phương án mở/thu gọn nếu ưu tiên chiều rộng bài làm.
+**Context**: Phạm vi hiện tại là tạo nhánh và tư vấn bố cục. Chờ chốt hướng trước khi triển khai. Giữ cấu hình extension đã ghi nhận cho dự án.
+
+---
+
+## Lịch sử nộp bài — triển khai thẻ Góp ý AI
+**Timestamp**: 2026-11-09T16:20:13Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "Giúp tôi sửa theo như bạn đề xuất, đồng thời sửa cả các doc trong aidlc-docs nếu có liên quan đến phần này"
+**AI Response**: Đã đưa thẻ Góp ý AI vào cột nhận xét của Lịch sử nộp bài Practice và đồng bộ UC 41, FR-030, US-ASM-012 cùng tài liệu U08. 71 ca trong phạm vi liên quan, lint, TypeScript và build đã qua. Lượt chạy toàn bộ Vitest được dừng do lỗi đọc tệp tạm của sandbox. Chi tiết kiểm tra được ghi trong kế hoạch.
+**Context**: Yêu cầu triển khai đã được xác nhận. Dùng lại các điều kiện truy cập, API và trạng thái của U08. Security và Resiliency giữ phạm vi đã duyệt, PBT tắt theo cấu hình dự án.
+
+---
+
+## Lịch sử nộp bài — bàn giao vào staging
+**Timestamp**: 2026-11-09T17:07:03Z
+**Requested by:** Vu Hai Nam
+**User Input**: "giúp tôi chia thành các commit nhỏ, push lên branch hiện tại rồi merge staging vào branch này. Sau đó check e2e rồi tạo pr vào staging, khi nào CI xanh thì merge branch hiện tại vào staging"
+**AI Response**: Chia thay đổi giao diện và kiểm thử thành một commit, tài liệu AI-DLC thành một commit. Đồng bộ staging sau khi push, xác minh E2E trên mã đã đồng bộ và kiểm tra CI của PR trước khi merge.
+**Context**: Bàn giao U08 trên nhánh fix/student-ai-grading.
+
+---
+
+## Requirements / Workflow Planning — Excel và YouTube
+**Timestamp**: 2026-11-09T14:12:32Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1]  giúp tôi fix các lỗi sau"
+**Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794233005454-3e125cc1-8228-4f99-8224-6d401eabe462.png; chữ trong ảnh: "fix bug", "đổi nhập csv thành nhập excel", "màn hình youtube video k xem được trong web".
+**AI Response**: "Đọc CLAUDE.md và AI-DLC; dùng systematic-debugging/ponytail. Xác nhận UI/controller/service chỉ hỗ trợ CSV; nguyên nhân lỗi YouTube runtime chưa xác định. Tạo bản yêu cầu 2026-11-09-excel-youtube-fixes.md. Lần ghi audit/state trước bị sandbox từ chối; yêu cầu escalation bị ngắt bởi người dùng. Chưa sửa mã ứng dụng."
+**Context**: Workspace brownfield, cây ban đầu sạch; giữ Security/Resiliency và bỏ qua PBT đang tắt.
+
+---
+
+## Workflow Planning — tiếp tục
+**Timestamp**: 2026-11-09T14:12:32Z
+**Requested by:** Quang Hung
+**User Input**: "continue"
+**AI Response**: "Tiếp tục từ bản yêu cầu, kiểm tra không có ghi audit/state dở dang. Chuẩn bị inception/plans/2026-11-09-excel-youtube-execution-plan.md với các bước parser/API/UI/test và tái hiện video trước khi sửa. Đề nghị duyệt kế hoạch để sửa mã và kiểm thử theo CLAUDE.md và quy tắc code-generation."
+**Context**: Workflow Planning hoàn tất bản kế hoạch, chờ duyệt trước sửa mã; source/test chưa thay đổi hoặc chạy.
+
+---
+
+## Code Generation — duyệt kế hoạch
+**Timestamp**: 2026-11-09T14:30:24Z
+**Requested by:** Quang Hung
+**User Input**: "a"
+**AI Response**: "Thực hiện kế hoạch 2026-11-09-excel-youtube-execution-plan.md. Dùng test-driven-development và verification-before-completion cùng systematic-debugging/ponytail. Đã thấy test nhập Excel thất bại trước khi sửa."
+**Context**: Cho phép sửa mã và kiểm thử toàn bộ trình tự đã trình bày; không commit/push/deploy.
+
+---
+
+## Điều chỉnh phạm vi — chỉ chuyển nhập CSV sang Excel
+**Timestamp**: 2026-11-09T14:30:24Z
+**Requested by:** Quang Hung
+**User Input**: "thôi tôi k bị lỗi yt link nữa giúp tôi chuyển import csv bất cứ chỗ nào thành import excel, 2 phàn này có ở trong admin với manager"
+**AI Response**: "Hủy sửa YouTube theo yêu cầu. Chuyển cả ba chỗ nhập: tài khoản Admin, ghi danh sinh viên Manager và câu hỏi Manager. Backend U01 dùng POI để đọc XLSX theo validation/transaction hiện có; U05 đọc sheet email rồi dùng API danh sách text hiện có; U10 đã hỗ trợ XLSX nên đổi UI và mẫu. Sinh ba mẫu Excel thật, xóa mẫu câu hỏi CSV khỏi UI; giữ API CSV cũ và xuất CSV. Test frontend 814/119 files, backend liên quan 39/0 skip, lint và build đã qua. Typecheck độc lập đang kiểm tra sau khi build tái sinh types."
+**Context**: Phạm vi được người dùng yêu cầu trực tiếp. Không sửa YouTube/CSP, không thêm dependency/schema; Security/Resiliency giữ phạm vi hiện có, PBT tắt.
+
+---
+
+## Build and Test — Excel imports complete
+**Timestamp**: 2026-11-09T14:31:47Z
+**Requested by:** Quang Hung
+**AI Response**: "Hoàn tất phạm vi Excel đã điều chỉnh. Fresh backend 39 tests/0 skipped, frontend 814 tests/119 files, lint, production build và typecheck độc lập qua; diff check qua. Đồng bộ tài liệu U01/U05/U10 và báo cáo construction/build-and-test/2026-11-09-excel-import-results.md. Typecheck ban đầu vướng types .next cũ; build tái sinh rồi qua. Build sandbox có lỗi tải font Open Graph; build lại có quyền mạng qua. Không đổi YouTube/CSP, dependency/schema. Chưa test nhập Excel live qua trình duyệt, full backend/DB/performance; không nhập dữ liệu thật, restart backend, commit/push/deploy."
+**Context**: Kiểm chứng và báo cáo hoàn tất; user đã cho phép sửa và kiểm thử trong kế hoạch, không yêu cầu Operations.
+
+---
+
+
+## Scoped audit and UI proposal — materials and quiz
+**Timestamp**: 2026-11-09T14:45:09Z
+**Requested by:** Quang Hung
+**User Input**:
+Học liệu:
+thêm 1 trường status disabled / enabled
+ghi chú mô tả nên để format được, thêm căn lề format, bullet,... 
+sửa lại phần tài liệu nguồn cho AI thành dropdown để chọn nhiều tài liệu 1 lúc
+đang bị lỗi tạo quiz theo source
+sửa soạn câu hỏi từ popup về flat 
+[Image #1] lúc thêm câu hỏi thì thêm câu hỏi vào màn hình ở trong cái khung câu hỏi luôn ko cần phải mở popup flat , giúp tôi đề xuất giao diện trước khi sửa $ponytail:ponytail-audit $superpowers:using-superpowers
+**Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794234886335-1fef9d85-b235-4935-8f05-0d4271d8d8d6.png
+**AI Response**: Dùng using-superpowers, ponytail-audit, brainstorming và impeccable để đọc luồng U13/U10; Product Design preflight không có context đã lưu. Đề xuất bố cục trước sửa, dùng Image Gen cho minh họa. Có hai finding cần sửa: lời hướng dẫn chọn nguồn AI lỗi thời và không thông báo khi ngân sách text khiến tài liệu sau rỗng. API production của quiz hiện mở trả ba nguồn YouTube hasText=false, danh sách AI draft rỗng; chưa tạo task hay xác nhận lỗi provider. Chụp ảnh browser timeout hai lần, không dùng ảnh capture lỗi. Chuẩn bị inception/requirements/2026-11-09-material-quiz-ui-proposal.md; hỏi hành vi Disabled qua câu hỏi bất đồng bộ, chờ trả lời. Không sửa source/test/config hoặc dữ liệu production trong lượt này; giữ nguyên diff nhập Excel trước đó.
+**Context**: Người dùng yêu cầu đề xuất trước triển khai; chỉ audit phạm vi học liệu/quiz và tạo tài liệu/minh họa. Không chạy test/build, không commit/push/deploy. Extension giữ cấu hình hiện hữu; PBT tắt.
+
+---
+
+
+## Code Generation — approved materials and quiz UI
+**Timestamp**: 2026-11-09T15:31:28Z
+**Requested by:** Quang Hung
+**User Input**: "ok giúp tôi sửa theo kế hoạch"
+**AI Response**: Thực hiện đề xuất material-quiz-ui-proposal và kế hoạch construction/plans/code-generation-plan/2026-11-09-material-quiz-ui.md. Bổ sung enabled độc lập archive, mô tả có cấu trúc, inline question/bank/AI, dropdown nhiều tài liệu, cảnh báo source truncation và chặn nguồn rỗng. Áp dụng Disabled ẩn sinh viên/loại khỏi nguồn AI mới theo phương án được duyệt. Dùng writing-plans/dispatching-parallel-agents/TDD/verification và reviewer độc lập. Giữ toàn bộ diff Excel trước đó.
+**Context**: User cho phép triển khai và kiểm thử. Root phụ trách quiz/AI/integration, hai worker phụ trách backend và shared editor/material UI. Không live migration/restart/commit/push/deploy.
+
+---
+
+## User steering — manual UI acceptance
+**Timestamp**: 2026-11-09T15:31:28Z
+**Requested by:** Quang Hung
+**User Input**: "cứ sửa trươc sdid sau tôi tự test ui"
+**AI Response**: Dừng kiểm tra UI trình duyệt, đóng tab local do agent mở. Tiếp tục kiểm tra tự động và sửa finding Important từ reviewer. Browser capture host CUA không sẵn sàng, không tuyên bố có nghiệm thu hình ảnh/mobile.
+**Context**: Người dùng tự test UI; không dừng công việc mã/kiểm thử đã duyệt.
+
+---
+
+## Follow-up fix — description list gutter
+**Timestamp**: 2026-11-09T15:31:28Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] cái border của mô tả khi thêm bullet đang bị tràn ra ngoài viền"
+**Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794237925279-4d2a9898-8b27-4c1e-90e2-924ed0474fa5.png
+**AI Response**: Sửa root cause inline margin thụt lề ghi đè marker gutter. Editor chừa2rem trong margin cho bullet/số; viewer ps-8. Shared3tests/lint qua, final related82tests/10files và build/typecheck qua. Không chụp/test UI theo yêu cầu người dùng.
+**Context**: Sửa tối thiểu trong shared FormattedTextEditor/View, không thêm logic hay dependency.
+
+---
+
+## Follow-up fix — Vietnamese status labels
+**Timestamp**: 2026-11-09T15:31:28Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] bỏ chữ enabled, disabled đi đewe tiensg việt bật rawstr là dược"
+**Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794238144009-bd815772-27b7-4eb1-8f17-f5e023c49bcc.png
+**AI Response**: Thay nhãn hiển thị trên form tạo/sửa, detail và list bằng Bật/Tắt; giữ tên trường API enabled.55tests học liệu/8files qua. Copy-only change không cần chạy lại full suite/build.
+**Context**: Chỉ đổi copy theo yêu cầu, không đổi trạng thái hoặc quyền.
+
+---
+
+## Build and Test — material/quiz closure
+**Timestamp**: 2026-11-09T15:31:28Z
+**Requested by:** Quang Hung
+**AI Response**: Code scope hoàn tất. Backend clean533/48suites0skip, focused104/119/10 (overlap, không cộng), required guard5mandatory+57tracedcases đều qua; executable JAR packaged. Frontend836/124files, full lint, build/typecheck qua; sau gutter82tests/10files/build/typecheck qua; sau labels55tests/8files qua. Reviewer đã đọc lại bốn fix Important không còn finding trong các đường đó. Đồng bộ OpenAPI và docs U13/U10; báo cáo construction/build-and-test/2026-11-09-material-quiz-ui-results.md. Hai migration chỉ thử trên DB tạm; chưa chạy DB/app đang hoạt động, chưa gọi AI provider thật, không commit/push/deploy.
+**Context**: Security/Resiliency theo phạm vi đã duyệt, PBT tắt. Người dùng nhận phần manual UI acceptance; giữ diff Excel trước đó.
+
+---
+
+---
+
+## Follow-up fix — optional AI API source at HTTP boundary
+**Timestamp**: 2026-11-09T22:44:00+07:00
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] sao chạy lại backend rồi vẫn bị thiếu src khi tạo ai quiz tôi chọn tài liêu jr"
+**Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794238683249-430c5181-8919-4e3e-b099-87adaf400e7e.png
+**AI Response**: Shared AiDraftRequests incorrectly required source despite frontend automatic selection via null. Made parser argument optional for quiz and bank; invalid explicit values still rejected. Regression red reproduced; backend50/0skip and executable JAR package passed; frontend payload2 passed. Report: construction/build-and-test/2026-11-09-quiz-http-auto-source-fix.md.
+**Context**: Selected materialIds are separate from AI API source. No additional migration/frontend production change, app restart, provider call, manual UI test or commit/push/deploy. Existing Security/Resiliency scope retained; PBT disabled.
+
+---
+
+## AI quiz provider failure diagnosis
+**Timestamp**: 2026-11-09T23:00:00+07:00
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] sao k tạo được"
+**Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794239579431-1133c648-d58f-4db9-b983-23dab1288534.png
+**AI Response**: Traced exact HTTP503 message to HttpProviderGateway response handling. Existing worker retries transient503 after2s and5s before eligible fallback. Screenshot therefore shows provider HTTP failure, not missing source validation. No current application runtime log was available among workspace logs, so provider/model and precise upstream cause cannot be established. Also identified unrelated AUTO source label rendering null personal text. No application changes or real provider calls made in this diagnostic turn; user retains UI acceptance.
+
+---
+
+## Live AI worker investigation and duplicate-worker correction
+**Timestamp**: 2026-11-09T23:05:00+07:00
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] giúp tôi check lại"
+**Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794239698369-2fd1e748-2d32-45f2-b802-5ec6204aa02c.png
+**AI Response**: Used orca-cli to read current Backend terminal, then Docker/RabbitMQ and read-only DB metadata. Failed task PERSONAL/GEMINI/gemini-3.5-flash-lite returned503 in2.71s; only eligible connection test later passed. Found old Docker worker still consuming same queues alongside current local,worker backend. Evidence strongly indicates old worker handled failed task; direct per-task ownership log unavailable. Stopped only stale platform-worker-1; verified backend running, jobs.ai consumers8->4, zero pending/inflight. No provider retry was submitted, no data/schema/config/code changed. Report construction/build-and-test/2026-11-09-ai-worker-runtime-diagnosis.md.
+**Context**: Reversible local runtime correction under ongoing authorized bugfix. No claim upstream503 fixed. User submits new request for provider/UI acceptance. Security: no secrets/prompts/document bodies read; Resiliency: current bounded retry/fallback now handles jobs; PBT disabled.
+
+---
+
+## AI-DLC documentation reconciliation — current working tree
+**Timestamp**: 2026-11-09T23:07:04.2971378+07:00
+**Requested by:** Quang Hung
+**User Input**: "check doc aidlc xem từ những phần tôi sửa như này có cần sửa lại doc aidlc tương ứng k"
+**AI Response**: Compared implemented Excel/material/quiz/source changes with current unit documents. Updated19 Markdown files: U01 import entity/API, U05 enrollment rule, U10 AI rule/domain, U13 fields/UI/JDBC scope, U03 download-owner contract, U11 formatted instructions UI, U06 local worker operations, four unit as-built deltas, requirements/stories, current inventory and persistence policy. Report construction/build-and-test/2026-11-09-aidlc-doc-sync.md. Verified22 added local links resolve, Markdown fences balanced and scoped diff whitespace passed.
+**Context**: Documentation-only; no application code/config/schema/runtime changes or application tests rerun. Historical test evidence/audit retained; no claim full U13 JDBC or successful live AI generation. Existing Security/Resiliency scope retained, PBT disabled.
+
+---
+
+## Follow-up fix — automatic AI source label
+**Timestamp**: 2026-11-09T23:10:43.4809130+07:00
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] sao mỗi lần bấm tạo bằng ai nó lại ghi null cá nhân"
+**Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794240551724-14199c95-76b9-47aa-bfd9-d0d1a6ea7175.png
+**AI Response**: Shared DraftView treated all non-SHARED/non-MCP provenance as personal and interpolated null provider. Added explicit PERSONAL branch and automatic-source label; legacy PERSONAL without provider uses API cá nhân. Five regression cases reproduce3 failures before fix; after fix37 related tests/2files passed, scoped ESLint and whitespace passed. Updated U10 frontend behavior documentation.
+**Context**: Presentation-only change covers quiz/bank; no request/source selection, database, runtime or provider changes. No manual UI test per user preference. Security/Resiliency scope retained; PBT disabled.
+
+---
+
+## AI quiz review follow-up
+**Timestamp**: 2026-11-09T23:32:50.9223211+07:00
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] cái nút xem này là sao bấm vào k có tác dụng gì, với sau hiện  là null, lúc chọn src thì k bắt buộc thêm prompt , nếu prompt k liên quan gì đến src thì nó hiện cảnh báo chữ màu vàng trước những câu hỏi AI vừa tạo và prompt sẽ theo mặc didhj là tạo quiz theo document vừa gắn, với lại thêm nút chấp nhật tất cả đề xuất quiz tạo bằng ai, hiện tại chỉ có thể accept từng câu một"
+**Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794240746137-83ddf011-e65c-410c-aec9-1ac365743340.png
+**AI Response**: Implemented active Xem/Thu gọn with dirty guards, optional instructions/default document quiz prompt across shared HTTP/service/UI, same-call semantic relevance metadata and persistent yellow sourceWarnings, bulk acceptance via existing API preserving edits/drops/validation/version and pending-save locks. Null label fix retained. Red regression observed; final frontend66tests/5files, scoped ESLint/typecheck passed; backend98tests/5suites0skip and executable JAR package passed. U10 domain/UI/rules/as-built and story acceptance synchronized. Plan/results named 2026-11-09-ai-quiz-review-followup.md in their respective plan/build-and-test directories.
+**Context**: No migration/dependency/provider call/UI test/restart/commit/push/deploy. Existing drafts not retroactively assessed; model warning is fallible and requires author review. User previously requested direct implementation and owns manual UI acceptance. Security/Resiliency retained, PBT disabled.
+
+---
+
+## Admin subjects runtime diagnosis
+**Timestamp**: 2026-11-09T23:46:22.8945060+07:00
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] trang môn học của admin bị lỗi gì này"
+**Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794242031327-78aa1c34-9b8e-4eec-a71c-d32b317a1ca6.png
+**User steering**: "check ở terminal frontend trong orca đi"
+**User-supplied diagnostic text**: Console output reported style-src nonce CSP blocks, repeated subject API500, profile/refresh401, Fast Refresh and React call stacks; this was not the requested Network Response body. Original console text remains in the conversation; excerpts are not presented as a complete raw capture here.
+**User confirmation**: "Đã tải được môn học"
+**AI Response**: Read existing frontend/backend Orca terminals; no original U04 stack because unexpected handler suppressed diagnostics. Inspected non-secret subject metadata read-only; health200 and unauthenticated API401. Added server exception logging only, retaining safe client response. Fresh54 controller/service tests plus package passed, isolated31 PostgreSQL tests executed/passed, frontend27/3files passed. Checked zero running AI tasks, gracefully restarted same backend launcher with current source; health200. User confirmed page recovers; no new subject exception found. Evidence construction/build-and-test/2026-11-09-admin-subjects-runtime-diagnosis.md.
+**Context**: Original500 root cause unproven; no logic/data/CSP/auth changes. Browser tab inventory was rejected by automatic approval review due user's self-UI-test preference; no workaround. Security/Resiliency retained; PBT disabled. No commit/push/deploy.
+
+---
+
+## Source grounding enforcement correction
+**Timestamp**: 2026-11-10T00:09:08.9224434+07:00
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] sao tôi chọn tài liệu sau prompt câu hỏi k liên quan đến tài liệu nó vẫn tạo câu hỏi k liên quan"
+**Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794242796413-846f0b2c-3497-4244-ac9f-4dbc4c1e9c4a.png
+**AI Response**: Confirmed previous warning-only handler still made mismatched output READY. Added negative request/question grounding gates: discard wrong-topic output, retain warning/PENDING and perform one bounded source-only retry with original custom prompt absent. Preserve source IDs/count/type/difficulty/API policy; repeat current authorization/version/text/quota checks. New QuizSourceRetry bean serializes with draft row lock and deterministic reference, commits task+metadata together, records submit errors after rollback; after-commit callback and owner-only poll recovery, stale old-task callbacks ignored. Second mismatch FAILED/AI_SOURCE_MISMATCH with no questions. Red reproduced; final103 backend tests/6suites0skip and package passed, including11 PostgreSQL repo and26 real workflow cases. Frontend44/2files passed; scoped diff and29 local links passed. Current U10/stories synchronized, report construction/build-and-test/2026-11-10-ai-source-grounding-fix.md.
+**Runtime**: Zero RUNNING AI tasks checked before graceful restart of existing Orca backend terminal. scripts/run-backend.bat clean rebuilt current source; new PID55012 started00:08:15+07 and health200. No additional migration. Older incorrect READY drafts left unchanged; user must discard/recreate.
+**Context**: Conditional retry may use one extra AI task. Model assessments remain fallible; no remote AI generation/UI acceptance, commit/push/deploy. User retains UI testing. Security/Resiliency retained; PBT disabled.
+
+---
+
+## Commit preparation and final checks
+**Timestamp**: 2026-11-10T00:17:58.8486715+07:00
+**Requested by:** Quang Hung
+**User Input**: "ok chuẩn rồi giúp tôi tạo commit rõ ràng"
+**AI Response**: Reviewed all150 changed/new paths; no pre-existing staged changes. Split reviewed scope into20 Excel code/test/template paths,84 integrated materials/quiz/code/contracts paths,1 subject diagnostic path and45 AI-DLC paths. Fresh backend changed suites239/0skip and frontend849tests/124files passed; full frontend ESLint/typecheck passed. Subject diagnostic54-test refresh pending before its commit. Commit messages will explain behavior and validation. Existing raw audit request whitespace is preserved intentionally; application diff whitespace passed.
+**Context**: User explicitly authorizes local commits. No push/PR/deploy; no new source/runtime/data changes for commit preparation. Prior user UI acceptance retained; provider correctness limits and source-only retry cost remain documented.
+
+## Local commit delivery and fresh verification
+**Timestamp**: 2026-11-10T00:19:45.0733854+07:00
+**Requested by:** Quang Hung
+**AI Response**: Created local code commits5d628228 (20 Excel paths), b1729529 (84 integrated material/quiz paths) and0df689df (subject exception diagnostics). Final documentation commit carries this receipt and all45 reviewed AI-DLC paths.
+**Verification**: Fresh changed backend suites239tests/19suites0fail/error/skip (.tmp/commit-final-backend-tests.log); separate subject54tests/2suites0fail/error/skip (.tmp/commit-final-subject-tests.log). Full frontend849tests/124files passed (.tmp/commit-final-frontend-tests.log); full ESLint and standalone typecheck passed (.tmp/commit-final-frontend-lint.log, .tmp/commit-final-frontend-typecheck.log). Application/staged code whitespace passed. Preserve two trailing-whitespace lines in original raw user audit text; check other documentation strictly. Prior build/provider/UI reports retain their dated scope, not rerun claims.
+**Context**: User accepted current behavior and explicitly requested clear commits. No source/config/dependency/migration/runtime change in this delivery turn; no push/PR/deploy. Backend test scope is focused, not a full-backend-suite claim. No new remote provider or manual UI run. Security/Resiliency retained; PBT disabled.
+
+---
+
+## Prepare pull request into staging
+**Timestamp**: 2026-11-10T00:23:59.7652239+07:00
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi tạo pr trước khi merge staginfg"
+**AI Response**: User authorizes publishing the current branch and creating a PR into staging, not merging. Fetched origin; feature headfb8846ad contains the four reviewed commits, staginga35d9854 is ahead by5 while feature is ahead by4. git merge-tree computed a clean merge (77f503aaca9323236dd30232f16bad32ce36493b) without changing either branch. No open PR found for this head/base. Remote feature branch is an ancestor, so normal fast-forward push is sufficient. Add only this delivery receipt before publishing; source/config unchanged from final239+54 backend and849 frontend/lint/typecheck verification. PR body follows mattpocock-skills:pr template, explains two additive migrations, source-only retry limit/cost and evidence scope. CI verifies the current merged PR tree; no merge, auto-merge, reviewer messages or deployment authorized.
+**Context**: Publish branch via Git transport and create/check PR with GitHub connector. Existing Security/Resiliency scope retained; PBT disabled. This entry records preparation; live PR URL/check status will be reported from GitHub rather than guessed in this commit.
+
+---
+
+## Resolve PR59 conflicts and prepare staging merge
+**Timestamp**: 2026-11-10T00:33:47.9482154+07:00
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi resolve conflict pr vừa tạo merge vào staging"
+**AI Response**: User now explicitly authorizes conflict resolution and merge of PR59 into staging. Latest staging9a07e1e includes PR58 student feedback and U12 changes; original feature head5576222a CI backend/frontend/deploy-script passed. Merged origin/staging into the feature branch without rewriting existing commits. Only audit.md conflicted: retained both conflict blocks verbatim, including historical requester attribution/raw whitespace. All application changes merged automatically. Verify code preservation and local merged checks, commit/push resolution, then require latest-head CI green and merge PR with expected-head protection. No force push, branch deletion or production deploy.
+**Context**: Current approval supersedes the earlier PR-only/no-merge instruction. Keep Security/Resiliency scope and PBT disabled. Original CI is historical evidence until refreshed for the resolution head.
+
+## PR59 resolution checkpoint
+
+Only audit.md required manual resolution; both branch blocks retained verbatim. Verified all105 feature and17 incoming staging application paths match their respective parent blobs exactly. Merged frontend861tests/125files, full lint and typecheck passed. Full local backend verification is running; one pre-existing backup assertion decodes UTF-8 bytes using Java17's Windows default charset. Confirm with UTF-8 separately without changing unrelated source. Latest-head GitHub Linux full CI must pass before the authorized staging merge; original PR CI is not reused for the resolution head.
+
+## Tính năng: khung chat AI sửa đề đang có
+**Timestamp**: 2026-11-09T16:10:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi muốn thêm 1 khung chat nhỏ với AI (như ảnh 2) để sửa đề đang sẵn có (để ở trên phần Toàn bài) để khi tạo đề xong rồi có thể sửa lại đề đó bằng AI (chẳng hạn như ảnh 3 tôi đã tạo xong đề bằng tiếng trung nhưng tôi muốn đổi lại thành tiếng anh thì phải tạo lại từ đầu, việc này rất mất công nên tôi muốn thêm box chat với AI, gửi cho AI toàn bộ context và nó có thể sửa trực tiếp theo yêu cầu của người dùng)" (kèm 3 ảnh: trang soạn bài có thẻ rubric bên phải, thẻ rubric phóng to, đề tiếng Trung đã tạo bằng AI)
+**AI Response**: "Thêm chế độ REVISE cho luồng AI soạn đề (POST /assignments/{id}/ai-drafts, trường mode): máy chủ gửi AI toàn bộ đề đã lưu (tên, hướng dẫn, mọi khối, rubric từng mục, rubric Toàn bài) với mã khối ngắn, AI trả bản đầy đủ đã sửa (schema riêng); áp dụng giữ id, ảnh, sơ đồ và định dạng chữ của khối giữ mã, kiểm tra khung bằng DocumentModelService, ghi lại rubric theo mục. Mới: AssignmentDraftRevision.java; sửa AssignmentAiDraftService, AiDraftProposal (tách chuẩn hóa rubric), AssignmentCommands/AssignmentRequests (mode). Frontend: AiReviseChat.tsx đặt trên thẻ Toàn bài (chỉ khi bài nháp, sửa được), lưu trước khi gửi, ghi thẳng kết quả lên trang, Ctrl+Z quay lại; API requestAiRevision. Test: backend AssignmentAiRevisionTest 5 ca, gói assignments + ArchitectureTest 96/96; frontend assignments 43/43, lint các file sửa sạch, typecheck chỉ còn lỗi sẵn có (thiếu package materials). Chưa chạy thử với AI thật trên trình duyệt (stack Docker đang chạy image backend cũ)."
+**Context**: Tính năng thêm vào U07 trong phạm vi thành phần hiện có (minimal depth); không commit.
+
+---
+
+## Kiểm thử thật khung chat AI sửa đề
+**Timestamp**: 2026-11-09T16:55:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Rebuild and test" rồi "tôi không có tài khoản, bạn hãy tự seed và đăng nhập vào cho tôi"
+**AI Response**: "Build lại image platform-backend:local, khởi động lại backend/worker (cổng 8081) và Mailpit; frontend dev trỏ BACKEND_URL tới 8081 (thêm cấu hình frontend-dev-docker-backend vào .claude/launch.json). Đặt mật khẩu thử mới cho tài khoản local gv.test@fpt.edu.vn (lưu ở .tmp/local-test-accounts.md, không commit), đăng nhập, tạo bài nháp 'Đề 1' tiếng Trung ở lớp SE-DEMO1. Lỗi thật tìm được: Gemini đôi khi lặp vô tận khi text là trường tùy chọn (8.192 token, kết quả không phải JSON) và làm rơi khối LIST. Sửa: schema bắt buộc ref/type/text và đặt chúng đầu, danh sách gửi mỗi mục một dòng trong text; thêm log WARN lý do kết quả AI lệch schema (không ghi nội dung) trong AiTaskJobHandler. Sau sửa: 12/12 lượt dịch thành công, đủ khối và ref; thử qua giao diện: đề được dịch, giữ in đậm, danh sách và điểm rubric; Ctrl+Z trả lại nội dung trang (rubric không hoàn tác, như luồng Soạn bằng AI). Test assignments + ai + ArchitectureTest 237/237."
+**Context**: Kiểm thử end-to-end local và sửa lỗi; không commit.
+
+---
+
+## Sửa lỗi: khung chat AI báo "Kết quả AI không đúng định dạng"
+**Timestamp**: 2026-11-09T17:10:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tại sao bị lỗi này" (kèm ảnh khung chat: "tạo cho tôi 10 bài" báo Mục "" chưa có tiêu chí chấm; "tạo cho tôi 10 yêu cầu" báo "Kết quả AI không đúng định dạng yêu cầu Đề chưa thay đổi.")
+**AI Response**: "Nguyên nhân: AI (gemini-3.5-flash-lite, tối đa 8.192 token đầu ra) phải chép lại toàn bộ đề nên bị lặp tới hết token (JSON bị cắt), làm rơi khối, hoặc thêm tiêu đề rỗng. Sửa: AI chỉ trả các thao tác UPDATE/INSERT/DELETE theo mã khối, máy chủ ghép vào đề đã gửi (AssignmentDraftRevision.merge, lưu snapshot trong provenance, ẩn khỏi API); khối và rubric không nhắc tới giữ nguyên; bỏ tiêu đề rỗng; prompt hiểu 'tạo N yêu cầu/bài/câu' là thêm N câu; đánh dấu unchanged khi AI không đổi gì và khung chat báo rõ thay vì áp dụng; gộp lưu ý quá 3 dòng. Kiểm thử thật: 10/10 lượt thành công, 'tạo cho tôi 10 yêu cầu' thêm đủ 10 mục qua giao diện. Backend assignments + ai + ArchitectureTest 238/238; frontend assignments 44/44, lint sạch. Câu mới có thể chưa có rubric do mô hình nhỏ bỏ qua (hiện thành lưu ý)."
+**Context**: Sửa lỗi sau kiểm thử thật; không commit.
+
+---
+
+## Rà soát trước khi đưa lên staging: khung chat AI sửa đề
+**Timestamp**: 2026-11-09T17:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Kiểm tra xem có thể đưa lên staging chưa, còn lỗi nào không"
+**AI Response**: "Rà toàn bộ thay đổi từ 80dfc026, sửa 3 lỗi: (1) áp dụng bản sửa khi đề đã đổi phiên bản trong lúc AI xử lý sẽ ghi đè phần vừa gõ — máy chủ từ chối với AI_DRAFT_STALE; (2) AI trả hướng dẫn rỗng sẽ xóa hướng dẫn — rỗng coi là giữ nguyên; (3) khung chat có thể chờ mãi — giới hạn 3 phút rồi bỏ đề xuất. Thêm 2 test backend. Kiểm tra: backend mvn verify 2.038/2.038, BUILD SUCCESS; frontend 804/804 test, eslint toàn bộ sạch, tsc không lỗi mới (3 file test materials không chạy do máy local thiếu package xlsx/pdfjs-dist/docx-preview, lỗi có sẵn). Docker local đã cập nhật bản cuối."
+**Context**: Rà soát sẵn sàng staging; chưa commit.
+
+---
+
+## Giải quyết conflict khi merge origin/staging vào staging
+**Timestamp**: 2026-11-10T02:44:55Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra và solve conflict cho tôi"
+**AI Response**: "Merge origin/staging (9d47ab31) vào staging (841436e5) chỉ còn một conflict thật ở frontend/tests/features/quizzes/pages/QuizScreens.test.tsx (dòng import); audit.md đã tự gộp, không còn marker. Giữ cả hai phía: addInlineQuestion (origin) và getBankTags (local) vì file dùng cả hai. Kiểm tra: QuizScreens.test.tsx 26/26 test qua; tsc không lỗi trong mã nguồn (4 lỗi chỉ nằm ở .next/types cũ của route receipt đã bị origin xóa). Đã stage file; chưa commit merge, chưa push."
+**Context**: Giải quyết conflict merge; chờ người dùng xác nhận commit.
+
+---
+
+## Commit merge origin/staging vào staging
+**Timestamp**: 2026-11-10T02:48:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
+**AI Response**: "Commit merge 63e91aa0 (Merge remote-tracking branch 'origin/staging' into staging), thân thông điệp ghi cách giải quyết conflict import ở QuizScreens.test.tsx. Không push."
+**Context**: Commit merge; chưa push.
+
+---
+
+## Kiểm thử đầy đủ sau merge origin/staging
+**Timestamp**: 2026-11-10T03:16:44Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Chạy full test trước"
+**AI Response**: "Chạy trên 63e91aa0. Frontend: vitest 867/867 (126 file), eslint sạch, build thành công, tsc sạch sau khi build tạo lại .next/types. Backend: mvn -B verify trong maven:3.9-eclipse-temurin-17 với Testcontainers, 2.081 test, 0 failure, 0 error, 0 skipped, BUILD SUCCESS. Lần chạy backend đầu có 10 error NoSuchFile (../infra, ../agent-skills) do chỉ mount thư mục backend vào container; mount cả repo thì hết. Đã khởi động Docker Desktop để chạy. Không đổi mã nguồn."
+**Context**: Kiểm thử sau merge; mục audit này chưa commit, chưa push.
+
+---
+
+## Kiểm tra CI sau khi push staging
+**Timestamp**: 2026-11-10T03:25:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra CI cho tôi"
+**AI Response**: "CI không chạy cho 0deea035: workflow chỉ kích hoạt khi push lên main hoặc có pull request. PR #45 (feat/quiz-draw-rule-shortage-warning vào staging) báo CONFLICTING; 4 commit của PR đã nằm trên staging, còn 490512b2 (40 dòng audit) chưa vào."
+**Context**: Kiểm tra CI; không đổi mã nguồn.
+
+---
+
+## Giải quyết conflict của PR #45 với staging
+**Timestamp**: 2026-11-10T03:47:14Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra và solve conflict cho tôi"
+**AI Response**: "Merge origin/staging (0deea035) vào feat/quiz-draw-rule-shortage-warning (490512b2). Conflict duy nhất ở aidlc-docs/audit.md do hai phía cùng nối thêm vào cuối file; giữ cả hai theo thứ tự thời gian: 5 mục ngày 2026-11-03 của nhánh PR trước, rồi các mục từ 2026-11-04 của staging. Kết quả khác origin/staging đúng ở audit.md, mã nguồn giống hệt bản staging đã kiểm thử đầy đủ."
+**Context**: Giải quyết conflict merge trên nhánh PR; chưa push.
 
 ---

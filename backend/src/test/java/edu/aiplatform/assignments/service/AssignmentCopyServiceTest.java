@@ -75,48 +75,53 @@ class AssignmentCopyServiceTest {
             ResourceRef ref = i.getArgument(2);
             return target.equals(ref.id()) ? AuthorizationDecision.allow() : AuthorizationDecision.deny("OUT");
         });
-        assertThat(code(() -> f.copies.copyToClass(f.teacher, target, source.id()))).isEqualTo("ASSIGNMENT_NOT_FOUND");
+        assertThat(code(() -> f.copies.copyToClass(f.teacher, target, source.id(), null))).isEqualTo("ASSIGNMENT_NOT_FOUND");
         doReturn(AuthorizationDecision.allow()).when(f.authorization).authorize(any(), any(), any());
-        AssignmentViews.Detail copy = f.copies.copyToClass(f.teacher, target, source.id());
+        AssignmentViews.Detail copy = f.copies.copyToClass(f.teacher, target, source.id(), null);
         assertThat(copy.classId()).isEqualTo(target);
         assertThat(copy.origin()).isEqualTo(AssignmentOrigin.CLASS_COPY);
-        assertThat(code(() -> f.copies.copyToClass(f.teacher, source.classId(), source.id()))).isEqualTo("COPY_SAME_CLASS");
+        assertThat(code(() -> f.copies.copyToClass(f.teacher, source.classId(), source.id(), null))).isEqualTo("COPY_SAME_CLASS");
     }
 
     @Test
-    void classCopySourcesListPublishedSubjectAssignmentsFirst() {
+    void classCopySourcesListSubjectTemplatesFirst() {
         f.put(AssignmentScope.SUBJECT, AssignmentStatus.OPEN, new DocumentModel(List.of()), true);
         f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT, new DocumentModel(List.of()), true);
+        f.put(AssignmentScope.SUBJECT, AssignmentStatus.RETIRED, new DocumentModel(List.of()), true);
         UUID other = UUID.randomUUID();
         when(f.classScope.listTaughtClasses(f.teacher.accountId())).thenReturn(List.of(f.classId, other));
         f.put(AssignmentScope.CLASS, AssignmentStatus.CLOSED, new DocumentModel(List.of()), true);
         List<AssignmentViews.CopySource> sources = f.copies.copySources(f.teacher, other);
         assertThat(sources).extracting(AssignmentViews.CopySource::kind).containsExactly("SUBJECT", "CLASS");
-        assertThat(sources.get(0).assignments()).as("chỉ bài môn đã phát hành").hasSize(1);
+        assertThat(sources.get(0).assignments()).as("đề mẫu của môn, trừ bài đã ngưng giao").hasSize(2);
         assertThat(sources.get(1).classId()).isEqualTo(f.classId);
     }
 
     @Test
-    void copyPublishedSubjectAssignmentIntoClassButNotDraft() {
-        Assignment open = f.put(AssignmentScope.SUBJECT, AssignmentStatus.OPEN, new DocumentModel(List.of()), true);
-        AssignmentViews.Detail copy = f.copies.copyToClass(f.teacher, f.classId, open.id());
+    void copySubjectTemplateIntoClassWithNewTitleButNotRetired() {
+        Assignment template = f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT, new DocumentModel(List.of()), true);
+        AssignmentViews.Detail copy = f.copies.copyToClass(f.teacher, f.classId, template.id(), "  Bài lab 1  ");
         assertThat(copy.scope()).isEqualTo(AssignmentScope.CLASS);
         assertThat(copy.classId()).isEqualTo(f.classId);
         assertThat(copy.status()).isEqualTo(AssignmentStatus.DRAFT);
-        Assignment draft = f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT, new DocumentModel(List.of()), true);
-        assertThat(code(() -> f.copies.copyToClass(f.teacher, f.classId, draft.id()))).isEqualTo("ASSIGNMENT_NOT_FOUND");
+        assertThat(copy.title()).isEqualTo("Bài lab 1");
+        assertThat(f.copies.copyToClass(f.teacher, f.classId, template.id(), " ").title())
+                .as("tiêu đề trống thì giữ tên đề mẫu").isEqualTo(template.title());
+        Assignment retired = f.put(AssignmentScope.SUBJECT, AssignmentStatus.RETIRED, new DocumentModel(List.of()), true);
+        assertThat(code(() -> f.copies.copyToClass(f.teacher, f.classId, retired.id(), null)))
+                .isEqualTo("ASSIGNMENT_NOT_FOUND");
     }
 
     @Test
     void copyIntoSubjectFromSameSubjectOrTaughtClass() {
         Assignment sibling = f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT, new DocumentModel(List.of()), true);
-        AssignmentViews.Detail fromSubject = f.copies.copyToSubject(f.manager, f.subjectId, sibling.id());
+        AssignmentViews.Detail fromSubject = f.copies.copyToSubject(f.manager, f.subjectId, sibling.id(), null);
         assertThat(fromSubject.scope()).isEqualTo(AssignmentScope.SUBJECT);
         assertThat(fromSubject.classId()).isNull();
         assertThat(fromSubject.subjectId()).isEqualTo(f.subjectId);
         Assignment ofClass = f.put(AssignmentScope.CLASS, AssignmentStatus.CLOSED, new DocumentModel(List.of()), true);
-        assertThat(f.copies.copyToSubject(f.manager, f.subjectId, ofClass.id()).scope()).isEqualTo(AssignmentScope.SUBJECT);
-        assertThat(code(() -> f.copies.copyToSubject(f.manager, UUID.randomUUID(), sibling.id())))
+        assertThat(f.copies.copyToSubject(f.manager, f.subjectId, ofClass.id(), null).scope()).isEqualTo(AssignmentScope.SUBJECT);
+        assertThat(code(() -> f.copies.copyToSubject(f.manager, UUID.randomUUID(), sibling.id(), null)))
                 .isEqualTo("ASSIGNMENT_NOT_FOUND");
     }
 }

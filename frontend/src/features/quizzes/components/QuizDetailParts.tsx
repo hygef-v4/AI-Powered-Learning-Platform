@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { type ReactNode, useEffect, useId, useState } from "react";
 import { Alert, Button, Dialog, Field, Icon, Pill, Section, Switch, TextInput } from "@/shared/ui";
 import { formatPoints, TYPE_LABELS } from "../model/labels";
 import { McqEditor } from "./McqEditor";
@@ -16,12 +16,14 @@ const TEXTAREA = "w-full rounded-lg border border-line-strong px-3 py-2 text-[13
  * "Câu hỏi (n)": thứ tự, nguồn câu, điểm, nội dung và đáp án; sửa điểm, đổi thứ tự, bỏ câu khi quiz còn nháp. `onPropose`
  * (Quiz của lớp): giảng viên đề xuất câu riêng vào ngân hàng của môn (BR-U10-09).
  */
-export function QuizItemList({ items, onChange, editable, onEditInline, onPropose }: {
+export function QuizItemList({ items, onChange, editable, onEditInline, onPropose, editingId, editor }: {
   items: DraftItem[];
   onChange: (items: DraftItem[]) => void;
   editable: boolean;
   onEditInline: (item: QuizItemView) => void;
   onPropose?: (item: QuizItemView) => void;
+  editingId?: string;
+  editor?: ReactNode;
 }) {
   const move = (index: number, delta: number) => {
     const next = [...items];
@@ -36,6 +38,9 @@ export function QuizItemList({ items, onChange, editable, onEditInline, onPropos
       {items.map((draft, index) => {
         const q = draft.item.question;
         const inline = draft.item.inline;
+        if (q.id === editingId) return <li key={q.id} className="rounded-xl border border-line p-3" data-testid="quiz-item">
+          <p className="mb-3 text-sm font-semibold text-ink">Câu {index + 1}</p>{editor}
+        </li>;
         return (
           <li key={q.id} className="rounded-xl border border-line p-3" data-testid="quiz-item">
             <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted">
@@ -79,16 +84,22 @@ export function QuizItemList({ items, onChange, editable, onEditInline, onPropos
 
 
 /** Popup soạn câu riêng của quiz (BR-U10-13) hoặc câu đề xuất (BR-U10-09), dùng McqEditor. */
-export function InlineQuestionDialog({ initial, onClose, onSave, title }: {
+export function InlineQuestionDialog({ initial, onClose, onSave, title, inline = false, onDirtyChange }: {
   initial: Pick<QuizItemView, "question"> | null;
   onClose: () => void;
   onSave: (content: QuestionContent) => Promise<void>;
   title?: string;
+  inline?: boolean;
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const [form, setForm] = useState<QuestionForm>(() => (initial ? formOf(initial.question) : emptyForm()));
   const [errors, setErrors] = useState<FormErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    onDirtyChange?.(JSON.stringify(form) !== JSON.stringify(initial ? formOf(initial.question) : emptyForm()));
+  }, [form, initial, onDirtyChange]);
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
   const save = async () => {
     const found = validateForm(form);
     setErrors(found);
@@ -102,23 +113,28 @@ export function InlineQuestionDialog({ initial, onClose, onSave, title }: {
       setBusy(false);
     }
   };
-  return (
-    <Dialog open onClose={onClose} dismissible={!busy} size="lg" icon="quiz" title={title ?? (initial ? "Sửa câu riêng của quiz" : "Thêm câu riêng")}
-      footer={<>
-        <Button variant="primary" onClick={() => void save()} disabled={busy} data-testid="inline-question-save">Lưu câu</Button>
-      </>}>
+  const footer = <>
+    {inline && <Button onClick={onClose} disabled={busy} aria-label="Hủy soạn câu">Hủy</Button>}
+    <Button variant="primary" onClick={() => void save()} disabled={busy} data-testid="inline-question-save">Lưu câu</Button>
+  </>;
+  const body = (
       <div className="flex flex-col gap-4">
-        <McqEditor value={form} onChange={setForm} errors={errors} />
+        <McqEditor value={form} onChange={setForm} errors={errors} readOnly={busy} />
         <QuestionMetaPanel value={form} onChange={setForm} errors={errors} />
         {error && <Alert tone="danger" role="alert">{error}</Alert>}
       </div>
-    </Dialog>
   );
+  if (inline) return <div className="flex min-w-0 flex-col gap-4" role="region" aria-label={initial ? "Sửa câu hỏi" : "Soạn câu mới"}>
+    {body}<div className="flex justify-end gap-2 border-t border-line pt-3">{footer}</div>
+  </div>;
+  return <Dialog open onClose={onClose} dismissible={!busy} size="lg" icon="quiz"
+    title={title ?? (initial ? "Sửa câu riêng của quiz" : "Thêm câu riêng")} footer={footer}>{body}</Dialog>;
 }
 
 export type SettingsForm = {
   title: string;
   instructions: string;
+  instructionsDocument?: QuizDetailsInput["instructionsDocument"];
   timeLimit: string;
   maxAttempts: string;
   shuffleQuestions: boolean;
@@ -139,6 +155,7 @@ export function settingsFormOf(quiz: QuizDetailsInput): SettingsForm {
   return {
     title: quiz.title,
     instructions: quiz.instructions ?? "",
+    instructionsDocument: quiz.instructionsDocument,
     timeLimit: s.timeLimitMinutes === null ? "" : String(s.timeLimitMinutes),
     maxAttempts: s.maxAttempts === null ? "" : String(s.maxAttempts),
     shuffleQuestions: s.shuffleQuestions,
@@ -197,6 +214,7 @@ export function settingsInput(form: SettingsForm): { errors: Record<string, stri
     input: {
       title: form.title.trim(),
       instructions: form.instructions.trim() || null,
+      instructionsDocument: form.instructionsDocument,
       settings,
       activityMonitoringEnabled: form.activityMonitoringEnabled,
       activityNotice: form.activityNotice.trim() || null,

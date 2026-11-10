@@ -7,6 +7,7 @@ import { Button, ClickableRow, Dialog, Icon, IconButton, PageNav, Pill, Section,
 import { PersonPicker } from "./PersonPicker";
 import { formatDate, formatOperationError } from "../model/format";
 import { parseEnrollmentList, type EnrollmentPreviewRow } from "../model/enrollmentList";
+import { readEnrollmentWorkbook } from "../model/enrollmentWorkbook";
 import { ENROLLMENT_RESULT_LABELS, type EnrollmentRowResult, type EnrollmentView, type PersonView } from "../model/types";
 
 const PAGE_SIZE = 20;
@@ -15,7 +16,7 @@ const STATUS_TABS = [{ value: "ACTIVE", label: "Đang học" }, { value: "REMOVE
 const OK_RESULTS = new Set(["ENROLLED", "RESTORED"]);
 const NO_GROUP = "__none";
 
-/** Kết quả từng dòng sau khi thêm theo danh sách, cùng kiểu bảng kiểm tra CSV ở trang Tài khoản. */
+/** Kết quả từng dòng sau khi thêm theo danh sách, cùng kiểu bảng kiểm tra Excel ở trang Tài khoản. */
 export function EnrollmentResultTable({ rows }: { rows: EnrollmentRowResult[] }) {
   return <TableFrame filledHead className="[&_table]:table-fixed">
     <caption className="sr-only">Kết quả từng dòng</caption>
@@ -156,7 +157,7 @@ function AddStudentDialog({ candidates, loadCandidates, onEnroll, onClose }: { c
 }
 
 /**
- * Thêm theo danh sách, cùng kiểu thẻ Nhập CSV ở trang Tài khoản: dán email hoặc chọn tệp CSV một cột, Xem trước kiểm từng
+ * Thêm theo danh sách: dán email hoặc chọn tệp Excel một cột, Xem trước kiểm từng
  * dòng, rồi Thêm N sinh viên. Thêm hết thì đóng thẻ; còn dòng không thêm được thì hiện bảng kết quả.
  */
 function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Promise<EnrollmentRowResult[]>; onClose: () => void }) {
@@ -178,11 +179,14 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
   async function choose(next: File | undefined) {
     if (file.current) file.current.value = "";
     if (!next) return;
-    if (next.size > 102400) { setError("Danh sách tối đa 100 KB."); setPreview(null); return; }
-    const text = await next.text();
-    setFileName(next.name);
-    edit(text);
-    review(text);
+    setBusy(true); setError(""); setPreview(null); setResults(null); setInput(""); setFileName("");
+    try {
+      const text = await readEnrollmentWorkbook(next);
+      setFileName(next.name);
+      edit(text);
+      review(text);
+    } catch (cause) { setError(formatOperationError(cause)); }
+    finally { setBusy(false); }
   }
   async function handleSubmit() {
     if (busy || !valid) return;
@@ -198,8 +202,8 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
   const shown = preview?.slice(page * PREVIEW_SIZE, (page + 1) * PREVIEW_SIZE) ?? [];
   return <Section title="Thêm sinh viên theo danh sách" icon="upload_file"
     actions={<button type="button" onClick={onClose} aria-label="Đóng" className="text-muted hover:text-ink"><Icon name="close" /></button>}>
-    <input ref={file} type="file" accept=".csv,text/csv" aria-label="Chọn tệp CSV" className="sr-only" disabled={busy}
-      data-testid="enrollment-csv-input" onChange={(event) => void choose(event.target.files?.[0])} />
+    <input ref={file} type="file" accept=".xlsx" aria-label="Chọn tệp Excel" className="sr-only" disabled={busy}
+      data-testid="enrollment-excel-input" onChange={(event) => void choose(event.target.files?.[0])} />
     <div className="flex flex-col gap-1.5">
       <label htmlFor={`${id}-list`} className="text-xs font-semibold text-body">Danh sách email</label>
       <textarea id={`${id}-list`} value={input} disabled={busy} onChange={(event) => edit(event.target.value)} data-testid="enrollment-list-input"
@@ -211,6 +215,7 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
         <span className="min-w-0 truncate text-[13px] font-semibold text-ink">{fileName}</span>
       </div>}
       <Button icon="folder_open" disabled={busy} onClick={() => file.current?.click()}>{fileName ? "Chọn tệp khác" : "Chọn tệp"}</Button>
+      <a href="/templates/enrollment-import.xlsx" download="mau-sinh-vien.xlsx" className="text-xs font-semibold text-primary-ink hover:underline">Tải tệp mẫu Excel</a>
       <Button icon="check" disabled={busy || !input.trim()} onClick={() => review()} data-testid="enrollment-list-preview">Xem trước</Button>
     </div>
     {error && <p role="alert" className="text-sm text-danger">{error}</p>}

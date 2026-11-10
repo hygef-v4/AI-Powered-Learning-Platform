@@ -31,7 +31,7 @@ public final class AiDraftViews {
                               DraftStatus status, List<DraftQuestion> questions, Integer requestedCount, String source,
                               String provider, List<MaterialRef> materials, String agentLabel, Long baseVersion,
                               String failureCode, String failureMessage, UUID createdBy, Instant createdAt,
-                              Instant decidedAt) {
+                              Instant decidedAt, List<String> sourceWarnings) {
 
         static AiDraftView of(QuizAiDraft d) {
             Map<String, Object> p = d.provenance();
@@ -40,7 +40,12 @@ public final class AiDraftViews {
                     d.proposal(), count instanceof Number n ? n.intValue() : null, string(p, SOURCE), string(p, PROVIDER),
                     materials(p.get(MATERIALS)), string(p, AGENT_LABEL), d.baseVersion(),
                     string(p, QuizAiDraft.FAILURE_CODE), string(p, QuizAiDraft.FAILURE_MESSAGE), d.createdBy(),
-                    d.createdAt(), d.decidedAt());
+                    d.createdAt(), d.decidedAt(), warnings(p.get("sourceWarnings")));
+        }
+
+        private static List<String> warnings(Object value) {
+            return value instanceof List<?> list ? list.stream().filter(String.class::isInstance)
+                    .map(String.class::cast).toList() : List.of();
         }
 
         private static String string(Map<String, Object> provenance, String key) {

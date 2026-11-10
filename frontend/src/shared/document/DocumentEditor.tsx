@@ -1,5 +1,6 @@
 "use client";
 
+import { SectionNumber } from "./SectionNumber";
 import {
   Fragment,
   useEffect,
@@ -29,6 +30,7 @@ import {
   sectionsOf,
   type TitleContent,
   MAX_SECTION_DEPTH,
+  sectionNumber,
   underOf,
   type Align,
   type BlockOrigin,
@@ -43,6 +45,9 @@ import {
 } from "./types";
 
 type Mode = "author" | "student";
+
+/** Chữ gợi ý ở ô Bài làm của bạn (yêu cầu 2026-11-10), ngắn như chữ gợi ý của người soạn. */
+const ANSWER_PLACEHOLDER = "Viết câu trả lời…";
 
 /** Mục có chữ riêng (ngoài các mục con): có khối khác đoạn trống. */
 function hasOwnText(section: DocSection): boolean {
@@ -63,6 +68,8 @@ type Props = {
   issues?: ValidationIssue[];
   /** Phần đầu trang giấy, trên các block (tên bài, hướng dẫn). */
   header?: ReactNode;
+  /** Dòng thông tin chỉ đọc, gắn theo ID tiêu đề của từng phần. */
+  sectionBylines?: Readonly<Record<string, string>>;
   /** Nút thêm ở cuối thanh công cụ; có nút thì thanh công cụ vẫn hiện khi chỉ đọc. */
   toolbarExtra?: ReactNode;
   /**
@@ -100,7 +107,7 @@ type FocusTarget = { id: string; at: "start" | "end"; field?: number };
 type Selected = { blockId: string; field: number; start: number; end: number };
 
 /*
- * Nghiệp vụ soạn (yêu cầu 2026-11-02): chỉ có một loại khung là Mục (Tiêu đề 1–6, đánh số 1., 1.1., 1.1.1.); tiêu đề mục
+ * Nghiệp vụ soạn (yêu cầu 2026-11-02): chỉ có một loại khung là Mục (Tiêu đề 1–6, đánh số I., I.1., I.1.a., I.1.a.aa.); tiêu đề mục
  * chỉ ghi chữ, nội dung viết trong Ô văn bản (giấy trắng, luôn có Dòng cuối ở đáy). Nút "+ Mục" trên thanh công cụ thêm mục
  * cùng tầng; thanh "+" ở đáy mỗi ô văn bản (cả ô ngoài cùng) thêm mục nằm trong ô đó.
  */
@@ -421,12 +428,15 @@ function StepGlyph() {
   );
 }
 
-/** Nút thêm mục: chỉ một dấu "+" kéo dài hết bề ngang, nhạt cho tới khi rê chuột (yêu cầu 2026-11-02). */
-function AddBar({ title, onClick }: { title: string; onClick: () => void }) {
+/**
+ * Nút thêm câu hỏi: dấu "+" kèm chữ kéo dài hết bề ngang, luôn hiện ở đáy mỗi ô văn bản (yêu cầu 2026-11-10); chữ nói rõ
+ * phải thêm câu hỏi để sinh viên làm, không chỉ gõ đề bài.
+ */
+function AddBar({ label, onClick }: { label: string; onClick: () => void }) {
   return (
-    <button type="button" aria-label="Thêm mục" title={title} onClick={onClick}
-      className="flex h-6 w-full items-center justify-center rounded-md text-faint transition-colors hover:bg-primary-soft hover:text-primary-ink focus-visible:bg-primary-soft focus-visible:text-primary-ink">
-      <Icon name="add" size={16} />
+    <button type="button" aria-label={label} title={label} onClick={onClick}
+      className="flex h-7 w-full items-center justify-center gap-1 rounded-md text-xs font-medium text-muted transition-colors hover:bg-primary-soft hover:text-primary-ink focus-visible:bg-primary-soft focus-visible:text-primary-ink">
+      <Icon name="add" size={16} />{label}
     </button>
   );
 }
@@ -551,9 +561,9 @@ function Square({ label, danger = false, disabled = false, onClick, children }: 
 function SectionTools({ shown, onRemove, onUp, onDown }: { shown: boolean; onRemove: () => void; onUp?: () => void; onDown?: () => void }) {
   return (
     <span className={cx("absolute top-0 -left-7 z-10 flex flex-col gap-1 py-1 pr-2.5 pl-1 transition-opacity", shown ? "opacity-100" : "pointer-events-none opacity-0")}>
-      <Square danger label="Xóa mục" onClick={onRemove}>✕</Square>
-      <Square label="Đưa mục lên" disabled={!onUp} onClick={() => onUp?.()}>↑</Square>
-      <Square label="Đưa mục xuống" disabled={!onDown} onClick={() => onDown?.()}>↓</Square>
+      <Square danger label="Xóa câu hỏi" onClick={onRemove}>✕</Square>
+      <Square label="Đưa câu hỏi lên" disabled={!onUp} onClick={() => onUp?.()}>↑</Square>
+      <Square label="Đưa câu hỏi xuống" disabled={!onDown} onClick={() => onDown?.()}>↓</Square>
     </span>
   );
 }
@@ -583,7 +593,9 @@ const TOOLBAR_COVER = "shadow-[0_-0.75rem_0_0.25rem_var(--c-bg)]";
 
 export function DocumentEditor({
   document, onChange, mode, diagramEnabled, readOnly = false, imageUrl, uploadImage, issues = [],
-  header, titleField, toolbarExtra, viewSlot, toolbarCenter, comments, activeComment, highlightBlockId, onFocusBlock, emptyLeafLabel, answerGuidance = false, fullWidth = false, matchCommentHeight = false,
+  header, sectionBylines, titleField, toolbarExtra, viewSlot, toolbarCenter, comments, activeComment,
+  highlightBlockId, onFocusBlock, emptyLeafLabel, answerGuidance = false, fullWidth = false,
+  matchCommentHeight = false,
   externalEdit = null,
 }: Props) {
   const origin: BlockOrigin = mode === "author" ? "TEACHER" : "STUDENT";
@@ -756,7 +768,10 @@ export function DocumentEditor({
   // Thanh công cụ theo chỗ con trỏ (yêu cầu 2026-11-04): + Mục chỉ ở đoạn văn và dòng cuối; chèn bảng, ảnh, sơ đồ ở đoạn văn,
   // danh sách, dòng cuối; không ở tên bài, tiêu đề mục, ô bảng, ảnh, sơ đồ.
   const onText = !focused || focused.type === "PARAGRAPH";
-  const addSectionAllowed = !inHeader && (cursorLine !== null || onText);
+  // "+ Câu hỏi" (yêu cầu 2026-11-10): con trỏ không ở đâu, ở tên bài hay ở tiêu đề câu hỏi thì thêm câu hỏi xuống cuối;
+  // ở đoạn văn, dòng cuối thì thêm tại con trỏ; chỉ khóa ở chỗ không được thêm (bảng, ảnh, sơ đồ, danh sách).
+  const addAtEnd = inHeader || (cursorLine === null && (!focused || focused.type === "HEADING"));
+  const addSectionAllowed = addAtEnd || cursorLine !== null || onText;
   const insertAllowed = !inHeader && (cursorLine !== null || onText) && (focused ? inPart(focused.id) : atEndInPart);
   // Ở tên bài hay ở dòng cuối (chưa phải đoạn văn) thì không có khối nào để định dạng.
   const target = focused && !locked(focused) && !inHeader && !cursorLine ? focused : undefined;
@@ -1089,7 +1104,9 @@ export function DocumentEditor({
   };
   if (tree.blocks.length > 0 || tree.after.length > 0) leaves.push(tree);
   collect(tree);
-  const stepping = view === "step" && tree.children.length > 0;
+  // Bài chưa có câu hỏi vẫn chuyển được sang Từng phần (yêu cầu 2026-11-10): cả bài là một trang.
+  if (leaves.length === 0) leaves.push(tree);
+  const stepping = view === "step";
   const stepIndex = Math.min(stepAt, Math.max(0, leaves.length - 1));
   const currentLeaf = stepping ? leaves[stepIndex]! : null;
   // Từng phần: chỉ các mục đang hiện (mục của trang và các mục cha) mới có ghi chú bên lề, không để cột ghi chú kéo dài trang.
@@ -1113,6 +1130,7 @@ export function DocumentEditor({
   ));
 
   function renderBlock(block: DocumentBlock): ReactNode {
+    const byline = block.type === "HEADING" ? sectionBylines?.[block.id] : undefined;
     const isLocked = locked(block);
     const teacherBlock = student && block.origin === "TEACHER";
     const drawable = !readOnly && teacherBlock && block.type === "DIAGRAM" && inPart(block.id);
@@ -1138,6 +1156,7 @@ export function DocumentEditor({
         ) : (
           <BlockEditor block={block} imageUrl={imageUrl} previewUrl={previews[block.id]} uploadError={uploadError[block.id]}
             onUpload={uploadImage ? (file) => void upload(block.id, file) : undefined} guard={teacherBlock}
+            placeholder={firstAnswerLine.has(block.id) ? ANSWER_PLACEHOLDER : undefined}
             ops={{
               change: (next, focus) => {
                 // Đoạn cuối của khung bị xóa hết chữ: bỏ đoạn đó, con trỏ về dòng cuối (luôn có) của khung.
@@ -1155,6 +1174,7 @@ export function DocumentEditor({
               openDiagram: () => setDiagram(block.id),
             }} />
         )}
+        {byline && <p className="mt-1 wrap-break-word text-xs text-muted">{byline}</p>}
         {blockIssues.map((issue, i) => <p key={i} role="alert" className="text-xs text-danger">{issue.message}</p>)}
         {inlineComments(block.id)}
       </div>
@@ -1178,9 +1198,20 @@ export function DocumentEditor({
     return (
       <button type="button" aria-label="Viết vào phần này" data-testid={`write-part-${key}`}
         onClick={() => insertAfter(last.id, newBlock("PARAGRAPH", origin))} className={cx("block w-full cursor-text text-left text-sm text-muted", guided ? "min-h-16 rounded-md px-2 focus-visible:ring-2 focus-visible:ring-focus" : "h-7")}>
-        {guided && "Bấm để bắt đầu viết bài làm…"}
+        {guided && ANSWER_PLACEHOLDER}
       </button>
     );
+  }
+
+  /** Đoạn đầu tiên sinh viên viết trong mỗi phần: còn trống thì có chữ gợi ý như của giảng viên (yêu cầu 2026-11-10). */
+  const firstAnswerLine = new Set<string>();
+  if (guided) {
+    const mark = (section: DocSection) => {
+      const first = section.blocks.find((b) => b.origin === "STUDENT" && b.type === "PARAGRAPH");
+      if (first) firstAnswerLine.add(first.id);
+      section.children.forEach(mark);
+    };
+    mark(tree);
   }
 
   function leafContent(section: DocSection, key: string): ReactNode {
@@ -1215,6 +1246,10 @@ export function DocumentEditor({
   function tailLine(section: DocSection, key: string, end = false): ReactNode {
     const anchor = end ? lastOf(section) : ownEnd(section);
     const tailKey = end ? `tail-end-${key}` : `tail-${key}`;
+    // Ô còn trống: gợi ý cho người mới (yêu cầu 2026-11-10); ngoài mọi câu hỏi chỉ nhắc bấm + để thêm câu hỏi.
+    const placeholder = hasOwnText(section) || section.children.length > 0 ? undefined
+      : section.heading ? "Viết nội dung câu hỏi…"
+        : "Nhập đề bài, bối cảnh hệ thống, yêu cầu chung…";
     return (
       <div key={`${tailKey}-${blocks.length}`} data-block-id={tailKey} data-testid={tailKey}
         className="border-b border-dashed border-line-strong py-0.5 transition-colors focus-within:border-primary"
@@ -1223,7 +1258,7 @@ export function DocumentEditor({
           setCursorLine({ afterId: anchor?.id ?? null, sectionKey: key, tailKey });
         }}>
         <TailList list={tailStyles[tailKey]?.list}>
-        <RichText runs={tailRuns(tailKey)} aria-label="Dòng cuối" className={cx(PARAGRAPH_CLASS, alignClass(tailStyles[tailKey]?.align))}
+        <RichText runs={tailRuns(tailKey)} aria-label="Dòng cuối" placeholder={placeholder} className={cx(PARAGRAPH_CLASS, alignClass(tailStyles[tailKey]?.align))}
           onChange={(runs) => {
             if (!runsText(runs)) return;
             const preset = tailStyles[tailKey];
@@ -1261,7 +1296,7 @@ export function DocumentEditor({
 
   /** Cấp tiêu đề của mục con trong {@code section}: theo mục con đang có, không thì sâu hơn một cấp (tối đa Tiêu đề 6). */
   const childLevel = (section: DocSection) => section.children[0]?.level ?? section.level + 1;
-  /** Mục lồng tối đa 3 tầng (1.1.1.), yêu cầu 2026-11-04: mục tầng 3 không thêm mục con. */
+  /** Câu hỏi lồng tối đa 4 tầng (I.1.a.aa.), yêu cầu 2026-11-10: tầng 4 không thêm ý. */
   const canAddChild = (section: DocSection) => section.depth < MAX_SECTION_DEPTH && childLevel(section) <= 6;
   /** Thêm mục con vào cuối {@code section} (sau các mục con đang có); gốc tài liệu thì là mục ngoài cùng. */
   function addChild(section: DocSection) {
@@ -1292,12 +1327,12 @@ export function DocumentEditor({
    * con của mục (ở ô ngoài cùng là mục ngoài cùng).
    */
   function quickAdd(section: DocSection): ReactNode {
-    // Ẩn cho tới khi con trỏ ở trong ô văn bản này (tiêu đề, văn bản hay dòng cuối của mục).
-    if (!canAddChild(section) || cursorSection !== section) return null;
+    // Luôn hiện để người mới thấy chỗ thêm mục (yêu cầu 2026-11-10); mục tầng 3 không thêm mục con.
+    if (!canAddChild(section)) return null;
     return (
       <div className="flex flex-wrap items-center gap-1 pt-1" data-testid={`quick-add-${section.heading?.id ?? "DOCUMENT"}`}
         onMouseDown={(event) => event.preventDefault()}>
-        <AddBar title={section.heading ? "Thêm mục vào trong mục này" : "Thêm mục"} onClick={() => addChild(section)} />
+        <AddBar label={section.heading ? "Thêm ý" : "Thêm câu hỏi"} onClick={() => addChild(section)} />
       </div>
     );
   }
@@ -1339,7 +1374,7 @@ export function DocumentEditor({
         onDrop={(event) => { event.preventDefault(); event.stopPropagation(); commitDrop(); }}
         style={{ backgroundColor: SECTION_BG[Math.min(dragged.depth - 1, SECTION_BG.length - 1)] }}>
         <span className={cx(HEADING_CLASS[dragged.heading.type === "HEADING" ? dragged.heading.content.style : "H1"] ?? HEADING_CLASS.H1)}>
-          {numbers.get(dragKey!)} {blockText(dragged.heading)}
+          <SectionNumber value={numbers.get(dragKey!) ?? ""} /> {blockText(dragged.heading)}
         </span>
       </div>
     ) : null;
@@ -1370,13 +1405,13 @@ export function DocumentEditor({
             onUp={index > 0 ? () => stepSection(section, -1) : undefined}
             onDown={index >= 0 && index < siblings.length - 1 ? () => stepSection(section, 1) : undefined} />;
         })()}
-        {/* Số thứ tự 1., 1.1., 2. đứng trước tiêu đề, không sửa được; người soạn kéo số để đổi chỗ mục trong cùng cha. */}
+        {/* Số thứ tự I., I.1., II. đứng trước tiêu đề, không sửa được; người soạn kéo số để đổi chỗ mục trong cùng cha. */}
         <div className="flex items-start gap-1.5">
           <span data-testid={`number-${key}`} draggable={authoring || undefined}
-            title={authoring ? "Kéo để đổi chỗ mục" : undefined}
+            title={authoring ? "Kéo để đổi chỗ câu hỏi" : undefined}
             onDragStart={authoring ? (event) => { event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", key); setDragKey(key); } : undefined}
             onDragEnd={authoring ? () => { setDragKey(null); setDropAt(null); } : undefined}
-            className={cx(HEADING_CLASS[headingStyle] ?? HEADING_CLASS.H1, "shrink-0 py-0.5 tabular-nums", authoring && "cursor-grab active:cursor-grabbing")}>{numbers.get(key)}</span>
+            className={cx(HEADING_CLASS[headingStyle] ?? HEADING_CLASS.H1, "shrink-0 py-0.5 tabular-nums", authoring && "cursor-grab active:cursor-grabbing")}><SectionNumber value={numbers.get(key) ?? ""} /></span>
           <div className="min-w-0 flex-1">{renderBlock(heading)}</div>
         </div>
         {/* Ô trắng của phần; bấm vào chỗ trống là viết tiếp ở dòng cuối. */}
@@ -1443,7 +1478,8 @@ export function DocumentEditor({
   );
   // Nút chọn cách đọc (Cả trang / Từng phần): trên header của trang nếu trang đưa chỗ ({@code viewSlot}), không thì trên thanh
   // công cụ.
-  const viewToggle = tree.children.length > 0 ? (
+  // Luôn hiện, kể cả khi bài chưa có câu hỏi (yêu cầu 2026-11-10).
+  const viewToggle = (
     <span role="radiogroup" aria-label="Chế độ xem" className="flex items-center gap-0.5 rounded-lg bg-line/60 p-0.5">
       <ViewButton label="Cả trang" on={!stepping} onClick={() => {
         pinned.current = currentLeaf ? currentLeaf.heading?.id ?? "DOCUMENT" : null;
@@ -1461,20 +1497,20 @@ export function DocumentEditor({
         setView("step");
       }}><StepGlyph /></ViewButton>
     </span>
-  ) : null;
+  );
   addPartFrom.current = (parentId) => {
     if (!authoring) return;
     const parent = parentId ? sectionByKey.get(parentId) : tree;
     if (parent) addChild(parent);
   };
-  // Số thứ tự của từng phần theo cây: 1., 1.1., 1.2., 2.
+  // Số thứ tự của từng câu hỏi theo cây: I., I.1., I.1.a., I.1.a.aa. (yêu cầu 2026-11-10).
   const numbers = new Map<string, string>();
-  const numberParts = (section: DocSection, prefix: string) => section.children.forEach((child, i) => {
-    const number = `${prefix}${i + 1}.`;
-    if (child.heading) numbers.set(child.heading.id, number);
-    numberParts(child, number);
+  const numberParts = (section: DocSection, path: number[]) => section.children.forEach((child, i) => {
+    const counters = [...path, i + 1];
+    if (child.heading) numbers.set(child.heading.id, sectionNumber(counters));
+    numberParts(child, counters);
   });
-  numberParts(tree, "");
+  numberParts(tree, []);
   // Đoạn văn cuối của mỗi khung có dòng cuối: id đoạn -> id dòng cuối.
   const tailOf = new Map<string, string>();
   const mapTails = (section: DocSection) => {
@@ -1534,9 +1570,10 @@ export function DocumentEditor({
               <Separator />
               {!student && (
                 <>
-                  <ToolbarButton title="Thêm mục con tại chỗ con trỏ" aria-label="Thêm mục" className="gap-1 pr-2"
-                    data-testid="add-block" disabled={!addSectionAllowed || !canAddChild(cursorSection ?? tree)} onClick={() => addAtCursor(cursorSection)}>
-                    <Icon name="add" size={16} />Mục
+                  <ToolbarButton title="Thêm câu hỏi tại chỗ con trỏ" aria-label="Thêm câu hỏi" className="gap-1 pr-2"
+                    data-testid="add-block" disabled={!addSectionAllowed || !canAddChild(addAtEnd ? tree : cursorSection ?? tree)}
+                    onClick={() => (addAtEnd ? addChild(tree) : addAtCursor(cursorSection))}>
+                    <Icon name="add" size={16} />Câu hỏi
                   </ToolbarButton>
                   <Separator />
                 </>
@@ -1597,6 +1634,18 @@ export function DocumentEditor({
 
       <div className={rail ? cx("grid items-start gap-5", fullWidth ? "grid-cols-[minmax(0,1fr)_300px]" : "grid-cols-[minmax(0,816px)_300px] justify-center") : cx("mx-auto w-full", !fullWidth && "max-w-[816px]")}>
         <div ref={paper} data-testid="document-paper" onMouseLeave={hoverOff} onMouseOver={hoverOff}
+          onBlurCapture={(event) => {
+            // Con trỏ rời trang (bấm ra ngoài): không còn chỗ con trỏ, "+ Câu hỏi" thêm xuống cuối (yêu cầu 2026-11-10). Nút trên
+            // thanh công cụ giữ con trỏ (chặn mousedown) nên không làm mất chỗ con trỏ.
+            // Cửa sổ mất focus (mở hộp chọn tệp khi chèn ảnh) thì giữ chỗ con trỏ: kiểm sau khi focus đã chuyển xong.
+            if (paper.current?.contains(event.relatedTarget as Node | null)) return;
+            setTimeout(() => {
+              if (!globalThis.document.hasFocus() || paper.current?.contains(globalThis.document.activeElement)) return;
+              setFocusedId(null);
+              setCursorLine(null);
+              setInHeader(false);
+            }, 0);
+          }}
           onDragOver={(event) => { if (dragKey && dropAt) event.preventDefault(); }}
           onDrop={(event) => { if (!dragKey) return; event.preventDefault(); commitDrop(); }}
           className={cx("min-h-[60vh] min-w-0 rounded-lg border border-line bg-surface px-5 pt-10 pb-4 shadow-[var(--shadow-lift)] sm:pt-12", fullWidth ? "sm:px-8" : "sm:px-14")}>
@@ -1665,7 +1714,7 @@ function BlockEditor({ block, ops, imageUrl, previewUrl, onUpload, uploadError, 
     case "HEADING":
       // Tiêu đề mục định dạng được (đậm, nghiêng, màu…, yêu cầu 2026-11-04), một dòng: Enter mở đoạn mới bên dưới.
       return (
-        <RichText aria-label="Nội dung tiêu đề" runs={headingRuns(block)}
+        <RichText aria-label="Nội dung tiêu đề" placeholder="Tên câu hỏi" runs={headingRuns(block)}
           className={cx(HEADING_CLASS[block.content.style] ?? HEADING_CLASS.H1, alignClass(block.content.align))}
           onChange={(runs) => ops.change(withHeadingRuns(block, runs))}
           onKey={(event, caret) => keys(event, caret, {

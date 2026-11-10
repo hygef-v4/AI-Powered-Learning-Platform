@@ -22,7 +22,7 @@ Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://clau
 | 30 | Class Dashboard của Student, dòng bài trên thẻ lớp (`s01`) | `ClassCardAssignments` | 37 | Student |
 | 39 | Assignment Detail: bài Graded đang làm (`s12`), bài Practice (`s12b`), bài Graded đã công bố điểm (`s12c`), bài nhóm (`s12d`) | `StudentAssignmentDetailPage` | 38 | Student |
 | 40 | Assignment Workspace bài cá nhân (`s16`), popup Nộp bài (`s16b`), Biên nhận sau khi nộp (`s16c`) | `AssignmentWorkspacePage`, `SubmitDialog`, `ReceiptPage` | 39 | Student |
-| 41 | Submission History: bài Practice (`s13`), bài Graded đã chấm (`s13b`), popup Nhận góp ý AI (`s13c`) | `SubmissionHistoryPage`, `PracticeFeedbackPanel` | 40, 41 | Student |
+| 41 | Submission History: bài Practice có thẻ Góp ý AI, bài Graded đã chấm (`s13b`). `s13` và `s13c` là mẫu tham chiếu trước khi chuyển sang thẻ. | `SubmissionHistoryPage`, `PracticeFeedbackPanel` | 40, 41 | Student |
 
 U08 đăng ký `NavEntry` "Bài tập" (Student). Chế độ nhóm của Assignment Workspace (UC 56) do U12 làm, dùng lại `DocumentEditor` của U07 và `useActivityTracker` của U08.
 
@@ -51,7 +51,7 @@ app/attempts/[attemptId]/           AssignmentWorkspacePage      #40 Assignment 
 app/attempts/[attemptId]/receipt/   ReceiptPage                  biên nhận sau khi nộp
 app/my-assignments/[assignmentId]/history/  SubmissionHistoryPage  #41 Submission History
   AttemptList, AttemptViewer, DocxDownloadButton
-  PracticeFeedbackPanel                       góp ý AI của bài Practice, AiSourcePicker (U06, chỉ nguồn cá nhân), AiTaskStatus (U06)
+  PracticeFeedbackPanel                       thẻ góp ý AI của lượt Practice đã nộp trong cột nhận xét của DocumentEditor
   (vùng SubmissionResultSection cho U09)
 shared/activity/
   useActivityTracker                          dùng chung U08, U11, U12
@@ -72,7 +72,7 @@ shared/activity/
 | `SubmitDialog` | `POST .../submit` | "Nộp bài lượt n?": bảng Mục, Kiểm tra (kiểm sơ bộ: tổng số sơ đồ bắt buộc, có nội dung; rồi lỗi `validateForSubmit` của server theo phần; hoặc Hợp lệ); còn lỗi thì chỉ có Quay lại sửa; "Sau khi nộp, lượt này không sửa được. Bạn còn n lượt sau lượt này." |
 | `ReceiptPage` | `GET /api/v1/attempts/{attemptId}` | "Đã nộp bài": tên · lượt x / y, Mã biên nhận, Thời gian nộp (giờ Việt Nam), Tình trạng (Đúng hạn hoặc Trễ), Nội dung (số mục, số sơ đồ); nút Tải DOCX, Xem lịch sử nộp bài, Về danh sách bài tập |
 | `SubmissionHistoryPage`, `AttemptList`, `AttemptViewer`, `DocxDownloadButton` | `GET /api/v1/assignments/{assignmentId}/attempts/mine`, `GET /api/v1/attempts/{attemptId}`, `GET .../export.docx` | Đường dẫn "Bài tập › tên › Lịch sử nộp bài"; "Bài nộp · lượt n" (thời điểm nộp · mã biên nhận), Tải DOCX, nội dung chỉ đọc; "Các lượt nộp": mỗi lượt kèm thời điểm, bài Graded ghi "Được chấm" ở lượt nộp cuối và "Không chấm" ở lượt khác, bài Practice ghi đã có hoặc chưa có góp ý AI; bài Graded có phần Kết quả (U09) |
-| `PracticeFeedbackPanel` | `POST`, `GET .../feedback` | Chỉ bài `PRACTICE`: nút Nhận góp ý AI mở popup chọn API cá nhân (chưa có khóa thì link sang Kết nối AI); góp ý đã có: nhãn "AI ước tính, không phải điểm chính thức", nguồn · thời điểm, nhận xét chung, điểm mạnh, cần cải thiện, theo từng phần (tên phần); không có ước tính theo rubric. Góp ý do agent MCP ghi qua `record_private_feedback` hiện cùng chỗ với nhãn Agent |
+| `PracticeFeedbackPanel` | `POST`, `GET .../feedback` | Luôn hiện với lượt `PRACTICE` đã nộp đang chọn. Thẻ nằm bên phải bài làm từ 1280px, ở đầu nội dung bài làm trên màn hình hẹp. Nút **Nhận góp ý AI** hoặc **Nhận góp ý lại** nằm trong thẻ. Thẻ hiển thị trạng thái tải, chờ, lỗi, thao tác tải lại khi lỗi đọc và liên kết **Kết nối AI**. Góp ý đã có hiển thị nhãn **Góp ý tham khảo**, nguồn, thời điểm, nhận xét chung, điểm mạnh, điểm cần cải thiện và nhận xét theo tên phần nếu có. Góp ý MCP có nhãn Agent. |
 | `useActivityTracker` | `POST .../activity` (hoặc API của U11, U12) | Dùng trạng thái hiển thị của trang, không dùng blur; heartbeat 60 giây; gom lô, gửi lại khi lỗi |
 
 Route `/my-assignments/*` và `/attempts/*` chỉ cho Student (dùng `RoleGuard` của U01). Backend vẫn kiểm quyền thật.

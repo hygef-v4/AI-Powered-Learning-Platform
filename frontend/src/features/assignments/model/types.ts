@@ -153,7 +153,9 @@ export type AiDraft = {
   origin: "AI_TASK" | "MCP";
   status: "PENDING" | "READY" | "APPLIED" | "DISCARDED" | "FAILED";
   taskId: string | null;
-  proposal: { title: string; businessContext: string; instructions: string; sections: AiProposalSection[]; validation?: AiDraftValidation } | null;
+  /** {@code unchanged}: bản sửa đề bằng AI không đổi gì so với đề đã gửi. */
+  proposal: { title: string; businessContext: string; instructions: string; sections: AiProposalSection[]; validation?: AiDraftValidation;
+    unchanged?: boolean } | null;
   provenance: Record<string, unknown>;
   safeError: string | null;
   baseVersion: number;
@@ -187,7 +189,8 @@ export type ScheduleInput = {
   openNow?: boolean;
   closesAt: string;
   lateUntil?: string | null;
-  maxAttempts: number;
+  /** Chỉ bài Luyện tập; bài có chấm gửi null (yêu cầu 2026-11-10). */
+  maxAttempts: number | null;
   confirmUngroupedStudents?: boolean;
 };
 

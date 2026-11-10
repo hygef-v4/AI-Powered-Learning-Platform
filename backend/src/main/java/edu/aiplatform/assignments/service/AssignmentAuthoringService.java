@@ -113,15 +113,12 @@ public class AssignmentAuthoringService {
         return create(actor, AssignmentScope.CLASS, classId, ref.subjectId(), command);
     }
 
-    /** F3 bài của môn: chỉ cá nhân, Chủ nhiệm môn soạn (BR-U07-02). */
+    /** F3 đề mẫu của môn, Chủ nhiệm môn soạn (BR-U07-02); có cả bài nhóm (yêu cầu 2026-11-09). */
     @Transactional
     public AssignmentViews.Detail createForSubject(Actor actor, UUID subjectId, AssignmentCommands.Create command) {
         access.requireSubjectManager(actor, subjectId, "ASSIGNMENT_CREATED");
         if (support.subjectArchived(subjectId)) {
             throw ApiException.conflict("ASSIGNMENT_READ_ONLY", "Môn đã lưu trữ, không tạo bài được");
-        }
-        if (command.submissionMode() == SubmissionMode.GROUP) {
-            throw ApiException.badRequest("GROUP_NOT_ALLOWED", "Bài của môn chỉ có hình thức cá nhân");
         }
         modes(command.submissionMode(), command.gradingMode());
         return create(actor, AssignmentScope.SUBJECT, null, subjectId, command);
@@ -247,8 +244,25 @@ public class AssignmentAuthoringService {
     @Transactional(readOnly = true)
     public List<AssignmentViews.Material> selectableMaterials(Actor actor, UUID id) {
         Assignment assignment = support.manageable(actor, id, "ASSIGNMENT_MATERIALS_VIEW");
-        return selectable(actor, assignment).stream()
-                .map(m -> new AssignmentViews.Material(m.materialId(), m.title(), m.hasText())).toList();
+        return materialViews(selectable(actor, assignment));
+    }
+
+    /** Tài liệu tham khảo của lớp khi tạo bài bằng AI, lúc bài chưa có (yêu cầu 2026-11-10). */
+    @Transactional(readOnly = true)
+    public List<AssignmentViews.Material> selectableMaterialsForClass(Actor actor, UUID classId) {
+        access.requireClassManager(actor, classId, "ASSIGNMENT_MATERIALS_VIEW");
+        return materialViews(selectable(actor, ResourceRef.courseClass(classId)));
+    }
+
+    /** Tài liệu tham khảo của môn khi tạo đề mẫu bằng AI, lúc bài chưa có (yêu cầu 2026-11-10). */
+    @Transactional(readOnly = true)
+    public List<AssignmentViews.Material> selectableMaterialsForSubject(Actor actor, UUID subjectId) {
+        access.requireSubjectManager(actor, subjectId, "ASSIGNMENT_MATERIALS_VIEW");
+        return materialViews(selectable(actor, ResourceRef.subject(subjectId)));
+    }
+
+    private static List<AssignmentViews.Material> materialViews(List<SelectableMaterial> list) {
+        return list.stream().map(m -> new AssignmentViews.Material(m.materialId(), m.title(), m.hasText())).toList();
     }
 
     /** Trang xem sơ đồ (link trong DOCX); trang tự kiểm quyền đọc bài. */
@@ -286,7 +300,9 @@ public class AssignmentAuthoringService {
                     new ValidationIssue("DIAGRAM_DISABLED", b.id(), "Bài chưa bật sơ đồ")));
         }
         issues.addAll(rubrics.readinessIssues(assignment));
-        if (assignment.submissionMode() == SubmissionMode.GROUP && !support.groupSupported(assignment.classId())) {
+        // Đề mẫu của môn không thuộc lớp nào: lớp nhận bản copy mới kiểm bài nhóm.
+        if (assignment.submissionMode() == SubmissionMode.GROUP && assignment.scope() == AssignmentScope.CLASS
+                && !support.groupSupported(assignment.classId())) {
             issues.add(new ValidationIssue("GROUP_NOT_SUPPORTED", null, "Chưa dùng được bài nhóm cho lớp này"));
         }
         if (assignment.activityMonitoringEnabled()) {
@@ -387,8 +403,11 @@ public class AssignmentAuthoringService {
     }
 
     private List<SelectableMaterial> selectable(Actor actor, Assignment assignment) {
-        ResourceRef scope = assignment.scope() == AssignmentScope.CLASS
-                ? ResourceRef.courseClass(assignment.classId()) : ResourceRef.subject(assignment.subjectId());
+        return selectable(actor, assignment.scope() == AssignmentScope.CLASS
+                ? ResourceRef.courseClass(assignment.classId()) : ResourceRef.subject(assignment.subjectId()));
+    }
+
+    private List<SelectableMaterial> selectable(Actor actor, ResourceRef scope) {
         try {
             List<SelectableMaterial> list = materials.listSelectable(actor, scope);
             return list == null ? List.of() : list;

@@ -56,6 +56,19 @@ class AssignmentAiDraftServiceTest {
 
     private final AssignmentFixtures f = new AssignmentFixtures();
 
+    @Test
+    void templatesAreNonRetiredSubjectAssignmentsOfTheSameSubject() {
+        Assignment mine = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
+        Assignment published = f.put(AssignmentScope.SUBJECT, AssignmentStatus.OPEN, new DocumentModel(List.of()), false);
+        Assignment draft = f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
+        f.put(AssignmentScope.SUBJECT, AssignmentStatus.RETIRED, new DocumentModel(List.of()), false);
+        f.put(AssignmentScope.CLASS, AssignmentStatus.OPEN, new DocumentModel(List.of()), false);
+
+        assertThat(f.aiDrafts.listTemplates(f.teacher, mine.id()))
+                .extracting(AssignmentViews.AiTemplateOption::assignmentId)
+                .containsExactlyInAnyOrder(published.id(), draft.id());
+    }
+
     private static final String OUTPUT = """
             {"schemaVersion":2,"title":"Đề thiết kế hệ thống","businessContext":"FPT runs events and tracks registration capacity.","instructions":"Làm đủ các mục","sections":[
              {"level":1,"title":"Phân tích","guidance":"","rubric":[]},

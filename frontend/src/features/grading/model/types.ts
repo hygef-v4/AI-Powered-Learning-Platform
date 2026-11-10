@@ -95,6 +95,7 @@ export type Detail = {
   memberActivities: { student: Person; activity: Detail["activity"]; state: string }[];
   sectionAuthors: { partId: string; accountId: string }[];
   current: boolean;
+  groupEvaluationId?: string | null;
 };
 export type Person = { accountId: string; name: string; email: string };
 export type SubmissionRow = {
@@ -214,7 +215,7 @@ export const GRADE_STATUS_LABELS: Record<string, string> = {
   DRAFT: "Đã chấm",
   FINALIZED: "Đã chấm",
   PUBLISHED: "Đã công bố",
-  SUPERSEDED: "Lượt cũ",
+  SUPERSEDED: "Bài nộp cũ",
   NOT_SUBMITTED: "Chưa nộp",
   IN_PROGRESS: "Chưa nộp",
 };

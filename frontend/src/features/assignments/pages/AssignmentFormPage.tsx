@@ -22,6 +22,7 @@ import {
 } from "@/shared/document";
 import { Alert, Button, Dialog, Field, Menu, MenuItem, Pill, showToast } from "@/shared/ui";
 import { AiDraftDialog } from "../components/AiDraftDialog";
+import { AiReviseChat } from "../components/AiReviseChat";
 import { assignmentsApi, docxUrl, imageUrlFor } from "../api";
 import { AssignmentSettingsPanel, settingsOf, type Settings } from "../components/AssignmentSettingsPanel";
 import { errorMessage, formatTime, problemCode, problemIssues } from "../model/format";
@@ -179,7 +180,6 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const conflictRef = useRef(false);
   const fetched = useRef({ epoch: -1, parts: new Set<string>() });
-  const startedAiFromCreate = useRef(false);
 
   const apply = useCallback((next: AssignmentDetail, replaceLocal: boolean) => {
     setDetail(next);
@@ -204,16 +204,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     return () => controller.abort();
   }, [apply, id]);
 
-  useEffect(() => {
-    if (params.get("startAI") !== "1" || !detail?.permissions.canEditContent || startedAiFromCreate.current) return;
-    startedAiFromCreate.current = true;
-    setDialog("ai");
-    const query = new URLSearchParams(params.toString());
-    query.delete("startAI");
-    const suffix = query.toString();
-    router.replace(`/assignments/${encodeURIComponent(id)}${suffix ? `?${suffix}` : ""}`, { scroll: false });
-  }, [detail, id, params, router]);
-
+  // Tạo đề bằng AI chỉ có ở popup tạo bài (yêu cầu 2026-11-10); trang soạn chỉ mở popup AI để duyệt đề xuất do agent MCP gửi.
   useEffect(() => {
     if (!proposalId || detail?.id !== id || !detail.permissions.canEditContent || detail.status !== "DRAFT") return;
     const key = `${id}:${proposalId}`;
@@ -385,6 +376,21 @@ export function AssignmentFormPage({ id }: { id: string }) {
     }
   }), [apply, id]);
 
+  /** Lưu trước khi AI đọc hoặc ghi đè đề; trả version mới nhất. */
+  const saveForAi = useCallback(async () => {
+    if (!await save()) throw new Error("Không áp dụng được vì còn nội dung chưa lưu. Kiểm tra trạng thái lưu rồi thử lại.");
+    return version.current;
+  }, [save]);
+
+  /** Đề AI đã ghi trên máy chủ: tải lại, giữ bản trước để Ctrl+Z quay lại được. */
+  const showAiResult = useCallback(async (message: string) => {
+    const values = latest.current;
+    const before = { ...values.skeleton, title: values.skeleton.title ?? { runs: [{ text: values.title }] } };
+    await reload();
+    setAiEdit((current) => ({ id: (current?.id ?? 0) + 1, before }));
+    notify(message, "success");
+  }, [reload]);
+
   const parts = useMemo(() => computeParts(skeleton), [skeleton]);
   const sections = useMemo(() => sectionsOf(skeleton, parts), [skeleton, parts]);
 
@@ -551,6 +557,15 @@ export function AssignmentFormPage({ id }: { id: string }) {
     };
   });
 
+  // Khung chat sửa đề bằng AI đứng trên thẻ Toàn bài (yêu cầu 2026-11-09).
+  if (editable && detail.status === "DRAFT" && !preview) {
+    comments.unshift({
+      key: "ai-revise",
+      anchorBlockId: null,
+      content: <AiReviseChat assignmentId={id} prepare={saveForAi} onApplied={() => showAiResult("Đã sửa đề bằng AI. Nhấn Ctrl+Z để quay lại bản trước.")} />,
+    });
+  }
+
   const header = (
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
       {/* Tên bài do trình soạn vẽ ngay trên dòng này (định dạng được, lưu trong khung đề). */}
@@ -629,7 +644,6 @@ export function AssignmentFormPage({ id }: { id: string }) {
         onFocusBlock={(blockId) => { const part = sections.get(blockId); if (part) setActivePart(part); }}
         viewSlot={viewSlot}
         toolbarExtra={preview ? undefined : <>
-          {editable && detail.status === "DRAFT" && <ToolbarButton icon="smart_toy" title="Soạn bằng AI" aria-label="Soạn bằng AI" onClick={() => setDialog("ai")} />}
           <ToolbarButton icon="tune" title="Cài đặt bài" aria-label="Cài đặt bài" onClick={() => setDialog("settings")} />
         </>} />
 
@@ -665,20 +679,13 @@ export function AssignmentFormPage({ id }: { id: string }) {
           )}
         </Dialog>
       )}
-      {dialog === "ai" && detail.permissions.canEditContent && detail.status === "DRAFT" && (
+      {dialog === "ai" && proposalId && detail.permissions.canEditContent && detail.status === "DRAFT" && (
         <AiDraftDialog assignmentId={id} initialDraftId={proposalId} version={detail.version} currentPartCount={detail.parts.filter((p) => p.headingBlockId).length}
           currentTitle={title} currentInstructions={instructions} gradingMode={detail.gradingMode}
-          prepareApply={async () => {
-            if (!await save()) throw new Error("Không áp dụng được vì còn nội dung chưa lưu. Kiểm tra trạng thái lưu rồi thử lại.");
-            return version.current;
-          }}
+          prepareApply={saveForAi}
           onClose={() => setDialog(null)} onApplied={async () => {
-            const values = latest.current;
-            const before = { ...values.skeleton, title: values.skeleton.title ?? { runs: [{ text: values.title }] } };
             setDialog(null);
-            await reload();
-            setAiEdit((current) => ({ id: (current?.id ?? 0) + 1, before }));
-            notify("Đã ghi đề AI lên trang. Nhấn Ctrl+Z để quay lại bản trước.", "success");
+            await showAiResult("Đã ghi đề AI lên trang. Nhấn Ctrl+Z để quay lại bản trước.");
           }} />
       )}
       {dialog === "retire" && (

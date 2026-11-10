@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, cleanup, act } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, cleanup, act, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { GradingWorkspacePage } from "@/features/grading/pages/GradingWorkspacePage";
 import { ApiError } from "@/shared/api/client";
@@ -65,6 +65,40 @@ function openAi() {
   fireEvent.click(btn);
 }
 describe("workspace save", () => {
+  it("shows the section author beside the heading and jumps to member grades", async () => {
+    mocks.loadEvaluation.mockResolvedValue({
+      ...detail,
+      evaluation: { ...detail.evaluation, kind: "GROUP_DOCUMENT", accountId: null },
+      document: { blocks: [{ id: "part", type: "HEADING", content: { text: "Thiết kế" } }] },
+      sectionAuthors: [{ partId: "part", accountId: "s" }],
+      memberActivities: [{
+        student: { accountId: "s", name: "Nguyễn An", email: "an@school.test" },
+        state: "DISABLED",
+        activity: null,
+      }],
+      members: [{ ...detail.evaluation, id: "member", kind: "MEMBER" }],
+    });
+    render(<GradingWorkspacePage evaluationId="e" />);
+
+    const section = await screen.findByTestId("block-part");
+    expect(within(section).getByText("Người thực hiện: Nguyễn An")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Điểm thành viên" }));
+    expect(screen.getByRole("region", { name: "Điểm nhóm và thành viên" })).toHaveFocus();
+  });
+
+  it("opens the matching group submission when AI grading is clicked from a member grade", async () => {
+    mocks.loadEvaluation.mockResolvedValue({
+      ...detail,
+      evaluation: { ...detail.evaluation, kind: "MEMBER", groupDocumentId: "document" },
+      navigationIds: ["another-group", "own-group"],
+      groupEvaluationId: "own-group",
+    });
+    render(<GradingWorkspacePage evaluationId="e" status="PENDING" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Chấm bằng AI" }));
+    expect(mocks.push).toHaveBeenCalledWith("/teaching/evaluations/own-group?status=PENDING");
+    expect(mocks.requestProposal).not.toHaveBeenCalled();
+  });
+
   it("explains a concurrent grade lock without discarding unsaved checklist changes or retrying", async () => {
     mocks.loadEvaluation.mockResolvedValue({ ...detail, rubrics: [
       { rubricId: "r", partId: "p", maxPoints: 1, criteria: [{ criterionId: "c", title: "Đúng", items: [{ itemId: "i", text: "Đúng nội dung", points: 1 }] }] },
@@ -317,6 +351,20 @@ describe("AI proposal comparison and draft application", () => {
           score: 3,
           feedback: "Nhận xét chung tiếng Việt",
           sections: [{ partId: "part-1", feedback: "Tốt phần 1" }],
+          structuredFeedback: {
+            schemaVersion: 1,
+            summary: { strengths: ["Mô hình rõ ràng"], improvements: [], nextSteps: [] },
+            items: [{
+              rubricId: "r1",
+              itemId: "i1",
+              evidence: "Có lớp người dùng",
+              reason: "Xác định đúng thực thể chính",
+              suggestion: null,
+              evidenceBlockId: null,
+              requiresReview: false,
+              reviewReason: null,
+            }],
+          },
         },
       },
       {
@@ -349,8 +397,11 @@ describe("AI proposal comparison and draft application", () => {
     expect(screen.queryByRole("region", { name: "Chấm bằng AI" })).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
-    // Tạm thời không nhận nhận xét của AI.
-    expect(screen.queryByText("Nhận xét chung tiếng Việt")).not.toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Nhận xét chung" }))
+      .toHaveTextContent("Nhận xét chung tiếng Việt");
+    const item = within(screen.getByTestId("rubric-item-i1"));
+    expect(item.getByText("Chi tiết nhận xét & minh chứng")).toBeVisible();
+    expect(item.getByText("Xác định đúng thực thể chính")).toBeInTheDocument();
   });
 
   it("shows the AI comparison without NaN when a fractional point was saved before", async () => {

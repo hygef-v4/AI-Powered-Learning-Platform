@@ -12,9 +12,7 @@ import { Button, Dialog, Field, Icon, IconButton, Pill, Select, showToast } from
 import { assignmentsApi } from "../api";
 import { AiDraftPreview } from "./AiDraftPreview";
 import { SearchPicker } from "./SearchPicker";
-import { TemplateFileField } from "./TemplateFileField";
 import { errorMessage, requestRef } from "../model/format";
-import { templateFor } from "../model/templateStore";
 import { templateText } from "../model/templateText";
 import type { AiDraft, AiSourcePreview, GradingMode, Material } from "../model/types";
 
@@ -33,8 +31,10 @@ type Props = {
 
 const POLL_MS = 2000;
 const MAX_SOURCE_FILES = 3;
+/** Tổng điểm mặc định của đề AI (yêu cầu 2026-11-10); AI chia điểm rubric cho đủ con số này. */
+const DEFAULT_TARGET_POINTS = "10";
 
-type SourceUpload = {
+export type SourceUpload = {
   id: string;
   file: File;
   status: "UPLOADING" | "READING" | "READY" | "ERROR";
@@ -65,10 +65,15 @@ export function AiDraftDialog({
   const [request, setRequest] = useState("");
   const [language, setLanguage] = useState<"VI" | "EN">("EN");
   const [questionCount, setQuestionCount] = useState("");
+  const [targetPoints, setTargetPoints] = useState(DEFAULT_TARGET_POINTS);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [chosen, setChosen] = useState<string[]>([]);
   const [sourceFiles, setSourceFiles] = useState<SourceUpload[]>([]);
   const [template, setTemplate] = useState<Template | null>(null);
+  /** Đề mẫu chọn từ bài của môn (yêu cầu 2026-11-09); tệp tải lên thay thế lựa chọn này. */
+  const [templateId, setTemplateId] = useState("");
+  const [templates, setTemplates] = useState<{ assignmentId: string; title: string }[]>([]);
+  const templateInput = useRef<HTMLInputElement>(null);
 
   const [sourcePolicy, setSourcePolicy] = useState<PurposePolicy | null>(null);
   const abortUploads = useRef(new Map<string, () => void>());
@@ -83,8 +88,6 @@ export function AiDraftDialog({
   const awaiting = busy || draft?.status === "PENDING";
   const uploading = sourceFiles.some((item) => item.status !== "READY") || template?.status === "READING";
   const templateReady = template?.status === "READY";
-  /** Đã chọn mẫu đề (kể cả đang đọc): ngôn ngữ và số câu hỏi khóa, lấy theo mẫu. Đọc lỗi thì mở lại. */
-  const templateSet = template !== null && template.status !== "ERROR";
 
   useEffect(() => {
     if (!initialDraftId) return;
@@ -113,18 +116,13 @@ export function AiDraftDialog({
     };
   }, []);
 
-  // Bài tạo kèm đề mẫu: mặc định dùng đề mẫu đó làm Mẫu đề (yêu cầu 2026-11-05).
-  const templateLoaded = useRef(false);
   useEffect(() => {
-    if (templateLoaded.current) return;
-    templateLoaded.current = true;
-    let active = true;
-    void templateFor(assignmentId).then((file) => {
-      if (active && file) void readTemplate(file);
-    });
-    return () => { active = false; };
-    // readTemplate chỉ dùng setter; chạy một lần.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const controller = new AbortController();
+    assignmentsApi.listAiTemplates(assignmentId, controller.signal).then(
+      (list) => { if (!controller.signal.aborted) setTemplates(list); },
+      () => {},
+    );
+    return () => controller.abort();
   }, [assignmentId]);
 
   useEffect(() => {
@@ -245,12 +243,13 @@ export function AiDraftDialog({
     }
   }
 
+  // Không trường nào bắt buộc (yêu cầu 2026-11-09): bỏ trống thì AI tự quyết; nút Tạo đề không bị khóa.
   async function send() {
-    if (!configured || !hasReference) return;
-    // Có mẫu đề: ngôn ngữ và số câu hỏi lấy theo mẫu (yêu cầu 2026-11-05).
-    const count = templateReady
-      ? (template.questionCount && template.questionCount <= 10 ? template.questionCount : undefined)
-      : Number(questionCount);
+    if (countError || pointsError) {
+      setError(countError ?? pointsError ?? null);
+      return;
+    }
+    const count = countValid ? countNumber : undefined;
     if (uploading) {
       setError("Hãy đợi tải xong hoặc gỡ các tệp bị lỗi trước khi tạo đề.");
       return;
@@ -262,7 +261,9 @@ export function AiDraftDialog({
       materialIds: chosen,
       sourceFileRefs: sourceFiles.flatMap((item) => (item.fileRef ? [item.fileRef] : [])),
       formatText: templateReady ? template.text : undefined,
-      options: { profile: "AUTO" as const, language: templateReady ? "AUTO" as const : language, questionCount: count },
+      templateAssignmentId: template ? undefined : templateId || undefined,
+      // Ngôn ngữ theo ô Ngôn ngữ, ưu tiên hơn ngôn ngữ ghi trong yêu cầu hay đề mẫu.
+      options: { profile: "AUTO" as const, language, questionCount: count, targetPoints: pointsValid ? pointsNumber : undefined },
       requestRef: ref.current,
     };
     await submit(input);
@@ -319,27 +320,17 @@ export function AiDraftDialog({
   const showPreview = proposal !== null && invalid;
   const countNumber = Number(questionCount);
   const countValid = questionCount.trim() !== "" && Number.isInteger(countNumber) && countNumber >= 1 && countNumber <= 10;
-  // Lỗi số câu hỏi hiện đỏ ngay dưới ô (yêu cầu 2026-11-05); ô trống thì chỉ khóa nút Tạo đề.
+  // Số câu hỏi sai hiện đỏ ngay dưới ô; ô trống thì AI tự quyết.
   const countError = questionCount.trim() !== "" && !countValid ? "Số câu hỏi từ 1 đến 10." : undefined;
-  const hasReference = chosen.length > 0 || sourceFiles.length > 0;
-  /** Cấu hình: có mẫu đề, hoặc nhập số câu hỏi (ngôn ngữ luôn có giá trị). */
-  const configured = templateReady || countValid;
+  // Tổng điểm như luật của server: lớn hơn 0, tối đa 1.000, không quá 2 chữ số thập phân; ô trống thì AI tự chia điểm.
+  const pointsNumber = Number(targetPoints);
+  const pointsValid = targetPoints.trim() !== "" && Number.isFinite(pointsNumber) && pointsNumber > 0 && pointsNumber <= 1000
+    && Math.round(pointsNumber * 100) === pointsNumber * 100;
+  const pointsError = targetPoints.trim() !== "" && !pointsValid ? "Tổng điểm lớn hơn 0, tối đa 1.000, tối đa 2 chữ số thập phân." : undefined;
   const working = phase !== "idle" || draft?.status === "PENDING" || (busy && !draft) || (proposal !== null && !invalid);
   const accept = sourcePolicy ? acceptAttribute(sourcePolicy) : undefined;
-  if (working) {
-    // Popup chờ riêng: chỉ vòng xoay và chữ; popup soạn vẫn giữ nguyên trạng thái để quay về khi lỗi.
-    return typeof document === "undefined" ? null : createPortal(
-      <div className="fixed inset-0 z-[100] flex animate-fade items-center justify-center bg-[var(--c-scrim)] p-4 backdrop-blur-[2px]">
-        <div role="alertdialog" aria-modal="true" aria-busy="true" aria-label="Đang tạo bản nháp" data-testid="ai-progress"
-          className="flex animate-pop items-center gap-3 rounded-xl border border-line bg-surface px-6 py-5 shadow-[var(--shadow-float)]">
-          <span aria-hidden="true"
-            className="size-5 animate-spin rounded-full border-2 border-line-strong border-t-primary motion-reduce:animate-none" />
-          <span className="text-[14px] font-semibold text-ink">Đang tạo bản nháp</span>
-        </div>
-      </div>,
-      document.body,
-    );
-  }
+  // Popup chờ riêng: popup soạn vẫn giữ nguyên trạng thái để quay về khi lỗi.
+  if (working) return <AiProgress />;
   return (
     <Dialog
       open
@@ -358,7 +349,7 @@ export function AiDraftDialog({
           <Button
             variant="primary"
             onClick={() => void send()}
-            disabled={awaiting || proposal !== null || uploading || !configured || !hasReference}
+            disabled={awaiting || proposal !== null}
             data-testid="ai-send"
           >
             Tạo đề
@@ -368,37 +359,69 @@ export function AiDraftDialog({
     >
       {!showPreview && (
         <>
-          {/* Cấu hình (yêu cầu 2026-11-05): mẫu đề, hoặc ngôn ngữ và số câu hỏi; có mẫu đề thì hai ô dưới lấy theo mẫu. */}
-          <section aria-labelledby="ai-config" className="flex flex-col gap-3">
-            <p id="ai-config" className="text-xs font-semibold text-body">Cấu hình<span className="text-primary-ink"> *</span></p>
-            <Field label="Mẫu đề">
-              <TemplateFileField file={template?.file ?? null} disabled={awaiting} accept=".docx" testId="ai-format"
-                status={template && <TemplateStatus template={template} onRetry={() => void readTemplate(template.file)} />}
-                onChange={(file) => { if (file) void readTemplate(file); else setTemplate(null); }} />
+          {/* Lời dẫn cho người mới dùng (yêu cầu 2026-11-10): ô nào cũng không bắt buộc, đề tạo xong ghi thẳng lên trang. */}
+          <p className="text-[13px] leading-relaxed text-muted" data-testid="ai-intro">
+            Mô tả đề bạn cần, AI soạn câu hỏi kèm rubric chấm điểm rồi ghi thẳng lên trang; nhấn Ctrl+Z để hoàn tác. Các ô dưới
+            đây đều không bắt buộc.
+          </p>
+          {/* Mẫu đề và tài liệu tham khảo chỉ thêm ngữ cảnh, không bắt buộc (yêu cầu 2026-11-09). */}
+          <Field label="Mẫu đề" htmlFor="ai-template">
+            <Select id="ai-template" aria-label="Mẫu đề" disabled={awaiting} data-testid="ai-template"
+              value={template ? "__file__" : templateId}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "__upload__") templateInput.current?.click();
+                else if (value === "__file__") return;
+                else {
+                  setTemplate(null);
+                  setTemplateId(value);
+                }
+              }}>
+              <option value="">Không dùng đề mẫu</option>
+              {template && <option value="__file__">{template.file.name}</option>}
+              {templates.length > 0 && (
+                <optgroup label="Đề mẫu của môn">
+                  {templates.map((item) => <option key={item.assignmentId} value={item.assignmentId}>{item.title}</option>)}
+                </optgroup>
+              )}
+              <option value="__upload__">Tải đề mẫu lên…</option>
+            </Select>
+            <input ref={templateInput} type="file" accept=".docx" hidden aria-label="Tải đề mẫu lên" data-testid="ai-format"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                if (!file) return;
+                setTemplateId("");
+                void readTemplate(file);
+              }} />
+            {template && template.status !== "READY" && (
+              <span className="flex items-center gap-2"><TemplateStatus template={template} onRetry={() => void readTemplate(template.file)} /></span>
+            )}
+          </Field>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Field label="Ngôn ngữ" htmlFor="ai-language">
+              <Select id="ai-language" aria-label="Ngôn ngữ" value={language} disabled={awaiting}
+                onChange={(e) => setLanguage(e.target.value as typeof language)}>
+                <option value="EN">English</option>
+                <option value="VI">Tiếng Việt</option>
+              </Select>
             </Field>
-            <div aria-hidden className="flex items-center gap-3 text-xs font-semibold text-muted">
-              <span className="h-px flex-1 bg-line" />hoặc<span className="h-px flex-1 bg-line" />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Ngôn ngữ" htmlFor="ai-language">
-                <Select id="ai-language" aria-label="Ngôn ngữ" value={templateSet ? "AUTO" : language}
-                  disabled={awaiting || templateSet} onChange={(e) => setLanguage(e.target.value as typeof language)}>
-                  {templateSet && <option value="AUTO">Theo mẫu đề</option>}
-                  <option value="EN">English</option>
-                  <option value="VI">Tiếng Việt</option>
-                </Select>
-              </Field>
-              <Field label="Số câu hỏi" htmlFor="ai-count" error={templateSet ? undefined : countError}>
-                <input id="ai-count" aria-label="Số câu hỏi" type="number" min={1} max={10} step={1}
-                  value={templateSet ? String(template.questionCount || "") : questionCount}
-                  disabled={awaiting || templateSet} onChange={(e) => setQuestionCount(e.target.value)}
-                  aria-invalid={!templateSet && countError ? true : undefined}
-                  className={`w-full rounded-lg border px-3 py-2 text-[13px] disabled:cursor-not-allowed disabled:bg-sunken disabled:text-muted ${
-                    !templateSet && countError ? "border-danger" : "border-line-strong"}`} />
-              </Field>
-            </div>
-          </section>
-          <Field label="Tài liệu tham khảo" htmlFor="ai-reference" required>
+            <Field label="Số câu hỏi" htmlFor="ai-count" error={countError}>
+              <input id="ai-count" aria-label="Số câu hỏi" type="number" min={1} max={10} step={1} value={questionCount}
+                placeholder="AI tự chọn" disabled={awaiting} onChange={(e) => setQuestionCount(e.target.value)}
+                aria-invalid={countError ? true : undefined}
+                className={`w-full rounded-lg border px-3 py-2 text-[13px] disabled:cursor-not-allowed disabled:bg-sunken disabled:text-muted ${
+                  countError ? "border-danger" : "border-line-strong"}`} />
+            </Field>
+            <Field label="Tổng điểm" htmlFor="ai-points" error={pointsError}>
+              <input id="ai-points" aria-label="Tổng điểm" type="number" min={0.01} max={1000} step={0.5} value={targetPoints}
+                placeholder="AI tự chia" disabled={awaiting} onChange={(e) => setTargetPoints(e.target.value)}
+                aria-invalid={pointsError ? true : undefined} data-testid="ai-points"
+                className={`w-full rounded-lg border px-3 py-2 text-[13px] disabled:cursor-not-allowed disabled:bg-sunken disabled:text-muted ${
+                  pointsError ? "border-danger" : "border-line-strong"}`} />
+            </Field>
+          </div>
+          <Field label="Tài liệu tham khảo" htmlFor="ai-reference">
             <ReferencePicker materials={materials} chosen={chosen} uploads={sourceFiles} disabled={awaiting}
               canUpload={!!sourcePolicy && sourceFiles.length < MAX_SOURCE_FILES} accept={accept}
               onChoose={(id) => setChosen((c) => (c.includes(id) ? c : [...c, id].slice(0, 10)))}
@@ -408,6 +431,7 @@ export function AiDraftDialog({
           </Field>
           <Field label="Yêu cầu" htmlFor="ai-request">
             <textarea id="ai-request" rows={4} maxLength={4000} value={request} disabled={awaiting}
+              placeholder="Ví dụ: Đề phân tích thiết kế hệ thống quản lý thư viện, có vẽ sơ đồ use case và sơ đồ lớp, độ khó trung bình."
               onChange={(e) => setRequest(e.target.value)}
               className="w-full rounded-lg border border-field px-3 py-2 text-[13px] outline-none focus:outline-2 focus:outline-focus" />
           </Field>
@@ -416,10 +440,25 @@ export function AiDraftDialog({
       {showPreview && proposal && (
         <div className="flex flex-col gap-4" data-testid="ai-proposal">
           {currentPartCount > 0 && <p className="text-xs text-muted">Bài chưa bị thay đổi.</p>}
-          <AiDraftPreview proposal={proposal} />
+          <AiDraftPreview proposal={proposal} targetPoints={pointsValid ? pointsNumber : undefined} />
         </div>
       )}
     </Dialog>
+  );
+}
+
+/** Popup chờ khi AI đang soạn hay đang ghi đề: chỉ vòng xoay và chữ. */
+export function AiProgress() {
+  return typeof document === "undefined" ? null : createPortal(
+    <div className="fixed inset-0 z-[100] flex animate-fade items-center justify-center bg-[var(--c-scrim)] p-4 backdrop-blur-[2px]">
+      <div role="alertdialog" aria-modal="true" aria-busy="true" aria-label="Đang tạo bản nháp" data-testid="ai-progress"
+        className="flex animate-pop items-center gap-3 rounded-xl border border-line bg-surface px-6 py-5 shadow-[var(--shadow-float)]">
+        <span aria-hidden="true"
+          className="size-5 animate-spin rounded-full border-2 border-line-strong border-t-primary motion-reduce:animate-none" />
+        <span className="text-[14px] font-semibold text-ink">Đang tạo bản nháp</span>
+      </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -438,7 +477,7 @@ function TemplateStatus({ template, onRetry }: { template: Template; onRetry: ()
  * Tài liệu tham khảo (yêu cầu 2026-11-05): một ô gộp học liệu của bài và tệp tải lên, thêm được nhiều tài liệu. Ô tìm đứng
  * yên, gợi ý luôn ngay dưới ô tìm, dòng cuối của gợi ý là tải tài liệu lên; tài liệu đã chọn xếp dài dần xuống dưới ô tìm.
  */
-function ReferencePicker({ materials, chosen, uploads, disabled, canUpload, accept, onChoose, onUnchoose, onUpload,
+export function ReferencePicker({ materials, chosen, uploads, disabled, canUpload, accept, onChoose, onUnchoose, onUpload,
   onRemoveUpload, onRetryUpload }: {
   materials: Material[];
   chosen: string[];
@@ -454,11 +493,13 @@ function ReferencePicker({ materials, chosen, uploads, disabled, canUpload, acce
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const picked = chosen.flatMap((id) => materials.filter((m) => m.materialId === id));
-  const chip = "inline-flex h-7 max-w-[16rem] items-center gap-1.5 rounded-md border border-line bg-sunken pl-2 pr-0.5 text-xs";
+  // Tên tài liệu cắt ngắn để một dòng chứa được khoảng 4 tài liệu (yêu cầu 2026-11-10); rê chuột xem đủ tên.
+  const chip = "inline-flex h-7 max-w-[8.5rem] items-center gap-1.5 rounded-md border border-line bg-sunken pl-2 pr-0.5 text-xs";
   return (
     <>
       {/* Tài liệu đã chọn xếp hàng ngay trong thanh tìm, dài thì xuống dòng (yêu cầu 2026-11-05). */}
       <SearchPicker id="ai-reference" label="Tài liệu tham khảo" disabled={disabled} optionIcon="menu_book" multiple
+        placeholder="Chọn học liệu của môn hoặc tải tệp lên để AI bám theo"
         options={materials.filter((m) => !chosen.includes(m.materialId)).map((m) => ({ id: m.materialId, label: m.title }))}
         emptyText={materials.length === 0 ? "Chưa có học liệu dùng được." : "Không tìm thấy học liệu."}
         onPick={onChoose}

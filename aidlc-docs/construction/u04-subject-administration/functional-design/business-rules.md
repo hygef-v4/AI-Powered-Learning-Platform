@@ -47,3 +47,7 @@ Mỗi rule có mã `BR-U04-xx` để truy vết sang test. Mã giữ như U04 c�
 
 - Quyền kiểm phía server ở mọi request, mặc định từ chối; route đổi trạng thái có chống CSRF.
 - Repository của unit là riêng; unit khác đọc môn qua `ISubjectQuery`, không đọc bảng `subjects`.
+
+## Chẩn đoán lỗi 500 ngoài dự kiến — 2026-11-09
+
+SubjectExceptionHandler.unexpected giữ response SUBJECT_INTERNAL_ERROR chung cho client, đồng thời ghi exception vào log server để chẩn đoán. Không gửi stack trace hoặc nội dung lỗi nội bộ cho frontend. Lượt lỗi local được khôi phục sau restart backend; người dùng xác nhận tải được môn học. Vì không có stack của lỗi gốc, không coi restart là bằng chứng về nguyên nhân code/dữ liệu/CSP. [Bằng chứng và giới hạn](../../build-and-test/2026-11-09-admin-subjects-runtime-diagnosis.md).

@@ -22,7 +22,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | F6 Nộp bài | UC 39 | Assignment Workspace |
 | F7 Tự nộp | - | - |
 | F8 Lịch sử nộp | UC 40 | Submission History |
-| F9 Xin phản hồi bằng API cá nhân | UC 41 | Submission History, popup chọn nguồn AI |
+| F9 Xin phản hồi bằng API cá nhân | UC 41 | Thẻ Góp ý AI trong Submission History |
 | F10 Phản hồi qua agent MCP | UC 41 | - |
 | F11 Ghi dữ liệu hoạt động | - | Assignment Workspace |
 | F12 Tóm tắt và dọn dữ liệu hoạt động | UC 42 (U09) | - |
@@ -87,14 +87,14 @@ Xuất:
 1. Từ Assignment Detail hoặc Student Assignments mở Submission History; frontend gọi `GET /api/v1/assignments/{assignmentId}/attempts/mine` kèm `classId`.
 2. Trả các lượt của mình: lượt thứ, thời điểm nộp, trễ, cách nộp, nhãn "được chấm" (bài `GRADED`, lượt nộp cuối), cảnh báo khi tự nộp.
 3. Chọn một lượt: `GET /api/v1/attempts/{attemptId}` trả nội dung chỉ đọc và biên nhận; điểm và nhận xét đã công bố do U09 gắn qua slot `SubmissionResultSection`.
-4. Bài `PRACTICE`: hiện lịch sử phản hồi AI của lượt (`GET /api/v1/attempts/{attemptId}/feedback`) và nút "Xin phản hồi AI" (F9); nút Tải DOCX (F5).
+4. Bài `PRACTICE`: thẻ Góp ý AI đọc lịch sử theo lượt đang xem (`GET /api/v1/attempts/{attemptId}/feedback`). Nút Tải DOCX (F5) ở thanh trên cùng.
 
 ### F9 - Xin phản hồi bằng API cá nhân (UC 41)
-1. Trên lượt đã nộp của bài `PRACTICE` bấm "Xin phản hồi AI"; `AiSourcePicker` của U06 chỉ hiện kết nối cá nhân của người học; người học chọn nguồn.
-2. Frontend gọi `POST /api/v1/attempts/{attemptId}/feedback` kèm nguồn và `requestRef`.
+1. Trên lượt đã nộp của bài `PRACTICE`, bấm **Nhận góp ý AI** hoặc **Nhận góp ý lại** trong thẻ. Thẻ có liên kết **Kết nối AI** để quản lý khóa API cá nhân.
+2. Frontend gọi `POST /api/v1/attempts/{attemptId}/feedback` với `requestRef`. Nguồn và nhà cung cấp do máy chủ xử lý.
 3. Kiểm BR-U08-40, 44: chủ lượt, `SUBMITTED`, `PRACTICE`, còn ghi danh; lượt chưa có yêu cầu đang chờ; chưa quá 20 yêu cầu trong ngày.
 4. Dựng prompt theo BR-U08-45 (`IAssignmentQuery.getContent`, `IDocumentModel.toPlainText`, `compactDiagramXml`; không có rubric) kèm JSON schema của phản hồi (nhận xét chung, điểm mạnh, nhận xét từng phần, gợi ý).
-5. Gọi `IAiTask.submit` (loại `PRACTICE_FEEDBACK`, đích là lượt, `inputVersion` là `receiptHash`); tạo phản hồi `PENDING`; audit `PRACTICE_FEEDBACK_REQUESTED`; trả `taskId` cho `AiTaskStatus`.
+5. Gọi `IAiTask.submit` (loại `PRACTICE_FEEDBACK`, đích là lượt), ghi audit `PRACTICE_FEEDBACK_REQUESTED` và trả bản ghi phản hồi. Khi còn `PENDING`, thẻ đọc lại danh sách góp ý định kỳ và khóa nút yêu cầu.
 6. U06 gọi `onReady`: kiểm lại chủ lượt, ghi danh, hash, schema; đạt thì lưu phản hồi `READY` kèm provenance và trả `APPLIED`, không thì trả `STALE` hoặc `REJECTED`. `onFailed` chuyển phản hồi sang `FAILED`.
 7. Người học xem phản hồi; muốn thêm thì xin lại, mỗi lần là một bản trong lịch sử.
 

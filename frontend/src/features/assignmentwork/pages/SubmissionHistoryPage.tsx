@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { DocumentEditor, ToolbarButton, outlineOf, publishOutline, type DocumentComment } from "@/shared/document";
-import { Alert, Button, Menu, MenuItem } from "@/shared/ui";
+import { Alert, Menu, MenuItem } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { attemptImageUrl, exportUrl, workApi } from "../api";
 import { formatPoints, resultByPart, useAttemptResult, type ResultPart } from "../model/attemptResult";
-import { errorMessage, formatDateTime } from "../model/format";
-import { PracticeFeedbackDialog } from "../components/PracticeFeedbackPanel";
+import { errorMessage, formatDateTime, historyOpen, historyVersions } from "../model/format";
+import { PracticeFeedbackPanel } from "../components/PracticeFeedbackPanel";
 import type { AttemptResult } from "../slots";
 import type { Attempt, AttemptSummary, StudentDetail } from "../model/types";
 
@@ -44,9 +44,8 @@ function TopBar({ barRef, title, status, setViewSlot, actions }: {
 /**
  * #41 Submission History (F8, UC 40): bài nộp hiện như trang tài liệu chỉ đọc (kiểu Docs ở chế độ chỉ xem):
  * giữa thanh công cụ, thẳng giữa trang giấy, là nút lượt trước / lượt sau và ô chọn lượt theo thời gian (mới nhất trước);
- * nút tải DOCX ở bên phải. Bên lề chỉ có điểm: tổng điểm ở đầu, điểm của từng bài gắn vào tiêu đề của bài; học sinh
- * không xem chi tiết các mục rubric. Bài luyện tập có nút Góp ý AI trên thanh công cụ (mở hộp thoại góp ý). `?attempt=` mở sẵn một lượt; quay lại về
- * đúng tab của bài trên trang Bài tập (`focus`).
+ * nút tải DOCX ở bên phải. Bên lề hiện góp ý AI của lượt luyện tập hoặc tổng điểm và điểm từng phần của bài đã chấm.
+ * `?attempt=` mở sẵn một lượt; quay lại về đúng tab của bài trên trang Bài tập (`focus`).
  */
 export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }) {
   const params = useSearchParams();
@@ -58,7 +57,6 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   const [selected, setSelected] = useState<string | null>(null);
   const [attempt, setAttempt] = useState<Attempt | null>(null);
   const [error, setError] = useState<unknown>(null);
-  const [aiOpen, setAiOpen] = useState(false);
   const [viewSlot, setViewSlot] = useState<HTMLElement | null>(null);
   const [headerHeight, setHeaderHeight] = useState(64);
   const headerObserver = useRef<ResizeObserver | null>(null);
@@ -78,8 +76,11 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
       .then(([value, list]) => {
         if (controller.signal.aborted) return;
         setDetail(value);
-        // Lịch sử chỉ gồm các lượt đã nộp; lượt đang làm không hiện (lỗi 2026-11-05).
-        const submitted = list.filter((a) => a.status === "SUBMITTED");
+        // Lịch sử chỉ gồm các lượt đã nộp; lượt đang làm không hiện (lỗi 2026-11-05). Bài cá nhân (yêu cầu 2026-11-10):
+        // chỉ mở sau hạn nộp đúng giờ; nộp lại là ghi đè nên chỉ có bản đúng hạn, thêm bản nộp muộn nếu có.
+        const all = list.filter((a) => a.status === "SUBMITTED").sort((a, b) => b.attemptNo - a.attemptNo);
+        const submitted = value.gradingMode === "PRACTICE" ? all
+          : historyOpen(value, all.length > 0) ? historyVersions(all) : [];
         setAttempts(submitted);
         setSelected(submitted.find((a) => a.attemptId === wanted)?.attemptId ?? submitted[0]?.attemptId ?? null);
       }, (e) => { if (!controller.signal.aborted) setError(e); });
@@ -121,7 +122,9 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   );
   if (attempts.length === 0) {
     return shell(<TopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot} />,
-      <p className="rounded-xl border border-line bg-surface p-8 text-center text-[13.5px] text-muted">Bạn chưa nộp lượt nào.</p>);
+      <p className="rounded-xl border border-line bg-surface p-8 text-center text-[13.5px] text-muted">
+        {historyOpen(detail, true) ? "Bạn chưa nộp bài nào." : "Lịch sử nộp bài hiện sau khi đã nộp và qua hạn nộp."}
+      </p>);
   }
 
   // Mới nhất trước: ‹ về lượt trước (cũ hơn), › sang lượt sau (mới hơn).
@@ -129,17 +132,29 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   const index = ordered.findIndex((a) => a.attemptId === selected);
   const shown = attempt && attempt.attemptId === selected ? attempt : null;
   const comments = shown && shownResult ? scoreCards(shownResult, shown) : [];
-  // Bài luyện tập đã nộp: nút Góp ý AI trên thanh công cụ.
-  const practiceReady = detail.gradingMode === "PRACTICE" && current?.status === "SUBMITTED";
+  if (shown && detail.gradingMode === "PRACTICE" && current?.status === "SUBMITTED") {
+    comments.push({
+      key: `practice-feedback-${shown.attemptId}`,
+      anchorBlockId: null,
+      content: (
+        <PracticeFeedbackPanel
+          attemptId={shown.attemptId}
+          partTitles={{
+            ASSIGNMENT: "Toàn bài",
+            ...Object.fromEntries(shown.parts.map((part) => [part.partId, part.title])),
+          }}
+        />
+      ),
+    });
+  }
 
   const bar = (
     <TopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot}
-      actions={current && <>
-        {practiceReady && <Button icon="smart_toy" onClick={() => setAiOpen(true)}>Góp ý AI</Button>}
+      actions={current && (
         <Menu label="" icon="more_horiz" ariaLabel="Thao tác khác" align="right">
           <MenuItem icon="download" onClick={() => { window.location.href = exportUrl(current.attemptId); }}>Tải DOCX</MenuItem>
         </Menu>
-      </>} />
+      )} />
   );
   const kind = (
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
@@ -158,24 +173,24 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
         titleField={{ text: detail.title, readOnly: true, onText: NOOP }}
         header={kind}
         viewSlot={viewSlot}
-        // Thanh công cụ chỉ còn chuyển qua lại giữa các lượt.
-        toolbarCenter={<>
-          <ToolbarButton icon="chevron_left" title="Lượt trước" aria-label="Lượt trước" disabled={index < 0 || index >= ordered.length - 1}
+        // Chuyển qua lại giữa các bài nộp; chỉ có khi có hơn một bản (bài cá nhân: bản đúng hạn và bản nộp muộn).
+        toolbarCenter={ordered.length < 2 ? undefined : <>
+          <ToolbarButton icon="chevron_left" title="Bài nộp trước" aria-label="Bài nộp trước" disabled={index < 0 || index >= ordered.length - 1}
             onClick={() => setSelected(ordered[index + 1]!.attemptId)} />
-          <select aria-label="Chọn lượt" value={selected ?? ""} onChange={(e) => setSelected(e.target.value)}
+          <select aria-label="Chọn bài nộp" value={selected ?? ""} onChange={(e) => setSelected(e.target.value)}
             className="h-7 rounded-md border border-line bg-surface px-2 font-mono text-xs text-ink outline-none focus:border-focus">
-            {ordered.map((a) => <option key={a.attemptId} value={a.attemptId}>{attemptTime(a)}</option>)}
+            {ordered.map((a) => (
+              <option key={a.attemptId} value={a.attemptId}>
+                {detail.gradingMode === "PRACTICE" ? attemptTime(a) : `${a.late ? "Bản nộp muộn" : "Bản đúng hạn"} – ${attemptTime(a)}`}
+              </option>
+            ))}
           </select>
-          <ToolbarButton icon="chevron_right" title="Lượt sau" aria-label="Lượt sau" disabled={index <= 0}
+          <ToolbarButton icon="chevron_right" title="Bài nộp sau" aria-label="Bài nộp sau" disabled={index <= 0}
             onClick={() => setSelected(ordered[index - 1]!.attemptId)} />
         </>}
       />
     )}
     {current?.warnings.length ? <Alert tone="warning">{current.warnings.map((w) => w.message).join("; ")}</Alert> : null}
-    {aiOpen && current && practiceReady && (
-      <PracticeFeedbackDialog attemptId={current.attemptId} onClose={() => setAiOpen(false)}
-        partTitles={shown ? { ASSIGNMENT: "Toàn bài", ...Object.fromEntries(shown.parts.map((part) => [part.partId, part.title])) } : undefined} />
-    )}
   </>);
 }
 

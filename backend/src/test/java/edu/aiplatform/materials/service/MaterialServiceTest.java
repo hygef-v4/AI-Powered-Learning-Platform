@@ -19,6 +19,50 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class MaterialServiceTest {
+    @Test
+    void legacyTitleAndVisibilityUpdatePreservesFormattedTrailingBlankParagraph() {
+        var document = new edu.aiplatform.shared.content.FormattedText(List.of(
+                new edu.aiplatform.shared.content.FormattedText.Block(
+                        edu.aiplatform.shared.content.FormattedText.Type.PARAGRAPH,
+                        edu.aiplatform.shared.content.FormattedText.Align.CENTER, 0,
+                        List.of(new edu.aiplatform.shared.content.FormattedText.Run("Mô tả", true, null, null))),
+                new edu.aiplatform.shared.content.FormattedText.Block(
+                        edu.aiplatform.shared.content.FormattedText.Type.PARAGRAPH,
+                        edu.aiplatform.shared.content.FormattedText.Align.LEFT, 0,
+                        List.of(new edu.aiplatform.shared.content.FormattedText.Run("", null, null, null)))));
+        Material rich = material.withPresentation(false, document);
+        when(repo.find(id)).thenReturn(Optional.of(rich));
+        when(repo.update(any(), eq(0L))).thenReturn(true);
+        Material edited = service.update(actor, id,
+                new MaterialCommands.Update("New title", "Mô tả", 0, 0L, null, true, null));
+        assertThat(edited.descriptionDocument()).isEqualTo(document);
+        assertThat(edited.description()).isEqualTo("Mô tả\n");
+        assertThat(edited.enabled()).isTrue();
+    }
+
+    @Test
+    void presentationUpdatesDerivePlainTextAndPreserveDisabledAcrossRevisions() {
+        var document = new edu.aiplatform.shared.content.FormattedText(List.of(
+                new edu.aiplatform.shared.content.FormattedText.Block(
+                        edu.aiplatform.shared.content.FormattedText.Type.UL,
+                        edu.aiplatform.shared.content.FormattedText.Align.CENTER, 1,
+                        List.of(new edu.aiplatform.shared.content.FormattedText.Run("Mô tả", true, null, null)))));
+        when(repo.update(any(), eq(0L))).thenReturn(true);
+        Material changed = service.update(actor, id,
+                new MaterialCommands.Update("Title", "Ignored plain", 0, 0L, null, false, document));
+        assertThat(changed.enabled()).isFalse();
+        assertThat(changed.description()).isEqualTo("Mô tả");
+        assertThat(changed.descriptionDocument()).isEqualTo(document);
+        assertThat(changed.revise("Title", changed.description(), 0, 2, Material.Status.ACTIVE, now).enabled()).isFalse();
+        assertThat(changed.inModule(UUID.randomUUID()).descriptionDocument()).isEqualTo(document);
+        when(repo.find(id)).thenReturn(Optional.of(changed));
+        when(repo.update(any(), eq(changed.version()))).thenReturn(true);
+        Material enabled = service.update(actor, id,
+                new MaterialCommands.Update("Title", "Mô tả", 0, changed.version(), null, true, null));
+        assertThat(enabled.enabled()).isTrue();
+        assertThat(enabled.descriptionDocument()).isEqualTo(document);
+    }
+
     final UUID id = UUID.randomUUID(), subject = UUID.randomUUID();
     final Actor actor = new Actor(UUID.randomUUID(), Role.SUBJECT_MANAGER);
     final Instant now = Instant.parse("2026-10-21T00:00:00Z");

@@ -7,4 +7,5 @@ export { DocxImportDialog, type DocxPreview } from "./DocxImportDialog";
 export { BlockView, DocumentViewer, RunsView, type ImageUrl } from "./DocumentViewer";
 export { formatPoints, RubricNote, RubricViewer } from "./RubricViewer";
 export * from "./types";
+export { SectionNumber } from "./SectionNumber";
 export * from "./outline";

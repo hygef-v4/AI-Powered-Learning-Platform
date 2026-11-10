@@ -51,19 +51,26 @@ public final class AssignmentCommands {
     /**
      * {@code source} rỗng: hệ thống tự chọn nguồn theo token của lượt này; {@code PERSONAL} không kèm provider: chỉ thử
      * API cá nhân. {@code formatText}: chữ của mẫu đề (DOCX đã nhập ở trình duyệt, không giới hạn 2 MB) mà AI phải
-     * theo (yêu cầu 2026-11-05).
+     * theo (yêu cầu 2026-11-05); {@code templateAssignmentId}: bài của môn do chủ nhiệm môn tạo dùng làm đề mẫu
+     * (yêu cầu 2026-11-09). {@code mode} {@code REVISE}: AI sửa đề đang có theo {@code request}, bỏ qua tài liệu nguồn,
+     * mẫu đề và tùy chọn tạo đề (yêu cầu 2026-11-09).
      */
     public record AiDraftRequest(String request, List<UUID> materialIds, List<String> sourceFileRefs,
                                  AiSource source, AiProvider provider, String requestRef, DraftOptions options,
-                                 String formatText) {
+                                 String formatText, UUID templateAssignmentId, String mode) {
+        public AiDraftRequest(String request, List<UUID> materialIds, List<String> sourceFileRefs, AiSource source,
+                              AiProvider provider, String requestRef, DraftOptions options, String formatText) {
+            this(request, materialIds, sourceFileRefs, source, provider, requestRef, options, formatText, null, null);
+        }
+
         public AiDraftRequest(String request, List<UUID> materialIds, List<String> sourceFileRefs, AiSource source,
                               AiProvider provider, String requestRef, DraftOptions options) {
-            this(request, materialIds, sourceFileRefs, source, provider, requestRef, options, null);
+            this(request, materialIds, sourceFileRefs, source, provider, requestRef, options, null, null, null);
         }
 
         public AiDraftRequest(String request, List<UUID> materialIds, AiSource source, AiProvider provider,
                               String requestRef) {
-            this(request, materialIds, List.of(), source, provider, requestRef, null, null);
+            this(request, materialIds, List.of(), source, provider, requestRef, null, null, null, null);
         }
     }
 

@@ -1,8 +1,8 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import {
-  createSubjectQuiz, getBankQuestionsForQuiz, getClassQuizzes, getManagedSubjects, getQuiz, getSubjectQuizzes, previewRandomItems,
+  addInlineQuestion, createSubjectQuiz, getBankQuestionsForQuiz, getBankTags, getClassQuizzes, getManagedSubjects, getQuiz, getSubjectQuizzes, previewRandomItems,
   previewPaper, proposeQuestion, publishQuiz, reopenQuiz, saveDrawRules, saveQuizItems, updateQuizDetails,
 } from "@/features/quizzes/api";
 import { BankQuestionPicker } from "@/features/quizzes/components/BankQuestionPicker";
@@ -29,7 +29,7 @@ vi.mock("@/features/quizzes/api", () => ({
   addInlineQuestion: vi.fn(),
   updateInlineQuestion: vi.fn(),
   saveDrawRules: vi.fn(),
-  getBankTags: vi.fn(async () => [{ tag: "Chương 1", activeCount: 12 }]),
+  getBankTags: vi.fn(async () => [{ tag: "Chương 1", activeCount: 12, byDifficulty: { EASY: 10, HARD: 2 } }]),
   previewPaper: vi.fn(),
   proposeQuestion: vi.fn(),
   publishQuiz: vi.fn(),
@@ -106,6 +106,85 @@ it("restores quiz status tab after remount and ignores invalid status", async ()
 });
 
 describe("QuizDetailPage", () => {
+  it("keeps formatted description including blank paragraphs when only settings change", () => {
+    const document = { blocks: [
+      { type: "PARAGRAPH" as const, align: "LEFT" as const, indent: 0, runs: [{ text: "Mô tả", bold: true }] },
+      { type: "PARAGRAPH" as const, align: "LEFT" as const, indent: 0, runs: [{ text: "" }] },
+    ] };
+    const form = settingsFormOf({ ...INFO, instructions: "Mô tả\n", instructionsDocument: document });
+    const result = settingsInput({ ...form, timeLimit: "10" });
+    expect(result.input?.instructionsDocument).toEqual(document);
+  });
+
+  it("locks mode switching until an inline save finishes", async () => {
+    let finish!: (value: QuizDetail) => void;
+    vi.mocked(getQuiz).mockResolvedValue(detail());
+    vi.mocked(addInlineQuestion).mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+    render(<QuizDetailPage id="z1" />);
+    fireEvent.click(await screen.findByLabelText("Thêm câu hỏi"));
+    fireEvent.click(screen.getByTestId("quiz-detail-add-inline"));
+    fireEvent.change(screen.getByTestId("mcq-editor-stem"), { target: { value: "Câu hỏi mới" } });
+    fireEvent.change(screen.getByTestId("mcq-editor-option-0"), { target: { value: "A" } });
+    fireEvent.change(screen.getByTestId("mcq-editor-option-1"), { target: { value: "B" } });
+    fireEvent.click(screen.getByTestId("mcq-editor-correct-0"));
+    fireEvent.click(screen.getByTestId("inline-question-save"));
+    await waitFor(() => expect(addInlineQuestion).toHaveBeenCalled());
+    expect(screen.getByRole("button", { name: "Ngân hàng" })).toBeDisabled();
+    expect(screen.getByTestId("quiz-detail-edit")).toBeDisabled();
+    finish(detail({ version: 4 }));
+    await waitFor(() => expect(screen.queryByTestId("mcq-editor-stem")).not.toBeInTheDocument());
+  });
+
+  it("authors and edits inside the question section without a dialog", async () => {
+    vi.mocked(getQuiz).mockResolvedValue({ ...detail(), items: [{ ...detail().items[0]!, inline: true }] });
+    render(<QuizDetailPage id="z1" />);
+    fireEvent.click(await screen.findByTestId("quiz-item-edit-0"));
+    const card = screen.getByTestId("quiz-item");
+    expect(within(card).getByTestId("mcq-editor-stem")).toHaveValue(QUESTION.stem);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Hủy soạn câu" }));
+    fireEvent.click(screen.getByLabelText("Thêm câu hỏi"));
+    fireEvent.click(screen.getByTestId("quiz-detail-add-inline"));
+    const section = screen.getByRole("heading", { name: "Câu hỏi" }).closest("section")!;
+    expect(within(section).getByTestId("mcq-editor-stem")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("keeps an unsaved inline question when changing modes is canceled", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    vi.mocked(getQuiz).mockResolvedValue(detail());
+    render(<QuizDetailPage id="z1" />);
+    fireEvent.click(await screen.findByLabelText("Thêm câu hỏi"));
+    fireEvent.click(screen.getByTestId("quiz-detail-add-inline"));
+    fireEvent.change(screen.getByTestId("mcq-editor-stem"), { target: { value: "Câu đang soạn" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ngân hàng" }));
+    expect(confirm).toHaveBeenCalled();
+    expect(screen.getByTestId("mcq-editor-stem")).toHaveValue("Câu đang soạn");
+    const leaving = new Event("beforeunload", { cancelable: true });
+    expect(window.dispatchEvent(leaving)).toBe(false);
+    confirm.mockReturnValue(true);
+    fireEvent.click(screen.getByRole("button", { name: "Hủy soạn câu" }));
+    expect(screen.queryByTestId("mcq-editor-stem")).not.toBeInTheDocument();
+    confirm.mockRestore();
+  });
+
+  it("keeps the inline form and shows the error when saving fails", async () => {
+    vi.mocked(getQuiz).mockResolvedValue(detail());
+    vi.mocked(addInlineQuestion).mockRejectedValue(new Error("offline"));
+    render(<QuizDetailPage id="z1" />);
+    fireEvent.click(await screen.findByLabelText("Thêm câu hỏi"));
+    fireEvent.click(screen.getByTestId("quiz-detail-add-inline"));
+    fireEvent.change(screen.getByTestId("mcq-editor-stem"), { target: { value: "Câu hỏi mới" } });
+    fireEvent.change(screen.getByTestId("mcq-editor-option-0"), { target: { value: "A" } });
+    fireEvent.change(screen.getByTestId("mcq-editor-option-1"), { target: { value: "B" } });
+    fireEvent.click(screen.getByTestId("mcq-editor-correct-0"));
+    fireEvent.click(screen.getByTestId("inline-question-save"));
+    await waitFor(() => expect(addInlineQuestion).toHaveBeenCalledWith("z1", expect.objectContaining({ stem: "Câu hỏi mới" }), 3));
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(screen.getByTestId("mcq-editor-stem")).toHaveValue("Câu hỏi mới");
+    expect(screen.getByTestId("inline-question-save")).toBeEnabled();
+  });
+
   it("lưu điểm câu kèm version của quiz", async () => {
     vi.mocked(getQuiz).mockResolvedValue(detail());
     vi.mocked(saveQuizItems).mockResolvedValue(detail({ version: 4 }));
@@ -211,6 +290,45 @@ describe("QuizDetailPage", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Đóng" })[0]!);
     fireEvent.click(screen.getByTestId("quiz-detail-publish"));
     expect(await screen.findByTestId("quiz-detail-publish-summary")).toHaveTextContent("một đề mới gồm 4 câu");
+  });
+
+  it("sinh đề: cảnh báo ngay khi quy tắc cần nhiều câu hơn kho theo thẻ và độ khó, vẫn cho lưu", async () => {
+    vi.mocked(getQuiz).mockResolvedValue(detail());
+    render(<QuizDetailPage id="z1" />);
+
+    fireEvent.change(await screen.findByTestId("draw-rules-mode"), { target: { value: "GENERATED" } });
+    fireEvent.click(screen.getByTestId("draw-rule-add"));
+    fireEvent.change(screen.getByTestId("draw-rule-tag-0"), { target: { value: "chương 1" } });
+    await screen.findByText("Kho có 12 câu đang dùng mang thẻ này");
+    expect(screen.queryByTestId("draw-rule-shortage-0")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByTestId("draw-rule-count-0"), { target: { value: "13" } });
+    expect(screen.getByTestId("draw-rule-shortage-0")).toHaveTextContent("Cần 13 câu, kho chỉ có 12 câu; chưa phát hành được.");
+    expect(screen.getByTestId("draw-rules-save")).toBeEnabled();
+
+    fireEvent.change(screen.getByTestId("draw-rule-count-0"), { target: { value: "3" } });
+    expect(screen.queryByTestId("draw-rule-shortage-0")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Độ khó của quy tắc 1"), { target: { value: "HARD" } });
+    expect(screen.getByText("Kho có 2 câu mức Khó đang dùng mang thẻ này")).toBeInTheDocument();
+    expect(screen.getByTestId("draw-rule-shortage-0")).toHaveTextContent("Cần 3 câu, kho chỉ có 2 câu");
+
+    fireEvent.change(screen.getByLabelText("Độ khó của quy tắc 1"), { target: { value: "MEDIUM" } });
+    expect(screen.getByText("Kho chưa có câu mức Trung bình mang thẻ này")).toBeInTheDocument();
+    fireEvent.change(screen.getByTestId("draw-rule-tag-0"), { target: { value: "Thẻ chưa có" } });
+    expect(screen.getByTestId("draw-rule-shortage-0")).toHaveTextContent("kho chỉ có 0 câu");
+  });
+
+  it("sinh đề: không tải được thẻ thì không báo thiếu câu", async () => {
+    vi.mocked(getQuiz).mockResolvedValue(detail());
+    vi.mocked(getBankTags).mockRejectedValueOnce(new Error("offline"));
+    render(<QuizDetailPage id="z1" />);
+
+    fireEvent.change(await screen.findByTestId("draw-rules-mode"), { target: { value: "GENERATED" } });
+    fireEvent.click(screen.getByTestId("draw-rule-add"));
+    fireEvent.change(screen.getByTestId("draw-rule-tag-0"), { target: { value: "Chương 1" } });
+    fireEvent.change(screen.getByTestId("draw-rule-count-0"), { target: { value: "99" } });
+    await waitFor(() => expect(getBankTags).toHaveBeenCalled());
+    expect(screen.queryByTestId("draw-rule-shortage-0")).not.toBeInTheDocument();
   });
 
   it("hiện phần lượt làm của sinh viên theo lớp của quiz; quiz của môn mở từ lớp thì theo lớp đó", async () => {

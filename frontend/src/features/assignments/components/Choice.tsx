@@ -2,6 +2,11 @@
 
 import { cx } from "@/shared/ui";
 
+/** Một câu ngắn dưới lựa chọn để người mới biết lựa chọn làm gì (popup tạo bài, popup cài đặt; yêu cầu 2026-11-10). */
+export function ChoiceHint({ children }: { children: string }) {
+  return <p className="animate-fade text-xs text-muted">{children}</p>;
+}
+
 export type ChoiceOption<T extends string> = { value: T; label: string; disabled?: boolean; title?: string };
 
 /** Chọn một trong khối liền nền chìm (popup tạo bài, popup cài đặt); lựa chọn đang chọn nổi lên. */

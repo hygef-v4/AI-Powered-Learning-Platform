@@ -13,6 +13,7 @@ import edu.aiplatform.assignments.contract.DocumentBlock;
 import edu.aiplatform.assignments.contract.DocumentFiles;
 import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.contract.DocxImportPreview;
+import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.IDiagramLinker;
 import edu.aiplatform.assignments.contract.IDocumentModel;
@@ -96,15 +97,26 @@ public class AttemptService {
             throw reject(actor, assignmentId, "SUBMISSION_CLOSED", "Bài đã hết hạn nhận bài");
         }
         int used = attempts.maxAttemptNo(assignmentId, actor.accountId());
+        // Bài có chấm nộp bao nhiêu lần cũng được khi còn hạn; chỉ bài Luyện tập giới hạn lượt (yêu cầu 2026-11-10).
         int max = view.maxAttempts() == null ? 1 : view.maxAttempts();
-        if (used >= max) {
+        if (view.gradingMode() == GradingMode.PRACTICE && used >= max) {
             throw reject(actor, assignmentId, "ATTEMPTS_EXHAUSTED", "Bạn đã dùng hết số lượt nộp");
         }
         AssignmentContent content = WorkAccess.call(() -> assignments.getContent(assignmentId))
                 .orElseThrow(() -> ApiException.notFound("NOT_FOUND"));
         Instant deadline = view.lateUntil() != null ? view.lateUntil() : view.closesAt();
+        // Bài có chấm nộp lại: bắt đầu từ bài nộp gần nhất để sửa tiếp, không phải làm lại từ đề trống (yêu cầu 2026-11-10);
+        // bài nộp cũ không còn khớp khung đề thì bắt đầu từ đề. Bài Luyện tập mỗi lượt làm lại từ đề.
+        DocumentModel startFrom = view.gradingMode() == GradingMode.PRACTICE ? content.skeleton()
+                : attempts.listMine(assignmentId, actor.accountId()).stream()
+                        .filter(a -> a.status() == AttemptStatus.SUBMITTED)
+                        .max(java.util.Comparator.comparingInt(AssignmentAttempt::attemptNo))
+                        // Danh sách lượt không mang nội dung bài: tải lại đủ bài nộp gần nhất.
+                        .flatMap(last -> attempts.find(last.id())).map(AssignmentAttempt::content)
+                        .filter(previous -> documents.validateForSave(content.skeleton(), previous).errors().isEmpty())
+                        .orElse(content.skeleton());
         AssignmentAttempt attempt = new AssignmentAttempt(UUID.randomUUID(), assignmentId, ref.classId(),
-                actor.accountId(), used + 1, AttemptSnapshot.of(view, content.requiredDiagrams()), content.skeleton(),
+                actor.accountId(), used + 1, AttemptSnapshot.of(view, content.requiredDiagrams()), startFrom,
                 0, AttemptStatus.IN_PROGRESS, null, false, now, deadline, null, null, null, List.of());
         attempts.insert(attempt);
         return new Started(attemptView(attempt, view), true);
@@ -187,7 +199,9 @@ public class AttemptService {
     @Transactional(readOnly = true)
     public Export export(Actor actor, UUID attemptId) {
         AssignmentAttempt attempt = access.requireReadableAttempt(actor, attemptId, "ATTEMPT_DOCX_EXPORTED");
-        String title = attempt.snapshot().title() + " – Lượt " + attempt.attemptNo();
+        // Bài có chấm không còn khái niệm lượt (yêu cầu 2026-11-10): tên tệp chỉ có tên bài; bài Luyện tập vẫn ghi lượt.
+        String title = attempt.snapshot().gradingMode() == GradingMode.PRACTICE
+                ? attempt.snapshot().title() + " – Lượt " + attempt.attemptNo() : attempt.snapshot().title();
         byte[] bytes = docx.export(attempt.content(), title, linker(attempt.id()));
         return new Export(fileName(title), bytes);
     }

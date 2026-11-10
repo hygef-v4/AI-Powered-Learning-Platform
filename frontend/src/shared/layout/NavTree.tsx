@@ -4,94 +4,111 @@ import Link from "next/link";
 import { useState } from "react";
 import { cx } from "@/shared/ui/cx";
 import { Icon } from "@/shared/ui/Icon";
+import { Menu } from "@/shared/ui/Menu";
 import type { NavItem } from "./navigation";
 
-/** Một nút của cây trên sidebar (một môn, một lớp): mã nhỏ trên tên; mở ra là các mục của nút đó. */
+/** Một môn, một lớp trên sidebar: mã nhỏ trên tên. */
 export type NavTreeNode = { id: string; code?: string; name?: string };
 
 type Props = {
   label: string;
+  /** Chữ của ô chọn khi chưa mở môn, lớp nào (trang danh sách). */
+  placeholder: string;
   nodes: NavTreeNode[];
-  /** Nút của trang đang mở: mở sẵn và mục đang mở được tô. */
+  /** Môn, lớp của trang đang mở. */
   currentId: string | null;
-  /** Các mục của một nút; chỉ mục của nút đang mở mới mang `active`. */
+  /** Các mục của một môn, lớp; chỉ mục của môn, lớp đang mở mới mang `active`. */
   itemsFor: (id: string) => NavItem[];
   loading?: boolean;
 };
 
 /**
- * Nhánh cây dưới một mục của menu role (kiểu cây thư mục): mỗi nút bấm để mở, đóng; nút của trang đang mở mở sẵn. Sidebar
- * thu gọn (màn rộng) thì ẩn cả nhánh, mục cha giữ vai trò mục đang mở.
+ * Nhánh cây dưới một mục của menu role (yêu cầu 2026-11-10): đầu nhánh là ô thả xuống chọn môn, lớp như trước. Chọn trong
+ * ô chỉ đổi nhánh bên dưới sang các mục của môn, lớp đó, không chuyển trang; bấm một mục của nhánh mới chuyển trang. Mặc định
+ * nhánh là môn, lớp của trang đang mở; đang ở một trang trong nhánh thì đổi môn, lớp sang luôn đúng trang đó của môn, lớp mới. Sidebar thu gọn (màn rộng) thì ẩn cả nhánh, mục cha giữ vai trò mục đang mở.
  */
-export function NavTree({ label, nodes, currentId, itemsFor, loading = false }: Props) {
-  const [toggled, setToggled] = useState<Record<string, boolean>>({});
-  const isOpen = (id: string) => toggled[id] ?? id === currentId;
-
-  function toggleNode(id: string) {
-    setToggled((previous) => ({ ...previous, [id]: !isOpen(id) }));
-  }
-
+export function NavTree({ label, placeholder, nodes, currentId, itemsFor, loading = false }: Props) {
+  // Môn, lớp đang chọn trong ô; trang đổi sang môn, lớp khác thì chọn theo trang mới.
+  const [picked, setPicked] = useState<{ id: string | null; page: string | null }>({ id: currentId, page: currentId });
+  const pickedId = picked.page === currentId ? picked.id : currentId;
+  const current = nodes.find((node) => node.id === pickedId);
+  const items = pickedId ? itemsFor(pickedId) : [];
+  // Đang ở một trang trong nhánh (ví dụ Bài tập của lớp A): đổi lớp trong ô thì sang đúng trang đó của lớp mới (yêu cầu
+  // 2026-11-10). Ở ngoài nhánh (đang ở lớp, mở nhánh môn) thì đổi trong ô chỉ đổi các mục bên dưới, không chuyển trang.
+  const openIndex = currentId ? itemsFor(currentId).findIndex((item) => item.active) : -1;
+  const hrefFor = (id: string) => (openIndex >= 0 ? itemsFor(id)[openIndex]?.href : undefined);
   return (
-    <ul aria-label={label} className="ml-[18px] flex flex-col gap-0.5 border-l border-line py-0.5 pl-1.5 md:group-data-[collapsed]/sidebar:hidden">
-      {loading && nodes.length === 0 && (
-        <li aria-hidden className="flex flex-col gap-1 px-2.5 py-2">
-          <span className="h-2 w-10 rounded bg-sunken" />
-          <span className="h-3 w-28 max-w-full rounded bg-sunken" />
-        </li>
-      )}
-      {!loading && nodes.length === 0 && <li className="px-2.5 py-1.5 text-[12.5px] text-muted">Chưa có mục nào.</li>}
-      {nodes.map((node) => {
-        const open = isOpen(node.id);
-        const current = node.id === currentId;
-        return (
-          <li key={node.id}>
-            <button
-              type="button"
-              aria-expanded={open}
-              onClick={() => toggleNode(node.id)}
-              title={node.name}
-              className={cx(
-                "flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-surface/60",
-                current ? "text-ink" : "text-body hover:text-ink",
-              )}
-            >
-              <Icon name="chevron_right" size={13} className={cx("shrink-0 text-muted transition-transform duration-200", open && "rotate-90")} />
-              <span className="min-w-0 flex-1 leading-none">
-                {node.code && <span className="block truncate font-mono text-[9.5px] leading-none tracking-wide text-muted">{node.code}</span>}
-                {node.name ? (
-                  <span className={cx("block truncate text-[13px] leading-[1.15] font-semibold", node.code && "mt-[3px]")}>{node.name}</span>
-                ) : (
-                  <span aria-hidden className="mt-[3px] block h-3 w-24 rounded bg-sunken" />
+    <div role="group" aria-label={label} className="ml-[18px] flex flex-col gap-1 border-l border-line py-1 pl-1.5 md:group-data-[collapsed]/sidebar:hidden">
+      <Menu
+        ariaLabel={current?.name ? `${placeholder}: ${current.name}` : placeholder}
+        variant="tool"
+        className="w-full"
+        summaryClassName="!h-11 w-full !whitespace-normal rounded-lg border border-line bg-surface !px-2.5 !py-1 text-left hover:!bg-surface hover:border-line-strong [&>svg:last-child]:ml-auto [&>svg:last-child]:shrink-0"
+        label={
+          pickedId && !current?.name ? (
+            <span aria-hidden className="flex flex-1 flex-col gap-1">
+              <span className="h-2 w-10 rounded bg-sunken" />
+              <span className="h-3 w-28 max-w-full rounded bg-sunken" />
+            </span>
+          ) : current ? (
+            <span className="min-w-0 flex-1 leading-none" title={current.name}>
+              <span className="block overflow-hidden font-mono text-[9.5px] leading-none tracking-wide whitespace-nowrap text-muted">{current.code}</span>
+              <span className="mt-[3px] block truncate text-[13px] leading-[1.15] font-semibold text-ink">{current.name}</span>
+            </span>
+          ) : (
+            <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-muted">{placeholder}</span>
+          )
+        }
+      >
+        <div className="flex max-h-72 w-[208px] flex-col gap-0.5 overflow-y-auto">
+          {loading && nodes.length === 0 && <span className="px-2.5 py-2 text-[13px] text-muted">Đang tải…</span>}
+          {!loading && nodes.length === 0 && <span className="px-2.5 py-2 text-[13px] text-muted">Chưa có mục nào.</span>}
+          {nodes.filter((node) => node.name).map((node) => {
+            const selected = node.id === pickedId;
+            const href = hrefFor(node.id);
+            const className = cx("flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] text-ink transition-colors hover:bg-sunken", selected && "bg-primary-soft");
+            const body = (
+              <>
+                <span className="min-w-0 flex-1 leading-none" title={node.name}>
+                  <span className="block overflow-hidden font-mono text-[9.5px] leading-none tracking-wide whitespace-nowrap text-muted">{node.code}</span>
+                  <span className="mt-[3px] block truncate text-[13px] leading-[1.15] font-semibold">{node.name}</span>
+                </span>
+                {selected && <Icon name="check" size={15} className="shrink-0 text-primary-ink" />}
+              </>
+            );
+            return href ? (
+              <Link key={node.id} href={href} role="menuitemradio" aria-checked={selected} data-menu-item className={className}>{body}</Link>
+            ) : (
+              <button key={node.id} type="button" role="menuitemradio" aria-checked={selected} data-menu-item className={className}
+                onClick={() => setPicked({ id: node.id, page: currentId })}>{body}</button>
+            );
+          })}
+        </div>
+      </Menu>
+      {items.length > 0 && (
+        <ul className="ml-[15px] flex flex-col gap-0.5 border-l border-line pl-1.5">
+          {items.map((item) => (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                aria-current={item.active ? "page" : undefined}
+                className={cx(
+                  "group flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] font-semibold whitespace-nowrap transition-colors duration-200",
+                  item.active ? "bg-surface text-ink shadow-[0_1px_2px_rgb(60_38_14/0.08)]" : "text-body hover:bg-surface/60 hover:text-ink",
                 )}
-              </span>
-            </button>
-            {open && (
-              <ul className="mt-0.5 mb-1 ml-[15px] flex flex-col gap-0.5 border-l border-line pl-1.5">
-                {itemsFor(node.id).map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      aria-current={item.active ? "page" : undefined}
-                      className={cx(
-                        "group flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] font-semibold whitespace-nowrap transition-colors duration-200",
-                        item.active ? "bg-surface text-ink shadow-[0_1px_2px_rgb(60_38_14/0.08)]" : "text-body hover:bg-surface/60 hover:text-ink",
-                      )}
-                    >
-                      <Icon
-                        name={item.icon}
-                        size={15}
-                        filled={item.active}
-                        className={cx("shrink-0 transition-colors", item.active ? "text-primary-ink" : "text-muted group-hover:text-ink")}
-                      />
-                      <span className="truncate">{item.label}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </li>
-        );
-      })}
-    </ul>
+              >
+                <Icon
+                  name={item.icon}
+                  size={15}
+                  filled={item.active}
+                  className={cx("shrink-0 transition-colors", item.active ? "text-primary-ink" : "text-muted group-hover:text-ink")}
+                />
+                <span className="truncate">{item.label}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

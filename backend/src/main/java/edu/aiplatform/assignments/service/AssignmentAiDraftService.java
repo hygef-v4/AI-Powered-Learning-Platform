@@ -30,6 +30,7 @@ import edu.aiplatform.files.contract.IArtifact;
 import edu.aiplatform.files.contract.StoredFileInfo;
 import edu.aiplatform.assignments.contract.AssignmentScope;
 import edu.aiplatform.assignments.contract.AssignmentStatus;
+import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.contract.DocumentPart;
 import edu.aiplatform.assignments.contract.RubricCriterion;
 import edu.aiplatform.assignments.repository.AiDraftRepository;
@@ -75,8 +76,9 @@ public class AssignmentAiDraftService {
     static final String FORMAT_TITLE_PREFIX = "FORMAT TEMPLATE: ";
     static final String FORMAT_INSTRUCTION = "\n\nThe source titled \"FORMAT TEMPLATE: ...\" is the instructor's "
             + "assignment format template: follow its section order, numbering, headings and layout exactly, but take "
-            + "the content from the request and the other sources. Take the number of questions and the output language "
-            + "from the template when the settings do not fix them.";
+            + "the content from the request and the other sources. Keep writing in the configured output language even "
+            + "when the template uses another language. Take the number of questions from the template only when "
+            + "topLevelQuestionCount is not set.";
 
     private final AssignmentRepository assignments;
     private final AiDraftRepository drafts;
@@ -88,6 +90,7 @@ public class AssignmentAiDraftService {
     private final IReferenceMaterial materials;
     private final IArtifact artifacts;
     private final IAssignmentSourceTextExtractor sourceTextExtractor;
+    private final DocumentModelService documentModelService;
     private final ObjectMapper json;
     private final TransactionTemplate transaction;
     private final Clock clock;
@@ -96,6 +99,7 @@ public class AssignmentAiDraftService {
                                     AssignmentSupport support, AssignmentAccess access, AssignmentAudit audit,
                                     IAiTask aiTasks, IReferenceMaterial materials, ObjectMapper json,
                                     IArtifact artifacts, IAssignmentSourceTextExtractor sourceTextExtractor,
+                                    DocumentModelService documentModelService,
                                     PlatformTransactionManager transactions, Clock clock) {
         this.assignments = assignments;
         this.drafts = drafts;
@@ -107,9 +111,38 @@ public class AssignmentAiDraftService {
         this.materials = materials;
         this.artifacts = artifacts;
         this.sourceTextExtractor = sourceTextExtractor;
+        this.documentModelService = documentModelService;
         this.json = json;
         this.transaction = new TransactionTemplate(transactions);
         this.clock = clock;
+    }
+
+    /**
+     * Đề mẫu chọn được (yêu cầu 2026-11-09): bài của môn (do chủ nhiệm môn tạo) cùng môn với bài đang soạn, mọi trạng
+     * thái trừ đã ngưng giao vì bài của môn không còn phát hành. Không gồm chính bài đang soạn.
+     */
+    public List<AssignmentViews.AiTemplateOption> listTemplates(Actor actor, UUID id) {
+        return transaction.execute(status -> {
+            Assignment assignment = support.manageable(actor, id, "ASSIGNMENT_AI_TEMPLATES");
+            return assignments.listOfSubject(assignment.subjectId()).stream()
+                    .filter(candidate -> !candidate.id().equals(id) && isTemplateFor(actor, assignment, candidate))
+                    .map(candidate -> new AssignmentViews.AiTemplateOption(candidate.id(), candidate.title()))
+                    .toList();
+        });
+    }
+
+    private boolean isTemplateFor(Actor actor, Assignment target, Assignment candidate) {
+        return AssignmentCopyService.isSubjectTemplate(candidate)
+                && candidate.subjectId().equals(target.subjectId());
+    }
+
+    /** Chữ khung đề của đề mẫu đã chọn; đề mẫu ngoài phạm vi thì báo lỗi. */
+    private String loadTemplateText(Actor actor, Assignment target, UUID templateId) {
+        Assignment template = assignments.find(templateId)
+                .filter(candidate -> isTemplateFor(actor, target, candidate))
+                .orElseThrow(() -> ApiException.badRequest("AI_TEMPLATE_INVALID", "Đề mẫu không hợp lệ"));
+        String text = documentModelService.toPlainText(template.skeleton()).strip();
+        return text.length() > MAX_FORMAT_CHARS ? text.substring(0, MAX_FORMAT_CHARS) : text;
     }
 
     /** Đọc nguồn trước khi gọi AI; FileRef vẫn được kiểm lại khi gửi yêu cầu tạo đề. */
@@ -126,7 +159,14 @@ public class AssignmentAiDraftService {
 
     /** F6 bước 2–4: tạo đề xuất PENDING, gửi task AI; {@code requestRef} chống gửi trùng. */
     public AssignmentViews.AiDraft request(Actor actor, UUID id, AssignmentCommands.AiDraftRequest command) {
+        boolean revise = AssignmentDraftRevision.MODE.equals(command.mode());
+        if (command.mode() != null && !revise) {
+            throw ApiException.badRequest("AI_REQUEST_INVALID", "Chế độ AI không hợp lệ");
+        }
         String prompt = command.request() == null ? "" : command.request().strip();
+        if (revise && prompt.isEmpty()) {
+            throw ApiException.badRequest("AI_REQUEST_INVALID", "Nhập yêu cầu sửa đề");
+        }
         if (prompt.length() > MAX_REQUEST) {
             throw ApiException.badRequest("AI_REQUEST_INVALID", "Yêu cầu tối đa 4.000 ký tự");
         }
@@ -138,24 +178,23 @@ public class AssignmentAiDraftService {
         if (command.provider() != null && command.source() != AiSource.PERSONAL) {
             throw ApiException.badRequest("AI_SOURCE_INVALID", "Nguồn AI không hợp lệ");
         }
-        String formatText = command.formatText() == null || command.formatText().isBlank() ? null
+        String uploadedFormat = revise || command.formatText() == null || command.formatText().isBlank() ? null
                 : command.formatText().strip();
-        if (formatText != null && formatText.length() > MAX_FORMAT_CHARS) {
-            formatText = formatText.substring(0, MAX_FORMAT_CHARS);
-        }
+        String formatText = uploadedFormat == null || uploadedFormat.length() <= MAX_FORMAT_CHARS ? uploadedFormat
+                : uploadedFormat.substring(0, MAX_FORMAT_CHARS);
         AssignmentCommands.DraftOptions draftOptions = normalizeOptions(command.options());
-        List<String> sourceRefs = normalizeSourceRefs(command.sourceFileRefs());
-        List<UUID> materialIds = command.materialIds() == null ? List.of()
+        List<String> sourceRefs = revise ? List.of() : normalizeSourceRefs(command.sourceFileRefs());
+        List<UUID> materialIds = revise || command.materialIds() == null ? List.of()
                 : List.copyOf(new LinkedHashSet<>(command.materialIds()));
         if (materialIds.size() > Assignment.MATERIALS_MAX) {
             throw ApiException.badRequest("TOO_MANY_MATERIALS", "Chọn tối đa 10 tài liệu tham khảo");
         }
-        if (prompt.isEmpty() && sourceRefs.isEmpty() && materialIds.isEmpty() && formatText == null) {
-            throw ApiException.badRequest("AI_REQUEST_INVALID", "Nhập yêu cầu hoặc chọn ít nhất một tài liệu nguồn");
-        }
-        String effectivePrompt = prompt.isEmpty()
+        // Không trường nào bắt buộc (yêu cầu 2026-11-09): trường nào bỏ trống thì AI tự quyết.
+        boolean hasSources = !sourceRefs.isEmpty() || !materialIds.isEmpty();
+        String effectivePrompt = !prompt.isEmpty() ? prompt : hasSources
                 ? "Create an assessment draft grounded in the selected source documents. Do not invent requirements not supported by those sources."
-                : prompt;
+                : "Create a complete, coherent assessment draft that fits this assignment's settings. Choose the topic, "
+                        + "business context and number of questions yourself.";
         Prepared prepared = transaction.execute(status -> {
             Assignment assignment = support.manageable(actor, id, "ASSIGNMENT_AI_DRAFT_REQUESTED");
             access.requireOwnerWritable(assignment);
@@ -164,8 +203,11 @@ public class AssignmentAiDraftService {
             }
             var existing = drafts.findByRequest(id, requestRef);
             if (existing.isPresent()) {
-                return new Prepared(assignment, existing.get(), false);
+                return new Prepared(assignment, existing.get(), false, null, null);
             }
+            // Đề mẫu chọn từ bài của môn; tệp tải lên (formatText) được ưu tiên khi có cả hai.
+            String templateText = revise || command.templateAssignmentId() == null || formatText != null ? null
+                    : loadTemplateText(actor, assignment, command.templateAssignmentId());
             if (!materialIds.isEmpty()) {
                 Set<UUID> allowed = selectable(actor, assignment).stream().map(SelectableMaterial::materialId)
                         .collect(Collectors.toSet());
@@ -192,11 +234,20 @@ public class AssignmentAiDraftService {
             }
             ArrayNode ids = provenance.putArray("materialIds");
             materialIds.forEach(m -> ids.add(m.toString()));
+            AssignmentDraftRevision.Snapshot snapshot = null;
+            if (revise) {
+                snapshot = AssignmentDraftRevision.snapshot(assignment, rubrics.all(id));
+                provenance.put("mode", AssignmentDraftRevision.MODE);
+                provenance.put("instruction", prompt);
+                provenance.set("blockRefs", snapshot.blockRefs());
+                provenance.set("snapshot", snapshot.document());
+            }
             AssignmentAiDraft draft = new AssignmentAiDraft(UUID.randomUUID(), id, AssignmentAiDraft.Origin.AI_TASK,
                     null, requestRef, AssignmentAiDraft.Status.PENDING, null, provenance, assignment.version(), null,
                     actor.accountId(), clock.instant(), null);
             drafts.insert(draft);
-            return new Prepared(assignment, draft, true);
+            return new Prepared(assignment, draft, true, templateText,
+                    snapshot == null ? null : snapshot.document());
         });
         if (!prepared.created()) {
             return view(prepared.draft());
@@ -221,15 +272,20 @@ public class AssignmentAiDraftService {
         List<MaterialText> texts = new java.util.ArrayList<>(materialIds.isEmpty() ? List.of() : texts(actor, materialIds));
         sourceTexts.forEach(source -> texts.add(new MaterialText(UUID.randomUUID(), source.fileName(), source.text(),
                 source.truncated(), null)));
-        boolean hasFormat = formatText != null;
+        String template = formatText != null ? formatText : prepared.templateText();
+        boolean hasFormat = template != null && !template.isBlank();
         if (hasFormat) {
-            texts.add(new MaterialText(UUID.randomUUID(), FORMAT_TITLE_PREFIX + "template", formatText,
-                    command.formatText().strip().length() > MAX_FORMAT_CHARS, null));
+            texts.add(new MaterialText(UUID.randomUUID(), FORMAT_TITLE_PREFIX + "template", template,
+                    template.length() >= MAX_FORMAT_CHARS, null));
         }
         String finalPrompt = hasFormat ? effectivePrompt + FORMAT_INSTRUCTION : effectivePrompt;
-        AiPrompt aiPrompt = AssignmentDraftPromptBuilder.build(prepared.assignment(), finalPrompt, texts, draftOptions);
-        String schema = AssignmentDraftGenerationSchema.build(draftOptions, prepared.assignment().gradingMode());
-        List<AiSourceChoice> order = sourceOrder(actor, command, aiPrompt);
+        AiPrompt aiPrompt = revise
+                ? AssignmentDraftRevision.buildPrompt(prepared.assignment(), prompt, prepared.revisionDocument())
+                : AssignmentDraftPromptBuilder.build(prepared.assignment(), finalPrompt, texts, draftOptions);
+        String schema = revise ? AssignmentDraftRevision.OUTPUT_SCHEMA
+                : AssignmentDraftGenerationSchema.build(draftOptions, prepared.assignment().gradingMode());
+        int maxOutputTokens = revise ? AssignmentDraftRevision.MAX_OUTPUT_TOKENS : MAX_OUTPUT_TOKENS;
+        List<AiSourceChoice> order = sourceOrder(actor, command, aiPrompt, maxOutputTokens);
         if (order.isEmpty()) {
             String message = "API chung không đủ hạn mức cho lượt này và bạn chưa lưu khóa API cá nhân";
             transaction.executeWithoutResult(s -> drafts.markFailed(draft.id(), message, clock.instant()));
@@ -243,7 +299,7 @@ public class AssignmentAiDraftService {
             try {
                 task = aiTasks.submit(new AiTaskRequest(actor, choice.source(), choice.provider(), TASK_TYPE,
                         TARGET_PREFIX + draft.id(), prepared.assignment().version(), requestRef, aiPrompt, schema,
-                        MAX_OUTPUT_TOKENS));
+                        maxOutputTokens));
                 picked = choice;
             } catch (ApiException e) {
                 // API chung không dùng được thì tự chuyển sang nguồn kế tiếp (API cá nhân), không bắt tải lại.
@@ -296,6 +352,9 @@ public class AssignmentAiDraftService {
             if (draft.status() != AssignmentAiDraft.Status.READY || draft.proposal() == null) {
                 throw ApiException.conflict("AI_DRAFT_NOT_READY", "Đề xuất chưa sẵn sàng hoặc đã xử lý");
             }
+            if (isRevision(draft.proposal())) {
+                return applyRevision(actor, current, draft, command);
+            }
             boolean previouslyInvalid = "INVALID".equals(draft.proposal().path("validation").path("status").asText());
             ObjectNode validation = AssignmentDraftValidator.validate(draft.proposal(), current.gradingMode(),
                     validationOptions(draft.provenance()));
@@ -330,6 +389,63 @@ public class AssignmentAiDraftService {
                     "replacedTitle", command.replaceTitle()));
             return support.detail(actor, saved, List.of());
         });
+    }
+
+    /** Áp dụng bản sửa đề (yêu cầu 2026-11-09): khối giữ mã cũ giữ id, ảnh, sơ đồ và định dạng chữ không đổi. */
+    private AssignmentViews.Detail applyRevision(Actor actor, Assignment current, AssignmentAiDraft draft,
+                                                 AssignmentCommands.ApplyDraft command) {
+        // Bản sửa dựa trên đề lúc gửi; đề đã đổi sau đó thì áp dụng sẽ ghi đè phần vừa sửa.
+        if (current.version() != draft.baseVersion()) {
+            throw ApiException.conflict("AI_DRAFT_STALE",
+                    "Đề đã thay đổi trong lúc AI xử lý nên chưa áp dụng; hãy gửi lại yêu cầu");
+        }
+        ObjectNode validation = AssignmentDraftRevision.validate(draft.proposal(), current.gradingMode());
+        if ("INVALID".equals(validation.path("status").asText())) {
+            throw ApiException.conflict("AI_DRAFT_INVALID", "Đề sau khi sửa không hợp lệ; gửi lại yêu cầu khác");
+        }
+        String proposedTitle = draft.proposal().path("title").asText("").strip();
+        boolean replaceTitle = command.replaceTitle() && !proposedTitle.isEmpty();
+        AssignmentDraftRevision.Built built = AssignmentDraftRevision.build(draft.proposal(),
+                draft.provenance().path("blockRefs"), current.skeleton(), current.title());
+        DocumentModel skeleton = replaceTitle ? built.skeleton() : new DocumentModel(built.skeleton().blocks(),
+                current.skeleton() == null ? null : current.skeleton().title());
+        var structure = documentModelService.validateSkeleton(skeleton);
+        if (!structure.ok()) {
+            throw ApiException.conflict("AI_DRAFT_INVALID", "Đề sau khi sửa không hợp lệ: "
+                    + structure.errors().get(0).message());
+        }
+        Instant now = clock.instant();
+        List<DocumentPart> parts = PartCalculator.compute(skeleton);
+        Map<String, List<RubricCriterion>> suggestions = new HashMap<>();
+        String wholePart = RubricService.WHOLE;
+        for (DocumentPart part : parts) {
+            if (part.headingBlockId() == null) {
+                wholePart = part.partId();
+            } else if (built.rubricByHeading().containsKey(part.headingBlockId())) {
+                suggestions.put(part.partId(), RubricService.normalize(
+                        built.rubricByHeading().get(part.headingBlockId()), current.diagramEnabled()));
+            }
+        }
+        if (!built.wholeRubric().isEmpty()) {
+            suggestions.put(wholePart, RubricService.normalize(built.wholeRubric(), current.diagramEnabled()));
+        }
+        String instructions = command.replaceInstructions()
+                ? draft.proposal().path("instructions").asText("") : current.instructions();
+        String title = replaceTitle ? proposedTitle : current.title();
+        Assignment saved = assignments.save(current.withAuthoring(title, instructions, skeleton, parts, now));
+        rubrics.replaceAll(saved, suggestions, now);
+        if (drafts.markApplied(draft.id(), now) != 1) {
+            throw ApiException.conflict("AI_DRAFT_NOT_READY", "Đề xuất đã được xử lý");
+        }
+        audit.success(actor, "ASSIGNMENT_AI_DRAFT_APPLIED", saved.id(), AssignmentAudit.details(
+                "draftId", draft.id(), "origin", draft.origin(), "mode", AssignmentDraftRevision.MODE,
+                "provenance", provenanceSummary(draft.provenance()), "partCount", parts.size(),
+                "replacedInstructions", command.replaceInstructions(), "replacedTitle", replaceTitle));
+        return support.detail(actor, saved, List.of());
+    }
+
+    private static boolean isRevision(JsonNode proposal) {
+        return AssignmentDraftRevision.KIND.equals(proposal.path("kind").asText());
     }
 
     /** F6 bước 7: bỏ đề xuất, bài không đổi. */
@@ -397,11 +513,21 @@ public class AssignmentAiDraftService {
                 drafts.markFailed(draftId, "Bài không còn ở trạng thái nháp", clock.instant());
                 return ApplyOutcome.REJECTED;
             }
+            boolean revise = AssignmentDraftRevision.MODE.equals(draft.provenance().path("mode").asText());
             ObjectNode proposal;
             JsonNode raw;
             try {
                 raw = json.readTree(result.output());
-                proposal = AiDraftProposal.normalize(raw, assignment.diagramEnabled());
+                if (revise) {
+                    JsonNode sent = draft.provenance().path("snapshot");
+                    JsonNode merged = AssignmentDraftRevision.merge(raw, sent);
+                    proposal = AssignmentDraftRevision.normalize(merged, assignment.diagramEnabled());
+                    if (proposal != null && sent.equals(merged)) {
+                        proposal.put("unchanged", true);
+                    }
+                } else {
+                    proposal = AiDraftProposal.normalize(raw, assignment.diagramEnabled());
+                }
             } catch (JsonProcessingException | RuntimeException e) {
                 raw = null;
                 proposal = null;
@@ -410,7 +536,9 @@ public class AssignmentAiDraftService {
                 drafts.markFailed(draftId, "Kết quả AI không đúng định dạng", clock.instant());
                 return ApplyOutcome.REJECTED;
             }
-            proposal.set("validation", AssignmentDraftValidator.validate(raw, assignment.gradingMode(),
+            proposal.set("validation", revise
+                    ? AssignmentDraftRevision.validate(proposal, assignment.gradingMode())
+                    : AssignmentDraftValidator.validate(raw, assignment.gradingMode(),
                     validationOptions(draft.provenance())));
             ObjectNode provenance = draft.provenance().deepCopy();
             aiTasks.get(result.taskId()).ifPresent(task -> {
@@ -459,11 +587,12 @@ public class AssignmentAiDraftService {
     }
 
     /** Nguồn chọn đích danh, hoặc thứ tự tự chọn của module AI (chỉ còn API cá nhân khi yêu cầu PERSONAL). */
-    private List<AiSourceChoice> sourceOrder(Actor actor, AssignmentCommands.AiDraftRequest command, AiPrompt prompt) {
+    private List<AiSourceChoice> sourceOrder(Actor actor, AssignmentCommands.AiDraftRequest command, AiPrompt prompt,
+                                             int maxOutputTokens) {
         if (command.source() != null && command.provider() != null) {
             return List.of(new AiSourceChoice(command.source(), command.provider()));
         }
-        List<AiSourceChoice> order = aiTasks.sourceOrder(actor, prompt, MAX_OUTPUT_TOKENS);
+        List<AiSourceChoice> order = aiTasks.sourceOrder(actor, prompt, maxOutputTokens);
         if (command.source() == null) return order;
         return order.stream().filter(choice -> choice.source() == command.source()).toList();
     }
@@ -562,6 +691,8 @@ public class AssignmentAiDraftService {
         ObjectNode safe = provenance != null && provenance.isObject()
                 ? ((ObjectNode) provenance).deepCopy() : JsonNodeFactory.instance.objectNode();
         safe.remove("materialIds");
+        safe.remove("blockRefs");
+        safe.remove("snapshot");
         JsonNode sourceFiles = safe.path("sourceFiles");
         if (sourceFiles.isArray()) {
             ArrayNode visible = JsonNodeFactory.instance.arrayNode();
@@ -595,6 +726,7 @@ public class AssignmentAiDraftService {
         }
     }
 
-    private record Prepared(Assignment assignment, AssignmentAiDraft draft, boolean created) {
+    private record Prepared(Assignment assignment, AssignmentAiDraft draft, boolean created, String templateText,
+                            JsonNode revisionDocument) {
     }
 }

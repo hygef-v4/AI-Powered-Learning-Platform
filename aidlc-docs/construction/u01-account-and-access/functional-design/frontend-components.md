@@ -24,7 +24,7 @@ U01 nằm trong **Web Shell** (xác thực, hồ sơ, khung sau đăng nhập) v
 | 4 | User Profile (`c05`) | `ProfilePage` | 06, 07 |
 | 5 | Password Change, popup (`c06`) | `PasswordChangeDialog` | 05 |
 | – | Khung sau đăng nhập: thanh trên cùng, menu bên, popup Đăng xuất (`c15`) | `AppShell`, `LogoutDialog`, `PostLoginRedirect`, `RoleGuard` | 01, 02, 03 |
-| 11 | Account List, vùng Nhập CSV (`a02`, `a02b`) | `AccountListPage`, `ImportAccountsPanel` | 08, luồng phụ của 09 |
+| 11 | Account List, vùng Nhập Excel (`a02`, `a02b`) | `AccountListPage`, `ImportAccountsPanel` | 08, luồng phụ của 09 |
 | 12 | New Account, popup (`a03`) | `NewAccountDialog` | 09 |
 | 13 | Account Detail và popup Đổi vai trò, Đổi vai trò bị từ chối, Vô hiệu hóa / Mở lại (`a04`, `a04b`, `a04c`, `a04d`) | `AccountDetailPage`, `RoleChangeDialog`, `RoleChangeRejectedDialog`, `StatusToggleDialog` | 10, 11, 12 |
 
@@ -54,7 +54,7 @@ app/profile/        ProfilePage           #4 User Profile
 app/admin/accounts/ AccountListPage       #11 Account List
     AccountFilters                tab vai trò, lọc trạng thái, ô tìm
     AccountTable
-    ImportAccountsPanel           vùng Nhập CSV ngay trên trang (a02b)
+    ImportAccountsPanel           vùng Nhập Excel ngay trên trang (a02b)
     NewAccountDialog              #12 popup
   [id]/             AccountDetailPage     #13 Account Detail
     AccountInfoForm
@@ -135,7 +135,7 @@ Menu bên theo design (mỗi unit đăng ký mục của màn mình qua `NavEntr
 
 | Mục | Nội dung |
 |---|---|
-| Đầu trang | "Tài khoản" kèm tổng số; nút Nhập CSV, Thêm tài khoản |
+| Đầu trang | "Tài khoản" kèm tổng số; nút Nhập Excel, Thêm tài khoản |
 | Bộ lọc | Tab vai trò: Tất cả, Sinh viên, Giảng viên, Chủ nhiệm môn, Quản trị viên; lọc Trạng thái (Chờ kích hoạt, Hoạt động, Vô hiệu hóa); ô "Lọc theo email hoặc tên" |
 | Cột | Họ tên (avatar chữ viết tắt), Email, Vai trò, Trạng thái (nhãn màu), Ngày tạo; bấm dòng mở Account Detail |
 | Phân trang | "Hiển thị a–b trong N tài khoản" |
@@ -143,11 +143,11 @@ Menu bên theo design (mỗi unit đăng ký mục của màn mình qua `NavEntr
 
 ### ImportAccountsPanel (`a02b`, luồng phụ của UC 09)
 
-Nút "Nhập CSV" mở vùng nhập ngay trên Account List; danh sách tải lại sau khi xác nhận.
+Nút "Nhập Excel" mở vùng nhập ngay trên Account List; danh sách tải lại sau khi xác nhận.
 
 | Bước | Nội dung | API |
 |---|---|---|
-| Chọn tệp | "Tệp .csv, mã UTF-8, dòng đầu là tiêu đề cột"; ô tệp (tên, dung lượng), nút "Chọn tệp khác", link "Tải tệp mẫu (email, họ tên, vai trò)" | `validateAccountImport` |
+| Chọn tệp | "Tệp Excel .xlsx, trang tính đầu tiên, dòng đầu là tiêu đề cột"; ô tệp (tên, dung lượng), nút "Chọn tệp khác", link "Tải tệp mẫu (email, họ tên, vai trò)" | `validateAccountImport` |
 | Xem trước | Nhãn đếm số dòng, hợp lệ, lỗi; "Chỉ nhập các dòng hợp lệ; dòng lỗi được bỏ qua."; bảng Dòng, Email, Họ tên, Vai trò, Kết quả kiểm tra (Hợp lệ, hoặc lý do dễ hiểu như email đã tồn tại, không phải email trường, vai trò không hợp lệ), có phân trang | - |
 | Xác nhận | Ghi chú "Tài khoản mới ở trạng thái Chờ kích hoạt. Hệ thống không gửi email; người dùng tự kích hoạt bằng email trường."; Hủy, "Xác nhận nhập N tài khoản" | `commitAccountImport` (gửi lại tệp; backend kiểm lại rồi chỉ tạo dòng hợp lệ) |
 

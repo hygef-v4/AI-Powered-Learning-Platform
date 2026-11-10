@@ -14,7 +14,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams("classId=class-context"),
 }));
 
-const label = "Cho sinh viên xem phổ điểm ẩn danh";
+const label = "Cho sinh viên xem phổ điểm";
 const initial = { enabled: false, version: 0, canEdit: true };
 const subjectAssignment = {
   id: "a", classId: null, subjectId: "s", scope: "SUBJECT", title: "Bài của môn", instructions: "",

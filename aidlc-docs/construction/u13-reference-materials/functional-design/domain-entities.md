@@ -30,7 +30,7 @@ U13 không sở hữu: tệp trên Drive (U03), Quiz (U10), Assignment (U07), th
 
 | Entity | Thuộc tính chính |
 |---|---|
-| `Material` | `id`, `scope` (`SUBJECT`, `CLASS`), `subjectId` (luôn có), `classId` (chỉ `CLASS`), `moduleId` (bắt buộc, FK material_modules cùng subject), `kind` (`FILE`, `YOUTUBE_LINK`), `title` (≤ 200), `description` (≤ 2.000), `orderNo`, `status` (`ACTIVE`, `ARCHIVED`), `currentVersionNo`, `createdBy`, `createdAt`, `updatedAt`, `version` |
+| `Material` | `id`, `scope` (`SUBJECT`, `CLASS`), `subjectId` (luôn có), `classId` (chỉ `CLASS`), `moduleId` (bắt buộc, FK material_modules cùng subject), `kind` (`FILE`, `YOUTUBE_LINK`), `title` (≤ 200), `description` (≤ 2.000), `descriptionDocument` (FormattedText tùy chọn), `enabled` (boolean, mặc định true, độc lập status), `orderNo`, `status` (`ACTIVE`, `ARCHIVED`), `currentVersionNo`, `createdBy`, `createdAt`, `updatedAt`, `version` |
 | `MaterialVersion` | `materialId`, `versionNo` (khóa cùng `materialId`), `fileId`, `fileName`, `mimeType`, `byteSize` (với `FILE`), `videoUrl`, `videoId` (với `YOUTUBE_LINK`), `textStatus` (`PENDING`, `EXTRACTED`, `NO_TEXT`, `FAILED`; chỉ `FILE`), `extractedText` (≤ 1.000.000 ký tự), `createdBy`, `createdAt` |
 
 ```mermaid
@@ -94,3 +94,11 @@ Module cơ bản của môn đã triển khai. Học liệu môn/lớp bắt bu�
 | Material.moduleId | Nonnull FK material_modules; service validates same subject; old records backfilled Module1 by migration 29/10 |
 
 Module data and Quiz visibility are distinct from the Quiz aggregate owned by U10; U13 does not own questions/attempts. No Lesson/embedding/RAG entities are implied.
+
+## Delta học liệu — 2026-11-09
+
+`enabled=false` (UI Tắt) không đổi ACTIVE/ARCHIVED hoặc xóa lịch sử. Sinh viên không thấy/mở/tải học liệu đã tắt; kiểm lại quyền cả khi đổi token tải đã cấp thành nội dung. Staff còn quyền vẫn quản lý/bật lại; học liệu tắt không được chọn/trích làm nguồn AI mới.
+
+`descriptionDocument` dùng shared FormattedText: block PARAGRAPH/UL/OL, align LEFT/CENTER/RIGHT/JUSTIFY, indent 0–6, runs text/bold/italic/underline; không nhận HTML. Tối đa 100 block, 200 run/block, 1.000 run tổng; plain description tối đa 2.000 ký tự. Document là nguồn plain text khi được gửi; cập nhật plain text cũ không đổi nội dung sau trim giữ format hiện có. Bỏ field enabled khi cập nhật giữ trạng thái trước đó.
+
+Migration `materials/V20261109_2200__material_visibility_and_formatted_description.sql` thêm enabled mặc định true, description_document JSONB nullable và index file_id của material_versions. Material/version adapter chuyển JDBC, xóa MaterialRow/MaterialVersionRow; module repository còn JPA. [Kiểm chứng và giới hạn](../../build-and-test/2026-11-09-material-quiz-ui-results.md).

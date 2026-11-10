@@ -141,8 +141,9 @@ class AssignmentSupport {
                 write && (status == AssignmentStatus.SCHEDULED || status == AssignmentStatus.OPEN),
                 write && a.editable(),
                 write && status == AssignmentStatus.DRAFT,
-                // Phát hành thẳng từ bài nháp (yêu cầu 2026-10-22 bỏ trạng thái Đã duyệt).
-                write && a.editable(),
+                // Phát hành thẳng từ bài nháp (yêu cầu 2026-10-22 bỏ trạng thái Đã duyệt); bài của môn là đề mẫu,
+                // không phát hành (yêu cầu 2026-11-09).
+                write && a.editable() && a.scope() == AssignmentScope.CLASS,
                 write,
                 write && (status == AssignmentStatus.CLOSED || status == AssignmentStatus.RETIRED),
                 archived);
