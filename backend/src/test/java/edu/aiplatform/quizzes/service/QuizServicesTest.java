@@ -93,6 +93,7 @@ class QuizServicesTest {
     private final List<AuditEvent> audits = new ArrayList<>();
     private final List<DomainEvent> events = new ArrayList<>();
     private final List<UUID> retiredNotices = new ArrayList<>();
+    private final List<UUID> deletingNotices = new ArrayList<>();
     private boolean subjectActive = true;
     private InMemoryQuizStore store;
     private QuizAuthoringService authoring;
@@ -127,7 +128,18 @@ class QuizServicesTest {
         IClassScope classScope = mock(IClassScope.class);
         when(classScope.listTaughtClasses(teacher.accountId())).thenReturn(List.of(classA, classB));
         ObjectProvider<IQuizLifecycleListener> listeners = mock(ObjectProvider.class);
-        when(listeners.orderedStream()).thenAnswer(call -> Stream.of((IQuizLifecycleListener) retiredNotices::add));
+        IQuizLifecycleListener listener = new IQuizLifecycleListener() {
+            @Override
+            public void onRetired(UUID quizId) {
+                retiredNotices.add(quizId);
+            }
+
+            @Override
+            public void onDeleting(UUID quizId) {
+                deletingNotices.add(quizId);
+            }
+        };
+        when(listeners.orderedStream()).thenAnswer(call -> Stream.of(listener));
 
         QuizAudit audit = new QuizAudit(audits::add, clock);
         QuizAccess access = new QuizAccess(authorization, audit);
@@ -135,7 +147,7 @@ class QuizServicesTest {
                 new ActiveSubjects(subjects));
         support.setAttemptPresence(attempted::contains);
         authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access, audit,
-                clock);
+                clock, listeners);
         papers = new QuizPaperService(store.quizRepository, store.questionRepository, support, clock);
         publication = new QuizPublicationService(store.quizRepository, support, papers, listeners, events::add, audit, clock);
         copies = new QuizCopyService(store.quizRepository, store.questionRepository, classScope, support, access, audit, clock);
@@ -414,6 +426,7 @@ class QuizServicesTest {
                 .as("sửa quiz đang mở tại chỗ, không tạo version").isEqualTo(QuizStatus.OPEN);
         assertThat(api(() -> authoring.delete(teacher, quiz.quiz().id(), open.quiz().version() + 1)).code())
                 .isEqualTo("QUIZ_DELETE_BLOCKED");
+        assertThat(deletingNotices).isEmpty();
     }
 
     @Test
@@ -704,6 +717,7 @@ class QuizServicesTest {
 
         assertThat(store.quizzes).doesNotContainKey(quiz.quiz().id());
         assertThat(store.questions).isEmpty();
+        assertThat(deletingNotices).as("U13 gỡ Quiz khỏi module trước khi xóa").containsExactly(quiz.quiz().id());
         assertThat(audits).extracting(AuditEvent::action).contains("QUIZ_DELETED");
     }
 

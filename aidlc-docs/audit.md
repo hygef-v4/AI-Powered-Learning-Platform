@@ -12362,3 +12362,75 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 **Context**: Construction — documentation sync đợt 2
 
 ---
+
+## Kiểm tra bản f8885746 đã deploy lên VPS chưa
+**Timestamp**: 2026-11-10T07:57:37Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem bản này đã được deploy trên vps chưa cho tôi"
+**AI Response**: "Chưa deploy. CI main run 42778541773: frontend, backend, deploy-script SUCCESS; job images vẫn in_progress nên workflow chưa thành công và VPS chưa thể kéo image f8885746. https://alapedu.online vẫn trả 200 (bản cũ đang chạy). Lệnh SSH đọc platform-deploy status trên VPS bị từ chối quyền nên chưa xác minh trực tiếp SHA đang chạy. Không thay đổi gì trên VPS."
+**Context**: Phát hành staging→main; chờ job images và timer deploy của VPS.
+
+---
+
+## Đọc trạng thái deploy trên VPS qua SSH
+**Timestamp**: 2026-11-10T07:59:08Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Cho phép SSH"
+**AI Response**: "Chỉ đọc qua SSH (platform-deploy status, timer, journalctl, docker ps). VPS đang chạy ba7f1728 (PR #61, deploy tự động 07:12:19Z, OK); backend, worker, frontend healthy. f8885746 chưa deploy vì job images của CI main run 42778541773 còn in_progress; timer chạy mỗi khoảng 2 phút và sẽ tự deploy khi workflow thành công. Không thay đổi gì trên VPS."
+**Context**: Phát hành staging→main; chờ CI images rồi timer tự deploy.
+
+---
+
+## Hỏi cách xóa Quiz tạo nhầm trong danh sách học liệu
+**Timestamp**: 2026-11-10T08:15:05Z
+**Requested by:** Đào Chí Cường
+**User Input**: "phần học liệu này làm sao để xoá, tôi chỉ đang thấy lưu trữ (có vẻ là ẩn học liệu đi để sinh viên không xem được có đúng không), tôi tạo nhầm và muốn xoá hẳn học liệu đó đi thì phải làm sao"
+**AI Response**: "Mục 'dádsad' là Quiz trạng thái RETIRED (Lưu trữ), không phải học liệu. Backend có DELETE quiz chỉ cho Quiz nháp chưa từng phát hành (BR-U10-24), nhưng frontend chưa có nút gọi deleteQuiz. Học liệu thường thì nút Xóa là xóa mềm. Đề xuất thêm nút Xóa cho Quiz nháp."
+**Context**: Hỏi đáp U13/U10, không sửa code.
+
+---
+
+## Thêm nút Xóa cho Quiz nháp chưa phát hành
+**Timestamp**: 2026-11-10T08:15:05Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Thêm nút Xoá"
+**AI Response**: "Thay đổi nhỏ, độ sâu tối thiểu: Quiz DRAFT hiện nút Xóa (thay Lưu trữ) ở danh sách module, sidebar và trang chi tiết Quiz; xóa vĩnh viễn qua DELETE /quizzes/{id}. Backend: thêm hook onDeleting vào IQuizLifecycleListener để U13 gỡ liên kết material_module_quizzes trong cùng transaction (FK không cascade)."
+**Context**: Construction — sửa nhỏ U10/U13.
+
+---
+
+## Xác nhận bản f8885746 đã deploy lên VPS
+**Timestamp**: 2026-11-10T08:15:27Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem bản mới đã được deploy chưa"
+**AI Response**: "Đã deploy. CI main run 42778541773 thành công (frontend, backend, deploy-script, images). VPS (chỉ đọc qua SSH): platform-deploy status Đang chạy f88857465e05, Quay về được ba7f1728, Bỏ qua trống; log 08:05:24Z 'Deploy f88857465e05 xong, mọi dịch vụ khỏe'. backend, worker, frontend chạy image f8885746 và healthy; https://alapedu.online trả 200. Không thay đổi gì trên VPS; chưa kiểm thử thủ công tính năng hoàn tác trên production."
+**Context**: Phát hành staging→main hoàn tất.
+
+---
+
+## Commit nút Xóa Quiz nháp
+**Timestamp**: 2026-11-10T08:24:49Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
+**AI Response**: "Tạo nhánh feat/delete-draft-quiz (--no-track) từ main và commit toàn bộ thay đổi: nút Xóa Quiz nháp (frontend), hook onDeleting gỡ Quiz khỏi module (backend), test và audit. Không push."
+**Context**: Construction — sửa nhỏ U10/U13, commit.
+
+---
+
+## Kiểm tra sẵn sàng đưa lên staging
+**Timestamp**: 2026-11-10T08:45:49Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem có thể đưa lên staging chưa"
+**AI Response**: "Sẵn sàng: origin/staging cùng nội dung với main, nhánh merge fast-forward không conflict. Frontend lint, typecheck, 910 test, build đạt; backend mvn verify 2054 test, 10 lỗi do container thiếu ../infra và ../agent-skills, chạy lại với cả repo thì 78 test đạt. Chưa có integration test xóa Quiz đang gắn module trên PostgreSQL."
+**Context**: Construction — kiểm tra trước khi mở PR vào staging.
+
+---
+
+## Push và mở PR vào staging
+**Timestamp**: 2026-11-10T08:45:49Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Push và mở PR"
+**AI Response**: "Push nhánh feat/delete-draft-quiz (upstream cùng tên) và mở PR vào staging."
+**Context**: Construction — phát hành vào staging.
+
+---
