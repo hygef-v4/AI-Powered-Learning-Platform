@@ -7,6 +7,14 @@ import java.util.*;
 import org.junit.jupiter.api.Test;
 
 class EvaluationTest {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"-0.25,3.75", "0.25,4.25"})
+    void adjustmentsCanUseAnEmptyOptionalNote(String adjustment, String expected) {
+        var grade = evaluation();
+        grade.saveGrade("{}", new BigDecimal("4"), new BigDecimal(adjustment), "", null,
+                null, actor, now);
+        assertThat(grade.score()).isEqualByComparingTo(expected);
+    }
     private final UUID actor = UUID.randomUUID();
     private final Instant now = Instant.parse("2026-10-20T00:00:00Z");
 
@@ -21,10 +29,10 @@ class EvaluationTest {
     }
 
     @Test
-    void saveClampsScoreAndRequiresAdjustmentReason() {
+    void saveClampsScoreAndAllowsOptionalAdjustmentReason() {
         var e = evaluation();
-        assertThatThrownBy(() -> e.saveGrade("{}", new BigDecimal("4"), new BigDecimal("-1"), "", null, null, actor, now))
-                .hasMessageContaining("reason");
+        e.saveGrade("{}", new BigDecimal("4"), new BigDecimal("-1"), null, null, null, actor, now);
+        assertThat(e.score()).isEqualByComparingTo("3.00");
         e.saveGrade("{}", new BigDecimal("4"), new BigDecimal("-1"), "late", "feedback", null, actor, now);
         assertThat(e.score()).isEqualByComparingTo("3.00");
         assertThat(e.status()).isEqualTo(EvaluationStatus.DRAFT);

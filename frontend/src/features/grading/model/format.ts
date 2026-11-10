@@ -1,14 +1,11 @@
 import { ApiError } from "@/shared/api/client";
 
-const FEEDBACK_SENTENCES = new Intl.Segmenter("vi", { granularity: "sentence" });
-
-export function formatFeedbackParagraphs(value: string): string {
-  if (value.includes("\n")) return value;
-  return Array.from(FEEDBACK_SENTENCES.segment(value), ({ segment }) => segment.trim())
-    .filter(Boolean).join("\n\n");
-}
+export const ADJUSTMENT_REASON_MESSAGE = "Nhập lý do khi cộng hoặc trừ điểm.";
 
 export function formatErrorMessage(error: unknown) {
+  if (error instanceof ApiError && error.problem.code === "ADJUSTMENT_REASON_REQUIRED") {
+    return ADJUSTMENT_REASON_MESSAGE;
+  }
   if (error instanceof ApiError && error.problem.status === 409) {
     switch (error.problem.code) {
       case "GRADE_LOCKED":

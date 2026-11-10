@@ -601,3 +601,43 @@ Evidence and limits: construction/build-and-test/2026-11-10-grading-ai-errors.md
 - [x] Final349 connected tests0fail0error0skip; local API/worker refreshed, health200. One live proposal READY7.50 matches12 item scores and section totals2+3+2.5 in storage/UI. Saved grade/state/version/hash unchanged.
 
 Evidence: construction/build-and-test/2026-11-10-grading-derived-total.md. Original tab retained; separate test tab shows unsaved proposal. No official grade action, commit/push or VPS update. Other providers not tested live; full suite/JAR not repeated. Security/Resiliency retained; PBT disabled.
+
+
+## Compact optional manual grading feedback — 2026-11-10
+
+- [x] Remove grade-history/paragraph-split/whole-feedback-clear UI; optional change note collapsed. Manual strengths/improvements and per-item comments/evidence available without AI; blank manual fields accepted, AI completeness/review checks retained.
+- [x] Inline required adjustment reason and readable fallback; autosave pauses after errors and resumes on edits.
+- [x] Final173 frontend/204 backend tests, TypeScript/scoped lint and45 final-polish cases pass. Local API/worker refreshed and health200; DOM checks pass. Browser-test accidental local draft mutation restored to exact7.40 score/non-audit contents via normal saves; version/history correction retained, no finalize/publish.
+
+Evidence and limits: construction/build-and-test/2026-11-10-manual-feedback-parity.md. No commit/push, VPS release, migration, provider call or subagents. Full build/suites/mobile visual verification not repeated; screenshot follow-ups timed out. Security/Resiliency retained; PBT disabled.
+
+
+## Student assignment context columns — 2026-11-10
+
+- [x] Class and subject codes shown across3 tabs; fixed widths/overflow and correct empty/loading spans. Existing filtering/navigation retained.
+- [x] Assignment-work23 tests plus final4 page cases, TypeScript/scoped lint and whitespace pass. No API/data change, account switch, commit/push or deployment. Prior grading work preserved.
+
+Evidence: construction/build-and-test/2026-11-10-student-assignment-context.md. Live student/mobile visual acceptance and full build not repeated. Security/Resiliency retained; PBT disabled.
+
+
+## Quiet30-second grading autosave and one optional note — 2026-11-10
+
+- [x] Mock diagnosis confirms the old1500ms global busy transition replaced score editors without an actual evaluation reload.30-second idle background save retains inputs/focus; view-only renders do not reset the timer.
+- [x] Single-flight/revision/version handling preserves newer edits; explicit Save/Ctrl+S, error pause and group/stale/locked-grade guards retained. One optional change note replaces required adjustment reason, with user-authorized domain rule update and legacy-note preservation.
+- [x] Final176 frontend/206 backend cases, final13 hook cases, TypeScript/scoped lint/whitespace pass. Local API/worker refreshed, health200. All grade mutation tests mocked; no live grade edits, commit/push or VPS deploy.
+
+Evidence: construction/build-and-test/2026-11-10-grading-quiet-autosave.md. Prior pending changes retained. Full build/real multi-session/mobile visual checks not repeated. Security/Resiliency retained; PBT disabled.
+
+## Student published result entry — 2026-11-10
+
+- [x] Confirmed local published8/10 is hidden behind a newer draft plus pre-deadline history filtering. Detail now retains submitted result and a published-only detail link; read-only viewer admits current grading candidate before deadline without older history/drafts. Existing backend ownership/publication controls retained.
+- [x] Connected26 frontend/9 GradebookService cases and final13 affected page cases pass; TypeScript/scoped lint/whitespace pass. No live grade writes, student-account switch, subagents, commit/push or deployment. Prior pending changes retained.
+
+Evidence: construction/build-and-test/2026-11-10-student-published-result-entry.md. Student live visual acceptance/full build not performed. Security/Resiliency retained; PBT disabled.
+
+## Local commits and fresh verification — 2026-11-10
+
+- [x] ee0a3838: compact optional manual feedback, unified optional note and quiet30-second autosave with edit/version preservation.
+- [x]23f9309a: student assignment class/subject columns and regression coverage.
+- [x]4873b931: student published result and detail access alongside newer drafts, preserving private-grade controls.
+- [x] Fresh202 frontend/206 backend architecture cases, TypeScript/scoped lint/whitespace checks pass; cumulative audit/state recorded separately. No push/deploy, live grade mutation or subagents. Full production build/live student visual acceptance not repeated.

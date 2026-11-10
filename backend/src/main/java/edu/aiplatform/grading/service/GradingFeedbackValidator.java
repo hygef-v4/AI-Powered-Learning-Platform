@@ -106,8 +106,9 @@ public class GradingFeedbackValidator {
             UUID itemId = readUuid(itemNode.get("itemId"), "itemId");
             String evidence = readOptionalText(itemNode.get("evidence"), MAX_ITEM_TEXT_LENGTH,
                     "evidence");
-            String reason = readRequiredText(itemNode.get("reason"), MAX_ITEM_TEXT_LENGTH,
-                    "reason");
+            String reason = requireAllItems
+                    ? readRequiredText(itemNode.get("reason"), MAX_ITEM_TEXT_LENGTH, "reason")
+                    : readOptionalText(itemNode.get("reason"), MAX_ITEM_TEXT_LENGTH, "reason");
             String suggestion = readOptionalText(itemNode.get("suggestion"), MAX_ITEM_TEXT_LENGTH,
                     "suggestion");
             String evidenceBlockId = readOptionalText(itemNode.get("evidenceBlockId"),
@@ -178,7 +179,11 @@ public class GradingFeedbackValidator {
             if (!seenItems.add(item.itemId())) {
                 throw createInvalidFeedback("Duplicate rubric item in structuredFeedback");
             }
-            validateRequiredText(item.reason(), MAX_ITEM_TEXT_LENGTH, "reason");
+            if (requireAllItems) {
+                validateRequiredText(item.reason(), MAX_ITEM_TEXT_LENGTH, "reason");
+            } else {
+                validateOptionalText(item.reason(), MAX_ITEM_TEXT_LENGTH, "reason");
+            }
             validateOptionalText(item.evidence(), MAX_ITEM_TEXT_LENGTH, "evidence");
             validateOptionalText(item.suggestion(), MAX_ITEM_TEXT_LENGTH, "suggestion");
             validateOptionalText(item.reviewReason(), MAX_REVIEW_REASON_LENGTH, "reviewReason");
@@ -188,7 +193,7 @@ public class GradingFeedbackValidator {
             if (item.requiresReview() && !hasReviewReason) {
                 throw createInvalidFeedback("requiresReview requires a non-blank reviewReason");
             }
-            if (!hasEvidence && !(item.requiresReview() && hasReviewReason)) {
+            if (requireAllItems && !hasEvidence && !(item.requiresReview() && hasReviewReason)) {
                 throw createInvalidFeedback(
                         "Each item requires observed evidence or an explicit review flag with reason");
             }

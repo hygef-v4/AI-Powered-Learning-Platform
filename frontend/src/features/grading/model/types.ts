@@ -13,7 +13,7 @@ export type StructuredFeedbackItem = {
   rubricId: string;
   itemId: string;
   evidence: string | null;
-  reason: string;
+  reason: string | null;
   suggestion: string | null;
   evidenceBlockId: string | null;
   requiresReview: boolean;
@@ -241,7 +241,6 @@ export type GradingFormValues = {
   acknowledgedReviewItems?: Checks;
   reviewedItemScores?: ItemScores;
   adjustment: string;
-  adjustmentReason: string;
   feedback: string;
   changeReason: string;
   usedProposalId: string | null;
