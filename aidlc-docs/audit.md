@@ -10267,6 +10267,47 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **Context**: [CI run 41482601367](https://github.com/hygef-v4/AI-Powered-Learning-Platform/actions/runs/41482601367) completed successfully on 123fa1c19c4d15b2e3efb92becaaafc96f6a85ca: backend verify and required PostgreSQL guard passed; frontend install/lint/typecheck/tests/build passed; images/deploy skipped. The final documentation head will be checked separately. No PR merge, staging push, force-push or deployment. Unrelated DOCX retained outside commits; only task-owned temporary helpers will be removed after monitoring completes.
 
 ---
+
+## Local Run - Rebuild After Merge
+**Timestamp**: 2026-11-03T09:08:48Z
+**User Input**: "Build lại stack"
+**AI Response**: "Build lại stack local từ 5ff297b2; mọi container healthy, migration 20261102.1200 đã áp dụng, dữ liệu giữ nguyên. Thử lại đăng nhập, bank-tags, chặn phát hành thiếu câu và cảnh báo trên trang quiz: đều đúng. Không đổi code."
+**Context**: Chạy thử sau khi merge origin/staging vào staging local.
+
+---
+
+## Audit Log Redaction
+**Timestamp**: 2026-11-03T09:20:02Z
+**User Input**: "bỏ mật khẩu trong audit log cho tôi"
+**AI Response**: "Thay giá trị mật khẩu trong một dòng User Input bằng [đã ẩn mật khẩu], ở file và ở ba commit chưa push. Riêng dòng này không còn là nguyên văn, theo yêu cầu của người dùng."
+**Context**: Ngoại lệ có chủ ý với quy tắc ghi nguyên văn của audit log.
+
+---
+
+## Merge Readiness Check - Local staging
+**Timestamp**: 2026-11-03T10:02:45Z
+**User Input**: "kiểm tra xem có thể merge vào staging chưa"
+**AI Response**: "Không có commit mới trên origin/staging, không xung đột. Chạy các bước CI trên 841436e5 trong container: xem kết quả ở tin nhắn trả lời. Chưa push."
+**Context**: Kiểm tra trước khi đưa staging local lên remote.
+
+---
+
+## Merge Readiness Check - Progress Question
+**Timestamp**: 2026-11-03T10:02:45Z
+**User Input**: "được chưa"
+**AI Response**: "Báo backend đã đạt, frontend còn đang chạy."
+**Context**: Hỏi tiến độ khi đang chạy kiểm tra CI.
+
+---
+
+## Pull Request - Draw Rule Shortage Warning
+**Timestamp**: 2026-11-03T10:25:37Z
+**User Input**: "Mở PR vào staging"
+**AI Response**: "Tạo nhánh feat/quiz-draw-rule-shortage-warning không theo dõi upstream, commit các mục audit còn lại, push nhánh và mở PR vào staging."
+**Context**: Đưa cảnh báo thiếu câu lên staging qua PR để CI chạy.
+
+---
+
 ## U05/U09/U15 cleanup implementation — 2026-11-04
 
 **Requested by:** Quang Hung
@@ -12075,5 +12116,23 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 **User Input**: "Chạy full test trước"
 **AI Response**: "Chạy trên 63e91aa0. Frontend: vitest 867/867 (126 file), eslint sạch, build thành công, tsc sạch sau khi build tạo lại .next/types. Backend: mvn -B verify trong maven:3.9-eclipse-temurin-17 với Testcontainers, 2.081 test, 0 failure, 0 error, 0 skipped, BUILD SUCCESS. Lần chạy backend đầu có 10 error NoSuchFile (../infra, ../agent-skills) do chỉ mount thư mục backend vào container; mount cả repo thì hết. Đã khởi động Docker Desktop để chạy. Không đổi mã nguồn."
 **Context**: Kiểm thử sau merge; mục audit này chưa commit, chưa push.
+
+---
+
+## Kiểm tra CI sau khi push staging
+**Timestamp**: 2026-11-10T03:25:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra CI cho tôi"
+**AI Response**: "CI không chạy cho 0deea035: workflow chỉ kích hoạt khi push lên main hoặc có pull request. PR #45 (feat/quiz-draw-rule-shortage-warning vào staging) báo CONFLICTING; 4 commit của PR đã nằm trên staging, còn 490512b2 (40 dòng audit) chưa vào."
+**Context**: Kiểm tra CI; không đổi mã nguồn.
+
+---
+
+## Giải quyết conflict của PR #45 với staging
+**Timestamp**: 2026-11-10T03:47:14Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra và solve conflict cho tôi"
+**AI Response**: "Merge origin/staging (0deea035) vào feat/quiz-draw-rule-shortage-warning (490512b2). Conflict duy nhất ở aidlc-docs/audit.md do hai phía cùng nối thêm vào cuối file; giữ cả hai theo thứ tự thời gian: 5 mục ngày 2026-11-03 của nhánh PR trước, rồi các mục từ 2026-11-04 của staging. Kết quả khác origin/staging đúng ở audit.md, mã nguồn giống hệt bản staging đã kiểm thử đầy đủ."
+**Context**: Giải quyết conflict merge trên nhánh PR; chưa push.
 
 ---
