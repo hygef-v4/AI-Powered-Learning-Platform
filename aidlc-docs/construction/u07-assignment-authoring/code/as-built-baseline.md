@@ -8,6 +8,10 @@ assignments sở hữu document/rubric/authoring/AI draft/publication/copy. UI e
 
 **Compatibility fix 2026-11-01:** RubricRepository reads both the current criteria array and the historical object envelope containing `criteria`, preserving decimal points and IDs. Reading never rewrites the stored envelope or its metadata, nor restores historical authoring features. Malformed criteria still fail instead of becoming an empty rubric. This restores U09 gradebook/progress reads for existing envelope rows. Editor tools now have distinct enabled hover/focus backgrounds and pointer cursors; the assignment sticky header stacks above the document toolbar so its dropdown remains accessible.
 
+**Delta 2026-11-09/10 (`9cf5d502`, `594c79e5`, đối chiếu 2026-11-10):** `AiReviseChat` và `AssignmentDraftRevision` thêm chế độ `REVISE` cho `POST /assignments/{id}/ai-drafts`: AI trả thao tác `UPDATE`/`INSERT`/`DELETE` theo mã khối, server ghép vào bản đề đã gửi, áp dụng giữ id, ảnh, sơ đồ và định dạng của khối không đổi; `409 AI_DRAFT_STALE` khi đề đổi trong lúc AI xử lý. Chi tiết ở [F6b](../functional-design/business-logic-model.md) và BR-U07-54, 55. Tests nguồn: `AssignmentAiRevisionTest`, `AiReviseChat.test.tsx`; đợt đối chiếu này không chạy lại.
+
+**Delta 2026-11-10 (PR #60: `bad8df16`, `16f2c8ce`, `cdaf0f46`, `211927b0`, `4ff7a0da`):** bài của môn là đề mẫu không phát hành và được là bài nhóm; copy nhận `title`; AI soạn nháp nhận `templateAssignmentId`; ba endpoint đọc mới (tài liệu của lớp/môn, đề mẫu); bài có chấm không còn số lượt; `SectionNumbering` đánh số câu hỏi bốn tầng. Migration `V20261109_2330__allow_group_subject_templates.sql`, `V20261110_1200__graded_without_attempt_limit.sql`. Rule BR-U07-80…86 và [delta frontend](../functional-design/frontend-components.md).
+
 ## Source và negative-test inventory
 
 | Source | Trách nhiệm |

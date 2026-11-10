@@ -1,9 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArchiveItemDialog, ModuleItemDialog } from "@/features/materials/components/MaterialDialogs";
+import { ArchiveItemDialog, ModuleItemDialog, removalAction, removalMessage } from "@/features/materials/components/MaterialDialogs";
 import { ModuleNeighbours, useModulePlace, useModuleScope } from "@/features/materials/components/ModulePlace";
-import { notifyOutlineChanged, useOutlineChanged } from "@/features/materials/model/outline";
+import { boardHref, notifyOutlineChanged, useOutlineChanged } from "@/features/materials/model/outline";
 import { ApiError } from "@/shared/api/client";
 import { FormattedTextView } from "@/shared/document/FormattedTextView";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
@@ -31,12 +32,13 @@ const validPoints = (value: string) => /^\d+([.,]\d{1,2})?$/.test(value.trim()) 
 
 /**
  * Màn #22 Quiz Detail (UC 48), cùng bố cục trang chi tiết học liệu: tên module nhỏ phía trên tên quiz, Sửa (cùng popup Tạo
- * học liệu) và Lưu trữ như ở danh sách học liệu. Cột trái: cách lập đề, câu hỏi rồi mô tả; cột phải: cấu hình rồi lượt làm
+ * học liệu) và Xóa (Quiz nháp) hoặc Lưu trữ như ở danh sách học liệu. Cột trái: cách lập đề, câu hỏi rồi mô tả; cột phải: cấu hình rồi lượt làm
  * của sinh viên; cuối trang là mục trước / sau trong danh sách module (sidebar cũng là danh sách module). Quiz chưa lưu trữ sửa được tại chỗ, kể cả đang
  * mở (không tạo phiên bản mới). Giảng viên mở quiz của môn từ lớp (`classId`) thì chỉ xem. Quiz sinh đề dùng quy tắc thay cho
  * danh sách câu (BR-U10-17).
  */
 export function QuizDetailPage({ id, classId }: { id: string; classId?: string | null }) {
+  const router = useRouter();
   const [detail, setDetail] = useState<QuizDetail | null>(null);
   const [items, setItems] = useState<DraftItem[]>([]);
   const [settings, setSettings] = useState<SettingsForm | null>(null);
@@ -192,6 +194,8 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
   const editScope = classId ? { kind: "class" as const, classId } : quiz.scope === "CLASS" && quiz.classId
     ? { kind: "class" as const, classId: quiz.classId } : { kind: "subject" as const, subjectId: quiz.subjectId };
   const moduleQuiz = { quizId: quiz.id, title: quiz.title, status: quiz.status, scope: quiz.scope, classId: quiz.classId, canManage: detail.canManage };
+  const moduleItem = { kind: "quiz" as const, quiz: moduleQuiz };
+  const removal = removalAction(moduleItem);
 
   return (
     <>
@@ -211,7 +215,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
           )}
           {editable && <>
             <Button icon="edit" disabled={busy} onClick={() => chooseDialog("edit")} data-testid="quiz-detail-edit">Sửa</Button>
-            <Button variant="danger" icon="archive" disabled={busy} onClick={() => chooseDialog("archive")} data-testid="quiz-detail-archive">Lưu trữ</Button>
+            <Button variant="danger" icon={removal.icon} disabled={busy} onClick={() => chooseDialog("archive")} data-testid="quiz-detail-archive">{removal.label}</Button>
           </>}
         </>}
       />
@@ -286,7 +290,12 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
       {dialog === "edit" && <ModuleItemDialog scope={editScope} moduleId="" item={{ kind: "quiz", quiz: moduleQuiz }}
         onClose={() => setDialog(null)} onSaved={(message) => { setDialog(null); showToast(message); notifyOutlineChanged(); }} />}
       {dialog === "archive" && <ArchiveItemDialog item={{ quiz: moduleQuiz }} classId={classId ?? undefined} onClose={() => setDialog(null)}
-        onSaved={() => { setDialog(null); showToast("Đã lưu trữ quiz", "danger"); notifyOutlineChanged(); }} />}
+        onSaved={(removed) => {
+          setDialog(null);
+          showToast(removalMessage(moduleItem), "danger");
+          notifyOutlineChanged();
+          if (removed) router.push(scope ? boardHref(scope) : "/manager/materials");
+        }} />}
     </>
   );
 }

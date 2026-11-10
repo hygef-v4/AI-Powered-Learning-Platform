@@ -8,6 +8,7 @@ import { errorMessage, formatDateTime, requestRef } from "../model/format";
 import type { Feedback } from "../model/types";
 
 const POLL_MS = 3000;
+const MAX_POLLS = 60;
 
 /** Góp ý AI theo lượt Practice đã nộp (F9, F10, UC 41). */
 export function PracticeFeedbackPanel({ attemptId, partTitles }: {
@@ -36,15 +37,16 @@ export function PracticeFeedbackPanel({ attemptId, partTitles }: {
 
   const hasPending = items?.some((item) => item.status === "PENDING") ?? false;
   useEffect(() => {
-    if (!hasPending || loadError !== null) return;
+    if (!hasPending || loadError !== null || refreshCount >= MAX_POLLS) return;
     const timer = setTimeout(() => setRefreshCount((value) => value + 1), POLL_MS);
     return () => clearTimeout(timer);
-  }, [hasPending, items, loadError]);
+  }, [hasPending, items, loadError, refreshCount]);
 
   async function handleRequestFeedback() {
     setIsRequesting(true);
     setRequestError(null);
     try {
+      setRefreshCount(0);
       const result = await workApi.requestFeedback(attemptId, feedbackRequestRef);
       setItems((previous) => [result, ...(previous ?? []).filter((item) => item.feedbackId !== result.feedbackId)]);
       setFeedbackRequestRef(requestRef());
@@ -119,6 +121,9 @@ export function PracticeFeedbackPanel({ attemptId, partTitles }: {
           )}
         </article>
       ))}
+      {hasPending && refreshCount >= MAX_POLLS && <p role="status" className="text-xs text-muted">
+        AI vẫn đang xử lý. <Button size="sm" onClick={() => setRefreshCount(0)}>Kiểm tra lại góp ý</Button>
+      </p>}
       <p className="text-xs text-muted">
         Bạn có thể quản lý khóa API cá nhân tại{" "}
         <Link href="/ai/connection" className="font-semibold text-primary-ink">Kết nối AI</Link>.

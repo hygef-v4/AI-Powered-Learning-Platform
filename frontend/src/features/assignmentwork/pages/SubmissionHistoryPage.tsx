@@ -7,9 +7,10 @@ import { Alert, Menu, MenuItem } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { attemptImageUrl, exportUrl, workApi } from "../api";
 import { formatPoints, resultByPart, useAttemptResult, type ResultPart } from "../model/attemptResult";
-import { errorMessage, formatDateTime } from "../model/format";
+import { errorMessage, formatDateTime, historyOpen, historyVersions } from "../model/format";
 import { PracticeFeedbackPanel } from "../components/PracticeFeedbackPanel";
-import type { AttemptResult } from "../slots";
+import { studentGradeDistributions, type AttemptResult } from "../slots";
+import { PublishedFeedback, PublishedRubricItems } from "../components/PublishedFeedback";
 import type { Attempt, AttemptSummary, StudentDetail } from "../model/types";
 
 function attemptTime(a: AttemptSummary) {
@@ -76,8 +77,11 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
       .then(([value, list]) => {
         if (controller.signal.aborted) return;
         setDetail(value);
-        // Lịch sử chỉ gồm các lượt đã nộp; lượt đang làm không hiện (lỗi 2026-11-05).
-        const submitted = list.filter((a) => a.status === "SUBMITTED");
+        // Lịch sử chỉ gồm các lượt đã nộp; lượt đang làm không hiện (lỗi 2026-11-05). Bài cá nhân (yêu cầu 2026-11-10):
+        // chỉ mở sau hạn nộp đúng giờ; nộp lại là ghi đè nên chỉ có bản đúng hạn, thêm bản nộp muộn nếu có.
+        const all = list.filter((a) => a.status === "SUBMITTED").sort((a, b) => b.attemptNo - a.attemptNo);
+        const submitted = value.gradingMode === "PRACTICE" ? all
+          : historyOpen(value, all.length > 0) ? historyVersions(all) : [];
         setAttempts(submitted);
         setSelected(submitted.find((a) => a.attemptId === wanted)?.attemptId ?? submitted[0]?.attemptId ?? null);
       }, (e) => { if (!controller.signal.aborted) setError(e); });
@@ -119,7 +123,9 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   );
   if (attempts.length === 0) {
     return shell(<TopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot} />,
-      <p className="rounded-xl border border-line bg-surface p-8 text-center text-[13.5px] text-muted">Bạn chưa nộp lượt nào.</p>);
+      <p className="rounded-xl border border-line bg-surface p-8 text-center text-[13.5px] text-muted">
+        {historyOpen(detail, true) ? "Bạn chưa nộp bài nào." : "Lịch sử nộp bài hiện sau khi đã nộp và qua hạn nộp."}
+      </p>);
   }
 
   // Mới nhất trước: ‹ về lượt trước (cũ hơn), › sang lượt sau (mới hơn).
@@ -168,26 +174,32 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
         titleField={{ text: detail.title, readOnly: true, onText: NOOP }}
         header={kind}
         viewSlot={viewSlot}
-        // Thanh công cụ chỉ còn chuyển qua lại giữa các lượt.
-        toolbarCenter={<>
-          <ToolbarButton icon="chevron_left" title="Lượt trước" aria-label="Lượt trước" disabled={index < 0 || index >= ordered.length - 1}
+        // Chuyển qua lại giữa các bài nộp; chỉ có khi có hơn một bản (bài cá nhân: bản đúng hạn và bản nộp muộn).
+        toolbarCenter={ordered.length < 2 ? undefined : <>
+          <ToolbarButton icon="chevron_left" title="Bài nộp trước" aria-label="Bài nộp trước" disabled={index < 0 || index >= ordered.length - 1}
             onClick={() => setSelected(ordered[index + 1]!.attemptId)} />
-          <select aria-label="Chọn lượt" value={selected ?? ""} onChange={(e) => setSelected(e.target.value)}
+          <select aria-label="Chọn bài nộp" value={selected ?? ""} onChange={(e) => setSelected(e.target.value)}
             className="h-7 rounded-md border border-line bg-surface px-2 font-mono text-xs text-ink outline-none focus:border-focus">
-            {ordered.map((a) => <option key={a.attemptId} value={a.attemptId}>{attemptTime(a)}</option>)}
+            {ordered.map((a) => (
+              <option key={a.attemptId} value={a.attemptId}>
+                {detail.gradingMode === "PRACTICE" ? attemptTime(a) : `${a.late ? "Bản nộp muộn" : "Bản đúng hạn"} – ${attemptTime(a)}`}
+              </option>
+            ))}
           </select>
-          <ToolbarButton icon="chevron_right" title="Lượt sau" aria-label="Lượt sau" disabled={index <= 0}
+          <ToolbarButton icon="chevron_right" title="Bài nộp sau" aria-label="Bài nộp sau" disabled={index <= 0}
             onClick={() => setSelected(ordered[index - 1]!.attemptId)} />
         </>}
       />
     )}
+    {shownResult && studentGradeDistributions.entries().map(({ key, component: Distribution }) =>
+      <Distribution key={key} classId={classId} assignmentId={assignmentId} />)}
     {current?.warnings.length ? <Alert tone="warning">{current.warnings.map((w) => w.message).join("; ")}</Alert> : null}
   </>);
 }
 
 /**
- * Bên lề chỉ có điểm: đầu tài liệu là thẻ tổng điểm; mỗi phần (nhánh con trực tiếp của gốc) một thẻ điểm gắn vào tiêu đề
- * của phần. Tạm thời không có nhận xét; học sinh không thấy các mục rubric.
+ * Bên lề hiển thị điểm và nhận xét đã công bố: đầu tài liệu là thẻ tổng điểm; mỗi phần (nhánh con trực tiếp của gốc) một thẻ điểm gắn vào tiêu đề
+ * của phần, kèm minh chứng và gợi ý theo rubric.
  */
 function scoreCards(result: AttemptResult, attempt: Attempt): DocumentComment[] {
   const blockIds = new Set(attempt.content.blocks.map((block) => block.id));
@@ -220,6 +232,7 @@ function TotalCard({ result }: { result: AttemptResult }) {
         <span className="text-[13px] text-muted">/ {formatPoints(result.maxScore)}</span>
       </p>
       <Meter awarded={result.score} max={result.maxScore} />
+      <div className="mt-3"><PublishedFeedback feedback={result.feedback} summary={result.summary} /></div>
       {result.memberOverride && <p className="mt-2 text-xs text-muted">Điểm cá nhân đã được giảng viên điều chỉnh riêng.</p>}
     </article>
   );
@@ -237,6 +250,7 @@ function PartScoreCard({ part }: { part: ResultPart }) {
         </span>
       </p>
       <Meter awarded={part.awarded} max={part.max} />
+      <PublishedRubricItems items={part.items} />
     </article>
   );
 }

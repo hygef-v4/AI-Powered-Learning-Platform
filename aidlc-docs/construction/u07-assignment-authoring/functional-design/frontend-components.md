@@ -13,6 +13,19 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://claude.ai/artifact/M5RgKNauBqdxM7GUTRwau4), bản 17/10/2026; `#n` là số màn, mã trong ngoặc (ví dụ `a02`) là artboard.
 
+## Popup tạo bài, trình soạn câu hỏi, lịch — 2026-11-10
+
+Nguồn: `211927b0`, `4ff7a0da`, `6a787e3f` (PR #60). Phần này thay mô tả trái ngược của `CreateAssignmentDialog`, `AiDraftDialog`, `DocumentEditor`, `ScheduleForm` và `SubjectAssignmentListPage` ở các bảng bên dưới.
+
+- `CreateAssignmentDialog`: tên bài bắt buộc; "Cách tạo" gồm Đề mới (tệp DOCX mẫu), Đề có sẵn (`SearchPicker` tìm theo tên; đề mẫu của môn đứng đầu, rồi bài các lớp mình dạy) và Tạo từ AI (Ngôn ngữ, Mẫu đề, Tài liệu tham khảo, Yêu cầu, tiến độ AI ngay trong popup); mỗi lựa chọn có một câu gợi ý. API thêm `GET .../assignment-materials`, `GET .../assignments/materials`, `GET .../ai-drafts/templates`; copy gửi kèm `title`. Bỏ `templateStore` (ghi nhớ mẫu đề).
+- `SubjectAssignmentListPage`: tiêu đề "Đề mẫu bài tập", tạo đề mẫu; không có phát hành.
+- `AssignmentFormPage`: bỏ nút Soạn bằng AI trên thanh công cụ; `AiDraftDialog` chỉ mở khi duyệt đề xuất có sẵn; `AiReviseChat` giữ nguyên.
+- `DocumentEditor`: mục là câu hỏi, đánh số `I.`/`I.1.`/`I.1.a.`/`I.1.a.aa.` (`SectionNumber`, bốn tầng); thanh "+ Thêm câu hỏi" và "+ Thêm ý" luôn hiện; nút "+ Câu hỏi" trên thanh công cụ thêm vào cuối khi không có con trỏ; nút Cả trang / Từng phần luôn hiện kể cả khi chưa có câu hỏi; placeholder ngắn cho mô tả, tên câu hỏi, dòng rubric và ô trả lời của sinh viên.
+- `AssignmentSettingsPanel`: gợi ý một dòng và info tip; công tắc phân bố điểm (U09 `GradeDistributionSettings`) không còn ghi "ẩn danh".
+- `ScheduleForm`: ô "Số lượt làm" chỉ hiện với bài Luyện tập; bài có chấm gửi `maxAttempts = null`.
+
+Tests nguồn: `AiDraftDialog.test.tsx`, `assignments.test.tsx`, `outline.test.tsx`, `authoringFlow.test.tsx`, `document.test.tsx`.
+
 ## 1. Màn hình
 
 Theo design G21, đổi theo các yêu cầu 2026-10-21, 2026-10-22: Assignment Form thành một trang tài liệu kiểu Google Docs, không còn thanh bước, popup Rubric Detail và hộp nhập DOCX riêng.
@@ -45,6 +58,7 @@ app/assignments/[id]/     AssignmentFormPage          #26 Assignment Form
   AssignmentSettingsPanel (popup Cài đặt)     Hình thức, Chế độ (Choice), nút gạt Ghi nhận hoạt động
   ScheduleForm (popup Xếp lịch, Đổi lịch)
   AiDraftDialog                               AiSourcePicker (U06), AiTaskStatus (U06), xem trước đề xuất
+  AiReviseChat                                khung chat "Sửa đề bằng AI" trên thẻ rubric Toàn bài (bài DRAFT sửa được)
   RetireDialog, popup Xóa bản nháp
   (vùng AssignmentFormSection cho U12: kiểm tra sẵn sàng của bài nhóm)
   (vùng AssignmentSettingsSection / assignmentSettingsSections cho U09: cài đặt phân bố theo bài–lớp)
@@ -72,6 +86,7 @@ shared/ui/PageHeader                          màn hẹp thì hàng nút xuống
 | `ScheduleForm` | `POST .../publish`, `PATCH .../schedule` | Một trang: tích "Hẹn giờ mở" mới chọn ngày, giờ mở (không tích là mở ngay); Hạn nộp (ngày, giờ; mặc định 23:59); tích "Cho nộp muộn" mới chọn hạn nộp muộn (≤ 30 ngày sau hạn); Số lượt nộp 1–10; nút Phát hành ngay, Xếp lịch hoặc Lưu lịch. Bài đang mở không hiện ngày mở, không đổi số lượt. Lỗi: "Thiếu hạn nộp", "Hạn nộp không sau lúc mở", "Hạn nộp muộn quá 30 ngày sau hạn nộp", "Số lượt ngoài 1–10"; cảnh báo nhóm của U12 kèm ô "Vẫn phát hành" |
 | Xem trước | `GET /api/v1/assignments/{id}` | Đề như người học thấy khi làm bài, chỉ đọc, không có rubric; Quay lại, Xếp lịch |
 | `AiDraftDialog` | `POST .../ai-drafts`, `GET .../ai-drafts/{draftId}`, `:apply`, `:discard` | Yêu cầu*, tài liệu tham khảo, nguồn AI (`AiSourcePicker`); đề xuất các mục kèm rubric gợi ý; Bỏ, Áp dụng |
+| `AiReviseChat` | `POST .../ai-drafts` (`mode: REVISE`), `GET .../ai-drafts/{draftId}`, `:apply`, `:discard` | Ô "Yêu cầu sửa đề" (≤ 4.000 ký tự, Enter gửi, Shift+Enter xuống dòng); lưu thay đổi đang chờ, hỏi kết quả mỗi 2 giây, tối đa 3 phút; tự áp dụng rồi tải lại đề, Ctrl+Z quay lại khung đề trước; hiện tối đa 3 lưu ý; báo khi AI không đổi gì, bản sửa không hợp lệ hoặc đề đã đổi (`AI_DRAFT_STALE`), khi đó đề không đổi |
 | `RetireDialog`, Xóa bản nháp | `/retire`, `DELETE` | Ngưng giao bắt buộc lý do; Xóa chỉ với bản nháp |
 | `AssignmentSummary` | `GET /api/v1/subjects/{subjectId}/assignments` | Số bài tập của môn (đang mở, nháp gồm cả bài `REVIEWED` cũ) |
 

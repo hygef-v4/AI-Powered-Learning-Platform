@@ -5,6 +5,7 @@ import edu.aiplatform.assignments.dto.AssignmentViews;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.assignments.contract.AssignmentScope;
 import edu.aiplatform.assignments.contract.AssignmentStatus;
+import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.assignments.contract.ReadinessResult;
 import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignments.contract.ValidationIssue;
@@ -61,6 +62,11 @@ public class AssignmentPublicationService {
     @Transactional
     public AssignmentViews.Detail publish(Actor actor, UUID id, AssignmentCommands.Publish command) {
         Assignment current = support.lock(actor, id, command.version(), "ASSIGNMENT_PUBLISHED");
+        // Bài của môn chỉ là đề mẫu (yêu cầu 2026-11-09): giảng viên copy về lớp rồi tự giao.
+        if (current.scope() == AssignmentScope.SUBJECT) {
+            throw ApiException.conflict("SUBJECT_TEMPLATE_NOT_PUBLISHABLE",
+                    "Bài của môn là đề mẫu, giảng viên tạo bài ở lớp từ đề mẫu rồi giao");
+        }
         if (!current.editable()) {
             throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ phát hành bài nháp");
         }
@@ -72,12 +78,13 @@ public class AssignmentPublicationService {
         requireOwnerOpen(current);
         Instant now = clock.instant();
         Instant opensAt = command.openNow() ? now : command.opensAt();
-        validateSchedule(opensAt, command.closesAt(), command.lateUntil(), command.maxAttempts(), now);
+        Integer maxAttempts = attemptsFor(current, command.maxAttempts());
+        validateSchedule(opensAt, command.closesAt(), command.lateUntil(), maxAttempts, current.gradingMode(), now);
         if (current.submissionMode() == SubmissionMode.GROUP) {
             requireGroupsReady(current.classId(), command.confirmUngroupedStudents());
         }
         Assignment saved = assignments.save(current.withSchedule(AssignmentStatus.SCHEDULED, opensAt,
-                command.closesAt(), command.lateUntil(), command.maxAttempts(), now));
+                command.closesAt(), command.lateUntil(), maxAttempts, now));
         rubrics.lockAll(saved.id(), now);
         audit.success(actor, "ASSIGNMENT_PUBLISHED", saved.id(), AssignmentAudit.details("scope", saved.scope(),
                 "classId", saved.classId(), "subjectId", saved.subjectId(), "opensAt", opensAt,
@@ -94,13 +101,14 @@ public class AssignmentPublicationService {
         Assignment current = support.lock(actor, id, command.version(), "ASSIGNMENT_SCHEDULE_CHANGED");
         Instant now = clock.instant();
         Instant opensAt = command.opensAt() == null ? current.opensAt() : command.opensAt();
-        Integer maxAttempts = command.maxAttempts() == null ? current.maxAttempts() : command.maxAttempts();
+        Integer maxAttempts = attemptsFor(current, command.maxAttempts() == null ? current.maxAttempts() : command.maxAttempts());
         Instant closesAt = command.closesAt() == null ? current.closesAt() : command.closesAt();
         Instant lateUntil = command.lateUntil();
         switch (current.status()) {
-            case SCHEDULED -> validateSchedule(opensAt, closesAt, lateUntil, maxAttempts, now);
+            case SCHEDULED -> validateSchedule(opensAt, closesAt, lateUntil, maxAttempts, current.gradingMode(), now);
             case OPEN -> {
-                if (!opensAt.equals(current.opensAt()) || !Objects.equals(maxAttempts, current.maxAttempts())) {
+                if (!opensAt.equals(current.opensAt()) || (Assignment.limitsAttempts(current.gradingMode())
+                        && !Objects.equals(maxAttempts, current.maxAttempts()))) {
                     throw ApiException.badRequest("SCHEDULE_OPEN_LOCKED",
                             "Bài đang mở chỉ kéo dài hạn nộp, không đổi ngày mở và số lượt");
                 }
@@ -175,10 +183,19 @@ public class AssignmentPublicationService {
         }
     }
 
-    /** BR-U07-33: {@code opensAt < closesAt}, hạn chưa qua, lượt 1–10, {@code closesAt < lateUntil ≤ closesAt + 30 ngày}. */
+    /** Bài có chấm không lưu số lượt (yêu cầu 2026-11-10): nộp không giới hạn khi còn hạn. */
+    private static Integer attemptsFor(Assignment assignment, Integer requested) {
+        return Assignment.limitsAttempts(assignment.gradingMode()) ? requested : null;
+    }
+
+    /**
+     * BR-U07-33: {@code opensAt < closesAt}, hạn chưa qua, {@code closesAt < lateUntil ≤ closesAt + 30 ngày}; bài Luyện tập
+     * thêm số lượt 1–10, bài có chấm không có số lượt (yêu cầu 2026-11-10).
+     */
     static void validateSchedule(Instant opensAt, Instant closesAt, Instant lateUntil, Integer maxAttempts,
-                                 Instant now) {
-        if (maxAttempts == null || maxAttempts < 1 || maxAttempts > Assignment.ATTEMPTS_MAX) {
+                                 GradingMode gradingMode, Instant now) {
+        if (Assignment.limitsAttempts(gradingMode)
+                && (maxAttempts == null || maxAttempts < 1 || maxAttempts > Assignment.ATTEMPTS_MAX)) {
             throw ApiException.badRequest("SCHEDULE_INVALID", "Số lượt nộp tối đa từ 1 đến 10");
         }
         validateDeadlines(opensAt, closesAt, lateUntil, now);

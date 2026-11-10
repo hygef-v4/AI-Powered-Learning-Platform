@@ -147,6 +147,14 @@ public class MaterialModuleRepositoryAdapter implements IMaterialModuleRepositor
                 == 1;
     }
 
+    @Override
+    @Transactional(timeout = 10)
+    public void unlinkQuiz(UUID quizId) {
+        em.createNativeQuery("delete from material_module_quizzes where quiz_id=?1")
+                .setParameter(1, quizId)
+                .executeUpdate();
+    }
+
     private int count(String sql, UUID id) {
         return ((Number) em.createNativeQuery(sql).setParameter(1, id).getSingleResult())
                 .intValue();

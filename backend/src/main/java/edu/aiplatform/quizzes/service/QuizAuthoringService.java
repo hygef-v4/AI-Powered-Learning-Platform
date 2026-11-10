@@ -10,6 +10,7 @@ import edu.aiplatform.quizzes.service.QuizViews.QuizDetail;
 import edu.aiplatform.quizzes.service.QuizViews.QuizPage;
 import edu.aiplatform.quizzes.service.QuizViews.QuizRow;
 import edu.aiplatform.quizzes.service.QuizViews.RandomPreview;
+import edu.aiplatform.quizzes.contract.IQuizLifecycleListener;
 import edu.aiplatform.quizzes.contract.QuizScope;
 import edu.aiplatform.quizzes.contract.QuizSettings;
 import edu.aiplatform.quizzes.contract.QuizStatus;
@@ -36,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,15 +59,18 @@ public class QuizAuthoringService {
     private final QuizAccess access;
     private final QuizAudit audit;
     private final Clock clock;
+    private final ObjectProvider<IQuizLifecycleListener> listeners;
 
     public QuizAuthoringService(IQuizRepository quizzes, IQuestionRepository questions, QuizSupport support,
-                                QuizAccess access, QuizAudit audit, Clock clock) {
+                                QuizAccess access, QuizAudit audit, Clock clock,
+                                ObjectProvider<IQuizLifecycleListener> listeners) {
         this.quizzes = quizzes;
         this.questions = questions;
         this.support = support;
         this.access = access;
         this.audit = audit;
         this.clock = clock;
+        this.listeners = listeners;
     }
 
     /** Thông tin, cài đặt Quiz (F7 bước 5). */
@@ -289,6 +294,7 @@ public class QuizAuthoringService {
             throw ApiException.conflict("QUIZ_DELETE_BLOCKED", "Quiz đã phát hành không xóa được; hãy ngưng quiz");
         }
         QuizSupport.requireVersion(quiz, version);
+        listeners.orderedStream().forEach(listener -> listener.onDeleting(id));
         if (!quizzes.delete(id, version)) {
             throw QuizSupport.versionConflict();
         }

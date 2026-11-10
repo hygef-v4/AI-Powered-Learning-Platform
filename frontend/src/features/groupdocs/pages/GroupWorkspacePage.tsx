@@ -1,4 +1,5 @@
 "use client";
+import { studentAssignmentFeedback } from "@/features/assignmentwork/slots";
 
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -376,7 +377,11 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
           </div>
         </div>
       ) : (
-        <GroupSubmissionTab view={view} />
+        <>
+          <GroupSubmissionTab view={view} />
+          {view.role.member && studentAssignmentFeedback.entries().map(({ key, component: Feedback }) =>
+            <Feedback key={key} classId={view.classId} assignmentId={view.assignmentId} />)}
+        </>
       )}
 
       {editing && (

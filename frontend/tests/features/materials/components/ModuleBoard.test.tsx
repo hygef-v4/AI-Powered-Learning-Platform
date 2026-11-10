@@ -153,6 +153,37 @@ it("students open materials and quizzes in the class context without management 
   expect(apiFetch).toHaveBeenCalledWith("/api/v1/me/classes/class1/modules", expect.any(Object));
 });
 
+it("deletes a draft quiz permanently but archives a published one", async () => {
+  const quiz = (quizId: string, title: string, status: "DRAFT" | "OPEN") => ({
+    quizId,
+    title,
+    status,
+    scope: "SUBJECT" as const,
+    classId: null,
+    canManage: true,
+  });
+  const modules = [
+    mod("m1", "Module 1", { quizzes: [quiz("q1", "Quiz tạo nhầm", "DRAFT"), quiz("q2", "Quiz chương 1", "OPEN")] }),
+  ];
+  vi.mocked(apiFetch).mockImplementation(async (path, init) => {
+    if (init?.method && init.method !== "GET") return undefined;
+    if (String(path).startsWith("/api/v1/quizzes/q1")) return { quiz: { version: 4 } };
+    return String(path).includes("/modules") ? modules : [];
+  });
+  render(<ModuleBoard scope={{ kind: "subject", subjectId: "subject" }} />);
+  await screen.findByText("Quiz tạo nhầm");
+  expect(screen.getByRole("button", { name: "Lưu trữ Quiz chương 1" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Lưu trữ Quiz tạo nhầm" })).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "Xóa Quiz tạo nhầm" }));
+  expect(screen.getByText(/xóa vĩnh viễn/)).toBeInTheDocument();
+  fireEvent.click(screen.getByTestId("material-archive-confirm"));
+  await waitFor(() =>
+    expect(apiFetch).toHaveBeenCalledWith("/api/v1/quizzes/q1?version=4", { method: "DELETE" }),
+  );
+  expect(apiFetch).not.toHaveBeenCalledWith("/api/v1/quizzes/q1/retire", expect.anything());
+});
+
 it("creates a module from the page header", async () => {
   backend([], []);
   render(<ModuleBoard scope={{ kind: "subject", subjectId: "subject" }} header />);

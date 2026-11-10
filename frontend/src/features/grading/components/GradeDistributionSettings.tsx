@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, Switch } from "@/shared/ui";
+import { Alert, Button, InfoTip, Switch } from "@/shared/ui";
 import { gradingApi, type GradeDistributionVisibility } from "../api";
 
 export function GradeDistributionSettings({ classId, assignmentId, gradingMode }: {
@@ -52,8 +52,11 @@ function VisibilitySetting({ classId, assignmentId }: { classId: string; assignm
   if (!error && !value?.canEdit) return null;
   return <div className="flex flex-col gap-1" data-testid="grade-distribution-settings">
     {value?.canEdit && <>
-      <Switch checked={value.enabled} label="Cho sinh viên xem phổ điểm ẩn danh" ariaLabel="Cho sinh viên xem phổ điểm ẩn danh"
-        disabled={busy || !!error} onChange={(enabled) => handleSave(enabled)} />
+      <span className="flex items-center gap-1">
+        <Switch checked={value.enabled} label="Cho sinh viên xem phổ điểm" ariaLabel="Cho sinh viên xem phổ điểm"
+          disabled={busy || !!error} onChange={(enabled) => handleSave(enabled)} />
+        <InfoTip label="Phổ điểm" text="Sinh viên xem được phổ điểm của cả lớp." />
+      </span>
       {/* Công tắc tự cho thấy đang lưu; dòng báo chỉ cho trình đọc màn hình để thẻ không xô lên xuống khi lưu. */}
       <p className="sr-only" role="status">{busy ? "Đang lưu cài đặt phổ điểm…" : ""}</p>
     </>}

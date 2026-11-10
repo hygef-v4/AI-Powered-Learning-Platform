@@ -1477,3 +1477,11 @@ Given đề xuất đang mở, When bấm Thu gọn, Then đóng phần xem theo
 ## Source-grounded AI proposal acceptance correction — 2026-11-10
 
 US-AIG-001/002: Given AI nhận tài liệu và trả đánh giá lệch nguồn, When xử lý kết quả, Then không đưa câu lệch sang READY/chấp nhận; tạo lại tối đa một task chỉ dùng prompt mặc định và tài liệu đã kiểm lại quyền. Given lượt tạo lại vẫn báo lệch, Then FAILED và proposal rỗng. Cảnh báo được giữ, không chạy lặp vô hạn; có thể tốn thêm một task AI. Legacy READY drafts không được sửa ngầm; đánh giá model không phải bằng chứng tuyệt đối về chất lượng. [Kiểm chứng](../../construction/build-and-test/2026-11-10-ai-source-grounding-fix.md).
+
+## Grading remediation acceptance amendment — 2026-11-10
+
+The approved continuation refines US-GRD-002/003/004/005 and US-RPT-001 without creating new roles or screens. Teacher review must expose partial points, explanations and acknowledgements; a newly filled AI draft alone must not save or publish a grade. Group/member draft corrections preserve a coherent rubric/adjustment breakdown and append history; official grades remain locked and survive group resubmission. A group refresh that changes receipts must clear old marks.
+
+Students can read their published teacher feedback, structured summary, item evidence and improvement suggestions, including group results. Anonymous distributions remain subject to the existing sample/bucket thresholds. Current quiz/class access, per-attempt score privacy and bounded Practice polling have automated regression coverage; live browser/provider acceptance is separate.
+
+[Continuation and evidence](../../construction/plans/code-generation-plan/2026-11-10-grading-remediation-continuation.md).

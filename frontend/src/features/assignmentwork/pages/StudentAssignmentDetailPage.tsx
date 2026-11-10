@@ -7,7 +7,7 @@ import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Alert, Button, ButtonLink, PageHeader, Pill, Section } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { workApi } from "../api";
-import { errorMessage, formatDateTime } from "../model/format";
+import { errorMessage, formatDateTime, historyOpen } from "../model/format";
 import { ResultSummaryCard } from "../components/ResultSummaryCard";
 import { assignmentMaterialSections, groupWorkEntries } from "../slots";
 import { myStatusLabels, myStatusTones, type AttemptSummary, type StudentDetail } from "../model/types";
@@ -80,10 +80,13 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
   const status = row ? rowStatus(row) : null;
   const latest = detail.latestAttempt;
   const statusKey = (a: { status: string; late: boolean }) => (a.status === "IN_PROGRESS" ? "IN_PROGRESS" : a.late ? "SUBMITTED_LATE" : "SUBMITTED");
-  // Danh sách lượt: đủ các lượt khi tải được lịch sử, không thì lượt mới nhất.
-  const rowsOfAttempts = attempts && attempts.length > 0
-    ? [...attempts].sort((a, b) => b.attemptNo - a.attemptNo)
-    : latest ? [{ ...latest, attemptNo: null }] : [];
+  // Bài luyện tập: mỗi lượt một dòng, có bộ đếm lượt (chỉ ở trang này). Bài cá nhân (yêu cầu 2026-11-10): chỉ một bài
+  // nộp, nộp lại là ghi đè bản cũ, không đếm số lần: một dòng là bản đang sửa nếu có, không thì bản nộp mới nhất.
+  const practice = detail.gradingMode === "PRACTICE";
+  const newestFirst = attempts && attempts.length > 0 ? [...attempts].sort((a, b) => b.attemptNo - a.attemptNo) : null;
+  const rowsOfAttempts = practice
+    ? newestFirst ?? (latest ? [{ ...latest, attemptNo: null }] : [])
+    : (newestFirst ? newestFirst.slice(0, 1) : latest ? [latest] : []).map((a) => ({ ...a, attemptNo: null }));
   return (
     <div className="flex flex-col gap-4">
       <PageHeader backHref={back} title={detail.title} breadcrumb={[{ label: "Bài tập", href: back }, { label: detail.title }]} />
@@ -107,10 +110,13 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
           <SlotOutlet slot={assignmentMaterialSections} props={{ classId, materialIds: detail.referenceMaterialIds }} />
           {latest?.graded && <ResultSummaryCard attemptId={latest.attemptId} />}
         </div>
-        <Section title="Làm bài" actions={<span className="text-[13px] text-muted tabular-nums" title="Lượt đã dùng / tối đa">{detail.attemptsUsed}/{detail.maxAttempts ?? 1}</span>}>
+        {/* Chỉ bài luyện tập có bộ đếm lượt; bài cá nhân, nhóm không đếm số lần nộp (yêu cầu 2026-11-10). */}
+        <Section title="Làm bài" actions={practice
+          ? <span className="text-[13px] text-muted tabular-nums" title="Lượt đã dùng / tối đa">{detail.attemptsUsed}/{detail.maxAttempts ?? 1} lượt</span>
+          : undefined}>
           {rowsOfAttempts.length > 0 && (
             // Mỗi lượt một dòng; bấm để mở lịch sử nộp bài đúng lượt đó (lượt đang làm thì mở trang làm bài).
-            <ul aria-label="Các lượt làm" className="-mx-2 flex flex-col">
+            <ul aria-label={practice ? "Các lượt làm" : "Bài nộp"} className="-mx-2 flex flex-col">
               {rowsOfAttempts.map((a) => {
                 const key = statusKey(a);
                 const href = a.status === "IN_PROGRESS" ? `/attempts/${encodeURIComponent(a.attemptId)}` : `${history}&attempt=${encodeURIComponent(a.attemptId)}`;
@@ -118,7 +124,7 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
                   <li key={a.attemptId}>
                     <Link href={href} className="row-interactive flex items-center justify-between gap-3 rounded-lg px-2 py-2 text-[13px] hover:bg-shell">
                       <span className="flex min-w-0 flex-col">
-                        {a.attemptNo !== null && <span className="font-semibold text-ink">Lượt {a.attemptNo}</span>}
+                        {practice && a.attemptNo !== null && <span className="font-semibold text-ink">Lượt {a.attemptNo}</span>}
                         <span className="font-mono text-xs text-muted">{formatDateTime(a.submittedAt ?? a.lastSavedAt ?? a.startedAt)}</span>
                       </span>
                       <Pill tone={myStatusTones[key]}>{myStatusLabels[key]}</Pill>
@@ -133,10 +139,15 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
           ) : detail.inProgressAttemptId ? (
             <ButtonLink variant="primary" href={`/attempts/${encodeURIComponent(detail.inProgressAttemptId)}`}>Tiếp tục làm bài</ButtonLink>
           ) : detail.canStart ? (
-            // Chỉ khi còn hạn nộp (hoặc còn hạn nộp trễ) và còn lượt.
-            <Button variant="primary" onClick={() => void start()} disabled={starting} data-testid="start-attempt">Bắt đầu làm bài</Button>
+            // Còn hạn nộp (hoặc hạn nộp trễ); bài luyện tập còn lượt. Bài cá nhân đã nộp thì sửa bài đã nộp rồi nộp lại (ghi đè).
+            <Button variant="primary" onClick={() => void start()} disabled={starting} data-testid="start-attempt">
+              {!practice && detail.attemptsUsed > 0 ? "Sửa và nộp lại" : "Bắt đầu làm bài"}
+            </Button>
           ) : null}
-          <ButtonLink href={history}>Xem lịch sử nộp bài</ButtonLink>
+          {/* Bài cá nhân, nhóm: lịch sử chỉ có khi đã nộp và qua hạn nộp đúng giờ (yêu cầu 2026-11-10). */}
+          {historyOpen(detail, submitted || !!attempts?.some((a) => a.status === "SUBMITTED")) && (
+            <ButtonLink href={history}>Xem lịch sử nộp bài</ButtonLink>
+          )}
         </Section>
       </div>
     </div>

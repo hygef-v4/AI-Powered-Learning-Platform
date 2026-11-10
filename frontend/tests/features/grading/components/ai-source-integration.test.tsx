@@ -51,6 +51,6 @@ describe("U09 AI requests choose their source automatically", () => {
     expect(await screen.findByText("Ước tính khoảng 5.123 token.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }));
     await waitFor(() => expect(mocks.requestBatch).toHaveBeenCalledExactlyOnceWith(items, { requestRef: expect.any(String) }));
-    expect(await screen.findByText(/QUEUED/)).toBeInTheDocument();
+    expect(await screen.findByText(/Đã gửi yêu cầu AI/)).toBeInTheDocument();
   });
 });

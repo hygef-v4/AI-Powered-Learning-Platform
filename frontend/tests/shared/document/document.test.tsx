@@ -8,6 +8,7 @@ import { DocumentViewer } from "@/shared/document/DocumentViewer";
 import { readRuns, runsHtml, setCaret } from "@/shared/document/RichText";
 import { colorRange, joinLines, runLines, splitRuns, toggleFlagRange } from "@/shared/document/runs";
 import { RubricNote, RubricViewer } from "@/shared/document/RubricViewer";
+import { SectionNumber } from "@/shared/document/SectionNumber";
 import {
   atomicItems,
   computeParts,
@@ -28,6 +29,15 @@ const doc: DocumentModel = {
 };
 
 describe("DocumentEditor", () => {
+  it("measures a wrapped toolbar for the sticky feedback offset", () => {
+    const height = vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(76);
+    try {
+      render(<DocumentEditor document={doc} onChange={vi.fn()} mode="student" diagramEnabled={false} readOnly toolbarCenter={<button>Lịch sử</button>} />);
+      expect(screen.getByTestId("document-editor").style.getPropertyValue("--doc-toolbar-height")).toBe("76px");
+    } finally {
+      height.mockRestore();
+    }
+  });
   it("workspace: each question has its answer box, no per-question diagram button; a diagram opens on click", () => {
     const second = { id: "q2", origin: "TEACHER" as const, type: "HEADING" as const, content: { style: "H1" as const, text: "Câu 2" } };
     const drawn = { id: "d1", origin: "STUDENT" as const, type: "DIAGRAM" as const,
@@ -43,7 +53,7 @@ describe("DocumentEditor", () => {
     fireEvent.click(within(screen.getByTestId("answer-t1")).getByRole("button", { name: "Vẽ sơ đồ" }));
     expect(screen.getByTestId("drawio-panel")).toBeInTheDocument();
     // A diagram-only answer still offers an explicit way to add explanation text.
-    expect(within(screen.getByTestId("answer-t1")).getByTestId("write-part-t1")).toHaveTextContent("Bấm để bắt đầu viết bài làm");
+    expect(within(screen.getByTestId("answer-t1")).getByTestId("write-part-t1")).toHaveTextContent("Viết câu trả lời…");
   });
 
   it("workspace: guidance is opt-in and cannot enable editing for read-only or author mode", () => {
@@ -61,6 +71,8 @@ describe("DocumentEditor", () => {
     rerender(<DocumentEditor document={next} onChange={onChange} mode="student" diagramEnabled={false} answerGuidance />);
     const field = screen.getByRole("textbox", { name: "Đoạn văn" });
     expect(field).toHaveTextContent("");
+    // Dòng bài làm đầu tiên còn trống có chữ gợi ý ngắn như của giảng viên (yêu cầu 2026-11-10).
+    expect(field).toHaveAttribute("data-placeholder", "Viết câu trả lời…");
     expect(next.blocks[2]).toMatchObject({ content: { runs: [{ text: "" }] } });
   });
 
@@ -144,7 +156,7 @@ describe("DocumentEditor", () => {
     });
     expect(screen.queryByLabelText("Mã")).toBeNull();
     expect(screen.queryByLabelText("Kiểu đoạn")).toBeNull();
-    expect(screen.getByTestId("add-block")).toHaveTextContent("Mục");
+    expect(screen.getByTestId("add-block")).toHaveTextContent("Câu hỏi");
     fireEvent.click(screen.getByTestId("add-block"));
     expect(screen.queryByRole("menuitem")).toBeNull();
   });
@@ -159,21 +171,21 @@ describe("DocumentEditor", () => {
     expect(document.querySelector('[data-testid^="add-sibling"]')).toBeNull();
     expect(problemBox.querySelector('[data-section="q1"]')).not.toBeNull();
     expect(screen.getByTestId("tail-q1")).toBeInTheDocument();
-    expect(screen.getByTestId("number-t1")).toHaveTextContent("1.");
-    expect(screen.getByTestId("number-q1")).toHaveTextContent("1.1.");
-    expect(screen.queryByTestId("quick-add-t1")).toBeNull();
+    expect(screen.getByTestId("number-t1")).toHaveTextContent("I.");
+    expect(screen.getByTestId("number-q1")).toHaveTextContent("I.1.");
     fireEvent.focus(within(screen.getByTestId("tail-end-t1")).getByLabelText("Dòng cuối"));
     const problemRow = screen.getByTestId("quick-add-t1");
     expect(problemRow.parentElement).toBe(problemBox);
     expect(problemRow.previousElementSibling).toBe(screen.getByTestId("tail-end-t1"));
     expect(screen.getByTestId("tail-end-t1").previousElementSibling).toBe(problemBox.querySelector('[data-section="q1"]'));
     expect(screen.getByTestId("tail-end-DOCUMENT")).toBeInTheDocument();
-    expect(within(problemRow).getAllByRole("button").map((b) => b.getAttribute("aria-label"))).toEqual(["Thêm mục"]);
-    fireEvent.click(within(problemRow).getByRole("button", { name: "Thêm mục" }));
+    expect(within(problemRow).getAllByRole("button").map((b) => b.getAttribute("aria-label"))).toEqual(["Thêm ý"]);
+    fireEvent.click(within(problemRow).getByRole("button", { name: "Thêm ý" }));
     expect((onChange.mock.calls[0]![0] as DocumentModel).blocks.map((b) => b.type === "HEADING" ? b.content.style : b.id)).toEqual(["H1", "t2", "H2", "H2"]);
+    // "+" luôn hiện ở đáy mỗi ô văn bản, kể cả khi con trỏ ở mục khác (yêu cầu 2026-11-10).
     fireEvent.focus(within(screen.getByTestId("tail-q1")).getByLabelText("Dòng cuối"));
-    expect(screen.queryByTestId("quick-add-t1")).toBeNull();
-    fireEvent.click(within(screen.getByTestId("quick-add-q1")).getByRole("button", { name: "Thêm mục" }));
+    expect(screen.getByTestId("quick-add-t1")).toBeInTheDocument();
+    fireEvent.click(within(screen.getByTestId("quick-add-q1")).getByRole("button", { name: "Thêm ý" }));
     expect((onChange.mock.calls[1]![0] as DocumentModel).blocks.map((b) => b.type === "HEADING" ? b.content.style : b.id)).toEqual(["H1", "t2", "H2", "H3"]);
   });
 
@@ -184,10 +196,10 @@ describe("DocumentEditor", () => {
       { id: "a1", origin: "TEACHER", type: "PARAGRAPH", content: { runs: [{ text: "Nội dung câu 1" }] } },
       { id: "p2", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Đề 2" } }] };
     render(<DocumentEditor document={withQuestion} onChange={onChange} mode="author" diagramEnabled={false} />);
-    expect(screen.getByTestId("number-p2")).toHaveTextContent("2.");
-    fireEvent.click(within(document.querySelector<HTMLElement>('[data-section="q1"]')!).getByRole("button", { name: "Xóa mục" }));
+    expect(screen.getByTestId("number-p2")).toHaveTextContent("II.");
+    fireEvent.click(within(document.querySelector<HTMLElement>('[data-section="q1"]')!).getByRole("button", { name: "Xóa câu hỏi" }));
     expect((onChange.mock.calls[0]![0] as DocumentModel).blocks.map((b) => b.id)).toEqual(["t1", "t2", "p2"]);
-    fireEvent.click(within(document.querySelector<HTMLElement>('[data-section="t1"]')!).getAllByRole("button", { name: "Xóa mục" })[0]!);
+    fireEvent.click(within(document.querySelector<HTMLElement>('[data-section="t1"]')!).getAllByRole("button", { name: "Xóa câu hỏi" })[0]!);
     expect((onChange.mock.calls[1]![0] as DocumentModel).blocks.map((b) => b.id)).toEqual(["p2"]);
   });
 
@@ -210,7 +222,7 @@ describe("DocumentEditor", () => {
     const onChange = vi.fn();
     const { rerender } = render(<DocumentEditor document={{ blocks: [] }} onChange={onChange} mode="author" diagramEnabled={false} />);
     fireEvent.focus(within(screen.getByTestId("tail-DOCUMENT")).getByLabelText("Dòng cuối"));
-    expect(within(screen.getByTestId("quick-add-DOCUMENT")).getAllByRole("button").map((b) => b.getAttribute("aria-label"))).toEqual(["Thêm mục"]);
+    expect(within(screen.getByTestId("quick-add-DOCUMENT")).getAllByRole("button").map((b) => b.getAttribute("aria-label"))).toEqual(["Thêm câu hỏi"]);
     const two: DocumentModel = { blocks: [
       { id: "p1", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "Đề 1" } },
       { id: "q1", origin: "TEACHER", type: "HEADING", content: { style: "H2", text: "Câu A" } },
@@ -277,9 +289,12 @@ describe("DocumentEditor", () => {
     rerender(<DocumentEditor document={ai} onChange={onChange} mode="author" diagramEnabled={false} externalEdit={{ id: 1, before: doc }} />);
     fireEvent.keyDown(screen.getByTestId("document-editor"), { key: "z", ctrlKey: true });
     expect(onChange).toHaveBeenLastCalledWith(doc);
+    // Trang soạn đề nhận ra bản trước AI, bản AI theo tham chiếu để trả lại rubric và hướng dẫn của bản đó.
+    expect(onChange.mock.lastCall![0]).toBe(doc);
     rerender(<DocumentEditor document={doc} onChange={onChange} mode="author" diagramEnabled={false} externalEdit={{ id: 1, before: doc }} />);
     fireEvent.keyDown(screen.getByTestId("document-editor"), { key: "y", ctrlKey: true });
     expect(onChange).toHaveBeenLastCalledWith(ai);
+    expect(onChange.mock.lastCall![0]).toBe(ai);
   });
 
   it("chỉ đọc có nút giữa (lịch sử nộp bài) vẫn đổi được Cả trang / Từng phần", () => {
@@ -621,6 +636,7 @@ describe("CommentRail", () => {
     render(<Rail />);
     const card = screen.getByText("Rubric 1").closest("[data-comment]");
     expect(card).toHaveClass("sticky");
+    expect(card).toHaveStyle({ top: "calc(var(--doc-toolbar-top, 4rem) + var(--doc-toolbar-height, 2.25rem) + 0.5rem)" });
     expect(card?.parentElement).toHaveAttribute("data-comment-band", "h1");
   });
 });
@@ -645,5 +661,20 @@ describe("decodeSvgDataUri", () => {
     expect(decodeSvgDataUri(`data:image/svg+xml;base64,${base64}`)).toBe(svg);
     expect(decodeSvgDataUri(`data:image/svg+xml,${encodeURIComponent(svg)}`)).toBe(svg);
     expect(decodeSvgDataUri("data:image/png;base64,AAAA")).toBeNull();
+  });
+});
+
+describe("chế độ xem và số câu hỏi (yêu cầu 2026-11-10)", () => {
+  it("bài chưa có câu hỏi vẫn chuyển được sang Từng phần", () => {
+    render(<DocumentEditor document={{ blocks: [] }} onChange={vi.fn()} mode="author" diagramEnabled={false} />);
+    fireEvent.click(screen.getByRole("radio", { name: "Từng phần" }));
+    expect(screen.getByRole("radio", { name: "Từng phần" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByTestId("step-nav")).toBeInTheDocument();
+  });
+
+  it("phần số La Mã viết kiểu chữ có chân, phần sau giữ nguyên", () => {
+    const { container } = render(<p><SectionNumber value="IV.2.a." /></p>);
+    expect(container).toHaveTextContent("IV.2.a.");
+    expect(container.querySelector(".font-roman")).toHaveTextContent(/^IV$/);
   });
 });

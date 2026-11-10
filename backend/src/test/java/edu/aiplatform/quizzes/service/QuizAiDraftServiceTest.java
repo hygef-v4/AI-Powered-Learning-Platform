@@ -332,7 +332,7 @@ class QuizAiDraftServiceTest {
         QuizSupport support = new QuizSupport(store.quizRepository, store.questionRepository, classes, access, active);
         QuizReferenceMaterials materials = new QuizReferenceMaterials(u13, support, access);
         authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access, audit,
-                clock);
+                clock, listeners);
         publication = new QuizPublicationService(store.quizRepository, support,
                 new QuizPaperService(store.quizRepository, store.questionRepository, support, clock), listeners,
                 event -> { }, audit, clock);

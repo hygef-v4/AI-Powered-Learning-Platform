@@ -36,6 +36,13 @@ public class AssignmentAiDraftController {
         return drafts.get(actor, id, draftId);
     }
 
+    /** Đề mẫu của môn để chọn trong popup soạn bằng AI. */
+    @GetMapping("/templates")
+    public List<AssignmentViews.AiTemplateOption> listTemplates(@AuthenticationPrincipal Actor actor,
+                                                               @PathVariable UUID id) {
+        return drafts.listTemplates(actor, id);
+    }
+
     @PostMapping(value = "/sources:preview", consumes = "application/json")
     public List<AssignmentViews.AiSourcePreview> previewSources(@AuthenticationPrincipal Actor actor,
                                                                @PathVariable UUID id,

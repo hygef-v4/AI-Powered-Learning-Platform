@@ -1,9 +1,9 @@
-import type { DocumentModel, Run } from "@/shared/document/types";
+import { sectionNumber, type DocumentModel, type Run } from "@/shared/document/types";
 
 const runsText = (runs: Run[] | undefined) => (runs ?? []).map((run) => run.text).join("");
 
 /**
- * Chữ của mẫu đề (DOCX đã nhập thành khung) gửi cho AI (yêu cầu 2026-11-05): mục đánh số 1., 1.1. như trình soạn,
+ * Chữ của mẫu đề (DOCX đã nhập thành khung) gửi cho AI (yêu cầu 2026-11-05): mục đánh số I., I.1., I.1.a. như trình soạn,
  * đoạn, danh sách, bảng thành dòng chữ. {@code questionCount}: số mục ngoài cùng, tức số câu hỏi của mẫu.
  */
 export function templateText(document: DocumentModel): { text: string; questionCount: number } {
@@ -21,7 +21,7 @@ export function templateText(document: DocumentModel): { text: string; questionC
         counters[depth - 1] = (counters[depth - 1] ?? 0) + 1;
         counters.length = depth;
         if (depth === 1) questionCount++;
-        lines.push(`${counters.join(".")}. ${block.content.text ?? ""}`.trimEnd());
+        lines.push(`${sectionNumber(counters)} ${block.content.text ?? ""}`.trimEnd());
         break;
       }
       case "PARAGRAPH":

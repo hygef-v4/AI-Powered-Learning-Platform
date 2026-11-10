@@ -2,7 +2,7 @@
 
 // U13: khi đang xem một học liệu hay một Quiz (trang soạn của người quản lý, trang làm của sinh viên), sidebar đổi thành
 // danh sách module của môn (học liệu và Quiz từng module), đầu sidebar chỉ có lối về trang Học liệu, không có ô chọn.
-// Người quản lý thêm học liệu vào module, sửa, xóa (Quiz: lưu trữ) ngay trên sidebar. Các module nằm chung một thẻ trắng,
+// Người quản lý thêm học liệu vào module, sửa, xóa (Quiz đã phát hành: lưu trữ) ngay trên sidebar. Các module nằm chung một thẻ trắng,
 // ngăn nhau bằng một đường kẻ; bấm đầu module (mũi tên cuối hàng) để thu gọn / mở.
 
 import Link from "next/link";
@@ -14,7 +14,7 @@ import { showErrorToast, showToast } from "@/shared/ui";
 import { cx } from "@/shared/ui/cx";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import { contextQuery, materialPath } from "../api";
-import { ArchiveItemDialog, ModuleItemDialog } from "./MaterialDialogs";
+import { ArchiveItemDialog, ModuleItemDialog, removalAction, removalMessage } from "./MaterialDialogs";
 import { CollapseBody, canEditItem, reopen } from "./ModuleBoard";
 import { useModuleCollapse } from "../model/moduleCollapse";
 import { useModuleScope } from "./ModulePlace";
@@ -237,9 +237,9 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                                   onClick={() => setDialog({ type: "item", module, item })}
                                 />
                                 <ItemTool
-                                  icon={item.kind === "quiz" ? "archive" : "trash"}
+                                  icon={removalAction(item).icon}
                                   danger
-                                  label={`${item.kind === "quiz" ? "Lưu trữ" : "Xóa"} ${itemTitle(item)}`}
+                                  label={`${removalAction(item).label} ${itemTitle(item)}`}
                                   onClick={() => setDialog({ type: "archive", item, active })}
                                 />
                               </span>
@@ -277,10 +277,9 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
           }
           classId={classId}
           onClose={() => setDialog(null)}
-          onSaved={() => {
-            const removed = dialog.item.kind === "material";
+          onSaved={(removed) => {
             setDialog(null);
-            showToast(removed ? "Đã xóa học liệu" : "Đã lưu trữ quiz", "danger");
+            showToast(removalMessage(dialog.item), "danger");
             notifyOutlineChanged();
             if (removed && dialog.active && scope) router.push(boardHref(scope));
           }}

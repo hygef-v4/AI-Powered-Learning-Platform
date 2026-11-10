@@ -31,7 +31,7 @@ public final class PartCalculator {
         }
         List<DocumentPart> parts = new ArrayList<>();
         Deque<Heading> branch = new ArrayDeque<>();
-        // Số thứ tự như trên trang (1., 1.1.): mục chưa đặt tên gọi bằng số của nó (yêu cầu 2026-11-04).
+        // Số thứ tự như trên trang (I., I.1., I.1.a.): mục chưa đặt tên gọi bằng số của nó (yêu cầu 2026-11-04, 2026-11-10).
         List<Integer> counters = new ArrayList<>();
         for (int i = 0; i < headings.size(); i++) {
             Heading raw = headings.get(i);
@@ -47,7 +47,7 @@ public final class PartCalculator {
             } else {
                 counters.add(1);
             }
-            String number = String.join(".", counters.stream().map(String::valueOf).toList()) + ".";
+            String number = SectionNumbering.of(counters);
             Heading heading = new Heading(raw.id(), raw.level(), raw.title().isEmpty() ? number : raw.title());
             List<UUID> ancestors = branch.stream().map(Heading::id).toList();
             List<String> path = new ArrayList<>(branch.stream().map(Heading::title).toList());

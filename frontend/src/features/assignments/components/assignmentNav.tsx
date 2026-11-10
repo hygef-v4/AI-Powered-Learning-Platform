@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { FADE_LABEL, type NavContext, type NavLocation } from "@/shared/layout/navigation";
 import { BackLink } from "@/shared/navigation/BackLink";
 import { Icon, cx } from "@/shared/ui";
-import { MAX_SECTION_DEPTH } from "@/shared/document";
+import { MAX_SECTION_DEPTH, SectionNumber } from "@/shared/document";
 import { addPart, showPart, useAssignmentOutline } from "../model/outline";
 
 const WHEN_OPEN = "md:group-data-[collapsed]/sidebar:hidden";
@@ -40,7 +40,7 @@ function AddButton({ label, onClick }: { label: string; onClick: () => void }) {
 /**
  * Sidebar của bài, cùng kiểu sidebar học liệu: lối về trang Bài tập ở đầu, rồi thẻ trắng có header Mục lục (nút "+" thêm mục
  * ngoài cùng) và các mục trên một dòng: mục ngoài cùng in đậm, mục con chữ thường lùi vào theo tầng, đoạn văn không ghi; mỗi
- * hàng có "+" thêm mục con (tới tầng 1.1.1.). Thu gọn sidebar thì chỉ còn số (1., 1.1.). Tài liệu nhóm (U12) dùng lại.
+ * hàng có "+" thêm mục con (tới tầng I.1.a.aa.). Thu gọn sidebar thì chỉ còn số (I., I.1.). Tài liệu nhóm (U12) dùng lại.
  */
 export function AssignmentNav() {
   const outline = useAssignmentOutline();
@@ -65,10 +65,10 @@ export function AssignmentNav() {
         {outline && (
           <div className="flex flex-col rounded-xl border border-line bg-surface p-1 shadow-[0_1px_2px_rgb(60_38_14/0.06)]">
           <div className={cx(WHEN_OPEN, "flex items-center justify-between gap-2 border-b border-line py-1 pr-1 pl-2.5")}>
-            <span className="text-xs font-semibold tracking-[.04em] text-muted uppercase">Mục lục</span>
-            {outline.editable && <AddButton label="Thêm mục" onClick={() => addPart(null)} />}
+            <span className="text-xs font-semibold tracking-[.04em] text-muted uppercase">Câu hỏi</span>
+            {outline.editable && <AddButton label="Thêm câu hỏi" onClick={() => addPart(null)} />}
           </div>
-          {outline.entries.length === 0 && <span className={cx("px-2.5 py-2 text-[12.5px] text-faint", FADE_LABEL)}>Bài chưa có mục</span>}
+          {outline.entries.length === 0 && <span className={cx("px-2.5 py-2 text-[12.5px] text-faint", FADE_LABEL)}>Bài chưa có câu hỏi</span>}
           {outline.entries.length > 0 && (
           <ol className="flex flex-col gap-0.5 pt-1" data-testid="assignment-outline">
             {outline.entries.map((entry) => {
@@ -86,10 +86,12 @@ export function AssignmentNav() {
                     className={cx("flex min-w-0 flex-1 items-center rounded-lg py-1.5 text-left text-[13px] whitespace-nowrap transition-colors",
                       problem ? "px-2.5 font-semibold text-ink" : loose ? "px-2.5 text-body" : "pr-2.5 text-body md:group-data-[collapsed]/sidebar:!pl-2.5",
                       active ? "bg-primary-soft" : "hover:bg-sunken")}>
-                    <span className={cx(WHEN_COLLAPSED, "w-full text-center font-mono text-xs tabular-nums", problem ? "font-bold" : "text-muted")}>{loose ? "…" : entry.number}</span>
-                    <span className={cx(WHEN_OPEN, "min-w-0 truncate")}>{title}</span>
+                    <span className={cx(WHEN_COLLAPSED, "w-full text-center font-mono text-xs tabular-nums", problem ? "font-bold" : "text-muted")}>{loose ? "…" : <SectionNumber value={entry.number} />}</span>
+                    <span className={cx(WHEN_OPEN, "min-w-0 truncate")}>
+                      {loose ? title : <><SectionNumber value={entry.number} />{entry.title ? ` ${entry.title}` : ""}</>}
+                    </span>
                   </button>
-                  {outline.editable && !loose && entry.depth < MAX_SECTION_DEPTH && <AddButton label={`Thêm mục con vào ${entry.number}`} onClick={() => addPart(entry.id)} />}
+                  {outline.editable && !loose && entry.depth < MAX_SECTION_DEPTH && <AddButton label={`Thêm ý vào ${entry.number}`} onClick={() => addPart(entry.id)} />}
                 </li>
               );
             })}

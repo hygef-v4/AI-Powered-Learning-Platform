@@ -242,28 +242,41 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
   );
 }
 
-/** Chọn sidebar cho trang đang mở: ngữ cảnh môn hay lớp nếu khớp, không thì menu của role. */
+/**
+ * Chọn sidebar cho trang đang mở: ngữ cảnh thay menu (đề cương bài, module học liệu) nếu khớp; không thì menu của role, mỗi
+ * mục có cây (môn, lớp) luôn kèm nhánh của nó (yêu cầu 2026-11-10), nhánh của trang đang mở thì biết môn, lớp đang mở.
+ */
 function ContextualNav({ resolve, nav, label, pathname, collapsed }: { resolve: (at: NavLocation) => NavContext | null; nav: NavItem[]; label: string; pathname: string; collapsed: boolean }) {
   const params = useSearchParams();
   const found = resolve({ pathname, search: new URLSearchParams(params?.toString() ?? "") });
-  if (!found) return <NavList key="role" label={label} items={nav} pathname={pathname} collapsed={collapsed} />;
-  if (found.parentHref) {
-    return (
-      <NavList key="role" label={label} items={nav} pathname={pathname} collapsed={collapsed} branch={{ href: found.parentHref, content: found.header }} />
-    );
+  if (found && !found.parentHref) {
+    return <NavList key={found.key} label={found.label} items={found.items} pathname={pathname} header={found.header} collapsed={collapsed} />;
   }
-  return <NavList key={found.key} label={found.label} items={found.items} pathname={pathname} header={found.header} collapsed={collapsed} />;
+  const branches = new Map<string, NavBranch>();
+  for (const item of nav) {
+    // Nhánh của mục chưa mở trang nào bên trong: dựng như đang ở trang danh sách của mục đó (chưa chọn môn, lớp).
+    const here = found?.parentHref === item.href ? found : resolve({ pathname: item.href, search: new URLSearchParams() });
+    if (here?.parentHref === item.href) branches.set(item.href, { content: here.header, current: here === found });
+  }
+  return <NavList key="role" label={label} items={nav} pathname={pathname} collapsed={collapsed} branches={branches} />;
 }
 
-type NavBranch = { href: string; content: ReactNode };
+/** `current`: trang đang mở nằm trong nhánh này. */
+type NavBranch = { content: ReactNode; current: boolean };
 
 /**
  * Danh sách mục sidebar; đổi sang ngữ cảnh khác thì dựng lại để mờ vào. Sidebar thu gọn (chỉ màn rộng) thì còn biểu
- * tượng; tên mục hiện thành nhãn nổi bên phải khi rê chuột hoặc focus bằng bàn phím, trình đọc màn hình vẫn đọc tên mục. `branch`: nhánh cây (môn, lớp) mở ngay dưới mục cha; mục
- * cha chỉ tô như mục đang mở khi đang ở đúng trang của nó hoặc khi sidebar thu gọn (nhánh bị ẩn).
+ * tượng; tên mục hiện thành nhãn nổi bên phải khi rê chuột hoặc focus bằng bàn phím, trình đọc màn hình vẫn đọc tên mục.
+ * `branches`: nhánh cây (môn, lớp) dưới mục cha. Mũi tên ở
+ * cuối hàng mục cha chỉ mở, đóng nhánh, không chuyển trang (yêu cầu 2026-11-10), để chọn môn, lớp rồi mục bên trong; bấm tên
+ * mục cha thì sang trang danh sách như mọi mục khác và mở nhánh. Không thêm nút nào. Mục cha chỉ tô như mục đang mở khi đang ở
+ * đúng trang của nó hoặc khi sidebar thu gọn.
  */
-function NavList({ label, items, pathname, header, collapsed, branch }: { label: string; items: NavItem[]; pathname: string; header?: ReactNode; collapsed: boolean; branch?: NavBranch }) {
-  const current = branch ? branch.href : activeHref(items, pathname);
+function NavList({ label, items, pathname, header, collapsed, branches }: { label: string; items: NavItem[]; pathname: string; header?: ReactNode; collapsed: boolean; branches?: Map<string, NavBranch> }) {
+  const inBranch = [...(branches?.entries() ?? [])].find(([, branch]) => branch.current)?.[0];
+  const current = inBranch ?? activeHref(items, pathname);
+  const [toggled, setToggled] = useState<Record<string, boolean>>({});
+  const isOpen = (href: string) => toggled[href] ?? (href === inBranch || pathname === href);
   const [tip, setTip] = useState<{ label: string; top: number } | null>(null);
 
   /** Nhãn nổi đặt theo sidebar (nằm ngoài vùng cuộn của danh sách nên không bị cắt). */
@@ -274,7 +287,6 @@ function NavList({ label, items, pathname, header, collapsed, branch }: { label:
     const base = event.currentTarget.closest("[data-app-sidebar]")?.getBoundingClientRect().top ?? 0;
     setTip({ label, top: row.top - base + row.height / 2 });
   }
-
   // Phần đầu (lối về, ô chọn môn hay lớp) nằm ngoài vùng cuộn để danh sách thả xuống của ô chọn tràn ra được khi sidebar thu gọn.
   return (
     <div className="flex min-h-0 flex-1 animate-fade flex-col">
@@ -282,7 +294,9 @@ function NavList({ label, items, pathname, header, collapsed, branch }: { label:
       {/* Ngữ cảnh tự vẽ danh sách trong phần đầu (ví dụ danh sách module) thì không có mục riêng. */}
       {items.length > 0 && <nav aria-label={label} className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-x-hidden overflow-y-auto">
       {items.map((item, index) => {
-        const isParent = branch?.href === item.href;
+        const branch = branches?.get(item.href);
+        const isParent = !!branch;
+        const open = isParent && isOpen(item.href);
         // Mục cha của nhánh khi đang ở trang con: chỉ tô khi sidebar thu gọn (màn rộng), lúc mục con bị ẩn.
         const ancestor = isParent && pathname !== item.href;
         const active = item.active ?? item.href === current;
@@ -294,6 +308,7 @@ function NavList({ label, items, pathname, header, collapsed, branch }: { label:
                 {heading}
               </span>
             )}
+            <div className="relative">
             <Link
               href={item.href}
               onMouseEnter={(event) => showTip(event, item.label)}
@@ -301,6 +316,7 @@ function NavList({ label, items, pathname, header, collapsed, branch }: { label:
               onFocus={(event) => showTip(event, item.label)}
               onBlur={() => setTip(null)}
               aria-current={active && !ancestor ? "page" : undefined}
+              onClick={isParent ? () => setToggled((previous) => ({ ...previous, [item.href]: true })) : undefined}
               className={cx(
                 "group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] font-semibold whitespace-nowrap transition-colors duration-200",
                 ancestor
@@ -326,9 +342,18 @@ function NavList({ label, items, pathname, header, collapsed, branch }: { label:
                 className={cx("shrink-0 transition-colors", active ? "text-primary-ink" : "text-muted group-hover:text-ink")}
               />
               <span className={FADE_LABEL}>{item.label}</span>
-              {isParent && <Icon name="expand_more" size={14} className={cx("ml-auto shrink-0 text-muted", FADE_LABEL)} />}
             </Link>
-            {isParent && branch?.content}
+            {/* Mũi tên cuối hàng: chỉ mở, đóng nhánh; nằm đè lên hàng nên trông như một phần của mục, không phải nút thêm. */}
+            {isParent && (
+              <button type="button" aria-expanded={open} aria-label={`${open ? "Thu gọn" : "Mở"} ${item.label}`}
+                title={open ? "Thu gọn" : "Mở"}
+                onClick={() => setToggled((previous) => ({ ...previous, [item.href]: !open }))}
+                className="absolute top-1/2 right-1 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface hover:text-ink md:group-data-[collapsed]/sidebar:hidden">
+                <Icon name="expand_more" size={16} className={cx("transition-transform duration-200", !open && "-rotate-90")} />
+              </button>
+            )}
+            </div>
+            {open && branch?.content}
           </Fragment>
         );
       })}

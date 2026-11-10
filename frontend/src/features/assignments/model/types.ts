@@ -189,7 +189,8 @@ export type ScheduleInput = {
   openNow?: boolean;
   closesAt: string;
   lateUntil?: string | null;
-  maxAttempts: number;
+  /** Chỉ bài Luyện tập; bài có chấm gửi null (yêu cầu 2026-11-10). */
+  maxAttempts: number | null;
   confirmUngroupedStudents?: boolean;
 };
 

@@ -39,10 +39,17 @@ public class SubjectAssignmentController {
         return copies.subjectCopySources(actor, subjectId);
     }
 
+    /** Tài liệu tham khảo cho Tạo từ AI trong popup tạo đề mẫu, lúc bài chưa có. */
+    @GetMapping("/materials")
+    public List<AssignmentViews.Material> materials(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId) {
+        return authoring.selectableMaterialsForSubject(actor, subjectId);
+    }
+
     @PostMapping(value = "/copies", consumes = "application/json")
     public ResponseEntity<AssignmentViews.Detail> copy(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
                                                        @RequestBody AssignmentRequests.Copy body) {
-        AssignmentViews.Detail created = copies.copyToSubject(actor, subjectId, body.sourceAssignmentId());
+        AssignmentViews.Detail created = copies.copyToSubject(actor, subjectId, body.sourceAssignmentId(),
+                body.title());
         return ResponseEntity.created(URI.create("/api/v1/assignments/" + created.id())).body(created);
     }
 

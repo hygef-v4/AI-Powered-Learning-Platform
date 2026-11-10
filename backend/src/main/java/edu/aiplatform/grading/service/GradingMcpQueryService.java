@@ -281,6 +281,17 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         String type = in.text("type", null), proposalState = in.text("proposalStatus", null);
         if (type != null && !Set.of("ATTEMPT", "GROUP_DOCUMENT").contains(type))
             throw McpInput.invalid();
+        var matchingProposalIds = proposalState == null ? Set.<UUID>of()
+                : gradingProposalService.listStoredProposals(new ArrayList<>(byId.keySet())).stream()
+                        .filter(p -> {
+                            var evaluation = byId.get(p.evaluationId);
+                            boolean stale = evaluation != null && Set.of("PENDING", "READY").contains(p.status)
+                                    && (!Objects.equals(p.submissionHash, evaluation.submissionHash)
+                                            || !Objects.equals(p.rubricFingerprint, evaluation.rubricSnapshot)
+                                            || evaluation.state == edu.aiplatform.grading.model.EvaluationStatus.SUPERSEDED);
+                            return proposalState.equals(stale ? "STALE" : p.status);
+                        }).map(p -> p.evaluationId)
+                        .collect(java.util.stream.Collectors.toSet());
         for (var row : listing.rows()) {
             Map<String, Object> mapped = new LinkedHashMap<>();
             mapped.put("student", row.student());
@@ -296,8 +307,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
                 if (e.kind == EvaluationKind.MEMBER
                         || (type != null && !type.equals(e.kind.name())))
                     continue;
-                if (proposalState != null && gradingProposalService.listProposals(actor, e.id)
-                        .stream().noneMatch(p -> proposalState.equals(p.status)))
+                if (proposalState != null && !matchingProposalIds.contains(e.id))
                     continue;
                 mapped.put("submissionRef", Map.of("kind", e.kind.name(), "id",
                         (e.kind == EvaluationKind.ATTEMPT ? e.attemptId : e.groupDocumentId),
@@ -315,15 +325,18 @@ public class GradingMcpQueryService implements IMcpToolProvider {
     /** Builds an aggregate summary of published grades for the assignment. */
     private Map<String, Object> buildAssignmentSummary(Actor actor, UUID classId, UUID assignmentId,
             int limit) {
-        var page = submissionReviewService.listSubmissions(actor, classId, assignmentId, "ALL",
-                null, 1, limit);
+        var listing = submissionReviewService.listRows(actor, classId, assignmentId, "ALL", null);
+        var page = new GradingViews.SubmissionPage(listing.rows().stream().limit(limit).toList(),
+                listing.rows().size(), 1, limit, listing.summary(), listing.closesAt());
+        var evaluations = new HashMap<UUID, edu.aiplatform.grading.model.Evaluation>();
+        listing.evaluations().forEach(e -> evaluations.put(e.id, e));
         Map<String, Long> strengths = new HashMap<>(), improvements = new HashMap<>();
         int covered = 0;
         for (var row : page.rows()) {
             if (row.evaluationId() == null)
                 continue;
-            var evaluation = submissionReviewService.loadEvaluation(actor, row.evaluationId())
-                    .evaluation();
+            var evaluation = evaluations.get(row.evaluationId());
+            if (evaluation == null) continue;
             if (evaluation.kind == EvaluationKind.MEMBER || evaluation.structuredFeedback == null
                     || evaluation.structuredFeedback.summary() == null)
                 continue;

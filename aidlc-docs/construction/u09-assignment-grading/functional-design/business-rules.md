@@ -59,6 +59,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U09-30 | Giảng viên chọn nguồn: API chung trong quota, API cá nhân (qua `IAiTask` của U06) hoặc agent MCP (đọc bài qua `read_authorized_submission`, ghi qua `record_grading_proposal`). Hết quota không tự chuyển nguồn. | UC 43, FR-012 |
 | BR-U09-31 | Prompt gồm hướng dẫn, khung, rubric (id và nội dung từng mục) và bài nộp dạng chữ, sơ đồ ở dạng XML rút gọn (`IDocumentModel`); không có tên, email người học. Điểm đóng góp thành viên không gửi AI. | FR-008 |
 | BR-U09-32 | AI proposal có scores/structured feedback/evidence theo item rubric, đúng schema/version/submissionHash. Trùng hoặc thiếu item, bằng chứng sai và payload quá giới hạn bị từ chối. Proposal không tự finalize/publish; nhiều proposal có version và stale state. | US-GRD-002 S1, S2 |
+| BR-U09-36 | Phần bỏ trống (2026-11-09): phần lá không có bài làm của người học (chỉ còn nội dung của đề hoặc rỗng) không gửi AI; prompt và schema chỉ gồm khối và rubric của phần có bài làm. Kết quả AI được ghép với điểm 0 cho rubric của phần trống rồi chuẩn hóa (checks, item scores, structured feedback) trước khi kiểm theo BR-U09-32. Mọi phần đều trống thì server tạo ngay đề xuất `READY` toàn điểm 0, không tạo task AI và không trừ quota. Đề xuất 0 điểm vẫn chỉ là đề xuất theo BR-U09-33. | UC 43 |
 | BR-U09-33 | Đề xuất chỉ để tham khảo: "Dùng đề xuất" điền sẵn checklist và nhận xét; giảng viên sửa rồi lưu như chấm tay. Điểm khác đề xuất không cần lý do; đề xuất gốc vẫn truy vết được. AI không lưu, không chốt, không công bố điểm. | US-GRD-003 S1, S2 |
 | BR-U09-34 | Chấm hàng loạt bằng AI: chọn nhiều bài `PENDING` hoặc `DRAFT` trong Submission Detail và một nguồn; mỗi bài một task; trả kết quả từng mục (đã gửi, hết quota, ngoài quyền, không chấm được). Giảng viên xác nhận từng bài trong Grading Workspace. | UC 43 |
 | BR-U09-35 | AI lỗi hoặc đề xuất sai thì bài nộp không mất, không có điểm giả; giảng viên chấm tay hoặc thử lại. | US-GRD-002 S2 |
@@ -76,7 +77,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U09-50 | U12 nộp lại trong hạn thì dùng lại root/member hiện có, reset điểm, rubric checks, nhận xét, điều chỉnh và dữ liệu AI review, trở về PENDING kể cả trước đó FINALIZED/PUBLISHED. Điểm trước mất hiệu lực; lịch sử/audit vẫn chỉ đọc. Đây là reset do nộp mới, không phải cho giảng viên sửa điểm đã chốt. Không đổi DB schema/index. | Quyết định mới nhất của người dùng 2026-11-02 |
+| BR-U09-50 | U12 nộp lại: root/member chưa chốt reset về PENDING cho receipt mới; root FINALIZED/PUBLISHED giữ nguyên receipt, điểm và snapshot đã chốt. Khi chuyển nhóm, MEMBER chưa chốt của nhóm cũ thành SUPERSEDED; không xóa điểm official. | Kế hoạch remediation được duyệt 2026-11-10 |
 | BR-U09-51 | Tài liệu nhóm chấm theo rubric từng phần; điểm thành viên mặc định bằng điểm nhóm. Chỉ sửa đóng góp khi root và thành viên hiện hành chưa chốt; FINALIZED/PUBLISHED khóa cả hai theo BR-U09-42. Lý do sửa draft tùy chọn; không có công thức ghép điểm. | Quyết định người dùng 2026-11-02 |
 
 ## 7. Sổ điểm, xuất, phân bố (UC 45)
@@ -95,3 +96,13 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U09-70 | Audit: GRADE_SAVED, GRADE_FINALIZED, GRADE_PUBLISHED, GRADE_CHANGED (điểm thành viên chưa chốt; lý do tùy chọn), AI_GRADING_REQUESTED, GRADEBOOK_EXPORTED. Không ghi nội dung bài nộp. GRADE_CHANGED của điểm official trong lịch sử giữ nguyên, không tạo mới. | FR-014, BR-U09-42 |
 | BR-U09-71 | Sửa đánh giá phải kèm `version`; lệch thì `409`. U01, U05, U07, U08 không trả lời thì từ chối (fail closed). | SEC-002 |
 | BR-U09-72 | Xin gia hạn cá nhân, phúc khảo và kiểm tra tương đồng bài nộp nằm ngoài phạm vi. | Phạm vi 2026-09-25 |
+
+## Remediation amendment — 2026-11-10
+
+Draft score changes append the previous score/checks/feedback/item scores to history. Effective adjustment is the bounded final score minus rubric score; members inherit group adjustment and retain individual override totals when the group draft changes. Member override reasons remain optional; changing official grades remains forbidden.
+
+AI output is validated without fabricated missing evidence/scores, clamping, erasing unknown evidence IDs, or rounding invalid precision into valid points. Empty-part zero entries are deterministic; merging them preserves a supplied AI total for validation. Group saves validate current document/class/assignment/hash and evidence anchors. Request references accept up to 200 characters.
+
+Provider output supplies item scores and feedback; it omits redundant full-credit checks. After empty-part merging, the existing normalizer derives checks from item scores before strict validation. The full MCP proposal schema still requires consistent explicit checks. This prevents an AI-generated checkbox from contradicting its zero/partial score without relaxing score or evidence validation (2026-11-10 live rejection follow-up).
+
+MCP proposal filtering reads metadata in bulk and derives STALE for changed receipts/rubrics without locking or polling every proposal. Learning summaries aggregate the authorized listing rather than loading every complete evaluation. Progress reuses class roster, contacts and evaluations once, preserving individual/group counting and both original permissions.

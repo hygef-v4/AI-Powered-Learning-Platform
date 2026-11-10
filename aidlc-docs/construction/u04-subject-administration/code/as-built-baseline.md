@@ -4,6 +4,8 @@ Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths
 
 subjects có quản trị danh sách/chi tiết/create/update, manager assignment, archive/reopen và version guards. UI tại admin/subjects; Subject Detail của Admin không cấp quyền chấm hoặc sửa lớp. Các handoff raw paths bị mất được thay bằng baseline này, không tạo lại nội dung approval giả.
 
+**Delta 2026-11-10 (`0df689df`):** `SubjectExceptionHandler` ghi log exception gốc khi yêu cầu Admin môn học lỗi ngoài dự kiến; response vẫn là `SUBJECT_INTERNAL_ERROR` chung, các ánh xạ lỗi quyền, lưu trữ và validation không đổi. [Chẩn đoán](../../build-and-test/2026-11-09-admin-subjects-runtime-diagnosis.md).
+
 ## Source và negative-test inventory
 
 | Source | Trách nhiệm |

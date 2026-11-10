@@ -1,0 +1,68 @@
+{
+  "recordedAt": "2026-11-10T04:24:57.656604+00:00",
+  "requestedBy": "Quang Hung",
+  "branch": "fix/u05-u09-u15",
+  "baseline": "d0e56561",
+  "originalStash": {
+    "sha": "e9dd4bdd8c380162cb15690d4862bbf8b97232ef",
+    "retained": true
+  },
+  "sourceSnapshot": {
+    "files": 1637,
+    "sha256": "a5cac50bf455c50cd2930019f15ac684dc60712fc88969eb11299d7c60275eb8",
+    "unchangedAfterVerification": true
+  },
+  "backend": {
+    "command": "mvn -f backend/pom.xml -Dfile.encoding=UTF-8 verify",
+    "exitCode": 0,
+    "tests": 2095,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "suites": 250,
+    "log": ".tmp/grading-backend-full-final.log",
+    "packaged": true,
+    "excludedHistoricalReport": "AssignmentAiRevisionTest: 9 tests, not part of final Maven run",
+    "jarSha256": "21b0f1c3bc17ea8ab695f3a805afa8f093d2852929acaaee90a11a468549bab8"
+  },
+  "requiredGuard": {
+    "command": "./scripts/assert-required-backend-tests.ps1",
+    "exitCode": 0,
+    "suites": 5,
+    "mappedCases": 57,
+    "log": ".tmp/grading-backend-required-final.log"
+  },
+  "frontend": {
+    "tests": 870,
+    "files": 127,
+    "testCommand": "npm test -- --maxWorkers=2",
+    "testLog": ".tmp/grading-full-frontend-final.log",
+    "lint": "passed",
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "otherLogs": [
+      ".tmp/grading-lint-final.log",
+      ".tmp/grading-typecheck-final.log",
+      ".tmp/grading-build-final.log"
+    ]
+  },
+  "migrations": [
+    "grading/V20261110_1000__grant_grade_distribution_visibility_to_app.sql",
+    "quizpractice/V20261110_1010__widen_quiz_attempts_score_columns.sql"
+  ],
+  "selfReview": "Primary agent only; no subagents. Regression tests cover decimal precision, saved checks, receipt refresh and legacy member adjustments.",
+  "limits": [
+    "No authenticated visual/mobile browser acceptance; Orca browser was at login.",
+    "No live AI provider request or live grade write.",
+    "No local runtime restart or live migration; no commit, push or deployment.",
+    "Historical grading records are not backfilled."
+  ],
+  "earlierLogs": [
+    ".tmp/grading-red.log",
+    ".tmp/grading-final-model-red.log",
+    ".tmp/grading-final-ui-red.log",
+    ".tmp/grading-legacy-member-red.log",
+    ".tmp/grading-backend-full-before-policy-sync.log",
+    ".tmp/grading-full-frontend.log"
+  ]
+}

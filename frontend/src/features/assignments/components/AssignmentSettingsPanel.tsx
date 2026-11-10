@@ -2,8 +2,8 @@
 
 import { type DiagramType } from "@/shared/document";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
-import { Field, Switch } from "@/shared/ui";
-import { Choice } from "./Choice";
+import { Field, InfoTip, Switch } from "@/shared/ui";
+import { Choice, ChoiceHint } from "./Choice";
 import { assignmentFormSections, assignmentSettingsSections } from "../slots";
 import { type AssignmentDetail, type GradingMode, type SubmissionMode } from "../model/types";
 
@@ -14,6 +14,16 @@ export type Settings = {
   activityMonitoringEnabled: boolean;
   activityNotice: string;
   referenceMaterialIds: string[];
+};
+
+/** Một câu ngắn dưới mỗi lựa chọn, giống popup tạo bài (yêu cầu 2026-11-10). */
+const SUBMISSION_HINTS: Record<SubmissionMode, string> = {
+  INDIVIDUAL: "Mỗi sinh viên nộp một bài.",
+  GROUP: "Mỗi nhóm nộp chung một bài.",
+};
+const GRADING_HINTS: Record<GradingMode, string> = {
+  GRADED: "Tính vào sổ điểm.",
+  PRACTICE: "Tự luyện, không tính điểm.",
 };
 
 export function settingsOf(detail: AssignmentDetail): Settings {
@@ -47,6 +57,7 @@ export function AssignmentSettingsPanel({ detail, value, onChange, readOnly, cla
           { value: "INDIVIDUAL", label: "Cá nhân" },
           { value: "GROUP", label: "Nhóm" },
         ]} />
+        <ChoiceHint>{SUBMISSION_HINTS[detail.submissionMode]}</ChoiceHint>
       </Field>
       {group && detail.classId && <SlotOutlet slot={assignmentFormSections} props={{ assignmentId: detail.id, classId: detail.classId }} />}
       <Field label="Chế độ">
@@ -55,12 +66,15 @@ export function AssignmentSettingsPanel({ detail, value, onChange, readOnly, cla
             { value: "GRADED", label: "Graded" },
             { value: "PRACTICE", label: "Practice" },
           ]} />
+        <ChoiceHint key={value.gradingMode}>{GRADING_HINTS[value.gradingMode]}</ChoiceHint>
       </Field>
       {classId && <SlotOutlet slot={assignmentSettingsSections} props={{ assignmentId: detail.id, classId, gradingMode: value.gradingMode }} />}
-      <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-1">
         <Switch checked={value.activityMonitoringEnabled} label="Ghi nhận hoạt động"
           disabled={readOnly}
           onChange={(checked) => onChange({ ...value, activityMonitoringEnabled: checked })} />
+        <InfoTip label="Ghi nhận hoạt động"
+          text="Ghi lại khi sinh viên rời trang lúc làm bài." />
       </div>
       {value.activityMonitoringEnabled && (
         <Field label="Lời báo cho sinh viên" htmlFor="activity-notice" required>

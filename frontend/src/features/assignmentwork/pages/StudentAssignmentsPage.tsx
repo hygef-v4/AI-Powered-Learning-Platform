@@ -42,11 +42,6 @@ function kindOf(row: StudentRow): Kind {
   return row.gradingMode === "PRACTICE" ? "PRACTICE" : row.submissionMode;
 }
 
-/** Số lượt còn được làm của bài; bài không ghi số lượt tối đa thì được một lượt (như khi bắt đầu làm). */
-function attemptsLeft(row: StudentRow) {
-  return `Còn ${Math.max(0, (row.maxAttempts ?? 1) - row.attemptCount)} lượt`;
-}
-
 /** Mở bài từ trang chung thì đánh dấu `from=all` để nút quay lại về trang chung, không về trang bài tập của lớp. */
 function detailHref(row: StudentRow, general: boolean) {
   return `/my-assignments/${encodeURIComponent(row.assignmentId)}?classId=${encodeURIComponent(row.classId)}${general ? "&from=all" : ""}`;
@@ -122,12 +117,13 @@ export function StudentAssignmentsPage() {
             <col className="w-[110px]" />
             <col className="w-[150px]" />
             <col className="w-[130px]" />
-            <col className="w-[140px]" />
+            {/* Không còn cột Lượt làm (yêu cầu 2026-11-10): tab Đã nộp mới có cột Điểm. */}
+            {tab === "submitted" && <col className="w-[140px]" />}
             <col className="w-[48px]" />
           </colgroup>
           <thead>
             <tr>
-              <Th>Bài tập</Th><Th>Loại</Th><Th>Hạn nộp</Th><Th>Trạng thái</Th><Th>{tab === "submitted" ? "Điểm" : "Lượt làm"}</Th>
+              <Th>Bài tập</Th><Th>Loại</Th><Th>Hạn nộp</Th><Th>Trạng thái</Th>{tab === "submitted" && <Th>Điểm</Th>}
               <Th><span className="sr-only">Mở bài</span></Th>
             </tr>
           </thead>
@@ -142,9 +138,7 @@ export function StudentAssignmentsPage() {
                   <span className="font-mono text-xs text-muted">{formatDateTime(row.closesAt)}</span>
                 </Td>
                 <Td label="Trạng thái"><Pill tone={rowStatus(row).tone}>{rowStatus(row).label}</Pill></Td>
-                {tab !== "submitted" ? (
-                  <Td label="Lượt làm" className="whitespace-nowrap">{attemptsLeft(row)}</Td>
-                ) : (
+                {tab === "submitted" && (
                   <Td label="Điểm">
                     {row.gradingMode === "GRADED" ? <SlotOutlet slot={studentAssignmentResults} props={{ assignmentId: row.assignmentId, classId: row.classId }} /> : <span className="text-muted">—</span>}
                   </Td>

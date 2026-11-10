@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Pill } from "@/shared/ui";
+import { Button, Icon, Pill } from "@/shared/ui";
+import { AutoTextarea } from "@/shared/document";
 import type {
   StructuredFeedbackItem,
   StructuredFeedbackSummary,
@@ -11,13 +12,37 @@ function cleanSuggestionText(suggestion: string, isFullMarks: boolean): string {
   return suggestion.replace(/^Gợi ý thêm\s*\(không trừ điểm\)\s*:\s*/i, "");
 }
 
-function parseSummaryLines(value: string): string[] {
-  return value
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
-    .slice(0, 5)
-    .map((line) => line.slice(0, 500));
+function FeedbackSummaryList({ label, items, disabled, onChange }: {
+  label: string;
+  items: string[];
+  disabled: boolean;
+  onChange: (items: string[]) => void;
+}) {
+  return <fieldset className="min-w-0">
+    <legend className="mb-2 text-sm font-semibold text-ink">{label}</legend>
+    {items.length === 0 ? <p className="py-2 text-sm text-muted">Chưa có ý nhận xét.</p> : (
+      <ul className="list-disc space-y-3 pl-5 marker:text-muted">
+        {items.map((item, index) => <li key={index}>
+          <div className="flex items-start gap-1.5">
+            <AutoTextarea aria-label={`${label}, ý ${index + 1}`} value={item} maxLength={500}
+              disabled={disabled} rows={2}
+              onChange={(event) => onChange(items.map((entry, at) => at === index ? event.target.value : entry))}
+              className="min-h-16 min-w-0 flex-1 rounded-lg border! border-line bg-surface! px-3! py-2! text-sm font-normal leading-6 text-ink focus:border-focus" />
+            <button type="button" aria-label={`Xóa ý ${index + 1}: ${label}`} disabled={disabled}
+              onClick={() => onChange(items.filter((_, at) => at !== index))}
+              className="mt-1 inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted hover:bg-danger-soft hover:text-danger focus-visible:outline-2 focus-visible:outline-focus disabled:opacity-40">
+              <Icon name="close" size={16} />
+            </button>
+          </div>
+        </li>)}
+      </ul>
+    )}
+    <div className="mt-2 flex items-center justify-between gap-2">
+      <Button size="sm" variant="ghost" icon="add" aria-label={`Thêm ý: ${label}`}
+        disabled={disabled || items.length >= 5} onClick={() => onChange([...items, ""])}>Thêm ý</Button>
+      <span className="text-xs text-muted">{items.length}/5 ý</span>
+    </div>
+  </fieldset>;
 }
 
 export function GradingFeedbackSummary({
@@ -43,10 +68,10 @@ export function GradingFeedbackSummary({
   return (
     <section
       aria-label={title}
-      className="mt-2.5 rounded-xl border border-line bg-shell/40 p-3 text-xs leading-relaxed"
+      className="mt-3 rounded-xl border border-line bg-shell/40 p-4 text-sm leading-6"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-xs font-bold text-ink">{title}</h3>
+        <h3 className="text-sm font-semibold text-ink">{title}</h3>
         {editable && onClear && (
           <button
             type="button"
@@ -59,42 +84,20 @@ export function GradingFeedbackSummary({
         )}
       </div>
       {editable && onChange ? (
-        <div className="mt-2 grid gap-2.5 sm:grid-cols-2">
-          <label className="block font-medium text-ink">
-            Làm tốt (mỗi dòng 1 ý, tối đa 5)
-            <textarea
-              aria-label="Làm tốt"
-              disabled={disabled}
-              rows={3}
-              value={summary.strengths.join("\n")}
-              onChange={(e) =>
-                onChange({ ...summary, strengths: parseSummaryLines(e.target.value) })
-              }
-              className="mt-1 block w-full rounded-lg border border-line bg-surface p-2 text-xs font-normal text-ink focus:border-focus focus:outline-none"
-            />
-          </label>
-          <label className="block font-medium text-ink">
-            Cần sửa (mỗi dòng 1 ý, tối đa 5)
-            <textarea
-              aria-label="Cần sửa"
-              disabled={disabled}
-              rows={3}
-              value={summary.improvements.join("\n")}
-              onChange={(e) =>
-                onChange({ ...summary, improvements: parseSummaryLines(e.target.value) })
-              }
-              className="mt-1 block w-full rounded-lg border border-line bg-surface p-2 text-xs font-normal text-ink focus:border-focus focus:outline-none"
-            />
-          </label>
+        <div className={`mt-4 grid gap-5 ${summary.strengths.length > 0 && summary.improvements.length > 0 ? "md:grid-cols-2" : ""}`}>
+          <FeedbackSummaryList label="Điểm mạnh" items={summary.strengths} disabled={disabled}
+            onChange={(strengths) => onChange({ ...summary, strengths })} />
+          <FeedbackSummaryList label="Điểm cần cải thiện" items={summary.improvements} disabled={disabled}
+            onChange={(improvements) => onChange({ ...summary, improvements })} />
         </div>
       ) : (
         <div className={`mt-2 grid gap-2.5 ${summary.strengths.length > 0 && summary.improvements.length > 0 ? "sm:grid-cols-2" : ""}`}>
           {summary.strengths.length > 0 && (
             <div className="rounded-lg border border-line-soft bg-surface p-2.5">
               <p className="font-semibold text-success">✓ Làm tốt</p>
-              <ul className="mt-1 list-disc space-y-1 pl-4 text-ink">
+              <ul className="mt-2 list-disc space-y-2 pl-5 text-ink">
                 {summary.strengths.map((entry, idx) => (
-                  <li key={idx} className="break-words">{entry}</li>
+                  <li key={idx} className="whitespace-pre-wrap break-words">{entry}</li>
                 ))}
               </ul>
             </div>
@@ -102,9 +105,9 @@ export function GradingFeedbackSummary({
           {summary.improvements.length > 0 && (
             <div className="rounded-lg border border-line-soft bg-surface p-2.5">
               <p className="font-semibold text-warning">! Cần sửa</p>
-              <ul className="mt-1 list-disc space-y-1 pl-4 text-ink">
+              <ul className="mt-2 list-disc space-y-2 pl-5 text-ink">
                 {summary.improvements.map((entry, idx) => (
-                  <li key={idx} className="break-words">{entry}</li>
+                  <li key={idx} className="whitespace-pre-wrap break-words">{entry}</li>
                 ))}
               </ul>
             </div>
@@ -136,7 +139,7 @@ export function RubricItemFeedback({
   maxPoints: number;
   feedbackItem?: StructuredFeedbackItem | null;
   acknowledged?: boolean;
-  validBlockIds?: Set<string>;
+  validBlockIds?: Set<string> | string[];
   editable?: boolean;
   disabled?: boolean;
   onChangeItem?: (updated: StructuredFeedbackItem) => void;
@@ -181,7 +184,14 @@ export function RubricItemFeedback({
   const showAckControl = editable && Boolean(onToggleAcknowledge) && (feedbackItem.requiresReview || acknowledged);
 
   const blockId = feedbackItem.evidenceBlockId?.trim() || null;
-  const canNavigateToBlock = Boolean(blockId && validBlockIds?.has(blockId));
+  const hasValidBlock = blockId
+    ? validBlockIds instanceof Set
+      ? validBlockIds.has(blockId)
+      : Array.isArray(validBlockIds)
+        ? validBlockIds.includes(blockId)
+        : false
+    : false;
+  const canNavigateToBlock = Boolean(blockId && hasValidBlock);
   const suggestionLabel = isFullMarks ? "Gợi ý thêm (không trừ điểm)" : "Cách cải thiện";
 
   return (
@@ -231,44 +241,44 @@ export function RubricItemFeedback({
           <div className="space-y-2">
             <label className="block font-medium text-ink">
               Minh chứng từ bài làm
-              <textarea
+              <AutoTextarea
                 aria-label={`Minh chứng: ${itemText}`}
                 disabled={disabled}
-                rows={2}
+                rows={3}
                 maxLength={1000}
                 value={feedbackItem.evidence ?? ""}
                 onChange={(e) =>
                   onChangeItem({ ...feedbackItem, evidence: e.target.value || null })
                 }
-                className="mt-1 block w-full rounded border border-line bg-surface p-1.5 text-xs font-normal text-ink focus:border-focus focus:outline-none"
+                className="mt-1 min-h-24 rounded-lg border! border-line bg-surface! p-2! text-sm font-normal leading-relaxed text-ink focus:border-focus"
               />
             </label>
             <label className="block font-medium text-ink">
               Giải thích điểm (bắt buộc)
-              <textarea
+              <AutoTextarea
                 aria-label={`Giải thích điểm: ${itemText}`}
                 disabled={disabled}
-                rows={2}
+                rows={3}
                 maxLength={1000}
                 value={feedbackItem.reason}
                 onChange={(e) =>
                   onChangeItem({ ...feedbackItem, reason: e.target.value })
                 }
-                className="mt-1 block w-full rounded border border-line bg-surface p-1.5 text-xs font-normal text-ink focus:border-focus focus:outline-none"
+                className="mt-1 min-h-24 rounded-lg border! border-line bg-surface! p-2! text-sm font-normal leading-relaxed text-ink focus:border-focus"
               />
             </label>
             <label className="block font-medium text-ink">
               {suggestionLabel}
-              <textarea
+              <AutoTextarea
                 aria-label={`Gợi ý: ${itemText}`}
                 disabled={disabled}
-                rows={2}
+                rows={3}
                 maxLength={1000}
                 value={feedbackItem.suggestion ?? ""}
                 onChange={(e) =>
                   onChangeItem({ ...feedbackItem, suggestion: e.target.value || null })
                 }
-                className="mt-1 block w-full rounded border border-line bg-surface p-1.5 text-xs font-normal text-ink focus:border-focus focus:outline-none"
+                className="mt-1 min-h-24 rounded-lg border! border-line bg-surface! p-2! text-sm font-normal leading-relaxed text-ink focus:border-focus"
               />
             </label>
           </div>
@@ -307,11 +317,11 @@ export function RubricItemFeedback({
                 }}
                 className="font-semibold text-primary-ink underline underline-offset-2 hover:text-ink"
               >
-                Đi tới đoạn bài làm ({blockId})
+                Đi tới đoạn bài làm
               </a>
             ) : (
               <span className="text-muted">
-                Tham chiếu đoạn: {blockId} (hiển thị dạng văn bản, không có neo trực tiếp)
+                Đoạn tham chiếu không còn trong bài nộp.
               </span>
             )}
           </div>

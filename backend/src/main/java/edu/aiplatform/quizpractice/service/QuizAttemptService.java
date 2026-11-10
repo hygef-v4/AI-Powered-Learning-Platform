@@ -64,6 +64,7 @@ public class QuizAttemptService {
         if (existing.isPresent()) {
             return taking(existing.get());
         }
+        quiz = support.quizInClass(quizId, ref);
         if (ref.status() != ClassStatus.OPEN || quiz.status() != QuizStatus.OPEN) {
             access.rejected(actor, "QUIZ_SUBMIT_REJECTED", null, "QUIZ_NOT_OPEN");
             throw ApiException.conflict("QUIZ_NOT_OPEN", "Quiz đã ngưng hoặc lớp không còn mở");

@@ -100,8 +100,8 @@ public class GroupSubmissionService {
     }
 
     /**
-     * Tự nộp một tài liệu (F13), gọi trong transaction riêng của bộ quét. Mục đang giữ được chốt bằng bản nháp; không
-     * có thay đổi sau lần nộp cuối thì chỉ đóng. Câu lệnh có điều kiện nên chạy lại không nộp hai lần.
+     * Tự nộp một tài liệu (F13), gọi trong transaction riêng của bộ quét. Mục đang giữ được chốt bằng bản nháp; đã có
+     * bản nộp tay hoặc chưa có thay đổi nào thì chỉ nhả khóa và đóng. Câu lệnh có điều kiện nên chạy lại không nộp hai lần.
      */
     @Transactional
     public Optional<Receipt> autoSubmit(UUID documentId) {
@@ -110,27 +110,14 @@ public class GroupSubmissionService {
             return Optional.empty();
         }
         Instant now = clock.instant();
-        boolean finalized = false;
-        for (GroupSection section : documents.lockSections(documentId)) {
-            if (section.status() == GroupSection.Status.CLAIMED && section.draftBlocks() != null) {
-                GroupSection done = section.done(now);
-                if (documents.updateSection(done)) {
-                    documents.insertRevision(new SectionRevision(UUID.randomUUID(), section.id(), section.claimedBy(),
-                            done.publishedBlocks(), now));
-                    finalized = true;
-                }
-            } else if (section.status() == GroupSection.Status.CLAIMED) {
-                documents.updateSection(section.released());
+        boolean finalized = closeSections(documentId, !document.submitted(), now);
+        if (document.submitted() || (!finalized && !document.changedSinceSubmit())) {
+            if (documents.update(document.closed())) {
+                push(document, "document.closed", null);
             }
-        }
-        SubmitMode mode = document.autoSubmitReason() != null ? document.autoSubmitReason() : SubmitMode.AUTO_DEADLINE;
-        if (!finalized && !document.changedSinceSubmit()) {
-            if (!documents.update(document.closed())) {
-                return Optional.empty();
-            }
-            push(document, "document.closed", null);
             return Optional.empty();
         }
+        SubmitMode mode = document.autoSubmitReason() != null ? document.autoSubmitReason() : SubmitMode.AUTO_DEADLINE;
         ClassGroup group = groups.findGroup(document.groupId()).orElse(null);
         AssignmentView assignment = assignments.get(document.assignmentId()).orElse(null);
         if (group == null || assignment == null) {
@@ -141,6 +128,23 @@ public class GroupSubmissionService {
         ValidationResult result = validate(document, snapshot.document());
         return Optional.of(store(document, group, assignment, snapshot, null, mode, GroupDocument.Status.CLOSED,
                 warnings(snapshot, result)));
+    }
+
+    private boolean closeSections(UUID documentId, boolean finalizeDrafts, Instant now) {
+        boolean finalized = false;
+        for (GroupSection section : documents.lockSections(documentId)) {
+            if (finalizeDrafts && section.status() == GroupSection.Status.CLAIMED && section.draftBlocks() != null) {
+                GroupSection done = section.done(now);
+                if (documents.updateSection(done)) {
+                    documents.insertRevision(new SectionRevision(UUID.randomUUID(), section.id(), section.claimedBy(),
+                            done.publishedBlocks(), now));
+                    finalized = true;
+                }
+            } else if (section.status() == GroupSection.Status.CLAIMED) {
+                documents.updateSection(section.released());
+            }
+        }
+        return finalized;
     }
 
     /** DOCX: thành viên tải bản hiện tại hoặc bản nộp; giảng viên chỉ bản nộp (BR-U12-44). */
@@ -169,7 +173,8 @@ public class GroupSubmissionService {
                           UUID by, SubmitMode mode, GroupDocument.Status next, List<String> warnings) {
         Instant now = clock.instant();
         // Tự nộp chạy sau hạn cuối: trễ hay không tính theo lần sửa cuối của nhóm, như bài cá nhân (AttemptSubmitter).
-        Instant effective = mode == SubmitMode.MANUAL || document.lastChangedAt() == null ? now : document.lastChangedAt();
+        Instant effective = mode == SubmitMode.MANUAL ? now : document.lastChangedAt() != null
+                ? document.lastChangedAt() : (assignment.closesAt() != null ? assignment.closesAt() : now);
         boolean late = assignment.closesAt() != null && effective.isAfter(assignment.closesAt());
         String hash = GroupSnapshot.receiptHash(json, document.id(), snapshot, now);
         GroupDocument submitted = document.withSubmission(snapshot.document(), snapshot.authors(), by, mode, now, late, hash,

@@ -1,5 +1,19 @@
 # U07 Assignment Authoring — business-rules
 
+## Đề mẫu của môn, nộp lại không giới hạn, đánh số câu hỏi — 2026-11-10
+
+Nguồn: `bad8df16`, `16f2c8ce`, `cdaf0f46` (PR #60). Các rule dưới đây thay phần trái ngược trong BR-U07-02, 03, 33, 35, 42 ở các bảng bên dưới; phần còn lại của những rule đó giữ nguyên.
+
+| Mã | Rule | Thay cho |
+|---|---|---|
+| BR-U07-80 | Bài của môn là **đề mẫu**: Chủ nhiệm môn soạn, không phát hành cho các lớp. `POST .../publish` với bài của môn trả `409 SUBJECT_TEMPLATE_NOT_PUBLISHABLE`, `canPublish` luôn `false`. Giảng viên copy đề mẫu về lớp rồi tự giao. | BR-U07-02 (giao cho mọi lớp theo lịch chung), phần bài của môn trong BR-U07-33, 35, 36 |
+| BR-U07-81 | Đề mẫu của môn được là bài `GROUP`; ràng buộc DB `ck_assignments_scope_owner` chỉ còn yêu cầu bài lớp có `class_id`, bài môn không có. Kiểm `IGroupAssignmentSupport` chỉ áp dụng cho bài của lớp, tức lúc lớp nhận bản copy. | BR-U07-03 ("`GROUP` chỉ có ở bài của lớp"), lỗi `GROUP_NOT_ALLOWED`, `GROUP_NOT_SUPPORTED` khi tạo/copy vào môn |
+| BR-U07-82 | Copy: nguồn cho lớp là đề mẫu cùng môn (mọi trạng thái trừ `RETIRED`) rồi bài của các lớp khác mình dạy; nguồn cho môn là bài khác của cùng môn và bài các lớp mình dạy, có cả bài nhóm. Body copy nhận `title`; bỏ trống thì giữ tên bài nguồn. | BR-U07-42 ("chỉ bài của lớp"), BR-U07-40 phần tên bài khi copy |
+| BR-U07-83 | AI soạn bản nháp: không trường nào bắt buộc, bỏ trống thì AI tự chọn chủ đề và số câu. Chọn được một đề mẫu của môn qua `templateAssignmentId` (cùng môn, chưa `RETIRED`, không phải chính bài đang soạn; sai thì `400 AI_TEMPLATE_INVALID`); chữ khung của đề mẫu vào prompt như mẫu định dạng, cắt theo trần; tệp mẫu tải lên được ưu tiên khi có cả hai. Ngôn ngữ đầu ra theo cài đặt, không theo ngôn ngữ của đề mẫu. | BR-U07-50 ("nhập yêu cầu" là bắt buộc) |
+| BR-U07-84 | Danh sách tài liệu tham khảo đọc được trước khi có bài: `GET /classes/{classId}/assignment-materials` (giảng viên của lớp) và `GET /subjects/{subjectId}/assignments/materials` (Chủ nhiệm môn); `GET /assignments/{id}/ai-drafts/templates` liệt kê đề mẫu chọn được. | Mới |
+| BR-U07-85 | Chỉ bài `PRACTICE` có `maxAttempts` (1–10). Bài `GRADED` cá nhân và nhóm không lưu số lượt (gửi gì cũng thành `null`), nộp lại không giới hạn khi còn hạn nộp hoặc hạn nộp muộn; đổi lịch bài `OPEN` chỉ so `maxAttempts` với bài `PRACTICE`. Ràng buộc `ck_assignments_published` chỉ đòi `max_attempts` cho bài `PRACTICE` đã lên lịch; số lượt cũ của bài có chấm giữ trong DB nhưng không dùng. | `maxAttempts` 1–10 cho mọi bài trong BR-U07-33, 35 |
+| BR-U07-86 | Câu hỏi đánh số bốn tầng `I.`, `I.1.`, `I.1.a.`, `I.1.a.aa.` (`SectionNumbering`: La Mã, số, chữ thường, chữ thường gấp đôi). Tên phần của câu hỏi chưa đặt tên và DOCX xuất ra dùng số này; nhập DOCX đọc lại đúng cây câu hỏi. | Cách đánh số cũ trong tên phần và DOCX |
+
 ## Server-managed authoring workflow — 2026-11-01
 
 Agent đọc `read_agent_workflow(workflow=AUTHOR_ASSIGNMENT)` để nhận đầy đủ quy trình từ server, sau đó lấy schema mới nhất qua `read_authoring_requirements(kind=ASSIGNMENT)`. Không cần skill cài trên máy hoặc form khởi tạo trên UI. Tiếp tục hỏi làm rõ trong chat ngoài, lưu DRAFT/đề xuất và trả reviewUrl cho người soạn duyệt. Quiz/ngân hàng dùng schema/hướng dẫn riêng theo kind, không áp dụng sai workflow Assignment. Nguồn đầy đủ duy nhất: `backend/src/main/resources/agent-workflows/author-assignment/SKILL.md`.
@@ -82,6 +96,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U07-50 | AI soạn bản nháp cho bài `DRAFT`: người soạn nhập yêu cầu, chọn tài liệu tham khảo được phép (khi U13 có), chọn nguồn AI trong popup của U06. AI đề xuất hướng dẫn, cây heading Tiêu đề 1–6 kèm đoạn hướng dẫn dưới mỗi heading và gợi ý rubric cho từng phần; không có sơ đồ. | FR-006, US-AIG-001, 002 |
 | BR-U07-51 | Đề xuất là bản nháp có provenance (người yêu cầu, nguồn, provider, model khi biết, tài liệu và version). Người soạn xem trước; Áp dụng thì thay toàn bộ khung (cảnh báo khi khung đã có nội dung) và hướng dẫn nếu chọn, tính lại phần, điền gợi ý rubric vào rubric của phần để sửa tiếp; cần `version` của bài không đổi từ lúc xem. Bỏ thì bài không đổi. AI không tự duyệt hay phát hành. | FR-006 |
 | BR-U07-52 | Prompt chỉ có yêu cầu, cài đặt bài và chữ của tài liệu đã chọn (cắt theo trần ký tự); không có dữ liệu người học. Không có AI hoặc hết quota vẫn soạn thủ công được. | FR-006 |
+| BR-U07-54 | Sửa đề đang có bằng AI (2026-11-09): chỉ bài `DRAFT` người soạn sửa được; `mode = REVISE` bắt buộc có yêu cầu (≤ 4.000 ký tự), không dùng tài liệu tham khảo, file nguồn hay mô tả định dạng; `mode` khác trả `400 AI_REQUEST_INVALID`. AI chỉ trả thao tác sửa, chèn, xóa theo mã khối, server ghép vào bản đề đã gửi; khối và rubric không được nhắc tới giữ nguyên id, ảnh, sơ đồ và định dạng. Lỗi rubric của bản sửa chỉ là cảnh báo. | FR-006 |
+| BR-U07-55 | Bản sửa chỉ áp dụng khi `version` của đề bằng `baseVersion` lúc gửi (`409 AI_DRAFT_STALE` nếu đề đã đổi trong lúc AI xử lý) và bản sửa hợp lệ (`409 AI_DRAFT_INVALID`). AI không đổi gì thì không áp dụng và báo cho người soạn. Trang chờ tối đa 3 phút rồi hủy đề xuất. | FR-006 |
 | BR-U07-53 | Tool MCP: `read_assignment_context` (giảng viên có quyền đọc bản nháp và rubric; người học chỉ nhận thông tin bài như Assignment Detail: hình thức, chế độ, lịch, sơ đồ cần có, không có đề và rubric) và `save_assignment_draft` (chỉ giảng viên có quyền, bài `DRAFT`, kèm `expectedVersion`). Tool ghi chỉ lưu thành đề xuất chờ người soạn áp dụng như BR-U07-51, không sửa thẳng bài. | FR-035 |
 
 ## 7. DOCX
@@ -99,3 +115,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U07-70 | Mọi API kiểm quyền phía server; ngoài phạm vi trả `404` và ghi audit `ACCESS_DENIED`. Sửa bài, rubric, lịch phải kèm `version`; lệch thì `409`. | SEC-002 |
 | BR-U07-71 | Audit: `ASSIGNMENT_CREATED`, `ASSIGNMENT_DELETED`, `ASSIGNMENT_PUBLISHED` (lớp hoặc môn, lịch), `ASSIGNMENT_SCHEDULE_CHANGED`, `ASSIGNMENT_RETIRED` (lý do), `ASSIGNMENT_CLONED`, `ASSIGNMENT_VERSION_CREATED`, `ASSIGNMENT_COPIED` (nguồn, đích), `RUBRIC_UPDATED`, `ASSIGNMENT_AI_DRAFT_APPLIED` (provenance), `ASSIGNMENT_DOCX_IMPORTED`; `ASSIGNMENT_REVIEWED` chỉ khi gọi API duyệt. Không ghi nội dung đề. | FR-014 |
 | BR-U07-72 | U01, U04, U05 không trả lời thì từ chối (fail closed): trả 503 `ASSIGNMENT_DEPENDENCY_UNAVAILABLE` (kể cả khi U01 trả `DEPENDENCY_UNAVAILABLE`), không trả 404 hay ghi audit từ chối oan. AI, U12, U13 lỗi không chặn việc soạn thủ công. | BR-U01-93 |
+
+## Rubric/deadline remediation — 2026-11-10
+
+Locking a rubric removes fully blank placeholder rows/criteria while keeping validation of partially completed items. Assignment detail includes the whole-assignment rubric in its parts and total. Automatic closure waits until the existing final deadline plus 30 seconds; valid individual submissions in the grace period are not marked late when no late window exists.

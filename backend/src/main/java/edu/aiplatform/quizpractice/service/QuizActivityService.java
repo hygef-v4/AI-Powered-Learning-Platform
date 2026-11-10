@@ -21,7 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class QuizActivityService {
 
-    public static final int MAX_EVENTS = 100;
+    public static final int MAX_EVENTS = 50;
+    public static final int MAX_CLIENT_EVENT_ID_LENGTH = 64;
 
     private final IActivityWrite activity;
     private final PracticeSupport support;
@@ -47,7 +48,13 @@ public class QuizActivityService {
             throw ApiException.conflict("ACTIVITY_NOT_ENABLED", "Quiz này không ghi nhận hoạt động");
         }
         if (events.isEmpty() || events.size() > MAX_EVENTS) {
-            throw ApiException.badRequest("ACTIVITY_BATCH_INVALID", "Mỗi lần gửi 1–100 sự kiện");
+            throw ApiException.badRequest("ACTIVITY_BATCH_INVALID", "Mỗi lần gửi 1–50 sự kiện");
+        }
+        for (ActivityEventInput event : events) {
+            if (event == null || event.clientEventId() == null || event.clientEventId().isBlank()
+                    || event.clientEventId().length() > MAX_CLIENT_EVENT_ID_LENGTH) {
+                throw ApiException.badRequest("ACTIVITY_EVENT_INVALID", "Sự kiện hoạt động không hợp lệ");
+            }
         }
         try {
             activity.record(actor, new WorkRef(WorkKind.QUIZ_ATTEMPT, attemptId, attempt.classId()), events);

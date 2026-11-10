@@ -47,3 +47,7 @@ export const groupWorkEntries = createSlot<{ assignmentId: string; classId: stri
 export const assignmentMaterialSections = createSlot<{ classId: string; materialIds: string[] }>(
   "AssignmentMaterialSection",
 );
+
+/** Published group feedback and anonymous distributions supplied by U09. */
+export const studentAssignmentFeedback = createSlot<{ assignmentId: string; classId: string }>("StudentAssignmentFeedback");
+export const studentGradeDistributions = createSlot<{ assignmentId: string; classId: string }>("StudentGradeDistributions");

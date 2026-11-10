@@ -78,6 +78,10 @@ public class GradingProposalService {
         return gradingProposalTransactions.recordDispatch(proposal.id, task, null);
     }
 
+    List<GradingProposal> listStoredProposals(List<UUID> authorizedEvaluationIds) {
+        return gradingProposalRepository.findForEvaluations(authorizedEvaluationIds);
+    }
+
     /** Lists an evaluation's proposals and reconciles their current AI task state. */
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public List<GradingProposal> listProposals(Actor actor, UUID evaluationId) {
