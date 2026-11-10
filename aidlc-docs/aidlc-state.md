@@ -554,3 +554,8 @@ User explicitly requested resolving PR59 and merging into staging. Latest stagin
 - [x] Verify the merged source and complete the authorized local merge delivery; no push. Full backend verify2110 tests0fail0error0skip/JAR; frontend908 tests/129files, full lint/typecheck passed.
 
 Existing Security/Resiliency scope retained; PBT disabled. No production behavior changed by manual resolution. No UI/provider acceptance, frontend production build, deployment, live migration or application restart in this merge task.
+
+
+## Authorized staging-to-main release — 2026-11-10
+
+User authorized publishing a staging-to-main PR and merging after CI passes. Application source is the verified7fbf5703 tree; this checkpoint only records authorization. The GitHub PR/workflow and final chat response carry the release outcome without adding another source commit after verification. Existing Security/Resiliency scope retained; PBT disabled.

@@ -12282,3 +12282,12 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 **AI Response**: Full merged-tree Maven verify passed2110 tests with0failures/errors/skips and executable JAR; full frontend908 tests/129files, lint and typecheck passed. Removed only three audit conflict markers and proved both histories retained exactly before appending this task. Compared every staged index entry to the initial user merge: only audit.md, aidlc-state.md and the one-line feedback fixture changed during manual resolution. CRLF-aware staged whitespace check passed; incoming line endings retained. Complete the authorized local merge using original parents b9bf1889 and57b0bb8d. No push, UI/provider acceptance, frontend production build, live migration, app restart, deployment or subagents. Logs retained under ignored .tmp/staging-final-*.log.
 
 ---
+
+
+## Authorized staging-to-main pull request and CI gate
+**Timestamp**: 2026-11-10T06:55:26Z
+**Requested by:** Quang Hung
+**User Input**: "tạo pr từ staging lên main, chạy ci nếu pass thì merge vào main"
+**AI Response**: Confirmed remote main57b0bb8d is an ancestor of remote staging7fbf5703; release scope is five grading/quiz/assignment/UI documentation commits plus the previous merge. User explicitly authorizes creating the PR, running CI and merging only after success, superseding the earlier no-push restriction for this release. Record this request in a documentation-only staging commit, publish it without force, create staging-to-main PR and require successful backend/frontend/deploy-script jobs on its current head. PR images is intentionally skipped; main push builds and publishes SHA-tagged images, which existing VPS automation may deploy. Full local merged-source verification2110 backend tests/JAR and908 frontend tests/lint/typecheck passed before this documentation-only change. Final CI and merge receipt is recorded in the GitHub PR and chat; no infrastructure settings changed or branch deletion.
+
+---
