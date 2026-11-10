@@ -65,12 +65,114 @@ function openAi() {
   fireEvent.click(btn);
 }
 describe("workspace save", () => {
-  it("separates general feedback into paragraphs without changing decimal points or saving automatically", async () => {
+  it("waits for 30 idle seconds after the latest edit while Ctrl+S saves immediately", async () => {
+    mocks.loadEvaluation.mockResolvedValue({ ...detail, evaluation: { ...detail.evaluation, rubricItemScores: {} },
+      rubrics: [{ rubricId: "r", partId: "p", maxPoints: 1,
+        criteria: [{ criterionId: "c", title: "Design", items: [{ itemId: "i", text: "Test criterion", points: 1 }] }] }] });
+    mocks.saveEvaluation.mockResolvedValue({ ...detail.evaluation, version: 3 });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    const feedback = await screen.findByRole("textbox", { name: "Nhận xét chung" });
+    await act(async () => { await Promise.resolve(); });
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    fireEvent.change(feedback, { target: { value: "First edit" } });
+    await act(async () => { await vi.advanceTimersByTimeAsync(29000); });
+    fireEvent.change(feedback, { target: { value: "Latest edit" } });
+    await act(async () => { await vi.advanceTimersByTimeAsync(29000); });
+    expect(mocks.saveEvaluation).not.toHaveBeenCalled();
+    act(() => screen.getByRole("spinbutton", { name: "Điểm mục Test criterion" }).focus());
+    await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+    expect(mocks.saveEvaluation).toHaveBeenCalledTimes(1);
+    expect(mocks.saveEvaluation).toHaveBeenLastCalledWith("e", expect.objectContaining({ feedback: "Latest edit" }));
+    fireEvent.change(feedback, { target: { value: "Save now" } });
+    await act(async () => { fireEvent.keyDown(window, { key: "s", ctrlKey: true }); });
+    expect(mocks.saveEvaluation).toHaveBeenCalledTimes(2);
+    expect(mocks.saveEvaluation).toHaveBeenLastCalledWith("e", expect.objectContaining({ feedback: "Save now" }));
+  });
+
+  it("autosaves after 30 seconds without removing score editors or losing focus", async () => {
+    let finishSave!: (evaluation: Detail["evaluation"]) => void;
+    mocks.saveEvaluation.mockReturnValue(new Promise<Detail["evaluation"]>((resolve) => { finishSave = resolve; }));
+    mocks.loadEvaluation.mockResolvedValue({ ...detail, evaluation: { ...detail.evaluation, rubricItemScores: {} },
+      rubrics: [{ rubricId: "r", partId: "p", maxPoints: 1,
+      criteria: [{ criterionId: "c", title: "Design", items: [{ itemId: "i", text: "Test criterion", points: 1 }] }] }] });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    const score = await screen.findByRole("spinbutton", { name: "Điểm mục Test criterion" });
+    await act(async () => { await Promise.resolve(); });
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    act(() => score.focus());
+    fireEvent.change(score, { target: { value: "0.5" } });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1499); });
+    expect(mocks.saveEvaluation).not.toHaveBeenCalled();
+    expect(score).toHaveFocus();
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    expect(mocks.saveEvaluation).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(28500); });
+    expect(mocks.saveEvaluation).toHaveBeenCalledTimes(1);
+    expect(score.isConnected).toBe(true);
+    expect(score).toBeEnabled();
+    expect(score).toHaveFocus();
+    await act(async () => { finishSave({ ...detail.evaluation, version: 3, score: 0.5,
+      rubricItemScores: { r: { i: 0.5 } } }); });
+    const replacement = screen.getByRole("spinbutton", { name: "Điểm mục Test criterion" });
+    expect(replacement).toBe(score);
+    expect(replacement).toHaveFocus();
+    expect(mocks.loadEvaluation).toHaveBeenCalledTimes(1);
+    expect(mocks.push).not.toHaveBeenCalled();
+  });
+
+  it.each(["0.5", "-0.5"])("saves an adjustment with only one optional note (%s)", async (adjustment) => {
+    mocks.saveEvaluation.mockResolvedValue({ ...detail.evaluation, version: 3,
+      adjustment: Number(adjustment), adjustmentReason: "Điều chỉnh theo quy định" });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    const points = await screen.findByRole("spinbutton", { name: "Điểm cộng/trừ" });
+    fireEvent.change(points, { target: { value: adjustment } });
+    expect(screen.queryByRole("textbox", { name: "Lý do cộng/trừ điểm" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
+    await waitFor(() => expect(mocks.saveEvaluation).toHaveBeenCalledTimes(1));
+    expect(mocks.saveEvaluation).toHaveBeenLastCalledWith("e", expect.objectContaining({
+      adjustment, adjustmentReason: null, changeReason: null,
+    }));
+    await waitFor(() => expect(points).toBeEnabled());
+    fireEvent.click(screen.getByText("Ghi chú thay đổi (tùy chọn)"));
+    fireEvent.change(screen.getByRole("textbox", { name: "Ghi chú thay đổi" }), { target: { value: "Điều chỉnh theo quy định" } });
+    fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
+    await waitFor(() => expect(mocks.saveEvaluation).toHaveBeenCalledTimes(2));
+    expect(mocks.loadEvaluation).toHaveBeenCalledTimes(1);
+    expect(points).toHaveValue(Number(adjustment));
+    expect(screen.queryByRole("button", { name: "Tải lại phiên bản" })).not.toBeInTheDocument();
+    expect(mocks.saveEvaluation).toHaveBeenLastCalledWith("e", expect.objectContaining({
+      adjustment, adjustmentReason: "Điều chỉnh theo quy định", changeReason: "Điều chỉnh theo quy định",
+    }));
+  });
+
+  it("pauses autosave after a failed save and resumes after an edit without reloading the form", async () => {
+    mocks.saveEvaluation.mockRejectedValueOnce(new Error("Offline"))
+      .mockResolvedValue({ ...detail.evaluation, feedback: "Đã bổ sung", version: 3 });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    const feedback = await screen.findByRole("textbox", { name: "Nhận xét chung" });
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    fireEvent.change(feedback, { target: { value: "Đang chấm" } });
+    await act(async () => { await vi.advanceTimersByTimeAsync(30000); });
+    expect(screen.getByRole("alert")).toHaveTextContent("Offline");
+    await act(async () => { await vi.advanceTimersByTimeAsync(60000); });
+    expect(mocks.saveEvaluation).toHaveBeenCalledTimes(1);
+    expect(mocks.loadEvaluation).toHaveBeenCalledTimes(1);
+    expect(feedback).toHaveValue("Đang chấm");
+
+    fireEvent.change(feedback, { target: { value: "Đã bổ sung" } });
+    await act(async () => { await vi.advanceTimersByTimeAsync(30000); });
+    expect(mocks.saveEvaluation).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(feedback).toHaveValue("Đã bổ sung");
+  });
+
+  it("keeps manually entered paragraphs without an extra paragraph-format button", async () => {
     mocks.loadEvaluation.mockResolvedValue({ ...detail, evaluation: { ...detail.evaluation, feedback: "Đạt 1.25/2.00 điểm. Cần bổ sung sơ đồ. Hoàn thiện phần còn thiếu." } });
     render(<GradingWorkspacePage evaluationId="e" />);
-    fireEvent.click(await screen.findByRole("button", { name: "Tách đoạn" }));
-    expect(screen.getByRole("textbox", { name: "Nhận xét chung" })).toHaveValue("Đạt 1.25/2.00 điểm.\n\nCần bổ sung sơ đồ.\n\nHoàn thiện phần còn thiếu.");
-    expect(screen.getByRole("button", { name: "Tách đoạn" })).toBeDisabled();
+    const feedback = await screen.findByRole("textbox", { name: "Nhận xét chung" });
+    fireEvent.change(feedback, { target: { value: "Đạt 1.25/2.00 điểm.\n\nCần bổ sung sơ đồ." } });
+    expect(feedback).toHaveValue("Đạt 1.25/2.00 điểm.\n\nCần bổ sung sơ đồ.");
+    expect(screen.queryByRole("button", { name: "Tách đoạn" })).not.toBeInTheDocument();
     expect(mocks.saveEvaluation).not.toHaveBeenCalled();
   });
   it("shows a larger AI grading button with a visible text label", async () => {
@@ -414,7 +516,7 @@ describe("AI proposal comparison and draft application", () => {
     expect(screen.getByRole("region", { name: "Nhận xét chung" }))
       .toHaveTextContent("Nhận xét chung tiếng Việt");
     const item = within(screen.getByTestId("rubric-item-i1"));
-    expect(item.getByText("Chi tiết nhận xét & minh chứng")).toBeVisible();
+    expect(item.getByText("Nhận xét & minh chứng")).toBeVisible();
     expect(item.getByText("Xác định đúng thực thể chính")).toBeInTheDocument();
   });
 
@@ -448,12 +550,11 @@ describe("AI proposal comparison and draft application", () => {
     expect(document.body.textContent).not.toContain("NaN");
   });
 
-  it("collapses empty activity and history into compact disclosures while keeping populated history open", async () => {
+  it("keeps activity review without displaying empty or populated grade history", async () => {
     const { unmount } = render(<GradingWorkspacePage evaluationId="e" />);
     const activityHeading = await screen.findByRole("heading", { name: "Hoạt động khi làm bài" });
-    const historyHeading = screen.getByRole("heading", { name: "Lịch sử sửa điểm" });
     expect(activityHeading.closest("details")).not.toHaveAttribute("open");
-    expect(historyHeading.closest("details")).not.toHaveAttribute("open");
+    expect(screen.queryByRole("heading", { name: "Lịch sử sửa điểm" })).not.toBeInTheDocument();
     expect(screen.getByText(/nền tảng không kết luận gian lận/)).toBeInTheDocument();
     unmount();
 
@@ -465,9 +566,9 @@ describe("AI proposal comparison and draft application", () => {
       },
     });
     render(<GradingWorkspacePage evaluationId="e" />);
-    const populatedHistoryHeading = await screen.findByRole("heading", { name: "Lịch sử sửa điểm" });
-    expect(populatedHistoryHeading.closest("details")).toHaveAttribute("open");
-    expect(screen.getByText(/Cộng điểm sơ đồ/)).toBeInTheDocument();
+    await screen.findByRole("heading", { name: "Hoạt động khi làm bài" });
+    expect(screen.queryByRole("heading", { name: "Lịch sử sửa điểm" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Cộng điểm sơ đồ/)).not.toBeInTheDocument();
   });
 });
 

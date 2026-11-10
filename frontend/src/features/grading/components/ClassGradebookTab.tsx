@@ -187,7 +187,8 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
           </div>
         )}
       </section>
-      {exporting && data && <GradebookExportDialog classId={classId} assignments={data.assignments} onClose={() => setExporting(false)} />}
+      {exporting && data && <GradebookExportDialog classId={classId} assignments={data.assignments}
+        initialAssignmentId={mode === "assignment" ? activeAssignment?.id : undefined} onClose={() => setExporting(false)} />}
     </div>
   );
 }

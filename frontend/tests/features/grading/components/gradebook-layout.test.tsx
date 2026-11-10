@@ -191,7 +191,10 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
   });
 
   it("nút Xuất bảng điểm lên chỗ của dòng tiêu đề và giữ phạm vi xuất đã chọn", async () => {
-    mocks.exportGrades.mockResolvedValue(new Blob(["csv"], { type: "text/csv" }));
+    mocks.exportGrades.mockResolvedValue({ blob: new Blob(["xlsx"]), filename: "Bài tập tuần 1.xlsx" });
+    const download = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
+      expect(this.download).toBe("Bài tập tuần 1.xlsx");
+    });
     URL.createObjectURL = vi.fn(() => "blob:test");
     URL.revokeObjectURL = vi.fn();
     const host = document.createElement("div");
@@ -201,11 +204,14 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
     await screen.findByText("Nguyễn Văn An");
     fireEvent.click(within(host).getByRole("button", { name: "Xuất bảng điểm" }));
     const dialog = screen.getByRole("dialog", { name: "Xuất bảng điểm" });
+    expect(within(dialog).getByRole("combobox", { name: /Phạm vi/ })).toHaveValue("a-1");
     fireEvent.change(within(dialog).getByRole("combobox", { name: /Phạm vi/ }), { target: { value: "a-2" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Xuất tệp" }));
     // Mặc định là Excel, đứng trước CSV.
     expect(within(dialog).getAllByRole("radio").map((r) => r.textContent)).toEqual(["Excel", "CSV"]);
     await waitFor(() => expect(mocks.exportGrades).toHaveBeenCalledWith("class-1", "xlsx", "a-2"));
+    await waitFor(() => expect(download).toHaveBeenCalledOnce());
+    download.mockRestore();
     host.remove();
   });
 

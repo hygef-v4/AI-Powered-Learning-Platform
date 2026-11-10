@@ -18,6 +18,38 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
 
 class GradebookAssemblyTest {
+    @Test
+    void exportRetainsAssignmentTitleEvenWithNoStudents() {
+        fixture(0);
+        var export = gradebookService.buildExport(actor, classId, assignmentId, "xlsx");
+        assertThat(export.assignmentTitle()).isEqualTo("Design");
+        assertThat(export.rows()).hasSize(1);
+        assertThat(gradebookService.buildExport(actor, classId, null, "csv").assignmentTitle()).isEqualTo("Design");
+    }
+
+    @Test
+    void exportUsesVietnameseHeadersStatusesAndSubmissionTime() {
+        var evaluation = fixture(1).get(0);
+        var rows = gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx");
+        assertThat(rows.get(0)).containsExactly("Sinh viên", "Email", "Bài tập", "Trạng thái",
+                "Thời gian nộp", "Nộp muộn", "Điểm", "Điểm tối đa", "Nhận xét");
+        assertThat(rows.get(1)).contains("Đã công bố", "01/11/2026 08:00:00", "Không");
+        for (var state : List.of(EvaluationStatus.PENDING, EvaluationStatus.DRAFT, EvaluationStatus.FINALIZED)) {
+            evaluation.state = state;
+            String expected = switch (state) {
+                case PENDING -> "Chờ chấm";
+                case DRAFT -> "Đã chấm";
+                default -> "Đã chốt điểm";
+            };
+            assertThat(gradebookService.buildExportRows(actor, classId, assignmentId, "csv").get(1).get(3))
+                    .isEqualTo(expected);
+        }
+        when(evaluationRepository.findForClass(classId)).thenReturn(List.of());
+        when(submissionQuery.listSubmissions(assignmentId, classId)).thenReturn(List.of());
+        assertThat(gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx").get(1).get(3))
+                .isEqualTo("Chưa nộp");
+    }
+
     final UUID classId = UUID.randomUUID(), assignmentId = UUID.randomUUID();
     final Actor actor = new Actor(UUID.randomUUID(), Role.TEACHER);
     final IEvaluationRepository evaluationRepository = mock(IEvaluationRepository.class);

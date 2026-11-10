@@ -3,8 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { apiFetch } from "@/shared/api/client";
 import { AutoTextarea, type RubricCriterion } from "@/shared/document";
-import { Button, Icon } from "@/shared/ui";
-import { formatFeedbackParagraphs } from "../model/format";
+import { Icon } from "@/shared/ui";
 import { GradingFeedbackSummary } from "./StructuredFeedbackSection";
 import type {
   GradingFormValues,
@@ -222,10 +221,8 @@ export function GradingHeaderSection({
   disabled,
   setFeedback,
   setAdjustment,
-  setAdjustmentReason,
   setChangeReason,
   updateStructuredSummary,
-  clearStructuredFeedback,
 }: {
   assignmentKind: string;
   unanchoredAuthors: string[];
@@ -233,13 +230,9 @@ export function GradingHeaderSection({
   disabled: boolean;
   setFeedback: (value: string) => void;
   setAdjustment: (value: string) => void;
-  setAdjustmentReason: (value: string) => void;
   setChangeReason: (value: string) => void;
   updateStructuredSummary: (summary: StructuredFeedbackSummary) => void;
-  clearStructuredFeedback: () => void;
 }) {
-  const hasAdjustment = Number(form.adjustment) !== 0 && form.adjustment.trim() !== "";
-  const paragraphFeedback = formatFeedbackParagraphs(form.feedback);
   return (
     <div className="mb-5 flex flex-col gap-2.5 border-b border-line pb-4">
       <p className="text-[13px] text-muted" data-testid="assignment-kind">
@@ -249,16 +242,10 @@ export function GradingHeaderSection({
         <p className="text-xs text-muted">Người thực hiện: {unanchoredAuthors.join(", ")}</p>
       )}
       <section aria-label="Nhận xét chung" className="mt-1 text-sm leading-relaxed text-body">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <label htmlFor="grading-general-feedback" className="text-sm font-semibold text-ink">Nhận xét chung</label>
-          <Button size="sm" variant="ghost" disabled={disabled || paragraphFeedback === form.feedback || paragraphFeedback.length > 10000}
-            title={paragraphFeedback.length > 10000 ? "Nhận xét sau khi tách đoạn vượt giới hạn 10.000 ký tự" : "Tách từng câu thành một đoạn, giữ nguyên nội dung"}
-            onClick={() => setFeedback(paragraphFeedback)}>Tách đoạn</Button>
-        </div>
+        <label htmlFor="grading-general-feedback" className="text-sm font-semibold text-ink">Nhận xét chung</label>
         <AutoTextarea
           id="grading-general-feedback"
           aria-label="Nhận xét chung"
-          aria-describedby="grading-feedback-help"
           disabled={disabled}
           rows={3}
           maxLength={10000}
@@ -267,7 +254,6 @@ export function GradingHeaderSection({
           placeholder="Nhập nhận xét chung cho bài làm…"
           className="mt-2 min-h-28 rounded-lg border! border-line bg-surface! p-3! text-sm font-normal leading-6 text-ink focus:border-focus disabled:opacity-60"
         />
-        <p id="grading-feedback-help" className="mt-1.5 text-xs text-muted">Enter để xuống dòng; cách một dòng để tách đoạn.</p>
         {form.feedback.trim() && <p className="sr-only">{form.feedback}</p>}
       </section>
       <div className="flex flex-wrap items-end gap-3">
@@ -283,34 +269,19 @@ export function GradingHeaderSection({
             className="mt-1 block w-28 rounded-lg border border-line bg-surface px-2.5 py-1 text-xs font-normal text-ink focus:border-focus focus:outline-none disabled:opacity-60"
           />
         </label>
-        {hasAdjustment && (
-          <label className="block min-w-48 flex-1 text-xs font-semibold text-ink">
-            Lý do cộng/trừ điểm
-            <input
-              type="text"
-              aria-label="Lý do cộng/trừ điểm"
-              disabled={disabled}
-              value={form.adjustmentReason}
-              onChange={(event) => setAdjustmentReason(event.target.value)}
-              placeholder="Nhập lý do cộng/trừ điểm…"
-              className="mt-1 block w-full rounded-lg border border-line bg-surface px-2.5 py-1 text-xs font-normal text-ink focus:border-focus focus:outline-none disabled:opacity-60"
-            />
-          </label>
-        )}
       </div>
-      {!disabled && <label className="block text-xs font-semibold text-ink">
-        Lý do sửa điểm
-        <input aria-label="Lý do sửa điểm" value={form.changeReason}
+      {!disabled && <details className="text-xs text-muted">
+        <summary className="cursor-pointer">Ghi chú thay đổi (tùy chọn)</summary>
+        <input aria-label="Ghi chú thay đổi" value={form.changeReason}
           onChange={event => setChangeReason(event.target.value)}
-          className="mt-1 block w-full rounded-lg border border-line bg-surface px-2.5 py-1 text-xs font-normal text-ink focus:border-focus focus:outline-none" />
-      </label>}
+          className="mt-2 block w-full rounded-lg border border-line bg-surface px-2.5 py-1 text-xs font-normal text-ink focus:border-focus focus:outline-none" />
+      </details>}
       <GradingFeedbackSummary
         summary={form.structuredFeedback?.summary}
         title="Điểm mạnh và điểm cần cải thiện"
         editable={!disabled}
         disabled={disabled}
         onChange={updateStructuredSummary}
-        onClear={clearStructuredFeedback}
       />
     </div>
   );

@@ -37,6 +37,35 @@ const feedback: StructuredFeedback = { schemaVersion: 1, summary: { strengths: [
 
 beforeEach(() => { vi.clearAllMocks(); mocks.saveEvaluation.mockResolvedValue({ ...initial.evaluation, version: 3 }); });
 
+it("preserves edits made during background saving and uses the returned version for the next save", async () => {
+  let finish!: (value: Detail["evaluation"]) => void;
+  mocks.saveEvaluation.mockReturnValueOnce(new Promise<Detail["evaluation"]>((resolve) => { finish = resolve; }))
+    .mockResolvedValueOnce({ ...initial.evaluation, version: 4, score: 1, adjustment: 0.25,
+      rubricItemScores: { r: { i: "0.75" } }, adjustmentReason: "New note", feedback: "New edit" });
+  const { result } = renderHook(() => useGradingWorkspace(initial, async () => initial));
+  act(() => result.current.updateForm({ feedback: "First edit" }));
+  let pending!: Promise<Detail["evaluation"] | null>;
+  act(() => { pending = result.current.save(false, { background: true }); });
+  expect(result.current.disabled).toBe(false);
+  expect(await result.current.save(false, { background: true })).toBeNull();
+  expect(mocks.saveEvaluation).toHaveBeenCalledTimes(1);
+  act(() => result.current.updateForm({ feedback: "New edit", adjustment: "0.5", changeReason: "New note",
+    itemScores: { r: { i: "0.75" } } }));
+  await act(async () => {
+    finish({ ...initial.evaluation, version: 3, feedback: "First edit" });
+    await pending;
+  });
+  expect(result.current.form).toMatchObject({ feedback: "New edit", adjustment: "0.5", changeReason: "New note",
+    itemScores: { r: { i: "0.75" } } });
+  expect(result.current.dirty).toBe(true);
+  await act(async () => { await result.current.save(false, { background: true }); });
+  expect(mocks.saveEvaluation).toHaveBeenLastCalledWith("e", expect.objectContaining({
+    version: 3, feedback: "New edit", adjustment: "0.5", adjustmentReason: "New note", changeReason: "New note",
+    itemScoresByRubric: { r: { i: "0.75" } },
+  }));
+  expect(result.current.dirty).toBe(false);
+});
+
 it("reloads the official values and clears a stale unsaved draft when another session has finalized", async () => {
   const finalized: Detail = { ...initial, evaluation: { ...initial.evaluation, state: "FINALIZED", feedback: "Official feedback" } };
   const { result } = renderHook(() => useGradingWorkspace(initial, async () => finalized));

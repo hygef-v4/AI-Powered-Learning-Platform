@@ -81,9 +81,6 @@ public class Evaluation {
         delta = delta == null ? BigDecimal.ZERO : delta;
         if (delta.scale() > 2 || delta.abs().compareTo(new BigDecimal("9999.99")) > 0)
             throw ApiException.badRequest("INVALID_ADJUSTMENT", "Invalid adjustment");
-        if (delta.signum() != 0 && isBlankText(deltaReason))
-            throw ApiException.badRequest("ADJUSTMENT_REASON_REQUIRED",
-                    "Adjustment requires a reason");
         var next = rubricScore.add(delta).max(BigDecimal.ZERO).min(maxScore).setScale(2,
                 RoundingMode.HALF_UP);
         if (gradedAt != null && score != null && score.compareTo(next) != 0) {

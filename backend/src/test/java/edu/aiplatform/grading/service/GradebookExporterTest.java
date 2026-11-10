@@ -10,6 +10,21 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 class GradebookExporterTest {
     @Test
+    void filenamesPreserveUnicodeAndHandleUnsafeReservedEmptyAndLongTitles() {
+        var exporter = new GradebookExporter();
+        assertThat(exporter.buildFilename("Bài tập tuần 1", "gradebook", "xlsx"))
+                .isEqualTo("Bài tập tuần 1.xlsx");
+        assertThat(exporter.buildFilename("Bài: 1/2\\3?*<>|\"\r\n. ", "gradebook", "csv"))
+                .isEqualTo("Bài_ 1_2_3________.csv");
+        for (String title : List.of("", "... ", "CON", "nul.txt", "LPT9"))
+            assertThat(exporter.buildFilename(title, "gradebook", "xlsx")).isEqualTo("gradebook.xlsx");
+        assertThat(exporter.buildFilename(null, "gradebook-class-date", "xlsx"))
+                .isEqualTo("gradebook-class-date.xlsx");
+        assertThat(exporter.buildFilename("😀".repeat(150), "gradebook", "xlsx"))
+                .isEqualTo("😀".repeat(60) + ".xlsx");
+    }
+
+    @Test
     void csvQuotesTextAndNeutralizesFormulas() throws Exception {
         var out = new ByteArrayOutputStream();
         new GradebookExporter().writeGradebook(List.of(List.of("Name", "Feedback"), List.of("=SUM(1,2)", " \t@evil\n\"quote\"")),
@@ -31,6 +46,7 @@ class GradebookExporterTest {
             }
         }
         assertThat(entries).containsKeys("[Content_Types].xml", "xl/workbook.xml", "xl/worksheets/sheet1.xml");
+        assertThat(entries.get("xl/workbook.xml")).contains("name=\"Bảng điểm\"");
         assertThat(entries.get("xl/worksheets/sheet1.xml")).contains("inlineStr", "=1+1", "&amp;")
                 .doesNotContain("<f>");
     }

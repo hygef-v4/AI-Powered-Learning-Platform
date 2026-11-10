@@ -44,7 +44,7 @@ final class GradingPromptParts {
     static List<RubricView> findActiveRubrics(IDocumentModel documentModel,
             DocumentModel document, DocumentModel skeleton, List<RubricView> rubrics) {
         List<DocumentPart> parts = computeParts(documentModel, skeleton != null ? skeleton : document);
-        Set<String> emptyPartIds = findEmptyPartIds(document, skeleton, parts);
+        Set<String> emptyPartIds = findEmptyPartIds(documentModel, document, skeleton, parts);
         boolean allPartsEmpty = parts.isEmpty()
                 || parts.stream().allMatch(p -> emptyPartIds.contains(p.partId()));
         if (allPartsEmpty) {
@@ -58,7 +58,7 @@ final class GradingPromptParts {
     static List<RubricView> findEmptyRubrics(IDocumentModel documentModel,
             DocumentModel document, DocumentModel skeleton, List<RubricView> rubrics) {
         List<DocumentPart> parts = computeParts(documentModel, skeleton != null ? skeleton : document);
-        Set<String> emptyPartIds = findEmptyPartIds(document, skeleton, parts);
+        Set<String> emptyPartIds = findEmptyPartIds(documentModel, document, skeleton, parts);
         boolean allPartsEmpty = parts.isEmpty()
                 || parts.stream().allMatch(p -> emptyPartIds.contains(p.partId()));
         if (allPartsEmpty) {
@@ -72,10 +72,10 @@ final class GradingPromptParts {
     static Set<String> findEmptyPartIds(IDocumentModel documentModel,
             DocumentModel document, DocumentModel skeleton) {
         List<DocumentPart> parts = computeParts(documentModel, skeleton != null ? skeleton : document);
-        return findEmptyPartIds(document, skeleton, parts);
+        return findEmptyPartIds(documentModel, document, skeleton, parts);
     }
 
-    static Set<String> findEmptyPartIds(DocumentModel document, DocumentModel skeleton,
+    static Set<String> findEmptyPartIds(IDocumentModel documentModel, DocumentModel document, DocumentModel skeleton,
             List<DocumentPart> parts) {
         if (parts == null || parts.isEmpty()) {
             return Set.of();
@@ -84,7 +84,7 @@ final class GradingPromptParts {
         Set<String> emptyParts = new HashSet<>();
         for (var part : parts) {
             List<DocumentBlock> partBlocks = blocksByPart.getOrDefault(part.partId(), List.of());
-            if (!hasStudentWork(partBlocks, skeleton)) {
+            if (!hasStudentWork(documentModel, partBlocks, skeleton)) {
                 emptyParts.add(part.partId());
             }
         }
@@ -140,7 +140,7 @@ final class GradingPromptParts {
         return currentPartId;
     }
 
-    private static boolean hasStudentWork(List<DocumentBlock> blocks, DocumentModel skeleton) {
+    private static boolean hasStudentWork(IDocumentModel documentModel, List<DocumentBlock> blocks, DocumentModel skeleton) {
         if (blocks == null || blocks.isEmpty()) {
             return false;
         }
@@ -149,10 +149,10 @@ final class GradingPromptParts {
         indexSkeletonBlocks(skeleton, skeletonXml, skeletonRows);
         for (DocumentBlock block : blocks) {
             if (block.origin() == BlockOrigin.TEACHER
-                    && hasModifiedTeacherBlock(block, skeletonXml, skeletonRows)) {
+                    && hasModifiedTeacherBlock(documentModel, block, skeletonXml, skeletonRows)) {
                 return true;
             }
-            if (block.origin() == BlockOrigin.STUDENT && hasStudentBlockContent(block)) {
+            if (block.origin() == BlockOrigin.STUDENT && hasStudentBlockContent(documentModel, block)) {
                 return true;
             }
         }
@@ -173,12 +173,12 @@ final class GradingPromptParts {
         }
     }
 
-    private static boolean hasModifiedTeacherBlock(DocumentBlock block,
+    private static boolean hasModifiedTeacherBlock(IDocumentModel documentModel, DocumentBlock block,
             Map<UUID, String> skeletonXml, Map<UUID, JsonNode> skeletonRows) {
         if (block.type() == BlockType.DIAGRAM) {
             String xml = block.content().path("xml").asText("");
             String orig = skeletonXml.getOrDefault(block.id(), "");
-            return hasDiagramCells(xml) && !xml.equals(orig);
+            return documentModel != null && documentModel.hasDiagramContent(xml) && !xml.equals(orig);
         }
         if (block.type() == BlockType.TABLE) {
             JsonNode origRows = skeletonRows.get(block.id());
@@ -189,26 +189,15 @@ final class GradingPromptParts {
         return false;
     }
 
-    private static boolean hasStudentBlockContent(DocumentBlock block) {
+    private static boolean hasStudentBlockContent(IDocumentModel documentModel, DocumentBlock block) {
         if (block.type() == BlockType.DIAGRAM) {
-            return hasDiagramCells(block.content().path("xml").asText(""));
+            return documentModel != null && documentModel.hasDiagramContent(block.content().path("xml").asText(""));
         }
         if (block.type() == BlockType.IMAGE) {
             return block.content().path("hasFile").asBoolean(false)
                     || !block.content().path("fileRef").asText("").isBlank();
         }
         return hasNonEmptyText(block);
-    }
-
-    private static boolean hasDiagramCells(String xml) {
-        if (xml == null || xml.isBlank()) {
-            return false;
-        }
-        String stripped = xml.replaceAll("<mxCell\\s+id=[\"']0[\"'][^>]*/>", "")
-                .replaceAll("<mxCell\\s+id=[\"']1[\"'][^>]*/>", "")
-                .replaceAll("<mxCell\\s+id=[\"']0[\"'][^>]*>.*?</mxCell>", "")
-                .replaceAll("<mxCell\\s+id=[\"']1[\"'][^>]*>.*?</mxCell>", "");
-        return stripped.contains("<mxCell") || stripped.contains("<UserObject");
     }
 
     private static int headingLevel(DocumentBlock block) {

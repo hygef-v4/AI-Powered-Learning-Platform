@@ -31,9 +31,8 @@ export function createInitialForm(evaluation: Evaluation, rubrics: Rubric[]): Gr
     acknowledgedReviewItems: evaluation.acknowledgedReviewItems ?? {},
     reviewedItemScores: evaluation.reviewedItemScores ?? {},
     adjustment: String(evaluation.adjustment ?? 0),
-    adjustmentReason: evaluation.adjustmentReason ?? "",
     feedback: evaluation.feedback ?? "",
-    changeReason: "",
+    changeReason: evaluation.adjustmentReason ?? "",
     usedProposalId: null,
   };
 }
@@ -103,7 +102,7 @@ export function buildStructuredItemPatch(
         rubricId,
         itemId,
         evidence: null,
-        reason: "Đạt yêu cầu theo tiêu chí.",
+        reason: "",
         suggestion: null,
         evidenceBlockId: null,
         requiresReview: false,

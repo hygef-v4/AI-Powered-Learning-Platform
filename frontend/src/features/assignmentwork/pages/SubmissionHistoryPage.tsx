@@ -78,10 +78,11 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
         if (controller.signal.aborted) return;
         setDetail(value);
         // Lịch sử chỉ gồm các lượt đã nộp; lượt đang làm không hiện (lỗi 2026-11-05). Bài cá nhân (yêu cầu 2026-11-10):
-        // chỉ mở sau hạn nộp đúng giờ; nộp lại là ghi đè nên chỉ có bản đúng hạn, thêm bản nộp muộn nếu có.
+        // lịch sử mở sau hạn nộp; bản đang được chấm vẫn mở riêng để xem điểm đã công bố trước hạn.
+        // Điểm và nhận xét chưa công bố do API kết quả giữ kín.
         const all = list.filter((a) => a.status === "SUBMITTED").sort((a, b) => b.attemptNo - a.attemptNo);
         const submitted = value.gradingMode === "PRACTICE" ? all
-          : historyOpen(value, all.length > 0) ? historyVersions(all) : [];
+          : historyOpen(value, all.length > 0) ? historyVersions(all) : all.filter((a) => a.graded);
         setAttempts(submitted);
         setSelected(submitted.find((a) => a.attemptId === wanted)?.attemptId ?? submitted[0]?.attemptId ?? null);
       }, (e) => { if (!controller.signal.aborted) setError(e); });
