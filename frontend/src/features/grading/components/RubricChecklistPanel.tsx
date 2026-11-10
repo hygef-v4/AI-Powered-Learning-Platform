@@ -104,7 +104,6 @@ export function RubricChecklist({
                 </span>
               </div>
             </div>
-            {feedback && (
               <RubricItemFeedback
                 rubricId={rubric.rubricId}
                 itemId={item.itemId}
@@ -116,6 +115,7 @@ export function RubricChecklist({
                 editable={!disabled}
                 disabled={disabled}
                 validBlockIds={validBlockIds}
+                fallbackBlockId={rubric.partId}
                 onChangeItem={
                   onChangeStructuredItem
                     ? (patch) => onChangeStructuredItem(rubric.rubricId, item.itemId, patch)
@@ -125,7 +125,6 @@ export function RubricChecklist({
                   onToggleAcknowledge ? () => onToggleAcknowledge(ackKey) : undefined
                 }
               />
-            )}
           </li>
         );
       })}

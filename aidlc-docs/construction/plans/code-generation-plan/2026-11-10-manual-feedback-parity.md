@@ -1,0 +1,12 @@
+# Optional manual grading feedback and simpler workspace
+
+User authorizes removing redundant controls/copy and making manual grading capable of strengths/improvements, per-item comments/evidence and navigation, without mandatory detail fields or a busy default screen. Continue alongside the approved history removal and autosave/adjustment fix. Existing Product.md and Impeccable distill/clarify guidance apply. No subagents or extra approval requested.
+
+Design: general feedback and scores remain primary. Summary and per-item detail sections are collapsed until needed; existing populated AI feedback remains available. Opening an empty detail must not create/save fabricated feedback. Manual explanation/evidence/anchor are optional; locked rubric references, bounds and AI evidence/review validation remain enforced. Navigation can fall back to the rubric's existing submission section without displaying IDs.
+
+- [x] Inspect shared editors, save/form mapping, AI and student readers, and backend validator. Existing item editor is gated by feedback presence; manual validator currently enforces AI-style required text/evidence.
+- [x] RED:1 frontend missing-editor regression;2 backend validation errors reproduce optional-field rejection, including save/finalize. AI completeness, anchors/bounds and existing review protections covered.
+- [x] Expose optional manual editors, remove paragraph-split and whole-feedback-clear buttons, move the optional change note into a compact disclosure with a clearer label. Reuse existing model/persistence contracts; allow optional manual explanation/evidence only.
+- [x] Final173 frontend/204 backend tests, TypeScript/scoped lint and final45 UI-polish cases pass. Local API/worker refreshed and health200; local DOM checked. A browser test accidentally saved one local draft item; restored the exact score/feedback/non-audit contents through normal versioned saves, with audit retained. No finalized/published or VPS grade mutation, real provider call, migration, commit/push or deployment. Full screenshot/mobile verification remains limited by browser screenshot timeouts. Evidence: build-and-test/2026-11-10-manual-feedback-parity.md.
+
+Security/Resiliency retained: authorization, stale/version guards, AI evidence completeness and flagged-item confirmation stay enforced. New manual text remains bounded and anchors validated. Infrastructure rules N/A; PBT disabled.

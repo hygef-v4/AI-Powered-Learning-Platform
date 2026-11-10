@@ -34,6 +34,9 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   const [detail, setDetail] = useState(initial);
   const [form, setForm] = useState(() => createInitialForm(initial.evaluation, initial.rubrics));
   const [busy, setBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
+  const editRevision = useRef(0);
   const [error, setError] = useState("");
   const [dirty, setDirty] = useState(false);
   const [aiAutoApplied, setAiAutoApplied] = useState(false);
@@ -59,6 +62,8 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
 
   function updateForm(patch: Partial<GradingFormValues>) {
     if (disabled) return;
+    editRevision.current += 1;
+    setError("");
     setForm((current) => ({ ...current, ...patch }));
     setDirty(true);
     setAiAutoApplied(false);
@@ -84,28 +89,12 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   function setAdjustment(adjustment: string) {
     updateForm({ adjustment });
   }
-  function setAdjustmentReason(adjustmentReason: string) {
-    updateForm({ adjustmentReason });
-  }
   function setChangeReason(changeReason: string) {
-    setForm((current) => ({ ...current, changeReason }));
-    if (!disabled) {
-      setDirty(true);
-      setAiAutoApplied(false);
-    }
+    updateForm({ changeReason });
   }
 
   function updateStructuredSummary(summary: StructuredFeedbackSummary) {
     updateForm(buildStructuredSummaryPatch(form, summary));
-  }
-
-  function clearStructuredFeedback() {
-    updateForm({
-      structuredFeedback: null,
-      clearStructuredFeedback: true,
-      acknowledgedReviewItems: {},
-      reviewedItemScores: {},
-    });
   }
 
   function updateStructuredItem(rubricId: string, itemId: string, patch: Partial<StructuredFeedbackItem>) {
@@ -121,6 +110,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     try {
       const refreshed = await refresh();
       setDetail(refreshed);
+      setError("");
       const receiptChanged = refreshed.evaluation.submissionHash !== evaluation.submissionHash;
       if (receiptChanged || refreshed.evaluation.state === "FINALIZED" || refreshed.evaluation.state === "PUBLISHED") {
         setForm(createInitialForm(refreshed.evaluation, refreshed.rubrics));
@@ -141,11 +131,15 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     if (confirmNavigation()) router.push(buildEvaluationHref(id, keepFilters ? filters : {}));
   }
 
-  async function saveEvaluation(advance = false): Promise<Evaluation | null> {
-    if (disabled) return null;
+  async function saveEvaluation(advance = false,
+    options: { background?: boolean } = {}): Promise<Evaluation | null> {
+    if (disabled || savingRef.current) return null;
     const currentIndex = detail.navigationIds.indexOf(evaluation.id);
     const next = currentIndex >= 0 ? detail.navigationIds[currentIndex + 1] : undefined;
-    setBusy(true);
+    const savedRevision = editRevision.current;
+    savingRef.current = true;
+    setSaving(true);
+    if (!options.background) setBusy(true);
     setError("");
     try {
       if (hasInvalidItemScores(detail.rubrics, form.itemScores)) {
@@ -187,13 +181,13 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
         version: evaluation.version,
         checkedItemsByRubric: form.checks,
         adjustment: form.adjustment,
-        adjustmentReason: form.adjustmentReason || null,
+        adjustmentReason: Number(form.adjustment) !== 0 ? form.changeReason.trim() || null : null,
         feedback: form.feedback,
-        changeReason: form.changeReason || null,
+        changeReason: form.changeReason.trim() || null,
         usedProposalId: form.usedProposalId,
       });
       if (saved) {
-        setDetail({ ...detail, evaluation: saved });
+        setDetail((current) => ({ ...current, evaluation: saved }));
         let replacementForm: GradingFormValues | null = null;
         if (saved.kind === "GROUP_DOCUMENT") {
           try {
@@ -208,20 +202,23 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
             setError("Đã lưu điểm nhóm. Tải lại bài để cập nhật điểm và phiên bản thành viên.");
           }
         }
-        setForm((current) => replacementForm ?? ({
+        const preserveEdits = !replacementForm && editRevision.current !== savedRevision;
+        setForm((current) => replacementForm ?? (preserveEdits ? {
+          ...current,
+          usedProposalId: current.usedProposalId === form.usedProposalId ? null : current.usedProposalId,
+        } : {
           ...current,
           adjustment: String(saved.adjustment ?? current.adjustment),
-          adjustmentReason: saved.adjustmentReason ?? "",
           structuredFeedback: saved.structuredFeedback ?? current.structuredFeedback ?? null,
           clearStructuredFeedback: false,
           acknowledgedReviewItems: saved.acknowledgedReviewItems ?? current.acknowledgedReviewItems ?? {},
           reviewedItemScores: saved.reviewedItemScores ?? current.reviewedItemScores ?? {},
           usedProposalId: null,
         }));
-        setDirty(false);
-        setAiAutoApplied(false);
-        dirtyRef.current = false;
-        if (advance && next) router.push(buildEvaluationHref(next, filters));
+        setDirty(preserveEdits);
+        if (!preserveEdits) setAiAutoApplied(false);
+        dirtyRef.current = preserveEdits;
+        if (advance && next && !preserveEdits) router.push(buildEvaluationHref(next, filters));
         return saved;
       }
       return null;
@@ -229,12 +226,14 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
       setError(formatErrorMessage(error));
       return null;
     } finally {
-      setBusy(false);
+      savingRef.current = false;
+      setSaving(false);
+      if (!options.background) setBusy(false);
     }
   }
 
   async function requestProposal(input: AiRequest): Promise<Proposal | null> {
-    if (disabled) return null;
+    if (disabled || savingRef.current) return null;
     setBusy(true);
     setError("");
     try {
@@ -257,6 +256,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     structuredFeedback?: StructuredFeedback | null,
   ) {
     if (disabled) return;
+    editRevision.current += 1;
     const patch = buildProposalDraftPatch(
       detail.rubrics,
       evaluation,
@@ -277,6 +277,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     evaluation,
     form,
     busy,
+    saving,
     error,
     dirty,
     aiAutoApplied,
@@ -291,12 +292,10 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     setItemScore,
     setFeedback,
     setAdjustment,
-    setAdjustmentReason,
     setChangeReason,
     updateStructuredSummary,
     updateStructuredItem,
     toggleAcknowledgedReviewItem,
-    clearStructuredFeedback,
     reload: reloadEvaluation,
     navigate: navigateEvaluation,
     confirmNavigation,

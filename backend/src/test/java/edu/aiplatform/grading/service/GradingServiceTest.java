@@ -66,6 +66,23 @@ class GradingServiceTest {
                         Instant.now(), false, "hash")));
     }
 
+    @Test
+    void manualFeedbackCanSaveAndFinalizeWithOptionalEvidenceAndExplanation() {
+        var manual = new GradingFeedback(1,
+                new GradingFeedback.Summary(List.of("Clear model"), List.of(), List.of()),
+                List.of(new GradingFeedback.Item(rubricId, itemId, null, "", "Add multiplicity",
+                        null, false, null)));
+        gradingService.saveEvaluation(teacher, evaluation.id, new Save(
+                0, Map.of(), BigDecimal.ZERO, null, "Manual feedback", null, null,
+                Map.of(rubricId, Map.of(itemId, new BigDecimal("2.00"))),
+                manual, false, null, null));
+        assertThat(evaluation.structuredFeedback.items().get(0).reason()).isEmpty();
+        assertThat(evaluation.structuredFeedback.items().get(0).evidence()).isNull();
+        gradingService.finalizeEvaluation(teacher, new ItemVersion(evaluation.id, 0));
+        assertThat(evaluation.state).isEqualTo(EvaluationStatus.FINALIZED);
+        assertThat(evaluation.score).isEqualByComparingTo("2.00");
+    }
+
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.EnumSource(value = EvaluationStatus.class, names = {"FINALIZED", "PUBLISHED"})
     void officialGradesRejectManualAndProposalSavesWithoutMutation(EvaluationStatus state) {

@@ -17,7 +17,7 @@ import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
 import { buildChecklistBindings } from "../components/GradingForm";
 import { useGradingWorkspace } from "../hooks/useGradingWorkspace";
-import { ActivityReview, GradeHistory } from "../components/GradingReviewPanels";
+import { ActivityReview } from "../components/GradingReviewPanels";
 import { AiProposalPanel, buildAiRequest } from "../components/AiProposalPanel";
 import { BatchActionDialog } from "../components/BatchActionDialog";
 import { MemberContributionPanel } from "../components/MemberContributionPanel";
@@ -82,6 +82,7 @@ function Workspace({
     evaluation,
     form,
     busy,
+    saving,
     error,
     dirty,
     aiAutoApplied,
@@ -95,12 +96,10 @@ function Workspace({
     setItemScore,
     setFeedback,
     setAdjustment,
-    setAdjustmentReason,
     setChangeReason,
     updateStructuredSummary,
     updateStructuredItem,
     toggleAcknowledgedReviewItem,
-    clearStructuredFeedback,
     reload,
     navigate,
     save,
@@ -148,10 +147,10 @@ function Workspace({
 
   const handleAiGrade = async (input?: AiRequest) => {
     if (evaluation.kind === "MEMBER") {
-      if (detail.groupEvaluationId && !busy) navigate(detail.groupEvaluationId);
+      if (detail.groupEvaluationId && !busy && !saving) navigate(detail.groupEvaluationId);
       return;
     }
-    if (disabled || official || busy || aiGenerating) return;
+    if (disabled || official || busy || saving || aiGenerating) return;
     setAiOpen(false);
     setAiRequesting(true);
     const created = await requestProposal(input ?? buildAiRequest());
@@ -174,7 +173,7 @@ function Workspace({
   };
 
   const handlePublish = async () => {
-    if (busy || disabled) return;
+    if (busy || saving || disabled) return;
     if (dirty) {
       const saved = await save(false);
       if (!saved) return;
@@ -249,13 +248,15 @@ function Workspace({
     headerObserver.current = observer;
   }, []);
 
+  const saveDraftRef = useRef(save);
+  useEffect(() => { saveDraftRef.current = save; }, [save]);
   useEffect(() => {
-    if (!dirty || aiAutoApplied || disabled || busy || aiOpen) return;
+    if (!dirty || aiAutoApplied || disabled || busy || saving || aiOpen || error) return;
     const timer = setTimeout(() => {
-      void save(false);
-    }, 1500);
+      void saveDraftRef.current(false, { background: true });
+    }, 30000);
     return () => clearTimeout(timer);
-  }, [dirty, aiAutoApplied, disabled, busy, aiOpen, save, form.checks, form.itemScores, form.adjustment, form.feedback]);
+  }, [dirty, aiAutoApplied, disabled, busy, saving, aiOpen, error, form]);
 
   useEffect(() => {
     const keys = (event: KeyboardEvent) => {
@@ -317,7 +318,7 @@ function Workspace({
     })),
   ];
   const activeHeading = detail.rubrics.find((rubric) => rubric.rubricId === activePart)?.partId ?? null;
-  const saveText = busy ? "Đang xử lý…" : dirty ? "Chưa lưu" : `Đã lưu ${formatPoints(evaluation.score, evaluation.maxScore)}`;
+  const saveText = saving ? "Đang lưu…" : busy ? "Đang xử lý…" : dirty ? "Chưa lưu" : `Đã lưu ${formatPoints(evaluation.score, evaluation.maxScore)}`;
   const isGroupSubmission = evaluation.kind === "GROUP_DOCUMENT";
   const assignmentKind = isGroupSubmission ? "Nhóm" : "Cá nhân";
   const assignmentTitle = context.value?.title || "Bài tập";
@@ -352,16 +353,16 @@ function Workspace({
         }
         actions={
           <>
-            <Button size="sm" variant="secondary" disabled={disabled} onClick={() => void save(true)}>
+            <Button size="sm" variant="secondary" disabled={disabled || saving} onClick={() => void save(true)}>
               Lưu nháp / thay đổi
             </Button>
-            <Button size="sm" variant="secondary" disabled={disabled || dirty || evaluation.state !== "DRAFT"} onClick={() => setAction("finalize")}>
+            <Button size="sm" variant="secondary" disabled={disabled || saving || dirty || evaluation.state !== "DRAFT"} onClick={() => setAction("finalize")}>
               Chốt điểm
             </Button>
             <Button
               size="sm"
               variant="primary"
-              disabled={busy || Boolean(error) || !detail.current || evaluation.state === "PUBLISHED"}
+              disabled={busy || saving || Boolean(error) || !detail.current || evaluation.state === "PUBLISHED"}
               onClick={() => void handlePublish()}
             >
               Công bố điểm
@@ -395,10 +396,8 @@ function Workspace({
             disabled={disabled}
             setFeedback={setFeedback}
             setAdjustment={setAdjustment}
-            setAdjustmentReason={setAdjustmentReason}
             setChangeReason={setChangeReason}
             updateStructuredSummary={updateStructuredSummary}
-            clearStructuredFeedback={clearStructuredFeedback}
           />
         }
         sectionBylines={sectionBylines}
@@ -412,12 +411,12 @@ function Workspace({
               icon="chevron_left"
               title="Bài trước"
               aria-label="Bài trước"
-              disabled={currentIndex <= 0 || busy}
+              disabled={currentIndex <= 0 || busy || saving}
               onClick={() => navigate(detail.navigationIds[currentIndex - 1]!)}
             />
             <StudentPickerDropdown
               evaluationId={evaluation.id}
-              busy={busy}
+              busy={busy || saving}
               studentName={studentName}
               studentEmail={studentEmail}
               directory={directory}
@@ -427,7 +426,7 @@ function Workspace({
               icon="chevron_right"
               title="Bài sau"
               aria-label="Bài sau"
-              disabled={currentIndex < 0 || currentIndex >= detail.navigationIds.length - 1 || busy}
+              disabled={currentIndex < 0 || currentIndex >= detail.navigationIds.length - 1 || busy || saving}
               onClick={() => navigate(detail.navigationIds[currentIndex + 1]!)}
             />
           </>
@@ -465,7 +464,7 @@ function Workspace({
               aria-label="Chấm bằng AI"
               className="h-9! gap-2! px-3! text-sm! font-semibold!"
               aria-expanded={aiGenerating}
-              disabled={evaluation.kind === "MEMBER" ? busy || !detail.groupEvaluationId : disabled || official || busy || aiGenerating}
+              disabled={evaluation.kind === "MEMBER" ? busy || saving || !detail.groupEvaluationId : disabled || official || busy || saving || aiGenerating}
               onClick={() => void handleAiGrade()}
             >
               Chấm bằng AI
@@ -479,13 +478,8 @@ function Workspace({
           <MemberContributionPanel root={evaluation} members={detail.members} names={memberNames} onSaved={() => void reload()} />
         </div>
       )}
-      <div className="mt-6 flex flex-col gap-3">
-        <div className={detail.activityState === "DISABLED" ? "hidden" : undefined}>
-          <ActivityReview detail={detail} />
-        </div>
-        <div>
-          <GradeHistory evaluation={evaluation} />
-        </div>
+      <div className={detail.activityState === "DISABLED" ? "hidden" : "mt-6"}>
+        <ActivityReview detail={detail} />
       </div>
       {aiOpen && (
         <section id="grading-ai-review" aria-label="Chấm bằng AI" className="scroll-mt-52 border-t border-line pt-5">

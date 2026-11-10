@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useState } from "react";
 import { GradingWorkspacePage } from "@/features/grading/pages/GradingWorkspacePage";
@@ -204,6 +204,31 @@ describe("Feedback summary without duplicated improvement guidance", () => {
 });
 
 describe("Structured Grading Feedback — Teacher Workspace & Student View", () => {
+  it("adds optional manual summary and per-item feedback without requiring AI or creating feedback on open", async () => {
+    mocks.detail.mockResolvedValue(baseDetail);
+    mocks.proposals.mockResolvedValue([]);
+    mocks.save.mockResolvedValue({ ...baseDetail.evaluation, version: 2 });
+    render(<GradingWorkspacePage evaluationId="eval-1" />);
+    const summary = await screen.findByText("Điểm mạnh và điểm cần cải thiện");
+    expect(summary.closest("details")).not.toHaveAttribute("open");
+    fireEvent.click(summary);
+    const firstItem = within(screen.getByTestId("rubric-item-i1"));
+    fireEvent.click(firstItem.getByText("Nhận xét & minh chứng"));
+    expect(mocks.save).not.toHaveBeenCalled();
+    expect(firstItem.getByRole("textbox", { name: "Giải thích điểm: Xác định thực thể" })).toHaveValue("");
+    expect(firstItem.getByRole("link", { name: "Đi tới đoạn bài làm" })).toHaveAttribute("href", "#submission-block-part-1");
+    fireEvent.change(screen.getByRole("textbox", { name: "Điểm mạnh, ý 1" }), { target: { value: "Nắm được các lớp chính" } });
+    fireEvent.change(firstItem.getByRole("textbox", { name: "Minh chứng: Xác định thực thể" }), { target: { value: "Có lớp LopHoc" } });
+    fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
+    await waitFor(() => expect(mocks.save).toHaveBeenCalled());
+    const saved = mocks.save.mock.calls[0]![1].structuredFeedback;
+    expect(saved.summary).toEqual({ strengths: ["Nắm được các lớp chính"], improvements: [], nextSteps: [] });
+    expect(saved.items).toHaveLength(1);
+    expect(saved.items[0]).toMatchObject({ rubricId: "r1", itemId: "i1", evidence: "Có lớp LopHoc", reason: "", requiresReview: false });
+    expect(saved.items.some((item: { itemId: string }) => item.itemId === "i2")).toBe(false);
+    expect(screen.queryByRole("button", { name: "Xóa nhận xét cấu trúc" })).not.toBeInTheDocument();
+  });
+
   it("saves only nonblank summary ideas while retaining multiline text and historical next steps", async () => {
     mocks.detail.mockResolvedValue({ ...baseDetail, evaluation: { ...baseDetail.evaluation, structuredFeedback: sampleStructuredFeedback } });
     mocks.proposals.mockResolvedValue([]);
@@ -254,7 +279,8 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     expect(screen.getByText(/Ảnh sơ đồ mờ chưa trích xuất hết ký hiệu bội số/)).toBeInTheDocument();
 
     // Known block anchor is rendered as a navigable link; unknown block reference is plain text
-    const validAnchor = screen.getByRole("link", { name: "Đi tới đoạn bài làm" });
+    const validAnchor = within(screen.getByRole("region", { name: "Chấm bằng AI" }))
+      .getByRole("link", { name: "Đi tới đoạn bài làm" });
     expect(validAnchor).toHaveAttribute("href", "#submission-block-part-1");
     expect(document.querySelector('[data-block-id="part-1"]')).not.toBeNull();
     expect(
