@@ -1,9 +1,18 @@
 import { beforeEach, expect, it, vi } from "vitest";
-import { apiFetch } from "@/shared/api/client";
+import { apiFetch, apiDownloadFile } from "@/shared/api/client";
 import { gradingApi } from "@/features/grading/api";
 
-vi.mock("@/shared/api/client", () => ({ apiFetch: vi.fn(), apiDownload: vi.fn() }));
+vi.mock("@/shared/api/client", () => ({ apiFetch: vi.fn(), apiDownloadFile: vi.fn() }));
 beforeEach(() => vi.clearAllMocks());
+
+it("exports the selected scope with server filename metadata", () => {
+  gradingApi.exportGrades("c", "xlsx", "a");
+  expect(apiDownloadFile).toHaveBeenLastCalledWith(
+    "/api/v1/classes/c/gradebook/export?format=xlsx&assignmentId=a",
+  );
+  gradingApi.exportGrades("c", "csv");
+  expect(apiDownloadFile).toHaveBeenLastCalledWith("/api/v1/classes/c/gradebook/export?format=csv");
+});
 
 it("keeps direct/MCP evaluation reads free of navigation parameters", () => {
   gradingApi.loadEvaluation("e");

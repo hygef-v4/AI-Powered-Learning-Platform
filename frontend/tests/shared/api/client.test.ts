@@ -1,11 +1,27 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, apiFetch, CONCURRENT_REFRESH_WAIT_MS, setUnauthenticatedHandler } from "@/shared/api/client";
+import { ApiError, apiFetch, apiDownloadFile, CONCURRENT_REFRESH_WAIT_MS, setUnauthenticatedHandler } from "@/shared/api/client";
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status });
 }
 
 describe("apiFetch", () => {
+  it.each([
+    ["attachment; filename=\"fallback.xlsx\"; filename*=UTF-8''B%C3%A0i%20t%E1%BA%ADp.xlsx", "Bài tập.xlsx"],
+    ["attachment; filename=\"gradebook.csv\"", "gradebook.csv"],
+    ["attachment; filename=\"fallback.xlsx\"; filename*=UTF-8''bad%ZZ", "fallback.xlsx"],
+    ["", null],
+  ])("keeps download filename from %s", async (disposition, filename) => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response("workbook", {
+      headers: { "Content-Disposition": disposition },
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await apiDownloadFile("/api/v1/export");
+    expect(result.filename).toBe(filename);
+    expect(result.blob.size).toBe(8);
+    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ credentials: "include" });
+  });
+
   afterEach(() => {
     vi.unstubAllGlobals();
     setUnauthenticatedHandler(null);

@@ -559,3 +559,9 @@ Existing Security/Resiliency scope retained; PBT disabled. No production behavio
 ## Authorized staging-to-main release — 2026-11-10
 
 User authorized publishing a staging-to-main PR and merging after CI passes. Application source is the verified7fbf5703 tree; this checkpoint only records authorization. The GitHub PR/workflow and final chat response carry the release outcome without adding another source commit after verification. Existing Security/Resiliency scope retained; PBT disabled.
+
+## Gradebook export naming — 2026-11-10
+
+- [x] Scoped workspace/export review and requirements documented in inception/requirements/2026-11-10-gradebook-export.md.
+- [x] User approved implementation; safe assignment filenames shared by API and UI. Backend14 tests, frontend183 tests plus final35-case subset, typecheck/scoped lint passed. Evidence: construction/build-and-test/2026-11-10-gradebook-export.md. No live Excel/browser acceptance, full suite/build, restart, deployment or commit/push. Security/Resiliency retained; PBT disabled.
+- [x] Screenshot follow-up: Vietnamese headers/statuses/late flags/time/sheet, active-assignment export default, single-assignment title and ID-free aggregate filenames. Backend15/15, frontend35/35, typecheck/lint passed. Local API/worker refreshed; two pending staging migrations applied on startup. Real local browser downloads and XLSX XML assertions passed for assignment5rows and aggregate20rows/4assignments. User's original tab retained. No VPS release, grade write, commit/push or subagents; current evidence/limits in the same report.

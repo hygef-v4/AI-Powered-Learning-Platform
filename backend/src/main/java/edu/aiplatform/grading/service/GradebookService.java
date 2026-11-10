@@ -44,6 +44,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,6 +63,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class GradebookService {
+    private static final DateTimeFormatter EXPORT_DATE_TIME = DateTimeFormatter
+            .ofPattern("dd/MM/yyyy HH:mm:ss").withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
     private static final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -406,6 +410,13 @@ public class GradebookService {
     @Transactional
     public List<List<String>> buildExportRows(Actor actor, UUID classId, UUID assignmentId,
             String format) {
+        return buildExport(actor, classId, assignmentId, format).rows();
+    }
+
+    public record GradebookExport(List<List<String>> rows, String assignmentTitle) {}
+
+    @Transactional
+    public GradebookExport buildExport(Actor actor, UUID classId, UUID assignmentId, String format) {
         // Step 1: Check teacher export permission and format parameter (csv or xlsx)
         gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_EXPORT);
         if (!Set.of("csv", "xlsx").contains(format))
@@ -413,20 +424,20 @@ public class GradebookService {
 
         // Step 2: Write standard header row
         List<List<String>> output = new ArrayList<>();
-        output.add(List.of("Student", "Email", "Assignment", "Status", "Submitted at", "Late",
-                "Score", "Maximum", "Feedback"));
+        output.add(List.of("Sinh viên", "Email", "Bài tập", "Trạng thái", "Thời gian nộp", "Nộp muộn",
+                "Điểm", "Điểm tối đa", "Nhận xét"));
 
         // Step 3: Load gradebook data and format export rows for each student and assignment
         gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
         var data = loadGradebook(classId, null);
-        if (assignmentId != null && data.columns().stream()
-                .noneMatch(assignment -> assignmentId.equals(assignment.id())))
+        var selectedColumns = data.columns().stream()
+                .filter(column -> assignmentId == null || assignmentId.equals(column.id())).toList();
+        if (assignmentId != null && selectedColumns.isEmpty())
             throw ApiException.notFound("ASSIGNMENT_NOT_FOUND");
         for (var student : data.students()) {
-            for (var column : data.columns()) {
-                if (assignmentId == null || assignmentId.equals(column.id()))
-                    output.add(buildExportRow(student, mapGradeCell(student.accountId(), column,
-                            data.evaluations(), data.progress()), column.title()));
+            for (var column : selectedColumns) {
+                output.add(buildExportRow(student, mapGradeCell(student.accountId(), column,
+                        data.evaluations(), data.progress()), column.title()));
             }
         }
 
@@ -434,7 +445,8 @@ public class GradebookService {
         audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "GRADEBOOK_EXPORTED",
                 "CLASS", classId.toString(), AuditResult.SUCCESS, null, Map.of("format", format),
                 clock.instant()));
-        return output;
+        String title = selectedColumns.size() == 1 ? selectedColumns.get(0).title() : null;
+        return new GradebookExport(output, title);
     }
 
     /** Formats one export row and includes scores and feedback only for official grades. */
@@ -442,9 +454,19 @@ public class GradebookService {
         boolean official = grade.status().equals("FINALIZED") || grade.status().equals("PUBLISHED");
         String score = official && grade.score() != null ? grade.score().toPlainString() : "";
         String feedback = official && grade.feedback() != null ? grade.feedback() : "";
-        return List.of(student.name(), student.email(), assignmentTitle, grade.status(),
-                grade.submittedAt() == null ? "" : grade.submittedAt().toString(),
-                Boolean.toString(grade.late()), score,
+        String status = switch (grade.status()) {
+            case "NOT_SUBMITTED" -> "Chưa nộp";
+            case "IN_PROGRESS" -> "Đang làm bài";
+            case "PENDING" -> "Chờ chấm";
+            case "DRAFT" -> "Đã chấm";
+            case "FINALIZED" -> "Đã chốt điểm";
+            case "PUBLISHED" -> "Đã công bố";
+            case "SUPERSEDED" -> "Bài nộp cũ";
+            default -> "Chưa xác định";
+        };
+        return List.of(student.name(), student.email(), assignmentTitle, status,
+                grade.submittedAt() == null ? "" : EXPORT_DATE_TIME.format(grade.submittedAt()),
+                grade.late() ? "Có" : "Không", score,
                 grade.maxScore() == null ? "" : grade.maxScore().toPlainString(), feedback);
     }
 }

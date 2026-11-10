@@ -127,3 +127,20 @@ export async function apiDownload(path: string, init: RequestInit = {}): Promise
   if (!headers.has("Accept")) headers.set("Accept", "application/octet-stream");
   return (await apiResponse(path, { ...init, headers })).blob();
 }
+
+/** Keeps the server's Unicode filename together with the authenticated download. */
+export async function apiDownloadFile(path: string): Promise<{ blob: Blob; filename: string | null }> {
+  const response = await apiResponse(path, { headers: { Accept: "application/octet-stream" } });
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const encodedName = /filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1];
+  const plainName = /filename="([^"]*)"/i.exec(disposition)?.[1];
+  let filename = plainName ?? null;
+  if (encodedName) {
+    try {
+      filename = decodeURIComponent(encodedName);
+    } catch {
+      // Keep the fallback when an upstream server sends malformed encoding.
+    }
+  }
+  return { blob: await response.blob(), filename };
+}

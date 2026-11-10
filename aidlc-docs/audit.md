@@ -12291,3 +12291,37 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 **AI Response**: Confirmed remote main57b0bb8d is an ancestor of remote staging7fbf5703; release scope is five grading/quiz/assignment/UI documentation commits plus the previous merge. User explicitly authorizes creating the PR, running CI and merging only after success, superseding the earlier no-push restriction for this release. Record this request in a documentation-only staging commit, publish it without force, create staging-to-main PR and require successful backend/frontend/deploy-script jobs on its current head. PR images is intentionally skipped; main push builds and publishes SHA-tagged images, which existing VPS automation may deploy. Full local merged-source verification2110 backend tests/JAR and908 frontend tests/lint/typecheck passed before this documentation-only change. Final CI and merge receipt is recorded in the GitHub PR and chat; no infrastructure settings changed or branch deletion.
 
 ---
+
+## Gradebook export requirements review
+**Timestamp**: 2026-11-10T07:05:14Z
+**Requested by:** Quang Hung
+**User Input**: Giúp tôi check phần export gradebook excel nên hợp lý hơn với export nên để tên excel theo tên asignment
+**AI Response**: Inspected UI download, backend header, exporter, service and existing tests. Prepared concrete assignment-title filename criteria in inception/requirements/2026-11-10-gradebook-export.md. CLAUDE.md requires explicit requirements approval before implementation; awaiting review. No application source edited or runtime tests executed. Existing Security/Resiliency retained; PBT disabled.
+
+---
+
+## Gradebook export implementation and verification
+**Timestamp**: 2026-11-10T07:23:48Z
+**Requested by:** Quang Hung
+**User Input**: Giúp tôi sửa theo plan
+**AI Response**: Approved reviewed requirements and authorized implementation/verification. Implemented server-owned safe Unicode assignment filenames, all-assignment class/Vietnam-date names, same-snapshot title metadata and authenticated frontend filename download. Backend14 tests passed; frontend183 passed with final updated35-case subset passed; final typecheck and scoped lint passed. Initial memory failures recovered with bounded runs; one test expectation and callback typing corrected. Evidence: construction/build-and-test/2026-11-10-gradebook-export.md. No live grade, deployment, restart, commit/push or subagents. Security/Resiliency retained; PBT disabled.
+
+---
+
+
+## Gradebook Vietnamese workbook and filename screenshot follow-up
+**Timestamp**: 2026-11-10T09:24:22Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] để tiếng việt  với để tên file phải giống tên bài assignment, chứu k phải id như này [Image #2]"
+**AI Response**: User authorizes Vietnamese export presentation and assignment-title filenames. Reproduced missing assignment-context default in a parent/dialog frontend regression1/16 failing, and English headers/raw status, Gradebook sheet and ID fallback in backend4/15 failing. Existing uncommitted naming changes retained. Extend current scoped plan, implement both symptoms and run connected checks; environment question pending for live acceptance. No subagents or publish/deploy action.
+
+---
+
+
+## Gradebook local runtime acceptance
+**Timestamp**: 2026-11-10T09:30:25Z
+**Requested by:** Quang Hung
+**User Input**: "hiên tại trên máy, nhóm cũng deploy fps r"
+**AI Response**: Confirmed local browser context. Final backend15/15, frontend35/35, typecheck and scoped lint passed. Restarted only the identified existing local API/worker launcher; health200, startup applied two pending staging assignment migrations20261109.2330 and20261110.1200. Downloaded SWD392 – Thiết kế hệ thống nhắn tin.xlsx from the authenticated UI and verified actual XLSX XML has9 Vietnamese headers, Bảng điểm sheet,5 rows for the selected assignment, localized statuses/flags and unchanged0.00 published score. Aggregate download Bảng điểm tổng hợp-2026-11-10.xlsx verified20rows/4assignments and no class ID. Temporary tab closed and original browser tab restored. Existing uncommitted changes preserved; no live grade/provider action, VPS update, commit/push, full-suite/build rerun or subagents. Updated the current requirements/plan/state and verification report.
+
+---
