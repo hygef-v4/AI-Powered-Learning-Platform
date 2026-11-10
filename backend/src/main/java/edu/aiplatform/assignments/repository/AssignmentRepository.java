@@ -131,11 +131,11 @@ public class AssignmentRepository {
                 .param("id", id).param("now", ts(now)).update();
     }
 
-    /** {@code OPEN → CLOSED} khi qua {@code lateUntil}, hoặc {@code closesAt} nếu không có (BR-U07-34). */
+    /** {@code OPEN → CLOSED} sau 30 giây ân hạn kể từ {@code lateUntil}, hoặc {@code closesAt} nếu không có (BR-U07-34). */
     public List<UUID> closeDue(Instant now) {
         return jdbc.sql("update assignments set status = 'CLOSED', updated_at = :now, version = version + 1 "
-                        + "where status = 'OPEN' and coalesce(late_until, closes_at) <= :now returning id")
-                .param("now", ts(now)).query(UUID.class).list();
+                        + "where status = 'OPEN' and coalesce(late_until, closes_at) <= :cutoff returning id")
+                .param("now", ts(now)).param("cutoff", ts(now.minusSeconds(30))).query(UUID.class).list();
     }
 
     /** Chỉ xóa bài chưa từng phát hành (BR-U07-31); rubric và đề xuất AI xóa theo khóa ngoại. */

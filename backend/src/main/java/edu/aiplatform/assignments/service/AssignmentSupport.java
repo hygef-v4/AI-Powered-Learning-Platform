@@ -122,18 +122,8 @@ class AssignmentSupport {
         boolean manage = access.canManage(actor, a);
         boolean archived = access.ownerArchived(a);
         boolean write = manage && !archived;
-        Map<String, AssignmentRubric> byPart = new HashMap<>();
-        rubrics.listByAssignment(a.id()).forEach(r -> byPart.put(r.partId(), r));
-        List<AssignmentViews.Part> parts = new ArrayList<>();
-        BigDecimal total = BigDecimal.ZERO;
-        for (DocumentPart part : a.parts()) {
-            AssignmentRubric rubric = byPart.get(part.partId());
-            BigDecimal points = rubric == null ? BigDecimal.ZERO : rubric.totalPoints();
-            total = total.add(points);
-            parts.add(new AssignmentViews.Part(part.partId(), part.headingBlockId(), part.ancestorHeadingIds(),
-                    part.title(), rubric == null ? null : rubric.id(), rubric == null ? 0 : rubric.criteria().size(),
-                    points, rubric != null && rubric.complete(), rubric != null && rubric.locked()));
-        }
+        List<AssignmentViews.Part> parts = detailParts(a);
+        BigDecimal total = parts.stream().map(AssignmentViews.Part::totalPoints).reduce(BigDecimal.ZERO, BigDecimal::add);
         AssignmentStatus status = a.status();
         AssignmentViews.Permissions permissions = new AssignmentViews.Permissions(manage,
                 write && a.editable(),
@@ -153,6 +143,26 @@ class AssignmentSupport {
                 status, a.opensAt(), a.closesAt(), a.lateUntil(), a.maxAttempts(),
                 a.retiredReason(), a.createdAt(), a.updatedAt(), a.version(), permissions,
                 a.scope() == AssignmentScope.CLASS && groupSupported(a.classId()), List.copyOf(warnings));
+    }
+
+    private List<AssignmentViews.Part> detailParts(Assignment a) {
+        Map<String, AssignmentRubric> byPart = new HashMap<>();
+        rubrics.listByAssignment(a.id()).forEach(r -> byPart.put(r.partId(), r));
+        List<AssignmentViews.Part> parts = new ArrayList<>();
+        AssignmentRubric whole = byPart.get(RubricService.WHOLE);
+        if (whole != null && RubricService.hasWhole(a.parts())
+                && (!whole.criteria().isEmpty() || a.parts().isEmpty())) {
+            parts.add(new AssignmentViews.Part(RubricService.WHOLE, null, List.of(), RubricService.WHOLE_TITLE,
+                    whole.id(), whole.criteria().size(), whole.totalPoints(), whole.complete(), whole.locked()));
+        }
+        for (DocumentPart part : a.parts()) {
+            AssignmentRubric rubric = byPart.get(part.partId());
+            BigDecimal points = rubric == null ? BigDecimal.ZERO : rubric.totalPoints();
+            parts.add(new AssignmentViews.Part(part.partId(), part.headingBlockId(), part.ancestorHeadingIds(),
+                    part.title(), rubric == null ? null : rubric.id(), rubric == null ? 0 : rubric.criteria().size(),
+                    points, rubric != null && rubric.complete(), rubric != null && rubric.locked()));
+        }
+        return parts;
     }
 
     String ownerName(Assignment a) {
