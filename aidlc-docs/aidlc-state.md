@@ -1,5 +1,18 @@
 # AI-DLC State Tracking
 
+## Sửa 22 điểm UI/UX — build và kiểm thử xong, đã commit, chưa push, 2026-11-10
+
+Người dùng yêu cầu sửa toàn bộ 22 điểm của đợt rà soát UI/UX, chọn phương án A cho cả 9 câu hỏi, duyệt kế hoạch 21 bước và duyệt mã. Nhánh `fix/ui-ux-remediation` tạo từ `staging` `062a43f5`. Chỉ sửa `frontend/` và `PRODUCT.md`; không đổi backend, API, schema. [Yêu cầu và quyết định](inception/requirements/2026-11-10-ui-ux-remediation-questions.md); [kế hoạch và điều chỉnh](construction/plans/code-generation-plan/2026-11-10-ui-ux-remediation.md); [tóm tắt thay đổi](construction/ui-ux-remediation/code/summary.md); [kết quả build và kiểm thử](construction/build-and-test/2026-11-10-ui-ux-remediation-results.md).
+
+- [x] Workspace Detection: brownfield, dùng lại tài liệu reverse engineering hiện có.
+- [x] Requirements Analysis: 22 yêu cầu, 9 quyết định (đều A).
+- [x] Workflow Planning: chỉ chạy Code Generation và Build and Test; các giai đoạn khác bỏ qua.
+- [x] Code Generation: 21/21 bước, người dùng đã duyệt.
+- [x] Build and Test: TypeScript và ESLint sạch; Vitest 886/886 ca trong 128 file, ba lần liên tiếp; production build thành công; trình duyệt xác nhận màn đăng nhập và trang 404.
+- [ ] Operations: giai đoạn giữ chỗ, chờ người dùng xác nhận.
+
+Chưa kiểm tra trên trình duyệt các màn sau đăng nhập (chỉ có kiểm thử tự động trong jsdom). Đã commit trên nhánh theo yêu cầu sau đó của người dùng; chưa push. Security và Resiliency tuân thủ trong phạm vi đã duyệt, các quy tắc khác N/A; PBT tắt.
+
 ## U08 — Thẻ Góp ý AI trong Lịch sử nộp bài, 2026-11-09
 
 Đã triển khai trên `fix/student-ai-grading` và đồng bộ UC 41, FR-030, US-ASM-012 cùng tài liệu U08. Thẻ luôn hiện theo lượt Practice đã nộp, dùng cột nhận xét trên màn hình rộng và chuyển vào đầu nội dung bài làm trên màn hình hẹp. [Kế hoạch và kết quả kiểm tra](construction/plans/code-generation-plan/2026-11-09-student-ai-feedback-card.md).
