@@ -12257,6 +12257,59 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 
 ---
 
+## Rà soát bug trên staging
+**Timestamp**: 2026-11-10T04:26:32Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra code mới nhất trên staging xem còn bug gì không"
+**AI Response**: "Rà staging tại 062a43f5 (trùng origin/staging; mã nguồn giống hệt 63e91aa0, chỉ khác audit.md). Frontend chạy lại: tsc sạch, eslint sạch, vitest 867/867 (126 file). Backend không chạy lại vì máy không có mvn trên PATH và mã nguồn không đổi so với lần mvn verify 2.081 test đã qua trên 63e91aa0. Đọc tay phần mã đổi từ 80dfc026: sửa đề bằng AI, học liệu ẩn/hiện và mô tả có định dạng, kiểm quyền khi tải học liệu, nhập tài khoản Excel, quiz AI bám tài liệu, cảnh báo thiếu câu của quy tắc bốc đề, FormattedText. Phát hiện: (1) Ctrl+Z sau khi AI sửa đề chỉ khôi phục khối nội dung, không khôi phục rubric và hướng dẫn mà AI đã thay (DocumentEditor externalEdit chỉ giữ DocumentModel; RubricService.replaceAll đã ghi đè); (2) cảnh báo thiếu câu ở DrawRulesPanel đếm theo từng thẻ, không trừ câu trùng nội dung và câu hai quy tắc cùng cần như QuizPaperPlanner, nên có thể không cảnh báo dù phát hành vẫn bị chặn; (3) AiTaskJobHandler có hai câu lệnh trên một dòng, lệch quy ước trình bày. Chưa đọc kỹ: GroupWorkspacePage, PracticeFeedbackPanel, màn chấm điểm, QuizDetailPage/AiDrafts phía frontend. Không đổi mã nguồn."
+**Context**: Rà soát; chỉ thêm mục audit này, chưa commit.
+
+---
+
+## Sửa lỗi Ctrl+Z sau khi AI sửa đề
+**Timestamp**: 2026-11-10T04:30:45Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa lỗi Ctrl+Z"
+**AI Response**: "Sửa trong frontend/src/features/assignments/pages/AssignmentFormPage.tsx: khi AI ghi đề, trang chụp hướng dẫn và tiêu chí của bản trước AI; Ctrl+Z về bản đó thì trả lại hướng dẫn và rubric của mọi phần đã tải (kể cả phần trống và Toàn bài), đánh dấu chưa lưu để lần lưu tới ghi lên máy chủ sau khung đề; Ctrl+Y trả lại bản của AI (rubric chỉ khi đã tải xong lúc hoàn tác). Nhận ra bản đề theo tham chiếu đối tượng mà DocumentEditor trả về khi hoàn tác, làm lại. Thêm hàm listRestoredCriteria và test của nó; test externalEdit của DocumentEditor kiểm thêm tham chiếu. Không đổi backend, API hay DocumentEditor. Kiểm tra: tsc sạch, eslint sạch, vitest toàn bộ qua. Chưa thử trên trình duyệt vì cần một lượt gọi AI thật."
+**Context**: Sửa lỗi; chưa commit.
+
+---
+
+## Thử bản sửa Ctrl+Z trên trình duyệt
+**Timestamp**: 2026-11-10T04:34:40Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Thử trên trình duyệt"
+**AI Response**: "Chạy dev server frontend (cấu hình frontend-dev, backend Docker ở cổng 8080; cấu hình frontend-dev-docker-backend trỏ 8081 không có gì nghe), đăng nhập teacher@platform.local, tạo qua API một bài nháp thử 'Thử Ctrl+Z sau khi AI sửa đề' ở lớp SE-MAU1 với hai mục có rubric và hướng dẫn. Chưa thử được luồng AI: container platform-backend và platform-worker chạy image build ngày 2026-11-03, cũ hơn mã nguồn; backend đó chưa có chế độ REVISE (2026-11-09) và chưa tạo rubric Toàn bài khi lưu khung, nên trang báo 'Không tải được tiêu chí chấm'. Cần build lại backend và worker từ mã hiện tại (chạy các migration mới trên DB local) trước khi thử; chờ người dùng quyết định. Không đổi mã nguồn."
+**Context**: Kiểm thử trên trình duyệt bị chặn bởi stack Docker local cũ; chưa commit.
+
+---
+
+## Documentation Sync — staging code vs AI-DLC docs
+**Timestamp**: 2026-11-10T04:35:55Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra code mới nhất trên staging xem code và tài liệu đã đồng bộ với nhau chưa, đồng bộ tài liệu aidlc theo code mới nhất"
+**AI Response**: "Đối chiếu staging@062a43f5 với aidlc-docs; ghi danh sách khoảng cách vào construction/build-and-test/2026-11-10-aidlc-code-sync-gaps.md (U07 REVISE, U08 bỏ biên nhận và kiểm nộp, U09 phần trống 0 điểm, U10, U06, shell). Lượt này dừng do hết hạn mức sử dụng trước khi sửa tài liệu unit; chưa chạy test, không sửa code."
+**Context**: Construction — documentation sync, bước đối chiếu xong, bước cập nhật tài liệu unit còn lại
+
+---
+
+## Documentation Sync — unit docs updated
+**Timestamp**: 2026-11-10T07:15:14Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Tiếp tục sửa"
+**AI Response**: "Sửa tài liệu theo danh sách lệch: U07 (F6b, BR-U07-54/55, AiReviseChat), U08 (BR-U08-20/22, F6, bỏ ReceiptPage), U09 (BR-U09-36, F5/F14, frontend), U10 (bank-tags byDifficulty), U06 (model Gemini chọn sẵn), U05/U01 (NavTree), U04 (log lỗi). Bổ sung 15 mục và bỏ 2 liên kết hỏng trong current-code-baseline; xác nhận api-inventory khớp 239 mapping; cập nhật build-and-test-summary, aidlc-state và báo cáo 2026-11-10-aidlc-code-sync-gaps.md. Chỉ sửa Markdown, không chạy application test, không commit."
+**Context**: Construction — documentation sync hoàn tất cho staging@062a43f5
+
+---
+
+## Build lại stack local và thử bản sửa Ctrl+Z trên trình duyệt
+**Timestamp**: 2026-11-10T07:15:16Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Build lại và thử"
+**AI Response**: "Build lại image platform-backend:local từ mã hiện tại, recreate backend và worker (--no-deps); Flyway áp 5 migration mới lên DB local (tới v20261109.2201), cả hai healthy. Lượt AI thật không chạy được: stack local báo 'API chung không đủ hạn mức cho lượt này và bạn chưa lưu khóa API cá nhân'. Thay bằng một đề xuất READY (origin MCP) chèn thẳng vào assignment_ai_drafts của bài thử 95feaf71-92a3-43b7-9ec3-30db07c3e06f rồi áp dụng qua giao diện (?proposalId=). Kết quả đối chiếu với máy chủ: sau khi áp dụng còn 1 mục 'Database design' với rubric 10 điểm; bấm Hoàn tác thì hai mục cũ cùng rubric 5 điểm của từng mục trở lại trên trang và trên máy chủ; bấm Làm lại thì về bản AI cùng rubric của nó. Chưa kiểm được trên trình duyệt: khôi phục hướng dẫn (luồng này không thay hướng dẫn) và luồng khung chat với AI thật. Không đổi mã nguồn trong lượt này; dev server đã dừng."
+**Context**: Kiểm thử trên trình duyệt; bài thử và đề xuất thử còn trong DB local; chưa commit.
+
+---
 
 ## Staging merge check and authorized resolution
 **Timestamp**: 2026-11-10T06:45:33Z
@@ -12289,5 +12342,23 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 **Requested by:** Quang Hung
 **User Input**: "tạo pr từ staging lên main, chạy ci nếu pass thì merge vào main"
 **AI Response**: Confirmed remote main57b0bb8d is an ancestor of remote staging7fbf5703; release scope is five grading/quiz/assignment/UI documentation commits plus the previous merge. User explicitly authorizes creating the PR, running CI and merging only after success, superseding the earlier no-push restriction for this release. Record this request in a documentation-only staging commit, publish it without force, create staging-to-main PR and require successful backend/frontend/deploy-script jobs on its current head. PR images is intentionally skipped; main push builds and publishes SHA-tagged images, which existing VPS automation may deploy. Full local merged-source verification2110 backend tests/JAR and908 frontend tests/lint/typecheck passed before this documentation-only change. Final CI and merge receipt is recorded in the GitHub PR and chat; no infrastructure settings changed or branch deletion.
+
+---
+
+## Merge origin/staging và đưa lên staging
+**Timestamp**: 2026-11-10T07:22:06Z
+**Requested by:** Đào Chí Cường
+**User Input**: "pull code mới nhất, solve conflict sau đó đưa lên staging cho tôi"
+**AI Response**: "Merge origin/staging (17 commit, tới 218f8b36) vào staging cục bộ. Xung đột ở audit.md và U09 business-logic-model.md, giữ cả hai phía. Sửa một câu ở U05 frontend-components theo 8b3aa862. Sau merge: tsc sạch, 109/109 test frontend của assignments và shared/document qua; không chạy backend test. Push thường lên origin/staging."
+**Context**: Merge và push theo yêu cầu; không deploy
+
+---
+
+## Documentation Sync — PR #60 sau merge
+**Timestamp**: 2026-11-10T07:28:44Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Đồng bộ tiếp"
+**AI Response**: "Đồng bộ tài liệu cho 7 commit tính năng của PR #60 tại staging@1e77eb79: U07 (BR-U07-80…86, delta F3/F6/F9/F13, frontend, as-built), U08 (BR-U08-70…74, logic, frontend, as-built), U09 frontend, api-inventory thêm 3 endpoint (241 mapping khớp source), current-code-baseline thêm 4 migration và 2 test class, cập nhật báo cáo và aidlc-state. Ghi nhận Inception (FR-027, US-ASM-009, số lượt) còn mô tả hành vi cũ, chưa sửa vì là thay đổi yêu cầu. Chỉ sửa Markdown, không chạy application test, chưa commit."
+**Context**: Construction — documentation sync đợt 2
 
 ---

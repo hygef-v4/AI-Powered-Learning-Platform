@@ -289,9 +289,12 @@ describe("DocumentEditor", () => {
     rerender(<DocumentEditor document={ai} onChange={onChange} mode="author" diagramEnabled={false} externalEdit={{ id: 1, before: doc }} />);
     fireEvent.keyDown(screen.getByTestId("document-editor"), { key: "z", ctrlKey: true });
     expect(onChange).toHaveBeenLastCalledWith(doc);
+    // Trang soạn đề nhận ra bản trước AI, bản AI theo tham chiếu để trả lại rubric và hướng dẫn của bản đó.
+    expect(onChange.mock.lastCall![0]).toBe(doc);
     rerender(<DocumentEditor document={doc} onChange={onChange} mode="author" diagramEnabled={false} externalEdit={{ id: 1, before: doc }} />);
     fireEvent.keyDown(screen.getByTestId("document-editor"), { key: "y", ctrlKey: true });
     expect(onChange).toHaveBeenLastCalledWith(ai);
+    expect(onChange.mock.lastCall![0]).toBe(ai);
   });
 
   it("chỉ đọc có nút giữa (lịch sử nộp bài) vẫn đổi được Cả trang / Từng phần", () => {

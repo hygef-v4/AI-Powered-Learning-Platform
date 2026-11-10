@@ -67,6 +67,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 5. U06 gọi `onReady`: kiểm quyền người yêu cầu, hash còn khớp, schema, id mục thuộc rubric; đạt thì lưu đề xuất `READY` kèm provenance, không thì `STALE` hoặc `REJECTED`. `onFailed` chuyển `FAILED`.
 6. Giảng viên bấm "Dùng đề xuất": điền sẵn checklist và nhận xét; sửa nếu muốn rồi lưu như F4 bước 3–4; ghi đề xuất đã dùng.
 
+**Delta 2026-11-09 (BR-U09-36):** trước bước 3, `GradingPromptBuilder.findEmptyPartIds` và `findActiveRubrics` xác định phần lá không có bài làm. Không còn rubric nào hoạt động thì bước 4 lưu ngay đề xuất `READY` 0 điểm (`createZeroProposal`), vẫn audit `AI_GRADING_REQUESTED`, không gọi `IAiTask.submit`. Ngược lại prompt, schema và `maxOutputTokens` (4.096 + 220 mỗi mục, trần 8.192) chỉ tính trên rubric hoạt động; ở bước 5 kết quả được ghép điểm 0 của phần trống và chuẩn hóa trước khi kiểm schema. Grading đọc khung đề qua contract `IDocumentModel`, không gọi lớp nội bộ của U07.
+
 ### F6 - AI chấm hàng loạt (UC 43)
 1. Trong Submission Detail chọn nhiều bài `PENDING` hoặc `DRAFT`, bấm "Chấm hàng loạt bằng AI", chọn một nguồn.
 2. Frontend gọi `POST /api/v1/evaluations:ai-proposals` kèm danh sách và nguồn.
@@ -130,6 +132,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Submission Detail hiện nhóm thay cho sinh viên; Grading Workspace đọc tài liệu nhóm qua `IGroupSubmissionSource`, hiện từng phần kèm người làm.
 3. Chấm tài liệu nhóm như F4, F5; điểm thành viên mặc định bằng điểm tài liệu chung; giảng viên sửa từng người qua `PUT /api/v1/evaluations/{id}/members/{accountId}` (BR-U09-51).
 4. Chốt, công bố cả đánh giá tài liệu và đánh giá thành viên như F8, F9.
+5. Từ 2026-11-09: chi tiết đánh giá `MEMBER` trả `groupEvaluationId` (đánh giá `GROUP_DOCUMENT` hiện hành, chưa `SUPERSEDED`, mà thành viên thuộc về); nút chấm AI ở dòng thành viên mở bản nộp nhóm đó thay vì gửi AI cho riêng thành viên. Tab Sổ điểm liệt kê "Bản nộp chung theo nhóm" cho bài nhóm đang chọn.
 
 
 ### AI provider checkbox derivation — 2026-11-10
