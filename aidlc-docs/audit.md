@@ -12720,3 +12720,30 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 **Context**: Construction — Build and Test, đồng bộ nhánh với staging trước khi merge PR #64
 
 ---
+
+## Sửa 22 điểm UI/UX — việc còn lại sau khi merge PR #64
+**Timestamp**: 2026-11-10T14:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "làm nốt các việc còn lại cho tôi"
+**AI Response**: PR #64 đã merge vào `staging` (31cb17f2) sau khi CI qua. Xác nhận deploy: `ci.yml` chỉ build image khi push vào `main`; push vào `staging` không kích hoạt workflow nào, nên merge này không tạo lần deploy tự động. Xóa nhánh `fix/ui-ux-remediation` (local và remote): lệnh bị bộ kiểm soát quyền của phiên từ chối, chưa xóa. Kiểm tra trình duyệt các màn sau đăng nhập: đã chạy dev server local trên `staging` 31cb17f2, trình duyệt chưa có phiên đăng nhập và phiên làm việc không được đọc mật khẩu tài khoản thử, nên chưa kiểm tra; chờ người dùng tự đăng nhập trong khung trình duyệt. Không đổi mã nguồn.
+**Context**: Construction — Build and Test, sau merge PR #64
+
+---
+
+## Sửa 22 điểm UI/UX — bỏ qua kiểm tra trình duyệt sau đăng nhập
+**Timestamp**: 2026-11-10T14:45:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Bỏ qua bước này"
+**AI Response**: Dừng dev server local. Không kiểm tra các màn sau đăng nhập trên trình duyệt theo quyết định của người dùng; phần này vẫn chỉ có kiểm thử tự động trong jsdom. Không đổi mã nguồn.
+**Context**: Construction — Build and Test, sau merge PR #64
+
+---
+
+## Sửa 22 điểm UI/UX — PR ghi audit sau merge
+**Timestamp**: 2026-11-10T14:50:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Có, mở PR"
+**AI Response**: Commit các mục audit sau merge PR #64 lên nhánh `docs/ui-ux-remediation-audit` và mở PR vào `staging`. Chỉ đổi `aidlc-docs/audit.md`; không đổi mã nguồn, không merge PR.
+**Context**: Construction — Build and Test, sau merge PR #64
+
+---
