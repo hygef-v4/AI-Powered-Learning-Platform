@@ -9,11 +9,22 @@ import { formatErrorMessage } from "../model/format";
 import type { BatchResult, ItemVersion } from "../model/types";
 
 const OUTCOME_CODE_MESSAGES: Record<string, string> = {
+  ALREADY_FINALIZED: "Bài này đã được chốt điểm trước đó. Điểm được giữ nguyên.",
+  ALREADY_PUBLISHED: "Bài này đã được công bố điểm trước đó. Điểm được giữ nguyên.",
+  INVALID_GRADE_STATE: "Trạng thái bài đã thay đổi hoặc chưa phù hợp với thao tác này. Tải lại danh sách để kiểm tra.",
+  GRADE_VERSION_CONFLICT: "Bài chấm đã được cập nhật. Tải lại danh sách để dùng phiên bản mới nhất.",
+  GRADE_LOCKED: "Điểm đã được khóa. Tải lại danh sách để xem trạng thái hiện tại.",
+  DUPLICATE_ITEM: "Bài bị chọn trùng; chỉ xử lý một lần.",
+  INCOMPLETE_BATCH_RESULT: "Chưa nhận đủ kết quả xử lý. Tải lại danh sách để kiểm tra.",
   STRUCTURED_FEEDBACK_REVIEW_REQUIRED:
     "Còn mục nhận xét cấu trúc cần giảng viên kiểm tra và xác nhận trước khi chốt điểm.",
   STRUCTURED_FEEDBACK_SCORE_MISMATCH:
     "Có mục đã thay đổi điểm nhưng chưa cập nhật hoặc xác nhận lại giải thích nhận xét.",
 };
+
+function isAlreadyCompleted(row: BatchResult["items"][number]) {
+  return row.outcome === "SKIPPED" && (row.code === "ALREADY_FINALIZED" || row.code === "ALREADY_PUBLISHED");
+}
 
 export function BatchActionDialog({
   action,
@@ -58,19 +69,50 @@ export function BatchActionDialog({
       let completed: BatchResult;
       if (action === "ai") {
         completed = await gradingApi.requestProposals(items, buildAiRequest(choice));
-      } else if (action === "finalize") {
-        completed = await gradingApi.finalizeGrades(items);
       } else {
-        const initial = await gradingApi.publishGrades(items);
-        const unfinalized = initial.items.filter((r) => r.outcome === "FAILED" && r.code === "INVALID_GRADE_STATE");
+        const response = action === "finalize" ? await gradingApi.finalizeGrades(items) : await gradingApi.publishGrades(items);
+        const drafts = new Set<string>();
+        const initial = { items: await Promise.all(response.items.map(async (row) => {
+          if (row.outcome !== "FAILED" || row.code !== "INVALID_GRADE_STATE") return row;
+          try {
+            const { evaluation } = await gradingApi.loadEvaluation(row.evaluationId);
+            if (evaluation.state === "PUBLISHED" || (action === "finalize" && evaluation.state === "FINALIZED")) {
+              return { ...row, outcome: "SKIPPED", code: evaluation.state === "PUBLISHED" ? "ALREADY_PUBLISHED" : "ALREADY_FINALIZED" };
+            }
+            if (evaluation.state === "DRAFT") drafts.add(row.evaluationId);
+          } catch {
+            // An unavailable fresh read must not trigger an automatic grade write.
+          }
+          return row;
+        })) };
+        const unfinalized = action === "publish" ? initial.items.filter((row) => drafts.has(row.evaluationId)) : [];
         if (unfinalized.length > 0) {
           const toFinalize = items.filter((it) => unfinalized.some((u) => u.evaluationId === it.evaluationId));
           const finalized = await gradingApi.finalizeGrades(toFinalize);
-          const retryItems = items.map((item) => {
-            const fin = finalized.items.find((r) => r.evaluationId === item.evaluationId);
-            return fin && fin.newVersion != null ? { evaluationId: item.evaluationId, version: fin.newVersion } : item;
-          });
-          completed = await gradingApi.publishGrades(retryItems);
+          const retryToPublish = toFinalize
+            .map((item) => {
+              const fin = finalized.items.find((r) => r.evaluationId === item.evaluationId);
+              return fin?.outcome === "SUCCESS" && fin.newVersion != null
+                ? { evaluationId: item.evaluationId, version: fin.newVersion }
+                : null;
+            })
+            .filter((item): item is ItemVersion => item !== null);
+          const retried = retryToPublish.length > 0
+            ? await gradingApi.publishGrades(retryToPublish)
+            : { items: [] };
+          completed = {
+            items: initial.items.map((orig) => {
+              if (drafts.has(orig.evaluationId)) {
+                const fin = finalized.items.find((r) => r.evaluationId === orig.evaluationId);
+                if (fin?.outcome === "SUCCESS" && fin.newVersion != null) {
+                  return retried.items.find((r) => r.evaluationId === orig.evaluationId)
+                    ?? { ...orig, code: "INCOMPLETE_BATCH_RESULT", newVersion: fin.newVersion };
+                }
+                return fin ?? orig;
+              }
+              return orig;
+            }),
+          };
         } else {
           completed = initial;
         }
@@ -78,8 +120,13 @@ export function BatchActionDialog({
       setResult(completed);
       // Snapshot success before refreshing: a filtered list can remove the completed rows.
       if (action !== "ai" && completed.items.length === items.length
-        && items.every((item) => completed.items.some((row) => row.evaluationId === item.evaluationId && row.outcome === "SUCCESS"))) {
-        setSuccessMessage(action === "publish" ? `Đã công bố điểm cho ${items.length} bài.` : `Đã chốt điểm cho ${items.length} bài.`);
+        && items.every((item) => completed.items.some((row) => row.evaluationId === item.evaluationId && (row.outcome === "SUCCESS" || isAlreadyCompleted(row))))) {
+        const skipped = completed.items.filter(isAlreadyCompleted).length;
+        const changed = items.length - skipped;
+        const message = changed > 0
+          ? action === "publish" ? `Đã công bố điểm cho ${changed} bài.` : `Đã chốt điểm cho ${changed} bài.`
+          : "Các bài đã được chốt hoặc công bố trước đó. Điểm được giữ nguyên.";
+        setSuccessMessage(message + (skipped > 0 && changed > 0 ? ` ${skipped} bài đã hoàn tất trước đó, điểm được giữ nguyên.` : ""));
       }
       onDone();
     } catch (e) {
@@ -107,13 +154,13 @@ export function BatchActionDialog({
       dismissible={!busy}
       footer={
         <>
-          <Button
+          {result ? <Button onClick={onClose}>Đóng</Button> : <Button
             variant="primary"
-            disabled={busy || !!result || items.length === 0}
+            disabled={busy || items.length === 0}
             onClick={() => void run()}
           >
             {busy ? "Đang xử lý…" : "Xác nhận"}
-          </Button>
+          </Button>}
         </>
       }
     >
@@ -124,7 +171,7 @@ export function BatchActionDialog({
       {/* Nguồn AI do hệ thống tự chọn: API chung nếu còn đủ hạn mức cho lượt này, không thì khóa cá nhân (yêu cầu 2026-11-05). */}
       {action === "ai" && (
         <p className="text-xs text-muted">
-          {estimateState === "loading" ? "Đang ước tính token…" : estimateState === "ready" && estimate.tokens
+          {estimateState === "loading" ? "Đang ước tính token…" : estimateState === "ready" && estimate.tokens != null
             ? `Ước tính khoảng ${estimate.tokens.toLocaleString("vi-VN")} token.` : "Chưa ước tính được token."}
         </p>
       )}
@@ -132,15 +179,15 @@ export function BatchActionDialog({
       {result && (
         <ul className="flex flex-col">
           {result.items.map((r, index) => {
-            const detailMsg = r.code ? OUTCOME_CODE_MESSAGES[r.code] : undefined;
+            const detailMsg = r.code ? OUTCOME_CODE_MESSAGES[r.code] ?? "Không thể thực hiện thao tác. Tải lại danh sách và thử lại." : undefined;
             return (
               <li key={`${r.evaluationId}-${index}`} className="border-b border-line py-2 last:border-b-0">
                 <p>
-                  Bài {index + 1}: {r.outcome}
-                  {r.code && ` · ${r.code}`}
+                  Bài {index + 1}: {r.outcome === "SUCCESS" ? "Thành công" : r.outcome === "QUEUED" ? "Đã gửi yêu cầu AI" : r.outcome === "SKIPPED" ? "Bỏ qua" : "Chưa thực hiện được"}
                 </p>
                 {detailMsg && (
-                  <p role="alert" className="mt-1 text-xs font-medium text-danger">
+                  <p role={r.outcome === "FAILED" ? "alert" : undefined}
+                    className={`mt-1 text-xs font-medium ${r.outcome === "FAILED" ? "text-danger" : "text-muted"}`}>
                     {detailMsg}
                   </p>
                 )}

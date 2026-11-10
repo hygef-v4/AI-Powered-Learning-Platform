@@ -28,6 +28,15 @@ const doc: DocumentModel = {
 };
 
 describe("DocumentEditor", () => {
+  it("measures a wrapped toolbar for the sticky feedback offset", () => {
+    const height = vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(76);
+    try {
+      render(<DocumentEditor document={doc} onChange={vi.fn()} mode="student" diagramEnabled={false} readOnly toolbarCenter={<button>Lịch sử</button>} />);
+      expect(screen.getByTestId("document-editor").style.getPropertyValue("--doc-toolbar-height")).toBe("76px");
+    } finally {
+      height.mockRestore();
+    }
+  });
   it("workspace: each question has its answer box, no per-question diagram button; a diagram opens on click", () => {
     const second = { id: "q2", origin: "TEACHER" as const, type: "HEADING" as const, content: { style: "H1" as const, text: "Câu 2" } };
     const drawn = { id: "d1", origin: "STUDENT" as const, type: "DIAGRAM" as const,
@@ -621,6 +630,7 @@ describe("CommentRail", () => {
     render(<Rail />);
     const card = screen.getByText("Rubric 1").closest("[data-comment]");
     expect(card).toHaveClass("sticky");
+    expect(card).toHaveStyle({ top: "calc(var(--doc-toolbar-top, 4rem) + var(--doc-toolbar-height, 2.25rem) + 0.5rem)" });
     expect(card?.parentElement).toHaveAttribute("data-comment-band", "h1");
   });
 });

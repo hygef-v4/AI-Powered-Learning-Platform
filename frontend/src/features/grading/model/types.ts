@@ -153,6 +153,7 @@ export type Save = {
 export type Proposal = {
   id: string;
   versionNo: number;
+  createdAt?: string | null;
   taskId?: string | null;
   taskState?: "QUEUED" | "RUNNING" | "READY" | "FAILED" | "UNKNOWN" | "CANCELLED" | string | null;
   status: string;

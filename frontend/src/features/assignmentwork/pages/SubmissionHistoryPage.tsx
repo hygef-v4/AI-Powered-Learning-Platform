@@ -9,7 +9,8 @@ import { attemptImageUrl, exportUrl, workApi } from "../api";
 import { formatPoints, resultByPart, useAttemptResult, type ResultPart } from "../model/attemptResult";
 import { errorMessage, formatDateTime } from "../model/format";
 import { PracticeFeedbackPanel } from "../components/PracticeFeedbackPanel";
-import type { AttemptResult } from "../slots";
+import { studentGradeDistributions, type AttemptResult } from "../slots";
+import { PublishedFeedback, PublishedRubricItems } from "../components/PublishedFeedback";
 import type { Attempt, AttemptSummary, StudentDetail } from "../model/types";
 
 function attemptTime(a: AttemptSummary) {
@@ -181,13 +182,15 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
         </>}
       />
     )}
+    {shownResult && studentGradeDistributions.entries().map(({ key, component: Distribution }) =>
+      <Distribution key={key} classId={classId} assignmentId={assignmentId} />)}
     {current?.warnings.length ? <Alert tone="warning">{current.warnings.map((w) => w.message).join("; ")}</Alert> : null}
   </>);
 }
 
 /**
- * Bên lề chỉ có điểm: đầu tài liệu là thẻ tổng điểm; mỗi phần (nhánh con trực tiếp của gốc) một thẻ điểm gắn vào tiêu đề
- * của phần. Tạm thời không có nhận xét; học sinh không thấy các mục rubric.
+ * Bên lề hiển thị điểm và nhận xét đã công bố: đầu tài liệu là thẻ tổng điểm; mỗi phần (nhánh con trực tiếp của gốc) một thẻ điểm gắn vào tiêu đề
+ * của phần, kèm minh chứng và gợi ý theo rubric.
  */
 function scoreCards(result: AttemptResult, attempt: Attempt): DocumentComment[] {
   const blockIds = new Set(attempt.content.blocks.map((block) => block.id));
@@ -220,6 +223,7 @@ function TotalCard({ result }: { result: AttemptResult }) {
         <span className="text-[13px] text-muted">/ {formatPoints(result.maxScore)}</span>
       </p>
       <Meter awarded={result.score} max={result.maxScore} />
+      <div className="mt-3"><PublishedFeedback feedback={result.feedback} summary={result.summary} /></div>
       {result.memberOverride && <p className="mt-2 text-xs text-muted">Điểm cá nhân đã được giảng viên điều chỉnh riêng.</p>}
     </article>
   );
@@ -237,6 +241,7 @@ function PartScoreCard({ part }: { part: ResultPart }) {
         </span>
       </p>
       <Meter awarded={part.awarded} max={part.max} />
+      <PublishedRubricItems items={part.items} />
     </article>
   );
 }

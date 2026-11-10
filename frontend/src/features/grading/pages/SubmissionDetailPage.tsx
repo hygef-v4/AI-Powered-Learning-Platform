@@ -8,6 +8,7 @@ import { useResource } from "../hooks/useResource";
 import { formatPoints, GRADE_STATUS_LABELS } from "../model/types";
 import { Pagination } from "@/shared/ui/Pagination";
 import { BatchActionDialog } from "../components/BatchActionDialog";
+import { buildGradeActionItems } from "../model/gradeActions";
 import { Alert, Button, EmptyState, Icon, Pill, Select, type Tone } from "@/shared/ui";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
 import { buildEvaluationHref } from "../model/navigation";
@@ -54,10 +55,7 @@ export function SubmissionDetailPage({
   );
   const resource = useResource(load);
   const data = resource.value;
-  const items =
-    data?.rows
-      .filter((r) => r.evaluationId && selected.includes(r.evaluationId))
-      .map((r) => ({ evaluationId: r.evaluationId!, version: r.version })) ?? [];
+  const selectedRows = data?.rows.filter((row) => row.evaluationId && selected.includes(row.evaluationId)) ?? [];
   const selectable = data?.rows.filter((r) => r.evaluationId) ?? [];
   return (
     <main className="flex min-w-0 flex-col gap-6">
@@ -144,11 +142,12 @@ export function SubmissionDetailPage({
               <option value="false">Đúng hạn</option>
               <option value="true">Nộp trễ</option>
             </Select>
-            {items.length > 0 && (
+            {selectedRows.length > 0 && (
               <div className="ml-auto flex animate-pop flex-wrap items-center gap-2 rounded-lg bg-primary-soft py-1 pr-1 pl-3">
-                <span className="text-[13px] font-semibold text-ink">Đã chọn {items.length} bài</span>
+                <span className="text-[13px] font-semibold text-ink">Đã chọn {selectedRows.length} bài</span>
                 {(["ai", "finalize", "publish"] as const).map((a) => (
-                  <Button key={a} size="sm" variant={a === "publish" ? "primary" : "secondary"} onClick={() => setAction(a)}>
+                  <Button key={a} size="sm" variant={a === "publish" ? "primary" : "secondary"}
+                    disabled={!buildGradeActionItems(selectedRows, a).length} onClick={() => setAction(a)}>
                     {a === "ai" ? "AI đề xuất" : a === "finalize" ? "Chốt điểm" : "Công bố điểm"}
                   </Button>
                 ))}
@@ -245,7 +244,7 @@ export function SubmissionDetailPage({
       {action && (
         <BatchActionDialog
           action={action}
-          items={items}
+          items={buildGradeActionItems(selectedRows, action)}
           onClose={() => setAction(null)}
           onDone={() => void resource.refresh().catch(() => {})}
         />

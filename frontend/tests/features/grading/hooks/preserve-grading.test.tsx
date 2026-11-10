@@ -115,3 +115,28 @@ it.each([
   act(() => result.current.applyProposal({ r: ["i", "other"] }, "Legacy feedback", "legacy"));
   expect(result.current.form.reviewedItemScores).toEqual(expected);
 });
+
+
+it("refreshes every group member version including overridden grades after saving", async () => {
+  const source: Detail = { ...initial, evaluation: { ...initial.evaluation, kind: "GROUP_DOCUMENT" },
+    members: [{ ...initial.evaluation, id: "member", kind: "MEMBER", memberOverride: true, version: 4 }] };
+  const refreshed: Detail = { ...source, members: [{ ...source.members[0]!, version: 5 }] };
+  mocks.saveEvaluation.mockResolvedValue({ ...source.evaluation, version: 3 });
+  const refresh = vi.fn().mockResolvedValue(refreshed);
+  const { result } = renderHook(() => useGradingWorkspace(source, refresh));
+  act(() => result.current.updateForm({ feedback: "Changed" }));
+  await act(async () => { await result.current.save(); });
+  expect(result.current.detail.members[0]?.version).toBe(5);
+});
+
+it("does not carry saved marks onto a group receipt changed during the refresh", async () => {
+  const source: Detail = { ...initial, evaluation: { ...initial.evaluation, kind: "GROUP_DOCUMENT" } };
+  const pending: Detail = { ...source, evaluation: { ...source.evaluation, submissionHash: "new", state: "PENDING",
+    version: 9, score: null, feedback: null, rubricChecks: "{}", rubricItemScores: {}, adjustment: 0 } };
+  mocks.saveEvaluation.mockResolvedValue({ ...source.evaluation, version: 3 });
+  const { result } = renderHook(() => useGradingWorkspace(source, async () => pending));
+  act(() => result.current.updateForm({ feedback: "Old receipt" }));
+  await act(async () => { await result.current.save(); });
+  expect(result.current.form.feedback).toBe("");
+  expect(result.current.detail.evaluation.submissionHash).toBe("new");
+});
