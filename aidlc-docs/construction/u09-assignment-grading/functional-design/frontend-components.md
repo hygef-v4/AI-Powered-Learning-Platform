@@ -22,6 +22,15 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://claude.ai/artifact/M5RgKNauBqdxM7GUTRwau4), bản 17/10/2026; `#n` là số màn, mã trong ngoặc (ví dụ `a02`) là artboard.
 
+## AI review và điều hướng bài nhóm — 2026-11-09
+
+- `ClassGradebookTab`: bài nhóm đang chọn có danh sách "Bản nộp chung theo nhóm" (`useSubmissionDirectory`), mỗi nhóm một link "Xem bản nộp chung" mở Grading Workspace của đánh giá nhóm; có trạng thái đang tải, lỗi kèm Thử lại và "Chưa có bản nộp chung để xem".
+- `GradingWorkspacePage`: bài nhóm ghi "Người thực hiện: tên" theo tiêu đề từng phần (`sectionBylines`), người làm của phần không gắn được tiêu đề ghi ở đầu trang; hiện "Nhận xét chung" và "Điểm mạnh và điểm cần cải thiện" ngay trên trang; thanh công cụ có nút "Điểm thành viên" cuộn tới `#group-member-grades` và nút "Xem đề xuất AI". Với đánh giá `MEMBER`, nút AI có nhãn "Mở bài nộp nhóm để chấm bằng AI" và chuyển sang `groupEvaluationId`.
+- `RubricChecklistPanel` nhận `feedbackItems` và `acknowledgedReviewItems` để hiện nhận xét AI theo từng mục; `MemberContributionPanel` dùng trường Điểm và Lý do có nhãn cho từng thành viên.
+- Bài có phần bỏ trống: đề xuất AI cho 0 điểm ở các phần đó mà không gọi AI (BR-U09-36); giao diện không đổi.
+
+Nguồn: `baf349b0`, `d85b5429`; tests nguồn `gradebook-layout.test.tsx`, `workspace.test.tsx`, không chạy lại trong đợt đối chiếu 2026-11-10.
+
 ## 1. Màn hình theo design
 
 | # | Màn (artboard) | Component | UC | Role |

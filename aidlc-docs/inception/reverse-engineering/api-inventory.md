@@ -1,6 +1,6 @@
 # API inventory — source annotations, 2026-11-07
 
-Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`. 49 controller files. Entries reproduce class/method mapping annotations from source; compose class-level RequestMapping with each method mapping and retain HTTP method, path arrays, consumes/produces and parameters. They are an annotation inventory, not complete request/response schemas or fresh endpoint acceptance. Non-controller MCP schemas remain owned by IMcpToolProvider. Existing OpenAPI specs are partial coverage.
+Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; đối chiếu lại 2026-11-10 với `staging@062a43f5`: 48 controller files, 239 mapping annotation khác nhau khớp hoàn toàn với source (không thừa, không thiếu). `POST /assignments/{id}/ai-drafts` nhận thêm `mode = REVISE` trong body mà không đổi annotation; `GET /api/v1/attempts/{attemptId}/receipt` còn ở backend nhưng frontend không gọi nữa. Entries reproduce class/method mapping annotations from source; compose class-level RequestMapping with each method mapping and retain HTTP method, path arrays, consumes/produces and parameters. They are an annotation inventory, not complete request/response schemas or fresh endpoint acceptance. Non-controller MCP schemas remain owned by IMcpToolProvider. Existing OpenAPI specs are partial coverage.
 
 ## [academics/controller/AcademicsController.java](../../../backend/src/main/java/edu/aiplatform/academics/controller/AcademicsController.java)
 

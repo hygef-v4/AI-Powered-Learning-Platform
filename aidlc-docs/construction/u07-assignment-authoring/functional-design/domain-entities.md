@@ -92,7 +92,7 @@ Part
 | Entity | Thuộc tính chính |
 |---|---|
 | `AssignmentRubric` | `id`, `assignmentId`, `partId` (duy nhất cùng `assignmentId`), `criteria[]` (`id`, `title`, `description`, `kind` `TEXT` hoặc `DIAGRAM`, `items[]` gồm `id`, `text`, `points`; giao diện atomic: mỗi tiêu chí một mục), `totalPoints` (tự tính), `lockedAt`, `version` |
-| `AssignmentAiDraft` | `id`, `assignmentId`, `origin` (`AI_TASK`, `MCP`), `taskId`, `status` (`PENDING`, `READY`, `APPLIED`, `DISCARDED`, `FAILED`), `proposal` (hướng dẫn, cây heading kèm đoạn hướng dẫn, gợi ý rubric theo heading), `provenance` (người yêu cầu, nguồn, provider, model, tài liệu và version, nhãn agent), `baseVersion`, `createdBy`, `createdAt`, `decidedAt` |
+| `AssignmentAiDraft` | `id`, `assignmentId`, `origin` (`AI_TASK`, `MCP`), `taskId`, `status` (`PENDING`, `READY`, `APPLIED`, `DISCARDED`, `FAILED`), `proposal` (hướng dẫn, cây heading kèm đoạn hướng dẫn, gợi ý rubric theo heading; bản sửa đề có `kind = REVISION`: tên, hướng dẫn, toàn bộ khối sau khi ghép kèm mã khối, rubric, `validation`, `unchanged`), `provenance` (người yêu cầu, nguồn, provider, model, tài liệu và version, nhãn agent; bản sửa đề thêm `mode = REVISE` và `blockRefs` nối mã khối với id), `baseVersion`, `createdBy`, `createdAt`, `decidedAt` |
 
 ## 5. Contract
 

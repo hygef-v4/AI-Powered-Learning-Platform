@@ -29,6 +29,8 @@ Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://clau
 | 33 | Student Detail, popup (`t19`) | `StudentDetailDialog` | 23 | Teacher, Subject Manager được giao dạy |
 | 36 | Student Class Detail (`s02`) | `StudentClassPage` | 21 | Student |
 
+**Cây điều hướng 2026-11-09 (`cc99aaf9`):** menu của role giữ nguyên; môn và lớp hiện thành cây (`shared/layout/NavTree`) ngay dưới mục cha của chúng (Môn được phân công, Lớp được phân công, Lớp của tôi) thay cho sidebar riêng theo môn/lớp có link quay lại và nút đổi môn/lớp. `ClassNavContexts` dựng cây và khai `NavContext.parentHref`; cây áp dụng cả ở trang danh sách, nút đang mở tự bung, sidebar thu gọn thì ẩn cây và tô mục cha. `NavContext` không có `parentHref` (đề cương bài tập, module học liệu) vẫn thay menu của role.
+
 U05 đăng ký `NavEntry` cho các mục menu bên: Tổng quan, Môn học của tôi, Lớp học (Subject Manager); Lớp được phân công (Teacher, Subject Manager); Lớp của tôi (Student).
 
 ## 2. Cây component

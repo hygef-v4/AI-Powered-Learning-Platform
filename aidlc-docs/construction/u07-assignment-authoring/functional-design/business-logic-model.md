@@ -77,6 +77,13 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 6. Người soạn xem đề xuất. Áp dụng: `POST .../ai-drafts/{draftId}:apply` kèm `version`; cảnh báo nếu khung đã có nội dung; thay khung (và hướng dẫn nếu chọn), tính lại phần như F4 bước 5, điền gợi ý rubric; đề xuất `APPLIED`; audit `ASSIGNMENT_AI_DRAFT_APPLIED`.
 7. Bỏ: đề xuất `DISCARDED`, bài không đổi.
 
+### F6b - Sửa đề đang có bằng AI (UC 35, 2026-11-09)
+1. Trên Assignment Form của bài `DRAFT` sửa được, khung chat "Sửa đề bằng AI" đứng trên thẻ rubric Toàn bài. Người soạn gõ yêu cầu (≤ 4.000 ký tự); trang lưu mọi thay đổi đang chờ rồi gọi `POST /api/v1/assignments/{id}/ai-drafts` với `mode = REVISE`, `request`, `requestRef`. Chế độ này bỏ qua tài liệu tham khảo, file nguồn và mô tả định dạng; nguồn AI tự chọn.
+2. Server chụp đề đã lưu (tên, hướng dẫn, mọi khối, rubric từng mục và Toàn bài) thành JSON, mỗi khối một mã ngắn (`b1`, `b2`…); bảng nối mã với id khối lưu trong `provenance.blockRefs`, `provenance.mode = REVISE`.
+3. AI chỉ trả tên, hướng dẫn và danh sách thao tác `UPDATE`, `INSERT` (chèn sau mã), `DELETE` theo mã khối. `onReady`: server ghép thao tác vào bản đã gửi (`AssignmentDraftRevision.merge`), khối và rubric không được nhắc tới giữ nguyên; mã lạ thì bỏ thao tác, chèn sau mã lạ thì chèn cuối; heading rỗng bị bỏ, hướng dẫn trống giữ hướng dẫn hiện tại. Kết quả chuẩn hóa, kiểm (`validate`) và lưu thành đề xuất `READY` loại `REVISION`; không đổi gì thì đánh dấu `unchanged`.
+4. Trang tự áp dụng `:apply` (thay tên và hướng dẫn). Server từ chối `409 AI_DRAFT_STALE` khi `version` của đề khác `baseVersion` của đề xuất, `409 AI_DRAFT_INVALID` khi bản sửa hoặc khung sau khi dựng không hợp lệ. Khối giữ mã dùng lại id, ảnh, sơ đồ và định dạng chữ không đổi; tính lại phần, thay rubric theo heading và Toàn bài; audit `ASSIGNMENT_AI_DRAFT_APPLIED` kèm `mode = REVISE`.
+5. Chat báo "Đã sửa đề", tối đa 3 lưu ý; Ctrl+Z quay lại khung đề trước. Chat bỏ cuộc sau 3 phút và hủy đề xuất; đề xuất `unchanged` hoặc `INVALID` bị hủy, đề không đổi.
+
 ### F7 - Xuất, nhập DOCX (UC 35)
 Xuất:
 1. Menu Khác có Xuất DOCX (đề) và Xuất rubric; trang lưu bản đang sửa rồi gọi `GET /api/v1/assignments/{id}/docx` hoặc `GET /api/v1/assignments/{id}/rubric/docx`.

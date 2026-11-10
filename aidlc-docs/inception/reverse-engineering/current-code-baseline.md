@@ -8,6 +8,8 @@
 
 **Evidence:** [dated test/build matrix](../../construction/build-and-test/build-and-test-summary.md). The 1,830 backend / 799 frontend results precede this staging merge; do not relabel them as a fresh run on this SHA. Frontend tests/fixtures are under [frontend/tests](../../../frontend/tests); styles under shared/styles or the owning feature.
 
+**Delta 2026-11-10 (`staging@062a43f5`):** danh sách controller, test và migration bên dưới đã đối chiếu lại với source: thêm 15 mục còn thiếu, bỏ 2 liên kết tới file đã xóa. Frontend có thêm `shared/layout/NavTree.tsx` (cây môn/lớp trong sidebar), `app/opengraph-image.tsx` và `shared/siteMetadata.ts` (metadata Open Graph/Twitter, ảnh 1200×630; `/opengraph-image` nằm ngoài `proxy.ts`), `features/assignments/components/AiReviseChat.tsx`; đã xóa `features/assignmentwork/pages/ReceiptPage.tsx` và route `/attempts/[attemptId]/receipt`. Fixture/helper test không liệt kê. [Báo cáo đối chiếu](../../construction/build-and-test/2026-11-10-aidlc-code-sync-gaps.md); không chạy lại test.
+
 ## U01 — Account & Access
 
 Primary UC 01–12; FR-001, FR-002, FR-015.
@@ -171,6 +173,7 @@ Primary UC 14–15; FR-013, FR-033, FR-038.
 - [SettingValidatorTest.java](../../../backend/src/test/java/edu/aiplatform/settings/model/SettingValidatorTest.java)
 - [SettingsSectionRegistryTest.java](../../../backend/src/test/java/edu/aiplatform/settings/service/SettingsSectionRegistryTest.java)
 - [SettingsServiceTest.java](../../../backend/src/test/java/edu/aiplatform/settings/service/SettingsServiceTest.java)
+- [DownloadGrantExpiryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/files/service/DownloadGrantExpiryIntegrationTest.java)
 
 ### Migrations
 
@@ -258,11 +261,13 @@ Primary UC 20–30; FR-003, FR-005, FR-024.
 - [AcademicsContractAdapterTest.java](../../../backend/src/test/java/edu/aiplatform/academics/service/AcademicsContractAdapterTest.java)
 - [AcademicsMcpToolsTest.java](../../../backend/src/test/java/edu/aiplatform/academics/service/AcademicsMcpToolsTest.java)
 - [AcademicsServiceTest.java](../../../backend/src/test/java/edu/aiplatform/academics/service/AcademicsServiceTest.java)
+- [ClassTermMigrationIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/academics/integration/ClassTermMigrationIntegrationTest.java)
 
 ### Migrations
 
 - [V20260925_1100__create_classes_enrollments.sql](../../../backend/src/main/resources/db/migration/classes/V20260925_1100__create_classes_enrollments.sql)
 - [V20261027_1100__allow_open_class_without_teacher.sql](../../../backend/src/main/resources/db/migration/classes/V20261027_1100__allow_open_class_without_teacher.sql)
+- [V20261107_2200__remove_class_term.sql](../../../backend/src/main/resources/db/migration/classes/V20261107_2200__remove_class_term.sql)
 
 ### Frontend
 
@@ -370,6 +375,7 @@ Primary UC 34–36; FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 - [AssignmentQueryServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentQueryServiceTest.java)
 - [DocumentModelServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/DocumentModelServiceTest.java)
 - [DocxRoundTripTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/DocxRoundTripTest.java)
+- [AssignmentAiRevisionTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentAiRevisionTest.java)
 
 ### Migrations
 
@@ -536,6 +542,7 @@ Primary UC 46–48; FR-006, FR-007, FR-016, FR-017, FR-028.
 - [V20260925_1600__create_quiz_tables.sql](../../../backend/src/main/resources/db/migration/quizzes/V20260925_1600__create_quiz_tables.sql)
 - [V20261030_1810__preserve_unpublished_quiz_retirement.sql](../../../backend/src/main/resources/db/migration/quizzes/V20261030_1810__preserve_unpublished_quiz_retirement.sql)
 - [V20261101_1200__quiz_rework.sql](../../../backend/src/main/resources/db/migration/quizzes/V20261101_1200__quiz_rework.sql)
+- [V20261109_2201__quiz_formatted_instructions.sql](../../../backend/src/main/resources/db/migration/quizzes/V20261109_2201__quiz_formatted_instructions.sql)
 
 ### Frontend
 
@@ -598,7 +605,6 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 
 ### Controllers
 
-- [GroupDocCollaborationController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocCollaborationController.java)
 - [GroupDocController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocController.java)
 - [GroupDocImageController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocImageController.java)
 - [GroupController.java](../../../backend/src/main/java/edu/aiplatform/groups/controller/GroupController.java)
@@ -609,7 +615,6 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 - [GroupRepositoriesIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/model/GroupRepositoriesIntegrationTest.java)
 - [GroupSectionTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/model/GroupSectionTest.java)
 - [GroupAutoSubmitScannerTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupAutoSubmitScannerTest.java)
-- [GroupDocCollaborationServicesTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupDocCollaborationServicesTest.java)
 - [GroupDocumentServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupDocumentServiceTest.java)
 - [GroupSectionServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupSectionServiceTest.java)
 - [GroupSubmissionServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupSubmissionServiceTest.java)
@@ -622,6 +627,8 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 - [LeaderRequestServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/LeaderRequestServiceTest.java)
 - [MyGroupServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/MyGroupServiceTest.java)
 - [RandomGroupSplitterTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/RandomGroupSplitterTest.java)
+- [RabbitSseMultiInstanceIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/integration/RabbitSseMultiInstanceIntegrationTest.java)
+- [GroupDocImportServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupDocImportServiceTest.java)
 
 ### Migrations
 
@@ -670,11 +677,16 @@ Primary UC 58–62; FR-004, FR-005.
 - [MaterialServiceTest.java](../../../backend/src/test/java/edu/aiplatform/materials/service/MaterialServiceTest.java)
 - [MaterialTextExtractJobHandlerTest.java](../../../backend/src/test/java/edu/aiplatform/materials/service/MaterialTextExtractJobHandlerTest.java)
 - [ReferenceMaterialWiringTest.java](../../../backend/src/test/java/edu/aiplatform/materials/service/ReferenceMaterialWiringTest.java)
+- [MaterialModuleMigrationIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/materials/integration/MaterialModuleMigrationIntegrationTest.java)
+- [MaterialPresentationIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/materials/integration/MaterialPresentationIntegrationTest.java)
+- [MaterialPresentationTest.java](../../../backend/src/test/java/edu/aiplatform/materials/model/MaterialPresentationTest.java)
+- [MaterialDownloadPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/materials/service/MaterialDownloadPolicyTest.java)
 
 ### Migrations
 
 - [V20260925_1900__create_material_tables.sql](../../../backend/src/main/resources/db/migration/materials/V20260925_1900__create_material_tables.sql)
 - [V20261029_1000__create_material_modules.sql](../../../backend/src/main/resources/db/migration/materials/V20261029_1000__create_material_modules.sql)
+- [V20261109_2200__material_visibility_and_formatted_description.sql](../../../backend/src/main/resources/db/migration/materials/V20261109_2200__material_visibility_and_formatted_description.sql)
 
 ### Frontend
 
@@ -774,6 +786,9 @@ Primary UC 66; FR-024, FR-038.
 - [GlobalExceptionHandlerTest.java](../../../backend/src/test/java/edu/aiplatform/shared/error/GlobalExceptionHandlerTest.java)
 - [ForbiddenKeyGuardTest.java](../../../backend/src/test/java/edu/aiplatform/shared/security/ForbiddenKeyGuardTest.java)
 - [ContractStubsTest.java](../../../backend/src/test/java/edu/aiplatform/shared/stub/ContractStubsTest.java)
+- [PlatformWorkflowIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java)
+- [RequirementsCoverageIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/requirements/RequirementsCoverageIntegrationTest.java)
+- [FormattedTextTest.java](../../../backend/src/test/java/edu/aiplatform/shared/content/FormattedTextTest.java)
 
 ## Delta 2026-11-01: làm lại Quiz
 

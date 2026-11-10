@@ -34,9 +34,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U08-20 | Nộp tay: lượt `IN_PROGRESS` của chính mình, trước `deadlineAt` (cộng 30 giây ân hạn), nội dung qua `validateForSubmit` (khung còn đủ, ô sơ đồ trống của đề đã được vẽ, đủ `requiredDiagrams` theo loại suy từ hình vẽ, sơ đồ `OTHER` bù loại thiếu, có nội dung của người học: chữ, ảnh, sơ đồ, sơ đồ của đề đã vẽ khác đề, bảng của đề đã điền khác đề). Trang kiểm sơ bộ trước (tổng số sơ đồ, có nội dung) và không chặn bài server sẽ nhận. | US-ASM-003 S1 |
+| BR-U08-20 | Nộp tay: lượt `IN_PROGRESS` của chính mình, trước `deadlineAt` (cộng 30 giây ân hạn), đúng `contentVersion`. Từ 2026-11-09 nộp tay không còn chặn theo `validateForSubmit`: bài thiếu sơ đồ bắt buộc hoặc chưa có nội dung vẫn nộp được, popup chỉ xác nhận. Kết quả `validateForSubmit` (khung còn đủ, ô sơ đồ của đề đã vẽ, đủ `requiredDiagrams`, có nội dung của người học) vẫn được server tính và trả trong `submitIssues` khi đọc/lưu lượt, nhưng trang hiện không dùng. | US-ASM-003 S1 |
 | BR-U08-21 | Nộp thì nội dung bất biến; `submittedAt` theo giờ server; `late` khi nộp sau `closesAt`; `receiptHash` là SHA-256 của nội dung. Trong cùng transaction gọi `ISubmissionListener.onSubmitted` để U09 tạo dòng chờ chấm với bài `GRADED`. | FR-018, BR-U03-64 |
-| BR-U08-22 | Biên nhận gồm mã lượt, lượt thứ mấy, thời điểm nộp, trễ hay không, mã băm. Nộp lặp (bấm hai lần, mạng gửi lại) trả cùng biên nhận. | UC 39 |
+| BR-U08-22 | Biên nhận gồm mã lượt, lượt thứ mấy, thời điểm nộp, trễ hay không, mã băm. Nộp lặp (bấm hai lần, mạng gửi lại) trả cùng biên nhận. Từ 2026-11-09 không còn trang Biên nhận: nộp xong trang về chi tiết bài; `GET /api/v1/attempts/{attemptId}/receipt` vẫn có ở backend nhưng frontend không gọi, mã biên nhận xem ở Submission History. | UC 39 |
 | BR-U08-23 | Tự nộp bản đã lưu gần nhất (kể cả rỗng), không kiểm điều kiện nộp, ghi cảnh báo cho giảng viên: khi hết `deadlineAt` (`AUTO_DEADLINE`, scanner mỗi phút) và khi bài bị ngưng giao (`AUTO_RETIRED`, trong `onRetired`). | FR-007 |
 
 ## 4. Lịch sử nộp (UC 40)

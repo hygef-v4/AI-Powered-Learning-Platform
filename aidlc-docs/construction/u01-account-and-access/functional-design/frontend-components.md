@@ -95,7 +95,7 @@ Hai trang dùng chung `OtpFlow` (`features/identity/otp`) với thanh bước v�
 | Vùng | Nội dung |
 |---|---|
 | Thanh trên cùng | Logo "Nền tảng học tập" (về `homePath`); lối vào do unit khác đăng ký qua `AccountMenuEntry` theo role (U06: "Kết nối AI" cho Student, Teacher, Subject Manager; Admin không có); vùng `HeaderWidget` (U14: chuông thông báo kèm số chưa đọc); thẻ hồ sơ (avatar chữ viết tắt, màu theo role; họ tên; nhãn role) mở User Profile; nút "Đăng xuất" màu đỏ |
-| Menu bên | Mục theo role, lấy từ `NavEntry` do unit sở hữu màn đăng ký; mục đang mở tô nền xanh, icon đặc. Danh sách ở bảng dưới |
+| Menu bên | Mục theo role, lấy từ `NavEntry` do unit sở hữu màn đăng ký; mục đang mở tô nền xanh, icon đặc. Danh sách ở bảng dưới. Từ 2026-11-09 `AppShell` vẽ nhánh cây `NavTree` dưới mục có `href` trùng `NavContext.parentHref` (môn, lớp của U05) |
 | `LogoutDialog` (`c15`) | "Đăng xuất?" — "Bạn sẽ thoát khỏi phiên trên thiết bị này. Bài đang làm đã được tự lưu."; Hủy, Đăng xuất. Xác nhận thì gọi `logout`, xóa trạng thái phía client, về User Login (UC 03) |
 | Thông tin người dùng | Họ tên, role lấy từ `SessionInfo`; tải lại trang thì gọi `GET /api/v1/me/profile` |
 | `PostLoginRedirect` | Sau đăng nhập, kích hoạt, hoặc khi mở `/`: lấy `homePath` rồi chuyển tới dashboard. Khi Admin Dashboard (U15, Iter 3) chưa có, `homePath` của Admin tạm là Account List |

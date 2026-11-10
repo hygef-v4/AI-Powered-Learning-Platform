@@ -1,5 +1,7 @@
 # U09 Assignment Grading — AS-BUILT source snapshot 2026-11-07
 
+**AI grading delta 2026-11-09 (`d85b5429`, `fb20c6bc`, `baf349b0`, đối chiếu 2026-11-10):** `GradingPromptBuilder` tìm phần lá không có bài làm, chỉ gửi AI khối và rubric của phần có bài làm, ghép điểm 0 cho phần trống và chuẩn hóa payload; bài trống hoàn toàn nhận đề xuất `READY` 0 điểm mà không tạo task AI (BR-U09-36). Grading dùng contract `IDocumentModel`, `DiagramXml` của U07 trở lại package-private (ArchUnit `unit_internals_are_private`). `GradingViews` chi tiết đánh giá thêm `groupEvaluationId`; `calculateMaxOutputTokens` = min(8.192, 4.096 + 220 × số mục). Không đổi schema DB hay endpoint.
+
 **Structure cleanup 2026-11-06:** concrete JDBC repositories are `EvaluationRepository` and `GradingProposalRepository`; interfaces and SQL remain unchanged. Frontend `formatErrorMessage` lives in `model/format.ts`, with all consumers and its existing test relocated accordingly. [Scope and verification](../../plans/code-generation-plan/2026-11-06-u09-structure-cleanup.md).
 
 **JDBC delta 2026-11-06:** Evaluation/GradingProposal adapters chuyển từ JPA sang Spring JDBC; visibility giữ JDBC. Hai mapping type là `EvaluationRow`/`GradingProposalRow`, hai Spring Data interface đã bỏ. Giữ contract/schema/JSONB, explicit CAS/version và row/advisory transaction locks. [Persistence hiện hành](jdbc-persistence.md); các snapshot/evidence có ngày bên dưới giữ phạm vi lịch sử.

@@ -45,6 +45,7 @@ app/assignments/[id]/     AssignmentFormPage          #26 Assignment Form
   AssignmentSettingsPanel (popup Cài đặt)     Hình thức, Chế độ (Choice), nút gạt Ghi nhận hoạt động
   ScheduleForm (popup Xếp lịch, Đổi lịch)
   AiDraftDialog                               AiSourcePicker (U06), AiTaskStatus (U06), xem trước đề xuất
+  AiReviseChat                                khung chat "Sửa đề bằng AI" trên thẻ rubric Toàn bài (bài DRAFT sửa được)
   RetireDialog, popup Xóa bản nháp
   (vùng AssignmentFormSection cho U12: kiểm tra sẵn sàng của bài nhóm)
   (vùng AssignmentSettingsSection / assignmentSettingsSections cho U09: cài đặt phân bố theo bài–lớp)
@@ -72,6 +73,7 @@ shared/ui/PageHeader                          màn hẹp thì hàng nút xuống
 | `ScheduleForm` | `POST .../publish`, `PATCH .../schedule` | Một trang: tích "Hẹn giờ mở" mới chọn ngày, giờ mở (không tích là mở ngay); Hạn nộp (ngày, giờ; mặc định 23:59); tích "Cho nộp muộn" mới chọn hạn nộp muộn (≤ 30 ngày sau hạn); Số lượt nộp 1–10; nút Phát hành ngay, Xếp lịch hoặc Lưu lịch. Bài đang mở không hiện ngày mở, không đổi số lượt. Lỗi: "Thiếu hạn nộp", "Hạn nộp không sau lúc mở", "Hạn nộp muộn quá 30 ngày sau hạn nộp", "Số lượt ngoài 1–10"; cảnh báo nhóm của U12 kèm ô "Vẫn phát hành" |
 | Xem trước | `GET /api/v1/assignments/{id}` | Đề như người học thấy khi làm bài, chỉ đọc, không có rubric; Quay lại, Xếp lịch |
 | `AiDraftDialog` | `POST .../ai-drafts`, `GET .../ai-drafts/{draftId}`, `:apply`, `:discard` | Yêu cầu*, tài liệu tham khảo, nguồn AI (`AiSourcePicker`); đề xuất các mục kèm rubric gợi ý; Bỏ, Áp dụng |
+| `AiReviseChat` | `POST .../ai-drafts` (`mode: REVISE`), `GET .../ai-drafts/{draftId}`, `:apply`, `:discard` | Ô "Yêu cầu sửa đề" (≤ 4.000 ký tự, Enter gửi, Shift+Enter xuống dòng); lưu thay đổi đang chờ, hỏi kết quả mỗi 2 giây, tối đa 3 phút; tự áp dụng rồi tải lại đề, Ctrl+Z quay lại khung đề trước; hiện tối đa 3 lưu ý; báo khi AI không đổi gì, bản sửa không hợp lệ hoặc đề đã đổi (`AI_DRAFT_STALE`), khi đó đề không đổi |
 | `RetireDialog`, Xóa bản nháp | `/retire`, `DELETE` | Ngưng giao bắt buộc lý do; Xóa chỉ với bản nháp |
 | `AssignmentSummary` | `GET /api/v1/subjects/{subjectId}/assignments` | Số bài tập của môn (đang mở, nháp gồm cả bài `REVIEWED` cũ) |
 
