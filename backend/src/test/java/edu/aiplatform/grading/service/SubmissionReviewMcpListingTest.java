@@ -48,6 +48,17 @@ class SubmissionReviewMcpListingTest {
         verify(submissions,never()).getSubmission(any());
         verifyNoInteractions(activity);
         verify(repo).findForAssignmentAndClass(assignmentId,classId);
+        clearInvocations(repo, classes, accounts);
+        when(assignment.assignmentId()).thenReturn(assignmentId);
+        when(assignment.status()).thenReturn(AssignmentStatus.OPEN);
+        when(assignments.listForClass(classId)).thenReturn(List.of(assignment));
+        when(repo.findForClass(classId)).thenReturn(evals);
+        var progress = service.loadProgress(actor, classId);
+        assertThat(progress.get(assignmentId).summary()).containsEntry("submitted", 200L);
+        verify(repo).findForClass(classId);
+        verify(repo, never()).findForAssignmentAndClass(any(), any());
+        verify(classes).listActiveStudents(classId);
+        verify(accounts).getContacts(students);
         doThrow(edu.aiplatform.shared.error.ApiException.notFound("CLASS_NOT_FOUND"))
                 .when(access).requireTeacher(actor,classId,Actions.GRADING_REVIEW);
         assertThatThrownBy(() -> service.listRows(actor,classId,assignmentId,"ALL",null))

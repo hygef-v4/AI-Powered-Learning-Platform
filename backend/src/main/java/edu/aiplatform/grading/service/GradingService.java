@@ -1,6 +1,9 @@
 package edu.aiplatform.grading.service;
 
 import edu.aiplatform.grading.model.RubricScoring;
+import edu.aiplatform.grading.contract.IGroupSubmissionSource;
+import edu.aiplatform.grading.contract.GroupSubmissionView;
+import org.springframework.beans.factory.ObjectProvider;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,11 +55,13 @@ public class GradingService {
     private final ObjectMapper objectMapper;
     private final Clock clock;
     private final GradingFeedbackValidator gradingFeedbackValidator;
+    private final ObjectProvider<IGroupSubmissionSource> groupSubmissionSourceProvider;
 
     /** Creates the grading service with evaluation, authorization, and audit dependencies. */
     public GradingService(IEvaluationRepository evaluationRepository, GradingAccess gradingAccess,
             IAudit audit, IEventPublisher eventPublisher, ISubmissionQuery submissionQuery,
-            ObjectMapper objectMapper, Clock clock) {
+            ObjectMapper objectMapper, Clock clock,
+            ObjectProvider<IGroupSubmissionSource> groupSubmissionSourceProvider) {
         this.evaluationRepository = evaluationRepository;
         this.gradingAccess = gradingAccess;
         this.audit = audit;
@@ -64,6 +69,7 @@ public class GradingService {
         this.submissionQuery = submissionQuery;
         this.objectMapper = objectMapper;
         this.clock = clock;
+        this.groupSubmissionSourceProvider = groupSubmissionSourceProvider;
         this.gradingFeedbackValidator = new GradingFeedbackValidator(objectMapper);
     }
 
@@ -78,8 +84,24 @@ public class GradingService {
         evaluation.requireEditableGrade();
         if (evaluation.kind == EvaluationKind.ATTEMPT) {
             requireLatestSubmission(evaluation);
+        } else if (evaluation.kind == EvaluationKind.GROUP_DOCUMENT && !evaluation.hasOfficialGrade()) {
+            requireGroupSubmission(evaluation);
         }
         return evaluation;
+    }
+
+    private GroupSubmissionView requireGroupSubmission(Evaluation evaluation) {
+        var source = groupSubmissionSourceProvider.getIfAvailable();
+        if (source == null)
+            throw ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE", "Group submission source unavailable");
+        var submission = source.getGroupSubmission(evaluation.groupDocumentId).orElseThrow(() ->
+                ApiException.unavailable("SUBMISSION_UNAVAILABLE", "Group submission unavailable"));
+        if (!Objects.equals(evaluation.groupDocumentId, submission.groupDocumentId())
+                || !Objects.equals(evaluation.submissionHash, submission.submissionHash())
+                || !evaluation.assignmentId.equals(submission.assignmentId())
+                || !evaluation.classId.equals(submission.classId()))
+            throw ApiException.conflict("SUBMISSION_CHANGED", "Group submission snapshot changed");
+        return submission;
     }
 
     /**
@@ -151,6 +173,9 @@ public class GradingService {
             submittedDocument = submissionQuery.getSubmission(evaluation.attemptId)
                     .map(SubmissionView::content).orElse(null);
         }
+        if (evaluation.kind == EvaluationKind.GROUP_DOCUMENT) {
+            submittedDocument = requireGroupSubmission(evaluation).content();
+        }
         Set<String> validBlockIds = GradingFeedbackValidator.listValidBlockIds(rubrics,
                 submittedDocument);
 
@@ -159,7 +184,8 @@ public class GradingService {
                 validBlockIds, currentEffectiveScores, previousEffectiveScores);
 
         // Step 5: Update evaluation to DRAFT status and set total score, adjustment, and structured feedback
-        evaluation.saveGrade(GradingJson.writeSnapshot(objectMapper, input.checkedItemsByRubric()),
+        evaluation.saveGrade(GradingJson.writeSnapshot(objectMapper,
+                        RubricScoring.synchronizeChecks(rubrics, currentEffectiveScores)),
                 points, input.adjustment(), input.adjustmentReason(), input.feedback(),
                 input.changeReason(), actor.accountId(), clock.instant());
         evaluation.rubricItemScores = itemScores;
@@ -259,7 +285,10 @@ public class GradingService {
         member.checkVersion(input.version());
 
         // Step 3: Set overridden member score, save to DB, and record audit event
-        member.overrideMemberScore(input.score(), input.reason(), actor.accountId(),
+        var groupRubricScore = RubricScoring.calculateScore(
+                GradingJson.readRubrics(objectMapper, root.rubricSnapshot),
+                GradingJson.readChecks(objectMapper, root.rubricChecks), root.rubricItemScores);
+        member.overrideMemberScore(input.score(), groupRubricScore, input.reason(), actor.accountId(),
                 clock.instant());
         evaluationRepository.save(member);
         recordAudit(actor, member, "GRADE_CHANGED", input.reason());

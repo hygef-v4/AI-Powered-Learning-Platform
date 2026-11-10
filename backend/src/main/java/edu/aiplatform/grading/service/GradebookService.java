@@ -154,7 +154,7 @@ public class GradebookService {
             if (evaluation.kind == EvaluationKind.MEMBER || submission != null
                     && Objects.equals(evaluation.attemptId, submission.gradedAttemptId())) {
                 var previous = current.get(key);
-                if (previous == null || evaluation.createdAt.isAfter(previous.createdAt))
+                if (previous == null || gradeTime(evaluation).isAfter(gradeTime(previous)))
                     current.put(key, evaluation);
             }
         }
@@ -274,7 +274,7 @@ public class GradebookService {
             if (actor.accountId().equals(evaluation.accountId)
                     && evaluation.state != EvaluationStatus.SUPERSEDED) {
                 var previous = latest.get(evaluation.assignmentId);
-                if (previous == null || evaluation.createdAt.isAfter(previous.createdAt))
+                if (previous == null || gradeTime(evaluation).isAfter(gradeTime(previous)))
                     latest.put(evaluation.assignmentId, evaluation);
             }
 
@@ -282,6 +282,10 @@ public class GradebookService {
         return latest.values().stream()
                 .filter(evaluation -> evaluation.state == EvaluationStatus.PUBLISHED)
                 .map(this::mapStudentView).toList();
+    }
+
+    private static Instant gradeTime(Evaluation evaluation) {
+        return evaluation.gradedAt == null ? evaluation.createdAt : evaluation.gradedAt;
     }
 
     /** Returns the caller's attempt grade and hides its details until publication. */
@@ -332,6 +336,7 @@ public class GradebookService {
                 if (criterion.items() == null)
                     continue;
                 for (var item : criterion.items()) {
+                    if (item.points() == null) continue;
                     BigDecimal awarded = awardedForRubric.getOrDefault(item.itemId(),
                             BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
                     rubricScore = rubricScore.add(awarded);
@@ -387,7 +392,7 @@ public class GradebookService {
             if (evaluation.state == EvaluationStatus.PUBLISHED
                     && active.contains(evaluation.accountId)) {
                 var previous = latest.get(evaluation.accountId);
-                if (previous == null || evaluation.createdAt.isAfter(previous.createdAt))
+                if (previous == null || gradeTime(evaluation).isAfter(gradeTime(previous)))
                     latest.put(evaluation.accountId, evaluation);
             }
         return new GradeDistributionCalculator().calculate(

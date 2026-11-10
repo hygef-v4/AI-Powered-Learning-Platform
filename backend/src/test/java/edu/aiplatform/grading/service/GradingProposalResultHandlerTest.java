@@ -292,4 +292,57 @@ class GradingProposalResultHandlerTest {
         assertThat(e.score).isNull();
         verify(proposals).save(p);
     }
+
+    @Test
+    void realPromptBuilderDoesNotFabricateInvalidProposalsAndRejectsViolations() throws Exception {
+        var json = new ObjectMapper().findAndRegisterModules();
+        UUID rubricId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
+        var rubrics = List.of(new RubricView(rubricId, UUID.randomUUID(), "part-1",
+                List.of(new RubricCriterion(UUID.randomUUID(), "Kiến trúc", "", CriterionKind.values()[0],
+                        List.of(new RubricItem(itemId, "Đúng quan hệ", new BigDecimal("2.50"))))),
+                new BigDecimal("2.50")));
+        String snapshot = json.writeValueAsString(rubrics);
+        List<String> invalidOutputs = List.of(
+                """
+                {"checks":{"%s":["%s"]},"itemScoresByRubric":{"%s":{"%s":9.00}},"score":"9.00","feedback":"Tốt","sections":[],"structuredFeedback":{"schemaVersion":1,"summary":{"strengths":[],"improvements":[],"nextSteps":[]},"items":[{"rubricId":"%s","itemId":"%s","evidence":"Obs","reason":"Reason","suggestion":"Sug","evidenceBlockId":"part-1","requiresReview":false,"reviewReason":null}]}}
+                """.formatted(rubricId, itemId, rubricId, itemId, rubricId, itemId),
+                """
+                {"checks":{"%s":[]},"itemScoresByRubric":{"%s":{}},"score":"0.00","feedback":"Tốt","sections":[],"structuredFeedback":{"schemaVersion":1,"summary":{"strengths":[],"improvements":[],"nextSteps":[]},"items":[]}}
+                """.formatted(rubricId, rubricId),
+                """
+                {"checks":{"%s":[]},"itemScoresByRubric":{"%s":{"%s":1.00}},"score":"1.00","feedback":"Tốt","sections":[],"structuredFeedback":{"schemaVersion":1,"summary":{"strengths":[],"improvements":[],"nextSteps":[]},"items":[{"rubricId":"%s","itemId":"%s","evidence":"   ","reason":"Reason","suggestion":"Sug","evidenceBlockId":"part-1","requiresReview":false,"reviewReason":null}]}}
+                """.formatted(rubricId, rubricId, itemId, rubricId, itemId),
+                """
+                {"checks":{"%s":[]},"itemScoresByRubric":{"%s":{"%s":1.00}},"score":"1.00","feedback":"Tốt","sections":[],"structuredFeedback":{"schemaVersion":1,"summary":{"strengths":[],"improvements":[],"nextSteps":[]},"items":[{"rubricId":"%s","itemId":"%s","evidence":"Obs","reason":"Reason","suggestion":"Sug","evidenceBlockId":"unknown-block","requiresReview":false,"reviewReason":null}]}}
+                """.formatted(rubricId, rubricId, itemId, rubricId, itemId),
+                """
+                {"checks":{"%s":[]},"itemScoresByRubric":{"%s":{"%s":1.00}},"score":"2.50","feedback":"Tốt","sections":[],"structuredFeedback":{"schemaVersion":1,"summary":{"strengths":[],"improvements":[],"nextSteps":[]},"items":[{"rubricId":"%s","itemId":"%s","evidence":"Obs","reason":"Reason","suggestion":"Sug","evidenceBlockId":"part-1","requiresReview":false,"reviewReason":null}]}}
+                """.formatted(rubricId, rubricId, itemId, rubricId, itemId));
+
+        for (String output : invalidOutputs) {
+            var repo = mock(IEvaluationRepository.class);
+            var proposals = mock(IGradingProposalRepository.class);
+            var e = Evaluation.createPendingEvaluation(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                    UUID.randomUUID(), "hash-1", new BigDecimal("2.50"), snapshot, Instant.now());
+            var p = new GradingProposal();
+            p.id = UUID.randomUUID();
+            p.evaluationId = e.id;
+            p.versionNo = 1;
+            p.submissionHash = "hash-1";
+            p.rubricFingerprint = snapshot;
+            p.requesterId = UUID.randomUUID();
+            when(repo.lockById(e.id)).thenReturn(Optional.of(e));
+            when(proposals.findForEvaluation(e.id)).thenReturn(List.of(p));
+            when(proposals.save(any())).thenAnswer(i -> i.getArgument(0));
+            var handler = new GradingProposalResultHandler(new GradingProposalTransactions(
+                    repo, proposals, mock(GradingService.class), mock(GradingAccess.class),
+                    mock(SubmissionReviewService.class), mock(IAssignmentQuery.class),
+                    new GradingPromptBuilder(json), new GradingProposalValidator(json), json, Clock.systemUTC()));
+            var result = new AiTaskResult(UUID.randomUUID(), "GRADING_PROPOSAL",
+                    new Actor(p.requesterId, Role.TEACHER), "evaluation:" + e.id, 1, output);
+            assertThat(handler.onReady(result)).isEqualTo(ApplyOutcome.REJECTED);
+            assertThat(p.status).isEqualTo("REJECTED");
+        }
+    }
 }

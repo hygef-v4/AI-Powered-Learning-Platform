@@ -124,8 +124,31 @@ class GradingMcpQueryServiceTest {
                 new GradingViews.SubmissionPage(List.of(row),1,1,100,Map.of("total",1L),null));
         when(submissionReviewService.listSubmissions(teacher,e.classId,e.assignmentId,"ALL",null,1,1)).thenReturn(
                 new GradingViews.SubmissionPage(List.of(row),1,1,1,Map.of("total",1L),null));
+        when(submissionReviewService.listRows(teacher,e.classId,e.assignmentId,"ALL",null)).thenReturn(
+                new SubmissionReviewService.Listing(List.of(row),List.of(e),Map.of("total",1L),null));
         var result=(Map<String,Object>)gradingMcpQueryService.call(teacher,"read_class_learning_summary",Map.of("classId",e.classId.toString(),"assignmentId",e.assignmentId.toString())).content();
         assertThat(result.get("feedbackAggregation")).isNotNull();
         assertThat(result.get("feedbackCovered")).isEqualTo(1);
+        verify(submissionReviewService, never()).loadEvaluation(any(), any());
+    }
+    @Test
+    void proposalFilterUsesOneBulkReadAndDerivesStaleSnapshotsWithoutWrites() {
+        var e = evaluation();
+        var row = new GradingViews.SubmissionRow(null, e.id, e.attemptId, "DRAFT", null,
+                BigDecimal.TEN, false, Instant.now(), 1, 0);
+        when(submissionReviewService.listRows(teacher, e.classId, e.assignmentId, "ALL", null))
+                .thenReturn(new SubmissionReviewService.Listing(List.of(row), List.of(e), Map.of(), null));
+        var p = new GradingProposal();
+        p.evaluationId = e.id;
+        p.status = "READY";
+        p.submissionHash = "old-hash";
+        p.rubricFingerprint = e.rubricSnapshot;
+        when(gradingProposalService.listStoredProposals(List.of(e.id))).thenReturn(List.of(p));
+        var output = (Map<?, ?>) gradingMcpQueryService.call(teacher, "list_submissions", Map.of(
+                "classId", e.classId.toString(), "assignmentId", e.assignmentId.toString(),
+                "proposalStatus", "STALE")).content();
+        assertThat((List<?>) output.get("items")).hasSize(1);
+        verify(gradingProposalService).listStoredProposals(List.of(e.id));
+        verify(gradingProposalService, never()).listProposals(any(), any());
     }
 }
