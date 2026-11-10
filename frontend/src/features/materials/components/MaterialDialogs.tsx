@@ -7,6 +7,7 @@ import {
   copyQuizToClass,
   createClassQuiz,
   createSubjectQuiz,
+  deleteQuiz,
   getClassQuizzes,
   getCopySources,
   getQuiz,
@@ -349,7 +350,28 @@ export function ModuleItemDialog({
   );
 }
 
-/** Xóa học liệu (ẩn khỏi danh sách, dữ liệu vẫn giữ) hay lưu trữ Quiz. */
+/** Quiz nháp chưa từng phát hành xóa vĩnh viễn được; Quiz khác chỉ lưu trữ (BR-U10-24). */
+export function isQuizDeletable(quiz: ModuleQuiz) {
+  return quiz.status === "DRAFT";
+}
+
+/** Nút gỡ một mục khỏi module: học liệu và Quiz nháp là Xóa, Quiz đã phát hành là Lưu trữ. */
+export function removalAction(item: OutlineItem) {
+  return item.kind === "quiz" && !isQuizDeletable(item.quiz)
+    ? { icon: "archive" as const, label: "Lưu trữ" }
+    : { icon: "trash" as const, label: "Xóa" };
+}
+
+/** Thông báo sau khi gỡ mục: học liệu bị ẩn, Quiz nháp bị xóa, Quiz khác bị lưu trữ. */
+export function removalMessage(item: OutlineItem) {
+  if (item.kind === "material") return "Đã xóa học liệu";
+  return isQuizDeletable(item.quiz) ? "Đã xóa quiz" : "Đã lưu trữ quiz";
+}
+
+/**
+ * Xóa học liệu (ẩn khỏi danh sách, dữ liệu vẫn giữ), xóa vĩnh viễn Quiz nháp hay lưu trữ Quiz đã phát hành.
+ * `onSaved(removed)`: `removed` khi mục không còn trong module.
+ */
 export function ArchiveItemDialog({
   item,
   classId,
@@ -359,14 +381,17 @@ export function ArchiveItemDialog({
   item: { material: Material } | { quiz: ModuleQuiz };
   classId?: string;
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (removed: boolean) => void;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const lock = useRef(false);
   const isQuiz = "quiz" in item;
+  const deletesQuiz = isQuiz && isQuizDeletable(item.quiz);
   const title = isQuiz ? item.quiz.title : item.material.title;
-  async function archive() {
+  const action = isQuiz && !deletesQuiz ? "Lưu trữ" : "Xóa";
+  const noun = isQuiz ? "quiz" : "học liệu";
+  async function removeItem() {
     if (lock.current) return;
     lock.current = true;
     setBusy(true);
@@ -374,9 +399,10 @@ export function ArchiveItemDialog({
     try {
       if (isQuiz) {
         const detail = await getQuiz(item.quiz.quizId, classId ?? null);
-        await retireQuiz(item.quiz.quizId, "", detail.quiz.version);
+        if (deletesQuiz) await deleteQuiz(item.quiz.quizId, detail.quiz.version);
+        else await retireQuiz(item.quiz.quizId, "", detail.quiz.version);
       } else await materialApi.archive(item.material);
-      onSaved();
+      onSaved(!isQuiz || deletesQuiz);
     } catch (e) {
       setError(materialError(e));
     } finally {
@@ -387,7 +413,7 @@ export function ArchiveItemDialog({
   return (
     <Dialog
       open
-      title={isQuiz ? "Lưu trữ quiz?" : "Xóa học liệu?"}
+      title={`${action} ${noun}?`}
       onClose={onClose}
       dismissible={!busy}
       tone="danger"
@@ -396,14 +422,15 @@ export function ArchiveItemDialog({
           data-testid="material-archive-confirm"
           variant="danger"
           disabled={busy}
-          onClick={() => void archive()}
+          onClick={() => void removeItem()}
         >
-          {isQuiz ? "Lưu trữ" : "Xóa"}
+          {action}
         </Button>
       }
     >
       <p>
-        Bạn có chắc muốn {isQuiz ? "lưu trữ quiz" : "xóa học liệu"} {title} không?
+        Bạn có chắc muốn {action.toLowerCase()} {noun} {title} không?
+        {deletesQuiz && " Quiz nháp sẽ bị xóa vĩnh viễn, không khôi phục được."}
       </p>
       {error && (
         <p role="alert" className="text-sm text-danger">

@@ -90,7 +90,7 @@ class QuizRework2026Test {
         ObjectProvider<edu.aiplatform.quizzes.contract.IQuizLifecycleListener> listeners = mock(ObjectProvider.class);
         when(listeners.orderedStream()).thenAnswer(call -> java.util.stream.Stream.empty());
         publication = new QuizPublicationService(store.quizRepository, support, papers, listeners, events::add, audit, clock);
-        authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access, audit, clock);
+        authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access, audit, clock, listeners);
         query = new QuizQueryService(store.quizRepository, store.questionRepository, classes, papers);
         scorer = new QuizScorer(store.quizRepository, store.questionRepository);
         QuestionDuplicates duplicates = new QuestionDuplicates(store.questionRepository);
