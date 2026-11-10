@@ -12520,3 +12520,106 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 **AI Response**: Provider prompt/schema now omit redundant score; existing normalization derives it from rubric item scores before strict validation. Full MCP contract unchanged. RED2/12; initial connected run exposed2 contradictory-check fixture failures because score was omitted from the full-validator fixture, corrected its setup. Final349 connected AI/grading/diagram/architecture tests pass0fail0error0skip. Refreshed local API/worker, health200, one paid Gemini request yields READY proposalc58454d1/version8 at7.50, independently verified12 item scores and section totals2+3+2.5 in DB and UI. Persisted grade remains DRAFT0.00/version1 with identical submission hash. Original browser form untouched; separate verification tab1728489459 remains open with7.50 unsaved after browser closeTab timed out. No official grade action, migration, dependency, frontend change, history rewrite, commit/push, VPS update or subagents. Evidence: construction/build-and-test/2026-11-10-grading-derived-total.md. Security/Resiliency retained; PBT disabled.
 
 ---
+
+
+## Remove confusing grade-history panel
+**Timestamp**: 2026-11-10T11:09:40Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] cái lịch sử sửa điểm này là sao tôi thấy nó cứ sao sao ấy, bỏ được k"
+**AI Response**: Inspected Evaluation.saveGrade: history includes saved draft total changes after the first save, not only official revisions. Teacher panel renders empty reason separators. User authorizes removal from workspace UI; delete renderer/caller and empty spacing, adapt existing test. Preserve backend persisted audit history, save behavior, student data and separate AI proposal history. Scope3 frontend files plus workflow records. Verification pending; no subagents or live grade writes. Plan: construction/plans/code-generation-plan/2026-11-10-remove-grade-history-panel.md. Existing Security/Resiliency retained; disabled PBT skipped.
+
+---
+
+
+## Adjustment validation and paragraph-action explanation
+**Timestamp**: 2026-11-10T11:13:06Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] với lại nếu tôi nhập điểm cộng trừ mà k nhập lý do thì nó luôn reload trang và show Adjustment requires a reason
+
+
+, với lại lý do cộng trừ điểm thì khác gì lý do sửa điểm?"
+**Additional User Input**: "[Image #1] chữ tách đoạn ở đây là sao"
+**AI Response**: Explained paragraph splitting formats general feedback without changing scores or saving automatically; explained adjustmentReason vs changeReason. Found autosave effect retries every1.5s after failure as busy toggles while dirty remains true; missing adjustment reason is only enforced by backend. Continue authorized task with client inline validation, save guard and autosave error pause, readable server fallback, preserving form contents and both reason contracts. Grade-history removal already passes168 grading tests/typecheck/lint and local UI inspection. RED regressions started. No live grade writes, subagents, commit/push or deployment.
+
+---
+
+
+## Optional manual feedback and compact grading controls
+**Timestamp**: 2026-11-10T11:24:58Z
+**Requested by:** Quang Hung
+**User Input**: "nút nào thừa thì bỏ với lại nếu bấm chấm AI thì sẽ hiện nhiều mục hơn là chấm thủ công tôi muốn chấm thử công cũng có thể tạo ra mấy cái ô như chấm bằng AI ví dụ ô điểm mạnh điểm yếu gvien nên có tùy chọn thêm, chi tiết nhận xét và mình chứng, đi tới đoạn làm bài gv cũng nên có nma nó là optional nếu chấm thủ công, đừng làm giao diện dối, chữ nào bỏ được, nút nào bỏ được cho gọn mà k ảnh hưởng thì bỏ"
+**AI Response**: Added manual optional summary/item editors with collapsed disclosures, no feedback creation on opening, no fabricated explanation. Manual navigation falls back to rubric section without visible IDs. Removed paragraph-split utility/button/help and whole-feedback-clear control; optional change note uses compact disclosure and clearer label. Backend manual feedback allows blank explanation/evidence while AI intake retains full required coverage/evidence and review flags/anchor/size guards. RED1 frontend +2 backend. Prior adjustment fix passed172 UI tests/typecheck/lint. Broader run encountered Windows paging-file exhaustion before any backend test; lowered own test heaps and serialized verification. Initial frontend run172/173, old AI preview test updated to scope its anchor inside the preview because manual anchors now also exist. Verification ongoing; no grade writes, provider calls, commit/push, deployment or subagents. Plan: construction/plans/code-generation-plan/2026-11-10-manual-feedback-parity.md. Security/Resiliency retained; PBT disabled.
+
+---
+
+
+## Grading UI parity and validation verified
+**Timestamp**: 2026-11-10T11:35:35Z
+**Requested by:** Quang Hung
+**User Input**: "nút nào thừa thì bỏ với lại nếu bấm chấm AI thì sẽ hiện nhiều mục hơn là chấm thủ công tôi muốn chấm thử công cũng có thể tạo ra mấy cái ô như chấm bằng AI ví dụ ô điểm mạnh điểm yếu gvien nên có tùy chọn thêm, chi tiết nhận xét và mình chứng, đi tới đoạn làm bài gv cũng nên có nma nó là optional nếu chấm thủ công, đừng làm giao diện dối, chữ nào bỏ được, nút nào bỏ được cho gọn mà k ảnh hưởng thì bỏ"
+**AI Response**: Completed optional collapsed manual summary/item editors and section navigation, removed redundant paragraph/history/clear controls, compact optional change note, inline adjustment validation and autosave error pause/recovery. Final173 frontend +204 backend tests, TypeScript/lint and final45 polish cases pass. Local API/worker refreshed, health200; DOM checks pass. Browser automation accidentally changed one draft item0.50→0.00 and autosaved local evaluation7.40→6.90; reported and restored through normal versioned save/review path. All non-audit contents now semantically match baseline at7.40 DRAFT; version7 and2 additional history records retained. Temporary explanation confirmation text removed verbatim; no finalized/published/VPS mutation or audit deletion. Temporary verification tab closed. Screenshot captures timed out, so full visual/mobile acceptance not claimed. No provider call, migration, commit/push, deployment or subagents. Evidence: construction/build-and-test/2026-11-10-manual-feedback-parity.md. Security/Resiliency retained; PBT disabled.
+
+---
+
+
+## Student assignment class and subject context
+**Timestamp**: 2026-11-10T11:38:03Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] sửa phần bài tập nên hiện thêm cột lớp nào , môn nào"
+**AI Response**: StudentRow already contains authorized classCode/subjectCode. Added Lớp/Môn học columns across3 tabs, matching fixed widths, scrollable minimum table width, missing-value fallback and correct loading/empty spans. Adapted existing list/filter/submitted-row tests. Prior uncommitted grading work retained. Verification pending; no backend/data/account change, browser write, dependency, subagents, commit/push or VPS deployment. Plan: construction/plans/code-generation-plan/2026-11-10-student-assignment-context.md. Existing Security/Resiliency retained; PBT disabled.
+
+---
+
+
+## Student assignment context verified
+**Timestamp**: 2026-11-10T11:39:32Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] sửa phần bài tập nên hiện thêm cột lớp nào , môn nào"
+**AI Response**: Added existing class/subject codes as Lớp/Môn học columns across3 student-assignment tabs; matching widths, neutral missing-code fallback, full-code titles and correct empty/loading spans. Shared table overflow preserves narrow-screen access. Assignment-work23 tests/5files plus final4 page tests, TypeScript/scoped lint and whitespace checks pass. Corrected unsupported test query exact option caught by typecheck; source unchanged after initial23 green cases. No new API/backend/data change, account switch, live browser write, commit/push, VPS update or subagents. Prior grading edits retained. Evidence: construction/build-and-test/2026-11-10-student-assignment-context.md. Security/Resiliency retained; PBT disabled; full build/mobile visual checks not repeated.
+
+---
+
+
+## Quiet autosave and unified optional note
+**Timestamp**: 2026-11-10T11:49:53Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] sao mỗi lần tôi điều chỉnh điểm trang nó lại reload 1 lần sau 1 giây hay sao ấy, tìm hiểu nguyên nhân"
+**Additional User Input**: "[Image #1] tôi nghĩ có ghi chú thay đổi (tùy chọn) rồi thì k cần ls do công trừ điểm"
+**Additional User Input**: "tôi k muoosnm tự lưu sau 1.5s tôi nghĩ tăng tgian lên 30s"
+**Additional User Input**: "hoặc là tự động lưu thì k nên reload lại trang"
+**AI Response**: Isolated mock diagnostic confirms1500ms autosave sets global busy, removes focused score input, recreates it after response, with1 evaluation load and0 navigations; actual page reload is not required to reproduce. User authorizes30-second idle save and quiet background saves, plus one optional note. RED4 frontend/48 and1 backend/6 demonstrate desired behavior absent. Added separate saving/single-flight state, edit revision preservation and returned-version reuse, blocked conflicting commands, retained explicit save/Ctrl+S and error pause. Unified note preserves historical adjustment notes and maps to both existing API fields; removed separate required-reason field and aggregate requirement as explicitly requested, retaining score bounds/locks/versions/AI review guards. Initial48 focused cases pass; final connected tests/typecheck/lint pending. All mutations use mocks, no live grade editing or browser actions. No subagents, commit/push or deployment. Plan: construction/plans/code-generation-plan/2026-11-10-grading-quiet-autosave.md. Security/Resiliency retained; PBT disabled.
+
+---
+
+
+## Quiet autosave verified
+**Timestamp**: 2026-11-10T11:56:27Z
+**Requested by:** Quang Hung
+**User Input**: "hoặc là tự động lưu thì k nên reload lại trang"
+**AI Response**: Completed both authorized preferences:30-second idle debounce and background save without editor removal/focus loss. Added latest-save ref after RED showed a focus-only render reset the timer. Single-flight and edit-revision guards preserve newer points/text/adjustments/notes and reuse the saved evaluation version; command buttons serialize operations, manual save/Ctrl+S stay immediate, error pause remains. Unified optional note preserves old adjustment notes, maps to existing API fields and removes required-adjustment-reason aggregate rule per explicit request. Final176 grading UI tests +206 grading/backend/architecture tests +13 final hook cases pass; TypeScript/scoped lint/whitespace pass. Refreshed local API/worker, health200. No browser grade interaction, real grade mutation, AI call, migration, commit/push, VPS update or subagents in this turn; prior pending work retained. Evidence: construction/build-and-test/2026-11-10-grading-quiet-autosave.md. Security/Resiliency retained; PBT disabled; full build/live multi-session/mobile checks not repeated.
+
+---
+
+## Student published result entry
+**Timestamp**: 2026-11-10T12:09:00Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] sao xem bài chấm của sinh viên thì k thấy được bài giảng viên vừa chấm k vào được để xem chi tiết chấm điểm như nào"
+**AI Response**: Read-only local evaluation inspection confirms latest submitted attempt has PUBLISHED8/10 while the detail page shows a newer IN_PROGRESS draft. Result card selection only uses latestAttempt, and the history viewer blocks the grading candidate before deadline. RED3/13 cases reproduce both defects. Reuse current submitted grading candidate and existing result/document viewer; show explicit detail link only for API-published scores. Keep full old-history deadline, draft exclusion, ownership/enrollment and unpublished feedback suppression. No grade edits, subagents, commit/push or deployment. Plan: construction/plans/code-generation-plan/2026-11-10-student-published-result-entry.md. Existing Security/Resiliency retained; PBT disabled. Verification pending.
+
+---
+
+## Student published result entry verified
+**Timestamp**: 2026-11-10T12:11:00Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] sao xem bài chấm của sinh viên thì k thấy được bài giảng viên vừa chấm k vào được để xem chi tiết chấm điểm như nào"
+**AI Response**: Fixed draft hiding the submitted result and pre-deadline detail-view blockage. Added published-only “Xem chi tiết chấm điểm” link preserving attempt/class/return context and retained Continue editing. Older full history remains gated; backend owns access and private feedback suppression. Connected26 assignment-work UI cases,9 GradebookService cases and final13 affected page cases pass; TypeScript/scoped lint/whitespace pass. No grade writes, account switch, subagents, commit/push, schema changes, Docker restart or VPS deploy. Browser inventory showed teacher session; live student visual acceptance/full build not performed. Evidence: construction/build-and-test/2026-11-10-student-published-result-entry.md. Security/Resiliency retained; PBT disabled.
+
+---
+
+## Commit reviewed grading and student assignment changes
+**Timestamp**: 2026-11-10T12:19:05Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp rôi commit rõ ràng"
+**AI Response**: Reviewed the current working tree and separated three functional commits, each with regression tests and its implementation/verification documents: ee0a3838 simplifies optional manual feedback and saves quietly after30s while preserving in-flight edits;23f9309a adds class/subject columns;4873b931 retains published grading beside a newer draft and opens current submission details before deadline. Fresh combined frontend run202 cases/24 files and backend grading/architecture206 cases pass with0 failures/errors/skips; TypeScript, scoped ESLint and whitespace checks pass. Logs: .tmp/commit-grading-student-tests.log, .tmp/commit-backend-tests.log, .tmp/commit-typecheck.log, .tmp/commit-lint.log. This workflow-only commit records the cumulative audit/state, including prior incident restoration and verification limits. No push, deployment, grade mutation, account switch or subagents. Full production build and live student visual verification not repeated. Security/Resiliency retained; PBT disabled.
+
+---
