@@ -26,6 +26,14 @@ beforeEach(() => {
 it("trang chung có ô lọc lớp cạnh tiêu đề; chọn một lớp thì chỉ còn bài của lớp đó", async () => {
   render(<StudentAssignmentsPage />);
   expect(await screen.findByText("Sơ đồ lớp")).toBeInTheDocument();
+  expect(screen.getByRole("columnheader", { name: "Lớp" })).toBeInTheDocument();
+  expect(screen.getByRole("columnheader", { name: "Môn học" })).toBeInTheDocument();
+  const firstRow = within(screen.getByTestId("student-row-a1"));
+  expect(firstRow.getByRole("cell", { name: "SE1901" })).toBeInTheDocument();
+  expect(firstRow.getByRole("cell", { name: "SWD392" })).toBeInTheDocument();
+  const secondRow = within(screen.getByTestId("student-row-a2"));
+  expect(secondRow.getByRole("cell", { name: "SE1903" })).toBeInTheDocument();
+  expect(secondRow.getByRole("cell", { name: "SWT301" })).toBeInTheDocument();
   const filter = screen.getByTestId("assignment-class-filter");
   expect(filter).toHaveTextContent("Tất cả lớp");
   fireEvent.click(within(filter).getByRole("menuitem", { name: /SE1903/, hidden: true }));
@@ -52,6 +60,7 @@ it("restores list tab, kind, class, search and page on remount without a history
   expect(await screen.findByText("Nhóm 20")).toBeInTheDocument();
   expect(screen.queryByText("Nhóm 0")).not.toBeInTheDocument();
   expect(screen.getByRole("tab", { name: /Đã nộp/ })).toHaveAttribute("aria-selected", "true");
+  expect(within(screen.getByTestId("student-row-20")).getByRole("cell", { name: "SWD392" })).toBeInTheDocument();
   expect(screen.getByLabelText("Loại bài")).toHaveValue("GROUP");
   const historyLength = window.history.length;
   fireEvent.change(screen.getByLabelText("Tìm bài tập"), { target: { value: "Nhóm 2" } });

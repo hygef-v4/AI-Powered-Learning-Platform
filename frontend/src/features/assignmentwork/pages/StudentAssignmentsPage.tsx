@@ -35,7 +35,7 @@ function detailHref(row: StudentRow, general: boolean) {
 /**
  * #38 Student Assignments (F1, UC 37): bài của các lớp đang học (hoặc một lớp khi mở từ sidebar của lớp, `?classId=`), cùng bố
  * cục bảng Lớp học: một thẻ có tab Chưa làm / Đang làm / Đã nộp, ô lọc loại bài (Cá nhân / Nhóm / Luyện tập) và ô tìm theo tên bài; bảng tiêu đề tô nền,
- * bấm dòng để mở bài. Các tab cùng độ rộng cột; cột thứ năm là Lượt làm (số lượt còn lại), riêng Đã nộp là Điểm. Bài đang làm
+ * bấm dòng để mở bài. Các tab cùng độ rộng cột, hiện lớp và môn học; riêng Đã nộp có thêm Điểm. Bài đang làm
  * (kể cả bài nhóm nhóm đang làm) có nhãn Đang làm màu vàng; bài nhóm hiện trạng thái theo tiến độ của nhóm;
  * điểm do U09 gắn.
  */
@@ -70,6 +70,7 @@ export function StudentAssignmentsPage() {
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const current = Math.min(page, totalPages - 1);
   const shown = visible.slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE);
+  const columnCount = tab === "submitted" ? 8 : 7;
 
   return (
     <>
@@ -99,9 +100,11 @@ export function StudentAssignmentsPage() {
           </div>
         </div>
         {/* Cột cố định độ rộng để hai tab Chưa làm / Đã nộp thẳng cột nhau. */}
-        <TableFrame filledHead className="[&_table]:min-w-[760px] [&_table]:table-fixed">
+        <TableFrame filledHead className="[&_table]:min-w-[1000px] [&_table]:table-fixed">
           <colgroup>
             <col />
+            <col className="w-[110px]" />
+            <col className="w-[110px]" />
             <col className="w-[110px]" />
             <col className="w-[150px]" />
             <col className="w-[130px]" />
@@ -111,7 +114,7 @@ export function StudentAssignmentsPage() {
           </colgroup>
           <thead>
             <tr>
-              <Th>Bài tập</Th><Th>Loại</Th><Th>Hạn nộp</Th><Th>Trạng thái</Th>{tab === "submitted" && <Th>Điểm</Th>}
+              <Th>Bài tập</Th><Th>Lớp</Th><Th>Môn học</Th><Th>Loại</Th><Th>Hạn nộp</Th><Th>Trạng thái</Th>{tab === "submitted" && <Th>Điểm</Th>}
               <Th><span className="sr-only">Mở bài</span></Th>
             </tr>
           </thead>
@@ -121,6 +124,8 @@ export function StudentAssignmentsPage() {
                 <Td>
                   <Link href={detailHref(row, !classId)} onClick={(e) => e.stopPropagation()} className="block truncate font-semibold text-ink hover:text-primary-ink">{row.title}</Link>
                 </Td>
+                <Td className="truncate" title={row.classCode || undefined}>{row.classCode || "—"}</Td>
+                <Td className="truncate" title={row.subjectCode || undefined}>{row.subjectCode || "—"}</Td>
                 <Td className="whitespace-nowrap">{KIND_LABELS[kindOf(row)]}</Td>
                 <Td className="whitespace-nowrap">
                   <span className="font-mono text-xs text-muted">{formatDateTime(row.closesAt)}</span>
@@ -134,9 +139,9 @@ export function StudentAssignmentsPage() {
                 <Td className="text-faint"><Icon name="chevron_right" size={18} /></Td>
               </ClickableRow>
             ))}
-            {loading && !rows && <tr><Td colSpan={6} className="py-10 text-center! text-muted"><span role="status">Đang tải bài tập…</span></Td></tr>}
+            {loading && !rows && <tr><Td colSpan={columnCount} className="py-10 text-center! text-muted"><span role="status">Đang tải bài tập…</span></Td></tr>}
             {rows && shown.length === 0 && (
-              <tr><Td colSpan={6} className="py-10 text-center! text-muted">{tab === "upcoming" ? "Không còn bài chưa làm." : tab === "doing" ? "Không có bài đang làm." : "Chưa nộp bài nào."}</Td></tr>
+              <tr><Td colSpan={columnCount} className="py-10 text-center! text-muted">{tab === "upcoming" ? "Không còn bài chưa làm." : tab === "doing" ? "Không có bài đang làm." : "Chưa nộp bài nào."}</Td></tr>
             )}
           </tbody>
         </TableFrame>
