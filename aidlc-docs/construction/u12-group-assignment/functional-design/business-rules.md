@@ -77,3 +77,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U12-60 | Bài nhóm không có tính năng AI cho người học (bài nhóm chỉ `GRADED` theo D02; D03 bỏ): không phản hồi AI, không tool đọc tài liệu nhóm cho người học. Agent của giảng viên đọc bản nộp nhóm qua tool `read_authorized_group_submission` để đề xuất chấm ở U09 (US-GRP-006). | US-GRP-004 S2, D02 |
 | BR-U12-61 | Audit: tạo, sửa, xóa nhóm; chia ngẫu nhiên (khi lưu); đổi trưởng nhóm; gửi, hủy, duyệt, từ chối yêu cầu; giao mục; nhả khóa do trưởng nhóm hoặc giảng viên; nộp (tay, tự). Không audit từng lần tự lưu. | FR-014 |
 | BR-U12-62 | Mọi API kiểm quyền phía server, ngoài phạm vi trả `404` và ghi audit `ACCESS_DENIED`. U01, U05, U07 không trả lời thì từ chối (fail closed). Sự kiện phát sau commit. | SEC-002 |
+
+## Submission remediation — 2026-11-10
+
+New untouched group documents have no edit timestamp (repository uses the existing non-null column's epoch sentinel). Claim/release alone do not mark content as edited. Deadline submission closes an untouched document without generating an empty receipt; an existing leader submission is closed and claims released without overwriting it. U09 preserves official group grades on resubmission and supersedes only unofficial old-group member records.

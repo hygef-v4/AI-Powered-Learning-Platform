@@ -82,3 +82,9 @@ Route `/my-assignments/*` và `/attempts/*` chỉ cho Student (dùng `RoleGuard`
 assignmentwork có start/save/submit/history, late/auto-submit, practice feedback và activity. ActivityService.RETENTION = 1 ngày; scanner xóa theo hằng này, không Settings activity.retentionDays 1–365. Theo dõi hoạt động không tự trừ điểm. Feedback Practice gắn submission/version và không vào gradebook.
 
 [Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.
+
+## Published feedback and bounded polling — 2026-11-10
+
+SubmissionHistoryPage displays teacher feedback, structured summary and rubric evidence/reasons/suggestions alongside the published scores. U08 exposes studentAssignmentFeedback and studentGradeDistributions slots for U09; group results appear in the U12 submitted tab for members only.
+
+PracticeFeedbackPanel stops automatic refresh after 60 polls at 3-second intervals. Pending tasks remain pending; an explicit recheck resumes observation without creating another task. No published grade, rubric scoring or feedback ownership policy is changed by polling.
