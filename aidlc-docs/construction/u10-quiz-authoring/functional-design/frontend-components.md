@@ -90,7 +90,7 @@ QuizController POST `/api/v1/quizzes/{id}/reopen` nhận expected version; front
 | Thành phần | Nội dung |
 |---|---|
 | `QuizDetailPage` | Bỏ nút Duyệt; Phát hành từ nháp kèm hộp xác nhận số câu, tổng điểm; Quiz sinh đề ẩn danh sách câu |
-| `DrawRulesPanel` | "Cách lập đề": đề cố định hoặc sinh đề; bảng quy tắc, gợi ý thẻ kèm số câu trong kho, tổng câu và điểm, "Xem thử đề mẫu" |
+| `DrawRulesPanel` | "Cách lập đề": đề cố định hoặc sinh đề; bảng quy tắc, gợi ý thẻ kèm số câu trong kho theo độ khó, cảnh báo ngay khi quy tắc cần nhiều câu hơn kho (ước tính từng quy tắc, vẫn cho lưu, backend quyết định khi phát hành), tổng câu và điểm, "Xem thử đề mẫu" |
 | `QuizSettingsPanel` | Thêm "Gợi ý trừ điểm khi rời trang" khi bật ghi nhận hoạt động; bỏ trường tài liệu ẩn |
 | `QuestionListPage` | Lọc từ URL `?status=`; lọc Chờ duyệt thì duyệt, từ chối hàng loạt; lọc Nháp thì kích hoạt hàng loạt; nút "Câu trùng" |
 | `QuestionDetailPage` | Câu `PENDING` chỉ duyệt hoặc từ chối kèm lý do; `SimilarQuestionsAlert`; cảnh báo Quiz thiếu câu khi ngưng |

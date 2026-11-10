@@ -10029,6 +10029,70 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 
 ---
 
+## Local Run - Quiz Review
+**Timestamp**: 2026-11-02T11:38:07Z
+**User Input**: "chạy local dự án để tôi kiểm tra lại các thay đổi mới của phần quiz"
+**AI Response**: "Khởi động Docker Desktop, build và chạy stack local từ staging (047c2e5c) bằng docker compose; mọi container healthy, ứng dụng ở http://localhost:8088. Không đổi code và không đổi dữ liệu."
+**Context**: Chạy thử theo yêu cầu, không phải thay đổi phần mềm; không mở stage AI-DLC mới.
+
+---
+
+## Local Run - Quiz Sample Data
+**Timestamp**: 2026-11-02T11:54:19Z
+**User Input**: "Tạo dữ liệu mẫu"
+**AI Response**: "Tạo dữ liệu mẫu trên database local qua API thật: môn SWT301, lớp SE-MAU1, 25 câu hỏi (19 đang dùng, 2 nháp, 3 chờ duyệt, 1 bị từ chối), 4 quiz (2 đang mở, 2 nháp), 5 lượt làm đã nộp. Đã đọc lại dữ liệu trên giao diện của cả ba vai trò. Không đổi code."
+**Context**: Dữ liệu thử cho việc kiểm tra phần quiz; script nằm ngoài repo.
+
+---
+
+## Local Run - Test Account Passwords
+**Timestamp**: 2026-11-02T11:56:55Z
+**User Input**: "đặt mặt khẩu cho các tài khoản là [đã ẩn mật khẩu] cho tôi"
+**AI Response**: "Ghi trực tiếp hash bcrypt vào database local cho 4 tài khoản *@platform.local vì mật khẩu này không đạt chính sách mật khẩu của ứng dụng; không đổi code và không đổi chính sách."
+**Context**: Chỉ áp dụng cho tài khoản thử trên stack Docker local.
+
+---
+
+## Local Run - Quiz Creation Question
+**Timestamp**: 2026-11-02T12:23:43Z
+**User Input**: "làm sao để chủ nhiệm môn tạo quiz"
+**AI Response**: "Hướng dẫn tạo quiz qua mục Học liệu: Tạo học liệu, chọn nội dung Quiz. Không đổi code."
+**Context**: Câu hỏi khi kiểm tra phần quiz; mục ghi muộn cùng lúc với thay đổi bên dưới.
+
+---
+
+## Local Run - Draw Rule Shortage Question
+**Timestamp**: 2026-11-02T12:23:43Z
+**User Input**: "kho đang có 6 câu sao tôi nhập 7 vẫn nhận"
+**AI Response**: "Giải thích BR-U10-17: cho lưu quy tắc, chặn khi phát hành. Thử phát hành quiz thiếu câu qua API: trả 400 POOL_INSUFFICIENT, quiz vẫn là nháp."
+**Context**: Câu hỏi khi kiểm tra phần quiz; mục ghi muộn cùng lúc với thay đổi bên dưới.
+
+---
+
+## U10 Change - Draw Rule Shortage Warning
+**Timestamp**: 2026-11-02T12:23:43Z
+**User Input**: "Thêm cảnh báo"
+**AI Response**: "Thêm cảnh báo thiếu câu ngay trên từng quy tắc sinh đề, đếm theo thẻ và độ khó; vẫn cho lưu, backend vẫn quyết định khi phát hành. API bank-tags trả thêm byDifficulty. Chưa commit."
+**Context**: Thay đổi nhỏ trong phạm vi U10 (DrawRulesPanel, QuizPaperService); làm trực tiếp, không mở stage AI-DLC mới.
+
+---
+
+## Merge Readiness Check - origin/staging
+**Timestamp**: 2026-11-03T08:54:40Z
+**User Input**: "kiểm tra các thay đổi mới nhất trên staging xem có xung đột gì không, có thể merge vào chưa"
+**AI Response**: "Thử merge không đổi cây làm việc với origin/staging 1878da06: chỉ xung đột aidlc-docs/audit.md. Trên bản ghép: frontend typecheck, lint, 745 test đạt; backend chạy 1721 test có 9 lỗi do thiếu thư mục khi đóng gói, chạy lại đủ mã nguồn đều đạt. Chưa merge."
+**Context**: Kiểm tra trước khi merge; không đổi code.
+
+---
+
+## Merge origin/staging Into Local staging
+**Timestamp**: 2026-11-03T08:59:50Z
+**User Input**: "Merge vào local"
+**AI Response**: "Merge origin/staging vào staging local; xung đột aidlc-docs/audit.md xử lý bằng cách giữ cả hai bên. Không push."
+**Context**: Thực hiện sau kiểm tra sẵn sàng merge.
+
+---
+
 ## Dedicated MCP documentation — 2026-11-02
 
 **Requested by:** Quang Hung
@@ -10203,6 +10267,47 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **Context**: [CI run 41482601367](https://github.com/hygef-v4/AI-Powered-Learning-Platform/actions/runs/41482601367) completed successfully on 123fa1c19c4d15b2e3efb92becaaafc96f6a85ca: backend verify and required PostgreSQL guard passed; frontend install/lint/typecheck/tests/build passed; images/deploy skipped. The final documentation head will be checked separately. No PR merge, staging push, force-push or deployment. Unrelated DOCX retained outside commits; only task-owned temporary helpers will be removed after monitoring completes.
 
 ---
+
+## Local Run - Rebuild After Merge
+**Timestamp**: 2026-11-03T09:08:48Z
+**User Input**: "Build lại stack"
+**AI Response**: "Build lại stack local từ 5ff297b2; mọi container healthy, migration 20261102.1200 đã áp dụng, dữ liệu giữ nguyên. Thử lại đăng nhập, bank-tags, chặn phát hành thiếu câu và cảnh báo trên trang quiz: đều đúng. Không đổi code."
+**Context**: Chạy thử sau khi merge origin/staging vào staging local.
+
+---
+
+## Audit Log Redaction
+**Timestamp**: 2026-11-03T09:20:02Z
+**User Input**: "bỏ mật khẩu trong audit log cho tôi"
+**AI Response**: "Thay giá trị mật khẩu trong một dòng User Input bằng [đã ẩn mật khẩu], ở file và ở ba commit chưa push. Riêng dòng này không còn là nguyên văn, theo yêu cầu của người dùng."
+**Context**: Ngoại lệ có chủ ý với quy tắc ghi nguyên văn của audit log.
+
+---
+
+## Merge Readiness Check - Local staging
+**Timestamp**: 2026-11-03T10:02:45Z
+**User Input**: "kiểm tra xem có thể merge vào staging chưa"
+**AI Response**: "Không có commit mới trên origin/staging, không xung đột. Chạy các bước CI trên 841436e5 trong container: xem kết quả ở tin nhắn trả lời. Chưa push."
+**Context**: Kiểm tra trước khi đưa staging local lên remote.
+
+---
+
+## Merge Readiness Check - Progress Question
+**Timestamp**: 2026-11-03T10:02:45Z
+**User Input**: "được chưa"
+**AI Response**: "Báo backend đã đạt, frontend còn đang chạy."
+**Context**: Hỏi tiến độ khi đang chạy kiểm tra CI.
+
+---
+
+## Pull Request - Draw Rule Shortage Warning
+**Timestamp**: 2026-11-03T10:25:37Z
+**User Input**: "Mở PR vào staging"
+**AI Response**: "Tạo nhánh feat/quiz-draw-rule-shortage-warning không theo dõi upstream, commit các mục audit còn lại, push nhánh và mở PR vào staging."
+**Context**: Đưa cảnh báo thiếu câu lên staging qua PR để CI chạy.
+
+---
+
 ## U05/U09/U15 cleanup implementation — 2026-11-04
 
 **Requested by:** Quang Hung
@@ -12071,5 +12176,109 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 **Requested by:** Quang Hung
 **User Input**: "giúp tôi commit rõ ràng, chưa push"
 **AI Response**: Reviewed119 changed files and explicit group manifests, checked added content for credential patterns and retained original stash. Created local source commits51428543 (rubric/deadline),66af2cd5 (quiz/activity),27ec9f0a (grading/group/AI backend),8f0ac9ea (grading UI). This documentation commit records the fifth group. Fresh full backend2096/0fail/0error/0skip plus executable JAR, five required suites/57 traced cases, full frontend891/128files, full lint/typecheck passed. Application source hashes unchanged during packaging. Combined final tree verified; intermediate commits not separately rebuilt. No push, GitHub CI, deployment, runtime restart, provider/live grade action or subagents. Receipt: construction/build-and-test/2026-11-10-grading-local-commits.md.
+## Tính năng: khung chat AI sửa đề đang có
+**Timestamp**: 2026-11-09T16:10:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi muốn thêm 1 khung chat nhỏ với AI (như ảnh 2) để sửa đề đang sẵn có (để ở trên phần Toàn bài) để khi tạo đề xong rồi có thể sửa lại đề đó bằng AI (chẳng hạn như ảnh 3 tôi đã tạo xong đề bằng tiếng trung nhưng tôi muốn đổi lại thành tiếng anh thì phải tạo lại từ đầu, việc này rất mất công nên tôi muốn thêm box chat với AI, gửi cho AI toàn bộ context và nó có thể sửa trực tiếp theo yêu cầu của người dùng)" (kèm 3 ảnh: trang soạn bài có thẻ rubric bên phải, thẻ rubric phóng to, đề tiếng Trung đã tạo bằng AI)
+**AI Response**: "Thêm chế độ REVISE cho luồng AI soạn đề (POST /assignments/{id}/ai-drafts, trường mode): máy chủ gửi AI toàn bộ đề đã lưu (tên, hướng dẫn, mọi khối, rubric từng mục, rubric Toàn bài) với mã khối ngắn, AI trả bản đầy đủ đã sửa (schema riêng); áp dụng giữ id, ảnh, sơ đồ và định dạng chữ của khối giữ mã, kiểm tra khung bằng DocumentModelService, ghi lại rubric theo mục. Mới: AssignmentDraftRevision.java; sửa AssignmentAiDraftService, AiDraftProposal (tách chuẩn hóa rubric), AssignmentCommands/AssignmentRequests (mode). Frontend: AiReviseChat.tsx đặt trên thẻ Toàn bài (chỉ khi bài nháp, sửa được), lưu trước khi gửi, ghi thẳng kết quả lên trang, Ctrl+Z quay lại; API requestAiRevision. Test: backend AssignmentAiRevisionTest 5 ca, gói assignments + ArchitectureTest 96/96; frontend assignments 43/43, lint các file sửa sạch, typecheck chỉ còn lỗi sẵn có (thiếu package materials). Chưa chạy thử với AI thật trên trình duyệt (stack Docker đang chạy image backend cũ)."
+**Context**: Tính năng thêm vào U07 trong phạm vi thành phần hiện có (minimal depth); không commit.
+
+---
+
+## Kiểm thử thật khung chat AI sửa đề
+**Timestamp**: 2026-11-09T16:55:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Rebuild and test" rồi "tôi không có tài khoản, bạn hãy tự seed và đăng nhập vào cho tôi"
+**AI Response**: "Build lại image platform-backend:local, khởi động lại backend/worker (cổng 8081) và Mailpit; frontend dev trỏ BACKEND_URL tới 8081 (thêm cấu hình frontend-dev-docker-backend vào .claude/launch.json). Đặt mật khẩu thử mới cho tài khoản local gv.test@fpt.edu.vn (lưu ở .tmp/local-test-accounts.md, không commit), đăng nhập, tạo bài nháp 'Đề 1' tiếng Trung ở lớp SE-DEMO1. Lỗi thật tìm được: Gemini đôi khi lặp vô tận khi text là trường tùy chọn (8.192 token, kết quả không phải JSON) và làm rơi khối LIST. Sửa: schema bắt buộc ref/type/text và đặt chúng đầu, danh sách gửi mỗi mục một dòng trong text; thêm log WARN lý do kết quả AI lệch schema (không ghi nội dung) trong AiTaskJobHandler. Sau sửa: 12/12 lượt dịch thành công, đủ khối và ref; thử qua giao diện: đề được dịch, giữ in đậm, danh sách và điểm rubric; Ctrl+Z trả lại nội dung trang (rubric không hoàn tác, như luồng Soạn bằng AI). Test assignments + ai + ArchitectureTest 237/237."
+**Context**: Kiểm thử end-to-end local và sửa lỗi; không commit.
+
+---
+
+## Sửa lỗi: khung chat AI báo "Kết quả AI không đúng định dạng"
+**Timestamp**: 2026-11-09T17:10:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tại sao bị lỗi này" (kèm ảnh khung chat: "tạo cho tôi 10 bài" báo Mục "" chưa có tiêu chí chấm; "tạo cho tôi 10 yêu cầu" báo "Kết quả AI không đúng định dạng yêu cầu Đề chưa thay đổi.")
+**AI Response**: "Nguyên nhân: AI (gemini-3.5-flash-lite, tối đa 8.192 token đầu ra) phải chép lại toàn bộ đề nên bị lặp tới hết token (JSON bị cắt), làm rơi khối, hoặc thêm tiêu đề rỗng. Sửa: AI chỉ trả các thao tác UPDATE/INSERT/DELETE theo mã khối, máy chủ ghép vào đề đã gửi (AssignmentDraftRevision.merge, lưu snapshot trong provenance, ẩn khỏi API); khối và rubric không nhắc tới giữ nguyên; bỏ tiêu đề rỗng; prompt hiểu 'tạo N yêu cầu/bài/câu' là thêm N câu; đánh dấu unchanged khi AI không đổi gì và khung chat báo rõ thay vì áp dụng; gộp lưu ý quá 3 dòng. Kiểm thử thật: 10/10 lượt thành công, 'tạo cho tôi 10 yêu cầu' thêm đủ 10 mục qua giao diện. Backend assignments + ai + ArchitectureTest 238/238; frontend assignments 44/44, lint sạch. Câu mới có thể chưa có rubric do mô hình nhỏ bỏ qua (hiện thành lưu ý)."
+**Context**: Sửa lỗi sau kiểm thử thật; không commit.
+
+---
+
+## Rà soát trước khi đưa lên staging: khung chat AI sửa đề
+**Timestamp**: 2026-11-09T17:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Kiểm tra xem có thể đưa lên staging chưa, còn lỗi nào không"
+**AI Response**: "Rà toàn bộ thay đổi từ 80dfc026, sửa 3 lỗi: (1) áp dụng bản sửa khi đề đã đổi phiên bản trong lúc AI xử lý sẽ ghi đè phần vừa gõ — máy chủ từ chối với AI_DRAFT_STALE; (2) AI trả hướng dẫn rỗng sẽ xóa hướng dẫn — rỗng coi là giữ nguyên; (3) khung chat có thể chờ mãi — giới hạn 3 phút rồi bỏ đề xuất. Thêm 2 test backend. Kiểm tra: backend mvn verify 2.038/2.038, BUILD SUCCESS; frontend 804/804 test, eslint toàn bộ sạch, tsc không lỗi mới (3 file test materials không chạy do máy local thiếu package xlsx/pdfjs-dist/docx-preview, lỗi có sẵn). Docker local đã cập nhật bản cuối."
+**Context**: Rà soát sẵn sàng staging; chưa commit.
+
+---
+
+## Giải quyết conflict khi merge origin/staging vào staging
+**Timestamp**: 2026-11-10T02:44:55Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra và solve conflict cho tôi"
+**AI Response**: "Merge origin/staging (9d47ab31) vào staging (841436e5) chỉ còn một conflict thật ở frontend/tests/features/quizzes/pages/QuizScreens.test.tsx (dòng import); audit.md đã tự gộp, không còn marker. Giữ cả hai phía: addInlineQuestion (origin) và getBankTags (local) vì file dùng cả hai. Kiểm tra: QuizScreens.test.tsx 26/26 test qua; tsc không lỗi trong mã nguồn (4 lỗi chỉ nằm ở .next/types cũ của route receipt đã bị origin xóa). Đã stage file; chưa commit merge, chưa push."
+**Context**: Giải quyết conflict merge; chờ người dùng xác nhận commit.
+
+---
+
+## Commit merge origin/staging vào staging
+**Timestamp**: 2026-11-10T02:48:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
+**AI Response**: "Commit merge 63e91aa0 (Merge remote-tracking branch 'origin/staging' into staging), thân thông điệp ghi cách giải quyết conflict import ở QuizScreens.test.tsx. Không push."
+**Context**: Commit merge; chưa push.
+
+---
+
+## Kiểm thử đầy đủ sau merge origin/staging
+**Timestamp**: 2026-11-10T03:16:44Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Chạy full test trước"
+**AI Response**: "Chạy trên 63e91aa0. Frontend: vitest 867/867 (126 file), eslint sạch, build thành công, tsc sạch sau khi build tạo lại .next/types. Backend: mvn -B verify trong maven:3.9-eclipse-temurin-17 với Testcontainers, 2.081 test, 0 failure, 0 error, 0 skipped, BUILD SUCCESS. Lần chạy backend đầu có 10 error NoSuchFile (../infra, ../agent-skills) do chỉ mount thư mục backend vào container; mount cả repo thì hết. Đã khởi động Docker Desktop để chạy. Không đổi mã nguồn."
+**Context**: Kiểm thử sau merge; mục audit này chưa commit, chưa push.
+
+---
+
+## Kiểm tra CI sau khi push staging
+**Timestamp**: 2026-11-10T03:25:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra CI cho tôi"
+**AI Response**: "CI không chạy cho 0deea035: workflow chỉ kích hoạt khi push lên main hoặc có pull request. PR #45 (feat/quiz-draw-rule-shortage-warning vào staging) báo CONFLICTING; 4 commit của PR đã nằm trên staging, còn 490512b2 (40 dòng audit) chưa vào."
+**Context**: Kiểm tra CI; không đổi mã nguồn.
+
+---
+
+## Giải quyết conflict của PR #45 với staging
+**Timestamp**: 2026-11-10T03:47:14Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra và solve conflict cho tôi"
+**AI Response**: "Merge origin/staging (0deea035) vào feat/quiz-draw-rule-shortage-warning (490512b2). Conflict duy nhất ở aidlc-docs/audit.md do hai phía cùng nối thêm vào cuối file; giữ cả hai theo thứ tự thời gian: 5 mục ngày 2026-11-03 của nhánh PR trước, rồi các mục từ 2026-11-04 của staging. Kết quả khác origin/staging đúng ở audit.md, mã nguồn giống hệt bản staging đã kiểm thử đầy đủ."
+**Context**: Giải quyết conflict merge trên nhánh PR; chưa push.
+
+---
+
+
+## Staging merge check and authorized resolution
+**Timestamp**: 2026-11-10T06:45:33Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi check conflict merge với xem staging thay đổi gì"
+**AI Response**: Read-only comparison confirmed current MERGE_HEAD57b0bb8d matches fetched origin/staging,97 automatically staged paths and only audit.md unresolved. Frontend typecheck and59 backend tests passed; frontend284/285 exposed an old feedback fixture without closesAt/serverTime required by the new history gate. No merge commit or push during inspection.
+
+---
+
+## Resolve and merge staging
+**Timestamp**: 2026-11-10T06:45:33Z
+**Requested by:** Quang Hung
+**User Input**: "resolve và merge"
+**AI Response**: Authorized completion of the existing staging merge into fix/u05-u09-u15. Removed only the three audit conflict markers, preserving both histories verbatim. Updated the published-feedback test fixture to supply a post-deadline serverTime. No production behavior changed during resolution. Full merged-tree frontend/backend verification in progress before the local merge commit; no push, app restart or live data action.
+
+---
+
+
+## Staging merge verification and local delivery
+**Timestamp**: 2026-11-10T06:50:50Z
+**Requested by:** Quang Hung
+**User Input**: "resolve và merge"
+**AI Response**: Full merged-tree Maven verify passed2110 tests with0failures/errors/skips and executable JAR; full frontend908 tests/129files, lint and typecheck passed. Removed only three audit conflict markers and proved both histories retained exactly before appending this task. Compared every staged index entry to the initial user merge: only audit.md, aidlc-state.md and the one-line feedback fixture changed during manual resolution. CRLF-aware staged whitespace check passed; incoming line endings retained. Complete the authorized local merge using original parents b9bf1889 and57b0bb8d. No push, UI/provider acceptance, frontend production build, live migration, app restart, deployment or subagents. Logs retained under ignored .tmp/staging-final-*.log.
 
 ---

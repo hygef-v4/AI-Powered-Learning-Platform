@@ -23,6 +23,7 @@ import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -82,15 +83,18 @@ public class QuizPaperService {
     public List<BankTag> bankTags(Actor actor, UUID id) {
         Quiz quiz = support.loadManaged(actor, id);
         Map<String, String> display = new LinkedHashMap<>();
-        Map<String, Integer> counts = new LinkedHashMap<>();
+        Map<String, Map<Difficulty, Integer>> counts = new LinkedHashMap<>();
         for (PoolEntry entry : questions.activePool(quiz.subjectId())) {
             for (String tag : entry.tags()) {
                 String key = tag.strip().toLowerCase(Locale.ROOT);
                 display.putIfAbsent(key, tag.strip());
-                counts.merge(key, 1, Integer::sum);
+                counts.computeIfAbsent(key, k -> new EnumMap<>(Difficulty.class))
+                        .merge(entry.difficulty(), 1, Integer::sum);
             }
         }
-        return counts.entrySet().stream().map(e -> new BankTag(display.get(e.getKey()), e.getValue()))
+        return counts.entrySet().stream()
+                .map(e -> new BankTag(display.get(e.getKey()),
+                        e.getValue().values().stream().mapToInt(Integer::intValue).sum(), e.getValue()))
                 .sorted(Comparator.comparing(BankTag::tag, String.CASE_INSENSITIVE_ORDER)).toList();
     }
 

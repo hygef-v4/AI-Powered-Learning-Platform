@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import {
-  addInlineQuestion, createSubjectQuiz, getBankQuestionsForQuiz, getClassQuizzes, getManagedSubjects, getQuiz, getSubjectQuizzes, previewRandomItems,
+  addInlineQuestion, createSubjectQuiz, getBankQuestionsForQuiz, getBankTags, getClassQuizzes, getManagedSubjects, getQuiz, getSubjectQuizzes, previewRandomItems,
   previewPaper, proposeQuestion, publishQuiz, reopenQuiz, saveDrawRules, saveQuizItems, updateQuizDetails,
 } from "@/features/quizzes/api";
 import { BankQuestionPicker } from "@/features/quizzes/components/BankQuestionPicker";
@@ -29,7 +29,7 @@ vi.mock("@/features/quizzes/api", () => ({
   addInlineQuestion: vi.fn(),
   updateInlineQuestion: vi.fn(),
   saveDrawRules: vi.fn(),
-  getBankTags: vi.fn(async () => [{ tag: "Chương 1", activeCount: 12 }]),
+  getBankTags: vi.fn(async () => [{ tag: "Chương 1", activeCount: 12, byDifficulty: { EASY: 10, HARD: 2 } }]),
   previewPaper: vi.fn(),
   proposeQuestion: vi.fn(),
   publishQuiz: vi.fn(),
@@ -290,6 +290,45 @@ describe("QuizDetailPage", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Đóng" })[0]!);
     fireEvent.click(screen.getByTestId("quiz-detail-publish"));
     expect(await screen.findByTestId("quiz-detail-publish-summary")).toHaveTextContent("một đề mới gồm 4 câu");
+  });
+
+  it("sinh đề: cảnh báo ngay khi quy tắc cần nhiều câu hơn kho theo thẻ và độ khó, vẫn cho lưu", async () => {
+    vi.mocked(getQuiz).mockResolvedValue(detail());
+    render(<QuizDetailPage id="z1" />);
+
+    fireEvent.change(await screen.findByTestId("draw-rules-mode"), { target: { value: "GENERATED" } });
+    fireEvent.click(screen.getByTestId("draw-rule-add"));
+    fireEvent.change(screen.getByTestId("draw-rule-tag-0"), { target: { value: "chương 1" } });
+    await screen.findByText("Kho có 12 câu đang dùng mang thẻ này");
+    expect(screen.queryByTestId("draw-rule-shortage-0")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByTestId("draw-rule-count-0"), { target: { value: "13" } });
+    expect(screen.getByTestId("draw-rule-shortage-0")).toHaveTextContent("Cần 13 câu, kho chỉ có 12 câu; chưa phát hành được.");
+    expect(screen.getByTestId("draw-rules-save")).toBeEnabled();
+
+    fireEvent.change(screen.getByTestId("draw-rule-count-0"), { target: { value: "3" } });
+    expect(screen.queryByTestId("draw-rule-shortage-0")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Độ khó của quy tắc 1"), { target: { value: "HARD" } });
+    expect(screen.getByText("Kho có 2 câu mức Khó đang dùng mang thẻ này")).toBeInTheDocument();
+    expect(screen.getByTestId("draw-rule-shortage-0")).toHaveTextContent("Cần 3 câu, kho chỉ có 2 câu");
+
+    fireEvent.change(screen.getByLabelText("Độ khó của quy tắc 1"), { target: { value: "MEDIUM" } });
+    expect(screen.getByText("Kho chưa có câu mức Trung bình mang thẻ này")).toBeInTheDocument();
+    fireEvent.change(screen.getByTestId("draw-rule-tag-0"), { target: { value: "Thẻ chưa có" } });
+    expect(screen.getByTestId("draw-rule-shortage-0")).toHaveTextContent("kho chỉ có 0 câu");
+  });
+
+  it("sinh đề: không tải được thẻ thì không báo thiếu câu", async () => {
+    vi.mocked(getQuiz).mockResolvedValue(detail());
+    vi.mocked(getBankTags).mockRejectedValueOnce(new Error("offline"));
+    render(<QuizDetailPage id="z1" />);
+
+    fireEvent.change(await screen.findByTestId("draw-rules-mode"), { target: { value: "GENERATED" } });
+    fireEvent.click(screen.getByTestId("draw-rule-add"));
+    fireEvent.change(screen.getByTestId("draw-rule-tag-0"), { target: { value: "Chương 1" } });
+    fireEvent.change(screen.getByTestId("draw-rule-count-0"), { target: { value: "99" } });
+    await waitFor(() => expect(getBankTags).toHaveBeenCalled());
+    expect(screen.queryByTestId("draw-rule-shortage-0")).not.toBeInTheDocument();
   });
 
   it("hiện phần lượt làm của sinh viên theo lớp của quiz; quiz của môn mở từ lớp thì theo lớp đó", async () => {

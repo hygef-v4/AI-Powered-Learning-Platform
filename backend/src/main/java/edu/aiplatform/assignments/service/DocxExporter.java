@@ -108,8 +108,8 @@ final class DocxExporter {
     }
 
     /**
-     * Số mục như trình soạn hiển thị (1., 1.1., 1.1.1.), ghi vào đầu tiêu đề để mở lại tệp vẫn dựng đúng cây mục
-     * (yêu cầu 2026-11-05: nhập DOCX lấy cây theo số đầu mục).
+     * Số câu hỏi như trình soạn hiển thị (I., I.1., I.1.a., I.1.a.aa.; yêu cầu 2026-11-10), ghi vào đầu tiêu đề để mở lại
+     * tệp vẫn dựng đúng cây câu hỏi (yêu cầu 2026-11-05: nhập DOCX lấy cây theo số đầu mục).
      */
     static final class SectionNumbers {
         private final java.util.ArrayDeque<Integer> open = new java.util.ArrayDeque<>();
@@ -125,11 +125,11 @@ final class DocxExporter {
             for (int i = depth; i < counters.length; i++) {
                 counters[i] = 0;
             }
-            StringBuilder out = new StringBuilder();
+            java.util.List<Integer> used = new java.util.ArrayList<>();
             for (int i = 0; i < depth; i++) {
-                out.append(Math.max(1, counters[i])).append('.');
+                used.add(counters[i]);
             }
-            return out.toString();
+            return edu.aiplatform.assignments.model.SectionNumbering.of(used);
         }
     }
 

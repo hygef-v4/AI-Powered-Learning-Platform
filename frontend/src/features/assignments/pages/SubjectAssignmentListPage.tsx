@@ -14,7 +14,8 @@ import { rememberAssignmentsPage } from "../model/outline";
 type ManagedSubject = { id: string; code: string; name: string };
 
 /**
- * #25 Assignment List (F2): bài của môn cho Chủ nhiệm môn, cùng kiểu trang Bài tập của sinh viên; nút Tạo bài tập trên đầu
+ * #25 Assignment List (F2): đề mẫu của môn cho Chủ nhiệm môn (yêu cầu 2026-11-09: không giao cho lớp, giảng viên dựa vào
+ * đề mẫu để tạo bài ở lớp), cùng kiểu trang Bài tập của sinh viên; nút Tạo bài tập trên đầu
  * trang, ngoài thẻ danh sách. Đổi môn bằng ô chọn môn trên sidebar (`?subjectId=`).
  */
 export function SubjectAssignmentListPage() {
@@ -41,9 +42,9 @@ export function SubjectAssignmentListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Bài tập"
+      <PageHeader title="Đề mẫu bài tập"
         actions={<Button variant="primary" icon="add" disabled={!subjectId || !page.data || page.data.ownerArchived}
-          onClick={() => setCreating(true)} data-testid="subject-assignment-create">Tạo bài tập</Button>} />
+          onClick={() => setCreating(true)} data-testid="subject-assignment-create">Tạo đề mẫu</Button>} />
       {subjectsError !== null && <Alert tone="danger" role="alert">{errorMessage(subjectsError)}</Alert>}
       {subjects && subjects.length === 0 && <Alert tone="info">Bạn chưa được giao quản lý môn nào.</Alert>}
       {subjectId && <AssignmentListCard page={page} />}

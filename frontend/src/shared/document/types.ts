@@ -234,13 +234,13 @@ export function computeParts(document: DocumentModel): DocumentPart[] {
   if (headings.length === 0) return [{ partId: WHOLE_DOCUMENT, headingBlockId: null, ancestorHeadingIds: [], title: "Toàn bài" }];
   const parts: DocumentPart[] = [];
   const branch: (typeof headings[number] & { label: string })[] = [];
-  // Số thứ tự như trong trang (1., 1.1.): mục chưa đặt tên thì gọi bằng số của nó.
+  // Số thứ tự như trong trang (I., I.1.): câu hỏi chưa đặt tên thì gọi bằng số của nó.
   const counters: number[] = [];
   headings.forEach((heading, index) => {
     while (branch.length > 0 && branch[branch.length - 1]!.level >= heading.level) branch.pop();
     counters.length = branch.length + 1;
     counters[branch.length] = (counters[branch.length] ?? 0) + 1;
-    const label = heading.title || `${counters.join(".")}.`;
+    const label = heading.title || sectionNumber(counters);
     const ancestors = branch.map((h) => h.id);
     const path = [...branch.map((h) => h.label), label];
     branch.push({ ...heading, label });
@@ -266,8 +266,47 @@ export function sectionsOf(document: DocumentModel, parts: DocumentPart[]): Map<
   return sections;
 }
 
-/** Mục lồng tối đa 3 tầng: 1., 1.1., 1.1.1. (yêu cầu 2026-11-04). */
-export const MAX_SECTION_DEPTH = 3;
+/** Câu hỏi lồng tối đa 4 tầng: I., I.1., I.1.a., I.1.a.aa. (yêu cầu 2026-11-10, thay 3 tầng của 2026-11-04). */
+export const MAX_SECTION_DEPTH = 4;
+
+const ROMAN: [number, string][] = [[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"], [50, "L"],
+  [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
+
+function roman(n: number): string {
+  let rest = n;
+  let out = "";
+  for (const [value, symbol] of ROMAN) {
+    while (rest >= value) {
+      out += symbol;
+      rest -= value;
+    }
+  }
+  return out;
+}
+
+/** a, b, …, z, aa, ab, … */
+function letters(n: number): string {
+  let rest = n;
+  let out = "";
+  while (rest > 0) {
+    rest--;
+    out = String.fromCharCode(97 + (rest % 26)) + out;
+    rest = Math.floor(rest / 26);
+  }
+  return out;
+}
+
+/**
+ * Số câu hỏi theo thứ tự ở từng tầng (yêu cầu 2026-11-10), giống SectionNumbering của backend: tầng 1 số La Mã, tầng 2
+ * số, tầng 3 chữ thường, tầng 4 chữ thường gấp đôi: [1] → "I.", [1, 2] → "I.2.", [1, 2, 1] → "I.2.a.", [1, 2, 1, 3] → "I.2.a.cc.".
+ */
+export function sectionNumber(counters: number[]): string {
+  return counters.map((count, depth) => {
+    const n = Math.max(1, count);
+    const part = depth === 0 ? roman(n) : depth === 1 ? String(n) : depth === 2 ? letters(n) : letters(n).repeat(2);
+    return `${part}.`;
+  }).join("");
+}
 
 /** Cấp mục mà đoạn {@code block} quay về (đoạn viết ở dòng cuối của mục cha), null nếu là đoạn thường. */
 export function underOf(block: DocumentBlock): number | null {

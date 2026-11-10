@@ -17,8 +17,9 @@ const rowsOf = (detail: QuizDetail): Row[] => detail.drawRules.map((r) => ({ key
 
 /**
  * "Cách lập đề" (BR-U10-17): đề cố định, hoặc mỗi lượt làm sinh một đề mới theo quy tắc "thẻ nào lấy bao nhiêu câu" từ
- * câu đang dùng của ngân hàng môn. Lưu riêng với danh sách câu; phát hành chặn nếu kho không đủ câu. Trang cha đặt `key`
- * theo version của Quiz để nhận lại dữ liệu mới sau khi lưu.
+ * câu đang dùng của ngân hàng môn. Lưu riêng với danh sách câu; phát hành chặn nếu kho không đủ câu, còn cảnh báo ở từng
+ * quy tắc chỉ là ước tính vì một câu nhiều thẻ có thể được hai quy tắc cùng cần. Trang cha đặt `key` theo version của Quiz
+ * để nhận lại dữ liệu mới sau khi lưu.
  */
 export function DrawRulesPanel({ detail, editable, disabled, onSaved, onError }: {
   detail: QuizDetail;
@@ -30,7 +31,7 @@ export function DrawRulesPanel({ detail, editable, disabled, onSaved, onError }:
   const id = useId();
   const [mode, setMode] = useState<QuizPaperMode>(detail.quiz.paperMode);
   const [rows, setRows] = useState<Row[]>(() => rowsOf(detail));
-  const [tags, setTags] = useState<BankTag[]>([]);
+  const [tags, setTags] = useState<BankTag[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<PaperPreview | null>(null);
   const [nextKey, setNextKey] = useState(1000);
@@ -47,7 +48,13 @@ export function DrawRulesPanel({ detail, editable, disabled, onSaved, onError }:
     return () => controller.abort();
   }, [editable, mode, quizId]);
 
-  const available = (tag: string) => tags.find((t) => t.tag.toLowerCase() === tag.trim().toLowerCase())?.activeCount;
+  // Số câu trong kho khớp thẻ và độ khó của quy tắc; null khi chưa tải được danh sách thẻ.
+  const available = (row: Row) => {
+    if (!tags) return null;
+    const found = tags.find((t) => t.tag.toLowerCase() === row.tag.trim().toLowerCase());
+    if (!found) return 0;
+    return row.difficulty ? found.byDifficulty[row.difficulty] ?? 0 : found.activeCount;
+  };
   const update = (key: number, patch: Partial<Row>) => setRows((list) => list.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   const total = rows.reduce((sum, r) => sum + (Number(r.questionCount) || 0), 0);
   const totalPoints = rows.reduce((sum, r) => sum + (Number(r.questionCount) || 0) * (decimal(r.pointsEach) || 0), 0);
@@ -86,10 +93,14 @@ export function DrawRulesPanel({ detail, editable, disabled, onSaved, onError }:
           <option value="GENERATED">Sinh đề mới cho mỗi lượt làm</option>
         </Select>
         {mode === "GENERATED" && <>
-          <datalist id={`${id}-tags`}>{tags.map((t) => <option key={t.tag} value={t.tag}>{t.activeCount} câu</option>)}</datalist>
+          <datalist id={`${id}-tags`}>{tags?.map((t) => <option key={t.tag} value={t.tag}>{t.activeCount} câu</option>)}</datalist>
           <ul className="flex flex-col gap-2">
             {rows.map((row, index) => {
-              const count = available(row.tag);
+              const hasTag = row.tag.trim() !== "";
+              const count = available(row);
+              const level = row.difficulty ? ` mức ${DIFFICULTY_LABELS[row.difficulty]}` : "";
+              const requested = Number(row.questionCount);
+              const short = hasTag && count !== null && Number.isInteger(requested) && requested > count;
               return (
                 <li key={row.key} className="flex flex-col gap-1 rounded-lg border border-line p-2" data-testid="draw-rule">
                   <TextInput aria-label={`Thẻ của quy tắc ${index + 1}`} placeholder="Thẻ, ví dụ Chương 1" list={`${id}-tags`} value={row.tag}
@@ -104,8 +115,9 @@ export function DrawRulesPanel({ detail, editable, disabled, onSaved, onError }:
                     <TextInput aria-label={`Điểm mỗi câu của quy tắc ${index + 1}`} inputMode="decimal" suffix="điểm" value={row.pointsEach}
                       onChange={(event) => update(row.key, { pointsEach: event.target.value })} data-testid={`draw-rule-points-${index}`} />
                   </div>
+                  {short && <p role="status" className="text-xs font-medium text-warning" data-testid={`draw-rule-shortage-${index}`}>Cần {requested} câu, kho chỉ có {count} câu; chưa phát hành được.</p>}
                   <div className="flex items-center justify-between gap-2 text-xs text-muted">
-                    <span>{row.tag.trim() === "" ? "Chọn thẻ để xem số câu trong kho" : count === undefined ? "Kho chưa có câu mang thẻ này" : `Kho có ${count} câu đang dùng mang thẻ này`}</span>
+                    <span>{!hasTag ? "Chọn thẻ để xem số câu trong kho" : count === null ? "" : count === 0 ? `Kho chưa có câu${level} mang thẻ này` : `Kho có ${count} câu${level} đang dùng mang thẻ này`}</span>
                     {editable && <Button size="sm" variant="ghost" onClick={() => setRows((list) => list.filter((r) => r.key !== row.key))} aria-label={`Bỏ quy tắc ${index + 1}`}>Bỏ</Button>}
                   </div>
                 </li>

@@ -22,32 +22,40 @@ const typeInto = (line: HTMLElement, text: string) => {
 
 it("soạn từ trống: + Mục trên thanh công cụ thêm mục con tại con trỏ, thanh + ở đáy ô văn bản thêm mục con ở cuối; mỗi ô chỉ một dòng cuối và một +", () => {
   render(<Page />);
-  // "+" ẩn cho tới khi con trỏ vào ô văn bản đó.
-  expect(screen.queryByTestId("quick-add-DOCUMENT")).toBeNull();
+  // "+ Thêm câu hỏi" luôn hiện ở đáy ô văn bản (yêu cầu 2026-11-10); ô ngoài cùng nhắc bấm + để chia đề thành câu hỏi.
+  expect(labels(screen.getByTestId("quick-add-DOCUMENT"))).toEqual(["Thêm câu hỏi"]);
+  expect(screen.getByTestId("quick-add-DOCUMENT")).toHaveTextContent("Thêm câu hỏi");
+  expect(within(screen.getByTestId("tail-DOCUMENT")).getByLabelText("Dòng cuối")).toHaveAttribute("data-placeholder", "Nhập đề bài, bối cảnh hệ thống, yêu cầu chung…");
   focusLine("tail-DOCUMENT");
-  expect(labels(screen.getByTestId("quick-add-DOCUMENT"))).toEqual(["Thêm mục"]);
-  fireEvent.click(within(screen.getByTestId("quick-add-DOCUMENT")).getByRole("button", { name: "Thêm mục" }));
+  expect(labels(screen.getByTestId("quick-add-DOCUMENT"))).toEqual(["Thêm câu hỏi"]);
+  fireEvent.click(within(screen.getByTestId("quick-add-DOCUMENT")).getByRole("button", { name: "Thêm câu hỏi" }));
   const [bai1] = sectionIds();
-  expect(screen.getByTestId(`number-${bai1}`)).toHaveTextContent("1.");
-  expect(labels(screen.getByTestId(`quick-add-${bai1}`))).toEqual(["Thêm mục"]);
+  expect(screen.getByTestId(`number-${bai1}`)).toHaveTextContent("I.");
+  // Trong một câu hỏi, nút ở đáy ghi "Thêm ý" (yêu cầu 2026-11-10).
+  expect(labels(screen.getByTestId(`quick-add-${bai1}`))).toEqual(["Thêm ý"]);
 
   // Con trỏ trong mục 1 → "+ Mục" trên thanh công cụ thêm mục con 1.1 ngay tại con trỏ.
   typeInto(screen.getByTestId(`tail-${bai1}`), "Mô tả bài 1");
   fireEvent.click(screen.getByTestId("add-block"));
   const cau1a = sectionIds()[1]!;
-  expect(screen.getByTestId(`number-${cau1a}`)).toHaveTextContent("1.1.");
+  expect(screen.getByTestId(`number-${cau1a}`)).toHaveTextContent("I.1.");
   // Con trỏ ở dòng cuối của cả tài liệu → mục ngoài cùng 2.
   focusLine("tail-end-DOCUMENT");
   fireEvent.click(screen.getByTestId("add-block"));
-  // Con trỏ trong 1.1 → mục con 1.1.1; mục tầng 3 thì nút "+ Mục" khóa.
+  // Con trỏ trong I.1 → ý I.1.a, rồi I.1.a.aa; tầng 4 thì nút "+ Câu hỏi" khóa (đánh số I., I.1., I.1.a., I.1.a.aa.).
   typeInto(screen.getByTestId(`tail-${cau1a}`), "Nội dung 1.1");
   fireEvent.click(screen.getByTestId("add-block"));
-  expect(sectionIds().map((id) => screen.getByTestId(`number-${id}`).textContent)).toEqual(["1.", "1.1.", "1.1.1.", "2."]);
+  typeInto(screen.getByTestId(`tail-${sectionIds()[2]!}`), "Nội dung I.1.a");
+  fireEvent.click(screen.getByTestId("add-block"));
+  expect(sectionIds().map((id) => screen.getByTestId(`number-${id}`).textContent)).toEqual(["I.", "I.1.", "I.1.a.", "I.1.a.aa.", "II."]);
+  // Con trỏ ở tiêu đề câu hỏi: "+ Câu hỏi" vẫn bấm được, thêm câu hỏi xuống cuối (yêu cầu 2026-11-10).
+  expect(screen.getByTestId("add-block")).toBeEnabled();
+  typeInto(screen.getByTestId(`tail-${sectionIds()[3]!}`), "Nội dung I.1.a.aa");
   expect(screen.getByTestId("add-block")).toBeDisabled();
   // "+" ở đáy ô văn bản của mục 1 → mục con 1.2 ở cuối mục 1.
   focusLine(`tail-end-${bai1}`);
-  fireEvent.click(within(screen.getByTestId(`quick-add-${bai1}`)).getByRole("button", { name: "Thêm mục" }));
-  expect(sectionIds().map((id) => screen.getByTestId(`number-${id}`).textContent)).toEqual(["1.", "1.1.", "1.1.1.", "1.2.", "2."]);
+  fireEvent.click(within(screen.getByTestId(`quick-add-${bai1}`)).getByRole("button", { name: "Thêm ý" }));
+  expect(sectionIds().map((id) => screen.getByTestId(`number-${id}`).textContent)).toEqual(["I.", "I.1.", "I.1.a.", "I.1.a.aa.", "I.2.", "II."]);
 
   // Mục 1 đã có mục con: dòng cuối ở giữa (trên 1.1) mất, giữa 1.1 và 1.2 không có "+"; chữ "Mô tả bài 1" vẫn còn.
   expect(screen.queryByTestId(`tail-${bai1}`)).toBeNull();
@@ -66,7 +74,7 @@ it("soạn từ trống: + Mục trên thanh công cụ thêm mục con tại co
 
   // Cuối tài liệu cũng có dòng cuối và nút thêm mục ngoài cùng.
   focusLine("tail-end-DOCUMENT");
-  expect(labels(screen.getByTestId("quick-add-DOCUMENT"))).toEqual(["Thêm mục"]);
+  expect(labels(screen.getByTestId("quick-add-DOCUMENT"))).toEqual(["Thêm câu hỏi"]);
 });
 
 it("ô bảng định dạng được: bôi đen rồi bấm Đậm chỉ đổi phần bôi đen; không có nút thụt lề, không có dòng chú thích dưới sơ đồ", async () => {
@@ -92,7 +100,7 @@ it("ô bảng định dạng được: bôi đen rồi bấm Đậm chỉ đổi
   expect(screen.queryByLabelText("Chú thích sơ đồ")).toBeNull();
 });
 
-it("căn lề từng ô bảng; con trỏ trong bảng thì không thêm mục; mục tầng 3 (1.1.1.) không có nút thêm mục con; sidebar thêm được mục", async () => {
+it("căn lề từng ô bảng; con trỏ trong bảng thì không thêm mục; câu hỏi tầng 4 (I.1.a.aa.) không có nút thêm ý; sidebar thêm được mục", async () => {
   const { setCaret } = await import("@/shared/document/RichText");
   let latest: DocumentModel | null = null;
   function TablePage() {
@@ -100,6 +108,7 @@ it("căn lề từng ô bảng; con trỏ trong bảng thì không thêm mục; 
       { id: "a", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "A" } },
       { id: "b", origin: "TEACHER", type: "HEADING", content: { style: "H2", text: "B" } },
       { id: "c", origin: "TEACHER", type: "HEADING", content: { style: "H3", text: "C" } },
+      { id: "d", origin: "TEACHER", type: "HEADING", content: { style: "H4", text: "D" } },
       { id: "tb", origin: "TEACHER", type: "TABLE", content: { rows: [[{ runs: [{ text: "Ô" }] }]] } },
     ] });
     return <DocumentEditor document={doc} onChange={(next) => { latest = next; setDoc(next); }} mode="author" diagramEnabled={false} />;
@@ -115,11 +124,12 @@ it("căn lề từng ô bảng; con trỏ trong bảng thì không thêm mục; 
   const table = (latest as DocumentModel | null)!.blocks.find((b) => b.id === "tb")!;
   expect(table.type === "TABLE" && table.content.rows[0]![0]!.align).toBe("CENTER");
 
-  // Mục 1.1.1. không có "+" thêm mục con; sidebar thêm mục vào mục 1.
-  fireEvent.focus(within(screen.getByTestId("tail-c")).getByLabelText("Dòng cuối"));
-  expect(screen.queryByTestId("quick-add-c")).toBeNull();
+  // Câu hỏi I.1.a.aa. không có "+" thêm ý; I.1.a. vẫn có; sidebar thêm mục vào mục I.
+  fireEvent.focus(within(screen.getByTestId("tail-d")).getByLabelText("Dòng cuối"));
+  expect(screen.queryByTestId("quick-add-d")).toBeNull();
+  expect(screen.getByTestId("quick-add-c")).toBeInTheDocument();
   act(() => { window.dispatchEvent(new CustomEvent("document:add-part", { detail: { parentId: "a" } })); });
-  expect((latest as DocumentModel | null)!.blocks.map((b) => b.type === "HEADING" ? b.content.style : b.id)).toEqual(["H1", "H2", "H3", "tb", "H2"]);
+  expect((latest as DocumentModel | null)!.blocks.map((b) => b.type === "HEADING" ? b.content.style : b.id)).toEqual(["H1", "H2", "H3", "H4", "tb", "H2"]);
 });
 
 it("trang đưa chỗ trên header thì nút chọn cách đọc nằm ở đó, không nằm trên thanh công cụ", () => {
@@ -167,8 +177,8 @@ describe("mục: định dạng tiêu đề, lên xuống, kéo thả; thanh cô
   it("nút lên, xuống chỉ đổi chỗ trong cùng cha; kéo số mục thả lên mục cùng cha hiện bản xem trước mờ rồi đổi chỗ", () => {
     render(<Page />);
     const a1 = document.querySelector<HTMLElement>('[data-section="a1"]')!;
-    expect(within(a1).getByRole("button", { name: "Đưa mục lên" })).toBeDisabled();
-    fireEvent.click(within(a1).getByRole("button", { name: "Đưa mục xuống" }));
+    expect(within(a1).getByRole("button", { name: "Đưa câu hỏi lên" })).toBeDisabled();
+    fireEvent.click(within(a1).getByRole("button", { name: "Đưa câu hỏi xuống" }));
     expect(screen.getByTestId("order")).toHaveTextContent("a,a2,a1,b,tb");
     // Kéo A thả xuống nửa dưới của B (cùng cha là gốc; jsdom không có toạ độ chuột nên là nửa dưới).
     const data = { effectAllowed: "", setData: () => {} };
@@ -184,11 +194,12 @@ describe("mục: định dạng tiêu đề, lên xuống, kéo thả; thanh cô
     expect(screen.getByTestId("order")).toHaveTextContent("b,tb,a,a2,a1");
   });
 
-  it("tên bài: định dạng, căn lề được và lưu trong JSON khung đề; không thêm mục, không chèn; kéo mép cột đổi độ rộng cột", () => {
+  it("tên bài: định dạng, căn lề được và lưu trong JSON khung đề; + Câu hỏi thêm xuống cuối, không chèn; kéo mép cột đổi độ rộng cột", () => {
     render(<Page withTitle />);
     const title = screen.getByLabelText("Tên bài");
     fireEvent.focus(title);
-    expect(screen.getByTestId("add-block")).toBeDisabled();
+    // Con trỏ ở tên bài vẫn thêm được câu hỏi, câu hỏi mới nằm cuối bài (yêu cầu 2026-11-10).
+    expect(screen.getByTestId("add-block")).toBeEnabled();
     expect(screen.getByLabelText("Chèn sơ đồ Draw.io")).toBeDisabled();
     expect(screen.getByLabelText("Danh sách chấm")).toBeDisabled();
     fireEvent.click(screen.getByLabelText("Đậm (Ctrl+B)"));
@@ -202,6 +213,10 @@ describe("mục: định dạng tiêu đề, lên xuống, kéo thả; thanh cô
     fireEvent.mouseUp(window);
     const tb = json().blocks.find((b) => b.id === "tb")!;
     expect(tb.type === "TABLE" && tb.content.widths).toEqual([70, 30]);
+    // Bấm "+ Câu hỏi" khi con trỏ ở tên bài: câu hỏi ngoài cùng mới ở cuối bài.
+    fireEvent.focus(screen.getByLabelText("Tên bài"));
+    fireEvent.click(screen.getByTestId("add-block"));
+    expect(json().blocks.at(-1)).toMatchObject({ type: "HEADING", content: { style: "H1" } });
   });
 });
 

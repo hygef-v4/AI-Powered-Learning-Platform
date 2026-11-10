@@ -16,13 +16,13 @@ const blocks: DocumentBlock[] = [
 
 afterEach(() => { act(() => publishOutline(null)); });
 
-it("dàn ý theo cây mục, đánh số 1., 1.1., 1.2.1. như trong trang; đoạn văn không ghi", () => {
+it("dàn ý theo cây câu hỏi, đánh số I., I.1., I.2.a. như trong trang; đoạn văn không ghi", () => {
   expect(outlineOf(blocks)).toEqual([
-    { id: "p1", depth: 1, title: "Hệ thống thư viện", number: "1." },
-    { id: "q1", depth: 2, title: "Vẽ use case", number: "1.1." },
-    { id: "q2", depth: 2, title: "", number: "1.2." },
-    { id: "q2a", depth: 3, title: "Ý a", number: "1.2.1." },
-    { id: "p2", depth: 1, title: "Đề phụ", number: "2." },
+    { id: "p1", depth: 1, title: "Hệ thống thư viện", number: "I." },
+    { id: "q1", depth: 2, title: "Vẽ use case", number: "I.1." },
+    { id: "q2", depth: 2, title: "", number: "I.2." },
+    { id: "q2a", depth: 3, title: "Ý a", number: "I.2.a." },
+    { id: "p2", depth: 1, title: "Đề phụ", number: "II." },
   ]);
 });
 
@@ -34,7 +34,7 @@ it("sidebar của bài: lối về Bài tập, mỗi phần một dòng; bấm t
   expect(screen.getByRole("link", { name: /Bài tập/ })).toHaveAttribute("href", "/teaching/classes/c1?tab=evals");
   const problem = screen.getByRole("button", { name: /Hệ thống thư viện/ });
   expect(problem).toHaveClass("font-semibold");
-  expect(screen.getByRole("button", { name: /^1\.2\.\s*1\.2\.$/ })).not.toHaveClass("font-semibold");
+  expect(screen.getByRole("button", { name: /^I\.2\.\s*I\.2\.$/ })).not.toHaveClass("font-semibold");
   const shown = vi.fn();
   window.addEventListener("document:show-part", shown);
   fireEvent.click(screen.getByRole("button", { name: /Vẽ use case/ }));
@@ -42,20 +42,21 @@ it("sidebar của bài: lối về Bài tập, mỗi phần một dòng; bấm t
   window.removeEventListener("document:show-part", shown);
 });
 
-it("sidebar có header Mục lục với nút + thêm mục ngoài cùng; mỗi hàng có + thêm mục con, trừ mục tầng 3; chỉ khi sửa được", () => {
+it("sidebar có header Câu hỏi với nút + thêm câu hỏi ngoài cùng; mỗi hàng có + thêm ý tới tầng 4; chỉ khi sửa được", () => {
   const context = assignmentContext({ pathname: "/assignments/a1", search: new URLSearchParams() })!;
   render(<>{context.header}</>);
   act(() => publishOutline({ assignmentId: "a1", backHref: "/x", backLabel: "Bài tập", entries: outlineOf(blocks), editable: true }));
-  expect(screen.getByText("Mục lục")).toBeInTheDocument();
+  expect(screen.getByText("Câu hỏi")).toBeInTheDocument();
   const added = vi.fn();
   window.addEventListener("document:add-part", added);
-  fireEvent.click(screen.getByRole("button", { name: "Thêm mục" }));
-  fireEvent.click(screen.getByRole("button", { name: "Thêm mục con vào 1." }));
+  fireEvent.click(screen.getByRole("button", { name: "Thêm câu hỏi" }));
+  fireEvent.click(screen.getByRole("button", { name: "Thêm ý vào I." }));
   expect(added.mock.calls.map((call) => (call[0] as CustomEvent).detail)).toEqual([{ parentId: null }, { parentId: "p1" }]);
-  expect(screen.queryByRole("button", { name: "Thêm mục con vào 1.2.1." })).toBeNull();
+  // Tầng 3 (I.2.a.) vẫn thêm được ý tầng 4.
+  expect(screen.getByRole("button", { name: "Thêm ý vào I.2.a." })).toBeInTheDocument();
   window.removeEventListener("document:add-part", added);
   act(() => publishOutline({ assignmentId: "a1", backHref: "/x", backLabel: "Bài tập", entries: outlineOf(blocks), editable: false }));
-  expect(screen.queryByRole("button", { name: "Thêm mục" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Thêm câu hỏi" })).toBeNull();
 });
 
 it("văn bản ngoài mọi mục là một dòng tầng 0 trong Mục lục: mấy chữ đầu, chữ thường, không số, không nút +", () => {

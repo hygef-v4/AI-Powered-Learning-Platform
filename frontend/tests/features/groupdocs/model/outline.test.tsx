@@ -16,8 +16,8 @@ vi.mock("next/link", () => ({
 }));
 
 const heading = (id: string, style: "H1" | "H2" | "H3", text: string): DocumentBlock => ({ id, origin: "TEACHER", type: "HEADING", content: { style, text } });
-// "1. Hệ thống" là heading cha (không phải mục); 1.1, 1.2 là mục; 1.2.1 là heading con trong mục 1.2.
-const blocks: DocumentBlock[] = [heading("h0", "H1", "Hệ thống"), heading("p1", "H2", "1.1. Đặc tả"), heading("p2", "H2", "Thiết kế"), heading("p2a", "H3", "Sơ đồ lớp")];
+// "I. Hệ thống" là heading cha (không phải mục); I.1, I.2 là mục; I.2.a là heading con trong mục I.2.
+const blocks: DocumentBlock[] = [heading("h0", "H1", "Hệ thống"), heading("p1", "H2", "I.1. Đặc tả"), heading("p2", "H2", "Thiết kế"), heading("p2a", "H3", "Sơ đồ lớp")];
 const section = (id: string, partId: string, title: string): SectionView => ({
   id, partId, title, orderNo: 1, status: "OPEN", holderId: null, assignedBy: null, publishedBlocks: null, draftBlocks: null,
   draftSavedAt: null, lastAuthorId: null, version: 1,
@@ -61,7 +61,7 @@ it("trang tài liệu nhóm đăng mục lục: lối về Bài tập, không c�
   expect(screen.queryByRole("link", { name: "Thoát" })).not.toBeInTheDocument();
   // Heading tự gõ số trùng số sidebar thì không lặp lại.
   // Tên nút gồm số khi thu gọn sidebar rồi "số tiêu đề".
-  expect(within(outline).getByRole("button", { name: /^1\.1\.\s*1\.1\. Đặc tả$/ })).toBeInTheDocument();
-  fireEvent.click(within(outline).getByRole("button", { name: /1\.2\.1\. Sơ đồ lớp/ }));
+  expect(within(outline).getByRole("button", { name: /^I\.1\.\s*I\.1\. Đặc tả$/ })).toBeInTheDocument();
+  fireEvent.click(within(outline).getByRole("button", { name: /I\.2\.a\. Sơ đồ lớp/ }));
   await vi.waitFor(() => expect(scrolled).toContain("section-s2"));
 });

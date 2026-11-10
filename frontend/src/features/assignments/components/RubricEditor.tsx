@@ -6,7 +6,7 @@ import { cx } from "@/shared/ui";
 
 const FIELD = "min-w-0 rounded-md border bg-transparent px-1.5 py-1 text-xs text-ink outline-none hover:border-line focus:border-focus focus:bg-surface";
 const INPUT = `${FIELD} border-transparent`;
-/** Ô điểm luôn có viền nhạt: không có chữ gợi ý (yêu cầu 2026-10-22) nên viền cho biết chỗ nhập điểm. */
+/** Ô điểm luôn có viền nhạt và chữ gợi ý "Điểm" (yêu cầu 2026-11-10, thay yêu cầu 2026-10-22). */
 const POINTS = `${FIELD} border-line`;
 /** Ô điểm sai (quá 2 chữ số thập phân): bộ class riêng, vì cx không gộp class trùng nên không chồng lên POINTS được. */
 const POINTS_INVALID = "min-w-0 rounded-md border border-danger bg-danger-soft px-1.5 py-1 text-xs text-danger outline-none focus:shadow-[0_0_0_3px_var(--c-danger-soft)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-danger";
@@ -77,7 +77,8 @@ export function RubricEditor({ criteria, onChange }: {
         <div key={item.itemId ?? i} className="group/row flex items-start gap-0.5">
           <span aria-hidden className="w-3 pt-1 text-center text-[11px] text-muted">☐</span>
           {/* Ô nhiều dòng, tự cao theo chữ: lúc sửa thấy đủ nội dung mục, không bị cắt (yêu cầu 2026-11-05). */}
-          <AutoTextarea data-atomic-text aria-label={`Mục chấm ${i + 1}`} value={item.text} maxLength={1000} className={cx(INPUT, "flex-1 leading-snug")}
+          <AutoTextarea data-atomic-text aria-label={`Mục chấm ${i + 1}`} value={item.text} maxLength={1000}
+            placeholder="Tiêu chí" className={cx(INPUT, "flex-1 leading-snug")}
             onChange={(e) => edit(i, { text: e.target.value.replace(/\n/g, " ") })}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.nativeEvent.isComposing) {
@@ -85,12 +86,12 @@ export function RubricEditor({ criteria, onChange }: {
                 add(i + 1);
               }
             }} />
-          <input data-atomic-points aria-label={`Điểm mục ${i + 1}`} type="number" step="0.01" min="0" max="1000"
+          <input data-atomic-points aria-label={`Điểm mục ${i + 1}`} type="number" step="0.01" min="0" max="1000" placeholder="Điểm"
             value={item.points ?? ""}
             aria-invalid={pointsMalformed(item.points) || undefined}
             title={pointsMalformed(item.points) ? "Điểm tối đa 2 chữ số thập phân" : undefined}
             className={cx(pointsMalformed(item.points) ? POINTS_INVALID : POINTS,
-              "w-9 shrink-0 px-1 text-right [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none")}
+              "w-11 shrink-0 px-1 text-right placeholder:text-[11px] placeholder:text-muted [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none")}
             onChange={(e) => edit(i, { points: parsePoints(e.target.value) })}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.nativeEvent.isComposing) {
@@ -106,8 +107,9 @@ export function RubricEditor({ criteria, onChange }: {
       ))}
       {items.length < LIMIT && (
         <button type="button" aria-label="Thêm mục chấm" title="Thêm mục chấm" onClick={() => add(items.length)}
-          className="flex h-6 w-full items-center justify-center rounded-md text-sm leading-none text-muted hover:bg-shell hover:text-primary-ink">
-          +
+          className="flex h-6 w-full items-center justify-center gap-1 rounded-md text-sm leading-none text-muted hover:bg-shell hover:text-primary-ink">
+          {/* Thẻ chưa có mục chấm: ghi rõ nút làm gì cho người mới (yêu cầu 2026-11-10). */}
+          +{items.length === 0 && <span className="text-xs">Thêm mục chấm</span>}
         </button>
       )}
     </div>

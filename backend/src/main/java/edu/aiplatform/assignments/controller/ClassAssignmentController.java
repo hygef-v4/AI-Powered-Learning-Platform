@@ -50,6 +50,12 @@ public class ClassAssignmentController {
         return ResponseEntity.created(URI.create("/api/v1/assignments/" + created.id())).body(created);
     }
 
+    /** Tài liệu tham khảo cho Tạo từ AI trong popup tạo bài, lúc bài chưa có. */
+    @GetMapping("/assignment-materials")
+    public List<AssignmentViews.Material> materials(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId) {
+        return authoring.selectableMaterialsForClass(actor, classId);
+    }
+
     @GetMapping("/assignment-copy-sources")
     public List<AssignmentViews.CopySource> copySources(@AuthenticationPrincipal Actor actor,
                                                         @PathVariable UUID classId) {
@@ -59,7 +65,8 @@ public class ClassAssignmentController {
     @PostMapping(value = "/assignments:copy", consumes = "application/json")
     public ResponseEntity<AssignmentViews.Detail> copy(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
                                                        @RequestBody AssignmentRequests.Copy body) {
-        AssignmentViews.Detail created = copies.copyToClass(actor, classId, body.sourceAssignmentId());
+        AssignmentViews.Detail created = copies.copyToClass(actor, classId, body.sourceAssignmentId(),
+                body.title());
         return ResponseEntity.created(URI.create("/api/v1/assignments/" + created.id())).body(created);
     }
 }

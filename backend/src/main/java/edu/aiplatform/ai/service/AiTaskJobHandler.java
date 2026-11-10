@@ -318,7 +318,9 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
                     : schemas.check(task.outputSchema(), response.output());
             settle(task, response.usage(), invalid.isEmpty() ? "READY" : "INVALID_OUTPUT");
             if (invalid.isPresent()) {
-                save(task.moveTo(AiTaskState.FAILED, clock.instant()).withResult(null, response.requestId())
+                // Chỉ ghi vị trí lệch schema để chẩn đoán, không ghi nội dung kết quả.
+                log.warn("AI task output rejected taskId={} taskType={} reason={}", task.id(), task.taskType(),
+                        invalid.get().length() > 300 ? invalid.get().substring(0, 300) : invalid.get());                save(task.moveTo(AiTaskState.FAILED, clock.instant()).withResult(null, response.requestId())
                         .withError("Kết quả AI không đúng định dạng yêu cầu"));
             } else {
                 save(task.withResult(response.output(), response.requestId()).moveTo(AiTaskState.READY, clock.instant()));

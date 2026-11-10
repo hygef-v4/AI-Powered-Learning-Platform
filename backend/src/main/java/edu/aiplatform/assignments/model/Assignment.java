@@ -33,6 +33,14 @@ public record Assignment(UUID id, AssignmentScope scope, UUID classId, UUID subj
     public static final int MATERIALS_MAX = 10;
     public static final int REQUIRED_DIAGRAM_MAX = 20;
     public static final int ATTEMPTS_MAX = 10;
+
+    /**
+     * Chỉ bài Luyện tập giới hạn số lượt (yêu cầu 2026-11-10); bài có chấm (cá nhân, nhóm) nộp bao nhiêu lần cũng được khi
+     * còn hạn nộp hay hạn nộp muộn, số lượt lưu cũ không còn dùng.
+     */
+    public static boolean limitsAttempts(GradingMode gradingMode) {
+        return gradingMode == GradingMode.PRACTICE;
+    }
     public static final java.time.Duration LATE_MAX = java.time.Duration.ofDays(30);
 
     public Assignment {

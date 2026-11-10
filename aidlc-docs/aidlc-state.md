@@ -545,3 +545,12 @@ User explicitly requested resolving PR59 and merging into staging. Latest stagin
 - [x] Source commits51428543,66af2cd5,27ec9f0a,8f0ac9ea; this final documentation commit completes the series. Original Antigravity stash retained.
 
 [Commit receipt and limits](construction/build-and-test/2026-11-10-grading-local-commits.md). No push, GitHub CI, deployment, runtime restart, provider call, live grade write or subagents in this turn. Security/Resiliency retained; PBT disabled.
+
+
+## Staging merge resolution — 2026-11-10
+
+- [x] Resolve the existing merge of staging57b0bb8d, retaining both audit histories exactly.
+- [x] Align the published-feedback test fixture with the new deadline-gated history behavior.
+- [x] Verify the merged source and complete the authorized local merge delivery; no push. Full backend verify2110 tests0fail0error0skip/JAR; frontend908 tests/129files, full lint/typecheck passed.
+
+Existing Security/Resiliency scope retained; PBT disabled. No production behavior changed by manual resolution. No UI/provider acceptance, frontend production build, deployment, live migration or application restart in this merge task.

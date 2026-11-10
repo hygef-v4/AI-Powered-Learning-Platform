@@ -73,15 +73,16 @@ export function RubricNote({ title, criteria, active = false, onActivate, issues
           <Pill>{total !== undefined ? `Tổng ${formatPoints(total)} điểm` : `${formatPoints(rubricTotal(criteria))} điểm`}</Pill>
         )}
       </div>
-      {editor && (active || !editOnActive) ? editor : <RubricLines criteria={criteria} expanded={active} />}
+      {editor && (active || !editOnActive) ? editor : <RubricLines criteria={criteria} expanded={active} editable={!!editor} />}
       {issues.map((issue, i) => <p key={i} role="alert" className="text-[11px] text-danger">{issue}</p>)}
     </section>
   );
 }
 
-function RubricLines({ criteria, expanded }: { criteria: RubricCriterion[]; expanded: boolean }) {
+function RubricLines({ criteria, expanded, editable = false }: { criteria: RubricCriterion[]; expanded: boolean; editable?: boolean }) {
   const items = atomicItems(criteria);
-  if (items.length === 0) return <p className="text-xs text-muted">Chưa có mục chấm.</p>;
+  // Người soạn sửa được: chỉ cách thêm mục chấm cho người mới (yêu cầu 2026-11-10).
+  if (items.length === 0) return <p className="text-xs text-muted">{editable ? "Chưa có mục chấm. Bấm vào thẻ để thêm." : "Chưa có mục chấm."}</p>;
   return (
     <ul className="flex flex-col gap-1 text-xs text-body">
       {items.map((item, i) => (

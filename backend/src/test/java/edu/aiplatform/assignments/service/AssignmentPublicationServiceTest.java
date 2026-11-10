@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import edu.aiplatform.academics.contract.ClassStatus;
+import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.assignments.contract.AssignmentScope;
 import edu.aiplatform.assignments.contract.AssignmentStatus;
 import edu.aiplatform.assignments.contract.DocumentModel;
@@ -66,11 +67,28 @@ class AssignmentPublicationServiceTest {
                 .isEqualTo("SCHEDULE_INVALID");
         assertThat(code(() -> f.publication.publish(f.teacher, a.id(),
                 publish(a.version(), later, end, end.plus(Duration.ofDays(31)), 1)))).isEqualTo("SCHEDULE_INVALID");
-        assertThat(code(() -> f.publication.publish(f.teacher, a.id(), publish(a.version(), later, end, null, 11))))
+        // Số lượt chỉ kiểm với bài Luyện tập; bài có chấm không có số lượt (yêu cầu 2026-11-10).
+        assertThat(code(() -> AssignmentPublicationService.validateSchedule(later, end, null, 11, GradingMode.PRACTICE, NOW)))
                 .isEqualTo("SCHEDULE_INVALID");
+        assertThat(code(() -> AssignmentPublicationService.validateSchedule(later, end, null, null, GradingMode.PRACTICE, NOW)))
+                .isEqualTo("SCHEDULE_INVALID");
+        AssignmentPublicationService.validateSchedule(later, end, null, null, GradingMode.GRADED, NOW);
         assertThat(code(() -> f.publication.publish(f.teacher, a.id(),
                 publish(a.version(), NOW.minus(Duration.ofDays(9)), NOW.minus(Duration.ofDays(1)), null, 1))))
                 .isEqualTo("SCHEDULE_INVALID");
+    }
+
+    @Test
+    void subjectAssignmentIsTemplateAndCannotBePublished() {
+        Instant later = NOW.plus(Duration.ofDays(1));
+        Instant end = NOW.plus(Duration.ofDays(7));
+        Assignment template = f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT,
+                new DocumentModel(List.of(heading("H1", "Mục"))), true);
+        assertThat(f.authoring.detail(f.manager, template.id()).permissions().canPublish()).isFalse();
+        assertThat(code(() -> f.publication.publish(f.manager, template.id(),
+                publish(template.version(), later, end, null, 1))))
+                .isEqualTo("SUBJECT_TEMPLATE_NOT_PUBLISHABLE");
+        assertThat(f.assignments.find(template.id()).orElseThrow().status()).isEqualTo(AssignmentStatus.DRAFT);
     }
 
     @Test
@@ -79,7 +97,8 @@ class AssignmentPublicationServiceTest {
         AssignmentViews.Detail detail = f.publication.publish(f.teacher, a.id(),
                 publish(a.version(), NOW.plus(Duration.ofDays(1)), NOW.plus(Duration.ofDays(7)), NOW.plus(Duration.ofDays(8)), 3));
         assertThat(detail.status()).isEqualTo(AssignmentStatus.SCHEDULED);
-        assertThat(detail.maxAttempts()).isEqualTo(3);
+        // Bài có chấm nộp không giới hạn khi còn hạn: số lượt gửi lên bị bỏ qua (yêu cầu 2026-11-10).
+        assertThat(detail.maxAttempts()).isNull();
         assertThat(f.rubricsOf(a.id())).allMatch(AssignmentRubric::locked);
         verify(f.audit).record(argThat(e -> e.action().equals("ASSIGNMENT_PUBLISHED")));
         verify(f.listener, never()).onOpened(any());
@@ -112,7 +131,7 @@ class AssignmentPublicationServiceTest {
                 open.version(), null, open.closesAt().minus(Duration.ofHours(1)), null, null))))
                 .isEqualTo("SCHEDULE_SHORTENED");
         assertThat(code(() -> f.publication.changeSchedule(f.teacher, open.id(), new AssignmentCommands.Schedule(
-                open.version(), null, null, null, 5)))).isEqualTo("SCHEDULE_OPEN_LOCKED");
+                open.version(), open.opensAt().plus(Duration.ofHours(1)), null, null, null)))).isEqualTo("SCHEDULE_OPEN_LOCKED");
         AssignmentViews.Detail extended = f.publication.changeSchedule(f.teacher, open.id(), new AssignmentCommands.Schedule(
                 open.version(), null, open.closesAt().plus(Duration.ofDays(2)), null, null));
         assertThat(extended.closesAt()).isEqualTo(open.closesAt().plus(Duration.ofDays(2)));
