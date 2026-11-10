@@ -4,7 +4,22 @@ import Link from "next/link";
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
-import { Alert, ClassFilter, ClickableRow, Icon, PageHeader, PageNav, Pill, Select, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
+import {
+  Alert,
+  ClassFilter,
+  ClickableRow,
+  Icon,
+  PageHeader,
+  PageNav,
+  Pill,
+  Segmented,
+  Select,
+  TableFrame,
+  TableSkeletonRows,
+  Td,
+  TextInput,
+  Th,
+} from "@/shared/ui";
 import { errorMessage, formatDateTime } from "../model/format";
 import { studentAssignmentResults } from "../slots";
 import type { StudentRow } from "../model/types";
@@ -80,16 +95,13 @@ export function StudentAssignmentsPage() {
       {error !== null && <Alert tone="danger" role="alert">{errorMessage(error)}</Alert>}
       <section aria-label="Danh sách bài tập" className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
         <div className="flex flex-wrap items-center gap-3">
-          <div role="tablist" aria-label="Nhóm bài" className="flex flex-wrap gap-1 rounded-xl bg-shell p-1">
-            {TABS.map((item) => (
-              <button key={item.value} type="button" role="tab" aria-selected={tab === item.value}
-                onClick={() => { setTab(item.value); setPage(0); }}
-                className={cx("rounded-[7px] px-2.5 py-1.5 text-xs font-semibold transition-colors duration-200",
-                  tab === item.value ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink")}>
-                {item.label}{rows && <span className="ml-1 tabular-nums text-muted">{count(item.value)}</span>}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            as="tab"
+            ariaLabel="Nhóm bài"
+            value={tab}
+            onChange={(value) => { setTab(value); setPage(0); }}
+            options={TABS.map((item) => ({ ...item, count: rows ? count(item.value) : undefined }))}
+          />
           <Select aria-label="Loại bài" value={mode} wrapperClassName="ml-auto w-40" onChange={(e) => { setMode(e.target.value); setPage(0); }}>
             <option value="">Mọi loại</option>
             {(Object.keys(KIND_LABELS) as Kind[]).map((kind) => <option key={kind} value={kind}>{KIND_LABELS[kind]}</option>)}
@@ -99,8 +111,8 @@ export function StudentAssignmentsPage() {
               onChange={(e) => { setQuery(e.target.value); setPage(0); }} />
           </div>
         </div>
-        {/* Cột cố định độ rộng để hai tab Chưa làm / Đã nộp thẳng cột nhau. */}
-        <TableFrame filledHead className="[&_table]:min-w-[1000px] [&_table]:table-fixed">
+        {/* Cột cố định độ rộng để hai tab Chưa làm / Đã nộp thẳng cột nhau; trên điện thoại mỗi bài là một thẻ. */}
+        <TableFrame filledHead stackOnMobile className="sm:[&_table]:min-w-[1000px] [&_table]:table-fixed">
           <colgroup>
             <col />
             <col className="w-[110px]" />
@@ -124,22 +136,22 @@ export function StudentAssignmentsPage() {
                 <Td>
                   <Link href={detailHref(row, !classId)} onClick={(e) => e.stopPropagation()} className="block truncate font-semibold text-ink hover:text-primary-ink">{row.title}</Link>
                 </Td>
-                <Td className="truncate" title={row.classCode || undefined}>{row.classCode || "—"}</Td>
-                <Td className="truncate" title={row.subjectCode || undefined}>{row.subjectCode || "—"}</Td>
-                <Td className="whitespace-nowrap">{KIND_LABELS[kindOf(row)]}</Td>
-                <Td className="whitespace-nowrap">
+                <Td label="Lớp" className="truncate" title={row.classCode || undefined}>{row.classCode || "—"}</Td>
+                <Td label="Môn học" className="truncate" title={row.subjectCode || undefined}>{row.subjectCode || "—"}</Td>
+                <Td label="Loại" className="whitespace-nowrap">{KIND_LABELS[kindOf(row)]}</Td>
+                <Td label="Hạn nộp" className="whitespace-nowrap">
                   <span className="font-mono text-xs text-muted">{formatDateTime(row.closesAt)}</span>
                 </Td>
-                <Td><Pill tone={rowStatus(row).tone}>{rowStatus(row).label}</Pill></Td>
+                <Td label="Trạng thái"><Pill tone={rowStatus(row).tone}>{rowStatus(row).label}</Pill></Td>
                 {tab === "submitted" && (
-                  <Td>
+                  <Td label="Điểm">
                     {row.gradingMode === "GRADED" ? <SlotOutlet slot={studentAssignmentResults} props={{ assignmentId: row.assignmentId, classId: row.classId }} /> : <span className="text-muted">—</span>}
                   </Td>
                 )}
-                <Td className="text-faint"><Icon name="chevron_right" size={18} /></Td>
+                <Td hideWhenStacked className="text-faint"><Icon name="chevron_right" size={18} /></Td>
               </ClickableRow>
             ))}
-            {loading && !rows && <tr><Td colSpan={columnCount} className="py-10 text-center! text-muted"><span role="status">Đang tải bài tập…</span></Td></tr>}
+            {loading && !rows && <TableSkeletonRows columns={columnCount} label="Đang tải bài tập…" />}
             {rows && shown.length === 0 && (
               <tr><Td colSpan={columnCount} className="py-10 text-center! text-muted">{tab === "upcoming" ? "Không còn bài chưa làm." : tab === "doing" ? "Không có bài đang làm." : "Chưa nộp bài nào."}</Td></tr>
             )}

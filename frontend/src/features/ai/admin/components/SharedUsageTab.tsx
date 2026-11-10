@@ -109,7 +109,7 @@ export function SharedUsageTab() {
               {data.byDay.map((d) => (
                 <span key={d.day} title={`${dayLabel(d.day)}: ${formatTokens(d.tokens)} token`} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-0.5">
                   {values && d.tokens > 0 && (
-                    <span className="text-[10px] leading-none font-semibold whitespace-nowrap tabular-nums">{COMPACT.format(d.tokens)}</span>
+                    <span className="text-xs leading-none font-semibold whitespace-nowrap tabular-nums">{COMPACT.format(d.tokens)}</span>
                   )}
                   <span
                     className="w-full rounded-t-[3px] bg-on-primary/60"
@@ -147,7 +147,7 @@ export function SharedUsageTab() {
                 <tr key={t.accountId}>
                   <Td>
                     <p className="font-semibold">{t.name}</p>
-                    <p className="text-[11px] text-muted">{t.email}</p>
+                    <p className="text-xs text-muted">{t.email}</p>
                   </Td>
                   <Td className="text-right tabular-nums">{formatTokens(t.requests)}</Td>
                   <Td className="text-right whitespace-nowrap tabular-nums">

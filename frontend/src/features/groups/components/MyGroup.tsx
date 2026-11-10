@@ -185,7 +185,7 @@ function MemberCard({ member }: { member: MyGroupView["members"][number] }) {
     <li data-testid="group-member"
       className={cx("flex aspect-[3/4] min-w-0 flex-col items-center justify-center gap-2.5 rounded-xl border px-3 py-5 text-center",
         member.leader ? "border-warning/50 bg-warning-soft/35" : "border-line bg-surface")}>
-      <span className={cx("inline-flex h-5 items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold", member.leader ? "bg-warning-soft text-warning" : "invisible")}>
+      <span className={cx("inline-flex h-5 items-center gap-1 rounded-full px-2.5 text-xs font-semibold", member.leader ? "bg-warning-soft text-warning" : "invisible")}>
         {member.leader && <><Icon name="crown" size={13} filled />Trưởng nhóm</>}
       </span>
       <span aria-hidden="true"

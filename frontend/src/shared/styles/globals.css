@@ -61,6 +61,20 @@
   --color-orange: var(--c-orange);
   --color-orange-soft: var(--c-orange-soft);
 
+  /* Bề mặt giữ nguyên màu ở cả hai theme: khung trình xem tài liệu (nền xám tối như trình xem PDF), trang bảng tính (giấy
+     trắng) và khối mã trong hướng dẫn cài đặt. */
+  --color-viewer: #525659;
+  --color-viewer-bar: #323639;
+  --color-sheet-head: #f1f3f4;
+  --color-sheet-line: #e0e0e0;
+  --color-sheet-muted: #5f6368;
+  --color-code: #17212b;
+  --color-code-ink: #d4dbe3;
+  --color-code-key: #7cc7ff;
+  --color-code-string: #f5b97a;
+  --color-code-number: #f2d36b;
+  --color-code-muted: #9aa7b4;
+
   --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
   --animate-rise: rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   --animate-pop: pop 0.28s cubic-bezier(0.16, 1, 0.3, 1) backwards;
@@ -388,6 +402,73 @@ html.drawio-panel-open [data-app-sidebar] {
     linear-gradient(90deg, var(--c-line-soft) 1px, transparent 1px);
   background-size: 32px 32px, 32px 32px, 8px 8px, 8px 8px;
   background-position: -1px -1px;
+}
+
+/* Bảng xếp thẻ trên màn hẹp (`TableFrame stackOnMobile`): ẩn hàng tiêu đề, mỗi dòng là một thẻ, ô đầu là tên, các ô còn
+   lại là cặp nhãn (lấy từ `data-label`) và giá trị. Từ `sm` trở lên là bảng như thường. */
+@layer components {
+  @media (width < 40rem) {
+    .table-stack {
+      overflow-x: visible;
+    }
+    .table-stack table,
+    .table-stack tbody {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .table-stack colgroup {
+      display: none;
+    }
+    .table-stack thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .table-stack tbody > tr {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border: 1px solid var(--c-line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: var(--c-surface);
+    }
+    .table-stack tbody > tr > td {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 0;
+      padding: 0;
+      white-space: normal;
+    }
+    .table-stack tbody > tr > td:first-child {
+      font-size: 15px;
+    }
+    .table-stack tbody > tr > td[data-label]::before {
+      flex-shrink: 0;
+      color: var(--c-muted);
+      content: attr(data-label);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .table-stack tbody > tr > td[data-stack-hidden],
+    .table-stack tbody > tr > td:empty {
+      display: none;
+    }
+    .table-stack tbody > tr > td[colspan] {
+      justify-content: center;
+    }
+    .table-stack tr.row-interactive:hover > td:first-child {
+      box-shadow: none;
+    }
+  }
 }
 
 /* Dòng bấm được (bảng và danh sách): rê chuột thì nền ấm lên, một vạch màu chính trượt vào ở mép trái, mũi tên cuối dòng

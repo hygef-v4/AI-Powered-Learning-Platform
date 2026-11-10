@@ -10,7 +10,7 @@ import { BackLink } from "@/shared/navigation/BackLink";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { FADE_LABEL, type NavContext, type NavLocation } from "@/shared/layout/navigation";
-import { showToast } from "@/shared/ui";
+import { showErrorToast, showToast } from "@/shared/ui";
 import { cx } from "@/shared/ui/cx";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import { contextQuery, materialPath } from "../api";
@@ -133,7 +133,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                     <span
                       title={module.title}
                       className={cx(
-                        "line-clamp-2 min-w-0 flex-1 text-[11.5px] font-semibold text-muted md:group-data-[collapsed]/sidebar:hidden",
+                        "line-clamp-2 min-w-0 flex-1 text-xs font-semibold text-muted md:group-data-[collapsed]/sidebar:hidden",
                         FADE_LABEL,
                       )}
                     >
@@ -223,7 +223,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                                         showToast("Đã mở lại quiz");
                                         notifyOutlineChanged();
                                       },
-                                      () => showToast("Không mở lại được quiz", "danger"),
+                                      () => showErrorToast("Không mở lại được quiz"),
                                     )
                                   }
                                 />

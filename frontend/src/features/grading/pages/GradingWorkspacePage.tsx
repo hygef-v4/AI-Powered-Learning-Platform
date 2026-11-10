@@ -8,7 +8,7 @@ import {
   publishOutline,
   type DocumentComment,
 } from "@/shared/document";
-import { Alert, Button, Pill, showToast } from "@/shared/ui";
+import { Alert, Button, Pill, showErrorToast } from "@/shared/ui";
 import { RubricChecklist } from "../components/RubricChecklistPanel";
 import { calculateChecklistPoints } from "../model/rubricScores";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
@@ -142,7 +142,7 @@ function Workspace({
     setAiOpen(false);
   }
   useEffect(() => {
-    if (aiOutcome?.message) showToast(aiOutcome.message, "danger");
+    if (aiOutcome?.message) showErrorToast(aiOutcome.message);
   }, [aiOutcome]);
 
   const handleAiGrade = async (input?: AiRequest) => {
@@ -165,7 +165,7 @@ function Workspace({
           created.proposal.structuredFeedback ?? null,
         );
       } else if (created.status === "FAILED" || created.status === "REJECTED") {
-        if (created.safeError) showToast(created.safeError, "danger");
+        if (created.safeError) showErrorToast(created.safeError);
       } else {
         setGeneratingProposalId(created.id);
       }

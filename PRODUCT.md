@@ -34,7 +34,7 @@ An AI-assisted learning platform for an FPT university setting: classes, assignm
 
 - Stack: Next.js (App Router) + React + Tailwind v4 in `frontend/`; Spring backend; strict CSP with nonces; self-hosted fonts.
 - Vietnamese UI throughout; school emails on @fpt.edu.vn.
-- Light and dark themes are both required.
+- Light and dark themes are both required. Until the user picks one, the theme follows the operating system setting (confirmed 2026-11-10).
 - Short popups stay centered dialogs; long forms are made as compact as possible and become their own page if they still don't fit one screen. No redundant buttons (no Cancel beside a close X) and no hint text explaining what a field does.
 - Near-identical create forms are merged into one form with extra fields rather than split by function.
 
@@ -44,7 +44,7 @@ User-confirmed (binding):
 - Name: "Nền tảng học tập". Logo: hanko seal with the kanji 学.
 - Palette trial updated 2026-11-01 from the user's white-background reference: light canvas #FAFAFA, white sidebar/top bar/cards, neutral gray borders and text. Muted blue #466A96 is reserved for controls and selected states rather than tinting large surfaces. This replaces the cooler Slate Blue light surfaces the user found tiring. Dark theme retains slate surfaces with pale blue accents. Semantic success/warning/error colors remain distinct. Remove the oversized shell watermark and soften shadows; retain the small brush logo's brand colors.
 - Font: Plus Jakarta Sans is being trialed at the user's request (2026-11-01); Be Vietnam Pro was the previous approved choice.
-- Shell: left sidebar holds only page links; search, notifications and account sit in a top bar.
+- Shell: left sidebar holds only page links; notifications, the theme switch and the account menu (profile, AI connection, sign out) sit in a top bar. There is no global search (confirmed 2026-11-10).
 - Style: modern minimalist, "less is more": show only what the user needs, neatly arranged, understandable on one screen, with small interaction effects.
 
 ## Evidence on Hand

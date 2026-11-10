@@ -12448,6 +12448,94 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 **User Input**: "Push và mở PR"
 **AI Response**: "Push nhánh feat/delete-draft-quiz (upstream cùng tên) và mở PR vào staging."
 **Context**: Construction — phát hành vào staging.
+## Rà soát UI/UX toàn dự án
+**Timestamp**: 2026-11-10T04:58:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra toàn bộ UI/UX dự án và gửi tôi các điểm cần cải thiện/bổ sung/sửa đổi"
+**AI Response**: "Rà soát chỉ đọc. Chạy dev server và xem trực tiếp màn đăng nhập, kích hoạt, khôi phục mật khẩu, 404 (desktop và 375px); các màn sau đăng nhập chỉ đọc mã nguồn vì thao tác đọc mật khẩu tài khoản test bị chặn. Gửi 22 điểm chia ba mức ưu tiên (mobile, accessibility, nhất quán). Không sửa file. Mục này ghi bổ sung sau khi trả lời, cùng lúc với mục kế tiếp."
+**Context**: Rà soát; không đổi mã nguồn.
+
+---
+
+## Sửa 22 điểm UI/UX — Workspace Detection và Requirements Analysis
+**Timestamp**: 2026-11-10T04:58:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "sửa toàn bộ 22 mục trên cho tôi"
+**AI Response**: "Workspace Detection: brownfield, aidlc-state.md và tài liệu reverse engineering hiện có được dùng lại. Tạo nhánh fix/ui-ux-remediation từ staging 062a43f5. Requirements Analysis: ghi 22 yêu cầu và 9 câu hỏi xác nhận (phạm vi bảng mobile, vị trí Đăng xuất, tìm kiếm, theme mặc định, trạng thái tải, cỡ chữ, nút Hủy, cách bàn giao, các giai đoạn AI-DLC) tại aidlc-docs/inception/requirements/2026-11-10-ui-ux-remediation-questions.md. Giữ cấu hình extension hiện có. Chưa sửa mã nguồn; dừng chờ trả lời."
+**Context**: INCEPTION, Requirements Analysis; chờ người dùng điền [Answer].
+
+---
+
+## Sửa 22 điểm UI/UX — trả lời câu hỏi và kế hoạch Code Generation
+**Timestamp**: 2026-11-10T05:06:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Theo đề xuất"
+**AI Response**: "Ghi cả 9 câu trả lời là A (phương án đề xuất) vào aidlc-docs/inception/requirements/2026-11-10-ui-ux-remediation-questions.md. Requirements Analysis và Workflow Planning hoàn tất: chỉ chạy Code Generation và Build and Test; bỏ qua User Stories, Application Design, Units Generation, Functional Design, NFR, Infrastructure Design. Code Generation Part 1: lập kế hoạch 21 bước tại aidlc-docs/construction/plans/code-generation-plan/2026-11-10-ui-ux-remediation.md. Theo Câu 9 = A, hỏi duyệt kế hoạch: 'Bạn duyệt kế hoạch Code Generation 21 bước để tôi bắt đầu sửa mã chứ?'. Chưa sửa mã nguồn."
+**Context**: CONSTRUCTION, Code Generation Part 1 (Planning); chờ người dùng duyệt kế hoạch.
+
+---
+
+## Sửa 22 điểm UI/UX — duyệt kế hoạch Code Generation
+**Timestamp**: 2026-11-10T05:10:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Duyệt, sửa đi"
+**AI Response**: "Kế hoạch 21 bước được duyệt. Bắt đầu Code Generation Part 2 trên nhánh fix/ui-ux-remediation theo aidlc-docs/construction/plans/code-generation-plan/2026-11-10-ui-ux-remediation.md."
+**Context**: CONSTRUCTION, Code Generation Part 2 (Generation); kế hoạch đã duyệt.
+
+---
+
+## Sửa 22 điểm UI/UX — hoàn tất Code Generation
+**Timestamp**: 2026-11-10T05:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Duyệt, sửa đi"
+**AI Response**: "Thực hiện 21/21 bước của kế hoạch trên nhánh fix/ui-ux-remediation; chỉ sửa frontend/ và PRODUCT.md. Kết quả: tsc và eslint sạch; vitest 886/886 ca trong 128 file, ba lần liên tiếp; trình duyệt xác nhận tiêu đề tab, lỗi form đăng nhập, vùng chạm, theme theo hệ điều hành và trang 404 ở 375px. Chưa kiểm tra trên trình duyệt các màn sau đăng nhập; chưa chạy production build. Điều chỉnh so với kế hoạch được ghi trong file kế hoạch (toast đỏ báo hoàn tất vẫn tự ẩn, thêm showErrorToast cho lỗi; chữ biểu đồ SVG giữ nguyên; màu cố định thành token đặt tên). Chạy npm install vì node_modules thiếu gói; package-lock.json đã hoàn nguyên. Không commit theo Câu 8 = A. Hỏi duyệt: Request Changes hoặc Continue to Next Stage (Build and Test)."
+**Context**: CONSTRUCTION, Code Generation Part 2 hoàn tất; chờ người dùng duyệt mã.
+
+---
+
+## Sửa 22 điểm UI/UX — duyệt Code Generation, sang Build and Test
+**Timestamp**: 2026-11-10T05:48:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Duyệt, làm tiếp"
+**AI Response**: "Code Generation được duyệt. Bắt đầu Build and Test: chạy production build của frontend và lập tài liệu kết quả build, kiểm thử cho thay đổi này."
+**Context**: CONSTRUCTION, Build and Test.
+
+---
+
+## Sửa 22 điểm UI/UX — hoàn tất Build and Test
+**Timestamp**: 2026-11-10T05:58:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Duyệt, làm tiếp"
+**AI Response**: "Production build của frontend thành công; tsc sau build không lỗi; eslint sạch; vitest 886/886 ca trong 128 file. Ghi kết quả tại aidlc-docs/construction/build-and-test/2026-11-10-ui-ux-remediation-results.md; hướng dẫn build và kiểm thử chung của dự án giữ nguyên. Chưa kiểm tra trên trình duyệt các màn sau đăng nhập. Không commit. Hỏi: 'Build and test instructions complete. Ready to proceed to Operations stage?'"
+**Context**: CONSTRUCTION, Build and Test hoàn tất; chờ người dùng xác nhận sang Operations (giai đoạn giữ chỗ).
+
+---
+
+## Sửa 22 điểm UI/UX — commit
+**Timestamp**: 2026-11-10T10:00:04Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý.
+I hit my usage limit while you were working, but it has reset now. Please continue from where you left off."
+**AI Response**: "Tạo hai commit trên nhánh fix/ui-ux-remediation: một commit mã nguồn frontend kèm PRODUCT.md, một commit tài liệu AI-DLC (yêu cầu, kế hoạch, tóm tắt, kết quả build và kiểm thử, trạng thái, audit). Không push."
+**Context**: Commit theo yêu cầu, thay cho Câu 8 = A (không commit) trước đó; chưa push.
+
+---
+
+## Sửa 22 điểm UI/UX — push và mở pull request
+**Timestamp**: 2026-11-10T10:01:20Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Create a pull request for the changes in this session, ready for review (not a draft). Target — Repository: hygef-v4/AI-Powered-Learning-Platform; Branch: fix/ui-ux-remediation; Base branch: main." (lệnh Create PR của ứng dụng, kèm các bước: commit thay đổi chưa commit, push nhánh, mở PR bằng gh pr create không dùng --draft, báo URL)
+**AI Response**: "Push nhánh fix/ui-ux-remediation và mở pull request vào main theo nhánh đích của lệnh. origin/main đã chứa 062a43f5 nên PR chỉ gồm các commit của đợt sửa này; origin/staging có 2 commit mới hơn chưa nằm trong nhánh. Không bật auto-merge."
+**Context**: Bàn giao; PR sẵn sàng review, chưa merge.
+
+---
+
+## Sửa 22 điểm UI/UX — đổi PR sang staging và gộp staging
+**Timestamp**: 2026-11-10T10:14:48Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi muốn mở PR đưa lên staging để test trước chứ không phải mở PR vào main"
+**AI Response**: "Đổi nhánh đích của PR #64 từ main sang staging. origin/staging đi trước nhánh 25 commit (không phải 2 như đã báo trước đó) và xung đột ở 9 file, nên gộp origin/staging (d093f797) vào fix/ui-ux-remediation. Cách giải quyết: assignmentNav, RubricChecklistPanel, GradingWorkspacePage, RubricViewer, NavTree lấy bản staging rồi áp lại cỡ chữ tối thiểu 12px và showErrorToast; StudentAssignmentsPage giữ việc staging bỏ cột Lượt làm và thêm nhãn cột cho bảng xếp thẻ; AppShell giữ nhánh cây mở/đóng của staging cùng nhãn nổi của sidebar thu gọn; aidlc-state.md và audit.md giữ cả hai phía (các mục của staging đứng trước các mục của đợt này trong audit.md). Kiểm tra sau gộp: tsc và eslint sạch, vitest 929/929 ca trong 131 file, production build thành công. Chưa kiểm tra trên trình duyệt sau gộp."
+**Context**: Bàn giao; PR #64 nhắm staging, chưa merge.
 
 ---
 
@@ -12621,5 +12709,14 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 **Requested by:** Quang Hung
 **User Input**: "Giúp rôi commit rõ ràng"
 **AI Response**: Reviewed the current working tree and separated three functional commits, each with regression tests and its implementation/verification documents: ee0a3838 simplifies optional manual feedback and saves quietly after30s while preserving in-flight edits;23f9309a adds class/subject columns;4873b931 retains published grading beside a newer draft and opens current submission details before deadline. Fresh combined frontend run202 cases/24 files and backend grading/architecture206 cases pass with0 failures/errors/skips; TypeScript, scoped ESLint and whitespace checks pass. Logs: .tmp/commit-grading-student-tests.log, .tmp/commit-backend-tests.log, .tmp/commit-typecheck.log, .tmp/commit-lint.log. This workflow-only commit records the cumulative audit/state, including prior incident restoration and verification limits. No push, deployment, grade mutation, account switch or subagents. Full production build and live student visual verification not repeated. Security/Resiliency retained; PBT disabled.
+
+---
+
+## Sửa 22 điểm UI/UX — cập nhật staging và merge PR
+**Timestamp**: 2026-11-10T14:23:15Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Cập nhật code mới nhất, solve conflict và merge vào staging"
+**AI Response**: Gộp `origin/staging` (923196c8, 7 commit mới) vào `fix/ui-ux-remediation`. Một file xung đột: `StudentAssignmentsPage.tsx`; giữ hai cột Lớp / Môn học và bề rộng bảng 1000px của staging, giữ bảng xếp thẻ trên điện thoại (thêm nhãn cột cho hai cột mới) và khung xương khi tải (số cột theo `columnCount`). `aidlc-state.md`, `audit.md` và ba file chấm điểm gộp tự động. Sau khi gộp: `tsc --noEmit` và ESLint sạch, Vitest 945 ca / 132 file qua, production build thành công. Chưa kiểm tra lại trên trình duyệt. Sau đó push và merge PR #64 vào `staging` theo yêu cầu.
+**Context**: Construction — Build and Test, đồng bộ nhánh với staging trước khi merge PR #64
 
 ---

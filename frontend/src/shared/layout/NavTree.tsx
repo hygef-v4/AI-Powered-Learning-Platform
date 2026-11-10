@@ -52,7 +52,7 @@ export function NavTree({ label, placeholder, nodes, currentId, itemsFor, loadin
             </span>
           ) : current ? (
             <span className="min-w-0 flex-1 leading-none" title={current.name}>
-              <span className="block overflow-hidden font-mono text-[9.5px] leading-none tracking-wide whitespace-nowrap text-muted">{current.code}</span>
+              <span className="block overflow-hidden font-mono text-xs leading-none tracking-wide whitespace-nowrap text-muted">{current.code}</span>
               <span className="mt-[3px] block truncate text-[13px] leading-[1.15] font-semibold text-ink">{current.name}</span>
             </span>
           ) : (
@@ -70,7 +70,7 @@ export function NavTree({ label, placeholder, nodes, currentId, itemsFor, loadin
             const body = (
               <>
                 <span className="min-w-0 flex-1 leading-none" title={node.name}>
-                  <span className="block overflow-hidden font-mono text-[9.5px] leading-none tracking-wide whitespace-nowrap text-muted">{node.code}</span>
+                  <span className="block overflow-hidden font-mono text-xs leading-none tracking-wide whitespace-nowrap text-muted">{node.code}</span>
                   <span className="mt-[3px] block truncate text-[13px] leading-[1.15] font-semibold">{node.name}</span>
                 </span>
                 {selected && <Icon name="check" size={15} className="shrink-0 text-primary-ink" />}

@@ -12,7 +12,7 @@ export type ClassFilterOption = { classId: string; code: string; subjectCode: st
 export function ClassLabel({ subjectCode, code }: { subjectCode: string | null; code: string }) {
   return (
     <span className="min-w-0 flex-1 leading-none" title={subjectCode ? `${subjectCode} · ${code}` : code}>
-      {subjectCode && <span className="block overflow-hidden font-mono text-[9.5px] leading-none tracking-wide whitespace-nowrap text-muted">{subjectCode}</span>}
+      {subjectCode && <span className="block overflow-hidden font-mono text-xs leading-none tracking-wide whitespace-nowrap text-muted">{subjectCode}</span>}
       <span className={cx("block truncate text-[13px] leading-[1.15] font-semibold text-ink", subjectCode && "mt-[3px]")}>{code}</span>
     </span>
   );

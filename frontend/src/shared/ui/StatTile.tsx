@@ -21,7 +21,7 @@ export function StatTile({
 }) {
   const body = (
     <>
-      <span className="text-[10.5px] font-semibold tracking-[.08em] text-muted uppercase">{label}</span>
+      <span className="text-xs font-semibold tracking-[.08em] text-muted uppercase">{label}</span>
       <span className="font-display text-[32px] leading-none tracking-[-0.02em] text-ink">{value}</span>
       {meta && <span className="text-[12.5px] text-muted">{meta}</span>}
       {href && (

@@ -1,5 +1,17 @@
 # AI-DLC State Tracking
 
+## Sửa 22 điểm UI/UX — build và kiểm thử xong, đã commit, chưa push, 2026-11-10
+
+Người dùng yêu cầu sửa toàn bộ 22 điểm của đợt rà soát UI/UX, chọn phương án A cho cả 9 câu hỏi, duyệt kế hoạch 21 bước và duyệt mã. Nhánh `fix/ui-ux-remediation` tạo từ `staging` `062a43f5`. Chỉ sửa `frontend/` và `PRODUCT.md`; không đổi backend, API, schema. [Yêu cầu và quyết định](inception/requirements/2026-11-10-ui-ux-remediation-questions.md); [kế hoạch và điều chỉnh](construction/plans/code-generation-plan/2026-11-10-ui-ux-remediation.md); [tóm tắt thay đổi](construction/ui-ux-remediation/code/summary.md); [kết quả build và kiểm thử](construction/build-and-test/2026-11-10-ui-ux-remediation-results.md).
+
+- [x] Workspace Detection: brownfield, dùng lại tài liệu reverse engineering hiện có.
+- [x] Requirements Analysis: 22 yêu cầu, 9 quyết định (đều A).
+- [x] Workflow Planning: chỉ chạy Code Generation và Build and Test; các giai đoạn khác bỏ qua.
+- [x] Code Generation: 21/21 bước, người dùng đã duyệt.
+- [x] Build and Test: TypeScript và ESLint sạch; Vitest 886/886 ca trong 128 file, ba lần liên tiếp; production build thành công; trình duyệt xác nhận màn đăng nhập và trang 404.
+- [ ] Operations: giai đoạn giữ chỗ, chờ người dùng xác nhận.
+
+Chưa kiểm tra trên trình duyệt các màn sau đăng nhập (chỉ có kiểm thử tự động trong jsdom). Đã commit trên nhánh theo yêu cầu sau đó của người dùng; chưa push. Security và Resiliency tuân thủ trong phạm vi đã duyệt, các quy tắc khác N/A; PBT tắt.
 ## Đồng bộ tài liệu với code staging — 2026-11-10
 
 Đối chiếu `staging@062a43f5` với aidlc-docs và sửa các chỗ lệch do commit code chưa kèm tài liệu: U07 sửa đề bằng AI (`REVISE`, `AI_DRAFT_STALE`), U08 bỏ kiểm nộp và trang biên nhận, U09 phần bỏ trống 0 điểm và điều hướng bản nộp nhóm, U10 số câu theo độ khó, U06 model Gemini chọn sẵn, cây điều hướng môn/lớp (U05/U01), log lỗi Admin môn học (U04). Bảng kê source trong current-code-baseline được bổ sung 15 mục, bỏ 2 liên kết hỏng; API inventory khớp 239 mapping. [Báo cáo](construction/build-and-test/2026-11-10-aidlc-code-sync-gaps.md).

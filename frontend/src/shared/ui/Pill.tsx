@@ -7,7 +7,7 @@ export function Pill({ tone = "neutral", children, className }: { tone?: Tone; c
   return (
     <span
       className={cx(
-        "inline-flex h-[22px] items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold whitespace-nowrap",
+        "inline-flex h-[22px] items-center gap-1 rounded-full px-2.5 text-xs font-semibold whitespace-nowrap",
         SOFT_TONES[tone],
         className,
       )}

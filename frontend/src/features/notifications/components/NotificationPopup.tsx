@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/shared/ui/Icon";
+import { handleTabListKey } from "@/shared/ui/tabKeys";
 import { notificationsApi, safeNotificationLink } from "../api";
 import { EmailPreferencePanel } from "./EmailPreferencePanel";
 import type { NotificationItem } from "../model/types";
@@ -189,10 +190,11 @@ export function NotificationPopup({
       </div>
       <div hidden={settings} className={styles.listView}>
         <div className={styles.tabbar}>
-          <div role="tablist" aria-label="Lọc thông báo" className={styles.tabs}>
+          <div role="tablist" aria-label="Lọc thông báo" onKeyDown={handleTabListKey} className={styles.tabs}>
             <button
               role="tab"
               aria-selected={!unread}
+              tabIndex={unread ? -1 : 0}
               onClick={() => {
                 setUnread(false);
                 setPage(1);
@@ -203,6 +205,7 @@ export function NotificationPopup({
             <button
               role="tab"
               aria-selected={unread}
+              tabIndex={unread ? 0 : -1}
               onClick={() => {
                 setUnread(true);
                 setPage(1);

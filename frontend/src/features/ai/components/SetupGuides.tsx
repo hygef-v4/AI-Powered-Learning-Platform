@@ -51,7 +51,7 @@ export function ApiSetupGuide() {
           </div>
         ))}
       </div>
-      <p className="mt-3 text-[11px] text-muted">Không chia sẻ khóa cho người khác.</p>
+      <p className="mt-3 text-xs text-muted">Không chia sẻ khóa cho người khác.</p>
     </SettingsGroup>
   );
 }
@@ -96,7 +96,7 @@ export function JsonCode({
   return (
     <div className="relative">
       {action && <div className="absolute top-2 right-2">{action}</div>}
-      <pre className="overflow-x-auto rounded-xl bg-[#17212b] p-4 pr-12 font-mono text-[12px] leading-relaxed text-[#d4dbe3]">
+      <pre className="overflow-x-auto rounded-xl bg-code p-4 pr-12 font-mono text-[12px] leading-relaxed text-code-ink">
         <code>
           {parts.map((part, i) => {
             if (i % 2 === 0) return part;
@@ -107,7 +107,7 @@ export function JsonCode({
               return (
                 <span
                   key={i}
-                  className={isKey ? "text-[#7cc7ff]" : "text-[#f5b97a]"}
+                  className={isKey ? "text-code-key" : "text-code-string"}
                 >
                   {part}
                 </span>
@@ -115,13 +115,13 @@ export function JsonCode({
             }
             if (part === ":" || part === ",") {
               return (
-                <span key={i} className="text-[#9aa7b4]">
+                <span key={i} className="text-code-muted">
                   {part}
                 </span>
               );
             }
             return (
-              <span key={i} className="text-[#f2d36b]">
+              <span key={i} className="text-code-number">
                 {part}
               </span>
             );
@@ -181,7 +181,7 @@ After saving, reload MCP if supported. If restarting the application is required
       <li><strong>Dán cấu hình bên dưới.</strong> Ghép vào cấu hình hiện có, giữ nguyên các server khác. {token ? "Cấu hình đã chứa token vừa tạo." : "Thay <token của bạn> bằng token vừa tạo."} Lưu trong cấu hình cá nhân, không đưa file chứa token lên Git.</li>
     </ol>
     <JsonCode text={config} action={token ? <IconButton icon="copy" label="Sao chép cấu hình"
-      className="text-[#d4dbe3] hover:bg-white/10 hover:text-white" onClick={() => {
+      className="text-code-ink hover:bg-white/10 hover:text-white" onClick={() => {
         void navigator.clipboard.writeText(config).then(() => setCopyState("Đã sao chép"), () => setCopyState("Không sao chép được. Hãy chọn và sao chép đoạn cấu hình."));
       }} /> : undefined} />
     <p className="text-[13px] text-body"><strong>4. Kiểm tra kết nối.</strong> Tải lại MCP trong ứng dụng; nếu phiên bản đang dùng yêu cầu khởi động lại, lưu công việc trước. Nhờ agent: “Gọi get_my_capabilities, sau đó dùng một tool chỉ đọc được tài khoản cho phép.” Chỉ xem là kết nối thành công khi đọc được dữ liệu thực tế.</p>

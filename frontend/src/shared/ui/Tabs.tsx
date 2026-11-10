@@ -61,7 +61,7 @@ export function Tabs<T extends string>({
             )}
           >
             {item.label}
-            {item.count !== undefined && <span className="font-mono text-[11px] font-medium text-muted">{item.count}</span>}
+            {item.count !== undefined && <span className="font-mono text-xs font-medium text-muted">{item.count}</span>}
           </button>
         );
       })}

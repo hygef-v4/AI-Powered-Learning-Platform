@@ -38,7 +38,7 @@ export function AnnouncementFeed({
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
               {classCodes && (
                 <span
-                  className="shrink-0 rounded-md border border-line-strong px-1.5 py-px text-[11.5px] font-semibold text-muted"
+                  className="shrink-0 rounded-md border border-line-strong px-1.5 py-px text-xs font-semibold text-muted"
                   title={item.className}
                 >
                   {classCodes[item.classId] ?? item.className}

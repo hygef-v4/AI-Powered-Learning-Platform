@@ -77,7 +77,7 @@ export function PracticeFeedbackPanel({ attemptId, partTitles }: {
       {items && items.length === 0 && <p className="text-sm text-muted">Chưa có góp ý.</p>}
       {items?.map((item) => (
         <article key={item.feedbackId} className="flex flex-col gap-2 rounded-lg border border-line p-3 wrap-anywhere">
-          <p className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted">
+          <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
             {item.status === "READY" && <Pill tone="warning">Góp ý tham khảo</Pill>}
             {item.status === "PENDING" && <Pill tone="info">Đang chờ</Pill>}
             {item.status === "FAILED" && <Pill tone="danger">Không nhận được góp ý</Pill>}

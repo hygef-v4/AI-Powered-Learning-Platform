@@ -1,7 +1,7 @@
 "use client";
 
 import { useUrlState } from "@/shared/navigation/useUrlState";
-import { TextInput, cx } from "@/shared/ui";
+import { Segmented, TextInput } from "@/shared/ui";
 import { SubjectClassesTable } from "./SubjectClassesTable";
 import type { SubjectClassStatus, SubjectClassSummary } from "../model/types";
 
@@ -30,30 +30,13 @@ export function SubjectClassesTab({ items }: { items: SubjectClassSummary[] }) {
   return (
     <section className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
       <div className="flex flex-wrap items-center gap-3">
-        <div
-          role="tablist"
-          aria-label="Trạng thái lớp"
-          className="flex flex-wrap gap-1 rounded-xl bg-shell p-1"
-        >
-          {TABS.map((tab) => (
-            <button
-              key={tab.value}
-              type="button"
-              role="tab"
-              aria-selected={status === tab.value}
-              data-testid={`subjects-classes-filter-${tab.value}`}
-              onClick={() => setStatus(tab.value)}
-              className={cx(
-                "rounded-[7px] px-2.5 py-1.5 text-xs font-semibold transition-colors duration-200",
-                status === tab.value
-                  ? "bg-surface text-ink shadow-sm"
-                  : "text-muted hover:text-ink",
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          as="tab"
+          ariaLabel="Trạng thái lớp"
+          value={status}
+          onChange={setStatus}
+          options={TABS.map((tab) => ({ ...tab, testId: `subjects-classes-filter-${tab.value}` }))}
+        />
         <div role="search" className="ml-auto w-full sm:w-72">
           <TextInput
             type="search"

@@ -170,7 +170,7 @@ describe("AiDraftDialog", () => {
 
   it("shows a separate waiting popup, then returns to the untouched form with a corner toast on failure", async () => {
     vi.spyOn(assignmentsApi, "materials").mockResolvedValue(MATERIAL);
-    const toast = vi.spyOn(ui, "showToast").mockImplementation(() => {});
+    const toast = vi.spyOn(ui, "showErrorToast").mockImplementation(() => {});
     let fail: (error: Error) => void = () => {};
     vi.spyOn(assignmentsApi, "requestAiDraft").mockImplementation(() => new Promise((_, reject) => { fail = reject; }));
     render(<AiDraftDialog assignmentId="a1" version={1} currentPartCount={0} currentTitle="" currentInstructions=""
@@ -192,7 +192,7 @@ describe("AiDraftDialog", () => {
     expect(within(screen.getByRole("list", { name: "Tài liệu đã chọn" })).getByText("UML basics")).toBeInTheDocument();
     expect(screen.getByTestId("ai-send")).toHaveTextContent("Tạo đề");
     expect(screen.queryByRole("alert")).toBeNull();
-    expect(toast).toHaveBeenCalledWith(expect.any(String), "danger");
+    expect(toast).toHaveBeenCalledWith(expect.any(String));
   });
 
   it("an uploaded template file becomes the format; language and count stay the user's choice", async () => {

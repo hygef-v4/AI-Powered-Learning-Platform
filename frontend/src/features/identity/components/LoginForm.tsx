@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import { ApiError } from "@/shared/api/client";
 import { cx } from "@/shared/ui/cx";
 import { Icon } from "@/shared/ui/Icon";
 import { login } from "../api";
 import { AUTH_INPUT, AUTH_LABEL, LOGIN_BUTTON } from "./authStyles";
-import { PasswordField } from "./PasswordField";
+import { FieldError, PasswordField } from "./PasswordField";
 import type { SessionInfo } from "../model/types";
 
 /** Một câu cho mọi thất bại: không phân biệt sai mật khẩu, khóa tạm, chưa kích hoạt hay không tồn tại (BR-U01-40, Q05). */
@@ -23,19 +23,29 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const emailInput = useRef<HTMLInputElement>(null);
+  const passwordInput = useRef<HTMLInputElement>(null);
+  const emailErrorId = `${emailId}-error`;
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (!EMAIL_FORMAT.test(email.trim())) {
-      setError("Nhập email trường hợp lệ.");
+    // Lỗi nhập nằm dưới đúng ô; ô lỗi đầu tiên nhận focus.
+    const invalidEmail = EMAIL_FORMAT.test(email.trim()) ? null : "Nhập email trường hợp lệ.";
+    const missingPassword = password.length === 0 ? "Nhập mật khẩu." : null;
+    setEmailError(invalidEmail);
+    setPasswordError(missingPassword);
+    setError(null);
+    if (invalidEmail) {
+      emailInput.current?.focus();
       return;
     }
-    if (password.length === 0) {
-      setError("Nhập mật khẩu.");
+    if (missingPassword) {
+      passwordInput.current?.focus();
       return;
     }
     setSubmitting(true);
-    setError(null);
     try {
       onSuccess(await login(email.trim(), password));
     } catch (e) {
@@ -57,19 +67,31 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
         </label>
         <input
           id={emailId}
+          ref={emailInput}
           type="email"
           autoComplete="username"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={cx(AUTH_INPUT, "mt-1.5")}
+          aria-invalid={emailError ? true : undefined}
+          aria-describedby={emailError ? emailErrorId : undefined}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setEmailError(null);
+          }}
+          className={cx(AUTH_INPUT, "mt-1.5", emailError && "border-danger")}
         />
+        {emailError && <FieldError id={emailErrorId}>{emailError}</FieldError>}
       </div>
       <PasswordField
         className="mt-4"
         label="Mật khẩu"
         autoComplete="current-password"
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        error={passwordError}
+        inputRef={passwordInput}
+        onChange={(e) => {
+          setPassword(e.target.value);
+          setPasswordError(null);
+        }}
       />
 
       {error && (
@@ -88,13 +110,13 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
       </button>
 
       <div className="mt-4 text-right">
-        <Link href="/reset-password" className="text-xs font-medium text-primary-ink hover:underline">
+        <Link href="/reset-password" className="inline-flex min-h-6 items-center text-xs font-medium text-primary-ink hover:underline">
           Quên mật khẩu?
         </Link>
       </div>
       <p className="mt-3 text-center text-xs text-muted">
         Lần đầu sử dụng?{" "}
-        <Link href="/activate" className="font-semibold text-primary-ink hover:underline">
+        <Link href="/activate" className="inline-flex min-h-6 items-center font-semibold text-primary-ink hover:underline">
           Kích hoạt tài khoản
         </Link>
       </p>

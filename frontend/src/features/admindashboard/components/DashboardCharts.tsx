@@ -206,7 +206,7 @@ export function SegmentBar({ items, shown }: { items: (Series & { value: number 
     <div className="flex h-4 origin-left animate-grow-x gap-0.5 [animation-delay:200ms] motion-reduce:animate-none" onMouseLeave={() => setHover(null)}>
       {visible.map((item, i) => (
         <span key={item.name} title={`${item.name}: ${formatNumber(item.value)}`} onMouseEnter={() => setHover(item.name)}
-          className={cx("flex min-w-0 items-center justify-center text-[10px] font-semibold text-surface tabular-nums",
+          className={cx("flex min-w-0 items-center justify-center text-xs font-semibold text-surface tabular-nums",
             "transition-transform duration-200 ease-out motion-reduce:transition-none",
             hover === item.name && "scale-y-[1.35]",
             i === 0 && "rounded-l-[4px]", i === visible.length - 1 && "rounded-r-[4px]")}

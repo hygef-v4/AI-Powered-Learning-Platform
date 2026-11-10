@@ -20,7 +20,7 @@ import {
   type RubricCriterion,
   type ValidationIssue,
 } from "@/shared/document";
-import { Alert, Button, Dialog, Field, Menu, MenuItem, Pill, showToast } from "@/shared/ui";
+import { Alert, Button, Dialog, Field, Menu, MenuItem, Pill, showErrorToast, showToast } from "@/shared/ui";
 import { AiDraftDialog } from "../components/AiDraftDialog";
 import { AiReviseChat } from "../components/AiReviseChat";
 import { assignmentsApi, docxUrl, imageUrlFor } from "../api";
@@ -134,9 +134,13 @@ export function rubricIssues(cards: DocumentPart[], criteria: Record<string, Rub
   });
 }
 
-/** Thông báo của trang soạn nổi ở góc trên bên phải (yêu cầu 2026-11-05), không chen lên thanh công cụ. */
+/**
+ * Thông báo của trang soạn nổi ở góc trên bên phải (yêu cầu 2026-11-05), không chen lên thanh công cụ. Trang này chỉ dùng
+ * màu đỏ cho lỗi (chưa lưu được, thiếu nội dung), nên câu màu đỏ ở lại tới khi người dùng đóng.
+ */
 function notify(text: string, tone: "danger" | "success") {
-  showToast(text, tone);
+  if (tone === "danger") showErrorToast(text);
+  else showToast(text, tone);
 }
 
 /** Chạy {@code task} sau mọi lệnh ghi đang chờ (lưu, duyệt…) để lệnh nào cũng gửi đúng version của bài. */

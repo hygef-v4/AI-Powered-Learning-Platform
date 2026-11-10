@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Button, Pill, Section } from "@/shared/ui";
+import { Alert, Button, Pill, Section, useConfirmDialog } from "@/shared/ui";
 import {
   acceptBankDraft, acceptQuizDraft, discardBankDraft, discardQuizDraft, getBankDraft, getBankDrafts, getQuizDraft, getQuizDrafts,
   getQuizMaterials, getSubjectMaterials, requestBankDraft, requestQuizDraft,
@@ -113,8 +113,17 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
     setOpen(null);
     setReloadKey((k) => k + 1);
   };
+  const [confirmDialog, requestConfirm] = useConfirmDialog();
   const close = () => {
-    if (onRequestClose ? onRequestClose() : !draftDirty.current || window.confirm("Bỏ các chỉnh sửa đề xuất chưa lưu?")) complete();
+    if (onRequestClose) {
+      if (onRequestClose()) complete();
+      return;
+    }
+    if (draftDirty.current) {
+      requestConfirm("Bỏ các chỉnh sửa đề xuất chưa lưu?", complete);
+      return;
+    }
+    complete();
   };
   // Mở popup AI khi trang quiz yêu cầu (chọn "Soạn bằng AI"); giá trị 0 là chưa yêu cầu.
   const [handled, setHandled] = useState(openRequest);
@@ -142,8 +151,14 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
               </span>
               <Button size="sm" className="ml-auto" disabled={disabled} aria-expanded={expanded} onClick={() => {
                 if (expanded) { close(); return; }
-                if (draftDirty.current && !window.confirm("Bỏ các chỉnh sửa chưa lưu để xem đề xuất khác?")) return;
-                if (!onRequestOpen || onRequestOpen()) setOpen({ draftId: draft.id });
+                const viewDraft = () => {
+                  if (!onRequestOpen || onRequestOpen()) setOpen({ draftId: draft.id });
+                };
+                if (draftDirty.current) {
+                  requestConfirm("Bỏ các chỉnh sửa chưa lưu để xem đề xuất khác?", viewDraft);
+                  return;
+                }
+                viewDraft();
               }}
                 data-testid="quiz-ai-draft-view">{expanded ? "Thu gọn" : "Xem"}</Button>
             </li>
@@ -155,6 +170,7 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
         <AiDraftDialog inline={inline} api={api} initialDraftId={open.draftId} onClose={close} onAccepted={complete}
           onDirtyChange={updateDirty} onBusyChange={onBusyChange} onDraftShown={setViewedDraftId} />
       )}
+      {confirmDialog}
     </>;
   return inline ? <div className="mt-4 flex flex-col gap-3" aria-label="Đề xuất AI">{body}</div> : <Section title="Đề xuất AI">{body}</Section>;
 }

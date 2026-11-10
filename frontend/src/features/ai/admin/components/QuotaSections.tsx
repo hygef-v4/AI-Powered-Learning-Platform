@@ -241,7 +241,7 @@ export function TeacherQuotaTable() {
               <tr key={t.accountId}>
                 <Td>
                   <p className="font-semibold">{t.name}</p>
-                  <p className="text-[11px] text-muted">{t.email}</p>
+                  <p className="text-xs text-muted">{t.email}</p>
                 </Td>
                 <Td className="text-right whitespace-nowrap tabular-nums">{t.dayTokens === 0 ? "0 · chặn" : formatTokens(t.dayTokens)}</Td>
                 <Td>
@@ -394,7 +394,7 @@ function TeacherQuotaDialog({
                       className="flex w-full flex-col px-3 py-2 text-left hover:bg-sunken"
                     >
                       <span className="text-sm text-ink">{c.email}</span>
-                      <span className="text-[11px] text-muted">{c.name}</span>
+                      <span className="text-xs text-muted">{c.name}</span>
                     </button>
                   </li>
                 ))}

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/useActivityTracker";
-import { Alert, Button, cx, Dialog, Pill } from "@/shared/ui";
+import { Alert, Button, cx, Dialog, Icon, Pill } from "@/shared/ui";
 import { getAttempt, recordQuizActivity, saveAnswers, submitAttempt } from "../api";
 import { QuestionNav, QuestionPrevNext, questionIndex } from "../components/QuestionPager";
 import { errorCode, errorMessage, formatPoints, penaltyRuleText } from "../model/labels";
@@ -23,6 +23,14 @@ function remainingSeconds(view: TakingView, skewMs: number): number | null {
   return Math.max(0, Math.floor((new Date(view.deadlineAt).getTime() - (Date.now() + skewMs)) / 1000));
 }
 
+/** Mốc thời gian đọc cho trình đọc màn hình; chữ chỉ đổi khi qua mốc nên mỗi mốc được đọc một lần. */
+function timeMilestone(seconds: number | null): string {
+  if (seconds === null || seconds > 300) return "";
+  if (seconds > 60) return "Còn dưới 5 phút.";
+  if (seconds > 10) return "Còn dưới 1 phút.";
+  return "Còn 10 giây.";
+}
+
 function clockText(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
@@ -32,7 +40,7 @@ function clockText(seconds: number): string {
 /**
  * Màn #44 Quiz Taking (UC 51; BR-U11-12, 13, 14): đề không có đáp án, mỗi câu một trang (câu đang xem giữ trên URL để tải
  * lại không mất chỗ), tự lưu 2 giây sau lần chọn cuối và khi rời trang kèm `answerVersion`, nộp có xác nhận, hết giờ thì
- * lưu lần cuối rồi tự nộp.
+ * lưu lần cuối rồi tự nộp. Thanh đồng hồ và nút Nộp bài dính dưới thanh trên của ứng dụng; lưu lỗi thì có nút Thử lại.
  */
 export function QuizTakingPage({ attemptId }: { attemptId: string }) {
   const router = useRouter();
@@ -219,16 +227,28 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface p-3">
+      <div className="sticky top-[4.25rem] z-20 flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface p-3 shadow-[var(--shadow-lift)]">
         <Button size="sm" variant="ghost" onClick={() => void flush().then(() => router.push("/quiz-practice"))} data-testid="quiz-taking-exit">Thoát</Button>
         <span className="font-semibold text-ink">{view.title}</span>
-        <Pill tone="info">Practice</Pill>
-        <span className="text-xs text-muted" role="status" data-testid="quiz-taking-save-state">{saveLabel}</span>
+        <Pill tone="info">Luyện tập</Pill>
+        <span className={cx("text-xs", saveState === "error" ? "font-semibold text-danger" : "text-muted")} role="status" data-testid="quiz-taking-save-state">
+          {saveLabel}
+        </span>
+        {saveState === "error" && (
+          <Button size="sm" icon="refresh" disabled={finishing !== null} onClick={() => void flush()} data-testid="quiz-taking-save-retry">
+            Thử lại
+          </Button>
+        )}
         {remaining !== null && (
-          <span className={cx("ml-auto font-mono text-sm font-bold", remaining < 60 ? "text-danger" : "text-ink")} data-testid="quiz-taking-timer">
+          <span
+            className={cx("ml-auto inline-flex items-center gap-1 font-mono text-sm font-bold", remaining < 60 ? "text-danger" : "text-ink")}
+            data-testid="quiz-taking-timer"
+          >
+            {remaining < 60 && <Icon name="warning" size={15} />}
             Còn {clockText(remaining)}
           </span>
         )}
+        <span className="sr-only" aria-live="assertive" data-testid="quiz-taking-time-milestone">{timeMilestone(remaining)}</span>
         <Button variant="primary" className={remaining === null ? "ml-auto" : undefined} disabled={finishing !== null}
           onClick={() => setConfirming(true)} data-testid="quiz-taking-submit">Nộp bài</Button>
       </div>
@@ -254,7 +274,7 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
                 const checked = (answers[question.questionId] ?? []).includes(option.optionId);
                 return (
                   <li key={option.optionId}>
-                    <label className={cx("flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-[13px]",
+                    <label className={cx("flex min-h-11 cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2.5 text-[14px]",
                       checked ? "border-primary bg-primary-soft" : "border-line hover:bg-shell")}>
                       <input type={multi ? "checkbox" : "radio"} name={`q-${question.questionId}`} checked={checked} disabled={finishing !== null}
                         onChange={() => choose(question.questionId, option.optionId, multi)} data-testid={`quiz-taking-option-${option.optionId}`} />

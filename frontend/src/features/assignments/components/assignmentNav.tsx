@@ -65,7 +65,7 @@ export function AssignmentNav() {
         {outline && (
           <div className="flex flex-col rounded-xl border border-line bg-surface p-1 shadow-[0_1px_2px_rgb(60_38_14/0.06)]">
           <div className={cx(WHEN_OPEN, "flex items-center justify-between gap-2 border-b border-line py-1 pr-1 pl-2.5")}>
-            <span className="text-[11.5px] font-semibold tracking-[.04em] text-muted uppercase">Câu hỏi</span>
+            <span className="text-xs font-semibold tracking-[.04em] text-muted uppercase">Câu hỏi</span>
             {outline.editable && <AddButton label="Thêm câu hỏi" onClick={() => addPart(null)} />}
           </div>
           {outline.entries.length === 0 && <span className={cx("px-2.5 py-2 text-[12.5px] text-faint", FADE_LABEL)}>Bài chưa có câu hỏi</span>}
@@ -86,7 +86,7 @@ export function AssignmentNav() {
                     className={cx("flex min-w-0 flex-1 items-center rounded-lg py-1.5 text-left text-[13px] whitespace-nowrap transition-colors",
                       problem ? "px-2.5 font-semibold text-ink" : loose ? "px-2.5 text-body" : "pr-2.5 text-body md:group-data-[collapsed]/sidebar:!pl-2.5",
                       active ? "bg-primary-soft" : "hover:bg-sunken")}>
-                    <span className={cx(WHEN_COLLAPSED, "w-full text-center font-mono text-[11px] tabular-nums", problem ? "font-bold" : "text-muted")}>{loose ? "…" : <SectionNumber value={entry.number} />}</span>
+                    <span className={cx(WHEN_COLLAPSED, "w-full text-center font-mono text-xs tabular-nums", problem ? "font-bold" : "text-muted")}>{loose ? "…" : <SectionNumber value={entry.number} />}</span>
                     <span className={cx(WHEN_OPEN, "min-w-0 truncate")}>
                       {loose ? title : <><SectionNumber value={entry.number} />{entry.title ? ` ${entry.title}` : ""}</>}
                     </span>

@@ -23,7 +23,7 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
                 </span>
               ) : (
                 <span
-                  className={`flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] ${
+                  className={`flex size-5 shrink-0 items-center justify-center rounded-full text-xs ${
                     state === "current" ? "bg-primary-strong font-bold text-on-primary" : "bg-sunken text-muted"
                   }`}
                 >

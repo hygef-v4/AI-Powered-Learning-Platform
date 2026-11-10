@@ -160,7 +160,7 @@ export function StudentPickerDropdown({
       >
         <span className="min-w-0 flex-1 truncate">
           <span className="block text-xs font-semibold leading-tight text-ink">{studentName}</span>
-          {studentEmail && <span className="block text-[10.5px] leading-tight text-muted">{studentEmail}</span>}
+          {studentEmail && <span className="block text-xs leading-tight text-muted">{studentEmail}</span>}
         </span>
         <Icon name="unfold_more" size={14} className="shrink-0 text-muted" />
       </button>

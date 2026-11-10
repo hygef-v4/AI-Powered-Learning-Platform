@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, Button, cx, Dialog, Pill, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
+import { Alert, Button, Dialog, Pill, Segmented, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import { getBankQuestionsForQuiz, previewRandomItems } from "../api";
 import { DIFFICULTY_LABELS, DIFFICULTY_TONES, errorMessage, TYPE_LABELS } from "../model/labels";
 import type { Difficulty, QuestionPage, QuestionView } from "../model/types";
@@ -88,15 +88,17 @@ export function BankQuestionPicker({ quizId, freeSlots, onClose, onAdd, inline =
       </>;
   const body = (
       <div className="flex flex-col gap-3 text-[13px]">
-        <div role="tablist" aria-label="Cách lấy câu" className="flex gap-1">
-          {([["manual", "Chọn tay"], ["random", "Bốc ngẫu nhiên"]] as const).map(([key, label]) => (
-            <button key={key} type="button" role="tab" aria-selected={tab === key} onClick={() => { setTab(key); setError(null); }}
-              data-testid={`bank-picker-tab-${key}`}
-              className={cx("rounded-lg px-3 py-1.5 font-semibold", tab === key ? "bg-primary-soft text-primary-ink" : "text-body hover:bg-shell")}>
-              {label}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          as="tab"
+          ariaLabel="Cách lấy câu"
+          className="w-fit"
+          value={tab}
+          onChange={(value) => { setTab(value); setError(null); }}
+          options={[
+            { value: "manual", label: "Chọn tay", testId: "bank-picker-tab-manual" },
+            { value: "random", label: "Bốc ngẫu nhiên", testId: "bank-picker-tab-random" },
+          ]}
+        />
         <div className="flex flex-wrap items-center gap-2">
           <Select aria-label="Độ khó" value={difficulty} onChange={(event) => setDifficulty(event.target.value as Difficulty | "")} data-testid="bank-picker-difficulty">
             <option value="">Mọi độ khó</option>

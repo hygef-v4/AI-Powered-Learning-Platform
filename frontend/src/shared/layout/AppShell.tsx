@@ -2,14 +2,25 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Fragment, Suspense, useCallback, useState, useSyncExternalStore, type ReactNode } from "react";
+import {
+  Fragment,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type FocusEvent,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 import type { Role } from "@/shared/auth/roles";
 import { useCurrentUser, type CurrentUser } from "@/shared/auth/useCurrentUser";
 import { useTheme } from "@/shared/theme";
 import { cx } from "@/shared/ui/cx";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import { Logo } from "@/shared/ui/Logo";
-import { Menu } from "@/shared/ui/Menu";
+import { Menu, MenuItem } from "@/shared/ui/Menu";
 import { SOFT_TONES } from "@/shared/ui/tones";
 import { LogoutDialog } from "./LogoutDialog";
 import { AVATAR_TONES, FADE_LABEL, ROLE_LABELS, activeHref, initials, type NavContext, type NavItem, type NavLocation } from "./navigation";
@@ -59,10 +70,13 @@ function storedCollapsed() {
   }
 }
 
+const FOCUSABLE = 'a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), [tabindex="0"]';
+
 /**
- * Khung sau đăng nhập: thanh trên dài hết chiều ngang (nút menu, logo, thông báo, theme, tài khoản); bên dưới là sidebar
- * chỉ chứa mục chuyển trang và nội dung. Ba vùng mỗi vùng một màu. Màn rộng thu gọn được sidebar còn biểu tượng (nhớ qua
- * lần sau); màn hẹp sidebar là ngăn kéo.
+ * Khung sau đăng nhập: thanh trên dài hết chiều ngang (nút menu, logo, thông báo, theme, tài khoản kèm đăng xuất); bên
+ * dưới là sidebar chỉ chứa mục chuyển trang và nội dung. Ba vùng mỗi vùng một màu. Màn rộng thu gọn được sidebar còn biểu
+ * tượng (nhớ qua lần sau); màn hẹp sidebar là ngăn kéo: đóng thì không nhận focus, mở thì giữ Tab trong ngăn kéo và nút
+ * menu, Esc để đóng.
  */
 export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: sessionUser, context, children }: Props) {
   const pathname = usePathname() ?? "";
@@ -74,12 +88,43 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
   const [collapsed, setCollapsed] = useState(storedCollapsed);
   const wide = useWide();
   const closeLogout = useCallback(() => setLogoutOpen(false), []);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const sidebar = useRef<HTMLElement>(null);
   const roleLabel = ROLE_LABELS[role];
   // Ngăn kéo menu trên màn hẹp tự đóng khi đã sang trang khác.
   const drawerOpen = drawer === pathname;
 
   // Sidebar đang hiện đủ: màn rộng là chưa thu gọn, màn hẹp là ngăn kéo đang mở.
   const sidebarOpen = wide ? !collapsed : drawerOpen;
+
+  const drawerActive = !wide && drawerOpen;
+  useEffect(() => {
+    if (!drawerActive) return;
+    function handleDrawerKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setDrawer(null);
+        menuButton.current?.focus();
+        return;
+      }
+      if (event.key !== "Tab" || !menuButton.current || !sidebar.current) return;
+      const stops = [menuButton.current, ...sidebar.current.querySelectorAll<HTMLElement>(FOCUSABLE)];
+      const first = stops[0]!;
+      const last = stops.at(-1)!;
+      const current = document.activeElement as HTMLElement | null;
+      if (!current || !stops.includes(current)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && current === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && current === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener("keydown", handleDrawerKey);
+    return () => document.removeEventListener("keydown", handleDrawerKey);
+  }, [drawerActive]);
 
   function toggleSidebar() {
     if (!wide) {
@@ -97,8 +142,15 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
 
   return (
     <div data-app-shell className="flex min-h-screen flex-col bg-shell">
+      <a
+        href="#main"
+        className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-2 focus-visible:left-2 focus-visible:z-[120] focus-visible:rounded-lg focus-visible:bg-primary focus-visible:px-3.5 focus-visible:py-2 focus-visible:text-[13px] focus-visible:font-semibold focus-visible:text-on-primary"
+      >
+        Bỏ qua tới nội dung
+      </a>
       <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-1.5 border-b border-line bg-nav pr-3 pl-2.5 md:pr-4">
         <button
+          ref={menuButton}
           type="button"
           aria-label={sidebarOpen ? "Thu gọn menu" : "Mở menu"}
           aria-expanded={sidebarOpen}
@@ -129,12 +181,12 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
             summaryClassName="!h-10 gap-2.5 !pl-1.5 !pr-2"
             label={
               <>
-                <span className={cx("flex size-8 items-center justify-center rounded-full text-[11.5px] font-bold", SOFT_TONES[AVATAR_TONES[role]])}>
+                <span className={cx("flex size-8 items-center justify-center rounded-full text-xs font-bold", SOFT_TONES[AVATAR_TONES[role]])}>
                   {user ? initials(user.displayName) : <Icon name="person" size={16} />}
                 </span>
                 <span className="hidden flex-col text-left leading-tight sm:flex">
                   {user && <span className="text-[13px] font-semibold text-ink">{user.displayName}</span>}
-                  <span className={user ? "text-[11px] text-muted" : "text-[13px] font-semibold text-ink"}>{roleLabel}</span>
+                  <span className={user ? "text-xs text-muted" : "text-[13px] font-semibold text-ink"}>{roleLabel}</span>
                 </span>
               </>
             }
@@ -143,14 +195,21 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
             {headerLinks.map((link) => (
               <AccountLink key={link.href} href={link.href} icon={link.icon} label={link.label} />
             ))}
+            <hr className="my-1 border-line" />
+            <MenuItem icon="logout" tone="danger" onClick={() => setLogoutOpen(true)}>
+              Đăng xuất
+            </MenuItem>
           </Menu>
         </div>
       </header>
 
       <div className="flex min-w-0 flex-1">
         <aside
+          ref={sidebar}
           data-app-sidebar
           data-collapsed={collapsed || undefined}
+          // Màn hẹp, ngăn kéo đóng: nằm ngoài màn hình nên không được nhận focus hay để trình đọc màn hình đọc.
+          inert={!wide && !drawerOpen}
           className={cx(
             "group/sidebar fixed top-14 bottom-0 left-0 z-30 flex w-[256px] shrink-0 flex-col border-r border-line bg-sidebar px-3 py-4",
             "md:sticky md:h-[calc(100dvh-3.5rem)] md:translate-x-0",
@@ -166,17 +225,6 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
           ) : (
             <NavList label={`Menu ${roleLabel}`} items={nav} pathname={pathname} collapsed={collapsed} />
           )}
-          <div className="mt-3 pt-1">
-            <button
-              type="button"
-              onClick={() => setLogoutOpen(true)}
-              title={collapsed ? "Đăng xuất" : undefined}
-              className="flex w-full items-center gap-2.5 overflow-hidden rounded-lg px-2.5 py-2 text-left text-[13.5px] font-semibold whitespace-nowrap text-danger transition-colors duration-200 hover:bg-danger-soft"
-            >
-              <Icon name="logout" size={17} className="shrink-0" />
-              <span className={FADE_LABEL}>Đăng xuất</span>
-            </button>
-          </div>
         </aside>
         {drawerOpen && (
           <div aria-hidden className="fixed inset-x-0 top-14 bottom-0 z-20 animate-fade bg-[var(--c-scrim)] md:hidden" onClick={() => setDrawer(null)} />
@@ -184,7 +232,9 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
         <div className="relative isolate flex min-w-0 flex-1 flex-col overflow-x-clip">
           {/* Nội dung rộng theo phần trăm màn hình (lề hai bên 4%), không chặn ở một độ rộng cố định: màn lớn không còn khoảng
               trống to hai bên. */}
-          <main className="flex w-full min-w-0 flex-1 flex-col gap-7 px-4 pt-8 pb-16 sm:px-[4%] md:pt-10">{children}</main>
+          <main id="main" tabIndex={-1} className="flex w-full min-w-0 flex-1 flex-col gap-7 px-4 pt-8 pb-16 outline-none sm:px-[4%] md:pt-10">
+            {children}
+          </main>
         </div>
       </div>
       <LogoutDialog open={logoutOpen} onClose={closeLogout} />
@@ -216,7 +266,8 @@ type NavBranch = { content: ReactNode; current: boolean };
 
 /**
  * Danh sách mục sidebar; đổi sang ngữ cảnh khác thì dựng lại để mờ vào. Sidebar thu gọn (chỉ màn rộng) thì còn biểu
- * tượng, tên mục vẫn đọc được qua `title` và trình đọc màn hình. `branches`: nhánh cây (môn, lớp) dưới mục cha. Mũi tên ở
+ * tượng; tên mục hiện thành nhãn nổi bên phải khi rê chuột hoặc focus bằng bàn phím, trình đọc màn hình vẫn đọc tên mục.
+ * `branches`: nhánh cây (môn, lớp) dưới mục cha. Mũi tên ở
  * cuối hàng mục cha chỉ mở, đóng nhánh, không chuyển trang (yêu cầu 2026-11-10), để chọn môn, lớp rồi mục bên trong; bấm tên
  * mục cha thì sang trang danh sách như mọi mục khác và mở nhánh. Không thêm nút nào. Mục cha chỉ tô như mục đang mở khi đang ở
  * đúng trang của nó hoặc khi sidebar thu gọn.
@@ -226,6 +277,16 @@ function NavList({ label, items, pathname, header, collapsed, branches }: { labe
   const current = inBranch ?? activeHref(items, pathname);
   const [toggled, setToggled] = useState<Record<string, boolean>>({});
   const isOpen = (href: string) => toggled[href] ?? (href === inBranch || pathname === href);
+  const [tip, setTip] = useState<{ label: string; top: number } | null>(null);
+
+  /** Nhãn nổi đặt theo sidebar (nằm ngoài vùng cuộn của danh sách nên không bị cắt). */
+  function showTip(event: MouseEvent<HTMLElement> | FocusEvent<HTMLElement>, label: string) {
+    if (!collapsed) return;
+    if (event.type === "focus" && !event.currentTarget.matches(":focus-visible")) return;
+    const row = event.currentTarget.getBoundingClientRect();
+    const base = event.currentTarget.closest("[data-app-sidebar]")?.getBoundingClientRect().top ?? 0;
+    setTip({ label, top: row.top - base + row.height / 2 });
+  }
   // Phần đầu (lối về, ô chọn môn hay lớp) nằm ngoài vùng cuộn để danh sách thả xuống của ô chọn tràn ra được khi sidebar thu gọn.
   return (
     <div className="flex min-h-0 flex-1 animate-fade flex-col">
@@ -243,14 +304,17 @@ function NavList({ label, items, pathname, header, collapsed, branches }: { labe
         return (
           <Fragment key={item.href}>
             {heading && (
-              <span className={cx("mx-2.5 mt-5 mb-1.5 text-[10.5px] font-semibold tracking-[.09em] whitespace-nowrap text-muted uppercase", FADE_LABEL)}>
+              <span className={cx("mx-2.5 mt-5 mb-1.5 text-xs font-semibold tracking-[.09em] whitespace-nowrap text-muted uppercase", FADE_LABEL)}>
                 {heading}
               </span>
             )}
             <div className="relative">
             <Link
               href={item.href}
-              title={collapsed ? item.label : undefined}
+              onMouseEnter={(event) => showTip(event, item.label)}
+              onMouseLeave={() => setTip(null)}
+              onFocus={(event) => showTip(event, item.label)}
+              onBlur={() => setTip(null)}
               aria-current={active && !ancestor ? "page" : undefined}
               onClick={isParent ? () => setToggled((previous) => ({ ...previous, [item.href]: true })) : undefined}
               className={cx(
@@ -294,6 +358,16 @@ function NavList({ label, items, pathname, header, collapsed, branches }: { labe
         );
       })}
       </nav>}
+      {collapsed && tip && (
+        <span
+          aria-hidden
+          data-nav-tip
+          style={{ top: tip.top }}
+          className="pointer-events-none absolute left-full z-50 ml-2 hidden -translate-y-1/2 animate-fade rounded-lg bg-ink px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap text-surface shadow-[var(--shadow-float)] md:block"
+        >
+          {tip.label}
+        </span>
+      )}
     </div>
   );
 }
@@ -318,6 +392,7 @@ function AccountLink({ href, icon, label }: { href: string; icon?: IconName; lab
   return (
     <Link
       href={href}
+      role="menuitem"
       data-menu-item
       className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] text-ink transition-colors hover:bg-sunken"
     >

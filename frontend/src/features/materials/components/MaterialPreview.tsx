@@ -115,7 +115,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
       return (
         <div
           role="alert"
-          className="flex flex-col items-center gap-3 rounded-xl bg-[#525659] p-16 text-center text-sm text-white/85"
+          className="flex flex-col items-center gap-3 rounded-xl bg-viewer p-16 text-center text-sm text-white/85"
         >
           {current.error}
           <Button
@@ -131,7 +131,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
       return (
         <div
           role="status"
-          className="flex h-[calc(100vh-13rem)] min-h-[560px] items-center justify-center rounded-xl bg-[#525659] text-sm text-white/75"
+          className="flex h-[calc(100vh-13rem)] min-h-[560px] items-center justify-center rounded-xl bg-viewer text-sm text-white/75"
         >
           Đang mở tệp…
         </div>
