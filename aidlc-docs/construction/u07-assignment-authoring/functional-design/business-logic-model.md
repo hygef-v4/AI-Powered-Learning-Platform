@@ -45,6 +45,13 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ## 3. Soạn bài
 
+### Delta 2026-11-10 cho F3, F6, F9, F13 (PR #60)
+
+- **F3:** popup "Bài tập mới" (lớp) hoặc "Đề mẫu mới" (môn) bắt buộc tên bài và có ba cách tạo. *Đề mới*: chọn loại bài và tệp DOCX mẫu tùy chọn, như các bước F3 bên dưới. *Đề có sẵn*: chọn nguồn rồi copy theo F13 với tên vừa nhập. *Tạo từ AI*: chọn ngôn ngữ, đề mẫu của môn hoặc tệp mẫu, tài liệu tham khảo (đọc qua endpoint của lớp/môn vì bài chưa có) và yêu cầu; bấm Tạo thì tạo bài, gửi `POST .../ai-drafts` rồi áp dụng kết quả vào bài, tổng điểm cố định 10. AI lỗi thì bài đã tạo được dùng lại khi thử lại.
+- **F6:** nút "Soạn bằng AI" không còn trên thanh công cụ của Assignment Form; `AiDraftDialog` ở trang này chỉ còn mở để duyệt đề xuất (ví dụ từ MCP qua `proposalId`). F6b (sửa đề bằng AI) không đổi.
+- **F9:** bài của môn không phát hành (`409 SUBJECT_TEMPLATE_NOT_PUBLISHABLE`, BR-U07-80); bài có chấm không có số lượt (BR-U07-85).
+- **F13:** nguồn copy và `title` theo BR-U07-82.
+
 ### F3 - Tạo bài (UC 35)
 1. Bấm "Tạo bài tập" ở tab Evals (bài của lớp) hoặc Assignment List (bài của môn); popup gồm một ô tệp DOCX tùy chọn (chọn xong chỉ hiện tên tệp), thẻ chọn Hình thức (Cá nhân, Nhóm; nhóm chỉ ở lớp và khi U12 có), thẻ chọn Chế độ (Graded, Practice; nhóm chỉ Graded). Bài của lớp có nút nhỏ "Copy từ lớp khác" (F13). Không có dòng hướng dẫn, không chọn sơ đồ.
 2. Kiểm quyền (R3/R4 với lớp, R2 với môn) và lớp hoặc môn chưa lưu trữ (BR-U07-02, 03, 04).

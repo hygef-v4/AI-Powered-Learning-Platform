@@ -1,5 +1,17 @@
 # U08 Assignment Work — business-rules
 
+## Nộp lại không giới hạn và lịch sử theo hạn — 2026-11-10
+
+Nguồn: `cdaf0f46`, `6a787e3f` (PR #60). Thay phần trái ngược trong BR-U08-03, 11, 12, 30, 31 bên dưới; bài `PRACTICE` giữ nguyên các rule cũ về lượt.
+
+| Mã | Rule | Thay cho |
+|---|---|---|
+| BR-U08-70 | Chỉ bài `PRACTICE` giới hạn số lượt. Bài `GRADED` cá nhân bắt đầu lượt mới bao nhiêu lần cũng được khi còn hạn nộp hoặc hạn nộp muộn; "hết lượt" chỉ còn với bài Luyện tập. | BR-U08-11 (`maxAttempts` cho mọi bài) |
+| BR-U08-71 | Lượt mới của bài `GRADED` bắt đầu từ nội dung bài nộp gần nhất để sửa tiếp; bài nộp cũ không còn khớp khung đề (không qua `validateForSave`) thì bắt đầu từ khung đề. Bài `PRACTICE` mỗi lượt làm lại từ khung đề. | BR-U08-12 ("lượt mới bắt đầu từ khung của đề") |
+| BR-U08-72 | Với người học, bài có chấm chỉ có một bài nộp: nộp lại là ghi đè, không đếm số lần. Server vẫn lưu từng lượt; trang chỉ hiện bản đang sửa hoặc bản nộp mới nhất, nút "Sửa và nộp lại". Số lượt và bộ đếm chỉ hiện ở trang chi tiết bài Luyện tập. | BR-U08-03 (số lượt đã dùng và còn lại), BR-U08-30 phần hiển thị |
+| BR-U08-73 | Submission History của bài có chấm chỉ mở khi đã nộp và đã qua `closesAt`; gồm bản đúng hạn (bản nộp cuối trước hạn) và, nếu có, bản nộp muộn (bản nộp cuối trong hạn nộp muộn), mới nhất trước. Bài Luyện tập xem lịch sử lúc nào cũng được. Điều kiện mở là kiểm ở frontend (`historyOpen`), API lượt không đổi. | BR-U08-31 (danh sách mọi lượt) |
+| BR-U08-74 | Tên tệp DOCX tải ra của bài có chấm chỉ có tên bài; bài Luyện tập vẫn ghi "Lượt n". | Tên tệp kèm lượt cho mọi bài |
+
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
 

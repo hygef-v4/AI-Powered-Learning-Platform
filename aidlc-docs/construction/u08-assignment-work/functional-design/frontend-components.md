@@ -7,6 +7,12 @@
 > Cập nhật 2026-10-17 theo design G21 (bản 17/10, 123 artboard): màn, popup, trường và thao tác lấy theo design; chỗ design khác quy tắc nghiệp vụ thì giữ quy tắc. Chỉ sửa tài liệu.
 > Cập nhật 2026-10-22 theo code hiện tại (các yêu cầu của người dùng 2026-10-21, 2026-10-22; chi tiết từng vòng trong code-summary).
 
+**Delta 2026-11-10 (`6a787e3f`, BR-U08-70…74):** thay mô tả trái ngược ở các bảng bên dưới.
+
+- `StudentAssignmentsPage`: bỏ cột số lượt; trạng thái bài có chấm không còn "Đã nộp n lượt".
+- `StudentAssignmentDetailPage`: bài có chấm hiện một dòng (bản đang sửa, không thì bản nộp mới nhất) và nút "Sửa và nộp lại" khi đã nộp mà còn hạn; "Lượt" và bộ đếm đã dùng / tối đa chỉ có ở bài Luyện tập. Link lịch sử chỉ hiện khi `historyOpen` (đã nộp và qua hạn nộp đúng giờ; bài Luyện tập luôn hiện).
+- `SubmissionHistoryPage`: bài có chấm chỉ liệt kê bản đúng hạn và bản nộp muộn (`historyVersions`), chuyển qua lại khi có cả hai; chưa tới hạn thì báo lịch sử hiện sau khi đã nộp và qua hạn; thời điểm nộp ghi tới giây.
+
 **Primary UC:** 37, 38, 39, 40, 41. **Primary stories:** US-ASM-003 (phần Assignment cá nhân), US-ASM-012; dữ liệu hoạt động của US-INT-001. **Requirements:** FR-007, FR-008, FR-018, FR-030, FR-039.
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).

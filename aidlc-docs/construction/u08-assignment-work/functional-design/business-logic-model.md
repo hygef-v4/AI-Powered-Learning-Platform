@@ -69,6 +69,8 @@ Xuất:
 1. Trên Workspace hoặc Submission History bấm Tải DOCX; frontend gọi `GET /api/v1/attempts/{attemptId}/export.docx`.
 2. Kiểm chủ lượt, hoặc giảng viên chính của lớp ghi trên lượt; gọi `IDocx.export` (sơ đồ kèm mã `[drawio:attemptId/blockId]`).
 
+**Delta 2026-11-10 cho F3 (BR-U08-70, 71):** kiểm "hết lượt" chỉ áp dụng cho bài `PRACTICE`; lượt mới của bài `GRADED` lấy nội dung bài nộp gần nhất còn khớp khung đề, không thì khung đề.
+
 ### F6 - Nộp bài (UC 39)
 1. Bấm Nộp: popup chỉ hỏi xác nhận, không còn bảng kiểm sơ bộ (2026-11-09); xác nhận thì frontend lưu lần cuối rồi gọi `POST /api/v1/attempts/{attemptId}/submit` kèm `contentVersion`.
 2. Lượt đã `SUBMITTED` thì trả lại biên nhận cũ (BR-U08-22).

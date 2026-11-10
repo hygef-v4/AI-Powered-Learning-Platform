@@ -8,6 +8,8 @@
 - [x] Sửa functional-design và as-built của unit bị lệch
 - [x] Cập nhật current-code-baseline, api-inventory, build-and-test-summary
 - [x] Kiểm liên kết cục bộ của các file đã sửa
+- [x] Đợt 2 sau merge tới `staging@1e77eb79`: PR #60 (đề mẫu của môn, nộp lại không giới hạn, đánh số câu hỏi, popup tạo bài) vào U07, U08, U09, U05; BR-U07-80…86, BR-U08-70…74; api-inventory 241 mapping, baseline thêm 6 mục
+- [ ] Inception (FR-027, US-ASM-009, số lượt nộp bài có chấm) còn mô tả hành vi cũ; chờ xác nhận yêu cầu trước khi sửa
 
 Chỉ sửa Markdown; không chạy application test, không đổi code/schema/config, không commit hay deploy. Thay đổi chưa commit ở `AssignmentFormPage` nằm ngoài phạm vi. Security/Resiliency giữ phạm vi đã duyệt, PBT disabled.
 

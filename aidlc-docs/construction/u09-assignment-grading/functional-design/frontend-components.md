@@ -22,6 +22,10 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://claude.ai/artifact/M5RgKNauBqdxM7GUTRwau4), bản 17/10/2026; `#n` là số màn, mã trong ngoặc (ví dụ `a02`) là artboard.
 
+## Bỏ số lượt ở danh sách bài nộp — 2026-11-10
+
+`SubmissionDetailPage` bỏ cột "Lượt" (`6a787e3f`); nhãn trạng thái `SUPERSEDED` đổi từ "Lượt cũ" thành "Bài nộp cũ". `GradeDistributionSettings` không còn ghi "ẩn danh" (`4ff7a0da`). Lý do: bài có chấm nộp lại không giới hạn, xem BR-U08-70…74.
+
 ## AI review và điều hướng bài nhóm — 2026-11-09
 
 - `ClassGradebookTab`: bài nhóm đang chọn có danh sách "Bản nộp chung theo nhóm" (`useSubmissionDirectory`), mỗi nhóm một link "Xem bản nộp chung" mở Grading Workspace của đánh giá nhóm; có trạng thái đang tải, lỗi kèm Thử lại và "Chưa có bản nộp chung để xem".

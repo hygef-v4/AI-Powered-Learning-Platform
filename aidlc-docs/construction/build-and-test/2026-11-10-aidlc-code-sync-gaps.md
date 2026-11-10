@@ -21,9 +21,26 @@ Excel import, Bật/Tắt học liệu, soạn quiz tại chỗ, nguồn AI (`fb
 
 Không cần tài liệu: `6f6aa5d0` (cấu hình dev server cục bộ), `e6a5780c`, `7efb2b21`, `19e8ebf6`, `0f2fbab7` (chỉ comment, format, import).
 
+## Đợt 2: sau khi merge tới `staging@1e77eb79`
+
+Merge kéo về 17 commit. Phần sửa chấm điểm, quiz và nộp bài nhóm của `b9bf1889` đã kèm tài liệu. Bảy commit tính năng của PR #60 thì chưa, đã bổ sung như sau:
+
+| Unit | Code (commit) | Hiện trạng code | Tài liệu đã sửa |
+|---|---|---|---|
+| U07 | `bad8df16` | Bài của môn là đề mẫu: không phát hành (`409 SUBJECT_TEMPLATE_NOT_PUBLISHABLE`), được là bài nhóm; copy nhận `title`; AI nháp nhận `templateAssignmentId`; ba endpoint đọc mới. | [BR-U07-80…84](../u07-assignment-authoring/functional-design/business-rules.md), [logic](../u07-assignment-authoring/functional-design/business-logic-model.md), [as-built](../u07-assignment-authoring/code/as-built-baseline.md), [api-inventory](../../inception/reverse-engineering/api-inventory.md) |
+| U07 | `16f2c8ce`, `4ff7a0da` | Câu hỏi đánh số `I.`/`I.1.`/`I.1.a.`/`I.1.a.aa.`; thanh thêm câu hỏi/ý; Cả trang / Từng phần luôn hiện. | BR-U07-86, [frontend](../u07-assignment-authoring/functional-design/frontend-components.md) |
+| U07 | `211927b0` | Popup tạo bài có ba cách tạo, AI chạy ngay trong popup; bỏ nút Soạn bằng AI trên thanh công cụ. | [frontend](../u07-assignment-authoring/functional-design/frontend-components.md), logic F3/F6 |
+| U07, U08 | `cdaf0f46` | Chỉ bài Luyện tập giới hạn lượt; bài có chấm nộp lại không giới hạn, lượt mới bắt đầu từ bài nộp gần nhất. | BR-U07-85, [BR-U08-70…74](../u08-assignment-work/functional-design/business-rules.md), [logic](../u08-assignment-work/functional-design/business-logic-model.md), [as-built](../u08-assignment-work/code/as-built-baseline.md) |
+| U08, U09 | `6a787e3f` | Một bài nộp ghi đè, lịch sử chỉ mở sau khi nộp và qua hạn; danh sách chấm bỏ cột Lượt. | [U08 frontend](../u08-assignment-work/functional-design/frontend-components.md), [U09 frontend](../u09-assignment-grading/functional-design/frontend-components.md) |
+| U05 | `8b3aa862` | Dropdown chọn môn/lớp trong nhánh sidebar. | [U05 frontend](../u05-class-enrollment/functional-design/frontend-components.md) |
+
+Các rule mới được viết thành mục có ngày ở đầu file và nêu rõ rule cũ nào bị thay; dòng rule cũ trong bảng bên dưới không bị xóa.
+
+**Chưa đồng bộ ở tầng Inception:** `requirements.md`, `use-cases.md` và `stories.md` còn mô tả bài của môn được giao cho mọi lớp (FR-027, US-ASM-009) và số lượt nộp cho bài có chấm. Đây là thay đổi yêu cầu nghiệp vụ, cần người phụ trách xác nhận trước khi sửa nên đợt này chỉ ghi nhận.
+
 ## Kiểm tra đã làm
 
-- API inventory: 239 mapping annotation khác nhau trong 48 controller khớp hoàn toàn với source.
+- API inventory: 241 mapping annotation khác nhau trong 48 controller khớp hoàn toàn với source (239 ở đợt 1, thêm 3 endpoint đọc của PR #60 ở đợt 2, trong đó `/materials` trùng chuỗi với một mapping đã có).
 - current-code-baseline: mọi controller, test class (`*Test.java`) và migration trong source đều có trong bảng kê; không còn liên kết hỏng.
 - Liên kết cục bộ của các file Markdown đã sửa trong đợt này đều trỏ tới file tồn tại.
 
