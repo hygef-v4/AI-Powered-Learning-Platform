@@ -23,6 +23,8 @@ import {
 import { Alert, Button, Dialog, Field, Menu, MenuItem, Pill, showErrorToast, showToast } from "@/shared/ui";
 import { AiDraftDialog } from "../components/AiDraftDialog";
 import { AiReviseChat } from "../components/AiReviseChat";
+import { ExamImportDialog } from "../components/ExamImportDialog";
+import { clearPendingImport, peekPendingImport } from "../model/pendingImports";
 import { assignmentsApi, docxUrl, imageUrlFor } from "../api";
 import { AssignmentSettingsPanel, settingsOf, type Settings } from "../components/AssignmentSettingsPanel";
 import { errorMessage, formatTime, problemCode, problemIssues } from "../model/format";
@@ -187,7 +189,13 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
   const [activePart, setActivePart] = useState<string | null>(null);
   const proposalId = params.get("proposalId") ?? undefined;
-  const [dialog, setDialog] = useState<"ai" | "retire" | "delete" | "settings" | "schedule" | null>(null);
+  const [dialog, setDialog] = useState<"ai" | "import" | "retire" | "delete" | "settings" | "schedule" | null>(null);
+  /** Tệp đề cũ chọn ở popup tạo bài: mở popup nhập đề và chuyển đổi ngay khi trang tải xong (BR-U07-87). */
+  const [importFiles, setImportFiles] = useState<File[] | undefined>(() => {
+    const pending = peekPendingImport(id);
+    return pending.length > 0 ? pending : undefined;
+  });
+  const openedPendingImport = useRef(false);
   const openedMcpProposal = useRef<string | null>(null);
   const [preview, setPreview] = useState(false);
   // Header dính trên đầu: nút chọn cách đọc nằm giữa header; thanh công cụ của trình soạn dính ngay dưới header (yêu cầu 2026-11-04).
@@ -233,6 +241,14 @@ export function AssignmentFormPage({ id }: { id: string }) {
     );
     return () => controller.abort();
   }, [apply, id]);
+
+  useEffect(() => {
+    if (!importFiles || detail?.id !== id || !detail.permissions.canEditContent) return;
+    if (openedPendingImport.current) return;
+    openedPendingImport.current = true;
+    clearPendingImport(id);
+    setDialog("import");
+  }, [detail, id, importFiles]);
 
   // Tạo đề bằng AI chỉ có ở popup tạo bài (yêu cầu 2026-11-10); trang soạn chỉ mở popup AI để duyệt đề xuất do agent MCP gửi.
   useEffect(() => {
@@ -578,6 +594,8 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const backHref = assignmentsHref(detail, classId);
   const permissions = detail.permissions;
   const editable = permissions.canEditContent && !preview;
+  // Nhập đề thay khung nên chỉ khi bài chưa phát hành (BR-U07-87).
+  const canImport = permissions.canEditContent && (detail.status === "DRAFT" || detail.status === "REVIEWED");
   const rubricItemCount = Object.values(criteria).reduce((sum, list) => sum + list.reduce((partSum, criterion) => partSum + criterion.items.length, 0), 0);
   const active = parts.find((part) => part.partId === activePart);
   const titleMissing = issues.some((issue) => issue.code === "TITLE_REQUIRED");
@@ -648,6 +666,9 @@ export function AssignmentFormPage({ id }: { id: string }) {
         <div ref={setViewSlot} data-testid="view-slot" className="flex justify-center" />
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Menu label="" icon="more_horiz" ariaLabel="Thao tác khác" align="right">
+            {canImport && (
+              <MenuItem icon="upload_file" onClick={() => { setImportFiles(undefined); setDialog("import"); }}>Nhập đề từ tệp</MenuItem>
+            )}
             <MenuItem icon="download" onClick={() => void exportDocx("skeleton")}>Xuất DOCX</MenuItem>
             <MenuItem icon="download" onClick={() => void exportDocx("rubric")}>Xuất rubric</MenuItem>
             {permissions.canCreateVersion && (
@@ -746,6 +767,13 @@ export function AssignmentFormPage({ id }: { id: string }) {
           onClose={() => setDialog(null)} onApplied={async () => {
             setDialog(null);
             await showAiResult("Đã ghi đề AI lên trang. Nhấn Ctrl+Z để quay lại bản trước.");
+          }} />
+      )}
+      {dialog === "import" && canImport && (
+        <ExamImportDialog assignmentId={id} currentSkeleton={skeleton} prepare={saveForAi} initialFiles={importFiles}
+          onClose={() => setDialog(null)} onApplied={async (message) => {
+            setDialog(null);
+            await showAiResult(message);
           }} />
       )}
       {dialog === "retire" && (

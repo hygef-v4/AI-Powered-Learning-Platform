@@ -10,6 +10,8 @@ import type {
   DetailsInput,
   DiagramView,
   GradingMode,
+  ImportDraft,
+  ImportPlacement,
   ImportPreview,
   Material,
   RubricDetail,
@@ -99,6 +101,8 @@ export const assignmentsApi = {
     write<AiDraft>(`/assignments/${enc(id)}/ai-drafts`, "POST", { request, mode: "REVISE", requestRef }),
   aiDraft: (id: string, draftId: string, signal?: AbortSignal) =>
     apiFetch<AiDraft>(`${base}/assignments/${enc(id)}/ai-drafts/${enc(draftId)}`, { signal }),
+  importDraft: (id: string, draftId: string, signal?: AbortSignal) =>
+    apiFetch<ImportDraft>(`${base}/assignments/${enc(id)}/ai-drafts/${enc(draftId)}`, { signal }),
   /** Đề mẫu của môn (bài do chủ nhiệm môn tạo) để chọn khi soạn bằng AI. */
   listAiTemplates: (id: string, signal?: AbortSignal) =>
     apiFetch<{ assignmentId: string; title: string }[]>(`${base}/assignments/${enc(id)}/ai-drafts/templates`, { signal }),
@@ -106,8 +110,18 @@ export const assignmentsApi = {
     apiFetch<AiSourcePreview[]>(`${base}/assignments/${enc(id)}/ai-drafts/sources:preview`, {
       method: "POST", body: JSON.stringify({ sourceFileRefs }), signal,
     }),
-  applyAiDraft: (id: string, draftId: string, version: number, replaceInstructions: boolean, replaceTitle: boolean) =>
-    write<AssignmentDetail>(`/assignments/${enc(id)}/ai-drafts/${enc(draftId)}:apply`, "POST", { version, replaceInstructions, replaceTitle }),
+  /** {@code placement} chỉ dùng cho bản nhập đề từ ảnh/PDF: thay toàn bộ hay chèn vào cuối khung đề (BR-U07-98). */
+  applyAiDraft: (id: string, draftId: string, version: number, replaceInstructions: boolean, replaceTitle: boolean,
+    placement?: ImportPlacement) =>
+    write<AssignmentDetail>(`/assignments/${enc(id)}/ai-drafts/${enc(draftId)}:apply`, "POST",
+      { version, replaceInstructions, replaceTitle, ...(placement ? { placement } : {}) }),
+  /** Nhập đề cũ từ ảnh/PDF (tối đa 5 ảnh hoặc 1 PDF): tạo bản nháp chờ AI đọc (BR-U07-87). */
+  startImport: (id: string, files: File[], requestRef: string) => {
+    const form = new FormData();
+    files.forEach((file) => form.append("files", file));
+    form.append("requestRef", requestRef);
+    return apiFetch<ImportDraft>(`${base}/assignments/${enc(id)}/imports`, { method: "POST", body: form });
+  },
   discardAiDraft: (id: string, draftId: string) => write<AiDraft>(`/assignments/${enc(id)}/ai-drafts/${enc(draftId)}:discard`, "POST"),
 };
 

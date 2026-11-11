@@ -163,6 +163,29 @@ export type AiDraft = {
   decidedAt: string | null;
 };
 
+/** Cảnh báo của bản nhập đề (BR-U07-89, 94, 96). */
+export type ImportWarning = {
+  kind: "ILLEGIBLE" | "HEADER_FOOTER_REMOVED" | "ROTATED_PAGE" | "LOW_RESOLUTION" | "FIGURE_CROP_FAILED" | "OTHER";
+  page?: number;
+  message: string;
+};
+
+/** Đề xuất của bản nháp nhập đề từ ảnh/PDF (BR-U07-97). */
+export type ImportProposal = {
+  kind: "IMPORT";
+  title: string;
+  document: DocumentModel;
+  warnings: ImportWarning[];
+  counts: { headings: number; tables: number; images: number; illegible: number };
+  /** Id khối ảnh → link tải 5 phút của hình đã cắt, chỉ để xem trước (máy chủ cấp mỗi lần đọc bản nháp). */
+  previews?: Record<string, string>;
+};
+
+/** Bản nháp nhập đề: cùng API bản nháp AI, đề xuất có {@code kind: "IMPORT"}. */
+export type ImportDraft = Omit<AiDraft, "proposal"> & { proposal: ImportProposal | null };
+
+export type ImportPlacement = "REPLACE" | "APPEND";
+
 export type ImportPreview = {
   document: DocumentModel;
   warnings: ValidationIssue[];

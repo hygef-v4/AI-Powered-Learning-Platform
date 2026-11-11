@@ -11,6 +11,7 @@ import edu.aiplatform.shared.stub.Stubs;
 import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -45,6 +46,16 @@ public class FilesContractStubs {
             @Override
             public InputStream open(String fileId) {
                 return InputStream.nullInputStream();
+            }
+
+            @Override
+            public Optional<DownloadToken> issuePreviewToken(FileRef fileRef, Actor actor) {
+                return Optional.empty();
+            }
+
+            @Override
+            public String inspect(Actor actor, ArtifactPurpose purpose, String originalFileName, byte[] content) {
+                return "application/octet-stream";
             }
         });
     }

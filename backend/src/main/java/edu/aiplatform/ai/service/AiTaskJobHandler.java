@@ -10,9 +10,11 @@ import edu.aiplatform.ai.service.IProviderGateway.ProviderException;
 import edu.aiplatform.ai.service.IProviderGateway.Request;
 import edu.aiplatform.ai.service.IProviderGateway.Response;
 import edu.aiplatform.ai.service.IProviderGateway.Usage;
+import edu.aiplatform.ai.contract.AiImage;
 import edu.aiplatform.ai.contract.AiProvider;
 import edu.aiplatform.ai.contract.AiSource;
 import edu.aiplatform.ai.contract.AiTaskState;
+import edu.aiplatform.ai.contract.AiTokenEstimate;
 import edu.aiplatform.ai.model.AiConnection;
 import edu.aiplatform.ai.model.AiConnection.Status;
 import edu.aiplatform.ai.repository.AiConnectionRepository;
@@ -40,6 +42,7 @@ import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -59,6 +62,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     static final Duration STALE_PENDING = Duration.ofMinutes(5);
     static final int MAX_RESULT_CHARS = 1_000_000;
     static final int SHARED_CONCURRENCY = 2;
+    static final String MISSING_IMAGES = "Ảnh gửi AI không còn";
 
     private final AiTaskRepository tasks;
     private final AiConnectionRepository connections;
@@ -75,6 +79,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     private final Clock clock;
     /** API chung: tối đa 2 lời gọi đồng thời mỗi provider trong một worker (NFR-U06-03). */
     private final Map<AiProvider, Semaphore> sharedSlots = new EnumMap<>(AiProvider.class);
+    private AiImageSourceRegistry imageSources = AiImageSourceRegistry.of(List.of());
 
     public AiTaskJobHandler(AiTaskRepository tasks, AiConnectionRepository connections, IProviderGateway gateway,
                             KeyCipher cipher, JsonSchemaChecker schemas, QuotaReservationService quota,
@@ -96,6 +101,11 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         for (AiProvider provider : AiProvider.values()) {
             sharedSlots.put(provider, new Semaphore(SHARED_CONCURRENCY));
         }
+    }
+
+    @Autowired(required = false)
+    void setImageSources(AiImageSourceRegistry imageSources) {
+        this.imageSources = imageSources;
     }
 
     // ---- IJobHandler ----------------------------------------------------------------------------------------
@@ -219,15 +229,35 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             }
             return next;
         }
+        List<AiImage> images = loadImages(readPrompt(task.inputPayload()));
+        if (images == null) {
+            // Ảnh đã bị dọn (bản nháp bị bỏ hoặc quá hạn): không gọi provider, hoàn chỗ quota (BR-U06-55).
+            fail(task, MISSING_IMAGES, false);
+            return null;
+        }
         save(running);
-        return dispatch(running, connection);
+        return dispatch(running, connection, images);
     }
 
-    private Dispatch dispatch(AiTask task, AiConnection connection) {
+    private Dispatch dispatch(AiTask task, AiConnection connection, List<AiImage> images) {
         String key = cipher.decrypt(connection.encryptedKey());
         JsonNode prompt = readPrompt(task.inputPayload());
         return new Dispatch(task, connection, new Request(task.model(), key, text(prompt, "system"), text(prompt, "user"),
-                task.outputSchema(), task.maxOutputTokens(), properties.requestTimeout()));
+                task.outputSchema(), task.maxOutputTokens(), properties.requestTimeout(), images));
+    }
+
+    /** Nạp bytes ảnh theo tham chiếu trong prompt; thiếu ảnh nào thì trả {@code null} (BR-U06-55). */
+    private List<AiImage> loadImages(JsonNode prompt) {
+        List<AiImage> images = new ArrayList<>();
+        for (JsonNode ref : prompt.path("images")) {
+            Optional<AiImage> image = imageSources.find(ref.path("source").asText(""))
+                    .flatMap(source -> source.load(ref.path("ref").asText("")));
+            if (image.isEmpty() || image.get().bytes() == null || image.get().bytes().length == 0) {
+                return null;
+            }
+            images.add(new AiImage(ref.path("mediaType").asText(image.get().mediaType()), image.get().bytes()));
+        }
+        return images;
     }
 
     /**
@@ -252,9 +282,19 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             order.removeIf(c -> ConnectionOrder.providerRank(c.provider()) <= rank);
         }
         JsonNode prompt = readPrompt(task.inputPayload());
-        int promptChars = text(prompt, "system").length() + text(prompt, "user").length();
+        int imageCount = prompt.path("images").size();
+        int promptChars = text(prompt, "system").length() + text(prompt, "user").length()
+                + imageCount * AiTokenEstimate.IMAGE_PROMPT_CHARS;
+        List<AiImage> images = imageCount == 0 ? List.of() : loadImages(prompt);
+        if (images == null) {
+            return null;
+        }
         for (AiConnection candidate : order.subList(at + 1, order.size())) {
             if (candidate.id().equals(task.connectionId())) {
+                continue;
+            }
+            // Prompt có ảnh: bỏ qua model không đọc được ảnh (BR-U06-58).
+            if (imageCount > 0 && !catalog.supportsImages(candidate.provider(), candidate.model())) {
                 continue;
             }
             int max = Math.min(task.maxOutputTokens(), catalog.maxOutputTokens(candidate.provider()));
@@ -274,7 +314,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             AiTask moved = task.retryWith(source, candidate.id(), candidate.provider(), candidate.model(), max, reserved,
                     day, clock.instant());
             save(moved);
-            return dispatch(tasks.findById(moved.id()).orElse(moved), candidate);
+            return dispatch(tasks.findById(moved.id()).orElse(moved), candidate, images);
         }
         return null;
     }

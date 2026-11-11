@@ -67,4 +67,17 @@ class ArtifactServiceTest {
         assertThat(token.url()).isEqualTo("/api/v1/files/download/tok");
         assertThat(token.expiresAt()).isEqualTo(now.plusSeconds(300));
     }
+
+    @Test
+    void previewTokenOnlyForTheOwnerOfAValidReferenceAndDoesNotAttach() {
+        when(tokens.issue("file-1", owner.accountId())).thenReturn("tok");
+
+        assertThat(service.issuePreviewToken(ref(owner.accountId(), ArtifactPurpose.DOCUMENT_IMAGE,
+                now.plusSeconds(60)), owner)).map(DownloadToken::url).contains("/api/v1/files/download/tok");
+        assertThat(service.issuePreviewToken(ref(owner.accountId(), ArtifactPurpose.DOCUMENT_IMAGE,
+                now.minusSeconds(1)), owner)).as("hết hạn").isEmpty();
+        assertThat(service.issuePreviewToken(ref(UUID.randomUUID(), ArtifactPurpose.DOCUMENT_IMAGE,
+                now.plusSeconds(60)), owner)).as("người khác").isEmpty();
+        assertThat(service.issuePreviewToken(new FileRef("x.y"), owner)).as("sai chữ ký").isEmpty();
+    }
 }

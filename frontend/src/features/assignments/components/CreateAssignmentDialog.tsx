@@ -7,6 +7,8 @@ import { Alert, Button, Dialog, Field, Icon, IconButton, Select, TextInput } fro
 import { AiProgress, ReferencePicker, type SourceUpload } from "./AiDraftDialog";
 import { SearchPicker } from "./SearchPicker";
 import { TemplateFileField } from "./TemplateFileField";
+import { checkImportFiles, IMPORT_ACCEPT, importKindOf } from "../model/importFiles";
+import { savePendingImport } from "../model/pendingImports";
 import { assignmentsApi, type CreateInput } from "../api";
 import { Choice, ChoiceHint as Hint } from "./Choice";
 import { errorMessage, requestRef } from "../model/format";
@@ -33,7 +35,7 @@ const AI_TARGET_POINTS = 10;
 
 /** Một câu ngắn dưới mỗi lựa chọn (yêu cầu 2026-11-10). */
 const METHOD_HINTS: Record<Method, string> = {
-  NEW: "Soạn từ đầu, có thể tải DOCX làm khung.",
+  NEW: "Soạn từ đầu, có thể tải DOCX, ảnh hoặc PDF đề cũ làm khung.",
   EXISTING: "Copy một đề có sẵn rồi sửa tiếp.",
   AI: "AI soạn đề kèm rubric, tổng 10 điểm.",
 };
@@ -58,7 +60,9 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   const [title, setTitle] = useState("");
   const [titleError, setTitleError] = useState<string | null>(null);
   const [method, setMethod] = useState<Method>("NEW");
-  const [file, setFile] = useState<File | null>(null);
+  /** Mẫu đề của Đề mới: 1 DOCX (nhập ngay), hoặc ảnh/PDF đề cũ (trang soạn bài nhờ AI đọc, BR-U07-87). */
+  const [templateFiles, setTemplateFiles] = useState<File[]>([]);
+  const file = templateFiles[0] ?? null;
   const [kind, setKind] = useState<Kind>("INDIVIDUAL");
   const [sources, setSources] = useState<CopySource[] | null>(null);
   const [sourceId, setSourceId] = useState("");
@@ -130,7 +134,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   function changeMethod(next: Method) {
     setMethod(next);
     setSourceId("");
-    setFile(null);
+    setTemplateFiles([]);
     setError(null);
     if (next === "AI") loadAiInputs();
   }
@@ -227,6 +231,13 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
       setError("Hãy đợi tải xong hoặc gỡ các tệp bị lỗi.");
       return;
     }
+    if (method === "NEW" && file && importKindOf(file) !== "DOCX") {
+      const issue = checkImportFiles(templateFiles, null);
+      if (issue) {
+        setError(issue);
+        return;
+      }
+    }
     setBusy(true);
     setError(null);
     let assignment = created ?? aiCreated;
@@ -251,7 +262,10 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
         }
         return;
       }
-      if (file) {
+      if (file && importKindOf(file) !== "DOCX") {
+        // Ảnh/PDF: trang soạn bài mở popup nhập đề và nhờ AI đọc ngay (BR-U07-87).
+        savePendingImport(assignment.id, templateFiles);
+      } else if (file) {
         const made = assignment;
         setCreated(made);
         const imported = await assignmentsApi.importDocx(made.id, file);
@@ -322,7 +336,9 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
           </Field>
           {method === "NEW" && (
             <Field label="Mẫu đề">
-              <TemplateFileField file={file} disabled={locked} onChange={setFile} />
+              <TemplateFileField file={file} files={templateFiles} disabled={locked} accept={IMPORT_ACCEPT}
+                label="Tải DOCX, ảnh hoặc PDF đề cũ" onChange={(next) => setTemplateFiles(next ? [next] : [])}
+                onFilesChange={setTemplateFiles} />
             </Field>
           )}
           {ai && (

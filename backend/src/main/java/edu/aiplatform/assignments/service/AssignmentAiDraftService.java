@@ -94,6 +94,8 @@ public class AssignmentAiDraftService {
     private final ObjectMapper json;
     private final TransactionTemplate transaction;
     private final Clock clock;
+    /** Bản nháp nhập đề từ ảnh/PDF (BR-U07-98, 99); rỗng trong test không dùng nhập đề. */
+    private AssignmentImportService assignmentImportService;
 
     public AssignmentAiDraftService(AssignmentRepository assignments, AiDraftRepository drafts, RubricService rubrics,
                                     AssignmentSupport support, AssignmentAccess access, AssignmentAudit audit,
@@ -115,6 +117,11 @@ public class AssignmentAiDraftService {
         this.json = json;
         this.transaction = new TransactionTemplate(transactions);
         this.clock = clock;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setAssignmentImportService(AssignmentImportService assignmentImportService) {
+        this.assignmentImportService = assignmentImportService;
     }
 
     /**
@@ -340,12 +347,16 @@ public class AssignmentAiDraftService {
     public AssignmentViews.AiDraft get(Actor actor, UUID id, UUID draftId) {
         return transaction.execute(status -> {
             support.manageable(actor, id, "ASSIGNMENT_AI_DRAFT_VIEW");
-            return view(draft(id, draftId));
+            return AssignmentImportService.withPreviews(view(draft(id, draftId)), actor, artifacts);
         });
     }
 
     /** F6 bước 6 (BR-U07-51): thay khung (và hướng dẫn nếu chọn), tính lại phần, điền gợi ý rubric. */
     public AssignmentViews.Detail apply(Actor actor, UUID id, UUID draftId, AssignmentCommands.ApplyDraft command) {
+        if (assignmentImportService != null && drafts.find(draftId).filter(d -> d.assignmentId().equals(id))
+                .map(d -> AssignmentImportService.isImport(d.proposal())).orElse(false)) {
+            return assignmentImportService.applyImport(actor, id, draftId, command);
+        }
         return transaction.execute(status -> {
             Assignment current = support.lockEditable(actor, id, command.version(), "ASSIGNMENT_AI_DRAFT_APPLIED");
             AssignmentAiDraft draft = draft(id, draftId);
@@ -464,6 +475,10 @@ public class AssignmentAiDraftService {
             } catch (RuntimeException ignored) {
                 // Hủy task là việc phụ; đề xuất đã bỏ.
             }
+        }
+        if (assignmentImportService != null) {
+            // Bản nháp nhập đề: ảnh trang không còn cần (BR-U07-99); bản nháp khác không có trang nên không đổi gì.
+            assignmentImportService.discardPages(draftId);
         }
         return view(drafts.find(draftId).orElseThrow());
     }
@@ -682,12 +697,12 @@ public class AssignmentAiDraftService {
                 options.path("requireTitle").asBoolean(false));
     }
 
-    private AssignmentViews.AiDraft view(AssignmentAiDraft d) {
+    static AssignmentViews.AiDraft view(AssignmentAiDraft d) {
         return new AssignmentViews.AiDraft(d.id(), d.assignmentId(), d.origin().name(), d.status().name(), d.taskId(),
                 d.proposal(), safeProvenance(d.provenance()), d.safeError(), d.baseVersion(), d.createdAt(), d.decidedAt());
     }
 
-    private ObjectNode safeProvenance(JsonNode provenance) {
+    private static ObjectNode safeProvenance(JsonNode provenance) {
         ObjectNode safe = provenance != null && provenance.isObject()
                 ? ((ObjectNode) provenance).deepCopy() : JsonNodeFactory.instance.objectNode();
         safe.remove("materialIds");
@@ -715,7 +730,7 @@ public class AssignmentAiDraftService {
         return out;
     }
 
-    private static UUID draftId(String targetRef) {
+    static UUID draftId(String targetRef) {
         if (targetRef == null || !targetRef.startsWith(TARGET_PREFIX)) {
             return null;
         }

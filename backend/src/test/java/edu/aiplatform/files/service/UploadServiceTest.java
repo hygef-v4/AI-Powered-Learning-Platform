@@ -127,6 +127,34 @@ class UploadServiceTest {
     }
 
     @Test
+    void inspectsExamImportFileWithoutStoringIt() {
+        String mediaType = service.inspectFile(teacher, ArtifactPurpose.ASSIGNMENT_IMPORT, "de.pdf", TestFiles.PDF);
+
+        assertThat(mediaType).isEqualTo("application/pdf");
+        verify(storage, never()).put(any(), any(), any());
+        assertThat(dir.resolve("tmp")).isEmptyDirectory();
+    }
+
+    @Test
+    void inspectRejectsWrongTypeAndOversizedExamImports() {
+        when(settings.get(PurposePolicy.ASSIGNMENT_IMPORT_MAX_MB)).thenReturn(Optional.of(1));
+        byte[] big = new byte[1024 * 1024 + 1];
+        System.arraycopy(TestFiles.PNG, 0, big, 0, TestFiles.PNG.length);
+
+        assertThatThrownBy(() -> service.inspectFile(teacher, ArtifactPurpose.ASSIGNMENT_IMPORT, "a.png", TestFiles.TEXT))
+                .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+        assertThatThrownBy(() -> service.inspectFile(teacher, ArtifactPurpose.ASSIGNMENT_IMPORT, "a.png", big))
+                .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
+    }
+
+    @Test
+    void examImportPurposeCannotBeStored() {
+        assertThatThrownBy(() -> service.upload(teacher, ArtifactPurpose.ASSIGNMENT_IMPORT, upload("a.png", TestFiles.PNG)))
+                .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.BAD_REQUEST);
+        verify(storage, never()).put(any(), any(), any());
+    }
+
+    @Test
     void rejectsRenamedFileAndAuditsIt() {
         assertThatThrownBy(() -> service.upload(teacher, ArtifactPurpose.MATERIAL, upload("anh.pdf", TestFiles.PNG)))
                 .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
