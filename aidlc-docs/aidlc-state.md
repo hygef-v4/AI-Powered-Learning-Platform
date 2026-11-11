@@ -682,3 +682,24 @@ Evidence: construction/build-and-test/2026-11-10-student-published-result-entry.
 Plan: construction/plans/code-generation-plan/2026-11-11-editable-grades-and-background-ai.md. Evidence: construction/build-and-test/2026-11-11-editable-grades-and-background-ai.md. Security/Resiliency compliant for existing scope; PBT disabled. Existing U12 preservation of official group grades on resubmission remains, with stale-receipt edits denied. Student tabs see saved corrections on load/refetch; no realtime push added.
 
 User subsequently authorized descriptive local commits. Source/tests and documentation recorded separately; fresh precommit frontend grading/assignment-work run passed211 tests/25 files. No push or deployment.
+
+## Ba lỗi UI/UX staging — 2026-11-11
+
+Người dùng duyệt "sửa 3 lỗi trên". Baseline origin/staging ce40e447; thực hiện tại worktree riêng `.claude/worktrees/ui-ux-staging`, nhánh `codex/ui-ux-staging`.
+
+- [x] Workspace Detection, yêu cầu và kế hoạch sửa giới hạn; dùng lại brownfield context.
+- [x] Pagination/PageNav xuống dòng; Switch có accessible name từ nhãn; Field nối lỗi tới control và giữ focus khi lỗi thay đổi.
+- [x] 332 test/51 file, TypeScript, ESLint, diff check qua. Production build exit 0, có cảnh báo font bị chặn và 27 standalone traced files ở ngoài root do junction dependency.
+- [x] Ghi giới hạn: chưa kiểm tra layout trên browser/mobile, chưa xác nhận standalone deployment; không commit/push/deploy hay thay checkout gốc.
+
+[Kế hoạch](construction/plans/code-generation-plan/2026-11-11-three-ui-fixes.md) và [kết quả](construction/build-and-test/2026-11-11-three-ui-fixes.md). Security/Resiliency giữ phạm vi đã duyệt, PBT disabled. Các stage thiết kế mới/stories/hạ tầng/operations không cần cho ba lỗi hiện hữu.
+
+### Staging readiness — ba lỗi UI/UX, 2026-11-11
+
+- [x] Fetch origin/staging vẫn cùng ce40e447; review không thấy blocker.
+- [x] Full frontend 963 test/135 file qua; Docker build sạch cảnh báo font/tracing và image smoke test health UP/login/icon 200.
+- [x] Đủ điều kiện commit/tạo PR staging; merge sau CI PR. Chưa commit/push/merge; chưa xác minh browser/mobile thực. Chi tiết trong báo cáo ba lỗi UI/UX ở trên.
+
+### Cho phép tạo PR — ba lỗi UI/UX, 2026-11-11
+
+Người dùng yêu cầu "tạo pr vào staging cho tôi". Cho phép commit/push nhánh `codex/ui-ux-staging` và tạo PR base `staging`; không bao gồm merge. Source là bản đã qua 963 test/135 file và Docker smoke. Trạng thái phát hành cuối theo PR GitHub và phản hồi giao hàng.

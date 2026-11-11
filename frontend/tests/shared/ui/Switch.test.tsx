@@ -1,7 +1,24 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { Switch } from "@/shared/ui";
+
+it("dùng nhãn hiển thị khi không truyền tên trợ năng riêng", () => {
+  const onChange = vi.fn();
+  render(<Switch checked={false} label={<strong>Ghi nhận hoạt động</strong>} onChange={onChange} />);
+  const toggle = screen.getByRole("switch", { name: "Ghi nhận hoạt động" });
+  fireEvent.click(toggle);
+  expect(onChange).toHaveBeenCalledWith(true);
+});
+
+it("ưu tiên ariaLabel và giữ tên riêng cho các công tắc", () => {
+  render(<>
+    <Switch checked label="Bật" ariaLabel="Bật học liệu" onChange={vi.fn()} />
+    <Switch checked={false} label="Ghi nhận hoạt động" onChange={vi.fn()} disabled />
+  </>);
+  expect(screen.getByRole("switch", { name: "Bật học liệu" })).toBeChecked();
+  expect(screen.getByRole("switch", { name: "Ghi nhận hoạt động" })).toBeDisabled();
+});
 
 function Saved({ save }: { save: (next: boolean) => Promise<void> }) {
   const [value, setValue] = useState(false);

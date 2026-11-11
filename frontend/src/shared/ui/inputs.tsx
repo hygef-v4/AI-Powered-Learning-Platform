@@ -1,5 +1,8 @@
 "use client";
-import { useRef, useState, type InputHTMLAttributes, type KeyboardEvent, type ReactNode, type SelectHTMLAttributes } from "react";
+import {
+  Children, Fragment, cloneElement, isValidElement, useId, useRef, useState,
+  type InputHTMLAttributes, type KeyboardEvent, type ReactNode, type SelectHTMLAttributes,
+} from "react";
 import { cx } from "./cx";
 import { Icon, type IconName } from "./Icon";
 
@@ -22,21 +25,46 @@ type FieldProps = {
 
 /** Nhãn, ô nhập và lỗi của một trường. */
 export function Field({ label, htmlFor, required, error, children }: FieldProps) {
+  const errorId = useId();
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
       <label htmlFor={htmlFor} className="text-xs font-semibold text-body">
         {label}
         {required && <span className="text-primary-ink"> *</span>}
       </label>
-      {children}
+      {htmlFor ? describeField(children, htmlFor, error ? errorId : undefined) : children}
       {error && (
-        <p role="alert" className="flex animate-fade items-center gap-1 text-xs text-danger">
+        <p id={errorId} role="alert" className="flex animate-fade items-center gap-1 text-xs text-danger">
           <Icon name="error" size={13} />
           {error}
         </p>
       )}
     </div>
   );
+}
+
+type DescribedControlProps = {
+  id?: string;
+  "aria-describedby"?: string;
+  children?: ReactNode;
+};
+
+/** Nối đúng ô mà label trỏ tới; chỉ đi qua wrapper DOM/Fragment, không sửa cây của component khác. */
+function describeField(children: ReactNode, controlId: string, errorId?: string): ReactNode {
+  return Children.map(children, (child) => {
+    if (!isValidElement<DescribedControlProps>(child)) return child;
+    if (child.props.id === controlId && errorId) {
+      return cloneElement(child, {
+        "aria-describedby": [child.props["aria-describedby"], errorId].filter(Boolean).join(" "),
+      });
+    }
+    if ((typeof child.type === "string" || child.type === Fragment) && child.props.children) {
+      return cloneElement(child, {
+        children: describeField(child.props.children, controlId, errorId),
+      });
+    }
+    return child;
+  });
 }
 
 type TextInputProps = InputHTMLAttributes<HTMLInputElement> & {
@@ -96,6 +124,7 @@ type SwitchProps = {
  * (disabled, `aria-busy`) tới khi lưu xong, để không bấm chồng; lưu xong thì theo `checked` của trang (lỗi thì tự về giá trị cũ).
  */
 export function Switch({ checked, onChange, label, ariaLabel, disabled }: SwitchProps) {
+  const labelId = useId();
   const [pending, setPending] = useState<boolean | null>(null);
   const shown = pending ?? checked;
   function toggle() {
@@ -114,6 +143,7 @@ export function Switch({ checked, onChange, label, ariaLabel, disabled }: Switch
         role="switch"
         aria-checked={shown}
         aria-label={ariaLabel}
+        aria-labelledby={ariaLabel ? undefined : labelId}
         aria-busy={pending !== null || undefined}
         disabled={disabled || pending !== null}
         onClick={toggle}
@@ -134,7 +164,7 @@ export function Switch({ checked, onChange, label, ariaLabel, disabled }: Switch
           )}
         />
       </button>
-      <span>{label}</span>
+      <span id={labelId}>{label}</span>
     </span>
   );
 }
