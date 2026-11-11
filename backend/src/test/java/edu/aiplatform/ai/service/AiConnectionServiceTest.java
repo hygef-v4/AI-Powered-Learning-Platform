@@ -84,7 +84,7 @@ class AiConnectionServiceTest {
         verify(repository).insert(saved.capture());
         assertThat(saved.getValue().keyCiphertext()).isNotEmpty();
         assertThat(new String(saved.getValue().keyCiphertext())).doesNotContain("secret");
-        assertThat(cipher.decrypt(saved.getValue().encryptedKey())).isEqualTo("AIzaSyD-secret-3kQf");
+        assertThat(cipher.decryptConnectionKey(saved.getValue())).isEqualTo("AIzaSyD-secret-3kQf");
         assertThat(view.keyHint()).isEqualTo("3kQf");
         assertThat(view.toString()).doesNotContain("secret");
         ArgumentCaptor<AuditEvent> event = ArgumentCaptor.forClass(AuditEvent.class);
@@ -170,30 +170,27 @@ class AiConnectionServiceTest {
     }
 
     @Test
-    void adminRevealsSavedSchoolKeyAndAuditsIt() {
-        AiConnection shared = existing(AiConnection.Scope.INSTITUTIONAL);
-        when(repository.findById(shared.id())).thenReturn(Optional.of(shared));
-
-        assertThat(service.revealInstitutional(admin, shared.id())).isEqualTo("AIzaSy-old-key-0000");
-        ArgumentCaptor<edu.aiplatform.audit.contract.AuditEvent> event =
-                ArgumentCaptor.forClass(edu.aiplatform.audit.contract.AuditEvent.class);
-        verify(audit, org.mockito.Mockito.atLeastOnce()).record(event.capture());
-        assertThat(event.getAllValues()).extracting(edu.aiplatform.audit.contract.AuditEvent::action)
-                .contains("AI_CONNECTION_KEY_REVEALED");
-        assertThat(event.getAllValues().toString()).doesNotContain("AIzaSy-old-key-0000");
+    void savedKeysCannotBeReadBackThroughTheService() {
+        assertThat(java.util.Arrays.stream(AiConnectionService.class.getMethods())
+                .map(java.lang.reflect.Method::getName))
+                .noneMatch(name -> name.toLowerCase(java.util.Locale.ROOT).contains("reveal"));
     }
 
     @Test
-    void institutionalRevealAllowsDisabledButNeverPersonalRevokedOrMissing() {
-        AiConnection shared=existing(AiConnection.Scope.INSTITUTIONAL);
-        when(repository.findById(shared.id())).thenReturn(Optional.of(shared.withStatus(Status.DISABLED,NOW)));
-        assertThat(service.revealInstitutional(admin,shared.id())).isEqualTo("AIzaSy-old-key-0000");
-        when(repository.findById(shared.id())).thenReturn(Optional.of(shared.revoked(NOW)));
-        assertThatThrownBy(()->service.revealInstitutional(admin,shared.id())).isInstanceOf(ApiException.class);
-        var personal=existing(AiConnection.Scope.PERSONAL);
+    void replacedKeyStaysBoundToItsOwnConnection() {
+        AiConnection personal = existing(AiConnection.Scope.PERSONAL);
         when(repository.findById(personal.id())).thenReturn(Optional.of(personal));
-        assertThatThrownBy(()->service.revealInstitutional(admin,personal.id())).isInstanceOf(ApiException.class);
-        assertThatThrownBy(()->service.revealInstitutional(admin,UUID.randomUUID())).isInstanceOf(ApiException.class);
+
+        service.replacePersonal(teacher, personal.id(), new SaveCommand("AIzaSy-new-key-7777", "gemini-2.5-flash", 2L));
+
+        ArgumentCaptor<AiConnection> updated = ArgumentCaptor.forClass(AiConnection.class);
+        verify(repository).update(updated.capture());
+        assertThat(cipher.decryptConnectionKey(updated.getValue())).isEqualTo("AIzaSy-new-key-7777");
+        AiConnection other = existing(AiConnection.Scope.PERSONAL);
+        AiConnection copied = new AiConnection(other.id(), other.scope(), other.ownerId(), other.provider(),
+                other.model(), updated.getValue().keyCiphertext(), updated.getValue().keyIv(),
+                updated.getValue().keyVersion(), other.keyHint(), other.status(), null, null, NOW, NOW, 2);
+        assertThatThrownBy(() -> cipher.decryptConnectionKey(copied)).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -221,9 +218,10 @@ class AiConnectionServiceTest {
     }
 
     private AiConnection existing(AiConnection.Scope scope) {
-        AiConnection created = AiConnection.create(UUID.randomUUID(), scope,
-                scope == AiConnection.Scope.PERSONAL ? teacher.accountId() : null, AiProvider.GEMINI, "gemini-2.5-flash",
-                cipher.encrypt("AIzaSy-old-key-0000"), "0000", NOW);
+        UUID id = UUID.randomUUID();
+        UUID ownerId = scope == AiConnection.Scope.PERSONAL ? teacher.accountId() : null;
+        AiConnection created = AiConnection.create(id, scope, ownerId, AiProvider.GEMINI, "gemini-2.5-flash",
+                cipher.encryptConnectionKey(id, scope, ownerId, AiProvider.GEMINI, "AIzaSy-old-key-0000"), "0000", NOW);
         return new AiConnection(created.id(), created.scope(), created.ownerId(), created.provider(), created.model(),
                 created.keyCiphertext(), created.keyIv(), created.keyVersion(), created.keyHint(), created.status(), null,
                 null, NOW, NOW, 2);

@@ -354,9 +354,8 @@ class PlatformWorkflowIntegrationTest {
         String key = "integration-only-key-never-sent";
         var saved = aiConnectionService.addPersonal(actor(Role.TEACHER), AiProvider.OPENAI,
                 new AiConnectionService.SaveCommand(key, "gpt-6.1-sol", null));
-        assertThat(aiConnectionService.revealPersonal(actor(Role.TEACHER), saved.id())).isEqualTo(key);
-        assertThatThrownBy(() -> aiConnectionService.revealPersonal(actor(Role.STUDENT), saved.id()))
-                .isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> aiConnectionService.setPersonalEnabled(actor(Role.STUDENT), saved.id(), false,
+                saved.version())).isInstanceOf(ApiException.class);
         var disabled = aiConnectionService.setPersonalEnabled(actor(Role.TEACHER), saved.id(), false, saved.version());
         assertThat(disabled.status().name()).isEqualTo("DISABLED");
         assertThat(jdbc.queryForObject("select row_to_json(c)::text from ai_connections c where id=?",

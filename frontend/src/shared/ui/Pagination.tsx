@@ -57,7 +57,7 @@ export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "b
         </p>
       )}
       {count > 1 && (
-        <nav aria-label="Phân trang" className="flex items-center gap-1.5">
+        <nav aria-label="Phân trang" className="flex max-w-full flex-wrap items-center justify-center gap-1.5">
           <button
             type="button"
             aria-label="Trang trước"

@@ -43,6 +43,7 @@ it("trong lớp: không có ô chọn lớp, không ghi mã lớp hay đã sửa
   const card = await screen.findByTestId("announcement-card");
   expect(announcementsApi.list).toHaveBeenCalledWith("c1", 1, 20, expect.any(AbortSignal));
   expect(screen.queryByTestId("announcement-class-filter")).not.toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Thông báo lớp", level: 1 })).toBeInTheDocument();
   expect(within(card).queryByText("SE1801")).not.toBeInTheDocument();
   expect(card).not.toHaveTextContent("đã sửa");
   expect(within(card).getByRole("heading", { name: item.title })).toBeInTheDocument();
@@ -74,6 +75,7 @@ it("menu chính: lọc theo lớp, ghi mã lớp; popup chọn nhiều lớp nga
   vi.mocked(announcementsApi.create).mockResolvedValue(item);
   render(<ClassAnnouncementsPage />);
   const card = await screen.findByTestId("announcement-card");
+  expect(screen.getByRole("heading", { name: "Tất cả thông báo", level: 1 })).toBeInTheDocument();
   expect(within(card).getByText("SE1801")).toBeInTheDocument();
   // Ô lọc cùng kiểu ô chuyển lớp trên sidebar: mã nhỏ trên tên, chọn một mục trong menu.
   expect(screen.getByTestId("announcement-class-filter")).toHaveTextContent("Tất cả lớp");
