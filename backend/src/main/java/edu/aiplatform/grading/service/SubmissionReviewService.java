@@ -132,6 +132,35 @@ public class SubmissionReviewService {
                 .orElseThrow(() -> ApiException.notFound("ASSIGNMENT_NOT_FOUND"));
         requireAssignment(assignment, courseClass);
         var evals = evaluationRepository.findForAssignmentAndClass(assignmentId, classId);
+        var students = classAccess.listActiveStudents(classId);
+        return buildListing(classId, assignmentId, assignment, evals, filter, late, students,
+                accountLookup.getContacts(students));
+    }
+
+    public Map<UUID, SubmissionPage> loadProgress(Actor actor, UUID classId) {
+        gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
+        gradingAccess.requireTeacher(actor, classId, Actions.GRADING_REVIEW);
+        var courseClass = classAccess.getClassRef(classId)
+                .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+        var students = classAccess.listActiveStudents(classId);
+        var contacts = accountLookup.getContacts(students);
+        var all = evaluationRepository.findForClass(classId).stream()
+                .collect(java.util.stream.Collectors.groupingBy(e -> e.assignmentId));
+        var result = new LinkedHashMap<UUID, SubmissionPage>();
+        for (var assignment : assignmentQuery.listForClass(classId)) {
+            if (!GradebookService.isGradable(assignment)) continue;
+            requireAssignment(assignment, courseClass);
+            var listing = buildListing(classId, assignment.assignmentId(), assignment,
+                    all.getOrDefault(assignment.assignmentId(), List.of()), null, null, students, contacts);
+            result.put(assignment.assignmentId(), new SubmissionPage(listing.rows().stream().limit(1).toList(),
+                    listing.rows().size(), 1, 1, listing.summary(), listing.closesAt()));
+        }
+        return result;
+    }
+
+    private Listing buildListing(UUID classId, UUID assignmentId, AssignmentView assignment,
+            List<edu.aiplatform.grading.model.Evaluation> evals, String filter, Boolean late, List<UUID> students,
+            Map<UUID, edu.aiplatform.identity.contract.AccountContact> contacts) {
         List<SubmissionRow> rows = new ArrayList<>();
         if (assignment.submissionMode() == SubmissionMode.GROUP) {
             var provider = groupSubmissionSourceProvider.getIfAvailable();
@@ -158,8 +187,6 @@ public class SubmissionReviewService {
             Map<UUID, StudentSubmissionStatus> source = new HashMap<>();
             for (var submission : submissionQuery.listSubmissions(assignmentId, classId))
                 source.put(submission.accountId(), submission);
-            var students = classAccess.listActiveStudents(classId);
-            var contacts = accountLookup.getContacts(students);
             for (var sid : students) {
                 var submission = source.get(sid);
                 var evaluation = submission == null ? null
@@ -324,6 +351,7 @@ public class SubmissionReviewService {
         return new EvaluationDetail(evaluation, document,
                 GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot), navigationIds,
                 activityValue, activityState, members, memberActivities, authors, current,
-                groupEvaluationId);
+                groupEvaluationId, current
+                        && courseClass.status() == edu.aiplatform.academics.contract.ClassStatus.OPEN);
     }
 }

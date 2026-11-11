@@ -78,7 +78,10 @@ export function IconButton({
       title={label}
       style={{ width: size, height: size }}
       className={cx(
-        "inline-flex shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors duration-200",
+        "relative inline-flex shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors duration-200",
+        // Màn cảm ứng: vùng chạm 44px quanh nút, hình vẽ giữ nguyên.
+        "pointer-coarse:after:absolute pointer-coarse:after:top-1/2 pointer-coarse:after:left-1/2 pointer-coarse:after:size-11",
+        "pointer-coarse:after:-translate-1/2 pointer-coarse:after:content-['']",
         "hover:bg-sunken hover:text-ink active:scale-95 disabled:cursor-not-allowed disabled:opacity-45",
         className,
       )}

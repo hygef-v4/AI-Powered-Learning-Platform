@@ -8,6 +8,7 @@ import { errorMessage, formatDateTime, requestRef } from "../model/format";
 import type { Feedback } from "../model/types";
 
 const POLL_MS = 3000;
+const MAX_POLLS = 60;
 
 /** Góp ý AI theo lượt Practice đã nộp (F9, F10, UC 41). */
 export function PracticeFeedbackPanel({ attemptId, partTitles }: {
@@ -36,15 +37,16 @@ export function PracticeFeedbackPanel({ attemptId, partTitles }: {
 
   const hasPending = items?.some((item) => item.status === "PENDING") ?? false;
   useEffect(() => {
-    if (!hasPending || loadError !== null) return;
+    if (!hasPending || loadError !== null || refreshCount >= MAX_POLLS) return;
     const timer = setTimeout(() => setRefreshCount((value) => value + 1), POLL_MS);
     return () => clearTimeout(timer);
-  }, [hasPending, items, loadError]);
+  }, [hasPending, items, loadError, refreshCount]);
 
   async function handleRequestFeedback() {
     setIsRequesting(true);
     setRequestError(null);
     try {
+      setRefreshCount(0);
       const result = await workApi.requestFeedback(attemptId, feedbackRequestRef);
       setItems((previous) => [result, ...(previous ?? []).filter((item) => item.feedbackId !== result.feedbackId)]);
       setFeedbackRequestRef(requestRef());
@@ -75,7 +77,7 @@ export function PracticeFeedbackPanel({ attemptId, partTitles }: {
       {items && items.length === 0 && <p className="text-sm text-muted">Chưa có góp ý.</p>}
       {items?.map((item) => (
         <article key={item.feedbackId} className="flex flex-col gap-2 rounded-lg border border-line p-3 wrap-anywhere">
-          <p className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted">
+          <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
             {item.status === "READY" && <Pill tone="warning">Góp ý tham khảo</Pill>}
             {item.status === "PENDING" && <Pill tone="info">Đang chờ</Pill>}
             {item.status === "FAILED" && <Pill tone="danger">Không nhận được góp ý</Pill>}
@@ -119,6 +121,9 @@ export function PracticeFeedbackPanel({ attemptId, partTitles }: {
           )}
         </article>
       ))}
+      {hasPending && refreshCount >= MAX_POLLS && <p role="status" className="text-xs text-muted">
+        AI vẫn đang xử lý. <Button size="sm" onClick={() => setRefreshCount(0)}>Kiểm tra lại góp ý</Button>
+      </p>}
       <p className="text-xs text-muted">
         Bạn có thể quản lý khóa API cá nhân tại{" "}
         <Link href="/ai/connection" className="font-semibold text-primary-ink">Kết nối AI</Link>.

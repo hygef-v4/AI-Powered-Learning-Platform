@@ -6,24 +6,26 @@ import { formatErrorMessage } from "../model/format";
 export function GradebookExportDialog({
   classId,
   assignments,
+  initialAssignmentId = "",
   onClose,
 }: {
   classId: string;
   assignments: { id: string; title: string }[];
+  initialAssignmentId?: string;
   onClose: () => void;
 }) {
   const [format, setFormat] = useState("xlsx");
-  const [assignment, setAssignment] = useState("");
+  const [assignment, setAssignment] = useState(initialAssignmentId);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   async function handleDownload() {
     setBusy(true);
     try {
-      const blob = await gradingApi.exportGrades(classId, format, assignment || undefined);
+      const { blob, filename } = await gradingApi.exportGrades(classId, format, assignment || undefined);
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `gradebook-${new Date().toISOString().slice(0, 10)}.${format}`;
+      anchor.download = filename || `${assignments.find((item) => item.id === assignment)?.title || "Bảng điểm tổng hợp"}.${format}`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();

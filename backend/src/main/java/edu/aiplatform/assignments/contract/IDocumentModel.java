@@ -19,6 +19,9 @@ public interface IDocumentModel {
 
     String compactDiagramXml(String xml);
 
+    /** Whether a valid Draw.io document has shapes or connectors, including compressed pages. */
+    boolean hasDiagramContent(String xml);
+
     /**
      * Bản để lưu: làm sạch SVG xem trước của sơ đồ (bỏ script, thuộc tính sự kiện, tham chiếu ngoài), bỏ khóa lạ
      * trong nội dung block. Gọi trước {@code validate*} khi lưu khung hoặc bài làm (NFR-U07-30).

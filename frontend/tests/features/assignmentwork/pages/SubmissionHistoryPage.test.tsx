@@ -1,3 +1,4 @@
+import { attemptResultSources } from "@/features/assignmentwork/slots";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { workApi } from "@/features/assignmentwork/api";
@@ -143,6 +144,28 @@ describe("SubmissionHistoryPage (yêu cầu 2026-11-10)", () => {
     expect(load).not.toHaveBeenCalled();
   });
 
+  it("opens current graded submission before deadline despite a newer draft, without opening older history", async () => {
+    vi.spyOn(workApi, "detail").mockResolvedValue({ ...pastDeadline, serverTime: "2026-10-25T23:00:00Z" });
+    vi.spyOn(workApi, "history").mockResolvedValue([
+      summary({ attemptId: "draft", attemptNo: 3, status: "IN_PROGRESS", graded: false }),
+      summary({ attemptId: "graded", attemptNo: 2, graded: true }),
+      summary({ attemptId: "old", attemptNo: 1 }),
+    ]);
+    const load = vi.spyOn(workApi, "attempt").mockImplementation(async (id) => attempt(id));
+    vi.spyOn(attemptResultSources, "entries").mockReturnValue([{ key: "test", load: async () => ({
+      score: 8, maxScore: 10, publishedAt: "2026-10-25T22:00:00Z", updated: false, memberOverride: false,
+      feedback: "Nhận xét đã công bố", summary: null, items: [],
+    }) }]);
+
+    render(<SubmissionHistoryPage assignmentId="x" />);
+
+    expect(await screen.findByText("Nhận xét đã công bố")).toBeInTheDocument();
+    expect(load).toHaveBeenCalledWith("graded", expect.anything());
+    expect(load).not.toHaveBeenCalledWith("draft", expect.anything());
+    expect(load).not.toHaveBeenCalledWith("old", expect.anything());
+    expect(screen.queryByRole("combobox", { name: "Chọn bài nộp" })).not.toBeInTheDocument();
+  });
+
   it("bài luyện tập: đủ các lượt đã nộp, chỉ ghi giờ, không ghi lượt", async () => {
     vi.spyOn(workApi, "detail").mockResolvedValue({ ...pastDeadline, gradingMode: "PRACTICE", serverTime: "2026-10-25T23:00:00Z" });
     vi.spyOn(workApi, "history").mockResolvedValue([summary({ attemptId: "a2", attemptNo: 2 }), summary({ attemptId: "a1", attemptNo: 1 })]);
@@ -175,4 +198,22 @@ describe("resultByPart", () => {
       expect.objectContaining({ title: "Chương 2", awarded: 1, max: 2 }),
     ]);
   });
+});
+
+
+it("shows published teacher feedback, summary and rubric evidence", async () => {
+  vi.spyOn(workApi, "detail").mockResolvedValue({ ...pastDeadline, serverTime: "2026-11-10T00:01:00Z" });
+  vi.spyOn(workApi, "history").mockResolvedValue([summary({ graded: true })]);
+  vi.spyOn(workApi, "attempt").mockResolvedValue(attempt("a1"));
+  attemptResultSources.register({ key: "feedback-test", order: -1, load: async () => ({
+    score: 3, maxScore: 4, publishedAt: "2026-11-10T00:00:00Z", updated: false, memberOverride: false,
+    feedback: "Nhận xét của giảng viên", summary: { strengths: ["Thiết kế tốt"], improvements: ["Thiếu liên kết"], nextSteps: ["Thêm quan hệ"] },
+    items: [{ rubricId: "r", partId: "ASSIGNMENT", criterionTitle: "Mô hình", itemText: "Quan hệ lớp",
+      awarded: 3, max: 4, evidence: "Trích dẫn bài làm", reason: "Còn thiếu", suggestion: "Bổ sung kết nối" }],
+  }) });
+  render(<SubmissionHistoryPage assignmentId="x" />);
+  expect(await screen.findByText("Nhận xét của giảng viên")).toBeInTheDocument();
+  expect(screen.getByText("Thiết kế tốt")).toBeInTheDocument();
+  expect(screen.getByText("Trích dẫn bài làm")).toBeInTheDocument();
+  expect(screen.getByText("Bổ sung kết nối")).toBeInTheDocument();
 });

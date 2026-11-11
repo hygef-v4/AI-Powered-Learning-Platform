@@ -49,9 +49,12 @@ class AttemptSubmitter {
     /** Nộp lượt đã khóa dòng; trả {@code false} nếu lượt đã nộp trước đó. */
     boolean submit(AssignmentAttempt attempt, SubmitMode mode, UUID actorId, Instant now, Instant closesAt,
                    List<ValidationIssue> warnings) {
+        Instant lateUntil = assignments.get(attempt.assignmentId())
+                .map(AssignmentView::lateUntil)
+                .orElse(attempt.snapshot().lateUntil());
         Instant effective = mode == SubmitMode.MANUAL ? now
                 : attempt.lastSavedAt() != null ? attempt.lastSavedAt() : attempt.startedAt();
-        boolean late = closesAt != null && effective.isAfter(closesAt);
+        boolean late = lateUntil != null && closesAt != null && effective.isAfter(closesAt);
         String hash = receiptHash(attempt.content());
         if (attempts.submit(attempt.id(), mode, late, hash, now, warnings) != 1) {
             return false;

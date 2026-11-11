@@ -10,11 +10,13 @@ export function MemberContributionPanel({
   members,
   names,
   onSaved,
+  editable = true,
 }: {
   root: Evaluation;
   members: Evaluation[];
   names: Record<string, string>;
   onSaved: () => void;
+  editable?: boolean;
 }) {
   return (
     <section id="group-member-grades" aria-labelledby="group-member-grades-title" tabIndex={-1}
@@ -37,7 +39,7 @@ export function MemberContributionPanel({
           <MemberRow
             key={`${member.id}-${member.version}`}
             rootId={root.id}
-            locked={root.state === "FINALIZED" || root.state === "PUBLISHED" || root.state === "SUPERSEDED"}
+            locked={!editable || root.state === "SUPERSEDED"}
             member={member}
             name={names[member.accountId!] ?? "Thành viên"}
             onSaved={onSaved}
@@ -65,7 +67,7 @@ function MemberRow({
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const disabled = locked || busy || member.state === "FINALIZED" || member.state === "PUBLISHED" || member.state === "SUPERSEDED";
+  const disabled = locked || busy || member.state === "SUPERSEDED";
   async function handleSave() {
     if (disabled) return;
     setBusy(true);

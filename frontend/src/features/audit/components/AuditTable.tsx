@@ -15,7 +15,7 @@ export const SYSTEM_ACTOR = "Hệ thống";
 /** Ô chữ dài: tối đa 2 dòng, dài hơn thì cắt (đủ chữ khi rê chuột). */
 const CLAMP = "line-clamp-2 leading-snug";
 
-const HEAD = "border-b border-line bg-sunken px-3 py-2.5 text-left text-[11px] font-semibold tracking-[.06em] whitespace-nowrap text-muted uppercase";
+const HEAD = "border-b border-line bg-sunken px-3 py-2.5 text-left text-xs font-semibold tracking-[.06em] whitespace-nowrap text-muted uppercase";
 
 /**
  * Bảng bản ghi audit (artboard a13): nền trắng, hàng tiêu đề tô màu nền phụ, chỉ xem. Mỗi cột rộng theo nội dung của nó:
@@ -52,7 +52,7 @@ export function AuditTable({ data, onPageChange }: Props) {
             {data.items.length === 0 && (
               <tr>
                 <Td colSpan={7} className="px-3 text-muted" data-testid="audit-table-empty">
-                  Không có bản ghi nào khớp bộ lọc.
+                  Không có bản ghi nào phù hợp.
                 </Td>
               </tr>
             )}

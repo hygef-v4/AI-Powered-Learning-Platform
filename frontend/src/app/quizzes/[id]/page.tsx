@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { QuizDetailPage } from "@/features/quizzes/pages/QuizDetailPage";
+
+export const metadata: Metadata = { title: "Quiz" };
 
 // U10 #22 Quiz Detail; ?classId= khi giảng viên mở quiz của môn từ lớp mình dạy (chỉ xem).
 export default async function Page({ params, searchParams }: {

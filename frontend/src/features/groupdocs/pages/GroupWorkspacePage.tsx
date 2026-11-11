@@ -1,11 +1,12 @@
 "use client";
+import { studentAssignmentFeedback } from "@/features/assignmentwork/slots";
 
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { formatDateTime } from "@/features/groups/model/format";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, Dialog, Pill, Section, TableFrame, Td, Th, cx, type Tone } from "@/shared/ui";
+import { Alert, Button, Dialog, Pill, Section, TableFrame, Tabs, Td, Th, cx, type Tone } from "@/shared/ui";
 import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import { DocumentViewer } from "@/shared/document";
 import { DOCUMENT_ENTRY, outlineOf, publishOutline } from "@/shared/document/outline";
@@ -272,20 +273,15 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         {me.member && !me.leader && editable && <span className="text-xs text-muted">Trưởng nhóm nộp bài</span>}
       </div>
 
-      <div role="tablist" aria-label="Tài liệu nhóm" className="flex gap-1 border-b border-line">
-        {([["work", "Tài liệu"], ["submission", "Bản nộp"]] as const).map(([key, label]) => (
-          <button
-            key={key}
-            role="tab"
-            type="button"
-            aria-selected={tab === key}
-            onClick={() => setTab(key)}
-            className={cx("-mb-px border-b-2 px-3.5 py-2 text-[13px] font-semibold", tab === key ? "border-primary text-primary-ink" : "border-transparent text-muted")}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        label="Tài liệu nhóm"
+        value={tab}
+        onChange={setTab}
+        items={[
+          { key: "work", label: "Tài liệu" },
+          { key: "submission", label: "Bản nộp" },
+        ]}
+      />
 
       {notice && (
         <Alert tone="danger" role="alert">
@@ -381,7 +377,11 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
           </div>
         </div>
       ) : (
-        <GroupSubmissionTab view={view} />
+        <>
+          <GroupSubmissionTab view={view} />
+          {view.role.member && studentAssignmentFeedback.entries().map(({ key, component: Feedback }) =>
+            <Feedback key={key} classId={view.classId} assignmentId={view.assignmentId} />)}
+        </>
       )}
 
       {editing && (
@@ -514,8 +514,8 @@ function GroupSubmissionTab({ view }: { view: WorkspaceView }) {
             {dateTime(s.submittedAt)}
             {s.late && " · trễ hạn"}
           </p>
-          <p className="font-mono text-[11px] break-all text-muted">Mã biên nhận: {s.receiptHash}</p>
-          <TableFrame className="[&_table]:min-w-[520px] [&_table]:table-fixed">
+          <p className="font-mono text-xs break-all text-muted">Mã biên nhận: {s.receiptHash}</p>
+          <TableFrame stackOnMobile className="sm:[&_table]:min-w-[520px] [&_table]:table-fixed">
             <colgroup><col /><col className="w-[30%]" /><col className="w-[170px]" /></colgroup><thead>
               <tr>
                 <Th>Mục</Th>
@@ -527,8 +527,8 @@ function GroupSubmissionTab({ view }: { view: WorkspaceView }) {
               {rows.map((row) => (
                 <tr key={row.key}>
                   <Td>{row.title}</Td>
-                  <Td>{row.author}</Td>
-                  <Td>{row.current ? STATUS[row.current].text : "—"}</Td>
+                  <Td label="Tác giả trong bản nộp">{row.author}</Td>
+                  <Td label="Trạng thái hiện tại">{row.current ? STATUS[row.current].text : "—"}</Td>
                 </tr>
               ))}
             </tbody>

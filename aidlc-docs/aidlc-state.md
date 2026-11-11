@@ -1,5 +1,59 @@
 # AI-DLC State Tracking
 
+## U12 — Sinh viên tự chia nhóm, giảng viên duyệt — Build and Test, 2026-11-11
+
+Tính năng mới mở rộng U12: sinh viên tự lập đề xuất nhóm trong lớp, giảng viên duyệt thì đề xuất thành nhóm chính thức. Brownfield, dùng lại tài liệu reverse engineering hiện hành. [Câu hỏi xác nhận](inception/requirements/2026-11-11-student-self-grouping-questions.md) (A cả 9 câu); [yêu cầu SG-01…09](inception/requirements/2026-11-11-student-self-grouping.md). Nhánh `feat/student-self-grouping` (`--no-track` từ `origin/staging@e78ac7b9`), worktree `../AI-Powered-Learning-Platform-self-grouping`.
+
+- [x] Workspace Detection: brownfield, bỏ qua Reverse Engineering.
+- [x] Requirements Analysis: người dùng duyệt 2026-11-11. Security/Resiliency giữ phạm vi, PBT tắt.
+- [x] User Stories: [kế hoạch](inception/plans/2026-11-11-student-self-grouping-story-plan.md) A cả 4 câu; US-GRP-007…010, người dùng duyệt 2026-11-11.
+- [x] Workflow Planning: [kế hoạch thực hiện](inception/plans/2026-11-11-student-self-grouping-execution-plan.md), người dùng duyệt 2026-11-11. Chạy Functional Design U12, Code Generation, Build and Test; bỏ qua Application Design, Units Generation, NFR Requirements/Design, Infrastructure Design.
+- [x] Functional Design U12: [kế hoạch](construction/plans/functional-design-plan/2026-11-11-u12-student-self-grouping-functional-design-plan.md) A cả 9 câu; BR-U12-70…96, F16–F24, người dùng duyệt 2026-11-11.
+- [x] Code Generation U12: [kế hoạch 19 bước](construction/plans/code-generation-plan/2026-11-11-u12-student-self-grouping-code-generation-plan.md) xong 19/19, người dùng duyệt 2026-11-11. Backend 54 test liên quan qua (gồm PostgreSQL); frontend 45 test nhóm, tsc, eslint qua. Chưa thử trên trình duyệt, chưa chạy toàn bộ suite.
+- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-11-student-self-grouping-results.md). Backend `mvn -B verify` 2.203 test qua; frontend lint, typecheck, 978/978 test, build qua; thử hai vai trò trên stack riêng `selfgroup`. Người dùng duyệt 2026-11-11; đã commit trên nhánh, chưa push.
+
+## UI/UX đợt 2 — kiểm báo cáo ngày 2026-11-10, đã commit, chưa push, 2026-11-11
+
+Nhánh `fix/ui-ux-review-2` từ `origin/staging@353383f2`. Đối chiếu từng mục của báo cáo đánh giá UI/UX với mã sau PR #64: mục 3 (bảng Bài tập dạng thẻ, cột lớp), 4 (thanh đồng hồ dính, `aria-live`, đáp án 44px), 6 (ngăn kéo `inert`, Esc), 8 (toast lỗi), "Practice", liên kết bỏ qua, Đăng xuất trong menu tài khoản, `Menu` phím mũi tên, tiêu đề popup 22px đã sửa trước đó.
+
+- [x] Sidebar: mục đang chọn `bg-primary-soft`, hover token mới `--c-sidebar-hover` (sáng `#f4f4f5`, tối `#202b39`); bỏ bóng nâu; mũi tên mở nhánh 40px trên màn cảm ứng, liên kết cha chừa lề phải
+- [x] Ô nhập 16px dưới 640px (quy tắc chung trong `globals.css`, ô OTP chữ to giữ cỡ)
+- [x] Lề `main` và 4 thanh đầu trang dính dùng chung `.main-gutter`/`.main-bleed`; đã đo trên trình duyệt: thanh trùng hai mép `main`
+- [x] Công tắc tắt dùng `--c-field` (3,33:1), cả `Switch` và bản trong Thông báo
+- [x] Trang chấm bài: `window.confirm` thành popup "Bỏ thay đổi"
+- [x] Quiz: "Chưa lưu được" màu cảnh báo, popup khi thoát quiz có giới hạn giờ, dải số câu cuộn ngang ở trên câu hỏi khi hẹp hơn `lg`
+- [x] Hạn nộp tương đối ("còn 5 giờ", cảnh báo dưới 24 giờ) ở trang Bài tập của sinh viên; thời gian thông báo dạng tương đối; `shared/dateTime.ts` cố định giờ Việt Nam thay 3 chỗ `toLocaleString` theo giờ máy
+- [x] `InfoTip` đóng bằng Esc, rê chuột vào được; `Tabs` có Home/End, `aria-controls`/`tabpanel` ở trang lớp và môn; bảng lượt làm quiz mở được bằng bàn phím
+- [x] Câu chữ: "Không có … phù hợp.", "…", "Nhập đúng email do trường cấp.", hằng số `LOAD_FAILED_MESSAGE`; trình xem học liệu `100dvh`
+- [ ] Chưa làm: `useAuthoringGuard` (nút Back cần trả lời đồng bộ), thang cỡ chữ/bo góc/z-index, `Overlay`/`Textarea` dùng chung, gộp `Pagination`/`PageNav`, gộp 11 hàm ngày giờ, kiểm thử ảnh chụp, lint chặn giá trị lẻ; hành vi ô chọn môn/lớp trên sidebar chờ người dùng quyết định
+
+Kiểm tra: `tsc --noEmit`, `eslint` qua; Vitest 133 tệp, 950 test qua. Trình duyệt (stack Docker local): sidebar hai theme, ô nhập 16px ở 375px, thanh dính trang soạn bài. Chưa thử trên iPhone thật. Không đổi backend, API hay schema; đã commit trên nhánh, chưa push. Security/Resiliency giữ phạm vi đã duyệt, PBT tắt.
+
+## Sửa 22 điểm UI/UX — build và kiểm thử xong, đã commit, chưa push, 2026-11-10
+
+Người dùng yêu cầu sửa toàn bộ 22 điểm của đợt rà soát UI/UX, chọn phương án A cho cả 9 câu hỏi, duyệt kế hoạch 21 bước và duyệt mã. Nhánh `fix/ui-ux-remediation` tạo từ `staging` `062a43f5`. Chỉ sửa `frontend/` và `PRODUCT.md`; không đổi backend, API, schema. [Yêu cầu và quyết định](inception/requirements/2026-11-10-ui-ux-remediation-questions.md); [kế hoạch và điều chỉnh](construction/plans/code-generation-plan/2026-11-10-ui-ux-remediation.md); [tóm tắt thay đổi](construction/ui-ux-remediation/code/summary.md); [kết quả build và kiểm thử](construction/build-and-test/2026-11-10-ui-ux-remediation-results.md).
+
+- [x] Workspace Detection: brownfield, dùng lại tài liệu reverse engineering hiện có.
+- [x] Requirements Analysis: 22 yêu cầu, 9 quyết định (đều A).
+- [x] Workflow Planning: chỉ chạy Code Generation và Build and Test; các giai đoạn khác bỏ qua.
+- [x] Code Generation: 21/21 bước, người dùng đã duyệt.
+- [x] Build and Test: TypeScript và ESLint sạch; Vitest 886/886 ca trong 128 file, ba lần liên tiếp; production build thành công; trình duyệt xác nhận màn đăng nhập và trang 404.
+- [ ] Operations: giai đoạn giữ chỗ, chờ người dùng xác nhận.
+
+Chưa kiểm tra trên trình duyệt các màn sau đăng nhập (chỉ có kiểm thử tự động trong jsdom). Đã commit trên nhánh theo yêu cầu sau đó của người dùng; chưa push. Security và Resiliency tuân thủ trong phạm vi đã duyệt, các quy tắc khác N/A; PBT tắt.
+## Đồng bộ tài liệu với code staging — 2026-11-10
+
+Đối chiếu `staging@062a43f5` với aidlc-docs và sửa các chỗ lệch do commit code chưa kèm tài liệu: U07 sửa đề bằng AI (`REVISE`, `AI_DRAFT_STALE`), U08 bỏ kiểm nộp và trang biên nhận, U09 phần bỏ trống 0 điểm và điều hướng bản nộp nhóm, U10 số câu theo độ khó, U06 model Gemini chọn sẵn, cây điều hướng môn/lớp (U05/U01), log lỗi Admin môn học (U04). Bảng kê source trong current-code-baseline được bổ sung 15 mục, bỏ 2 liên kết hỏng; API inventory khớp 239 mapping. [Báo cáo](construction/build-and-test/2026-11-10-aidlc-code-sync-gaps.md).
+
+- [x] Đối chiếu commit code sau các đợt sync 2026-11-07 và 2026-11-09
+- [x] Sửa functional-design và as-built của unit bị lệch
+- [x] Cập nhật current-code-baseline, api-inventory, build-and-test-summary
+- [x] Kiểm liên kết cục bộ của các file đã sửa
+- [x] Đợt 2 sau merge tới `staging@1e77eb79`: PR #60 (đề mẫu của môn, nộp lại không giới hạn, đánh số câu hỏi, popup tạo bài) vào U07, U08, U09, U05; BR-U07-80…86, BR-U08-70…74; api-inventory 241 mapping, baseline thêm 6 mục
+- [ ] Inception (FR-027, US-ASM-009, số lượt nộp bài có chấm) còn mô tả hành vi cũ; chờ xác nhận yêu cầu trước khi sửa
+
+Chỉ sửa Markdown; không chạy application test, không đổi code/schema/config, không commit hay deploy. Thay đổi chưa commit ở `AssignmentFormPage` nằm ngoài phạm vi. Security/Resiliency giữ phạm vi đã duyệt, PBT disabled.
+
 ## U08 — Thẻ Góp ý AI trong Lịch sử nộp bài, 2026-11-09
 
 Đã triển khai trên `fix/student-ai-grading` và đồng bộ UC 41, FR-030, US-ASM-012 cùng tài liệu U08. Thẻ luôn hiện theo lượt Practice đã nộp, dùng cột nhận xét trên màn hình rộng và chuyển vào đầu nội dung bài làm trên màn hình hẹp. [Kế hoạch và kết quả kiểm tra](construction/plans/code-generation-plan/2026-11-09-student-ai-feedback-card.md).
@@ -485,3 +539,207 @@ User requested a PR before merge into staging. Source headfb8846ad has four feat
 ## PR59 conflict resolution / merge authorization — 2026-11-10
 
 User explicitly requested resolving PR59 and merging into staging. Latest staging9a07e1e introduces U08 feedback/U12 changes. Only audit.md had a textual conflict; preserve both histories, do not drop either side. Application changes merged automatically. Refresh checks on the resolution head and merge with exact-head protection only after CI passes; preserve feature commits/branch and do not deploy production. Previous PR-only authorization is superseded for this merge. Security/Resiliency retained; PBT disabled.
+
+
+## Grading remediation continuation — 2026-11-10
+
+- [x] Restored the 37-file Antigravity stash; completed the five-wave scope sequentially, without subagents.
+- [x] Official group-grade preservation, member history/transfer/adjustments (including legacy data), AI validation, group evidence/freshness, rubric/deadline/quiz fixes, query batching, student feedback, batch controls and bounded polling.
+- [x] Requirements/stories, affected unit docs, OpenAPI and the original/continuation plans synchronized.
+- [x] Final backend 2,095 tests with zero failures/errors/skips and executable JAR; required five-suite/57-case guard passed. Frontend 870 tests/127 files, full lint/typecheck/build passed. Source snapshot unchanged.
+
+[Results, evidence and applying migrations](construction/build-and-test/2026-11-10-grading-remediation-results.md). Original stash retained; changes unstaged, no commit/push/deploy. Existing browser was at login; no authenticated UI/mobile/provider acceptance or live grade write. No running API/worker restart or live migration. Update the local backend through the existing Flyway startup process to apply the two new migrations. Security/Resiliency retained; PBT disabled.
+
+
+## Grading UI screenshot follow-up — 2026-11-10
+
+- [x] Measured toolbar-relative score/comment offset, readable auto-growing feedback, clean evidence links, dated successful proposal cards; latest failure notice retained outside history. Internal diagnostics preserved.
+- [x] Full frontend873/127files, lint/typecheck/build; desktop/mobile real-component fixture inspected. No authenticated session/provider/live grade write or backend change/restart.
+
+[Results and acceptance](construction/build-and-test/2026-11-10-grading-ui-feedback-polish.md). Existing work retained, no subagents/commit/push. Security/Resiliency retained; PBT disabled.
+
+
+## AI grading action and reported rejection — 2026-11-10
+
+- [x] Larger36px AI grading action with permanent label; narrow read-only toolbar wraps. Regression206/20files, scoped lint, typecheck/build and synthetic desktop/mobile fixture passed.
+- [x] Read-only runtime diagnosis: two Gemini tasks READY then grading REJECTED. Output deliberately cleared after handling; exact invalid field remains unproven. No backend fix or successful new provider run claimed.
+
+[Evidence and limits](construction/build-and-test/2026-11-10-grading-ai-button-and-error.md). No subagents/live grade/provider retry/application restart/commit/push. Security/Resiliency retained; PBT disabled.
+
+
+## AI grading rejection fixed — 2026-11-10
+
+- [x] Reproduced zero-score/full-credit-check contradiction with controlled Gemini request; provider output now omits redundant checks and existing normalization derives them. Full MCP schema/strict validation retained.
+- [x] Red/green regression, connected210/38classes0skip, final14 regression, Maven verify/JAR and live Gemini READY with16 feedback items passed. Local API/worker refreshed; grade fingerprint/version unchanged in final verification.
+- [x] Opened new proposal in a separate authenticated Chrome tab; original tab preserved. Two provider calls; no grade apply/save/finalize/publish, migration, commit/push or subagents.
+
+[Results and limits](construction/build-and-test/2026-11-10-grading-ai-rejection-fix.md). Other models were not tested live; whole-backend suite not repeated. Security/Resiliency retained; PBT disabled.
+
+
+## Grading feedback formatting — 2026-11-10
+
+- [x] General paragraph action/readable type; strengths/improvements as separate editable bulleted ideas with retained newlines and add/remove/limit controls. Blank draft rows excluded only at save.
+- [x] Grading/document210/20files, final grading154/17files, scoped lint, typecheck/build and synthetic desktop/mobile inspection passed.
+
+[Evidence and acceptance](construction/build-and-test/2026-11-10-grading-feedback-format.md). No live grade save, provider call, backend/runtime change, commit/push or subagents. Security/Resiliency retained; PBT disabled.
+
+
+## Repeated grade actions — 2026-11-10
+
+- [x] Shared state eligibility for both batch selectors; readable completed/race feedback and safe draft-only publish fallback. Backend guards retained.
+- [x] Grading167/18files, scoped lint, typecheck/build; authenticated gradebook shows published student with all batch actions disabled.
+
+[Results and limits](construction/build-and-test/2026-11-10-grading-repeat-actions.md). No live finalize/publish, backend/runtime change, migration, commit/push or subagents. Security/Resiliency retained; PBT disabled.
+
+
+## Grading local commit delivery — 2026-11-10
+
+- [x] User requested clear local commits, explicitly no push. Five groups: rubric/deadline, quiz/activity, grading/group/AI backend, grading UI, then AI-DLC records.
+- [x] Fresh full backend2096 tests0skip/JAR and five-suite/57-case guard; full frontend891/128files, lint/typecheck passed. Source unchanged during packaging.
+- [x] Source commits51428543,66af2cd5,27ec9f0a,8f0ac9ea; this final documentation commit completes the series. Original Antigravity stash retained.
+
+[Commit receipt and limits](construction/build-and-test/2026-11-10-grading-local-commits.md). No push, GitHub CI, deployment, runtime restart, provider call, live grade write or subagents in this turn. Security/Resiliency retained; PBT disabled.
+
+
+## Staging merge resolution — 2026-11-10
+
+- [x] Resolve the existing merge of staging57b0bb8d, retaining both audit histories exactly.
+- [x] Align the published-feedback test fixture with the new deadline-gated history behavior.
+- [x] Verify the merged source and complete the authorized local merge delivery; no push. Full backend verify2110 tests0fail0error0skip/JAR; frontend908 tests/129files, full lint/typecheck passed.
+
+Existing Security/Resiliency scope retained; PBT disabled. No production behavior changed by manual resolution. No UI/provider acceptance, frontend production build, deployment, live migration or application restart in this merge task.
+
+
+## Authorized staging-to-main release — 2026-11-10
+
+User authorized publishing a staging-to-main PR and merging after CI passes. Application source is the verified7fbf5703 tree; this checkpoint only records authorization. The GitHub PR/workflow and final chat response carry the release outcome without adding another source commit after verification. Existing Security/Resiliency scope retained; PBT disabled.
+
+## Gradebook export naming — 2026-11-10
+
+- [x] Scoped workspace/export review and requirements documented in inception/requirements/2026-11-10-gradebook-export.md.
+- [x] User approved implementation; safe assignment filenames shared by API and UI. Backend14 tests, frontend183 tests plus final35-case subset, typecheck/scoped lint passed. Evidence: construction/build-and-test/2026-11-10-gradebook-export.md. No live Excel/browser acceptance, full suite/build, restart, deployment or commit/push. Security/Resiliency retained; PBT disabled.
+- [x] Screenshot follow-up: Vietnamese headers/statuses/late flags/time/sheet, active-assignment export default, single-assignment title and ID-free aggregate filenames. Backend15/15, frontend35/35, typecheck/lint passed. Local API/worker refreshed; two pending staging migrations applied on startup. Real local browser downloads and XLSX XML assertions passed for assignment5rows and aggregate20rows/4assignments. User's original tab retained. No VPS release, grade write, commit/push or subagents; current evidence/limits in the same report.
+
+## Diagram-only AI grading consistency — 2026-11-10
+
+- [x] Reproduced erroneous empty detection for real compressed Draw.io pages; grading now reuses the shared bounded document parser. Live heading/rubric snapshot mapping matches2+4+4=10.
+- [x] Full backend2116 tests/253suites0fail0error0skip/JAR and required guard passed. One successful live Gemini retry gives READY8.50 with all3 sections recognized; persisted grade remains DRAFT0.00/version1 and submission hash unchanged.
+
+Evidence: construction/build-and-test/2026-11-10-grading-diagram-parity.md. No grade save/finalize/publish, assignment/submission edit, migration, VPS update, commit/push or subagents. Qualitative scoring still needs teacher review. Existing Security/Resiliency retained; PBT disabled.
+
+## Accurate Vietnamese AI errors — 2026-11-10
+
+- [x] Translate actual grading validation failures and old proposal messages without exposing uppercase codes; preserve precise provider reasons and internal server diagnostics.
+- [x] Recognize explicit token-truncation metadata for3 providers with charged usage retained; distinguish known quota/rate errors without guessing from429 alone.
+- [x] Final343 connected tests0fail0error0skip and authenticated browser inspection pass. Local API/worker refreshed; original browser form retained and saved grade/version/hash unchanged. No paid model request, grade write, migration, commit/push or VPS update.
+
+Evidence and limits: construction/build-and-test/2026-11-10-grading-ai-errors.md. Existing diagram fix retained. Security/Resiliency retained; PBT disabled.
+
+
+## Deterministic AI grading totals — 2026-11-10
+
+- [x] Provider schema/prompt delegate totals to existing backend calculation; complete MCP contract and strict item/check/evidence validation retained.
+- [x] Final349 connected tests0fail0error0skip; local API/worker refreshed, health200. One live proposal READY7.50 matches12 item scores and section totals2+3+2.5 in storage/UI. Saved grade/state/version/hash unchanged.
+
+Evidence: construction/build-and-test/2026-11-10-grading-derived-total.md. Original tab retained; separate test tab shows unsaved proposal. No official grade action, commit/push or VPS update. Other providers not tested live; full suite/JAR not repeated. Security/Resiliency retained; PBT disabled.
+
+
+## Compact optional manual grading feedback — 2026-11-10
+
+- [x] Remove grade-history/paragraph-split/whole-feedback-clear UI; optional change note collapsed. Manual strengths/improvements and per-item comments/evidence available without AI; blank manual fields accepted, AI completeness/review checks retained.
+- [x] Inline required adjustment reason and readable fallback; autosave pauses after errors and resumes on edits.
+- [x] Final173 frontend/204 backend tests, TypeScript/scoped lint and45 final-polish cases pass. Local API/worker refreshed and health200; DOM checks pass. Browser-test accidental local draft mutation restored to exact7.40 score/non-audit contents via normal saves; version/history correction retained, no finalize/publish.
+
+Evidence and limits: construction/build-and-test/2026-11-10-manual-feedback-parity.md. No commit/push, VPS release, migration, provider call or subagents. Full build/suites/mobile visual verification not repeated; screenshot follow-ups timed out. Security/Resiliency retained; PBT disabled.
+
+
+## Student assignment context columns — 2026-11-10
+
+- [x] Class and subject codes shown across3 tabs; fixed widths/overflow and correct empty/loading spans. Existing filtering/navigation retained.
+- [x] Assignment-work23 tests plus final4 page cases, TypeScript/scoped lint and whitespace pass. No API/data change, account switch, commit/push or deployment. Prior grading work preserved.
+
+Evidence: construction/build-and-test/2026-11-10-student-assignment-context.md. Live student/mobile visual acceptance and full build not repeated. Security/Resiliency retained; PBT disabled.
+
+
+## Quiet30-second grading autosave and one optional note — 2026-11-10
+
+- [x] Mock diagnosis confirms the old1500ms global busy transition replaced score editors without an actual evaluation reload.30-second idle background save retains inputs/focus; view-only renders do not reset the timer.
+- [x] Single-flight/revision/version handling preserves newer edits; explicit Save/Ctrl+S, error pause and group/stale/locked-grade guards retained. One optional change note replaces required adjustment reason, with user-authorized domain rule update and legacy-note preservation.
+- [x] Final176 frontend/206 backend cases, final13 hook cases, TypeScript/scoped lint/whitespace pass. Local API/worker refreshed, health200. All grade mutation tests mocked; no live grade edits, commit/push or VPS deploy.
+
+Evidence: construction/build-and-test/2026-11-10-grading-quiet-autosave.md. Prior pending changes retained. Full build/real multi-session/mobile visual checks not repeated. Security/Resiliency retained; PBT disabled.
+
+## Student published result entry — 2026-11-10
+
+- [x] Confirmed local published8/10 is hidden behind a newer draft plus pre-deadline history filtering. Detail now retains submitted result and a published-only detail link; read-only viewer admits current grading candidate before deadline without older history/drafts. Existing backend ownership/publication controls retained.
+- [x] Connected26 frontend/9 GradebookService cases and final13 affected page cases pass; TypeScript/scoped lint/whitespace pass. No live grade writes, student-account switch, subagents, commit/push or deployment. Prior pending changes retained.
+
+Evidence: construction/build-and-test/2026-11-10-student-published-result-entry.md. Student live visual acceptance/full build not performed. Security/Resiliency retained; PBT disabled.
+
+## Local commits and fresh verification — 2026-11-10
+
+- [x] ee0a3838: compact optional manual feedback, unified optional note and quiet30-second autosave with edit/version preservation.
+- [x]23f9309a: student assignment class/subject columns and regression coverage.
+- [x]4873b931: student published result and detail access alongside newer drafts, preserving private-grade controls.
+- [x] Fresh202 frontend/206 backend architecture cases, TypeScript/scoped lint/whitespace checks pass; cumulative audit/state recorded separately. No push/deploy, live grade mutation or subagents. Full production build/live student visual acceptance not repeated.
+
+## Editable published grades and background AI — implemented, 2026-11-11
+
+- [x] User selects immediate student-visible corrections after every successful save, and editing until class ARCHIVED including past assignment deadlines. No separate published snapshot or republish step.
+- [x] Latest AI clarification supersedes the earlier wait-on-screen wording: background task must not block grading/navigation. Reviewed model/save/publication, group and proposal callback guards and current busy/modal/auto-apply behavior on2444c3f4.
+- [x] User approved the six-task plan with `$ponytail:ponytail triển khai theo kế hoạch`, including explicit Apply/notification. Implemented direct publication/legacy FINALIZED compatibility, preserving PUBLISHED after saves, AI review safeguards, current receipt/version rules and background result isolation/recovery. Removed finalize buttons; retained quiet30-second autosave.
+- [x] Full Maven verify2146 tests with no failures/errors/skips and required integration/traced-suite guard pass. Full frontend956 tests/134 files pass; final connected211 tests/25 files and workspace39 tests pass after subsequent additions (overlapping counts). TypeScript, scoped ESLint, production frontend build and whitespace pass. No live grade edits, paid model calls, subagents, commit/push or deploy.
+- [x] User restarted the local backend; direct Orca UI acceptance passed for published corrections8→8.25, student visibility/detail access, background AI across navigation, concurrent manual edits preserved when AI completes, explicit Apply without automatic saving and quiet30-second autosave without reload. Restored saved8.00 and original feedback. New AI proposals remain in history. Archived-class/group UI acceptance was not performed; automated coverage remains. The earlier rejected restart command stopped/restarted no process.
+
+Plan: construction/plans/code-generation-plan/2026-11-11-editable-grades-and-background-ai.md. Evidence: construction/build-and-test/2026-11-11-editable-grades-and-background-ai.md. Security/Resiliency compliant for existing scope; PBT disabled. Existing U12 preservation of official group grades on resubmission remains, with stale-receipt edits denied. Student tabs see saved corrections on load/refetch; no realtime push added.
+
+User subsequently authorized descriptive local commits. Source/tests and documentation recorded separately; fresh precommit frontend grading/assignment-work run passed211 tests/25 files. No push or deployment.
+
+## Ba lỗi UI/UX staging — 2026-11-11
+
+Người dùng duyệt "sửa 3 lỗi trên". Baseline origin/staging ce40e447; thực hiện tại worktree riêng `.claude/worktrees/ui-ux-staging`, nhánh `codex/ui-ux-staging`.
+
+- [x] Workspace Detection, yêu cầu và kế hoạch sửa giới hạn; dùng lại brownfield context.
+- [x] Pagination/PageNav xuống dòng; Switch có accessible name từ nhãn; Field nối lỗi tới control và giữ focus khi lỗi thay đổi.
+- [x] 332 test/51 file, TypeScript, ESLint, diff check qua. Production build exit 0, có cảnh báo font bị chặn và 27 standalone traced files ở ngoài root do junction dependency.
+- [x] Ghi giới hạn: chưa kiểm tra layout trên browser/mobile, chưa xác nhận standalone deployment; không commit/push/deploy hay thay checkout gốc.
+
+[Kế hoạch](construction/plans/code-generation-plan/2026-11-11-three-ui-fixes.md) và [kết quả](construction/build-and-test/2026-11-11-three-ui-fixes.md). Security/Resiliency giữ phạm vi đã duyệt, PBT disabled. Các stage thiết kế mới/stories/hạ tầng/operations không cần cho ba lỗi hiện hữu.
+
+### Staging readiness — ba lỗi UI/UX, 2026-11-11
+
+- [x] Fetch origin/staging vẫn cùng ce40e447; review không thấy blocker.
+- [x] Full frontend 963 test/135 file qua; Docker build sạch cảnh báo font/tracing và image smoke test health UP/login/icon 200.
+- [x] Đủ điều kiện commit/tạo PR staging; merge sau CI PR. Chưa commit/push/merge; chưa xác minh browser/mobile thực. Chi tiết trong báo cáo ba lỗi UI/UX ở trên.
+
+### Cho phép tạo PR — ba lỗi UI/UX, 2026-11-11
+
+Người dùng yêu cầu "tạo pr vào staging cho tôi". Cho phép commit/push nhánh `codex/ui-ux-staging` và tạo PR base `staging`; không bao gồm merge. Source là bản đã qua 963 test/135 file và Docker smoke. Trạng thái phát hành cuối theo PR GitHub và phản hồi giao hàng.
+
+## Teacher class overview — 2026-11-11
+
+- [x] User approved replacing submission-progress tabs/recent announcements on teacher class info with compact read-only class facts, three assignment summary links and nearest3 upcoming deadlines. Student class info and announcement routes preserved. Reused assignment list/submission summaries; no full gradebook load, new API or schedule scope.
+- [x] RED/GREEN:264 related tests/31 files pass; final targeted34/2 pass after link fix. TypeScript, scoped ESLint and whitespace pass. Local browser verified1440px/390px, light/dark, correct counts and actionable filtered gradebook link. No class/grade writes. Security/Resiliency retained; PBT disabled.
+- Limits: numbers refresh on page reload; summary links select the first assignment with matching work. Production build/backend suite not repeated for this frontend-only change; no commit/push/deploy. Plan/evidence: construction/plans/code-generation-plan/2026-11-11-teacher-class-overview.md.
+
+- Subsequent user request authorizes local commit, push and PR to staging. Fresh34 targeted tests and TypeScript pass; fetched staging has no divergence from the implementation baseline and merge preview has no conflict. Publish the overview changes only; no automatic merge/deployment.
+
+## Gradebook bulk selection in the table — 2026-11-11
+
+- [x] Approved proposal implemented inline: no duplicate selection list/toggle, row/header mixed-state checkboxes,20 rows/page, explicit all-filtered selection capped100. Counts reflect action eligibility. Selection survives page changes but resets for assignment/search/status/mode. Group roots selected once; member grades remain separately accessible.
+- [x] RED4 new tests, GREEN189 grading tests/20 files; final targeted20/2 pass, TypeScript/scoped lint pass. Local5-student/group-root UI verified at1440px/390px, light/dark, no document overflow; no AI/publish/data writes.30/101 scenarios covered with fixtures.
+- No backend/API/dependency, production build, commit/push/deploy. Security/Resiliency retained, PBT off. Plan/evidence: construction/plans/code-generation-plan/2026-11-11-gradebook-bulk-selection.md.
+
+- Approved follow-up: global announcement navigation/title is “Tất cả thông báo”; nested class navigation/title remains “Thông báo lớp”. URLs/filtering/authorization unchanged.11 announcement tests and scoped lint pass; local browser verifies both destinations and titles. Checkbox cursors also verified as pointer/enabled and not-allowed/disabled. Changes remain uncommitted.
+
+- Shared cursor follow-up: base CSS applies pointer to enabled native/custom interactive controls and not-allowed to disabled, preserving text/drag/pending utility overrides. Actual group choices and14 browser style probes pass;324 related tests/44 files, lint and production build/typecheck pass. No backend/data changes, commit/push. Not every screen/state was manually exercised.
+
+- Subsequent user authorization: “giúp tôi commit”. Record bulk-selection, announcement labels, shared cursors and documentation in separate local commits;15 fresh precommit tests/3 files pass. No push/merge/deploy.
+
+- PR74 CI follow-up: feature-registration test retained the old global announcement labels. Reproduced RED locally and updated all3 role expectations to the approved label; fixed-class labels remain unchanged. Full frontend967 tests/136 files and scoped lint pass. User authorizes pushing the fix to staging to repair PR74; no merge/deploy requested. Evidence: .tmp/pr74-red.log, pr74-frontend-full.log.
+
+### PR delivery — ba lỗi UI/UX
+
+Tích hợp staging `1f713615`; giữ cả hai lịch sử audit/state. Fresh full frontend
+963 test/135 file, ESLint/TypeScript, Docker build và runtime smoke qua. Người dùng
+cho phép push/tạo PR vào staging; không tự merge PR. Xem PR GitHub để biết trạng thái CI.

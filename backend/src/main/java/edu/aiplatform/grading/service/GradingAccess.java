@@ -33,6 +33,23 @@ public class GradingAccess {
     /** Requires the actor to have the requested permission for the class. */
     public void requireTeacher(Actor actor, UUID classId, String action) {
         requireAuthorization(actor, classId, action);
+        if (Actions.GRADING_WRITE.equals(action) && !isClassWritable(classId)) {
+            throw ApiException.conflict("GRADING_CLASS_READ_ONLY",
+                    "Lớp đã lưu trữ hoặc chưa mở. Không thể chỉnh sửa điểm.");
+        }
+    }
+
+    public boolean isClassWritable(UUID classId) {
+        try {
+            return classAccess.getClassRef(classId)
+                    .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"))
+                    .status() == edu.aiplatform.academics.contract.ClassStatus.OPEN;
+        } catch (ApiException ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            throw ApiException.unavailable("GRADING_DEPENDENCY_UNAVAILABLE",
+                    "Class service unavailable");
+        }
     }
 
     /** Requires the actor to have grade access and active enrollment in the class. */

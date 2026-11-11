@@ -1,6 +1,7 @@
 package edu.aiplatform.ai.repository;
 
 import edu.aiplatform.ai.model.AiConnection;
+import edu.aiplatform.ai.model.AiConnection.EncryptedKey;
 
 import edu.aiplatform.ai.contract.AiProvider;
 import edu.aiplatform.ai.model.AiConnection.Scope;
@@ -80,6 +81,24 @@ public class AiConnectionRepository {
         return jdbc.sql("select " + COLUMNS + " from ai_connections where scope = 'INSTITUTIONAL' and status <> 'REVOKED' "
                         + "order by provider, created_at, id")
                 .query(AiConnectionRepository::map).list();
+    }
+
+    /** Kết nối còn bản mã khóa, để nâng cấp bản mã cũ chưa gắn AAD. */
+    public List<AiConnection> listWithKey() {
+        return jdbc.sql("select " + COLUMNS + " from ai_connections where key_ciphertext is not null "
+                        + "and status <> 'REVOKED' order by created_at, id")
+                .query(AiConnectionRepository::map).list();
+    }
+
+    /**
+     * Thay bản mã khi bản mã hiện tại vẫn là {@code previous}; không đổi {@code version} vì khóa không đổi. Trả
+     * {@code false} khi dòng đã bị thay (người dùng vừa thay khóa hoặc tiến trình khác đã nâng cấp).
+     */
+    public boolean replaceKeyCiphertext(UUID id, byte[] previous, EncryptedKey next) {
+        return jdbc.sql("update ai_connections set key_ciphertext = :cipher, key_iv = :iv, key_version = :keyVersion "
+                        + "where id = :id and key_ciphertext = :previous")
+                .param("id", id).param("previous", previous).param("cipher", next.ciphertext())
+                .param("iv", next.iv()).param("keyVersion", next.version()).update() == 1;
     }
 
     private static Map<String, Object> params(AiConnection c) {

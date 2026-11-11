@@ -1,6 +1,6 @@
 # API inventory — source annotations, 2026-11-07
 
-Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`. 49 controller files. Entries reproduce class/method mapping annotations from source; compose class-level RequestMapping with each method mapping and retain HTTP method, path arrays, consumes/produces and parameters. They are an annotation inventory, not complete request/response schemas or fresh endpoint acceptance. Non-controller MCP schemas remain owned by IMcpToolProvider. Existing OpenAPI specs are partial coverage.
+Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; đối chiếu lại 2026-11-10 với `staging@1e77eb79`: 48 controller files, 241 mapping annotation khác nhau khớp hoàn toàn với source (không thừa, không thiếu) sau khi thêm ba endpoint đọc của PR #60 (`/ai-drafts/templates`, `/assignment-materials`, `/subjects/{subjectId}/assignments/materials`). `POST /assignments/{id}/ai-drafts` nhận thêm `mode = REVISE` trong body mà không đổi annotation; `GET /api/v1/attempts/{attemptId}/receipt` còn ở backend nhưng frontend không gọi nữa. Entries reproduce class/method mapping annotations from source; compose class-level RequestMapping with each method mapping and retain HTTP method, path arrays, consumes/produces and parameters. They are an annotation inventory, not complete request/response schemas or fresh endpoint acceptance. Non-controller MCP schemas remain owned by IMcpToolProvider. Existing OpenAPI specs are partial coverage.
 
 ## [academics/controller/AcademicsController.java](../../../backend/src/main/java/edu/aiplatform/academics/controller/AcademicsController.java)
 
@@ -45,7 +45,6 @@ Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`. 49 controller files
 @PostMapping("/connections")
 @PostMapping("/connections:test")
 @PutMapping("/connections/{id}")
-@GetMapping("/connections/{id}/key")
 @PostMapping("/connections/{id}:test")
 @PutMapping("/connections/{id}/status")
 @DeleteMapping("/connections/{id}")
@@ -68,7 +67,6 @@ Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`. 49 controller files
 @PostMapping("/api/v1/me/ai-connections")
 @PostMapping("/api/v1/me/ai-connections:test")
 @PutMapping("/api/v1/me/ai-connections/{id}")
-@GetMapping("/api/v1/me/ai-connections/{id}/key")
 @PostMapping("/api/v1/me/ai-connections/{id}:test")
 @PutMapping("/api/v1/me/ai-connections/{id}/status")
 @DeleteMapping("/api/v1/me/ai-connections/{id}")
@@ -126,6 +124,7 @@ Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`. 49 controller files
 @PostMapping(consumes = "application/json")
 @GetMapping("/{draftId}")
 @PostMapping(value = "/sources:preview", consumes = "application/json")
+@GetMapping("/templates")
 @PostMapping(value = "/{draftId}:apply", consumes = "application/json")
 @PostMapping("/{draftId}:discard")
 ```
@@ -159,6 +158,7 @@ Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`. 49 controller files
 @GetMapping("/assignments")
 @PostMapping(value = "/assignments", consumes = "application/json")
 @GetMapping("/assignment-copy-sources")
+@GetMapping("/assignment-materials")
 @PostMapping(value = "/assignments:copy", consumes = "application/json")
 ```
 
@@ -175,6 +175,7 @@ Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`. 49 controller files
 ```java
 @RequestMapping("/api/v1/subjects/{subjectId}/assignments")
 @GetMapping("/copy-sources")
+@GetMapping("/materials")
 @PostMapping(value = "/copies", consumes = "application/json")
 @GetMapping
 @PostMapping(consumes = "application/json")
@@ -330,6 +331,29 @@ Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`. 49 controller files
 @GetMapping("/api/v1/classes/{classId}/students/{studentId}/group")
 @GetMapping("/api/v1/classes/{classId}/group-assignments")
 @GetMapping("/api/v1/classes/{classId}/group-assignments/{assignmentId}/progress")
+```
+
+## [groups/controller/GroupProposalController.java](../../../backend/src/main/java/edu/aiplatform/groups/controller/GroupProposalController.java)
+
+Thêm 2026-11-11 trên nhánh `feat/student-self-grouping` (sinh viên tự chia nhóm, US-GRP-007…010): 15 mapping.
+
+```java
+@GetMapping("/api/v1/classes/{classId}/group-formation")
+@PutMapping("/api/v1/classes/{classId}/group-formation")
+@GetMapping("/api/v1/classes/{classId}/group-proposals")
+@PostMapping("/api/v1/classes/{classId}/group-proposals:approve")
+@PostMapping("/api/v1/group-proposals/{proposalId}:reject")
+@GetMapping("/api/v1/me/classes/{classId}/group-proposal")
+@PostMapping("/api/v1/classes/{classId}/group-proposals")
+@PutMapping("/api/v1/group-proposals/{proposalId}/name")
+@PostMapping("/api/v1/group-proposals/{proposalId}/invitations")
+@PostMapping("/api/v1/group-proposals/{proposalId}/invitations/{accountId}:revoke")
+@PostMapping("/api/v1/group-proposals/{proposalId}:accept")
+@PostMapping("/api/v1/group-proposals/{proposalId}:decline")
+@PostMapping("/api/v1/group-proposals/{proposalId}:leave")
+@PostMapping("/api/v1/group-proposals/{proposalId}:submit")
+@PostMapping("/api/v1/group-proposals/{proposalId}:withdraw")
+@PostMapping("/api/v1/group-proposals/{proposalId}:cancel")
 ```
 
 ## [identity/controller/AdminAccountController.java](../../../backend/src/main/java/edu/aiplatform/identity/controller/AdminAccountController.java)

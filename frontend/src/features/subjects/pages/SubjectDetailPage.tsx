@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useUrlState } from "@/shared/navigation/useUrlState";
-import { Button, PageHeader, Section, showToast, Tabs, type TabItem } from "@/shared/ui";
+import { Button, PageHeader, Section, showToast, tabId, Tabs, type TabItem } from "@/shared/ui";
 import { getSubject, getSubjectClasses } from "../api";
 import { ManagerCard } from "../components/ManagerCard";
 import { ManagerChangeDialog } from "../components/ManagerChangeDialog";
@@ -89,11 +89,13 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
         onChange={setTab}
         label="Nội dung môn học"
         testIdPrefix="subjects-tab-"
+        panelId="subject-tab-panel"
       />
       {tab === "information" ? (
         <div
           role="tabpanel"
-          aria-label="Thông tin"
+          id="subject-tab-panel"
+          aria-labelledby={tabId("subject-tab-panel", tab)}
           className="grid items-start gap-4 lg:grid-cols-[1fr_280px]"
         >
           <SubjectInfoTab key={data.version} {...base} onSaved={() => saved("Đã lưu thay đổi")} />
@@ -111,7 +113,7 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
           </div>
         </div>
       ) : (
-        <div role="tabpanel" aria-label="Lớp học" className="flex flex-col gap-3">
+        <div role="tabpanel" id="subject-tab-panel" aria-labelledby={tabId("subject-tab-panel", tab)} className="flex flex-col gap-3">
           {classes.loading && (
             <p role="status" className="py-8 text-center text-sm text-muted">
               Đang tải lớp học…

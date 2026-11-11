@@ -19,7 +19,7 @@ describe("rubric checklist (BR-U09-20)", () => {
   it("ticking gives the item its full points and unticking gives zero", () => {
     render(<Editor />);
     const item = screen.getByRole("checkbox", { name: /Quan hệ đúng/ });
-    expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("spinbutton").length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: /Đủ điểm/ })).not.toBeInTheDocument();
     fireEvent.click(item);
     expect(item).toBeChecked();
@@ -29,6 +29,12 @@ describe("rubric checklist (BR-U09-20)", () => {
     expect(item).not.toBeChecked();
     expect(screen.getByText("0.00 / 1.00 điểm")).toBeInTheDocument();
     expect(screen.getByTestId("scores")).toHaveTextContent('{"r":{"i":0}}');
+  });
+  it("allows a partial score and clears the full-credit checkbox", () => {
+    render(<Editor />);
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Điểm mục Quan hệ đúng" }), { target: { value: "0.5" } });
+    expect(screen.getByTestId("scores")).toHaveTextContent('{"r":{"i":0.5}}');
+    expect(screen.getByRole("checkbox", { name: /Quan hệ đúng/ })).not.toBeChecked();
   });
   it("preserves saved or AI partial scores while deriving full-score checkboxes", () => {
     const two = [...rubrics, { rubricId: "r2", partId: "q2", maxPoints: 2, criteria: [{ criterionId: "c2", title: "", items: [

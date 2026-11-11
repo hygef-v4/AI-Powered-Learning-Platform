@@ -9,7 +9,8 @@ import { attemptImageUrl, exportUrl, workApi } from "../api";
 import { formatPoints, resultByPart, useAttemptResult, type ResultPart } from "../model/attemptResult";
 import { errorMessage, formatDateTime, historyOpen, historyVersions } from "../model/format";
 import { PracticeFeedbackPanel } from "../components/PracticeFeedbackPanel";
-import type { AttemptResult } from "../slots";
+import { studentGradeDistributions, type AttemptResult } from "../slots";
+import { PublishedFeedback, PublishedRubricItems } from "../components/PublishedFeedback";
 import type { Attempt, AttemptSummary, StudentDetail } from "../model/types";
 
 function attemptTime(a: AttemptSummary) {
@@ -30,7 +31,7 @@ function TopBar({ barRef, title, status, setViewSlot, actions }: {
   actions?: ReactNode;
 }) {
   return (
-    <header ref={barRef} className="sticky top-14 z-30 -mx-4 -mt-8 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] px-4 py-3 backdrop-blur-md sm:-mx-8 sm:px-8 md:-mt-10">
+    <header ref={barRef} className="sticky top-14 z-30 main-bleed -mt-8 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] py-3 backdrop-blur-md md:-mt-10">
       <div className="flex min-w-0 flex-1 items-center gap-x-3">
         <h1 className="min-w-0 truncate text-[15px] font-semibold text-ink" title={title}>{title}</h1>
         {status}
@@ -77,10 +78,11 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
         if (controller.signal.aborted) return;
         setDetail(value);
         // Lịch sử chỉ gồm các lượt đã nộp; lượt đang làm không hiện (lỗi 2026-11-05). Bài cá nhân (yêu cầu 2026-11-10):
-        // chỉ mở sau hạn nộp đúng giờ; nộp lại là ghi đè nên chỉ có bản đúng hạn, thêm bản nộp muộn nếu có.
+        // lịch sử mở sau hạn nộp; bản đang được chấm vẫn mở riêng để xem điểm đã công bố trước hạn.
+        // Điểm và nhận xét chưa công bố do API kết quả giữ kín.
         const all = list.filter((a) => a.status === "SUBMITTED").sort((a, b) => b.attemptNo - a.attemptNo);
         const submitted = value.gradingMode === "PRACTICE" ? all
-          : historyOpen(value, all.length > 0) ? historyVersions(all) : [];
+          : historyOpen(value, all.length > 0) ? historyVersions(all) : all.filter((a) => a.graded);
         setAttempts(submitted);
         setSelected(submitted.find((a) => a.attemptId === wanted)?.attemptId ?? submitted[0]?.attemptId ?? null);
       }, (e) => { if (!controller.signal.aborted) setError(e); });
@@ -190,13 +192,15 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
         </>}
       />
     )}
+    {shownResult && studentGradeDistributions.entries().map(({ key, component: Distribution }) =>
+      <Distribution key={key} classId={classId} assignmentId={assignmentId} />)}
     {current?.warnings.length ? <Alert tone="warning">{current.warnings.map((w) => w.message).join("; ")}</Alert> : null}
   </>);
 }
 
 /**
- * Bên lề chỉ có điểm: đầu tài liệu là thẻ tổng điểm; mỗi phần (nhánh con trực tiếp của gốc) một thẻ điểm gắn vào tiêu đề
- * của phần. Tạm thời không có nhận xét; học sinh không thấy các mục rubric.
+ * Bên lề hiển thị điểm và nhận xét đã công bố: đầu tài liệu là thẻ tổng điểm; mỗi phần (nhánh con trực tiếp của gốc) một thẻ điểm gắn vào tiêu đề
+ * của phần, kèm minh chứng và gợi ý theo rubric.
  */
 function scoreCards(result: AttemptResult, attempt: Attempt): DocumentComment[] {
   const blockIds = new Set(attempt.content.blocks.map((block) => block.id));
@@ -229,6 +233,7 @@ function TotalCard({ result }: { result: AttemptResult }) {
         <span className="text-[13px] text-muted">/ {formatPoints(result.maxScore)}</span>
       </p>
       <Meter awarded={result.score} max={result.maxScore} />
+      <div className="mt-3"><PublishedFeedback feedback={result.feedback} summary={result.summary} /></div>
       {result.memberOverride && <p className="mt-2 text-xs text-muted">Điểm cá nhân đã được giảng viên điều chỉnh riêng.</p>}
     </article>
   );
@@ -246,6 +251,7 @@ function PartScoreCard({ part }: { part: ResultPart }) {
         </span>
       </p>
       <Meter awarded={part.awarded} max={part.max} />
+      <PublishedRubricItems items={part.items} />
     </article>
   );
 }

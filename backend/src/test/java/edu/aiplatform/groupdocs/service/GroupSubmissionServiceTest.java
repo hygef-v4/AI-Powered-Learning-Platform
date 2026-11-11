@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -116,9 +117,7 @@ class GroupSubmissionServiceTest {
         when(documents.listSections(document.id())).thenReturn(List.of(
                 section("p1", heading1, 1, Status.DONE, null, List.of(answer), member.accountId()),
                 section("p2", heading2, 2, Status.CLAIMED, leader.accountId(), null, null)));
-
         var receipt = service.submit(leader, document.id(), 0L);
-
         assertThat(receipt.mode()).isEqualTo("MANUAL");
         assertThat(receipt.late()).isFalse();
         assertThat(receipt.receiptHash()).startsWith("sha256:");
@@ -138,7 +137,6 @@ class GroupSubmissionServiceTest {
         when(documents.listSections(document.id())).thenReturn(List.of());
         assertThatThrownBy(() -> service.submit(member, document.id(), 0L))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_LEADER_ONLY"));
-
         when(documentModel.validateForSubmit(any(), any(), any())).thenReturn(new ValidationResult(
                 List.of(new ValidationIssue("DIAGRAM_REQUIRED", null, "Thiếu sơ đồ lớp")), List.of()));
         assertThatThrownBy(() -> service.submit(leader, document.id(), 0L))
@@ -154,9 +152,7 @@ class GroupSubmissionServiceTest {
                 .withDraft(List.of(draft), NOW.minusSeconds(40));
         when(documents.lockSections(document.id())).thenReturn(List.of(held));
         when(documents.listSections(document.id())).thenReturn(List.of(held.done(NOW)));
-
         var receipt = service.autoSubmit(document.id()).orElseThrow();
-
         assertThat(receipt.mode()).isEqualTo("AUTO_DEADLINE");
         assertThat(receipt.submittedBy()).isNull();
         ArgumentCaptor<SectionRevision> revision = ArgumentCaptor.forClass(SectionRevision.class);
@@ -179,7 +175,6 @@ class GroupSubmissionServiceTest {
                 .withDraft(List.of(draft), closesAt.minusSeconds(60));
         when(documents.lockSections(document.id())).thenReturn(List.of(held));
         when(documents.listSections(document.id())).thenReturn(List.of(held.done(NOW)));
-
         assertThat(service.autoSubmit(document.id()).orElseThrow().late())
                 .as("tài liệu sửa lần cuối lúc tạo, trước hạn").isFalse();
     }
@@ -187,7 +182,6 @@ class GroupSubmissionServiceTest {
     @Test
     void autoSubmitOnClosedDocumentDoesNothing() {
         when(documents.lockDocument(document.id())).thenReturn(Optional.of(document.closed()));
-
         assertThat(service.autoSubmit(document.id())).isEmpty();
         verify(documents, never()).update(any());
         verify(evaluation, never()).onGroupSubmitted(any(), anyString(), any(), any(), any());
@@ -195,12 +189,55 @@ class GroupSubmissionServiceTest {
 
     @Test
     void retiredAssignmentUsesRetiredMode() {
+        DocumentBlock draft = block(UUID.randomUUID(), BlockType.PARAGRAPH, "nháp");
+        GroupSection held = section("p1", heading1, 1, Status.CLAIMED, member.accountId(), null, null)
+                .withDraft(List.of(draft), NOW.minusSeconds(30));
         document = document.withAutoSubmitReason(GroupDocument.SubmitMode.AUTO_RETIRED);
         when(documents.lockDocument(document.id())).thenReturn(Optional.of(document));
-        when(documents.lockSections(document.id())).thenReturn(List.of());
-        when(documents.listSections(document.id())).thenReturn(List.of());
+        when(documents.lockSections(document.id())).thenReturn(List.of(held));
+        when(documents.listSections(document.id())).thenReturn(List.of(held.done(NOW)));
 
         assertThat(service.autoSubmit(document.id()).orElseThrow().mode()).isEqualTo("AUTO_RETIRED");
+    }
+
+    @Test
+    void autoSubmitOnUntouchedDocumentSimplyClosesWithoutCreatingSubmission() {
+        when(documents.lockSections(document.id())).thenReturn(List.of(
+                section("p1", heading1, 1, Status.CLAIMED, member.accountId(), null, null)));
+        assertThat(service.autoSubmit(document.id())).isEmpty();
+        ArgumentCaptor<GroupDocument> saved = ArgumentCaptor.forClass(GroupDocument.class);
+        verify(documents).update(saved.capture());
+        assertThat(saved.getValue().status()).isEqualTo(GroupDocument.Status.CLOSED);
+        assertThat(saved.getValue().submittedAt()).isNull();
+        verifyNoInteractions(evaluation, events, audit);
+    }
+
+    @Test
+    void autoSubmitAfterManualSubmitClosesWithoutOverwritingEvenWhenDraftEditedLater() {
+        when(documents.listSections(document.id())).thenReturn(List.of());
+        var receipt = service.submit(leader, document.id(), 0L);
+        ArgumentCaptor<GroupDocument> saved = ArgumentCaptor.forClass(GroupDocument.class);
+        verify(documents).update(saved.capture());
+        GroupDocument submitted = saved.getValue();
+        GroupDocument touchedLater = new GroupDocument(submitted.id(), submitted.groupId(), submitted.assignmentId(),
+                submitted.classId(), submitted.status(), submitted.sharedBlocks(), submitted.activityMonitoring(),
+                submitted.autoSubmitReason(), submitted.submittedDocument(), submitted.sectionAuthors(),
+                submitted.submittedBy(), submitted.submitMode(), submitted.submittedAt(), submitted.late(),
+                submitted.receiptHash(), submitted.warnings(), NOW.plusSeconds(120), 1, submitted.createdAt());
+        GroupSection heldWithDraft = section("p1", heading1, 1, Status.CLAIMED, member.accountId(), null, null)
+                .withDraft(List.of(block(UUID.randomUUID(), BlockType.PARAGRAPH, "nháp sau nộp")), NOW.plusSeconds(120));
+        when(documents.lockDocument(document.id())).thenReturn(Optional.of(touchedLater));
+        when(documents.lockSections(document.id())).thenReturn(List.of(heldWithDraft));
+        clearInvocations(documents, evaluation, events, audit, sse);
+        assertThat(service.autoSubmit(document.id())).isEmpty();
+        verify(documents).updateSection(argThat(s -> s.status() == Status.OPEN && s.claimedBy() == null));
+        verify(documents, never()).insertRevision(any());
+        verify(documents).update(saved.capture());
+        assertThat(saved.getValue().status()).isEqualTo(GroupDocument.Status.CLOSED);
+        assertThat(saved.getValue().submittedDocument()).isEqualTo(submitted.submittedDocument());
+        assertThat(saved.getValue().receiptHash()).isEqualTo(receipt.receiptHash());
+        assertThat(saved.getValue().submitMode()).isEqualTo(GroupDocument.SubmitMode.MANUAL);
+        verifyNoInteractions(evaluation, events, audit);
     }
 
     @Test

@@ -12,6 +12,16 @@ describe("ErrorPage", () => {
     expect(screen.queryByRole("button", { name: "Tải lại trang" })).not.toBeInTheDocument();
   });
 
+  it("có nút đổi giao diện sáng/tối", () => {
+    document.documentElement.dataset.theme = "light";
+    render(<ErrorPage kind="not-found" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Chuyển giao diện tối" }));
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    fireEvent.click(screen.getByRole("button", { name: "Chuyển giao diện sáng" }));
+    expect(document.documentElement.dataset.theme).toBe("light");
+  });
+
   it("offers a retry action for runtime errors", () => {
     const retry = vi.fn();
     render(<ErrorPage kind="generic" retry={retry} />);

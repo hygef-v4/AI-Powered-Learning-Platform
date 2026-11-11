@@ -8,11 +8,13 @@ import edu.aiplatform.grading.model.GradeDistributionCalculator;
 import edu.aiplatform.identity.contract.Actor;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.http.ContentDisposition;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,15 +51,16 @@ public class GradebookController {
             @RequestParam(required = false) UUID assignmentId,
             @RequestParam(defaultValue = "csv") String format, HttpServletResponse response)
             throws IOException {
-        var rows = gradebookService.buildExportRows(actor, classId, assignmentId, format); // Complete authorization before
-        // headers/bytes.
+        var export = gradebookService.buildExport(actor, classId, assignmentId, format);
+        String fallback = "Bảng điểm tổng hợp-" + LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        String filename = gradebookExporter.buildFilename(export.assignmentTitle(), fallback, format);
         response.setContentType(format.equals("csv") ? "text/csv; charset=UTF-8"
                 : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Cache-Control", "no-store");
         response.setHeader("X-Content-Type-Options", "nosniff");
-        response.setHeader("Content-Disposition", "attachment; filename=\"gradebook-" + classId
-                + "-" + LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")) + "." + format + "\"");
-        gradebookExporter.writeGradebook(rows, format, response.getOutputStream());
+        response.setHeader("Content-Disposition", ContentDisposition.attachment()
+                .filename(filename, StandardCharsets.UTF_8).build().toString());
+        gradebookExporter.writeGradebook(export.rows(), format, response.getOutputStream());
     }
 
     /** Returns grade distribution buckets for the teacher's view of an assignment. */

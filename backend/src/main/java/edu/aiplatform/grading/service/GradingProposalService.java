@@ -55,8 +55,11 @@ public class GradingProposalService {
         var proposal = prepared.proposal();
 
         // Step 2: Check idempotency - return existing proposal if already dispatched or pending
-        if (!prepared.dispatch())
+        if (!prepared.dispatch()) {
+            if (proposal.safeError != null)
+                proposal.safeError = GradingProposalCallbackSupport.formatTaskError(proposal.safeError);
             return proposal;
+        }
 
         // Step 3: Submit asynchronous task to background AI engine (U06)
         AiTaskView task;
@@ -76,6 +79,10 @@ public class GradingProposalService {
 
         // Step 4: Record dispatched task ID, keep PENDING status, and return proposal to caller
         return gradingProposalTransactions.recordDispatch(proposal.id, task, null);
+    }
+
+    List<GradingProposal> listStoredProposals(List<UUID> authorizedEvaluationIds) {
+        return gradingProposalRepository.findForEvaluations(authorizedEvaluationIds);
     }
 
     /** Lists an evaluation's proposals and reconciles their current AI task state. */
@@ -127,6 +134,10 @@ public class GradingProposalService {
                             .ifPresent(task -> proposal.taskState = task.state().name());
                 }
             }
+        }
+        for (var proposal : listed) {
+            if (proposal.safeError != null)
+                proposal.safeError = GradingProposalCallbackSupport.formatTaskError(proposal.safeError);
         }
         return listed;
     }

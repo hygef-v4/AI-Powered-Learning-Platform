@@ -31,7 +31,7 @@ export function PageNav({
   if (totalPages <= 1) return null;
   return (
     <div className="flex justify-center px-1 text-xs text-muted">
-      <nav aria-label="Phân trang" className="flex items-center gap-1">
+      <nav aria-label="Phân trang" className="flex max-w-full flex-wrap items-center justify-center gap-1">
         <PageButton label="Trang trước" disabled={page === 0} onClick={() => onPage(page - 1)}>
           <Icon name="chevron_right" size={16} className="rotate-180" />
         </PageButton>
@@ -76,6 +76,7 @@ function PageButton({
       onClick={onClick}
       className={cx(
         "inline-flex h-7 min-w-7 items-center justify-center rounded-md border px-1.5 text-xs font-semibold disabled:opacity-40",
+        "pointer-coarse:h-11 pointer-coarse:min-w-11",
         current ? "border-primary bg-primary text-on-primary" : "border-line-strong bg-surface text-body hover:bg-shell",
       )}
     >

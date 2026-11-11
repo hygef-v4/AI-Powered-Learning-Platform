@@ -224,7 +224,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     }
 
     private Dispatch dispatch(AiTask task, AiConnection connection) {
-        String key = cipher.decrypt(connection.encryptedKey());
+        String key = cipher.decryptConnectionKey(connection);
         JsonNode prompt = readPrompt(task.inputPayload());
         return new Dispatch(task, connection, new Request(task.model(), key, text(prompt, "system"), text(prompt, "user"),
                 task.outputSchema(), task.maxOutputTokens(), properties.requestTimeout()));

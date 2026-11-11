@@ -32,4 +32,7 @@ public interface IMaterialModuleRepository {
     void link(MaterialModule.QuizLink link);
 
     boolean unlink(UUID moduleId, UUID quizId);
+
+    /** Gỡ Quiz khỏi mọi module (Quiz sắp bị xóa). */
+    void unlinkQuiz(UUID quizId);
 }

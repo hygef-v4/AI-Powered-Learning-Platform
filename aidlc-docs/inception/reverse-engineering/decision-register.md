@@ -27,7 +27,7 @@ Baseline `staging@794a405304bf02dd2593a9fa2c88662d7cd52845`. User approved docum
 | D-Q3 2026-11-01 | Only Subject Manager writes to the bank | Teachers propose, manager approves or rejects; quiz-own questions need no approval | Feedback 29/10 implemented |
 | D-Q4 2026-11-01 | Near-duplicate via `pg_trgm` proposed in the assessment | Trigram in Java; exact via SHA-256 | Role `migrator` has no CREATE on the database, so `create extension` could break existing environments |
 | D-Q5 2026-11-01 | Quiz could attach reference materials | Attachment removed from API and UI; column `reference_material_ids` kept unused until checked on staging | AI source materials remain |
-| D15 discovered during execution | FR-012/BR-U06-03 prohibit all API-key readback | AiConnectionService.revealInstitutional and AiAdminController permit Admin reveal for non-REVOKED institutional connections, including DISABLED; AI_CONNECTION_KEY_REVEALED audit | Document AS-BUILT exception; security design approval pending, no code/security change in this synchronization. Admin cannot thereby read personal keys |
+| D15 discovered during execution | FR-012/BR-U06-03 prohibit all API-key readback | Was: Admin reveal of institutional keys and owner reveal of personal keys via GET .../{id}/key. Closed 2026-11-11: both endpoints and service methods removed; keys are write-only; ciphertext bound with AAD to the connection | Resolved in code by security review 2026-11-11; old AI_CONNECTION_KEY_REVEALED audit rows keep their label |
 
 ## Execution rulings
 

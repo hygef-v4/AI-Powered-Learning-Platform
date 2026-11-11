@@ -23,6 +23,8 @@ Fresh full application verification after merge `f68a6ec5` is not established by
 | Recorded scope | Evidence | Result and limit |
 |---|---|---|
 | U09 move/rename, 06/11; delivered in `1cddff35` before the staging merge | [Full verification](2026-11-06-u09-structure-full-verification.md) | Backend 1,830 passed/0 skipped; all four required PostgreSQL suites passed; frontend 799 passed/116 files; lint without warnings, typecheck and production build passed. Not a new run on `f68a6ec5`. |
+| U12 sinh viên tự chia nhóm, 11/11, nhánh `feat/student-self-grouping` chưa commit | [Kết quả](2026-11-11-student-self-grouping-results.md) | Backend 2.203 test qua (`mvn -B verify`, PostgreSQL Testcontainers); frontend lint, typecheck, 978/978 test, build qua; thử hai vai trò trên trình duyệt ở stack riêng. Chưa xem trên giao diện: duyệt nhiều, hạn chót, giao diện điện thoại. |
+| Đối chiếu tài liệu với `staging@062a43f5`, 10/11 | [Doc/code sync](2026-11-10-aidlc-code-sync-gaps.md) | Chỉ sửa Markdown cho U01, U04–U10 và các bảng kê; không chạy application test, không phải acceptance. |
 | Move-only refactor, 30/10 | [Package/file moves](2026-10-30-package-moves-only-results.md) | Historical 1,611 backend/599 frontend; no conversion into current HEAD acceptance. |
 | Remediation, 30/10 | [Remediation result](2026-10-30-remediation-student-mcp-results.md) | Historical 1,611 backend/599 frontend and two lint warnings; original scope/limits retained. |
 

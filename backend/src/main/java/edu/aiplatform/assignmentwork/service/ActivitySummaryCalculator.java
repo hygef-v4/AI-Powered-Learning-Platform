@@ -95,7 +95,8 @@ final class ActivitySummaryCalculator {
                 : "Có " + unknown + " chỗ thiếu hoặc lệch dữ liệu, ghi là không rõ. " + NOTE;
         Instant lastEventAt = events.stream().map(ActivityEvent::serverTime).max(Comparator.naturalOrder()).orElse(null);
         return new ActivitySummary(ActivityPolicyState.AVAILABLE, away, known, List.copyOf(intervals), unknown, note,
-                lastEventAt);
+                lastEventAt, events.stream().map(ActivityEvent::serverTime)
+                        .min(Comparator.naturalOrder()).orElse(null));
     }
 
     /** Lệch giữa đồng hồ server và client của phiên, lấy ở sự kiện đầu có giờ client. */

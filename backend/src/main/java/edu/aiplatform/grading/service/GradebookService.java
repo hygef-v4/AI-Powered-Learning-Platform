@@ -44,6 +44,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,6 +63,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class GradebookService {
+    private static final DateTimeFormatter EXPORT_DATE_TIME = DateTimeFormatter
+            .ofPattern("dd/MM/yyyy HH:mm:ss").withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
     private static final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -154,7 +158,7 @@ public class GradebookService {
             if (evaluation.kind == EvaluationKind.MEMBER || submission != null
                     && Objects.equals(evaluation.attemptId, submission.gradedAttemptId())) {
                 var previous = current.get(key);
-                if (previous == null || evaluation.createdAt.isAfter(previous.createdAt))
+                if (previous == null || gradeTime(evaluation).isAfter(gradeTime(previous)))
                     current.put(key, evaluation);
             }
         }
@@ -274,7 +278,7 @@ public class GradebookService {
             if (actor.accountId().equals(evaluation.accountId)
                     && evaluation.state != EvaluationStatus.SUPERSEDED) {
                 var previous = latest.get(evaluation.assignmentId);
-                if (previous == null || evaluation.createdAt.isAfter(previous.createdAt))
+                if (previous == null || gradeTime(evaluation).isAfter(gradeTime(previous)))
                     latest.put(evaluation.assignmentId, evaluation);
             }
 
@@ -282,6 +286,10 @@ public class GradebookService {
         return latest.values().stream()
                 .filter(evaluation -> evaluation.state == EvaluationStatus.PUBLISHED)
                 .map(this::mapStudentView).toList();
+    }
+
+    private static Instant gradeTime(Evaluation evaluation) {
+        return evaluation.gradedAt == null ? evaluation.createdAt : evaluation.gradedAt;
     }
 
     /** Returns the caller's attempt grade and hides its details until publication. */
@@ -332,6 +340,7 @@ public class GradebookService {
                 if (criterion.items() == null)
                     continue;
                 for (var item : criterion.items()) {
+                    if (item.points() == null) continue;
                     BigDecimal awarded = awardedForRubric.getOrDefault(item.itemId(),
                             BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
                     rubricScore = rubricScore.add(awarded);
@@ -350,7 +359,8 @@ public class GradebookService {
                         : null;
         return new StudentGradeView(evaluation.assignmentId, evaluation.attemptId, evaluation.score,
                 evaluation.maxScore, evaluation.feedback, evaluation.publishedAt,
-                !evaluation.changes.isEmpty(), evaluation.rubricChecks, summary,
+                evaluation.publishedAt != null && evaluation.gradedAt != null
+                        && evaluation.gradedAt.isAfter(evaluation.publishedAt), evaluation.rubricChecks, summary,
                 List.copyOf(rubricItems), rubrics.isEmpty() ? evaluation.score : rubricScore,
                 evaluation.memberOverride);
     }
@@ -387,7 +397,7 @@ public class GradebookService {
             if (evaluation.state == EvaluationStatus.PUBLISHED
                     && active.contains(evaluation.accountId)) {
                 var previous = latest.get(evaluation.accountId);
-                if (previous == null || evaluation.createdAt.isAfter(previous.createdAt))
+                if (previous == null || gradeTime(evaluation).isAfter(gradeTime(previous)))
                     latest.put(evaluation.accountId, evaluation);
             }
         return new GradeDistributionCalculator().calculate(
@@ -401,6 +411,13 @@ public class GradebookService {
     @Transactional
     public List<List<String>> buildExportRows(Actor actor, UUID classId, UUID assignmentId,
             String format) {
+        return buildExport(actor, classId, assignmentId, format).rows();
+    }
+
+    public record GradebookExport(List<List<String>> rows, String assignmentTitle) {}
+
+    @Transactional
+    public GradebookExport buildExport(Actor actor, UUID classId, UUID assignmentId, String format) {
         // Step 1: Check teacher export permission and format parameter (csv or xlsx)
         gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_EXPORT);
         if (!Set.of("csv", "xlsx").contains(format))
@@ -408,20 +425,20 @@ public class GradebookService {
 
         // Step 2: Write standard header row
         List<List<String>> output = new ArrayList<>();
-        output.add(List.of("Student", "Email", "Assignment", "Status", "Submitted at", "Late",
-                "Score", "Maximum", "Feedback"));
+        output.add(List.of("Sinh viên", "Email", "Bài tập", "Trạng thái", "Thời gian nộp", "Nộp muộn",
+                "Điểm", "Điểm tối đa", "Nhận xét"));
 
         // Step 3: Load gradebook data and format export rows for each student and assignment
         gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
         var data = loadGradebook(classId, null);
-        if (assignmentId != null && data.columns().stream()
-                .noneMatch(assignment -> assignmentId.equals(assignment.id())))
+        var selectedColumns = data.columns().stream()
+                .filter(column -> assignmentId == null || assignmentId.equals(column.id())).toList();
+        if (assignmentId != null && selectedColumns.isEmpty())
             throw ApiException.notFound("ASSIGNMENT_NOT_FOUND");
         for (var student : data.students()) {
-            for (var column : data.columns()) {
-                if (assignmentId == null || assignmentId.equals(column.id()))
-                    output.add(buildExportRow(student, mapGradeCell(student.accountId(), column,
-                            data.evaluations(), data.progress()), column.title()));
+            for (var column : selectedColumns) {
+                output.add(buildExportRow(student, mapGradeCell(student.accountId(), column,
+                        data.evaluations(), data.progress()), column.title()));
             }
         }
 
@@ -429,17 +446,29 @@ public class GradebookService {
         audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "GRADEBOOK_EXPORTED",
                 "CLASS", classId.toString(), AuditResult.SUCCESS, null, Map.of("format", format),
                 clock.instant()));
-        return output;
+        String title = selectedColumns.size() == 1 ? selectedColumns.get(0).title() : null;
+        return new GradebookExport(output, title);
     }
 
-    /** Formats one export row and includes scores and feedback only for official grades. */
+    /** Staff exports include saved drafts; student endpoints still require publication. */
     private List<String> buildExportRow(Person student, GradeCell grade, String assignmentTitle) {
-        boolean official = grade.status().equals("FINALIZED") || grade.status().equals("PUBLISHED");
-        String score = official && grade.score() != null ? grade.score().toPlainString() : "";
-        String feedback = official && grade.feedback() != null ? grade.feedback() : "";
-        return List.of(student.name(), student.email(), assignmentTitle, grade.status(),
-                grade.submittedAt() == null ? "" : grade.submittedAt().toString(),
-                Boolean.toString(grade.late()), score,
+        boolean saved = grade.status().equals("DRAFT") || grade.status().equals("FINALIZED")
+                || grade.status().equals("PUBLISHED");
+        String score = saved && grade.score() != null ? grade.score().toPlainString() : "";
+        String feedback = saved && grade.feedback() != null ? grade.feedback() : "";
+        String status = switch (grade.status()) {
+            case "NOT_SUBMITTED" -> "Chưa nộp";
+            case "IN_PROGRESS" -> "Đang làm bài";
+            case "PENDING" -> "Chờ chấm";
+            case "DRAFT" -> "Đã chấm";
+            case "FINALIZED" -> "Đã lưu";
+            case "PUBLISHED" -> "Đã công bố";
+            case "SUPERSEDED" -> "Bài nộp cũ";
+            default -> "Chưa xác định";
+        };
+        return List.of(student.name(), student.email(), assignmentTitle, status,
+                grade.submittedAt() == null ? "" : EXPORT_DATE_TIME.format(grade.submittedAt()),
+                grade.late() ? "Có" : "Không", score,
                 grade.maxScore() == null ? "" : grade.maxScore().toPlainString(), feedback);
     }
 }

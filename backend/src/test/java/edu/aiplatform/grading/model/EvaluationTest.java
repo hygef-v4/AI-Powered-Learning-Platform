@@ -7,6 +7,14 @@ import java.util.*;
 import org.junit.jupiter.api.Test;
 
 class EvaluationTest {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"-0.25,3.75", "0.25,4.25"})
+    void adjustmentsCanUseAnEmptyOptionalNote(String adjustment, String expected) {
+        var grade = evaluation();
+        grade.saveGrade("{}", new BigDecimal("4"), new BigDecimal(adjustment), "", null,
+                null, actor, now);
+        assertThat(grade.score()).isEqualByComparingTo(expected);
+    }
     private final UUID actor = UUID.randomUUID();
     private final Instant now = Instant.parse("2026-10-20T00:00:00Z");
 
@@ -21,10 +29,10 @@ class EvaluationTest {
     }
 
     @Test
-    void saveClampsScoreAndRequiresAdjustmentReason() {
+    void saveClampsScoreAndAllowsOptionalAdjustmentReason() {
         var e = evaluation();
-        assertThatThrownBy(() -> e.saveGrade("{}", new BigDecimal("4"), new BigDecimal("-1"), "", null, null, actor, now))
-                .hasMessageContaining("reason");
+        e.saveGrade("{}", new BigDecimal("4"), new BigDecimal("-1"), null, null, null, actor, now);
+        assertThat(e.score()).isEqualByComparingTo("3.00");
         e.saveGrade("{}", new BigDecimal("4"), new BigDecimal("-1"), "late", "feedback", null, actor, now);
         assertThat(e.score()).isEqualByComparingTo("3.00");
         assertThat(e.status()).isEqualTo(EvaluationStatus.DRAFT);
@@ -33,23 +41,18 @@ class EvaluationTest {
     }
 
     @Test
-    void finalizedAndPublishedGradesRejectChangesEvenWithReason() {
+    void legacyFinalizedAndPublishedGradesAllowCorrections() {
         var e = evaluation();
         e.saveGrade("{}", new BigDecimal("4"), BigDecimal.ZERO, null, "ok", null, actor, now);
-        e.finalizeGrade(actor, now);
-        assertThatThrownBy(() -> e.saveGrade("{}", new BigDecimal("6"), BigDecimal.ZERO, null, "updated", "correction", actor, now))
-                .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
-                        ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
+        e.state = EvaluationStatus.FINALIZED;
+        e.saveGrade("{}", new BigDecimal("6"), BigDecimal.ZERO, null, "updated", "correction", actor, now);
+        assertThat(e.state).isEqualTo(EvaluationStatus.DRAFT);
         e.publishGrade(actor, now);
-        assertThatThrownBy(() -> e.saveGrade("{}", new BigDecimal("6"), BigDecimal.ZERO, null, null, null, actor, now))
-                .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
-                        ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
-        assertThatThrownBy(() -> e.overrideMemberScore(BigDecimal.TEN, "correction", actor, now));
-        assertThat(e.memberOverride).isFalse();
-        assertThat(e.status()).isEqualTo(EvaluationStatus.PUBLISHED);
-        assertThat(e.score()).isEqualByComparingTo("4");
-        assertThat(e.feedback).isEqualTo("ok");
-        assertThat(e.history()).isEmpty();
+        e.overrideMemberScore(BigDecimal.TEN, BigDecimal.ZERO, "correction", actor, now.plusSeconds(1));
+        assertThat(e.memberOverride).isTrue();
+        assertThat(e.state).isEqualTo(EvaluationStatus.PUBLISHED);
+        assertThat(e.score).isEqualByComparingTo("10");
+        assertThat(e.history()).hasSize(2);
     }
 
     @Test
@@ -70,9 +73,31 @@ class EvaluationTest {
     @Test
     void feedbackLimitAndPublishRequireValidState() {
         var e = evaluation();
-        assertThatThrownBy(() -> e.publishGrade(actor, now)).hasMessageContaining("FINALIZED");
+        assertThatThrownBy(() -> e.publishGrade(actor, now)).hasMessageContaining("DRAFT");
         assertThatThrownBy(
                 () -> e.saveGrade("{}", BigDecimal.ONE, BigDecimal.ZERO, null, "x".repeat(10001), null, actor, now))
                 .hasMessageContaining("10000");
+    }
+    @Test
+    void draftScoreChangesKeepHistoryAndGroupAdjustment() {
+        var root = evaluation();
+        root.saveGrade("{}", new BigDecimal("6"), BigDecimal.ONE, "bonus", "old", null, actor, now);
+        root.saveGrade("{}", new BigDecimal("7"), BigDecimal.ONE, "bonus", "new", "correction", actor, now.plusSeconds(1));
+        assertThat(root.history()).singleElement().satisfies(h -> {
+            assertThat(h.before()).isEqualByComparingTo("7");
+            assertThat(h.after()).isEqualByComparingTo("8");
+            assertThat(h.previousFeedback()).isEqualTo("old");
+            assertThat(h.reason()).isEqualTo("correction");
+        });
+        var member = evaluation();
+        member.inheritGroupGrade(root, null, actor, now);
+        assertThat(member.score).isEqualByComparingTo("8");
+        assertThat(member.adjustment).isEqualByComparingTo("1");
+        member.overrideMemberScore(new BigDecimal("5"), new BigDecimal("7"), "contribution", actor, now);
+        assertThat(member.adjustment).isEqualByComparingTo("-2");
+        root.saveGrade("{}", new BigDecimal("8"), BigDecimal.ONE, "bonus", "new", null, actor, now);
+        member.inheritGroupGrade(root, null, actor, now);
+        assertThat(member.score).isEqualByComparingTo("5");
+        assertThat(member.adjustment).isEqualByComparingTo("-3");
     }
 }

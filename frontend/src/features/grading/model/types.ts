@@ -13,7 +13,7 @@ export type StructuredFeedbackItem = {
   rubricId: string;
   itemId: string;
   evidence: string | null;
-  reason: string;
+  reason: string | null;
   suggestion: string | null;
   evidenceBlockId: string | null;
   requiresReview: boolean;
@@ -80,6 +80,7 @@ export type Evaluation = {
   }[];
 };
 export type Detail = {
+  editable?: boolean;
   evaluation: Evaluation;
   document: SubmissionDocumentDto;
   rubrics: Rubric[];
@@ -153,6 +154,7 @@ export type Save = {
 export type Proposal = {
   id: string;
   versionNo: number;
+  createdAt?: string | null;
   taskId?: string | null;
   taskState?: "QUEUED" | "RUNNING" | "READY" | "FAILED" | "UNKNOWN" | "CANCELLED" | string | null;
   status: string;
@@ -240,7 +242,6 @@ export type GradingFormValues = {
   acknowledgedReviewItems?: Checks;
   reviewedItemScores?: ItemScores;
   adjustment: string;
-  adjustmentReason: string;
   feedback: string;
   changeReason: string;
   usedProposalId: string | null;

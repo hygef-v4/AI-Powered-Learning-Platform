@@ -50,7 +50,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class AiTaskService implements IAiTask {
 
     public static final int MAX_ACTIVE = 3;
-    static final int MAX_REQUEST_REF = 100;
+    static final int MAX_REQUEST_REF = 200;
     static final int MAX_PROMPT_CHARS = 400_000;
 
     private final AiTaskRepository tasks;

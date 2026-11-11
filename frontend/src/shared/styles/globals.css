@@ -34,6 +34,7 @@
   --color-shell: var(--c-bg);
   --color-nav: var(--c-nav);
   --color-sidebar: var(--c-sidebar);
+  --color-sidebar-hover: var(--c-sidebar-hover);
   --color-watermark: var(--c-watermark);
   --color-canvas: var(--c-bg);
   --color-table-head: var(--c-bg);
@@ -60,6 +61,21 @@
   --color-accent-soft: var(--c-accent-soft);
   --color-orange: var(--c-orange);
   --color-orange-soft: var(--c-orange-soft);
+
+  /* Bề mặt giữ nguyên màu ở cả hai theme: khung trình xem tài liệu (nền xám tối như trình xem PDF), trang bảng tính (giấy
+     trắng) và khối mã trong hướng dẫn cài đặt. */
+  --color-viewer: #525659;
+  --color-viewer-bar: #323639;
+  --color-sheet-head: #f1f3f4;
+  --color-sheet-line: #e0e0e0;
+  --color-sheet-muted: #5f6368;
+  --color-sheet-ink: #202124;
+  --color-code: #17212b;
+  --color-code-ink: #d4dbe3;
+  --color-code-key: #7cc7ff;
+  --color-code-string: #f5b97a;
+  --color-code-number: #f2d36b;
+  --color-code-muted: #9aa7b4;
 
   --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
   --animate-rise: rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
@@ -143,6 +159,8 @@
   --c-nav: #ffffff;
   --c-watermark: #f1f1f3;
   --c-sidebar: #ffffff;
+  /* Nền khi rê chuột trên sidebar: phải khác nền sidebar ở cả hai theme (sáng: sidebar trắng; tối: sunken gần trùng sidebar). */
+  --c-sidebar-hover: #f4f4f5;
   --shadow-float: 0 18px 48px rgb(24 24 27 / 0.08), 0 2px 6px rgb(24 24 27 / 0.035);
   --shadow-lift: 0 4px 14px rgb(24 24 27 / 0.025);
 }
@@ -189,6 +207,7 @@
   --c-nav: #1d2939;
   --c-watermark: #263549;
   --c-sidebar: #131d28;
+  --c-sidebar-hover: #202b39;
   --shadow-float: 0 18px 48px rgb(0 0 0 / 0.4), 0 2px 6px rgb(0 0 0 / 0.2);
   --shadow-lift: 0 6px 18px rgb(0 0 0 / 0.25);
 }
@@ -213,6 +232,24 @@ body {
 /* Trong layer base để class tiện ích (truncate, whitespace-nowrap) của từng chỗ vẫn thắng; ngoài layer thì tiêu đề cắt
    một dòng vẫn bị xuống dòng. */
 @layer base {
+  /* Native controls and custom accessible controls share the same click affordance. */
+  :where(button, a[href], summary, select,
+    input[type="checkbox"], input[type="radio"], input[type="button"], input[type="submit"], input[type="reset"], input[type="file"],
+    [role="button"], [role="link"], [role="tab"], [role="menuitem"], [role="option"], [role="checkbox"], [role="radio"], [role="switch"], [role="treeitem"]),
+  :where([role="combobox"]):not(input):not(textarea),
+  label:has(input[type="checkbox"], input[type="radio"]) {
+    cursor: pointer;
+  }
+
+  :where(button, a[href], summary, select, input, [role]):is(:disabled, [aria-disabled="true"]),
+  label:has(input[type="checkbox"]:disabled, input[type="radio"]:disabled) {
+    cursor: not-allowed;
+  }
+
+  input::file-selector-button {
+    cursor: inherit;
+  }
+
   h1,
   h2,
   h3 {
@@ -224,6 +261,42 @@ body {
 :root {
   accent-color: var(--c-primary-strong);
   caret-color: var(--c-primary-ink);
+}
+
+/*
+ * Safari iOS tự phóng to trang khi chạm vào ô nhập chữ nhỏ hơn 16px. Màn hẹp: mọi ô nhập (kể cả ô viết tay) dùng 16px;
+ * từ `sm` trở lên giữ cỡ của từng ô. Ngoài layer để thắng class `text-[13.5px]` của ô; ô chữ to (mã OTP) giữ cỡ riêng.
+ */
+@media (max-width: 639.98px) {
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"], .text-lg, .text-xl, .text-2xl),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/*
+ * Lề hai bên của vùng nội dung (`main` trong AppShell) và thanh đầu trang dính tràn hết bề ngang vùng đó. `main` đệm 4% bề
+ * ngang khung chứa nó; thanh nằm trong `main` nên % tính trên bề ngang nội dung (92% khung) — chia 0,92 để ra cùng số px.
+ */
+.main-gutter {
+  padding-inline: 1rem;
+}
+
+.main-bleed {
+  margin-inline: -1rem;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 40rem) {
+  .main-gutter {
+    padding-inline: 4%;
+  }
+
+  .main-bleed {
+    margin-inline: calc(-4% / 0.92);
+    padding-inline: calc(4% / 0.92);
+  }
 }
 
 /* Placeholder đủ tương phản (4,5:1) ở cả hai theme. */
@@ -372,6 +445,23 @@ html.drawio-panel-open [data-app-sidebar] {
   position: absolute;
 }
 
+/*
+ * Màu chữ và màu tô nền người viết chọn (RichText, RunsView) được lưu theo nền sáng: chữ #202124 hay nền tô #FFF475 sẽ
+ * mất chữ trên trang tối. Theme tối giữ sắc độ nhưng đẩy chữ lên vùng sáng (L ≥ 0,75) và kéo nền tô xuống vùng tối
+ * (L = 0,38), nên chữ vẫn đạt 4,5:1; dữ liệu lưu không đổi. Trình duyệt chưa hỗ trợ màu tương đối thì giữ màu gốc.
+ */
+[data-theme="dark"] [data-color] {
+  color: oklch(from var(--run-color) max(0.75, calc(1 - l * 0.35)) min(c, 0.16) h) !important;
+}
+
+[data-theme="dark"] [data-highlight] {
+  background-color: oklch(from var(--run-highlight) 0.38 min(c, 0.09) h) !important;
+}
+
+[data-theme="dark"] [data-color][data-highlight] {
+  color: oklch(from var(--run-color) max(0.84, calc(1 - l * 0.3)) min(c, 0.14) h) !important;
+}
+
 /* One typeface: display titles carry weight instead of a second family; codes and times keep aligned figures. */
 @layer utilities {
   .font-display { font-weight: 700; }
@@ -388,6 +478,73 @@ html.drawio-panel-open [data-app-sidebar] {
     linear-gradient(90deg, var(--c-line-soft) 1px, transparent 1px);
   background-size: 32px 32px, 32px 32px, 8px 8px, 8px 8px;
   background-position: -1px -1px;
+}
+
+/* Bảng xếp thẻ trên màn hẹp (`TableFrame stackOnMobile`): ẩn hàng tiêu đề, mỗi dòng là một thẻ, ô đầu là tên, các ô còn
+   lại là cặp nhãn (lấy từ `data-label`) và giá trị. Từ `sm` trở lên là bảng như thường. */
+@layer components {
+  @media (width < 40rem) {
+    .table-stack {
+      overflow-x: visible;
+    }
+    .table-stack table,
+    .table-stack tbody {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .table-stack colgroup {
+      display: none;
+    }
+    .table-stack thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .table-stack tbody > tr {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border: 1px solid var(--c-line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: var(--c-surface);
+    }
+    .table-stack tbody > tr > td {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 0;
+      padding: 0;
+      white-space: normal;
+    }
+    .table-stack tbody > tr > td:first-child {
+      font-size: 15px;
+    }
+    .table-stack tbody > tr > td[data-label]::before {
+      flex-shrink: 0;
+      color: var(--c-muted);
+      content: attr(data-label);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .table-stack tbody > tr > td[data-stack-hidden],
+    .table-stack tbody > tr > td:empty {
+      display: none;
+    }
+    .table-stack tbody > tr > td[colspan] {
+      justify-content: center;
+    }
+    .table-stack tr.row-interactive:hover > td:first-child {
+      box-shadow: none;
+    }
+  }
 }
 
 /* Dòng bấm được (bảng và danh sách): rê chuột thì nền ấm lên, một vạch màu chính trượt vào ở mép trái, mũi tên cuối dòng

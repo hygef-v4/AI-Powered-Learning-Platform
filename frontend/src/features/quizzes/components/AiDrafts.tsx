@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { AiTaskStatus, PROVIDER_LABEL, type AiProvider, type SourceChoice } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, cx, Dialog, Field, Icon, Pill, Select, TextInput } from "@/shared/ui";
+import { Alert, Button, cx, Dialog, Field, Icon, Pill, Select, TextInput, useConfirmDialog } from "@/shared/ui";
 import { DIFFICULTY_LABELS, errorMessage, failureLabel, formatDateTime, TYPE_LABELS } from "../model/labels";
 import { McqEditor } from "./McqEditor";
 import { MaterialSourceSelect } from "./MaterialSourceSelect";
@@ -161,14 +161,20 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
     showDraft(null);
   });
 
+  const [confirmDialog, requestConfirm] = useConfirmDialog();
   const footer = mode === "form" ? undefined : (
     <>
       {draft && draft.status !== "PENDING" && (
         <Button onClick={() => {
-          if (draft.status === "READY" && JSON.stringify(entries) !== JSON.stringify(entriesOf(draft))
-            && !window.confirm("Bỏ các chỉnh sửa đề xuất chưa lưu để tạo yêu cầu mới?")) return;
-          if (draft.status !== "FAILED") setRequest(null);
-          showDraft(null);
+          const startNewRequest = () => {
+            if (draft.status !== "FAILED") setRequest(null);
+            showDraft(null);
+          };
+          if (draft.status === "READY" && JSON.stringify(entries) !== JSON.stringify(entriesOf(draft))) {
+            requestConfirm("Bỏ các chỉnh sửa đề xuất chưa lưu để tạo yêu cầu mới?", startNewRequest);
+            return;
+          }
+          startNewRequest();
         }} disabled={busy} data-testid="ai-draft-new">{draft.status === "FAILED" && request ? "Thử lại yêu cầu" : "Yêu cầu mới"}</Button>
       )}
       {draft?.status === "READY" && (
@@ -212,8 +218,14 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
     {body}<div className="flex flex-wrap justify-end gap-2 border-t border-line pt-3">
       <Button onClick={onClose} disabled={busy}>Đóng soạn AI</Button>{footer}
     </div>
+    {confirmDialog}
   </div>;
-  return <Dialog open onClose={onClose} dismissible={!busy} size="lg" icon="smart_toy" title={api.title} footer={footer}>{body}</Dialog>;
+  return (
+    <>
+      <Dialog open onClose={onClose} dismissible={!busy} size="lg" icon="smart_toy" title={api.title} footer={footer}>{body}</Dialog>
+      {confirmDialog}
+    </>
+  );
 }
 
 /**
@@ -294,11 +306,11 @@ function DraftRequestForm({ api, busy, initial, onSubmit, onDirtyChange }: {
           Chưa lấy được danh sách tài liệu; vẫn gửi được yêu cầu không kèm tài liệu.
           <Button size="sm" onClick={() => { setMaterialsError(false); setMaterials(null); setMaterialsReload((value) => value + 1); }}>Tải lại tài liệu</Button>
         </div>}
-        {materials?.length === 0 && <p className="text-[11px] text-muted">Chưa có học liệu nào.</p>}
+        {materials?.length === 0 && <p className="text-xs text-muted">Chưa có học liệu nào.</p>}
         <MaterialSourceSelect materials={materialsError ? [] : materials} value={materialIds} onChange={setMaterialIds} disabled={busy} />
         {errors.materialIds && <p role="alert" className="text-xs text-danger">{errors.materialIds}</p>}
       </div>
-      <p className="text-[11px] text-muted">Hệ thống tự chọn nguồn AI khả dụng. Chỉ các tài liệu đã chọn và có nội dung văn bản được đưa vào yêu cầu.</p>
+      <p className="text-xs text-muted">Hệ thống tự chọn nguồn AI khả dụng. Chỉ các tài liệu đã chọn và có nội dung văn bản được đưa vào yêu cầu.</p>
       <div className="flex justify-end">
         <Button variant="primary" icon="smart_toy" onClick={submit} data-testid="ai-draft-submit">Gửi yêu cầu</Button>
       </div>
@@ -359,7 +371,7 @@ function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
                 onAccept={() => accept(index)} />
             ))}
           </ol>
-          <p className="text-[11px] text-muted">{note}</p>
+          <p className="text-xs text-muted">{note}</p>
         </>
       )}
     </div>
@@ -409,7 +421,7 @@ function ProposalCard({ index, entry, onChange, onAccept }: {
           </ul>
           {form.explanation && <p className="mt-1.5 text-[12px] text-muted">Giải thích: {form.explanation}</p>}
           {entry.serverViolations.length > 0 && state === "open" && (
-            <p className="mt-1.5 text-[11px] text-danger">Cần sửa: {entry.serverViolations.map((v) => v.message).join("; ")}</p>
+            <p className="mt-1.5 text-xs text-danger">Cần sửa: {entry.serverViolations.map((v) => v.message).join("; ")}</p>
           )}
         </>
       )}

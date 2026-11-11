@@ -863,6 +863,138 @@ Given submission hợp lệ, When chấm rubric tay/AI proposal, Then dùng ph�
 
 Given history đóng góp, When đánh giá, Then không tự suy ra cheating/điểm đóng góp bằng số thao tác.
 
+### US-GRP-007 - Bật đợt sinh viên tự chia nhóm
+
+**Primary unit**: U12; **Scope**: MVP; **Persona**: P-TEACHER.
+
+**Current UC trace**: UC 57 — Create/Update/Delete Class Group (mở rộng 2026-11-11). Source: [current UC table](../../../docs/usecase_table.md).
+
+**Story**: Là giảng viên, tôi muốn bật đợt cho sinh viên tự lập nhóm với sĩ số và hạn chót do tôi đặt, để sinh viên chọn bạn cùng nhóm mà tôi vẫn kiểm soát quy mô nhóm.
+
+**Truy vết**: FR-025, SG-01, SEC-002, SEC-003. [Yêu cầu](../requirements/2026-11-11-student-self-grouping.md).
+
+**Acceptance criteria**
+
+#### Scenario 1 - Bật đợt hợp lệ
+
+- **Given** giảng viên chính của lớp `DRAFT`/`OPEN`
+- **When** bật đợt với sĩ số tối thiểu và tối đa trong 2–20, tối thiểu ≤ tối đa, hạn chót trống hoặc ở tương lai
+- **Then** cấu hình được lưu và audit; khi lớp `OPEN` và chưa tới hạn, sinh viên chưa có nhóm thấy đợt đang mở cùng sĩ số và hạn chót
+
+#### Scenario 2 - Cấu hình hoặc người thao tác không hợp lệ
+
+- **Given** sĩ số ngoài 2–20, tối thiểu lớn hơn tối đa, hạn chót đã qua, lớp `ARCHIVED`, hoặc người thao tác không phải giảng viên chính của lớp
+- **When** lưu cấu hình
+- **Then** hệ thống từ chối với lỗi cụ thể và cấu hình cũ không đổi
+
+#### Scenario 3 - Đóng đợt
+
+- **Given** đợt đang mở, có đề xuất nháp, đề xuất chờ duyệt và lời mời đang chờ
+- **When** giảng viên tắt đợt hoặc tới hạn chót
+- **Then** sinh viên không tạo, mời, chấp nhận hay gửi duyệt được; lời mời đang chờ hết hiệu lực; đề xuất chờ duyệt vẫn chờ giảng viên quyết định; đề xuất nháp được giữ để dùng khi đợt mở lại
+
+### US-GRP-008 - Lập đề xuất nhóm và mời bạn
+
+**Primary unit**: U12; **Scope**: MVP; **Persona**: P-STUDENT.
+
+**Current UC trace**: UC 54 — View My Group (mở rộng 2026-11-11). Source: [current UC table](../../../docs/usecase_table.md).
+
+**Story**: Là sinh viên chưa có nhóm, tôi muốn tạo đề xuất nhóm và mời bạn cùng lớp, hoặc nhận lời mời của bạn, để làm việc với những người tôi chọn.
+
+**Truy vết**: FR-025, SG-02, SG-08, SG-09, SEC-002, SEC-003. [Yêu cầu](../requirements/2026-11-11-student-self-grouping.md).
+
+**Acceptance criteria**
+
+#### Scenario 1 - Tạo đề xuất và mời
+
+- **Given** đợt đang mở; sinh viên ghi danh `ACTIVE`, chưa có nhóm chính thức và chưa ở đề xuất đang hoạt động nào
+- **When** tạo đề xuất với tên hợp lệ, không trùng trong lớp, rồi mời các bạn chưa có nhóm
+- **Then** người tạo là trưởng nhóm và thành viên; mỗi người được mời nhận thông báo trong ứng dụng; số thành viên cộng lời mời đang chờ không vượt sĩ số tối đa
+
+#### Scenario 2 - Chấp nhận hoặc từ chối lời mời
+
+- **Given** sinh viên có một hoặc nhiều lời mời đang chờ và chưa ở đề xuất đang hoạt động nào
+- **When** chấp nhận một lời mời
+- **Then** sinh viên thành thành viên của đề xuất đó và các lời mời còn lại tự hủy; nếu từ chối thì lời mời đóng và đề xuất không đổi
+
+#### Scenario 3 - Thao tác không hợp lệ
+
+- **Given** sinh viên đã có nhóm chính thức, đã ở đề xuất đang hoạt động khác, không ghi danh `ACTIVE`, lớp không `OPEN`, đợt đã đóng, hoặc người mời không phải trưởng nhóm
+- **When** tạo đề xuất, mời, hoặc chấp nhận lời mời
+- **Then** hệ thống từ chối với lỗi cụ thể; không sinh viên nào thuộc hai đề xuất đang hoạt động, kể cả khi hai thao tác diễn ra cùng lúc
+
+#### Scenario 4 - Rời hoặc hủy đề xuất nháp
+
+- **Given** đề xuất đang nháp
+- **When** một thành viên rời, hoặc trưởng nhóm hủy đề xuất
+- **Then** người rời được tự do; khi hủy thì mọi thành viên được tự do và lời mời đang chờ của đề xuất bị hủy
+
+### US-GRP-009 - Gửi đề xuất nhóm để giảng viên duyệt
+
+**Primary unit**: U12; **Scope**: MVP; **Persona**: P-STUDENT (trưởng nhóm đề xuất).
+
+**Current UC trace**: UC 54 — View My Group (mở rộng 2026-11-11). Source: [current UC table](../../../docs/usecase_table.md).
+
+**Story**: Là trưởng nhóm đề xuất, tôi muốn gửi đề xuất cho giảng viên duyệt khi đủ người, và rút về để sửa khi cần, để nhóm của tôi trở thành nhóm chính thức.
+
+**Truy vết**: FR-025, SG-03, SG-08, SG-09, SEC-002. [Yêu cầu](../requirements/2026-11-11-student-self-grouping.md).
+
+**Acceptance criteria**
+
+#### Scenario 1 - Gửi duyệt
+
+- **Given** đợt đang mở và đề xuất nháp có số thành viên đã chấp nhận ≥ sĩ số tối thiểu
+- **When** trưởng nhóm gửi duyệt
+- **Then** đề xuất chuyển sang chờ duyệt và bị khóa; lời mời còn chờ tự hủy; giảng viên chính nhận thông báo có đề xuất mới
+
+#### Scenario 2 - Chưa đủ điều kiện
+
+- **Given** đề xuất thiếu sĩ số tối thiểu, đợt đã đóng, hoặc người gửi không phải trưởng nhóm
+- **When** gửi duyệt
+- **Then** hệ thống từ chối với lỗi cụ thể và đề xuất vẫn là nháp
+
+#### Scenario 3 - Rút về nháp
+
+- **Given** đề xuất đang chờ duyệt
+- **When** trưởng nhóm rút về
+- **Then** đề xuất thành nháp, rời khỏi danh sách chờ duyệt của giảng viên và sửa được khi đợt mở
+
+### US-GRP-010 - Duyệt đề xuất nhóm và xếp sinh viên còn lại
+
+**Primary unit**: U12; **Scope**: MVP; **Persona**: P-TEACHER.
+
+**Current UC trace**: UC 57 — Create/Update/Delete Class Group (mở rộng 2026-11-11). Source: [current UC table](../../../docs/usecase_table.md).
+
+**Story**: Là giảng viên, tôi muốn duyệt hoặc từ chối đề xuất nhóm của sinh viên và thấy ai còn chưa có nhóm, để chốt bộ nhóm của lớp nhanh mà vẫn đúng quy tắc.
+
+**Truy vết**: FR-025, SG-04, SG-05, SG-06, SG-07, SG-08, SG-09, SEC-002, SEC-003, SEC-005. [Yêu cầu](../requirements/2026-11-11-student-self-grouping.md).
+
+**Acceptance criteria**
+
+#### Scenario 1 - Duyệt một hoặc nhiều đề xuất
+
+- **Given** giảng viên chính của lớp `DRAFT`/`OPEN` và các đề xuất chờ duyệt
+- **When** duyệt một đề xuất hoặc chọn nhiều đề xuất để duyệt một lần
+- **Then** mỗi đề xuất hợp lệ thành nhóm chính thức với đúng tên, trưởng nhóm và thành viên, `version` bộ nhóm tăng, thao tác được audit và thành viên nhận thông báo; đề xuất vi phạm quy tắc bộ nhóm được báo kèm lý do, không ghi một nửa và không chặn các đề xuất hợp lệ khác
+
+#### Scenario 2 - Từ chối
+
+- **Given** một đề xuất chờ duyệt
+- **When** giảng viên từ chối, có hoặc không có lý do (tối đa 1.000 ký tự)
+- **Then** đề xuất bị từ chối, thành viên nhận thông báo kèm lý do và được tự do lập hoặc vào đề xuất khác
+
+#### Scenario 3 - Sinh viên chưa có nhóm và sửa tay
+
+- **Given** đợt đang mở hoặc đã đóng
+- **When** giảng viên mở tab Nhóm, rồi tạo tay hoặc chia ngẫu nhiên và lưu bộ nhóm
+- **Then** tab hiện sinh viên chưa có nhóm cùng đề xuất họ đang ở; người vừa được xếp nhóm chính thức rời đề xuất của họ, đề xuất mất trưởng nhóm bị hủy, đề xuất chờ duyệt còn dưới sĩ số tối thiểu quay về nháp
+
+#### Scenario 4 - Không có quyền hoặc dữ liệu đã đổi
+
+- **Given** người thao tác không phải giảng viên chính, lớp `ARCHIVED`, đề xuất không còn chờ duyệt, hoặc bộ nhóm vừa bị người khác lưu
+- **When** duyệt hoặc từ chối
+- **Then** hệ thống từ chối hoặc báo xung đột để tải lại; sau khi duyệt, sinh viên không tự đổi thành viên nhóm chính thức
+
 ### US-IAM-001 - Nhận và kích hoạt tài khoản trường cấp
 
 **Primary unit**: U01; **Scope**: MVP.
@@ -1430,6 +1562,10 @@ Given AI credentials, When cấu hình, Then bản ghi được bảo vệ qua U
 | US-GRP-004 | U12 | MVP |
 | US-GRP-005 | U12 | MVP |
 | US-GRP-006 | U12 | MVP |
+| US-GRP-007 | U12 | MVP |
+| US-GRP-008 | U12 | MVP |
+| US-GRP-009 | U12 | MVP |
+| US-GRP-010 | U12 | MVP |
 | US-IAM-001 | U01 | MVP |
 | US-IAM-002 | U01 | MVP |
 | US-IAM-003 | U01 | MVP |
@@ -1477,3 +1613,11 @@ Given đề xuất đang mở, When bấm Thu gọn, Then đóng phần xem theo
 ## Source-grounded AI proposal acceptance correction — 2026-11-10
 
 US-AIG-001/002: Given AI nhận tài liệu và trả đánh giá lệch nguồn, When xử lý kết quả, Then không đưa câu lệch sang READY/chấp nhận; tạo lại tối đa một task chỉ dùng prompt mặc định và tài liệu đã kiểm lại quyền. Given lượt tạo lại vẫn báo lệch, Then FAILED và proposal rỗng. Cảnh báo được giữ, không chạy lặp vô hạn; có thể tốn thêm một task AI. Legacy READY drafts không được sửa ngầm; đánh giá model không phải bằng chứng tuyệt đối về chất lượng. [Kiểm chứng](../../construction/build-and-test/2026-11-10-ai-source-grounding-fix.md).
+
+## Grading remediation acceptance amendment — 2026-11-10
+
+The approved continuation refines US-GRD-002/003/004/005 and US-RPT-001 without creating new roles or screens. Teacher review must expose partial points, explanations and acknowledgements; a newly filled AI draft alone must not save or publish a grade. Group/member draft corrections preserve a coherent rubric/adjustment breakdown and append history; official grades remain locked and survive group resubmission. A group refresh that changes receipts must clear old marks.
+
+Students can read their published teacher feedback, structured summary, item evidence and improvement suggestions, including group results. Anonymous distributions remain subject to the existing sample/bucket thresholds. Current quiz/class access, per-attempt score privacy and bounded Practice polling have automated regression coverage; live browser/provider acceptance is separate.
+
+[Continuation and evidence](../../construction/plans/code-generation-plan/2026-11-10-grading-remediation-continuation.md).

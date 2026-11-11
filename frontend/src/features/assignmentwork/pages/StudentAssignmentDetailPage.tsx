@@ -84,6 +84,8 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
   // nộp, nộp lại là ghi đè bản cũ, không đếm số lần: một dòng là bản đang sửa nếu có, không thì bản nộp mới nhất.
   const practice = detail.gradingMode === "PRACTICE";
   const newestFirst = attempts && attempts.length > 0 ? [...attempts].sort((a, b) => b.attemptNo - a.attemptNo) : null;
+  const gradedAttempt = newestFirst?.find((a) => a.status === "SUBMITTED" && a.graded)
+    ?? (latest?.graded ? latest : null);
   const rowsOfAttempts = practice
     ? newestFirst ?? (latest ? [{ ...latest, attemptNo: null }] : [])
     : (newestFirst ? newestFirst.slice(0, 1) : latest ? [latest] : []).map((a) => ({ ...a, attemptNo: null }));
@@ -108,7 +110,8 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
             )}
           </Section>
           <SlotOutlet slot={assignmentMaterialSections} props={{ classId, materialIds: detail.referenceMaterialIds }} />
-          {latest?.graded && <ResultSummaryCard attemptId={latest.attemptId} />}
+          {gradedAttempt && <ResultSummaryCard attemptId={gradedAttempt.attemptId}
+            detailsHref={`${history}&attempt=${encodeURIComponent(gradedAttempt.attemptId)}`} />}
         </div>
         {/* Chỉ bài luyện tập có bộ đếm lượt; bài cá nhân, nhóm không đếm số lần nộp (yêu cầu 2026-11-10). */}
         <Section title="Làm bài" actions={practice

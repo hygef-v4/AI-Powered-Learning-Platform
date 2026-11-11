@@ -19,16 +19,24 @@ const initial: Detail = {
   members: [], memberActivities: [], sectionAuthors: [],
 };
 
-it.each(["FINALIZED", "PUBLISHED"] as const)("does not edit or save a %s evaluation, including AI application", async (state) => {
+it.each(["FINALIZED", "PUBLISHED"] as const)("edits and saves a %s evaluation", async (state) => {
   const source: Detail = { ...initial, evaluation: { ...initial.evaluation, state } };
+  mocks.saveEvaluation.mockResolvedValue({ ...source.evaluation, version: 3 });
+  const { result } = renderHook(() => useGradingWorkspace(source, async () => source));
+  act(() => result.current.updateForm({ feedback: "changed" }));
+  await act(() => result.current.save());
+  expect(result.current.disabled).toBe(false);
+  expect(result.current.dirty).toBe(false);
+  expect(mocks.saveEvaluation).toHaveBeenCalledOnce();
+});
+it("does not edit, apply AI or save after the class is archived", async () => {
+  const source = { ...initial, editable: false };
   const { result } = renderHook(() => useGradingWorkspace(source, async () => source));
   const before = result.current.form;
   act(() => result.current.updateForm({ feedback: "changed" }));
-  act(() => result.current.applyProposal({ r: ["i"] }, "AI feedback", "proposal"));
+  act(() => result.current.applyProposal({ r: ["i"] }, "AI", "p"));
   await act(() => result.current.save());
-  expect(result.current.disabled).toBe(true);
   expect(result.current.form).toEqual(before);
-  expect(result.current.dirty).toBe(false);
   expect(mocks.saveEvaluation).not.toHaveBeenCalled();
 });
 const feedback: StructuredFeedback = { schemaVersion: 1, summary: { strengths: [], improvements: [], nextSteps: [] },
@@ -37,14 +45,43 @@ const feedback: StructuredFeedback = { schemaVersion: 1, summary: { strengths: [
 
 beforeEach(() => { vi.clearAllMocks(); mocks.saveEvaluation.mockResolvedValue({ ...initial.evaluation, version: 3 }); });
 
-it("reloads the official values and clears a stale unsaved draft when another session has finalized", async () => {
+it("preserves edits made during background saving and uses the returned version for the next save", async () => {
+  let finish!: (value: Detail["evaluation"]) => void;
+  mocks.saveEvaluation.mockReturnValueOnce(new Promise<Detail["evaluation"]>((resolve) => { finish = resolve; }))
+    .mockResolvedValueOnce({ ...initial.evaluation, version: 4, score: 1, adjustment: 0.25,
+      rubricItemScores: { r: { i: "0.75" } }, adjustmentReason: "New note", feedback: "New edit" });
+  const { result } = renderHook(() => useGradingWorkspace(initial, async () => initial));
+  act(() => result.current.updateForm({ feedback: "First edit" }));
+  let pending!: Promise<Detail["evaluation"] | null>;
+  act(() => { pending = result.current.save(false, { background: true }); });
+  expect(result.current.disabled).toBe(false);
+  expect(await result.current.save(false, { background: true })).toBeNull();
+  expect(mocks.saveEvaluation).toHaveBeenCalledTimes(1);
+  act(() => result.current.updateForm({ feedback: "New edit", adjustment: "0.5", changeReason: "New note",
+    itemScores: { r: { i: "0.75" } } }));
+  await act(async () => {
+    finish({ ...initial.evaluation, version: 3, feedback: "First edit" });
+    await pending;
+  });
+  expect(result.current.form).toMatchObject({ feedback: "New edit", adjustment: "0.5", changeReason: "New note",
+    itemScores: { r: { i: "0.75" } } });
+  expect(result.current.dirty).toBe(true);
+  await act(async () => { await result.current.save(false, { background: true }); });
+  expect(mocks.saveEvaluation).toHaveBeenLastCalledWith("e", expect.objectContaining({
+    version: 3, feedback: "New edit", adjustment: "0.5", adjustmentReason: "New note", changeReason: "New note",
+    itemScoresByRubric: { r: { i: "0.75" } },
+  }));
+  expect(result.current.dirty).toBe(false);
+});
+
+it("preserves unsaved edits when another session has only reviewed the same receipt", async () => {
   const finalized: Detail = { ...initial, evaluation: { ...initial.evaluation, state: "FINALIZED", feedback: "Official feedback" } };
   const { result } = renderHook(() => useGradingWorkspace(initial, async () => finalized));
   act(() => result.current.updateForm({ feedback: "Unsaved edits" }));
   await act(() => result.current.reload());
-  expect(result.current.form.feedback).toBe("Official feedback");
-  expect(result.current.dirty).toBe(false);
-  expect(result.current.disabled).toBe(true);
+  expect(result.current.form.feedback).toBe("Unsaved edits");
+  expect(result.current.dirty).toBe(true);
+  expect(result.current.disabled).toBe(false);
 });
 
 it("discards old marks and AI selection when a group resubmits using the same evaluation ID", async () => {
@@ -114,4 +151,29 @@ it.each([
   const { result } = renderHook(() => useGradingWorkspace(source, async () => source));
   act(() => result.current.applyProposal({ r: ["i", "other"] }, "Legacy feedback", "legacy"));
   expect(result.current.form.reviewedItemScores).toEqual(expected);
+});
+
+
+it("refreshes every group member version including overridden grades after saving", async () => {
+  const source: Detail = { ...initial, evaluation: { ...initial.evaluation, kind: "GROUP_DOCUMENT" },
+    members: [{ ...initial.evaluation, id: "member", kind: "MEMBER", memberOverride: true, version: 4 }] };
+  const refreshed: Detail = { ...source, members: [{ ...source.members[0]!, version: 5 }] };
+  mocks.saveEvaluation.mockResolvedValue({ ...source.evaluation, version: 3 });
+  const refresh = vi.fn().mockResolvedValue(refreshed);
+  const { result } = renderHook(() => useGradingWorkspace(source, refresh));
+  act(() => result.current.updateForm({ feedback: "Changed" }));
+  await act(async () => { await result.current.save(); });
+  expect(result.current.detail.members[0]?.version).toBe(5);
+});
+
+it("does not carry saved marks onto a group receipt changed during the refresh", async () => {
+  const source: Detail = { ...initial, evaluation: { ...initial.evaluation, kind: "GROUP_DOCUMENT" } };
+  const pending: Detail = { ...source, evaluation: { ...source.evaluation, submissionHash: "new", state: "PENDING",
+    version: 9, score: null, feedback: null, rubricChecks: "{}", rubricItemScores: {}, adjustment: 0 } };
+  mocks.saveEvaluation.mockResolvedValue({ ...source.evaluation, version: 3 });
+  const { result } = renderHook(() => useGradingWorkspace(source, async () => pending));
+  act(() => result.current.updateForm({ feedback: "Old receipt" }));
+  await act(async () => { await result.current.save(); });
+  expect(result.current.form.feedback).toBe("");
+  expect(result.current.detail.evaluation.submissionHash).toBe("new");
 });

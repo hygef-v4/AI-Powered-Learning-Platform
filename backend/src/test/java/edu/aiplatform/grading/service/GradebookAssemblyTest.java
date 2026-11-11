@@ -18,6 +18,42 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
 
 class GradebookAssemblyTest {
+    @Test
+    void exportRetainsAssignmentTitleEvenWithNoStudents() {
+        fixture(0);
+        var export = gradebookService.buildExport(actor, classId, assignmentId, "xlsx");
+        assertThat(export.assignmentTitle()).isEqualTo("Design");
+        assertThat(export.rows()).hasSize(1);
+        assertThat(gradebookService.buildExport(actor, classId, null, "csv").assignmentTitle()).isEqualTo("Design");
+    }
+
+    @Test
+    void exportUsesVietnameseHeadersStatusesAndSubmissionTime() {
+        var evaluation = fixture(1).get(0);
+        var rows = gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx");
+        assertThat(rows.get(0)).containsExactly("Sinh viên", "Email", "Bài tập", "Trạng thái",
+                "Thời gian nộp", "Nộp muộn", "Điểm", "Điểm tối đa", "Nhận xét");
+        assertThat(rows.get(1)).contains("Đã công bố", "01/11/2026 08:00:00", "Không");
+        for (var state : List.of(EvaluationStatus.PENDING, EvaluationStatus.DRAFT, EvaluationStatus.FINALIZED)) {
+            evaluation.state = state;
+            String expected = switch (state) {
+                case PENDING -> "Chờ chấm";
+                case DRAFT -> "Đã chấm";
+                default -> "Đã lưu";
+            };
+            assertThat(gradebookService.buildExportRows(actor, classId, assignmentId, "csv").get(1).get(3))
+                    .isEqualTo(expected);
+            if (state == EvaluationStatus.DRAFT) {
+                assertThat(gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx")
+                        .get(1).get(6)).isEqualTo(evaluation.score.toPlainString());
+            }
+        }
+        when(evaluationRepository.findForClass(classId)).thenReturn(List.of());
+        when(submissionQuery.listSubmissions(assignmentId, classId)).thenReturn(List.of());
+        assertThat(gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx").get(1).get(3))
+                .isEqualTo("Chưa nộp");
+    }
+
     final UUID classId = UUID.randomUUID(), assignmentId = UUID.randomUUID();
     final Actor actor = new Actor(UUID.randomUUID(), Role.TEACHER);
     final IEvaluationRepository evaluationRepository = mock(IEvaluationRepository.class);
@@ -178,12 +214,15 @@ class GradebookAssemblyTest {
         assertThat(gradebookService.listGrades(actor, classId, null, 1, 1).rows().get(0).student().name()).isEqualTo("Unavailable");
     }
 
-    @Test void exportHidesDraftScoresAndEmptyClassExportsOnlyHeaders() {
+    @Test void exportIncludesStaffDraftScoresAndEmptyClassExportsOnlyHeaders() {
         var values = fixture(1);
         values.get(0).state = EvaluationStatus.DRAFT;
         var row = gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx").get(1);
-        assertThat(row.get(6)).isEmpty();
-        assertThat(row.get(8)).isEmpty();
+        assertThat(row.get(6)).isEqualTo(values.get(0).score.toPlainString());
+        assertThat(row.get(8)).isEqualTo(values.get(0).feedback == null ? "" : values.get(0).feedback);
+        values.get(0).state = EvaluationStatus.PENDING;
+        assertThat(gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx")
+                .get(1).get(6)).isEmpty();
         when(classAccess.listActiveStudents(classId)).thenReturn(List.of());
         assertThat(gradebookService.buildExportRows(actor, classId, null, "csv")).hasSize(1);
     }

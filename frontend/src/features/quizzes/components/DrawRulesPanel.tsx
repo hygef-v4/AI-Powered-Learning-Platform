@@ -136,7 +136,7 @@ export function DrawRulesPanel({ detail, editable, disabled, onSaved, onError }:
         </>}
       </fieldset>
       {preview && (
-        <Dialog open size="lg" onClose={() => setPreview(null)} icon="visibility" title="Đề mẫu" footer={<Button onClick={() => setPreview(null)}>Đóng</Button>}>
+        <Dialog open size="lg" onClose={() => setPreview(null)} icon="visibility" title="Đề mẫu">
           <div className="flex flex-col gap-3 text-[13px]" data-testid="paper-preview">
             {preview.shortages.length > 0 && (
               <Alert tone="warning" title="Kho chưa đủ câu">

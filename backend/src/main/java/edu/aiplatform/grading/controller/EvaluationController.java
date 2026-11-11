@@ -71,7 +71,7 @@ public class EvaluationController {
     }
 
     /**
-     * Finalizes multiple draft evaluations in batch mode.
+     * Compatibility validation for saved evaluations; does not lock them.
      */
     @PostMapping("/evaluations:finalize")
     public BatchResult finalizeGrades(@AuthenticationPrincipal Actor actor,
@@ -80,7 +80,7 @@ public class EvaluationController {
     }
 
     /**
-     * Publishes multiple finalized evaluations in batch mode to make them visible to students.
+     * Publishes saved evaluations in batch mode to make them visible to students.
      */
     @PostMapping("/evaluations:publish")
     public BatchResult publishGrades(@AuthenticationPrincipal Actor actor,

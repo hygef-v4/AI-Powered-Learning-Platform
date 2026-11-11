@@ -3,8 +3,8 @@
 import { useId, useState, type FormEvent } from "react";
 import { ApiError } from "@/shared/api/client";
 import { Button } from "@/shared/ui/Button";
-import { Dialog } from "@/shared/ui/Dialog";
 import { Field } from "@/shared/ui/inputs";
+import { Section } from "@/shared/ui/Section";
 import { changePassword } from "../../api";
 import { PasswordChecklist } from "../../components/PasswordChecklist";
 import { SecretInput } from "../../components/SecretInput";
@@ -12,9 +12,11 @@ import { PASSWORD_VIOLATION_MESSAGES, passwordAcceptable } from "../../model/pas
 
 export const PASSWORD_CHANGED_MESSAGE = "Đã đổi mật khẩu";
 
-/** Popup Password Change (UC 05, design `c06`): mật khẩu hiện tại, mật khẩu mới và nhập lại (BR-U01-33). */
-export function PasswordChangeDialog({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
-  const formId = useId();
+/**
+ * Khối Đổi mật khẩu nằm ngay trên trang Hồ sơ (UC 05, design `c06`): mật khẩu hiện tại, mật khẩu mới và nhập lại
+ * (BR-U01-33). Đổi xong thì xóa các ô và báo cho trang.
+ */
+export function PasswordChangeForm({ onChanged }: { onChanged: () => void }) {
   const currentId = useId();
   const newId = useId();
   const confirmId = useId();
@@ -25,7 +27,7 @@ export function PasswordChangeDialog({ onClose, onChanged }: { onClose: () => vo
   const [error, setError] = useState<string | null>(null);
   const acceptable = passwordAcceptable(password);
 
-  async function submit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (current.length === 0) {
       setError("Nhập mật khẩu hiện tại.");
@@ -43,6 +45,9 @@ export function PasswordChangeDialog({ onClose, onChanged }: { onClose: () => vo
     setError(null);
     try {
       await changePassword(current, password);
+      setCurrent("");
+      setPassword("");
+      setConfirm("");
       onChanged();
     } catch (e) {
       const problem = (e instanceof ApiError ? e.problem : { status: 0 }) as {
@@ -67,36 +72,52 @@ export function PasswordChangeDialog({ onClose, onChanged }: { onClose: () => vo
   }
 
   return (
-    <Dialog
-      open
+    <Section
       title="Đổi mật khẩu"
       icon="lock_reset"
-      onClose={onClose}
-      footer={
-        <>
-          <Button type="submit" form={formId} variant="primary" disabled={busy}>
-            Đổi mật khẩu
-          </Button>
-        </>
-      }
+      description="Các thiết bị khác sẽ bị đăng xuất. Phiên hiện tại được giữ lại."
     >
-      <form id={formId} onSubmit={submit} noValidate className="flex flex-col gap-3.5">
-        <Field label="Mật khẩu hiện tại" htmlFor={currentId}>
-          <SecretInput id={currentId} autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} />
-        </Field>
-        <Field label="Mật khẩu mới" htmlFor={newId}>
-          <SecretInput id={newId} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        </Field>
-        <Field label="Nhập lại mật khẩu mới" htmlFor={confirmId}>
-          <SecretInput id={confirmId} autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
-        </Field>
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Mật khẩu hiện tại" htmlFor={currentId}>
+            <SecretInput
+              id={currentId}
+              autoComplete="current-password"
+              value={current}
+              onChange={(e) => setCurrent(e.target.value)}
+            />
+          </Field>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Mật khẩu mới" htmlFor={newId}>
+            <SecretInput
+              id={newId}
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </Field>
+          <Field label="Nhập lại mật khẩu mới" htmlFor={confirmId}>
+            <SecretInput
+              id={confirmId}
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+            />
+          </Field>
+        </div>
         <PasswordChecklist password={password} chips />
         {error && (
           <p role="alert" className="text-[13px] text-danger">
             {error}
           </p>
         )}
+        <div className="flex justify-end border-t border-line pt-5">
+          <Button type="submit" icon="key" disabled={busy}>
+            Đổi mật khẩu
+          </Button>
+        </div>
       </form>
-    </Dialog>
+    </Section>
   );
 }

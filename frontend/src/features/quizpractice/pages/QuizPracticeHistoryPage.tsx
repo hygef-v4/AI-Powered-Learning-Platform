@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Button, PageHeader, Pill, Select, TableFrame, Td, Th } from "@/shared/ui";
+import { Alert, Button, PageHeader, Pill, Select, TableFrame, TableSkeletonRows, Td, Th } from "@/shared/ui";
 import { getPracticeHistory, startAttempt } from "../api";
 import { attemptsText, errorMessage, formatDateTime, formatPoints } from "../model/labels";
 import type { PracticeQuizRow } from "../model/types";
@@ -55,25 +55,25 @@ export function QuizPracticeHistoryPage() {
           </Select>
         )} />
       {error && <Alert tone="danger" role="alert" className="mb-3">{error}</Alert>}
-      {!rows && !error && <p role="status" className="py-8 text-center text-sm text-muted">Đang tải quiz…</p>}
-      {rows && (
-        <TableFrame className="[&_table]:min-w-[720px] [&_table]:table-fixed">
+      {(rows || !error) && (
+        <TableFrame stackOnMobile className="sm:[&_table]:min-w-[720px] [&_table]:table-fixed">
           <colgroup><col /><col className="w-[140px]" /><col className="w-[110px]" /><col className="w-[130px]" /><col className="w-[170px]" /><col className="w-[110px]" /></colgroup><thead><tr><Th>Quiz</Th><Th>Lớp</Th><Th>Số lần làm</Th><Th>Điểm cao nhất</Th><Th>Lần gần nhất</Th><Th></Th></tr></thead>
           <tbody>
-            {shown.length === 0 && <tr><Td colSpan={6} className="py-8 text-center text-muted">Chưa có quiz luyện tập.</Td></tr>}
+            {!rows && <TableSkeletonRows columns={6} label="Đang tải quiz…" />}
+            {rows && shown.length === 0 && <tr><Td colSpan={6} className="py-8 text-center text-muted">Chưa có quiz luyện tập.</Td></tr>}
             {shown.map((row) => (
               <tr key={`${row.quizId}/${row.classId}`} data-testid="practice-history-row">
                 <Td>
                   <span className="font-semibold">{row.title}</span>
                   <span className="ml-2 inline-flex gap-1">
-                    <Pill tone="info">Practice</Pill>
+                    <Pill tone="info">Luyện tập</Pill>
                     {row.attemptsUsed === 0 && <Pill tone="warning">Chưa làm</Pill>}
                   </span>
                 </Td>
-                <Td>{row.classCode}</Td>
-                <Td>{attemptsText(row.attemptsUsed, row.maxAttempts)}</Td>
-                <Td>{row.bestScore === null ? "—" : `${formatPoints(row.bestScore)} / ${formatPoints(row.maxScore)}`}</Td>
-                <Td className="whitespace-nowrap text-muted">{formatDateTime(row.lastAttemptAt)}</Td>
+                <Td label="Lớp">{row.classCode}</Td>
+                <Td label="Số lần làm">{attemptsText(row.attemptsUsed, row.maxAttempts)}</Td>
+                <Td label="Điểm cao nhất">{row.bestScore === null ? "—" : `${formatPoints(row.bestScore)} / ${formatPoints(row.maxScore)}`}</Td>
+                <Td label="Lần gần nhất" className="whitespace-nowrap text-muted">{formatDateTime(row.lastAttemptAt)}</Td>
                 <Td className="whitespace-nowrap">
                   {row.attemptsUsed === 0 && row.canStart
                     ? <Button size="sm" variant="primary" disabled={busy} onClick={() => void start(row)} data-testid="practice-history-start">Bắt đầu</Button>

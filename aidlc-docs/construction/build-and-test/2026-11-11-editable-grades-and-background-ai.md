@@ -1,0 +1,42 @@
+# Editable grades and background AI — verification, 2026-11-11
+
+## Local browser retest
+
+### Retest after user restarted backend
+
+- Additional direct concurrent-edit UI acceptance: dispatched AI, confirmed running, then filled general feedback with a distinct Vietnamese test marker and adjustment0.25. When latest proposal became READY, the marker and0.25 remained and form still reported unsaved. Opened proposal review, explicitly clicked Apply: AI feedback replaced the manual marker but form remained unsaved. Reloaded without Save; server returned original feedback and PUBLISHED8.00/10.00, confirming no automatic overwrite/publication from callback or Apply. The generated proposal remains in history; no source change was required.
+
+- Passed on the actual Orca UI using supplied local teacher/student2 test accounts. Saved published evaluation7e25dd9f-73e6-441b-8f6f-b65d7e7f1e13 from8.00 to8.25 by adjustment0.25 without a reason; PUT returned200 and status remained PUBLISHED. No finalize/republication needed.
+- Logged out and logged in as student2. Assignment result showed8.25, and its detailed grading link opened the submitted attempt with feedback/strengths/improvements. Returned as teacher and restored saved8.00.
+- Sent one actual AI proposal request (POST200), observed AI-running state with Save enabled and no blocking progress modal. Navigated away to class gradebook and back. Latest proposal reached READY, proposed6.00, compared with saved8.00. No Apply was clicked; grade/feedback remained the prior saved version. The new proposal remains in history for inspection.
+- Verified quiet30-second autosave after closing the proposal panel: adjustment0.25 became saved8.25 without manual Save. A document-scoped marker survived, confirming no document reload. While the proposal panel was open autosave was intentionally paused by the existing guard. Restored adjustment0 via Save; final UI confirmed PUBLISHED and saved8.00/10.00.
+- Did not archive the shared test class or alter group/member data for this acceptance run. Those paths remain covered by automated tests rather than this manual UI run. No source fixes, commit, push or deployment during this retest.
+
+- User supplied local test credentials and requested UI acceptance. Logged in through Orca browser as the test teacher; opened SE1933, sports booking assignment, published evaluation for JS SE Student 2. New frontend exposes editable inputs, Save changes, disabled already-published action and no finalize button.
+- Changed adjustment from0 to0.25 and clicked Save. Actual browser network recorded PUT evaluation returning409; UI reported that finalized grades cannot be edited. Source Evaluation.requireMutableGrade only rejects superseded grades, while listening backend PID38680 started2026-11-11 10:03:47, before final verified build11:04:42. Local backend is still running the earlier implementation.
+- Reverted the unsaved adjustment to0 and reloaded; UI confirmed PUBLISHED and saved8.00/10.00. No test correction persisted. Did not send a paid AI grading job against the outdated runtime. Student correction visibility, background AI and archived-class UI acceptance remain pending a manual backend restart. Prior automatic review rejection of restart was respected; no retry/bypass attempted.
+
+## Delivered behavior
+
+- Removed finalize buttons from the new grading and batch workflow. Saved drafts publish directly; legacy finalize endpoints validate without introducing a locked state. Existing FINALIZED data remains readable/editable under current class/submission permissions.
+- Corrections to PUBLISHED grades retain publication and update student-visible score, rubric and feedback after a successful save. Published saves and first publication both enforce AI review acknowledgments. Repeated publication does not emit another publication event. Quiet30-second autosave, explicit Save/Ctrl+S, version conflicts and in-flight edit preservation remain.
+- OPEN classes permit grading after assignment deadlines. ARCHIVED/DRAFT classes reject writes; archived evaluations can still be read under existing authorization. Workspace receives an additive editable flag. Group/member writes retain receipt checks, transaction boundaries and individual overrides.
+- Staff CSV/XLSX exports include saved draft scores/feedback now that finalize is no longer a prerequisite; student reads still require PUBLISHED. Unsubmitted/pending rows do not acquire scores from a draft export rule.
+- AI submission does not lock the form or navigation. Removed the progress modal and auto-application on READY. Reused existing proposal review/Apply; AI does not save or publish grades. Regrading PUBLISHED targets works at request, MCP and callback validation boundaries.
+- Shared bounded polling keeps pending work across teaching-page navigation, deduplicates subscriptions and completion notifications, retains retry/backoff/recheck and server diagnostics. Per-account cleanup and delayed responses cannot erase the next account's cache. No browser storage, new queue or realtime infrastructure.
+
+## Verification evidence
+
+- RED runs captured model/access lock/publication defects, blocking AI UI, account-switch cleanup race and missing staff draft-export scores. Logs: `.tmp/editable-grades-red.log`, `.tmp/editable-service-red.log`, `.tmp/background-ai-red.log`, `.tmp/background-account-race-red.log`, `.tmp/editable-export-red.log`.
+- **Full backend Maven verify:2146 tests,0 failures/errors/skips**, packaged executable JAR. Final log: `.tmp/editable-backend-verified.log`. The first full attempt exceeded its deliberately small256MB test heap after1285 passing cases; final verification used768MB for the test process, with no product configuration change.
+- Required PostgreSQL/integration guard passes: subjects31, notification delivery7, evaluation version/persistence11, grade-distribution visibility1, platform workflow26. The traced-case guard also passes. Published corrections round-trip through real PostgreSQL and preserve publishedAt/version; composed workflows assert that corrected published feedback is visible to the student.
+- **Full frontend:956 tests/134 files pass** (`.tmp/editable-frontend-full.log`). Final connected grading/assignment-work run after subsequent regression additions: **211 tests/25 files pass**, including account isolation and both PENDING/QUEUED batch outcomes (`.tmp/editable-frontend-final.log`). Final workspace accessibility/status checks:39 cases pass (`.tmp/editable-workspace-final.log`). Counts overlap; do not add them.
+- Final production Next.js build and its TypeScript stage pass (`.tmp/editable-frontend-build-final.log`). Separate TypeScript/scoped ESLint and whitespace checks pass. Final UI checks use mocked fixtures; no live grade edit or paid model request.
+- Manual connected-code review checked all remaining FINALIZED/hasOfficialGrade references, publication/save review guards, stale group receipt handling, export privacy and account-switch cleanup. No independent subagent review was run, as requested.
+
+## Compatibility and limits
+
+- No migration, dependency, new publication snapshot, cancellation endpoint, new backend task system or WebSocket/SSE change. Keep the existing U12 policy preserving already official group grades across resubmission; stale-receipt grades remain protected, rather than silently becoming editable against a different submitted document.
+- Student views reflect successful saves on their next load/refetch; there is no push update into an already open student tab. Tracking/toasts persist in the authenticated teaching layout; leaving that area/closing the browser does not cancel the server job. Opening the submission again recovers proposal state from the server.
+- No commit/push/deploy. Source/JAR/build are verified, but local backend refresh was rejected by automatic tool review with the only stated reason **“blocked by policy”**. No process was stopped or restarted by that rejected command. The existing local runtime must be restarted manually to load the change. Browser acceptance against the refreshed backend was therefore not performed.
+- Security/Resiliency: compliant for existing scope; authorization, fail-closed class state, receipt/version, AI evidence/review validation and finite retries retained. PBT remains disabled. Provider scoring quality and real multi-user load are not established by these tests.

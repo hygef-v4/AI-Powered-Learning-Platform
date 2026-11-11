@@ -1,5 +1,17 @@
 # U08 Assignment Work — business-rules
 
+## Nộp lại không giới hạn và lịch sử theo hạn — 2026-11-10
+
+Nguồn: `cdaf0f46`, `6a787e3f` (PR #60). Thay phần trái ngược trong BR-U08-03, 11, 12, 30, 31 bên dưới; bài `PRACTICE` giữ nguyên các rule cũ về lượt.
+
+| Mã | Rule | Thay cho |
+|---|---|---|
+| BR-U08-70 | Chỉ bài `PRACTICE` giới hạn số lượt. Bài `GRADED` cá nhân bắt đầu lượt mới bao nhiêu lần cũng được khi còn hạn nộp hoặc hạn nộp muộn; "hết lượt" chỉ còn với bài Luyện tập. | BR-U08-11 (`maxAttempts` cho mọi bài) |
+| BR-U08-71 | Lượt mới của bài `GRADED` bắt đầu từ nội dung bài nộp gần nhất để sửa tiếp; bài nộp cũ không còn khớp khung đề (không qua `validateForSave`) thì bắt đầu từ khung đề. Bài `PRACTICE` mỗi lượt làm lại từ khung đề. | BR-U08-12 ("lượt mới bắt đầu từ khung của đề") |
+| BR-U08-72 | Với người học, bài có chấm chỉ có một bài nộp: nộp lại là ghi đè, không đếm số lần. Server vẫn lưu từng lượt; trang chỉ hiện bản đang sửa hoặc bản nộp mới nhất, nút "Sửa và nộp lại". Số lượt và bộ đếm chỉ hiện ở trang chi tiết bài Luyện tập. | BR-U08-03 (số lượt đã dùng và còn lại), BR-U08-30 phần hiển thị |
+| BR-U08-73 | Submission History của bài có chấm chỉ mở khi đã nộp và đã qua `closesAt`; gồm bản đúng hạn (bản nộp cuối trước hạn) và, nếu có, bản nộp muộn (bản nộp cuối trong hạn nộp muộn), mới nhất trước. Bài Luyện tập xem lịch sử lúc nào cũng được. Điều kiện mở là kiểm ở frontend (`historyOpen`), API lượt không đổi. | BR-U08-31 (danh sách mọi lượt) |
+| BR-U08-74 | Tên tệp DOCX tải ra của bài có chấm chỉ có tên bài; bài Luyện tập vẫn ghi "Lượt n". | Tên tệp kèm lượt cho mọi bài |
+
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
 
@@ -34,9 +46,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U08-20 | Nộp tay: lượt `IN_PROGRESS` của chính mình, trước `deadlineAt` (cộng 30 giây ân hạn), nội dung qua `validateForSubmit` (khung còn đủ, ô sơ đồ trống của đề đã được vẽ, đủ `requiredDiagrams` theo loại suy từ hình vẽ, sơ đồ `OTHER` bù loại thiếu, có nội dung của người học: chữ, ảnh, sơ đồ, sơ đồ của đề đã vẽ khác đề, bảng của đề đã điền khác đề). Trang kiểm sơ bộ trước (tổng số sơ đồ, có nội dung) và không chặn bài server sẽ nhận. | US-ASM-003 S1 |
+| BR-U08-20 | Nộp tay: lượt `IN_PROGRESS` của chính mình, trước `deadlineAt` (cộng 30 giây ân hạn), đúng `contentVersion`. Từ 2026-11-09 nộp tay không còn chặn theo `validateForSubmit`: bài thiếu sơ đồ bắt buộc hoặc chưa có nội dung vẫn nộp được, popup chỉ xác nhận. Kết quả `validateForSubmit` (khung còn đủ, ô sơ đồ của đề đã vẽ, đủ `requiredDiagrams`, có nội dung của người học) vẫn được server tính và trả trong `submitIssues` khi đọc/lưu lượt, nhưng trang hiện không dùng. | US-ASM-003 S1 |
 | BR-U08-21 | Nộp thì nội dung bất biến; `submittedAt` theo giờ server; `late` khi nộp sau `closesAt`; `receiptHash` là SHA-256 của nội dung. Trong cùng transaction gọi `ISubmissionListener.onSubmitted` để U09 tạo dòng chờ chấm với bài `GRADED`. | FR-018, BR-U03-64 |
-| BR-U08-22 | Biên nhận gồm mã lượt, lượt thứ mấy, thời điểm nộp, trễ hay không, mã băm. Nộp lặp (bấm hai lần, mạng gửi lại) trả cùng biên nhận. | UC 39 |
+| BR-U08-22 | Biên nhận gồm mã lượt, lượt thứ mấy, thời điểm nộp, trễ hay không, mã băm. Nộp lặp (bấm hai lần, mạng gửi lại) trả cùng biên nhận. Từ 2026-11-09 không còn trang Biên nhận: nộp xong trang về chi tiết bài; `GET /api/v1/attempts/{attemptId}/receipt` vẫn có ở backend nhưng frontend không gọi, mã biên nhận xem ở Submission History. | UC 39 |
 | BR-U08-23 | Tự nộp bản đã lưu gần nhất (kể cả rỗng), không kiểm điều kiện nộp, ghi cảnh báo cho giảng viên: khi hết `deadlineAt` (`AUTO_DEADLINE`, scanner mỗi phút) và khi bài bị ngưng giao (`AUTO_RETIRED`, trong `onRetired`). | FR-007 |
 
 ## 4. Lịch sử nộp (UC 40)

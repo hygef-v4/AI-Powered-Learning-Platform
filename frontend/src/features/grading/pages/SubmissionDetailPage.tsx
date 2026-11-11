@@ -8,6 +8,8 @@ import { useResource } from "../hooks/useResource";
 import { formatPoints, GRADE_STATUS_LABELS } from "../model/types";
 import { Pagination } from "@/shared/ui/Pagination";
 import { BatchActionDialog } from "../components/BatchActionDialog";
+import { buildGradeActionItems } from "../model/gradeActions";
+import { formatDateTime } from "@/shared/dateTime";
 import { Alert, Button, EmptyState, Icon, Pill, Select, type Tone } from "@/shared/ui";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
 import { buildEvaluationHref } from "../model/navigation";
@@ -30,9 +32,9 @@ function rowActionLabel(status: string): string {
 }
 
 const CELL = "border-b border-line px-3 py-3 align-middle first:pl-1 last:pr-1";
-const HEAD = "border-b border-line px-3 pb-2.5 text-left text-[10.5px] font-semibold tracking-[.08em] whitespace-nowrap text-muted uppercase first:pl-1 last:pr-1";
+const HEAD = "border-b border-line px-3 pb-2.5 text-left text-xs font-semibold tracking-[.08em] whitespace-nowrap text-muted uppercase first:pl-1 last:pr-1";
 
-/** Bài nộp của một bài tập: số liệu nhanh, lọc, chọn nhiều để chốt/công bố/AI, bảng dạng tài liệu. */
+/** Bài nộp của một bài tập: số liệu nhanh, lọc, chọn nhiều để công bố/AI, bảng dạng tài liệu. */
 export function SubmissionDetailPage({
   classId,
   assignmentId,
@@ -47,17 +49,14 @@ export function SubmissionDetailPage({
   const page = /^[1-9]\d{0,4}$/.test(pageValue) ? Number(pageValue) : 1;
   const setPage = (next: number) => setPageValue(String(next));
   const [selected, setSelected] = useState<string[]>([]);
-  const [action, setAction] = useState<"ai" | "finalize" | "publish" | null>(null);
+  const [action, setAction] = useState<"ai" | "publish" | null>(null);
   const load = useCallback(
     () => gradingApi.listSubmissions(classId, assignmentId, filter, page, late),
     [classId, assignmentId, filter, page, late],
   );
   const resource = useResource(load);
   const data = resource.value;
-  const items =
-    data?.rows
-      .filter((r) => r.evaluationId && selected.includes(r.evaluationId))
-      .map((r) => ({ evaluationId: r.evaluationId!, version: r.version })) ?? [];
+  const selectedRows = data?.rows.filter((row) => row.evaluationId && selected.includes(row.evaluationId)) ?? [];
   const selectable = data?.rows.filter((r) => r.evaluationId) ?? [];
   return (
     <main className="flex min-w-0 flex-col gap-6">
@@ -106,7 +105,7 @@ export function SubmissionDetailPage({
             ].map(([key, label]) => (
               <section key={key} className="flex flex-col gap-1">
                 <strong className="font-display text-[28px] leading-none text-ink tabular-nums">{data.summary[key!] ?? 0}</strong>
-                <p className="text-[10.5px] font-semibold tracking-[.08em] text-muted uppercase">{label}</p>
+                <p className="text-xs font-semibold tracking-[.08em] text-muted uppercase">{label}</p>
               </section>
             ))}
           </div>
@@ -144,12 +143,13 @@ export function SubmissionDetailPage({
               <option value="false">Đúng hạn</option>
               <option value="true">Nộp trễ</option>
             </Select>
-            {items.length > 0 && (
+            {selectedRows.length > 0 && (
               <div className="ml-auto flex animate-pop flex-wrap items-center gap-2 rounded-lg bg-primary-soft py-1 pr-1 pl-3">
-                <span className="text-[13px] font-semibold text-ink">Đã chọn {items.length} bài</span>
-                {(["ai", "finalize", "publish"] as const).map((a) => (
-                  <Button key={a} size="sm" variant={a === "publish" ? "primary" : "secondary"} onClick={() => setAction(a)}>
-                    {a === "ai" ? "AI đề xuất" : a === "finalize" ? "Chốt điểm" : "Công bố điểm"}
+                <span className="text-[13px] font-semibold text-ink">Đã chọn {selectedRows.length} bài</span>
+                {(["ai", "publish"] as const).map((a) => (
+                  <Button key={a} size="sm" variant={a === "publish" ? "primary" : "secondary"}
+                    disabled={!buildGradeActionItems(selectedRows, a).length} onClick={() => setAction(a)}>
+                    {a === "ai" ? "AI đề xuất" : "Công bố điểm"}
                   </Button>
                 ))}
                 <Button size="sm" variant="ghost" onClick={() => setSelected([])}>
@@ -202,7 +202,7 @@ export function SubmissionDetailPage({
                       <p className="font-mono text-xs break-all text-muted">{r.student.email}</p>
                     </td>
                     <td className={`${CELL} font-mono text-xs whitespace-nowrap text-body`}>
-                      {r.submittedAt ? new Date(r.submittedAt).toLocaleString("vi-VN") : "—"}
+                      {formatDateTime(r.submittedAt)}
                       {r.late && <span className="ml-2 font-sans font-semibold text-danger">Trễ</span>}
                     </td>
                     <td className={CELL}>
@@ -244,7 +244,7 @@ export function SubmissionDetailPage({
       {action && (
         <BatchActionDialog
           action={action}
-          items={items}
+          items={buildGradeActionItems(selectedRows, action)}
           onClose={() => setAction(null)}
           onDone={() => void resource.refresh().catch(() => {})}
         />

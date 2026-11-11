@@ -74,7 +74,13 @@ public record AssignmentRubric(UUID id, UUID assignmentId, String partId, List<R
     }
 
     public RubricView view() {
-        return new RubricView(id, assignmentId, partId, criteria, totalPoints);
+        List<RubricCriterion> clean = criteria.stream()
+                .map(c -> new RubricCriterion(c.criterionId(), c.title(), c.description(), c.kind(),
+                        c.items() == null ? List.of()
+                                : c.items().stream().filter(i -> !blank(i.text()) && i.points() != null).toList()))
+                .filter(c -> !c.items().isEmpty())
+                .toList();
+        return new RubricView(id, assignmentId, partId, clean, total(clean));
     }
 
     public static BigDecimal total(List<RubricCriterion> criteria) {

@@ -3,8 +3,14 @@ import { ApiError } from "@/shared/api/client";
 import { formatErrorMessage } from "@/features/grading/model/format";
 
 describe("grading conflict explanations", () => {
+  it("explains a missing adjustment reason in Vietnamese instead of exposing the server message", () => {
+    const error = new ApiError({ status: 400, title: "Bad Request", code: "ADJUSTMENT_REASON_REQUIRED",
+      detail: "Adjustment requires a reason" });
+    expect(formatErrorMessage(error)).toBe("Nhập lý do khi cộng hoặc trừ điểm.");
+  });
   it.each([
     ["GRADE_LOCKED", "Điểm đã chốt"],
+    ["GRADING_CLASS_READ_ONLY", "Lớp đã lưu trữ hoặc chưa mở"],
     ["SUBMISSION_CHANGED", "Bài nộp đã thay đổi"],
     ["NOT_LATEST_ATTEMPT", "Bài nộp đã thay đổi"],
     ["RUBRIC_CHANGED", "Rubric đã thay đổi"],

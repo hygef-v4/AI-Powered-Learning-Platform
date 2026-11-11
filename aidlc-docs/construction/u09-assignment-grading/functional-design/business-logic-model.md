@@ -1,5 +1,10 @@
 # U09 Assignment Grading — business-logic-model
 
+## Cập nhật có hiệu lực 2026-11-11
+
+Theo kế hoạch `../../plans/code-generation-plan/2026-11-11-editable-grades-and-background-ai.md`: không sinh FINALIZED mới; lưu trước công bố là DRAFT, công bố trực tiếp, sửa sau công bố giữ PUBLISHED. Quyền ghi phụ thuộc lớp OPEN và receipt/version hiện hành; ARCHIVED chỉ đọc. Giữ enum/endpoint finalize cũ như xác thực không khóa. Kiểm tra xác nhận AI tại publish và save PUBLISHED. AI tạo proposal bất đồng bộ, READY không tự ghi điểm; UI theo dõi ở layout giảng dạy, giảng viên áp dụng rõ ràng. Không thêm snapshot công bố, schema, queue hay realtime mới. Các mô tả chốt/khóa cũ bên dưới chỉ còn là tham chiếu lịch sử khi mâu thuẫn với cập nhật này.
+
+
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
 
@@ -67,6 +72,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 5. U06 gọi `onReady`: kiểm quyền người yêu cầu, hash còn khớp, schema, id mục thuộc rubric; đạt thì lưu đề xuất `READY` kèm provenance, không thì `STALE` hoặc `REJECTED`. `onFailed` chuyển `FAILED`.
 6. Giảng viên bấm "Dùng đề xuất": điền sẵn checklist và nhận xét; sửa nếu muốn rồi lưu như F4 bước 3–4; ghi đề xuất đã dùng.
 
+**Delta 2026-11-09 (BR-U09-36):** trước bước 3, `GradingPromptBuilder.findEmptyPartIds` và `findActiveRubrics` xác định phần lá không có bài làm. Không còn rubric nào hoạt động thì bước 4 lưu ngay đề xuất `READY` 0 điểm (`createZeroProposal`), vẫn audit `AI_GRADING_REQUESTED`, không gọi `IAiTask.submit`. Ngược lại prompt, schema và `maxOutputTokens` (4.096 + 220 mỗi mục, trần 8.192) chỉ tính trên rubric hoạt động; ở bước 5 kết quả được ghép điểm 0 của phần trống và chuẩn hóa trước khi kiểm schema. Grading đọc khung đề qua contract `IDocumentModel`, không gọi lớp nội bộ của U07.
+
 ### F6 - AI chấm hàng loạt (UC 43)
 1. Trong Submission Detail chọn nhiều bài `PENDING` hoặc `DRAFT`, bấm "Chấm hàng loạt bằng AI", chọn một nguồn.
 2. Frontend gọi `POST /api/v1/evaluations:ai-proposals` kèm danh sách và nguồn.
@@ -97,7 +104,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 1. `FINALIZED`/`PUBLISHED` chỉ đọc rubric, điểm, nhận xét và lịch sử, không có ô lý do sửa.
 2. Lưu trực tiếp, áp dụng AI hoặc sửa điểm thành viên bị từ chối `409 GRADE_LOCKED`, kể cả có lý do.
 3. `FINALIZED` hiện hành vẫn được công bố sang `PUBLISHED`; điểm và nội dung chấm không đổi.
-4. Nộp lại làm điểm cũ mất hiệu lực: cá nhân SUPERSEDED lượt cũ; nhóm reset bản chấm hiện có về PENDING. Không có mở khóa/sửa điểm cũ bằng lý do.
+4. Nộp lại làm điểm cũ mất hiệu lực: cá nhân SUPERSEDED lượt cũ; nhóm reset draft hiện có về PENDING, giữ nguyên điểm FINALIZED/PUBLISHED và receipt đã chốt. Không có mở khóa/sửa điểm cũ bằng lý do.
 
 ## 5. Sổ điểm và người học
 
@@ -126,7 +133,13 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 4. Mỗi lớp của bài SUBJECT độc lập; Quiz/Practice không có công tắc. Bật chưa đủ mẫu vẫn lưu ý định, chỉ hiện histogram khi đạt ngưỡng riêng tư.
 
 ### F14 - Bài nhóm (khi U12 có)
-1. U12 gọi IGroupEvaluation.onGroupSubmitted trong transaction nộp: dùng lại root/member, reset về PENDING cho receipt mới (BR-U09-50), bỏ điểm hiện hành trước đó.
+1. U12 gọi IGroupEvaluation.onGroupSubmitted trong transaction nộp: dùng lại root/member chưa chốt, reset về PENDING cho receipt mới; giữ nguyên điểm và snapshot FINALIZED/PUBLISHED (BR-U09-50).
 2. Submission Detail hiện nhóm thay cho sinh viên; Grading Workspace đọc tài liệu nhóm qua `IGroupSubmissionSource`, hiện từng phần kèm người làm.
 3. Chấm tài liệu nhóm như F4, F5; điểm thành viên mặc định bằng điểm tài liệu chung; giảng viên sửa từng người qua `PUT /api/v1/evaluations/{id}/members/{accountId}` (BR-U09-51).
 4. Chốt, công bố cả đánh giá tài liệu và đánh giá thành viên như F8, F9.
+5. Từ 2026-11-09: chi tiết đánh giá `MEMBER` trả `groupEvaluationId` (đánh giá `GROUP_DOCUMENT` hiện hành, chưa `SUPERSEDED`, mà thành viên thuộc về); nút chấm AI ở dòng thành viên mở bản nộp nhóm đó thay vì gửi AI cho riêng thành viên. Tab Sổ điểm liệt kê "Bản nộp chung theo nhóm" cho bài nhóm đang chọn.
+
+
+### AI provider checkbox derivation — 2026-11-10
+
+For F5/F6 provider tasks, GradingProposalTransactions uses the provider-specific schema, which omits checks. GradingPromptBuilder keeps its full schema/policy for F7 MCP. The existing callback merges genuinely empty parts and derives omitted checklist selections from item scores, then runs the same strict validator. No points, evidence or feedback are fabricated; explicit inconsistent checks remain invalid for full proposals. Validation-stage diagnostics contain fixed codes/class names only. See [verified live fix](../../build-and-test/2026-11-10-grading-ai-rejection-fix.md).

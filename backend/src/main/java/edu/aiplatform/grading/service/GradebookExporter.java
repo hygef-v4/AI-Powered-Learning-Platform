@@ -13,6 +13,17 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class GradebookExporter {
+    public String buildFilename(String title, String fallback, String format) {
+        String name = title == null ? fallback : title.replaceAll("[\\p{Cntrl}<>:\"/\\\\|?*]", "_").strip();
+        // Leave room for the extension within common 255-byte filesystem filename limits.
+        name = name.codePoints().limit(60).collect(StringBuilder::new,
+                StringBuilder::appendCodePoint, StringBuilder::append).toString()
+                .replaceAll("[.\\s]+$", "");
+        if (name.isBlank() || name.matches("(?i)(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\\..*)?"))
+            name = fallback;
+        return name + "." + format;
+    }
+
     /** Writes gradebook rows as CSV or XLSX to the supplied output stream. */
     public void writeGradebook(List<List<String>> rows, String format, OutputStream output)
             throws IOException {
@@ -76,7 +87,7 @@ public class GradebookExporter {
                         + "iceDocument\" Target=\"xl/workbook.xml\"/></Relationships>");
         writePart(zip, "xl/workbook.xml",
                 "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://"
-                        + "schemas.openxmlformats.org/officeDocument/2006/relationships\"><sheets><sheet name=\"Gradebook"
+                        + "schemas.openxmlformats.org/officeDocument/2006/relationships\"><sheets><sheet name=\"Bảng điểm"
                         + "\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>");
         writePart(zip, "xl/_rels/workbook.xml.rels",
                 "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relation"

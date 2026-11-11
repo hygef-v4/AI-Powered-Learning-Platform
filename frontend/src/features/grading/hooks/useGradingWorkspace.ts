@@ -1,11 +1,21 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import { gradingApi } from "../api";
-import { buildRubricValues, hasPartialPoints, hasInvalidItemScores } from "../model/rubricScores";
+import { hasPartialPoints, hasInvalidItemScores } from "../model/rubricScores";
 import { formatErrorMessage } from "../model/format";
 import { useGradingProposals } from "./useGradingProposals";
+import { readGradingAiAccount } from "../model/gradingAiTasks";
 import { buildEvaluationHref, type NavigationFilters } from "../model/navigation";
+import {
+  buildItemScorePatch,
+  buildProposalDraftPatch,
+  buildStructuredItemPatch,
+  buildStructuredSummaryPatch,
+  buildToggleAcknowledgePatch,
+  createInitialForm,
+} from "../components/GradingForm";
 import type {
   AiRequest,
   Checks,
@@ -14,46 +24,29 @@ import type {
   GradingFormValues,
   ItemScores,
   Proposal,
-  Rubric,
   StructuredFeedback,
+  StructuredFeedbackItem,
+  StructuredFeedbackSummary,
 } from "../model/types";
 
 const UNSAVED_CHANGES_MESSAGE = "Bạn có thay đổi chưa lưu. Rời bài này?";
 
-/** Opening a grade preserves explicit item scores and historical adjustments. */
-function createInitialForm(evaluation: Evaluation, rubrics: Rubric[]): GradingFormValues {
-  let checks: Checks;
-  try {
-    checks = JSON.parse(evaluation.rubricChecks);
-  } catch {
-    checks = {};
-  }
-  const normalized = buildRubricValues(rubrics, checks, evaluation.rubricItemScores ?? {});
-  return {
-    checks: normalized.checks,
-    itemScores: normalized.itemScores,
-    structuredFeedback: evaluation.structuredFeedback ?? null,
-    clearStructuredFeedback: false,
-    acknowledgedReviewItems: evaluation.acknowledgedReviewItems ?? {},
-    reviewedItemScores: evaluation.reviewedItemScores ?? {},
-    adjustment: String(evaluation.adjustment ?? 0),
-    adjustmentReason: evaluation.adjustmentReason ?? "",
-    feedback: evaluation.feedback ?? "",
-    changeReason: "",
-    usedProposalId: null,
-  };
-}
-
 export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Detail>, filters: NavigationFilters = {}) {
+  const [confirmDialog, requestConfirm] = useConfirmDialog();
   const router = useRouter();
   const [detail, setDetail] = useState(initial);
   const [form, setForm] = useState(() => createInitialForm(initial.evaluation, initial.rubrics));
   const [busy, setBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
+  const requestingRef = useRef(false);
+  const editRevision = useRef(0);
   const [error, setError] = useState("");
   const [dirty, setDirty] = useState(false);
+  const [aiAutoApplied, setAiAutoApplied] = useState(false);
   const evaluation = detail.evaluation;
   const official = evaluation.state === "FINALIZED" || evaluation.state === "PUBLISHED";
-  const disabled = busy || !detail.current || evaluation.state === "SUPERSEDED" || official;
+  const disabled = busy || !detail.current || detail.editable === false || evaluation.state === "SUPERSEDED";
   const dirtyRef = useRef(dirty);
   const { proposals, proposalsLoaded, pollExhausted, addProposal, resumePolling } = useGradingProposals(evaluation.id, busy, setError);
 
@@ -73,19 +66,60 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
 
   function updateForm(patch: Partial<GradingFormValues>) {
     if (disabled) return;
+    editRevision.current += 1;
+    setError("");
     setForm((current) => ({ ...current, ...patch }));
     setDirty(true);
+    setAiAutoApplied(false);
+  }
+
+  function toggleItem(rubricId: string, itemId: string, achieved: boolean) {
+    const max = Number(
+      detail.rubrics
+        .find((r) => r.rubricId === rubricId)
+        ?.criteria.flatMap((c) => c.items)
+        .find((i) => i.itemId === itemId)?.points ?? 0,
+    );
+    updateForm(buildItemScorePatch(detail.rubrics, form, rubricId, itemId, achieved ? max : 0));
+  }
+
+  function setItemScore(rubricId: string, itemId: string, score: number) {
+    updateForm(buildItemScorePatch(detail.rubrics, form, rubricId, itemId, score));
+  }
+
+  function setFeedback(feedback: string) {
+    updateForm({ feedback });
+  }
+  function setAdjustment(adjustment: string) {
+    updateForm({ adjustment });
+  }
+  function setChangeReason(changeReason: string) {
+    updateForm({ changeReason });
+  }
+
+  function updateStructuredSummary(summary: StructuredFeedbackSummary) {
+    updateForm(buildStructuredSummaryPatch(form, summary));
+  }
+
+  function updateStructuredItem(rubricId: string, itemId: string, patch: Partial<StructuredFeedbackItem>) {
+    updateForm(buildStructuredItemPatch(detail.rubrics, form, rubricId, itemId, patch));
+  }
+
+  function toggleAcknowledgedReviewItem(key: string) {
+    const patch = buildToggleAcknowledgePatch(detail.rubrics, form, key);
+    if (patch) updateForm(patch);
   }
 
   async function reloadEvaluation() {
     try {
-      // Preserve unsaved edits only while grading the same submitted receipt.
       const refreshed = await refresh();
       setDetail(refreshed);
+      setError("");
       const receiptChanged = refreshed.evaluation.submissionHash !== evaluation.submissionHash;
-      if (receiptChanged || refreshed.evaluation.state === "FINALIZED" || refreshed.evaluation.state === "PUBLISHED") {
+      if (receiptChanged || refreshed.editable === false || refreshed.evaluation.state === "SUPERSEDED") {
         setForm(createInitialForm(refreshed.evaluation, refreshed.rubrics));
         setDirty(false);
+        setAiAutoApplied(false);
         dirtyRef.current = false;
       }
       if (receiptChanged) resumePolling();
@@ -94,18 +128,21 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     }
   }
 
-  function confirmNavigation() {
-    return !dirty || window.confirm(UNSAVED_CHANGES_MESSAGE);
-  }
   function navigateEvaluation(id: string, keepFilters = true) {
-    if (confirmNavigation()) router.push(buildEvaluationHref(id, keepFilters ? filters : {}));
+    const go = () => router.push(buildEvaluationHref(id, keepFilters ? filters : {}));
+    if (dirty) requestConfirm(UNSAVED_CHANGES_MESSAGE, go, "Bỏ thay đổi");
+    else go();
   }
 
-  async function saveEvaluation(advance = false): Promise<Evaluation | null> {
-    if (disabled) return null;
+  async function saveEvaluation(advance = false,
+    options: { background?: boolean } = {}): Promise<Evaluation | null> {
+    if (disabled || savingRef.current) return null;
     const currentIndex = detail.navigationIds.indexOf(evaluation.id);
     const next = currentIndex >= 0 ? detail.navigationIds[currentIndex + 1] : undefined;
-    setBusy(true);
+    const savedRevision = editRevision.current;
+    savingRef.current = true;
+    setSaving(true);
+    if (!options.background) setBusy(true);
     setError("");
     try {
       if (hasInvalidItemScores(detail.rubrics, form.itemScores)) {
@@ -125,7 +162,16 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
         ...(supportsItemScores ? { itemScoresByRubric: form.itemScores ?? {} } : {}),
         ...(hasStructuredPayload
           ? {
-            ...(form.structuredFeedback ? { structuredFeedback: form.structuredFeedback } : {}),
+            ...(form.structuredFeedback ? {
+              structuredFeedback: {
+                ...form.structuredFeedback,
+                summary: {
+                  ...form.structuredFeedback.summary,
+                  strengths: form.structuredFeedback.summary.strengths.filter((entry) => entry.trim()),
+                  improvements: form.structuredFeedback.summary.improvements.filter((entry) => entry.trim()),
+                },
+              },
+            } : {}),
             ...(form.clearStructuredFeedback ? { clearStructuredFeedback: true } : {}),
             ...(form.acknowledgedReviewItems && Object.keys(form.acknowledgedReviewItems).length > 0
               ? { acknowledgedReviewItems: form.acknowledgedReviewItems }
@@ -138,24 +184,44 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
         version: evaluation.version,
         checkedItemsByRubric: form.checks,
         adjustment: form.adjustment,
-        adjustmentReason: form.adjustmentReason || null,
+        adjustmentReason: Number(form.adjustment) !== 0 ? form.changeReason.trim() || null : null,
         feedback: form.feedback,
-        changeReason: form.changeReason || null,
+        changeReason: form.changeReason.trim() || null,
         usedProposalId: form.usedProposalId,
       });
       if (saved) {
-        setDetail({ ...detail, evaluation: saved });
-        setForm((current) => ({
+        setDetail((current) => ({ ...current, evaluation: saved }));
+        let replacementForm: GradingFormValues | null = null;
+        if (saved.kind === "GROUP_DOCUMENT") {
+          try {
+            const refreshed = await refresh();
+            setDetail(refreshed);
+            if (refreshed.evaluation.submissionHash !== saved.submissionHash
+                || refreshed.editable === false || refreshed.evaluation.state === "SUPERSEDED") {
+              replacementForm = createInitialForm(refreshed.evaluation, refreshed.rubrics);
+            }
+          } catch {
+            setDetail({ ...detail, evaluation: saved, members: [] });
+            setError("Đã lưu điểm nhóm. Tải lại bài để cập nhật điểm và phiên bản thành viên.");
+          }
+        }
+        const preserveEdits = !replacementForm && editRevision.current !== savedRevision;
+        setForm((current) => replacementForm ?? (preserveEdits ? {
           ...current,
+          usedProposalId: current.usedProposalId === form.usedProposalId ? null : current.usedProposalId,
+        } : {
+          ...current,
+          adjustment: String(saved.adjustment ?? current.adjustment),
           structuredFeedback: saved.structuredFeedback ?? current.structuredFeedback ?? null,
           clearStructuredFeedback: false,
           acknowledgedReviewItems: saved.acknowledgedReviewItems ?? current.acknowledgedReviewItems ?? {},
           reviewedItemScores: saved.reviewedItemScores ?? current.reviewedItemScores ?? {},
           usedProposalId: null,
         }));
-        setDirty(false);
-        dirtyRef.current = false;
-        if (advance && next) router.push(buildEvaluationHref(next, filters));
+        setDirty(preserveEdits);
+        if (!preserveEdits) setAiAutoApplied(false);
+        dirtyRef.current = preserveEdits;
+        if (advance && next && !preserveEdits) router.push(buildEvaluationHref(next, filters));
         return saved;
       }
       return null;
@@ -163,27 +229,30 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
       setError(formatErrorMessage(error));
       return null;
     } finally {
-      setBusy(false);
+      savingRef.current = false;
+      setSaving(false);
+      if (!options.background) setBusy(false);
     }
   }
 
   async function requestProposal(input: AiRequest): Promise<Proposal | null> {
-    if (disabled) return null;
-    setBusy(true);
+    if (disabled || savingRef.current || requestingRef.current) return null;
+    requestingRef.current = true;
+    const account = readGradingAiAccount();
     setError("");
     try {
       const created = await gradingApi.requestProposal(evaluation.id, input);
+      if (account !== readGradingAiAccount()) return null;
       if (created) addProposal(created);
       return created ?? null;
     } catch (error) {
       setError(formatErrorMessage(error));
       return null;
     } finally {
-      setBusy(false);
+      requestingRef.current = false;
     }
   }
 
-  /** Applying a proposal changes only the local draft and requires a fresh review. */
   function applyProposal(
     checks: Checks,
     feedback: string,
@@ -192,26 +261,20 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     structuredFeedback?: StructuredFeedback | null,
   ) {
     if (disabled) return;
-    const normalized = buildRubricValues(detail.rubrics, checks, itemScores);
-    const retainedFeedback = structuredFeedback ?? form.structuredFeedback ?? evaluation.structuredFeedback ?? null;
-    const reviewedItemScores: ItemScores = {};
-    // Legacy proposals contain no new explanations: keep only the old text's item/score baselines.
-    if (!structuredFeedback && retainedFeedback) {
-      for (const { rubricId, itemId } of retainedFeedback.items) {
-        const score = form.reviewedItemScores?.[rubricId]?.[itemId] ?? form.itemScores?.[rubricId]?.[itemId];
-        if (score !== undefined) (reviewedItemScores[rubricId] ??= {})[itemId] = score;
-      }
-    }
-    updateForm({
-      checks: normalized.checks,
-      itemScores: normalized.itemScores,
+    editRevision.current += 1;
+    const patch = buildProposalDraftPatch(
+      detail.rubrics,
+      evaluation,
+      form,
+      checks,
       feedback,
-      structuredFeedback: retainedFeedback,
-      clearStructuredFeedback: false,
-      acknowledgedReviewItems: {},
-      reviewedItemScores,
-      usedProposalId: proposalId,
-    });
+      proposalId,
+      itemScores,
+      structuredFeedback,
+    );
+    setForm((current) => ({ ...current, ...patch }));
+    setDirty(true);
+    setAiAutoApplied(true);
   }
 
   return {
@@ -219,8 +282,10 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     evaluation,
     form,
     busy,
+    saving,
     error,
     dirty,
+    aiAutoApplied,
     proposals,
     proposalsLoaded,
     pollExhausted,
@@ -228,9 +293,17 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     official,
     currentIndex: detail.navigationIds.indexOf(evaluation.id),
     updateForm,
+    toggleItem,
+    setItemScore,
+    setFeedback,
+    setAdjustment,
+    setChangeReason,
+    updateStructuredSummary,
+    updateStructuredItem,
+    toggleAcknowledgedReviewItem,
     reload: reloadEvaluation,
     navigate: navigateEvaluation,
-    confirmNavigation,
+    confirmDialog,
     save: saveEvaluation,
     requestProposal,
     resumePolling,

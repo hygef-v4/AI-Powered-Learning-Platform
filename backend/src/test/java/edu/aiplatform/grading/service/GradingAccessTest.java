@@ -11,6 +11,29 @@ import java.util.UUID;
 import java.time.Clock;
 
 class GradingAccessTest {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(edu.aiplatform.academics.contract.ClassStatus.class)
+    void onlyOpenClassesAllowGradeWritesButArchivedGradesRemainReadable(
+            edu.aiplatform.academics.contract.ClassStatus status) {
+        var auth = mock(IAuthorization.class);
+        when(auth.authorize(any(), any(), any())).thenReturn(AuthorizationDecision.allow());
+        var classes = mock(IClassAccess.class);
+        var classId = UUID.randomUUID();
+        var teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
+        when(classes.getClassRef(classId)).thenReturn(java.util.Optional.of(
+                new edu.aiplatform.academics.contract.ClassRef(classId, UUID.randomUUID(),
+                        "SE1", "Class", status, teacher.accountId(), false)));
+        var access = new GradingAccess(auth, classes, mock(IAudit.class), Clock.systemUTC());
+        access.requireTeacher(teacher, classId, Actions.GRADING_REVIEW);
+        if (status == edu.aiplatform.academics.contract.ClassStatus.OPEN) {
+            assertThatCode(() -> access.requireTeacher(teacher, classId, Actions.GRADING_WRITE))
+                    .doesNotThrowAnyException();
+        } else {
+            assertThatThrownBy(() -> access.requireTeacher(teacher, classId, Actions.GRADING_WRITE))
+                    .isInstanceOfSatisfying(ApiException.class,
+                            error -> assertThat(error.code()).isEqualTo("GRADING_CLASS_READ_ONLY"));
+        }
+    }
     @Test
     void revokedClassAuthorityFailsClosedAndIsAudited() {
         var auth = mock(IAuthorization.class);

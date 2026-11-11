@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { GradingWorkspacePage } from "@/features/grading";
+
+export const metadata: Metadata = { title: "Chấm bài" };
 export default async function Page({ params, searchParams }: { params: Promise<{ evaluationId: string }>; searchParams: Promise<{ proposalId?: string | string[]; status?: string | string[]; late?: string | string[] }> }) {
   const { evaluationId } = await params;
   const { proposalId, status, late } = await searchParams;

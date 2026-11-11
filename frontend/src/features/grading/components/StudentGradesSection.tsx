@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
 import { formatPoints, GRADE_STATUS_LABELS } from "../model/types";
+import { formatDateTime } from "@/shared/dateTime";
 export function StudentGradesSection({
   classId,
   studentId,
@@ -32,7 +33,7 @@ export function StudentGradesSection({
             return <tr key={assignment.id} className="border-t">
               <th scope="row" className="p-2 font-medium">{assignment.title}</th>
               <td className="p-2">{assignment.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}</td>
-              <td className="p-2">{grade?.submittedAt ? <>{grade.late ? "Trễ" : "Đúng hạn"}<br/>{new Date(grade.submittedAt).toLocaleString("vi-VN")}</> : "Chưa nộp"}</td>
+              <td className="p-2">{grade?.submittedAt ? <>{grade.late ? "Trễ" : "Đúng hạn"}<br/>{formatDateTime(grade.submittedAt)}</> : "Chưa nộp"}</td>
               <td className="p-2">{formatPoints(grade?.score, grade?.maxScore ?? assignment.maxScore)}<br/>{GRADE_STATUS_LABELS[grade?.status ?? "NOT_SUBMITTED"] ?? grade?.status}</td>
             </tr>;
           })}</tbody>

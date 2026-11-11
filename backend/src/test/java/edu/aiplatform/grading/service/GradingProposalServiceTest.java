@@ -17,6 +17,29 @@ import edu.aiplatform.shared.error.ApiException;
 import org.mockito.ArgumentCaptor;
 
 class GradingProposalServiceTest {
+    @Test
+    void oldRejectedProposalsGetReadableMessagesWithoutRewritingStoredHistory() {
+        var transactions = mock(GradingProposalTransactions.class);
+        var ai = mock(IAiTask.class);
+        var evaluations = mock(IEvaluationRepository.class);
+        var proposals = mock(IGradingProposalRepository.class);
+        var access = mock(GradingAccess.class);
+        var evaluation = new Evaluation();
+        evaluation.id = UUID.randomUUID();
+        evaluation.classId = UUID.randomUUID();
+        when(evaluations.findById(evaluation.id)).thenReturn(Optional.of(evaluation));
+        var proposal = new GradingProposal();
+        proposal.status = "REJECTED";
+        proposal.safeError = "Phản hồi AI chưa hợp lệ (PROPOSAL_TOTAL_MISMATCH). Bạn vẫn có thể chấm thủ công.";
+        when(proposals.findForEvaluation(evaluation.id)).thenReturn(List.of(proposal));
+        var service = new GradingProposalService(transactions, ai, evaluations, proposals, access);
+        var actor = new Actor(UUID.randomUUID(), Role.TEACHER);
+        assertThat(service.listProposals(actor, evaluation.id).get(0).safeError)
+                .contains("Tổng điểm", "không khớp").doesNotContain("PROPOSAL_");
+        verify(proposals, never()).save(any());
+        verifyNoInteractions(ai);
+    }
+
     @ParameterizedTest
     @ValueSource(ints = {-1, 0, 201})
     void invalidBatchSizeFailsBeforeProposalOrEstimateWork(int size) {

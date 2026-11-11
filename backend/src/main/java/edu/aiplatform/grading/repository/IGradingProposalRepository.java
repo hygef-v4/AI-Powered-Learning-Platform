@@ -19,6 +19,9 @@ public interface IGradingProposalRepository {
     /** Lists proposals for an evaluation. */
     List<GradingProposal> findForEvaluation(UUID evaluationId);
 
+    /** Reads proposal metadata for an authorized listing without row locks. */
+    List<GradingProposal> findForEvaluations(List<UUID> evaluationIds);
+
     /** Persists the proposal and returns its stored state. */
     GradingProposal save(GradingProposal proposal);
 }

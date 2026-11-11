@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Pill, type Tone } from "@/shared/ui";
-import type { SourceChoice } from "@/shared/ai";
+import { formatDateTime, type SourceChoice } from "@/shared/ai";
 import { calculateChecklistPoints, hasInvalidItemScores, resolveItemPoints, isValidItemScore } from "../model/rubricScores";
 import { GradingFeedbackSummary, RubricItemFeedback } from "./StructuredFeedbackSection";
 import type {
@@ -85,6 +85,8 @@ export function AiProposalPanel({
   onRecheck?: () => void;
 }) {
   const [expandedOlder, setExpandedOlder] = useState<Record<string, boolean>>({});
+  const visibleProposals = proposals.filter((p) => p.status === "PENDING" || (p.proposal && p.status !== "FAILED" && p.status !== "REJECTED"));
+  const latestFailure = proposals[0]?.status === "FAILED" || proposals[0]?.status === "REJECTED" ? proposals[0] : null;
 
   function renderProposalContent(p: Proposal, isLatest: boolean) {
     const aiChecks = p.proposal?.checks ?? {};
@@ -122,11 +124,6 @@ export function AiProposalPanel({
             )}
           </div>
         )}
-        {(p.status === "FAILED" || p.status === "REJECTED") && <div className="mt-2 rounded-lg bg-danger/5 p-3">
-          <p>{p.safeError && !/^AI task (failed|unavailable or failed)$/.test(p.safeError) ? p.safeError : "Tác vụ AI không thành công. Kiểm tra kết nối hoặc thử lại bằng nguồn AI đã cấu hình."}</p>
-          <p className="mt-1 text-muted">Bạn vẫn có thể chấm thủ công theo rubric. Điểm chưa bị thay đổi.</p>
-          <a href="/ai/connection" className="mt-2 inline-block font-semibold text-primary-ink underline underline-offset-2">Kiểm tra kết nối AI</a>
-        </div>}
         {p.status === "STALE" && <p className="mt-2 text-muted">Bài nộp hoặc rubric đã thay đổi. Hãy yêu cầu một đề xuất mới.</p>}
         {p.proposal && <>
           <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-line bg-surface px-3 py-2">
@@ -286,7 +283,7 @@ export function AiProposalPanel({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="text-base font-bold text-ink">Đề xuất AI</h2>
-          <p className="mt-0.5 text-xs leading-relaxed text-muted">AI chỉ đề xuất. Bạn kiểm tra rubric và lưu nháp trước khi chốt.</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-muted">Kiểm tra đề xuất và lưu để cập nhật điểm.</p>
         </div>
         <button
           type="button"
@@ -297,15 +294,24 @@ export function AiProposalPanel({
           Yêu cầu đề xuất mới
         </button>
       </div>
-      {proposals.length === 0 && <p className="mt-3 text-sm text-muted">Chưa có đề xuất. Bạn có thể tự chấm theo rubric hoặc yêu cầu AI hỗ trợ.</p>}
+      {latestFailure && <div role="alert" className="mt-3 rounded-lg bg-danger/5 p-3 text-sm">
+        <p className="font-semibold text-danger">Không tạo được đề xuất</p>
+        <p className="mt-1">{latestFailure.safeError && !/^AI task (failed|unavailable or failed)$/.test(latestFailure.safeError) ? latestFailure.safeError : "Tác vụ AI không thành công. Kiểm tra kết nối hoặc thử lại bằng nguồn AI đã cấu hình."}</p>
+        <p className="mt-1 text-muted">Bạn vẫn có thể chấm thủ công theo rubric. Điểm chưa bị thay đổi.</p>
+        <a href="/ai/connection" className="mt-2 inline-block font-semibold text-primary-ink underline underline-offset-2">Kiểm tra kết nối AI</a>
+      </div>}
+      {visibleProposals.length === 0 && <p className="mt-3 text-sm text-muted">Chưa có đề xuất. Bạn có thể tự chấm theo rubric hoặc yêu cầu AI hỗ trợ.</p>}
       {selectedProposalId && proposalsLoaded && !proposals.some((p) => p.id === selectedProposalId) && (
         <p role="alert" className="mt-3 text-sm text-danger">Không tìm thấy đề xuất từ liên kết. Kiểm tra lịch sử đề xuất bên dưới; điểm chưa bị thay đổi.</p>
       )}
-      {proposals.map((p, index) => {
+      {visibleProposals.map((p, index) => {
         const baseMeta = STATUS_META[p.status] ?? { label: "Chưa khả dụng", tone: "neutral" as Tone, icon: "•" };
         const meta = p.status === "PENDING" ? { ...baseMeta, label: pendingStageLabel(p.taskState) } : baseMeta;
         const sourceLabel = `Lần ${p.versionNo} · ${p.origin === "MCP" ? (p.agentLabel ?? "Agent") : p.source === "PERSONAL" ? "API cá nhân" : "API trường"}`;
-        const keepExpanded = p.id === selectedProposalId || index === 0 || p.status === "PENDING" || p.status === "FAILED" || p.status === "REJECTED";
+        const createdAt = p.createdAt && Number.isFinite(Date.parse(p.createdAt))
+          ? <time dateTime={p.createdAt} className="block text-xs font-normal text-muted">Tạo lúc {formatDateTime(p.createdAt)}</time>
+          : null;
+        const keepExpanded = p.id === selectedProposalId || index === 0 || p.status === "PENDING";
         if (!keepExpanded) {
           const isOpen = !!expandedOlder[p.id];
           return (
@@ -327,6 +333,7 @@ export function AiProposalPanel({
                 <span className="text-xs text-muted">
                   {sourceLabel}
                   {p.proposal ? ` · ${Number(p.proposal.score).toFixed(2)} điểm` : ""}
+                  {createdAt}
                 </span>
               </button>
               <div hidden={!isOpen} className="mt-2 border-t border-line pt-2">
@@ -343,7 +350,7 @@ export function AiProposalPanel({
                 <span aria-hidden="true">{meta.icon}</span>
                 <strong>{meta.label}</strong>
               </Pill>
-              <span className="text-xs text-muted">{sourceLabel}</span>
+              <span className="text-xs text-muted">{sourceLabel}{createdAt}</span>
             </div>
             {index > 0 && <p className="mt-1 text-xs text-muted">Đề xuất trước đó</p>}
             {renderProposalContent(p, index === 0)}

@@ -1,4 +1,4 @@
-import { apiFetch, apiDownload } from "@/shared/api/client";
+import { apiFetch, apiDownloadFile } from "@/shared/api/client";
 import type { NavigationFilters } from "../model/navigation";
 import type {
   AiRequest,
@@ -71,7 +71,7 @@ export const gradingApi = {
   loadGradebook: (classId: string, q = "", page = 1, size = 20) =>
     apiFetch<GradebookPage>(`${API_ROOT}/classes/${classId}/gradebook?${buildQuery({ q, page, size })}`),
   exportGrades: (classId: string, format: string, assignmentId?: string) =>
-    apiDownload(`${API_ROOT}/classes/${classId}/gradebook/export?${buildQuery({ format, assignmentId })}`),
+    apiDownloadFile(`${API_ROOT}/classes/${classId}/gradebook/export?${buildQuery({ format, assignmentId })}`),
   loadStudentGrades: (classId: string, studentId: string) =>
     apiFetch<GradebookRow>(`${API_ROOT}/classes/${classId}/students/${studentId}/grades`),
   listMyGrades: (classId: string) => apiFetch<StudentGrade[]>(`${API_ROOT}/me/grades?classId=${classId}`),

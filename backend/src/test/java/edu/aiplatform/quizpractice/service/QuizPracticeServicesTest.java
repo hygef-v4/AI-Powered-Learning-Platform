@@ -95,6 +95,7 @@ class QuizPracticeServicesTest {
     private final IActivityWrite activityWrite = mock(IActivityWrite.class);
     private final IActivityQuery activityQuery = mock(IActivityQuery.class);
     private QuizSettings settings = new QuizSettings(false, false, 10, 2, true, true);
+    private QuizScope quizScope = QuizScope.CLASS;
     private QuizStatus quizStatus = QuizStatus.OPEN;
     private boolean monitoring;
     private boolean practiceAllowed = true;
@@ -110,7 +111,8 @@ class QuizPracticeServicesTest {
     void setup() {
         IAuthorization authorization = (actor, action, ref) -> {
             boolean allowed = Actions.QUIZ_PRACTICE.equals(action)
-                    ? practiceAllowed && (actor.equals(student) || actor.equals(other)) && classA.equals(ref.id())
+                    ? practiceAllowed && (actor.equals(student) || actor.equals(other))
+                            && (classA.equals(ref.id()) || classB.equals(ref.id()))
                     : actor.equals(teacher) && classA.equals(ref.id());
             return allowed ? AuthorizationDecision.allow() : AuthorizationDecision.deny("OUT_OF_SCOPE");
         };
@@ -153,8 +155,8 @@ class QuizPracticeServicesTest {
     }
 
     private QuizView quiz() {
-        return new QuizView(quizId, QuizScope.CLASS, classA, subject, 1, "Luyện tập", quizStatus, settings, monitoring,
-                monitoring ? "Ghi lại khi rời trang" : null, new BigDecimal("3"));
+        return new QuizView(quizId, quizScope, quizScope == QuizScope.CLASS ? classA : null, subject, 1, "Luyện tập",
+                quizStatus, settings, monitoring, monitoring ? "Ghi lại khi rời trang" : null, new BigDecimal("3"));
     }
 
     private static QuizQuestionView question(UUID id, QuestionType type) {
@@ -636,6 +638,80 @@ class QuizPracticeServicesTest {
         assertThat(resumed.activityNotice()).isEqualTo("Ghi lại khi rời trang");
     }
 
+    @Test
+    void bestScoreAndLastScoreRespectPerAttemptSnapshotVisibility() {
+        settings = new QuizSettings(false, false, 10, 5, false, false);
+        var hiddenAttempt = attemptsService.start(student, quizId, classA);
+        attemptsService.saveAnswers(student, hiddenAttempt.attemptId(),
+                Map.of(q1, List.of("1"), q2, List.of("1", "2")), hiddenAttempt.answerVersion());
+        attemptsService.submit(student, hiddenAttempt.attemptId());
+
+        settings = new QuizSettings(false, false, 10, 5, true, true);
+        assertThat(queries.detail(student, quizId, classA)).satisfies(detail -> {
+            assertThat(detail.bestScore()).isNull();
+            assertThat(detail.attempts().get(0).score()).isNull();
+        });
+        assertThat(queries.history(student, classA)).singleElement().satisfies(row -> {
+            assertThat(row.bestScore()).isNull();
+            assertThat(row.lastScore()).isNull();
+        });
+
+        var visibleAttempt = attemptsService.start(student, quizId, classA);
+        attemptsService.saveAnswers(student, visibleAttempt.attemptId(),
+                Map.of(q1, List.of("1")), visibleAttempt.answerVersion());
+        attemptsService.submit(student, visibleAttempt.attemptId());
+
+        settings = new QuizSettings(false, false, 10, 5, false, false);
+        assertThat(queries.detail(student, quizId, classA).bestScore())
+                .as("giữ điểm của lượt cho phép xem và không lộ điểm cao hơn của lượt ẩn")
+                .isEqualByComparingTo("1");
+        assertThat(queries.history(student, classA)).singleElement().satisfies(row -> {
+            assertThat(row.bestScore()).isEqualByComparingTo("1");
+            assertThat(row.lastScore()).isEqualByComparingTo("1");
+        });
+    }
+
+    @Test
+    void startReverifiesQuizStatusAfterLockAndActiveAttemptRequiresOpenClass() {
+        store.onLockStart = () -> quizStatus = QuizStatus.RETIRED;
+        assertThat(api(() -> attemptsService.start(student, quizId, classA)).code()).isEqualTo("QUIZ_NOT_OPEN");
+        assertThat(store.byId).isEmpty();
+
+        store.onLockStart = null;
+        quizStatus = QuizStatus.OPEN;
+        monitoring = true;
+        var taking = attemptsService.start(student, quizId, classA);
+        when(classes.getClassRef(classA)).thenReturn(Optional.of(classRef(classA, ClassStatus.ARCHIVED)));
+
+        assertThat(api(() -> attemptsService.get(student, taking.attemptId())).code()).isEqualTo("CLASS_NOT_OPEN");
+        assertThat(api(() -> attemptsService.saveAnswers(student, taking.attemptId(), Map.of(), 0)).code())
+                .isEqualTo("CLASS_NOT_OPEN");
+        assertThat(api(() -> attemptsService.submit(student, taking.attemptId())).code()).isEqualTo("CLASS_NOT_OPEN");
+        var event = new ActivityEventInput(UUID.randomUUID(), "e1", 0, ActivityKind.SESSION_START, clock.instant());
+        assertThat(api(() -> activity.record(student, taking.attemptId(), List.of(event))).code())
+                .isEqualTo("CLASS_NOT_OPEN");
+    }
+
+    @Test
+    void subjectScopedQuizCountsAttemptsAcrossClassesAndActivityValidatesLimits() {
+        quizScope = QuizScope.SUBJECT;
+        monitoring = true;
+        var taking = attemptsService.start(student, quizId, classA);
+
+        var detailInClassB = queries.detail(student, quizId, classB);
+        assertThat(detailInClassB.attemptsUsed()).isEqualTo(1);
+        assertThat(detailInClassB.inProgressAttemptId()).isEqualTo(taking.attemptId());
+
+        List<ActivityEventInput> tooMany = java.util.stream.IntStream.range(0, 51)
+                .mapToObj(i -> new ActivityEventInput(UUID.randomUUID(), "e" + i, i, ActivityKind.HIDDEN, clock.instant()))
+                .toList();
+        assertThat(api(() -> activity.record(student, taking.attemptId(), tooMany)).code())
+                .isEqualTo("ACTIVITY_BATCH_INVALID");
+        var longId = new ActivityEventInput(UUID.randomUUID(), "x".repeat(65), 0, ActivityKind.HIDDEN, clock.instant());
+        assertThat(api(() -> activity.record(student, taking.attemptId(), List.of(longId))).code())
+                .isEqualTo("ACTIVITY_EVENT_INVALID");
+    }
+
     private UUID submitFresh(Actor actor) {
         var taking = attemptsService.start(actor, quizId, classA);
         attemptsService.saveAnswers(actor, taking.attemptId(), Map.of(q1, List.of("1")), taking.answerVersion());
@@ -676,6 +752,7 @@ class QuizPracticeServicesTest {
         final Map<UUID, QuizAttempt> byId = new LinkedHashMap<>();
         /** Chạy ngay trước câu lệnh nộp: giả một lần lưu từ request khác xen vào giữa lúc chấm và lúc nộp. */
         Runnable beforeSubmit;
+        Runnable onLockStart;
 
         @Override
         public boolean decidePenalty(UUID attemptId, PenaltyDecision decision, BigDecimal points, UUID decidedBy, Instant at,
@@ -697,6 +774,9 @@ class QuizPracticeServicesTest {
 
         @Override
         public void lockStart(UUID quizId, UUID accountId) {
+            if (onLockStart != null) {
+                onLockStart.run();
+            }
         }
 
         @Override

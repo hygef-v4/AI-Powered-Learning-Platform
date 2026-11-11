@@ -209,7 +209,7 @@ describe("SubjectListPage", () => {
   it("empty không bị coi là lỗi và không bật trang sau", async () => {
     vi.mocked(getSubjects).mockResolvedValue(page([]));
     render(<SubjectListPage />);
-    expect(await screen.findByText("Không có môn học phù hợp với bộ lọc.")).toBeInTheDocument();
+    expect(await screen.findByText("Không có môn học phù hợp.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Trang sau" })).not.toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
@@ -221,9 +221,9 @@ describe("SubjectListPage", () => {
     render(<SubjectListPage />);
     expect(await screen.findByRole("alert")).toHaveTextContent("Không tải được dữ liệu");
     expect(screen.queryByText("internal SQL")).not.toBeInTheDocument();
-    expect(screen.queryByText("Không có môn học phù hợp với bộ lọc.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Không có môn học phù hợp.")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Thử lại" }));
-    expect(await screen.findByText("Không có môn học phù hợp với bộ lọc.")).toBeInTheDocument();
+    expect(await screen.findByText("Không có môn học phù hợp.")).toBeInTheDocument();
     expect(getSubjects).toHaveBeenCalledTimes(2);
   });
 

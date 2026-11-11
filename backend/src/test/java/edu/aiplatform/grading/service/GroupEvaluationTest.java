@@ -13,8 +13,8 @@ import java.math.BigDecimal;
 
 class GroupEvaluationTest {
     @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.EnumSource(value = EvaluationStatus.class, names = {"FINALIZED", "PUBLISHED"})
-    void resubmissionReusesGroupIdentityAndResetsGradesWithHistory(EvaluationStatus state) {
+    @org.junit.jupiter.params.provider.EnumSource(value = EvaluationStatus.class, names = {"DRAFT", "FINALIZED", "PUBLISHED"})
+    void resubmissionPreservesOfficialGradesAndResetsDrafts(EvaluationStatus state) {
         var repo = mock(IEvaluationRepository.class);
         var assignments = mock(IAssignmentQuery.class);
         var rubric = mock(IRubric.class);
@@ -49,12 +49,26 @@ class GroupEvaluationTest {
         root.feedback = "Old feedback";
         root.adjustment = BigDecimal.ONE;
         root.rubricChecks = "{\"old\":[]}";
-        when(repo.findForAssignmentAndClass(aid, cid)).thenReturn(List.of(root, member));
+        var previousGroupMember = Evaluation.createPendingEvaluation(null, aid, cid, sid,
+                "other", BigDecimal.TEN, "[]", Instant.now().minusSeconds(10));
+        previousGroupMember.kind = EvaluationKind.MEMBER;
+        previousGroupMember.groupDocumentId = UUID.randomUUID();
+        when(repo.lockById(previousGroupMember.id)).thenReturn(Optional.of(previousGroupMember));
+        when(repo.findForAssignmentAndClass(aid, cid)).thenReturn(List.of(root, member, previousGroupMember));
         when(repo.lockById(root.id)).thenReturn(Optional.of(root));
         when(repo.lockById(member.id)).thenReturn(Optional.of(member));
         var service = new EvaluationLifecycleService(repo, mock(ISubmissionQuery.class), assignments, rubric,
                 new ObjectMapper().findAndRegisterModules(), Clock.systemUTC(), classes);
         service.onGroupSubmitted(doc, "new", aid, cid, List.of(sid));
+        if (state != EvaluationStatus.DRAFT) {
+            assertThat(root.state).isEqualTo(state);
+            assertThat(member.state).isEqualTo(state);
+            assertThat(root.submissionHash).isEqualTo("old");
+            assertThat(root.score).isEqualByComparingTo("1");
+            assertThat(member.score).isEqualByComparingTo("1");
+            verify(repo, never()).save(any());
+            return;
+        }
         assertThat(root.state).isEqualTo(EvaluationStatus.PENDING);
         assertThat(root.submissionHash).isEqualTo("new");
         assertThat(root.score).isNull();
@@ -70,6 +84,7 @@ class GroupEvaluationTest {
         assertThat(root.rubricChecks).isEqualTo("{}");
         verify(repo).save(argThat(e -> e.id.equals(root.id)));
         verify(repo).save(argThat(e -> e.id.equals(member.id)));
-        verify(repo, times(2)).save(any());
+        assertThat(previousGroupMember.state).isEqualTo(EvaluationStatus.SUPERSEDED);
+        verify(repo, times(3)).save(any());
     }
 }

@@ -4,7 +4,24 @@ import Link from "next/link";
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
-import { Alert, ClassFilter, ClickableRow, Icon, PageHeader, PageNav, Pill, Select, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
+import {
+  Alert,
+  ClassFilter,
+  ClickableRow,
+  cx,
+  Icon,
+  PageHeader,
+  PageNav,
+  Pill,
+  Segmented,
+  Select,
+  TableFrame,
+  TableSkeletonRows,
+  Td,
+  TextInput,
+  Th,
+} from "@/shared/ui";
+import { formatTimeUntil } from "@/shared/dateTime";
 import { errorMessage, formatDateTime } from "../model/format";
 import { studentAssignmentResults } from "../slots";
 import type { StudentRow } from "../model/types";
@@ -27,6 +44,17 @@ function kindOf(row: StudentRow): Kind {
   return row.gradingMode === "PRACTICE" ? "PRACTICE" : row.submissionMode;
 }
 
+/** Thời gian còn lại tới hạn nộp, dưới ngày giờ; còn dưới 24 giờ thì màu cảnh báo. */
+function DueIn({ closesAt }: { closesAt: string | null }) {
+  const due = formatTimeUntil(closesAt);
+  if (!due) return null;
+  return (
+    <span className={cx("block text-xs", due.urgent ? "font-semibold text-warning" : "text-muted")} data-testid="assignment-due-in">
+      {due.text}
+    </span>
+  );
+}
+
 /** Mở bài từ trang chung thì đánh dấu `from=all` để nút quay lại về trang chung, không về trang bài tập của lớp. */
 function detailHref(row: StudentRow, general: boolean) {
   return `/my-assignments/${encodeURIComponent(row.assignmentId)}?classId=${encodeURIComponent(row.classId)}${general ? "&from=all" : ""}`;
@@ -35,7 +63,7 @@ function detailHref(row: StudentRow, general: boolean) {
 /**
  * #38 Student Assignments (F1, UC 37): bài của các lớp đang học (hoặc một lớp khi mở từ sidebar của lớp, `?classId=`), cùng bố
  * cục bảng Lớp học: một thẻ có tab Chưa làm / Đang làm / Đã nộp, ô lọc loại bài (Cá nhân / Nhóm / Luyện tập) và ô tìm theo tên bài; bảng tiêu đề tô nền,
- * bấm dòng để mở bài. Các tab cùng độ rộng cột; cột thứ năm là Lượt làm (số lượt còn lại), riêng Đã nộp là Điểm. Bài đang làm
+ * bấm dòng để mở bài. Các tab cùng độ rộng cột, hiện lớp và môn học; riêng Đã nộp có thêm Điểm. Bài đang làm
  * (kể cả bài nhóm nhóm đang làm) có nhãn Đang làm màu vàng; bài nhóm hiện trạng thái theo tiến độ của nhóm;
  * điểm do U09 gắn.
  */
@@ -70,6 +98,7 @@ export function StudentAssignmentsPage() {
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const current = Math.min(page, totalPages - 1);
   const shown = visible.slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE);
+  const columnCount = tab === "submitted" ? 8 : 7;
 
   return (
     <>
@@ -79,16 +108,13 @@ export function StudentAssignmentsPage() {
       {error !== null && <Alert tone="danger" role="alert">{errorMessage(error)}</Alert>}
       <section aria-label="Danh sách bài tập" className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
         <div className="flex flex-wrap items-center gap-3">
-          <div role="tablist" aria-label="Nhóm bài" className="flex flex-wrap gap-1 rounded-xl bg-shell p-1">
-            {TABS.map((item) => (
-              <button key={item.value} type="button" role="tab" aria-selected={tab === item.value}
-                onClick={() => { setTab(item.value); setPage(0); }}
-                className={cx("rounded-[7px] px-2.5 py-1.5 text-xs font-semibold transition-colors duration-200",
-                  tab === item.value ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink")}>
-                {item.label}{rows && <span className="ml-1 tabular-nums text-muted">{count(item.value)}</span>}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            as="tab"
+            ariaLabel="Nhóm bài"
+            value={tab}
+            onChange={(value) => { setTab(value); setPage(0); }}
+            options={TABS.map((item) => ({ ...item, count: rows ? count(item.value) : undefined }))}
+          />
           <Select aria-label="Loại bài" value={mode} wrapperClassName="ml-auto w-40" onChange={(e) => { setMode(e.target.value); setPage(0); }}>
             <option value="">Mọi loại</option>
             {(Object.keys(KIND_LABELS) as Kind[]).map((kind) => <option key={kind} value={kind}>{KIND_LABELS[kind]}</option>)}
@@ -98,10 +124,12 @@ export function StudentAssignmentsPage() {
               onChange={(e) => { setQuery(e.target.value); setPage(0); }} />
           </div>
         </div>
-        {/* Cột cố định độ rộng để hai tab Chưa làm / Đã nộp thẳng cột nhau. */}
-        <TableFrame filledHead className="[&_table]:min-w-[760px] [&_table]:table-fixed">
+        {/* Cột cố định độ rộng để hai tab Chưa làm / Đã nộp thẳng cột nhau; trên điện thoại mỗi bài là một thẻ. */}
+        <TableFrame filledHead stackOnMobile className="sm:[&_table]:min-w-[1000px] [&_table]:table-fixed">
           <colgroup>
             <col />
+            <col className="w-[110px]" />
+            <col className="w-[110px]" />
             <col className="w-[110px]" />
             <col className="w-[150px]" />
             <col className="w-[130px]" />
@@ -111,7 +139,7 @@ export function StudentAssignmentsPage() {
           </colgroup>
           <thead>
             <tr>
-              <Th>Bài tập</Th><Th>Loại</Th><Th>Hạn nộp</Th><Th>Trạng thái</Th>{tab === "submitted" && <Th>Điểm</Th>}
+              <Th>Bài tập</Th><Th>Lớp</Th><Th>Môn học</Th><Th>Loại</Th><Th>Hạn nộp</Th><Th>Trạng thái</Th>{tab === "submitted" && <Th>Điểm</Th>}
               <Th><span className="sr-only">Mở bài</span></Th>
             </tr>
           </thead>
@@ -121,22 +149,25 @@ export function StudentAssignmentsPage() {
                 <Td>
                   <Link href={detailHref(row, !classId)} onClick={(e) => e.stopPropagation()} className="block truncate font-semibold text-ink hover:text-primary-ink">{row.title}</Link>
                 </Td>
-                <Td className="whitespace-nowrap">{KIND_LABELS[kindOf(row)]}</Td>
-                <Td className="whitespace-nowrap">
+                <Td label="Lớp" className="truncate" title={row.classCode || undefined}>{row.classCode || "—"}</Td>
+                <Td label="Môn học" className="truncate" title={row.subjectCode || undefined}>{row.subjectCode || "—"}</Td>
+                <Td label="Loại" className="whitespace-nowrap">{KIND_LABELS[kindOf(row)]}</Td>
+                <Td label="Hạn nộp" className="whitespace-nowrap">
                   <span className="font-mono text-xs text-muted">{formatDateTime(row.closesAt)}</span>
+                  {tab !== "submitted" && <DueIn closesAt={row.closesAt} />}
                 </Td>
-                <Td><Pill tone={rowStatus(row).tone}>{rowStatus(row).label}</Pill></Td>
+                <Td label="Trạng thái"><Pill tone={rowStatus(row).tone}>{rowStatus(row).label}</Pill></Td>
                 {tab === "submitted" && (
-                  <Td>
+                  <Td label="Điểm">
                     {row.gradingMode === "GRADED" ? <SlotOutlet slot={studentAssignmentResults} props={{ assignmentId: row.assignmentId, classId: row.classId }} /> : <span className="text-muted">—</span>}
                   </Td>
                 )}
-                <Td className="text-faint"><Icon name="chevron_right" size={18} /></Td>
+                <Td hideWhenStacked className="text-faint"><Icon name="chevron_right" size={18} /></Td>
               </ClickableRow>
             ))}
-            {loading && !rows && <tr><Td colSpan={6} className="py-10 text-center! text-muted"><span role="status">Đang tải bài tập…</span></Td></tr>}
+            {loading && !rows && <TableSkeletonRows columns={columnCount} label="Đang tải bài tập…" />}
             {rows && shown.length === 0 && (
-              <tr><Td colSpan={6} className="py-10 text-center! text-muted">{tab === "upcoming" ? "Không còn bài chưa làm." : tab === "doing" ? "Không có bài đang làm." : "Chưa nộp bài nào."}</Td></tr>
+              <tr><Td colSpan={columnCount} className="py-10 text-center! text-muted">{tab === "upcoming" ? "Không còn bài chưa làm." : tab === "doing" ? "Không có bài đang làm." : "Chưa nộp bài nào."}</Td></tr>
             )}
           </tbody>
         </TableFrame>

@@ -7,7 +7,6 @@ import { McpAgentsTab } from "../components/McpAgentsTab";
 import {
   addConnection,
   getConnections,
-  revealConnection,
   revokeConnection,
   saveConnection,
   setConnectionEnabled,
@@ -50,7 +49,6 @@ const PERSONAL: KeysApi = {
   list: async () => (await getConnections()).filter((c) => c.configured && c.id),
   add: addConnection,
   save: saveConnection,
-  reveal: revealConnection,
   test: testConnection,
   testDraft: testConnectionDraft,
   setEnabled: setConnectionEnabled,

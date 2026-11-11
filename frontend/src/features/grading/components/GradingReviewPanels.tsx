@@ -1,4 +1,4 @@
-import { ACTIVITY_LABELS, type Detail, type Evaluation } from "../model/types";
+import { ACTIVITY_LABELS, type Detail } from "../model/types";
 
 export function ActivityReview({ detail }: { detail: Detail }) {
   const hasData = Boolean(detail.activity || (detail.memberActivities && detail.memberActivities.length > 0));
@@ -29,29 +29,6 @@ export function ActivityReview({ detail }: { detail: Detail }) {
           Chỉ để tham khảo; nền tảng không kết luận gian lận hoặc tự thay đổi điểm.
         </p>
       </div>
-    </details>
-  );
-}
-
-export function GradeHistory({ evaluation }: { evaluation: Evaluation }) {
-  const hasChanges = evaluation.changes.length > 0;
-  return (
-    <details open={hasChanges} className="rounded-xl border border-line bg-surface px-4 py-3 text-sm">
-      <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2">
-        <h2 className="inline text-sm font-bold text-ink">Lịch sử sửa điểm</h2>
-        <span className="text-xs text-muted">
-          {hasChanges ? `${evaluation.changes.length} lần thay đổi` : "Chưa có thay đổi điểm chính thức."}
-        </span>
-      </summary>
-      {hasChanges && (
-        <div className="mt-2 space-y-1 border-t border-line-soft pt-2">
-          {evaluation.changes.map((h, i) => (
-            <p key={i}>
-              {new Date(h.at).toLocaleString("vi-VN")} · {h.before} → {h.after} · {h.reason}
-            </p>
-          ))}
-        </div>
-      )}
     </details>
   );
 }

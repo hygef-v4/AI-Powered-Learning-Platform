@@ -75,7 +75,7 @@ export function RubricEditor({ criteria, onChange }: {
     <div ref={root} className="flex flex-col" data-testid="rubric-editor">
       {items.map((item, i) => (
         <div key={item.itemId ?? i} className="group/row flex items-start gap-0.5">
-          <span aria-hidden className="w-3 pt-1 text-center text-[11px] text-muted">☐</span>
+          <span aria-hidden className="w-3 pt-1 text-center text-xs text-muted">☐</span>
           {/* Ô nhiều dòng, tự cao theo chữ: lúc sửa thấy đủ nội dung mục, không bị cắt (yêu cầu 2026-11-05). */}
           <AutoTextarea data-atomic-text aria-label={`Mục chấm ${i + 1}`} value={item.text} maxLength={1000}
             placeholder="Tiêu chí" className={cx(INPUT, "flex-1 leading-snug")}
@@ -91,7 +91,7 @@ export function RubricEditor({ criteria, onChange }: {
             aria-invalid={pointsMalformed(item.points) || undefined}
             title={pointsMalformed(item.points) ? "Điểm tối đa 2 chữ số thập phân" : undefined}
             className={cx(pointsMalformed(item.points) ? POINTS_INVALID : POINTS,
-              "w-11 shrink-0 px-1 text-right placeholder:text-[11px] placeholder:text-muted [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none")}
+              "w-11 shrink-0 px-1 text-right placeholder:text-xs placeholder:text-muted [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none")}
             onChange={(e) => edit(i, { points: parsePoints(e.target.value) })}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.nativeEvent.isComposing) {
@@ -100,7 +100,7 @@ export function RubricEditor({ criteria, onChange }: {
               }
             }} />
           <button type="button" aria-label={`Xóa mục chấm ${i + 1}`} title="Xóa" onClick={() => set(items.filter((_, j) => j !== i))}
-            className="inline-flex size-5 shrink-0 items-center justify-center rounded text-[11px] text-muted opacity-0 group-hover/row:opacity-100 hover:bg-danger-soft hover:text-danger focus:opacity-100">
+            className="inline-flex size-5 shrink-0 items-center justify-center rounded text-xs text-muted opacity-0 group-hover/row:opacity-100 hover:bg-danger-soft hover:text-danger focus:opacity-100">
             ✕
           </button>
         </div>

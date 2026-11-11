@@ -354,9 +354,8 @@ class PlatformWorkflowIntegrationTest {
         String key = "integration-only-key-never-sent";
         var saved = aiConnectionService.addPersonal(actor(Role.TEACHER), AiProvider.OPENAI,
                 new AiConnectionService.SaveCommand(key, "gpt-6.1-sol", null));
-        assertThat(aiConnectionService.revealPersonal(actor(Role.TEACHER), saved.id())).isEqualTo(key);
-        assertThatThrownBy(() -> aiConnectionService.revealPersonal(actor(Role.STUDENT), saved.id()))
-                .isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> aiConnectionService.setPersonalEnabled(actor(Role.STUDENT), saved.id(), false,
+                saved.version())).isInstanceOf(ApiException.class);
         var disabled = aiConnectionService.setPersonalEnabled(actor(Role.TEACHER), saved.id(), false, saved.version());
         assertThat(disabled.status().name()).isEqualTo("DISABLED");
         assertThat(jdbc.queryForObject("select row_to_json(c)::text from ai_connections c where id=?",
@@ -623,27 +622,30 @@ class PlatformWorkflowIntegrationTest {
         assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId)).isEmpty();
         gradingService.finalizeEvaluation(actor(Role.TEACHER), new GradingCommands.ItemVersion(evaluationId,
                 evaluationRepository.findById(evaluationId).orElseThrow().version));
-        assertGradeLocked(evaluationId, checks);
+        assertGradeEditable(evaluationId, checks);
         assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId)).isEmpty();
         gradingService.publishEvaluation(actor(Role.TEACHER), new GradingCommands.ItemVersion(evaluationId,
                 evaluationRepository.findById(evaluationId).orElseThrow().version));
-        assertGradeLocked(evaluationId, checks);
+        assertGradeEditable(evaluationId, checks);
     }
 
-    void assertGradeLocked(UUID evaluationId, Map<UUID, Set<UUID>> checks) {
+    void assertGradeEditable(UUID evaluationId, Map<UUID, Set<UUID>> checks) {
         var before = evaluationRepository.findById(evaluationId).orElseThrow();
-        assertThatThrownBy(() -> gradingService.saveEvaluation(actor(Role.TEACHER), evaluationId,
+        gradingService.saveEvaluation(actor(Role.TEACHER), evaluationId,
                 new GradingCommands.Save(before.version, checks, BigDecimal.ZERO, null,
-                        "Attempt to change locked feedback", "A reason cannot unlock a grade", null)))
-                .isInstanceOfSatisfying(ApiException.class, error -> {
-                    assertThat(error.status().value()).isEqualTo(409);
-                    assertThat(error.code()).isEqualTo("GRADE_LOCKED");
-                });
+                        "Corrected teacher feedback", null, null));
         var after = evaluationRepository.findById(evaluationId).orElseThrow();
-        assertThat(after.version).isEqualTo(before.version);
+        assertThat(after.version).isEqualTo(before.version + 1);
         assertThat(after.state).isEqualTo(before.state);
         assertThat(after.score).isEqualByComparingTo(before.score);
-        assertThat(after.feedback).isEqualTo(before.feedback);
+        assertThat(after.feedback).isEqualTo("Corrected teacher feedback");
+        if (after.publishedAt != null) {
+            assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId))
+                    .singleElement().satisfies(grade -> {
+                        assertThat(grade.score()).isEqualByComparingTo(after.score);
+                        assertThat(grade.feedback()).isEqualTo(after.feedback);
+                    });
+        }
     }
 
     @Test
@@ -733,6 +735,16 @@ class PlatformWorkflowIntegrationTest {
         Set<UUID> identities = new HashSet<>(evaluations.stream().map(e -> e.id).toList());
         assertThat(evaluations.stream().filter(e -> e.kind.name().equals("MEMBER")).map(e -> e.accountId))
                 .containsExactlyInAnyOrder(actor(Role.STUDENT).accountId(), member.accountId());
+        gradingService.saveEvaluation(actor(Role.TEACHER), root, new GradingCommands.Save(
+                evaluationRepository.findById(root).orElseThrow().version, Map.of(), BigDecimal.ZERO,
+                null, "Draft grade", null, null));
+        workspace = prepareGroupSection(assignment.id());
+        var draftReceipt = groupSubmissionService.submit(actor(Role.STUDENT), workspace.documentId(), workspace.version());
+        assertThat(draftReceipt.receiptHash()).isNotEqualTo(firstReceipt.receiptHash());
+        assertThat(evaluationRepository.findForAssignmentAndClass(assignment.id(), classId)).allSatisfy(e -> {
+            assertThat(e.state.name()).isEqualTo("PENDING");
+            assertThat(e.score).isNull();
+        });
         publishGrade(root, assignment);
         assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId)).hasSize(1);
         assertThat(gradebookService.listMyGrades(member, classId)).hasSize(1);
@@ -745,9 +757,14 @@ class PlatformWorkflowIntegrationTest {
         assertThat(secondReceipt.receiptHash()).isNotEqualTo(firstReceipt.receiptHash());
         var reset = evaluationRepository.findForAssignmentAndClass(assignment.id(), classId);
         assertThat(reset.stream().map(e -> e.id)).containsExactlyInAnyOrderElementsOf(identities);
-        assertThat(reset).allSatisfy(e -> { assertThat(e.state.name()).isEqualTo("PENDING"); assertThat(e.score).isNull(); });
-        assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId)).isEmpty();
-        assertThat(gradebookService.listMyGrades(member, classId)).isEmpty();
+        assertThat(reset).allSatisfy(e -> {
+            assertThat(e.state.name()).isEqualTo("PUBLISHED");
+            assertThat(e.score).isEqualByComparingTo(BigDecimal.TEN);
+            assertThat(e.submissionHash).isEqualTo(draftReceipt.receiptHash());
+            assertThat(e.publishedAt).isNotNull();
+        });
+        assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId)).hasSize(1);
+        assertThat(gradebookService.listMyGrades(member, classId)).hasSize(1);
     }
 
     @Test

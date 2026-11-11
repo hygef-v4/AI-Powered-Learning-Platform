@@ -32,6 +32,8 @@ class GradingServiceTest {
     final Actor teacher = new Actor(teacherId, Role.TEACHER);
     final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
     final UUID rubricId = UUID.randomUUID(), itemId = UUID.randomUUID(), blockId = UUID.randomUUID();
+    final edu.aiplatform.grading.contract.IGroupSubmissionSource groupSource = mock(edu.aiplatform.grading.contract.IGroupSubmissionSource.class);
+    final org.springframework.beans.factory.ObjectProvider<edu.aiplatform.grading.contract.IGroupSubmissionSource> groupProvider = mock(org.springframework.beans.factory.ObjectProvider.class);
     Evaluation evaluation;
     GradingService gradingService;
 
@@ -47,6 +49,8 @@ class GradingServiceTest {
         when(evaluationRepository.lockById(evaluation.id)).thenReturn(Optional.of(evaluation));
         when(evaluationRepository.save(any())).thenAnswer(i -> i.getArgument(0));
         when(auth.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
+        when(classAccess.getClassRef(classId)).thenReturn(Optional.of(new ClassRef(classId,
+                UUID.randomUUID(), "SE1", "Class", ClassStatus.OPEN, teacherId, false)));
         when(submissionQuery.getSubmission(evaluation.attemptId))
                 .thenReturn(Optional.of(new SubmissionView(evaluation.attemptId, assignmentId, classId, studentId,
                         new DocumentModel(List.of(new DocumentBlock(blockId, BlockOrigin.STUDENT, BlockType.PARAGRAPH,
@@ -56,27 +60,89 @@ class GradingServiceTest {
                 .thenReturn(List.of(new StudentSubmissionStatus(studentId, evaluation.attemptId, 1,
                         AttemptStatus.SUBMITTED, Instant.now(), false)));
         gradingService = new GradingService(evaluationRepository, new GradingAccess(auth, classAccess, audit, Clock.systemUTC()), audit, eventPublisher,
-                submissionQuery, objectMapper, Clock.systemUTC());
+                submissionQuery, objectMapper, Clock.systemUTC(), groupProvider);
+        when(groupProvider.getIfAvailable()).thenReturn(groupSource);
+        when(groupSource.getGroupSubmission(any())).thenAnswer(inv -> Optional.of(
+                new edu.aiplatform.grading.contract.GroupSubmissionView(evaluation.groupDocumentId, UUID.randomUUID(),
+                        assignmentId, classId, new DocumentModel(List.of()), List.of(studentId), List.of(),
+                        Instant.now(), false, "hash")));
+    }
+
+    @Test
+    void manualFeedbackCanSaveAndFinalizeWithOptionalEvidenceAndExplanation() {
+        var manual = new GradingFeedback(1,
+                new GradingFeedback.Summary(List.of("Clear model"), List.of(), List.of()),
+                List.of(new GradingFeedback.Item(rubricId, itemId, null, "", "Add multiplicity",
+                        null, false, null)));
+        gradingService.saveEvaluation(teacher, evaluation.id, new Save(
+                0, Map.of(), BigDecimal.ZERO, null, "Manual feedback", null, null,
+                Map.of(rubricId, Map.of(itemId, new BigDecimal("2.00"))),
+                manual, false, null, null));
+        assertThat(evaluation.structuredFeedback.items().get(0).reason()).isEmpty();
+        assertThat(evaluation.structuredFeedback.items().get(0).evidence()).isNull();
+        gradingService.finalizeEvaluation(teacher, new ItemVersion(evaluation.id, 0));
+        assertThat(evaluation.state).isEqualTo(EvaluationStatus.DRAFT);
+        assertThat(evaluation.score).isEqualByComparingTo("2.00");
     }
 
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.EnumSource(value = EvaluationStatus.class, names = {"FINALIZED", "PUBLISHED"})
-    void officialGradesRejectManualAndProposalSavesWithoutMutation(EvaluationStatus state) {
+    void savedGradesAllowCorrectionsWithoutWithdrawingPublication(EvaluationStatus state) {
         gradingService.saveEvaluation(teacher, evaluation.id, command(0));
         evaluation.state = state;
-        var before = evaluation.score;
         var input = new Save(0, Map.of(), BigDecimal.ZERO, null, "replacement", "correction", null);
-        assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id, input))
-                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
-        assertThatThrownBy(() -> gradingService.saveCheckedEvaluation(teacher, evaluation.id, input, new GradingProposal()))
-                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
-        assertThat(evaluation.score).isEqualTo(before);
-        assertThat(evaluation.feedback).isEqualTo("feedback");
-        assertThat(evaluation.state).isEqualTo(state);
+        gradingService.saveEvaluation(teacher, evaluation.id, input);
+        assertThat(evaluation.feedback).isEqualTo("replacement");
+        assertThat(evaluation.state).isEqualTo(state == EvaluationStatus.PUBLISHED
+                ? EvaluationStatus.PUBLISHED : EvaluationStatus.DRAFT);
     }
 
     Save command(long version) {
         return new Save(version, Map.of(rubricId, Set.of(itemId)), BigDecimal.ZERO, null, "feedback", null, null);
+    }
+
+    @Test
+    void publishesWithoutFinalizeAndSavesCorrectionsWithoutRepublishing() {
+        gradingService.saveEvaluation(teacher, evaluation.id, command(0));
+        gradingService.publishEvaluation(teacher, new ItemVersion(evaluation.id, 0));
+        var publishedAt = evaluation.publishedAt;
+        gradingService.publishEvaluation(teacher, new ItemVersion(evaluation.id, 0));
+        gradingService.saveEvaluation(teacher, evaluation.id,
+                new Save(0, Map.of(), BigDecimal.ZERO, null, "Corrected", null, null));
+        assertThat(evaluation.state).isEqualTo(EvaluationStatus.PUBLISHED);
+        assertThat(evaluation.feedback).isEqualTo("Corrected");
+        assertThat(evaluation.publishedAt).isEqualTo(publishedAt);
+        verify(eventPublisher, times(1)).publish(any());
+    }
+
+    @Test
+    void publishedSaveCannotBypassReviewOfFlaggedFeedback() {
+        gradingService.saveEvaluation(teacher, evaluation.id, command(0));
+        evaluation.state = EvaluationStatus.PUBLISHED;
+        evaluation.publishedAt = Instant.now();
+        var before = evaluation.feedback;
+        assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id,
+                new Save(0, Map.of(), BigDecimal.ZERO, null, "Replacement", null, null,
+                        Map.of(), sampleFeedback("Review", true, "Unclear diagram"), false,
+                        null, null))).isInstanceOfSatisfying(ApiException.class,
+                                error -> assertThat(error.code()).isEqualTo("STRUCTURED_FEEDBACK_REVIEW_REQUIRED"));
+        assertThat(evaluation.feedback).isEqualTo(before);
+    }
+
+    @Test
+    void archiveStopsPublishedCorrectionsBeforeAnyMutation() {
+        gradingService.saveEvaluation(teacher, evaluation.id, command(0));
+        gradingService.publishEvaluation(teacher, new ItemVersion(evaluation.id, 0));
+        when(classAccess.getClassRef(classId)).thenReturn(Optional.of(new ClassRef(classId,
+                UUID.randomUUID(), "SE1", "Class", ClassStatus.ARCHIVED, teacherId, false)));
+        clearInvocations(evaluationRepository);
+        assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id,
+                new Save(0, Map.of(), null, null, "Must not save", null, null)))
+                .isInstanceOfSatisfying(ApiException.class,
+                        error -> assertThat(error.code()).isEqualTo("GRADING_CLASS_READ_ONLY"));
+        assertThat(evaluation.score).isEqualByComparingTo("4");
+        assertThat(evaluation.feedback).isEqualTo("feedback");
+        verify(evaluationRepository, never()).save(any());
     }
 
     GradingFeedback sampleFeedback(String reason, boolean requiresReview, String reviewReason) {
@@ -130,14 +196,13 @@ class GradingServiceTest {
     }
 
     @Test
-    void finalizeAndPublishAreSeparateAndEmitOnlyOnTransition() {
+    void legacyFinalizeValidatesWithoutLockingAndPublicationEmitsOnce() {
         gradingService.saveEvaluation(teacher, evaluation.id, command(0));
         gradingService.finalizeEvaluation(teacher, new ItemVersion(evaluation.id, 0));
-        assertThat(evaluation.status()).isEqualTo(EvaluationStatus.FINALIZED);
+        assertThat(evaluation.status()).isEqualTo(EvaluationStatus.DRAFT);
         gradingService.publishEvaluation(teacher, new ItemVersion(evaluation.id, 0));
         assertThat(evaluation.status()).isEqualTo(EvaluationStatus.PUBLISHED);
-        assertThatThrownBy(() -> gradingService.publishEvaluation(teacher, new ItemVersion(evaluation.id, 0)))
-                .isInstanceOf(RuntimeException.class);
+        gradingService.publishEvaluation(teacher, new ItemVersion(evaluation.id, 0));
         verify(eventPublisher, times(1))
                 .publish(argThat(e -> e.eventType().equals("grade.published") && !e.payload().containsKey("score")));
     }
@@ -197,7 +262,7 @@ class GradingServiceTest {
     }
 
     @Test
-    void groupMembersInheritFractionalBreakdownAndResubmissionClearsIt() throws Exception {
+    void publishedGroupCorrectionsPropagateAndRetainMemberOverrides() {
         evaluation.kind = EvaluationKind.GROUP_DOCUMENT;
         evaluation.groupDocumentId = UUID.randomUUID();
         var member = Evaluation.createPendingEvaluation(null, assignmentId, classId, studentId, "hash", new BigDecimal("4"),
@@ -208,18 +273,15 @@ class GradingServiceTest {
         when(evaluationRepository.lockById(member.id)).thenReturn(Optional.of(member));
         gradingService.saveEvaluation(teacher, evaluation.id, new Save(0, Map.of(), null, null, "partial", null, null,
                 Map.of(rubricId, Map.of(itemId, new BigDecimal("0.50")))));
-        assertThat(member.score).isEqualByComparingTo("0.50");
-        assertThat(member.rubricItemScores).isEqualTo(evaluation.rubricItemScores);
-        gradingService.finalizeEvaluation(teacher, new ItemVersion(evaluation.id, 0));
-        assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id, new Save(0, Map.of(), null, null, "reviewed", "correction", null,
-                Map.of(rubricId, Map.of(itemId, new BigDecimal("0.75"))))))
-                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
-        assertThat(evaluation.rubricItemScores.get(rubricId).get(itemId)).isEqualByComparingTo("0.50");
-        assertThat(member.rubricItemScores).isEqualTo(evaluation.rubricItemScores);
-        assertThatThrownBy(() -> gradingService.saveMemberGrade(teacher, evaluation.id, studentId,
-                new MemberSave(0, BigDecimal.ONE, "correction")))
-                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
         gradingService.publishEvaluation(teacher, new ItemVersion(evaluation.id, 0));
+        gradingService.saveEvaluation(teacher, evaluation.id, new Save(0, Map.of(), null, null, "reviewed", null, null,
+                Map.of(rubricId, Map.of(itemId, new BigDecimal("0.75")))));
+        assertThat(member.score).isEqualByComparingTo("0.75");
+        assertThat(member.state).isEqualTo(EvaluationStatus.PUBLISHED);
+        gradingService.saveMemberGrade(teacher, evaluation.id, studentId, new MemberSave(0, BigDecimal.ONE, "contribution"));
+        gradingService.saveEvaluation(teacher, evaluation.id, command(0));
+        assertThat(member.score).isEqualByComparingTo("1");
+        assertThat(member.memberOverride).isTrue();
         assertThat(member.state).isEqualTo(EvaluationStatus.PUBLISHED);
     }
 
@@ -281,7 +343,7 @@ class GradingServiceTest {
         assertThat(evaluation.reviewedItemScores.get(rubricId).get(itemId)).isEqualByComparingTo("3.00");
 
         gradingService.finalizeEvaluation(teacher, new ItemVersion(evaluation.id, 0));
-        assertThat(evaluation.state).isEqualTo(EvaluationStatus.FINALIZED);
+        assertThat(evaluation.state).isEqualTo(EvaluationStatus.DRAFT);
     }
 
     @Test
@@ -354,7 +416,7 @@ class GradingServiceTest {
                 Map.of(rubricId, Map.of(itemId, new BigDecimal("2.00"))),
                 flaggedFeedback, false, Map.of(rubricId, Set.of(itemId)), null));
         gradingService.finalizeEvaluation(teacher, new ItemVersion(evaluation.id, 0));
-        assertThat(evaluation.state).isEqualTo(EvaluationStatus.FINALIZED);
+        assertThat(evaluation.state).isEqualTo(EvaluationStatus.DRAFT);
     }
 
     @Test
@@ -389,14 +451,49 @@ class GradingServiceTest {
                 List.of(new GradingFeedback.Item(
                         rubricId, itemId, "Minh chứng nhóm", "Giải thích lần 2 sau khi chỉnh điểm", "Gợi ý cải thiện", "p",
                         false, null)));
-        assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id, new Save(
+        gradingService.saveEvaluation(teacher, evaluation.id, new Save(
                 0, Map.of(), BigDecimal.ZERO, null, "group v2", "Cập nhật điểm nhóm", null,
                 Map.of(rubricId, Map.of(itemId, new BigDecimal("3.00"))),
-                feedbackV2, false, null, null)))
-                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
-        assertThat(evaluation.changes).isEmpty();
-        assertThat(evaluation.structuredFeedback).isEqualTo(feedbackV1);
-        assertThat(member.structuredFeedback).isEqualTo(feedbackV1);
-        assertThat(member.state).isEqualTo(EvaluationStatus.FINALIZED);
+                feedbackV2, false, null, null));
+        assertThat(evaluation.changes).hasSize(1);
+        assertThat(evaluation.structuredFeedback).isEqualTo(feedbackV2);
+        assertThat(member.structuredFeedback).isEqualTo(feedbackV2);
+        assertThat(member.structuredFeedback).isNotSameAs(evaluation.structuredFeedback);
+        assertThat(member.state).isEqualTo(EvaluationStatus.DRAFT);
+    }
+    @Test
+    void rejectsChangedGroupSubmissionBeforeSaving() {
+        evaluation.kind = EvaluationKind.GROUP_DOCUMENT;
+        evaluation.groupDocumentId = UUID.randomUUID();
+        evaluation.submissionHash = "older";
+        assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id, command(0)))
+                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("SUBMISSION_CHANGED"));
+        verify(evaluationRepository, never()).save(any());
+    }
+    @Test
+    void savedChecksFollowExplicitPartialScores() {
+        var input = new Save(0, Map.of(rubricId, Set.of(itemId)), BigDecimal.ZERO, null,
+                "partial", null, null, Map.of(rubricId, Map.of(itemId, new BigDecimal("1.25"))), null, null, null, null);
+        gradingService.saveEvaluation(teacher, evaluation.id, input);
+        assertThat(evaluation.score).isEqualByComparingTo("1.25");
+        assertThat(evaluation.rubricChecks).doesNotContain(itemId.toString());
+    }
+    @Test
+    void overridingLegacyMemberUsesTheGroupsRubricBreakdownAndAllowsOptionalReason() {
+        evaluation.kind = EvaluationKind.GROUP_DOCUMENT;
+        evaluation.groupDocumentId = UUID.randomUUID();
+        var member = Evaluation.createPendingEvaluation(null, assignmentId, classId, studentId, "hash",
+                new BigDecimal("4"), evaluation.rubricSnapshot, Instant.now());
+        member.kind = EvaluationKind.MEMBER;
+        member.groupDocumentId = evaluation.groupDocumentId;
+        when(evaluationRepository.findForAssignmentAndClass(assignmentId, classId)).thenReturn(List.of(evaluation, member));
+        when(evaluationRepository.lockById(member.id)).thenReturn(Optional.of(member));
+        gradingService.saveEvaluation(teacher, evaluation.id, command(0));
+        member.memberOverride = true;
+        member.score = BigDecimal.ONE;
+        member.adjustment = BigDecimal.ZERO;
+        gradingService.saveMemberGrade(teacher, evaluation.id, studentId, new MemberSave(0, new BigDecimal("2"), null));
+        assertThat(member.score).isEqualByComparingTo("2");
+        assertThat(member.adjustment).isEqualByComparingTo("-2");
     }
 }
