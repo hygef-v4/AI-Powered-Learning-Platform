@@ -44,5 +44,6 @@ export function rowStatus(row: StudentRow): { label: string; tone: Tone } {
 
 /** Bài còn làm được: đang mở, chưa nộp hoặc đang làm. */
 export function upcoming(row: StudentRow): boolean {
-  return row.status === "OPEN" && (row.myStatus === "NOT_STARTED" || row.myStatus === "IN_PROGRESS" || row.myStatus === "GROUP");
+  return row.status === "OPEN" && (row.myStatus === "NOT_STARTED" || row.myStatus === "IN_PROGRESS"
+    || (row.myStatus === "GROUP" && !row.group?.submitted));
 }
