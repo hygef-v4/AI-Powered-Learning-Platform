@@ -24,6 +24,9 @@ public class RecipientResolver {
         if (EventTypes.ASSIGNMENT_OPENED.equals(event.eventType()))
             return assignmentGroups(event.payload());
         var p = event.payload();
+        // Nhóm đến từ đề xuất được duyệt: thành viên đã nhận thông báo duyệt, không báo trùng (BR-U12-95).
+        if (EventTypes.GROUP_MEMBERSHIP_CHANGED.equals(event.eventType())
+                && "PROPOSAL_APPROVED".equals(p.get("reason"))) return List.of();
         UUID classId = optionalId(p, "classId");
         List<UUID> ids;
         NotificationType type;
@@ -85,6 +88,28 @@ public class RecipientResolver {
                 ids = members(p);
                 link = groupLink(p);
             }
+            case EventTypes.GROUP_PROPOSAL_INVITED -> {
+                type = NotificationType.GROUP_PROPOSAL_INVITED;
+                ids = ids(p, "recipientIds");
+                link = proposalLink(p);
+            }
+            case EventTypes.GROUP_PROPOSAL_SUBMITTED -> {
+                type = NotificationType.GROUP_PROPOSAL_SUBMITTED;
+                var c = openClass(id(p, "classId"));
+                ids = c == null || c.teacherId() == null ? List.of() : List.of(c.teacherId());
+                id(p, "proposalId");
+                link = "/teaching/classes/" + id(p, "classId") + "?tab=students";
+            }
+            case EventTypes.GROUP_PROPOSAL_APPROVED -> {
+                type = NotificationType.GROUP_PROPOSAL_APPROVED;
+                ids = ids(p, "recipientIds");
+                link = proposalLink(p);
+            }
+            case EventTypes.GROUP_PROPOSAL_REJECTED -> {
+                type = NotificationType.GROUP_PROPOSAL_REJECTED;
+                ids = ids(p, "recipientIds");
+                link = proposalLink(p);
+            }
             case EventTypes.QUESTION_PROPOSED -> {
                 type = NotificationType.QUESTION_PROPOSED;
                 ids = ids(p, "recipientIds");
@@ -111,6 +136,7 @@ public class RecipientResolver {
         }
         boolean teacher =
                 type == NotificationType.LEADER_CHANGE_REQUESTED
+                        || type == NotificationType.GROUP_PROPOSAL_SUBMITTED
                         || type == NotificationType.QUESTION_PROPOSED
                         || type == NotificationType.QUESTION_REVIEWED;
         boolean admin = type == NotificationType.BACKUP_FAILED;
@@ -234,6 +260,11 @@ public class RecipientResolver {
     }
 
     /** Giảng viên duyệt yêu cầu ở trang Sinh viên của lớp mình dạy, mở sẵn đúng nhóm gửi yêu cầu. */
+    private String proposalLink(Map<String, Object> p) {
+        id(p, "proposalId");
+        return "/classes/" + id(p, "classId") + "/group";
+    }
+
     private String teacherGroupLink(Map<String, Object> p) {
         return "/teaching/classes/" + id(p, "classId") + "?tab=students&group=" + id(p, "groupId");
     }

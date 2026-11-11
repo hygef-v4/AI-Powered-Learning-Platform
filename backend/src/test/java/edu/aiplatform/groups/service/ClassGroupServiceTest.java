@@ -59,9 +59,10 @@ class ClassGroupServiceTest {
     private final IAudit audit = mock(IAudit.class);
     private final IEventPublisher events = mock(IEventPublisher.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
+    private final GroupProposalCleanup proposalCleanup = mock(GroupProposalCleanup.class);
     private final ClassGroupService service = new ClassGroupService(groups, documents, groupDocuments, streams,
             new GroupAccess(authorization, classes, audit, clock), classes, mock(IAccountLookup.class), audit, events, clock,
-            new Random(7));
+            new Random(7), proposalCleanup);
     private final List<UUID> students = IntStream.range(0, 7).mapToObj(i -> UUID.randomUUID()).toList();
 
     @BeforeEach
@@ -199,6 +200,50 @@ class ClassGroupServiceTest {
         verify(groups, never()).removeMembers(any(), any());
         verify(groups, never()).deleteGroup(any());
         verifyNoInteractions(documents, groupDocuments, streams, events, audit);
+    }
+
+    @Test
+    void savingReleasesNewlyPlacedStudentsFromTheirProposals() {
+        ClassGroup kept = group("Nhóm A", students.get(0), students.get(0), students.get(1));
+        when(groups.listGroups(classId)).thenReturn(List.of(kept));
+        List<Draft> drafts = List.of(
+                new Draft(kept.id().toString(), kept.id(), "Nhóm A", students.get(0),
+                        List.of(students.get(0), students.get(1), students.get(2))),
+                new Draft("new", null, "Nhóm B", students.get(3), List.of(students.get(3), students.get(4))));
+
+        service.save(teacher, classId, new SaveCommand(3L, drafts));
+
+        verify(proposalCleanup).releasePlacedStudents(classId,
+                java.util.Set.of(students.get(2), students.get(3), students.get(4)), NOW);
+    }
+
+    @Test
+    void approvedGroupsKeepExistingOnesAndMarkTheMembershipEvent() {
+        ClassGroup kept = group("Nhóm A", students.get(0), students.get(0), students.get(1));
+        when(groups.listGroups(classId)).thenReturn(List.of(kept));
+        Draft approved = new Draft("proposal-1", null, "Nhóm Mây", students.get(2),
+                List.of(students.get(2), students.get(3)));
+
+        var created = service.addApprovedGroups(teacher, classId, 3L, List.of(approved));
+
+        assertThat(created).containsOnlyKeys("proposal-1");
+        verify(groups).insertGroup(any());
+        verify(groups, never()).updateGroup(any(), any(), any(), any());
+        verify(groups, never()).deleteGroup(any());
+        ArgumentCaptor<DomainEvent> event = ArgumentCaptor.forClass(DomainEvent.class);
+        verify(events).publish(event.capture());
+        assertThat(event.getValue().payload()).containsEntry("reason", ClassGroupService.PROPOSAL_APPROVED);
+        verify(proposalCleanup, never()).releasePlacedStudents(any(), any(), any());
+    }
+
+    @Test
+    void approvedGroupsStopOnALostSetVersion() {
+        when(groups.bumpSetVersion(eq(classId), anyLong(), any())).thenReturn(false);
+
+        assertThatThrownBy(() -> service.addApprovedGroups(teacher, classId, 3L, List.of()))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("GROUP_SET_VERSION_CONFLICT"));
+        verify(groups, never()).insertGroup(any());
     }
 
     private void classStatus(ClassStatus status) {

@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useCallback, useEffect, useId, useState } from "react";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, ButtonLink, Dialog, Field, Icon, IconButton, LockedInput, PageHeader, Section, Select, TextInput, cx, showToast } from "@/shared/ui";
+import { Button, ButtonLink, Dialog, Field, Icon, IconButton, LockedInput, PageHeader, Section, Select, TextInput, cx, showToast } from "@/shared/ui";
 import { getMyGroup, renameGroup, submitLeaderRequest } from "../api";
+import { describeFormation } from "../model/proposals";
+import { GroupProposalSection, useMyProposal } from "./GroupProposalSection";
 import type { MyGroupView } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { initials } from "@/shared/layout/navigation";
@@ -68,9 +70,34 @@ export function MyGroupCard({ classId }: { classId: string }) {
           </div>
         </dl>
       ) : (
-        <p className="text-[13px] text-muted">Bạn chưa có nhóm trong lớp này.</p>
+        <ProposalSummary classId={classId} />
       )}
     </Section>
+  );
+}
+
+/** Thẻ Nhóm của tôi khi chưa có nhóm: đợt tự chia nhóm, đề xuất đang tham gia, số lời mời, lối vào trang Nhóm của tôi. */
+function ProposalSummary({ classId }: { classId: string }) {
+  const { view } = useMyProposal(classId);
+  const proposal = view?.proposal;
+  const invitations = view?.invitations.length ?? 0;
+  const active = !!view && (view.formation.open || !!proposal || invitations > 0);
+  return (
+    <div className="flex flex-col gap-2.5 text-[13px]">
+      <p className="text-muted">Bạn chưa có nhóm trong lớp này.</p>
+      {view?.formation.enabled && <p className="text-ink">Tự chia nhóm: {describeFormation(view.formation)}</p>}
+      {proposal && (
+        <p className="text-ink">
+          Đề xuất <span className="font-semibold">{proposal.name}</span> · {proposal.members.length} thành viên
+        </p>
+      )}
+      {invitations > 0 && <p className="text-ink">Bạn có {invitations} lời mời vào nhóm.</p>}
+      {active && (
+        <ButtonLink href={`/classes/${classId}/group`} size="sm" className="self-start" data-testid="my-group-open-proposal">
+          Mở Nhóm của tôi
+        </ButtonLink>
+      )}
+    </div>
   );
 }
 
@@ -82,6 +109,7 @@ export function MyGroupCard({ classId }: { classId: string }) {
 export function MyGroupPage({ classId }: { classId: string }) {
   const { view, error, reload } = useMyGroup(classId);
   const [requesting, setRequesting] = useState(false);
+  const reloadGroup = useCallback(() => void reload(), [reload]);
 
   if (error && !view) return <PageLoadError>{error}</PageLoadError>;
   if (!view) return <PageLoading />;
@@ -101,7 +129,7 @@ export function MyGroupPage({ classId }: { classId: string }) {
         }
       />
       {!view.groupId ? (
-        <Alert tone="info">Bạn chưa có nhóm trong lớp này. Giảng viên sẽ xếp nhóm.</Alert>
+        <GroupProposalSection classId={classId} onGrouped={reloadGroup} />
       ) : (
         <section aria-label="Thành viên nhóm" className="flex flex-col gap-5 rounded-xl border border-line bg-surface p-6">
           <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
