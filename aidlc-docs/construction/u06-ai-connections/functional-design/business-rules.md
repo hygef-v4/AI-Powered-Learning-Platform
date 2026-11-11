@@ -1,5 +1,19 @@
 # U06 AI Connections — business-rules
 
+## Ảnh trong prompt (nhập đề từ ảnh/PDF) — 2026-11-11
+
+Thiết kế, chưa có mã. Phục vụ U07 BR-U07-87…101. [Yêu cầu](../../../inception/requirements/2026-11-11-exam-image-import.md).
+
+| Mã | Quy tắc |
+|---|---|
+| BR-U06-54 | `AiPrompt` có thêm `images: List<AiImageRef>` (mặc định rỗng; constructor cũ `AiPrompt(system, user)` giữ nguyên). `AiImageRef(source, ref, mediaType)`: `mediaType` chỉ `image/jpeg` hoặc `image/png`, tối đa 10 ảnh mỗi tác vụ, `source` phải có `IAiImageSource` đăng ký. Sai thì `400 AI_TASK_INVALID`. `input_payload` lưu `{system, user, images: [{source, ref, mediaType}]}`, không lưu bytes. Fingerprint chống gửi trùng gồm cả danh sách ảnh. |
+| BR-U06-55 | `IAiImageSource` (U06 khai báo, unit gọi cài): `source()`, `load(ref) → Optional<AiImage(mediaType, bytes)>`. Worker nạp ảnh ngay trước khi gọi nhà cung cấp AI. Thiếu ảnh nào thì tác vụ FAILED với lỗi an toàn "Ảnh gửi AI không còn", không gọi nhà cung cấp, hoàn chỗ quota đã giữ. |
+| BR-U06-56 | Ước tính quota: mỗi ảnh tính thêm 1.600 token vào phần đầu vào khi giữ chỗ (`QuotaReservationService.estimate`). Quyết toán vẫn theo usage thật nhà cung cấp trả. |
+| BR-U06-57 | Model đọc ảnh: mỗi provider có `vision-models` trong cấu hình (`U06_GEMINI_VISION_MODELS`, `U06_OPENAI_VISION_MODELS`, `U06_CLAUDE_VISION_MODELS`). Không đặt thì mặc định bằng danh sách `models`. `ProviderCatalog.supportsImages(provider, model)`. |
+| BR-U06-58 | Tác vụ có ảnh: `sourceOrder` và bước thử kết nối kế tiếp trong worker bỏ qua kết nối có model không đọc ảnh. Không còn kết nối nào thì U07 báo `AI_VISION_UNAVAILABLE` lúc gửi. Nếu chuyện này chỉ xảy ra ở worker thì tác vụ FAILED với lỗi an toàn tương ứng. |
+| BR-U06-59 | Gateway gửi ảnh trước phần chữ trong cùng một lượt user: Gemini `parts[{inline_data: {mime_type, data}}…, {text}]`; OpenAI `content[{type: "image_url", image_url: {url: "data:{mime};base64,…", detail: "high"}}…, {type: "text", text}]`; Claude `content[{type: "image", source: {type: "base64", media_type, data}}…, {type: "text", text}]`. Không có ảnh thì body giống hệt hiện nay. Nhà cung cấp trả 400 vì không nhận ảnh thì xếp `REJECTED` với thông báo an toàn "Model đang dùng không đọc được ảnh". |
+| BR-U06-60 | `Request.toString`, log, audit và lỗi an toàn không bao giờ chứa bytes ảnh, base64 hay chữ prompt. Timeout giữ theo `requestTimeout` hiện hành. |
+
 ## Server-managed workflows amendment — 2026-11-01
 
 `read_agent_workflow` là tool READ cho Teacher/Subject Manager, nhận đúng hai giá trị `AUTHOR_ASSIGNMENT` hoặc `GRADE_WITH_RUBRIC`. Trả hướng dẫn đầy đủ từ tài nguyên classpath backend và `version` theo hash nội dung; không nhận đường dẫn tùy ý và không phụ thuộc thư mục skill/working directory của người dùng. Token READ_ONLY đọc được, nhưng không được cấp quyền ghi. Student/Admin không thấy hoặc gọi hai workflow giảng viên. Capabilities chỉ agent tới tool này; người dùng không bắt buộc tải/cài skill. Các wrapper cục bộ chỉ là tùy chọn. Quyền, scope và guard backend không thay đổi; việc đọc hướng dẫn không chứng minh model tuân thủ hoặc chấm đúng. [Yêu cầu](../../../inception/requirements/2026-11-01-server-agent-workflows.md).

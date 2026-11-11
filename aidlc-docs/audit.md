@@ -12897,3 +12897,184 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 **Context**: Construction — chỉnh UI frontend U01, không đổi API/backend.
 
 ---
+
+## Kiểm tra tính năng tải đề cũ lên thành đề đang chỉnh sửa
+**Timestamp**: 2026-11-11T06:46:17Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem đã có tính năng tải đề cũ lên, biến thành đề đang chỉnh sửa chưa cho tôi, chẳng hạn như tôi có đề trong ảnh" (kèm ảnh đề SWR302_SU25_PE1_407173)
+**AI Response**: "Đã có: nhập DOCX thành khung đề (POST /assignments/{id}/skeleton:import-docx, popup tạo bài 'Đề mới'), DOCX làm mẫu đề cho AI, tệp nguồn AI nhận TXT/DOCX/PDF. Chưa có: nhập ảnh hoặc PDF scan, đọc chữ rồi chuyển thành đề. Không sửa mã."
+**Context**: Tư vấn trước AI-DLC, chỉ đọc mã.
+
+---
+
+## Workspace Detection — nhập đề từ ảnh/PDF
+**Timestamp**: 2026-11-11T06:46:17Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Có, làm tính năng này"
+**AI Response**: "Bắt đầu AI-DLC cho tính năng nhập đề từ ảnh/PDF thành khung đề chỉnh sửa được. Brownfield, dùng lại tài liệu reverse engineering hiện hành, bỏ qua Reverse Engineering. Phạm vi chính: U07 (DocxService, AssignmentAiDraftService, CreateAssignmentDialog/AiDraftDialog), U06 (HttpProviderGateway hiện chỉ gửi text cho Gemini/OpenAI/Claude), U03 (PurposePolicy). Quy trình U12 tự chia nhóm vẫn đang chờ trả lời, không ảnh hưởng. Chuyển sang Requirements Analysis."
+**Context**: INCEPTION — Workspace Detection.
+
+---
+
+## Requirements Analysis — câu hỏi xác nhận nhập đề từ ảnh/PDF
+**Timestamp**: 2026-11-11T06:46:17Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Có, làm tính năng này"
+**AI Response**: "Tạo inception/requirements/2026-11-11-exam-image-import-questions.md với 10 câu hỏi (định dạng tệp, chỗ đặt trên giao diện, mức chuyển đổi, hình vẽ trong đề, giới hạn tệp, bước xem trước, cách đọc ảnh, phạm vi quiz, lưu tệp gốc, extension). Chờ người dùng trả lời."
+**Context**: INCEPTION — Requirements Analysis, độ sâu Standard.
+
+---
+
+## Requirements Analysis — trả lời câu hỏi nhập đề từ ảnh/PDF
+**Timestamp**: 2026-11-11T06:48:10Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Dùng hết đề xuất"
+**AI Response**: "Ghi A cho cả 10 câu trong 2026-11-11-exam-image-import-questions.md. Không còn điểm mơ hồ. Tạo tài liệu yêu cầu inception/requirements/2026-11-11-exam-image-import.md; giữ Security/Resiliency trong phạm vi đã duyệt, PBT tắt. Trình bày để duyệt; đề xuất bỏ qua User Stories (một vai trò, mở rộng US-ASM-004)."
+**Context**: INCEPTION — Requirements Analysis, chờ duyệt.
+
+---
+
+## Requirements Analysis — lời mời duyệt yêu cầu nhập đề từ ảnh/PDF
+**Timestamp**: 2026-11-11T06:52:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Dùng hết đề xuất"
+**AI Response**: "Trình 'Requirements Analysis Complete' cho inception/requirements/2026-11-11-exam-image-import.md (FR-IMP-01…08, NFR, 7 tiêu chí chấp nhận). Lựa chọn: Request Changes, Add User Stories, Approve & Continue sang Workflow Planning."
+**Context**: INCEPTION — Requirements Analysis, cổng duyệt.
+
+---
+
+## Requirements Analysis — duyệt yêu cầu nhập đề từ ảnh/PDF
+**Timestamp**: 2026-11-11T07:28:36Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Approve & Continue"
+**AI Response**: "Ghi nhận duyệt inception/requirements/2026-11-11-exam-image-import.md; bỏ qua User Stories. Chuyển sang Workflow Planning."
+**Context**: INCEPTION — Requirements Analysis hoàn tất.
+
+---
+
+## Workflow Planning — kế hoạch thực thi nhập đề từ ảnh/PDF
+**Timestamp**: 2026-11-11T07:28:36Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Approve & Continue"
+**AI Response**: "Tạo inception/plans/2026-11-11-exam-image-import-execution-plan.md. Rủi ro Medium. Chạy Functional Design (U07 kèm delta U06/U03), Code Generation, Build and Test; bỏ qua Application Design, Units Generation, NFR Requirements, NFR Design, Infrastructure Design. Thứ tự: gateway U06 → giới hạn tệp U03 và pom (PDFBox, imageio-webp) → backend U07 → frontend → tài liệu. Hỏi: Ready to proceed with this plan?"
+**Context**: INCEPTION — Workflow Planning, chờ duyệt.
+
+---
+
+## Workflow Planning — duyệt kế hoạch nhập đề từ ảnh/PDF
+**Timestamp**: 2026-11-11T07:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Approve & Continue"
+**AI Response**: "Ghi nhận duyệt execution plan. Chuyển sang Functional Design (U07 kèm delta U06/U03)."
+**Context**: INCEPTION — Workflow Planning hoàn tất; CONSTRUCTION — bắt đầu Functional Design.
+
+---
+
+## Functional Design — kế hoạch và câu hỏi U07 nhập đề từ ảnh/PDF
+**Timestamp**: 2026-11-11T07:55:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Approve & Continue"
+**AI Response**: "Đọc AssignmentAiDraftService, AiTaskService/AiTaskJobHandler, IProviderGateway, ProviderCatalog, DocxImporter, PurposePolicy, ContentInspector. Tạo construction/plans/functional-design-plan/2026-11-11-u07-exam-image-import-functional-design-plan.md: dùng lại bản nháp AI với chế độ IMPORT, endpoint multipart mới, IAiImageSource do U06 khai báo và U07 cài, cắt hình trong onReady, apply REPLACE/APPEND. 6 câu hỏi thiết kế (chỗ giữ ảnh trang, định dạng chữ, ảnh xoay, nguồn AI, tiêu đề, PDF có lớp chữ). Chờ trả lời."
+**Context**: CONSTRUCTION — Functional Design U07, chờ trả lời câu hỏi.
+
+---
+
+## Functional Design — trả lời và tài liệu U07 nhập đề từ ảnh/PDF
+**Timestamp**: 2026-11-11T07:57:41Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Dùng hết đề xuất"
+**AI Response**: "Ghi A cho 6 câu thiết kế. Thêm mục 'Nhập đề từ ảnh/PDF — 2026-11-11' vào business-rules (BR-U07-87…101), business-logic-model, domain-entities, frontend-components của U07; BR-U06-54…60 và domain-entities U06 (ảnh trong prompt, IAiImageSource, vision-models, gửi ảnh cho ba nhà cung cấp); BR-U03-99…100 (mục đích ASSIGNMENT_IMPORT, WEBP). Trình 'Functional Design Complete' với 2 lựa chọn: Request Changes / Continue to Next Stage (Code Generation)."
+**Context**: CONSTRUCTION — Functional Design U07, chờ duyệt.
+
+---
+
+## Functional Design — duyệt thiết kế U07 nhập đề từ ảnh/PDF
+**Timestamp**: 2026-11-11T08:05:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Continue to Next Stage"
+**AI Response**: "Ghi nhận duyệt Functional Design (BR-U07-87…101, BR-U06-54…60, BR-U03-99…100). Chuyển sang Code Generation Part 1 (Planning)."
+**Context**: CONSTRUCTION — Functional Design hoàn tất; bắt đầu Code Generation.
+
+---
+
+## Code Generation — kế hoạch U07 nhập đề từ ảnh/PDF
+**Timestamp**: 2026-11-11T08:15:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Continue to Next Stage"
+**AI Response**: "Đọc code-conventions và mã liên quan (AssignmentAuthoringService.saveSkeleton, AiDraftRepository, ScheduledScanRunner/IScheduledScanner, test hiện có). Tạo construction/plans/code-generation-plan/2026-11-11-u07-exam-image-import-code-generation-plan.md: bước 0 nhánh feat/exam-image-import (--no-track từ origin/staging), 22 bước (U03 1–2, U06 3–8, U07 backend 9–17, frontend 18–21, tài liệu 22). Hỏi duyệt kế hoạch."
+**Context**: CONSTRUCTION — Code Generation Part 1, chờ duyệt.
+
+---
+
+## Code Generation — duyệt kế hoạch và tạo worktree
+**Timestamp**: 2026-11-11T08:25:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Duyệt, bắt đầu viết" / "Worktree riêng"
+**AI Response**: "Ghi nhận duyệt kế hoạch viết mã. git switch sang nhánh mới bị từ chối vì origin/staging sửa 3 tệp tài liệu đang có thay đổi chưa commit, và thư mục chính có thay đổi của phiên U12. Theo lựa chọn của người dùng, tạo worktree .claude/worktrees/exam-image-import trên nhánh feat/exam-image-import (--no-track từ origin/staging@e78ac7b9), chép tài liệu nhập đề (yêu cầu, kế hoạch, mục functional-design U03/U06/U07, mục state và các mục audit này) sang; patch functional-design áp sạch. Bắt đầu Code Generation Part 2."
+**Context**: CONSTRUCTION — Code Generation Part 1 hoàn tất; bắt đầu Part 2.
+
+---
+
+## Code Generation — viết mã nhập đề từ ảnh/PDF
+**Timestamp**: 2026-11-11T13:15:30Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Hãy thử lại"
+**AI Response**: "Tiếp tục Code Generation trong worktree feat/exam-image-import sau khi phiên bị ngắt; trạng thái worktree còn nguyên. Hoàn tất 22/22 bước: U03 (WEBP, ASSIGNMENT_IMPORT, IArtifact.inspect), U06 (ảnh trong prompt, IAiImageSource, vision-models, gateway gửi ảnh cho Gemini/OpenAI/Claude), U07 (migration assignment_import_pages, kiểm và chuẩn hóa trang, prompt/schema, ánh xạ khối, cắt hình, AssignmentImportService, handler, image source, scanner dọn, POST /imports, :apply placement), frontend (ExamImportDialog, mục Nhập đề từ tệp, popup tạo bài nhận ảnh/PDF), tài liệu (tóm tắt mã, api-inventory, baseline, ghi chú điều chỉnh BR-U07). Maven trong Docker: U03 25/25, U06 64/64, U07 79/79, ArchitectureTest 3/3; frontend tsc, eslint sạch, Vitest assignments 61/61. Chưa commit. Trình Code Generation Complete: Request Changes / Continue to Next Stage (Build and Test)."
+**Context**: CONSTRUCTION — Code Generation Part 2, chờ duyệt.
+
+---
+
+## Code Generation — duyệt mã nhập đề từ ảnh/PDF
+**Timestamp**: 2026-11-11T13:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Continue to Next Stage"
+**AI Response**: "Ghi nhận duyệt mã. Chuyển sang Build and Test: chạy toàn bộ backend, toàn bộ frontend (Vitest, lint, typecheck, build), thử luồng nhập trên trình duyệt, ghi kết quả."
+**Context**: CONSTRUCTION — Code Generation hoàn tất; bắt đầu Build and Test.
+
+---
+
+## Build and Test — kết quả một phần (dừng vì hết hạn mức)
+**Timestamp**: 2026-11-11T13:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Continue to Next Stage"
+**AI Response**: "Frontend: Vitest 968/968 (135 file), tsc, eslint sạch, npm run build thành công. Backend mvn verify (Docker, Testcontainers qua socket): 2141 test, 0 failure, 13 error, BUILD FAILURE. Lỗi gồm JdbcQuizAttemptRepositoryIntegrationTest, JdbcQuestionRepositoryIntegrationTest, JdbcQuizRepositoryIntegrationTest (lỗi khởi tạo 0,003 s, nghi do môi trường Testcontainers) và 3 lỗi trong PlatformWorkflowIntegrationTest; chưa phân tích nguyên nhân. Chưa thử trên trình duyệt, chưa viết tài liệu build-and-test. Dừng vì hết hạn mức sử dụng."
+**Context**: CONSTRUCTION — Build and Test, dở dang.
+
+---
+
+## Build and Test — tiếp tục từ phiên khác, sửa lỗi và chạy lại
+**Timestamp**: 2026-11-11T14:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "D:\Github\AI-Powered-Learning-Platform\.claude\worktrees\exam-image-import\aidlc-docs\construction\u07-assignment-authoring\code\2026-11-11-exam-image-import-summary.md
+đây là file md của phiên cũ chạy local trên máy này nhưng ở 1 tài khoản claude khác, bạn có thể tiếp tục không"
+**AI Response**: "Tiếp tục Build and Test từ trạng thái worktree. Phân tích 13 lỗi mvn verify: (1) 3 lỗi PlatformWorkflowIntegrationTest do AiProperties.Provider có thêm constructor 2 tham số nên Spring không bind được, models rỗng, mọi model bị từ chối; bỏ constructor phụ, sửa KeyCipherAndCatalogTest và AiTaskFlowTest gọi constructor 3 tham số; (2) các lỗi Jdbc*RepositoryIntegrationTest do Docker chỉ mount backend/, thiếu ../infra/postgres/init/01-roles.sh; mount cả worktree. Chạy lại: 5 lớp lỗi 85/85 qua; mvn verify toàn bộ 2197 test, 0 failure, 0 error, BUILD SUCCESS. Ghi construction/build-and-test/2026-11-11-exam-image-import-verification.md, cập nhật aidlc-state. Chưa thử trình duyệt với AI thật, chưa commit."
+**Context**: CONSTRUCTION — Build and Test, test tự động hoàn tất.
+
+---
+
+## Build and Test — thử trên trình duyệt
+**Timestamp**: 2026-11-11T16:05:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Thử trên trình duyệt" / "Đã xong" / "Lấy key từ stack platform"
+**AI Response**: "Dựng stack Docker riêng examimport (cổng 28088) từ worktree; image backend đóng từ JAR đã build vì Maven trong Docker build lỗi mạng. Seed giảng viên gv@platform.local và lớp SE1801. Người dùng chọn lấy key từ stack platform: chép U06_AI_KEY_ENCRYPTION_KEY(_V2) từ infra/.env.local và dòng ai_connections Gemini (gemini-3.1-flash-lite) sang, gán PERSONAL cho gv, không in giá trị khóa. Thử với đề mẫu tự tạo (JPEG chụp nghiêng có hình đồ thị, PNG, PDF scan 2 trang). Tìm và sửa 2 lỗi: (1) frontend ExamImportDialog không thêm được tệp vì FileList sống bị rỗng khi xóa value trước lúc updater chạy, thêm test mô phỏng; (2) Gemini bỏ trường không bắt buộc nên khối mất runs và FIGURE mất page/box, sửa schema bắt buộc runs/items/rows và tách vị trí hình sang mảng figures, thêm test. Sau khi sửa: ảnh và PDF chép đúng nguyên văn, Ghi vào đề, Thay toàn bộ kèm đổi tên bài, nút Hoàn tác đều đúng; hình được cắt và lưu. Còn tồn tại: màn xem trước không hiện hình đã cắt (chưa đạt FR-IMP-05.1); khung cắt hơi rộng; Ctrl+Z sau khi popup đóng không chạy vì tiêu điểm ở body. Ghi vào build-and-test/2026-11-11-exam-image-import-verification.md, business-rules BR-U07-94, tóm tắt mã. Chưa commit."
+**Context**: CONSTRUCTION — Build and Test, thử trên trình duyệt.
+
+---
+
+## Build and Test — hiện hình trong màn xem trước, sửa Chèn vào cuối
+**Timestamp**: 2026-11-11T16:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa luôn"
+**AI Response**: "Thêm IArtifact.issuePreviewToken (BR-U03-101): link tải 5 phút cho tệp vừa lưu chưa gắn, chỉ khi fileRef đúng chữ ký, còn hạn, đúng chủ. GET bản nháp nhập đề READY thêm proposal.previews (id khối → link), cấp mỗi lần đọc, không lưu; DocumentViewer nhận previews. Khi thử lại trên trình duyệt phát hiện AssignmentRequests.Apply thiếu trường placement nên Chèn vào cuối luôn thành Thay toàn bộ; đã thêm trường và AssignmentRequestsTest. Thử lại: hình hiện trong màn xem trước; Chèn vào cuối ghi APPEND, khung đề 11 + 6 = 17 khối. Test thêm ở ArtifactServiceTest, AssignmentImportServiceTest, ExamImportDialog.test.tsx. Backend mvn verify 2201/2201; frontend Vitest 969/969, tsc, eslint sạch. Cập nhật business-rules U03, api-inventory, tài liệu build-and-test, aidlc-state. Hỏi: Build and test instructions complete. Ready to proceed to Operations stage? Chưa commit."
+**Context**: CONSTRUCTION — Build and Test, chờ duyệt.
+
+---
+
+## Operations
+**Timestamp**: 2026-11-11T16:35:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sang Operations"
+**AI Response**: "Ghi nhận duyệt Build and Test. Operations là giai đoạn giữ chỗ, không có bước nào; đánh dấu hoàn tất trong aidlc-state. Việc còn lại ngoài quy trình: commit trên nhánh feat/exam-image-import, merge origin/staging (#70–#73) trước khi mở PR, gỡ stack thử examimport (đang giữ bản chép kết nối Gemini và khóa mã hóa)."
+**Context**: OPERATIONS — placeholder, workflow nhập đề từ ảnh/PDF hoàn tất.
+
+---

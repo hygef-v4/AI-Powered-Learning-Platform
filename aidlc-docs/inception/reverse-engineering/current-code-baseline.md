@@ -355,6 +355,7 @@ Primary UC 34–36; FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 
 - [AssignmentAiDraftController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/AssignmentAiDraftController.java)
 - [AssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/AssignmentController.java)
+- [AssignmentImportController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/AssignmentImportController.java) — nhập đề từ ảnh/PDF, nhánh `feat/exam-image-import` 2026-11-11; service `AssignmentImportService`, `ImportFileReader`, `ImportPageNormalizer`, `ExamImportPrompt`, `ExamImportMapper`, `FigureCropper`, `AssignmentImportResultHandler`, `AssignmentImportImageSource`, `ImportPageCleanupScanner`; repository `ImportPageRepository`; U06 `AiImageSourceRegistry`, contract `AiImageRef`, `AiImage`, `IAiImageSource`; frontend `ExamImportDialog`
 - [ClassAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/ClassAssignmentController.java)
 - [RubricController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/RubricController.java)
 - [SubjectAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/SubjectAssignmentController.java)
@@ -364,6 +365,7 @@ Primary UC 34–36; FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 - [PartCalculatorTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/model/PartCalculatorTest.java)
 - [RubricRepositoryTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/repository/RubricRepositoryTest.java)
 - [AssignmentAiDraftServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentAiDraftServiceTest.java)
+- [AssignmentImportServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentImportServiceTest.java), `ImportFileReaderTest`, `ImportPageNormalizerTest`, `ExamImportMapperTest`, `FigureCropperTest` — nhập đề từ ảnh/PDF 2026-11-11
 - [AssignmentAuthoringServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentAuthoringServiceTest.java)
 - [AssignmentCopyServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentCopyServiceTest.java)
 - [AssignmentDraftGenerationSchemaTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentDraftGenerationSchemaTest.java)
