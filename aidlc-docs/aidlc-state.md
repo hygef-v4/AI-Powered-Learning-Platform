@@ -670,3 +670,15 @@ Evidence: construction/build-and-test/2026-11-10-student-published-result-entry.
 - [x]23f9309a: student assignment class/subject columns and regression coverage.
 - [x]4873b931: student published result and detail access alongside newer drafts, preserving private-grade controls.
 - [x] Fresh202 frontend/206 backend architecture cases, TypeScript/scoped lint/whitespace checks pass; cumulative audit/state recorded separately. No push/deploy, live grade mutation or subagents. Full production build/live student visual acceptance not repeated.
+
+## Editable published grades and background AI — implemented, 2026-11-11
+
+- [x] User selects immediate student-visible corrections after every successful save, and editing until class ARCHIVED including past assignment deadlines. No separate published snapshot or republish step.
+- [x] Latest AI clarification supersedes the earlier wait-on-screen wording: background task must not block grading/navigation. Reviewed model/save/publication, group and proposal callback guards and current busy/modal/auto-apply behavior on2444c3f4.
+- [x] User approved the six-task plan with `$ponytail:ponytail triển khai theo kế hoạch`, including explicit Apply/notification. Implemented direct publication/legacy FINALIZED compatibility, preserving PUBLISHED after saves, AI review safeguards, current receipt/version rules and background result isolation/recovery. Removed finalize buttons; retained quiet30-second autosave.
+- [x] Full Maven verify2146 tests with no failures/errors/skips and required integration/traced-suite guard pass. Full frontend956 tests/134 files pass; final connected211 tests/25 files and workspace39 tests pass after subsequent additions (overlapping counts). TypeScript, scoped ESLint, production frontend build and whitespace pass. No live grade edits, paid model calls, subagents, commit/push or deploy.
+- [x] User restarted the local backend; direct Orca UI acceptance passed for published corrections8→8.25, student visibility/detail access, background AI across navigation, concurrent manual edits preserved when AI completes, explicit Apply without automatic saving and quiet30-second autosave without reload. Restored saved8.00 and original feedback. New AI proposals remain in history. Archived-class/group UI acceptance was not performed; automated coverage remains. The earlier rejected restart command stopped/restarted no process.
+
+Plan: construction/plans/code-generation-plan/2026-11-11-editable-grades-and-background-ai.md. Evidence: construction/build-and-test/2026-11-11-editable-grades-and-background-ai.md. Security/Resiliency compliant for existing scope; PBT disabled. Existing U12 preservation of official group grades on resubmission remains, with stale-receipt edits denied. Student tabs see saved corrections on load/refetch; no realtime push added.
+
+User subsequently authorized descriptive local commits. Source/tests and documentation recorded separately; fresh precommit frontend grading/assignment-work run passed211 tests/25 files. No push or deployment.

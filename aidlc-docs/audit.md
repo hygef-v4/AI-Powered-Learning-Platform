@@ -12842,3 +12842,49 @@ kiểm tra và sửa các điểm trong báo cáo này"
 **Context**: Construction — commit thay đổi đã kiểm.
 
 ---
+
+## Plan editable published grades and background AI grading
+**Timestamp**: 2026-11-11T03:19:26Z
+**Requested by:** Quang Hung
+**User Input**: "Điểm vẫn có thể sửa trong khi course còn, không nên khóa việc cô không được sửa
+Sửa về async: khi nhấn chấm bài bằng AI thì phải ở tại màn hình đó chờ AI chấm xong mới được thao tác cái khác
+giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt điểm đko? b đề xuất cho tôi thầy cô muốn lúc chấm điểm thì lưu lại dddeesns khi nào muốn cho sinh viên xem thì công bố điểm, nma vẫn có thể sửa lại điểm được vì quá trình cho điểm có thể sai sót"
+**User Decision**: After publication corrections, "Cập nhật cho sinh viên ngay mỗi lần lưu". Grading remains editable "Đến khi lớp được lưu trữ (ARCHIVED), kể cả đã đóng nhận bài (đề xuất)".
+**Latest User Correction**: "Với sửa chấm bài ai về async gv k phải đợi màn hình load xong ai"
+**AI Response**: Read current grading model, service/DTO/repository, group/student views, proposal preparation/callback, workspace/polling/AI panel and existing shared UI. Latest correction supersedes the earlier wait-on-screen wording: AI must run in the background while teacher continues working. Plan removes finalize from the new workflow, permits direct publication, keeps PUBLISHED on subsequent saves and preserves class/archive authorization, receipt/version/audit/AI-review safeguards. No published snapshot/republish workflow selected. Proposed reuse of explicit Apply action and a small teacher-layout tracker prevents late AI overwriting another student's form or silently changing visible grades. Existing 30-second quiet save remains. Includes legacy FINALIZED compatibility, group/member atomicity, batch/MCP/student-result/distribution/export checks and async recovery/dedup tests. Baseline2444c3f4. Plan only, no source edit, grade/API write, paid AI request, subagents, commit/push/deploy or implementation tests. Security/Resiliency retained; PBT disabled. Plan: construction/plans/code-generation-plan/2026-11-11-editable-grades-and-background-ai.md. Additional Apply/notification UX remains a proposal for review.
+
+---
+
+## Implement approved editable-grade and background-AI plan
+**Requested by:** Quang Hung
+**Date:** 2026-11-11
+**User Input:** "$ponytail:ponytail triển khai theo kế hoạch"
+**AI Response:** Executing inline with ponytail, no subagents, commit/push/deploy or live grade writes. Preserved the existing uncommitted plan/audit/state. Model/access and direct publication tests went RED, then GREEN; implemented editable published grades until class ARCHIVED, direct publication and legacy finalize validation, AI review checks before public writes, group receipt/version checks and staff draft export. AI dispatch no longer blocks editing/navigation; shared bounded polling and teacher-layout tracking retain pending work across submissions, notify once and only apply on explicit user action. Late callbacks and account cleanup are isolated; an observed account-switch race was fixed with regression coverage. Updated existing tests that encoded obsolete grade locks. Kept baseline U12 preservation of published group grades on resubmission rather than changing that policy. Full frontend956 cases/134 files passed, final62 UI/background cases passed. Full backend rerun/build still in progress; initial256MB test heap exhausted after1285 cases, raised only test-process heap; no product setting changes. Ledger and rulings are in the approved plan. Security/Resiliency retained; PBT disabled.
+
+---
+
+## Verification progress and self-review rulings
+**Timestamp:** 2026-11-11T04:02:42Z
+**Requested by:** Quang Hung
+**User Input:** "$ponytail:ponytail triển khai theo kế hoạch"
+**AI Response:** Full frontend956 cases/134 files pass, then final connected211 cases/25 files, TypeScript and scoped ESLint pass; final workspace39 cases also pass after correcting request-button aria-busy. Production frontend build passes. Added account-switch delayed callback/cleanup regression (RED then GREEN), legacy batch pending outcome coverage and existing PostgreSQL grading correction round-trip. Backend full2146-case run surfaced obsolete grade-lock assertions in PlatformWorkflowIntegrationTest; revised the shared fixture helper to assert editable saved grades and immediate student-visible published corrections. Staff exports now include saved DRAFT grades, covered by a RED then updated assertion, keeping PENDING blank/student publication privacy. Existing U12 published group-resubmission preservation remains unchanged, with stale-receipt edits denied. Final full backend rerun and required-suite guard are in progress. No live grade mutation, paid AI request, subagents, commit/push/deployment. Security/Resiliency retained; PBT disabled.
+
+---
+
+## Completed editable-grade and background-AI implementation verification
+**Timestamp:** 2026-11-11T04:11:08Z
+**Requested by:** Quang Hung
+**User Input:** "$ponytail:ponytail triển khai theo kế hoạch"
+**AI Response:** Implemented the approved six-task plan inline. Removed finalize from new UI workflows; direct publication, editable published grades until ARCHIVED, immediate student visibility after successful save, quiet30-second autosave and explicit AI Apply are implemented. AI dispatch/background tracking no longer blocks navigation or edits; preserved authorization, current receipt/version, review acknowledgments and group/member overrides. Final full Maven verify passed2146 tests with0 failures/errors/skips and packaged the executable JAR; required integration/traced-suite checks passed. Full frontend956 tests/134 files passed; subsequent final connected211 tests/25 files and workspace39 tests passed (overlapping counts). Final TypeScript, scoped ESLint, production frontend build and whitespace checks passed. Plan and verification evidence updated. No live grade writes, paid AI request, subagents, commit/push/deploy. Security/Resiliency compliant for existing scope; PBT disabled. Automatic tool review rejected the attempted local backend stop/restart with the only stated reason “blocked by policy”; no process was stopped/restarted by that command. Existing runtime needs manual restart; browser acceptance against refreshed backend was not performed. Student tabs reflect corrections on load/refetch; existing official group-grade preservation across resubmission remains unchanged.
+**Evidence:** construction/build-and-test/2026-11-11-editable-grades-and-background-ai.md
+
+---
+
+## Commit approved grading workflow changes
+**Timestamp:** 2026-11-11T04:45:08Z
+**Requested by:** Quang Hung
+**User Input:** "Giúp tôi commit rõ ràng"
+**AI Response:** Reviewed current changes and existing verification evidence; committed source/regression tests separately from AI-DLC functional specification, plan and acceptance evidence. User restarted backend and direct local UI retests verified published edits/student results, background AI/navigation, preservation of concurrent manual edits and explicit Apply, and30-second autosave without reload. Restored original saved8.00 and feedback; generated AI proposals remain in test history. Fresh precommit connected frontend run passed211 tests/25 files; staged whitespace checks passed. No push/deploy; archived-class and group acceptance remain automated-only for this UI run. Security/Resiliency retained; PBT disabled.
+**Context:** Construction — authorized local commits only.
+
+---
