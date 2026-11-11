@@ -68,6 +68,7 @@ export function GradebookExportDialog({
           ))}
         </Select>
       </label>
+      <p className="text-xs text-muted">Xuất tất cả sinh viên trong phạm vi bài đã chọn, kể cả ngoài trang đang xem.</p>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
     </Dialog>
   );

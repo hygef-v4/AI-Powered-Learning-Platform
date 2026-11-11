@@ -53,8 +53,9 @@ Nguồn: `baf349b0`, `d85b5429`; tests nguồn `gradebook-layout.test.tsx`, `wor
 (TeacherClassTab "info" của U05)
   ClassProgressSection                       thẻ Bài đang mở, Chờ chấm; Tiến độ nộp bài; Phân bố điểm
 (TeacherClassTab "gradebook" của U05)
-  ClassGradebookTab                          tab Sổ điểm: bảng sinh viên × bài Graded, nút Xuất
-    GradebookExportDialog                    CSV hoặc XLSX, toàn bộ hoặc một bài
+  ClassGradebookTab                          tab Chấm điểm: danh sách theo bài/sinh viên, nút Bảng điểm
+    GradebookMatrix                          gradebookView=matrix: sinh viên × bài, lọc bài/tìm sinh viên/phân trang
+      GradebookExportDialog                  CSV hoặc XLSX, toàn bộ hoặc một bài
 (dòng bài ở tab Đánh giá, đăng ký qua AssignmentRowAction của U07)
   SubmissionsLink                            "x / N nộp · n chờ chấm", mở Submission Detail
 (StudentDetailSection của U05)
@@ -94,8 +95,8 @@ app/teaching/evaluations/[evaluationId]/      GradingWorkspacePage   #35
 | `MemberContributionPanel` | `PUT .../members/{accountId}` | "Điểm nhóm và thành viên": Điểm nhóm "x / tổng"; điểm từng thành viên mặc định bằng điểm nhóm, giảng viên sửa từng người, lý do tùy chọn (BR-U09-51) |
 | `ActivityTimeline` (U08) | `IActivityQuery` của U08 | "Hoạt động khi làm bài": thời điểm rời trang và thời lượng; "Chỉ để tham khảo; nền tảng không kết luận gian lận." |
 | `GradeHistoryPanel` | `GET /api/v1/evaluations/{id}` | "Lịch sử sửa điểm": Lúc (thời điểm · người), Trước → sau, Lý do |
-| `ClassGradebookTab` | `GET .../gradebook` | Tab Sổ điểm: ô tìm sinh viên theo tên hoặc email; "n sinh viên · n bài Graded"; nút Xuất. Bảng mỗi dòng một sinh viên (avatar, tên, email), mỗi cột một bài Graded (tên, hình thức, trạng thái bài): "x / tổng" và trạng thái (Chưa nộp, Trễ, Chờ chấm, Đã chấm, Đã chốt, Đã công bố; bài nhóm lấy điểm thành viên, chưa có điểm thì Nhóm đang làm hoặc Nhóm đã nộp); phân trang; "Chỉ bài Graded; lượt được chấm; không có tổng điểm có trọng số; không gồm Practice và Quiz." |
-| `GradebookExportDialog` | `GET .../gradebook/export` | Định dạng CSV hoặc XLSX; Phạm vi toàn bộ bài Graded hoặc một bài; "Việc xuất được ghi vào Nhật ký audit; tệp không lưu lại trên hệ thống."; Hủy, Xuất tệp; tải tệp dạng luồng |
+| `ClassGradebookTab`, `GradebookMatrix` | `GET .../gradebook` | Tab Chấm điểm giữ danh sách theo bài/sinh viên và thao tác hàng loạt. Nút Bảng điểm mở `gradebookView=matrix` trong trang lớp: một dòng/sinh viên (STT, tên, email), cột là tên bài và điểm tối đa, lọc một bài/toàn bộ, tìm theo tên/email và phân trang20 hàng. Điểm đã lưu có liên kết xem chi tiết, nhãn truy cập/tooltip trạng thái; giữ0, chưa chấm/chưa nộp hiển thị gạch ngang. Bài nhóm lấy điểm riêng thành viên. Cuộn ngang trong bảng, cố định cột định danh và hàng tiêu đề; Quay lại chấm điểm giữ bộ lọc trước. Không gồm Practice/Quiz, không tự tính trọng số/tổng. |
+| `GradebookExportDialog` | `GET .../gradebook/export` | Mở từ ma trận, mặc định phạm vi bài đang xem và định dạng Excel; CSV hoặc XLSX, toàn bộ bài tính điểm hoặc một bài. Xuất mọi sinh viên trong phạm vi bài, kể cả ngoài trang/tìm kiếm hiện tại; tải tệp dạng luồng, không lưu tệp trên máy chủ. |
 | `ClassProgressSection` | `GET /api/v1/classes/{classId}/submission-progress`, `GET .../grade-distribution` | Trên tab Thông tin lớp: thẻ Bài đang mở (kèm số bài hết hạn hôm nay), Chờ chấm (bài nộp chưa có điểm); "Tiến độ nộp bài": từng bài (tên, hình thức · chế độ, hạn, số đã nộp / N sinh viên hoặc nhóm, phần trăm), link mở tab Đánh giá; "Phân bố điểm" của một bài đã công bố: số bài theo khoảng điểm (theo phần trăm tổng điểm) |
 | `SubmissionsLink` | `GET .../assignments/{assignmentId}/submissions` (tóm tắt) | Cột Bài nộp: "x / N nộp · n chờ chấm", "đã công bố", bài nhóm "x / k nhóm nộp"; bấm mở Submission Detail |
 | `StudentGradesSection` | `GET /api/v1/classes/{classId}/students/{accountId}/grades` | Trong popup Student Detail: Đã nộp x / y bài Graded, Nộp trễ n; bảng Bài, Hình thức, Nộp (Đúng hạn, Trễ, Chưa nộp), Điểm ("x / tổng" hoặc Chờ chấm) |
