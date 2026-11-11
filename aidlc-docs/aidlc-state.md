@@ -1,5 +1,22 @@
 # AI-DLC State Tracking
 
+## UI/UX đợt 2 — kiểm báo cáo ngày 2026-11-10, đã commit, chưa push, 2026-11-11
+
+Nhánh `fix/ui-ux-review-2` từ `origin/staging@353383f2`. Đối chiếu từng mục của báo cáo đánh giá UI/UX với mã sau PR #64: mục 3 (bảng Bài tập dạng thẻ, cột lớp), 4 (thanh đồng hồ dính, `aria-live`, đáp án 44px), 6 (ngăn kéo `inert`, Esc), 8 (toast lỗi), "Practice", liên kết bỏ qua, Đăng xuất trong menu tài khoản, `Menu` phím mũi tên, tiêu đề popup 22px đã sửa trước đó.
+
+- [x] Sidebar: mục đang chọn `bg-primary-soft`, hover token mới `--c-sidebar-hover` (sáng `#f4f4f5`, tối `#202b39`); bỏ bóng nâu; mũi tên mở nhánh 40px trên màn cảm ứng, liên kết cha chừa lề phải
+- [x] Ô nhập 16px dưới 640px (quy tắc chung trong `globals.css`, ô OTP chữ to giữ cỡ)
+- [x] Lề `main` và 4 thanh đầu trang dính dùng chung `.main-gutter`/`.main-bleed`; đã đo trên trình duyệt: thanh trùng hai mép `main`
+- [x] Công tắc tắt dùng `--c-field` (3,33:1), cả `Switch` và bản trong Thông báo
+- [x] Trang chấm bài: `window.confirm` thành popup "Bỏ thay đổi"
+- [x] Quiz: "Chưa lưu được" màu cảnh báo, popup khi thoát quiz có giới hạn giờ, dải số câu cuộn ngang ở trên câu hỏi khi hẹp hơn `lg`
+- [x] Hạn nộp tương đối ("còn 5 giờ", cảnh báo dưới 24 giờ) ở trang Bài tập của sinh viên; thời gian thông báo dạng tương đối; `shared/dateTime.ts` cố định giờ Việt Nam thay 3 chỗ `toLocaleString` theo giờ máy
+- [x] `InfoTip` đóng bằng Esc, rê chuột vào được; `Tabs` có Home/End, `aria-controls`/`tabpanel` ở trang lớp và môn; bảng lượt làm quiz mở được bằng bàn phím
+- [x] Câu chữ: "Không có … phù hợp.", "…", "Nhập đúng email do trường cấp.", hằng số `LOAD_FAILED_MESSAGE`; trình xem học liệu `100dvh`
+- [ ] Chưa làm: `useAuthoringGuard` (nút Back cần trả lời đồng bộ), thang cỡ chữ/bo góc/z-index, `Overlay`/`Textarea` dùng chung, gộp `Pagination`/`PageNav`, gộp 11 hàm ngày giờ, kiểm thử ảnh chụp, lint chặn giá trị lẻ; hành vi ô chọn môn/lớp trên sidebar chờ người dùng quyết định
+
+Kiểm tra: `tsc --noEmit`, `eslint` qua; Vitest 133 tệp, 950 test qua. Trình duyệt (stack Docker local): sidebar hai theme, ô nhập 16px ở 375px, thanh dính trang soạn bài. Chưa thử trên iPhone thật. Không đổi backend, API hay schema; đã commit trên nhánh, chưa push. Security/Resiliency giữ phạm vi đã duyệt, PBT tắt.
+
 ## Sửa 22 điểm UI/UX — build và kiểm thử xong, đã commit, chưa push, 2026-11-10
 
 Người dùng yêu cầu sửa toàn bộ 22 điểm của đợt rà soát UI/UX, chọn phương án A cho cả 9 câu hỏi, duyệt kế hoạch 21 bước và duyệt mã. Nhánh `fix/ui-ux-remediation` tạo từ `staging` `062a43f5`. Chỉ sửa `frontend/` và `PRODUCT.md`; không đổi backend, API, schema. [Yêu cầu và quyết định](inception/requirements/2026-11-10-ui-ux-remediation-questions.md); [kế hoạch và điều chỉnh](construction/plans/code-generation-plan/2026-11-10-ui-ux-remediation.md); [tóm tắt thay đổi](construction/ui-ux-remediation/code/summary.md); [kết quả build và kiểm thử](construction/build-and-test/2026-11-10-ui-ux-remediation-results.md).
