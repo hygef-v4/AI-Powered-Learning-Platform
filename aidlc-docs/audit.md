@@ -12889,6 +12889,23 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 
 ---
 
+## Simplify teacher class information overview
+**Timestamp:** 2026-11-11T06:18:14Z
+**Requested by:** Quang Hung
+**User Input:** "Ok giúp tôi sửa theo đề xúât"
+**AI Response:** Implemented the approved class-information proposal inline with ponytail/impeccable, no subagents. Read-only facts replace disabled fields; empty descriptions hidden. Replaced teacher progress tabs and recent announcements with open-assignment/pending-submission/unpublished-grade summaries and up to3 nearest future OPEN deadlines including Practice. Reused existing assignment/progress APIs with server group-root counts; removed whole-gradebook pagination. Summary grading links select the first relevant assignment and status filter. Student announcements/page and all announcement routes remain. RED tests then264 related tests/31 files pass; final targeted34/2, TypeScript, scoped ESLint and whitespace pass. Direct browser verifies1440px/390px, light/dark,5 open/1 pending/0 unpublished and correct pending link. No live data mutation, backend/schema change, commit/push/deploy. Production build/full backend not repeated. Security/Resiliency compliant for existing scope; PBT disabled.
+**Context:** Construction — approved teacher overview change. Plan and evidence: construction/plans/code-generation-plan/2026-11-11-teacher-class-overview.md.
+
+---
+
+## Commit and publish teacher class overview PR to staging
+**Timestamp:** 2026-11-11T06:23:08Z
+**Requested by:** Quang Hung
+**User Input:** "Ok giúp tôi commit, push, check staging xem có change k nếu k thì tạo  pr lên staging"
+**AI Response:** Fetched origin and checked staging divergence before publication. Current branch and staging have no divergent commits; merge-tree reports no conflict. Committing only the approved teacher class overview and its tests/AI-DLC records, pushing the existing branch and opening a PR targeting staging. Fresh targeted34 tests/2 files and TypeScript pass; broader264 related tests, scoped lint and direct desktop/mobile light/dark UI were verified during implementation. No merge/deployment authorized in this request; production build/backend tests not repeated for this frontend-only change.
+**Context:** Construction — authorized commit, push and PR; no automatic merge.
+
+---
 ## Sửa bố cục trang Hồ sơ, Đổi mật khẩu thành khối trên trang
 **Timestamp**: 2026-11-11T04:30:00Z
 **Requested by:** Đào Chí Cường
@@ -12977,5 +12994,22 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 **User Input**: "tạo pr vào staging cho tôi"
 **AI Response**: "Xác nhận GitHub display name qua profile API bằng tài khoản Git hiện có; kiểm tra không có PR mở trùng nhánh. Chuẩn bị commit đúng ba file UI, hai file test và tài liệu liên quan, push codex/ui-ux-staging, tạo PR base staging. Dùng kết quả 963 test/135 file, TypeScript/ESLint và Docker build/smoke đã xác minh trên cùng source. Không merge PR."
 **Context**: Publication authorization; trạng thái PR và CI sẽ được ghi trên GitHub và phản hồi cuối để tránh phát sinh commit sau bản đã xác minh. Không sửa attribution lịch sử.
+
+## Resolve PR70 staging conflict and merge
+**Timestamp:** 2026-11-11T09:24:48Z
+**Requested by:** Quang Hung
+**User Input:** "giúp tôi solve conflict pr với staging sau merge vào"
+**Latest User Input:** "[Image #1] giúp tôi merge request pr 70 vào staging"
+**AI Response:** User authorizes conflict resolution, push and PR70 merge into staging. Latest staging adds profile layout, dark-mode color and AI key-security changes. Only audit.md conflicts; retained both sides' complete historical entries and original requester attributions. Source merges without manual changes. Verify merged frontend scope, then push and wait for required CI on the updated PR head before merge. No main merge or production deployment requested.
+**Context:** Construction — integrate approved PR70 with latest staging; no subagents.
+
+---
+
+## UI/UX staging — tích hợp trước PR
+**Timestamp**: 2026-11-11T09:40:50Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tạo pr vào staging cho tôi"
+**AI Response**: "Staging mới có teacher-class-overview. Tích hợp vào nhánh PR; code không xung đột, hai file audit/state được giữ nguyên nội dung cả hai bên và xác minh bằng so sánh thứ tự từng dòng. Fresh full frontend 963 test/135 file, full ESLint, TypeScript qua. Docker build và smoke test health UP/login/icon 200 qua trên source đã tích hợp. Hoàn tất merge commit local, push và tạo PR; không merge PR vào staging."
+**Context**: PR delivery; GitHub PR/CI là nguồn trạng thái cuối.
 
 ---

@@ -703,3 +703,17 @@ Người dùng duyệt "sửa 3 lỗi trên". Baseline origin/staging ce40e447; 
 ### Cho phép tạo PR — ba lỗi UI/UX, 2026-11-11
 
 Người dùng yêu cầu "tạo pr vào staging cho tôi". Cho phép commit/push nhánh `codex/ui-ux-staging` và tạo PR base `staging`; không bao gồm merge. Source là bản đã qua 963 test/135 file và Docker smoke. Trạng thái phát hành cuối theo PR GitHub và phản hồi giao hàng.
+
+## Teacher class overview — 2026-11-11
+
+- [x] User approved replacing submission-progress tabs/recent announcements on teacher class info with compact read-only class facts, three assignment summary links and nearest3 upcoming deadlines. Student class info and announcement routes preserved. Reused assignment list/submission summaries; no full gradebook load, new API or schedule scope.
+- [x] RED/GREEN:264 related tests/31 files pass; final targeted34/2 pass after link fix. TypeScript, scoped ESLint and whitespace pass. Local browser verified1440px/390px, light/dark, correct counts and actionable filtered gradebook link. No class/grade writes. Security/Resiliency retained; PBT disabled.
+- Limits: numbers refresh on page reload; summary links select the first assignment with matching work. Production build/backend suite not repeated for this frontend-only change; no commit/push/deploy. Plan/evidence: construction/plans/code-generation-plan/2026-11-11-teacher-class-overview.md.
+
+- Subsequent user request authorizes local commit, push and PR to staging. Fresh34 targeted tests and TypeScript pass; fetched staging has no divergence from the implementation baseline and merge preview has no conflict. Publish the overview changes only; no automatic merge/deployment.
+
+### PR delivery — ba lỗi UI/UX
+
+Tích hợp staging `1f713615`; giữ cả hai lịch sử audit/state. Fresh full frontend
+963 test/135 file, ESLint/TypeScript, Docker build và runtime smoke qua. Người dùng
+cho phép push/tạo PR vào staging; không tự merge PR. Xem PR GitHub để biết trạng thái CI.

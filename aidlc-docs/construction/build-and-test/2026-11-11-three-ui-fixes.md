@@ -85,3 +85,14 @@ thay đổi backend/API/schema; CI PR vẫn chạy backend verify theo cấu hì
 Giới hạn còn lại: chưa kiểm tra layout trực tiếp trên browser/mobile. Cảnh báo
 đóng gói standalone ở lượt Windows trước đã được giải quyết về mặt xác minh bằng
 build và smoke test Docker thành công; không dùng artifact Windows cũ để deploy.
+
+## Tích hợp staging trước khi mở PR — 2026-11-11
+
+Staging tiến tới `1f713615` (teacher class overview) trong lúc chuẩn bị PR.
+Source merge tự động, chỉ audit/state xung đột append; giữ toàn bộ nội dung cả hai
+bên, xác minh từng dòng theo thứ tự. Fresh full suite **963 test/135 file**, full
+ESLint và TypeScript qua trên bản tích hợp. Docker build thành công, image
+`sha256:289cbf8a2995fda2d63109b4c83ed6e679b2482a921b92802b4e80dab81b4d52`, smoke
+cô lập health UP/login/icon đều 200. Source diff so với staging vẫn chỉ ba file
+shared UI và hai file test. Không chạy lại backend/live browser. User đã cho phép
+commit/push/tạo PR; chưa cho phép merge PR. PR GitHub ghi nhận trạng thái CI/phát hành.
