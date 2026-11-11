@@ -13005,6 +13005,42 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 
 ---
 
+## Put gradebook bulk selection directly in the table
+**Timestamp:** 2026-11-11T13:35:31Z
+**Requested by:** Quang Hung
+**User Input:** "ok giúp tôi sửa"
+**AI Response:** Implemented approved bulk-selection UI inline, no subagents. Replaced separate toggle/list with row and mixed-state header checkboxes,20-row paging, explicit all-filtered selection up to100 and action-specific counts. Unsubmitted rows disabled. Changing assignment/search/status/mode clears selection, changing page preserves it. Reused complete submission directory without refetching it for each local filter; captured action item/version snapshot for the existing confirmation dialog. Group selection uses group-root rows; member grades retained in expandable section. RED4 new cases then GREEN189 grading tests/20 files, final20 targeted tests/2 files, TypeScript/scoped lint pass. Verified real local teacher UI with5 students and1 group at1440px/390px, light/dark; filters reset selection and header skips unsubmitted.30/101 cases use fixtures. No real AI/publish requests, data edits, backend/schema/dependency changes, commit/push/deploy. Production build/backend suite not repeated. Security/Resiliency retained; PBT disabled.
+**Context:** Construction — approved grading bulk-selection UI. Plan/evidence: construction/plans/code-generation-plan/2026-11-11-gradebook-bulk-selection.md.
+
+---
+
+## Clarify announcement navigation scope
+**Timestamp:** 2026-11-11T13:45:49Z
+**Requested by:** Quang Hung
+**User Input:** "ok giúp tôi sửa như đề xuất"
+**AI Response:** Renamed global Teacher/Student/Subject Manager announcement menu and global page/metadata to “Tất cả thông báo”; class-specific menu/page remains “Thông báo lớp”. Existing URLs, class filter and permissions retained.11 announcement tests/2 files and scoped lint pass; browser confirms global and fixed-class headings and distinct sidebar links. Prior checkbox pointer tweak also verified via browser computed styles. No data mutations, commit/push/deploy, backend or production-build rerun.
+**Context:** Construction — approved copy clarification, preserving current uncommitted bulk-selection changes.
+
+---
+
+## Consistent pointer cursors for interactive controls
+**Timestamp:** 2026-11-11T13:51:16Z
+**Requested by:** Quang Hung
+**User Input:** "[Image #1] check laik bất cứ cái gì có thể hover phải là pointer"
+**AI Response:** Found raw group-selection buttons missing cursor. Added shared base CSS for enabled native controls and interactive ARIA roles, checkbox/radio labels and file chooser buttons; disabled controls use not-allowed. Retained local text/drag/pending cursor overrides and removed duplicate per-checkbox cursor styling. Reviewed native handlers, non-native clickable surfaces and explicit cursor exceptions; decorative hover is not automatically made clickable. Browser confirms pointer for all3 actual group choices.14 native/custom enabled/disabled computed-style probes pass, text fields remain non-pointer and drag override preserved.324 related frontend tests/44 files, scoped lint and production Next.js build/typecheck pass. No backend/data mutation, commit/push/deploy. Not all real screen/state combinations manually exercised; security/resiliency unchanged, PBT off.
+**Context:** Construction — shared UI affordance correction; preserves existing uncommitted changes.
+
+---
+
+## Commit bulk-selection and UI affordance changes
+**Timestamp:** 2026-11-11T13:53:30Z
+**Requested by:** Quang Hung
+**User Input:** "giúp tôi commit"
+**AI Response:** Reviewed current working tree on fix/u05-u09-u15 and staged only the approved changes as separate commits: inline bulk gradebook selection/tests, global-vs-class announcement labels/tests, shared pointer cursors, and AI-DLC plan/state/audit evidence. Fresh precommit15 tests/3 files pass; preceding324 related tests/44 files, lint/typecheck and production frontend build passed. Retained all existing unrelated committed changes; no push, merge or deploy requested. No grade/class data writes.
+**Context:** Construction — authorized local commits only.
+
+---
+
 ## UI/UX staging — tích hợp trước PR
 **Timestamp**: 2026-11-11T09:40:50Z
 **Requested by:** Đào Chí Cường

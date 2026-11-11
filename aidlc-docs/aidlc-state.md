@@ -712,6 +712,18 @@ Người dùng yêu cầu "tạo pr vào staging cho tôi". Cho phép commit/pus
 
 - Subsequent user request authorizes local commit, push and PR to staging. Fresh34 targeted tests and TypeScript pass; fetched staging has no divergence from the implementation baseline and merge preview has no conflict. Publish the overview changes only; no automatic merge/deployment.
 
+## Gradebook bulk selection in the table — 2026-11-11
+
+- [x] Approved proposal implemented inline: no duplicate selection list/toggle, row/header mixed-state checkboxes,20 rows/page, explicit all-filtered selection capped100. Counts reflect action eligibility. Selection survives page changes but resets for assignment/search/status/mode. Group roots selected once; member grades remain separately accessible.
+- [x] RED4 new tests, GREEN189 grading tests/20 files; final targeted20/2 pass, TypeScript/scoped lint pass. Local5-student/group-root UI verified at1440px/390px, light/dark, no document overflow; no AI/publish/data writes.30/101 scenarios covered with fixtures.
+- No backend/API/dependency, production build, commit/push/deploy. Security/Resiliency retained, PBT off. Plan/evidence: construction/plans/code-generation-plan/2026-11-11-gradebook-bulk-selection.md.
+
+- Approved follow-up: global announcement navigation/title is “Tất cả thông báo”; nested class navigation/title remains “Thông báo lớp”. URLs/filtering/authorization unchanged.11 announcement tests and scoped lint pass; local browser verifies both destinations and titles. Checkbox cursors also verified as pointer/enabled and not-allowed/disabled. Changes remain uncommitted.
+
+- Shared cursor follow-up: base CSS applies pointer to enabled native/custom interactive controls and not-allowed to disabled, preserving text/drag/pending utility overrides. Actual group choices and14 browser style probes pass;324 related tests/44 files, lint and production build/typecheck pass. No backend/data changes, commit/push. Not every screen/state was manually exercised.
+
+- Subsequent user authorization: “giúp tôi commit”. Record bulk-selection, announcement labels, shared cursors and documentation in separate local commits;15 fresh precommit tests/3 files pass. No push/merge/deploy.
+
 ### PR delivery — ba lỗi UI/UX
 
 Tích hợp staging `1f713615`; giữ cả hai lịch sử audit/state. Fresh full frontend
