@@ -108,10 +108,14 @@ class AiTaskFlowTest {
         when(authorization.authorize(eq(student), eq(Actions.AI_PERSONAL), any())).thenReturn(AuthorizationDecision.allow());
         when(authorization.authorize(eq(student), eq(Actions.AI_SHARED_USE), any()))
                 .thenReturn(AuthorizationDecision.deny("ROLE"));
-        shared = AiConnection.create(UUID.randomUUID(), AiConnection.Scope.INSTITUTIONAL, null, AiProvider.GEMINI,
-                "gemini-2.5-flash", cipher.encrypt("school-key-1234"), "1234", NOW);
-        personal = AiConnection.create(UUID.randomUUID(), AiConnection.Scope.PERSONAL, teacher.accountId(),
-                AiProvider.OPENAI, "gpt-4.1-mini", cipher.encrypt("my-key-abcd"), "abcd", NOW);
+        UUID sharedId = UUID.randomUUID();
+        shared = AiConnection.create(sharedId, AiConnection.Scope.INSTITUTIONAL, null, AiProvider.GEMINI,
+                "gemini-2.5-flash", cipher.encryptConnectionKey(sharedId, AiConnection.Scope.INSTITUTIONAL, null,
+                        AiProvider.GEMINI, "school-key-1234"), "1234", NOW);
+        UUID personalId = UUID.randomUUID();
+        personal = AiConnection.create(personalId, AiConnection.Scope.PERSONAL, teacher.accountId(),
+                AiProvider.OPENAI, "gpt-4.1-mini", cipher.encryptConnectionKey(personalId, AiConnection.Scope.PERSONAL,
+                        teacher.accountId(), AiProvider.OPENAI, "my-key-abcd"), "abcd", NOW);
         when(connections.findInstitutional(any())).thenReturn(Optional.empty());
         when(connections.findInstitutional(AiProvider.GEMINI)).thenReturn(Optional.of(shared));
         when(connections.findPersonal(any(), any())).thenReturn(Optional.empty());

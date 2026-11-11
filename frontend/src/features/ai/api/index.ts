@@ -34,8 +34,6 @@ export const testConnectionDraft = (provider: AiProvider, body: SaveConnection, 
 export const saveConnection = (id: string, body: SaveConnection) =>
   apiFetch<ConnectionView>(keyUrl(id), { method: "PUT", body: JSON.stringify(body) });
 
-export const revealConnection = (id: string) => apiFetch<{ apiKey: string }>(`${keyUrl(id)}/key`);
-
 export const testConnection = (id: string) => apiFetch<ConnectionView>(`${keyUrl(id)}:test`, { method: "POST" });
 
 /** Công tắc khóa cá nhân: tắt vẫn giữ khóa, không dùng khi gọi AI. */

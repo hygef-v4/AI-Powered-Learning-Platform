@@ -49,7 +49,6 @@ function backend(options: { statusConflict?: boolean; keys?: ConnectionView[]; q
         return options.statusConflict
           ? json({ status: 409, code: "AI_CONNECTION_VERSION_CONFLICT" }, 409)
           : json({ ...GEMINI, status: "DISABLED", version: 5 });
-      if (url === "/api/v1/admin/ai/connections/k1/key") return json({ apiKey: "AIzaSy-saved-Zx9q" });
       if (url === "/api/v1/admin/ai/connections:test") return json({ ok: false, message: "Key API không hợp lệ (HTTP 401)" });
       if (url.endsWith(":test")) return json({ ...GEMINI_2, lastTestResult: "Đạt" });
       if (url === "/api/v1/admin/ai/quota-policy" && method === "GET")
@@ -208,11 +207,13 @@ describe("AiConnectionsPanel", () => {
     const keyField = screen.getByLabelText(/Khóa API/);
     expect(keyField).toHaveValue("");
     expect(keyField).toHaveAttribute("placeholder", "••••••••Zx9q");
+    // Khóa chỉ ghi: chưa gõ khóa mới thì không xem hay sao chép được, và không gọi API lấy khóa đã lưu.
+    expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Xem khóa" })).toBeDisabled();
+    expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Sao chép khóa" })).toBeDisabled();
+    fireEvent.change(keyField, { target: { value: "AIzaSy-typed-Ab12" } });
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Xem khóa" }));
-    await waitFor(() => expect(keyField).toHaveValue("AIzaSy-saved-Zx9q"));
-    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Ẩn khóa" }));
-    expect(keyField).toHaveValue("");
-    expect(calls.some((c) => c.url === "/api/v1/admin/ai/connections/k1/key")).toBe(true);
+    expect(keyField).toHaveAttribute("type", "text");
+    expect(calls.some((c) => c.url.endsWith("/key"))).toBe(false);
   });
 
   it("thêm mức riêng: gõ email tới đâu gợi ý tới đó", async () => {

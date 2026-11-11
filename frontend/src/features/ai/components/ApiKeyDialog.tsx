@@ -20,15 +20,14 @@ type Props = {
   taken?: AiProvider[];
   /** Kiểm tra với khóa, mô hình đang nhập; không truyền thì không có nút Kiểm tra. */
   onTest?: (provider: AiProvider, body: SaveConnection) => Promise<KeyTestResult>;
-  /** Lấy khóa đã lưu khi sửa (nút mắt, sao chép); không truyền thì chỉ xem, sao chép được khóa vừa nhập. */
-  onReveal?: () => Promise<string>;
 };
 
 /**
- * Popup thêm hoặc sửa khóa API (c12a): khóa chỉ nhập, không hiện lại; sau khi lưu chỉ còn 4 ký tự cuối. Khi sửa, để
- * trống ô khóa là giữ khóa đang lưu (ô hiện 4 ký tự cuối làm gợi ý).
+ * Popup thêm hoặc sửa khóa API (c12a): khóa chỉ ghi, đã lưu thì không tải lại về trình duyệt (2026-11-11); sau khi lưu
+ * chỉ còn 4 ký tự cuối. Khi sửa, để trống ô khóa là giữ khóa đang lưu (ô hiện 4 ký tự cuối làm gợi ý). Nút mắt và sao
+ * chép chỉ dùng cho khóa đang gõ.
  */
-export function ApiKeyDialog({ current, initialProvider, providers, taken = [], onClose, onSave, onTest, onReveal }: Props) {
+export function ApiKeyDialog({ current, initialProvider, providers, taken = [], onClose, onSave, onTest }: Props) {
   const ids = { provider: useId(), key: useId(), model: useId() };
   const [provider, setProvider] = useState<AiProvider>(initialProvider);
   const models = providers.find((p) => p.provider === provider)?.models ?? [];
@@ -38,45 +37,13 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
   const [error, setError] = useState<string | null>(null);
   const [test, setTest] = useState<KeyTestResult | null>(null);
   const [shown, setShown] = useState(false);
-  const [saved, setSaved] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const editing = current?.configured === true;
-  const canReveal = editing && onReveal !== undefined;
-
-  /** Khóa đã lưu, tải một lần rồi giữ lại (để trống hoặc giữ nguyên là không đổi khóa). */
-  const reveal = async (): Promise<string | null> => {
-    if (saved !== null) return saved;
-    if (!onReveal) return null;
-    try {
-      const key = await onReveal();
-      setSaved(key);
-      return key;
-    } catch {
-      setError("Không xem được khóa đã lưu, thử lại sau.");
-      return null;
-    }
-  };
-
-  // Ẩn lại khóa đã lưu thì về ô trống với gợi ý 4 ký tự cuối, không để một dãy chấm dài; khóa đang gõ thì chỉ che đi.
-  const toggleShown = async () => {
-    if (shown) {
-      setShown(false);
-      if (saved !== null && apiKey === saved) setApiKey("");
-      return;
-    }
-    if (!apiKey && canReveal) {
-      const key = await reveal();
-      if (key === null) return;
-      setApiKey(key);
-    }
-    setShown(true);
-  };
 
   const copyKey = async () => {
-    const text = apiKey || (canReveal ? await reveal() : null);
-    if (!text) return;
+    if (!apiKey) return;
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(apiKey);
       setCopied(true);
     } catch {
       setCopied(false);
@@ -90,7 +57,7 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
   };
 
   const body = (): SaveConnection => ({
-    apiKey: apiKey.trim() && apiKey.trim() !== saved ? apiKey.trim() : undefined,
+    apiKey: apiKey.trim() || undefined,
     model,
     version: editing ? current?.version : undefined,
   });
@@ -187,13 +154,13 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
           <IconButton
             icon={shown ? "visibility_off" : "visibility"}
             label={shown ? "Ẩn khóa" : "Xem khóa"}
-            disabled={busy || (!apiKey && !canReveal)}
-            onClick={() => void toggleShown()}
+            disabled={busy || !apiKey}
+            onClick={() => setShown((value) => !value)}
           />
           <IconButton
             icon={copied ? "check" : "copy"}
             label={copied ? "Đã sao chép" : "Sao chép khóa"}
-            disabled={busy || (!apiKey && !canReveal)}
+            disabled={busy || !apiKey}
             onClick={() => void copyKey()}
           />
         </div>

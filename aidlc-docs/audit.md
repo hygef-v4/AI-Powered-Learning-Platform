@@ -12897,3 +12897,22 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 **Context**: Construction — chỉnh UI frontend U01, không đổi API/backend.
 
 ---
+
+## Rà soát bảo mật khóa API AI cá nhân
+**Timestamp**: 2026-11-11T07:05:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "để người dùng lưu api key cá nhân trên web có ổn không, hiện tại có đang lưu api vào db không. Có cách nào để tránh lộ lọt thông tin api key người dùng không"
+**AI Response**: "Trả lời: khóa được lưu trong ai_connections, mã hóa AES-256-GCM, khóa giải mã ở biến môi trường, chỉ hiện 4 ký tự cuối. Điểm yếu: GET /me/ai-connections/{id}/key và GET /admin/ai/connections/{id}/key trả khóa rõ; khóa giải mã nằm cùng VPS với DB; GCM chưa gắn AAD. Đề xuất sửa mục trả khóa rõ và AAD."
+**Context**: Câu hỏi bảo mật U06, chỉ đọc code.
+
+---
+
+## Khóa API chỉ ghi và gắn AAD cho bản mã
+**Timestamp**: 2026-11-11T07:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Có, sửa luôn"
+**AI Response**: "Backend: bỏ GET /api/v1/me/ai-connections/{id}/key và GET /api/v1/admin/ai/connections/{id}/key cùng revealPersonal/revealInstitutional (đóng D15). KeyCipher thêm encryptConnectionKey/decryptConnectionKey gắn AAD id|scope|owner|provider; lưu, thay, kiểm tra nháp, ConnectionTestService và AiTaskJobHandler dùng bản gắn AAD, bản mã chưa gắn bị từ chối. ConnectionKeyUpgrade (ApplicationReadyEvent) mã hóa lại khóa cũ bằng khóa mới nhất, ghi có điều kiện trên bản mã cũ (AiConnectionRepository.listWithKey, replaceKeyCiphertext), không đổi version. Token MCP giữ nguyên (không AAD, vẫn reveal cho chủ). Frontend: ApiKeyDialog bỏ onReveal, nút xem và sao chép chỉ cho khóa đang gõ; bỏ revealConnection/revealInstitutional. Cập nhật BR-U06-03, business-logic-model F8, domain-entities, decision-register D15, api-inventory, requirements, runbook ai-key-encryption. Kiểm tra: Maven trong maven:3.9-eclipse-temurin-17 các test AI (68) và AiRepositoriesIntegrationTest (6), PlatformWorkflowIntegrationTest (26) với Testcontainers đều qua; tsc, eslint sạch, Vitest tests/features/ai 38/38. Chưa chạy toàn bộ suite, chưa thử trên trình duyệt, không commit."
+**Context**: Construction — sửa bảo mật U06 trực tiếp theo yêu cầu, không đổi schema.
+
+---
+

@@ -82,14 +82,6 @@ public class AiConnectionController {
         }
     }
 
-    public record KeyResponse(String apiKey) {
-
-        @Override
-        public String toString() {
-            return "KeyResponse[***]";
-        }
-    }
-
     public record StatusRequest(Boolean enabled, Long version) {
     }
 
@@ -116,11 +108,6 @@ public class AiConnectionController {
     public ConnectionView save(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                @RequestBody SaveCommand command) {
         return connections.replacePersonal(actor, id, command);
-    }
-
-    @GetMapping("/api/v1/me/ai-connections/{id}/key")
-    public KeyResponse key(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return new KeyResponse(connections.revealPersonal(actor, id));
     }
 
     @PostMapping("/api/v1/me/ai-connections/{id}:test")
