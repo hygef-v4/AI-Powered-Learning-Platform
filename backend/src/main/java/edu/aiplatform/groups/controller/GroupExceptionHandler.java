@@ -18,7 +18,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
  * Lỗi có danh sách chi tiết của U12: bộ nhóm mâu thuẫn trả từng lỗi theo nhóm (BR-U12-04), tài liệu chưa đủ điều
  * kiện nộp trả danh sách cần sửa (BR-U12-40). Lỗi khác do {@code GlobalExceptionHandler} trả.
  */
-@RestControllerAdvice(assignableTypes = {GroupController.class, GroupDocController.class})
+@RestControllerAdvice(assignableTypes = {GroupController.class, GroupProposalController.class, GroupDocController.class})
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class GroupExceptionHandler {
 

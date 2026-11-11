@@ -114,4 +114,18 @@ describe("MyGroupPage", () => {
     expect(button).toHaveTextContent("Đang chờ duyệt");
     expect(screen.queryByRole("button", { name: /Yêu cầu đổi trưởng nhóm/ })).not.toBeInTheDocument();
   });
+
+  it("chưa có nhóm và đợt tự chia nhóm đang mở: hiện phần lập đề xuất thay cho dòng chờ giảng viên", async () => {
+    const noGroup: MyGroupView = { ...VIEW, groupId: null, name: null, leaderId: null, members: [], works: [], myRequests: [] };
+    const proposals = {
+      classId: "c1", classStatus: "OPEN", grouped: false, proposal: null, invitations: [], lastRejected: null, candidates: [],
+      formation: { enabled: true, minSize: 2, maxSize: 4, deadline: null, open: true, closedReason: null },
+    };
+    vi.stubGlobal("fetch", vi.fn((input: RequestInfo | URL) => json(String(input).endsWith("/group-proposal") ? proposals : noGroup)));
+    render(<MyGroupPage classId="c1" />);
+
+    expect(await screen.findByTestId("proposal-create")).toBeInTheDocument();
+    expect(screen.getByText("Đang mở, nhóm từ 2 đến 4 người.")).toBeInTheDocument();
+    expect(screen.queryByTestId("leader-request-open")).not.toBeInTheDocument();
+  });
 });

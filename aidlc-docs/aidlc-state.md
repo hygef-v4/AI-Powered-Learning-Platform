@@ -1,5 +1,17 @@
 # AI-DLC State Tracking
 
+## U12 — Sinh viên tự chia nhóm, giảng viên duyệt — Build and Test, 2026-11-11
+
+Tính năng mới mở rộng U12: sinh viên tự lập đề xuất nhóm trong lớp, giảng viên duyệt thì đề xuất thành nhóm chính thức. Brownfield, dùng lại tài liệu reverse engineering hiện hành. [Câu hỏi xác nhận](inception/requirements/2026-11-11-student-self-grouping-questions.md) (A cả 9 câu); [yêu cầu SG-01…09](inception/requirements/2026-11-11-student-self-grouping.md). Nhánh `feat/student-self-grouping` (`--no-track` từ `origin/staging@e78ac7b9`), worktree `../AI-Powered-Learning-Platform-self-grouping`.
+
+- [x] Workspace Detection: brownfield, bỏ qua Reverse Engineering.
+- [x] Requirements Analysis: người dùng duyệt 2026-11-11. Security/Resiliency giữ phạm vi, PBT tắt.
+- [x] User Stories: [kế hoạch](inception/plans/2026-11-11-student-self-grouping-story-plan.md) A cả 4 câu; US-GRP-007…010, người dùng duyệt 2026-11-11.
+- [x] Workflow Planning: [kế hoạch thực hiện](inception/plans/2026-11-11-student-self-grouping-execution-plan.md), người dùng duyệt 2026-11-11. Chạy Functional Design U12, Code Generation, Build and Test; bỏ qua Application Design, Units Generation, NFR Requirements/Design, Infrastructure Design.
+- [x] Functional Design U12: [kế hoạch](construction/plans/functional-design-plan/2026-11-11-u12-student-self-grouping-functional-design-plan.md) A cả 9 câu; BR-U12-70…96, F16–F24, người dùng duyệt 2026-11-11.
+- [x] Code Generation U12: [kế hoạch 19 bước](construction/plans/code-generation-plan/2026-11-11-u12-student-self-grouping-code-generation-plan.md) xong 19/19, người dùng duyệt 2026-11-11. Backend 54 test liên quan qua (gồm PostgreSQL); frontend 45 test nhóm, tsc, eslint qua. Chưa thử trên trình duyệt, chưa chạy toàn bộ suite.
+- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-11-student-self-grouping-results.md). Backend `mvn -B verify` 2.203 test qua; frontend lint, typecheck, 978/978 test, build qua; thử hai vai trò trên stack riêng `selfgroup`. Người dùng duyệt 2026-11-11; đã commit trên nhánh, chưa push.
+
 ## UI/UX đợt 2 — kiểm báo cáo ngày 2026-11-10, đã commit, chưa push, 2026-11-11
 
 Nhánh `fix/ui-ux-review-2` từ `origin/staging@353383f2`. Đối chiếu từng mục của báo cáo đánh giá UI/UX với mã sau PR #64: mục 3 (bảng Bài tập dạng thẻ, cột lớp), 4 (thanh đồng hồ dính, `aria-live`, đáp án 44px), 6 (ngăn kéo `inert`, Esc), 8 (toast lỗi), "Practice", liên kết bỏ qua, Đăng xuất trong menu tài khoản, `Menu` phím mũi tên, tiêu đề popup 22px đã sửa trước đó.

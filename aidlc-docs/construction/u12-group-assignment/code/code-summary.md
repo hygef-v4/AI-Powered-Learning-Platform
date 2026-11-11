@@ -240,3 +240,28 @@ Nhánh `feat/u12-section-ux`. Chỉ frontend.
 - `GroupWorkspacePage` đăng dàn ý `outlineOf(sharedBlocks)` qua `publishOutline`; lối về: sinh viên `/my-assignments/{assignmentId}?classId=`, giảng viên `/teaching/classes/{classId}?tab=students`. Bỏ nút Thoát.
 - Bấm dòng (`document:show-part`): về thẻ Tài liệu, cuộn tới mục chứa heading (`model/outline.ts` `findSectionForHeading`: chính mục, mục cha gần nhất, hoặc mục đầu tiên sau heading cha). Cuộn trang thì báo `document:current-part` để sidebar sáng đúng mục.
 - **Test:** `tests/features/groupdocs/model/outline.test.tsx` (ánh xạ heading → mục, ngữ cảnh sidebar, trang đăng mục lục, lối về, không có "+", bấm dòng cuộn tới mục).
+
+## Sinh viên tự chia nhóm, giảng viên duyệt (2026-11-11)
+
+Nhánh `feat/student-self-grouping` (`--no-track` từ `origin/staging@e78ac7b9`). US-GRP-007…010, [yêu cầu SG-01…09](../../../inception/requirements/2026-11-11-student-self-grouping.md), BR-U12-70…96, F16–F24, [kế hoạch](../../plans/code-generation-plan/2026-11-11-u12-student-self-grouping-code-generation-plan.md). API, JSON và hành vi cũ giữ nguyên; payload `group.membership-changed` chỉ thêm `reason = PROPOSAL_APPROVED` khi nhóm đến từ đề xuất được duyệt.
+
+- **Migration** `groups/V20261111_1800__group_self_formation.sql`: `group_formation_settings`, `group_proposals`, `group_proposal_members`; partial unique index `uq_group_proposal_members_active (class_id, account_id) where active`; role `app` chỉ SELECT/INSERT/UPDATE (không xóa, giữ lịch sử).
+- **Model** (`groups/model`): `GroupFormationSettings` (đợt mở tính khi đọc/ghi), `GroupProposal`, `ProposalMember`, `ProposalRules`.
+- **Repository**: `GroupProposalRepository` (Spring JDBC, CAS `version` của cài đặt, khóa `FOR UPDATE` đề xuất).
+- **Service**:
+  - `GroupFormationService`: đọc/lưu đợt, audit `GROUP_FORMATION_UPDATED`, mở lại đợt thì lời mời cũ hết hạn.
+  - `GroupProposalService`: màn sinh viên, tạo, đổi tên, mời, thu hồi, chấp nhận, từ chối, rời, hủy, gửi duyệt, rút về; dọn lười thành viên không còn hiệu lực.
+  - `GroupProposalReviewService`: danh sách cho giảng viên, duyệt một hoặc nhiều (một transaction, một lần tăng `version` bộ nhóm, đề xuất lỗi trả theo id), từ chối.
+  - `GroupProposalCleanup`: sinh viên vừa có nhóm chính thức rời đề xuất (gọi trong `ClassGroupService.save` và sau khi duyệt).
+  - `ClassGroupService`: thêm `addApprovedGroups`; `apply` trả người vừa được xếp nhóm; so trưởng nhóm bằng `Objects.equals`.
+  - `GroupAccess.denyProposal`: `404` kèm audit `ACCESS_DENIED`.
+- **API**: `GroupProposalController`, 15 mapping (xem [api-inventory](../../../inception/reverse-engineering/api-inventory.md)); `GroupExceptionHandler` áp cho controller mới.
+- **Thông báo**: `EventTypes.GROUP_PROPOSAL_INVITED/SUBMITTED/APPROVED/REJECTED`; `NotificationType` cùng tên, tiêu đề và tóm tắt cố định, không email. Lý do từ chối không nằm trong thông báo (tóm tắt cố định không mang dữ liệu sự kiện); sinh viên xem lý do ở trang Nhóm của tôi. `RecipientResolver` bỏ qua membership-changed có `reason = PROPOSAL_APPROVED`.
+- **Frontend** (`features/groups`):
+  - `model/types.ts`, `api/index.ts` thêm kiểu và hàm gọi API; `model/proposals.ts` (nhãn, tóm tắt đợt, kiểm form, giờ Việt Nam, thông điệp lỗi).
+  - Sinh viên: `GroupProposalSection.tsx` (banner đợt, đề xuất bị từ chối, lời mời, thẻ đề xuất), `ProposalDialogs.tsx` (đặt tên, mời bạn); `MyGroup.tsx` hiện phần này khi chưa có nhóm, thẻ Nhóm của tôi hiện tóm tắt.
+  - Giảng viên: `SelfGroupingSettingsDialog.tsx`, `ProposalReviewList.tsx` (duyệt nhiều, từ chối, sinh viên chưa có nhóm) đặt đầu tab Sinh viên trong `ClassGroupsPanel.tsx`.
+  - Nhãn audit mới trong `features/audit/model/labels.ts`.
+  - Gộp component nhỏ theo nhóm chức năng thay vì mỗi component một tệp như kế hoạch: `FormationBanner`, `InvitationList`, `ProposalCard` nằm trong `GroupProposalSection.tsx`; `RejectProposalDialog`, `UngroupedStudentsList` trong `ProposalReviewList.tsx`; `ProposalNameDialog` dùng chung cho tạo và đổi tên.
+- **Test backend**: `ProposalRulesTest`, `GroupProposalRepositoryIntegrationTest` (PostgreSQL thật), `GroupFormationServiceTest`, `GroupProposalServiceTest`, `GroupProposalReviewServiceTest`, `GroupProposalCleanupTest`, `GroupProposalFlowIntegrationTest` (luồng đầy đủ, duyệt nhiều có đề xuất lỗi, lưu bộ nhóm dọn đề xuất, hai lần chấp nhận đồng thời), `GroupProposalControllerTest`, `GroupProposalNotificationTest`; `ClassGroupServiceTest` thêm 3 ca.
+- **Test frontend**: `model/proposals.test.ts`, `GroupProposalSection.test.tsx`, `ProposalReviewList.test.tsx`, `SelfGroupingSettingsDialog.test.tsx`; `MyGroup.test.tsx` thêm ca chưa có nhóm.

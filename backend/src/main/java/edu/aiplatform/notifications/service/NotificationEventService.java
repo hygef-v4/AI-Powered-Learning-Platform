@@ -21,6 +21,10 @@ public class NotificationEventService {
                     Map.entry(EventTypes.GROUP_LEADER_CHANGED, "U12"),
                     Map.entry(EventTypes.GROUP_LEADER_REQUEST_REJECTED, "U12"),
                     Map.entry(EventTypes.GROUP_SUBMITTED, "U12"),
+                    Map.entry(EventTypes.GROUP_PROPOSAL_INVITED, "U12"),
+                    Map.entry(EventTypes.GROUP_PROPOSAL_SUBMITTED, "U12"),
+                    Map.entry(EventTypes.GROUP_PROPOSAL_APPROVED, "U12"),
+                    Map.entry(EventTypes.GROUP_PROPOSAL_REJECTED, "U12"),
                     Map.entry(EventTypes.BACKUP_FAILED, "U03"),
                     Map.entry(EventTypes.CLASS_ANNOUNCEMENT_POSTED, "U14"));
     private final RecipientResolver resolver;
@@ -69,6 +73,10 @@ public class NotificationEventService {
             case LEADER_REQUEST_REJECTED -> "Yêu cầu đổi trưởng nhóm bị từ chối";
             case GROUP_MEMBERSHIP_CHANGED -> "Thành viên nhóm đã thay đổi";
             case GROUP_SUBMITTED -> "Nhóm đã nộp bài";
+            case GROUP_PROPOSAL_INVITED -> "Bạn được mời vào nhóm";
+            case GROUP_PROPOSAL_SUBMITTED -> "Có đề xuất nhóm chờ duyệt";
+            case GROUP_PROPOSAL_APPROVED -> "Đề xuất nhóm được duyệt";
+            case GROUP_PROPOSAL_REJECTED -> "Đề xuất nhóm bị từ chối";
             case QUESTION_PROPOSED -> "Có câu hỏi chờ duyệt";
             case QUESTION_REVIEWED -> "Câu hỏi đề xuất đã được xử lý";
         };
