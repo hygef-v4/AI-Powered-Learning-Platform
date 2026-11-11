@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, type FormEvent, type ReactNode } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { ApiError } from "@/shared/api/client";
 import { initials } from "@/shared/layout/navigation";
 import { Alert } from "@/shared/ui/Alert";
@@ -23,11 +23,9 @@ const PHONE_FORMAT = /^\+?[0-9]{8,15}$/;
 export function ProfileForm({
   profile,
   onSaved,
-  onChangePassword,
 }: {
   profile: Profile;
   onSaved: (profile: Profile) => void;
-  onChangePassword: () => void;
 }) {
   const nameId = useId();
   const phoneId = useId();
@@ -67,67 +65,67 @@ export function ProfileForm({
   }
 
   return (
-    <Section className="p-7">
-      <form onSubmit={submit} noValidate>
-        <div className="grid gap-8 sm:grid-cols-[180px_1fr]">
-          <div className="flex justify-center pt-2">
-            <span className="flex size-24 items-center justify-center rounded-full bg-primary text-[28px] font-bold text-on-primary">
-              {initials(profile.displayName)}
-            </span>
-          </div>
-          <div className="flex flex-col gap-4">
-            <Field label="Họ và tên" htmlFor={nameId} error={fieldError.name}>
-              <TextInput id={nameId} value={displayName} invalid={!!fieldError.name} onChange={(e) => setDisplayName(e.target.value)} />
-            </Field>
-            <Field label="Số điện thoại" htmlFor={phoneId} error={fieldError.phone}>
-              <TextInput
-                id={phoneId}
-                inputMode="tel"
-                value={phoneNumber}
-                invalid={!!fieldError.phone}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-              />
-            </Field>
-            <Field label="Email trường" htmlFor={emailId}>
-              <LockedInput id={emailId} value={profile.email} />
-            </Field>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Vai trò" htmlFor={roleId}>
-                <LockedInput id={roleId} value={ROLE_LABELS[profile.role]} />
-              </Field>
-              <div className="flex min-w-0 flex-col gap-1.5">
-                <p className="text-xs font-semibold text-body">Trạng thái tài khoản</p>
-                <LockedBox>
-                  <Pill tone={STATUS_TONES[profile.status]}>{STATUS_LABELS[profile.status]}</Pill>
-                </LockedBox>
-              </div>
-            </div>
-          </div>
+    <Section
+      title="Thông tin cá nhân"
+      icon="person"
+      description="Email trường, vai trò và trạng thái do quản trị viên quản lý."
+    >
+      <div className="flex items-center gap-4 rounded-lg bg-shell p-4">
+        <span
+          aria-hidden="true"
+          className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary text-xl font-bold text-on-primary"
+        >
+          {initials(profile.displayName)}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-base font-bold text-ink">{profile.displayName}</p>
+          <p className="truncate text-[13px] text-muted">{profile.email}</p>
+        </div>
+        <Pill tone={STATUS_TONES[profile.status]}>{STATUS_LABELS[profile.status]}</Pill>
+      </div>
+
+      <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Họ và tên" htmlFor={nameId} error={fieldError.name}>
+            <TextInput
+              id={nameId}
+              value={displayName}
+              invalid={!!fieldError.name}
+              onChange={(e) => setDisplayName(e.target.value)}
+            />
+          </Field>
+          <Field label="Số điện thoại" htmlFor={phoneId} error={fieldError.phone}>
+            <TextInput
+              id={phoneId}
+              inputMode="tel"
+              value={phoneNumber}
+              invalid={!!fieldError.phone}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+            />
+          </Field>
+          <Field label="Email trường" htmlFor={emailId}>
+            <LockedInput id={emailId} value={profile.email} />
+          </Field>
+          <Field label="Vai trò" htmlFor={roleId}>
+            <LockedInput id={roleId} value={ROLE_LABELS[profile.role]} />
+          </Field>
         </div>
 
         {message && (
-          <Alert tone={message.kind === "ok" ? "success" : "danger"} role={message.kind === "ok" ? "status" : "alert"} className="mt-5">
+          <Alert
+            tone={message.kind === "ok" ? "success" : "danger"}
+            role={message.kind === "ok" ? "status" : "alert"}
+          >
             {message.text}
           </Alert>
         )}
 
-        <div className="mt-6 flex items-center justify-between gap-2 border-t border-line pt-5">
-          <Button icon="key" onClick={onChangePassword}>
-            Đổi mật khẩu
-          </Button>
+        <div className="flex justify-end border-t border-line pt-5">
           <Button type="submit" variant="primary" disabled={!dirty || saving}>
             Lưu thay đổi
           </Button>
         </div>
       </form>
     </Section>
-  );
-}
-
-function LockedBox({ children }: { children: ReactNode }) {
-  return (
-    <div aria-disabled="true" className="flex h-10 cursor-not-allowed items-center rounded-lg border border-line-strong bg-shell px-3">
-      {children}
-    </div>
   );
 }

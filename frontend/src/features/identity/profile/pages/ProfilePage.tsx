@@ -1,16 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { showToast } from "@/shared/ui/Toast";
 import { useSession } from "../../hooks/session";
-import { PASSWORD_CHANGED_MESSAGE, PasswordChangeDialog } from "../components/PasswordChangeDialog";
+import { PASSWORD_CHANGED_MESSAGE, PasswordChangeForm } from "../components/PasswordChangeForm";
 import { ProfileForm } from "../components/ProfileForm";
 
-/** Màn User Profile (UC 06, 07; design `c05`), mở popup Password Change (UC 05, `c06`). */
+/** Màn User Profile (UC 06, 07; design `c05`) kèm khối Đổi mật khẩu ngay trên trang (UC 05, `c06`). */
 export function ProfilePage() {
   const session = useSession();
-  const [changing, setChanging] = useState(false);
   if (session.status !== "authenticated") return null;
 
   return (
@@ -20,17 +18,8 @@ export function ProfilePage() {
         key={session.profile.accountId}
         profile={session.profile}
         onSaved={() => void session.reload()}
-        onChangePassword={() => setChanging(true)}
       />
-      {changing && (
-        <PasswordChangeDialog
-          onClose={() => setChanging(false)}
-          onChanged={() => {
-            setChanging(false);
-            showToast(PASSWORD_CHANGED_MESSAGE);
-          }}
-        />
-      )}
+      <PasswordChangeForm onChanged={() => showToast(PASSWORD_CHANGED_MESSAGE)} />
     </div>
   );
 }

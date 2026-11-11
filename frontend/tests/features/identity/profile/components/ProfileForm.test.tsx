@@ -23,7 +23,7 @@ describe("ProfileForm", () => {
   afterEach(() => vi.clearAllMocks());
 
   it("email, vai trò, trạng thái chỉ đọc; chỉ sửa được tên và số điện thoại", () => {
-    render(<ProfileForm profile={PROFILE} onSaved={vi.fn()} onChangePassword={vi.fn()} />);
+    render(<ProfileForm profile={PROFILE} onSaved={vi.fn()} />);
     expect(screen.getByLabelText("Họ và tên")).toBeEnabled();
     expect(screen.getByLabelText("Số điện thoại")).toBeEnabled();
     expect(screen.getByLabelText("Email trường")).toBeDisabled();
@@ -39,7 +39,7 @@ describe("ProfileForm", () => {
     const onSaved = vi.fn();
     render(
       <>
-        <ProfileForm profile={PROFILE} onSaved={onSaved} onChangePassword={vi.fn()} />
+        <ProfileForm profile={PROFILE} onSaved={onSaved} />
         <Toaster />
       </>,
     );
@@ -54,7 +54,7 @@ describe("ProfileForm", () => {
   });
 
   it("số điện thoại sai định dạng bị chặn trước khi gọi API", () => {
-    render(<ProfileForm profile={PROFILE} onSaved={vi.fn()} onChangePassword={vi.fn()} />);
+    render(<ProfileForm profile={PROFILE} onSaved={vi.fn()} />);
     fireEvent.change(screen.getByLabelText("Số điện thoại"), { target: { value: "091 234" } });
     fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
 
