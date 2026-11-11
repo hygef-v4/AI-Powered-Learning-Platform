@@ -14,7 +14,7 @@ studentClassBoard.register({
 navEntries.register({
   key: "class-announcements",
   order: 40,
-  title: "Thông báo lớp",
+  title: "Tất cả thông báo",
   href: "/announcements",
   icon: "campaign",
   roles: ["TEACHER", "STUDENT"],
@@ -22,7 +22,7 @@ navEntries.register({
 navEntries.register({
   key: "manager-class-announcements",
   order: 40,
-  title: "Thông báo lớp",
+  title: "Tất cả thông báo",
   href: "/announcements",
   icon: "campaign",
   roles: ["SUBJECT_MANAGER"],
