@@ -42,10 +42,6 @@ export const testInstitutionalDraft = (provider: AiProvider, body: SaveConnectio
 export const saveInstitutional = (id: string, body: SaveConnection) =>
   apiFetch<ConnectionView>(`${BASE}/connections/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(body) });
 
-/** Khóa rõ đã lưu, cho Admin xem lại hoặc sao chép trong popup Sửa (mỗi lần xem ghi audit). */
-export const revealInstitutional = (id: string) =>
-  apiFetch<{ apiKey: string }>(`${BASE}/connections/${encodeURIComponent(id)}/key`);
-
 export const testInstitutional = (id: string) =>
   apiFetch<ConnectionView>(`${BASE}/connections/${encodeURIComponent(id)}:test`, { method: "POST" });
 
