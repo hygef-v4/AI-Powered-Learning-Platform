@@ -70,6 +70,10 @@ public class AssignmentPublicationService {
         if (!current.editable()) {
             throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ phát hành bài nháp");
         }
+        // Hoàn tất bài rồi mới giao (yêu cầu 2026-11-11); sửa bài sau khi hoàn tất thì bài về nháp, phải hoàn tất lại.
+        if (current.status() != AssignmentStatus.REVIEWED) {
+            throw ApiException.conflict("ASSIGNMENT_NOT_FINALIZED", "Hoàn tất bài trước khi xếp lịch");
+        }
         List<ValidationIssue> issues = authoring.readinessIssues(current);
         if (!issues.isEmpty()) {
             throw AssignmentProblem.issues(HttpStatus.CONFLICT, "ASSIGNMENT_NOT_READY", "Bài chưa đủ để phát hành",
