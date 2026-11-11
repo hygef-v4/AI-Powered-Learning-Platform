@@ -266,7 +266,7 @@ describe("QuizTakingPage (UC 51)", () => {
     fireEvent.click(screen.getByTestId("quiz-taking-confirm-submit"));
 
     await waitFor(() => expect(saveAnswers).toHaveBeenCalledTimes(1));
-    expect(await screen.findByTestId("quiz-taking-save-state")).toHaveTextContent("Lưu chưa được");
+    expect(await screen.findByTestId("quiz-taking-save-state")).toHaveTextContent("Chưa lưu được");
     expect(submitAttempt).not.toHaveBeenCalled();
     expect(replace).not.toHaveBeenCalled();
   });
@@ -294,6 +294,24 @@ describe("QuizTakingPage (UC 51)", () => {
     vi.mocked(getAttempt).mockResolvedValue(TAKING);
     render(<QuizTakingPage attemptId="a1" />);
     expect(await screen.findByTestId("quiz-taking-time-milestone")).toBeEmptyDOMElement();
+  });
+
+  it("thoát quiz có giới hạn giờ thì hỏi trước và báo đồng hồ vẫn chạy; quiz không giới hạn thì thoát ngay", async () => {
+    vi.mocked(getAttempt).mockResolvedValue({ ...TAKING, deadlineAt: new Date(Date.now() + 600_000).toISOString(), serverTime: new Date().toISOString() });
+    const timed = render(<QuizTakingPage attemptId="a1" />);
+    fireEvent.click(await screen.findByTestId("quiz-taking-exit"));
+    expect(await screen.findByTestId("quiz-taking-exit-notice")).toHaveTextContent("đồng hồ vẫn chạy");
+    expect(push).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId("quiz-taking-confirm-exit"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/quiz-practice"));
+    timed.unmount();
+    push.mockClear();
+
+    vi.mocked(getAttempt).mockResolvedValue(TAKING);
+    render(<QuizTakingPage attemptId="a1" />);
+    fireEvent.click(await screen.findByTestId("quiz-taking-exit"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/quiz-practice"));
+    expect(screen.queryByTestId("quiz-taking-exit-notice")).not.toBeInTheDocument();
   });
 
   it("hết giờ thì tự nộp", async () => {

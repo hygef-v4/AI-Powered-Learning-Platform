@@ -21,11 +21,12 @@ export function QuestionNav({ count, index, onChange, toneOf, labelOf }: {
   labelOf?: (index: number) => string;
 }) {
   return (
-    <div className="flex flex-wrap gap-1.5">
+    // Màn hẹp hơn lg: một dải số cuộn ngang thay vì nhiều hàng, để không đẩy câu hỏi xuống dưới.
+    <div className="flex flex-wrap gap-1.5 max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:p-0.5">
       {Array.from({ length: count }, (_, i) => (
         <button key={i} type="button" onClick={() => onChange(i)} aria-current={i === index ? "true" : undefined}
           aria-label={labelOf ? labelOf(i) : `Câu ${i + 1}`}
-          className={cx("h-8 w-8 rounded-lg border text-xs font-semibold pointer-coarse:size-11", TONES[toneOf(i)], i === index && "ring-2 ring-primary")}>
+          className={cx("h-8 w-8 shrink-0 rounded-lg border text-xs font-semibold pointer-coarse:size-11", TONES[toneOf(i)], i === index && "ring-2 ring-primary")}>
           {i + 1}
         </button>
       ))}

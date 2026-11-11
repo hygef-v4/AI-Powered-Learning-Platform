@@ -1,3 +1,4 @@
+import { LOAD_FAILED_MESSAGE } from "@/shared/api/messages";
 import { ApiError } from "@/shared/api/client";
 
 export const ADJUSTMENT_REASON_MESSAGE = "Nhập lý do khi cộng hoặc trừ điểm.";
@@ -26,5 +27,5 @@ export function formatErrorMessage(error: unknown) {
   }
   return error instanceof Error
     ? error.message
-    : "Không thể tải dữ liệu. Vui lòng thử lại.";
+    : LOAD_FAILED_MESSAGE;
 }

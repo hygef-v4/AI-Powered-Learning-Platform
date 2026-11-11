@@ -2,10 +2,19 @@
 
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { cx } from "./cx";
+import { handleTabListKey } from "./tabKeys";
 
 export type TabItem<T extends string> = { key: T; label: ReactNode; count?: number };
 
-/** Hàng tab gạch chân; gạch chân trượt sang tab vừa chọn, số đếm nhỏ cạnh nhãn. */
+/** Id của tab ứng với `key`, để vùng nội dung (`role="tabpanel"`, `id={panelId}`) đặt `aria-labelledby`. */
+export function tabId(panelId: string, key: string) {
+  return `${panelId}-tab-${key}`;
+}
+
+/**
+ * Hàng tab gạch chân; gạch chân trượt sang tab vừa chọn, số đếm nhỏ cạnh nhãn. Có `panelId` thì tab đang chọn trỏ tới vùng
+ * nội dung có id đó (`aria-controls`).
+ */
 export function Tabs<T extends string>({
   items,
   value,
@@ -13,6 +22,7 @@ export function Tabs<T extends string>({
   label,
   className,
   testIdPrefix,
+  panelId,
 }: {
   items: TabItem<T>[];
   value: T;
@@ -20,6 +30,7 @@ export function Tabs<T extends string>({
   label: string;
   className?: string;
   testIdPrefix?: string;
+  panelId?: string;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
   const [bar, setBar] = useState<{ left: number; width: number } | null>(null);
@@ -34,9 +45,9 @@ export function Tabs<T extends string>({
     return () => observer?.disconnect();
   }, [value, items]);
   return (
-    <div ref={listRef} role="tablist" aria-label={label}
+    <div ref={listRef} role="tablist" aria-label={label} onKeyDown={handleTabListKey}
       className={cx("relative flex gap-6 overflow-x-auto border-b border-line [scrollbar-width:none]", className)}>
-      {items.map((item, index) => {
+      {items.map((item) => {
         const on = item.key === value;
         return (
           <button
@@ -44,16 +55,10 @@ export function Tabs<T extends string>({
             type="button"
             role="tab"
             aria-selected={on}
+            id={panelId ? tabId(panelId, item.key) : undefined}
+            aria-controls={panelId && on ? panelId : undefined}
             tabIndex={on ? 0 : -1}
             onClick={() => onChange(item.key)}
-            onKeyDown={(event) => {
-              // Mũi tên trái/phải chuyển sang tab bên cạnh và đưa focus theo.
-              if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
-              event.preventDefault();
-              const next = (index + (event.key === "ArrowRight" ? 1 : -1) + items.length) % items.length;
-              onChange(items[next]!.key);
-              listRef.current?.querySelectorAll<HTMLElement>('[role="tab"]')[next]?.focus();
-            }}
             data-testid={testIdPrefix ? `${testIdPrefix}${item.key}` : undefined}
             className={cx(
               "flex cursor-pointer items-center gap-1.5 py-3 text-[13.5px] font-semibold whitespace-nowrap transition-colors duration-200",

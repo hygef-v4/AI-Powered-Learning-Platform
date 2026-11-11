@@ -133,7 +133,7 @@ describe("AuditLogPage", () => {
     vi.stubGlobal("fetch", fetchMock);
     render(<AuditLogPage />);
 
-    expect(await screen.findByTestId("audit-table-empty")).toHaveTextContent("Không có bản ghi nào khớp bộ lọc.");
+    expect(await screen.findByTestId("audit-table-empty")).toHaveTextContent("Không có bản ghi nào phù hợp.");
     const url = new URL(auditCalls(fetchMock)[0]!, "http://x");
     expect(url.searchParams.get("objectType")).toBe("ACCOUNT");
     expect(url.searchParams.get("objectId")).toBe("abc");

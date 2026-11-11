@@ -51,6 +51,7 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
   const [remaining, setRemaining] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const [finishing, setFinishing] = useState<"manual" | "timeup" | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const answersRef = useRef(answers);
@@ -223,15 +224,16 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
   const question = view.questions[index];
   const answered = (id: string) => (answers[id]?.length ?? 0) > 0;
   const unanswered = view.questions.map((q, i) => (answered(q.questionId) ? null : i + 1)).filter((n): n is number => n !== null);
-  const saveLabel = { saved: "Đã tự động lưu", dirty: "Chưa lưu…", saving: "Đang lưu…", error: "Lưu chưa được" }[saveState];
+  const saveLabel = { saved: "Đã tự động lưu", dirty: "Chưa lưu…", saving: "Đang lưu…", error: "Chưa lưu được" }[saveState];
+  const exit = () => void flush().then(() => router.push("/quiz-practice"));
 
   return (
     <div className="flex flex-col gap-4">
       <div className="sticky top-[4.25rem] z-20 flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface p-3 shadow-[var(--shadow-lift)]">
-        <Button size="sm" variant="ghost" onClick={() => void flush().then(() => router.push("/quiz-practice"))} data-testid="quiz-taking-exit">Thoát</Button>
+        <Button size="sm" variant="ghost" onClick={() => (remaining === null ? exit() : setLeaving(true))} data-testid="quiz-taking-exit">Thoát</Button>
         <span className="font-semibold text-ink">{view.title}</span>
         <Pill tone="info">Luyện tập</Pill>
-        <span className={cx("text-xs", saveState === "error" ? "font-semibold text-danger" : "text-muted")} role="status" data-testid="quiz-taking-save-state">
+        <span className={cx("text-xs", saveState === "error" ? "font-semibold text-warning" : "text-muted")} role="status" data-testid="quiz-taking-save-state">
           {saveLabel}
         </span>
         {saveState === "error" && (
@@ -287,7 +289,7 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
             <QuestionPrevNext count={view.questions.length} index={index} onChange={setIndex} testIdPrefix="quiz-taking" />
           </section>
         )}
-        <nav aria-label="Danh sách câu" className="rounded-xl border border-line bg-surface p-3">
+        <nav aria-label="Danh sách câu" className="order-first min-w-0 rounded-xl border border-line bg-surface p-3 lg:order-none">
           <p className="mb-2 text-xs text-muted">Đã làm {view.questions.length - unanswered.length} / {view.questions.length}</p>
           <QuestionNav count={view.questions.length} index={index} onChange={setIndex}
             toneOf={(i) => (i === index ? "current" : answered(view.questions[i]?.questionId ?? "") ? "done" : "blank")}
@@ -307,6 +309,14 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
             {remaining !== null && <p>Thời gian còn lại: {clockText(remaining)}.</p>}
             <p>Sau khi nộp, lượt này kết thúc.</p>
           </div>
+        </Dialog>
+      )}
+      {leaving && (
+        <Dialog open onClose={() => setLeaving(false)} title="Thoát khỏi bài?" tone="warning"
+          footer={<Button variant="primary" onClick={exit} data-testid="quiz-taking-confirm-exit">Thoát</Button>}>
+          <p className="text-[13px]" data-testid="quiz-taking-exit-notice">
+            Các câu đã chọn được lưu, nhưng đồng hồ vẫn chạy khi bạn rời trang. Quay lại trước khi hết giờ để làm tiếp.
+          </p>
         </Dialog>
       )}
       {finishing === "timeup" && (

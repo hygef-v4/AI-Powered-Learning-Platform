@@ -3,7 +3,7 @@
 import type {CandidateLoader} from "../hooks/useCandidates";
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useState } from "react";
-import { Button, PageHeader, Pill, Section, Tabs, type TabItem } from "@/shared/ui";
+import { Button, PageHeader, Pill, Section, tabId, Tabs, type TabItem } from "@/shared/ui";
 import { initials } from "@/shared/layout/navigation";
 import { ClassInfoForm } from "../components/ClassInfoForm";
 import { AssignTeacherDialog, ClassStateActions } from "../components/ClassDialogs";
@@ -42,10 +42,10 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
       breadcrumb={[{ label: "Lớp học", href: "/manager/classes" }, { label: value.code }]} />
     {/* Nút thêm sinh viên của tab Sinh viên nằm cùng hàng tab, bên phải. */}
     <div className="relative">
-      <Tabs items={tabs} value={tab} onChange={openTab} label="Chi tiết lớp" testIdPrefix="class-tab-" />
+      <Tabs items={tabs} value={tab} onChange={openTab} label="Chi tiết lớp" testIdPrefix="class-tab-" panelId="class-tab-panel" />
       <div ref={setTabActions} className="absolute right-0 bottom-1.5" />
     </div>
-    {tab === "info" ? <div role="tabpanel" aria-label="Thông tin" className="grid items-start gap-4 lg:grid-cols-[1fr_280px]">
+    {tab === "info" ? <div role="tabpanel" id="class-tab-panel" aria-labelledby={tabId("class-tab-panel", tab)} className="grid items-start gap-4 lg:grid-cols-[1fr_280px]">
       <ClassInfoForm value={value} onSave={actions.onSaveInfo}/>
       <div className="flex flex-col gap-4">
         <Section title="Trạng thái">
@@ -62,7 +62,7 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
           </div> : <div><Pill>Chưa phân công</Pill></div>}
         </Section>
       </div>
-    </div> : <div role="tabpanel" aria-label="Sinh viên">
+    </div> : <div role="tabpanel" id="class-tab-panel" aria-labelledby={tabId("class-tab-panel", tab)}>
       <EnrollmentPanel loadCandidates={loadCandidates} students={students} editable={!archived} includeRemoved candidates={candidates} onStatusChange={actions.onEnrollmentStatus} onEnroll={actions.onEnroll} onBatch={actions.onBatch} actionsHost={tabActions}/>
     </div>}
     {assigning && !archived && <AssignTeacherDialog loadTeachers={loadTeachers} value={value} teachers={teachers} onAssign={actions.onAssign} onClose={() => setAssigning(false)}/>}

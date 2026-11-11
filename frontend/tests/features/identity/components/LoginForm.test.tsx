@@ -53,7 +53,7 @@ describe("LoginForm", () => {
 
     fill("khong-phai-email", "hocbai2026");
 
-    expect(screen.getByRole("alert")).toHaveTextContent("Nhập email trường hợp lệ.");
+    expect(screen.getByRole("alert")).toHaveTextContent("Nhập đúng email do trường cấp.");
     expect(loginMock).not.toHaveBeenCalled();
   });
 
@@ -65,7 +65,7 @@ describe("LoginForm", () => {
     const email = screen.getByLabelText("Email");
     const password = screen.getByLabelText("Mật khẩu");
     expect(email).toHaveAttribute("aria-invalid", "true");
-    expect(email).toHaveAccessibleDescription("Nhập email trường hợp lệ.");
+    expect(email).toHaveAccessibleDescription("Nhập đúng email do trường cấp.");
     expect(password).toHaveAttribute("aria-invalid", "true");
     expect(password).toHaveAccessibleDescription("Nhập mật khẩu.");
     expect(email).toHaveFocus();

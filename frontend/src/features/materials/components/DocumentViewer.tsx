@@ -258,7 +258,7 @@ export function DocumentViewer({
         onScroll={track}
         className={cx(
           "overflow-auto px-6 py-6",
-          fullscreen ? "h-[calc(100vh-3rem)]" : "h-[calc(100vh-13rem)] min-h-[560px]",
+          fullscreen ? "h-[calc(100dvh-3rem)]" : "h-[calc(100dvh-13rem)] min-h-[360px] sm:min-h-[560px]",
         )}
       >
         {error ? (

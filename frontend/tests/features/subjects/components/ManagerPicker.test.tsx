@@ -120,7 +120,7 @@ describe("ManagerPicker boundary", () => {
     expect(screen.queryByText(/provider secret/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId("subject-manager-retry"));
     fireEvent.focus(screen.getByRole("combobox"));
-    await screen.findByText("Không có chủ nhiệm phù hợp");
+    await screen.findByText("Không có chủ nhiệm phù hợp.");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 

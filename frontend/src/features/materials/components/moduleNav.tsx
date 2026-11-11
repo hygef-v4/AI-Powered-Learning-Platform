@@ -120,7 +120,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
           <span className={cx("px-2.5 py-2 text-[13px] text-muted", FADE_LABEL)}>Đang tải…</span>
         )}
         {scope && outline && outline.length > 0 && (
-          <div className="flex flex-col rounded-xl border border-line bg-surface p-1 shadow-[0_1px_2px_rgb(60_38_14/0.06)]">
+          <div className="flex flex-col rounded-xl border border-line bg-surface p-1 shadow-xs">
             {outline.map(({ module, items }, index) => {
               const open = !collapsed.has(module.id);
               return (

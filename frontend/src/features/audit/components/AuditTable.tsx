@@ -52,7 +52,7 @@ export function AuditTable({ data, onPageChange }: Props) {
             {data.items.length === 0 && (
               <tr>
                 <Td colSpan={7} className="px-3 text-muted" data-testid="audit-table-empty">
-                  Không có bản ghi nào khớp bộ lọc.
+                  Không có bản ghi nào phù hợp.
                 </Td>
               </tr>
             )}

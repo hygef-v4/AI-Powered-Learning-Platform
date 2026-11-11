@@ -79,7 +79,7 @@ export function SubjectTable({ items }: { items: SubjectListItem[]; offset?: num
         {items.length === 0 && (
           <tr>
             <Td colSpan={5} className="py-10 text-center! text-muted">
-              Không có môn học phù hợp với bộ lọc.
+              Không có môn học phù hợp.
             </Td>
           </tr>
         )}

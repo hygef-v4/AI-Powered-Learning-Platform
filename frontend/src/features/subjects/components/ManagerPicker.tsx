@@ -143,7 +143,7 @@ export function ManagerPicker({
               </p>
             )}
             {ready && candidates.length === 0 && (
-              <p className="px-3 py-2 text-xs text-muted">Không có chủ nhiệm phù hợp</p>
+              <p className="px-3 py-2 text-xs text-muted">Không có chủ nhiệm phù hợp.</p>
             )}
             {ready &&
               candidates.map((manager) => (
