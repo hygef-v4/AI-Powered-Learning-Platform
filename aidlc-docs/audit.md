@@ -12906,3 +12906,39 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 **Context:** Construction — authorized commit, push and PR; no automatic merge.
 
 ---
+## Sửa bố cục trang Hồ sơ, Đổi mật khẩu thành khối trên trang
+**Timestamp**: 2026-11-11T04:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "sửa lại trang hồ sơ, phần đổi mật khẩu không hiện pop-up nữa mà ở luôn trang này dạng flat, ngoài ra chỉnh lại bố cục cho hợp lí"
+**AI Response**: "Thay PasswordChangeDialog bằng PasswordChangeForm (khối Section phẳng dưới thông tin cá nhân; mật khẩu hiện tại một ô, mật khẩu mới và nhập lại hai cột; đổi xong xóa các ô và báo toast). ProfileForm thành khối 'Thông tin cá nhân': dải đầu avatar chữ viết tắt, họ tên, email, nhãn trạng thái; lưới hai cột Họ và tên · Số điện thoại, Email trường · Vai trò; bỏ nút mở popup. Đổi tên test tương ứng, thêm kiểm tra xóa ô sau khi đổi. Cập nhật frontend-components.md của U01. tsc, eslint, Vitest identity (39 test) qua; xem trên trình duyệt ở 1440px và 375px với backend local. Không commit."
+**Context**: Construction — chỉnh UI frontend U01, không đổi API/backend.
+
+---
+
+## Rà soát bảo mật khóa API AI cá nhân
+**Timestamp**: 2026-11-11T07:05:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "để người dùng lưu api key cá nhân trên web có ổn không, hiện tại có đang lưu api vào db không. Có cách nào để tránh lộ lọt thông tin api key người dùng không"
+**AI Response**: "Trả lời: khóa được lưu trong ai_connections, mã hóa AES-256-GCM, khóa giải mã ở biến môi trường, chỉ hiện 4 ký tự cuối. Điểm yếu: GET /me/ai-connections/{id}/key và GET /admin/ai/connections/{id}/key trả khóa rõ; khóa giải mã nằm cùng VPS với DB; GCM chưa gắn AAD. Đề xuất sửa mục trả khóa rõ và AAD."
+**Context**: Câu hỏi bảo mật U06, chỉ đọc code.
+
+---
+
+## Khóa API chỉ ghi và gắn AAD cho bản mã
+**Timestamp**: 2026-11-11T07:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Có, sửa luôn"
+**AI Response**: "Backend: bỏ GET /api/v1/me/ai-connections/{id}/key và GET /api/v1/admin/ai/connections/{id}/key cùng revealPersonal/revealInstitutional (đóng D15). KeyCipher thêm encryptConnectionKey/decryptConnectionKey gắn AAD id|scope|owner|provider; lưu, thay, kiểm tra nháp, ConnectionTestService và AiTaskJobHandler dùng bản gắn AAD, bản mã chưa gắn bị từ chối. ConnectionKeyUpgrade (ApplicationReadyEvent) mã hóa lại khóa cũ bằng khóa mới nhất, ghi có điều kiện trên bản mã cũ (AiConnectionRepository.listWithKey, replaceKeyCiphertext), không đổi version. Token MCP giữ nguyên (không AAD, vẫn reveal cho chủ). Frontend: ApiKeyDialog bỏ onReveal, nút xem và sao chép chỉ cho khóa đang gõ; bỏ revealConnection/revealInstitutional. Cập nhật BR-U06-03, business-logic-model F8, domain-entities, decision-register D15, api-inventory, requirements, runbook ai-key-encryption. Kiểm tra: Maven trong maven:3.9-eclipse-temurin-17 các test AI (68) và AiRepositoriesIntegrationTest (6), PlatformWorkflowIntegrationTest (26) với Testcontainers đều qua; tsc, eslint sạch, Vitest tests/features/ai 38/38. Chưa chạy toàn bộ suite, chưa thử trên trình duyệt, không commit."
+**Context**: Construction — sửa bảo mật U06 trực tiếp theo yêu cầu, không đổi schema.
+
+---
+
+## Resolve PR70 staging conflict and merge
+**Timestamp:** 2026-11-11T09:24:48Z
+**Requested by:** Quang Hung
+**User Input:** "giúp tôi solve conflict pr với staging sau merge vào"
+**Latest User Input:** "[Image #1] giúp tôi merge request pr 70 vào staging"
+**AI Response:** User authorizes conflict resolution, push and PR70 merge into staging. Latest staging adds profile layout, dark-mode color and AI key-security changes. Only audit.md conflicts; retained both sides' complete historical entries and original requester attributions. Source merges without manual changes. Verify merged frontend scope, then push and wait for required CI on the updated PR head before merge. No main merge or production deployment requested.
+**Context:** Construction — integrate approved PR70 with latest staging; no subagents.
+
+---

@@ -121,6 +121,29 @@ class AiRepositoriesIntegrationTest {
     }
 
     @Test
+    void keyCiphertextIsReplacedOnlyWhileItIsStillTheExpectedOne() {
+        AiConnectionRepository repo = new AiConnectionRepository(jdbc);
+        AiConnection legacy = AiConnection.create(UUID.randomUUID(), Scope.PERSONAL, account, AiProvider.OPENAI,
+                "gpt-4.1-mini", new EncryptedKey(new byte[] {7, 7}, new byte[] {1}, 1), "abcd", NOW);
+        AiConnection revoked = AiConnection.create(UUID.randomUUID(), Scope.PERSONAL, account, AiProvider.OPENAI,
+                "gpt-4.1-mini", new EncryptedKey(new byte[] {8}, new byte[] {1}, 1), "efgh", NOW);
+        repo.insert(legacy);
+        repo.insert(revoked);
+        repo.update(revoked.revoked(NOW));
+
+        assertThat(repo.listWithKey()).extracting(AiConnection::id).contains(legacy.id()).doesNotContain(revoked.id());
+        EncryptedKey resealed = new EncryptedKey(new byte[] {5, 5, 5}, new byte[] {2}, 2);
+        assertThat(repo.replaceKeyCiphertext(legacy.id(), new byte[] {9}, resealed)).as("bản mã đã khác").isFalse();
+        assertThat(repo.replaceKeyCiphertext(legacy.id(), new byte[] {7, 7}, resealed)).isTrue();
+        assertThat(repo.findById(legacy.id())).hasValueSatisfying(found -> {
+            assertThat(found.keyCiphertext()).containsExactly(5, 5, 5);
+            assertThat(found.keyIv()).containsExactly(2);
+            assertThat(found.keyVersion()).isEqualTo(2);
+            assertThat(found.version()).as("khóa không đổi nên version giữ nguyên").isEqualTo(legacy.version());
+        });
+    }
+
+    @Test
     void multipleInstitutionalKeysPreferActiveThenCreationTimeAndId() {
         AiConnectionRepository repo = new AiConnectionRepository(jdbc);
         AiConnection disabledOld = institutional(1, AiProvider.CLAUDE, NOW.minusSeconds(60))
