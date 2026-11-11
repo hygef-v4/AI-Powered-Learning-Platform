@@ -1,43 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo } from "react";
-import { useUrlState } from "@/shared/navigation/useUrlState";
-import { Button, Section, Segmented } from "@/shared/ui";
+import { useCallback } from "react";
+import { Button, Section } from "@/shared/ui";
+import { formatDateTime } from "@/shared/dateTime";
+import { assignmentsApi } from "@/features/assignments/api";
 import { gradingApi } from "../api";
-import type { GradebookPage, SubmissionPage } from "../model/types";
 import { useResource } from "../hooks/useResource";
 
-type GradebookAssignment = GradebookPage["assignments"][number];
-
-function parseDeadlineMs(deadline: string | null | undefined): number | null {
-  if (!deadline) return null;
-  const parsed = Date.parse(deadline);
-  return Number.isNaN(parsed) ? null : parsed;
-}
-
-function sortAssignmentsForProgress(
-  assignments: GradebookAssignment[],
-  progress: Record<string, SubmissionPage>,
-): GradebookAssignment[] {
-  return [...assignments].sort((left, right) => {
-    const leftPending = (progress[left.id]?.summary.PENDING ?? 0) > 0 ? 1 : 0;
-    const rightPending = (progress[right.id]?.summary.PENDING ?? 0) > 0 ? 1 : 0;
-    if (leftPending !== rightPending) {
-      return rightPending - leftPending;
-    }
-    const leftDeadline = parseDeadlineMs(progress[left.id]?.deadline);
-    const rightDeadline = parseDeadlineMs(progress[right.id]?.deadline);
-    if (leftDeadline !== null && rightDeadline !== null && leftDeadline !== rightDeadline) {
-      return leftDeadline - rightDeadline;
-    }
-    if (leftDeadline !== null && rightDeadline === null) return -1;
-    if (leftDeadline === null && rightDeadline !== null) return 1;
-    return left.id.localeCompare(right.id);
-  });
-}
-
-/** Đường dẫn sang tab Chấm điểm của lớp, mở sẵn một bài tập hoặc một sinh viên. */
+/** Shared entry point from class summaries and submission workspaces. */
 export function buildGradebookHref(classId: string, pick?: { assignment?: string; student?: string }) {
   const params = new URLSearchParams({ tab: "gradebook" });
   if (pick?.assignment) params.set("assignment", pick.assignment);
@@ -45,116 +16,76 @@ export function buildGradebookHref(classId: string, pick?: { assignment?: string
   return `/teaching/classes/${encodeURIComponent(classId)}?${params}`;
 }
 
-/** Lượt đã nộp (đang chờ chấm hoặc đã chấm), không tính Chưa nộp và Đang làm. */
-const SUBMITTED = new Set(["PENDING", "DRAFT", "FINALIZED", "PUBLISHED"]);
-
-type View = "assignment" | "student";
-
-/** Cả lớp trong sổ điểm (trang 100 sinh viên), để tính tiến độ theo từng sinh viên. */
-async function loadWholeGradebook(classId: string) {
-  const first = await gradingApi.loadGradebook(classId, "", 1, 100);
-  const rows = [...first.rows];
-  for (let page = 2; rows.length < first.total && page <= 50; page++) {
-    const next = await gradingApi.loadGradebook(classId, "", page, 100);
-    if (next.rows.length === 0) break;
-    rows.push(...next.rows);
-  }
-  return { ...first, rows };
-}
-
-/**
- * Tiến độ nộp bài trên tab Thông tin lớp của giảng viên: tab Theo bài tập (mỗi bài tính điểm một dòng: tên, loại bài, số đã
- * nộp, thanh tiến độ; bài có bài chờ chấm lên trước rồi đến hạn gần nhất) và Theo sinh viên (mỗi sinh viên một dòng:
- * số bài đã nộp trên tổng số bài, người nộp ít lên trước). Bấm một dòng để mở Sổ điểm với bài hoặc sinh viên đó; nút Xem sổ
- * điểm trên đầu thẻ. Danh sách cao cố định, nhiều dòng thì cuộn trong thẻ.
- */
 export function ClassProgressSection({ classId }: { classId: string; layout?: "standalone" | "overview" }) {
-  const [view, setView] = useUrlState<View>("progressView", "assignment", ["assignment", "student"]);
   const load = useCallback(async () => {
-    const [progress, gradebook] = await Promise.all([gradingApi.loadSubmissionProgress(classId), loadWholeGradebook(classId)]);
-    return { progress, assignments: gradebook.assignments, rows: gradebook.rows };
+    const [assignments, progress] = await Promise.all([
+      assignmentsApi.listForClass(classId, { status: ["OPEN"] }),
+      gradingApi.loadSubmissionProgress(classId),
+    ]);
+    return { assignments: assignments.items.filter(row => row.status === "OPEN"), progress, loadedAt: Date.now() };
   }, [classId]);
-
   const { value, error, refresh } = useResource(load);
-
-  const sortedAssignments = useMemo(
-    () => (value ? sortAssignmentsForProgress(value.assignments, value.progress) : []),
-    [value],
+  const assignmentsHref = `/teaching/classes/${encodeURIComponent(classId)}?tab=evals&assignmentState=open`;
+  const pending = Object.values(value?.progress ?? {}).reduce((sum, page) => sum + (page.summary.PENDING ?? 0), 0);
+  const unpublished = Object.values(value?.progress ?? {}).reduce(
+    (sum, page) => sum + (page.summary.DRAFT ?? 0) + (page.summary.FINALIZED ?? 0), 0,
   );
-  const students = useMemo(() => (value ? (value.rows ?? []).map((row) => ({
-    student: row.student,
-    submitted: row.grades.filter((cell) => SUBMITTED.has(cell.status)).length,
-  })).sort((a, b) => a.submitted - b.submitted || a.student.name.localeCompare(b.student.name, "vi")) : []), [value]);
-
-  const empty = sortedAssignments.length === 0 || (view === "student" && students.length === 0);
+  const pendingAssignment = Object.entries(value?.progress ?? {}).find(([, page]) => (page.summary.PENDING ?? 0) > 0)?.[0];
+  const unpublishedAssignment = Object.entries(value?.progress ?? {}).find(
+    ([, page]) => (page.summary.DRAFT ?? 0) + (page.summary.FINALIZED ?? 0) > 0,
+  )?.[0];
+  const upcoming = (value?.assignments ?? [])
+    .filter(row => row.closesAt && Date.parse(row.closesAt) > (value?.loadedAt ?? 0))
+    .sort((left, right) => Date.parse(left.closesAt!) - Date.parse(right.closesAt!))
+    .slice(0, 3);
 
   return (
-    <Section title="Tiến độ nộp bài"
-      actions={<Link href={buildGradebookHref(classId)} className="text-[13px] font-semibold text-primary-ink hover:underline">Chấm điểm</Link>}>
-      <Segmented as="tab" ariaLabel="Xem tiến độ" value={view} onChange={setView} className="self-start"
-        options={[{ value: "assignment", label: "Theo bài tập" }, { value: "student", label: "Theo sinh viên" }]} />
-      {/* Cao bằng danh sách Thông báo gần đây bên cạnh; nhiều dòng thì cuộn trong vùng này. */}
-      <div className="-mx-2 h-[248px] overflow-x-hidden overflow-y-auto px-2 [scrollbar-color:var(--c-muted)_transparent] [scrollbar-gutter:stable]">
-        {error ? (
-          <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-            <p role="alert" className="text-[13px] text-danger">{error}</p>
-            <Button size="sm" variant="secondary" onClick={() => void refresh().catch(() => {})}>Thử tải lại</Button>
-          </div>
-        ) : !value ? (
-          <p role="status" className="flex h-full items-center justify-center text-[13px] text-muted">Đang tải tiến độ nộp bài…</p>
-        ) : empty ? (
-          <p className="flex h-full items-center justify-center text-[13px] text-muted">
-            {sortedAssignments.length === 0 ? "Chưa có bài tính điểm trong lớp." : "Lớp chưa có sinh viên."}
-          </p>
-        ) : view === "assignment" ? (
-          <ul className="-my-1 flex flex-col">
-            {sortedAssignments.map((assignment) => {
-              const p = value.progress[assignment.id];
-              const total = Math.max(0, p?.summary.total ?? 0);
-              const submitted = Math.max(0, p?.summary.submitted ?? 0);
-              const unit = assignment.submissionMode === "GROUP" ? "nhóm" : "sinh viên";
-              return (
-                <ProgressRow key={assignment.id} testId="progress-assignment-row" dataId={assignment.id}
-                  href={buildGradebookHref(classId, { assignment: assignment.id })} title={assignment.title} meta={assignment.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}
-                  done={submitted} total={total} hint={`${submitted} / ${total} ${unit} đã nộp`} showBar={!!p} />
-              );
-            })}
-          </ul>
-        ) : (
-          <ul className="-my-1 flex flex-col">
-            {students.map(({ student, submitted }) => (
-              <ProgressRow key={student.accountId} testId="progress-student-row" dataId={student.accountId}
-                href={buildGradebookHref(classId, { student: student.accountId })} title={student.name} meta={student.email}
-                done={submitted} total={sortedAssignments.length} hint={`Đã nộp ${submitted} / ${sortedAssignments.length} bài`} showBar />
+    <Section title="Tổng quan bài tập">
+      {error ? (
+        <div className="flex flex-col items-start gap-3">
+          <p role="alert" className="text-sm text-danger">{error}</p>
+          <Button size="sm" variant="secondary" onClick={() => void refresh().catch(() => {})}>Thử tải lại</Button>
+        </div>
+      ) : !value ? (
+        <p role="status" className="text-sm text-muted">Đang tải tổng quan…</p>
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {[
+              { label: "Bài đang mở", count: value.assignments.length, href: assignmentsHref },
+              { label: "Bài nộp chờ chấm", count: pending, href: `${buildGradebookHref(classId, { assignment: pendingAssignment })}&gradebookStatus=PENDING` },
+              { label: "Bài đã chấm chưa công bố", count: unpublished, href: `${buildGradebookHref(classId, { assignment: unpublishedAssignment })}&gradebookStatus=DRAFT` },
+            ].map(item => (
+              <Link key={item.label} href={item.href} aria-label={`${item.count} ${item.label}`} className="row-interactive flex items-baseline gap-3 rounded-lg px-2 py-3 hover:bg-shell">
+                <span className="text-2xl font-semibold tabular-nums text-ink">{item.count}</span>
+                <span className="text-sm text-body">{item.label}</span>
+              </Link>
             ))}
-          </ul>
-        )}
-      </div>
+          </div>
+          <div className="border-t border-line pt-5">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold text-ink">Hạn nộp sắp tới</h3>
+              <Link href={assignmentsHref} className="text-[13px] font-semibold text-primary-ink hover:underline">Tất cả bài tập</Link>
+            </div>
+            {upcoming.length === 0 ? <p className="text-sm text-muted">Chưa có hạn nộp sắp tới.</p> : (
+              <ul className="divide-y divide-line">
+                {upcoming.map(assignment => (
+                  <li key={assignment.id} data-testid="upcoming-assignment">
+                    <Link href={`/assignments/${encodeURIComponent(assignment.id)}?classId=${encodeURIComponent(classId)}`}
+                      className="row-interactive -mx-2 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 rounded-lg px-2 py-3 hover:bg-shell">
+                      <span className="min-w-0 flex-1 basis-48">
+                        <span className="block break-words text-sm font-semibold text-ink">{assignment.title}</span>
+                        <span className="text-xs text-muted">{assignment.gradingMode === "PRACTICE" ? "Luyện tập" : assignment.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}</span>
+                      </span>
+                      <time dateTime={assignment.closesAt!} className="text-[13px] tabular-nums text-muted">{formatDateTime(assignment.closesAt)}</time>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </>
+      )}
     </Section>
-  );
-}
-
-/** Một dòng tiến độ: tên, dòng phụ, số đã nộp trên tổng và thanh tiến độ; cả dòng là liên kết sang Chấm điểm. */
-function ProgressRow({ testId, dataId, href, title, meta, done, total, hint, showBar }: {
-  testId: string; dataId: string; href: string; title: string; meta: string; done: number; total: number; hint: string; showBar: boolean;
-}) {
-  return (
-    <li data-testid={testId} data-assignment-id={testId === "progress-assignment-row" ? dataId : undefined} className="border-b border-line last:border-b-0">
-      <Link href={href} className="row-interactive -mx-2 flex flex-col gap-1.5 rounded-lg px-2 py-2.5 hover:bg-shell">
-        <span className="flex items-center gap-3">
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[13.5px] font-semibold text-ink">{title}</span>
-            <span className="block truncate text-xs text-muted">{meta}</span>
-          </span>
-          <span className="shrink-0 text-xs text-muted tabular-nums" title={hint}>{done}/{total}</span>
-        </span>
-        {showBar && (
-          <span aria-hidden className="block h-1 overflow-hidden rounded-full bg-sunken">
-            <span className="block h-full rounded-full bg-primary"
-              ref={(node) => { if (node) node.style.width = `${total > 0 ? Math.round((100 * done) / total) : 0}%`; }} />
-          </span>
-        )}
-      </Link>
-    </li>
   );
 }

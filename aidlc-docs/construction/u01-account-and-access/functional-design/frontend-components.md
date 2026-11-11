@@ -22,7 +22,7 @@ U01 nằm trong **Web Shell** (xác thực, hồ sơ, khung sau đăng nhập) v
 | 2 | Activate Account, bước 1–3 (`c02a`, `c02b`, `c02`) | `ActivationPage` | 01 |
 | 3 | Password Reset, bước 1–3 (`c03a`, `c03`, `c04`) | `PasswordResetPage` | 04 |
 | 4 | User Profile (`c05`) | `ProfilePage` | 06, 07 |
-| 5 | Password Change, popup (`c06`) | `PasswordChangeDialog` | 05 |
+| 5 | Password Change, khối trên trang Hồ sơ (`c06`) | `PasswordChangeForm` | 05 |
 | – | Khung sau đăng nhập: thanh trên cùng, menu bên, popup Đăng xuất (`c15`) | `AppShell`, `LogoutDialog`, `PostLoginRedirect`, `RoleGuard` | 01, 02, 03 |
 | 11 | Account List, vùng Nhập Excel (`a02`, `a02b`) | `AccountListPage`, `ImportAccountsPanel` | 08, luồng phụ của 09 |
 | 12 | New Account, popup (`a03`) | `NewAccountDialog` | 09 |
@@ -50,7 +50,7 @@ shared/layout/      AppShell              khung sau đăng nhập (code đã có
   RoleGuard                       chặn route theo role
 app/profile/        ProfilePage           #4 User Profile
   ProfileForm
-  PasswordChangeDialog            #5 popup (nút "Đổi mật khẩu")
+  PasswordChangeForm              #5 khối Đổi mật khẩu ngay dưới ProfileForm
 app/admin/accounts/ AccountListPage       #11 Account List
     AccountFilters                tab vai trò, lọc trạng thái, ô tìm
     AccountTable
@@ -114,20 +114,21 @@ Menu bên theo design (mỗi unit đăng ký mục của màn mình qua `NavEntr
 
 | Mục | Nội dung |
 |---|---|
-| Trường | Họ và tên, Số điện thoại (sửa được); Email trường, Vai trò, Trạng thái tài khoản (chỉ đọc), ghi chú "Email, vai trò và trạng thái do nhà trường quản lý." |
-| Thao tác | Đổi mật khẩu (mở #5), Lưu thay đổi |
+| Bố cục | Từ 2026-11-11: khối "Thông tin cá nhân" (dải đầu gồm avatar chữ viết tắt, họ tên, email, nhãn trạng thái; lưới hai cột Họ và tên · Số điện thoại, Email trường · Vai trò; một cột dưới 640px) rồi khối "Đổi mật khẩu" (#5) cùng trang |
+| Trường | Họ và tên, Số điện thoại (sửa được); Email trường, Vai trò, Trạng thái tài khoản (chỉ đọc), ghi chú "Email trường, vai trò và trạng thái do quản trị viên quản lý." |
+| Thao tác | Lưu thay đổi |
 | API | `getProfile`, `updateProfile` |
 | Ghi chú | Avatar chỉ là chữ viết tắt; không có tải ảnh đại diện |
 
-### PasswordChangeDialog (#5, `c06`)
+### PasswordChangeForm (#5, `c06`)
 
 | Mục | Nội dung |
 |---|---|
 | Trường | Mật khẩu hiện tại, Mật khẩu mới, Nhập lại mật khẩu mới (mỗi ô có nút hiện/ẩn); điều kiện "Ít nhất 8 ký tự", "Có cả chữ và số" |
-| Ghi chú trên popup | "Các thiết bị khác sẽ bị đăng xuất. Phiên hiện tại được giữ lại." |
+| Ghi chú dưới tiêu đề khối | "Các thiết bị khác sẽ bị đăng xuất. Phiên hiện tại được giữ lại." |
 | Validation phía client | Mật khẩu mới ≥ 8 ký tự có chữ và số; hai ô khớp |
 | API | `changePassword` |
-| Thao tác | Hủy, Đổi mật khẩu; xong thì đóng popup và báo các thiết bị khác đã bị đăng xuất |
+| Thao tác | Đổi mật khẩu; xong thì xóa các ô và báo "Đã đổi mật khẩu". Từ 2026-11-11 là khối phẳng trên trang Hồ sơ, không còn popup |
 
 ## 4. Admin Console
 

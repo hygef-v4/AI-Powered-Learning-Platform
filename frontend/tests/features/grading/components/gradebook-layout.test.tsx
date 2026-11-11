@@ -77,7 +77,10 @@ beforeEach(() => {
   vi.resetAllMocks();
   window.history.replaceState(null, "", "/");
   mocks.loadGradebook.mockResolvedValue(samplePage);
-  mocks.listSubmissions.mockResolvedValue({ rows: [], total: 0 });
+  mocks.listSubmissions.mockImplementation((_classId, assignmentId) => Promise.resolve({ rows: samplePage.rows.map(row => {
+    const grade = row.grades.find(cell => cell.assignmentId === assignmentId);
+    return { student: row.student, evaluationId: null, status: "NOT_SUBMITTED", score: null, version: 1, ...grade };
+  }), total: samplePage.rows.length }));
   mocks.loadSubmissionProgress.mockResolvedValue({ "a-1": { rows: [], total: 2, page: 1, size: 20, deadline: null, summary: { total: 2, submitted: 2, PENDING: 2 } } });
 });
 
@@ -87,8 +90,8 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
   it("links directly to each submitted group's evaluation above the member grades", async () => {
     mocks.listSubmissions.mockResolvedValue({
       rows: [
-        { student: { accountId: "group-1", name: "Nhóm 1" }, evaluationId: "group-eval-1" },
-        { student: { accountId: "group-2", name: "Nhóm 2" }, evaluationId: "group-eval-2" },
+        { student: { accountId: "group-1", name: "Nhóm 1" }, evaluationId: "group-eval-1", status: "DRAFT", version: 1 },
+        { student: { accountId: "group-2", name: "Nhóm 2" }, evaluationId: "group-eval-2", status: "PUBLISHED", version: 1 },
         { student: { accountId: "group-3", name: "Nhóm 3" }, evaluationId: null },
       ],
       total: 3,
@@ -97,15 +100,15 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
 
     const groupAssignment = await screen.findByRole("button", { name: new RegExp(longTitle2) });
     expect(screen.queryByRole("link", { name: /Xem bản nộp chung/ })).not.toBeInTheDocument();
-    expect(mocks.listSubmissions).not.toHaveBeenCalled();
+    expect(mocks.listSubmissions).toHaveBeenCalled();
     fireEvent.click(groupAssignment);
 
-    const groups = await screen.findByRole("list", { name: "Bản nộp chung theo nhóm" });
+    const groups = await screen.findByRole("table", { name: "Bài nộp của nhóm" });
     expect(within(groups).getByRole("link", { name: "Xem bản nộp chung của Nhóm 1" }))
       .toHaveAttribute("href", "/teaching/evaluations/group-eval-1");
     expect(within(groups).getByRole("link", { name: "Xem bản nộp chung của Nhóm 2" }))
       .toHaveAttribute("href", "/teaching/evaluations/group-eval-2");
-    expect(within(groups).queryByText("Nhóm 3")).not.toBeInTheDocument();
+    expect(within(groups).getByRole("checkbox", { name: "Chọn Nhóm 3" })).toBeDisabled();
     expect(mocks.listSubmissions).toHaveBeenCalledWith("class-1", "a-2", "ALL", 1);
   });
 
@@ -118,7 +121,7 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
     expect(first).not.toHaveTextContent("chờ chấm");
     expect(screen.queryByRole("link", { name: "Xem bài nộp" })).not.toBeInTheDocument();
 
-    const rowAn = screen.getByText("Nguyễn Văn An").closest("tr")!;
+    const rowAn = (await screen.findByText("Nguyễn Văn An")).closest("tr")!;
     expect(within(rowAn).getByText("10 / 10")).toBeInTheDocument();
     expect(within(rowAn).getByText("Đã công bố")).toBeInTheDocument();
     expect(within(rowAn).getByRole("link", { name: "Xem điểm" })).toHaveAttribute("href", "/teaching/evaluations/eval-a1-s1");
@@ -135,8 +138,7 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
     fireEvent.click(rowAn2);
     expect(push).not.toHaveBeenCalledWith(expect.stringContaining("submissions"));
     fireEvent.click(screen.getByRole("button", { name: new RegExp(longTitle1) }));
-    fireEvent.click(screen.getByText("Nguyễn Văn An").closest("tr")!);
-    expect(push).toHaveBeenLastCalledWith("/teaching/evaluations/eval-a1-s1");
+    expect(await screen.findByRole("link", { name: "Xem điểm" })).toHaveAttribute("href", "/teaching/evaluations/eval-a1-s1");
     expect(screen.queryByRole("columnheader", { name: /Bài 1/ })).not.toBeInTheDocument();
   });
 
@@ -145,7 +147,7 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
     await screen.findByText("Nguyễn Văn An");
     fireEvent.change(screen.getByRole("combobox", { name: "Lọc theo trạng thái" }), { target: { value: "DRAFT" } });
     expect(screen.queryByText("Nguyễn Văn An")).not.toBeInTheDocument();
-    expect(screen.getByText("Trần Thị Bình")).toBeInTheDocument();
+    expect(await screen.findByText("Trần Thị Bình")).toBeInTheDocument();
   });
 
   it("mở từ Tiến độ nộp bài: ?assignment= chọn sẵn bài, ?student= mở chế độ Theo sinh viên với người đó", async () => {
@@ -228,8 +230,9 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
     unmount();
 
     mocks.loadGradebook.mockResolvedValue({ ...samplePage, rows: [], total: 0 });
+    mocks.listSubmissions.mockResolvedValue({ rows: [], total: 0 });
     render(<ClassGradebookTab classId="class-1" />);
-    expect(await screen.findByText("Không có sinh viên phù hợp.")).toBeInTheDocument();
+    expect(await screen.findByText("Không có bài phù hợp.")).toBeInTheDocument();
   });
 });
 
@@ -276,9 +279,8 @@ it("offers batch selection with server versions in assignment mode", async () =>
   mocks.listSubmissions.mockResolvedValue({ rows: [{ student: { accountId: "s1", name: "An" },
     evaluationId: "batch-e1", version: 7, status: "DRAFT" }], total: 1 });
   render(<ClassGradebookTab classId="class-1" />);
-  fireEvent.click(await screen.findByRole("button", { name: "Thao tác hàng loạt" }));
   fireEvent.click(await screen.findByRole("checkbox", { name: "Chọn An" }));
-  expect(screen.getByRole("button", { name: "Công bố đã chọn" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: /Công bố điểm \(/ })).toBeEnabled();
 });
 
 it.each([
@@ -287,10 +289,9 @@ it.each([
   mocks.listSubmissions.mockResolvedValue({ rows: [{ student: { accountId: "s1", name: "An" },
     evaluationId: "batch-e1", version: 7, status }], total: 1 });
   render(<ClassGradebookTab classId="class-1" />);
-  fireEvent.click(await screen.findByRole("button", { name: "Thao tác hàng loạt" }));
   fireEvent.click(await screen.findByRole("checkbox", { name: "Chọn An" }));
   const finalize = screen.queryByRole("button", { name: "Chốt điểm đã chọn" });
-  const publish = screen.getByRole("button", { name: "Công bố đã chọn" });
+  const publish = screen.getByRole("button", { name: /Công bố điểm \(/ });
   expect(finalize).not.toBeInTheDocument();
   expect(publish).toHaveProperty("disabled", publishDisabled);
 });

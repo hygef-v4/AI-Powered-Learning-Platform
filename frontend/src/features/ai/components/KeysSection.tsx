@@ -15,7 +15,6 @@ export type KeysApi = {
   list: () => Promise<ConnectionView[]>;
   add: (provider: AiProvider, body: SaveConnection) => Promise<unknown>;
   save: (id: string, body: SaveConnection) => Promise<unknown>;
-  reveal: (id: string) => Promise<{ apiKey: string }>;
   test: (id: string) => Promise<unknown>;
   testDraft: (provider: AiProvider, body: SaveConnection, id?: string | null) => Promise<{ ok: boolean; message: string }>;
   setEnabled: (id: string, enabled: boolean, version: number) => Promise<unknown>;
@@ -206,7 +205,6 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
             setEditing(null);
             await reload();
           }}
-          onReveal={current?.id ? async () => (await api.reveal(current.id as string)).apiKey : undefined}
           onTest={async (provider, body) => {
             const result = await api.testDraft(provider, body, current?.id);
             return { ok: result.ok, text: result.message };

@@ -13,7 +13,7 @@ function menu(role: Role): string[] {
 describe("menu bên do các unit đăng ký", () => {
   it("đúng mục và thứ tự của design cho từng role", () => {
     expect(menu("ADMIN")).toEqual(["Tổng quan", "Tài khoản", "Môn học", "Cài đặt", "Nhật ký"]);
-    expect(menu("SUBJECT_MANAGER")).toEqual(["Môn được phân công", "Lớp được phân công", "Thông báo lớp"]);
+    expect(menu("SUBJECT_MANAGER")).toEqual(["Môn được phân công", "Lớp được phân công", "Tất cả thông báo"]);
     expect(subjectNavEntries.entries().map((entry) => entry.title)).toEqual([
       "Thông tin môn",
       "Lớp học",
@@ -21,8 +21,8 @@ describe("menu bên do các unit đăng ký", () => {
       "Bài tập",
       "Ngân hàng câu hỏi",
     ]);
-    expect(menu("TEACHER")).toEqual(["Lớp được phân công", "Thông báo lớp"]);
-    expect(menu("STUDENT")).toEqual(["Lớp của tôi", "Bài tập", "Thông báo lớp"]);
+    expect(menu("TEACHER")).toEqual(["Lớp được phân công", "Tất cả thông báo"]);
+    expect(menu("STUDENT")).toEqual(["Lớp của tôi", "Bài tập", "Tất cả thông báo"]);
   });
 
   it("Admin không có nút Kết nối AI", () => {

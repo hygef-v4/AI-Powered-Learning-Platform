@@ -2,6 +2,8 @@
 
 Runbook của U06 (P4, NFR-U06-30, SECURITY-09). Khóa API của người dùng và của trường được lưu dạng mã hóa AES-256-GCM bằng một khóa chỉ có trong biến môi trường. Thiếu khóa thì backend vẫn chạy, nhưng mọi thao tác lưu, kiểm tra hay dùng khóa API trả lỗi `AI_KEY_ENCRYPTION_NOT_CONFIGURED` (503); không có giá trị mặc định.
 
+Từ 2026-11-11 khóa API chỉ ghi: không có API nào trả lại khóa đã lưu, popup Sửa chỉ nhận khóa mới. Bản mã gắn AAD theo id, phạm vi, chủ và nhà cung cấp của kết nối, nên chép bản mã sang dòng khác thì không dùng được. Khóa lưu trước ngày này được backend và worker mã hóa lại khi khởi động (log `AI key upgrade finished`); `unreadable` khác 0 nghĩa là khóa đó không giải mã được bằng khóa mã hóa hiện có, người dùng phải nhập lại.
+
 ## Biến môi trường
 
 | Biến | Bắt buộc | Ý nghĩa |

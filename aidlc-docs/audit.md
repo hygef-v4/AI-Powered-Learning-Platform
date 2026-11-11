@@ -12888,3 +12888,173 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 **Context:** Construction — authorized local commits only.
 
 ---
+
+## Fix PR74 frontend navigation expectations
+**Date:** 2026-11-11
+**Requested by:** Quang Hung
+**User Input:** "[Image #1] giúp tôi fix lỗi pr"
+**AI Response:** Read the failed frontend job of PR74:966/967 tests passed; the global feature-registration test still expected the former announcement label. Reproduced the exact failure locally in tests/features/register.test.ts, then updated only the global menu expectations for Subject Manager, Teacher and Student to the approved “Tất cả thông báo”. Kept class-context expectations “Thông báo lớp” and all route/authorization behavior unchanged. Full local frontend suite passes967 tests/136 files; scoped ESLint passes. Commit/push the correction to staging to update PR74 and verify fresh CI. No PR merge or production deployment.
+**Context:** Construction — minimal CI regression fix; no product-source change or subagents.
+
+---
+
+## Simplify teacher class information overview
+**Timestamp:** 2026-11-11T06:18:14Z
+**Requested by:** Quang Hung
+**User Input:** "Ok giúp tôi sửa theo đề xúât"
+**AI Response:** Implemented the approved class-information proposal inline with ponytail/impeccable, no subagents. Read-only facts replace disabled fields; empty descriptions hidden. Replaced teacher progress tabs and recent announcements with open-assignment/pending-submission/unpublished-grade summaries and up to3 nearest future OPEN deadlines including Practice. Reused existing assignment/progress APIs with server group-root counts; removed whole-gradebook pagination. Summary grading links select the first relevant assignment and status filter. Student announcements/page and all announcement routes remain. RED tests then264 related tests/31 files pass; final targeted34/2, TypeScript, scoped ESLint and whitespace pass. Direct browser verifies1440px/390px, light/dark,5 open/1 pending/0 unpublished and correct pending link. No live data mutation, backend/schema change, commit/push/deploy. Production build/full backend not repeated. Security/Resiliency compliant for existing scope; PBT disabled.
+**Context:** Construction — approved teacher overview change. Plan and evidence: construction/plans/code-generation-plan/2026-11-11-teacher-class-overview.md.
+
+---
+
+## Commit and publish teacher class overview PR to staging
+**Timestamp:** 2026-11-11T06:23:08Z
+**Requested by:** Quang Hung
+**User Input:** "Ok giúp tôi commit, push, check staging xem có change k nếu k thì tạo  pr lên staging"
+**AI Response:** Fetched origin and checked staging divergence before publication. Current branch and staging have no divergent commits; merge-tree reports no conflict. Committing only the approved teacher class overview and its tests/AI-DLC records, pushing the existing branch and opening a PR targeting staging. Fresh targeted34 tests/2 files and TypeScript pass; broader264 related tests, scoped lint and direct desktop/mobile light/dark UI were verified during implementation. No merge/deployment authorized in this request; production build/backend tests not repeated for this frontend-only change.
+**Context:** Construction — authorized commit, push and PR; no automatic merge.
+
+---
+## Sửa bố cục trang Hồ sơ, Đổi mật khẩu thành khối trên trang
+**Timestamp**: 2026-11-11T04:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "sửa lại trang hồ sơ, phần đổi mật khẩu không hiện pop-up nữa mà ở luôn trang này dạng flat, ngoài ra chỉnh lại bố cục cho hợp lí"
+**AI Response**: "Thay PasswordChangeDialog bằng PasswordChangeForm (khối Section phẳng dưới thông tin cá nhân; mật khẩu hiện tại một ô, mật khẩu mới và nhập lại hai cột; đổi xong xóa các ô và báo toast). ProfileForm thành khối 'Thông tin cá nhân': dải đầu avatar chữ viết tắt, họ tên, email, nhãn trạng thái; lưới hai cột Họ và tên · Số điện thoại, Email trường · Vai trò; bỏ nút mở popup. Đổi tên test tương ứng, thêm kiểm tra xóa ô sau khi đổi. Cập nhật frontend-components.md của U01. tsc, eslint, Vitest identity (39 test) qua; xem trên trình duyệt ở 1440px và 375px với backend local. Không commit."
+**Context**: Construction — chỉnh UI frontend U01, không đổi API/backend.
+
+---
+
+## Rà soát bảo mật khóa API AI cá nhân
+**Timestamp**: 2026-11-11T07:05:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "để người dùng lưu api key cá nhân trên web có ổn không, hiện tại có đang lưu api vào db không. Có cách nào để tránh lộ lọt thông tin api key người dùng không"
+**AI Response**: "Trả lời: khóa được lưu trong ai_connections, mã hóa AES-256-GCM, khóa giải mã ở biến môi trường, chỉ hiện 4 ký tự cuối. Điểm yếu: GET /me/ai-connections/{id}/key và GET /admin/ai/connections/{id}/key trả khóa rõ; khóa giải mã nằm cùng VPS với DB; GCM chưa gắn AAD. Đề xuất sửa mục trả khóa rõ và AAD."
+**Context**: Câu hỏi bảo mật U06, chỉ đọc code.
+
+---
+
+## Khóa API chỉ ghi và gắn AAD cho bản mã
+**Timestamp**: 2026-11-11T07:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Có, sửa luôn"
+**AI Response**: "Backend: bỏ GET /api/v1/me/ai-connections/{id}/key và GET /api/v1/admin/ai/connections/{id}/key cùng revealPersonal/revealInstitutional (đóng D15). KeyCipher thêm encryptConnectionKey/decryptConnectionKey gắn AAD id|scope|owner|provider; lưu, thay, kiểm tra nháp, ConnectionTestService và AiTaskJobHandler dùng bản gắn AAD, bản mã chưa gắn bị từ chối. ConnectionKeyUpgrade (ApplicationReadyEvent) mã hóa lại khóa cũ bằng khóa mới nhất, ghi có điều kiện trên bản mã cũ (AiConnectionRepository.listWithKey, replaceKeyCiphertext), không đổi version. Token MCP giữ nguyên (không AAD, vẫn reveal cho chủ). Frontend: ApiKeyDialog bỏ onReveal, nút xem và sao chép chỉ cho khóa đang gõ; bỏ revealConnection/revealInstitutional. Cập nhật BR-U06-03, business-logic-model F8, domain-entities, decision-register D15, api-inventory, requirements, runbook ai-key-encryption. Kiểm tra: Maven trong maven:3.9-eclipse-temurin-17 các test AI (68) và AiRepositoriesIntegrationTest (6), PlatformWorkflowIntegrationTest (26) với Testcontainers đều qua; tsc, eslint sạch, Vitest tests/features/ai 38/38. Chưa chạy toàn bộ suite, chưa thử trên trình duyệt, không commit."
+**Context**: Construction — sửa bảo mật U06 trực tiếp theo yêu cầu, không đổi schema.
+
+---
+
+
+## UI/UX staging — yêu cầu và phạm vi được duyệt
+**Timestamp**: 2026-11-11T09:17:06Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "cập nhật code mới nhất của dự án trên nhánh staging, kiểm tra UI-UX và cải thiện"
+**AI Response**: "Đã fetch origin/staging ce40e447, tạo worktree codex/ui-ux-staging; xác nhận tên công tắc trống, mô tả lỗi trống bằng DOM và thanh phân trang tối thiểu 444px ở pointer coarse. Chưa kiểm tra được browser vì Computer Use không xác nhận URL. Chờ duyệt ba lỗi. Ghi bù yêu cầu trước do lượt trước kết thúc bởi Computer Use."
+**Context**: Workspace Detection và Requirements Analysis; giữ nguyên checkout gốc.
+
+---
+
+## UI/UX staging — triển khai ba lỗi
+**Timestamp**: 2026-11-11T09:17:06Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "sửa 3 lỗi trên"
+**AI Response**: "Ghi nhận duyệt sửa ba lỗi đã nêu và kiểm thử hồi quy. Pagination/PageNav xuống dòng khi thiếu chỗ; Switch nối nhãn bằng aria-labelledby khi không có ariaLabel; Field nối lỗi với control có id khớp htmlFor, giữ mô tả hiện có. Thực hiện trong worktree riêng."
+**Context**: Construction; sửa lỗi giới hạn trong shared UI. Security/Resiliency giữ cấu hình cũ, PBT tắt. gh không có trong PATH nên chưa xác nhận GitHub display name.
+
+---
+
+## UI/UX staging — mã và hồi quy
+**Timestamp**: 2026-11-11T09:20:49Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "sửa 3 lỗi trên"
+**AI Response**: "Đã sửa flex wrap cho hai thanh phân trang; Switch dùng nhãn hiển thị làm accessible name dự phòng; Field nối lỗi với control khớp htmlFor qua wrapper DOM/Fragment và giữ aria-describedby có sẵn. Thêm 5 ca hồi quy mới; xác nhận thất bại trước sửa. Ca giữ focus phát hiện remount trong bản đầu và đã sửa bằng cách giữ cây child ổn định cả khi hết lỗi. Lượt cuối 332 test/51 file qua; TypeScript, full ESLint và scoped ESLint cuối qua. Build đang chạy; không xác minh browser trực tiếp."
+**Context**: Construction — Code Generation hoàn tất, Build and Test đang thực hiện. PBT bỏ qua theo cấu hình disabled.
+
+---
+
+## UI/UX staging — hoàn tất
+**Timestamp**: 2026-11-11T09:21:50Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "sửa 3 lỗi trên"
+**AI Response**: "Hoàn tất ba lỗi trên codex/ui-ux-staging. Lượt cuối 332 test/51 file, TypeScript, ESLint và diff check qua. Build exit 0; ghi rõ font fetch EACCES và 27 traced files thiếu trong standalone vì junction dependency. Chưa kiểm tra browser/mobile, chưa commit/push/deploy. Kết quả ở construction/build-and-test/2026-11-11-three-ui-fixes.md."
+**Context**: Build and Test hoàn tất trong phạm vi; artifact standalone chưa xác minh để deploy. Security/Resiliency giữ nguyên; PBT disabled.
+
+---
+
+## UI/UX staging — đánh giá sẵn sàng tích hợp
+**Timestamp**: 2026-11-11T09:26:13Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "kiểm tra xem có thể đưa lên staging chưa"
+**AI Response**: "Fetch staging và xác nhận vẫn cùng baseline ce40e447. Review diff và CI; chạy toàn bộ frontend suite và kiểm tra Docker build theo Dockerfile để làm rõ cảnh báo standalone do junction. Chưa commit/push/merge."
+**Context**: Build and Test — staging readiness review.
+
+---
+
+## UI/UX staging — kết luận readiness
+**Timestamp**: 2026-11-11T09:29:32Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "kiểm tra xem có thể đưa lên staging chưa"
+**AI Response**: "Không phát hiện blocker. origin/staging vẫn cùng ce40e447; toàn bộ frontend 963 test/135 file qua; Dockerfile build thành công không còn cảnh báo font/standalone; container cô lập network none trả health UP, login/icon 200. Source không đổi; đủ điều kiện commit và tạo PR staging, merge sau CI PR. Chưa xác minh browser/mobile thực, chưa commit/push/merge."
+**Context**: Build and Test readiness; image local giữ lại, container thử tự xóa. Không tác động container đang chạy. Security/Resiliency retained, PBT disabled.
+
+---
+
+## UI/UX staging — cho phép tạo PR
+**Timestamp**: 2026-11-11T09:36:34Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tạo pr vào staging cho tôi"
+**AI Response**: "Xác nhận GitHub display name qua profile API bằng tài khoản Git hiện có; kiểm tra không có PR mở trùng nhánh. Chuẩn bị commit đúng ba file UI, hai file test và tài liệu liên quan, push codex/ui-ux-staging, tạo PR base staging. Dùng kết quả 963 test/135 file, TypeScript/ESLint và Docker build/smoke đã xác minh trên cùng source. Không merge PR."
+**Context**: Publication authorization; trạng thái PR và CI sẽ được ghi trên GitHub và phản hồi cuối để tránh phát sinh commit sau bản đã xác minh. Không sửa attribution lịch sử.
+
+## Resolve PR70 staging conflict and merge
+**Timestamp:** 2026-11-11T09:24:48Z
+**Requested by:** Quang Hung
+**User Input:** "giúp tôi solve conflict pr với staging sau merge vào"
+**Latest User Input:** "[Image #1] giúp tôi merge request pr 70 vào staging"
+**AI Response:** User authorizes conflict resolution, push and PR70 merge into staging. Latest staging adds profile layout, dark-mode color and AI key-security changes. Only audit.md conflicts; retained both sides' complete historical entries and original requester attributions. Source merges without manual changes. Verify merged frontend scope, then push and wait for required CI on the updated PR head before merge. No main merge or production deployment requested.
+**Context:** Construction — integrate approved PR70 with latest staging; no subagents.
+
+---
+
+## Put gradebook bulk selection directly in the table
+**Timestamp:** 2026-11-11T13:35:31Z
+**Requested by:** Quang Hung
+**User Input:** "ok giúp tôi sửa"
+**AI Response:** Implemented approved bulk-selection UI inline, no subagents. Replaced separate toggle/list with row and mixed-state header checkboxes,20-row paging, explicit all-filtered selection up to100 and action-specific counts. Unsubmitted rows disabled. Changing assignment/search/status/mode clears selection, changing page preserves it. Reused complete submission directory without refetching it for each local filter; captured action item/version snapshot for the existing confirmation dialog. Group selection uses group-root rows; member grades retained in expandable section. RED4 new cases then GREEN189 grading tests/20 files, final20 targeted tests/2 files, TypeScript/scoped lint pass. Verified real local teacher UI with5 students and1 group at1440px/390px, light/dark; filters reset selection and header skips unsubmitted.30/101 cases use fixtures. No real AI/publish requests, data edits, backend/schema/dependency changes, commit/push/deploy. Production build/backend suite not repeated. Security/Resiliency retained; PBT disabled.
+**Context:** Construction — approved grading bulk-selection UI. Plan/evidence: construction/plans/code-generation-plan/2026-11-11-gradebook-bulk-selection.md.
+
+---
+
+## Clarify announcement navigation scope
+**Timestamp:** 2026-11-11T13:45:49Z
+**Requested by:** Quang Hung
+**User Input:** "ok giúp tôi sửa như đề xuất"
+**AI Response:** Renamed global Teacher/Student/Subject Manager announcement menu and global page/metadata to “Tất cả thông báo”; class-specific menu/page remains “Thông báo lớp”. Existing URLs, class filter and permissions retained.11 announcement tests/2 files and scoped lint pass; browser confirms global and fixed-class headings and distinct sidebar links. Prior checkbox pointer tweak also verified via browser computed styles. No data mutations, commit/push/deploy, backend or production-build rerun.
+**Context:** Construction — approved copy clarification, preserving current uncommitted bulk-selection changes.
+
+---
+
+## Consistent pointer cursors for interactive controls
+**Timestamp:** 2026-11-11T13:51:16Z
+**Requested by:** Quang Hung
+**User Input:** "[Image #1] check laik bất cứ cái gì có thể hover phải là pointer"
+**AI Response:** Found raw group-selection buttons missing cursor. Added shared base CSS for enabled native controls and interactive ARIA roles, checkbox/radio labels and file chooser buttons; disabled controls use not-allowed. Retained local text/drag/pending cursor overrides and removed duplicate per-checkbox cursor styling. Reviewed native handlers, non-native clickable surfaces and explicit cursor exceptions; decorative hover is not automatically made clickable. Browser confirms pointer for all3 actual group choices.14 native/custom enabled/disabled computed-style probes pass, text fields remain non-pointer and drag override preserved.324 related frontend tests/44 files, scoped lint and production Next.js build/typecheck pass. No backend/data mutation, commit/push/deploy. Not all real screen/state combinations manually exercised; security/resiliency unchanged, PBT off.
+**Context:** Construction — shared UI affordance correction; preserves existing uncommitted changes.
+
+---
+
+## Commit bulk-selection and UI affordance changes
+**Timestamp:** 2026-11-11T13:53:30Z
+**Requested by:** Quang Hung
+**User Input:** "giúp tôi commit"
+**AI Response:** Reviewed current working tree on fix/u05-u09-u15 and staged only the approved changes as separate commits: inline bulk gradebook selection/tests, global-vs-class announcement labels/tests, shared pointer cursors, and AI-DLC plan/state/audit evidence. Fresh precommit15 tests/3 files pass; preceding324 related tests/44 files, lint/typecheck and production frontend build passed. Retained all existing unrelated committed changes; no push, merge or deploy requested. No grade/class data writes.
+**Context:** Construction — authorized local commits only.
+
+---
+
+## UI/UX staging — tích hợp trước PR
+**Timestamp**: 2026-11-11T09:40:50Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tạo pr vào staging cho tôi"
+**AI Response**: "Staging mới có teacher-class-overview. Tích hợp vào nhánh PR; code không xung đột, hai file audit/state được giữ nguyên nội dung cả hai bên và xác minh bằng so sánh thứ tự từng dòng. Fresh full frontend 963 test/135 file, full ESLint, TypeScript qua. Docker build và smoke test health UP/login/icon 200 qua trên source đã tích hợp. Hoàn tất merge commit local, push và tạo PR; không merge PR vào staging."
+**Context**: PR delivery; GitHub PR/CI là nguồn trạng thái cuối.
+
+---

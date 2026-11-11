@@ -62,7 +62,7 @@ export function ClassAnnouncementsPage({
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        title="Thông báo lớp"
+        title={fixedClassId ? "Thông báo lớp" : "Tất cả thông báo"}
         actions={
           <>
             {!fixedClassId && (

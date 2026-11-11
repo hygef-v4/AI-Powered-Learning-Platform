@@ -31,7 +31,7 @@ public class ConnectionTestService {
     }
 
     public Result test(AiConnection connection) {
-        String key = cipher.decrypt(connection.encryptedKey());
+        String key = cipher.decryptConnectionKey(connection);
         try {
             Response response = gateway.call(connection.provider(), new Request(connection.model(), key, SYSTEM, USER, null,
                     MAX_OUTPUT, properties.testTimeout()));

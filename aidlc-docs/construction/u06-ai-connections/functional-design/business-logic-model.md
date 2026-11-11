@@ -91,7 +91,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Thêm: POST `/api/v1/admin/ai/connections` với provider/apiKey/model; sửa PUT `/api/v1/admin/ai/connections/{id}` theo SaveCommand/version.
 3. Test draft chưa lưu: POST `/api/v1/admin/ai/connections:test`; test key đã lưu: POST `/api/v1/admin/ai/connections/{id}:test`, synthetic payload, usage SHARED.
 4. Bật/tắt PUT `/api/v1/admin/ai/connections/{id}/status` với enabled/version; revoke DELETE `/api/v1/admin/ai/connections/{id}`.
-5. Admin GET `/api/v1/admin/ai/connections/{id}/key` xem key chung không REVOKED, kể cả DISABLED; ghi AI_CONNECTION_KEY_REVEALED, không log secret. Không có quyền đọc key cá nhân.
+5. Không có endpoint đọc lại key (bỏ GET `.../{id}/key` của Admin và cá nhân ngày 2026-11-11, đóng D15). Sửa khóa chỉ nhập khóa mới; để trống là giữ khóa cũ.
 6. Provider selection ưu tiên ACTIVE, created_at rồi id; task dùng trạng thái/quota hiện hành.
 
 ### F9 - Cấu hình quota (UC 14, 15)

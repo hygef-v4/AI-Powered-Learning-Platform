@@ -40,15 +40,6 @@ public class AiAdminController {
     public record StatusRequest(Boolean enabled, Long version) {
     }
 
-    /** Khóa rõ cho popup Sửa của Admin; không in ra log. */
-    public record KeyResponse(String apiKey) {
-
-        @Override
-        public String toString() {
-            return "KeyResponse[***]";
-        }
-    }
-
     /** Khóa không được in ra log: {@code toString} chỉ có provider, model và id. */
     public record TestRequest(String provider, String apiKey, String model, UUID id) {
 
@@ -107,11 +98,6 @@ public class AiAdminController {
     public ConnectionView save(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                @RequestBody SaveCommand command) {
         return connections.replaceInstitutional(actor, id, command);
-    }
-
-    @GetMapping("/connections/{id}/key")
-    public KeyResponse key(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return new KeyResponse(connections.revealInstitutional(actor, id));
     }
 
     @PostMapping("/connections/{id}:test")
