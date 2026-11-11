@@ -12888,3 +12888,21 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 **Context:** Construction — authorized local commits only.
 
 ---
+
+## Simplify teacher class information overview
+**Timestamp:** 2026-11-11T06:18:14Z
+**Requested by:** Quang Hung
+**User Input:** "Ok giúp tôi sửa theo đề xúât"
+**AI Response:** Implemented the approved class-information proposal inline with ponytail/impeccable, no subagents. Read-only facts replace disabled fields; empty descriptions hidden. Replaced teacher progress tabs and recent announcements with open-assignment/pending-submission/unpublished-grade summaries and up to3 nearest future OPEN deadlines including Practice. Reused existing assignment/progress APIs with server group-root counts; removed whole-gradebook pagination. Summary grading links select the first relevant assignment and status filter. Student announcements/page and all announcement routes remain. RED tests then264 related tests/31 files pass; final targeted34/2, TypeScript, scoped ESLint and whitespace pass. Direct browser verifies1440px/390px, light/dark,5 open/1 pending/0 unpublished and correct pending link. No live data mutation, backend/schema change, commit/push/deploy. Production build/full backend not repeated. Security/Resiliency compliant for existing scope; PBT disabled.
+**Context:** Construction — approved teacher overview change. Plan and evidence: construction/plans/code-generation-plan/2026-11-11-teacher-class-overview.md.
+
+---
+
+## Commit and publish teacher class overview PR to staging
+**Timestamp:** 2026-11-11T06:23:08Z
+**Requested by:** Quang Hung
+**User Input:** "Ok giúp tôi commit, push, check staging xem có change k nếu k thì tạo  pr lên staging"
+**AI Response:** Fetched origin and checked staging divergence before publication. Current branch and staging have no divergent commits; merge-tree reports no conflict. Committing only the approved teacher class overview and its tests/AI-DLC records, pushing the existing branch and opening a PR targeting staging. Fresh targeted34 tests/2 files and TypeScript pass; broader264 related tests, scoped lint and direct desktop/mobile light/dark UI were verified during implementation. No merge/deployment authorized in this request; production build/backend tests not repeated for this frontend-only change.
+**Context:** Construction — authorized commit, push and PR; no automatic merge.
+
+---
