@@ -18,7 +18,7 @@ export function GradebookBatchControls(props: Props) {
 function BatchSelection({ classId, assignmentId, onDone }: Props) {
   const { value, error, refresh } = useSubmissionDirectory(classId, assignmentId);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [action, setAction] = useState<"ai" | "finalize" | "publish" | null>(null);
+  const [action, setAction] = useState<"ai" | "publish" | null>(null);
   const rows = value?.filter(row => row.evaluationId) ?? [];
   const selectedRows = rows.filter(row => selected.has(row.evaluationId!));
   const items = selectedRows
@@ -38,14 +38,13 @@ function BatchSelection({ classId, assignmentId, onDone }: Props) {
               return next;
             })} className="size-4 accent-primary" />
           {row.student.name}
-          <span className="ml-auto text-xs text-muted">{row.status === "FINALIZED" ? "Đã chốt" : GRADE_STATUS_LABELS[row.status] ?? row.status}</span>
+          <span className="ml-auto text-xs text-muted">{GRADE_STATUS_LABELS[row.status] ?? row.status}</span>
         </label>
       </li>)}
     </ul>
     <div className="flex flex-wrap items-center gap-2">
       <span className="text-xs text-muted">Đã chọn {items.length} / 100 bài</span>
       <Button size="sm" disabled={disabled || !buildGradeActionItems(selectedRows, "ai").length} onClick={() => setAction("ai")}>Chấm AI đã chọn</Button>
-      <Button size="sm" disabled={disabled || !buildGradeActionItems(selectedRows, "finalize").length} onClick={() => setAction("finalize")}>Chốt điểm đã chọn</Button>
       <Button size="sm" disabled={disabled || !buildGradeActionItems(selectedRows, "publish").length} onClick={() => setAction("publish")}>Công bố đã chọn</Button>
     </div>
     {action && <BatchActionDialog action={action} items={buildGradeActionItems(selectedRows, action)} onClose={() => setAction(null)} onDone={() => {

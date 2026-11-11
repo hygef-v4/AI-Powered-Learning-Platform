@@ -42,7 +42,15 @@ public final class GradingViews {
     public record EvaluationDetail(Evaluation evaluation, DocumentModel document,
             List<RubricView> rubrics, List<UUID> navigationIds, ActivitySummary activity,
             String activityState, List<Evaluation> members, List<MemberActivity> memberActivities,
-            List<GroupSectionAuthor> sectionAuthors, boolean current, UUID groupEvaluationId) {
+            List<GroupSectionAuthor> sectionAuthors, boolean current, UUID groupEvaluationId,
+            boolean editable) {
+        public EvaluationDetail(Evaluation evaluation, DocumentModel document,
+                List<RubricView> rubrics, List<UUID> navigationIds, ActivitySummary activity,
+                String activityState, List<Evaluation> members, List<MemberActivity> memberActivities,
+                List<GroupSectionAuthor> sectionAuthors, boolean current, UUID groupEvaluationId) {
+            this(evaluation, document, rubrics, navigationIds, activity, activityState, members,
+                    memberActivities, sectionAuthors, current, groupEvaluationId, true);
+        }
     }
 
     public record MemberActivity(Person student, ActivitySummary activity, String state) {

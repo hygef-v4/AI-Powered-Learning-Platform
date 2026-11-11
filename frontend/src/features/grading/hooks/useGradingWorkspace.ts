@@ -6,6 +6,7 @@ import { gradingApi } from "../api";
 import { hasPartialPoints, hasInvalidItemScores } from "../model/rubricScores";
 import { formatErrorMessage } from "../model/format";
 import { useGradingProposals } from "./useGradingProposals";
+import { readGradingAiAccount } from "../model/gradingAiTasks";
 import { buildEvaluationHref, type NavigationFilters } from "../model/navigation";
 import {
   buildItemScorePatch,
@@ -38,13 +39,14 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
+  const requestingRef = useRef(false);
   const editRevision = useRef(0);
   const [error, setError] = useState("");
   const [dirty, setDirty] = useState(false);
   const [aiAutoApplied, setAiAutoApplied] = useState(false);
   const evaluation = detail.evaluation;
   const official = evaluation.state === "FINALIZED" || evaluation.state === "PUBLISHED";
-  const disabled = busy || !detail.current || evaluation.state === "SUPERSEDED" || official;
+  const disabled = busy || !detail.current || detail.editable === false || evaluation.state === "SUPERSEDED";
   const dirtyRef = useRef(dirty);
   const { proposals, proposalsLoaded, pollExhausted, addProposal, resumePolling } = useGradingProposals(evaluation.id, busy, setError);
 
@@ -114,7 +116,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
       setDetail(refreshed);
       setError("");
       const receiptChanged = refreshed.evaluation.submissionHash !== evaluation.submissionHash;
-      if (receiptChanged || refreshed.evaluation.state === "FINALIZED" || refreshed.evaluation.state === "PUBLISHED") {
+      if (receiptChanged || refreshed.editable === false || refreshed.evaluation.state === "SUPERSEDED") {
         setForm(createInitialForm(refreshed.evaluation, refreshed.rubrics));
         setDirty(false);
         setAiAutoApplied(false);
@@ -195,7 +197,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
             const refreshed = await refresh();
             setDetail(refreshed);
             if (refreshed.evaluation.submissionHash !== saved.submissionHash
-                || refreshed.evaluation.state === "FINALIZED" || refreshed.evaluation.state === "PUBLISHED") {
+                || refreshed.editable === false || refreshed.evaluation.state === "SUPERSEDED") {
               replacementForm = createInitialForm(refreshed.evaluation, refreshed.rubrics);
             }
           } catch {
@@ -234,18 +236,20 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   }
 
   async function requestProposal(input: AiRequest): Promise<Proposal | null> {
-    if (disabled || savingRef.current) return null;
-    setBusy(true);
+    if (disabled || savingRef.current || requestingRef.current) return null;
+    requestingRef.current = true;
+    const account = readGradingAiAccount();
     setError("");
     try {
       const created = await gradingApi.requestProposal(evaluation.id, input);
+      if (account !== readGradingAiAccount()) return null;
       if (created) addProposal(created);
       return created ?? null;
     } catch (error) {
       setError(formatErrorMessage(error));
       return null;
     } finally {
-      setBusy(false);
+      requestingRef.current = false;
     }
   }
 

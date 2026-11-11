@@ -8,7 +8,7 @@ import {
   publishOutline,
   type DocumentComment,
 } from "@/shared/document";
-import { Alert, Button, Pill, showErrorToast } from "@/shared/ui";
+import { Alert, Button, Pill, showErrorToast, showToast } from "@/shared/ui";
 import { RubricChecklist } from "../components/RubricChecklistPanel";
 import { calculateChecklistPoints } from "../model/rubricScores";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
@@ -23,7 +23,6 @@ import { BatchActionDialog } from "../components/BatchActionDialog";
 import { MemberContributionPanel } from "../components/MemberContributionPanel";
 import { buildGradebookHref } from "../components/ClassProgressSection";
 import {
-  AiProgressModal,
   GradingHeaderSection,
   StudentPickerDropdown,
   TopBar,
@@ -31,13 +30,11 @@ import {
   noteCriteria,
   useSubmissionImages,
 } from "../components/GradingWorkspaceHeader";
-import { formatPoints, GRADE_STATUS_LABELS, type AiRequest, type Detail, type Proposal } from "../model/types";
+import { formatPoints, GRADE_STATUS_LABELS, type AiRequest, type Detail } from "../model/types";
 import { toEditorDocument } from "../model/submissionDocument";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import type { NavigationFilters } from "../model/navigation";
-
-/** Kết quả một lượt chấm AI cần xử lý một lần: áp đề xuất READY hoặc báo lỗi. */
-type AiOutcome = { proposal?: Proposal; message?: string };
+import { setGradingAiLabel } from "../model/gradingAiTasks";
 
 export function GradingWorkspacePage({
   evaluationId,
@@ -90,7 +87,6 @@ function Workspace({
     proposalsLoaded,
     pollExhausted,
     disabled,
-    official,
     currentIndex,
     updateForm,
     setItemScore,
@@ -107,68 +103,33 @@ function Workspace({
     resumePolling,
     applyProposal,
   } = workspace;
-  const [action, setAction] = useState<"finalize" | "publish" | null>(null);
+  const [action, setAction] = useState<"publish" | null>(null);
   const [aiOpen, setAiOpen] = useState(Boolean(proposalId));
   const [aiRequesting, setAiRequesting] = useState(false);
-  const [generatingProposalId, setGeneratingProposalId] = useState<string | null>(null);
-  const [aiOutcome, setAiOutcome] = useState<AiOutcome | null>(null);
-  const [seenPollExhausted, setSeenPollExhausted] = useState(pollExhausted);
-  const aiGenerating = aiRequesting || generatingProposalId !== null;
+  const aiGenerating = aiRequesting || proposals.some((proposal) => proposal.status === "PENDING");
   const [reviewSelection, setReviewSelection] = useState(proposalId);
   if (reviewSelection !== proposalId) {
     setReviewSelection(proposalId);
     setAiOpen(Boolean(proposalId));
   }
 
-  const pollJustExhausted = pollExhausted && !seenPollExhausted;
-  if (pollExhausted !== seenPollExhausted) setSeenPollExhausted(pollExhausted);
-  if (pollJustExhausted || (aiGenerating && error)) {
-    setAiRequesting(false);
-    setGeneratingProposalId(null);
-    setAiOutcome({ message: error || "Quá thời gian chờ phản hồi từ AI" });
-  } else if (generatingProposalId) {
-    const target = proposals.find((p) => p.id === generatingProposalId);
-    if (target && ((target.status === "READY" && target.proposal) || target.status === "FAILED" || target.status === "REJECTED")) {
-      setGeneratingProposalId(null);
-      setAiOutcome(target.status === "READY" ? { proposal: target } : { message: target.safeError ?? undefined });
-    }
-  }
-  const [appliedAiOutcome, setAppliedAiOutcome] = useState<AiOutcome | null>(null);
-  if (aiOutcome?.proposal?.proposal && appliedAiOutcome !== aiOutcome) {
-    const ready = aiOutcome.proposal;
-    setAppliedAiOutcome(aiOutcome);
-    applyProposal(ready.proposal!.checks ?? {}, ready.proposal!.feedback ?? "", ready.id,
-      ready.proposal!.itemScoresByRubric ?? {}, ready.proposal!.structuredFeedback ?? null);
-    setAiOpen(false);
-  }
-  useEffect(() => {
-    if (aiOutcome?.message) showErrorToast(aiOutcome.message);
-  }, [aiOutcome]);
-
   const handleAiGrade = async (input?: AiRequest) => {
     if (evaluation.kind === "MEMBER") {
       if (detail.groupEvaluationId && !busy && !saving) navigate(detail.groupEvaluationId);
       return;
     }
-    if (disabled || official || busy || saving || aiGenerating) return;
+    if (disabled || busy || saving || aiGenerating) return;
     setAiOpen(false);
     setAiRequesting(true);
     const created = await requestProposal(input ?? buildAiRequest());
     setAiRequesting(false);
-    if (created) {
-      if (created.status === "READY" && created.proposal) {
-        applyProposal(
-          created.proposal.checks ?? {},
-          created.proposal.feedback ?? "",
-          created.id,
-          created.proposal.itemScoresByRubric ?? {},
-          created.proposal.structuredFeedback ?? null,
-        );
-      } else if (created.status === "FAILED" || created.status === "REJECTED") {
-        if (created.safeError) showErrorToast(created.safeError);
-      } else {
-        setGeneratingProposalId(created.id);
-      }
+    if (created) setGradingAiLabel(evaluation.id, `${assignmentTitle} — ${studentName}`);
+    if (created?.status === "FAILED" || created?.status === "REJECTED") {
+      if (created.safeError) showErrorToast(created.safeError);
+    } else if (created) {
+      showToast(created.status === "READY"
+        ? "Đã có đề xuất AI mới. Mở Xem đề xuất AI để kiểm tra."
+        : "Đã gửi chấm AI. Bạn có thể tiếp tục làm việc.");
     }
   };
 
@@ -322,6 +283,9 @@ function Workspace({
   const isGroupSubmission = evaluation.kind === "GROUP_DOCUMENT";
   const assignmentKind = isGroupSubmission ? "Nhóm" : "Cá nhân";
   const assignmentTitle = context.value?.title || "Bài tập";
+  useEffect(() => {
+    setGradingAiLabel(evaluation.id, `${assignmentTitle} — ${studentName}`);
+  }, [evaluation.id, assignmentTitle, studentName]);
   const memberNames = Object.fromEntries(
     (detail.memberActivities ?? []).map(({ student }) => [student.accountId, student.name]),
   );
@@ -354,16 +318,13 @@ function Workspace({
         }
         actions={
           <>
-            <Button size="sm" variant="secondary" disabled={disabled || saving} onClick={() => void save(true)}>
-              Lưu nháp / thay đổi
-            </Button>
-            <Button size="sm" variant="secondary" disabled={disabled || saving || dirty || evaluation.state !== "DRAFT"} onClick={() => setAction("finalize")}>
-              Chốt điểm
+            <Button size="sm" variant="secondary" disabled={disabled || saving} onClick={() => void save(false)}>
+              Lưu thay đổi
             </Button>
             <Button
               size="sm"
               variant="primary"
-              disabled={busy || saving || Boolean(error) || !detail.current || evaluation.state === "PUBLISHED"}
+              disabled={busy || saving || Boolean(error) || !detail.current || detail.editable === false || evaluation.state === "PUBLISHED"}
               onClick={() => void handlePublish()}
             >
               Công bố điểm
@@ -378,6 +339,9 @@ function Workspace({
       )}
       {!detail.rubrics.length && <Alert tone="warning">Bài chưa có rubric khả dụng.</Alert>}
 
+      {evaluation.state === "PUBLISHED" && <p className="text-xs text-muted">
+        Thay đổi sẽ hiển thị cho sinh viên sau khi lưu.
+      </p>}
       <DocumentEditor
         fullWidth
         matchCommentHeight
@@ -464,11 +428,11 @@ function Workspace({
               title={evaluation.kind === "MEMBER" ? "Mở bài nộp nhóm để chấm bằng AI" : "Chấm bằng AI"}
               aria-label="Chấm bằng AI"
               className="h-9! gap-2! px-3! text-sm! font-semibold!"
-              aria-expanded={aiGenerating}
-              disabled={evaluation.kind === "MEMBER" ? busy || saving || !detail.groupEvaluationId : disabled || official || busy || saving || aiGenerating}
+              aria-busy={aiGenerating}
+              disabled={evaluation.kind === "MEMBER" ? busy || saving || !detail.groupEvaluationId : disabled || busy || saving || aiGenerating}
               onClick={() => void handleAiGrade()}
             >
-              Chấm bằng AI
+              {aiGenerating ? "AI đang chấm…" : "Chấm bằng AI"}
             </ToolbarButton>
           </>
         }
@@ -476,7 +440,7 @@ function Workspace({
 
       {isGroupSubmission && (
         <div className="mt-6 flex flex-col gap-4">
-          <MemberContributionPanel root={evaluation} members={detail.members} names={memberNames} onSaved={() => void reload()} />
+          <MemberContributionPanel root={evaluation} editable={detail.editable !== false && detail.current} members={detail.members} names={memberNames} onSaved={() => void reload()} />
         </div>
       )}
       <div className={detail.activityState === "DISABLED" ? "hidden" : "mt-6"}>
@@ -493,7 +457,7 @@ function Workspace({
             proposals={proposals}
             proposalsLoaded={proposalsLoaded}
             selectedProposalId={proposalId}
-            disabled={disabled || official}
+            disabled={disabled}
             rubrics={detail.rubrics}
             currentValues={form}
             partTitles={partTitles}
@@ -508,7 +472,6 @@ function Workspace({
           />
         </section>
       )}
-      <AiProgressModal open={aiGenerating} />
       {action && (
         <BatchActionDialog
           action={action}

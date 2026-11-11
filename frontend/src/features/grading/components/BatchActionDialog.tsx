@@ -5,6 +5,7 @@ import { Icon } from "@/shared/ui/Icon";
 import { buildAiRequest } from "./AiProposalPanel";
 import type { SourceChoice } from "@/shared/ai";
 import { gradingApi } from "../api";
+import { readGradingAiAccount, resumeGradingPolling } from "../model/gradingAiTasks";
 import { formatErrorMessage } from "../model/format";
 import type { BatchResult, ItemVersion } from "../model/types";
 
@@ -14,10 +15,11 @@ const OUTCOME_CODE_MESSAGES: Record<string, string> = {
   INVALID_GRADE_STATE: "Trạng thái bài đã thay đổi hoặc chưa phù hợp với thao tác này. Tải lại danh sách để kiểm tra.",
   GRADE_VERSION_CONFLICT: "Bài chấm đã được cập nhật. Tải lại danh sách để dùng phiên bản mới nhất.",
   GRADE_LOCKED: "Điểm đã được khóa. Tải lại danh sách để xem trạng thái hiện tại.",
+  GRADING_CLASS_READ_ONLY: "Lớp đã lưu trữ hoặc chưa mở. Không thể chỉnh sửa hay công bố điểm.",
   DUPLICATE_ITEM: "Bài bị chọn trùng; chỉ xử lý một lần.",
   INCOMPLETE_BATCH_RESULT: "Chưa nhận đủ kết quả xử lý. Tải lại danh sách để kiểm tra.",
   STRUCTURED_FEEDBACK_REVIEW_REQUIRED:
-    "Còn mục nhận xét cấu trúc cần giảng viên kiểm tra và xác nhận trước khi chốt điểm.",
+    "Còn mục nhận xét cần giảng viên kiểm tra và xác nhận trước khi công bố hoặc lưu điểm đã công bố.",
   STRUCTURED_FEEDBACK_SCORE_MISMATCH:
     "Có mục đã thay đổi điểm nhưng chưa cập nhật hoặc xác nhận lại giải thích nhận xét.",
 };
@@ -65,13 +67,17 @@ export function BatchActionDialog({
     if (busy || items.length === 0) return;
     setBusy(true);
     setError("");
+    const account = readGradingAiAccount();
     try {
       let completed: BatchResult;
       if (action === "ai") {
         completed = await gradingApi.requestProposals(items, buildAiRequest(choice));
+        if (account && account === readGradingAiAccount()) {
+          completed.items.filter((item) => item.outcome === "PENDING" || item.outcome === "QUEUED")
+            .forEach((item) => resumeGradingPolling(item.evaluationId));
+        }
       } else {
         const response = action === "finalize" ? await gradingApi.finalizeGrades(items) : await gradingApi.publishGrades(items);
-        const drafts = new Set<string>();
         const initial = { items: await Promise.all(response.items.map(async (row) => {
           if (row.outcome !== "FAILED" || row.code !== "INVALID_GRADE_STATE") return row;
           try {
@@ -79,43 +85,12 @@ export function BatchActionDialog({
             if (evaluation.state === "PUBLISHED" || (action === "finalize" && evaluation.state === "FINALIZED")) {
               return { ...row, outcome: "SKIPPED", code: evaluation.state === "PUBLISHED" ? "ALREADY_PUBLISHED" : "ALREADY_FINALIZED" };
             }
-            if (evaluation.state === "DRAFT") drafts.add(row.evaluationId);
           } catch {
             // An unavailable fresh read must not trigger an automatic grade write.
           }
           return row;
         })) };
-        const unfinalized = action === "publish" ? initial.items.filter((row) => drafts.has(row.evaluationId)) : [];
-        if (unfinalized.length > 0) {
-          const toFinalize = items.filter((it) => unfinalized.some((u) => u.evaluationId === it.evaluationId));
-          const finalized = await gradingApi.finalizeGrades(toFinalize);
-          const retryToPublish = toFinalize
-            .map((item) => {
-              const fin = finalized.items.find((r) => r.evaluationId === item.evaluationId);
-              return fin?.outcome === "SUCCESS" && fin.newVersion != null
-                ? { evaluationId: item.evaluationId, version: fin.newVersion }
-                : null;
-            })
-            .filter((item): item is ItemVersion => item !== null);
-          const retried = retryToPublish.length > 0
-            ? await gradingApi.publishGrades(retryToPublish)
-            : { items: [] };
-          completed = {
-            items: initial.items.map((orig) => {
-              if (drafts.has(orig.evaluationId)) {
-                const fin = finalized.items.find((r) => r.evaluationId === orig.evaluationId);
-                if (fin?.outcome === "SUCCESS" && fin.newVersion != null) {
-                  return retried.items.find((r) => r.evaluationId === orig.evaluationId)
-                    ?? { ...orig, code: "INCOMPLETE_BATCH_RESULT", newVersion: fin.newVersion };
-                }
-                return fin ?? orig;
-              }
-              return orig;
-            }),
-          };
-        } else {
-          completed = initial;
-        }
+        completed = initial;
       }
       setResult(completed);
       // Snapshot success before refreshing: a filtered list can remove the completed rows.
@@ -183,7 +158,7 @@ export function BatchActionDialog({
             return (
               <li key={`${r.evaluationId}-${index}`} className="border-b border-line py-2 last:border-b-0">
                 <p>
-                  Bài {index + 1}: {r.outcome === "SUCCESS" ? "Thành công" : r.outcome === "QUEUED" ? "Đã gửi yêu cầu AI" : r.outcome === "SKIPPED" ? "Bỏ qua" : "Chưa thực hiện được"}
+                  Bài {index + 1}: {r.outcome === "SUCCESS" ? "Thành công" : r.outcome === "QUEUED" || r.outcome === "PENDING" ? "Đã gửi yêu cầu AI" : r.outcome === "READY" ? "Đã có đề xuất AI" : r.outcome === "SKIPPED" ? "Bỏ qua" : "Chưa thực hiện được"}
                 </p>
                 {detailMsg && (
                   <p role={r.outcome === "FAILED" ? "alert" : undefined}

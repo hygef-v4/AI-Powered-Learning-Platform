@@ -621,27 +621,30 @@ class PlatformWorkflowIntegrationTest {
         assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId)).isEmpty();
         gradingService.finalizeEvaluation(actor(Role.TEACHER), new GradingCommands.ItemVersion(evaluationId,
                 evaluationRepository.findById(evaluationId).orElseThrow().version));
-        assertGradeLocked(evaluationId, checks);
+        assertGradeEditable(evaluationId, checks);
         assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId)).isEmpty();
         gradingService.publishEvaluation(actor(Role.TEACHER), new GradingCommands.ItemVersion(evaluationId,
                 evaluationRepository.findById(evaluationId).orElseThrow().version));
-        assertGradeLocked(evaluationId, checks);
+        assertGradeEditable(evaluationId, checks);
     }
 
-    void assertGradeLocked(UUID evaluationId, Map<UUID, Set<UUID>> checks) {
+    void assertGradeEditable(UUID evaluationId, Map<UUID, Set<UUID>> checks) {
         var before = evaluationRepository.findById(evaluationId).orElseThrow();
-        assertThatThrownBy(() -> gradingService.saveEvaluation(actor(Role.TEACHER), evaluationId,
+        gradingService.saveEvaluation(actor(Role.TEACHER), evaluationId,
                 new GradingCommands.Save(before.version, checks, BigDecimal.ZERO, null,
-                        "Attempt to change locked feedback", "A reason cannot unlock a grade", null)))
-                .isInstanceOfSatisfying(ApiException.class, error -> {
-                    assertThat(error.status().value()).isEqualTo(409);
-                    assertThat(error.code()).isEqualTo("GRADE_LOCKED");
-                });
+                        "Corrected teacher feedback", null, null));
         var after = evaluationRepository.findById(evaluationId).orElseThrow();
-        assertThat(after.version).isEqualTo(before.version);
+        assertThat(after.version).isEqualTo(before.version + 1);
         assertThat(after.state).isEqualTo(before.state);
         assertThat(after.score).isEqualByComparingTo(before.score);
-        assertThat(after.feedback).isEqualTo(before.feedback);
+        assertThat(after.feedback).isEqualTo("Corrected teacher feedback");
+        if (after.publishedAt != null) {
+            assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId))
+                    .singleElement().satisfies(grade -> {
+                        assertThat(grade.score()).isEqualByComparingTo(after.score);
+                        assertThat(grade.feedback()).isEqualTo(after.feedback);
+                    });
+        }
     }
 
     @Test

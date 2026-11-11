@@ -86,8 +86,11 @@ class GradingProposalResultHandlerTest {
         assertThat(afterDispatch.taskState).isNull();
     }
 
-    @Test
-    void readyCallbackBeforeTaskIdAttachmentTransitionsImmediatelyAndIdempotently() throws Exception {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(value = edu.aiplatform.grading.model.EvaluationStatus.class,
+            names = {"PENDING", "DRAFT", "FINALIZED", "PUBLISHED"})
+    void readyCallbackBeforeTaskIdAttachmentTransitionsImmediatelyAndIdempotently(
+            edu.aiplatform.grading.model.EvaluationStatus state) throws Exception {
         var repo = mock(IEvaluationRepository.class);
         var proposals = mock(IGradingProposalRepository.class);
         var grading = mock(GradingService.class);
@@ -102,6 +105,7 @@ class GradingProposalResultHandlerTest {
                 new BigDecimal("2.50")));
         var e = Evaluation.createPendingEvaluation(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 "hash-1", new BigDecimal("2.50"), json.writeValueAsString(rubrics), Instant.now());
+        e.state = state;
         var p = new GradingProposal();
         p.id = UUID.randomUUID();
         p.evaluationId = e.id;

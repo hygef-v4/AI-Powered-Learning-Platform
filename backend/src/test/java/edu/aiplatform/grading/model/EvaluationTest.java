@@ -41,23 +41,18 @@ class EvaluationTest {
     }
 
     @Test
-    void finalizedAndPublishedGradesRejectChangesEvenWithReason() {
+    void legacyFinalizedAndPublishedGradesAllowCorrections() {
         var e = evaluation();
         e.saveGrade("{}", new BigDecimal("4"), BigDecimal.ZERO, null, "ok", null, actor, now);
-        e.finalizeGrade(actor, now);
-        assertThatThrownBy(() -> e.saveGrade("{}", new BigDecimal("6"), BigDecimal.ZERO, null, "updated", "correction", actor, now))
-                .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
-                        ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
+        e.state = EvaluationStatus.FINALIZED;
+        e.saveGrade("{}", new BigDecimal("6"), BigDecimal.ZERO, null, "updated", "correction", actor, now);
+        assertThat(e.state).isEqualTo(EvaluationStatus.DRAFT);
         e.publishGrade(actor, now);
-        assertThatThrownBy(() -> e.saveGrade("{}", new BigDecimal("6"), BigDecimal.ZERO, null, null, null, actor, now))
-                .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
-                        ex -> assertThat(ex.code()).isEqualTo("GRADE_LOCKED"));
-        assertThatThrownBy(() -> e.overrideMemberScore(BigDecimal.TEN, BigDecimal.ZERO, "correction", actor, now));
-        assertThat(e.memberOverride).isFalse();
-        assertThat(e.status()).isEqualTo(EvaluationStatus.PUBLISHED);
-        assertThat(e.score()).isEqualByComparingTo("4");
-        assertThat(e.feedback).isEqualTo("ok");
-        assertThat(e.history()).isEmpty();
+        e.overrideMemberScore(BigDecimal.TEN, BigDecimal.ZERO, "correction", actor, now.plusSeconds(1));
+        assertThat(e.memberOverride).isTrue();
+        assertThat(e.state).isEqualTo(EvaluationStatus.PUBLISHED);
+        assertThat(e.score).isEqualByComparingTo("10");
+        assertThat(e.history()).hasSize(2);
     }
 
     @Test
@@ -78,7 +73,7 @@ class EvaluationTest {
     @Test
     void feedbackLimitAndPublishRequireValidState() {
         var e = evaluation();
-        assertThatThrownBy(() -> e.publishGrade(actor, now)).hasMessageContaining("FINALIZED");
+        assertThatThrownBy(() -> e.publishGrade(actor, now)).hasMessageContaining("DRAFT");
         assertThatThrownBy(
                 () -> e.saveGrade("{}", BigDecimal.ONE, BigDecimal.ZERO, null, "x".repeat(10001), null, actor, now))
                 .hasMessageContaining("10000");

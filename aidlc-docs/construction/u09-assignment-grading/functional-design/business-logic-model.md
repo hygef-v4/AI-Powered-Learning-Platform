@@ -1,5 +1,10 @@
 # U09 Assignment Grading — business-logic-model
 
+## Cập nhật có hiệu lực 2026-11-11
+
+Theo kế hoạch `../../plans/code-generation-plan/2026-11-11-editable-grades-and-background-ai.md`: không sinh FINALIZED mới; lưu trước công bố là DRAFT, công bố trực tiếp, sửa sau công bố giữ PUBLISHED. Quyền ghi phụ thuộc lớp OPEN và receipt/version hiện hành; ARCHIVED chỉ đọc. Giữ enum/endpoint finalize cũ như xác thực không khóa. Kiểm tra xác nhận AI tại publish và save PUBLISHED. AI tạo proposal bất đồng bộ, READY không tự ghi điểm; UI theo dõi ở layout giảng dạy, giảng viên áp dụng rõ ràng. Không thêm snapshot công bố, schema, queue hay realtime mới. Các mô tả chốt/khóa cũ bên dưới chỉ còn là tham chiếu lịch sử khi mâu thuẫn với cập nhật này.
+
+
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
 

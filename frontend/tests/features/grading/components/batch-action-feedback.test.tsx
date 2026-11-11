@@ -122,14 +122,14 @@ describe("grade action success feedback", () => {
 });
 
 
-it("only publishes successfully finalized items and retains review-required errors", async () => {
-  mocks.publishGrades.mockResolvedValueOnce({ items: items.map(i => ({ ...i, outcome: "FAILED", code: "INVALID_GRADE_STATE", newVersion: null })) })
-    .mockResolvedValueOnce({ items: [success.items[0]] });
-  mocks.finalizeGrades.mockResolvedValue({ items: [success.items[0], { ...items[1], outcome: "FAILED", code: "STRUCTURED_FEEDBACK_REVIEW_REQUIRED", newVersion: null }] });
+it("publishes directly and retains review errors without a finalize retry", async () => {
+  mocks.publishGrades.mockResolvedValue({ items: [success.items[0], {
+    ...items[1], outcome: "FAILED", code: "STRUCTURED_FEEDBACK_REVIEW_REQUIRED", newVersion: null,
+  }] });
   render(<Harness action="publish" />);
   fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }));
   await act(async () => {});
-  expect(mocks.publishGrades).toHaveBeenLastCalledWith([{ evaluationId: "e1", version: 4 }]);
-  expect(mocks.finalizeGrades).toHaveBeenCalledExactlyOnceWith(items);
+  expect(mocks.publishGrades).toHaveBeenCalledExactlyOnceWith(items);
+  expect(mocks.finalizeGrades).not.toHaveBeenCalled();
   expect(screen.getByRole("dialog")).toHaveTextContent(/xác nhận|duyệt/i);
 });

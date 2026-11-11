@@ -1,3 +1,4 @@
+vi.mock("@/features/grading/components/GradingAiTaskTracker", () => ({ GradingAiTaskTracker: () => null }));
 import { render, screen, cleanup } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";

@@ -359,7 +359,8 @@ public class GradebookService {
                         : null;
         return new StudentGradeView(evaluation.assignmentId, evaluation.attemptId, evaluation.score,
                 evaluation.maxScore, evaluation.feedback, evaluation.publishedAt,
-                !evaluation.changes.isEmpty(), evaluation.rubricChecks, summary,
+                evaluation.publishedAt != null && evaluation.gradedAt != null
+                        && evaluation.gradedAt.isAfter(evaluation.publishedAt), evaluation.rubricChecks, summary,
                 List.copyOf(rubricItems), rubrics.isEmpty() ? evaluation.score : rubricScore,
                 evaluation.memberOverride);
     }
@@ -449,17 +450,18 @@ public class GradebookService {
         return new GradebookExport(output, title);
     }
 
-    /** Formats one export row and includes scores and feedback only for official grades. */
+    /** Staff exports include saved drafts; student endpoints still require publication. */
     private List<String> buildExportRow(Person student, GradeCell grade, String assignmentTitle) {
-        boolean official = grade.status().equals("FINALIZED") || grade.status().equals("PUBLISHED");
-        String score = official && grade.score() != null ? grade.score().toPlainString() : "";
-        String feedback = official && grade.feedback() != null ? grade.feedback() : "";
+        boolean saved = grade.status().equals("DRAFT") || grade.status().equals("FINALIZED")
+                || grade.status().equals("PUBLISHED");
+        String score = saved && grade.score() != null ? grade.score().toPlainString() : "";
+        String feedback = saved && grade.feedback() != null ? grade.feedback() : "";
         String status = switch (grade.status()) {
             case "NOT_SUBMITTED" -> "Chưa nộp";
             case "IN_PROGRESS" -> "Đang làm bài";
             case "PENDING" -> "Chờ chấm";
             case "DRAFT" -> "Đã chấm";
-            case "FINALIZED" -> "Đã chốt điểm";
+            case "FINALIZED" -> "Đã lưu";
             case "PUBLISHED" -> "Đã công bố";
             case "SUPERSEDED" -> "Bài nộp cũ";
             default -> "Chưa xác định";
