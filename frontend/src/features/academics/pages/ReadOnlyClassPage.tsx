@@ -1,14 +1,14 @@
 "use client";
 
 import { useUrlState } from "@/shared/navigation/useUrlState";
-import { useCallback, useId, useState } from "react";
+import { useCallback, useState } from "react";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { teacherClassTabs } from "../slots";
 import { StudentClassPage } from "./StudentClassPage";
 import { EnrollmentPanel } from "../components/EnrollmentPanel";
-import { Field, LockedInput, PageHeader, Section } from "@/shared/ui";
+import { PageHeader, Section } from "@/shared/ui";
 import { EmptyState, PageHeading, Tabs } from "../components/AcademicsUi";
-import type { CourseClassView, EnrollmentView } from "../model/types";
+import { CLASS_STATUS_LABELS, type CourseClassView, type EnrollmentView } from "../model/types";
 
 import styles from "../styles/academics.module.css";
 
@@ -28,7 +28,6 @@ export function ReadOnlyClassPage({
 }) {
   const [tab, openTab] = useUrlState<ClassTab>("tab", "info", CLASS_TABS);
   const [groupNames, setGroupNames] = useState<{ classId: string; names: Record<string, string>; leaders: string[] } | null>(null);
-  const fieldId = useId();
   // Ô trên dòng tiêu đề cho nút của tab đang mở (unit gắn vào bằng portal).
   const [headerActions, setHeaderActions] = useState<HTMLElement | null>(null);
   // U12 dựng bảng sinh viên kèm nhóm thì bảng sinh viên chỉ xem của trang ẩn đi.
@@ -77,24 +76,24 @@ export function ReadOnlyClassPage({
         // Đổi tab thì dựng lại khung này để nội dung mới mờ vào, khớp với gạch chân đang trượt.
         <div key={tab} role="tabpanel" aria-label={tabs.find((t) => t.key === tab)?.label} className={styles.tabPanel}>
         {tab === "info" && (
-          // Thẻ Thông tin lớp như trang lớp của sinh viên, thêm ô Sinh viên (đang học); không có tên lớp, học kỳ hay học liệu
-          // (yêu cầu 2026-11-02). Bên dưới hàng thẻ chia đôi do các unit gắn vào (Thông báo gần đây, Tiến độ nộp bài).
           <div className="flex flex-col gap-4" data-teacher-overview="true">
             <Section title="Thông tin lớp">
-              <div className="grid min-w-0 gap-4 sm:grid-cols-3">
-                <Field label="Mã môn" htmlFor={`${fieldId}-subject`}><LockedInput id={`${fieldId}-subject`} value={value.subject.code} /></Field>
-                <Field label="Mã lớp" htmlFor={`${fieldId}-code`}><LockedInput id={`${fieldId}-code`} value={value.code} /></Field>
-                <Field label="Sinh viên" htmlFor={`${fieldId}-students`}><LockedInput id={`${fieldId}-students`} value={String(studentSummaryCount)} /></Field>
-              </div>
-              <div>
-                  <Field label="Mô tả" htmlFor={`${fieldId}-description`}>
-                    <p id={`${fieldId}-description`} className="min-h-28 rounded-lg border border-line bg-sunken px-3 py-2 text-[13.5px] whitespace-pre-line text-body [overflow-wrap:anywhere]">
-                      {normalizedDescription || <span className="text-muted">Chưa có mô tả.</span>}
-                    </p>
-                  </Field>
-              </div>
+              <dl className="grid min-w-0 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  ["Môn học", `${value.subject.code} · ${value.subject.name}`],
+                  ["Mã lớp", value.code],
+                  ["Sinh viên", String(studentSummaryCount)],
+                  ["Trạng thái", CLASS_STATUS_LABELS[value.status]],
+                ].map(([label, content]) => (
+                  <div key={label} className="min-w-0">
+                    <dt className="mb-1 text-xs text-muted">{label}</dt>
+                    <dd className="break-words text-sm font-medium text-ink">{content}</dd>
+                  </div>
+                ))}
+              </dl>
+              {normalizedDescription && <p className="text-sm whitespace-pre-line text-body [overflow-wrap:anywhere]">{normalizedDescription}</p>}
             </Section>
-            <div className="grid items-start gap-4 lg:grid-cols-2">
+            <div>
               <SlotOutlet slot={teacherClassTabs} props={{ classId: value.id, tab: "info" as const }} />
             </div>
           </div>

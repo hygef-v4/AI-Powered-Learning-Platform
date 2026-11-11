@@ -112,6 +112,13 @@ public class GroupAccess {
         }
     }
 
+    /** Đề xuất nhóm không thuộc phạm vi của người gọi: ghi audit và trả {@code 404} (BR-U12-91). */
+    public ApiException denyProposal(Actor actor, UUID proposalId, String reason) {
+        audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
+                "GROUP_PROPOSAL", String.valueOf(proposalId), AuditResult.DENIED, reason, Map.of(), clock.instant()));
+        return ApiException.notFound("GROUP_PROPOSAL_NOT_FOUND");
+    }
+
     private void deny(Actor actor, UUID classId, String action, String reason) {
         audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED", "CLASS",
                 String.valueOf(classId), AuditResult.DENIED, reason, Map.of("action", action), clock.instant()));

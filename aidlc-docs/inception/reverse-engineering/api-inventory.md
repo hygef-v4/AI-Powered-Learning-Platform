@@ -45,7 +45,6 @@ Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; đối chiếu lạ
 @PostMapping("/connections")
 @PostMapping("/connections:test")
 @PutMapping("/connections/{id}")
-@GetMapping("/connections/{id}/key")
 @PostMapping("/connections/{id}:test")
 @PutMapping("/connections/{id}/status")
 @DeleteMapping("/connections/{id}")
@@ -68,7 +67,6 @@ Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; đối chiếu lạ
 @PostMapping("/api/v1/me/ai-connections")
 @PostMapping("/api/v1/me/ai-connections:test")
 @PutMapping("/api/v1/me/ai-connections/{id}")
-@GetMapping("/api/v1/me/ai-connections/{id}/key")
 @PostMapping("/api/v1/me/ai-connections/{id}:test")
 @PutMapping("/api/v1/me/ai-connections/{id}/status")
 @DeleteMapping("/api/v1/me/ai-connections/{id}")
@@ -342,6 +340,29 @@ Thêm 2026-11-11 trên nhánh `feat/exam-image-import`, chưa có ở staging. N
 @GetMapping("/api/v1/classes/{classId}/students/{studentId}/group")
 @GetMapping("/api/v1/classes/{classId}/group-assignments")
 @GetMapping("/api/v1/classes/{classId}/group-assignments/{assignmentId}/progress")
+```
+
+## [groups/controller/GroupProposalController.java](../../../backend/src/main/java/edu/aiplatform/groups/controller/GroupProposalController.java)
+
+Thêm 2026-11-11 trên nhánh `feat/student-self-grouping` (sinh viên tự chia nhóm, US-GRP-007…010): 15 mapping.
+
+```java
+@GetMapping("/api/v1/classes/{classId}/group-formation")
+@PutMapping("/api/v1/classes/{classId}/group-formation")
+@GetMapping("/api/v1/classes/{classId}/group-proposals")
+@PostMapping("/api/v1/classes/{classId}/group-proposals:approve")
+@PostMapping("/api/v1/group-proposals/{proposalId}:reject")
+@GetMapping("/api/v1/me/classes/{classId}/group-proposal")
+@PostMapping("/api/v1/classes/{classId}/group-proposals")
+@PutMapping("/api/v1/group-proposals/{proposalId}/name")
+@PostMapping("/api/v1/group-proposals/{proposalId}/invitations")
+@PostMapping("/api/v1/group-proposals/{proposalId}/invitations/{accountId}:revoke")
+@PostMapping("/api/v1/group-proposals/{proposalId}:accept")
+@PostMapping("/api/v1/group-proposals/{proposalId}:decline")
+@PostMapping("/api/v1/group-proposals/{proposalId}:leave")
+@PostMapping("/api/v1/group-proposals/{proposalId}:submit")
+@PostMapping("/api/v1/group-proposals/{proposalId}:withdraw")
+@PostMapping("/api/v1/group-proposals/{proposalId}:cancel")
 ```
 
 ## [identity/controller/AdminAccountController.java](../../../backend/src/main/java/edu/aiplatform/identity/controller/AdminAccountController.java)

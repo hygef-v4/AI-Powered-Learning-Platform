@@ -354,9 +354,8 @@ class PlatformWorkflowIntegrationTest {
         String key = "integration-only-key-never-sent";
         var saved = aiConnectionService.addPersonal(actor(Role.TEACHER), AiProvider.OPENAI,
                 new AiConnectionService.SaveCommand(key, "gpt-6.1-sol", null));
-        assertThat(aiConnectionService.revealPersonal(actor(Role.TEACHER), saved.id())).isEqualTo(key);
-        assertThatThrownBy(() -> aiConnectionService.revealPersonal(actor(Role.STUDENT), saved.id()))
-                .isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> aiConnectionService.setPersonalEnabled(actor(Role.STUDENT), saved.id(), false,
+                saved.version())).isInstanceOf(ApiException.class);
         var disabled = aiConnectionService.setPersonalEnabled(actor(Role.TEACHER), saved.id(), false, saved.version());
         assertThat(disabled.status().name()).isEqualTo("DISABLED");
         assertThat(jdbc.queryForObject("select row_to_json(c)::text from ai_connections c where id=?",
@@ -498,6 +497,8 @@ class PlatformWorkflowIntegrationTest {
                         List.of(new RubricItem(UUID.randomUUID(), "Correct answer", BigDecimal.TEN))))));
         prepared = assignmentAuthoringService.detail(teacher, prepared.id());
         assertThat(rubric.complete()).isTrue();
+        // Hoàn tất bài rồi mới xếp lịch giao (yêu cầu 2026-11-11).
+        prepared = assignmentAuthoringService.review(teacher, prepared.id(), prepared.version());
         return assignmentPublicationService.publish(teacher, prepared.id(),
                 new AssignmentCommands.Publish(prepared.version(), null, true, Instant.now().plusSeconds(3600),
                         null, 2, false));

@@ -17,6 +17,17 @@ Mở rộng nhập DOCX của U07 sang ảnh và PDF scan, dùng AI đọc ảnh
 
 Tạo worktree riêng vì thư mục chính có thay đổi chưa commit của phiên khác.
 
+## U12 — Sinh viên tự chia nhóm, giảng viên duyệt — Build and Test, 2026-11-11
+
+Tính năng mới mở rộng U12: sinh viên tự lập đề xuất nhóm trong lớp, giảng viên duyệt thì đề xuất thành nhóm chính thức. Brownfield, dùng lại tài liệu reverse engineering hiện hành. [Câu hỏi xác nhận](inception/requirements/2026-11-11-student-self-grouping-questions.md) (A cả 9 câu); [yêu cầu SG-01…09](inception/requirements/2026-11-11-student-self-grouping.md). Nhánh `feat/student-self-grouping` (`--no-track` từ `origin/staging@e78ac7b9`), worktree `../AI-Powered-Learning-Platform-self-grouping`.
+
+- [x] Workspace Detection: brownfield, bỏ qua Reverse Engineering.
+- [x] Requirements Analysis: người dùng duyệt 2026-11-11. Security/Resiliency giữ phạm vi, PBT tắt.
+- [x] User Stories: [kế hoạch](inception/plans/2026-11-11-student-self-grouping-story-plan.md) A cả 4 câu; US-GRP-007…010, người dùng duyệt 2026-11-11.
+- [x] Workflow Planning: [kế hoạch thực hiện](inception/plans/2026-11-11-student-self-grouping-execution-plan.md), người dùng duyệt 2026-11-11. Chạy Functional Design U12, Code Generation, Build and Test; bỏ qua Application Design, Units Generation, NFR Requirements/Design, Infrastructure Design.
+- [x] Functional Design U12: [kế hoạch](construction/plans/functional-design-plan/2026-11-11-u12-student-self-grouping-functional-design-plan.md) A cả 9 câu; BR-U12-70…96, F16–F24, người dùng duyệt 2026-11-11.
+- [x] Code Generation U12: [kế hoạch 19 bước](construction/plans/code-generation-plan/2026-11-11-u12-student-self-grouping-code-generation-plan.md) xong 19/19, người dùng duyệt 2026-11-11. Backend 54 test liên quan qua (gồm PostgreSQL); frontend 45 test nhóm, tsc, eslint qua. Chưa thử trên trình duyệt, chưa chạy toàn bộ suite.
+- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-11-student-self-grouping-results.md). Backend `mvn -B verify` 2.203 test qua; frontend lint, typecheck, 978/978 test, build qua; thử hai vai trò trên stack riêng `selfgroup`. Người dùng duyệt 2026-11-11; đã commit trên nhánh, chưa push.
 
 ## UI/UX đợt 2 — kiểm báo cáo ngày 2026-11-10, đã commit, chưa push, 2026-11-11
 
@@ -700,3 +711,52 @@ Evidence: construction/build-and-test/2026-11-10-student-published-result-entry.
 Plan: construction/plans/code-generation-plan/2026-11-11-editable-grades-and-background-ai.md. Evidence: construction/build-and-test/2026-11-11-editable-grades-and-background-ai.md. Security/Resiliency compliant for existing scope; PBT disabled. Existing U12 preservation of official group grades on resubmission remains, with stale-receipt edits denied. Student tabs see saved corrections on load/refetch; no realtime push added.
 
 User subsequently authorized descriptive local commits. Source/tests and documentation recorded separately; fresh precommit frontend grading/assignment-work run passed211 tests/25 files. No push or deployment.
+
+## Ba lỗi UI/UX staging — 2026-11-11
+
+Người dùng duyệt "sửa 3 lỗi trên". Baseline origin/staging ce40e447; thực hiện tại worktree riêng `.claude/worktrees/ui-ux-staging`, nhánh `codex/ui-ux-staging`.
+
+- [x] Workspace Detection, yêu cầu và kế hoạch sửa giới hạn; dùng lại brownfield context.
+- [x] Pagination/PageNav xuống dòng; Switch có accessible name từ nhãn; Field nối lỗi tới control và giữ focus khi lỗi thay đổi.
+- [x] 332 test/51 file, TypeScript, ESLint, diff check qua. Production build exit 0, có cảnh báo font bị chặn và 27 standalone traced files ở ngoài root do junction dependency.
+- [x] Ghi giới hạn: chưa kiểm tra layout trên browser/mobile, chưa xác nhận standalone deployment; không commit/push/deploy hay thay checkout gốc.
+
+[Kế hoạch](construction/plans/code-generation-plan/2026-11-11-three-ui-fixes.md) và [kết quả](construction/build-and-test/2026-11-11-three-ui-fixes.md). Security/Resiliency giữ phạm vi đã duyệt, PBT disabled. Các stage thiết kế mới/stories/hạ tầng/operations không cần cho ba lỗi hiện hữu.
+
+### Staging readiness — ba lỗi UI/UX, 2026-11-11
+
+- [x] Fetch origin/staging vẫn cùng ce40e447; review không thấy blocker.
+- [x] Full frontend 963 test/135 file qua; Docker build sạch cảnh báo font/tracing và image smoke test health UP/login/icon 200.
+- [x] Đủ điều kiện commit/tạo PR staging; merge sau CI PR. Chưa commit/push/merge; chưa xác minh browser/mobile thực. Chi tiết trong báo cáo ba lỗi UI/UX ở trên.
+
+### Cho phép tạo PR — ba lỗi UI/UX, 2026-11-11
+
+Người dùng yêu cầu "tạo pr vào staging cho tôi". Cho phép commit/push nhánh `codex/ui-ux-staging` và tạo PR base `staging`; không bao gồm merge. Source là bản đã qua 963 test/135 file và Docker smoke. Trạng thái phát hành cuối theo PR GitHub và phản hồi giao hàng.
+
+## Teacher class overview — 2026-11-11
+
+- [x] User approved replacing submission-progress tabs/recent announcements on teacher class info with compact read-only class facts, three assignment summary links and nearest3 upcoming deadlines. Student class info and announcement routes preserved. Reused assignment list/submission summaries; no full gradebook load, new API or schedule scope.
+- [x] RED/GREEN:264 related tests/31 files pass; final targeted34/2 pass after link fix. TypeScript, scoped ESLint and whitespace pass. Local browser verified1440px/390px, light/dark, correct counts and actionable filtered gradebook link. No class/grade writes. Security/Resiliency retained; PBT disabled.
+- Limits: numbers refresh on page reload; summary links select the first assignment with matching work. Production build/backend suite not repeated for this frontend-only change; no commit/push/deploy. Plan/evidence: construction/plans/code-generation-plan/2026-11-11-teacher-class-overview.md.
+
+- Subsequent user request authorizes local commit, push and PR to staging. Fresh34 targeted tests and TypeScript pass; fetched staging has no divergence from the implementation baseline and merge preview has no conflict. Publish the overview changes only; no automatic merge/deployment.
+
+## Gradebook bulk selection in the table — 2026-11-11
+
+- [x] Approved proposal implemented inline: no duplicate selection list/toggle, row/header mixed-state checkboxes,20 rows/page, explicit all-filtered selection capped100. Counts reflect action eligibility. Selection survives page changes but resets for assignment/search/status/mode. Group roots selected once; member grades remain separately accessible.
+- [x] RED4 new tests, GREEN189 grading tests/20 files; final targeted20/2 pass, TypeScript/scoped lint pass. Local5-student/group-root UI verified at1440px/390px, light/dark, no document overflow; no AI/publish/data writes.30/101 scenarios covered with fixtures.
+- No backend/API/dependency, production build, commit/push/deploy. Security/Resiliency retained, PBT off. Plan/evidence: construction/plans/code-generation-plan/2026-11-11-gradebook-bulk-selection.md.
+
+- Approved follow-up: global announcement navigation/title is “Tất cả thông báo”; nested class navigation/title remains “Thông báo lớp”. URLs/filtering/authorization unchanged.11 announcement tests and scoped lint pass; local browser verifies both destinations and titles. Checkbox cursors also verified as pointer/enabled and not-allowed/disabled. Changes remain uncommitted.
+
+- Shared cursor follow-up: base CSS applies pointer to enabled native/custom interactive controls and not-allowed to disabled, preserving text/drag/pending utility overrides. Actual group choices and14 browser style probes pass;324 related tests/44 files, lint and production build/typecheck pass. No backend/data changes, commit/push. Not every screen/state was manually exercised.
+
+- Subsequent user authorization: “giúp tôi commit”. Record bulk-selection, announcement labels, shared cursors and documentation in separate local commits;15 fresh precommit tests/3 files pass. No push/merge/deploy.
+
+- PR74 CI follow-up: feature-registration test retained the old global announcement labels. Reproduced RED locally and updated all3 role expectations to the approved label; fixed-class labels remain unchanged. Full frontend967 tests/136 files and scoped lint pass. User authorizes pushing the fix to staging to repair PR74; no merge/deploy requested. Evidence: .tmp/pr74-red.log, pr74-frontend-full.log.
+
+### PR delivery — ba lỗi UI/UX
+
+Tích hợp staging `1f713615`; giữ cả hai lịch sử audit/state. Fresh full frontend
+963 test/135 file, ESLint/TypeScript, Docker build và runtime smoke qua. Người dùng
+cho phép push/tạo PR vào staging; không tự merge PR. Xem PR GitHub để biết trạng thái CI.

@@ -50,15 +50,18 @@ class AssignmentPublicationServiceTest {
     }
 
     @Test
-    void publishGoesStraightFromDraftCheckingReadinessAndSchedule() {
+    void publishNeedsAFinalizedAssignmentThenChecksReadinessAndSchedule() {
         Instant later = NOW.plus(Duration.ofDays(1));
         Instant end = NOW.plus(Duration.ofDays(7));
-        Assignment empty = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of(heading("H1", "Mục"))), false);
-        assertThat(code(() -> f.publication.publish(f.teacher, empty.id(), publish(empty.version(), later, end, null, 1))))
-                .as("bài nháp chưa đủ: luật duyệt kiểm ngay khi phát hành").isEqualTo("ASSIGNMENT_NOT_READY");
         Assignment draft = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of(heading("H1", "Mục"))), true);
-        assertThat(f.publication.publish(f.teacher, draft.id(), publish(draft.version(), later, end, null, 1)).status())
-                .as("không cần qua Đã duyệt").isEqualTo(AssignmentStatus.SCHEDULED);
+        assertThat(code(() -> f.publication.publish(f.teacher, draft.id(), publish(draft.version(), later, end, null, 1))))
+                .as("phải hoàn tất bài rồi mới xếp lịch (yêu cầu 2026-11-11)").isEqualTo("ASSIGNMENT_NOT_FINALIZED");
+        assertThat(f.support.detail(f.teacher, draft, List.of()).permissions().canPublish()).isFalse();
+        Assignment finalized = f.authoring.review(f.teacher, draft.id(), draft.version()) == null ? null : f.store.get(draft.id());
+        assertThat(finalized.status()).isEqualTo(AssignmentStatus.REVIEWED);
+        assertThat(f.support.detail(f.teacher, finalized, List.of()).permissions().canPublish()).isTrue();
+        assertThat(f.publication.publish(f.teacher, finalized.id(), publish(finalized.version(), later, end, null, 1)).status())
+                .isEqualTo(AssignmentStatus.SCHEDULED);
         Assignment open = f.put(AssignmentScope.CLASS, AssignmentStatus.OPEN, new DocumentModel(List.of(heading("H1", "Mục"))), true);
         assertThat(code(() -> f.publication.publish(f.teacher, open.id(), publish(open.version(), later, end, null, 1))))
                 .isEqualTo("ASSIGNMENT_STATUS_INVALID");

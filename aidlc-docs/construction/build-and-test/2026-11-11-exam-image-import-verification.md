@@ -55,6 +55,10 @@ Stack Docker riêng (project `examimport`, cổng 28088) chạy mã của nhánh
 
 Sau các bản sửa: backend `mvn verify` 2201/2201, BUILD SUCCESS; frontend Vitest 969/969 (135 file), tsc, eslint sạch.
 
+### Sau khi merge `origin/staging` (2026-11-11)
+
+Merge 28 commit của staging (PR #70–#75, gồm #72 gắn ciphertext key AI với kết nối, và tính năng sinh viên tự chia nhóm). Có một xung đột mã ở `AiTaskJobHandler.dispatch`: giữ tham số ảnh của nhánh này và dùng `cipher.decryptConnectionKey(connection)` của staging. `audit.md` và `aidlc-state.md` giữ mục của cả hai nhánh. Sau merge: backend `mvn verify` 2264/2264, BUILD SUCCESS; frontend Vitest 998/998 (141 file), tsc, eslint sạch. Không thử lại trên trình duyệt sau merge.
+
 ### Còn tồn tại
 
 - Khung cắt hình do AI ước lượng hơi rộng: với ảnh chụp nghiêng, hình dính thêm một dòng chữ phía trên.

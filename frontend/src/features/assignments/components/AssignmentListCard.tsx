@@ -12,12 +12,14 @@ import { rememberAssignmentsPage } from "../model/outline";
 import { statusLabels, statusTones, type AssignmentRow, type AssignmentStatus } from "../model/types";
 import type { useAssignmentPage } from "../hooks/useAssignmentPage";
 
-type Tab = "open" | "draft" | "closed";
+type Tab = "open" | "draft" | "finalized" | "closed";
 type Kind = "INDIVIDUAL" | "GROUP" | "PRACTICE";
 
 const TABS: { value: Tab; label: string; statuses: AssignmentStatus[]; empty: string }[] = [
   { value: "open", label: "Đang mở", statuses: ["OPEN", "SCHEDULED"], empty: "Không có bài đang mở." },
-  { value: "draft", label: "Nháp", statuses: ["DRAFT", "REVIEWED"], empty: "Không có bài nháp." },
+  { value: "draft", label: "Nháp", statuses: ["DRAFT"], empty: "Không có bài nháp." },
+  // Bài đã hoàn tất, chờ xếp lịch giao (yêu cầu 2026-11-11).
+  { value: "finalized", label: "Hoàn tất", statuses: ["REVIEWED"], empty: "Không có bài hoàn tất." },
   { value: "closed", label: "Đã đóng", statuses: ["CLOSED", "RETIRED"], empty: "Chưa có bài đã đóng." },
 ];
 const KIND_LABELS: Record<Kind, string> = { INDIVIDUAL: "Cá nhân", GROUP: "Nhóm", PRACTICE: "Luyện tập" };
@@ -37,7 +39,7 @@ function kindOf(row: AssignmentRow): Kind {
  */
 export function AssignmentListCard({ page, classId }: { page: ReturnType<typeof useAssignmentPage>; classId?: string }) {
   const router = useRouter();
-  const [tab, setTab] = useUrlState<Tab>("assignmentState", "open", ["open", "draft", "closed"]);
+  const [tab, setTab] = useUrlState<Tab>("assignmentState", "open", ["open", "draft", "finalized", "closed"]);
   const [kind, setKind] = useUrlState<Kind | "">("assignmentKind", "", ["", "INDIVIDUAL", "GROUP", "PRACTICE"]);
   const [query, setQuery] = useUrlState<string>("assignmentQuery", "", undefined, "replace");
   const [pageValue, setPageValue] = useUrlState<string>("assignmentPage", "0", undefined, "replace");

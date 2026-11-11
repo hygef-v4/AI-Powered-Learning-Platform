@@ -271,7 +271,7 @@ export function DocumentViewer({
           sheet ? (
             <div
               style={{ zoom }}
-              className="mx-auto w-fit min-w-[min(100%,960px)] bg-white text-ink shadow-[0_2px_12px_rgb(0_0_0/0.45)]"
+              className="mx-auto w-fit min-w-[min(100%,960px)] bg-white text-sheet-ink shadow-[0_2px_12px_rgb(0_0_0/0.45)]"
               data-testid="material-xlsx-viewer"
             >
               <table className="min-w-full border-collapse text-[13px]">

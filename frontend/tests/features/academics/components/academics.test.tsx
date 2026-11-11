@@ -247,7 +247,7 @@ describe("U05 reference UI", () => {
     expect(screen.queryByText("Phân bố điểm")).not.toBeInTheDocument();
   });
 
-  it("tab Thông tin lớp của giảng viên giống trang lớp sinh viên: thẻ thông tin chỉ xem, không có ô số liệu, mô tả an toàn", () => {
+  it("shows teacher class facts as text, counts active students and safely hides empty descriptions", () => {
     const description = `<script>alert(1)</script> Mô tả học phần chi tiết`;
     const removedStudent: EnrollmentView = { ...student, accountId: "removed-1", name: "Sinh viên Đã gỡ", status: "REMOVED" };
     const { container, rerender } = render(
@@ -260,12 +260,18 @@ describe("U05 reference UI", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Thông tin lớp", level: 2 })).toBeInTheDocument();
-    expect(screen.getByLabelText("Mã lớp")).toHaveValue(course.code);
+    expect(screen.getByText(course.code)).toBeInTheDocument();
     // Chỉ đếm sinh viên đang học.
-    expect(screen.getByLabelText("Sinh viên")).toHaveValue("1");
+    expect(screen.getByText("1", { selector: "dd" })).toBeInTheDocument();
+    expect(screen.getByText(`${course.subject.code} · ${course.subject.name}`)).toBeInTheDocument();
+    expect(container.querySelector("input")).toBeNull();
     expect(screen.getByText(description)).toBeInTheDocument();
     expect(container.querySelector("script")).toBeNull();
     expect(screen.queryByTestId("overview-students-card")).not.toBeInTheDocument();
+
+    rerender(<ReadOnlyClassPage audience="teacher" value={{ ...course, description: "  " }} students={[student]} onBack={vi.fn()} />);
+    expect(screen.queryByText("Chưa có mô tả.")).not.toBeInTheDocument();
+    expect(screen.queryByText(description)).not.toBeInTheDocument();
 
     rerender(<ReadOnlyClassPage audience="student" value={course} students={[student]} onBack={vi.fn()} />);
     expect(screen.getByRole("heading", { name: "Thông tin lớp", level: 2 })).toBeInTheDocument();

@@ -56,7 +56,7 @@ public class AiConnectionService {
 
     // ---- API cá nhân ----------------------------------------------------------------------------------------
     // Như khóa của trường (yêu cầu 2026-11-05): nhiều khóa cho một nhà cung cấp, mỗi khóa có công tắc, thay, kiểm tra,
-    // xem lại, thu hồi theo id; chỉ chủ khóa làm được.
+    // thu hồi theo id; chỉ chủ khóa làm được. Khóa chỉ ghi: đã lưu thì không đọc lại được qua API (2026-11-11).
 
     /** Mọi khóa cá nhân chưa thu hồi của người dùng, theo nhà cung cấp rồi thời điểm thêm. */
     @Transactional(readOnly = true)
@@ -109,13 +109,6 @@ public class AiConnectionService {
         access.require(actor, Actions.AI_PERSONAL);
         return testDraft(actor, Scope.PERSONAL, actor.accountId(), provider,
                 id == null ? null : personal(actor, id), command, Source.PERSONAL);
-    }
-
-    /** Khóa rõ của chính mình, cho popup Sửa; mỗi lần xem ghi audit. */
-    @Transactional
-    public String revealPersonal(Actor actor, UUID id) {
-        access.require(actor, Actions.AI_PERSONAL);
-        return reveal(actor, personal(actor, id));
     }
 
     private AiConnection personal(Actor actor, UUID id) {
@@ -193,8 +186,9 @@ public class AiConnectionService {
         Instant now = clock.instant();
         AiConnection probe;
         if (key != null) {
-            probe = AiConnection.create(saved == null ? UUID.randomUUID() : saved.id(), scope, ownerId, provider, model,
-                    cipher.encrypt(key), KeyCipher.hint(key), now);
+            UUID probeId = saved == null ? UUID.randomUUID() : saved.id();
+            probe = AiConnection.create(probeId, scope, ownerId, provider, model,
+                    cipher.encryptConnectionKey(probeId, scope, ownerId, provider, key), KeyCipher.hint(key), now);
         } else if (saved != null) {
             if (saved.provider() != provider) {
                 throw ApiException.badRequest("AI_KEY_REQUIRED", "Cần nhập khóa API");
@@ -217,23 +211,6 @@ public class AiConnectionService {
         return new TestResult(result.ok(), result.message());
     }
 
-    /** Khóa rõ của một khóa chung, cho Admin xem lại hoặc sao chép trong popup Sửa; mỗi lần xem ghi audit. */
-    @Transactional
-    public String revealInstitutional(Actor actor, UUID id) {
-        access.require(actor, Actions.AI_ADMIN);
-        return reveal(actor, institutional(id));
-    }
-
-    private String reveal(Actor actor, AiConnection connection) {
-        String key = cipher.decrypt(connection.encryptedKey());
-        Map<String, Object> details = new LinkedHashMap<>();
-        details.put("provider", connection.provider().name());
-        details.put("keyHint", connection.keyHint());
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "AI_CONNECTION_KEY_REVEALED", "AI_CONNECTION",
-                connection.id().toString(), AuditResult.SUCCESS, null, details, clock.instant()));
-        return key;
-    }
-
     private AiConnection institutional(UUID id) {
         return repository.findById(id)
                 .filter(c -> c.scope() == Scope.INSTITUTIONAL && c.status() != Status.REVOKED)
@@ -251,8 +228,9 @@ public class AiConnectionService {
             if (key == null) {
                 throw ApiException.badRequest("AI_KEY_REQUIRED", "Cần nhập khóa API");
             }
-            AiConnection created = AiConnection.create(UUID.randomUUID(), scope, ownerId, provider, model,
-                    cipher.encrypt(key), KeyCipher.hint(key), now);
+            UUID id = UUID.randomUUID();
+            AiConnection created = AiConnection.create(id, scope, ownerId, provider, model,
+                    cipher.encryptConnectionKey(id, scope, ownerId, provider, key), KeyCipher.hint(key), now);
             repository.insert(created);
             auditChange(actor, created, "ADD");
             return view(provider, created);
@@ -260,7 +238,8 @@ public class AiConnectionService {
         AiConnection connection = existing.get();
         checkVersion(connection, command.version());
         AiConnection next = key == null ? connection.withModel(model, now)
-                : connection.withKey(model, cipher.encrypt(key), KeyCipher.hint(key), now);
+                : connection.withKey(model, cipher.encryptConnectionKey(connection.id(), connection.scope(),
+                        connection.ownerId(), connection.provider(), key), KeyCipher.hint(key), now);
         store(next);
         auditChange(actor, next, key == null ? "MODEL" : "REPLACE");
         return view(provider, repository.findById(connection.id()).orElse(next));

@@ -447,6 +447,14 @@ export function AssignmentFormPage({ id }: { id: string }) {
   function changed() {
     setUnsaved(true);
     setTick((value) => value + 1);
+    // Sửa bài đã hoàn tất thì bài về nháp (server cũng đổi khi lưu): nút lại là "Hoàn tất" (yêu cầu 2026-11-11).
+    const current = detailRef.current;
+    if (current?.status === "REVIEWED") {
+      const draft: AssignmentDetail = { ...current, status: "DRAFT",
+        permissions: { ...current.permissions, canReview: true, canPublish: false } };
+      detailRef.current = draft;
+      setDetail(draft);
+    }
   }
   function editTitle(value: string) {
     setTitle(value);
@@ -553,24 +561,43 @@ export function AssignmentFormPage({ id }: { id: string }) {
     notify(missingText(found), "danger");
   }
 
-  /**
-   * "Xếp lịch" ngay trên trang soạn hoặc trang xem trước (yêu cầu 2026-10-22, bỏ trạng thái Đã duyệt): lưu, kiểm sơ bộ
-   * tên bài và rubric rồi mở lịch; phát hành thẳng từ bản nháp, server kiểm đủ luật duyệt (BR-U07-32) khi phát hành.
-   */
-  async function openSchedule() {
-    // Xếp lịch: bỏ luôn các dòng mục chấm trống trên thẻ (server cũng không lưu chúng).
+  /** Lưu bản mới nhất, bỏ dòng mục chấm trống, kiểm sơ bộ tên bài và rubric; còn thiếu thì báo và trả false. */
+  async function saveAndCheck(): Promise<boolean> {
     const cleaned = Object.fromEntries(Object.entries(latest.current.criteria).map(([partId, list]) => [partId, cleanCriteria(list)]));
     latest.current = { ...latest.current, criteria: cleaned };
     setCriteria(cleaned);
     if (!(await save())) {
       setPreview(false);
-      return;
+      return false;
     }
     const found = localMissing();
     if (found.length > 0) {
       showMissing(found);
-      return;
+      return false;
     }
+    return true;
+  }
+
+  /**
+   * "Hoàn tất" (yêu cầu 2026-11-11): lưu bản mới nhất, server kiểm đủ luật duyệt (BR-U07-32) rồi chuyển bài sang Đã hoàn
+   * tất; lúc đó nút đổi thành "Xếp lịch". Vẫn sửa được; sửa thì bài về nháp, phải hoàn tất lại mới giao.
+   */
+  async function finalizeAssignment() {
+    if (!(await saveAndCheck())) return;
+    try {
+      const next = await chain(queue, () => assignmentsApi.review(id, version.current));
+      // Không hiện thông báo nổi: nút đổi thành "Xếp lịch" và nhãn trạng thái thành "Hoàn tất" là đủ.
+      apply(next, false);
+    } catch (error) {
+      const serverIssues = problemIssues(error);
+      if (serverIssues.length > 0) showMissing(serverIssues);
+      else notify(errorMessage(error), "danger");
+    }
+  }
+
+  /** "Xếp lịch": chỉ có ở bài đã hoàn tất; lưu, kiểm rồi mở lịch, server kiểm lại khi phát hành. */
+  async function openSchedule() {
+    if (!(await saveAndCheck())) return;
     setDialog("schedule");
   }
 
@@ -685,7 +712,9 @@ export function AssignmentFormPage({ id }: { id: string }) {
           ) : (
             <Button icon="visibility" data-testid="assignment-preview" onClick={() => void openPreview()}>Xem trước</Button>
           )}
-          {permissions.canPublish ? (
+          {permissions.canReview ? (
+            <Button variant="primary" icon="check_circle" data-testid="assignment-finalize" onClick={() => void finalizeAssignment()}>Hoàn tất</Button>
+          ) : permissions.canPublish ? (
             <Button variant="primary" icon="calendar_month" data-testid="assignment-schedule" onClick={() => void openSchedule()}>Xếp lịch</Button>
           ) : permissions.canChangeSchedule && (
             <Button variant="primary" icon="calendar_month" data-testid="assignment-change-schedule" onClick={() => setDialog("schedule")}>Đổi lịch</Button>

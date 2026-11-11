@@ -149,7 +149,7 @@ Hỗ trợ hai kênh: ALAP gọi API (Gemini/OpenAI/Claude), và agent riêng g�
 
 **Tiêu chí chấp nhận:**
 - API chung do Admin cấu hình; API cá nhân do chính Student/Teacher/Subject Manager cấu hình. MVP dùng API key hợp lệ, không giả định gói chat cá nhân cấp API miễn phí.
-- Key chỉ dùng phía server, lưu được bảo vệ, không plaintext trong log/audit; list masked. Ngoại lệ AS-BUILT: Admin được reveal institutional key không REVOKED qua endpoint riêng có audit; personal key không có readback cho Admin (delta D15 cần review security design).
+- Key chỉ dùng phía server, lưu được bảo vệ, không plaintext trong log/audit; list masked. Key chỉ ghi: không có readback cho chủ khóa hay Admin (D15 đã đóng 2026-11-11); bản mã gắn AAD theo kết nối.
 - Adapter provider-neutral chuẩn hóa output/usage và giữ provenance; model tương thích cấu hình, timeout/retry hữu hạn.
 - MCP xác thực người dùng ALAP; mỗi tool kiểm scope/ownership/state/version. Không lộ key chung/cá nhân cho agent.
 - Tài liệu/học liệu mở rộng có embedding phải có cấu hình riêng; thay model sinh nội dung không tự đổi vector index.
@@ -241,6 +241,7 @@ Trong danh sách sinh viên của lớp được phân công, giảng viên ph�
 - Chia ngẫu nhiên chỉ chia sinh viên chưa có nhóm, giữ nguyên nhóm đã có, các nhóm mới chênh nhau tối đa một người và giảng viên xem trước trước khi lưu.
 - Một thay đổi trưởng nhóm chỉ có hiệu lực sau quyết định của giảng viên và được audit.
 - Giảng viên chỉ xóa nhóm chưa có tài liệu nhóm hoặc bản nộp; nhóm đã dùng chỉ được điều chỉnh thành viên theo quy tắc bảo toàn lịch sử.
+- Duyệt 2026-11-11: giảng viên bật đợt cho sinh viên tự lập đề xuất nhóm, duyệt thì đề xuất thành nhóm chính thức. [Yêu cầu SG-01…09](2026-11-11-student-self-grouping.md).
 
 ### FR-026 - Assignment GROUP: tài liệu chung và đóng góp
 

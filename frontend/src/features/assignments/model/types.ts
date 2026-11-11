@@ -219,11 +219,11 @@ export type ScheduleInput = {
 
 export const statusLabels: Record<AssignmentStatus, string> = {
   // Không còn bước duyệt (yêu cầu 2026-10-22): bài đã duyệt từ trước hiện như bản nháp.
-  DRAFT: "Nháp", REVIEWED: "Nháp", SCHEDULED: "Đã lên lịch", OPEN: "Đang mở", CLOSED: "Đã đóng", RETIRED: "Ngưng giao",
+  DRAFT: "Nháp", REVIEWED: "Hoàn tất", SCHEDULED: "Đã lên lịch", OPEN: "Đang mở", CLOSED: "Đã đóng", RETIRED: "Ngưng giao",
 };
 
 export const statusTones: Record<AssignmentStatus, Tone> = {
-  DRAFT: "neutral", REVIEWED: "neutral", SCHEDULED: "accent", OPEN: "success", CLOSED: "warning", RETIRED: "danger",
+  DRAFT: "neutral", REVIEWED: "info", SCHEDULED: "accent", OPEN: "success", CLOSED: "warning", RETIRED: "danger",
 };
 
 export const gradingLabels: Record<GradingMode, string> = { GRADED: "Graded", PRACTICE: "Practice" };

@@ -144,6 +144,15 @@ class AssignmentAuthoringServiceTest {
     }
 
     @Test
+    void editingRubricOfAFinalizedAssignmentReturnsItToDraft() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.REVIEWED, new DocumentModel(List.of(heading("H1", "Mục"))), true);
+        f.authoring.updateRubric(f.teacher, a.id(), a.parts().get(0).partId(),
+                new AssignmentCommands.RubricUpdate(a.version(), AssignmentFixtures.completeCriteria()));
+        // Sửa sau khi hoàn tất thì bài về nháp, phải hoàn tất lại mới xếp lịch (yêu cầu 2026-11-11).
+        assertThat(f.store.get(a.id()).status()).isEqualTo(AssignmentStatus.DRAFT);
+    }
+
+    @Test
     void savingSkeletonRecomputesPartsAndSyncsRubrics() {
         Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.REVIEWED, new DocumentModel(List.of()), true);
         DocumentBlock h1 = heading("H1", "Phân tích");

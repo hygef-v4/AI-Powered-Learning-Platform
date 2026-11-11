@@ -6,12 +6,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import edu.aiplatform.ai.contract.AiProvider;
+import edu.aiplatform.ai.model.AiConnection;
 import edu.aiplatform.ai.model.AiConnection.EncryptedKey;
+import edu.aiplatform.ai.model.AiConnection.Scope;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class KeyCipherAndCatalogTest {
@@ -42,6 +46,45 @@ class KeyCipherAndCatalogTest {
         KeyCipher rotated = new KeyCipher(properties(KEY_V1, KEY_V2));
         assertThat(rotated.encrypt("new-key").version()).isEqualTo(2);
         assertThat(rotated.decrypt(old)).isEqualTo("old-key");
+    }
+
+    @Test
+    void connectionKeyOnlyDecryptsForTheConnectionItWasSealedFor() {
+        KeyCipher cipher = new KeyCipher(properties(KEY_V1, null));
+        UUID id = UUID.randomUUID();
+        UUID owner = UUID.randomUUID();
+        EncryptedKey sealed = cipher.encryptConnectionKey(id, Scope.PERSONAL, owner, AiProvider.GEMINI, "AIza-own-3kQf");
+
+        assertThat(cipher.decryptConnectionKey(connection(id, Scope.PERSONAL, owner, AiProvider.GEMINI, sealed)))
+                .isEqualTo("AIza-own-3kQf");
+        assertThatThrownBy(() -> cipher.decryptConnectionKey(
+                connection(UUID.randomUUID(), Scope.PERSONAL, owner, AiProvider.GEMINI, sealed)))
+                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> cipher.decryptConnectionKey(
+                connection(id, Scope.PERSONAL, UUID.randomUUID(), AiProvider.GEMINI, sealed)))
+                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> cipher.decryptConnectionKey(
+                connection(id, Scope.INSTITUTIONAL, null, AiProvider.GEMINI, sealed)))
+                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> cipher.decryptConnectionKey(
+                connection(id, Scope.PERSONAL, owner, AiProvider.OPENAI, sealed)))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void legacyUnboundCiphertextIsRejectedForConnections() {
+        KeyCipher cipher = new KeyCipher(properties(KEY_V1, null));
+        EncryptedKey legacy = cipher.encrypt("AIza-legacy-0000");
+
+        assertThatThrownBy(() -> cipher.decryptConnectionKey(
+                connection(UUID.randomUUID(), Scope.INSTITUTIONAL, null, AiProvider.GEMINI, legacy)))
+                .isInstanceOf(IllegalStateException.class);
+        assertThat(cipher.decrypt(legacy)).isEqualTo("AIza-legacy-0000");
+    }
+
+    static AiConnection connection(UUID id, Scope scope, UUID owner, AiProvider provider, EncryptedKey key) {
+        return AiConnection.create(id, scope, owner, provider, "gemini-2.5-flash", key, "0000",
+                Instant.parse("2026-11-11T00:00:00Z"));
     }
 
     @Test

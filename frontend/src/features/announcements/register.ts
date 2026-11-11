@@ -1,7 +1,6 @@
 "use client";
 
-import { createElement } from "react";
-import { studentClassBoard, teacherClassTabs } from "@/features/academics/slots";
+import { studentClassBoard } from "@/features/academics/slots";
 import { navEntries } from "@/features/identity/slots";
 import { ClassRecentAnnouncements } from "./components/ClassRecentAnnouncements";
 
@@ -11,18 +10,11 @@ studentClassBoard.register({
   order: 10,
   component: ClassRecentAnnouncements,
 });
-// Tab Thông tin lớp của giảng viên: nửa trái hàng thẻ, cạnh Tiến độ nộp bài (U09).
-teacherClassTabs.register({
-  key: "u14-announcements",
-  order: 80,
-  component: ({ classId, tab }) =>
-    tab === "info" ? createElement(ClassRecentAnnouncements, { classId, teaching: true }) : null,
-});
 
 navEntries.register({
   key: "class-announcements",
   order: 40,
-  title: "Thông báo lớp",
+  title: "Tất cả thông báo",
   href: "/announcements",
   icon: "campaign",
   roles: ["TEACHER", "STUDENT"],
@@ -30,7 +22,7 @@ navEntries.register({
 navEntries.register({
   key: "manager-class-announcements",
   order: 40,
-  title: "Thông báo lớp",
+  title: "Tất cả thông báo",
   href: "/announcements",
   icon: "campaign",
   roles: ["SUBJECT_MANAGER"],

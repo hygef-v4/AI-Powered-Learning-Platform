@@ -66,8 +66,15 @@ export function runsHtml(runs: Run[]): string {
     const lines = [run.underline ? "underline" : "", run.strike ? "line-through" : ""].filter(Boolean);
     if (lines.length > 0) style.push(`text-decoration:${lines.join(" ")}`);
     if (run.code) { data.push("data-code"); style.push("font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:0.92em"); }
-    if (run.color && HEX.test(run.color)) { data.push(`data-color="${run.color}"`); style.push(`color:${run.color}`); }
-    if (run.highlight && HEX.test(run.highlight)) { data.push(`data-highlight="${run.highlight}"`); style.push(`background-color:${run.highlight}`); }
+    // Biến --run-* để globals.css đổi độ sáng ở theme tối; màu gốc vẫn ghi thẳng để chép sang ứng dụng khác giữ màu.
+    if (run.color && HEX.test(run.color)) {
+      data.push(`data-color="${run.color}"`);
+      style.push(`color:${run.color};--run-color:${run.color}`);
+    }
+    if (run.highlight && HEX.test(run.highlight)) {
+      data.push(`data-highlight="${run.highlight}"`);
+      style.push(`background-color:${run.highlight};--run-highlight:${run.highlight}`);
+    }
     return `<span data-run ${data.join(" ")} style="${style.join(";")}">${escape(run.text)}</span>`;
   }).join("");
 }

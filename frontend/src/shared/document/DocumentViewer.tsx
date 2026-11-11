@@ -45,8 +45,16 @@ export function runStyle(run: Run | undefined): CSSProperties {
   const lines = [run?.underline && "underline", run?.strike && "line-through"].filter(Boolean).join(" ");
   return {
     ...(lines ? { textDecorationLine: lines } : {}),
-    ...(run?.color ? { color: run.color } : {}),
-    ...(run?.highlight ? { backgroundColor: run.highlight } : {}),
+    ...(run?.color ? { color: run.color, "--run-color": run.color } : {}),
+    ...(run?.highlight ? { backgroundColor: run.highlight, "--run-highlight": run.highlight } : {}),
+  } as CSSProperties;
+}
+
+/** Thuộc tính đánh dấu màu do người viết chọn, để globals.css chỉnh độ sáng ở theme tối. */
+function runColorAttributes(run: Run): Record<string, string> {
+  return {
+    ...(run.color ? { "data-color": run.color } : {}),
+    ...(run.highlight ? { "data-highlight": run.highlight } : {}),
   };
 }
 
@@ -57,7 +65,12 @@ export function RunsView({ runs }: { runs: Run[] | undefined }) {
         const style = runStyle(run);
         const plain = !run.bold && !run.italic && !run.code && Object.keys(style).length === 0;
         return plain ? <Fragment key={index}>{run.text}</Fragment>
-          : <span key={index} className={cx(runClass(run), run.code && "rounded bg-shell px-1")} style={style}>{run.text}</span>;
+          : (
+            <span key={index} className={cx(runClass(run), run.code && "rounded bg-shell px-1")} style={style}
+              {...runColorAttributes(run)}>
+              {run.text}
+            </span>
+          );
       })}
     </>
   );

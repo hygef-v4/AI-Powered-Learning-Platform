@@ -4,7 +4,6 @@ import { KeysSection, type KeysApi } from "../../components/KeysSection";
 import {
   addInstitutional,
   getInstitutional,
-  revealInstitutional,
   revokeInstitutional,
   saveInstitutional,
   setInstitutionalEnabled,
@@ -16,7 +15,6 @@ const API: KeysApi = {
   list: async () => (await getInstitutional()).filter((c) => c.configured && c.id),
   add: addInstitutional,
   save: saveInstitutional,
-  reveal: revealInstitutional,
   test: testInstitutional,
   testDraft: testInstitutionalDraft,
   setEnabled: setInstitutionalEnabled,

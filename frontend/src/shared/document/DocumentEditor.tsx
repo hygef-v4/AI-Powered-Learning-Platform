@@ -508,7 +508,7 @@ function Swatches({ colors, onPick, noneLabel }: { colors: string[]; onPick: (co
       <div className="grid grid-cols-8 gap-1">
         {colors.map((color) => (
           <button key={color} type="button" title={color} aria-label={color} onClick={() => onPick(color)}
-            className="size-4 rounded-full border border-black/10 hover:scale-125" style={{ backgroundColor: color }} />
+            className="size-4 rounded-full border border-line-strong hover:scale-125" style={{ backgroundColor: color }} />
         ))}
       </div>
     </div>
