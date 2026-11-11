@@ -12889,6 +12889,15 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 
 ---
 
+## Fix PR74 frontend navigation expectations
+**Date:** 2026-11-11
+**Requested by:** Quang Hung
+**User Input:** "[Image #1] giúp tôi fix lỗi pr"
+**AI Response:** Read the failed frontend job of PR74:966/967 tests passed; the global feature-registration test still expected the former announcement label. Reproduced the exact failure locally in tests/features/register.test.ts, then updated only the global menu expectations for Subject Manager, Teacher and Student to the approved “Tất cả thông báo”. Kept class-context expectations “Thông báo lớp” and all route/authorization behavior unchanged. Full local frontend suite passes967 tests/136 files; scoped ESLint passes. Commit/push the correction to staging to update PR74 and verify fresh CI. No PR merge or production deployment.
+**Context:** Construction — minimal CI regression fix; no product-source change or subagents.
+
+---
+
 ## Simplify teacher class information overview
 **Timestamp:** 2026-11-11T06:18:14Z
 **Requested by:** Quang Hung

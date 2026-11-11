@@ -724,6 +724,8 @@ Người dùng yêu cầu "tạo pr vào staging cho tôi". Cho phép commit/pus
 
 - Subsequent user authorization: “giúp tôi commit”. Record bulk-selection, announcement labels, shared cursors and documentation in separate local commits;15 fresh precommit tests/3 files pass. No push/merge/deploy.
 
+- PR74 CI follow-up: feature-registration test retained the old global announcement labels. Reproduced RED locally and updated all3 role expectations to the approved label; fixed-class labels remain unchanged. Full frontend967 tests/136 files and scoped lint pass. User authorizes pushing the fix to staging to repair PR74; no merge/deploy requested. Evidence: .tmp/pr74-red.log, pr74-frontend-full.log.
+
 ### PR delivery — ba lỗi UI/UX
 
 Tích hợp staging `1f713615`; giữ cả hai lịch sử audit/state. Fresh full frontend
