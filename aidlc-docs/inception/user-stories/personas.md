@@ -28,3 +28,7 @@ Admin theo dõi trạng thái backup và cấu hình lịch; quyền này không
 
 
 Admin sử dụng UC14 View Settings và UC15 Edit Setting cho Settings/quota/API chung, UC66 cho trạng thái backup. Teacher/Subject Manager được giao dạy dùng UC 42 cho activity trong chi tiết bài làm/lượt được phép. UC15 được khôi phục; IDs 26/76/78/79/80/81/82 không còn UC độc lập.
+
+## Tự chia nhóm — 2026-11-11
+
+P-TEACHER bật đợt tự chia nhóm cho lớp mình là giảng viên chính, đặt sĩ số và hạn chót, duyệt hoặc từ chối đề xuất và xếp sinh viên còn lại (US-GRP-007, US-GRP-010). P-STUDENT chưa có nhóm lập đề xuất, mời bạn hoặc nhận lời mời trong lớp mình ghi danh; người tạo đề xuất làm trưởng nhóm đề xuất và gửi duyệt (US-GRP-008, US-GRP-009). Không thêm vai trò hay persona; nhóm chỉ chính thức sau khi giảng viên duyệt. [Yêu cầu](../requirements/2026-11-11-student-self-grouping.md).

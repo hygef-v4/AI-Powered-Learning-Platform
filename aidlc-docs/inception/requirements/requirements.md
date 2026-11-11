@@ -241,6 +241,7 @@ Trong danh sách sinh viên của lớp được phân công, giảng viên ph�
 - Chia ngẫu nhiên chỉ chia sinh viên chưa có nhóm, giữ nguyên nhóm đã có, các nhóm mới chênh nhau tối đa một người và giảng viên xem trước trước khi lưu.
 - Một thay đổi trưởng nhóm chỉ có hiệu lực sau quyết định của giảng viên và được audit.
 - Giảng viên chỉ xóa nhóm chưa có tài liệu nhóm hoặc bản nộp; nhóm đã dùng chỉ được điều chỉnh thành viên theo quy tắc bảo toàn lịch sử.
+- Duyệt 2026-11-11: giảng viên bật đợt cho sinh viên tự lập đề xuất nhóm, duyệt thì đề xuất thành nhóm chính thức. [Yêu cầu SG-01…09](2026-11-11-student-self-grouping.md).
 
 ### FR-026 - Assignment GROUP: tài liệu chung và đóng góp
 
