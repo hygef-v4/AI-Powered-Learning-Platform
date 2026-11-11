@@ -6,7 +6,7 @@
 > Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 > Cập nhật 2026-10-17 theo design G21 (bản 17/10, 123 artboard): màn, popup, trường và thao tác lấy theo design; chỗ design khác quy tắc nghiệp vụ thì giữ quy tắc. Chỉ sửa tài liệu.
 
-**Primary UC:** 53, 54, 55, 56, 57. **Primary stories:** US-GRP-001, US-GRP-002, US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006. **Requirements:** FR-025, FR-026, FR-018, FR-039.
+**Primary UC:** 53, 54, 55, 56, 57. **Primary stories:** US-GRP-001, US-GRP-002, US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006, US-GRP-007, US-GRP-008, US-GRP-009, US-GRP-010. **Requirements:** FR-025, FR-026, FR-018, FR-039; SG-01…09 (2026-11-11).
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
 
@@ -87,3 +87,60 @@ Route `/group-docs/*` cho Student và giảng viên của lớp; `/classes/*` ch
 groups và groupdocs thuộc cùng U12. Leader request reason tùy chọn, null thành chuỗi rỗng, tối đa 1.000; reject reason tùy chọn, trống thành null. GroupRenameService cho đổi tên theo scope; editor hiển thị lỗi nhóm đã bị gỡ khỏi draft. Claims/locks/leader submit giữ theo SectionRules và services; không tự thêm peer assessment hay đổi AI Student GROUP.
 
 [Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.
+
+## Sinh viên tự chia nhóm — 2026-11-11
+
+US-GRP-007…010; quy tắc BR-U12-70…96 trong [business-rules](business-rules.md). Không thêm trang; thêm vào trang Nhóm của tôi và `ClassGroupsPanel` (quyết định Q9). Chữ hiển thị tiếng Việt, theo quy ước UI hiện có (WCAG 2.2 AA, `PRODUCT.md`).
+
+### Cây component
+
+```
+(StudentClassSection của U05)  MyGroupCard           chưa có nhóm: "Đợt tự chia nhóm đang mở đến …" hoặc "Chờ giảng viên xếp nhóm";
+                                                      số lời mời đang chờ; link "Mở Nhóm của tôi"
+app/classes/[classId]/group/   MyGroupPage           có nhóm chính thức: như cũ; chưa có: GroupProposalSection
+  GroupProposalSection                               nạp GET /me/classes/{classId}/group-proposal
+    FormationStatusBanner                            đợt mở: sĩ số min–max, hạn chót; đóng: lý do
+    ProposalRejectedNotice                           đề xuất bị từ chối gần nhất, lý do
+    InvitationList                                   lời mời đến tôi: Chấp nhận, Từ chối
+    ProposalCard                                     đề xuất của tôi: tên, trạng thái, thành viên, lời mời chờ
+      CreateProposalDialog                           tên nhóm
+      RenameProposalDialog                           tên nhóm
+      InviteMembersDialog                            chọn bạn mời được, tìm theo tên/email
+      ConfirmDialog (dùng chung)                     hủy đề xuất, rời đề xuất, gửi duyệt, rút về
+(TeacherClassTab "students")   ClassGroupsPanel      thêm nút "Tự chia nhóm" và nhãn trạng thái đợt
+    SelfGroupingSettingsDialog                       bật/tắt, sĩ số, hạn chót
+    ProposalReviewList                               cạnh LeaderRequestList: đề xuất đang hoạt động, duyệt, từ chối
+      RejectProposalDialog                           lý do tùy chọn
+    UngroupedStudentsList                            sinh viên chưa có nhóm kèm đề xuất họ đang ở
+```
+
+### Component và API
+
+| Component | API | Hành vi |
+|---|---|---|
+| `MyGroupCard` | `GET /api/v1/me/classes/{classId}/group`, `GET .../group-proposal` | Chưa có nhóm: trạng thái đợt, số lời mời, tên và trạng thái đề xuất của tôi; link tới trang Nhóm của tôi |
+| `GroupProposalSection` | `GET /api/v1/me/classes/{classId}/group-proposal` | Hiện các khối theo trạng thái (bảng dưới); tải lại sau mỗi thao tác; `409` báo "Đề xuất vừa thay đổi" và tải lại |
+| `FormationStatusBanner` | — | Mở: "Bạn tự lập nhóm từ min đến max người, hạn …"; đóng: "Đợt tự chia nhóm đã đóng. Giảng viên sẽ xếp nhóm cho bạn." |
+| `InvitationList` | `POST /api/v1/group-proposals/{id}:accept`, `:decline` | Mỗi lời mời: tên đề xuất, trưởng nhóm, số thành viên/max; Chấp nhận (ẩn khi đợt đóng, khi tôi đang ở đề xuất khác thì ghi "Rời đề xuất hiện tại để chấp nhận"), Từ chối |
+| `ProposalCard` | `PUT .../name`, `POST .../invitations`, `.../invitations/{accountId}:revoke`, `:leave`, `:submit`, `:withdraw`, `:cancel` | Tên, nhãn Nháp/Chờ duyệt, thành viên (Trưởng nhóm, Bạn), lời mời chờ (hết hạn khi đợt đóng). Trưởng nhóm, Nháp: Đổi tên, Mời bạn, Thu hồi, Gửi duyệt (tắt kèm lý do khi dưới min), Hủy đề xuất. Trưởng nhóm, Chờ duyệt: Rút về để sửa. Thành viên, Nháp: Rời đề xuất |
+| `CreateProposalDialog`, `RenameProposalDialog` | `POST /api/v1/classes/{classId}/group-proposals`, `PUT .../name` | Ô tên bắt buộc, 1–100 ký tự sau khi cắt khoảng trắng, đếm ký tự; lỗi trùng tên hiện dưới ô |
+| `InviteMembersDialog` | dữ liệu "bạn mời được" từ `GET .../group-proposal` | Danh sách chọn nhiều có ô tìm; ghi "Đang ở đề xuất khác" cạnh người đó; số chỗ còn lại = max − thành viên − lời mời chờ, chặn chọn quá |
+| `SelfGroupingSettingsDialog` | `GET`, `PUT /api/v1/classes/{classId}/group-formation` | Công tắc "Cho sinh viên tự chia nhóm"; Sĩ số tối thiểu, tối đa (2–20, min ≤ max); Hạn chót (tùy chọn, phải ở tương lai, giờ Việt Nam); lỗi dưới đúng ô; ghi chú "Đề xuất chờ duyệt vẫn được duyệt sau khi đóng" |
+| `ProposalReviewList` | `GET /api/v1/classes/{classId}/group-proposals`, `POST .../group-proposals:approve`, `POST /api/v1/group-proposals/{id}:reject` | Thẻ "Đề xuất nhóm" (số chờ duyệt): tên, trưởng nhóm, thành viên, trạng thái; cảnh báo sĩ số; ô chọn ở đề xuất Chờ duyệt, "Duyệt (n)", Duyệt, Từ chối từng cái; đề xuất Nháp chỉ xem. Sau khi duyệt: toast số đề xuất được duyệt, lỗi hiện tại từng thẻ; tải lại cả bộ nhóm |
+| `RejectProposalDialog` | `:reject` | "Từ chối đề xuất X?"; Lý do (tùy chọn, tối đa 1.000 ký tự, đếm ký tự); Hủy, Từ chối |
+| `UngroupedStudentsList` | `GET .../group-proposals` | Sinh viên chưa có nhóm: tên, email, đề xuất đang ở (tên, trạng thái) hoặc "Chưa có đề xuất"; dùng cùng dữ liệu cho nút Chia ngẫu nhiên hiện có |
+
+### Trạng thái màn sinh viên
+
+| Trạng thái | Hiện |
+|---|---|
+| Có nhóm chính thức | Màn Nhóm của tôi như cũ |
+| Chưa có nhóm, đợt tắt hoặc lớp không `OPEN` | `FormationStatusBanner` đóng; đề xuất cũ (nếu có) chỉ xem |
+| Chưa có nhóm, đợt mở, không ở đề xuất | Banner mở, `ProposalRejectedNotice` nếu có, `InvitationList`, nút Tạo đề xuất nhóm |
+| Ở đề xuất Nháp hoặc Chờ duyệt | Banner, `ProposalCard`, `InvitationList` (lời mời khác) |
+
+### Hợp đồng dữ liệu frontend
+
+- `features/groups/model/types.ts`: thêm `FormationSettings`, `FormationState` (`open`, `closedReason`), `ProposalStatus`, `ProposalMemberStatus`, `ProposalView`, `InvitationView`, `MyProposalView`, `ClassProposalsView`, `ApproveResult`.
+- `features/groups/api/index.ts`: một hàm cho mỗi API mới, dùng client và cách báo lỗi hiện có.
+- Kiểm hợp lệ form ở frontend chỉ để báo sớm; backend vẫn kiểm (BR-U12-91, 93).

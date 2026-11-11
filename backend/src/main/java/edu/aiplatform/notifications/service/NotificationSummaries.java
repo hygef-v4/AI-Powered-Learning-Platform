@@ -21,6 +21,10 @@ final class NotificationSummaries {
             case LEADER_REQUEST_REJECTED -> "Xem trạng thái yêu cầu trong nhóm của bạn.";
             case GROUP_MEMBERSHIP_CHANGED -> "Xem danh sách thành viên mới nhất.";
             case GROUP_SUBMITTED -> "Xem trạng thái nộp bài của nhóm.";
+            case GROUP_PROPOSAL_INVITED -> "Mở Nhóm của tôi để chấp nhận hoặc từ chối lời mời.";
+            case GROUP_PROPOSAL_SUBMITTED -> "Mở tab Sinh viên của lớp để duyệt hoặc từ chối.";
+            case GROUP_PROPOSAL_APPROVED -> "Nhóm của bạn đã thành nhóm chính thức của lớp.";
+            case GROUP_PROPOSAL_REJECTED -> "Xem lý do trong Nhóm của tôi và lập đề xuất khác.";
             case BACKUP_FAILED -> "Xem chi tiết lần sao lưu thất bại để kiểm tra và xử lý.";
             case QUESTION_PROPOSED -> "Mở ngân hàng câu hỏi để duyệt hoặc từ chối.";
             case QUESTION_REVIEWED -> "Xem kết quả duyệt câu hỏi bạn đề xuất.";

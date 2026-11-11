@@ -310,9 +310,9 @@ describe("CreateAssignmentDialog", () => {
   });
 });
 
-describe("không còn trạng thái Đã duyệt", () => {
-  it("bài đã duyệt từ trước hiện là Nháp và nằm ở tab Nháp; loại gộp hình thức và chế độ", () => {
-    expect(statusLabels.REVIEWED).toBe("Nháp");
+describe("trạng thái Hoàn tất", () => {
+  it("bài hoàn tất nằm ở tab Hoàn tất riêng, không lẫn vào tab Nháp; loại gộp hình thức và chế độ", () => {
+    expect(statusLabels.REVIEWED).toBe("Hoàn tất");
     const row = (id: string, status: string, submissionMode = "INDIVIDUAL", gradingMode = "GRADED") =>
       ({ id, title: `Bài ${id}`, status, scope: "SUBJECT", submissionMode, gradingMode, closesAt: null }) as never;
     const page = { data: { items: [row("a", "OPEN"), row("b", "REVIEWED", "INDIVIDUAL", "PRACTICE"), row("c", "DRAFT", "GROUP")], hiddenCount: 0, counts: {}, groupSupported: true, ownerArchived: false },
@@ -321,8 +321,11 @@ describe("không còn trạng thái Đã duyệt", () => {
     expect(screen.getByText("Bài a")).toBeInTheDocument();
     expect(screen.queryByText("Bài b")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: /Nháp/ }));
-    expect(screen.getByTestId("assignment-row-b")).toHaveTextContent("Luyện tập");
     expect(screen.getByTestId("assignment-row-c")).toHaveTextContent("Nhóm");
+    expect(screen.queryByTestId("assignment-row-b")).toBeNull();
+    fireEvent.click(screen.getByRole("tab", { name: /Hoàn tất/ }));
+    expect(screen.getByTestId("assignment-row-b")).toHaveTextContent("Luyện tập");
+    expect(screen.queryByTestId("assignment-row-c")).toBeNull();
   });
 });
 

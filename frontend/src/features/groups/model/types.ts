@@ -86,3 +86,94 @@ export type MyGroupView = {
 };
 
 export type StudentGroup = { groupId: string | null; name: string | null; leader: boolean; memberCount: number };
+
+// ---- Sinh viên tự chia nhóm (US-GRP-007…010) ----------------------------------------------------------------
+
+/** Lý do đợt tự chia nhóm đang đóng; `null` khi đợt mở. */
+export type FormationClosedReason = "DISABLED" | "CLASS_NOT_OPEN" | "DEADLINE_PASSED";
+
+export type FormationView = {
+  classId: string;
+  enabled: boolean;
+  minSize: number;
+  maxSize: number;
+  deadline: string | null;
+  version: number;
+  open: boolean;
+  closedReason: FormationClosedReason | null;
+};
+
+export type FormationSummary = Pick<FormationView, "enabled" | "minSize" | "maxSize" | "deadline" | "open" | "closedReason">;
+
+export type ProposalStatus = "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | "CANCELLED";
+
+/** Thành viên hoặc lời mời của đề xuất; `expired` chỉ dùng cho lời mời khi đợt đóng. */
+export type ProposalMemberView = Person & { leader: boolean; expired: boolean };
+
+export type ProposalView = {
+  id: string;
+  name: string;
+  status: ProposalStatus;
+  leaderId: string;
+  leader: boolean;
+  version: number;
+  members: ProposalMemberView[];
+  invitations: ProposalMemberView[];
+  freeSeats: number;
+  submittedAt: string | null;
+};
+
+export type InvitationView = {
+  proposalId: string;
+  proposalName: string;
+  status: ProposalStatus;
+  leaderName: string | null;
+  memberCount: number;
+  expired: boolean;
+  canAccept: boolean;
+};
+
+export type RejectedProposalView = { proposalId: string; name: string; reason: string | null; decidedAt: string | null };
+
+/** Bạn mời được: chỉ id, họ tên, email và cờ đang ở đề xuất khác (BR-U12-92). */
+export type CandidateView = Person & { inOtherProposal: boolean };
+
+/** Màn đề xuất của sinh viên; `grouped` đúng thì sinh viên đã có nhóm chính thức. */
+export type MyProposalView = {
+  classId: string;
+  classStatus: string;
+  grouped: boolean;
+  formation: FormationSummary;
+  proposal: ProposalView | null;
+  invitations: InvitationView[];
+  lastRejected: RejectedProposalView | null;
+  candidates: CandidateView[];
+};
+
+export type ProposalWarning = "LEADER_INACTIVE" | "BELOW_MIN" | "ABOVE_MAX";
+
+export type ReviewProposalView = {
+  id: string;
+  name: string;
+  status: ProposalStatus;
+  leader: Person;
+  members: Person[];
+  pendingInvitations: number;
+  submittedAt: string | null;
+  warnings: ProposalWarning[];
+};
+
+export type UngroupedView = { person: Person; proposalId: string | null; proposalName: string | null; proposalStatus: ProposalStatus | null };
+
+export type ClassProposalsView = {
+  classId: string;
+  formation: FormationView;
+  proposals: ReviewProposalView[];
+  ungrouped: UngroupedView[];
+};
+
+export type ApproveResult = {
+  approved: { proposalId: string; groupId: string }[];
+  failed: { proposalId: string; code: string; message: string }[];
+  groupSetVersion: number;
+};

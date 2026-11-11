@@ -614,6 +614,7 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 - [GroupDocController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocController.java)
 - [GroupDocImageController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocImageController.java)
 - [GroupController.java](../../../backend/src/main/java/edu/aiplatform/groups/controller/GroupController.java)
+- [GroupProposalController.java](../../../backend/src/main/java/edu/aiplatform/groups/controller/GroupProposalController.java) — sinh viên tự chia nhóm (2026-11-11)
 
 ### Tests
 
@@ -633,6 +634,14 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 - [LeaderRequestServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/LeaderRequestServiceTest.java)
 - [MyGroupServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/MyGroupServiceTest.java)
 - [RandomGroupSplitterTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/RandomGroupSplitterTest.java)
+- [GroupProposalControllerTest.java](../../../backend/src/test/java/edu/aiplatform/groups/controller/GroupProposalControllerTest.java)
+- [ProposalRulesTest.java](../../../backend/src/test/java/edu/aiplatform/groups/model/ProposalRulesTest.java)
+- [GroupProposalRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/groups/repository/GroupProposalRepositoryIntegrationTest.java)
+- [GroupFormationServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/GroupFormationServiceTest.java)
+- [GroupProposalServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/GroupProposalServiceTest.java)
+- [GroupProposalReviewServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/GroupProposalReviewServiceTest.java)
+- [GroupProposalCleanupTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/GroupProposalCleanupTest.java)
+- [GroupProposalFlowIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/GroupProposalFlowIntegrationTest.java)
 - [RabbitSseMultiInstanceIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/integration/RabbitSseMultiInstanceIntegrationTest.java)
 - [GroupDocImportServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupDocImportServiceTest.java)
 
@@ -643,6 +652,7 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 - [V20261029_1100__make_leader_request_reason_optional.sql](../../../backend/src/main/resources/db/migration/groups/V20261029_1100__make_leader_request_reason_optional.sql)
 - [V20261102_1000__group_section_collaboration.sql](../../../backend/src/main/resources/db/migration/groups/V20261102_1000__group_section_collaboration.sql)
 - [V20261102_1200__group_assignment_phase.sql](../../../backend/src/main/resources/db/migration/groups/V20261102_1200__group_assignment_phase.sql)
+- [V20261111_1800__group_self_formation.sql](../../../backend/src/main/resources/db/migration/groups/V20261111_1800__group_self_formation.sql) — đợt tự chia nhóm, đề xuất, lời mời (2026-11-11)
 
 ### Frontend
 

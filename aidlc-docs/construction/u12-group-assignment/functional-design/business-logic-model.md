@@ -5,7 +5,7 @@
 
 > Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
-**Primary UC:** 53, 54, 55, 56, 57. **Primary stories:** US-GRP-001, US-GRP-002, US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006. **Requirements:** FR-025, FR-026, FR-018, FR-039.
+**Primary UC:** 53, 54, 55, 56, 57. **Primary stories:** US-GRP-001, US-GRP-002, US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006, US-GRP-007, US-GRP-008, US-GRP-009, US-GRP-010. **Requirements:** FR-025, FR-026, FR-018, FR-039; SG-01…09 (2026-11-11).
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
 
@@ -130,3 +130,77 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 groups và groupdocs thuộc cùng U12. Leader request reason tùy chọn, null thành chuỗi rỗng, tối đa 1.000; reject reason tùy chọn, trống thành null. GroupRenameService cho đổi tên theo scope; editor hiển thị lỗi nhóm đã bị gỡ khỏi draft. Claims/locks/leader submit giữ theo SectionRules và services; không tự thêm peer assessment hay đổi AI Student GROUP.
 
 [Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.
+
+## 5. Sinh viên tự chia nhóm — 2026-11-11
+
+US-GRP-007…010; quy tắc BR-U12-70…96 trong [business-rules](business-rules.md), thực thể trong [domain-entities](domain-entities.md). Mọi luồng ghi là một transaction; sự kiện phát sau commit.
+
+### F16 - Cài đặt đợt (US-GRP-007)
+
+1. Giảng viên chính mở popup cài đặt; `GET .../group-formation` trả cài đặt (mặc định tắt, `minSize` 2, `maxSize` 5, không hạn chót, `version` 0), trạng thái mở/đóng và lý do đóng (`DISABLED`, `CLASS_NOT_OPEN`, `DEADLINE_PASSED`).
+2. `PUT` kèm `version`: kiểm quyền và lớp `DRAFT`/`OPEN` (BR-U12-70), kiểm giá trị (BR-U12-93), so `version`.
+3. Ghi cài đặt, tăng `version`, audit trước/sau. Nếu đợt chuyển từ đóng sang mở, các lời mời `INVITED` còn treo của lớp chuyển `EXPIRED` trước (BR-U12-72) để lời mời cũ không tự sống lại.
+
+### F17 - Đọc màn đề xuất của sinh viên (US-GRP-008, 009)
+
+1. `requireStudent` (ghi danh `ACTIVE`). Có nhóm chính thức thì trả `grouped = true`, màn Nhóm của tôi hiện như cũ.
+2. Tính trạng thái đợt (BR-U12-71).
+3. Đề xuất đang hoạt động của tôi: thành viên hiệu lực (BR-U12-89 lọc khi đọc), lời mời đang chờ (hiển thị "hết hạn" nếu đợt đóng), vai trò của tôi, `version`, các nút được phép.
+4. Lời mời `INVITED` đến tôi (đề xuất, trưởng nhóm, số thành viên) khi tôi không ở đề xuất nào hoặc đang ở để biết phải rời trước.
+5. Đề xuất `REJECTED` gần nhất kèm lý do nếu tôi chưa ở đề xuất đang hoạt động mới hơn (BR-U12-86).
+6. Bạn mời được, chỉ khi tôi là trưởng nhóm đề xuất `DRAFT` và đợt mở (BR-U12-92).
+
+### F18 - Tạo, đổi tên, mời, thu hồi (US-GRP-008)
+
+1. Kiểm quyền, đợt mở, sinh viên hợp lệ (BR-U12-74).
+2. Tạo: kiểm tên (BR-U12-75), chèn đề xuất `DRAFT` và dòng trưởng nhóm `ACCEPTED`, `active`; vi phạm partial unique index thì trả `STUDENT_IN_PROPOSAL`.
+3. Đổi tên, mời, thu hồi: khóa dòng đề xuất (`SELECT … FOR UPDATE`), so `version`, áp quy tắc dọn lười (BR-U12-72, 89) cho chính đề xuất này, kiểm BR-U12-76/77, ghi, tăng `version`.
+4. Mời phát một `group.proposal-invited` cho mỗi người được mời mới.
+
+### F19 - Chấp nhận, từ chối, rời, hủy (US-GRP-008)
+
+1. Chấp nhận: khóa đề xuất; kiểm BR-U12-78; đặt dòng của tôi `ACCEPTED`, `active`; các lời mời `INVITED` khác của tôi trong lớp thành `REVOKED`. Tăng `version` đề xuất. Lỗi unique index (tôi vừa vào đề xuất khác ở luồng song song) → `STUDENT_IN_PROPOSAL`, hoàn tác.
+2. Từ chối: dòng `DECLINED`.
+3. Rời (không phải trưởng nhóm, đề xuất `DRAFT`): dòng `LEFT`, không hoạt động.
+4. Hủy (trưởng nhóm, `DRAFT`): đề xuất `CANCELLED`, `LEADER_CANCELLED`; thành viên không hoạt động; lời mời `REVOKED`.
+
+### F20 - Gửi duyệt, rút về (US-GRP-009)
+
+1. Khóa đề xuất, so `version`, dọn lười; kiểm đợt mở và sĩ số tối thiểu theo thành viên hiệu lực (BR-U12-80).
+2. Gửi: `SUBMITTED`, `submittedAt`, lời mời `REVOKED`, audit, phát `group.proposal-submitted` tới giảng viên chính.
+3. Rút về: `SUBMITTED` → `DRAFT` (BR-U12-81); không cần đợt mở.
+
+### F21 - Duyệt một hoặc nhiều (US-GRP-010)
+
+1. `requireTeacher`, lớp `DRAFT`/`OPEN`; kiểm danh sách id (BR-U12-93).
+2. Đọc `version` bộ nhóm, bộ nhóm hiện tại, sinh viên `ACTIVE`; khóa các đề xuất theo thứ tự id để tránh deadlock.
+3. Với từng đề xuất theo thứ tự gửi:
+   - Không thuộc lớp → lỗi `GROUP_PROPOSAL_NOT_FOUND`; không `SUBMITTED` → `PROPOSAL_NOT_SUBMITTED`.
+   - Tính thành viên hiệu lực trên bộ nhóm đang tích lũy; người không hiệu lực → `LEFT`.
+   - Trưởng nhóm không hiệu lực hoặc dưới `minSize` → `PROPOSAL_INCOMPLETE`, đề xuất về `DRAFT`.
+   - Thêm nháp nhóm mới vào bộ đang tích lũy, chạy `GroupSetRules.validate`; lỗi → bỏ nháp, trả mã lỗi (ví dụ `GROUP_NAME_DUPLICATE`), đề xuất giữ `SUBMITTED`.
+4. Có ít nhất một nhóm hợp lệ: `bumpSetVersion` một lần (lệch → `409`, hoàn tác cả lần duyệt), gọi phần `apply` của lưu bộ nhóm với các nhóm mới (tạo nhóm, thành viên, tài liệu cho bài nhóm đang mở, audit `GROUP_CREATED`, `group.membership-changed` với `reason = PROPOSAL_APPROVED`).
+5. Ghi từng đề xuất hợp lệ `APPROVED`, `approvedGroupId`; thành viên không hoạt động; audit và `group.proposal-approved`.
+6. Trả `{ approved: [{proposalId, groupId}], failed: [{proposalId, code, message}], groupSetVersion }`.
+
+### F22 - Từ chối (US-GRP-010)
+
+1. `requireTeacher`, lớp `DRAFT`/`OPEN`; khóa đề xuất, phải `SUBMITTED` của lớp.
+2. Ghi `REJECTED`, lý do (BR-U12-86), thành viên không hoạt động; audit; phát `group.proposal-rejected`.
+
+### F23 - Dọn đề xuất khi lưu bộ nhóm (US-GRP-010 S3)
+
+1. Trong `ClassGroupService.save`, sau `apply`, lấy tập sinh viên vừa có nhóm chính thức (người chuyển vào nhóm, kể cả nhóm mới).
+2. Gọi dịch vụ đề xuất trong cùng transaction: áp BR-U12-88 cho các đề xuất có những người này. Không phát thông báo (BR-U12-95).
+3. Lỗi trong bước dọn làm hỏng cả lần lưu (không để đề xuất lệch với bộ nhóm).
+
+### F24 - Đọc danh sách cho giảng viên (US-GRP-010 S3)
+
+`GET .../group-proposals` trả đề xuất `DRAFT`/`SUBMITTED` của lớp với thành viên hiệu lực, lời mời chờ, cảnh báo sĩ số (BR-U12-73), và sinh viên `ACTIVE` chưa có nhóm kèm `{proposalId, proposalName, status}` nếu có (BR-U12-90). Không ghi gì khi đọc.
+
+### Đồng thời
+
+- Một đề xuất mỗi sinh viên: partial unique index, không dựa vào kiểm ở ứng dụng.
+- Thao tác cùng đề xuất: khóa dòng đề xuất + `version`.
+- Duyệt và lưu bộ nhóm: cùng `version` bộ nhóm; ai ghi sau nhận `409`.
+- Chấp nhận song song hai lời mời của cùng người: một thành công, một `STUDENT_IN_PROPOSAL`.
