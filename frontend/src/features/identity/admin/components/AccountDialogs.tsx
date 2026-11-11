@@ -119,7 +119,7 @@ export function RoleChangeRejectedDialog({ account, block, onClose }: { account:
     ...block.classes.map((item) => ({ kind: "Lớp", item, href: null })),
   ];
   return (
-    <Dialog open title="Không đổi được vai trò" icon="block" tone="danger" onClose={onClose} footer={<Button onClick={onClose}>Đóng</Button>}>
+    <Dialog open title="Không đổi được vai trò" icon="block" tone="danger" onClose={onClose}>
       <Alert tone="danger" role="alert">
         {account.displayName} đang giữ các môn hoặc lớp.
       </Alert>

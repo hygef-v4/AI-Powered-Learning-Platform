@@ -16,7 +16,7 @@ export function SecretInput(props: Omit<InputHTMLAttributes<HTMLInputElement>, "
           type="button"
           onClick={() => setVisible((v) => !v)}
           aria-label={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-          className="flex text-muted hover:text-ink"
+          className="-mr-1.5 flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink"
         >
           <Icon name={visible ? "visibility_off" : "visibility"} size={18} />
         </button>

@@ -113,7 +113,15 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
               <ClickableRow key={s.accountId} onClick={() => s.attempts > 0 && setStudent(s)} data-testid="quiz-attempts-row"
                 className={s.attempts > 0 ? undefined : "cursor-default"}>
                 <Td>
-                  <span className="block truncate font-semibold" title={s.displayName ?? undefined}>{s.displayName ?? "—"}</span>
+                  {s.attempts > 0 ? (
+                    // Nút trong ô đầu để mở lượt làm bằng bàn phím; dòng vẫn bấm chuột được như trước.
+                    <button type="button" onClick={(event) => { event.stopPropagation(); setStudent(s); }}
+                      className="block max-w-full truncate text-left font-semibold text-ink hover:text-primary-ink" title={s.displayName ?? undefined}>
+                      {s.displayName ?? "—"}
+                    </button>
+                  ) : (
+                    <span className="block truncate font-semibold" title={s.displayName ?? undefined}>{s.displayName ?? "—"}</span>
+                  )}
                   <span className="block truncate text-xs text-muted" title={s.email ?? undefined}>{s.email}</span>
                   {s.lastSubmittedAt && <span className="block text-xs text-muted tabular-nums">Lần gần nhất {formatDateTime(s.lastSubmittedAt)}</span>}
                 </Td>
@@ -132,7 +140,7 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
         <PageNav page={page} size={PAGE_SIZE} total={data.students.length} onPage={setPage} />
       </>}
       {student && !detail && (
-        <Dialog open onClose={() => setStudent(null)} title={`Lượt làm · ${student.displayName ?? ""}`} footer={<Button onClick={() => setStudent(null)}>Đóng</Button>}>
+        <Dialog open onClose={() => setStudent(null)} title={`Lượt làm · ${student.displayName ?? ""}`}>
           <ul className="flex flex-col gap-2 text-[13px]">
             {student.rows.map((row) => (
               <li key={row.attemptId} className="flex items-center justify-between gap-2">
@@ -151,8 +159,7 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
         </Dialog>
       )}
       {detail && (
-        <Dialog open size="lg" onClose={() => setDetail(null)} title={`${detail.displayName ?? ""} · Lần ${detail.result.attemptNo}`}
-          footer={<Button onClick={() => setDetail(null)}>Đóng</Button>}>
+        <Dialog open size="lg" onClose={() => setDetail(null)} title={`${detail.displayName ?? ""} · Lần ${detail.result.attemptNo}`}>
           <p className="mb-2 text-[13px]" data-testid="teacher-attempt-summary">
             Điểm {formatPoints(detail.result.score)} / {formatPoints(detail.result.maxScore)} · nộp lúc {formatDateTime(detail.result.submittedAt)}
             {submitModeText(detail.result.submitMode) && <> · {submitModeText(detail.result.submitMode)}</>}

@@ -3,7 +3,7 @@
 import { type CandidateLoader } from "../hooks/useCandidates";
 import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Button, ClickableRow, Dialog, Icon, IconButton, PageNav, Pill, Section, Select, TableFrame, Td, TextInput, Th, cx, showToast } from "@/shared/ui";
+import { Button, ClickableRow, Dialog, Icon, IconButton, PageNav, Pill, Section, Segmented, Select, TableFrame, Td, TextInput, Th, showToast } from "@/shared/ui";
 import { PersonPicker } from "./PersonPicker";
 import { formatDate, formatOperationError } from "../model/format";
 import { parseEnrollmentList, type EnrollmentPreviewRow } from "../model/enrollmentList";
@@ -78,14 +78,13 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
     <section aria-label="Sinh viên trong lớp" className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
       {/* Một hàng công cụ: tab trạng thái, lọc nhóm, ô tìm. */}
       <div className="flex flex-wrap items-center gap-3">
-        {showStatus && <div role="tablist" aria-label="Trạng thái sinh viên" className="flex flex-wrap gap-1 rounded-xl bg-shell p-1">
-          {STATUS_TABS.map((tab) => <button key={tab.value} type="button" role="tab" aria-selected={status === tab.value}
-            onClick={() => { setStatus(tab.value); setPage(0); }}
-            className={cx("rounded-[7px] px-2.5 py-1.5 text-xs font-semibold transition-colors duration-200",
-              status === tab.value ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink")}>
-            {tab.label}
-          </button>)}
-        </div>}
+        {showStatus && <Segmented
+  as="tab"
+  ariaLabel="Trạng thái sinh viên"
+  value={status}
+  onChange={(value) => { setStatus(value); setPage(0); }}
+  options={[...STATUS_TABS]}
+/>}
         {groupNames && (
           <Select aria-label="Lọc theo nhóm" value={group} wrapperClassName="w-48" onChange={(event) => { setGroup(event.target.value); setPage(0); }}>
             <option value="">Tất cả</option>
@@ -235,7 +234,6 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
       </TableFrame>
       <PageNav page={page} size={PREVIEW_SIZE} total={preview.length} onPage={setPage} />
       <div className="flex justify-end gap-2 border-t border-line pt-3.5">
-        <Button disabled={busy} onClick={onClose}>Hủy</Button>
         <Button variant="primary" icon="check" disabled={busy || !valid} onClick={() => void handleSubmit()} data-testid="enrollment-list-submit">{`Thêm ${valid} sinh viên`}</Button>
       </div>
     </>}

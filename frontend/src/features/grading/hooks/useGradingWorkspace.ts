@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import { gradingApi } from "../api";
 import { hasPartialPoints, hasInvalidItemScores } from "../model/rubricScores";
 import { formatErrorMessage } from "../model/format";
@@ -30,6 +31,7 @@ import type {
 const UNSAVED_CHANGES_MESSAGE = "Bạn có thay đổi chưa lưu. Rời bài này?";
 
 export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Detail>, filters: NavigationFilters = {}) {
+  const [confirmDialog, requestConfirm] = useConfirmDialog();
   const router = useRouter();
   const [detail, setDetail] = useState(initial);
   const [form, setForm] = useState(() => createInitialForm(initial.evaluation, initial.rubrics));
@@ -124,11 +126,10 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     }
   }
 
-  function confirmNavigation() {
-    return !dirty || window.confirm(UNSAVED_CHANGES_MESSAGE);
-  }
   function navigateEvaluation(id: string, keepFilters = true) {
-    if (confirmNavigation()) router.push(buildEvaluationHref(id, keepFilters ? filters : {}));
+    const go = () => router.push(buildEvaluationHref(id, keepFilters ? filters : {}));
+    if (dirty) requestConfirm(UNSAVED_CHANGES_MESSAGE, go, "Bỏ thay đổi");
+    else go();
   }
 
   async function saveEvaluation(advance = false,
@@ -298,7 +299,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     toggleAcknowledgedReviewItem,
     reload: reloadEvaluation,
     navigate: navigateEvaluation,
-    confirmNavigation,
+    confirmDialog,
     save: saveEvaluation,
     requestProposal,
     resumePolling,

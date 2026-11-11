@@ -9,6 +9,7 @@ import { formatPoints, GRADE_STATUS_LABELS } from "../model/types";
 import { Pagination } from "@/shared/ui/Pagination";
 import { BatchActionDialog } from "../components/BatchActionDialog";
 import { buildGradeActionItems } from "../model/gradeActions";
+import { formatDateTime } from "@/shared/dateTime";
 import { Alert, Button, EmptyState, Icon, Pill, Select, type Tone } from "@/shared/ui";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
 import { buildEvaluationHref } from "../model/navigation";
@@ -31,7 +32,7 @@ function rowActionLabel(status: string): string {
 }
 
 const CELL = "border-b border-line px-3 py-3 align-middle first:pl-1 last:pr-1";
-const HEAD = "border-b border-line px-3 pb-2.5 text-left text-[10.5px] font-semibold tracking-[.08em] whitespace-nowrap text-muted uppercase first:pl-1 last:pr-1";
+const HEAD = "border-b border-line px-3 pb-2.5 text-left text-xs font-semibold tracking-[.08em] whitespace-nowrap text-muted uppercase first:pl-1 last:pr-1";
 
 /** Bài nộp của một bài tập: số liệu nhanh, lọc, chọn nhiều để chốt/công bố/AI, bảng dạng tài liệu. */
 export function SubmissionDetailPage({
@@ -104,7 +105,7 @@ export function SubmissionDetailPage({
             ].map(([key, label]) => (
               <section key={key} className="flex flex-col gap-1">
                 <strong className="font-display text-[28px] leading-none text-ink tabular-nums">{data.summary[key!] ?? 0}</strong>
-                <p className="text-[10.5px] font-semibold tracking-[.08em] text-muted uppercase">{label}</p>
+                <p className="text-xs font-semibold tracking-[.08em] text-muted uppercase">{label}</p>
               </section>
             ))}
           </div>
@@ -201,7 +202,7 @@ export function SubmissionDetailPage({
                       <p className="font-mono text-xs break-all text-muted">{r.student.email}</p>
                     </td>
                     <td className={`${CELL} font-mono text-xs whitespace-nowrap text-body`}>
-                      {r.submittedAt ? new Date(r.submittedAt).toLocaleString("vi-VN") : "—"}
+                      {formatDateTime(r.submittedAt)}
                       {r.late && <span className="ml-2 font-sans font-semibold text-danger">Trễ</span>}
                     </td>
                     <td className={CELL}>

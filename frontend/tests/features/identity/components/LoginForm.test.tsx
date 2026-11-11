@@ -53,7 +53,27 @@ describe("LoginForm", () => {
 
     fill("khong-phai-email", "hocbai2026");
 
-    expect(screen.getByRole("alert")).toHaveTextContent("Nhập email trường hợp lệ.");
+    expect(screen.getByRole("alert")).toHaveTextContent("Nhập đúng email do trường cấp.");
+    expect(loginMock).not.toHaveBeenCalled();
+  });
+
+  it("lỗi nằm dưới đúng ô, ô lỗi đầu tiên được đánh dấu và nhận focus", () => {
+    render(<LoginForm onSuccess={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Đăng nhập" }));
+
+    const email = screen.getByLabelText("Email");
+    const password = screen.getByLabelText("Mật khẩu");
+    expect(email).toHaveAttribute("aria-invalid", "true");
+    expect(email).toHaveAccessibleDescription("Nhập đúng email do trường cấp.");
+    expect(password).toHaveAttribute("aria-invalid", "true");
+    expect(password).toHaveAccessibleDescription("Nhập mật khẩu.");
+    expect(email).toHaveFocus();
+
+    fireEvent.change(email, { target: { value: "taivm@fpt.edu.vn" } });
+    expect(email).not.toHaveAttribute("aria-invalid");
+    fireEvent.click(screen.getByRole("button", { name: "Đăng nhập" }));
+    expect(password).toHaveFocus();
     expect(loginMock).not.toHaveBeenCalled();
   });
 

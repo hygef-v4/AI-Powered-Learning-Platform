@@ -3,7 +3,7 @@
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Alert, Button, ClickableRow, cx, PageHeader, Pagination, Pill, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
+import { Alert, Button, ClickableRow, PageHeader, Pagination, Pill, Segmented, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import { createSubjectQuiz, getManagedSubjects, getSubjectQuizzes } from "../api";
 import { CreateQuizDialog } from "../components/CreateQuizDialog";
 import { errorMessage, formatDateTime, formatPoints, QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "../model/labels";
@@ -90,17 +90,13 @@ export function SubjectQuizListPage() {
       />
       {archived && <Alert tone="warning" className="mb-3">Môn đã lưu trữ, quiz của môn chỉ xem.</Alert>}
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <div role="tablist" aria-label="Trạng thái quiz" className="flex gap-1">
-          {TABS.map((tab) => (
-            <button key={tab.label} type="button" role="tab" aria-selected={(status || null) === tab.key}
-              onClick={() => { setStatus(tab.key ?? ""); setFilters((current) => ({ ...current, page: 0 })); }}
-              data-testid={`quiz-list-tab-${tab.key ?? "ALL"}`}
-              className={cx("rounded-lg px-3 py-1.5 text-[13px] font-semibold",
-                (status || null) === tab.key ? "bg-primary-soft text-primary-ink" : "text-body hover:bg-shell")}>
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <Segmented<QuizStatus | "">
+          as="tab"
+          ariaLabel="Trạng thái quiz"
+          value={status}
+          onChange={(value) => { setStatus(value); setFilters((current) => ({ ...current, page: 0 })); }}
+          options={TABS.map((tab) => ({ value: tab.key ?? "", label: tab.label, testId: `quiz-list-tab-${tab.key ?? "ALL"}` }))}
+        />
         <TextInput icon="search" placeholder="Tìm theo tên quiz" aria-label="Tìm theo tên quiz" value={search} maxLength={200}
           onChange={(event) => setSearch(event.target.value)} wrapperClassName="min-w-60 flex-1" data-testid="quiz-list-search" />
       </div>

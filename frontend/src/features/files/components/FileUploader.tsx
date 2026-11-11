@@ -63,7 +63,7 @@ export function FileUploader({ purpose, label = "Chọn tệp", currentName, onU
           onChange={(e) => { void handle(e.target.files?.[0]); e.target.value = ""; }} />
       </div>
       {state.status === "error" && (
-        <p role="alert" className="flex items-center gap-1 text-[11px] text-danger">
+        <p role="alert" className="flex items-center gap-1 text-xs text-danger">
           <Icon name="error" size={14} />
           {state.message}
         </p>

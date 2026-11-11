@@ -248,18 +248,36 @@ describe("QuizAiDraftPanel (F8, F13)", () => {
     const proposal = draft({ target: "QUIZ", quizId: "z1" });
     vi.mocked(getQuizDrafts).mockResolvedValue([proposal, { ...proposal, id: "d2" }]);
     vi.mocked(getQuizDraft).mockResolvedValue(proposal);
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     render(<QuizAiDraftPanel inline detail={quiz} disabled={false} onConflict={vi.fn()} onQuizChange={vi.fn()} />);
     fireEvent.click(nth(await screen.findAllByRole("button", { name: "Xem" }), 0));
     fireEvent.click(nth(await screen.findAllByTestId("ai-draft-edit"), 0));
     fireEvent.change(screen.getByTestId("mcq-editor-stem"), { target: { value: "Giữ nội dung" } });
+    // Thu gọn khi còn chỉnh sửa: popup xác nhận hiện ra; đóng popup thì giữ nguyên nội dung đang sửa.
     fireEvent.click(screen.getByRole("button", { name: "Thu gọn" }));
+    expect(screen.getByRole("dialog", { name: "Bỏ các chỉnh sửa đề xuất chưa lưu?" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Đóng" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByTestId("mcq-editor-stem")).toHaveValue("Giữ nội dung");
     fireEvent.click(screen.getByRole("button", { name: "Xem" }));
+    expect(screen.getByRole("dialog", { name: "Bỏ các chỉnh sửa chưa lưu để xem đề xuất khác?" })).toBeInTheDocument();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByTestId("mcq-editor-stem")).toHaveValue("Giữ nội dung");
-    expect(confirm).toHaveBeenCalledTimes(2);
     expect(getQuizDraft).toHaveBeenCalledTimes(1);
-    confirm.mockRestore();
+  });
+
+  it("discards unsaved edits only after the confirmation dialog is accepted", async () => {
+    const proposal = draft({ target: "QUIZ", quizId: "z1" });
+    vi.mocked(getQuizDrafts).mockResolvedValue([proposal]);
+    vi.mocked(getQuizDraft).mockResolvedValue(proposal);
+    render(<QuizAiDraftPanel inline detail={quiz} disabled={false} onConflict={vi.fn()} onQuizChange={vi.fn()} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Xem" }));
+    fireEvent.click(nth(await screen.findAllByTestId("ai-draft-edit"), 0));
+    fireEvent.change(screen.getByTestId("mcq-editor-stem"), { target: { value: "Sẽ bỏ" } });
+    fireEvent.click(screen.getByRole("button", { name: "Thu gọn" }));
+    fireEvent.click(screen.getByRole("button", { name: "Bỏ chỉnh sửa" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("mcq-editor-stem")).not.toBeInTheDocument();
   });
 
   it("accepts all quiz proposals using the current quiz version", async () => {

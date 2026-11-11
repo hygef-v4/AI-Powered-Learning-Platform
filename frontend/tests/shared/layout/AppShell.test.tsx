@@ -32,7 +32,7 @@ describe("AppShell", () => {
     expect(menu).toHaveTextContent("Nhật ký audit");
     expect(screen.getByRole("link", { name: "Cài đặt" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Tổng quan" })).not.toHaveAttribute("aria-current");
-    expect(screen.getByRole("link", { name: "Kết nối AI" })).toHaveAttribute("href", "/ai/connection");
+    expect(screen.getByRole("menuitem", { name: "Kết nối AI" })).toHaveAttribute("href", "/ai/connection");
     expect(await screen.findByText("Phòng Đào tạo")).toBeInTheDocument();
     expect(screen.getByText("Quản trị viên")).toBeInTheDocument();
   });
@@ -81,7 +81,13 @@ describe("AppShell", () => {
     fireEvent.click(screen.getByRole("button", { name: "Thu gọn menu" }));
     expect(sidebar).toHaveAttribute("data-collapsed", "true");
     expect(screen.getByRole("button", { name: "Mở menu" })).toHaveAttribute("aria-expanded", "false");
-    expect(screen.getByRole("link", { name: "Cài đặt" })).toHaveAttribute("title", "Cài đặt");
+    // Thu gọn: tên mục hiện thành nhãn nổi khi rê chuột, không dùng `title`.
+    const settings = screen.getByRole("link", { name: "Cài đặt" });
+    expect(settings).not.toHaveAttribute("title");
+    fireEvent.mouseEnter(settings);
+    expect(container.querySelector("[data-nav-tip]")).toHaveTextContent("Cài đặt");
+    fireEvent.mouseLeave(settings);
+    expect(container.querySelector("[data-nav-tip]")).not.toBeInTheDocument();
     expect(localStorage.getItem("sidebar-collapsed")).toBe("1");
 
     unmount();
@@ -102,12 +108,50 @@ describe("AppShell", () => {
       </AppShell>,
     );
 
-    // Đăng xuất nằm ở cuối sidebar, không còn trong menu tài khoản.
-    expect(document.querySelector("[data-app-sidebar]")).toContainElement(screen.getByRole("button", { name: "Đăng xuất" }));
-    fireEvent.click(screen.getByRole("button", { name: "Đăng xuất" }));
+    // Đăng xuất nằm trong menu tài khoản; sidebar chỉ còn mục chuyển trang.
+    const logout = screen.getByRole("menuitem", { name: "Đăng xuất" });
+    expect(document.querySelector("[data-app-sidebar]")).not.toContainElement(logout);
+    expect(screen.getByRole("menu")).toContainElement(logout);
+    fireEvent.click(logout);
     expect(screen.getByRole("dialog", { name: "Đăng xuất?" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Đóng" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("có link bỏ qua tới nội dung trỏ vào vùng main", () => {
+    const { container } = render(
+      <AppShell role="ADMIN" nav={adminNav} user={null}>
+        <p>Nội dung</p>
+      </AppShell>,
+    );
+    expect(container.querySelector("a")).toHaveTextContent("Bỏ qua tới nội dung");
+    expect(screen.getByRole("link", { name: "Bỏ qua tới nội dung" })).toHaveAttribute("href", "#main");
+    expect(screen.getByRole("main")).toHaveAttribute("id", "main");
+  });
+
+  it("màn hẹp: ngăn kéo đóng thì không nhận focus; mở ra thì Esc đóng và trả focus về nút menu", () => {
+    vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: false }));
+    const { container } = render(
+      <AppShell role="ADMIN" nav={adminNav} user={null}>
+        <p>Nội dung</p>
+      </AppShell>,
+    );
+    const sidebar = container.querySelector("[data-app-sidebar]")!;
+    expect(sidebar).toHaveAttribute("inert");
+
+    const menuButton = screen.getByRole("button", { name: "Mở menu" });
+    fireEvent.click(menuButton);
+    expect(sidebar).not.toHaveAttribute("inert");
+
+    // Tab ở mục cuối quay về nút menu, không lọt ra nội dung phía sau.
+    const links = sidebar.querySelectorAll("a");
+    links[links.length - 1]!.focus();
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(menuButton).toHaveFocus();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(sidebar).toHaveAttribute("inert");
+    expect(menuButton).toHaveFocus();
   });
 });

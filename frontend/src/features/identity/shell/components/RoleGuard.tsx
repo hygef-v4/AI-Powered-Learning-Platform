@@ -25,7 +25,7 @@ export function RoleGuard({ roles, children }: { roles?: Role[]; children: React
     return <ErrorPage kind="unavailable" />;
   }
   if (!allowed) {
-    return <FullPageStatus>Đang tải...</FullPageStatus>;
+    return <FullPageStatus>Đang tải…</FullPageStatus>;
   }
   return <>{children}</>;
 }

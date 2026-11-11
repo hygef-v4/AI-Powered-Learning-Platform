@@ -84,8 +84,8 @@ export function McqEditor({ value, onChange, errors, readOnly = false }: Props) 
             </Button>
           </div>
         )}
-        {errors.options && <p role="alert" className="text-[11px] text-danger">{errors.options}</p>}
-        {errors.correctOptionIds && <p role="alert" className="text-[11px] text-danger">{errors.correctOptionIds}</p>}
+        {errors.options && <p role="alert" className="text-xs text-danger">{errors.options}</p>}
+        {errors.correctOptionIds && <p role="alert" className="text-xs text-danger">{errors.correctOptionIds}</p>}
       </div>
 
       <Field label="Điểm (mặc định)" htmlFor={`${id}-points`} required error={errors.defaultPoints}>

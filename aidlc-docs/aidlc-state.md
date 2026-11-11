@@ -1,5 +1,34 @@
 # AI-DLC State Tracking
 
+## UI/UX đợt 2 — kiểm báo cáo ngày 2026-11-10, đã commit, chưa push, 2026-11-11
+
+Nhánh `fix/ui-ux-review-2` từ `origin/staging@353383f2`. Đối chiếu từng mục của báo cáo đánh giá UI/UX với mã sau PR #64: mục 3 (bảng Bài tập dạng thẻ, cột lớp), 4 (thanh đồng hồ dính, `aria-live`, đáp án 44px), 6 (ngăn kéo `inert`, Esc), 8 (toast lỗi), "Practice", liên kết bỏ qua, Đăng xuất trong menu tài khoản, `Menu` phím mũi tên, tiêu đề popup 22px đã sửa trước đó.
+
+- [x] Sidebar: mục đang chọn `bg-primary-soft`, hover token mới `--c-sidebar-hover` (sáng `#f4f4f5`, tối `#202b39`); bỏ bóng nâu; mũi tên mở nhánh 40px trên màn cảm ứng, liên kết cha chừa lề phải
+- [x] Ô nhập 16px dưới 640px (quy tắc chung trong `globals.css`, ô OTP chữ to giữ cỡ)
+- [x] Lề `main` và 4 thanh đầu trang dính dùng chung `.main-gutter`/`.main-bleed`; đã đo trên trình duyệt: thanh trùng hai mép `main`
+- [x] Công tắc tắt dùng `--c-field` (3,33:1), cả `Switch` và bản trong Thông báo
+- [x] Trang chấm bài: `window.confirm` thành popup "Bỏ thay đổi"
+- [x] Quiz: "Chưa lưu được" màu cảnh báo, popup khi thoát quiz có giới hạn giờ, dải số câu cuộn ngang ở trên câu hỏi khi hẹp hơn `lg`
+- [x] Hạn nộp tương đối ("còn 5 giờ", cảnh báo dưới 24 giờ) ở trang Bài tập của sinh viên; thời gian thông báo dạng tương đối; `shared/dateTime.ts` cố định giờ Việt Nam thay 3 chỗ `toLocaleString` theo giờ máy
+- [x] `InfoTip` đóng bằng Esc, rê chuột vào được; `Tabs` có Home/End, `aria-controls`/`tabpanel` ở trang lớp và môn; bảng lượt làm quiz mở được bằng bàn phím
+- [x] Câu chữ: "Không có … phù hợp.", "…", "Nhập đúng email do trường cấp.", hằng số `LOAD_FAILED_MESSAGE`; trình xem học liệu `100dvh`
+- [ ] Chưa làm: `useAuthoringGuard` (nút Back cần trả lời đồng bộ), thang cỡ chữ/bo góc/z-index, `Overlay`/`Textarea` dùng chung, gộp `Pagination`/`PageNav`, gộp 11 hàm ngày giờ, kiểm thử ảnh chụp, lint chặn giá trị lẻ; hành vi ô chọn môn/lớp trên sidebar chờ người dùng quyết định
+
+Kiểm tra: `tsc --noEmit`, `eslint` qua; Vitest 133 tệp, 950 test qua. Trình duyệt (stack Docker local): sidebar hai theme, ô nhập 16px ở 375px, thanh dính trang soạn bài. Chưa thử trên iPhone thật. Không đổi backend, API hay schema; đã commit trên nhánh, chưa push. Security/Resiliency giữ phạm vi đã duyệt, PBT tắt.
+
+## Sửa 22 điểm UI/UX — build và kiểm thử xong, đã commit, chưa push, 2026-11-10
+
+Người dùng yêu cầu sửa toàn bộ 22 điểm của đợt rà soát UI/UX, chọn phương án A cho cả 9 câu hỏi, duyệt kế hoạch 21 bước và duyệt mã. Nhánh `fix/ui-ux-remediation` tạo từ `staging` `062a43f5`. Chỉ sửa `frontend/` và `PRODUCT.md`; không đổi backend, API, schema. [Yêu cầu và quyết định](inception/requirements/2026-11-10-ui-ux-remediation-questions.md); [kế hoạch và điều chỉnh](construction/plans/code-generation-plan/2026-11-10-ui-ux-remediation.md); [tóm tắt thay đổi](construction/ui-ux-remediation/code/summary.md); [kết quả build và kiểm thử](construction/build-and-test/2026-11-10-ui-ux-remediation-results.md).
+
+- [x] Workspace Detection: brownfield, dùng lại tài liệu reverse engineering hiện có.
+- [x] Requirements Analysis: 22 yêu cầu, 9 quyết định (đều A).
+- [x] Workflow Planning: chỉ chạy Code Generation và Build and Test; các giai đoạn khác bỏ qua.
+- [x] Code Generation: 21/21 bước, người dùng đã duyệt.
+- [x] Build and Test: TypeScript và ESLint sạch; Vitest 886/886 ca trong 128 file, ba lần liên tiếp; production build thành công; trình duyệt xác nhận màn đăng nhập và trang 404.
+- [ ] Operations: giai đoạn giữ chỗ, chờ người dùng xác nhận.
+
+Chưa kiểm tra trên trình duyệt các màn sau đăng nhập (chỉ có kiểm thử tự động trong jsdom). Đã commit trên nhánh theo yêu cầu sau đó của người dùng; chưa push. Security và Resiliency tuân thủ trong phạm vi đã duyệt, các quy tắc khác N/A; PBT tắt.
 ## Đồng bộ tài liệu với code staging — 2026-11-10
 
 Đối chiếu `staging@062a43f5` với aidlc-docs và sửa các chỗ lệch do commit code chưa kèm tài liệu: U07 sửa đề bằng AI (`REVISE`, `AI_DRAFT_STALE`), U08 bỏ kiểm nộp và trang biên nhận, U09 phần bỏ trống 0 điểm và điều hướng bản nộp nhóm, U10 số câu theo độ khó, U06 model Gemini chọn sẵn, cây điều hướng môn/lớp (U05/U01), log lỗi Admin môn học (U04). Bảng kê source trong current-code-baseline được bổ sung 15 mục, bỏ 2 liên kết hỏng; API inventory khớp 239 mapping. [Báo cáo](construction/build-and-test/2026-11-10-aidlc-code-sync-gaps.md).

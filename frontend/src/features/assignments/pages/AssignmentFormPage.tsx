@@ -20,7 +20,7 @@ import {
   type RubricCriterion,
   type ValidationIssue,
 } from "@/shared/document";
-import { Alert, Button, Dialog, Field, Menu, MenuItem, Pill, showToast } from "@/shared/ui";
+import { Alert, Button, Dialog, Field, Menu, MenuItem, Pill, showErrorToast, showToast } from "@/shared/ui";
 import { AiDraftDialog } from "../components/AiDraftDialog";
 import { AiReviseChat } from "../components/AiReviseChat";
 import { assignmentsApi, docxUrl, imageUrlFor } from "../api";
@@ -134,9 +134,13 @@ export function rubricIssues(cards: DocumentPart[], criteria: Record<string, Rub
   });
 }
 
-/** Thông báo của trang soạn nổi ở góc trên bên phải (yêu cầu 2026-11-05), không chen lên thanh công cụ. */
+/**
+ * Thông báo của trang soạn nổi ở góc trên bên phải (yêu cầu 2026-11-05), không chen lên thanh công cụ. Trang này chỉ dùng
+ * màu đỏ cho lỗi (chưa lưu được, thiếu nội dung), nên câu màu đỏ ở lại tới khi người dùng đóng.
+ */
 function notify(text: string, tone: "danger" | "success") {
-  showToast(text, tone);
+  if (tone === "danger") showErrorToast(text);
+  else showToast(text, tone);
 }
 
 /** Chạy {@code task} sau mọi lệnh ghi đang chờ (lưu, duyệt…) để lệnh nào cũng gửi đúng version của bài. */
@@ -634,7 +638,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
 
   return (
     <div data-wide-workspace className="flex flex-col gap-4" style={{ "--doc-toolbar-top": `${56 + headerHeight}px` } as CSSProperties}>
-      <header ref={headerRef} className="sticky top-14 z-30 -mx-4 -mt-8 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] px-4 py-3 backdrop-blur-md sm:-mx-8 sm:px-8 md:-mt-10">
+      <header ref={headerRef} className="sticky top-14 z-30 main-bleed -mt-8 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] py-3 backdrop-blur-md md:-mt-10">
         {/* Quay lại nằm ở sidebar của bài; đầu trang chỉ còn tên bài (đổi theo ô tên đang sửa) và trạng thái. */}
         <div className="flex min-w-0 flex-1 items-center gap-x-3">
           <h1 className="min-w-0 truncate text-[15px] font-semibold text-ink" title={title || detail.title}>{title || detail.title || "Bài chưa đặt tên"}</h1>

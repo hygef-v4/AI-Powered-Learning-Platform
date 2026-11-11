@@ -36,7 +36,9 @@ export function pageItems(current: number, count: number): (number | "gap")[] {
   return items;
 }
 
-const BOX = "inline-flex h-[30px] min-w-[30px] items-center justify-center rounded-lg px-2 text-xs font-semibold transition-colors duration-200";
+const BOX =
+  "inline-flex h-[30px] min-w-[30px] items-center justify-center rounded-lg px-2 text-xs font-semibold transition-colors duration-200 " +
+  "pointer-coarse:h-11 pointer-coarse:min-w-11";
 
 /** Dòng "Hiển thị a–b trong N …" và nút chuyển trang, theo design. */
 export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "bản ghi", note, summary: showSummary = true, testId = "pagination" }: Props) {

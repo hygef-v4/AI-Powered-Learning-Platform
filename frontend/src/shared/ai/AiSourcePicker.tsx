@@ -103,7 +103,7 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
           {error}
         </Alert>
       )}
-      {!options && !error && <p className="text-muted">Đang tải...</p>}
+      {!options && !error && <p className="text-muted">Đang tải…</p>}
       {options && (
         <div role="radiogroup" aria-label="Nguồn AI" className="flex flex-col gap-2">
           {options.map((option) => (
@@ -117,7 +117,7 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
           ))}
         </div>
       )}
-      <p className="text-[11px] text-muted">
+      <p className="text-xs text-muted">
         {preferred ? "Đổi nguồn mặc định" : "Không muốn chọn mỗi lần? Đặt nguồn mặc định"} ở{" "}
         <Link href="/ai/connection?tab=settings" className="font-semibold text-primary-ink underline">
           Kết nối AI

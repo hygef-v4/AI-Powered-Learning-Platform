@@ -10,7 +10,7 @@ import { BackLink } from "@/shared/navigation/BackLink";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { FADE_LABEL, type NavContext, type NavLocation } from "@/shared/layout/navigation";
-import { showToast } from "@/shared/ui";
+import { showErrorToast, showToast } from "@/shared/ui";
 import { cx } from "@/shared/ui/cx";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import { contextQuery, materialPath } from "../api";
@@ -120,7 +120,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
           <span className={cx("px-2.5 py-2 text-[13px] text-muted", FADE_LABEL)}>Đang tải…</span>
         )}
         {scope && outline && outline.length > 0 && (
-          <div className="flex flex-col rounded-xl border border-line bg-surface p-1 shadow-[0_1px_2px_rgb(60_38_14/0.06)]">
+          <div className="flex flex-col rounded-xl border border-line bg-surface p-1 shadow-xs">
             {outline.map(({ module, items }, index) => {
               const open = !collapsed.has(module.id);
               return (
@@ -133,7 +133,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                     <span
                       title={module.title}
                       className={cx(
-                        "line-clamp-2 min-w-0 flex-1 text-[11.5px] font-semibold text-muted md:group-data-[collapsed]/sidebar:hidden",
+                        "line-clamp-2 min-w-0 flex-1 text-xs font-semibold text-muted md:group-data-[collapsed]/sidebar:hidden",
                         FADE_LABEL,
                       )}
                     >
@@ -223,7 +223,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                                         showToast("Đã mở lại quiz");
                                         notifyOutlineChanged();
                                       },
-                                      () => showToast("Không mở lại được quiz", "danger"),
+                                      () => showErrorToast("Không mở lại được quiz"),
                                     )
                                   }
                                 />

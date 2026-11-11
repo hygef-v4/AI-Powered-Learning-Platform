@@ -2,10 +2,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/shared/ui/Icon";
+import { handleTabListKey } from "@/shared/ui/tabKeys";
 import { notificationsApi, safeNotificationLink } from "../api";
 import { EmailPreferencePanel } from "./EmailPreferencePanel";
 import type { NotificationItem } from "../model/types";
 import styles from "../styles/notifications.module.css";
+import { formatDateTime, formatRelativeTime } from "@/shared/dateTime";
 /**
  * Popup thông báo: tiêu đề kèm nút cài đặt mở tùy chọn email theo vai trò trong popup; hàng tab
  * Tất cả / Chưa đọc mang luôn nút đánh dấu đã đọc. Làm mới (SSE, định kỳ, sau khi đọc) giữ danh sách cũ của cùng bộ lọc cho tới khi
@@ -189,10 +191,11 @@ export function NotificationPopup({
       </div>
       <div hidden={settings} className={styles.listView}>
         <div className={styles.tabbar}>
-          <div role="tablist" aria-label="Lọc thông báo" className={styles.tabs}>
+          <div role="tablist" aria-label="Lọc thông báo" onKeyDown={handleTabListKey} className={styles.tabs}>
             <button
               role="tab"
               aria-selected={!unread}
+              tabIndex={unread ? -1 : 0}
               onClick={() => {
                 setUnread(false);
                 setPage(1);
@@ -203,6 +206,7 @@ export function NotificationPopup({
             <button
               role="tab"
               aria-selected={unread}
+              tabIndex={unread ? 0 : -1}
               onClick={() => {
                 setUnread(true);
                 setPage(1);
@@ -255,7 +259,7 @@ export function NotificationPopup({
               <span className={styles.text}>
                 <strong>{item.title}</strong>
                 <p>{item.summary}</p>
-                <p>{new Date(item.createdAt).toLocaleString("vi-VN")}</p>
+                <p><time dateTime={item.createdAt} title={formatDateTime(item.createdAt)}>{formatRelativeTime(item.createdAt)}</time></p>
               </span>
               {!item.readAt && <span className={styles.dot} />}
             </button>

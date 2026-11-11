@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useUrlState } from "@/shared/navigation/useUrlState";
-import { Section, cx } from "@/shared/ui";
+import { Section, Segmented } from "@/shared/ui";
 import { DeadlineChip } from "./DeadlineChip";
 import type { StudentRow } from "../model/types";
 import { upcoming, useStudentAssignments } from "../hooks/useStudentAssignments";
@@ -40,18 +40,18 @@ export function ClassTodoCard({ classId }: { classId: string }) {
       title="Bài tập cần làm"
       actions={<Link href={`/my-assignments?classId=${encodeURIComponent(classId)}`} className="text-[13px] font-semibold text-primary-ink hover:underline">Tất cả bài tập</Link>}
     >
-      <div role="tablist" aria-label="Loại bài" className="-mt-1 flex w-fit gap-1 rounded-xl bg-shell p-1">
-        {TABS.map((tab) => {
-          const count = todo.filter((row) => kindOf(row) === tab.mode).length;
-          return (
-            <button key={tab.mode} type="button" role="tab" aria-selected={mode === tab.mode} onClick={() => setMode(tab.mode)}
-              className={cx("rounded-[7px] px-2.5 py-1 text-xs font-semibold transition-colors duration-200",
-                mode === tab.mode ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink")}>
-              {tab.label}{rows && <span className="ml-1 tabular-nums text-muted">{count}</span>}
-            </button>
-          );
-        })}
-      </div>
+      <Segmented
+        as="tab"
+        ariaLabel="Loại bài"
+        className="-mt-1 w-fit"
+        value={mode}
+        onChange={setMode}
+        options={TABS.map((tab) => ({
+          value: tab.mode,
+          label: tab.label,
+          count: rows ? todo.filter((row) => kindOf(row) === tab.mode).length : undefined,
+        }))}
+      />
       {/* Cao đúng 5 dòng ở mọi trạng thái; nhiều hơn 5 bài thì cuộn trong vùng này. */}
       <div className="-mx-2 h-[256px] overflow-x-hidden overflow-y-auto px-2 [scrollbar-color:var(--c-muted)_transparent] [scrollbar-gutter:stable]">
       {error ? <p role="alert" className="flex h-full items-center justify-center text-center text-[13px] text-danger">Không tải được bài tập.</p>

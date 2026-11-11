@@ -102,7 +102,7 @@ export function TopBar({
   return (
     <header
       ref={barRef}
-      className="sticky top-14 z-30 -mx-4 -mt-8 flex items-center justify-between gap-3 border-b border-line bg-[var(--c-topbar)] px-4 py-2.5 backdrop-blur-md sm:-mx-8 sm:px-8 md:-mt-10"
+      className="sticky top-14 z-30 main-bleed -mt-8 flex items-center justify-between gap-3 border-b border-line bg-[var(--c-topbar)] py-2.5 backdrop-blur-md md:-mt-10"
     >
       <div className="flex min-w-0 shrink items-center gap-x-2.5">{left}</div>
       <div ref={setViewSlot} data-testid="view-slot" className="flex shrink-0 justify-center" />
@@ -160,7 +160,7 @@ export function StudentPickerDropdown({
       >
         <span className="min-w-0 flex-1 truncate">
           <span className="block text-xs font-semibold leading-tight text-ink">{studentName}</span>
-          {studentEmail && <span className="block text-[10.5px] leading-tight text-muted">{studentEmail}</span>}
+          {studentEmail && <span className="block text-xs leading-tight text-muted">{studentEmail}</span>}
         </span>
         <Icon name="unfold_more" size={14} className="shrink-0 text-muted" />
       </button>

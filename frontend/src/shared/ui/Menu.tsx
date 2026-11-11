@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { cx } from "./cx";
 import { Icon, type IconName } from "./Icon";
 
@@ -17,14 +17,45 @@ type Props = {
   children: ReactNode;
 };
 
-/** Nút mở danh sách thao tác (dựa trên {@code details}): bấm ra ngoài, Esc hoặc chọn một mục thì đóng. */
+/**
+ * Nút mở danh sách thao tác (dựa trên {@code details}): bấm ra ngoài, Esc hoặc chọn một mục thì đóng. Mở ra thì focus vào
+ * mục đầu; mũi tên lên/xuống, Home, End di chuyển giữa các mục; Esc trả focus về nút mở.
+ */
 export function Menu({ label, icon, ariaLabel, align = "left", variant = "button", className, summaryClassName, children }: Props) {
   const ref = useRef<HTMLDetailsElement>(null);
+  const [open, setOpen] = useState(false);
+
+  function listMenuItems() {
+    return [...(ref.current?.querySelectorAll<HTMLElement>("[data-menu-item]:not(:disabled)") ?? [])];
+  }
+
+  function handleMenuKey(event: ReactKeyboardEvent<HTMLDetailsElement>) {
+    if (!ref.current?.open) return;
+    const step = { ArrowDown: 1, ArrowUp: -1 }[event.key];
+    if (step === undefined && event.key !== "Home" && event.key !== "End") return;
+    const items = listMenuItems();
+    if (items.length === 0) return;
+    event.preventDefault();
+    const current = items.indexOf(document.activeElement as HTMLElement);
+    const next = event.key === "Home" ? 0
+      : event.key === "End" ? items.length - 1
+        : current < 0 ? (step === 1 ? 0 : items.length - 1)
+          : (current + step! + items.length) % items.length;
+    items[next]!.focus();
+  }
+
   useEffect(() => {
     function close(event: Event) {
       const details = ref.current;
       if (!details?.open) return;
-      if (event instanceof KeyboardEvent ? event.key === "Escape" : !details.contains(event.target as Node)) details.open = false;
+      if (event instanceof KeyboardEvent) {
+        if (event.key !== "Escape") return;
+        const focusInside = details.contains(document.activeElement);
+        details.open = false;
+        if (focusInside) details.querySelector("summary")?.focus();
+      } else if (!details.contains(event.target as Node)) {
+        details.open = false;
+      }
     }
     document.addEventListener("mousedown", close);
     document.addEventListener("keydown", close);
@@ -35,11 +66,18 @@ export function Menu({ label, icon, ariaLabel, align = "left", variant = "button
   }, []);
   return (
     <details ref={ref} className={cx("relative", className)}
+      onKeyDown={handleMenuKey}
+      onToggle={(event) => {
+        const isOpen = event.currentTarget.open;
+        setOpen(isOpen);
+        // Mở bằng bàn phím hay chuột đều đưa focus vào mục đầu để mũi tên dùng được ngay.
+        if (isOpen) listMenuItems()[0]?.focus();
+      }}
       onClick={(event) => {
         // Chọn một mục thì đóng menu.
         if ((event.target as HTMLElement).closest("[data-menu-item]") && ref.current) ref.current.open = false;
       }}>
-      <summary aria-label={ariaLabel}
+      <summary aria-label={ariaLabel} aria-haspopup="menu" aria-expanded={open}
         className={cx("flex cursor-pointer list-none items-center gap-1.5 whitespace-nowrap select-none [&::-webkit-details-marker]:hidden",
           variant === "tool" ? "h-8 rounded-lg px-2 text-[13px] font-medium text-body transition-colors hover:bg-sunken hover:text-ink"
             : "h-9 rounded-lg border border-line-strong bg-surface px-3.5 text-[13px] font-semibold text-ink transition-colors hover:bg-sunken",

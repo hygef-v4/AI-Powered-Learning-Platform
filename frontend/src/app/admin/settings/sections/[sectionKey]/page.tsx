@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { SettingsSectionHost } from "@/features/settings/components/SettingsSectionHost";
+
+export const metadata: Metadata = { title: "Cài đặt" };
 
 export default async function Page({
   params,

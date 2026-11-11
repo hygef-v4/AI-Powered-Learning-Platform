@@ -235,7 +235,7 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
               </span>
             )}
           </div>
-          <p className="text-[11px] text-muted">Kiểm tra có thể tính phí nhỏ.</p>
+          <p className="text-xs text-muted">Kiểm tra có thể tính phí nhỏ.</p>
         </div>
       )}
     </Dialog>
