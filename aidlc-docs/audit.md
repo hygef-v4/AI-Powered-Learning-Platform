@@ -12888,3 +12888,12 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 **Context:** Construction — authorized local commits only.
 
 ---
+
+## Sửa bố cục trang Hồ sơ, Đổi mật khẩu thành khối trên trang
+**Timestamp**: 2026-11-11T04:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "sửa lại trang hồ sơ, phần đổi mật khẩu không hiện pop-up nữa mà ở luôn trang này dạng flat, ngoài ra chỉnh lại bố cục cho hợp lí"
+**AI Response**: "Thay PasswordChangeDialog bằng PasswordChangeForm (khối Section phẳng dưới thông tin cá nhân; mật khẩu hiện tại một ô, mật khẩu mới và nhập lại hai cột; đổi xong xóa các ô và báo toast). ProfileForm thành khối 'Thông tin cá nhân': dải đầu avatar chữ viết tắt, họ tên, email, nhãn trạng thái; lưới hai cột Họ và tên · Số điện thoại, Email trường · Vai trò; bỏ nút mở popup. Đổi tên test tương ứng, thêm kiểm tra xóa ô sau khi đổi. Cập nhật frontend-components.md của U01. tsc, eslint, Vitest identity (39 test) qua; xem trên trình duyệt ở 1440px và 375px với backend local. Không commit."
+**Context**: Construction — chỉnh UI frontend U01, không đổi API/backend.
+
+---
