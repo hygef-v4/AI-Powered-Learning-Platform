@@ -232,6 +232,24 @@ body {
 /* Trong layer base để class tiện ích (truncate, whitespace-nowrap) của từng chỗ vẫn thắng; ngoài layer thì tiêu đề cắt
    một dòng vẫn bị xuống dòng. */
 @layer base {
+  /* Native controls and custom accessible controls share the same click affordance. */
+  :where(button, a[href], summary, select,
+    input[type="checkbox"], input[type="radio"], input[type="button"], input[type="submit"], input[type="reset"], input[type="file"],
+    [role="button"], [role="link"], [role="tab"], [role="menuitem"], [role="option"], [role="checkbox"], [role="radio"], [role="switch"], [role="treeitem"]),
+  :where([role="combobox"]):not(input):not(textarea),
+  label:has(input[type="checkbox"], input[type="radio"]) {
+    cursor: pointer;
+  }
+
+  :where(button, a[href], summary, select, input, [role]):is(:disabled, [aria-disabled="true"]),
+  label:has(input[type="checkbox"]:disabled, input[type="radio"]:disabled) {
+    cursor: not-allowed;
+  }
+
+  input::file-selector-button {
+    cursor: inherit;
+  }
+
   h1,
   h2,
   h3 {
