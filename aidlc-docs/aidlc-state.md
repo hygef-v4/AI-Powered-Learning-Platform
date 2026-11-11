@@ -683,6 +683,27 @@ Plan: construction/plans/code-generation-plan/2026-11-11-editable-grades-and-bac
 
 User subsequently authorized descriptive local commits. Source/tests and documentation recorded separately; fresh precommit frontend grading/assignment-work run passed211 tests/25 files. No push or deployment.
 
+## Ba lỗi UI/UX staging — 2026-11-11
+
+Người dùng duyệt "sửa 3 lỗi trên". Baseline origin/staging ce40e447; thực hiện tại worktree riêng `.claude/worktrees/ui-ux-staging`, nhánh `codex/ui-ux-staging`.
+
+- [x] Workspace Detection, yêu cầu và kế hoạch sửa giới hạn; dùng lại brownfield context.
+- [x] Pagination/PageNav xuống dòng; Switch có accessible name từ nhãn; Field nối lỗi tới control và giữ focus khi lỗi thay đổi.
+- [x] 332 test/51 file, TypeScript, ESLint, diff check qua. Production build exit 0, có cảnh báo font bị chặn và 27 standalone traced files ở ngoài root do junction dependency.
+- [x] Ghi giới hạn: chưa kiểm tra layout trên browser/mobile, chưa xác nhận standalone deployment; không commit/push/deploy hay thay checkout gốc.
+
+[Kế hoạch](construction/plans/code-generation-plan/2026-11-11-three-ui-fixes.md) và [kết quả](construction/build-and-test/2026-11-11-three-ui-fixes.md). Security/Resiliency giữ phạm vi đã duyệt, PBT disabled. Các stage thiết kế mới/stories/hạ tầng/operations không cần cho ba lỗi hiện hữu.
+
+### Staging readiness — ba lỗi UI/UX, 2026-11-11
+
+- [x] Fetch origin/staging vẫn cùng ce40e447; review không thấy blocker.
+- [x] Full frontend 963 test/135 file qua; Docker build sạch cảnh báo font/tracing và image smoke test health UP/login/icon 200.
+- [x] Đủ điều kiện commit/tạo PR staging; merge sau CI PR. Chưa commit/push/merge; chưa xác minh browser/mobile thực. Chi tiết trong báo cáo ba lỗi UI/UX ở trên.
+
+### Cho phép tạo PR — ba lỗi UI/UX, 2026-11-11
+
+Người dùng yêu cầu "tạo pr vào staging cho tôi". Cho phép commit/push nhánh `codex/ui-ux-staging` và tạo PR base `staging`; không bao gồm merge. Source là bản đã qua 963 test/135 file và Docker smoke. Trạng thái phát hành cuối theo PR GitHub và phản hồi giao hàng.
+
 ## Teacher class overview — 2026-11-11
 
 - [x] User approved replacing submission-progress tabs/recent announcements on teacher class info with compact read-only class facts, three assignment summary links and nearest3 upcoming deadlines. Student class info and announcement routes preserved. Reused assignment list/submission summaries; no full gradebook load, new API or schedule scope.
@@ -690,3 +711,9 @@ User subsequently authorized descriptive local commits. Source/tests and documen
 - Limits: numbers refresh on page reload; summary links select the first assignment with matching work. Production build/backend suite not repeated for this frontend-only change; no commit/push/deploy. Plan/evidence: construction/plans/code-generation-plan/2026-11-11-teacher-class-overview.md.
 
 - Subsequent user request authorizes local commit, push and PR to staging. Fresh34 targeted tests and TypeScript pass; fetched staging has no divergence from the implementation baseline and merge preview has no conflict. Publish the overview changes only; no automatic merge/deployment.
+
+### PR delivery — ba lỗi UI/UX
+
+Tích hợp staging `1f713615`; giữ cả hai lịch sử audit/state. Fresh full frontend
+963 test/135 file, ESLint/TypeScript, Docker build và runtime smoke qua. Người dùng
+cho phép push/tạo PR vào staging; không tự merge PR. Xem PR GitHub để biết trạng thái CI.
