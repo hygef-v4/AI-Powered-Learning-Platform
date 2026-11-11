@@ -219,7 +219,7 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     expect(firstItem.getByRole("link", { name: "Đi tới đoạn bài làm" })).toHaveAttribute("href", "#submission-block-part-1");
     fireEvent.change(screen.getByRole("textbox", { name: "Điểm mạnh, ý 1" }), { target: { value: "Nắm được các lớp chính" } });
     fireEvent.change(firstItem.getByRole("textbox", { name: "Minh chứng: Xác định thực thể" }), { target: { value: "Có lớp LopHoc" } });
-    fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
+    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
     await waitFor(() => expect(mocks.save).toHaveBeenCalled());
     const saved = mocks.save.mock.calls[0]![1].structuredFeedback;
     expect(saved.summary).toEqual({ strengths: ["Nắm được các lớp chính"], improvements: [], nextSteps: [] });
@@ -236,7 +236,7 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     render(<GradingWorkspacePage evaluationId="eval-1" />);
     fireEvent.click(await screen.findByRole("button", { name: "Thêm ý: Điểm cần cải thiện" }));
     fireEvent.change(screen.getByLabelText("Điểm cần cải thiện, ý 1"), { target: { value: "Ý chính.\nChi tiết minh chứng." } });
-    fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
+    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
     await waitFor(() => expect(mocks.save).toHaveBeenCalled());
     expect(mocks.save.mock.calls[0]![1].structuredFeedback).toEqual({
       ...sampleStructuredFeedback,
@@ -334,7 +334,7 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     expect(screen.getByRole("checkbox", { name: "Bội số quan hệ" })).not.toBeChecked();
 
     mocks.save.mockImplementation(async () => ({ ...baseDetail.evaluation, version: 2, score: 1 }));
-    fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
+    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
     await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1));
     const body = mocks.save.mock.calls[0]![1];
     expect(body).toMatchObject({

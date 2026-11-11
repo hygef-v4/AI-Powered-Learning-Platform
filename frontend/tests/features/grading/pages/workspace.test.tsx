@@ -65,6 +65,32 @@ function openAi() {
   fireEvent.click(btn);
 }
 describe("workspace save", () => {
+  it("keeps published grades editable, removes finalize and shows the student-visible save notice", async () => {
+    mocks.loadEvaluation.mockResolvedValue({ ...detail, editable: true,
+      evaluation: { ...detail.evaluation, state: "PUBLISHED" } });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    expect(await screen.findByRole("textbox", { name: "Nhận xét chung" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "Chốt điểm" })).not.toBeInTheDocument();
+    expect(screen.getByText("Thay đổi sẽ hiển thị cho sinh viên sau khi lưu.")).toBeInTheDocument();
+  });
+
+  it("keeps manual editing and navigation available while an AI submission is being dispatched", async () => {
+    let finish!: (proposal: unknown) => void;
+    mocks.requestProposal.mockReturnValue(new Promise((resolve) => { finish = resolve; }));
+    render(<GradingWorkspacePage evaluationId="e" />);
+    const input = await screen.findByRole("textbox", { name: "Nhận xét chung" });
+    fireEvent.click(screen.getByRole("button", { name: "Chấm bằng AI" }));
+    expect(input).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Bài sau" })).toBeEnabled();
+    expect(screen.queryByTestId("ai-progress")).not.toBeInTheDocument();
+    fireEvent.change(input, { target: { value: "Teacher keeps working" } });
+    await act(async () => {
+      finish({ id: "ready", status: "READY", versionNo: 1,
+        proposal: { checks: {}, score: 0, feedback: "Late AI result" } });
+    });
+    expect(input).toHaveValue("Teacher keeps working");
+    expect(mocks.saveEvaluation).not.toHaveBeenCalled();
+  });
   it("waits for 30 idle seconds after the latest edit while Ctrl+S saves immediately", async () => {
     mocks.loadEvaluation.mockResolvedValue({ ...detail, evaluation: { ...detail.evaluation, rubricItemScores: {} },
       rubrics: [{ rubricId: "r", partId: "p", maxPoints: 1,
@@ -127,7 +153,7 @@ describe("workspace save", () => {
     const points = await screen.findByRole("spinbutton", { name: "Điểm cộng/trừ" });
     fireEvent.change(points, { target: { value: adjustment } });
     expect(screen.queryByRole("textbox", { name: "Lý do cộng/trừ điểm" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
+    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
     await waitFor(() => expect(mocks.saveEvaluation).toHaveBeenCalledTimes(1));
     expect(mocks.saveEvaluation).toHaveBeenLastCalledWith("e", expect.objectContaining({
       adjustment, adjustmentReason: null, changeReason: null,
@@ -135,7 +161,7 @@ describe("workspace save", () => {
     await waitFor(() => expect(points).toBeEnabled());
     fireEvent.click(screen.getByText("Ghi chú thay đổi (tùy chọn)"));
     fireEvent.change(screen.getByRole("textbox", { name: "Ghi chú thay đổi" }), { target: { value: "Điều chỉnh theo quy định" } });
-    fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
+    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
     await waitFor(() => expect(mocks.saveEvaluation).toHaveBeenCalledTimes(2));
     expect(mocks.loadEvaluation).toHaveBeenCalledTimes(1);
     expect(points).toHaveValue(Number(adjustment));
@@ -222,7 +248,7 @@ describe("workspace save", () => {
     mocks.saveEvaluation.mockRejectedValue(new ApiError({ status: 409, title: "Conflict", code: "GRADE_LOCKED" }));
     render(<GradingWorkspacePage evaluationId="e" />);
     fireEvent.click(await screen.findByRole("checkbox", { name: "Đúng nội dung" }));
-    fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
+    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Điểm đã chốt");
     expect(screen.getByRole("checkbox", { name: "Đúng nội dung" })).toBeChecked();
     expect(mocks.saveEvaluation).toHaveBeenCalledTimes(1);
@@ -237,9 +263,9 @@ describe("workspace save", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Bài sau" }));
     expect(mocks.push).toHaveBeenLastCalledWith("/teaching/evaluations/next?status=PENDING&late=true");
     expect(mocks.loadEvaluation).toHaveBeenCalledWith("e", { status: "PENDING", late: "true" });
-    fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
+    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
     await waitFor(() => expect(mocks.saveEvaluation).toHaveBeenCalled());
-    await waitFor(() => expect(mocks.push).toHaveBeenCalledTimes(2));
+    expect(mocks.push).toHaveBeenCalledTimes(1);
     expect(mocks.push).toHaveBeenLastCalledWith("/teaching/evaluations/next?status=PENDING&late=true");
     fireEvent.click(screen.getByLabelText("Chọn sinh viên"));
     fireEvent.click(await screen.findByRole("button", { name: /Trần Bình/ }));
@@ -250,30 +276,29 @@ describe("workspace save", () => {
     mocks.loadEvaluation.mockResolvedValue({ ...detail, navigationIds: ["e"] });
     mocks.saveEvaluation.mockResolvedValue({ ...detail.evaluation, version: 3 });
     render(<GradingWorkspacePage evaluationId="e" status="PENDING" />);
-    fireEvent.click(await screen.findByRole("button", { name: "Lưu nháp / thay đổi" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Lưu thay đổi" }));
     await waitFor(() => expect(mocks.saveEvaluation).toHaveBeenCalled());
-    await waitFor(() => expect(screen.getByRole("button", { name: "Lưu nháp / thay đổi" })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole("button", { name: "Lưu thay đổi" })).toBeEnabled());
     expect(mocks.push).not.toHaveBeenCalled();
   });
   it("does not jump backwards when the current grade has left the filtered queue", async () => {
     mocks.loadEvaluation.mockResolvedValue({ ...detail, navigationIds: ["earlier-pending"] });
     mocks.saveEvaluation.mockResolvedValue({ ...detail.evaluation, version: 3 });
     render(<GradingWorkspacePage evaluationId="e" status="PENDING" />);
-    fireEvent.click(await screen.findByRole("button", { name: "Lưu nháp / thay đổi" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Lưu thay đổi" }));
     await waitFor(() => expect(mocks.saveEvaluation).toHaveBeenCalled());
-    await waitFor(() => expect(screen.getByRole("button", { name: "Lưu nháp / thay đổi" })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole("button", { name: "Lưu thay đổi" })).toBeEnabled());
     expect(mocks.push).not.toHaveBeenCalled();
   });
-  it.each(["FINALIZED", "PUBLISHED"] as const)("shows %s grades read-only while allowing current FINALIZED publication", async (state) => {
+  it.each(["FINALIZED", "PUBLISHED"] as const)("keeps %s grades editable while publication remains explicit", async (state) => {
     mocks.loadEvaluation.mockResolvedValue({ ...detail, evaluation: { ...detail.evaluation, state }, rubrics: [
       { rubricId: "r", partId: "p", maxPoints: 1, criteria: [{ criterionId: "c", title: "Đúng", items: [{ itemId: "i", text: "Đúng nội dung", points: 1 }] }] },
     ] });
     render(<GradingWorkspacePage evaluationId="e" />);
-    expect(await screen.findByRole("checkbox", { name: "Đúng nội dung" })).toBeDisabled();
+    expect(await screen.findByRole("checkbox", { name: "Đúng nội dung" })).toBeEnabled();
     expect(screen.queryByText(/Điểm đã chốt. Bản chấm chỉ có thể xem/)).not.toBeInTheDocument();
-    const save = screen.getByRole("button", { name: /Lưu nháp/ });
-    expect(save).toBeDisabled();
-    fireEvent.click(save);
+    const save = screen.getByRole("button", { name: /Lưu thay đổi/ });
+    expect(save).toBeEnabled();
     expect(mocks.saveEvaluation).not.toHaveBeenCalled();
     expect(screen.queryByLabelText(/Lý do sửa điểm/)).not.toBeInTheDocument();
     const publish = screen.getByRole("button", { name: "Công bố điểm" });
@@ -344,13 +369,14 @@ describe("workspace save", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Bỏ thay đổi" }));
     expect(mocks.push).toHaveBeenCalledWith("/teaching/evaluations/next");
   });
-  it("sends version and checklist, then moves to the next submission only after saving", async () => {
+  it("sends version and checklist, and stays on the submission after saving", async () => {
     mocks.saveEvaluation.mockResolvedValue({ ...detail.evaluation, version: 3 });
     render(<GradingWorkspacePage evaluationId="e" />);
     // Tạm thời không có ô nhận xét: nhận xét đã lưu được giữ nguyên khi lưu điểm.
     expect(screen.queryByRole("textbox", { name: /Nhận xét/ })).not.toBeInTheDocument();
-    fireEvent.click(await screen.findByRole("button", { name: "Lưu nháp / thay đổi" }));
-    await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/teaching/evaluations/next"));
+    fireEvent.click(await screen.findByRole("button", { name: "Lưu thay đổi" }));
+    await waitFor(() => expect(mocks.saveEvaluation).toHaveBeenCalled());
+    expect(mocks.push).not.toHaveBeenCalled();
     expect(mocks.saveEvaluation.mock.calls[0]![1]).toMatchObject({
       version: 2,
       checkedItemsByRubric: {},
@@ -365,7 +391,7 @@ describe("workspace save", () => {
       new ApiError({ status: 409, title: "Conflict", code: "GRADE_VERSION_CONFLICT" }),
     );
     render(<GradingWorkspacePage evaluationId="e" />);
-    fireEvent.click(await screen.findByRole("button", { name: "Lưu nháp / thay đổi" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Lưu thay đổi" }));
     await screen.findByRole("alert");
     expect(mocks.push).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Công bố điểm" })).toBeDisabled();
@@ -383,8 +409,8 @@ it("shows a live score and named sections while AI is unavailable, without savin
   expect(screen.getByRole("region", { name: "Rubric: Câu 1: Class Diagram" })).toHaveTextContent("Đạt 2.5");
   expect(screen.getAllByRole("spinbutton").length).toBeGreaterThan(0);
   expect(screen.queryByText(/Điều chỉnh/)).not.toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Lưu nháp / thay đổi" })).toBeEnabled();
-  expect(screen.getByRole("button", { name: "Chốt điểm" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Lưu thay đổi" })).toBeEnabled();
+  expect(screen.queryByRole("button", { name: "Chốt điểm" })).not.toBeInTheDocument();
   expect(mocks.saveEvaluation).not.toHaveBeenCalled();
 });
 
@@ -400,7 +426,7 @@ it("treats a saved fractional point as not achieved (checklist only) and ticking
   expect(screen.queryByText(/Điểm lẻ/)).not.toBeInTheDocument();
   fireEvent.click(item);
   expect(item).toBeChecked();
-  fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
+  fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
   await waitFor(() => expect(mocks.saveEvaluation).toHaveBeenCalled());
   expect(mocks.saveEvaluation.mock.calls[0]![1]).toMatchObject({ version: 2, checkedItemsByRubric: { r: ["i"] }, itemScoresByRubric: { r: { i: 1 } } });
   expect(mocks.saveEvaluation.mock.calls[0]![1]).not.toHaveProperty("score");
@@ -415,7 +441,7 @@ it("unticking an item gives it zero and a backend without item scores only gets 
   expect(item).toBeChecked();
   fireEvent.click(item);
   expect(screen.getByLabelText("Điểm tạm tính")).toHaveTextContent("0.00 / 10.00");
-  fireEvent.click(screen.getByRole("button", { name: "Lưu nháp / thay đổi" }));
+  fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
   await waitFor(() => expect(mocks.saveEvaluation).toHaveBeenCalled());
   expect(mocks.saveEvaluation.mock.calls[0]![1]).toMatchObject({ checkedItemsByRubric: { r: [] } });
   expect(mocks.saveEvaluation.mock.calls[0]![1]).not.toHaveProperty("itemScoresByRubric");
@@ -429,7 +455,7 @@ it("recovers the actual task error when an older backend only returns AI task fa
   openAi();
   expect(await screen.findByText("Yêu cầu chấm không hợp lệ (HTTP 400)")).toBeInTheDocument();
   expect(mocks.loadTask).toHaveBeenCalledWith("task");
-  expect(screen.getByRole("button", { name: "Lưu nháp / thay đổi" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Lưu thay đổi" })).toBeEnabled();
 });
 
 describe("AI proposal comparison and draft application", () => {
@@ -808,10 +834,11 @@ describe("AI grading request lifecycle", () => {
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Chấm bằng AI" }));
     });
-    expect(screen.getByRole("alertdialog", { name: "Đang chấm bằng AI" })).toBeInTheDocument();
+    expect(screen.queryByRole("alertdialog", { name: "Đang chấm bằng AI" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Chấm bằng AI" })).toHaveAttribute("aria-busy", "true");
   }
 
-  it("applies a proposal that becomes READY while polling and closes the progress overlay once", async () => {
+  it("retains manual work when AI becomes READY and only applies on request", async () => {
     mocks.listProposals.mockResolvedValueOnce([]).mockResolvedValueOnce([pending]).mockResolvedValue([
       { ...pending, status: "READY", taskState: undefined, proposal: { checks: { r1: ["i1"] }, itemScoresByRubric: { r1: { i1: 1 } }, score: 1, feedback: "AI xong" } },
     ]);
@@ -821,6 +848,9 @@ describe("AI grading request lifecycle", () => {
       await vi.advanceTimersByTimeAsync(3000);
     });
     expect(screen.queryByRole("alertdialog", { name: "Đang chấm bằng AI" })).not.toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).not.toBeChecked();
+    fireEvent.click(screen.getByRole("button", { name: "Xem đề xuất AI" }));
+    fireEvent.click(screen.getByRole("button", { name: "Áp dụng vào bản nháp" }));
     expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
     expect(mocks.saveEvaluation).not.toHaveBeenCalled();
   });

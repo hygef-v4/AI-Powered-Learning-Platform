@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
 import { apiFetch } from "@/shared/api/client";
 import { AutoTextarea, type RubricCriterion } from "@/shared/document";
 import { Icon } from "@/shared/ui";
@@ -284,28 +283,5 @@ export function GradingHeaderSection({
         onChange={updateStructuredSummary}
       />
     </div>
-  );
-}
-
-export function AiProgressModal({ open }: { open: boolean }) {
-  if (!open || typeof document === "undefined") return null;
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex animate-fade items-center justify-center bg-[var(--c-scrim)] p-4 backdrop-blur-[2px]">
-      <div
-        role="alertdialog"
-        aria-modal="true"
-        aria-busy="true"
-        aria-label="Đang chấm bằng AI"
-        data-testid="ai-progress"
-        className="flex animate-pop items-center gap-3 rounded-xl border border-line bg-surface px-6 py-5 shadow-[var(--shadow-float)]"
-      >
-        <span
-          aria-hidden="true"
-          className="size-5 animate-spin rounded-full border-2 border-line-strong border-t-primary motion-reduce:animate-none"
-        />
-        <span className="text-[14px] font-semibold text-ink">Đang chấm bằng AI…</span>
-      </div>
-    </div>,
-    document.body,
   );
 }

@@ -80,6 +80,7 @@ export type Evaluation = {
   }[];
 };
 export type Detail = {
+  editable?: boolean;
   evaluation: Evaluation;
   document: SubmissionDocumentDto;
   rubrics: Rubric[];

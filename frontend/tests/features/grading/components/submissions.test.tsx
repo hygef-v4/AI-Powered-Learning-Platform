@@ -183,19 +183,19 @@ describe("submission filters and batch behavior", () => {
   it("hides bulk actions until selection, resets page and selection on filter/page change, and does not reload metadata", async () => {
     render(<SubmissionDetailPage classId="c" assignmentId="a" />);
     await ready();
-    expect(screen.queryByRole("button", { name: "Chốt điểm" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Công bố điểm" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox", { name: "Chọn Sinh viên A" }));
-    expect(screen.getByRole("button", { name: "Chốt điểm" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Công bố điểm" })).toBeEnabled();
     fireEvent.click(screen.getByTestId("pagination-page-2-button"));
     await waitFor(() => expect(mocks.listSubmissions).toHaveBeenLastCalledWith("c", "a", "ALL", 2, ""));
     await ready();
-    expect(screen.queryByRole("button", { name: "Chốt điểm" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Công bố điểm" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox", { name: "Chọn Sinh viên A" }));
-    expect(screen.getByRole("button", { name: "Chốt điểm" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Công bố điểm" })).toBeEnabled();
     fireEvent.change(screen.getByRole("combobox", { name: "Trạng thái" }), { target: { value: "DRAFT" } });
     await waitFor(() => expect(mocks.listSubmissions).toHaveBeenLastCalledWith("c", "a", "DRAFT", 1, ""));
     await ready();
-    expect(screen.queryByRole("button", { name: "Chốt điểm" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Công bố điểm" })).not.toBeInTheDocument();
     fireEvent.change(screen.getByRole("combobox", { name: "Nộp bài" }), { target: { value: "true" } });
     await waitFor(() => expect(mocks.listSubmissions).toHaveBeenLastCalledWith("c", "a", "DRAFT", 1, "true"));
     await ready();
@@ -222,7 +222,7 @@ describe("submission filters and batch behavior", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: "Chọn SV Pending" }));
     expect(screen.getByText("Đã chọn 1 bài")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Bỏ chọn" }));
-    expect(screen.queryByRole("button", { name: "Chốt điểm" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Công bố điểm" })).not.toBeInTheDocument();
   });
 
   it("keeps unsubmitted rows unselectable and passes the current evaluation version to batch", async () => {
@@ -230,7 +230,7 @@ describe("submission filters and batch behavior", () => {
     await ready();
     expect(screen.getByRole("checkbox", { name: "Chọn Sinh viên B" })).toBeDisabled();
     fireEvent.click(screen.getByRole("checkbox", { name: "Chọn tất cả bài trong trang" }));
-    fireEvent.click(screen.getByRole("button", { name: "Chốt điểm" }));
+    fireEvent.click(screen.getByRole("button", { name: "Công bố điểm" }));
     expect(screen.getByTestId("batch-items")).toHaveTextContent(JSON.stringify([{ evaluationId: "e", version: 7 }]));
     mocks.listSubmissions.mockRejectedValueOnce(new Error("List refresh failed"));
     fireEvent.click(screen.getByRole("button", { name: "Refresh list" }));

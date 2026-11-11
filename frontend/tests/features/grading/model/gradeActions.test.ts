@@ -10,7 +10,7 @@ const rows: SubmissionRow[] = ["PENDING", "DRAFT", "FINALIZED", "PUBLISHED", "SU
 
 describe("batch grade action eligibility", () => {
   it.each([
-    ["ai", [{ evaluationId: "e0", version: 7 }, { evaluationId: "e1", version: 8 }]],
+    ["ai", [{ evaluationId: "e0", version: 7 }, { evaluationId: "e1", version: 8 }, { evaluationId: "e2", version: 9 }, { evaluationId: "e3", version: 10 }]],
     ["finalize", [{ evaluationId: "e1", version: 8 }]],
     ["publish", [{ evaluationId: "e1", version: 8 }, { evaluationId: "e2", version: 9 }]],
   ] as const)("selects only eligible %s items and retains their original server version", (action, expected) => {

@@ -39,10 +39,14 @@ class GradebookAssemblyTest {
             String expected = switch (state) {
                 case PENDING -> "Chờ chấm";
                 case DRAFT -> "Đã chấm";
-                default -> "Đã chốt điểm";
+                default -> "Đã lưu";
             };
             assertThat(gradebookService.buildExportRows(actor, classId, assignmentId, "csv").get(1).get(3))
                     .isEqualTo(expected);
+            if (state == EvaluationStatus.DRAFT) {
+                assertThat(gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx")
+                        .get(1).get(6)).isEqualTo(evaluation.score.toPlainString());
+            }
         }
         when(evaluationRepository.findForClass(classId)).thenReturn(List.of());
         when(submissionQuery.listSubmissions(assignmentId, classId)).thenReturn(List.of());
@@ -210,12 +214,15 @@ class GradebookAssemblyTest {
         assertThat(gradebookService.listGrades(actor, classId, null, 1, 1).rows().get(0).student().name()).isEqualTo("Unavailable");
     }
 
-    @Test void exportHidesDraftScoresAndEmptyClassExportsOnlyHeaders() {
+    @Test void exportIncludesStaffDraftScoresAndEmptyClassExportsOnlyHeaders() {
         var values = fixture(1);
         values.get(0).state = EvaluationStatus.DRAFT;
         var row = gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx").get(1);
-        assertThat(row.get(6)).isEmpty();
-        assertThat(row.get(8)).isEmpty();
+        assertThat(row.get(6)).isEqualTo(values.get(0).score.toPlainString());
+        assertThat(row.get(8)).isEqualTo(values.get(0).feedback == null ? "" : values.get(0).feedback);
+        values.get(0).state = EvaluationStatus.PENDING;
+        assertThat(gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx")
+                .get(1).get(6)).isEmpty();
         when(classAccess.listActiveStudents(classId)).thenReturn(List.of());
         assertThat(gradebookService.buildExportRows(actor, classId, null, "csv")).hasSize(1);
     }

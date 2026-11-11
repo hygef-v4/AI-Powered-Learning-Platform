@@ -351,6 +351,7 @@ public class SubmissionReviewService {
         return new EvaluationDetail(evaluation, document,
                 GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot), navigationIds,
                 activityValue, activityState, members, memberActivities, authors, current,
-                groupEvaluationId);
+                groupEvaluationId, current
+                        && courseClass.status() == edu.aiplatform.academics.contract.ClassStatus.OPEN);
     }
 }

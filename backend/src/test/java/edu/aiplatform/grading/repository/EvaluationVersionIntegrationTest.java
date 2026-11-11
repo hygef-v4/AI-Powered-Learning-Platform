@@ -508,5 +508,19 @@ class EvaluationVersionIntegrationTest {
                 .isInstanceOf(ApiException.class).extracting("code")
                 .isEqualTo("GRADE_VERSION_CONFLICT");
         assertThat(read(published.id).state.name()).isEqualTo("PUBLISHED");
+        var corrected = transactionTemplate.execute(status -> {
+            var e = evaluationRepository.lockById(published.id).orElseThrow();
+            e.checkVersion(published.version);
+            e.saveGrade("{}", new BigDecimal("5"), BigDecimal.ZERO, null, "Correction", null,
+                    UUID.randomUUID(), NOW.plusSeconds(30));
+            e.rubricItemScores = Map.of(rubricId, Map.of(itemId, new BigDecimal("5")));
+            e.reviewedItemScores = e.rubricItemScores;
+            return evaluationRepository.save(e);
+        });
+        var visible = read(corrected.id);
+        assertThat(visible.state.name()).isEqualTo("PUBLISHED");
+        assertThat(visible.score).isEqualByComparingTo("5");
+        assertThat(visible.publishedAt).isEqualTo(published.publishedAt);
+        assertThat(visible.version).isEqualTo(published.version + 1);
     }
 }

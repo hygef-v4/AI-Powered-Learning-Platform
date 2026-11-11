@@ -283,7 +283,7 @@ export function AiProposalPanel({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="text-base font-bold text-ink">Đề xuất AI</h2>
-          <p className="mt-0.5 text-xs leading-relaxed text-muted">AI chỉ đề xuất. Bạn kiểm tra rubric và lưu nháp trước khi chốt.</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-muted">Kiểm tra đề xuất và lưu để cập nhật điểm.</p>
         </div>
         <button
           type="button"

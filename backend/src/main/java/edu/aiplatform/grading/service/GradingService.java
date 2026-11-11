@@ -84,7 +84,7 @@ public class GradingService {
         evaluation.requireEditableGrade();
         if (evaluation.kind == EvaluationKind.ATTEMPT) {
             requireLatestSubmission(evaluation);
-        } else if (evaluation.kind == EvaluationKind.GROUP_DOCUMENT && !evaluation.hasOfficialGrade()) {
+        } else if (evaluation.kind == EvaluationKind.GROUP_DOCUMENT) {
             requireGroupSubmission(evaluation);
         }
         return evaluation;
@@ -182,8 +182,12 @@ public class GradingService {
         // Step 4: Resolve and validate feedback state, ensuring modifications to AI scores have acknowledged reviews
         var feedbackState = resolveFeedbackState(evaluation, input, usedProposal, rubrics,
                 validBlockIds, currentEffectiveScores, previousEffectiveScores);
+        if (evaluation.state == EvaluationStatus.PUBLISHED) {
+            requireStructuredFeedbackReviewed(feedbackState.feedback(), feedbackState.reviewedScores(),
+                    feedbackState.acknowledgedItems(), currentEffectiveScores);
+        }
 
-        // Step 5: Update evaluation to DRAFT status and set total score, adjustment, and structured feedback
+        // Keep published corrections visible; unpublished evaluations remain drafts.
         evaluation.saveGrade(GradingJson.writeSnapshot(objectMapper,
                         RubricScoring.synchronizeChecks(rubrics, currentEffectiveScores)),
                 points, input.adjustment(), input.adjustmentReason(), input.feedback(),
@@ -201,7 +205,7 @@ public class GradingService {
     }
 
     /**
-     * Finalizes an evaluation draft after validating that all required structured feedback reviews are resolved.
+     * Validates a saved grade for legacy finalize callers without locking it.
      */
     @Transactional
     public Evaluation finalizeEvaluation(Actor actor, ItemVersion item) {
@@ -210,27 +214,17 @@ public class GradingService {
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Finalize the group document");
 
-        // Step 2: Ensure any feedback items flagged for review or score-modified items are acknowledged
-        if (evaluation.structuredFeedback != null) {
-            var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
-            var currentEffectiveScores = RubricScoring.calculateEffectiveItemScores(rubrics,
-                    GradingJson.readChecks(objectMapper, evaluation.rubricChecks),
-                    evaluation.rubricItemScores);
-            requireStructuredFeedbackReviewed(evaluation.structuredFeedback,
-                    evaluation.reviewedItemScores, evaluation.acknowledgedReviewItems,
-                    currentEffectiveScores);
-        }
+        requireEvaluationReviewed(evaluation);
 
-        // Step 3: Transition state to FINALIZED, propagate to group members, and record audit event
+        // Legacy validation must not introduce a new locked state.
         evaluation.finalizeGrade(actor.accountId(), clock.instant());
-        propagateGroupGrade(evaluation, actor, GroupOperation.FINALIZE, null);
         evaluationRepository.save(evaluation);
-        recordAudit(actor, evaluation, "GRADE_FINALIZED", null);
+        recordAudit(actor, evaluation, "GRADE_REVIEWED", null);
         return evaluation;
     }
 
     /**
-     * Publishes a finalized evaluation to students and emits the GRADE_PUBLISHED domain event.
+     * Publishes a saved evaluation once and emits the GRADE_PUBLISHED domain event.
      */
     @Transactional
     public Evaluation publishEvaluation(Actor actor, ItemVersion item) {
@@ -238,6 +232,9 @@ public class GradingService {
         var evaluation = requireCurrent(actor, item.evaluationId(), item.version());
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Publish the group document");
+
+        if (evaluation.state == EvaluationStatus.PUBLISHED) return evaluation;
+        requireEvaluationReviewed(evaluation);
 
         // Step 2: Transition state to PUBLISHED and propagate to group members
         evaluation.publishGrade(actor.accountId(), clock.instant());
@@ -269,6 +266,8 @@ public class GradingService {
         root.requireMutableGrade();
         if (root.kind != EvaluationKind.GROUP_DOCUMENT || root.score == null)
             throw ApiException.conflict("GROUP_NOT_GRADED", "Grade group document first");
+        requireGroupSubmission(root);
+        if (root.state == EvaluationStatus.PUBLISHED) requireEvaluationReviewed(root);
 
         // Step 2: Locate matching member evaluation record and check version concurrency
         final UUID documentId = root.groupDocumentId;
@@ -511,7 +510,7 @@ public class GradingService {
             && acknowledgedItems.getOrDefault(r, Set.of()).contains(i);
             if (item.requiresReview() && !ack) {
                 throw ApiException.conflict("STRUCTURED_FEEDBACK_REVIEW_REQUIRED",
-                        "Cần xác nhận hoặc chỉnh sửa các mục nhận xét được đánh dấu cần giảng viên kiểm tra trước khi chốt điểm.");
+                        "Cần xác nhận hoặc chỉnh sửa các mục nhận xét cần kiểm tra trước khi công bố hoặc lưu điểm đã công bố.");
             }
             BigDecimal currentScore = currentEffectiveScores.getOrDefault(r, Map.of()).get(i);
             BigDecimal reviewedScore = reviewedScores == null ? null
@@ -520,9 +519,18 @@ public class GradingService {
                     && (reviewedScore == null || currentScore.compareTo(reviewedScore) != 0)
                     && !ack) {
                 throw ApiException.conflict("STRUCTURED_FEEDBACK_SCORE_MISMATCH",
-                        "Điểm mục rubric đã thay đổi sau khi tạo nhận xét; vui lòng chỉnh sửa hoặc xác nhận lại giải thích trước khi chốt điểm.");
+                        "Điểm mục rubric đã thay đổi sau khi tạo nhận xét; vui lòng chỉnh sửa hoặc xác nhận lại giải thích trước khi công bố hoặc lưu điểm đã công bố.");
             }
         }
+    }
+
+    private void requireEvaluationReviewed(Evaluation evaluation) {
+        var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
+        requireStructuredFeedbackReviewed(evaluation.structuredFeedback,
+                evaluation.reviewedItemScores, evaluation.acknowledgedReviewItems,
+                RubricScoring.calculateEffectiveItemScores(rubrics,
+                        GradingJson.readChecks(objectMapper, evaluation.rubricChecks),
+                        evaluation.rubricItemScores));
     }
 
     /**
@@ -546,7 +554,7 @@ public class GradingService {
     }
 
     private enum GroupOperation {
-        SAVE, FINALIZE, PUBLISH
+        SAVE, PUBLISH
     }
 
     /**
@@ -565,7 +573,6 @@ public class GradingService {
             var member = evaluationRepository.lockById(candidate.id).orElseThrow();
             switch (operation) {
             case SAVE -> member.inheritGroupGrade(root, reason, actor.accountId(), clock.instant());
-            case FINALIZE -> member.finalizeGrade(actor.accountId(), clock.instant());
             case PUBLISH -> member.publishGrade(actor.accountId(), clock.instant());
             }
             evaluationRepository.save(member);

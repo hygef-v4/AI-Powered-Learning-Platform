@@ -151,7 +151,9 @@ public class GradingProposalTransactions {
             throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Use the group document");
         }
         if (evaluation.state != EvaluationStatus.PENDING
-                && evaluation.state != EvaluationStatus.DRAFT) {
+                && evaluation.state != EvaluationStatus.DRAFT
+                && evaluation.state != EvaluationStatus.FINALIZED
+                && evaluation.state != EvaluationStatus.PUBLISHED) {
             throw ApiException.conflict("INVALID_GRADE_STATE", stateMessage);
         }
     }
@@ -265,7 +267,9 @@ public class GradingProposalTransactions {
         if (!proposal.submissionHash.equals(evaluation.submissionHash)
                 || !proposal.rubricFingerprint.equals(evaluation.rubricSnapshot)
                 || (evaluation.state != EvaluationStatus.PENDING
-                        && evaluation.state != EvaluationStatus.DRAFT)) {
+                        && evaluation.state != EvaluationStatus.DRAFT
+                        && evaluation.state != EvaluationStatus.FINALIZED
+                        && evaluation.state != EvaluationStatus.PUBLISHED)) {
             proposal.status = "STALE";
             proposal.taskId = result.taskId();
             proposal.taskState = null;

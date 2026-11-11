@@ -72,7 +72,7 @@ public class Evaluation {
                     "Reload the evaluation before saving");
     }
 
-    /** Saves rubric results, an optional adjustment, and feedback as a draft grade. */
+    /** Saves corrections without withdrawing an already published grade. */
     public void saveGrade(String checks, BigDecimal rubricScore, BigDecimal delta,
             String deltaReason, String feedback, String changeReason, UUID actor, Instant now) {
         requireMutableGrade();
@@ -95,24 +95,24 @@ public class Evaluation {
         this.feedback = feedback;
         gradedBy = actor;
         gradedAt = now;
-        state = EvaluationStatus.DRAFT;
+        if (state != EvaluationStatus.PUBLISHED) state = EvaluationStatus.DRAFT;
     }
 
-    /** Finalizes a draft grade. */
+    /** Compatibility validation for clients that still call finalize; does not lock grades. */
     public void finalizeGrade(UUID actor, Instant now) {
-        if (state != EvaluationStatus.DRAFT || score == null)
+        if ((state != EvaluationStatus.DRAFT && state != EvaluationStatus.FINALIZED
+                && state != EvaluationStatus.PUBLISHED) || score == null)
             throw ApiException.conflict("INVALID_GRADE_STATE",
-                    "Only DRAFT grades can be finalized");
-        state = EvaluationStatus.FINALIZED;
-        gradedBy = actor;
-        gradedAt = now;
+                    "Only saved DRAFT grades can be reviewed");
+        if (state == EvaluationStatus.FINALIZED) state = EvaluationStatus.DRAFT;
     }
 
-    /** Publishes a finalized grade to the student. */
+    /** Publishes a saved grade once, including legacy finalized grades. */
     public void publishGrade(UUID actor, Instant now) {
-        if (state != EvaluationStatus.FINALIZED)
+        if (state == EvaluationStatus.PUBLISHED) return;
+        if ((state != EvaluationStatus.DRAFT && state != EvaluationStatus.FINALIZED) || score == null)
             throw ApiException.conflict("INVALID_GRADE_STATE",
-                    "Only FINALIZED grades can be published");
+                    "Only saved DRAFT grades can be published");
         state = EvaluationStatus.PUBLISHED;
         publishedAt = now;
     }
@@ -192,10 +192,8 @@ public class Evaluation {
         state = EvaluationStatus.SUPERSEDED;
     }
 
-    /** Ensures the grade is not locked and the evaluation is editable. */
+    /** Class permissions are checked by the service; superseded grades remain immutable. */
     public void requireMutableGrade() {
-        if (hasOfficialGrade())
-            throw ApiException.conflict("GRADE_LOCKED", "Điểm đã chốt không thể chỉnh sửa.");
         requireEditableGrade();
     }
 

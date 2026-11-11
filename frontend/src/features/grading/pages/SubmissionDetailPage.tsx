@@ -34,7 +34,7 @@ function rowActionLabel(status: string): string {
 const CELL = "border-b border-line px-3 py-3 align-middle first:pl-1 last:pr-1";
 const HEAD = "border-b border-line px-3 pb-2.5 text-left text-xs font-semibold tracking-[.08em] whitespace-nowrap text-muted uppercase first:pl-1 last:pr-1";
 
-/** Bài nộp của một bài tập: số liệu nhanh, lọc, chọn nhiều để chốt/công bố/AI, bảng dạng tài liệu. */
+/** Bài nộp của một bài tập: số liệu nhanh, lọc, chọn nhiều để công bố/AI, bảng dạng tài liệu. */
 export function SubmissionDetailPage({
   classId,
   assignmentId,
@@ -49,7 +49,7 @@ export function SubmissionDetailPage({
   const page = /^[1-9]\d{0,4}$/.test(pageValue) ? Number(pageValue) : 1;
   const setPage = (next: number) => setPageValue(String(next));
   const [selected, setSelected] = useState<string[]>([]);
-  const [action, setAction] = useState<"ai" | "finalize" | "publish" | null>(null);
+  const [action, setAction] = useState<"ai" | "publish" | null>(null);
   const load = useCallback(
     () => gradingApi.listSubmissions(classId, assignmentId, filter, page, late),
     [classId, assignmentId, filter, page, late],
@@ -146,10 +146,10 @@ export function SubmissionDetailPage({
             {selectedRows.length > 0 && (
               <div className="ml-auto flex animate-pop flex-wrap items-center gap-2 rounded-lg bg-primary-soft py-1 pr-1 pl-3">
                 <span className="text-[13px] font-semibold text-ink">Đã chọn {selectedRows.length} bài</span>
-                {(["ai", "finalize", "publish"] as const).map((a) => (
+                {(["ai", "publish"] as const).map((a) => (
                   <Button key={a} size="sm" variant={a === "publish" ? "primary" : "secondary"}
                     disabled={!buildGradeActionItems(selectedRows, a).length} onClick={() => setAction(a)}>
-                    {a === "ai" ? "AI đề xuất" : a === "finalize" ? "Chốt điểm" : "Công bố điểm"}
+                    {a === "ai" ? "AI đề xuất" : "Công bố điểm"}
                   </Button>
                 ))}
                 <Button size="sm" variant="ghost" onClick={() => setSelected([])}>

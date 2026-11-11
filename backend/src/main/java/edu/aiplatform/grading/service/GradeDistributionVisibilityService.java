@@ -62,6 +62,7 @@ public class GradeDistributionVisibilityService {
         if (!requireAssignedTeacher(actor, classId, assignmentId))
             throw ApiException.conflict("GRADE_DISTRIBUTION_READ_ONLY",
                     "Archived class or retired assignment");
+        gradingAccess.requireTeacher(actor, classId, Actions.GRADING_WRITE);
         if (version < 0)
             throw ApiException.badRequest("INVALID_VERSION", "Version must be nonnegative");
 
@@ -82,7 +83,7 @@ public class GradeDistributionVisibilityService {
     /** Checks whether the actor is the teacher assigned to the requested class assignment. */
     private boolean requireAssignedTeacher(Actor actor, UUID classId, UUID assignmentId) {
         // Step 1: Verify teacher permission and course class existence
-        gradingAccess.requireTeacher(actor, classId, Actions.GRADING_WRITE);
+        gradingAccess.requireTeacher(actor, classId, Actions.GRADING_REVIEW);
         var courseClass = classAccess.getClassRef(classId)
                 .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
         if (actor == null || !actor.accountId().equals(courseClass.teacherId()))
