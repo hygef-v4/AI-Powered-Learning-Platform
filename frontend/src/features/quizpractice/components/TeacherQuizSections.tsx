@@ -113,7 +113,15 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
               <ClickableRow key={s.accountId} onClick={() => s.attempts > 0 && setStudent(s)} data-testid="quiz-attempts-row"
                 className={s.attempts > 0 ? undefined : "cursor-default"}>
                 <Td>
-                  <span className="block truncate font-semibold" title={s.displayName ?? undefined}>{s.displayName ?? "—"}</span>
+                  {s.attempts > 0 ? (
+                    // Nút trong ô đầu để mở lượt làm bằng bàn phím; dòng vẫn bấm chuột được như trước.
+                    <button type="button" onClick={(event) => { event.stopPropagation(); setStudent(s); }}
+                      className="block max-w-full truncate text-left font-semibold text-ink hover:text-primary-ink" title={s.displayName ?? undefined}>
+                      {s.displayName ?? "—"}
+                    </button>
+                  ) : (
+                    <span className="block truncate font-semibold" title={s.displayName ?? undefined}>{s.displayName ?? "—"}</span>
+                  )}
                   <span className="block truncate text-xs text-muted" title={s.email ?? undefined}>{s.email}</span>
                   {s.lastSubmittedAt && <span className="block text-xs text-muted tabular-nums">Lần gần nhất {formatDateTime(s.lastSubmittedAt)}</span>}
                 </Td>

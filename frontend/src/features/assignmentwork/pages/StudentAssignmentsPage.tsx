@@ -8,6 +8,7 @@ import {
   Alert,
   ClassFilter,
   ClickableRow,
+  cx,
   Icon,
   PageHeader,
   PageNav,
@@ -20,6 +21,7 @@ import {
   TextInput,
   Th,
 } from "@/shared/ui";
+import { formatTimeUntil } from "@/shared/dateTime";
 import { errorMessage, formatDateTime } from "../model/format";
 import { studentAssignmentResults } from "../slots";
 import type { StudentRow } from "../model/types";
@@ -40,6 +42,17 @@ const KIND_LABELS: Record<Kind, string> = { INDIVIDUAL: "Cá nhân", GROUP: "Nh�
 /** Loại bài hiển thị: bài luyện tập (không chấm điểm) là một loại riêng, còn lại theo cá nhân hay nhóm. */
 function kindOf(row: StudentRow): Kind {
   return row.gradingMode === "PRACTICE" ? "PRACTICE" : row.submissionMode;
+}
+
+/** Thời gian còn lại tới hạn nộp, dưới ngày giờ; còn dưới 24 giờ thì màu cảnh báo. */
+function DueIn({ closesAt }: { closesAt: string | null }) {
+  const due = formatTimeUntil(closesAt);
+  if (!due) return null;
+  return (
+    <span className={cx("block text-xs", due.urgent ? "font-semibold text-warning" : "text-muted")} data-testid="assignment-due-in">
+      {due.text}
+    </span>
+  );
 }
 
 /** Mở bài từ trang chung thì đánh dấu `from=all` để nút quay lại về trang chung, không về trang bài tập của lớp. */
@@ -141,6 +154,7 @@ export function StudentAssignmentsPage() {
                 <Td label="Loại" className="whitespace-nowrap">{KIND_LABELS[kindOf(row)]}</Td>
                 <Td label="Hạn nộp" className="whitespace-nowrap">
                   <span className="font-mono text-xs text-muted">{formatDateTime(row.closesAt)}</span>
+                  {tab !== "submitted" && <DueIn closesAt={row.closesAt} />}
                 </Td>
                 <Td label="Trạng thái"><Pill tone={rowStatus(row).tone}>{rowStatus(row).label}</Pill></Td>
                 {tab === "submitted" && (

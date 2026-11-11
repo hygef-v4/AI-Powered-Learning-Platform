@@ -232,7 +232,7 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
         <div className="relative isolate flex min-w-0 flex-1 flex-col overflow-x-clip">
           {/* Nội dung rộng theo phần trăm màn hình (lề hai bên 4%), không chặn ở một độ rộng cố định: màn lớn không còn khoảng
               trống to hai bên. */}
-          <main id="main" tabIndex={-1} className="flex w-full min-w-0 flex-1 flex-col gap-7 px-4 pt-8 pb-16 outline-none sm:px-[4%] md:pt-10">
+          <main id="main" tabIndex={-1} className="main-gutter flex w-full min-w-0 flex-1 flex-col gap-7 pt-8 pb-16 outline-none md:pt-10">
             {children}
           </main>
         </div>
@@ -319,11 +319,14 @@ function NavList({ label, items, pathname, header, collapsed, branches }: { labe
               onClick={isParent ? () => setToggled((previous) => ({ ...previous, [item.href]: true })) : undefined}
               className={cx(
                 "group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] font-semibold whitespace-nowrap transition-colors duration-200",
+                // Mục đang chọn tô primary-soft (xanh dành cho trạng thái chọn), hover tô sidebar-hover: nền sidebar trắng nên
+                // không dùng surface (trắng trên trắng).
+                isParent && "pr-10",
                 ancestor
-                  ? "text-ink hover:bg-surface/60 md:group-data-[collapsed]/sidebar:bg-surface md:group-data-[collapsed]/sidebar:shadow-[0_1px_2px_rgb(60_38_14/0.08)]"
+                  ? "text-ink hover:bg-sidebar-hover md:group-data-[collapsed]/sidebar:bg-primary-soft"
                   : active
-                    ? "bg-surface text-ink shadow-[0_1px_2px_rgb(60_38_14/0.08)]"
-                    : "text-body hover:bg-surface/60 hover:text-ink",
+                    ? "bg-primary-soft text-ink"
+                    : "text-body hover:bg-sidebar-hover hover:text-ink",
               )}
             >
               {active && (
@@ -348,7 +351,7 @@ function NavList({ label, items, pathname, header, collapsed, branches }: { labe
               <button type="button" aria-expanded={open} aria-label={`${open ? "Thu gọn" : "Mở"} ${item.label}`}
                 title={open ? "Thu gọn" : "Mở"}
                 onClick={() => setToggled((previous) => ({ ...previous, [item.href]: !open }))}
-                className="absolute top-1/2 right-1 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface hover:text-ink md:group-data-[collapsed]/sidebar:hidden">
+                className="absolute top-1/2 right-1 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md text-muted transition-colors hover:bg-sidebar-hover hover:text-ink pointer-coarse:right-0 pointer-coarse:size-10 md:group-data-[collapsed]/sidebar:hidden">
                 <Icon name="expand_more" size={16} className={cx("transition-transform duration-200", !open && "-rotate-90")} />
               </button>
             )}

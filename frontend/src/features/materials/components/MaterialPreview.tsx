@@ -131,7 +131,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
       return (
         <div
           role="status"
-          className="flex h-[calc(100vh-13rem)] min-h-[560px] items-center justify-center rounded-xl bg-viewer text-sm text-white/75"
+          className="flex h-[calc(100dvh-13rem)] min-h-[360px] sm:min-h-[560px] items-center justify-center rounded-xl bg-viewer text-sm text-white/75"
         >
           Đang mở tệp…
         </div>

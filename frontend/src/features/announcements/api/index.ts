@@ -1,3 +1,4 @@
+import { LOAD_FAILED_MESSAGE } from "@/shared/api/messages";
 import { apiFetch } from "@/shared/api/client";
 import type { Announcement, AnnouncementFeed, AnnouncementInput } from "../model/types";
 const enc = encodeURIComponent;
@@ -21,5 +22,5 @@ export const announcementsApi = {
     apiFetch<void>(`/api/v1/announcements/${enc(id)}?version=${version}`, { method: "DELETE" }),
 };
 export function announcementError(error: unknown) {
-  return error instanceof Error ? error.message : "Không thể tải dữ liệu, vui lòng thử lại.";
+  return error instanceof Error ? error.message : LOAD_FAILED_MESSAGE;
 }

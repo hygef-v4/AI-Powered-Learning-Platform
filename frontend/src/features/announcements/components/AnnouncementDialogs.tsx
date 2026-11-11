@@ -316,7 +316,7 @@ function ClassPicker({
                 <ClassLabel subjectCode={c.subjectCode} code={c.code} />,
               ),
             )}
-            {!shown.length && <p className="px-3 py-2 text-xs text-muted">Không có lớp phù hợp</p>}
+            {!shown.length && <p className="px-3 py-2 text-xs text-muted">Không có lớp phù hợp.</p>}
           </div>,
           document.body,
         )}

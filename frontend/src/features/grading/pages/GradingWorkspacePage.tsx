@@ -338,6 +338,7 @@ function Workspace({
 
   return (
     <div data-wide-workspace className="flex flex-col gap-4" style={{ "--doc-toolbar-top": `${56 + headerHeight}px` } as CSSProperties}>
+      {workspace.confirmDialog}
       <TopBar
         barRef={headerRef}
         setViewSlot={setViewSlot}

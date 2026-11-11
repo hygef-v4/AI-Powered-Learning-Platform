@@ -32,7 +32,7 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
   async function submit(event: FormEvent) {
     event.preventDefault();
     // Lỗi nhập nằm dưới đúng ô; ô lỗi đầu tiên nhận focus.
-    const invalidEmail = EMAIL_FORMAT.test(email.trim()) ? null : "Nhập email trường hợp lệ.";
+    const invalidEmail = EMAIL_FORMAT.test(email.trim()) ? null : "Nhập đúng email do trường cấp.";
     const missingPassword = password.length === 0 ? "Nhập mật khẩu." : null;
     setEmailError(invalidEmail);
     setPasswordError(missingPassword);
@@ -106,7 +106,7 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
         disabled={submitting}
         className={cx(LOGIN_BUTTON, "mt-6")}
       >
-        {submitting ? "Đang đăng nhập..." : "Đăng nhập"}
+        {submitting ? "Đang đăng nhập…" : "Đăng nhập"}
       </button>
 
       <div className="mt-4 text-right">

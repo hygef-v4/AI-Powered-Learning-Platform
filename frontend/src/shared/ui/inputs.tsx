@@ -124,7 +124,7 @@ export function Switch({ checked, onChange, label, ariaLabel, disabled }: Switch
           "pointer-coarse:after:absolute pointer-coarse:after:-inset-3 pointer-coarse:after:content-['']",
           // Đang lưu: chỉ công tắc này khóa, giữ nguyên độ đậm (chỉ đổi con trỏ); trang không khóa các công tắc khác khi lưu.
           pending !== null ? "cursor-progress" : disabled && "cursor-not-allowed opacity-45",
-          shown ? "bg-primary" : "bg-line-strong",
+          shown ? "bg-primary" : "bg-field",
         )}
       >
         <span

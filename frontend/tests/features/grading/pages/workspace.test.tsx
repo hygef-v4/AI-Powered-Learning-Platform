@@ -315,7 +315,6 @@ describe("workspace save", () => {
   });
 
   it("keeps unsaved work when the teacher cancels switching students", async () => {
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     mocks.listSubmissions.mockResolvedValue({ rows: [
       { student: { accountId: "s2", name: "Trần Bình", email: "binh@school.test" }, evaluationId: "next" },
     ], total: 1 });
@@ -326,10 +325,24 @@ describe("workspace save", () => {
     fireEvent.click(await screen.findByRole("checkbox", { name: "Đúng nội dung" }));
     fireEvent.click(screen.getByLabelText("Chọn sinh viên"));
     fireEvent.click(await screen.findByRole("button", { name: /Trần Bình/ }));
-    expect(confirm).toHaveBeenCalled();
+    expect(await screen.findByRole("dialog", { name: "Bạn có thay đổi chưa lưu. Rời bài này?" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Đóng" }));
     expect(mocks.push).not.toHaveBeenCalled();
     expect(screen.getByRole("checkbox", { name: "Đúng nội dung" })).toBeChecked();
-    confirm.mockRestore();
+  });
+  it("leaves the unsaved submission when the teacher confirms in the dialog", async () => {
+    mocks.listSubmissions.mockResolvedValue({ rows: [
+      { student: { accountId: "s2", name: "Trần Bình", email: "binh@school.test" }, evaluationId: "next" },
+    ], total: 1 });
+    mocks.loadEvaluation.mockResolvedValue({ ...detail, rubrics: [
+      { rubricId: "r", partId: "p", maxPoints: 1, criteria: [{ criterionId: "c", title: "Đúng", items: [{ itemId: "i", text: "Đúng nội dung", points: 1 }] }] },
+    ] });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    fireEvent.click(await screen.findByRole("checkbox", { name: "Đúng nội dung" }));
+    fireEvent.click(screen.getByLabelText("Chọn sinh viên"));
+    fireEvent.click(await screen.findByRole("button", { name: /Trần Bình/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "Bỏ thay đổi" }));
+    expect(mocks.push).toHaveBeenCalledWith("/teaching/evaluations/next");
   });
   it("sends version and checklist, then moves to the next submission only after saving", async () => {
     mocks.saveEvaluation.mockResolvedValue({ ...detail.evaluation, version: 3 });

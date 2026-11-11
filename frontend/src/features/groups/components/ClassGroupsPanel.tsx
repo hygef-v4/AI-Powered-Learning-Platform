@@ -180,7 +180,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
                     onClick={() => { setDeleteError(null); setOpen({ kind: "delete", group: d }); }} />
                 </>} />
             ))}
-            {drafts.length > 0 && shownGroups.length === 0 && <li className="px-2.5 py-3 text-[13px] text-muted">Không có nhóm khớp.</li>}
+            {drafts.length > 0 && shownGroups.length === 0 && <li className="px-2.5 py-3 text-[13px] text-muted">Không có nhóm phù hợp.</li>}
             <GroupItem name="Chưa có nhóm" meta={`${ungroupedCount} sinh viên`} active={filter === UNGROUPED} onPick={() => pick(UNGROUPED)} />
           </ul>
         </section>

@@ -17,7 +17,7 @@ export function InfoCard({
   text?: ReactNode;
 }) {
   return (
-    <div className="w-[300px] rounded-xl border border-white/40 bg-surface/95 p-4 text-ink shadow-[0_18px_40px_rgba(15,23,42,.18)]">
+    <div className="w-[300px] rounded-xl border border-white/40 bg-surface/95 p-4 text-ink shadow-[var(--shadow-float)]">
       <div className="flex items-start gap-3">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary-ink">
           <Icon name="verified_user" size={20} />

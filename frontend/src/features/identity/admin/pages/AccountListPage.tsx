@@ -176,7 +176,7 @@ export function AccountListPage() {
               {!data && (
                 <tr>
                   <Td colSpan={5} className="py-8 text-center text-muted">
-                    Đang tải...
+                    Đang tải…
                   </Td>
                 </tr>
               )}
@@ -216,7 +216,7 @@ export function AccountListPage() {
               {data && data.items.length === 0 && (
                 <tr>
                   <Td colSpan={5} className="py-10 text-center text-muted">
-                    Không có tài khoản phù hợp với bộ lọc.
+                    Không có tài khoản phù hợp.
                   </Td>
                 </tr>
               )}

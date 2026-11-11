@@ -31,7 +31,7 @@ function TopBar({ barRef, title, status, setViewSlot, actions }: {
   actions?: ReactNode;
 }) {
   return (
-    <header ref={barRef} className="sticky top-14 z-30 -mx-4 -mt-8 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] px-4 py-3 backdrop-blur-md sm:-mx-8 sm:px-8 md:-mt-10">
+    <header ref={barRef} className="sticky top-14 z-30 main-bleed -mt-8 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] py-3 backdrop-blur-md md:-mt-10">
       <div className="flex min-w-0 flex-1 items-center gap-x-3">
         <h1 className="min-w-0 truncate text-[15px] font-semibold text-ink" title={title}>{title}</h1>
         {status}

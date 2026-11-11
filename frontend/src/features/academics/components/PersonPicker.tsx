@@ -76,7 +76,7 @@ export function PersonPicker({ label, value, onChange, people = [], loader, clea
       className="fixed z-[110] max-h-56 overflow-auto rounded-lg border border-line bg-surface py-1 shadow-[var(--shadow-float)]">
       {options.loading && <p role="status" className="px-3 py-2 text-xs text-muted">Đang tìm…</p>}
       {options.error && <p role="alert" className="px-3 py-2 text-xs text-danger">{options.error}</p>}
-      {!options.loading && !options.error && rows.length === 0 && <p className="px-3 py-2 text-xs text-muted">Không có người phù hợp</p>}
+      {!options.loading && !options.error && rows.length === 0 && <p className="px-3 py-2 text-xs text-muted">Không có người phù hợp.</p>}
       {!options.loading && rows.map((person) => <button key={person.id} type="button" role="option" aria-selected={value?.id === person.id}
         className="flex w-full cursor-pointer flex-col px-3 py-2 text-left hover:bg-shell aria-selected:bg-primary-soft"
         onMouseDown={(event) => event.preventDefault()} onClick={() => choose(person)}>

@@ -93,7 +93,7 @@ export function AssignmentListCard({ page, classId }: { page: ReturnType<typeof 
           ))}
           {page.loading && !page.data && <tr><Td colSpan={columns} className="py-10 text-center! text-muted"><span role="status">Đang tải bài tập…</span></Td></tr>}
           {page.data && shown.length === 0 && (
-            <tr><Td colSpan={columns} className="py-10 text-center! text-muted">{filtered ? "Không có bài tập khớp bộ lọc." : TABS.find((t) => t.value === tab)!.empty}</Td></tr>
+            <tr><Td colSpan={columns} className="py-10 text-center! text-muted">{filtered ? "Không có bài tập phù hợp." : TABS.find((t) => t.value === tab)!.empty}</Td></tr>
           )}
         </tbody>
       </TableFrame>

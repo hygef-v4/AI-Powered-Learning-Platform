@@ -34,6 +34,7 @@
   --color-shell: var(--c-bg);
   --color-nav: var(--c-nav);
   --color-sidebar: var(--c-sidebar);
+  --color-sidebar-hover: var(--c-sidebar-hover);
   --color-watermark: var(--c-watermark);
   --color-canvas: var(--c-bg);
   --color-table-head: var(--c-bg);
@@ -157,6 +158,8 @@
   --c-nav: #ffffff;
   --c-watermark: #f1f1f3;
   --c-sidebar: #ffffff;
+  /* Nền khi rê chuột trên sidebar: phải khác nền sidebar ở cả hai theme (sáng: sidebar trắng; tối: sunken gần trùng sidebar). */
+  --c-sidebar-hover: #f4f4f5;
   --shadow-float: 0 18px 48px rgb(24 24 27 / 0.08), 0 2px 6px rgb(24 24 27 / 0.035);
   --shadow-lift: 0 4px 14px rgb(24 24 27 / 0.025);
 }
@@ -203,6 +206,7 @@
   --c-nav: #1d2939;
   --c-watermark: #263549;
   --c-sidebar: #131d28;
+  --c-sidebar-hover: #202b39;
   --shadow-float: 0 18px 48px rgb(0 0 0 / 0.4), 0 2px 6px rgb(0 0 0 / 0.2);
   --shadow-lift: 0 6px 18px rgb(0 0 0 / 0.25);
 }
@@ -238,6 +242,42 @@ body {
 :root {
   accent-color: var(--c-primary-strong);
   caret-color: var(--c-primary-ink);
+}
+
+/*
+ * Safari iOS tự phóng to trang khi chạm vào ô nhập chữ nhỏ hơn 16px. Màn hẹp: mọi ô nhập (kể cả ô viết tay) dùng 16px;
+ * từ `sm` trở lên giữ cỡ của từng ô. Ngoài layer để thắng class `text-[13.5px]` của ô; ô chữ to (mã OTP) giữ cỡ riêng.
+ */
+@media (max-width: 639.98px) {
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"], .text-lg, .text-xl, .text-2xl),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/*
+ * Lề hai bên của vùng nội dung (`main` trong AppShell) và thanh đầu trang dính tràn hết bề ngang vùng đó. `main` đệm 4% bề
+ * ngang khung chứa nó; thanh nằm trong `main` nên % tính trên bề ngang nội dung (92% khung) — chia 0,92 để ra cùng số px.
+ */
+.main-gutter {
+  padding-inline: 1rem;
+}
+
+.main-bleed {
+  margin-inline: -1rem;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 40rem) {
+  .main-gutter {
+    padding-inline: 4%;
+  }
+
+  .main-bleed {
+    margin-inline: calc(-4% / 0.92);
+    padding-inline: calc(4% / 0.92);
+  }
 }
 
 /* Placeholder đủ tương phản (4,5:1) ở cả hai theme. */

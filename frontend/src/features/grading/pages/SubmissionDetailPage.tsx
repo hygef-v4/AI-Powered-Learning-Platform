@@ -9,6 +9,7 @@ import { formatPoints, GRADE_STATUS_LABELS } from "../model/types";
 import { Pagination } from "@/shared/ui/Pagination";
 import { BatchActionDialog } from "../components/BatchActionDialog";
 import { buildGradeActionItems } from "../model/gradeActions";
+import { formatDateTime } from "@/shared/dateTime";
 import { Alert, Button, EmptyState, Icon, Pill, Select, type Tone } from "@/shared/ui";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
 import { buildEvaluationHref } from "../model/navigation";
@@ -201,7 +202,7 @@ export function SubmissionDetailPage({
                       <p className="font-mono text-xs break-all text-muted">{r.student.email}</p>
                     </td>
                     <td className={`${CELL} font-mono text-xs whitespace-nowrap text-body`}>
-                      {r.submittedAt ? new Date(r.submittedAt).toLocaleString("vi-VN") : "—"}
+                      {formatDateTime(r.submittedAt)}
                       {r.late && <span className="ml-2 font-sans font-semibold text-danger">Trễ</span>}
                     </td>
                     <td className={CELL}>

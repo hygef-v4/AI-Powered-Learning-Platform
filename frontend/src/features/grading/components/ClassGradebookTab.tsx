@@ -144,7 +144,7 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
                   <PickItem key={row.student.accountId} active={row.student.accountId === activeStudent?.student.accountId}
                     onPick={() => setSelectedStudentId(row.student.accountId)} title={row.student.name} meta={row.student.email} />
                 ))}
-                {mode === "assignment" && shownAssignments.length === 0 && <li className="py-6 text-center text-[13px] text-muted">Không có bài khớp.</li>}
+                {mode === "assignment" && shownAssignments.length === 0 && <li className="py-6 text-center text-[13px] text-muted">Không có bài phù hợp.</li>}
                 {mode === "student" && data.rows.length === 0 && <li className="py-6 text-center text-[13px] text-muted">Không có sinh viên phù hợp.</li>}
               </ul>
               {mode === "student" && pager}

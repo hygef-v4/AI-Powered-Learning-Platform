@@ -146,7 +146,7 @@ function EmailStep({
     event.preventDefault();
     const value = email.trim();
     if (!EMAIL_FORMAT.test(value)) {
-      setError("Nhập email trường hợp lệ.");
+      setError("Nhập đúng email do trường cấp.");
       return;
     }
     setBusy(true);

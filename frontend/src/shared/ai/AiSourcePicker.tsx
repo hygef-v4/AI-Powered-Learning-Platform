@@ -103,7 +103,7 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
           {error}
         </Alert>
       )}
-      {!options && !error && <p className="text-muted">Đang tải...</p>}
+      {!options && !error && <p className="text-muted">Đang tải…</p>}
       {options && (
         <div role="radiogroup" aria-label="Nguồn AI" className="flex flex-col gap-2">
           {options.map((option) => (
