@@ -34,11 +34,30 @@ Dữ liệu seed bằng SQL: 1 giảng viên, 6 sinh viên, lớp SE1801 (`OPEN`
 
 Ghi chú nhỏ, không chặn: danh sách "bạn mời được" không sắp theo tên (thứ tự thấy được: Giang, Bình, Chi, Hà, Dũng).
 
+## Thử bổ sung trên trình duyệt — 2026-11-12
+
+Sau khi PR #75 đã merge, thử nốt các phần còn thiếu trên stack `selfgroup` dựng lại từ `staging@d8c51ad8` (worktree mới, nhánh `docs/self-grouping-browser-check`). Seed 1 giảng viên, 10 sinh viên, lớp SE1801 `OPEN`; dựng tình huống bằng API (đợt bật 2–3 người; Nhóm Mây sv1+sv2 và Nhóm Sao sv3+sv4 chờ duyệt; Nhóm Gió sv5+sv6, mời sv8; Nhóm Lửa sv7), rồi thử trên trình duyệt trong app ở 1024px, chế độ tối, trừ các bước ghi ở cột vai trò.
+
+| Bước | Vai trò, cách thử | Kết quả |
+|---|---|---|
+| Rút về nháp rồi gửi lại | Sinh viên 1 (trưởng Nhóm Mây), trình duyệt | "Rút về để sửa" đưa về Nháp, hiện lại Đổi tên, Mời bạn, Gửi duyệt, Hủy đề xuất; "Gửi duyệt" đưa lại Chờ duyệt. |
+| Thành viên rời đề xuất | Sinh viên 6 (Nhóm Gió), trình duyệt | Thành viên chỉ thấy nút "Rời đề xuất"; hộp xác nhận "Rời đề xuất Nhóm Gió?"; sau khi rời về màn "Tạo đề xuất nhóm". |
+| Trưởng nhóm hủy đề xuất | Sinh viên 7 (Nhóm Lửa), trình duyệt | Thẻ ghi "cần thêm 1 người để gửi duyệt"; hộp xác nhận "Hủy đề xuất Nhóm Lửa?"; sau khi hủy về màn "Tạo đề xuất nhóm". |
+| Duyệt nhiều đề xuất một lần | Giảng viên, trình duyệt | Chọn Nhóm Mây và Nhóm Sao, "Duyệt đã chọn (2)": toast "Đã duyệt 2 đề xuất thành nhóm", Chờ duyệt về 0, Chưa có nhóm từ 10 về 6, hai nhóm hiện trong thẻ Nhóm. |
+| Hạn chót đóng đợt | Sửa `deadline` về quá khứ trong DB thử (không chờ thật) | Giảng viên thấy "Tự chia nhóm: Đã hết hạn lúc 13:24 12/11/2026" (đúng giờ Việt Nam). Sinh viên 8 (trình duyệt) thấy "Đã hết hạn … Giảng viên sẽ xếp nhóm cho bạn." và lời mời Nhóm Gió "Lời mời đã hết hạn", chỉ còn nút Từ chối. API: `canAccept=false`; ép gọi chấp nhận trả 409 `FORMATION_CLOSED`; trưởng Nhóm Gió không còn danh sách bạn mời được. |
+| Chia ngẫu nhiên phần còn lại | Giảng viên, trình duyệt ở 375px, chế độ sáng | Sĩ số tối đa 3: xem trước Nhóm 3 (3 người), Nhóm 4 (2 người), thêm 1 người vào Nhóm Sao còn chỗ; "Lưu 3 nhóm" xong, Chưa có nhóm 0, khung tự chia nhóm ghi "Mọi sinh viên đã có nhóm.". DB: Nhóm Gió `CANCELLED` `LEADER_PLACED`, sinh viên 6 `LEFT`, lời mời sinh viên 8 `REVOKED` (BR-U12-88). |
+| Điện thoại 375px, chế độ sáng | Sinh viên 8 và giảng viên | Không cuộn ngang (`scrollWidth` 375); banner cảnh báo `#8a5a00` trên `#fff3d6` (khoảng 5,5:1) sau khi hết hiệu ứng hiện dần; hộp cài đặt vừa màn, nhập hạn chót đã qua thì báo "Hạn chót phải ở tương lai." dưới ô và không gửi. |
+
+Phát hiện ngoài phạm vi PR #75 (có từ trước): ở viewport 1024px, bảng "Tất cả sinh viên" trong tab Sinh viên chỉ rộng 304px vì cạnh thẻ Nhóm 340px; cột Họ tên co về 0px, tiêu đề cột và nhãn "Trưởng nhóm" chồng lên tên nhóm. Bảng này không đổi trong PR #75. Ở 375px bảng trong popup Chia ngẫu nhiên chật (tên xuống dòng) nhưng vẫn dùng được. Ô hạn chót hiện theo định dạng 12 giờ của trình duyệt ("01:24 PM"), giá trị đúng giờ Việt Nam.
+
+Dữ liệu thử có một đề xuất "Thử" do lỗi mã hóa chữ có dấu của script curl trên Windows (không phải lỗi ứng dụng), đã hủy ngay.
+
 ## Giới hạn
 
-- Chưa thử: duyệt nhiều đề xuất một lần trên giao diện, hạn chót đóng đợt, rút về nháp, sinh viên rời hoặc hủy đề xuất, chia ngẫu nhiên phần còn lại, giao diện điện thoại và chế độ sáng. Các nhánh này có test tự động ở backend và frontend nhưng chưa xem trên trình duyệt.
-- Không đo hiệu năng; không có hạ tầng mới. Không chạy CI, không deploy, không commit hay push.
-- Stack `selfgroup` vẫn đang chạy trên máy để xem lại; có thể tắt bằng `docker compose -p selfgroup down -v`.
+- Hạn chót đóng đợt thử bằng cách sửa giá trị trong DB thử, không chờ hết hạn thật; lời mời hết hạn ghi `EXPIRED` lười chưa thấy trực tiếp vì lời mời bị thu hồi khi chia ngẫu nhiên trước khi có lần ghi khác chạm tới.
+- Chưa thử trên thiết bị thật, chỉ giả lập 375×812 trong trình duyệt của app.
+- Không đo hiệu năng; không có hạ tầng mới. Không chạy CI, không deploy.
+- Stack `selfgroup` vẫn chạy để xem lại; tắt bằng `docker compose -p selfgroup down -v` (cần chạy từ `infra/` của một bản checkout, kèm cùng tệp override và env đã dùng).
 
 ## Extension
 

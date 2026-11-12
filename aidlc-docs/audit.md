@@ -13646,3 +13646,21 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 **Context**: CONSTRUCTION — sửa lỗi nhỏ U06.
 
 ---
+
+## Build and Test U12 — thử nốt trên trình duyệt
+**Timestamp**: 2026-11-12T06:27:31Z
+**Requested by:** Đào Chí Cường
+**User Input**: "thử nốt các phần chưa kiểm trên trình duyệt"
+**AI Response**: "Dựng lại stack selfgroup từ staging@d8c51ad8 (worktree mới, nhánh docs/self-grouping-browser-check), seed 1 giảng viên, 10 sinh viên; dựng tình huống bằng API. Đã thử trên trình duyệt: rút về nháp và gửi lại, thành viên rời đề xuất, trưởng nhóm hủy đề xuất, duyệt nhiều (2 đề xuất), hạn chót đóng đợt (sửa deadline trong DB thử), chia ngẫu nhiên phần còn lại (Nhóm Gió tự hủy LEADER_PLACED, lời mời REVOKED), điện thoại 375px và chế độ sáng, lỗi hạn chót trong hộp cài đặt. Tất cả đúng thiết kế. Phát hiện có từ trước: bảng sinh viên ở 1024px co cột Họ tên về 0. Ghi vào 2026-11-11-student-self-grouping-results.md. Không commit, không push."
+**Context**: CONSTRUCTION — Build and Test U12, thử bổ sung sau khi PR #75 đã merge.
+
+---
+
+## Commit và mở PR kết quả thử trên trình duyệt
+**Timestamp**: 2026-11-12T06:28:50Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit and open PR"
+**AI Response**: "Commit kết quả thử bổ sung và audit trên nhánh docs/self-grouping-browser-check, push và mở PR vào staging."
+**Context**: CONSTRUCTION — Build and Test U12, công bố kết quả.
+
+---
