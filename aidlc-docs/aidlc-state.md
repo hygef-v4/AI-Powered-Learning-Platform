@@ -1,5 +1,20 @@
 # AI-DLC State Tracking
 
+## U06 — Guardrail hai tầng cho prompt AI, đã duyệt mã, đã commit, chưa push, 2026-11-12
+
+Nhánh `feat/ai-prompt-guardrail` từ `main@8923d45d`. Guardrail Tầng 1 (quy tắc/regex) và Tầng 2 (RBAC, máy trạng thái, phân tích trích dẫn, chính sách logic, không regex) chạy tuần tự, fail-closed, trả `400 AI_PROMPT_REJECTED` trước khi lưu draft, giữ quota hay gọi AI. [Thiết kế và vị trí file](construction/u06-ai-connections/code/ai-prompt-guardrail.md); [kế hoạch và kết quả](construction/plans/code-generation-plan/2026-11-11-ai-prompt-guardrail.md).
+
+- [x] Workspace Detection: brownfield, dùng lại tài liệu reverse engineering
+- [x] Requirements Analysis (Standard): đặc tả của người dùng đủ; quyết định stack Java/Spring Boot và vị trí ở U06 ghi trong kế hoạch
+- [x] Workflow Planning: chỉ Code Generation và Build and Test; các giai đoạn khác bỏ qua
+- [x] Code Generation: contract + 8 lớp service, nối vào soạn/sửa đề, soạn quiz, tạo lại quiz, `AiTaskService`; `UntrustedPrompt` cho 5 prompt builder
+- [x] Build and Test: toàn bộ `mvn verify` backend 2.220 test qua, 0 lỗi
+- [x] Người dùng duyệt mã (2026-11-11)
+- [x] Trình duyệt: yêu cầu injection ở "Sửa đề bằng AI" bị chặn 400, hiện câu báo thân thiện, không tạo draft/AI task (2026-11-12)
+- [x] Commit trên nhánh, chưa push
+
+Không đổi schema, migration, cấu hình, dependency hay frontend. Security Baseline: SECURITY-03 (log không chứa nội dung), 05 (kiểm đầu vào), 08 (RBAC phòng thủ thêm), 15 (fail-closed) tuân thủ; các quy tắc khác N/A. Resiliency không bị ảnh hưởng. PBT tắt.
+
 ## UI/UX đợt 2 — kiểm báo cáo ngày 2026-11-10, đã commit, chưa push, 2026-11-11
 
 Nhánh `fix/ui-ux-review-2` từ `origin/staging@353383f2`. Đối chiếu từng mục của báo cáo đánh giá UI/UX với mã sau PR #64: mục 3 (bảng Bài tập dạng thẻ, cột lớp), 4 (thanh đồng hồ dính, `aria-live`, đáp án 44px), 6 (ngăn kéo `inert`, Esc), 8 (toast lỗi), "Practice", liên kết bỏ qua, Đăng xuất trong menu tài khoản, `Menu` phím mũi tên, tiêu đề popup 22px đã sửa trước đó.
