@@ -85,9 +85,11 @@ describe("CreateAssignmentDialog", () => {
     const onCreated = vi.fn();
     render(<CreateAssignmentDialog target={{ kind: "class", classId: "c1", groupSupported: false }} onClose={vi.fn()} onCreated={onCreated} />);
     expect(screen.queryByRole("tab")).toBeNull();
-    expect(screen.getAllByRole("radio").slice(0, 3).map((radio) => radio.closest("label")?.textContent))
-      .toEqual(["Đề mới", "Đề có sẵn", "Tạo từ AI"]);
-    expect(screen.getByRole("radio", { name: "Đề mới" })).toBeChecked();
+    // Loại đứng trên Cách tạo; mặc định là Đề có sẵn (yêu cầu 2026-11-12).
+    expect(screen.getAllByRole("radio").map((radio) => radio.closest("label")?.textContent))
+      .toEqual(["Cá nhân", "Nhóm", "Luyện tập", "Đề có sẵn", "Đề mới", "Tạo từ AI"]);
+    expect(screen.getByRole("radio", { name: "Đề có sẵn" })).toBeChecked();
+    fireEvent.click(screen.getByRole("radio", { name: "Đề mới" }));
     // Tiêu đề không có chữ gợi ý; Đề mới chỉ có Mẫu đề (tệp DOCX), không có copy.
     expect(screen.getByTestId("create-assignment-title")).not.toHaveAttribute("placeholder");
     expect(screen.queryByRole("combobox")).toBeNull();
@@ -111,6 +113,7 @@ describe("CreateAssignmentDialog", () => {
     const onCreated = vi.fn();
     render(<CreateAssignmentDialog target={{ kind: "class", classId: "c1", groupSupported: false }} onClose={vi.fn()} onCreated={onCreated} />);
     expect(screen.queryByText(/Sơ đồ Draw.io luôn dùng được/)).toBeNull();
+    fireEvent.click(screen.getByRole("radio", { name: "Đề mới" }));
     const file = new File(["docx"], "De-bai.docx");
     fireEvent.change(screen.getByTestId("create-docx"), { target: { files: [file] } });
     expect(screen.getByTestId("docx-file")).toHaveTextContent("De-bai.docx");
@@ -129,6 +132,7 @@ describe("CreateAssignmentDialog", () => {
     const importDocx = vi.spyOn(assignmentsApi, "importDocx");
     const onCreated = vi.fn();
     render(<CreateAssignmentDialog target={{ kind: "class", classId: "c1", groupSupported: false }} onClose={vi.fn()} onCreated={onCreated} />);
+    fireEvent.click(screen.getByRole("radio", { name: "Đề mới" }));
     const pages = [new File(["1"], "trang-1.png"), new File(["2"], "trang-2.jpg")];
     fireEvent.change(screen.getByTestId("create-docx"), { target: { files: pages } });
     expect(screen.getByTestId("docx-file")).toHaveTextContent("trang-1.png");
@@ -148,6 +152,7 @@ describe("CreateAssignmentDialog", () => {
     const importDocx = vi.spyOn(assignmentsApi, "importDocx").mockRejectedValue(new Error("Tệp hỏng"));
     const onCreated = vi.fn();
     render(<CreateAssignmentDialog target={{ kind: "class", classId: "c1", groupSupported: false }} onClose={vi.fn()} onCreated={onCreated} />);
+    fireEvent.click(screen.getByRole("radio", { name: "Đề mới" }));
     fireEvent.change(screen.getByTestId("create-docx"), { target: { files: [new File(["x"], "a.docx")] } });
     fireEvent.change(screen.getByTestId("create-assignment-title"), { target: { value: "Lab 1" } });
     fireEvent.click(screen.getByTestId("create-assignment-submit"));
@@ -170,8 +175,9 @@ describe("CreateAssignmentDialog", () => {
     const copy = vi.spyOn(assignmentsApi, "copyToSubject").mockResolvedValue(created);
     const onCreated = vi.fn();
     render(<CreateAssignmentDialog target={{ kind: "subject", subjectId: "s1" }} onClose={vi.fn()} onCreated={onCreated} />);
-    fireEvent.click(screen.getByRole("radio", { name: "Đề có sẵn" }));
-    expect(screen.queryByRole("radiogroup", { name: "Loại" })).toBeNull();
+    // Đề có sẵn là mặc định và cũng chọn được Loại.
+    expect(screen.getByRole("radio", { name: "Đề có sẵn" })).toBeChecked();
+    expect(screen.getByRole("radiogroup", { name: "Loại" })).toBeInTheDocument();
     const search = screen.getByRole("combobox", { name: "Đề có sẵn" });
     fireEvent.focus(search);
     await screen.findByRole("option", { name: "Bài m1" });
@@ -198,7 +204,7 @@ describe("CreateAssignmentDialog", () => {
     fireEvent.change(screen.getByTestId("create-assignment-title"), { target: { value: "Đề mẫu 1" } });
     fireEvent.click(screen.getByTestId("create-assignment-submit"));
     await waitFor(() => expect(onCreated).toHaveBeenCalledWith(created));
-    expect(copy).toHaveBeenCalledWith("s1", "m1", "Đề mẫu 1");
+    expect(copy).toHaveBeenCalledWith("s1", "m1", "Đề mẫu 1", { submissionMode: "INDIVIDUAL", gradingMode: "GRADED" });
     vi.restoreAllMocks();
   });
 
@@ -228,8 +234,7 @@ describe("CreateAssignmentDialog", () => {
     const copy = vi.spyOn(assignmentsApi, "copy").mockResolvedValue(created);
     const onCreated = vi.fn();
     render(<CreateAssignmentDialog target={{ kind: "class", classId: "c1", groupSupported: true }} onClose={vi.fn()} onCreated={onCreated} />);
-    fireEvent.click(screen.getByRole("radio", { name: "Đề có sẵn" }));
-    expect(screen.queryByRole("radiogroup", { name: "Loại" })).toBeNull();
+    expect(screen.getByRole("radiogroup", { name: "Loại" })).toBeInTheDocument();
     expect(screen.queryByTestId("create-docx")).toBeNull();
     fireEvent.change(screen.getByTestId("create-assignment-title"), { target: { value: "Lab 1" } });
     fireEvent.click(screen.getByTestId("create-assignment-submit"));
@@ -241,9 +246,11 @@ describe("CreateAssignmentDialog", () => {
     fireEvent.mouseDown(screen.getByRole("option", { name: "Bài m2" }));
     expect(screen.getByTestId("copy-source")).toHaveTextContent("Bài m2");
     expect(screen.getByTestId("create-assignment-title")).toHaveValue("Lab 1");
+    fireEvent.click(screen.getByRole("radio", { name: "Nhóm" }));
     fireEvent.click(screen.getByTestId("create-assignment-submit"));
     await waitFor(() => expect(onCreated).toHaveBeenCalledWith(created));
-    expect(copy).toHaveBeenCalledWith("c1", "m2", "Lab 1");
+    // Bài copy theo Loại đã chọn trong popup.
+    expect(copy).toHaveBeenCalledWith("c1", "m2", "Lab 1", { submissionMode: "GROUP", gradingMode: "GRADED" });
     vi.restoreAllMocks();
   });
 
@@ -346,6 +353,20 @@ describe("trạng thái Hoàn tất", () => {
     fireEvent.click(screen.getByRole("tab", { name: /Hoàn tất/ }));
     expect(screen.getByTestId("assignment-row-b")).toHaveTextContent("Luyện tập");
     expect(screen.queryByTestId("assignment-row-c")).toBeNull();
+  });
+
+  it("bài nháp và bài hoàn tất không có nút sang trang Chấm điểm, bài đã giao thì có", async () => {
+    await import("@/features/grading/register");
+    const row = (id: string, status: string) =>
+      ({ id, title: `Bài ${id}`, status, scope: "CLASS", submissionMode: "INDIVIDUAL", gradingMode: "GRADED", closesAt: null }) as never;
+    const page = { data: { items: [row("a", "OPEN"), row("b", "REVIEWED"), row("c", "DRAFT")], hiddenCount: 0, counts: {}, groupSupported: true, ownerArchived: false },
+      error: null, loading: false, reload: () => {} } as never;
+    render(<AssignmentListCard page={page} classId="c1" />);
+    expect(within(screen.getByTestId("assignment-row-a")).getByRole("link", { name: "Chấm điểm" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: /Nháp/ }));
+    expect(within(screen.getByTestId("assignment-row-c")).queryByRole("link", { name: "Chấm điểm" })).toBeNull();
+    fireEvent.click(screen.getByRole("tab", { name: /Hoàn tất/ }));
+    expect(within(screen.getByTestId("assignment-row-b")).queryByRole("link", { name: "Chấm điểm" })).toBeNull();
   });
 });
 
@@ -452,7 +473,7 @@ describe("ScheduleForm", () => {
     fireEvent.change(screen.getByLabelText("Hạn nộp (ngày)"), { target: { value: "2099-01-01" } });
     fireEvent.click(screen.getByTestId("schedule-submit"));
     await vi.waitFor(() => expect(submit).toHaveBeenCalled());
-    expect(submit.mock.calls[0]![0]).toMatchObject({ openNow: true, opensAt: null, closesAt: "2099-01-01T16:59:00.000Z", lateUntil: null, maxAttempts: null });
+    expect(submit.mock.calls[0]![0]).toMatchObject({ openNow: true, opensAt: null, closesAt: "2098-12-31T17:00:00.000Z", lateUntil: null, maxAttempts: null });
   });
 });
 

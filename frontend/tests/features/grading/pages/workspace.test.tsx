@@ -225,7 +225,7 @@ describe("workspace save", () => {
     const section = await screen.findByTestId("block-part");
     expect(within(section).getByText("Người thực hiện: Nguyễn An")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Điểm thành viên" }));
-    expect(screen.getByRole("region", { name: "Điểm nhóm và thành viên" })).toHaveFocus();
+    expect(screen.getByRole("region", { name: "Điểm thành viên" })).toHaveFocus();
   });
 
   it("opens the matching group submission when AI grading is clicked from a member grade", async () => {

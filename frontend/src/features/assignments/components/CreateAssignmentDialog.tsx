@@ -49,17 +49,19 @@ const KIND_HINTS: Record<Kind, string> = {
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
- * t21b Tạo bài tập (F3, F13), một popup: Tiêu đề bắt buộc ở trên cùng, rồi Cách tạo (yêu cầu 2026-11-10):
- * - Đề mới: Loại bài (Cá nhân, Nhóm, Luyện tập) và Mẫu đề là tệp DOCX (nhập luôn vào khung), không copy.
- * - Đề có sẵn: copy đề mẫu của môn hay bài ở lớp mình dạy (bài copy giữ loại của bài nguồn).
- * - Tạo từ AI: Loại, Mẫu đề, Tài liệu tham khảo và Yêu cầu ngay trong popup này; bấm Tạo thì tạo bài, AI soạn rồi ghi đề
+ * t21b Tạo bài tập (F3, F13), một popup: Tiêu đề bắt buộc ở trên cùng, rồi Loại bài (Cá nhân, Nhóm, Luyện tập) dùng cho
+ * cả ba cách tạo, rồi Cách tạo (yêu cầu 2026-11-10; 2026-11-12: Loại đứng trên Cách tạo, mặc định là Đề có sẵn):
+ * - Đề có sẵn: copy đề mẫu của môn hay bài ở lớp mình dạy; bài copy theo Loại đã chọn (chọn bài nguồn thì Loại nhảy theo
+ *   bài đó, vẫn đổi được).
+ * - Đề mới: Mẫu đề là tệp DOCX (nhập luôn vào khung), không copy.
+ * - Tạo từ AI: Mẫu đề, Tài liệu tham khảo và Yêu cầu ngay trong popup này; bấm Tạo thì tạo bài, AI soạn rồi ghi đề
  *   lên trang. AI chỉ có ở bước tạo, không có trong trang soạn. AI lỗi thì giữ bài đã tạo để thử lại; đóng popup thì bỏ bài.
  * Bài của môn chỉ là đề mẫu, không giao cho lớp.
  */
 export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   const [title, setTitle] = useState("");
   const [titleError, setTitleError] = useState<string | null>(null);
-  const [method, setMethod] = useState<Method>("NEW");
+  const [method, setMethod] = useState<Method>("EXISTING");
   /** Mẫu đề của Đề mới: 1 DOCX (nhập ngay), hoặc ảnh/PDF đề cũ (trang soạn bài nhờ AI đọc, BR-U07-87). */
   const [templateFiles, setTemplateFiles] = useState<File[]>([]);
   const file = templateFiles[0] ?? null;
@@ -137,6 +139,16 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     setTemplateFiles([]);
     setError(null);
     if (next === "AI") loadAiInputs();
+  }
+
+  /** Chọn bài nguồn: Loại nhảy theo bài đó (bài nhóm mà lớp chưa dùng được nhóm thì giữ loại đang chọn). */
+  function pickSource(id: string) {
+    setSourceId(id);
+    setError(null);
+    const source = candidates.find((item) => item.id === id);
+    if (!source) return;
+    const next: Kind = source.gradingMode === "PRACTICE" ? "PRACTICE" : source.submissionMode === "GROUP" ? "GROUP" : "INDIVIDUAL";
+    if (next !== "GROUP" || groupAllowed) setKind(next);
   }
 
   function createInput(name: string): CreateInput {
@@ -245,8 +257,10 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
       if (!assignment) {
         if (existing) {
           // Tiêu đề không lấy theo bài nguồn: dùng tiêu đề người dùng nhập (yêu cầu 2026-11-09).
-          assignment = target.kind === "class" ? await assignmentsApi.copy(target.classId, sourceId, name)
-            : await assignmentsApi.copyToSubject(target.subjectId, sourceId, name);
+          const { submissionMode, gradingMode } = createInput(name);
+          const modes = { submissionMode, gradingMode };
+          assignment = target.kind === "class" ? await assignmentsApi.copy(target.classId, sourceId, name, modes)
+            : await assignmentsApi.copyToSubject(target.subjectId, sourceId, name, modes);
         } else {
           assignment = target.kind === "class" ? await assignmentsApi.createForClass(target.classId, createInput(name))
             : await assignmentsApi.createForSubject(target.subjectId, createInput(name));
@@ -302,10 +316,18 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
           data-testid="create-assignment-title"
           onChange={(e) => { setTitle(e.target.value); if (e.target.value.trim()) setTitleError(null); }} />
       </Field>
+      <Field label="Loại">
+        <Choice name="Loại" value={kind} disabled={setupLocked} onChange={setKind} options={[
+          { value: "INDIVIDUAL", label: "Cá nhân" },
+          { value: "GROUP", label: "Nhóm", disabled: !groupAllowed, title: groupAllowed ? undefined : "Lớp chưa dùng được bài nhóm" },
+          { value: "PRACTICE", label: "Luyện tập" },
+        ]} />
+        <Hint key={kind}>{KIND_HINTS[kind]}</Hint>
+      </Field>
       <Field label="Cách tạo">
         <Choice name="Cách tạo" value={method} disabled={setupLocked} onChange={changeMethod} options={[
-          { value: "NEW", label: "Đề mới" },
           { value: "EXISTING", label: "Đề có sẵn" },
+          { value: "NEW", label: "Đề mới" },
           { value: "AI", label: "Tạo từ AI" },
         ]} />
         <Hint key={method}>{METHOD_HINTS[method]}</Hint>
@@ -314,7 +336,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
         <Field label="Đề có sẵn" required>
           <SearchPicker id="copy-sources" label="Đề có sẵn" placeholder="Tìm theo tên bài" disabled={locked}
             optionIcon="assignment" loading={sources === null} emptyText="Chưa có đề nào để copy." onOpen={loadSources}
-            options={options} onPick={(id) => { setSourceId(id); setError(null); }} />
+            options={options} onPick={pickSource} />
           {picked && (
             <div className="flex animate-fade items-center gap-3 rounded-[10px] border border-line bg-sunken px-3.5 py-3 text-[13.5px]"
               data-testid="copy-source">
@@ -326,14 +348,6 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
         </Field>
       ) : (
         <>
-          <Field label="Loại">
-            <Choice name="Loại" value={kind} disabled={setupLocked} onChange={setKind} options={[
-              { value: "INDIVIDUAL", label: "Cá nhân" },
-              { value: "GROUP", label: "Nhóm", disabled: !groupAllowed, title: groupAllowed ? undefined : "Lớp chưa dùng được bài nhóm" },
-              { value: "PRACTICE", label: "Luyện tập" },
-            ]} />
-            <Hint key={kind}>{KIND_HINTS[kind]}</Hint>
-          </Field>
           {method === "NEW" && (
             <Field label="Mẫu đề">
               <TemplateFileField file={file} files={templateFiles} disabled={locked} accept={IMPORT_ACCEPT}

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { assignmentsApi } from "@/features/assignments/api";
 import { AiReviseChat } from "@/features/assignments/components/AiReviseChat";
@@ -77,5 +77,67 @@ describe("AiReviseChat", () => {
 
     expect(request).not.toHaveBeenCalled();
     expect(screen.getByTestId("ai-revise-send")).toBeDisabled();
+  });
+
+  it("is a popup that stays closed until its icon button is pressed, and closes again", () => {
+    vi.spyOn(assignmentsApi, "listAiTemplates").mockResolvedValue([]);
+    vi.spyOn(assignmentsApi, "materials").mockResolvedValue([]);
+    render(<AiReviseChat assignmentId="a1" prepare={vi.fn()} onApplied={vi.fn()} />);
+    const toggle = screen.getByTestId("ai-revise-toggle");
+
+    // Nút chỉ có biểu tượng, tên đọc được qua aria-label.
+    expect(toggle).toHaveTextContent("");
+    expect(toggle).toHaveAccessibleName("Sửa đề bằng AI");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByTestId("ai-revise-chat")).not.toBeVisible();
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByTestId("ai-revise-chat")).toBeVisible();
+    // Chưa có tệp nào: không có hàng tệp gửi kèm.
+    expect(screen.queryByTestId("ai-revise-attachments")).toBeNull();
+    fireEvent.click(toggle);
+    expect(screen.getByTestId("ai-revise-chat")).not.toBeVisible();
+  });
+
+  it("adds a template and a reference from the two-row + menu, shows them in one row template first, sends and clears them", async () => {
+    vi.spyOn(assignmentsApi, "listAiTemplates").mockResolvedValue([
+      { assignmentId: "t1", title: "Đề mẫu của môn", subjectTemplate: true },
+      { assignmentId: "o1", title: "Đề giữa kỳ năm trước", subjectTemplate: false },
+    ]);
+    vi.spyOn(assignmentsApi, "materials").mockResolvedValue([{ materialId: "m1", title: "Chương 3 UML", hasText: true } as never]);
+    const request = vi.spyOn(assignmentsApi, "requestAiRevision").mockResolvedValue(draft("READY"));
+    vi.spyOn(assignmentsApi, "applyAiDraft").mockResolvedValue({} as never);
+    render(<AiReviseChat assignmentId="a1" prepare={vi.fn().mockResolvedValue(3)} onApplied={vi.fn().mockResolvedValue(undefined)} />);
+    fireEvent.click(screen.getByTestId("ai-revise-toggle"));
+
+    // Chọn tài liệu tham khảo trước: mẫu đề thêm sau vẫn đứng đầu hàng.
+    fireEvent.click(screen.getByTestId("ai-revise-attach"));
+    expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["Mẫu đề", "Tài liệu tham khảo"]);
+    fireEvent.click(screen.getByRole("menuitem", { name: "Tài liệu tham khảo" }));
+    // Tải tệp lên nằm ngay trong danh sách.
+    expect(screen.getAllByRole("menuitem")[0]).toHaveTextContent("Tải tệp lên");
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Chương 3 UML" }));
+    expect(screen.queryByTestId("ai-revise-attach-menu")).toBeNull();
+    fireEvent.click(screen.getByTestId("ai-revise-attach"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Mẫu đề" }));
+    expect(screen.getAllByRole("menuitem").map((item) => item.textContent))
+      .toEqual(["Tải tệp lên", "Đề mẫu của môn", "Đề giữa kỳ năm trước"]);
+    fireEvent.click(screen.getByRole("menuitem", { name: "Đề giữa kỳ năm trước" }));
+
+    const chips = within(screen.getByTestId("ai-revise-attachments")).getAllByRole("listitem");
+    expect(chips.map((chip) => chip.textContent)).toEqual(["Mẫu đề: Đề giữa kỳ năm trước", "Tài liệu tham khảo: Chương 3 UML"]);
+    // Đã có mẫu đề: dòng Mẫu đề của menu khóa và đổi chữ.
+    fireEvent.click(screen.getByTestId("ai-revise-attach"));
+    expect(screen.getByRole("menuitem", { name: "Đã có mẫu đề" })).toBeDisabled();
+    fireEvent.click(screen.getByTestId("ai-revise-attach"));
+    send("Làm lại đề theo mẫu này");
+
+    expect(await screen.findByText(/Đã sửa đề theo yêu cầu/)).toBeInTheDocument();
+    expect(request).toHaveBeenCalledWith("a1", "Làm lại đề theo mẫu này", expect.any(String),
+      { formatText: undefined, templateAssignmentId: "o1", materialIds: ["m1"], sourceFileRefs: [] });
+    const sent = screen.getByRole("list", { name: "Tệp gửi kèm" });
+    expect(sent).toHaveTextContent("Mẫu đề: Đề giữa kỳ năm trước");
+    expect(sent).toHaveTextContent("Tài liệu tham khảo: Chương 3 UML");
+    expect(screen.queryByTestId("ai-revise-attachments")).toBeNull();
   });
 });

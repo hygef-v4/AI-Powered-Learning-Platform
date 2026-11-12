@@ -71,6 +71,14 @@ type Props = {
   header?: ReactNode;
   /** Dòng thông tin chỉ đọc, gắn theo ID tiêu đề của từng phần. */
   sectionBylines?: Readonly<Record<string, string>>;
+  /** Nút thao tác của từng phần (theo ID tiêu đề), nằm bên phải, ngang hàng tiêu đề. */
+  sectionActions?: Readonly<Record<string, ReactNode>>;
+  /** Người học chỉ viết được trong các phần này (ID tiêu đề phần lá); không có thì viết được mọi phần. */
+  writableParts?: ReadonlySet<string>;
+  /** Số thứ tự của phần theo ID tiêu đề, thay số tự đánh (trang chỉ hiện một số phần mà vẫn giữ số như cả tài liệu). */
+  sectionNumbers?: Readonly<Record<string, string>>;
+  /** Cách đọc lúc mở: cả trang (mặc định) hoặc từng phần. */
+  initialView?: "page" | "step";
   /** Nút thêm ở cuối thanh công cụ; có nút thì thanh công cụ vẫn hiện khi chỉ đọc. */
   toolbarExtra?: ReactNode;
   /**
@@ -100,6 +108,12 @@ type Props = {
    */
   externalEdit?: { id: number; before: DocumentModel } | null;
 };
+
+/** Chỉ giữ các block thuộc phần được viết ({@code writable}: ID tiêu đề phần lá); không giới hạn thì giữ nguyên. */
+function writableOnly(sections: Map<string, string>, writable: ReadonlySet<string> | undefined): Map<string, string> {
+  if (!writable) return sections;
+  return new Map([...sections].filter(([, leaf]) => writable.has(leaf)));
+}
 
 type StyleValue = "P" | "UL" | "OL" | HeadingStyle;
 /** Nơi đặt con trỏ sau khi tài liệu đổi: ô nhập đầu, cuối, hoặc ô thứ {@code field} của block. */
@@ -594,7 +608,7 @@ const TOOLBAR_COVER = "shadow-[0_-0.75rem_0_0.25rem_var(--c-bg)]";
 
 export function DocumentEditor({
   document, onChange, mode, diagramEnabled, readOnly = false, imageUrl, uploadImage, issues = [],
-  header, sectionBylines, titleField, toolbarExtra, viewSlot, toolbarCenter, comments, activeComment,
+  header, sectionBylines, sectionActions, writableParts, sectionNumbers, initialView = "page", titleField, toolbarExtra, viewSlot, toolbarCenter, comments, activeComment,
   highlightBlockId, onFocusBlock, emptyLeafLabel, answerGuidance = false, fullWidth = false,
   matchCommentHeight = false,
   externalEdit = null,
@@ -631,7 +645,7 @@ export function DocumentEditor({
   }
   const [dropAt, setDropAt] = useState<{ key: string; place: "before" | "after" } | null>(null);
   const [selected, setSelected] = useState<Selected | null>(null);
-  const [view, setView] = useState<"page" | "step">("page");
+  const [view, setView] = useState<"page" | "step">(initialView);
   const [stepAt, setStepAt] = useState(0);
   const latestLeaves = useRef<DocSection[]>([]);
   /** Thêm mục con từ sidebar của bài (sự kiện `document:add-part`); null là mục ngoài cùng. Chỉ người soạn. */
@@ -767,7 +781,7 @@ export function DocumentEditor({
   const authoring = !student && !readOnly;
   const guided = student && answerGuidance;
   // Người học chỉ viết trong phần: block nằm từ tiêu đề lá tới tiêu đề kế; khung không có tiêu đề thì cả bài.
-  const sections = student ? sectionsOf(document, computeParts(document)) : null;
+  const sections = student ? writableOnly(sectionsOf(document, computeParts(document)), writableParts) : null;
   const inPart = (blockId: string | undefined) => !sections || (!!blockId && sections.has(blockId));
   // Tài liệu trống không có tiêu đề nên cả bài là một phần; còn lại cuối tài liệu luôn thuộc tiêu đề cuối (là lá).
   const atEndInPart = blocks.length === 0 || inPart(blocks.at(-1)!.id);
@@ -1200,6 +1214,7 @@ export function DocumentEditor({
     if (!last) return null;
     if (student && section.blocks.some((b) => b.origin === "STUDENT" && (!guided || b.type === "PARAGRAPH" || b.type === "LIST"))) return null;
     if (authoring || (!student && section.blocks.length > 0)) return null;
+    if (student && !readOnly && section.heading && !inPart(section.heading.id)) return null;
     if (readOnly) {
       return student && emptyLeafLabel
         ? <p data-testid={`empty-part-${key}`} className="py-1 text-xs text-muted">{emptyLeafLabel}</p>
@@ -1225,7 +1240,9 @@ export function DocumentEditor({
   }
 
   function leafContent(section: DocSection, key: string): ReactNode {
-    if (!guided) return <>{section.blocks.map(renderBlock)}{emptyLeaf(section, key)}</>;
+    // Phần người học không viết được (phần chung của bài nhóm) thì không có ô Bài làm.
+    const answerable = !section.heading || inPart(section.heading.id);
+    if (!guided || !answerable) return <>{section.blocks.map(renderBlock)}{emptyLeaf(section, key)}</>;
     const firstAnswer = section.blocks.findIndex((block) => block.origin === "STUDENT" || block.type === "DIAGRAM" || block.type === "TABLE");
     const splitAt = firstAnswer < 0 ? section.blocks.length : firstAnswer;
     return <>
@@ -1423,6 +1440,7 @@ export function DocumentEditor({
             onDragEnd={authoring ? () => { setDragKey(null); setDropAt(null); } : undefined}
             className={cx(HEADING_CLASS[headingStyle] ?? HEADING_CLASS.H1, "shrink-0 py-0.5 tabular-nums", authoring && "cursor-grab active:cursor-grabbing")}><SectionNumber value={numbers.get(key) ?? ""} /></span>
           <div className="min-w-0 flex-1">{renderBlock(heading)}</div>
+          {sectionActions?.[heading.id] && <div className="flex shrink-0 items-center gap-1.5 self-center">{sectionActions[heading.id]}</div>}
         </div>
         {/* Ô trắng của phần; bấm vào chỗ trống là viết tiếp ở dòng cuối. */}
         <div data-leaf-body className="mt-1 mb-1 rounded-md border border-black/10 bg-surface px-3 py-1.5"
@@ -1517,7 +1535,7 @@ export function DocumentEditor({
   const numbers = new Map<string, string>();
   const numberParts = (section: DocSection, path: number[]) => section.children.forEach((child, i) => {
     const counters = [...path, i + 1];
-    if (child.heading) numbers.set(child.heading.id, sectionNumber(counters));
+    if (child.heading) numbers.set(child.heading.id, sectionNumbers?.[child.heading.id] ?? sectionNumber(counters));
     numberParts(child, counters);
   });
   numberParts(tree, []);
@@ -1663,7 +1681,9 @@ export function DocumentEditor({
           {stepping && stepNav("top")}
           <div ref={content}>
             {titleField && (
-              <div data-block-id="TITLE" className="mb-2" onFocusCapture={() => { setInHeader(true); if (cursorLine) setCursorLine(null); }}>
+              // Thiếu tên bài khi hoàn tất, xếp lịch: viền đỏ quanh cả ô tên (yêu cầu 2026-11-12), hết khi gõ tên.
+              <div data-block-id="TITLE" data-invalid={titleField.invalid || undefined}
+                className={cx("mb-2", titleField.invalid && "rounded-lg px-2 py-1 outline-2 outline-danger")} onFocusCapture={() => { setInHeader(true); if (cursorLine) setCursorLine(null); }}>
                 {titleField.readOnly || readOnly
                   ? <h2 className={cx(TITLE_CLASS, alignClass(document.title?.align))}>{titleField.text ? <RunsView runs={titleRuns} /> : "Bài chưa đặt tên"}</h2>
                   : <RichText aria-label="Tên bài" runs={titleRuns} placeholder={titleField.placeholder}

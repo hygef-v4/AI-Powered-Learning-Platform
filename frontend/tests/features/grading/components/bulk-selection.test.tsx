@@ -2,6 +2,8 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { GradebookBatchControls } from "@/features/grading/components/GradebookBatchControls";
 const mocks = vi.hoisted(() => ({ listSubmissions: vi.fn(), dialog: vi.fn() }));
+const router = vi.hoisted(() => ({ push: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => router }));
 vi.mock("@/features/grading/api", () => ({ gradingApi: mocks }));
 vi.mock("@/features/grading/components/BatchActionDialog", () => ({ BatchActionDialog: (props: unknown) => { mocks.dialog(props); return <div>Confirm batch</div>; } }));
 const rows = Array.from({ length: 30 }, (_, i) => ({
@@ -74,4 +76,11 @@ it("renders one group root per row and handles a failed directory without action
   render(<GradebookBatchControls {...props} />);
   await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+});
+
+it("bấm cả dòng là mở trang chấm; không còn dòng đếm số sinh viên", async () => {
+  render(<GradebookBatchControls {...props} />);
+  fireEvent.click(await screen.findByText("Student 12"));
+  expect(router.push).toHaveBeenCalledWith(expect.stringContaining("e12"));
+  expect(screen.queryByText(/Hiển thị/)).not.toBeInTheDocument();
 });

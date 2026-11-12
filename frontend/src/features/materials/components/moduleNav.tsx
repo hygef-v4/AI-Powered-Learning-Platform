@@ -8,7 +8,8 @@
 import Link from "next/link";
 import { BackLink } from "@/shared/navigation/BackLink";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { apiFetch } from "@/shared/api/client";
 import { FADE_LABEL, type NavContext, type NavLocation } from "@/shared/layout/navigation";
 import { showErrorToast, showToast } from "@/shared/ui";
 import { cx } from "@/shared/ui/cx";
@@ -55,6 +56,18 @@ function sourceOf(pathname: string, classId?: string): Source | null {
 }
 
 export function moduleContext({ pathname, search }: NavLocation): NavContext | null {
+  // Trang làm Quiz, kết quả Quiz (`/quiz-attempts/{id}`, `.../result`) không mang lớp trên địa chỉ: đọc lớp và Quiz từ lượt
+  // làm rồi hiện cùng sidebar module với trang Quiz luyện tập (yêu cầu 2026-11-12).
+  const attempt = /^\/quiz-attempts\/([^/]+)(\/result)?$/.exec(pathname);
+  if (attempt) {
+    const attemptId = decodeURIComponent(attempt[1]!);
+    return {
+      key: `quiz-attempt-modules:${attemptId}`,
+      label: "Danh sách module",
+      header: <AttemptModuleNav attemptId={attemptId} submitted={Boolean(attempt[2])} />,
+      items: [],
+    };
+  }
   const classId = search.get("classId") ?? undefined;
   const source = sourceOf(pathname, classId);
   if (!source) return null;
@@ -64,6 +77,36 @@ export function moduleContext({ pathname, search }: NavLocation): NavContext | n
     header: <ModuleNav source={source} classId={classId} />,
     items: [],
   };
+}
+
+type AttemptOwner = { quizId: string; classId: string };
+
+/** Sidebar của một lượt làm Quiz: tìm Quiz và lớp của lượt (lượt đang làm hoặc đã nộp) rồi vẽ danh sách module. */
+function AttemptModuleNav({ attemptId, submitted }: { attemptId: string; submitted: boolean }) {
+  const [owner, setOwner] = useState<AttemptOwner | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    const path = `/api/v1/quiz-attempts/${encodeURIComponent(attemptId)}`;
+    const read = (suffix: string) => apiFetch<AttemptOwner>(`${path}${suffix}`, { signal: controller.signal });
+    // Lượt đã nộp chỉ đọc được qua kết quả, lượt đang làm chỉ đọc được qua trang làm: thử đúng loại trước.
+    read(submitted ? "/result" : "").catch(() => read(submitted ? "" : "/result")).then(
+      (found) => { if (!controller.signal.aborted) setOwner({ quizId: found.quizId, classId: found.classId }); },
+      () => {},
+    );
+    return () => controller.abort();
+  }, [attemptId, submitted]);
+  if (!owner) {
+    return (
+      <div className="mb-3 shrink-0 border-b border-line pb-3.5">
+        <BackLink href="/quiz-practice" title="Luyện tập Quiz"
+          className="inline-flex max-w-full items-center gap-2.5 rounded-md px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-muted transition-colors hover:text-ink">
+          <Icon name="arrow_back" size={17} className="shrink-0" />
+          <span className={FADE_LABEL}>Luyện tập Quiz</span>
+        </BackLink>
+      </div>
+    );
+  }
+  return <ModuleNav source={{ kind: "practice", id: owner.quizId }} classId={owner.classId} />;
 }
 
 function ModuleNav({ source, classId }: { source: Source; classId?: string }) {

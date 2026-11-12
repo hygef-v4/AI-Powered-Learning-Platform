@@ -68,6 +68,21 @@ class AssignmentCopyServiceTest {
     }
 
     @Test
+    void copyTakesTheKindChosenWhenCreatingAndKeepsTheSourceKindOtherwise() {
+        Assignment source = f.put(AssignmentScope.CLASS, AssignmentStatus.CLOSED, new DocumentModel(List.of()), true);
+        UUID target = UUID.randomUUID();
+
+        AssignmentViews.Detail practice = f.copies.copyToClass(f.teacher, target, source.id(), "Luyện tập 1",
+                edu.aiplatform.assignments.contract.SubmissionMode.INDIVIDUAL,
+                edu.aiplatform.assignments.contract.GradingMode.PRACTICE);
+        AssignmentViews.Detail same = f.copies.copyToClass(f.teacher, target, source.id(), "Bản sao");
+
+        assertThat(practice.gradingMode()).isEqualTo(edu.aiplatform.assignments.contract.GradingMode.PRACTICE);
+        assertThat(same.gradingMode()).isEqualTo(source.gradingMode());
+        assertThat(same.submissionMode()).isEqualTo(source.submissionMode());
+    }
+
+    @Test
     void copyBetweenClassesNeedsTeachingBothClasses() {
         Assignment source = f.put(AssignmentScope.CLASS, AssignmentStatus.CLOSED, new DocumentModel(List.of()), true);
         UUID target = UUID.randomUUID();

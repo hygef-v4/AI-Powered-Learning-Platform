@@ -104,6 +104,17 @@ class GroupWorkspaceServiceTest {
         var submission = service.workspace(member, document.id()).lastSubmission();
         assertThat(submission.authors()).containsExactlyElementsOf(authors);
         assertThat(submission.receiptHash()).isEqualTo("sha256:abc");
+        assertThat(submission.changedSince()).isFalse();
+
+        // Sửa sau khi nộp: bài lại Đang làm, trưởng nhóm nộp lại được.
+        GroupDocument edited = new GroupDocument(submitted.id(), submitted.groupId(), submitted.assignmentId(),
+                submitted.classId(), submitted.status(), submitted.sharedBlocks(), submitted.activityMonitoring(),
+                submitted.autoSubmitReason(), submitted.submittedDocument(), submitted.sectionAuthors(),
+                submitted.submittedBy(), submitted.submitMode(), submitted.submittedAt(), submitted.late(),
+                submitted.receiptHash(), submitted.warnings(), NOW.plusSeconds(60), submitted.version(),
+                submitted.createdAt());
+        when(documents.findById(document.id())).thenReturn(Optional.of(edited));
+        assertThat(service.workspace(member, document.id()).lastSubmission().changedSince()).isTrue();
     }
 
     @Test

@@ -3,7 +3,7 @@ import { useId, useState } from "react";
 import { Button, Field, TextInput } from "@/shared/ui";
 import { gradingApi } from "../api";
 import { formatErrorMessage } from "../model/format";
-import { formatPoints, type Evaluation } from "../model/types";
+import type { Evaluation } from "../model/types";
 
 export function MemberContributionPanel({
   root,
@@ -21,19 +21,9 @@ export function MemberContributionPanel({
   return (
     <section id="group-member-grades" aria-labelledby="group-member-grades-title" tabIndex={-1}
       className="@container scroll-mt-36 rounded-xl border border-line bg-surface px-4 py-3 sm:px-5">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 id="group-member-grades-title" className="text-sm font-semibold text-ink">
-          Điểm nhóm và thành viên
-        </h2>
-        <p className="text-xs text-muted">
-          Điểm nhóm <span className="font-semibold tabular-nums text-ink">
-            {formatPoints(root.score, root.maxScore)}
-          </span>
-        </p>
-      </div>
-      <p className="mt-1 text-xs text-muted">
-        Giảng viên xem xét đóng góp; hệ thống không suy điểm từ số thao tác.
-      </p>
+      <h2 id="group-member-grades-title" className="text-[16px] font-bold text-ink">
+        Điểm thành viên
+      </h2>
       <ul className="mt-3 divide-y divide-line-soft border-t border-line-soft">
         {members.map((member) => (
           <MemberRow

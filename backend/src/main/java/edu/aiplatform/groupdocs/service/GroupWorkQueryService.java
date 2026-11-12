@@ -64,7 +64,8 @@ public class GroupWorkQueryService implements IGroupWorkStatus, IGroupSubmission
     public Map<UUID, GroupWorkStatus> statusFor(UUID accountId, Collection<UUID> assignmentIds) {
         Map<UUID, GroupWorkStatus> result = new LinkedHashMap<>();
         for (GroupDocument d : documents.listByGroups(groups.listGroupIdsOf(accountId), assignmentIds)) {
-            result.put(d.assignmentId(), new GroupWorkStatus(d.assignmentId(), d.id(), d.submitted(), d.submittedAt()));
+            result.put(d.assignmentId(), new GroupWorkStatus(d.assignmentId(), d.id(), d.submitted(), d.submittedAt(),
+                    d.submitted() && d.changedSinceSubmit()));
         }
         return result;
     }

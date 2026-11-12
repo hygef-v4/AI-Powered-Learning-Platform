@@ -47,10 +47,10 @@ export function ScheduleForm({ assignment, mode, onSubmit }: Props) {
   // Chỉ bài Luyện tập có số lượt; bài có chấm nộp bao nhiêu lần cũng được khi còn hạn (yêu cầu 2026-11-10).
   const practice = assignment.gradingMode === "PRACTICE";
   const [scheduled, setScheduled] = useState(mode === "change" && !!assignment.opensAt);
-  const [opens, setOpens] = useState<When>(split(assignment.opensAt, "07:00"));
-  const [closes, setCloses] = useState<When>(split(assignment.closesAt, "23:59"));
+  const [opens, setOpens] = useState<When>(split(assignment.opensAt, "00:00"));
+  const [closes, setCloses] = useState<When>(split(assignment.closesAt, "00:00"));
   const [allowLate, setAllowLate] = useState(!!assignment.lateUntil);
-  const [late, setLate] = useState<When>(split(assignment.lateUntil, "23:59"));
+  const [late, setLate] = useState<When>(split(assignment.lateUntil, "00:00"));
   const [maxAttempts, setMaxAttempts] = useState(String(assignment.maxAttempts ?? 1));
   const [confirmGroups, setConfirmGroups] = useState(false);
   const [groupWarnings, setGroupWarnings] = useState<string[]>([]);

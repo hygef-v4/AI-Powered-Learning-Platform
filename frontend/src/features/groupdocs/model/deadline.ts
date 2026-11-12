@@ -54,3 +54,16 @@ export function describeDeadline(
   if (!view.lastSubmission) details.push("Nhóm chưa nộp bản nào; trưởng nhóm nên nộp trước hạn.");
   return { tone: late || remaining <= 5 * 60_000 ? "danger" : "warning", title, details };
 }
+
+/** Thời gian còn lại tới `deadline` ("2 ngày 3 giờ", "45 phút"); đã qua hạn hoặc không có hạn thì `null`. */
+export function formatRemaining(deadline: string | null, now: number): string | null {
+  if (!deadline) return null;
+  const ms = Date.parse(deadline) - now;
+  if (ms <= 0) return null;
+  const minutes = Math.floor(ms / 60_000);
+  const days = Math.floor(minutes / 1440);
+  const hours = Math.floor((minutes % 1440) / 60);
+  if (days > 0) return `${days} ngày ${hours} giờ`;
+  if (hours > 0) return `${hours} giờ ${minutes % 60} phút`;
+  return `${Math.max(1, minutes)} phút`;
+}

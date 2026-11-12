@@ -13501,3 +13501,12 @@ bạn có thể tiếp tục phiên này không"
 **Context**: CONSTRUCTION — đồng bộ staging cho PR #76.
 
 ---
+
+## Gỡ xung đột PR #76 lần 2
+**Timestamp**: 2026-11-12T02:15:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tiếp tục"
+**AI Response**: "CI của PR #76 xanh (backend, frontend, deploy-script, GitGuardian) nhưng staging lại có commit mới (1a36439b, 456356a5) nên PR xung đột. Merge origin/staging: xung đột ở api/index.ts (giữ importDraft, nhận listAiTemplates(own)), CreateAssignmentDialog.tsx (mặc định EXISTING, giữ templateFiles), AssignmentFormPage.tsx (giữ Nhập đề từ tệp và ExamImportDialog, nhận downloadDocx, nhãn Tải đề (DOCX), AiReviseChat nổi). Sửa test ảnh đề cũ chọn Đề mới trước. Docker Desktop đã tắt giữa chừng, khởi động lại. Xóa .next/types cũ (output build, gitignored) rồi next typegen. Backend mvn verify 2273/2273 BUILD SUCCESS; frontend Vitest 1018/1018, tsc, eslint sạch. Commit merge và push."
+**Context**: CONSTRUCTION — đồng bộ staging cho PR #76.
+
+---

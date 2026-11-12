@@ -89,7 +89,14 @@ export function AssignmentListCard({ page, classId }: { page: ReturnType<typeof 
               {classId && <Td className="whitespace-nowrap">{row.scope === "SUBJECT" ? "Môn" : "Lớp"}</Td>}
               <Td className="whitespace-nowrap"><span className="font-mono text-xs text-muted">{formatDateTime(row.closesAt)}</span></Td>
               <Td><Pill tone={statusTones[row.status]}>{statusLabels[row.status]}</Pill></Td>
-              {classId && <Td><SlotOutlet slot={assignmentRowActions} props={{ assignmentId: row.id, classId, practice: row.gradingMode === "PRACTICE" }} /></Td>}
+              {classId && (
+                <Td>
+                  {/* Bài nháp, bài đã hoàn tất chưa giao nên chưa có bài nộp: không có nút sang trang Chấm điểm (yêu cầu 2026-11-12). */}
+                  {row.status !== "DRAFT" && row.status !== "REVIEWED" && (
+                    <SlotOutlet slot={assignmentRowActions} props={{ assignmentId: row.id, classId, practice: row.gradingMode === "PRACTICE" }} />
+                  )}
+                </Td>
+              )}
               <Td className="text-faint"><Icon name="chevron_right" size={18} /></Td>
             </ClickableRow>
           ))}

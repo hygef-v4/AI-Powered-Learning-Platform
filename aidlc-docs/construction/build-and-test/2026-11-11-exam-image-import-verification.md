@@ -59,6 +59,15 @@ Sau các bản sửa: backend `mvn verify` 2201/2201, BUILD SUCCESS; frontend Vi
 
 Merge 28 commit của staging (PR #70–#75, gồm #72 gắn ciphertext key AI với kết nối, và tính năng sinh viên tự chia nhóm). Có một xung đột mã ở `AiTaskJobHandler.dispatch`: giữ tham số ảnh của nhánh này và dùng `cipher.decryptConnectionKey(connection)` của staging. `audit.md` và `aidlc-state.md` giữ mục của cả hai nhánh. Sau merge: backend `mvn verify` 2264/2264, BUILD SUCCESS; frontend Vitest 998/998 (141 file), tsc, eslint sạch. Không thử lại trên trình duyệt sau merge.
 
+### Merge staging lần 3 (2026-11-12, cho PR #76)
+
+Staging thêm `1a36439b` (không gian làm bài nhóm) và `456356a5` (trợ lý AI sửa đề nổi, xuất DOCX, popup tạo bài mặc định "Đề có sẵn"). Xung đột ở 3 tệp frontend:
+- `api/index.ts`: giữ `importDraft`, nhận `listAiTemplates(own)` của staging.
+- `CreateAssignmentDialog.tsx`: mặc định `EXISTING` của staging, giữ `templateFiles` nhiều tệp.
+- `AssignmentFormPage.tsx`: giữ mục "Nhập đề từ tệp" và `ExamImportDialog`, nhận `downloadDocx`, nhãn "Tải đề (DOCX)" và `AiReviseChat` nổi.
+
+Test "ảnh đề cũ" của popup tạo bài thêm bước chọn "Đề mới", vì mặc định giờ là "Đề có sẵn". Sau merge: backend `mvn verify` 2273/2273, BUILD SUCCESS; frontend Vitest 1018/1018 (146 file), tsc, eslint sạch. Chưa thử lại trên trình duyệt.
+
 ### Còn tồn tại
 
 - Khung cắt hình do AI ước lượng hơi rộng: với ảnh chụp nghiêng, hình dính thêm một dòng chữ phía trên.
