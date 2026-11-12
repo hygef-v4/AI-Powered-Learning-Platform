@@ -106,7 +106,8 @@ class AcademicsApiContractTest {
     }
 
     @Test void subjectSummariesExposeStatusCountsAndDetail() throws Exception {
-        var summary = new SubjectSummary(subjectId, "CS101", "Computing", SubjectStatus.ACTIVE,
+        var summary = new SubjectSummary(subjectId, "CS101", "Computing", "Nhập môn điện toán",
+                SubjectStatus.ACTIVE,
                 Map.of(ClassStatus.DRAFT, 1L, ClassStatus.OPEN, 2L, ClassStatus.ARCHIVED, 3L));
         when(academicsService.listManagedSubjects(serverActor)).thenReturn(List.of(summary));
         when(academicsService.loadManagedSubject(serverActor, subjectId)).thenReturn(summary);
@@ -115,6 +116,7 @@ class AcademicsApiContractTest {
                 .andExpect(jsonPath("$[0].classCounts.OPEN").value(2));
         mvc.perform(get("/api/v1/manager/subjects/" + subjectId)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(subjectId.toString()))
+                .andExpect(jsonPath("$.description").value("Nhập môn điện toán"))
                 .andExpect(jsonPath("$.classCounts.ARCHIVED").value(3));
         verify(academicsService).listManagedSubjects(serverActor);
         verify(academicsService).loadManagedSubject(serverActor, subjectId);

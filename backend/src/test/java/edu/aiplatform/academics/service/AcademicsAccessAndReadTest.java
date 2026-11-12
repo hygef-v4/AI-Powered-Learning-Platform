@@ -323,7 +323,7 @@ class AcademicsAccessAndReadTest {
     @Test void managedSubjectSummaryCountsEveryStatusAndSuppliesZeroForAbsentStatus() {
         when(academicsReadRepository.listOfSubject(subjectId)).thenReturn(List.of(course(classId,ClassStatus.OPEN,teacherId),course(UUID.randomUUID(),ClassStatus.OPEN,teacherId),course(UUID.randomUUID(),ClassStatus.DRAFT,null)));
         SubjectSummary result = academicsService.loadManagedSubject(actor(Role.SUBJECT_MANAGER),subjectId);
-        assertThat(result).isEqualTo(new SubjectSummary(subjectId,"CS101","Computer Science",SubjectStatus.ACTIVE,
+        assertThat(result).isEqualTo(new SubjectSummary(subjectId,"CS101","Computer Science","Nhập môn khoa học máy tính",SubjectStatus.ACTIVE,
                 Map.of(ClassStatus.DRAFT,1L,ClassStatus.OPEN,2L,ClassStatus.ARCHIVED,0L)));
         verify(academicsReadRepository).listOfSubject(subjectId);
         verifyNoInteractions(audit);
@@ -464,7 +464,7 @@ class AcademicsAccessAndReadTest {
         return new AccountContact(id,role.name().toLowerCase(Locale.ROOT)+"@example.com",role+" name",role,status);
     }
     private Person person(AccountContact contact) {return new Person(contact.accountId(),contact.displayName(),contact.email());}
-    private SubjectRef subject(UUID id,UUID owner) {return new SubjectRef(id,"CS101","Computer Science",SubjectStatus.ACTIVE,owner);}
+    private SubjectRef subject(UUID id,UUID owner) {return new SubjectRef(id,"CS101","Computer Science",SubjectStatus.ACTIVE,owner,"Nhập môn khoa học máy tính");}
     private CourseClass course(UUID id,ClassStatus status,UUID assignedTeacher) {
         return new CourseClass(id,subjectId,"CS101-A","Algorithms",null,status,assignedTeacher,true,now.minusSeconds(3600),now,7);
     }

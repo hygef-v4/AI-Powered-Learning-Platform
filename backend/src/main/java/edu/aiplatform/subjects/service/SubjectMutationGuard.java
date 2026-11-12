@@ -48,6 +48,7 @@ public class SubjectMutationGuard implements ISubjectMutationGuard {
                 subject.code().value(),
                 subject.name(),
                 subject.status(),
-                subject.managerId());
+                subject.managerId(),
+                subject.description());
     }
 }

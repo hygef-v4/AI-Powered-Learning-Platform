@@ -542,7 +542,7 @@ public class AcademicsService {
         academicsReadRepository.listOfSubject(subject.subjectId())
                 .forEach(courseClass -> counts.merge(courseClass.status(), 1L, Long::sum));
         return new SubjectSummary(subject.subjectId(), subject.code(), subject.name(),
-                subject.status(), Map.copyOf(counts));
+                subject.description(), subject.status(), Map.copyOf(counts));
     }
 
     private Student mapStudentView(Enrollment enrollment) {

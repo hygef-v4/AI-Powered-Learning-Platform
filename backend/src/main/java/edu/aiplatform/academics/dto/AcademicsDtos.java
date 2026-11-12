@@ -17,8 +17,8 @@ public final class AcademicsDtos {
     public record Subject(UUID id, String code, String name) {
     }
 
-    public record SubjectSummary(UUID id, String code, String name, SubjectStatus status,
-            Map<ClassStatus, Long> classCounts) {
+    public record SubjectSummary(UUID id, String code, String name, String description,
+            SubjectStatus status, Map<ClassStatus, Long> classCounts) {
     }
 
     public record Student(UUID accountId, String name, String email, Instant enrolledAt,
