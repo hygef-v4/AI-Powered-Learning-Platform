@@ -13300,6 +13300,97 @@ bạn có thể tiếp tục phiên này không"
 **User Input:** "giúp tôi commit"
 **AI Response:** Reviewed all pending changes on fix/u05-u09-u15 and created separate feature commits with their own specs, tests and validation reports:7466539b for matrix gradebook/matching CSV-XLSX exports and97ebab28 for student overview/announcement summary removal. Fresh precommit26 related frontend tests and19 backend export/assembly/controller tests pass; git diff --check clean. Recording shared AI-DLC state/audit separately. Previous full checks and live backend export reload limitation remain documented without claiming a new deployment. No push, merge, deploy, backend restart or data writes.
 **Context:** Authorized local commits only; shared docs commit follows the two feature commits.
+## Two-tier AI prompt guardrail — workspace detection, requirements, code generation
+**Timestamp**: 2026-11-11T16:16:16Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Bạn là một Senior Software Architect & AI Security Engineer. Tôi đang phát triển một hệ thống web hỗ trợ giảng dạy và chấm bài bằng AI. Hiện tại hệ thống có nhiều điểm (entry points) cho phép người dùng nhập văn bản/prompt gửi tới AI (ví dụ: nút "Sửa đề bằng AI", tùy chỉnh barem điểm, tiêu chí chấm, phản hồi bài làm, giải thích đáp án, v.v.).
+
+Tôi cần bạn tái cấu trúc (refactor) và viết code để xây dựng một cơ chế Validation/Guardrail tập trung, áp dụng triệt để cho TẤT CẢ các điểm tiếp nhận prompt người dùng trước khi gửi tới LLM.
+
+---
+
+### YÊU CẦU KIẾN TRÚC & TRIỂN KHAI
+
+#### 1. Kiến trúc Guardrail hai tầng (Two-Tier Guardrail Architecture)
+
+Xây dựng một pipeline kiểm duyệt gồm hai tầng, xử lý các yêu cầu theo thứ tự tuần tự:
+
+- **Tầng 1 (Rule-based / Regex & Heuristic - Nhanh & Miễn phí):**
+  - Giới hạn số lượng ký tự tối đa và tối thiểu (max length theo từng context).
+  - Sử dụng Regex để lọc các mẫu prompt injection phổ biến: `ignore previous instructions`, `bypass rules`, `bây giờ bạn là`, `<script>`, SQL payload và các chuỗi Base64/Hex có dấu hiệu được sử dụng để vượt qua bộ lọc bảo mật.
+  - Chặn các pattern có dấu hiệu dò tìm system prompt hoặc thực hiện các hành vi nhập vai nguy hiểm.
+
+- **Tầng 2 (Context & Policy Validation - Logic-based & Miễn phí):**
+  - Sử dụng Context Validation và Policy Engine nội bộ, dựa trên cơ chế đánh giá logic xác định (Deterministic Logical Evaluation), không sử dụng Regex, AI, LLM hoặc API bên ngoài.
+  - Kiểm tra ý định của người dùng có phù hợp với chức năng và phạm vi hoạt động được cho phép của ứng dụng hay không.
+  - Phân tích ngữ cảnh hội thoại để phân biệt nội dung được trích dẫn hợp lệ với các chỉ dẫn thực sự nhắm đến hệ thống.
+  - Sử dụng State Machine để xác thực trạng thái hội thoại và đảm bảo yêu cầu tuân theo quy trình xử lý của ứng dụng.
+  - Sử dụng RBAC (Role-Based Access Control) để xác minh quyền hạn người dùng và ngăn chặn hành vi tự ý nâng cấp đặc quyền.
+  - Sử dụng Logical Policy Evaluation để phát hiện các yêu cầu vi phạm quy tắc bảo mật hoặc chính sách nghiệp vụ đã được định nghĩa trước.
+  - Phân loại yêu cầu thành các nhóm sau: `VALID`, `PROMPT_INJECTION`, `OFF_TOPIC`, `HARMFUL_MALICIOUS`.
+  - Tầng 2 phải tập trung vào kiểm tra ngữ cảnh, quyền hạn, trạng thái phiên và đánh giá logic chính sách, thay vì lặp lại các cơ chế Regex và Pattern Matching của Tầng 1.
+
+- **Quy tắc thực thi Pipeline (Pipeline Execution Rules):**
+  - Nếu Tầng 1 phát hiện vi phạm, từ chối yêu cầu ngay lập tức.
+  - Chỉ những yêu cầu vượt qua Tầng 1 mới được chuyển sang Tầng 2.
+  - Nếu Tầng 2 phát hiện vi phạm hoặc gặp lỗi trong quá trình xác thực, từ chối yêu cầu ngay lập tức (Fail-closed).
+  - Chỉ những yêu cầu vượt qua thành công cả hai tầng mới được chuyển đến Main LLM.
+  - Nếu một trong hai tầng thất bại, từ chối yêu cầu ngay lập tức, trả về HTTP 400 cùng thông báo thân thiện và không tiêu tốn credit gọi Main LLM API.
+
+#### 2. Phân loại theo Context (Context-Aware Validation)
+Không phải chỗ nào cũng có cùng phạm vi kiểm duyệt. Hãy thiết kế Validator hỗ trợ nhiều context thông qua Enum/Factory Pattern:
+- `EXAM_EDITING`: Chỉ cho phép dịch đề, đổi ngữ cảnh, thêm/bớt yêu cầu bài tập, đổi độ khó.
+- `GRADING_RUBRIC`: Chỉ cho phép chỉnh barem, phân phối điểm, tiêu chí đánh giá bài làm.
+- `STUDENT_FEEDBACK`: Chỉ cho phép giải thích lỗi sai, gợi ý hướng tiếp cận, cấm giải hộ toàn bộ bài.
+- `GENERAL_CHAT/OTHER`: Phù hợp với tác vụ cụ thể khác.
+
+#### 3. Kỹ thuật chống Jailbreak khi ghép Prompt chính
+Viết một hàm tiện ích (utility) chuẩn hóa:
+- Đưa mọi input người dùng vào các block phân định rõ ràng (Delimiters như `<user_request>...</user_request>`).
+- Cấu hình System Prompt mẫu có chỉ thị rõ ràng: xem dữ liệu trong thẻ phân định là dữ liệu thô (untrusted data), tuyệt đối không coi là chỉ thị hệ thống.
+
+### MÔI TRƯỜNG & STACK KỸ THUẬT:
+(Hãy kiểm tra codebase của dự án tôi để tương thích, hoặc nếu viết mẫu, hãy áp dụng TypeScript / Node.js / Next.js API Routes / Anthropic SDK).
+
+Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất vị trí đặt các file mới, và viết code hoàn chỉnh kèm unit test mẫu cho lớp Validator này."
+**AI Response**: "Workspace detection: brownfield, reuse existing reverse-engineering artifacts; backend is Java 17/Spring Boot and every LLM call goes through U06 IAiTask.submit, so the guardrail is implemented in Java (TypeScript/Next.js was only the fallback stack). Requirements analysis (Standard): user specification complete; decisions recorded in the plan (placement in ai.contract/ai.service, early check before draft persistence plus central re-check in AiTaskService, submissions/materials wrapped instead of filtered, fail-closed category HARMFUL_MALICIOUS). Free-text entry points found: assignment AI draft create/revise, quiz/bank AI questions (incl. MCP) and quiz source retry; grading proposal and practice feedback carry no user free text. Implemented Tier 1 rule scanner with normalization (NFKC, invisible chars, diacritics, leetspeak, spaced letters, URL/HTML decoding, Base64/Hex re-scan), Tier 2 policy engine (action/context, RBAC, state machine, quoted-vs-directive analysis, privilege claims, harmful/forbidden/off-topic lexicons, no regex), UntrustedPrompt delimiters and system directive applied to five prompt builders. HTTP 400 AI_PROMPT_REJECTED before draft rows, quota or AI task. Created branch feat/ai-prompt-guardrail --no-track from main. Tests: related scope passed (guardrail 56 + UntrustedPrompt 6 + AI task, quiz, assignment, practice feedback, grading, ArchitectureTest); one existing quiz assertion updated for the stronger &lt; escape. Full backend verify result recorded in the plan. No schema/config/dependency/frontend change, no browser check, no commit/push."
+**Context**: Inception (workspace detection, requirements) and Construction (code generation, build and test) for U06 two-tier prompt guardrail; Security Baseline SECURITY-03/05/08/15 applicable, others N/A; PBT disabled.
+
+---
+
+## Two-tier AI prompt guardrail — code approval
+**Timestamp**: 2026-11-11T16:28:21Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Approve the code"
+**AI Response**: "Recorded approval of the U06 prompt guardrail code generation; full backend verify already passed (2,220 tests, 0 failures). Build and Test complete; Operations remains a placeholder. No commit, push, PR or browser check performed."
+**Context**: Construction — Code Generation approved; Build and Test complete.
+
+---
+
+## Two-tier AI prompt guardrail — browser check and commit
+**Timestamp**: 2026-11-12T01:58:38Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tiếp tục"
+**AI Response**: "Continued the two open items. Ran the branch backend separately on port 8081 with Flyway disabled (shared local DB and another session's stack untouched), frontend dev pointed at it, logged in as the local test teacher. An injection-style request in the AI revise chat returned 400 AI_PROMPT_REJECTED, the chat showed the friendly message and \"Đề chưa thay đổi.\", no draft or AI task row was created, and the log contains only the rule id. No valid request sent (would call the real provider). Temporary container and env file removed. Committed the change on feat/ai-prompt-guardrail; no push or PR."
+**Context**: Construction — Build and Test browser verification; local commit.
+
+---
+
+## Two-tier AI prompt guardrail — staging merge, push and PR
+**Timestamp**: 2026-11-12T02:12:20Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Push, PR to staging"
+**AI Response**: "Branch conflicted with origin/staging (16 commits ahead). Merged staging into feat/ai-prompt-guardrail: kept staging's template/reference support for AI revise and wrapped template, materials, instruction and document in untrusted-data tags; added format_template to reserved delimiters and the Tier 1 spoof rule; updated the revision prompt test. Kept both sides of aidlc-state.md and audit.md in chronological order. Full backend verify on the merge: 2,287 tests, 0 failures. Pushed the branch to its own remote ref and opened a PR into staging without Claude attribution; no merge."
+**Context**: Construction — integration with staging and PR publication.
+
+---
+
+## PR77 auto-fix — frontend CI
+**Timestamp**: 2026-11-12T02:34:04Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Turn on Auto-fix"
+**AI Response**: "Enabled Auto-fix for PR77. CI frontend job failed at aefadf60 in gradebook-layout.test.tsx (group gradebook test asserted listSubmissions was called before the request started under CI load); frontend code identical to staging and the test passed locally in isolation. Changed the assertion to waitFor; grading tests 194/194, full frontend 1,007/1,007, ESLint clean. Committed 07b1bd8b and pushed to the PR branch; production code unchanged."
+**Context**: Construction — PR CI fix under Auto-fix.
 
 ---
 
@@ -13508,5 +13599,50 @@ bạn có thể tiếp tục phiên này không"
 **User Input**: "tiếp tục"
 **AI Response**: "CI của PR #76 xanh (backend, frontend, deploy-script, GitGuardian) nhưng staging lại có commit mới (1a36439b, 456356a5) nên PR xung đột. Merge origin/staging: xung đột ở api/index.ts (giữ importDraft, nhận listAiTemplates(own)), CreateAssignmentDialog.tsx (mặc định EXISTING, giữ templateFiles), AssignmentFormPage.tsx (giữ Nhập đề từ tệp và ExamImportDialog, nhận downloadDocx, nhãn Tải đề (DOCX), AiReviseChat nổi). Sửa test ảnh đề cũ chọn Đề mới trước. Docker Desktop đã tắt giữa chừng, khởi động lại. Xóa .next/types cũ (output build, gitignored) rồi next typegen. Backend mvn verify 2273/2273 BUILD SUCCESS; frontend Vitest 1018/1018, tsc, eslint sạch. Commit merge và push."
 **Context**: CONSTRUCTION — đồng bộ staging cho PR #76.
+
+---
+
+## PR77 auto-fix — merge conflict with staging
+**Timestamp**: 2026-11-12T02:47:33Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Turn on Auto-fix"
+**AI Response**: "Auto-fix reported PR77 conflicting with staging. Fetched origin/staging and merged it (no rebase/force-push). AiTaskService: kept both the guardrail free-text check and staging's AI image validation/vision connection filter; aidlc-state.md: kept both sections. Added the guardrail argument to staging's new vision-limited AiTaskFlowTest constructor call. New ASSIGNMENT_IMPORT (image/PDF) task carries no user free text, so it needs no guardrail input. Full backend verify on the merge: 2,342 tests, 0 failures. Committed and pushed to the PR branch."
+**Context**: Construction — PR conflict resolution under Auto-fix.
+
+---
+
+## Merge PR #76 vào staging
+**Timestamp**: 2026-11-12T02:33:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem đã có thể merge vào main chưa cho tôi" / "Merge #76"
+**AI Response**: "Kiểm tra: PR #76 vào staging MERGEABLE CLEAN, CI xanh (backend, frontend, deploy-script, GitGuardian), chưa có review; không đọc được quy tắc bảo vệ nhánh (404). Lên main phải qua PR staging → main, kéo theo 15 commit khác của staging; merge thử staging vào main không xung đột. Theo yêu cầu, merge PR #76 vào staging bằng merge commit a9ae40a9 lúc 2026-11-12T02:32:46Z. Chưa thử lại trên trình duyệt sau các lần merge staging; chưa mở PR staging → main."
+**Context**: OPERATIONS — đưa tính năng nhập đề vào staging.
+
+---
+
+## Merge PR #78 staging vào main
+**Timestamp**: 2026-11-12T02:50:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Mở PR lên main" / "kiểm tra CI của PR #78 xong chưa, xem còn xung đột gì không, kiểm tra xem có thể merge vào main chưa" / "Merge #78"
+**AI Response**: "Mở PR #78 staging → main (release: nhập đề từ ảnh/PDF, tự chia nhóm, bảng điểm ma trận, không gian làm bài nhóm, trợ lý AI nổi, xuất DOCX). CI xanh (backend, frontend, deploy-script, GitGuardian), MERGEABLE CLEAN, chưa có review. Báo người dùng: merge vào main build image và VPS tự deploy production, chạy 2 migration mới. Theo yêu cầu, merge PR #78 bằng merge commit a85e3f19 lúc 2026-11-12T02:49:21Z; theo dõi CI run 43144023309 trên main."
+**Context**: OPERATIONS — phát hành lên main.
+
+---
+
+## Kiểm tra deploy production a85e3f19
+**Timestamp**: 2026-11-12T03:06:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "ssh và kiểm tra xem đã deploy thành công hay chưa cho tôi"
+**AI Response**: "SSH vào VPS (alapedu.online) bằng khóa alap_vps_deploy, chỉ đọc. platform-deploy: sao lưu database predeploy-20261112T030106Z-8923d45d509b.dump, deploy a85e3f19 lúc 10:01 giờ VN, báo 'xong, mọi dịch vụ khỏe'; bản quay về được 8923d45d. Backend, worker, frontend chạy image a85e3f19, đều healthy. Flyway áp dụng 2 migration (20261111.1300 create assignment import pages, 20261111.1800 group self formation). Không có dòng ERROR/Exception trong log backend và worker từ lúc khởi động. https://alapedu.online/ trả 200. Chưa thử luồng nhập đề trên production."
+**Context**: OPERATIONS — xác nhận deploy production.
+
+---
+
+## Sửa lỗi — ghi rõ lý do nhà cung cấp AI không trả nội dung
+**Timestamp**: 2026-11-12T03:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "có cách nào để không cần dùng AI có model đọc được ảnh vẫn có thể chuyển từ ảnh sang đề không" (kèm ảnh popup Nhập đề từ tệp báo "Nhà cung cấp AI không trả nội dung") / "Ghi rõ lỗi Gemini"
+**AI Response**: "Đọc log production (chỉ đọc): tác vụ ASSIGNMENT_IMPORT gọi GEMINI gemini-3.1-flash-lite, HTTP 200 sau 5,5 s, CHARGED, không có chữ; không phải thiếu model đọc ảnh. Trình bày hướng OCR (Tesseract) + AI chữ hoặc chỉ OCR làm phương án không cần model đọc ảnh, chưa làm. Theo lựa chọn của người dùng, sửa lỗi nhỏ, bỏ qua các stage thiết kế: nhánh fix/gemini-empty-reason (--no-track từ origin/staging@3fd7bbee). HttpProviderGateway khi chữ rỗng báo mã lý do kèm giải thích (Gemini promptFeedback.blockReason/finishReason, OpenAI content_filter/refusal, Claude refusal), log WARN không kèm nội dung; BR-U06-61. Test HttpProviderGatewayTest 21/21, AiTaskFlowTest 32/32, ArchitectureTest 3/3; mvn verify 2343/2343 BUILD SUCCESS. Commit trên nhánh, chưa push."
+**Context**: CONSTRUCTION — sửa lỗi nhỏ U06.
 
 ---

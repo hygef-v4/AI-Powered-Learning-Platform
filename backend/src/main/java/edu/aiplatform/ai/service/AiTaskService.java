@@ -13,6 +13,8 @@ import edu.aiplatform.ai.contract.AiTaskView;
 import edu.aiplatform.ai.contract.AiTokenEstimate;
 import edu.aiplatform.ai.contract.AiUsageSummary;
 import edu.aiplatform.ai.contract.IAiTask;
+import edu.aiplatform.ai.contract.IPromptGuardrail;
+import edu.aiplatform.ai.contract.UserPromptInput;
 import edu.aiplatform.ai.model.AiConnection;
 import edu.aiplatform.ai.model.AiConnection.Status;
 import edu.aiplatform.ai.repository.AiConnectionRepository;
@@ -56,6 +58,11 @@ public class AiTaskService implements IAiTask {
     public static final int MAX_ACTIVE = 3;
     static final int MAX_REQUEST_REF = 200;
     static final int MAX_PROMPT_CHARS = 400_000;
+    /**
+     * Loại task nhận chữ tự do của người dùng: bắt buộc kèm {@link UserPromptInput} để guardrail kiểm lại tập trung,
+     * không unit nào gửi được chữ tự do tới AI mà bỏ qua guardrail.
+     */
+    static final Set<String> FREE_TEXT_TASK_TYPES = Set.of("ASSIGNMENT_DRAFT", "QUIZ_QUESTION_DRAFT");
     static final int MAX_IMAGES = 10;
     static final Set<String> IMAGE_TYPES = Set.of("image/jpeg", "image/png");
 
@@ -67,6 +74,7 @@ public class AiTaskService implements IAiTask {
     private final ProviderCatalog catalog;
     private final JsonSchemaChecker schemas;
     private final AiAccess access;
+    private final IPromptGuardrail promptGuardrail;
     private final AiTaskDelivery delivery;
     private final IJob jobs;
     private final ObjectMapper json;
@@ -76,7 +84,8 @@ public class AiTaskService implements IAiTask {
 
     public AiTaskService(AiTaskRepository tasks, AiConnectionRepository connections, AiUsageRepository usage,
                          AiTaskResultHandlerRegistry handlers, QuotaReservationService quota, ProviderCatalog catalog,
-                         JsonSchemaChecker schemas, AiAccess access, AiTaskDelivery delivery, IJob jobs, ObjectMapper json,
+                         JsonSchemaChecker schemas, AiAccess access, IPromptGuardrail promptGuardrail,
+                         AiTaskDelivery delivery, IJob jobs, ObjectMapper json,
                          PlatformTransactionManager transactionManager, Clock clock) {
         this.tasks = tasks;
         this.connections = connections;
@@ -86,6 +95,7 @@ public class AiTaskService implements IAiTask {
         this.catalog = catalog;
         this.schemas = schemas;
         this.access = access;
+        this.promptGuardrail = promptGuardrail;
         this.delivery = delivery;
         this.jobs = jobs;
         this.json = json;
@@ -102,6 +112,7 @@ public class AiTaskService implements IAiTask {
     @Transactional
     public AiTaskView submit(AiTaskRequest requested) {
         validate(requested);
+        requireGuardedInput(requested);
         String fingerprint = fingerprint(requested);
         Optional<AiTask> existing = tasks.findByRequestRef(requested.requestRef());
         if (existing.isPresent()) {
@@ -209,7 +220,7 @@ public class AiTaskService implements IAiTask {
         AiSourceChoice choice = order.get(0);
         return new AiTaskRequest(request.actor(), choice.source(), choice.provider(), request.taskType(),
                 request.targetRef(), request.inputVersion(), request.requestRef(), request.prompt(), request.outputSchema(),
-                request.maxOutputTokens());
+                request.maxOutputTokens(), request.userInput());
     }
 
     private List<AiSourceChoice> candidates(Actor actor, AiSource only, AiPrompt prompt, int maxOutputTokens) {
@@ -294,6 +305,25 @@ public class AiTaskService implements IAiTask {
         if (promptChars(request.prompt()) > MAX_PROMPT_CHARS) {
             throw ApiException.badRequest("AI_PROMPT_TOO_LARGE", "Nội dung gửi AI quá dài");
         }
+    }
+
+    /**
+     * Kiểm lại tập trung chữ tự do (phòng thủ nhiều lớp, unit gọi đã kiểm sớm trước khi lưu bản ghi): chạy trước khi giữ
+     * quota hay tạo task nên yêu cầu bị chặn không tốn credit. Chữ tự do phải thuộc đúng người gửi task.
+     */
+    private void requireGuardedInput(AiTaskRequest request) {
+        UserPromptInput userInput = request.userInput();
+        if (userInput == null) {
+            if (FREE_TEXT_TASK_TYPES.contains(request.taskType())) {
+                throw ApiException.badRequest(IPromptGuardrail.REJECTED_CODE,
+                        "Yêu cầu AI chưa qua bước kiểm duyệt nội dung nên chưa được gửi");
+            }
+            return;
+        }
+        if (userInput.actor() == null || !userInput.actor().equals(request.actor())) {
+            throw ApiException.badRequest(IPromptGuardrail.REJECTED_CODE, "Yêu cầu AI không khớp người gửi");
+        }
+        promptGuardrail.requireValid(userInput);
     }
 
     /** Ảnh trong prompt: tối đa 10, JPEG/PNG, nguồn đã đăng ký (BR-U06-54). */

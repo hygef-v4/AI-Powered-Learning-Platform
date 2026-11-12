@@ -115,7 +115,7 @@ final class AssignmentFixtures {
     final AssignmentCopyService copies = new AssignmentCopyService(assignments, rubrics, access, support,
             assignmentAudit, classScope, materials, clock);
     final AssignmentAiDraftService aiDrafts = new AssignmentAiDraftService(assignments, drafts, rubrics, support, access,
-            assignmentAudit, aiTasks, materials, json, artifacts, sourceTexts, documents, transactions, clock);
+            assignmentAudit, aiTasks, new edu.aiplatform.ai.service.PromptGuardrailService(), materials, json, artifacts, sourceTexts, documents, transactions, clock);
 
     AssignmentFixtures() {
         when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());

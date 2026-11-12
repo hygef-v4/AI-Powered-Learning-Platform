@@ -7,6 +7,7 @@ import edu.aiplatform.ai.contract.AiTaskRequest;
 import edu.aiplatform.ai.contract.AiTaskState;
 import edu.aiplatform.ai.contract.AiTaskView;
 import edu.aiplatform.ai.contract.IAiTask;
+import edu.aiplatform.ai.contract.IPromptGuardrail;
 import edu.aiplatform.ai.contract.MaterialText;
 import edu.aiplatform.ai.contract.SelectableMaterial;
 import edu.aiplatform.identity.contract.Actions;
@@ -70,6 +71,7 @@ public class QuizAiDraftService {
     private final ActiveSubjects activeSubjects;
     private final QuizReferenceMaterials materials;
     private final IAiTask ai;
+    private final IPromptGuardrail promptGuardrail;
     private final QuizAudit audit;
     private final QuestionDuplicates duplicates;
     private final TransactionOperations transactions;
@@ -78,7 +80,8 @@ public class QuizAiDraftService {
 
     public QuizAiDraftService(IQuizAiDraftRepository drafts, IQuizRepository quizzes, IQuestionRepository questions,
                               QuizSupport support, QuizAccess access, ActiveSubjects activeSubjects,
-                              QuizReferenceMaterials materials, IAiTask ai, QuizAudit audit,
+                              QuizReferenceMaterials materials, IAiTask ai, IPromptGuardrail promptGuardrail,
+                              QuizAudit audit,
                               QuestionDuplicates duplicates, TransactionOperations transactions, Clock clock, QuizSourceRetry sourceRetry) {
         this.drafts = drafts;
         this.quizzes = quizzes;
@@ -88,6 +91,7 @@ public class QuizAiDraftService {
         this.activeSubjects = activeSubjects;
         this.materials = materials;
         this.ai = ai;
+        this.promptGuardrail = promptGuardrail;
         this.audit = audit;
         this.duplicates = duplicates;
         this.transactions = transactions;
@@ -119,6 +123,7 @@ public class QuizAiDraftService {
         Prepared prepared = transactions.execute(status -> {
             Quiz quiz = support.loadEditable(actor, quizId, version);
             validate(request);
+            promptGuardrail.requireValid(QuizDraftPrompt.userInput(actor, request));
             Optional<QuizAiDraft> existing = existing(actor, request, DraftTarget.QUIZ, quizId);
             if (existing.isPresent()) {
                 return new Prepared(existing.get(), null, false);
@@ -140,6 +145,7 @@ public class QuizAiDraftService {
                     "SUBJECT_NOT_FOUND");
             activeSubjects.require(subjectId);
             validate(request);
+            promptGuardrail.requireValid(QuizDraftPrompt.userInput(actor, request));
             Optional<QuizAiDraft> existing = existing(actor, request, DraftTarget.BANK, subjectId);
             if (existing.isPresent()) {
                 return new Prepared(existing.get(), null, false);
@@ -185,7 +191,8 @@ public class QuizAiDraftService {
             task = ai.submit(new AiTaskRequest(actor, request.source(), request.provider(), QuizDraftPrompt.TASK_TYPE,
                     TARGET_PREFIX + draft.id(), draft.baseVersion() == null ? 0 : draft.baseVersion(),
                     request.requestRef(), QuizDraftPrompt.prompt(prepared.target(), request, texts),
-                    QuizDraftPrompt.schema(request.count()), QuizDraftPrompt.maxOutputTokens(request.count())));
+                    QuizDraftPrompt.schema(request.count()), QuizDraftPrompt.maxOutputTokens(request.count()),
+                    QuizDraftPrompt.userInput(actor, request)));
         } catch (ApiException failure) {
             return fail(draft, failure.code(), failure.getMessage());
         } catch (RuntimeException failure) {

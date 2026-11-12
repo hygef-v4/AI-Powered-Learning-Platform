@@ -15,6 +15,7 @@ import edu.aiplatform.ai.contract.AiTaskRequest;
 import edu.aiplatform.ai.contract.AiTaskResult;
 import edu.aiplatform.ai.contract.AiTaskState;
 import edu.aiplatform.ai.contract.AiTaskView;
+import edu.aiplatform.ai.contract.UntrustedPrompt;
 import edu.aiplatform.ai.contract.ApplyOutcome;
 import edu.aiplatform.ai.contract.IAiTask;
 import edu.aiplatform.assignments.contract.AssignmentContent;
@@ -297,9 +298,9 @@ public class PracticeFeedbackService {
         }
         String submission = documents.toPlainText(attempt.content());
         int room = Math.max(0, MAX_PROMPT_CHARS - user.length() - 40);
-        user.append("\n<bai_nop>\n").append(submission.length() > room ? submission.substring(0, room) : submission)
-                .append("\n</bai_nop>");
-        return new AiPrompt(system, user.toString());
+        user.append('\n').append(UntrustedPrompt.wrap(UntrustedPrompt.STUDENT_SUBMISSION_TAG,
+                submission.length() > room ? submission.substring(0, room) : submission));
+        return new AiPrompt(UntrustedPrompt.secureSystem(system), user.toString());
     }
 
     static WorkViews.Feedback view(PracticeFeedback f) {

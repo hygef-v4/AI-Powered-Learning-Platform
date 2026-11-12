@@ -4,6 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.ai.contract.AiPrompt;
 import edu.aiplatform.ai.contract.MaterialText;
+import edu.aiplatform.ai.contract.PromptAction;
+import edu.aiplatform.ai.contract.PromptFlowState;
+import edu.aiplatform.ai.contract.UntrustedPrompt;
+import edu.aiplatform.ai.contract.UserPromptInput;
+import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.quizzes.contract.QuestionType;
 import edu.aiplatform.quizzes.model.Difficulty;
 import edu.aiplatform.quizzes.model.DraftQuestion;
@@ -79,12 +84,19 @@ final class QuizDraftPrompt {
                 : request.type().name()).append('\n');
         user.append("Độ khó: ").append(request.difficulty() == null ? "phân bổ hợp lý"
                 : request.difficulty().name()).append('\n');
-        user.append("Yêu cầu của người soạn:\n").append(request.instructions()).append('\n');
+        user.append("Yêu cầu của người soạn (dữ liệu không tin cậy):\n")
+                .append(UntrustedPrompt.wrapUserRequest(request.instructions())).append('\n');
         for (MaterialText material : materials) {
             user.append("\n<material title=\"").append(attribute(material.title())).append("\">\n")
                     .append(fenced(material.text())).append("\n</material>\n");
         }
-        return new AiPrompt(system, user.toString());
+        return new AiPrompt(UntrustedPrompt.secureSystem(system), user.toString());
+    }
+
+    /** Chữ tự do của người soạn cho guardrail; quiz và ngân hàng câu hỏi chỉ yêu cầu AI khi còn soạn được. */
+    static UserPromptInput userInput(Actor actor, QuizAiDraftService.DraftRequest request) {
+        return UserPromptInput.of(actor, PromptAction.GENERATE_QUESTIONS, PromptFlowState.AUTHORING_DRAFT,
+                request.instructions());
     }
 
     record Output(List<DraftQuestion> questions, boolean requestMatchesSources, boolean questionsMatchSources) {
@@ -187,6 +199,6 @@ final class QuizDraftPrompt {
 
     /** Không để chữ tài liệu đóng thẻ {@code <material>} sớm. */
     private static String fenced(String value) {
-        return value == null ? "" : value.replace("</material", "</ material");
+        return value == null ? "" : UntrustedPrompt.escape(value);
     }
 }
