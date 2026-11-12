@@ -23,7 +23,7 @@ import {
 import { Alert, Button, Dialog, Field, Menu, MenuItem, Pill, showErrorToast, showToast } from "@/shared/ui";
 import { AiDraftDialog } from "../components/AiDraftDialog";
 import { AiReviseChat } from "../components/AiReviseChat";
-import { assignmentsApi, docxUrl, imageUrlFor } from "../api";
+import { assignmentsApi, downloadDocx, imageUrlFor } from "../api";
 import { AssignmentSettingsPanel, settingsOf, type Settings } from "../components/AssignmentSettingsPanel";
 import { errorMessage, formatTime, problemCode, problemIssues } from "../model/format";
 import { RubricEditor, cleanCriteria, rubricPointsMalformed } from "../components/RubricEditor";
@@ -206,6 +206,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const detailRef = useRef<AssignmentDetail | null>(null);
   // Bản mới nhất người dùng đã gõ, cập nhật ngay trong lúc sửa để lần lưu đang chờ không gửi bản cũ.
   const latest = useRef<Local>({ title, instructions, settings, skeleton, criteria });
+  const exporting = useRef(false);
   const dirty = useRef({ details: false, skeleton: false, rubrics: new Set<string>() });
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const conflictRef = useRef(false);
@@ -431,6 +432,14 @@ export function AssignmentFormPage({ id }: { id: string }) {
   function changed() {
     setUnsaved(true);
     setTick((value) => value + 1);
+    // Sửa bài đã hoàn tất thì bài về nháp (server cũng đổi khi lưu): nút lại là "Hoàn tất" (yêu cầu 2026-11-11).
+    const current = detailRef.current;
+    if (current?.status === "REVIEWED") {
+      const draft: AssignmentDetail = { ...current, status: "DRAFT",
+        permissions: { ...current.permissions, canReview: true, canPublish: false } };
+      detailRef.current = draft;
+      setDetail(draft);
+    }
   }
   function editTitle(value: string) {
     setTitle(value);
@@ -509,8 +518,19 @@ export function AssignmentFormPage({ id }: { id: string }) {
     }
   }
 
+  /** Lưu bản đang sửa rồi tải tệp về máy; đang tải thì không tải chồng, lỗi thì báo ở góc trên. */
   async function exportDocx(what: "skeleton" | "rubric") {
-    if (await save()) window.location.assign(docxUrl(id, what));
+    if (exporting.current) return;
+    exporting.current = true;
+    try {
+      if (!(await save())) return;
+      const name = (latest.current.title.trim() || "bai-tap").replace(/[\\/:*?"<>|\r\n]+/g, " ");
+      await downloadDocx(id, what, `${what === "rubric" ? "Rubric - " : ""}${name}.docx`);
+    } catch (error) {
+      notify(`Không tải được tệp ${what === "rubric" ? "rubric" : "đề"}. ${errorMessage(error)}`, "danger");
+    } finally {
+      exporting.current = false;
+    }
   }
 
   /** Xem trước (tùy chọn): lưu bản đang sửa rồi xem đề như sinh viên thấy khi làm bài (không có rubric). */
@@ -537,24 +557,43 @@ export function AssignmentFormPage({ id }: { id: string }) {
     notify(missingText(found), "danger");
   }
 
-  /**
-   * "Xếp lịch" ngay trên trang soạn hoặc trang xem trước (yêu cầu 2026-10-22, bỏ trạng thái Đã duyệt): lưu, kiểm sơ bộ
-   * tên bài và rubric rồi mở lịch; phát hành thẳng từ bản nháp, server kiểm đủ luật duyệt (BR-U07-32) khi phát hành.
-   */
-  async function openSchedule() {
-    // Xếp lịch: bỏ luôn các dòng mục chấm trống trên thẻ (server cũng không lưu chúng).
+  /** Lưu bản mới nhất, bỏ dòng mục chấm trống, kiểm sơ bộ tên bài và rubric; còn thiếu thì báo và trả false. */
+  async function saveAndCheck(): Promise<boolean> {
     const cleaned = Object.fromEntries(Object.entries(latest.current.criteria).map(([partId, list]) => [partId, cleanCriteria(list)]));
     latest.current = { ...latest.current, criteria: cleaned };
     setCriteria(cleaned);
     if (!(await save())) {
       setPreview(false);
-      return;
+      return false;
     }
     const found = localMissing();
     if (found.length > 0) {
       showMissing(found);
-      return;
+      return false;
     }
+    return true;
+  }
+
+  /**
+   * "Hoàn tất" (yêu cầu 2026-11-11): lưu bản mới nhất, server kiểm đủ luật duyệt (BR-U07-32) rồi chuyển bài sang Đã hoàn
+   * tất; lúc đó nút đổi thành "Xếp lịch". Vẫn sửa được; sửa thì bài về nháp, phải hoàn tất lại mới giao.
+   */
+  async function finalizeAssignment() {
+    if (!(await saveAndCheck())) return;
+    try {
+      const next = await chain(queue, () => assignmentsApi.review(id, version.current));
+      // Không hiện thông báo nổi: nút đổi thành "Xếp lịch" và nhãn trạng thái thành "Hoàn tất" là đủ.
+      apply(next, false);
+    } catch (error) {
+      const serverIssues = problemIssues(error);
+      if (serverIssues.length > 0) showMissing(serverIssues);
+      else notify(errorMessage(error), "danger");
+    }
+  }
+
+  /** "Xếp lịch": chỉ có ở bài đã hoàn tất; lưu, kiểm rồi mở lịch, server kiểm lại khi phát hành. */
+  async function openSchedule() {
+    if (!(await saveAndCheck())) return;
     setDialog("schedule");
   }
 
@@ -618,13 +657,6 @@ export function AssignmentFormPage({ id }: { id: string }) {
   });
 
   // Khung chat sửa đề bằng AI đứng trên thẻ Toàn bài (yêu cầu 2026-11-09).
-  if (editable && detail.status === "DRAFT" && !preview) {
-    comments.unshift({
-      key: "ai-revise",
-      anchorBlockId: null,
-      content: <AiReviseChat assignmentId={id} prepare={saveForAi} onApplied={() => showAiResult("Đã sửa đề bằng AI. Nhấn Ctrl+Z để quay lại bản trước.")} />,
-    });
-  }
 
   const header = (
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
@@ -648,8 +680,8 @@ export function AssignmentFormPage({ id }: { id: string }) {
         <div ref={setViewSlot} data-testid="view-slot" className="flex justify-center" />
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Menu label="" icon="more_horiz" ariaLabel="Thao tác khác" align="right">
-            <MenuItem icon="download" onClick={() => void exportDocx("skeleton")}>Xuất DOCX</MenuItem>
-            <MenuItem icon="download" onClick={() => void exportDocx("rubric")}>Xuất rubric</MenuItem>
+            <MenuItem icon="download" onClick={() => void exportDocx("skeleton")}>Tải đề (DOCX)</MenuItem>
+            <MenuItem icon="download" onClick={() => void exportDocx("rubric")}>Tải rubric (DOCX)</MenuItem>
             {permissions.canCreateVersion && (
               <MenuItem icon="history" onClick={() => void act(async () => {
                 const copy = await assignmentsApi.newVersion(id);
@@ -664,7 +696,9 @@ export function AssignmentFormPage({ id }: { id: string }) {
           ) : (
             <Button icon="visibility" data-testid="assignment-preview" onClick={() => void openPreview()}>Xem trước</Button>
           )}
-          {permissions.canPublish ? (
+          {permissions.canReview ? (
+            <Button variant="primary" icon="check_circle" data-testid="assignment-finalize" onClick={() => void finalizeAssignment()}>Hoàn tất</Button>
+          ) : permissions.canPublish ? (
             <Button variant="primary" icon="calendar_month" data-testid="assignment-schedule" onClick={() => void openSchedule()}>Xếp lịch</Button>
           ) : permissions.canChangeSchedule && (
             <Button variant="primary" icon="calendar_month" data-testid="assignment-change-schedule" onClick={() => setDialog("schedule")}>Đổi lịch</Button>
@@ -747,6 +781,11 @@ export function AssignmentFormPage({ id }: { id: string }) {
             setDialog(null);
             await showAiResult("Đã ghi đề AI lên trang. Nhấn Ctrl+Z để quay lại bản trước.");
           }} />
+      )}
+      {/* Trợ lý AI sửa đề: popup nổi ở góc phải dưới, bấm để mở / đóng (yêu cầu 2026-11-12). */}
+      {editable && (detail.status === "DRAFT" || detail.status === "REVIEWED") && !preview && (
+        <AiReviseChat assignmentId={id} prepare={saveForAi}
+          onApplied={() => showAiResult("Đã sửa đề bằng AI. Nhấn Ctrl+Z để quay lại bản trước.")} />
       )}
       {dialog === "retire" && (
         <RetireDialog onClose={() => setDialog(null)}

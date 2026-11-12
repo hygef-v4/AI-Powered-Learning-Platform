@@ -2,19 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { getPolicies, uploadFile } from "@/features/files/api";
-import {
-  acceptAttribute,
-  checkFile,
-  type PurposePolicy,
-} from "@/features/files/model/purposes";
 import { Button, Dialog, Field, Icon, IconButton, Pill, Select, showErrorToast } from "@/shared/ui";
 import { assignmentsApi } from "../api";
 import { AiDraftPreview } from "./AiDraftPreview";
 import { SearchPicker } from "./SearchPicker";
 import { errorMessage, requestRef } from "../model/format";
-import { templateText } from "../model/templateText";
-import type { AiDraft, AiSourcePreview, GradingMode, Material } from "../model/types";
+import { MAX_SOURCE_FILES, readTemplateFile, useSourceUploads, type SourceUpload, type TemplateFile } from "./sourceUploads";
+import type { AiDraft, GradingMode, Material } from "../model/types";
+
+export type { SourceUpload };
+type Template = TemplateFile;
 
 type Props = {
   assignmentId: string;
@@ -30,21 +27,8 @@ type Props = {
 };
 
 const POLL_MS = 2000;
-const MAX_SOURCE_FILES = 3;
 /** Tổng điểm mặc định của đề AI (yêu cầu 2026-11-10); AI chia điểm rubric cho đủ con số này. */
 const DEFAULT_TARGET_POINTS = "10";
-
-export type SourceUpload = {
-  id: string;
-  file: File;
-  status: "UPLOADING" | "READING" | "READY" | "ERROR";
-  percent: number;
-  fileRef?: string;
-  error?: string;
-  preview?: AiSourcePreview;
-};
-/** Mẫu đề: DOCX nhập qua bộ nhập khung đề (tối đa 20 MB, không giới hạn 2 MB của tệp nguồn), gửi AI dạng chữ. */
-type Template = { file: File; status: "READING" | "READY" | "ERROR"; text?: string; questionCount?: number; error?: string };
 
 /**
  * t13b Tạo nháp bằng AI (F6; BR-U07-50, 51). Yêu cầu 2026-11-05: không chọn nguồn AI (hệ thống dùng API chung nếu hạn mức
@@ -68,53 +52,48 @@ export function AiDraftDialog({
   const [targetPoints, setTargetPoints] = useState(DEFAULT_TARGET_POINTS);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [chosen, setChosen] = useState<string[]>([]);
-  const [sourceFiles, setSourceFiles] = useState<SourceUpload[]>([]);
   const [template, setTemplate] = useState<Template | null>(null);
   /** Đề mẫu chọn từ bài của môn (yêu cầu 2026-11-09); tệp tải lên thay thế lựa chọn này. */
   const [templateId, setTemplateId] = useState("");
   const [templates, setTemplates] = useState<{ assignmentId: string; title: string }[]>([]);
   const templateInput = useRef<HTMLInputElement>(null);
 
-  const [sourcePolicy, setSourcePolicy] = useState<PurposePolicy | null>(null);
-  const abortUploads = useRef(new Map<string, () => void>());
   const [draft, setDraft] = useState<AiDraft | null>(null);
   const [busy, setBusy] = useState(Boolean(initialDraftId));
   /** Đang gửi yêu cầu hoặc đang ghi đề lên trang: hiện popup chờ riêng (yêu cầu 2026-11-05). */
   const [phase, setPhase] = useState<"idle" | "sending" | "applying">("idle");
   // Lỗi hiện thông báo đỏ ở góc trên bên phải, không hiện trong popup (yêu cầu 2026-11-05).
   const setError = (message: string | null) => { if (message) showErrorToast(message); };
+  const sources = useSourceUploads(assignmentId, showErrorToast);
   const ref = useRef(requestRef());
   const applied = useRef(false);
   const awaiting = busy || draft?.status === "PENDING";
-  const uploading = sourceFiles.some((item) => item.status !== "READY") || template?.status === "READING";
+  const uploading = sources.pending || template?.status === "READING";
   const templateReady = template?.status === "READY";
+
+  /**
+   * Kết quả AI về. Lỗi khi chạy: hệ thống đã tự thử lần lượt các khóa (trường rồi cá nhân) ở phía máy chủ, hết khóa mới báo
+   * lỗi; quay về popup soạn, giữ nguyên mọi thứ đã nhập, báo lỗi ở góc.
+   */
+  function receive(next: AiDraft) {
+    if (next.status !== "FAILED") {
+      setDraft(next);
+      return;
+    }
+    showErrorToast(`${next.safeError ?? "AI không trả kết quả."} Bạn vẫn soạn thủ công được.`);
+    setDraft(null);
+    ref.current = requestRef();
+  }
 
   useEffect(() => {
     if (!initialDraftId) return;
     const controller = new AbortController();
     assignmentsApi.aiDraft(assignmentId, initialDraftId, controller.signal).then(
-      loaded => { if (!controller.signal.aborted) { setDraft(loaded); setBusy(false); } },
+      loaded => { if (!controller.signal.aborted) { receive(loaded); setBusy(false); } },
       error => { if (!controller.signal.aborted) { setError(errorMessage(error)); setBusy(false); } },
     );
     return () => controller.abort();
   }, [assignmentId, initialDraftId]);
-
-  useEffect(() => {
-    let active = true;
-    const pending = abortUploads.current;
-    getPolicies()
-      .then((policies) => {
-        if (active) setSourcePolicy(policies.find((policy) => policy.purpose === "ASSIGNMENT_SOURCE") ?? null);
-      })
-      .catch(() => {
-        if (active) setError("Không tải được giới hạn tệp nguồn.");
-      });
-    return () => {
-      active = false;
-      pending.forEach((abort) => abort());
-      pending.clear();
-    };
-  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -139,7 +118,7 @@ export function AiDraftDialog({
   useEffect(() => {
     if (!draft || draft.status !== "PENDING") return;
     const timer = setTimeout(() => {
-      assignmentsApi.aiDraft(assignmentId, draft.draftId).then(setDraft, (e) => setError(errorMessage(e)));
+      assignmentsApi.aiDraft(assignmentId, draft.draftId).then(receive, (e) => setError(errorMessage(e)));
     }, POLL_MS);
     return () => clearTimeout(timer);
   }, [assignmentId, draft]);
@@ -149,92 +128,17 @@ export function AiDraftDialog({
   const validation = proposal?.validation;
   const invalid = proposal !== null && (!validation || validation.status === "INVALID" || proposal.sections.length === 0);
 
-  // Lỗi khi chạy: hệ thống đã tự thử lần lượt các khóa (trường rồi cá nhân) ở phía máy chủ; hết khóa mới báo lỗi. Quay về
-  // popup cũ, giữ nguyên mọi thứ đã nhập, báo lỗi ở góc.
-  useEffect(() => {
-    if (draft?.status !== "FAILED") return;
-    showErrorToast(`${draft.safeError ?? "AI không trả kết quả."} Bạn vẫn soạn thủ công được.`);
-    setDraft(null);
-    ref.current = requestRef();
-  }, [draft]);
-
-  // Đề hợp lệ: ghi thẳng lên trang.
-  useEffect(() => {
-    if (!proposal || invalid || applied.current) return;
-    applied.current = true;
-    void apply();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [proposal, invalid]);
-
-  function updateUpload(id: string, update: (item: SourceUpload) => SourceUpload) {
-    setSourceFiles((files) => files.map((item) => (item.id === id ? update(item) : item)));
-  }
-
   /** Đọc mẫu đề bằng bộ nhập DOCX; số câu hỏi là số mục ngoài cùng của mẫu. */
   async function readTemplate(file: File) {
     setTemplate({ file, status: "READING" });
-    try {
-      const preview = await assignmentsApi.importDocx(assignmentId, file);
-      const { text, questionCount: count } = templateText(preview.document);
-      if (!text.trim()) throw new Error("Mẫu đề không có nội dung đọc được.");
-      setTemplate((current) => (current?.file === file ? { file, status: "READY", text, questionCount: count } : current));
-    } catch (cause) {
-      setTemplate((current) => (current?.file === file ? { file, status: "ERROR", error: errorMessage(cause) } : current));
-    }
-  }
-
-  async function upload(file: File, id = crypto.randomUUID()) {
-    if (!sourcePolicy) {
-      setError("Chưa tải được chính sách tệp nguồn.");
-      return;
-    }
-    const issue = checkFile(file, sourcePolicy);
-    const start: SourceUpload = issue
-      ? { id, file, status: "ERROR", percent: 0, error: issue }
-      : { id, file, status: "UPLOADING", percent: 0 };
-    setSourceFiles((files) => (files.some((item) => item.id === id)
-      ? files.map((item) => (item.id === id ? start : item)) : [...files, start]));
-    if (issue) return;
-    const handle = uploadFile(file, "ASSIGNMENT_SOURCE", (percent) => updateUpload(id, (item) => ({ ...item, percent })));
-    const controller = new AbortController();
-    abortUploads.current.set(id, () => {
-      handle.abort();
-      controller.abort();
-    });
-    try {
-      const result = await handle.promise;
-      updateUpload(id, (item) => ({ ...item, status: "READING", percent: 100, fileRef: result.fileRef.value }));
-      const previews = await assignmentsApi.previewAiSources(assignmentId, [result.fileRef.value], controller.signal);
-      if (!previews[0]) throw new Error("Không đọc được nội dung tệp.");
-      updateUpload(id, (item) => ({ ...item, status: "READY", preview: previews[0] }));
-    } catch (cause) {
-      updateUpload(id, (item) => ({
-        ...item,
-        status: "ERROR",
-        error: cause instanceof Error ? cause.message : "Tải tệp lên không thành công",
-      }));
-    } finally {
-      abortUploads.current.delete(id);
-    }
-  }
-
-  function addSourceFiles(files: FileList | File[] | null) {
-    if (!files) return;
-    const remaining = MAX_SOURCE_FILES - sourceFiles.length;
-    if (files.length > remaining) setError("Chỉ chọn tối đa 3 tệp nguồn.");
-    Array.from(files).slice(0, Math.max(0, remaining)).forEach((file) => void upload(file));
-  }
-
-  function removeUpload(item: SourceUpload) {
-    abortUploads.current.get(item.id)?.();
-    abortUploads.current.delete(item.id);
-    setSourceFiles((files) => files.filter((file) => file.id !== item.id));
+    const read = await readTemplateFile(assignmentId, file);
+    setTemplate((current) => (current?.file === file ? read : current));
   }
 
   async function submit(input: Parameters<typeof assignmentsApi.requestAiDraft>[1]) {
     setPhase("sending");
     try {
-      setDraft(await assignmentsApi.requestAiDraft(assignmentId, input));
+      receive(await assignmentsApi.requestAiDraft(assignmentId, input));
     } catch (e) {
       setError(errorMessage(e));
       ref.current = requestRef();
@@ -254,12 +158,11 @@ export function AiDraftDialog({
       setError("Hãy đợi tải xong hoặc gỡ các tệp bị lỗi trước khi tạo đề.");
       return;
     }
-    if (draft?.status === "FAILED") ref.current = requestRef();
     applied.current = false;
     const input = {
       request,
       materialIds: chosen,
-      sourceFileRefs: sourceFiles.flatMap((item) => (item.fileRef ? [item.fileRef] : [])),
+      sourceFileRefs: sources.fileRefs,
       formatText: templateReady ? template.text : undefined,
       templateAssignmentId: template ? undefined : templateId || undefined,
       // Ngôn ngữ theo ô Ngôn ngữ, ưu tiên hơn ngôn ngữ ghi trong yêu cầu hay đề mẫu.
@@ -294,6 +197,14 @@ export function AiDraftDialog({
     }
   }
 
+  // Đề hợp lệ: ghi thẳng lên trang.
+  useEffect(() => {
+    if (!proposal || invalid || applied.current) return;
+    applied.current = true;
+    void apply();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proposal, invalid]);
+
   async function revise() {
     if (!draft) return;
     setBusy(true);
@@ -309,8 +220,7 @@ export function AiDraftDialog({
   }
 
   async function discard() {
-    abortUploads.current.forEach((abort) => abort());
-    abortUploads.current.clear();
+    sources.clear();
     if (draft && (draft.status === "READY" || draft.status === "PENDING")) {
       await assignmentsApi.discardAiDraft(assignmentId, draft.draftId).catch(() => {});
     }
@@ -328,7 +238,6 @@ export function AiDraftDialog({
     && Math.round(pointsNumber * 100) === pointsNumber * 100;
   const pointsError = targetPoints.trim() !== "" && !pointsValid ? "Tổng điểm lớn hơn 0, tối đa 1.000, tối đa 2 chữ số thập phân." : undefined;
   const working = phase !== "idle" || draft?.status === "PENDING" || (busy && !draft) || (proposal !== null && !invalid);
-  const accept = sourcePolicy ? acceptAttribute(sourcePolicy) : undefined;
   // Popup chờ riêng: popup soạn vẫn giữ nguyên trạng thái để quay về khi lỗi.
   if (working) return <AiProgress />;
   return (
@@ -422,12 +331,11 @@ export function AiDraftDialog({
             </Field>
           </div>
           <Field label="Tài liệu tham khảo" htmlFor="ai-reference">
-            <ReferencePicker materials={materials} chosen={chosen} uploads={sourceFiles} disabled={awaiting}
-              canUpload={!!sourcePolicy && sourceFiles.length < MAX_SOURCE_FILES} accept={accept}
+            <ReferencePicker materials={materials} chosen={chosen} uploads={sources.uploads} disabled={awaiting}
+              canUpload={sources.canUpload} accept={sources.accept}
               onChoose={(id) => setChosen((c) => (c.includes(id) ? c : [...c, id].slice(0, 10)))}
               onUnchoose={(id) => setChosen((c) => c.filter((item) => item !== id))}
-              onUpload={addSourceFiles} onRemoveUpload={removeUpload}
-              onRetryUpload={(item) => void upload(item.file, item.id)} />
+              onUpload={sources.add} onRemoveUpload={sources.remove} onRetryUpload={sources.retry} />
           </Field>
           <Field label="Yêu cầu" htmlFor="ai-request">
             <textarea id="ai-request" rows={4} maxLength={4000} value={request} disabled={awaiting}
@@ -477,8 +385,10 @@ function TemplateStatus({ template, onRetry }: { template: Template; onRetry: ()
  * Tài liệu tham khảo (yêu cầu 2026-11-05): một ô gộp học liệu của bài và tệp tải lên, thêm được nhiều tài liệu. Ô tìm đứng
  * yên, gợi ý luôn ngay dưới ô tìm, dòng cuối của gợi ý là tải tài liệu lên; tài liệu đã chọn xếp dài dần xuống dưới ô tìm.
  */
-export function ReferencePicker({ materials, chosen, uploads, disabled, canUpload, accept, onChoose, onUnchoose, onUpload,
-  onRemoveUpload, onRetryUpload }: {
+export function ReferencePicker({ id = "ai-reference", materials, chosen, uploads, disabled, canUpload, accept, onChoose,
+  onUnchoose, onUpload, onRemoveUpload, onRetryUpload }: {
+  /** Id của ô tìm; đổi khi một trang có hai ô chọn tài liệu. */
+  id?: string;
   materials: Material[];
   chosen: string[];
   uploads: SourceUpload[];
@@ -498,7 +408,7 @@ export function ReferencePicker({ materials, chosen, uploads, disabled, canUploa
   return (
     <>
       {/* Tài liệu đã chọn xếp hàng ngay trong thanh tìm, dài thì xuống dòng (yêu cầu 2026-11-05). */}
-      <SearchPicker id="ai-reference" label="Tài liệu tham khảo" disabled={disabled} optionIcon="menu_book" multiple
+      <SearchPicker id={id} label="Tài liệu tham khảo" disabled={disabled} optionIcon="menu_book" multiple
         placeholder="Chọn học liệu của môn hoặc tải tệp lên để AI bám theo"
         options={materials.filter((m) => !chosen.includes(m.materialId)).map((m) => ({ id: m.materialId, label: m.title }))}
         emptyText={materials.length === 0 ? "Chưa có học liệu dùng được." : "Không tìm thấy học liệu."}

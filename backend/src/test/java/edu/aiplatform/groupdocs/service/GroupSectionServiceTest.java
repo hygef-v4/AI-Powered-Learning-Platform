@@ -115,6 +115,8 @@ class GroupSectionServiceTest {
         assertThat(view.holderId()).isEqualTo(member.accountId());
         assertThat(view.version()).isEqualTo(1);
         verify(sse).publish(eq("group-doc:" + document.id()), any());
+        // Nhận mục là sửa tài liệu: bài đã nộp lại thành Đang làm.
+        verify(documents).touch(eq(document.id()), any());
     }
 
     @Test

@@ -323,3 +323,15 @@ it("đang cuộn tới mục 3 mà chuyển sang Từng phần thì mở đúng 
   expect(screen.getByTestId("step-nav")).toHaveTextContent("3 / 3");
   expect(document.querySelector('[data-section="c"]')).not.toBeNull();
 });
+
+it("thiếu tên bài: viền đỏ quanh ô tên, có tên thì hết", () => {
+  const empty: DocumentModel = { blocks: [] };
+  const { rerender } = render(<DocumentEditor document={empty} onChange={vi.fn()} mode="author" diagramEnabled={false}
+    titleField={{ text: "", invalid: true, onText: vi.fn() }} />);
+  const node = document.querySelector<HTMLElement>('[data-block-id="TITLE"]')!;
+  expect(node).toHaveAttribute("data-invalid", "true");
+  expect(node).toHaveClass("outline-2", "outline-danger");
+  rerender(<DocumentEditor document={empty} onChange={vi.fn()} mode="author" diagramEnabled={false}
+    titleField={{ text: "Lab 1", invalid: false, onText: vi.fn() }} />);
+  expect(document.querySelector('[data-block-id="TITLE"]')).not.toHaveClass("outline-danger");
+});

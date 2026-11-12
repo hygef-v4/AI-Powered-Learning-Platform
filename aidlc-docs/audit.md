@@ -12924,6 +12924,223 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 
 ---
 
+## Đề xuất tính năng sinh viên tự chia nhóm, giảng viên duyệt
+**Timestamp**: 2026-11-11T06:40:13Z
+**Requested by:** Đào Chí Cường
+**User Input**: "phần chia nhóm giảng viên đang muốn thêm tính năng có thể cho các bạn trong lớp tự chia nhóm với nhau sau đó giảng viên duyệt, nên làm tính năng này không và nếu có thì triển khai như thế nào"
+**AI Response**: "Đọc U12 (class_groups, class_group_members, GroupSetRules, LeaderChangeRequest, GroupController). Khuyên nên làm theo mô hình đề xuất nhóm tách khỏi bộ nhóm chính thức: giảng viên mở đợt tự đăng ký (min/max, hạn chót), trưởng nhóm tạo đề xuất và mời, người được mời chấp nhận, gửi duyệt; giảng viên duyệt trong một transaction dùng lại GroupSetRules và version của bộ nhóm; xử lý sinh viên còn lại bằng chia ngẫu nhiên phần còn lại. Không sửa mã."
+**Context**: Tư vấn trước AI-DLC, chỉ đọc mã.
+
+---
+
+## Workspace Detection — sinh viên tự chia nhóm
+**Timestamp**: 2026-11-11T06:40:13Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Yes, start it"
+**AI Response**: "Bắt đầu AI-DLC. Dự án brownfield đã có aidlc-state.md và tài liệu reverse engineering hiện hành (đồng bộ 2026-11-10), dùng lại, bỏ qua Reverse Engineering. Phạm vi chính là U12 (groups) và màn nhóm của giảng viên/sinh viên. Extension: Security và Resiliency bật trong phạm vi đã duyệt, PBT tắt; hỏi xác nhận lại trong câu hỏi yêu cầu. Chuyển sang Requirements Analysis."
+**Context**: INCEPTION — Workspace Detection.
+
+---
+
+## Requirements Analysis — câu hỏi xác nhận
+**Timestamp**: 2026-11-11T06:40:13Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Yes, start it"
+**AI Response**: "Tạo inception/requirements/2026-11-11-student-self-grouping-questions.md với 9 câu hỏi (cách lập nhóm, đợt đăng ký, sĩ số, cách duyệt, sinh viên còn lại, thay đổi sau duyệt, quan hệ với nhóm do giảng viên tạo, thông báo, extension). Chờ người dùng trả lời."
+**Context**: INCEPTION — Requirements Analysis, độ sâu Standard.
+
+---
+
+## Requirements Analysis — trả lời câu hỏi
+**Timestamp**: 2026-11-11T06:46:17Z
+**Requested by:** Đào Chí Cường
+**User Input**: "hãy trả lời theo phương án bạn đề xuất cho tôi"
+**AI Response**: "Điền A cho cả 9 câu theo phương án đề xuất. Kiểm mâu thuẫn: không có. Các điểm câu trả lời chưa nói tới (lời mời khi tới hạn, rời đề xuất, trùng tên) được ghi là giả định trong tài liệu yêu cầu. Viết inception/requirements/2026-11-11-student-self-grouping.md; Security/Resiliency giữ phạm vi, PBT tắt."
+**Context**: INCEPTION — Requirements Analysis.
+
+---
+
+## Requirements Analysis — chờ duyệt
+**Timestamp**: 2026-11-11T06:52:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "hãy trả lời theo phương án bạn đề xuất cho tôi"
+**AI Response**: "Trình tài liệu yêu cầu SG-01…09 và NFR, thêm dòng trỏ ở FR-025. Hỏi duyệt: Request Changes hoặc Approve & Continue sang User Stories."
+**Context**: INCEPTION — Requirements Analysis, lời hỏi duyệt.
+
+---
+
+## Requirements Analysis — người dùng duyệt
+**Timestamp**: 2026-11-11T06:48:17Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Approve & Continue"
+**AI Response**: "Ghi Requirements Analysis hoàn tất. Đánh giá User Stories: cần chạy (tính năng mới hai vai trò). Tạo đánh giá và kế hoạch story kèm câu hỏi."
+**Context**: INCEPTION — Requirements Analysis duyệt; bắt đầu User Stories phần lập kế hoạch.
+
+---
+
+## User Stories — kế hoạch và câu hỏi
+**Timestamp**: 2026-11-11T06:49:02Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Approve & Continue"
+**AI Response**: "Tạo inception/plans/2026-11-11-student-self-grouping-story-plan.md: đánh giá (chạy User Stories, độ sâu vừa), đề xuất bốn story US-GRP-007…010 theo hành trình, 4 câu hỏi (cách chia, nơi ghi, persona, mức chi tiết). Chờ người dùng trả lời."
+**Context**: INCEPTION — User Stories phần lập kế hoạch.
+
+---
+
+## User Stories — trả lời và duyệt kế hoạch
+**Timestamp**: 2026-11-11T07:28:41Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Use your proposals"
+**AI Response**: "Điền A cho 4 câu của kế hoạch story; không có câu trả lời mơ hồ hay mâu thuẫn. Coi lời chọn phương án đề xuất là duyệt kế hoạch (kế hoạch chính là các phương án đó). Bắt đầu phần sinh story US-GRP-007…010."
+**Context**: INCEPTION — User Stories, duyệt kế hoạch, bắt đầu phần sinh.
+
+---
+
+## User Stories — chờ duyệt
+**Timestamp**: 2026-11-11T07:29:40Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Use your proposals"
+**AI Response**: "Viết US-GRP-007…010 sau US-GRP-006 trong stories.md (3, 4, 3, 4 scenario Given/When/Then), thêm dòng bảng story–unit và unit-of-work-story-map, thêm mục Tự chia nhóm vào personas.md. Liên kết kiểm xong. Hỏi duyệt: Request Changes hoặc Approve & Continue sang Workflow Planning."
+**Context**: INCEPTION — User Stories, lời hỏi duyệt.
+
+---
+
+## User Stories — người dùng duyệt
+**Timestamp**: 2026-11-11T07:48:22Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Approve & Continue"
+**AI Response**: "Ghi User Stories hoàn tất (US-GRP-007…010). Bắt đầu Workflow Planning."
+**Context**: INCEPTION — User Stories duyệt.
+
+---
+
+## Workflow Planning — chờ duyệt
+**Timestamp**: 2026-11-11T07:49:19Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Approve & Continue"
+**AI Response**: "Tạo inception/plans/2026-11-11-student-self-grouping-execution-plan.md. Rủi ro trung bình. Chạy: Functional Design U12, Code Generation, Build and Test. Bỏ qua: Application Design, Units Generation, NFR Requirements, NFR Design, Infrastructure Design. Ghi chú: thư mục làm việc có thay đổi của phiên khác, cần nhánh/worktree riêng trước khi viết mã. Hỏi: Ready to proceed with this plan?"
+**Context**: INCEPTION — Workflow Planning, lời hỏi duyệt.
+
+---
+
+## Workflow Planning — người dùng duyệt
+**Timestamp**: 2026-11-11T07:57:06Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Approve & Continue"
+**AI Response**: "Ghi Workflow Planning hoàn tất. Bắt đầu Functional Design U12: đọc tài liệu thiết kế U12 hiện có và mã liên quan, tạo kế hoạch và câu hỏi."
+**Context**: INCEPTION — Workflow Planning duyệt; CONSTRUCTION — bắt đầu Functional Design U12.
+
+---
+
+## Functional Design U12 — kế hoạch và câu hỏi
+**Timestamp**: 2026-11-11T07:58:19Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Approve & Continue"
+**AI Response**: "Đọc tài liệu functional design U12 và ClassGroupService.save/apply, EventTypes, NotificationEventService. Tạo construction/plans/functional-design-plan/2026-11-11-u12-student-self-grouping-functional-design-plan.md với 9 câu hỏi (đường duyệt, duyệt nhiều, thành viên không hiệu lực, hạn chót, lịch sử, đổi tên, thông báo trùng, thông báo do hệ thống, vị trí giao diện). Chờ người dùng trả lời."
+**Context**: CONSTRUCTION — Functional Design U12, lập kế hoạch.
+
+---
+
+## Functional Design U12 — trả lời câu hỏi
+**Timestamp**: 2026-11-11T08:14:42Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Use your proposals"
+**AI Response**: "Điền A cho 9 câu; không có câu trả lời mơ hồ hay mâu thuẫn. Viết thiết kế vào bốn tệp functional-design của U12."
+**Context**: CONSTRUCTION — Functional Design U12.
+
+---
+
+## Functional Design U12 — chờ duyệt
+**Timestamp**: 2026-11-11T08:18:59Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Use your proposals"
+**AI Response**: "Thêm thiết kế tự chia nhóm vào bốn tệp functional-design U12: GroupFormationSettings, GroupProposal, ProposalMember, hai máy trạng thái, 4 sự kiện, API mới; BR-U12-70…96; luồng F16–F24; component frontend. Kiểm Mermaid và liên kết. Security/Resiliency: tuân thủ hoặc N/A có lý do. Hỏi duyệt: Request Changes hoặc Continue to Next Stage (Code Generation)."
+**Context**: CONSTRUCTION — Functional Design U12, lời hỏi duyệt.
+
+---
+
+## Functional Design U12 — người dùng duyệt
+**Timestamp**: 2026-11-11T08:29:40Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Continue to Next Stage"
+**AI Response**: "Ghi Functional Design U12 hoàn tất. Bắt đầu Code Generation phần lập kế hoạch."
+**Context**: CONSTRUCTION — Functional Design U12 duyệt.
+
+---
+
+## Code Generation U12 — kế hoạch chờ duyệt
+**Timestamp**: 2026-11-11T08:30:48Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Continue to Next Stage"
+**AI Response**: "Đọc code-conventions, mã và test groups hiện có. Tạo construction/plans/code-generation-plan/2026-11-11-u12-student-self-grouping-code-generation-plan.md (19 bước: migration, model, repository, 3 service, sửa ClassGroupService.save, sự kiện và notifications, controller, test unit/integration, frontend sinh viên và giảng viên, tài liệu). Hỏi duyệt kế hoạch và chọn nơi viết mã (worktree mới hay checkout hiện tại) vì thư mục làm việc có thay đổi chưa commit của phiên khác."
+**Context**: CONSTRUCTION — Code Generation U12 phần lập kế hoạch, lời hỏi duyệt.
+
+---
+
+## Code Generation U12 — duyệt kế hoạch
+**Timestamp**: 2026-11-11T08:35:35Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Approve, use worktree"
+**AI Response**: "Ghi duyệt kế hoạch 19 bước. Tạo worktree ../AI-Powered-Learning-Platform-self-grouping, nhánh feat/student-self-grouping (--no-track từ origin/staging) và bắt đầu sinh mã."
+**Context**: CONSTRUCTION — Code Generation U12, bắt đầu phần sinh.
+
+---
+
+## Code Generation U12 — khôi phục tài liệu sau khi checkout chính đổi nhánh
+**Timestamp**: 2026-11-11T13:09:52Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Hãy thử lại"
+**AI Response**: "Lần sửa thông báo trước bị dừng vì python3 mở REPL; chạy lại bằng script tệp qua python -I, sửa xong 4 tệp notifications. Docker Desktop đã tắt giữa chừng, khởi động lại. Phát hiện checkout chính (D:/Github/AI-Powered-Learning-Platform) đã chuyển sang main sạch: GitHub Desktop cất thay đổi chưa commit vào stash@{0} (On fix/ai-key-write-only) lúc 16:25. Không đụng stash và checkout chính; lấy riêng tài liệu của tính năng này từ stash@{0} vào worktree feat/student-self-grouping (tệp mới, patch cho U12/stories/personas/story map/requirements.md, 18 mục audit, mục aidlc-state). Mục U07 và mục audit 'Đưa trang Hồ sơ lên staging' vẫn chỉ ở stash@{0}. Backend bước 1–13 xong: 54 test liên quan qua (gồm 3 integration test PostgreSQL); sửa lỗi contains(null) trên List.of trong mời và duyệt nhiều."
+**Context**: CONSTRUCTION — Code Generation U12, phần sinh mã.
+
+---
+
+## Code Generation U12 — chờ duyệt mã
+**Timestamp**: 2026-11-11T13:20:03Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Hãy thử lại"
+**AI Response**: "Hoàn tất 19/19 bước trên nhánh feat/student-self-grouping. Frontend: types, api, model/proposals.ts, GroupProposalSection, ProposalDialogs, SelfGroupingSettingsDialog, ProposalReviewList, sửa MyGroup và ClassGroupsPanel, nhãn audit; sửa trùng dòng 'Giảng viên sẽ xếp nhóm' khi đợt đóng. Test: backend 54 (unit, controller, 3 integration PostgreSQL); frontend 45 test nhóm + 21 audit, tsc, eslint qua. Tài liệu: code-summary U12, api-inventory (+15 mapping), current-code-baseline. Chưa thử trên trình duyệt, chưa chạy toàn bộ backend/frontend suite (để Build and Test). Hỏi duyệt: Request Changes hoặc Continue to Next Stage (Build and Test)."
+**Context**: CONSTRUCTION — Code Generation U12, lời hỏi duyệt.
+
+---
+
+## Code Generation U12 — người dùng duyệt
+**Timestamp**: 2026-11-11T13:23:46Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Continue to Next Stage"
+**AI Response**: "Ghi Code Generation U12 hoàn tất. Bắt đầu Build and Test: mvn -B verify toàn backend trong maven:3.9-eclipse-temurin-17 có Testcontainers, frontend lint/typecheck/test/build toàn bộ, thử hai vai trò trên trình duyệt."
+**Context**: CONSTRUCTION — Code Generation duyệt; bắt đầu Build and Test.
+
+---
+
+## Build and Test U12 — tiếp tục phiên ở tài khoản Claude khác
+**Timestamp**: 2026-11-11T13:44:45Z
+**Requested by:** Đào Chí Cường
+**User Input**: "https://claude.ai/code/cshk_01GSCVFazDpYrSq97Nx6oXa83Th3YEYGn7GKEGtmiGCWGs
+bạn có thể tiếp tục phiên này không"
+**AI Response**: "Không mở được link chia sẻ phiên cloud; đề nghị teleport, dán nội dung hoặc chỉ ra phiên local."
+**Context**: CONSTRUCTION — Build and Test U12, phiên trước dừng do giới hạn sử dụng.
+
+---
+
+## Build and Test U12 — hoàn tất, chờ duyệt
+**Timestamp**: 2026-11-11T14:02:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "đây là phiên đó, chạy local trên máy này nhưng ở tài khoản claude khác, bạn có thể tiếp tục không"
+**AI Response**: "Đọc transcript phiên trước trên máy. mvn -B verify đã xong trước khi phiên dừng: 2.203 test, BUILD SUCCESS (13:37:42Z). Seed stack selfgroup (1 giảng viên, 6 sinh viên, lớp SE1801). Thử hai vai trò: bật đợt 2–3 người, sinh viên 1 tạo Nhóm A và mời trên trình duyệt, sinh viên 2 chấp nhận, sinh viên 3 lập Nhóm B qua API, kiểm STUDENT_IN_PROPOSAL và khóa version (409), gửi duyệt, giảng viên duyệt Nhóm A và từ chối Nhóm B có lý do trên trình duyệt; thông báo đúng loại, không trùng. Ghi 2026-11-11-student-self-grouping-results.md, dòng tóm tắt, cập nhật aidlc-state. Hỏi: Build and test instructions complete. Ready to proceed to Operations stage?"
+**Context**: CONSTRUCTION — Build and Test U12 hoàn tất; chưa commit.
+
+---
+
+## Build and Test U12 — người dùng duyệt, commit
+**Timestamp**: 2026-11-11T14:10:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Duyệt & commit"
+**AI Response**: "Ghi Build and Test U12 được duyệt. Commit mã và tài liệu tính năng sinh viên tự chia nhóm lên nhánh feat/student-self-grouping (chưa push). Operations là placeholder."
+**Context**: CONSTRUCTION — Build and Test U12 duyệt; commit.
+
+---
+
 ## Rà soát bảo mật khóa API AI cá nhân
 **Timestamp**: 2026-11-11T07:05:00Z
 **Requested by:** Đào Chí Cường
@@ -13059,6 +13276,30 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 
 ---
 
+## U09 — bảng điểm ma trận theo file Excel mẫu
+**Timestamp:** 2026-11-11T15:42:52Z
+**Requested by:** Quang Hung
+**User Input:** "giúp tôi sửa cấu trúc bảng điểm hiện tại cho giống cấu trúc này cứ để hiện tại cột là tên assignmnet cũng được, chỗ xuất bảng điểm thay thành 1 bảng điểm đi bấm vào thì có thể xem được điểm từng bài hoặc là toàn bộ điểm, tong trang đấy thì có thể bấm xuất bảng điểm [Image #1] @\"C:\Users\Quang Hung\Downloads\Done-FA26 - MLN131 - SE1925-JS(IT).xlsx\""
+**AI Response:** Read sample workbook locally without modifying it. Replaced grading workspace export button with Bảng điểm; added a matrix within the existing class route, assignment/all selection, student search and pagination, frozen identity columns, grade detail links and scoped export. CSV/XLSX now use one student per row and assignment columns; reuse current receipt/member score mapping, preserve zero/draft grades and leave ungraded cells blank. XLSX numbers, widths, bold/wrapped header, D2 freeze and filter verified by production writer plus openpyxl. Full frontend970/137files and backend verify2,153/no skips plus required57-case guard passed; final targeted19 frontend and19 backend passed after CSS/test refinements. Local browser checks1440/390, light/dark, filter/search/export dialog passed. Actual download still uses old9-column backend runtime; did not restart a service previously blocked by automatic approval review. Report explicitly requires backend reload before live export acceptance. No grade/class writes, sample-file edits, commit/push/deploy. Security/Resiliency maintained; PBT disabled.
+**Context:** Construction — [plan](construction/plans/code-generation-plan/2026-11-11-gradebook-matrix.md), [validation and live runtime limit](construction/build-and-test/2026-11-11-gradebook-matrix.md).
+
+---
+
+## Student class overview aligned with teacher
+**Timestamp:** 2026-11-11T16:02:56Z
+**Requested by:** Quang Hung
+**User Input:** "[Image #1] bor cái thông báo gàn đây của trang sinh viên nên thay bằng cái j đó để đồng bộ giống giao diện cho teacher"
+**AI Response:** Replaced the recent-announcements/todo split with a full-width Tổng quan bài tập using the existing student assignment request: Chưa làm/Đang làm/Đã nộp links to matching class-scoped tabs, followed by existing kind filters and deadline-ordered todo list. Removed unused announcement board registration/component; announcement navigation remains. Corrected shared upcoming predicate so submitted group work does not count as unstarted or remain in todo. Empty/loading/error states avoid fake zero statistics; short lists shrink rather than reserving five blank rows. Full frontend972/138files, final7 tests, lint/typecheck/production build pass. Verified local student2 in isolated browser profile at1440 dark/390 light, matching overview/list2/1/3 counts, group-empty filter and no horizontal overflow. No grade/submission/announcement writes, backend change or rerun, commit/push/deploy. Preserved preceding uncommitted gradebook changes. Phone hardware/VPS not tested; Security/Resiliency unchanged and PBT disabled.
+**Context:** Construction — [plan](construction/plans/code-generation-plan/2026-11-11-student-class-overview.md), [evidence](construction/build-and-test/2026-11-11-student-class-overview.md).
+
+---
+
+## Commit gradebook matrix and student overview
+**Timestamp:** 2026-11-11T16:14:41Z
+**Requested by:** Quang Hung
+**User Input:** "giúp tôi commit"
+**AI Response:** Reviewed all pending changes on fix/u05-u09-u15 and created separate feature commits with their own specs, tests and validation reports:7466539b for matrix gradebook/matching CSV-XLSX exports and97ebab28 for student overview/announcement summary removal. Fresh precommit26 related frontend tests and19 backend export/assembly/controller tests pass; git diff --check clean. Recording shared AI-DLC state/audit separately. Previous full checks and live backend export reload limitation remain documented without claiming a new deployment. No push, merge, deploy, backend restart or data writes.
+**Context:** Authorized local commits only; shared docs commit follows the two feature commits.
 ## Two-tier AI prompt guardrail — workspace detection, requirements, code generation
 **Timestamp**: 2026-11-11T16:16:16Z
 **Requested by:** Đào Chí Cường
@@ -13132,5 +13373,14 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 **User Input**: "tiếp tục"
 **AI Response**: "Continued the two open items. Ran the branch backend separately on port 8081 with Flyway disabled (shared local DB and another session's stack untouched), frontend dev pointed at it, logged in as the local test teacher. An injection-style request in the AI revise chat returned 400 AI_PROMPT_REJECTED, the chat showed the friendly message and \"Đề chưa thay đổi.\", no draft or AI task row was created, and the log contains only the rule id. No valid request sent (would call the real provider). Temporary container and env file removed. Committed the change on feat/ai-prompt-guardrail; no push or PR."
 **Context**: Construction — Build and Test browser verification; local commit.
+
+---
+
+## Two-tier AI prompt guardrail — staging merge, push and PR
+**Timestamp**: 2026-11-12T02:12:20Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Push, PR to staging"
+**AI Response**: "Branch conflicted with origin/staging (16 commits ahead). Merged staging into feat/ai-prompt-guardrail: kept staging's template/reference support for AI revise and wrapped template, materials, instruction and document in untrusted-data tags; added format_template to reserved delimiters and the Tier 1 spoof rule; updated the revision prompt test. Kept both sides of aidlc-state.md and audit.md in chronological order. Full backend verify on the merge: 2,287 tests, 0 failures. Pushed the branch to its own remote ref and opened a PR into staging without Claude attribution; no merge."
+**Context**: Construction — integration with staging and PR publication.
 
 ---

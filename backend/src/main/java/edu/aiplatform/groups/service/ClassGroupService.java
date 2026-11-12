@@ -60,17 +60,22 @@ public class ClassGroupService {
     private final IEventPublisher events;
     private final Clock clock;
     private final RandomGenerator random;
+    private final GroupProposalCleanup groupProposalCleanup;
 
     @Autowired
     public ClassGroupService(GroupRepository groups, GroupDocumentRepository documents, GroupDocumentService groupDocuments,
                              IGroupDocStreams streams, GroupAccess access, IClassAccess classes, IAccountLookup accounts,
-                             IAudit audit, IEventPublisher events, Clock clock) {
-        this(groups, documents, groupDocuments, streams, access, classes, accounts, audit, events, clock, new SecureRandom());
+                             IAudit audit, IEventPublisher events, Clock clock,
+                             GroupProposalCleanup groupProposalCleanup) {
+        this(groups, documents, groupDocuments, streams, access, classes, accounts, audit, events, clock, new SecureRandom(),
+                groupProposalCleanup);
     }
 
     ClassGroupService(GroupRepository groups, GroupDocumentRepository documents, GroupDocumentService groupDocuments,
                       IGroupDocStreams streams, GroupAccess access, IClassAccess classes, IAccountLookup accounts,
-                      IAudit audit, IEventPublisher events, Clock clock, RandomGenerator random) {
+                      IAudit audit, IEventPublisher events, Clock clock, RandomGenerator random,
+                      GroupProposalCleanup groupProposalCleanup) {
+        this.groupProposalCleanup = groupProposalCleanup;
         this.groups = groups;
         this.documents = documents;
         this.groupDocuments = groupDocuments;
@@ -195,12 +200,45 @@ public class ClassGroupService {
         if (!groups.bumpSetVersion(classId, version, now)) {
             throw versionConflict();
         }
-        apply(actor, classId, current, byId, drafts, deleted, now);
+        ApplyResult result = apply(actor, classId, current, byId, drafts, deleted, now, null);
+        // Người vừa có nhóm chính thức rời đề xuất của họ (BR-U12-88, F23).
+        groupProposalCleanup.releasePlacedStudents(classId, result.placed(), now);
         return view(actor, classId);
     }
 
-    private void apply(Actor actor, UUID classId, List<ClassGroup> current, Map<UUID, ClassGroup> byId, List<Draft> drafts,
-                       List<ClassGroup> deleted, Instant now) {
+    /**
+     * Thêm nhóm từ đề xuất được duyệt (F21, BR-U12-83): giữ nguyên các nhóm hiện có, thêm {@code newGroups} đã được
+     * người gọi kiểm bằng {@link GroupSetRules}; tăng {@code version} bộ nhóm một lần, lệch thì {@code 409}. Trả id
+     * nhóm mới theo khóa của từng nháp.
+     */
+    @Transactional
+    public Map<String, UUID> addApprovedGroups(Actor actor, UUID classId, long expectedVersion, List<Draft> newGroups) {
+        Instant now = clock.instant();
+        if (!groups.bumpSetVersion(classId, expectedVersion, now)) {
+            throw versionConflict();
+        }
+        List<ClassGroup> current = groups.listGroups(classId);
+        Map<UUID, ClassGroup> byId = new LinkedHashMap<>();
+        List<Draft> drafts = new ArrayList<>();
+        for (ClassGroup g : current) {
+            byId.put(g.id(), g);
+            drafts.add(new Draft(g.id().toString(), g.id(), g.name(), g.leaderId(), g.memberIds()));
+        }
+        drafts.addAll(newGroups);
+        ApplyResult result = apply(actor, classId, current, byId, drafts, List.of(), now, PROPOSAL_APPROVED);
+        Map<String, UUID> created = new LinkedHashMap<>();
+        newGroups.forEach(d -> created.put(d.key(), result.ids().get(d.key())));
+        return created;
+    }
+
+    /** Lý do của sự kiện membership khi nhóm đến từ đề xuất được duyệt; U14 không thông báo trùng (BR-U12-95). */
+    public static final String PROPOSAL_APPROVED = "PROPOSAL_APPROVED";
+
+    private record ApplyResult(Map<String, UUID> ids, Set<UUID> placed) {
+    }
+
+    private ApplyResult apply(Actor actor, UUID classId, List<ClassGroup> current, Map<UUID, ClassGroup> byId,
+                              List<Draft> drafts, List<ClassGroup> deleted, Instant now, String membershipReason) {
         Map<UUID, UUID> before = new HashMap<>();
         current.forEach(g -> g.memberIds().forEach(m -> before.put(m, g.id())));
 
@@ -246,7 +284,7 @@ public class ClassGroupService {
             } else {
                 ClassGroup old = byId.get(d.id());
                 boolean renamed = !old.name().equals(d.name());
-                boolean leaderChanged = !d.leaderId().equals(old.leaderId());
+                boolean leaderChanged = !Objects.equals(d.leaderId(), old.leaderId());
                 boolean membersChanged = !new HashSet<>(old.memberIds()).equals(new HashSet<>(d.memberIds()));
                 if (renamed || leaderChanged) {
                     groups.updateGroup(id, d.name(), d.leaderId(), now);
@@ -284,12 +322,19 @@ public class ClassGroupService {
             UUID group = after.getOrDefault(member, before.get(member));
             movedByGroup.computeIfAbsent(group, k -> new ArrayList<>()).add(member);
         }
-        movedByGroup.forEach((group, members) ->
-                publish(EventTypes.GROUP_MEMBERSHIP_CHANGED, classId, group, List.copyOf(members)));
+        movedByGroup.forEach((group, members) -> publish(EventTypes.GROUP_MEMBERSHIP_CHANGED, classId, group,
+                List.copyOf(members), membershipReason));
         for (UUID id : leaderChangedGroups) {
             drafts.stream().filter(d -> id.equals(d.id())).findFirst()
                     .ifPresent(d -> publish(EventTypes.GROUP_LEADER_CHANGED, classId, id, d.memberIds()));
         }
+        Set<UUID> placed = new LinkedHashSet<>();
+        after.forEach((member, group) -> {
+            if (moved.contains(member)) {
+                placed.add(member);
+            }
+        });
+        return new ApplyResult(ids, placed);
     }
 
     /** Yêu cầu chờ của người đã rời nhóm, hoặc đề cử người đã rời nhóm, tự hủy (BR-U12-07). */
@@ -340,12 +385,19 @@ public class ClassGroupService {
     }
 
     private void publish(String type, UUID classId, UUID groupId, List<UUID> recipients) {
+        publish(type, classId, groupId, recipients, null);
+    }
+
+    private void publish(String type, UUID classId, UUID groupId, List<UUID> recipients, String reason) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("classId", classId.toString());
         if (groupId != null) {
             payload.put("groupId", groupId.toString());
         }
         payload.put("recipientIds", recipients.stream().map(UUID::toString).toList());
+        if (reason != null) {
+            payload.put("reason", reason);
+        }
         events.publish(new DomainEvent(1, UUID.randomUUID(), type, "U12", clock.instant(), null, payload));
     }
 

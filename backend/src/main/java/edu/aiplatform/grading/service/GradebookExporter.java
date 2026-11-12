@@ -8,7 +8,7 @@ import java.util.zip.*;
 import org.springframework.stereotype.Component;
 
 /**
- * Streaming CSV / inline-string XLSX. No formulas, shared-string table, files
+ * Streaming CSV / XLSX. No formulas, shared-string table, files
  * or external dependencies.
  */
 @Component
@@ -80,7 +80,8 @@ public class GradebookExporter {
                         + "ts-package.relationships+xml\"/><Default Extension=\"xml\" ContentType=\"application/xml\"/><Ov"
                         + "erride PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocumen"
                         + "t.spreadsheetml.sheet.main+xml\"/><Override PartName=\"/xl/worksheets/sheet1.xml\" ContentType="
-                        + "\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/></Types>");
+                        + "\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>"
+                        + "<Override PartName=\"/xl/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/></Types>");
         writePart(zip, "_rels/.rels",
                 "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relation"
                         + "ship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/off"
@@ -92,24 +93,66 @@ public class GradebookExporter {
         writePart(zip, "xl/_rels/workbook.xml.rels",
                 "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relation"
                         + "ship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/wor"
-                        + "ksheet\" Target=\"worksheets/sheet1.xml\"/></Relationships>");
+                        + "ksheet\" Target=\"worksheets/sheet1.xml\"/>"
+                        + "<Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles\" Target=\"styles.xml\"/></Relationships>");
+        writePart(zip, "xl/styles.xml", """
+                <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                  <fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>
+                  <fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>
+                  <borders count="1"><border/></borders>
+                  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+                  <cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment wrapText="1" vertical="center"/></xf></cellXfs>
+                  <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+                </styleSheet>
+                """);
         zip.putNextEntry(new ZipEntry("xl/worksheets/sheet1.xml"));
         var writer = new OutputStreamWriter(zip, StandardCharsets.UTF_8);
-        writer.write(
-                "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><sheetData>");
-        for (var row : rows) {
-            writer.write("<row>");
-            for (var cell : row) {
-                writer.write("<c t=\"inlineStr\"><is><t xml:space=\"preserve\">");
-                writer.write(escapeXml(cell));
-                writer.write("</t></is></c>");
+        boolean matrix = !rows.isEmpty() && !rows.get(0).isEmpty()
+                && "STT".equals(rows.get(0).get(0));
+        int columnCount = rows.isEmpty() ? 0 : rows.get(0).size();
+        writer.write("<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">");
+        if (matrix) {
+            writer.write("<sheetViews><sheetView workbookViewId=\"0\"><pane xSplit=\"3\" ySplit=\"1\" topLeftCell=\"D2\" activePane=\"bottomRight\" state=\"frozen\"/></sheetView></sheetViews>");
+            writer.write("<cols><col min=\"1\" max=\"1\" width=\"6\" customWidth=\"1\"/><col min=\"2\" max=\"2\" width=\"28\" customWidth=\"1\"/><col min=\"3\" max=\"3\" width=\"32\" customWidth=\"1\"/>");
+            if (columnCount > 3)
+                writer.write("<col min=\"4\" max=\"" + columnCount + "\" width=\"24\" customWidth=\"1\"/>");
+            writer.write("</cols>");
+        }
+        writer.write("<sheetData>");
+        for (int rowIndex = 0; rowIndex < rows.size(); rowIndex++) {
+            var row = rows.get(rowIndex);
+            writer.write("<row r=\"" + (rowIndex + 1) + "\""
+                    + (rowIndex == 0 ? " ht=\"60\" customHeight=\"1\"" : "") + ">");
+            for (int columnIndex = 0; columnIndex < row.size(); columnIndex++) {
+                String cell = row.get(columnIndex);
+                String reference = buildColumnName(columnIndex) + (rowIndex + 1);
+                if (matrix && rowIndex > 0 && (columnIndex == 0 || columnIndex >= 3)
+                        && cell != null && cell.matches("-?\\d+(\\.\\d+)?")) {
+                    writer.write("<c r=\"" + reference + "\"><v>" + cell + "</v></c>");
+                } else {
+                    writer.write("<c r=\"" + reference + "\" t=\"inlineStr\""
+                            + (rowIndex == 0 ? " s=\"1\"" : "")
+                            + "><is><t xml:space=\"preserve\">");
+                    writer.write(escapeXml(cell));
+                    writer.write("</t></is></c>");
+                }
             }
             writer.write("</row>");
         }
-        writer.write("</sheetData></worksheet>");
+        writer.write("</sheetData>");
+        if (matrix && columnCount > 0)
+            writer.write("<autoFilter ref=\"A1:" + buildColumnName(columnCount - 1) + rows.size() + "\"/>");
+        writer.write("</worksheet>");
         writer.flush();
         zip.closeEntry();
         zip.finish();
         zip.flush();
+    }
+
+    private static String buildColumnName(int index) {
+        var name = new StringBuilder();
+        for (int column = index + 1; column > 0; column = (column - 1) / 26)
+            name.append((char) ('A' + (column - 1) % 26));
+        return name.reverse().toString();
     }
 }

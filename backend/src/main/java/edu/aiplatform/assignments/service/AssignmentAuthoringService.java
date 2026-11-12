@@ -197,16 +197,19 @@ public class AssignmentAuthoringService {
                 "classId", current.classId(), "subjectId", current.subjectId(), "status", current.status()));
     }
 
-    /** F8 (BR-U07-24, 32): kiểm đủ rồi chuyển REVIEWED. */
+    /**
+     * Hoàn tất bài (BR-U07-24, 32; yêu cầu 2026-11-11): kiểm đủ rồi chuyển REVIEWED ("Đã hoàn tất"), lưu bản mới nhất; chỉ
+     * bài đã hoàn tất mới xếp lịch giao được. Sửa nội dung, rubric hay cài đặt sau đó thì bài tự về nháp.
+     */
     @Transactional
     public AssignmentViews.Detail review(Actor actor, UUID id, long version) {
         Assignment current = support.lockEditable(actor, id, version, "ASSIGNMENT_REVIEWED");
         if (current.status() != AssignmentStatus.DRAFT) {
-            throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ duyệt bài đang nháp");
+            throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ hoàn tất bài đang nháp");
         }
         List<ValidationIssue> issues = readinessIssues(current);
         if (!issues.isEmpty()) {
-            throw AssignmentProblem.issues(HttpStatus.CONFLICT, "ASSIGNMENT_NOT_READY", "Bài chưa đủ để duyệt", issues);
+            throw AssignmentProblem.issues(HttpStatus.CONFLICT, "ASSIGNMENT_NOT_READY", "Bài chưa đủ để hoàn tất", issues);
         }
         Assignment saved = assignments.save(current.withStatus(AssignmentStatus.REVIEWED, clock.instant()));
         audit.success(actor, "ASSIGNMENT_REVIEWED", saved.id(), AssignmentAudit.details("versionNo", saved.versionNo()));

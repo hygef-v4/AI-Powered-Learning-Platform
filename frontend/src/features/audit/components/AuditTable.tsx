@@ -23,16 +23,16 @@ const HEAD = "border-b border-line bg-sunken px-3 py-2.5 text-left text-xs font-
  * - Thời gian hai dòng ngắn: ngày rồi giờ (giây và ngày đầy đủ khi rê chuột);
  * - Người thực hiện (email), Hành động, Đối tượng (tên do người dùng nhập, có thể rất dài) chia phần còn lại, xuống tối đa
  *   2 dòng, dài hơn thì cắt và hiện đủ khi rê chuột.
- * Khung bảng cao tối đa theo màn hình, hàng tiêu đề đứng yên; màn hẹp thì kéo ngang được ngay (thanh cuộn ngang luôn ở
- * đáy khung đang nhìn thấy, không phải cuộn hết trang mới thấy).
+ * Bảng dài theo nội dung, chỉ có một thanh cuộn dọc là của trang (yêu cầu 2026-11-12: bỏ thanh cuộn riêng của bảng); màn
+ * hẹp thì bảng kéo ngang được.
  */
 export function AuditTable({ data, onPageChange }: Props) {
   const first = data.page * data.size;
   return (
     <div className="flex flex-col gap-3">
-      <div className="max-h-[calc(100dvh-220px)] min-h-64 overflow-auto overscroll-x-contain rounded-xl border border-line bg-surface [scrollbar-gutter:stable]"
+      <div className="overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-xl border border-line bg-surface"
         data-testid="audit-table-scroll">
-        <table className="w-full min-w-[980px] table-fixed border-collapse [&_tbody_tr:last-child>td]:border-b-0 [&_thead_th]:sticky [&_thead_th]:top-0 [&_thead_th]:z-[1]">
+        <table className="w-full min-w-[980px] table-fixed border-collapse [&_tbody_tr:last-child>td]:border-b-0">
           <colgroup>
             <col className="w-12" /><col className="w-[104px]" /><col className="w-[22%]" /><col className="w-[25%]" />
             <col /><col className="w-[112px]" /><col className="w-[124px]" />

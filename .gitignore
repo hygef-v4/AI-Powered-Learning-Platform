@@ -20,3 +20,6 @@ infra/cloudflare.ini
 infra/docker-compose.override.yml
 
 team_db_key
+
+PRODUCT.md
+.impeccable

@@ -231,7 +231,7 @@ describe("AiDraftDialog", () => {
 
   it("the template dropdown lists the subject's templates and can upload one", async () => {
     vi.spyOn(assignmentsApi, "materials").mockResolvedValue([]);
-    vi.spyOn(assignmentsApi, "listAiTemplates").mockResolvedValue([{ assignmentId: "t1", title: "Đề mẫu cuối kỳ" }]);
+    vi.spyOn(assignmentsApi, "listAiTemplates").mockResolvedValue([{ assignmentId: "t1", title: "Đề mẫu cuối kỳ" , subjectTemplate: true }]);
     const requestAiDraft = vi.spyOn(assignmentsApi, "requestAiDraft").mockResolvedValue({
       draftId: "d1", assignmentId: "a1", origin: "AI_TASK", status: "PENDING", taskId: null, proposal: null,
       provenance: {}, safeError: null, baseVersion: 1, createdAt: "now", decidedAt: null,

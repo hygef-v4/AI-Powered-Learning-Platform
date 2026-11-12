@@ -75,6 +75,8 @@ public class GroupSectionService {
         }
         refuse(SectionRules.canClaim(section, actor.accountId()));
         GroupSection claimed = save(section.claimedBy(actor.accountId(), actor.accountId(), clock.instant()));
+        // Nhận, giao, nhả mục cũng là sửa tài liệu: bài đã nộp lại thành Đang làm, nộp lại được.
+        documents.touch(documentId, clock.instant());
         push(documentId, "section.claimed", claimed);
         return SectionView.of(claimed, actor.accountId());
     }
@@ -105,6 +107,8 @@ public class GroupSectionService {
         }
         GroupSection assigned = save(section.claimedBy(assigneeId, actor.accountId(), clock.instant()));
         record(actor, "GROUP_SECTION_ASSIGNED", assigned, Map.of("assignee", assigneeId.toString()));
+        // Nhận, giao, nhả mục cũng là sửa tài liệu: bài đã nộp lại thành Đang làm, nộp lại được.
+        documents.touch(documentId, clock.instant());
         push(documentId, "section.assigned", assigned);
         return SectionView.of(assigned, actor.accountId());
     }
@@ -122,6 +126,8 @@ public class GroupSectionService {
             record(actor, "GROUP_SECTION_RELEASED", released,
                     Map.of("holder", holder.toString(), "cause", ctx.teacher() ? "TEACHER" : "LEADER"));
         }
+        // Nhận, giao, nhả mục cũng là sửa tài liệu: bài đã nộp lại thành Đang làm, nộp lại được.
+        documents.touch(documentId, clock.instant());
         push(documentId, "section.released", released);
         return SectionView.of(released, actor.accountId());
     }

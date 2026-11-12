@@ -9,7 +9,7 @@ import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { workApi } from "../api";
 import { errorMessage, formatDateTime, historyOpen } from "../model/format";
 import { ResultSummaryCard } from "../components/ResultSummaryCard";
-import { assignmentMaterialSections, groupWorkEntries } from "../slots";
+import { assignmentMaterialSections, groupProgressSections, groupWorkEntries } from "../slots";
 import { myStatusLabels, myStatusTones, type AttemptSummary, type StudentDetail } from "../model/types";
 import { rowStatus, useStudentAssignments } from "../hooks/useStudentAssignments";
 
@@ -86,9 +86,12 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
   const newestFirst = attempts && attempts.length > 0 ? [...attempts].sort((a, b) => b.attemptNo - a.attemptNo) : null;
   const gradedAttempt = newestFirst?.find((a) => a.status === "SUBMITTED" && a.graded)
     ?? (latest?.graded ? latest : null);
+  // Thẻ Làm bài chỉ liệt kê bài đã nộp; bài đang làm dở mở bằng nút Tiếp tục làm bài.
+  const submittedOnly = newestFirst?.filter((a) => a.status !== "IN_PROGRESS") ?? null;
+  const latestSubmitted = latest && latest.status !== "IN_PROGRESS" ? latest : null;
   const rowsOfAttempts = practice
-    ? newestFirst ?? (latest ? [{ ...latest, attemptNo: null }] : [])
-    : (newestFirst ? newestFirst.slice(0, 1) : latest ? [latest] : []).map((a) => ({ ...a, attemptNo: null }));
+    ? submittedOnly ?? (latestSubmitted ? [{ ...latestSubmitted, attemptNo: null }] : [])
+    : (submittedOnly ? submittedOnly.slice(0, 1) : latestSubmitted ? [latestSubmitted] : []).map((a) => ({ ...a, attemptNo: null }));
   return (
     <div className="flex flex-col gap-4">
       <PageHeader backHref={back} title={detail.title} breadcrumb={[{ label: "Bài tập", href: back }, { label: detail.title }]} />
@@ -109,8 +112,10 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
               <Alert tone="info" title="Bài có ghi nhận hoạt động">{detail.activityNotice}</Alert>
             )}
           </Section>
+          {/* Bài nhóm: thẻ Tiến độ ngay dưới Thông tin; nhóm nộp rồi thì thành thẻ Kết quả (khi đã có điểm). */}
+          {detail.submissionMode === "GROUP" && <SlotOutlet slot={groupProgressSections} props={{ assignmentId, classId }} />}
           <SlotOutlet slot={assignmentMaterialSections} props={{ classId, materialIds: detail.referenceMaterialIds }} />
-          {gradedAttempt && <ResultSummaryCard attemptId={gradedAttempt.attemptId}
+          {detail.submissionMode !== "GROUP" && gradedAttempt && <ResultSummaryCard attemptId={gradedAttempt.attemptId}
             detailsHref={`${history}&attempt=${encodeURIComponent(gradedAttempt.attemptId)}`} />}
         </div>
         {/* Chỉ bài luyện tập có bộ đếm lượt; bài cá nhân, nhóm không đếm số lần nộp (yêu cầu 2026-11-10). */}

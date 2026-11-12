@@ -70,7 +70,9 @@ public class DocxService implements IDocx {
     @Transactional(readOnly = true)
     public Export exportAssignment(Actor actor, UUID id) {
         Assignment assignment = support.readable(actor, id, "ASSIGNMENT_DOCX_EXPORTED");
-        byte[] bytes = exporter.export(assignment.title(), assignment.instructions(), assignment.skeleton(),
+        // Không xuất phần hướng dẫn cũ (instructions): trang soạn không hiện nó nên tệp tải về cũng không có chữ lạ dưới
+        // tên bài (yêu cầu 2026-11-12).
+        byte[] bytes = exporter.export(assignment.title(), null, assignment.skeleton(),
                 linker(assignment.id()));
         return new Export(fileName(assignment.title()), bytes);
     }
@@ -86,14 +88,32 @@ public class DocxService implements IDocx {
         if (whole != null && RubricService.hasWhole(assignment.parts()) && !whole.criteria().isEmpty()) {
             sections.add(new DocxExporter.RubricSection(RubricService.WHOLE_TITLE, whole.criteria(), whole.totalPoints()));
         }
-        for (DocumentPart part : assignment.parts()) {
+        Map<UUID, String> numbered = numberedHeadings(assignment);
+        for (DocumentPart part : assignment.parts() == null ? List.<DocumentPart>of() : assignment.parts()) {
             AssignmentRubric rubric = byPart.get(part.partId());
-            if (rubric != null && !rubric.criteria().isEmpty()) {
-                sections.add(new DocxExporter.RubricSection(part.title(), rubric.criteria(), rubric.totalPoints()));
+            if (rubric != null && rubric.criteria() != null && !rubric.criteria().isEmpty()) {
+                sections.add(new DocxExporter.RubricSection(numbered.getOrDefault(part.headingBlockId(), part.title()),
+                        rubric.criteria(), rubric.totalPoints()));
             }
         }
         String title = assignment.title() == null ? "" : assignment.title();
         return new Export(fileName("Rubric - " + title), exporter.exportRubric(title, sections));
+    }
+
+    /** Tiêu đề từng câu hỏi kèm số như trong tệp đề (I., I.1.); câu chưa đặt tên chỉ có số. */
+    private static Map<UUID, String> numberedHeadings(Assignment assignment) {
+        Map<UUID, String> out = new java.util.HashMap<>();
+        if (assignment.skeleton() == null || assignment.skeleton().blocks() == null) {
+            return out;
+        }
+        DocxExporter.SectionNumbers numbers = new DocxExporter.SectionNumbers();
+        for (DocumentBlock block : assignment.skeleton().blocks()) {
+            int level = edu.aiplatform.assignments.model.PartCalculator.level(block);
+            if (level > 0) {
+                out.put(block.id(), (numbers.next(level) + " " + block.content().path("text").asText("")).strip());
+            }
+        }
+        return out;
     }
 
     /** F7 nhập: bài nháp, đọc trong bộ nhớ; sơ đồ theo mã chỉ lấy khi người nhập đọc được bài nguồn. */

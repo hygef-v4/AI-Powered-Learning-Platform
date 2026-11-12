@@ -27,7 +27,8 @@ final class AssignmentRequests {
     }
 
     /** {@code title} bỏ trống thì giữ tên bài nguồn. */
-    record Copy(UUID sourceAssignmentId, String title) {
+    /** {@code submissionMode}, {@code gradingMode}: loại của bài copy; bỏ trống thì giữ loại của bài nguồn. */
+    record Copy(UUID sourceAssignmentId, String title, SubmissionMode submissionMode, GradingMode gradingMode) {
     }
 
     record Details(Long version, String title, String instructions, Boolean diagramEnabled, GradingMode gradingMode,

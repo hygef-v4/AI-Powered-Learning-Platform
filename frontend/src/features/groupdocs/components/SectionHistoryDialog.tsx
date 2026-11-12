@@ -6,14 +6,7 @@ import { ApiError } from "@/shared/api/client";
 import { DocumentViewer } from "@/shared/document";
 import { Alert, Dialog, cx } from "@/shared/ui";
 import { getRevisions, groupDocImageUrl } from "../api";
-import type { RevisionKind, RevisionView, SectionView, WorkspaceView } from "../model/types";
-
-const KIND: Record<RevisionKind, string> = {
-  DONE: "Xong",
-  // Dữ liệu cũ của các tính năng đã bỏ (tiếp quản, nhập file cả tài liệu).
-  TAKEOVER: "Bản nháp trước khi bị tiếp quản",
-  IMPORT: "Nhập từ file",
-};
+import type { RevisionView, SectionView, WorkspaceView } from "../model/types";
 
 function memberName(view: Pick<WorkspaceView, "members" | "viewerId">, id: string | null | undefined): string {
   if (!id) return "—";
@@ -54,7 +47,7 @@ export function SectionHistoryDialog({
 
   const current = revisions?.find((r) => r.id === selected) ?? null;
   return (
-    <Dialog open size="xl" icon="history" title={`Lịch sử · ${section.title}`} onClose={onClose}>
+    <Dialog open size="xl" icon="history" title="Lịch sử" onClose={onClose}>
       {error && (
         <Alert tone="danger" role="alert">
           {error}
@@ -63,8 +56,9 @@ export function SectionHistoryDialog({
       {!revisions && !error && <p className="text-sm text-muted">Đang tải…</p>}
       {revisions && revisions.length === 0 && <p className="text-sm text-muted">Mục chưa có bản lịch sử nào.</p>}
       {revisions && revisions.length > 0 && (
-        <div className="grid gap-3 md:grid-cols-[240px_1fr]">
-          <ul aria-label="Các bản lịch sử" className="flex max-h-[60vh] flex-col gap-1 overflow-y-auto">
+        // Chiều cao cố định: đổi bản xem không làm popup cao thấp theo nội dung; mỗi cột tự cuộn.
+        <div className="grid h-[min(52vh,440px)] gap-3 md:grid-cols-[240px_1fr]">
+          <ul aria-label="Các bản lịch sử" className="flex min-h-0 flex-col gap-1 overflow-y-auto">
             {revisions.map((r) => (
               <li key={r.id}>
                 <button
@@ -77,14 +71,12 @@ export function SectionHistoryDialog({
                   )}
                 >
                   <span className="font-semibold text-ink">{formatDateTime(r.createdAt)}</span>
-                  <span className="text-muted">
-                    {KIND[r.kind]} · {memberName(view, r.authorId)}
-                  </span>
+                  <span className="text-muted">{memberName(view, r.authorId)}</span>
                 </button>
               </li>
             ))}
           </ul>
-          <div className="min-h-40 rounded-xl border border-line p-3">
+          <div className="min-h-0 overflow-y-auto rounded-xl border border-line p-3">
             {current && <DocumentViewer document={{ blocks: current.blocks }} imageUrl={groupDocImageUrl(view.documentId)} empty="Bản này trống." />}
           </div>
         </div>

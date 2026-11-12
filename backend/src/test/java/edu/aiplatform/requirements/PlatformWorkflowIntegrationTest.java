@@ -497,6 +497,8 @@ class PlatformWorkflowIntegrationTest {
                         List.of(new RubricItem(UUID.randomUUID(), "Correct answer", BigDecimal.TEN))))));
         prepared = assignmentAuthoringService.detail(teacher, prepared.id());
         assertThat(rubric.complete()).isTrue();
+        // Hoàn tất bài rồi mới xếp lịch giao (yêu cầu 2026-11-11).
+        prepared = assignmentAuthoringService.review(teacher, prepared.id(), prepared.version());
         return assignmentPublicationService.publish(teacher, prepared.id(),
                 new AssignmentCommands.Publish(prepared.version(), null, true, Instant.now().plusSeconds(3600),
                         null, 2, false));

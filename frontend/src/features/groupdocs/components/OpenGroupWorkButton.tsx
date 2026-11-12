@@ -1,59 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ApiError } from "@/shared/api/client";
-import { ButtonLink, Section } from "@/shared/ui";
-import { getMyGroupDoc } from "../api";
-import type { WorkspaceView } from "../model/types";
+import Link from "next/link";
+import { formatDateTime } from "@/features/groups/model/format";
+import { ButtonLink, Pill } from "@/shared/ui";
+import { useMyGroupDoc } from "../hooks/useMyGroupDoc";
 
-/** Trên Assignment Detail bài nhóm (s12d): nhóm, mục của bạn, tiến độ, nút Mở tài liệu nhóm. */
+/** Nội dung thẻ Làm bài của bài nhóm, như bài cá nhân: dòng bản nộp của nhóm (nếu đã nộp) và nút mở tài liệu nhóm. */
 export function OpenGroupWorkButton({ assignmentId }: { assignmentId: string; classId: string }) {
-  const [view, setView] = useState<WorkspaceView | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    getMyGroupDoc(assignmentId).then(
-      (loaded) => {
-        if (active) setView(loaded);
-      },
-      (e: unknown) => {
-        if (!active) return;
-        setMessage(e instanceof ApiError && e.problem.code === "GROUP_NONE" ? "Bạn chưa có nhóm cho bài này." : "Chưa mở được tài liệu nhóm.");
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, [assignmentId]);
+  const { view, message } = useMyGroupDoc(assignmentId);
 
   if (message) return <p className="text-[13px] text-muted">{message}</p>;
   if (!view) return null;
-  const leader = view.members.find((m) => m.leader)?.name ?? "chưa có";
-  // Mục đang soạn hoặc đã Xong do mình viết.
-  const mine = view.sections
-    .filter((s) => s.holderId === view.viewerId || (s.status === "DONE" && s.lastAuthorId === view.viewerId))
-    .map((s) => s.title);
-  const done = view.sections.filter((s) => s.status === "DONE").length;
+  const href = `/group-docs/${encodeURIComponent(view.documentId)}`;
+  const submission = view.lastSubmission;
   return (
-    <Section title="Bài nhóm" icon="groups" tone="accent">
-      <dl className="grid grid-cols-[110px_1fr] gap-y-1 text-[13px]">
-        <dt className="text-muted">Nhóm</dt>
-        <dd>
-          {view.groupName} · trưởng nhóm {leader}
-        </dd>
-        <dt className="text-muted">Mục của bạn</dt>
-        <dd>{mine.length ? mine.join(", ") : "Chưa nhận mục nào"}</dd>
-        <dt className="text-muted">Tiến độ</dt>
-        <dd>
-          {done} / {view.sections.length} mục Xong
-        </dd>
-      </dl>
-      <div>
-        <ButtonLink href={`/group-docs/${view.documentId}`} variant="primary">
-          Mở tài liệu nhóm
-        </ButtonLink>
-      </div>
-    </Section>
+    <>
+      {submission && (
+        <ul aria-label="Bài nộp" className="-mx-2 flex flex-col">
+          <li>
+            <Link href={href} className="row-interactive flex items-center justify-between gap-3 rounded-lg px-2 py-2 text-[13px] hover:bg-shell">
+              <span className="font-mono text-xs text-muted">{formatDateTime(submission.submittedAt)}</span>
+              <Pill tone={submission.late ? "accent" : "success"}>{submission.late ? "Nộp trễ" : "Đã nộp"}</Pill>
+            </Link>
+          </li>
+        </ul>
+      )}
+      <ButtonLink href={href} variant="primary">Mở tài liệu nhóm</ButtonLink>
+    </>
   );
 }

@@ -70,7 +70,28 @@ class AssignmentAiRevisionTest {
         assertThat(snapshot.document().path("title").asText()).isEqualTo("Bài 1");
         assertThat(snapshot.blockRefs().path("b3").asText()).isEqualTo(image.toString());
         var prompt = AssignmentDraftRevision.buildPrompt(a, "Dịch sang tiếng Anh", snapshot.document());
-        assertThat(prompt.user()).contains("Dịch sang tiếng Anh").contains("数据模型设计");
+        assertThat(prompt.user()).contains("Dịch sang tiếng Anh").contains("数据模型设计")
+                .doesNotContain("FORMAT TEMPLATE").doesNotContain("REFERENCE MATERIAL");
+    }
+
+    @Test
+    void revisionPromptKeepsTheTemplateApartFromReferenceMaterials() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, chineseSkeleton(), true);
+        var snapshot = AssignmentDraftRevision.snapshot(a, f.rubricsOf(a.id()));
+
+        var prompt = AssignmentDraftRevision.buildPrompt(a, "Viết lại theo mẫu", snapshot.document(),
+                "I. Phần trắc nghiệm\nII. Phần tự luận",
+                List.of(new edu.aiplatform.ai.contract.MaterialText(UUID.randomUUID(), "Chương 3", "Nội dung UML", false,
+                        null)));
+
+        String user = prompt.user();
+        assertThat(user).contains("FORMAT TEMPLATE (follow its structure):\n<format_template>\nI. Phần trắc nghiệm")
+                .contains("REFERENCE MATERIAL 1 (content source): Chương 3\n<source_material>\nNội dung UML\n"
+                        + "</source_material>")
+                .contains("<user_request>\nViết lại theo mẫu\n</user_request>");
+        assertThat(user.indexOf("FORMAT TEMPLATE")).isLessThan(user.indexOf("REFERENCE MATERIAL"));
+        assertThat(user.indexOf("REFERENCE MATERIAL")).isLessThan(user.indexOf("Current assessment JSON"));
+        assertThat(prompt.system()).contains("FORMAT TEMPLATE").contains("REFERENCE MATERIALS");
     }
 
     @Test

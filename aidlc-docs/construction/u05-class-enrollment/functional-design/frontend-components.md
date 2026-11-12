@@ -88,7 +88,7 @@ features/academics/slots.ts                          StudentClassSection, Teache
 |---|---|---|
 | `ClassDashboardPage` (Student) | `GET /api/v1/me/classes` | "Lớp của tôi"; tab Đang học, Đã kết thúc; thẻ lớp: mã môn, tên môn, "GV tên", vùng `ClassCardSection` (U08: số bài sắp đến hạn hoặc đang mở, "Chưa có bài"); bấm thẻ mở Student Class Detail |
 | `ClassDashboardPage` (Teacher, Subject Manager) | `GET /api/v1/teaching/classes` | "Lớp được phân công"; tab Sắp mở, Đang dạy, Đã kết thúc (kèm số); thẻ lớp: mã môn, tên môn, "Lớp mã", số sinh viên; bấm thẻ mở Teacher Class Detail |
-| `StudentClassPage` | `GET /api/v1/me/classes/{id}` | Nút quay lại; tên môn; đường dẫn "Lớp của tôi › mã môn · mã lớp · GV"; các phần do unit khác gắn qua `StudentClassSection`, theo thứ tự: Học liệu (U13), Bài tập sắp đến hạn (U08), Thông báo lớp (U14), Nhóm của tôi (U12) |
+| `StudentClassPage` | `GET /api/v1/me/classes/{id}` | Thông tin lớp và cột Giảng viên/Nhóm của tôi; bên dưới là Tổng quan bài tập đủ chiều rộng (U08: Chưa làm, Đang làm, Đã nộp và danh sách cần làm có lọc loại). Không có thẻ Thông báo gần đây; xem thông báo từ menu lớp. Tab Học liệu dùng `StudentClassSection` (U13), Nhóm của tôi dùng `StudentClassAside` (U12), Tổng quan dùng `StudentClassBoard` (U08). |
 | `TeacherClassPage` | `GET /api/v1/teaching/classes/{id}` | Nút quay lại; tên môn kèm nhãn trạng thái; đường dẫn "Lớp được phân công › mã môn · mã lớp"; tab Thông tin lớp, Sinh viên (kèm số), Học liệu (U13), Đánh giá (U07, U10), Sổ điểm (U09) |
 | `ClassInfoTab` | - | Thẻ "Thông tin lớp": Môn, Mã lớp, Giảng viên, Trạng thái, Mô tả; thẻ số Sinh viên đang học; phần do unit khác gắn qua `TeacherClassTab` "info": Nhóm và số sinh viên chưa có nhóm (U12), Bài đang mở, Chờ chấm, Tiến độ nộp bài, Phân bố điểm (U09) |
 | `StudentsTab` | `GET /api/v1/teaching/classes/{id}/students` | Ô tìm theo tên hoặc email; bảng #, Họ tên (avatar), Email, Nhóm (U12); phân trang. Lớp đã chia nhóm thì phần nhóm của U12 hiện thay bảng |
@@ -100,7 +100,7 @@ Route theo `RoleGuard` của U01: `/classes/*` cho Student; `/teaching/*` cho Te
 
 | Slot | Unit gắn | Dùng để |
 |---|---|---|
-| `StudentClassSection` | U13 (Học liệu), U08 (Bài tập sắp đến hạn), U14 (Thông báo lớp), U12 (Nhóm của tôi) | Phần nội dung trên Student Class Detail |
+| `StudentClassSection`, `StudentClassAside`, `StudentClassBoard` | U13 (Học liệu), U12 (Nhóm của tôi), U08 (Tổng quan bài tập) | Ba vùng độc lập của trang lớp sinh viên; U14 không đăng ký thẻ thông báo ở tổng quan. |
 | `TeacherClassTab` | "info": U12, U09; "students": U12; "materials": U13; "evals": U07, U10 (U09 gắn cột Bài nộp qua slot của U07); "gradebook": U09 | Tab và phần trên Teacher Class Detail |
 | `StudentDetailSection` | U12 (nhóm), U09 (bài nộp, điểm trong lớp) | Phần trong popup Student Detail |
 | `SubjectSummarySection` | U13 (học liệu), U10 (câu hỏi, Quiz), U07 (bài tập của môn) | Số liệu theo môn trên Manager Dashboard và My Subject |

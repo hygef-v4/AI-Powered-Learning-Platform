@@ -32,7 +32,8 @@ public final class WorkViews {
                       UUID inProgressAttemptId, Instant lastSubmittedAt, GroupWork group) {
     }
 
-    public record GroupWork(UUID groupDocumentId, boolean submitted, Instant submittedAt) {
+    /** {@code changedSinceSubmit}: nhóm sửa sau lần nộp cuối, bài lại là Đang làm. */
+    public record GroupWork(UUID groupDocumentId, boolean submitted, Instant submittedAt, boolean changedSinceSubmit) {
     }
 
     public record AttemptSummary(UUID attemptId, int attemptNo, AttemptStatus status, Instant startedAt,

@@ -27,16 +27,23 @@ final class PngChunks {
 
     /** Ảnh đại diện 480×270: khung, ba hình chữ nhật nối nhau; XML sơ đồ ghi vào chunk {@code tEXt mxfile}. */
     static byte[] diagramPlaceholder(String xml) {
+        return diagramPlaceholder(xml, true);
+    }
+
+    /** {@code drawn} sai (sơ đồ chưa vẽ gì): chỉ có khung trống, không vẽ hình đại diện (lỗi 2026-11-12). */
+    static byte[] diagramPlaceholder(String xml, boolean drawn) {
         int width = 480;
         int height = 270;
         int[] pixels = new int[width * height];
         Arrays.fill(pixels, 0xF8FAFC);
         rect(pixels, width, 0, 0, width, height, 0xCBD5E1, false);
-        box(pixels, width, 40, 100, 110, 70);
-        box(pixels, width, 185, 100, 110, 70);
-        box(pixels, width, 330, 100, 110, 70);
-        rect(pixels, width, 150, 133, 35, 4, 0x475569, true);
-        rect(pixels, width, 295, 133, 35, 4, 0x475569, true);
+        if (drawn) {
+            box(pixels, width, 40, 100, 110, 70);
+            box(pixels, width, 185, 100, 110, 70);
+            box(pixels, width, 330, 100, 110, 70);
+            rect(pixels, width, 150, 133, 35, 4, 0x475569, true);
+            rect(pixels, width, 295, 133, 35, 4, 0x475569, true);
+        }
         byte[] png = encode(pixels, width, height);
         return xml == null ? png : withText(png, MXFILE, encodeUri(xml));
     }

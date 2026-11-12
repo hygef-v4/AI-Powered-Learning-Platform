@@ -71,7 +71,7 @@ final class PromptRuleScanner {
                     + "|an)|huong dan (he thong|an|goc))\\b"),
             // --- Giả thẻ phân định / lượt hội thoại ---
             rule("T1_DELIMITER_SPOOF", INJECTION, "<\\s*/?\\s*(user_request|source_material|student_submission"
-                    + "|current_document|bai_nop|untrusted_data|system|assistant|developer)\\s*>"),
+                    + "|current_document|format_template|bai_nop|untrusted_data|system|assistant|developer)\\s*>"),
             rule("T1_CHAT_TOKEN", INJECTION, "<\\|\\s*(im_start|im_end|system|endoftext|eot_id|start_header_id)"
                     + "\\s*\\|>|\\[/?\\s*(inst|sys)\\s*\\]|<<\\s*/?\\s*sys\\s*>>"),
             rule("T1_ROLE_HEADER", INJECTION, "^\\s*(#{2,}\\s*(system|instructions?)\\b|(system|assistant|developer)"

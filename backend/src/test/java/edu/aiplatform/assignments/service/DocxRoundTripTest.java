@@ -131,6 +131,89 @@ class DocxRoundTripTest {
     }
 
     @Test
+    void rubricExportSurvivesMissingTitlesAndPointsAndShowsTheTotal() throws Exception {
+        RubricCriterion untitled = new RubricCriterion(UUID.randomUUID(), null, null, CriterionKind.TEXT,
+                List.of(new RubricItem(UUID.randomUUID(), null, null),
+                        new RubricItem(UUID.randomUUID(), "Đúng quan hệ", new BigDecimal("2.00"))));
+        byte[] docx = exporter.exportRubric(null, List.of(
+                new DocxExporter.RubricSection(null, List.of(untitled), null),
+                new DocxExporter.RubricSection("I.1. Sơ đồ lớp", List.of(untitled), new BigDecimal("2.00"))));
+        try (XWPFDocument doc = new XWPFDocument(new ByteArrayInputStream(docx))) {
+            assertThat(doc.getParagraphs()).extracting(XWPFParagraph::getText)
+                    .contains("Tổng điểm: 2", "I.1. Sơ đồ lớp (2 điểm)");
+            assertThat(doc.getTables()).hasSize(2);
+            assertThat(doc.getTables().get(1).getRow(2).getCell(1).getText()).isEqualTo("2");
+        }
+    }
+
+    @Test
+    void emptyTableFillsThePageAndAnUndrawnDiagramIsAnEmptyFrame() throws Exception {
+        ObjectNode table = JsonNodeFactory.instance.objectNode();
+        var rows = table.putArray("rows");
+        for (int i = 0; i < 3; i++) {
+            var row = rows.addArray();
+            for (int j = 0; j < 4; j++) {
+                row.addObject().putArray("runs");
+            }
+        }
+        DocumentBlock undrawn = AssignmentFixtures.diagram("");
+        byte[] docx = exporter.export("Đề", null, new DocumentModel(List.of(AssignmentFixtures.heading("H1", "Câu 1"),
+                new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.TABLE, table), undrawn)), linker);
+        try (XWPFDocument doc = new XWPFDocument(new ByteArrayInputStream(docx))) {
+            XWPFTable exported = doc.getTables().get(0);
+            assertThat(exported.getRows()).hasSize(3);
+            assertThat(exported.getWidthType()).isEqualTo(org.apache.poi.xwpf.usermodel.TableWidthType.PCT);
+            assertThat(exported.getRow(0).getTableCells()).hasSize(4)
+                    .allSatisfy(cell -> assertThat(cell.getWidthType())
+                            .isEqualTo(org.apache.poi.xwpf.usermodel.TableWidthType.PCT));
+            assertThat(doc.getParagraphs()).extracting(XWPFParagraph::getText)
+                    .anySatisfy(text -> assertThat(text).contains("Chưa có sơ đồ"))
+                    .noneSatisfy(text -> assertThat(text).contains("bấm vào ảnh"));
+        }
+        assertThat(PngChunks.diagramPlaceholder(null, false)).isNotEqualTo(PngChunks.diagramPlaceholder(null, true));
+    }
+
+    @Test
+    void exportKeepsTheFormattingShownInTheEditor() throws Exception {
+        ObjectNode title = JsonNodeFactory.instance.objectNode().put("align", "CENTER");
+        title.putArray("runs").addObject().put("text", "Đề giữa kỳ").put("italic", true);
+        ObjectNode heading = JsonNodeFactory.instance.objectNode().put("style", "H1").put("text", "Phân tích")
+                .put("align", "RIGHT");
+        heading.putArray("runs").addObject().put("text", "Phân tích").put("underline", true).put("color", "#C00000");
+        ObjectNode paragraph = JsonNodeFactory.instance.objectNode();
+        // Ký tự điều khiển dán từ nơi khác vào: phải bỏ, nếu còn thì Word báo tệp hỏng.
+        paragraph.putArray("runs").addObject().put("text", "Tô nền").put("highlight", "#FFF2CC")
+                .put("color", "not-a-color");
+        ObjectNode table = JsonNodeFactory.instance.objectNode();
+        table.putArray("widths").add(70).add(30);
+        var row = table.putArray("rows").addArray();
+        row.addObject().put("align", "CENTER").putArray("runs").addObject().put("text", "A");
+        row.addObject().putArray("runs").addObject().put("text", "B");
+        DocumentModel model = new DocumentModel(List.of(
+                new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.HEADING, heading),
+                new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.PARAGRAPH, paragraph),
+                new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.TABLE, table)), title);
+
+        try (XWPFDocument doc = new XWPFDocument(new ByteArrayInputStream(exporter.export("Tên thuần", null, model, linker)))) {
+            XWPFParagraph first = doc.getParagraphs().get(0);
+            assertThat(first.getText()).isEqualTo("Đề giữa kỳ");
+            assertThat(first.getAlignment()).isEqualTo(org.apache.poi.xwpf.usermodel.ParagraphAlignment.CENTER);
+            assertThat(first.getRuns().get(0).isItalic()).isTrue();
+            XWPFParagraph exportedHeading = doc.getParagraphs().get(1);
+            assertThat(exportedHeading.getText()).isEqualTo("I. Phân tích");
+            assertThat(exportedHeading.getAlignment()).isEqualTo(org.apache.poi.xwpf.usermodel.ParagraphAlignment.RIGHT);
+            assertThat(exportedHeading.getRuns().get(1).getColor()).isEqualTo("C00000");
+            XWPFParagraph body = doc.getParagraphs().get(2);
+            assertThat(body.getText()).isEqualTo("Tô nền");
+            assertThat(body.getRuns().get(0).getCTR().xmlText()).contains("w:fill=\"FFF2CC\"");
+            XWPFTable exported = doc.getTables().get(0);
+            assertThat(exported.getRow(0).getCell(0).getWidth()).isGreaterThan(exported.getRow(0).getCell(1).getWidth());
+            assertThat(exported.getRow(0).getCell(0).getParagraphs().get(0).getAlignment())
+                    .isEqualTo(org.apache.poi.xwpf.usermodel.ParagraphAlignment.CENTER);
+        }
+    }
+
+    @Test
     void exportedPngCarriesMxfileChunk() {
         byte[] png = PngChunks.diagramPlaceholder(DocumentModelServiceTest.DIAGRAM);
         assertThat(PngChunks.isPng(png)).isTrue();
