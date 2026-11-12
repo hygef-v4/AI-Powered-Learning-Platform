@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.aiplatform.ai.service.IProviderGateway;
+import edu.aiplatform.ai.contract.AiImage;
 import edu.aiplatform.ai.contract.AiProvider;
 import java.io.IOException;
 import java.net.ConnectException;
@@ -18,6 +19,8 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Base64;
+import java.util.Locale;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -34,6 +37,7 @@ public class HttpProviderGateway implements IProviderGateway {
             AiProvider.OPENAI, "https://api.openai.com",
             AiProvider.CLAUDE, "https://api.anthropic.com");
     static final String RESULT_TOOL = "return_result";
+    static final String IMAGES_NOT_SUPPORTED = "Model đang dùng không đọc được ảnh; hãy chọn model khác";
 
     private final ObjectMapper json;
     private final Map<AiProvider, String> baseUrls;
@@ -65,7 +69,11 @@ public class HttpProviderGateway implements IProviderGateway {
         if (r.system() != null) {
             body.putObject("systemInstruction").putArray("parts").addObject().put("text", r.system());
         }
-        body.putArray("contents").addObject().put("role", "user").putArray("parts").addObject().put("text", r.user());
+        ArrayNode parts = body.putArray("contents").addObject().put("role", "user").putArray("parts");
+        for (AiImage image : r.images()) {
+            parts.addObject().putObject("inline_data").put("mime_type", image.mediaType()).put("data", base64(image));
+        }
+        parts.addObject().put("text", r.user());
         ObjectNode config = body.putObject("generationConfig");
         config.put("maxOutputTokens", r.maxOutputTokens());
         if (r.outputSchema() != null) {
@@ -101,7 +109,16 @@ public class HttpProviderGateway implements IProviderGateway {
         if (r.system() != null) {
             messages.addObject().put("role", "system").put("content", r.system());
         }
-        messages.addObject().put("role", "user").put("content", r.user());
+        if (r.images().isEmpty()) {
+            messages.addObject().put("role", "user").put("content", r.user());
+        } else {
+            ArrayNode content = messages.addObject().put("role", "user").putArray("content");
+            for (AiImage image : r.images()) {
+                content.addObject().put("type", "image_url").putObject("image_url")
+                        .put("url", "data:" + image.mediaType() + ";base64," + base64(image)).put("detail", "high");
+            }
+            content.addObject().put("type", "text").put("text", r.user());
+        }
         body.put("max_completion_tokens", r.maxOutputTokens());
         if (r.outputSchema() != null) {
             ObjectNode format = body.putObject("response_format");
@@ -128,7 +145,16 @@ public class HttpProviderGateway implements IProviderGateway {
         if (r.system() != null) {
             body.put("system", r.system());
         }
-        body.putArray("messages").addObject().put("role", "user").put("content", r.user());
+        if (r.images().isEmpty()) {
+            body.putArray("messages").addObject().put("role", "user").put("content", r.user());
+        } else {
+            ArrayNode content = body.putArray("messages").addObject().put("role", "user").putArray("content");
+            for (AiImage image : r.images()) {
+                content.addObject().put("type", "image").putObject("source").put("type", "base64")
+                        .put("media_type", image.mediaType()).put("data", base64(image));
+            }
+            content.addObject().put("type", "text").put("text", r.user());
+        }
         if (r.outputSchema() != null) {
             ObjectNode tool = body.putArray("tools").addObject();
             tool.put("name", RESULT_TOOL);
@@ -182,7 +208,19 @@ public class HttpProviderGateway implements IProviderGateway {
                         null);
             }
         }
+        if (status == 400 && !r.images().isEmpty() && mentionsImage(response.body())) {
+            throw new ProviderException(FailureKind.REJECTED, status, IMAGES_NOT_SUPPORTED, null);
+        }
         throw new ProviderException(kindOf(status), status, safeMessage(status, response.body()), null);
+    }
+
+    private static String base64(AiImage image) {
+        return Base64.getEncoder().encodeToString(image.bytes());
+    }
+
+    /** Body chỉ dùng để phân loại lỗi model không nhận ảnh, không đưa vào thông báo (BR-U06-59, 60). */
+    private static boolean mentionsImage(String body) {
+        return body != null && body.toLowerCase(Locale.ROOT).contains("image");
     }
 
     /** 4xx và quá tải là từ chối, không tính token; lỗi 5xx khác không rõ đã xử lý chưa (BR-U06-14). */

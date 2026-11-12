@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 /**
  * Quy tắc theo {@code purpose}: role được tải lên (BR-U03-04), trần dung lượng lấy từ Settings (BR-U03-02, 87) và luôn
  * bị kẹp trong trần cứng 50 MB, 5 MB, 2 MB. Loại tệp cố định, không có trong Settings: học liệu PDF, DOCX, PPTX, XLSX; ảnh
- * trong tài liệu PNG, JPEG; tệp nguồn soạn bài bằng AI TXT, DOCX, PDF.
+ * trong tài liệu PNG, JPEG; tệp nguồn soạn bài bằng AI TXT, DOCX, PDF; tệp nhập đề PNG, JPEG, WEBP, PDF (trần 10 MB).
  */
 @Component
 public class PurposePolicy {
@@ -20,17 +20,20 @@ public class PurposePolicy {
     public static final SettingKey<Integer> MATERIAL_MAX_MB = new SettingKey<>("files.material.maxSizeMb", Integer.class);
     public static final SettingKey<Integer> IMAGE_MAX_MB = new SettingKey<>("files.documentImage.maxSizeMb", Integer.class);
     public static final SettingKey<Integer> ASSIGNMENT_SOURCE_MAX_MB = new SettingKey<>("files.assignmentSource.maxSizeMb", Integer.class);
+    public static final SettingKey<Integer> ASSIGNMENT_IMPORT_MAX_MB = new SettingKey<>("files.assignmentImport.maxSizeMb", Integer.class);
 
     static final Map<ArtifactPurpose, Integer> HARD_CAP_MB = Map.of(ArtifactPurpose.MATERIAL, 50,
-            ArtifactPurpose.DOCUMENT_IMAGE, 5, ArtifactPurpose.ASSIGNMENT_SOURCE, 2);
+            ArtifactPurpose.DOCUMENT_IMAGE, 5, ArtifactPurpose.ASSIGNMENT_SOURCE, 2, ArtifactPurpose.ASSIGNMENT_IMPORT, 10);
     static final Map<ArtifactPurpose, Set<FileType>> SUPPORTED = Map.of(
             ArtifactPurpose.MATERIAL, EnumSet.of(FileType.PDF, FileType.DOCX, FileType.PPTX, FileType.XLSX),
             ArtifactPurpose.DOCUMENT_IMAGE, EnumSet.of(FileType.PNG, FileType.JPEG),
-            ArtifactPurpose.ASSIGNMENT_SOURCE, EnumSet.of(FileType.TXT, FileType.DOCX, FileType.PDF));
+            ArtifactPurpose.ASSIGNMENT_SOURCE, EnumSet.of(FileType.TXT, FileType.DOCX, FileType.PDF),
+            ArtifactPurpose.ASSIGNMENT_IMPORT, EnumSet.of(FileType.PNG, FileType.JPEG, FileType.WEBP, FileType.PDF));
     static final Map<ArtifactPurpose, Set<Role>> UPLOADERS = Map.of(
             ArtifactPurpose.MATERIAL, EnumSet.of(Role.TEACHER, Role.SUBJECT_MANAGER),
             ArtifactPurpose.DOCUMENT_IMAGE, EnumSet.of(Role.STUDENT, Role.TEACHER, Role.SUBJECT_MANAGER),
-            ArtifactPurpose.ASSIGNMENT_SOURCE, EnumSet.of(Role.TEACHER, Role.SUBJECT_MANAGER));
+            ArtifactPurpose.ASSIGNMENT_SOURCE, EnumSet.of(Role.TEACHER, Role.SUBJECT_MANAGER),
+            ArtifactPurpose.ASSIGNMENT_IMPORT, EnumSet.of(Role.TEACHER, Role.SUBJECT_MANAGER));
 
     private final ISettings settings;
 
@@ -48,6 +51,7 @@ public class PurposePolicy {
             case MATERIAL -> MATERIAL_MAX_MB;
             case DOCUMENT_IMAGE -> IMAGE_MAX_MB;
             case ASSIGNMENT_SOURCE -> ASSIGNMENT_SOURCE_MAX_MB;
+            case ASSIGNMENT_IMPORT -> ASSIGNMENT_IMPORT_MAX_MB;
         };
         int size = settings.get(sizeKey).map(value -> Math.max(1, Math.min(cap, value))).orElse(cap);
         return new PurposeLimits(purpose, size, EnumSet.copyOf(SUPPORTED.get(purpose)));

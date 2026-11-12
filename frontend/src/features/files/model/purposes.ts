@@ -1,4 +1,5 @@
-export type ArtifactPurpose = "MATERIAL" | "DOCUMENT_IMAGE" | "ASSIGNMENT_SOURCE";
+/** {@code ASSIGNMENT_IMPORT}: ảnh/PDF đề cũ nhập thành khung đề, máy chủ chỉ kiểm, không lưu (BR-U03-99). */
+export type ArtifactPurpose = "MATERIAL" | "DOCUMENT_IMAGE" | "ASSIGNMENT_SOURCE" | "ASSIGNMENT_IMPORT";
 
 export type PurposePolicy = {
   purpose: ArtifactPurpose;

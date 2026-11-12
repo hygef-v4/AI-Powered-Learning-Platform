@@ -151,6 +151,15 @@ Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; đối chiếu lạ
 @PostMapping("/versions")
 ```
 
+## [assignments/controller/AssignmentImportController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/AssignmentImportController.java)
+
+Thêm 2026-11-11 trên nhánh `feat/exam-image-import`, chưa có ở staging. Nhập đề từ ảnh/PDF (BR-U07-87). Ghi đề qua `POST /ai-drafts/{draftId}:apply`, body thêm `placement` (`REPLACE` hoặc `APPEND`). `GET /ai-drafts/{draftId}` của bản nhập đề READY trả thêm `proposal.previews` (id khối ảnh → link tải 5 phút của hình đã cắt, cấp mỗi lần đọc, không lưu).
+
+```java
+@RequestMapping("/api/v1/assignments/{id}/imports")
+@PostMapping(consumes = "multipart/form-data")
+```
+
 ## [assignments/controller/ClassAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/ClassAssignmentController.java)
 
 ```java

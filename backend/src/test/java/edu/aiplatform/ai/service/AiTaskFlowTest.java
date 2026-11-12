@@ -60,6 +60,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -576,5 +577,118 @@ class AiTaskFlowTest {
         assertThat(task.state()).isEqualTo(AiTaskState.CANCELLED);
         verify(quota).release(teacher.accountId(), task.quotaDay(), task.reservedTokens());
         assertThat(worker.findStalePending(NOW.plusSeconds(1))).isEmpty();
+    }
+
+    // ---- ảnh trong prompt (BR-U06-54…59) -------------------------------------------------------------------
+
+    private final Map<String, byte[]> pages = new ConcurrentHashMap<>();
+
+    private void registerPages() {
+        edu.aiplatform.ai.contract.IAiImageSource source = new edu.aiplatform.ai.contract.IAiImageSource() {
+            @Override
+            public String source() {
+                return "TEST_PAGES";
+            }
+
+            @Override
+            public Optional<edu.aiplatform.ai.contract.AiImage> load(String ref) {
+                return Optional.ofNullable(pages.get(ref))
+                        .map(bytes -> new edu.aiplatform.ai.contract.AiImage("image/jpeg", bytes));
+            }
+        };
+        AiImageSourceRegistry registry = AiImageSourceRegistry.of(List.of(source));
+        service.setImageSources(registry);
+        worker.setImageSources(registry);
+    }
+
+    private AiTaskRequest imageRequest(String ref, List<edu.aiplatform.ai.contract.AiImageRef> images) {
+        return new AiTaskRequest(teacher, AiSource.PERSONAL, AiProvider.OPENAI, "GRADING_PROPOSAL", "evaluation:1", 3,
+                ref, new AiPrompt("Chép đề", "Trang 1", images), SCHEMA, 500);
+    }
+
+    private static edu.aiplatform.ai.contract.AiImageRef page(String ref) {
+        return new edu.aiplatform.ai.contract.AiImageRef("TEST_PAGES", ref, "image/jpeg");
+    }
+
+    @Test
+    void imagePromptStoresOnlyReferencesAndWorkerSendsLoadedBytes() throws Exception {
+        registerPages();
+        pages.put("d/1", new byte[]{9, 8, 7});
+        AiTaskView view = service.submit(imageRequest("img-1", List.of(page("d/1"))));
+
+        String payload = tasks.rows.get(view.taskId()).inputPayload();
+        assertThat(json.readTree(payload).at("/images/0/ref").asText()).isEqualTo("d/1");
+        assertThat(payload).doesNotContain("CQgH");
+        when(gateway.call(eq(AiProvider.OPENAI), any()))
+                .thenReturn(new Response("{\"score\":1}", "req", new Usage(10L, 5L, null, null)));
+
+        worker.handle(message(view.taskId()));
+
+        ArgumentCaptor<IProviderGateway.Request> sent = ArgumentCaptor.forClass(IProviderGateway.Request.class);
+        verify(gateway).call(eq(AiProvider.OPENAI), sent.capture());
+        assertThat(sent.getValue().images()).hasSize(1);
+        assertThat(sent.getValue().images().get(0).bytes()).containsExactly(9, 8, 7);
+        assertThat(tasks.rows.get(view.taskId()).state()).isEqualTo(AiTaskState.READY);
+    }
+
+    @Test
+    void missingImageFailsTheTaskWithoutCallingTheProvider() {
+        registerPages();
+        AiTaskView view = service.submit(imageRequest("img-2", List.of(page("gone"))));
+
+        worker.handle(message(view.taskId()));
+
+        AiTask task = tasks.rows.get(view.taskId());
+        assertThat(task.state()).isEqualTo(AiTaskState.FAILED);
+        assertThat(task.safeError()).isEqualTo(AiTaskJobHandler.MISSING_IMAGES);
+        verify(gateway, org.mockito.Mockito.never()).call(any(), any());
+    }
+
+    @Test
+    void rejectsImagesFromUnknownSourcesOrWithUnsupportedTypes() {
+        registerPages();
+        assertThatThrownBy(() -> service.submit(imageRequest("img-3", List.of(
+                new edu.aiplatform.ai.contract.AiImageRef("OTHER", "x", "image/jpeg")))))
+                .isInstanceOf(ApiException.class).hasMessageContaining("Ảnh");
+        assertThatThrownBy(() -> service.submit(imageRequest("img-4", List.of(
+                new edu.aiplatform.ai.contract.AiImageRef("TEST_PAGES", "x", "image/gif")))))
+                .isInstanceOf(ApiException.class);
+        List<edu.aiplatform.ai.contract.AiImageRef> eleven = java.util.stream.IntStream.range(0, 11)
+                .mapToObj(i -> page("p" + i)).toList();
+        assertThatThrownBy(() -> service.submit(imageRequest("img-5", eleven))).isInstanceOf(ApiException.class);
+    }
+
+    @Test
+    void imagesAddToTheQuotaEstimateAndTheDuplicateFingerprint() {
+        registerPages();
+        AiTaskRequest shared = new AiTaskRequest(teacher, AiSource.SHARED, null, "GRADING_PROPOSAL", "evaluation:1", 3,
+                "img-6", new AiPrompt("s", "u", List.of(page("a"), page("b"))), SCHEMA, 500);
+
+        service.submit(shared);
+
+        verify(quota).reserve(teacher.accountId(), QuotaReservationService.estimate(
+                2 + 2 * edu.aiplatform.ai.contract.AiTokenEstimate.IMAGE_PROMPT_CHARS, 500));
+        assertThat(AiTaskService.fingerprint(shared)).isNotEqualTo(AiTaskService.fingerprint(new AiTaskRequest(
+                teacher, AiSource.SHARED, null, "GRADING_PROPOSAL", "evaluation:1", 3, "img-6",
+                new AiPrompt("s", "u", List.of(page("a"))), SCHEMA, 500)));
+    }
+
+    @Test
+    void imagePromptsOnlyUseConnectionsWhoseModelReadsImages() {
+        AiProperties visionLimited = new AiProperties(KeyCipherAndCatalogTest.KEY_V1, null, Duration.ofSeconds(120),
+                Duration.ofSeconds(20), Map.of(
+                "gemini", new AiProperties.Provider(List.of("gemini-2.5-flash"), 8192, List.of("gemini-2.5-pro")),
+                "openai", new AiProperties.Provider(List.of("gpt-4.1-mini"), 4096, List.of())));
+        AiTaskResultHandlerRegistry registry = AiTaskResultHandlerRegistry.of(List.of(handler));
+        AiAccess access = new AiAccess(authorization, mock(IAudit.class), clock);
+        AiTaskService limited = new AiTaskService(tasks, connections, usageRepository, registry, quota,
+                new ProviderCatalog(visionLimited), new JsonSchemaChecker(json), access, new PromptGuardrailService(),
+                new AiTaskDelivery(tasks, registry, accounts, tx), jobs, json, tx, clock);
+        when(quota.remaining(teacher.accountId())).thenReturn(new QuotaReservationService.Remaining(0, 100_000,
+                100_000, null));
+
+        assertThat(limited.sourceOrder(teacher, new AiPrompt("s", "u"), 500)).hasSize(2);
+        assertThat(limited.sourceOrder(teacher, new AiPrompt("s", "u", List.of(page("a"))), 500)).containsExactly(
+                new edu.aiplatform.ai.contract.AiSourceChoice(AiSource.PERSONAL, AiProvider.OPENAI));
     }
 }

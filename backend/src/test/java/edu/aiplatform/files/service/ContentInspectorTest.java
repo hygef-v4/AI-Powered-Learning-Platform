@@ -47,6 +47,14 @@ class ContentInspectorTest {
     }
 
     @Test
+    void detectsWebpByItsRiffSignature() throws Exception {
+        byte[] webp = {'R', 'I', 'F', 'F', 0x1A, 0, 0, 0, 'W', 'E', 'B', 'P', 'V', 'P', '8', 'L', 0x0D, 0, 0, 0, 0x2F,
+                0, 0, 0, 0x10, 0x07, 0x10, 0x11, 0x11, (byte) 0x88, (byte) 0x88, (byte) 0xFE, 0x07, 0};
+
+        assertThat(inspector.detect(write("de.png", webp), "de.png")).contains(FileType.WEBP);
+    }
+
+    @Test
     void textRenamedAsPdfIsRecognizedByItsActualContent() throws Exception {
         assertThat(inspector.detect(write("gia.pdf", TestFiles.TEXT), "gia.pdf")).contains(FileType.TXT);
     }

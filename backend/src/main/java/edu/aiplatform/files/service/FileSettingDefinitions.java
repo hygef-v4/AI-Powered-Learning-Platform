@@ -34,4 +34,12 @@ public class FileSettingDefinitions {
                 SettingType.INTEGER, 2,
                 Map.of(SettingValidator.MIN, 1, SettingValidator.MAX, 2, SettingValidator.UNIT, "MB"));
     }
+
+    @Bean
+    SettingDefinition assignmentImportMaxSize() {
+        return new SettingDefinition("files.assignmentImport.maxSizeMb", SettingGroup.FILES,
+                "Tệp nhập đề (ảnh/PDF) tối đa", "Dung lượng tối đa mỗi ảnh hoặc PDF đề cũ khi nhập thành khung đề.",
+                SettingType.INTEGER, 10,
+                Map.of(SettingValidator.MIN, 1, SettingValidator.MAX, 10, SettingValidator.UNIT, "MB"));
+    }
 }

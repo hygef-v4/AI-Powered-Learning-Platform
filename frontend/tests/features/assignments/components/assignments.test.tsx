@@ -7,6 +7,7 @@ import { assignmentsApi } from "@/features/assignments/api";
 import { AssignmentListCard } from "@/features/assignments/components/AssignmentListCard";
 import { WHOLE_PART, cardIssues, hasWholePart, listRestoredCriteria, mergeSaved, missingText, reappearedParts, rubricIssues } from "@/features/assignments/pages/AssignmentFormPage";
 import { CreateAssignmentDialog } from "@/features/assignments/components/CreateAssignmentDialog";
+import { clearPendingImport, peekPendingImport } from "@/features/assignments/model/pendingImports";
 import { fromLocalInput, toLocalInput } from "@/features/assignments/model/format";
 import { RubricEditor, cleanCriteria, rubricPointsMalformed } from "@/features/assignments/components/RubricEditor";
 import { ScheduleForm } from "@/features/assignments/components/ScheduleForm";
@@ -122,6 +123,26 @@ describe("CreateAssignmentDialog", () => {
     expect(create.mock.calls[0]![1]).toMatchObject({ submissionMode: "INDIVIDUAL", diagramEnabled: true });
     expect(importDocx).toHaveBeenCalledWith("a1", file);
     expect(saveSkeleton).toHaveBeenCalledWith("a1", 0, document, { fromDocx: true });
+    vi.restoreAllMocks();
+  });
+
+  it("ảnh đề cũ: tạo bài rồi để trang soạn bài nhờ AI đọc, không nhập DOCX", async () => {
+    const created = { id: "a-img", version: 0 } as AssignmentDetail;
+    vi.spyOn(assignmentsApi, "createForClass").mockResolvedValue(created);
+    const importDocx = vi.spyOn(assignmentsApi, "importDocx");
+    const onCreated = vi.fn();
+    render(<CreateAssignmentDialog target={{ kind: "class", classId: "c1", groupSupported: false }} onClose={vi.fn()} onCreated={onCreated} />);
+    fireEvent.click(screen.getByRole("radio", { name: "Đề mới" }));
+    const pages = [new File(["1"], "trang-1.png"), new File(["2"], "trang-2.jpg")];
+    fireEvent.change(screen.getByTestId("create-docx"), { target: { files: pages } });
+    expect(screen.getByTestId("docx-file")).toHaveTextContent("trang-1.png");
+    expect(screen.getByTestId("docx-file")).toHaveTextContent("+1 tệp");
+    fireEvent.change(screen.getByTestId("create-assignment-title"), { target: { value: "SWR302" } });
+    fireEvent.click(screen.getByTestId("create-assignment-submit"));
+    await waitFor(() => expect(onCreated).toHaveBeenCalledWith(created));
+    expect(importDocx).not.toHaveBeenCalled();
+    expect(peekPendingImport("a-img")).toEqual(pages);
+    clearPendingImport("a-img");
     vi.restoreAllMocks();
   });
 

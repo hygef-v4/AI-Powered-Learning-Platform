@@ -13,6 +13,7 @@ public enum FileType {
     XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", List.of("xlsx")),
     PNG("image/png", List.of("png")),
     JPEG("image/jpeg", List.of("jpg", "jpeg")),
+    WEBP("image/webp", List.of("webp")),
     GIF("image/gif", List.of("gif")),
     SVG("image/svg+xml", List.of("svg"));
 

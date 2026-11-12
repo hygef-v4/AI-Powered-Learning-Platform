@@ -25,8 +25,8 @@ class KeyCipherAndCatalogTest {
 
     static AiProperties properties(String v1, String v2) {
         return new AiProperties(v1, v2, Duration.ofSeconds(120), Duration.ofSeconds(20), Map.of(
-                "gemini", new AiProperties.Provider(List.of("gemini-2.5-flash", " gemini-2.5-pro "), 8192),
-                "openai", new AiProperties.Provider(List.of("gpt-4.1-mini"), 4096)));
+                "gemini", new AiProperties.Provider(List.of("gemini-2.5-flash", " gemini-2.5-pro "), 8192, List.of()),
+                "openai", new AiProperties.Provider(List.of("gpt-4.1-mini"), 4096, List.of())));
     }
 
     @Test
@@ -116,5 +116,18 @@ class KeyCipherAndCatalogTest {
         assertThat(catalog.allowed(AiProvider.CLAUDE, "claude-sonnet-5-5")).as("chưa cấu hình").isFalse();
         assertThat(catalog.maxOutputTokens(AiProvider.OPENAI)).isEqualTo(4096);
         assertThat(catalog.providers()).hasSize(3);
+    }
+
+    @Test
+    void visionModelsDefaultToAllAllowedModelsAndCanBeNarrowed() {
+        ProviderCatalog all = new ProviderCatalog(properties(KEY_V1, null));
+        assertThat(all.supportsImages(AiProvider.GEMINI, "gemini-2.5-flash")).isTrue();
+        assertThat(all.supportsImages(AiProvider.GEMINI, "gemini-1.0")).as("không cho phép").isFalse();
+
+        ProviderCatalog narrowed = new ProviderCatalog(new AiProperties(KEY_V1, null, Duration.ofSeconds(120),
+                Duration.ofSeconds(20), Map.of("gemini", new AiProperties.Provider(
+                        List.of("gemini-2.5-flash", "gemini-2.5-pro"), 8192, List.of(" gemini-2.5-pro ", "")))));
+        assertThat(narrowed.supportsImages(AiProvider.GEMINI, "gemini-2.5-pro")).isTrue();
+        assertThat(narrowed.supportsImages(AiProvider.GEMINI, "gemini-2.5-flash")).isFalse();
     }
 }

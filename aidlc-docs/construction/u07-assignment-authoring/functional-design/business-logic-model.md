@@ -1,5 +1,64 @@
 # U07 Assignment Authoring — business-logic-model
 
+## Nhập đề từ ảnh/PDF — 2026-11-11
+
+Thiết kế, chưa có mã. Quy tắc: BR-U07-87…101. Dùng lại bản nháp AI (F6), thêm chế độ `IMPORT`.
+
+### F-IMP1 Gửi tệp
+
+1. `AssignmentImportController` nhận multipart, gọi `AssignmentImportService.start(actor, id, files, command)`.
+2. Kiểm requestRef: đã có bản nháp cùng `requestRef` thì trả bản nháp đó.
+3. Kiểm quyền và `editable()` trong transaction đọc (BR-U07-87).
+4. `ImportFileReader` kiểm số tệp, loại, dung lượng, PDF và megapixel (BR-U07-88). Sau đó `ImportPageNormalizer` dựng ảnh trang và chữ gợi ý (BR-U07-89, 90). Lỗi thì ném `400`, không ghi gì.
+5. Chọn nguồn AI có model đọc được ảnh (BR-U07-100).
+6. Transaction ghi: thêm `assignment_ai_drafts` (PENDING, `mode = IMPORT`) và `assignment_import_pages`; ghi audit `ASSIGNMENT_IMPORT_REQUESTED`.
+7. `IAiTask.submit` với `AiPrompt(system, user, images = [AiImageRef("ASSIGNMENT_IMPORT", "{draftId}/{n}", "image/jpeg")])`, schema BR-U07-94, `maxOutputTokens` 16.000. Lỗi nguồn thì thử nguồn kế tiếp; hết nguồn thì bản nháp FAILED và xóa trang.
+8. Gắn `taskId` vào bản nháp, trả `AiDraft` view (PENDING).
+
+### F-IMP2 Worker đọc ảnh
+
+`AiTaskJobHandler` thấy prompt có `images`. Với mỗi ảnh, nó gọi `IAiImageSource` (U07 cài, `source = ASSIGNMENT_IMPORT`) để đọc bytes từ `assignment_import_pages`. Thiếu ảnh (đã dọn) thì tác vụ FAILED với lỗi "Ảnh nhập đề không còn", không gọi nhà cung cấp AI.
+
+### F-IMP3 Nhận kết quả
+
+`AssignmentImportResultHandler.onReady` thực hiện:
+
+1. Bản nháp không còn PENDING thì trả `ApplyOutcome` bỏ qua.
+2. Kiểm JSON theo schema, ánh xạ khối (BR-U07-95), cắt và lưu hình (BR-U07-96), dựng `DocumentModel` và chạy `validateSkeleton` (BR-U07-97).
+3. Transaction: ghi đề xuất, đặt bản nháp READY, xóa ảnh trang.
+4. Lỗi ở bước 2: bản nháp FAILED và xóa ảnh trang.
+
+`onFailed`: bản nháp FAILED, xóa ảnh trang (BR-U07-99).
+
+### F-IMP4 Ghi vào đề
+
+`:apply` với bản nháp `IMPORT` đi nhánh `applyImport`:
+
+1. `lockEditable(version)`.
+2. `REPLACE`: khối mới thay toàn bộ. `APPEND`: khối hiện có nối với khối mới.
+3. Lưu khung qua đường lưu của nhập DOCX (gắn ảnh, tính lại phần, giữ rubric khớp `partId`).
+4. Đổi tên bài nếu có `replaceTitle`.
+5. `markApplied`, ghi audit `ASSIGNMENT_IMPORT_APPLIED`, trả `Detail`.
+
+### Trạng thái bản nháp nhập
+
+```text
+                 start (tệp hợp lệ)
+                        |
+                        v
+     +------------- PENDING --------------+
+     | :discard        |  onReady OK       | onFailed / kết quả sai
+     v                 v                   v
+ DISCARDED           READY               FAILED
+                       |
+          :apply       |       :discard
+       +---------------+---------------+
+       v                               v
+    APPLIED                        DISCARDED
+```
+
+Ảnh trang (`assignment_import_pages`) chỉ tồn tại khi bản nháp ở PENDING; job dọn xóa trang quá 24 giờ.
+
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
 

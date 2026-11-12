@@ -74,9 +74,14 @@ public final class AssignmentCommands {
         }
     }
 
-    public record ApplyDraft(long version, boolean replaceInstructions, boolean replaceTitle) {
+    /** {@code placement}: chỉ dùng cho bản nhập đề từ ảnh/PDF, {@code REPLACE} (mặc định) hoặc {@code APPEND} (BR-U07-98). */
+    public record ApplyDraft(long version, boolean replaceInstructions, boolean replaceTitle, String placement) {
+        public ApplyDraft(long version, boolean replaceInstructions, boolean replaceTitle) {
+            this(version, replaceInstructions, replaceTitle, null);
+        }
+
         public ApplyDraft(long version, boolean replaceInstructions) {
-            this(version, replaceInstructions, false);
+            this(version, replaceInstructions, false, null);
         }
     }
 }
