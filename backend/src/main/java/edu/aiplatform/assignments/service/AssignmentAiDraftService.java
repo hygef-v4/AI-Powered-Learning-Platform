@@ -21,9 +21,13 @@ import edu.aiplatform.ai.contract.AiTaskState;
 import edu.aiplatform.ai.contract.AiTaskView;
 import edu.aiplatform.ai.contract.ApplyOutcome;
 import edu.aiplatform.ai.contract.IAiTask;
+import edu.aiplatform.ai.contract.IPromptGuardrail;
 import edu.aiplatform.ai.contract.IReferenceMaterial;
 import edu.aiplatform.ai.contract.MaterialText;
+import edu.aiplatform.ai.contract.PromptAction;
+import edu.aiplatform.ai.contract.PromptFlowState;
 import edu.aiplatform.ai.contract.SelectableMaterial;
+import edu.aiplatform.ai.contract.UserPromptInput;
 import edu.aiplatform.files.contract.ArtifactPurpose;
 import edu.aiplatform.files.contract.FileRef;
 import edu.aiplatform.files.contract.IArtifact;
@@ -87,6 +91,7 @@ public class AssignmentAiDraftService {
     private final AssignmentAccess access;
     private final AssignmentAudit audit;
     private final IAiTask aiTasks;
+    private final IPromptGuardrail promptGuardrail;
     private final IReferenceMaterial materials;
     private final IArtifact artifacts;
     private final IAssignmentSourceTextExtractor sourceTextExtractor;
@@ -97,7 +102,8 @@ public class AssignmentAiDraftService {
 
     public AssignmentAiDraftService(AssignmentRepository assignments, AiDraftRepository drafts, RubricService rubrics,
                                     AssignmentSupport support, AssignmentAccess access, AssignmentAudit audit,
-                                    IAiTask aiTasks, IReferenceMaterial materials, ObjectMapper json,
+                                    IAiTask aiTasks, IPromptGuardrail promptGuardrail,
+                                    IReferenceMaterial materials, ObjectMapper json,
                                     IArtifact artifacts, IAssignmentSourceTextExtractor sourceTextExtractor,
                                     DocumentModelService documentModelService,
                                     PlatformTransactionManager transactions, Clock clock) {
@@ -108,6 +114,7 @@ public class AssignmentAiDraftService {
         this.access = access;
         this.audit = audit;
         this.aiTasks = aiTasks;
+        this.promptGuardrail = promptGuardrail;
         this.materials = materials;
         this.artifacts = artifacts;
         this.sourceTextExtractor = sourceTextExtractor;
@@ -183,6 +190,8 @@ public class AssignmentAiDraftService {
         String formatText = uploadedFormat == null || uploadedFormat.length() <= MAX_FORMAT_CHARS ? uploadedFormat
                 : uploadedFormat.substring(0, MAX_FORMAT_CHARS);
         AssignmentCommands.DraftOptions draftOptions = normalizeOptions(command.options());
+        UserPromptInput userInput = UserPromptInput.of(actor,
+                revise ? PromptAction.REVISE_DRAFT : PromptAction.CREATE_DRAFT, PromptFlowState.AUTHORING_DRAFT, prompt);
         List<String> sourceRefs = revise ? List.of() : normalizeSourceRefs(command.sourceFileRefs());
         List<UUID> materialIds = revise || command.materialIds() == null ? List.of()
                 : List.copyOf(new LinkedHashSet<>(command.materialIds()));
@@ -201,6 +210,8 @@ public class AssignmentAiDraftService {
             if (assignment.status() != AssignmentStatus.DRAFT) {
                 throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ soạn bằng AI khi bài đang nháp");
             }
+            // Guardrail trước khi lưu bản đề xuất: bị chặn thì HTTP 400, transaction rollback, không gọi AI.
+            promptGuardrail.requireValid(userInput);
             var existing = drafts.findByRequest(id, requestRef);
             if (existing.isPresent()) {
                 return new Prepared(assignment, existing.get(), false, null, null);
@@ -299,7 +310,7 @@ public class AssignmentAiDraftService {
             try {
                 task = aiTasks.submit(new AiTaskRequest(actor, choice.source(), choice.provider(), TASK_TYPE,
                         TARGET_PREFIX + draft.id(), prepared.assignment().version(), requestRef, aiPrompt, schema,
-                        maxOutputTokens));
+                        maxOutputTokens, userInput));
                 picked = choice;
             } catch (ApiException e) {
                 // API chung không dùng được thì tự chuyển sang nguồn kế tiếp (API cá nhân), không bắt tải lại.

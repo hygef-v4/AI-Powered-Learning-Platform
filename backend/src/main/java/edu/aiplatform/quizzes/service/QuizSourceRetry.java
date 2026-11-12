@@ -81,7 +81,8 @@ public class QuizSourceRetry {
                 var task = ai.submit(new AiTaskRequest(actor, request.source(), request.provider(), QuizDraftPrompt.TASK_TYPE,
                         QuizAiDraftService.TARGET_PREFIX + draft.id(), draft.baseVersion() == null ? 0 : draft.baseVersion(),
                         request.requestRef(), QuizDraftPrompt.prompt("quiz theo tài liệu nguồn", request, texts),
-                        QuizDraftPrompt.schema(count), QuizDraftPrompt.maxOutputTokens(count)));
+                        QuizDraftPrompt.schema(count), QuizDraftPrompt.maxOutputTokens(count),
+                        QuizDraftPrompt.userInput(actor, request)));
                 if (task.taskId() == null || task.state() == AiTaskState.FAILED || task.state() == AiTaskState.CANCELLED) {
                     throw ApiException.unavailable("AI_SOURCE_RETRY_FAILED", "Không gửi được lượt tạo lại theo tài liệu.");
                 }
