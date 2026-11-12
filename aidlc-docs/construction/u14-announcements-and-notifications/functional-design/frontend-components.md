@@ -17,7 +17,7 @@ Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://clau
 | # | Màn (artboard) | Component | UC | Role |
 |---|---|---|---|---|
 | 31 | Class Announcements: giảng viên (`t08`), popup Sửa thông báo (`t08b`), Xóa thông báo (`t08c`); sinh viên (`s06`) | `ClassAnnouncementsPage`, `AnnouncementEditorDialog`, `DeleteAnnouncementDialog` | 63, 64 | Student, Teacher, Subject Manager của lớp |
-| 36 | Student Class Detail, phần Thông báo lớp (`s02`) | `ClassAnnouncementsCard` | 63 | Student |
+| 36 | Student Class Detail (`s02`) | Không gắn thẻ thông báo gần đây từ 2026-11-11; menu Thông báo lớp mở `ClassAnnouncementsPage` | 63 | Student |
 | – | Popup Thông báo trên thanh trên cùng (`c14`) | `NotificationBell`, `NotificationPopup`, `EmailPreferencePanel` | 65 | Mọi vai trò |
 
 U14 đăng ký `NavEntry` "Thông báo lớp" (Student, Teacher; Subject Manager trong nhóm "Giảng dạy" cho lớp được giao dạy) và `HeaderWidget` (chuông thông báo).
@@ -46,7 +46,7 @@ app/announcements/                 ClassAnnouncementsPage   #31 Class Announceme
 | `AnnouncementComposer` | `POST /api/v1/classes/{classId}/announcements` | "Thông báo mới · lớp": Tiêu đề (tối đa 200 ký tự), Nội dung (Markdown, tối đa 5.000 ký tự) "gửi tới n sinh viên"; ô Thông báo quan trọng (gắn nhãn Quan trọng, không ghim); ô Gửi email cho sinh viên (chỉ chọn được khi đánh dấu quan trọng; email gửi theo tùy chọn của người nhận, BR-U14-03); "Hai lựa chọn này chỉ có khi tạo, không đổi được khi sửa."; nút Đăng thông báo |
 | `AnnouncementEditorDialog` | `PATCH /api/v1/announcements/{id}` | "Sửa thông báo": Tiêu đề*, Nội dung (Markdown)*; "Không đổi được lựa chọn Quan trọng / Gửi email sau khi đăng. Sinh viên không nhận thông báo mới khi bạn sửa."; Hủy, Lưu thay đổi; `409` báo tải lại |
 | `DeleteAnnouncementDialog` | `DELETE /api/v1/announcements/{id}` | "Xóa thông báo?": "“X” sẽ bị xóa khỏi lớp …"; Hủy, Xóa (xóa mềm phía hệ thống) |
-| `ClassAnnouncementsCard` | `GET /api/v1/me/announcements?classId=` | "Thông báo lớp" trên Student Class Detail: vài thông báo mới nhất (tiêu đề, nhãn Quan trọng, tác giả · thời điểm); link Xem tất cả mở Class Announcements lọc lớp |
+| Thông báo từ trang lớp | Trang `ClassAnnouncementsPage` hiện có | Menu Thông báo lớp mở danh sách riêng của lớp; menu Tất cả thông báo mở danh sách chung. Không có component/slot thông báo gần đây trên trang Thông tin lớp sinh viên. |
 | `NotificationBell` | `GET /api/v1/me/notifications/unread-count`, `.../events` | Chuông trên thanh trên cùng, chấm đỏ kèm số chưa đọc; SSE; mất kết nối thì tải lại số chưa đọc |
 | `NotificationPopup` | `GET /api/v1/me/notifications`, `POST .../{id}:read`, `POST .../notifications:read-all` | "Thông báo", nút Đánh dấu tất cả đã đọc; tab Tất cả, Chưa đọc (kèm số); mỗi thông báo: tiêu đề, lớp hoặc nhóm · thời điểm tương đối, chấm chưa đọc; bấm thì đánh dấu đã đọc rồi mở link; tải thêm khi cuộn (không có trang thông báo riêng) |
 | `EmailPreferencePanel` | `GET`, `PUT /api/v1/me/notification-preferences` | Mọi role, trong trang Cài đặt của popup: "Gửi email cho tôi khi có" với công tắc từng loại: Ghi danh vào lớp, Bài tập mới mở, Nhắc hạn nộp, Công bố điểm, Thông báo quan trọng của lớp (BR-U14-20, 21); Teacher có yêu cầu đổi trưởng nhóm/kết quả duyệt câu hỏi; Subject Manager thêm đề xuất câu hỏi; Admin thấy cảnh báo sao lưu bắt buộc (khóa bật); tắt email tùy chọn vẫn có thông báo trong app |

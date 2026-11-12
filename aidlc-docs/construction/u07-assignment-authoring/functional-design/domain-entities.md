@@ -1,5 +1,46 @@
 # U07 Assignment Authoring — domain-entities
 
+## Nhập đề từ ảnh/PDF — 2026-11-11
+
+Thiết kế, chưa có mã. Quy tắc: BR-U07-87…101.
+
+```text
+assignment_ai_drafts (đã có)
+  provenance.mode       "IMPORT" (mới; trước có "REVISE" hoặc không có)
+  provenance.import     { fileKind: IMAGE | PDF, pageCount, totalBytes }
+  proposal (READY)      { kind: "IMPORT", title, document, warnings[], counts }
+
+assignment_import_pages (bảng mới, tạm)
+  draft_id              uuid, FK assignment_ai_drafts ON DELETE CASCADE
+  page_no               smallint 1–10
+  media_type            text, luôn "image/jpeg"
+  width, height         int, sau chuẩn hóa (cạnh dài ≤ 2.000px)
+  bytes                 bytea
+  text_hint             text null (chữ trích từ PDF có lớp chữ)
+  created_at            timestamptz
+  PK (draft_id, page_no); index created_at để job dọn
+```
+
+| Đối tượng | Mô tả |
+|---|---|
+| `ImportPage` | Một trang đã chuẩn hóa: `pageNo`, `jpeg`, `width`, `height`, `textHint`, `warnings`. |
+| `ImportProposal` | Kết quả đã ánh xạ: `title`, `DocumentModel`, `warnings[{kind, page, message}]`, `counts{headings, tables, images, illegible}`. |
+| `ImportPlacement` | `REPLACE`, `APPEND`. |
+| `AssignmentCommands.ApplyDraft` | Thêm `placement` (rỗng thì `REPLACE`); các trường cũ giữ nguyên. |
+| `AssignmentViews.AiDraft` | Thêm `mode` (`IMPORT`), để frontend hiện đúng màn xem trước. |
+| `AiImageRef` (U06) | `source`, `ref`, `mediaType`: tham chiếu ảnh nằm trong prompt. U07 cài `IAiImageSource` cho `source = ASSIGNMENT_IMPORT`. |
+
+Cảnh báo (`warnings.kind`): `ILLEGIBLE`, `HEADER_FOOTER_REMOVED`, `ROTATED_PAGE`, `LOW_RESOLUTION`, `FIGURE_CROP_FAILED`, `OTHER`.
+
+API:
+
+| Endpoint | Mô tả |
+|---|---|
+| `POST /api/v1/assignments/{id}/imports` | Multipart: `files` (1–5), `requestRef`, `source`, `provider`. Trả `AiDraft` (PENDING). |
+| `GET /api/v1/assignments/{id}/ai-drafts/{draftId}` | Đã có; đề xuất `IMPORT` có `document`, `warnings`, `counts`. |
+| `POST .../ai-drafts/{draftId}:apply` | Thêm `placement`. |
+| `POST .../ai-drafts/{draftId}:discard` | Đã có; xóa thêm ảnh trang. |
+
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
 

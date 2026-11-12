@@ -2,6 +2,7 @@ package edu.aiplatform.ai.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.aiplatform.ai.contract.AiImageRef;
 import edu.aiplatform.ai.contract.AiPrompt;
 import edu.aiplatform.ai.contract.AiProvider;
 import edu.aiplatform.ai.contract.AiSource;
@@ -9,6 +10,7 @@ import edu.aiplatform.ai.contract.AiSourceChoice;
 import edu.aiplatform.ai.contract.AiTaskRequest;
 import edu.aiplatform.ai.contract.AiTaskState;
 import edu.aiplatform.ai.contract.AiTaskView;
+import edu.aiplatform.ai.contract.AiTokenEstimate;
 import edu.aiplatform.ai.contract.AiUsageSummary;
 import edu.aiplatform.ai.contract.IAiTask;
 import edu.aiplatform.ai.model.AiConnection;
@@ -33,7 +35,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -52,6 +56,8 @@ public class AiTaskService implements IAiTask {
     public static final int MAX_ACTIVE = 3;
     static final int MAX_REQUEST_REF = 200;
     static final int MAX_PROMPT_CHARS = 400_000;
+    static final int MAX_IMAGES = 10;
+    static final Set<String> IMAGE_TYPES = Set.of("image/jpeg", "image/png");
 
     private final AiTaskRepository tasks;
     private final AiConnectionRepository connections;
@@ -66,6 +72,7 @@ public class AiTaskService implements IAiTask {
     private final ObjectMapper json;
     private final TransactionTemplate transactions;
     private final Clock clock;
+    private AiImageSourceRegistry imageSources = AiImageSourceRegistry.of(List.of());
 
     public AiTaskService(AiTaskRepository tasks, AiConnectionRepository connections, AiUsageRepository usage,
                          AiTaskResultHandlerRegistry handlers, QuotaReservationService quota, ProviderCatalog catalog,
@@ -86,6 +93,11 @@ public class AiTaskService implements IAiTask {
         this.clock = clock;
     }
 
+    @Autowired(required = false)
+    void setImageSources(AiImageSourceRegistry imageSources) {
+        this.imageSources = imageSources;
+    }
+
     @Override
     @Transactional
     public AiTaskView submit(AiTaskRequest requested) {
@@ -97,7 +109,7 @@ public class AiTaskService implements IAiTask {
         }
         AiTaskRequest request = resolveSource(requested);
         Actor actor = request.actor();
-        AiConnection connection = connectionFor(actor, request.source(), request.provider());
+        AiConnection connection = connectionFor(actor, request.source(), request.provider(), request.prompt().hasImages());
         int max = Math.min(request.maxOutputTokens(), catalog.maxOutputTokens(connection.provider()));
         tasks.lockActor(actor.accountId());
         if (tasks.countActive(actor.accountId()) >= MAX_ACTIVE) {
@@ -178,7 +190,7 @@ public class AiTaskService implements IAiTask {
             }
             return;
         }
-        connectionFor(actor, source, provider);
+        connectionFor(actor, source, provider, false);
     }
 
     /**
@@ -218,7 +230,7 @@ public class AiTaskService implements IAiTask {
             return order;
         }
         if (access.allowed(actor, Actions.AI_SHARED_USE)) {
-            Optional<AiConnection> shared = ConnectionOrder.active(connections.listInstitutional(), catalog).stream()
+            Optional<AiConnection> shared = usable(connections.listInstitutional(), prompt.hasImages()).stream()
                     .findFirst();
             if (shared.isPresent()) {
                 int max = Math.min(maxOutputTokens, catalog.maxOutputTokens(shared.get().provider()));
@@ -230,20 +242,20 @@ public class AiTaskService implements IAiTask {
             }
         }
         if (access.allowed(actor, Actions.AI_PERSONAL)) {
-            ConnectionOrder.active(connections.listPersonal(actor.accountId()), catalog)
+            usable(connections.listPersonal(actor.accountId()), prompt.hasImages())
                     .forEach(c -> order.add(new AiSourceChoice(AiSource.PERSONAL, c.provider())));
         }
         return order;
     }
 
     /** Nguồn đúng như người dùng chọn; không có hoặc không dùng được thì báo lỗi, không đổi nguồn (BR-U06-10). */
-    private AiConnection connectionFor(Actor actor, AiSource source, AiProvider provider) {
+    private AiConnection connectionFor(Actor actor, AiSource source, AiProvider provider, boolean images) {
         if (source == AiSource.SHARED) {
             if (!access.allowed(actor, Actions.AI_SHARED_USE)) {
                 throw ApiException.forbidden("AI_SHARED_NOT_ALLOWED");
             }
             // Khóa chung tốt nhất theo thứ tự thử: Claude, GPT, Gemini; mô hình tốt trước (yêu cầu 2026-11-05).
-            return ConnectionOrder.active(connections.listInstitutional(), catalog).stream().findFirst()
+            return usable(connections.listInstitutional(), images).stream().findFirst()
                     .orElseThrow(() -> ApiException.badRequest("AI_SHARED_NOT_CONFIGURED",
                             "API của trường chưa được bật; hãy chọn API cá nhân"));
         }
@@ -254,7 +266,7 @@ public class AiTaskService implements IAiTask {
             throw ApiException.badRequest("AI_PROVIDER_REQUIRED", "Cần chọn nhà cung cấp cho API cá nhân");
         }
         // Khóa cá nhân tốt nhất của provider (một provider có thể có nhiều khóa).
-        return ConnectionOrder.active(connections.listPersonal(actor.accountId()), catalog).stream()
+        return usable(connections.listPersonal(actor.accountId()), images).stream()
                 .filter(c -> c.provider() == provider).findFirst()
                 .filter(c -> c.status() == Status.ACTIVE)
                 .orElseThrow(() -> ApiException.badRequest("AI_PERSONAL_NOT_CONFIGURED",
@@ -278,19 +290,45 @@ public class AiTaskService implements IAiTask {
         if (request.outputSchema() == null || !schemas.validSchema(request.outputSchema())) {
             throw ApiException.badRequest("AI_TASK_INVALID", "Schema kết quả không hợp lệ");
         }
+        validateImages(request.prompt().images());
         if (promptChars(request.prompt()) > MAX_PROMPT_CHARS) {
             throw ApiException.badRequest("AI_PROMPT_TOO_LARGE", "Nội dung gửi AI quá dài");
         }
     }
 
+    /** Ảnh trong prompt: tối đa 10, JPEG/PNG, nguồn đã đăng ký (BR-U06-54). */
+    private void validateImages(List<AiImageRef> images) {
+        if (images.size() > MAX_IMAGES) {
+            throw ApiException.badRequest("AI_TASK_INVALID", "Tối đa 10 ảnh mỗi yêu cầu AI");
+        }
+        for (AiImageRef image : images) {
+            if (image == null || image.ref() == null || image.ref().isBlank()
+                    || !IMAGE_TYPES.contains(image.mediaType()) || imageSources.find(image.source()).isEmpty()) {
+                throw ApiException.badRequest("AI_TASK_INVALID", "Ảnh gửi AI không hợp lệ");
+            }
+        }
+    }
+
+    /** Kết nối đang bật theo thứ tự thử; prompt có ảnh thì chỉ giữ model đọc được ảnh (BR-U06-58). */
+    private List<AiConnection> usable(List<AiConnection> all, boolean images) {
+        List<AiConnection> ordered = ConnectionOrder.active(all, catalog);
+        return images ? ordered.stream().filter(c -> catalog.supportsImages(c.provider(), c.model())).toList()
+                : ordered;
+    }
+
     private static int promptChars(AiPrompt prompt) {
-        return (prompt.system() == null ? 0 : prompt.system().length()) + prompt.user().length();
+        return (prompt.system() == null ? 0 : prompt.system().length()) + prompt.user().length()
+                + prompt.images().size() * AiTokenEstimate.IMAGE_PROMPT_CHARS;
     }
 
     private String prompt(AiPrompt prompt) {
-        Map<String, String> body = new LinkedHashMap<>();
+        Map<String, Object> body = new LinkedHashMap<>();
         body.put("system", prompt.system());
         body.put("user", prompt.user());
+        if (prompt.hasImages()) {
+            body.put("images", prompt.images().stream().map(image -> Map.of("source", image.source(),
+                    "ref", image.ref(), "mediaType", image.mediaType())).toList());
+        }
         try {
             return json.writeValueAsString(body);
         } catch (JsonProcessingException e) {
@@ -302,6 +340,9 @@ public class AiTaskService implements IAiTask {
     static String fingerprint(AiTaskRequest r) {
         String raw = r.actor().accountId() + "|" + r.taskType() + "|" + r.targetRef() + "|" + r.inputVersion() + "|"
                 + r.source() + "|" + (r.provider() == null ? "" : r.provider());
+        if (r.prompt() != null && r.prompt().hasImages()) {
+            raw += "|" + r.prompt().images().stream().map(i -> i.source() + ":" + i.ref()).toList();
+        }
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(raw.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException e) {

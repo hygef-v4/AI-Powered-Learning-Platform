@@ -222,6 +222,8 @@ select optgroup {
 html {
   background: var(--c-bg);
   -webkit-text-size-adjust: 100%;
+  /* Luôn chừa chỗ thanh cuộn: mở popup (khóa cuộn trang) không làm trang phía sau giãn ra. */
+  scrollbar-gutter: stable;
 }
 
 body {

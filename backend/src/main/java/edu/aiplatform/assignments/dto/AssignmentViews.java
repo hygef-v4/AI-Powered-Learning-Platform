@@ -82,8 +82,11 @@ public final class AssignmentViews {
                           Instant createdAt, Instant decidedAt) {
     }
 
-    /** Đề mẫu chọn được khi soạn bằng AI: bài của môn do chủ nhiệm môn tạo (yêu cầu 2026-11-09). */
-    public record AiTemplateOption(UUID assignmentId, String title) {
+    /**
+     * Đề mẫu chọn được khi soạn bằng AI: bài của môn do chủ nhiệm môn tạo (yêu cầu 2026-11-09) hoặc đề cũ người soạn
+     * quản lý được (yêu cầu 2026-11-12); {@code subjectTemplate} phân biệt hai nhóm.
+     */
+    public record AiTemplateOption(UUID assignmentId, String title, boolean subjectTemplate) {
     }
 
     public record AiSourcePreview(String fileName, String previewText, int extractedChars, boolean truncated) {

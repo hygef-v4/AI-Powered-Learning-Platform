@@ -397,7 +397,8 @@ function Workspace({
           </>
         }
         toolbarExtra={
-          <>
+          // Ba nút cách nhau rõ, không dính vào nhau.
+          <div className="ml-2 flex items-center gap-2">
             {isGroupSubmission && detail.members.length > 0 && (
               <ToolbarButton
                 icon="groups"
@@ -434,7 +435,7 @@ function Workspace({
             >
               {aiGenerating ? "AI đang chấm…" : "Chấm bằng AI"}
             </ToolbarButton>
-          </>
+          </div>
         }
       />
 

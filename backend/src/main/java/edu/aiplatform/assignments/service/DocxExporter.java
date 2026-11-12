@@ -31,7 +31,9 @@ import org.openxmlformats.schemas.drawingml.x2006.main.CTNonVisualDrawingProps;
 import org.openxmlformats.schemas.drawingml.x2006.wordprocessingDrawing.CTInline;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTDrawing;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTR;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTShd;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.NumberingDocument;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STShd;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.StylesDocument;
 
 /**
@@ -43,6 +45,8 @@ final class DocxExporter {
 
     static final String W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
     private static final int MAX_IMAGE_WIDTH_PX = 600;
+    /** Bảng rộng gần hết trang: Word cộng thêm lề trong của ô vào bề ngang, để 100% thì bảng lấn ra ngoài lề phải. */
+    private static final String TABLE_WIDTH = "97.5%";
     private static final int MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
     record RubricSection(String partTitle, List<RubricCriterion> criteria, BigDecimal total) {
@@ -63,13 +67,21 @@ final class DocxExporter {
             if (!lists.isEmpty()) {
                 doc.createNumbering().setNumbering(NumberingDocument.Factory.parse(numbering(lists)).getNumbering());
             }
-            if (title != null && !title.isBlank()) {
-                styled(doc, "Title", title);
+            JsonNode formatted = document == null ? null : document.title();
+            if (formatted != null && !text(formatted.path("runs")).isBlank()) {
+                // Tên bài có định dạng trên trang soạn (đậm, nghiêng, màu, căn lề): xuất đúng như thế.
+                XWPFParagraph p = doc.createParagraph();
+                p.setStyle("Title");
+                p.setAlignment(ParagraphAlignment.CENTER);
+                runs(p, formatted.path("runs"), false);
+            } else if (title != null && !title.isBlank()) {
+                // Tên bài luôn đứng giữa trang (yêu cầu 2026-11-12), ảnh và sơ đồ cũng vậy.
+                styled(doc, "Title", title).setAlignment(ParagraphAlignment.CENTER);
             }
             if (instructions != null && !instructions.isBlank()) {
                 for (String line : instructions.split("\\r?\\n")) {
                     if (!line.isBlank()) {
-                        doc.createParagraph().createRun().setText(line);
+                        doc.createParagraph().createRun().setText(clean(line));
                     }
                 }
             }
@@ -93,7 +105,7 @@ final class DocxExporter {
         try (XWPFDocument doc = new XWPFDocument(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             doc.createStyles().setStyles(StylesDocument.Factory.parse(STYLES).getStyles());
             if (title != null && !title.isBlank()) {
-                styled(doc, "Title", title);
+                styled(doc, "Title", title).setAlignment(ParagraphAlignment.CENTER);
             }
             if (rubrics.isEmpty()) {
                 doc.createParagraph().createRun().setText("Chưa có mục chấm.");
@@ -141,13 +153,23 @@ final class DocxExporter {
                 String style = switch (c.path("style").asText("")) {
                     case "TITLE" -> "Title";
                     case "SUBTITLE" -> "Subtitle";
-                    default -> "Heading" + c.path("style").asText("H1").substring(1);
+                    default -> "Heading" + headingLevel(c.path("style").asText(""));
                 };
-                String text = c.path("text").asText("");
-                if (style.startsWith("Heading")) {
-                    text = numbers.next(Integer.parseInt(style.substring("Heading".length()))) + " " + text;
+                String number = style.startsWith("Heading")
+                        ? numbers.next(Integer.parseInt(style.substring("Heading".length()))) : "";
+                JsonNode formatted = c.path("runs");
+                if (formatted.isArray() && !text(formatted).isBlank()) {
+                    // Tiêu đề có định dạng (yêu cầu 2026-11-04): số của câu rồi chữ đúng định dạng trên trang.
+                    XWPFParagraph p = doc.createParagraph();
+                    p.setStyle(style);
+                    if (!number.isEmpty()) {
+                        p.createRun().setText(number + " ");
+                    }
+                    runs(p, formatted, false);
+                    align(p, c);
+                } else {
+                    align(styled(doc, style, (number + " " + c.path("text").asText("")).strip()), c);
                 }
-                align(styled(doc, style, text.strip()), c);
             }
             case PARAGRAPH -> {
                 XWPFParagraph p = doc.createParagraph();
@@ -170,11 +192,43 @@ final class DocxExporter {
         }
     }
 
+    /** Cấp tiêu đề 1–6 của block; kiểu lạ hay thiếu thì coi là cấp 1 để tệp vẫn xuất được. */
+    private static int headingLevel(String style) {
+        String digits = style.replaceAll("\\D", "");
+        if (digits.isEmpty() || digits.length() > 1) {
+            return 1;
+        }
+        return Math.max(1, Math.min(6, Integer.parseInt(digits)));
+    }
+
     private static XWPFParagraph styled(XWPFDocument doc, String style, String text) {
         XWPFParagraph p = doc.createParagraph();
         p.setStyle(style);
-        p.createRun().setText(text);
+        p.createRun().setText(clean(text));
         return p;
+    }
+
+    /**
+     * Bỏ ký tự XML không cho phép (ký tự điều khiển dán từ nơi khác vào): còn chúng thì Word báo tệp hỏng, không mở được.
+     * Tab giữ nguyên; xuống dòng do nơi gọi tách thành ngắt dòng.
+     */
+    static String clean(String text) {
+        if (text == null) {
+            return "";
+        }
+        StringBuilder out = new StringBuilder(text.length());
+        text.codePoints().filter(cp -> cp == '\t' || cp == '\n' || (cp >= 0x20 && cp <= 0xD7FF)
+                || (cp >= 0xE000 && cp <= 0xFFFD) || cp >= 0x10000).forEach(out::appendCodePoint);
+        return out.toString();
+    }
+
+    /** Chữ thuần của một dãy run. */
+    private static String text(JsonNode runs) {
+        StringBuilder out = new StringBuilder();
+        for (JsonNode run : runs) {
+            out.append(run.path("text").asText(""));
+        }
+        return out.toString();
     }
 
     /** Căn lề của block (tiêu đề, đoạn, danh sách). */
@@ -189,7 +243,7 @@ final class DocxExporter {
 
     private static void runs(XWPFParagraph p, JsonNode runs, boolean bold) {
         for (JsonNode run : runs) {
-            String[] lines = run.path("text").asText("").split("\n", -1);
+            String[] lines = clean(run.path("text").asText("")).split("\n", -1);
             XWPFRun r = p.createRun();
             for (int i = 0; i < lines.length; i++) {
                 if (i > 0) {
@@ -197,8 +251,13 @@ final class DocxExporter {
                 }
                 r.setText(lines[i], i);
             }
-            r.setBold(bold || run.path("bold").asBoolean(false));
-            r.setItalic(run.path("italic").asBoolean(false));
+            // Chỉ ghi đậm, nghiêng khi bật: ghi "không đậm" tường minh sẽ đè mất chữ đậm của kiểu Tiêu đề, tên bài.
+            if (bold || run.path("bold").asBoolean(false)) {
+                r.setBold(true);
+            }
+            if (run.path("italic").asBoolean(false)) {
+                r.setItalic(true);
+            }
             if (run.path("underline").asBoolean(false)) {
                 r.setUnderline(UnderlinePatterns.SINGLE);
             }
@@ -208,8 +267,18 @@ final class DocxExporter {
             if (run.path("strike").asBoolean(false)) {
                 r.setStrikeThrough(true);
             }
-            if (run.path("color").isTextual()) {
-                r.setColor(run.path("color").asText().substring(1));
+            String color = run.path("color").asText("");
+            if (color.matches("#[0-9a-fA-F]{6}")) {
+                r.setColor(color.substring(1));
+            }
+            // Màu tô nền của chữ: tô đúng mã màu (shading), không ép về bảng màu highlight có sẵn của Word.
+            String highlight = run.path("highlight").asText("");
+            if (highlight.matches("#[0-9a-fA-F]{6}")) {
+                CTR ctr = r.getCTR();
+                CTShd shade = (ctr.isSetRPr() ? ctr.getRPr() : ctr.addNewRPr()).addNewShd();
+                shade.setVal(STShd.CLEAR);
+                shade.setColor("auto");
+                shade.setFill(highlight.substring(1));
             }
         }
     }
@@ -222,6 +291,19 @@ final class DocxExporter {
         }
         XWPFTable table = doc.createTable(Math.max(1, rows.size()), columns);
         table.setStyleID("TableGrid");
+        // Bảng rộng hết trang, các cột bằng nhau như trên trang soạn: bảng ô trống không bị co thành một vạch (lỗi 2026-11-12).
+        table.setWidth(TABLE_WIDTH);
+        // Cột theo độ rộng người soạn đã kéo (widths, %); không có hoặc lệch số cột thì chia đều.
+        JsonNode widths = c.path("widths");
+        boolean custom = widths.isArray() && widths.size() == columns;
+        for (XWPFTableRow row : table.getRows()) {
+            List<XWPFTableCell> cells = row.getTableCells();
+            for (int j = 0; j < cells.size(); j++) {
+                double percent = custom ? widths.get(j).asDouble(0) : 0;
+                cells.get(j).setWidth(String.format(java.util.Locale.ROOT, "%.2f%%",
+                        percent > 0 && percent <= 100 ? percent : 100.0 / columns));
+            }
+        }
         boolean header = c.path("headerRow").asBoolean(false);
         for (int i = 0; i < rows.size(); i++) {
             XWPFTableRow row = table.getRow(i);
@@ -231,11 +313,17 @@ final class DocxExporter {
             for (int j = 0; j < columns; j++) {
                 XWPFTableCell cell = row.getCell(j);
                 JsonNode source = rows.get(i).get(j);
+                // Chữ trong ô cách đều trên dưới, không dùng khoảng cách sau đoạn của văn bản thường.
+                cell.getParagraphs().get(0).setSpacingBefore(60);
+                cell.getParagraphs().get(0).setSpacingAfter(60);
                 if (source != null) {
+                    align(cell.getParagraphs().get(0), source);
                     runs(cell.getParagraphs().get(0), source.path("runs"), header && i == 0);
                 }
             }
         }
+        // Đoạn trống sau bảng: hai bảng liền nhau không bị Word gộp thành một, bảng không dính sát khối đứng sau.
+        doc.createParagraph().setSpacingAfter(0);
     }
 
     private void image(XWPFDocument doc, JsonNode c) {
@@ -243,13 +331,16 @@ final class DocxExporter {
         byte[] data = read(c.path(DocumentFiles.FILE_ID).asText(null));
         int type = pictureType(data);
         if (type < 0) {
-            doc.createParagraph().createRun().setText("[Ảnh" + (alt.isBlank() ? "" : ": " + alt) + "]");
+            doc.createParagraph().createRun().setText(clean("[Ảnh" + (alt.isBlank() ? "" : ": " + alt) + "]"));
             return;
         }
         int[] size = PngChunks.size(data).orElse(new int[]{400, 300});
         int requested = c.path("width").asInt(size[0]);
-        picture(doc.createParagraph().createRun(), data, type, "image", Math.min(requested, MAX_IMAGE_WIDTH_PX),
-                size, alt);
+        // Ảnh đứng giữa trang như trên trang soạn.
+        XWPFParagraph holder = doc.createParagraph();
+        holder.setAlignment(ParagraphAlignment.CENTER);
+        picture(holder.createRun(), data, type, "image", Math.max(1, Math.min(requested, MAX_IMAGE_WIDTH_PX)),
+                size, clean(alt));
     }
 
     private static void diagram(XWPFDocument doc, DocumentBlock block, IDiagramLinker linker) {
@@ -258,17 +349,21 @@ final class DocxExporter {
         String code = linker == null ? null : linker.linkFor(block.id());
         String description = (alt.isEmpty() ? "Sơ đồ " + c.path("diagramType").asText("") : alt)
                 + (code == null ? "" : " [drawio:" + code + "]");
-        byte[] png = PngChunks.diagramPlaceholder(c.path("xml").asText(null));
+        // Sơ đồ chưa vẽ (trang soạn hiện "Chưa có sơ đồ"): khung trống, không dùng hình đại diện của sơ đồ đã vẽ.
+        boolean drawn = !c.path("svgPreview").asText("").isBlank()
+                || DiagramXml.cellCount(c.path("xml").asText("")) > 0;
+        byte[] png = PngChunks.diagramPlaceholder(c.path("xml").asText(null), drawn);
         String url = linker == null ? null : linker.viewUrlFor(block.id());
         XWPFParagraph p = doc.createParagraph();
+        p.setAlignment(ParagraphAlignment.CENTER);
         XWPFRun run = url == null ? p.createRun() : p.createHyperlinkRun(url);
         picture(run, png, XWPFDocument.PICTURE_TYPE_PNG, "diagram-" + block.id() + ".png", 480, new int[]{480, 270},
                 description);
         XWPFRun caption = p.createRun();
         caption.addBreak();
         caption.setItalic(true);
-        caption.setText(description.replaceAll("\\s*\\[drawio:[^\\]]*\\]", "")
-                + (url == null ? "" : " (bấm vào ảnh để mở sơ đồ)"));
+        caption.setText(clean(drawn ? description.replaceAll("\\s*\\[drawio:[^\\]]*\\]", "")
+                + (url == null ? "" : " (bấm vào ảnh để mở sơ đồ)") : "Chưa có sơ đồ"));
     }
 
     private static void picture(XWPFRun run, byte[] data, int type, String name, int width, int[] size,
@@ -296,34 +391,68 @@ final class DocxExporter {
     }
 
     private static void rubric(XWPFDocument doc, List<RubricSection> sections) {
-        styled(doc, "Heading1", "Rubric");
+        // Tên bài và chữ Rubric đứng giữa trang, tổng điểm ngay dưới chữ Rubric, căn phải (yêu cầu 2026-11-12).
+        styled(doc, "Heading1", "Rubric").setAlignment(ParagraphAlignment.CENTER);
+        BigDecimal sum = sections.stream().map(RubricSection::total).filter(java.util.Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        XWPFParagraph totalLine = doc.createParagraph();
+        totalLine.setAlignment(ParagraphAlignment.RIGHT);
+        XWPFRun total = totalLine.createRun();
+        total.setBold(true);
+        total.setText("Tổng điểm: " + points(sum));
         for (RubricSection section : sections) {
-            styled(doc, "Heading2", section.partTitle() + " (" + section.total().stripTrailingZeros().toPlainString()
-                    + " điểm)");
+            String partTitle = section.partTitle() == null ? "" : section.partTitle().strip();
+            styled(doc, "Heading2", (partTitle + (section.total() == null ? "" : " (" + points(section.total())
+                    + " điểm)")).strip());
             // Rubric atomic: mỗi dòng một mục chấm có điểm; tiêu chí nhiều mục (bản cũ, đề xuất AI) ghi kèm tên tiêu chí.
             List<String[]> rows = new ArrayList<>();
             for (RubricCriterion criterion : section.criteria()) {
-                for (RubricItem item : criterion.items()) {
-                    String text = item.text() == null ? "" : item.text();
-                    boolean atomic = criterion.items().size() == 1 && text.startsWith(criterion.title());
-                    rows.add(new String[]{atomic || criterion.title().isBlank() ? text : criterion.title() + ": " + text,
-                            item.points() == null ? "" : item.points().stripTrailingZeros().toPlainString()});
+                String name = criterion.title() == null ? "" : criterion.title().strip();
+                List<RubricItem> items = criterion.items() == null ? List.of() : criterion.items();
+                for (RubricItem item : items) {
+                    String text = item.text() == null ? "" : item.text().strip();
+                    boolean atomic = items.size() == 1 && text.startsWith(name);
+                    rows.add(new String[]{atomic || name.isEmpty() ? text : text.isEmpty() ? name : name + ": " + text,
+                            item.points() == null ? "" : points(item.points())});
                 }
             }
             XWPFTable table = doc.createTable(rows.size() + 1, 2);
             table.setStyleID("TableGrid");
+            // Bảng rộng hết trang, cột Điểm hẹp: mục chấm dài không bị bóp thành cột nhỏ.
+            table.setWidth(TABLE_WIDTH);
+            for (XWPFTableRow row : table.getRows()) {
+                row.getCell(0).setWidth("85%");
+                row.getCell(1).setWidth("15%");
+            }
             String[] header = {"Mục chấm", "Điểm"};
             for (int j = 0; j < 2; j++) {
-                XWPFRun r = table.getRow(0).getCell(j).getParagraphs().get(0).createRun();
+                XWPFParagraph head = table.getRow(0).getCell(j).getParagraphs().get(0);
+                head.setSpacingBefore(60);
+                head.setSpacingAfter(60);
+                if (j == 1) {
+                    head.setAlignment(ParagraphAlignment.CENTER);
+                }
+                XWPFRun r = head.createRun();
                 r.setBold(true);
                 r.setText(header[j]);
             }
             for (int i = 0; i < rows.size(); i++) {
                 for (int j = 0; j < 2; j++) {
-                    table.getRow(i + 1).getCell(j).getParagraphs().get(0).createRun().setText(rows.get(i)[j]);
+                    XWPFParagraph cell = table.getRow(i + 1).getCell(j).getParagraphs().get(0);
+                    cell.setSpacingBefore(60);
+                    cell.setSpacingAfter(60);
+                    if (j == 1) {
+                        cell.setAlignment(ParagraphAlignment.CENTER);
+                    }
+                    cell.createRun().setText(clean(rows.get(i)[j]));
                 }
             }
         }
+    }
+
+    /** Điểm ghi gọn: 2 thay cho 2.00, 1.5 giữ nguyên. */
+    private static String points(BigDecimal value) {
+        return value.signum() == 0 ? "0" : value.stripTrailingZeros().toPlainString();
     }
 
     private byte[] read(String fileId) {
@@ -403,7 +532,8 @@ final class DocxExporter {
             + "<w:right w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"auto\"/>"
             + "<w:insideH w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"auto\"/>"
             + "<w:insideV w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"auto\"/>"
-            + "</w:tblBorders></w:tblPr></w:style>"
+            + "</w:tblBorders><w:tblCellMar><w:left w:w=\"144\" w:type=\"dxa\"/><w:right w:w=\"108\" w:type=\"dxa\"/>"
+            + "</w:tblCellMar></w:tblPr></w:style>"
             + "</w:styles>";
 
     private static String style(String id, String name, int outline, String runProperties) {

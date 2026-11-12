@@ -5,7 +5,7 @@
 
 > Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
-**Primary UC:** 53, 54, 55, 56, 57. **Primary stories:** US-GRP-001, US-GRP-002, US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006. **Requirements:** FR-025, FR-026, FR-018, FR-039.
+**Primary UC:** 53, 54, 55, 56, 57. **Primary stories:** US-GRP-001, US-GRP-002, US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006, US-GRP-007, US-GRP-008, US-GRP-009, US-GRP-010. **Requirements:** FR-025, FR-026, FR-018, FR-039; SG-01…09 (2026-11-11).
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
 
@@ -81,3 +81,64 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ## Submission remediation — 2026-11-10
 
 New untouched group documents have no edit timestamp (repository uses the existing non-null column's epoch sentinel). Claim/release alone do not mark content as edited. Deadline submission closes an untouched document without generating an empty receipt; an existing leader submission is closed and claims released without overwriting it. U09 preserves official group grades on resubmission and supersedes only unofficial old-group member records.
+
+## 8. Sinh viên tự chia nhóm — 2026-11-11
+
+US-GRP-007…010, [SG-01…09](../../../inception/requirements/2026-11-11-student-self-grouping.md). Thực thể và trạng thái ở [domain-entities](domain-entities.md).
+
+### Đợt tự chia nhóm
+
+| Mã | Rule | Nguồn |
+|---|---|---|
+| BR-U12-70 | Chỉ giảng viên chính của lớp `DRAFT`/`OPEN` đọc và sửa cài đặt đợt. Bật cần `minSize`, `maxSize` là số nguyên 2–20, `minSize ≤ maxSize`; `deadline` trống hoặc sau thời điểm lưu. Tắt giữ nguyên sĩ số và hạn chót đã lưu. Lưu kèm `version`, lệch thì `409`. Audit `GROUP_FORMATION_UPDATED` với giá trị trước/sau. | SG-01, US-GRP-007 S1, S2 |
+| BR-U12-71 | Đợt **mở** khi `enabled`, lớp `OPEN` và (`deadline` trống hoặc `now < deadline`); tính mỗi lần đọc/ghi, không dùng job. Lớp chưa có cài đặt coi như tắt. | SG-01 |
+| BR-U12-72 | Khi đợt đóng: sinh viên không tạo, đổi tên, mời, chấp nhận, gửi duyệt được (`FORMATION_CLOSED`); vẫn rời, rút về, hủy đề xuất được. Lời mời `INVITED` hiển thị là hết hạn và chuyển `EXPIRED` ở lần ghi kế tiếp chạm tới đề xuất hoặc khi đợt được mở lại. Đề xuất `SUBMITTED` vẫn duyệt/từ chối được; `DRAFT` được giữ. | SG-01, US-GRP-007 S3 |
+| BR-U12-73 | Đổi sĩ số khi đợt đang bật không đổi đề xuất đã có; đề xuất `SUBMITTED` không còn thỏa sĩ số mới hiện cảnh báo cho giảng viên, vẫn duyệt được. | SG-01 |
+
+### Đề xuất và lời mời
+
+| Mã | Rule | Nguồn |
+|---|---|---|
+| BR-U12-74 | **Sinh viên hợp lệ** cho đề xuất: ghi danh `ACTIVE` trong lớp, chưa ở nhóm chính thức nào của lớp. Sinh viên không hợp lệ không tạo, được mời hay chấp nhận (`STUDENT_ALREADY_GROUPED`, hoặc `404` nếu ngoài lớp). | SG-02 |
+| BR-U12-75 | Tạo đề xuất khi đợt mở, người tạo hợp lệ và chưa ở đề xuất đang hoạt động (`STUDENT_IN_PROPOSAL`). Tên cắt khoảng trắng, 1–100 ký tự (`PROPOSAL_NAME_INVALID`), không trùng (không phân biệt hoa thường) tên nhóm chính thức hay đề xuất đang hoạt động khác của lớp (`GROUP_NAME_DUPLICATE`). Người tạo là trưởng nhóm, thành viên `ACCEPTED`. | SG-02, US-GRP-008 S1 |
+| BR-U12-76 | Trưởng nhóm đổi tên đề xuất `DRAFT` khi đợt mở, cùng kiểm như BR-U12-75. | Quyết định Q6 |
+| BR-U12-77 | Trưởng nhóm mời khi đề xuất `DRAFT` và đợt mở; người được mời hợp lệ, khác người đã `ACCEPTED`/`INVITED` trong đề xuất; số `ACCEPTED` cộng `INVITED` sau khi mời không vượt `maxSize` (`PROPOSAL_FULL`). Người đang ở đề xuất khác vẫn được mời (họ phải rời trước khi chấp nhận). Trưởng nhóm thu hồi lời mời `INVITED` (`REVOKED`). | SG-02, US-GRP-008 S1 |
+| BR-U12-78 | Người được mời chấp nhận khi đợt mở, đề xuất `DRAFT`, lời mời `INVITED`, người đó hợp lệ và không ở đề xuất đang hoạt động khác (`STUDENT_IN_PROPOSAL`; database bảo đảm khi đồng thời). Chấp nhận thì `ACCEPTED`, `active`; mọi lời mời `INVITED` khác của người đó trong lớp thành `REVOKED`. Từ chối thì `DECLINED`, được khi đề xuất còn hoạt động. | SG-02, US-GRP-008 S2, S3 |
+| BR-U12-79 | Thành viên không phải trưởng nhóm rời đề xuất `DRAFT` bất kỳ lúc nào (`LEFT`). Trưởng nhóm không rời; trưởng nhóm hủy đề xuất `DRAFT` (`CANCELLED`, `LEADER_CANCELLED`): thành viên thành không hoạt động, lời mời `INVITED` thành `REVOKED`. | SG-02, US-GRP-008 S4 |
+
+### Gửi duyệt
+
+| Mã | Rule | Nguồn |
+|---|---|---|
+| BR-U12-80 | Trưởng nhóm gửi đề xuất `DRAFT` khi đợt mở và số thành viên hiệu lực (`ACCEPTED`, ghi danh `ACTIVE`, chưa có nhóm chính thức) ≥ `minSize` (`PROPOSAL_BELOW_MIN`). Gửi thì `SUBMITTED`, `submittedAt`; lời mời `INVITED` thành `REVOKED`; phát `group.proposal-submitted`; audit `GROUP_PROPOSAL_SUBMITTED`. | SG-03, US-GRP-009 S1, S2 |
+| BR-U12-81 | Đề xuất `SUBMITTED` bị khóa: không đổi tên, mời, rời. Trưởng nhóm rút về `DRAFT` bất kỳ lúc nào trước khi giảng viên quyết định. | SG-03, US-GRP-009 S3 |
+
+### Duyệt và từ chối
+
+| Mã | Rule | Nguồn |
+|---|---|---|
+| BR-U12-82 | Chỉ giảng viên chính của lớp `DRAFT`/`OPEN` duyệt/từ chối, chỉ đề xuất `SUBMITTED` của lớp đó (khác lớp `404`, khác trạng thái `PROPOSAL_NOT_SUBMITTED`). | SG-04, US-GRP-010 S4 |
+| BR-U12-83 | Duyệt dùng lõi lưu bộ nhóm (BR-U12-02, 04): bộ nhóm hiện tại cộng một nhóm mới (tên, trưởng nhóm, thành viên hiệu lực của đề xuất), kiểm `GroupSetRules`; tạo nhóm, tài liệu cho bài nhóm đang mở, audit `GROUP_CREATED`, sự kiện membership với `reason = PROPOSAL_APPROVED`. Đề xuất `APPROVED`, `approvedGroupId`, `decidedBy/At`; thành viên không hoạt động; phát `group.proposal-approved`; audit `GROUP_PROPOSAL_APPROVED`. | SG-04, US-GRP-010 S1 |
+| BR-U12-84 | Duyệt nhiều (tối đa 100 id, không trùng): một transaction, đọc `version` bộ nhóm, tăng một lần. Kiểm lần lượt theo thứ tự gửi, mỗi đề xuất trên bộ nhóm đã cộng các đề xuất hợp lệ trước. Đề xuất lỗi được bỏ qua, trả mã lỗi theo id, giữ `SUBMITTED` (trừ BR-U12-85). Có ít nhất một hợp lệ thì ghi; không có thì không đổi `version`. Bộ nhóm bị lưu đồng thời thì cả lần duyệt `409 GROUP_SET_VERSION_CONFLICT`, không ghi gì. | SG-04, quyết định Q1, Q2 |
+| BR-U12-85 | Lúc duyệt chỉ tính thành viên hiệu lực. Thành viên không hiệu lực (rời lớp, đã vào nhóm chính thức) bị chuyển `LEFT`. Trưởng nhóm không hiệu lực hoặc còn dưới `minSize` thì đề xuất lỗi `PROPOSAL_INCOMPLETE` và về `DRAFT`. Tên trùng nhóm chính thức thì lỗi `GROUP_NAME_DUPLICATE`, giữ `SUBMITTED`. | Quyết định Q3, Q6 |
+| BR-U12-86 | Từ chối: lý do tùy chọn, cắt khoảng trắng, trống thành null, tối đa 1.000 ký tự. Đề xuất `REJECTED`, thành viên không hoạt động; phát `group.proposal-rejected`; audit `GROUP_PROPOSAL_REJECTED`. Sinh viên thấy đề xuất bị từ chối gần nhất kèm lý do tới khi tạo hoặc vào đề xuất khác. | SG-04, US-GRP-010 S2, quyết định Q5 |
+| BR-U12-87 | Nhóm đã duyệt là nhóm chính thức bình thường (BR-U12-01…13); sinh viên không tự đổi thành viên. | SG-06 |
+
+### Tương tác với bộ nhóm chính thức
+
+| Mã | Rule | Nguồn |
+|---|---|---|
+| BR-U12-88 | Giảng viên lưu bộ nhóm (BR-U12-04) bất kỳ lúc nào. Trong cùng transaction, mỗi sinh viên vừa có nhóm chính thức: dòng `ACCEPTED` hoạt động thành `LEFT`, lời mời `INVITED` thành `REVOKED`. Người đó là trưởng nhóm đề xuất thì đề xuất `CANCELLED` (`LEADER_PLACED`). Đề xuất `SUBMITTED` còn dưới `minSize` thành viên hiệu lực thì về `DRAFT`. | SG-07, US-GRP-010 S3 |
+| BR-U12-89 | Sinh viên rời lớp không có listener: khi đọc, họ không tính là thành viên hiệu lực; lần ghi kế tiếp chạm tới đề xuất (kể cả duyệt) chuyển họ `LEFT`. Trưởng nhóm rời lớp thì đề xuất được coi và ghi `CANCELLED` (`LEADER_LEFT_CLASS`) ở lần ghi kế tiếp. | BR-U12-07, quyết định Q3 |
+| BR-U12-90 | Danh sách cho giảng viên: đề xuất đang hoạt động (tên, trưởng nhóm, thành viên hiệu lực, số lời mời chờ, trạng thái, cảnh báo sĩ số) và sinh viên `ACTIVE` chưa có nhóm kèm đề xuất họ đang ở; chỉ `SUBMITTED` có nút duyệt/từ chối. | SG-05, US-GRP-010 S3 |
+
+### Quyền, dữ liệu, audit, thông báo
+
+| Mã | Rule | Nguồn |
+|---|---|---|
+| BR-U12-91 | Mọi kiểm ở backend (SECURITY-08): sinh viên chỉ thao tác lớp mình ghi danh `ACTIVE`, lớp `OPEN`; chỉ trưởng nhóm thao tác đề xuất của mình; chỉ người được mời trả lời lời mời; người không liên quan nhận `404` và audit `ACCESS_DENIED` như BR-U12-62. Sinh viên chỉ thấy đề xuất mình là thành viên hoặc được mời. | SG NFR |
+| BR-U12-92 | Danh sách "bạn mời được" chỉ trả khi sinh viên là trưởng nhóm đề xuất `DRAFT` và đợt mở: sinh viên hợp lệ của cùng lớp, chỉ id, họ tên, email trường và cờ đang ở đề xuất khác; không trả thông tin khác. | SG-02, SECURITY-08 |
+| BR-U12-93 | Đầu vào (SECURITY-05): id dạng UUID; tên 1–100; lý do ≤ 1.000; sĩ số số nguyên 2–20; hạn chót thời điểm ISO-8601; danh sách id không trùng, tối đa `maxSize` (mời) hoặc 100 (duyệt). Truy vấn tham số hóa. | SECURITY-05 |
+| BR-U12-94 | Audit: `GROUP_FORMATION_UPDATED`, `GROUP_PROPOSAL_SUBMITTED`, `GROUP_PROPOSAL_APPROVED`, `GROUP_PROPOSAL_REJECTED`, cùng `GROUP_CREATED` của nhóm được tạo. Không audit tạo nháp, mời, chấp nhận, rời. Không ghi họ tên, email hay lý do vào log ứng dụng (SECURITY-03). | FR-014, SG NFR |
+| BR-U12-95 | Thông báo chỉ bốn loại ở bảng sự kiện; thay đổi do hệ thống (BR-U12-85, 88, 89) không thông báo. Sự kiện phát sau commit; lỗi gửi thông báo không hoàn tác thao tác (RESILIENCY-10, theo cơ chế sự kiện hiện có). | SG-08, quyết định Q7, Q8 |
+| BR-U12-96 | Mọi thao tác ghi lên đề xuất là một transaction; lỗi thì hoàn tác toàn bộ, trả lỗi chung không lộ chi tiết nội bộ (SECURITY-15). Thao tác trưởng nhóm gửi `version` đề xuất, lệch thì `409 PROPOSAL_VERSION_CONFLICT`. | SECURITY-15 |

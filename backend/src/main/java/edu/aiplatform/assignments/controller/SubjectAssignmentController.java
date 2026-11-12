@@ -49,7 +49,7 @@ public class SubjectAssignmentController {
     public ResponseEntity<AssignmentViews.Detail> copy(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
                                                        @RequestBody AssignmentRequests.Copy body) {
         AssignmentViews.Detail created = copies.copyToSubject(actor, subjectId, body.sourceAssignmentId(),
-                body.title());
+                body.title(), body.submissionMode(), body.gradingMode());
         return ResponseEntity.created(URI.create("/api/v1/assignments/" + created.id())).body(created);
     }
 

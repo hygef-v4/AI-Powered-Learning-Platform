@@ -8,7 +8,7 @@ export const studentClassSections = createSlot<{ classId: string }>("StudentClas
 /** Thẻ ở cột phải trang lớp sinh viên, dưới thẻ Giảng viên (U12: Nhóm của tôi). */
 export const studentClassAside = createSlot<{ classId: string }>("StudentClassAside");
 
-/** Hàng thẻ chia đôi dưới Thông tin lớp của trang lớp sinh viên (U14: thông báo gần đây; U08: bài cần làm). */
+/** Tổng quan dưới Thông tin lớp của sinh viên (U08: thống kê và bài cần làm). */
 export const studentClassBoard = createSlot<{ classId: string }>("StudentClassBoard");
 
 /** Tab hoặc phần trên Teacher Class Detail: Thông tin lớp, Sinh viên, Học liệu, Bài tập (`evals`), Chấm điểm. */

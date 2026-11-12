@@ -88,7 +88,8 @@ export function StudentAssignmentsPage() {
   const rows = allRows && classFilter ? allRows.filter((row) => row.classId === classFilter) : allRows;
 
   const inTab = (row: StudentRow, key: Tab) =>
-    key === "upcoming" ? upcoming(row) && !doing(row) : key === "doing" ? doing(row) : row.submittedCount > 0 || !!row.group?.submitted;
+    // Mỗi bài một tab: đang làm (kể cả sửa để nộp lại) thì chỉ ở Đang làm, không ở Đã nộp.
+    key === "upcoming" ? upcoming(row) && !doing(row) : key === "doing" ? doing(row) : !doing(row) && (row.submittedCount > 0 || !!row.group?.submitted);
   const focused = focus ? rows?.find((row) => row.assignmentId === focus) : undefined;
   const tab: Tab = chosenTab || TABS.find((item) => focused && inTab(focused, item.value))?.value || "upcoming";
   const q = query.toLocaleLowerCase("vi").trim();

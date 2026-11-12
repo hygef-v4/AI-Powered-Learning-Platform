@@ -192,28 +192,13 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
     await waitFor(() => expect(mocks.loadGradebook).toHaveBeenLastCalledWith("class-1", "Bình", 1));
   });
 
-  it("nút Xuất bảng điểm lên chỗ của dòng tiêu đề và giữ phạm vi xuất đã chọn", async () => {
-    mocks.exportGrades.mockResolvedValue({ blob: new Blob(["xlsx"]), filename: "Bài tập tuần 1.xlsx" });
-    const download = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
-      expect(this.download).toBe("Bài tập tuần 1.xlsx");
-    });
-    URL.createObjectURL = vi.fn(() => "blob:test");
-    URL.revokeObjectURL = vi.fn();
+  it("opens the matrix gradebook from the page header instead of exporting directly", async () => {
     const host = document.createElement("div");
     document.body.appendChild(host);
-
     render(<ClassGradebookTab classId="class-1" headerActions={host} />);
     await screen.findByText("Nguyễn Văn An");
-    fireEvent.click(within(host).getByRole("button", { name: "Xuất bảng điểm" }));
-    const dialog = screen.getByRole("dialog", { name: "Xuất bảng điểm" });
-    expect(within(dialog).getByRole("combobox", { name: /Phạm vi/ })).toHaveValue("a-1");
-    fireEvent.change(within(dialog).getByRole("combobox", { name: /Phạm vi/ }), { target: { value: "a-2" } });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Xuất tệp" }));
-    // Mặc định là Excel, đứng trước CSV.
-    expect(within(dialog).getAllByRole("radio").map((r) => r.textContent)).toEqual(["Excel", "CSV"]);
-    await waitFor(() => expect(mocks.exportGrades).toHaveBeenCalledWith("class-1", "xlsx", "a-2"));
-    await waitFor(() => expect(download).toHaveBeenCalledOnce());
-    download.mockRestore();
+    expect(within(host).getByRole("link", { name: "Bảng điểm" })).toHaveAttribute("href", "/teaching/classes/class-1?tab=gradebook&gradebookView=matrix");
+    expect(screen.queryByRole("button", { name: "Xuất bảng điểm" })).not.toBeInTheDocument();
     host.remove();
   });
 
@@ -226,7 +211,7 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Mất kết nối máy chủ");
     fireEvent.click(screen.getByRole("button", { name: "Thử tải lại" }));
     expect(await screen.findByText("Chưa có bài tính điểm trong lớp.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Xuất bảng điểm" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "Bảng điểm" })).toBeInTheDocument();
     unmount();
 
     mocks.loadGradebook.mockResolvedValue({ ...samplePage, rows: [], total: 0 });
@@ -262,9 +247,9 @@ it("validates gradebook URL pagination before calling the API", async () => {
 });
 
 it("restores gradebook search and pagination while typing replaces the current entry", async () => {
-  window.history.replaceState(null, "", "/?gradebookQuery=Bình&gradebookPage=2&assignment=a-2");
+  window.history.replaceState(null, "", "/?gradebookQuery=Bình&gradebookPage=2&assignment=a-1");
   render(<ClassGradebookTab classId="class-1" />);
-  expect(await screen.findByRole("button", { name: new RegExp(longTitle2) })).toHaveAttribute("aria-pressed", "true");
+  expect(await screen.findByRole("button", { name: new RegExp(longTitle1) })).toHaveAttribute("aria-pressed", "true");
   expect(screen.getByRole("searchbox", { name: "Tìm sinh viên" })).toHaveValue("Bình");
   await waitFor(() => expect(mocks.loadGradebook).toHaveBeenLastCalledWith("class-1", "Bình", 2));
   const length = window.history.length;
@@ -294,4 +279,16 @@ it.each([
   const publish = screen.getByRole("button", { name: /Công bố điểm \(/ });
   expect(finalize).not.toBeInTheDocument();
   expect(publish).toHaveProperty("disabled", publishDisabled);
+});
+
+it("bài nhóm tìm theo tên nhóm, không tìm sinh viên trên máy chủ", async () => {
+  window.history.replaceState(null, "", "/?assignment=a-2");
+  render(<ClassGradebookTab classId="class-1" />);
+  const search = await screen.findByRole("searchbox", { name: "Tìm nhóm" });
+  expect(screen.queryByRole("searchbox", { name: "Tìm sinh viên" })).not.toBeInTheDocument();
+  const calls = mocks.loadGradebook.mock.calls.length;
+  fireEvent.change(search, { target: { value: "Nhóm 1" } });
+  expect(search).toHaveValue("Nhóm 1");
+  await new Promise((resolve) => setTimeout(resolve, 350));
+  expect(mocks.loadGradebook.mock.calls.length).toBe(calls);
 });

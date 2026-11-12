@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /** AI soạn bản nháp (F6): gửi yêu cầu, xem đề xuất, áp dụng, bỏ. */
@@ -36,11 +37,12 @@ public class AssignmentAiDraftController {
         return drafts.get(actor, id, draftId);
     }
 
-    /** Đề mẫu của môn để chọn trong popup soạn bằng AI. */
+    /** Đề mẫu của môn để chọn khi soạn bằng AI; {@code own=true} thêm các đề cũ người soạn quản lý được. */
     @GetMapping("/templates")
     public List<AssignmentViews.AiTemplateOption> listTemplates(@AuthenticationPrincipal Actor actor,
-                                                               @PathVariable UUID id) {
-        return drafts.listTemplates(actor, id);
+                                                               @PathVariable UUID id,
+                                                               @RequestParam(defaultValue = "false") boolean own) {
+        return drafts.listTemplates(actor, id, own);
     }
 
     @PostMapping(value = "/sources:preview", consumes = "application/json")

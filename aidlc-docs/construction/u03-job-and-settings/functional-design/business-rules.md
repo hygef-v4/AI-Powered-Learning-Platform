@@ -1,5 +1,15 @@
 # U03 Job and Settings — business-rules
 
+## Mục đích tệp nhập đề — 2026-11-11
+
+Thiết kế, chưa có mã. Phục vụ U07 BR-U07-87…101.
+
+| Mã | Quy tắc |
+|---|---|
+| BR-U03-99 | Mục đích `ASSIGNMENT_IMPORT` chỉ dùng để kiểm tệp, không lưu: PNG, JPEG, WEBP, PDF; người tải lên Teacher, Subject Manager; trần cứng 10MB; setting `files.assignmentImport.maxSizeMb` ("Tệp nhập đề (ảnh/PDF) tối đa", nhóm FILES, 1–10). Policy trả qua API policy hiện có để frontend kiểm trước khi gửi. Gọi `IArtifact.store` với mục đích này thì bị từ chối. |
+| BR-U03-100 | `FileType.WEBP` (`image/webp`, đuôi `webp`): `ContentInspector` nhận diện theo chữ ký `RIFF....WEBP`. WEBP chỉ thuộc `ASSIGNMENT_IMPORT`; ảnh trong tài liệu (`DOCUMENT_IMAGE`) vẫn chỉ PNG, JPEG. |
+| BR-U03-101 | `IArtifact.issuePreviewToken(fileRef, actor)` cấp link tải 5 phút (như `issueDownloadToken`) cho tệp vừa lưu mà chưa gắn, chỉ khi `fileRef` đúng chữ ký, còn hạn và thuộc `actor`; ngược lại trả rỗng, không ném lỗi. Không gắn tệp, không đổi lịch dọn tệp mồ côi. Dùng cho hình cắt trong bản xem trước nhập đề (FR-IMP-05.1). Thêm 2026-11-11 khi thử trên trình duyệt. |
+
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
 

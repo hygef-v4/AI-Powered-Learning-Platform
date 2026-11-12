@@ -4,13 +4,13 @@ import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Button, ClickableRow, Icon, Pill, Segmented, Select, TableFrame, Td, TextInput, Th, cx, type Tone } from "@/shared/ui";
+import { Button, ButtonLink, ClickableRow, Icon, Pill, Segmented, Select, TableFrame, Td, TextInput, Th, cx, type Tone } from "@/shared/ui";
 import { Pagination } from "@/shared/ui/Pagination";
 import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
 import { GRADE_STATUS_LABELS, type Decimal, type GradebookPage, type GradeCell } from "../model/types";
 import { GradebookBatchControls } from "./GradebookBatchControls";
-import { GradebookExportDialog } from "./GradebookExportDialog";
+import { GradebookMatrix } from "./GradebookMatrix";
 
 type Assignment = GradebookPage["assignments"][number];
 type Mode = "assignment" | "student";
@@ -43,19 +43,23 @@ const statusOf = (grade: GradeCell | undefined) => {
 };
 
 export function ClassGradebookTab({ classId, headerActions }: { classId: string; headerActions?: HTMLElement | null }) {
+  const params = useSearchParams();
+  if (params?.get("gradebookView") === "matrix") return <GradebookMatrix key={classId} classId={classId} headerActions={headerActions} />;
   return <GradebookContent key={classId} classId={classId} headerActions={headerActions} />;
 }
 
 /**
  * Sổ điểm (U09) theo kiểu danh sách – chi tiết, dùng được cả khi lớp có hàng trăm bài: chọn "Theo bài tập" hay "Theo sinh
  * viên"; cột trái là danh sách có ô tìm và cuộn riêng, cột phải là bảng điểm của mục đang chọn với ô tìm và lọc trạng thái.
- * Hai bảng cùng độ rộng cột. Mở từ Tiến độ nộp bài thì `?assignment=` hoặc `?student=` chọn sẵn mục tương ứng. Không có bảng
- * ma trận; cả sổ lấy bằng Xuất sổ điểm trên dòng tiêu đề trang lớp. Chỉ bài tính điểm và lượt được chấm, không cộng tổng hay
+ * Hai bảng cùng độ rộng cột. Mở từ trang lớp thì `?assignment=` hoặc `?student=` chọn sẵn mục tương ứng. Nút Bảng điểm
+ * mở ma trận sinh viên/bài tập và xuất tệp. Chỉ bài tính điểm và lượt được chấm, không cộng tổng hay
  * trọng số (BR-U09).
  */
 function GradebookContent({ classId, headerActions }: { classId: string; headerActions?: HTMLElement | null }) {
   const params = useSearchParams();
   const [query, setQuery] = useUrlState<string>("gradebookQuery", "", undefined, "replace");
+  // Bài nhóm: ô tìm lọc bảng bài nộp theo tên nhóm, không tìm sinh viên trên máy chủ.
+  const [groupQuery, setGroupQuery] = useState("");
   const [pageValue, setPageValue] = useUrlState<string>("gradebookPage", "1", undefined, "replace");
   const page = /^[1-9]\d*$/.test(pageValue) && Number.isSafeInteger(Number(pageValue)) ? Number(pageValue) : 1;
   const setPage = (page: number) => setPageValue(String(page));
@@ -64,7 +68,6 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
   const [selectedStudentId, setSelectedStudentId] = useUrlState<string>("student", "");
   const [assignmentQuery, setAssignmentQuery] = useUrlState<string>("gradebookAssignmentQuery", "", undefined, "replace");
   const [status, setStatus] = useUrlState<string>("gradebookStatus", "", ["", ...STATUS_FILTERS]);
-  const [exporting, setExporting] = useState(false);
 
   // Gõ tìm sinh viên: hỏi máy chủ sau khi ngừng gõ một nhịp, không theo từng phím.
   const [search, setSearch] = useState("");
@@ -86,12 +89,17 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
   const gradeOf = (cells: GradeCell[], assignmentId: string) => cells.find((cell) => cell.assignmentId === assignmentId);
   const keep = (grade: GradeCell | undefined) => !status || statusOf(grade) === status;
 
-  const exportButton = (
-    <Button icon="download" disabled={!data || assignments.length === 0} onClick={() => setExporting(true)}>Xuất bảng điểm</Button>
-  );
+  const matrixParams = new URLSearchParams(params?.toString());
+  matrixParams.set("tab", "gradebook");
+  matrixParams.set("gradebookView", "matrix");
+  const gradebookButton = <ButtonLink href={`/teaching/classes/${encodeURIComponent(classId)}?${matrixParams}`} icon="assignment">Bảng điểm</ButtonLink>;
   const studentSearch = (
     <TextInput type="search" icon="search" aria-label="Tìm sinh viên" placeholder="Tìm sinh viên" value={query}
       onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
+  );
+  const groupSearch = (
+    <TextInput type="search" icon="search" aria-label="Tìm nhóm" placeholder="Tìm nhóm" value={groupQuery}
+      onChange={(e) => setGroupQuery(e.target.value)} />
   );
   const assignmentSearch = (
     <TextInput type="search" icon="search" aria-label="Tìm bài tập" placeholder="Tìm bài tập" value={assignmentQuery}
@@ -114,7 +122,7 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
-      {headerActions ? createPortal(exportButton, headerActions) : <div className="flex justify-end">{exportButton}</div>}
+      {headerActions ? createPortal(gradebookButton, headerActions) : <div className="flex justify-end">{gradebookButton}</div>}
       <section aria-label="Chấm điểm" className="flex min-w-0 flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
         <Segmented as="tab" ariaLabel="Chế độ chấm điểm" value={mode} onChange={setMode} className="self-start"
           options={[{ value: "assignment", label: "Theo bài tập" }, { value: "student", label: "Theo sinh viên" }]} />
@@ -152,9 +160,11 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
             <div className="flex min-w-0 flex-col gap-3">
               {mode === "assignment" && activeAssignment && (
                 <>
-                  <DetailHead title={activeAssignment.title} meta={kindLabel(activeAssignment)} search={studentSearch} filter={statusFilter} />
+                  <DetailHead title={activeAssignment.title} meta={kindLabel(activeAssignment)} filter={statusFilter}
+                    search={activeAssignment.submissionMode === "GROUP" ? groupSearch : studentSearch} />
                   <GradebookBatchControls key={`batch-${activeAssignment.id}`} classId={classId}
-                    assignmentId={activeAssignment.id} query={query} status={status} group={activeAssignment.submissionMode === "GROUP"}
+                    assignmentId={activeAssignment.id} query={activeAssignment.submissionMode === "GROUP" ? groupQuery : query}
+                    status={status} group={activeAssignment.submissionMode === "GROUP"}
                     onDone={() => void resource.refresh().catch(() => {})} />
                   {activeAssignment.submissionMode === "GROUP" && (
                     <details className="border-t border-line pt-3">
@@ -188,8 +198,6 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
           </div>
         )}
       </section>
-      {exporting && data && <GradebookExportDialog classId={classId} assignments={data.assignments}
-        initialAssignmentId={mode === "assignment" ? activeAssignment?.id : undefined} onClose={() => setExporting(false)} />}
     </div>
   );
 }

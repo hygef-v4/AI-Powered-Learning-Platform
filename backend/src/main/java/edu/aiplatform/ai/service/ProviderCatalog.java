@@ -27,6 +27,15 @@ public class ProviderCatalog {
         return model != null && models(provider).contains(model);
     }
 
+    /** Model đọc được ảnh: theo {@code vision-models}, không đặt thì mọi model cho phép (BR-U06-57). */
+    public boolean supportsImages(AiProvider provider, String model) {
+        if (!allowed(provider, model)) {
+            return false;
+        }
+        List<String> vision = config(provider).visionModels();
+        return vision.isEmpty() || vision.contains(model);
+    }
+
     public int maxOutputTokens(AiProvider provider) {
         AiProperties.Provider config = config(provider);
         return config == null || config.maxOutputTokens() <= 0 ? 4096 : config.maxOutputTokens();

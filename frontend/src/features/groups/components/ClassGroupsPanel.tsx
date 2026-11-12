@@ -8,6 +8,7 @@ import { GroupFormDialog } from "./GroupFormDialog";
 import { GroupProgressCard } from "./GroupProgressCard";
 import { byGroupName, draftsFrom, personLabel, saveErrorText, UNGROUPED, type StudentRow } from "../model/groupDrafts";
 import { LeaderRequestList } from "./LeaderRequestList";
+import { ProposalReviewList } from "./ProposalReviewList";
 import { RandomSplitDialog } from "./RandomSplitDialog";
 import type { Draft, GroupSetView } from "../model/types";
 
@@ -153,6 +154,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
 
   return (
     <div className="flex flex-col gap-4">
+      <ProposalReviewList classId={classId} setVersion={set.version} readOnly={readOnly} onGroupsChanged={() => void load()} />
       <LeaderRequestList set={set} groupId={filter || undefined} onChanged={() => void load()} />
       <GroupProgressCard classId={classId} set={set} />
       <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">

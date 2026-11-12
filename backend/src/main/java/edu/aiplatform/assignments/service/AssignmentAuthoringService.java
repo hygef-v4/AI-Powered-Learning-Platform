@@ -162,8 +162,33 @@ public class AssignmentAuthoringService {
         }
         String instructions = command.instructions() == null ? current.instructions()
                 : instructions(command.instructions());
-        DocumentModel pending = DocumentFiles.resolveFiles(current.skeleton(), documents.sanitize(command.skeleton()),
-                null);
+        StoredSkeleton stored = storeSkeleton(actor, current, command.skeleton(), instructions, current.title());
+        if (command.fromDocx()) {
+            audit.success(actor, "ASSIGNMENT_DOCX_IMPORTED", stored.saved().id(), AssignmentAudit.details(
+                    "blockCount", stored.saved().skeleton().blocks().size(), "partCount", stored.partCount()));
+        }
+        return support.detail(actor, stored.saved(), stored.warnings());
+    }
+
+    /**
+     * Ghi khung nhập từ ảnh/PDF (BR-U07-98): cùng đường lưu với nhập DOCX (kiểm khối, gắn ảnh, tính lại phần, giữ rubric
+     * của phần còn khớp); {@code title} khác rỗng thì đổi tên bài trong cùng lần lưu.
+     */
+    @Transactional
+    public AssignmentViews.Detail saveImportedSkeleton(Actor actor, UUID id, long version, DocumentModel skeleton,
+                                                       String title) {
+        Assignment current = support.lockEditable(actor, id, version, "ASSIGNMENT_IMPORT_APPLIED");
+        String nextTitle = title == null || title.isBlank() ? current.title() : title(title);
+        StoredSkeleton stored = storeSkeleton(actor, current, skeleton, current.instructions(), nextTitle);
+        return support.detail(actor, stored.saved(), stored.warnings());
+    }
+
+    private record StoredSkeleton(Assignment saved, int partCount, List<ValidationIssue> warnings) {
+    }
+
+    private StoredSkeleton storeSkeleton(Actor actor, Assignment current, DocumentModel skeleton, String instructions,
+                                         String title) {
+        DocumentModel pending = DocumentFiles.resolveFiles(current.skeleton(), documents.sanitize(skeleton), null);
         ValidationResult result = documents.validateSkeleton(pending);
         List<ValidationIssue> errors = new ArrayList<>(result.errors());
         if (!current.diagramEnabled()) {
@@ -177,13 +202,9 @@ public class AssignmentAuthoringService {
                 ref -> artifacts.attach(new FileRef(ref), actor, ArtifactPurpose.DOCUMENT_IMAGE).fileId());
         Instant now = clock.instant();
         List<DocumentPart> parts = PartCalculator.compute(stored);
-        Assignment saved = assignments.save(current.withSkeleton(instructions, stored, parts, now));
+        Assignment saved = assignments.save(current.withAuthoring(title, instructions, stored, parts, now));
         rubrics.syncParts(saved.id(), parts, now);
-        if (command.fromDocx()) {
-            audit.success(actor, "ASSIGNMENT_DOCX_IMPORTED", saved.id(), AssignmentAudit.details(
-                    "blockCount", stored.blocks().size(), "partCount", parts.size()));
-        }
-        return support.detail(actor, saved, result.warnings());
+        return new StoredSkeleton(saved, parts.size(), result.warnings());
     }
 
     /** F14 (BR-U07-31): chỉ bài chưa phát hành; rubric, đề xuất AI xóa theo. */
@@ -197,16 +218,19 @@ public class AssignmentAuthoringService {
                 "classId", current.classId(), "subjectId", current.subjectId(), "status", current.status()));
     }
 
-    /** F8 (BR-U07-24, 32): kiểm đủ rồi chuyển REVIEWED. */
+    /**
+     * Hoàn tất bài (BR-U07-24, 32; yêu cầu 2026-11-11): kiểm đủ rồi chuyển REVIEWED ("Đã hoàn tất"), lưu bản mới nhất; chỉ
+     * bài đã hoàn tất mới xếp lịch giao được. Sửa nội dung, rubric hay cài đặt sau đó thì bài tự về nháp.
+     */
     @Transactional
     public AssignmentViews.Detail review(Actor actor, UUID id, long version) {
         Assignment current = support.lockEditable(actor, id, version, "ASSIGNMENT_REVIEWED");
         if (current.status() != AssignmentStatus.DRAFT) {
-            throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ duyệt bài đang nháp");
+            throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ hoàn tất bài đang nháp");
         }
         List<ValidationIssue> issues = readinessIssues(current);
         if (!issues.isEmpty()) {
-            throw AssignmentProblem.issues(HttpStatus.CONFLICT, "ASSIGNMENT_NOT_READY", "Bài chưa đủ để duyệt", issues);
+            throw AssignmentProblem.issues(HttpStatus.CONFLICT, "ASSIGNMENT_NOT_READY", "Bài chưa đủ để hoàn tất", issues);
         }
         Assignment saved = assignments.save(current.withStatus(AssignmentStatus.REVIEWED, clock.instant()));
         audit.success(actor, "ASSIGNMENT_REVIEWED", saved.id(), AssignmentAudit.details("versionNo", saved.versionNo()));

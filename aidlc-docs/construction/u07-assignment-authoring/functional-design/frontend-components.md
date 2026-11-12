@@ -1,5 +1,43 @@
 # U07 Assignment Authoring — frontend-components
 
+## Nhập đề từ ảnh/PDF — 2026-11-11
+
+Thiết kế, chưa có mã. Quy tắc: BR-U07-87…101.
+
+### `ExamImportDialog` (mới, `features/assignments/components`)
+
+- **Props**: `assignmentId`, `version`, `hasContent`, `initialFiles?`, `autoStart?`, `onApplied(detail, previous)`, `onClose`.
+- **Trạng thái**: `PICK`, `RUNNING`, `PREVIEW`, `ERROR`.
+
+| Bước | Giao diện |
+|---|---|
+| `PICK` | Vùng chọn tệp (`accept=".png,.jpg,.jpeg,.webp,.pdf"`, nhiều tệp). Danh sách tệp có ảnh nhỏ, nút lên/xuống, kéo thả để đổi thứ tự, nút gỡ. Kiểm ngay theo policy `ASSIGNMENT_IMPORT` (`getPolicies`, `checkFile`): loại tệp, dung lượng, tối đa 5 ảnh hoặc 1 PDF, không trộn. Nút "Chuyển thành đề" chỉ bật khi danh sách hợp lệ. |
+| `RUNNING` | Popup chờ dùng chung `AiProgress` ("Đang đọc đề…"), có nút "Hủy" gọi `:discard`. Hỏi trạng thái bản nháp như `AiDraftDialog`. |
+| `PREVIEW` | Xem trước chỉ đọc bằng trình hiển thị tài liệu hiện có. Đầu màn: số heading, bảng, hình, số chỗ không đọc rõ. Cảnh báo dạng `Alert` có danh sách. Ô "Dùng '{title}' làm tên bài" (mặc định tắt, chỉ hiện khi có `title`). Nút: khung trống thì "Ghi vào đề"; khung có nội dung thì "Thay toàn bộ" và "Chèn vào cuối"; "Bỏ" gọi `:discard`. |
+| `ERROR` | Thông báo lỗi tiếng Việt theo mã (BR-U07-88, 100, U06), nút "Thử lại" (requestRef mới) và "Đóng". |
+
+Trạng thái có `aria-live="polite"`; mọi nút dùng được bằng bàn phím; ở 375px danh sách tệp xếp một cột.
+
+### Trang soạn bài (`AssignmentFormPage`)
+
+- Menu thêm (cạnh "Xuất DOCX") có mục "Nhập đề từ tệp" (icon `upload_file`). Chỉ hiện khi sửa được bài và bài chưa phát hành. Mục này lưu thay đổi đang dở (như `saveForAi`) rồi mở `ExamImportDialog`.
+- Tệp `.docx` chọn trong dialog đi đường nhập DOCX cũ (`importDocx`), cùng màn xem trước, không gọi AI.
+- Ghi xong: đưa bản trước vào lịch sử trình soạn (cơ chế "đề AI ghi thẳng lên trang"), toast "Đã nhập đề. Nhấn Ctrl+Z để quay lại bản trước."
+- Có import đang chờ từ popup tạo bài thì tự mở dialog với `initialFiles` và `autoStart`.
+
+### Popup tạo bài (`CreateAssignmentDialog`)
+
+- Lựa chọn "Đề mới", ô "Mẫu đề" (`TemplateFileField`) nhận `.docx,.png,.jpg,.jpeg,.webp,.pdf`; ảnh chọn được tối đa 5. Gợi ý: "DOCX, ảnh hoặc PDF đề cũ".
+- DOCX: giữ luồng cũ (nhập và lưu ngay).
+- Ảnh/PDF: tạo bài, đặt tệp vào `pendingImports` (bộ nhớ module, theo `assignmentId`), rồi `onCreated`. Trang soạn bài mở `ExamImportDialog` tự chạy. Lỗi gửi tệp: bài vẫn được giữ, báo "Đã tạo bài, chưa nhập tệp: …".
+
+### API client (`features/assignments/api`)
+
+- `startImport(id, files, { requestRef, source?, provider? })`: multipart `POST /assignments/{id}/imports`.
+- `applyAiDraft(id, draftId, { version, placement, replaceTitle })`: thêm `placement`.
+- Dùng lại `getAiDraft`, `discardAiDraft`.
+- Kiểu `AiDraft` thêm `mode`. Đề xuất `IMPORT`: `document`, `warnings`, `counts`, `title`.
+
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
 

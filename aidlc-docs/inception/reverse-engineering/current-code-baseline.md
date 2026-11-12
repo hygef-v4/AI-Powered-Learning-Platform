@@ -355,6 +355,7 @@ Primary UC 34–36; FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 
 - [AssignmentAiDraftController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/AssignmentAiDraftController.java)
 - [AssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/AssignmentController.java)
+- [AssignmentImportController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/AssignmentImportController.java) — nhập đề từ ảnh/PDF, nhánh `feat/exam-image-import` 2026-11-11; service `AssignmentImportService`, `ImportFileReader`, `ImportPageNormalizer`, `ExamImportPrompt`, `ExamImportMapper`, `FigureCropper`, `AssignmentImportResultHandler`, `AssignmentImportImageSource`, `ImportPageCleanupScanner`; repository `ImportPageRepository`; U06 `AiImageSourceRegistry`, contract `AiImageRef`, `AiImage`, `IAiImageSource`; frontend `ExamImportDialog`
 - [ClassAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/ClassAssignmentController.java)
 - [RubricController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/RubricController.java)
 - [SubjectAssignmentController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/SubjectAssignmentController.java)
@@ -364,6 +365,7 @@ Primary UC 34–36; FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 - [PartCalculatorTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/model/PartCalculatorTest.java)
 - [RubricRepositoryTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/repository/RubricRepositoryTest.java)
 - [AssignmentAiDraftServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentAiDraftServiceTest.java)
+- [AssignmentImportServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentImportServiceTest.java), `ImportFileReaderTest`, `ImportPageNormalizerTest`, `ExamImportMapperTest`, `FigureCropperTest` — nhập đề từ ảnh/PDF 2026-11-11
 - [AssignmentAuthoringServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentAuthoringServiceTest.java)
 - [AssignmentCopyServiceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentCopyServiceTest.java)
 - [AssignmentDraftGenerationSchemaTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentDraftGenerationSchemaTest.java)
@@ -614,6 +616,7 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 - [GroupDocController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocController.java)
 - [GroupDocImageController.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/controller/GroupDocImageController.java)
 - [GroupController.java](../../../backend/src/main/java/edu/aiplatform/groups/controller/GroupController.java)
+- [GroupProposalController.java](../../../backend/src/main/java/edu/aiplatform/groups/controller/GroupProposalController.java) — sinh viên tự chia nhóm (2026-11-11)
 
 ### Tests
 
@@ -633,6 +636,14 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 - [LeaderRequestServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/LeaderRequestServiceTest.java)
 - [MyGroupServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/MyGroupServiceTest.java)
 - [RandomGroupSplitterTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/RandomGroupSplitterTest.java)
+- [GroupProposalControllerTest.java](../../../backend/src/test/java/edu/aiplatform/groups/controller/GroupProposalControllerTest.java)
+- [ProposalRulesTest.java](../../../backend/src/test/java/edu/aiplatform/groups/model/ProposalRulesTest.java)
+- [GroupProposalRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/groups/repository/GroupProposalRepositoryIntegrationTest.java)
+- [GroupFormationServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/GroupFormationServiceTest.java)
+- [GroupProposalServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/GroupProposalServiceTest.java)
+- [GroupProposalReviewServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/GroupProposalReviewServiceTest.java)
+- [GroupProposalCleanupTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/GroupProposalCleanupTest.java)
+- [GroupProposalFlowIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/groups/service/GroupProposalFlowIntegrationTest.java)
 - [RabbitSseMultiInstanceIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/integration/RabbitSseMultiInstanceIntegrationTest.java)
 - [GroupDocImportServiceTest.java](../../../backend/src/test/java/edu/aiplatform/groupdocs/service/GroupDocImportServiceTest.java)
 
@@ -643,6 +654,7 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 - [V20261029_1100__make_leader_request_reason_optional.sql](../../../backend/src/main/resources/db/migration/groups/V20261029_1100__make_leader_request_reason_optional.sql)
 - [V20261102_1000__group_section_collaboration.sql](../../../backend/src/main/resources/db/migration/groups/V20261102_1000__group_section_collaboration.sql)
 - [V20261102_1200__group_assignment_phase.sql](../../../backend/src/main/resources/db/migration/groups/V20261102_1200__group_assignment_phase.sql)
+- [V20261111_1800__group_self_formation.sql](../../../backend/src/main/resources/db/migration/groups/V20261111_1800__group_self_formation.sql) — đợt tự chia nhóm, đề xuất, lời mời (2026-11-11)
 
 ### Frontend
 

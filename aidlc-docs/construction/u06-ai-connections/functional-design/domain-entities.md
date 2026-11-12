@@ -1,5 +1,19 @@
 # U06 AI Connections — domain-entities
 
+## Ảnh trong prompt — 2026-11-11
+
+Thiết kế, chưa có mã. Quy tắc BR-U06-54…60.
+
+| Đối tượng | Thay đổi |
+|---|---|
+| `AiPrompt` | `(system, user, images)`; constructor `(system, user)` đặt `images = []`. |
+| `AiImageRef` (mới, contract) | `source`, `ref`, `mediaType`. |
+| `AiImage` (mới, contract) | `mediaType`, `bytes`. |
+| `IAiImageSource` (mới, contract) | `source()`, `load(ref)`. Đăng ký theo `source` như `AiTaskResultHandlerRegistry`. |
+| `IProviderGateway.Request` | Thêm `images: List<AiImage>` (constructor cũ giữ, mặc định rỗng); `toString` chỉ ghi số ảnh. |
+| `AiProperties.Provider` | Thêm `visionModels` (rỗng thì bằng `models`). |
+| `ai_tasks.input_payload` | JSON thêm `images` (tham chiếu). Không đổi cột. |
+
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
 

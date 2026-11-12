@@ -27,7 +27,8 @@ final class AssignmentRequests {
     }
 
     /** {@code title} bỏ trống thì giữ tên bài nguồn. */
-    record Copy(UUID sourceAssignmentId, String title) {
+    /** {@code submissionMode}, {@code gradingMode}: loại của bài copy; bỏ trống thì giữ loại của bài nguồn. */
+    record Copy(UUID sourceAssignmentId, String title, SubmissionMode submissionMode, GradingMode gradingMode) {
     }
 
     record Details(Long version, String title, String instructions, Boolean diagramEnabled, GradingMode gradingMode,
@@ -90,10 +91,11 @@ final class AssignmentRequests {
     record AiSources(List<String> sourceFileRefs) {
     }
 
-    record Apply(Long version, Boolean replaceInstructions, Boolean replaceTitle) {
+    /** {@code placement}: chỉ dùng cho bản nháp nhập đề, {@code REPLACE} (mặc định) hoặc {@code APPEND} (BR-U07-98). */
+    record Apply(Long version, Boolean replaceInstructions, Boolean replaceTitle, String placement) {
         AssignmentCommands.ApplyDraft command() {
             return new AssignmentCommands.ApplyDraft(requireVersion(version), Boolean.TRUE.equals(replaceInstructions),
-                    Boolean.TRUE.equals(replaceTitle));
+                    Boolean.TRUE.equals(replaceTitle), placement);
         }
     }
 

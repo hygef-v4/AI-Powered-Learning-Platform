@@ -1,5 +1,46 @@
 # AI-DLC State Tracking
 
+## U07 — Nhập đề từ ảnh/PDF thành khung đề chỉnh sửa được — Code Generation, 2026-11-11
+
+Mở rộng nhập DOCX của U07 sang ảnh và PDF scan, dùng AI đọc ảnh (U06) để dựng khối đề. Brownfield, dùng lại tài liệu reverse engineering hiện hành. [Câu hỏi xác nhận](inception/requirements/2026-11-11-exam-image-import-questions.md) (A cả 10 câu); [yêu cầu](inception/requirements/2026-11-11-exam-image-import.md).
+
+- [x] Workspace Detection: brownfield, bỏ qua Reverse Engineering.
+- [x] Requirements Analysis: FR-IMP-01…08, người dùng duyệt 2026-11-11T07:28:36Z.
+- [x] User Stories: bỏ qua (một vai trò, mở rộng US-ASM-004).
+- [x] Workflow Planning: [execution plan](inception/plans/2026-11-11-exam-image-import-execution-plan.md), người dùng duyệt. Chạy Functional Design (U07 kèm delta U06/U03), Code Generation, Build and Test; bỏ qua Application Design, Units Generation, NFR Requirements, NFR Design, Infrastructure Design.
+- [x] Functional Design U07 (kèm delta U06/U03): [kế hoạch](construction/plans/functional-design-plan/2026-11-11-u07-exam-image-import-functional-design-plan.md) (A cả 6 câu); BR-U07-87…101, BR-U06-54…60, BR-U03-99…100 trong functional-design của từng unit; người dùng duyệt.
+- [x] Code Generation Part 1: [kế hoạch 22 bước + nhánh](construction/plans/code-generation-plan/2026-11-11-u07-exam-image-import-code-generation-plan.md), người dùng duyệt.
+- [x] Code Generation Part 2: 22/22 bước xong trên nhánh `feat/exam-image-import` (worktree `.claude/worktrees/exam-image-import`, `--no-track` từ `origin/staging@e78ac7b9`), người dùng duyệt 2026-11-11T13:20:00Z. [Tóm tắt và điều chỉnh](construction/u07-assignment-authoring/code/2026-11-11-exam-image-import-summary.md). Test theo phạm vi: U03 25/25, U06 64/64, U07 79/79, ArchitectureTest 3/3, frontend tsc/eslint sạch, Vitest assignments 61/61. Chưa commit.
+- [x] Build and Test (người dùng duyệt 2026-11-11T16:35:00Z): test tự động và thử trên trình duyệt với Gemini thật đã xong, [kết quả](construction/build-and-test/2026-11-11-exam-image-import-verification.md). Đã sửa bind `AiProperties.Provider`, lỗi chọn tệp trong popup, schema để Gemini trả đủ nội dung, hình trong màn xem trước (BR-U03-101) và `placement` của `:apply`. Backend mvn verify 2201/2201, frontend Vitest 969/969, tsc, eslint sạch. Chưa commit.
+- [x] Operations: giai đoạn giữ chỗ, không có bước nào; triển khai theo quy trình merge vào `staging` hiện có.
+- Extension: Security và Resiliency bật trong phạm vi đã duyệt, PBT tắt (giữ bảng Extension Configuration).
+
+Tạo worktree riêng vì thư mục chính có thay đổi chưa commit của phiên khác.
+
+## U05/U08/U14 — tổng quan lớp sinh viên, 2026-11-11
+
+Thay Thông báo gần đây và thẻ cần làm chia đôi bằng một thẻ Tổng quan bài tập đủ chiều rộng, đồng bộ giảng viên: số Chưa làm/Đang làm/Đã nộp mở đúng tab của lớp; giữ loại bài và hạn nộp, thẻ co theo nội dung. Bài nhóm đã nộp được loại khỏi helper upcoming dùng chung. Thông báo vẫn có trong menu, không thêm lịch/số buổi/điểm nháp. [Kế hoạch](construction/plans/code-generation-plan/2026-11-11-student-class-overview.md), [kiểm tra](construction/build-and-test/2026-11-11-student-class-overview.md).
+
+Full frontend972/972,138 tệp; kiểm cuối7/7, ESLint/TypeScript/build32 trang qua. UI local student2 trong profile tách riêng,1440/390 sáng/tối; số2/1/3 khớp tab Bài tập, menu thông báo còn, không tràn ngang. Không đổi backend/migration hay ghi bài nộp/điểm; chưa test VPS/thiết bị thật. Đã commit riêng `97ebab28` theo yêu cầu tiếp theo; giữ thay đổi bảng điểm trong commit riêng, chưa push/deploy. Security/Resiliency giữ phạm vi đã duyệt, PBT disabled.
+
+## U09 — bảng điểm dạng ma trận, 2026-11-11
+
+Đã triển khai trên `fix/u05-u09-u15`: nút Bảng điểm ở trang Chấm điểm mở ma trận sinh viên × assignment, lọc một bài/toàn bộ, tìm kiếm/phân trang và xuất XLSX/CSV cùng cấu trúc. Điểm0 và điểm riêng thành viên nhóm được giữ, chưa chấm để trống; XLSX dùng ô số và cố định header/cột định danh. [Kế hoạch](construction/plans/code-generation-plan/2026-11-11-gradebook-matrix.md), [kiểm tra/giới hạn](construction/build-and-test/2026-11-11-gradebook-matrix.md).
+
+Frontend970/970, backend full verify2.153/2.153 và guard57 ca qua; test bổ sung cuối Assembly/Exporter/Controller19/19, giao diện cuối19/19; lint/TypeScript/build qua. UI local đã kiểm màn rộng/hẹp, sáng/tối, lọc/tìm và popup xuất. Writer mới tạo XLSX được đọc lại xác nhận kiểu số/freeze/filter; download live vẫn theo cấu trúc cũ vì backend hiện chạy chưa nạp mã mới. Không restart trái lệnh automatic approval review trước đó. Đã commit riêng `7466539b` theo yêu cầu tiếp theo, chưa push/deploy; không sửa điểm hay dữ liệu workbook mẫu. Trước commit chạy lại26 test frontend liên quan và19 test backend export/assembly/controller, đều qua. Security/Resiliency giữ phạm vi đã duyệt, PBT tắt.
+
+## U12 — Sinh viên tự chia nhóm, giảng viên duyệt — Build and Test, 2026-11-11
+
+Tính năng mới mở rộng U12: sinh viên tự lập đề xuất nhóm trong lớp, giảng viên duyệt thì đề xuất thành nhóm chính thức. Brownfield, dùng lại tài liệu reverse engineering hiện hành. [Câu hỏi xác nhận](inception/requirements/2026-11-11-student-self-grouping-questions.md) (A cả 9 câu); [yêu cầu SG-01…09](inception/requirements/2026-11-11-student-self-grouping.md). Nhánh `feat/student-self-grouping` (`--no-track` từ `origin/staging@e78ac7b9`), worktree `../AI-Powered-Learning-Platform-self-grouping`.
+
+- [x] Workspace Detection: brownfield, bỏ qua Reverse Engineering.
+- [x] Requirements Analysis: người dùng duyệt 2026-11-11. Security/Resiliency giữ phạm vi, PBT tắt.
+- [x] User Stories: [kế hoạch](inception/plans/2026-11-11-student-self-grouping-story-plan.md) A cả 4 câu; US-GRP-007…010, người dùng duyệt 2026-11-11.
+- [x] Workflow Planning: [kế hoạch thực hiện](inception/plans/2026-11-11-student-self-grouping-execution-plan.md), người dùng duyệt 2026-11-11. Chạy Functional Design U12, Code Generation, Build and Test; bỏ qua Application Design, Units Generation, NFR Requirements/Design, Infrastructure Design.
+- [x] Functional Design U12: [kế hoạch](construction/plans/functional-design-plan/2026-11-11-u12-student-self-grouping-functional-design-plan.md) A cả 9 câu; BR-U12-70…96, F16–F24, người dùng duyệt 2026-11-11.
+- [x] Code Generation U12: [kế hoạch 19 bước](construction/plans/code-generation-plan/2026-11-11-u12-student-self-grouping-code-generation-plan.md) xong 19/19, người dùng duyệt 2026-11-11. Backend 54 test liên quan qua (gồm PostgreSQL); frontend 45 test nhóm, tsc, eslint qua. Chưa thử trên trình duyệt, chưa chạy toàn bộ suite.
+- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-11-student-self-grouping-results.md). Backend `mvn -B verify` 2.203 test qua; frontend lint, typecheck, 978/978 test, build qua; thử hai vai trò trên stack riêng `selfgroup`. Người dùng duyệt 2026-11-11; đã commit trên nhánh, chưa push.
+
 ## UI/UX đợt 2 — kiểm báo cáo ngày 2026-11-10, đã commit, chưa push, 2026-11-11
 
 Nhánh `fix/ui-ux-review-2` từ `origin/staging@353383f2`. Đối chiếu từng mục của báo cáo đánh giá UI/UX với mã sau PR #64: mục 3 (bảng Bài tập dạng thẻ, cột lớp), 4 (thanh đồng hồ dính, `aria-live`, đáp án 44px), 6 (ngăn kéo `inert`, Esc), 8 (toast lỗi), "Practice", liên kết bỏ qua, Đăng xuất trong menu tài khoản, `Menu` phím mũi tên, tiêu đề popup 22px đã sửa trước đó.

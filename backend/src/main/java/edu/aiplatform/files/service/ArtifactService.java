@@ -11,6 +11,7 @@ import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.shared.error.ApiException;
 import java.io.InputStream;
 import java.time.Clock;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -47,6 +48,11 @@ public class ArtifactService implements IArtifact {
         return uploads.upload(actor, purpose, file).fileRef();
     }
 
+    @Override
+    public String inspect(Actor actor, ArtifactPurpose purpose, String originalFileName, byte[] content) {
+        return uploads.inspectFile(actor, purpose, originalFileName, content);
+    }
+
     /** Kiểm chữ ký, hạn, người gắn là người tải lên và đúng {@code purpose} (BR-U03-30). */
     @Override
     public StoredFileInfo attach(FileRef fileRef, Actor actor, ArtifactPurpose purpose) {
@@ -80,5 +86,13 @@ public class ArtifactService implements IArtifact {
     @Override
     public InputStream open(String fileId) {
         return storage.open(fileId);
+    }
+
+    @Override
+    public Optional<DownloadToken> issuePreviewToken(FileRef fileRef, Actor actor) {
+        return signer.verify(fileRef)
+                .filter(payload -> !payload.expiresAt().isBefore(clock.instant()))
+                .filter(payload -> payload.ownerAccountId().equals(actor.accountId()))
+                .map(payload -> issueDownloadToken(payload.fileId(), actor.accountId()));
     }
 }
