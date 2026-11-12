@@ -13384,3 +13384,12 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 **Context**: Construction — integration with staging and PR publication.
 
 ---
+
+## PR77 auto-fix — frontend CI
+**Timestamp**: 2026-11-12T02:34:04Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Turn on Auto-fix"
+**AI Response**: "Enabled Auto-fix for PR77. CI frontend job failed at aefadf60 in gradebook-layout.test.tsx (group gradebook test asserted listSubmissions was called before the request started under CI load); frontend code identical to staging and the test passed locally in isolation. Changed the assertion to waitFor; grading tests 194/194, full frontend 1,007/1,007, ESLint clean. Committed 07b1bd8b and pushed to the PR branch; production code unchanged."
+**Context**: Construction — PR CI fix under Auto-fix.
+
+---
