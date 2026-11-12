@@ -54,4 +54,21 @@ class PurposePolicyTest {
         assertThat(policy.canUpload(Role.SUBJECT_MANAGER, ArtifactPurpose.ASSIGNMENT_SOURCE)).isTrue();
         assertThat(policy.canUpload(Role.STUDENT, ArtifactPurpose.ASSIGNMENT_SOURCE)).isFalse();
     }
+
+    @Test
+    void examImportAcceptsImagesAndPdfUpToTenMegabytesForEducatorsOnly() {
+        when(settings.get(any())).thenReturn(Optional.empty());
+        when(settings.get(PurposePolicy.ASSIGNMENT_IMPORT_MAX_MB)).thenReturn(Optional.of(25));
+
+        PurposeLimits limits = policy.limits(ArtifactPurpose.ASSIGNMENT_IMPORT);
+
+        assertThat(limits.maxSizeMb()).isEqualTo(10);
+        assertThat(limits.allowedTypes())
+                .containsExactlyInAnyOrder(FileType.PNG, FileType.JPEG, FileType.WEBP, FileType.PDF);
+        assertThat(policy.limits(ArtifactPurpose.DOCUMENT_IMAGE).allowedTypes()).doesNotContain(FileType.WEBP);
+        assertThat(policy.canUpload(Role.TEACHER, ArtifactPurpose.ASSIGNMENT_IMPORT)).isTrue();
+        assertThat(policy.canUpload(Role.SUBJECT_MANAGER, ArtifactPurpose.ASSIGNMENT_IMPORT)).isTrue();
+        assertThat(policy.canUpload(Role.STUDENT, ArtifactPurpose.ASSIGNMENT_IMPORT)).isFalse();
+        assertThat(ArtifactPurpose.ASSIGNMENT_IMPORT.storable()).isFalse();
+    }
 }

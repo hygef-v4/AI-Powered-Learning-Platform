@@ -76,6 +76,9 @@ public class UploadService {
     }
 
     public UploadResult upload(Actor actor, ArtifactPurpose purpose, FileUpload file) {
+        if (!purpose.storable()) {
+            throw ApiException.badRequest("FILE_PURPOSE_NOT_STORABLE", "Mục đích tệp này không lưu được");
+        }
         if (!permits.tryAcquire()) {
             throw ApiException.unavailable("UPLOAD_BUSY", "Hệ thống đang bận, thử lại sau");
         }
@@ -111,6 +114,33 @@ public class UploadService {
         } finally {
             deleteQuietly(temp);
             permits.release();
+        }
+    }
+
+    /** Kiểm quyền, dung lượng và loại theo nội dung như {@link #upload}, không lưu; trả media type (BR-U03-99). */
+    public String inspectFile(Actor actor, ArtifactPurpose purpose, String originalFileName, byte[] content) {
+        checkAllowed(actor, purpose);
+        PurposeLimits limits = policy.limits(purpose);
+        if (content == null || content.length > limits.maxBytes()) {
+            throw tooLarge(actor, purpose, limits);
+        }
+        String name = FileNameSanitizer.sanitize(originalFileName);
+        Path temp = null;
+        try {
+            Files.createDirectories(tmpDir);
+            temp = Files.createTempFile(tmpDir, "inspect-", ".tmp");
+            Files.write(temp, content);
+            Optional<FileType> type = inspector.detect(temp, name);
+            if (type.isEmpty() || !limits.allowedTypes().contains(type.get())) {
+                fileAudit.uploadDenied(actor.accountId(), "FILE_TYPE_NOT_ALLOWED",
+                        Map.of("purpose", purpose.name(), "detected", type.map(Enum::name).orElse("UNKNOWN")));
+                throw ApiException.unsupportedMediaType("FILE_TYPE_NOT_ALLOWED", "Loại tệp không được phép");
+            }
+            return type.get().mediaType();
+        } catch (IOException e) {
+            throw ApiException.unavailable("UPLOAD_FAILED", "Không nhận được tệp, thử lại sau");
+        } finally {
+            deleteQuietly(temp);
         }
     }
 

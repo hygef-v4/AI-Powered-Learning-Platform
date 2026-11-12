@@ -19,10 +19,19 @@ public record AiProperties(String keyEncryptionKey, String keyEncryptionKeyV2, D
         providers = providers == null ? Map.of() : providers;
     }
 
-    public record Provider(List<String> models, int maxOutputTokens) {
+    /**
+     * {@code visionModels}: model đọc được ảnh; rỗng thì mọi model trong {@code models} (BR-U06-57).
+     * Chỉ giữ constructor chuẩn: thêm constructor khác thì Spring không bind được record này.
+     */
+    public record Provider(List<String> models, int maxOutputTokens, List<String> visionModels) {
 
         public Provider {
-            models = models == null ? List.of() : models.stream().map(String::trim).filter(m -> !m.isEmpty()).toList();
+            models = clean(models);
+            visionModels = clean(visionModels);
+        }
+
+        private static List<String> clean(List<String> names) {
+            return names == null ? List.of() : names.stream().map(String::trim).filter(m -> !m.isEmpty()).toList();
         }
     }
 }

@@ -178,10 +178,14 @@ export function BlockView({ block, imageUrl, previewUrl, onOpenDiagram }: {
   }
 }
 
-/** Tài liệu chỉ đọc; block của người soạn có thể làm nhạt khi xem bài làm. */
-export function DocumentViewer({ document, imageUrl, markTeacherBlocks = false, empty = "Tài liệu trống." }: {
+/**
+ * Tài liệu chỉ đọc; block của người soạn có thể làm nhạt khi xem bài làm. {@code previews}: id block ảnh → URL ảnh
+ * chưa lưu (ví dụ hình cắt trong bản xem trước nhập đề).
+ */
+export function DocumentViewer({ document, imageUrl, previews, markTeacherBlocks = false, empty = "Tài liệu trống." }: {
   document: DocumentModel;
   imageUrl?: ImageUrl;
+  previews?: Record<string, string>;
   markTeacherBlocks?: boolean;
   empty?: string;
 }) {
@@ -190,7 +194,7 @@ export function DocumentViewer({ document, imageUrl, markTeacherBlocks = false, 
     <div className="flex flex-col gap-3">
       {document.blocks.map((block) => (
         <div key={block.id} className={markTeacherBlocks && block.origin === "TEACHER" && block.type !== "HEADING" ? "opacity-70" : undefined}>
-          <BlockView block={block} imageUrl={imageUrl} />
+          <BlockView block={block} imageUrl={imageUrl} previewUrl={previews?.[block.id]} />
         </div>
       ))}
     </div>

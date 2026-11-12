@@ -91,10 +91,11 @@ final class AssignmentRequests {
     record AiSources(List<String> sourceFileRefs) {
     }
 
-    record Apply(Long version, Boolean replaceInstructions, Boolean replaceTitle) {
+    /** {@code placement}: chỉ dùng cho bản nháp nhập đề, {@code REPLACE} (mặc định) hoặc {@code APPEND} (BR-U07-98). */
+    record Apply(Long version, Boolean replaceInstructions, Boolean replaceTitle, String placement) {
         AssignmentCommands.ApplyDraft command() {
             return new AssignmentCommands.ApplyDraft(requireVersion(version), Boolean.TRUE.equals(replaceInstructions),
-                    Boolean.TRUE.equals(replaceTitle));
+                    Boolean.TRUE.equals(replaceTitle), placement);
         }
     }
 

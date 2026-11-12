@@ -10,11 +10,13 @@ import edu.aiplatform.ai.service.IProviderGateway.FailureKind;
 import edu.aiplatform.ai.service.IProviderGateway.ProviderException;
 import edu.aiplatform.ai.service.IProviderGateway.Request;
 import edu.aiplatform.ai.service.IProviderGateway.Response;
+import edu.aiplatform.ai.contract.AiImage;
 import edu.aiplatform.ai.contract.AiProvider;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
@@ -233,5 +235,77 @@ class HttpProviderGatewayTest {
         server.stop(0);
         assertThatThrownBy(() -> gateway.call(AiProvider.GEMINI, request(SCHEMA)))
                 .isInstanceOfSatisfying(ProviderException.class, e -> assertThat(e.kind()).isEqualTo(FailureKind.REJECTED));
+    }
+
+    private static Request imageRequest() {
+        return new Request("model-x", "secret-key", "Hệ thống", "Chép đề", SCHEMA, 500, Duration.ofSeconds(2),
+                List.of(new AiImage("image/jpeg", new byte[]{1, 2, 3}), new AiImage("image/png", new byte[]{4})));
+    }
+
+    @Test
+    void geminiSendsImagesAsInlineDataBeforeTheText() throws Exception {
+        reply = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"{}\"}]}}]}";
+
+        gateway.call(AiProvider.GEMINI, imageRequest());
+
+        JsonNode parts = json.readTree(lastBody.get()).at("/contents/0/parts");
+        assertThat(parts).hasSize(3);
+        assertThat(parts.at("/0/inline_data/mime_type").asText()).isEqualTo("image/jpeg");
+        assertThat(parts.at("/0/inline_data/data").asText()).isEqualTo("AQID");
+        assertThat(parts.at("/1/inline_data/mime_type").asText()).isEqualTo("image/png");
+        assertThat(parts.at("/2/text").asText()).isEqualTo("Chép đề");
+    }
+
+    @Test
+    void openAiSendsImagesAsDataUrlContentParts() throws Exception {
+        reply = "{\"choices\":[{\"finish_reason\":\"stop\",\"message\":{\"content\":\"{}\"}}]}";
+
+        gateway.call(AiProvider.OPENAI, imageRequest());
+
+        JsonNode content = json.readTree(lastBody.get()).at("/messages/1/content");
+        assertThat(content).hasSize(3);
+        assertThat(content.at("/0/type").asText()).isEqualTo("image_url");
+        assertThat(content.at("/0/image_url/url").asText()).isEqualTo("data:image/jpeg;base64,AQID");
+        assertThat(content.at("/0/image_url/detail").asText()).isEqualTo("high");
+        assertThat(content.at("/2/type").asText()).isEqualTo("text");
+        assertThat(content.at("/2/text").asText()).isEqualTo("Chép đề");
+    }
+
+    @Test
+    void claudeSendsImagesAsBase64Blocks() throws Exception {
+        reply = "{\"stop_reason\":\"tool_use\",\"content\":[{\"type\":\"tool_use\",\"name\":\"return_result\",\"input\":{}}]}";
+
+        gateway.call(AiProvider.CLAUDE, imageRequest());
+
+        JsonNode content = json.readTree(lastBody.get()).at("/messages/0/content");
+        assertThat(content).hasSize(3);
+        assertThat(content.at("/0/type").asText()).isEqualTo("image");
+        assertThat(content.at("/0/source/type").asText()).isEqualTo("base64");
+        assertThat(content.at("/0/source/media_type").asText()).isEqualTo("image/jpeg");
+        assertThat(content.at("/0/source/data").asText()).isEqualTo("AQID");
+        assertThat(content.at("/2/text").asText()).isEqualTo("Chép đề");
+    }
+
+    @Test
+    void requestsWithoutImagesKeepThePlainTextUserMessage() throws Exception {
+        reply = "{\"choices\":[{\"finish_reason\":\"stop\",\"message\":{\"content\":\"{}\"}}]}";
+
+        gateway.call(AiProvider.OPENAI, request(SCHEMA));
+
+        assertThat(json.readTree(lastBody.get()).at("/messages/1/content").isTextual()).isTrue();
+        assertThat(request(SCHEMA).toString()).contains("images=0").doesNotContain("secret-key");
+        assertThat(imageRequest().toString()).contains("images=2");
+    }
+
+    @Test
+    void modelThatRejectsImagesIsReportedWithoutExposingTheBody() {
+        status = 400;
+        reply = "{\"error\":{\"message\":\"This model does not support image input secret-detail\"}}";
+
+        assertThatThrownBy(() -> gateway.call(AiProvider.OPENAI, imageRequest()))
+                .isInstanceOfSatisfying(ProviderException.class, e -> {
+                    assertThat(e.kind()).isEqualTo(FailureKind.REJECTED);
+                    assertThat(e.getMessage()).contains("không đọc được ảnh").doesNotContain("secret-detail");
+                });
     }
 }
