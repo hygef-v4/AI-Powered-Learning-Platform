@@ -13275,3 +13275,30 @@ bạn có thể tiếp tục phiên này không"
 **Context**: PR delivery; GitHub PR/CI là nguồn trạng thái cuối.
 
 ---
+
+## U09 — bảng điểm ma trận theo file Excel mẫu
+**Timestamp:** 2026-11-11T15:42:52Z
+**Requested by:** Quang Hung
+**User Input:** "giúp tôi sửa cấu trúc bảng điểm hiện tại cho giống cấu trúc này cứ để hiện tại cột là tên assignmnet cũng được, chỗ xuất bảng điểm thay thành 1 bảng điểm đi bấm vào thì có thể xem được điểm từng bài hoặc là toàn bộ điểm, tong trang đấy thì có thể bấm xuất bảng điểm [Image #1] @\"C:\Users\Quang Hung\Downloads\Done-FA26 - MLN131 - SE1925-JS(IT).xlsx\""
+**AI Response:** Read sample workbook locally without modifying it. Replaced grading workspace export button with Bảng điểm; added a matrix within the existing class route, assignment/all selection, student search and pagination, frozen identity columns, grade detail links and scoped export. CSV/XLSX now use one student per row and assignment columns; reuse current receipt/member score mapping, preserve zero/draft grades and leave ungraded cells blank. XLSX numbers, widths, bold/wrapped header, D2 freeze and filter verified by production writer plus openpyxl. Full frontend970/137files and backend verify2,153/no skips plus required57-case guard passed; final targeted19 frontend and19 backend passed after CSS/test refinements. Local browser checks1440/390, light/dark, filter/search/export dialog passed. Actual download still uses old9-column backend runtime; did not restart a service previously blocked by automatic approval review. Report explicitly requires backend reload before live export acceptance. No grade/class writes, sample-file edits, commit/push/deploy. Security/Resiliency maintained; PBT disabled.
+**Context:** Construction — [plan](construction/plans/code-generation-plan/2026-11-11-gradebook-matrix.md), [validation and live runtime limit](construction/build-and-test/2026-11-11-gradebook-matrix.md).
+
+---
+
+## Student class overview aligned with teacher
+**Timestamp:** 2026-11-11T16:02:56Z
+**Requested by:** Quang Hung
+**User Input:** "[Image #1] bor cái thông báo gàn đây của trang sinh viên nên thay bằng cái j đó để đồng bộ giống giao diện cho teacher"
+**AI Response:** Replaced the recent-announcements/todo split with a full-width Tổng quan bài tập using the existing student assignment request: Chưa làm/Đang làm/Đã nộp links to matching class-scoped tabs, followed by existing kind filters and deadline-ordered todo list. Removed unused announcement board registration/component; announcement navigation remains. Corrected shared upcoming predicate so submitted group work does not count as unstarted or remain in todo. Empty/loading/error states avoid fake zero statistics; short lists shrink rather than reserving five blank rows. Full frontend972/138files, final7 tests, lint/typecheck/production build pass. Verified local student2 in isolated browser profile at1440 dark/390 light, matching overview/list2/1/3 counts, group-empty filter and no horizontal overflow. No grade/submission/announcement writes, backend change or rerun, commit/push/deploy. Preserved preceding uncommitted gradebook changes. Phone hardware/VPS not tested; Security/Resiliency unchanged and PBT disabled.
+**Context:** Construction — [plan](construction/plans/code-generation-plan/2026-11-11-student-class-overview.md), [evidence](construction/build-and-test/2026-11-11-student-class-overview.md).
+
+---
+
+## Commit gradebook matrix and student overview
+**Timestamp:** 2026-11-11T16:14:41Z
+**Requested by:** Quang Hung
+**User Input:** "giúp tôi commit"
+**AI Response:** Reviewed all pending changes on fix/u05-u09-u15 and created separate feature commits with their own specs, tests and validation reports:7466539b for matrix gradebook/matching CSV-XLSX exports and97ebab28 for student overview/announcement summary removal. Fresh precommit26 related frontend tests and19 backend export/assembly/controller tests pass; git diff --check clean. Recording shared AI-DLC state/audit separately. Previous full checks and live backend export reload limitation remain documented without claiming a new deployment. No push, merge, deploy, backend restart or data writes.
+**Context:** Authorized local commits only; shared docs commit follows the two feature commits.
+
+---

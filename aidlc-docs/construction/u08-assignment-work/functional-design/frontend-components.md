@@ -15,6 +15,8 @@
 
 **Primary UC:** 37, 38, 39, 40, 41. **Primary stories:** US-ASM-003 (phần Assignment cá nhân), US-ASM-012; dữ liệu hoạt động của US-INT-001. **Requirements:** FR-007, FR-008, FR-018, FR-030, FR-039.
 
+**Delta 2026-11-11 — tổng quan lớp sinh viên:** `ClassTodoCard` trong `StudentClassBoard` thành thẻ Tổng quan bài tập đủ chiều rộng, thống kê Chưa làm/Đang làm/Đã nộp theo cùng tiêu chí tab Bài tập và mở tab tương ứng của lớp. Giữ bộ lọc cá nhân/nhóm/luyện tập và danh sách cần làm theo hạn, cao tối đa5 dòng và co theo nội dung. Dùng một lần đọc danh sách của chính sinh viên, không số0 giả khi tải/lỗi; bài nhóm đã nộp không thuộc helper `upcoming`. Không còn thẻ thông báo gần đây trên tổng quan; menu thông báo giữ nguyên.
+
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
 
 Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://claude.ai/artifact/M5RgKNauBqdxM7GUTRwau4), bản 17/10/2026; `#n` là số màn, mã trong ngoặc (ví dụ `a02`) là artboard.

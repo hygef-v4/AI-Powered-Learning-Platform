@@ -44,8 +44,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,8 +61,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class GradebookService {
-    private static final DateTimeFormatter EXPORT_DATE_TIME = DateTimeFormatter
-            .ofPattern("dd/MM/yyyy HH:mm:ss").withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
     private static final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -423,10 +419,7 @@ public class GradebookService {
         if (!Set.of("csv", "xlsx").contains(format))
             throw ApiException.badRequest("INVALID_EXPORT_FORMAT", "Choose csv or xlsx");
 
-        // Step 2: Write standard header row
         List<List<String>> output = new ArrayList<>();
-        output.add(List.of("Sinh viên", "Email", "Bài tập", "Trạng thái", "Thời gian nộp", "Nộp muộn",
-                "Điểm", "Điểm tối đa", "Nhận xét"));
 
         // Step 3: Load gradebook data and format export rows for each student and assignment
         gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
@@ -435,11 +428,19 @@ public class GradebookService {
                 .filter(column -> assignmentId == null || assignmentId.equals(column.id())).toList();
         if (assignmentId != null && selectedColumns.isEmpty())
             throw ApiException.notFound("ASSIGNMENT_NOT_FOUND");
+        var header = new ArrayList<>(List.of("STT", "Họ và tên", "Email"));
+        for (var column : selectedColumns) {
+            header.add(column.title() + " (/" + column.maxScore().stripTrailingZeros().toPlainString() + ")");
+        }
+        output.add(header);
         for (var student : data.students()) {
+            var row = new ArrayList<>(List.of(String.valueOf(output.size()), student.name(), student.email()));
             for (var column : selectedColumns) {
-                output.add(buildExportRow(student, mapGradeCell(student.accountId(), column,
-                        data.evaluations(), data.progress()), column.title()));
+                var grade = mapGradeCell(student.accountId(), column, data.evaluations(), data.progress());
+                boolean saved = Set.of("DRAFT", "FINALIZED", "PUBLISHED").contains(grade.status());
+                row.add(saved && grade.score() != null ? grade.score().toPlainString() : "");
             }
+            output.add(row);
         }
 
         // Step 4: Record audit log event for gradebook export
@@ -450,25 +451,4 @@ public class GradebookService {
         return new GradebookExport(output, title);
     }
 
-    /** Staff exports include saved drafts; student endpoints still require publication. */
-    private List<String> buildExportRow(Person student, GradeCell grade, String assignmentTitle) {
-        boolean saved = grade.status().equals("DRAFT") || grade.status().equals("FINALIZED")
-                || grade.status().equals("PUBLISHED");
-        String score = saved && grade.score() != null ? grade.score().toPlainString() : "";
-        String feedback = saved && grade.feedback() != null ? grade.feedback() : "";
-        String status = switch (grade.status()) {
-            case "NOT_SUBMITTED" -> "Chưa nộp";
-            case "IN_PROGRESS" -> "Đang làm bài";
-            case "PENDING" -> "Chờ chấm";
-            case "DRAFT" -> "Đã chấm";
-            case "FINALIZED" -> "Đã lưu";
-            case "PUBLISHED" -> "Đã công bố";
-            case "SUPERSEDED" -> "Bài nộp cũ";
-            default -> "Chưa xác định";
-        };
-        return List.of(student.name(), student.email(), assignmentTitle, status,
-                grade.submittedAt() == null ? "" : EXPORT_DATE_TIME.format(grade.submittedAt()),
-                grade.late() ? "Có" : "Không", score,
-                grade.maxScore() == null ? "" : grade.maxScore().toPlainString(), feedback);
-    }
 }

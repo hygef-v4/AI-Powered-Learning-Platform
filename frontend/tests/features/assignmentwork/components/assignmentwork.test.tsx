@@ -31,6 +31,8 @@ describe("danh sách bài", () => {
     expect(upcoming(row({}))).toBe(true);
     expect(upcoming(row({ myStatus: "SUBMITTED" }))).toBe(false);
     expect(upcoming(row({ status: "CLOSED" }))).toBe(false);
+    expect(upcoming(row({ myStatus: "GROUP", group: { groupDocumentId: "doc", submitted: true, submittedAt: "2026-11-11T00:00:00Z" } }))).toBe(false);
+    expect(upcoming(row({ myStatus: "GROUP", group: { groupDocumentId: "doc", submitted: false, submittedAt: null } }))).toBe(true);
   });
   it("đếm ngược tới hạn", () => {
     const now = Date.parse("2026-10-20T00:00:00Z");
