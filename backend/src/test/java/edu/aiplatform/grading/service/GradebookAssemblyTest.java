@@ -11,6 +11,7 @@ import edu.aiplatform.grading.model.*;
 import edu.aiplatform.grading.repository.*;
 import edu.aiplatform.identity.contract.*;
 import edu.aiplatform.grading.controller.GradebookController;
+import edu.aiplatform.shared.error.ApiException;
 import java.math.BigDecimal;
 import java.time.*;
 import java.util.*;
@@ -28,30 +29,61 @@ class GradebookAssemblyTest {
     }
 
     @Test
-    void exportUsesVietnameseHeadersStatusesAndSubmissionTime() {
+    void exportUsesStudentRowsAndAssignmentColumnsWithSavedScoresOnly() {
         var evaluation = fixture(1).get(0);
         var rows = gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx");
-        assertThat(rows.get(0)).containsExactly("Sinh viên", "Email", "Bài tập", "Trạng thái",
-                "Thời gian nộp", "Nộp muộn", "Điểm", "Điểm tối đa", "Nhận xét");
-        assertThat(rows.get(1)).contains("Đã công bố", "01/11/2026 08:00:00", "Không");
+        assertThat(rows.get(0)).containsExactly("STT", "Họ và tên", "Email", "Design (/10)");
+        assertThat(rows.get(1)).containsExactly("1", "Student 0", "s0@school.test", "7.50");
         for (var state : List.of(EvaluationStatus.PENDING, EvaluationStatus.DRAFT, EvaluationStatus.FINALIZED)) {
             evaluation.state = state;
-            String expected = switch (state) {
-                case PENDING -> "Chờ chấm";
-                case DRAFT -> "Đã chấm";
-                default -> "Đã lưu";
-            };
             assertThat(gradebookService.buildExportRows(actor, classId, assignmentId, "csv").get(1).get(3))
-                    .isEqualTo(expected);
-            if (state == EvaluationStatus.DRAFT) {
-                assertThat(gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx")
-                        .get(1).get(6)).isEqualTo(evaluation.score.toPlainString());
-            }
+                    .isEqualTo(state == EvaluationStatus.PENDING ? "" : "7.50");
         }
         when(evaluationRepository.findForClass(classId)).thenReturn(List.of());
         when(submissionQuery.listSubmissions(assignmentId, classId)).thenReturn(List.of());
-        assertThat(gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx").get(1).get(3))
-                .isEqualTo("Chưa nộp");
+        assertThat(gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx").get(1).get(3)).isEmpty();
+    }
+
+    @Test
+    void matrixExportsEachStudentOnceAcrossMultipleAssignmentsAndPreservesZero() {
+        var values = fixture(2);
+        values.get(1).score = BigDecimal.ZERO;
+        var secondId = UUID.randomUUID();
+        var second = mock(AssignmentView.class);
+        when(second.assignmentId()).thenReturn(secondId);
+        when(second.scope()).thenReturn(AssignmentScope.CLASS);
+        when(second.classId()).thenReturn(classId);
+        when(second.title()).thenReturn("Testing");
+        when(second.gradingMode()).thenReturn(GradingMode.GRADED);
+        when(second.status()).thenReturn(AssignmentStatus.OPEN);
+        when(second.submissionMode()).thenReturn(SubmissionMode.INDIVIDUAL);
+        when(rubric.maxPoints(secondId)).thenReturn(new BigDecimal("20"));
+        var first = assignmentQuery.get(assignmentId).orElseThrow();
+        when(assignmentQuery.get(secondId)).thenReturn(Optional.of(second));
+        when(assignmentQuery.listForClass(classId)).thenReturn(List.of(first, second));
+        var rows = gradebookService.buildExportRows(actor, classId, null, "xlsx");
+        assertThat(rows).hasSize(3);
+        assertThat(rows.get(0)).containsExactly("STT", "Họ và tên", "Email", "Design (/10)", "Testing (/20)");
+        assertThat(rows.get(1)).containsExactly("1", "Student 0", "s0@school.test", "7.50", "");
+        assertThat(rows.get(2)).containsExactly("2", "Student 1", "s1@school.test", "0", "");
+    }
+
+    @Test
+    void exportRejectsAnAssignmentOutsideTheClassWithoutRecordingSuccess() {
+        fixture(1);
+        assertThatThrownBy(() -> gradebookService.buildExport(actor, classId, UUID.randomUUID(), "xlsx"))
+                .isInstanceOfSatisfying(ApiException.class,
+                        error -> assertThat(error.code()).isEqualTo("ASSIGNMENT_NOT_FOUND"));
+        verifyNoInteractions(audit);
+    }
+
+    @Test
+    void exportRequiresPermissionBeforeReadingAnyGradebookData() {
+        doThrow(ApiException.notFound("CLASS_NOT_FOUND")).when(gradingAccess)
+                .requireTeacher(actor, classId, Actions.GRADEBOOK_EXPORT);
+        assertThatThrownBy(() -> gradebookService.buildExport(actor, classId, null, "xlsx"))
+                .isInstanceOf(ApiException.class);
+        verifyNoInteractions(evaluationRepository, assignmentQuery, classAccess, accountLookup, audit);
     }
 
     final UUID classId = UUID.randomUUID(), assignmentId = UUID.randomUUID();
@@ -183,14 +215,16 @@ class GradebookAssemblyTest {
         assertThat(row.grades().get(0).late()).isTrue();
         verify(source).listGroupSubmissions(assignmentId, classId);
         verify(submissionQuery, never()).listSubmissions(any(), any());
+        var exported = gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx");
+        assertThat(exported.get(2)).containsExactly("2", "Student 1", "s1@school.test", "8.25");
     }
 
     @Test void exportLoadsA201StudentClassOnceAndKeepsOfficialScores() {
         fixture(201);
         var rows = gradebookService.buildExportRows(actor, classId, assignmentId, "csv");
         assertThat(rows).hasSize(202);
-        assertThat(rows.subList(1, rows.size())).extracting(row -> row.get(1)).doesNotHaveDuplicates();
-        assertThat(rows.get(201)).contains("Student 200", "s200@school.test", "7.50", "Feedback 200");
+        assertThat(rows.subList(1, rows.size())).extracting(row -> row.get(2)).doesNotHaveDuplicates();
+        assertThat(rows.get(201)).containsExactly("201", "Student 200", "s200@school.test", "7.50");
         verify(evaluationRepository, times(1)).findForClass(classId);
         verify(submissionQuery, times(1)).listSubmissions(assignmentId, classId);
         verify(accountLookup, times(1)).getContacts(anyCollection());
@@ -218,11 +252,10 @@ class GradebookAssemblyTest {
         var values = fixture(1);
         values.get(0).state = EvaluationStatus.DRAFT;
         var row = gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx").get(1);
-        assertThat(row.get(6)).isEqualTo(values.get(0).score.toPlainString());
-        assertThat(row.get(8)).isEqualTo(values.get(0).feedback == null ? "" : values.get(0).feedback);
+        assertThat(row.get(3)).isEqualTo(values.get(0).score.toPlainString());
         values.get(0).state = EvaluationStatus.PENDING;
         assertThat(gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx")
-                .get(1).get(6)).isEmpty();
+                .get(1).get(3)).isEmpty();
         when(classAccess.listActiveStudents(classId)).thenReturn(List.of());
         assertThat(gradebookService.buildExportRows(actor, classId, null, "csv")).hasSize(1);
     }

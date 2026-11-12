@@ -9,7 +9,7 @@ import type { CourseClassView } from "../model/types";
 
 /**
  * Lớp của tôi (Sinh viên), cùng bố cục Chi tiết lớp của Chủ nhiệm môn nhưng chỉ xem: thẻ Thông tin lớp (mã môn, mã lớp, mô tả) bên
- * trái, cột phải có Giảng viên và Nhóm của tôi; bên dưới là hàng hai thẻ chia đôi (Thông báo gần đây, Bài cần làm). `?tab=materials`
+ * trái, cột phải có Giảng viên và Nhóm của tôi; bên dưới là Tổng quan bài tập. `?tab=materials`
  * (mục Học liệu trên sidebar) mở danh sách học liệu của lớp.
  */
 export function StudentClassPage({ value, tab }: { value: CourseClassView; tab: "info" | "materials" }) {
@@ -53,7 +53,7 @@ export function StudentClassPage({ value, tab }: { value: CourseClassView; tab: 
             <SlotOutlet slot={studentClassAside} props={{ classId: value.id }} />
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="flex flex-col gap-4">
           <SlotOutlet slot={studentClassBoard} props={{ classId: value.id }} />
         </div>
         </>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useUrlState } from "@/shared/navigation/useUrlState";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { teacherClassTabs } from "../slots";
@@ -27,6 +28,7 @@ export function ReadOnlyClassPage({
   onBack: () => void;
 }) {
   const [tab, openTab] = useUrlState<ClassTab>("tab", "info", CLASS_TABS);
+  const params = useSearchParams();
   const [groupNames, setGroupNames] = useState<{ classId: string; names: Record<string, string>; leaders: string[] } | null>(null);
   // Ô trên dòng tiêu đề cho nút của tab đang mở (unit gắn vào bằng portal).
   const [headerActions, setHeaderActions] = useState<HTMLElement | null>(null);
@@ -68,7 +70,7 @@ export function ReadOnlyClassPage({
     <>
       {/* Tiêu đề là tên trang đang mở; quay về danh sách lớp bằng sidebar của lớp. */}
       <PageHeader
-        title={tabs.find((t) => t.key === tab)?.label}
+        title={tab === "gradebook" && params?.get("gradebookView") === "matrix" ? "Bảng điểm" : tabs.find((t) => t.key === tab)?.label}
         actions={<div ref={setHeaderActions} className="flex flex-wrap items-center gap-2" />} />
       {/* Màn rộng đã có các tab này trên sidebar của lớp. */}
       <div className="md:hidden"><Tabs items={tabs} value={tab} onChange={openTab} label="Nội dung lớp" /></div>

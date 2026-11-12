@@ -115,9 +115,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 4. Trả mỗi sinh viên một mục đóng mở chứa từng bài: "x / tổng" của lượt được chấm và trạng thái (BR-U09-60); không có điểm tổng.
 
 ### F12 - Xuất bảng điểm (UC 45)
-1. Bấm Xuất trên Sổ điểm, chọn CSV hoặc XLSX, tùy chọn một bài; frontend gọi `GET /api/v1/classes/{classId}/gradebook/export`.
+1. Bấm Bảng điểm ở trang Chấm điểm để xem ma trận sinh viên × bài tính điểm; lọc một bài/toàn bộ, tìm sinh viên và phân trang qua API gradebook hiện có. Bấm Xuất bảng điểm trong chế độ này, chọn CSV hoặc XLSX và phạm vi bài; frontend gọi `GET /api/v1/classes/{classId}/gradebook/export`.
 2. Kiểm quyền và bộ lọc trước khi tạo tệp; ngoài quyền trả `404`.
-3. Tạo tệp theo BR-U09-61 dạng luồng; chặn công thức trong CSV; tên tệp gồm mã lớp, mã bài, ngày.
+3. Tạo ma trận theo BR-U09-61 dạng luồng, một dòng/sinh viên cho mọi sinh viên thuộc phạm vi bài đã chọn; chặn công thức trong CSV, giữ văn bản XLSX ở kiểu chuỗi và điểm ở kiểu số. Tên tệp dùng tên bài khi có một cột bài, còn lại Bảng điểm tổng hợp kèm ngày. XLSX có tiêu đề đậm/xuống dòng, độ rộng cột, bộ lọc và cố định hàng đầu/ba cột định danh.
 4. Ghi audit `GRADEBOOK_EXPORTED` (phạm vi, định dạng); không lưu tệp.
 
 ### F13 - Người học xem điểm và phân bố
