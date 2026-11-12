@@ -78,7 +78,7 @@ public class GroupWorkspaceService {
                 : docAccess.window(d.assignmentId(), false);
         Submission submission = d.submittedAt() == null ? null : new Submission(d.submittedBy(), d.submitMode().name(),
                 d.submittedAt(), d.late(), d.receiptHash(),
-                d.sectionAuthors() == null ? List.of() : d.sectionAuthors());
+                d.sectionAuthors() == null ? List.of() : d.sectionAuthors(), d.changedSinceSubmit());
         return new WorkspaceView(d.id(), d.assignmentId(), assignment == null ? null : assignment.title(),
                 assignment == null ? null : assignment.closesAt(), assignment == null ? null : assignment.lateUntil(),
                 d.classId(), ctx.group().id(), ctx.group().name(), ctx.group().leaderId(), members, d.status().name(),
@@ -111,8 +111,11 @@ public class GroupWorkspaceService {
     public record Role(boolean member, boolean leader, boolean teacher) {
     }
 
-    /** Bản nộp cuối; {@code authors} là tác giả từng mục lúc nộp, không đổi khi mục được sửa sau đó (BR-U12-44). */
+    /**
+     * Bản nộp cuối; {@code authors} là tác giả từng mục lúc nộp, không đổi khi mục được sửa sau đó (BR-U12-44);
+     * {@code changedSince}: đã sửa sau lần nộp này (bài lại là Đang làm, trưởng nhóm nộp lại được).
+     */
     public record Submission(UUID submittedBy, String mode, Instant submittedAt, boolean late, String receiptHash,
-                             List<SectionAuthor> authors) {
+                             List<SectionAuthor> authors, boolean changedSince) {
     }
 }

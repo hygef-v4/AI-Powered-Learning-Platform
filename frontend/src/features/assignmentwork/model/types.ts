@@ -29,7 +29,8 @@ export type StudentRow = {
   submittedCount: number;
   inProgressAttemptId: string | null;
   lastSubmittedAt: string | null;
-  group: { groupDocumentId: string | null; submitted: boolean; submittedAt: string | null } | null;
+  /** {@code changedSinceSubmit}: nhóm sửa sau lần nộp cuối, bài lại là Đang làm. */
+  group: { groupDocumentId: string | null; submitted: boolean; submittedAt: string | null; changedSinceSubmit?: boolean } | null;
 };
 
 export type AttemptSummary = {

@@ -56,6 +56,8 @@ export function ClassGradebookTab({ classId, headerActions }: { classId: string;
 function GradebookContent({ classId, headerActions }: { classId: string; headerActions?: HTMLElement | null }) {
   const params = useSearchParams();
   const [query, setQuery] = useUrlState<string>("gradebookQuery", "", undefined, "replace");
+  // Bài nhóm: ô tìm lọc bảng bài nộp theo tên nhóm, không tìm sinh viên trên máy chủ.
+  const [groupQuery, setGroupQuery] = useState("");
   const [pageValue, setPageValue] = useUrlState<string>("gradebookPage", "1", undefined, "replace");
   const page = /^[1-9]\d*$/.test(pageValue) && Number.isSafeInteger(Number(pageValue)) ? Number(pageValue) : 1;
   const setPage = (page: number) => setPageValue(String(page));
@@ -92,6 +94,10 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
   const studentSearch = (
     <TextInput type="search" icon="search" aria-label="Tìm sinh viên" placeholder="Tìm sinh viên" value={query}
       onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
+  );
+  const groupSearch = (
+    <TextInput type="search" icon="search" aria-label="Tìm nhóm" placeholder="Tìm nhóm" value={groupQuery}
+      onChange={(e) => setGroupQuery(e.target.value)} />
   );
   const assignmentSearch = (
     <TextInput type="search" icon="search" aria-label="Tìm bài tập" placeholder="Tìm bài tập" value={assignmentQuery}
@@ -152,9 +158,11 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
             <div className="flex min-w-0 flex-col gap-3">
               {mode === "assignment" && activeAssignment && (
                 <>
-                  <DetailHead title={activeAssignment.title} meta={kindLabel(activeAssignment)} search={studentSearch} filter={statusFilter} />
+                  <DetailHead title={activeAssignment.title} meta={kindLabel(activeAssignment)} filter={statusFilter}
+                    search={activeAssignment.submissionMode === "GROUP" ? groupSearch : studentSearch} />
                   <GradebookBatchControls key={`batch-${activeAssignment.id}`} classId={classId}
-                    assignmentId={activeAssignment.id} query={query} status={status} group={activeAssignment.submissionMode === "GROUP"}
+                    assignmentId={activeAssignment.id} query={activeAssignment.submissionMode === "GROUP" ? groupQuery : query}
+                    status={status} group={activeAssignment.submissionMode === "GROUP"}
                     onDone={() => void resource.refresh().catch(() => {})} />
                   {activeAssignment.submissionMode === "GROUP" && (
                     <details className="border-t border-line pt-3">

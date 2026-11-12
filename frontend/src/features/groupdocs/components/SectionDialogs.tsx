@@ -1,16 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
-import { formatDateTime } from "@/features/groups/model/format";
+import { useState } from "react";
 import { ApiError } from "@/shared/api/client";
-import { uploadFile } from "@/features/files/api";
-import { DocumentEditor, DocumentViewer, DocxImportDialog } from "@/shared/document";
-import { Alert, Button, Dialog, Pill, Select, TableFrame, Td, Th } from "@/shared/ui";
-import { assignSection, finishSection, groupDocImageUrl, previewSectionDocx, saveDraft, submitDocument } from "../api";
-import type { DocumentBlock, DocumentModel, Receipt, SectionView, WorkspaceView } from "../model/types";
-
-export const AUTOSAVE_MS = 10_000;
+import { SearchPicker } from "@/features/assignments/components/SearchPicker";
+import { Alert, Button, Dialog, Field, Pill, TableFrame, Td, Th } from "@/shared/ui";
+import { SECTION_STATUS } from "../model/status";
+import { assignSection, submitDocument } from "../api";
+import type { Receipt, SectionView, WorkspaceView } from "../model/types";
 
 function problemMessage(e: unknown, fallback: string): string {
   if (e instanceof ApiError) {
@@ -21,179 +17,9 @@ function problemMessage(e: unknown, fallback: string): string {
 }
 
 /**
- * Phần của mục trong khung chung: heading của phần (`partId` là id của heading) và các block của người soạn tới heading
- * kế tiếp. Không tìm thấy heading thì dựng heading theo tên mục để trình soạn vẫn có chỗ viết.
+ * Trưởng nhóm giao mục (s18f, BR-U12-33): ô tìm chọn thành viên như các ô chọn khác; mục đang có người giữ thì ô ghi sẵn
+ * người đó và nhắc giao cho người khác sẽ nhả mục trước đó.
  */
-export function partOf(shared: DocumentModel, section: Pick<SectionView, "partId" | "title">) {
-  const blocks = shared.blocks;
-  const at = blocks.findIndex((b) => b.id === section.partId);
-  if (at < 0) {
-    const heading: DocumentBlock = { id: section.partId, origin: "TEACHER", type: "HEADING", content: { style: "H2", text: section.title } };
-    return { heading, guide: [] as DocumentBlock[] };
-  }
-  const next = blocks.findIndex((b, i) => i > at && b.type === "HEADING");
-  return { heading: blocks[at]!, guide: blocks.slice(at + 1, next < 0 ? undefined : next) };
-}
-
-/**
- * Trình soạn mục che kín trang (s18b, BR-U12-34) dùng `DocumentEditor` chung ở chế độ người học: chỉ người giữ; heading
- * của phần là block khóa, hướng dẫn của giảng viên trong phần chỉ xem; chỉ block của người học được lưu. Tự lưu 10 giây
- * sau lần sửa cuối kèm `version` của mục; `409` báo tải lại; Xong đăng nội dung và đóng. Draw.io theo cài đặt của bài.
- * Chèn ảnh (BR-U12-35) và nhập DOCX vào mục như trình soạn bài cá nhân. Còn phần chưa lưu thì trình duyệt hỏi lại khi
- * đóng tab hoặc tải lại trang; sắp hết hạn thì hiện nhắc hạn ngay trong trình soạn.
- */
-export function SectionEditorDialog({
-  documentId,
-  section,
-  shared,
-  diagramEnabled,
-  deadlineNotice = null,
-  onClose,
-  onChanged,
-}: {
-  documentId: string;
-  section: SectionView;
-  shared: DocumentModel;
-  diagramEnabled: boolean;
-  deadlineNotice?: string | null;
-  onClose: () => void;
-  onChanged: () => void;
-}) {
-  const part = useMemo(() => partOf(shared, section), [shared, section]);
-  const [doc, setDoc] = useState<DocumentModel>(() => ({
-    blocks: [part.heading, ...(section.draftBlocks ?? section.publishedBlocks ?? [])],
-  }));
-  const [version, setVersion] = useState(section.version);
-  const [savedAt, setSavedAt] = useState<string | null>(section.draftSavedAt);
-  const [dirty, setDirty] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [importing, setImporting] = useState(false);
-  // Đóng mà lưu lỗi thì giữ trình soạn; bấm Đóng lần nữa thì thoát và bỏ phần chưa lưu (không bị kẹt).
-  const [discardOnClose, setDiscardOnClose] = useState(false);
-
-  const save = useCallback(async () => {
-    try {
-      const saved = await saveDraft(documentId, section.id, version, doc.blocks.filter((b) => b.origin === "STUDENT"));
-      setVersion(saved.version);
-      setSavedAt(saved.draftSavedAt);
-      setDirty(false);
-      setDiscardOnClose(false);
-      setError(null);
-      return true;
-    } catch (e) {
-      setError(problemMessage(e, "Không lưu được bản nháp."));
-      return false;
-    }
-  }, [documentId, section.id, doc, version]);
-
-  useEffect(() => {
-    if (!dirty) return;
-    const timer = setTimeout(() => void save(), AUTOSAVE_MS);
-    return () => clearTimeout(timer);
-  }, [dirty, save]);
-
-  useEffect(() => {
-    if (!dirty) return;
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = "";
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [dirty]);
-
-  const edit = (next: DocumentModel) => {
-    setDoc(next);
-    setDirty(true);
-  };
-
-  const handleClose = async () => {
-    if (!dirty || discardOnClose) return onClose();
-    if (await save()) onClose();
-    else setDiscardOnClose(true);
-  };
-
-  const done = async () => {
-    setBusy(true);
-    if (dirty && !(await save())) {
-      setBusy(false);
-      return;
-    }
-    try {
-      await finishSection(documentId, section.id);
-      onChanged();
-      onClose();
-    } catch (e) {
-      setError(problemMessage(e, "Không đánh dấu Xong được."));
-      setBusy(false);
-    }
-  };
-
-  // Portal ra body: render tại chỗ thì lớp phủ bị kẹt dưới thanh trên và sidebar của khung trang.
-  const editor = (
-    <div role="dialog" aria-modal="true" aria-label={`Soạn ${section.title}`} className="fixed inset-0 z-[90] flex flex-col bg-surface">
-      <div className="flex items-center gap-3 border-b border-line px-6 py-3">
-        <h2 className="text-[16px] font-bold text-ink">{section.title}</h2>
-        <Pill tone="info">Bạn đang giữ</Pill>
-        <span className="text-xs text-muted">
-          {dirty ? "Chưa lưu" : savedAt ? `Tự lưu lúc ${formatDateTime(savedAt).slice(-5)}` : "Chưa có bản nháp"} · mỗi 10 giây
-        </span>
-        <span className="ml-auto flex flex-wrap gap-2">
-          <Button icon="upload_file" onClick={() => setImporting(true)} disabled={busy}>
-            Nhập DOCX
-          </Button>
-          <Button onClick={() => void handleClose()} disabled={busy}>
-            {discardOnClose ? "Đóng, bỏ phần chưa lưu" : "Đóng"}
-          </Button>
-          <Button variant="primary" icon="check" onClick={() => void done()} disabled={busy}>
-            Xong
-          </Button>
-        </span>
-      </div>
-      {error && (
-        <Alert tone="danger" role="alert" className="mx-6 mt-3">
-          {error}
-        </Alert>
-      )}
-      {deadlineNotice && (
-        <Alert tone="warning" className="mx-6 mt-3">
-          {deadlineNotice} Nên bấm Xong trước hạn.
-        </Alert>
-      )}
-      <div className="min-h-0 flex-1 overflow-y-auto bg-shell px-6 py-4">
-        <DocumentEditor
-          document={doc}
-          mode="student"
-          diagramEnabled={diagramEnabled}
-          imageUrl={groupDocImageUrl(documentId)}
-          uploadImage={async (file) => (await uploadFile(file, "DOCUMENT_IMAGE", () => {}).promise).fileRef.value}
-          onChange={edit}
-          header={
-            part.guide.length > 0 && (
-              <div className="mb-3 rounded-xl bg-shell p-3">
-                <p className="mb-1 text-xs font-semibold text-muted">Hướng dẫn của giảng viên cho mục này</p>
-                <DocumentViewer document={{ blocks: part.guide }} imageUrl={groupDocImageUrl(documentId)} />
-              </div>
-            )
-          }
-        />
-      </div>
-      {importing && (
-        <DocxImportDialog
-          allowReplace={false}
-          title={`Nhập DOCX vào mục “${section.title}”`}
-          preview={(file) => previewSectionDocx(documentId, section.id, file)}
-          onClose={() => setImporting(false)}
-          onImport={(imported) => edit({ blocks: [...doc.blocks, ...imported.blocks] })}
-        />
-      )}
-    </div>
-  );
-  return typeof document === "undefined" ? editor : createPortal(editor, document.body);
-}
-
-/** Trưởng nhóm giao mục (s18f, BR-U12-33): mục đang do người khác giữ thì cảnh báo nhả trước. */
 export function AssignSectionDialog({
   view,
   section,
@@ -205,48 +31,43 @@ export function AssignSectionDialog({
   onClose: () => void;
   onChanged: () => void;
 }) {
-  const [assignee, setAssignee] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const heldByOther = section.status === "CLAIMED";
-  const holder = view.members.find((m) => m.accountId === section.holderId);
+  const [assignee, setAssignee] = useState(heldByOther ? (section.holderId ?? "") : "");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const chosen = view.members.find((m) => m.accountId === assignee);
+  const changed = !!assignee && assignee !== section.holderId;
   const assign = async () => {
+    setBusy(true);
     try {
       await assignSection(view.documentId, section.id, assignee, heldByOther);
       onChanged();
       onClose();
     } catch (e) {
       setError(problemMessage(e, "Không giao được mục."));
+      setBusy(false);
     }
   };
   return (
     <Dialog
       open
-      title={`Giao mục ${section.title}`}
+      title="Giao mục"
       icon="person_add"
       onClose={onClose}
       footer={
-        <>
-          <Button variant="primary" onClick={() => void assign()} disabled={!assignee}>
-            Giao mục
-          </Button>
-        </>
+        <Button variant="primary" onClick={() => void assign()} disabled={!changed || busy}>
+          Giao mục
+        </Button>
       }
     >
-      <Select aria-label="Thành viên nhận mục" value={assignee} onChange={(e) => setAssignee(e.target.value)}>
-        <option value="">Chọn thành viên</option>
-        {view.members.filter((m) => m.accountId !== section.holderId).map((m) => (
-          <option key={m.accountId} value={m.accountId}>
-            {m.name ?? m.accountId}
-          </option>
-        ))}
-      </Select>
-      {heldByOther && (
-        <Alert tone="warning">
-          {holder?.name ?? "Một thành viên"} đang giữ mục này. Giao cho người khác sẽ nhả mục trước; bản nháp chưa Xong của
-          người đang giữ sẽ bị bỏ.
-        </Alert>
-      )}
-      <p className="text-xs text-muted">Người được giao bắt đầu soạn ngay; thành viên cũng có thể tự nhận mục.</p>
+      <Field label="Thành viên nhận mục" htmlFor="assign-member">
+        <SearchPicker id="assign-member" label="Thành viên nhận mục" placeholder="Tìm thành viên" optionIcon="person"
+          emptyText="Không có thành viên phù hợp."
+          options={view.members.filter((m) => m.accountId !== assignee).map((m) => ({ id: m.accountId, label: m.name ?? m.accountId }))}
+          onPick={setAssignee}
+          selected={chosen ? { label: chosen.name ?? chosen.accountId, clearLabel: "Bỏ chọn thành viên", onClear: () => setAssignee("") } : undefined} />
+      </Field>
+      {heldByOther && <Alert tone="warning">Giao cho người khác sẽ nhả mục trước đó.</Alert>}
       {error && (
         <Alert tone="danger" role="alert">
           {error}
@@ -256,31 +77,33 @@ export function AssignSectionDialog({
   );
 }
 
-/** Nộp tài liệu nhóm (s18c, BR-U12-40): chỉ trưởng nhóm; mục chưa Xong không vào bản nộp. */
+/**
+ * Nộp tài liệu nhóm (s18c, BR-U12-40): chỉ trưởng nhóm; mục chưa Xong không vào bản nộp. Nộp lỗi thì đóng popup và báo
+ * lên trang ({@code onFailed}: một câu báo lỗi và các block bị báo lỗi) để trang tô đỏ các mục chưa xong.
+ */
 export function SubmitGroupDialog({
   view,
   onClose,
   onSubmitted,
+  onFailed,
 }: {
   view: WorkspaceView;
   onClose: () => void;
   onSubmitted: (receipt: Receipt) => void;
+  onFailed: (message: string, blockIds: string[]) => void;
 }) {
-  const [error, setError] = useState<string | null>(null);
-  const [issues, setIssues] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const undone = view.sections.filter((s) => s.status !== "DONE");
   const name = (id: string | null) => view.members.find((m) => m.accountId === id)?.name ?? "Chưa ai nhận";
   const submit = async () => {
     setBusy(true);
-    setError(null);
     try {
       onSubmitted(await submitDocument(view.documentId, view.version));
     } catch (e) {
-      const problem = e instanceof ApiError ? (e.problem as ApiError["problem"] & { issues?: { message: string }[] }) : undefined;
-      setIssues(problem?.issues?.map((i) => i.message) ?? []);
-      setError(problemMessage(e, "Không nộp được, thử lại sau."));
-      setBusy(false);
+      const problem = e instanceof ApiError ? (e.problem as ApiError["problem"] & { issues?: { blockId?: string }[] }) : undefined;
+      const blockIds = (problem?.issues ?? []).map((i) => i.blockId ?? "").filter(Boolean);
+      const invalid = problem?.issues !== undefined;
+      onFailed(invalid ? "Chưa nộp được vì còn mục chưa xong." : problemMessage(e, "Không nộp được, thử lại sau."), blockIds);
     }
   };
   return (
@@ -303,39 +126,24 @@ export function SubmitGroupDialog({
       }
     >
       {undone.length > 0 && (
-        <>
-          <Alert tone="warning">Chỉ nội dung của mục Xong được đưa vào bản nộp.</Alert>
-          <TableFrame className="[&_table]:table-fixed">
-            <colgroup><col /><col className="w-[32%]" /><col className="w-[140px]" /></colgroup><thead>
-              <tr>
-                <Th>Mục</Th>
-                <Th>Người giữ</Th>
-                <Th>Trạng thái</Th>
+        <TableFrame filledHead className="[&_table]:table-fixed">
+          <colgroup><col /><col className="w-[32%]" /><col className="w-[140px]" /></colgroup><thead>
+            <tr>
+              <Th>Mục</Th>
+              <Th>Người giữ</Th>
+              <Th>Trạng thái</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {undone.map((s) => (
+              <tr key={s.id}>
+                <Td>{s.title}</Td>
+                <Td>{name(s.holderId)}</Td>
+                <Td><Pill tone={SECTION_STATUS[s.status].tone}>{SECTION_STATUS[s.status].text}</Pill></Td>
               </tr>
-            </thead>
-            <tbody>
-              {undone.map((s) => (
-                <tr key={s.id}>
-                  <Td>{s.title}</Td>
-                  <Td>{name(s.holderId)}</Td>
-                  <Td>{s.status === "CLAIMED" ? "Đang làm" : "Mở"}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </TableFrame>
-        </>
-      )}
-      <p className="text-xs text-muted">Bạn có thể nộp lại trước hạn; mỗi lần nộp tạo một biên nhận mới.</p>
-      {error && (
-        <Alert tone="danger" role="alert" title={error}>
-          {issues.length > 0 && (
-            <ul className="list-disc pl-4">
-              {issues.map((i) => (
-                <li key={i}>{i}</li>
-              ))}
-            </ul>
-          )}
-        </Alert>
+            ))}
+          </tbody>
+        </TableFrame>
       )}
     </Dialog>
   );

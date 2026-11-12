@@ -81,3 +81,16 @@ it("ignores invalid list values and retains focus-based tab selection", async ()
   expect(screen.getByRole("tab", { name: /Đã nộp/ })).toHaveAttribute("aria-selected", "true");
   expect(screen.getByLabelText("Loại bài")).toHaveValue("");
 });
+
+it("bài đang sửa để nộp lại chỉ nằm ở Đang làm, không lẫn vào Đã nộp", async () => {
+  vi.mocked(workApi.list).mockResolvedValue([
+    row({ assignmentId: "done", myStatus: "SUBMITTED", submittedCount: 1, title: "Đã xong" }),
+    row({ assignmentId: "redo", myStatus: "IN_PROGRESS", submittedCount: 1, inProgressAttemptId: "t", title: "Đang sửa" }),
+  ]);
+  window.history.replaceState(null, "", "/my-assignments?tab=submitted");
+  render(<StudentAssignmentsPage />);
+  expect(await screen.findByText("Đã xong")).toBeInTheDocument();
+  expect(screen.queryByText("Đang sửa")).not.toBeInTheDocument();
+  expect(screen.getByRole("tab", { name: /Đã nộp/ })).toHaveTextContent("1");
+  expect(screen.getByRole("tab", { name: /Đang làm/ })).toHaveTextContent("1");
+});

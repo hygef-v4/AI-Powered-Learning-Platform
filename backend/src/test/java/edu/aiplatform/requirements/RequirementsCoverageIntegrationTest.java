@@ -524,7 +524,7 @@ class RequirementsCoverageIntegrationTest {
         when(groupWorkStatus.statusFor(accountIds.get(Role.STUDENT), List.of(assignmentId)))
                 .thenThrow(new IllegalStateException("PRIVATE_GROUP_FAILURE"))
                 .thenReturn(Map.of(assignmentId, new edu.aiplatform.assignmentwork.contract.GroupWorkStatus(
-                        assignmentId, null, false, null)));
+                        assignmentId, null, false, null, false)));
         reminderScanner.scan(NOW);
         for (String table : List.of("deadline_reminders", "notifications", "email_deliveries")) {
             assertThat(jdbc.queryForObject("select count(*) from " + table, Integer.class)).as(table).isZero();

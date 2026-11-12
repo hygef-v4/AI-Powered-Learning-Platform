@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button, Icon, Pill, TableFrame, Td, Th } from "@/shared/ui";
+import { Button, ClickableRow, Icon, Pill, TableFrame, Td, Th } from "@/shared/ui";
 import { Pagination } from "@/shared/ui/Pagination";
 import { useSubmissionDirectory } from "../hooks/useSubmissionDirectory";
 import { BatchActionDialog } from "./BatchActionDialog";
@@ -25,12 +26,14 @@ export function GradebookBatchControls(props: Props) {
 
 function SubmissionTable({ onDone, query = "", status = "", group = false, directory }: Props & { directory: ReturnType<typeof useSubmissionDirectory> }) {
   const { value, error, refresh } = directory;
+  const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(0);
   const [action, setAction] = useState<{ kind: "ai" | "publish"; items: ItemVersion[] } | null>(null);
   const search = query.trim().toLocaleLowerCase("vi");
   const rows = (value ?? []).filter(row => (!status || formatStatus(row.status) === status)
-    && `${row.student.name} ${row.student.email}`.toLocaleLowerCase("vi").includes(search));
+    // Bài nhóm: tìm theo tên nhóm; bài cá nhân: theo tên hoặc email sinh viên.
+    && (group ? row.student.name : `${row.student.name} ${row.student.email}`).toLocaleLowerCase("vi").includes(search));
   const currentPage = Math.min(page, Math.max(0, Math.ceil(rows.length / PAGE_SIZE) - 1));
   const shown = rows.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
   const eligible = rows.filter(canSelect);
@@ -93,8 +96,8 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
         const state = formatStatus(row.status);
         const href = canSelect(row) ? buildEvaluationHref(row.evaluationId!) : null;
         const label = group ? `Xem bản nộp chung của ${row.student.name}` : state === "PENDING" ? "Chấm bài" : state === "DRAFT" ? "Tiếp tục chấm" : "Xem điểm";
-        return <tr key={row.student.accountId}>
-          <Td><input type="checkbox" aria-label={`Chọn ${row.student.name}`} className="size-4 accent-primary"
+        const cells = <>
+          <Td onClick={(event) => event.stopPropagation()}><input type="checkbox" aria-label={`Chọn ${row.student.name}`} className="size-4 accent-primary"
             checked={!!row.evaluationId && selected.has(row.evaluationId)}
             disabled={!canSelect(row) || (selectedCount >= MAX_BATCH && !selected.has(row.evaluationId!))}
             onChange={event => toggleRow(row.evaluationId!, event.target.checked)} /></Td>
@@ -108,13 +111,18 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
             {row.late && <Pill tone="danger">Trễ</Pill>}
           </div></Td>
           <Td>{href && <Link href={href} aria-label={label} title={label}
+            onClick={(event) => event.stopPropagation()}
             className="inline-flex size-8 items-center justify-center rounded-lg text-muted hover:bg-primary-soft hover:text-primary-ink"><Icon name="chevron_right" size={20} /></Link>}</Td>
-        </tr>;
+        </>;
+        // Bấm cả dòng là mở trang chấm.
+        return href
+          ? <ClickableRow key={row.student.accountId} onClick={() => router.push(href)}>{cells}</ClickableRow>
+          : <tr key={row.student.accountId}>{cells}</tr>;
       })}
         {!shown.length && <tr><Td colSpan={5} className="py-8 text-center! text-muted">Không có bài phù hợp.</Td></tr>}
       </tbody>
     </TableFrame>
-    <Pagination page={currentPage} pageSize={PAGE_SIZE} total={rows.length} itemLabel={group ? "nhóm" : "sinh viên"} onPageChange={setPage} />
+    <Pagination page={currentPage} pageSize={PAGE_SIZE} total={rows.length} summary={false} onPageChange={setPage} />
     {action && <BatchActionDialog action={action.kind} items={action.items} onClose={() => setAction(null)} onDone={() => {
       setSelected(new Set());
       void refresh().catch(() => {});

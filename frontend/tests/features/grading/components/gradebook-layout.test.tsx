@@ -262,9 +262,9 @@ it("validates gradebook URL pagination before calling the API", async () => {
 });
 
 it("restores gradebook search and pagination while typing replaces the current entry", async () => {
-  window.history.replaceState(null, "", "/?gradebookQuery=Bình&gradebookPage=2&assignment=a-2");
+  window.history.replaceState(null, "", "/?gradebookQuery=Bình&gradebookPage=2&assignment=a-1");
   render(<ClassGradebookTab classId="class-1" />);
-  expect(await screen.findByRole("button", { name: new RegExp(longTitle2) })).toHaveAttribute("aria-pressed", "true");
+  expect(await screen.findByRole("button", { name: new RegExp(longTitle1) })).toHaveAttribute("aria-pressed", "true");
   expect(screen.getByRole("searchbox", { name: "Tìm sinh viên" })).toHaveValue("Bình");
   await waitFor(() => expect(mocks.loadGradebook).toHaveBeenLastCalledWith("class-1", "Bình", 2));
   const length = window.history.length;
@@ -294,4 +294,16 @@ it.each([
   const publish = screen.getByRole("button", { name: /Công bố điểm \(/ });
   expect(finalize).not.toBeInTheDocument();
   expect(publish).toHaveProperty("disabled", publishDisabled);
+});
+
+it("bài nhóm tìm theo tên nhóm, không tìm sinh viên trên máy chủ", async () => {
+  window.history.replaceState(null, "", "/?assignment=a-2");
+  render(<ClassGradebookTab classId="class-1" />);
+  const search = await screen.findByRole("searchbox", { name: "Tìm nhóm" });
+  expect(screen.queryByRole("searchbox", { name: "Tìm sinh viên" })).not.toBeInTheDocument();
+  const calls = mocks.loadGradebook.mock.calls.length;
+  fireEvent.change(search, { target: { value: "Nhóm 1" } });
+  expect(search).toHaveValue("Nhóm 1");
+  await new Promise((resolve) => setTimeout(resolve, 350));
+  expect(mocks.loadGradebook.mock.calls.length).toBe(calls);
 });

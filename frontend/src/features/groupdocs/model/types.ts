@@ -51,6 +51,8 @@ export type WorkspaceView = {
     submittedAt: string;
     late: boolean;
     receiptHash: string;
+    /** Đã sửa sau lần nộp này: bài lại là Đang làm, trưởng nhóm nộp lại được. */
+    changedSince?: boolean;
     /** Tác giả từng mục lúc nộp (BR-U12-44); mục chưa Xong thì `done` false, không vào bản nộp. */
     authors?: { partId: string; title: string; accountId: string | null; done: boolean }[];
   } | null;

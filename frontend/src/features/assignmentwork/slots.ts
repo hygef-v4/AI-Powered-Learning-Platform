@@ -40,14 +40,19 @@ export const attemptResultSources = createRegistry<{ key: string; order?: number
   "AttemptResultSource",
 );
 
-/** Nút mở bài nhóm trên Assignment Detail (U12). */
+/** Nút mở bài nhóm trong thẻ Làm bài của Assignment Detail (U12). */
 export const groupWorkEntries = createSlot<{ assignmentId: string; classId: string }>("GroupWorkEntry");
+
+/** Thẻ Tiến độ bài nhóm dưới thẻ Thông tin của Assignment Detail (U12); nhóm đã nộp thì là thẻ Kết quả. */
+export const groupProgressSections = createSlot<{ assignmentId: string; classId: string }>("GroupProgressSection");
 
 /** Tài liệu tham khảo gắn kèm trên Assignment Detail (U13). */
 export const assignmentMaterialSections = createSlot<{ classId: string; materialIds: string[] }>(
   "AssignmentMaterialSection",
 );
 
-/** Published group feedback and anonymous distributions supplied by U09. */
-export const studentAssignmentFeedback = createSlot<{ assignmentId: string; classId: string }>("StudentAssignmentFeedback");
+/** Thẻ Kết quả bài nhóm đã công bố (U09); `partTitles` là tên mục theo ID phần để chia điểm theo mục. */
+export const studentAssignmentFeedback = createSlot<{ assignmentId: string; classId: string; partTitles?: Readonly<Record<string, string>> }>(
+  "StudentAssignmentFeedback",
+);
 export const studentGradeDistributions = createSlot<{ assignmentId: string; classId: string }>("StudentGradeDistributions");

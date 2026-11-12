@@ -23,10 +23,14 @@ export function useStudentAssignments(classId?: string) {
   return { rows: current ? loaded.rows : null, error: current ? loaded.error : null, loading: !current };
 }
 
-/** Đang làm: lượt làm dở của mình, hoặc bài nhóm nhóm đã bắt đầu (có tài liệu nhóm) mà chưa nộp; chỉ bài còn mở. */
+/**
+ * Đang làm: lượt làm dở của mình, hoặc bài nhóm nhóm đã bắt đầu (có tài liệu nhóm) mà chưa nộp hoặc đã sửa sau lần nộp
+ * cuối; chỉ bài còn mở.
+ */
 export function doing(row: StudentRow): boolean {
   if (row.status !== "OPEN") return false;
-  return row.myStatus === "IN_PROGRESS" || (row.myStatus === "GROUP" && !!row.group?.groupDocumentId && !row.group.submitted);
+  return row.myStatus === "IN_PROGRESS"
+    || (row.myStatus === "GROUP" && !!row.group?.groupDocumentId && (!row.group.submitted || !!row.group.changedSinceSubmit));
 }
 
 /**
@@ -42,7 +46,9 @@ export function rowStatus(row: StudentRow): { label: string; tone: Tone } {
   return { label: myStatusLabels[row.myStatus], tone: myStatusTones[row.myStatus] };
 }
 
-/** Bài còn làm được: đang mở, chưa nộp hoặc đang làm. */
+/** Bài còn làm được: đang mở, chưa nộp hoặc đang làm; bài nhóm đã nộp (chưa sửa gì sau đó) thì không. */
 export function upcoming(row: StudentRow): boolean {
-  return row.status === "OPEN" && (row.myStatus === "NOT_STARTED" || row.myStatus === "IN_PROGRESS" || row.myStatus === "GROUP");
+  if (row.status !== "OPEN") return false;
+  if (row.myStatus === "GROUP") return !row.group?.submitted || doing(row);
+  return row.myStatus === "NOT_STARTED" || row.myStatus === "IN_PROGRESS";
 }
