@@ -13610,3 +13610,39 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 **Context**: Construction — PR conflict resolution under Auto-fix.
 
 ---
+
+## Merge PR #76 vào staging
+**Timestamp**: 2026-11-12T02:33:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem đã có thể merge vào main chưa cho tôi" / "Merge #76"
+**AI Response**: "Kiểm tra: PR #76 vào staging MERGEABLE CLEAN, CI xanh (backend, frontend, deploy-script, GitGuardian), chưa có review; không đọc được quy tắc bảo vệ nhánh (404). Lên main phải qua PR staging → main, kéo theo 15 commit khác của staging; merge thử staging vào main không xung đột. Theo yêu cầu, merge PR #76 vào staging bằng merge commit a9ae40a9 lúc 2026-11-12T02:32:46Z. Chưa thử lại trên trình duyệt sau các lần merge staging; chưa mở PR staging → main."
+**Context**: OPERATIONS — đưa tính năng nhập đề vào staging.
+
+---
+
+## Merge PR #78 staging vào main
+**Timestamp**: 2026-11-12T02:50:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Mở PR lên main" / "kiểm tra CI của PR #78 xong chưa, xem còn xung đột gì không, kiểm tra xem có thể merge vào main chưa" / "Merge #78"
+**AI Response**: "Mở PR #78 staging → main (release: nhập đề từ ảnh/PDF, tự chia nhóm, bảng điểm ma trận, không gian làm bài nhóm, trợ lý AI nổi, xuất DOCX). CI xanh (backend, frontend, deploy-script, GitGuardian), MERGEABLE CLEAN, chưa có review. Báo người dùng: merge vào main build image và VPS tự deploy production, chạy 2 migration mới. Theo yêu cầu, merge PR #78 bằng merge commit a85e3f19 lúc 2026-11-12T02:49:21Z; theo dõi CI run 43144023309 trên main."
+**Context**: OPERATIONS — phát hành lên main.
+
+---
+
+## Kiểm tra deploy production a85e3f19
+**Timestamp**: 2026-11-12T03:06:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "ssh và kiểm tra xem đã deploy thành công hay chưa cho tôi"
+**AI Response**: "SSH vào VPS (alapedu.online) bằng khóa alap_vps_deploy, chỉ đọc. platform-deploy: sao lưu database predeploy-20261112T030106Z-8923d45d509b.dump, deploy a85e3f19 lúc 10:01 giờ VN, báo 'xong, mọi dịch vụ khỏe'; bản quay về được 8923d45d. Backend, worker, frontend chạy image a85e3f19, đều healthy. Flyway áp dụng 2 migration (20261111.1300 create assignment import pages, 20261111.1800 group self formation). Không có dòng ERROR/Exception trong log backend và worker từ lúc khởi động. https://alapedu.online/ trả 200. Chưa thử luồng nhập đề trên production."
+**Context**: OPERATIONS — xác nhận deploy production.
+
+---
+
+## Sửa lỗi — ghi rõ lý do nhà cung cấp AI không trả nội dung
+**Timestamp**: 2026-11-12T03:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "có cách nào để không cần dùng AI có model đọc được ảnh vẫn có thể chuyển từ ảnh sang đề không" (kèm ảnh popup Nhập đề từ tệp báo "Nhà cung cấp AI không trả nội dung") / "Ghi rõ lỗi Gemini"
+**AI Response**: "Đọc log production (chỉ đọc): tác vụ ASSIGNMENT_IMPORT gọi GEMINI gemini-3.1-flash-lite, HTTP 200 sau 5,5 s, CHARGED, không có chữ; không phải thiếu model đọc ảnh. Trình bày hướng OCR (Tesseract) + AI chữ hoặc chỉ OCR làm phương án không cần model đọc ảnh, chưa làm. Theo lựa chọn của người dùng, sửa lỗi nhỏ, bỏ qua các stage thiết kế: nhánh fix/gemini-empty-reason (--no-track từ origin/staging@3fd7bbee). HttpProviderGateway khi chữ rỗng báo mã lý do kèm giải thích (Gemini promptFeedback.blockReason/finishReason, OpenAI content_filter/refusal, Claude refusal), log WARN không kèm nội dung; BR-U06-61. Test HttpProviderGatewayTest 21/21, AiTaskFlowTest 32/32, ArchitectureTest 3/3; mvn verify 2343/2343 BUILD SUCCESS. Commit trên nhánh, chưa push."
+**Context**: CONSTRUCTION — sửa lỗi nhỏ U06.
+
+---
