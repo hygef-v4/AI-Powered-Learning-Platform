@@ -228,6 +228,40 @@ class HttpProviderGatewayTest {
     }
 
     @Test
+    void emptyOutputNamesTheProviderStopReasonInsteadOfAGenericMessage() {
+        // Production 2026-11-12: Gemini trả 200 không có chữ, người dùng chỉ thấy "không trả nội dung".
+        reply = "{\"candidates\":[{\"finishReason\":\"RECITATION\"}],\"usageMetadata\":{\"promptTokenCount\":900}}";
+        assertThatThrownBy(() -> gateway.call(AiProvider.GEMINI, request(SCHEMA)))
+                .isInstanceOfSatisfying(ProviderException.class, e -> {
+                    assertThat(e.kind()).isEqualTo(FailureKind.CHARGED);
+                    assertThat(e.usage().inputTokens()).isEqualTo(900);
+                    assertThat(e.getMessage()).contains("dừng", "RECITATION", "trùng văn bản có sẵn");
+                });
+
+        reply = "{\"promptFeedback\":{\"blockReason\":\"PROHIBITED_CONTENT\"},\"usageMetadata\":{\"promptTokenCount\":900}}";
+        assertThatThrownBy(() -> gateway.call(AiProvider.GEMINI, request(SCHEMA)))
+                .hasMessageContaining("chặn nội dung gửi lên").hasMessageContaining("PROHIBITED_CONTENT");
+
+        reply = "{\"choices\":[{\"finish_reason\":\"stop\",\"message\":{\"content\":null,\"refusal\":\"secret\"}}]}";
+        assertThatThrownBy(() -> gateway.call(AiProvider.OPENAI, request(SCHEMA)))
+                .hasMessageContaining("model từ chối trả lời").hasMessageNotContaining("secret");
+
+        reply = "{\"choices\":[{\"finish_reason\":\"content_filter\",\"message\":{\"content\":\"\"}}]}";
+        assertThatThrownBy(() -> gateway.call(AiProvider.OPENAI, request(SCHEMA)))
+                .hasMessageContaining("content_filter: bộ lọc nội dung chặn");
+
+        reply = "{\"stop_reason\":\"refusal\",\"content\":[]}";
+        assertThatThrownBy(() -> gateway.call(AiProvider.CLAUDE, request(SCHEMA)))
+                .hasMessageContaining("refusal: model từ chối trả lời");
+
+        reply = "{\"candidates\":[{\"finishReason\":\"STOP\",\"content\":{\"parts\":[]}}]}";
+        assertThatThrownBy(() -> gateway.call(AiProvider.GEMINI, request(SCHEMA)))
+                .hasMessage(HttpProviderGateway.EMPTY_OUTPUT);
+        assertThat(HttpProviderGateway.emptyOutputMessage("NEW_REASON", false))
+                .isEqualTo("Nhà cung cấp AI dừng mà không trả nội dung (NEW_REASON)");
+    }
+
+    @Test
     void overloadIsRejectedAndUnreachableProviderIsRejected() {
         assertThat(HttpProviderGateway.kindOf(529)).isEqualTo(FailureKind.REJECTED);
         assertThat(HttpProviderGateway.kindOf(503)).isEqualTo(FailureKind.REJECTED);
