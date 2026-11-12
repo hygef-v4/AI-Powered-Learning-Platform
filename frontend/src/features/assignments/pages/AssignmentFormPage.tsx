@@ -23,7 +23,7 @@ import {
 import { Alert, Button, Dialog, Field, Menu, MenuItem, Pill, showErrorToast, showToast } from "@/shared/ui";
 import { AiDraftDialog } from "../components/AiDraftDialog";
 import { AiReviseChat } from "../components/AiReviseChat";
-import { assignmentsApi, docxUrl, imageUrlFor } from "../api";
+import { assignmentsApi, downloadDocx, imageUrlFor } from "../api";
 import { AssignmentSettingsPanel, settingsOf, type Settings } from "../components/AssignmentSettingsPanel";
 import { errorMessage, formatTime, problemCode, problemIssues } from "../model/format";
 import { RubricEditor, cleanCriteria, rubricPointsMalformed } from "../components/RubricEditor";
@@ -206,6 +206,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const detailRef = useRef<AssignmentDetail | null>(null);
   // Bản mới nhất người dùng đã gõ, cập nhật ngay trong lúc sửa để lần lưu đang chờ không gửi bản cũ.
   const latest = useRef<Local>({ title, instructions, settings, skeleton, criteria });
+  const exporting = useRef(false);
   const dirty = useRef({ details: false, skeleton: false, rubrics: new Set<string>() });
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const conflictRef = useRef(false);
@@ -517,8 +518,19 @@ export function AssignmentFormPage({ id }: { id: string }) {
     }
   }
 
+  /** Lưu bản đang sửa rồi tải tệp về máy; đang tải thì không tải chồng, lỗi thì báo ở góc trên. */
   async function exportDocx(what: "skeleton" | "rubric") {
-    if (await save()) window.location.assign(docxUrl(id, what));
+    if (exporting.current) return;
+    exporting.current = true;
+    try {
+      if (!(await save())) return;
+      const name = (latest.current.title.trim() || "bai-tap").replace(/[\\/:*?"<>|\r\n]+/g, " ");
+      await downloadDocx(id, what, `${what === "rubric" ? "Rubric - " : ""}${name}.docx`);
+    } catch (error) {
+      notify(`Không tải được tệp ${what === "rubric" ? "rubric" : "đề"}. ${errorMessage(error)}`, "danger");
+    } finally {
+      exporting.current = false;
+    }
   }
 
   /** Xem trước (tùy chọn): lưu bản đang sửa rồi xem đề như sinh viên thấy khi làm bài (không có rubric). */
@@ -645,13 +657,6 @@ export function AssignmentFormPage({ id }: { id: string }) {
   });
 
   // Khung chat sửa đề bằng AI đứng trên thẻ Toàn bài (yêu cầu 2026-11-09).
-  if (editable && detail.status === "DRAFT" && !preview) {
-    comments.unshift({
-      key: "ai-revise",
-      anchorBlockId: null,
-      content: <AiReviseChat assignmentId={id} prepare={saveForAi} onApplied={() => showAiResult("Đã sửa đề bằng AI. Nhấn Ctrl+Z để quay lại bản trước.")} />,
-    });
-  }
 
   const header = (
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
@@ -675,8 +680,8 @@ export function AssignmentFormPage({ id }: { id: string }) {
         <div ref={setViewSlot} data-testid="view-slot" className="flex justify-center" />
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Menu label="" icon="more_horiz" ariaLabel="Thao tác khác" align="right">
-            <MenuItem icon="download" onClick={() => void exportDocx("skeleton")}>Xuất DOCX</MenuItem>
-            <MenuItem icon="download" onClick={() => void exportDocx("rubric")}>Xuất rubric</MenuItem>
+            <MenuItem icon="download" onClick={() => void exportDocx("skeleton")}>Tải đề (DOCX)</MenuItem>
+            <MenuItem icon="download" onClick={() => void exportDocx("rubric")}>Tải rubric (DOCX)</MenuItem>
             {permissions.canCreateVersion && (
               <MenuItem icon="history" onClick={() => void act(async () => {
                 const copy = await assignmentsApi.newVersion(id);
@@ -776,6 +781,11 @@ export function AssignmentFormPage({ id }: { id: string }) {
             setDialog(null);
             await showAiResult("Đã ghi đề AI lên trang. Nhấn Ctrl+Z để quay lại bản trước.");
           }} />
+      )}
+      {/* Trợ lý AI sửa đề: popup nổi ở góc phải dưới, bấm để mở / đóng (yêu cầu 2026-11-12). */}
+      {editable && (detail.status === "DRAFT" || detail.status === "REVIEWED") && !preview && (
+        <AiReviseChat assignmentId={id} prepare={saveForAi}
+          onApplied={() => showAiResult("Đã sửa đề bằng AI. Nhấn Ctrl+Z để quay lại bản trước.")} />
       )}
       {dialog === "retire" && (
         <RetireDialog onClose={() => setDialog(null)}

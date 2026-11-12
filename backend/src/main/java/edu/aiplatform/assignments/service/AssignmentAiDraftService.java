@@ -122,11 +122,18 @@ public class AssignmentAiDraftService {
      * thái trừ đã ngưng giao vì bài của môn không còn phát hành. Không gồm chính bài đang soạn.
      */
     public List<AssignmentViews.AiTemplateOption> listTemplates(Actor actor, UUID id) {
+        return listTemplates(actor, id, false);
+    }
+
+    /** {@code own}: thêm các đề cũ cùng môn mà người soạn quản lý được (chat sửa đề bằng AI, yêu cầu 2026-11-12). */
+    public List<AssignmentViews.AiTemplateOption> listTemplates(Actor actor, UUID id, boolean own) {
         return transaction.execute(status -> {
             Assignment assignment = support.manageable(actor, id, "ASSIGNMENT_AI_TEMPLATES");
             return assignments.listOfSubject(assignment.subjectId()).stream()
-                    .filter(candidate -> !candidate.id().equals(id) && isTemplateFor(actor, assignment, candidate))
-                    .map(candidate -> new AssignmentViews.AiTemplateOption(candidate.id(), candidate.title()))
+                    .filter(candidate -> !candidate.id().equals(id) && (isTemplateFor(actor, assignment, candidate)
+                            || own && isOwnAssignmentFor(actor, assignment, candidate)))
+                    .map(candidate -> new AssignmentViews.AiTemplateOption(candidate.id(), candidate.title(),
+                            isTemplateFor(actor, assignment, candidate)))
                     .toList();
         });
     }
@@ -136,10 +143,17 @@ public class AssignmentAiDraftService {
                 && candidate.subjectId().equals(target.subjectId());
     }
 
+    /** Đề cũ dùng làm mẫu: bài cùng môn, chưa gỡ, người soạn quản lý được. */
+    private boolean isOwnAssignmentFor(Actor actor, Assignment target, Assignment candidate) {
+        return candidate.subjectId().equals(target.subjectId()) && candidate.status() != AssignmentStatus.RETIRED
+                && access.canManage(actor, candidate);
+    }
+
     /** Chữ khung đề của đề mẫu đã chọn; đề mẫu ngoài phạm vi thì báo lỗi. */
     private String loadTemplateText(Actor actor, Assignment target, UUID templateId) {
         Assignment template = assignments.find(templateId)
-                .filter(candidate -> isTemplateFor(actor, target, candidate))
+                .filter(candidate -> !candidate.id().equals(target.id()) && (isTemplateFor(actor, target, candidate)
+                        || isOwnAssignmentFor(actor, target, candidate)))
                 .orElseThrow(() -> ApiException.badRequest("AI_TEMPLATE_INVALID", "Đề mẫu không hợp lệ"));
         String text = documentModelService.toPlainText(template.skeleton()).strip();
         return text.length() > MAX_FORMAT_CHARS ? text.substring(0, MAX_FORMAT_CHARS) : text;
@@ -178,13 +192,14 @@ public class AssignmentAiDraftService {
         if (command.provider() != null && command.source() != AiSource.PERSONAL) {
             throw ApiException.badRequest("AI_SOURCE_INVALID", "Nguồn AI không hợp lệ");
         }
-        String uploadedFormat = revise || command.formatText() == null || command.formatText().isBlank() ? null
+        // Sửa đề bằng AI cũng nhận mẫu đề và tài liệu tham khảo (yêu cầu 2026-11-12).
+        String uploadedFormat = command.formatText() == null || command.formatText().isBlank() ? null
                 : command.formatText().strip();
         String formatText = uploadedFormat == null || uploadedFormat.length() <= MAX_FORMAT_CHARS ? uploadedFormat
                 : uploadedFormat.substring(0, MAX_FORMAT_CHARS);
         AssignmentCommands.DraftOptions draftOptions = normalizeOptions(command.options());
-        List<String> sourceRefs = revise ? List.of() : normalizeSourceRefs(command.sourceFileRefs());
-        List<UUID> materialIds = revise || command.materialIds() == null ? List.of()
+        List<String> sourceRefs = normalizeSourceRefs(command.sourceFileRefs());
+        List<UUID> materialIds = command.materialIds() == null ? List.of()
                 : List.copyOf(new LinkedHashSet<>(command.materialIds()));
         if (materialIds.size() > Assignment.MATERIALS_MAX) {
             throw ApiException.badRequest("TOO_MANY_MATERIALS", "Chọn tối đa 10 tài liệu tham khảo");
@@ -198,15 +213,16 @@ public class AssignmentAiDraftService {
         Prepared prepared = transaction.execute(status -> {
             Assignment assignment = support.manageable(actor, id, "ASSIGNMENT_AI_DRAFT_REQUESTED");
             access.requireOwnerWritable(assignment);
-            if (assignment.status() != AssignmentStatus.DRAFT) {
-                throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ soạn bằng AI khi bài đang nháp");
+            // Bài đã hoàn tất vẫn sửa được bằng AI (yêu cầu 2026-11-12): ghi đề AI xong thì bài về nháp như mọi lần sửa.
+            if (!assignment.editable()) {
+                throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ soạn bằng AI khi bài chưa giao");
             }
             var existing = drafts.findByRequest(id, requestRef);
             if (existing.isPresent()) {
                 return new Prepared(assignment, existing.get(), false, null, null);
             }
             // Đề mẫu chọn từ bài của môn; tệp tải lên (formatText) được ưu tiên khi có cả hai.
-            String templateText = revise || command.templateAssignmentId() == null || formatText != null ? null
+            String templateText = command.templateAssignmentId() == null || formatText != null ? null
                     : loadTemplateText(actor, assignment, command.templateAssignmentId());
             if (!materialIds.isEmpty()) {
                 Set<UUID> allowed = selectable(actor, assignment).stream().map(SelectableMaterial::materialId)
@@ -274,13 +290,16 @@ public class AssignmentAiDraftService {
                 source.truncated(), null)));
         String template = formatText != null ? formatText : prepared.templateText();
         boolean hasFormat = template != null && !template.isBlank();
+        // Sửa đề: mẫu đề và tài liệu tham khảo đi thành hai phần riêng của prompt, không trộn vào nhau.
+        List<MaterialText> references = List.copyOf(texts);
         if (hasFormat) {
             texts.add(new MaterialText(UUID.randomUUID(), FORMAT_TITLE_PREFIX + "template", template,
                     template.length() >= MAX_FORMAT_CHARS, null));
         }
         String finalPrompt = hasFormat ? effectivePrompt + FORMAT_INSTRUCTION : effectivePrompt;
         AiPrompt aiPrompt = revise
-                ? AssignmentDraftRevision.buildPrompt(prepared.assignment(), prompt, prepared.revisionDocument())
+                ? AssignmentDraftRevision.buildPrompt(prepared.assignment(), prompt, prepared.revisionDocument(),
+                        hasFormat ? template : null, references)
                 : AssignmentDraftPromptBuilder.build(prepared.assignment(), finalPrompt, texts, draftOptions);
         String schema = revise ? AssignmentDraftRevision.OUTPUT_SCHEMA
                 : AssignmentDraftGenerationSchema.build(draftOptions, prepared.assignment().gradingMode());
@@ -509,8 +528,8 @@ public class AssignmentAiDraftService {
                 return ApplyOutcome.REJECTED;
             }
             Assignment assignment = assignments.find(draft.assignmentId()).orElse(null);
-            if (assignment == null || assignment.status() != AssignmentStatus.DRAFT) {
-                drafts.markFailed(draftId, "Bài không còn ở trạng thái nháp", clock.instant());
+            if (assignment == null || !assignment.editable()) {
+                drafts.markFailed(draftId, "Bài đã giao, không còn sửa được", clock.instant());
                 return ApplyOutcome.REJECTED;
             }
             boolean revise = AssignmentDraftRevision.MODE.equals(draft.provenance().path("mode").asText());

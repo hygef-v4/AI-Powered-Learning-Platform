@@ -8,6 +8,7 @@ import edu.aiplatform.ai.contract.IReferenceMaterial;
 import edu.aiplatform.ai.contract.SelectableMaterial;
 import edu.aiplatform.assignments.contract.AssignmentScope;
 import edu.aiplatform.assignments.contract.AssignmentStatus;
+import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignments.model.Assignment;
 import edu.aiplatform.assignments.model.AssignmentOrigin;
@@ -119,6 +120,13 @@ public class AssignmentCopyService {
     @Transactional
     public AssignmentViews.Detail copyToSubject(Actor actor, UUID subjectId, UUID sourceAssignmentId,
                                                 String title) {
+        return copyToSubject(actor, subjectId, sourceAssignmentId, title, null, null);
+    }
+
+    /** {@code submissionMode}, {@code gradingMode}: loại của bài copy; null thì giữ loại của bài nguồn. */
+    @Transactional
+    public AssignmentViews.Detail copyToSubject(Actor actor, UUID subjectId, UUID sourceAssignmentId, String title,
+                                                SubmissionMode submissionMode, GradingMode gradingMode) {
         access.requireSubjectManager(actor, subjectId, "ASSIGNMENT_COPIED");
         if (access.subjectStatus(subjectId) == SubjectStatus.ARCHIVED) {
             throw ApiException.conflict("ASSIGNMENT_READ_ONLY", "Môn đã lưu trữ, không tạo bài được");
@@ -137,8 +145,8 @@ public class AssignmentCopyService {
         }
         Set<UUID> allowed = selectable(actor, ResourceRef.subject(subjectId));
         List<UUID> kept = source.referenceMaterialIds().stream().filter(allowed::contains).toList();
-        Assignment copy = insertCopy(actor, source, null, subjectId, AssignmentOrigin.CLASS_COPY, 1,
-                copyTitle(title, source), kept);
+        Assignment copy = insertCopy(actor, source.withModes(submissionMode, gradingMode), null, subjectId,
+                AssignmentOrigin.CLASS_COPY, 1, copyTitle(title, source), kept);
         audit.success(actor, "ASSIGNMENT_COPIED", copy.id(), AssignmentAudit.details("sourceAssignmentId", source.id(),
                 "targetSubjectId", subjectId));
         return support.detail(actor, copy, List.of());
@@ -176,6 +184,13 @@ public class AssignmentCopyService {
     @Transactional
     public AssignmentViews.Detail copyToClass(Actor actor, UUID targetClassId, UUID sourceAssignmentId,
                                               String title) {
+        return copyToClass(actor, targetClassId, sourceAssignmentId, title, null, null);
+    }
+
+    /** {@code submissionMode}, {@code gradingMode}: loại của bài copy; null thì giữ loại của bài nguồn. */
+    @Transactional
+    public AssignmentViews.Detail copyToClass(Actor actor, UUID targetClassId, UUID sourceAssignmentId, String title,
+                                              SubmissionMode submissionMode, GradingMode gradingMode) {
         ClassRef target = access.requireClassManager(actor, targetClassId, "ASSIGNMENT_COPIED");
         if (target.status() == ClassStatus.ARCHIVED) {
             throw ApiException.conflict("ASSIGNMENT_READ_ONLY", "Lớp đã lưu trữ, không tạo bài được");
@@ -197,6 +212,7 @@ public class AssignmentCopyService {
                 throw ApiException.badRequest("COPY_SAME_CLASS", "Bài đã thuộc lớp này, hãy dùng Nhân bản");
             }
         }
+        source = source.withModes(submissionMode, gradingMode);
         requireGroupSupport(source, targetClassId);
         Set<UUID> allowed = selectable(actor, ResourceRef.courseClass(targetClassId));
         List<UUID> kept = source.referenceMaterialIds().stream().filter(allowed::contains).toList();

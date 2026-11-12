@@ -1681,7 +1681,9 @@ export function DocumentEditor({
           {stepping && stepNav("top")}
           <div ref={content}>
             {titleField && (
-              <div data-block-id="TITLE" className="mb-2" onFocusCapture={() => { setInHeader(true); if (cursorLine) setCursorLine(null); }}>
+              // Thiếu tên bài khi hoàn tất, xếp lịch: viền đỏ quanh cả ô tên (yêu cầu 2026-11-12), hết khi gõ tên.
+              <div data-block-id="TITLE" data-invalid={titleField.invalid || undefined}
+                className={cx("mb-2", titleField.invalid && "rounded-lg px-2 py-1 outline-2 outline-danger")} onFocusCapture={() => { setInHeader(true); if (cursorLine) setCursorLine(null); }}>
                 {titleField.readOnly || readOnly
                   ? <h2 className={cx(TITLE_CLASS, alignClass(document.title?.align))}>{titleField.text ? <RunsView runs={titleRuns} /> : "Bài chưa đặt tên"}</h2>
                   : <RichText aria-label="Tên bài" runs={titleRuns} placeholder={titleField.placeholder}

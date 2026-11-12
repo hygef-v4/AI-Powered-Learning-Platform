@@ -1,4 +1,4 @@
-import { apiFetch } from "@/shared/api/client";
+import { apiDownloadFile, apiFetch } from "@/shared/api/client";
 import type { DocumentModel, RubricCriterion } from "@/shared/document";
 import type {
   AiDraft,
@@ -49,12 +49,13 @@ export const assignmentsApi = {
     write<AssignmentDetail>(`/subjects/${enc(subjectId)}/assignments`, "POST", input),
   copySources: (classId: string, signal?: AbortSignal) =>
     apiFetch<CopySource[]>(`${base}/classes/${enc(classId)}/assignment-copy-sources`, { signal }),
-  copy: (classId: string, sourceAssignmentId: string, title?: string) =>
-    write<AssignmentDetail>(`/classes/${enc(classId)}/assignments:copy`, "POST", { sourceAssignmentId, title }),
+  /** {@code modes}: loại của bài copy (cá nhân / nhóm, tính điểm / luyện tập); bỏ trống thì giữ loại của bài nguồn. */
+  copy: (classId: string, sourceAssignmentId: string, title?: string, modes?: CopyModes) =>
+    write<AssignmentDetail>(`/classes/${enc(classId)}/assignments:copy`, "POST", { sourceAssignmentId, title, ...modes }),
   subjectCopySources: (subjectId: string, signal?: AbortSignal) =>
     apiFetch<CopySource[]>(`${base}/subjects/${enc(subjectId)}/assignments/copy-sources`, { signal }),
-  copyToSubject: (subjectId: string, sourceAssignmentId: string, title?: string) =>
-    write<AssignmentDetail>(`/subjects/${enc(subjectId)}/assignments/copies`, "POST", { sourceAssignmentId, title }),
+  copyToSubject: (subjectId: string, sourceAssignmentId: string, title?: string, modes?: CopyModes) =>
+    write<AssignmentDetail>(`/subjects/${enc(subjectId)}/assignments/copies`, "POST", { sourceAssignmentId, title, ...modes }),
   detail: (id: string, signal?: AbortSignal) => apiFetch<AssignmentDetail>(`${base}/assignments/${enc(id)}`, { signal }),
   updateDetails: (id: string, version: number, input: DetailsInput) =>
     write<AssignmentDetail>(`/assignments/${enc(id)}`, "PATCH", { ...input, version }),
@@ -95,13 +96,16 @@ export const assignmentsApi = {
     templateAssignmentId?: string }) =>
     write<AiDraft>(`/assignments/${enc(id)}/ai-drafts`, "POST", input),
   /** AI sửa đề đang có theo yêu cầu; máy chủ gửi kèm toàn bộ đề và rubric đã lưu (yêu cầu 2026-11-09). */
-  requestAiRevision: (id: string, request: string, requestRef: string) =>
-    write<AiDraft>(`/assignments/${enc(id)}/ai-drafts`, "POST", { request, mode: "REVISE", requestRef }),
+  requestAiRevision: (id: string, request: string, requestRef: string,
+    /** Tệp gửi kèm (yêu cầu 2026-11-12): mẫu đề (chữ của DOCX tải lên hoặc một đề cũ) và tài liệu tham khảo. */
+    attachments?: { formatText?: string; templateAssignmentId?: string; materialIds?: string[]; sourceFileRefs?: string[] }) =>
+    write<AiDraft>(`/assignments/${enc(id)}/ai-drafts`, "POST", { request, mode: "REVISE", requestRef, ...attachments }),
   aiDraft: (id: string, draftId: string, signal?: AbortSignal) =>
     apiFetch<AiDraft>(`${base}/assignments/${enc(id)}/ai-drafts/${enc(draftId)}`, { signal }),
-  /** Đề mẫu của môn (bài do chủ nhiệm môn tạo) để chọn khi soạn bằng AI. */
-  listAiTemplates: (id: string, signal?: AbortSignal) =>
-    apiFetch<{ assignmentId: string; title: string }[]>(`${base}/assignments/${enc(id)}/ai-drafts/templates`, { signal }),
+  /** Đề mẫu của môn (bài do chủ nhiệm môn tạo) để chọn khi soạn bằng AI; {@code own}: thêm các đề cũ mình quản lý được. */
+  listAiTemplates: (id: string, signal?: AbortSignal, own = false) =>
+    apiFetch<{ assignmentId: string; title: string; subjectTemplate: boolean }[]>(
+      `${base}/assignments/${enc(id)}/ai-drafts/templates${own ? "?own=true" : ""}`, { signal }),
   previewAiSources: (id: string, sourceFileRefs: string[], signal?: AbortSignal) =>
     apiFetch<AiSourcePreview[]>(`${base}/assignments/${enc(id)}/ai-drafts/sources:preview`, {
       method: "POST", body: JSON.stringify({ sourceFileRefs }), signal,
@@ -115,7 +119,25 @@ export function imageUrlFor(assignmentId: string) {
   return (blockId: string) => `${base}/assignments/${enc(assignmentId)}/blocks/${enc(blockId)}/image`;
 }
 
+export type CopyModes = Pick<CreateInput, "submissionMode" | "gradingMode">;
+
 /** Tệp DOCX của đề hoặc của rubric: hai tệp riêng (yêu cầu 2026-10-22). */
 export function docxUrl(assignmentId: string, what: "skeleton" | "rubric") {
   return `${base}/assignments/${enc(assignmentId)}/${what === "rubric" ? "rubric/docx" : "docx"}`;
+}
+
+/**
+ * Tải tệp DOCX của đề hoặc rubric về máy (yêu cầu 2026-11-12): gọi qua apiFetch nên phiên hết hạn được làm mới, lỗi trả về
+ * dạng ApiError để trang báo, không còn chuyển cả trang sang địa chỉ tệp (lỗi là mất trang soạn).
+ */
+export async function downloadDocx(assignmentId: string, what: "skeleton" | "rubric", fallbackName: string) {
+  const { blob, filename } = await apiDownloadFile(docxUrl(assignmentId, what));
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename ?? fallbackName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

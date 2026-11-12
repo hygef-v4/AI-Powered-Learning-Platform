@@ -125,6 +125,15 @@ public record Assignment(UUID id, AssignmentScope scope, UUID classId, UUID subj
                 actorId, now, now, 0);
     }
 
+    /** Bài copy đổi loại (cá nhân / nhóm, tính điểm / luyện tập) theo lựa chọn lúc tạo (yêu cầu 2026-11-12). */
+    public Assignment withModes(SubmissionMode nextSubmissionMode, GradingMode nextGradingMode) {
+        return new Assignment(id, scope, classId, subjectId, sourceAssignmentId, origin, versionNo,
+                nextSubmissionMode == null ? submissionMode : nextSubmissionMode, diagramEnabled,
+                nextGradingMode == null ? gradingMode : nextGradingMode, title, instructions, skeleton, parts,
+                requiredDiagrams, referenceMaterialIds, activityMonitoringEnabled, activityNotice, status, opensAt,
+                closesAt, lateUntil, maxAttempts, retiredReason, createdBy, createdAt, updatedAt, version);
+    }
+
     public Assignment withVersion(long nextVersion) {
         return new Assignment(id, scope, classId, subjectId, sourceAssignmentId, origin, versionNo, submissionMode,
                 diagramEnabled, gradingMode, title, instructions, skeleton, parts, requiredDiagrams,

@@ -66,7 +66,7 @@ public class ClassAssignmentController {
     public ResponseEntity<AssignmentViews.Detail> copy(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
                                                        @RequestBody AssignmentRequests.Copy body) {
         AssignmentViews.Detail created = copies.copyToClass(actor, classId, body.sourceAssignmentId(),
-                body.title());
+                body.title(), body.submissionMode(), body.gradingMode());
         return ResponseEntity.created(URI.create("/api/v1/assignments/" + created.id())).body(created);
     }
 }
