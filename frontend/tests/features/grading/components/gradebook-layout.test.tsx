@@ -100,7 +100,8 @@ describe("ClassGradebookTab: danh sách – chi tiết", () => {
 
     const groupAssignment = await screen.findByRole("button", { name: new RegExp(longTitle2) });
     expect(screen.queryByRole("link", { name: /Xem bản nộp chung/ })).not.toBeInTheDocument();
-    expect(mocks.listSubmissions).toHaveBeenCalled();
+    // Danh sách bài nộp tải sau khi nút bài hiện ra; chờ thay vì giả định đã gọi (CI chậm hơn máy local).
+    await waitFor(() => expect(mocks.listSubmissions).toHaveBeenCalled());
     fireEvent.click(groupAssignment);
 
     const groups = await screen.findByRole("table", { name: "Bài nộp của nhóm" });
