@@ -17,6 +17,8 @@
 
 **Delta 2026-11-11 — tổng quan lớp sinh viên:** `ClassTodoCard` trong `StudentClassBoard` thành thẻ Tổng quan bài tập đủ chiều rộng, thống kê Chưa làm/Đang làm/Đã nộp theo cùng tiêu chí tab Bài tập và mở tab tương ứng của lớp. Giữ bộ lọc cá nhân/nhóm/luyện tập và danh sách cần làm theo hạn, cao tối đa5 dòng và co theo nội dung. Dùng một lần đọc danh sách của chính sinh viên, không số0 giả khi tải/lỗi; bài nhóm đã nộp không thuộc helper `upcoming`. Không còn thẻ thông báo gần đây trên tổng quan; menu thông báo giữ nguyên.
 
+**Delta 2026-11-13 — bài đã đóng/chưa nộp:** `StudentAssignmentsPage` thêm tab **Đã đóng** (`tab=closed`) cho dòng API đã CLOSED hoặc MISSED nhưng chưa có bài nộp cá nhân/nhóm. Bài đã nộp vẫn ở Đã nộp, kể cả nhóm sửa sau khi nộp rồi hết hạn. URL lọc/tìm kiếm/phân trang được giữ; quay về từ chi tiết với `focus` tự chọn Đã đóng. Trạng thái dùng chung `rowStatus` hiển thị Hết hạn cho cả nhóm đã đóng/chưa nộp trên danh sách và chi tiết. Tab Đã đóng chỉ hiện ngày hạn nộp, không đếm thời gian còn lại. `upcoming`/`doing` và tổng quan bài cần làm giữ nguyên; không đổi lịch nhận bài, API hoặc quyền truy cập.
+
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
 
 Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://claude.ai/artifact/M5RgKNauBqdxM7GUTRwau4), bản 17/10/2026; `#n` là số màn, mã trong ngoặc (ví dụ `a02`) là artboard.
