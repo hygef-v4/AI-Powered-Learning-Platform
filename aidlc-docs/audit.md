@@ -13664,3 +13664,82 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 **Context**: CONSTRUCTION — Build and Test U12, công bố kết quả.
 
 ---
+
+## Rà soát danh sách bug nhóm và tạo đề AI
+**Timestamp**: 2026-11-13T05:10:00Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] giúp tôi check lại các bug sau"
+**AI Response**: "Đối chiếu sáu mục trong ảnh với code hiện tại. Thêm sinh viên chỉ chọn một người và chọn thành viên nhóm chưa có chọn tất cả. Đổi trưởng nhóm đã có UI và đường lưu; chưa tái hiện lỗi thực tế. Schema tạo/sửa đề AI chưa hỗ trợ định dạng chữ/căn lề. ASSIGNMENT_SOURCE chỉ nhận TXT/DOCX/PDF. Đề mẫu cấp môn đã có tại /manager/assignments nhưng sidebar ghi Bài tập. Giảng viên được nhả mục đang nhận khi tài liệu còn editable; thao tác bỏ bản nháp. Chạy 14 test ClassGroupsPanel và 17 test GroupWorkspacePage đều qua. Không thay source, không kiểm thử browser hoặc gọi AI."
+**Context**: Read-only triage; chưa xác nhận nguyên nhân runtime của đổi trưởng nhóm; không commit/push.
+
+---
+
+## Kiểm tra trực tiếp UI nhóm, thêm sinh viên và đề mẫu
+**Timestamp**: 2026-11-13T05:20:34Z
+**Requested by:** Quang Hung
+**User Input**: "giảng viên chua chỉnh đc trưởng nhóm [Image #1]  b có thể đăng nhập vào hệ thống và hcekc lại tất cả lỗi kia giúp tôi"
+**AI Response**: "Đăng nhập local bằng tài khoản teacher và manager đã cung cấp, qua hai profile riêng. Teacher SWD392/SE1933 đổi trưởng nhóm từ U05 Mock Student sang JS SE Student 2, lưu thành công, reload vẫn giữ; sau đó đổi lại U05 Mock Student và vào lại trang xác nhận khôi phục. Không tái hiện lỗi đổi trưởng nhóm trên local này. Popup thành viên không có chọn tất cả. Manager thêm sinh viên chỉ có combobox chọn một người; không thêm/gỡ sinh viên. Popup Tạo từ AI: mẫu nhận .docx, tham khảo .pdf,.txt,.docx; không gọi AI hay upload. Manager qua Môn được phân công > SWD392 > Bài tập mở Đề mẫu bài tập có Tạo đề mẫu. Teacher vào tài liệu nhóm thấy Nhả mục của JS SE Student 2 và mở được xác nhận; đóng mà không nhả, tránh bỏ bản nháp. Hộp xác nhận chỉ có tiêu đề và nút, chưa mô tả hậu quả. Định dạng AI xác nhận qua schema ở lượt trước, chưa chạy model để tái hiện. Hỏi môi trường xảy ra lỗi trưởng nhóm qua câu hỏi async, chưa nhận trả lời. Không sửa source, commit/push/deploy. Đổi trưởng nhóm phát sinh lịch sử/audit dù đã phục hồi người cũ."
+**Context**: Browser acceptance local; không kết luận cho bản deploy hoặc mọi lớp; còn chờ xác định môi trường của lỗi trưởng nhóm.
+
+---
+
+## Triển khai thao tác nhóm và nguồn/định dạng AI
+**Timestamp**: 2026-11-13T05:55:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa theo đề xuất $ponytail:ponytail"
+**AI Response**: "Đã triển khai các đề xuất đã duyệt theo Ponytail full, dùng lại API batch, versioned group save, document runs và image worker. Test backend 2349, frontend 1024 qua; final cap delta 107 backend và hai frontend qua; lint, typecheck và build riêng qua. Có UI chọn tất cả, Đổi trưởng nhóm riêng, Đề mẫu, cảnh báo Nhả mục, nguồn PNG/JPEG và định dạng AI có kiểm tra. Giữ giới hạn batch 200, nguồn ba tệp/2 MB mỗi tệp. Backend local chưa reload, ô nguồn vẫn báo loại cũ, chưa gọi model thực tế. Từ chối tự động chặn xóa cache types; không xóa lại, dùng build/typecheck riêng và trả cấu hình gốc. Không commit/push/deploy."
+**Context**: CONSTRUCTION — approved seven-item scope; applied user-supplied ponytail 5.3.3 skill. Evidence at construction/build-and-test/2026-11-13-group-and-ai-authoring.md. No subagents.
+
+---
+
+## Lập kế hoạch đính kèm trong chat AI
+**Timestamp**: 2026-11-13T06:08:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi lập plan trển khai"
+**AI Response**: "Dùng writing-plans và quy trình AI-DLC, đối chiếu code hiện tại và lưu kế hoạch 2026-11-13-ai-chat-attachments.md. Giai đoạn 1: menu ba mục, nguồn có sẵn tách tải từ máy, DOCX chuyển vai trò, Ctrl+V ảnh, kéo thả, giữ nội dung khi gửi lỗi. Giai đoạn 2: thẻ đọc link HTTPS công khai, backend tải có giới hạn/chống SSRF rồi lưu TXT private qua FileRef hiện có; chỉ báo đã đọc khi thật sự có nội dung. Có file map, task/test, giới hạn và điều kiện giao từng giai đoạn. Chưa triển khai hoặc commit/push."
+**Context**: Planning only; preserve all existing uncommitted work; native sequential execution if later authorized, no subagents.
+
+---
+
+
+## Triển khai đính kèm tệp trong chat AI
+**Timestamp**: 2026-11-13T06:31:36Z
+**Requested by:** Quang Hung
+**User Input**: "thôi hiện tại chauw cần đọc link đâu cứ làm đọc file thôi, giúp tôi trienrek hai"
+**AI Response**: "Đã triển khai phần tệp, bỏ toàn bộ đọc link khỏi scope. Menu ba mục, paste ảnh/kéo thả, DOCX chuyển vai trò có xác nhận, hàng đợi chung và giữ text/tệp khi lỗi; requestRef chống retry trùng, phục hồi có chủ động. 1037 frontend test/150 file, lint, TypeScript và build riêng qua. UI DOCX/TXT và đổi vai trò qua, paste PNG có ảnh blob thật nhưng backend runtime cũ vẫn từ chối PNG, cần nạp bản sửa trước và reload trang. Chưa gọi AI, thay nội dung đề, commit/push/deploy. Đã gỡ tệp thử khỏi composer; ba upload fixture nhỏ dùng vòng đời tệp hiện có. Cảnh báo detector thiếu src của SourceImagePreview là false positive, đã miễn hẹp theo file sau khi kiểm blob tải được và lifecycle test."
+**Context**: CONSTRUCTION, phase 1 approved; no URL backend endpoints or network reader added; no subagents; evidence 2026-11-13-ai-chat-files.md.
+
+**Final verification**: Added regression for lost apply acknowledgement (no recovery/discard/repeat until refresh). Full frontend 1038 tests/150 files pass with two workers. Isolated production build, including TypeScript, passes with two build workers; both next.config.ts and tsconfig.json restored. Concurrent verification first exhausted Windows virtual memory; sequential retry passed without product configuration changes or service restart. Final full ESLint rerun recorded in .tmp/ai-chat-files-lint.log.
+
+---
+
+## Khởi động lại backend và kiểm tra UI tệp AI
+**Timestamp**: 2026-11-13T06:56:13Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi khởi động lại và test kại ui"
+**AI Response**: "Tiếp tục kiểm thử phần tệp đã duyệt. Đã xác minh backend Java local ở cổng 8080, gửi Ctrl+C vào đúng terminal; dừng container worker cũ thuộc infra dự án để không nhận job bằng mã cũ. Chạy lại scripts/run-backend.bat trong terminal hiện có với profiles local,worker; đang build để nạp bản sửa. Tiếp theo reload trang và kiểm UI ảnh/tệp, không commit/push."
+**Context**: BUILD AND TEST follow-up, explicit new restart authorization; Orca CLI used for terminal/browser, no subagents.
+
+**Result — 2026-11-13T07:01:04Z**: Restart succeeded, Java PID 37852 listens on 8080 and runs API plus local worker; Docker worker stays stopped. Manager file-picker PNG and simulated JPEG paste reach Sẵn sàng with loaded thumbnails; simulated DOCX drop and reference/template conversion both pass. Invalid type, >2 MB and fourth file rejected, retry/remove/send gating and close/reopen preservation pass. Teacher JPEG upload passes. Removed all composer fixtures/test text; restored teacher's original class/student route. Screenshot .tmp/ai-chat-ui-restarted.png. Five small private upload artifacts use normal lifecycle. No assignment content edits, AI call, source change, commit/push/deploy. Existing CSP style warnings and SSE connection-aborted navigation logs remain; physical OS clipboard not tested.
+
+---
+
+## Kiểm tra AI provider thực tế qua UI
+**Timestamp**: 2026-11-13T07:09:22Z
+**Requested by:** Quang Hung
+**User Input**: "Gọi ai thực tế đi"
+**AI Response**: "Tạo riêng đề nháp QA f0643cc5-f9a5-4947-8eea-5056564bffa8 trong lớp thử của giảng viên, chuẩn bị ảnh và TXT không nhạy cảm chứa mã kiểm tra riêng không có trong lời nhắn. Sẽ gửi qua chat UI để kiểm đường upload, vision, đọc tệp, worker/provider và áp dụng kết quả; không công bố đề."
+**Context**: Explicit live-provider call authorization; no source changes or subagents.
+
+**Result — 2026-11-13T07:13:49Z**: Two real UI calls used PERSONAL/GEMINI gemini-3.5-flash-lite. First task a3cb7291-6465-42a4-8a8f-0b680615a1e9 read exact image-only VISION-7Q4M and TXT-only FILE-9P2K markers and business rules, applied draft 90dca5da-fb43-4426-bd92-ed47c4d0b017. It omitted rubric and used Markdown; stored validation NEEDS_REVIEW/0 points visibly warned. One focused follow-up task 62983464-ff02-478f-b6a4-a27cb7b812bb applied draft d0073df2-2319-42c3-96ec-a92bd7117344: VALID, two criteria × five points, one question, ten total, no Markdown. Requested bold still absent from normalized proposal and persisted runs; no raw-provider payload inspected, so raw omission vs normalization not conclusively separated. Reload confirmed saved content/rubric. Screenshot .tmp/ai-live-provider-result.png; restored viewport and left QA draft unpublished for user review. Two uploaded fixtures use existing lifecycle. No source-code change, additional call loop, publication, commit/push/deploy, or regression-suite rerun.
+
+---
+
+## Local commit and staging integration check
+**Timestamp**: 2026-11-13T07:24:33Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi commit, check mêrg staging vào nhánh hỉện tại"
+**AI Response**: "Đã đối chiếu toàn bộ WIP, chạy lại 217 test frontend/31 file và 131 test backend liên quan, đều qua. Tách thành commit quản lý sinh viên/nhóm, commit nguồn ảnh/đính kèm và định dạng AI, cùng commit tài liệu kế hoạch/kiểm thử. Fetch origin/staging và merge vào fix/u05-u09-u15 trả Already up to date; không có conflict hoặc commit staging mới cần nhập. Giữ nguyên ghi nhận AI thiếu rubric ở lượt đầu và bold chưa đạt. Chưa push, tạo PR hoặc deploy."
+**Context**: User-authorized local integration; no source changes or subagents. Evidence .tmp/ai-authoring-precommit.log and .tmp/ai-authoring-backend-precommit.log. Existing full verification and live provider evidence retained.
+
+---
