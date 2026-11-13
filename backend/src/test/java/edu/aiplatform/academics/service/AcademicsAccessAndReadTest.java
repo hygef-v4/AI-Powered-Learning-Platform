@@ -361,16 +361,16 @@ class AcademicsAccessAndReadTest {
         verify(audit).record(argThat(e -> e.result()==AuditResult.FAILURE));
     }
 
-    @Test void studentCandidatesKeepActiveAndPendingStudentsFilterOthersAndCapAtTwenty() {
+    @Test void studentCandidatesSupportMoreThanTwentyAndFilterOtherRoles() {
         var eligible = new ArrayList<AccountContact>();
         eligible.add(contact(UUID.randomUUID(),Role.STUDENT,AccountStatus.PENDING));
         for (int i=0;i<24;i++) eligible.add(contact(UUID.randomUUID(),Role.STUDENT,AccountStatus.ACTIVE));
         var response = new ArrayList<AccountContact>(List.of(contact(UUID.randomUUID(),Role.STUDENT,AccountStatus.DISABLED),contact(UUID.randomUUID(),Role.TEACHER,AccountStatus.ACTIVE)));
         response.addAll(eligible);
-        when(accountLookup.findStudents("name or email",20)).thenReturn(response);
+        when(accountLookup.findStudents("name or email",200)).thenReturn(response);
         var result = academicsService.listStudentCandidates(actor(Role.SUBJECT_MANAGER),classId,"name or email");
-        assertThat(result).containsExactlyElementsOf(eligible.stream().limit(20).map(this::person).toList());
-        verify(accountLookup).findStudents("name or email",20);
+        assertThat(result).containsExactlyElementsOf(eligible.stream().limit(200).map(this::person).toList());
+        verify(accountLookup).findStudents("name or email",200);
         verifyNoInteractions(academicsReadRepository,subjectQuery,audit);
     }
 

@@ -11,12 +11,13 @@ import type { Draft, GroupSetView } from "../model/types";
  * (sửa nhóm thì thành viên hiện tại đứng đầu), chọn trưởng nhóm trong số thành viên. Bấm lưu là lưu ngay cho cả
  * lớp; nhóm khác không còn ai thì bị bỏ.
  */
-export function GroupFormDialog({ classId, set, people, group, onClose, onSaved }: {
+export function GroupFormDialog({ classId, set, people, group, leaderOnly = false, onClose, onSaved }: {
   classId: string;
   set: GroupSetView;
   people: StudentRow[];
   /** Nhóm đang sửa; không có là tạo nhóm mới. */
   group?: Draft;
+  leaderOnly?: boolean;
   onClose: () => void;
   onSaved: (next: GroupSetView, name: string) => void;
 }) {
@@ -37,6 +38,8 @@ export function GroupFormDialog({ classId, set, people, group, onClose, onSaved 
   const list = [...people]
     .filter((p) => !groupOf(p.accountId) && `${personLabel(p)} ${p.email ?? ""}`.toLocaleLowerCase("vi").includes(q))
     .sort((a, b) => rank(a.accountId) - rank(b.accountId) || personLabel(a).localeCompare(personLabel(b), "vi"));
+  const allSelected = list.length > 0 && list.every(person => members.includes(person.accountId));
+  const someSelected = list.some(person => members.includes(person.accountId));
   const leader = leaderId && members.includes(leaderId) ? leaderId : (members[0] ?? null);
   const { rest, emptied } = withdraw(others, members);
   const usedIds = new Set(set.groups.filter((g) => g.used).map((g) => g.id));
@@ -67,23 +70,30 @@ export function GroupFormDialog({ classId, set, people, group, onClose, onSaved 
   };
 
   return (
-    <Dialog open title={group ? `Sửa ${group.name}` : "Tạo nhóm"} size="lg" onClose={onClose} dismissible={!busy}
+    <Dialog open title={leaderOnly ? `Đổi trưởng nhóm — ${group?.name}` : group ? `Sửa ${group.name}` : "Tạo nhóm"} size="lg" onClose={onClose} dismissible={!busy}
       footer={<Button variant="primary" icon="save" disabled={!valid || busy} onClick={() => void save()}>{group ? "Lưu nhóm" : "Tạo nhóm"}</Button>}>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Tên nhóm" htmlFor={`${id}-name`} required error={nameError}>
-          <TextInput id={`${id}-name`} value={name} maxLength={100} onChange={(e) => setName(e.target.value)} />
-        </Field>
+      <div className={cx("grid gap-4", !leaderOnly && "sm:grid-cols-2")}>
+        {!leaderOnly && <Field label="Tên nhóm" htmlFor={`${id}-name`} required error={nameError}>
+          <TextInput id={`${id}-name`} value={name} maxLength={100} disabled={busy} onChange={(e) => setName(e.target.value)} />
+        </Field>}
         <Field label="Trưởng nhóm" htmlFor={`${id}-leader`} required>
-          <Select id={`${id}-leader`} value={leader ?? ""} disabled={members.length === 0} onChange={(e) => setLeaderId(e.target.value)}>
+          <Select id={`${id}-leader`} value={leader ?? ""} disabled={busy || members.length === 0} onChange={(e) => setLeaderId(e.target.value)}>
             {members.length === 0 && <option value="">Chọn thành viên trước</option>}
             {members.map((m) => <option key={m} value={m}>{personLabel(people.find((p) => p.accountId === m))}</option>)}
           </Select>
         </Field>
       </div>
-      <div className="flex flex-col gap-2">
+      {!leaderOnly && <div className="flex flex-col gap-2">
         <span className="text-xs font-semibold text-body">Thành viên ({members.length})</span>
-        <TextInput type="search" icon="search" aria-label="Tìm sinh viên" placeholder="Tìm sinh viên" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <TextInput type="search" icon="search" aria-label="Tìm sinh viên" placeholder="Tìm sinh viên" value={query} disabled={busy} onChange={(e) => setQuery(e.target.value)} />
+        <label className="flex items-center gap-3 text-xs font-semibold">
+          <input type="checkbox" className="size-4 accent-primary" checked={allSelected} disabled={busy || !list.length}
+            ref={node => { if (node) node.indeterminate = someSelected && !allSelected; }}
+            onChange={() => setMembers(current => allSelected ? current.filter(member => !list.some(person => person.accountId === member))
+              : [...new Set([...current, ...list.map(person => person.accountId)])])} />
+          Chọn tất cả kết quả lọc ({list.length})
+        </label>
         <ul aria-label="Chọn thành viên" className="max-h-72 overflow-y-auto rounded-lg border border-line [scrollbar-color:var(--c-muted)_transparent]">
           {list.map((p) => {
             const picked = members.includes(p.accountId);
@@ -91,7 +101,7 @@ export function GroupFormDialog({ classId, set, people, group, onClose, onSaved 
             return (
               <li key={p.accountId} className="border-b border-line last:border-b-0">
                 <label className={cx("flex cursor-pointer items-center gap-3 px-3 py-2 transition-colors", picked ? "bg-primary-soft/50" : "hover:bg-shell")}>
-                  <input type="checkbox" className="size-4 accent-primary" checked={picked} onChange={() => toggle(p.accountId)} aria-label={`Chọn ${personLabel(p)}`} />
+                  <input type="checkbox" className="size-4 accent-primary" checked={picked} disabled={busy} onChange={() => toggle(p.accountId)} aria-label={`Chọn ${personLabel(p)}`} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13.5px] font-semibold text-ink">{personLabel(p)}</span>
                     <span className="block truncate text-xs text-muted">{p.email}</span>
@@ -106,7 +116,7 @@ export function GroupFormDialog({ classId, set, people, group, onClose, onSaved 
             <li className="px-3 py-8 text-center text-[13px] text-muted">{q ? "Không có sinh viên phù hợp." : "Mọi sinh viên đã có nhóm."}</li>
           )}
         </ul>
-      </div>
+      </div>}
       {(moved > 0 || emptied.length > 0) && (
         <p className={cx("text-[13px]", blocked.length ? "text-danger" : "text-muted")}>
           {moved > 0 && `Chuyển ${moved} người từ nhóm khác sang. `}

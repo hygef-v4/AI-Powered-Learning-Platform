@@ -175,7 +175,8 @@ describe("GroupWorkspacePage", () => {
     expect(calls.some((c) => c.url.endsWith(":claim"))).toBe(false);
     fireEvent.click(within(item).getByRole("button", { name: "Nhả mục" }));
     const dialog = await screen.findByRole("dialog", { name: "Nhả mục" });
-    expect(within(dialog).queryByText(/Bản nháp/)).not.toBeInTheDocument();
+    expect(dialog).toHaveTextContent("Bản nháp đang làm của mục này sẽ bị bỏ");
+    expect(dialog).toHaveTextContent("Bình");
     fireEvent.click(within(dialog).getByRole("button", { name: "Nhả mục" }));
     await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s2:release"))).toBe(true));
   });

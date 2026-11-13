@@ -43,7 +43,7 @@ public class AccountLookupService implements IAccountLookup {
     /** Sinh viên đang hoạt động (U05 thêm vào lớp; chỉ Student ACTIVE được ghi danh). */
     @Override
     public List<AccountContact> findStudents(String query, int limit) {
-        return accounts.findForLookup(query, Set.of(Role.STUDENT), AccountStatus.ACTIVE, clamp(limit)).stream()
+        return accounts.findForLookup(query, Set.of(Role.STUDENT), AccountStatus.ACTIVE, limit < 1 ? 20 : Math.min(limit, 200)).stream()
                 .map(AccountLookupService::contact).toList();
     }
 

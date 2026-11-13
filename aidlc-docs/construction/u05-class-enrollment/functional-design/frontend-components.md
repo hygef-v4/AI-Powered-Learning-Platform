@@ -115,3 +115,8 @@ CourseClass.create tạo DRAFT. OPEN không bắt buộc teacher: domain, Academ
 ## Nhập Excel — cập nhật 2026-11-09
 
 Thêm sinh viên theo danh sách nhận tệp `.xlsx`, sheet đầu có một cột `email` ở A1; cung cấp mẫu `/templates/enrollment-import.xlsx`. Tối đa 100 KB và 200 dòng; từ chối tệp hỏng, công thức, ô lỗi, ô nhiều dòng và nhiều cột. Giữ dán email, xem trước rồi xác nhận; chuyển nội dung về danh sách text cho API hiện hữu, server kiểm lại quyền, tài khoản và kết quả ghi danh.
+
+
+## Chọn nhiều sinh viên — 2026-11-13
+
+Popup Thêm sinh viên dùng danh sách checkbox có tìm kiếm, chọn tất cả kết quả lọc và bộ đếm. Loại sinh viên đang ACTIVE trong lớp khỏi lựa chọn; giữ lựa chọn qua bộ lọc. Tối đa 200 kết quả và 200 người/lượt, cùng giới hạn API batch hiện hữu. Nếu thêm một phần thành công, giữ những người thất bại và hiển thị kết quả để thử lại. API lookup sinh viên mở trần từ 20 lên 200, lookup tài khoản/giảng viên vẫn 20. Không thay quyền quản lý lớp hoặc giới hạn nhập Excel.

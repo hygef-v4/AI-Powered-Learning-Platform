@@ -144,3 +144,8 @@ app/classes/[classId]/group/   MyGroupPage           có nhóm chính thức: nh
 - `features/groups/model/types.ts`: thêm `FormationSettings`, `FormationState` (`open`, `closedReason`), `ProposalStatus`, `ProposalMemberStatus`, `ProposalView`, `InvitationView`, `MyProposalView`, `ClassProposalsView`, `ApproveResult`.
 - `features/groups/api/index.ts`: một hàm cho mỗi API mới, dùng client và cách báo lỗi hiện có.
 - Kiểm hợp lệ form ở frontend chỉ để báo sớm; backend vẫn kiểm (BR-U12-91, 93).
+
+
+## Thao tác nhóm rõ nghĩa — 2026-11-13
+
+Mỗi nhóm có nút Đổi trưởng nhóm riêng, mở popup chỉ chọn trong thành viên hiện tại và lưu bằng group-set version hiện hữu. Tên/thành viên nhóm không bị sửa qua popup này. Form tạo/sửa nhóm thêm checkbox chọn tất cả kết quả lọc, giữ lựa chọn ngoài bộ lọc và trạng thái chọn một phần; không đưa sinh viên đang ở nhóm khác vào danh sách. Lớp ARCHIVED giữ chế độ chỉ xem. Xác nhận Nhả mục ghi rõ tên mục, người giữ, bản nháp đang làm sẽ bị bỏ và nội dung đã hoàn thành được giữ; quyền nhả không đổi.

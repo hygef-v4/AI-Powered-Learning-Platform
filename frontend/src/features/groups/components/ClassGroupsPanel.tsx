@@ -14,7 +14,7 @@ import type { Draft, GroupSetView } from "../model/types";
 
 const PAGE_SIZE = 20;
 
-type Open = { kind: "create" } | { kind: "edit"; group: Draft } | { kind: "delete"; group: Draft } | { kind: "random" } | null;
+type Open = { kind: "create" } | { kind: "edit"; group: Draft } | { kind: "leader"; group: Draft } | { kind: "delete"; group: Draft } | { kind: "random" } | null;
 
 const formatDate = (value?: string | null) => {
   if (!value) return "—";
@@ -176,6 +176,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
               <GroupItem key={d.key} name={d.name} meta={`${d.memberIds.length} sinh viên`}
                 active={filter === d.key} onPick={() => pick(d.key)}
                 actions={!readOnly && <>
+                  <Button size="sm" variant="ghost" aria-label={`Đổi trưởng nhóm ${d.name}`} onClick={() => setOpen({ kind: "leader", group: d })}>Đổi trưởng nhóm</Button>
                   <IconButton icon="edit" size={28} label={`Sửa ${d.name}`} onClick={() => setOpen({ kind: "edit", group: d })} />
                   <IconButton icon="trash" size={28} disabled={used(d)} className="text-danger! hover:bg-danger-soft"
                     label={used(d) ? `Không xóa được ${d.name}: nhóm đã có tài liệu hoặc bài nộp` : `Xóa ${d.name}`}
@@ -232,8 +233,8 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
         </section>
       </div>
 
-      {(open?.kind === "create" || open?.kind === "edit") && (
-        <GroupFormDialog classId={classId} set={set} people={all} group={open.kind === "edit" ? open.group : undefined}
+      {(open?.kind === "create" || open?.kind === "edit" || open?.kind === "leader") && (
+        <GroupFormDialog classId={classId} set={set} people={all} group={open.kind !== "create" ? open.group : undefined} leaderOnly={open.kind === "leader"}
           onClose={() => setOpen(null)} onSaved={(next, name) => saved(next, name)} />
       )}
       {open?.kind === "random" && (
