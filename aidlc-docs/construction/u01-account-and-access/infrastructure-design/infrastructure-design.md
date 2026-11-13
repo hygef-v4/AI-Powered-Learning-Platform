@@ -1,6 +1,6 @@
 # U01 Account & Access — infrastructure-design
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U01 Account & Access thuộc Iter 1, người code: Người 1; phạm vi UC 01–12 giữ như U01 cũ, chỉ đổi liên kết sang các unit mới. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
@@ -12,12 +12,12 @@ File này chỉ ghi phần hạ tầng U01 dùng.
 
 | Thành phần (NFR Design) | Chạy ở | Ghi chú |
 |---|---|---|
-| `RateLimitFilter`, `JwtAuthFilter`, các service U01 | Container `backend`, package `edu.aiplatform.identity` | Một backend modular monolith |
+| `JwtAuthFilter`, các service U01 (giới hạn tần suất qua `RequestThrottle` trong service) | Container `backend`, package `edu.aiplatform.identity` | Một backend modular monolith |
 | `OtpMailHandler` | Container `worker` | Handler của việc `OTP_DELIVERY`, nhận từ queue `jobs.email` |
 | Bảng `accounts` (gồm `email_preferences` do U14 ghi; quota/usage ở bảng riêng U06) | Container `postgres` | Migration Flyway trong thư mục của U01 |
 | Refresh token, OTP, bucket rate limit | Container `redis`, database 0 | Khóa theo mục 3 |
 | Việc nền | Message RabbitMQ gửi sau commit, không có bảng job | U03 sở hữu |
-| Gửi mail | Brevo SMTP ở demo/production; Mailpit ở local/test | Cấu hình `SMTP_*` |
+| Gửi mail | SMTP mặc định (Mailpit local/test) hoặc Brevo HTTPS API | `MAIL_TRANSPORT`, `SMTP_*`; `BREVO_API_KEY` chỉ cho `brevo-api` |
 
 ## 2. RabbitMQ
 
@@ -43,7 +43,7 @@ Redis **không bật persistence**: VPS khởi động lại thì mọi người
 
 ## 4. Cấu hình
 
-Biến môi trường như `logical-components.md` mục 4; giá trị bí mật lấy từ CI/CD.
+Biến môi trường như `logical-components.md` mục 4; giá trị bí mật nằm trong `infra/.env` trên VPS (quyền 600), CI/CD không giữ secret. Từ 2026-11-06 VPS tự deploy bản mới trên `main` và tự quay về khi lỗi (`docs/runbooks/deploy-vps.md` mục 10).
 
 ## 5. Quan sát riêng U01
 

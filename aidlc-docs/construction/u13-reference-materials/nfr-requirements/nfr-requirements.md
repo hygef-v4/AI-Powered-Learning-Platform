@@ -1,6 +1,6 @@
 # U13 Reference Materials — nfr-requirements
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U13 Reference Materials thuộc Iter 3, người code: Người 4; UC 58–62. Lấy phần học liệu của U05 cũ; bỏ module, Lesson, tóm tắt, embedding và RAG (phần mở rộng US-CNT-005). Thông báo lớp của U05 cũ thuộc U14. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 58, 59, 60, 61, 62. **Primary stories:** US-CNT-001, US-CNT-002; US-CNT-005 là phần mở rộng. **Requirements:** FR-004, FR-005, FR-013.
 
@@ -13,9 +13,11 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | NFR-U13-03 | `extractText` cho tối đa 10 tài liệu p95 ≤ 1 giây (đọc chữ đã trích sẵn). | BR-U13-31 |
 | NFR-U13-10 | Khóa lạc quan `version`; phiên bản mới và lưu trữ là câu lệnh có điều kiện. | BR-U13-12 |
 | NFR-U13-11 | Job trích chữ idempotent theo (`materialId`, `versionNo`). | BR-U13-30 |
-| NFR-U13-30 | Tệp kiểm loại theo nội dung ở U03; trình trích chữ chạy với giới hạn thời gian và bộ nhớ, không chạy macro. URL YouTube kiểm bằng biểu thức chặt, chỉ lưu id video. | SEC-003 |
+| NFR-U13-30 | Tệp kiểm loại theo nội dung ở U03; trình trích chữ chạy với giới hạn thời gian và bộ nhớ, không chạy macro. URL YouTube kiểm bằng biểu thức chặt, lưu id video và URL HTTPS chuẩn của một video theo BR-U13-10; không giữ ngữ cảnh playlist không cần thiết. | SEC-003 |
 | NFR-U13-31 | Không log nội dung tài liệu. | SEC-005 |
 | NFR-U13-40 | Người code viết unit test cho mọi `BR-U13-xx`; tester viết integration test, gồm người học lớp khác mở tài liệu, tải bằng token hết hạn, thay phiên bản khi job trích chữ đang chạy, và phân quyền 4 role trên mọi endpoint. | NFR-004 |
+
+**Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
 
 ## Compliance
 
@@ -26,3 +28,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | SECURITY-08 | Compliant | R2, R3/R4, R5 theo phạm vi; token tải 5 phút |
 | SECURITY-15 | Compliant | Fail closed khi U01, U04, U05 lỗi |
 | Rule còn lại | N/A | Không có secret, không gọi dịch vụ ngoài |
+
+## Design assessment scope — 2026-10-30
+
+Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evidence có ngày trước baseline, không chứng nhận runtime tại HEAD. Đợt này chỉ đồng bộ tài liệu; hiệu lực security/resiliency, latency/capacity và provider acceptance phải có kiểm chứng riêng. PBT vẫn disabled.

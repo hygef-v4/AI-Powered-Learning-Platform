@@ -1,6 +1,9 @@
 # U01 Account & Access — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U01 Account & Access thuộc Iter 1, người code: Người 1; phạm vi UC 01–12 giữ như U01 cũ, chỉ đổi liên kết sang các unit mới. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
@@ -31,7 +34,7 @@ U01 **không** sở hữu: phân công Chủ nhiệm môn (U04), lớp, giảng 
 | Thuộc tính | Ý nghĩa | Ràng buộc |
 |---|---|---|
 | `accountId` | Định danh | Bất biến |
-| `schoolEmail` | Email trường, dùng đăng nhập | Bắt buộc; chuẩn hóa chữ thường, bỏ khoảng trắng; duy nhất toàn hệ thống; thuộc tên miền trong biến triển khai `U01_ALLOWED_EMAIL_DOMAINS`; **không đổi sau khi tạo** |
+| `schoolEmail` | Email đăng nhập (giữ tên cũ, thuộc tên miền nào cũng được) | Bắt buộc; chuẩn hóa chữ thường, bỏ khoảng trắng; đúng định dạng, tối đa 254 ký tự; duy nhất toàn hệ thống; **không đổi sau khi tạo** |
 | `role` | Vai trò cao nhất | `STUDENT`, `TEACHER`, `SUBJECT_MANAGER`, `ADMIN`; `ADMIN` không nhận phân công môn/lớp (BR-U01-60) |
 | `status` | Trạng thái vòng đời | `PENDING`, `ACTIVE`, `DISABLED` |
 | `credential` | `PasswordCredential` | Rỗng khi `PENDING` |
@@ -80,7 +83,7 @@ Không số dư credit hoặc ví trong Account. U06 lưu quota educator, usage 
 
 ## 7. Cấu hình U01
 
-Không có bảng cấu hình (database chỉ gồm bảng của ERD). Tên miền email trường là biến triển khai `U01_ALLOWED_EMAIL_DOMAINS` (BR-U01-03).
+Không có bảng cấu hình (database chỉ gồm bảng của ERD). Email không giới hạn tên miền (BR-U01-03); biến `U01_ALLOWED_EMAIL_DOMAINS` đã bỏ ngày 2026-11-06.
 
 ## 8. `OtpChallenge`
 
@@ -131,10 +134,10 @@ Không có use case xem lại lịch sử nhập nên kết quả không lưu. B
 
 | Thuộc tính | Ý nghĩa |
 |---|---|
-| `rowNumber` | Số dòng trong CSV |
+| `rowNumber` | Số dòng trong tệp nhập Excel (hoặc CSV qua API tương thích cũ) |
 | `schoolEmail`, `displayName`, `role` | Dữ liệu đọc được |
 | `outcome` | `CREATED`, `REJECTED` |
-| `reason` | Mã lỗi: `EMAIL_EXISTS`, `EMAIL_DOMAIN_NOT_ALLOWED`, `INVALID_EMAIL`, `INVALID_ROLE`, `DUPLICATE_IN_FILE`, `MISSING_FIELD` |
+| `reason` | Mã lỗi: `EMAIL_EXISTS`, `INVALID_EMAIL`, `INVALID_ROLE`, `DUPLICATE_IN_FILE`, `MISSING_FIELD` |
 
 ## 12. `AuthorizationDecision`
 
@@ -154,7 +157,7 @@ Phạm vi môn đến từ `ISubjectScope` (U04 cài), phạm vi lớp và ghi d
 |---|---|---|---|
 | `IAuthorization` | `authorize(actor, action, resourceRef)` | Mọi unit; tool MCP của U06 | Quyết định quyền phía server, mặc định từ chối: kiểm token, phiên `sid` còn, trạng thái `ACTIVE`, role, rồi phạm vi môn/lớp qua U04/U05 (F13) |
 | `IAccountLookup` | `findStudents(query, limit)`, `findAccounts(query, roles, limit)` (thêm mới), `findByEmails(emails)`, `getContact(accountId)`, `countByRoleAndStatus()` | U02 (email người thực hiện trên Audit Log), U04 (chọn Chủ nhiệm môn), U05 (thêm sinh viên, chọn giảng viên), U14 (địa chỉ nhận email), U15 (số đếm Admin Dashboard) | Tra thông tin liên hệ tối thiểu (email, tên hiển thị, role, trạng thái); không trả mật khẩu, số điện thoại; tối đa 20 kết quả mỗi lần tìm |
-| `IMail` | `send(MailMessage)` | U01 (OTP), U14 (email thông báo) | Gửi email qua SMTP (Brevo ở demo/production, Mailpit ở local/test) bằng `SmtpMailAdapter`, có timeout |
+| `IMail` | `send(MailMessage)` | U01 (OTP), U14 (email thông báo) | Gửi email qua `SmtpMailAdapter` (SMTP mặc định, Mailpit local/test) hoặc `BrevoApiMailAdapter` (HTTPS); chọn bằng `MAIL_TRANSPORT`, timeout hữu hạn |
 
 ### Interface U01 khai báo, unit khác cài
 
@@ -192,7 +195,7 @@ U02 và U03 cùng ở Iter 1 và được code trước hoặc song song với U
 | `PATCH /api/v1/admin/accounts/{id}` | 11 | `displayName`, `phoneNumber`, `version`; không email/role/status |
 | `PUT /api/v1/admin/accounts/{id}/role` | 11 | Đổi role theo F11 |
 | `PUT /api/v1/admin/accounts/{id}/status` | 12 | Vô hiệu hóa hoặc mở lại theo F12 |
-| `POST /api/v1/admin/accounts/imports:validate`, `imports:commit` | Luồng phụ của 09 | Kiểm rồi xác nhận nhập CSV theo F10 |
+| `POST /api/v1/admin/accounts/imports:validate`, `imports:commit` | Luồng phụ của 09 | Kiểm rồi xác nhận nhập Excel `.xlsx` theo F10; API vẫn nhận CSV UTF-8 cũ |
 
 Không có API ảnh đại diện. Cột avatar cũ nếu đã tồn tại có thể giữ tương thích, không đưa vào DTO; không tự xóa dữ liệu/schema đang có.
 

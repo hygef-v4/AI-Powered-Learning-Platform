@@ -1,6 +1,6 @@
 # U01 Account & Access — nfr-requirements
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U01 Account & Access thuộc Iter 1, người code: Người 1; phạm vi UC 01–12 giữ như U01 cũ, chỉ đổi liên kết sang các unit mới. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
@@ -16,7 +16,7 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test.
 | NFR-U01-02 | Đăng nhập, refresh, đăng xuất, hồ sơ, danh sách tài khoản: p95 ≤ 500 ms ở tải mục tiêu. Thời gian bcrypt được tính vào ngân sách này. | NFR-003 |
 | NFR-U01-03 | Yêu cầu OTP trả `Accepted` mà không chờ gửi mail; mail đi qua job U03. | NFR-003, BR-U01-92 |
 | NFR-U01-04 | Chữ ký JWT kiểm local; trước domain action kiểm current account/session authority qua server store, không trust JWT role/version cũ. Lỗi authority fail closed. | Câu N5 |
-| NFR-U01-05 | Nhập CSV 1000 dòng: bước kiểm tra xong trong ≤ 10 giây. | BR-U01-80 |
+| NFR-U01-05 | Nhập Excel 1000 dòng: bước kiểm tra xong trong ≤ 10 giây. | BR-U01-80 |
 
 ## 2. Phiên và xác thực
 
@@ -43,8 +43,8 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test.
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
-| NFR-U01-30 | Gửi mail qua Mail Port dùng SMTP. Local/test dùng Mailpit, không gửi mail thật. Demo/production dùng Brevo SMTP với SMTP login và SMTP key, cấu hình bằng biến môi trường; không dùng API key cho SMTP. | Câu N8, NFR-005 |
-| NFR-U01-31 | Kết nối SMTP có timeout; lỗi thì message retry tối đa 5 lần với backoff tăng dần qua queue retry của U03; hết lượt thì ghi log ERROR, không báo lỗi cho người dùng. | REL-003, BR-U01-92 |
+| NFR-U01-30 | Gửi mail qua U01 IMail. `MAIL_TRANSPORT=smtp` là default, local/test dùng Mailpit; SMTP production dùng SMTP login/key. `brevo-api` dùng Brevo HTTPS API và `BREVO_API_KEY` khi mạng chặn SMTP; SMTP_FROM là địa chỉ gửi chung. Không dùng API key làm SMTP key. | Câu N8, NFR-005; source delta 06/11 |
+| NFR-U01-31 | SMTP và Brevo HTTPS API có timeout; lỗi thì message retry tối đa 5 lần với backoff tăng dần qua queue retry của U03; hết lượt thì ghi log ERROR, không báo lỗi cho người dùng. | REL-003, BR-U01-92 |
 | NFR-U01-32 | Nội dung mail chỉ chứa mã OTP và thời hạn; không chứa mật khẩu, link đăng nhập hay thông tin tài khoản khác. | SEC-005 |
 
 ## 5. Khả dụng và lỗi phụ thuộc
@@ -55,14 +55,14 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test.
 | NFR-U01-41 | PostgreSQL không khả dụng: mọi thao tác ghi và đăng nhập trả lỗi an toàn. | SEC-006 |
 | NFR-U01-42 | U04 hoặc U05 không trả lời khi kiểm phạm vi: từ chối quyền. | BR-U01-93 |
 | NFR-U01-43 | Hồ sơ không gọi U03 (không có ảnh đại diện). U03 lỗi chỉ ảnh hưởng việc gửi OTP, xử lý theo NFR-U01-31. | BR-U01-52 |
-| NFR-U01-44 | Mọi lời gọi Redis, database, U03, U04, U05, SMTP có timeout hữu hạn. | NFR-003, REL-003 |
+| NFR-U01-44 | Mọi lời gọi Redis, database, U03, U04, U05, IMail có timeout hữu hạn. | NFR-003, REL-003 |
 
 ## 6. Bảo mật dữ liệu và log
 
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
 | NFR-U01-50 | Log có cấu trúc gồm timestamp, correlation ID, level, message; không chứa mật khẩu, OTP, token, số điện thoại. | SEC-005, BR-U01-91 |
-| NFR-U01-51 | Khóa ký JWT và thông tin SMTP chỉ lấy từ biến môi trường/secret store. | NFR-005 |
+| NFR-U01-51 | Khóa ký JWT, thông tin SMTP và BREVO_API_KEY chỉ lấy từ biến môi trường/secret store. | NFR-005 |
 | NFR-U01-53 | Endpoint public (đăng nhập, yêu cầu OTP, kích hoạt, đặt lại) có rate limit; mọi endpoint khác yêu cầu access token. | SEC-002, SEC-003 |
 
 ## 7. Khả năng kiểm thử và dùng được
@@ -104,3 +104,7 @@ Mã `NFR-U01-xx` để truy vết sang NFR Design và test.
 
 - Tạo/import không gửi OTP, activation hợp lệ/sai/hết hạn/rate limit; recovery không lộ account.
 - Đăng nhập/đăng xuất/phiên revoked; R1 own profile; Admin bị chặn học vụ; Student shared quota bị từ chối.
+
+## Design assessment scope — 2026-10-30
+
+Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evidence có ngày trước baseline, không chứng nhận runtime tại HEAD. Đợt này chỉ đồng bộ tài liệu; hiệu lực security/resiliency, latency/capacity và provider acceptance phải có kiểm chứng riêng. PBT vẫn disabled.

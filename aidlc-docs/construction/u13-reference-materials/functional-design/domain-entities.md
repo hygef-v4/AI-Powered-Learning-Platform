@@ -1,6 +1,9 @@
 # U13 Reference Materials — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U13 Reference Materials thuộc Iter 3, người code: Người 4; UC 58–62. Lấy phần học liệu của U05 cũ; bỏ module, Lesson, tóm tắt, embedding và RAG (phần mở rộng US-CNT-005). Thông báo lớp của U05 cũ thuộc U14. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 58, 59, 60, 61, 62. **Primary stories:** US-CNT-001, US-CNT-002; US-CNT-005 là phần mở rộng. **Requirements:** FR-004, FR-005, FR-013.
 
@@ -8,12 +11,18 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 Thiết kế độc lập công nghệ.
 
+**Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
+
 ## 1. Tổng quan
 
 | Entity | Loại | Lưu ở |
 |---|---|---|
 | `Material` | Aggregate root | `materials` |
 | `MaterialVersion` | Phiên bản tệp hoặc link | `material_versions` |
+| `MaterialModule` | Module của môn | `material_modules` |
+| `MaterialModule.QuizLink` | Liên kết Quiz duy nhất tới một module | `material_module_quizzes` |
+| `MaterialModule` | Module của môn | `material_modules` |
+| `MaterialModule.QuizLink` | Liên kết Quiz duy nhất tới một module | `material_module_quizzes` |
 
 U13 không sở hữu: tệp trên Drive (U03), Quiz (U10), Assignment (U07), thông báo lớp (U14).
 
@@ -21,7 +30,7 @@ U13 không sở hữu: tệp trên Drive (U03), Quiz (U10), Assignment (U07), th
 
 | Entity | Thuộc tính chính |
 |---|---|
-| `Material` | `id`, `scope` (`SUBJECT`, `CLASS`), `subjectId` (luôn có), `classId` (chỉ `CLASS`), `kind` (`FILE`, `YOUTUBE_LINK`), `title` (≤ 200), `description` (≤ 2.000), `orderNo`, `status` (`ACTIVE`, `ARCHIVED`), `currentVersionNo`, `createdBy`, `createdAt`, `updatedAt`, `version` |
+| `Material` | `id`, `scope` (`SUBJECT`, `CLASS`), `subjectId` (luôn có), `classId` (chỉ `CLASS`), `moduleId` (bắt buộc, FK material_modules cùng subject), `kind` (`FILE`, `YOUTUBE_LINK`), `title` (≤ 200), `description` (≤ 2.000), `descriptionDocument` (FormattedText tùy chọn), `enabled` (boolean, mặc định true, độc lập status), `orderNo`, `status` (`ACTIVE`, `ARCHIVED`), `currentVersionNo`, `createdBy`, `createdAt`, `updatedAt`, `version` |
 | `MaterialVersion` | `materialId`, `versionNo` (khóa cùng `materialId`), `fileId`, `fileName`, `mimeType`, `byteSize` (với `FILE`), `videoUrl`, `videoId` (với `YOUTUBE_LINK`), `textStatus` (`PENDING`, `EXTRACTED`, `NO_TEXT`, `FAILED`; chỉ `FILE`), `extractedText` (≤ 1.000.000 ký tự), `createdBy`, `createdAt` |
 
 ```mermaid
@@ -31,7 +40,7 @@ stateDiagram-v2
     ACTIVE --> ARCHIVED: Xóa (lưu trữ)
 ```
 
-**Text alternative**: Tài liệu tạo ra ở `ACTIVE` với phiên bản 1. Sửa tiêu đề, mô tả, thứ tự không đổi phiên bản; thay tệp hoặc link tạo phiên bản mới và giữ phiên bản cũ. Xóa chuyển `ARCHIVED`: ẩn với người học, tham chiếu cũ vẫn đọc được.
+**Text alternative**: Tài liệu tạo ra ở `ACTIVE` với phiên bản 1. Sửa tiêu đề, mô tả, thứ tự không đổi phiên bản; thay tệp hoặc link tạo phiên bản mới và giữ phiên bản cũ. Xóa chuyển `ARCHIVED`: ẩn với người học và khỏi danh sách module Đang dùng; staff còn quyền hiện hành vẫn xem/tải tham chiếu và phiên bản cũ. Không cho sửa hoặc chọn làm nguồn AI mới.
 
 ## 3. Contract
 
@@ -49,7 +58,6 @@ stateDiagram-v2
 
 | Contract | Unit cài | Dùng để |
 |---|---|---|
-| Slot frontend `LearningMaterialSection` | U11 | Danh sách Quiz gắn tài liệu kèm nút Làm Quiz trên Learning Material |
 
 ### Interface U13 dùng
 
@@ -70,3 +78,27 @@ stateDiagram-v2
 | `PUT /api/v1/subjects/{subjectId}/materials:reorder`, `PUT /api/v1/classes/{classId}/materials:reorder` | 58, 60 (kéo sắp thứ tự) |
 | `GET`, `PATCH /api/v1/materials/{id}`; `POST .../versions`; `POST .../archive` | 58–61 |
 | `GET /api/v1/me/classes/{classId}/materials` (lọc được theo `ids`); `GET /api/v1/materials/{id}/view`; `POST .../download-token` | 62 |
+
+## Source behavior delta — 2026-10-30
+
+Module cơ bản của môn đã triển khai. Học liệu môn/lớp bắt buộc moduleId cùng môn; dữ liệu cũ backfill Module 1. Manager quản lý module; class viewers đọc theo scope. Quiz nằm tối đa một module, attach khác module chuyển link; phải kiểm quyền với Quiz. Delete chặn active materials; archived materials chuyển sang module khác, không xóa module cuối nếu cần giữ chúng. Version/reorder kiểm server; module không đồng nghĩa Lesson/RAG.
+
+[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.
+
+## Module entity schema — 2026-10-30
+
+| Entity | Fields and constraints |
+|---|---|
+| MaterialModule | id UUID PK; subjectId FK subjects; title nonblank max200; orderNo >=0; createdBy FK accounts; createdAt, updatedAt (>=createdAt); version >=0 |
+| MaterialModule.QuizLink | Java projection moduleId, quizId, orderNo; DB composite PK(module_id,quiz_id), unique quiz_id, FK module ON DELETE CASCADE and FK quizzes. DB created_at records link creation. |
+| Material.moduleId | Nonnull FK material_modules; service validates same subject; old records backfilled Module1 by migration 29/10 |
+
+Module data and Quiz visibility are distinct from the Quiz aggregate owned by U10; U13 does not own questions/attempts. No Lesson/embedding/RAG entities are implied.
+
+## Delta học liệu — 2026-11-09
+
+`enabled=false` (UI Tắt) không đổi ACTIVE/ARCHIVED hoặc xóa lịch sử. Sinh viên không thấy/mở/tải học liệu đã tắt; kiểm lại quyền cả khi đổi token tải đã cấp thành nội dung. Staff còn quyền vẫn quản lý/bật lại; học liệu tắt không được chọn/trích làm nguồn AI mới.
+
+`descriptionDocument` dùng shared FormattedText: block PARAGRAPH/UL/OL, align LEFT/CENTER/RIGHT/JUSTIFY, indent 0–6, runs text/bold/italic/underline; không nhận HTML. Tối đa 100 block, 200 run/block, 1.000 run tổng; plain description tối đa 2.000 ký tự. Document là nguồn plain text khi được gửi; cập nhật plain text cũ không đổi nội dung sau trim giữ format hiện có. Bỏ field enabled khi cập nhật giữ trạng thái trước đó.
+
+Migration `materials/V20261109_2200__material_visibility_and_formatted_description.sql` thêm enabled mặc định true, description_document JSONB nullable và index file_id của material_versions. Material/version adapter chuyển JDBC, xóa MaterialRow/MaterialVersionRow; module repository còn JPA. [Kiểm chứng và giới hạn](../../build-and-test/2026-11-09-material-quiz-ui-results.md).

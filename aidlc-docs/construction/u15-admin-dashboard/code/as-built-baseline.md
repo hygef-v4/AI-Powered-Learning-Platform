@@ -1,0 +1,37 @@
+# U15 Admin Dashboard — AS-BUILT source snapshot 2026-11-07
+
+**Convention delta 2026-11-05:** internal actions use `loadDashboard`, `loadActivity`, `listBackups`, `requireNonNegativeCount` and `validateBackupSummary`; dependencies identify actual services/contracts. Frontend API uses load/list verbs; chart components live in `DashboardCharts.tsx`. All callers/imports/tests are updated. Public routes, response data, source deadlines, stale-data/denial behavior and MCP provider contracts remain unchanged. [Naming verification and exceptions](../../build-and-test/2026-11-05-u05-u09-u15-conventions-results.md).
+
+**Follow-up delta 2026-11-05:** independent frontend sources render counts without waiting for activity/usage/history. Each request has a five-second deadline and linked cancellation; optional cards distinguish pending from unavailable. Thirty-second visible-tab refresh, stale-primary behavior and denial clearing remain. Backend fan-out/contracts are unchanged. [Current verification and limits](../../build-and-test/2026-11-05-u05-u09-u15-followup-results.md); older dated evidence below remains historical.
+
+Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths are catalogued in [current-code-baseline](../../../inception/reverse-engineering/current-code-baseline.md). Dated deltas/test results below retain their original scope; this update is not runtime acceptance.
+
+Admin Dashboard có counts, backup metadata/history và GET /activity. Activity gồm biến động ACTIVE accounts hôm nay, số Assignment 7 ngày (individual/group/practice), tối đa 50 security events trong 30 ngày; ngày Asia/Ho_Chi_Minh. Các nguồn lỗi/timeout trả từng Section UNAVAILABLE/data null; no-store, chỉ ADMIN, query lạ bị từ chối. Không lộ archive/secrets hoặc cấp quyền học vụ.
+
+## Source và negative-test inventory
+
+| Source | Trách nhiệm |
+|---|---|
+| [admindashboard/controller](../../../../backend/src/main/java/edu/aiplatform/admindashboard/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [admindashboard/service](../../../../backend/src/main/java/edu/aiplatform/admindashboard/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [admindashboard/dto](../../../../backend/src/main/java/edu/aiplatform/admindashboard/dto) | Kiểu dữ liệu request/response riêng. |
+| [admindashboard/integration](../../../../backend/src/main/java/edu/aiplatform/admindashboard/integration) | Adapter hạ tầng/provider, listener và sender. |
+
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [admindashboard](../../../../frontend/src/features/admindashboard) | [api](../../../../frontend/src/features/admindashboard/api) | [model](../../../../frontend/src/features/admindashboard/model) | [pages](../../../../frontend/src/features/admindashboard/pages) | [components](../../../../frontend/src/features/admindashboard/components) | [hooks](../../../../frontend/src/features/admindashboard/hooks) | — | [tests](../../../../frontend/tests/features/admindashboard) |
+
+Tests: [admindashboard](../../../../backend/src/test/java/edu/aiplatform/admindashboard).
+
+[Controller, migration and individual test inventory](../../../inception/reverse-engineering/current-code-baseline.md).
+
+## Evidence và giới hạn
+
+Kiểm tra của đợt refactor được ghi trong [refactor results](../../build-and-test/2026-10-30-package-moves-only-results.md). Những báo cáo có ngày trước đó là bằng chứng lịch sử. Có source/test không đồng nghĩa test pass hoặc runtime/provider healthy. Negative cases cần kiểm trong test nguồn: actor sai role/scope, không có dữ liệu, stale version, unavailable provider; chi tiết thật theo assertions của từng file test.
+
+### Ghi nhận kiểm thử trước baseline
+
+- [aidlc-docs/construction/build-and-test/2026-10-25-u05-u15-audit-report.md](../../build-and-test/2026-10-25-u05-u15-audit-report.md)
+- [aidlc-docs/construction/build-and-test/2026-10-25-u05-u15-manual-test-guide.md](../../build-and-test/2026-10-25-u05-u15-manual-test-guide.md)
+- [aidlc-docs/construction/build-and-test/2026-10-26-u05-u15-followup-report.md](../../build-and-test/2026-10-26-u05-u15-followup-report.md)
+- [aidlc-docs/construction/build-and-test/u15-verification.md](../../build-and-test/u15-verification.md)

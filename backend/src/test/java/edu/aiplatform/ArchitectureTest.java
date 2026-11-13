@@ -14,31 +14,38 @@ import com.tngtech.archunit.lang.SimpleConditionEvent;
 import java.util.Map;
 
 /** Quy tắc khung: tên interface, ranh giới unit. */
-@AnalyzeClasses(packages = "edu.aiplatform",
-        importOptions = {ImportOption.DoNotIncludeTests.class, ImportOption.DoNotIncludePackageInfos.class})
+@AnalyzeClasses(packages = "edu.aiplatform", importOptions = { ImportOption.DoNotIncludeTests.class,
+        ImportOption.DoNotIncludePackageInfos.class })
 class ArchitectureTest {
 
     /** Package → số unit; package cùng số là cùng một unit. */
-    static final Map<String, Integer> UNIT_OF_PACKAGE = Map.ofEntries(
-            Map.entry("identity", 1), Map.entry("audit", 2),
-            Map.entry("files", 3), Map.entry("jobs", 3), Map.entry("settings", 3), Map.entry("backup", 3),
-            Map.entry("subjects", 4), Map.entry("academics", 5), Map.entry("ai", 6),
-            Map.entry("assignments", 7), Map.entry("assignmentwork", 8), Map.entry("grading", 9),
-            Map.entry("quizzes", 10), Map.entry("quizpractice", 11),
-            Map.entry("groups", 12), Map.entry("groupdocs", 12), Map.entry("materials", 13),
-            Map.entry("announcements", 14), Map.entry("notifications", 14), Map.entry("admindashboard", 15));
+    static final Map<String, Integer> UNIT_OF_PACKAGE = Map.ofEntries(Map.entry("identity", 1),
+            Map.entry("audit", 2), Map.entry("files", 3), Map.entry("jobs", 3),
+            Map.entry("settings", 3), Map.entry("backup", 3), Map.entry("subjects", 4),
+            Map.entry("academics", 5), Map.entry("ai", 6), Map.entry("assignments", 7),
+            Map.entry("assignmentwork", 8), Map.entry("grading", 9), Map.entry("quizzes", 10),
+            Map.entry("quizpractice", 11), Map.entry("groups", 12), Map.entry("groupdocs", 12),
+            Map.entry("materials", 13), Map.entry("announcements", 14),
+            Map.entry("notifications", 14), Map.entry("admindashboard", 15));
 
     @ArchTest
-    static final ArchRule interfaces_are_named_with_I_prefix = classes()
-            .that().areInterfaces().and().areNotAnnotations()
-            .should().haveNameMatching(".*[.$]I[A-Z][A-Za-z0-9]*")
+    static final ArchRule academics_and_grading_use_jdbc = classes().that()
+            .resideInAnyPackage("edu.aiplatform.academics..", "edu.aiplatform.grading..").should()
+            .onlyDependOnClassesThat()
+            .resideOutsideOfPackages("jakarta.persistence..", "org.springframework.data.jpa..",
+                    "org.hibernate..")
+            .because("U05/U09 persist through Spring JDBC under the project-wide JDBC decision");
+
+    @ArchTest
+    static final ArchRule interfaces_are_named_with_I_prefix = classes().that().areInterfaces()
+            .and().areNotAnnotations().should().haveNameMatching(".*[.$]I[A-Z][A-Za-z0-9]*")
             .because("interface đặt tên dạng Ixxx, không dùng đuôi Port");
 
     @ArchTest
-    static final ArchRule unit_internals_are_private = classes()
-            .that().resideInAnyPackage("..application..", "..domain..", "..infrastructure..", "..web..")
-            .should(onlyBeAccessedFromTheSameUnit())
-            .allowEmptyShould(true)
+    static final ArchRule unit_internals_are_private = classes().that()
+            .resideInAnyPackage("..service..", "..model..", "..repository..", "..dto..",
+                    "..config..", "..integration..", "..controller..")
+            .should(onlyBeAccessedFromTheSameUnit()).allowEmptyShould(true)
             .because("unit khác chỉ dùng package contract");
 
     static Integer unitOf(JavaClass javaClass) {
@@ -60,7 +67,8 @@ class ArchitectureTest {
                 for (Dependency dependency : item.getDirectDependenciesToSelf()) {
                     Integer origin = unitOf(dependency.getOriginClass());
                     if (origin != null && !origin.equals(unit)) {
-                        events.add(SimpleConditionEvent.violated(dependency, dependency.getDescription()));
+                        events.add(SimpleConditionEvent.violated(dependency,
+                                dependency.getDescription()));
                     }
                 }
             }

@@ -5,7 +5,8 @@ import { Button, cx } from "@/shared/ui";
 
 export const DRAWIO_ORIGIN = "https://embed.diagrams.net";
 const DRAWIO_URL = `${DRAWIO_ORIGIN}/?embed=1&ui=min&spin=1&proto=json&saveAndExit=1&noExitBtn=0&lang=vi`;
-const MIN_WIDTH = 360;
+/** Cột Draw.io mở ra bằng nửa màn hình, kéo được trong khoảng 1/3 tới 2/3 bề ngang (yêu cầu 2026-11-04). */
+const clampWidth = (value: number) => Math.round(Math.min(window.innerWidth * 2 / 3, Math.max(window.innerWidth / 3, value)));
 
 type Props = {
   xml: string;
@@ -45,7 +46,7 @@ export function DiagramEditor({ xml, title, onSave, onClose }: Props) {
   const frame = useRef<HTMLIFrameElement>(null);
   const pending = useRef<string | null>(null);
   const [ready, setReady] = useState(false);
-  const [width, setWidth] = useState(() => (typeof window === "undefined" ? 800 : Math.round(window.innerWidth * 0.6)));
+  const [width, setWidth] = useState(() => (typeof window === "undefined" ? 800 : Math.round(window.innerWidth / 2)));
   const [dragging, setDragging] = useState(false);
   const handlers = useRef({ onSave, onClose, xml });
   useEffect(() => {
@@ -63,11 +64,17 @@ export function DiagramEditor({ xml, title, onSave, onClose }: Props) {
   useEffect(() => {
     document.documentElement.style.setProperty("--drawio-panel-width", `${width}px`);
   }, [width]);
+  // Đổi cỡ cửa sổ thì giữ độ rộng trong khoảng 1/3–2/3.
+  useEffect(() => {
+    const fit = () => setWidth((current) => clampWidth(current));
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, []);
 
   // Kéo mép trái để đổi độ rộng; lớp phủ trong lúc kéo để iframe không nuốt sự kiện chuột.
   useEffect(() => {
     if (!dragging) return;
-    const move = (event: MouseEvent) => setWidth(Math.round(Math.max(MIN_WIDTH, Math.min(window.innerWidth - event.clientX, window.innerWidth * 0.9))));
+    const move = (event: MouseEvent) => setWidth(clampWidth(window.innerWidth - event.clientX));
     const up = () => setDragging(false);
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseup", up);
@@ -112,7 +119,7 @@ export function DiagramEditor({ xml, title, onSave, onClose }: Props) {
     <>
       {dragging && <div aria-hidden className="fixed inset-0 z-[59] cursor-col-resize" />}
       <aside role="dialog" aria-label={title} data-testid="drawio-panel" style={{ width }}
-        className="fixed inset-y-0 right-0 z-[60] flex animate-[drawio-slide-in_0.25s_ease] flex-col overflow-hidden border-l-2 border-line bg-white shadow-[-4px_0_24px_rgba(0,0,0,0.18)]">
+        className="fixed inset-y-0 right-0 z-[60] flex animate-[drawio-slide-in_0.25s_ease] flex-col overflow-hidden border-l-2 border-line bg-surface shadow-[-4px_0_24px_rgba(0,0,0,0.18)]">
         <div role="separator" aria-orientation="vertical" aria-label="Kéo để đổi độ rộng" title="Kéo để đổi độ rộng"
           onMouseDown={(event) => { event.preventDefault(); setDragging(true); }}
           className={cx("group absolute inset-y-0 left-0 z-[61] flex w-3.5 cursor-col-resize items-center justify-center hover:bg-primary/10",
@@ -130,7 +137,7 @@ export function DiagramEditor({ xml, title, onSave, onClose }: Props) {
         </div>
         <div className="relative min-h-0 flex-1">
           {/* embed.diagrams.net trả 403 khi Referer là localhost; không gửi Referer (cũng không lộ URL trang). */}
-          <iframe ref={frame} src={DRAWIO_URL} title={title} referrerPolicy="no-referrer" className="absolute inset-0 size-full border-0 bg-white" />
+          <iframe ref={frame} src={DRAWIO_URL} title={title} referrerPolicy="no-referrer" className="absolute inset-0 size-full border-0 bg-surface" />
         </div>
       </aside>
     </>

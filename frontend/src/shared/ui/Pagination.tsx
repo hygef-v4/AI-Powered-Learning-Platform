@@ -12,6 +12,8 @@ type Props = {
   itemLabel?: string;
   /** Chữ thêm sau dòng hiển thị, ví dụ "50 dòng mỗi trang". */
   note?: ReactNode;
+  /** false: ẩn dòng "Hiển thị a–b trong N", chỉ còn nút chuyển trang. */
+  summary?: boolean;
   testId?: string;
 };
 
@@ -34,10 +36,12 @@ export function pageItems(current: number, count: number): (number | "gap")[] {
   return items;
 }
 
-const BOX = "inline-flex h-[30px] min-w-[30px] items-center justify-center rounded-lg px-2 text-xs font-semibold";
+const BOX =
+  "inline-flex h-[30px] min-w-[30px] items-center justify-center rounded-lg px-2 text-xs font-semibold transition-colors duration-200 " +
+  "pointer-coarse:h-11 pointer-coarse:min-w-11";
 
 /** Dòng "Hiển thị a–b trong N …" và nút chuyển trang, theo design. */
-export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "bản ghi", note, testId = "pagination" }: Props) {
+export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "bản ghi", note, summary: showSummary = true, testId = "pagination" }: Props) {
   const count = Math.max(1, Math.ceil(total / pageSize));
   const from = total === 0 ? 0 : page * pageSize + 1;
   const to = Math.min(total, (page + 1) * pageSize);
@@ -45,26 +49,28 @@ export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "b
     total === 0 ? `Không có ${itemLabel}` : `Hiển thị ${NUMBER.format(from)}–${NUMBER.format(to)} trong ${NUMBER.format(total)} ${itemLabel}`;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3" data-testid={testId}>
-      <p className="text-xs text-muted">
-        {summary}
-        {note && <> · {note}</>}
-      </p>
+    <div className={cx("flex flex-wrap items-center gap-3", showSummary ? "justify-between" : "justify-center")} data-testid={testId}>
+      {showSummary && (
+        <p className="text-[12.5px] text-muted">
+          {summary}
+          {note && <> · {note}</>}
+        </p>
+      )}
       {count > 1 && (
-        <nav aria-label="Phân trang" className="flex items-center gap-1.5">
+        <nav aria-label="Phân trang" className="flex max-w-full flex-wrap items-center justify-center gap-1.5">
           <button
             type="button"
             aria-label="Trang trước"
             disabled={page === 0}
             onClick={() => onPageChange(page - 1)}
-            className={cx(BOX, "border border-line-strong bg-white text-body disabled:cursor-not-allowed disabled:opacity-45")}
+            className={cx(BOX, "text-body hover:bg-sunken disabled:cursor-not-allowed disabled:opacity-35")}
             data-testid={`${testId}-prev-button`}
           >
             <Icon name="chevron_left" size={16} />
           </button>
           {pageItems(page, count).map((item, i) =>
             item === "gap" ? (
-              <span key={`gap-${i}`} className={cx(BOX, "border border-line-strong bg-white text-muted")} aria-hidden>
+              <span key={`gap-${i}`} className={cx(BOX, "text-muted")} aria-hidden>
                 …
               </span>
             ) : (
@@ -73,7 +79,7 @@ export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "b
                 type="button"
                 aria-current={item === page ? "page" : undefined}
                 onClick={() => onPageChange(item)}
-                className={cx(BOX, item === page ? "bg-primary text-white" : "border border-line-strong bg-white text-body hover:bg-shell")}
+                className={cx(BOX, item === page ? "bg-primary-soft font-mono text-ink" : "font-mono text-muted hover:bg-sunken hover:text-ink")}
                 data-testid={`${testId}-page-${item + 1}-button`}
               >
                 {item + 1}
@@ -85,7 +91,7 @@ export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "b
             aria-label="Trang sau"
             disabled={page >= count - 1}
             onClick={() => onPageChange(page + 1)}
-            className={cx(BOX, "border border-line-strong bg-white text-body disabled:cursor-not-allowed disabled:opacity-45")}
+            className={cx(BOX, "text-body hover:bg-sunken disabled:cursor-not-allowed disabled:opacity-35")}
             data-testid={`${testId}-next-button`}
           >
             <Icon name="chevron_right" size={16} />

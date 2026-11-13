@@ -1,37 +1,217 @@
-# Public contracts — 2026-10-13
+# Public contract types — source snapshot 2026-11-07
 
-> Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime hoặc phê duyệt các quyết định còn mở.
+Source: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`. Canonical signatures are in these top-level contract interfaces/DTOs/enums; fallback implementations under contract/stub are not public contract declarations. HTTP mappings: [api-inventory.md](../reverse-engineering/api-inventory.md). Source inventory is not a claim of complete runtime acceptance.
 
-Đây là chữ ký logical đề xuất cho Inception; không khẳng định contracts/code hiện có đã cập nhật. Các API hiện hành không mâu thuẫn vẫn cần review downstream.
+## U01 Account & Access
 
-| Owner | Contract responsibilities |
-|---|---|
-| U01 | authenticate/activate/logout/reset/changePassword; account CRUD/status; authorize(actor, action, target) |
-| U02 | recordAudit; queryAudit(admin, filters) append-only |
-| U03 | file store/download scoped; jobs enqueue-after-commit/retry; typed Settings version/audit; viewSettings (UC14) / editSetting (UC15) delegate quota via U07 and institutional AI configuration via U13 public ports; runScheduledBackup/listBackupStatus; publishBackupFailure |
-| U04 | subject/class CRUD and assignments/enrollment; academicScope check; count summaries |
-| U05 | attach/list/download references; announcements; optional Lesson extension |
-| U06 | rubric CRUD/validate/lock/snapshot; MCQ bank version/select |
-| U07 | reserveTeacherQuota(actor, connection, model, requestRef, estimate); reconcileUsage; markUsageUnknown; listOwnUsage; getTeacherQuotaPolicy/setTeacherQuota(admin, policy, version) (read UC14 / update UC15; owner U07) |
-| U08 | createAssignment(actor, submissionMode, diagramEnabled); createQuiz; review/publish/retire/version/copy |
-| U09 | document skeleton/editor/import/export; validate diagramEnabled/XML; Quiz questions/config; versioned activityMonitoringPolicy |
-| U11 | start/save/submit individual/Quiz; requestFeedback(actor, contentVersion, connectionRef); feedbackHistory; recordActivityEvent/queryScopedActivity (individual/Quiz/group) |
-| U12 | groups/membership/leader/allocation |
-| U13 | managePersonalConnection; manageSharedConnection(admin); testSyntheticConnection; revoke; requestAi(task, scopedContext, connectionRef); create/revokeMcpCredential; scoped MCP tools |
-| U14 | claim/save group section; group context policy; leader submit/version; record own member activity through U11 port |
-| U15 | proposal validation; manual evaluation; finalize/publish/history/gradebook; reviewWorkActivity(authorizedTeacher, attempt/member) within UC 42 via U11 IActivityQuery |
-| U16 | notifications/email/reminders; aggregates/gradebook export via ports; dashboardBackupStatus (UC 66) via U03 IBackupStatus; idempotent importantAnnouncement/backupFailure email |
+- [AccountContact.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/AccountContact.java)
+- [AccountStatus.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/AccountStatus.java)
+- [Actions.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/Actions.java)
+- [Actor.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/Actor.java)
+- [AuthorizationDecision.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/AuthorizationDecision.java)
+- [backend/src/main/java/edu/aiplatform/identity/contract/IAccountLookup.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/IAccountLookup.java)
+- [backend/src/main/java/edu/aiplatform/identity/contract/IAuthorization.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/IAuthorization.java)
+- [backend/src/main/java/edu/aiplatform/identity/contract/IClassScope.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/IClassScope.java)
+- [backend/src/main/java/edu/aiplatform/identity/contract/IMail.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/IMail.java)
+- [backend/src/main/java/edu/aiplatform/identity/contract/ISubjectScope.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/ISubjectScope.java)
+- [MailMessage.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/MailMessage.java)
+- [ResourceRef.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/ResourceRef.java)
+- [Role.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/Role.java)
+- [ScopeKind.java](../../../backend/src/main/java/edu/aiplatform/identity/contract/ScopeKind.java)
 
-MCP tools minimum: read_assignment_context, read_authorized_material, read_own_work, read_authorized_submission (assigned educator only), save_assignment_draft(expectedVersion), record_private_feedback, record_grading_proposal. Names/spec schema cần chốt Construction. Không submit official hoặc publish_grade tool giai đoạn đầu. Token số liệu do agent gửi chỉ reported.
+## U02 Audit
 
-## UC consolidation — 66 active UC
+- [AuditEvent.java](../../../backend/src/main/java/edu/aiplatform/audit/contract/AuditEvent.java)
+- [AuditFilter.java](../../../backend/src/main/java/edu/aiplatform/audit/contract/AuditFilter.java)
+- [AuditLogView.java](../../../backend/src/main/java/edu/aiplatform/audit/contract/AuditLogView.java)
+- [AuditResult.java](../../../backend/src/main/java/edu/aiplatform/audit/contract/AuditResult.java)
+- [backend/src/main/java/edu/aiplatform/audit/contract/IAudit.java](../../../backend/src/main/java/edu/aiplatform/audit/contract/IAudit.java)
+- [backend/src/main/java/edu/aiplatform/audit/contract/IAuditQuery.java](../../../backend/src/main/java/edu/aiplatform/audit/contract/IAuditQuery.java)
+- [backend/src/main/java/edu/aiplatform/audit/contract/IAuditStats.java](../../../backend/src/main/java/edu/aiplatform/audit/contract/IAuditStats.java)
 
-UC 14 View Settings và UC 15 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U07 giữ quota service/data; U13 giữ connection/provider/credentials bảo vệ và test synthetic qua public port. UC 76/78/82 (ID cũ) không còn độc lập. UC 66 gộp UC 80 (ID cũ) (U16 dashboard, U03 backup); UC 42 gộp UC 81 (ID cũ) (U15 review, U11/U14 activity). UC 35 soạn Individual, UC 53 soạn Group (U09); Draw.io tùy chọn trong UC 39/56, UC 26 (ID cũ) retired. UC 79 (ID cũ) retired; UC 41 chỉ feedback Assignment Practice đã nộp. 50 MVP + 1 extension story, 15 units; không tự phê duyệt D01–D04 hoặc runtime.
+## U03 Job and Settings
 
-## Current public contract clarifications
+- [BackupDashboardRunView.java](../../../backend/src/main/java/edu/aiplatform/backup/contract/BackupDashboardRunView.java)
+- [BackupDashboardSummary.java](../../../backend/src/main/java/edu/aiplatform/backup/contract/BackupDashboardSummary.java)
+- [BackupRunView.java](../../../backend/src/main/java/edu/aiplatform/backup/contract/BackupRunView.java)
+- [BackupState.java](../../../backend/src/main/java/edu/aiplatform/backup/contract/BackupState.java)
+- [backend/src/main/java/edu/aiplatform/backup/contract/IBackupDashboardStatus.java](../../../backend/src/main/java/edu/aiplatform/backup/contract/IBackupDashboardStatus.java)
+- [backend/src/main/java/edu/aiplatform/backup/contract/IBackupStatus.java](../../../backend/src/main/java/edu/aiplatform/backup/contract/IBackupStatus.java)
+- [ArtifactPurpose.java](../../../backend/src/main/java/edu/aiplatform/files/contract/ArtifactPurpose.java)
+- [DownloadToken.java](../../../backend/src/main/java/edu/aiplatform/files/contract/DownloadToken.java)
+- [FileRef.java](../../../backend/src/main/java/edu/aiplatform/files/contract/FileRef.java)
+- [FileUpload.java](../../../backend/src/main/java/edu/aiplatform/files/contract/FileUpload.java)
+- [backend/src/main/java/edu/aiplatform/files/contract/IArtifact.java](../../../backend/src/main/java/edu/aiplatform/files/contract/IArtifact.java)
+- [StoredFileInfo.java](../../../backend/src/main/java/edu/aiplatform/files/contract/StoredFileInfo.java)
+- [DomainEvent.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/DomainEvent.java)
+- [EventTypes.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/EventTypes.java)
+- [backend/src/main/java/edu/aiplatform/jobs/contract/IEventPublisher.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/IEventPublisher.java)
+- [backend/src/main/java/edu/aiplatform/jobs/contract/IJob.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/IJob.java)
+- [backend/src/main/java/edu/aiplatform/jobs/contract/IJobHandler.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/IJobHandler.java)
+- [backend/src/main/java/edu/aiplatform/jobs/contract/IPendingSweeper.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/IPendingSweeper.java)
+- [backend/src/main/java/edu/aiplatform/jobs/contract/IScheduledScanner.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/IScheduledScanner.java)
+- [JobMessage.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/JobMessage.java)
+- [JobQueue.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/JobQueue.java)
+- [JobTypes.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/JobTypes.java)
+- [PendingJob.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/PendingJob.java)
+- [RetryableJobException.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/RetryableJobException.java)
+- [SafeJobErrors.java](../../../backend/src/main/java/edu/aiplatform/jobs/contract/SafeJobErrors.java)
+- [backend/src/main/java/edu/aiplatform/settings/contract/ISettings.java](../../../backend/src/main/java/edu/aiplatform/settings/contract/ISettings.java)
+- [backend/src/main/java/edu/aiplatform/settings/contract/ISettingsSectionProvider.java](../../../backend/src/main/java/edu/aiplatform/settings/contract/ISettingsSectionProvider.java)
+- [SettingDefinition.java](../../../backend/src/main/java/edu/aiplatform/settings/contract/SettingDefinition.java)
+- [SettingGroup.java](../../../backend/src/main/java/edu/aiplatform/settings/contract/SettingGroup.java)
+- [SettingKey.java](../../../backend/src/main/java/edu/aiplatform/settings/contract/SettingKey.java)
+- [SettingType.java](../../../backend/src/main/java/edu/aiplatform/settings/contract/SettingType.java)
 
-- U03 viewSettings(UC14) / editSetting(UC15) authorize Admin; read masked institutional config and delegate mutations/testing/revocation to U13 IAiConnectionAdministration. Public contracts allow unavailable adapters without hard dependency cycles.
-- IAiConnectionAdministration U13: getMaskedInstitutionalConfiguration(adminActor), updateInstitutionalConfiguration(adminActor, provider/model, secretInput, expectedVersion), testInstitutionalConnection(adminActor, syntheticRequest), revokeInstitutionalConnection(adminActor, connectionRef, expectedVersion). No raw/ciphertext key readback; each operation validates and audits at its owner.
-- U07 ITeacherQuotaPolicy provides separate read/update quota semantics. U03 does not write U07/U13 repositories or promise atomic multi-owner edits.
-- record_private_feedback requires owned SUBMITTED PRACTICE Assignment and immutable submissionVersion, before saving incoming MCP results. Draft saves remain editing operations; they cannot bypass feedback restrictions.
-- U05 material commands support FILE and YOUTUBE_LINK. Links are validated reference URLs/title/version with current subject/class scope; no mandatory captions/download/LLM processing.
+## U04 Subject Administration
+
+- [backend/src/main/java/edu/aiplatform/subjects/contract/ISubjectClasses.java](../../../backend/src/main/java/edu/aiplatform/subjects/contract/ISubjectClasses.java)
+- [backend/src/main/java/edu/aiplatform/subjects/contract/ISubjectMutationGuard.java](../../../backend/src/main/java/edu/aiplatform/subjects/contract/ISubjectMutationGuard.java)
+- [backend/src/main/java/edu/aiplatform/subjects/contract/ISubjectQuery.java](../../../backend/src/main/java/edu/aiplatform/subjects/contract/ISubjectQuery.java)
+- [SubjectClassSummary.java](../../../backend/src/main/java/edu/aiplatform/subjects/contract/SubjectClassSummary.java)
+- [SubjectRef.java](../../../backend/src/main/java/edu/aiplatform/subjects/contract/SubjectRef.java)
+- [SubjectStatus.java](../../../backend/src/main/java/edu/aiplatform/subjects/contract/SubjectStatus.java)
+
+## U05 Class & Enrollment
+
+- [ClassRef.java](../../../backend/src/main/java/edu/aiplatform/academics/contract/ClassRef.java)
+- [ClassStatus.java](../../../backend/src/main/java/edu/aiplatform/academics/contract/ClassStatus.java)
+- [backend/src/main/java/edu/aiplatform/academics/contract/IClassAccess.java](../../../backend/src/main/java/edu/aiplatform/academics/contract/IClassAccess.java)
+
+## U06 AI Connections
+
+- [AiGradingLimits.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiGradingLimits.java)
+- [AiPrompt.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiPrompt.java)
+- [AiProvider.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiProvider.java)
+- [AiSource.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiSource.java)
+- [AiSourceChoice.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiSourceChoice.java)
+- [AiTaskFailure.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiTaskFailure.java)
+- [AiTaskRequest.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiTaskRequest.java)
+- [AiTaskResult.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiTaskResult.java)
+- [AiTaskState.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiTaskState.java)
+- [AiTaskView.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiTaskView.java)
+- [AiTokenEstimate.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiTokenEstimate.java)
+- [AiUsageSummary.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AiUsageSummary.java)
+- [ApplyOutcome.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/ApplyOutcome.java)
+- [AssignmentSourceFile.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AssignmentSourceFile.java)
+- [AssignmentSourceText.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/AssignmentSourceText.java)
+- [backend/src/main/java/edu/aiplatform/ai/contract/IAiTask.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/IAiTask.java)
+- [backend/src/main/java/edu/aiplatform/ai/contract/IAiTaskResultHandler.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/IAiTaskResultHandler.java)
+- [backend/src/main/java/edu/aiplatform/ai/contract/IAssignmentSourceTextExtractor.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/IAssignmentSourceTextExtractor.java)
+- [backend/src/main/java/edu/aiplatform/ai/contract/IMcpToolProvider.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/IMcpToolProvider.java)
+- [backend/src/main/java/edu/aiplatform/ai/contract/IMcpWriteRequest.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/IMcpWriteRequest.java)
+- [backend/src/main/java/edu/aiplatform/ai/contract/IReferenceMaterial.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/IReferenceMaterial.java)
+- [MaterialText.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/MaterialText.java)
+- [McpFingerprint.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/McpFingerprint.java)
+- [McpInput.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/McpInput.java)
+- [McpSchemas.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/McpSchemas.java)
+- [McpToolDefinition.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/McpToolDefinition.java)
+- [McpToolKind.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/McpToolKind.java)
+- [McpToolResult.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/McpToolResult.java)
+- [SelectableMaterial.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/SelectableMaterial.java)
+- [UsageMeasurement.java](../../../backend/src/main/java/edu/aiplatform/ai/contract/UsageMeasurement.java)
+
+## U07 Assignment Authoring
+
+- [AssignmentContent.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/AssignmentContent.java)
+- [AssignmentDayCount.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/AssignmentDayCount.java)
+- [AssignmentScope.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/AssignmentScope.java)
+- [AssignmentStatus.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/AssignmentStatus.java)
+- [AssignmentView.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/AssignmentView.java)
+- [BlockOrigin.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/BlockOrigin.java)
+- [BlockType.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/BlockType.java)
+- [CriterionKind.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/CriterionKind.java)
+- [DiagramType.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/DiagramType.java)
+- [DocumentBlock.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/DocumentBlock.java)
+- [DocumentFiles.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/DocumentFiles.java)
+- [DocumentModel.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/DocumentModel.java)
+- [DocumentPart.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/DocumentPart.java)
+- [DocxImportPreview.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/DocxImportPreview.java)
+- [GradingMode.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/GradingMode.java)
+- [backend/src/main/java/edu/aiplatform/assignments/contract/IAssignmentLifecycleListener.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/IAssignmentLifecycleListener.java)
+- [backend/src/main/java/edu/aiplatform/assignments/contract/IAssignmentQuery.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/IAssignmentQuery.java)
+- [backend/src/main/java/edu/aiplatform/assignments/contract/IDiagramLinker.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/IDiagramLinker.java)
+- [backend/src/main/java/edu/aiplatform/assignments/contract/IDiagramResolver.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/IDiagramResolver.java)
+- [backend/src/main/java/edu/aiplatform/assignments/contract/IDocumentModel.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/IDocumentModel.java)
+- [backend/src/main/java/edu/aiplatform/assignments/contract/IDocx.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/IDocx.java)
+- [backend/src/main/java/edu/aiplatform/assignments/contract/IGroupAssignmentSupport.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/IGroupAssignmentSupport.java)
+- [backend/src/main/java/edu/aiplatform/assignments/contract/IRubric.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/IRubric.java)
+- [ReadinessResult.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/ReadinessResult.java)
+- [RubricCriterion.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/RubricCriterion.java)
+- [RubricItem.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/RubricItem.java)
+- [RubricScore.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/RubricScore.java)
+- [RubricView.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/RubricView.java)
+- [SubmissionMode.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/SubmissionMode.java)
+- [SubmissionWindow.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/SubmissionWindow.java)
+- [ValidationIssue.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/ValidationIssue.java)
+- [ValidationResult.java](../../../backend/src/main/java/edu/aiplatform/assignments/contract/ValidationResult.java)
+
+## U08 Assignment Work
+
+- [ActivityEventInput.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/ActivityEventInput.java)
+- [ActivityInterval.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/ActivityInterval.java)
+- [ActivityKind.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/ActivityKind.java)
+- [ActivityPolicyState.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/ActivityPolicyState.java)
+- [ActivitySummary.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/ActivitySummary.java)
+- [AttemptStatus.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/AttemptStatus.java)
+- [GroupWorkStatus.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/GroupWorkStatus.java)
+- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/IActivityQuery.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/IActivityQuery.java)
+- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/IActivityWrite.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/IActivityWrite.java)
+- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/IGroupWorkStatus.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/IGroupWorkStatus.java)
+- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/ISubmissionListener.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/ISubmissionListener.java)
+- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/ISubmissionQuery.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/ISubmissionQuery.java)
+- [backend/src/main/java/edu/aiplatform/assignmentwork/contract/IntervalCertainty.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/IntervalCertainty.java)
+- [StudentSubmissionStatus.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/StudentSubmissionStatus.java)
+- [SubmissionView.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/SubmissionView.java)
+- [SubmitMode.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/SubmitMode.java)
+- [WorkKind.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/WorkKind.java)
+- [WorkRef.java](../../../backend/src/main/java/edu/aiplatform/assignmentwork/contract/WorkRef.java)
+
+## U09 Assignment Grading
+
+- [GroupSectionAuthor.java](../../../backend/src/main/java/edu/aiplatform/grading/contract/GroupSectionAuthor.java)
+- [GroupSubmissionStatus.java](../../../backend/src/main/java/edu/aiplatform/grading/contract/GroupSubmissionStatus.java)
+- [GroupSubmissionView.java](../../../backend/src/main/java/edu/aiplatform/grading/contract/GroupSubmissionView.java)
+- [backend/src/main/java/edu/aiplatform/grading/contract/IGroupEvaluation.java](../../../backend/src/main/java/edu/aiplatform/grading/contract/IGroupEvaluation.java)
+- [backend/src/main/java/edu/aiplatform/grading/contract/IGroupSubmissionSource.java](../../../backend/src/main/java/edu/aiplatform/grading/contract/IGroupSubmissionSource.java)
+
+## U10 Quiz Authoring
+
+- [AnswerKey.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/AnswerKey.java)
+- [AnswerReview.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/AnswerReview.java)
+- [backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizAttemptPresence.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizAttemptPresence.java)
+- [backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizLifecycleListener.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizLifecycleListener.java)
+- [backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizQuery.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizQuery.java)
+- [backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizScoring.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/IQuizScoring.java)
+- [LeavePenalty.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/LeavePenalty.java)
+- [QuestionScore.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuestionScore.java)
+- [QuestionType.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuestionType.java)
+- [QuizAnswer.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizAnswer.java)
+- [QuizOptionView.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizOptionView.java)
+- [QuizQuestionView.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizQuestionView.java)
+- [QuizScope.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizScope.java)
+- [QuizScore.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizScore.java)
+- [QuizSettings.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizSettings.java)
+- [QuizStatus.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizStatus.java)
+- [QuizStudentView.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizStudentView.java)
+- [QuizView.java](../../../backend/src/main/java/edu/aiplatform/quizzes/contract/QuizView.java)
+
+## U11 Quiz Practice
+
+- Không có file thuộc nhóm này trong source snapshot.
+
+## U12 Group Assignment
+
+- [backend/src/main/java/edu/aiplatform/groupdocs/contract/ISseHub.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/contract/ISseHub.java)
+
+## U13 Reference Materials
+
+- Không có file thuộc nhóm này trong source snapshot.
+
+## U14 Announcements & Notifications
+
+- Không có file thuộc nhóm này trong source snapshot.
+
+## U15 Admin Dashboard
+
+- Không có file thuộc nhóm này trong source snapshot.

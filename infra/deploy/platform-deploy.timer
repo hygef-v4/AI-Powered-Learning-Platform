@@ -1,0 +1,11 @@
+# Cài vào /etc/systemd/system/. Xem docs/runbooks/deploy-vps.md, mục 10.
+[Unit]
+Description=Hỏi GitHub bản mới trên main mỗi 2 phút
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=2min
+RandomizedDelaySec=15s
+
+[Install]
+WantedBy=timers.target

@@ -1,10 +1,14 @@
-# End-to-end test instructions — UC63–65
+# E2E instructions — role and integration acceptance
 
-Status: independent E2E pending. The earlier desktop production fixture verifies frontend behavior only. Use the real stack and test-only accounts after [integration setup](integration-test-instructions.md).
+Baseline staging@794a4053. Not executed in this documentation-only change. Existing scripts and fixture requirements: [scripts/e2e/README](../../../scripts/e2e/README.md). Seeding mutates data; use only an authorized isolated/local environment and record fixture IDs without credentials.
 
-1. Assigned Teacher creates important/email and ordinary announcements in an OPEN class; verify Student feed/filter/U05 class card, sanitized Markdown and newest-first pagination. Edit with version, preserve author/flags, race another edit, then confirm delete. Verify read-only Student and unauthorized staff/Admin behavior through UI and direct API.
-2. Cause each supported owner event; verify bell/popup for all four roles, all/unread/load more, open target, read/read-all and second-tab refresh. Change account/class/query filter and ensure stale requests cannot show prior rows. Verify lost connection recovery and logout cleanup using real SSE.
-3. Student changes all five email preferences; verify only future eligible email behavior changes and in-app notices remain. Staff have no learning-email switches. Confirm emails in Mailpit and role-specific destinations using actual recipients/permissions.
-4. Exercise server409/503, empty state and failed submission/retry, keyboard focus/Escape, desktop and mobile viewport. Compare local reference screens s06/t08/t08b/t08c/c14 under `E:/FPTUni/sem9_fa26/ui-reference` while preserving current business rules.
+| Actor | Priority acceptance |
+|---|---|
+| Student | Own classes/material modules/visible Quiz; no MCP management or bearer use; personal API remains; own attempts/results; group policy/claim behavior |
+| Teacher | Current class scope, author/review/publish, Quiz edit/retire/reopen and immutable attempt snapshots; grading proposal review/finalize/publish; optional leader reasons |
+| Subject Manager | Current subject modules/materials/bank/classes; OPEN class without teacher; teaching/gradebook only if assigned |
+| Admin | Accounts/subjects/Settings/multiple keys; audited institutional-key reveal; own MCP reporting only; dashboard counts/activity/backup partial availability |
 
-Record browser/version, viewport, roles, source revision, expected/actual results, sanitized screenshots/console/network evidence and tester identity. No automated browser test script is claimed to exist. Do not label fixture screenshots or responsive CSS as full mobile/provider acceptance.
+For each step record actor/route/expected/current result, time/commit/browser/fixture, screenshot or response evidence, and fail/skip reason. Check keyboard/focus, stale version, changed role/ownership, wrong class, provider unavailable, Mailpit delivery and no secret in logs. UI fixtures do not prove live provider integration.
+
+Relevant scoped guides are listed in the [summary](build-and-test-summary.md); do not combine their historical pass totals into a fresh full-platform result.

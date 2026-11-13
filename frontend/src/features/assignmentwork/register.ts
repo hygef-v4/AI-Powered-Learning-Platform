@@ -1,9 +1,9 @@
-// U08: mục Bài tập trên menu bên của Student; bài sắp đến hạn trên Student Class Detail và thẻ lớp.
+// U08: mục Bài tập trên menu bên của Student và tổng quan bài tập trên trang lớp.
 
-import { classCardSections, studentClassSections } from "@/features/academics/slots";
+import { studentClassBoard } from "@/features/academics/slots";
 import { navEntries } from "@/features/identity/slots";
-import { ClassAssignmentsCard, ClassCardAssignments } from "./ClassAssignmentsCard";
+import { ClassTodoCard } from "./components/ClassTodoCard";
 
 navEntries.register({ key: "my-assignments", order: 20, title: "Bài tập", href: "/my-assignments", icon: "assignment", roles: ["STUDENT"] });
-studentClassSections.register({ key: "assignments", order: 20, component: ClassAssignmentsCard });
-classCardSections.register({ key: "assignments", order: 10, component: ClassCardAssignments });
+// Tổng quan đủ chiều rộng bên dưới Thông tin lớp.
+studentClassBoard.register({ key: "assignments", order: 20, component: ClassTodoCard });

@@ -2,6 +2,9 @@ package edu.aiplatform.audit.contract.stub;
 
 import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.audit.contract.IAuditQuery;
+import edu.aiplatform.audit.contract.IAuditStats;
+import java.time.Instant;
+import java.util.List;
 import edu.aiplatform.shared.stub.Stubs;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -25,6 +28,22 @@ public class AuditContractStubs {
     @Bean
     @ConditionalOnMissingBean
     IAuditQuery auditQueryStub() {
-        return Stubs.announce(IAuditQuery.class, (actor, filter, page) -> Page.empty(page));
+        return Stubs.announce(IAuditQuery.class, (actor, filter, page, recordView) -> Page.empty(page));
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    IAuditStats auditStatsStub() {
+        return Stubs.announce(IAuditStats.class, new IAuditStats() {
+            @Override
+            public long countSucceeded(String action, Instant from, Instant to, String detailKey, String detailValue) {
+                return 0;
+            }
+
+            @Override
+            public List<edu.aiplatform.audit.contract.AuditLogView> recentSecurityEvents(Instant from, int limit) {
+                return List.of();
+            }
+        });
     }
 }

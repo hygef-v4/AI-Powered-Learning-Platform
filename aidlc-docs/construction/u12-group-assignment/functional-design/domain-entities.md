@@ -1,8 +1,11 @@
 # U12 Group Assignment — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U12 Group Assignment thuộc Iter 3, người code: Người 2; UC 53–57. Gộp U12 cũ (nhóm và trưởng nhóm) và U14 cũ (tài liệu nhóm và nộp). Soạn đề, rubric dùng U07; chấm dùng U09. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
 
-**Primary UC:** 53, 54, 55, 56, 57. **Primary stories:** US-GRP-001, US-GRP-002, US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006. **Requirements:** FR-025, FR-026, FR-018, FR-039.
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
+
+**Primary UC:** 53, 54, 55, 56, 57. **Primary stories:** US-GRP-001, US-GRP-002, US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006, US-GRP-007, US-GRP-008, US-GRP-009, US-GRP-010. **Requirements:** FR-025, FR-026, FR-018, FR-039; SG-01…09 (2026-11-11).
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
 
@@ -26,7 +29,7 @@ U12 không sở hữu: bài, khung, rubric (U07), đánh giá và điểm (U09),
 |---|---|
 | `ClassGroup` | `id`, `classId`, `name` (≤ 100, không trùng trong lớp), `leaderId`, `createdBy`, `createdAt`, `updatedAt`; bộ nhóm của lớp có `version` chung để lưu một lần |
 | `GroupMember` | `groupId`, `classId`, `accountId`, `joinedAt`; duy nhất (`classId`, `accountId`) |
-| `LeaderChangeRequest` | `id`, `groupId`, `requestedBy`, `proposedLeaderId` (có thể trống), `reason` (10–1.000), `status` (`PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`), `newLeaderId`, `decidedBy`, `decidedAt`, `decisionReason`, `createdAt`; tối đa một `PENDING` mỗi nhóm |
+| `LeaderChangeRequest` | `id`, `groupId`, `requestedBy`, `proposedLeaderId` (có thể trống), `reason` (0–1.000), `status` (`PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`), `newLeaderId`, `decidedBy`, `decidedAt`, `decisionReason`, `createdAt`; tối đa một `PENDING` mỗi nhóm |
 
 ```mermaid
 stateDiagram-v2
@@ -101,3 +104,90 @@ Không có.
 | `POST /api/v1/group-docs/{id}/sections/{sectionId}:claim`, `:assign`, `:release`, `:done`; `PUT .../sections/{sectionId}/draft` | 56 |
 | `POST /api/v1/group-docs/{id}/submit`; `GET .../export.docx` | 56 |
 | `GET /api/v1/classes/{classId}/group-assignments/{assignmentId}/progress` | 42, 57 |
+
+## Source behavior delta — 2026-10-30
+
+groups và groupdocs thuộc cùng U12. Leader request reason tùy chọn, null thành chuỗi rỗng, tối đa 1.000; reject reason tùy chọn, trống thành null. GroupRenameService cho đổi tên theo scope; editor hiển thị lỗi nhóm đã bị gỡ khỏi draft. Claims/locks/leader submit giữ theo SectionRules và services; không tự thêm peer assessment hay đổi AI Student GROUP.
+
+[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.
+
+## Sinh viên tự chia nhóm — 2026-11-11
+
+Thiết kế cho US-GRP-007…010, [yêu cầu SG-01…09](../../../inception/requirements/2026-11-11-student-self-grouping.md), [quyết định thiết kế](../../plans/functional-design-plan/2026-11-11-u12-student-self-grouping-functional-design-plan.md). Đề xuất nằm ngoài bộ nhóm chính thức; chỉ khi giảng viên duyệt mới thành `ClassGroup`.
+
+### Entity
+
+| Entity | Thuộc tính chính |
+|---|---|
+| `GroupFormationSettings` | `classId` (một dòng mỗi lớp), `enabled`, `minSize`, `maxSize` (2–20, min ≤ max), `deadline` (có thể trống), `updatedBy`, `updatedAt`, `version` |
+| `GroupProposal` | `id`, `classId`, `name` (1–100), `leaderId`, `status` (`DRAFT`, `SUBMITTED`, `APPROVED`, `REJECTED`, `CANCELLED`), `submittedAt`, `decidedBy`, `decidedAt`, `decisionReason` (0–1.000, trống thành null), `approvedGroupId`, `endReason` (`LEADER_CANCELLED`, `LEADER_PLACED`, `LEADER_LEFT_CLASS`; chỉ khi `CANCELLED`), `createdAt`, `updatedAt`, `version` |
+| `ProposalMember` | `proposalId`, `classId`, `accountId` (một dòng mỗi cặp đề xuất–sinh viên), `status` (`INVITED`, `ACCEPTED`, `DECLINED`, `REVOKED`, `EXPIRED`, `LEFT`), `active` (đúng khi `ACCEPTED` và đề xuất `DRAFT`/`SUBMITTED`), `invitedBy`, `createdAt`, `respondedAt` |
+
+Trưởng nhóm có dòng `ProposalMember` `ACCEPTED` ngay khi tạo. Đề xuất **đang hoạt động** khi `DRAFT` hoặc `SUBMITTED`.
+
+### Ràng buộc dữ liệu
+
+- Duy nhất (`classId`, `accountId`) khi `active` (partial unique index): một sinh viên một đề xuất đang hoạt động, giữ đúng cả khi hai thao tác chạy cùng lúc.
+- Khóa chính (`proposalId`, `accountId`): mời lại sau khi từ chối/thu hồi thì cập nhật dòng cũ về `INVITED`.
+- Đề xuất kết thúc (`APPROVED`, `REJECTED`, `CANCELLED`) thì mọi dòng `active` thành không hoạt động; `status` thành viên giữ nguyên để làm lịch sử.
+- Không đổi bảng hiện có; bản ghi đề xuất và lời mời được giữ (không xóa).
+
+### Máy trạng thái đề xuất
+
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT: Sinh viên tạo
+    DRAFT --> SUBMITTED: Trưởng nhóm gửi duyệt
+    SUBMITTED --> DRAFT: Trưởng nhóm rút về, hoặc hệ thống trả về khi thiếu người
+    SUBMITTED --> APPROVED: Giảng viên duyệt
+    SUBMITTED --> REJECTED: Giảng viên từ chối
+    DRAFT --> CANCELLED: Trưởng nhóm hủy, hoặc trưởng nhóm không còn hiệu lực
+    SUBMITTED --> CANCELLED: Trưởng nhóm không còn hiệu lực
+```
+
+**Text alternative**: Đề xuất tạo ra ở `DRAFT`. Trưởng nhóm gửi duyệt thì `SUBMITTED` và bị khóa. Từ `SUBMITTED`, trưởng nhóm rút về hoặc hệ thống trả về (dưới sĩ số tối thiểu, duyệt lỗi `PROPOSAL_INCOMPLETE`) thì `DRAFT`; giảng viên duyệt thì `APPROVED`, từ chối thì `REJECTED`. Trưởng nhóm hủy đề xuất nháp, hoặc trưởng nhóm được giảng viên xếp vào nhóm chính thức hay rời lớp, thì `CANCELLED`. `APPROVED`, `REJECTED`, `CANCELLED` là trạng thái cuối.
+
+### Máy trạng thái lời mời và thành viên
+
+```mermaid
+stateDiagram-v2
+    [*] --> INVITED: Trưởng nhóm mời
+    [*] --> ACCEPTED: Người tạo đề xuất
+    INVITED --> ACCEPTED: Người được mời chấp nhận
+    INVITED --> DECLINED: Người được mời từ chối
+    INVITED --> REVOKED: Thu hồi, gửi duyệt, hủy đề xuất, hoặc vào đề xuất khác
+    INVITED --> EXPIRED: Đợt đóng
+    ACCEPTED --> LEFT: Tự rời, được xếp nhóm chính thức, hoặc rời lớp
+    DECLINED --> INVITED: Mời lại
+    REVOKED --> INVITED: Mời lại
+    EXPIRED --> INVITED: Mời lại khi đợt mở
+```
+
+**Text alternative**: Người tạo đề xuất vào thẳng `ACCEPTED`. Người được mời bắt đầu ở `INVITED`, rồi `ACCEPTED` khi chấp nhận, `DECLINED` khi từ chối, `REVOKED` khi trưởng nhóm thu hồi, khi đề xuất được gửi duyệt hay bị hủy, hoặc khi người đó chấp nhận lời mời khác, và `EXPIRED` khi đợt đóng. Thành viên `ACCEPTED` thành `LEFT` khi tự rời, được giảng viên xếp vào nhóm chính thức hoặc rời lớp. Người `DECLINED`, `REVOKED`, `EXPIRED` được mời lại.
+
+### Sự kiện mới
+
+| Sự kiện | Người nhận (trong payload) | U14 |
+|---|---|---|
+| `group.proposal-invited` | Người được mời | Thông báo "Bạn được mời vào nhóm" |
+| `group.proposal-submitted` | Giảng viên chính của lớp | Thông báo "Có đề xuất nhóm chờ duyệt" |
+| `group.proposal-approved` | Thành viên đề xuất | Thông báo "Đề xuất nhóm được duyệt" |
+| `group.proposal-rejected` | Thành viên đề xuất | Thông báo "Đề xuất nhóm bị từ chối" kèm lý do |
+
+Khi duyệt, `group.membership-changed` vẫn phát (SSE, các phần khác) với `reason = PROPOSAL_APPROVED`; U14 không tạo thông báo cho lý do này để thành viên chỉ nhận một thông báo.
+
+### API mới
+
+| API | Vai trò | Story |
+|---|---|---|
+| `GET`, `PUT /api/v1/classes/{classId}/group-formation` | Giảng viên chính | US-GRP-007 |
+| `GET /api/v1/classes/{classId}/group-proposals` (đề xuất đang hoạt động, sinh viên chưa có nhóm kèm đề xuất của họ) | Giảng viên chính | US-GRP-010 |
+| `POST /api/v1/classes/{classId}/group-proposals:approve` (danh sách id, kết quả từng đề xuất); `POST /api/v1/group-proposals/{id}:reject` | Giảng viên chính | US-GRP-010 |
+| `GET /api/v1/me/classes/{classId}/group-proposal` (trạng thái đợt, đề xuất của tôi, lời mời đến tôi, đề xuất bị từ chối gần nhất, bạn mời được) | Sinh viên | US-GRP-008, 009 |
+| `POST /api/v1/classes/{classId}/group-proposals`; `PUT /api/v1/group-proposals/{id}/name` | Sinh viên; trưởng nhóm | US-GRP-008 |
+| `POST /api/v1/group-proposals/{id}/invitations`; `POST .../invitations/{accountId}:revoke` | Trưởng nhóm | US-GRP-008 |
+| `POST /api/v1/group-proposals/{id}:accept`, `:decline` | Người được mời | US-GRP-008 |
+| `POST /api/v1/group-proposals/{id}:leave` | Thành viên không phải trưởng nhóm | US-GRP-008 |
+| `POST /api/v1/group-proposals/{id}:submit`, `:withdraw`, `:cancel` | Trưởng nhóm | US-GRP-008, 009 |
+
+Thao tác của trưởng nhóm và cài đặt đợt gửi kèm `version`; duyệt không gửi `version` bộ nhóm, server tự đọc và tăng.

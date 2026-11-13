@@ -1,6 +1,50 @@
 # U07 Assignment Authoring — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U07 Assignment Authoring thuộc Iter 2, người code: Người 4; UC 34–36. Lấy phần Assignment của U08 cũ (vòng đời, phát hành), U09 cũ (tài liệu, khung, DOCX) và rubric của U06 cũ. Quiz và ngân hàng thuộc U10. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+## Nhập đề từ ảnh/PDF — 2026-11-11
+
+Thiết kế, chưa có mã. Quy tắc: BR-U07-87…101.
+
+```text
+assignment_ai_drafts (đã có)
+  provenance.mode       "IMPORT" (mới; trước có "REVISE" hoặc không có)
+  provenance.import     { fileKind: IMAGE | PDF, pageCount, totalBytes }
+  proposal (READY)      { kind: "IMPORT", title, document, warnings[], counts }
+
+assignment_import_pages (bảng mới, tạm)
+  draft_id              uuid, FK assignment_ai_drafts ON DELETE CASCADE
+  page_no               smallint 1–10
+  media_type            text, luôn "image/jpeg"
+  width, height         int, sau chuẩn hóa (cạnh dài ≤ 2.000px)
+  bytes                 bytea
+  text_hint             text null (chữ trích từ PDF có lớp chữ)
+  created_at            timestamptz
+  PK (draft_id, page_no); index created_at để job dọn
+```
+
+| Đối tượng | Mô tả |
+|---|---|
+| `ImportPage` | Một trang đã chuẩn hóa: `pageNo`, `jpeg`, `width`, `height`, `textHint`, `warnings`. |
+| `ImportProposal` | Kết quả đã ánh xạ: `title`, `DocumentModel`, `warnings[{kind, page, message}]`, `counts{headings, tables, images, illegible}`. |
+| `ImportPlacement` | `REPLACE`, `APPEND`. |
+| `AssignmentCommands.ApplyDraft` | Thêm `placement` (rỗng thì `REPLACE`); các trường cũ giữ nguyên. |
+| `AssignmentViews.AiDraft` | Thêm `mode` (`IMPORT`), để frontend hiện đúng màn xem trước. |
+| `AiImageRef` (U06) | `source`, `ref`, `mediaType`: tham chiếu ảnh nằm trong prompt. U07 cài `IAiImageSource` cho `source = ASSIGNMENT_IMPORT`. |
+
+Cảnh báo (`warnings.kind`): `ILLEGIBLE`, `HEADER_FOOTER_REMOVED`, `ROTATED_PAGE`, `LOW_RESOLUTION`, `FIGURE_CROP_FAILED`, `OTHER`.
+
+API:
+
+| Endpoint | Mô tả |
+|---|---|
+| `POST /api/v1/assignments/{id}/imports` | Multipart: `files` (1–5), `requestRef`, `source`, `provider`. Trả `AiDraft` (PENDING). |
+| `GET /api/v1/assignments/{id}/ai-drafts/{draftId}` | Đã có; đề xuất `IMPORT` có `document`, `warnings`, `counts`. |
+| `POST .../ai-drafts/{draftId}:apply` | Thêm `placement`. |
+| `POST .../ai-drafts/{draftId}:discard` | Đã có; xóa thêm ảnh trang. |
+
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 > Cập nhật 2026-10-22 theo code hiện tại (các yêu cầu của người dùng 2026-10-21, 2026-10-22; chi tiết từng vòng trong code-summary).
 
 **Primary UC:** 34, 35, 36. **Primary stories:** US-ASM-001 (phần Assignment), US-ASM-004, US-ASM-008, US-ASM-009, US-ASM-010, US-QBK-001. **Requirements:** FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
@@ -89,7 +133,7 @@ Part
 | Entity | Thuộc tính chính |
 |---|---|
 | `AssignmentRubric` | `id`, `assignmentId`, `partId` (duy nhất cùng `assignmentId`), `criteria[]` (`id`, `title`, `description`, `kind` `TEXT` hoặc `DIAGRAM`, `items[]` gồm `id`, `text`, `points`; giao diện atomic: mỗi tiêu chí một mục), `totalPoints` (tự tính), `lockedAt`, `version` |
-| `AssignmentAiDraft` | `id`, `assignmentId`, `origin` (`AI_TASK`, `MCP`), `taskId`, `status` (`PENDING`, `READY`, `APPLIED`, `DISCARDED`, `FAILED`), `proposal` (hướng dẫn, cây heading kèm đoạn hướng dẫn, gợi ý rubric theo heading), `provenance` (người yêu cầu, nguồn, provider, model, tài liệu và version, nhãn agent), `baseVersion`, `createdBy`, `createdAt`, `decidedAt` |
+| `AssignmentAiDraft` | `id`, `assignmentId`, `origin` (`AI_TASK`, `MCP`), `taskId`, `status` (`PENDING`, `READY`, `APPLIED`, `DISCARDED`, `FAILED`), `proposal` (hướng dẫn, cây heading kèm đoạn hướng dẫn, gợi ý rubric theo heading; bản sửa đề có `kind = REVISION`: tên, hướng dẫn, toàn bộ khối sau khi ghép kèm mã khối, rubric, `validation`, `unchanged`), `provenance` (người yêu cầu, nguồn, provider, model, tài liệu và version, nhãn agent; bản sửa đề thêm `mode = REVISE` và `blockRefs` nối mã khối với id), `baseVersion`, `createdBy`, `createdAt`, `decidedAt` |
 
 ## 5. Contract
 
@@ -115,6 +159,7 @@ Part
 | `IGroupAssignmentSupport` | `checkReadiness(classId)` → lỗi, cảnh báo | U12 | Bật `GROUP`; kiểm lớp có nhóm, mỗi nhóm có thành viên và trưởng nhóm trước khi phát hành. Chưa có U12 thì bản tạm trả lỗi `GROUP_SUPPORT_UNAVAILABLE` (hằng `UNAVAILABLE`) và U07 không cho tạo, duyệt, phát hành bài nhóm |
 | Slot frontend `AssignmentRowAction` | - | U09 | Lối vào bài nộp (Submission Detail) trên từng dòng bài |
 | Slot frontend `AssignmentFormSection` | - | U12 | Phần nhóm trên Assignment Form của bài `GROUP` |
+| Slot frontend `AssignmentSettingsSection` (`assignmentSettingsSections`) | Ngữ cảnh bài và lớp hiện tại | U09 | Cài đặt phân bố theo bài–lớp, quyền riêng từ server không phụ thuộc readOnly nội dung |
 
 Chưa có U08, U12 thì listener rỗng và `GROUP` không chọn được. Chưa có U13 thì `IReferenceMaterial` của U06 trả rỗng, AI soạn chỉ từ yêu cầu.
 
@@ -124,7 +169,7 @@ Chưa có U08, U12 thì listener rỗng và `GROUP` không chọn được. Chư
 |---|---|---|
 | `IAuthorization` | U01 | Kiểm R2, R3/R4, R5 |
 | `IAudit` | U02 | Audit |
-| `IArtifact`, `IEventPublisher`, `ISettings` | U03 | Ảnh trong khung; sự kiện `assignment.opened`; kiểm `activity.retentionDays` khi bật theo dõi |
+| `IArtifact`, `IEventPublisher`, `ISettings` | U03 | Ảnh trong khung; sự kiện `assignment.opened`; retention activity hiện cố định 1 ngày, không dùng setting cũ |
 | `ISubjectQuery` | U04 | Môn còn `ACTIVE` |
 | `IClassAccess` | U05 | Trạng thái lớp, lớp của môn |
 | `IAiTask`, `IReferenceMaterial` | U06 | Gửi task AI soạn bản nháp; lấy chữ tài liệu tham khảo (U13 cài) |

@@ -1,6 +1,14 @@
 # U09 Assignment Grading — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U09 Assignment Grading thuộc Iter 2, người code: Người 2; UC 42–45. Lấy phần chấm Assignment và sổ điểm của U15 cũ và phần tiến độ nộp, phân bố điểm, xuất bảng điểm của U16 cũ. Kết quả Quiz luyện tập thuộc U11, thông báo thuộc U14. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+## Cập nhật có hiệu lực 2026-11-11
+
+Theo kế hoạch `../../plans/code-generation-plan/2026-11-11-editable-grades-and-background-ai.md`: không sinh FINALIZED mới; lưu trước công bố là DRAFT, công bố trực tiếp, sửa sau công bố giữ PUBLISHED. Quyền ghi phụ thuộc lớp OPEN và receipt/version hiện hành; ARCHIVED chỉ đọc. Giữ enum/endpoint finalize cũ như xác thực không khóa. Kiểm tra xác nhận AI tại publish và save PUBLISHED. AI tạo proposal bất đồng bộ, READY không tự ghi điểm; UI theo dõi ở layout giảng dạy, giảng viên áp dụng rõ ràng. Không thêm snapshot công bố, schema, queue hay realtime mới. Các mô tả chốt/khóa cũ bên dưới chỉ còn là tham chiếu lịch sử khi mâu thuẫn với cập nhật này.
+
+
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 42, 43, 44, 45. **Primary stories:** US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005, US-RPT-001, US-RPT-003, US-INT-001. **Requirements:** FR-008, FR-009, FR-019, FR-020, FR-024, FR-039.
 
@@ -15,11 +23,14 @@ Thiết kế độc lập công nghệ.
 | `Evaluation` | Aggregate root | `evaluations` |
 | `EvaluationHistory` | Phần tử chỉ thêm | `evaluations.history` |
 | `GradingProposal` | Đề xuất từ AI hoặc MCP, có version | `grading_proposals` |
+| `GradeDistributionVisibility` | Cài đặt có version theo cặp `assignmentId`, `classId`; `enabled=false` mặc định | `grade_distribution_visibility` (U09/grading) |
 | `GradebookView`, `GradeDistributionView` | Kết quả tính khi đọc | Không lưu |
 
 U09 không sở hữu: bài nộp (U08, U12), bài và rubric (U07), lượt Quiz và kết quả luyện tập (U11), phản hồi Practice (U08), dữ liệu hoạt động (U08), thông báo (U14).
 
 ## 2. `Evaluation`
+
+`GradeDistributionVisibility` dùng khóa duy nhất `(assignmentId,classId)`, `enabled` và `version`. Migration grading `V20261101_0900__assignment_grade_distribution_visibility.sql` tạo bảng rỗng, không chuyển cờ lớp cũ. Không có bản ghi nghĩa là tắt. GET/PUT trả `{enabled,version,canEdit}`; PUT nhận `{enabled,version}`. Quyền `canEdit` dựa phân công dạy hiện tại và trạng thái lớp/bài, độc lập quyền sửa nội dung bài; bài SUBJECT mỗi lớp một bản ghi.
 
 | Thuộc tính | Kiểu | Ràng buộc |
 |---|---|---|
@@ -27,8 +38,8 @@ U09 không sở hữu: bài nộp (U08, U12), bài và rubric (U07), lượt Qui
 | `kind` | enum | `ATTEMPT`, `GROUP_DOCUMENT`, `MEMBER` |
 | `assignmentId`, `classId` | UUID | Bài; lớp của lượt hoặc của nhóm |
 | `attemptId` | UUID | Với `ATTEMPT`; duy nhất |
-| `groupDocumentId` | UUID | Với `GROUP_DOCUMENT`, `MEMBER` |
-| `accountId` | UUID | Chủ lượt (`ATTEMPT`) hoặc thành viên (`MEMBER`); duy nhất cùng `groupDocumentId` với `MEMBER` |
+| `groupDocumentId` | UUID | Với GROUP_DOCUMENT/MEMBER; một root cho mỗi tài liệu nhóm |
+| `accountId` | UUID | Chủ lượt hoặc thành viên; MEMBER duy nhất theo documentId và accountId |
 | `submissionHash` | chuỗi | Hash của bài nộp được chấm |
 | `maxScore` | số (6,2) | Tổng điểm rubric |
 | `rubricChecks` | JSON | Theo phần: mục đạt, điểm phần |
@@ -47,14 +58,13 @@ stateDiagram-v2
     DRAFT --> DRAFT: Lưu lại
     DRAFT --> FINALIZED: Chốt
     FINALIZED --> PUBLISHED: Công bố
-    FINALIZED --> FINALIZED: Sửa có lý do
-    PUBLISHED --> PUBLISHED: Sửa có lý do
     PENDING --> SUPERSEDED: Có lượt nộp mới
     DRAFT --> SUPERSEDED: Có lượt nộp mới
-    FINALIZED --> SUPERSEDED: Có lượt nộp mới
+    FINALIZED --> SUPERSEDED: Cá nhân nộp lại
+    PUBLISHED --> SUPERSEDED: Cá nhân nộp lại
 ```
 
-**Text alternative**: Bài `GRADED` được nộp tạo đánh giá `PENDING`. Giảng viên lưu điểm thì `DRAFT`; chốt thì `FINALIZED`; công bố thì `PUBLISHED`. Sửa điểm đã chốt hoặc đã công bố cần lý do, giữ trạng thái và thêm lịch sử. Người học nộp lượt mới thì đánh giá chưa công bố của lượt cũ thành `SUPERSEDED`; đánh giá đã công bố giữ nguyên. Với bài nhóm, nhóm nộp lại thì đánh giá đưa về `PENDING` và điểm cũ vào lịch sử.
+**Text alternative (quyết định mới nhất 2026-11-02)**: Sau chốt không sửa được nội dung chấm; công bố đổi FINALIZED thành PUBLISHED. Nộp lại làm điểm trước mất hiệu lực: cá nhân chuyển đánh giá cũ thành SUPERSEDED kể cả đã công bố, tạo PENDING cho lượt mới; nhóm dùng lại root/member, xóa điểm và dữ liệu review hiện hành, trở về PENDING. Lịch sử/audit vẫn chỉ đọc; không lưu các lượt chấm nhóm song song, không đổi schema DB.
 
 ## 3. `GradingProposal`
 
@@ -75,7 +85,7 @@ stateDiagram-v2
 
 | Interface | Phương thức | Dùng bởi | Dùng để |
 |---|---|---|---|
-| `IGroupEvaluation` | `onGroupSubmitted(groupDocumentId, submissionHash, assignmentId, classId, memberIds)` | U12 | Tạo hoặc đưa về chờ chấm đánh giá tài liệu nhóm và thành viên trong transaction nộp |
+| `IGroupEvaluation` | `onGroupSubmitted(groupDocumentId, submissionHash, assignmentId, classId, memberIds)` | U12 | Reset root/member về PENDING cho lần nộp mới trong transaction nộp |
 | Sự kiện `grade.published` | - | U14 | Báo người học vừa có điểm (bài, lớp, danh sách người học) |
 | `ISubmissionListener` (contract của U08, U09 cài) | `onSubmitted(attemptId)` | U08 | Tạo đánh giá chờ chấm khi nộp bài `GRADED` |
 | `IAiTaskResultHandler` cho `GRADING_PROPOSAL`, `IMcpToolProvider` (contract của U06, U09 cài) | - | U06 | Nhận đề xuất AI; tool `record_grading_proposal` |
@@ -98,7 +108,7 @@ Chưa có U12 thì không có đánh giá nhóm; Submission Detail chỉ có bà
 | `IAuthorization` | U01 | Kiểm R3/R4, R5 |
 | `IAudit` | U02 | Audit |
 | `IEventPublisher` | U03 | Sự kiện `grade.published` |
-| `IClassAccess` | U05 | Sinh viên đang ghi danh, cờ `showGradeDistribution` |
+| `IClassAccess` | U05 | Sinh viên đang ghi danh, giảng viên được phân công, trạng thái và phạm vi lớp; không đọc cột phân bố lịch sử |
 | `IAiTask` | U06 | Task đề xuất chấm |
 | `IAssignmentQuery`, `IRubric`, `IDocumentModel` | U07 | Bài, rubric đã khóa, tính điểm, chữ và XML rút gọn cho AI |
 | `ISubmissionQuery`, `IActivityQuery` | U08 | Bài nộp, tiến độ, dữ liệu hoạt động |
@@ -112,6 +122,7 @@ Chưa có U12 thì không có đánh giá nhóm; Submission Detail chỉ có bà
 | `POST`, `GET /api/v1/evaluations/{id}/ai-proposals`; `POST /api/v1/evaluations:ai-proposals` | 43 |
 | `POST /api/v1/evaluations:finalize`, `POST /api/v1/evaluations:publish` | 43, 44 |
 | `GET /api/v1/classes/{classId}/gradebook`, `GET .../gradebook/export` | 45 |
+| `GET`, `PUT /api/v1/classes/{classId}/assignments/{assignmentId}/grade-distribution-visibility` | 34, 35, 45 (cài đặt U09 trong ngữ cảnh bài) |
 | `GET /api/v1/classes/{classId}/submission-progress`; `GET /api/v1/classes/{classId}/grade-distribution?assignmentId=` | 42, 45 (tab Thông tin lớp) |
 | `GET /api/v1/classes/{classId}/students/{accountId}/grades` | 45 (popup Student Detail) |
 | `GET /api/v1/me/grades`, `GET /api/v1/me/grades/attempts/{attemptId}`, `GET /api/v1/me/grade-distributions` | 37, 40 (U08) |

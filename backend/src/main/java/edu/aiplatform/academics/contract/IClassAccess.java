@@ -11,19 +11,27 @@ import java.util.UUID;
  */
 public interface IClassAccess {
 
+    /** Loads the lightweight class reference for a class ID. */
     Optional<ClassRef> getClassRef(UUID classId);
 
+    /** Checks whether the account is actively enrolled as a student in the class. */
     boolean isActiveStudent(UUID accountId, UUID classId);
 
+    /** Lists active student account IDs enrolled in the class. */
     List<UUID> listActiveStudents(UUID classId);
 
+    /** Checks whether the account manages the class subject. */
     boolean isClassManager(UUID accountId, UUID classId);
 
+    /** Lists open classes associated with the account. */
     List<ClassRef> listOpenClassesOf(UUID accountId);
 
+    /** Lists open classes belonging to the subject. */
     List<ClassRef> listOpenClassesOfSubject(UUID subjectId);
 
+    /** Counts classes grouped by lifecycle status. */
     Map<ClassStatus, Long> countClassesByStatus();
 
+    /** Counts active enrollments across the platform. */
     long countActiveEnrollments();
 }

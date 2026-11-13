@@ -1,19 +1,24 @@
 # U14 Announcements & Notifications — business-rules
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U14 Announcements & Notifications thuộc Iter 3, người code: Người 3; UC 63–65. Lấy thông báo lớp của U05 cũ và thông báo, email, nhắc hạn của U16 cũ. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 63, 64, 65. **Primary stories:** US-CNT-004, US-NTF-001; nhắc hạn của US-RPT-001. **Requirements:** FR-011, FR-019, FR-023.
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
+
+**Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
 
 ## 1. Thông báo lớp (UC 63, 64)
 
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U14-01 | Giảng viên chính của lớp (R3/R4) tạo, sửa, xóa thông báo của lớp `OPEN`; người học đang ghi danh và giảng viên của lớp đọc. Người học không đăng; Admin không vào lớp. | FR-023, UC 63, 64 |
-| BR-U14-02 | Thông báo có tiêu đề (≤ 200) và nội dung markdown (≤ 5.000 ký tự, hiển thị đã làm sạch); không HTML thô, không tệp đính kèm, không bình luận. | FR-023, SEC-003 |
+| BR-U14-02 | Thông báo có tiêu đề văn bản thuần (≤ 200) và nội dung Markdown (≤ 5.000 ký tự đầu vào). Tạo/sửa loại thẻ HTML, thuộc tính sự kiện và nội dung script/style bằng parser trước lưu, giữ Markdown hợp lệ; từ chối nếu rỗng sau làm sạch. Hiển thị tiếp tục chặn HTML thô, ảnh và URL nguy hiểm. Không tệp đính kèm, không bình luận. Phương án A được duyệt ngày 2026-10-23. | FR-023, SEC-003 |
 | BR-U14-03 | Khi tạo, giảng viên có thể đánh dấu quan trọng và chọn gửi email. Tạo mới thì phát `class.announcement-posted` sau commit: người học đang ghi danh nhận thông báo trong app; thông báo quan trọng có chọn email thì gửi email theo tùy chọn của người nhận. | UC 64, FR-011 |
-| BR-U14-04 | Sửa kiểm `version`, giữ tác giả và thời điểm gốc, ghi người sửa và audit trước, sau; không gửi lại thông báo hay email. | US-CNT-004 S4 |
+| BR-U14-04 | Sửa kiểm `version` và trả `version` mới (đã tăng) để lần sửa tiếp không bị 409, giữ tác giả và thời điểm gốc, ghi người sửa và audit trước, sau; không gửi lại thông báo hay email. | US-CNT-004 S4 |
 | BR-U14-05 | Xóa là xóa mềm: loại khỏi danh sách, giữ người xóa, thời điểm, tham chiếu và audit. | US-CNT-004 S5 |
 | BR-U14-06 | Class Announcements mở từ Class Dashboard: thông báo của mọi lớp `OPEN` mình học hoặc dạy, mới nhất trước, lọc theo lớp; mở từ một lớp thì lọc sẵn lớp đó. Student Class Detail hiện vài thông báo mới nhất của lớp. | US-CNT-004 S2 |
 
@@ -27,13 +32,15 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U14-13 | Chuông và popup trên thanh điều hướng của mọi vai trò: số chưa đọc, danh sách phân trang, đánh dấu đã đọc từng cái hoặc tất cả; cập nhật realtime qua `ISseHub` của U12 (kênh theo tài khoản). Người dùng chỉ xem, sửa thông báo của mình. | UC 65 |
 | BR-U14-14 | Giữ thông báo 180 ngày rồi xóa. | Thiết kế |
 
+Refinement approved 2026-10-24: mô tả trong chuông dùng lời dẫn hành động theo loại thông báo và đối tượng nhận hiện hành; không yêu cầu người đã đăng nhập đăng nhập lại. Thông báo cũ còn câu mặc định được chuyển mô tả khi trả feed, giữ nguyên lịch sử, đường dẫn và trạng thái đã đọc. Email dùng mẫu tối thiểu yêu cầu đăng nhập riêng theo BR-U14-23. BR-U14-12 tiếp tục áp dụng; không đưa điểm/nhận xét hoặc payload riêng tư vào mô tả.
+
 ## 3. Email
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U14-20 | Loại có email: `ENROLLED`, `ASSIGNMENT_OPENED`, `GRADE_PUBLISHED`, `DEADLINE_REMINDER`, `ANNOUNCEMENT_IMPORTANT` (thông báo lớp quan trọng có chọn email), `BACKUP_FAILED` (Admin). Các loại khác chỉ trong app. | FR-011 |
-| BR-U14-21 | Người học bật, tắt email từng loại học tập trong popup thông báo; tắt thì email `SKIPPED`, thông báo trong app vẫn có. Email `BACKUP_FAILED` cho Admin luôn gửi. | US-NTF-001, FR-011 |
-| BR-U14-22 | Trần 300 email thông báo mỗi ngày (giờ Việt Nam, đặt bằng biến môi trường); vượt thì `DEFERRED` sang ngày sau theo thứ tự ưu tiên `BACKUP_FAILED` > `DEADLINE_REMINDER` > `ANNOUNCEMENT_IMPORTANT` > `ASSIGNMENT_OPENED` > `GRADE_PUBLISHED` > `ENROLLED`. Email OTP của U01 không tính. | FR-011 |
+| BR-U14-20 | Email Student: `ENROLLED`, `ASSIGNMENT_OPENED`, `GRADE_PUBLISHED`, `DEADLINE_REMINDER`, `ANNOUNCEMENT_IMPORTANT` (thông báo lớp quan trọng có chọn email). Teacher: `LEADER_CHANGE_REQUESTED`, `QUESTION_REVIEWED`. Subject Manager: các loại Teacher và `QUESTION_PROPOSED`. Admin: `BACKUP_FAILED`. Các loại khác chỉ trong app; không mở rộng người nhận sự kiện. | FR-011; sửa lỗi 2026-11-02 |
+| BR-U14-21 | Mọi vai trò có cài đặt email trong popup; UI hiển thị các loại backend trả về theo role hiện hành. Student mặc định bật năm loại học tập; các loại email staff phù hợp role mặc định bật khi chưa có tùy chọn lưu; không ghi đè lựa chọn đã lưu. Chỉ cập nhật tùy chọn của chính mình và loại phù hợp role. Tắt thì email mới `SKIPPED`, thông báo trong app vẫn có. Admin thấy `BACKUP_FAILED` luôn bật, bị khóa và có giải thích cảnh báo bắt buộc; server từ chối tắt kể cả gọi API trực tiếp. | US-NTF-001, FR-011; sửa lỗi 2026-11-02 |
+| BR-U14-22 | Trần 300 email thông báo mỗi ngày (giờ Việt Nam, đặt bằng biến môi trường); vượt thì `DEFERRED` sang ngày sau theo thứ tự ưu tiên `BACKUP_FAILED` > `DEADLINE_REMINDER` > `ANNOUNCEMENT_IMPORTANT` > `ASSIGNMENT_OPENED` > `GRADE_PUBLISHED` > `ENROLLED` và ba loại staff mới (cùng mức thấp nhất). Email OTP của U01 không tính. | FR-011 |
 | BR-U14-23 | Gửi qua job `EMAIL_SEND` (queue `jobs.email` của U03) bằng `IMail` của U01; lỗi thử lại theo U03 tối đa 5 lần rồi `FAILED`; không gửi trùng. `SENT` chỉ nghĩa là nhà cung cấp đã nhận. Nội dung tối thiểu kèm link cần đăng nhập. | US-NTF-001 S2, S4 |
 | BR-U14-24 | Email nhắc hạn đã bị hoãn mà tới lúc gửi đã qua hạn thì `SKIPPED`. | Thiết kế |
 
@@ -52,3 +59,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U14-40 | Mọi API kiểm quyền phía server; ngoài phạm vi trả `404` và ghi audit `ACCESS_DENIED`. | SEC-002 |
 | BR-U14-41 | Audit: `ANNOUNCEMENT_CREATED`, `ANNOUNCEMENT_UPDATED` (trước, sau), `ANNOUNCEMENT_DELETED`. Không audit từng thông báo, từng email. | FR-014 |
 | BR-U14-42 | U01, U05 không trả lời khi xử lý sự kiện thì thử lại theo U03; mất sự kiện chỉ mất thông báo, không ảnh hưởng nghiệp vụ. | BR-U03-70 |
+
+## Delta 2026-11-01
+
+Thêm hai loại thông báo trong ứng dụng từ U10: `QUESTION_PROPOSED` tới Chủ nhiệm môn của môn, mở Question List lọc Chờ duyệt; `QUESTION_REVIEWED` tới giảng viên đề xuất, mở tab Học liệu của lớp ở trang giảng dạy (BR-U10-09). Ban đầu chỉ trong app; từ sửa lỗi 2026-11-02 có email tùy chọn theo BR-U14-20/21.

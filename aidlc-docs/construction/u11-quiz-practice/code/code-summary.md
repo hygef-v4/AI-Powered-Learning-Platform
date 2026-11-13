@@ -1,5 +1,9 @@
 # U11 Quiz Practice — code summary (giai đoạn 3)
 
+**Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
+
+## Ghi nhận trước baseline 2026-10-30 (lịch sử)
+
 Code viết ngày 2026-10-20 trên nhánh `quiz-practice` (tách từ `quiz-authoring` `f3b54bc`) theo [plan giai đoạn 3](../../plans/code-generation-plan/u11-quiz-practice-code-generation-plan.md) (G1–G7). Phạm vi: UC 49 (KAN-128), UC 50 (KAN-129), UC 51 (KAN-130), UC 52 (KAN-57), phần Quiz của UC 42; luồng F1–F7, F9. Chưa gồm tracker hoạt động phía trình duyệt (G3) và `MaterialQuizList` (G4). Chưa commit.
 
 ## Business logic
@@ -147,3 +151,33 @@ Theo plan giai đoạn 6 (K1–K7), nhánh `quiz-activity` từ `staging` `0d1cf
     - chỉ gửi sự kiện khi lượt bật ghi nhận, kèm lời báo;
     - giảng viên thấy dòng thời gian.
 - **Kiểm:** backend `mvn -B verify` (JDK 17) 1112 test, 0 lỗi, 31 bỏ qua (`SubjectRepositoryIntegrationTest`); frontend lint, typecheck, 411 test, build đều đạt. Chưa chạy thử Docker vì U14 chưa sửa bean `notificationTopology`.
+
+## Chạy thử end-to-end G3, G4 và link thông báo (2026-10-22, stack Docker local)
+
+Cùng lần chạy với giai đoạn 4 và E3 của U10 (xem code-summary U10).
+
+Chạy trên `staging` `20c1458` (sau PR #8). Stack `docker-compose.yml` + `docker-compose.local.yml` dựng từ mã nguồn trên volume mới (project `quiz-e2e`, override tạm đẩy PostgreSQL sang cổng 15432), Nginx `:8088`, Mailpit thật.
+
+Dữ liệu nền tạo bằng API:
+- Admin kích hoạt bằng OTP qua Mailpit; Chủ nhiệm môn, giảng viên, 2 sinh viên.
+- Môn `QZE2E`, lớp `QZE2E-01` ở trạng thái `OPEN`, có 2 sinh viên.
+- 2 học liệu link YouTube: một của môn, một của lớp.
+- 3 câu ngân hàng đã kích hoạt; Quiz của lớp có 3 câu đó.
+
+Các thao tác kiểm thì làm trên trình duyệt (khung trình duyệt của app), kiểm thêm bằng API và PostgreSQL. Stack đã gỡ cùng volume sau khi chạy.
+
+| Bước | Kết quả |
+|---|---|
+| Sinh viên 1 mở chuông, bấm "Có Quiz mới" (link U14 không có `classId`) | Đạt; trang tự chuyển sang `/quiz-practice/{quizId}?classId=…` (L1) |
+| Quiz Practice Detail | Đạt; có lời báo ghi nhận hoạt động, "Học liệu gắn kèm (1)" |
+| Mở học liệu lớp: phần "Quiz gắn với học liệu" | Đạt (G4); "Practice · không giới hạn thời gian · Đã dùng 0 / 1 lượt", nút Làm quiz. Học liệu môn không gắn Quiz thì không có phần này |
+| Bấm Làm quiz: trang làm bài hiện lời báo, tracker gửi `SESSION_START` | Đạt (G3); `POST /quiz-attempts/{id}/activity` trả `204` |
+| Giả lập rời trang 4 giây: đổi `visibilityState` và phát `visibilitychange` (công cụ không chuyển tab thật được) | Đạt; `activity_events` có `HIDDEN`, `VISIBLE` với `work_kind` `QUIZ_ATTEMPT` |
+| Trả lời 1 câu, nộp | Đạt; 1/4, `SUBMITTED`, `MANUAL`; trước khi nộp xong đã ghi `SESSION_END` (tổng 4 sự kiện, `sequence` 0–3) |
+| Mở lại học liệu lớp | Đạt; "Bạn đã dùng hết 1/1 lượt làm quiz này." |
+| Giảng viên mở Lượt làm → Sinh viên Một → Xem bài | Đạt; "Dòng thời gian hoạt động": "Rời trang 1 lần · tổng thời gian đã biết 4 giây", khoảng 14:13:18–14:13:22, kèm câu trả lời |
+| Log backend, worker | Không có lỗi |
+
+## Làm lại Quiz (2026-11-01)
+
+Thêm `AttemptActivityAssessor`, `ActivityOutcome`, `ActivitySignal`, `PenaltyDecision`, `QuestionPager`. Mã lỗi: `PENALTY_REASON_INVALID`, `PENALTY_POINTS_INVALID`, `PENALTY_NOT_DECIDABLE`. Mục G4 ở trên là lịch sử, đã bỏ. Chi tiết: [kết quả](../../build-and-test/2026-11-01-quiz-rework-results.md).

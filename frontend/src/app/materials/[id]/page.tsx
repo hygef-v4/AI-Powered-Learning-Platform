@@ -1,5 +1,19 @@
-import { MaterialDetailPage } from "@/features/materials/MaterialDetailPage";
-export default async function Page({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ classId?: string }> }) {
-  const { id } = await params; const { classId } = await searchParams;
-  return <MaterialDetailPage key={`${id}:${classId}`} id={id} classId={classId} />;
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+
+export const metadata: Metadata = { title: "Học liệu" };
+
+/** Trang sửa học liệu cũ: nay sửa và lưu trữ ngay trên trang chi tiết (`/view`). */
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ classId?: string }>;
+}) {
+  const { id } = await params;
+  const { classId } = await searchParams;
+  redirect(
+    `/materials/${encodeURIComponent(id)}/view${classId ? `?classId=${encodeURIComponent(classId)}` : ""}`,
+  );
 }

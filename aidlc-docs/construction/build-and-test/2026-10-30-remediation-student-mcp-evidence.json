@@ -1,0 +1,112 @@
+{
+  "baseline": "staging@794a405304bf02dd2593a9fa2c88662d7cd52845 plus uncommitted remediation",
+  "recordedAt": "2026-10-30T06:51:55.296176+00:00",
+  "backend": {
+    "command": "mvn -o -B -Dmaven.repo.local=<existing user cache> verify",
+    "totals": {
+      "tests": 1611,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "suites": 215
+  },
+  "frontend": {
+    "success": true,
+    "numTotalTests": 599,
+    "numPassedTests": 599,
+    "numFailedTests": 0,
+    "numPendingTests": 0
+  },
+  "frontendFiles": 94,
+  "selectedBackendSuites": [
+    {
+      "name": "edu.aiplatform.ai.domain.AiRepositoriesIntegrationTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "edu.aiplatform.assignmentwork.application.PracticeFeedbackConcurrencyIntegrationTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "edu.aiplatform.assignmentwork.application.PracticeFeedbackMcpParityTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "edu.aiplatform.backup.application.BackupJobHandlerTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "edu.aiplatform.backup.infrastructure.BackupConcurrentDeliveryIntegrationTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "edu.aiplatform.groupdocs.domain.GroupRepositoriesIntegrationTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "edu.aiplatform.jobs.application.JobDispatcherTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "edu.aiplatform.jobs.infrastructure.JobListenerTest",
+      "tests": "29",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "edu.aiplatform.notifications.infrastructure.NotificationDeliveryIntegrationTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "edu.aiplatform.quizzes.infrastructure.QuizPublicationMigrationIntegrationTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "edu.aiplatform.subjects.infrastructure.SubjectRepositoryIntegrationTest",
+      "tests": "31",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ],
+  "requiredDbGuard": [
+    "Required suite passed: edu.aiplatform.subjects.infrastructure.SubjectRepositoryIntegrationTest (31 tests, no skips)",
+    "Required suite passed: edu.aiplatform.notifications.infrastructure.NotificationDeliveryIntegrationTest (2 tests, no skips)"
+  ],
+  "lint": {
+    "errors": 0,
+    "existingWarnings": 2
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "liveProviderOrDeploy": false
+}

@@ -1,4 +1,7 @@
-import { QuestionDetailPage } from "@/features/quizzes/QuestionDetailPage";
+import type { Metadata } from "next";
+import { QuestionDetailPage } from "@/features/quizzes/pages/QuestionDetailPage";
+
+export const metadata: Metadata = { title: "Câu hỏi" };
 
 // U10 #20 Question Detail; id "new" là thêm câu vào môn ?subjectId=.
 export default async function Page({ params, searchParams }: {

@@ -1,0 +1,71 @@
+import { act, renderHook } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { formatDuration } from "@/shared/activity/ActivityTimeline";
+import { HEARTBEAT_MS, useActivityTracker } from "@/shared/activity/useActivityTracker";
+import { computeParts, type DocumentModel } from "@/shared/document";
+import { insertIntoPart } from "@/features/assignmentwork/pages/AssignmentWorkspacePage";
+import { remaining } from "@/features/assignmentwork/model/format";
+import type { StudentRow } from "@/features/assignmentwork/model/types";
+import { upcoming } from "@/features/assignmentwork/hooks/useStudentAssignments";
+
+describe("insertIntoPart", () => {
+  const heading = (id: string, style: "H1" | "H2", text: string): DocumentModel["blocks"][number] => ({ id, origin: "TEACHER", type: "HEADING", content: { style, text } });
+  const para = (id: string): DocumentModel["blocks"][number] => ({ id, origin: "TEACHER", type: "PARAGRAPH", content: { runs: [{ text: id }] } });
+  const content: DocumentModel = { blocks: [heading("a", "H1", "A"), para("a-text"), heading("b", "H1", "B"), para("b-text")] };
+  const parts = computeParts(content);
+  const added = [{ id: "new", origin: "STUDENT" as const, type: "PARAGRAPH" as const, content: { runs: [{ text: "nhập" }] } }];
+
+  it("chèn vào cuối phần đang chọn; không chọn phần thì thêm vào cuối bài", () => {
+    expect(insertIntoPart(content, parts, "a", added).blocks.map((b) => b.id)).toEqual(["a", "a-text", "new", "b", "b-text"]);
+    expect(insertIntoPart(content, parts, null, added).blocks.map((b) => b.id)).toEqual(["a", "a-text", "b", "b-text", "new"]);
+  });
+});
+
+describe("danh sách bài", () => {
+  const row = (patch: Partial<StudentRow>): StudentRow => ({
+    assignmentId: "a", classId: "c", classCode: "C1", subjectCode: "SWD", scope: "CLASS", title: "Bài", submissionMode: "INDIVIDUAL",
+    gradingMode: "GRADED", diagramEnabled: false, status: "OPEN", opensAt: null, closesAt: null, lateUntil: null, maxAttempts: 1,
+    myStatus: "NOT_STARTED", attemptCount: 0, submittedCount: 0, inProgressAttemptId: null, lastSubmittedAt: null, group: null, ...patch,
+  });
+  it("sắp đến hạn là bài đang mở chưa nộp", () => {
+    expect(upcoming(row({}))).toBe(true);
+    expect(upcoming(row({ myStatus: "SUBMITTED" }))).toBe(false);
+    expect(upcoming(row({ status: "CLOSED" }))).toBe(false);
+    expect(upcoming(row({ myStatus: "GROUP", group: { groupDocumentId: "doc", submitted: true, submittedAt: "2026-11-11T00:00:00Z" } }))).toBe(false);
+    expect(upcoming(row({ myStatus: "GROUP", group: { groupDocumentId: "doc", submitted: false, submittedAt: null } }))).toBe(true);
+  });
+  it("đếm ngược tới hạn", () => {
+    const now = Date.parse("2026-10-20T00:00:00Z");
+    expect(remaining("2026-10-21T02:30:00Z", now)).toBe("1 ngày 2 giờ");
+    expect(remaining("2026-10-20T00:10:00Z", now)).toBe("10 phút");
+    expect(remaining("2026-10-19T00:00:00Z", now)).toBe("Đã quá hạn");
+  });
+  it("định dạng thời lượng ISO", () => {
+    expect(formatDuration("PT1M5S")).toBe("1 phút 5 giây");
+    expect(formatDuration("PT0S")).toBe("0 giây");
+  });
+});
+
+describe("useActivityTracker", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it("gửi SESSION_START, HIDDEN khi rời trang, HEARTBEAT mỗi 60 giây; tắt thì không gửi gì", async () => {
+    const send = vi.fn().mockResolvedValue(undefined);
+    const { unmount } = renderHook(() => useActivityTracker({ enabled: true, send }));
+    expect(send.mock.calls[0]![0][0].kind).toBe("SESSION_START");
+    await act(async () => { await Promise.resolve(); });
+    await act(async () => {
+      Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(send.mock.calls.flatMap((c) => c[0]).map((e: { kind: string }) => e.kind)).toContain("HIDDEN");
+    await act(async () => { await vi.advanceTimersByTimeAsync(HEARTBEAT_MS + 10_000); });
+    expect(send.mock.calls.flatMap((c) => c[0]).map((e: { kind: string }) => e.kind)).toContain("HEARTBEAT");
+    unmount();
+    const off = vi.fn();
+    renderHook(() => useActivityTracker({ enabled: false, send: off }));
+    expect(off).not.toHaveBeenCalled();
+    Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true });
+  });
+});

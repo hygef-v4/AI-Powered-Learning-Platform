@@ -15,7 +15,12 @@ export type SourceOption = {
   reason: string | null;
   quota: SourceQuota | null;
   costBearer: "SCHOOL" | "SELF";
+  /** Nguồn mặc định của người dùng (FB-U06-01); có thể đang không dùng được. */
+  preferred?: boolean;
 };
+
+/** Nguồn AI mặc định (GET/PUT /api/v1/me/ai-source-preference); `source` null là hỏi mỗi lần. */
+export type SourcePreference = { source: AiSource | null; provider: AiProvider | null };
 
 /** Lựa chọn người dùng gửi kèm yêu cầu; unit gọi truyền vào `IAiTask.submit` qua API của mình. */
 export type SourceChoice = { source: AiSource; provider: AiProvider | null };

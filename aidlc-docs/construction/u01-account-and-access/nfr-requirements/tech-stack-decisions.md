@@ -1,6 +1,8 @@
-# U01 Account & Access — tech-stack-decisions
+# U01 Account & Access — tech-stack-decisions — chuẩn JDBC
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U01 Account & Access thuộc Iter 1, người code: Người 1; phạm vi UC 01–12 giữ như U01 cũ, chỉ đổi liên kết sang các unit mới. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code còn JPA được ghi là khoảng cách migration.
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
@@ -15,7 +17,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
 | Lưu refresh, OTP, rate limit | Redis | Đã chốt ở Application Design; có TTL và bộ đếm nguyên tử | Application Design |
 | Dữ liệu tài khoản | PostgreSQL | Đã chốt ở Application Design | Application Design |
 | Băm mật khẩu | bcrypt, cost ≥ 12 | Người dùng chọn | Câu N4 |
-| Gửi mail | SMTP qua Mail Port; demo dùng Brevo SMTP + SMTP key | Dùng trong hạn mức miễn phí của Brevo; đổi nhà cung cấp SMTP bằng cấu hình | Câu N8, REL-005 |
+| Gửi mail | U01 IMail: SMTP mặc định (Mailpit local/test) hoặc Brevo HTTPS API (`MAIL_TRANSPORT=brevo-api`) | SMTP dùng SMTP key; API dùng BREVO_API_KEY qua HTTPS khi mạng chặn SMTP; đều cần cấu hình provider | Câu N8, REL-005 |
 | Mail local/demo | Mailpit trong container | Không tốn lượt mail thật, xem được OTP khi test | Câu N8 |
 | Gửi mail bất đồng bộ | Job của U03 + worker | Lỗi mail không làm hỏng yêu cầu | BR-U01-92 |
 | Đọc CSV | Thư viện CSV chuẩn của Java (Apache Commons CSV hoặc tương đương) | Xử lý đúng dấu phẩy và ngoặc kép trong tên | BR-U01-80 |
@@ -47,3 +49,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
 
 - Tạo/import không gửi OTP, activation hợp lệ/sai/hết hạn/rate limit; recovery không lộ account.
 - Đăng nhập/đăng xuất/phiên revoked; R1 own profile; Admin bị chặn học vụ; Student shared quota bị từ chối.
+
+## Design assessment scope — 2026-10-30
+
+Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evidence có ngày trước baseline, không chứng nhận runtime tại HEAD. Đợt này chỉ đồng bộ tài liệu; hiệu lực security/resiliency, latency/capacity và provider acceptance phải có kiểm chứng riêng. PBT vẫn disabled.

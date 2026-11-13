@@ -1,12 +1,19 @@
 # U04 Subject Administration — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U04 Subject Administration thuộc Iter 1, người code: Người 4; UC 16–19. Tách phần môn học từ U04 cũ (Subject, Class & Enrollment); phần lớp và ghi danh thuộc U05. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 16, 17, 18, 19. **Primary stories:** US-CAT-001 (phần môn). **Requirements:** FR-002, FR-003.
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md).
 
 Thiết kế độc lập công nghệ.
+
+**Quyết định 2026-11-07 — D-U04-04:** Bỏ học kỳ lớp khỏi UI, request/response, domain và dữ liệu hiện hành; xem [quyết định đã duyệt](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Migration mới `V20261107_2200__remove_class_term.sql` xóa cột cũ khi áp dụng; không sửa migration hoặc bằng chứng lịch sử. Các quy tắc khác giữ nguyên phạm vi đã chốt.
+
+**Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
 
 ## 1. Tổng quan
 
@@ -33,11 +40,11 @@ U04 không sở hữu: tài khoản và role (U01), lớp, giảng viên lớp v
 ```mermaid
 stateDiagram-v2
     [*] --> ACTIVE: Admin thêm môn
-    ACTIVE --> ARCHIVED: Lưu trữ khi mọi lớp đã ARCHIVED
+    ACTIVE --> ARCHIVED: Lưu trữ môn và các lớp DRAFT OPEN
     ARCHIVED --> ACTIVE: Mở lại
 ```
 
-**Text alternative**: Môn tạo ra ở `ACTIVE`. Chỉ lưu trữ được khi mọi lớp của môn đã `ARCHIVED`; môn `ARCHIVED` có thể mở lại về `ACTIVE`. Không xóa môn.
+**Text alternative**: Môn tạo ra ở `ACTIVE`. Lưu trữ môn đồng thời lưu trữ mọi lớp `DRAFT`, `OPEN` trong cùng transaction, giữ enrollment/lịch sử và gỡ Chủ nhiệm môn; lỗi thì rollback toàn bộ. Môn `ARCHIVED` có thể mở lại về `ACTIVE`, không tự mở lại lớp hoặc gán lại Chủ nhiệm. Không xóa môn.
 
 ## 3. Contract
 
@@ -56,9 +63,9 @@ stateDiagram-v2
 
 | Contract | Phương thức | Unit cài | Dùng để |
 |---|---|---|---|
-| `ISubjectClasses` | `listClassesOfSubject(subjectId)` → `List<SubjectClassSummary>`, `countClasses(subjectIds)` → số lớp theo môn, `countUnarchivedClasses(subjectId)`, `archiveClassesOfSubject(subjectId, actor)` | U05 | Hiện lớp của môn chỉ đọc trên Subject Detail và số lớp trên Subject List; chặn lưu trữ môn khi còn lớp chưa lưu trữ, mà U04 không phụ thuộc ngược U05 |
+| `ISubjectClasses` | `listClassesOfSubject(subjectId)` → `List<SubjectClassSummary>`, `countClasses(subjectIds)` → số lớp theo môn, `countUnarchivedClasses(subjectId)`, `archiveClassesOfSubject(subjectId, actor)` | U05 | Hiện lớp chỉ đọc và tổng số lớp tại Subject Detail; lưu trữ đồng thời các lớp DRAFT/OPEN khi lưu trữ môn trong cùng transaction, không làm U04 phụ thuộc ngược implementation U05 |
 
-`SubjectClassSummary`: `classId`, `code`, `name`, `term`, `status`, `teacherName`, `activeStudentCount`.
+`SubjectClassSummary`: `classId`, `code`, `name`, `status`, `teacherName`, `activeStudentCount`.
 
 ### Interface U04 dùng
 

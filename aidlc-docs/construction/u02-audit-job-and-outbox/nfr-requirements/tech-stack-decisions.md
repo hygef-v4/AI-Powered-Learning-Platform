@@ -1,6 +1,8 @@
-# U02 Audit — tech-stack-decisions
+# U02 Audit — tech-stack-decisions — chuẩn JDBC
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U02 Audit thuộc Iter 1, người code: Người 2; phạm vi UC 13 giữ như U02 cũ (chỉ audit; việc nền đã thuộc U03). 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code còn JPA được ghi là khoảng cách migration.
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 13. **Primary stories:** US-AUD-001. **Requirements:** FR-014.
 
@@ -8,7 +10,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
 
 | Hạng mục | Chọn | Lý do |
 |---|---|---|
-| Bảng `audit_logs` | PostgreSQL + Spring Data JPA | Đã chốt |
+| Bảng `audit_logs` | PostgreSQL + Spring JDBC (JdbcTemplate/NamedParameterJdbcTemplate/JdbcClient) | Đã chốt |
 | Lưu JSON audit | Cột `jsonb` | Đã chốt ở Application Design |
 | Test | JUnit 5, Testcontainers (PostgreSQL) | Theo NFR-004 |
 
@@ -27,3 +29,7 @@ Messaging, worker, sweeper và scanner thuộc U03 (xem `u03-job-and-settings/nf
 ## Kiểm tra revision bắt buộc
 
 - Id lặp không trùng; rollback denied vẫn ghi; field secrets/prompt bị loại; filter malformed từ chối; không Admin denied.
+
+## Design assessment scope — 2026-10-30
+
+Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evidence có ngày trước baseline, không chứng nhận runtime tại HEAD. Đợt này chỉ đồng bộ tài liệu; hiệu lực security/resiliency, latency/capacity và provider acceptance phải có kiểm chứng riêng. PBT vẫn disabled.

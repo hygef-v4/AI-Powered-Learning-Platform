@@ -1,4 +1,10 @@
-# U09 — Implementation and verification
+# U09 — Implementation and verification, cập nhật JDBC 2026-11-06
+
+**Persistence hiện hành:** [U09 JDBC](jdbc-persistence.md), theo [quy định JDBC toàn dự án](../../persistence-conventions.md). Các phần có ngày trước đây mô tả implementation/evidence lịch sử; không còn là yêu cầu dùng JPA cho U09.
+
+**Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
+
+## Ghi nhận trước baseline 2026-10-30 (lịch sử)
 
 Ngày: 2026-10-20. Branch: `grading-gradebook`, baseline `6341aed2`.
 

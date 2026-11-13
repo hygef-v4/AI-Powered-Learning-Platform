@@ -1,0 +1,36 @@
+# U06 AI Connections — AS-BUILT source snapshot 2026-11-07
+
+Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths are catalogued in [current-code-baseline](../../../inception/reverse-engineering/current-code-baseline.md). Dated deltas/test results below retain their original scope; this update is not runtime acceptance.
+
+**Documentation UI delta 2026-11-02:** /ai/mcp-guide under the existing authenticated AI layout replaces the long inline MCP setup guide with a persistent connection-tab link. Reuses McpClientSetup for four native formats/English prompt, stable SSR endpoint and placeholder-only docs. Includes per-role workflows, 29 source-aligned non-Admin tools, proposal/apply and grading-quality limits, retries, disconnect/revoke and official references. No backend/API/schema changes. [Verification](../../../construction/build-and-test/2026-11-02-mcp-documentation-results.md).
+
+MCP credential dành ACTIVE Student/Teacher/Subject Manager; Admin bị từ chối. Nhiều institutional keys/provider; repository chọn ACTIVE tạo sớm nhất. Owner reveal ACTIVE MCP token khi có ciphertext; Admin reveal key chung không REVOKED (kể cả DISABLED) và ghi audit. Personal key không có readback cho Admin. Staff write tools có proposal/retry/confirmation theo source, không tự finalize/publish.
+
+## Source và negative-test inventory
+
+| Source | Trách nhiệm |
+|---|---|
+| [ai/controller](../../../../backend/src/main/java/edu/aiplatform/ai/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [ai/service](../../../../backend/src/main/java/edu/aiplatform/ai/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [ai/repository](../../../../backend/src/main/java/edu/aiplatform/ai/repository) | Repository interface/implementation, Spring JDBC/SQL và persistence mapping. |
+| [ai/model](../../../../backend/src/main/java/edu/aiplatform/ai/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [ai/integration](../../../../backend/src/main/java/edu/aiplatform/ai/integration) | Adapter hạ tầng/provider, listener và sender. |
+| [ai/config](../../../../backend/src/main/java/edu/aiplatform/ai/config) | Properties, cấu hình bean và topology. |
+| [ai/contract](../../../../backend/src/main/java/edu/aiplatform/ai/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
+
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [ai](../../../../frontend/src/features/ai) | [api](../../../../frontend/src/features/ai/api) | [model](../../../../frontend/src/features/ai/model) | [pages](../../../../frontend/src/features/ai/pages) | [components](../../../../frontend/src/features/ai/components) | — | — | [tests](../../../../frontend/tests/features/ai) |
+
+Tests: [ai](../../../../backend/src/test/java/edu/aiplatform/ai).
+
+[Controller, migration and individual test inventory](../../../inception/reverse-engineering/current-code-baseline.md).
+
+## Evidence và giới hạn
+
+Kiểm tra của đợt refactor được ghi trong [refactor results](../../build-and-test/2026-10-30-package-moves-only-results.md). Những báo cáo có ngày trước đó là bằng chứng lịch sử. Có source/test không đồng nghĩa test pass hoặc runtime/provider healthy. Negative cases cần kiểm trong test nguồn: actor sai role/scope, không có dữ liệu, stale version, unavailable provider; chi tiết thật theo assertions của từng file test.
+
+### Ghi nhận kiểm thử trước baseline
+
+- [aidlc-docs/construction/build-and-test/e2e-u02-u06-u12-2026-10-24.md](../../build-and-test/e2e-u02-u06-u12-2026-10-24.md)
+- [aidlc-docs/construction/build-and-test/u06-verification.md](../../build-and-test/u06-verification.md)

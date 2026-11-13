@@ -1,10 +1,11 @@
-// U07: mục Bài tập trên menu bên của Subject Manager; phần Bài tập trong tab Đánh giá của lớp; số bài tập của môn.
+// U07: mục Bài tập trên sidebar của môn (Subject Manager); tab Bài tập của lớp; sidebar các phần của bài khi soạn một bài.
 
-import { subjectSummarySections, teacherClassTabs } from "@/features/academics/slots";
-import { navEntries } from "@/features/identity/slots";
-import { AssignmentSummary } from "./AssignmentSummary";
-import { ClassAssignmentsSection } from "./ClassAssignmentsSection";
+import { teacherClassTabs } from "@/features/academics/slots";
+import { contextNavEntries, subjectNavEntries } from "@/features/identity/slots";
+import { assignmentContext, studentAssignmentContext } from "./components/assignmentNav";
+import { ClassAssignmentsSection } from "./components/ClassAssignmentsSection";
 
-navEntries.register({ key: "manager-assignments", order: 60, title: "Bài tập", href: "/manager/assignments", icon: "assignment", roles: ["SUBJECT_MANAGER"] });
+subjectNavEntries.register({ key: "manager-assignments", order: 40, title: "Đề mẫu", icon: "assignment", path: "/manager/assignments" });
 teacherClassTabs.register({ key: "assignments", order: 10, component: ClassAssignmentsSection });
-subjectSummarySections.register({ key: "assignments", order: 20, component: AssignmentSummary });
+contextNavEntries.register({ key: "assignment-outline", order: 4, roles: ["SUBJECT_MANAGER", "TEACHER"], resolve: assignmentContext });
+contextNavEntries.register({ key: "assignment-work-outline", order: 4, roles: ["STUDENT"], resolve: studentAssignmentContext });

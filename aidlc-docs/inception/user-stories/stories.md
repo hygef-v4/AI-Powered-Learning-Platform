@@ -1,5 +1,7 @@
 # User Stories — Inception revision 2026-10-13
 
+> Latest acceptance 2026-11-02, US-GRD-003/004 and US-GRP-006: FINALIZED/PUBLISHED rejects manual/AI/member edits even with a reason; FINALIZED can publish. Resubmission invalidates the old grade; individual evaluations become SUPERSEDED and group evaluations reset to PENDING. Keep audit/history, without parallel group snapshots or DB changes. [Decision](../requirements/2026-11-02-locked-grades.md).
+
 > Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime. D01–D04 đã chốt 2026-10-15.
 
 **50 MVP stories + 1 extension story**, 66 active UC, 15 logical units. IDs giữ lịch sử; US-ASM-005 và US-PAY-* retired; US-ASM-007 gộp tài liệu thuần vào US-ASM-004.
@@ -30,7 +32,7 @@ Given Student, When chọn nguồn, Then personal API hoạt động đúng quy�
 
 **Current UC trace**: UC 32. Source: [current UC table](../../../docs/usecase_table.md).
 
-**Story**: Là user, tôi kết nối agent vào tools ALAP với phạm vi cá nhân.
+**Story**: Là Student/Teacher/Subject Manager ACTIVE, tôi kết nối agent với tool đúng role/scope. Student dùng MCP hoặc API cá nhân cho UC41; Admin không dùng MCP.
 
 **Truy vết**: FR-035/037. Primary unit U06.
 
@@ -323,6 +325,10 @@ Given draft/IN_PROGRESS, bài GRADED hoặc dữ liệu ngoài quyền, When web
 #### Scenario 4
 
 Given AI lỗi/stale hoặc submissionVersion không khớp, When nhận kết quả, Then không apply sai snapshot và không thay đổi bài nộp/điểm.
+
+#### Scenario 5
+
+Given sinh viên đang xem Lịch sử nộp bài Practice, When mở hoặc đổi lượt nộp, Then thẻ Góp ý AI hiển thị lịch sử của lượt đang chọn. Thẻ nằm cạnh bài trên màn hình rộng và nằm trong luồng đọc trên màn hình hẹp. Sinh viên gửi yêu cầu bằng nút trong thẻ.
 
 ### US-AUD-001 - Tra cứu audit nghiệp vụ và bảo mật
 
@@ -857,6 +863,138 @@ Given submission hợp lệ, When chấm rubric tay/AI proposal, Then dùng ph�
 
 Given history đóng góp, When đánh giá, Then không tự suy ra cheating/điểm đóng góp bằng số thao tác.
 
+### US-GRP-007 - Bật đợt sinh viên tự chia nhóm
+
+**Primary unit**: U12; **Scope**: MVP; **Persona**: P-TEACHER.
+
+**Current UC trace**: UC 57 — Create/Update/Delete Class Group (mở rộng 2026-11-11). Source: [current UC table](../../../docs/usecase_table.md).
+
+**Story**: Là giảng viên, tôi muốn bật đợt cho sinh viên tự lập nhóm với sĩ số và hạn chót do tôi đặt, để sinh viên chọn bạn cùng nhóm mà tôi vẫn kiểm soát quy mô nhóm.
+
+**Truy vết**: FR-025, SG-01, SEC-002, SEC-003. [Yêu cầu](../requirements/2026-11-11-student-self-grouping.md).
+
+**Acceptance criteria**
+
+#### Scenario 1 - Bật đợt hợp lệ
+
+- **Given** giảng viên chính của lớp `DRAFT`/`OPEN`
+- **When** bật đợt với sĩ số tối thiểu và tối đa trong 2–20, tối thiểu ≤ tối đa, hạn chót trống hoặc ở tương lai
+- **Then** cấu hình được lưu và audit; khi lớp `OPEN` và chưa tới hạn, sinh viên chưa có nhóm thấy đợt đang mở cùng sĩ số và hạn chót
+
+#### Scenario 2 - Cấu hình hoặc người thao tác không hợp lệ
+
+- **Given** sĩ số ngoài 2–20, tối thiểu lớn hơn tối đa, hạn chót đã qua, lớp `ARCHIVED`, hoặc người thao tác không phải giảng viên chính của lớp
+- **When** lưu cấu hình
+- **Then** hệ thống từ chối với lỗi cụ thể và cấu hình cũ không đổi
+
+#### Scenario 3 - Đóng đợt
+
+- **Given** đợt đang mở, có đề xuất nháp, đề xuất chờ duyệt và lời mời đang chờ
+- **When** giảng viên tắt đợt hoặc tới hạn chót
+- **Then** sinh viên không tạo, mời, chấp nhận hay gửi duyệt được; lời mời đang chờ hết hiệu lực; đề xuất chờ duyệt vẫn chờ giảng viên quyết định; đề xuất nháp được giữ để dùng khi đợt mở lại
+
+### US-GRP-008 - Lập đề xuất nhóm và mời bạn
+
+**Primary unit**: U12; **Scope**: MVP; **Persona**: P-STUDENT.
+
+**Current UC trace**: UC 54 — View My Group (mở rộng 2026-11-11). Source: [current UC table](../../../docs/usecase_table.md).
+
+**Story**: Là sinh viên chưa có nhóm, tôi muốn tạo đề xuất nhóm và mời bạn cùng lớp, hoặc nhận lời mời của bạn, để làm việc với những người tôi chọn.
+
+**Truy vết**: FR-025, SG-02, SG-08, SG-09, SEC-002, SEC-003. [Yêu cầu](../requirements/2026-11-11-student-self-grouping.md).
+
+**Acceptance criteria**
+
+#### Scenario 1 - Tạo đề xuất và mời
+
+- **Given** đợt đang mở; sinh viên ghi danh `ACTIVE`, chưa có nhóm chính thức và chưa ở đề xuất đang hoạt động nào
+- **When** tạo đề xuất với tên hợp lệ, không trùng trong lớp, rồi mời các bạn chưa có nhóm
+- **Then** người tạo là trưởng nhóm và thành viên; mỗi người được mời nhận thông báo trong ứng dụng; số thành viên cộng lời mời đang chờ không vượt sĩ số tối đa
+
+#### Scenario 2 - Chấp nhận hoặc từ chối lời mời
+
+- **Given** sinh viên có một hoặc nhiều lời mời đang chờ và chưa ở đề xuất đang hoạt động nào
+- **When** chấp nhận một lời mời
+- **Then** sinh viên thành thành viên của đề xuất đó và các lời mời còn lại tự hủy; nếu từ chối thì lời mời đóng và đề xuất không đổi
+
+#### Scenario 3 - Thao tác không hợp lệ
+
+- **Given** sinh viên đã có nhóm chính thức, đã ở đề xuất đang hoạt động khác, không ghi danh `ACTIVE`, lớp không `OPEN`, đợt đã đóng, hoặc người mời không phải trưởng nhóm
+- **When** tạo đề xuất, mời, hoặc chấp nhận lời mời
+- **Then** hệ thống từ chối với lỗi cụ thể; không sinh viên nào thuộc hai đề xuất đang hoạt động, kể cả khi hai thao tác diễn ra cùng lúc
+
+#### Scenario 4 - Rời hoặc hủy đề xuất nháp
+
+- **Given** đề xuất đang nháp
+- **When** một thành viên rời, hoặc trưởng nhóm hủy đề xuất
+- **Then** người rời được tự do; khi hủy thì mọi thành viên được tự do và lời mời đang chờ của đề xuất bị hủy
+
+### US-GRP-009 - Gửi đề xuất nhóm để giảng viên duyệt
+
+**Primary unit**: U12; **Scope**: MVP; **Persona**: P-STUDENT (trưởng nhóm đề xuất).
+
+**Current UC trace**: UC 54 — View My Group (mở rộng 2026-11-11). Source: [current UC table](../../../docs/usecase_table.md).
+
+**Story**: Là trưởng nhóm đề xuất, tôi muốn gửi đề xuất cho giảng viên duyệt khi đủ người, và rút về để sửa khi cần, để nhóm của tôi trở thành nhóm chính thức.
+
+**Truy vết**: FR-025, SG-03, SG-08, SG-09, SEC-002. [Yêu cầu](../requirements/2026-11-11-student-self-grouping.md).
+
+**Acceptance criteria**
+
+#### Scenario 1 - Gửi duyệt
+
+- **Given** đợt đang mở và đề xuất nháp có số thành viên đã chấp nhận ≥ sĩ số tối thiểu
+- **When** trưởng nhóm gửi duyệt
+- **Then** đề xuất chuyển sang chờ duyệt và bị khóa; lời mời còn chờ tự hủy; giảng viên chính nhận thông báo có đề xuất mới
+
+#### Scenario 2 - Chưa đủ điều kiện
+
+- **Given** đề xuất thiếu sĩ số tối thiểu, đợt đã đóng, hoặc người gửi không phải trưởng nhóm
+- **When** gửi duyệt
+- **Then** hệ thống từ chối với lỗi cụ thể và đề xuất vẫn là nháp
+
+#### Scenario 3 - Rút về nháp
+
+- **Given** đề xuất đang chờ duyệt
+- **When** trưởng nhóm rút về
+- **Then** đề xuất thành nháp, rời khỏi danh sách chờ duyệt của giảng viên và sửa được khi đợt mở
+
+### US-GRP-010 - Duyệt đề xuất nhóm và xếp sinh viên còn lại
+
+**Primary unit**: U12; **Scope**: MVP; **Persona**: P-TEACHER.
+
+**Current UC trace**: UC 57 — Create/Update/Delete Class Group (mở rộng 2026-11-11). Source: [current UC table](../../../docs/usecase_table.md).
+
+**Story**: Là giảng viên, tôi muốn duyệt hoặc từ chối đề xuất nhóm của sinh viên và thấy ai còn chưa có nhóm, để chốt bộ nhóm của lớp nhanh mà vẫn đúng quy tắc.
+
+**Truy vết**: FR-025, SG-04, SG-05, SG-06, SG-07, SG-08, SG-09, SEC-002, SEC-003, SEC-005. [Yêu cầu](../requirements/2026-11-11-student-self-grouping.md).
+
+**Acceptance criteria**
+
+#### Scenario 1 - Duyệt một hoặc nhiều đề xuất
+
+- **Given** giảng viên chính của lớp `DRAFT`/`OPEN` và các đề xuất chờ duyệt
+- **When** duyệt một đề xuất hoặc chọn nhiều đề xuất để duyệt một lần
+- **Then** mỗi đề xuất hợp lệ thành nhóm chính thức với đúng tên, trưởng nhóm và thành viên, `version` bộ nhóm tăng, thao tác được audit và thành viên nhận thông báo; đề xuất vi phạm quy tắc bộ nhóm được báo kèm lý do, không ghi một nửa và không chặn các đề xuất hợp lệ khác
+
+#### Scenario 2 - Từ chối
+
+- **Given** một đề xuất chờ duyệt
+- **When** giảng viên từ chối, có hoặc không có lý do (tối đa 1.000 ký tự)
+- **Then** đề xuất bị từ chối, thành viên nhận thông báo kèm lý do và được tự do lập hoặc vào đề xuất khác
+
+#### Scenario 3 - Sinh viên chưa có nhóm và sửa tay
+
+- **Given** đợt đang mở hoặc đã đóng
+- **When** giảng viên mở tab Nhóm, rồi tạo tay hoặc chia ngẫu nhiên và lưu bộ nhóm
+- **Then** tab hiện sinh viên chưa có nhóm cùng đề xuất họ đang ở; người vừa được xếp nhóm chính thức rời đề xuất của họ, đề xuất mất trưởng nhóm bị hủy, đề xuất chờ duyệt còn dưới sĩ số tối thiểu quay về nháp
+
+#### Scenario 4 - Không có quyền hoặc dữ liệu đã đổi
+
+- **Given** người thao tác không phải giảng viên chính, lớp `ARCHIVED`, đề xuất không còn chờ duyệt, hoặc bộ nhóm vừa bị người khác lưu
+- **When** duyệt hoặc từ chối
+- **Then** hệ thống từ chối hoặc báo xung đột để tải lại; sau khi duyệt, sinh viên không tự đổi thành viên nhóm chính thức
+
 ### US-IAM-001 - Nhận và kích hoạt tài khoản trường cấp
 
 **Primary unit**: U01; **Scope**: MVP.
@@ -864,7 +1002,7 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 **Current UC trace**: UC 01. Source: [current UC table](../../../docs/usecase_table.md).
 
 
-**Story**: Là người học hoặc giảng viên, tôi muốn kích hoạt tài khoản gắn với email trường để bắt đầu sử dụng nền tảng mà không cần tự đăng ký.
+**Story**: Là người học hoặc giảng viên, tôi muốn kích hoạt tài khoản gắn với email đăng nhập do trường cấp để bắt đầu sử dụng nền tảng mà không cần tự đăng ký.
 
 **Truy vết**: FR-001, FR-011, NFR-002, SEC-001, SEC-002, SEC-003, SEC-006.
 
@@ -872,8 +1010,8 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 
 #### Scenario 1 - Kích hoạt thành công
 
-- **Given** tài khoản đã được cấp/import ở trạng thái chờ kích hoạt với email thuộc miền của trường
-- **When** ở lần đăng nhập đầu người dùng nhập email trường, yêu cầu kích hoạt, nhập OTP hệ thống gửi qua email và sau khi OTP được xác minh thì đặt mật khẩu đạt chính sách
+- **Given** tài khoản đã được cấp/import ở trạng thái chờ kích hoạt (email thuộc tên miền nào cũng được)
+- **When** ở lần đăng nhập đầu người dùng nhập email đăng nhập, yêu cầu kích hoạt, nhập OTP hệ thống gửi qua email và sau khi OTP được xác minh thì đặt mật khẩu đạt chính sách
 - **Then** tài khoản được kích hoạt, OTP bị vô hiệu và người dùng được tự đăng nhập, vào thẳng dashboard theo vai trò
 
 #### Scenario 1a - OTP sai
@@ -882,9 +1020,9 @@ Given history đóng góp, When đánh giá, Then không tự suy ra cheating/đ
 - **When** người dùng nhập sai hoặc mã đã hết hạn
 - **Then** hệ thống báo "mã không hợp lệ hoặc đã hết hạn", không mở bước nhập mật khẩu và trừ lượt thử
 
-#### Scenario 2 - Email chưa được cấp hoặc ngoài miền trường
+#### Scenario 2 - Email chưa được cấp hoặc sai định dạng
 
-- **Given** email chưa có tài khoản chờ kích hoạt hoặc ngoài allowlist miền trường
+- **Given** email chưa có tài khoản chờ kích hoạt hoặc sai định dạng
 - **When** người dùng yêu cầu kích hoạt
 - **Then** hệ thống trả phản hồi trung tính giống trường hợp hợp lệ, không gửi email, không tạo tài khoản công khai và hướng dẫn liên hệ quản trị nếu không nhận được mã
 
@@ -1228,9 +1366,9 @@ Given Teacher chọn câu ACTIVE, When soạn Quiz, Then pin version và không 
 
 #### Scenario 3 - Phân bố điểm ẩn danh trên danh sách bài Student
 
-- **Given** Chủ nhiệm môn của môn đã bật hiển thị phân bố điểm trong Edit Class Information (UC 29), bài GRADED đủ điều kiện riêng tư và điểm đã công bố theo lớp
+- **Given** giảng viên được phân công dạy lớp đã bật phân bố cho cặp bài tập–lớp (mặc định tắt), bài GRADED có ít nhất 20 người đang ghi danh có điểm công bố dùng được
 - **When** người học mở Student Assignments của lớp (UC 37)
-- **Then** bài GRADED có điểm đã công bố hiện phân bố theo khoảng điểm tổng hợp, ẩn khoảng quá ít người; quiz/Practice không có phân bố; không suy ra danh tính hoặc điểm của người học khác; Teacher chỉ được giao dạy không có quyền bật/tắt cài đặt này
+- **Then** bài GRADED hiện phân bố theo khoảng điểm tổng hợp, ẩn khoảng dưới 5 người; Quiz/Practice không có phân bố; không trả danh tính/điểm cá nhân khác. Bài SUBJECT có cài đặt riêng từng lớp; giảng viên lớp bật/tắt được dù nội dung bài chỉ đọc. Chủ nhiệm môn không được giao dạy không có quyền bật/tắt
 
 
 
@@ -1376,7 +1514,7 @@ Given AI credentials, When cấu hình, Then bản ghi được bảo vệ qua U
 
 - **Given** giảng viên có phân công lớp và có dữ liệu activity
 - **When** xem timeline từng sinh viên kể cả bài nhóm
-- **Then** thấy số lần/thời lượng/khoảng thiếu, không tự kết luận gian lận hoặc đổi điểm; ngoài quyền bị từ chối.
+- **Then** thấy số lần/thời lượng/khoảng thiếu, không tự kết luận gian lận; ngoài quyền bị từ chối. Assignment không đổi điểm. Quiz có cấu hình thì mức trừ gợi ý được tính khi nộp, giảng viên quyết định trừ hay không từng lượt kèm lý do, chưa quyết định thì điểm giữ nguyên (sửa FR-039 2026-11-02).
 
 #### Scenario 3 - Activity trong UC 42
 
@@ -1424,6 +1562,10 @@ Given AI credentials, When cấu hình, Then bản ghi được bảo vệ qua U
 | US-GRP-004 | U12 | MVP |
 | US-GRP-005 | U12 | MVP |
 | US-GRP-006 | U12 | MVP |
+| US-GRP-007 | U12 | MVP |
+| US-GRP-008 | U12 | MVP |
+| US-GRP-009 | U12 | MVP |
+| US-GRP-010 | U12 | MVP |
 | US-IAM-001 | U01 | MVP |
 | US-IAM-002 | U01 | MVP |
 | US-IAM-003 | U01 | MVP |
@@ -1445,3 +1587,37 @@ Given AI credentials, When cấu hình, Then bản ghi được bảo vệ qua U
 ## Validation
 
 Mỗi story có Given/When/Then; baseline scope và UC owner ở requirements/use-cases.md. FR/NFR/SEC tham chiếu requirements hiện hành; UC dùng số mới 01–66 đánh theo unit ngày 2026-10-14 (bảng đối chiếu số cũ ở use-cases.md), không đọc catalog 73 cũ. Không xác nhận tests đã chạy; Construction design/plans đã sync; code/contracts/migrations thực tế chưa revision. Security/resiliency enabled subset giữ nguyên; PBT disabled.
+
+## Current acceptance deltas — 2026-10-30
+
+US-AIC-002: Student own-Practice MCP restored, Admin credentials/tools denied (including old tokens), wrong owner/expired/revoked deny; owner token reveal requires ACTIVE and ciphertext. US-AIC-003: multiple institutional keys/provider and Admin reveal audited; personal keys remain private. Class lifecycle, Quiz reopen, optional leader reasons and material modules inherit the code-derived UC clarifications without new story IDs. Source behavior is documented; fresh acceptance is pending.
+
+## MCP correction and audit remediation — 2026-10-30
+
+Student/Teacher/Subject Manager ACTIVE manage own MCP credentials; Admin is denied, including pre-existing tokens. UC41 personal API and MCP share own/SUBMITTED/PRACTICE/current-enrollment/hash/schema/pending/daily-budget restrictions. MCP READ_ONLY cannot record feedback; READ_WRITE can. API and MCP quota checks are serialized per account inside a transaction. UC52 remains deterministic permitted Quiz result/explanation, not an AI generation service. Current code is a remediation working tree on794a4053; dated initial audit and staff-expansion docs are historical where superseded.
+
+## Acceptance delta đã duyệt — 2026-11-09
+
+- UC09/28/46: Given tệp Excel đúng mẫu và người dùng đủ quyền, When xem trước/xác nhận nhập, Then giữ kiểm tra dữ liệu/kết quả từng dòng như luồng hiện hữu; file sai mẫu/giới hạn bị từ chối.
+- US-CNT-001/002: Given học liệu đang bật, When staff đủ quyền tắt, Then sinh viên không thấy/mở/tải kể cả qua token đã cấp; lịch sử vẫn giữ và staff có thể bật lại. Given mô tả có bullet/căn lề, When lưu/mở lại, Then giữ định dạng an toàn và plain fallback.
+- US-AIG-001/002 và US-QBK-002: Given quiz cho phép sửa, When soạn tay/chọn ngân hàng/soạn AI, Then thao tác trong khung câu hỏi, chọn nhiều tài liệu có chữ, không cần popup nguồn API; thiếu/null source vẫn tới cơ chế tự chọn. Lỗi giữ input, rời bản soạn chưa lưu được cảnh báo. Đề xuất AI vẫn cần người chấp nhận.
+
+Đây là tiêu chí cập nhật, không tự xác nhận mọi UI/provider acceptance đã qua. [Bằng chứng theo phạm vi](../../construction/build-and-test/2026-11-09-aidlc-doc-sync.md).
+
+## AI quiz review acceptance bổ sung — 2026-11-09
+
+US-AIG-001/002, US-QBK-002: Given có tài liệu nguồn dùng được, When gửi mà để trống yêu cầu, Then tạo prompt mặc định bám tài liệu. Given model đánh giá yêu cầu không liên quan tài liệu, When mở đề xuất mới, Then hiện cảnh báo vàng trước câu hỏi và giữ cảnh báo khi mở lại. Đánh giá model có thể sai; không coi là chứng minh chất lượng.
+
+Given đề xuất đang mở, When bấm Thu gọn, Then đóng phần xem theo guard chưa lưu. Given các câu chưa Bỏ đều hợp lệ, When Chấp nhận tất cả, Then lưu một request dùng nội dung sửa mới nhất và version quiz hiện tại; câu lỗi chặn lưu để sửa. [Kiểm chứng](../../construction/build-and-test/2026-11-09-ai-quiz-review-followup.md).
+
+## Source-grounded AI proposal acceptance correction — 2026-11-10
+
+US-AIG-001/002: Given AI nhận tài liệu và trả đánh giá lệch nguồn, When xử lý kết quả, Then không đưa câu lệch sang READY/chấp nhận; tạo lại tối đa một task chỉ dùng prompt mặc định và tài liệu đã kiểm lại quyền. Given lượt tạo lại vẫn báo lệch, Then FAILED và proposal rỗng. Cảnh báo được giữ, không chạy lặp vô hạn; có thể tốn thêm một task AI. Legacy READY drafts không được sửa ngầm; đánh giá model không phải bằng chứng tuyệt đối về chất lượng. [Kiểm chứng](../../construction/build-and-test/2026-11-10-ai-source-grounding-fix.md).
+
+## Grading remediation acceptance amendment — 2026-11-10
+
+The approved continuation refines US-GRD-002/003/004/005 and US-RPT-001 without creating new roles or screens. Teacher review must expose partial points, explanations and acknowledgements; a newly filled AI draft alone must not save or publish a grade. Group/member draft corrections preserve a coherent rubric/adjustment breakdown and append history; official grades remain locked and survive group resubmission. A group refresh that changes receipts must clear old marks.
+
+Students can read their published teacher feedback, structured summary, item evidence and improvement suggestions, including group results. Anonymous distributions remain subject to the existing sample/bucket thresholds. Current quiz/class access, per-attempt score privacy and bounded Practice polling have automated regression coverage; live browser/provider acceptance is separate.
+
+[Continuation and evidence](../../construction/plans/code-generation-plan/2026-11-10-grading-remediation-continuation.md).

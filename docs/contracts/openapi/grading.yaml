@@ -237,6 +237,81 @@ paths:
         '404': *id005
         '409': *id006
         '503': *id007
+  /api/v1/classes/{classId}/assignments/{assignmentId}/grade-distribution-visibility:
+    parameters:
+    - name: classId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: assignmentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    get:
+      operationId: getGradeDistributionVisibility
+      tags: [U09]
+      description: >-
+        Assigned teacher of this class only, including an assigned SubjectManager.
+        Content authoring readOnly does not restrict this separate permission.
+        GRADED assignments only, never Quiz/Practice. SUBJECT assignments have independent
+        settings per class; unpublished SUBJECT DRAFT/REVIEWED returns 404.
+        Missing setting defaults off. Archived class or retired assignment returns canEdit=false.
+      security:
+      - session: []
+      responses:
+        '200':
+          description: Current setting for this assignment and class
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradeDistributionVisibility'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '503': *id007
+    put:
+      operationId: updateGradeDistributionVisibility
+      tags: [U09]
+      description: >-
+        Assigned teacher only. Stores enabled for this assignment-class pair with optimistic
+        version checking; stale version, archived class or retired assignment returns 409.
+        Enabling records intent even when the minimum privacy sample is not yet met.
+        Old class flags are ignored and never migrated to enabled settings.
+      security:
+      - session: []
+        csrf: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enabled, version]
+              properties:
+                enabled:
+                  type: boolean
+                version:
+                  type: integer
+                  format: int64
+                  minimum: 0
+      responses:
+        '200':
+          description: Saved setting and new version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradeDistributionVisibility'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
   /api/v1/classes/{classId}/gradebook/export:
     get:
       operationId: exportGradebook
@@ -292,12 +367,25 @@ paths:
       tags:
       - U09
       description: Assigned Teacher/SubjectManager only. Admin and class-management-only
-        authority are denied.
+        authority are denied. Optional status/late filters restrict navigationIds to the
+        originating submission listing in listing order. Requests without filters retain
+        legacy navigation order. Filters never grant access or bypass grade write checks.
       parameters:
       - name: id
         in: path
         required: true
         schema: *id001
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [ALL, PENDING, DRAFT, FINALIZED, PUBLISHED, NOT_SUBMITTED, IN_PROGRESS]
+      - name: late
+        in: query
+        required: false
+        schema:
+          type: boolean
       security:
       - session: []
       responses:
@@ -318,7 +406,8 @@ paths:
       tags:
       - U09
       description: Assigned Teacher/SubjectManager only. Admin and class-management-only
-        authority are denied.
+        authority are denied. Only current PENDING/DRAFT grades are editable. FINALIZED/PUBLISHED
+        writes, including AI proposal application, return 409 GRADE_LOCKED even with a reason.
       parameters:
       - name: id
         in: path
@@ -352,7 +441,8 @@ paths:
       tags:
       - U09
       description: Assigned Teacher/SubjectManager only. Admin and class-management-only
-        authority are denied.
+        authority are denied. Both group root and member must be editable. FINALIZED/PUBLISHED
+        root or member returns 409 GRADE_LOCKED, including requests containing a reason.
       parameters:
       - name: id
         in: path
@@ -508,6 +598,35 @@ paths:
         '404': *id005
         '409': *id006
         '503': *id007
+  /api/v1/evaluations:ai-proposal-estimate:
+    post:
+      operationId: estimateGradingProposalBatch
+      tags:
+      - U09
+      description: Read-only estimate for the distinct grading evaluations in a batch; does not call an AI provider or reserve quota.
+      parameters: []
+      security:
+      - session: []
+        csrf: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiEstimate'
+        '400': *id002
+        '401': *id003
+        '403': *id004
+        '404': *id005
+        '409': *id006
+        '503': *id007
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Batch'
   /api/v1/evaluations:ai-proposals:
     post:
       operationId: requestGradingProposalBatch
@@ -628,7 +747,12 @@ paths:
       operationId: getMyGradeDistribution
       tags:
       - U09
-      description: 'Student: active enrollment; own PUBLISHED results only.'
+      description: >-
+        Student with active enrollment only. Anonymous histogram for a GRADED assignment
+        only when this assignment-class setting is enabled (default false) and at least
+        20 actively enrolled learners have usable published scores. Buckets below 5 are
+        suppressed. No learner identities or individual scores are returned. Quiz/Practice
+        are excluded; SUBJECT assignments use independent settings and samples per class.
       parameters:
       - name: classId
         in: query
@@ -666,6 +790,19 @@ components:
       in: header
       name: X-XSRF-TOKEN
   schemas:
+    GradeDistributionVisibility:
+      type: object
+      required: [enabled, version, canEdit]
+      properties:
+        enabled:
+          type: boolean
+          default: false
+        version:
+          type: integer
+          format: int64
+          minimum: 0
+        canEdit:
+          type: boolean
     Problem:
       type: object
       properties:
@@ -707,6 +844,11 @@ components:
           additionalProperties:
             type: array
             items: *id001
+        itemScoresByRubric:
+          description: Optional per-item overrides; omitted or null retains legacy checklist scoring.
+          anyOf:
+          - $ref: '#/components/schemas/RubricItemScores'
+          - type: 'null'
         adjustment:
           anyOf:
           - type: number
@@ -725,6 +867,8 @@ components:
             maxLength: 10000
           - type: 'null'
         changeReason:
+          deprecated: true
+          description: Legacy field retained for request compatibility. FINALIZED/PUBLISHED grades reject writes with HTTP 409 GRADE_LOCKED even when a reason is provided.
           anyOf:
           - type: string
             maxLength: 2000
@@ -777,12 +921,12 @@ components:
           minLength: 1
           maxLength: 200
       required:
-      - source
       - requestRef
       additionalProperties: false
-      description: PERSONAL requires provider. Caller chooses source explicitly; no
-        fallback. requestRef is idempotent within its evaluation/requester/source/snapshot
-        scope.
+      description: Omit source for automatic selection through U06 (eligible shared
+        API first, then configured personal keys). An explicit source remains supported;
+        provider is optional for PERSONAL and must be absent for other sources.
+        requestRef is idempotent within its evaluation/requester/source/snapshot scope.
     Batch:
       type: object
       properties:
@@ -816,9 +960,45 @@ components:
             required: &id014 []
       required:
       - items
+    AiEstimate:
+      type: object
+      properties:
+        estimatedTokens:
+          type: integer
+          format: int64
+          minimum: 0
+        items:
+          type: integer
+          format: int32
+          minimum: 0
+      required:
+      - estimatedTokens
+      - items
+      additionalProperties: false
     RubricChecks: *id012
+    RubricItemScores:
+      type: object
+      description: >-
+        Maps locked rubric UUIDs to item UUIDs and awarded points. Values must be
+        nonnegative, at most the locked item's maximum, and have at most two decimal
+        places. An explicit item value overrides the legacy checklist value;
+        the server computes the authoritative total. Unknown rubric/item IDs are rejected.
+      propertyNames:
+        format: uuid
+      additionalProperties:
+        type: object
+        propertyNames:
+          format: uuid
+        additionalProperties:
+          anyOf:
+          - type: number
+            minimum: 0
+            multipleOf: 0.01
+          - type: string
+            pattern: '^\d+(\.\d{1,2})?$'
     Evaluation:
       type: object
+      description: FINALIZED/PUBLISHED grading content cannot be edited. Publishing changes visibility only. Individual resubmission supersedes the previous evaluation. Group resubmission resets unfinalized root/member drafts to PENDING; FINALIZED/PUBLISHED group grades retain their original receipt, scores and review snapshots.
       properties:
         id: *id001
         assignmentId: *id001
@@ -858,6 +1038,8 @@ components:
           - type: 'null'
         maxScore: *id013
         rubricChecks: *id010
+        rubricItemScores:
+          $ref: '#/components/schemas/RubricItemScores'
         rubricSnapshot: *id010
         submissionHash: *id010
         adjustment: *id013
@@ -896,6 +1078,9 @@ components:
                 - type: 'null'
               reason: *id010
               previousChecks: *id010
+              previousItemScores:
+                description: Item-score snapshot before an official change or group resubmission; absent in legacy history.
+                $ref: '#/components/schemas/RubricItemScores'
               previousFeedback:
                 anyOf:
                 - *id010
@@ -1102,6 +1287,9 @@ components:
               id: *id001
               title: *id010
               maxScore: *id013
+              submissionMode:
+                type: string
+                enum: [INDIVIDUAL, GROUP]
             required: *id014
         total:
           type: integer
@@ -1192,6 +1380,18 @@ components:
         proposal:
           anyOf:
           - type: object
+            properties:
+              checks:
+                $ref: '#/components/schemas/RubricChecks'
+              itemScoresByRubric:
+                $ref: '#/components/schemas/RubricItemScores'
+              score:
+                description: Must equal the sum of rubric item points before teacher adjustments.
+                anyOf:
+                - type: number
+                  multipleOf: 0.01
+                - type: string
+                  pattern: '^\d+(\.\d{1,2})?$'
           - type: 'null'
         usage:
           anyOf:

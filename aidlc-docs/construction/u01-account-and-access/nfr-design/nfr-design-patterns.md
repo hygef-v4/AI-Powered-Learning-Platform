@@ -1,6 +1,6 @@
 # U01 Account & Access — nfr-design-patterns
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U01 Account & Access thuộc Iter 1, người code: Người 1; phạm vi UC 01–12 giữ như U01 cũ, chỉ đổi liên kết sang các unit mới. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
@@ -57,7 +57,7 @@ Mỗi pattern ghi yêu cầu nó phục vụ (`NFR-U01-xx`, `BR-U01-xx`).
 | PostgreSQL | Kết nối 2 s, truy vấn 3 s | Lỗi an toàn `503` | NFR-U01-41 |
 | Redis | Kết nối 1 s, lệnh 500 ms | Đăng nhập, refresh, OTP trả `503` "hệ thống tạm bận"; access còn hạn vẫn chạy | NFR-U01-40 |
 | U04, U05 (phạm vi) | 1 s | Từ chối quyền | NFR-U01-42 |
-| SMTP | Kết nối 5 s, gửi 10 s | Worker retry, không ảnh hưởng người dùng | NFR-U01-31 |
+| SMTP / Brevo HTTPS API | Kết nối 5 s, gửi/request 10 s | Worker retry, không ảnh hưởng người dùng | NFR-U01-31 |
 
 - **Không dùng circuit breaker** (Câu D2): quy mô ≤ 100 người đồng thời, timeout ngắn và pool hữu hạn là đủ.
 
@@ -67,9 +67,9 @@ Mỗi pattern ghi yêu cầu nó phục vụ (`NFR-U01-xx`, `BR-U01-xx`).
 
 ### P9 - Gửi OTP qua job U03
 - Request không ghi database: gọi `IJob.enqueue` gửi message `OTP_DELIVERY(accountId, purpose)` sang queue `jobs.email` của RabbitMQ (không có bảng job) rồi trả `202`. Không sinh mã ở request.
-- Worker nhận job, **sinh mã tại chỗ**, ghi băm vào Redis (xóa mã cũ), gửi SMTP. Mã rõ chỉ tồn tại trong bộ nhớ worker và trong email; không nằm trong queue, DB hay log.
-- SMTP lỗi → retry 5 lần, backoff 30 s, 1 phút, 2 phút, 4 phút, 8 phút; mỗi lần retry sinh mã mới. Hết lượt → bỏ message, log ERROR `OTP_DELIVERY_FAILED` (U03 không có dead-letter); người dùng yêu cầu OTP lại (NFR-U01-31).
-- Redis lỗi lúc worker chạy → message retry như lỗi SMTP.
+- Worker nhận job, **sinh mã tại chỗ**, ghi băm vào Redis (xóa mã cũ), gửi qua IMail (SMTP hoặc Brevo HTTPS API). Mã rõ chỉ tồn tại trong bộ nhớ worker và trong email; không nằm trong queue, DB hay log.
+- IMail lỗi (SMTP hoặc API) → retry 5 lần, backoff 30 s, 1 phút, 2 phút, 4 phút, 8 phút; mỗi lần retry sinh mã mới. Hết lượt → bỏ message, log ERROR `OTP_DELIVERY_FAILED` (U03 không có dead-letter); người dùng yêu cầu OTP lại (NFR-U01-31).
+- Redis lỗi lúc worker chạy → message retry như lỗi IMail.
 - Hạn 10 phút của OTP tính từ lúc worker ghi mã, không phải lúc người dùng bấm.
 
 ## 4. Quan sát
@@ -100,3 +100,7 @@ Không bắt buộc (RESILIENCY-14 ngoài phạm vi đồ án). Hành vi fail-cl
 - Đăng nhập/đăng xuất/phiên revoked; R1 own profile; Admin bị chặn học vụ; Student shared quota bị từ chối.
 
 ISessionAuthority xác minh phiên `sid` còn (Redis) và account status (PostgreSQL) trước action; JWT không chứa quyền academic đầy đủ, role từ current account. PostgreSQL lỗi thì fail closed; Redis lỗi thì bỏ qua bước kiểm phiên theo NFR-U01-40; cache nếu dùng cần invalidation khi đổi role/status/logout, không TTL grace bỏ qua revoke.
+
+## Design assessment scope — 2026-10-30
+
+Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evidence có ngày trước baseline, không chứng nhận runtime tại HEAD. Đợt này chỉ đồng bộ tài liệu; hiệu lực security/resiliency, latency/capacity và provider acceptance phải có kiểm chứng riêng. PBT vẫn disabled.

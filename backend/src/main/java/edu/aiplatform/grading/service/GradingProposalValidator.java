@@ -1,0 +1,234 @@
+package edu.aiplatform.grading.service;
+
+import edu.aiplatform.grading.model.RubricScoring;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.aiplatform.assignments.contract.RubricView;
+import edu.aiplatform.grading.model.GradingFeedback;
+import edu.aiplatform.shared.error.ApiException;
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+@Component
+public class GradingProposalValidator {
+    private static final Logger log = LoggerFactory.getLogger(GradingProposalValidator.class);
+    private static final int MAX_FEEDBACK_LENGTH = 10000;
+    private static final int MAX_PAYLOAD_LENGTH = 262144;
+    private static final Set<String> PROPOSAL_FIELDS = Set.of("checks", "score", "feedback",
+            "sections", "itemScoresByRubric", "structuredFeedback");
+    private final ObjectMapper objectMapper;
+    private final GradingFeedbackValidator gradingFeedbackValidator;
+
+    /** Creates the validator with the JSON parser used for proposal payloads. */
+    public GradingProposalValidator(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+        this.gradingFeedbackValidator = new GradingFeedbackValidator(objectMapper);
+    }
+
+    /** Maps proposal errors to diagnostic codes without exposing provider values. */
+    public static String buildRejectionDiagnostic(ApiException error) {
+        String detail = error.getMessage() == null ? "" : error.getMessage();
+        if (detail.startsWith("Unknown evidenceBlockId:"))
+            return "FEEDBACK_UNKNOWN_EVIDENCE_BLOCK";
+        if (detail.equals("AI structuredFeedback must provide feedback for every rubric item"))
+            return "FEEDBACK_ITEM_COVERAGE";
+        if (detail.equals("Unknown rubricId or itemId in structuredFeedback"))
+            return "FEEDBACK_UNKNOWN_ITEM";
+        if (detail.equals("Duplicate rubric item in structuredFeedback"))
+            return "FEEDBACK_DUPLICATE_ITEM";
+        if (detail.equals(
+                "Each item requires observed evidence or an explicit review flag with reason"))
+            return "FEEDBACK_MISSING_EVIDENCE";
+        if (detail.equals("requiresReview requires a non-blank reviewReason"))
+            return "FEEDBACK_MISSING_REVIEW_REASON";
+        if (detail.startsWith("Unknown field in structuredFeedback:"))
+            return "FEEDBACK_UNKNOWN_FIELD";
+        if (detail.equals("AI total does not match rubric item scores"))
+            return "PROPOSAL_TOTAL_MISMATCH";
+        if (detail.equals("Checks must match full-credit item scores"))
+            return "PROPOSAL_CHECKS_MISMATCH";
+        if (detail.equals("Invalid section reference"))
+            return "PROPOSAL_SECTION_MISMATCH";
+        if (detail.equals("Unknown rubric item") || detail.equals("Unknown rubric"))
+            return "PROPOSAL_UNKNOWN_ITEM";
+        return "PROPOSAL_SCHEMA_MISMATCH";
+    }
+
+    public record Validated(Map<UUID, Set<UUID>> checks, BigDecimal score, String feedback,
+            JsonNode sections, Map<UUID, Map<UUID, BigDecimal>> itemScoresByRubric,
+            GradingFeedback structuredFeedback) {
+        /** Preserves callers that provide checklist scores without newer feedback fields. */
+        public Validated(Map<UUID, Set<UUID>> checks, BigDecimal score, String feedback,
+                JsonNode sections, Map<UUID, Map<UUID, BigDecimal>> itemScoresByRubric) {
+            this(checks, score, feedback, sections, itemScoresByRubric, null);
+        }
+    }
+
+    /** Validates a proposal against its rubric and derives checklist scores. */
+    public Validated validateProposal(JsonNode payload, List<RubricView> rubrics) {
+        return validateProposal(payload, rubrics, null);
+    }
+
+    /** Validates a proposal against its rubric, submission blocks, and structured feedback. */
+    public Validated validateProposal(JsonNode payload, List<RubricView> rubrics,
+            Set<String> validBlockIds) {
+        String stage = "SHAPE";
+        try {
+            requireProposalObject(payload);
+            stage = "CHECKS";
+            var checks = readChecks(payload);
+            stage = "ITEM_SCORES";
+            Map<UUID, Map<UUID, BigDecimal>> itemScores = payload.has("itemScoresByRubric")
+                    ? objectMapper.convertValue(payload.get("itemScoresByRubric"),
+                            new com.fasterxml.jackson.core.type.TypeReference<Map<UUID, Map<UUID, BigDecimal>>>() {
+                            })
+                    : Map.of();
+            if (itemScores == null)
+                throw new IllegalArgumentException();
+            requireCompleteScores(rubrics, checks, itemScores);
+            var score = RubricScoring.calculateScore(rubrics, checks, itemScores);
+            stage = "TOTAL";
+            requireMatchingScore(payload.get("score"), score);
+            stage = "FEEDBACK";
+            var feedback = readFeedback(payload.get("feedback"));
+            var sections = payload.get("sections");
+            stage = "SECTIONS";
+            validateSections(sections, rubrics);
+            stage = "STRUCTURED_FEEDBACK";
+            GradingFeedback structuredFeedback = gradingFeedbackValidator
+                    .validateNode(payload.get("structuredFeedback"), rubrics, validBlockIds, true);
+            return new Validated(checks, score, feedback, sections,
+                    RubricScoring.copyItemScores(itemScores), structuredFeedback);
+        } catch (ApiException ex) {
+            log.warn("AI proposal validation rejected stage={} diagnostic={}", stage, buildRejectionDiagnostic(ex));
+            throw ApiException.badRequest("INVALID_AI_PROPOSAL", ex.getMessage());
+        } catch (RuntimeException ex) {
+            log.warn("AI proposal validation rejected stage={} exception={}", stage, ex.getClass().getSimpleName());
+            throw ApiException.badRequest("INVALID_AI_PROPOSAL",
+                    "AI proposal does not match the rubric schema");
+        }
+    }
+
+    /** Requires each rubric item to have a valid fractional score. */
+    private void requireCompleteScores(List<RubricView> rubrics, Map<UUID, Set<UUID>> checks,
+            Map<UUID, Map<UUID, BigDecimal>> scores) {
+        for (var rubric : rubrics) {
+            var awarded = scores.get(rubric.rubricId());
+            if (awarded == null)
+                throw new IllegalArgumentException();
+            for (var criterion : rubric.criteria())
+                for (var item : criterion.items()) {
+                    var points = awarded.get(item.itemId());
+                    if (points == null)
+                        throw new IllegalArgumentException();
+                    boolean checked = checks.getOrDefault(rubric.rubricId(), Set.of())
+                            .contains(item.itemId());
+                    if (checked != (points.compareTo(item.points()) == 0))
+                        throw ApiException.badRequest("INVALID_AI_PROPOSAL",
+                                "Checks must match full-credit item scores");
+                }
+        }
+    }
+
+    /** Rejects proposal payloads with an invalid shape or undeclared fields. */
+    private void requireProposalObject(JsonNode payload) {
+        if (payload == null || !payload.isObject()) {
+            throw new IllegalArgumentException();
+        }
+        payload.fieldNames().forEachRemaining(field -> {
+            if (!PROPOSAL_FIELDS.contains(field)) {
+                throw new IllegalArgumentException();
+            }
+        });
+    }
+
+    /** Reads and validates selected rubric item IDs from the proposal payload. */
+    private Map<UUID, Set<UUID>> readChecks(JsonNode payload) {
+        var node = payload.get("checks");
+        if (node == null || !node.isObject() || !payload.hasNonNull("score")) {
+            throw new IllegalArgumentException();
+        }
+        Map<UUID, Set<UUID>> checks = new LinkedHashMap<>();
+        var fields = node.fields();
+        while (fields.hasNext()) {
+            var field = fields.next();
+            if (!field.getValue().isArray()) {
+                throw new IllegalArgumentException();
+            }
+            Set<UUID> selected = new HashSet<>();
+            for (var item : field.getValue()) {
+                if (!item.isTextual() || !selected.add(UUID.fromString(item.textValue()))) {
+                    throw new IllegalArgumentException();
+                }
+            }
+            checks.put(UUID.fromString(field.getKey()), selected);
+        }
+        return checks;
+    }
+
+    /** Requires the reported proposal score to match the score derived from rubric items. */
+    private void requireMatchingScore(JsonNode scoreNode, BigDecimal computedScore) {
+        var suppliedScore = new BigDecimal(scoreNode.asText());
+        if (suppliedScore.scale() > 2 || computedScore.compareTo(suppliedScore) != 0) {
+            throw ApiException.badRequest("INVALID_AI_PROPOSAL",
+                    "AI total does not match rubric item scores");
+        }
+    }
+
+    /** Reads optional feedback text while enforcing its size limit. */
+    private String readFeedback(JsonNode node) {
+        if (node != null && !node.isNull() && !node.isTextual()) {
+            throw new IllegalArgumentException();
+        }
+        String feedback = node == null || node.isNull() ? null : node.textValue();
+        if (feedback != null && feedback.length() > MAX_FEEDBACK_LENGTH) {
+            throw new IllegalArgumentException();
+        }
+        return feedback;
+    }
+
+    /** Validates section feedback entries against the parts in the rubric. */
+    private void validateSections(JsonNode sections, List<RubricView> rubrics) {
+        if (sections == null) {
+            return;
+        }
+        if (!sections.isArray()) {
+            throw new IllegalArgumentException();
+        }
+        Set<String> knownPartIds = new HashSet<>();
+        Set<String> seenPartIds = new HashSet<>();
+        rubrics.forEach(rubric -> knownPartIds.add(rubric.partId()));
+        for (var section : sections) {
+            if (!section.isObject() || !section.path("partId").isTextual()
+                    || !knownPartIds.contains(section.path("partId").asText())
+                    || !seenPartIds.add(section.path("partId").asText())
+                    || !section.path("feedback").isTextual()
+                    || section.path("feedback").asText().length() > MAX_FEEDBACK_LENGTH) {
+                throw ApiException.badRequest("INVALID_AI_PROPOSAL", "Invalid section reference");
+            }
+        }
+    }
+
+    /** Parses proposal JSON and rejects malformed or oversized payloads. */
+    public JsonNode parseProposal(String value) {
+        if (value == null || value.length() > MAX_PAYLOAD_LENGTH)
+            throw ApiException.badRequest("INVALID_AI_PROPOSAL", "AI proposal too large");
+        try {
+            return objectMapper.reader()
+                    .with(com.fasterxml.jackson.databind.DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
+                    .with(com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
+                    .readTree(value);
+        } catch (Exception ex) {
+            log.warn("AI proposal validation rejected stage=JSON_PARSE exception={}", ex.getClass().getSimpleName());
+            throw ApiException.badRequest("INVALID_AI_PROPOSAL", "Invalid AI proposal JSON");
+        }
+    }
+}

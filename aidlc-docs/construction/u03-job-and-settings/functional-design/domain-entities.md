@@ -1,6 +1,9 @@
 # U03 Job and Settings — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U03 Job and Settings thuộc Iter 1, người code: Người 3. Viết lại từ thiết kế chi tiết 2026-10-09 theo phạm vi 66 UC: bỏ avatar và việc nền của Code Lab, PayOS, tóm tắt học liệu; thêm backup và các nhóm cài đặt mới. Chỉ sửa tài liệu; unit chưa có code (khung code tạo lại 2026-10-16).
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 14, 15. **Primary stories:** US-SET-001, US-OPS-001. **Requirements:** FR-013, FR-033, FR-038; REL-001/002/003/004.
 
@@ -154,3 +157,7 @@ Khai báo trong code của unit sở hữu: `key`, `group`, tên hiển thị, m
 |---|---|---|
 | `IAuthorization` | U01 | `C` - kiểm role upload và quyền `ADMIN` cho Settings; tới khi U01 xong, bản tạm trong khung luôn cho phép |
 | `IAudit` | U02 | `C` - audit; tới khi U02 xong, bản tạm trong khung chỉ ghi ra log |
+
+## Contract kiểm lại quyền tải học liệu — 2026-11-09
+
+U03 khai báo `files/contract/IArtifactDownloadPolicy`: `purpose()` và `requireDownload(actor, fileId)`; U13 cài `MaterialDownloadPolicy`. DownloadService gọi owner policy cho purpose MATERIAL trước khi mở bytes của token hợp lệ, kể cả token cấp trước lúc tắt học liệu. Thiếu/lỗi policy từ chối với FILE_ACCESS_UNAVAILABLE; lỗi quyền của owner giữ nguyên. Student phải còn quyền với học liệu đang bật và phiên bản nội dung hiện hành; staff xem phiên bản cũ theo quyền. Không đổi định dạng/thời hạn token hoặc chính sách purpose khác. [Bằng chứng](../../build-and-test/2026-11-09-material-quiz-ui-results.md).

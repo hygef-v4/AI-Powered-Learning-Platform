@@ -1,0 +1,123 @@
+"use client";
+
+import { useId, useState, type FormEvent } from "react";
+import { ApiError } from "@/shared/api/client";
+import { Button } from "@/shared/ui/Button";
+import { Field } from "@/shared/ui/inputs";
+import { Section } from "@/shared/ui/Section";
+import { changePassword } from "../../api";
+import { PasswordChecklist } from "../../components/PasswordChecklist";
+import { SecretInput } from "../../components/SecretInput";
+import { PASSWORD_VIOLATION_MESSAGES, passwordAcceptable } from "../../model/passwordRules";
+
+export const PASSWORD_CHANGED_MESSAGE = "Đã đổi mật khẩu";
+
+/**
+ * Khối Đổi mật khẩu nằm ngay trên trang Hồ sơ (UC 05, design `c06`): mật khẩu hiện tại, mật khẩu mới và nhập lại
+ * (BR-U01-33). Đổi xong thì xóa các ô và báo cho trang.
+ */
+export function PasswordChangeForm({ onChanged }: { onChanged: () => void }) {
+  const currentId = useId();
+  const newId = useId();
+  const confirmId = useId();
+  const [current, setCurrent] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const acceptable = passwordAcceptable(password);
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (current.length === 0) {
+      setError("Nhập mật khẩu hiện tại.");
+      return;
+    }
+    if (!acceptable) {
+      setError("Mật khẩu mới cần ít nhất 8 ký tự, có cả chữ và số.");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Hai mật khẩu mới chưa khớp.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await changePassword(current, password);
+      setCurrent("");
+      setPassword("");
+      setConfirm("");
+      onChanged();
+    } catch (e) {
+      const problem = (e instanceof ApiError ? e.problem : { status: 0 }) as {
+        status: number;
+        code?: string;
+        violations?: string[];
+      };
+      if (problem.code === "CURRENT_PASSWORD_INVALID") {
+        setError("Mật khẩu hiện tại không đúng.");
+        setCurrent("");
+      } else if (problem.code === "TOO_MANY_ATTEMPTS") {
+        setError("Nhập sai mật khẩu hiện tại quá nhiều lần, hãy thử lại sau ít phút.");
+        setCurrent("");
+      } else if (problem.code === "PASSWORD_POLICY") {
+        setError((problem.violations ?? []).map((v) => PASSWORD_VIOLATION_MESSAGES[v] ?? v).join(" "));
+      } else {
+        setError("Hệ thống tạm bận, vui lòng thử lại sau.");
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Section
+      title="Đổi mật khẩu"
+      icon="lock_reset"
+      description="Các thiết bị khác sẽ bị đăng xuất. Phiên hiện tại được giữ lại."
+    >
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Mật khẩu hiện tại" htmlFor={currentId}>
+            <SecretInput
+              id={currentId}
+              autoComplete="current-password"
+              value={current}
+              onChange={(e) => setCurrent(e.target.value)}
+            />
+          </Field>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Mật khẩu mới" htmlFor={newId}>
+            <SecretInput
+              id={newId}
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </Field>
+          <Field label="Nhập lại mật khẩu mới" htmlFor={confirmId}>
+            <SecretInput
+              id={confirmId}
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+            />
+          </Field>
+        </div>
+        <PasswordChecklist password={password} chips />
+        {error && (
+          <p role="alert" className="text-[13px] text-danger">
+            {error}
+          </p>
+        )}
+        <div className="flex justify-end border-t border-line pt-5">
+          <Button type="submit" icon="key" disabled={busy}>
+            Đổi mật khẩu
+          </Button>
+        </div>
+      </form>
+    </Section>
+  );
+}

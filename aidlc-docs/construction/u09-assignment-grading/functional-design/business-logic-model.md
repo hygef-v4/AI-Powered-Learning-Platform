@@ -1,6 +1,14 @@
 # U09 Assignment Grading — business-logic-model
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U09 Assignment Grading thuộc Iter 2, người code: Người 2; UC 42–45. Lấy phần chấm Assignment và sổ điểm của U15 cũ và phần tiến độ nộp, phân bố điểm, xuất bảng điểm của U16 cũ. Kết quả Quiz luyện tập thuộc U11, thông báo thuộc U14. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+## Cập nhật có hiệu lực 2026-11-11
+
+Theo kế hoạch `../../plans/code-generation-plan/2026-11-11-editable-grades-and-background-ai.md`: không sinh FINALIZED mới; lưu trước công bố là DRAFT, công bố trực tiếp, sửa sau công bố giữ PUBLISHED. Quyền ghi phụ thuộc lớp OPEN và receipt/version hiện hành; ARCHIVED chỉ đọc. Giữ enum/endpoint finalize cũ như xác thực không khóa. Kiểm tra xác nhận AI tại publish và save PUBLISHED. AI tạo proposal bất đồng bộ, READY không tự ghi điểm; UI theo dõi ở layout giảng dạy, giảng viên áp dụng rõ ràng. Không thêm snapshot công bố, schema, queue hay realtime mới. Các mô tả chốt/khóa cũ bên dưới chỉ còn là tham chiếu lịch sử khi mâu thuẫn với cập nhật này.
+
+
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 42, 43, 44, 45. **Primary stories:** US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005, US-RPT-001, US-RPT-003, US-INT-001. **Requirements:** FR-008, FR-009, FR-019, FR-020, FR-024, FR-039.
 
@@ -19,7 +27,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | F7 Đề xuất qua agent MCP | UC 43 | - |
 | F8 Chốt | UC 43, 44 | Submission Detail, Grading Workspace |
 | F9 Công bố | UC 43, 44 | Submission Detail, Grading Workspace |
-| F10 Sửa điểm đã chốt hoặc đã công bố | UC 44 | Grading Workspace |
+| F10 Xem điểm đã khóa | UC 44 | Grading Workspace chỉ đọc |
 | F11 Sổ điểm | UC 45 | Teacher Class Detail, tab Evals |
 | F12 Xuất bảng điểm | UC 45 | Teacher Class Detail, tab Evals |
 | F13 Người học xem điểm và phân bố | UC 37, 40 (U08) | Student Assignments, Submission History |
@@ -31,7 +39,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 1. U08 gọi `ISubmissionListener.onSubmitted(attemptId)` trong transaction nộp.
 2. U09 đọc lượt qua `ISubmissionQuery.getSubmission` và bài qua `IAssignmentQuery.get`; bài `PRACTICE` thì bỏ qua.
 3. Tạo đánh giá `PENDING` (lượt, bài, lớp, người học, `submissionHash`, tổng điểm từ `IRubric.maxPoints`).
-4. Đánh giá cũ chưa công bố của cùng (bài, người học) chuyển `SUPERSEDED` (BR-U09-10).
+4. Khi cá nhân nộp lại, mọi đánh giá cũ chuyển SUPERSEDED kể cả FINALIZED/PUBLISHED; điểm trước không còn hiệu lực hay hiển thị. Tạo PENDING cho lượt mới (BR-U09-10).
 
 ### F2 - Danh sách bài nộp và tiến độ (UC 42)
 1. Giảng viên bấm "Bài nộp" trên dòng bài ở tab Evals (U09 gắn qua slot `AssignmentRowAction` của U07); frontend gọi `GET /api/v1/classes/{classId}/assignments/{assignmentId}/submissions`.
@@ -50,7 +58,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ## 3. Chấm
 
 ### F4 - Chấm tay (UC 44)
-1. Giảng viên tích mục đạt của từng phần; điểm phần và điểm bài tự tính qua `IRubric.score`.
+1. Giảng viên tích mục đạt của từng phần; điểm phần và điểm bài tự tính qua GradingJson item scores (partial0..max, checkbox-compatible).
 2. Tùy chọn nhập điều chỉnh (kèm lý do) và nhận xét.
 3. Lưu: `PUT /api/v1/evaluations/{id}` kèm `version`; kiểm quyền, đánh giá không `SUPERSEDED`, mục thuộc rubric, điều chỉnh có lý do, điểm cuối trong 0 tới tổng.
 4. Đánh giá `PENDING` hoặc `DRAFT` thành `DRAFT`; ghi người chấm, thời điểm; audit `GRADE_SAVED`. Đánh giá đã chốt hoặc đã công bố đi theo F10.
@@ -63,6 +71,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 4. Gọi `IAiTask.submit` (loại `GRADING_PROPOSAL`, đích là đánh giá, `inputVersion` là `submissionHash`); tạo đề xuất `PENDING` version kế tiếp; audit `AI_GRADING_REQUESTED`.
 5. U06 gọi `onReady`: kiểm quyền người yêu cầu, hash còn khớp, schema, id mục thuộc rubric; đạt thì lưu đề xuất `READY` kèm provenance, không thì `STALE` hoặc `REJECTED`. `onFailed` chuyển `FAILED`.
 6. Giảng viên bấm "Dùng đề xuất": điền sẵn checklist và nhận xét; sửa nếu muốn rồi lưu như F4 bước 3–4; ghi đề xuất đã dùng.
+
+**Delta 2026-11-09 (BR-U09-36):** trước bước 3, `GradingPromptBuilder.findEmptyPartIds` và `findActiveRubrics` xác định phần lá không có bài làm. Không còn rubric nào hoạt động thì bước 4 lưu ngay đề xuất `READY` 0 điểm (`createZeroProposal`), vẫn audit `AI_GRADING_REQUESTED`, không gọi `IAiTask.submit`. Ngược lại prompt, schema và `maxOutputTokens` (4.096 + 220 mỗi mục, trần 8.192) chỉ tính trên rubric hoạt động; ở bước 5 kết quả được ghép điểm 0 của phần trống và chuẩn hóa trước khi kiểm schema. Grading đọc khung đề qua contract `IDocumentModel`, không gọi lớp nội bộ của U07.
 
 ### F6 - AI chấm hàng loạt (UC 43)
 1. Trong Submission Detail chọn nhiều bài `PENDING` hoặc `DRAFT`, bấm "Chấm hàng loạt bằng AI", chọn một nguồn.
@@ -90,11 +100,11 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 3. Sau commit phát `grade.published` (bài, lớp, người học vừa có điểm; bài nhóm là các thành viên) cho U14.
 4. Trả kết quả từng mục.
 
-### F10 - Sửa điểm đã chốt hoặc đã công bố (UC 44)
-1. Trong Grading Workspace sửa checklist, điều chỉnh, nhận xét của đánh giá `FINALIZED` hoặc `PUBLISHED`, nhập lý do.
-2. `PUT /api/v1/evaluations/{id}` kèm `version` và lý do; thiếu lý do thì từ chối.
-3. Giữ trạng thái, thêm một mục lịch sử; audit `GRADE_CHANGED`.
-4. Đánh giá đã công bố: người học thấy điểm mới kèm nhãn "đã cập nhật".
+### F10 - Xem điểm đã khóa (UC 44, thay quy tắc cũ ngày 2026-11-02)
+1. `FINALIZED`/`PUBLISHED` chỉ đọc rubric, điểm, nhận xét và lịch sử, không có ô lý do sửa.
+2. Lưu trực tiếp, áp dụng AI hoặc sửa điểm thành viên bị từ chối `409 GRADE_LOCKED`, kể cả có lý do.
+3. `FINALIZED` hiện hành vẫn được công bố sang `PUBLISHED`; điểm và nội dung chấm không đổi.
+4. Nộp lại làm điểm cũ mất hiệu lực: cá nhân SUPERSEDED lượt cũ; nhóm reset draft hiện có về PENDING, giữ nguyên điểm FINALIZED/PUBLISHED và receipt đã chốt. Không có mở khóa/sửa điểm cũ bằng lý do.
 
 ## 5. Sổ điểm và người học
 
@@ -105,19 +115,31 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 4. Trả mỗi sinh viên một mục đóng mở chứa từng bài: "x / tổng" của lượt được chấm và trạng thái (BR-U09-60); không có điểm tổng.
 
 ### F12 - Xuất bảng điểm (UC 45)
-1. Bấm Xuất trên Sổ điểm, chọn CSV hoặc XLSX, tùy chọn một bài; frontend gọi `GET /api/v1/classes/{classId}/gradebook/export`.
+1. Bấm Bảng điểm ở trang Chấm điểm để xem ma trận sinh viên × bài tính điểm; lọc một bài/toàn bộ, tìm sinh viên và phân trang qua API gradebook hiện có. Bấm Xuất bảng điểm trong chế độ này, chọn CSV hoặc XLSX và phạm vi bài; frontend gọi `GET /api/v1/classes/{classId}/gradebook/export`.
 2. Kiểm quyền và bộ lọc trước khi tạo tệp; ngoài quyền trả `404`.
-3. Tạo tệp theo BR-U09-61 dạng luồng; chặn công thức trong CSV; tên tệp gồm mã lớp, mã bài, ngày.
+3. Tạo ma trận theo BR-U09-61 dạng luồng, một dòng/sinh viên cho mọi sinh viên thuộc phạm vi bài đã chọn; chặn công thức trong CSV, giữ văn bản XLSX ở kiểu chuỗi và điểm ở kiểu số. Tên tệp dùng tên bài khi có một cột bài, còn lại Bảng điểm tổng hợp kèm ngày. XLSX có tiêu đề đậm/xuống dòng, độ rộng cột, bộ lọc và cố định hàng đầu/ba cột định danh.
 4. Ghi audit `GRADEBOOK_EXPORTED` (phạm vi, định dạng); không lưu tệp.
 
 ### F13 - Người học xem điểm và phân bố
 1. Student Assignments (U08) nhúng `StudentGradeCell` qua slot `StudentAssignmentResult`; component gọi `GET /api/v1/me/grades` và `GET /api/v1/me/grade-distributions` kèm lớp.
 2. U09 kiểm người học đang ghi danh lớp; trả điểm `PUBLISHED` của chính mình theo từng bài.
-3. Phân bố: kiểm BR-U09-62 với từng bài; đủ điều kiện thì trả khoảng điểm, ẩn khoảng dưới 5 người; không đủ thì không trả.
+3. Phân bố: kiểm cài đặt `enabled` của đúng cặp bài–lớp và BR-U09-62 với từng bài; chỉ tính người đang ghi danh có điểm công bố dùng được, ít nhất 20 người; trả khoảng điểm, ẩn khoảng dưới 5 người; không đủ thì không trả. Không đọc cờ lịch sử ở lớp.
 4. Submission History (U08) nhúng `StudentGradePanel` qua slot `SubmissionResultSection`; gọi `GET /api/v1/me/grades/attempts/{attemptId}`: điểm, nhận xét, mục rubric đạt, nhãn "đã cập nhật" nếu có; lượt chưa công bố thì trả "chưa có điểm".
 
+### F13a - Giảng viên bật/tắt phân bố theo bài–lớp
+1. Trong ngữ cảnh bài GRADED của lớp, gọi `GET /api/v1/classes/{classId}/assignments/{assignmentId}/grade-distribution-visibility`, nhận `{enabled,version,canEdit}`. Chưa có bản ghi thì trả tắt và version ban đầu; không chuyển cờ true từ lớp.
+2. Kiểm bài thuộc lớp (bài CLASS của lớp hoặc SUBJECT của môn), người gọi được phân công dạy và lớp cho phép sửa. Quyền chỉ đọc nội dung bài không khóa cài đặt này; Chủ nhiệm môn chỉ quản lý môn không được sửa. Bài SUBJECT còn DRAFT/REVIEWED chưa được giao cho lớp: GET trả `404`. Lớp ARCHIVED hoặc bài RETIRED: GET trả `canEdit=false`, PUT trả `409`.
+3. PUT cùng URL gửi `{enabled,version}`. Chưa có bản ghi dùng version `0`, lưu lần đầu thành `1`. Cập nhật lạc quan trong U09 theo khóa bài–lớp; version lệch trả `409`, tạo mới đồng thời cũng phải kiểm version. Trả `{enabled,version,canEdit}` và audit `GRADE_DISTRIBUTION_VISIBILITY_CHANGED` với bài/lớp và trạng thái enabled.
+4. Mỗi lớp của bài SUBJECT độc lập; Quiz/Practice không có công tắc. Bật chưa đủ mẫu vẫn lưu ý định, chỉ hiện histogram khi đạt ngưỡng riêng tư.
+
 ### F14 - Bài nhóm (khi U12 có)
-1. U12 gọi `IGroupEvaluation.onGroupSubmitted` trong transaction nộp: tạo hoặc đưa về `PENDING` đánh giá tài liệu nhóm và đánh giá từng thành viên (BR-U09-50).
+1. U12 gọi IGroupEvaluation.onGroupSubmitted trong transaction nộp: dùng lại root/member chưa chốt, reset về PENDING cho receipt mới; giữ nguyên điểm và snapshot FINALIZED/PUBLISHED (BR-U09-50).
 2. Submission Detail hiện nhóm thay cho sinh viên; Grading Workspace đọc tài liệu nhóm qua `IGroupSubmissionSource`, hiện từng phần kèm người làm.
 3. Chấm tài liệu nhóm như F4, F5; điểm thành viên mặc định bằng điểm tài liệu chung; giảng viên sửa từng người qua `PUT /api/v1/evaluations/{id}/members/{accountId}` (BR-U09-51).
 4. Chốt, công bố cả đánh giá tài liệu và đánh giá thành viên như F8, F9.
+5. Từ 2026-11-09: chi tiết đánh giá `MEMBER` trả `groupEvaluationId` (đánh giá `GROUP_DOCUMENT` hiện hành, chưa `SUPERSEDED`, mà thành viên thuộc về); nút chấm AI ở dòng thành viên mở bản nộp nhóm đó thay vì gửi AI cho riêng thành viên. Tab Sổ điểm liệt kê "Bản nộp chung theo nhóm" cho bài nhóm đang chọn.
+
+
+### AI provider checkbox derivation — 2026-11-10
+
+For F5/F6 provider tasks, GradingProposalTransactions uses the provider-specific schema, which omits checks. GradingPromptBuilder keeps its full schema/policy for F7 MCP. The existing callback merges genuinely empty parts and derives omitted checklist selections from item scores, then runs the same strict validator. No points, evidence or feedback are fabricated; explicit inconsistent checks remain invalid for full proposals. Validation-stage diagnostics contain fixed codes/class names only. See [verified live fix](../../build-and-test/2026-11-10-grading-ai-rejection-fix.md).

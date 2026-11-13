@@ -1,6 +1,12 @@
 # U06 AI Connections — business-logic-model
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U06 AI Connections thuộc Iter 2, người code: Người 5; UC 31–33 và phần API chung, quota của UC 14–15 (màn do U03). Gộp U07 cũ (AI Usage & Teacher Quota) và U13 cũ (AI Connections & MCP); bỏ mua credit và chạy code. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**Source delta 2026-11-07 (`f68a6ec5`):** PERSONAL/INSTITUTIONAL hỗ trợ nhiều key/provider và ACTIVE/DISABLED/REVOKED; CRUD/test/reveal/status theo connection ID. AiTaskService tự chọn nguồn khi caller để trống: shared nếu có quyền/đủ quota, rồi personal. ConnectionOrder: CLAUDE → OPENAI → GEMINI, model catalog, createdAt, id. Worker retry cùng key với lỗi tạm 429/503/529 (đợi 2 s, 5 s), sau đó xét key kế tiếp; settlement usage/quota giữ riêng REJECTED/UNKNOWN. UNKNOWN vẫn có thể phát sinh chi phí và không tự hoàn reserved usage. Redelivery guard và fallback trong một task là hai trường hợp khác nhau. Các mô tả lịch sử “không tự đổi nguồn/không retry” bên dưới không thay quy tắc source hiện hành này.
+
+
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 31, 32, 33; hỗ trợ 14, 15. **Primary stories:** US-AIC-001, US-AIC-002, US-AIC-003, US-AIC-004, US-AIG-001, US-AIG-002, US-AIG-003. **Requirements:** FR-012, FR-021, FR-033, FR-034, FR-035, FR-036, FR-037.
 
@@ -29,31 +35,31 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F1 - Thêm hoặc thay API cá nhân (UC 31)
 1. Mở AI Connection từ menu tài khoản, tab API cá nhân; frontend gọi `GET /api/v1/me/ai-connections` và `GET /api/v1/ai/providers` (provider và model cho phép).
-2. Bấm Thêm (hoặc Thay) ở một provider, nhập key, chọn model; frontend gọi `PUT /api/v1/me/ai-connections/{provider}` (kèm `version` khi thay; đổi model không cần nhập lại key).
+2. Bấm Thêm để POST `/api/v1/me/ai-connections` với provider/key/model; mỗi provider có nhiều key. Thay một key dùng PUT `/api/v1/me/ai-connections/{id}` với version; đổi model không cần nhập lại key. Công tắc dùng PUT `/{id}/status` với enabled/version; owner reveal dùng GET `/{id}/key`.
 3. Kiểm người gọi là Student, Teacher hoặc Subject Manager đang `ACTIVE`, provider hợp lệ, model nằm trong danh sách cho phép, key đúng định dạng cơ bản (BR-U06-01, 02).
 4. Mã hóa key, lưu kết nối `PERSONAL` `ACTIVE` với 4 ký tự cuối; thay thì ghi đè bản mã, tăng `version`, xóa kết quả kiểm tra cũ (BR-U06-03, 06).
 5. Ghi audit `AI_CONNECTION_CHANGED`; trả kết nối dạng che, gợi ý bấm Kiểm tra.
 
 ### F2 - Kiểm tra API cá nhân (UC 31)
-1. Bấm Kiểm tra; UI báo có thể phát sinh chi phí nhỏ trên key; frontend gọi `POST /api/v1/me/ai-connections/{provider}:test`.
+1. Bấm Kiểm tra; UI báo có thể phát sinh chi phí nhỏ trên key; frontend gọi `POST /api/v1/me/ai-connections/{id}:test`.
 2. Kiểm chủ sở hữu và kết nối `ACTIVE`; giải mã key trong bộ nhớ.
 3. Gửi yêu cầu tổng hợp cố định, tối đa 5 token ra, timeout 20 giây (BR-U06-04).
 4. Lưu kết quả (`OK` hoặc lỗi đã làm sạch: key sai, hết hạn mức phía provider, model không hỗ trợ, không kết nối được) và thời điểm; có usage thì ghi bản ghi loại `CONNECTION_TEST`.
 5. Ghi audit `AI_CONNECTION_TESTED`; trả kết quả.
 
 ### F3 - Thu hồi API cá nhân (UC 31)
-1. Bấm Thu hồi, xác nhận; frontend gọi `DELETE /api/v1/me/ai-connections/{provider}`.
+1. Bấm Thu hồi, xác nhận; frontend gọi `DELETE /api/v1/me/ai-connections/{id}`.
 2. Kiểm chủ sở hữu; xóa bản mã, chuyển `REVOKED`; ghi audit `AI_CONNECTION_CHANGED`.
-3. Task chưa gửi đi dùng kết nối này chuyển `FAILED` khi tới lượt chạy; task đã gửi vẫn chạy xong (BR-U06-05).
+3. Worker xét các key ACTIVE kế tiếp theo ConnectionOrder khi key đang dùng không còn hợp lệ; settlement/fallback giữ accounting và quyền actor. Task đã gửi tuân theo xử lý kết quả hiện hành, không hủy lời gọi provider đã phát đi (BR-U06-05).
 
-## 3. MCP (Student, Teacher, Subject Manager)
+## 3. MCP (Student, Teacher, Subject Manager; Admin bị từ chối)
 
 ### F4 - Tạo credential MCP (UC 32)
 1. Mở tab MCP Agent; frontend gọi `GET /api/v1/me/mcp-credentials`.
 2. Bấm Tạo, nhập nhãn (tên agent), chọn quyền `READ_ONLY` hoặc `READ_WRITE` và hạn 7, 30 hoặc 90 ngày; frontend gọi `POST /api/v1/me/mcp-credentials`.
-3. Kiểm role Student, Teacher hoặc Subject Manager đang `ACTIVE`; chưa có quá 5 credential còn hiệu lực (BR-U06-30).
+3. Kiểm role Student, Teacher hoặc Subject Manager đang `ACTIVE`; Admin bị từ chối; chưa có quá 5 credential còn hiệu lực (BR-U06-30).
 4. Sinh token ngẫu nhiên 256 bit; lưu bản băm, 4 ký tự cuối và hạn (BR-U06-31).
-5. Ghi audit `MCP_CREDENTIAL_CREATED`; trả token đúng một lần kèm địa chỉ `/mcp` và hướng dẫn cho từng ứng dụng agent đã kiểm chứng (BR-U06-50).
+5. Ghi audit `MCP_CREDENTIAL_CREATED`; trả token khi tạo; owner ACTIVE có thể reveal khi có bản mã kèm địa chỉ `/mcp` và hướng dẫn cho từng ứng dụng agent đã kiểm chứng (BR-U06-50).
 
 ### F5 - Thu hồi credential MCP (UC 32)
 1. Bấm Thu hồi, xác nhận; frontend gọi `DELETE /api/v1/me/mcp-credentials/{id}`.
@@ -81,17 +87,18 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ## 5. Admin (qua Settings của U03)
 
 ### F8 - Cấu hình API chung (UC 14, 15)
-1. Admin mở Setting List; bấm phần "API AI của trường" mở `AiConnectionsPanel`; panel gọi `GET /api/v1/admin/ai/connections` (dạng che).
-2. Thêm hoặc thay key, chọn model: `PUT /api/v1/admin/ai/connections/{provider}` kèm `version`; kiểm Admin; mã hóa, lưu kết nối `INSTITUTIONAL` `ACTIVE`.
-3. Kiểm tra: `POST /api/v1/admin/ai/connections/{provider}:test` chạy như F2 bước 2–5; usage ghi nguồn `SHARED`, không trừ quota giảng viên.
-4. Tắt hoặc bật: `PUT .../{provider}/status`; thu hồi: `DELETE .../{provider}` xóa bản mã.
-5. Ghi audit `AI_CONNECTION_CHANGED`; yêu cầu AI mới dùng cấu hình hiện hành (BR-U06-05).
+1. Admin GET `/api/v1/admin/ai/connections` lấy danh sách masked. Nhiều key/provider.
+2. Thêm: POST `/api/v1/admin/ai/connections` với provider/apiKey/model; sửa PUT `/api/v1/admin/ai/connections/{id}` theo SaveCommand/version.
+3. Test draft chưa lưu: POST `/api/v1/admin/ai/connections:test`; test key đã lưu: POST `/api/v1/admin/ai/connections/{id}:test`, synthetic payload, usage SHARED.
+4. Bật/tắt PUT `/api/v1/admin/ai/connections/{id}/status` với enabled/version; revoke DELETE `/api/v1/admin/ai/connections/{id}`.
+5. Không có endpoint đọc lại key (bỏ GET `.../{id}/key` của Admin và cá nhân ngày 2026-11-11, đóng D15). Sửa khóa chỉ nhập khóa mới; để trống là giữ khóa cũ.
+6. Provider selection ưu tiên ACTIVE, created_at rồi id; task dùng trạng thái/quota hiện hành.
 
 ### F9 - Cấu hình quota (UC 14, 15)
 1. Bấm phần "Quota AI giảng viên" mở `TeacherQuotaPanel`; panel gọi `GET /api/v1/admin/ai/quota-policy` và `GET /api/v1/admin/ai/teacher-quotas?q=`.
 2. Đặt mức mặc định mỗi ngày và trần ngày toàn hệ thống: `PUT /api/v1/admin/ai/quota-policy` kèm `version`; số nguyên không âm.
-3. Đặt mức riêng: tìm giảng viên qua `IAccountLookup.findAccounts` (role `TEACHER`, `SUBJECT_MANAGER`), gọi `PUT /api/v1/admin/ai/teacher-quotas/{accountId}` kèm `version`; bỏ mức riêng: `DELETE` để về mặc định.
-4. Kiểm Admin; người được đặt phải là Teacher hoặc Subject Manager; lệch `version` thì `409`.
+3. Đặt mức riêng: tìm giảng viên qua `IAccountLookup.findAccounts` (role `TEACHER`, `SUBJECT_MANAGER`), gọi `PUT /api/v1/admin/ai/teacher-quotas/{accountId}` chỉ với `dayTokens` (không có version/CAS trong DTO hiện tại); bỏ mức riêng: `DELETE` để về mặc định.
+4. Kiểm Admin; người được đặt phải là Teacher hoặc Subject Manager. Global quota-policy có version/CAS; teacher override hiện không có version/CAS, không hứa 409 cho stale override.
 5. Ghi audit `QUOTA_CHANGED` (trước, sau); mức mới áp cho lần giữ chỗ tiếp theo, không thu hồi phần đã dùng.
 
 ### F10 - Tổng hợp usage API chung (UC 33, Admin)
@@ -101,8 +108,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ## 6. Task AI cho unit khác
 
 ### F11 - Chọn nguồn và gửi task AI
-1. Ở màn của unit gọi (soạn Assignment, soạn Quiz, xin phản hồi AI, đề xuất chấm), người dùng bấm nút AI; `AiSourcePicker` gọi `GET /api/v1/ai/sources`: API chung theo từng provider (chỉ Teacher, Subject Manager; kèm quota còn lại hoặc lý do không dùng được) và các kết nối cá nhân `ACTIVE`.
-2. Người dùng chọn nguồn; UI hiện bên chịu chi phí và số token ước tính có nhãn "ước tính" (BR-U06-27); không tự chọn thay.
+1. Ở màn của unit gọi, caller có thể mở `AiSourcePicker` để chọn nguồn rõ hoặc gửi automatic mode không kèm source. Picker đọc `GET /api/v1/ai/sources`, hiển thị nguồn available và lý do không dùng được.
+2. Picker tự gửi preferred source nếu đang available; nếu không thì cho người dùng chọn. Với automatic mode, backend chọn shared nếu có quyền/đủ quota ước tính, rồi personal ACTIVE theo ConnectionOrder. Thông tin chi phí/quota phụ thuộc màn gọi, không được suy ra mọi màn đều mở picker (BR-U06-10, 27).
 3. Frontend gọi API của unit gọi; unit này kiểm quyền trên đích, dựng prompt tối thiểu, gọi `IAiTask.submit` kèm `requestRef` (BR-U06-20).
 4. U06 kiểm `requestRef`: trùng dấu vân tay thì trả task cũ, khác thì `409` (BR-U06-21).
 5. Kiểm nguồn: `SHARED` chỉ Teacher, Subject Manager `ACTIVE` và kết nối chung `ACTIVE`; `PERSONAL` đúng chủ và `ACTIVE`; người gọi có ít hơn 3 task đang chờ hoặc chạy (BR-U06-11, 17).
@@ -129,3 +136,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F14 - Tóm tắt cho Setting List (UC 14)
 1. U03 gọi `summary()` của `AiConnectionsSection` và `TeacherQuotaSection` (timeout 1 giây).
 2. Trả bản tóm tắt đã che: trạng thái và model từng provider của API chung; mức mặc định, trần ngày, số giảng viên có mức riêng, hoặc "Chưa cấu hình".
+
+## AI/MCP current flow — 2026-10-30
+
+MCP credential dành ACTIVE Student/Teacher/Subject Manager; Admin bị từ chối. Nhiều institutional keys/provider; repository chọn ACTIVE tạo sớm nhất. Owner reveal ACTIVE MCP token khi có ciphertext; Admin reveal key chung không REVOKED (kể cả DISABLED) và ghi audit. Personal key không có readback cho Admin. Staff write tools có proposal/retry/confirmation theo source, không tự finalize/publish.
+
+Credential HTTP: GET/POST `/api/v1/me/mcp-credentials`, PATCH/DELETE `/{id}`, GET `/{id}/token`. List DTO có revealable; popup chỉnh label/access không đổi token/hạn. Admin API key reveal là luồng riêng ở AiAdminController; không dùng để đọc personal key. Negative cases: wrong owner, Admin, expired/revoked, ciphertext thiếu và account/role đổi.

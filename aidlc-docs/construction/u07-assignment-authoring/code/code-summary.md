@@ -1,5 +1,9 @@
 # U07 Assignment Authoring — code summary
 
+**Current source snapshot 2026-10-30:** [as-built-baseline.md](as-built-baseline.md) — source-observed; các số test/ngữ cảnh checkout dưới đây là lịch sử, không phải kết quả chạy lại tại HEAD hiện tại.
+
+## Ghi nhận trước baseline 2026-10-30 (lịch sử)
+
 Code viết ngày 2026-10-20 theo [plan](../../plans/code-generation-plan/u07-assignment-authoring-code-generation-plan.md), nhánh `assignment`, làm cùng U08. Integration test (PostgreSQL thật, chạy đồng thời, Word và Google Docs) do tester viết.
 
 ## Business logic
@@ -162,10 +166,35 @@ Unit test thêm: cờ ô thêm được giữ khi lưu, chèn hàng, cột giữ
 
 Unit test thêm: phát hành thẳng từ bản nháp (đủ thì lên lịch, thiếu thì `ASSIGNMENT_NOT_READY`, bài đang mở thì từ chối); frontend: ✕ mờ ở bảng, sơ đồ của đề, nhãn và bộ lọc Nháp.
 
+## AI authoring theo yêu cầu tự do — 2026-10-24
+
+- Manual / Import DOCX / AI dùng chung editor. AI không yêu cầu chọn SWR/SWD; chế độ nội bộ `AUTO` suy ra kiểu bài từ yêu cầu và nguồn khi có căn cứ.
+- Chọn Tiếng Việt/English, 1–10 yêu cầu chính và tổng điểm. Output v2 có title, businessContext, instructions, sections và rubric từng mục điểm. Backend kiểm leaf rubric, số câu, điểm dương/hai số thập phân và tổng BigDecimal; chặn apply nếu validation gốc hoặc kiểm lại INVALID.
+- Nguồn riêng `ASSIGNMENT_SOURCE`: tối đa 3 TXT/DOCX/PDF có chữ, 2 MiB/file, 6 MiB tổng, 30.000 ký tự. Upload có tiến độ thật; `POST /assignments/{id}/ai-drafts/sources:preview` kiểm quyền/FileRef và trả đoạn chữ tối đa 1.000 ký tự/file trước khi gọi AI. Không lưu raw source text trong provenance hoặc trả file ID cho frontend. Có thể tạo chỉ từ file nguồn. Tệp không đọc được thì 400 `ASSIGNMENT_SOURCE_UNREADABLE`; bộ trích chữ đang chạy đủ 2 việc thì 503 `ASSIGNMENT_SOURCE_BUSY` (lỗi tạm, thử lại sau), không báo tệp hỏng.
+- Preview phân biệt title/context/hướng dẫn/câu/rubric/điểm/issues. Bài mang tên mặc định dùng sẵn title AI; bài đã soạn mặc định giữ title/instructions. Có nhãn hướng dẫn rõ và đối chiếu cũ/mới. Apply flush autosave, kiểm version và tải lại rubric. Editor không tạm hiện 0 khi rubric đang tải; lỗi tải có retry.
+- Spinner, task status thật và thời gian đã chờ; chưa có lịch sử đủ để đưa ETA.
+
+**Kiểm tra**: 20 test backend/6 suite và 17 test frontend/2 file đạt; frontend typecheck, lint các file sửa, production build và backend package đạt. Mockito chạy với agent nạp sẵn và `forkCount=0` vì self-attach bị Windows từ chối. Full lint từng hết bộ nhớ; không ghi full lint/full regression pass.
+
+**Runtime**: Đã tạo image local `platform-backend:ai-authoring-20261024` và `platform-frontend:ai-authoring-20261024`; chưa thay container backend/frontend/worker. Người dùng yêu cầu tự chạy nên dừng khởi động/test live. Chưa xác nhận Gemini, upload thực và apply/reload qua browser.
+
+**Còn mở trong kế hoạch mở rộng**: cấu hình mục tiêu ở cấp assignment sau reload (hiện lưu trong provenance draft); tự nhập phân bổ điểm từng câu/chia đều; danh sách/tái sử dụng/gỡ nguồn sau reload; acceptance rộng về import, quyền nguồn, U09 và live. Không coi toàn bộ kế hoạch mở rộng là hoàn tất.
+
 ## Còn lại
 
 - Trang lớp của U05 chưa đọc `?tab=evals`; nút quay lại từ Assignment Form về trang lớp, chưa mở thẳng tab Đánh giá.
 - Bước 14 Review: đối chiếu UC 34–36, story, BR-U07 với code, người dùng duyệt.
+
+## Follow-up empty Gemini draft / readable preview — 2026-10-24
+
+- Added AssignmentDraftGenerationSchema: generate complete flat questions/rubrics before context, exact requested count, mandatory graded rubric and server-validated text/point bounds. Base/MCP schema now rejects zero sections while preserving legacy hierarchy. No paid automatic regeneration.
+- Prompt limits context/instructions and removes repeated filler; application splits blank-line paragraphs into document blocks while keeping common context ungraded.
+- AiDraftPreview shows validation/coverage first, collapsible prose, question cards and adjacent rubric panels. Dialog XL is isolated to AI use; footer wraps. Explicit revise flow preserves inputs and never resubmits automatically.
+- New regression coverage: empty schema accepted before fix; count, absent/empty rubric, prose limits, context paragraphs, invalid apply UI and explicit revision. Focused backend 31, UI 7; typecheck, changed-file lint and production build pass. Backend/worker image rebuilt. API host must restart; live provider verification remains open.
+
+## Local commit organization — 2026-10-24
+
+User authorized separate local commits, with no push: file/extraction foundation (35bd38b4), assignment generation and safe apply (5a00fb7e), authoring/preview UI (e3f7cdad), followed by documentation. Restored existing timeout/PDF/DOCX/PPTX regression tests while retaining new UTF-8 checks; all 6 MaterialTextExtractorTest cases pass. No production changes were introduced while organizing commits. Remaining live-provider and extended-plan work stays open.
 
 ## Thay đổi 2026-10-24
 

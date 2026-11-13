@@ -1,0 +1,34 @@
+# U04 Subject Administration — AS-BUILT source snapshot 2026-11-07
+
+Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths are catalogued in [current-code-baseline](../../../inception/reverse-engineering/current-code-baseline.md). Dated deltas/test results below retain their original scope; this update is not runtime acceptance.
+
+subjects có quản trị danh sách/chi tiết/create/update, manager assignment, archive/reopen và version guards. UI tại admin/subjects; Subject Detail của Admin không cấp quyền chấm hoặc sửa lớp. Các handoff raw paths bị mất được thay bằng baseline này, không tạo lại nội dung approval giả.
+
+**Delta 2026-11-10 (`0df689df`):** `SubjectExceptionHandler` ghi log exception gốc khi yêu cầu Admin môn học lỗi ngoài dự kiến; response vẫn là `SUBJECT_INTERNAL_ERROR` chung, các ánh xạ lỗi quyền, lưu trữ và validation không đổi. [Chẩn đoán](../../build-and-test/2026-11-09-admin-subjects-runtime-diagnosis.md).
+
+## Source và negative-test inventory
+
+| Source | Trách nhiệm |
+|---|---|
+| [subjects/controller](../../../../backend/src/main/java/edu/aiplatform/subjects/controller) | HTTP endpoints, request/response và lỗi HTTP. |
+| [subjects/service](../../../../backend/src/main/java/edu/aiplatform/subjects/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [subjects/repository](../../../../backend/src/main/java/edu/aiplatform/subjects/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [subjects/model](../../../../backend/src/main/java/edu/aiplatform/subjects/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
+| [subjects/dto](../../../../backend/src/main/java/edu/aiplatform/subjects/dto) | Kiểu dữ liệu request/response riêng. |
+| [subjects/contract](../../../../backend/src/main/java/edu/aiplatform/subjects/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
+
+| Feature | API | Model | Pages | Components | Hooks | Styles | Tests |
+|---|---|---|---|---|---|---|---|
+| [subjects](../../../../frontend/src/features/subjects) | [api](../../../../frontend/src/features/subjects/api) | [model](../../../../frontend/src/features/subjects/model) | [pages](../../../../frontend/src/features/subjects/pages) | [components](../../../../frontend/src/features/subjects/components) | [hooks](../../../../frontend/src/features/subjects/hooks) | — | [tests](../../../../frontend/tests/features/subjects) |
+
+Tests: [subjects](../../../../backend/src/test/java/edu/aiplatform/subjects).
+
+[Controller, migration and individual test inventory](../../../inception/reverse-engineering/current-code-baseline.md).
+
+## Evidence và giới hạn
+
+Kiểm tra của đợt refactor được ghi trong [refactor results](../../build-and-test/2026-10-30-package-moves-only-results.md). Những báo cáo có ngày trước đó là bằng chứng lịch sử. Có source/test không đồng nghĩa test pass hoặc runtime/provider healthy. Negative cases cần kiểm trong test nguồn: actor sai role/scope, không có dữ liệu, stale version, unavailable provider; chi tiết thật theo assertions của từng file test.
+
+### Ghi nhận kiểm thử trước baseline
+
+- [aidlc-docs/construction/build-and-test/2026-10-25-b2-b8-u04-results.md](../../build-and-test/2026-10-25-b2-b8-u04-results.md)

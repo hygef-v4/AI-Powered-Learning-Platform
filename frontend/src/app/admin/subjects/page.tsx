@@ -1,3 +1,8 @@
-import { SubjectListPage } from "@/features/subjects/SubjectListPage";
+import type { Metadata } from "next";
+import { SubjectListPage } from "@/features/subjects/pages/SubjectListPage";
 
-export default function Page() { return <SubjectListPage />; }
+export const metadata: Metadata = { title: "Môn học" };
+
+export default function Page() {
+  return <SubjectListPage />;
+}

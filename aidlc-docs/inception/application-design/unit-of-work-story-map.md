@@ -1,6 +1,6 @@
 # Unit / Story / UC map — 2026-10-14
 
-> Revision 2026-10-14 theo yêu cầu người dùng: 15 unit chia lại thành 3 iteration, mỗi iteration 5 unit, mỗi unit nằm trọn một iteration; unit chia theo dữ liệu sở hữu để liên kết trong cao và liên kết ngoài thấp. Danh mục 66 UC, 50 MVP story + 1 extension giữ nguyên ID. Đây là revision tài liệu; thiết kế Construction vẫn nằm trong các folder unit cũ, chưa tách/gộp theo unit mới.
+> AS-BUILT sync 2026-10-30; 66 UC/15 unit ownership retained and verified against source. Dated planning estimates below remain estimates, not actual LOC or runtime acceptance.
 
 66 active UC; 50 MVP stories + 1 extension; 15 logical units
 
@@ -37,7 +37,7 @@
 | U09 | US-GRD-002, US-GRD-003, US-GRD-004, US-GRD-005, US-INT-001, US-RPT-001, US-RPT-003 |  |
 | U10 | US-QBK-002, US-ASM-006 |  |
 | U11 | US-GRD-001 |  |
-| U12 | US-GRP-001, US-GRP-002, US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006 |  |
+| U12 | US-GRP-001, US-GRP-002, US-GRP-003, US-GRP-004, US-GRP-005, US-GRP-006, US-GRP-007, US-GRP-008, US-GRP-009, US-GRP-010 |  |
 | U13 | US-CNT-001, US-CNT-002 | US-CNT-005 |
 | U14 | US-CNT-004, US-NTF-001 |  |
 | U15 | US-RPT-002 |  |
@@ -52,7 +52,7 @@ Catalog source: [use-cases.md](../requirements/use-cases.md). Unit, iteration, p
 | US-ASM-001 | U07 (duyệt, phát hành Assignment) | U10 (phát hành Quiz) |
 | US-ASM-003 | U08 (làm, nộp Assignment cá nhân) | U11 (làm Quiz) |
 | US-AIG-001, US-AIG-002 | U06 (gọi AI) | U07, U10 (nhận bản nháp) |
-| US-RPT-001 | U09 (theo dõi nộp bài) | U14 (nhắc hạn), U05 (bật phân bố điểm) |
+| US-RPT-001 | U09 (theo dõi nộp bài, cài đặt phân bố theo bài–lớp) | U14 (nhắc hạn), U05 (phạm vi dạy và ghi danh) |
 | US-INT-001 | U09 (giảng viên xem) | U08 (dữ liệu hoạt động), U11, U12 (ghi sự kiện) |
 
 ## Truy vết chức năng đã gộp

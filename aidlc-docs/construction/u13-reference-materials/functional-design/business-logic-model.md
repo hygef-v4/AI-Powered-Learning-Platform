@@ -1,10 +1,15 @@
 # U13 Reference Materials — business-logic-model
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U13 Reference Materials thuộc Iter 3, người code: Người 4; UC 58–62. Lấy phần học liệu của U05 cũ; bỏ module, Lesson, tóm tắt, embedding và RAG (phần mở rộng US-CNT-005). Thông báo lớp của U05 cũ thuộc U14. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 58, 59, 60, 61, 62. **Primary stories:** US-CNT-001, US-CNT-002; US-CNT-005 là phần mở rộng. **Requirements:** FR-004, FR-005, FR-013.
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
+
+**Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
 
 ## 1. Truy vết
 
@@ -47,9 +52,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F5 - Xem tài liệu (UC 62)
 1. Student Class Detail có phần Học liệu do U13 gắn qua `StudentClassSection`: `GET /api/v1/me/classes/{classId}/materials` trả tài liệu `ACTIVE` của môn và của lớp.
 2. Bấm tài liệu mở Learning Material: `GET /api/v1/materials/{id}/view` kèm `classId`; kiểm quyền xem (BR-U13-02).
-3. Tệp: frontend gọi `POST /api/v1/materials/{id}/download-token`; U13 kiểm quyền rồi gọi `IArtifact.issueDownloadToken`; PDF hiện ngay trên trang, tệp khác tải về.
+3. Tệp: frontend gọi `POST /api/v1/materials/{id}/download-token`; U13 kiểm quyền rồi gọi `IArtifact.issueDownloadToken`; PDF hiện ngay trên trang, XLSX có trình xem theo sheet; mọi tệp được phép đều tải về.
 4. Link YouTube: trang nhúng `youtube-nocookie.com` theo id video đã lưu (BR-U13-20, 21).
-5. Vùng `LearningMaterialSection` hiện phần do unit khác gắn (U11: Quiz gắn tài liệu này).
 6. Giảng viên, Chủ nhiệm môn cũng mở được Learning Material của tài liệu mình có quyền xem.
 7. Assignment Detail (U08) và Quiz Practice Detail (U11) nhúng `MaterialLinkList` qua slot `AssignmentMaterialSection`, `QuizMaterialSection`: component gọi `GET /api/v1/me/classes/{classId}/materials?ids=`; U13 chỉ trả tài liệu `ACTIVE` người học được xem (BR-U13-23).
 
@@ -57,10 +61,16 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F6 - Trích chữ
 1. Sau khi lưu phiên bản tệp, U13 gửi job `MATERIAL_TEXT_EXTRACT` qua `IJob` (queue `jobs.triggered`); phiên bản ở `PENDING`.
-2. Worker đọc tệp qua `IArtifact.open`, trích chữ PDF, DOCX, PPTX bằng thư viện, không OCR.
+2. Worker đọc tệp qua `IArtifact.open`, trích chữ PDF, DOCX, PPTX, XLSX bằng thư viện; không OCR, không chạy macro/thực thi công thức, không tự gọi AI.
 3. Ghi chữ (cắt ở 1.000.000 ký tự) và `EXTRACTED`; ít chữ thì `NO_TEXT`; lỗi sau các lần thử của U03 thì `FAILED`. Phiên bản bị thay trước khi job chạy thì bỏ qua.
 
 ### F7 - Nguồn cho AI và MCP
 1. U07, U10 gọi `IReferenceMaterial.listSelectable(actor, scopeRef)` để hiện danh sách tài liệu người soạn chọn được (BR-U13-31).
 2. Khi gửi task AI, U07, U10 gọi `extractText(actor, materialIds, maxChars)`: U13 kiểm lại quyền từng tài liệu, trả chữ phiên bản hiện tại kèm id, phiên bản, tiêu đề; tài liệu chưa có chữ được đánh dấu để người soạn biết.
-3. Agent gọi `read_authorized_material(materialId)` qua U06: U13 kiểm quyền xem của actor, trả chữ (cắt theo trần của tool) và thông tin tài liệu.
+3. Agent gọi `read_authorized_material(materialId)` qua U06: U13 kiểm quyền xem hiện hành của actor, cho staff còn quyền đọc cả tham chiếu ARCHIVED, trả chữ (cắt theo trần của tool) và thông tin tài liệu. listSelectable/extractText cho tác vụ AI mới chỉ nhận ACTIVE.
+
+## Source behavior delta — 2026-10-30
+
+Module cơ bản của môn đã triển khai. Học liệu môn/lớp bắt buộc moduleId cùng môn; dữ liệu cũ backfill Module 1. Manager quản lý module; class viewers đọc theo scope. Quiz nằm tối đa một module, attach khác module chuyển link; phải kiểm quyền với Quiz. Delete chặn active materials; archived materials chuyển sang module khác, không xóa module cuối nếu cần giữ chúng. Version/reorder kiểm server; module không đồng nghĩa Lesson/RAG.
+
+[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.

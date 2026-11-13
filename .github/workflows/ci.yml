@@ -23,6 +23,9 @@ jobs:
           cache: maven
       # Testcontainers dùng Docker có sẵn trên runner.
       - run: mvn -B verify
+      - name: Require U04 and notification PostgreSQL tests without skips
+        shell: pwsh
+        run: ../scripts/assert-required-backend-tests.ps1
 
   frontend:
     runs-on: ubuntu-latest
@@ -64,11 +67,15 @@ jobs:
             docker push ghcr.io/$OWNER/platform-$app:${{ github.sha }}
           done
 
-  # Deploy qua SSH: khung, chưa bật. Khi bật: ghi infra/.env từ secrets (quyền 600), đặt IMAGE_TAG=SHA,
-  # rồi `docker compose pull && docker compose up -d` trên VPS (shared-infrastructure §5).
-  deploy:
-    if: false
-    needs: [images]
+  # Deploy: không có job ở đây. Nhà cung cấp VPS chặn kết nối quốc tế nên runner không SSH vào được; VPS tự hỏi
+  # GitHub lần chạy thành công mới nhất của workflow này trên main rồi tự deploy, lỗi thì tự quay về
+  # (infra/deploy/platform-deploy.sh, docs/runbooks/deploy-vps.md mục 10). Job images thành công thì workflow mới
+  # thành công, nên image của SHA đó chắc chắn đã có trên GHCR.
+
+  # Test script deploy bằng lệnh giả, không cần VPS.
+  deploy-script:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Chưa bật deploy"
+      - uses: actions/checkout@v4
+      - run: shellcheck infra/deploy/platform-deploy.sh infra/deploy/test-platform-deploy.sh
+      - run: bash infra/deploy/test-platform-deploy.sh

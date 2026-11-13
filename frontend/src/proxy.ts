@@ -11,7 +11,8 @@ export function proxy(request: NextRequest) {
     `style-src 'self' 'nonce-${nonce}'`,
     // Existing React components use dynamic style attributes; this exception cannot execute scripts.
     "style-src-attr 'unsafe-inline'",
-    "font-src 'self'",
+    // docx-preview nạp font nhúng trong tệp Word qua blob: URL.
+    "font-src 'self' blob:",
     "img-src 'self' data: blob:",
     `connect-src 'self'${development ? " ws: wss:" : ""}`,
     "frame-src 'self' blob: https://www.youtube-nocookie.com https://embed.diagrams.net",
@@ -36,5 +37,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api(?:/|$)|_next/static|_next/image|fonts/|favicon.ico|robots.txt|sitemap.xml).*)"],
+  matcher: ["/((?!api(?:/|$)|_next/static|_next/image|fonts/|favicon.ico|opengraph-image|robots.txt|sitemap.xml).*)"],
 };

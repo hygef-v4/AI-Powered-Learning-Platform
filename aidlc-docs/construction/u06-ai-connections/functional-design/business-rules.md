@@ -1,6 +1,34 @@
 # U06 AI Connections — business-rules
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U06 AI Connections thuộc Iter 2, người code: Người 5; UC 31–33 và phần API chung, quota của UC 14–15 (màn do U03). Gộp U07 cũ (AI Usage & Teacher Quota) và U13 cũ (AI Connections & MCP); bỏ mua credit và chạy code. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+## Ảnh trong prompt (nhập đề từ ảnh/PDF) — 2026-11-11
+
+Thiết kế, chưa có mã. Phục vụ U07 BR-U07-87…101. [Yêu cầu](../../../inception/requirements/2026-11-11-exam-image-import.md).
+
+| Mã | Quy tắc |
+|---|---|
+| BR-U06-54 | `AiPrompt` có thêm `images: List<AiImageRef>` (mặc định rỗng; constructor cũ `AiPrompt(system, user)` giữ nguyên). `AiImageRef(source, ref, mediaType)`: `mediaType` chỉ `image/jpeg` hoặc `image/png`, tối đa 10 ảnh mỗi tác vụ, `source` phải có `IAiImageSource` đăng ký. Sai thì `400 AI_TASK_INVALID`. `input_payload` lưu `{system, user, images: [{source, ref, mediaType}]}`, không lưu bytes. Fingerprint chống gửi trùng gồm cả danh sách ảnh. |
+| BR-U06-55 | `IAiImageSource` (U06 khai báo, unit gọi cài): `source()`, `load(ref) → Optional<AiImage(mediaType, bytes)>`. Worker nạp ảnh ngay trước khi gọi nhà cung cấp AI. Thiếu ảnh nào thì tác vụ FAILED với lỗi an toàn "Ảnh gửi AI không còn", không gọi nhà cung cấp, hoàn chỗ quota đã giữ. |
+| BR-U06-56 | Ước tính quota: mỗi ảnh tính thêm 1.600 token vào phần đầu vào khi giữ chỗ (`QuotaReservationService.estimate`). Quyết toán vẫn theo usage thật nhà cung cấp trả. |
+| BR-U06-57 | Model đọc ảnh: mỗi provider có `vision-models` trong cấu hình (`U06_GEMINI_VISION_MODELS`, `U06_OPENAI_VISION_MODELS`, `U06_CLAUDE_VISION_MODELS`). Không đặt thì mặc định bằng danh sách `models`. `ProviderCatalog.supportsImages(provider, model)`. |
+| BR-U06-58 | Tác vụ có ảnh: `sourceOrder` và bước thử kết nối kế tiếp trong worker bỏ qua kết nối có model không đọc ảnh. Không còn kết nối nào thì U07 báo `AI_VISION_UNAVAILABLE` lúc gửi. Nếu chuyện này chỉ xảy ra ở worker thì tác vụ FAILED với lỗi an toàn tương ứng. |
+| BR-U06-59 | Gateway gửi ảnh trước phần chữ trong cùng một lượt user: Gemini `parts[{inline_data: {mime_type, data}}…, {text}]`; OpenAI `content[{type: "image_url", image_url: {url: "data:{mime};base64,…", detail: "high"}}…, {type: "text", text}]`; Claude `content[{type: "image", source: {type: "base64", media_type, data}}…, {type: "text", text}]`. Không có ảnh thì body giống hệt hiện nay. Nhà cung cấp trả 400 vì không nhận ảnh thì xếp `REJECTED` với thông báo an toàn "Model đang dùng không đọc được ảnh". |
+| BR-U06-60 | `Request.toString`, log, audit và lỗi an toàn không bao giờ chứa bytes ảnh, base64 hay chữ prompt. Timeout giữ theo `requestTimeout` hiện hành. |
+| BR-U06-61 | Nhà cung cấp trả HTTP 200 mà không có chữ: lỗi an toàn nêu mã lý do nhà cung cấp trả kèm giải thích, thay cho câu chung "Nhà cung cấp AI không trả nội dung". Gemini lấy `promptFeedback.blockReason` (chặn đầu vào, "chặn nội dung gửi lên") hoặc `candidates[0].finishReason` (`SAFETY`, `RECITATION`, `BLOCKLIST`, `PROHIBITED_CONTENT`, `SPII`, `IMAGE_SAFETY`, `LANGUAGE`, `OTHER`…); OpenAI `finish_reason = content_filter` hoặc có `message.refusal`; Claude `stop_reason = refusal`. Mã lạ vẫn hiện nguyên mã. Lý do dừng bình thường (`STOP`, `stop`, `end_turn`…) giữ câu chung. Vẫn là lỗi `CHARGED` kèm usage. Log WARN ghi provider, model, requestId, mã lý do, không ghi nội dung phản hồi hay lời từ chối. Thêm 2026-11-12 sau lỗi nhập đề trên production. |
+
+## Server-managed workflows amendment — 2026-11-01
+
+`read_agent_workflow` là tool READ cho Teacher/Subject Manager, nhận đúng hai giá trị `AUTHOR_ASSIGNMENT` hoặc `GRADE_WITH_RUBRIC`. Trả hướng dẫn đầy đủ từ tài nguyên classpath backend và `version` theo hash nội dung; không nhận đường dẫn tùy ý và không phụ thuộc thư mục skill/working directory của người dùng. Token READ_ONLY đọc được, nhưng không được cấp quyền ghi. Student/Admin không thấy hoặc gọi hai workflow giảng viên. Capabilities chỉ agent tới tool này; người dùng không bắt buộc tải/cài skill. Các wrapper cục bộ chỉ là tùy chọn. Quyền, scope và guard backend không thay đổi; việc đọc hướng dẫn không chứng minh model tuân thủ hoặc chấm đúng. [Yêu cầu](../../../inception/requirements/2026-11-01-server-agent-workflows.md).
+
+## External-agent workflow amendment — 2026-11-01
+
+Giao việc và hỏi làm rõ diễn ra trong Codex, Claude Code, OpenCode hoặc Antigravity; không cần tạo phiên hay điền form trên nền tảng trước. get_my_capabilities trả hướng dẫn theo role; Student vẫn chỉ góp ý Practice đã nộp của mình. UI dùng để xem, sửa và duyệt kết quả qua reviewUrl. Skill là tùy chọn, hook không phải điều kiện dùng MCP. Không tự gọi provider hoặc công bố điểm qua MCP.
+
+[Yêu cầu và stories](../../../inception/requirements/2026-11-01-external-agent-workflow.md).
+
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 31, 32, 33; hỗ trợ 14, 15. **Primary stories:** US-AIC-001, US-AIC-002, US-AIC-003, US-AIC-004, US-AIG-001, US-AIG-002, US-AIG-003. **Requirements:** FR-012, FR-021, FR-033, FR-034, FR-035, FR-036, FR-037.
 
@@ -11,22 +39,22 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U06-01 | Có hai loại kết nối: `INSTITUTIONAL` (API chung, chỉ Admin cấu hình qua Settings) và `PERSONAL` (API cá nhân, chỉ chủ tài khoản Student, Teacher, Subject Manager cấu hình trong UC 31). Admin không có API cá nhân, không xem hay dùng kết nối cá nhân của người khác. | FR-012, FR-021 |
-| BR-U06-02 | Provider: `GEMINI`, `OPENAI`, `CLAUDE`. Mỗi người tối đa một kết nối cá nhân còn hiệu lực cho mỗi provider; API chung tối đa một kết nối cho mỗi provider. Mỗi kết nối chọn một model trong danh sách cho phép do server cấu hình. Địa chỉ gọi provider cố định trong code; không nhận URL từ người dùng. | FR-012 |
-| BR-U06-03 | Key được mã hóa trước khi lưu, kèm phiên bản khóa mã hóa; chỉ hiện 4 ký tự cuối. Không trả key hay bản mã qua API, không ghi vào log hay audit. Thay key thì ghi đè; thu hồi thì xóa bản mã và chuyển `REVOKED`. | FR-012, SEC-006 |
+| BR-U06-02 | GEMINI/OPENAI/CLAUDE; PERSONAL và INSTITUTIONAL đều có nhiều kết nối/provider. PERSONAL thuộc đúng owner, thao tác theo connection UUID; chỉ ACTIVE được chọn. ConnectionOrder ưu tiên CLAUDE, OPENAI, GEMINI, rồi thứ tự model trong ProviderCatalog, createdAt và id. Model/endpoint do server allowlist, không nhận URL tùy ý. | FR-012; source delta 05/11 |
+| BR-U06-03 | Provider key mã hóa AES-256-GCM kèm phiên bản khóa và AAD gắn id/scope/owner/provider của kết nối (bản mã chép sang dòng khác không giải mã được); list chỉ hiện hint. Key chỉ ghi: không API nào trả lại key đã lưu, kể cả cho chủ khóa và Admin (bỏ reveal 2026-11-11, đóng D15). Bản mã cũ chưa gắn AAD được mã hóa lại khi backend/worker khởi động. Không ghi secret vào log/audit. | FR-012, SEC-006 |
 | BR-U06-04 | Kiểm tra kết nối gửi một yêu cầu tổng hợp cố định, tối đa 5 token ra, không dùng nội dung học vụ; UI báo trước việc này có thể phát sinh chi phí trên key. Lưu kết quả đã làm sạch và thời điểm. Kiểm tra API chung không cho Admin quyền học vụ. | FR-037, US-AIG-003 |
-| BR-U06-05 | Kết nối API chung có trạng thái `ACTIVE`, `DISABLED` (công tắc tắt, giữ key), `REVOKED`. Đổi, tắt, thu hồi có hiệu lực với yêu cầu AI mới; task đã gửi tới provider vẫn chạy xong. | FR-021 |
+| BR-U06-05 | Cả PERSONAL và INSTITUTIONAL có ACTIVE, DISABLED (giữ key nhưng không dùng), REVOKED. PERSONAL do owner bật/tắt, API chung do Admin; version bắt buộc khi đổi. Việc chọn/fallback chỉ dùng key ACTIVE; task đã gửi giữ các quy tắc xử lý kết quả và accounting của worker. | FR-021; source delta 05/11 |
 | BR-U06-06 | Thay key hoặc model phải gửi kèm `version`; lệch thì `409`. | FR-033 |
 
 ## 2. Nguồn AI và quota API chung (US-AIC-003)
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U06-10 | Mỗi yêu cầu AI chọn rõ một nguồn: `SHARED` (API chung) hoặc `PERSONAL` (kết nối cá nhân của chính người gọi). Lỗi hay hết quota không tự chuyển sang nguồn khác. | FR-034, FR-036 |
+| BR-U06-10 | Có thể chọn rõ SHARED hoặc PERSONAL/provider; khi source trống, AiTaskService.resolveSource ưu tiên API chung nếu có quyền và đủ quota ước tính, sau đó key cá nhân ACTIVE theo ConnectionOrder. PERSONAL không kèm provider chỉ xét key cá nhân. Worker thử key kế tiếp khi lỗi, có thể từ chung sang cá nhân của đúng actor; không cấp thêm quyền học vụ. | FR-034, FR-036; source delta 05/11 |
 | BR-U06-11 | `SHARED` chỉ cho Teacher và Subject Manager đang `ACTIVE`; Student và Admin không dùng. Nguồn nào cũng không thêm quyền học vụ: unit gọi tự kiểm quyền trên tài nguyên trước khi gửi task. | FR-021, US-AIG-002 |
 | BR-U06-12 | Quota tính bằng token theo ngày (Asia/Ho_Chi_Minh), không cộng dồn sang ngày sau; không có giới hạn theo giờ. Admin đặt mức mặc định mỗi ngày cho mọi giảng viên, trần ngày toàn hệ thống, và mức riêng mỗi ngày cho từng giảng viên (0 là chặn). Một mức áp cho mọi model; usage vẫn ghi provider, model riêng. Chưa đặt mức mặc định và trần thì chưa dùng được `SHARED`. | FR-034, D04 chốt 2026-10-15 |
 | BR-U06-13 | Trước khi gửi, giữ chỗ ước tính (số ký tự prompt chia 2, làm tròn lên, cộng `maxOutputTokens`) trên cửa sổ ngày toàn hệ thống và cửa sổ ngày của người gọi, trong một transaction. Vượt mức nào thì từ chối, báo thời điểm có cửa sổ mới và gợi ý chọn nguồn khác. | FR-034 |
 | BR-U06-14 | Provider trả phản hồi có usage: thay phần giữ chỗ bằng token thật, kể cả khi kết quả không dùng được. Provider từ chối không tính token (key sai, quá giới hạn tần suất, model không hỗ trợ): giải phóng giữ chỗ. Không biết kết quả (hết giờ hoặc mất kết nối sau khi đã gửi): tính phần giữ chỗ là đã dùng với nhãn `ESTIMATED`, không tự hoàn. | FR-034, FR-036 |
-| BR-U06-15 | Token thật vượt ước tính vẫn ghi đủ; cửa sổ có thể vượt mức và yêu cầu sau bị chặn tới cửa sổ mới. | FR-034 |
+| BR-U06-15 | Token ra thật gồm cả token suy luận của provider (Gemini: `candidatesTokenCount` cộng `thoughtsTokenCount`; phần suy luận ghi riêng ở `reasoningTokens`). Token thật vượt ước tính vẫn ghi đủ; cửa sổ có thể vượt mức và yêu cầu sau bị chặn tới cửa sổ mới. | FR-034 |
 | BR-U06-16 | API cá nhân và MCP không trừ quota chung. Quota không mua bán, không quy đổi ra tiền. | FR-034 |
 | BR-U06-17 | Mỗi tài khoản tối đa 3 task đang chờ hoặc đang chạy, tính mọi nguồn. | Chống quá tải worker |
 
@@ -36,10 +64,10 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U06-20 | Unit gọi (U07, U08, U09, U10) gửi task gồm loại task, đích (`targetRef`, `inputVersion`), nguồn, prompt đã lọc, JSON schema của kết quả, `maxOutputTokens`, `requestRef`. Unit gọi tự kiểm quyền trên đích và chỉ đưa ngữ cảnh tối thiểu (không đáp án ẩn, điểm chưa công bố, dữ liệu người khác). U06 không đọc dữ liệu của unit khác. | FR-012, FR-035 |
 | BR-U06-21 | `requestRef` duy nhất. Gửi lại cùng `requestRef` và cùng dấu vân tay (người gọi, loại task, đích, `inputVersion`, nguồn) thì trả task cũ; khác dấu vân tay thì `409`. | FR-034 |
-| BR-U06-22 | Trạng thái task: `QUEUED → RUNNING → READY / FAILED / UNKNOWN`; `QUEUED → CANCELLED / FAILED`. Ghi mốc đã gửi trước khi gọi provider; message đến lại cho task đã có mốc gửi mà chưa có kết quả thì chuyển `UNKNOWN`, không gọi provider lần hai. | FR-036 |
+| BR-U06-22 | Trạng thái task: `QUEUED → RUNNING → READY / FAILED / UNKNOWN`; `QUEUED → CANCELLED / FAILED`. Ghi mốc đã gửi trước khi gọi provider; message đến lại cho task đã có mốc gửi mà chưa có kết quả thì không gọi provider lần hai: còn trong cửa sổ gọi (`requestTimeout` cộng 30 giây kể từ mốc gửi) thì để task `RUNNING` vì lần gọi trước có thể vẫn đang chạy; quá cửa sổ thì chuyển `UNKNOWN`. | FR-036 |
 | BR-U06-23 | Kết quả phải đúng JSON schema, sai thì `FAILED` (token đã dùng vẫn tính). Kết quả đúng được chuyển cho handler của unit gọi; handler kiểm lại quyền và `inputVersion` rồi mới áp dụng; đích đã đổi thì không áp dụng (`STALE`). AI không tự công bố bài, không chốt điểm. | FR-012, US-AIG-001 |
 | BR-U06-24 | Prompt và kết quả chỉ giữ tới khi task kết thúc và đã chuyển cho handler; sau đó xóa, chỉ giữ thông tin task và usage. | SEC-005 |
-| BR-U06-25 | Gọi provider có timeout 120 giây. U06 không tự gọi lại provider; người dùng muốn thử lại thì tạo yêu cầu mới. | FR-036 |
+| BR-U06-25 | Mỗi lần gọi provider có timeout hữu hạn theo gateway. AiTaskJobHandler retry cùng key cho lỗi tạm REJECTED HTTP 429/503/529 với khoảng chờ 2 s và 5 s, sau đó xét key ACTIVE kế tiếp. Settlement phân biệt REJECTED/UNKNOWN; UNKNOWN giữ usage ước tính, không tự hoàn token. Redelivery không gọi trùng một lượt đang chạy theo BR-U06-22. | FR-036; source delta 05/11 |
 | BR-U06-26 | Người gửi được hủy task `QUEUED` của mình; giữ chỗ được giải phóng. | Thiết kế |
 | BR-U06-27 | Trước khi gửi, UI hiện nguồn, bên chịu chi phí (trường hoặc chính người dùng), quota còn lại nếu dùng API chung và số token ước tính có nhãn "ước tính". | FR-036 |
 
@@ -47,8 +75,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U06-30 | Student, Teacher, Subject Manager tạo credential MCP cho agent của mình; Admin không. Credential gắn tài khoản, nhãn, quyền `READ_ONLY` hoặc `READ_WRITE`, hạn 7, 30 hoặc 90 ngày (mặc định 30); tối đa 5 credential còn hiệu lực mỗi người. | FR-035 |
-| BR-U06-31 | Token chỉ hiện một lần lúc tạo; lưu bản băm SHA-256 và 4 ký tự cuối. Credential hết hiệu lực khi hết hạn hoặc bị thu hồi; tài khoản không còn `ACTIVE` thì mọi lời gọi bị từ chối. Đổi hoặc đặt lại mật khẩu, đổi role không thu hồi credential; mỗi lời gọi dùng role và phạm vi hiện hành (BR-U06-33). Có hiệu lực ở lời gọi tiếp theo. | FR-035 |
+| BR-U06-30 | MCP_SELF và bearer MCP chỉ dành ACTIVE STUDENT, TEACHER, SUBJECT_MANAGER. ADMIN không tạo/list/update/reveal/revoke credential và credential Admin cũ bị từ chối theo role hiện hành ở lần gọi kế tiếp. Student API cá nhân vẫn tách nguồn shared quota; không cấp Admin học vụ qua MCP. | FR-035 |
+| BR-U06-31 | Token dùng SHA-256/hint để xác thực; có thể lưu thêm AES-GCM ciphertext/IV/key version. Token trả khi tạo và chủ credential ACTIVE có thể xem lại khi còn bản mã giải mã được; ghi MCP_TOKEN_REVEALED. Token cũ không có bản mã hoặc thiếu encryption key có thể không reveal được. Hết hạn/revoke/role không hợp lệ/account không ACTIVE bị chặn ở call kế tiếp; đổi password không tự revoke. | FR-035 |
 | BR-U06-32 | MCP server dùng transport Streamable HTTP tại `/mcp`, xác thực bằng header `Authorization: Bearer`. Không dùng key provider để xác thực, không trả key cho agent. MCP không gọi AI thay agent: agent dùng mô hình của nó. | FR-012, FR-035 |
 | BR-U06-33 | Mỗi lời gọi tool: xác thực credential; dựng actor từ tài khoản của credential; tool ghi cần `READ_WRITE`; tham số đúng schema và không quá 64 KB; tối đa 60 lời gọi mỗi phút mỗi credential; unit sở hữu tool kiểm quyền qua `IAuthorization` và kiểm `expectedVersion` khi ghi; kết quả không quá 256 KB. | FR-035 |
 | BR-U06-34 | Tool do unit sở hữu dữ liệu đăng ký, kèm role được dùng. Không có tool nộp bài chính thức, công bố điểm, khôi phục dữ liệu, đọc credential. Tham số và kết quả coi là không tin cậy. | FR-035 |
@@ -65,7 +93,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U06-50 | Mỗi provider có hướng dẫn lấy key và chọn model; MCP có hướng dẫn cho từng ứng dụng agent đã thử thật (cài đặt, xác thực, thử tool, ngắt kết nối, xử lý lỗi); ứng dụng chưa thử ghi "chưa kiểm chứng". Không hướng dẫn dán key vào prompt. | FR-037 |
+| BR-U06-50 | Mỗi provider có hướng dẫn lấy key và chọn model. Tab Agent MCP có nút mở tài liệu riêng /ai/mcp-guide, kể cả khi tải credential lỗi: hướng dẫn kết nối theo ứng dụng, xác thực/đọc thử, ngắt kết nối, luồng dùng và từng tool theo vai trò/quyền, lỗi thường gặp. Hướng dẫn ưu tiên thao tác trong ứng dụng và prompt tiếng Anh; ứng dụng chưa thử ghi "chưa kiểm chứng". Không đưa key/token thật vào tài liệu hoặc hướng dẫn dán key API vào prompt; chỉ cấu hình cá nhân có token. Tạo/chấm qua MCP là nháp/đề xuất chờ giảng viên xem, áp dụng và quyết định trên UI. Danh mục cần đồng bộ khi provider registry đổi. | FR-037, quyết định người dùng 2026-11-02 |
 | BR-U06-51 | Mọi API kiểm quyền phía server: API Settings chỉ Admin; kết nối cá nhân, credential MCP, task và usage chỉ chủ sở hữu. Ngoài phạm vi trả `404` và ghi audit `ACCESS_DENIED`. | SEC-002 |
 | BR-U06-52 | Audit: `AI_CONNECTION_CHANGED` (thêm, thay, tắt, bật, thu hồi; provider, loại, 4 ký tự cuối), `AI_CONNECTION_TESTED`, `QUOTA_CHANGED` (trước, sau), `MCP_CREDENTIAL_CREATED`, `MCP_REVOKED`, `MCP_TOOL_CALLED` (tool, đích, kết quả). Không ghi key, token, prompt. | FR-014, FR-035 |
 | BR-U06-53 | U01 hoặc U03 không trả lời thì từ chối (fail closed). Lỗi AI không làm mất dữ liệu người dùng đang soạn; người dùng vẫn làm thủ công được. | BR-U01-93, US-AIG-001 |

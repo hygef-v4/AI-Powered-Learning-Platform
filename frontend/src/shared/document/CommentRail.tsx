@@ -31,21 +31,40 @@ function anchorTop(paper: HTMLElement, blockId: string | null, base: number): nu
  * đó, và chỉ bị đẩy đi khi đầu phần kế tiếp cuộn tới. Thẻ chồng nhau thì thẻ sau dời xuống. Vị trí đặt trực tiếp lên
  * DOM (không qua state) nên gõ chữ làm block cao lên thì dải đi theo mà không render lại.
  */
-export function CommentRail({ paper, comments, activeKey }: {
+export function CommentRail({ paper, comments, activeKey, matchSectionHeight = false }: {
   paper: RefObject<HTMLElement | null>;
   comments: DocumentComment[];
   activeKey?: string | null;
+  matchSectionHeight?: boolean;
 }) {
   const rail = useRef<HTMLDivElement>(null);
   const bands = useRef(new Map<string, HTMLDivElement>());
   const cards = useRef(new Map<string, HTMLDivElement>());
-  const state = useRef({ comments, activeKey });
+  const state = useRef({ comments, activeKey, matchSectionHeight });
+  const sizedBodies = useRef(new Set<HTMLElement>());
   const observer = useRef<ResizeObserver | null>(null);
 
   const layout = useRef(() => {
     const railEl = rail.current;
     const paperEl = paper.current;
     if (!railEl || !paperEl) return;
+    const nextBodies = new Set<HTMLElement>();
+    if (state.current.matchSectionHeight) {
+      for (const comment of state.current.comments) {
+        if (!comment.anchorBlockId) continue;
+        const anchor = paperEl.querySelector<HTMLElement>(`[data-block-id="${comment.anchorBlockId.replace(/["\\]/g, "\\$&")}"]`);
+        const section = anchor?.closest<HTMLElement>("[data-section][data-leaf]");
+        const body = section?.querySelector<HTMLElement>(":scope > [data-leaf-body]");
+        const card = cards.current.get(comment.key);
+        if (!anchor || !body || !card) continue;
+        const height = Math.max(0, Math.ceil(card.offsetHeight - (body.getBoundingClientRect().top - anchor.getBoundingClientRect().top)));
+        const minimum = `${height}px`;
+        if (body.style.minHeight !== minimum) body.style.minHeight = minimum;
+        nextBodies.add(body);
+      }
+    }
+    sizedBodies.current.forEach((body) => { if (!nextBodies.has(body)) body.style.minHeight = ""; });
+    sizedBodies.current = nextBodies;
     const base = railEl.getBoundingClientRect().top;
     const end = paperEl.getBoundingClientRect().bottom - base;
     const entries = state.current.comments.flatMap((comment) => {
@@ -76,7 +95,7 @@ export function CommentRail({ paper, comments, activeKey }: {
   });
 
   useLayoutEffect(() => {
-    state.current = { comments, activeKey };
+    state.current = { comments, activeKey, matchSectionHeight };
     cards.current.forEach((card) => observer.current?.observe(card));
     layout.current();
   });
@@ -93,6 +112,8 @@ export function CommentRail({ paper, comments, activeKey }: {
     return () => {
       observer.current?.disconnect();
       observer.current = null;
+      sizedBodies.current.forEach((body) => { body.style.minHeight = ""; });
+      sizedBodies.current.clear();
       window.removeEventListener("resize", run);
     };
   }, [paper]);
@@ -102,8 +123,8 @@ export function CommentRail({ paper, comments, activeKey }: {
       {comments.map((comment) => (
         <div key={comment.key} data-comment-band={comment.key} className="absolute inset-x-0 top-0"
           ref={(node) => { if (node) bands.current.set(comment.key, node); else bands.current.delete(comment.key); }}>
-          {/* Dính dưới thanh trên cùng (64px) và thanh công cụ của trang soạn. */}
-          <div data-comment={comment.key} className="sticky top-[7.25rem]"
+          <div data-comment={comment.key} className="sticky"
+            style={{ top: "calc(var(--doc-toolbar-top, 4rem) + var(--doc-toolbar-height, 2.25rem) + 0.5rem)" }}
             ref={(node) => { if (node) cards.current.set(comment.key, node); else cards.current.delete(comment.key); }}>
             {comment.content}
           </div>

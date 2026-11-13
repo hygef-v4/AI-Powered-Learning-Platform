@@ -1,11 +1,8 @@
-import { ErrorPage } from "./ErrorPage";
+import type { Metadata } from "next";
+import { ErrorPage } from "@/shared/ui/ErrorPage";
+
+export const metadata: Metadata = { title: "Không tìm thấy trang" };
 
 export default function NotFound() {
-  return (
-    <ErrorPage
-      code="404"
-      title="Không tìm thấy trang"
-      description="Đường dẫn này không tồn tại hoặc đã được thay đổi. Hãy kiểm tra lại liên kết hoặc quay về trang chủ."
-    />
-  );
+  return <ErrorPage kind="not-found" />;
 }

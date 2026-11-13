@@ -1,6 +1,8 @@
 # Yêu cầu sản phẩm ALAP — Inception revision 2026-10-13
 
-> Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime. D01–D04 đã chốt 2026-10-15.
+> Quyết định mới nhất 2026-11-02, FR-007/008: FINALIZED/PUBLISHED khóa chỉnh sửa điểm. Nộp lại bỏ hiệu lực điểm cũ: cá nhân SUPERSEDED bản chấm cũ, nhóm reset về PENDING. Không giữ nhiều lượt chấm nhóm, không đổi DB schema. [Quy tắc và acceptance](2026-11-02-locked-grades.md).
+
+> AS-BUILT synchronization 2026-10-30 at staging@794a4053. Giữ FR IDs và phạm vi đã chốt; source-observed, không thay thế runtime acceptance. Các khác biệt với yêu cầu cũ được ghi tại decision register.
 
 ## 1. Ý định, nguồn và trạng thái
 
@@ -21,7 +23,7 @@ API chung của tổ chức chỉ giảng viên được cấp quota; API cá nh
 
 ### 2.3 Mở rộng và ngoài phạm vi
 
-- Lesson/module processing, tóm tắt học liệu và RAG nâng cao chỉ mở rộng; link video YouTube dạy học thuộc MVP; không chặn luồng Assignment/Quiz.
+- Lesson processing nâng cao, tóm tắt học liệu và RAG chỉ mở rộng; module cơ bản đã có code; link video YouTube dạy học thuộc MVP; không chặn luồng Assignment/Quiz.
 - Loại khỏi scope: Code Lab, Judge0, test runner, mua credit/token, ví, payment/PayOS.
 - Giữ exclusions trước: mobile native, multi-tenancy, LMS/SSO, mã mời, comments, Simulation/proctored Exam, grade appeal, gia hạn cá nhân và similarity checking chưa được chốt.
 - Không tuyên bố AS-IS đã khảo sát. Thu thập/validate quy trình của giảng viên và sinh viên SWR/SWD rồi cập nhật Report 1; không dựng bằng chứng giả.
@@ -51,7 +53,7 @@ Hệ thống phải dùng email do trường cấp làm định danh đăng nh�
 - Người dùng đã xác thực có thể đăng nhập và đăng xuất an toàn.
 - Phiên hết hạn theo cấu hình và bị vô hiệu hóa khi đăng xuất.
 - Luồng khôi phục mật khẩu không tiết lộ tài khoản có tồn tại hay không.
-- Email đăng nhập của người học/giảng viên phải thuộc miền email trường được cấu hình; người dùng không thể tự đăng ký bằng email ngoài miền.
+- Email đăng nhập thuộc tên miền nào cũng được (thay đổi ngày 2026-11-06, trước đây giới hạn theo miền email trường). Người dùng vẫn không thể tự đăng ký: Admin tạo tài khoản, người dùng kích hoạt bằng OTP gửi tới chính email đó.
 
 ### FR-002 - Phân quyền và nguồn AI
 
@@ -78,12 +80,12 @@ Administrator xem danh sách/chi tiết, thêm và sửa môn, gán Chủ nhiệ
 
 ### FR-004 - Tài liệu tham khảo; Lesson là mở rộng
 
-MVP cho người có quyền gắn tài liệu tham khảo vào môn/lớp/Assignment, xem và tải riêng tư qua U03/U05. Tài liệu và quyền của môn/lớp được tái sử dụng; không bắt buộc một hệ thống Lesson/module để tạo bài.
+MVP cho người có quyền gắn tài liệu tham khảo vào môn/lớp/Assignment, xem và tải riêng tư qua U03/U13. Tài liệu và quyền của môn/lớp được tái sử dụng; module cơ bản của môn đã có ở U13, mỗi material phải thuộc module; không yêu cầu Lesson/RAG nâng cao để tạo bài.
 
 **Tiêu chí chấp nhận:**
 - Kiểm loại/kích thước tệp và scope trước lưu/đọc; tài liệu được lưu trữ vẫn giữ tham chiếu lịch sử.
 - Tạo Assignment/Quiz không yêu cầu có Lesson. Thiếu kết nối AI không chặn xem/tải tài liệu.
-- Lesson có module, caption/transcription, summary/embedding và RAG nâng cao là mở rộng chưa cam kết trong MVP; lưu/mở link YouTube video dạy học là reference material MVP. Khi bật mở rộng phải chốt provider embedding, nguồn tài trợ, kiểm quyền và acceptance riêng; không dùng lại HOLD credit cũ.
+- Lesson nâng cao có caption/transcription, summary/embedding và RAG là mở rộng chưa cam kết trong MVP; lưu/mở link YouTube video dạy học là reference material MVP. Khi bật mở rộng phải chốt provider embedding, nguồn tài trợ, kiểm quyền và acceptance riêng; không dùng lại HOLD credit cũ.
 
 ### FR-005 - Truy cập tài liệu và lớp
 
@@ -136,7 +138,7 @@ Bỏ mua credit, gói giá, wallet, checkout, PayOS/webhook/đối soát và ho�
 Hệ thống gửi OTP kích hoạt/khôi phục, ghi danh, bài mới/mở giao, công bố điểm và nhắc hạn; thêm email thông báo lớp mới được giảng viên đánh dấu quan trọng và cảnh báo backup thất bại cho Admin. Không tự gửi OTP khi Admin tạo/import tài khoản.
 
 **Tiêu chí chấp nhận:**
-- U16 xếp gửi sau commit, kiểm người nhận và tùy chọn nhận email học tập, chống trùng theo event/recipient/channel; OTP thuộc U01, dùng IMail chung.
+- U14 xếp gửi sau commit, kiểm người nhận và tùy chọn nhận email học tập, chống trùng theo event/recipient/channel; OTP thuộc U01, dùng IMail chung.
 - Retry/backoff hữu hạn, trạng thái PENDING/SENT/FAILED; SENT là provider chấp nhận, không bảo đảm inbox. Lỗi email không rollback nghiệp vụ.
 - Nội dung tối thiểu, link yêu cầu đăng nhập, không gửi raw điểm/bài nộp/secrets/backup attachment. Tuân hạn mức nhà cung cấp; không retry vô hạn.
 - Thông báo lớp chỉnh sửa không tự gửi lại email tạo mới; backup failure chỉ tới Admin theo policy vận hành. Xem đặc tả góp ý hội đồng.
@@ -147,14 +149,14 @@ Hỗ trợ hai kênh: ALAP gọi API (Gemini/OpenAI/Claude), và agent riêng g�
 
 **Tiêu chí chấp nhận:**
 - API chung do Admin cấu hình; API cá nhân do chính Student/Teacher/Subject Manager cấu hình. MVP dùng API key hợp lệ, không giả định gói chat cá nhân cấp API miễn phí.
-- Key chỉ dùng phía server, lưu được bảo vệ, không plaintext trong log/API response; xem masked, thay/thu hồi, không đọc lại nguyên key.
+- Key chỉ dùng phía server, lưu được bảo vệ, không plaintext trong log/audit; list masked. Key chỉ ghi: không có readback cho chủ khóa hay Admin (D15 đã đóng 2026-11-11); bản mã gắn AAD theo kết nối.
 - Adapter provider-neutral chuẩn hóa output/usage và giữ provenance; model tương thích cấu hình, timeout/retry hữu hạn.
 - MCP xác thực người dùng ALAP; mỗi tool kiểm scope/ownership/state/version. Không lộ key chung/cá nhân cho agent.
 - Tài liệu/học liệu mở rộng có embedding phải có cấu hình riêng; thay model sinh nội dung không tự đổi vector index.
 
 ### FR-013 - Lưu trữ tệp
 
-Hệ thống phải lưu tệp học tập qua một dịch vụ lưu trữ riêng tư, cấp quyền truy cập ngắn hạn và không công khai trực tiếp object chứa dữ liệu học tập. Dung lượng tối đa và loại tệp cho phép theo mục đích do Administrator chỉnh trên Settings trong giới hạn hệ thống (FR-033).
+Hệ thống phải lưu tệp học tập qua một dịch vụ lưu trữ riêng tư, cấp quyền truy cập ngắn hạn và không công khai trực tiếp object chứa dữ liệu học tập. Dung lượng tối đa theo mục đích do Administrator chỉnh trên Settings trong giới hạn hệ thống (FR-033). Riêng học liệu MATERIAL có định dạng cố định PDF, DOCX, PPTX, XLSX; Admin không bật/tắt từng định dạng học liệu. Các purpose khác giữ chính sách riêng. XLSX được xem/tải và trích nội dung làm nguồn AI theo quyền; không tự gọi AI khi upload.
 
 ### FR-014 - Audit nghiệp vụ và bảo mật
 
@@ -224,7 +226,7 @@ Administrator xem Admin Dashboard (UC 66): số tài khoản theo role/status, m
 
 Teacher hoặc Subject Manager được giao dạy lớp R3/R4 xem/xuất GradeBook CSV/XLSX (UC 45). Kiểm toàn bộ bộ lọc trước khi tạo tệp; ghi rõ chưa nộp/chưa chốt, không tính điểm tổng, không xuất quiz hoặc Practice; Admin không có quyền.
 
-Phân bố điểm ẩn danh là luồng phụ của Student Assignments (UC 37): chỉ Chủ nhiệm môn bật/tắt cho lớp trong Edit Class Information (UC 29), mặc định tắt; chỉ bài GRADED đủ mẫu riêng tư, không quiz/Practice, bài của môn tính riêng từng lớp. Tiến độ nộp hiện trên Student Submissions (UC 42), chỉ R3/R4 của lớp. AI Grading Proposals thuộc UC 43, chấm/chốt điểm thuộc UC 44, công bố/xem/xuất Gradebook thuộc UC 45. Phân tích chất lượng câu hỏi/độ lệch điểm AI nằm ngoài phạm vi.
+Phân bố điểm ẩn danh là luồng phụ của Student Assignments (UC 37): giảng viên được phân công dạy lớp bật/tắt cho từng cặp bài tập–lớp trong ngữ cảnh bài tập, mặc định tắt; Chủ nhiệm môn chỉ có quyền khi được phân công dạy lớp. Chỉ bài GRADED, không Quiz/Practice; bài SUBJECT có cài đặt độc lập từng lớp. Chỉ tính người đang ghi danh có điểm công bố dùng được (ít nhất 20), ẩn khoảng dưới 5 người và không trả danh tính/điểm cá nhân khác. Quyền chỉ đọc nội dung bài không quyết định quyền cài đặt phân bố. Tiến độ nộp hiện trên Student Submissions (UC 42), chỉ R3/R4 của lớp. AI Grading Proposals thuộc UC 43, chấm/chốt điểm thuộc UC 44, công bố/xem/xuất Gradebook thuộc UC 45. Phân tích chất lượng câu hỏi/độ lệch điểm AI nằm ngoài phạm vi.
 
 ### FR-025 - Quản lý nhóm và trưởng nhóm
 
@@ -239,6 +241,7 @@ Trong danh sách sinh viên của lớp được phân công, giảng viên ph�
 - Chia ngẫu nhiên chỉ chia sinh viên chưa có nhóm, giữ nguyên nhóm đã có, các nhóm mới chênh nhau tối đa một người và giảng viên xem trước trước khi lưu.
 - Một thay đổi trưởng nhóm chỉ có hiệu lực sau quyết định của giảng viên và được audit.
 - Giảng viên chỉ xóa nhóm chưa có tài liệu nhóm hoặc bản nộp; nhóm đã dùng chỉ được điều chỉnh thành viên theo quy tắc bảo toàn lịch sử.
+- Duyệt 2026-11-11: giảng viên bật đợt cho sinh viên tự lập đề xuất nhóm, duyệt thì đề xuất thành nhóm chính thức. [Yêu cầu SG-01…09](2026-11-11-student-self-grouping.md).
 
 ### FR-026 - Assignment GROUP: tài liệu chung và đóng góp
 
@@ -272,6 +275,7 @@ Student chỉ yêu cầu phản hồi trên Assignment PRACTICE đã nộp (UC41
 - Lưu lịch sử nhiều feedback hợp lệ với provenance/rate limits/idempotency; stale version không apply nhầm hoặc ghi đè bài nộp/điểm.
 - Không xuất key, đáp án ẩn hoặc dữ liệu người khác; không auto-call mỗi keystroke.
 - Student thiếu kết nối vẫn viết/lưu/nộp được. Bài nhóm không có phản hồi AI cho Student.
+- Trên Lịch sử nộp bài, thẻ Góp ý AI luôn hiện với lượt Practice đã nộp đang xem. Thẻ nằm cạnh bài làm trên màn hình rộng và nằm trong luồng đọc trên màn hình hẹp. Yêu cầu mới chỉ được gửi khi sinh viên bấm nút trong thẻ.
 
 ### FR-031 - Đã rút: quản trị gói credit
 
@@ -301,10 +305,10 @@ Admin cấp hạn mức token cho Teacher/Subject Manager ACTIVE theo ngày tron
 MCP server cung cấp tools đọc đề/rubric/tài liệu/bài làm đúng quyền, ghi bản nháp và lưu phản hồi/proposal. MCP không là proxy mặc định gọi AI chung và không đọc trực tiếp database bỏ qua domain services.
 
 **Tiêu chí chấp nhận:**
-- Credential MCP gắn actor, scope, expiry, có thu hồi; mỗi call tái kiểm quyền tài nguyên.
+- MCP credential dành ACTIVE Student/Teacher/Subject Manager; Admin không có quyền MCP. Mỗi call kiểm current role/scope; Student chỉ đọc metadata được phép, đọc submitted Practice của mình và lưu góp ý riêng; không rubric/official grade/hidden Quiz answers.
 - Tool trả tối thiểu dữ liệu cần; dữ liệu ngoài scope, key, đáp án ẩn không xuất.
 - Ghi draft yêu cầu expectedVersion và trạng thái editable; submit bài/điểm official không nằm trong tools giai đoạn đầu.
-- Student không đọc bài người khác; Teacher không lớp ngoài phân công; response AI và agent là input không tin cậy.
+- Student dùng personal API hoặc MCP cho own submitted Practice feedback theo cùng business guards; Teacher không đọc lớp ngoài phân công; response AI/agent là input không tin cậy.
 - Audit tool-call actor/resource/action/outcome, không prompt/key thô. Token agent nếu có chỉ là externallyReported, không dùng trừ quota chung.
 
 ### FR-036 - Minh bạch nguồn AI, token và provenance
@@ -328,7 +332,7 @@ Có hướng dẫn kết nối API cho Gemini/OpenAI/Claude và hướng dẫn M
 U03 chỉ backup database: dump PostgreSQL nhất quán lên thư mục Drive riêng tư, tách lưu trữ đang dùng, giữ các bản trong 7 ngày gần nhất; Admin xem trạng thái/lịch sử (UC 66) và chỉnh lịch qua Settings. Archive mã hóa, khóa giải mã giữ riêng; không export secrets dạng rõ.
 
 **Tiêu chí chấp nhận:**
-- Chỉ SUCCESS khi dump/upload/checksum đầy đủ; lỗi không xóa bản tốt gần nhất, retry hữu hạn, phát failure event cho U16.
+- Chỉ SUCCESS khi dump/upload/checksum đầy đủ; lỗi không xóa bản tốt gần nhất, retry hữu hạn, phát failure event cho U14.
 - Tệp người dùng trên Drive không được backup; tệp bị mất hoặc xóa trên Drive thì không khôi phục được (chốt 2026-10-15).
 - Người vận hành thử restore môi trường cô lập: quyền, tài liệu/XML, bài nộp/điểm và quota/usage; ghi bằng chứng và RPO/RTO đo được. Không có nút restore production/MCP restore trong MVP.
 
@@ -339,8 +343,9 @@ Giảng viên tùy chọn activityMonitoringEnabled cho Assignment/Quiz, mặc �
 **Tiêu chí chấp nhận:**
 - Server kiểm actor/enrollment/attempt/group/state, dedup và giới hạn tần suất; không thu thập khi policy off.
 - Hiển thị lần/thời gian rời trang và khoảng dữ liệu thiếu; không cộng trùng blur/visibility hoặc tính iframe Draw.io là rời trang.
-- Chỉ dữ liệu trong quyền, nhóm phân biệt từng thành viên; retention cấu hình/thông báo trước triển khai.
-- Client event là tín hiệu không đáng tin tuyệt đối. Không tự kết luận gian lận, trừ điểm hoặc nộp bài; không webcam/screenshots/chặn ứng dụng ngoài.
+- Chỉ dữ liệu trong quyền, nhóm phân biệt từng thành viên; retention hiện tại cố định 1 ngày (ActivityService.RETENTION), thông báo trước khi thu thập.
+- Client event là tín hiệu không đáng tin tuyệt đối, có thể bị chặn hoặc giả. Không tự kết luận gian lận hoặc tự nộp bài; không webcam/screenshots/chặn ứng dụng ngoài.
+- **Sửa 2026-11-02 (người dùng chốt, thay bản 2026-11-01):** vẫn không tự trừ điểm. Riêng Quiz, người soạn có thể cấu hình mức trừ gợi ý theo số lần rời trang (số lần miễn, điểm mỗi lần, mức tối đa, thời gian rời tối thiểu). Hệ thống tính mức gợi ý khi nộp, chỉ đếm khoảng rời chắc chắn; không có tín hiệu thì gắn cờ, không có gợi ý. Giảng viên quyết định từng lượt: trừ (được chọn số điểm khác mức gợi ý) hoặc không trừ, kèm lý do; chưa quyết định thì điểm giữ nguyên. Sinh viên được báo quy tắc trước khi làm và thấy quyết định cùng lý do. Quiz vẫn là luyện tập, không vào sổ điểm (D01). Assignment không đổi. Chi tiết: BR-U11-32, 33.
 
 ## 5. Luồng chính
 
@@ -445,7 +450,7 @@ Backup tối thiểu và kiểm thử restore thuộc FR-038; cảnh báo backup
 
 ### REL-005 - Không phát sinh chi phí
 
-Mọi thành phần bảo mật và vận hành phải miễn phí: thư viện mã nguồn mở, Let's Encrypt, GitHub Actions và GHCR với repository public, Mailpit khi phát triển, Brevo SMTP khi demo/production (trong hạn mức gói miễn phí).
+Mọi thành phần bảo mật và vận hành phải miễn phí: thư viện mã nguồn mở, Let's Encrypt, GitHub Actions và GHCR với repository public, Mailpit khi phát triển, Brevo SMTP hoặc Brevo HTTPS API khi demo/production (trong hạn mức gói miễn phí); chọn bằng MAIL_TRANSPORT, SMTP là mặc định và HTTPS dùng khi mạng chặn SMTP.
 
 AI API chung do đơn vị vận hành cung cấp/tài trợ có quota và kill-switch; personal API/agent theo tài khoản người dùng. Không mặc định API miễn phí hoặc ngân sách trường đã có. Embedding/RAG chỉ extension với nguồn chi phí riêng.
 
@@ -463,7 +468,37 @@ UC 14 View Settings và UC 15 Edit Setting là hai UC riêng, primary U03; bao g
 ### Tiêu chí tích hợp UC đã gộp
 
 - UC14/15: chỉ Admin; UC14 chỉ xem, UC15 sửa/test/revoke; cập nhật Settings và quota là hai thao tác có owner/version/audit riêng, không hứa transaction nguyên tử xuyên unit. Quota service chưa sẵn sàng hiển thị unavailable, không báo cập nhật thành công giả. Institutional credentials are viewed/edited through UC14/15 via U13 protected connection records, not ordinary Settings plaintext.
-- UC 66: U16 đọc IBackupStatus của U03; không đọc repository hoặc trả archive/secrets. Khi lỗi port hiển thị unavailable/last-known timestamp, không ghi SUCCESS hoặc không có backup giả.
+- UC 66: U14 đọc IBackupStatus của U03; không đọc repository hoặc trả archive/secrets. Khi lỗi port hiển thị unavailable/last-known timestamp, không ghi SUCCESS hoặc không có backup giả.
 - UC 42: U15 đọc IActivityQuery của U11 sau kiểm R3/R4, attempt/class/member và policy; policy off hiển thị monitoring disabled, không có sự kiện hiển thị no recorded data, lỗi port hiển thị unavailable. Không coi các trạng thái này là không gian lận hoặc 0 lần chắc chắn.
 
 Construction current docs: [README](../../construction/README.md). Stage approvals/code progress không thay vì revision tài liệu.
+
+## AS-BUILT behavior clarifications — 2026-10-30
+
+- FR-003: create lớp vẫn DRAFT; OPEN được phép teacher null. Nếu có teacher phải ACTIVE/đúng role; không cấp teaching scope cho người chưa được gán.
+- FR-007/028: Quiz edit OPEN giữ OPEN; retire mọi trạng thái chưa RETIRED, reason mặc định Lưu trữ; reopen theo publication history (publishedAt nullable); bỏ REVIEWED của Quiz từ 2026-11-01, phát hành thẳng từ DRAFT (Assignment vẫn có REVIEWED).
+- FR-012/034/035: nhiều institutional keys/provider, chọn theo repository (ACTIVE ưu tiên rồi created_at/id); credential/key reveal theo điều kiện ở trên.
+- FR-025: leader request/reject reason tùy chọn, tối đa 1.000 ký tự.
+- FR-024: U15 activity projection riêng, ngày VN, counts/backup vẫn có; từng nguồn có availability.
+
+Source và yêu cầu cũ: [decision-register.md](../reverse-engineering/decision-register.md); [doc-code-traceability.md](../reverse-engineering/doc-code-traceability.md).
+
+## MCP correction and audit remediation — 2026-10-30
+
+Student/Teacher/Subject Manager ACTIVE manage own MCP credentials; Admin is denied, including pre-existing tokens. UC41 personal API and MCP share own/SUBMITTED/PRACTICE/current-enrollment/hash/schema/pending/daily-budget restrictions. MCP READ_ONLY cannot record feedback; READ_WRITE can. API and MCP quota checks are serialized per account inside a transaction. UC52 remains deterministic permitted Quiz result/explanation, not an AI generation service. Current code is a remediation working tree on794a4053; dated initial audit and staff-expansion docs are historical where superseded.
+
+## Delta đã được người dùng duyệt — 2026-11-09
+
+- UC09/28/46: giao diện nhập tài khoản, ghi danh và câu hỏi chuyển sang Excel .xlsx kèm mẫu thật; giữ API tương thích cũ theo từng unit, không đổi xuất báo cáo CSV.
+- FR-004/005/013: học liệu có Bật/Tắt độc lập lưu trữ; chặn sinh viên cả direct view và token tải cũ khi tắt, chặn chọn nguồn AI; staff quản lý theo quyền. Mô tả học liệu có định dạng giới hạn, tương thích plain text.
+- FR-006/007/017: mô tả quiz có định dạng; soạn câu tay/ngân hàng/AI tại chỗ; dropdown chọn nhiều tài liệu nguồn; nguồn API tự chọn khi thiếu/null source. AI chỉ đề xuất, người soạn vẫn xem/chấp nhận, không tự phát hành.
+
+Thiết kế được duyệt ở [proposal](2026-11-09-material-quiz-ui-proposal.md); [đối chiếu unit và bằng chứng](../../construction/build-and-test/2026-11-09-aidlc-doc-sync.md). Không thêm UC/role mới hoặc thay quyết định YouTube đã hủy; runtime provider acceptance còn giới hạn trong báo cáo.
+
+## Approved grading remediation amendment — 2026-11-10
+
+Continuation of the reviewed Antigravity plan is authorized for sequential implementation without subagents. FR-008/009/019/020/024/030/039 retain existing role access, publication privacy and immutable official grades. Group resubmission preserves FINALIZED/PUBLISHED grading receipts and scores; only unofficial group drafts reset. Individual resubmission policy is unchanged.
+
+Teacher workflows include inline AI drafts with an explicit teacher action before saving, structured feedback review, partial rubric scores, group/member adjustment/history, and assignment-mode batch actions. Students see approved feedback/evidence and privacy-filtered distributions; Practice feedback observation is bounded and can be explicitly resumed. Quiz score visibility follows attempt snapshots, while current class/quiz state governs active work.
+
+[Execution plan](../../construction/plans/code-generation-plan/2026-11-10-grading-remediation-continuation.md) records implementation and verification separately.

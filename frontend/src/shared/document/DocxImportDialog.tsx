@@ -82,12 +82,11 @@ export function DocxImportDialog({ title = "Nhập DOCX", preview, onImport, all
   return (
     <Dialog open size="lg" icon="upload_file" title={title} onClose={onClose} dismissible={!busy}
       footer={<>
-        <Button onClick={onClose} disabled={busy}>Hủy</Button>
         <Button variant="primary" disabled={busy || !result} onClick={() => void confirm()} data-testid="docx-import-confirm">Nhập</Button>
       </>}>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       <Field label="Tệp DOCX" hint="Tối đa 20 MB; tệp chỉ đọc trong bộ nhớ, không lưu.">
-        <label className="inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-[9px] border border-line-strong bg-white px-3 py-1.5 text-xs font-semibold">
+        <label className="inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-lg border border-line-strong bg-surface px-3 py-1.5 text-xs font-semibold">
           {file ? "Chọn tệp khác" : "Chọn tệp"}
           <input type="file" accept=".docx" className="sr-only" data-testid="docx-file"
             onChange={(e) => { const next = e.target.files?.[0]; if (next) void read(next); e.target.value = ""; }} />
@@ -99,8 +98,8 @@ export function DocxImportDialog({ title = "Nhập DOCX", preview, onImport, all
         <div className="flex flex-col gap-3" data-testid="docx-preview">
           <p className="text-[13px] text-ink">{result.document.blocks.length} khối · {result.imageCount} ảnh · {result.diagramCount} sơ đồ</p>
           {sections.length > 0 && (
-            <TableFrame>
-              <thead><tr><Th>#</Th><Th>Mục</Th><Th>Độ dài</Th></tr></thead>
+            <TableFrame className="[&_table]:table-fixed">
+              <colgroup><col className="w-[48px]" /><col /><col className="w-[100px]" /></colgroup><thead><tr><Th>#</Th><Th>Mục</Th><Th>Độ dài</Th></tr></thead>
               <tbody>
                 {sections.map((section, index) => (
                   <tr key={index}><Td>{index + 1}</Td><Td>{section.title}</Td><Td>{section.blocks} khối</Td></tr>

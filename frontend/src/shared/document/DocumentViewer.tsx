@@ -45,8 +45,16 @@ export function runStyle(run: Run | undefined): CSSProperties {
   const lines = [run?.underline && "underline", run?.strike && "line-through"].filter(Boolean).join(" ");
   return {
     ...(lines ? { textDecorationLine: lines } : {}),
-    ...(run?.color ? { color: run.color } : {}),
-    ...(run?.highlight ? { backgroundColor: run.highlight } : {}),
+    ...(run?.color ? { color: run.color, "--run-color": run.color } : {}),
+    ...(run?.highlight ? { backgroundColor: run.highlight, "--run-highlight": run.highlight } : {}),
+  } as CSSProperties;
+}
+
+/** Thuộc tính đánh dấu màu do người viết chọn, để globals.css chỉnh độ sáng ở theme tối. */
+function runColorAttributes(run: Run): Record<string, string> {
+  return {
+    ...(run.color ? { "data-color": run.color } : {}),
+    ...(run.highlight ? { "data-highlight": run.highlight } : {}),
   };
 }
 
@@ -57,7 +65,12 @@ export function RunsView({ runs }: { runs: Run[] | undefined }) {
         const style = runStyle(run);
         const plain = !run.bold && !run.italic && !run.code && Object.keys(style).length === 0;
         return plain ? <Fragment key={index}>{run.text}</Fragment>
-          : <span key={index} className={cx(runClass(run), run.code && "rounded bg-shell px-1")} style={style}>{run.text}</span>;
+          : (
+            <span key={index} className={cx(runClass(run), run.code && "rounded bg-shell px-1")} style={style}
+              {...runColorAttributes(run)}>
+              {run.text}
+            </span>
+          );
       })}
     </>
   );
@@ -90,7 +103,7 @@ export function BlockView({ block, imageUrl, previewUrl, onOpenDiagram }: {
 }) {
   switch (block.type) {
     case "HEADING":
-      return <p className={cx(HEADING_CLASS[block.content.style] ?? HEADING_CLASS.H1, alignClass(block.content.align))}>{block.content.text || "(Chưa đặt tên)"}</p>;
+      return <p className={cx(HEADING_CLASS[block.content.style] ?? HEADING_CLASS.H1, alignClass(block.content.align))}>{block.content.runs ? <RunsView runs={block.content.runs} /> : block.content.text}</p>;
     case "PARAGRAPH":
       return <p className={cx("whitespace-pre-wrap", PARAGRAPH_CLASS, alignClass(block.content.align))}><RunsView runs={block.content.runs} /></p>;
     case "LIST":
@@ -98,15 +111,17 @@ export function BlockView({ block, imageUrl, previewUrl, onOpenDiagram }: {
     case "TABLE":
       return (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-[13px]">
+          <table className={cx("w-full border-collapse text-[13px]", block.content.widths && "table-fixed")}>
+            {block.content.widths && <colgroup>{block.content.widths.map((width, c) => <col key={c} style={{ width: `${width}%` }} />)}</colgroup>}
             <tbody>
               {block.content.rows.map((row, r) => (
                 <tr key={r}>
                   {row.map((cell, c) => {
                     const Cell = block.content.headerRow && r === 0 ? "th" : "td";
                     return (
-                      <Cell key={c} className={cx("border border-line-strong px-2.5 py-1.5 text-left align-top whitespace-pre-wrap", Cell === "th" && "bg-canvas font-semibold")}>
-                        <RunsView runs={cell.runs} />
+                      <Cell key={c} className={cx("border border-line-strong px-2.5 py-1.5 align-top whitespace-pre-wrap", alignClass(cell.align) || "text-left", Cell === "th" && "bg-canvas font-semibold")}>
+                        {/* Ô trống vẫn cao một dòng, hàng không bị xẹp. */}
+                        <span className="block min-h-[1.4em]"><RunsView runs={cell.runs} /></span>
                       </Cell>
                     );
                   })}
@@ -140,7 +155,7 @@ export function BlockView({ block, imageUrl, previewUrl, onOpenDiagram }: {
           <button type="button" onClick={() => onOpenDiagram?.(block.id)} disabled={!onOpenDiagram}
             aria-label={onOpenDiagram ? (drawn ? "Sửa sơ đồ" : "Vẽ sơ đồ") : undefined}
             className={cx("flex min-h-60 w-full items-center justify-center overflow-hidden rounded-lg p-0 transition-colors",
-              drawn ? "bg-white" : "bg-canvas",
+              drawn ? "bg-surface" : "bg-canvas",
               onOpenDiagram ? "cursor-pointer border-2 border-dashed border-line-strong hover:border-primary"
                 : drawn ? "cursor-default border border-line" : "cursor-default border-2 border-dashed border-line-strong")}>
             {svg ? (
@@ -163,10 +178,14 @@ export function BlockView({ block, imageUrl, previewUrl, onOpenDiagram }: {
   }
 }
 
-/** Tài liệu chỉ đọc; block của người soạn có thể làm nhạt khi xem bài làm. */
-export function DocumentViewer({ document, imageUrl, markTeacherBlocks = false, empty = "Tài liệu trống." }: {
+/**
+ * Tài liệu chỉ đọc; block của người soạn có thể làm nhạt khi xem bài làm. {@code previews}: id block ảnh → URL ảnh
+ * chưa lưu (ví dụ hình cắt trong bản xem trước nhập đề).
+ */
+export function DocumentViewer({ document, imageUrl, previews, markTeacherBlocks = false, empty = "Tài liệu trống." }: {
   document: DocumentModel;
   imageUrl?: ImageUrl;
+  previews?: Record<string, string>;
   markTeacherBlocks?: boolean;
   empty?: string;
 }) {
@@ -175,7 +194,7 @@ export function DocumentViewer({ document, imageUrl, markTeacherBlocks = false, 
     <div className="flex flex-col gap-3">
       {document.blocks.map((block) => (
         <div key={block.id} className={markTeacherBlocks && block.origin === "TEACHER" && block.type !== "HEADING" ? "opacity-70" : undefined}>
-          <BlockView block={block} imageUrl={imageUrl} />
+          <BlockView block={block} imageUrl={imageUrl} previewUrl={previews?.[block.id]} />
         </div>
       ))}
     </div>

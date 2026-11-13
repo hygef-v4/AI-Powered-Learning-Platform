@@ -66,8 +66,15 @@ export function runsHtml(runs: Run[]): string {
     const lines = [run.underline ? "underline" : "", run.strike ? "line-through" : ""].filter(Boolean);
     if (lines.length > 0) style.push(`text-decoration:${lines.join(" ")}`);
     if (run.code) { data.push("data-code"); style.push("font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:0.92em"); }
-    if (run.color && HEX.test(run.color)) { data.push(`data-color="${run.color}"`); style.push(`color:${run.color}`); }
-    if (run.highlight && HEX.test(run.highlight)) { data.push(`data-highlight="${run.highlight}"`); style.push(`background-color:${run.highlight}`); }
+    // Biến --run-* để globals.css đổi độ sáng ở theme tối; màu gốc vẫn ghi thẳng để chép sang ứng dụng khác giữ màu.
+    if (run.color && HEX.test(run.color)) {
+      data.push(`data-color="${run.color}"`);
+      style.push(`color:${run.color};--run-color:${run.color}`);
+    }
+    if (run.highlight && HEX.test(run.highlight)) {
+      data.push(`data-highlight="${run.highlight}"`);
+      style.push(`background-color:${run.highlight};--run-highlight:${run.highlight}`);
+    }
     return `<span data-run ${data.join(" ")} style="${style.join(";")}">${escape(run.text)}</span>`;
   }).join("");
 }
@@ -145,6 +152,7 @@ type Props = {
   onKey?: (event: KeyboardEvent<HTMLDivElement>, caret: Caret) => void;
   onFocus?: () => void;
   className?: string;
+  placeholder?: string;
   "aria-label": string;
 };
 
@@ -153,7 +161,7 @@ type Props = {
  * mỗi run một span. React không vẽ lại ô khi người dùng gõ (giữ con trỏ, gõ dấu tiếng Việt); chỉ viết lại nội dung khi
  * run từ ngoài khác run đang hiện (định dạng, hoàn tác…) rồi đặt lại vùng chọn như cũ. Dán chỉ lấy chữ thuần.
  */
-export function RichText({ runs, onChange, onKey, onFocus, className, "aria-label": label }: Props) {
+export function RichText({ runs, onChange, onKey, onFocus, className, placeholder, "aria-label": label }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   /** Run đang hiện trong ô; khác run nhận vào thì viết lại ô. */
   const shown = useRef<Run[] | null>(null);
@@ -173,9 +181,10 @@ export function RichText({ runs, onChange, onKey, onFocus, className, "aria-labe
     else if (caret) setCaret(root, Math.min(caret.start, length), Math.min(caret.end, length));
   }, [runs]);
 
-  function input() {
+  function input(composing = false) {
     const root = ref.current;
-    if (!root) return;
+    // Bộ gõ đang ghép chữ (gõ dấu tiếng Việt): đợi ghép xong mới báo, để ô không bị vẽ lại hay đổi chỗ giữa chừng.
+    if (!root || composing) return;
     const before = shown.current ?? runs;
     let next = readRuns(root);
     if (runsLength(before) === 0 && hasFormat(before[0]) && next.length === 1 && !hasFormat(next[0])) {
@@ -201,9 +210,10 @@ export function RichText({ runs, onChange, onKey, onFocus, className, "aria-labe
 
   return (
     <div ref={ref} role="textbox" aria-multiline="true" aria-label={label} contentEditable suppressContentEditableWarning tabIndex={0}
-      data-editable data-rich spellCheck
-      className={cx("min-h-[1.65em] w-full cursor-text break-words whitespace-pre-wrap outline-none", className)}
-      onInput={input} onPaste={paste} onDrop={(event) => event.preventDefault()} onFocus={onFocus}
+      data-editable data-rich spellCheck aria-placeholder={placeholder}
+      data-placeholder={placeholder} data-empty={runs.every((run) => !run.text) || undefined}
+      className={cx("min-h-[1.65em] w-full cursor-text break-words whitespace-pre-wrap outline-none", placeholder && "relative", className)}
+      onInput={(event) => input((event.nativeEvent as InputEvent).isComposing)} onCompositionEnd={() => input()} onPaste={paste} onDrop={(event) => event.preventDefault()} onFocus={onFocus}
       onKeyDown={(event) => {
         if (!event.nativeEvent.isComposing && onKey && ref.current) onKey(event, getCaret(ref.current));
       }} />

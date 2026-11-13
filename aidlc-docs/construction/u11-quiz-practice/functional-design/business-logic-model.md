@@ -1,6 +1,9 @@
 # U11 Quiz Practice — business-logic-model
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U11 Quiz Practice thuộc Iter 3, người code: Người 1; UC 49–52. Lấy phần lượt Quiz của U11 cũ và chấm Quiz luyện tập của U15 cũ. Quiz chỉ có chế độ luyện tập (D01). Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 49, 50, 51, 52. **Primary stories:** US-ASM-003 (phần Quiz); dữ liệu hoạt động lượt Quiz của US-INT-001. **Requirements:** FR-007, FR-008, FR-018, FR-039.
 
@@ -23,7 +26,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ## 2. Xem Quiz
 
 ### F1 - Lịch sử luyện tập (UC 49)
-1. Student mở Quiz Practice History từ mục Luyện tập Quiz trên menu bên (U11 đăng ký `NavEntry`); frontend gọi `GET /api/v1/me/quizzes` kèm lớp.
+1. Student mở Quiz Practice History (từ 29/10 không còn mục Luyện tập Quiz trên menu bên; Quiz mở từ module học liệu của U13); frontend gọi `GET /api/v1/me/quizzes` kèm lớp.
 2. Lấy các lớp `OPEN` đang học (`IClassAccess.listOpenClassesOf`), Quiz đang mở của từng lớp (`IQuizQuery.listForClass`) và các lượt của mình.
 3. Ghép thành danh sách Quiz: số lượt, điểm cao nhất, điểm lượt gần nhất (chỉ khi Quiz cho hiện điểm), nhãn "chưa làm"; Quiz đã ngưng mà có lượt thì hiện để xem lại (BR-U11-02).
 4. Bấm Quiz mở Quiz Practice Detail; bấm lượt đã nộp mở Quiz Result; lượt đang làm mở Quiz Taking.
@@ -33,7 +36,6 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Kiểm R5 với lớp và Quiz (BR-U11-01); không đạt thì "không tìm thấy".
 3. Trả thông tin theo BR-U11-03 (`IQuizQuery.get`) và các lượt của mình.
 4. Nút Làm Quiz hoặc Tiếp tục khi Quiz `OPEN` và còn lượt; không thì nêu lý do (đã ngưng, hết lượt).
-5. Learning Material (U13) nhúng `MaterialQuizList` của U11 qua slot `LearningMaterialSection`: Quiz gắn tài liệu đó (`IQuizQuery.listByMaterial`) kèm lượt đã dùng, còn lại và nút Làm Quiz.
 
 ## 3. Làm Quiz
 
@@ -80,3 +82,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Kiểm giảng viên chính của lớp; Quiz là Quiz của lớp hoặc của môn chứa lớp.
 3. Trả mỗi sinh viên: số lượt, điểm cao nhất, điểm lượt gần nhất, thời điểm nộp.
 4. Mở một lượt: câu trả lời chỉ đọc, điểm, và `ActivityTimeline` (U08) với dữ liệu từ `IActivityQuery.summary` (BR-U11-31).
+
+## Delta 2026-11-01
+
+Bắt đầu lượt Quiz sinh đề: `PracticeSupport.newPaper` lấy câu đã gặp của người học rồi gọi `drawPaper`. Nộp: `AttemptActivityAssessor` đọc tóm tắt của U08, tính số lần, tín hiệu, mức trừ gợi ý và lưu cùng câu lệnh nộp, điểm giữ nguyên; lỗi đọc không chặn nộp. Giảng viên quyết định: `POST /classes/{classId}/quiz-attempts/{attemptId}/penalty:decide` với `decision` (`APPLIED`, `DISMISSED`), `points` (khi trừ), `reason`; điểm tính lại từ điểm gốc. Bỏ lọc `GET /me/quizzes?materialId=`.

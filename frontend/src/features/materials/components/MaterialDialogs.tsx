@@ -1,0 +1,442 @@
+"use client";
+import { useRouter } from "next/navigation";
+import { useEffect, useId, useRef, useState } from "react";
+import { FileUploader } from "@/features/files/components/FileUploader";
+import {
+  cloneQuiz,
+  copyQuizToClass,
+  createClassQuiz,
+  createSubjectQuiz,
+  deleteQuiz,
+  getClassQuizzes,
+  getCopySources,
+  getQuiz,
+  getSubjectQuizzes,
+  retireQuiz,
+  updateQuizDetails,
+} from "@/features/quizzes/api";
+import type { QuizDetail, QuizRow } from "@/features/quizzes/model/types";
+import { Button, Dialog, Field, Segmented, Select, Switch, TextInput } from "@/shared/ui";
+import { FormattedTextEditor } from "@/shared/document/FormattedTextEditor";
+import type { FormattedText } from "@/shared/document/formattedText";
+import { materialApi, materialError, moduleApi, outlinePaths, validYoutube } from "../api";
+import type { OutlineItem } from "../model/outline";
+import type { Material, ModuleQuiz, ModuleScope } from "../model/types";
+
+type Content = "FILE" | "YOUTUBE_LINK" | "QUIZ";
+type StaffScope = Extract<ModuleScope, { kind: "subject" } | { kind: "class" }>;
+const NEW_QUIZ = "";
+
+function quizDetails(detail: QuizDetail, title: string, instructions: string,
+  document: FormattedText | null, keep = false) {
+  const q = detail.quiz;
+  return {
+    title,
+    instructions: instructions.trim() || (keep ? q.instructions : null),
+    instructionsDocument: keep && !instructions.trim() ? q.instructionsDocument ?? null : document,
+    settings: q.settings,
+    activityMonitoringEnabled: q.activityMonitoringEnabled,
+    activityNotice: q.activityNotice,
+  };
+}
+
+/**
+ * Popup Tạo học liệu (và Sửa, cùng popup): dòng đầu là tên, dòng hai chọn nội dung (Tệp, YouTube, Quiz) với ô riêng của
+ * từng loại, dòng cuối là mô tả. Quiz tạo mới trống hoặc lấy một quiz cũ làm mẫu (câu hỏi, cấu hình chép sang quiz mới).
+ * Sửa thì giữ loại nội dung; chọn tệp hay link mới là thay nội dung.
+ */
+type Template = QuizRow & { copy: boolean };
+export function ModuleItemDialog({
+  scope,
+  moduleId,
+  item,
+  onClose,
+  onSaved,
+}: {
+  scope: StaffScope;
+  moduleId: string;
+  item?: OutlineItem;
+  onClose: () => void;
+  onSaved: (message: string) => void;
+}) {
+  const id = useId();
+  const router = useRouter();
+  const material = item?.kind === "material" ? item.material : null;
+  const quiz = item?.kind === "quiz" ? item.quiz : null;
+  const editing = !!item;
+  const [content, setContent] = useState<Content>(
+    material ? material.kind : quiz ? "QUIZ" : "FILE",
+  );
+  const [title, setTitle] = useState(material?.title ?? quiz?.title ?? "");
+  const [description, setDescription] = useState(material?.description ?? "");
+  const [descriptionDocument, setDescriptionDocument] = useState<FormattedText | null>(material?.descriptionDocument ?? null);
+  const [enabled, setEnabled] = useState(material?.enabled !== false);
+  const [url, setUrl] = useState(
+    material?.kind === "YOUTUBE_LINK" ? (material.current.videoUrl ?? "") : "",
+  );
+  const [fileRef, setFileRef] = useState<string>();
+  const [quizId, setQuizId] = useState(NEW_QUIZ);
+  const [quizzes, setQuizzes] = useState<Template[] | null>(null);
+  const [detail, setDetail] = useState<QuizDetail | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const lock = useRef(false);
+
+  useEffect(() => {
+    if (!quiz) return;
+    getQuiz(quiz.quizId, scope.kind === "class" ? scope.classId : null).then(
+      (value) => {
+        setDetail(value);
+        setDescription(value.quiz.instructions ?? "");
+        setDescriptionDocument(value.quiz.instructionsDocument ?? null);
+      },
+      (e: unknown) => setError(materialError(e)),
+    );
+  }, [quiz, scope]);
+  useEffect(() => {
+    if (content !== "QUIZ" || editing || quizzes) return;
+    // Mẫu: quiz của môn (Chủ nhiệm môn); quiz của lớp và quiz của lớp khác cùng môn còn chép được (giảng viên).
+    const load: Promise<Template[]> =
+      scope.kind === "subject"
+        ? getSubjectQuizzes(scope.subjectId, { size: 100 }).then((page) =>
+            page.items.map((row) => ({ ...row, copy: false })),
+          )
+        : Promise.all([
+            getClassQuizzes(scope.classId),
+            getCopySources(scope.classId).catch(() => [] as QuizRow[]),
+          ]).then(([own, others]) => [
+            ...own.filter((row) => row.scope === "CLASS").map((row) => ({ ...row, copy: false })),
+            ...others
+              .filter((row) => !own.some((o) => o.id === row.id))
+              .map((row) => ({ ...row, copy: true })),
+          ]);
+    load.then(setQuizzes, (e: unknown) => setError(materialError(e)));
+  }, [content, editing, quizzes, scope]);
+
+  function chooseQuiz(value: string) {
+    setQuizId(value);
+    setError("");
+    const row = quizzes?.find((q) => q.id === value);
+    if (row && !title.trim()) setTitle(row.title);
+  }
+
+  async function save() {
+    if (lock.current) return;
+    if (!title.trim()) {
+      setError("Nhập tên học liệu.");
+      return;
+    }
+    if (
+      content === "YOUTUBE_LINK" &&
+      (!editing || url.trim() !== (material?.current.videoUrl ?? "")) &&
+      !validYoutube(url)
+    ) {
+      setError("Dán link của một video YouTube.");
+      return;
+    }
+    if (content === "FILE" && !editing && !fileRef) {
+      setError("Chọn tệp.");
+      return;
+    }
+    lock.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      if (material) {
+        let current: Material = material;
+        const newUrl =
+          content === "YOUTUBE_LINK" && url.trim() !== (material.current.videoUrl ?? "");
+        if (fileRef || newUrl)
+          current = await materialApi.replace(
+            current,
+            fileRef ? { fileRef } : { videoUrl: url.trim() },
+          );
+        await materialApi.update(current, title.trim(), description, undefined, { enabled, descriptionDocument });
+        onSaved("Đã lưu thay đổi");
+      } else if (quiz) {
+        if (!detail) return;
+        await updateQuizDetails(
+          quiz.quizId,
+          quizDetails(detail, title.trim(), description, descriptionDocument),
+          detail.quiz.version,
+        );
+        onSaved("Đã lưu thay đổi");
+      } else if (content === "QUIZ") {
+        const template = quizzes?.find((q) => q.id === quizId);
+        let created: QuizDetail;
+        if (template) {
+          created =
+            template.copy && scope.kind === "class"
+              ? await copyQuizToClass(scope.classId, template.id)
+              : await cloneQuiz(template.id);
+          created = await updateQuizDetails(
+            created.quiz.id,
+            quizDetails(created, title.trim(), description, descriptionDocument, true),
+            created.quiz.version,
+          );
+        } else {
+          created =
+            scope.kind === "subject"
+              ? await createSubjectQuiz(scope.subjectId, title.trim())
+              : await createClassQuiz(scope.classId, title.trim());
+          if (description.trim())
+            created = await updateQuizDetails(
+              created.quiz.id,
+              quizDetails(created, title.trim(), description, descriptionDocument),
+              created.quiz.version,
+            );
+        }
+        await moduleApi.attachQuiz(moduleId, created.quiz.id);
+        // Đóng popup trước khi điều hướng từ sidebar sang quiz vừa tạo.
+        onSaved("Đã tạo quiz");
+        router.push(
+          scope.kind === "class"
+            ? `/quizzes/${encodeURIComponent(created.quiz.id)}?classId=${encodeURIComponent(scope.classId)}`
+            : `/quizzes/${encodeURIComponent(created.quiz.id)}`,
+        );
+      } else {
+        await materialApi.create(outlinePaths(scope).materials, {
+          kind: content,
+          title: title.trim(),
+          description,
+          descriptionDocument,
+          enabled,
+          orderNo: 0,
+          source: content === "FILE" ? { fileRef } : { videoUrl: url.trim() },
+          moduleId,
+        });
+        onSaved("Đã thêm học liệu");
+      }
+    } catch (e) {
+      setError(materialError(e));
+    } finally {
+      lock.current = false;
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog
+      open
+      size="lg"
+      title={editing ? "Sửa học liệu" : "Tạo học liệu"}
+      onClose={onClose}
+      dismissible={!busy}
+      footer={
+        <Button
+          data-testid="material-source-save"
+          variant="primary"
+          disabled={busy || (!!quiz && !detail)}
+          onClick={() => void save()}
+        >
+          {editing ? "Lưu" : "Tạo"}
+        </Button>
+      }
+    >
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          void save();
+        }}
+        noValidate
+        className="flex flex-col gap-4"
+      >
+        <Field label="Tên học liệu" htmlFor={`${id}-title`} required>
+          <TextInput
+            id={`${id}-title`}
+            data-testid="material-source-title"
+            maxLength={200}
+            value={title}
+            disabled={busy}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              setError("");
+            }}
+          />
+        </Field>
+        {content !== "QUIZ" && <div className="flex flex-wrap items-center justify-between gap-2">
+          <Switch checked={enabled} onChange={setEnabled} ariaLabel="Bật học liệu" disabled={busy}
+            label={enabled ? "Bật" : "Tắt"} />
+          <span className="text-xs text-muted">Tắt để ẩn với sinh viên và không dùng làm nguồn AI mới.</span>
+        </div>}
+        <div className="flex flex-col gap-3">
+          <span className="text-xs font-semibold text-body">
+            Nội dung <span className="text-primary-ink">*</span>
+          </span>
+          <Segmented<Content>
+            ariaLabel="Nội dung"
+            value={content}
+            onChange={(value) => {
+              if (!editing) {
+                setContent(value);
+                setError("");
+              }
+            }}
+            options={[
+              { value: "FILE", label: "Tệp", disabled: editing && content !== "FILE" },
+              {
+                value: "YOUTUBE_LINK",
+                label: "YouTube",
+                disabled: editing && content !== "YOUTUBE_LINK",
+              },
+              { value: "QUIZ", label: "Quiz", disabled: editing && content !== "QUIZ" },
+            ]}
+          />
+          {/* Ô riêng của loại nội dung đang chọn, trong một thẻ trắng ngay dưới. */}
+          {!(content === "QUIZ" && editing) && (
+            <div className="rounded-xl border border-line bg-surface p-4">
+              {content === "FILE" && (
+                <FileUploader
+                  purpose="MATERIAL"
+                  currentName={material?.current.fileName}
+                  onUploaded={(result) => {
+                    setFileRef(result.fileRef.value);
+                    setError("");
+                  }}
+                />
+              )}
+              {content === "YOUTUBE_LINK" && (
+                <TextInput
+                  id={`${id}-url`}
+                  aria-label="Link YouTube"
+                  data-testid="material-source-url"
+                  type="url"
+                  icon="link"
+                  value={url}
+                  disabled={busy}
+                  placeholder="https://www.youtube.com/watch?v=…"
+                  onChange={(e) => {
+                    setUrl(e.target.value);
+                    setError("");
+                  }}
+                />
+              )}
+              {content === "QUIZ" && (
+                <Select
+                  id={`${id}-quiz`}
+                  aria-label="Quiz"
+                  value={quizId}
+                  disabled={busy || !quizzes}
+                  onChange={(e) => chooseQuiz(e.target.value)}
+                  data-testid="module-quiz-select"
+                >
+                  <option value={NEW_QUIZ}>Quiz trống</option>
+                  {quizzes && quizzes.length > 0 && (
+                    <optgroup label="Tạo từ quiz cũ">
+                      {quizzes.map((row) => (
+                        <option key={row.id} value={row.id}>
+                          {row.title}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                </Select>
+              )}
+            </div>
+          )}
+        </div>
+        <Field label="Mô tả">
+          <FormattedTextEditor value={descriptionDocument} plainText={description}
+            maxLength={content === "QUIZ" ? 5000 : 2000} disabled={busy} aria-label="Mô tả"
+            onChange={(text, document) => { setDescription(text); setDescriptionDocument(document); }} />
+        </Field>
+        {error && (
+          <p role="alert" className="text-sm text-danger">
+            {error}
+          </p>
+        )}
+      </form>
+    </Dialog>
+  );
+}
+
+/** Quiz nháp chưa từng phát hành xóa vĩnh viễn được; Quiz khác chỉ lưu trữ (BR-U10-24). */
+export function isQuizDeletable(quiz: ModuleQuiz) {
+  return quiz.status === "DRAFT";
+}
+
+/** Nút gỡ một mục khỏi module: học liệu và Quiz nháp là Xóa, Quiz đã phát hành là Lưu trữ. */
+export function removalAction(item: OutlineItem) {
+  return item.kind === "quiz" && !isQuizDeletable(item.quiz)
+    ? { icon: "archive" as const, label: "Lưu trữ" }
+    : { icon: "trash" as const, label: "Xóa" };
+}
+
+/** Thông báo sau khi gỡ mục: học liệu bị ẩn, Quiz nháp bị xóa, Quiz khác bị lưu trữ. */
+export function removalMessage(item: OutlineItem) {
+  if (item.kind === "material") return "Đã xóa học liệu";
+  return isQuizDeletable(item.quiz) ? "Đã xóa quiz" : "Đã lưu trữ quiz";
+}
+
+/**
+ * Xóa học liệu (ẩn khỏi danh sách, dữ liệu vẫn giữ), xóa vĩnh viễn Quiz nháp hay lưu trữ Quiz đã phát hành.
+ * `onSaved(removed)`: `removed` khi mục không còn trong module.
+ */
+export function ArchiveItemDialog({
+  item,
+  classId,
+  onClose,
+  onSaved,
+}: {
+  item: { material: Material } | { quiz: ModuleQuiz };
+  classId?: string;
+  onClose: () => void;
+  onSaved: (removed: boolean) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const lock = useRef(false);
+  const isQuiz = "quiz" in item;
+  const deletesQuiz = isQuiz && isQuizDeletable(item.quiz);
+  const title = isQuiz ? item.quiz.title : item.material.title;
+  const action = isQuiz && !deletesQuiz ? "Lưu trữ" : "Xóa";
+  const noun = isQuiz ? "quiz" : "học liệu";
+  async function removeItem() {
+    if (lock.current) return;
+    lock.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      if (isQuiz) {
+        const detail = await getQuiz(item.quiz.quizId, classId ?? null);
+        if (deletesQuiz) await deleteQuiz(item.quiz.quizId, detail.quiz.version);
+        else await retireQuiz(item.quiz.quizId, "", detail.quiz.version);
+      } else await materialApi.archive(item.material);
+      onSaved(!isQuiz || deletesQuiz);
+    } catch (e) {
+      setError(materialError(e));
+    } finally {
+      lock.current = false;
+      setBusy(false);
+    }
+  }
+  return (
+    <Dialog
+      open
+      title={`${action} ${noun}?`}
+      onClose={onClose}
+      dismissible={!busy}
+      tone="danger"
+      footer={
+        <Button
+          data-testid="material-archive-confirm"
+          variant="danger"
+          disabled={busy}
+          onClick={() => void removeItem()}
+        >
+          {action}
+        </Button>
+      }
+    >
+      <p>
+        Bạn có chắc muốn {action.toLowerCase()} {noun} {title} không?
+        {deletesQuiz && " Quiz nháp sẽ bị xóa vĩnh viễn, không khôi phục được."}
+      </p>
+      {error && (
+        <p role="alert" className="text-sm text-danger">
+          {error}
+        </p>
+      )}
+    </Dialog>
+  );
+}

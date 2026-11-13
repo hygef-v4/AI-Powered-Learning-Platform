@@ -1,0 +1,12 @@
+# Cài vào /etc/systemd/system/. Xem docs/runbooks/deploy-vps.md, mục 10.
+[Unit]
+Description=Deploy bản mới nhất của main đã qua CI (tự quay về nếu lỗi)
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/platform-deploy check
+# Kéo image, sao lưu database và chờ kiểm tra sức khỏe hai lần (bản mới và bản quay về).
+TimeoutStartSec=20min

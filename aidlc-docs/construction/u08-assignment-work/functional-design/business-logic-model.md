@@ -1,6 +1,9 @@
 # U08 Assignment Work — business-logic-model
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U08 Assignment Work thuộc Iter 2, người code: Người 3; UC 37–41. Lấy phần Assignment cá nhân, phản hồi Practice và dữ liệu hoạt động của U11 cũ. Lượt Quiz thuộc U11 mới, bài nhóm thuộc U12. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 > Cập nhật 2026-10-22 theo code hiện tại (các yêu cầu của người dùng 2026-10-21, 2026-10-22; chi tiết từng vòng trong code-summary).
 
 **Primary UC:** 37, 38, 39, 40, 41. **Primary stories:** US-ASM-003 (phần Assignment cá nhân), US-ASM-012; dữ liệu hoạt động của US-INT-001. **Requirements:** FR-007, FR-008, FR-018, FR-030, FR-039.
@@ -19,7 +22,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | F6 Nộp bài | UC 39 | Assignment Workspace |
 | F7 Tự nộp | - | - |
 | F8 Lịch sử nộp | UC 40 | Submission History |
-| F9 Xin phản hồi bằng API cá nhân | UC 41 | Submission History, popup chọn nguồn AI |
+| F9 Xin phản hồi bằng API cá nhân | UC 41 | Thẻ Góp ý AI trong Submission History |
 | F10 Phản hồi qua agent MCP | UC 41 | - |
 | F11 Ghi dữ liệu hoạt động | - | Assignment Workspace |
 | F12 Tóm tắt và dọn dữ liệu hoạt động | UC 42 (U09) | - |
@@ -66,12 +69,14 @@ Xuất:
 1. Trên Workspace hoặc Submission History bấm Tải DOCX; frontend gọi `GET /api/v1/attempts/{attemptId}/export.docx`.
 2. Kiểm chủ lượt, hoặc giảng viên chính của lớp ghi trên lượt; gọi `IDocx.export` (sơ đồ kèm mã `[drawio:attemptId/blockId]`).
 
+**Delta 2026-11-10 cho F3 (BR-U08-70, 71):** kiểm "hết lượt" chỉ áp dụng cho bài `PRACTICE`; lượt mới của bài `GRADED` lấy nội dung bài nộp gần nhất còn khớp khung đề, không thì khung đề.
+
 ### F6 - Nộp bài (UC 39)
-1. Bấm Nộp: popup kiểm sơ bộ (tổng số sơ đồ bắt buộc, có nội dung; bảng của đề có chữ tính như đã điền), còn lỗi thì chỉ có Quay lại sửa; xác nhận thì frontend lưu lần cuối rồi gọi `POST /api/v1/attempts/{attemptId}/submit` kèm `contentVersion`.
+1. Bấm Nộp: popup chỉ hỏi xác nhận, không còn bảng kiểm sơ bộ (2026-11-09); xác nhận thì frontend lưu lần cuối rồi gọi `POST /api/v1/attempts/{attemptId}/submit` kèm `contentVersion`.
 2. Lượt đã `SUBMITTED` thì trả lại biên nhận cũ (BR-U08-22).
-3. Kiểm chủ lượt, `IN_PROGRESS`, trước `deadlineAt` cộng 30 giây, còn ghi danh; `validateForSubmit`. Có lỗi thì trả danh sách cần sửa; quá hạn thì ghi audit `SUBMIT_REJECTED`.
+3. Kiểm chủ lượt, `IN_PROGRESS`, trước `deadlineAt` cộng 30 giây, còn ghi danh, đúng `contentVersion`; không gọi `validateForSubmit` nên không còn `409 SUBMISSION_INVALID` (2026-11-09). Quá hạn thì ghi audit `SUBMIT_REJECTED`.
 4. Một transaction: `SUBMITTED`, `submittedAt`, `late`, `receiptHash`, `submitMode = MANUAL`; gọi `ISubmissionListener.onSubmitted` (U09); audit `ASSIGNMENT_SUBMITTED`.
-5. Trả biên nhận, mở Submission History.
+5. Trả biên nhận; trang chuyển về Assignment Detail (`/my-assignments/{assignmentId}`, kèm `classId` khi lượt có lớp).
 
 ### F7 - Tự nộp
 1. `IScheduledScanner` của U08 chạy mỗi phút: lượt `IN_PROGRESS` có `deadlineAt` cộng 30 giây đã qua được nộp bằng bản đã lưu gần nhất, `submitMode = AUTO_DEADLINE`, không kiểm điều kiện nộp, ghi cảnh báo (ví dụ thiếu sơ đồ bắt buộc); gọi `onSubmitted`; audit.
@@ -84,14 +89,14 @@ Xuất:
 1. Từ Assignment Detail hoặc Student Assignments mở Submission History; frontend gọi `GET /api/v1/assignments/{assignmentId}/attempts/mine` kèm `classId`.
 2. Trả các lượt của mình: lượt thứ, thời điểm nộp, trễ, cách nộp, nhãn "được chấm" (bài `GRADED`, lượt nộp cuối), cảnh báo khi tự nộp.
 3. Chọn một lượt: `GET /api/v1/attempts/{attemptId}` trả nội dung chỉ đọc và biên nhận; điểm và nhận xét đã công bố do U09 gắn qua slot `SubmissionResultSection`.
-4. Bài `PRACTICE`: hiện lịch sử phản hồi AI của lượt (`GET /api/v1/attempts/{attemptId}/feedback`) và nút "Xin phản hồi AI" (F9); nút Tải DOCX (F5).
+4. Bài `PRACTICE`: thẻ Góp ý AI đọc lịch sử theo lượt đang xem (`GET /api/v1/attempts/{attemptId}/feedback`). Nút Tải DOCX (F5) ở thanh trên cùng.
 
 ### F9 - Xin phản hồi bằng API cá nhân (UC 41)
-1. Trên lượt đã nộp của bài `PRACTICE` bấm "Xin phản hồi AI"; `AiSourcePicker` của U06 chỉ hiện kết nối cá nhân của người học; người học chọn nguồn.
-2. Frontend gọi `POST /api/v1/attempts/{attemptId}/feedback` kèm nguồn và `requestRef`.
+1. Trên lượt đã nộp của bài `PRACTICE`, bấm **Nhận góp ý AI** hoặc **Nhận góp ý lại** trong thẻ. Thẻ có liên kết **Kết nối AI** để quản lý khóa API cá nhân.
+2. Frontend gọi `POST /api/v1/attempts/{attemptId}/feedback` với `requestRef`. Nguồn và nhà cung cấp do máy chủ xử lý.
 3. Kiểm BR-U08-40, 44: chủ lượt, `SUBMITTED`, `PRACTICE`, còn ghi danh; lượt chưa có yêu cầu đang chờ; chưa quá 20 yêu cầu trong ngày.
 4. Dựng prompt theo BR-U08-45 (`IAssignmentQuery.getContent`, `IDocumentModel.toPlainText`, `compactDiagramXml`; không có rubric) kèm JSON schema của phản hồi (nhận xét chung, điểm mạnh, nhận xét từng phần, gợi ý).
-5. Gọi `IAiTask.submit` (loại `PRACTICE_FEEDBACK`, đích là lượt, `inputVersion` là `receiptHash`); tạo phản hồi `PENDING`; audit `PRACTICE_FEEDBACK_REQUESTED`; trả `taskId` cho `AiTaskStatus`.
+5. Gọi `IAiTask.submit` (loại `PRACTICE_FEEDBACK`, đích là lượt), ghi audit `PRACTICE_FEEDBACK_REQUESTED` và trả bản ghi phản hồi. Khi còn `PENDING`, thẻ đọc lại danh sách góp ý định kỳ và khóa nút yêu cầu.
 6. U06 gọi `onReady`: kiểm lại chủ lượt, ghi danh, hash, schema; đạt thì lưu phản hồi `READY` kèm provenance và trả `APPLIED`, không thì trả `STALE` hoặc `REJECTED`. `onFailed` chuyển phản hồi sang `FAILED`.
 7. Người học xem phản hồi; muốn thêm thì xin lại, mỗi lần là một bản trong lịch sử.
 
@@ -113,7 +118,7 @@ Xuất:
 1. U09 kiểm giảng viên được giao lớp rồi gọi `IActivityQuery.summary(workRef, accountId)`.
 2. U08 ghép `HIDDEN` với `VISIBLE` theo phiên thành khoảng rời trang; khoảng không có heartbeat quá 2 phút, sự kiện lệch thứ tự, giờ client bất thường được đánh dấu "không rõ" (BR-U08-53).
 3. Trả trạng thái chính sách, số lần, tổng thời gian đã biết, các khoảng và khoảng không rõ; không có kết luận.
-4. Scanner xóa theo lô sự kiện có giờ server cũ hơn `activity.retentionDays` (BR-U08-54).
+4. Scanner xóa theo lô sự kiện có giờ server cũ hơn 1 ngày (`ActivityService.RETENTION`) (BR-U08-54).
 
 ## 6. Interface cho unit khác
 
@@ -121,3 +126,9 @@ Xuất:
 1. U09 đọc bài nộp theo bài và lớp, nội dung lượt, trạng thái từng sinh viên (chưa làm, đang làm, đã nộp, nộp trễ) qua `ISubmissionQuery`; cài `ISubmissionListener` để tạo dòng chờ chấm.
 2. U14 lấy sinh viên chưa nộp của bài sắp hết hạn qua `listStudentsWithoutSubmission` để nhắc 24 giờ trước hạn; với bài nhóm, U08 dựa vào trạng thái nhóm từ `IGroupWorkStatus` của U12.
 3. U11, U12 ghi sự kiện qua `IActivityWrite`; U12 cài `IGroupWorkStatus` và slot `GroupWorkEntry`.
+
+## Source behavior delta — 2026-10-30
+
+assignmentwork có start/save/submit/history, late/auto-submit, practice feedback và activity. ActivityService.RETENTION = 1 ngày; scanner xóa theo hằng này, không Settings activity.retentionDays 1–365. Theo dõi hoạt động không tự trừ điểm. Feedback Practice gắn submission/version và không vào gradebook.
+
+[Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.

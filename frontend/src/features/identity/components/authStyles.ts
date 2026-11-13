@@ -1,24 +1,22 @@
-// Kiểu dùng chung của các màn chưa đăng nhập, theo số đo của design G21 (`Main`, `c02a`–`c04`).
+// Kiểu dùng chung của các màn chưa đăng nhập (đăng nhập, kích hoạt, khôi phục mật khẩu).
 // Màn sau đăng nhập dùng `@/shared/ui`; các màn này có khung riêng nên giữ kiểu ở đây.
 
-/** Nhãn ô nhập: chữ in hoa nhỏ, đậm. */
-export const AUTH_LABEL = "text-[11px] font-bold tracking-[.06em] text-[#64748b] uppercase";
+/** Nhãn ô nhập. */
+export const AUTH_LABEL = "text-xs font-semibold text-body";
 
-/** Ô nhập cao 44px, bo 12px. */
+/** Ô nhập cao 44px. */
 export const AUTH_INPUT =
-  "h-11 w-full rounded-xl border border-[#d9dee8] bg-white px-3.5 text-[13px] text-ink outline-none " +
-  "placeholder:text-[#94a3b8] focus:border-primary focus:ring-2 focus:ring-primary/15 " +
-  "read-only:bg-[#f1f5f9] read-only:text-[#475569]";
+  "h-11 w-full rounded-lg border border-line-strong bg-surface px-3.5 text-[14px] text-ink outline-none transition-[border-color,box-shadow] duration-200 " +
+  "placeholder:text-faint focus:border-primary focus:shadow-[0_0_0_3px_var(--c-primary-soft)] " +
+  "read-only:bg-sunken read-only:text-body";
 
-/** Nút chính rộng hết cột, bo 12px. */
+/** Nút chính rộng hết cột. */
 export const AUTH_BUTTON =
-  "flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary-strong text-sm font-semibold text-white " +
-  "transition-colors hover:bg-[#1d2c80] disabled:cursor-not-allowed disabled:opacity-45";
+  "flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-on-primary " +
+  "transition-[background-color,transform] duration-200 hover:bg-primary-strong active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-45";
 
-/** Nút Đăng nhập dùng màu riêng của artboard `Main`. */
-export const LOGIN_BUTTON =
-  "flex h-12 w-full items-center justify-center rounded-xl bg-[#0e2a9e] text-sm font-semibold text-white " +
-  "transition-colors hover:bg-[#0b2180] disabled:cursor-not-allowed disabled:opacity-60";
+/** Nút Đăng nhập, cùng kiểu nút chính. */
+export const LOGIN_BUTTON = AUTH_BUTTON;
 
 /** Chữ ghi chú dưới nút. */
-export const AUTH_NOTE = "text-center text-xs leading-relaxed text-[#94a3b8]";
+export const AUTH_NOTE = "text-center text-xs leading-relaxed text-muted";

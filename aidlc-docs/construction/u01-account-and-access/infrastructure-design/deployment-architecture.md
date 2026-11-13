@@ -1,6 +1,6 @@
 # U01 Account & Access — deployment-architecture
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U01 Account & Access thuộc Iter 1, người code: Người 1; phạm vi UC 01–12 giữ như U01 cũ, chỉ đổi liên kết sang các unit mới. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
@@ -24,12 +24,12 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
  |   [postgres]           [redis]                      [rabbitmq]     |
  |        ^                   ^                             |         |
  |        |                   |                             v         |
- |        +-------------------+--------------------- [worker] --------+--> Brevo SMTP
+ |        +-------------------+--------------------- [worker] --------+--> Brevo mail
  |                                                                    |
  +--------------------------------------------------------------------+
 ```
 
-**Text alternative**: Internet chỉ vào được cổng 80/443 của Nginx. Nginx nằm trên mạng `edge` cùng frontend và backend. Backend và worker nằm trên mạng `internal` cùng PostgreSQL, Redis và RabbitMQ; ba datastore này không có cổng public. Worker đọc RabbitMQ và gửi mail tới Brevo SMTP.
+**Text alternative**: Internet chỉ vào được cổng 80/443 của Nginx. Nginx nằm trên mạng `edge` cùng frontend và backend. Backend và worker nằm trên mạng `internal` cùng PostgreSQL, Redis và RabbitMQ; ba datastore này không có cổng public. Worker đọc RabbitMQ và gọi IMail: SMTP mặc định hoặc Brevo HTTPS API (`MAIL_TRANSPORT=brevo-api`, `BREVO_API_KEY`) khi mạng chặn SMTP.
 
 ## 2. Local/demo
 
@@ -40,12 +40,12 @@ Cùng `docker-compose.yml` với file override `docker-compose.local.yml`:
 ## 3. Luồng đăng nhập qua hạ tầng
 
 1. Trình duyệt → Nginx (TLS) → backend `/api/v1/auth/login`.
-2. Backend: `RateLimitFilter` → Redis; kiểm mật khẩu → PostgreSQL; tạo refresh → Redis; trả cookie.
-3. Request sau: Nginx → backend, `JwtAuthFilter` chỉ kiểm chữ ký, không gọi datastore.
+2. Backend: `AuthService` hỏi `RequestThrottle` (bucket trên Redis) trước khi kiểm mật khẩu; kiểm mật khẩu → PostgreSQL; tạo refresh → Redis; trả cookie.
+3. Request sau: Nginx → backend, `JwtAuthFilter` gọi `SessionAuthority.authenticate` để kiểm chữ ký và quyền/phiên/tài khoản hiện hành; không chỉ tin role trong JWT.
 
 ## 4. Luồng OTP qua hạ tầng
 
-1. Trình duyệt → backend `/api/v1/auth/activation-requests` → kiểm tài khoản, trả `202`.
+1. Trình duyệt → backend `POST /api/v1/auth/activation/request` → kiểm tài khoản, trả `202`.
 2. U03 gửi `JobMessage` `OTP_DELIVERY` sang RabbitMQ ngay (yêu cầu không ghi database), vào queue `jobs.email`.
 3. Worker nhận, sinh mã, ghi băm vào Redis, gửi SMTP.
 4. Lỗi → U03 gửi lại qua queue thử lại theo backoff; hết lượt → log ERROR, người dùng yêu cầu OTP lại.

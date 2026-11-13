@@ -1,0 +1,92 @@
+package edu.aiplatform.grading.service;
+
+import edu.aiplatform.academics.contract.IClassAccess;
+import edu.aiplatform.audit.contract.AuditEvent;
+import edu.aiplatform.audit.contract.AuditResult;
+import edu.aiplatform.audit.contract.IAudit;
+import edu.aiplatform.identity.contract.Actions;
+import edu.aiplatform.identity.contract.Actor;
+import edu.aiplatform.identity.contract.AuthorizationDecision;
+import edu.aiplatform.identity.contract.IAuthorization;
+import edu.aiplatform.identity.contract.ResourceRef;
+import edu.aiplatform.shared.error.ApiException;
+import java.time.Clock;
+import java.util.Map;
+import java.util.UUID;
+import org.springframework.stereotype.Component;
+
+@Component
+public class GradingAccess {
+    private final IAuthorization auth;
+    private final IClassAccess classAccess;
+    private final IAudit audit;
+    private final Clock clock;
+
+    /** Creates the authorization helper with access, audit, and time dependencies. */
+    public GradingAccess(IAuthorization auth, IClassAccess classAccess, IAudit audit, Clock clock) {
+        this.auth = auth;
+        this.classAccess = classAccess;
+        this.audit = audit;
+        this.clock = clock;
+    }
+
+    /** Requires the actor to have the requested permission for the class. */
+    public void requireTeacher(Actor actor, UUID classId, String action) {
+        requireAuthorization(actor, classId, action);
+        if (Actions.GRADING_WRITE.equals(action) && !isClassWritable(classId)) {
+            throw ApiException.conflict("GRADING_CLASS_READ_ONLY",
+                    "Lớp đã lưu trữ hoặc chưa mở. Không thể chỉnh sửa điểm.");
+        }
+    }
+
+    public boolean isClassWritable(UUID classId) {
+        try {
+            return classAccess.getClassRef(classId)
+                    .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"))
+                    .status() == edu.aiplatform.academics.contract.ClassStatus.OPEN;
+        } catch (ApiException ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            throw ApiException.unavailable("GRADING_DEPENDENCY_UNAVAILABLE",
+                    "Class service unavailable");
+        }
+    }
+
+    /** Requires the actor to have grade access and active enrollment in the class. */
+    public void requireStudent(Actor actor, UUID classId) {
+        requireAuthorization(actor, classId, Actions.MY_GRADE_READ);
+        final boolean enrolled;
+        try {
+            enrolled = classAccess.isActiveStudent(actor.accountId(), classId);
+        } catch (RuntimeException ex) {
+            throw ApiException.unavailable("GRADING_DEPENDENCY_UNAVAILABLE",
+                    "Enrollment service unavailable");
+        }
+        if (!enrolled) {
+            audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "ACCESS_DENIED",
+                    "CLASS", String.valueOf(classId), AuditResult.DENIED, "ENROLLMENT_REQUIRED",
+                    Map.of("action", Actions.MY_GRADE_READ), clock.instant()));
+            throw ApiException.notFound("GRADE_NOT_FOUND");
+        }
+    }
+
+    /** Authorizes a class action and records denied access before returning an error. */
+    private void requireAuthorization(Actor actor, UUID classId, String action) {
+        final AuthorizationDecision decision;
+        try {
+            decision = auth.authorize(actor, action, ResourceRef.courseClass(classId));
+        } catch (RuntimeException ex) {
+            throw ApiException.unavailable("GRADING_DEPENDENCY_UNAVAILABLE",
+                    "Access service unavailable");
+        }
+        if (decision == null || "DEPENDENCY_UNAVAILABLE".equals(decision.reason()))
+            throw ApiException.unavailable("GRADING_DEPENDENCY_UNAVAILABLE",
+                    "Access service unavailable");
+        if (!decision.allowed()) {
+            audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(),
+                    "ACCESS_DENIED", "CLASS", String.valueOf(classId), AuditResult.DENIED,
+                    "GRADING_SCOPE", Map.of("action", action), clock.instant()));
+            throw ApiException.notFound("GRADE_NOT_FOUND");
+        }
+    }
+}

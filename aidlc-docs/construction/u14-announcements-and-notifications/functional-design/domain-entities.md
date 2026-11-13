@@ -1,12 +1,17 @@
 # U14 Announcements & Notifications — domain-entities
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U14 Announcements & Notifications thuộc Iter 3, người code: Người 3; UC 63–65. Lấy thông báo lớp của U05 cũ và thông báo, email, nhắc hạn của U16 cũ. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 63, 64, 65. **Primary stories:** US-CNT-004, US-NTF-001; nhắc hạn của US-RPT-001. **Requirements:** FR-011, FR-019, FR-023.
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
 
 Thiết kế độc lập công nghệ.
+
+**Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
 
 ## 1. Tổng quan
 
@@ -18,7 +23,7 @@ Thiết kế độc lập công nghệ.
 | `NotificationPreference` | Tùy chọn email theo loại | `notification_preferences` |
 | `DeadlineReminder` | Dấu đã nhắc theo (bài, lớp, hạn) | `deadline_reminders` |
 
-U14 không sở hữu: tài khoản, gửi SMTP (U01), sự kiện nguồn (U03, U05, U07, U09, U10, U12), lớp, ghi danh (U05), bài, bài nộp (U07, U08).
+U14 không sở hữu: tài khoản, gửi email qua IMail (U01; SMTP hoặc Brevo HTTPS API), sự kiện nguồn (U03, U05, U07, U09, U10, U12), lớp, ghi danh (U05), bài, bài nộp (U07, U08).
 
 ## 2. Thuộc tính
 
@@ -27,7 +32,7 @@ U14 không sở hữu: tài khoản, gửi SMTP (U01), sự kiện nguồn (U03,
 | `Announcement` | `id`, `classId`, `title` (≤ 200), `body` (≤ 5.000), `important`, `sendEmail`, `status` (`ACTIVE`, `DELETED`), `createdBy`, `createdAt`, `updatedBy`, `updatedAt`, `deletedBy`, `deletedAt`, `version` |
 | `Notification` | `id`, `recipientId`, `type`, `sourceEventId`, `title`, `summary`, `link`, `readAt`, `createdAt`; duy nhất (`sourceEventId`, `recipientId`, `type`) |
 | `EmailDelivery` | `id`, `notificationId` (duy nhất), `recipientId`, `type`, `status` (`PENDING`, `SENT`, `FAILED`, `SKIPPED`, `DEFERRED`), `priority`, `scheduledFor`, `attempts`, `lastError`, `createdAt`, `sentAt` |
-| `NotificationPreference` | `accountId`, `type`, `emailEnabled`; khóa (`accountId`, `type`); không có dòng nghĩa là bật |
+| `NotificationPreference` | `accountId`, `type`, `emailEnabled`; khóa (`accountId`, `type`); không có dòng: các loại phù hợp role của Student/Teacher/Subject Manager mặc định bật; giữ tùy chọn đã lưu; BACKUP_FAILED luôn bật |
 | `DeadlineReminder` | `assignmentId`, `classId`, `closesAt`, `status` (`SENT`, `SKIPPED`), `processedAt`; khóa (`assignmentId`, `classId`, `closesAt`) |
 
 ```mermaid

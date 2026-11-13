@@ -74,7 +74,7 @@ SSE EventSource dùng cookie cùng origin; kênh accountId do server quyết đ�
 
 ### C07 — Header SEC-004 trên branch hiện tại
 
-Branch này chưa có sửa nonce của U13. Áp lại riêng giải pháp đã kiểm của commit `28b9f46` vào `frontend/src/proxy.ts`, `frontend/src/proxy.test.ts`, `frontend/src/app/layout.tsx` (không cherry-pick/merge/commit tự động): nonce riêng từng request, script nonce/strict-dynamic, DENY/frame-ancestors none, HSTS/nosniff/referrer; dynamic rendering để nonce khớp HTML. Giữ child frame PDF/YouTube/Draw.io. Style attribute exception và dev eval/HMR được ghi rõ; production script không unsafe-inline/eval. Smoke nonce/header và hydration sau build.
+Branch này chưa có sửa nonce của U13. Áp lại riêng giải pháp đã kiểm của commit `28b9f46` vào `frontend/src/proxy.ts`, `frontend/tests/proxy.test.ts`, `frontend/src/app/layout.tsx` (không cherry-pick/merge/commit tự động): nonce riêng từng request, script nonce/strict-dynamic, DENY/frame-ancestors none, HSTS/nosniff/referrer; dynamic rendering để nonce khớp HTML. Giữ child frame PDF/YouTube/Draw.io. Style attribute exception và dev eval/HMR được ghi rõ; production script không unsafe-inline/eval. Smoke nonce/header và hydration sau build.
 
 ### C08 — Dependency và acceptance gates
 

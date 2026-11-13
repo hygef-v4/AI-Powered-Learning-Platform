@@ -1,5 +1,5 @@
 import { Icon } from "@/shared/ui/Icon";
-import { checkPassword } from "../passwordRules";
+import { checkPassword } from "../model/passwordRules";
 
 /**
  * Hai điều kiện dưới ô mật khẩu: "Ít nhất 8 ký tự", "Có cả chữ và số" (design `c02`, `c04`, `c06`).
@@ -17,7 +17,7 @@ export function PasswordChecklist({ password, chips }: { password: string; chips
         chips ? (
           <li
             key={item.label}
-            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
               item.ok ? "bg-success-soft text-success" : "bg-neutral-soft text-muted"
             }`}
           >
@@ -26,7 +26,7 @@ export function PasswordChecklist({ password, chips }: { password: string; chips
             <span className="sr-only">{item.ok ? " (đạt)" : " (chưa đạt)"}</span>
           </li>
         ) : (
-          <li key={item.label} className={`flex items-center gap-1 ${item.ok ? "text-[#059669]" : "text-[#94a3b8]"}`}>
+          <li key={item.label} className={`flex items-center gap-1 ${item.ok ? "text-success" : "text-muted"}`}>
             <Icon name="check" size={14} />
             {item.label}
             <span className="sr-only">{item.ok ? " (đạt)" : " (chưa đạt)"}</span>

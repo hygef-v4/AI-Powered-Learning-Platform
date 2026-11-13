@@ -1,10 +1,15 @@
 # U13 Reference Materials — business-rules
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U13 Reference Materials thuộc Iter 3, người code: Người 4; UC 58–62. Lấy phần học liệu của U05 cũ; bỏ module, Lesson, tóm tắt, embedding và RAG (phần mở rộng US-CNT-005). Thông báo lớp của U05 cũ thuộc U14. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 58, 59, 60, 61, 62. **Primary stories:** US-CNT-001, US-CNT-002; US-CNT-005 là phần mở rộng. **Requirements:** FR-004, FR-005, FR-013.
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md), [requirements](../../../inception/requirements/requirements.md).
+
+**Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
 
 ## 1. Phạm vi và quyền
 
@@ -18,28 +23,28 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U13-10 | Hai loại: `FILE` (PDF, DOCX, PPTX qua U03 purpose `MATERIAL`; loại và dung lượng theo Settings, mặc định ≤ 50 MB; kiểm theo nội dung tệp) và `YOUTUBE_LINK` (một video dạng `youtube.com/watch?v=` hoặc `youtu.be/`, không nhận playlist). | FR-004, UC 59, 61 |
-| BR-U13-11 | Mỗi tài liệu có tiêu đề (≤ 200), mô tả (≤ 2.000) và thứ tự trong danh sách. Không có module, Lesson, tiến độ học. | FR-004, FR-005 |
-| BR-U13-12 | Sửa tiêu đề, mô tả, thứ tự không tạo phiên bản. Thay tệp hoặc link tạo phiên bản mới; phiên bản cũ giữ lại để các tham chiếu cũ (Quiz gắn tài liệu, provenance của AI) vẫn đọc được; người học luôn thấy phiên bản mới nhất. Material Detail hiện lịch sử phiên bản. | UC 58, US-CNT-001 |
-| BR-U13-13 | Xóa là lưu trữ: tài liệu ẩn với người học, không chọn được làm nguồn AI hay gắn vào Quiz mới; tham chiếu cũ vẫn giữ. | FR-004 |
+| BR-U13-10 | Hai loại: `FILE` (PDF, DOCX, PPTX, XLSX qua U03 purpose `MATERIAL`; danh sách định dạng cố định, Admin chỉ chỉnh dung lượng qua Settings, mặc định ≤ 50 MB; kiểm theo nội dung tệp) và `YOUTUBE_LINK` (một video thuộc host YouTube cho phép: watch, youtu.be, Shorts, embed, live, bản mobile/music/nocookie). Nhận HTTP hoặc thiếu scheme và ngữ cảnh list/index, chuẩn hóa về URL HTTPS của một video. Không nhận playlist-only, host giả, userinfo/port khác chuẩn, ID sai hoặc nhiều tham số v. | FR-004, UC59/61; đồng bộ staging 2026-11-02 |
+| BR-U13-11 | Mỗi tài liệu có tiêu đề (≤ 200), mô tả (≤ 2.000) và thứ tự trong danh sách. Có module cơ bản của môn; Lesson nâng cao và tiến độ học chưa thuộc scope implementation này. | FR-004, FR-005 |
+| BR-U13-12 | Sửa tiêu đề, mô tả, thứ tự không tạo phiên bản. Thay tệp hoặc link tạo phiên bản mới; phiên bản cũ giữ lại để các tham chiếu cũ (provenance của AI) vẫn đọc được; người học luôn thấy phiên bản mới nhất. Material Detail hiện lịch sử phiên bản. | UC 58, US-CNT-001 |
+| BR-U13-13 | Xóa là lưu trữ: tài liệu ẩn với người học, không chọn được làm nguồn AI hay gắn vào Quiz mới; tham chiếu cũ vẫn giữ. Teacher/Subject Manager còn quyền hợp lệ vẫn xem/tải được, kể cả đọc học liệu môn kế thừa qua lớp; kiểm phân công hiện hành mỗi lần. Danh sách Đang dùng chỉ hiện ACTIVE không làm mất quyền truy cập trực tiếp của staff. Không cho sửa học liệu ARCHIVED. | FR-004 |
 | BR-U13-14 | Thêm tài liệu không tự gọi AI, không tóm tắt, không tạo embedding. Tóm tắt, phụ đề, embedding, RAG là phần mở rộng US-CNT-005. | FR-004, US-CNT-005 |
 
 ## 3. Xem tài liệu (UC 62)
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U13-20 | Learning Material: PDF xem ngay trên trang, mọi tệp tải được; link YouTube mở trong trình phát nhúng `youtube-nocookie.com`. Tải và xem tệp qua token 5 phút của U03 sau khi U13 kiểm quyền. | UC 62 |
+| BR-U13-20 | Learning Material: PDF xem ngay trên trang, XLSX xem bảng theo sheet, mọi tệp tải được; link YouTube mở trong trình phát nhúng `youtube-nocookie.com`. Tải và xem tệp qua token 5 phút của U03 sau khi U13 kiểm quyền. | UC 62 |
 | BR-U13-21 | ALAP không kiểm soát quyền xem video trên YouTube; video bị xóa hoặc riêng tư thì trình phát của YouTube báo lỗi. U13 không gọi API của YouTube. | UC 62 |
-| BR-U13-22 | Learning Material có vùng cho unit khác gắn vào (slot `LearningMaterialSection`); U11 gắn danh sách Quiz có tham chiếu tài liệu này. | FR-005 |
+| BR-U13-22 | Bỏ từ 2026-11-01: Learning Material không còn vùng cho unit khác gắn vào; Quiz nằm trong module học liệu. | FR-005 |
 | BR-U13-23 | Tài liệu gắn kèm Assignment (U07) và Quiz (U10) hiện trên Assignment Detail (U08) và Quiz Practice Detail (U11) qua `MaterialLinkList` của U13; chỉ hiện tài liệu `ACTIVE` người xem có quyền, mỗi dòng mở Learning Material. | FR-004, FR-005 |
 
 ## 4. Nguồn cho AI
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U13-30 | Sau khi lưu phiên bản tệp, job nền trích chữ từ PDF, DOCX, PPTX (không OCR); trung bình dưới 50 ký tự mỗi trang thì ghi `NO_TEXT`; tệp vẫn dùng được. Trích chữ không gọi AI. Chữ giữ tối đa 1.000.000 ký tự. | FR-004 |
+| BR-U13-30 | Sau khi lưu phiên bản tệp, job nền trích chữ từ PDF, DOCX, PPTX, XLSX (không OCR, không chạy macro/thực thi công thức); trung bình dưới 50 ký tự mỗi trang thì ghi `NO_TEXT`; tệp vẫn dùng được. Trích chữ không gọi AI. Chữ giữ tối đa 1.000.000 ký tự. | FR-004 |
 | BR-U13-31 | `IReferenceMaterial` (U06 khai báo, U13 cài): `listSelectable` trả tài liệu `ACTIVE` người gọi được xem trong phạm vi (lớp: tài liệu của môn và của lớp; môn: tài liệu của môn) kèm trạng thái chữ; `extractText` kiểm lại quyền từng tài liệu, trả chữ của phiên bản hiện tại kèm id, phiên bản, tiêu đề, cắt theo trần ký tự. Link YouTube chỉ có tiêu đề, mô tả, URL. | FR-006 |
-| BR-U13-32 | Tool MCP `read_authorized_material(materialId)`: người có quyền xem đọc chữ và thông tin tài liệu; ngoài quyền thì từ chối. Nội dung tài liệu là dữ liệu không tin cậy, không phải lệnh. | FR-035 |
+| BR-U13-32 | Tool MCP `read_authorized_material(materialId)`: người có quyền xem đọc chữ và thông tin tài liệu; ngoài quyền thì từ chối. Nội dung tài liệu là dữ liệu không tin cậy, không phải lệnh. Staff còn quyền có thể đọc tham chiếu ARCHIVED qua tool này; khác với chọn nguồn cho tác vụ AI mới, vốn chỉ nhận ACTIVE. | FR-035 |
 
 ## 5. Audit và lỗi
 
@@ -48,3 +53,23 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U13-40 | Mọi API kiểm quyền phía server; ngoài phạm vi trả `404` và ghi audit `ACCESS_DENIED`. Sửa kèm `version`; lệch thì `409`. | SEC-002 |
 | BR-U13-41 | Audit: `MATERIAL_CREATED`, `MATERIAL_UPDATED`, `MATERIAL_VERSION_CREATED`, `MATERIAL_ARCHIVED`. Không audit từng lần xem, tải. | FR-014 |
 | BR-U13-42 | U01, U04, U05 không trả lời thì từ chối (fail closed); trích chữ lỗi không ảnh hưởng việc xem, tải. | BR-U01-93 |
+
+## Module rules — AS-BUILT 2026-10-30
+
+| Rule | Behavior |
+|---|---|
+| BR-U13-M01 | Manager của môn quản lý module; tên 1–200, orderNo ≥0, version CAS. Mọi material có moduleId cùng subject. |
+| BR-U13-M02 | Backfill materials cũ vào Module 1; module basic không cần embedding/AI/Lesson. Môn `ACTIVE` chưa có module nào (môn mới) thì tự tạo "Module 1" (audit `MATERIAL_MODULE_CREATED`) khi Chủ nhiệm môn mở trang học liệu của môn hoặc giảng viên mở trang học liệu của lớp, để thêm được học liệu; Student mở trang không tạo module. |
+| BR-U13-M03 | Quiz tối đa một module qua unique quiz_id; attach chuyển link cũ. Quiz cùng môn và actor có quyền manage Quiz. |
+| BR-U13-M04 | Xóa chặn active materials; archived materials chuyển module khác; không xóa module cuối nếu còn archived materials. Quiz links cascade khi xóa module. |
+| BR-U13-M05 | Subject view chỉ subject Quiz; teacher class view thấy subject OPEN hoặc RETIRED có publishedAt thực và quiz lớp mình; RETIRED chưa phát hành bị ẩn; Student chỉ quiz listForClass cho phép. canManageModules khác canManageQuiz. |
+| BR-U13-M06 | Reorder items không rỗng, tối đa 500, mỗi item id/version; trùng id hoặc stale version bị từ chối. Source không buộc gửi đủ toàn bộ module. |
+
+Negative tests/source: MaterialModuleServiceTest, MaterialModuleService và migration 29/10; chưa chạy lại ở baseline.
+
+
+## Enabled và mô tả có định dạng — 2026-11-09
+
+`enabled` là boolean độc lập ACTIVE/ARCHIVED, mặc định true cho bản ghi và yêu cầu tạo cũ. Disabled ẩn danh sách sinh viên, chặn xem trực tiếp/cấp token và kiểm lại khi đổi token lấy nội dung; staff vẫn quản lý/bật lại theo quyền. Tài liệu disabled không được chọn/trích làm nguồn AI mới. Không xóa version/lịch sử.
+
+`descriptionDocument` là FormattedText tùy chọn; server lấy plain description từ document, tối đa 2.000 ký tự. Chỉ paragraph/danh sách, căn lề, indent 0–6 và run đậm/nghiêng/gạch chân; tối đa 100 block, 200 run/block, 1.000 run tổng. Không nhận HTML để render. Text cũ vẫn tương thích. MaterialRepositoryAdapter dùng JDBC; hai row JPA cũ đã bỏ, module repository giữ ngoài phạm vi.

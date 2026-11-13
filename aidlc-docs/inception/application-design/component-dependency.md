@@ -1,37 +1,46 @@
-# Component Dependencies — 2026-10-13
+# Component Dependency — AS-BUILT 2026-10-30
 
-> Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime hoặc phê duyệt các quyết định còn mở.
+Baseline `staging@794a405304bf02dd2593a9fa2c88662d7cd52845`; source-observed, không phải runtime acceptance. 66 active UC, 50 MVP stories + 1 extension, 15 logical units.
 
-## Runtime (text alternative)
+| Unit | Trách nhiệm hiện hành | UC | Packages |
+|---|---|---|---|
+| U01 | Account & Access | 01–12 | [identity](../../../backend/src/main/java/edu/aiplatform/identity) |
+| U02 | Audit | 13 | [audit](../../../backend/src/main/java/edu/aiplatform/audit) |
+| U03 | Job and Settings | 14–15 | [files](../../../backend/src/main/java/edu/aiplatform/files), [jobs](../../../backend/src/main/java/edu/aiplatform/jobs), [settings](../../../backend/src/main/java/edu/aiplatform/settings), [backup](../../../backend/src/main/java/edu/aiplatform/backup) |
+| U04 | Subject Administration | 16–19 | [subjects](../../../backend/src/main/java/edu/aiplatform/subjects) |
+| U05 | Class & Enrollment | 20–30 | [academics](../../../backend/src/main/java/edu/aiplatform/academics) |
+| U06 | AI Connections | 31–33 | [ai](../../../backend/src/main/java/edu/aiplatform/ai) |
+| U07 | Assignment Authoring | 34–36 | [assignments](../../../backend/src/main/java/edu/aiplatform/assignments) |
+| U08 | Assignment Work | 37–41 | [assignmentwork](../../../backend/src/main/java/edu/aiplatform/assignmentwork) |
+| U09 | Assignment Grading | 42–45 | [grading](../../../backend/src/main/java/edu/aiplatform/grading) |
+| U10 | Quiz Authoring | 46–48 | [quizzes](../../../backend/src/main/java/edu/aiplatform/quizzes) |
+| U11 | Quiz Practice | 49–52 | [quizpractice](../../../backend/src/main/java/edu/aiplatform/quizpractice) |
+| U12 | Group Assignment | 53–57 | [groups](../../../backend/src/main/java/edu/aiplatform/groups), [groupdocs](../../../backend/src/main/java/edu/aiplatform/groupdocs) |
+| U13 | Reference Materials | 58–62 | [materials](../../../backend/src/main/java/edu/aiplatform/materials) |
+| U14 | Announcements & Notifications | 63–65 | [announcements](../../../backend/src/main/java/edu/aiplatform/announcements), [notifications](../../../backend/src/main/java/edu/aiplatform/notifications) |
+| U15 | Admin Dashboard | 66 | [admindashboard](../../../backend/src/main/java/edu/aiplatform/admindashboard) |
 
-Web → Nginx → Spring Boot API → domain ports → PostgreSQL/Redis/Google Drive. Jobs sau commit → RabbitMQ → worker → provider API hoặc email. Agent ngoài → authenticated MCP adapter → cùng domain ports. AI direct dùng shared/personal connection; MCP agent gọi model riêng. Không PayOS, Judge0 hoặc thanh toán. YouTube links are MVP; advanced RAG and automatic video processing remain extensions.
+## Cross-unit contract dependencies
 
-## Data ownership
+Dưới đây là import public contract trong source (bao gồm conditional adapters); không phải thứ tự phát hành hoặc call graph runtime. Có quan hệ hai chiều ở mức port; không dùng tuyên bố “không có vòng phụ thuộc” của thiết kế cũ để chứng minh build/runtime. Shared infrastructure không tính là unit riêng.
 
-| Dữ liệu | Owner |
+| Consumer | Providers theo import contract |
 |---|---|
-| Account/auth | U01 |
-| Audit | U02 |
-| File/job/Settings/backup status | U03 |
-| Academic/enrollment | U04 |
-| References/announcements, optional lessons | U05 |
-| Rubric/MCQ versions | U06 |
-| Quota reservations/usage windows/provenance | U07 |
-| ASSIGNMENT/QUIZ lifecycle, submissionMode/diagramEnabled | U08; cấu hình chi tiết qua U09 port |
-| Document/Quiz config | U09 |
-| Individual attempts/submission/feedback references; ActivityEvent including group via U14 port | U11 |
-| Groups/member/leader | U12 |
-| Protected AI connections/MCP credentials/tasks | U13 |
-| Group section versions/submissions | U14 |
-| Evaluations/proposals/official grades | U15 |
-| Notifications/exports/aggregates | U16 |
+| U01 | U02, U03, U04, U05 |
+| U02 | U01, U04, U05 |
+| U03 | U01, U02 |
+| U04 | U01, U02 |
+| U05 | U01, U02, U03, U04, U06 |
+| U06 | U01, U02, U03 |
+| U07 | U01, U02, U03, U04, U05, U06 |
+| U08 | U01, U02, U03, U05, U06, U07 |
+| U09 | U01, U02, U03, U05, U06, U07, U08 |
+| U10 | U01, U02, U03, U04, U05, U06 |
+| U11 | U01, U02, U03, U05, U08, U10 |
+| U12 | U01, U02, U03, U05, U07, U08, U09 |
+| U13 | U01, U02, U03, U04, U05, U06, U10 |
+| U14 | U01, U02, U03, U05, U07, U08, U12 |
+| U15 | U01, U02, U03, U04, U05, U06, U07 |
+## Nguồn chi tiết
 
-Credentials không cột plaintext accounts hoặc Settings value; database chi tiết cần Construction thiết kế mới. Unit gọi public port, không đọc repository khác. Giữ version/idempotency/audit.
-
-## Trust
-
-AI output, agent/tool input, files/XML và callback là untrusted. Authorize current actor/resource mỗi call. Không key/raw prompt trong audit, không hidden answer trong context Student. Shared quota backend-enforced, Student denied. MCP draft ghi expectedVersion, không official decision. Đồ thị dependency hiện hành ở unit-of-work-dependency.md (text/table), hình cũ chỉ historical.
-
-## UC consolidation — 66 active UC
-
-UC 14 View Settings và UC 15 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U07 giữ quota service/data; U13 giữ connection/provider/credentials bảo vệ và test synthetic qua public port. UC 76/78/82 (ID cũ) không còn độc lập. UC 66 gộp UC 80 (ID cũ) (U16 dashboard, U03 backup); UC 42 gộp UC 81 (ID cũ) (U15 review, U11/U14 activity). UC 35 soạn Individual, UC 53 soạn Group (U09); Draw.io tùy chọn trong UC 39/56, UC 26 (ID cũ) retired. UC 79 (ID cũ) retired; UC 41 chỉ feedback Assignment Practice đã nộp. 50 MVP + 1 extension story, 15 units; không tự phê duyệt D01–D04 hoặc runtime.
+[Manifest code/schema/UI/tests](../reverse-engineering/current-code-baseline.md); [Public contract signatures](component-methods.md); [HTTP API inventory](../reverse-engineering/api-inventory.md); [Decision/delta register](../reverse-engineering/decision-register.md).

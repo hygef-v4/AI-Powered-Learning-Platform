@@ -1,6 +1,9 @@
 # U01 Account & Access — business-logic-model
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U01 Account & Access thuộc Iter 1, người code: Người 1; phạm vi UC 01–12 giữ như U01 cũ, chỉ đổi liên kết sang các unit mới. 66 active UC, 50 MVP stories + 1 extension, 15 logical units. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 
 **Primary UC:** 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12. **Primary stories:** US-IAM-001, US-IAM-002, US-IAM-003, US-IAM-004, US-IAM-005, US-IAM-006, US-IAM-007. **Requirements:** FR-001/002/015.
 
@@ -22,7 +25,7 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 | F7 Xem và sửa hồ sơ | UC 06, 07 | User Profile | US-IAM-004 |
 | F8 Xem danh sách tài khoản | UC 08 | Account List | US-IAM-007 |
 | F9 Tạo tài khoản | UC 09 | New Account | US-IAM-007 |
-| F10 Nhập hàng loạt | Luồng phụ của UC 09 | Account List (nút Nhập CSV) | US-IAM-007 |
+| F10 Nhập hàng loạt | Luồng phụ của UC 09 | Account List (nút Nhập Excel) | US-IAM-007 |
 | F14 Xem chi tiết và sửa thông tin tài khoản | UC 10, 11 | Account Detail | US-IAM-007 |
 | F11 Đổi role | UC 11 | Account Detail | US-IAM-005, US-IAM-007 |
 | F12 Vô hiệu hóa và mở lại | UC 12 | Account Detail | US-IAM-007 |
@@ -36,7 +39,7 @@ Mỗi luồng ghi: đầu vào → các bước → kết quả, kèm rule (`BR-
 
 1. Chuẩn hóa email (BR-U01-02).
 2. Kiểm `RequestThrottle` theo email và client. Vượt ngưỡng → sang bước 6 (BR-U01-25).
-3. Tìm tài khoản. Không có, ngoài domain, hoặc không ở `PENDING` → sang bước 6 (BR-U01-12).
+3. Tìm tài khoản. Email sai định dạng, không có tài khoản, hoặc không ở `PENDING` → sang bước 6 (BR-U01-12).
 4. Gửi việc `OTP_DELIVERY(ACTIVATION)` qua `IJob.enqueue` (yêu cầu không ghi database nên message gửi ngay, BR-U03-50).
 5. Worker sinh `OtpChallenge`, xóa challenge cũ, lưu băm và gửi mail (BR-U01-20, 21, 23). Mã rõ không đi qua queue hay DB.
 6. Trả **`Accepted`** với cùng một thông báo cho mọi trường hợp.
@@ -142,16 +145,16 @@ Màn New Account mở từ nút "Thêm tài khoản" trên Account List; tạo x
 **Vào**: `schoolEmail`, `displayName`, `role`.
 
 1. Kiểm quyền admin (BR-U01-67).
-2. Kiểm email (BR-U01-02, 03). Trùng → lỗi rõ cho admin.
+2. Kiểm email (BR-U01-02, 03): đúng định dạng, không giới hạn tên miền. Trùng → lỗi rõ cho admin.
 3. Tạo tài khoản `PENDING`, không mật khẩu, **không gửi mail** (BR-U01-10).
 4. Tạo `ADMIN` bắt buộc qua luồng này, không qua nhập hàng loạt (BR-U01-84).
 5. Ghi audit `ACCOUNT_CREATED`.
 
 ### F10 - Nhập hàng loạt (luồng phụ của UC 09)
 
-Nút "Nhập CSV" trên Account List; giữ theo quyết định của người dùng ngày 2026-10-09.
+Nút "Nhập Excel" trên Account List; chuyển sang Excel theo yêu cầu người dùng ngày 2026-11-09.
 
-1. Kiểm quyền admin; kiểm file là CSV, ≤ 1000 dòng (BR-U01-80).
+1. Kiểm quyền admin; kiểm file Excel .xlsx, tối đa 1 MB và 1000 dòng (API vẫn nhận CSV cũ) (BR-U01-80).
 2. Kiểm từng dòng, trả `AccountImportResult` trong response, không lưu (BR-U01-82, 84).
 3. Admin xem kết quả và xác nhận: frontend gửi lại cùng file.
 4. Kiểm lại toàn bộ file (dữ liệu có thể đã đổi), tạo các dòng hợp lệ ở `PENDING` trong một transaction, không gửi mail (BR-U01-85). Email đã tồn tại (kể cả do lần nhập trước) báo lỗi dòng nên nhập lại cùng file không tạo trùng (BR-U01-83).

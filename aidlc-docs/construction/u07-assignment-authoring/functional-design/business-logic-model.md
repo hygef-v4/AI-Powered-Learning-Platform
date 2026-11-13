@@ -1,6 +1,68 @@
 # U07 Assignment Authoring — business-logic-model
 
-> Revision 2026-10-15 theo [unit-of-work](../../../inception/application-design/unit-of-work.md): U07 Assignment Authoring thuộc Iter 2, người code: Người 4; UC 34–36. Lấy phần Assignment của U08 cũ (vòng đời, phát hành), U09 cũ (tài liệu, khung, DOCX) và rubric của U06 cũ. Quiz và ngân hàng thuộc U10. Chỉ sửa tài liệu; chưa triển khai hoặc kiểm runtime.
+## Nhập đề từ ảnh/PDF — 2026-11-11
+
+Thiết kế, chưa có mã. Quy tắc: BR-U07-87…101. Dùng lại bản nháp AI (F6), thêm chế độ `IMPORT`.
+
+### F-IMP1 Gửi tệp
+
+1. `AssignmentImportController` nhận multipart, gọi `AssignmentImportService.start(actor, id, files, command)`.
+2. Kiểm requestRef: đã có bản nháp cùng `requestRef` thì trả bản nháp đó.
+3. Kiểm quyền và `editable()` trong transaction đọc (BR-U07-87).
+4. `ImportFileReader` kiểm số tệp, loại, dung lượng, PDF và megapixel (BR-U07-88). Sau đó `ImportPageNormalizer` dựng ảnh trang và chữ gợi ý (BR-U07-89, 90). Lỗi thì ném `400`, không ghi gì.
+5. Chọn nguồn AI có model đọc được ảnh (BR-U07-100).
+6. Transaction ghi: thêm `assignment_ai_drafts` (PENDING, `mode = IMPORT`) và `assignment_import_pages`; ghi audit `ASSIGNMENT_IMPORT_REQUESTED`.
+7. `IAiTask.submit` với `AiPrompt(system, user, images = [AiImageRef("ASSIGNMENT_IMPORT", "{draftId}/{n}", "image/jpeg")])`, schema BR-U07-94, `maxOutputTokens` 16.000. Lỗi nguồn thì thử nguồn kế tiếp; hết nguồn thì bản nháp FAILED và xóa trang.
+8. Gắn `taskId` vào bản nháp, trả `AiDraft` view (PENDING).
+
+### F-IMP2 Worker đọc ảnh
+
+`AiTaskJobHandler` thấy prompt có `images`. Với mỗi ảnh, nó gọi `IAiImageSource` (U07 cài, `source = ASSIGNMENT_IMPORT`) để đọc bytes từ `assignment_import_pages`. Thiếu ảnh (đã dọn) thì tác vụ FAILED với lỗi "Ảnh nhập đề không còn", không gọi nhà cung cấp AI.
+
+### F-IMP3 Nhận kết quả
+
+`AssignmentImportResultHandler.onReady` thực hiện:
+
+1. Bản nháp không còn PENDING thì trả `ApplyOutcome` bỏ qua.
+2. Kiểm JSON theo schema, ánh xạ khối (BR-U07-95), cắt và lưu hình (BR-U07-96), dựng `DocumentModel` và chạy `validateSkeleton` (BR-U07-97).
+3. Transaction: ghi đề xuất, đặt bản nháp READY, xóa ảnh trang.
+4. Lỗi ở bước 2: bản nháp FAILED và xóa ảnh trang.
+
+`onFailed`: bản nháp FAILED, xóa ảnh trang (BR-U07-99).
+
+### F-IMP4 Ghi vào đề
+
+`:apply` với bản nháp `IMPORT` đi nhánh `applyImport`:
+
+1. `lockEditable(version)`.
+2. `REPLACE`: khối mới thay toàn bộ. `APPEND`: khối hiện có nối với khối mới.
+3. Lưu khung qua đường lưu của nhập DOCX (gắn ảnh, tính lại phần, giữ rubric khớp `partId`).
+4. Đổi tên bài nếu có `replaceTitle`.
+5. `markApplied`, ghi audit `ASSIGNMENT_IMPORT_APPLIED`, trả `Detail`.
+
+### Trạng thái bản nháp nhập
+
+```text
+                 start (tệp hợp lệ)
+                        |
+                        v
+     +------------- PENDING --------------+
+     | :discard        |  onReady OK       | onFailed / kết quả sai
+     v                 v                   v
+ DISCARDED           READY               FAILED
+                       |
+          :apply       |       :discard
+       +---------------+---------------+
+       v                               v
+    APPLIED                        DISCARDED
+```
+
+Ảnh trang (`assignment_import_pages`) chỉ tồn tại khi bản nháp ở PENDING; job dọn xóa trang quá 24 giờ.
+
+**AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
+
+
+> Current source baseline 2026-10-30, staging@794a4053; ownership theo unit-of-work hiện hành. Có implementation source; chưa chạy lại runtime acceptance trong đợt sync. Ước lượng và kết quả có ngày cũ giữ theo phạm vi lịch sử.
 > Cập nhật 2026-10-22 theo code hiện tại (các yêu cầu của người dùng 2026-10-21, 2026-10-22; chi tiết từng vòng trong code-summary).
 
 **Primary UC:** 34, 35, 36. **Primary stories:** US-ASM-001 (phần Assignment), US-ASM-004, US-ASM-008, US-ASM-009, US-ASM-010, US-QBK-001. **Requirements:** FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
@@ -42,6 +104,13 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ## 3. Soạn bài
 
+### Delta 2026-11-10 cho F3, F6, F9, F13 (PR #60)
+
+- **F3:** popup "Bài tập mới" (lớp) hoặc "Đề mẫu mới" (môn) bắt buộc tên bài và có ba cách tạo. *Đề mới*: chọn loại bài và tệp DOCX mẫu tùy chọn, như các bước F3 bên dưới. *Đề có sẵn*: chọn nguồn rồi copy theo F13 với tên vừa nhập. *Tạo từ AI*: chọn ngôn ngữ, đề mẫu của môn hoặc tệp mẫu, tài liệu tham khảo (đọc qua endpoint của lớp/môn vì bài chưa có) và yêu cầu; bấm Tạo thì tạo bài, gửi `POST .../ai-drafts` rồi áp dụng kết quả vào bài, tổng điểm cố định 10. AI lỗi thì bài đã tạo được dùng lại khi thử lại.
+- **F6:** nút "Soạn bằng AI" không còn trên thanh công cụ của Assignment Form; `AiDraftDialog` ở trang này chỉ còn mở để duyệt đề xuất (ví dụ từ MCP qua `proposalId`). F6b (sửa đề bằng AI) không đổi.
+- **F9:** bài của môn không phát hành (`409 SUBJECT_TEMPLATE_NOT_PUBLISHABLE`, BR-U07-80); bài có chấm không có số lượt (BR-U07-85).
+- **F13:** nguồn copy và `title` theo BR-U07-82.
+
 ### F3 - Tạo bài (UC 35)
 1. Bấm "Tạo bài tập" ở tab Evals (bài của lớp) hoặc Assignment List (bài của môn); popup gồm một ô tệp DOCX tùy chọn (chọn xong chỉ hiện tên tệp), thẻ chọn Hình thức (Cá nhân, Nhóm; nhóm chỉ ở lớp và khi U12 có), thẻ chọn Chế độ (Graded, Practice; nhóm chỉ Graded). Bài của lớp có nút nhỏ "Copy từ lớp khác" (F13). Không có dòng hướng dẫn, không chọn sơ đồ.
 2. Kiểm quyền (R3/R4 với lớp, R2 với môn) và lớp hoặc môn chưa lưu trữ (BR-U07-02, 03, 04).
@@ -73,6 +142,13 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 5. U06 gọi `onReady`: bài còn `DRAFT` thì lưu đề xuất `READY` và trả `APPLIED`; bài đã xóa hoặc đã phát hành thì trả `REJECTED`. `onFailed` chuyển đề xuất sang `FAILED`.
 6. Người soạn xem đề xuất. Áp dụng: `POST .../ai-drafts/{draftId}:apply` kèm `version`; cảnh báo nếu khung đã có nội dung; thay khung (và hướng dẫn nếu chọn), tính lại phần như F4 bước 5, điền gợi ý rubric; đề xuất `APPLIED`; audit `ASSIGNMENT_AI_DRAFT_APPLIED`.
 7. Bỏ: đề xuất `DISCARDED`, bài không đổi.
+
+### F6b - Sửa đề đang có bằng AI (UC 35, 2026-11-09)
+1. Trên Assignment Form của bài `DRAFT` sửa được, khung chat "Sửa đề bằng AI" đứng trên thẻ rubric Toàn bài. Người soạn gõ yêu cầu (≤ 4.000 ký tự); trang lưu mọi thay đổi đang chờ rồi gọi `POST /api/v1/assignments/{id}/ai-drafts` với `mode = REVISE`, `request`, `requestRef`. Chế độ này bỏ qua tài liệu tham khảo, file nguồn và mô tả định dạng; nguồn AI tự chọn.
+2. Server chụp đề đã lưu (tên, hướng dẫn, mọi khối, rubric từng mục và Toàn bài) thành JSON, mỗi khối một mã ngắn (`b1`, `b2`…); bảng nối mã với id khối lưu trong `provenance.blockRefs`, `provenance.mode = REVISE`.
+3. AI chỉ trả tên, hướng dẫn và danh sách thao tác `UPDATE`, `INSERT` (chèn sau mã), `DELETE` theo mã khối. `onReady`: server ghép thao tác vào bản đã gửi (`AssignmentDraftRevision.merge`), khối và rubric không được nhắc tới giữ nguyên; mã lạ thì bỏ thao tác, chèn sau mã lạ thì chèn cuối; heading rỗng bị bỏ, hướng dẫn trống giữ hướng dẫn hiện tại. Kết quả chuẩn hóa, kiểm (`validate`) và lưu thành đề xuất `READY` loại `REVISION`; không đổi gì thì đánh dấu `unchanged`.
+4. Trang tự áp dụng `:apply` (thay tên và hướng dẫn). Server từ chối `409 AI_DRAFT_STALE` khi `version` của đề khác `baseVersion` của đề xuất, `409 AI_DRAFT_INVALID` khi bản sửa hoặc khung sau khi dựng không hợp lệ. Khối giữ mã dùng lại id, ảnh, sơ đồ và định dạng chữ không đổi; tính lại phần, thay rubric theo heading và Toàn bài; audit `ASSIGNMENT_AI_DRAFT_APPLIED` kèm `mode = REVISE`.
+5. Chat báo "Đã sửa đề", tối đa 3 lưu ý; Ctrl+Z quay lại khung đề trước. Chat bỏ cuộc sau 3 phút và hủy đề xuất; đề xuất `unchanged` hoặc `INVALID` bị hủy, đề không đổi.
 
 ### F7 - Xuất, nhập DOCX (UC 35)
 Xuất:
@@ -144,6 +220,6 @@ Ngưng giao:
 
 ### F16 - Interface cho unit khác
 1. U08 đọc bài, lịch, `submissionWindow` (`ON_TIME`, `LATE`, `CLOSED`) và nội dung đã khóa (khung, phần, `requiredDiagrams`, rubric) qua `IAssignmentQuery`; kiểm bài làm qua `IDocumentModel`.
-2. U09 đọc rubric đã khóa và tính điểm qua `IRubric.score`; dùng `toPlainText`, `compactDiagramXml` khi dựng prompt AI chấm.
+2. U09 đọc rubric đã khóa và tính điểm qua GradingJson item scores (partial0..max, checkbox-compatible); dùng `toPlainText`, `compactDiagramXml` khi dựng prompt AI chấm.
 3. U12 đọc khung và phần cho tài liệu nhóm; cài `IGroupAssignmentSupport` và `IAssignmentLifecycleListener`.
 4. U14 nhận `assignment.opened`; đọc bài sắp hết hạn qua `listClosingBetween` để nhắc hạn.
