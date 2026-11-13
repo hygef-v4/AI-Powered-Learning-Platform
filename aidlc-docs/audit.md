@@ -13781,3 +13781,54 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 **Context**: Explicit commit/push/PR authorization for the completed visibility repair; supplied Ponytail remains active, PR skill applied. No product source changes in this delivery step. Final PR URL/status to be verified and reported to user.
 
 ---
+
+## Member contribution levels — design review
+**Timestamp**: 2026-11-13T22:12:11+07:00
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi có thể bổ sung  phần này ko, nhớ ghi rõ cách chấm vào"
+**AI Response**: "Kiểm tra MemberContributionPanel, API/service/model và repository JSONB hiện có. Soạn đề xuất lưu 5 mức tùy chọn cùng điểm/lý do, hướng dẫn chấm theo rubric và đóng góp/vấn đáp, không tự quy đổi mức thành điểm; giữ quyền, version, công bố và reset khi nộp lại. Chuẩn bị tài liệu cụ thể để duyệt theo CLAUDE.md và brainstorming; chưa sửa source."
+**Context**: Requirements/design proposal at inception/requirements/2026-11-13-member-contribution-levels.md. Existing reverse engineering reused; workspace initially clean. No subagents, tests, commit/push or live writes. Awaiting approval of this new feature scope, not re-requesting prior authorizations.
+
+---
+
+## Implement five member contribution levels
+**Timestamp**: 2026-11-13T22:20:00+07:00
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi thử sửa như vậy xem, sau tôi tự test"
+**AI Response**: "Người dùng duyệt phương án 5 mức không tự quy đổi điểm, yêu cầu triển khai và tự test UI sau. Dùng Ponytail và writing-plans, ghi kế hoạch U09 trực tiếp, tái sử dụng JSONB/endpoint/version/permission hiện có. Triển khai mức tùy chọn, căn cứ được lưu/tải lại, hướng dẫn chấm thu gọn, hiển thị cá nhân sau công bố và regression tự động."
+**Context**: Approval covers the concrete preceding proposal and implementation. Existing design/state/audit WIP retained. No subagents or live UI grading writes; no commit/push/restart/deploy requested.
+
+---
+
+**Implementation result**: Added nullable named contribution enum, atomic member command/JSONB save and previous/current-level audit; no score formula. Preserved grade permissions/version checks and group inheritance/reset behavior. Optional shared-select UI with collapsed 5-level grading guide, restored personal reason, and published own-student contribution view. RED six UI regressions with one control; GREEN55 backend,199 grading frontend, API4 (three overlap), scoped lint and isolated TypeScript. Normal typecheck remains blocked by known stale generated Next routes; no cache deletion or product config changes. Self-reviewed callers, JSON serialization and privacy. User will test UI; no live data/model calls, browser check, restart, production build, commit/push/deploy. New backend must be running before client sends contributionLevel. Evidence: construction/build-and-test/2026-11-13-member-contribution-levels.md.
+
+## Restart FE/BE in existing Orca terminal tabs
+**Timestamp**: 2026-11-13T22:37:58.4945460+07:00
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi khởi động lại 2 tab fe be terminal orca"
+**AI Response**: "Dùng skill orca-cli, xác nhận hai terminal đúng workspace đều đã dừng ở PowerShell prompt và cổng 3000/8080 trống. Khởi chạy FE bằng npm --prefix frontend run dev trên cổng 3000 và BE bằng scripts/run-backend.bat (clean compile, profiles local,worker) trong chính hai tab có sẵn. Xác nhận worker Docker thuộc dự án rồi dừng để tránh chạy mã cũ song song với worker local. FE /login HTTP200, BE /health HTTP200 status UP; startup hoàn tất."
+**Context**: Explicit restart authorization. Preserved all feature WIP. No new tabs, source/config changes, AI calls, manual grade writes, commit/push/deploy. Initial health probes used protected /actuator/health and returned401; corrected to configured /health and verified UP. User will test UI.
+
+---
+
+## Group grading side-panel implementation
+**Timestamp**: 2026-11-13T22:43:00+07:00
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa giao diện theo đề xuất"
+**AI Response**: "Triển khai bố cục hai cột đã đề xuất: khung phải Rubric nhóm/Thành viên, chọn một người, mục phụ trách và liên kết hai chiều. Giữ draft khi chuyển người/tab/đóng drawer, không tự đoán tác giả. Dùng lại shared components và document navigation; trực tiếp theo Ponytail, writing-plans và Impeccable, không subagent."
+**Context**: User approval covers the preceding concrete UI proposal. Existing five-level grading WIP preserved. Plan construction/plans/code-generation-plan/2026-11-13-group-grading-side-panel.md. No backend or score-rule changes, live grading writes, AI calls, commit/push/deploy.
+
+---
+
+**Result**: Implemented the approved group grading side-panel layout with an optional shared editor slot, rubric/member tabs, one-member selector, author/section jump links and responsive modeless drawer. Retained drafts across member/tab/drawer changes and other-member saves; rebases only unchanged server values, preserves conflicting drafts/version for server rejection. Added unsaved navigation/unload and publish guards. RED3/44controls; full frontend1056/151files and final50 scoped tests pass, lint/isolated TypeScript pass. Initial jsdom scroll API error and one new fixture type mismatch corrected and rerun; normal stale Next validators left unchanged. Live local teacher UI1440/390 verified correct author selection, both navigation directions/page-step mode, draft switching and drawer Escape/reopen. Removed unsaved QA note, restored554x930 viewport; no real score changes, publish, AI requests, backend restart, production build, commit/push/deploy. Screenshots .tmp/group-grading-desktop.png and .tmp/group-grading-mobile.png. Evidence construction/build-and-test/2026-11-13-group-grading-side-panel.md.
+
+## Commit member assessments and group grading UI
+**Timestamp**: 2026-11-13T23:23:47.7955058+07:00
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit rõ ràng"
+**AI Response**: "Kiểm tra đúng nhánh fix/u05-u09-u15, staged index ban đầu trống, giữ toàn bộ WIP đã triển khai. Chia thành commit dữ liệu đánh giá năm mức/API/quyền xem, commit UI chấm nhóm cạnh bài và bảo vệ bản nháp, cùng commit tài liệu/kế hoạch/kết quả. Chạy lại test grading backend và frontend/shared document/caller trước commit, kiểm whitespace và loại trừ log/ảnh .tmp. Chỉ commit local, không push/merge/deploy."
+**Context**: Explicit local commit authorization for the completed five-level member assessment and approved group-side-panel UI work. Existing production build/type-cache limitations remain as recorded in evidence; no new product changes or live grade writes in this delivery step.
+
+---
+
+**Fresh precommit verification**: Backend55 tests passed with no failures/errors/skips; frontend grading/shared document and submission-history caller276 tests/26 files passed, exit0. Logs .tmp/grading-assessments-precommit-backend.log and .tmp/grading-assessments-precommit-frontend.log. Whitespace/index checks passed. Created separate local data/API and UI feature commits; recording plans, guidance, UI acceptance and delivery evidence in a documentation commit. No product changes during delivery, no push/merge/deploy or production build. Temporary logs, commit-message files and screenshots remain ignored under .tmp.
