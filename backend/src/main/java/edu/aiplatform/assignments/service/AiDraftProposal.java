@@ -35,20 +35,20 @@ final class AiDraftProposal {
              "properties":{
               "schemaVersion":{"type":"integer","minimum":1,"maximum":2},
               "title":{"type":"string"},
-              "businessContext":{"type":"string"},
+              "businessContext":{"type":"string"},"businessContextFormat":FORMAT,
               "instructions":{"type":"string"},
               "sections":{"type":"array","minItems":1,"maxItems":100,"items":{"type":"object","required":["level","title"],
                "additionalProperties":false,"properties":{
                 "level":{"type":"integer","minimum":1,"maximum":6},
                 "title":{"type":"string"},
-                "guidance":{"type":"string"},
+                "guidance":{"type":"string"},"titleFormat":FORMAT,"guidanceFormat":FORMAT,
                 "rubric":{"type":"array","maxItems":20,"items":{"type":"object","required":["title","items"],
                  "additionalProperties":false,"properties":{
                   "title":{"type":"string"},"description":{"type":"string"},
                   "kind":{"type":"string","enum":["TEXT","DIAGRAM"]},
                   "items":{"type":"array","maxItems":20,"items":{"type":"object","required":["text","points"],
                    "additionalProperties":false,"properties":{"text":{"type":"string"},"points":{"type":"number"}}}}}}}}}}}}
-            """;
+            """.replace("FORMAT", AiDraftFormatting.SCHEMA);
 
     private AiDraftProposal() {
     }
@@ -63,6 +63,7 @@ final class AiDraftProposal {
                 raw.has("title") && raw.has("businessContext") ? 2 : 1));
         out.put("title", cut(raw.path("title").asText("").strip(), Assignment.TITLE_MAX));
         out.put("businessContext", cut(raw.path("businessContext").asText(""), DocumentModelService.MAX_TEXT));
+        out.set("businessContextFormat", AiDraftFormatting.normalize(raw.path("businessContextFormat"), out.path("businessContext").asText()));
         out.put("instructions", cut(raw.path("instructions").asText(""), Assignment.INSTRUCTIONS_MAX));
         ArrayNode sections = out.putArray("sections");
         JsonNode rawSections = raw.path("sections");
@@ -81,6 +82,8 @@ final class AiDraftProposal {
             next.put("level", Math.max(1, Math.min(6, section.path("level").asInt(1))));
             next.put("title", title);
             next.put("guidance", cut(section.path("guidance").asText(""), DocumentModelService.MAX_TEXT));
+            next.set("titleFormat", AiDraftFormatting.normalize(section.path("titleFormat"), title));
+            next.set("guidanceFormat", AiDraftFormatting.normalize(section.path("guidanceFormat"), next.path("guidance").asText()));
             next.set("rubric", normalizeRubric(section.path("rubric"), diagramEnabled));
         }
         return out;
@@ -135,17 +138,21 @@ final class AiDraftProposal {
         Map<UUID, List<RubricCriterion>> suggestions = new HashMap<>();
         String businessContext = proposal.path("businessContext").asText("").strip();
         if (!businessContext.isEmpty()) {
-            addParagraphs(blocks, businessContext);
+            addParagraphs(blocks, businessContext, proposal.path("businessContextFormat"));
         }
         for (JsonNode section : proposal.path("sections")) {
             UUID headingId = UUID.randomUUID();
             ObjectNode heading = JsonNodeFactory.instance.objectNode();
             heading.put("style", "H" + section.path("level").asInt(1));
             heading.put("text", section.path("title").asText(""));
+            if (!section.path("titleFormat").isEmpty()) {
+                heading.putArray("runs").addObject().put("text", section.path("title").asText(""));
+                AiDraftFormatting.apply(heading, section.path("titleFormat"));
+            }
             blocks.add(new DocumentBlock(headingId, BlockOrigin.TEACHER, BlockType.HEADING, heading));
             String guidance = section.path("guidance").asText("");
             if (!guidance.isBlank()) {
-                addParagraphs(blocks, guidance);
+                addParagraphs(blocks, guidance, section.path("guidanceFormat"));
             }
             List<RubricCriterion> criteria = criteria(section.path("rubric"));
             if (!criteria.isEmpty()) {
@@ -155,11 +162,12 @@ final class AiDraftProposal {
         return new Built(new DocumentModel(List.copyOf(blocks)), suggestions);
     }
 
-    private static void addParagraphs(List<DocumentBlock> blocks, String text) {
+    private static void addParagraphs(List<DocumentBlock> blocks, String text, JsonNode format) {
         // Preserve all content while bounding the number of new document blocks per field.
-        for (String value : text.strip().split("\\n\\s*\\n", 8)) {
+        for (String value : (format.isEmpty() ? text.strip().split("\\n\\s*\\n", 8) : new String[]{text})) {
             ObjectNode paragraph = JsonNodeFactory.instance.objectNode();
             paragraph.putArray("runs").addObject().put("text", value.strip());
+            AiDraftFormatting.apply(paragraph, format);
             blocks.add(new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.PARAGRAPH, paragraph));
         }
     }

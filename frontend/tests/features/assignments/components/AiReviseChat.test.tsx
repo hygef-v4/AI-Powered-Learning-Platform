@@ -99,7 +99,7 @@ describe("AiReviseChat", () => {
     expect(screen.getByTestId("ai-revise-chat")).not.toBeVisible();
   });
 
-  it("adds a template and a reference from the two-row + menu, shows them in one row template first, sends and clears them", async () => {
+  it("adds a template and a reference from the three-row + menu, shows them in one row template first, sends and clears them", async () => {
     vi.spyOn(assignmentsApi, "listAiTemplates").mockResolvedValue([
       { assignmentId: "t1", title: "Đề mẫu của môn", subjectTemplate: true },
       { assignmentId: "o1", title: "Đề giữa kỳ năm trước", subjectTemplate: false },
@@ -112,23 +112,24 @@ describe("AiReviseChat", () => {
 
     // Chọn tài liệu tham khảo trước: mẫu đề thêm sau vẫn đứng đầu hàng.
     fireEvent.click(screen.getByTestId("ai-revise-attach"));
-    expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["Mẫu đề", "Tài liệu tham khảo"]);
-    fireEvent.click(screen.getByRole("menuitem", { name: "Tài liệu tham khảo" }));
-    // Tải tệp lên nằm ngay trong danh sách.
-    expect(screen.getAllByRole("menuitem")[0]).toHaveTextContent("Tải tệp lên");
+    expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["Chọn đề mẫu có sẵn", "Chọn học liệu của môn", "Tải từ máy"]);
+    fireEvent.click(screen.getByRole("menuitem", { name: "Chọn học liệu của môn" }));
+    expect(screen.queryByRole("menuitem", { name: "Tải tệp lên" })).not.toBeInTheDocument();
     fireEvent.click(await screen.findByRole("menuitem", { name: "Chương 3 UML" }));
     expect(screen.queryByTestId("ai-revise-attach-menu")).toBeNull();
     fireEvent.click(screen.getByTestId("ai-revise-attach"));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Mẫu đề" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Chọn đề mẫu có sẵn" }));
     expect(screen.getAllByRole("menuitem").map((item) => item.textContent))
-      .toEqual(["Tải tệp lên", "Đề mẫu của môn", "Đề giữa kỳ năm trước"]);
+      .toEqual(["Đề mẫu của môn", "Đề giữa kỳ năm trước"]);
     fireEvent.click(screen.getByRole("menuitem", { name: "Đề giữa kỳ năm trước" }));
 
     const chips = within(screen.getByTestId("ai-revise-attachments")).getAllByRole("listitem");
-    expect(chips.map((chip) => chip.textContent)).toEqual(["Mẫu đề: Đề giữa kỳ năm trước", "Tài liệu tham khảo: Chương 3 UML"]);
+    expect(chips[0]).toHaveTextContent("Mẫu đề");
+    expect(chips[0]).toHaveTextContent("Đề giữa kỳ năm trước");
+    expect(chips[1]).toHaveTextContent("Tham khảo · học liệu");
     // Đã có mẫu đề: dòng Mẫu đề của menu khóa và đổi chữ.
     fireEvent.click(screen.getByTestId("ai-revise-attach"));
-    expect(screen.getByRole("menuitem", { name: "Đã có mẫu đề" })).toBeDisabled();
+    expect(screen.getByRole("menuitem", { name: "Chọn đề mẫu có sẵn" })).toBeEnabled();
     fireEvent.click(screen.getByTestId("ai-revise-attach"));
     send("Làm lại đề theo mẫu này");
 

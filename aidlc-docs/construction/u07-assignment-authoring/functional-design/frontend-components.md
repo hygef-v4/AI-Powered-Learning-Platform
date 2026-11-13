@@ -135,3 +135,17 @@ Route `/assignments/*` và `/manager/assignments` cho Teacher, Subject Manager (
 | `AssignmentRowAction` | U09 | Cột Bài nộp trên dòng bài ở tab Đánh giá |
 | `AssignmentFormSection` | U12 | Kiểm tra sẵn sàng nhóm trên Assignment Form của bài nhóm |
 | `AssignmentSettingsSection` (`assignmentSettingsSections`) | U09 | Cài đặt phân bố cho bài GRADED khi có classId. Quyền `canEdit` của U09 độc lập với readOnly của nội dung bài, kể cả bài SUBJECT chỉ đọc |
+
+
+## Nguồn ảnh và định dạng AI — 2026-11-13
+
+Menu cấp môn mang tên Đề mẫu; route và quyền giữ nguyên. ASSIGNMENT_SOURCE nhận thêm PNG/JPEG, dùng chung cả tạo mới và sửa đề; tối đa 3 tệp, 2 MB/tệp, tổng 6 MB. Xem trước ảnh local có thu hồi object URL khi gỡ/rời màn hình. Worker nhận tham chiếu draft/index của ảnh đã attach qua kiểm quyền; không nhận fileId tự do từ client. Model phải hỗ trợ ảnh; đây không phải OCR chuyển ảnh thành chữ. Mẫu định dạng vẫn DOCX, ảnh là tài liệu tham khảo.
+
+Đề xuất tạo mới có businessContextFormat, titleFormat/guidanceFormat từng mục; sửa đề có format từng block. Chỉ nhận thuộc tính định dạng của document editor: align, bold/italic/underline/strike/code, color/highlight hex và runs để nhấn riêng từng đoạn chữ. Runs phải ghép đúng nội dung plain text. LIST/TABLE khi sửa nhận định dạng áp dụng toàn khối. Dữ liệu cũ chỉ có plain text vẫn dùng được; không có HTML/CSS tùy ý. Xem trước và áp dụng giữ định dạng; rubric, version và quyền kiểm lại như trước.
+
+
+## Khung chat đính kèm tệp — 2026-11-13
+
+AiReviseChat: menu + gồm Chọn đề mẫu có sẵn / Chọn học liệu của môn / Tải từ máy. Tệp ngoài mặc định tham khảo; DOCX có thể đổi vai trò với xác nhận thay mẫu và giữ mẫu cũ nếu đọc thất bại. Hỗ trợ paste ảnh và kéo thả qua cùng hàng đợi upload, giữ plain text đi kèm; không đọc URL. Thẻ có vai trò, thumbnail, trạng thái, gỡ/thử lại. Ba tệp tham khảo 2 MB/tệp, một mẫu DOCX 20 MB; server vẫn kiểm lại.
+
+Lỗi trước khi task được nhận giữ input/tệp và dùng lại requestRef nếu retry cùng payload. Lỗi AI có nút Khôi phục yêu cầu, không tự gọi lại. Đóng chat giữ state; đổi assignment hủy callback cũ. Giữ apply/undo/version. Evidence: ../../build-and-test/2026-11-13-ai-chat-files.md.

@@ -1,3 +1,4 @@
+import type { Align, Run } from "@/shared/document/types";
 import type { DiagramType, DocumentModel, RubricCriterion, ValidationIssue } from "@/shared/document";
 import type { Tone } from "@/shared/ui";
 
@@ -130,7 +131,11 @@ export type DiagramView = {
   svgPreview: string | null;
 };
 
+export type AiTextFormat = Partial<Omit<Run, "text">> & { align?: Align; runs?: Run[] };
+
 export type AiProposalSection = {
+  titleFormat?: AiTextFormat;
+  guidanceFormat?: AiTextFormat;
   level: number;
   title: string;
   guidance: string;
@@ -154,7 +159,7 @@ export type AiDraft = {
   status: "PENDING" | "READY" | "APPLIED" | "DISCARDED" | "FAILED";
   taskId: string | null;
   /** {@code unchanged}: bản sửa đề bằng AI không đổi gì so với đề đã gửi. */
-  proposal: { title: string; businessContext: string; instructions: string; sections: AiProposalSection[]; validation?: AiDraftValidation;
+  proposal: { title: string; businessContextFormat?: AiTextFormat; businessContext: string; instructions: string; sections: AiProposalSection[]; validation?: AiDraftValidation;
     unchanged?: boolean } | null;
   provenance: Record<string, unknown>;
   safeError: string | null;

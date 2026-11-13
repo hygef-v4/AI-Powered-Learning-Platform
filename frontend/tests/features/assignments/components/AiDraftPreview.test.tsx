@@ -33,4 +33,16 @@ describe("AI assessment preview", () => {
     expect(screen.getByText("Correct multiplicities")).toBeVisible();
     expect(screen.getByText("Exception flows.")).toBeVisible();
   });
+  it("previews native emphasis and alignment without dropping selective run styles", () => {
+    render(<AiDraftPreview proposal={{ title: "Exam", instructions: "", businessContext: "Context",
+      businessContextFormat: { align: "CENTER", bold: true },
+      sections: [{ level: 1, title: "Diagram", titleFormat: { italic: true }, guidance: "Draw UML",
+        guidanceFormat: { align: "RIGHT", runs: [{ text: "Draw ", bold: true }, { text: "UML", underline: true }] }, rubric: [] }] }} />);
+    expect(screen.getByText("Context")).toHaveClass("font-bold");
+    expect(screen.getByText("Context").closest("p")).toHaveClass("text-center");
+    expect(screen.getByText("Diagram")).toHaveClass("italic");
+    expect(screen.getByText("Draw")).toHaveClass("font-bold");
+    expect(screen.getByText("UML")).toHaveStyle({ textDecorationLine: "underline" });
+  });
+
 });

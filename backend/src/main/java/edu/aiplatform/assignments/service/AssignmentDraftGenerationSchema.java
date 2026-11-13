@@ -18,7 +18,7 @@ final class AssignmentDraftGenerationSchema {
             ObjectNode original = (ObjectNode) schema.path("properties");
             ObjectNode properties = JSON.createObjectNode();
             // Gemini follows property order. Complete questions/rubrics before spending tokens on prose.
-            for (String name : new String[]{"sections", "title", "businessContext", "instructions", "schemaVersion"}) {
+            for (String name : new String[]{"sections", "title", "businessContext", "instructions", "schemaVersion", "businessContextFormat"}) {
                 properties.set(name, original.get(name));
             }
             schema.set("properties", properties);
