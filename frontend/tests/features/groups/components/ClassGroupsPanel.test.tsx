@@ -135,7 +135,7 @@ describe("ClassGroupsPanel", () => {
     const dialog = await screen.findByRole("dialog", { name: "Tạo nhóm" });
 
     // Chỉ liệt kê người chưa có nhóm.
-    expect(within(dialog).getAllByRole("checkbox").map((c) => c.getAttribute("aria-label"))).toEqual(["Chọn Chi", "Chọn Dũng"]);
+    expect(within(dialog).getAllByRole("checkbox").filter(c => c.hasAttribute("aria-label")).map((c) => c.getAttribute("aria-label"))).toEqual(["Chọn Chi", "Chọn Dũng"]);
     fireEvent.change(within(dialog).getByLabelText(/Tên nhóm/), { target: { value: "Nhóm B" } });
     fireEvent.click(within(dialog).getByRole("checkbox", { name: "Chọn Chi" }));
     fireEvent.click(within(dialog).getByRole("checkbox", { name: "Chọn Dũng" }));
@@ -164,7 +164,7 @@ describe("ClassGroupsPanel", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Sửa Nhóm 1" }));
     const dialog = await screen.findByRole("dialog", { name: "Sửa Nhóm 1" });
 
-    expect(within(dialog).getAllByRole("checkbox").map((c) => c.getAttribute("aria-label"))).toEqual(["Chọn An", "Chọn Bình", "Chọn Dũng"]);
+    expect(within(dialog).getAllByRole("checkbox").filter(c => c.hasAttribute("aria-label")).map((c) => c.getAttribute("aria-label"))).toEqual(["Chọn An", "Chọn Bình", "Chọn Dũng"]);
     fireEvent.click(within(dialog).getByRole("checkbox", { name: "Chọn Dũng" }));
     fireEvent.click(within(dialog).getByRole("checkbox", { name: "Chọn An" }));
     fireEvent.click(within(dialog).getByRole("button", { name: "Lưu nhóm" }));
@@ -174,6 +174,34 @@ describe("ClassGroupsPanel", () => {
       { key: "g1", id: "g1", name: "Nhóm 1", leaderId: "b", memberIds: ["b", "d"] },
       { key: "g2", id: "g2", name: "Nhóm 2", leaderId: "c", memberIds: ["c"] },
     ]);
+  });
+
+  it("chọn tất cả chỉ đổi người trong kết quả lọc và giữ người đã chọn ngoài bộ lọc", async () => {
+    backend(WITH_GROUPS);
+    render(<ClassGroupsPanel classId={CLASS} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Tạo nhóm" }));
+    const dialog = await screen.findByRole("dialog", { name: "Tạo nhóm" });
+    fireEvent.click(within(dialog).getByRole("checkbox", { name: /Chọn tất cả/ }));
+    expect(within(dialog).getByRole("checkbox", { name: "Chọn Chi" })).toBeChecked();
+    expect(within(dialog).getByRole("checkbox", { name: "Chọn Dũng" })).toBeChecked();
+    fireEvent.change(within(dialog).getByRole("searchbox"), { target: { value: "Chi" } });
+    fireEvent.click(within(dialog).getByRole("checkbox", { name: /Chọn tất cả/ }));
+    fireEvent.change(within(dialog).getByRole("searchbox"), { target: { value: "" } });
+    expect(within(dialog).getByRole("checkbox", { name: "Chọn Chi" })).not.toBeChecked();
+    expect(within(dialog).getByRole("checkbox", { name: "Chọn Dũng" })).toBeChecked();
+  });
+
+  it("đổi trưởng nhóm chỉ gửi thay đổi leader cùng version, không sửa thành viên", async () => {
+    const calls = backend(WITH_GROUPS);
+    render(<ClassGroupsPanel classId={CLASS} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Đổi trưởng nhóm Nhóm 1" }));
+    const dialog = await screen.findByRole("dialog", { name: "Đổi trưởng nhóm — Nhóm 1" });
+    expect(within(dialog).queryByRole("checkbox")).not.toBeInTheDocument();
+    fireEvent.change(within(dialog).getByLabelText(/Trưởng nhóm/), { target: { value: "b" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Lưu nhóm" }));
+    await waitFor(() => expect(calls.some(call => call.method === "PUT")).toBe(true));
+    expect(putBody(calls)).toMatchObject({ version: WITH_GROUPS.version,
+      groups: [{ id: "g1", leaderId: "b", memberIds: ["a", "b"] }] });
   });
 
   it("tên nhóm trùng hoặc chưa chọn ai thì không lưu được", async () => {

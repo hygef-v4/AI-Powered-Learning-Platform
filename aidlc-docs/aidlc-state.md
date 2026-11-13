@@ -787,3 +787,48 @@ Người dùng yêu cầu "tạo pr vào staging cho tôi". Cho phép commit/pus
 Tích hợp staging `1f713615`; giữ cả hai lịch sử audit/state. Fresh full frontend
 963 test/135 file, ESLint/TypeScript, Docker build và runtime smoke qua. Người dùng
 cho phép push/tạo PR vào staging; không tự merge PR. Xem PR GitHub để biết trạng thái CI.
+
+## Group controls and AI authoring — 2026-11-13
+
+- [x] User approved seven previously reviewed proposals with “giúp tôi sửa theo đề xuất $ponytail:ponytail”. Implemented multi-select student enrollment (200-row existing batch limit), filtered group-member selection, explicit leader-only action, Đề mẫu navigation, informative release confirmation, private image reference sources for AI generation/revision and document-native formatting.
+- [x] Full backend verify 2349 tests without failures/errors/skips; required integration guard and 57 traced cases pass. Final cap delta 107 academics/identity tests pass. Full frontend 1024 tests/148 files, final two enrollment cases, scoped lint, isolated typecheck and production build pass.
+- [x] Browser checks teacher/manager UI at local mobile viewport; no post-change data writes or paid AI call. Running backend still advertises old source types and needs reload. Original tsconfig restored after isolated build. Automatic review blocked deletion of stale generated type directory; no retry/deletion performed. No commit/push/deploy.
+
+Plan/evidence: construction/plans/code-generation-plan/2026-11-13-group-and-ai-authoring.md and construction/build-and-test/2026-11-13-group-and-ai-authoring.md. Existing security/resiliency scope retained; PBT disabled.
+
+## Kế hoạch đính kèm trong khung chat AI — 2026-11-13
+
+- [x] Đối chiếu AiReviseChat, sourceUploads, API signed FileRef, IArtifact và thư viện trích xuất hiện có; giữ nguyên WIP trước đó.
+- [x] Lập kế hoạch hai giai đoạn theo yêu cầu “giúp tôi lập plan trển khai”: menu ba nguồn, tệp mặc định tham khảo/DOCX đổi vai trò, paste ảnh, kéo thả và giữ nội dung khi gửi lỗi; sau đó nhập trang HTTPS công khai thành nguồn TXT riêng tư.
+- [ ] Triển khai giai đoạn 1 khi người dùng yêu cầu thực hiện.
+- [ ] Chứng minh đường kết nối URL chống SSRF/rebinding/redirect trước khi bật giai đoạn 2; chưa suy ra endpoint mạng được phép triển khai từ yêu cầu lập kế hoạch.
+
+Kế hoạch: construction/plans/code-generation-plan/2026-11-13-ai-chat-attachments.md. Chưa sửa source, chạy test mới, commit/push hoặc deploy. Không subagent. Giữ Security/Resiliency hiện hữu; phần mạng có review bổ sung, PBT vẫn tắt.
+
+
+## AI chat files — implemented 2026-11-13
+
+- [x] User approved phase 1 only and explicitly deferred links. Three-action menu, DOCX role switching, image paste, file drop, shared bounded/cancellable upload queue, visible cards and input/recovery safeguards implemented. Existing WIP retained; no new backend/API/dependency.
+- [x] Full frontend 1038 tests/150 files, full lint, isolated TypeScript and production build pass; original tsconfig/next config restored. Final verification ran sequentially with two workers after Windows virtual-memory exhaustion in a concurrent run. Manager UI validates DOCX/reference/template transitions and TXT drop; PNG thumbnail renders but running backend still uses old image policy. No model call or assignment edits; fixture attachments removed from composer.
+- [ ] Deferred by user: all URL/link work. Not required for this phase's completion.
+
+Plan/evidence: construction/plans/code-generation-plan/2026-11-13-ai-chat-attachments.md and construction/build-and-test/2026-11-13-ai-chat-files.md. Backend reload and page refresh needed for live image acceptance. Scoped blob-preview design false-positive exemption recorded; no global exemption. No commit/push/deploy, no subagents.
+
+### Runtime UI recheck — 2026-11-13
+
+- [x] User explicitly authorized restart. Existing backend terminal restarted through scripts/run-backend.bat; new local API and worker started on 8080. Old Docker worker stopped to prevent stale-code job execution.
+- [x] Fresh manager/teacher UI accepts PNG/JPEG as Sẵn sàng; manager DOCX role switching, text+image paste, file drop, size/type/count validation, retry/remove and close/reopen preservation pass. Previous running-backend image-policy limitation is resolved.
+- [x] Removed test attachments/text from composers and restored teacher route. No assignment text edits, model-provider request, commit/push/deploy. Browser-event paste/drop simulation; existing CSP style/SSE disconnect logs remain outside this check's scope.
+
+### Live AI check — 2026-11-13
+
+- [x] Explicit user authorization “Gọi ai thực tế đi”: two real PERSONAL/GEMINI gemini-3.5-flash-lite calls through teacher chat UI in a new QA draft. Image-only and TXT-only markers correctly read; apply and reload persistence pass.
+- [x] Follow-up yields one question, two five-point rubric criteria, VALID total ten points. Draft f0643cc5-f9a5-4947-8eea-5056564bffa8 remains unpublished for review; screenshot .tmp/ai-live-provider-result.png.
+- [ ] Content-quality finding: initial call omitted requested rubric and emitted Markdown; second call fixed rubric/markers but still omitted requested native bold. No source-code fix claimed; no further calls or commit/push/deploy.
+
+### Local commits and staging check — 2026-11-13
+
+- [x] User authorized local commits and integration check against staging. Recorded class enrollment/group controls and AI source/chat authoring as separate feature commits, with plans and verification in a documentation commit.
+- [x] Fresh precommit checks: 217 frontend tests/31 files and 131 targeted backend tests pass; diff whitespace check passes. No code changes since earlier lint/typecheck/build and live UI checks.
+- [x] Fetched origin/staging and merged into fix/u05-u09-u15: Already up to date; no conflicts or merge commit needed. Staging contains no commits missing from this branch.
+- [ ] Push/PR/deploy not requested in this interaction. Live AI rubric/formatting findings remain recorded; no claim they were fixed by committing.

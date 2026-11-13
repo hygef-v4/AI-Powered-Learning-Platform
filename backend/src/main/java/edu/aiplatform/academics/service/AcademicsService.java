@@ -174,9 +174,9 @@ public class AcademicsService {
             requireAudience(actor, "manager");
             requireClassAccess(actor, "manager", id);
             validateQuery(query);
-            return accountLookup.findStudents(query, 20).stream()
+            return accountLookup.findStudents(query, 200).stream()
                     .filter(a -> a.role() == Role.STUDENT && a.status() != AccountStatus.DISABLED)
-                    .limit(20).map(this::mapPerson).toList();
+                    .limit(200).map(this::mapPerson).toList();
         });
     }
 

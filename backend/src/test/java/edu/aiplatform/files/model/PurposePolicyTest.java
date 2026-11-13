@@ -27,7 +27,7 @@ class PurposePolicyTest {
         assertThat(policy.limits(ArtifactPurpose.DOCUMENT_IMAGE).maxSizeMb()).isEqualTo(5);
         assertThat(policy.limits(ArtifactPurpose.ASSIGNMENT_SOURCE).maxSizeMb()).isEqualTo(2);
         assertThat(policy.limits(ArtifactPurpose.ASSIGNMENT_SOURCE).allowedTypes())
-                .containsExactlyInAnyOrder(FileType.TXT, FileType.DOCX, FileType.PDF);
+                .containsExactlyInAnyOrder(FileType.TXT, FileType.DOCX, FileType.PDF, FileType.PNG, FileType.JPEG);
     }
 
     @Test

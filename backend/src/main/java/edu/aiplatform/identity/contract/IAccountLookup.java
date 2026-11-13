@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-/** Tra tài khoản cho U02, U04, U05, U14, U15; mỗi lần tìm tối đa 20 kết quả. */
+/** Tra tài khoản cho U02, U04, U05, U14, U15; tìm tài khoản tối đa 20 kết quả, ứng viên sinh viên tối đa 200 kết quả. */
 public interface IAccountLookup {
 
     /** U14: keyset page of ACTIVE Admins, ordered by UUID; maximum page size100. */

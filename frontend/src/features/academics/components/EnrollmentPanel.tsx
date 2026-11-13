@@ -1,10 +1,9 @@
 "use client";
 
-import { type CandidateLoader } from "../hooks/useCandidates";
+import { useCandidates, type CandidateLoader } from "../hooks/useCandidates";
 import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button, ClickableRow, Dialog, Icon, IconButton, PageNav, Pill, Section, Segmented, Select, TableFrame, Td, TextInput, Th, showToast } from "@/shared/ui";
-import { PersonPicker } from "./PersonPicker";
 import { formatDate, formatOperationError } from "../model/format";
 import { parseEnrollmentList, type EnrollmentPreviewRow } from "../model/enrollmentList";
 import { readEnrollmentWorkbook } from "../model/enrollmentWorkbook";
@@ -128,7 +127,7 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
       </TableFrame>
       <PageNav page={current} size={PAGE_SIZE} total={visible.length} onPage={setPage} />
     </section>
-    {adding && onEnroll && <AddStudentDialog candidates={candidates} loadCandidates={loadCandidates} onEnroll={onEnroll} onClose={() => setAdding(false)} />}
+    {adding && onEnroll && <AddStudentDialog candidates={candidates} students={students} loadCandidates={loadCandidates} onEnroll={onEnroll} onBatch={onBatch} onClose={() => setAdding(false)} />}
     <Dialog open={removing !== null} title="Gỡ sinh viên khỏi lớp?" onClose={() => setRemoving(null)} dismissible={!busy}
       footer={<Button variant="danger" disabled={busy} onClick={() => removing && void handleEnrollmentChange(removing, "REMOVED")} data-testid="enrollment-remove-confirm">Gỡ sinh viên</Button>}>
       <p>Bạn có chắc muốn gỡ {removing?.name} khỏi lớp không?</p>
@@ -137,20 +136,71 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
   </div>;
 }
 
-/** Popup Thêm sinh viên, cùng kiểu popup Thêm tài khoản: một ô chọn sinh viên và nút Thêm. */
-function AddStudentDialog({ candidates, loadCandidates, onEnroll, onClose }: { candidates: PersonView[]; loadCandidates?: CandidateLoader; onEnroll: (id: string) => Promise<void>; onClose: () => void }) {
-  const [selected, setSelected] = useState<PersonView | null>(null);
+/** Chọn nhiều người, dùng cùng batch enrollment và giữ các dòng thất bại để thử lại. */
+function AddStudentDialog({ candidates, students, loadCandidates, onEnroll, onBatch, onClose }: {
+  candidates: PersonView[]; students: EnrollmentView[]; loadCandidates?: CandidateLoader;
+  onEnroll: (id: string) => Promise<void>; onBatch?: (text: string) => Promise<EnrollmentRowResult[]>; onClose: () => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<PersonView[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [results, setResults] = useState<EnrollmentRowResult[]>([]);
+  const options = useCandidates(candidates, query, loadCandidates, 200);
+  const enrolled = new Set(students.filter(student => student.status === "ACTIVE").map(student => student.accountId));
+  const q = query.trim().toLocaleLowerCase("vi");
+  const rows = options.rows.filter(person => !enrolled.has(person.id) && `${person.name} ${person.email}`.toLocaleLowerCase("vi").includes(q));
+  const allSelected = rows.length > 0 && rows.every(person => selected.some(item => item.id === person.id));
+  const someSelected = rows.some(person => selected.some(item => item.id === person.id));
+  function toggleAll() {
+    setSelected(current => allSelected ? current.filter(person => !rows.some(row => row.id === person.id))
+      : [...current, ...rows.filter(person => !current.some(item => item.id === person.id))]);
+  }
   async function add() {
-    if (!selected || busy) return;
-    setBusy(true); setError("");
-    try { await onEnroll(selected.id); showToast("Đã thêm sinh viên"); onClose(); }
-    catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
+    if (!selected.length || busy) return;
+    setBusy(true); setError(""); setResults([]);
+    try {
+      if (onBatch) {
+        const next = await onBatch(selected.map(person => person.email).join("\n"));
+        const failed = next.filter(row => !OK_RESULTS.has(row.result));
+        const added = next.length - failed.length;
+        if (added) showToast(`Đã thêm ${added} sinh viên`);
+        if (!failed.length) { onClose(); return; }
+        setSelected(current => current.filter(person => failed.some(row => row.email.toLowerCase() === person.email.toLowerCase())));
+        setResults(failed);
+      } else {
+        for (const person of selected) {
+          await onEnroll(person.id);
+          setSelected(current => current.filter(item => item.id !== person.id));
+        }
+        showToast("Đã thêm sinh viên"); onClose();
+      }
+    } catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
   }
   return <Dialog open title="Thêm sinh viên" size="lg" onClose={onClose} dismissible={!busy}
-    footer={<Button variant="primary" disabled={busy || !selected} onClick={() => void add()} data-testid="enrollment-add-submit">Thêm</Button>}>
-    <PersonPicker label="Sinh viên" value={selected} onChange={(person) => { setSelected(person); setError(""); }} people={candidates} loader={loadCandidates} disabled={busy} />
+    footer={<Button variant="primary" disabled={busy || !selected.length || selected.length > 200} onClick={() => void add()} data-testid="enrollment-add-submit">Thêm {selected.length} sinh viên</Button>}>
+    <TextInput type="search" icon="search" aria-label="Tìm sinh viên" placeholder="Tìm tên hoặc email" value={query} disabled={busy} onChange={event => setQuery(event.target.value)} />
+    <label className="flex items-center gap-3 text-sm">
+      <input type="checkbox" className="size-4 accent-primary" checked={allSelected} disabled={busy || options.loading || !rows.length}
+        ref={node => { if (node) node.indeterminate = someSelected && !allSelected; }} onChange={toggleAll} />
+      Chọn tất cả kết quả lọc ({rows.length})
+      <span className="ml-auto text-xs text-muted">Đã chọn {selected.length}</span>
+    </label>
+    {options.loading && <p role="status">Đang tải sinh viên…</p>}
+    {options.error && <p role="alert" className="text-sm text-danger">{options.error}</p>}
+    <ul aria-label="Chọn sinh viên" className="max-h-72 overflow-y-auto rounded-lg border border-line">
+      {!options.loading && rows.map(person => <li key={person.id} className="border-b border-line last:border-0">
+        <label className="flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-shell">
+          <input type="checkbox" className="size-4 accent-primary" checked={selected.some(item => item.id === person.id)} disabled={busy}
+            onChange={event => setSelected(current => event.target.checked ? [...current, person] : current.filter(item => item.id !== person.id))} />
+          <span><span className="block text-sm font-semibold">{person.name}</span><span className="block text-xs text-muted">{person.email}</span></span>
+        </label>
+      </li>)}
+      {!options.loading && !options.error && !rows.length && <li className="p-4 text-sm text-muted">Không có sinh viên phù hợp.</li>}
+    </ul>
+    {options.rows.length >= 200 && <p className="text-xs text-muted">Hiển thị tối đa 200 kết quả. Tìm tên hoặc email để thu hẹp danh sách.</p>}
+    {selected.length > 200 && <p role="alert">Chọn tối đa 200 sinh viên mỗi lượt.</p>}
+    {results.length > 0 && <EnrollmentResultTable rows={results} />}
     {error && <p role="alert" className="text-sm text-danger">{error}</p>}
   </Dialog>;
 }

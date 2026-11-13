@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
-import { Icon, IconButton, cx, showErrorToast, type IconName } from "@/shared/ui";
+import { AiChatAttachments } from "./AiChatAttachments";
+import { useAiChatAttachments } from "../hooks/useAiChatAttachments";
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode, type ClipboardEvent, type DragEvent } from "react";
+import { Button, Dialog, Icon, IconButton, cx, showErrorToast, type IconName } from "@/shared/ui";
 import { assignmentsApi } from "../api";
 import { errorMessage, requestRef } from "../model/format";
 import type { AiDraft, Material } from "../model/types";
-import { readTemplateFile, useSourceUploads, type TemplateFile } from "./sourceUploads";
 
 const POLL_MS = 2000;
 const MAX_REQUEST = 4000;
@@ -26,24 +27,19 @@ type Message = {
   /** Mẫu đề và tài liệu tham khảo gửi kèm yêu cầu này. */
   template?: string;
   references?: string[];
+  recover?: () => void;
 };
 type TemplateOption = { assignmentId: string; title: string; subjectTemplate: boolean };
 /** Menu của nút "+": danh sách gốc, hoặc danh sách đề có sẵn / học liệu để chọn. */
 type AttachMenu = "root" | "templates" | "materials";
 
-/**
- * Trợ lý AI sửa đề đang có (yêu cầu 2026-11-09), là popup nổi ở góc phải dưới trang soạn, mở / đóng bằng một nút tròn chỉ
- * có biểu tượng (yêu cầu 2026-11-12). Máy chủ gửi AI toàn bộ đề và rubric đã lưu, AI trả bản đã sửa và trang ghi thẳng lên
- * đề; Ctrl+Z quay lại bản trước. Tệp gửi kèm thêm bằng nút "+" cạnh ô nhắn, menu chỉ có hai dòng: Mẫu đề (AI làm theo bố
- * cục; chỉ một mẫu, đã có thì dòng này khóa và ghi "Đã có mẫu đề") và Tài liệu tham khảo (AI lấy nội dung). Bấm một dòng thì
- * ra danh sách để chọn, dòng đầu của danh sách là tải tệp lên. Có tệp thì hiện một hàng thẻ nhỏ có tên ngay trên ô nhắn,
- * không ghi chữ đầu hàng: mẫu đề đứng đầu, rồi các tài liệu tham khảo, phân biệt bằng biểu tượng. Gửi xong thì bỏ các tệp.
- */
-export function AiReviseChat({ assignmentId, prepare, onApplied }: {
-  assignmentId: string;
-  /** Lưu mọi thay đổi đang chờ, trả version mới nhất; lỗi thì ném kèm lý do. */
-  prepare: () => Promise<number>;
-  onApplied: () => Promise<void>;
+/** Composer chỉ quản lý tệp của assignment hiện tại; đổi bài hủy các callback cũ. */
+export function AiReviseChat(props: { assignmentId: string; prepare: () => Promise<number>; onApplied: () => Promise<void> }) {
+  return <AiReviseChatPanel key={props.assignmentId} {...props} />;
+}
+
+function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
+  assignmentId: string; prepare: () => Promise<number>; onApplied: () => Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
   /** Đã mở lần nào chưa: lần đầu mở mới tải danh sách đề có sẵn, học liệu, giới hạn tệp. */
@@ -54,15 +50,17 @@ export function AiReviseChat({ assignmentId, prepare, onApplied }: {
   const [menu, setMenu] = useState<AttachMenu | null>(null);
   const [query, setQuery] = useState("");
   const [templates, setTemplates] = useState<TemplateOption[]>([]);
-  const [templateId, setTemplateId] = useState("");
-  const [template, setTemplate] = useState<TemplateFile | null>(null);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [chosen, setChosen] = useState<string[]>([]);
-  const sources = useSourceUploads(assignmentId, showErrorToast, opened);
+  const attachments = useAiChatAttachments(assignmentId, showErrorToast, opened);
+  const { sources, template, templateId } = attachments;
+  const [dragging, setDragging] = useState(false);
+  const dragDepth = useRef(0);
+  const submitting = useRef(false);
+  const pendingRequest = useRef<{ key: string; ref: string } | null>(null);
   const nextId = useRef(0);
   const alive = useRef(true);
   const list = useRef<HTMLDivElement>(null);
-  const templateInput = useRef<HTMLInputElement>(null);
   const referenceInput = useRef<HTMLInputElement>(null);
   const attach = useRef<HTMLDivElement>(null);
   const field = useRef<HTMLTextAreaElement>(null);
@@ -116,7 +114,9 @@ export function AiReviseChat({ assignmentId, prepare, onApplied }: {
 
   function toggle() {
     setOpened(true);
-    setOpen((value) => !value);
+    setOpen(value => !value);
+    dragDepth.current = 0;
+    setDragging(false);
     setMenu(null);
   }
 
@@ -129,89 +129,139 @@ export function AiReviseChat({ assignmentId, prepare, onApplied }: {
     setMessages((current) => [...current, { ...message, id: nextId.current++ }]);
   }
 
-  async function readTemplate(file: File) {
-    setTemplateId("");
-    setTemplate({ file, status: "READING" });
-    const read = await readTemplateFile(assignmentId, file);
-    if (alive.current) setTemplate((current) => (current?.file === file ? read : current));
-  }
-
-  const pickedTemplate = templates.find((item) => item.assignmentId === templateId);
-  const pickedMaterials = chosen.flatMap((id) => materials.filter((item) => item.materialId === id));
+  const pickedTemplate = templates.find(item => item.assignmentId === templateId);
+  const pickedMaterials = chosen.flatMap(id => materials.filter(item => item.materialId === id));
   const hasTemplate = Boolean(template || pickedTemplate);
   const hasReferences = pickedMaterials.length > 0 || sources.uploads.length > 0;
 
   async function send(event?: FormEvent) {
     event?.preventDefault();
     const text = input.trim();
-    if (!text || busy) return;
-    if (sources.pending || (template && template.status !== "READY")) {
-      showErrorToast("Hãy đợi tải xong hoặc gỡ các tệp bị lỗi trước khi gửi.");
-      return;
-    }
+    if (!text || submitting.current) return;
+    if (attachments.pending) { showErrorToast("Hãy đợi tải xong hoặc gỡ các tệp bị lỗi trước khi gửi."); return; }
+    const snapshot = attachments.snapshot();
+    const materialIds = [...chosen];
     const templateName = template ? template.file.name : pickedTemplate?.title;
-    const references = [...pickedMaterials.map((item) => item.title), ...sources.uploads.map((item) => item.file.name)];
-    const attachments = {
-      formatText: template?.text,
-      templateAssignmentId: template ? undefined : templateId || undefined,
-      materialIds: chosen,
-      sourceFileRefs: sources.fileRefs,
-    };
-    const attached = Boolean(templateName) || references.length > 0;
-    setInput("");
-    setMenu(null);
-    say({ role: "user", text, template: templateName, references });
+    const references = [...pickedMaterials.map(item => item.title), ...sources.uploads.map(item => item.file.name)];
+    const payload = { formatText: template?.text, templateAssignmentId: template ? undefined : templateId || undefined,
+      materialIds, sourceFileRefs: sources.fileRefs };
+    const key = JSON.stringify([text, payload]);
+    if (pendingRequest.current?.key !== key) pendingRequest.current = { key, ref: requestRef() };
+    const ref = pendingRequest.current.ref;
+    const recover = () => { setInput(text); attachments.restore(snapshot); setChosen(materialIds); };
+    submitting.current = true;
     setBusy(true);
+    setMenu(null);
     let draft: AiDraft | null = null;
+    let accepted = false;
+    let applied = false;
+    let applying = false;
     try {
       await prepare();
-      const requested = attached
-        ? await assignmentsApi.requestAiRevision(assignmentId, text, requestRef(), attachments)
-        : await assignmentsApi.requestAiRevision(assignmentId, text, requestRef());
-      // Máy chủ đã nhận tệp đính kèm: bỏ khỏi ô, yêu cầu sau không tự gửi lại.
-      setTemplate(null);
-      setTemplateId("");
+      if (!alive.current) return;
+      const requested = hasTemplate || hasReferences
+        ? await assignmentsApi.requestAiRevision(assignmentId, text, ref, payload)
+        : await assignmentsApi.requestAiRevision(assignmentId, text, ref);
+      if (!alive.current) return;
+      accepted = true;
+      pendingRequest.current = null;
+      say({ role: "user", text, template: templateName, references });
+      setInput("");
+      attachments.clear();
       setChosen([]);
-      sources.clear();
       draft = await waitForResult(assignmentId, requested, () => alive.current);
       if (!alive.current) return;
       if (draft.status !== "READY" || !draft.proposal) {
-        say({ role: "ai", text: `${draft.safeError ?? "AI không trả kết quả."} Đề chưa thay đổi.`, tone: "danger" });
+        say({ role: "ai", text: `${draft.safeError ?? "AI không trả kết quả."} Đề chưa thay đổi.`, tone: "danger", recover });
         return;
       }
       if (draft.proposal.unchanged) {
-        say({ role: "ai", text: "AI chưa thay đổi gì. Hãy nói rõ hơn, ví dụ: \"Thêm 10 câu hỏi về thiết kế cơ sở dữ liệu, mỗi câu 10 điểm\"." });
+        say({ role: "ai", text: "AI chưa thay đổi gì. Hãy nói rõ hơn yêu cầu sửa đề.", recover });
         void assignmentsApi.discardAiDraft(assignmentId, draft.draftId).catch(() => {});
         return;
       }
       const validation = draft.proposal.validation;
       if (validation?.status === "INVALID") {
-        say({ role: "ai", text: `Không áp dụng được: ${validation.issues.map((issue) => issue.message).join(" ")}`, tone: "danger" });
+        say({ role: "ai", text: `Không áp dụng được: ${validation.issues.map(issue => issue.message).join(" ")}`, tone: "danger", recover });
         void assignmentsApi.discardAiDraft(assignmentId, draft.draftId).catch(() => {});
         return;
       }
       const version = await prepare();
+      if (!alive.current) return;
+      applying = true;
       await assignmentsApi.applyAiDraft(assignmentId, draft.draftId, version, true, true);
+      applied = true;
       await onApplied();
-      const warnings = validation?.issues.filter((issue) => issue.severity === "WARNING") ?? [];
-      const shown = warnings.slice(0, MAX_WARNINGS).map((issue) => `Lưu ý: ${issue.message}`);
+      if (!alive.current) return;
+      const warnings = validation?.issues.filter(issue => issue.severity === "WARNING") ?? [];
+      const shown = warnings.slice(0, MAX_WARNINGS).map(issue => `Lưu ý: ${issue.message}`);
       if (warnings.length > MAX_WARNINGS) shown.push(`…và ${warnings.length - MAX_WARNINGS} lưu ý khác.`);
       say({ role: "ai", text: ["Đã sửa đề theo yêu cầu. Nhấn Ctrl+Z để quay lại bản trước.", ...shown].join("\n") });
     } catch (error) {
       if (!alive.current) return;
-      say({ role: "ai", text: `${errorMessage(error)} Đề chưa thay đổi.`, tone: "danger" });
-      if (draft?.status === "READY") void assignmentsApi.discardAiDraft(assignmentId, draft.draftId).catch(() => {});
+      say({ role: "ai", text: applied ? "Đề đã được cập nhật nhưng chưa tải lại được. Vui lòng tải lại trang."
+        : applying ? `${errorMessage(error)} Chưa xác nhận được kết quả áp dụng. Hãy tải lại đề để kiểm tra trước khi thử lại.`
+        : `${errorMessage(error)} ${accepted ? "Đề chưa thay đổi." : "Yêu cầu chưa được xác nhận; nội dung và tệp vẫn được giữ để thử lại."}`,
+        tone: "danger", recover: accepted && !applying ? recover : undefined });
+      if (!applying && draft?.status === "READY") void assignmentsApi.discardAiDraft(assignmentId, draft.draftId).catch(() => {});
     } finally {
+      submitting.current = false;
       if (alive.current) setBusy(false);
     }
   }
+
+  function addFiles(files: File[]) {
+    if (!busy && !attachments.processing) attachments.addFiles(files);
+  }
+
+  function pasteImages(event: ClipboardEvent<HTMLTextAreaElement>) {
+    const files = Array.from(event.clipboardData.items ?? []).filter(item => item.kind === "file")
+      .map(item => item.getAsFile()).filter((file): file is File => !!file && file.type.startsWith("image/"));
+    if (!files.length) return;
+    event.preventDefault();
+    if (busy) return;
+    if (attachments.processing) showErrorToast("Đợi chuyển vai trò tệp xong rồi dán ảnh.");
+    else addFiles(files);
+    const text = event.clipboardData.getData("text/plain");
+    if (text) {
+      const start = event.currentTarget.selectionStart;
+      const end = event.currentTarget.selectionEnd;
+      setInput(current => (current.slice(0, start) + text + current.slice(end)).slice(0, MAX_REQUEST));
+    }
+  }
+
+  function dragFiles(event: DragEvent<HTMLElement>, entering: boolean) {
+    if (!Array.from(event.dataTransfer.types).includes("Files")) return;
+    event.preventDefault();
+    if (busy || attachments.processing) return;
+    dragDepth.current = Math.max(0, dragDepth.current + (entering ? 1 : -1));
+    setDragging(dragDepth.current > 0);
+  }
+
+  function dropFiles(event: DragEvent<HTMLElement>) {
+    if (!Array.from(event.dataTransfer.types).includes("Files")) return;
+    event.preventDefault();
+    dragDepth.current = 0;
+    setDragging(false);
+    const items = Array.from(event.dataTransfer.items ?? []);
+    let hasDirectory = false;
+    const files = items.length ? items.flatMap(item => {
+      if (item.webkitGetAsEntry?.()?.isDirectory) { hasDirectory = true; return []; }
+      const file = item.kind === "file" ? item.getAsFile() : null;
+      return file ? [file] : [];
+    }) : Array.from(event.dataTransfer.files);
+    if (hasDirectory) showErrorToast("Chọn tệp cụ thể, không kéo thả thư mục.");
+    addFiles(files);
+  }
+
+  function closeChat() { setOpen(false); dragDepth.current = 0; setDragging(false); }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
       void send();
     }
-    if (event.key === "Escape") setOpen(false);
+    if (event.key === "Escape") closeChat();
   }
 
   const needle = query.trim().toLocaleLowerCase("vi");
@@ -223,13 +273,17 @@ export function AiReviseChat({ assignmentId, prepare, onApplied }: {
     <>
       {/* Popup giữ nguyên khi đóng (chỉ ẩn) để cuộc trò chuyện và lượt AI đang chạy không mất. */}
       <section id="ai-revise-panel" aria-label="Sửa đề bằng AI" data-testid="ai-revise-chat" hidden={!open}
+        onDragEnter={event => dragFiles(event, true)} onDragLeave={event => dragFiles(event, false)}
+        onDragOver={event => { if (Array.from(event.dataTransfer.types).includes("Files")) { event.preventDefault(); event.dataTransfer.dropEffect = busy ? "none" : "copy"; } }}
+        onDrop={dropFiles}
         className={cx("fixed right-4 bottom-20 z-40 w-[min(22rem,calc(100vw-2rem))] flex-col rounded-2xl border",
           "border-line bg-surface shadow-[var(--shadow-float)] h-[min(30rem,calc(100dvh-9.5rem))]",
           open && "flex animate-pop")}>
+        {dragging && <div role="status" className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center rounded-2xl border-2 border-dashed border-primary bg-surface/95 text-sm font-semibold text-primary-ink">Thả tệp để đính kèm</div>}
         <header className="flex shrink-0 items-center gap-2 border-b border-line py-2 pr-2 pl-3.5">
           <Icon name="smart_toy" size={17} className="text-primary" />
           <h2 className="flex-1 text-[13.5px] font-semibold text-ink">Sửa đề bằng AI</h2>
-          <IconButton icon="close" label="Đóng trợ lý AI" size={28} onClick={() => setOpen(false)} />
+          <IconButton icon="close" label="Đóng trợ lý AI" size={28} onClick={closeChat} />
         </header>
         <div ref={list} role="log" aria-live="polite" className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-3.5 py-3">
           {messages.map((message) => (
@@ -237,6 +291,8 @@ export function AiReviseChat({ assignmentId, prepare, onApplied }: {
               message.role === "user" ? "self-end bg-primary text-on-primary"
                 : message.tone === "danger" ? "self-start bg-danger-soft text-danger" : "self-start bg-sunken text-ink")}>
               <p className="whitespace-pre-line">{message.text}</p>
+              {message.recover && <button type="button" disabled={busy || !!input || hasTemplate || hasReferences}
+                onClick={message.recover} className="mt-1 text-[11px] font-semibold underline disabled:opacity-40">Khôi phục yêu cầu</button>}
               {(message.template || (message.references?.length ?? 0) > 0) && (
                 <ul className="mt-1.5 flex flex-col gap-0.5 border-t border-white/30 pt-1.5 text-[11px]" aria-label="Tệp gửi kèm">
                   {message.template && <li><b>Mẫu đề:</b> {message.template}</li>}
@@ -248,32 +304,11 @@ export function AiReviseChat({ assignmentId, prepare, onApplied }: {
           {busy && <p role="status" className="self-start rounded-lg bg-sunken px-2.5 py-1.5 text-xs text-muted">AI đang sửa đề…</p>}
         </div>
         <div className="flex shrink-0 flex-col gap-2 border-t border-line px-3 py-2.5">
-          {/* Một hàng thẻ nhỏ, chỉ hiện khi có tệp: mẫu đề đứng đầu, rồi tài liệu tham khảo; phân biệt bằng biểu tượng. */}
-          {(hasTemplate || hasReferences) && (
-            <ul aria-label="Tệp gửi kèm yêu cầu" data-testid="ai-revise-attachments" className="flex max-h-[3.25rem] flex-wrap gap-1 overflow-y-auto">
-              {template && (
-                <Chip kind="template" name={template.file.name} disabled={busy}
-                  state={template.status === "READING" ? "…" : undefined} error={template.status === "ERROR" ? template.error : undefined}
-                  onRetry={() => void readTemplate(template.file)} onRemove={() => setTemplate(null)} />
-              )}
-              {!template && pickedTemplate && (
-                <Chip kind="template" name={pickedTemplate.title} disabled={busy} onRemove={() => setTemplateId("")} />
-              )}
-              {pickedMaterials.map((item) => (
-                <Chip key={item.materialId} kind="reference" name={item.title} disabled={busy}
-                  onRemove={() => setChosen((current) => current.filter((id) => id !== item.materialId))} />
-              ))}
-              {sources.uploads.map((item) => (
-                <Chip key={item.id} kind="reference" name={item.file.name} disabled={busy}
-                  state={item.status === "UPLOADING" ? `${item.percent}%` : item.status === "READING" ? "…" : undefined}
-                  error={item.status === "ERROR" ? item.error : undefined}
-                  onRetry={() => sources.retry(item)} onRemove={() => sources.remove(item)} />
-              ))}
-            </ul>
-          )}
+          <AiChatAttachments attachments={attachments} templateName={template?.file.name ?? pickedTemplate?.title}
+            materials={pickedMaterials} disabled={busy} onUnchoose={id => setChosen(current => current.filter(value => value !== id))} />
           <form onSubmit={(event) => void send(event)} className="flex items-end gap-1.5">
             <div ref={attach} className="relative shrink-0">
-              <IconButton icon="add" label="Thêm mẫu đề hoặc tài liệu tham khảo" data-testid="ai-revise-attach" disabled={busy}
+              <IconButton icon="add" label="Thêm mẫu đề hoặc tài liệu tham khảo" data-testid="ai-revise-attach" disabled={busy || attachments.processing}
                 aria-haspopup="menu" aria-expanded={menu !== null} onClick={() => showMenu(menu ? null : "root")}
                 className="border border-line-strong" />
               {menu && (
@@ -282,10 +317,9 @@ export function AiReviseChat({ assignmentId, prepare, onApplied }: {
                   className="absolute bottom-full left-0 z-10 mb-1.5 flex max-h-52 w-52 animate-pop flex-col overflow-hidden rounded-xl border border-line bg-surface py-1 shadow-[var(--shadow-float)]">
                   {menu === "root" ? (
                     <>
-                      <MenuRow icon={TEMPLATE_ICON} disabled={hasTemplate} onClick={() => showMenu("templates")}>
-                        {hasTemplate ? "Đã có mẫu đề" : "Mẫu đề"}
-                      </MenuRow>
-                      <MenuRow icon={REFERENCE_ICON} onClick={() => showMenu("materials")}>Tài liệu tham khảo</MenuRow>
+                      <MenuRow icon={TEMPLATE_ICON} onClick={() => showMenu("templates")}>Chọn đề mẫu có sẵn</MenuRow>
+                      <MenuRow icon={REFERENCE_ICON} onClick={() => showMenu("materials")}>Chọn học liệu của môn</MenuRow>
+                      <MenuRow icon="upload_file" disabled={!sources.canUpload} onClick={() => { setMenu(null); referenceInput.current?.click(); }}>Tải từ máy</MenuRow>
                     </>
                   ) : (
                     <>
@@ -295,17 +329,11 @@ export function AiReviseChat({ assignmentId, prepare, onApplied }: {
                           aria-label={menu === "templates" ? "Tìm mẫu đề" : "Tìm tài liệu tham khảo"} placeholder="Tìm theo tên"
                           className="h-7 min-w-0 flex-1 bg-transparent text-xs text-ink outline-none placeholder:text-muted" />
                       </div>
-                      {/* Danh sách cuộn trong khung menu; dòng đầu là tải tệp lên. */}
+                      {/* Danh sách chỉ chứa nguồn có sẵn; tải từ máy nằm ở menu gốc. */}
                       <div className="flex min-h-0 flex-col overflow-y-auto">
-                        {menu === "templates" ? (
-                          <MenuRow icon="upload_file" onClick={() => { setMenu(null); templateInput.current?.click(); }}>Tải tệp lên</MenuRow>
-                        ) : (
-                          <MenuRow icon="upload_file" disabled={!sources.canUpload}
-                            onClick={() => { setMenu(null); referenceInput.current?.click(); }}>Tải tệp lên</MenuRow>
-                        )}
                         {menu === "templates" && templateChoices.map((item) => (
                           <MenuRow key={item.assignmentId} icon={TEMPLATE_ICON}
-                            onClick={() => { setTemplate(null); setTemplateId(item.assignmentId); setMenu(null); }}>{item.title}</MenuRow>
+                            onClick={() => { attachments.chooseExisting(item.assignmentId); setMenu(null); }}>{item.title}</MenuRow>
                         ))}
                         {menu === "materials" && materialChoices.map((item) => (
                           <MenuRow key={item.materialId} icon={REFERENCE_ICON}
@@ -321,23 +349,21 @@ export function AiReviseChat({ assignmentId, prepare, onApplied }: {
               )}
             </div>
             <textarea ref={field} aria-label="Yêu cầu sửa đề" data-testid="ai-revise-input" rows={1} maxLength={MAX_REQUEST}
-              value={input} disabled={busy} onChange={(event) => setInput(event.target.value)} onKeyDown={handleKeyDown}
+              value={input} disabled={busy} onPaste={pasteImages} onChange={(event) => setInput(event.target.value)} onKeyDown={handleKeyDown}
               placeholder="Ví dụ: dịch toàn bộ đề sang tiếng Anh"
               className="min-h-8 flex-1 resize-none rounded-lg border border-field bg-surface px-2.5 py-1.5 text-xs leading-4 text-ink outline-none focus:outline-2 focus:outline-focus disabled:opacity-60" />
             <IconButton type="submit" icon="arrow_forward" label="Gửi yêu cầu" data-testid="ai-revise-send"
-              disabled={busy || !input.trim()} className="bg-primary text-on-primary hover:bg-primary-strong hover:text-on-primary" />
+              disabled={busy || !input.trim() || attachments.pending} className="bg-primary text-on-primary hover:bg-primary-strong hover:text-on-primary" />
           </form>
-          <input ref={templateInput} type="file" accept=".docx" hidden aria-label="Tải mẫu đề lên" data-testid="ai-revise-template-file"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              event.target.value = "";
-              if (file) void readTemplate(file);
-            }} />
-          <input ref={referenceInput} type="file" multiple accept={sources.accept} hidden aria-label="Tải tài liệu tham khảo lên"
+          <input ref={referenceInput} type="file" multiple accept=".docx,.pdf,.txt,.png,.jpg,.jpeg" hidden aria-label="Tải tệp từ máy"
             data-testid="ai-revise-reference-file"
-            onChange={(event) => { sources.add(event.target.files); event.target.value = ""; }} />
+            onChange={event => { addFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} />
         </div>
       </section>
+      <Dialog open={attachments.replacement !== null} title="Thay mẫu đề?" onClose={attachments.cancelReplacement}
+        footer={<Button variant="primary" onClick={() => void attachments.confirmReplacement()}>Thay mẫu đề</Button>}>
+        <p>Mẫu mới sẽ thay mẫu đang chọn sau khi đọc thành công. Các tài liệu tham khảo khác được giữ nguyên.</p>
+      </Dialog>
       <button type="button" data-testid="ai-revise-toggle" aria-expanded={open} aria-controls="ai-revise-panel" onClick={toggle}
         aria-label={open ? "Đóng trợ lý AI" : "Sửa đề bằng AI"} title={open ? "Đóng trợ lý AI" : "Sửa đề bằng AI"}
         className={cx("fixed right-4 bottom-5 z-40 inline-flex size-12 items-center justify-center rounded-full bg-primary",
@@ -363,37 +389,6 @@ async function waitForResult(assignmentId: string, draft: AiDraft, alive: () => 
     current = await assignmentsApi.aiDraft(assignmentId, current.draftId);
   }
   return current;
-}
-
-/** Thẻ nhỏ của một tệp gửi kèm: biểu tượng nói loại (mẫu đề hay tài liệu tham khảo), tên, nút gỡ; lỗi thì viền đỏ, bấm tên để thử lại. */
-function Chip({ kind, name, state, error, disabled, onRemove, onRetry }: {
-  kind: "template" | "reference";
-  name: string;
-  state?: string;
-  error?: string;
-  disabled?: boolean;
-  onRemove: () => void;
-  onRetry?: () => void;
-}) {
-  const role = kind === "template" ? "Mẫu đề" : "Tài liệu tham khảo";
-  return (
-    <li title={error ? `${role}: ${name} (${error})` : `${role}: ${name}`}
-      className={cx("inline-flex h-[22px] max-w-full items-center gap-1 rounded-md border pr-0.5 pl-1.5 text-[11px]",
-        error ? "border-danger bg-danger-soft text-danger" : kind === "template" ? "border-primary bg-primary-soft text-primary-ink" : "border-line bg-sunken text-ink")}>
-      <Icon name={kind === "template" ? TEMPLATE_ICON : REFERENCE_ICON} size={12} className="shrink-0" />
-      <span className="sr-only">{role}: </span>
-      {error && onRetry ? (
-        <button type="button" aria-label={`Thử lại ${name}`} onClick={onRetry} className="max-w-[9rem] min-w-0 truncate underline">{name}</button>
-      ) : (
-        <span className="max-w-[9rem] min-w-0 truncate">{name}</span>
-      )}
-      {state && <span role="status" className="shrink-0 text-muted tabular-nums">{state}</span>}
-      <button type="button" aria-label={`Gỡ ${name}`} disabled={disabled} onClick={onRemove}
-        className="flex size-4 shrink-0 items-center justify-center rounded text-muted hover:text-danger disabled:opacity-50">
-        <Icon name="close" size={11} />
-      </button>
-    </li>
-  );
 }
 
 function MenuRow({ icon, disabled, onClick, children }: {

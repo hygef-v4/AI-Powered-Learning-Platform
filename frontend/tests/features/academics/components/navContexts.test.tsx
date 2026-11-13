@@ -22,7 +22,7 @@ describe("sidebar của môn", () => {
     expect(resolveSubjectContext(at("/teaching/classes"))).toBeNull();
 
     const subject = resolveSubjectContext(at("/manager/subjects/s-1"))!;
-    expect(labels(subject.items)).toEqual(["Thông tin môn", "Lớp học", "Học liệu", "Bài tập", "Ngân hàng câu hỏi"]);
+    expect(labels(subject.items)).toEqual(["Thông tin môn", "Lớp học", "Học liệu", "Đề mẫu", "Ngân hàng câu hỏi"]);
     expect(subject.items.map((item) => item.href)).toEqual([
       "/manager/subjects/s-1",
       "/manager/classes?subjectId=s-1",
@@ -137,7 +137,7 @@ describe("AppShell với cây môn, lớp trên sidebar", () => {
     fireEvent.click(toggle);
     expect(screen.getByRole("button", { name: "Thu gọn Môn được phân công" })).toHaveAttribute("aria-expanded", "true");
     fireEvent.click(await within(screen.getByRole("group", { name: "Các môn được phân công" })).findByRole("menuitemradio", { name: /Software Requirement/ }));
-    expect(within(screen.getByRole("group", { name: "Các môn được phân công" })).getByRole("link", { name: "Bài tập" })).toHaveAttribute("href", expect.stringContaining("s-1"));
+    expect(within(screen.getByRole("group", { name: "Các môn được phân công" })).getByRole("link", { name: "Đề mẫu" })).toHaveAttribute("href", expect.stringContaining("s-1"));
   });
 
   it("trang Môn được phân công hiện ô Chọn môn, chưa môn nào mở", async () => {

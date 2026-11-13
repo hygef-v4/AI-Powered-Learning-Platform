@@ -26,6 +26,8 @@ export type TemplateFile = { file: File; status: "READING" | "READY" | "ERROR"; 
 /** Đọc mẫu đề bằng bộ nhập DOCX; số câu hỏi là số mục ngoài cùng của mẫu. Không đọc được thì trả trạng thái lỗi. */
 export async function readTemplateFile(assignmentId: string, file: File): Promise<TemplateFile> {
   try {
+    if (!file.name.toLowerCase().endsWith(".docx")) throw new Error("Mẫu đề phải là DOCX.");
+    if (file.size < 1 || file.size > 20 * 1024 * 1024) throw new Error("Tệp DOCX phải có nội dung và tối đa 20 MB.");
     const preview = await assignmentsApi.importDocx(assignmentId, file);
     const { text, questionCount } = templateText(preview.document);
     if (!text.trim()) throw new Error("Mẫu đề không có nội dung đọc được.");
@@ -42,6 +44,7 @@ export async function readTemplateFile(assignmentId: string, file: File): Promis
 export function useSourceUploads(assignmentId: string, onError: (message: string) => void, enabled = true) {
   const [policy, setPolicy] = useState<PurposePolicy | null>(null);
   const [uploads, setUploads] = useState<SourceUpload[]>([]);
+  const current = useRef<SourceUpload[]>([]);
   const aborts = useRef(new Map<string, () => void>());
   const report = useRef(onError);
   useEffect(() => {
@@ -72,75 +75,94 @@ export function useSourceUploads(assignmentId: string, onError: (message: string
     };
   }, []);
 
-  function update(id: string, change: (item: SourceUpload) => SourceUpload) {
-    setUploads((files) => files.map((item) => (item.id === id ? change(item) : item)));
+  function commit(files: SourceUpload[]) {
+    current.current = files;
+    setUploads(files);
   }
 
-  async function upload(file: File, id: string = crypto.randomUUID()) {
-    if (!policy) {
-      report.current("Chưa tải được chính sách tệp nguồn.");
-      return;
+  function update(id: string, change: (item: SourceUpload) => SourceUpload) {
+    commit(current.current.map(item => item.id === id ? change(item) : item));
+  }
+
+  async function upload(file: File, id: string = crypto.randomUUID()): Promise<SourceUpload | undefined> {
+    if (!policy) { report.current("Chưa tải được chính sách tệp nguồn."); return; }
+    if (!current.current.some(item => item.id === id) && current.current.length >= MAX_SOURCE_FILES) {
+      report.current("Chỉ chọn tối đa 3 tệp nguồn."); return;
     }
-    const issue = checkFile(file, policy);
-    const start: SourceUpload = issue
-      ? { id, file, status: "ERROR", percent: 0, error: issue }
+    aborts.current.get(id)?.();
+    aborts.current.delete(id);
+    const issue = file.size < 1 ? "Tệp không có nội dung." : checkFile(file, policy);
+    const start: SourceUpload = issue ? { id, file, status: "ERROR", percent: 0, error: issue }
       : { id, file, status: "UPLOADING", percent: 0 };
-    setUploads((files) => (files.some((item) => item.id === id)
-      ? files.map((item) => (item.id === id ? start : item)) : [...files, start]));
-    if (issue) return;
-    const handle = uploadFile(file, "ASSIGNMENT_SOURCE", (percent) => update(id, (item) => ({ ...item, percent })));
+    commit(current.current.some(item => item.id === id)
+      ? current.current.map(item => item.id === id ? start : item) : [...current.current, start]);
+    if (issue) return start;
     const controller = new AbortController();
-    aborts.current.set(id, () => {
-      handle.abort();
-      controller.abort();
-    });
+    let stopUpload: (() => void) | undefined;
+    const abort = () => { controller.abort(); stopUpload?.(); };
+    aborts.current.set(id, abort);
+    const active = () => aborts.current.get(id) === abort && !controller.signal.aborted;
     try {
+      const handle = uploadFile(file, "ASSIGNMENT_SOURCE", percent => {
+        if (active()) update(id, item => ({ ...item, percent }));
+      });
+      stopUpload = handle.abort;
       const result = await handle.promise;
-      update(id, (item) => ({ ...item, status: "READING", percent: 100, fileRef: result.fileRef.value }));
+      if (!active()) return;
+      update(id, item => ({ ...item, status: "READING", percent: 100, fileRef: result.fileRef.value }));
       const previews = await assignmentsApi.previewAiSources(assignmentId, [result.fileRef.value], controller.signal);
+      if (!active()) return;
       if (!previews[0]) throw new Error("Không đọc được nội dung tệp.");
-      update(id, (item) => ({ ...item, status: "READY", preview: previews[0] }));
+      const ready: SourceUpload = { id, file, status: "READY", percent: 100, fileRef: result.fileRef.value, preview: previews[0] };
+      update(id, () => ready);
+      return ready;
     } catch (cause) {
-      update(id, (item) => ({
-        ...item,
-        status: "ERROR",
-        error: cause instanceof Error ? cause.message : "Tải tệp lên không thành công",
-      }));
+      if (!active()) return;
+      const failed: SourceUpload = { id, file, status: "ERROR", percent: 0,
+        error: cause instanceof Error ? cause.message : "Tải tệp lên không thành công" };
+      update(id, () => failed);
+      return failed;
     } finally {
-      aborts.current.delete(id);
+      if (aborts.current.get(id) === abort) aborts.current.delete(id);
     }
   }
 
   function add(files: FileList | File[] | null) {
     if (!files) return;
-    const remaining = MAX_SOURCE_FILES - uploads.length;
-    if (files.length > remaining) report.current("Chỉ chọn tối đa 3 tệp nguồn.");
-    Array.from(files).slice(0, Math.max(0, remaining)).forEach((file) => void upload(file));
+    const unique = [...new Set(Array.from(files))].filter(file => !current.current.some(item => item.file === file));
+    const remaining = MAX_SOURCE_FILES - current.current.length;
+    if (unique.length > remaining) report.current(`Chỉ chọn tối đa 3 tệp nguồn; ${unique.length - Math.max(remaining, 0)} tệp chưa được thêm.`);
+    unique.slice(0, Math.max(0, remaining)).forEach(file => void upload(file));
   }
 
   function remove(item: SourceUpload) {
     aborts.current.get(item.id)?.();
     aborts.current.delete(item.id);
-    setUploads((files) => files.filter((file) => file.id !== item.id));
+    commit(current.current.filter(file => file.id !== item.id));
   }
 
-  /** Dừng mọi lượt tải và bỏ hết tệp (đóng popup, hoặc đã gửi kèm yêu cầu). */
   function clear() {
-    aborts.current.forEach((abort) => abort());
+    aborts.current.forEach(abort => abort());
     aborts.current.clear();
-    setUploads([]);
+    commit([]);
+  }
+
+  function restore(files: SourceUpload[]) {
+    clear();
+    commit(files.filter(item => item.status === "READY").slice(0, MAX_SOURCE_FILES));
   }
 
   return {
     uploads,
     canUpload: !!policy && uploads.length < MAX_SOURCE_FILES,
     accept: policy ? acceptAttribute(policy) : undefined,
-    /** Còn tệp chưa sẵn sàng (đang tải, đang đọc hoặc lỗi). */
-    pending: uploads.some((item) => item.status !== "READY"),
-    fileRefs: uploads.flatMap((item) => (item.fileRef ? [item.fileRef] : [])),
+    pending: uploads.some(item => item.status !== "READY"),
+    fileRefs: uploads.flatMap(item => item.status === "READY" && item.fileRef ? [item.fileRef] : []),
     add,
+    addOne: (file: File) => upload(file),
     remove,
     retry: (item: SourceUpload) => void upload(item.file, item.id),
+    restore,
     clear,
   };
 }

@@ -27,7 +27,7 @@ public class PurposePolicy {
     static final Map<ArtifactPurpose, Set<FileType>> SUPPORTED = Map.of(
             ArtifactPurpose.MATERIAL, EnumSet.of(FileType.PDF, FileType.DOCX, FileType.PPTX, FileType.XLSX),
             ArtifactPurpose.DOCUMENT_IMAGE, EnumSet.of(FileType.PNG, FileType.JPEG),
-            ArtifactPurpose.ASSIGNMENT_SOURCE, EnumSet.of(FileType.TXT, FileType.DOCX, FileType.PDF),
+            ArtifactPurpose.ASSIGNMENT_SOURCE, EnumSet.of(FileType.TXT, FileType.DOCX, FileType.PDF, FileType.PNG, FileType.JPEG),
             ArtifactPurpose.ASSIGNMENT_IMPORT, EnumSet.of(FileType.PNG, FileType.JPEG, FileType.WEBP, FileType.PDF));
     static final Map<ArtifactPurpose, Set<Role>> UPLOADERS = Map.of(
             ArtifactPurpose.MATERIAL, EnumSet.of(Role.TEACHER, Role.SUBJECT_MANAGER),
