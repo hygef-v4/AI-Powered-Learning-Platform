@@ -13743,3 +13743,12 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 **Context**: User-authorized local integration; no source changes or subagents. Evidence .tmp/ai-authoring-precommit.log and .tmp/ai-authoring-backend-precommit.log. Existing full verification and live provider evidence retained.
 
 ---
+
+## Push branch and open staging PR
+**Timestamp**: 2026-11-13T07:37:47Z
+**Requested by:** Quang Hung
+**User Input**: "Giúo tôi push và tạo pr trc khi merge staging"
+**AI Response**: "Tiếp nhận yêu cầu push fix/u05-u09-u15 và tạo PR nhắm staging để review trước khi merge. Working tree sạch, fetch xác nhận staging không có commit mới cần nhập; remote feature branch vẫn ở base và chưa có PR mở. Dùng skill PR để mô tả scope, test và vấn đề rubric/formatting còn tồn tại. Đưa audit này vào commit tài liệu trước khi push; không tự merge, bật auto-merge hoặc deploy."
+**Context**: Explicit push/PR authorization only. Existing verified source commits unchanged; no new test run needed for audit-only delta. Final PR URL and status reported to user after GitHub confirmation.
+
+---
