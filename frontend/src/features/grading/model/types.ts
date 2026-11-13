@@ -1,4 +1,5 @@
 import type { SubmissionDocumentDto } from "./submissionDocument";
+import type { ContributionLevel } from "./contributionLevels";
 
 export type Decimal = string | number;
 export type GradeStatus = "PENDING" | "DRAFT" | "FINALIZED" | "PUBLISHED" | "SUPERSEDED";
@@ -65,6 +66,7 @@ export type Evaluation = {
   reviewedItemScores?: ItemScores;
   acknowledgedReviewItems?: Checks;
   memberOverride?: boolean;
+  contributionLevel?: ContributionLevel | null;
   adjustment: Decimal;
   adjustmentReason: string | null;
   feedback: string | null;
@@ -211,6 +213,8 @@ export type StudentGrade = {
   rubricItems?: StudentRubricItem[];
   rubricScore?: Decimal | null;
   memberOverride?: boolean;
+  contributionLevel?: ContributionLevel | null;
+  contributionReason?: string | null;
 };
 export const GRADE_STATUS_LABELS: Record<string, string> = {
   PENDING: "Chờ chấm",

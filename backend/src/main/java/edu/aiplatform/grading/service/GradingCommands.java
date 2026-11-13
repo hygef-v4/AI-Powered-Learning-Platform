@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.Nulls;
 import edu.aiplatform.ai.contract.AiProvider;
 import edu.aiplatform.ai.contract.AiSource;
 import edu.aiplatform.grading.model.GradingFeedback;
+import edu.aiplatform.grading.model.ContributionLevel;
 import edu.aiplatform.shared.error.ApiException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
@@ -88,7 +89,11 @@ public final class GradingCommands {
 
     public record MemberSave(
             @JsonProperty(required = true) @JsonSetter(nulls = Nulls.FAIL) @PositiveOrZero long version,
-            @NotNull @DecimalMin("0") BigDecimal score, @Size(max = 2000) String reason)
+            @NotNull @DecimalMin("0") BigDecimal score, @Size(max = 2000) String reason,
+            ContributionLevel contributionLevel)
             implements IStrictInput {
+        public MemberSave(long version, BigDecimal score, String reason) {
+            this(version, score, reason, null);
+        }
     }
 }

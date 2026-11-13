@@ -358,7 +358,10 @@ public class GradebookService {
                 evaluation.publishedAt != null && evaluation.gradedAt != null
                         && evaluation.gradedAt.isAfter(evaluation.publishedAt), evaluation.rubricChecks, summary,
                 List.copyOf(rubricItems), rubrics.isEmpty() ? evaluation.score : rubricScore,
-                evaluation.memberOverride);
+                evaluation.memberOverride,
+                evaluation.kind == EvaluationKind.MEMBER ? evaluation.contributionLevel : null,
+                evaluation.kind == EvaluationKind.MEMBER && evaluation.memberOverride
+                        ? evaluation.adjustmentReason : null);
     }
 
     /** Buckets one published score per active student, subject to student visibility. */

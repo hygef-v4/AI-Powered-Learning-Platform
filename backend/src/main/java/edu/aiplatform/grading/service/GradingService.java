@@ -287,10 +287,17 @@ public class GradingService {
         var groupRubricScore = RubricScoring.calculateScore(
                 GradingJson.readRubrics(objectMapper, root.rubricSnapshot),
                 GradingJson.readChecks(objectMapper, root.rubricChecks), root.rubricItemScores);
+        var previousLevel = member.contributionLevel;
         member.overrideMemberScore(input.score(), groupRubricScore, input.reason(), actor.accountId(),
                 clock.instant());
+        member.contributionLevel = input.contributionLevel();
         evaluationRepository.save(member);
-        recordAudit(actor, member, "GRADE_CHANGED", input.reason());
+        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "GRADE_CHANGED", "EVALUATION",
+                member.id.toString(), AuditResult.SUCCESS, input.reason(),
+                Map.of("classId", member.classId.toString(),
+                        "previousContributionLevel", previousLevel == null ? "UNASSESSED" : previousLevel.name(),
+                        "contributionLevel", member.contributionLevel == null
+                                ? "UNASSESSED" : member.contributionLevel.name()), clock.instant()));
         return member;
     }
 
