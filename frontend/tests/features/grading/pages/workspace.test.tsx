@@ -11,8 +11,10 @@ const mocks = vi.hoisted(() => ({
   requestProposal: vi.fn(),
   push: vi.fn(),
   loadTask: vi.fn(),
+  saveMemberGrade: vi.fn(),
   listSubmissions: vi.fn(),
 }));
+const originalScrollIntoView = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollIntoView");
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock("@/features/grading/api", () => ({ gradingApi: mocks }));
 const detail: Detail = {
@@ -57,7 +59,80 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
+  if (originalScrollIntoView) Object.defineProperty(HTMLElement.prototype, "scrollIntoView", originalScrollIntoView);
+  else Reflect.deleteProperty(HTMLElement.prototype, "scrollIntoView");
   vi.useRealTimers();
+});
+
+function mockGroupWorkspace(wide = true) {
+  vi.stubGlobal("matchMedia", () => ({ matches: wide, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
+  const group: Detail = {
+    ...detail,
+    evaluation: { ...detail.evaluation, kind: "GROUP_DOCUMENT", groupDocumentId: "doc", accountId: null, score: 8 },
+    document: { blocks: [
+      { id: "p", type: "HEADING", origin: "TEACHER", content: { style: "H1", text: "Class Diagram" } },
+      { id: "answer", type: "PARAGRAPH", origin: "STUDENT", content: { runs: [{ text: "Bài làm sơ đồ lớp" }] } },
+      { id: "q", type: "HEADING", origin: "TEACHER", content: { style: "H1", text: "Sequence Diagram" } },
+    ] },
+    members: ["s1", "s2"].map((accountId) => ({ ...detail.evaluation, id: `member-${accountId}`, kind: "MEMBER", accountId, score: 8 })),
+    memberActivities: ["s1", "s2"].map((accountId, index) => ({ student: { accountId, name: index ? "Bình" : "An", email: `${accountId}@school.test` }, activity: null, state: "NO_DATA" })),
+    sectionAuthors: [{ partId: "p", accountId: "s1" }, { partId: "q", accountId: "s2" }],
+  };
+  mocks.loadEvaluation.mockResolvedValue(group);
+  return group;
+}
+
+it("grades a member beside the paper and opens the right person from a section", async () => {
+  mockGroupWorkspace();
+  const scrollIntoView = vi.fn();
+  Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { value: scrollIntoView, configurable: true });
+  const showPart = vi.fn();
+  window.addEventListener("document:show-part", showPart);
+  render(<GradingWorkspacePage evaluationId="e" />);
+  expect(await screen.findByRole("tab", { name: "Rubric nhóm" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Đánh giá Bình" }));
+  expect(screen.getByRole("combobox", { name: "Thành viên" })).toHaveValue("s2");
+  expect(screen.getByRole("tab", { name: "Thành viên" })).toHaveAttribute("aria-selected", "true");
+  expect(screen.getByTestId("document-side-panel")).toContainElement(screen.getByLabelText("Điểm cá nhân"));
+  fireEvent.change(screen.getByLabelText(/Căn cứ đánh giá/), { target: { value: "Đã vấn đáp Bình" } });
+  fireEvent.click(screen.getByRole("button", { name: "Xem phần Sequence Diagram" }));
+  expect(showPart).toHaveBeenCalled();
+  await waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
+  fireEvent.click(screen.getByRole("tab", { name: "Rubric nhóm" }));
+  fireEvent.click(screen.getByRole("tab", { name: "Thành viên" }));
+  expect(screen.getByLabelText(/Căn cứ đánh giá/)).toHaveValue("Đã vấn đáp Bình");
+  const leaving = new Event("beforeunload", { cancelable: true });
+  window.dispatchEvent(leaving);
+  expect(leaving.defaultPrevented).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Công bố điểm" }));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Bài sau" }));
+  expect(await screen.findByRole("dialog")).toHaveTextContent("Bạn có thay đổi chưa lưu");
+  expect(mocks.push).not.toHaveBeenCalled();
+  window.removeEventListener("document:show-part", showPart);
+});
+
+it("keeps a mobile member draft after closing and reopening the modeless drawer", async () => {
+  mockGroupWorkspace(false);
+  render(<GradingWorkspacePage evaluationId="e" />);
+  fireEvent.click(await screen.findByRole("button", { name: "Điểm thành viên" }));
+  fireEvent.change(screen.getByLabelText(/Căn cứ đánh giá/), { target: { value: "Ghi chú trên mobile" } });
+  fireEvent.keyDown(screen.getByRole("region", { name: "Chấm bài nhóm" }), { key: "Escape" });
+  expect(screen.queryByRole("region", { name: "Chấm bài nhóm" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Điểm thành viên" }));
+  expect(screen.getByLabelText(/Căn cứ đánh giá/)).toHaveValue("Ghi chú trên mobile");
+});
+
+it("keeps every recorded author on a shared section and only lists their known parts", async () => {
+  const group = mockGroupWorkspace();
+  group.sectionAuthors.push({ partId: "p", accountId: "s2" });
+  render(<GradingWorkspacePage evaluationId="e" />);
+  expect(await screen.findByText("Người thực hiện: An, Bình")).toBeInTheDocument();
+  fireEvent.click(within(screen.getByTestId("block-p").closest("section")!)
+    .getByRole("button", { name: "Đánh giá Bình" }));
+  expect(screen.getByRole("button", { name: "Xem phần Class Diagram" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Xem phần Sequence Diagram" })).toBeInTheDocument();
 });
 /** Đề xuất AI mở bằng nút trên thanh công cụ của tài liệu. */
 function openAi() {
@@ -207,7 +282,7 @@ describe("workspace save", () => {
     expect(button).toHaveTextContent("Chấm bằng AI");
     expect(button).toHaveClass("h-9!", "px-3!", "text-sm!");
   });
-  it("shows the section author beside the heading and jumps to member grades", async () => {
+  it("shows the section author beside the heading and focuses the member grading drawer", async () => {
     mocks.loadEvaluation.mockResolvedValue({
       ...detail,
       evaluation: { ...detail.evaluation, kind: "GROUP_DOCUMENT", accountId: null },
@@ -225,7 +300,9 @@ describe("workspace save", () => {
     const section = await screen.findByTestId("block-part");
     expect(within(section).getByText("Người thực hiện: Nguyễn An")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Điểm thành viên" }));
-    expect(screen.getByRole("region", { name: "Điểm thành viên" })).toHaveFocus();
+    expect(screen.getByRole("region", { name: "Chấm bài nhóm" })).toHaveFocus();
+    expect(screen.getByRole("region", { name: "Chấm bài nhóm" }))
+      .toContainElement(screen.getByRole("region", { name: "Điểm thành viên" }));
   });
 
   it("opens the matching group submission when AI grading is clicked from a member grade", async () => {

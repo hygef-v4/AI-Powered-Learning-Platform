@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   DocumentEditor,
   RubricNote,
@@ -21,6 +21,7 @@ import { ActivityReview } from "../components/GradingReviewPanels";
 import { AiProposalPanel, buildAiRequest } from "../components/AiProposalPanel";
 import { BatchActionDialog } from "../components/BatchActionDialog";
 import { MemberContributionPanel } from "../components/MemberContributionPanel";
+import { GroupGradingPanel } from "../components/GroupGradingPanel";
 import { buildGradebookHref } from "../components/ClassProgressSection";
 import {
   GradingHeaderSection,
@@ -73,7 +74,12 @@ function Workspace({
   status,
   late,
 }: { initial: Detail; refresh: () => Promise<Detail>; proposalId?: string } & NavigationFilters) {
-  const workspace = useGradingWorkspace(initial, refresh, { status, late });
+  const [membersDirty, setMembersDirty] = useState(false);
+  const [groupMode, setGroupMode] = useState<"rubric" | "members">("rubric");
+  const [groupPanelOpen, setGroupPanelOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<string | null>(null);
+  const [memberPart, setMemberPart] = useState<string | null>(null);
+  const workspace = useGradingWorkspace(initial, refresh, { status, late }, membersDirty);
   const {
     detail,
     evaluation,
@@ -135,6 +141,10 @@ function Workspace({
 
   const handlePublish = async () => {
     if (busy || saving || disabled) return;
+    if (membersDirty) {
+      showErrorToast("Bạn có đánh giá thành viên chưa lưu. Hãy lưu điểm thành viên trước khi công bố.");
+      return;
+    }
     if (dirty) {
       const saved = await save(false);
       if (!saved) return;
@@ -278,7 +288,8 @@ function Workspace({
       ),
     })),
   ];
-  const activeHeading = detail.rubrics.find((rubric) => rubric.rubricId === activePart)?.partId ?? null;
+  const activeHeading = evaluation.kind === "GROUP_DOCUMENT" && groupMode === "members"
+    ? memberPart : detail.rubrics.find((rubric) => rubric.rubricId === activePart)?.partId ?? null;
   const saveText = saving ? "Đang lưu…" : busy ? "Đang xử lý…" : dirty ? "Chưa lưu" : `Đã lưu ${formatPoints(evaluation.score, evaluation.maxScore)}`;
   const isGroupSubmission = evaluation.kind === "GROUP_DOCUMENT";
   const assignmentKind = isGroupSubmission ? "Nhóm" : "Cá nhân";
@@ -290,13 +301,37 @@ function Workspace({
     (detail.memberActivities ?? []).map(({ student }) => [student.accountId, student.name]),
   );
   const sectionBylines: Record<string, string> = {};
+  const sectionActions: Record<string, ReactNode> = {};
+  const memberSections: Record<string, { partId: string; title: string }[]> = {};
   const unanchoredAuthors = new Set<string>();
+  function openMember(accountId?: string) {
+    if (accountId) { setSelectedMember(accountId); setMemberPart(null); }
+    setGroupMode("members");
+    setGroupPanelOpen(true);
+  }
   if (isGroupSubmission) {
     const headings = new Set(paper.blocks.filter((block) => block.type === "HEADING").map((block) => block.id));
+    const authors = new Map<string, Set<string>>();
     for (const { partId, accountId } of detail.sectionAuthors ?? []) {
       const name = memberNames[accountId] ?? "Thành viên";
-      if (headings.has(partId)) sectionBylines[partId] = `Người thực hiện: ${name}`;
-      else unanchoredAuthors.add(name);
+      if (headings.has(partId)) {
+        const accounts = authors.get(partId) ?? new Set<string>();
+        accounts.add(accountId);
+        authors.set(partId, accounts);
+        const parts = memberSections[accountId] ?? [];
+        if (!parts.some(part => part.partId === partId)) parts.push({ partId, title: partTitles[partId] ?? "Phần bài làm" });
+        memberSections[accountId] = parts;
+      } else unanchoredAuthors.add(name);
+    }
+    for (const [partId, accounts] of authors) {
+      sectionBylines[partId] = `Người thực hiện: ${[...accounts].map(id => memberNames[id] ?? "Thành viên").join(", ")}`;
+      sectionActions[partId] = <div className="flex max-w-40 flex-wrap justify-end gap-1">
+        {[...accounts].filter(accountId => detail.members.some(member => member.accountId === accountId)).map(accountId => (
+          <Button key={accountId} size="sm" variant="ghost" className="max-w-full" onClick={() => openMember(accountId)}>
+            <span className="truncate">Đánh giá {memberNames[accountId] ?? "thành viên"}</span>
+          </Button>
+        ))}
+      </div>;
     }
   }
 
@@ -366,7 +401,23 @@ function Workspace({
           />
         }
         sectionBylines={sectionBylines}
+        sectionActions={sectionActions}
         comments={comments}
+        sidePanel={isGroupSubmission ? (
+          <GroupGradingPanel mode={groupMode} onModeChange={(mode) => { setGroupMode(mode); setMemberPart(null); }}
+            open={groupPanelOpen} onClose={() => setGroupPanelOpen(false)}
+            selectionKey={selectedMember}
+            rubric={comments.map(comment => <div key={comment.key}>{comment.content}</div>)}>
+            <MemberContributionPanel key={evaluation.submissionHash} root={evaluation}
+              editable={detail.editable !== false && detail.current} members={detail.members} names={memberNames}
+              selectedAccountId={selectedMember} onSelectMember={(accountId) => { setSelectedMember(accountId); setMemberPart(null); }}
+              sections={memberSections} onShowPart={(partId) => {
+                setMemberPart(partId);
+                setGroupPanelOpen(false);
+                window.dispatchEvent(new CustomEvent("document:show-part", { detail: { headingId: partId } }));
+              }} onDirtyChange={setMembersDirty} onSaved={() => void reload()} />
+          </GroupGradingPanel>
+        ) : undefined}
         activeComment={activePart}
         highlightBlockId={activeHeading}
         viewSlot={viewSlot}
@@ -400,19 +451,19 @@ function Workspace({
           // Ba nút cách nhau rõ, không dính vào nhau.
           <div className="ml-2 flex items-center gap-2">
             {isGroupSubmission && detail.members.length > 0 && (
+              <>
+              <ToolbarButton icon="description" title="Rubric nhóm" aria-label="Rubric nhóm" className="xl:hidden"
+                onClick={() => { setGroupMode("rubric"); setMemberPart(null); setGroupPanelOpen(true); }} />
               <ToolbarButton
                 icon="groups"
                 title="Điểm thành viên"
                 aria-label="Điểm thành viên"
                 aria-controls="group-member-grades"
-                onClick={() => {
-                  const panel = document.getElementById("group-member-grades");
-                  panel?.focus({ preventScroll: true });
-                  panel?.scrollIntoView?.({ block: "start" });
-                }}
+                onClick={() => openMember()}
               >
                 <span className="hidden xl:inline">Điểm thành viên</span>
               </ToolbarButton>
+              </>
             )}
             <ToolbarButton
               icon="history"
@@ -439,11 +490,6 @@ function Workspace({
         }
       />
 
-      {isGroupSubmission && (
-        <div className="mt-6 flex flex-col gap-4">
-          <MemberContributionPanel root={evaluation} editable={detail.editable !== false && detail.current} members={detail.members} names={memberNames} onSaved={() => void reload()} />
-        </div>
-      )}
       <div className={detail.activityState === "DISABLED" ? "hidden" : "mt-6"}>
         <ActivityReview detail={detail} />
       </div>
