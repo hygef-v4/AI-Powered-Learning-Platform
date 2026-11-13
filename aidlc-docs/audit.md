@@ -13752,3 +13752,32 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 **Context**: Explicit push/PR authorization only. Existing verified source commits unchanged; no new test run needed for audit-only delta. Final PR URL and status reported to user after GitHub confirmation.
 
 ---
+
+## Diagnose student assignment missing from class list
+**Timestamp**: 2026-11-13T14:15:45Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] check lỗi này"
+**AI Response**: "Đối chiếu ảnh thông báo mở được bài nhóm nhưng ba tab danh sách trống. Dùng diagnosing-bugs, dựng probe qua StudentAssignmentsPage thật: cùng một API row OPEN thì hiện, CLOSED chưa nộp thì mất khỏi cả ba tab. Chạy hai case có một pass và một fail đúng triệu chứng. Backend vẫn cho list/detail CLOSED; frontend không có tab chứa bài này và nhãn GROUP chưa nộp vẫn là Chưa làm. Hạn nộp trong ảnh có vẻ 00:00 13/11, phù hợp kịch bản đã đóng nhưng chưa xác minh record production. Đã hỏi link đầy đủ; chưa sửa sản phẩm, commit/push/deploy."
+**Context**: Diagnosis only; screenshot attachment 498cbab8-3e4f-4047-8749-b53022decaab/orca-paste-1794579083053-adf08895-257f-4433-8940-6e13035f1aff.png. Probe/log retained under ignored .tmp, failing test removed from discovered suite. Evidence 2026-11-13-student-assignment-visibility.md. No subagents or production writes.
+
+---
+
+## Fix closed unsubmitted assignment visibility
+**Timestamp**: 2026-11-13T14:20:22Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa lỗi đấy $ponytail:ponytail"
+**AI Response**: "Tiếp tục theo phạm vi sửa đã đề xuất và Ponytail full. Thêm tab Đã đóng cho bài đã đóng/chưa nộp, dùng chung trạng thái Hết hạn ở danh sách và trang chi tiết. Giữ nguyên điều kiện bài cần làm của tổng quan lớp, bài đã nộp, quyền và lịch nộp. Viết regression RED trước khi sửa; không tự commit/push/deploy."
+**Context**: User also supplied ponytail SKILL.md content/path; applying the supplied rules. Plan 2026-11-13-student-assignment-visibility.md. Existing diagnosis WIP retained; no subagents.
+
+**Result**: Fixed two frontend source files: shared closed/unsubmitted predicate/label and list closed tab with URL state, focus return, empty state and no actionable countdown. Nine new tests failed before source changes; all 40 affected tests and 1047 frontend tests/150 files now pass. Full lint and isolated TypeScript pass. Normal typecheck still fails on previously known stale generated Next routes; no cache deletion or product config change. An initial external check config could not resolve type libraries; corrected its location, verified successfully and removed it. Current U08 documentation, evidence and plan updated. No source/API/schedule changes in backend, no browser or deployed-record verification, no repeated production build, no commit/push/deploy.
+
+---
+
+## Commit and open staging PR for assignment visibility
+**Timestamp**: 2026-11-13T14:42:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit và tạo pr lên staging"
+**AI Response**: "Kiểm tra đúng chín file sửa/tài liệu, fetch origin xác nhận nhánh hiện tại trùng base staging và chưa có PR mở. Chạy lại test assignmentwork trước commit; đưa phần sửa bài đóng/chưa nộp, regression và tài liệu vào một commit rõ nguyên nhân. Push fix/u05-u09-u15 và tạo PR nhắm staging bằng GitHub CLI do connector trước đó bị từ chối quyền ghi. Mô tả PR nêu full frontend 1047 test đã qua, lint/typecheck riêng, giới hạn cache Next cũ và chưa xác minh record production. Không merge hoặc deploy trong yêu cầu này."
+**Context**: Explicit commit/push/PR authorization for the completed visibility repair; supplied Ponytail remains active, PR skill applied. No product source changes in this delivery step. Final PR URL/status to be verified and reported to user.
+
+---

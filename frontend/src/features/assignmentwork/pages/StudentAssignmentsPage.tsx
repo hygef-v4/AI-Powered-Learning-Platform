@@ -25,15 +25,16 @@ import { formatTimeUntil } from "@/shared/dateTime";
 import { errorMessage, formatDateTime } from "../model/format";
 import { studentAssignmentResults } from "../slots";
 import type { StudentRow } from "../model/types";
-import { doing, rowStatus, upcoming, useStudentAssignments } from "../hooks/useStudentAssignments";
+import { doing, isClosedUnsubmitted, rowStatus, upcoming, useStudentAssignments } from "../hooks/useStudentAssignments";
 
-type Tab = "upcoming" | "doing" | "submitted";
+type Tab = "upcoming" | "doing" | "submitted" | "closed";
 
 const PAGE_SIZE = 20;
 const TABS: { value: Tab; label: string }[] = [
   { value: "upcoming", label: "Chưa làm" },
   { value: "doing", label: "Đang làm" },
   { value: "submitted", label: "Đã nộp" },
+  { value: "closed", label: "Đã đóng" },
 ];
 
 type Kind = "INDIVIDUAL" | "GROUP" | "PRACTICE";
@@ -62,7 +63,7 @@ function detailHref(row: StudentRow, general: boolean) {
 
 /**
  * #38 Student Assignments (F1, UC 37): bài của các lớp đang học (hoặc một lớp khi mở từ sidebar của lớp, `?classId=`), cùng bố
- * cục bảng Lớp học: một thẻ có tab Chưa làm / Đang làm / Đã nộp, ô lọc loại bài (Cá nhân / Nhóm / Luyện tập) và ô tìm theo tên bài; bảng tiêu đề tô nền,
+ * cục bảng Lớp học: một thẻ có tab Chưa làm / Đang làm / Đã nộp / Đã đóng, ô lọc loại bài (Cá nhân / Nhóm / Luyện tập) và ô tìm theo tên bài; bảng tiêu đề tô nền,
  * bấm dòng để mở bài. Các tab cùng độ rộng cột, hiện lớp và môn học; riêng Đã nộp có thêm Điểm. Bài đang làm
  * (kể cả bài nhóm nhóm đang làm) có nhãn Đang làm màu vàng; bài nhóm hiện trạng thái theo tiến độ của nhóm;
  * điểm do U09 gắn.
@@ -73,7 +74,7 @@ export function StudentAssignmentsPage() {
   const classId = params.get("classId") ?? undefined;
   // Quay về từ một bài (`focus`): mở tab đang chứa bài đó theo dữ liệu mới tải; bấm tab thì theo lựa chọn.
   const focus = params.get("focus");
-  const [chosenTab, setTab] = useUrlState<Tab | "">("tab", "", ["", "upcoming", "doing", "submitted"]);
+  const [chosenTab, setTab] = useUrlState<Tab | "">("tab", "", ["", "upcoming", "doing", "submitted", "closed"]);
   // `?mode=GROUP` (link Bài nhóm trên trang Nhóm của tôi) mở sẵn ô lọc loại bài.
   const [mode, setMode] = useUrlState<string>("mode", "", ["", "INDIVIDUAL", "GROUP", "PRACTICE"], "replace");
   const [query, setQuery] = useUrlState<string>("q", "", undefined, "replace");
@@ -87,9 +88,11 @@ export function StudentAssignmentsPage() {
     .sort((a, b) => a.code.localeCompare(b.code, "vi"));
   const rows = allRows && classFilter ? allRows.filter((row) => row.classId === classFilter) : allRows;
 
-  const inTab = (row: StudentRow, key: Tab) =>
+  const inTab = (row: StudentRow, key: Tab) => {
     // Mỗi bài một tab: đang làm (kể cả sửa để nộp lại) thì chỉ ở Đang làm, không ở Đã nộp.
-    key === "upcoming" ? upcoming(row) && !doing(row) : key === "doing" ? doing(row) : !doing(row) && (row.submittedCount > 0 || !!row.group?.submitted);
+    if (key === "closed") return isClosedUnsubmitted(row);
+    return key === "upcoming" ? upcoming(row) && !doing(row) : key === "doing" ? doing(row) : !doing(row) && (row.submittedCount > 0 || !!row.group?.submitted);
+  };
   const focused = focus ? rows?.find((row) => row.assignmentId === focus) : undefined;
   const tab: Tab = chosenTab || TABS.find((item) => focused && inTab(focused, item.value))?.value || "upcoming";
   const q = query.toLocaleLowerCase("vi").trim();
@@ -155,7 +158,7 @@ export function StudentAssignmentsPage() {
                 <Td label="Loại" className="whitespace-nowrap">{KIND_LABELS[kindOf(row)]}</Td>
                 <Td label="Hạn nộp" className="whitespace-nowrap">
                   <span className="font-mono text-xs text-muted">{formatDateTime(row.closesAt)}</span>
-                  {tab !== "submitted" && <DueIn closesAt={row.closesAt} />}
+                  {(tab === "upcoming" || tab === "doing") && <DueIn closesAt={row.closesAt} />}
                 </Td>
                 <Td label="Trạng thái"><Pill tone={rowStatus(row).tone}>{rowStatus(row).label}</Pill></Td>
                 {tab === "submitted" && (
@@ -168,7 +171,7 @@ export function StudentAssignmentsPage() {
             ))}
             {loading && !rows && <TableSkeletonRows columns={columnCount} label="Đang tải bài tập…" />}
             {rows && shown.length === 0 && (
-              <tr><Td colSpan={columnCount} className="py-10 text-center! text-muted">{tab === "upcoming" ? "Không còn bài chưa làm." : tab === "doing" ? "Không có bài đang làm." : "Chưa nộp bài nào."}</Td></tr>
+              <tr><Td colSpan={columnCount} className="py-10 text-center! text-muted">{tab === "upcoming" ? "Không còn bài chưa làm." : tab === "doing" ? "Không có bài đang làm." : tab === "closed" ? "Không có bài đã đóng chưa nộp." : "Chưa nộp bài nào."}</Td></tr>
             )}
           </tbody>
         </TableFrame>

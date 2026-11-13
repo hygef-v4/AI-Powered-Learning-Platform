@@ -832,3 +832,19 @@ Plan/evidence: construction/plans/code-generation-plan/2026-11-13-ai-chat-attach
 - [x] Fresh precommit checks: 217 frontend tests/31 files and 131 targeted backend tests pass; diff whitespace check passes. No code changes since earlier lint/typecheck/build and live UI checks.
 - [x] Fetched origin/staging and merged into fix/u05-u09-u15: Already up to date; no conflicts or merge commit needed. Staging contains no commits missing from this branch.
 - [ ] Push/PR/deploy not requested in this interaction. Live AI rubric/formatting findings remain recorded; no claim they were fixed by committing.
+
+## Student assignment visibility diagnosis — 2026-11-13
+
+- [x] User requested checking a screenshot: notification opens group assessment, class assignment tabs show zero items. Reproduced via actual StudentAssignmentsPage with a mocked API row: OPEN visible, CLOSED/unsubmitted missing from every tab (one passing control, one failing symptom).
+- [x] Located frontend tab partition gap and misleading closed-group status label. Backend list/detail intentionally include CLOSED rows; deadline scanner can close previously published work. Diagnostic failing harness moved out of the discovered test tree.
+- [ ] Await full deployed assignment link to verify that record's status/class; not claiming the screenshot's production root cause is conclusively verified.
+- [ ] Product fix not requested/applied in this diagnosis turn. Proposed discoverable closed/unsubmitted category plus matching labels; preserve actionable class-summary predicates and authorization.
+
+Evidence: construction/build-and-test/2026-11-13-student-assignment-visibility.md. Only diagnosis documents changed; no commit/push/deploy.
+
+### Approved visibility repair — 2026-11-13
+
+- [x] User authorized the proposed repair with Ponytail. Added Đã đóng tab for CLOSED/MISSED rows without an individual/group submission, with existing Hết hạn label shared by list and detail. Closed submitted rows remain in Đã nộp; actionable todo predicates, API, schedules and permissions unchanged.
+- [x] RED: nine new regression failures, seven passing controls before source edits. GREEN: 40 affected tests and full frontend 1047 tests/150 files; full ESLint and isolated TypeScript pass. URL focus/filter/pagination and closed submitted group histories covered.
+- [x] Current U08 frontend doc and evidence updated. Normal typecheck still fails on old generated Next routes; no cache deletion or permanent config change, temporary check config removed.
+- [ ] Deploy-record confirmation and browser acceptance not performed; no link provided. No backend change or new build/backend tests required for this frontend classification delta. No commit/push/deploy.
