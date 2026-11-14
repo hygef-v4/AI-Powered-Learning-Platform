@@ -57,3 +57,13 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 Best/last scores respect each submitted attempt's visibility snapshot; simultaneous submission timestamps use attempt number to identify the latest attempt. Subject quiz attempt counts are consistent across enrolled classes. Starting a new attempt rechecks OPEN after the identity lock; active operations require an OPEN class. Historical own results retain their existing access policy.
 
 Question lineage selection prefers ACTIVE over RETIRED versions. Quiz score columns widen to numeric(10,2) in a new migration. Activity batches enforce 1–50 events and IDs of at most 64 characters. ActivitySummary adds optional firstEventAt alongside lastEventAt; U11 flags gaps before the first event and after the last event as SIGNAL_LOST without changing the score or declaring cheating. Existing constructors remain compatible.
+
+## Mã số sinh viên (MSSV) — 2026-11-13
+
+Nguồn: [yêu cầu SC-10](../../../inception/requirements/2026-11-13-student-code.md). MSSV do U01 quản lý (BR-U01-100…115).
+
+| Mã | Rule | Nguồn |
+|---|---|---|
+| BR-U11-42 | Danh sách lượt làm quiz phía giảng viên (`TeacherQuizAttemptService`) trả thêm `studentCode` của từng sinh viên. Trường này có thể rỗng nếu sinh viên chưa có MSSV. Bảng hiện cột "MSSV" ngay trước cột họ tên. Phạm vi quyền xem giữ nguyên. | SC-10 |
+
+**Giao diện**: `TeacherQuizSections` thêm cột MSSV. Ở màn hẹp, MSSV hiện thành dòng phụ dưới tên.

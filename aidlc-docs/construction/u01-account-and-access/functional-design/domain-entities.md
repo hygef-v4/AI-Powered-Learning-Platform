@@ -214,3 +214,59 @@ Không có API ảnh đại diện. Cột avatar cũ nếu đã tồn tại có 
 
 - Tạo/import không gửi OTP, activation hợp lệ/sai/hết hạn/rate limit; recovery không lộ account.
 - Đăng nhập/đăng xuất/phiên revoked; R1 own profile; Admin bị chặn học vụ; Student shared quota bị từ chối.
+
+## 15. Mã số sinh viên (MSSV) — 2026-11-13
+
+Nguồn: [BR-U01-100…115](business-rules.md#11-mã-số-sinh-viên-mssv--2026-11-13).
+
+### Thuộc tính mới của `Account`
+
+| Thuộc tính | Ý nghĩa | Ràng buộc |
+|---|---|---|
+| `studentCode` | Mã số sinh viên do trường cấp | Có thể trống. Khi có giá trị thì phải đúng `^[A-Z]{2}[0-9]{6}$` sau chuẩn hóa, duy nhất trong toàn hệ thống, và chỉ thuộc tài khoản role `STUDENT`. Chỉ đổi được theo BR-U01-105 |
+
+Migration `identity` mới thêm vào database:
+
+- Cột `student_code varchar(8)`, cho phép trống.
+- Unique index `ux_accounts_student_code`, chỉ áp dụng khi cột có giá trị.
+- Check `ck_accounts_student_code_format`: `student_code ~ '^[A-Z]{2}[0-9]{6}$'`.
+- Check `ck_accounts_student_code_role`: `role = 'STUDENT' or student_code is null`. Check này luôn đúng vì không đổi được role vào hoặc ra khỏi `STUDENT` (BR-U01-107).
+
+Dữ liệu có sẵn không bị đổi; mọi tài khoản hiện có bắt đầu với `student_code` trống.
+
+### `StudentCodePolicy`
+
+Lớp chính sách thuần, viết theo mẫu của `ProfilePolicy`, gồm 3 hàm:
+
+- `normalize(raw)`: cắt khoảng trắng và đổi sang in hoa. Chuỗi rỗng thì trả `null`.
+- `isValid(code)`: kiểm định dạng theo BR-U01-100.
+- `looksLikeStudentCode(raw)`: U05 dùng hàm này để nhận biết một dòng là MSSV.
+
+### `StudentCodeAssignmentResult` (F16): đã bỏ (2026-11-14)
+
+Không có luồng gán MSSV hàng loạt nên không có kiểu kết quả này.
+
+### Thay đổi ở `AccountImportResult` (F10)
+
+`ImportRowResult` có thêm trường `studentCode`. Trường `reason` có thêm các mã lỗi `MISSING_STUDENT_CODE`, `INVALID_STUDENT_CODE`, `STUDENT_CODE_NOT_ALLOWED`, `DUPLICATE_STUDENT_CODE_IN_FILE`, `STUDENT_CODE_EXISTS`.
+
+### Thay đổi contract
+
+| Contract | Thay đổi |
+|---|---|
+| `AccountContact` | Thêm trường `studentCode`, có thể rỗng. Các trường cũ giữ nguyên |
+| `IAccountLookup.findStudents`, `findAccounts` | `query` khớp thêm MSSV |
+| `IAccountLookup.findByStudentCodes(codes)` | Hàm mới, cho U05 dùng. Chỉ trả tài khoản role `STUDENT`. Nhận các mã đã chuẩn hóa và trả `AccountContact` của những mã tìm thấy; mã không tìm thấy thì bỏ qua. Cài đặt mặc định trên interface trả danh sách rỗng |
+| `getContacts`, `getContact`, `lockContact` | Trả thêm `studentCode`, vẫn chỉ chạy một truy vấn |
+
+### Thay đổi API
+
+| API | Thay đổi |
+|---|---|
+| `GET /api/v1/me/profile` | Trả thêm `studentCode` ở dạng chỉ đọc. `PATCH` không nhận trường này |
+| `GET /api/v1/admin/accounts` | Mỗi dòng có thêm `studentCode`. Tham số `q` khớp thêm MSSV |
+| `POST /api/v1/admin/accounts` | Thêm trường `studentCode`: bắt buộc khi role là `STUDENT`, không được gửi với role khác |
+| `GET /api/v1/admin/accounts/{id}` | Trả thêm `studentCode` và `studentCodeEditable`. `studentCodeEditable` là `true` khi tài khoản là `STUDENT` và đang `PENDING` |
+| `PATCH /api/v1/admin/accounts/{id}` | Thêm trường `studentCode` tùy chọn, xử lý theo BR-U01-105 |
+| `PUT /api/v1/admin/accounts/{id}/role` | Không có trường mới. Trả lỗi `STUDENT_ROLE_CHANGE_NOT_ALLOWED` khi role hiện tại hoặc role mới là `STUDENT` (BR-U01-107) |
+| `POST /api/v1/admin/accounts/imports:validate`, `imports:commit` | Nhận thêm cột `student_code` (BR-U01-108) |

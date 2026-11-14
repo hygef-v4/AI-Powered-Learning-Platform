@@ -13752,3 +13752,281 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 **Context**: Explicit push/PR authorization only. Existing verified source commits unchanged; no new test run needed for audit-only delta. Final PR URL and status reported to user after GitHub confirmation.
 
 ---
+
+## Requirements Analysis — đề xuất mã số sinh viên
+**Timestamp**: 2026-11-13T14:57:34Z
+**Requested by:** Hải Nam
+**User Input**: "tôi muốn thêm trường mã số sinh viên cho roll student. Hãy đề xuất phương hướng sửa các chức năng liên quan cho tôi, có cần thêm bớt chức năng gì không"
+**AI Response**: "Rà U01 identity (accounts, AccountImportService, AccountAdminService, ProfileService, AccountRepository search, AccountContact/IAccountLookup) và các nơi dùng thông tin sinh viên (U04 ghi danh theo danh sách/ứng viên, U09 bảng điểm và xuất XLSX/CSV, U12 nhóm, chấm bài, lượt làm quiz). Đưa đề xuất phạm vi: cột student_code nullable + unique, bắt buộc với STUDENT khi tạo/nhập, Admin sửa được còn sinh viên chỉ xem, thêm vào AccountContact và các DTO Person, tìm kiếm và ghi danh theo mã, cột mã trong bảng điểm/export; kèm các câu hỏi cần người dùng chốt. Chưa sửa mã nguồn."
+**Context**: Requirements Analysis (chưa duyệt). Chỉ đề xuất, chưa tạo tài liệu yêu cầu hay sửa mã. Không lấy được tên hiển thị GitHub (máy không có gh CLI).
+
+---
+
+## Requirements Analysis — trả lời câu hỏi mã số sinh viên
+**Timestamp**: 2026-11-13T15:04:23Z
+**Requested by:** Hải Nam
+**User Input**: "1. Định dạng MSSV: ví dụ 6–20 ký tự chữ và số. Định dạng này cố định trong code hay cho Admin cấu hình được? - 2 chữ cái ở đầu và 6 số ở sau, chữ cái thành in hoa
+2. Tài khoản cũ: mình đề xuất bắt buộc với tài khoản mới, còn tài khoản cũ được để trống cho đến khi cập nhật hàng loạt xong. - theo đề xuất 
+3. Ai được sửa MSSV sau khi tạo: mình đề xuất chỉ Admin được sửa, và có ghi audit. - theo đề xuất
+4. Khi tài khoản đổi khỏi role STUDENT: mình đề xuất xóa MSSV. - theo đề xuất
+5. Phạm vi: làm đủ cả 3 chức năng ở mục 3, hay chỉ làm chức năng cập nhật hàng loạt trước? - đủ cả 3
+
+tôi đã trả lời các câu hỏi, câu trả lời nằm ở sau câu hỏi ngăn cách bằng dấu -"
+**AI Response**: "Ghi nhận 5 quyết định: định dạng cố định ^[A-Z]{2}[0-9]{6}$ (tự đổi chữ in hoa); bắt buộc với tài khoản STUDENT mới, tài khoản cũ để trống tới khi cập nhật hàng loạt; chỉ Admin sửa, có audit; rời role STUDENT thì xóa mã; làm đủ cập nhật hàng loạt, ghi danh theo MSSV, lọc STUDENT chưa có mã. Tạo tệp câu hỏi xác nhận và tài liệu yêu cầu SC-01…10, ghi rõ các giả định còn lại để người dùng duyệt."
+**Context**: Requirements Analysis (Standard). Security/Resiliency giữ phạm vi đã duyệt, PBT tắt.
+
+---
+
+## Requirements Analysis — xin duyệt yêu cầu mã số sinh viên
+**Timestamp**: 2026-11-13T15:12:00Z
+**Requested by:** Hải Nam
+**User Input**: "(Không có input mới — AI trình tài liệu để duyệt)"
+**AI Response**: "Tạo aidlc-docs/inception/requirements/2026-11-13-student-code-questions.md và 2026-11-13-student-code.md (SC-01…10, NFR-SC-01…07, giả định G1–G4), cập nhật aidlc-state.md. Trình người dùng duyệt; bước kế tiếp là Workflow Planning, User Stories dự kiến bỏ qua."
+**Context**: Requirements Analysis — approval prompt.
+
+---
+
+## Requirements Analysis — đổi giả định G1, xác nhận tên người yêu cầu
+**Timestamp**: 2026-11-13T15:13:04Z
+**Requested by:** Hải Nam
+**User Input**: "phần G1 tôi muốn cho phép sinh viên thấy được mã số sinh viên của bản thân và của người khác. Bạn có thể để tên tôi là Hải Nam trong audit log."
+**AI Response**: "Thay giả định G1 bằng SC-11: sinh viên thấy MSSV của mình và của sinh viên khác trên các màn vốn đã hiện người đó (thành viên lớp, nhóm của tôi, đề xuất nhóm/lời mời/tìm bạn để mời), tìm bạn để mời theo MSSV; sửa NFR-SC-03 tương ứng. Đổi dòng Requested by của 3 mục audit trong phiên này từ Unknown sang Hải Nam theo xác nhận của người dùng; các mục lịch sử khác giữ nguyên. Trình lại tài liệu để duyệt."
+**Context**: Requirements Analysis — thay đổi yêu cầu theo review, chờ duyệt lại.
+
+---
+
+## Requirements Analysis — người dùng duyệt
+**Timestamp**: 2026-11-13T15:14:41Z
+**Requested by:** Hải Nam
+**User Input**: "Duyệt, tiếp tục"
+**AI Response**: "Ghi nhận duyệt yêu cầu SC-01…11 và giả định G2–G4; bỏ qua User Stories. Sửa nhãn unit trong tài liệu cho đúng danh mục (ghi danh là U05, lượt làm quiz là U11). Chuyển sang Workflow Planning."
+**Context**: Requirements Analysis hoàn tất; bắt đầu Workflow Planning.
+
+---
+
+## Workflow Planning — xin duyệt kế hoạch mã số sinh viên
+**Timestamp**: 2026-11-13T15:16:00Z
+**Requested by:** Hải Nam
+**User Input**: "(Không có input mới — AI trình kế hoạch để duyệt)"
+**AI Response**: "Tạo aidlc-docs/inception/plans/2026-11-13-student-code-execution-plan.md: rủi ro Trung bình; chạy Functional Design U01 kèm U05/U09/U11/U12, Code Generation, Build and Test; bỏ qua Application Design, Units Generation, NFR Requirements, NFR Design, Infrastructure Design. Code trên nhánh fix/student-code. Hỏi: Ready to proceed with this plan?"
+**Context**: Workflow Planning — approval prompt.
+
+---
+
+## Workflow Planning — người dùng hỏi thu hẹp phạm vi
+**Timestamp**: 2026-11-13T15:20:00Z
+**Requested by:** Hải Nam
+**User Input**: "có những chức năng nào thiên về quản lý sinh viên mới được thêm vào trong plan không? Tôi muốn bỏ các chức năng quá scope chính của hệ thống, ví dụ như đổi mã sinh viên"
+**AI Response**: "Liệt kê các chức năng thiên về quản lý hồ sơ sinh viên trong SC-01…11: Admin sửa/đổi MSSV (SC-02/03), kết quả CHANGED và hoán đổi mã trong cập nhật hàng loạt (SC-07) — bỏ theo yêu cầu; các mục cân nhắc: bộ lọc sinh viên chưa có MSSV (SC-08), ghi danh bằng MSSV (SC-09), tìm bạn mời nhóm theo MSSV (SC-11). Hỏi người dùng chọn mục bỏ và cách xử lý nhập sai mã."
+**Context**: Workflow Planning — thay đổi phạm vi, chưa sửa tài liệu.
+
+---
+
+## Workflow Planning — người dùng chọn thu hẹp phạm vi
+**Timestamp**: 2026-11-13T15:25:00Z
+**Requested by:** Hải Nam
+**User Input**: "Nhập sai mã: Sửa khi chưa kích hoạt (Recommended). Bỏ thêm: Lọc 'chưa có MSSV'"
+**AI Response**: "Sửa yêu cầu: SC-03 bỏ chức năng đổi MSSV, Admin chỉ gán mã cho tài khoản chưa có mã hoặc sửa khi tài khoản còn PENDING, ngoài ra trả STUDENT_CODE_LOCKED; SC-07 thành gán mã hàng loạt, bỏ CHANGED và hoán đổi mã, thêm lỗi STUDENT_CODE_ALREADY_SET; SC-08 bỏ bộ lọc chưa có MSSV, giữ tìm theo MSSV và cột. Giữ ghi danh bằng MSSV và tìm bạn mời nhóm theo MSSV. Cập nhật execution plan, tệp câu hỏi (Q6, Q7), aidlc-state. Trình lại kế hoạch để duyệt."
+**Context**: Workflow Planning — thu hẹp phạm vi, chờ duyệt lại.
+
+---
+
+## Workflow Planning — người dùng duyệt
+**Timestamp**: 2026-11-13T15:27:22Z
+**Requested by:** Hải Nam
+**AI Prompt**: "Ready to proceed with this plan?"
+**User Input**: "Duyệt, tiếp tục"
+**AI Response**: "Ghi nhận duyệt execution plan đã thu hẹp. Bắt đầu Functional Design U01 kèm U05/U09/U11/U12: tạo kế hoạch functional design có câu hỏi."
+**Context**: Workflow Planning hoàn tất (Approved); bắt đầu Functional Design.
+
+---
+
+## Functional Design U01 — kế hoạch và câu hỏi
+**Timestamp**: 2026-11-13T15:29:00Z
+**Requested by:** Hải Nam
+**User Input**: "(Không có input mới — AI trình câu hỏi functional design)"
+**AI Response**: "Tạo aidlc-docs/construction/plans/functional-design-plan/2026-11-13-u01-student-code-functional-design-plan.md: 9 bước (U01 entities/rules/logic/frontend, delta U05/U09/U11/U12, kiểm Security/Resiliency) và 8 câu hỏi (ràng buộc DB, API gán/sửa mã, tài khoản DISABLED, vị trí màn gán hàng loạt, ghi danh trộn email/MSSV, cách hiển thị, tìm bạn mời nhóm, thứ tự lỗi gán hàng loạt). Chờ người dùng trả lời."
+**Context**: Functional Design — Step 3/4, chờ trả lời.
+
+---
+
+## Functional Design U01 — trả lời câu hỏi
+**Timestamp**: 2026-11-13T15:31:19Z
+**Requested by:** Hải Nam
+**User Input**: "A cho cả 8 câu"
+**AI Response**: "Ghi [Answer]: A cho Q1–Q8 trong kế hoạch functional design. Không có câu trả lời mơ hồ, không cần câu hỏi bổ sung. Bắt đầu viết artifact functional design U01 và delta U05/U09/U11/U12."
+**Context**: Functional Design — Step 5 xong, sang Step 6.
+
+---
+
+## Functional Design U01 — xin duyệt
+**Timestamp**: 2026-11-13T15:36:17Z
+**Requested by:** Hải Nam
+**User Input**: "(Không có input mới — AI trình functional design để duyệt)"
+**AI Response**: "Viết functional design MSSV: U01 BR-U01-100…115, domain-entities mục 15, business-logic-model mục 8 (bổ sung F7/F9/F10/F11/F14, luồng mới F16), frontend-components mục 6; delta U05 BR-U05-56…60, U09 BR-U09-73…75, U11 BR-U11-42, U12 BR-U12-97…98 kèm trỏ frontend-components. Đánh dấu 9/9 bước kế hoạch, ghi tuân thủ Security/Resiliency (PBT N/A). Trình người dùng duyệt; bước tiếp theo Code Generation."
+**Context**: Functional Design — Step 7, chờ duyệt.
+
+---
+
+## Functional Design U01 — đổi cách xử lý MSSV khi rời role STUDENT
+**Timestamp**: 2026-11-13T15:48:13Z
+**Requested by:** Hải Nam
+**User Input**: "về việc đổi role student, thay vì xóa mã sinh viên đi thì vẫn giữ nguyên chỉ không hiện có được không"
+**AI Response**: "Được. Đổi SC-04/BR-U01-107: rời STUDENT thì giữ mã trong database nhưng ẩn ở mọi nơi (API, tìm kiếm, tra cứu ghi danh chỉ thấy mã của tài khoản STUDENT); mã vẫn được giữ chỗ, không ai khác dùng được; quay lại STUDENT thì mã cũ tự hiện lại, không cần nhập. Bỏ check role ở database. Cập nhật yêu cầu, execution plan, câu hỏi Q4 và functional design U01, trình duyệt lại."
+**Context**: Functional Design — thay đổi theo review, chờ duyệt lại.
+
+---
+
+## Functional Design U01 — xin duyệt lại sau khi đổi xử lý role
+**Timestamp**: 2026-11-13T15:50:26Z
+**Requested by:** Hải Nam
+**User Input**: "(Không có input mới — AI trình lại functional design)"
+**AI Response**: "Cập nhật SC-01, SC-04, NFR-SC-04, Q4 (X: giữ mã ẩn), execution plan; U01 BR-U01-102, 107, 115 sửa, thêm BR-U01-116 (mã ẩn), domain-entities bỏ check role, thêm hasHiddenStudentCode ở GET chi tiết, F11 và popup đổi vai trò theo cách mới; ghi chú thay đổi và SECURITY-11 trong kế hoạch functional design. Trình duyệt lại."
+**Context**: Functional Design — chờ duyệt lại.
+
+---
+
+## Functional Design U01 — bỏ đổi role liên quan STUDENT
+**Timestamp**: 2026-11-13T15:50:59Z
+**Requested by:** Hải Nam
+**User Input**: "tôi đã quyết định là không có chức năng đổi role từ student và đổi khác thành student nữa"
+**AI Response**: "Ghi nhận: chặn mọi đổi role từ STUDENT sang role khác và từ role khác sang STUDENT (lỗi STUDENT_ROLE_CHANGE_NOT_ALLOWED). Bỏ cơ chế mã ẩn (BR-U01-116) vì không còn cần; khôi phục check role ở database. Cập nhật SC-04, NFR-SC-04, Q4, execution plan, BR-U01-102/107/115, domain-entities, F11, popup Đổi vai trò; trình duyệt lại."
+**Context**: Functional Design — thay đổi theo review.
+
+---
+
+## Functional Design U01 — xin duyệt lại sau khi bỏ đổi role liên quan STUDENT
+**Timestamp**: 2026-11-13T15:52:19Z
+**Requested by:** Hải Nam
+**User Input**: "(Không có input mới — AI trình lại functional design)"
+**AI Response**: "Đã cập nhật SC-01, SC-04, NFR-SC-04, Q4, execution plan; BR-U01-102 (giữ check role ở DB), BR-U01-107 (chặn STUDENT_ROLE_CHANGE_NOT_ALLOWED), BR-U01-115, bỏ BR-U01-116; domain-entities, F11, popup Đổi vai trò, ghi chú và SECURITY-11 trong kế hoạch. Trình duyệt lại; nêu hệ quả tài khoản tạo nhầm role không sửa được."
+**Context**: Functional Design — chờ duyệt lại.
+
+---
+
+## Functional Design U01 — người dùng duyệt
+**Timestamp**: 2026-11-13T15:53:39Z
+**Requested by:** Hải Nam
+**User Input**: "Duyệt, tiếp tục"
+**AI Response**: "Ghi nhận duyệt functional design MSSV (BR-U01-100…115, BR-U05-56…60, BR-U09-73…75, BR-U11-42, BR-U12-97…98). Bắt đầu Code Generation Part 1: lập kế hoạch."
+**Context**: Functional Design hoàn tất; sang Code Generation.
+
+---
+
+## Code Generation U01 — xin duyệt kế hoạch
+**Timestamp**: 2026-11-13T15:55:06Z
+**Requested by:** Hải Nam
+**User Input**: "(Không có input mới — AI trình kế hoạch code generation)"
+**AI Response**: "Tạo aidlc-docs/construction/plans/code-generation-plan/2026-11-13-u01-student-code-code-generation-plan.md: 20 bước (migration, model/policy, repository, contract, admin service, import, F16, profile, controller; U05/U09/U11/U12; frontend types/admin/profile/các màn; test; tóm tắt; kiểm nhanh). Hỏi duyệt kế hoạch."
+**Context**: Code Generation Part 1 — approval prompt.
+
+---
+
+## Code Generation U01 — người dùng duyệt kế hoạch
+**Timestamp**: 2026-11-13T15:56:03Z
+**Requested by:** Hải Nam
+**User Input**: "Duyệt, bắt đầu code"
+**AI Response**: "Ghi nhận duyệt kế hoạch 20 bước. Bắt đầu Code Generation Part 2 trên nhánh fix/student-code."
+**Context**: Code Generation Part 1 hoàn tất (Approved); Part 2 bắt đầu.
+
+---
+
+## Code Generation U01 — hoàn tất, xin duyệt mã
+**Timestamp**: 2026-11-13T16:50:20Z
+**Requested by:** Hải Nam
+**User Input**: "(Không có input mới — AI trình mã để duyệt)"
+**AI Response**: "Thực hiện xong 20/20 bước: migration student_code, StudentCodeFormat/Policy, repository, AccountAdminService (tạo/sửa MSSV, chặn đổi role vào/ra STUDENT), nhập tài khoản có cột MSSV, StudentCodeImportService (F16) + endpoint, hồ sơ; U05 ghi danh email/MSSV (INVALID_IDENTIFIER), U09 cột MSSV và export, U11, U12 DTO; frontend admin/hồ sơ/ghi danh/bảng điểm/quiz/nhóm, tệp mẫu. Backend 805 test qua (2 lỗi Docker), frontend tsc/eslint sạch, Vitest 1043 qua. Chưa chạy integration PostgreSQL, chưa thử trình duyệt, chưa commit."
+**Context**: Code Generation Part 2 — approval prompt.
+
+---
+
+## Code Generation U01 — người dùng duyệt mã
+**Timestamp**: 2026-11-13T16:52:38Z
+**Requested by:** Hải Nam
+**User Input**: "Duyệt, sang Build & Test"
+**AI Response**: "Ghi nhận duyệt mã MSSV. Bắt đầu Build and Test: mvn verify đầy đủ (cần Docker cho PostgreSQL), frontend lint/typecheck/test/build, thử trình duyệt."
+**Context**: Code Generation hoàn tất; bắt đầu Build and Test.
+
+---
+
+## Build and Test — người dùng hỏi bỏ gán MSSV cho tài khoản cũ
+**Timestamp**: 2026-11-14T08:56:50Z
+**Requested by:** Hải Nam
+**User Input**: "Hệ thống của bọn tôi dự định sẽ cho mã sinh viên ngay từ đầu luôn chứ sẽ không có các account sinh viên không có mã thì có bỏ được chức năng thêm mã sinh viên cho những account hiện tại chưa có mã không?"
+**AI Response**: "Trả lời được bỏ: gỡ luồng gán MSSV hàng loạt (F16: StudentCodeImportService, 2 endpoint, AssignStudentCodesPanel, tệp mẫu, test) và trường hợp gán mã cho tài khoản chưa có mã ở trang chi tiết; giữ sửa mã khi PENDING. Nêu điểm cần chốt: database có bắt buộc STUDENT phải có MSSV không (ảnh hưởng dữ liệu sinh viên đang có ở môi trường local/staging). Chưa sửa mã, chờ người dùng chốt. Build and Test tạm dừng (lần chạy test frontend trước bị người dùng dừng)."
+**Context**: Build and Test — thay đổi phạm vi, chờ quyết định.
+
+---
+
+## Build and Test — người dùng chốt giữ cột MSSV cho phép trống
+**Timestamp**: 2026-11-14T08:58:48Z
+**Requested by:** Hải Nam
+**User Input**: "Giữ cho phép trống"
+**AI Response**: "Bỏ chức năng gán MSSV cho tài khoản chưa có mã: gỡ F16 (service, endpoint, panel, tệp mẫu, test, assignStudentCodes) và trường hợp gán mã ở trang chi tiết. MSSV chỉ sửa được khi tài khoản còn PENDING. Database giữ cột cho phép trống, không thêm ràng buộc bắt buộc. Cập nhật tài liệu và chạy lại kiểm tra."
+**Context**: Build and Test — thu hẹp phạm vi, quay lại sửa mã trước khi chạy Build and Test.
+
+---
+
+## Build and Test — đã gỡ chức năng gán MSSV cho tài khoản cũ
+**Timestamp**: 2026-11-14T09:16:41Z
+**Requested by:** Hải Nam
+**User Input**: "(Không có input mới — AI báo kết quả)"
+**AI Response**: "Đã gỡ StudentCodeImportService, 2 endpoint student-code-imports, AccountRepository.assignStudentCodes, AssignStudentCodesPanel, nút Gán MSSV từ Excel, tệp mẫu và test liên quan; sửa BR-U01-105 (chỉ sửa khi PENDING, còn lại STUDENT_CODE_LOCKED kể cả chưa có mã) và studentCodeEditable. Cập nhật yêu cầu (SC-02, SC-03, SC-07 đã bỏ, Q8), execution plan, functional design U01, tóm tắt mã, aidlc-state. Kiểm tra: frontend tsc/eslint sạch, Vitest identity+shared 183/183 (timeout 30 s), backend identity+ArchitectureTest 223/223 gồm 19 test PostgreSQL AccountRepository (Docker đã chạy). Chưa chạy lại mvn verify đầy đủ và thử trình duyệt."
+**Context**: Build and Test — chờ người dùng cho chạy tiếp.
+
+---
+
+## Build and Test — người dùng cho chạy tiếp
+**Timestamp**: 2026-11-14T09:17:16Z
+**Requested by:** Hải Nam
+**User Input**: "Chạy tiếp"
+**AI Response**: "Chạy mvn verify đầy đủ, frontend lint/typecheck/Vitest/build, rồi thử trình duyệt trên stack local."
+**Context**: Build and Test.
+
+---
+
+## Build and Test — hoàn tất, chờ duyệt
+**Timestamp**: 2026-11-14T10:02:21Z
+**Requested by:** Hải Nam
+**User Input**: "(Không có input mới — AI báo kết quả Build and Test)"
+**AI Response**: "mvn verify 2366 test qua; frontend lint/tsc sạch, Vitest 1042/1045 (3 timeout tải nặng, chạy lại qua), build qua sau khi xóa .next cũ. Dựng stack riêng studentcode (cổng 19088), kiểm migration, API (MISSING/INVALID/NOT_ALLOWED/EXISTS/LOCKED/STUDENT_ROLE_CHANGE_NOT_ALLOWED, sửa khi PENDING) và trình duyệt (danh sách/tạo/chi tiết tài khoản, popup đổi vai trò, ghi danh bằng MSSV, hồ sơ sinh viên). Ghi aidlc-docs/construction/build-and-test/2026-11-14-student-code-results.md. Hỏi: Build and test instructions complete. Ready to proceed to Operations stage?"
+**Context**: Build and Test — approval prompt.
+
+---
+
+## Build and Test — thử nốt các màn chưa thử
+**Timestamp**: 2026-11-14T10:05:48Z
+**Requested by:** Hải Nam
+**User Input**: "thử nốt các phần chưa thử giúp tôi được không?"
+**AI Response**: "Dựng thêm bài tập, bài nộp, quiz, nhóm trên stack studentcode rồi thử trình duyệt bảng điểm, chấm bài, chi tiết bài nộp, lượt làm quiz, các màn nhóm, màn hẹp và chế độ tối."
+**Context**: Build and Test — bổ sung kiểm thử trình duyệt.
+
+---
+
+## Build and Test — đã thử nốt các màn còn lại
+**Timestamp**: 2026-11-14T10:42:58Z
+**Requested by:** Hải Nam
+**User Input**: "(Không có input mới — AI báo kết quả thử bổ sung)"
+**AI Response**: "Dựng thêm bài cá nhân có bài nộp, quiz có lượt làm, nhóm, đợt tự chia nhóm và đề xuất trên stack studentcode. Thử trình duyệt: bảng điểm (tìm theo MSSV, màn hẹp, tối), tệp xuất CSV/XLSX, danh sách bài nộp, trang chấm bài, lượt làm quiz, tab Sinh viên/Nhóm, duyệt đề xuất, mời bạn theo MSSV, Nhóm của tôi. Sửa 3 chỗ: header trang chấm bài thiếu MSSV, dòng thành viên đề xuất mất MSSV khi có ghi chú, bảng điểm màn hẹp gộp MSSV vào ô tên; build lại image frontend và kiểm lại. Lint/tsc sạch, Vitest 1039/1045 (6 timeout, chạy lại riêng 33/33 qua). Cập nhật tệp kết quả, tóm tắt mã, aidlc-state."
+**Context**: Build and Test — chờ duyệt.
+
+---
+
+## Build and Test — người dùng duyệt
+**Timestamp**: 2026-11-14T10:43:59Z
+**Requested by:** Hải Nam
+**AI Prompt**: "Build and test instructions complete. Ready to proceed to Operations stage?"
+**User Input**: "Duyệt"
+**AI Response**: "Ghi nhận duyệt Build and Test. Operations là giai đoạn giữ chỗ, không có bước nào; workflow MSSV hoàn tất. Chưa commit, push hay deploy; stack studentcode vẫn chạy."
+**Context**: Build and Test hoàn tất; Operations placeholder.
+
+---
+
+## Giao nhánh MSSV — commit, push, merge staging, e2e, PR
+**Timestamp**: 2026-11-14T10:45:53Z
+**Requested by:** Hải Nam
+**User Input**: "commit và push giúp tôi, sau đó merge nhánh staging vào branch hiện tại, check e2e rồi tạo pr vào staging"
+**AI Response**: "Tách 2 commit (mã + test MSSV, tài liệu AIDLC), push fix/student-code, fetch và merge origin/staging, chạy lại mvn verify, Vitest/lint/build và e2e trên stack studentcode dựng lại từ mã sau merge, rồi tạo PR vào staging. Không tự merge PR."
+**Context**: Giao nhánh theo yêu cầu người dùng.
+
+---

@@ -1,5 +1,20 @@
 # AI-DLC State Tracking
 
+## U01 (kèm U05/U09/U11/U12) — Mã số sinh viên, 2026-11-13
+
+Thêm MSSV (2 chữ cái in hoa + 6 chữ số) cho tài khoản `STUDENT`, ghi danh bằng MSSV. Không có chức năng đổi mã (chỉ sửa khi tài khoản còn `PENDING`), không có bộ lọc sinh viên chưa có mã (người dùng thu hẹp phạm vi 2026-11-13). Ngày 2026-11-14 bỏ thêm chức năng gán MSSV cho tài khoản cũ (F16), cột vẫn cho phép trống. Nhánh hiện tại `fix/student-code`. Brownfield, dùng lại tài liệu reverse engineering hiện hành. [Câu hỏi xác nhận](inception/requirements/2026-11-13-student-code-questions.md); [yêu cầu SC-01…11](inception/requirements/2026-11-13-student-code.md).
+
+- Operations: giai đoạn giữ chỗ, không có bước nào; triển khai theo quy trình merge vào `staging` hiện có.
+
+- [x] Workspace Detection: brownfield, bỏ qua Reverse Engineering.
+- [x] Requirements Analysis (Standard): người dùng duyệt 2026-11-13; G1 đổi thành SC-11 (sinh viên thấy MSSV của mình và người khác), G2–G4 giữ.
+- [x] User Stories: bỏ qua (thuộc tính mới cho vai trò đã có, không thêm persona).
+- [x] Workflow Planning: [execution plan](inception/plans/2026-11-13-student-code-execution-plan.md), người dùng duyệt 2026-11-13 sau khi thu hẹp phạm vi. Chạy Functional Design U01 (kèm U05/U09/U11/U12), Code Generation, Build and Test; bỏ qua Application Design, Units Generation, NFR Requirements/Design, Infrastructure Design.
+- [x] Functional Design U01 (kèm U05/U09/U11/U12): [kế hoạch 9 bước, 8 câu hỏi](construction/plans/functional-design-plan/2026-11-13-u01-student-code-functional-design-plan.md), A cả 8 câu. Đã viết BR-U01-100…115 (kèm F16 gán MSSV hàng loạt; chặn đổi role vào/ra STUDENT theo quyết định 15:50), BR-U05-56…60, BR-U09-73…75, BR-U11-42, BR-U12-97…98; Security/Resiliency tuân thủ. Người dùng duyệt 2026-11-13T15:53:39Z.
+- [x] Code Generation: Part 1 [kế hoạch 20 bước](construction/plans/code-generation-plan/2026-11-13-u01-student-code-code-generation-plan.md) người dùng duyệt 2026-11-13T15:56:03Z; Part 2 xong 20/20 bước (2026-11-13T16:50:20Z), [tóm tắt](construction/u01-account-and-access/code/2026-11-13-student-code-summary.md). Backend 805 test qua (2 lỗi integration vì thiếu Docker), frontend tsc/eslint sạch, Vitest 1043 test qua (5 test timeout khi chạy tải nặng, chạy lại riêng thì qua). Chưa commit. Người dùng duyệt mã 2026-11-13T16:52:38Z.
+- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-14-student-code-results.md). Backend mvn verify 2.366 test qua (gồm PostgreSQL); frontend lint/tsc sạch, Vitest 1042/1045 (3 timeout khi chạy cả bộ, chạy lại riêng qua), build qua; thử trên stack riêng `studentcode` với Admin, Chủ nhiệm môn, sinh viên. Đã thử bổ sung bảng điểm/xuất, chấm bài, quiz, nhóm, màn hẹp, chế độ tối; sửa 3 chỗ frontend (header chấm bài, dòng thành viên đề xuất, bảng điểm màn hẹp). Người dùng duyệt 2026-11-14T10:43:59Z. Chưa commit.
+- Extension: Security và Resiliency giữ phạm vi đã duyệt, PBT tắt.
+
 ## U06 — Guardrail hai tầng cho prompt AI, PR #77 vào staging, 2026-11-12
 
 Nhánh `feat/ai-prompt-guardrail` từ `main@8923d45d`. Guardrail Tầng 1 (quy tắc/regex) và Tầng 2 (RBAC, máy trạng thái, phân tích trích dẫn, chính sách logic, không regex) chạy tuần tự, fail-closed, trả `400 AI_PROMPT_REJECTED` trước khi lưu draft, giữ quota hay gọi AI. [Thiết kế và vị trí file](construction/u06-ai-connections/code/ai-prompt-guardrail.md); [kế hoạch và kết quả](construction/plans/code-generation-plan/2026-11-11-ai-prompt-guardrail.md).

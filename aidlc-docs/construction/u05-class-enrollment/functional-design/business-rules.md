@@ -67,3 +67,22 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U05-53 | Dữ liệu sai (lớp, môn hoặc người không tồn tại, sai role) thì từ chối toàn bộ thao tác đó, báo cách sửa, không lộ dữ liệu người khác. | US-CAT-001 S2 |
 | BR-U05-54 | U01 hoặc U04 không trả lời thì từ chối (fail closed). | BR-U01-93 |
 | BR-U05-55 | Admin không có màn hay API lớp; Admin chỉ xem danh sách lớp của một môn qua Subject Detail của U04. | BR-U01-60 |
+
+## 6. Mã số sinh viên (MSSV) — 2026-11-13
+
+Nguồn: [yêu cầu SC-09, SC-10, SC-11](../../../inception/requirements/2026-11-13-student-code.md) và [FD Q5, Q6](../../plans/functional-design-plan/2026-11-13-u01-student-code-functional-design-plan.md). U01 sở hữu MSSV; xem BR-U01-100…115.
+
+| Mã | Rule | Nguồn |
+|---|---|---|
+| BR-U05-56 | Ghi danh theo danh sách nhận mỗi dòng là một email hoặc một MSSV, và một danh sách được trộn cả hai loại. Hệ thống nhận biết từng dòng như sau: dòng có `@` là email (chuẩn hóa chữ thường như cũ). Dòng còn lại được đổi sang in hoa; nếu khớp `^[A-Z]{2}[0-9]{6}$` thì là MSSV. Không khớp loại nào thì báo `INVALID_IDENTIFIER`. Mã `INVALID_IDENTIFIER` thay cho `INVALID_EMAIL` cũ (FD Q5). Header ở dòng đầu là tùy chọn và nhận một trong các giá trị `email`, `student_code`, `mssv`, không phân biệt hoa thường. Giới hạn 200 dòng và 100 KB giữ nguyên. Tệp Excel tải lên dùng một cột với một trong các header trên. | SC-09, FD Q5 |
+| BR-U05-57 | Một giá trị đã chuẩn hóa xuất hiện lần thứ hai trong danh sách thì báo `DUPLICATE_IN_LIST`. Hệ thống tra email bằng `findByEmails` và tra MSSV bằng `findByStudentCodes`, mỗi loại tra một lần. Giá trị không thuộc tài khoản nào thì báo `NOT_FOUND`, giống email không tìm thấy hiện nay. Nếu một dòng email và một dòng MSSV cùng chỉ tới một sinh viên, dòng sau nhận kết quả `ALREADY_ENROLLED` theo BR-U05-21. Mỗi dòng vẫn chạy trong transaction riêng như hiện nay. | SC-09, FD Q5 |
+| BR-U05-58 | Kết quả của mỗi dòng hiện đúng giá trị người dùng đã nhập (email hoặc MSSV). Bộ kết quả đầy đủ của BR-U05-24 trở thành: `ENROLLED`, `RESTORED`, `ALREADY_ENROLLED`, `NOT_FOUND`, `NOT_STUDENT`, `DISABLED`, `IN_OTHER_CLASS`, `INVALID_IDENTIFIER`, `DUPLICATE_IN_LIST`. | SC-09 |
+| BR-U05-59 | Ô tìm khi thêm từng sinh viên (BR-U05-23) tìm được theo email, tên hoặc MSSV. Giới hạn 20 kết quả và chỉ trả `STUDENT`, như cũ. | SC-09 |
+| BR-U05-60 | DTO `Person` của U05 có thêm trường `studentCode`, có thể rỗng. Trường này chỉ hiện ở những màn vốn đã hiện người đó: danh sách sinh viên của lớp cho nhân sự (Chủ nhiệm môn, giảng viên lớp, Admin), danh sách thành viên lớp cho sinh viên (SC-11), và kết quả tìm ứng viên. Quyền xem danh sách không đổi. | SC-10, SC-11 |
+
+**Giao diện**:
+
+- `EnrollmentPanel`: ô dán đổi chữ gợi ý thành "Mỗi dòng một email hoặc MSSV". Tệp mẫu Excel dùng header `email` và có thêm ví dụ MSSV. Cột kết quả hiện giá trị đã nhập. Câu báo cho `INVALID_IDENTIFIER` là "Không phải email hay MSSV hợp lệ".
+- `PersonPicker`: dòng phụ của mỗi kết quả là `SE123456 · email`.
+- Danh sách lớp phía nhân sự (`ManagedClassPage`) có cột "MSSV" đứng trước cột họ tên.
+- Thành viên lớp phía sinh viên (`StudentClassPage`) hiện MSSV ở dòng phụ dưới tên.

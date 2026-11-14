@@ -120,3 +120,7 @@ Thêm sinh viên theo danh sách nhận tệp `.xlsx`, sheet đầu có một c�
 ## Chọn nhiều sinh viên — 2026-11-13
 
 Popup Thêm sinh viên dùng danh sách checkbox có tìm kiếm, chọn tất cả kết quả lọc và bộ đếm. Loại sinh viên đang ACTIVE trong lớp khỏi lựa chọn; giữ lựa chọn qua bộ lọc. Tối đa 200 kết quả và 200 người/lượt, cùng giới hạn API batch hiện hữu. Nếu thêm một phần thành công, giữ những người thất bại và hiển thị kết quả để thử lại. API lookup sinh viên mở trần từ 20 lên 200, lookup tài khoản/giảng viên vẫn 20. Không thay quyền quản lý lớp hoặc giới hạn nhập Excel.
+
+## Mã số sinh viên (MSSV) — 2026-11-13
+
+Thay đổi giao diện để hiện và tìm theo MSSV ghi ở mục "Giao diện" của phần MSSV trong [business-rules.md](business-rules.md). Cách hiển thị chung (cột MSSV trước họ tên trong bảng, dòng phụ `SE123456 · email` trong thẻ, ô trống khi chưa có mã) theo [frontend-components U01 mục 6](../../u01-account-and-access/functional-design/frontend-components.md).

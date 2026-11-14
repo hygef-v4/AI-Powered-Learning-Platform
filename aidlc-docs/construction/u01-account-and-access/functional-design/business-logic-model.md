@@ -235,3 +235,66 @@ Phạm vi môn/lớp đọc ở backend tại thời điểm request, không suy
 
 - Tạo/import không gửi OTP, activation hợp lệ/sai/hết hạn/rate limit; recovery không lộ account.
 - Đăng nhập/đăng xuất/phiên revoked; R1 own profile; Admin bị chặn học vụ; Student shared quota bị từ chối.
+
+## 8. Mã số sinh viên (MSSV) — 2026-11-13
+
+Nguồn: [BR-U01-100…115](business-rules.md#11-mã-số-sinh-viên-mssv--2026-11-13). Mỗi mục dưới đây chỉ ghi phần thêm vào luồng gốc. Phần nào không nhắc tới thì giữ nguyên.
+
+### F9 (bổ sung) — Tạo tài khoản
+
+**Đầu vào thêm**: `studentCode`.
+
+1. Sau bước kiểm email, chuẩn hóa `studentCode` theo BR-U01-100.
+2. Kiểm mã theo role:
+   - Role là `STUDENT`: thiếu mã thì báo `MISSING_STUDENT_CODE`; sai định dạng thì báo `INVALID_STUDENT_CODE`; mã đã có người dùng thì báo `STUDENT_CODE_EXISTS`.
+   - Role khác mà có gửi mã: báo `STUDENT_CODE_NOT_ALLOWED`.
+3. Ghi tài khoản kèm mã. Nếu lệnh insert gặp lỗi trùng mã thì báo `STUDENT_CODE_EXISTS`. Lỗi trùng email giữ cách báo hiện có.
+4. Audit `ACCOUNT_CREATED` ghi thêm `studentCodeSet: true|false`.
+
+### F10 (bổ sung) — Nhập tài khoản
+
+Dòng nào không có lỗi email, tên hay role thì mới xét tiếp MSSV, theo thứ tự:
+
+1. Dòng `STUDENT` không có mã: `MISSING_STUDENT_CODE`.
+2. Dòng role khác có mã: `STUDENT_CODE_NOT_ALLOWED`.
+3. Mã sai định dạng: `INVALID_STUDENT_CODE`.
+4. Mã trùng một dòng phía trên trong tệp: `DUPLICATE_STUDENT_CODE_IN_FILE`.
+5. Mã đã thuộc một tài khoản có sẵn: `STUDENT_CODE_EXISTS`. Để kiểm điều này, hệ thống tra một lần tất cả mã của tệp trong database (`existingStudentCodes`).
+
+Bước xác nhận chạy giống luồng gốc. Gặp lỗi trùng thì rollback cả tệp và báo `IMPORT_CONFLICT`.
+
+### F11 (bổ sung) — Đổi role
+
+1. Kiểm quyền Admin như luồng gốc.
+2. Nếu role hiện tại hoặc role mới là `STUDENT` thì từ chối với lỗi `STUDENT_ROLE_CHANGE_NOT_ALLOWED` (BR-U01-107), không ghi gì vào tài khoản và ghi audit truy cập bị từ chối. Bước này chạy trước BR-U01-64…66.
+3. Các bước còn lại của luồng gốc giữ nguyên; MSSV không bị động tới.
+
+### F14 (bổ sung) — Admin sửa thông tin tài khoản
+
+**Đầu vào thêm**: `studentCode`, tùy chọn.
+
+1. Kiểm `version` như luồng gốc.
+2. Nếu request có `studentCode` thì áp BR-U01-105, xét lần lượt từ trên xuống:
+
+```
+khong gui truong            -> giu nguyen
+role khac STUDENT           -> STUDENT_CODE_NOT_ALLOWED
+gia tri rong, chua co ma    -> giu nguyen
+gia tri rong, da co ma      -> INVALID_STUDENT_CODE
+sai dinh dang               -> INVALID_STUDENT_CODE
+bang ma hien tai            -> giu nguyen
+dang PENDING                -> doi (sua go sai)
+khong PENDING               -> STUDENT_CODE_LOCKED (ke ca chua co ma)
+ma da thuoc tai khoan khac  -> STUDENT_CODE_EXISTS
+```
+
+3. Lưu mọi trường đã đổi trong một lần cập nhật kèm `version`.
+4. Audit `ACCOUNT_UPDATED` thêm `studentCode` vào danh sách trường đã đổi, chỉ khi mã thật sự thay đổi.
+
+### F7 (bổ sung) — Hồ sơ
+
+`GET /me/profile` trả thêm `studentCode` ở dạng chỉ đọc. `PATCH` không nhận trường này (BR-U01-106).
+
+### F16 — Gán MSSV hàng loạt: đã bỏ (2026-11-14)
+
+Người dùng bỏ luồng này vì mọi tài khoản sinh viên đều có MSSV từ lúc tạo. Không có service, API hay màn hình gán mã cho tài khoản cũ.

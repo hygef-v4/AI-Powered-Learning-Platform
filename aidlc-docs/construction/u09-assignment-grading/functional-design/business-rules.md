@@ -111,3 +111,19 @@ AI output is validated without fabricated missing evidence/scores, clamping, era
 Provider output supplies item scores and feedback; it omits redundant full-credit checks. After empty-part merging, the existing normalizer derives checks from item scores before strict validation. The full MCP proposal schema still requires consistent explicit checks. This prevents an AI-generated checkbox from contradicting its zero/partial score without relaxing score or evidence validation (2026-11-10 live rejection follow-up).
 
 MCP proposal filtering reads metadata in bulk and derives STALE for changed receipts/rubrics without locking or polling every proposal. Learning summaries aggregate the authorized listing rather than loading every complete evaluation. Progress reuses class roster, contacts and evaluations once, preserving individual/group counting and both original permissions.
+
+## Mã số sinh viên (MSSV) — 2026-11-13
+
+Nguồn: [yêu cầu SC-10](../../../inception/requirements/2026-11-13-student-code.md) và [FD Q6](../../plans/functional-design-plan/2026-11-13-u01-student-code-functional-design-plan.md). MSSV do U01 sở hữu, xem BR-U01-100…115.
+
+| Mã | Rule | Nguồn |
+|---|---|---|
+| BR-U09-73 | Bảng điểm dạng ma trận (BR-U09-61) có thêm cột "MSSV", đặt sau STT và trước Họ và tên. Cột này có cả trên màn hình lẫn trong tệp xuất CSV/XLSX. Trong XLSX, ô MSSV có kiểu văn bản và thuộc nhóm cột định danh được cố định. Sinh viên chưa có mã thì ô để trống. Giá trị MSSV vẫn qua bước chống công thức như mọi ô văn bản khác. | SC-10 |
+| BR-U09-74 | Ô tìm của bảng điểm khớp theo tên, email hoặc MSSV, không phân biệt hoa thường. | SC-10 |
+| BR-U09-75 | DTO `Person` của U09 có thêm trường `studentCode`, có thể rỗng. Trang chấm bài và chi tiết bài nộp hiện MSSV ở dòng phụ dưới tên sinh viên. Phạm vi quyền xem giữ nguyên như hiện nay. | SC-10 |
+
+**Giao diện**:
+
+- `GradebookMatrix`: thêm cột MSSV, cố định cùng cột tên.
+- `ClassGradebookTab`: chữ gợi ý ô tìm đổi thành "Tìm theo tên, email hoặc MSSV".
+- `GradingWorkspaceHeader` và `SubmissionDetailPage`: hiện dòng phụ `SE123456 · email`.
