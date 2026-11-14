@@ -146,3 +146,24 @@ docker compose -p studentcode -f docker-compose.yml -f docker-compose.local.yml 
 - Thử trên stack cho thấy backend chặn được các thao tác MSSV không hợp lệ, kể cả khi gọi thẳng API.
 - Resiliency: migration chỉ thêm cột cho phép trống; các stack khác không bị ảnh hưởng.
 - PBT: N/A vì đang tắt.
+
+## Sau khi merge `origin/staging` (2026-11-14)
+
+- **Merge:** staging có thêm 6 commit (đánh giá đóng góp thành viên nhóm, giữ hiển thị bài đã đóng mà chưa nộp).
+  - Chỉ `aidlc-docs/audit.md` bị conflict, do cả hai bên cùng thêm mục vào cuối. Đã giữ đủ cả hai phần.
+  - Các file grading cả hai bên cùng sửa thì tự gộp được.
+- **Backend:** `mvn -o -B verify` qua 2.373 test, 0 lỗi. Log: `.tmp/student-code-mvn-verify-merged.log`.
+- **Frontend:**
+  - Lint và `tsc` sạch; build qua (30 trang).
+  - Vitest qua 1062/1066. 4 test bị timeout 5 giây khi chạy cả bộ: authoringFlow, pagination, bulk-selection, và test mới từ staging trong workspace. Chạy lại riêng 4 file đó thì qua 64/64.
+- **E2E:**
+  - Sửa `scripts/e2e/seed.mjs` và `u04-u13-u14.mjs` để gửi kèm MSSV khi tạo sinh viên, vì backend giờ bắt buộc MSSV.
+  - Dựng lại stack `studentcode` từ mã sau merge, gồm backend, worker và frontend.
+  - Chạy `u04-u13-u14.mjs`: qua 40/40 ca. Log: `.tmp/e2e/student-code-u04-u13-u14.log`.
+  - Thử nhanh MSSV trên stack đã dựng lại:
+    - Thiếu mã thì báo `MISSING_STUDENT_CODE`; trùng mã thì báo `STUDENT_CODE_EXISTS`.
+    - Tìm theo MSSV ra đúng tài khoản.
+    - Hồ sơ của sv1 vẫn trả `SE000011`.
+- **Chưa chạy:**
+  - Các suite `u02`, `u06*` và `u12*`. Các suite này dùng `seed.json` của stack `localhost:8088`; stack đó đang được nhánh khác dùng nên không đụng tới.
+  - Thiết bị thật.

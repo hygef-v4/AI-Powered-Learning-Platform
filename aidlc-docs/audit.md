@@ -14109,3 +14109,12 @@ tôi đã trả lời các câu hỏi, câu trả lời nằm ở sau câu hỏi
 **Context**: Giao nhánh theo yêu cầu người dùng.
 
 ---
+
+## Giao nhánh MSSV — kết quả e2e sau merge
+**Timestamp**: 2026-11-14T11:16:18Z
+**Requested by:** Hải Nam
+**User Input**: "Đã đăng nhập"
+**AI Response**: "Merge origin/staging (chỉ conflict audit.md, giữ cả hai). Sau merge: mvn verify 2373 qua; lint/tsc sạch, Vitest 1062/1066 (4 timeout, chạy lại 64/64), build qua. Sửa seed.mjs và u04-u13-u14.mjs gửi MSSV khi tạo sinh viên; dựng lại stack studentcode và chạy u04-u13-u14.mjs 40/40 qua; thử nhanh MSSV qua. Người dùng đăng nhập GitHub trong trình duyệt của app để tạo PR vào staging."
+**Context**: Giao nhánh — trước khi tạo PR.
+
+---
