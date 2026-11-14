@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { ApiError } from "@/shared/api/client";
+import { isValidStudentCode, normalizeStudentCode, STUDENT_CODE_FORMAT_MESSAGE } from "@/shared/studentCode";
 import { Alert } from "@/shared/ui/Alert";
 import { Button, IconButton } from "@/shared/ui/Button";
 import { Field, TextInput } from "@/shared/ui/inputs";
@@ -165,32 +166,44 @@ function AccountEditForm({
   const phoneId = useId();
   const emailId = useId();
   const roleId = useId();
+  const codeId = useId();
+  const student = account.role === "STUDENT";
+  const savedCode = account.studentCode ?? "";
   const [displayName, setDisplayName] = useState(account.displayName);
   const [phoneNumber, setPhoneNumber] = useState(account.phoneNumber ?? "");
+  const [studentCode, setStudentCode] = useState(savedCode);
   const [busy, setBusy] = useState(false);
-  const [fieldError, setFieldError] = useState<{ name?: string; phone?: string }>({});
+  const [fieldError, setFieldError] = useState<{ name?: string; phone?: string; studentCode?: string }>({});
   const [error, setError] = useState<string | null>(null);
-  const dirty = displayName !== account.displayName || phoneNumber !== (account.phoneNumber ?? "");
+  const codeChanged = account.studentCodeEditable && normalizeStudentCode(studentCode) !== savedCode;
+  const dirty = displayName !== account.displayName || phoneNumber !== (account.phoneNumber ?? "") || codeChanged;
 
   function reset() {
     setDisplayName(account.displayName);
     setPhoneNumber(account.phoneNumber ?? "");
+    setStudentCode(savedCode);
     setFieldError({});
     setError(null);
   }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    const code = normalizeStudentCode(studentCode);
     const errors = {
       name: displayName.trim().length === 0 ? "Nhập họ và tên." : undefined,
       phone: phoneNumber.trim() && !PHONE_FORMAT.test(phoneNumber.trim()) ? "Số điện thoại gồm 8–15 chữ số, có thể có dấu + ở đầu." : undefined,
+      // Đã có mã thì không được xóa trống (BR-U01-105).
+      studentCode: !codeChanged ? undefined
+        : !code ? "Không xóa trống được MSSV đã có."
+          : isValidStudentCode(code) ? undefined : STUDENT_CODE_FORMAT_MESSAGE,
     };
     setFieldError(errors);
-    if (errors.name || errors.phone) return;
+    if (errors.name || errors.phone || errors.studentCode) return;
     setBusy(true);
     setError(null);
     try {
-      onSaved(await updateAccount(account.id, displayName.trim(), phoneNumber.trim(), account.version));
+      onSaved(await updateAccount(account.id, displayName.trim(), phoneNumber.trim(), account.version,
+        codeChanged ? code : undefined));
     } catch (e) {
       const code = e instanceof ApiError ? e.problem.code : undefined;
       setError((code && ADMIN_ERROR_LABELS[code]) ?? "Không lưu được, vui lòng thử lại.");
@@ -219,13 +232,43 @@ function AccountEditForm({
           <Field label="Email trường" htmlFor={emailId}>
             <LockedInput id={emailId} value={account.email} className="min-w-0" />
           </Field>
-          <Field label="Vai trò" htmlFor={roleId}>
-            <div className="flex min-w-0 gap-2">
-              <LockedInput id={roleId} value={ROLE_LABELS[account.role]} className="min-w-0 flex-1" />
-              <IconButton icon="swap_horiz" label="Đổi vai trò" size={40} onClick={onChangeRole} disabled={isSelf}
-                className="border border-line-strong bg-surface text-ink hover:bg-sunken" />
+          <div className="flex min-w-0 flex-col gap-1">
+            <Field label="Vai trò" htmlFor={roleId}>
+              <div className="flex min-w-0 gap-2">
+                <LockedInput id={roleId} value={ROLE_LABELS[account.role]} className="min-w-0 flex-1" />
+                {!student && (
+                  <IconButton icon="swap_horiz" label="Đổi vai trò" size={40} onClick={onChangeRole} disabled={isSelf}
+                    className="border border-line-strong bg-surface text-ink hover:bg-sunken" />
+                )}
+              </div>
+            </Field>
+            {/* BR-U01-107: không đổi vai trò vào hoặc ra khỏi Sinh viên. */}
+            {student && <p className="text-xs text-muted">Không đổi được vai trò của tài khoản sinh viên.</p>}
+          </div>
+          {student && (
+            <div className="flex min-w-0 flex-col gap-1">
+              <Field label="Mã số sinh viên" htmlFor={codeId} error={fieldError.studentCode}>
+                {account.studentCodeEditable ? (
+                  <TextInput
+                    id={codeId}
+                    value={studentCode}
+                    invalid={!!fieldError.studentCode}
+                    placeholder="SE123456"
+                    autoComplete="off"
+                    data-testid="account-detail-student-code-input"
+                    onChange={(e) => setStudentCode(e.target.value)}
+                    onBlur={() => setStudentCode(normalizeStudentCode(studentCode))}
+                  />
+                ) : (
+                  <LockedInput id={codeId} value={savedCode || "Chưa có MSSV"} className="min-w-0" />
+                )}
+              </Field>
+              <p className="text-xs text-muted" data-testid="account-detail-student-code-hint">
+                {account.studentCodeEditable ? "Chỉ sửa được khi sinh viên chưa kích hoạt."
+                  : "MSSV không đổi được sau khi sinh viên kích hoạt tài khoản."}
+              </p>
             </div>
-          </Field>
+          )}
         </div>
         {error && (
           <Alert tone="danger" role="alert">

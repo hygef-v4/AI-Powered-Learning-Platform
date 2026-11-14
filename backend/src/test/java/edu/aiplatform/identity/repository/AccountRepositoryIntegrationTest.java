@@ -457,6 +457,51 @@ class AccountRepositoryIntegrationTest {
         assertThat(search(null, null, null).total()).isEqualTo(1);
     }
 
+    /** BR-U01-100…102: định dạng, duy nhất và chỉ STUDENT có MSSV, bảo đảm ở database. */
+    @Test
+    void schemaGuardsStudentCodeFormatUniquenessAndRole() {
+        repository.insert(student("sv1@fpt.edu.vn", "SE000001"));
+
+        assertThatThrownBy(() -> repository.insert(student("sv2@fpt.edu.vn", "SE000001")))
+                .isInstanceOfSatisfying(DuplicateKeyException.class,
+                        e -> assertThat(AccountRepository.isStudentCodeConflict(e)).isTrue());
+        assertThatThrownBy(() -> repository.insert(pending("sv1@fpt.edu.vn", Role.TEACHER, "Trùng email")))
+                .isInstanceOfSatisfying(DuplicateKeyException.class,
+                        e -> assertThat(AccountRepository.isStudentCodeConflict(e)).isFalse());
+        assertThatThrownBy(() -> repository.insert(student("sv3@fpt.edu.vn", "se000003")))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("accounts_student_code_format");
+        Account teacher = Account.newPending(UUID.randomUUID(), "gv@fpt.edu.vn", Role.TEACHER, "GV", null,
+                "SE000004", NOW);
+        assertThatThrownBy(() -> repository.insert(teacher))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("accounts_student_code_role");
+        repository.insert(student("sv5@fpt.edu.vn", null));
+        repository.insert(student("sv6@fpt.edu.vn", null));
+        assertThat(search(null, null, null).total()).isEqualTo(3);
+    }
+
+    @Test
+    void studentCodeLookupSearchAndVersionedUpdate() {
+        Account coded = student("sv1@fpt.edu.vn", "SE000001");
+        Account legacy = student("sv2@fpt.edu.vn", null);
+        Account teacher = pending("gv@fpt.edu.vn", Role.TEACHER, "Giảng viên");
+        insertAll(coded, legacy, teacher);
+
+        assertThat(repository.findById(coded.id()).orElseThrow().studentCode()).isEqualTo("SE000001");
+        assertThat(repository.existingStudentCodes(List.of("SE000001", "SE000002"))).containsExactly("SE000001");
+        assertThat(repository.findStudentsByCodes(List.of("SE000001", "SE000009")))
+                .extracting(Account::id).containsExactly(coded.id());
+        assertThat(names(search(null, null, "se0000"))).containsExactly(coded.displayName());
+        assertThat(repository.findForLookup("SE000001", Set.of(Role.STUDENT), null, 20))
+                .extracting(Account::id).containsExactly(coded.id());
+
+        assertThat(repository.updateAccountDetails(legacy.id(), "Tên mới", null, "SE000005",
+                reload(legacy).version(), NOW)).isEqualTo(1);
+        assertThat(reload(legacy).studentCode()).isEqualTo("SE000005");
+        assertThat(repository.updateAccountDetails(legacy.id(), "Cũ", null, "SE000006", 1L, NOW)).isZero();
+    }
+
     /** Giống {@code AccountAdminService.protectLastAdmin} rồi đổi role, trong một transaction. */
     private static boolean demote(Account target, Runnable afterLock) {
         return Boolean.TRUE.equals(tx.execute(status -> {
@@ -539,5 +584,9 @@ class AccountRepositoryIntegrationTest {
         return new Account(a.id(), a.schoolEmail(), a.role(), a.status(), a.passwordHash(), a.passwordChangedAt(),
                 a.displayName(), a.phoneNumber(), a.failedLoginCount(), a.lockedUntil(), a.createdAt(), updatedAt,
                 a.version());
+    }
+    private static Account student(String email, String studentCode) {
+        return Account.newPending(UUID.randomUUID(), email, Role.STUDENT, email.substring(0, email.indexOf('@')),
+                null, studentCode, NOW);
     }
 }

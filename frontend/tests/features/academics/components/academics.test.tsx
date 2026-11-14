@@ -121,7 +121,7 @@ describe("U05 reference UI", () => {
     const onBatch = vi.fn();
     render(<EnrollmentPanel students={[]} editable onBatch={onBatch} />);
     fireEvent.click(screen.getByRole("button", { name: "Thêm theo danh sách" }));
-    fireEvent.change(screen.getByLabelText("Danh sách email"), { target: { value: "invalid" } });
+    fireEvent.change(screen.getByLabelText("Danh sách email hoặc MSSV"), { target: { value: "invalid" } });
     fireEvent.click(screen.getByRole("button", { name: "Xem trước" }));
     expect(screen.getByRole("button", { name: "Thêm 0 sinh viên" })).toBeDisabled();
     expect(onBatch).not.toHaveBeenCalled();
@@ -135,10 +135,10 @@ describe("U05 reference UI", () => {
     const file = new File([bytes], "students.xlsx");
     Object.defineProperty(file, "arrayBuffer", { value: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) });
     fireEvent.change(screen.getByLabelText("Chọn tệp Excel"), { target: { files: [file] } });
-    expect(await screen.findByRole("button", { name: "Thêm 1 sinh viên" })).toBeEnabled();
+    expect(await screen.findByRole("button", { name: "Thêm 2 sinh viên" })).toBeEnabled();
     expect(onBatch).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Thêm 1 sinh viên" }));
-    await waitFor(() => expect(onBatch).toHaveBeenCalledWith("email\nmasv@fpt.edu.vn"));
+    fireEvent.click(screen.getByRole("button", { name: "Thêm 2 sinh viên" }));
+    await waitFor(() => expect(onBatch).toHaveBeenCalledWith("email\nmasv@fpt.edu.vn\nSE123456"));
   });
 
   it("requires confirmation for archiving and sends the version", async () => {
@@ -227,17 +227,17 @@ describe("U05 reference UI", () => {
     const onBatch = vi.fn().mockResolvedValue([{ line: 1, email: "an@example.test", result: "ENROLLED" }]);
     render(<EnrollmentPanel students={[]} editable onBatch={onBatch} />);
     fireEvent.click(screen.getByRole("button", { name: "Thêm theo danh sách" }));
-    const input = screen.getByLabelText("Danh sách email");
+    const input = screen.getByLabelText("Danh sách email hoặc MSSV");
     fireEvent.change(input, { target: { value: "an@example.test\nbad" } });
     fireEvent.click(screen.getByRole("button", { name: "Xem trước" }));
-    expect(screen.getByText("Email không hợp lệ")).toBeInTheDocument();
+    expect(screen.getByText("Không phải email hay MSSV hợp lệ")).toBeInTheDocument();
     expect(onBatch).not.toHaveBeenCalled();
     fireEvent.change(input, { target: { value: "an@example.test" } });
     expect(screen.queryByRole("button", { name: /^Thêm \d+ sinh viên$/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Xem trước" }));
     fireEvent.click(screen.getByRole("button", { name: "Thêm 1 sinh viên" }));
     await waitFor(() => expect(onBatch).toHaveBeenCalledWith("an@example.test"));
-    await waitFor(() => expect(screen.queryByLabelText("Danh sách email")).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByLabelText("Danh sách email hoặc MSSV")).not.toBeInTheDocument());
   });
 
   it("does not offer the removed class-wide grade distribution setting to managers", () => {
@@ -282,11 +282,17 @@ describe("U05 reference UI", () => {
 describe("enrollment CSV preview", () => {
   it("rejects leading, trailing and repeated dots in the local part", () => {
     const rows = parseEnrollmentList(".a@example.test\na.@example.test\na..b@example.test\na.b@example.test");
-    expect(rows.map((row) => row.error)).toEqual(["INVALID_EMAIL", "INVALID_EMAIL", "INVALID_EMAIL", null]);
+    expect(rows.map((row) => row.error)).toEqual(["INVALID_IDENTIFIER", "INVALID_IDENTIFIER", "INVALID_IDENTIFIER", null]);
   });
   it("preserves row numbers and flags malformed or duplicate rows", () => {
     expect(parseEnrollmentList('\uFEFFemail\r\n"A@example.test"\r\n\r\na@example.test\r\nbad')).toEqual([
-      { line: 2, email: "a@example.test", error: null }, { line: 4, email: "a@example.test", error: "DUPLICATE_IN_LIST" }, { line: 5, email: "bad", error: "INVALID_EMAIL" },
+      { line: 2, email: "a@example.test", error: null }, { line: 4, email: "a@example.test", error: "DUPLICATE_IN_LIST" }, { line: 5, email: "bad", error: "INVALID_IDENTIFIER" },
+    ]);
+  });
+  it("accepts student codes alongside emails with an mssv header (BR-U05-56)", () => {
+    expect(parseEnrollmentList("MSSV\n se000001 \nSE000001\nan@example.test\nSE-00001")).toEqual([
+      { line: 2, email: "SE000001", error: null }, { line: 3, email: "SE000001", error: "DUPLICATE_IN_LIST" },
+      { line: 4, email: "an@example.test", error: null }, { line: 5, email: "se-00001", error: "INVALID_IDENTIFIER" },
     ]);
   });
   it("enforces byte and row limits", () => {

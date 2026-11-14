@@ -5,6 +5,8 @@ import { Alert, Button, Dialog, Field, Pill, Select, TextInput, cx, showToast } 
 import { saveGroups } from "../api";
 import { draftsFrom, freeNames, personLabel, saveErrorText, withdraw, type StudentRow } from "../model/groupDrafts";
 import type { Draft, GroupSetView } from "../model/types";
+import { matchesPersonQuery } from "@/shared/studentCode";
+import { PersonSubline } from "@/shared/ui/PersonSubline";
 
 /**
  * Popup Tạo nhóm / Sửa nhóm (t02f, BR-U12-02–04): tên nhóm, chọn thành viên trong danh sách người chưa có nhóm có ô tìm
@@ -36,7 +38,7 @@ export function GroupFormDialog({ classId, set, people, group, leaderOnly = fals
   // Chỉ người chưa có nhóm (sửa nhóm thì thêm thành viên hiện tại, đứng đầu); trong mỗi phần theo tên.
   const rank = (accountId: string) => (group?.memberIds.includes(accountId) ? 0 : 1);
   const list = [...people]
-    .filter((p) => !groupOf(p.accountId) && `${personLabel(p)} ${p.email ?? ""}`.toLocaleLowerCase("vi").includes(q))
+    .filter((p) => !groupOf(p.accountId) && matchesPersonQuery({ ...p, name: personLabel(p) }, q))
     .sort((a, b) => rank(a.accountId) - rank(b.accountId) || personLabel(a).localeCompare(personLabel(b), "vi"));
   const allSelected = list.length > 0 && list.every(person => members.includes(person.accountId));
   const someSelected = list.some(person => members.includes(person.accountId));
@@ -104,7 +106,7 @@ export function GroupFormDialog({ classId, set, people, group, leaderOnly = fals
                   <input type="checkbox" className="size-4 accent-primary" checked={picked} disabled={busy} onChange={() => toggle(p.accountId)} aria-label={`Chọn ${personLabel(p)}`} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13.5px] font-semibold text-ink">{personLabel(p)}</span>
-                    <span className="block truncate text-xs text-muted">{p.email}</span>
+                    <PersonSubline className="truncate" studentCode={p.studentCode} email={p.email} />
                   </span>
                   {picked && p.accountId === leader && <Pill tone="warning">Trưởng nhóm</Pill>}
                   {current && <span className="shrink-0 text-xs text-muted">{current.name}</span>}

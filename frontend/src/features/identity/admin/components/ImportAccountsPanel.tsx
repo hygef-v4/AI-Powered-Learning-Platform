@@ -78,6 +78,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
         </button>
       }
     >
+      <p className="text-xs text-muted">Cột: email, display_name, role, student_code (MSSV bắt buộc với sinh viên).</p>
       <input
         ref={input}
         type="file"
@@ -123,13 +124,14 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
             </Pill>
             {preview.rejectedCount > 0 && <Pill tone="danger">{preview.rejectedCount} lỗi</Pill>}
           </div>
-          <TableFrame filledHead className="[&_table]:min-w-[720px] [&_table]:table-fixed">
-            <colgroup><col className="w-[72px]" /><col className="w-[30%]" /><col /><col className="w-[130px]" /><col className="w-[200px]" /></colgroup><thead>
+          <TableFrame filledHead className="[&_table]:min-w-[820px] [&_table]:table-fixed">
+            <colgroup><col className="w-[72px]" /><col className="w-[28%]" /><col /><col className="w-[120px]" /><col className="w-[110px]" /><col className="w-[200px]" /></colgroup><thead>
               <tr>
                 <Th className="w-16">Dòng</Th>
                 <Th>Email</Th>
                 <Th>Họ tên</Th>
                 <Th>Vai trò</Th>
+                <Th>MSSV</Th>
                 <Th>Kết quả kiểm tra</Th>
               </tr>
             </thead>
@@ -140,6 +142,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
                   <Td>{row.email}</Td>
                   <Td>{row.displayName}</Td>
                   <Td>{ROLE_LABELS[row.role as Role] ?? row.role}</Td>
+                  <Td>{row.studentCode}</Td>
                   <Td>
                     {row.reason ? (
                       <Pill tone="danger">{sentence(IMPORT_REASON_LABELS[row.reason] ?? row.reason)}</Pill>

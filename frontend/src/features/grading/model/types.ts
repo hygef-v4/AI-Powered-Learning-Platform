@@ -98,7 +98,7 @@ export type Detail = {
   current: boolean;
   groupEvaluationId?: string | null;
 };
-export type Person = { accountId: string; name: string; email: string };
+export type Person = { accountId: string; name: string; email: string; studentCode?: string | null };
 export type SubmissionRow = {
   student: Person;
   evaluationId: string | null;

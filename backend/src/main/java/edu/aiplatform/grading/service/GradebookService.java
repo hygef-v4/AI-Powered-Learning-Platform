@@ -166,7 +166,7 @@ public class GradebookService {
         var students = studentIds.stream().map(id -> {
             var contact = contacts.get(id);
             return new Person(id, contact == null ? "Unavailable" : contact.displayName(),
-                    contact == null ? "" : contact.email());
+                    contact == null ? "" : contact.email(), contact == null ? null : contact.studentCode());
         }).toList();
         return new GradebookData(columns, students, current, progress);
     }
@@ -225,9 +225,10 @@ public class GradebookService {
         return new SubmissionProgress(individual, groupProgress);
     }
 
-    /** Matches a case-insensitive name or email search, with blank queries matching all. */
+    /** Matches a case-insensitive name, email or student-code search (BR-U09-74); blank queries match all. */
     private boolean matchesQuery(Person student, String query) {
-        return query == null || query.isBlank() || (student.name() + " " + student.email())
+        return query == null || query.isBlank() || (student.name() + " " + student.email() + " "
+                + Objects.requireNonNullElse(student.studentCode(), ""))
                 .toLowerCase(Locale.ROOT).contains(query.toLowerCase(Locale.ROOT));
     }
 
@@ -428,13 +429,14 @@ public class GradebookService {
                 .filter(column -> assignmentId == null || assignmentId.equals(column.id())).toList();
         if (assignmentId != null && selectedColumns.isEmpty())
             throw ApiException.notFound("ASSIGNMENT_NOT_FOUND");
-        var header = new ArrayList<>(List.of("STT", "Họ và tên", "Email"));
+        var header = new ArrayList<>(List.of("STT", "MSSV", "Họ và tên", "Email"));
         for (var column : selectedColumns) {
             header.add(column.title() + " (/" + column.maxScore().stripTrailingZeros().toPlainString() + ")");
         }
         output.add(header);
         for (var student : data.students()) {
-            var row = new ArrayList<>(List.of(String.valueOf(output.size()), student.name(), student.email()));
+            var row = new ArrayList<>(List.of(String.valueOf(output.size()),
+                    Objects.requireNonNullElse(student.studentCode(), ""), student.name(), student.email()));
             for (var column : selectedColumns) {
                 var grade = mapGradeCell(student.accountId(), column, data.evaluations(), data.progress());
                 boolean saved = Set.of("DRAFT", "FINALIZED", "PUBLISHED").contains(grade.status());

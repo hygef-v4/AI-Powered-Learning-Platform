@@ -1,6 +1,6 @@
 export type ClassStatus = "DRAFT" | "OPEN" | "ARCHIVED";
 export type Audience = "student" | "teacher" | "manager";
-export type PersonView = { id: string; name: string; email: string };
+export type PersonView = { id: string; name: string; email: string; studentCode?: string | null };
 export type SubjectView = { id: string; code: string; name: string; description?: string };
 export type CourseClassView = {
   id: string;
@@ -22,14 +22,16 @@ export type EnrollmentView = {
   email: string;
   enrolledAt: string;
   status: "ACTIVE" | "REMOVED";
+  studentCode?: string | null;
 };
 export type ClassInfoInput = Pick<CourseClassView, "name" | "description" | "version">;
 export type CreateClassInput = Omit<ClassInfoInput, "version"> & { subjectId: string; code: string; teacherId: string | null };
-export type EnrollmentResult = "ENROLLED" | "RESTORED" | "ALREADY_ENROLLED" | "NOT_FOUND" | "NOT_STUDENT" | "DISABLED" | "IN_OTHER_CLASS" | "INVALID_EMAIL" | "DUPLICATE_IN_LIST";
+export type EnrollmentResult = "ENROLLED" | "RESTORED" | "ALREADY_ENROLLED" | "NOT_FOUND" | "NOT_STUDENT" | "DISABLED" | "IN_OTHER_CLASS" | "INVALID_IDENTIFIER" | "DUPLICATE_IN_LIST";
+/** `email` là giá trị đã nhập: email hoặc MSSV (BR-U05-58). */
 export type EnrollmentRowResult = { line: number; email: string; result: EnrollmentResult };
 export const CLASS_STATUS_LABELS: Record<ClassStatus, string> = { DRAFT: "Nháp", OPEN: "Đang mở", ARCHIVED: "Lưu trữ" };
 export const ENROLLMENT_RESULT_LABELS: Record<EnrollmentResult, string> = {
   ENROLLED: "Đã thêm", RESTORED: "Đã thêm lại", ALREADY_ENROLLED: "Đã có trong lớp", NOT_FOUND: "Không tìm thấy tài khoản",
   NOT_STUDENT: "Không phải sinh viên", DISABLED: "Tài khoản vô hiệu hóa", IN_OTHER_CLASS: "Đang ở lớp khác cùng môn",
-  INVALID_EMAIL: "Email không hợp lệ", DUPLICATE_IN_LIST: "Trùng trong danh sách",
+  INVALID_IDENTIFIER: "Không phải email hay MSSV hợp lệ", DUPLICATE_IN_LIST: "Trùng trong danh sách",
 };

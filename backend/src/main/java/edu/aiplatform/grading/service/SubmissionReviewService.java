@@ -100,7 +100,7 @@ public class SubmissionReviewService {
      */
     Person mapPerson(UUID id) {
         return accountLookup.getContact(id)
-                .map(contact -> new Person(id, contact.displayName(), contact.email()))
+                .map(contact -> new Person(id, contact.displayName(), contact.email(), contact.studentCode()))
                 .orElse(new Person(id, "Unavailable", ""));
     }
 
@@ -201,7 +201,7 @@ public class SubmissionReviewService {
                                         : "PENDING";
                 var contact = contacts.get(sid);
                 var student = contact == null ? new Person(sid, "Unavailable", "")
-                        : new Person(sid, contact.displayName(), contact.email());
+                        : new Person(sid, contact.displayName(), contact.email(), contact.studentCode());
                 rows.add(new SubmissionRow(student, evaluation == null ? null : evaluation.id,
                         submission == null ? null : submission.gradedAttemptId(), status,
                         evaluation == null ? null : evaluation.score,

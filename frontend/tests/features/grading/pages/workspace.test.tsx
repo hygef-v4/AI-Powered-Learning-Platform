@@ -324,15 +324,16 @@ describe("workspace save", () => {
   });
   it("names the current student and searches all pages before switching submissions", async () => {
     mocks.listSubmissions.mockResolvedValueOnce({ rows: [
-      { student: { accountId: "s", name: "Nguyễn An", email: "an@school.test" }, evaluationId: "e" },
+      { student: { accountId: "s", name: "Nguyễn An", email: "an@school.test", studentCode: "SE000001" }, evaluationId: "e" },
     ], total: 2 }).mockResolvedValueOnce({ rows: [
-      { student: { accountId: "s2", name: "Trần Bình", email: "binh@school.test" }, evaluationId: "next" },
+      { student: { accountId: "s2", name: "Trần Bình", email: "binh@school.test", studentCode: "SE000002" }, evaluationId: "next" },
     ], total: 2 });
     render(<GradingWorkspacePage evaluationId="e" />);
     expect(await screen.findByRole("heading", { level: 1, name: "Nguyễn An" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Chọn sinh viên")).toHaveTextContent("SE000001 · an@school.test");
     expect(screen.getByLabelText("Chọn sinh viên")).toHaveTextContent("Nguyễn An");
     fireEvent.click(screen.getByLabelText("Chọn sinh viên"));
-    fireEvent.change(screen.getByRole("searchbox", { name: "Tìm sinh viên" }), { target: { value: "binh@school.test" } });
+    fireEvent.change(screen.getByRole("searchbox", { name: "Tìm sinh viên" }), { target: { value: "se000002" } });
     fireEvent.click(await screen.findByRole("button", { name: /Trần Bình/ }));
     expect(mocks.listSubmissions).toHaveBeenCalledWith("c", "a", "ALL", 2);
     expect(mocks.push).toHaveBeenCalledWith("/teaching/evaluations/next");

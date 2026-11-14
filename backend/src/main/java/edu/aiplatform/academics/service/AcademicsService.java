@@ -302,17 +302,26 @@ public class AcademicsService {
             requireAudience(actor, "manager");
             requireEditableClass(requireClassAccess(actor, "manager", id));
             var rows = EnrollmentListParser.parseEnrollmentRows(text);
-            var emails = rows.stream().filter(r -> r.error() == null)
+            var emails = rows.stream().filter(r -> r.error() == null && r.email() != null)
                     .map(EnrollmentListParser.Row::email).toList();
+            var studentCodes = rows.stream().filter(r -> r.error() == null && r.studentCode() != null)
+                    .map(EnrollmentListParser.Row::studentCode).toList();
             Map<String, AccountContact> found = accountLookup.findByEmails(emails).stream()
                     .collect(Collectors.toMap(a -> a.email().toLowerCase(Locale.ROOT),
                             Function.identity(), (a, b) -> a));
+            // BR-U05-57: MSSV chỉ tìm thấy tài khoản STUDENT; không thấy thì NOT_FOUND như email.
+            Map<String, AccountContact> foundByCode = studentCodes.isEmpty() ? Map.of()
+                    : accountLookup.findByStudentCodes(studentCodes).stream()
+                            .filter(a -> a.studentCode() != null)
+                            .collect(Collectors.toMap(AccountContact::studentCode,
+                                    Function.identity(), (a, b) -> a));
             var results = new ArrayList<RowResult>();
             for (var row : rows) {
                 EnrollmentResult result = row.error();
                 if (result == null)
                     result = lineTransactionTemplate.execute(tx -> {
-                        AccountContact resolved = found.get(row.email());
+                        AccountContact resolved = row.email() != null ? found.get(row.email())
+                                : foundByCode.get(row.studentCode());
                         // Khóa tài khoản trước môn như U01: mỗi dòng dùng role/trạng thái hiện tại tới lúc commit.
                         AccountContact account = resolved == null ? null
                                 : accountLookup.lockContact(resolved.accountId()).orElse(null);
@@ -320,7 +329,7 @@ public class AcademicsService {
                         requireEditableClass(current);
                         return enrollLine(actor, current, account, EnrollmentSource.LIST);
                     });
-                results.add(new RowResult(row.lineNumber(), row.email(), result));
+                results.add(new RowResult(row.lineNumber(), row.identifier(), result));
             }
             return List.copyOf(results);
         });
@@ -549,11 +558,12 @@ public class AcademicsService {
         var account = accountLookup.getContact(enrollment.accountId()).orElseThrow(
                 () -> ApiException.unavailable("ACCOUNT_UNAVAILABLE", "Không đọc được sinh viên"));
         return new Student(enrollment.accountId(), account.displayName(), account.email(),
-                enrollment.enrolledAt(), enrollment.status());
+                enrollment.enrolledAt(), enrollment.status(), account.studentCode());
     }
 
     private Person mapPerson(AccountContact account) {
-        return new Person(account.accountId(), account.displayName(), account.email());
+        return new Person(account.accountId(), account.displayName(), account.email(),
+                account.studentCode());
     }
 
     private Map<String, Object> buildTeacherDetails(UUID before, UUID after) {

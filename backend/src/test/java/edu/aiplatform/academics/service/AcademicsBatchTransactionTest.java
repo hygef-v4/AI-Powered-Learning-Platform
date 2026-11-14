@@ -106,7 +106,7 @@ class AcademicsBatchTransactionTest {
 
     @Test void invalidAndDuplicateRowsDoNotOpenTransactionsButLookupMissIsAnIsolatedOutcome() {
         var rows=academicsService.enrollStudents(manager,classId,"first@example.test\nbad\nfirst@example.test\nmissing@example.test\nthird@example.test");
-        assertThat(rows).extracting(AcademicsDtos.RowResult::result).containsExactly(EnrollmentResult.ENROLLED,EnrollmentResult.INVALID_EMAIL,
+        assertThat(rows).extracting(AcademicsDtos.RowResult::result).containsExactly(EnrollmentResult.ENROLLED,EnrollmentResult.INVALID_IDENTIFIER,
                 EnrollmentResult.DUPLICATE_IN_LIST,EnrollmentResult.NOT_FOUND,EnrollmentResult.ENROLLED);
         assertThat(rows).extracting(AcademicsDtos.RowResult::line).containsExactly(1,2,3,4,5);
         assertThat(recordingTransactions.propagations).hasSize(3).containsOnly(TransactionDefinition.PROPAGATION_REQUIRES_NEW);

@@ -13,6 +13,7 @@ import { formatDateTime } from "@/shared/dateTime";
 import { Alert, Button, EmptyState, Icon, Pill, Select, type Tone } from "@/shared/ui";
 import { useSubmissionContext } from "../hooks/useSubmissionContext";
 import { buildEvaluationHref } from "../model/navigation";
+import { PersonSubline } from "@/shared/ui/PersonSubline";
 
 const STATUS_TONES: Record<string, Tone> = {
   PENDING: "warning",
@@ -199,7 +200,7 @@ export function SubmissionDetailPage({
                     </td>
                     <td className={CELL}>
                       <strong className="font-semibold break-words text-ink">{r.student.name}</strong>
-                      <p className="font-mono text-xs break-all text-muted">{r.student.email}</p>
+                      <PersonSubline className="font-mono" studentCode={r.student.studentCode} email={r.student.email} />
                     </td>
                     <td className={`${CELL} font-mono text-xs whitespace-nowrap text-body`}>
                       {formatDateTime(r.submittedAt)}

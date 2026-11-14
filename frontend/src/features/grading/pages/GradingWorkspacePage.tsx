@@ -158,6 +158,7 @@ function Workspace({
     [...new Set(submitters.map((row) => row.student.name))].join(", ") ||
     (evaluation.kind === "GROUP_DOCUMENT" ? "Bài làm nhóm" : "Bài làm sinh viên");
   const studentEmail = [...new Set(submitters.map((row) => row.student.email))].join(", ") || "";
+  const studentCode = [...new Set(submitters.map((row) => row.student.studentCode).filter(Boolean))].join(", ");
   const paper = useMemo(() => toEditorDocument(detail.document), [detail.document]);
   const imageUrls = useSubmissionImages(evaluation.id, detail.document);
   const partTitles: Record<string, string> = {
@@ -384,6 +385,7 @@ function Workspace({
               busy={busy || saving}
               studentName={studentName}
               studentEmail={studentEmail}
+              studentCode={studentCode}
               directory={directory}
               onSelect={(targetId) => navigate(targetId, false)}
             />

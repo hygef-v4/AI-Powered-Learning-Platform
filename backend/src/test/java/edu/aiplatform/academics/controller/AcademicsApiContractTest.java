@@ -220,7 +220,7 @@ class AcademicsApiContractTest {
         String text = "student@example.test\n\ninvalid";
         when(academicsService.enrollStudents(serverActor, classId, text)).thenReturn(List.of(
                 new RowResult(1, "student@example.test", EnrollmentResult.ENROLLED),
-                new RowResult(3, "invalid", EnrollmentResult.INVALID_EMAIL)));
+                new RowResult(3, "invalid", EnrollmentResult.INVALID_IDENTIFIER)));
         mvc.perform(post("/api/v1/manager/classes/" + classId + "/enrollments").contentType("application/json")
                 .content("{\"accountId\":\"" + accountId + "\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.result").value("IN_OTHER_CLASS"));
@@ -228,7 +228,7 @@ class AcademicsApiContractTest {
                 .content("{\"text\":\"student@example.test\\n\\ninvalid\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$[0].result").value("ENROLLED"))
                 .andExpect(jsonPath("$[1].line").value(3)).andExpect(jsonPath("$[1].email").value("invalid"))
-                .andExpect(jsonPath("$[1].result").value("INVALID_EMAIL"));
+                .andExpect(jsonPath("$[1].result").value("INVALID_IDENTIFIER"));
         verify(academicsService).enrollStudent(serverActor, classId, accountId);
         verify(academicsService).enrollStudents(serverActor, classId, text);
         verifyNoMoreInteractions(academicsService);

@@ -10,6 +10,7 @@ import { GroupProposalSection, useMyProposal } from "./GroupProposalSection";
 import type { MyGroupView } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { initials } from "@/shared/layout/navigation";
+import { PersonSubline } from "@/shared/ui/PersonSubline";
 
 function useMyGroup(classId: string) {
   const [view, setView] = useState<MyGroupView | null>(null);
@@ -62,7 +63,7 @@ export function MyGroupCard({ classId }: { classId: string }) {
                   <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent">{initials(leader.name ?? "?")}</span>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-ink">{leader.name ?? "Chưa rõ tên"}</p>
-                    {leader.email && <p className="break-all text-xs text-muted">{leader.email}</p>}
+                    <PersonSubline studentCode={leader.studentCode} email={leader.email} />
                   </div>
                 </div>
               ) : <span className="text-muted">Chưa có</span>}
@@ -223,7 +224,7 @@ function MemberCard({ member }: { member: MyGroupView["members"][number] }) {
       </span>
       <div className="flex min-w-0 flex-col gap-0.5">
         <p className="text-sm font-semibold text-ink [overflow-wrap:anywhere]">{member.name ?? "Chưa rõ tên"}</p>
-        {member.email && <p className="text-xs break-all text-muted">{member.email}</p>}
+        <PersonSubline studentCode={member.studentCode} email={member.email} />
       </div>
     </li>
   );

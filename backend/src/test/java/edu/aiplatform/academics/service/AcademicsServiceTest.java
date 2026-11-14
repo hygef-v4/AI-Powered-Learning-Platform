@@ -172,9 +172,30 @@ class AcademicsServiceTest {
         when(enrollmentRepository.find(classId,duplicate)).thenReturn(Optional.of(Enrollment.createEnrollment(classId,duplicate,EnrollmentSource.MANUAL,now)));
         when(enrollmentRepository.activeInOtherClass(other,subjectId,classId)).thenReturn(true);
         var rows = academicsService.enrollStudents(manager,classId,"email\nnew@a.com\nrestore@a.com\nhas@a.com\nmissing@a.com\nteacher@a.com\ndisabled@a.com\nother@a.com\nbad\nnew@a.com");
-        assertThat(rows).extracting(AcademicsDtos.RowResult::result).containsExactly(EnrollmentResult.ENROLLED,EnrollmentResult.RESTORED,EnrollmentResult.ALREADY_ENROLLED,EnrollmentResult.NOT_FOUND,EnrollmentResult.NOT_STUDENT,EnrollmentResult.DISABLED,EnrollmentResult.IN_OTHER_CLASS,EnrollmentResult.INVALID_EMAIL,EnrollmentResult.DUPLICATE_IN_LIST);
+        assertThat(rows).extracting(AcademicsDtos.RowResult::result).containsExactly(EnrollmentResult.ENROLLED,EnrollmentResult.RESTORED,EnrollmentResult.ALREADY_ENROLLED,EnrollmentResult.NOT_FOUND,EnrollmentResult.NOT_STUDENT,EnrollmentResult.DISABLED,EnrollmentResult.IN_OTHER_CLASS,EnrollmentResult.INVALID_IDENTIFIER,EnrollmentResult.DUPLICATE_IN_LIST);
         assertThat(rows.get(0).line()).isEqualTo(2);
         verify(accountLookup,times(1)).findByEmails(any());
+    }
+    /** BR-U05-56…58: trộn email và MSSV; tra mỗi loại một lần; cùng một sinh viên ở dòng sau là ALREADY_ENROLLED. */
+    @Test void batchAcceptsStudentCodesAlongsideEmails() {
+        var byCode = UUID.randomUUID();
+        var viaEmail = new AccountContact(studentId,"new@a.com","N",Role.STUDENT,AccountStatus.ACTIVE,"SE000001");
+        var viaCode = new AccountContact(byCode,"code@a.com","C",Role.STUDENT,AccountStatus.ACTIVE,"SE000002");
+        when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(ClassStatus.OPEN,0)));
+        when(accountLookup.findByEmails(any())).thenReturn(List.of(viaEmail));
+        when(accountLookup.findByStudentCodes(any())).thenReturn(List.of(viaEmail,viaCode));
+        when(accountLookup.lockContact(studentId)).thenReturn(Optional.of(viaEmail));
+        when(accountLookup.lockContact(byCode)).thenReturn(Optional.of(viaCode));
+        when(enrollmentRepository.find(classId,studentId)).thenReturn(Optional.empty())
+                .thenReturn(Optional.of(Enrollment.createEnrollment(classId,studentId,EnrollmentSource.LIST,now)));
+        var rows = academicsService.enrollStudents(manager,classId,"mssv\nnew@a.com\nse000002\nSE000001\nSE999999\nse000002\nS1");
+        assertThat(rows).extracting(AcademicsDtos.RowResult::result).containsExactly(EnrollmentResult.ENROLLED,
+                EnrollmentResult.ENROLLED,EnrollmentResult.ALREADY_ENROLLED,EnrollmentResult.NOT_FOUND,
+                EnrollmentResult.DUPLICATE_IN_LIST,EnrollmentResult.INVALID_IDENTIFIER);
+        assertThat(rows).extracting(AcademicsDtos.RowResult::email).containsExactly("new@a.com","SE000002",
+                "SE000001","SE999999","SE000002","s1");
+        verify(accountLookup,times(1)).findByEmails(List.of("new@a.com"));
+        verify(accountLookup,times(1)).findByStudentCodes(List.of("SE000002","SE000001","SE999999"));
     }
     @Test void removedStudentImmediatelyLosesAccess() {
         var actor = new Actor(studentId,Role.STUDENT);

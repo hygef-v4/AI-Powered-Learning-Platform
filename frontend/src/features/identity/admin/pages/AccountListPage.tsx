@@ -32,7 +32,7 @@ const ROLE_TABS: { value: Role | ""; label: string }[] = [
 const STATUSES: AccountStatus[] = ["ACTIVE", "PENDING", "DISABLED"];
 
 /**
- * Account List (UC 08, design `a02`): ô tìm email/tên ở hàng trên (gõ tới đâu lọc tới đó), tab vai trò, lọc trạng thái bên
+ * Account List (UC 08, design `a02`): ô tìm email/tên/MSSV ở hàng trên (gõ tới đâu lọc tới đó), tab vai trò, lọc trạng thái bên
  * phải, phân trang; bộ lọc nằm trên URL để Back
  * giữ trạng thái. Mở New Account (UC 09, `a03`), Nhập Excel (`a02b`) và Account Detail (UC 10, `a04`).
  */
@@ -117,8 +117,8 @@ export function AccountListPage() {
           <TextInput
             type="search"
             icon="search"
-            aria-label="Lọc theo email hoặc tên"
-            placeholder="Lọc theo email hoặc tên"
+            aria-label="Tìm theo email, tên hoặc MSSV"
+            placeholder="Tìm theo email, tên hoặc MSSV"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -160,9 +160,10 @@ export function AccountListPage() {
           </Alert>
         ) : (
           <TableFrame filledHead className="[&_table]:min-w-[720px] [&_table]:table-fixed">
-            <colgroup><col /><col className="w-[34%]" /><col className="w-[140px]" /><col className="w-[120px]" /><col className="w-[48px]" /></colgroup>
+            <colgroup><col className="w-[110px]" /><col /><col className="w-[30%]" /><col className="w-[140px]" /><col className="w-[120px]" /><col className="w-[48px]" /></colgroup>
             <thead>
               <tr>
+                <Th>MSSV</Th>
                 <Th>Họ tên</Th>
                 <Th>Email</Th>
                 <Th>Vai trò</Th>
@@ -175,13 +176,14 @@ export function AccountListPage() {
             <tbody>
               {!data && (
                 <tr>
-                  <Td colSpan={5} className="py-8 text-center text-muted">
+                  <Td colSpan={6} className="py-8 text-center text-muted">
                     Đang tải…
                   </Td>
                 </tr>
               )}
               {data?.items.map((account) => (
                 <ClickableRow key={account.id} onClick={() => router.push(`/admin/accounts/${account.id}`)}>
+                  <Td className="font-medium text-body" data-testid="account-list-student-code">{account.studentCode}</Td>
                   <Td>
                     <span className="flex min-w-0 items-center gap-2.5">
                       <span
@@ -215,7 +217,7 @@ export function AccountListPage() {
               ))}
               {data && data.items.length === 0 && (
                 <tr>
-                  <Td colSpan={5} className="py-10 text-center text-muted">
+                  <Td colSpan={6} className="py-10 text-center text-muted">
                     Không có tài khoản phù hợp.
                   </Td>
                 </tr>

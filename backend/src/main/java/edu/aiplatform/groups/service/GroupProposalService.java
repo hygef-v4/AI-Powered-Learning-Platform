@@ -460,7 +460,7 @@ public class GroupProposalService {
                     Person person = people.loadPerson(id);
                     UUID other = memberships.get(id);
                     return new CandidateView(id, person.name(), person.email(),
-                            other != null && !Objects.equals(other, mine.id()));
+                            other != null && !Objects.equals(other, mine.id()), person.studentCode());
                 }).toList();
     }
 
@@ -513,10 +513,12 @@ public class GroupProposalService {
     }
 
     /** {@code expired} chỉ dùng cho lời mời khi đợt đóng. */
-    public record MemberView(UUID accountId, String name, String email, boolean leader, boolean expired) {
+    public record MemberView(UUID accountId, String name, String email, boolean leader, boolean expired,
+                             String studentCode) {
 
         static MemberView of(Person person, boolean leader, boolean expired) {
-            return new MemberView(person.accountId(), person.name(), person.email(), leader, expired);
+            return new MemberView(person.accountId(), person.name(), person.email(), leader, expired,
+                    person.studentCode());
         }
     }
 
@@ -527,7 +529,8 @@ public class GroupProposalService {
     public record RejectedView(UUID proposalId, String name, String reason, Instant decidedAt) {
     }
 
-    /** Bạn mời được (BR-U12-92): chỉ id, họ tên, email trường và cờ đang ở đề xuất khác. */
-    public record CandidateView(UUID accountId, String name, String email, boolean inOtherProposal) {
+    /** Bạn mời được (BR-U12-92, 98): id, họ tên, email trường, MSSV và cờ đang ở đề xuất khác. */
+    public record CandidateView(UUID accountId, String name, String email, boolean inOtherProposal,
+                                String studentCode) {
     }
 }

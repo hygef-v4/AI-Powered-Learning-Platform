@@ -105,10 +105,11 @@ public final class PracticeViews {
                              PenaltyView penalty) {
     }
 
-    /** Tóm tắt lượt của một sinh viên cho giảng viên (BR-U11-31). */
+    /** Tóm tắt lượt của một sinh viên cho giảng viên (BR-U11-31); {@code studentCode} là MSSV (BR-U11-42). */
     public record StudentAttempts(UUID accountId, String displayName, String email, int attempts, BigDecimal bestScore,
                                   BigDecimal lastScore, Instant lastSubmittedAt, List<AttemptRow> rows,
-                                  Integer lastLeaveCount, boolean signalWarning, boolean penaltyPending) {
+                                  Integer lastLeaveCount, boolean signalWarning, boolean penaltyPending,
+                                  String studentCode) {
     }
 
     public record ClassAttempts(UUID quizId, UUID classId, Integer maxAttempts, int studentsAttempted,

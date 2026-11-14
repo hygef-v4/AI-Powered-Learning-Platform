@@ -11,7 +11,12 @@ public final class AcademicsDtos {
     private AcademicsDtos() {
     }
 
-    public record Person(UUID id, String name, String email) {
+    /** {@code studentCode}: MSSV của sinh viên, rỗng với giảng viên hoặc khi chưa có (BR-U05-60). */
+    public record Person(UUID id, String name, String email, String studentCode) {
+
+        public Person(UUID id, String name, String email) {
+            this(id, name, email, null);
+        }
     }
 
     public record Subject(UUID id, String code, String name) {
@@ -22,7 +27,12 @@ public final class AcademicsDtos {
     }
 
     public record Student(UUID accountId, String name, String email, Instant enrolledAt,
-            EnrollmentStatus status) {
+            EnrollmentStatus status, String studentCode) {
+
+        public Student(UUID accountId, String name, String email, Instant enrolledAt,
+                EnrollmentStatus status) {
+            this(accountId, name, email, enrolledAt, status, null);
+        }
     }
 
     public record ClassView(UUID id, Subject subject, String code, String name, String description,
@@ -31,6 +41,7 @@ public final class AcademicsDtos {
             long version) {
     }
 
+    /** {@code email} giữ tên trường cũ của API, chứa đúng giá trị đã nhập: email hoặc MSSV (BR-U05-58). */
     public record RowResult(int line, String email, EnrollmentResult result) {
     }
 }

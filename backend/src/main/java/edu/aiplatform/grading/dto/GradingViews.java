@@ -27,7 +27,12 @@ public final class GradingViews {
     public record AiEstimate(long estimatedTokens, int items) {
     }
 
-    public record Person(UUID accountId, String name, String email) {
+    /** {@code studentCode}: MSSV, rỗng khi chưa có hoặc là nhóm (BR-U09-75). */
+    public record Person(UUID accountId, String name, String email, String studentCode) {
+
+        public Person(UUID accountId, String name, String email) {
+            this(accountId, name, email, null);
+        }
     }
 
     public record SubmissionRow(Person student, UUID evaluationId, UUID attemptId, String status,

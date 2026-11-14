@@ -119,9 +119,9 @@ class AccountAdminServiceTest {
         when(accounts.findByEmail("taivm@fpt.edu.vn"))
                 .thenReturn(Optional.of(IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, "h")));
 
-        assertThatThrownBy(() -> service.create(admin, "taivm@fpt.edu.vn", "Tài", Role.STUDENT))
+        assertThatThrownBy(() -> service.create(admin, "taivm@fpt.edu.vn", "Tài", Role.TEACHER))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("EMAIL_EXISTS"));
-        assertThatThrownBy(() -> service.create(admin, "a@gmail", "A", Role.STUDENT))
+        assertThatThrownBy(() -> service.create(admin, "a@gmail", "A", Role.TEACHER))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("INVALID_EMAIL"));
         verify(accounts, never()).insert(any());
     }
@@ -131,7 +131,7 @@ class AccountAdminServiceTest {
     void createAcceptsEmailFromAnyDomain() {
         when(accounts.findByEmail("a@gmail.com")).thenReturn(Optional.empty());
 
-        AccountViews.Detail created = service.create(admin, "A@Gmail.com", "A", Role.STUDENT);
+        AccountViews.Detail created = service.create(admin, "A@Gmail.com", "A", Role.STUDENT, "se000001");
 
         assertThat(created.email()).isEqualTo("a@gmail.com");
         verify(accounts).insert(any());
@@ -140,7 +140,7 @@ class AccountAdminServiceTest {
     @Test
     void staleVersionIsConflict() {
         Account target = stored(Role.STUDENT, AccountStatus.ACTIVE, "h");
-        when(accounts.updateProfile(eq(target.id()), anyString(), any(), eq(1L), any())).thenReturn(0);
+        when(accounts.updateAccountDetails(eq(target.id()), anyString(), any(), any(), eq(1L), any())).thenReturn(0);
 
         assertThatThrownBy(() -> service.update(admin, target.id(), "Tên mới", null, 1L))
                 .isInstanceOfSatisfying(ApiException.class,
@@ -149,15 +149,15 @@ class AccountAdminServiceTest {
 
     @Test
     void roleChangeRevokesSessionsAndAuditsBeforeAfter() {
-        Account target = stored(Role.STUDENT, AccountStatus.ACTIVE, "h");
-        when(accounts.updateRole(target.id(), Role.TEACHER, 3L, NOW)).thenReturn(1);
+        Account target = stored(Role.TEACHER, AccountStatus.ACTIVE, "h");
+        when(accounts.updateRole(target.id(), Role.SUBJECT_MANAGER, 3L, NOW)).thenReturn(1);
 
-        service.changeRole(admin, target.id(), Role.TEACHER, 3L);
+        service.changeRole(admin, target.id(), Role.SUBJECT_MANAGER, 3L);
 
         verify(sessions, times(2)).deleteAll(target.id());
         assertThat(audits).singleElement().satisfies(e -> {
             assertThat(e.action()).isEqualTo("ROLE_CHANGED");
-            assertThat(e.details()).containsEntry("from", "STUDENT").containsEntry("to", "TEACHER");
+            assertThat(e.details()).containsEntry("from", "TEACHER").containsEntry("to", "SUBJECT_MANAGER");
         });
     }
 
@@ -230,7 +230,7 @@ class AccountAdminServiceTest {
         when(subjectQuery.getSubject(subject)).thenThrow(new IllegalStateException("U04 lỗi"));
         when(classAccess.getClassRef(clazz)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.changeRole(admin, teacher.id(), Role.STUDENT, 3L))
+        assertThatThrownBy(() -> service.changeRole(admin, teacher.id(), Role.ADMIN, 3L))
                 .isInstanceOfSatisfying(RoleChangeBlockedException.class, e -> {
                     assertThat(e.subjects()).containsExactly(new RoleChangeBlockedException.Held(subject, null, null));
                     assertThat(e.classes()).containsExactly(new RoleChangeBlockedException.Held(clazz, null, null));
@@ -301,6 +301,123 @@ class AccountAdminServiceTest {
         verify(accounts).updateStatus(wasActive.id(), AccountStatus.ACTIVE, 3L, NOW);
         verify(sessions, never()).deleteAll(any());
         verify(subjectScope, never()).releaseManagerAssignments(any(), any());
+    }
+
+    /** BR-U01-102, 103: MSSV bắt buộc và đúng định dạng với STUDENT, cấm với role khác. */
+    @Test
+    void createRequiresValidStudentCodeOnlyForStudents() {
+        assertThatThrownBy(() -> service.create(admin, "sv@fpt.edu.vn", "SV", Role.STUDENT))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("MISSING_STUDENT_CODE"));
+        assertThatThrownBy(() -> service.create(admin, "sv@fpt.edu.vn", "SV", Role.STUDENT, "S1234567"))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("INVALID_STUDENT_CODE"));
+        assertThatThrownBy(() -> service.create(admin, "gv@fpt.edu.vn", "GV", Role.TEACHER, "SE000001"))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("STUDENT_CODE_NOT_ALLOWED"));
+        verify(accounts, never()).insert(any());
+    }
+
+    @Test
+    void createStoresNormalizedCodeAndAuditsWithoutValue() {
+        when(accounts.findByEmail("sv@fpt.edu.vn")).thenReturn(Optional.empty());
+
+        AccountViews.Detail created = service.create(admin, "sv@fpt.edu.vn", "SV", Role.STUDENT, " se000001 ");
+
+        assertThat(created.studentCode()).isEqualTo("SE000001");
+        assertThat(created.studentCodeEditable()).isTrue();
+        verify(accounts).insert(org.mockito.ArgumentMatchers.argThat(a -> "SE000001".equals(a.studentCode())));
+        assertThat(audits).singleElement().satisfies(e -> {
+            assertThat(e.details()).containsEntry("studentCodeSet", true);
+            assertThat(e.details().toString()).doesNotContain("SE000001");
+        });
+    }
+
+    /** BR-U01-101: mã đã có người dùng, kể cả khi hai request ghi cùng lúc. */
+    @Test
+    void createRejectsTakenStudentCode() {
+        when(accounts.findByEmail(anyString())).thenReturn(Optional.empty());
+        when(accounts.existingStudentCodes(List.of("SE000001"))).thenReturn(java.util.Set.of("SE000001"));
+        assertThatThrownBy(() -> service.create(admin, "a@fpt.edu.vn", "A", Role.STUDENT, "SE000001"))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("STUDENT_CODE_EXISTS"));
+
+        org.mockito.Mockito.doThrow(new org.springframework.dao.DuplicateKeyException(
+                        "duplicate key value violates unique constraint \"accounts_student_code_key\""))
+                .when(accounts).insert(any());
+        assertThatThrownBy(() -> service.create(admin, "b@fpt.edu.vn", "B", Role.STUDENT, "SE000002"))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("STUDENT_CODE_EXISTS"));
+    }
+
+    private Account storedStudent(AccountStatus status, String studentCode) {
+        Account base = IdentityTestData.account(Role.STUDENT, status, status == AccountStatus.PENDING ? null : "h");
+        Account account = new Account(base.id(), base.schoolEmail(), base.role(), base.status(), base.passwordHash(),
+                base.passwordChangedAt(), base.displayName(), base.phoneNumber(), 0, null, base.createdAt(),
+                base.updatedAt(), base.version(), studentCode);
+        when(accounts.findById(account.id())).thenReturn(Optional.of(account));
+        return account;
+    }
+
+    /**
+     * BR-U01-105: không gửi giữ nguyên; chỉ sửa khi PENDING; khóa khi đã kích hoạt, kể cả tài khoản cũ chưa có mã
+     * (không có chức năng gán mã cho tài khoản cũ, người dùng chốt 2026-11-14).
+     */
+    @Test
+    void updateAppliesStudentCodeRules() {
+        when(accounts.updateAccountDetails(any(), anyString(), any(), any(), anyLong(), any())).thenReturn(1);
+        Account legacy = storedStudent(AccountStatus.ACTIVE, null);
+        Account pending = storedStudent(AccountStatus.PENDING, "SE000001");
+        Account active = storedStudent(AccountStatus.ACTIVE, "SE000002");
+
+        service.update(admin, active.id(), "Vũ Minh Tài", null, null, 3L);
+        service.update(admin, active.id(), "Vũ Minh Tài", null, "se000002", 3L);
+        verify(accounts, times(2)).updateAccountDetails(active.id(), "Vũ Minh Tài", null, "SE000002", 3L, NOW);
+        service.update(admin, legacy.id(), "Vũ Minh Tài", null, "", 3L);
+        verify(accounts).updateAccountDetails(legacy.id(), "Vũ Minh Tài", null, null, 3L, NOW);
+        assertThatThrownBy(() -> service.update(admin, legacy.id(), "Vũ Minh Tài", null, "se000003", 3L))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("STUDENT_CODE_LOCKED"));
+        service.update(admin, pending.id(), "Vũ Minh Tài", null, "SE000004", 3L);
+        verify(accounts).updateAccountDetails(pending.id(), "Vũ Minh Tài", null, "SE000004", 3L, NOW);
+        assertThat(audits).last().satisfies(e -> assertThat(e.details()).containsEntry("fields", List.of("studentCode")));
+
+        assertThatThrownBy(() -> service.update(admin, active.id(), "Vũ Minh Tài", null, "SE000009", 3L))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("STUDENT_CODE_LOCKED"));
+        assertThatThrownBy(() -> service.update(admin, active.id(), "Vũ Minh Tài", null, " ", 3L))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("INVALID_STUDENT_CODE"));
+        assertThatThrownBy(() -> service.update(admin, pending.id(), "Vũ Minh Tài", null, "SE12", 3L))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("INVALID_STUDENT_CODE"));
+        Account teacher = stored(Role.TEACHER, AccountStatus.ACTIVE, "h");
+        assertThatThrownBy(() -> service.update(admin, teacher.id(), "GV", null, "SE000005", 3L))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("STUDENT_CODE_NOT_ALLOWED"));
+        when(accounts.existingStudentCodes(List.of("SE000006"))).thenReturn(java.util.Set.of("SE000006"));
+        assertThatThrownBy(() -> service.update(admin, pending.id(), "Vũ Minh Tài", null, "SE000006", 3L))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("STUDENT_CODE_EXISTS"));
+    }
+
+    @Test
+    void detailMarksStudentCodeEditableOnlyForPendingStudents() {
+        assertThat(service.detail(admin, storedStudent(AccountStatus.ACTIVE, null).id()).studentCodeEditable()).isFalse();
+        assertThat(service.detail(admin, storedStudent(AccountStatus.PENDING, "SE000001").id()).studentCodeEditable())
+                .isTrue();
+        assertThat(service.detail(admin, storedStudent(AccountStatus.ACTIVE, "SE000002").id()).studentCodeEditable())
+                .isFalse();
+        assertThat(service.detail(admin, stored(Role.TEACHER, AccountStatus.PENDING, null).id()).studentCodeEditable())
+                .isFalse();
+    }
+
+    /** BR-U01-107: không đổi role vào hoặc ra khỏi STUDENT; xét trước các quy tắc khác và ghi audit từ chối. */
+    @Test
+    void roleChangeIntoOrOutOfStudentIsRejected() {
+        Account student = storedStudent(AccountStatus.ACTIVE, "SE000001");
+        Account teacher = stored(Role.TEACHER, AccountStatus.ACTIVE, "h");
+
+        assertThatThrownBy(() -> service.changeRole(admin, student.id(), Role.TEACHER, 3L))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("STUDENT_ROLE_CHANGE_NOT_ALLOWED"));
+        assertThatThrownBy(() -> service.changeRole(admin, teacher.id(), Role.STUDENT, 3L))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("STUDENT_ROLE_CHANGE_NOT_ALLOWED"));
+        verify(accounts, never()).updateRole(any(), any(), anyLong(), any());
+        verify(sessions, never()).deleteAll(any());
+        assertThat(audits).extracting(AuditEvent::action).containsExactly("ROLE_CHANGE_REJECTED", "ROLE_CHANGE_REJECTED");
     }
 
     @SuppressWarnings("unchecked")

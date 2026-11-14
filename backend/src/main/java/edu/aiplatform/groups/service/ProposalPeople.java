@@ -26,9 +26,15 @@ public final class ProposalPeople {
             }
         });
         return new Person(accountId, contact.map(AccountContact::displayName).orElse(null),
-                contact.map(AccountContact::email).orElse(null));
+                contact.map(AccountContact::email).orElse(null),
+                contact.map(AccountContact::studentCode).orElse(null));
     }
 
-    public record Person(UUID accountId, String name, String email) {
+    /** {@code studentCode}: MSSV, rỗng khi chưa có (BR-U12-97). */
+    public record Person(UUID accountId, String name, String email, String studentCode) {
+
+        public Person(UUID accountId, String name, String email) {
+            this(accountId, name, email, null);
+        }
     }
 }

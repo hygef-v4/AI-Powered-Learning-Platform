@@ -104,14 +104,15 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
       {!data && !error && <p role="status" className="text-[13px] text-muted">Đang tải lượt làm…</p>}
       {data && <>
         {/* Cùng kiểu các bảng khác: hàng tiêu đề tô nền, bấm cả dòng để mở (mũi tên cuối dòng), phân trang dưới bảng. */}
-        <TableFrame filledHead className="[&_table]:min-w-[560px] [&_table]:table-fixed">
-          <colgroup><col /><col className="w-[72px]" /><col className="w-[96px]" /><col className="w-[96px]" /><col className="w-[40px]" /></colgroup>
-          <thead><tr><Th>Sinh viên</Th><Th>Lượt</Th><Th>Điểm cao nhất</Th><Th>Rời trang</Th><Th><span className="sr-only">Mở</span></Th></tr></thead>
+        <TableFrame filledHead className="[&_table]:min-w-[660px] [&_table]:table-fixed">
+          <colgroup><col className="w-[104px]" /><col /><col className="w-[72px]" /><col className="w-[96px]" /><col className="w-[96px]" /><col className="w-[40px]" /></colgroup>
+          <thead><tr><Th>MSSV</Th><Th>Sinh viên</Th><Th>Lượt</Th><Th>Điểm cao nhất</Th><Th>Rời trang</Th><Th><span className="sr-only">Mở</span></Th></tr></thead>
           <tbody>
-            {data.students.length === 0 && <tr><Td colSpan={5} className="py-6 text-center! text-muted">Lớp chưa có sinh viên.</Td></tr>}
+            {data.students.length === 0 && <tr><Td colSpan={6} className="py-6 text-center! text-muted">Lớp chưa có sinh viên.</Td></tr>}
             {data.students.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((s) => (
               <ClickableRow key={s.accountId} onClick={() => s.attempts > 0 && setStudent(s)} data-testid="quiz-attempts-row"
                 className={s.attempts > 0 ? undefined : "cursor-default"}>
+                <Td className="font-medium text-body" data-testid="quiz-attempts-student-code">{s.studentCode}</Td>
                 <Td>
                   {s.attempts > 0 ? (
                     // Nút trong ô đầu để mở lượt làm bằng bàn phím; dòng vẫn bấm chuột được như trước.

@@ -156,6 +156,8 @@ export type StudentAttempts = {
   lastLeaveCount: number | null;
   signalWarning: boolean;
   penaltyPending: boolean;
+  /** MSSV (BR-U11-42); null khi chưa có. */
+  studentCode?: string | null;
 };
 
 export type ClassAttempts = {

@@ -4,7 +4,7 @@ import { expect, it } from "vitest";
 import * as XLSX from "xlsx";
 
 it.each([
-  ["account-import", ["email", "display_name", "role"]],
+  ["account-import", ["email", "display_name", "role", "student_code"]],
   ["enrollment-import", ["email"]],
   ["question-import", ["noi_dung", "loai", "lua_chon_1", "lua_chon_2"]],
 ])("provides a real %s Excel template with headers and examples", (name, headers) => {

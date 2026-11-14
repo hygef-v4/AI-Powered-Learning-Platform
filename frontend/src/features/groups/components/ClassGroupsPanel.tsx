@@ -11,6 +11,8 @@ import { LeaderRequestList } from "./LeaderRequestList";
 import { ProposalReviewList } from "./ProposalReviewList";
 import { RandomSplitDialog } from "./RandomSplitDialog";
 import type { Draft, GroupSetView } from "../model/types";
+import { matchesPersonQuery } from "@/shared/studentCode";
+import { PersonSubline } from "@/shared/ui/PersonSubline";
 
 const PAGE_SIZE = 20;
 
@@ -118,7 +120,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
   const q = query.toLocaleLowerCase("vi").trim();
   const visible = all
     .sort((a, b) => personLabel(a).localeCompare(personLabel(b), "vi"))
-    .filter((p) => `${personLabel(p)} ${p.email ?? ""}`.toLocaleLowerCase("vi").includes(q)
+    .filter((p) => matchesPersonQuery({ ...p, name: personLabel(p) }, q)
       && (!filter || (groupOf(p.accountId)?.key ?? UNGROUPED) === filter));
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const current = Math.min(page, totalPages - 1);
@@ -193,7 +195,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="min-w-0 flex-1 truncate font-display text-[15px] font-bold text-ink" title={selectedName}>{selectedName}</h2>
             <div role="search" className="w-full sm:w-72">
-              <TextInput type="search" icon="search" aria-label="Lọc theo tên hoặc email" placeholder="Lọc theo tên hoặc email" value={query}
+              <TextInput type="search" icon="search" aria-label="Lọc theo tên, email hoặc MSSV" placeholder="Lọc theo tên, email hoặc MSSV" value={query}
                 onChange={(e) => { setQuery(e.target.value); setPage(0); }} />
             </div>
           </div>
@@ -210,7 +212,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
                       {g?.leaderId === p.accountId && <Pill tone="warning">Trưởng nhóm</Pill>}
                     </span>
                   </Td>
-                  <Td className="truncate text-muted">{p.email}</Td>
+                  <Td className="min-w-0"><PersonSubline className="truncate" studentCode={p.studentCode} email={p.email} /></Td>
                   <Td className="truncate">{g?.name ?? <span className="text-muted">Chưa có nhóm</span>}</Td>
                   <Td className="text-muted">{formatDate(p.enrolledAt)}</Td>
                   <Td className="text-right">

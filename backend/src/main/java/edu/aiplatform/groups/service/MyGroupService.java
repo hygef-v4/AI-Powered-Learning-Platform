@@ -94,7 +94,7 @@ public class MyGroupService {
             c = Optional.empty();
         }
         return new Member(id, c.map(AccountContact::displayName).orElse(null), c.map(AccountContact::email).orElse(null),
-                id.equals(group.leaderId()));
+                id.equals(group.leaderId()), c.map(AccountContact::studentCode).orElse(null));
     }
 
     public record MyGroupView(UUID classId, String classStatus, UUID groupId, String name, UUID leaderId,
@@ -102,7 +102,8 @@ public class MyGroupService {
                               List<RequestSummary> myRequests, boolean amLeader) {
     }
 
-    public record Member(UUID accountId, String name, String email, boolean leader) {
+    /** {@code studentCode}: MSSV, sinh viên thấy được của thành viên cùng nhóm (BR-U12-97, SC-11). */
+    public record Member(UUID accountId, String name, String email, boolean leader, String studentCode) {
     }
 
     public record GroupWork(UUID assignmentId, String title, Instant closesAt, UUID documentId, int doneSections,

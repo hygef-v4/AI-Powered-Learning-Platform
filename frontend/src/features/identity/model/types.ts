@@ -21,6 +21,8 @@ export type Profile = {
   role: Role;
   status: AccountStatus;
   homePath: string;
+  /** MSSV chỉ đọc của sinh viên; null khi chưa có (BR-U01-106). */
+  studentCode?: string | null;
 };
 
 export const ROLE_LABELS: Record<Role, string> = {
