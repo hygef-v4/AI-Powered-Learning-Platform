@@ -14118,3 +14118,12 @@ tôi đã trả lời các câu hỏi, câu trả lời nằm ở sau câu hỏi
 **Context**: Giao nhánh — trước khi tạo PR.
 
 ---
+
+## Giao nhánh MSSV — đã tạo PR #84
+**Timestamp**: 2026-11-14T13:56:55Z
+**Requested by:** Hải Nam
+**User Input**: "Đã đăng nhập"
+**AI Response**: "Tạo PR #84 fix/student-code → staging qua trang GitHub trong trình duyệt của app (https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/84), mô tả gồm phạm vi, kiểm thử sau merge (mvn verify 2373, Vitest, build, e2e 40/40) và lưu ý khi merge. Không merge PR, không bật auto-merge. Không gắn được PR vào thanh PR của app vì máy không có gh."
+**Context**: Giao nhánh hoàn tất.
+
+---
