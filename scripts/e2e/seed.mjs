@@ -27,7 +27,9 @@ for (const p of people) {
   const list = await admin.get(`/api/v1/admin/accounts?q=${encodeURIComponent(p.email)}`);
   let acc = (list.data?.items || list.data?.content || []).find((a) => a.email === p.email);
   if (!acc) {
-    const r = await admin.post("/api/v1/admin/accounts", { email: p.email, displayName: p.displayName, role: p.role });
+    // Student accounts require a unique student code (BR-U01-103): ST000001…ST000005.
+    const studentCode = p.role === "STUDENT" ? `ST${p.key.replace("sv", "").padStart(6, "0")}` : undefined;
+    const r = await admin.post("/api/v1/admin/accounts", { email: p.email, displayName: p.displayName, role: p.role, ...(studentCode ? { studentCode } : {}) });
     if (r.status >= 300) throw new Error(`create ${p.email}: ${r.status} ${JSON.stringify(r.data)}`);
     acc = r.data;
   }
