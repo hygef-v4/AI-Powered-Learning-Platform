@@ -92,6 +92,8 @@ type Props = {
   toolbarCenter?: ReactNode;
   /** Ghi chú bên lề gắn với block (rubric của từng mục), kiểu comment Google Docs. */
   comments?: DocumentComment[];
+  /** Khung bên phải thay thế ghi chú bên lề; nội dung tự xử lý cách mở trên màn hẹp. */
+  sidePanel?: ReactNode;
   activeComment?: string | null;
   /** Tiêu đề của phần đang chọn: viền phần đó. */
   highlightBlockId?: string | null;
@@ -610,7 +612,7 @@ export function DocumentEditor({
   document, onChange, mode, diagramEnabled, readOnly = false, imageUrl, uploadImage, issues = [],
   header, sectionBylines, sectionActions, writableParts, sectionNumbers, initialView = "page", titleField, toolbarExtra, viewSlot, toolbarCenter, comments, activeComment,
   highlightBlockId, onFocusBlock, emptyLeafLabel, answerGuidance = false, fullWidth = false,
-  matchCommentHeight = false,
+  matchCommentHeight = false, sidePanel,
   externalEdit = null,
 }: Props) {
   const origin: BlockOrigin = mode === "author" ? "TEACHER" : "STUDENT";
@@ -1148,8 +1150,8 @@ export function DocumentEditor({
   // Đang vẽ (Draw.io chiếm cột phải, trang hẹp lại) thì ẩn ghi chú bên lề như bản demo ẩn cột mục lục.
   const visible = editing ? [] : (comments ?? []).filter((c) => !c.anchorBlockId
     || (currentLeaf ? shownHeadings.has(c.anchorBlockId) : blocks.some((b) => b.id === c.anchorBlockId)));
-  const rail = wide && visible.length > 0;
-  const inlineComments = (anchor: string | null) => rail ? null : visible.filter((c) => c.anchorBlockId === anchor).map((c) => (
+  const rail = wide && (Boolean(sidePanel) || visible.length > 0);
+  const inlineComments = (anchor: string | null) => rail || sidePanel ? null : visible.filter((c) => c.anchorBlockId === anchor).map((c) => (
     <div key={c.key} className="my-2" data-comment={c.key}>{c.content}</div>
   ));
 
@@ -1705,7 +1707,12 @@ export function DocumentEditor({
           )}
           {stepping && stepNav("bottom")}
         </div>
-        {rail && <CommentRail paper={content} comments={visible} activeKey={activeComment} matchSectionHeight={matchCommentHeight} />}
+        {sidePanel ? <aside data-testid="document-side-panel" className={wide ? "sticky min-w-0 overflow-y-auto" : undefined}
+          style={wide ? {
+            top: "calc(var(--doc-toolbar-top, 4rem) + var(--doc-toolbar-height, 2.25rem) + 0.5rem)",
+            maxHeight: "calc(100dvh - var(--doc-toolbar-top, 4rem) - var(--doc-toolbar-height, 2.25rem) - 1rem)",
+          } : undefined}>{sidePanel}</aside>
+          : rail && <CommentRail paper={content} comments={visible} activeKey={activeComment} matchSectionHeight={matchCommentHeight} />}
       </div>
 
       {editing && editing.type === "DIAGRAM" && (

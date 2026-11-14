@@ -19,6 +19,53 @@ import org.junit.jupiter.api.Test;
 
 class GradebookServiceTest {
     @Test
+    void memberAssessmentIsPrivateUntilPublishedAndReflectsPublishedCorrections() {
+        var repo = mock(IEvaluationRepository.class);
+        var auth = mock(IAuthorization.class);
+        var classes = mock(IClassAccess.class);
+        var audit = mock(IAudit.class);
+        var classId = UUID.randomUUID();
+        var studentId = UUID.randomUUID();
+        var actor = new Actor(studentId, Role.STUDENT);
+        when(auth.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
+        when(classes.isActiveStudent(studentId, classId)).thenReturn(true);
+        var mine = Evaluation.createPendingEvaluation(null, UUID.randomUUID(), classId, studentId,
+                "hash", BigDecimal.TEN, "[]", Instant.EPOCH);
+        mine.kind = EvaluationKind.MEMBER;
+        mine.memberOverride = true;
+        mine.contributionLevel = ContributionLevel.PARTIALLY_MEETS;
+        mine.adjustmentReason = "Thiếu luồng lỗi";
+        mine.score = new BigDecimal("7");
+        mine.state = EvaluationStatus.DRAFT;
+        var other = Evaluation.createPendingEvaluation(null, mine.assignmentId, classId,
+                UUID.randomUUID(), "hash", BigDecimal.TEN, "[]", Instant.EPOCH);
+        other.kind = EvaluationKind.MEMBER;
+        other.contributionLevel = ContributionLevel.NOT_COMPLETED;
+        other.adjustmentReason = "Private other member";
+        other.state = EvaluationStatus.PUBLISHED;
+        when(repo.findForClass(classId)).thenReturn(List.of(mine, other));
+        var service = new GradebookService(repo,
+                new GradingAccess(auth, classes, audit, Clock.systemUTC()),
+                mock(IAssignmentQuery.class), mock(ISubmissionQuery.class), classes,
+                mock(IAccountLookup.class), mock(IRubric.class), audit, Clock.systemUTC(),
+                mock(org.springframework.beans.factory.ObjectProvider.class),
+                mock(GradeDistributionVisibilityRepository.class));
+        assertThat(service.listMyGrades(actor, classId)).isEmpty();
+        mine.state = EvaluationStatus.PUBLISHED;
+        assertThat(service.listMyGrades(actor, classId)).singleElement().satisfies(grade -> {
+            assertThat(grade.contributionLevel()).isEqualTo(ContributionLevel.PARTIALLY_MEETS);
+            assertThat(grade.contributionReason()).isEqualTo("Thiếu luồng lỗi");
+            assertThat(grade.score()).isEqualByComparingTo("7");
+        });
+        mine.contributionLevel = ContributionLevel.MEETS_EXPECTATIONS;
+        mine.adjustmentReason = "Đã xác minh hoàn thành";
+        assertThat(service.listMyGrades(actor, classId)).singleElement().satisfies(grade -> {
+            assertThat(grade.contributionLevel()).isEqualTo(ContributionLevel.MEETS_EXPECTATIONS);
+            assertThat(grade.contributionReason()).isEqualTo("Đã xác minh hoàn thành");
+            assertThat(grade.score()).isEqualByComparingTo("7");
+        });
+    }
+    @Test
     void studentCannotSeeDraftOrAnotherStudentsGrades() {
         var repo = mock(IEvaluationRepository.class);
         var auth = mock(IAuthorization.class);

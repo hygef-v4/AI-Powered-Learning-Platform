@@ -278,11 +278,13 @@ class GradingServiceTest {
                 Map.of(rubricId, Map.of(itemId, new BigDecimal("0.75")))));
         assertThat(member.score).isEqualByComparingTo("0.75");
         assertThat(member.state).isEqualTo(EvaluationStatus.PUBLISHED);
-        gradingService.saveMemberGrade(teacher, evaluation.id, studentId, new MemberSave(0, BigDecimal.ONE, "contribution"));
+        gradingService.saveMemberGrade(teacher, evaluation.id, studentId,
+                new MemberSave(0, BigDecimal.ONE, "contribution", ContributionLevel.NEEDS_SUPPORT));
         gradingService.saveEvaluation(teacher, evaluation.id, command(0));
         assertThat(member.score).isEqualByComparingTo("1");
         assertThat(member.memberOverride).isTrue();
         assertThat(member.state).isEqualTo(EvaluationStatus.PUBLISHED);
+        assertThat(member.contributionLevel).isEqualTo(ContributionLevel.NEEDS_SUPPORT);
     }
 
     @Test
@@ -495,5 +497,36 @@ class GradingServiceTest {
         gradingService.saveMemberGrade(teacher, evaluation.id, studentId, new MemberSave(0, new BigDecimal("2"), null));
         assertThat(member.score).isEqualByComparingTo("2");
         assertThat(member.adjustment).isEqualByComparingTo("-2");
+        for (var level : ContributionLevel.values()) {
+            gradingService.saveMemberGrade(teacher, evaluation.id, studentId,
+                    new MemberSave(0, new BigDecimal("2"), "  Hoàn thành API  ", level));
+            assertThat(member.contributionLevel).isEqualTo(level);
+            assertThat(member.adjustmentReason).isEqualTo("Hoàn thành API");
+            assertThat(member.score).isEqualByComparingTo("2");
+        }
+        verify(audit).record(argThat(event -> event.action().equals("GRADE_CHANGED")
+                && event.details().get("previousContributionLevel").equals("MEETS_EXPECTATIONS")
+                && event.details().get("contributionLevel").equals("PARTIALLY_MEETS")));
+        assertThatThrownBy(() -> gradingService.saveMemberGrade(teacher, evaluation.id, studentId,
+                new MemberSave(99, BigDecimal.ONE, "stale", ContributionLevel.MEETS_EXPECTATIONS)))
+                .isInstanceOfSatisfying(ApiException.class,
+                        error -> assertThat(error.code()).isEqualTo("GRADE_VERSION_CONFLICT"));
+        assertThat(member.contributionLevel).isEqualTo(ContributionLevel.NOT_COMPLETED);
+        gradingService.saveMemberGrade(teacher, evaluation.id, studentId,
+                new MemberSave(0, new BigDecimal("2"), null, null));
+        assertThat(member.contributionLevel).isNull();
+        assertThat(member.adjustmentReason).isNull();
+        when(classAccess.getClassRef(classId)).thenReturn(Optional.of(new ClassRef(classId,
+                UUID.randomUUID(), "SE1", "Class", ClassStatus.ARCHIVED, teacherId, false)));
+        assertThatThrownBy(() -> gradingService.saveMemberGrade(teacher, evaluation.id, studentId,
+                new MemberSave(0, BigDecimal.ONE, "archived", ContributionLevel.NOT_COMPLETED)))
+                .isInstanceOfSatisfying(ApiException.class,
+                        error -> assertThat(error.code()).isEqualTo("GRADING_CLASS_READ_ONLY"));
+        assertThat(member.contributionLevel).isNull();
+        when(auth.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.deny("OUT_OF_CLASS_SCOPE"));
+        assertThatThrownBy(() -> gradingService.saveMemberGrade(teacher, evaluation.id, studentId,
+                new MemberSave(0, BigDecimal.ONE, "forbidden", ContributionLevel.NOT_COMPLETED)))
+                .isInstanceOf(ApiException.class);
+        assertThat(member.contributionLevel).isNull();
     }
 }

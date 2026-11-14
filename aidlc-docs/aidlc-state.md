@@ -847,3 +847,50 @@ Plan/evidence: construction/plans/code-generation-plan/2026-11-13-ai-chat-attach
 - [x] Fresh precommit checks: 217 frontend tests/31 files and 131 targeted backend tests pass; diff whitespace check passes. No code changes since earlier lint/typecheck/build and live UI checks.
 - [x] Fetched origin/staging and merged into fix/u05-u09-u15: Already up to date; no conflicts or merge commit needed. Staging contains no commits missing from this branch.
 - [ ] Push/PR/deploy not requested in this interaction. Live AI rubric/formatting findings remain recorded; no claim they were fixed by committing.
+
+## Student assignment visibility diagnosis — 2026-11-13
+
+- [x] User requested checking a screenshot: notification opens group assessment, class assignment tabs show zero items. Reproduced via actual StudentAssignmentsPage with a mocked API row: OPEN visible, CLOSED/unsubmitted missing from every tab (one passing control, one failing symptom).
+- [x] Located frontend tab partition gap and misleading closed-group status label. Backend list/detail intentionally include CLOSED rows; deadline scanner can close previously published work. Diagnostic failing harness moved out of the discovered test tree.
+- [ ] Await full deployed assignment link to verify that record's status/class; not claiming the screenshot's production root cause is conclusively verified.
+- [ ] Product fix not requested/applied in this diagnosis turn. Proposed discoverable closed/unsubmitted category plus matching labels; preserve actionable class-summary predicates and authorization.
+
+Evidence: construction/build-and-test/2026-11-13-student-assignment-visibility.md. Only diagnosis documents changed; no commit/push/deploy.
+
+### Approved visibility repair — 2026-11-13
+
+- [x] User authorized the proposed repair with Ponytail. Added Đã đóng tab for CLOSED/MISSED rows without an individual/group submission, with existing Hết hạn label shared by list and detail. Closed submitted rows remain in Đã nộp; actionable todo predicates, API, schedules and permissions unchanged.
+- [x] RED: nine new regression failures, seven passing controls before source edits. GREEN: 40 affected tests and full frontend 1047 tests/150 files; full ESLint and isolated TypeScript pass. URL focus/filter/pagination and closed submitted group histories covered.
+- [x] Current U08 frontend doc and evidence updated. Normal typecheck still fails on old generated Next routes; no cache deletion or permanent config change, temporary check config removed.
+- [ ] Deploy-record confirmation and browser acceptance not performed; no link provided. No backend change or new build/backend tests required for this frontend classification delta. No commit/push/deploy.
+
+## Member contribution levels — 2026-11-13
+
+- [x] Read existing member grading UI/API/model/JSON persistence; prepared concrete five-level assessment and in-product scoring guidance.
+- [x] User subsequently approved implementation of inception/requirements/2026-11-13-member-contribution-levels.md. Optional persisted level; teacher decides score; no automatic conversion. See implementation results below.
+- Initial design-only stage changed no source/tests; implementation results below supersede that stage. No commit/push/deploy. Existing security/resiliency scope retained; PBT disabled.
+
+### Member contribution levels implemented — 2026-11-13
+
+- [x] User authorized implementation of the reviewed five-level contribution proposal; direct execution, no subagents. Persisted nullable enum in existing evaluation JSONB/member-save transaction, previous/current level audit, private published student view, reset on resubmission and retained independent assessment on group corrections.
+- [x] Shared Select and collapsed grading guide; no automatic score conversion, saved personal reason restored, initial level unassessed. Source and tests follow existing module boundaries, no new dependency/schema migration.
+- [x] Backend55/55; frontend grading199/199 plus API4/4 (three overlap); scoped lint and isolated source/test TypeScript pass. Normal TypeScript fails only on old generated Next route validators. Temporary typecheck config removed, production config untouched.
+- [x] User will perform UI acceptance. No browser check, production build, live grade changes, AI call, backend restart, commit/push/deploy. Backend must load new code before testing the new strict request field.
+
+Plan: construction/plans/code-generation-plan/2026-11-13-member-contribution-levels.md. Results: construction/build-and-test/2026-11-13-member-contribution-levels.md. Security/Resiliency scope retained, PBT disabled.
+
+### Group grading side panel — implemented 2026-11-13
+
+- [x] User approved the concrete two-column UI proposal. Added optional DocumentEditor sidePanel, group rubric/member tabs and responsive modeless drawer using the existing1280px breakpoint.
+- [x] Member selector/previous/next and actual sectionAuthors links in both directions; multiple authors retained, unknown contribution never inferred. Persistent per-member draft components, version-safe refresh/conflict handling and additional unsaved guards; group autosave excludes member grades.
+- [x] RED3 new failures/44 controls; frontend full1056/151files; final scoped50/50 after local polish, lint/isolated TypeScript pass. Normal stale Next validator issue remains outside this delta; temporary config removed.
+- [x] Live teacher local UI1440/390: two columns/sticky panel, correct member, jump in page/step modes, draft retained across member switch and drawer Escape/reopen. Removed temporary unsaved QA note; restored554x930 viewport. No actual grade save, publish or AI call.
+- No backend delta/restart, production build, commit/push/deploy. Existing five-level feature WIP preserved; no subagents. Security/Resiliency retained, PBT disabled.
+
+Plan: construction/plans/code-generation-plan/2026-11-13-group-grading-side-panel.md. Results: construction/build-and-test/2026-11-13-group-grading-side-panel.md.
+
+### Local commit delivery — member grading
+
+- [x] User authorized clear local commits. Separated optional contribution-level data/API/published-student visibility from group-side-panel UI and unsaved-draft safeguards; plans/evidence/audit recorded in a documentation commit.
+- [x] Fresh precommit backend55/55 and frontend grading/shared document/submission-history276/276 across26 files pass; whitespace/index checks pass. No source edits since verification, no log/screenshot/temp config added to git.
+- No push, merge or deploy requested/performed. Earlier UI/typecheck/full-suite evidence and production-build limitation remain recorded in the reports.

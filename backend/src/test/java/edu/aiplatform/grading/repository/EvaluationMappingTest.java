@@ -14,6 +14,25 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class EvaluationMappingTest {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(ContributionLevel.class)
+    void contributionLevelsRoundTripAndOldDocumentsDefaultUnassessed(ContributionLevel level)
+            throws Exception {
+        var member = Evaluation.createPendingEvaluation(null, UUID.randomUUID(), UUID.randomUUID(),
+                UUID.randomUUID(), "hash", BigDecimal.TEN, "[]", Instant.EPOCH);
+        member.kind = EvaluationKind.MEMBER;
+        member.contributionLevel = level;
+        member.memberOverride = true;
+        member.adjustmentReason = "Hoàn thành phần API";
+        var row = new EvaluationRow();
+        row.applyEvaluation(member);
+        assertThat(row.mapEvaluation().contributionLevel).isEqualTo(level);
+        assertThat(row.mapEvaluation().adjustmentReason).isEqualTo("Hoàn thành phần API");
+        var legacy = (ObjectNode) new ObjectMapper().readTree(row.document);
+        legacy.remove("contributionLevel");
+        row.document = legacy.toString();
+        assertThat(row.mapEvaluation().contributionLevel).isNull();
+    }
     @Test
     void aggregateMutationsCannotAutoFlushStaleIndexColumns() {
         var aggregate = Evaluation.createPendingEvaluation(UUID.randomUUID(), UUID.randomUUID(),

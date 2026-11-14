@@ -43,6 +43,7 @@ public class Evaluation {
     public Instant publishedAt;
     public long version;
     public boolean memberOverride;
+    public ContributionLevel contributionLevel;
     public List<EvaluationHistory> changes = new ArrayList<>();
 
     /** Creates a pending evaluation for a submitted attempt. */
@@ -169,6 +170,7 @@ public class Evaluation {
                     structuredFeedback == null ? null : structuredFeedback.copyFeedback()));
         }
         memberOverride = false;
+        contributionLevel = null;
         state = EvaluationStatus.PENDING;
         submissionHash = hash;
         rubricSnapshot = rubrics;
