@@ -401,7 +401,7 @@ class AiTaskFlowTest {
         AiTaskView view = service.submit(request(teacher, AiSource.SHARED, null, "r1"));
         AiTask queued = tasks.rows.get(view.taskId());
         tasks.update(queued.moveTo(AiTaskState.RUNNING,
-                NOW.minus(properties.requestTimeout()).minusSeconds(31)));
+                NOW.minus(worker.timeout()).minusSeconds(1)));
 
         worker.handle(message(view.taskId()));
 
@@ -690,5 +690,60 @@ class AiTaskFlowTest {
         assertThat(limited.sourceOrder(teacher, new AiPrompt("s", "u"), 500)).hasSize(2);
         assertThat(limited.sourceOrder(teacher, new AiPrompt("s", "u", List.of(page("a"))), 500)).containsExactly(
                 new edu.aiplatform.ai.contract.AiSourceChoice(AiSource.PERSONAL, AiProvider.OPENAI));
+    }
+
+    @Test
+    void quotaRejectionDoesNotPoisonPersonalFallback() throws Exception {
+        var queued = service.submit(request(teacher, AiSource.SHARED, null, "review-quota"));
+        UUID secondId = UUID.randomUUID();
+        var second = AiConnection.create(secondId, AiConnection.Scope.INSTITUTIONAL, null, AiProvider.GEMINI,
+                "gemini-2.5-flash", cipher.encryptConnectionKey(secondId, AiConnection.Scope.INSTITUTIONAL,
+                null, AiProvider.GEMINI, "second-review-key"), "view", NOW.plusSeconds(1));
+        when(connections.listInstitutional()).thenReturn(List.of(shared, second));
+        when(connections.findById(secondId)).thenReturn(Optional.of(second));
+        when(gateway.call(eq(AiProvider.GEMINI), any()))
+                .thenThrow(new ProviderException(FailureKind.REJECTED, 401, "key rejected", null));
+
+        var quotaRepository = mock(edu.aiplatform.ai.repository.QuotaRepository.class);
+        when(quotaRepository.policy()).thenReturn(new edu.aiplatform.ai.model.QuotaPolicy(0L, 100000L, 0, null, NOW));
+        when(quotaRepository.teacherQuota(any())).thenReturn(Optional.empty());
+        var realQuota = new QuotaReservationService(quotaRepository, clock);
+        var connection = mock(java.sql.Connection.class);
+        when(connection.getAutoCommit()).thenReturn(true);
+        var datasource = mock(javax.sql.DataSource.class);
+        when(datasource.getConnection()).thenReturn(connection);
+        var manager = new org.springframework.jdbc.datasource.DataSourceTransactionManager(datasource);
+        var interceptor = new org.springframework.transaction.interceptor.TransactionInterceptor(manager,
+                new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource());
+        var factory = new org.springframework.aop.framework.ProxyFactory(realQuota);
+        factory.setProxyTargetClass(true);
+        factory.addAdvice(interceptor);
+        var proxiedQuota = (QuotaReservationService) factory.getProxy();
+        var access = new AiAccess(authorization, mock(IAudit.class), clock);
+        var realWorker = new AiTaskJobHandler(tasks, connections, gateway, cipher, new JsonSchemaChecker(json),
+                proxiedQuota, new AiUsageService(usageRepository, access, clock), mock(AiTaskDelivery.class),
+                properties, json, manager, clock);
+        when(gateway.call(eq(AiProvider.OPENAI), any()))
+                .thenReturn(new Response("{\"score\":1}", "ok", new Usage(10L, 5L, null, null)));
+        realWorker.handle(message(queued.taskId()));
+        verify(gateway).call(eq(AiProvider.OPENAI), any());
+        verify(connection, never()).rollback();
+        assertThat(tasks.rows.get(queued.taskId()).state()).isEqualTo(AiTaskState.READY);
+    }
+    @Test
+    void jobBudgetCoversEveryCandidateAndRetry() {
+        var task = service.submit(request(teacher, AiSource.SHARED, null, "budget"));
+        worker.transientWaits = new Duration[] {Duration.ofSeconds(2), Duration.ofSeconds(5)};
+        Duration perKey = properties.requestTimeout().multipliedBy(3).plusSeconds(37);
+        assertThat(worker.timeout(message(task.taskId()))).isGreaterThanOrEqualTo(perKey.multipliedBy(2));
+    }
+
+    @Test
+    void budgetLookupDatabaseFailureCanBeRetried() {
+        var task = service.submit(request(teacher, AiSource.SHARED, null, "budget-db"));
+        when(connections.listPersonal(teacher.accountId())).thenThrow(
+                new org.springframework.dao.DataAccessResourceFailureException("database unavailable"));
+        assertThatThrownBy(() -> worker.timeout(message(task.taskId())))
+                .isInstanceOf(edu.aiplatform.jobs.contract.RetryableJobException.class);
     }
 }

@@ -225,7 +225,10 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
   const answered = (id: string) => (answers[id]?.length ?? 0) > 0;
   const unanswered = view.questions.map((q, i) => (answered(q.questionId) ? null : i + 1)).filter((n): n is number => n !== null);
   const saveLabel = { saved: "Đã tự động lưu", dirty: "Chưa lưu…", saving: "Đang lưu…", error: "Chưa lưu được" }[saveState];
-  const exit = () => void flush().then(() => router.push("/quiz-practice"));
+  const exit = () => void flush().then((outcome) => {
+    if (outcome === "saved") router.push("/quiz-practice");
+    else setLeaving(false);
+  });
 
   return (
     <div className="flex flex-col gap-4">

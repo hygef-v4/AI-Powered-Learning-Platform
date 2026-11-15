@@ -124,7 +124,7 @@ final class DiagramXml {
         return DiagramType.OTHER;
     }
 
-    /** Dạng chữ ngắn gọn: mỗi trang liệt kê hình (nhãn, kiểu) và đường nối (nguồn → đích, nhãn). */
+    /** Dạng chữ ngắn gọn: mỗi trang liệt kê hình (nhãn, kiểu) và đường nối (nguồn → đích, nét đứt, nhãn). */
     static String compact(String xml, int maxChars) {
         StringBuilder out = new StringBuilder();
         try {
@@ -145,6 +145,9 @@ final class DiagramXml {
                 for (Cell cell : cells(models.get(i))) {
                     if (cell.edge()) {
                         out.append("- nối ").append(cell.source()).append(" -> ").append(cell.target());
+                        if (cell.dashed()) {
+                            out.append(" (nét đứt)");
+                        }
                     } else {
                         out.append("- hình ").append(cell.id());
                         if (!cell.shape().isEmpty()) {
@@ -249,8 +252,9 @@ final class DiagramXml {
                 id = wrapper.getAttribute("id");
                 label = wrapper.getAttribute("label");
             }
+            String style = element.getAttribute("style");
             cells.add(new Cell(id, edge, element.getAttribute("source"), element.getAttribute("target"),
-                    clean(label), shape(element.getAttribute("style"))));
+                    clean(label), shape(style), style.contains("dashed=1")));
         }
         return cells;
     }
@@ -268,13 +272,16 @@ final class DiagramXml {
         return first.contains("=") ? "" : first;
     }
 
-    /** Bỏ thẻ HTML trong nhãn, gộp khoảng trắng, cắt ngắn. */
+    /** Bỏ thẻ HTML trong nhãn, giữ stereotype {@code <<include>>}, gộp khoảng trắng, cắt ngắn. */
     static String clean(String label) {
         if (label == null) {
             return "";
         }
-        String text = label.replaceAll("(?i)<br\\s*/?>", " ").replaceAll("<[^>]*>", " ")
+        // Nhãn không HTML được trình phân tích XML giải sẵn thành <<include>>; tạm đổi sang « » để không bị xóa như thẻ.
+        String text = label.replaceAll("<<([^<>]{1,80})>>", "«$1»")
+                .replaceAll("(?i)<br\\s*/?>", " ").replaceAll("<[^>]*>", " ")
                 .replace("&nbsp;", " ").replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
+                .replace("«", "<<").replace("»", ">>")
                 .replaceAll("\\s+", " ").strip();
         return text.length() > MAX_LABEL ? text.substring(0, MAX_LABEL) + "…" : text;
     }
@@ -294,6 +301,7 @@ final class DiagramXml {
         return result;
     }
 
-    private record Cell(String id, boolean edge, String source, String target, String label, String shape) {
+    private record Cell(String id, boolean edge, String source, String target, String label, String shape,
+                        boolean dashed) {
     }
 }

@@ -60,7 +60,7 @@ public class QuizAttemptService {
         ClassRef ref = support.classRef(classId);
         QuizView quiz = support.quizInClass(quizId, ref);
         attempts.lockStart(quizId, actor.accountId());
-        var existing = attempts.findInProgress(quizId, actor.accountId());
+        var existing = attempts.findInProgress(quizId, actor.accountId(), classId);
         if (existing.isPresent()) {
             return taking(existing.get());
         }
@@ -69,7 +69,7 @@ public class QuizAttemptService {
             access.rejected(actor, "QUIZ_SUBMIT_REJECTED", null, "QUIZ_NOT_OPEN");
             throw ApiException.conflict("QUIZ_NOT_OPEN", "Quiz đã ngưng hoặc lớp không còn mở");
         }
-        int used = attempts.countAttempts(quizId, actor.accountId());
+        int used = attempts.countAttempts(quizId, actor.accountId(), classId);
         Integer max = quiz.settings().maxAttempts();
         if (max != null && used >= max) {
             access.rejected(actor, "QUIZ_SUBMIT_REJECTED", null, "NO_ATTEMPTS_LEFT");
@@ -79,7 +79,9 @@ public class QuizAttemptService {
                 .flatMap(a -> a.snapshot().questionOrder().stream()).collect(Collectors.toSet());
         long seed = SEEDS.nextLong();
         QuizStudentView view = support.newPaper(quizId, seen, seed);
-        QuizAttempt attempt = QuizAttempt.start(quizId, classId, actor.accountId(), used + 1,
+        int nextAttemptNo = attempts.listByAccount(actor.accountId(), List.of(quizId)).stream()
+                .filter(a -> a.classId().equals(classId)).mapToInt(QuizAttempt::attemptNo).max().orElse(0) + 1;
+        QuizAttempt attempt = QuizAttempt.start(quizId, classId, actor.accountId(), nextAttemptNo,
                 AttemptSnapshot.of(view, seed), clock.instant());
         attempts.insert(attempt);
         return taking(attempt, view);
@@ -166,7 +168,7 @@ public class QuizAttemptService {
             return false;
         }
         Integer max = quiz.settings().maxAttempts();
-        return max == null || attempts.countAttempts(attempt.quizId(), attempt.accountId()) < max;
+        return max == null || attempts.countAttempts(attempt.quizId(), attempt.accountId(), attempt.classId()) < max;
     }
 
     private TakingView taking(QuizAttempt attempt) {

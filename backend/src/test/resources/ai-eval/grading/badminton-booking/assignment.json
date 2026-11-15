@@ -1,0 +1,76 @@
+{
+  "assignmentKey": "badminton-booking",
+  "title": "Hệ thống đặt sân cầu lông — Use Case Diagram và đặc tả UC Đặt sân",
+  "labelSource": "SYNTHETIC_TEAM",
+  "labelNote": "Đề, rubric, bài làm và điểm kỳ vọng do nhóm tự soạn để thử pipeline; chưa được giảng viên xác nhận.",
+  "instructions": "Hệ thống đặt sân cầu lông cho phép khách hàng xem lịch sân trống, đặt sân, hủy đặt sân và thanh toán trực tuyến qua cổng thanh toán. Chủ sân xác nhận và quản lý lịch sân. 1) Vẽ Use Case Diagram cho hệ thống: Khách hàng là primary actor; Chủ sân và Cổng thanh toán là secondary actor; có ít nhất 4 use case chính: Đặt sân, Hủy đặt sân, Thanh toán, Xem lịch sân trống. 2) Đặc tả use case Đặt sân gồm: tên use case, primary actor, secondary actor, precondition, postcondition, trigger, normal flow, alternative flow, exception flow, business rule. Chức năng Đặt sân có 2 normal flow: đặt sân lẻ theo giờ và đặt sân cố định theo tuần.",
+  "skeleton": [
+    { "key": "h-diagram", "style": "H1", "text": "1. Use Case Diagram" },
+    { "key": "h-spec", "style": "H1", "text": "2. Đặc tả use case Đặt sân" }
+  ],
+  "rubrics": [
+    {
+      "key": "r-diagram",
+      "partHeading": "h-diagram",
+      "criteria": [
+        {
+          "key": "c-notation",
+          "title": "Ký pháp Use Case Diagram",
+          "kind": "DIAGRAM",
+          "items": [
+            { "key": "d-boundary", "text": "Tên hệ thống nằm trong hình chữ nhật (system boundary), actor đặt bên ngoài hình chữ nhật", "points": 0.25 },
+            { "key": "d-oval", "text": "Use case được vẽ bằng hình oval", "points": 0.25 },
+            { "key": "d-dashed", "text": "Quan hệ include/extend vẽ bằng nét đứt và có nhãn <<include>>/<<extend>>; vẽ nét liền không được điểm", "points": 0.25 }
+          ]
+        },
+        {
+          "key": "c-content",
+          "title": "Nội dung sơ đồ",
+          "kind": "DIAGRAM",
+          "items": [
+            { "key": "d-primary", "text": "Có primary actor Khách hàng nối với các use case của khách hàng", "points": 0.25 },
+            { "key": "d-secondary", "text": "Có đủ secondary actor Chủ sân và Cổng thanh toán", "points": 0.25 },
+            { "key": "d-usecases", "text": "Có đủ 4 use case chính: Đặt sân, Hủy đặt sân, Thanh toán, Xem lịch sân trống", "points": 0.25 }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "r-spec",
+      "partHeading": "h-spec",
+      "criteria": [
+        {
+          "key": "c-spec-header",
+          "title": "Thông tin chung của đặc tả",
+          "kind": "TEXT",
+          "items": [
+            { "key": "s-name-actors", "text": "Tên use case Đặt sân, primary actor Khách hàng và secondary actor (Chủ sân, Cổng thanh toán) ghi đúng", "points": 0.25 },
+            { "key": "s-pre-post", "text": "Có precondition và postcondition rõ ràng, đúng với chức năng đặt sân", "points": 0.25 },
+            { "key": "s-trigger", "text": "Có trigger của use case", "points": 0.25 }
+          ]
+        },
+        {
+          "key": "c-spec-flows",
+          "title": "Luồng xử lý và quy tắc",
+          "kind": "TEXT",
+          "items": [
+            { "key": "s-normal", "text": "Có đủ 2 normal flow: đặt sân lẻ theo giờ và đặt sân cố định theo tuần (mỗi flow 0,25)", "points": 0.5 },
+            { "key": "s-alt", "text": "Có alternative flow hợp lý (ví dụ chọn khung giờ khác khi sân đã kín)", "points": 0.25 },
+            { "key": "s-exception", "text": "Có exception flow (ví dụ thanh toán thất bại, hết thời gian giữ chỗ)", "points": 0.5 },
+            { "key": "s-rule", "text": "Có business rule cụ thể (ví dụ thời gian giữ chỗ, điều kiện hủy và hoàn tiền)", "points": 0.5 }
+          ]
+        }
+      ]
+    }
+  ],
+  "cases": [
+    "cases/01-complete.json",
+    "cases/02-missing-exception-rule.json",
+    "cases/03-one-normal-flow.json",
+    "cases/04-solid-include.json",
+    "cases/05-off-topic.json",
+    "cases/06-prompt-injection.json",
+    "cases/07-empty-diagram.json",
+    "cases/08-wrong-actors.json"
+  ]
+}

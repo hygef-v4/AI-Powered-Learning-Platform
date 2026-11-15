@@ -79,7 +79,8 @@ public class QuizPracticeQueryService {
                 .collect(Collectors.groupingBy(QuizAttempt::quizId));
         List<PracticeQuizRow> rows = new ArrayList<>();
         for (Entry entry : entries.values()) {
-            List<QuizAttempt> own = mine.getOrDefault(entry.quiz.quizId(), List.of());
+            List<QuizAttempt> own = mine.getOrDefault(entry.quiz.quizId(), List.of()).stream()
+                    .filter(a -> a.classId().equals(entry.ref.classId())).toList();
             rows.add(row(entry.quiz, entry.ref, own));
         }
         return rows;
@@ -91,7 +92,8 @@ public class QuizPracticeQueryService {
         access.requireClass(actor, Actions.QUIZ_PRACTICE, classId, "QUIZ", quizId, PracticeSupport.QUIZ_NOT_FOUND);
         ClassRef ref = support.classRef(classId);
         QuizView quiz = support.quizInClass(quizId, ref);
-        List<QuizAttempt> own = attempts.listByAccount(actor.accountId(), List.of(quizId));
+        List<QuizAttempt> own = attempts.listByAccount(actor.accountId(), List.of(quizId)).stream()
+                .filter(a -> a.classId().equals(classId)).toList();
         if (quiz.status() != QuizStatus.OPEN && own.isEmpty()) {
             throw ApiException.notFound(PracticeSupport.QUIZ_NOT_FOUND);
         }

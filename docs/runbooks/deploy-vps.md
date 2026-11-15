@@ -209,6 +209,8 @@ Mở `https://<DOMAIN>`, kích hoạt Admin đầu tiên bằng OTP gửi tới 
 
 ## 10. Tự động deploy và rollback
 
+Staging cho nhóm kiểm thử chạy cạnh production trên cùng VPS (cổng 8443, project `platform-staging`, tự deploy theo nhánh `staging`): [deploy-staging.md](deploy-staging.md).
+
 Khi có commit mới trên `main` và CI chạy thành công (đã đẩy image lên GHCR), VPS tự deploy bản đó trong khoảng 2 phút. Nếu bản mới không khỏe, VPS tự quay về bản trước.
 
 GitHub Actions không SSH vào VPS. Lý do: nhà cung cấp chặn kết nối từ nước ngoài, và VPS cũng không tới được máy chủ Actions để chạy self-hosted runner. Vì vậy VPS tự kéo bản mới về:

@@ -117,6 +117,15 @@ describe("QuizPracticeDetailPage (UC 50)", () => {
 });
 
 describe("QuizTakingPage (UC 51)", () => {
+  it("keeps unsaved answers on screen when exit save fails", async () => {
+    vi.mocked(saveAnswers).mockRejectedValue(new Error("Network unavailable"));
+    render(<QuizTakingPage attemptId="a1" />);
+    fireEvent.click(await screen.findByTestId("quiz-taking-option-1"));
+    fireEvent.click(screen.getByTestId("quiz-taking-exit"));
+    await waitFor(() => expect(screen.getByTestId("quiz-taking-save-state")).toHaveTextContent("Chưa lưu được"));
+    expect(push).not.toHaveBeenCalled();
+    expect(screen.getByTestId("quiz-taking-option-1")).toBeChecked();
+  });
   beforeEach(() => {
     vi.mocked(getAttempt).mockResolvedValue(TAKING);
   });

@@ -125,9 +125,25 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         return callWindow();
     }
 
-    /** Thời gian tối đa một lần gọi provider có thể còn chạy sau mốc gửi. */
+    @Override
+    public Duration timeout(JobMessage message) {
+        UUID taskId = UUID.fromString(String.valueOf(message.payload().get("taskId")));
+        try {
+            AiTask task = tasks.findById(taskId).orElse(null);
+            if (task == null) return callWindow();
+            long candidates = connections.listPersonal(task.actorId()).size();
+            if (task.source() == AiSource.SHARED) candidates += connections.listInstitutional().size();
+            return callWindow().multipliedBy(Math.max(1, candidates + 1));
+        } catch (DataAccessException e) {
+            throw new RetryableJobException("Không đọc được ngân sách thời gian task AI", e);
+        }
+    }
+
+    /** Budget for one connection, including transient retries and backoff. */
     private Duration callWindow() {
-        return properties.requestTimeout().plusSeconds(30);
+        Duration window = properties.requestTimeout().multipliedBy(transientWaits.length + 1L).plusSeconds(30);
+        for (Duration wait : transientWaits) window = window.plus(wait);
+        return window;
     }
 
     @Override
@@ -149,6 +165,9 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             // Khóa lỗi thì finish trả lượt gọi bằng khóa kế tiếp (hệ thống rồi cá nhân; Claude, GPT, Gemini; mô hình tốt
             // trước), gọi tiếp ngay tới khi có kết quả hoặc hết khóa.
             while (dispatch != null) {
+                if (Thread.currentThread().isInterrupted()) {
+                    throw new RetryableJobException("AI task interrupted before provider call");
+                }
                 long callStartNanos = System.nanoTime();
                 Outcome outcome = callProvider(dispatch);
                 // Quá tải hoặc vượt tần suất (429, 503, 529) thường chỉ thoáng qua: đợi rồi gọi lại cùng khóa vài lần
@@ -265,6 +284,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
      * gửi; khóa chung mà hết hạn mức thì bỏ qua. Lưu task với khóa mới; hết khóa thì trả rỗng, task chưa đổi.
      */
     private Dispatch next(AiTask task) {
+        if (Thread.currentThread().isInterrupted()) return null;
         List<AiConnection> order = new ArrayList<>();
         if (task.source() == AiSource.SHARED) {
             order.addAll(ConnectionOrder.active(connections.listInstitutional(), catalog));
@@ -307,7 +327,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
                             QuotaReservationService.estimate(promptChars, max));
                     reserved = reservation.tokens();
                     day = reservation.day();
-                } catch (RuntimeException e) {
+                } catch (QuotaUnavailableException e) {
                     continue;
                 }
             }
@@ -333,6 +353,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             Thread.sleep(wait.toMillis());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            throw new RetryableJobException("AI retry interrupted", e);
         }
     }
 
@@ -477,7 +498,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
                     }));
             quietDeliver(queued.id());
         }
-        Instant runningDeadline = now.minus(properties.requestTimeout()).minus(Duration.ofMinutes(5));
+        Instant runningDeadline = now.minus(callWindow()).minus(Duration.ofMinutes(1));
         for (AiTask running : tasks.listByStateBefore(AiTaskState.RUNNING, runningDeadline)) {
             transactions.executeWithoutResult(status -> tasks.lock(running.id())
                     .filter(t -> t.state() == AiTaskState.RUNNING && t.dispatchedAt() != null

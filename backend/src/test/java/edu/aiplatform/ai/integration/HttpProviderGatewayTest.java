@@ -218,6 +218,43 @@ class HttpProviderGatewayTest {
     }
 
     @Test
+    void geminiCapsThinkingSoTheAnswerKeepsThreeQuartersOfTheOutputBudget() throws Exception {
+        reply = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"{}\"}]}}]}";
+        gateway.call(AiProvider.GEMINI, new Request("model-x", "secret-key", "Hệ thống", "Câu hỏi", SCHEMA, 6956,
+                Duration.ofSeconds(2)));
+        JsonNode config = json.readTree(lastBody.get()).path("generationConfig");
+        assertThat(config.path("maxOutputTokens").asInt()).isEqualTo(6956);
+        assertThat(config.at("/thinkingConfig/thinkingBudget").asInt()).isEqualTo(1739);
+
+        gateway.call(AiProvider.GEMINI, request(SCHEMA));
+        assertThat(json.readTree(lastBody.get()).path("generationConfig").has("thinkingConfig"))
+                .as("lời gọi nhỏ như thử kết nối giữ mặc định của model").isFalse();
+    }
+
+    @Test
+    void geminiTrimsArraysBackToTheOriginalSchemaLimits() throws Exception {
+        String schema = """
+                {"type":"object","properties":{"summary":{"type":"object","properties":{"improvements":{
+                "type":"array","maxItems":2,"items":{"type":"string"}}}},"items":{"type":"array","items":{
+                "type":"object","properties":{"tags":{"type":"array","maxItems":1}}}}}}
+                """;
+        reply = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":"
+                + json.writeValueAsString("{\"summary\":{\"improvements\":[\"a\",\"b\",\"c\"]},"
+                        + "\"items\":[{\"tags\":[\"x\",\"y\"]},{\"tags\":[\"z\"]}]}")
+                + "}]}}]}";
+        Response response = gateway.call(AiProvider.GEMINI, new Request("model-x", "secret-key", "Hệ thống",
+                "Câu hỏi", schema, 500, Duration.ofSeconds(2)));
+
+        JsonNode output = json.readTree(response.output());
+        assertThat(output.at("/summary/improvements")).hasSize(2);
+        assertThat(output.at("/summary/improvements/1").asText()).isEqualTo("b");
+        assertThat(output.at("/items/0/tags")).hasSize(1);
+        assertThat(output.at("/items/1/tags/0").asText()).isEqualTo("z");
+        assertThat(gateway.trimGeminiArraysToSchema("không phải JSON", json.readTree(schema)))
+                .isEqualTo("không phải JSON");
+    }
+
+    @Test
     void geminiOmitsArrayMaximaFromWireSchemaOnly() throws Exception {
         String schema = """
                 {"type":"object","required":["sections"],"properties":{"sections":{

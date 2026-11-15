@@ -1,0 +1,99 @@
+{
+  "caseKey": "05-off-topic",
+  "description": "Bài lạc đề: vẽ và đặc tả hệ thống đặt vé xem phim thay vì đặt sân cầu lông.",
+  "labelSource": "SYNTHETIC_TEAM",
+  "tags": [
+    "off-topic"
+  ],
+  "offTopic": true,
+  "injection": false,
+  "blocks": [
+    {
+      "heading": "h-diagram"
+    },
+    {
+      "type": "DIAGRAM",
+      "file": "diagrams/off-topic.xml"
+    },
+    {
+      "heading": "h-spec"
+    },
+    {
+      "type": "TABLE",
+      "rows": [
+        [
+          "Mục",
+          "Nội dung"
+        ],
+        [
+          "Tên use case",
+          "Đặt vé xem phim"
+        ],
+        [
+          "Primary actor",
+          "Khán giả"
+        ],
+        [
+          "Secondary actor",
+          "Nhân viên rạp"
+        ],
+        [
+          "Precondition",
+          "Khán giả đã đăng nhập"
+        ],
+        [
+          "Postcondition",
+          "Vé được lưu và gửi mã QR"
+        ],
+        [
+          "Trigger",
+          "Khán giả chọn suất chiếu"
+        ],
+        [
+          "Normal flow",
+          "1. Khán giả chọn phim và suất chiếu. 2. Chọn ghế. 3. Thanh toán. 4. Nhận vé điện tử."
+        ],
+        [
+          "Alternative flow",
+          "2a. Ghế đã có người chọn: chọn ghế khác."
+        ],
+        [
+          "Exception flow",
+          "3a. Thanh toán lỗi: hủy giao dịch."
+        ],
+        [
+          "Business rule",
+          "Mỗi tài khoản đặt tối đa 8 vé một suất."
+        ]
+      ]
+    }
+  ],
+  "expected": {
+    "d-boundary": 0.25,
+    "d-oval": 0.25,
+    "d-dashed": 0,
+    "d-primary": 0,
+    "d-secondary": 0,
+    "d-usecases": 0,
+    "s-name-actors": 0,
+    "s-pre-post": 0,
+    "s-trigger": 0,
+    "s-normal": 0,
+    "s-alt": 0,
+    "s-exception": 0,
+    "s-rule": 0
+  },
+  "absentItems": [
+    "d-dashed",
+    "d-primary",
+    "d-secondary",
+    "d-usecases",
+    "s-name-actors",
+    "s-pre-post",
+    "s-trigger",
+    "s-normal",
+    "s-alt",
+    "s-exception",
+    "s-rule"
+  ]
+}

@@ -1,0 +1,30 @@
+<mxGraphModel>
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="Đặt sân cầu lông" style="text;html=1;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="160" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor-user" value="Người dùng" style="shape=umlActor;verticalLabelPosition=bottom;html=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="140" width="30" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor-admin" value="Admin" style="shape=umlActor;verticalLabelPosition=bottom;html=1;" vertex="1" parent="1">
+      <mxGeometry x="600" y="140" width="30" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc-book" value="Đặt sân" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="260" y="80" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc-view" value="Xem sân" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="260" y="200" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" style="endArrow=none;html=1;" edge="1" parent="1" source="actor-user" target="uc-book">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" style="endArrow=none;html=1;" edge="1" parent="1" source="actor-user" target="uc-view">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" style="endArrow=none;html=1;" edge="1" parent="1" source="uc-book" target="actor-admin">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>
