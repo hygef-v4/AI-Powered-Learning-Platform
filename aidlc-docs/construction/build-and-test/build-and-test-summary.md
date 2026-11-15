@@ -22,6 +22,7 @@ The [build instructions](build-instructions.md) and [guard script](../../../scri
 
 | Recorded scope | Evidence | Result and limit |
 |---|---|---|
+| Ngày tháng/AI/đóng nhận bài, 15/11, working tree `fix/date-ai-grading-window` | [Kết quả](2026-11-15-date-ai-grading-window.md) | Frontend 1135/1135, lint, kiểm kiểu src/tests và build qua. Backend theo phạm vi và 282 test tích hợp qua; guard 5 suite PostgreSQL/58 kịch bản qua. Chưa gọi provider thật/nghiệm thu browser; không phải full backend suite. |
 | U09 giữ bản nháp khi refresh lỗi, 15/11, bản sửa trong `c376c06a` | [Kết quả](2026-11-15-member-draft-refresh-fix.md) | Vitest 306/306 theo phạm vi, 65/65 khi kiểm trước commit. Typecheck toàn src/tests bằng cấu hình tạm loại cache Next cũ. |
 | U04/U13/U14 quy ước mã nguồn, 15/11, working tree nhánh `fix/code-conventions-u04-u13-u14` trước commit | [Kết quả](2026-11-15-u04-u13-u14-code-conventions-results.md) | Backend 2.426 test, đủ 5 suite PostgreSQL. Frontend 1.075/1.092 lần chạy đầu, các test timeout qua khi chạy lại. E2E phạm vi này 40/40. |
 | U05 học kỳ, 15/11, nhánh `fix/term` | [Kết quả](2026-11-15-class-term-results.md) | Backend 2.426 test. Frontend 1.082/1.092 lần chạy đầu, các test timeout qua khi chạy lại. API 21/21 và kiểm tra trình duyệt trên stack riêng. |

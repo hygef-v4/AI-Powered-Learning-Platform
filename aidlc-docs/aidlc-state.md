@@ -1,5 +1,35 @@
 # AI-DLC State Tracking
 
+## Ngày tháng, kiểm API key và mở chấm sau đóng bài — 2026-11-15
+
+User duyệt đề xuất audit bằng “ok giúp tôi sửa theo đề xuất $ponytail:ponytail”.
+Brownfield, nhánh `fix/date-ai-grading-window` từ staging@7d0905d4; giữ audit WIP trước đó.
+[Yêu cầu](inception/requirements/2026-11-15-date-ai-grading-window.md),
+[kế hoạch](construction/plans/code-generation-plan/2026-11-15-date-ai-grading-window.md),
+[kết quả](construction/build-and-test/2026-11-15-date-ai-grading-window.md).
+
+- [x] DateInput dd/MM/yyyy chung; ISO/giờ Việt Nam giữ nguyên, không dependency mới.
+- [x] Probe AI đủ budget, typed output-limit không báo đỏ; giữ kiểm phản hồi tạo/chấm.
+- [x] Guard backend manual/AI/member/finalize/publish/batch/MCP và UI chỉ đọc trước đóng.
+- [x] Đóng sớm có xác nhận/quyền/version/audit; tự đóng sau hạn cuối +30 giây. Chốt
+  bài cá nhân/nhóm đã lưu cùng transaction, khóa đúng thứ tự và rollback khi lỗi.
+- [x] Frontend 1135/1135 và final academics37/37, lint/isolated typecheck/build qua;
+  config gốc khôi phục đúng byte. Backend scoped tests và final integration282/282,
+  5 required PostgreSQL suites/58 traced cases qua. Business rules/API/manifest cập nhật.
+- [ ] Nghiệm thu browser/key thật, tải lớn và deploy ngoài phạm vi lần thực hiện này.
+
+Security/Resiliency tuân thủ trong phạm vi thay đổi, PBT disabled. Không sửa dữ liệu
+học tập thật, restart backend/worker, commit/push/merge/deploy. Cần dùng backend và
+worker mã mới trước nghiệm thu; giữ cache Next cũ, chỉ kiểm build bằng thư mục riêng.
+
+### Bàn giao commit cục bộ — ngày tháng/AI/đóng nhận bài
+
+Người dùng yêu cầu “giúp tôi commit”. Chia thay đổi thành ba commit chức năng
+(DateInput, AI probe, grading/closure) và một commit tài liệu/kiểm chứng. Mã nguồn
+không đổi sau các kiểm thử đã ghi; diff whitespace và guard 5 suite PostgreSQL/58
+kịch bản kiểm lại trước commit đều qua. Không chạy lại toàn bộ test/build. Chưa
+push, merge, deploy hay gọi provider thật; giới hạn nghiệm thu giữ như báo cáo.
+
 ## Đồng bộ tài liệu theo staging — 2026-11-15
 
 Đối chiếu `staging@7e0e8375` theo các điểm trong báo cáo của người dùng. Phạm vi là tài liệu AI-DLC.

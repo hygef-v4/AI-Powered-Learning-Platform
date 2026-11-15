@@ -14574,3 +14574,30 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **Context**: Cập nhật Markdown theo yêu cầu đã xác nhận. Kết quả kiểm tra tĩnh không thay cho chạy kiểm thử ứng dụng trên HEAD.
 
 ---
+
+## Audit ngày tháng, kiểm tra API key và thời điểm chấm bài
+**Timestamp**: 2026-11-15T15:30:52Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi đổi lại định dạng chọn ngày tháng thành ngày trước thảng sau ở mấy  cái chọn ngày tháng của học kì,audit, ....  check lại nút bấm check ai api key, hiện tại lúc nào bấm check cũng bị đỏ, giúp tôi xem lại xem giảng viên hiện tại có thể chấm bài nếu hạn nộp chưa kết thúc hoặc bài chưa đóng ko,  tôi nghĩ là nên để cho gv ko thể chấm và công bố điểm, có thể cho tùy chọn giảng viên có thể đóng bài sớm hạn, bạn thử review lại và đề xuất cho tôi $ponytail:ponytail-audit"
+**AI Response**: "Audit chỉ đọc trên staging@7d0905d4, phạm vi ô ngày, AI connection và U07/U08/U09/U12 liên quan. Xác nhận 6 component dùng input date/datetime-local native, định dạng nhìn thấy phụ thuộc browser dù html lang=vi; đề xuất DateInput chung hiện dd/MM/yyyy, dữ liệu ISO giữ nguyên. Kiểm key dùng MAX_OUTPUT=5 từ trước; gateway thêm chặn MAX_TOKENS/length/max_tokens ngày 2026-11-10 và trả ProviderException HTTP200; tester coi lỗi => có đường báo đỏ dù key được provider chấp nhận. Chưa xác nhận mọi lần đỏ của người dùng vì local audit chỉ có test cũ đến 2026-11-09 (17 thành công). Tái hiện trực tiếp shortTestResult: thông báo hết token bị gán Hết hạn mức. Đề xuất probe ngân sách phù hợp model và phân loại kết quả/lỗi rõ, giữ kiểm cắt token cho tác vụ sinh nội dung. Giảng viên hiện chấm/công bố được khi bài OPEN: GradingService chỉ kiểm quyền/lớp/phiên bản/biên nhận, không kiểm hạn bài; đây là hành vi hiện có, yêu cầu chặn tới lúc đóng là thay đổi nghiệp vụ. Đề xuất guard backend thống nhất cho chấm tay/AI/member/batch/MCP/công bố và trạng thái read-only ở UI; mở chấm sau đóng nhận bài, gồm lateUntil và ân hạn30s, chốt auto-submit trước khi chấm. Chưa có đóng sớm; retire là Ngưng giao, status RETIRED và auto-submit, không thay thế CLOSED. Đề xuất nút Đóng nhận bài, kiểm quyền/version, xác nhận ảnh hưởng, chốt lượt đang làm và audit, giữ hạn đã công bố. Test có sẵn:64/64 backend (HttpProviderGatewayTest,AiConnectionServiceTest,GradingServiceTest,AssignmentPublicationServiceTest),38/38 frontend AI qua. Không đổi mã/test/config, không gọi provider bằng key thật, không commit/push/merge/deploy; chỉ append audit theo CLAUDE.md."
+**Context**: ponytail-audit một lượt báo cáo và đề xuất, giả định nhiều giảng viên/sinh viên dùng chung VPS/backend-worker. Security/Resiliency chỉ rà các đường liên quan; PBT disabled, bỏ qua. Chưa nghiệm thu browser/live provider/production hay toàn repo.
+
+---
+
+## Thực hiện đề xuất ngày tháng, AI và đóng nhận bài
+**Timestamp**: 2026-11-15T16:24:17Z
+**Requested by:** Quang Hung
+**User Input**: "ok giúp tôi sửa theo đề xuất $ponytail:ponytail"
+**AI Response**: "Đã triển khai trên fix/date-ai-grading-window từ staging@7d0905d4: DateInput dd/MM/yyyy chung cho 6 màn, giữ ISO và giờ Việt Nam; probe AI 1024 token và typed output-limit được coi kết nối đạt, giữ validation phản hồi tạo/chấm và phân loại lỗi; guard backend manual/AI/member/finalize/publish/batch/MCP tới CLOSED/RETIRED, metadata và UI chỉ đọc. Thêm POST /assignments/{id}/close và nút xác nhận cho giảng viên; kiểm quyền/lớp/version/audit, giữ hạn gốc, chốt lượt cá nhân/nhóm cùng transaction với CLOSED. Auto-close sau hạn cuối +30 giây dùng cùng lifecycle; sửa thứ tự khóa cho người học/background, giữ draft nhóm trong lịch sử và receipt nộp tay gốc. Kiểm PostgreSQL tranh chấp/rollback và full-composition retry đóng bài. Backend scoped510, rồi101 và61 qua theo từng delta; final21 suite tích hợp282/282, guard5 required suites và58 traced cases qua. Frontend toàn bộ1135/1135 trong156 file, final academics37/37, full lint, kiểm kiểu src/tests và production build qua. Sửa fixture null trái type sau build đầu bắt lỗi; config gốc khôi phục đúng byte, không xóa cache Next cũ. Cập nhật yêu cầu, kế hoạch, business rules, API inventory, manifest CI, state và báo cáo. Không commit/push/merge/deploy."
+**Context**: User đã duyệt đề xuất audit, không yêu cầu duyệt lại cùng phạm vi. Ponytail full; dispatching skill cho phép ba phần độc lập date/AI/UI, root tích hợp và review dữ liệu/transaction. Không thêm dependency/schema/reopen/feature flag. Security/Resiliency tuân thủ trong phạm vi quyền, fail-closed, bảo mật key, rollback/retry; PBT disabled. Chưa gọi provider/key thật, nghiệm thu browser/native picker, tải lớn hoặc chạy toàn bộ backend suite; không sửa dữ liệu học tập thật hay restart backend/worker đang dùng. Kết quả: construction/build-and-test/2026-11-15-date-ai-grading-window.md. Audit WIP cũ được giữ nguyên.
+
+---
+
+## Commit ngày tháng, AI và đóng nhận bài
+**Timestamp**: 2026-11-15T16:27:27Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit"
+**AI Response**: "Kiểm tra working tree trên fix/date-ai-grading-window, index ban đầu trống; chia ba commit chức năng date/AI/grading-closure và một commit tài liệu kiểm chứng. Giữ nguyên bản source đã kiểm thử: frontend1135, final academics37, backend integration282, lint/typecheck/build đã ghi ở lượt triển khai. Kiểm lại git diff whitespace và script guard5 required PostgreSQL suites/58 traced cases trước commit đều qua. Stage đường dẫn rõ ràng, không thêm log/cache/config tạm. Kiểm tra lại lịch sử và working tree sau commit."
+**Context**: User cho phép commit cục bộ. Không yêu cầu push/merge/deploy, không chạy lại test/build khi mã không đổi; các giới hạn key thật/browser/tải lớn giữ nguyên. Attribution xác nhận bằng gh api user --jq .name, không thay requester lịch sử. Không đổi quy tắc Security/Resiliency; PBT disabled, không phát sinh thiết kế hoặc mã mới.
+
+---
