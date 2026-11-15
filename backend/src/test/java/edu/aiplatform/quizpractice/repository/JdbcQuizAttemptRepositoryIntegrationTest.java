@@ -163,6 +163,25 @@ class JdbcQuizAttemptRepositoryIntegrationTest {
     }
 
     @Test
+    void newClassHasIndependentAttemptNumberAndInProgressSlot() {
+        QuizAttempt old = attempt(1, null);
+        repository.insert(old);
+        UUID newClass = UUID.randomUUID();
+        admin.sql("insert into course_classes (id, subject_id, code, name, status, created_at, updated_at)"
+                + " select :id, subject_id, 'RETAKE', 'Retake', 'OPEN', now(), now()"
+                + " from course_classes where id = :old")
+                .param("id", newClass).param("old", classId).update();
+        QuizAttempt fresh = QuizAttempt.start(quizId, newClass, student, 1, old.snapshot(), NOW);
+        repository.insert(fresh);
+        assertThat(repository.findInProgress(quizId, student, newClass)).contains(fresh);
+        assertThat(repository.countAttempts(quizId, student, newClass)).isEqualTo(1);
+        assertThat(repository.find(old.id())).contains(old);
+        assertThatThrownBy(() -> repository.insert(
+                QuizAttempt.start(quizId, newClass, student, 2, old.snapshot(), NOW)))
+                .isInstanceOf(DuplicateKeyException.class);
+    }
+
+    @Test
     void penaltyDecisionChangesScoreAndCanBeRevised() {
         QuizAttempt attempt = attempt(1, null);
         repository.insert(attempt);
