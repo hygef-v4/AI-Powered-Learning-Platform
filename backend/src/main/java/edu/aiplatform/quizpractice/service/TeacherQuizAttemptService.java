@@ -90,7 +90,8 @@ public class TeacherQuizAttemptService {
                             .orElse(null),
                     last == null ? null : last.score(), last == null ? null : last.submittedAt(),
                     own.stream().map(PracticeSupport::teacherRow).toList(),
-                    last == null || last.outcome() == null ? null : last.outcome().leaveCount(), warning, pending));
+                    last == null || last.outcome() == null ? null : last.outcome().leaveCount(), warning, pending,
+                    contact == null ? null : contact.studentCode()));
         }
         rows.sort(Comparator.comparing((StudentAttempts s) -> s.attempts() == 0)
                 .thenComparing(s -> s.displayName() == null ? "" : s.displayName()));

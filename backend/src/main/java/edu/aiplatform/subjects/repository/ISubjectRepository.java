@@ -20,29 +20,29 @@ public interface ISubjectRepository {
     /** READ_COMMITTED, khóa trong caller transaction, giới hạn lock/query wait; không async. */
     Optional<Subject> findByIdForUpdate(UUID subjectId, java.time.Duration timeout);
 
-    boolean existsByCode(SubjectCode code);
+    boolean hasSubjectWithCode(SubjectCode code);
 
     /** Một truy vấn theo khóa môn và manager_id hiện thời, không loại môn ARCHIVED. */
     boolean isManagedBy(UUID accountId, UUID subjectId);
 
     /** Mã hoặc tên chứa từ khóa literal; sắp theo code, trang đánh số từ 0, size tối đa 100. */
-    List<Subject> findPage(String query, SubjectStatus status, int page, int size);
+    List<Subject> findSubjectPage(String query, SubjectStatus status, int page, int size);
 
-    long count(String query, SubjectStatus status);
+    long countSubjects(String query, SubjectStatus status);
 
     /** Đếm theo cùng query trước khi lọc status (Q08), luôn có cả hai trạng thái kể cả số 0. */
-    Map<SubjectStatus, Long> countByStatus(String query);
+    Map<SubjectStatus, Long> countSubjectsByStatus(String query);
 
     /** Gồm cả môn ARCHIVED để kiểm scope hiện thời và phục vụ gỡ phân công khi disable. */
-    List<Subject> findManagedBy(UUID accountId);
+    List<Subject> findSubjectsManagedBy(UUID accountId);
 
     /** Unique constraint ở DB vẫn phải chặn hai request tạo cùng mã. */
-    void insert(Subject subject);
+    void insertSubject(Subject subject);
 
     /**
      * Ghi snapshot đã thay đổi với điều kiện id/version hiện tại khớp expectedVersion.
      * Snapshot mới có public version = expectedVersion + 1; false nghĩa là mất cập nhật đồng thời.
      * Adapter B05 chuyển đổi public version và storage @Version, không tăng version hai lần.
      */
-    boolean update(Subject subject, long expectedVersion);
+    boolean updateSubject(Subject subject, long expectedVersion);
 }

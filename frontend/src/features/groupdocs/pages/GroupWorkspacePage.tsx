@@ -322,7 +322,10 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
             </Button>
           </>
         }
-      />
+      >
+        {releasing && <p>Nhả mục <strong>{sectionName(releasing)}</strong> của <strong>{name(sectionPerson(releasing))}</strong>?
+          Bản nháp đang làm của mục này sẽ bị bỏ. Nội dung đã hoàn thành trước đó được giữ lại; thành viên có thể nhận lại mục.</p>}
+      </Dialog>
       <Dialog
         open={confirmingEdit !== null}
         title="Sửa mục"

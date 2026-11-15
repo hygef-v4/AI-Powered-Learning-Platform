@@ -30,29 +30,30 @@ import org.junit.jupiter.api.Test;
 class SubjectScopeServiceTest {
 
     private static final Instant NOW = Instant.parse("2026-10-19T00:00:00Z");
-    private final ISubjectRepository repository = mock(ISubjectRepository.class);
+    private final ISubjectRepository subjectRepository = mock(ISubjectRepository.class);
     private final IAudit audit = mock(IAudit.class);
-    private final SubjectScopeService service =
+    private final SubjectScopeService subjectScopeService =
             new SubjectScopeService(
-                    repository, new SubjectAuditRecorder(audit), Clock.fixed(NOW, ZoneOffset.UTC));
+                    subjectRepository, new SubjectAuditRecorder(
+                            audit), Clock.fixed(NOW, ZoneOffset.UTC));
     private final Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
 
     @Test
     void readsCurrentAssignmentEveryTimeAndDoesNotCacheAnAllowDecision() {
         UUID manager = UUID.randomUUID();
         UUID subject = UUID.randomUUID();
-        when(repository.isManagedBy(manager, subject)).thenReturn(true, false);
-        assertThat(service.isSubjectManager(manager, subject)).isTrue();
-        assertThat(service.isSubjectManager(manager, subject)).isFalse();
-        verify(repository, times(2)).isManagedBy(manager, subject);
+        when(subjectRepository.isManagedBy(manager, subject)).thenReturn(true, false);
+        assertThat(subjectScopeService.isSubjectManager(manager, subject)).isTrue();
+        assertThat(subjectScopeService.isSubjectManager(manager, subject)).isFalse();
+        verify(subjectRepository, times(2)).isManagedBy(manager, subject);
     }
 
     @Test
     void unknownOrUnassignedSubjectDoesNotGrantScope() {
         UUID manager = UUID.randomUUID();
         UUID missing = UUID.randomUUID();
-        when(repository.isManagedBy(manager, missing)).thenReturn(false);
-        assertThat(service.isSubjectManager(manager, missing)).isFalse();
+        when(subjectRepository.isManagedBy(manager, missing)).thenReturn(false);
+        assertThat(subjectScopeService.isSubjectManager(manager, missing)).isFalse();
     }
 
     @Test
@@ -60,8 +61,12 @@ class SubjectScopeServiceTest {
         UUID manager = UUID.randomUUID();
         Subject first = Subject.create(UUID.randomUUID(), "SWR302", "A", null, manager, NOW);
         Subject second = Subject.create(UUID.randomUUID(), "SWR303", "B", null, manager, NOW);
-        when(repository.findManagedBy(manager)).thenReturn(List.of(first, second));
-        assertThat(service.listManagedSubjects(manager)).containsExactly(first.id(), second.id());
+        when(subjectRepository.findSubjectsManagedBy(manager)).thenReturn(List.of(first, second));
+        assertThat(
+                subjectScopeService
+                        .listManagedSubjects(manager)).containsExactly(first
+                        .id(), second
+                        .id());
     }
 
     @Test
@@ -73,16 +78,16 @@ class SubjectScopeServiceTest {
         Subject second =
                 Subject.create(
                         UUID.randomUUID(), "SWR303", "B", null, manager, NOW.minusSeconds(60));
-        when(repository.findManagedBy(manager)).thenReturn(List.of(first, second));
-        when(repository.findByIdForUpdate(first.id())).thenReturn(Optional.of(first));
-        when(repository.findByIdForUpdate(second.id())).thenReturn(Optional.of(second));
-        when(repository.update(any(), anyLong())).thenReturn(true);
+        when(subjectRepository.findSubjectsManagedBy(manager)).thenReturn(List.of(first, second));
+        when(subjectRepository.findByIdForUpdate(first.id())).thenReturn(Optional.of(first));
+        when(subjectRepository.findByIdForUpdate(second.id())).thenReturn(Optional.of(second));
+        when(subjectRepository.updateSubject(any(), anyLong())).thenReturn(true);
 
-        assertThat(service.releaseManagerAssignments(manager, admin))
+        assertThat(subjectScopeService.releaseManagerAssignments(manager, admin))
                 .containsExactlyInAnyOrder(first.id(), second.id());
 
-        verify(repository)
-                .update(
+        verify(subjectRepository)
+                .updateSubject(
                         argThat(
                                 after ->
                                         after.id().equals(first.id())
@@ -90,8 +95,8 @@ class SubjectScopeServiceTest {
                                                 && after.version() == 2
                                                 && after.updatedAt().equals(NOW)),
                         org.mockito.ArgumentMatchers.eq(1L));
-        verify(repository)
-                .update(
+        verify(subjectRepository)
+                .updateSubject(
                         argThat(
                                 after ->
                                         after.id().equals(second.id())
@@ -113,15 +118,15 @@ class SubjectScopeServiceTest {
         Subject subject =
                 Subject.create(
                         UUID.randomUUID(), "SWR302", "A", null, manager, NOW.minusSeconds(60));
-        when(repository.findManagedBy(manager)).thenReturn(List.of(subject));
-        when(repository.findByIdForUpdate(subject.id()))
+        when(subjectRepository.findSubjectsManagedBy(manager)).thenReturn(List.of(subject));
+        when(subjectRepository.findByIdForUpdate(subject.id()))
                 .thenReturn(Optional.of(subject.changeManager(UUID.randomUUID(), NOW)));
-        assertThat(service.releaseManagerAssignments(manager, admin)).isEmpty();
-        verify(repository, never()).update(any(), anyLong());
+        assertThat(subjectScopeService.releaseManagerAssignments(manager, admin)).isEmpty();
+        verify(subjectRepository, never()).updateSubject(any(), anyLong());
 
-        when(repository.findByIdForUpdate(subject.id())).thenReturn(Optional.of(subject));
-        when(repository.update(any(), anyLong())).thenReturn(false);
-        assertThatThrownBy(() -> service.releaseManagerAssignments(manager, admin))
+        when(subjectRepository.findByIdForUpdate(subject.id())).thenReturn(Optional.of(subject));
+        when(subjectRepository.updateSubject(any(), anyLong())).thenReturn(false);
+        assertThatThrownBy(() -> subjectScopeService.releaseManagerAssignments(manager, admin))
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         error -> assertThat(error.code()).isEqualTo("SUBJECT_VERSION_CONFLICT"));
@@ -133,21 +138,27 @@ class SubjectScopeServiceTest {
         UUID manager = UUID.randomUUID();
         List<Subject> subjects = managedPair(manager);
         var failure = new IllegalStateException("second update unavailable");
-        when(repository.update(any(), anyLong())).thenAnswer(call -> {
+        when(subjectRepository.updateSubject(any(), anyLong())).thenAnswer(call -> {
             Subject value = call.getArgument(0);
             if (value.id().equals(subjects.get(1).id())) throw failure;
             return true;
         });
 
-        assertThatThrownBy(() -> service.releaseManagerAssignments(manager, admin)).isSameAs(failure);
+        assertThatThrownBy(
+                () -> subjectScopeService.releaseManagerAssignments(
+                        manager, admin)).isSameAs(failure);
 
-        var order = org.mockito.Mockito.inOrder(repository, audit);
-        order.verify(repository).findManagedBy(manager);
-        order.verify(repository).findByIdForUpdate(subjects.get(0).id());
-        order.verify(repository).update(argThat(s -> s.id().equals(subjects.get(0).id())), anyLong());
+        var order = org.mockito.Mockito.inOrder(subjectRepository, audit);
+        order.verify(subjectRepository).findSubjectsManagedBy(manager);
+        order.verify(subjectRepository).findByIdForUpdate(subjects.get(0).id());
+        order
+                .verify(subjectRepository)
+                .updateSubject(argThat(s -> s.id().equals(subjects.get(0).id())), anyLong());
         order.verify(audit).record(argThat(e -> e.objectId().equals(subjects.get(0).id().toString())));
-        order.verify(repository).findByIdForUpdate(subjects.get(1).id());
-        order.verify(repository).update(argThat(s -> s.id().equals(subjects.get(1).id())), anyLong());
+        order.verify(subjectRepository).findByIdForUpdate(subjects.get(1).id());
+        order
+                .verify(subjectRepository)
+                .updateSubject(argThat(s -> s.id().equals(subjects.get(1).id())), anyLong());
         verify(audit, times(1)).record(any());
     }
 
@@ -156,33 +167,35 @@ class SubjectScopeServiceTest {
         UUID manager = UUID.randomUUID();
         List<Subject> subjects = managedPair(manager);
         var failure = new IllegalStateException("second audit unavailable");
-        when(repository.update(any(), anyLong())).thenReturn(true);
+        when(subjectRepository.updateSubject(any(), anyLong())).thenReturn(true);
         org.mockito.Mockito.doAnswer(call -> {
             AuditEvent event = call.getArgument(0);
             if (event.objectId().equals(subjects.get(1).id().toString())) throw failure;
             return null;
         }).when(audit).record(any());
-        assertThatThrownBy(() -> service.releaseManagerAssignments(manager, admin)).isSameAs(failure);
-        verify(repository, times(2)).update(any(), anyLong());
+        assertThatThrownBy(
+                () -> subjectScopeService.releaseManagerAssignments(
+                        manager, admin)).isSameAs(failure);
+        verify(subjectRepository, times(2)).updateSubject(any(), anyLong());
         verify(audit, times(2)).record(any());
     }
 
     private List<Subject> managedPair(UUID manager) {
         Subject first = Subject.create(new UUID(0, 1), "FIRST", "A", null, manager, NOW.minusSeconds(60));
         Subject second = Subject.create(new UUID(0, 2), "SECOND", "B", null, manager, NOW.minusSeconds(60));
-        when(repository.findManagedBy(manager)).thenReturn(List.of(second, first));
-        when(repository.findByIdForUpdate(first.id())).thenReturn(Optional.of(first));
-        when(repository.findByIdForUpdate(second.id())).thenReturn(Optional.of(second));
+        when(subjectRepository.findSubjectsManagedBy(manager)).thenReturn(List.of(second, first));
+        when(subjectRepository.findByIdForUpdate(first.id())).thenReturn(Optional.of(first));
+        when(subjectRepository.findByIdForUpdate(second.id())).thenReturn(Optional.of(second));
         return List.of(first, second);
     }
 
     @Test
     void nullIdsFailClosedWithoutQueryingTheDatabase() {
-        assertThat(service.isSubjectManager(null, UUID.randomUUID())).isFalse();
-        assertThat(service.isSubjectManager(UUID.randomUUID(), null)).isFalse();
-        assertThat(service.listManagedSubjects(null)).isEmpty();
-        assertThat(service.releaseManagerAssignments(null, admin)).isEmpty();
-        verifyNoInteractions(repository);
+        assertThat(subjectScopeService.isSubjectManager(null, UUID.randomUUID())).isFalse();
+        assertThat(subjectScopeService.isSubjectManager(UUID.randomUUID(), null)).isFalse();
+        assertThat(subjectScopeService.listManagedSubjects(null)).isEmpty();
+        assertThat(subjectScopeService.releaseManagerAssignments(null, admin)).isEmpty();
+        verifyNoInteractions(subjectRepository);
     }
 
     @Test
@@ -190,7 +203,8 @@ class SubjectScopeServiceTest {
         UUID manager = UUID.randomUUID();
         UUID subject = UUID.randomUUID();
         IllegalStateException failure = new IllegalStateException("database unavailable");
-        when(repository.isManagedBy(manager, subject)).thenThrow(failure);
-        assertThatThrownBy(() -> service.isSubjectManager(manager, subject)).isSameAs(failure);
+        when(subjectRepository.isManagedBy(manager, subject)).thenThrow(failure);
+        assertThatThrownBy(
+                () -> subjectScopeService.isSubjectManager(manager, subject)).isSameAs(failure);
     }
 }

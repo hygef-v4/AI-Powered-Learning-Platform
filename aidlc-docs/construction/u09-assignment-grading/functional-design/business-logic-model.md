@@ -61,7 +61,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 1. Giảng viên tích mục đạt của từng phần; điểm phần và điểm bài tự tính qua GradingJson item scores (partial0..max, checkbox-compatible).
 2. Tùy chọn nhập điều chỉnh (kèm lý do) và nhận xét.
 3. Lưu: `PUT /api/v1/evaluations/{id}` kèm `version`; kiểm quyền, đánh giá không `SUPERSEDED`, mục thuộc rubric, điều chỉnh có lý do, điểm cuối trong 0 tới tổng.
-4. Đánh giá `PENDING` hoặc `DRAFT` thành `DRAFT`; ghi người chấm, thời điểm; audit `GRADE_SAVED`. Đánh giá đã chốt hoặc đã công bố đi theo F10.
+4. Bản PENDING, DRAFT hoặc FINALIZED cũ lưu thành DRAFT. Bản PUBLISHED lưu theo F10. Ghi người chấm, thời điểm và audit GRADE_SAVED.
 5. Tự mở bài kế.
 
 ### F5 - AI đề xuất một bài (UC 43)
@@ -87,24 +87,20 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 3. U09 tìm đánh giá theo lượt hoặc tài liệu nhóm; kiểm giảng viên chính của lớp, hash khớp, schema và id mục; lưu đề xuất `READY` nguồn MCP (nhãn agent, model nếu agent báo).
 4. Giảng viên dùng đề xuất như F5 bước 6.
 
-## 4. Chốt, công bố, sửa
+## 4. Công bố và sửa điểm
 
-### F8 - Chốt (UC 43, 44)
-1. Chốt một bài trong Grading Workspace, hoặc chọn nhiều bài trong Submission Detail rồi xác nhận; frontend gọi `POST /api/v1/evaluations:finalize` kèm id và `version`.
-2. Với từng mục: kiểm quyền, `DRAFT`, điểm hợp lệ, `version` khớp; đạt thì `FINALIZED`, audit `GRADE_FINALIZED`.
-3. Trả kết quả từng mục; mục lỗi không ảnh hưởng mục khác.
+### F8 - Endpoint finalize tương thích
+Endpoint `POST /api/v1/evaluations:finalize` giữ kiểm tra quyền, version và xác nhận phản hồi AI theo từng mục. Bản FINALIZED cũ chuyển về DRAFT khi kiểm tra thành công. Luồng giao diện công bố qua F9.
 
-### F9 - Công bố (UC 43, 44)
-1. Công bố một bài, hoặc chọn nhiều bài đã chốt ("chọn tất cả đã chốt"); frontend gọi `POST /api/v1/evaluations:publish`.
-2. Với từng mục: kiểm quyền, `FINALIZED`, `version`; đạt thì `PUBLISHED`, ghi `publishedAt`; audit `GRADE_PUBLISHED`.
-3. Sau commit phát `grade.published` (bài, lớp, người học vừa có điểm; bài nhóm là các thành viên) cho U14.
-4. Trả kết quả từng mục.
+### F9 - Công bố (UC 44, 45)
+1. Giảng viên công bố một bài hoặc chọn nhiều bài. Frontend gửi id và version qua `POST /api/v1/evaluations:publish`.
+2. Với từng mục, kiểm quyền, bài nộp hiện hành, version và xác nhận phản hồi AI. DRAFT hợp lệ hoặc FINALIZED cũ chuyển sang PUBLISHED, ghi publishedAt và audit GRADE_PUBLISHED.
+3. Sau commit phát `grade.published` cho U14 với người học vừa có điểm. Server trả kết quả từng mục.
 
-### F10 - Xem điểm đã khóa (UC 44, thay quy tắc cũ ngày 2026-11-02)
-1. `FINALIZED`/`PUBLISHED` chỉ đọc rubric, điểm, nhận xét và lịch sử, không có ô lý do sửa.
-2. Lưu trực tiếp, áp dụng AI hoặc sửa điểm thành viên bị từ chối `409 GRADE_LOCKED`, kể cả có lý do.
-3. `FINALIZED` hiện hành vẫn được công bố sang `PUBLISHED`; điểm và nội dung chấm không đổi.
-4. Nộp lại làm điểm cũ mất hiệu lực: cá nhân SUPERSEDED lượt cũ; nhóm reset draft hiện có về PENDING, giữ nguyên điểm FINALIZED/PUBLISHED và receipt đã chốt. Không có mở khóa/sửa điểm cũ bằng lý do.
+### F10 - Sửa điểm đã công bố (UC 44)
+1. Giảng viên được phân công sửa điểm PUBLISHED của bài nộp hiện hành khi lớp OPEN. Server kiểm biên nhận, version và xác nhận phản hồi AI.
+2. Lưu thành công giữ PUBLISHED và hiển thị kết quả cập nhật cho người học.
+3. Khi nộp lại, xử lý bản chấm theo BR-U09-10 (cá nhân) hoặc BR-U09-50 (nhóm).
 
 ## 5. Sổ điểm và người học
 
@@ -133,7 +129,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 4. Mỗi lớp của bài SUBJECT độc lập; Quiz/Practice không có công tắc. Bật chưa đủ mẫu vẫn lưu ý định, chỉ hiện histogram khi đạt ngưỡng riêng tư.
 
 ### F14 - Bài nhóm (khi U12 có)
-1. U12 gọi IGroupEvaluation.onGroupSubmitted trong transaction nộp: dùng lại root/member chưa chốt, reset về PENDING cho receipt mới; giữ nguyên điểm và snapshot FINALIZED/PUBLISHED (BR-U09-50).
+1. U12 gọi IGroupEvaluation.onGroupSubmitted trong transaction nộp: dùng lại root/member chưa chốt, reset về PENDING cho receipt mới; giữ nguyên điểm, mức đóng góp và snapshot FINALIZED/PUBLISHED (BR-U09-50).
 2. Submission Detail hiện nhóm thay cho sinh viên; Grading Workspace đọc tài liệu nhóm qua `IGroupSubmissionSource`, hiện từng phần kèm người làm.
 3. Chấm tài liệu nhóm như F4, F5; điểm thành viên mặc định bằng điểm tài liệu chung; giảng viên sửa từng người qua `PUT /api/v1/evaluations/{id}/members/{accountId}` (BR-U09-51).
 4. Chốt, công bố cả đánh giá tài liệu và đánh giá thành viên như F8, F9.

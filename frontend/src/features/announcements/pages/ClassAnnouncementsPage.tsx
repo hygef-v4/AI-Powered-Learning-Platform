@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Button, ClassFilter, PageHeader } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
-import { announcementsApi, announcementError } from "../api";
+import { announcementsApi, describeAnnouncementError } from "../api";
 import { AnnouncementFeed } from "../components/AnnouncementFeed";
 import { CreateAnnouncementDialog } from "../components/AnnouncementDialogs";
 import type { AnnouncementFeed as Feed } from "../model/types";
@@ -31,20 +31,24 @@ export function ClassAnnouncementsPage({
   useEffect(() => {
     const controller = new AbortController();
     void announcementsApi
-      .list(classId, page, 20, controller.signal)
+      .listAnnouncements(classId, page, 20, controller.signal)
       .then((data) => {
         if (!controller.signal.aborted) setResult({ key, data });
       })
       .catch((e) => {
         if (!controller.signal.aborted)
-          setResult((previous) => ({ key, data: previous.data, error: announcementError(e) }));
+          setResult((previous) => ({
+            key,
+            data: previous.data,
+            error: describeAnnouncementError(e),
+          }));
       });
     return () => controller.abort();
   }, [classId, page, key]);
   // Đang tải lại thì giữ danh sách cũ để trang không nháy trống.
   const data = result.data;
   const error = result.key === key ? result.error : undefined;
-  const reload = () => setRevision((value) => value + 1);
+  const handleReload = () => setRevision((value) => value + 1);
 
   if (!data)
     return error ? (
@@ -89,12 +93,12 @@ export function ClassAnnouncementsPage({
       {error && (
         <div role="alert" className="flex items-center gap-3 text-[13px] text-danger">
           {error}
-          <Button size="sm" onClick={reload}>
+          <Button size="sm" onClick={handleReload}>
             Thử lại
           </Button>
         </div>
       )}
-      <AnnouncementFeed items={data.items} classCodes={codes} onChanged={reload} />
+      <AnnouncementFeed items={data.items} classCodes={codes} onChanged={handleReload} />
       {(page > 1 || data.hasMore) && (
         <nav className="flex items-center justify-end gap-2" aria-label="Phân trang thông báo">
           <Button size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>
@@ -111,7 +115,7 @@ export function ClassAnnouncementsPage({
           classes={manageable}
           fixedClassId={fixedClassId}
           onClose={() => setCreating(false)}
-          onCreated={reload}
+          onCreated={handleReload}
         />
       )}
     </div>

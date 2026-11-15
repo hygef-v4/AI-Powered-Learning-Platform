@@ -7,6 +7,7 @@ import edu.aiplatform.identity.contract.Role;
 import edu.aiplatform.identity.model.Account;
 import edu.aiplatform.identity.repository.AccountRepository;
 import edu.aiplatform.identity.model.EmailPolicy;
+import edu.aiplatform.identity.model.StudentCodePolicy;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -43,7 +44,7 @@ public class AccountLookupService implements IAccountLookup {
     /** Sinh viên đang hoạt động (U05 thêm vào lớp; chỉ Student ACTIVE được ghi danh). */
     @Override
     public List<AccountContact> findStudents(String query, int limit) {
-        return accounts.findForLookup(query, Set.of(Role.STUDENT), AccountStatus.ACTIVE, clamp(limit)).stream()
+        return accounts.findForLookup(query, Set.of(Role.STUDENT), AccountStatus.ACTIVE, limit < 1 ? 20 : Math.min(limit, 200)).stream()
                 .map(AccountLookupService::contact).toList();
     }
 
@@ -62,6 +63,16 @@ public class AccountLookupService implements IAccountLookup {
         List<String> normalized = emails.stream().map(EmailPolicy::normalize).filter(e -> !e.isEmpty())
                 .distinct().toList();
         return accounts.findByEmails(normalized).stream().map(AccountLookupService::contact).toList();
+    }
+
+    @Override
+    public List<AccountContact> findByStudentCodes(Collection<String> studentCodes) {
+        if (studentCodes == null || studentCodes.isEmpty()) {
+            return List.of();
+        }
+        List<String> normalized = studentCodes.stream().map(StudentCodePolicy::normalize)
+                .filter(StudentCodePolicy::isValid).distinct().toList();
+        return accounts.findStudentsByCodes(normalized).stream().map(AccountLookupService::contact).toList();
     }
 
     @Override
@@ -96,6 +107,6 @@ public class AccountLookupService implements IAccountLookup {
 
     private static AccountContact contact(Account account) {
         return new AccountContact(account.id(), account.schoolEmail(), account.displayName(), account.role(),
-                account.status());
+                account.status(), account.studentCode());
     }
 }

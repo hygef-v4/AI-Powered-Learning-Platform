@@ -29,27 +29,28 @@ public class EmailCapPolicy {
                     1,
                     "QUESTION_REVIEWED",
                     1);
-    private final INotificationRepository repository;
+    private final INotificationRepository notificationRepository;
     private final int cap;
 
     public EmailCapPolicy(
-            INotificationRepository repository, @Value("${U14_EMAIL_DAILY_CAP:300}") int cap) {
+            INotificationRepository notificationRepository,
+            @Value("${U14_EMAIL_DAILY_CAP:300}") int cap) {
         if (cap < 0) throw new IllegalArgumentException("Email cap must be nonnegative");
-        this.repository = repository;
+        this.notificationRepository = notificationRepository;
         this.cap = cap;
     }
 
-    public boolean available(Instant now) {
-        repository.lockBudget();
+    public boolean hasCapacity(Instant now) {
+        notificationRepository.lockEmailBudget();
         Instant from = now.atZone(ZONE).toLocalDate().atStartOfDay(ZONE).toInstant();
-        return repository.reserved(from, nextDay(now)) < cap;
+        return notificationRepository.countReservedEmails(from, calculateNextDay(now)) < cap;
     }
 
-    public Instant nextDay(Instant now) {
+    public Instant calculateNextDay(Instant now) {
         return now.atZone(ZONE).toLocalDate().plusDays(1).atStartOfDay(ZONE).toInstant();
     }
 
-    public boolean sameDay(Instant a, Instant b) {
-        return a.atZone(ZONE).toLocalDate().equals(b.atZone(ZONE).toLocalDate());
+    public boolean isSameDay(Instant first, Instant second) {
+        return first.atZone(ZONE).toLocalDate().equals(second.atZone(ZONE).toLocalDate());
     }
 }

@@ -27,16 +27,17 @@ public class NotificationEventService {
                     Map.entry(EventTypes.GROUP_PROPOSAL_REJECTED, "U12"),
                     Map.entry(EventTypes.BACKUP_FAILED, "U03"),
                     Map.entry(EventTypes.CLASS_ANNOUNCEMENT_POSTED, "U14"));
-    private final RecipientResolver resolver;
-    private final NotificationService notifications;
+    private final RecipientResolver recipientResolver;
+    private final NotificationService notificationService;
 
-    public NotificationEventService(RecipientResolver resolver, NotificationService notifications) {
-        this.resolver = resolver;
-        this.notifications = notifications;
+    public NotificationEventService(
+            RecipientResolver recipientResolver, NotificationService notificationService) {
+        this.recipientResolver = recipientResolver;
+        this.notificationService = notificationService;
     }
 
     @Transactional(timeout = 15)
-    public void accept(DomainEvent event) {
+    public void handleEvent(DomainEvent event) {
         if (event == null
                 || event.schemaVersion() != 1
                 || event.eventType() == null
@@ -46,20 +47,20 @@ public class NotificationEventService {
                 || event.payload().size() > 30
                 || !SOURCES.get(event.eventType()).equals(event.sourceUnit()))
             throw new IllegalArgumentException("Invalid notification event");
-        for (var r : resolver.resolve(event)) {
-            notifications.create(
+        for (var resolved : recipientResolver.resolveRecipients(event)) {
+            notificationService.createNotification(
                     event.eventId(),
-                    r.type(),
-                    r.recipients(),
-                    title(r.type()),
-                    NotificationSummaries.forType(r.type()),
-                    r.link(),
-                    r.emailType(),
+                    resolved.type(),
+                    resolved.recipients(),
+                    resolveTitle(resolved.type()),
+                    NotificationSummaries.summarizeType(resolved.type()),
+                    resolved.link(),
+                    resolved.emailType(),
                     null);
         }
     }
 
-    public static String title(NotificationType type) {
+    public static String resolveTitle(NotificationType type) {
         return switch (type) {
             case ENROLLED -> "Bạn đã được ghi danh vào lớp";
             case ASSIGNMENT_OPENED -> "Có bài tập mới mở";

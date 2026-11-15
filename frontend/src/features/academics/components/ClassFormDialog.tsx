@@ -5,21 +5,23 @@ import { useId, useState, type FormEvent } from "react";
 import { Button, Dialog, Field, TextInput, showToast } from "@/shared/ui";
 import { PersonPicker } from "./PersonPicker";
 import type { CreateClassInput, PersonView, SubjectView } from "../model/types";
-import { formatOperationError } from "../model/format";
+import { CLASS_START_DATE_RANGE, CLASS_START_DATE_REQUIRED, formatClassFieldError, formatOperationError } from "../model/format";
+import { termOf } from "../model/term";
 
-type Errors = { code?: string };
+type Errors = { code?: string; startsOn?: string };
 
 /**
- * Popup Tạo lớp, cùng kiểu popup Thêm môn học: Mã lớp, Giảng viên (có thể để trống) rồi Mô tả; không còn tên lớp, học kỳ
- * (yêu cầu 2026-11-02, tên lưu bằng mã lớp). Không còn lớp nháp: tạo xong lớp được mở luôn.
+ * Popup Tạo lớp, cùng kiểu popup Thêm môn học: Mã lớp, Ngày bắt đầu, Giảng viên (có thể để trống) rồi Mô tả; không còn tên lớp
+ * (yêu cầu 2026-11-02, tên lưu bằng mã lớp). Học kỳ suy ra từ ngày bắt đầu và chỉ xem trước ở đây (D-U04-05, FD Q1).
  */
 export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeachers }: { subject: SubjectView; loadTeachers?: CandidateLoader; teachers: PersonView[]; onSubmit: (value: CreateClassInput) => Promise<void>; onClose: () => void }) {
   const id = useId();
-  const [values, setValues] = useState({ code: "", description: "" });
+  const [values, setValues] = useState({ code: "", startsOn: "", description: "" });
   const [teacher, setTeacher] = useState<PersonView | null>(null);
   const [errors, setErrors] = useState<Errors>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const term = termOf(values.startsOn);
   function set(key: keyof typeof values, value: string) {
     setValues({ ...values, [key]: value });
     setErrors((current) => ({ ...current, [key]: undefined }));
@@ -29,14 +31,20 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
     if (busy) return;
     const next: Errors = {};
     if (!values.code.trim()) next.code = "Nhập mã lớp.";
+    if (!values.startsOn) next.startsOn = CLASS_START_DATE_REQUIRED;
+    else if (!term) next.startsOn = CLASS_START_DATE_RANGE;
     setErrors(next);
     if (Object.keys(next).length) return;
     setBusy(true); setError("");
     try {
-      await onSubmit({ subjectId: subject.id, code: values.code.trim(), name: values.code.trim(), description: values.description.trim(), teacherId: teacher?.id ?? null });
+      await onSubmit({ subjectId: subject.id, code: values.code.trim(), name: values.code.trim(), description: values.description.trim(), startsOn: values.startsOn, teacherId: teacher?.id ?? null });
       showToast("Đã tạo lớp");
       onClose();
-    } catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
+    } catch (cause) {
+      const fieldError = formatClassFieldError(cause);
+      if (fieldError) setErrors((current) => ({ ...current, [fieldError.field]: fieldError.message }));
+      else setError(formatOperationError(cause));
+    } finally { setBusy(false); }
   }
   return <Dialog open title="Tạo lớp" size="lg" onClose={onClose} dismissible={!busy}
     footer={<Button type="submit" form={`${id}-form`} variant="primary" disabled={busy} data-testid="class-form-submit">Tạo lớp</Button>}>
@@ -45,6 +53,13 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
         <Field label="Mã lớp" htmlFor={`${id}-code`} required error={errors.code}>
           <TextInput id={`${id}-code`} maxLength={30} value={values.code} invalid={!!errors.code} onChange={(event) => set("code", event.target.value)} data-testid="class-form-code" />
         </Field>
+        <div className="flex flex-col gap-1.5">
+          <Field label="Ngày bắt đầu" htmlFor={`${id}-starts-on`} required error={errors.startsOn}>
+            <TextInput id={`${id}-starts-on`} type="date" min="2000-01-01" max="2099-12-31" value={values.startsOn} invalid={!!errors.startsOn}
+              onChange={(event) => set("startsOn", event.target.value)} data-testid="class-form-starts-on" />
+          </Field>
+          {term && <p aria-live="polite" className="text-xs text-muted" data-testid="class-form-term">Học kỳ: <span className="font-mono text-ink">{term}</span></p>}
+        </div>
         <PersonPicker label="Giảng viên" value={teacher} onChange={setTeacher} people={teachers} loader={loadTeachers} clearable disabled={busy} />
         <Field label="Mô tả" htmlFor={`${id}-description`}>
           <textarea id={`${id}-description`} maxLength={2000} value={values.description} onChange={(event) => set("description", event.target.value)}

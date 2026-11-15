@@ -22,14 +22,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class SubjectScopeService implements ISubjectScope {
 
-    private final ISubjectRepository repository;
-    private final SubjectAuditRecorder audit;
+    private final ISubjectRepository subjectRepository;
+    private final SubjectAuditRecorder subjectAuditRecorder;
     private final Clock clock;
 
     public SubjectScopeService(
-            ISubjectRepository repository, SubjectAuditRecorder audit, Clock clock) {
-        this.repository = repository;
-        this.audit = audit;
+            ISubjectRepository subjectRepository,
+            SubjectAuditRecorder subjectAuditRecorder,
+            Clock clock) {
+        this.subjectRepository = subjectRepository;
+        this.subjectAuditRecorder = subjectAuditRecorder;
         this.clock = clock;
     }
 
@@ -37,14 +39,18 @@ public class SubjectScopeService implements ISubjectScope {
     public boolean isSubjectManager(UUID accountId, UUID subjectId) {
         return accountId != null
                 && subjectId != null
-                && repository.isManagedBy(accountId, subjectId);
+                && subjectRepository.isManagedBy(accountId, subjectId);
     }
 
     @Override
     public List<UUID> listManagedSubjects(UUID accountId) {
         return accountId == null
                 ? List.of()
-                : repository.findManagedBy(accountId).stream().map(Subject::id).toList();
+                : subjectRepository
+                        .findSubjectsManagedBy(accountId)
+                        .stream()
+                        .map(Subject::id)
+                        .toList();
     }
 
     /** Khóa từng môn theo thứ tự id, gỡ Chủ nhiệm, tăng version, ghi audit trong transaction của U01. */
@@ -56,20 +62,25 @@ public class SubjectScopeService implements ISubjectScope {
             return List.of();
         }
         List<UUID> ids =
-                repository.findManagedBy(accountId).stream().map(Subject::id).sorted().toList();
+                subjectRepository
+                        .findSubjectsManagedBy(accountId)
+                        .stream()
+                        .map(Subject::id)
+                        .sorted()
+                        .toList();
         Instant now = clock.instant();
         List<UUID> released = new ArrayList<>();
         for (UUID id : ids) {
-            Subject before = repository.findByIdForUpdate(id).orElse(null);
+            Subject before = subjectRepository.findByIdForUpdate(id).orElse(null);
             if (before == null || !accountId.equals(before.managerId())) {
                 continue;
             }
             Subject after = before.changeManager(null, now);
-            if (!repository.update(after, before.version())) {
+            if (!subjectRepository.updateSubject(after, before.version())) {
                 throw ApiException.conflict(
                         "SUBJECT_VERSION_CONFLICT", "Dữ liệu môn đã thay đổi. Hãy thử lại");
             }
-            audit.managerChanged(actor, before, after);
+            subjectAuditRecorder.recordManagerChanged(actor, before, after);
             released.add(id);
         }
         return List.copyOf(released);

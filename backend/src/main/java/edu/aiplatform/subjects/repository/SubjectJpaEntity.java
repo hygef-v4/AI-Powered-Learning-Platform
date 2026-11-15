@@ -48,7 +48,7 @@ public class SubjectJpaEntity {
 
     protected SubjectJpaEntity() {}
 
-    static SubjectJpaEntity forInsert(Subject subject) {
+    static SubjectJpaEntity createFrom(Subject subject) {
         if (subject.version() != 1) {
             throw new IllegalArgumentException("Môn mới phải có public version 1");
         }
@@ -65,7 +65,7 @@ public class SubjectJpaEntity {
         return row;
     }
 
-    Subject toDomain() {
+    Subject mapToSubject() {
         return new Subject(
                 id,
                 new SubjectCode(code),

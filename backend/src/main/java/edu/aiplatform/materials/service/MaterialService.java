@@ -6,6 +6,7 @@ import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.jobs.contract.*;
 import edu.aiplatform.materials.model.*;
 import edu.aiplatform.materials.repository.*;
+import edu.aiplatform.shared.content.FormattedText;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
 import java.util.*;
@@ -15,42 +16,48 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(timeout = 10)
 public class MaterialService {
-    private final IMaterialRepository repository;
-    private final IMaterialModuleRepository modules;
-    private final MaterialAccessPolicy access;
-    private final IArtifact artifacts;
-    private final IJob jobs;
+    private final IMaterialRepository materialRepository;
+    private final IMaterialModuleRepository materialModuleRepository;
+    private final MaterialAccessPolicy materialAccessPolicy;
+    private final IArtifact artifact;
+    private final IJob job;
     private final IAudit audit;
     private final Clock clock;
 
     public MaterialService(
-            IMaterialRepository repository,
-            IMaterialModuleRepository modules,
-            MaterialAccessPolicy access,
-            IArtifact artifacts,
-            IJob jobs,
+            IMaterialRepository materialRepository,
+            IMaterialModuleRepository materialModuleRepository,
+            MaterialAccessPolicy materialAccessPolicy,
+            IArtifact artifact,
+            IJob job,
             IAudit audit,
             Clock clock) {
-        this.repository = repository;
-        this.modules = modules;
-        this.access = access;
-        this.artifacts = artifacts;
-        this.jobs = jobs;
+        this.materialRepository = materialRepository;
+        this.materialModuleRepository = materialModuleRepository;
+        this.materialAccessPolicy = materialAccessPolicy;
+        this.artifact = artifact;
+        this.job = job;
         this.audit = audit;
         this.clock = clock;
     }
 
-    public Material create(
+    public Material createMaterial(
             Actor actor, UUID scopeId, boolean classScope, MaterialCommands.Create input) {
-        UUID subjectId = classScope ? access.classList(actor, scopeId, false).subjectId() : scopeId;
-        if (!classScope) access.subjectList(actor, subjectId);
+        UUID subjectId =
+                classScope
+                        ? materialAccessPolicy
+                                .requireClassListAccess(actor, scopeId, false)
+                                .subjectId()
+                        : scopeId;
+        if (!classScope) materialAccessPolicy.requireSubjectListAccess(actor, subjectId);
+        boolean enabled = !Boolean.FALSE.equals(input.enabled());
         Material material =
                 new Material(
                         UUID.randomUUID(),
                         classScope ? Material.Scope.CLASS : Material.Scope.SUBJECT,
                         subjectId,
                         classScope ? scopeId : null,
-                        module(input.moduleId(), subjectId),
+                        requireModule(input.moduleId(), subjectId),
                         input.kind(),
                         input.title(),
                         input.description(),
@@ -60,41 +67,47 @@ public class MaterialService {
                         actor.accountId(),
                         clock.instant(),
                         clock.instant(),
-                        0).withPresentation(!Boolean.FALSE.equals(input.enabled()), input.descriptionDocument());
-        access.write(actor, material);
-        MaterialVersion version = source(actor, material, 1, input.source());
-        repository.insert(material, version);
-        enqueue(version);
-        record(actor, "MATERIAL_CREATED", material);
+                        0).changePresentation(enabled, input.descriptionDocument());
+        materialAccessPolicy.requireWriteAccess(actor, material);
+        MaterialVersion version = buildVersion(actor, material, 1, input.source());
+        materialRepository.insertMaterial(material, version);
+        enqueueTextExtraction(version);
+        recordAudit(actor, "MATERIAL_CREATED", material);
         return material;
     }
 
-    public Material update(Actor actor, UUID id, MaterialCommands.Update input) {
-        Material m = writable(actor, id, input.version());
+    public Material updateMaterial(Actor actor, UUID id, MaterialCommands.Update input) {
+        Material m = requireWritableMaterial(actor, id, input.version());
         Material target =
                 input.moduleId() == null || input.moduleId().equals(m.moduleId())
                         ? m
-                        : m.inModule(module(input.moduleId(), m.subjectId()));
+                        : m.moveToModule(requireModule(input.moduleId(), m.subjectId()));
+        boolean enabled = input.enabled() == null ? m.enabled() : input.enabled();
+        boolean sameDescription =
+                Objects.toString(m.description(), "")
+                        .strip()
+                        .equals(Objects.toString(input.description(), "").strip());
+        FormattedText document =
+                input.descriptionDocument() != null
+                        ? input.descriptionDocument()
+                        : sameDescription ? m.descriptionDocument() : null;
         Material next =
                 target.revise(
-                        input.title(),
-                        input.description(),
-                        input.orderNo(),
-                        m.currentVersionNo(),
-                        m.status(),
-                        clock.instant()).withPresentation(input.enabled() == null ? m.enabled() : input.enabled(),
-                                input.descriptionDocument() != null ? input.descriptionDocument()
-                                        : Objects.toString(m.description(), "").strip()
-                                                .equals(Objects.toString(input.description(), "").strip())
-                                                        ? m.descriptionDocument() : null);
-        save(next, m.version());
-        record(actor, "MATERIAL_UPDATED", next);
+                                input.title(),
+                                input.description(),
+                                input.orderNo(),
+                                m.currentVersionNo(),
+                                m.status(),
+                                clock.instant())
+                        .changePresentation(enabled, document);
+        saveMaterial(next, m.version());
+        recordAudit(actor, "MATERIAL_UPDATED", next);
         return next;
     }
 
-    public Material replace(Actor actor, UUID id, MaterialCommands.Replace input) {
-        Material m = writable(actor, id, input.version());
-        MaterialVersion version = source(actor, m, m.currentVersionNo() + 1, input.source());
+    public Material replaceMaterialVersion(Actor actor, UUID id, MaterialCommands.Replace input) {
+        Material m = requireWritableMaterial(actor, id, input.version());
+        MaterialVersion version = buildVersion(actor, m, m.currentVersionNo() + 1, input.source());
         Material next =
                 m.revise(
                         m.title(),
@@ -103,15 +116,15 @@ public class MaterialService {
                         version.versionNo(),
                         m.status(),
                         clock.instant());
-        save(next, m.version());
-        repository.insertVersion(version);
-        enqueue(version);
-        record(actor, "MATERIAL_VERSION_CREATED", next);
+        saveMaterial(next, m.version());
+        materialRepository.insertVersion(version);
+        enqueueTextExtraction(version);
+        recordAudit(actor, "MATERIAL_VERSION_CREATED", next);
         return next;
     }
 
-    public Material archive(Actor actor, UUID id, long expected) {
-        Material m = writable(actor, id, expected);
+    public Material archiveMaterial(Actor actor, UUID id, long expected) {
+        Material m = requireWritableMaterial(actor, id, expected);
         Material next =
                 m.revise(
                         m.title(),
@@ -120,22 +133,22 @@ public class MaterialService {
                         m.currentVersionNo(),
                         Material.Status.ARCHIVED,
                         clock.instant());
-        save(next, m.version());
-        record(actor, "MATERIAL_ARCHIVED", next);
+        saveMaterial(next, m.version());
+        recordAudit(actor, "MATERIAL_ARCHIVED", next);
         return next;
     }
 
-    public void reorder(
+    public void reorderMaterials(
             Actor actor, UUID scopeId, boolean classScope, MaterialCommands.Reorder input) {
-        if (classScope) access.classList(actor, scopeId, false);
-        else access.subjectList(actor, scopeId);
+        if (classScope) materialAccessPolicy.requireClassListAccess(actor, scopeId, false);
+        else materialAccessPolicy.requireSubjectListAccess(actor, scopeId);
         Set<UUID> seen = new HashSet<>();
         List<Material> rows = new ArrayList<>();
         for (var position : input.items()) {
             if (!seen.add(position.id()))
                 throw ApiException.badRequest(
                         "MATERIAL_REORDER_INVALID", "Danh sách có học liệu trùng");
-            Material m = writable(actor, position.id(), position.version());
+            Material m = requireWritableMaterial(actor, position.id(), position.version());
             if (classScope
                     ? !scopeId.equals(m.classId())
                     : m.classId() != null || !scopeId.equals(m.subjectId()))
@@ -155,42 +168,47 @@ public class MaterialService {
                             m.currentVersionNo(),
                             m.status(),
                             clock.instant());
-            save(next, m.version());
-            record(actor, "MATERIAL_UPDATED", next);
+            saveMaterial(next, m.version());
+            recordAudit(actor, "MATERIAL_UPDATED", next);
         }
     }
 
-    private Material writable(Actor actor, UUID id, long expected) {
+    private Material requireWritableMaterial(Actor actor, UUID id, long expected) {
         Material m =
-                repository.find(id).orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
-        access.write(actor, m);
-        if (expected != m.version()) throw conflict();
+                materialRepository
+                        .findMaterial(id)
+                        .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
+        materialAccessPolicy.requireWriteAccess(actor, m);
+        if (expected != m.version()) throw createVersionConflict();
         return m;
     }
 
     /** Module phải là module của đúng môn chứa học liệu. */
-    private UUID module(UUID moduleId, UUID subjectId) {
+    private UUID requireModule(UUID moduleId, UUID subjectId) {
         if (moduleId == null
-                || modules.find(moduleId).filter(m -> m.subjectId().equals(subjectId)).isEmpty())
+                || materialModuleRepository
+                        .findModule(moduleId)
+                        .filter(m -> m.subjectId().equals(subjectId))
+                        .isEmpty())
             throw ApiException.badRequest("MATERIAL_MODULE_INVALID", "Chọn module của môn");
         return moduleId;
     }
 
-    private void save(Material m, long expected) {
-        if (!repository.update(m, expected)) throw conflict();
+    private void saveMaterial(Material material, long expected) {
+        if (!materialRepository.updateMaterial(material, expected)) throw createVersionConflict();
     }
 
-    private ApiException conflict() {
+    private ApiException createVersionConflict() {
         return ApiException.conflict(
                 "MATERIAL_VERSION_CONFLICT", "Học liệu đã thay đổi, vui lòng tải lại");
     }
 
-    private MaterialVersion source(
-            Actor actor, Material m, int number, MaterialCommands.Source input) {
+    private MaterialVersion buildVersion(
+            Actor actor, Material material, int number, MaterialCommands.Source input) {
         if (input == null)
             throw ApiException.badRequest(
                     "MATERIAL_SOURCE_REQUIRED", "Chọn tệp hoặc đường dẫn video");
-        if (m.kind() == Material.Kind.YOUTUBE_LINK) {
+        if (material.kind() == Material.Kind.YOUTUBE_LINK) {
             if (input.fileRef() != null)
                 throw ApiException.badRequest(
                         "MATERIAL_SOURCE_INVALID", "Nguồn không phù hợp loại học liệu");
@@ -201,7 +219,7 @@ public class MaterialService {
                 throw ApiException.badRequest("MATERIAL_YOUTUBE_INVALID", e.getMessage());
             }
             return new MaterialVersion(
-                    m.id(),
+                    material.id(),
                     number,
                     null,
                     null,
@@ -217,13 +235,13 @@ public class MaterialService {
         if (input.videoUrl() != null || input.fileRef() == null || input.fileRef().isBlank())
             throw ApiException.badRequest("MATERIAL_SOURCE_INVALID", "Chọn tệp đã tải lên");
         StoredFileInfo file =
-                artifacts.attach(new FileRef(input.fileRef()), actor, ArtifactPurpose.MATERIAL);
+                artifact.attach(new FileRef(input.fileRef()), actor, ArtifactPurpose.MATERIAL);
         if (file == null
                 || file.purpose() != ArtifactPurpose.MATERIAL
                 || !actor.accountId().equals(file.ownerAccountId()))
             throw ApiException.badRequest("MATERIAL_FILE_INVALID", "Tệp không phù hợp");
         return new MaterialVersion(
-                m.id(),
+                material.id(),
                 number,
                 file.fileId(),
                 file.originalFileName(),
@@ -237,25 +255,33 @@ public class MaterialService {
                 clock.instant());
     }
 
-    private void enqueue(MaterialVersion v) {
-        if (v.fileId() != null)
-            jobs.enqueue(
+    private void enqueueTextExtraction(MaterialVersion version) {
+        if (version.fileId() != null)
+            job.enqueue(
                     JobTypes.MATERIAL_TEXT_EXTRACT,
-                    Map.of("materialId", v.materialId().toString(), "versionNo", v.versionNo()),
-                    "material:" + v.materialId() + ":" + v.versionNo());
+                    Map.of(
+                            "materialId",
+                            version.materialId().toString(),
+                            "versionNo",
+                            version.versionNo()),
+                    "material:" + version.materialId() + ":" + version.versionNo());
     }
 
-    private void record(Actor actor, String action, Material m) {
+    private void recordAudit(Actor actor, String action, Material material) {
         audit.record(
                 new AuditEvent(
                         UUID.randomUUID(),
                         actor.accountId(),
                         action,
                         "MATERIAL",
-                        m.id().toString(),
+                        material.id().toString(),
                         AuditResult.SUCCESS,
                         null,
-                        Map.of("versionNo", m.currentVersionNo(), "version", m.version()),
+                        Map.of(
+                                "versionNo",
+                                material.currentVersionNo(),
+                                "version",
+                                material.version()),
                         clock.instant()));
     }
 }

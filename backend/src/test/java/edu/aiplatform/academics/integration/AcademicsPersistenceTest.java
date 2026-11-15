@@ -9,6 +9,7 @@ import edu.aiplatform.academics.model.Enrollment;
 import edu.aiplatform.academics.model.EnrollmentSource;
 import edu.aiplatform.academics.model.EnrollmentStatus;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -24,15 +25,16 @@ import static org.mockito.Mockito.*;
 class AcademicsPersistenceTest {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate = mock(NamedParameterJdbcTemplate.class);
     private final Instant now = Instant.parse("2026-10-17T00:00:00Z");
+    private final LocalDate start = LocalDate.of(2027, 1, 10);
 
     @AfterEach void clearTransaction() { TransactionSynchronizationManager.clear(); }
 
     @Test void updatingStaleVersionRaisesConflictAndNeverChangesIdentity() {
         TransactionSynchronizationManager.setActualTransactionActive(true);
         var repository = new CourseClassRepository(namedParameterJdbcTemplate);
-        var original = CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C1", "Class", null, null, now);
+        var original = CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C1", "Class", null, start, null, now);
         when(namedParameterJdbcTemplate.update(anyString(), anyMap())).thenReturn(0);
-        assertThatThrownBy(() -> repository.update(original.updateInfo("New", null, now), 0))
+        assertThatThrownBy(() -> repository.update(original.updateInfo("New", null, start, now), 0))
                 .isInstanceOf(AcademicRuleException.class).hasMessageContaining("tải lại");
         verify(namedParameterJdbcTemplate).update(argThat(sql -> sql.contains("where id = :id and version = :expectedVersion") &&
                 !sql.contains("set subject_id") && !sql.contains("set code")),
@@ -41,7 +43,7 @@ class AcademicsPersistenceTest {
 
     @Test void rejectsUncoordinatedWritesAndInvalidVersion() {
         var repository = new CourseClassRepository(namedParameterJdbcTemplate);
-        var original = CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C1", "Class", null, null, now);
+        var original = CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C1", "Class", null, start, null, now);
         assertThatThrownBy(() -> repository.insert(original)).isInstanceOf(IllegalStateException.class);
         TransactionSynchronizationManager.setActualTransactionActive(true);
         assertThatThrownBy(() -> repository.update(original, 5)).isInstanceOf(IllegalArgumentException.class);
@@ -91,5 +93,26 @@ class AcademicsPersistenceTest {
         assertThat(repository.activeInOtherClass(accountId, subjectId, classId)).isTrue();
         assertThat(repository.activeInOtherClass(accountId, subjectId, classId)).isFalse();
         verify(namedParameterJdbcTemplate, times(2)).queryForObject(anyString(), anyMap(), eq(Boolean.class));
+    }
+
+    @Test void writesStartDateAndMapsDuplicateCodeInTermToClassExists() {
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        var repository = new CourseClassRepository(namedParameterJdbcTemplate);
+        var original = CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C1", "Class", null, start, null, now);
+        when(namedParameterJdbcTemplate.update(anyString(), anyMap())).thenThrow(new DuplicateKeyException("SQL details"));
+        assertThatThrownBy(() -> repository.insert(original))
+                .isInstanceOfSatisfying(AcademicRuleException.class, error -> {
+                    assertThat(error.code()).isEqualTo("CLASS_EXISTS");
+                    assertThat(error.getMessage()).isEqualTo("Mã lớp đã tồn tại trong môn ở học kỳ này");
+                });
+        var moved = original.updateInfo("Class", null, LocalDate.of(2027, 5, 15), now.plusSeconds(1));
+        assertThatThrownBy(() -> repository.update(moved, 0))
+                .isInstanceOfSatisfying(AcademicRuleException.class,
+                        error -> assertThat(error.code()).isEqualTo("CLASS_EXISTS"));
+        verify(namedParameterJdbcTemplate).update(argThat(sql -> sql.contains("insert") && sql.contains("starts_on")
+                && !sql.contains(" term")), argThat((Map<String, ?> params) ->
+                params.get("startsOn").equals(java.sql.Date.valueOf(start))));
+        verify(namedParameterJdbcTemplate).update(argThat(sql -> sql.contains("starts_on = :startsOn")
+                && !sql.contains("term =")), anyMap());
     }
 }

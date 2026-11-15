@@ -18,27 +18,27 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Component
 public class DeadlineReminderScanner implements IScheduledScanner {
     private static final Logger log = LoggerFactory.getLogger(DeadlineReminderScanner.class);
-    private final IAssignmentQuery assignments;
-    private final IClassAccess classes;
-    private final ISubmissionQuery submissions;
-    private final INotificationRepository repository;
-    private final NotificationService notifications;
-    private final TransactionTemplate transaction;
+    private final IAssignmentQuery assignmentQuery;
+    private final IClassAccess classAccess;
+    private final ISubmissionQuery submissionQuery;
+    private final INotificationRepository notificationRepository;
+    private final NotificationService notificationService;
+    private final TransactionTemplate transactionTemplate;
 
     public DeadlineReminderScanner(
-            IAssignmentQuery assignments,
-            IClassAccess classes,
-            ISubmissionQuery submissions,
-            INotificationRepository repository,
-            NotificationService notifications,
-            PlatformTransactionManager manager) {
-        this.assignments = assignments;
-        this.classes = classes;
-        this.submissions = submissions;
-        this.repository = repository;
-        this.notifications = notifications;
-        this.transaction = new TransactionTemplate(manager);
-        this.transaction.setTimeout(15);
+            IAssignmentQuery assignmentQuery,
+            IClassAccess classAccess,
+            ISubmissionQuery submissionQuery,
+            INotificationRepository notificationRepository,
+            NotificationService notificationService,
+            PlatformTransactionManager transactionManager) {
+        this.assignmentQuery = assignmentQuery;
+        this.classAccess = classAccess;
+        this.submissionQuery = submissionQuery;
+        this.notificationRepository = notificationRepository;
+        this.notificationService = notificationService;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+        this.transactionTemplate.setTimeout(15);
     }
 
     public String name() {
@@ -47,25 +47,26 @@ public class DeadlineReminderScanner implements IScheduledScanner {
 
     public void scan(Instant now) {
         for (var candidate :
-                assignments
+                assignmentQuery
                         .listClosingBetween(
                                 now.plus(Duration.ofHours(24)).minus(Duration.ofMinutes(5)),
                                 now.plus(Duration.ofHours(24)))) {
             try {
-                var current = assignments.get(candidate.assignmentId()).orElse(null);
-                if (current == null || !eligible(current, now)) continue;
+                var current = assignmentQuery.get(candidate.assignmentId()).orElse(null);
+                if (current == null || !isEligible(current, now)) continue;
                 List<ClassRef> targets =
                         current.classId() == null
-                                ? classes.listOpenClassesOfSubject(current.subjectId())
-                                : classes.getClassRef(current.classId())
+                                ? classAccess.listOpenClassesOfSubject(current.subjectId())
+                                : classAccess.getClassRef(current.classId())
                                         .map(List::of)
                                         .orElse(List.of());
-                for (var c :
+                for (var courseClass :
                         targets.stream()
                                 .filter(c -> c.status() == ClassStatus.OPEN)
                                 .toList()) {
                     try {
-                        transaction.executeWithoutResult(tx -> remind(current, c, now));
+                        transactionTemplate.executeWithoutResult(
+                                tx -> remindStudents(current, courseClass, now));
                     } catch (RuntimeException failure) {
                         // Catch after transaction rollback; dependency messages may contain private
                         // data.
@@ -73,7 +74,7 @@ public class DeadlineReminderScanner implements IScheduledScanner {
                                 "scanner={} assignmentId={} classId={} scanTime={} code=REMINDER_CLASS_FAILED errorType={}",
                                 name(),
                                 current.assignmentId(),
-                                c.classId(),
+                                courseClass.classId(),
                                 now,
                                 failure.getClass().getSimpleName());
                     }
@@ -89,45 +90,58 @@ public class DeadlineReminderScanner implements IScheduledScanner {
         }
     }
 
-    public static boolean eligible(AssignmentView a, Instant now) {
-        if (a.status() != AssignmentStatus.OPEN
-                || a.opensAt() == null
-                || a.closesAt() == null
-                || !a.closesAt().isAfter(now)) return false;
-        Instant due = a.closesAt().minus(Duration.ofHours(24));
+    public static boolean isEligible(AssignmentView assignment, Instant now) {
+        if (assignment.status() != AssignmentStatus.OPEN
+                || assignment.opensAt() == null
+                || assignment.closesAt() == null
+                || !assignment.closesAt().isAfter(now)) return false;
+        Instant due = assignment.closesAt().minus(Duration.ofHours(24));
         return !now.isBefore(due) && !now.isAfter(due.plus(Duration.ofMinutes(5)));
     }
 
-    private void remind(AssignmentView candidate, ClassRef c, Instant now) {
-        var a = assignments.get(candidate.assignmentId()).orElse(null);
-        var currentClass = classes.getClassRef(c.classId()).orElse(null);
-        if (a == null
-                || !Objects.equals(a.closesAt(), candidate.closesAt())
-                || !eligible(a, now)
+    private void remindStudents(AssignmentView candidate, ClassRef courseClass, Instant now) {
+        var assignment = assignmentQuery.get(candidate.assignmentId()).orElse(null);
+        var currentClass = classAccess.getClassRef(courseClass.classId()).orElse(null);
+        if (assignment == null
+                || !Objects.equals(assignment.closesAt(), candidate.closesAt())
+                || !isEligible(assignment, now)
                 || currentClass == null
                 || currentClass.status() != ClassStatus.OPEN) return;
-        boolean late = a.opensAt().isAfter(a.closesAt().minus(Duration.ofHours(24)));
-        if (!repository.reminder(
-                        a.assignmentId(), c.classId(), a.closesAt(), late ? "SKIPPED" : "SENT", now)
+        boolean late =
+                assignment.opensAt().isAfter(assignment.closesAt().minus(Duration.ofHours(24)));
+        if (!notificationRepository.insertReminder(
+                        assignment.assignmentId(),
+                        courseClass.classId(),
+                        assignment.closesAt(),
+                        late ? "SKIPPED" : "SENT",
+                        now)
                 || late) return;
-        Set<UUID> active = new HashSet<>(classes.listActiveStudents(c.classId()));
+        Set<UUID> active = new HashSet<>(classAccess.listActiveStudents(courseClass.classId()));
         var recipients =
-                submissions.listStudentsWithoutSubmission(a.assignmentId(), c.classId()).stream()
+                submissionQuery
+                        .listStudentsWithoutSubmission(
+                                assignment.assignmentId(), courseClass.classId())
+                        .stream()
                         .filter(active::contains)
                         .distinct()
                         .toList();
         UUID event =
                 UUID.nameUUIDFromBytes(
-                        (a.assignmentId() + ":" + c.classId() + ":" + a.closesAt())
+                        (assignment.assignmentId()
+                                        + ":"
+                                        + courseClass.classId()
+                                        + ":"
+                                        + assignment.closesAt())
                                 .getBytes(StandardCharsets.UTF_8));
-        notifications.create(
+        notificationService.createNotification(
                 event,
                 NotificationType.DEADLINE_REMINDER,
                 recipients,
-                NotificationEventService.title(NotificationType.DEADLINE_REMINDER),
-                NotificationSummaries.forType(NotificationType.DEADLINE_REMINDER),
-                AssignmentNotificationLink.student(a.assignmentId(), c.classId()),
+                NotificationEventService.resolveTitle(NotificationType.DEADLINE_REMINDER),
+                NotificationSummaries.summarizeType(NotificationType.DEADLINE_REMINDER),
+                AssignmentNotificationLink.buildStudentLink(
+                        assignment.assignmentId(), courseClass.classId()),
                 "DEADLINE_REMINDER",
-                a.closesAt());
+                assignment.closesAt());
     }
 }

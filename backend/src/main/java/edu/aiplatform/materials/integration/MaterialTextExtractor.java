@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 public class MaterialTextExtractor {
     public record Result(String text, int pages) {}
 
-    private final IArtifact artifacts;
+    private final IArtifact artifact;
     private final Duration deadline;
     private final ThreadPoolExecutor executor =
             new ThreadPoolExecutor(
@@ -34,12 +34,12 @@ public class MaterialTextExtractor {
                     });
 
     @org.springframework.beans.factory.annotation.Autowired
-    public MaterialTextExtractor(IArtifact artifacts) {
-        this(artifacts, Duration.ofSeconds(120));
+    public MaterialTextExtractor(IArtifact artifact) {
+        this(artifact, Duration.ofSeconds(120));
     }
 
-    MaterialTextExtractor(IArtifact artifacts, Duration deadline) {
-        this.artifacts = artifacts;
+    MaterialTextExtractor(IArtifact artifact, Duration deadline) {
+        this.artifact = artifact;
         this.deadline = deadline;
     }
 
@@ -50,12 +50,12 @@ public class MaterialTextExtractor {
         }
     }
 
-    public Result extract(String fileId) {
+    public Result extractText(String fileId) {
         AtomicReference<InputStream> activeStream = new AtomicReference<>();
         AtomicReference<Process> activeProcess = new AtomicReference<>();
         Future<Result> task;
         try {
-            task = executor.submit(() -> parse(fileId, activeStream, activeProcess));
+            task = executor.submit(() -> parseDocument(fileId, activeStream, activeProcess));
         } catch (RejectedExecutionException e) {
             throw new BusyException();
         }
@@ -79,9 +79,9 @@ public class MaterialTextExtractor {
         }
     }
 
-    public Result extract(String fileId, String mediaType) {
-        if (!"text/plain".equals(mediaType)) return extract(fileId);
-        try (InputStream input = artifacts.open(fileId)) {
+    public Result extractText(String fileId, String mediaType) {
+        if (!"text/plain".equals(mediaType)) return extractText(fileId);
+        try (InputStream input = artifact.open(fileId)) {
             byte[] bytes = input.readNBytes(2 * 1024 * 1024 + 1);
             if (bytes.length > 2 * 1024 * 1024)
                 throw new IllegalArgumentException("Source is too large");
@@ -106,7 +106,7 @@ public class MaterialTextExtractor {
         }
     }
 
-    private Result parse(
+    private Result parseDocument(
             String fileId,
             AtomicReference<InputStream> activeStream,
             AtomicReference<Process> activeProcess)
@@ -115,7 +115,7 @@ public class MaterialTextExtractor {
         Process process = null;
         try {
             Path input = directory.resolve("input"), output = directory.resolve("output");
-            try (InputStream in = artifacts.open(fileId);
+            try (InputStream in = artifact.open(fileId);
                     OutputStream out = Files.newOutputStream(input)) {
                 activeStream.set(in);
                 byte[] buffer = new byte[8192];

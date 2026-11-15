@@ -10,37 +10,22 @@ import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.identity.contract.Role;
 import edu.aiplatform.identity.model.Account;
-import edu.aiplatform.identity.repository.AccountRepository;
 import edu.aiplatform.identity.model.EmailPolicy;
 import edu.aiplatform.identity.model.ProfilePolicy;
+import edu.aiplatform.identity.model.StudentCodePolicy;
+import edu.aiplatform.identity.repository.AccountRepository;
+import edu.aiplatform.identity.service.ImportTableReader.TableRow;
 import edu.aiplatform.shared.error.ApiException;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.StringReader;
-import java.nio.ByteBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionOperations;
@@ -48,7 +33,8 @@ import org.springframework.transaction.support.TransactionOperations;
 /**
  * Nhập tài khoản từ Excel, tương thích CSV cũ (F10, luồng phụ UC 09). Bước kiểm không ghi; xác nhận gửi lại
  * cùng file, kiểm lại rồi tạo các dòng hợp lệ ở {@code PENDING} trong một transaction, không gửi mail (BR-U01-80–85).
- * Kết quả không lưu; audit ghi checksum file và số dòng tạo/lỗi.
+ * Cột tùy chọn {@code student_code} bắt buộc có giá trị ở dòng STUDENT (BR-U01-108). Kết quả không lưu; audit ghi
+ * checksum file và số dòng tạo/lỗi.
  */
 @Service
 public class AccountImportService {
@@ -56,6 +42,7 @@ public class AccountImportService {
     public static final int MAX_ROWS = 1000;
     public static final int MAX_BYTES = 1024 * 1024;
     static final List<String> REQUIRED_COLUMNS = List.of("email", "display_name", "role");
+    static final String STUDENT_CODE_COLUMN = "student_code";
     /** Nhập hàng loạt không được tạo ADMIN (BR-U01-84). */
     static final Set<Role> IMPORTABLE_ROLES = Set.of(Role.STUDENT, Role.TEACHER, Role.SUBJECT_MANAGER);
 
@@ -79,7 +66,7 @@ public class AccountImportService {
     }
 
     public record RowResult(long rowNumber, String email, String displayName, String role, Outcome outcome,
-                            String reason) {
+                            String reason, String studentCode) {
     }
 
     public record ImportResult(String fileChecksum, List<RowResult> rows, int validCount, int rejectedCount,
@@ -99,7 +86,7 @@ public class AccountImportService {
         try {
             return commitChecked(actor, file, now);
         } catch (DuplicateKeyException e) {
-            // Email vừa được tạo ở request khác giữa lúc kiểm và lúc ghi (hai lần xác nhận cùng tệp): cả tệp rollback.
+            // Email hoặc MSSV vừa được dùng ở request khác giữa lúc kiểm và lúc ghi: cả tệp rollback.
             throw ApiException.conflict("IMPORT_CONFLICT", "Dữ liệu tài khoản vừa thay đổi, hãy kiểm lại tệp nhập");
         }
     }
@@ -110,7 +97,7 @@ public class AccountImportService {
             for (RowResult row : checked.rows()) {
                 if (row.outcome() == Outcome.CREATED) {
                     accounts.insert(Account.newPending(UUID.randomUUID(), row.email(), Role.valueOf(row.role()),
-                            row.displayName(), null, now));
+                            row.displayName(), null, row.studentCode(), now));
                 }
             }
             audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "ACCOUNTS_IMPORTED", "ACCOUNT", null,
@@ -121,39 +108,42 @@ public class AccountImportService {
     }
 
     private ImportResult check(byte[] file, boolean committing) {
-        if (file == null || file.length == 0) {
-            throw invalidFile("Tệp nhập trống");
-        }
-        if (file.length > MAX_BYTES) {
-            throw invalidFile("Tệp nhập vượt 1 MB");
-        }
-        List<ImportRow> records = file.length >= 4 && file[0] == 'P' && file[1] == 'K'
-                ? readWorkbook(file) : parse(decode(file));
-        if (records.size() > MAX_ROWS) {
-            throw invalidFile("Tệp nhập có quá " + MAX_ROWS + " dòng dữ liệu");
-        }
-        List<String> normalizedEmails = records.stream().map(r -> EmailPolicy.normalize(r.email())).toList();
+        List<TableRow> records = ImportTableReader.readRows(file, REQUIRED_COLUMNS, List.of(STUDENT_CODE_COLUMN),
+                MAX_BYTES, MAX_ROWS);
+        List<String> normalizedEmails = records.stream().map(r -> EmailPolicy.normalize(r.value("email"))).toList();
+        List<String> normalizedCodes = records.stream()
+                .map(r -> StudentCodePolicy.normalize(r.value(STUDENT_CODE_COLUMN))).toList();
         Set<String> existing = accounts.existingEmails(normalizedEmails.stream().filter(e -> !e.isEmpty()).toList());
+        Set<String> existingCodes = accounts.existingStudentCodes(normalizedCodes.stream()
+                .filter(StudentCodePolicy::isValid).distinct().toList());
         Set<String> seen = new HashSet<>();
+        Set<String> seenCodes = new HashSet<>();
         List<RowResult> rows = new ArrayList<>();
         int valid = 0;
         for (int i = 0; i < records.size(); i++) {
-            ImportRow record = records.get(i);
+            TableRow record = records.get(i);
             String email = normalizedEmails.get(i);
-            String displayName = ProfilePolicy.normalizeDisplayName(record.displayName());
-            String roleText = record.role().strip().toUpperCase(Locale.ROOT);
+            String studentCode = normalizedCodes.get(i);
+            String displayName = ProfilePolicy.normalizeDisplayName(record.value("display_name"));
+            String roleText = record.value("role").strip().toUpperCase(Locale.ROOT);
             String reason = reason(email, displayName, roleText, existing, seen);
+            if (reason == null) {
+                reason = studentCodeReason(roleText, studentCode, existingCodes, seenCodes);
+            }
             if (!email.isEmpty()) {
                 seen.add(email);
+            }
+            if (StudentCodePolicy.isValid(studentCode)) {
+                seenCodes.add(studentCode);
             }
             Outcome outcome = reason != null ? Outcome.REJECTED : committing ? Outcome.CREATED : Outcome.VALID;
             if (reason == null) {
                 valid++;
             }
             // Số dòng trong tệp: dòng tiêu đề là dòng 1.
-            rows.add(new RowResult(record.rowNumber(), email, displayName, roleText, outcome, reason));
+            rows.add(new RowResult(record.rowNumber(), email, displayName, roleText, outcome, reason, studentCode));
         }
-        return new ImportResult(checksum(file), rows, valid, rows.size() - valid, committing);
+        return new ImportResult(ImportTableReader.checksum(file), rows, valid, rows.size() - valid, committing);
     }
 
     private String reason(String email, String displayName, String role, Set<String> existing, Set<String> seen) {
@@ -179,116 +169,23 @@ public class AccountImportService {
         }
     }
 
-    /** Dòng thiếu cột (ít dấu phẩy hơn tiêu đề) coi như ô trống thay vì lỗi cả tệp. */
-    private static String value(CSVRecord record, String column) {
-        return record.isMapped(column) && record.isSet(column) ? record.get(column) : "";
-    }
-
-    private static String decode(byte[] file) {
-        try {
-            String text = StandardCharsets.UTF_8.newDecoder()
-                    .onMalformedInput(CodingErrorAction.REPORT)
-                    .onUnmappableCharacter(CodingErrorAction.REPORT)
-                    .decode(ByteBuffer.wrap(file)).toString();
-            // Excel thường lưu UTF-8 kèm BOM.
-            return text.startsWith("﻿") ? text.substring(1) : text;
-        } catch (CharacterCodingException e) {
-            throw invalidFile("Tệp CSV phải mã hóa UTF-8");
+    /** BR-U01-108: xét sau các lỗi email, tên, role; {@code role} đã hợp lệ. */
+    private static String studentCodeReason(String role, String studentCode, Set<String> existingCodes,
+                                            Set<String> seenCodes) {
+        boolean student = Objects.equals(role, Role.STUDENT.name());
+        if (student && studentCode == null) {
+            return "MISSING_STUDENT_CODE";
         }
-    }
-
-    private record ImportRow(long rowNumber, String email, String displayName, String role) {
-    }
-
-    private static List<ImportRow> readWorkbook(byte[] file) {
-        try (var workbook = new XSSFWorkbook(new ByteArrayInputStream(file))) {
-            if (workbook.isMacroEnabled() || workbook.getNumberOfSheets() == 0) {
-                throw invalidFile("Chỉ nhận workbook .xlsx không có macro");
-            }
-            var sheet = workbook.getSheetAt(0);
-            var header = sheet.getRow(0);
-            if (header == null) {
-                throw invalidFile("Tệp Excel cần đủ cột email, display_name, role ở dòng đầu");
-            }
-            var formatter = new DataFormatter(Locale.ROOT);
-            Map<String, Integer> columns = new HashMap<>();
-            for (Cell cell : header) {
-                String name = readCell(cell, formatter).strip().toLowerCase(Locale.ROOT);
-                if (REQUIRED_COLUMNS.contains(name) && columns.putIfAbsent(name, cell.getColumnIndex()) != null) {
-                    throw invalidFile("Tệp Excel có cột trùng: " + name);
-                }
-            }
-            if (!columns.keySet().containsAll(REQUIRED_COLUMNS)) {
-                throw invalidFile("Tệp Excel cần đủ cột email, display_name, role");
-            }
-            List<ImportRow> rows = new ArrayList<>();
-            for (var row : sheet) {
-                if (row.getRowNum() == 0) {
-                    continue;
-                }
-                String email = readCell(row.getCell(columns.get("email")), formatter);
-                String name = readCell(row.getCell(columns.get("display_name")), formatter);
-                String role = readCell(row.getCell(columns.get("role")), formatter);
-                if (email.isBlank() && name.isBlank() && role.isBlank()) {
-                    continue;
-                }
-                rows.add(new ImportRow(row.getRowNum() + 1L, email, name, role));
-                if (rows.size() > MAX_ROWS) {
-                    throw invalidFile("Tệp nhập có quá " + MAX_ROWS + " dòng dữ liệu");
-                }
-            }
-            return rows;
-        } catch (ApiException rejected) {
-            throw rejected;
-        } catch (IOException | RuntimeException unreadable) {
-            throw invalidFile("Không đọc được tệp Excel .xlsx");
+        if (!student) {
+            return studentCode == null ? null : "STUDENT_CODE_NOT_ALLOWED";
         }
-    }
-
-    private static String readCell(Cell cell, DataFormatter formatter) {
-        if (cell != null && (cell.getCellType() == CellType.FORMULA || cell.getCellType() == CellType.ERROR)) {
-            throw invalidFile("Tệp Excel không được chứa ô công thức hoặc ô lỗi trong các cột nhập");
+        if (!StudentCodePolicy.isValid(studentCode)) {
+            return "INVALID_STUDENT_CODE";
         }
-        return formatter.formatCellValue(cell);
-    }
-
-    private static List<ImportRow> parse(String text) {
-        CSVFormat format = CSVFormat.DEFAULT.builder()
-                .setHeader()
-                .setIgnoreHeaderCase(true)
-                .setSkipHeaderRecord(true)
-                .setIgnoreEmptyLines(true)
-                .setTrim(true)
-                .build();
-        try (CSVParser parser = CSVParser.parse(new StringReader(text), format)) {
-            List<String> header = parser.getHeaderNames().stream()
-                    .map(name -> name.strip().toLowerCase(Locale.ROOT)).toList();
-            if (!header.containsAll(REQUIRED_COLUMNS)) {
-                throw invalidFile("Tệp CSV cần đủ cột email, display_name, role");
-            }
-            List<ImportRow> records = new ArrayList<>();
-            for (CSVRecord record : parser) {
-                if (records.size() > MAX_ROWS) {
-                    break;
-                }
-                records.add(new ImportRow(record.getRecordNumber() + 1, value(record, "email"),
-                        value(record, "display_name"), value(record, "role")));
-            }
-            return records;
-        } catch (IOException | IllegalArgumentException | IllegalStateException e) {
-            if (e instanceof ApiException apiException) {
-                throw apiException;
-            }
-            throw invalidFile("Không đọc được tệp CSV");
+        if (seenCodes.contains(studentCode)) {
+            return "DUPLICATE_STUDENT_CODE_IN_FILE";
         }
-    }
-
-    private static String checksum(byte[] file) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(file));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 không khả dụng", e);
-        }
+        return existingCodes.contains(studentCode) ? "STUDENT_CODE_EXISTS" : null;
     }
 
     private void require(Actor actor) {
@@ -300,9 +197,5 @@ public class AccountImportService {
                     "ACCOUNT", null, AuditResult.DENIED, Actions.ACCOUNT_IMPORT, Map.of(), clock.instant()));
             throw ApiException.forbidden("ACCOUNT_ADMIN_FORBIDDEN");
         }
-    }
-
-    private static ApiException invalidFile(String message) {
-        return ApiException.badRequest("IMPORT_FILE_INVALID", message);
     }
 }

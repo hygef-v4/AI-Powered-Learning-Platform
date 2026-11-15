@@ -2,7 +2,7 @@
 import Markdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import styles from "../styles/announcements.module.css";
-export function safeMarkdownUrl(url: string) {
+export function sanitizeMarkdownUrl(url: string) {
   return /^(https?:\/\/|\/(?!\/)|#)/i.test(url) && !/[\\\u0000-\u0020]/.test(url) ? url : "";
 }
 export function AnnouncementMarkdown({ body }: { body: string }) {
@@ -12,7 +12,7 @@ export function AnnouncementMarkdown({ body }: { body: string }) {
         skipHtml
         rehypePlugins={[rehypeSanitize]}
         disallowedElements={["img"]}
-        urlTransform={safeMarkdownUrl}
+        urlTransform={sanitizeMarkdownUrl}
         components={{
           a: ({ href, children }) =>
             href ? (

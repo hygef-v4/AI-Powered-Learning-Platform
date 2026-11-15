@@ -1,5 +1,6 @@
 import { apiFetch, apiDownloadFile } from "@/shared/api/client";
 import type { NavigationFilters } from "../model/navigation";
+import type { ContributionLevel } from "../model/contributionLevels";
 import type {
   AiRequest,
   AssignmentContext,
@@ -53,8 +54,10 @@ export const gradingApi = {
   saveEvaluation: (id: string, body: Save) => writeRequest<Evaluation>(`/evaluations/${id}`, body, "PUT"),
   finalizeGrades: (items: ItemVersion[]) => writeRequest<BatchResult>("/evaluations:finalize", { items }),
   publishGrades: (items: ItemVersion[]) => writeRequest<BatchResult>("/evaluations:publish", { items }),
-  saveMemberGrade: (id: string, accountId: string, version: number, score: string, reason: string | null) =>
-    writeRequest<Evaluation>(`/evaluations/${id}/members/${accountId}`, { version, score, reason }, "PUT"),
+  saveMemberGrade: (id: string, accountId: string, version: number, score: string,
+    reason: string | null, contributionLevel?: ContributionLevel | null) =>
+    writeRequest<Evaluation>(`/evaluations/${id}/members/${accountId}`,
+      { version, score, reason, contributionLevel }, "PUT"),
 
   loadTask: (id: string) =>
     apiFetch<{ state: string; safeError: string | null }>(

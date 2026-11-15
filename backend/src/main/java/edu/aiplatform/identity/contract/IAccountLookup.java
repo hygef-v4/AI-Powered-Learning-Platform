@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-/** Tra tài khoản cho U02, U04, U05, U14, U15; mỗi lần tìm tối đa 20 kết quả. */
+/** Tra tài khoản cho U02, U04, U05, U14, U15; tìm tài khoản tối đa 20 kết quả, ứng viên sinh viên tối đa 200 kết quả. */
 public interface IAccountLookup {
 
     /** U14: keyset page of ACTIVE Admins, ordered by UUID; maximum page size100. */
@@ -21,6 +21,14 @@ public interface IAccountLookup {
     List<AccountContact> findAccounts(String query, Set<Role> roles, int limit);
 
     List<AccountContact> findByEmails(Collection<String> emails);
+
+    /**
+     * U05: tài khoản {@code STUDENT} theo MSSV (BR-U05-57); nhận mã thô, tự chuẩn hóa; mã không tìm thấy thì không có
+     * trong kết quả.
+     */
+    default List<AccountContact> findByStudentCodes(Collection<String> studentCodes) {
+        return List.of();
+    }
 
     Optional<AccountContact> getContact(UUID accountId);
 

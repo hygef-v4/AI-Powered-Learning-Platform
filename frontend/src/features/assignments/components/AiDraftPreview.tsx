@@ -1,9 +1,18 @@
 import { Alert, Pill } from "@/shared/ui";
-import type { AiDraft, AiProposalSection } from "../model/types";
+import { RunsView } from "@/shared/document/DocumentViewer";
+import { alignClass } from "@/shared/document/DocumentViewer";
+import type { AiDraft, AiProposalSection, AiTextFormat } from "../model/types";
 
 type Proposal = NonNullable<AiDraft["proposal"]>;
 
-function Paragraphs({ text }: { text: string }) {
+function FormattedRuns({ text, format = {} }: { text: string; format?: AiTextFormat }) {
+  const { runs } = format;
+  const style = { bold: format.bold, italic: format.italic, underline: format.underline, strike: format.strike, code: format.code, color: format.color, highlight: format.highlight };
+  return <RunsView runs={(runs ?? [{ text }]).map(run => ({ ...run, ...Object.fromEntries(Object.entries(style).filter(([, value]) => value !== undefined)) }))} />;
+}
+
+function Paragraphs({ text, format }: { text: string; format?: AiTextFormat }) {
+  if (format && Object.keys(format).length) return <p className={`whitespace-pre-wrap break-words text-sm leading-7 text-body ${alignClass(format.align)}`}><FormattedRuns text={text} format={format} /></p>;
   return <div className="space-y-3 text-sm leading-7 text-body">
     {text.trim().split(/\n\s*\n/).filter(Boolean).map((paragraph, index) =>
       <p key={index} className="whitespace-pre-wrap break-words">{paragraph}</p>)}
@@ -45,7 +54,7 @@ export function AiDraftPreview({ proposal, targetPoints }: { proposal: Proposal;
     {proposal.title && <h3 className="text-xl font-bold leading-7 text-ink">{proposal.title}</h3>}
     {proposal.businessContext && <details open={proposal.businessContext.length <= 900} className="rounded-xl border border-line bg-canvas p-4">
       <summary className="cursor-pointer text-sm font-semibold text-ink">Bối cảnh nghiệp vụ <span className="font-normal text-muted">· không tính điểm · bấm để mở/thu gọn</span></summary>
-      <div className="mt-3 max-h-72 overflow-y-auto pr-2"><Paragraphs text={proposal.businessContext} /></div>
+      <div className="mt-3 max-h-72 overflow-y-auto pr-2"><Paragraphs text={proposal.businessContext} format={proposal.businessContextFormat} /></div>
     </details>}
     {proposal.instructions && <details className="rounded-xl border border-line p-4">
       <summary className="cursor-pointer text-sm font-semibold text-ink">Hướng dẫn làm và nộp bài</summary>
@@ -61,12 +70,12 @@ export function AiDraftPreview({ proposal, targetPoints }: { proposal: Proposal;
           return <article key={index} className="overflow-hidden rounded-xl border border-line" aria-label={`Câu ${index + 1}`}>
             <header className="flex items-start gap-3 border-b border-line bg-canvas px-4 py-3">
               <span className="rounded-md bg-primary/10 px-2 py-1 text-xs font-bold text-primary-ink">{index + 1}</span>
-              <h4 className="min-w-0 flex-1 break-words font-semibold leading-6 text-ink">{section.title}</h4>
+              <h4 className={`min-w-0 flex-1 break-words font-semibold leading-6 text-ink ${alignClass(section.titleFormat?.align)}`}><FormattedRuns text={section.title} format={section.titleFormat} /></h4>
               {!parent && <Pill>{points(section)} điểm</Pill>}
             </header>
             <div className="grid lg:grid-cols-2">
               <div className="min-w-0 p-4"><p className="mb-2 text-xs font-semibold uppercase text-muted">Yêu cầu / sản phẩm cần nộp</p>
-                {section.guidance ? <Paragraphs text={section.guidance} /> : <p className="text-sm text-muted">Chưa có mô tả yêu cầu.</p>}
+                {section.guidance ? <Paragraphs text={section.guidance} format={section.guidanceFormat} /> : <p className="text-sm text-muted">Chưa có mô tả yêu cầu.</p>}
               </div>
               <div className="min-w-0 space-y-3 border-t border-line bg-canvas/50 p-4 lg:border-t-0 lg:border-l">
                 <h5 className="text-sm font-semibold text-ink">Rubric · tiêu chí và điểm</h5>

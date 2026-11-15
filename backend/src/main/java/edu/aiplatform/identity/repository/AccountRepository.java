@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -30,7 +31,11 @@ import org.springframework.stereotype.Repository;
 public class AccountRepository {
 
     private static final String COLUMNS = "id, school_email, role, status, password_hash, password_changed_at, "
-            + "display_name, phone_number, failed_login_count, locked_until, created_at, updated_at, version";
+            + "display_name, phone_number, failed_login_count, locked_until, created_at, updated_at, version, "
+            + "student_code";
+
+    /** Tên unique index của MSSV, dùng để phân biệt với trùng email khi insert/update gặp lỗi trùng. */
+    static final String STUDENT_CODE_KEY = "accounts_student_code_key";
 
     private final JdbcClient jdbc;
 
@@ -40,14 +45,53 @@ public class AccountRepository {
 
     public void insert(Account account) {
         jdbc.sql("insert into accounts (id, school_email, role, status, password_hash, password_changed_at, "
-                        + "display_name, phone_number, created_at, updated_at, version) values (:id, :email, :role, "
-                        + ":status, :hash, :changedAt, :name, :phone, :createdAt, :updatedAt, :version)")
+                        + "display_name, phone_number, created_at, updated_at, version, student_code) values (:id, "
+                        + ":email, :role, :status, :hash, :changedAt, :name, :phone, :createdAt, :updatedAt, "
+                        + ":version, :studentCode)")
                 .param("id", account.id()).param("email", account.schoolEmail())
                 .param("role", account.role().name()).param("status", account.status().name())
                 .param("hash", account.passwordHash()).param("changedAt", timestamp(account.passwordChangedAt()))
                 .param("name", account.displayName()).param("phone", account.phoneNumber())
                 .param("createdAt", timestamp(account.createdAt())).param("updatedAt", timestamp(account.updatedAt()))
-                .param("version", account.version())
+                .param("version", account.version()).param("studentCode", account.studentCode())
+                .update();
+    }
+
+    /** Lỗi trùng đến từ unique index MSSV (BR-U01-101), không phải email. */
+    public static boolean isStudentCodeConflict(DuplicateKeyException error) {
+        String message = error.getMostSpecificCause().getMessage();
+        return message != null && message.contains(STUDENT_CODE_KEY);
+    }
+
+    /** Các mã đã chuẩn hóa trong danh sách đã thuộc một tài khoản nào đó (BR-U01-101, 108, 110). */
+    public Set<String> existingStudentCodes(Collection<String> studentCodes) {
+        if (studentCodes.isEmpty()) {
+            return Set.of();
+        }
+        return new HashSet<>(jdbc.sql("select student_code from accounts where student_code in (:codes)")
+                .param("codes", List.copyOf(studentCodes)).query(String.class).list());
+    }
+
+    /** Tài khoản {@code STUDENT} theo mã đã chuẩn hóa; mã không tìm thấy thì không có trong kết quả. */
+    public List<Account> findStudentsByCodes(Collection<String> studentCodes) {
+        if (studentCodes.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql("select " + COLUMNS + " from accounts where role = 'STUDENT' and student_code in (:codes)")
+                .param("codes", List.copyOf(studentCodes)).query(AccountRepository::map).list();
+    }
+
+    /**
+     * Admin sửa thông tin tài khoản (F14) trong một lệnh để chỉ tăng {@code version} một lần; {@code studentCode}
+     * là giá trị cuối cùng đã được service xét theo BR-U01-105.
+     */
+    public int updateAccountDetails(UUID id, String displayName, String phoneNumber, String studentCode,
+                                    long expectedVersion, Instant now) {
+        return jdbc.sql("update accounts set display_name = :name, phone_number = :phone, "
+                        + "student_code = :studentCode, updated_at = :now, version = version + 1 "
+                        + "where id = :id and version = :version")
+                .param("name", displayName).param("phone", phoneNumber).param("studentCode", studentCode)
+                .param("now", timestamp(now)).param("id", id).param("version", expectedVersion)
                 .update();
     }
 
@@ -118,7 +162,8 @@ public class AccountRepository {
             params.put("status", filter.status().name());
         }
         if (filter.query() != null) {
-            where.append(" and (school_email ilike :q escape '\\' or display_name ilike :q escape '\\')");
+            where.append(" and (school_email ilike :q escape '\\' or display_name ilike :q escape '\\'"
+                    + " or student_code ilike :q escape '\\')");
             params.put("q", "%" + escapeLike(filter.query()) + "%");
         }
         long total = jdbc.sql("select count(*) from accounts" + where).params(params).query(Long.class).single();
@@ -145,7 +190,8 @@ public class AccountRepository {
             params.put("status", status.name());
         }
         if (query != null && !query.isBlank()) {
-            sql.append(" and (school_email ilike :q escape '\\' or display_name ilike :q escape '\\')");
+            sql.append(" and (school_email ilike :q escape '\\' or display_name ilike :q escape '\\'"
+                    + " or student_code ilike :q escape '\\')");
             params.put("q", "%" + escapeLike(query.strip()) + "%");
         }
         sql.append(" order by display_name, school_email limit :limit");
@@ -262,6 +308,7 @@ public class AccountRepository {
                 Role.valueOf(rs.getString("role")), AccountStatus.valueOf(rs.getString("status")),
                 rs.getString("password_hash"), instant(rs, "password_changed_at"), rs.getString("display_name"),
                 rs.getString("phone_number"), rs.getInt("failed_login_count"), instant(rs, "locked_until"),
-                instant(rs, "created_at"), instant(rs, "updated_at"), rs.getLong("version"));
+                instant(rs, "created_at"), instant(rs, "updated_at"), rs.getLong("version"),
+                rs.getString("student_code"));
     }
 }

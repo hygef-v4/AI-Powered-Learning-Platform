@@ -12,18 +12,19 @@ import org.springframework.http.HttpStatus;
 /** Dùng chung cho đọc/ghi U04, không thay session/current account checks của U01. */
 final class SubjectAdminAccess {
     private final IAuthorization authorization;
-    private final SubjectAuditRecorder audit;
+    private final SubjectAuditRecorder subjectAuditRecorder;
     private final Clock clock;
 
-    SubjectAdminAccess(IAuthorization authorization, SubjectAuditRecorder audit, Clock clock) {
+    SubjectAdminAccess(
+            IAuthorization authorization, SubjectAuditRecorder subjectAuditRecorder, Clock clock) {
         this.authorization = authorization;
-        this.audit = audit;
+        this.subjectAuditRecorder = subjectAuditRecorder;
         this.clock = clock;
     }
 
-    void require(Actor actor, String action, ResourceRef resource) {
+    void requireAccess(Actor actor, String action, ResourceRef resource) {
         if (actor == null || actor.accountId() == null) {
-            throw reject(
+            throw rejectAccess(
                     actor,
                     action,
                     resource,
@@ -31,31 +32,34 @@ final class SubjectAdminAccess {
                             HttpStatus.UNAUTHORIZED, "AUTHENTICATION_REQUIRED", "Cần đăng nhập"));
         }
         if (actor.role() != Role.ADMIN) {
-            throw reject(actor, action, resource, ApiException.forbidden("SUBJECT_FORBIDDEN"));
+            throw rejectAccess(
+                    actor, action, resource, ApiException.forbidden("SUBJECT_FORBIDDEN"));
         }
         AuthorizationDecision decision;
         try {
             decision = authorization.authorize(actor, action, resource);
         } catch (RuntimeException unavailable) {
-            throw reject(actor, action, resource, authorizationUnavailable());
+            throw rejectAccess(actor, action, resource, createAuthorizationUnavailable());
         }
         if (decision == null) {
-            throw reject(actor, action, resource, authorizationUnavailable());
+            throw rejectAccess(actor, action, resource, createAuthorizationUnavailable());
         }
         if (!decision.allowed()) {
-            throw reject(actor, action, resource, ApiException.forbidden("SUBJECT_FORBIDDEN"));
+            throw rejectAccess(
+                    actor, action, resource, ApiException.forbidden("SUBJECT_FORBIDDEN"));
         }
     }
 
-    private ApiException authorizationUnavailable() {
+    private ApiException createAuthorizationUnavailable() {
         return ApiException.unavailable(
                 "SUBJECT_AUTHORIZATION_UNAVAILABLE", "Chưa kiểm tra được quyền, vui lòng thử lại");
     }
 
-    private ApiException reject(
+    private ApiException rejectAccess(
             Actor actor, String action, ResourceRef resource, ApiException rejection) {
         try {
-            audit.accessDenied(actor, action, resource, rejection.code(), clock.instant());
+            subjectAuditRecorder.recordAccessDenied(
+                    actor, action, resource, rejection.code(), clock.instant());
         } catch (RuntimeException unavailable) {
             throw ApiException.unavailable(
                     "SUBJECT_AUDIT_UNAVAILABLE", "Chưa ghi nhận được yêu cầu, vui lòng thử lại");

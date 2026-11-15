@@ -15,17 +15,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class SubjectQueryService implements ISubjectQuery {
 
-    private final ISubjectRepository repository;
+    private final ISubjectRepository subjectRepository;
 
-    public SubjectQueryService(ISubjectRepository repository) {
-        this.repository = repository;
+    public SubjectQueryService(ISubjectRepository subjectRepository) {
+        this.subjectRepository = subjectRepository;
     }
 
     @Override
     public Optional<SubjectRef> getSubject(UUID subjectId) {
         return subjectId == null
                 ? Optional.empty()
-                : repository.findById(subjectId).map(SubjectQueryService::reference);
+                : subjectRepository.findById(subjectId).map(SubjectQueryService::mapToSubjectRef);
     }
 
     @Override
@@ -39,17 +39,17 @@ public class SubjectQueryService implements ISubjectQuery {
     public List<SubjectRef> listManagedSubjects(UUID accountId) {
         return accountId == null
                 ? List.of()
-                : repository.findManagedBy(accountId).stream()
-                        .map(SubjectQueryService::reference)
+                : subjectRepository.findSubjectsManagedBy(accountId).stream()
+                        .map(SubjectQueryService::mapToSubjectRef)
                         .toList();
     }
 
     @Override
     public Map<SubjectStatus, Long> countSubjectsByStatus() {
-        return repository.countByStatus(null);
+        return subjectRepository.countSubjectsByStatus(null);
     }
 
-    private static SubjectRef reference(Subject subject) {
+    private static SubjectRef mapToSubjectRef(Subject subject) {
         return new SubjectRef(
                 subject.id(),
                 subject.code().value(),

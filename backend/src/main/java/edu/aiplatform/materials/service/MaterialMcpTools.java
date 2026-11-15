@@ -12,12 +12,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class MaterialMcpTools implements IMcpToolProvider {
-    private final MaterialQueryService queries;
-    private final IMaterialRepository repository;
+    private final MaterialQueryService materialQueryService;
+    private final IMaterialRepository materialRepository;
 
-    public MaterialMcpTools(MaterialQueryService queries, IMaterialRepository repository) {
-        this.queries = queries;
-        this.repository = repository;
+    public MaterialMcpTools(
+            MaterialQueryService materialQueryService, IMaterialRepository materialRepository) {
+        this.materialQueryService = materialQueryService;
+        this.materialRepository = materialRepository;
     }
 
     @Override
@@ -52,15 +53,15 @@ public class MaterialMcpTools implements IMcpToolProvider {
                     limit = input.integer("limit", 32000, 2, 32000);
             // Reading an existing reference differs from selecting ACTIVE sources for a new AI
             // task.
-            var material = queries.authorized(actor, id, null);
+            var material = materialQueryService.loadAuthorizedMaterial(actor, id, null);
             if (input.has("expectedVersion")
                     && input.version("expectedVersion") != material.currentVersionNo())
                 throw ApiException.conflict(
                         "MATERIAL_VERSION_CONFLICT", "Học liệu đã thay đổi, hãy đọc lại từ đầu");
             if (offset > 0 && !input.has("expectedVersion")) throw McpInput.invalid();
             var version =
-                    repository
-                            .version(id, material.currentVersionNo())
+                    materialRepository
+                            .findVersion(id, material.currentVersionNo())
                             .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
             String text =
                     material.kind() == Material.Kind.YOUTUBE_LINK

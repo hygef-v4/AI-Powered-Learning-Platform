@@ -15,25 +15,27 @@ import org.springframework.stereotype.Component;
 @Component
 @Profile("worker")
 public class NotificationEventListener {
-    private final NotificationEventService service;
-    private final ObjectMapper json;
-    private final RabbitTemplate rabbit;
+    private final NotificationEventService notificationEventService;
+    private final ObjectMapper objectMapper;
+    private final RabbitTemplate rabbitTemplate;
 
     public NotificationEventListener(
-            NotificationEventService service, ObjectMapper json, RabbitTemplate rabbit) {
-        this.service = service;
-        this.json = json;
-        this.rabbit = rabbit;
+            NotificationEventService notificationEventService,
+            ObjectMapper objectMapper,
+            RabbitTemplate rabbitTemplate) {
+        this.notificationEventService = notificationEventService;
+        this.objectMapper = objectMapper;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @RabbitListener(queues = NotificationTopology.QUEUE, ackMode = "MANUAL", concurrency = "1")
-    public void receive(Message message, Channel channel) throws IOException {
+    public void receiveEventMessage(Message message, Channel channel) throws IOException {
         long tag = message.getMessageProperties().getDeliveryTag();
         DomainEvent event;
         try {
             if (message.getBody().length > 262144)
                 throw new IllegalArgumentException("Event too large");
-            event = json.readValue(message.getBody(), DomainEvent.class);
+            event = objectMapper.readValue(message.getBody(), DomainEvent.class);
             if (event == null
                     || event.schemaVersion() != 1
                     || event.eventType() == null
@@ -48,28 +50,28 @@ public class NotificationEventListener {
             return;
         }
         try {
-            service.accept(event);
+            notificationEventService.handleEvent(event);
             channel.basicAck(tag, false);
         } catch (IllegalArgumentException malformed) {
             channel.basicReject(tag, false);
         } catch (RuntimeException unavailable) {
             Object header = message.getMessageProperties().getHeaders().get("u14-attempt");
-            int attempt = header instanceof Number n ? n.intValue() : 0;
+            int attempt = header instanceof Number number ? number.intValue() : 0;
             if (attempt < 0 || attempt >= NotificationTopology.RETRY_MS.length) {
                 channel.basicReject(tag, false);
                 return;
             }
-            var props = new MessageProperties();
-            props.setContentType(MessageProperties.CONTENT_TYPE_JSON);
-            props.setDeliveryMode(MessageDeliveryMode.PERSISTENT);
-            props.setHeader("u14-attempt", attempt + 1);
+            var properties = new MessageProperties();
+            properties.setContentType(MessageProperties.CONTENT_TYPE_JSON);
+            properties.setDeliveryMode(MessageDeliveryMode.PERSISTENT);
+            properties.setHeader("u14-attempt", attempt + 1);
             try {
-                rabbit.invoke(
+                rabbitTemplate.invoke(
                         operations -> {
                             operations.send(
-                                    NotificationTopology.retryExchange(attempt),
+                                    NotificationTopology.buildRetryExchange(attempt),
                                     event.eventType(),
-                                    new Message(message.getBody(), props));
+                                    new Message(message.getBody(), properties));
                             operations.waitForConfirmsOrDie(5000);
                             return null;
                         });

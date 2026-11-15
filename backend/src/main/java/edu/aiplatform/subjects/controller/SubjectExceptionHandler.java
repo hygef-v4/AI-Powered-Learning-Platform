@@ -21,8 +21,9 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 public class SubjectExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(SubjectExceptionHandler.class);
     @ExceptionHandler(ApiException.class)
-    public ProblemDetail api(ApiException failure) {
-        ProblemDetail result = problem(failure.status(), failure.code(), failure.getMessage());
+    public ProblemDetail handleApiException(ApiException failure) {
+        ProblemDetail result =
+                createProblem(failure.status(), failure.code(), failure.getMessage());
         if (failure instanceof SubjectRequests.InvalidRequest invalid)
             result.setProperty("fieldErrors", invalid.fieldErrors());
         return result;
@@ -32,47 +33,47 @@ public class SubjectExceptionHandler {
         HttpMessageNotReadableException.class,
         MethodArgumentTypeMismatchException.class
     })
-    public ProblemDetail invalid(Exception failure) {
-        return problem(
+    public ProblemDetail handleInvalidRequest(Exception failure) {
+        return createProblem(
                 HttpStatus.BAD_REQUEST,
                 "SUBJECT_REQUEST_INVALID",
                 "JSON, mã định danh hoặc tham số không hợp lệ");
     }
 
     @ExceptionHandler(OptimisticLockingFailureException.class)
-    public ProblemDetail stale(OptimisticLockingFailureException failure) {
-        return problem(
+    public ProblemDetail handleStaleVersion(OptimisticLockingFailureException failure) {
+        return createProblem(
                 HttpStatus.CONFLICT,
                 "SUBJECT_VERSION_CONFLICT",
                 "Dữ liệu môn đã thay đổi. Hãy tải lại trước khi sửa");
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ProblemDetail integrity(DataIntegrityViolationException failure) {
-        return problem(
+    public ProblemDetail handleIntegrityViolation(DataIntegrityViolationException failure) {
+        return createProblem(
                 HttpStatus.CONFLICT,
                 "SUBJECT_DATA_CONFLICT",
                 "Dữ liệu liên quan đã thay đổi, vui lòng tải lại");
     }
 
     @ExceptionHandler(DataAccessException.class)
-    public ProblemDetail storage(DataAccessException failure) {
-        return problem(
+    public ProblemDetail handleStorageFailure(DataAccessException failure) {
+        return createProblem(
                 HttpStatus.SERVICE_UNAVAILABLE,
                 "SUBJECT_STORAGE_UNAVAILABLE",
                 "Chưa truy cập được dữ liệu, vui lòng thử lại");
     }
 
     @ExceptionHandler(Exception.class)
-    public ProblemDetail unexpected(Exception failure) {
+    public ProblemDetail handleUnexpectedFailure(Exception failure) {
         log.error("Unexpected subject request failure", failure);
-        return problem(
+        return createProblem(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "SUBJECT_INTERNAL_ERROR",
                 "Chưa xử lý được yêu cầu, vui lòng thử lại");
     }
 
-    private ProblemDetail problem(HttpStatus status, String code, String detail) {
+    private ProblemDetail createProblem(HttpStatus status, String code, String detail) {
         ProblemDetail result = ProblemDetail.forStatusAndDetail(status, detail);
         result.setProperty("code", code);
         return result;

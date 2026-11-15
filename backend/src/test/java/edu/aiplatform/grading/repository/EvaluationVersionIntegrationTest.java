@@ -105,7 +105,7 @@ class EvaluationVersionIntegrationTest {
                 "insert into subjects (id,code,name,status,created_at,updated_at) values (?,?,'Fixture','ACTIVE',now(),now())",
                 subject, subject.toString().substring(0, 8).toUpperCase());
         owner.update(
-                "insert into course_classes (id,subject_id,code,name,status,created_at,updated_at) values (?,?,'C','Fixture','OPEN',now(),now())",
+                "insert into course_classes (id,subject_id,code,name,status,starts_on,created_at,updated_at) values (?,?,'C','Fixture','OPEN',DATE '2026-11-14',now(),now())",
                 course, subject);
         owner.update(
                 """

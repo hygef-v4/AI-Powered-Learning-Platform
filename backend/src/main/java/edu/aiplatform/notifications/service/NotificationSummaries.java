@@ -8,7 +8,7 @@ final class NotificationSummaries {
 
     private NotificationSummaries() {}
 
-    static String forType(NotificationType type) {
+    static String summarizeType(NotificationType type) {
         return switch (type) {
             case ENROLLED -> "Xem thông tin lớp và các hoạt động học tập.";
             case ASSIGNMENT_OPENED -> "Xem nội dung và hạn nộp bài.";
@@ -31,8 +31,8 @@ final class NotificationSummaries {
         };
     }
 
-    static String forDisplay(NotificationType type, String storedSummary) {
+    static String resolveDisplaySummary(NotificationType type, String storedSummary) {
         // Adapt old boilerplate on read, without rewriting notification history/read state.
-        return LEGACY_SIGN_IN_SUMMARY.equals(storedSummary) ? forType(type) : storedSummary;
+        return LEGACY_SIGN_IN_SUMMARY.equals(storedSummary) ? summarizeType(type) : storedSummary;
     }
 }

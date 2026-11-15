@@ -31,11 +31,11 @@ class AccountLookupAndPolicyTest {
     private final AccountLookupService lookup = new AccountLookupService(accounts);
 
     @Test
-    void studentsAreActiveOnlyAndAtMostTwenty() {
+    void studentsAreActiveOnlyAndBoundedForBulkSelection() {
         Account student = IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, "hash");
-        when(accounts.findForLookup("tai", Set.of(Role.STUDENT), AccountStatus.ACTIVE, 20)).thenReturn(List.of(student));
+        when(accounts.findForLookup("tai", Set.of(Role.STUDENT), AccountStatus.ACTIVE, 200)).thenReturn(List.of(student));
 
-        List<AccountContact> found = lookup.findStudents("tai", 500);
+        List<AccountContact> found = lookup.findStudents("tai", 1000);
 
         assertThat(found).singleElement().satisfies(c -> {
             assertThat(c.email()).isEqualTo("taivm@fpt.edu.vn");

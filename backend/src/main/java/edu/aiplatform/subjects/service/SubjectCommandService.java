@@ -22,22 +22,23 @@ import org.springframework.transaction.annotation.Transactional;
 /** UC17/19. Tách command để transaction không chờ contact/classes hiển thị của B07. */
 @Service
 public class SubjectCommandService {
-    private final ISubjectRepository repository;
-    private final SubjectAdminAccess access;
-    private final IAccountLookup accounts;
-    private final SubjectAuditRecorder audit;
+    private final ISubjectRepository subjectRepository;
+    private final SubjectAdminAccess subjectAdminAccess;
+    private final IAccountLookup accountLookup;
+    private final SubjectAuditRecorder subjectAuditRecorder;
     private final Clock clock;
 
     public SubjectCommandService(
-            ISubjectRepository repository,
+            ISubjectRepository subjectRepository,
             IAuthorization authorization,
-            IAccountLookup accounts,
-            SubjectAuditRecorder audit,
+            IAccountLookup accountLookup,
+            SubjectAuditRecorder subjectAuditRecorder,
             Clock clock) {
-        this.repository = repository;
-        this.access = new SubjectAdminAccess(authorization, audit, clock);
-        this.accounts = accounts;
-        this.audit = audit;
+        this.subjectRepository = subjectRepository;
+        this.subjectAdminAccess =
+                new SubjectAdminAccess(authorization, subjectAuditRecorder, clock);
+        this.accountLookup = accountLookup;
+        this.subjectAuditRecorder = subjectAuditRecorder;
         this.clock = clock;
     }
 
@@ -48,8 +49,8 @@ public class SubjectCommandService {
     public record ChangeManager(UUID managerId, Long version) {}
 
     @Transactional
-    public Subject create(Actor actor, Create command) {
-        access.require(actor, Actions.SUBJECT_CREATE, ResourceRef.none());
+    public Subject createSubject(Actor actor, Create command) {
+        subjectAdminAccess.requireAccess(actor, Actions.SUBJECT_CREATE, ResourceRef.none());
         requireCommand(command);
         Subject subject =
                 Subject.create(
@@ -59,15 +60,15 @@ public class SubjectCommandService {
                         command.description(),
                         command.managerId(),
                         clock.instant());
-        if (repository.existsByCode(subject.code())) {
+        if (subjectRepository.hasSubjectWithCode(subject.code())) {
             throw ApiException.conflict(
                     "SUBJECT_CODE_DUPLICATE", "Mã môn đã tồn tại, hãy dùng mã khác");
         }
         if (subject.managerId() != null) {
-            requireEligibleManager(subject.managerId(), lockManager(subject.managerId()));
+            requireEligibleManager(subject.managerId(), lockManagerAccount(subject.managerId()));
         }
         try {
-            repository.insert(subject);
+            subjectRepository.insertSubject(subject);
         } catch (DataIntegrityViolationException failure) {
             for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
                 if (cause instanceof org.hibernate.exception.ConstraintViolationException constraint
@@ -78,71 +79,73 @@ public class SubjectCommandService {
             }
             throw failure;
         }
-        audit.created(actor, subject);
+        subjectAuditRecorder.recordCreated(actor, subject);
         return subject;
     }
 
     @Transactional
     public Subject updateInformation(Actor actor, UUID subjectId, UpdateInformation command) {
-        access.require(actor, Actions.SUBJECT_UPDATE, ResourceRef.subject(subjectId));
+        subjectAdminAccess.requireAccess(
+                actor, Actions.SUBJECT_UPDATE, ResourceRef.subject(subjectId));
         requireCommand(command);
         long version = requireVersion(command.version());
-        Subject before = subject(subjectId);
+        Subject before = requireSubject(subjectId);
         before.requireVersion(version);
         Subject after =
                 before.updateInformation(command.name(), command.description(), clock.instant());
         if (after == before) {
             return before;
         }
-        save(after, version);
-        audit.informationUpdated(actor, before, after);
+        saveSubject(after, version);
+        subjectAuditRecorder.recordInformationUpdated(actor, before, after);
         return after;
     }
 
     @Transactional
     public Subject changeManager(Actor actor, UUID subjectId, ChangeManager command) {
-        access.require(actor, Actions.SUBJECT_MANAGER_CHANGE, ResourceRef.subject(subjectId));
+        subjectAdminAccess.requireAccess(
+                actor, Actions.SUBJECT_MANAGER_CHANGE, ResourceRef.subject(subjectId));
         requireCommand(command);
         long version = requireVersion(command.version());
-        Subject preliminary = subject(subjectId);
+        Subject preliminary = requireSubject(subjectId);
         preliminary.requireVersion(version);
         if (Objects.equals(preliminary.managerId(), command.managerId())) {
             return preliminary;
         }
         if (command.managerId() != null && preliminary.status() == SubjectStatus.ARCHIVED) {
-            throw archivedSubject();
+            throw createArchivedSubjectError();
         }
         // Khóa tài khoản trước dòng môn, cùng thứ tự với U01 khi vô hiệu hóa tài khoản rồi gỡ phân
         // công; điều kiện của
         // tài khoản kiểm sau môn để giữ thứ tự lỗi (version, lưu trữ, rồi mới tới Chủ nhiệm môn).
         AccountContact manager =
-                command.managerId() == null ? null : lockManager(command.managerId());
+                command.managerId() == null ? null : lockManagerAccount(command.managerId());
         Subject before =
-                repository
+                subjectRepository
                         .findByIdForUpdate(subjectId)
                         .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
         before.requireVersion(version);
         if (command.managerId() != null) {
             if (before.status() == SubjectStatus.ARCHIVED) {
-                throw archivedSubject();
+                throw createArchivedSubjectError();
             }
             requireEligibleManager(command.managerId(), manager);
         }
         Subject after = before.changeManager(command.managerId(), clock.instant());
-        save(after, version);
-        audit.managerChanged(actor, before, after);
+        saveSubject(after, version);
+        subjectAuditRecorder.recordManagerChanged(actor, before, after);
         return after;
     }
 
-    private static ApiException archivedSubject() {
+    private static ApiException createArchivedSubjectError() {
         return ApiException.conflict(
                 "SUBJECT_ARCHIVED", "Môn đã lưu trữ không có Chủ nhiệm môn. Hãy mở lại môn trước");
     }
 
     /** Đọc và khóa tài khoản tới hết transaction (U01 {@code lockContact}) để role không đổi trước khi gán xong. */
-    private AccountContact lockManager(UUID id) {
+    private AccountContact lockManagerAccount(UUID id) {
         try {
-            return accounts.lockContact(id).orElse(null);
+            return accountLookup.lockContact(id).orElse(null);
         } catch (RuntimeException unavailable) {
             throw ApiException.unavailable(
                     "SUBJECT_ACCOUNT_LOOKUP_UNAVAILABLE",
@@ -161,17 +164,17 @@ public class SubjectCommandService {
         }
     }
 
-    private Subject subject(UUID id) {
+    private Subject requireSubject(UUID id) {
         if (id == null) {
             throw ApiException.badRequest("SUBJECT_ID_REQUIRED", "Cần mã định danh môn học");
         }
-        return repository
+        return subjectRepository
                 .findById(id)
                 .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
     }
 
-    private void save(Subject after, long version) {
-        if (!repository.update(after, version)) {
+    private void saveSubject(Subject after, long version) {
+        if (!subjectRepository.updateSubject(after, version)) {
             throw ApiException.conflict(
                     "SUBJECT_VERSION_CONFLICT",
                     "Dữ liệu môn đã thay đổi. Hãy tải lại trước khi sửa");

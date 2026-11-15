@@ -22,7 +22,7 @@ describe("sidebar của môn", () => {
     expect(resolveSubjectContext(at("/teaching/classes"))).toBeNull();
 
     const subject = resolveSubjectContext(at("/manager/subjects/s-1"))!;
-    expect(labels(subject.items)).toEqual(["Thông tin môn", "Lớp học", "Học liệu", "Bài tập", "Ngân hàng câu hỏi"]);
+    expect(labels(subject.items)).toEqual(["Thông tin môn", "Lớp học", "Học liệu", "Đề mẫu", "Ngân hàng câu hỏi"]);
     expect(subject.items.map((item) => item.href)).toEqual([
       "/manager/subjects/s-1",
       "/manager/classes?subjectId=s-1",
@@ -92,7 +92,7 @@ describe("AppShell với cây môn, lớp trên sidebar", () => {
   const resolve = (where: { pathname: string; search: URLSearchParams }) => resolveClassContext(where) ?? resolveSubjectContext(where);
 
   it("ở trang của lớp thì giữ menu role; dưới Lớp được phân công là ô chọn lớp rồi các mục của lớp đang mở", async () => {
-    const value = { id: "c-1", code: "SE1801", name: "Lớp chiều thứ Hai", subject: { id: "s-1", code: "SWR302", name: "Software Requirement" } };
+    const value = { id: "c-1", code: "SE1801", name: "Lớp chiều thứ Hai", term: "SP27-BL5", subject: { id: "s-1", code: "SWR302", name: "Software Requirement" } };
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json([value, { ...value, id: "c-2", code: "SE1802" }])));
     location = { pathname: "/teaching/classes/c-1", search: "tab=gradebook" };
     render(<AppShell role="TEACHER" nav={nav} user={null} context={resolve}><p>Nội dung</p></AppShell>);
@@ -102,6 +102,7 @@ describe("AppShell với cây môn, lớp trên sidebar", () => {
     const branch = screen.getByRole("group", { name: "Các lớp được phân công" });
     // Ô thả xuống hiện lớp đang mở, nhánh là các mục của lớp đó.
     await waitFor(() => expect(branch).toHaveTextContent("SE1801"));
+    expect(branch).toHaveTextContent("SWR302 · SP27-BL5");
     expect(screen.getByRole("menuitemradio", { name: /SE1801/ })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByRole("link", { name: "Chấm điểm" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Chấm điểm" })).toHaveAttribute("href", "/teaching/classes/c-1?tab=gradebook");
@@ -137,7 +138,7 @@ describe("AppShell với cây môn, lớp trên sidebar", () => {
     fireEvent.click(toggle);
     expect(screen.getByRole("button", { name: "Thu gọn Môn được phân công" })).toHaveAttribute("aria-expanded", "true");
     fireEvent.click(await within(screen.getByRole("group", { name: "Các môn được phân công" })).findByRole("menuitemradio", { name: /Software Requirement/ }));
-    expect(within(screen.getByRole("group", { name: "Các môn được phân công" })).getByRole("link", { name: "Bài tập" })).toHaveAttribute("href", expect.stringContaining("s-1"));
+    expect(within(screen.getByRole("group", { name: "Các môn được phân công" })).getByRole("link", { name: "Đề mẫu" })).toHaveAttribute("href", expect.stringContaining("s-1"));
   });
 
   it("trang Môn được phân công hiện ô Chọn môn, chưa môn nào mở", async () => {

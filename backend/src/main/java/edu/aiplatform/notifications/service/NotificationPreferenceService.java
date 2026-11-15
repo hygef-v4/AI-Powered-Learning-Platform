@@ -18,7 +18,7 @@ public class NotificationPreferenceService {
                     "DEADLINE_REMINDER",
                     "ANNOUNCEMENT_IMPORTANT");
 
-    public static Set<String> typesFor(Role role) {
+    public static Set<String> listTypesForRole(Role role) {
         return switch (role) {
             case STUDENT -> TYPES;
             case TEACHER -> Set.of("LEADER_CHANGE_REQUESTED", "QUESTION_REVIEWED");
@@ -29,44 +29,44 @@ public class NotificationPreferenceService {
     }
 
     /** Mọi loại email của mọi vai trò mặc định bật (yêu cầu 2026-11-05); người dùng tự tắt nếu không cần. */
-    public static boolean defaultEnabled(String type) {
+    public static boolean isEnabledByDefault(String type) {
         return true;
     }
 
-    private final INotificationRepository repository;
-    private final NotificationAccess access;
+    private final INotificationRepository notificationRepository;
+    private final NotificationAccess notificationAccess;
 
     public NotificationPreferenceService(
-            INotificationRepository repository, NotificationAccess access) {
-        this.repository = repository;
-        this.access = access;
+            INotificationRepository notificationRepository, NotificationAccess notificationAccess) {
+        this.notificationRepository = notificationRepository;
+        this.notificationAccess = notificationAccess;
     }
 
-    public Map<String, Boolean> get(Actor actor) {
-        UUID id = access.self(actor);
-        var stored = repository.preferences(id);
+    public Map<String, Boolean> loadPreferences(Actor actor) {
+        UUID id = notificationAccess.requireSelf(actor);
+        var stored = notificationRepository.findPreferences(id);
         Map<String, Boolean> values = new TreeMap<>();
-        typesFor(actor.role())
+        listTypesForRole(actor.role())
                 .forEach(
                         t ->
                                 values.put(
                                         t,
                                         "BACKUP_FAILED".equals(t)
-                                                || stored.getOrDefault(t, defaultEnabled(t))));
+                                                || stored.getOrDefault(t, isEnabledByDefault(t))));
         return values;
     }
 
-    public Map<String, Boolean> put(Actor actor, Map<String, Boolean> values) {
-        UUID id = access.self(actor);
+    public Map<String, Boolean> updatePreferences(Actor actor, Map<String, Boolean> values) {
+        UUID id = notificationAccess.requireSelf(actor);
         if (values == null
                 || values.isEmpty()
                 || values.keySet().stream().anyMatch(Objects::isNull)
-                || !typesFor(actor.role()).containsAll(values.keySet())
+                || !listTypesForRole(actor.role()).containsAll(values.keySet())
                 || values.values().stream().anyMatch(Objects::isNull)
                 || Boolean.FALSE.equals(values.get("BACKUP_FAILED")))
             throw ApiException.badRequest(
                     "NOTIFICATION_PREFERENCE_INVALID", "Loại email không hợp lệ");
-        values.forEach((type, enabled) -> repository.preference(id, type, enabled));
-        return get(actor);
+        values.forEach((type, enabled) -> notificationRepository.savePreference(id, type, enabled));
+        return loadPreferences(actor);
     }
 }

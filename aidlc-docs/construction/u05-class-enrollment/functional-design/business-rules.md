@@ -9,16 +9,16 @@
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md).
 
-**Quyết định 2026-11-07 — D-U04-04:** Bỏ học kỳ lớp khỏi UI, request/response, domain và dữ liệu hiện hành; xem [quyết định đã duyệt](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Migration mới `V20261107_2200__remove_class_term.sql` xóa cột cũ khi áp dụng; không sửa migration hoặc bằng chứng lịch sử. Các quy tắc khác giữ nguyên phạm vi đã chốt.
+**Quyết định 2026-11-07 — D-U04-04 (đã được D-U04-05 thay thế ngày 2026-11-14, xem mục 7):** Bỏ học kỳ lớp khỏi UI, request/response, domain và dữ liệu hiện hành; xem [quyết định đã duyệt](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Migration mới `V20261107_2200__remove_class_term.sql` xóa cột cũ khi áp dụng; không sửa migration hoặc bằng chứng lịch sử. Các quy tắc khác giữ nguyên phạm vi đã chốt.
 
 ## 1. Lớp học (Subject Manager)
 
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U05-10 | Chỉ Chủ nhiệm môn của môn tạo lớp (UC 26) trên Class List; môn phải `ACTIVE` (hỏi U04); lớp bắt đầu ở `DRAFT`. | UC 26 |
-| BR-U05-11 | `code` lớp duy nhất trong môn, tối đa 30 ký tự, không đổi; `subjectId` không đổi. | Thiết kế |
+| BR-U05-11 | `code` lớp duy nhất trong cùng môn và cùng học kỳ `(subjectId, term, code)` (sửa theo D-U04-05, trước đây duy nhất trong môn), tối đa 30 ký tự, không đổi; `subjectId` không đổi. | Thiết kế, CT-04 |
 | BR-U05-12 | Teacher được gán phải ACTIVE và role TEACHER/SUBJECT_MANAGER; chỉ Chủ nhiệm môn của môn gán/đổi. OPEN được phép thiếu teacher. teacher_id hiện hành là căn cứ teaching scope; chưa gán thì không có educator nhận quyền từ phân công đó. Đổi teacher mất quyền ở request tiếp theo. | FR-003, UC 27 |
-| BR-U05-13 | Chỉ Chủ nhiệm môn của môn sửa `name`, `description`, mở, lưu trữ, mở lại lớp (UC 29). Giảng viên được giao chỉ xem thông tin lớp và danh sách sinh viên trong U05; quyền cài đặt phân bố theo bài–lớp thuộc U09. | FR-003, UC 29 |
+| BR-U05-13 | Chỉ Chủ nhiệm môn của môn sửa `name`, `description`, `startsOn` (BR-U05-63), mở, lưu trữ, mở lại lớp (UC 29). Giảng viên được giao chỉ xem thông tin lớp và danh sách sinh viên trong U05; quyền cài đặt phân bố theo bài–lớp thuộc U09. | FR-003, UC 29 |
 | BR-U05-14 | Chuyển DRAFT→OPEN, DRAFT→ARCHIVED, OPEN→ARCHIVED, ARCHIVED→OPEN. Create vẫn DRAFT. Mở/mở lại cần môn ACTIVE và kiểm enrollment conflict; teacher có thể null, nếu đã gán phải còn hợp lệ. Source-observed thay quy tắc bắt buộc teacher trước 27/10. | UC 29 |
 | BR-U05-15 | Mở lại lớp `ARCHIVED` bị từ chối nếu có sinh viên `ACTIVE` của lớp đang ở lớp chưa lưu trữ khác cùng môn; trả danh sách người vướng. | BR-U05-22 |
 | BR-U05-16 | Lưu trữ lớp giữ nguyên ghi danh và dữ liệu học tập; lớp `ARCHIVED` chỉ đọc. Khi U04 lưu trữ môn, U05 lưu trữ mọi lớp `DRAFT`, `OPEN` của môn qua `ISubjectClasses.archiveClassesOfSubject` (BR-U04-04), ghi audit từng lớp. | UC 29, BR-U04-04 |
@@ -67,3 +67,48 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U05-53 | Dữ liệu sai (lớp, môn hoặc người không tồn tại, sai role) thì từ chối toàn bộ thao tác đó, báo cách sửa, không lộ dữ liệu người khác. | US-CAT-001 S2 |
 | BR-U05-54 | U01 hoặc U04 không trả lời thì từ chối (fail closed). | BR-U01-93 |
 | BR-U05-55 | Admin không có màn hay API lớp; Admin chỉ xem danh sách lớp của một môn qua Subject Detail của U04. | BR-U01-60 |
+
+## 6. Mã số sinh viên (MSSV) — 2026-11-13
+
+Nguồn: [yêu cầu SC-09, SC-10, SC-11](../../../inception/requirements/2026-11-13-student-code.md) và [FD Q5, Q6](../../plans/functional-design-plan/2026-11-13-u01-student-code-functional-design-plan.md). U01 sở hữu MSSV; xem BR-U01-100…115.
+
+| Mã | Rule | Nguồn |
+|---|---|---|
+| BR-U05-56 | Ghi danh theo danh sách nhận mỗi dòng là một email hoặc một MSSV, và một danh sách được trộn cả hai loại. Hệ thống nhận biết từng dòng như sau: dòng có `@` là email (chuẩn hóa chữ thường như cũ). Dòng còn lại được đổi sang in hoa; nếu khớp `^[A-Z]{2}[0-9]{6}$` thì là MSSV. Không khớp loại nào thì báo `INVALID_IDENTIFIER`. Mã `INVALID_IDENTIFIER` thay cho `INVALID_EMAIL` cũ (FD Q5). Header ở dòng đầu là tùy chọn và nhận một trong các giá trị `email`, `student_code`, `mssv`, không phân biệt hoa thường. Giới hạn 200 dòng và 100 KB giữ nguyên. Tệp Excel tải lên dùng một cột với một trong các header trên. | SC-09, FD Q5 |
+| BR-U05-57 | Một giá trị đã chuẩn hóa xuất hiện lần thứ hai trong danh sách thì báo `DUPLICATE_IN_LIST`. Hệ thống tra email bằng `findByEmails` và tra MSSV bằng `findByStudentCodes`, mỗi loại tra một lần. Giá trị không thuộc tài khoản nào thì báo `NOT_FOUND`, giống email không tìm thấy hiện nay. Nếu một dòng email và một dòng MSSV cùng chỉ tới một sinh viên, dòng sau nhận kết quả `ALREADY_ENROLLED` theo BR-U05-21. Mỗi dòng vẫn chạy trong transaction riêng như hiện nay. | SC-09, FD Q5 |
+| BR-U05-58 | Kết quả của mỗi dòng hiện đúng giá trị người dùng đã nhập (email hoặc MSSV). Bộ kết quả đầy đủ của BR-U05-24 trở thành: `ENROLLED`, `RESTORED`, `ALREADY_ENROLLED`, `NOT_FOUND`, `NOT_STUDENT`, `DISABLED`, `IN_OTHER_CLASS`, `INVALID_IDENTIFIER`, `DUPLICATE_IN_LIST`. | SC-09 |
+| BR-U05-59 | Ô tìm khi thêm từng sinh viên (BR-U05-23) tìm được theo email, tên hoặc MSSV. Giới hạn 20 kết quả và chỉ trả `STUDENT`, như cũ. | SC-09 |
+| BR-U05-60 | DTO `Person` của U05 có thêm trường `studentCode`, có thể rỗng. Trường này chỉ hiện ở những màn vốn đã hiện người đó: danh sách sinh viên của lớp cho nhân sự (Chủ nhiệm môn, giảng viên lớp, Admin), danh sách thành viên lớp cho sinh viên (SC-11), và kết quả tìm ứng viên. Quyền xem danh sách không đổi. | SC-10, SC-11 |
+
+**Giao diện**:
+
+- `EnrollmentPanel`: ô dán đổi chữ gợi ý thành "Mỗi dòng một email hoặc MSSV". Tệp mẫu Excel dùng header `email` và có thêm ví dụ MSSV. Cột kết quả hiện giá trị đã nhập. Câu báo cho `INVALID_IDENTIFIER` là "Không phải email hay MSSV hợp lệ".
+- `PersonPicker`: dòng phụ của mỗi kết quả là `SE123456 · email`.
+- Danh sách lớp phía nhân sự (`ManagedClassPage`) có cột "MSSV" đứng trước cột họ tên.
+- Thành viên lớp phía sinh viên (`StudentClassPage`) hiện MSSV ở dòng phụ dưới tên.
+
+## 7. Học kỳ của lớp — 2026-11-14 (D-U04-05)
+
+Nguồn: [yêu cầu CT-01…09](../../../inception/requirements/2026-11-14-class-term.md) và [FD Q1–Q6](../../plans/functional-design-plan/2026-11-14-u05-class-term-functional-design-plan.md). Quyết định D-U04-05 thay D-U04-04: lớp có học kỳ để lọc, học kỳ do hệ thống tính, không có chức năng quản lý học kỳ.
+
+| Mã | Rule | Nguồn |
+|---|---|---|
+| BR-U05-61 | Tạo lớp bắt buộc có `startsOn` (ngày, ISO `YYYY-MM-DD`), trong khoảng 2000-01-01…2099-12-31; được ở quá khứ hoặc tương lai. Thiếu trường thì lỗi kiểm dữ liệu chung như các trường bắt buộc khác; ngoài khoảng thì `INVALID_CLASS_START_DATE`. Form tạo lớp không điền sẵn ngày (FD Q1). | CT-01, FD Q1 |
+| BR-U05-62 | Học kỳ `term` = mùa theo tháng của `startsOn` (1–4 `SP`, 5–8 `SU`, 9–12 `FA`) + 2 số cuối của năm; tháng 4, 8, 12 thêm `-BL5`. Chỉ server tính, bằng `ClassTermPolicy.termOf`. Request tạo hoặc sửa lớp có trường `term` bị từ chối như trường lạ (strict-input). `SP27` và `SP27-BL5` là hai học kỳ khác nhau. | CT-02, G1 |
+| BR-U05-63 | Sửa thông tin lớp (`PATCH /manager/classes/{id}`) nhận `name`, `description`, `startsOn` (bắt buộc, gửi giá trị hiện tại nếu không đổi) và `version`. Chỉ Chủ nhiệm môn của môn, chỉ khi lớp `DRAFT` hoặc `OPEN`; lớp `ARCHIVED` trả `CLASS_ARCHIVED`. Đổi `startsOn` thì tính lại `term` trong cùng thao tác, cùng khóa dòng và kiểm `version` như hiện có. Không có hộp xác nhận riêng khi học kỳ đổi (FD Q2). | CT-03, FD Q2 |
+| BR-U05-64 | Trùng `(subjectId, term, code)` khi tạo lớp hoặc khi đổi `startsOn` làm học kỳ đổi thì trả `CLASS_EXISTS`, câu báo "Mã lớp đã tồn tại trong môn ở học kỳ này", không lưu thay đổi. Database là nơi bảo đảm cuối cùng; lỗi trùng khóa ở cả insert và update đều được đổi thành `CLASS_EXISTS`, không để lỗi database lọt ra. | CT-04, NFR-CT-06 |
+| BR-U05-65 | Ba API danh sách lớp (`/me/classes`, `/teaching/classes`, `/manager/classes`) nhận tham số tùy chọn `term`. Rỗng là không lọc; có giá trị thì phải khớp mẫu chính xác, sai trả `INVALID_CLASS_TERM`. Lọc chỉ thu hẹp trong phạm vi quyền đã có của BR-U05-50. Thứ tự: `code` tăng dần, rồi `startsOn` giảm dần (học kỳ mới hơn trước), rồi `id`. | CT-06, CT-07, G3, NFR-CT-02 |
+| BR-U05-66 | Ô tìm `q` vẫn chỉ tìm theo mã và tên lớp, không khớp học kỳ (FD Q5). | FD Q5 |
+| BR-U05-67 | Migration mới backfill lớp có sẵn: `starts_on` = ngày của `created_at` theo `Asia/Ho_Chi_Minh`, `term` tính theo BR-U05-62 bằng SQL; sau đó đặt `NOT NULL`, check mẫu và khoảng ngày, đổi ràng buộc duy nhất sang `(subject_id, term, code)`, thêm chỉ mục `(subject_id, term)`. Không đổi id, `version`, `updated_at`, trạng thái, ghi danh hay dữ liệu học tập. Không sửa migration cũ. | CT-05, NFR-CT-03 |
+| BR-U05-68 | `ClassView` thêm `startsOn` và `term`; `ClassRef` và `SubjectClassSummary` thêm `term`. Chỉ thêm trường, không bỏ hay đổi tên trường đang có. | CT-07, NFR-CT-05 |
+| BR-U05-69 | MCP `list_my_classes` trả thêm `term` cho mỗi lớp và nhận tham số tùy chọn `term`, kiểm như BR-U05-65. | CT-07 |
+| BR-U05-70 | Luật ghi danh giữ nguyên, không xét học kỳ: BR-U05-15 và BR-U05-22 (`IN_OTHER_CLASS`, `ENROLLMENT_CONFLICT`) vẫn áp dụng cho mọi lớp chưa lưu trữ cùng môn. Lớp kỳ trước phải lưu trữ thì sinh viên mới vào lớp cùng môn ở kỳ sau. | CT-09 |
+| BR-U05-71 | Không có danh mục, API hay màn hình quản lý học kỳ. Danh sách học kỳ của bộ lọc lấy từ chính các lớp đã tải cho người dùng (FD Q4). | Yêu cầu gốc, FD Q4 |
+| BR-U05-72 | Audit giữ mã sự kiện hiện có: tạo lớp ghi `CLASS_CREATED`, sửa ngày bắt đầu ghi `CLASS_UPDATED` như sửa thông tin lớp. Học kỳ không đưa vào prompt AI, thông báo hay email. | G2, BR-U05-52 |
+
+**Giao diện** (chi tiết ở frontend-components.md mục học kỳ):
+
+- Form tạo lớp có ô Ngày bắt đầu bắt buộc, để trống ban đầu, hiện trước học kỳ sẽ gán.
+- Thẻ Thông tin lớp sửa được Ngày bắt đầu khi lớp chưa lưu trữ, hiện "Học kỳ: cũ → mới" khi ngày đổi làm học kỳ đổi.
+- Bộ lọc học kỳ ở trang Lớp học của Chủ nhiệm môn, giảng viên và sinh viên.
+- Nhãn lớp hiện học kỳ ở dòng nhỏ phía trên: `PRJ301 · SP27` (FD Q6).

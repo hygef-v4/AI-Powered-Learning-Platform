@@ -4,6 +4,8 @@ import { apiFetch } from "@/shared/api/client";
 import { AutoTextarea, type RubricCriterion } from "@/shared/document";
 import { Icon } from "@/shared/ui";
 import { GradingFeedbackSummary } from "./StructuredFeedbackSection";
+import { matchesPersonQuery } from "@/shared/studentCode";
+import { PersonSubline } from "@/shared/ui/PersonSubline";
 import type {
   GradingFormValues,
   Rubric,
@@ -115,6 +117,7 @@ export function StudentPickerDropdown({
   busy,
   studentName,
   studentEmail,
+  studentCode,
   directory,
   onSelect,
 }: {
@@ -122,6 +125,8 @@ export function StudentPickerDropdown({
   busy: boolean;
   studentName: string;
   studentEmail: string;
+  /** MSSV của người nộp (BR-U09-75); rỗng với bài nhóm hoặc sinh viên chưa có mã. */
+  studentCode?: string;
   directory: { value: SubmissionRow[] | null; error: string; refresh: () => Promise<unknown> };
   onSelect: (targetEvaluationId: string) => void;
 }) {
@@ -143,9 +148,7 @@ export function StudentPickerDropdown({
   const matches = (directory.value ?? []).filter(
     (row) =>
       row.evaluationId &&
-      `${row.student.name} ${row.student.email}`
-        .toLocaleLowerCase("vi")
-        .includes(search.trim().toLocaleLowerCase("vi")),
+      matchesPersonQuery(row.student, search),
   );
 
   return (
@@ -159,7 +162,7 @@ export function StudentPickerDropdown({
       >
         <span className="min-w-0 flex-1 truncate">
           <span className="block text-xs font-semibold leading-tight text-ink">{studentName}</span>
-          {studentEmail && <span className="block text-xs leading-tight text-muted">{studentEmail}</span>}
+          <PersonSubline className="leading-tight break-normal truncate" studentCode={studentCode} email={studentEmail} />
         </span>
         <Icon name="unfold_more" size={14} className="shrink-0 text-muted" />
       </button>
@@ -169,7 +172,7 @@ export function StudentPickerDropdown({
             Tìm sinh viên
             <input
               type="search"
-              placeholder="Tên hoặc email"
+              placeholder="Tên, email hoặc MSSV"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               className="w-full rounded-lg border border-field px-3 py-2 text-sm font-normal"
@@ -200,7 +203,7 @@ export function StudentPickerDropdown({
                     className="w-full cursor-pointer rounded-lg px-2 py-2 text-left text-sm hover:bg-sunken disabled:cursor-default disabled:opacity-50"
                   >
                     <span className="block font-semibold">{row.student.name}</span>
-                    <span className="block text-xs text-muted">{row.student.email}</span>
+                    <PersonSubline studentCode={row.student.studentCode} email={row.student.email} />
                   </button>
                 </li>
               ))}

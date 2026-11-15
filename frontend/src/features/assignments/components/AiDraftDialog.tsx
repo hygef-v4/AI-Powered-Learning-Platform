@@ -11,6 +11,7 @@ import { MAX_SOURCE_FILES, readTemplateFile, useSourceUploads, type SourceUpload
 import type { AiDraft, GradingMode, Material } from "../model/types";
 
 export type { SourceUpload };
+import { SourceImagePreview } from "./SourceImagePreview";
 type Template = TemplateFile;
 
 type Props = {
@@ -439,6 +440,9 @@ export function ReferencePicker({ id = "ai-reference", materials, chosen, upload
             ))}
           </ul>
         )} />
+      {uploads.some(item => item.file.type.startsWith("image/")) && <div className="flex flex-wrap gap-2">
+        {uploads.filter(item => item.file.type.startsWith("image/")).map(item => <SourceImagePreview key={item.id} file={item.file} />)}
+      </div>}
       <input ref={fileInput} aria-label="Tải tài liệu lên" type="file" multiple accept={accept} hidden
         onChange={(event) => { onUpload(event.target.files); event.target.value = ""; }} />
     </>

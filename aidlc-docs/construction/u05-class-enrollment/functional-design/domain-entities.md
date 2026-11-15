@@ -11,7 +11,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 Thiết kế độc lập công nghệ.
 
-**Quyết định 2026-11-07 — D-U04-04:** Bỏ học kỳ lớp khỏi UI, request/response, domain và dữ liệu hiện hành; xem [quyết định đã duyệt](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Migration mới `V20261107_2200__remove_class_term.sql` xóa cột cũ khi áp dụng; không sửa migration hoặc bằng chứng lịch sử. Các quy tắc khác giữ nguyên phạm vi đã chốt.
+**Quyết định 2026-11-07 — D-U04-04 (đã được D-U04-05 thay thế ngày 2026-11-14, xem bên dưới):** Bỏ học kỳ lớp khỏi UI, request/response, domain và dữ liệu hiện hành; xem [quyết định đã duyệt](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Migration mới `V20261107_2200__remove_class_term.sql` xóa cột cũ khi áp dụng; không sửa migration hoặc bằng chứng lịch sử. Các quy tắc khác giữ nguyên phạm vi đã chốt.
+
+**Quyết định 2026-11-14 — D-U04-05 (thay D-U04-04):** Lớp có lại học kỳ để lọc, nhưng học kỳ do hệ thống tính từ Ngày bắt đầu của lớp, không nhập tay và không có chức năng quản lý học kỳ. Xem [yêu cầu CT-01…09](../../../inception/requirements/2026-11-14-class-term.md) và [kế hoạch Functional Design](../../plans/functional-design-plan/2026-11-14-u05-class-term-functional-design-plan.md). Thêm migration mới; `V20261107_2200__remove_class_term.sql` giữ nguyên. Chi tiết ở mục 2.1 và BR-U05-61…72.
 
 ## 1. Tổng quan
 
@@ -28,7 +30,9 @@ U05 không sở hữu: tài khoản và role (U01), môn và Chủ nhiệm môn 
 |---|---|---|
 | `id` | UUID | Khóa |
 | `subjectId` | UUID | FK `subjects`; không đổi |
-| `code` | chuỗi ≤ 30 | Duy nhất trong môn; không đổi |
+| `code` | chuỗi ≤ 30 | Duy nhất trong cùng môn và cùng học kỳ `(subjectId, term, code)`; không đổi (D-U04-05) |
+| `startsOn` | ngày | Bắt buộc; 2000-01-01…2099-12-31; sửa được khi lớp chưa lưu trữ (BR-U05-61, 63) |
+| `term` | chuỗi ≤ 8 | Suy ra từ `startsOn` bằng `ClassTermPolicy`, không nhận từ client; mẫu `^(SP\|SU\|FA)[0-9]{2}(-BL5)?$` (BR-U05-62) |
 | `name` | chuỗi ≤ 200 | Bắt buộc |
 | `description` | chuỗi ≤ 2.000 | Tùy chọn |
 | `status` | enum | `DRAFT`, `OPEN`, `ARCHIVED` |
@@ -46,6 +50,31 @@ stateDiagram-v2
 ```
 
 **Text alternative**: Lớp tạo ra ở `DRAFT`. Mở lớp cần môn `ACTIVE`; teacher có thể chưa gán. `DRAFT` hoặc `OPEN` đều lưu trữ được; lớp `ARCHIVED` mở lại về `OPEN` và bị từ chối nếu có sinh viên đang học lớp chưa lưu trữ khác cùng môn.
+
+### 2.1 Học kỳ — `ClassTermPolicy` (D-U04-05)
+
+Value object/policy thuần, không phụ thuộc thời gian hệ thống hay database:
+
+| Hàm | Đầu vào → đầu ra | Quy tắc |
+|---|---|---|
+| `termOf(startsOn)` | ngày → mã học kỳ | Tháng 1–4 `SP`, 5–8 `SU`, 9–12 `FA`; + 2 số cuối năm (`year % 100`, đệm `0`); tháng 4, 8, 12 thêm `-BL5` |
+| `requireValidStart(startsOn)` | ngày → ngày | Không trống; trong 2000-01-01…2099-12-31; sai thì `INVALID_CLASS_START_DATE` |
+| `parseFilter(text)` | chuỗi tùy chọn → mã hoặc rỗng | Rỗng/khoảng trắng là không lọc; còn lại phải khớp mẫu chính xác (phân biệt hoa thường), sai thì `INVALID_CLASS_TERM` |
+| `compareNewestFirst(a, b)` | hai mã → thứ tự | Năm giảm dần, rồi mùa `FA` > `SU` > `SP`, rồi bản `-BL5` trước bản gốc cùng mùa |
+
+Bảng tham chiếu: 2027-01-10 → `SP27`; 2027-04-03 → `SP27-BL5`; 2027-05-15 → `SU27`; 2027-08-20 → `SU27-BL5`; 2026-09-07 → `FA26`; 2026-12-01 → `FA26-BL5`; 2000-01-01 → `SP00`; 2099-12-31 → `FA99-BL5`.
+
+`CourseClass` luôn giữ `term == ClassTermPolicy.termOf(startsOn)`. **Khi viết code (2026-11-14):** `term()` là accessor suy ra từ `startsOn`, record không lưu trường `term` riêng nên không thể lệch và không cần mã lỗi `INVALID_CLASS_SNAPSHOT`; hàm khởi tạo gọi `requireValidStart`. Ở database, `term` là cột `GENERATED ALWAYS AS (...) STORED` tính từ `starts_on`, repository không ghi cột này.
+
+### 2.2 Ràng buộc dữ liệu `course_classes` (migration mới)
+
+| Ràng buộc | Nội dung |
+|---|---|
+| Cột | `starts_on DATE NOT NULL`, `term VARCHAR(8)` generated stored từ `starts_on` (khi viết code) |
+| Check | `term` khớp `^(SP\|SU\|FA)[0-9]{2}(-BL5)?$`; `starts_on` trong 2000-01-01…2099-12-31 |
+| Duy nhất | Bỏ `uq_course_classes_subject_code`; thêm `uq_course_classes_subject_term_code (subject_id, term, code)` |
+| Chỉ mục | `ix_course_classes_subject_term (subject_id, term)` |
+| Backfill | Lớp có sẵn: `starts_on` = ngày của `created_at` theo `Asia/Ho_Chi_Minh`; `term` tính theo bảng trên bằng SQL (BR-U05-67) |
 
 ## 3. `Enrollment`
 
@@ -78,7 +107,7 @@ stateDiagram-v2
 | Sự kiện `enrollment.activated` | - | U14 | Thông báo ghi danh trong app và email |
 | `NavEntry` (contract frontend của U01, U05 cài) | - | U01 | Mục Tổng quan, Môn học của tôi, Lớp học (Subject Manager); Lớp được phân công (Teacher, Subject Manager); Lớp của tôi (Student) trên menu bên |
 
-`ClassRef`: `classId`, `subjectId`, `code`, `name`, `status`, `teacherId`, `showGradeDistribution` (dormant). `isClassManager` chỉ đúng với Chủ nhiệm môn của môn chứa lớp; Admin không có quyền này. U09 kiểm giảng viên được phân công và ghi danh qua U05, không đọc cột phân bố lịch sử.
+`ClassRef`: `classId`, `subjectId`, `code`, `term` (D-U04-05), `name`, `status`, `teacherId`, `showGradeDistribution` (dormant). `isClassManager` chỉ đúng với Chủ nhiệm môn của môn chứa lớp; Admin không có quyền này. U09 kiểm giảng viên được phân công và ghi danh qua U05, không đọc cột phân bố lịch sử.
 
 ### Contract U05 cung cấp (unit khác cài, phía frontend)
 

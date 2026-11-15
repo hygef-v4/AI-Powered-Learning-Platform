@@ -28,7 +28,7 @@ Ngày: 2026-10-20. Branch: `grading-gradebook`, baseline `6341aed2`.
 - Chỉ Assignment `GRADED`; không cộng Quiz/Practice hay tạo tổng điểm lớp. Mọi mutation kiểm tra quyền và version lại. Student chỉ đọc điểm `PUBLISHED` của mình khi còn enrollment. Bài nộp mới chưa công bố không hiện nhầm điểm cũ; điểm cũ vẫn đọc qua endpoint attempt lịch sử.
 - Checklist được tính bằng `BigDecimal` trên **rubric snapshot đã đóng băng**, thay vì gọi `IRubric.score` với rubric sống. Không thay public contract U07. `maxScore` và rubric được chụp lúc submit.
 - Listener dùng `MANDATORY`; batch dùng transaction riêng từng item, dedup ID, trả partial outcome. Unique/FK/CHECK thật có trong migration; không tạo bảng giả trong production.
-- Bài nhóm dùng điểm chung mặc định, giữ chỉnh riêng qua `memberOverride`; nộp lại reset PENDING và lưu lịch sử. Hoạt động được hiển thị riêng từng thành viên, không suy luận gian lận/điểm đóng góp.
+- Bài nhóm dùng điểm chung mặc định, giữ chỉnh riêng qua `memberOverride`; nộp lại chỉ reset bản chưa chính thức về PENDING và lưu lịch sử. Hoạt động được hiển thị riêng từng thành viên, không suy luận gian lận/điểm đóng góp.
 - Nguồn nhóm stub của U09 trả 503 khi U12 chưa có, thay vì trả mẫu/danh sách rỗng làm giả trạng thái thành công. `ConditionalOnMissingBean` vẫn cho adapter U12 thật thay thế.
 - U06 `inputVersion` là số thứ tự proposal; hash đầy đủ và rubric snapshot lưu riêng. Proposal commit trước dispatch. Callback lấy khóa evaluation trước khi đọc proposal; scalar correlation tránh stale entity trong persistence context. Polling đối chiếu task terminal để xử lý failure callback đến sớm. Không fallback nguồn; batch dừng dispatch tiếp khi nguồn lỗi.
 - MCP chỉ có tool ghi proposal, kiểm tra version/hash/scope/actor của U06; không có tool lưu điểm chính thức/chốt/công bố. U09 không tự quản API key, quota hay gọi provider.
@@ -48,7 +48,7 @@ Migration: `backend/src/main/resources/db/migration/grading/V20260925_1500__crea
 Khi prerequisites được bàn giao:
 
 1. Bật PostgreSQL/Docker, chạy `GradingPersistenceTest` rồi toàn bộ `mvn -f backend/pom.xml verify`. Kiểm migration mới/nâng cấp, `ddl-auto=validate`, JPA optimistic/pessimistic locking, app không có DELETE.
-2. Chạy profile `platform.contract-stubs.enabled=false` cùng U06/U07/U08 thật: submit → listener → manual/proposal → DRAFT → FINALIZED → PUBLISHED → Student → CSV/XLSX. Kiểm rollback submit, hai tab cùng version, resubmit đồng thời callback/chốt, retry dispatch và đổi giáo viên/enrollment.
+2. Chạy profile `platform.contract-stubs.enabled=false` cùng U06/U07/U08 thật: submit → listener → manual/proposal → DRAFT → PUBLISHED → Student → CSV/XLSX. Kiểm rollback submit, hai tab cùng version, resubmit đồng thời callback/công bố, retry dispatch và đổi giáo viên/enrollment.
 3. Với U12: kiểm membership/section authors, group resubmit, điểm member và callback cũ. Contract `GroupSubmissionStatus` hiện không có membership/trạng thái đang làm trước submit, nên chưa thể dựng tiến độ từng sinh viên trước submit từ contract này. Không tự sửa contract liên unit.
 4. Kiểm U14 nhận event thật, thu hồi quyền download token, mở export trên ứng dụng bảng tính, preview XML không có SVG, keyboard/focus và đối chiếu UI t16/t17/t18/t19 bằng trình duyệt.
 5. Đo NFR trên dữ liệu thật: submissions p95 ≤500 ms/200 SV; gradebook p95 ≤1 s/200×30; export ≤10 s; batch 200 p95 ≤2 s. Chưa có kết quả benchmark; unit tests không chứng minh NFR.
@@ -120,3 +120,34 @@ Theo yêu cầu người dùng, sửa U09 trên nhánh grading-gradebook tại b
 RED: 5 regression mới thất bại trên code production cũ, 4 test hiện hữu đạt. GREEN focused ban đầu 12; bổ sung kiểm SHARED payload, disabled workspace và finalize/publish để full suite cuối 446 tests/78 files đạt (tăng 8 test so baseline438). Lint/typecheck và production build đạt. Build dùng NEXT_DIST_DIR=.next-u09-picker-20261022 để giữ output cũ; tsconfig do Next tự sửa được khôi phục từ snapshot trước build. Lượt typecheck đầu thiếu package của staging mới; npm ci theo lockfile giải quyết, không đổi dependency version. Mock integration test đã sửa để giữ ApiError export thật sau khi GREEN đầu phát hiện mock thiếu.
 
 Logs ignored: .tmp/u09-picker-red.log, u09-picker-green.log, u09-picker-full-tests.log, u09-picker-lint.log, u09-picker-typecheck.log và u09-picker-build.log. Backend không chạy lại vì source/contract không đổi. Chưa gọi AI/MCP thật hoặc chạy browser E2E trong lượt này; các gate DB/session/NFR và U15/U03 còn mở. Không commit/push/Jira mutation.
+
+## Năm mức đóng góp thành viên — 2026-11-13
+
+Mỗi MEMBER có contributionLevel nullable trong JSONB hiện hữu; saveMemberGrade lưu
+cùng điểm/căn cứ và audit mức trước/sau. Năm mức có thứ tự: Vượt kỳ vọng, Đạt yêu cầu,
+Đạt một phần, Cần hỗ trợ nhiều, Không hoàn thành. Không tự quy đổi hoặc chọn mức theo
+điểm. Dữ liệu cũ có thể để trống mức. Nhóm nộp lại giữ điểm và mức đã công bố,
+chỉ đặt lại bản chưa chính thức theo BR-U09-50. Chấm lại điểm nhóm giữ đánh giá
+cá nhân đã lưu. UI dùng select tùy chọn và Cách đánh giá thu gọn.
+Sinh viên chỉ thấy mức/căn cứ của chính mình khi công bố; bản nháp không lộ.
+
+Backend scoped55/55, frontend grading199/199 và API4/4 (ba case trùng trong199), lint
+và isolated TypeScript qua. Normal TypeScript vẫn gặp cache route Next cũ; không đổi
+config sản phẩm hoặc xóa cache. Người dùng tự test UI sau khi backend nạp mã mới.
+Không migration, dependency, MCP/Excel change, live grading writes, commit/push/deploy.
+Xem ../../build-and-test/2026-11-13-member-contribution-levels.md.
+
+## Chấm thành viên cạnh bài nhóm — 2026-11-13
+
+Panel cuối bài được thay bằng khung phải Rubric nhóm/Thành viên. Chọn một người,
+liên kết tới mục phụ trách theo sectionAuthors, nút Đánh giá tại từng mục và điều
+hướng Trước/Sau. Giữ bản nháp khi đổi người/tab/drawer hoặc lưu thành viên khác;
+không âm thầm ghi đè version server mới. Màn hẹp là ngăn kéo modeless. Chặn công bố
+khi có draft cá nhân và cảnh báo rời bài; autosave nhóm không lưu điểm riêng.
+
+Full frontend1056/151file; kiểm cuối50 test, ESLint/isolated TypeScript qua. UI local
+1440/390 kiểm liên kết hai chiều, đúng người, draft chuyển người, Escape/đóng/mở và
+Từng phần; không bấm lưu/công bố/AI. Ghi chú QA đã xóa, viewport554x930 khôi phục.
+Ảnh .tmp/group-grading-desktop.png và group-grading-mobile.png. Không backend delta,
+production build, live grade write, commit/push/deploy. Kết quả chi tiết tại
+../../build-and-test/2026-11-13-group-grading-side-panel.md.

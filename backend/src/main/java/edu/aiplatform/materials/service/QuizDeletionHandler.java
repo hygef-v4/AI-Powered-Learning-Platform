@@ -14,10 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class QuizDeletionHandler implements IQuizLifecycleListener {
 
-    private final IMaterialModuleRepository moduleRepository;
+    private final IMaterialModuleRepository materialModuleRepository;
 
-    QuizDeletionHandler(IMaterialModuleRepository moduleRepository) {
-        this.moduleRepository = moduleRepository;
+    QuizDeletionHandler(IMaterialModuleRepository materialModuleRepository) {
+        this.materialModuleRepository = materialModuleRepository;
     }
 
     @Override
@@ -28,6 +28,6 @@ public class QuizDeletionHandler implements IQuizLifecycleListener {
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public void onDeleting(UUID quizId) {
-        moduleRepository.unlinkQuiz(quizId);
+        materialModuleRepository.unlinkQuiz(quizId);
     }
 }

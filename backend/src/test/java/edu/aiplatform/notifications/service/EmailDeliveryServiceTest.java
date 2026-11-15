@@ -13,37 +13,37 @@ import org.junit.jupiter.api.*;
 import org.mockito.ArgumentCaptor;
 
 class EmailDeliveryServiceTest {
-    INotificationRepository repo;
-    IJob jobs;
-    IAccountLookup accounts;
+    INotificationRepository notificationRepository;
+    IJob job;
+    IAccountLookup accountLookup;
     IMail mail;
-    EmailCapPolicy cap;
-    EmailDeliveryService service;
-    IAssignmentQuery assignments;
+    EmailCapPolicy emailCapPolicy;
+    EmailDeliveryService emailDeliveryService;
+    IAssignmentQuery assignmentQuery;
     Instant now = Instant.parse("2026-10-21T16:59:59Z");
     UUID recipient = UUID.randomUUID();
     Clock clock = Clock.fixed(now, ZoneOffset.UTC);
 
     @BeforeEach
     void setup() {
-        repo = mock(INotificationRepository.class);
-        jobs = mock(IJob.class);
-        accounts = mock(IAccountLookup.class);
+        notificationRepository = mock(INotificationRepository.class);
+        job = mock(IJob.class);
+        accountLookup = mock(IAccountLookup.class);
         mail = mock(IMail.class);
-        assignments = mock(IAssignmentQuery.class);
-        cap = new EmailCapPolicy(repo, 300);
-        service =
+        assignmentQuery = mock(IAssignmentQuery.class);
+        emailCapPolicy = new EmailCapPolicy(notificationRepository, 300);
+        emailDeliveryService =
                 new EmailDeliveryService(
-                        repo,
-                        cap,
-                        jobs,
-                        accounts,
+                        notificationRepository,
+                        emailCapPolicy,
+                        job,
+                        accountLookup,
                         mail,
                         clock,
-                        assignments,
+                        assignmentQuery,
                         "https://learning.example.test");
-        when(repo.preferences(any())).thenReturn(Map.of());
-        when(accounts.getContact(recipient))
+        when(notificationRepository.findPreferences(any())).thenReturn(Map.of());
+        when(accountLookup.getContact(recipient))
                 .thenReturn(
                         Optional.of(
                                 new AccountContact(
@@ -77,14 +77,14 @@ class EmailDeliveryServiceTest {
                         false,
                         null,
                         List.of());
-        when(assignments.get(assignmentId)).thenReturn(Optional.of(source));
+        when(assignmentQuery.get(assignmentId)).thenReturn(Optional.of(source));
         for (String prefix : List.of("/my-assignments/", "/assignments/")) {
             var e = pending();
             e.type = "DEADLINE_REMINDER";
             e.expiresAt = deadline;
-            var n = repo.find(e.notificationId).orElseThrow();
+            var n = notificationRepository.findNotification(e.notificationId).orElseThrow();
             n.link = prefix + assignmentId + "?classId=" + classId;
-            service.send(e.id);
+            emailDeliveryService.sendEmail(e.id);
             assertThat(e.status).isEqualTo(EmailDelivery.Status.SENT);
             verify(mail)
                     .send(
@@ -98,9 +98,9 @@ class EmailDeliveryServiceTest {
         var stale = pending();
         stale.type = "DEADLINE_REMINDER";
         stale.expiresAt = deadline.plusSeconds(1);
-        repo.find(stale.notificationId).orElseThrow().link =
+        notificationRepository.findNotification(stale.notificationId).orElseThrow().link =
                 "/my-assignments/" + assignmentId + "?classId=" + classId;
-        service.send(stale.id);
+        emailDeliveryService.sendEmail(stale.id);
         assertThat(stale.status).isEqualTo(EmailDelivery.Status.SKIPPED);
         verify(mail, times(2)).send(any());
     }
@@ -115,11 +115,11 @@ class EmailDeliveryServiceTest {
             var e = pending();
             e.type = "DEADLINE_REMINDER";
             e.expiresAt = now.plusSeconds(1000);
-            repo.find(e.notificationId).orElseThrow().link = link;
-            assertThatCode(() -> service.send(e.id)).doesNotThrowAnyException();
+            notificationRepository.findNotification(e.notificationId).orElseThrow().link = link;
+            assertThatCode(() -> emailDeliveryService.sendEmail(e.id)).doesNotThrowAnyException();
             assertThat(e.status).isEqualTo(EmailDelivery.Status.SKIPPED);
         }
-        verifyNoInteractions(assignments, mail);
+        verifyNoInteractions(assignmentQuery, mail);
     }
 
     @Test
@@ -128,11 +128,11 @@ class EmailDeliveryServiceTest {
         e.type = "DEADLINE_REMINDER";
         e.expiresAt = now.plusSeconds(1000);
         UUID assignmentId = UUID.randomUUID();
-        repo.find(e.notificationId).orElseThrow().link =
+        notificationRepository.findNotification(e.notificationId).orElseThrow().link =
                 "/my-assignments/" + assignmentId + "?classId=" + UUID.randomUUID();
-        when(assignments.get(assignmentId))
+        when(assignmentQuery.get(assignmentId))
                 .thenThrow(new IllegalStateException("private provider error"));
-        assertThatThrownBy(() -> service.send(e.id))
+        assertThatThrownBy(() -> emailDeliveryService.sendEmail(e.id))
                 .isInstanceOf(RetryableJobException.class)
                 .hasMessage("NOTIFICATION_ASSIGNMENT_UNAVAILABLE");
         assertThat(e.status).isEqualTo(EmailDelivery.Status.PENDING);
@@ -145,7 +145,7 @@ class EmailDeliveryServiceTest {
         n.recipientId = recipient;
         n.title = "Có điểm mới";
         n.link = "/classes/1";
-        when(repo.find(n.id)).thenReturn(Optional.of(n));
+        when(notificationRepository.findNotification(n.id)).thenReturn(Optional.of(n));
         return n;
     }
 
@@ -159,49 +159,51 @@ class EmailDeliveryServiceTest {
         e.status = EmailDelivery.Status.PENDING;
         e.scheduledFor = now;
         e.createdAt = now;
-        when(repo.lockEmail(e.id)).thenReturn(Optional.of(e));
+        when(notificationRepository.lockEmailDelivery(e.id)).thenReturn(Optional.of(e));
         return e;
     }
 
     EmailDelivery captured() {
         var captor = ArgumentCaptor.forClass(EmailDelivery.class);
-        verify(repo).addEmail(captor.capture());
+        verify(notificationRepository).insertEmailDelivery(captor.capture());
         return captor.getValue();
     }
 
     @Test
     void defaultPreferenceQueuesEmail() {
-        service.schedule(notice(), "ENROLLED", null);
+        emailDeliveryService.scheduleEmail(notice(), "ENROLLED", null);
         assertThat(captured().status).isEqualTo(EmailDelivery.Status.PENDING);
-        verify(jobs).enqueue(eq(JobTypes.EMAIL_SEND), anyMap(), startsWith("email:"));
+        verify(job).enqueue(eq(JobTypes.EMAIL_SEND), anyMap(), startsWith("email:"));
     }
 
     @Test
     void staffEmailsDefaultOnUntilTurnedOff() {
-        service.schedule(notice(), "QUESTION_REVIEWED", null);
+        emailDeliveryService.scheduleEmail(notice(), "QUESTION_REVIEWED", null);
         assertThat(captured().status).isEqualTo(EmailDelivery.Status.PENDING);
-        verify(jobs).enqueue(eq(JobTypes.EMAIL_SEND), anyMap(), startsWith("email:"));
+        verify(job).enqueue(eq(JobTypes.EMAIL_SEND), anyMap(), startsWith("email:"));
     }
 
     @Test
     void staffCanTurnAnEmailOff() {
-        when(repo.preferences(recipient)).thenReturn(Map.of("QUESTION_REVIEWED", false));
-        service.schedule(notice(), "QUESTION_REVIEWED", null);
+        when(notificationRepository.findPreferences(recipient))
+                .thenReturn(Map.of("QUESTION_REVIEWED", false));
+        emailDeliveryService.scheduleEmail(notice(), "QUESTION_REVIEWED", null);
         assertThat(captured().status).isEqualTo(EmailDelivery.Status.SKIPPED);
-        verifyNoInteractions(jobs);
+        verifyNoInteractions(job);
     }
 
     @Test
     void staffOptInQueuesEmail() {
-        when(repo.preferences(recipient)).thenReturn(Map.of("QUESTION_REVIEWED", true));
-        service.schedule(notice(), "QUESTION_REVIEWED", null);
+        when(notificationRepository.findPreferences(recipient))
+                .thenReturn(Map.of("QUESTION_REVIEWED", true));
+        emailDeliveryService.scheduleEmail(notice(), "QUESTION_REVIEWED", null);
         assertThat(captured().status).isEqualTo(EmailDelivery.Status.PENDING);
-        verify(jobs).enqueue(eq(JobTypes.EMAIL_SEND), anyMap(), startsWith("email:"));
+        verify(job).enqueue(eq(JobTypes.EMAIL_SEND), anyMap(), startsWith("email:"));
     }
 
     @Test
     void teacherEmailCanBeDeliveredButCannotReceiveManagerOnlyEmail() {
-        when(accounts.getContact(recipient))
+        when(accountLookup.getContact(recipient))
                 .thenReturn(
                         Optional.of(
                                 new AccountContact(
@@ -212,18 +214,18 @@ class EmailDeliveryServiceTest {
                                         AccountStatus.ACTIVE)));
         var allowed = pending();
         allowed.type = "QUESTION_REVIEWED";
-        service.send(allowed.id);
+        emailDeliveryService.sendEmail(allowed.id);
         assertThat(allowed.status).isEqualTo(EmailDelivery.Status.SENT);
         var denied = pending();
         denied.type = "QUESTION_PROPOSED";
-        service.send(denied.id);
+        emailDeliveryService.sendEmail(denied.id);
         assertThat(denied.status).isEqualTo(EmailDelivery.Status.SKIPPED);
         verify(mail, times(1)).send(any());
     }
 
     @Test
     void managerReceivesProposalEmailButNotStudentGradeEmail() {
-        when(accounts.getContact(recipient))
+        when(accountLookup.getContact(recipient))
                 .thenReturn(
                         Optional.of(
                                 new AccountContact(
@@ -234,54 +236,58 @@ class EmailDeliveryServiceTest {
                                         AccountStatus.ACTIVE)));
         var allowed = pending();
         allowed.type = "QUESTION_PROPOSED";
-        service.send(allowed.id);
+        emailDeliveryService.sendEmail(allowed.id);
         assertThat(allowed.status).isEqualTo(EmailDelivery.Status.SENT);
         var denied = pending();
-        service.send(denied.id);
+        emailDeliveryService.sendEmail(denied.id);
         assertThat(denied.status).isEqualTo(EmailDelivery.Status.SKIPPED);
         verify(mail, times(1)).send(any());
     }
 
     @Test
     void disabledPreferenceStillKeepsNotificationButSkipsEmail() {
-        when(repo.preferences(recipient)).thenReturn(Map.of("ENROLLED", false));
-        service.schedule(notice(), "ENROLLED", null);
+        when(notificationRepository.findPreferences(recipient))
+                .thenReturn(Map.of("ENROLLED", false));
+        emailDeliveryService.scheduleEmail(notice(), "ENROLLED", null);
         assertThat(captured().status).isEqualTo(EmailDelivery.Status.SKIPPED);
-        verifyNoInteractions(jobs);
+        verifyNoInteractions(job);
     }
 
     @Test
     void capReachedDefersUntilVietnamMidnight() {
-        when(repo.reserved(any(), any())).thenReturn(300L);
-        service.schedule(notice(), "ENROLLED", null);
+        when(notificationRepository.countReservedEmails(any(), any())).thenReturn(300L);
+        emailDeliveryService.scheduleEmail(notice(), "ENROLLED", null);
         var e = captured();
         assertThat(e.status).isEqualTo(EmailDelivery.Status.DEFERRED);
         assertThat(e.scheduledFor).isEqualTo(Instant.parse("2026-10-21T17:00:00Z"));
-        verifyNoInteractions(jobs);
+        verifyNoInteractions(job);
     }
 
     @Test
     void backupIgnoresLearningPreferences() {
-        when(repo.preferences(recipient)).thenReturn(Map.of("BACKUP_FAILED", false));
-        service.schedule(notice(), "BACKUP_FAILED", null);
+        when(notificationRepository.findPreferences(recipient))
+                .thenReturn(Map.of("BACKUP_FAILED", false));
+        emailDeliveryService.scheduleEmail(notice(), "BACKUP_FAILED", null);
         assertThat(captured().status).isEqualTo(EmailDelivery.Status.PENDING);
     }
 
     @Test
     void expiredReminderSkippedBeforeQueue() {
-        service.schedule(notice(), "DEADLINE_REMINDER", now);
+        emailDeliveryService.scheduleEmail(notice(), "DEADLINE_REMINDER", now);
         assertThat(captured().status).isEqualTo(EmailDelivery.Status.SKIPPED);
-        verifyNoInteractions(jobs);
+        verifyNoInteractions(job);
     }
 
     @Test
     void sendContainsNoGradeOrBodyAndSentIsTerminal() {
         var e = pending();
-        repo.find(e.notificationId).orElseThrow().summary = "9.5 PRIVATE_GRADE_COMMENT";
-        service.send(e.id);
+        notificationRepository
+                .findNotification(e.notificationId)
+                .orElseThrow().summary = "9.5 PRIVATE_GRADE_COMMENT";
+        emailDeliveryService.sendEmail(e.id);
         assertThat(e.status).isEqualTo(EmailDelivery.Status.SENT);
-        service.send(e.id);
-        service.failed(e.id);
+        emailDeliveryService.sendEmail(e.id);
+        emailDeliveryService.markEmailFailed(e.id);
         verify(mail, times(1))
                 .send(
                         argThat(
@@ -302,11 +308,11 @@ class EmailDeliveryServiceTest {
         doThrow(new IllegalStateException("private-email@example.test secret"))
                 .when(mail)
                 .send(any());
-        assertThatThrownBy(() -> service.send(e.id))
+        assertThatThrownBy(() -> emailDeliveryService.sendEmail(e.id))
                 .isInstanceOf(RetryableJobException.class)
                 .hasMessage("NOTIFICATION_MAIL_UNAVAILABLE");
         assertThat(e.status).isEqualTo(EmailDelivery.Status.PENDING);
-        service.failed(e.id);
+        emailDeliveryService.markEmailFailed(e.id);
         assertThat(e.lastError).isEqualTo("MAIL_RETRIES_EXHAUSTED");
         assertThat(e.attempts).isGreaterThanOrEqualTo(5);
     }
@@ -314,7 +320,7 @@ class EmailDeliveryServiceTest {
     @Test
     void disabledAccountIsSkipped() {
         var e = pending();
-        when(accounts.getContact(recipient))
+        when(accountLookup.getContact(recipient))
                 .thenReturn(
                         Optional.of(
                                 new AccountContact(
@@ -323,7 +329,7 @@ class EmailDeliveryServiceTest {
                                         "x",
                                         Role.STUDENT,
                                         AccountStatus.DISABLED)));
-        service.send(e.id);
+        emailDeliveryService.sendEmail(e.id);
         assertThat(e.status).isEqualTo(EmailDelivery.Status.SKIPPED);
         verifyNoInteractions(mail);
     }
@@ -332,8 +338,8 @@ class EmailDeliveryServiceTest {
     void staleReservationRechecksNewDayBudget() {
         var e = pending();
         e.scheduledFor = now.minus(Duration.ofDays(1));
-        when(repo.reserved(any(), any())).thenReturn(300L);
-        service.send(e.id);
+        when(notificationRepository.countReservedEmails(any(), any())).thenReturn(300L);
+        emailDeliveryService.sendEmail(e.id);
         assertThat(e.status).isEqualTo(EmailDelivery.Status.DEFERRED);
         verifyNoInteractions(mail);
     }
@@ -347,12 +353,12 @@ class EmailDeliveryServiceTest {
         backup.id = UUID.randomUUID();
         backup.status = EmailDelivery.Status.DEFERRED;
         backup.scheduledFor = now;
-        when(repo.lockEmail(backup.id)).thenReturn(Optional.of(backup));
-        when(repo.deferred(now)).thenReturn(List.of(expired, backup));
-        service.releaseDeferred(now);
+        when(notificationRepository.lockEmailDelivery(backup.id)).thenReturn(Optional.of(backup));
+        when(notificationRepository.listDeferredEmails(now)).thenReturn(List.of(expired, backup));
+        emailDeliveryService.releaseDeferredEmails(now);
         assertThat(expired.status).isEqualTo(EmailDelivery.Status.SKIPPED);
         assertThat(backup.status).isEqualTo(EmailDelivery.Status.PENDING);
-        verify(jobs)
+        verify(job)
                 .enqueue(anyString(), eq(Map.of("deliveryId", backup.id.toString())), anyString());
         assertThat(EmailCapPolicy.PRIORITY.get("BACKUP_FAILED"))
                 .isGreaterThan(EmailCapPolicy.PRIORITY.get("DEADLINE_REMINDER"));
@@ -361,8 +367,8 @@ class EmailDeliveryServiceTest {
     @Test
     void sweeperUsesBoundedPendingAndHandlerUsesEmailQueue() {
         var e = pending();
-        when(repo.pending(now)).thenReturn(List.of(e));
-        var handler = new EmailSendJobHandler(service, repo);
+        when(notificationRepository.listPendingEmails(now)).thenReturn(List.of(e));
+        var handler = new EmailSendJobHandler(emailDeliveryService, notificationRepository);
         assertThat(handler.queue()).isEqualTo(JobQueue.EMAIL);
         assertThat(handler.findStalePending(now))
                 .extracting(PendingJob::idempotencyKey)
@@ -378,13 +384,13 @@ class EmailDeliveryServiceTest {
         high.id = UUID.randomUUID();
         high.status = EmailDelivery.Status.DEFERRED;
         high.priority = 6;
-        when(repo.lockEmail(high.id)).thenReturn(Optional.of(high));
-        when(repo.deferred(now)).thenReturn(List.of(low, high));
-        when(repo.reserved(any(), any())).thenReturn(299L, 300L);
-        service.releaseDeferred(now);
+        when(notificationRepository.lockEmailDelivery(high.id)).thenReturn(Optional.of(high));
+        when(notificationRepository.listDeferredEmails(now)).thenReturn(List.of(low, high));
+        when(notificationRepository.countReservedEmails(any(), any())).thenReturn(299L, 300L);
+        emailDeliveryService.releaseDeferredEmails(now);
         assertThat(high.status).isEqualTo(EmailDelivery.Status.PENDING);
         assertThat(low.status).isEqualTo(EmailDelivery.Status.DEFERRED);
-        verify(jobs)
+        verify(job)
                 .enqueue(anyString(), eq(Map.of("deliveryId", high.id.toString())), anyString());
     }
 
@@ -393,24 +399,24 @@ class EmailDeliveryServiceTest {
         var e = pending();
         e.type = "DEADLINE_REMINDER";
         e.expiresAt = now.plusSeconds(1000);
-        var n = repo.find(e.notificationId).orElseThrow();
+        var n = notificationRepository.findNotification(e.notificationId).orElseThrow();
         n.link = "/assignments/" + UUID.randomUUID();
-        service.send(e.id);
+        emailDeliveryService.sendEmail(e.id);
         assertThat(e.status).isEqualTo(EmailDelivery.Status.SKIPPED);
         verifyNoInteractions(mail);
     }
 
     @Test
     void invalidCapAndBaseUrlFailStartup() {
-        assertThatThrownBy(() -> new EmailCapPolicy(repo, -1))
+        assertThatThrownBy(() -> new EmailCapPolicy(notificationRepository, -1))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(
                         () ->
                                 new EmailDeliveryService(
-                                        repo,
-                                        cap,
-                                        jobs,
-                                        accounts,
+                                        notificationRepository,
+                                        emailCapPolicy,
+                                        job,
+                                        accountLookup,
                                         mail,
                                         clock,
                                         mock(IAssignmentQuery.class),

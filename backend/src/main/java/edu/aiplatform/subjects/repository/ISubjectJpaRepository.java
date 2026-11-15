@@ -30,7 +30,7 @@ public interface ISubjectJpaRepository extends JpaRepository<SubjectJpaEntity, U
             where (:status is null or s.status = :status)
               and (lower(s.code) like :pattern escape '!' or lower(s.name) like :pattern escape '!')
             """)
-    List<SubjectJpaEntity> findPage(
+    List<SubjectJpaEntity> findSubjectPage(
             @Param("pattern") String pattern, @Param("status") SubjectStatus status, Pageable page);
 
     @Query(

@@ -19,7 +19,7 @@ public class NotificationAccess {
         this.clock = clock;
     }
 
-    public UUID self(Actor actor) {
+    public UUID requireSelf(Actor actor) {
         if (actor == null
                 || actor.accountId() == null
                 || !authorization
@@ -27,11 +27,11 @@ public class NotificationAccess {
                                 actor,
                                 Actions.NOTIFICATION_SELF,
                                 ResourceRef.account(actor.accountId()))
-                        .allowed()) throw denied(actor, null);
+                        .allowed()) throw rejectAccess(actor, null);
         return actor.accountId();
     }
 
-    public ApiException denied(Actor actor, UUID id) {
+    public ApiException rejectAccess(Actor actor, UUID id) {
         audit.record(
                 new AuditEvent(
                         UUID.randomUUID(),

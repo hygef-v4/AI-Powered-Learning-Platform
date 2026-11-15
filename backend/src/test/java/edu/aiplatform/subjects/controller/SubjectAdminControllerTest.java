@@ -48,9 +48,9 @@ class SubjectAdminControllerTest {
     private static final Instant NOW = Instant.parse("2026-10-18T10:00:00Z");
     private final UUID id = UUID.randomUUID(), manager = UUID.randomUUID();
     private final Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
-    private final ISubjectRepository repository = mock(ISubjectRepository.class);
+    private final ISubjectRepository subjectRepository = mock(ISubjectRepository.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
-    private final IAccountLookup accounts = mock(IAccountLookup.class);
+    private final IAccountLookup accountLookup = mock(IAccountLookup.class);
     private final ISubjectClasses legacyClasses = mock(ISubjectClasses.class);
     private final IAudit audit = mock(IAudit.class);
 
@@ -65,26 +65,26 @@ class SubjectAdminControllerTest {
             Jackson2ObjectMapperBuilder.json()
                     .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                     .build();
-    private SubjectClassesReader reader;
+    private SubjectClassesReader subjectClassesReader;
     private MockMvc mvc;
 
     @BeforeEach
     void setup() {
         when(authorization.authorize(any(), anyString(), any()))
                 .thenReturn(AuthorizationDecision.allow());
-        when(repository.findById(id)).thenReturn(Optional.of(subject()));
-        when(repository.findByIdForUpdate(id)).thenReturn(Optional.of(subject()));
-        when(repository.findByIdForUpdate(eq(id), any(Duration.class)))
+        when(subjectRepository.findById(id)).thenReturn(Optional.of(subject()));
+        when(subjectRepository.findByIdForUpdate(id)).thenReturn(Optional.of(subject()));
+        when(subjectRepository.findByIdForUpdate(eq(id), any(Duration.class)))
                 .thenReturn(Optional.of(subject()));
-        when(repository.findPage(null, null, 0, 20)).thenReturn(List.of(subject()));
-        when(repository.countByStatus(null))
+        when(subjectRepository.findSubjectPage(null, null, 0, 20)).thenReturn(List.of(subject()));
+        when(subjectRepository.countSubjectsByStatus(null))
                 .thenReturn(Map.of(SubjectStatus.ACTIVE, 1L, SubjectStatus.ARCHIVED, 0L));
-        when(repository.count(null, null)).thenReturn(1L);
-        when(repository.update(any(), anyLong())).thenReturn(true);
+        when(subjectRepository.countSubjects(null, null)).thenReturn(1L);
+        when(subjectRepository.updateSubject(any(), anyLong())).thenReturn(true);
         when(legacyClasses.countClasses(any())).thenReturn(Map.of(id, 0));
         when(checks.getIfAvailable()).thenReturn(archiveCheck);
         when(archiveCheck.countUnarchivedClasses(id)).thenReturn(0);
-        when(accounts.getContact(manager))
+        when(accountLookup.getContact(manager))
                 .thenReturn(
                         Optional.of(
                                 new AccountContact(
@@ -93,7 +93,7 @@ class SubjectAdminControllerTest {
                                         "Manager",
                                         Role.SUBJECT_MANAGER,
                                         AccountStatus.ACTIVE)));
-        when(accounts.lockContact(manager))
+        when(accountLookup.lockContact(manager))
                 .thenReturn(
                         Optional.of(
                                 new AccountContact(
@@ -102,17 +102,30 @@ class SubjectAdminControllerTest {
                                         "Manager",
                                         Role.SUBJECT_MANAGER,
                                         AccountStatus.ACTIVE)));
-        var recorder = new SubjectAuditRecorder(audit);
-        reader = new SubjectClassesReader(legacyClasses);
+        var subjectAuditRecorder = new SubjectAuditRecorder(audit);
+        subjectClassesReader = new SubjectClassesReader(legacyClasses);
         var reads =
                 new SubjectAdminService(
-                        repository, authorization, accounts, reader, recorder, clock);
-        var commands =
-                new SubjectCommandService(repository, authorization, accounts, recorder, clock);
-        var statuses = new SubjectStatusService(repository, authorization, checks, recorder, clock);
+                        subjectRepository,
+                        authorization,
+                        accountLookup,
+                        subjectClassesReader,
+                        subjectAuditRecorder,
+                        clock);
+        var subjectCommandService =
+                new SubjectCommandService(
+                        subjectRepository,
+                        authorization,
+                        accountLookup,
+                        subjectAuditRecorder,
+                        clock);
+        var subjectStatusService =
+                new SubjectStatusService(
+                        subjectRepository, authorization, checks, subjectAuditRecorder, clock);
         mvc =
                 MockMvcBuilders.standaloneSetup(
-                                new SubjectAdminController(reads, commands, statuses))
+                                new SubjectAdminController(
+                                        reads, subjectCommandService, subjectStatusService))
                         .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                         .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
                         .setControllerAdvice(
@@ -123,7 +136,7 @@ class SubjectAdminControllerTest {
 
     @AfterEach
     void cleanup() {
-        reader.close();
+        subjectClassesReader.close();
         SecurityContextHolder.clearContext();
     }
 
@@ -142,10 +155,10 @@ class SubjectAdminControllerTest {
 
     @Test
     void filteredPageBindsQueryStatusAndCountsBeforeStatusFilter() throws Exception {
-        when(repository.findPage("math", SubjectStatus.ACTIVE, 2, 10))
+        when(subjectRepository.findSubjectPage("math", SubjectStatus.ACTIVE, 2, 10))
                 .thenReturn(List.of(subject()));
-        when(repository.count("math", SubjectStatus.ACTIVE)).thenReturn(25L);
-        when(repository.countByStatus("math"))
+        when(subjectRepository.countSubjects("math", SubjectStatus.ACTIVE)).thenReturn(25L);
+        when(subjectRepository.countSubjectsByStatus("math"))
                 .thenReturn(Map.of(SubjectStatus.ACTIVE, 25L, SubjectStatus.ARCHIVED, 3L));
         mvc.perform(
                         get(BASE)
@@ -158,7 +171,7 @@ class SubjectAdminControllerTest {
                 .andExpect(jsonPath("$.size").value(10))
                 .andExpect(jsonPath("$.totalElements").value(25))
                 .andExpect(jsonPath("$.statusCounts.ARCHIVED").value(3));
-        verify(repository).findPage("math", SubjectStatus.ACTIVE, 2, 10);
+        verify(subjectRepository).findSubjectPage("math", SubjectStatus.ACTIVE, 2, 10);
     }
 
     @Test
@@ -181,7 +194,7 @@ class SubjectAdminControllerTest {
                 .isEqualTo(BASE + "/" + body.get("id").textValue());
         assertThat(body.get("manager").isNull()).isTrue();
         assertThat(body.get("classCount").isNull()).isTrue();
-        verify(repository, never()).findById(any());
+        verify(subjectRepository, never()).findById(any());
         verifyNoInteractions(legacyClasses);
     }
 
@@ -221,8 +234,8 @@ class SubjectAdminControllerTest {
                 .andExpect(jsonPath("$.name").value("New"))
                 .andExpect(jsonPath("$.code").value("ABC"))
                 .andExpect(jsonPath("$.version").value(2));
-        verify(repository)
-                .update(
+        verify(subjectRepository)
+                .updateSubject(
                         argThat(
                                 value ->
                                         value.managerId() == null
@@ -239,14 +252,14 @@ class SubjectAdminControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.managerId").value(manager.toString()))
                 .andExpect(jsonPath("$.version").value(2));
-        verify(accounts).lockContact(manager);
+        verify(accountLookup).lockContact(manager);
     }
 
     @Test
     void explicitNullManagerUnassignsInsteadOfBeingTreatedAsMissing() throws Exception {
         Subject assigned = subject().changeManager(manager, NOW.minusSeconds(1));
-        when(repository.findById(id)).thenReturn(Optional.of(assigned));
-        when(repository.findByIdForUpdate(id)).thenReturn(Optional.of(assigned));
+        when(subjectRepository.findById(id)).thenReturn(Optional.of(assigned));
+        when(subjectRepository.findByIdForUpdate(id)).thenReturn(Optional.of(assigned));
         var response =
                 mvc.perform(
                                 put(BASE + "/" + id + "/manager")
@@ -258,7 +271,7 @@ class SubjectAdminControllerTest {
                         .getResponse();
         assertThat(mapper.readTree(response.getContentAsString()).get("managerId").isNull())
                 .isTrue();
-        verifyNoInteractions(accounts);
+        verifyNoInteractions(accountLookup);
     }
 
     @Test
@@ -271,7 +284,7 @@ class SubjectAdminControllerTest {
                 .andExpect(jsonPath("$.status").value("ARCHIVED"))
                 .andExpect(jsonPath("$.version").value(2));
         clearInvocations(archiveCheck);
-        when(repository.findByIdForUpdate(eq(id), any(Duration.class)))
+        when(subjectRepository.findByIdForUpdate(eq(id), any(Duration.class)))
                 .thenReturn(Optional.of(subject().archive(NOW)));
         mvc.perform(
                         put(BASE + "/" + id + "/status")
@@ -303,7 +316,7 @@ class SubjectAdminControllerTest {
                                 .content("{\"status\":\"ARCHIVED\",\"version\":1}"))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.code").value("SUBJECT_CLASSES_UNAVAILABLE"));
-        verify(repository, never()).update(any(), anyLong());
+        verify(subjectRepository, never()).updateSubject(any(), anyLong());
     }
 
     static Stream<Arguments> invalidBodies() {
@@ -349,7 +362,7 @@ class SubjectAdminControllerTest {
         mvc.perform(request.contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("SUBJECT_REQUEST_INVALID"));
-        verifyNoInteractions(repository, archiveCheck, accounts);
+        verifyNoInteractions(subjectRepository, archiveCheck, accountLookup);
     }
 
     @Test
@@ -364,7 +377,7 @@ class SubjectAdminControllerTest {
             mvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(body))
                     .andExpect(status().isBadRequest());
         }
-        verifyNoInteractions(repository);
+        verifyNoInteractions(subjectRepository);
     }
 
     @Test
@@ -378,7 +391,7 @@ class SubjectAdminControllerTest {
         mvc.perform(get(BASE + "/not-a-uuid")).andExpect(status().isBadRequest());
         mvc.perform(get(BASE).param("status", "OPEN")).andExpect(status().isBadRequest());
         mvc.perform(get(BASE).param("page", "abc")).andExpect(status().isBadRequest());
-        verifyNoInteractions(repository);
+        verifyNoInteractions(subjectRepository);
     }
 
     @Test
@@ -388,7 +401,7 @@ class SubjectAdminControllerTest {
         mvc.perform(get(BASE).param("sort", "name")).andExpect(status().isBadRequest());
         mvc.perform(get(BASE).param("q", "one", "two")).andExpect(status().isBadRequest());
         mvc.perform(get(BASE).param("q", "x".repeat(201))).andExpect(status().isBadRequest());
-        verify(repository, never()).findPage(any(), any(), anyInt(), anyInt());
+        verify(subjectRepository, never()).findSubjectPage(any(), any(), anyInt(), anyInt());
     }
 
     @Test
@@ -402,7 +415,7 @@ class SubjectAdminControllerTest {
                         new TestingAuthenticationToken(
                                 "unexpected-principal", "unused", "ROLE_ADMIN"));
         mvc.perform(get(BASE)).andExpect(status().isUnauthorized());
-        verifyNoInteractions(repository);
+        verifyNoInteractions(subjectRepository);
         verify(audit, times(2)).record(any());
     }
 
@@ -416,31 +429,31 @@ class SubjectAdminControllerTest {
                                 .content("{\"status\":\"ARCHIVED\",\"version\":1}"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.blockingClasses").doesNotExist());
-        verifyNoInteractions(repository, archiveCheck);
+        verifyNoInteractions(subjectRepository, archiveCheck);
         verify(audit).record(any());
     }
 
     @Test
     void missingStaleDuplicateAndDatabaseErrorsRemainDistinctAndSafe() throws Exception {
-        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(subjectRepository.findById(id)).thenReturn(Optional.empty());
         mvc.perform(get(BASE + "/" + id))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("SUBJECT_NOT_FOUND"));
-        when(repository.findById(id)).thenReturn(Optional.of(subject()));
+        when(subjectRepository.findById(id)).thenReturn(Optional.of(subject()));
         mvc.perform(
                         patch(BASE + "/" + id)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"name\":\"New\",\"description\":null,\"version\":2}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("SUBJECT_VERSION_CONFLICT"));
-        when(repository.existsByCode(any())).thenReturn(true);
+        when(subjectRepository.hasSubjectWithCode(any())).thenReturn(true);
         mvc.perform(
                         post(BASE)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"code\":\"ABC\",\"name\":\"Name\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("SUBJECT_CODE_DUPLICATE"));
-        when(repository.findById(id))
+        when(subjectRepository.findById(id))
                 .thenThrow(
                         new DataAccessResourceFailureException(
                                 "password=secret select from subjects"));
@@ -456,12 +469,14 @@ class SubjectAdminControllerTest {
 
     @Test
     void integrityErrorIsNotMislabeledDuplicateAndUnknownFailureIsSafe500() throws Exception {
-        when(repository.findById(id))
+        when(subjectRepository.findById(id))
                 .thenThrow(new DataIntegrityViolationException("fk_subjects_manager SQL"));
         mvc.perform(get(BASE + "/" + id))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("SUBJECT_DATA_CONFLICT"));
-        doThrow(new IllegalStateException("internal secret path")).when(repository).findById(id);
+        doThrow(new IllegalStateException("internal secret path"))
+                .when(subjectRepository)
+                .findById(id);
         var failure =
                 mvc.perform(get(BASE + "/" + id))
                         .andExpect(status().isInternalServerError())
@@ -536,7 +551,7 @@ class SubjectAdminControllerTest {
                     .andExpect(jsonPath("$.code").value(code))
                     .andExpect(jsonPath("$.blockingClasses").doesNotExist());
         }
-        verifyNoInteractions(repository, accounts, archiveCheck, checks, legacyClasses);
+        verifyNoInteractions(subjectRepository, accountLookup, archiveCheck, checks, legacyClasses);
         verify(audit, times(7))
                 .record(
                         argThat(

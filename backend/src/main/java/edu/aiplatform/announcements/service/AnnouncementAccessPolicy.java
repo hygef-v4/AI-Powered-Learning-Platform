@@ -11,51 +11,52 @@ import org.springframework.stereotype.Service;
 @Service
 public class AnnouncementAccessPolicy {
     private final IAuthorization authorization;
-    private final IClassAccess classes;
+    private final IClassAccess classAccess;
     private final IAudit audit;
     private final Clock clock;
 
     public AnnouncementAccessPolicy(
-            IAuthorization authorization, IClassAccess classes, IAudit audit, Clock clock) {
+            IAuthorization authorization, IClassAccess classAccess, IAudit audit, Clock clock) {
         this.authorization = authorization;
-        this.classes = classes;
+        this.classAccess = classAccess;
         this.audit = audit;
         this.clock = clock;
     }
 
-    public ClassRef require(Actor actor, UUID id, boolean write) {
-        if (actor == null || actor.role() == Role.ADMIN) throw denied(actor, id);
+    public ClassRef requireClassAccess(Actor actor, UUID id, boolean write) {
+        if (actor == null || actor.role() == Role.ADMIN) throw rejectAccess(actor, id);
         var decision =
                 authorization.authorize(
                         actor,
                         write ? Actions.ANNOUNCEMENT_MANAGE : Actions.ANNOUNCEMENT_READ,
                         ResourceRef.courseClass(id));
-        if (!decision.allowed()) throw denied(actor, id);
-        var c = classes.getClassRef(id).orElseThrow(() -> denied(actor, id));
-        if (c.status() != ClassStatus.OPEN
+        if (!decision.allowed()) throw rejectAccess(actor, id);
+        var courseClass = classAccess.getClassRef(id).orElseThrow(() -> rejectAccess(actor, id));
+        if (courseClass.status() != ClassStatus.OPEN
                 || write
-                        && (!Objects.equals(c.teacherId(), actor.accountId())
-                                || actor.role() == Role.STUDENT)) throw denied(actor, id);
+                        && (!Objects.equals(courseClass.teacherId(), actor.accountId())
+                                || actor.role() == Role.STUDENT)) throw rejectAccess(actor, id);
         if (!write
                 && (actor.role() == Role.STUDENT
-                        ? !classes.isActiveStudent(actor.accountId(), id)
-                        : !Objects.equals(c.teacherId(), actor.accountId())))
-            throw denied(actor, id);
-        return c;
+                        ? !classAccess.isActiveStudent(actor.accountId(), id)
+                        : !Objects.equals(courseClass.teacherId(), actor.accountId())))
+            throw rejectAccess(actor, id);
+        return courseClass;
     }
 
-    public List<ClassRef> list(Actor actor, UUID classId) {
-        if (actor == null || actor.role() == Role.ADMIN) throw denied(actor, classId);
+    public List<ClassRef> listReadableClasses(Actor actor, UUID classId) {
+        if (actor == null || actor.role() == Role.ADMIN) throw rejectAccess(actor, classId);
         if (!authorization
                 .authorize(actor, Actions.NOTIFICATION_SELF, ResourceRef.account(actor.accountId()))
-                .allowed()) throw denied(actor, classId);
-        if (classId != null) return List.of(require(actor, classId, false));
-        return classes.listOpenClassesOf(actor.accountId()).stream()
+                .allowed()) throw rejectAccess(actor, classId);
+        if (classId != null) return List.of(requireClassAccess(actor, classId, false));
+        return classAccess.listOpenClassesOf(actor.accountId()).stream()
                 .filter(c -> c.status() == ClassStatus.OPEN)
                 .filter(
                         c ->
                                 actor.role() == Role.STUDENT
-                                        ? classes.isActiveStudent(actor.accountId(), c.classId())
+                                        ? classAccess.isActiveStudent(
+                                                actor.accountId(), c.classId())
                                         : Objects.equals(c.teacherId(), actor.accountId()))
                 .filter(
                         c ->
@@ -68,7 +69,7 @@ public class AnnouncementAccessPolicy {
                 .toList();
     }
 
-    public ApiException denied(Actor actor, UUID id) {
+    public ApiException rejectAccess(Actor actor, UUID id) {
         audit.record(
                 new AuditEvent(
                         UUID.randomUUID(),

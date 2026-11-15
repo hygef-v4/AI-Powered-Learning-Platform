@@ -2,7 +2,13 @@
 import Link from "next/link";
 import { useSession } from "@/features/identity/hooks/session";
 import { Icon } from "@/shared/ui";
-import { itemHref, itemKey, itemTitle, useModuleOutline, type OutlineItem } from "../model/outline";
+import {
+  buildItemHref,
+  buildItemKey,
+  resolveItemTitle,
+  useModuleOutline,
+  type OutlineItem,
+} from "../model/outline";
 import type { ModuleScope } from "../model/types";
 
 /** Nơi xem: lớp (sinh viên, giảng viên) theo `classId`, không có thì là môn (Chủ nhiệm môn) theo `subjectId`. */
@@ -71,16 +77,16 @@ function Neighbour({
 }) {
   return (
     <Link
-      href={itemHref(item, scope)}
-      data-testid={`material-${after ? "next" : "previous"}-${itemKey(item)}`}
-      aria-label={`${after ? "Sau" : "Trước"}: ${itemTitle(item)}`}
+      href={buildItemHref(item, scope)}
+      data-testid={`material-${after ? "next" : "previous"}-${buildItemKey(item)}`}
+      aria-label={`${after ? "Sau" : "Trước"}: ${resolveItemTitle(item)}`}
       className={`group flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:border-line-strong ${after ? "sm:col-start-2 sm:justify-end sm:text-right" : ""}`}
     >
       {!after && (
         <Icon name="chevron_left" size={18} className="shrink-0 text-muted group-hover:text-ink" />
       )}
       <span className="min-w-0 truncate text-[13.5px] font-semibold text-ink">
-        {itemTitle(item)}
+        {resolveItemTitle(item)}
       </span>
       {after && (
         <Icon name="chevron_right" size={18} className="shrink-0 text-muted group-hover:text-ink" />

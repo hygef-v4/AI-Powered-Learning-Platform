@@ -4,9 +4,9 @@ import {
   changeSubjectManager,
   changeSubjectStatus,
   createSubject,
-  getSubject,
-  getSubjectClasses,
-  getSubjects,
+  loadSubject,
+  listSubjectClasses,
+  listSubjects,
   updateSubject,
 } from "@/features/subjects/api";
 import type { SubjectApiProblem } from "@/features/subjects/model/types";
@@ -25,7 +25,7 @@ describe("API client U04", () => {
 
   it("encode query, giữ page0 và dùng cookie từ shared client", async () => {
     const fetchMock = mockResponse({ items: [], totalElements: 0 });
-    await getSubjects({ q: "  A&B  ", status: "ACTIVE", page: 0, size: 20 });
+    await listSubjects({ q: "  A&B  ", status: "ACTIVE", page: 0, size: 20 });
     expect(fetchMock.mock.calls[0]?.[0]).toBe(
       "/api/v1/admin/subjects?q=A%26B&status=ACTIVE&page=0&size=20",
     );
@@ -34,9 +34,9 @@ describe("API client U04", () => {
 
   it("bỏ query trống, encode id và phân biệt lớp unavailable với danh sách rỗng", async () => {
     const fetchMock = mockResponse({ availability: "UNAVAILABLE", items: null });
-    await getSubjects({ q: " " });
-    await getSubject("id/with slash");
-    await expect(getSubjectClasses("id/with slash")).resolves.toEqual({
+    await listSubjects({ q: " " });
+    await loadSubject("id/with slash");
+    await expect(listSubjectClasses("id/with slash")).resolves.toEqual({
       availability: "UNAVAILABLE",
       items: null,
     });

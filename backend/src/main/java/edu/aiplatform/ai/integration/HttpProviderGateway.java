@@ -22,6 +22,9 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -40,6 +43,11 @@ public class HttpProviderGateway implements IProviderGateway {
     static final String IMAGES_NOT_SUPPORTED = "Model đang dùng không đọc được ảnh; hãy chọn model khác";
     /** Dưới mức này không đặt ngân sách suy nghĩ (ví dụ lời gọi thử kết nối). */
     static final int MIN_TOKENS_FOR_THINKING_BUDGET = 2048;
+    static final String EMPTY_OUTPUT = "Nhà cung cấp AI không trả nội dung";
+    /** Lý do dừng bình thường: không phải chặn, chữ rỗng thì báo chung {@link #EMPTY_OUTPUT}. */
+    private static final Set<String> NORMAL_STOPS = Set.of("", "STOP", "stop", "end_turn", "tool_use", "tool_calls",
+            "FINISH_REASON_UNSPECIFIED", "BLOCKED_REASON_UNSPECIFIED", "stop_sequence");
+    private static final Logger log = LoggerFactory.getLogger(HttpProviderGateway.class);
 
     private final ObjectMapper json;
     private final Map<AiProvider, String> baseUrls;
@@ -100,14 +108,19 @@ public class HttpProviderGateway implements IProviderGateway {
                 : (candidates == null ? 0 : candidates) + (thoughts == null ? 0 : thoughts);
         Usage usage = new Usage(number(meta, "promptTokenCount"), output, number(meta, "cachedContentTokenCount"),
                 thoughts);
-        requireCompleteOutput(reply.path("candidates").path(0).path("finishReason").asText(""), usage);
+        String finishReason = reply.path("candidates").path(0).path("finishReason").asText("");
+        requireCompleteOutput(finishReason, usage);
         StringBuilder text = new StringBuilder();
         for (JsonNode part : reply.path("candidates").path(0).path("content").path("parts")) {
             text.append(part.path("text").asText(""));
         }
         String answer = r.outputSchema() == null ? text.toString()
                 : trimGeminiArraysToSchema(text.toString(), readSchema(r.outputSchema()));
-        return response(answer, reply.path("responseId").asText(null), usage);
+        // Gemini chặn ngay đầu vào thì không có candidate, lý do nằm ở promptFeedback.blockReason.
+        String blockReason = reply.path("promptFeedback").path("blockReason").asText("");
+        return response(AiProvider.GEMINI, r.model(), answer, reply.path("responseId").asText(null), usage,
+                blockReason.isEmpty() || NORMAL_STOPS.contains(blockReason) ? finishReason : blockReason,
+                !blockReason.isEmpty() && !NORMAL_STOPS.contains(blockReason));
     }
 
     /**
@@ -153,9 +166,13 @@ public class HttpProviderGateway implements IProviderGateway {
         Usage usage = new Usage(number(u, "prompt_tokens"), number(u, "completion_tokens"),
                 number(u.path("prompt_tokens_details"), "cached_tokens"),
                 number(u.path("completion_tokens_details"), "reasoning_tokens"));
-        requireCompleteOutput(reply.path("choices").path(0).path("finish_reason").asText(""), usage);
-        return response(reply.path("choices").path(0).path("message").path("content").asText(""),
-                reply.path("id").asText(null), usage);
+        String finishReason = reply.path("choices").path(0).path("finish_reason").asText("");
+        requireCompleteOutput(finishReason, usage);
+        JsonNode message = reply.path("choices").path(0).path("message");
+        // Model từ chối trả lời: OpenAI để lời từ chối ở message.refusal thay vì content.
+        String reason = message.path("refusal").asText("").isBlank() ? finishReason : "refusal";
+        return response(AiProvider.OPENAI, r.model(), message.path("content").asText(""),
+                reply.path("id").asText(null), usage, reason, false);
     }
 
     private Response claude(Request r) {
@@ -187,7 +204,8 @@ public class HttpProviderGateway implements IProviderGateway {
         JsonNode u = reply.path("usage");
         Usage usage = new Usage(number(u, "input_tokens"), number(u, "output_tokens"),
                 number(u, "cache_read_input_tokens"), null);
-        requireCompleteOutput(reply.path("stop_reason").asText(""), usage);
+        String stopReason = reply.path("stop_reason").asText("");
+        requireCompleteOutput(stopReason, usage);
         String output = "";
         for (JsonNode block : reply.path("content")) {
             if ("tool_use".equals(block.path("type").asText()) && RESULT_TOOL.equals(block.path("name").asText())) {
@@ -198,7 +216,7 @@ public class HttpProviderGateway implements IProviderGateway {
                 output += block.path("text").asText("");
             }
         }
-        return response(output, reply.path("id").asText(null), usage);
+        return response(AiProvider.CLAUDE, r.model(), output, reply.path("id").asText(null), usage, stopReason, false);
     }
 
     private JsonNode send(HttpRequest.Builder builder, ObjectNode body, Request r) {
@@ -296,11 +314,39 @@ public class HttpProviderGateway implements IProviderGateway {
         };
     }
 
-    private Response response(String output, String requestId, Usage usage) {
+    /**
+     * Chữ rỗng: báo lý do nhà cung cấp dừng hoặc chặn (mã lý do kèm giải thích) thay vì câu chung, ghi log mã lý do
+     * không kèm nội dung. {@code promptBlocked}: chặn ngay đầu vào (Gemini {@code promptFeedback.blockReason}).
+     */
+    private Response response(AiProvider provider, String model, String output, String requestId, Usage usage,
+                              String reason, boolean promptBlocked) {
         if (output == null || output.isBlank()) {
-            throw new ProviderException(FailureKind.CHARGED, 200, "Nhà cung cấp AI không trả nội dung", usage);
+            log.warn("AI provider returned no output provider={} model={} requestId={} reason={} promptBlocked={}",
+                    provider, model, requestId, reason.isEmpty() ? "-" : reason, promptBlocked);
+            throw new ProviderException(FailureKind.CHARGED, 200, emptyOutputMessage(reason, promptBlocked), usage);
         }
         return new Response(output, requestId, usage);
+    }
+
+    /** Câu báo lỗi khi không có chữ; chỉ dùng mã lý do do nhà cung cấp trả, không dùng nội dung phản hồi. */
+    static String emptyOutputMessage(String reason, boolean promptBlocked) {
+        if (reason == null || NORMAL_STOPS.contains(reason)) {
+            return EMPTY_OUTPUT;
+        }
+        String head = promptBlocked ? "Nhà cung cấp AI chặn nội dung gửi lên" : "Nhà cung cấp AI dừng mà không trả nội dung";
+        String why = switch (reason) {
+            case "SAFETY", "IMAGE_SAFETY" -> "bộ lọc an toàn chặn nội dung";
+            case "RECITATION", "IMAGE_RECITATION" ->
+                    "nội dung trùng văn bản có sẵn nên bị chặn chép lại; thử model hoặc nhà cung cấp khác";
+            case "BLOCKLIST", "PROHIBITED_CONTENT", "SPII", "IMAGE_PROHIBITED_CONTENT" ->
+                    "nội dung bị chính sách của nhà cung cấp chặn";
+            case "LANGUAGE" -> "ngôn ngữ không được hỗ trợ";
+            case "content_filter" -> "bộ lọc nội dung chặn";
+            case "refusal" -> "model từ chối trả lời";
+            case "OTHER" -> "nhà cung cấp không nêu lý do";
+            default -> null;
+        };
+        return head + " (" + reason + (why == null ? "" : ": " + why) + ")";
     }
 
     /** Large nested array maxima exceed Gemini's decoding complexity limit.

@@ -58,7 +58,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U12-40 | Chỉ trưởng nhóm hiện tại nộp, bất kỳ lúc nào bài còn nhận bài nộp; thành viên khác không nộp thay. Còn mục chưa Xong thì cảnh báo nhưng vẫn cho nộp, phần chưa Xong không vào bản nộp; tài liệu phải qua `validateForSubmit` (đủ sơ đồ bắt buộc, sơ đồ không rỗng). | US-GRP-005 S1 |
 | BR-U12-41 | Nộp chụp phần chung, nội dung đã đăng của các mục và tác giả từng mục thành bản bất biến kèm `receiptHash`, `late` nếu sau `closesAt`. Trong cùng transaction gọi `IGroupEvaluation.onGroupSubmitted` của U09; sau commit phát `group.submitted`. | US-GRP-005 S1, BR-U03-64 |
-| BR-U12-42 | Trưởng nhóm nộp lại được trước hạn; bản nộp cuối thay bản trước. U09 dùng lại bản chấm nhóm/thành viên, reset điểm về PENDING kể cả đã chốt/công bố; điểm trước không còn hiệu lực. Người nộp, thời điểm, mã băm vẫn ghi audit. Sau nộp vẫn sửa được tới hạn. Không lưu nhiều lượt chấm nhóm song song, không đổi DB schema. | FR-026, quyết định mới nhất 2026-11-02, BR-U09-50 |
+| BR-U12-42 | Trưởng nhóm nộp lại trong thời hạn áp dụng. Bản nộp mới thay bản trước trong workspace. U09 giữ điểm và mức đóng góp đã công bố cùng biên nhận đã chấm. Dữ liệu FINALIZED cũ cũng được giữ. Chỉ bản chấm chưa chính thức được đặt lại về PENDING và xóa điểm/mức nháp theo BR-U09-50. Người nộp, thời điểm và mã băm vẫn được ghi audit. | FR-026, BR-U09-50 |
 | BR-U12-43 | Tự nộp khi quá hạn cuối nhận bài 30 giây hoặc khi bài bị ngưng giao, nếu có thay đổi sau lần nộp cuối: mục đang `CLAIMED` được chốt bằng bản nháp đã lưu gần nhất (thêm lịch sử, `DONE`); chụp như BR-U12-41 với `AUTO_DEADLINE` hoặc `AUTO_RETIRED`; tài liệu `CLOSED`, chỉ đọc. Trễ của bản tự nộp tính theo lần sửa cuối của nhóm (`lastChangedAt`) so với `closesAt`, không theo giờ chạy tự nộp, giống bài cá nhân. Không phụ thuộc AI. Người đang mở workspace thấy trang khóa "Đang nộp…" rồi chuyển sang bản nộp. | US-GRP-005 S2 |
 | BR-U12-44 | Workspace có thẻ Bản nộp: bản nộp cuối với thời điểm, người nộp, cách nộp, trễ, biên nhận và tác giả từng mục. Thành viên tải DOCX bản hiện tại hoặc bản nộp; giảng viên chính của lớp tải DOCX bản nộp. | UC 56 |
 
@@ -142,3 +142,16 @@ US-GRP-007…010, [SG-01…09](../../../inception/requirements/2026-11-11-studen
 | BR-U12-94 | Audit: `GROUP_FORMATION_UPDATED`, `GROUP_PROPOSAL_SUBMITTED`, `GROUP_PROPOSAL_APPROVED`, `GROUP_PROPOSAL_REJECTED`, cùng `GROUP_CREATED` của nhóm được tạo. Không audit tạo nháp, mời, chấp nhận, rời. Không ghi họ tên, email hay lý do vào log ứng dụng (SECURITY-03). | FR-014, SG NFR |
 | BR-U12-95 | Thông báo chỉ bốn loại ở bảng sự kiện; thay đổi do hệ thống (BR-U12-85, 88, 89) không thông báo. Sự kiện phát sau commit; lỗi gửi thông báo không hoàn tác thao tác (RESILIENCY-10, theo cơ chế sự kiện hiện có). | SG-08, quyết định Q7, Q8 |
 | BR-U12-96 | Mọi thao tác ghi lên đề xuất là một transaction; lỗi thì hoàn tác toàn bộ, trả lỗi chung không lộ chi tiết nội bộ (SECURITY-15). Thao tác trưởng nhóm gửi `version` đề xuất, lệch thì `409 PROPOSAL_VERSION_CONFLICT`. | SECURITY-15 |
+
+## 9. Mã số sinh viên (MSSV) — 2026-11-13
+
+Nguồn: [yêu cầu SC-10, SC-11](../../../inception/requirements/2026-11-13-student-code.md); [FD Q6, Q7](../../plans/functional-design-plan/2026-11-13-u01-student-code-functional-design-plan.md). MSSV do U01 sở hữu (BR-U01-100…115).
+
+| Mã | Rule | Nguồn |
+|---|---|---|
+| BR-U12-97 | Các DTO người dùng của U12 có thêm trường `studentCode`, có thể rỗng: `ClassGroupService.PersonView`, `ProposalPeople.Person`, `GroupProposalService.MemberView` và DTO ứng viên mời. MSSV chỉ hiện trên những màn vốn đã hiện người đó. Phía giảng viên gồm danh sách nhóm, đề xuất chờ duyệt và sinh viên chưa có nhóm. Phía sinh viên gồm nhóm của tôi, thành viên và lời mời của đề xuất, và danh sách ứng viên mời. Phạm vi ứng viên và quyền xem giữ nguyên. | SC-10, SC-11 |
+| BR-U12-98 | Ô tìm bạn để mời vào đề xuất nhóm khớp theo tên, email hoặc MSSV, không phân biệt hoa thường. Hiện nay danh sách ứng viên được lọc ở frontend, nên chỉ cần thêm MSSV vào dữ liệu ứng viên và vào điều kiện lọc. Không thêm API mới. | SC-11, FD Q7 |
+
+**Giao diện**:
+- `ClassGroupsPanel`, `GroupFormDialog`, `ProposalReviewList`, `MyGroup`, `GroupProposalSection`, `ProposalDialogs`: hiện dòng phụ `SE123456 · email` dưới tên.
+- `InviteMembersDialog`: chữ gợi ý ô tìm đổi thành "Tìm theo tên, email hoặc MSSV".

@@ -47,9 +47,12 @@ function errorMessage(error: unknown) {
   return (error instanceof ApiError && error.problem.detail) || "Không thực hiện được, vui lòng thử lại.";
 }
 
+/** Không đổi vai trò vào hoặc ra khỏi Sinh viên (BR-U01-107): popup chỉ mở cho tài khoản khác sinh viên. */
+const STAFF_ROLES = ROLES.filter((r) => r !== "STUDENT");
+
 /**
  * Popup Đổi vai trò (UC 11, design `a04b`): một ô Vai trò, mặc định là vai trò hiện tại; chọn vai trò khác mới đổi được.
- * Bị chặn vì còn phụ trách thì chuyển sang `RoleChangeRejectedDialog`.
+ * Không có lựa chọn Sinh viên. Bị chặn vì còn phụ trách thì chuyển sang `RoleChangeRejectedDialog`.
  */
 export function RoleChangeDialog({ account, onClose, onChanged, onConflict, onBlocked }: DialogProps & { onBlocked: (block: RoleChangeBlock) => void }) {
   const roleId = useId();
@@ -96,7 +99,7 @@ export function RoleChangeDialog({ account, onClose, onChanged, onConflict, onBl
     >
       <Field label="Vai trò" htmlFor={roleId}>
         <Select id={roleId} value={role} onChange={(e) => setRole(e.target.value as Role)}>
-          {ROLES.map((r) => (
+          {STAFF_ROLES.map((r) => (
             <option key={r} value={r}>
               {ROLE_LABELS[r]}
             </option>

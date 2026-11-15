@@ -46,6 +46,8 @@ export type SubjectPage = {
 export type SubjectClassSummary = {
   classId: string;
   code: string;
+  /** Học kỳ suy ra từ ngày bắt đầu (D-U04-05). */
+  term: string;
   name: string;
   status: SubjectClassStatus;
   teacherName: string | null;

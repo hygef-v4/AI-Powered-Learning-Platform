@@ -15,101 +15,105 @@ import org.springframework.util.MultiValueMap;
 public final class SubjectRequests {
     private SubjectRequests() {}
 
-    public static SubjectCommandService.Create create(JsonNode body) {
-        fields(body, Set.of("code", "name", "description", "managerId"));
+    public static SubjectCommandService.Create parseCreate(JsonNode body) {
+        requireAllowedFields(body, Set.of("code", "name", "description", "managerId"));
         return new SubjectCommandService.Create(
-                text(body, "code", true),
-                text(body, "name", true),
-                text(body, "description", false),
-                uuid(body, "managerId", false));
+                readText(body, "code", true),
+                readText(body, "name", true),
+                readText(body, "description", false),
+                readUuid(body, "managerId", false));
     }
 
-    public static SubjectCommandService.UpdateInformation information(JsonNode body) {
-        fields(body, Set.of("name", "description", "version"));
-        require(body, "description");
+    public static SubjectCommandService.UpdateInformation parseUpdateInformation(JsonNode body) {
+        requireAllowedFields(body, Set.of("name", "description", "version"));
+        requireField(body, "description");
         return new SubjectCommandService.UpdateInformation(
-                text(body, "name", true), text(body, "description", false), version(body));
+                readText(
+                        body,
+                        "name",
+                        true), readText(body, "description", false), readVersion(body));
     }
 
-    public static SubjectCommandService.ChangeManager manager(JsonNode body) {
-        fields(body, Set.of("managerId", "version"));
+    public static SubjectCommandService.ChangeManager parseChangeManager(JsonNode body) {
+        requireAllowedFields(body, Set.of("managerId", "version"));
         return new SubjectCommandService.ChangeManager(
-                uuid(body, "managerId", true), version(body));
+                readUuid(body, "managerId", true), readVersion(body));
     }
 
-    public static SubjectStatusService.ChangeStatus status(JsonNode body) {
-        fields(body, Set.of("status", "version"));
+    public static SubjectStatusService.ChangeStatus parseChangeStatus(JsonNode body) {
+        requireAllowedFields(body, Set.of("status", "version"));
         SubjectStatus status;
         try {
-            status = SubjectStatus.valueOf(text(body, "status", true));
+            status = SubjectStatus.valueOf(readText(body, "status", true));
         } catch (IllegalArgumentException invalid) {
-            throw invalid("status", "Trạng thái phải là ACTIVE hoặc ARCHIVED");
+            throw createInvalidRequest("status", "Trạng thái phải là ACTIVE hoặc ARCHIVED");
         }
-        return new SubjectStatusService.ChangeStatus(status, version(body));
+        return new SubjectStatusService.ChangeStatus(status, readVersion(body));
     }
 
-    public static void query(MultiValueMap<String, String> params) {
+    public static void validateListQuery(MultiValueMap<String, String> params) {
         if (!Set.of("q", "status", "page", "size").containsAll(params.keySet())
                 || params.values().stream().anyMatch(values -> values.size() != 1)) {
-            throw invalid("query", "Chỉ nhận q, status, page, size, mỗi trường một giá trị");
+            throw createInvalidRequest(
+                    "query", "Chỉ nhận q, status, page, size, mỗi trường một giá trị");
         }
         String query = params.getFirst("q");
         if (query != null && query.length() > 200) {
-            throw invalid("q", "Từ khóa tối đa 200 ký tự");
+            throw createInvalidRequest("q", "Từ khóa tối đa 200 ký tự");
         }
     }
 
-    private static void fields(JsonNode body, Set<String> allowed) {
+    private static void requireAllowedFields(JsonNode body, Set<String> allowed) {
         if (body == null || !body.isObject()) {
-            throw invalid("body", "Cần một JSON object");
+            throw createInvalidRequest("body", "Cần một JSON object");
         }
         var names = body.fieldNames();
         while (names.hasNext()) {
             if (!allowed.contains(names.next())) {
-                throw invalid("body", "Có trường không được phép trong yêu cầu");
+                throw createInvalidRequest("body", "Có trường không được phép trong yêu cầu");
             }
         }
     }
 
-    private static JsonNode require(JsonNode body, String field) {
+    private static JsonNode requireField(JsonNode body, String field) {
         if (!body.has(field)) {
-            throw invalid(field, "Thiếu trường bắt buộc");
+            throw createInvalidRequest(field, "Thiếu trường bắt buộc");
         }
         return body.get(field);
     }
 
-    private static String text(JsonNode body, String field, boolean required) {
-        JsonNode value = required ? require(body, field) : body.get(field);
+    private static String readText(JsonNode body, String field, boolean required) {
+        JsonNode value = required ? requireField(body, field) : body.get(field);
         if (value == null || value.isNull()) {
-            if (required) throw invalid(field, "Cần chuỗi ký tự");
+            if (required) throw createInvalidRequest(field, "Cần chuỗi ký tự");
             return null;
         }
-        if (!value.isTextual()) throw invalid(field, "Cần chuỗi ký tự");
+        if (!value.isTextual()) throw createInvalidRequest(field, "Cần chuỗi ký tự");
         return value.textValue();
     }
 
-    private static UUID uuid(JsonNode body, String field, boolean required) {
-        if (required) require(body, field);
-        String value = text(body, field, false);
+    private static UUID readUuid(JsonNode body, String field, boolean required) {
+        if (required) requireField(body, field);
+        String value = readText(body, field, false);
         if (value == null) return null;
         try {
             UUID parsed = UUID.fromString(value);
             if (!parsed.toString().equalsIgnoreCase(value)) throw new IllegalArgumentException();
             return parsed;
         } catch (IllegalArgumentException invalid) {
-            throw invalid(field, "Cần UUID hợp lệ hoặc null");
+            throw createInvalidRequest(field, "Cần UUID hợp lệ hoặc null");
         }
     }
 
-    private static long version(JsonNode body) {
-        JsonNode value = require(body, "version");
+    private static long readVersion(JsonNode body) {
+        JsonNode value = requireField(body, "version");
         if (!value.isIntegralNumber() || !value.canConvertToLong() || value.longValue() < 1) {
-            throw invalid("version", "Cần version là số nguyên từ 1");
+            throw createInvalidRequest("version", "Cần version là số nguyên từ 1");
         }
         return value.longValue();
     }
 
-    private static InvalidRequest invalid(String field, String message) {
+    private static InvalidRequest createInvalidRequest(String field, String message) {
         return new InvalidRequest(field, message);
     }
 

@@ -20,15 +20,16 @@ import org.junit.jupiter.api.Test;
 
 class SubjectQueryServiceTest {
 
-    private final ISubjectRepository repository = mock(ISubjectRepository.class);
-    private final SubjectQueryService service = new SubjectQueryService(repository);
+    private final ISubjectRepository subjectRepository = mock(ISubjectRepository.class);
+    private final SubjectQueryService subjectQueryService =
+            new SubjectQueryService(subjectRepository);
     private static final Instant NOW = Instant.parse("2026-10-18T00:00:00Z");
 
     @Test
     void returnsContractFieldsWithDescriptionAndMissingSubjectIsEmpty() {
         UUID id = UUID.randomUUID();
         UUID manager = UUID.randomUUID();
-        when(repository.findById(id))
+        when(subjectRepository.findById(id))
                 .thenReturn(
                         Optional.of(
                                 Subject.create(
@@ -38,7 +39,7 @@ class SubjectQueryServiceTest {
                                         "Course description",
                                         manager,
                                         NOW)));
-        assertThat(service.getSubject(id))
+        assertThat(subjectQueryService.getSubject(id))
                 .contains(
                         new SubjectRef(
                                 id,
@@ -48,19 +49,19 @@ class SubjectQueryServiceTest {
                                 manager,
                                 "Course description"));
         UUID missing = UUID.randomUUID();
-        when(repository.findById(missing)).thenReturn(Optional.empty());
-        assertThat(service.getSubject(missing)).isEmpty();
-        assertThat(service.isActive(missing)).isFalse();
+        when(subjectRepository.findById(missing)).thenReturn(Optional.empty());
+        assertThat(subjectQueryService.getSubject(missing)).isEmpty();
+        assertThat(subjectQueryService.isActive(missing)).isFalse();
     }
 
     @Test
     void activeCheckReadsAgainAndDoesNotTreatArchivedAsActive() {
         UUID id = UUID.randomUUID();
         Subject active = Subject.create(id, "SWR302", "Requirements", null, null, NOW);
-        when(repository.findById(id))
+        when(subjectRepository.findById(id))
                 .thenReturn(Optional.of(active), Optional.of(active.archive(NOW)));
-        assertThat(service.isActive(id)).isTrue();
-        assertThat(service.isActive(id)).isFalse();
+        assertThat(subjectQueryService.isActive(id)).isTrue();
+        assertThat(subjectQueryService.isActive(id)).isFalse();
     }
 
     @Test
@@ -68,8 +69,8 @@ class SubjectQueryServiceTest {
         UUID manager = UUID.randomUUID();
         Subject managed =
                 Subject.create(UUID.randomUUID(), "SWR302", "Requirements", null, manager, NOW);
-        when(repository.findManagedBy(manager)).thenReturn(List.of(managed));
-        assertThat(service.listManagedSubjects(manager))
+        when(subjectRepository.findSubjectsManagedBy(manager)).thenReturn(List.of(managed));
+        assertThat(subjectQueryService.listManagedSubjects(manager))
                 .containsExactly(
                         new SubjectRef(
                                 managed.id(),
@@ -78,33 +79,35 @@ class SubjectQueryServiceTest {
                                 SubjectStatus.ACTIVE,
                                 manager));
         Subject unassigned = Subject.create(UUID.randomUUID(), "SWR303", "Other", null, null, NOW);
-        when(repository.findById(unassigned.id())).thenReturn(Optional.of(unassigned));
-        assertThat(service.getSubject(unassigned.id()).orElseThrow().managerId()).isNull();
+        when(subjectRepository.findById(unassigned.id())).thenReturn(Optional.of(unassigned));
+        assertThat(
+                subjectQueryService.getSubject(unassigned.id()).orElseThrow().managerId()).isNull();
     }
 
     @Test
     void countsUseTheWholeRepositoryWithoutStatusOrSearchFilter() {
         Map<SubjectStatus, Long> counts =
                 Map.of(SubjectStatus.ACTIVE, 0L, SubjectStatus.ARCHIVED, 2L);
-        when(repository.countByStatus(null)).thenReturn(counts);
-        assertThat(service.countSubjectsByStatus()).containsExactlyInAnyOrderEntriesOf(counts);
-        verify(repository).countByStatus(null);
+        when(subjectRepository.countSubjectsByStatus(null)).thenReturn(counts);
+        assertThat(subjectQueryService.countSubjectsByStatus())
+                .containsExactlyInAnyOrderEntriesOf(counts);
+        verify(subjectRepository).countSubjectsByStatus(null);
     }
 
     @Test
     void nullIdsDoNotBecomeQueriesForUnassignedSubjects() {
-        assertThat(service.getSubject(null)).isEmpty();
-        assertThat(service.isActive(null)).isFalse();
-        assertThat(service.listManagedSubjects(null)).isEmpty();
-        verifyNoInteractions(repository);
+        assertThat(subjectQueryService.getSubject(null)).isEmpty();
+        assertThat(subjectQueryService.isActive(null)).isFalse();
+        assertThat(subjectQueryService.listManagedSubjects(null)).isEmpty();
+        verifyNoInteractions(subjectRepository);
     }
 
     @Test
     void databaseFailureIsNotReturnedAsFabricatedMissingOrActiveData() {
         UUID id = UUID.randomUUID();
         IllegalStateException failure = new IllegalStateException("database unavailable");
-        when(repository.findById(id)).thenThrow(failure);
-        assertThatThrownBy(() -> service.getSubject(id)).isSameAs(failure);
-        assertThatThrownBy(() -> service.isActive(id)).isSameAs(failure);
+        when(subjectRepository.findById(id)).thenThrow(failure);
+        assertThatThrownBy(() -> subjectQueryService.getSubject(id)).isSameAs(failure);
+        assertThatThrownBy(() -> subjectQueryService.isActive(id)).isSameAs(failure);
     }
 }

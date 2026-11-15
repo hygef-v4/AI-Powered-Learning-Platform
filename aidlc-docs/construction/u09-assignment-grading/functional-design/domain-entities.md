@@ -46,6 +46,7 @@ U09 không sở hữu: bài nộp (U08, U12), bài và rubric (U07), lượt Qui
 | `adjustment`, `adjustmentReason` | số, chuỗi | Tùy chọn; có điều chỉnh thì bắt buộc lý do |
 | `score` | số (6,2) | 0 ≤ `score` ≤ `maxScore` |
 | `feedback` | chuỗi ≤ 10.000 | |
+| `contributionLevel` | enum tùy chọn | Mức đóng góp do giảng viên chọn cho bản MEMBER, độc lập với điểm |
 | `status` | enum | `PENDING`, `DRAFT`, `FINALIZED`, `PUBLISHED`, `SUPERSEDED` |
 | `gradedBy`, `gradedAt`, `publishedAt` | | |
 | `history` | danh sách `EvaluationHistory` | Người sửa, thời điểm, trước, sau, lý do |
@@ -56,15 +57,17 @@ stateDiagram-v2
     [*] --> PENDING: Bài GRADED được nộp
     PENDING --> DRAFT: Giảng viên lưu điểm
     DRAFT --> DRAFT: Lưu lại
-    DRAFT --> FINALIZED: Chốt
-    FINALIZED --> PUBLISHED: Công bố
-    PENDING --> SUPERSEDED: Có lượt nộp mới
-    DRAFT --> SUPERSEDED: Có lượt nộp mới
+    DRAFT --> PUBLISHED: Công bố
+    FINALIZED --> PUBLISHED: Công bố bản cũ
+    FINALIZED --> DRAFT: Lưu lại bản cũ
+    PUBLISHED --> PUBLISHED: Lưu sửa
+    PENDING --> SUPERSEDED: Cá nhân nộp lại
+    DRAFT --> SUPERSEDED: Cá nhân nộp lại
     FINALIZED --> SUPERSEDED: Cá nhân nộp lại
     PUBLISHED --> SUPERSEDED: Cá nhân nộp lại
 ```
 
-**Text alternative (quyết định mới nhất 2026-11-02)**: Sau chốt không sửa được nội dung chấm; công bố đổi FINALIZED thành PUBLISHED. Nộp lại làm điểm trước mất hiệu lực: cá nhân chuyển đánh giá cũ thành SUPERSEDED kể cả đã công bố, tạo PENDING cho lượt mới; nhóm dùng lại root/member, xóa điểm và dữ liệu review hiện hành, trở về PENDING. Lịch sử/audit vẫn chỉ đọc; không lưu các lượt chấm nhóm song song, không đổi schema DB.
+**Luồng trạng thái.** Giảng viên lưu DRAFT rồi công bố trực tiếp, hoặc công bố bản FINALIZED cũ. Sửa điểm của bài nộp hiện hành khi lớp OPEN thì bản PUBLISHED vẫn giữ trạng thái. Cá nhân nộp lại tạo PENDING cho lượt mới và chuyển bản chấm cũ sang SUPERSEDED. Khi nhóm nộp lại, giữ điểm và mức đóng góp đã công bố, kể cả dữ liệu FINALIZED cũ. Chỉ bản chưa chính thức được đặt lại theo BR-U09-50.
 
 ## 3. `GradingProposal`
 

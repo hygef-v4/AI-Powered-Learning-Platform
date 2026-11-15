@@ -11,14 +11,14 @@ export function EmailPreferencePanel() {
   useEffect(() => {
     const controller = new AbortController();
     void notificationsApi
-      .preferences(controller.signal)
+      .loadPreferences(controller.signal)
       .then(setValues)
       .catch(() => {
         if (!controller.signal.aborted) setError("Không thể tải tùy chọn email.");
       });
     return () => controller.abort();
   }, [revision]);
-  async function toggle(type: string) {
+  async function handleToggle(type: string) {
     if (!values || type in pending || type === "BACKUP_FAILED") return;
     const value = !values[type];
     setPending((previous) => ({ ...previous, [type]: value }));
@@ -74,7 +74,7 @@ export function EmailPreferencePanel() {
                 aria-busy={type in pending || undefined}
                 disabled={type in pending || type === "BACKUP_FAILED"}
                 className={styles.switch}
-                onClick={() => void toggle(type)}
+                onClick={() => void handleToggle(type)}
               />
             </div>
           ))}

@@ -174,7 +174,8 @@ public class AssignmentCopyService {
             List<AssignmentViews.Row> rows = assignments.listOfClass(classId).stream()
                     .map(a -> support.row(a, true)).toList();
             if (!rows.isEmpty()) {
-                sources.add(new AssignmentViews.CopySource(classId, ref.code(), ref.name(), ref.status(), rows));
+                sources.add(new AssignmentViews.CopySource(classId, ref.code(), ref.name(), ref.status(), rows,
+                        "CLASS", ref.term()));
             }
         }
         return sources;

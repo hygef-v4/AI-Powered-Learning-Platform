@@ -16,7 +16,7 @@ U14 handles learning/important announcement/backup failure recipients, preferenc
 
 ## AI transparency
 
-U06 owns API/MCP/task/quota/usage. Measured/estimated/externally reported/unavailable provenance kept separate; unknown is not zero. Shared educator quota never auto-falls back to personal. Student personal API/MCP supports submitted-own Practice; Admin MCP removed. Admin institutional-key reveal and owner MCP-token reveal are explicit code-derived exceptions recorded in the decision register.
+U06 owns API/MCP/task/quota/usage. Measured/estimated/externally reported/unavailable provenance kept separate; unknown is not zero. Shared educator quota never auto-falls back to personal. Student personal API/MCP supports submitted-own Practice; Admin MCP removed. Provider API keys are write-only under D15. An eligible owner can view their MCP token when decryption is available. See the [decision register](../reverse-engineering/decision-register.md).
 
 ## Decisions and mapping
 

@@ -47,6 +47,10 @@ for (const part of detail.data.parts || []) {
   if (put.status >= 300) console.log("rubric", part.title, brief(put));
 }
 detail = await T.get(`/api/v1/assignments/${AID}`);
+// Bài phải được Hoàn tất trước khi xếp lịch (từ 2026-11-11), nếu không phát hành trả ASSIGNMENT_NOT_FINALIZED.
+const reviewed = await T.post(`/api/v1/assignments/${AID}/review`, { version: detail.data.version });
+check(R, "U12-22 hoàn tất bài nhóm", reviewed.status === 200, brief(reviewed));
+detail = await T.get(`/api/v1/assignments/${AID}`);
 const closesAt = new Date(Date.now() + 3 * 60 * 1000).toISOString();
 let pub = await T.post(`/api/v1/assignments/${AID}/publish`, { version: detail.data.version, openNow: true, closesAt, maxAttempts: 3, confirmUngroupedStudents: false });
 check(R, "U12-05 sinh viên chưa có nhóm là cảnh báo cần xác nhận", pub.status === 409 && pub.data?.code === "GROUP_CONFIRMATION_REQUIRED", brief(pub));

@@ -20,12 +20,12 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
      */
     @Override
     public List<CourseClass> listForManager(Collection<UUID> subjectIds, String query,
-            ClassStatus status, int limit, int offset) {
+            ClassStatus status, String term, int limit, int offset) {
         PersistenceChecks.validatePage(limit, offset);
         if (subjectIds.isEmpty())
             return List.of();
         return validatePage("c.subject_id in (:subjectIds)",
-                Map.of("subjectIds", List.copyOf(subjectIds)), query, status, limit, offset);
+                Map.of("subjectIds", List.copyOf(subjectIds)), query, status, term, limit, offset);
     }
 
     /**
@@ -33,9 +33,9 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
      */
     @Override
     public List<CourseClass> listForTeacher(UUID accountId, String query, ClassStatus status,
-            int limit, int offset) {
+            String term, int limit, int offset) {
         return validatePage("c.teacher_id = :accountId", Map.of("accountId", accountId), query,
-                status, limit, offset);
+                status, term, limit, offset);
     }
 
     /**
@@ -43,20 +43,20 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
      */
     @Override
     public List<CourseClass> listForStudent(UUID accountId, String query, ClassStatus status,
-            int limit, int offset) {
+            String term, int limit, int offset) {
         return validatePage(
                 """
                         c.status in ('OPEN', 'ARCHIVED') and exists
                           (select 1 from enrollments e where e.class_id = c.id and e.account_id = :accountId and e.status = 'ACTIVE')
                         """,
-                Map.of("accountId", accountId), query, status, limit, offset);
+                Map.of("accountId", accountId), query, status, term, limit, offset);
     }
 
     /**
      * Executes a paginated SQL query for classes under a given scope condition with keyword filtering.
      */
     private List<CourseClass> validatePage(String scope, Map<String, Object> scopeArgs,
-            String query, ClassStatus status, int limit, int offset) {
+            String query, ClassStatus status, String term, int limit, int offset) {
         PersistenceChecks.validatePage(limit, offset);
         var args = new HashMap<>(scopeArgs);
         args.put("limit", limit);
@@ -65,6 +65,10 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
         if (status != null) {
             filter += " and c.status = :status";
             args.put("status", status.name());
+        }
+        if (term != null) {
+            filter += " and c.term = :term";
+            args.put("term", term);
         }
         if (query != null && !query.isBlank()) {
             if (query.length() > 200)
@@ -76,7 +80,7 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
         }
         return namedParameterJdbcTemplate.query(
                 "select c.* from course_classes c where " + scope + filter
-                        + " order by c.code, c.id limit :limit offset :offset",
+                        + " order by c.code, c.starts_on desc, c.id limit :limit offset :offset",
                 args, CourseClassRepository::mapCourseClass);
     }
 
@@ -86,7 +90,7 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
     @Override
     public List<CourseClass> listTaught(UUID accountId) {
         return namedParameterJdbcTemplate.query(
-                "select c.* from course_classes c where c.teacher_id = :accountId order by c.code,c.id",
+                "select c.* from course_classes c where c.teacher_id = :accountId order by c.code, c.starts_on desc, c.id",
                 Map.of("accountId", accountId), CourseClassRepository::mapCourseClass);
     }
 
@@ -96,7 +100,7 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
     @Override
     public List<CourseClass> listOfSubject(UUID subjectId) {
         return namedParameterJdbcTemplate.query(
-                "select c.* from course_classes c where c.subject_id = :subjectId order by c.code,c.id",
+                "select c.* from course_classes c where c.subject_id = :subjectId order by c.code, c.starts_on desc, c.id",
                 Map.of("subjectId", subjectId), CourseClassRepository::mapCourseClass);
     }
 

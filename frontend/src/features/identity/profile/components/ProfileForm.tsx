@@ -31,6 +31,7 @@ export function ProfileForm({
   const phoneId = useId();
   const emailId = useId();
   const roleId = useId();
+  const studentCodeId = useId();
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [phoneNumber, setPhoneNumber] = useState(profile.phoneNumber ?? "");
   const [saving, setSaving] = useState(false);
@@ -109,6 +110,12 @@ export function ProfileForm({
           <Field label="Vai trò" htmlFor={roleId}>
             <LockedInput id={roleId} value={ROLE_LABELS[profile.role]} />
           </Field>
+          {profile.role === "STUDENT" && (
+            // BR-U01-106: sinh viên chỉ xem MSSV, không sửa được.
+            <Field label="Mã số sinh viên" htmlFor={studentCodeId}>
+              <LockedInput id={studentCodeId} value={profile.studentCode ?? "Chưa có MSSV"} />
+            </Field>
+          )}
         </div>
 
         {message && (

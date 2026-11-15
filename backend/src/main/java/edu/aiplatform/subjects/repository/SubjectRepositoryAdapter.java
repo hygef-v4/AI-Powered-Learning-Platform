@@ -23,23 +23,24 @@ import org.springframework.transaction.annotation.Propagation;
 @Transactional(readOnly = true)
 public class SubjectRepositoryAdapter implements ISubjectRepository {
 
-    private final ISubjectJpaRepository rows;
+    private final ISubjectJpaRepository subjectJpaRepository;
     private final EntityManager entityManager;
 
-    public SubjectRepositoryAdapter(ISubjectJpaRepository rows, EntityManager entityManager) {
-        this.rows = rows;
+    public SubjectRepositoryAdapter(
+            ISubjectJpaRepository subjectJpaRepository, EntityManager entityManager) {
+        this.subjectJpaRepository = subjectJpaRepository;
         this.entityManager = entityManager;
     }
 
     @Override
     public Optional<Subject> findById(UUID subjectId) {
-        return rows.findById(subjectId).map(this::snapshot);
+        return subjectJpaRepository.findById(subjectId).map(this::mapToSubject);
     }
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public Optional<Subject> findByIdForUpdate(UUID subjectId) {
-        return rows.findByIdForUpdate(subjectId).map(this::snapshot);
+        return subjectJpaRepository.findByIdForUpdate(subjectId).map(this::mapToSubject);
     }
 
     @Override
@@ -81,7 +82,8 @@ public class SubjectRepositoryAdapter implements ISubjectRepository {
                 (oldStatement > 0 ? Math.min(oldStatement, millis) : millis) + "ms");
         // Khi query lỗi PostgreSQL transaction có thể đã aborted; không chạy SQL restore che lỗi
         // gốc.
-        Optional<Subject> result = rows.findByIdForUpdate(subjectId).map(this::snapshot);
+        Optional<Subject> result =
+                subjectJpaRepository.findByIdForUpdate(subjectId).map(this::mapToSubject);
         setTimeouts(previous[1].toString(), previous[2].toString());
         return result;
     }
@@ -96,54 +98,61 @@ public class SubjectRepositoryAdapter implements ISubjectRepository {
     }
 
     @Override
-    public boolean existsByCode(SubjectCode code) {
-        return rows.existsByCode(code.value());
+    public boolean hasSubjectWithCode(SubjectCode code) {
+        return subjectJpaRepository.existsByCode(code.value());
     }
 
     @Override
     public boolean isManagedBy(UUID accountId, UUID subjectId) {
         Objects.requireNonNull(accountId, "accountId");
         Objects.requireNonNull(subjectId, "subjectId");
-        return rows.existsByIdAndManagerId(subjectId, accountId);
+        return subjectJpaRepository.existsByIdAndManagerId(subjectId, accountId);
     }
 
     @Override
-    public List<Subject> findPage(String query, SubjectStatus status, int page, int size) {
+    public List<Subject> findSubjectPage(String query, SubjectStatus status, int page, int size) {
         if (page < 0 || size < 1 || size > 100) {
             throw ApiException.badRequest(
                     "SUBJECT_PAGE_INVALID", "Trang phải từ 0, số dòng mỗi trang từ 1 đến 100");
         }
-        return rows
-                .findPage(pattern(query), status, PageRequest.of(page, size, Sort.by("code")))
+        return subjectJpaRepository
+                .findSubjectPage(
+                        buildLikePattern(query),
+                        status,
+                        PageRequest.of(page, size, Sort.by("code")))
                 .stream()
-                .map(this::snapshot)
+                .map(this::mapToSubject)
                 .toList();
     }
 
     @Override
-    public long count(String query, SubjectStatus status) {
-        return rows.countMatching(pattern(query), status);
+    public long countSubjects(String query, SubjectStatus status) {
+        return subjectJpaRepository.countMatching(buildLikePattern(query), status);
     }
 
     @Override
-    public Map<SubjectStatus, Long> countByStatus(String query) {
+    public Map<SubjectStatus, Long> countSubjectsByStatus(String query) {
         Map<SubjectStatus, Long> counts = new EnumMap<>(SubjectStatus.class);
         for (SubjectStatus status : SubjectStatus.values()) {
-            counts.put(status, count(query, status));
+            counts.put(status, countSubjects(query, status));
         }
         return Map.copyOf(counts);
     }
 
     @Override
-    public List<Subject> findManagedBy(UUID accountId) {
+    public List<Subject> findSubjectsManagedBy(UUID accountId) {
         Objects.requireNonNull(accountId, "accountId");
-        return rows.findByManagerIdOrderByCodeAsc(accountId).stream().map(this::snapshot).toList();
+        return subjectJpaRepository
+                .findByManagerIdOrderByCodeAsc(accountId)
+                .stream()
+                .map(this::mapToSubject)
+                .toList();
     }
 
     @Override
     @Transactional
-    public void insert(Subject subject) {
-        SubjectJpaEntity row = SubjectJpaEntity.forInsert(subject);
+    public void insertSubject(Subject subject) {
+        SubjectJpaEntity row = SubjectJpaEntity.createFrom(subject);
         entityManager.persist(row);
         entityManager.flush();
         entityManager.detach(row);
@@ -151,12 +160,12 @@ public class SubjectRepositoryAdapter implements ISubjectRepository {
 
     @Override
     @Transactional
-    public boolean update(Subject subject, long expectedVersion) {
+    public boolean updateSubject(Subject subject, long expectedVersion) {
         if (expectedVersion < 1 || subject.version() != Math.addExact(expectedVersion, 1)) {
             throw new IllegalArgumentException(
                     "Snapshot cập nhật phải có public version bằng expectedVersion + 1");
         }
-        return rows.updateSnapshot(
+        return subjectJpaRepository.updateSnapshot(
                         subject.id(),
                         subject.code().value(),
                         subject.name(),
@@ -169,8 +178,8 @@ public class SubjectRepositoryAdapter implements ISubjectRepository {
                 == 1;
     }
 
-    private Subject snapshot(SubjectJpaEntity row) {
-        Subject subject = row.toDomain();
+    private Subject mapToSubject(SubjectJpaEntity row) {
+        Subject subject = row.mapToSubject();
         // Bulk UPDATE phía trên không đồng bộ managed entity. Detach chỉ row này để lần đọc sau lấy
         // DB mới,
         // không clear/detach dữ liệu unit khác trong transaction dùng chung (ví dụ disable
@@ -179,7 +188,7 @@ public class SubjectRepositoryAdapter implements ISubjectRepository {
         return subject;
     }
 
-    private static String pattern(String query) {
+    private static String buildLikePattern(String query) {
         String literal = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
         return "%" + literal.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
     }

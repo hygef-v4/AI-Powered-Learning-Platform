@@ -65,11 +65,12 @@ public class AcademicsService {
      * Lists course classes filtered by audience perspective (student, teacher, manager), query, and status.
      */
     public List<ClassView> listClasses(Actor actor, String audience, UUID subjectId, String query,
-            ClassStatus status, int page, int size) {
+            ClassStatus status, String term, int page, int size) {
         return executeGuarded(actor, "CLASS_LIST", null, () -> {
             requireAudience(actor, audience);
             validatePage(page, size);
             validateQuery(query);
+            String termFilter = ClassTermPolicy.parseFilter(term);
             List<CourseClass> values;
             int offset = (page - 1) * size;
             if (audience.equals("manager")) {
@@ -79,13 +80,14 @@ public class AcademicsService {
                     ids = List.of(subjectId);
                 }
                 values = ids.isEmpty() ? List.of()
-                        : academicsReadRepository.listForManager(ids, query, status, size, offset);
+                        : academicsReadRepository.listForManager(ids, query, status, termFilter,
+                                size, offset);
             } else if (audience.equals("teacher"))
                 values = academicsReadRepository.listForTeacher(actor.accountId(), query, status,
-                        size, offset);
+                        termFilter, size, offset);
             else
                 values = academicsReadRepository.listForStudent(actor.accountId(), query, status,
-                        size, offset);
+                        termFilter, size, offset);
             return mapClassViews(values);
         });
     }
@@ -174,9 +176,9 @@ public class AcademicsService {
             requireAudience(actor, "manager");
             requireClassAccess(actor, "manager", id);
             validateQuery(query);
-            return accountLookup.findStudents(query, 20).stream()
+            return accountLookup.findStudents(query, 200).stream()
                     .filter(a -> a.role() == Role.STUDENT && a.status() != AccountStatus.DISABLED)
-                    .limit(20).map(this::mapPerson).toList();
+                    .limit(200).map(this::mapPerson).toList();
         });
     }
 
@@ -184,16 +186,17 @@ public class AcademicsService {
      * Creates a new class within a subject managed by the caller.
      */
     public ClassView createClass(Actor actor, UUID subjectId, String code, String name,
-            String description, UUID teacherId) {
+            String description, LocalDate startsOn, UUID teacherId) {
         return executeCommand(actor, "CLASS_CREATED", subjectId, () -> {
             requireAudience(actor, "manager");
             requireManager(actor, subjectId);
+            ClassTermPolicy.requireValidStart(startsOn);
             // Khóa tài khoản giảng viên trước dòng môn: U01 vô hiệu hóa tài khoản khóa tài khoản rồi mới tới môn.
             requireTeacher(teacherId);
             subjectMutationGuard.lockActive(subjectId, SUBJECT_LOCK_WAIT);
             requireManager(actor, subjectId);
             CourseClass value = CourseClass.createClass(UUID.randomUUID(), subjectId, code, name,
-                    description, teacherId, clock.instant());
+                    description, startsOn, teacherId, clock.instant());
             courseClassRepository.insert(value);
             recordSuccess(actor, "CLASS_CREATED", value.id(), Map.of());
             if (teacherId != null)
@@ -204,13 +207,14 @@ public class AcademicsService {
     }
 
     /**
-     * Updates the class name and description after checking the expected version.
+     * Updates the class name, description and start date after checking the expected version.
      */
     public ClassView updateClassInfo(Actor actor, UUID id, String name, String description,
-            long version) {
+            LocalDate startsOn, long version) {
         return executeCommand(actor, "CLASS_UPDATED", id, () -> {
             CourseClass current = loadLockedClass(actor, id, version);
-            CourseClass changed = current.updateInfo(name, description, clock.instant());
+            CourseClass changed = current.updateInfo(name, description, startsOn,
+                    clock.instant());
             courseClassRepository.update(changed, version);
             recordSuccess(actor, "CLASS_UPDATED", id, Map.of());
             return mapClassView(changed);
@@ -302,17 +306,26 @@ public class AcademicsService {
             requireAudience(actor, "manager");
             requireEditableClass(requireClassAccess(actor, "manager", id));
             var rows = EnrollmentListParser.parseEnrollmentRows(text);
-            var emails = rows.stream().filter(r -> r.error() == null)
+            var emails = rows.stream().filter(r -> r.error() == null && r.email() != null)
                     .map(EnrollmentListParser.Row::email).toList();
+            var studentCodes = rows.stream().filter(r -> r.error() == null && r.studentCode() != null)
+                    .map(EnrollmentListParser.Row::studentCode).toList();
             Map<String, AccountContact> found = accountLookup.findByEmails(emails).stream()
                     .collect(Collectors.toMap(a -> a.email().toLowerCase(Locale.ROOT),
                             Function.identity(), (a, b) -> a));
+            // BR-U05-57: MSSV chỉ tìm thấy tài khoản STUDENT; không thấy thì NOT_FOUND như email.
+            Map<String, AccountContact> foundByCode = studentCodes.isEmpty() ? Map.of()
+                    : accountLookup.findByStudentCodes(studentCodes).stream()
+                            .filter(a -> a.studentCode() != null)
+                            .collect(Collectors.toMap(AccountContact::studentCode,
+                                    Function.identity(), (a, b) -> a));
             var results = new ArrayList<RowResult>();
             for (var row : rows) {
                 EnrollmentResult result = row.error();
                 if (result == null)
                     result = lineTransactionTemplate.execute(tx -> {
-                        AccountContact resolved = found.get(row.email());
+                        AccountContact resolved = row.email() != null ? found.get(row.email())
+                                : foundByCode.get(row.studentCode());
                         // Khóa tài khoản trước môn như U01: mỗi dòng dùng role/trạng thái hiện tại tới lúc commit.
                         AccountContact account = resolved == null ? null
                                 : accountLookup.lockContact(resolved.accountId()).orElse(null);
@@ -320,7 +333,7 @@ public class AcademicsService {
                         requireEditableClass(current);
                         return enrollLine(actor, current, account, EnrollmentSource.LIST);
                     });
-                results.add(new RowResult(row.lineNumber(), row.email(), result));
+                results.add(new RowResult(row.lineNumber(), row.identifier(), result));
             }
             return List.copyOf(results);
         });
@@ -530,7 +543,8 @@ public class AcademicsService {
         return new ClassView(courseClass.id(),
                 new Subject(subject.subjectId(), subject.code(), subject.name()),
                 courseClass.code(), courseClass.name(),
-                Objects.requireNonNullElse(courseClass.description(), ""), courseClass.status(), teacher,
+                Objects.requireNonNullElse(courseClass.description(), ""), courseClass.startsOn(),
+                courseClass.term(), courseClass.status(), teacher,
                 counts.active(), counts.removed(), courseClass.createdAt(),
                 courseClass.showGradeDistribution(), courseClass.version());
     }
@@ -549,11 +563,12 @@ public class AcademicsService {
         var account = accountLookup.getContact(enrollment.accountId()).orElseThrow(
                 () -> ApiException.unavailable("ACCOUNT_UNAVAILABLE", "Không đọc được sinh viên"));
         return new Student(enrollment.accountId(), account.displayName(), account.email(),
-                enrollment.enrolledAt(), enrollment.status());
+                enrollment.enrolledAt(), enrollment.status(), account.studentCode());
     }
 
     private Person mapPerson(AccountContact account) {
-        return new Person(account.accountId(), account.displayName(), account.email());
+        return new Person(account.accountId(), account.displayName(), account.email(),
+                account.studentCode());
     }
 
     private Map<String, Object> buildTeacherDetails(UUID before, UUID after) {

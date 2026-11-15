@@ -30,7 +30,7 @@ public class SubjectAuditRecorder {
      * U02 vẫn phải ghi DENIED bằng transaction riêng theo IAudit, kể cả caller không có transaction.
      */
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void accessDenied(
+    public void recordAccessDenied(
             Actor actor, String attemptedAction, ResourceRef resource, String reason, Instant at) {
         audit.record(
                 new AuditEvent(
@@ -49,14 +49,14 @@ public class SubjectAuditRecorder {
                         at));
     }
 
-    public void created(Actor actor, Subject subject) {
+    public void recordCreated(Actor actor, Subject subject) {
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("code", subject.code().value());
         details.put("managerId", subject.managerId());
-        record(actor, "SUBJECT_CREATED", subject, details, subject.createdAt());
+        recordEvent(actor, "SUBJECT_CREATED", subject, details, subject.createdAt());
     }
 
-    public void informationUpdated(Actor actor, Subject before, Subject after) {
+    public void recordInformationUpdated(Actor actor, Subject before, Subject after) {
         List<String> fields = new java.util.ArrayList<>();
         if (!before.name().equals(after.name())) {
             fields.add("name");
@@ -64,7 +64,7 @@ public class SubjectAuditRecorder {
         if (!java.util.Objects.equals(before.description(), after.description())) {
             fields.add("description");
         }
-        record(
+        recordEvent(
                 actor,
                 "SUBJECT_UPDATED",
                 after,
@@ -72,15 +72,15 @@ public class SubjectAuditRecorder {
                 after.updatedAt());
     }
 
-    public void managerChanged(Actor actor, Subject before, Subject after) {
+    public void recordManagerChanged(Actor actor, Subject before, Subject after) {
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("oldManagerId", before.managerId());
         details.put("newManagerId", after.managerId());
-        record(actor, "SUBJECT_MANAGER_CHANGED", after, details, after.updatedAt());
+        recordEvent(actor, "SUBJECT_MANAGER_CHANGED", after, details, after.updatedAt());
     }
 
-    public void statusChanged(Actor actor, Subject before, Subject after) {
-        record(
+    public void recordStatusChanged(Actor actor, Subject before, Subject after) {
+        recordEvent(
                 actor,
                 after.status() == edu.aiplatform.subjects.contract.SubjectStatus.ARCHIVED
                         ? "SUBJECT_ARCHIVED"
@@ -90,7 +90,7 @@ public class SubjectAuditRecorder {
                 after.updatedAt());
     }
 
-    private void record(
+    private void recordEvent(
             Actor actor, String action, Subject subject, Map<String, Object> details, Instant at) {
         audit.record(
                 new AuditEvent(

@@ -10,14 +10,14 @@ export type CollapseArea = "board" | "nav";
 const EMPTY: ReadonlySet<string> = new Set();
 const cache = new Map<CollapseArea, ReadonlySet<string>>();
 const listeners = new Set<() => void>();
-const storageKey = (area: CollapseArea) => `material-modules-collapsed:${area}`;
+const buildStorageKey = (area: CollapseArea) => `material-modules-collapsed:${area}`;
 
-function read(area: CollapseArea): ReadonlySet<string> {
+function readCollapsed(area: CollapseArea): ReadonlySet<string> {
   const known = cache.get(area);
   if (known) return known;
   let value: ReadonlySet<string> = EMPTY;
   try {
-    const raw = sessionStorage.getItem(storageKey(area));
+    const raw = sessionStorage.getItem(buildStorageKey(area));
     if (raw) value = new Set(JSON.parse(raw) as string[]);
   } catch {
     /* trình duyệt chặn bộ nhớ thì mở hết */
@@ -26,17 +26,17 @@ function read(area: CollapseArea): ReadonlySet<string> {
   return value;
 }
 
-function write(area: CollapseArea, value: ReadonlySet<string>) {
+function writeCollapsed(area: CollapseArea, value: ReadonlySet<string>) {
   cache.set(area, value);
   try {
-    sessionStorage.setItem(storageKey(area), JSON.stringify([...value]));
+    sessionStorage.setItem(buildStorageKey(area), JSON.stringify([...value]));
   } catch {
     /* chỉ nhớ trong trang */
   }
   listeners.forEach((listener) => listener());
 }
 
-function subscribe(listener: () => void) {
+function subscribeCollapse(listener: () => void) {
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
@@ -46,16 +46,16 @@ function subscribe(listener: () => void) {
 /** Module nào đang thu gọn và hàm đóng / mở một module. */
 export function useModuleCollapse(area: CollapseArea) {
   const collapsed = useSyncExternalStore(
-    subscribe,
-    () => read(area),
+    subscribeCollapse,
+    () => readCollapsed(area),
     () => EMPTY,
   );
   const toggle = useCallback(
     (moduleId: string) => {
-      const next = new Set(read(area));
+      const next = new Set(readCollapsed(area));
       if (next.has(moduleId)) next.delete(moduleId);
       else next.add(moduleId);
-      write(area, next);
+      writeCollapsed(area, next);
     },
     [area],
   );

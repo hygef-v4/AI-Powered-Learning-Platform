@@ -96,8 +96,8 @@ class JdbcQuizAttemptRepositoryIntegrationTest {
                 + " 'PENDING', 'Sinh viên')").param("id", student).param("email", student + "@fpt.edu.vn").update();
         admin.sql("insert into subjects (id, code, name, status, created_at, updated_at) values (:id, 'SWT301',"
                 + " 'Kiểm thử', 'ACTIVE', now(), now())").param("id", subject).update();
-        admin.sql("insert into course_classes (id, subject_id, code, name, status, created_at, updated_at)"
-                + " values (:id, :subject, 'SE1801', 'Lớp', 'DRAFT', now(), now())")
+        admin.sql("insert into course_classes (id, subject_id, code, name, status, starts_on, created_at, updated_at)"
+                + " values (:id, :subject, 'SE1801', 'Lớp', 'DRAFT', DATE '2026-11-14', now(), now())")
                 .param("id", classId).param("subject", subject).update();
         admin.sql("insert into quizzes (id, scope, class_id, subject_id, title, settings, created_by, created_at,"
                         + " updated_at) values (:id, 'CLASS', :classId, :subject, 'Quiz', '{}'::jsonb, :author, now(), now())")
@@ -167,8 +167,8 @@ class JdbcQuizAttemptRepositoryIntegrationTest {
         QuizAttempt old = attempt(1, null);
         repository.insert(old);
         UUID newClass = UUID.randomUUID();
-        admin.sql("insert into course_classes (id, subject_id, code, name, status, created_at, updated_at)"
-                + " select :id, subject_id, 'RETAKE', 'Retake', 'OPEN', now(), now()"
+        admin.sql("insert into course_classes (id, subject_id, code, name, status, starts_on, created_at, updated_at)"
+                + " select :id, subject_id, 'RETAKE', 'Retake', 'OPEN', starts_on, now(), now()"
                 + " from course_classes where id = :old")
                 .param("id", newClass).param("old", classId).update();
         QuizAttempt fresh = QuizAttempt.start(quizId, newClass, student, 1, old.snapshot(), NOW);

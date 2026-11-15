@@ -1,6 +1,6 @@
 # User Stories — Inception revision 2026-10-13
 
-> Latest acceptance 2026-11-02, US-GRD-003/004 and US-GRP-006: FINALIZED/PUBLISHED rejects manual/AI/member edits even with a reason; FINALIZED can publish. Resubmission invalidates the old grade; individual evaluations become SUPERSEDED and group evaluations reset to PENDING. Keep audit/history, without parallel group snapshots or DB changes. [Decision](../requirements/2026-11-02-locked-grades.md).
+> US-GRD-003/005 and US-GRP-006 follow the [current grading rules](../../construction/u09-assignment-grading/functional-design/business-rules.md). A valid draft can be published directly. A correction of a published grade stays published.
 
 > Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime. D01–D04 đã chốt 2026-10-15.
 
@@ -264,23 +264,23 @@ Given bài published có attempt, When retire/version, Then bài và rubric cũ 
 
 Given bản mới, When cấu hình, Then giữ type ASSIGNMENT/QUIZ và cấu hình mode/diagram hợp lệ.
 
-### US-ASM-009 - Bài cấp môn
+### US-ASM-009 - Đề mẫu cấp môn
 
 **Primary unit**: U07; **Scope**: MVP.
 
 **Current UC trace**: UC 35. Source: [current UC table](../../../docs/usecase_table.md).
 
-**Story**: Là Subject Manager, tôi giao Assignment cá nhân cho các lớp OPEN theo lịch chung.
+**Story**: Là Chủ nhiệm môn, tôi soạn đề mẫu để giảng viên sao chép và giao cho lớp mình dạy.
 
 **Truy vết**: FR-027. Primary unit U07.
 
 #### Scenario 1
 
-Given R2, When publish, Then giao các lớp theo scope; không GROUP cấp môn.
+Given Chủ nhiệm môn được phân công, When lưu đề mẫu INDIVIDUAL hoặc GROUP, Then đề có thể được sao chép theo quyền. Yêu cầu phát hành trực tiếp đề cấp môn trả SUBJECT_TEMPLATE_NOT_PUBLISHABLE.
 
 #### Scenario 2
 
-Given từng lớp, When grade, Then chỉ Teacher/Subject Manager được giao dạy quyết định kết quả.
+Given giảng viên được giao dạy lớp cùng môn, When sao chép đề mẫu về lớp, Then giảng viên hoàn tất và phát hành bản của lớp theo lịch riêng.
 
 ### US-ASM-010 - Copy bài và rubric
 
@@ -627,7 +627,7 @@ Given sai format/stale, When nhận, Then reject không official grade; key cá 
 **Current UC trace**: UC 43; UC 44. Source: [current UC table](../../../docs/usecase_table.md).
 
 
-**Story**: Là giảng viên, tôi muốn chấm thủ công hoặc duyệt/ghi đè đề xuất AI và lưu thành điểm nháp để chịu trách nhiệm cho quyết định học thuật trước khi chốt và công bố (US-GRD-005).
+**Story**: Là giảng viên, tôi muốn chấm thủ công hoặc duyệt/ghi đè đề xuất AI và lưu thành điểm nháp để chịu trách nhiệm cho quyết định học thuật trước khi công bố (US-GRD-005).
 
 **Truy vết**: FR-002, FR-008, FR-014, SEC-002, SEC-003, SEC-005.
 
@@ -637,7 +637,7 @@ Given sai format/stale, When nhận, Then reject không official grade; key cá 
 
 - **Given** đề xuất AI chưa duyệt thuộc lớp được phân công
 - **When** giảng viên chấp nhận đề xuất và lưu
-- **Then** kết quả trở thành điểm nháp do giảng viên quyết định, lưu actor/thời gian (như chấm tay) và người học chưa thấy điểm cho đến khi được chốt và công bố
+- **Then** kết quả trở thành điểm nháp do giảng viên quyết định, lưu actor/thời gian (như chấm tay) và người học chưa thấy điểm cho đến khi được công bố
 
 #### Scenario 2 - Ghi đè đề xuất
 
@@ -651,7 +651,13 @@ Given sai format/stale, When nhận, Then reject không official grade; key cá 
 - **When** nhập điểm/phản hồi hợp lệ và lưu
 - **Then** điểm nháp được lưu với actor/thời gian và không có lời gọi AI nào cho bài nộp đó
 
-#### Scenario 4 - Thao túng điểm ngoài quyền
+#### Scenario 4 - Sửa điểm đã công bố
+
+- **Given** lớp OPEN và điểm PUBLISHED thuộc bài nộp hiện hành
+- **When** giảng viên được phân công lưu sửa với version hợp lệ
+- **Then** điểm giữ trạng thái PUBLISHED và sinh viên thấy kết quả cập nhật sau khi lưu thành công
+
+#### Scenario 5 - Thao túng điểm ngoài quyền
 
 - **Given** người dùng không quản lý lớp hoặc không có quyền chấm
 - **When** gửi yêu cầu thay đổi điểm
@@ -682,7 +688,7 @@ Given sai format/stale, When nhận, Then reject không official grade; key cá 
 
 - **Given** giảng viên được phân công lớp
 - **When** mở sổ điểm lớp
-- **Then** hệ thống liệt kê sinh viên của lớp, mỗi sinh viên là một mục đóng/mở chứa điểm và trạng thái các bài, không có điểm tổng
+- **Then** hệ thống liệt kê sinh viên của lớp, mỗi sinh viên là một hàng trong ma trận điểm theo bài GRADED, không có điểm tổng
 
 #### Scenario 3 - Vai trò kế thừa phải có phân công lớp
 
@@ -692,35 +698,35 @@ Given sai format/stale, When nhận, Then reject không official grade; key cá 
 
 
 
-### US-GRD-005 - Chốt và công bố điểm từng bài hoặc hàng loạt
+### US-GRD-005 - Công bố điểm từng bài hoặc hàng loạt
 
 **Primary unit**: U09; **Scope**: MVP.
 
 **Current UC trace**: UC 44; UC 45. Source: [current UC table](../../../docs/usecase_table.md).
 
 
-**Story**: Là giảng viên, tôi muốn chốt điểm nháp đã chấm (US-GRD-003) cho từng bài hoặc hàng loạt trong lớp được phân công rồi công bố để người học nhận kết quả nhất quán và có kiểm soát.
+**Story**: Là giảng viên, tôi muốn công bố điểm nháp hợp lệ (US-GRD-003) cho từng bài hoặc hàng loạt trong lớp được phân công để người học nhận kết quả nhất quán và có kiểm soát.
 
 **Truy vết**: FR-002, FR-008, FR-009, FR-014, FR-020, SEC-002, SEC-003, SEC-005.
 
 **Acceptance criteria**
 
-#### Scenario 1 - Chốt các bài đủ điều kiện
+#### Scenario 1 - Công bố các bài đủ điều kiện
 
 - **Given** giảng viên quản lý lớp và danh sách gồm các bài đã có điểm/phản hồi hợp lệ
-- **When** giảng viên xác nhận chốt hàng loạt
-- **Then** chỉ bài đủ điều kiện chuyển thành điểm cuối, kết quả theo từng bài được trả và mỗi thay đổi được audit
+- **When** giảng viên xác nhận công bố hàng loạt
+- **Then** chỉ bài đủ điều kiện chuyển sang PUBLISHED, server trả kết quả từng bài và ghi audit
 
 #### Scenario 2 - Một phần dữ liệu không hợp lệ
 
 - **Given** danh sách có bài ngoài lớp, thiếu điểm hoặc đã bị thay đổi đồng thời
 - **When** yêu cầu được xử lý
-- **Then** hệ thống không chốt nhầm, báo rõ từng mục thất bại và không mở rộng quyền từ các mục hợp lệ
+- **Then** hệ thống từ chối từng mục không hợp lệ và trả lý do
 
-#### Scenario 3 - Chốt và công bố một bài
+#### Scenario 3 - Công bố một bài
 
 - **Given** giảng viên quản lý lớp và một bài có điểm nháp hợp lệ
-- **When** giảng viên chốt rồi công bố bài đó, hoặc chọn nhiều bài đã chốt và bấm "Công bố hàng loạt"
+- **When** giảng viên bấm "Công bố điểm" trên bài có điểm DRAFT hợp lệ hoặc FINALIZED từ luồng cũ
 - **Then** điểm trở thành điểm cuối, người học đúng bài thấy điểm và phản hồi theo chính sách, đề xuất AI không bị lộ và audit ghi actor/thời gian
 
 
@@ -861,7 +867,11 @@ Given submission hợp lệ, When chấm rubric tay/AI proposal, Then dùng ph�
 
 #### Scenario 2
 
-Given history đóng góp, When đánh giá, Then không tự suy ra cheating/điểm đóng góp bằng số thao tác.
+Given history đóng góp, When đánh giá, Then giảng viên tự chọn mức và điểm thành viên. Số thao tác chỉ là thông tin tham khảo.
+
+#### Scenario 3 - Nhóm nộp lại
+
+Given điểm và mức đóng góp đã công bố, When nhóm nộp bản mới, Then giữ nguyên điểm và mức đã công bố. Chỉ bản chấm chưa chính thức được đặt lại theo BR-U09-50.
 
 ### US-GRP-007 - Bật đợt sinh viên tự chia nhóm
 
@@ -1422,7 +1432,7 @@ Given Teacher chọn câu ACTIVE, When soạn Quiz, Then pin version và không 
 
 - **Given** tài khoản có phân công dạy lớp theo R3/R4
 - **When** yêu cầu xuất Excel/CSV
-- **Then** tệp chứa trạng thái, điểm đã chốt, thời gian nộp và phản hồi đúng phạm vi; mục chưa nộp/chưa chốt được ghi rõ
+- **Then** tệp chứa ma trận sinh viên × bài GRADED theo bộ lọc, gồm điểm đã lưu (kể cả DRAFT, điểm 0 và điểm riêng thành viên nhóm). Ô chưa chấm hoặc chưa nộp để trống
 
 #### Scenario 2 - Ngăn xuất ngoài quyền
 
@@ -1590,7 +1600,7 @@ Mỗi story có Given/When/Then; baseline scope và UC owner ở requirements/us
 
 ## Current acceptance deltas — 2026-10-30
 
-US-AIC-002: Student own-Practice MCP restored, Admin credentials/tools denied (including old tokens), wrong owner/expired/revoked deny; owner token reveal requires ACTIVE and ciphertext. US-AIC-003: multiple institutional keys/provider and Admin reveal audited; personal keys remain private. Class lifecycle, Quiz reopen, optional leader reasons and material modules inherit the code-derived UC clarifications without new story IDs. Source behavior is documented; fresh acceptance is pending.
+US-AIC-002: Student own-Practice MCP restored, Admin credentials/tools denied (including old tokens), wrong owner/expired/revoked deny; owner token reveal requires ACTIVE and ciphertext. US-AIC-003: multiple institutional keys per provider. Saved provider keys are write-only (D15). Class lifecycle, Quiz reopen, optional leader reasons and material modules inherit the code-derived UC clarifications without new story IDs. Source behavior is documented; fresh acceptance is pending.
 
 ## MCP correction and audit remediation — 2026-10-30
 

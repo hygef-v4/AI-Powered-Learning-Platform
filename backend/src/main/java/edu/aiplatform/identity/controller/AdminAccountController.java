@@ -51,6 +51,9 @@ public class AdminAccountController {
         public String displayName;
         @NotNull
         public Role role;
+        /** Bắt buộc với STUDENT, không được có với role khác (BR-U01-103). */
+        @Size(max = 32)
+        public String studentCode;
     }
 
     /** Email, role, trạng thái không đổi ở đây (BR-U01-04; role, trạng thái có API riêng). */
@@ -60,6 +63,9 @@ public class AdminAccountController {
         public String displayName;
         @Size(max = 32)
         public String phoneNumber;
+        /** Không gửi là giữ nguyên mã (BR-U01-105). */
+        @Size(max = 32)
+        public String studentCode;
         @NotNull
         public Long version;
     }
@@ -93,7 +99,7 @@ public class AdminAccountController {
     public AccountViews.Detail create(@AuthenticationPrincipal Actor actor,
                                       @RequestBody @Validated CreateRequest request) {
         request.rejectUnknownFields();
-        return admin.create(actor, request.email, request.displayName, request.role);
+        return admin.create(actor, request.email, request.displayName, request.role, request.studentCode);
     }
 
     @GetMapping("/{id}")
@@ -105,7 +111,8 @@ public class AdminAccountController {
     public AccountViews.Detail update(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                       @RequestBody @Validated UpdateRequest request) {
         request.rejectUnknownFields();
-        return admin.update(actor, id, request.displayName, request.phoneNumber, request.version);
+        return admin.update(actor, id, request.displayName, request.phoneNumber, request.studentCode,
+                request.version);
     }
 
     @PutMapping("/{id}/role")

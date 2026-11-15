@@ -215,7 +215,8 @@ public class StudentAssignmentService {
                 view.closesAt(), view.lateUntil(), view.maxAttempts(), status, list.size(), submitted.size(),
                 inProgress == null ? null : inProgress.id(), last == null ? null : last.submittedAt(),
                 group == null ? null : new WorkViews.GroupWork(group.groupDocumentId(), group.submitted(),
-                        group.submittedAt(), group.changedSinceSubmit()));
+                        group.submittedAt(), group.changedSinceSubmit()),
+                ref.term());
     }
 
     private static boolean closed(AssignmentView view, Instant now) {

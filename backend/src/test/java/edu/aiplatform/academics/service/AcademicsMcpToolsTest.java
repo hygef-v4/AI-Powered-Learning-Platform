@@ -9,6 +9,7 @@ import edu.aiplatform.identity.contract.*;
 import edu.aiplatform.shared.error.ApiException;
 import java.util.*;
 import java.time.Instant;
+import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
 class AcademicsMcpToolsTest {
@@ -19,8 +20,8 @@ class AcademicsMcpToolsTest {
     @Test void onlyTaughtClassesArePagedAndSubjectsAreDeduplicated() {
         UUID subject = UUID.randomUUID();
         var now=Instant.now();
-        var one=CourseClass.createClass(UUID.randomUUID(),subject,"C1","First","",teacher.accountId(),now);
-        var two=CourseClass.createClass(UUID.randomUUID(),subject,"C2","Second","",teacher.accountId(),now);
+        var one=CourseClass.createClass(UUID.randomUUID(),subject,"C1","First","",LocalDate.of(2027, 1, 10),teacher.accountId(),now);
+        var two=CourseClass.createClass(UUID.randomUUID(),subject,"C2","Second","",LocalDate.of(2027, 1, 10),teacher.accountId(),now);
         when(academicsReadRepository.listTaught(teacher.accountId())).thenReturn(List.of(one,two));
         when(subjectQuery.getSubject(subject)).thenReturn(Optional.of(new SubjectRef(subject,"S","Subject",SubjectStatus.ACTIVE,UUID.randomUUID())));
         var tools=new AcademicsMcpTools(academicsReadRepository,subjectQuery);
@@ -30,6 +31,25 @@ class AcademicsMcpToolsTest {
         var found=(Map<?,?>)tools.call(teacher,"list_my_subjects",Map.of()).content();
         assertThat((List<?>)found.get("items")).hasSize(1);
         verify(subjectQuery,never()).listManagedSubjects(teacher.accountId());
+    }
+
+    @Test void filtersTaughtClassesByTermAndReturnsTheTerm() {
+        UUID subject = UUID.randomUUID();
+        var now = Instant.now();
+        var spring = CourseClass.createClass(UUID.randomUUID(), subject, "SE01", "Spring", "",
+                LocalDate.of(2027, 4, 3), teacher.accountId(), now);
+        var fall = CourseClass.createClass(UUID.randomUUID(), subject, "SE01", "Fall", "",
+                LocalDate.of(2026, 9, 7), teacher.accountId(), now);
+        when(academicsReadRepository.listTaught(teacher.accountId())).thenReturn(List.of(spring, fall));
+        var tools = new AcademicsMcpTools(academicsReadRepository, subjectQuery);
+
+        var result = (Map<?, ?>) tools.call(teacher, "list_my_classes", Map.of("term", "SP27-BL5")).content();
+
+        assertThat((List<?>) result.get("items")).singleElement()
+                .satisfies(item -> assertThat(((Map<?, ?>) item).get("term")).isEqualTo("SP27-BL5"))
+                .satisfies(item -> assertThat(((Map<?, ?>) item).get("classId")).isEqualTo(spring.id()));
+        assertThatThrownBy(() -> tools.call(teacher, "list_my_classes", Map.of("term", "SP2027")))
+                .isInstanceOf(ApiException.class);
     }
 
     @Test void studentAdminAndInvalidPaginationAreRejectedBeforeQueries() {
