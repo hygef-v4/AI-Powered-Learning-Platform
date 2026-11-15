@@ -103,7 +103,6 @@ public class HttpProviderGateway implements IProviderGateway {
         Usage usage = new Usage(number(meta, "promptTokenCount"), output, number(meta, "cachedContentTokenCount"),
                 thoughts);
         String finishReason = reply.path("candidates").path(0).path("finishReason").asText("");
-        requireCompleteOutput(finishReason, usage);
         StringBuilder text = new StringBuilder();
         for (JsonNode part : reply.path("candidates").path(0).path("content").path("parts")) {
             text.append(part.path("text").asText(""));
@@ -147,7 +146,6 @@ public class HttpProviderGateway implements IProviderGateway {
                 number(u.path("prompt_tokens_details"), "cached_tokens"),
                 number(u.path("completion_tokens_details"), "reasoning_tokens"));
         String finishReason = reply.path("choices").path(0).path("finish_reason").asText("");
-        requireCompleteOutput(finishReason, usage);
         JsonNode message = reply.path("choices").path(0).path("message");
         // Model từ chối trả lời: OpenAI để lời từ chối ở message.refusal thay vì content.
         String reason = message.path("refusal").asText("").isBlank() ? finishReason : "refusal";
@@ -185,7 +183,6 @@ public class HttpProviderGateway implements IProviderGateway {
         Usage usage = new Usage(number(u, "input_tokens"), number(u, "output_tokens"),
                 number(u, "cache_read_input_tokens"), null);
         String stopReason = reply.path("stop_reason").asText("");
-        requireCompleteOutput(stopReason, usage);
         String output = "";
         for (JsonNode block : reply.path("content")) {
             if ("tool_use".equals(block.path("type").asText()) && RESULT_TOOL.equals(block.path("name").asText())) {
@@ -277,9 +274,7 @@ public class HttpProviderGateway implements IProviderGateway {
 
     private static void requireCompleteOutput(String reason, Usage usage) {
         if ("MAX_TOKENS".equals(reason) || "length".equals(reason) || "max_tokens".equals(reason)) {
-            throw new ProviderException(FailureKind.CHARGED, 200,
-                    "AI đã đạt giới hạn token của lần gọi nên phản hồi chưa hoàn chỉnh. Hãy thử lại với bài nhỏ hơn hoặc cấu hình giới hạn đầu ra cao hơn.",
-                    usage);
+            throw new OutputLimitException(usage);
         }
     }
 
@@ -300,8 +295,11 @@ public class HttpProviderGateway implements IProviderGateway {
      */
     private Response response(AiProvider provider, String model, String output, String requestId, Usage usage,
                               String reason, boolean promptBlocked) {
-        if (output == null || output.isBlank()) {
-            log.warn("AI provider returned no output provider={} model={} requestId={} reason={} promptBlocked={}",
+        if (!promptBlocked) {
+            requireCompleteOutput(reason, usage);
+        }
+        if (promptBlocked || !NORMAL_STOPS.contains(reason) || output == null || output.isBlank()) {
+            log.warn("AI provider returned unusable output provider={} model={} requestId={} reason={} promptBlocked={}",
                     provider, model, requestId, reason.isEmpty() ? "-" : reason, promptBlocked);
             throw new ProviderException(FailureKind.CHARGED, 200, emptyOutputMessage(reason, promptBlocked), usage);
         }
