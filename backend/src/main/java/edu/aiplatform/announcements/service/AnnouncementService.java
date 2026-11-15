@@ -75,7 +75,8 @@ public class AnnouncementService {
                                                 actor.role() == Role.STUDENT
                                                         ? 0
                                                         : classes.listActiveStudents(c.classId())
-                                                                .size()))
+                                                                .size(),
+                                                c.term()))
                         .toList();
         return new AnnouncementViews.Feed(items, options, page, size, more);
     }
