@@ -55,19 +55,19 @@ public class Announcement {
         if (email && !important)
             throw ApiException.badRequest(
                     "ANNOUNCEMENT_EMAIL_INVALID", "Chỉ thông báo quan trọng mới có email");
-        var a = new Announcement();
-        a.id = UUID.randomUUID();
-        a.classId = classId;
-        a.createdBy = actor;
-        a.updatedBy = actor;
-        a.createdAt = now;
-        a.updatedAt = now;
-        a.important = important;
-        a.sendEmail = email;
-        a.status = Status.ACTIVE;
-        a.title = cleanTitle(title);
-        a.body = cleanBody(body);
-        return a;
+        var announcement = new Announcement();
+        announcement.id = UUID.randomUUID();
+        announcement.classId = classId;
+        announcement.createdBy = actor;
+        announcement.updatedBy = actor;
+        announcement.createdAt = now;
+        announcement.updatedAt = now;
+        announcement.important = important;
+        announcement.sendEmail = email;
+        announcement.status = Status.ACTIVE;
+        announcement.title = cleanTitle(title);
+        announcement.body = cleanBody(body);
+        return announcement;
     }
 
     public void edit(String title, String body, UUID actor, Instant now) {
@@ -86,23 +86,23 @@ public class Announcement {
         updatedAt = now;
     }
 
-    private static String bounded(String text, int max) {
-        String s = text == null ? "" : text.strip();
-        if (s.isEmpty() || s.codePointCount(0, s.length()) > max)
+    private static String requireTextLength(String text, int max) {
+        String value = text == null ? "" : text.strip();
+        if (value.isEmpty() || value.codePointCount(0, value.length()) > max)
             throw ApiException.badRequest(
                     "ANNOUNCEMENT_INVALID", "Kiểm tra độ dài tiêu đề và nội dung");
-        return s;
+        return value;
     }
 
     private static String cleanTitle(String title) {
-        String value = bounded(title, 200);
+        String value = requireTextLength(title, 200);
         if (!Jsoup.isValid(value, Safelist.none()))
             throw ApiException.badRequest("ANNOUNCEMENT_INVALID", "Tiêu đề phải là văn bản thuần");
         return value;
     }
 
     private static String cleanBody(String body) {
-        String value = bounded(body, 5000);
+        String value = requireTextLength(body, 5000);
         // Keep Markdown/newlines, drop tags/attributes and script/style data. Never unescape
         // the output back into HTML; the renderer also enforces its Markdown URL allowlist.
         String cleaned =
@@ -112,6 +112,6 @@ public class Announcement {
                                 Safelist.none(),
                                 new Document.OutputSettings().prettyPrint(false))
                         .strip();
-        return bounded(cleaned, 5000);
+        return requireTextLength(cleaned, 5000);
     }
 }

@@ -4,11 +4,11 @@ import edu.aiplatform.announcements.model.Announcement;
 import java.util.*;
 
 public interface IAnnouncementRepository {
-    Optional<Announcement> find(UUID id);
+    Optional<Announcement> findAnnouncement(UUID id);
 
-    List<Announcement> list(List<UUID> classes, int page, int size);
+    List<Announcement> listAnnouncements(List<UUID> classIds, int page, int size);
 
-    void insert(Announcement announcement);
+    void insertAnnouncement(Announcement announcement);
 
-    boolean update(Announcement announcement, long expectedVersion);
+    boolean updateAnnouncement(Announcement announcement, long expectedVersion);
 }

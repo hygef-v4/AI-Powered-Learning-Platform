@@ -436,7 +436,7 @@ class RequirementsCoverageIntegrationTest {
         boolean staff = role == Role.TEACHER || role == Role.SUBJECT_MANAGER;
         if (staff) jdbc.update("update course_classes set teacher_id=? where id=?", accountIds.get(role), classId);
         Actor currentTeacher = new Actor(accountIds.get(staff ? role : Role.TEACHER), staff ? role : Role.TEACHER);
-        var created = announcementService.create(currentTeacher, classId,
+        var created = announcementService.createAnnouncement(currentTeacher, classId,
                 new edu.aiplatform.announcements.service.AnnouncementCommands.Create("Original", "Body", false, false));
         int readStatus = role == Role.ADMIN ? 404 : 200;
         mvc.perform(signedRequest(get("/api/v1/classes/" + classId + "/announcements"), role))
@@ -506,7 +506,10 @@ class RequirementsCoverageIntegrationTest {
         measureP95("U14_NOTIFICATIONS", 300,
                 () -> assertThat(notificationService.list(student, false, 1, 20).items()).hasSize(20));
         measureP95("U14_ANNOUNCEMENTS", 300,
-                () -> assertThat(announcementService.list(student, classId, 1, 20).items()).hasSize(20));
+                () -> assertThat(
+                        announcementService
+                                .listAnnouncements(student, classId, 1, 20)
+                                .items()).hasSize(20));
         assertThat(jdbc.queryForObject("select count(*) from audit_logs", Integer.class)).isZero();
     }
 
@@ -688,7 +691,7 @@ class RequirementsCoverageIntegrationTest {
         doAnswer(call -> { published.add(call.getArgument(0)); return null; }).when(messageSender).sendEvent(any());
         Actor teacher = new Actor(accountIds.get(Role.TEACHER), Role.TEACHER);
         transaction.executeWithoutResult(status -> {
-            announcementService.create(teacher, classId,
+            announcementService.createAnnouncement(teacher, classId,
                     new edu.aiplatform.announcements.service.AnnouncementCommands.Create("Rolled back", "Body", false, false));
             assertThat(published).isEmpty();
             status.setRollbackOnly();
@@ -696,7 +699,7 @@ class RequirementsCoverageIntegrationTest {
         assertThat(published.poll(200, java.util.concurrent.TimeUnit.MILLISECONDS)).isNull();
         assertThat(jdbc.queryForObject("select count(*) from announcements", Integer.class)).isZero();
         transaction.executeWithoutResult(status -> {
-            announcementService.create(teacher, classId,
+            announcementService.createAnnouncement(teacher, classId,
                     new edu.aiplatform.announcements.service.AnnouncementCommands.Create("Committed", "Body", false, false));
             assertThat(published).isEmpty();
         });
@@ -704,7 +707,7 @@ class RequirementsCoverageIntegrationTest {
         assertThat(jdbc.queryForObject("select count(*) from announcements", Integer.class)).isEqualTo(1);
         clearInvocations(messageSender);
         doThrow(new IllegalStateException("PRIVATE_PROVIDER_MESSAGE")).when(messageSender).sendEvent(any());
-        announcementService.create(teacher, classId,
+        announcementService.createAnnouncement(teacher, classId,
                 new edu.aiplatform.announcements.service.AnnouncementCommands.Create("Survives failure", "Body", false, false));
         verify(messageSender, timeout(3000)).sendEvent(any());
         assertThat(jdbc.queryForObject("select count(*) from announcements", Integer.class)).isEqualTo(2);

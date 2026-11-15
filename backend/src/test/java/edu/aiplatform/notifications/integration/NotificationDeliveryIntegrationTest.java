@@ -326,9 +326,9 @@ class NotificationDeliveryIntegrationTest {
         var foreign = edu.aiplatform.announcements.model.Announcement.create(otherClass, teacher,
                 "Foreign", "Body", false, false, NOW.plusSeconds(3));
         transaction.executeWithoutResult(tx -> List.of(old, recent, deleted, foreign)
-                .forEach(announcementRepository::insert));
+                .forEach(announcementRepository::insertAnnouncement));
         List<edu.aiplatform.announcements.model.Announcement> feed = transaction.execute(
-                tx -> announcementRepository.list(List.of(classId), 1, 20));
+                tx -> announcementRepository.listAnnouncements(List.of(classId), 1, 20));
         assertThat(feed)
                 .extracting(announcement -> announcement.id).containsExactly(recent.id, old.id);
     }

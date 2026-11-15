@@ -10,18 +10,18 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/me/announcements")
 public class MyAnnouncementController {
-    private final AnnouncementService service;
+    private final AnnouncementService announcementService;
 
-    public MyAnnouncementController(AnnouncementService service) {
-        this.service = service;
+    public MyAnnouncementController(AnnouncementService announcementService) {
+        this.announcementService = announcementService;
     }
 
     @GetMapping
-    public AnnouncementViews.Feed list(
+    public AnnouncementViews.Feed listMyAnnouncements(
             @AuthenticationPrincipal Actor actor,
             @RequestParam(required = false) UUID classId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return service.list(actor, classId, page, size);
+        return announcementService.listAnnouncements(actor, classId, page, size);
     }
 }

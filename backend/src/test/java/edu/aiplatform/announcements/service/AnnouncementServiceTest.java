@@ -20,24 +20,24 @@ class AnnouncementServiceTest {
     Actor teacher = new Actor(teacherId, Role.TEACHER);
     Instant now = Instant.parse("2026-10-21T08:00:00Z");
     Clock clock = Clock.fixed(now, ZoneOffset.UTC);
-    IAnnouncementRepository repo;
-    IAuthorization auth;
-    IClassAccess classes;
+    IAnnouncementRepository announcementRepository;
+    IAuthorization authorization;
+    IClassAccess classAccess;
     IAudit audit;
-    IEventPublisher events;
-    IAccountLookup accounts;
-    AnnouncementAccessPolicy access;
-    AnnouncementService service;
+    IEventPublisher eventPublisher;
+    IAccountLookup accountLookup;
+    AnnouncementAccessPolicy announcementAccessPolicy;
+    AnnouncementService announcementService;
     ClassRef course;
 
     @BeforeEach
     void setup() {
-        repo = mock(IAnnouncementRepository.class);
-        auth = mock(IAuthorization.class);
-        classes = mock(IClassAccess.class);
+        announcementRepository = mock(IAnnouncementRepository.class);
+        authorization = mock(IAuthorization.class);
+        classAccess = mock(IClassAccess.class);
         audit = mock(IAudit.class);
-        events = mock(IEventPublisher.class);
-        accounts = mock(IAccountLookup.class);
+        eventPublisher = mock(IEventPublisher.class);
+        accountLookup = mock(IAccountLookup.class);
         course =
                 new ClassRef(
                         classId,
@@ -47,11 +47,21 @@ class AnnouncementServiceTest {
                         ClassStatus.OPEN,
                         teacherId,
                         false);
-        when(classes.getClassRef(classId)).thenReturn(Optional.of(course));
-        when(auth.authorize(any(), any(), any())).thenReturn(AuthorizationDecision.allow());
-        when(accounts.getContact(any())).thenReturn(Optional.empty());
-        access = new AnnouncementAccessPolicy(auth, classes, audit, clock);
-        service = new AnnouncementService(repo, access, classes, accounts, audit, events, clock);
+        when(classAccess.getClassRef(classId)).thenReturn(Optional.of(course));
+        when(authorization.authorize(any(), any(), any()))
+                .thenReturn(AuthorizationDecision.allow());
+        when(accountLookup.getContact(any())).thenReturn(Optional.empty());
+        announcementAccessPolicy =
+                new AnnouncementAccessPolicy(authorization, classAccess, audit, clock);
+        announcementService =
+                new AnnouncementService(
+                        announcementRepository,
+                        announcementAccessPolicy,
+                        classAccess,
+                        accountLookup,
+                        audit,
+                        eventPublisher,
+                        clock);
     }
 
     Announcement item() {
@@ -64,20 +74,20 @@ class AnnouncementServiceTest {
                         true,
                         true,
                         now.minusSeconds(60));
-        when(repo.find(a.id)).thenReturn(Optional.of(a));
+        when(announcementRepository.findAnnouncement(a.id)).thenReturn(Optional.of(a));
         return a;
     }
 
     @Test
     void createPublishesOnlyMetadataAndAudits() {
         var created =
-                service.create(
+                announcementService.createAnnouncement(
                         teacher,
                         classId,
                         new AnnouncementCommands.Create(" Mới ", "Nội dung", true, true));
         assertThat(created.title()).isEqualTo("Mới");
-        verify(repo).insert(any());
-        verify(events)
+        verify(announcementRepository).insertAnnouncement(any());
+        verify(eventPublisher)
                 .publish(
                         argThat(
                                 e ->
@@ -95,16 +105,16 @@ class AnnouncementServiceTest {
     @Test
     void editPreservesAuthorAndFlagsAndDoesNotRepublish() {
         var a = item();
-        when(repo.update(a, 0)).thenReturn(true);
+        when(announcementRepository.updateAnnouncement(a, 0)).thenReturn(true);
         var edited =
-                service.edit(
+                announcementService.editAnnouncement(
                         teacher, a.id, new AnnouncementCommands.Edit("Đổi", "Nội dung sửa", 0));
         assertThat(edited.createdBy()).isEqualTo(teacherId);
         assertThat(edited.createdAt()).isEqualTo(now.minusSeconds(60));
         assertThat(edited.important()).isTrue();
         assertThat(edited.sendEmail()).isTrue();
         assertThat(edited.version()).as("version mới sau UPDATE").isEqualTo(1);
-        verifyNoInteractions(events);
+        verifyNoInteractions(eventPublisher);
         verify(audit)
                 .record(
                         argThat(
@@ -116,13 +126,14 @@ class AnnouncementServiceTest {
     @Test
     void consecutiveEditsUseReturnedVersionAndAuditExactMetadataWithoutContent() {
         var announcement = item();
-        when(repo.update(eq(announcement), anyLong())).thenAnswer(call -> {
+        when(announcementRepository.updateAnnouncement(eq(announcement), anyLong()))
+                .thenAnswer(call -> {
             announcement.version = (Long) call.getArgument(1) + 1;
             return true;
         });
-        var first = service.edit(teacher, announcement.id,
+        var first = announcementService.editAnnouncement(teacher, announcement.id,
                 new AnnouncementCommands.Edit("First", "private-body-sentinel", 0));
-        var second = service.edit(teacher, announcement.id,
+        var second = announcementService.editAnnouncement(teacher, announcement.id,
                 new AnnouncementCommands.Edit("Second", "Second body", first.version()));
         assertThat(second.version()).isEqualTo(2);
         assertThat(second.createdBy()).isEqualTo(teacherId);
@@ -142,9 +153,9 @@ class AnnouncementServiceTest {
             assertThat(((Map<?, ?>) event.details().get("after")).get("version")).isEqualTo((long) index + 1);
             assertThat(event.details().toString()).doesNotContain("private-body-sentinel", "Second body");
         }
-        verify(repo).update(announcement, 0);
-        verify(repo).update(announcement, 1);
-        verifyNoInteractions(events);
+        verify(announcementRepository).updateAnnouncement(announcement, 0);
+        verify(announcementRepository).updateAnnouncement(announcement, 1);
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -152,37 +163,38 @@ class AnnouncementServiceTest {
         var a = item();
         assertThatThrownBy(
                         () ->
-                                service.edit(
+                                announcementService.editAnnouncement(
                                         teacher,
                                         a.id,
                                         new AnnouncementCommands.Edit("Đổi", "Sửa", 1)))
                 .isInstanceOf(ApiException.class)
                 .extracting("code")
                 .isEqualTo("ANNOUNCEMENT_STALE");
-        verify(repo, never()).update(any(), anyLong());
-        verifyNoInteractions(events);
+        verify(announcementRepository, never()).updateAnnouncement(any(), anyLong());
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
     void concurrentCasFailureDoesNotAuditSuccess() {
         var a = item();
-        when(repo.update(a, 0)).thenReturn(false);
-        assertThatThrownBy(() -> service.delete(teacher, a.id, 0)).isInstanceOf(ApiException.class);
+        when(announcementRepository.updateAnnouncement(a, 0)).thenReturn(false);
+        assertThatThrownBy(() -> announcementService.deleteAnnouncement(teacher, a.id, 0))
+                .isInstanceOf(ApiException.class);
         verify(audit, never()).record(argThat(e -> e.result() == AuditResult.SUCCESS));
     }
 
     @Test
     void deleteIsSoftAndDoesNotRepublish() {
         var a = item();
-        when(repo.update(a, 0)).thenReturn(true);
-        service.delete(teacher, a.id, 0);
+        when(announcementRepository.updateAnnouncement(a, 0)).thenReturn(true);
+        announcementService.deleteAnnouncement(teacher, a.id, 0);
         assertThat(a.status).isEqualTo(Announcement.Status.DELETED);
         assertThat(a.deletedBy).isEqualTo(teacherId);
         assertThat(a.deletedAt).isEqualTo(now);
         verify(audit).record(argThat(e -> e.action().equals("ANNOUNCEMENT_DELETED")
                 && e.actorId().equals(teacherId) && e.objectId().equals(a.id.toString())
                 && e.details().get("status").equals("DELETED")));
-        verifyNoInteractions(events);
+        verifyNoInteractions(eventPublisher);
     }
 
     @ParameterizedTest
@@ -191,7 +203,7 @@ class AnnouncementServiceTest {
             names = {"ADMIN", "STUDENT"})
     void cannotManage(Role role) {
         var actor = new Actor(UUID.randomUUID(), role);
-        assertThatThrownBy(() -> access.require(actor, classId, true))
+        assertThatThrownBy(() -> announcementAccessPolicy.requireClassAccess(actor, classId, true))
                 .isInstanceOfSatisfying(ApiException.class, e -> {
                     assertThat(e.status().value()).isEqualTo(404);
                     assertThat(e.code()).isEqualTo("ANNOUNCEMENT_NOT_FOUND");
@@ -203,7 +215,7 @@ class AnnouncementServiceTest {
     void anotherTeacherCannotManage() {
         assertThatThrownBy(
                         () ->
-                                access.require(
+                                announcementAccessPolicy.requireClassAccess(
                                         new Actor(UUID.randomUUID(), Role.TEACHER), classId, true))
                 .isInstanceOfSatisfying(ApiException.class,
                         e -> assertThat(e.status().value()).isEqualTo(404));
@@ -211,11 +223,13 @@ class AnnouncementServiceTest {
 
     @Test
     void managerMustActuallyTeachTheClass() {
-        assertThat(access.require(new Actor(teacherId, Role.SUBJECT_MANAGER), classId, true))
+        assertThat(
+                announcementAccessPolicy.requireClassAccess(
+                        new Actor(teacherId, Role.SUBJECT_MANAGER), classId, true))
                 .isEqualTo(course);
         assertThatThrownBy(
                         () ->
-                                access.require(
+                                announcementAccessPolicy.requireClassAccess(
                                         new Actor(UUID.randomUUID(), Role.SUBJECT_MANAGER),
                                         classId,
                                         true))
@@ -225,9 +239,10 @@ class AnnouncementServiceTest {
     @Test
     void activeStudentReadsOnlyOpenEnrolledClass() {
         var student = new Actor(UUID.randomUUID(), Role.STUDENT);
-        when(classes.isActiveStudent(student.accountId(), classId)).thenReturn(true);
-        assertThat(access.require(student, classId, false)).isEqualTo(course);
-        when(classes.getClassRef(classId))
+        when(classAccess.isActiveStudent(student.accountId(), classId)).thenReturn(true);
+        assertThat(announcementAccessPolicy.requireClassAccess(student, classId, false))
+                .isEqualTo(course);
+        when(classAccess.getClassRef(classId))
                 .thenReturn(
                         Optional.of(
                                 new ClassRef(
@@ -238,15 +253,17 @@ class AnnouncementServiceTest {
                                         ClassStatus.ARCHIVED,
                                         teacherId,
                                         false)));
-        assertThatThrownBy(() -> access.require(student, classId, false))
+        assertThatThrownBy(
+                () -> announcementAccessPolicy.requireClassAccess(student, classId, false))
                 .isInstanceOf(ApiException.class);
     }
 
     @Test
     void authorizationDenialEvenForTeacherIsAudited() {
-        when(auth.authorize(any(), any(), any()))
+        when(authorization.authorize(any(), any(), any()))
                 .thenReturn(AuthorizationDecision.deny("DISABLED"));
-        assertThatThrownBy(() -> access.require(teacher, classId, true))
+        assertThatThrownBy(
+                () -> announcementAccessPolicy.requireClassAccess(teacher, classId, true))
                 .isInstanceOf(ApiException.class);
         verify(audit).record(argThat(e -> e.action().equals("ACCESS_DENIED")));
     }
@@ -266,16 +283,17 @@ class AnnouncementServiceTest {
 
     @Test
     void filteredFeedKeepsAllClassOptions() {
-        when(classes.listOpenClassesOf(teacherId)).thenReturn(List.of(course));
-        when(repo.list(anyList(), anyInt(), anyInt())).thenReturn(List.of());
-        var result = service.list(teacher, classId, 1, 20);
+        when(classAccess.listOpenClassesOf(teacherId)).thenReturn(List.of(course));
+        when(announcementRepository.listAnnouncements(anyList(), anyInt(), anyInt()))
+                .thenReturn(List.of());
+        var result = announcementService.listAnnouncements(teacher, classId, 1, 20);
         assertThat(result.classes()).hasSize(1);
         assertThat(result.items()).isEmpty();
     }
 
     @Test
     void badPaginationRejected() {
-        assertThatThrownBy(() -> service.list(teacher, null, 1, 51))
+        assertThatThrownBy(() -> announcementService.listAnnouncements(teacher, null, 1, 51))
                 .isInstanceOf(ApiException.class);
     }
 }

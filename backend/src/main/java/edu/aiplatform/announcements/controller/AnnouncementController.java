@@ -12,44 +12,44 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1")
 public class AnnouncementController {
-    private final AnnouncementService service;
+    private final AnnouncementService announcementService;
 
-    public AnnouncementController(AnnouncementService service) {
-        this.service = service;
+    public AnnouncementController(AnnouncementService announcementService) {
+        this.announcementService = announcementService;
     }
 
     @GetMapping("/classes/{classId}/announcements")
-    public AnnouncementViews.Feed list(
+    public AnnouncementViews.Feed listClassAnnouncements(
             @AuthenticationPrincipal Actor actor,
             @PathVariable UUID classId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return service.list(actor, classId, page, size);
+        return announcementService.listAnnouncements(actor, classId, page, size);
     }
 
     @PostMapping("/classes/{classId}/announcements")
     @ResponseStatus(HttpStatus.CREATED)
-    public AnnouncementViews.Item create(
+    public AnnouncementViews.Item createAnnouncement(
             @AuthenticationPrincipal Actor actor,
             @PathVariable UUID classId,
             @Valid @RequestBody AnnouncementCommands.Create input) {
-        return service.create(actor, classId, input);
+        return announcementService.createAnnouncement(actor, classId, input);
     }
 
     @PatchMapping("/announcements/{id}")
-    public AnnouncementViews.Item edit(
+    public AnnouncementViews.Item editAnnouncement(
             @AuthenticationPrincipal Actor actor,
             @PathVariable UUID id,
             @Valid @RequestBody AnnouncementCommands.Edit input) {
-        return service.edit(actor, id, input);
+        return announcementService.editAnnouncement(actor, id, input);
     }
 
     @DeleteMapping("/announcements/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(
+    public void deleteAnnouncement(
             @AuthenticationPrincipal Actor actor,
             @PathVariable UUID id,
             @RequestParam long version) {
-        service.delete(actor, id, version);
+        announcementService.deleteAnnouncement(actor, id, version);
     }
 }
