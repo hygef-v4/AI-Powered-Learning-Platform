@@ -14,101 +14,107 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true, timeout = 10, noRollbackFor = ApiException.class)
 public class MaterialQueryService {
-    private final IMaterialRepository repository;
-    private final MaterialAccessPolicy access;
-    private final IArtifact artifacts;
+    private final IMaterialRepository materialRepository;
+    private final MaterialAccessPolicy materialAccessPolicy;
+    private final IArtifact artifact;
 
     public MaterialQueryService(
-            IMaterialRepository repository, MaterialAccessPolicy access, IArtifact artifacts) {
-        this.repository = repository;
-        this.access = access;
-        this.artifacts = artifacts;
+            IMaterialRepository materialRepository,
+            MaterialAccessPolicy materialAccessPolicy,
+            IArtifact artifact) {
+        this.materialRepository = materialRepository;
+        this.materialAccessPolicy = materialAccessPolicy;
+        this.artifact = artifact;
     }
 
-    public List<MaterialViews.Detail> subjectList(Actor actor, UUID subjectId) {
-        access.subjectList(actor, subjectId);
-        return repository.list(subjectId, null).stream()
-                .map(m -> view(actor, m, false, null))
+    public List<MaterialViews.Detail> listSubjectMaterials(Actor actor, UUID subjectId) {
+        materialAccessPolicy.requireSubjectListAccess(actor, subjectId);
+        return materialRepository.listMaterials(subjectId, null).stream()
+                .map(m -> buildDetailView(actor, m, false, null))
                 .toList();
     }
 
-    public List<MaterialViews.Detail> classList(
+    public List<MaterialViews.Detail> listClassMaterials(
             Actor actor, UUID classId, boolean student, List<UUID> ids) {
         if (ids != null && ids.size() > 100)
             throw ApiException.badRequest("MATERIAL_IDS_LIMIT", "Tối đa 100 học liệu");
-        var c = access.classList(actor, classId, student);
-        return repository.list(c.subjectId(), classId).stream()
+        var c = materialAccessPolicy.requireClassListAccess(actor, classId, student);
+        return materialRepository.listMaterials(c.subjectId(), classId).stream()
                 .filter(m -> !student || m.status() == Material.Status.ACTIVE && m.enabled())
                 .filter(m -> ids == null || ids.contains(m.id()))
-                .map(m -> view(actor, m, false, classId))
+                .map(m -> buildDetailView(actor, m, false, classId))
                 .toList();
     }
 
-    public Material authorized(Actor actor, UUID id, UUID classId) {
+    public Material loadAuthorizedMaterial(Actor actor, UUID id, UUID classId) {
         Material m =
-                repository.find(id).orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
-        access.read(actor, m, classId);
+                materialRepository
+                        .findMaterial(id)
+                        .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
+        materialAccessPolicy.requireReadAccess(actor, m, classId);
         return m;
     }
 
-    public MaterialViews.Detail detail(Actor actor, UUID id, UUID classId) {
-        return view(actor, authorized(actor, id, classId), true, classId);
+    public MaterialViews.Detail loadMaterial(Actor actor, UUID id, UUID classId) {
+        return buildDetailView(actor, loadAuthorizedMaterial(actor, id, classId), true, classId);
     }
 
-    public DownloadToken download(Actor actor, UUID id, UUID classId, Integer versionNo) {
-        Material m = authorized(actor, id, classId);
+    public DownloadToken issueDownloadToken(Actor actor, UUID id, UUID classId, Integer versionNo) {
+        Material m = loadAuthorizedMaterial(actor, id, classId);
         int number = versionNo == null ? m.currentVersionNo() : versionNo;
         if (m.kind() != Material.Kind.FILE
                 || (actor.role() == Role.STUDENT && number != m.currentVersionNo()))
             throw ApiException.notFound("MATERIAL_NOT_FOUND");
         MaterialVersion v =
-                repository
-                        .version(id, number)
+                materialRepository
+                        .findVersion(id, number)
                         .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
-        return artifacts.issueDownloadToken(v.fileId(), actor.accountId());
+        return artifact.issueDownloadToken(v.fileId(), actor.accountId());
     }
 
-    private MaterialViews.Detail view(
-            Actor actor, Material m, boolean history, UUID contextClassId) {
+    private MaterialViews.Detail buildDetailView(
+            Actor actor, Material material, boolean history, UUID contextClassId) {
         MaterialVersion current =
-                repository
-                        .version(m.id(), m.currentVersionNo())
+                materialRepository
+                        .findVersion(material.id(), material.currentVersionNo())
                         .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
         boolean editable =
                 actor.role() != Role.STUDENT
-                        && !(contextClassId != null && m.scope() == Material.Scope.SUBJECT)
-                        && m.status() == Material.Status.ACTIVE
-                        && access.canManage(actor, m)
-                        && access.subject(m.subjectId()).status() == SubjectStatus.ACTIVE
-                        && (m.classId() == null
-                                || access.courseClass(m.classId()).status()
+                        && !(contextClassId != null && material.scope() == Material.Scope.SUBJECT)
+                        && material.status() == Material.Status.ACTIVE
+                        && materialAccessPolicy.canManageMaterial(actor, material)
+                        && materialAccessPolicy
+                                .requireSubject(material.subjectId())
+                                .status() == SubjectStatus.ACTIVE
+                        && (material.classId() == null
+                                || materialAccessPolicy.requireClass(material.classId()).status()
                                         != ClassStatus.ARCHIVED);
         List<MaterialViews.Version> versions =
                 !history
                         ? List.of()
                         : actor.role() == Role.STUDENT
                                 ? List.of(MaterialViews.Version.of(current))
-                                : repository.versions(m.id()).stream()
+                                : materialRepository.listVersions(material.id()).stream()
                                         .map(MaterialViews.Version::of)
                                         .toList();
         return new MaterialViews.Detail(
-                m.id(),
-                m.scope(),
-                m.subjectId(),
-                m.classId(),
-                m.moduleId(),
-                m.kind(),
-                m.title(),
-                m.description(),
-                m.orderNo(),
-                m.status(),
-                m.currentVersionNo(),
-                m.version(),
-                m.updatedAt(),
+                material.id(),
+                material.scope(),
+                material.subjectId(),
+                material.classId(),
+                material.moduleId(),
+                material.kind(),
+                material.title(),
+                material.description(),
+                material.orderNo(),
+                material.status(),
+                material.currentVersionNo(),
+                material.version(),
+                material.updatedAt(),
                 editable,
                 MaterialViews.Version.of(current),
                 versions,
-                m.enabled(),
-                m.descriptionDocument());
+                material.enabled(),
+                material.descriptionDocument());
     }
 }

@@ -9,23 +9,23 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface IMaterialRepository {
-    Optional<Material> find(UUID id);
+    Optional<Material> findMaterial(UUID id);
 
     List<Material> findByFileId(String fileId);
 
-    List<Material> list(UUID subjectId, UUID classId);
+    List<Material> listMaterials(UUID subjectId, UUID classId);
 
-    void insert(Material material, MaterialVersion version);
+    void insertMaterial(Material material, MaterialVersion version);
 
-    boolean update(Material material, long expectedVersion);
+    boolean updateMaterial(Material material, long expectedVersion);
 
     void insertVersion(MaterialVersion version);
 
-    List<MaterialVersion> versions(UUID id);
+    List<MaterialVersion> listVersions(UUID id);
 
-    Optional<MaterialVersion> version(UUID id, int versionNo);
+    Optional<MaterialVersion> findVersion(UUID id, int versionNo);
 
     boolean completeText(UUID id, int versionNo, MaterialVersion.TextStatus status, String text);
 
-    List<MaterialVersion> stalePending(Instant olderThan);
+    List<MaterialVersion> listStalePendingVersions(Instant olderThan);
 }

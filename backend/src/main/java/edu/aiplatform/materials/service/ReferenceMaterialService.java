@@ -13,12 +13,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true, timeout = 10, noRollbackFor = ApiException.class)
 public class ReferenceMaterialService implements IReferenceMaterial {
     public static final int MAX_CHARS = 1_000_000;
-    private final MaterialQueryService queries;
-    private final IMaterialRepository repository;
+    private final MaterialQueryService materialQueryService;
+    private final IMaterialRepository materialRepository;
 
-    public ReferenceMaterialService(MaterialQueryService queries, IMaterialRepository repository) {
-        this.queries = queries;
-        this.repository = repository;
+    public ReferenceMaterialService(
+            MaterialQueryService materialQueryService, IMaterialRepository materialRepository) {
+        this.materialQueryService = materialQueryService;
+        this.materialRepository = materialRepository;
     }
 
     @Override
@@ -27,9 +28,9 @@ public class ReferenceMaterialService implements IReferenceMaterial {
             throw ApiException.badRequest("MATERIAL_SCOPE_REQUIRED", "Chọn môn hoặc lớp");
         List<MaterialViews.Detail> items =
                 switch (scope.scope()) {
-                    case SUBJECT -> queries.subjectList(actor, scope.id());
+                    case SUBJECT -> materialQueryService.listSubjectMaterials(actor, scope.id());
                     case CLASS ->
-                            queries.classList(
+                            materialQueryService.listClassMaterials(
                                     actor,
                                     scope.id(),
                                     actor != null && actor.role() == Role.STUDENT,
@@ -60,15 +61,19 @@ public class ReferenceMaterialService implements IReferenceMaterial {
                     "MATERIAL_TEXT_LIMIT", "Chọn tối đa 10 học liệu và giới hạn ký tự hợp lệ");
         // Authorize every ID before reading or exposing any text.
         List<Material> materials =
-                ids.stream().distinct().map(id -> queries.authorized(actor, id, null)).toList();
+                ids
+                        .stream()
+                        .distinct()
+                        .map(id -> materialQueryService.loadAuthorizedMaterial(actor, id, null))
+                        .toList();
         if (materials.stream().anyMatch(m -> m.status() != Material.Status.ACTIVE || !m.enabled()))
             throw ApiException.notFound("MATERIAL_NOT_FOUND");
         int remaining = Math.min(maxChars, MAX_CHARS);
         List<MaterialText> result = new ArrayList<>();
         for (Material m : materials) {
             MaterialVersion v =
-                    repository
-                            .version(m.id(), m.currentVersionNo())
+                    materialRepository
+                            .findVersion(m.id(), m.currentVersionNo())
                             .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
             String text =
                     m.kind() == Material.Kind.YOUTUBE_LINK

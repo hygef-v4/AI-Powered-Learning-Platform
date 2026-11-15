@@ -21,7 +21,13 @@ public final class MaterialCommands {
             @NotNull UUID moduleId,
             Boolean enabled,
             FormattedText descriptionDocument) {
-        public Create(Material.Kind kind, String title, String description, int orderNo, Source source, UUID moduleId) {
+        public Create(
+                Material.Kind kind,
+                String title,
+                String description,
+                int orderNo,
+                Source source,
+                UUID moduleId) {
             this(kind, title, description, orderNo, source, moduleId, null, null);
         }
     }

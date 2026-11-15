@@ -20,42 +20,42 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(timeout = 10)
 public class MaterialModuleService {
-    private final IMaterialModuleRepository modules;
-    private final MaterialAccessPolicy access;
-    private final IQuizQuery quizzes;
+    private final IMaterialModuleRepository materialModuleRepository;
+    private final MaterialAccessPolicy materialAccessPolicy;
+    private final IQuizQuery quizQuery;
     private final IAudit audit;
     private final Clock clock;
 
     public MaterialModuleService(
-            IMaterialModuleRepository modules,
-            MaterialAccessPolicy access,
-            IQuizQuery quizzes,
+            IMaterialModuleRepository materialModuleRepository,
+            MaterialAccessPolicy materialAccessPolicy,
+            IQuizQuery quizQuery,
             IAudit audit,
             Clock clock) {
-        this.modules = modules;
-        this.access = access;
-        this.quizzes = quizzes;
+        this.materialModuleRepository = materialModuleRepository;
+        this.materialAccessPolicy = materialAccessPolicy;
+        this.quizQuery = quizQuery;
         this.audit = audit;
         this.clock = clock;
     }
 
     @Transactional(timeout = 10, noRollbackFor = ApiException.class)
-    public List<MaterialViews.Module> forSubject(Actor actor, UUID subjectId) {
-        access.subjectList(actor, subjectId);
-        boolean editable = access.canManageModules(actor, subjectId);
+    public List<MaterialViews.Module> listSubjectModules(Actor actor, UUID subjectId) {
+        materialAccessPolicy.requireSubjectListAccess(actor, subjectId);
+        boolean editable = materialAccessPolicy.canManageModules(actor, subjectId);
         if (editable) ensureDefaultModule(actor, subjectId);
         // Trang môn chỉ hiện Quiz của môn; Quiz của lớp chỉ giảng viên của lớp đó mở được.
-        return views(actor, subjectId, editable, q -> q.scope() == QuizScope.SUBJECT);
+        return buildModuleViews(actor, subjectId, editable, q -> q.scope() == QuizScope.SUBJECT);
     }
 
     @Transactional(timeout = 10, noRollbackFor = ApiException.class)
-    public List<MaterialViews.Module> forClass(Actor actor, UUID classId, boolean student) {
-        var c = access.classList(actor, classId, student);
+    public List<MaterialViews.Module> listClassModules(Actor actor, UUID classId, boolean student) {
+        var c = materialAccessPolicy.requireClassListAccess(actor, classId, student);
         if (!student) ensureDefaultModule(actor, c.subjectId());
         Predicate<QuizView> visible;
         if (student) {
             Set<UUID> open =
-                    quizzes.listForClass(classId).stream()
+                    quizQuery.listForClass(classId).stream()
                             .map(QuizView::quizId)
                             .collect(Collectors.toSet());
             visible = q -> open.contains(q.quizId());
@@ -67,7 +67,7 @@ public class MaterialModuleService {
                                             || (q.status() == QuizStatus.RETIRED
                                                     && q.publishedAt() != null)
                                     : classId.equals(q.classId());
-        return views(actor, c.subjectId(), false, visible);
+        return buildModuleViews(actor, c.subjectId(), false, visible);
     }
 
     /**
@@ -75,8 +75,8 @@ public class MaterialModuleService {
      * "Module 1" khi người soạn mở trang, để giảng viên của lớp thêm được học liệu.
      */
     private void ensureDefaultModule(Actor actor, UUID subjectId) {
-        if (!modules.list(subjectId).isEmpty()
-                || access.subject(subjectId).status()
+        if (!materialModuleRepository.listModules(subjectId).isEmpty()
+                || materialAccessPolicy.requireSubject(subjectId).status()
                         != edu.aiplatform.subjects.contract.SubjectStatus.ACTIVE) return;
         var now = clock.instant();
         var module =
@@ -89,47 +89,49 @@ public class MaterialModuleService {
                         now,
                         now,
                         0);
-        modules.insert(module);
-        record(actor, "MATERIAL_MODULE_CREATED", module);
+        materialModuleRepository.insertModule(module);
+        recordAudit(actor, "MATERIAL_MODULE_CREATED", module);
     }
 
-    public MaterialViews.Module create(
+    public MaterialViews.Module createModule(
             Actor actor, UUID subjectId, MaterialCommands.ModuleInput input) {
-        access.manageModules(actor, subjectId);
+        materialAccessPolicy.requireModuleManagement(actor, subjectId);
         var now = clock.instant();
         var module =
                 new MaterialModule(
                         UUID.randomUUID(),
                         subjectId,
                         input.title(),
-                        modules.list(subjectId).size(),
+                        materialModuleRepository.listModules(subjectId).size(),
                         actor.accountId(),
                         now,
                         now,
                         0);
-        modules.insert(module);
-        record(actor, "MATERIAL_MODULE_CREATED", module);
+        materialModuleRepository.insertModule(module);
+        recordAudit(actor, "MATERIAL_MODULE_CREATED", module);
         return new MaterialViews.Module(
                 module.id(), module.title(), module.orderNo(), module.version(), true, List.of());
     }
 
-    public void rename(Actor actor, UUID id, MaterialCommands.ModuleUpdate input) {
-        var module = writable(actor, id, input.version());
+    public void renameModule(Actor actor, UUID id, MaterialCommands.ModuleUpdate input) {
+        var module = requireWritableModule(actor, id, input.version());
         var next = module.revise(input.title(), module.orderNo(), clock.instant());
-        if (!modules.update(next, module.version())) throw conflict();
-        record(actor, "MATERIAL_MODULE_UPDATED", next);
+        if (
+                !materialModuleRepository.updateModule(
+                        next, module.version())) throw createVersionConflict();
+        recordAudit(actor, "MATERIAL_MODULE_UPDATED", next);
     }
 
     /** Chỉ xóa module không còn học liệu đang dùng; học liệu đã lưu trữ dời sang module đầu tiên còn lại của môn. */
-    public void delete(Actor actor, UUID id, long expected) {
-        var module = writable(actor, id, expected);
-        if (modules.activeMaterials(id) > 0)
+    public void deleteModule(Actor actor, UUID id, long expected) {
+        var module = requireWritableModule(actor, id, expected);
+        if (materialModuleRepository.countActiveMaterials(id) > 0)
             throw ApiException.conflict(
                     "MATERIAL_MODULE_NOT_EMPTY",
                     "Module còn học liệu, chuyển hoặc lưu trữ học liệu trước khi xóa");
-        if (modules.archivedMaterials(id) > 0) {
+        if (materialModuleRepository.countArchivedMaterials(id) > 0) {
             var other =
-                    modules.list(module.subjectId()).stream()
+                    materialModuleRepository.listModules(module.subjectId()).stream()
                             .filter(m -> !m.id().equals(id))
                             .findFirst()
                             .orElseThrow(
@@ -137,14 +139,14 @@ public class MaterialModuleService {
                                             ApiException.conflict(
                                                     "MATERIAL_MODULE_LAST",
                                                     "Môn cần ít nhất một module để giữ học liệu đã lưu trữ"));
-            modules.moveArchivedMaterials(id, other.id());
+            materialModuleRepository.moveArchivedMaterials(id, other.id());
         }
-        if (!modules.delete(id, expected)) throw conflict();
-        record(actor, "MATERIAL_MODULE_DELETED", module);
+        if (!materialModuleRepository.deleteModule(id, expected)) throw createVersionConflict();
+        recordAudit(actor, "MATERIAL_MODULE_DELETED", module);
     }
 
-    public void reorder(Actor actor, UUID subjectId, MaterialCommands.Reorder input) {
-        access.manageModules(actor, subjectId);
+    public void reorderModules(Actor actor, UUID subjectId, MaterialCommands.Reorder input) {
+        materialAccessPolicy.requireModuleManagement(actor, subjectId);
         Set<UUID> seen = new HashSet<>();
         List<MaterialModule> rows = new ArrayList<>();
         for (var position : input.items()) {
@@ -152,10 +154,10 @@ public class MaterialModuleService {
                 throw ApiException.badRequest(
                         "MATERIAL_REORDER_INVALID", "Danh sách có module trùng");
             var module =
-                    modules.find(position.id())
+                    materialModuleRepository.findModule(position.id())
                             .filter(m -> m.subjectId().equals(subjectId))
                             .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
-            if (module.version() != position.version()) throw conflict();
+            if (module.version() != position.version()) throw createVersionConflict();
             rows.add(module);
         }
         Map<UUID, Integer> positions = new HashMap<>();
@@ -163,47 +165,51 @@ public class MaterialModuleService {
         rows.sort(Comparator.comparing(MaterialModule::id));
         for (var module : rows) {
             var next = module.revise(module.title(), positions.get(module.id()), clock.instant());
-            if (!modules.update(next, module.version())) throw conflict();
+            if (
+                    !materialModuleRepository.updateModule(
+                            next, module.version())) throw createVersionConflict();
         }
     }
 
     /** Gắn Quiz vào module (Quiz đang ở module khác thì chuyển sang). */
-    public void attach(Actor actor, UUID moduleId, UUID quizId) {
+    public void attachQuiz(Actor actor, UUID moduleId, UUID quizId) {
         var module =
-                modules.find(moduleId)
+                materialModuleRepository.findModule(moduleId)
                         .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
-        var quiz = manageableQuiz(actor, module, quizId);
-        var current = modules.quizLink(quizId);
+        var quiz = requireManageableQuiz(actor, module, quizId);
+        var current = materialModuleRepository.findQuizLink(quizId);
         if (current.isPresent()) {
             if (current.get().moduleId().equals(moduleId)) return;
-            modules.unlink(current.get().moduleId(), quizId);
+            materialModuleRepository.unlinkModuleQuiz(current.get().moduleId(), quizId);
         }
         int order =
                 (int)
-                        modules.quizLinks(module.subjectId()).stream()
+                        materialModuleRepository.listQuizLinks(module.subjectId()).stream()
                                 .filter(l -> l.moduleId().equals(moduleId))
                                 .count();
-        modules.link(new MaterialModule.QuizLink(moduleId, quiz.quizId(), order));
-        record(actor, "MATERIAL_MODULE_QUIZ_ATTACHED", module);
+        materialModuleRepository.linkQuiz(
+                new MaterialModule.QuizLink(moduleId, quiz.quizId(), order));
+        recordAudit(actor, "MATERIAL_MODULE_QUIZ_ATTACHED", module);
     }
 
-    public void detach(Actor actor, UUID moduleId, UUID quizId) {
+    public void detachQuiz(Actor actor, UUID moduleId, UUID quizId) {
         var module =
-                modules.find(moduleId)
+                materialModuleRepository.findModule(moduleId)
                         .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
-        manageableQuiz(actor, module, quizId);
-        if (!modules.unlink(moduleId, quizId)) throw ApiException.notFound("MATERIAL_NOT_FOUND");
-        record(actor, "MATERIAL_MODULE_QUIZ_DETACHED", module);
+        requireManageableQuiz(actor, module, quizId);
+        if (!materialModuleRepository.unlinkModuleQuiz(moduleId, quizId)) throw ApiException
+                .notFound("MATERIAL_NOT_FOUND");
+        recordAudit(actor, "MATERIAL_MODULE_QUIZ_DETACHED", module);
     }
 
-    private QuizView manageableQuiz(Actor actor, MaterialModule module, UUID quizId) {
+    private QuizView requireManageableQuiz(Actor actor, MaterialModule module, UUID quizId) {
         var quiz =
-                quizzes.get(quizId)
+                quizQuery.get(quizId)
                         .orElseThrow(() -> ApiException.notFound("MATERIAL_QUIZ_NOT_FOUND"));
         if (!quiz.subjectId().equals(module.subjectId()))
             throw ApiException.badRequest(
                     "MATERIAL_QUIZ_INVALID", "Quiz không thuộc môn của module");
-        if (!access.canManageQuiz(
+        if (!materialAccessPolicy.canManageQuiz(
                 actor, quiz.subjectId(), quiz.scope() == QuizScope.CLASS ? quiz.classId() : null)) {
             audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(),
                     "ACCESS_DENIED", "MATERIAL_MODULE", module.id().toString(), AuditResult.DENIED,
@@ -213,47 +219,31 @@ public class MaterialModuleService {
         return quiz;
     }
 
-    private List<MaterialViews.Module> views(
+    private List<MaterialViews.Module> buildModuleViews(
             Actor actor, UUID subjectId, boolean editable, Predicate<QuizView> visible) {
         Map<UUID, List<MaterialModule.QuizLink>> links =
-                modules.quizLinks(subjectId).stream()
+                materialModuleRepository.listQuizLinks(subjectId).stream()
                         .collect(
                                 Collectors.groupingBy(
                                         MaterialModule.QuizLink::moduleId,
                                         LinkedHashMap::new,
                                         Collectors.toList()));
         Map<String, Boolean> manageable = new HashMap<>();
-        return modules.list(subjectId).stream()
+        return materialModuleRepository.listModules(subjectId).stream()
                 .map(
                         module -> {
                             var items =
                                     links.getOrDefault(module.id(), List.of()).stream()
-                                            .map(link -> quizzes.get(link.quizId()).orElse(null))
+                                            .map(link -> quizQuery.get(link.quizId()).orElse(null))
                                             .filter(Objects::nonNull)
                                             .filter(visible)
                                             .map(
-                                                    q -> {
-                                                        UUID classId =
-                                                                q.scope() == QuizScope.CLASS
-                                                                        ? q.classId()
-                                                                        : null;
-                                                        boolean manage =
-                                                                manageable.computeIfAbsent(
-                                                                        String.valueOf(classId),
-                                                                        k ->
-                                                                                access
-                                                                                        .canManageQuiz(
-                                                                                                actor,
-                                                                                                subjectId,
-                                                                                                classId));
-                                                        return new MaterialViews.ModuleQuiz(
-                                                                q.quizId(),
-                                                                q.title(),
-                                                                q.status(),
-                                                                q.scope(),
-                                                                q.classId(),
-                                                                manage);
-                                                    })
+                                                    quiz ->
+                                                            buildModuleQuiz(
+                                                                    actor,
+                                                                    subjectId,
+                                                                    quiz,
+                                                                    manageable))
                                             .toList();
                             return new MaterialViews.Module(
                                     module.id(),
@@ -266,20 +256,34 @@ public class MaterialModuleService {
                 .toList();
     }
 
-    private MaterialModule writable(Actor actor, UUID id, long expected) {
+    /** {@code manageable} lưu kết quả kiểm quyền theo lớp để không gọi lại trong cùng một lượt đọc. */
+    private MaterialViews.ModuleQuiz buildModuleQuiz(
+            Actor actor, UUID subjectId, QuizView quiz, Map<String, Boolean> manageable) {
+        UUID classId = quiz.scope() == QuizScope.CLASS ? quiz.classId() : null;
+        boolean manage =
+                manageable.computeIfAbsent(
+                        String.valueOf(classId),
+                        key -> materialAccessPolicy.canManageQuiz(actor, subjectId, classId));
+        return new MaterialViews.ModuleQuiz(
+                quiz.quizId(), quiz.title(), quiz.status(), quiz.scope(), quiz.classId(), manage);
+    }
+
+    private MaterialModule requireWritableModule(Actor actor, UUID id, long expected) {
         var module =
-                modules.find(id).orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
-        access.manageModules(actor, module.subjectId());
-        if (module.version() != expected) throw conflict();
+                materialModuleRepository
+                        .findModule(id)
+                        .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
+        materialAccessPolicy.requireModuleManagement(actor, module.subjectId());
+        if (module.version() != expected) throw createVersionConflict();
         return module;
     }
 
-    private ApiException conflict() {
+    private ApiException createVersionConflict() {
         return ApiException.conflict(
                 "MATERIAL_VERSION_CONFLICT", "Module đã thay đổi, vui lòng tải lại");
     }
 
-    private void record(Actor actor, String action, MaterialModule module) {
+    private void recordAudit(Actor actor, String action, MaterialModule module) {
         audit.record(
                 new AuditEvent(
                         UUID.randomUUID(),

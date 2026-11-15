@@ -11,24 +11,25 @@ import org.apache.pdfbox.pdmodel.font.*;
 import org.junit.jupiter.api.*;
 
 class MaterialTextExtractorTest {
-    IArtifact files;
-    MaterialTextExtractor extractor;
+    IArtifact artifact;
+    MaterialTextExtractor materialTextExtractor;
 
     @BeforeEach
     void setup() {
-        files = mock(IArtifact.class);
-        extractor = new MaterialTextExtractor(files);
+        artifact = mock(IArtifact.class);
+        materialTextExtractor = new MaterialTextExtractor(artifact);
     }
 
     @AfterEach
     void close() {
-        extractor.close();
+        materialTextExtractor.close();
     }
 
     @Test
     void deadlineCancelsAndClosesInputStream() throws Exception {
-        extractor.close();
-        extractor = new MaterialTextExtractor(files, java.time.Duration.ofMillis(250));
+        materialTextExtractor.close();
+        materialTextExtractor =
+                new MaterialTextExtractor(artifact, java.time.Duration.ofMillis(250));
         var closed = new java.util.concurrent.CountDownLatch(1);
         InputStream blocking =
                 new InputStream() {
@@ -48,8 +49,8 @@ class MaterialTextExtractorTest {
                         closed.countDown();
                     }
                 };
-        when(files.open("slow")).thenReturn(blocking);
-        assertThatThrownBy(() -> extractor.extract("slow"))
+        when(artifact.open("slow")).thenReturn(blocking);
+        assertThatThrownBy(() -> materialTextExtractor.extractText("slow"))
                 .isInstanceOf(IllegalStateException.class);
         assertThat(closed.await(2, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
     }
@@ -65,8 +66,9 @@ class MaterialTextExtractorTest {
             document.write(output);
             bytes = output.toByteArray();
         }
-        when(files.open("file")).thenReturn(new ByteArrayInputStream(bytes));
-        assertThat(extractor.extract("file").text()).contains("Reference material sentence");
+        when(artifact.open("file")).thenReturn(new ByteArrayInputStream(bytes));
+        assertThat(materialTextExtractor.extractText("file").text())
+                .contains("Reference material sentence");
     }
 
     @Test
@@ -80,8 +82,9 @@ class MaterialTextExtractorTest {
             document.write(output);
             bytes = output.toByteArray();
         }
-        when(files.open("file")).thenReturn(new ByteArrayInputStream(bytes));
-        assertThat(extractor.extract("file").text()).contains("Presentation reference content");
+        when(artifact.open("file")).thenReturn(new ByteArrayInputStream(bytes));
+        assertThat(materialTextExtractor.extractText("file").text())
+                .contains("Presentation reference content");
     }
 
     @Test
@@ -102,8 +105,8 @@ class MaterialTextExtractorTest {
             document.save(output);
             bytes = output.toByteArray();
         }
-        when(files.open("file")).thenReturn(new ByteArrayInputStream(bytes));
-        var result = extractor.extract("file");
+        when(artifact.open("file")).thenReturn(new ByteArrayInputStream(bytes));
+        var result = materialTextExtractor.extractText("file");
         assertThat(result.text()).contains("Reference content");
         assertThat(result.pages()).isEqualTo(1);
     }
@@ -123,8 +126,8 @@ class MaterialTextExtractorTest {
             workbook.write(output);
             bytes = output.toByteArray();
         }
-        when(files.open("xlsx-file")).thenReturn(new ByteArrayInputStream(bytes));
-        var result = extractor.extract("xlsx-file");
+        when(artifact.open("xlsx-file")).thenReturn(new ByteArrayInputStream(bytes));
+        var result = materialTextExtractor.extractText("xlsx-file");
         assertThat(result.text()).contains("Workbook overview reference sentence",
                 "Second sheet reference evidence", "137").doesNotContain("56");
         assertThat(result.text().strip().length() / Math.max(1, result.pages()))
@@ -159,9 +162,9 @@ class MaterialTextExtractorTest {
             bytes = output.toByteArray();
         }
         assertThat(bytes.length).isBetween(50_000_000, 52_428_800);
-        when(files.open("large-pdf")).thenReturn(new ByteArrayInputStream(bytes));
+        when(artifact.open("large-pdf")).thenReturn(new ByteArrayInputStream(bytes));
         long started = System.nanoTime();
-        var result = extractor.extract("large-pdf");
+        var result = materialTextExtractor.extractText("large-pdf");
         long elapsed = java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
         assertThat(result.text()).contains("Bounded extraction reference content");
         assertThat(result.pages()).isEqualTo(65);
@@ -192,8 +195,8 @@ class MaterialTextExtractorTest {
             document.save(output);
             bytes = output.toByteArray();
         }
-        when(files.open("image-only")).thenReturn(new ByteArrayInputStream(bytes));
-        var result = extractor.extract("image-only");
+        when(artifact.open("image-only")).thenReturn(new ByteArrayInputStream(bytes));
+        var result = materialTextExtractor.extractText("image-only");
         assertThat(result.text()).isBlank();
         assertThat(result.pages()).isEqualTo(1);
     }

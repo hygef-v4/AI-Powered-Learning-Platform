@@ -23,31 +23,35 @@ class MaterialModuleServiceTest {
             otherId = UUID.randomUUID();
     final Actor manager = new Actor(UUID.randomUUID(), Role.SUBJECT_MANAGER);
     final Instant now = Instant.parse("2026-10-29T00:00:00Z");
-    IMaterialModuleRepository repo;
-    MaterialAccessPolicy access;
-    IQuizQuery quizzes;
-    MaterialModuleService service;
+    IMaterialModuleRepository materialModuleRepository;
+    MaterialAccessPolicy materialAccessPolicy;
+    IQuizQuery quizQuery;
+    MaterialModuleService materialModuleService;
     IAudit audit;
     MaterialModule module, other;
 
     @BeforeEach
     void setup() {
-        repo = mock(IMaterialModuleRepository.class);
-        access = mock(MaterialAccessPolicy.class);
-        quizzes = mock(IQuizQuery.class);
+        materialModuleRepository = mock(IMaterialModuleRepository.class);
+        materialAccessPolicy = mock(MaterialAccessPolicy.class);
+        quizQuery = mock(IQuizQuery.class);
         audit = mock(IAudit.class);
-        service =
+        materialModuleService =
                 new MaterialModuleService(
-                        repo, access, quizzes, audit, Clock.fixed(now, ZoneOffset.UTC));
+                        materialModuleRepository,
+                        materialAccessPolicy,
+                        quizQuery,
+                        audit,
+                        Clock.fixed(now, ZoneOffset.UTC));
         module =
                 new MaterialModule(
                         moduleId, subject, "Module 1", 0, manager.accountId(), now, now, 0);
         other =
                 new MaterialModule(
                         otherId, subject, "Module 2", 1, manager.accountId(), now, now, 0);
-        when(repo.find(moduleId)).thenReturn(Optional.of(module));
-        when(repo.list(subject)).thenReturn(List.of(module, other));
-        when(repo.delete(any(), anyLong())).thenReturn(true);
+        when(materialModuleRepository.findModule(moduleId)).thenReturn(Optional.of(module));
+        when(materialModuleRepository.listModules(subject)).thenReturn(List.of(module, other));
+        when(materialModuleRepository.deleteModule(any(), anyLong())).thenReturn(true);
     }
 
     QuizView quiz(UUID id, QuizScope scope, UUID subjectId, UUID classOf, QuizStatus status) {
@@ -79,49 +83,73 @@ class MaterialModuleServiceTest {
 
     @Test
     void managerDefaultModuleIsCreatedOnlyOnceAcrossRepeatedOpen() {
-        when(access.canManageModules(manager, subject)).thenReturn(true);
-        when(access.subject(subject)).thenReturn(new edu.aiplatform.subjects.contract.SubjectRef(
-                subject, "S", "Subject", edu.aiplatform.subjects.contract.SubjectStatus.ACTIVE, manager.accountId()));
+        when(materialAccessPolicy.canManageModules(manager, subject)).thenReturn(true);
+        when(materialAccessPolicy.requireSubject(subject))
+                .thenReturn(
+                        new edu.aiplatform.subjects.contract.SubjectRef(
+                                subject,
+                                "S",
+                                "Subject",
+                                edu.aiplatform.subjects.contract.SubjectStatus.ACTIVE,
+                                manager.accountId()));
         var stored = new ArrayList<MaterialModule>();
-        when(repo.list(subject)).thenAnswer(call -> List.copyOf(stored));
-        doAnswer(call -> { stored.add(call.getArgument(0)); return null; }).when(repo).insert(any());
-        service.forSubject(manager, subject);
-        service.forSubject(manager, subject);
+        when(materialModuleRepository.listModules(subject)).thenAnswer(call -> List.copyOf(stored));
+        doAnswer(call -> { stored.add(call.getArgument(0)); return null; })
+                .when(materialModuleRepository)
+                .insertModule(any());
+        materialModuleService.listSubjectModules(manager, subject);
+        materialModuleService.listSubjectModules(manager, subject);
         assertThat(stored).hasSize(1);
         assertThat(stored.get(0).title()).isEqualTo("Module 1");
-        verify(repo).insert(any());
+        verify(materialModuleRepository).insertModule(any());
         verify(audit).record(argThat(e -> e.action().equals("MATERIAL_MODULE_CREATED")));
     }
 
     @Test
     void teacherOpeningArchivedSubjectDoesNotCreateDefaultModule() {
         Actor teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
-        when(access.classList(teacher, classId, false)).thenReturn(new ClassRef(
-                classId, subject, "C", "Class", ClassStatus.ARCHIVED, teacher.accountId(), false));
-        when(access.subject(subject)).thenReturn(new edu.aiplatform.subjects.contract.SubjectRef(
-                subject, "S", "Subject", edu.aiplatform.subjects.contract.SubjectStatus.ARCHIVED, null));
-        when(repo.list(subject)).thenReturn(List.of());
-        assertThat(service.forClass(teacher, classId, false)).isEmpty();
-        verify(repo, never()).insert(any());
+        when(materialAccessPolicy.requireClassListAccess(teacher, classId, false))
+                .thenReturn(
+                        new ClassRef(
+                                classId,
+                                subject,
+                                "C",
+                                "Class",
+                                ClassStatus.ARCHIVED,
+                                teacher.accountId(),
+                                false));
+        when(materialAccessPolicy.requireSubject(subject))
+                .thenReturn(
+                        new edu.aiplatform.subjects.contract.SubjectRef(
+                                subject,
+                                "S",
+                                "Subject",
+                                edu.aiplatform.subjects.contract.SubjectStatus.ARCHIVED,
+                                null));
+        when(materialModuleRepository.listModules(subject)).thenReturn(List.of());
+        assertThat(materialModuleService.listClassModules(teacher, classId, false)).isEmpty();
+        verify(materialModuleRepository, never()).insertModule(any());
         verifyNoInteractions(audit);
     }
 
     @Test
     void lastEmptyModuleMayBeDeleted() {
-        when(repo.list(subject)).thenReturn(List.of(module));
-        service.delete(manager, moduleId, 0);
-        verify(repo).delete(moduleId, 0);
-        verify(repo, never()).moveArchivedMaterials(any(), any());
+        when(materialModuleRepository.listModules(subject)).thenReturn(List.of(module));
+        materialModuleService.deleteModule(manager, moduleId, 0);
+        verify(materialModuleRepository).deleteModule(moduleId, 0);
+        verify(materialModuleRepository, never()).moveArchivedMaterials(any(), any());
     }
 
     @Test
     void reorderAcceptsProperSubsetWithoutChangingUnrequestedModule() {
-        when(repo.find(otherId)).thenReturn(Optional.of(other));
-        when(repo.update(any(), anyLong())).thenReturn(true);
-        service.reorder(manager, subject,
+        when(materialModuleRepository.findModule(otherId)).thenReturn(Optional.of(other));
+        when(materialModuleRepository.updateModule(any(), anyLong())).thenReturn(true);
+        materialModuleService.reorderModules(manager, subject,
                 new MaterialCommands.Reorder(List.of(new MaterialCommands.Position(otherId, 0L))));
-        verify(repo).update(argThat(m -> m.id().equals(otherId) && m.orderNo() == 0), eq(0L));
-        verify(repo, never()).update(argThat(m -> m.id().equals(moduleId)), anyLong());
+        verify(materialModuleRepository)
+                .updateModule(argThat(m -> m.id().equals(otherId) && m.orderNo() == 0), eq(0L));
+        verify(materialModuleRepository, never())
+                .updateModule(argThat(m -> m.id().equals(moduleId)), anyLong());
     }
 
     @Test
@@ -143,24 +171,24 @@ class MaterialModuleServiceTest {
     @Test
     void detachChecksCurrentQuizPermissionAndExactLinkBeforeSuccessAudit() {
         UUID quizId = UUID.randomUUID();
-        when(quizzes.get(quizId)).thenReturn(Optional.of(
+        when(quizQuery.get(quizId)).thenReturn(Optional.of(
                 quiz(quizId, QuizScope.SUBJECT, subject, null, QuizStatus.DRAFT)));
-        when(access.canManageQuiz(manager, subject, null)).thenReturn(false);
-        assertThatThrownBy(() -> service.detach(manager, moduleId, quizId))
+        when(materialAccessPolicy.canManageQuiz(manager, subject, null)).thenReturn(false);
+        assertThatThrownBy(() -> materialModuleService.detachQuiz(manager, moduleId, quizId))
                 .isInstanceOfSatisfying(ApiException.class,
                         e -> assertThat(e.code()).isEqualTo("MATERIAL_QUIZ_NOT_FOUND"));
-        verify(repo, never()).unlink(any(), any());
+        verify(materialModuleRepository, never()).unlinkModuleQuiz(any(), any());
         verify(audit).record(argThat(event -> event.action().equals("ACCESS_DENIED")
                 && event.result() == edu.aiplatform.audit.contract.AuditResult.DENIED));
         clearInvocations(audit);
-        when(access.canManageQuiz(manager, subject, null)).thenReturn(true);
-        when(repo.unlink(moduleId, quizId)).thenReturn(false);
-        assertThatThrownBy(() -> service.detach(manager, moduleId, quizId))
+        when(materialAccessPolicy.canManageQuiz(manager, subject, null)).thenReturn(true);
+        when(materialModuleRepository.unlinkModuleQuiz(moduleId, quizId)).thenReturn(false);
+        assertThatThrownBy(() -> materialModuleService.detachQuiz(manager, moduleId, quizId))
                 .isInstanceOfSatisfying(ApiException.class,
                         e -> assertThat(e.code()).isEqualTo("MATERIAL_NOT_FOUND"));
         verifyNoInteractions(audit);
-        when(repo.unlink(moduleId, quizId)).thenReturn(true);
-        service.detach(manager, moduleId, quizId);
+        when(materialModuleRepository.unlinkModuleQuiz(moduleId, quizId)).thenReturn(true);
+        materialModuleService.detachQuiz(manager, moduleId, quizId);
         verify(audit).record(argThat(event -> event.action().equals("MATERIAL_MODULE_QUIZ_DETACHED")
                 && event.actorId().equals(manager.accountId()) && event.objectId().equals(moduleId.toString())));
     }
@@ -168,44 +196,45 @@ class MaterialModuleServiceTest {
     @Test
     void attachToSameModuleIsIdempotentButForeignDetachCannotWrite() {
         UUID quizId = UUID.randomUUID();
-        when(quizzes.get(quizId)).thenReturn(Optional.of(
+        when(quizQuery.get(quizId)).thenReturn(Optional.of(
                 quiz(quizId, QuizScope.SUBJECT, subject, null, QuizStatus.DRAFT)));
-        when(access.canManageQuiz(manager, subject, null)).thenReturn(true);
-        when(repo.quizLink(quizId)).thenReturn(Optional.of(new MaterialModule.QuizLink(moduleId, quizId, 0)));
-        service.attach(manager, moduleId, quizId);
-        verify(repo, never()).link(any());
-        verify(repo, never()).unlink(any(), any());
+        when(materialAccessPolicy.canManageQuiz(manager, subject, null)).thenReturn(true);
+        when(materialModuleRepository.findQuizLink(quizId))
+                .thenReturn(Optional.of(new MaterialModule.QuizLink(moduleId, quizId, 0)));
+        materialModuleService.attachQuiz(manager, moduleId, quizId);
+        verify(materialModuleRepository, never()).linkQuiz(any());
+        verify(materialModuleRepository, never()).unlinkModuleQuiz(any(), any());
         verifyNoInteractions(audit);
-        when(quizzes.get(quizId)).thenReturn(Optional.of(
+        when(quizQuery.get(quizId)).thenReturn(Optional.of(
                 quiz(quizId, QuizScope.SUBJECT, UUID.randomUUID(), null, QuizStatus.DRAFT)));
-        assertThatThrownBy(() -> service.detach(manager, moduleId, quizId))
+        assertThatThrownBy(() -> materialModuleService.detachQuiz(manager, moduleId, quizId))
                 .isInstanceOfSatisfying(ApiException.class,
                         e -> assertThat(e.code()).isEqualTo("MATERIAL_QUIZ_INVALID"));
-        verify(repo, never()).unlink(any(), any());
+        verify(materialModuleRepository, never()).unlinkModuleQuiz(any(), any());
         verifyNoInteractions(audit);
     }
 
     @Test
     void deleteRefusesModuleWithActiveMaterials() {
-        when(repo.activeMaterials(moduleId)).thenReturn(2);
-        assertThatThrownBy(() -> service.delete(manager, moduleId, 0))
+        when(materialModuleRepository.countActiveMaterials(moduleId)).thenReturn(2);
+        assertThatThrownBy(() -> materialModuleService.deleteModule(manager, moduleId, 0))
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         e -> assertThat(e.code()).isEqualTo("MATERIAL_MODULE_NOT_EMPTY"));
-        verify(repo, never()).delete(any(), anyLong());
+        verify(materialModuleRepository, never()).deleteModule(any(), anyLong());
     }
 
     @Test
     void deleteMovesArchivedMaterialsToAnotherModule() {
-        when(repo.archivedMaterials(moduleId)).thenReturn(1);
-        service.delete(manager, moduleId, 0);
-        verify(repo).moveArchivedMaterials(moduleId, otherId);
-        verify(repo).delete(moduleId, 0);
+        when(materialModuleRepository.countArchivedMaterials(moduleId)).thenReturn(1);
+        materialModuleService.deleteModule(manager, moduleId, 0);
+        verify(materialModuleRepository).moveArchivedMaterials(moduleId, otherId);
+        verify(materialModuleRepository).deleteModule(moduleId, 0);
     }
 
     @Test
     void deleteOfStaleVersionConflicts() {
-        assertThatThrownBy(() -> service.delete(manager, moduleId, 5))
+        assertThatThrownBy(() -> materialModuleService.deleteModule(manager, moduleId, 5))
                 .isInstanceOfSatisfying(
                         ApiException.class, e -> assertThat(e.status().value()).isEqualTo(409));
     }
@@ -213,7 +242,7 @@ class MaterialModuleServiceTest {
     @Test
     void attachRejectsQuizOfAnotherSubject() {
         UUID quizId = UUID.randomUUID(), foreignSubject = UUID.randomUUID();
-        when(quizzes.get(quizId))
+        when(quizQuery.get(quizId))
                 .thenReturn(
                         Optional.of(
                                 quiz(
@@ -222,57 +251,57 @@ class MaterialModuleServiceTest {
                                         foreignSubject,
                                         null,
                                         QuizStatus.OPEN)));
-        when(access.canManageQuiz(manager, foreignSubject, null)).thenReturn(true);
-        assertThatThrownBy(() -> service.attach(manager, moduleId, quizId))
+        when(materialAccessPolicy.canManageQuiz(manager, foreignSubject, null)).thenReturn(true);
+        assertThatThrownBy(() -> materialModuleService.attachQuiz(manager, moduleId, quizId))
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         e -> {
                             assertThat(e.status().value()).isEqualTo(400);
                             assertThat(e.code()).isEqualTo("MATERIAL_QUIZ_INVALID");
                         });
-        verify(repo, never()).link(any());
-        verify(repo, never()).unlink(any(), any());
+        verify(materialModuleRepository, never()).linkQuiz(any());
+        verify(materialModuleRepository, never()).unlinkModuleQuiz(any(), any());
         verifyNoInteractions(audit);
     }
 
     @Test
     void attachMovesQuizFromItsPreviousModule() {
         UUID quizId = UUID.randomUUID();
-        when(quizzes.get(quizId))
+        when(quizQuery.get(quizId))
                 .thenReturn(
                         Optional.of(
                                 quiz(quizId, QuizScope.SUBJECT, subject, null, QuizStatus.DRAFT)));
-        when(access.canManageQuiz(manager, subject, null)).thenReturn(true);
-        when(repo.quizLink(quizId))
+        when(materialAccessPolicy.canManageQuiz(manager, subject, null)).thenReturn(true);
+        when(materialModuleRepository.findQuizLink(quizId))
                 .thenReturn(Optional.of(new MaterialModule.QuizLink(otherId, quizId, 0)));
-        service.attach(manager, moduleId, quizId);
-        verify(repo).unlink(otherId, quizId);
-        verify(repo).link(new MaterialModule.QuizLink(moduleId, quizId, 0));
+        materialModuleService.attachQuiz(manager, moduleId, quizId);
+        verify(materialModuleRepository).unlinkModuleQuiz(otherId, quizId);
+        verify(materialModuleRepository).linkQuiz(new MaterialModule.QuizLink(moduleId, quizId, 0));
     }
 
     @Test
     void studentsSeeOnlyOpenQuizzesOfTheirClass() {
         Actor student = new Actor(UUID.randomUUID(), Role.STUDENT);
         UUID open = UUID.randomUUID(), draft = UUID.randomUUID();
-        when(access.classList(student, classId, true))
+        when(materialAccessPolicy.requireClassListAccess(student, classId, true))
                 .thenReturn(
                         new ClassRef(
                                 classId, subject, "C", "Class", ClassStatus.OPEN, null, false));
-        when(repo.quizLinks(subject))
+        when(materialModuleRepository.listQuizLinks(subject))
                 .thenReturn(
                         List.of(
                                 new MaterialModule.QuizLink(moduleId, open, 0),
                                 new MaterialModule.QuizLink(moduleId, draft, 1)));
-        when(quizzes.get(open))
+        when(quizQuery.get(open))
                 .thenReturn(
                         Optional.of(quiz(open, QuizScope.SUBJECT, subject, null, QuizStatus.OPEN)));
-        when(quizzes.get(draft))
+        when(quizQuery.get(draft))
                 .thenReturn(
                         Optional.of(
                                 quiz(draft, QuizScope.SUBJECT, subject, null, QuizStatus.DRAFT)));
-        when(quizzes.listForClass(classId))
+        when(quizQuery.listForClass(classId))
                 .thenReturn(List.of(quiz(open, QuizScope.SUBJECT, subject, null, QuizStatus.OPEN)));
-        var views = service.forClass(student, classId, true);
+        var views = materialModuleService.listClassModules(student, classId, true);
         assertThat(views).hasSize(2);
         assertThat(views.get(0).quizzes())
                 .extracting(MaterialViews.ModuleQuiz::quizId)
@@ -298,7 +327,7 @@ class MaterialModuleServiceTest {
                         null,
                         BigDecimal.TEN,
                         null);
-        when(access.classList(teacher, classId, false))
+        when(materialAccessPolicy.requireClassListAccess(teacher, classId, false))
                 .thenReturn(
                         new ClassRef(
                                 classId,
@@ -308,31 +337,32 @@ class MaterialModuleServiceTest {
                                 ClassStatus.OPEN,
                                 teacher.accountId(),
                                 false));
-        when(repo.quizLinks(subject))
+        when(materialModuleRepository.listQuizLinks(subject))
                 .thenReturn(List.of(new MaterialModule.QuizLink(moduleId, quizId, 0)));
-        when(quizzes.get(quizId)).thenReturn(Optional.of(unpublished));
-        assertThat(service.forClass(teacher, classId, false).get(0).quizzes()).isEmpty();
+        when(quizQuery.get(quizId)).thenReturn(Optional.of(unpublished));
+        assertThat(materialModuleService.listClassModules(teacher, classId, false).get(0).quizzes())
+                .isEmpty();
     }
 
     @Test
     void lastModuleWithArchivedMaterialCannotBeDeleted() {
-        when(repo.list(subject)).thenReturn(List.of(module));
-        when(repo.archivedMaterials(moduleId)).thenReturn(1);
+        when(materialModuleRepository.listModules(subject)).thenReturn(List.of(module));
+        when(materialModuleRepository.countArchivedMaterials(moduleId)).thenReturn(1);
 
-        assertThatThrownBy(() -> service.delete(manager, moduleId, 0))
+        assertThatThrownBy(() -> materialModuleService.deleteModule(manager, moduleId, 0))
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         e -> assertThat(e.code()).isEqualTo("MATERIAL_MODULE_LAST"));
 
-        verify(repo, never()).moveArchivedMaterials(any(), any());
-        verify(repo, never()).delete(any(), anyLong());
+        verify(materialModuleRepository, never()).moveArchivedMaterials(any(), any());
+        verify(materialModuleRepository, never()).deleteModule(any(), anyLong());
         verifyNoInteractions(audit);
     }
 
     @Test
     void lostDeleteCasDoesNotAuditSuccess() {
-        when(repo.delete(moduleId, 0)).thenReturn(false);
-        assertThatThrownBy(() -> service.delete(manager, moduleId, 0))
+        when(materialModuleRepository.deleteModule(moduleId, 0)).thenReturn(false);
+        assertThatThrownBy(() -> materialModuleService.deleteModule(manager, moduleId, 0))
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         e -> assertThat(e.code()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
@@ -341,10 +371,10 @@ class MaterialModuleServiceTest {
 
     @Test
     void lostRenameCasDoesNotAuditSuccess() {
-        when(repo.update(any(), anyLong())).thenReturn(false);
+        when(materialModuleRepository.updateModule(any(), anyLong())).thenReturn(false);
         assertThatThrownBy(
                         () ->
-                                service.rename(
+                                materialModuleService.renameModule(
                                         manager,
                                         moduleId,
                                         new MaterialCommands.ModuleUpdate("New", 0L)))
@@ -359,17 +389,17 @@ class MaterialModuleServiceTest {
         var first = new MaterialCommands.Position(moduleId, 0L);
         assertThatThrownBy(
                         () ->
-                                service.reorder(
+                                materialModuleService.reorderModules(
                                         manager,
                                         subject,
                                         new MaterialCommands.Reorder(List.of(first, first))))
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         e -> assertThat(e.code()).isEqualTo("MATERIAL_REORDER_INVALID"));
-        when(repo.find(otherId)).thenReturn(Optional.of(other));
+        when(materialModuleRepository.findModule(otherId)).thenReturn(Optional.of(other));
         assertThatThrownBy(
                         () ->
-                                service.reorder(
+                                materialModuleService.reorderModules(
                                         manager,
                                         subject,
                                         new MaterialCommands.Reorder(
@@ -380,7 +410,7 @@ class MaterialModuleServiceTest {
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         e -> assertThat(e.code()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
-        when(repo.find(otherId))
+        when(materialModuleRepository.findModule(otherId))
                 .thenReturn(
                         Optional.of(
                                 new MaterialModule(
@@ -394,7 +424,7 @@ class MaterialModuleServiceTest {
                                         0)));
         assertThatThrownBy(
                         () ->
-                                service.reorder(
+                                materialModuleService.reorderModules(
                                         manager,
                                         subject,
                                         new MaterialCommands.Reorder(
@@ -405,30 +435,30 @@ class MaterialModuleServiceTest {
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         e -> assertThat(e.code()).isEqualTo("MATERIAL_NOT_FOUND"));
-        verify(repo, never()).update(any(), anyLong());
+        verify(materialModuleRepository, never()).updateModule(any(), anyLong());
         verifyNoInteractions(audit);
     }
 
     @Test
     void reorderPersistsRequestedPositionsAndRejectsLostCas() {
-        when(repo.find(otherId)).thenReturn(Optional.of(other));
-        when(repo.update(any(), anyLong())).thenReturn(true);
+        when(materialModuleRepository.findModule(otherId)).thenReturn(Optional.of(other));
+        when(materialModuleRepository.updateModule(any(), anyLong())).thenReturn(true);
         var command =
                 new MaterialCommands.Reorder(
                         List.of(
                                 new MaterialCommands.Position(otherId, 0L),
                                 new MaterialCommands.Position(moduleId, 0L)));
-        service.reorder(manager, subject, command);
-        verify(repo)
-                .update(
+        materialModuleService.reorderModules(manager, subject, command);
+        verify(materialModuleRepository)
+                .updateModule(
                         argThat(
                                 m ->
                                         m.id().equals(otherId)
                                                 && m.orderNo() == 0
                                                 && m.version() == 1),
                         eq(0L));
-        verify(repo)
-                .update(
+        verify(materialModuleRepository)
+                .updateModule(
                         argThat(
                                 m ->
                                         m.id().equals(moduleId)
@@ -436,8 +466,8 @@ class MaterialModuleServiceTest {
                                                 && m.version() == 1),
                         eq(0L));
 
-        when(repo.update(any(), anyLong())).thenReturn(false);
-        assertThatThrownBy(() -> service.reorder(manager, subject, command))
+        when(materialModuleRepository.updateModule(any(), anyLong())).thenReturn(false);
+        assertThatThrownBy(() -> materialModuleService.reorderModules(manager, subject, command))
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         e -> assertThat(e.code()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
@@ -466,23 +496,23 @@ class MaterialModuleServiceTest {
                         quiz(subjectDraft, QuizScope.SUBJECT, subject, null, QuizStatus.DRAFT),
                         quiz(subjectOpen, QuizScope.SUBJECT, subject, null, QuizStatus.OPEN),
                         quiz(subjectRetired, QuizScope.SUBJECT, subject, null, QuizStatus.RETIRED));
-        when(repo.quizLinks(subject))
+        when(materialModuleRepository.listQuizLinks(subject))
                 .thenReturn(
                         rows.stream()
                                 .map(q -> new MaterialModule.QuizLink(moduleId, q.quizId(), 0))
                                 .toList());
-        rows.forEach(q -> when(quizzes.get(q.quizId())).thenReturn(Optional.of(q)));
-        when(access.canManageModules(manager, subject)).thenReturn(true);
-        when(access.canManageQuiz(manager, subject, null)).thenReturn(true);
+        rows.forEach(q -> when(quizQuery.get(q.quizId())).thenReturn(Optional.of(q)));
+        when(materialAccessPolicy.canManageModules(manager, subject)).thenReturn(true);
+        when(materialAccessPolicy.canManageQuiz(manager, subject, null)).thenReturn(true);
 
-        var subjectView = service.forSubject(manager, subject).get(0);
+        var subjectView = materialModuleService.listSubjectModules(manager, subject).get(0);
         assertThat(subjectView.canManage()).isTrue();
         assertThat(subjectView.quizzes())
                 .extracting(MaterialViews.ModuleQuiz::quizId)
                 .containsExactly(subjectDraft, subjectOpen, subjectRetired);
         assertThat(subjectView.quizzes()).allSatisfy(q -> assertThat(q.canManage()).isTrue());
 
-        when(access.classList(teacher, classId, false))
+        when(materialAccessPolicy.requireClassListAccess(teacher, classId, false))
                 .thenReturn(
                         new ClassRef(
                                 classId,
@@ -492,8 +522,8 @@ class MaterialModuleServiceTest {
                                 ClassStatus.OPEN,
                                 teacher.accountId(),
                                 false));
-        when(access.canManageQuiz(teacher, subject, classId)).thenReturn(true);
-        var classView = service.forClass(teacher, classId, false).get(0);
+        when(materialAccessPolicy.canManageQuiz(teacher, subject, classId)).thenReturn(true);
+        var classView = materialModuleService.listClassModules(teacher, classId, false).get(0);
         assertThat(classView.canManage()).isFalse();
         assertThat(classView.quizzes())
                 .extracting(MaterialViews.ModuleQuiz::quizId)
@@ -510,7 +540,7 @@ class MaterialModuleServiceTest {
     void teacherOpeningAClassOfASubjectWithoutModulesGetsADefaultModule() {
         var teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
         UUID fresh = UUID.randomUUID();
-        when(access.classList(teacher, classId, false))
+        when(materialAccessPolicy.requireClassListAccess(teacher, classId, false))
                 .thenReturn(
                         new ClassRef(
                                 classId,
@@ -520,7 +550,7 @@ class MaterialModuleServiceTest {
                                 ClassStatus.OPEN,
                                 teacher.accountId(),
                                 false));
-        when(access.subject(fresh))
+        when(materialAccessPolicy.requireSubject(fresh))
                 .thenReturn(
                         new edu.aiplatform.subjects.contract.SubjectRef(
                                 fresh,
@@ -528,25 +558,26 @@ class MaterialModuleServiceTest {
                                 "Môn",
                                 edu.aiplatform.subjects.contract.SubjectStatus.ACTIVE,
                                 null));
-        when(repo.list(fresh)).thenReturn(List.of());
+        when(materialModuleRepository.listModules(fresh)).thenReturn(List.of());
 
-        service.forClass(teacher, classId, false);
+        materialModuleService.listClassModules(teacher, classId, false);
 
-        verify(repo)
-                .insert(argThat(m -> m.subjectId().equals(fresh) && m.title().equals("Module 1")));
+        verify(materialModuleRepository)
+                .insertModule(
+                        argThat(m -> m.subjectId().equals(fresh) && m.title().equals("Module 1")));
     }
 
     @Test
     void studentViewNeverCreatesModules() {
         var student = new Actor(UUID.randomUUID(), Role.STUDENT);
-        when(access.classList(student, classId, true))
+        when(materialAccessPolicy.requireClassListAccess(student, classId, true))
                 .thenReturn(
                         new ClassRef(
                                 classId, subject, "C", "Class", ClassStatus.OPEN, null, false));
-        when(repo.list(subject)).thenReturn(List.of());
+        when(materialModuleRepository.listModules(subject)).thenReturn(List.of());
 
-        service.forClass(student, classId, true);
+        materialModuleService.listClassModules(student, classId, true);
 
-        verify(repo, never()).insert(any());
+        verify(materialModuleRepository, never()).insertModule(any());
     }
 }

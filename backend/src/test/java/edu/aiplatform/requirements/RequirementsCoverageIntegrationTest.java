@@ -149,7 +149,7 @@ class RequirementsCoverageIntegrationTest {
         Material material = new Material(id, course == null ? Material.Scope.SUBJECT : Material.Scope.CLASS,
                 subject, course, module, Material.Kind.FILE, title, "", 0, status, 1,
                 accountIds.get(Role.SUBJECT_MANAGER), NOW, NOW, 0);
-        transaction.executeWithoutResult(tx -> materialRepository.insert(material,
+        transaction.executeWithoutResult(tx -> materialRepository.insertMaterial(material,
                 new MaterialVersion(id, 1, "file-" + id, "source.pdf", "application/pdf", 100L,
                         null, null, MaterialVersion.TextStatus.EXTRACTED, "Original evidence",
                         accountIds.get(Role.SUBJECT_MANAGER), NOW)));
@@ -171,11 +171,15 @@ class RequirementsCoverageIntegrationTest {
         UUID other = seedMaterial(subjectId, otherClassId, moduleId, "Other class", Material.Status.ACTIVE);
         UUID foreign = seedMaterial(foreignSubjectId, null, seedModule(foreignSubjectId), "Foreign", Material.Status.ACTIVE);
         UUID archived = seedMaterial(subjectId, classId, moduleId, "Archived", Material.Status.ARCHIVED);
-        assertThat(materialRepository.list(subjectId, null)).extracting(Material::id).containsExactly(materialId);
-        assertThat(materialRepository.list(subjectId, classId)).extracting(Material::id)
+        assertThat(materialRepository.listMaterials(subjectId, null))
+                .extracting(Material::id)
+                .containsExactly(materialId);
+        assertThat(materialRepository.listMaterials(subjectId, classId)).extracting(Material::id)
                 .containsExactlyInAnyOrder(materialId, own, archived).doesNotContain(other, foreign);
         Actor student = new Actor(accountIds.get(Role.STUDENT), Role.STUDENT);
-        assertThat(materialQueryService.classList(student, classId, true, List.of(own, other, foreign, archived)))
+        assertThat(
+                materialQueryService.listClassMaterials(
+                        student, classId, true, List.of(own, other, foreign, archived)))
                 .extracting(MaterialViews.Detail::id).containsExactly(own);
         assertThat(referenceMaterialService.listSelectable(student, ResourceRef.courseClass(classId)))
                 .extracting(source -> source.materialId()).containsExactlyInAnyOrder(materialId, own);
@@ -184,14 +188,14 @@ class RequirementsCoverageIntegrationTest {
     @Test
     void materialHistoryAndConditionalTextCompletionSurviveMetadataReplaceArchiveAndStaleCas() {
         Actor manager = new Actor(accountIds.get(Role.SUBJECT_MANAGER), Role.SUBJECT_MANAGER);
-        var changed = materialService.update(manager, materialId,
+        var changed = materialService.updateMaterial(manager, materialId,
                 new MaterialCommands.Update("Renamed", "Description", 1, 0L, null));
         assertThat(changed.currentVersionNo()).isEqualTo(1);
-        assertThat(materialRepository.versions(materialId)).hasSize(1);
+        assertThat(materialRepository.listVersions(materialId)).hasSize(1);
         when(artifact.attach(any(), eq(manager), eq(ArtifactPurpose.MATERIAL))).thenReturn(
                 new StoredFileInfo("new-file", manager.accountId(), ArtifactPurpose.MATERIAL,
                         "new.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 200L, "sha"));
-        materialService.replace(manager, materialId,
+        materialService.replaceMaterialVersion(manager, materialId,
                 new MaterialCommands.Replace(1L, new MaterialCommands.Source("signed", null)));
         transaction.executeWithoutResult(tx -> {
             assertThat(materialRepository.completeText(materialId, 2, MaterialVersion.TextStatus.EXTRACTED, "New evidence")).isTrue();
@@ -201,17 +205,19 @@ class RequirementsCoverageIntegrationTest {
         var text = referenceMaterialService.extractText(manager, List.of(materialId), 100).get(0);
         assertThat(text.versionNo()).isEqualTo(2);
         assertThat(text.text()).isEqualTo("New evidence");
-        assertThatThrownBy(() -> materialService.archive(manager, materialId, 1))
+        assertThatThrownBy(() -> materialService.archiveMaterial(manager, materialId, 1))
                 .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
                         e -> assertThat(e.code()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
-        materialService.archive(manager, materialId, 2);
-        assertThat(materialRepository.versions(materialId)).extracting(MaterialVersion::versionNo).containsExactly(2, 1);
-        var history = materialQueryService.detail(manager, materialId, null);
+        materialService.archiveMaterial(manager, materialId, 2);
+        assertThat(materialRepository.listVersions(materialId))
+                .extracting(MaterialVersion::versionNo)
+                .containsExactly(2, 1);
+        var history = materialQueryService.loadMaterial(manager, materialId, null);
         assertThat(history.versions()).hasSize(2);
         assertThat(history.canManage()).isFalse();
-        materialQueryService.download(manager, materialId, null, 1);
+        materialQueryService.issueDownloadToken(manager, materialId, null, 1);
         verify(artifact).issueDownloadToken("file-" + materialId, manager.accountId());
-        assertThatThrownBy(() -> materialService.update(manager, materialId,
+        assertThatThrownBy(() -> materialService.updateMaterial(manager, materialId,
                 new MaterialCommands.Update("Forbidden", "", 0, 3L, null)))
                 .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
                         e -> assertThat(e.code()).isEqualTo("MATERIAL_ARCHIVED"));
@@ -478,14 +484,23 @@ class RequirementsCoverageIntegrationTest {
         Actor admin = new Actor(accountIds.get(Role.ADMIN), Role.ADMIN);
         Actor manager = new Actor(accountIds.get(Role.SUBJECT_MANAGER), Role.SUBJECT_MANAGER);
         Actor student = new Actor(accountIds.get(Role.STUDENT), Role.STUDENT);
-        var ids = materialRepository.list(subjectId, null).stream().map(Material::id).toList();
+        var ids =
+                materialRepository
+                        .listMaterials(subjectId, null)
+                        .stream()
+                        .map(Material::id)
+                        .toList();
         assertThat(ids).hasSize(10);
         measureP95("U04_SCOPE", 20, () -> assertThat(authorization.authorize(manager,
                 Actions.MATERIAL_SUBJECT_MANAGE, ResourceRef.subject(subjectId)).allowed()).isTrue());
         measureP95(
                 "U04_LIST", 300, () -> subjectAdminService.listSubjects(admin, null, null, 0, 20));
         measureP95("U04_DETAIL", 300, () -> subjectAdminService.loadSubject(admin, subjectId));
-        measureP95("U13_LIST", 300, () -> assertThat(materialQueryService.subjectList(manager, subjectId)).hasSize(10));
+        measureP95(
+                "U13_LIST",
+                300,
+                () -> assertThat(
+                        materialQueryService.listSubjectMaterials(manager, subjectId)).hasSize(10));
         measureP95("U13_EXTRACT_TEN", 1000,
                 () -> assertThat(referenceMaterialService.extractText(manager, ids, 10000)).hasSize(10));
         measureP95("U14_NOTIFICATIONS", 300,

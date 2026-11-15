@@ -7,10 +7,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class MaterialMcpQueryTools implements IMcpToolProvider {
-    private final MaterialQueryService queries;
+    private final MaterialQueryService materialQueryService;
 
-    public MaterialMcpQueryTools(MaterialQueryService queries) {
-        this.queries = queries;
+    public MaterialMcpQueryTools(MaterialQueryService materialQueryService) {
+        this.materialQueryService = materialQueryService;
     }
 
     @Override
@@ -36,8 +36,9 @@ public class MaterialMcpQueryTools implements IMcpToolProvider {
         String query = in.text("query", "").toLowerCase(Locale.ROOT);
         var rows =
                 in.has("classId")
-                        ? queries.classList(actor, in.uuid("classId"), false, null)
-                        : queries.subjectList(actor, in.uuid("subjectId"));
+                        ? materialQueryService.listClassMaterials(
+                                actor, in.uuid("classId"), false, null)
+                        : materialQueryService.listSubjectMaterials(actor, in.uuid("subjectId"));
         var items =
                 rows.stream()
                         .filter(m -> m.title().toLowerCase(Locale.ROOT).contains(query))
