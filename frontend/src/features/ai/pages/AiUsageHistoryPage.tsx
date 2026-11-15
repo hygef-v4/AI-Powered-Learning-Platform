@@ -3,7 +3,7 @@
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useEffect, useRef, useState } from "react";
 import { PROVIDER_LABEL, formatDateTime, formatMaybeTokens, formatTokens, type SourceOption } from "@/shared/ai";
-import { Alert, PageNav, Pill, Segmented, SettingsCard, SettingsGroup, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
+import { Alert, cx, Pagination, Pill, Segmented, SettingsCard, SettingsGroup, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import { getSources, getUsage } from "../api";
 import { OUTCOME_LABEL, SOURCE_LABEL, TASK_LABEL } from "../model/labels";
 import type { UsagePage, UsageQuery, UsageSource } from "../model/types";
@@ -169,7 +169,7 @@ export function AiUsageHistoryPage({ mcpEnabled = true }: { mcpEnabled?: boolean
           )}
           {data && (
             <div className="pt-3">
-              <PageNav page={page} size={PAGE_SIZE} total={data.total} onPage={setPage} />
+              <Pagination page={page} pageSize={PAGE_SIZE} total={data.total} onPageChange={setPage} summary={false} />
             </div>
           )}
         </SettingsGroup>

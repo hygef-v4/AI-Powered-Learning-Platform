@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, useSyncExternalStore, type ReactNode } from "react";
-import { Button, ButtonLink, IconButton, Select, SettingsGroup } from "@/shared/ui";
+import { Button, ButtonLink, Card, IconButton, Select, SettingsGroup } from "@/shared/ui";
 
 const KEY_STEPS: { provider: string; steps: string[] }[] = [
   {
@@ -190,11 +190,11 @@ After saving, reload MCP if supported. If restarting the application is required
 }
 
 export function McpSetupGuide() {
-  return <section aria-label="Trợ giúp MCP" className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line bg-surface p-5">
+  return <Card as="section" padding="lg" className="flex flex-wrap items-center justify-between gap-4" aria-label="Trợ giúp MCP">
     <div className="min-w-0">
       <h2 className="text-sm font-semibold text-ink">Tài liệu MCP</h2>
       <p className="mt-1 text-[13px] text-muted">Cách kết nối ứng dụng, tạo đề, chấm bài và sử dụng từng tool.</p>
     </div>
     <ButtonLink href="/ai/mcp-guide" size="sm">Xem tài liệu MCP</ButtonLink>
-  </section>;
+  </Card>;
 }

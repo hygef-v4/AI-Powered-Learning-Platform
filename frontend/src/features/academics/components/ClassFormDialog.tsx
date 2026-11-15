@@ -2,7 +2,7 @@
 
 import { type CandidateLoader } from "../hooks/useCandidates";
 import { useId, useState, type FormEvent } from "react";
-import { Button, Dialog, Field, TextInput, showToast } from "@/shared/ui";
+import { Button, Dialog, Field, showToast, Textarea, TextInput } from "@/shared/ui";
 import { PersonPicker } from "./PersonPicker";
 import type { CreateClassInput, PersonView, SubjectView } from "../model/types";
 import { CLASS_START_DATE_RANGE, CLASS_START_DATE_REQUIRED, formatClassFieldError, formatOperationError } from "../model/format";
@@ -62,8 +62,8 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
         </div>
         <PersonPicker label="Giảng viên" value={teacher} onChange={setTeacher} people={teachers} loader={loadTeachers} clearable disabled={busy} />
         <Field label="Mô tả" htmlFor={`${id}-description`}>
-          <textarea id={`${id}-description`} maxLength={2000} value={values.description} onChange={(event) => set("description", event.target.value)}
-            className="min-h-20 w-full rounded-lg border border-field px-3 py-2 text-[13.5px] text-ink outline-none focus:border-focus" />
+          <Textarea id={`${id}-description`} maxLength={2000} value={values.description} onChange={(event) => set("description", event.target.value)}
+            className="min-h-20" />
         </Field>
       </fieldset>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}

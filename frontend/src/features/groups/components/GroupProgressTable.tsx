@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Alert, Pill, Select, TableFrame, Td, Th } from "@/shared/ui";
+import { Alert, Card, Pill, Select, TableFrame, Td, Th } from "@/shared/ui";
 import { getGroupAssignments, getProgress } from "../api";
 import { formatDate } from "../model/format";
 import { personLabel } from "../model/groupDrafts";
@@ -12,7 +12,7 @@ import type { GroupAssignment, GroupProgress, GroupSetView } from "../model/type
  * Tiến độ bài nhóm cho giảng viên (BR-U12-52): mỗi nhóm có trưởng nhóm, số mục Xong, trạng thái nộp, mục đang soạn và
  * lối vào tài liệu nhóm (chỉ xem, nhả mục ở đó). Lớp chưa có bài nhóm thì không hiện.
  */
-export function GroupProgressCard({ classId, set }: { classId: string; set: GroupSetView }) {
+export function GroupProgressTable({ classId, set }: { classId: string; set: GroupSetView }) {
   const [assignments, setAssignments] = useState<GroupAssignment[] | null>(null);
   const [selected, setSelected] = useState("");
   const [rows, setRows] = useState<GroupProgress[] | null>(null);
@@ -56,7 +56,7 @@ export function GroupProgressCard({ classId, set }: { classId: string; set: Grou
   if (assignments !== null && assignments.length === 0) return null;
 
   return (
-    <section aria-label="Tiến độ bài nhóm" className="flex min-w-0 flex-col gap-3 rounded-xl border border-line bg-surface p-4">
+    <Card as="section" className="flex min-w-0 flex-col gap-3" aria-label="Tiến độ bài nhóm">
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="font-display text-[15px] font-bold text-ink">Tiến độ bài nhóm</h2>
         {assignments && assignments.length > 1 && (
@@ -120,6 +120,6 @@ export function GroupProgressCard({ classId, set }: { classId: string; set: Grou
           </tbody>
         </TableFrame>
       )}
-    </section>
+    </Card>
   );
 }

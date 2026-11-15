@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, Dialog, Field, PageHeader, Pill, Section } from "@/shared/ui";
+import { Alert, Button, Dialog, Field, PageHeader, Pill, Section, Textarea } from "@/shared/ui";
 import { activateQuestion, approveQuestion, createQuestion, deleteQuestion, getQuestion, openDraft, rejectQuestion, retireQuestion, updateQuestion } from "../api";
 import { errorCode, errorMessage, STATUS_LABELS, STATUS_TONES } from "../model/labels";
 import { McqEditor } from "../components/McqEditor";
@@ -204,8 +204,7 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
         </>}>
         {confirm === "reject" ? (
           <Field label="Lý do từ chối" required htmlFor="question-reject-reason" hint="Giảng viên thấy lý do này để sửa rồi gửi lại.">
-            <textarea id="question-reject-reason" rows={3} maxLength={1000} value={reason} onChange={(e) => setReason(e.target.value)}
-              className="w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus" data-testid="question-detail-reason" />
+            <Textarea id="question-reject-reason" rows={3} maxLength={1000} value={reason} onChange={(e) => setReason(e.target.value)} data-testid="question-detail-reason" />
           </Field>
         ) : <p>{confirm === "delete" ? "Bạn có chắc muốn xóa câu hỏi nháp này không?" : "Bạn có chắc muốn ngưng dùng câu hỏi này không?"}</p>}
       </Dialog>

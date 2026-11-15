@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useId, useState } from "react";
 import { ApiError } from "@/shared/api/client";
-import { Button, ButtonLink, Dialog, Field, Icon, IconButton, LockedInput, PageHeader, Section, Select, TextInput, cx, showToast } from "@/shared/ui";
+import { Button, ButtonLink, Card, cx, Dialog, Field, Icon, IconButton, LockedInput, PageHeader, Section, Select, showToast, TextInput } from "@/shared/ui";
 import { getMyGroup, renameGroup, submitLeaderRequest } from "../api";
 import { describeFormation } from "../model/proposals";
 import { GroupProposalSection, useMyProposal } from "./GroupProposalSection";
@@ -132,7 +132,7 @@ export function MyGroupPage({ classId }: { classId: string }) {
       {!view.groupId ? (
         <GroupProposalSection classId={classId} onGrouped={reloadGroup} />
       ) : (
-        <section aria-label="Thành viên nhóm" className="flex flex-col gap-5 rounded-xl border border-line bg-surface p-6">
+        <Card as="section" padding="none" className="flex flex-col gap-5 p-6" aria-label="Thành viên nhóm">
           <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
             <div className="min-w-0 flex-1">
               <GroupName view={view} editable={view.amLeader && open} onRenamed={() => void reload()} />
@@ -146,7 +146,7 @@ export function MyGroupPage({ classId }: { classId: string }) {
           <ul className="grid grid-cols-[repeat(auto-fill,minmax(156px,1fr))] gap-3">
             {view.members.map((m) => <MemberCard key={m.accountId} member={m} />)}
           </ul>
-        </section>
+        </Card>
       )}
       {requesting && view.groupId && (
         <LeaderChangeRequestDialog

@@ -1,12 +1,10 @@
 "use client";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Button, ClassLabel, Dialog, Field, Icon, TextInput, cx, showToast } from "@/shared/ui";
+import { Button, ClassLabel, cx, Dialog, Field, Icon, showToast, Textarea, TextInput } from "@/shared/ui";
 import { announcementsApi, announcementError } from "../api";
 import type { Announcement, ClassOption } from "../model/types";
 
-const AREA =
-  "min-h-36 w-full rounded-lg border border-field px-3 py-2 text-[13.5px] leading-relaxed text-ink outline-none focus:border-focus disabled:opacity-60";
 const CHECK = "flex items-center gap-2 text-[13.5px] text-ink [&:has(input:disabled)]:text-muted";
 
 /**
@@ -101,13 +99,13 @@ export function CreateAnnouncementDialog({
         <ClassPicker classes={classes} chosen={chosen} disabled={busy} onChange={setChosen} />
       )}
       <Field label="Nội dung" htmlFor={`${id}-body`} required>
-        <textarea
+        <Textarea
           id={`${id}-body`}
           maxLength={5000}
           value={body}
           disabled={busy}
           onChange={(e) => setBody(e.target.value)}
-          className={AREA}
+          className="min-h-36 leading-relaxed"
           data-testid="announcement-create-body"
         />
       </Field>
@@ -382,14 +380,14 @@ export function AnnouncementEditorDialog({
         />
       </Field>
       <Field label="Nội dung" htmlFor={`${id}-body`} required>
-        <textarea
+        <Textarea
           id={`${id}-body`}
           data-testid="announcement-edit-body"
           maxLength={5000}
           value={body}
           disabled={busy}
           onChange={(e) => setBody(e.target.value)}
-          className={AREA}
+          className="min-h-36 leading-relaxed"
         />
       </Field>
       {error && (

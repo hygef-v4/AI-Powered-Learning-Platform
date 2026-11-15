@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
-import { Button, Field, LockedInput, Section, TextInput, showToast } from "@/shared/ui";
+import { Button, Field, LockedInput, Section, showToast, Textarea, TextInput } from "@/shared/ui";
 import type { ClassInfoInput, CourseClassView } from "../model/types";
 import { CLASS_START_DATE_RANGE, CLASS_START_DATE_REQUIRED, formatClassFieldError, formatOperationError } from "../model/format";
 import { termOf } from "../model/term";
@@ -59,9 +59,9 @@ function InfoEditor({ value, onSave }: { value: CourseClassView; onSave: (value:
         </div>
         <div className="sm:col-span-2">
           <Field label="Mô tả" htmlFor={`${id}-description`}>
-            <textarea id={`${id}-description`} maxLength={2000} disabled={archived} value={fields.description}
+            <Textarea id={`${id}-description`} maxLength={2000} disabled={archived} value={fields.description}
               onChange={(event) => setFields({ ...fields, description: event.target.value })}
-              className="min-h-28 w-full rounded-lg border border-field px-3 py-2 text-[13.5px] text-ink outline-none focus:border-focus disabled:cursor-not-allowed disabled:bg-sunken disabled:text-muted" />
+              className="min-h-28" />
           </Field>
         </div>
       </fieldset>

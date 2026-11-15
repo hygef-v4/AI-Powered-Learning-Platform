@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useId, useState } from "react";
-import { Alert, Button, Dialog, Field, Icon, Pill, Section, Switch, TextInput } from "@/shared/ui";
+import { Alert, Button, Dialog, Field, Icon, Pill, Section, Switch, Textarea, TextInput } from "@/shared/ui";
 import { formatPoints, TYPE_LABELS } from "../model/labels";
 import { McqEditor } from "./McqEditor";
 import { QuestionMetaPanel } from "./QuestionSidePanels";
@@ -10,7 +10,6 @@ import type { LeavePenalty, QuestionContent, QuizDetailsInput, QuizItemView, Qui
 
 export type DraftItem = { item: QuizItemView; points: string };
 
-const TEXTAREA = "w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus disabled:bg-shell";
 
 /**
  * "Câu hỏi (n)": thứ tự, nguồn câu, điểm, nội dung và đáp án; sửa điểm, đổi thứ tự, bỏ câu khi quiz còn nháp. `onPropose`
@@ -251,8 +250,8 @@ export function QuizSettingsPanel({ value, onChange, errors, readOnly }: {
         {value.activityMonitoringEnabled && (
           <Field label="Lời báo cho sinh viên" htmlFor={`${id}-notice`} required error={errors.activityNotice}
             hint="Sinh viên thấy lời báo này trước và trong khi làm bài.">
-            <textarea id={`${id}-notice`} rows={2} maxLength={1000} value={value.activityNotice} className={TEXTAREA}
-              aria-invalid={!!errors.activityNotice} onChange={(e) => set("activityNotice", e.target.value)}
+            <Textarea id={`${id}-notice`} rows={2} maxLength={1000} value={value.activityNotice}
+              invalid={!!errors.activityNotice} onChange={(e) => set("activityNotice", e.target.value)}
               data-testid="quiz-settings-activity-notice" />
           </Field>
         )}

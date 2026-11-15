@@ -266,7 +266,7 @@ describe("GroupWorkspacePage", () => {
 
     act(() => source!.onmessage!({ data: JSON.stringify({ type: "document.auto-submitted" }) }));
     const lock = await screen.findByRole("alertdialog", { name: "Đang nộp" });
-    expect(lock).toHaveTextContent(/Đã hết hạn nộp lúc 30\/10\/2026 17:00/);
+    expect(lock).toHaveTextContent(/Đã hết hạn nộp lúc 17:00 30\/10\/2026/);
     expect(lock.parentElement).toBe(document.body);
     await act(async () => resolveReload!());
     await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Pill, type Tone } from "@/shared/ui";
+import { Card, Pill, type Tone } from "@/shared/ui";
 import { formatDateTime, type SourceChoice } from "@/shared/ai";
 import { calculateChecklistPoints, hasInvalidItemScores, resolveItemPoints, isValidItemScore } from "../model/rubricScores";
 import { GradingFeedbackSummary, RubricItemFeedback } from "./StructuredFeedbackSection";
@@ -279,7 +279,7 @@ export function AiProposalPanel({
   }
 
   return (
-    <section aria-label="Đề xuất AI" className="rounded-xl border border-line bg-surface p-3.5 sm:p-4">
+    <Card as="section" padding="none" className="p-3.5 sm:p-4" aria-label="Đề xuất AI">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="text-base font-bold text-ink">Đề xuất AI</h2>
@@ -357,6 +357,6 @@ export function AiProposalPanel({
           </article>
         );
       })}
-    </section>
+    </Card>
   );
 }

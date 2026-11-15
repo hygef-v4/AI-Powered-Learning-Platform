@@ -4,7 +4,7 @@ import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Button, ButtonLink, ClickableRow, Icon, Pill, Segmented, Select, TableFrame, Td, TextInput, Th, cx, type Tone } from "@/shared/ui";
+import { Button, ButtonLink, Card, ClickableRow, cx, Icon, Pill, Segmented, Select, TableFrame, Td, TextInput, Th, type Tone } from "@/shared/ui";
 import { Pagination } from "@/shared/ui/Pagination";
 import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
@@ -124,7 +124,7 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
   return (
     <div className="flex min-w-0 flex-col gap-3">
       {headerActions ? createPortal(gradebookButton, headerActions) : <div className="flex justify-end">{gradebookButton}</div>}
-      <section aria-label="Chấm điểm" className="flex min-w-0 flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+      <Card as="section" padding="lg" className="flex min-w-0 flex-col gap-3.5" aria-label="Chấm điểm">
         <Segmented as="tab" ariaLabel="Chế độ chấm điểm" value={mode} onChange={setMode} className="self-start"
           options={[{ value: "assignment", label: "Theo bài tập" }, { value: "student", label: "Theo sinh viên" }]} />
 
@@ -198,7 +198,7 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
             </div>
           </div>
         )}
-      </section>
+      </Card>
     </div>
   );
 }

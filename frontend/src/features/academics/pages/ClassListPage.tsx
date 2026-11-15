@@ -1,7 +1,7 @@
 "use client";
 
 import { useUrlState } from "@/shared/navigation/useUrlState";
-import { Button, ClickableRow, Icon, PageHeader, PageNav, Pill, Segmented, TableFrame, Td, TermFilter, TextInput, Th } from "@/shared/ui";
+import { Button, Card, ClickableRow, Icon, PageHeader, Pagination, Pill, Segmented, TableFrame, Td, TermFilter, TextInput, Th } from "@/shared/ui";
 import { termOptions } from "../model/term";
 import { CLASS_STATUS_LABELS, type ClassStatus, type CourseClassView, type SubjectView } from "../model/types";
 
@@ -43,7 +43,7 @@ export function ClassListPage({ classes, subjects, initialSubjectId, onOpen, onC
     <PageHeader title="Lớp học" actions={
       <Button variant="primary" icon="add" disabled={!selected} onClick={() => selected && onCreate(selected)} data-testid="class-create">Tạo lớp</Button>
     } />
-    <section aria-label="Danh sách lớp" className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+    <Card as="section" padding="lg" className="flex flex-col gap-3.5" aria-label="Danh sách lớp">
       <div className="flex flex-wrap items-center gap-3">
         <Segmented
           as="tab"
@@ -72,7 +72,7 @@ export function ClassListPage({ classes, subjects, initialSubjectId, onOpen, onC
           {rows.length === 0 && <tr><Td colSpan={5} className="py-10 text-center! text-muted">Không có lớp phù hợp.</Td></tr>}
         </tbody>
       </TableFrame>
-      <PageNav page={current} size={PAGE_SIZE} total={filtered.length} onPage={setPage} />
-    </section>
+      <Pagination page={current} pageSize={PAGE_SIZE} total={filtered.length} onPageChange={setPage} summary={false} />
+    </Card>
   </>;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button, PageHeader, PageNav, cx, showToast } from "@/shared/ui";
+import { Button, Card, cx, PageHeader, Pagination, showToast } from "@/shared/ui";
 import { getSubjects } from "../api";
 import { SubjectFilters } from "../components/SubjectFilters";
 import { SubjectReadError } from "../components/SubjectReadError";
@@ -80,7 +80,7 @@ export function SubjectListPage() {
           }}
         />
       )}
-      <section className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+      <Card as="section" padding="lg" className="flex flex-col gap-3.5">
         <SubjectFilters
           search={search}
           status={query.status}
@@ -106,15 +106,16 @@ export function SubjectListPage() {
             )}
           >
             <SubjectTable items={data.items} offset={data.page * data.size} />
-            <PageNav
+            <Pagination
               page={data.page}
-              size={data.size}
+              pageSize={data.size}
               total={data.totalElements}
-              onPage={(page) => setQuery((current) => ({ ...current, page }))}
+              onPageChange={(page) => setQuery((current) => ({ ...current, page }))}
+              summary={false}
             />
           </div>
         )}
-      </section>
+      </Card>
     </>
   );
 }

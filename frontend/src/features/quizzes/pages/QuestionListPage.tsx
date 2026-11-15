@@ -3,7 +3,7 @@
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Alert, Button, ClickableRow, Dialog, Field, Menu, MenuItem, PageHeader, Pagination, Pill, Segmented, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
+import { Alert, Button, ClickableRow, Dialog, Field, Menu, MenuItem, PageHeader, Pagination, Pill, Segmented, Select, TableFrame, Td, Textarea, TextInput, Th } from "@/shared/ui";
 import { bulkQuestions, getDuplicateQuestions, getManagedSubjects, getQuestions } from "../api";
 import { DIFFICULTY_LABELS, DIFFICULTY_TONES, errorMessage, formatDateTime, STATUS_LABELS, STATUS_TONES, TYPE_LABELS } from "../model/labels";
 import { QuestionAiDraftDialog } from "../components/AiDraftTargets";
@@ -235,8 +235,7 @@ export function QuestionListPage() {
         <Dialog open onClose={() => setRejecting(false)} tone="warning" title={`Từ chối ${selected.length} câu đề xuất?`}
           footer={<Button variant="primary" disabled={busy || !reason.trim()} onClick={() => void runBulk("reject")} data-testid="question-list-reject-confirm">Từ chối</Button>}>
           <Field label="Lý do từ chối" required htmlFor="question-list-reason" hint="Giảng viên thấy lý do này để sửa rồi gửi lại.">
-            <textarea id="question-list-reason" rows={3} maxLength={1000} value={reason} onChange={(e) => setReason(e.target.value)}
-              className="w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus" data-testid="question-list-reason" />
+            <Textarea id="question-list-reason" rows={3} maxLength={1000} value={reason} onChange={(e) => setReason(e.target.value)} data-testid="question-list-reason" />
           </Field>
         </Dialog>
       )}

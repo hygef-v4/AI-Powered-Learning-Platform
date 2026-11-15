@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ActivityTimeline } from "@/shared/activity/ActivityTimeline";
-import { Alert, Button, ClickableRow, Dialog, Icon, PageNav, Pill, Section, TableFrame, Td, TextInput, Th } from "@/shared/ui";
+import { Alert, Button, ClickableRow, Dialog, Icon, Pagination, Pill, Section, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import { decideAttemptPenalty, getClassAttempts, getTeacherAttempt } from "../api";
 import { errorMessage, formatDateTime, formatPoints, signalText, submitModeText } from "../model/labels";
 import { ResultQuestions } from "./ResultQuestions";
@@ -138,7 +138,7 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
             ))}
           </tbody>
         </TableFrame>
-        <PageNav page={page} size={PAGE_SIZE} total={data.students.length} onPage={setPage} />
+        <Pagination page={page} pageSize={PAGE_SIZE} total={data.students.length} onPageChange={setPage} summary={false} />
       </>}
       {student && !detail && (
         <Dialog open onClose={() => setStudent(null)} title={`Lượt làm · ${student.displayName ?? ""}`}>

@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { AiTaskStatus, PROVIDER_LABEL, type AiProvider, type SourceChoice } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, cx, Dialog, Field, Icon, Pill, Select, TextInput, useConfirmDialog } from "@/shared/ui";
+import { Alert, Button, cx, Dialog, Field, Icon, Pill, Select, Textarea, TextInput, useConfirmDialog } from "@/shared/ui";
 import { DIFFICULTY_LABELS, errorMessage, failureLabel, formatDateTime, TYPE_LABELS } from "../model/labels";
 import { McqEditor } from "./McqEditor";
 import { MaterialSourceSelect } from "./MaterialSourceSelect";
@@ -12,7 +12,6 @@ import type {
   AiDraft, AiDraftRequest, Difficulty, QuestionContent, QuestionType, SelectableMaterial, Violation,
 } from "../model/types";
 
-const TEXTAREA = "w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus";
 const POLL_MS = 3000;
 const MAX_COUNT = 50;
 const MAX_MATERIALS = 10;
@@ -278,7 +277,7 @@ function DraftRequestForm({ api, busy, initial, onSubmit, onDirtyChange }: {
     <fieldset disabled={busy} className="flex flex-col gap-3" data-testid="ai-draft-form">
       <Field label="Yêu cầu" htmlFor={`${id}-instructions`} required={materialIds.length === 0} error={errors.instructions}
         hint="Khi đã chọn tài liệu, có thể để trống: AI mặc định tạo quiz theo nội dung tài liệu. Không đưa thông tin sinh viên.">
-        <textarea id={`${id}-instructions`} rows={3} maxLength={2000} value={instructions} className={TEXTAREA}
+        <Textarea id={`${id}-instructions`} rows={3} maxLength={2000} value={instructions}
           placeholder="Tạo quiz theo nội dung tài liệu đã chọn."
           onChange={(event) => setInstructions(event.target.value)} data-testid="ai-draft-instructions" />
       </Field>

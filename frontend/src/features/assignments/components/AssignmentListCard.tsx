@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
-import { Alert, Button, ClickableRow, Icon, PageNav, Pill, Segmented, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
+import { Alert, Button, Card, ClickableRow, Icon, Pagination, Pill, Segmented, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import type { ListFilter } from "../api";
 import { errorMessage, formatDateTime } from "../model/format";
 import { assignmentRowActions } from "../slots";
@@ -57,7 +57,7 @@ export function AssignmentListCard({ page, classId }: { page: ReturnType<typeof 
   const filtered = !!kind || !!q;
 
   return (
-    <section aria-label="Danh sách bài tập" className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+    <Card as="section" padding="lg" className="flex flex-col gap-3.5" aria-label="Danh sách bài tập">
       <div className="flex flex-wrap items-center gap-3">
         <Segmented as="tab" ariaLabel="Trạng thái bài" value={tab} onChange={(value) => { setTab(value); setPageNo(0); }}
           options={TABS.map((t) => ({ value: t.value, label: <>{t.label}{page.data && <span className="ml-1 tabular-nums text-muted">{items.filter((row) => inTab(row, t.value)).length}</span>}</> }))} />
@@ -106,7 +106,7 @@ export function AssignmentListCard({ page, classId }: { page: ReturnType<typeof 
           )}
         </tbody>
       </TableFrame>
-      <PageNav page={current} size={PAGE_SIZE} total={visible.length} onPage={setPageNo} />
-    </section>
+      <Pagination page={current} pageSize={PAGE_SIZE} total={visible.length} onPageChange={setPageNo} summary={false} />
+    </Card>
   );
 }

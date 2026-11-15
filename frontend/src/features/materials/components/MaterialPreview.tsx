@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { apiDownload } from "@/shared/api/client";
-import { Button, Icon } from "@/shared/ui";
+import { Button, Card, Icon } from "@/shared/ui";
 import { materialApi, materialError } from "../api";
 import { DocumentViewer, documentKind } from "./DocumentViewer";
 import { fileDescription, type Material } from "../model/types";
@@ -146,7 +146,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
     );
   }
   return (
-    <div className="flex flex-col items-center gap-4 rounded-xl border border-line bg-surface px-6 py-14 text-center">
+    <Card padding="none" className="flex flex-col items-center gap-4 px-6 py-14 text-center">
       <span
         aria-hidden="true"
         className="flex size-16 items-center justify-center rounded-2xl bg-primary-soft text-primary-ink"
@@ -160,6 +160,6 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
         <p className="text-xs text-muted">{fileDescription(material)}</p>
       </div>
       <DownloadButton material={material} classId={classId} />
-    </div>
+    </Card>
   );
 }

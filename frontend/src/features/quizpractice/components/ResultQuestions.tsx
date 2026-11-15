@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { cx, Pill } from "@/shared/ui";
+import { Card, cx, Pill } from "@/shared/ui";
 import { formatPoints } from "../model/labels";
 import type { ResultQuestion } from "../model/types";
 import { QuestionNav, QuestionPrevNext, type PagerTone } from "./QuestionPager";
@@ -27,7 +27,7 @@ export function ResultQuestions({ questions, showScore, index, onIndex }: {
   const blank = q.selectedOptionIds.length === 0;
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_240px]" data-testid="result-questions">
-      <section className="rounded-xl border border-line bg-surface p-4 text-[13px]" aria-label={`Câu ${current + 1}`}>
+      <Card as="section" className="text-[13px]" aria-label={`Câu ${current + 1}`}>
         <p className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted">
           <span className="font-bold text-ink">Câu {current + 1} / {questions.length}</span>
           {blank ? <Pill>Bỏ trống</Pill> : q.correct ? <Pill tone="success">Đúng</Pill> : <Pill tone="danger">Sai</Pill>}
@@ -50,10 +50,10 @@ export function ResultQuestions({ questions, showScore, index, onIndex }: {
         </ul>
         {q.explanation && <p className="mt-2 whitespace-pre-wrap text-body"><span className="font-semibold">Giải thích:</span> {q.explanation}</p>}
         <QuestionPrevNext count={questions.length} index={current} onChange={go} testIdPrefix="result-question" />
-      </section>
-      <nav aria-label="Danh sách câu" className="rounded-xl border border-line bg-surface p-3" data-testid="result-question-nav">
+      </Card>
+      <Card as="nav" padding="sm" aria-label="Danh sách câu" data-testid="result-question-nav">
         <QuestionNav count={questions.length} index={current} onChange={go} toneOf={(i) => toneOf(questions[i])} />
-      </nav>
+      </Card>
     </div>
   );
 }

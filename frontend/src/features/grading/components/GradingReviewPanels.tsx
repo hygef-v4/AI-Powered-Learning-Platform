@@ -1,9 +1,10 @@
 import { ACTIVITY_LABELS, type Detail } from "../model/types";
+import { Card } from "@/shared/ui";
 
 export function ActivityReview({ detail }: { detail: Detail }) {
   const hasData = Boolean(detail.activity || (detail.memberActivities && detail.memberActivities.length > 0));
   return (
-    <details open={hasData} className="rounded-xl border border-line bg-surface px-4 py-3 text-sm">
+    <Card as="details" padding="none" className="px-4 py-3 text-sm" open={hasData}>
       <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2">
         <h2 className="inline text-sm font-bold text-ink">Hoạt động khi làm bài</h2>
         <span className="text-xs text-muted">{ACTIVITY_LABELS[detail.activityState] ?? detail.activityState}</span>
@@ -29,6 +30,6 @@ export function ActivityReview({ detail }: { detail: Detail }) {
           Chỉ để tham khảo; nền tảng không kết luận gian lận hoặc tự thay đổi điểm.
         </p>
       </div>
-    </details>
+    </Card>
   );
 }

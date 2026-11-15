@@ -16,7 +16,7 @@ import {
   updateQuizDetails,
 } from "@/features/quizzes/api";
 import type { QuizDetail, QuizRow } from "@/features/quizzes/model/types";
-import { Button, Dialog, Field, Segmented, Select, Switch, TextInput } from "@/shared/ui";
+import { Button, Card, Dialog, Field, Segmented, Select, Switch, TextInput } from "@/shared/ui";
 import { FormattedTextEditor } from "@/shared/document/FormattedTextEditor";
 import type { FormattedText } from "@/shared/document/formattedText";
 import { materialApi, materialError, moduleApi, outlinePaths, validYoutube } from "../api";
@@ -284,7 +284,7 @@ export function ModuleItemDialog({
           />
           {/* Ô riêng của loại nội dung đang chọn, trong một thẻ trắng ngay dưới. */}
           {!(content === "QUIZ" && editing) && (
-            <div className="rounded-xl border border-line bg-surface p-4">
+            <Card>
               {content === "FILE" && (
                 <FileUploader
                   purpose="MATERIAL"
@@ -332,7 +332,7 @@ export function ModuleItemDialog({
                   )}
                 </Select>
               )}
-            </div>
+            </Card>
           )}
         </div>
         <Field label="Mô tả">

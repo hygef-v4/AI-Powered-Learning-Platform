@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { FADE_LABEL, type NavContext, type NavLocation } from "@/shared/layout/navigation";
 import { BackLink } from "@/shared/navigation/BackLink";
-import { Icon, cx } from "@/shared/ui";
+import { Card, cx, Icon } from "@/shared/ui";
 import { MAX_SECTION_DEPTH, SectionNumber } from "@/shared/document";
 import { addPart, showPart, useAssignmentOutline } from "../model/outline";
 
@@ -63,7 +63,7 @@ export function AssignmentNav() {
       <nav aria-label="Các phần của bài" className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
         {!outline && <span className={cx("px-2.5 py-2 text-[13px] text-muted", FADE_LABEL)}>Đang tải…</span>}
         {outline && (
-          <div className="flex flex-col rounded-xl border border-line bg-surface p-1 shadow-xs">
+          <Card padding="none" className="flex flex-col p-1 shadow-xs">
           <div className={cx(WHEN_OPEN, "flex items-center justify-between gap-2 border-b border-line py-1 pr-1 pl-2.5")}>
             <span className="text-xs font-semibold tracking-[.04em] text-muted uppercase">Câu hỏi</span>
             {outline.editable && <AddButton label="Thêm câu hỏi" onClick={() => addPart(null)} />}
@@ -97,7 +97,7 @@ export function AssignmentNav() {
             })}
           </ol>
           )}
-          </div>
+          </Card>
         )}
       </nav>
     </div>

@@ -68,6 +68,4 @@ export function errorCode(error: unknown): string | undefined {
   return error instanceof ApiError ? error.problem.code : undefined;
 }
 
-export function formatDateTime(value: string): string {
-  return new Date(value).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" });
-}
+export { formatDateTime } from "@/shared/dateTime";

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/useActivityTracker";
-import { Alert, Button, cx, Dialog, Icon, Pill } from "@/shared/ui";
+import { Alert, Button, Card, cx, Dialog, Icon, Pill } from "@/shared/ui";
 import { getAttempt, recordQuizActivity, saveAnswers, submitAttempt } from "../api";
 import { QuestionNav, QuestionPrevNext, questionIndex } from "../components/QuestionPager";
 import { errorCode, errorMessage, formatPoints, penaltyRuleText } from "../model/labels";
@@ -229,31 +229,9 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="sticky top-[4.25rem] z-20 flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface p-3 shadow-[var(--shadow-lift)]">
-        <Button size="sm" variant="ghost" onClick={() => (remaining === null ? exit() : setLeaving(true))} data-testid="quiz-taking-exit">Thoát</Button>
-        <span className="font-semibold text-ink">{view.title}</span>
-        <Pill tone="info">Luyện tập</Pill>
-        <span className={cx("text-xs", saveState === "error" ? "font-semibold text-warning" : "text-muted")} role="status" data-testid="quiz-taking-save-state">
-          {saveLabel}
-        </span>
-        {saveState === "error" && (
-          <Button size="sm" icon="refresh" disabled={finishing !== null} onClick={() => void flush()} data-testid="quiz-taking-save-retry">
-            Thử lại
-          </Button>
-        )}
-        {remaining !== null && (
-          <span
-            className={cx("ml-auto inline-flex items-center gap-1 font-mono text-sm font-bold", remaining < 60 ? "text-danger" : "text-ink")}
-            data-testid="quiz-taking-timer"
-          >
-            {remaining < 60 && <Icon name="warning" size={15} />}
-            Còn {clockText(remaining)}
-          </span>
-        )}
-        <span className="sr-only" aria-live="assertive" data-testid="quiz-taking-time-milestone">{timeMilestone(remaining)}</span>
-        <Button variant="primary" className={remaining === null ? "ml-auto" : undefined} disabled={finishing !== null}
-          onClick={() => setConfirming(true)} data-testid="quiz-taking-submit">Nộp bài</Button>
-      </div>
+      <TakingToolbar title={view.title} saveState={saveState} saveLabel={saveLabel} remaining={remaining}
+        busy={finishing !== null} onExit={() => (remaining === null ? exit() : setLeaving(true))}
+        onRetrySave={() => void flush()} onSubmit={() => setConfirming(true)} />
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {view.activityMonitoringEnabled && (
         <div data-testid="quiz-taking-activity-notice">
@@ -265,36 +243,11 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
       )}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_240px]">
         {question && (
-          <section className="rounded-xl border border-line bg-surface p-4" aria-label={`Câu ${index + 1}`}>
-            <p className="mb-2 text-xs text-muted">
-              Câu {index + 1} / {view.questions.length} · {question.type === "MCQ_MULTI" ? "Nhiều đáp án" : "Một đáp án"} · {formatPoints(question.points)} điểm
-            </p>
-            <p className="mb-3 whitespace-pre-wrap text-[14px] text-ink">{question.stem}</p>
-            <ul className="flex flex-col gap-2">
-              {question.options.map((option) => {
-                const multi = question.type === "MCQ_MULTI";
-                const checked = (answers[question.questionId] ?? []).includes(option.optionId);
-                return (
-                  <li key={option.optionId}>
-                    <label className={cx("flex min-h-11 cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2.5 text-[14px]",
-                      checked ? "border-primary bg-primary-soft" : "border-line hover:bg-shell")}>
-                      <input type={multi ? "checkbox" : "radio"} name={`q-${question.questionId}`} checked={checked} disabled={finishing !== null}
-                        onChange={() => choose(question.questionId, option.optionId, multi)} data-testid={`quiz-taking-option-${option.optionId}`} />
-                      {option.text}
-                    </label>
-                  </li>
-                );
-              })}
-            </ul>
-            <QuestionPrevNext count={view.questions.length} index={index} onChange={setIndex} testIdPrefix="quiz-taking" />
-          </section>
+          <QuestionCard question={question} index={index} total={view.questions.length} answers={answers}
+            busy={finishing !== null} choose={choose} setIndex={setIndex} />
         )}
-        <nav aria-label="Danh sách câu" className="order-first min-w-0 rounded-xl border border-line bg-surface p-3 lg:order-none">
-          <p className="mb-2 text-xs text-muted">Đã làm {view.questions.length - unanswered.length} / {view.questions.length}</p>
-          <QuestionNav count={view.questions.length} index={index} onChange={setIndex}
-            toneOf={(i) => (i === index ? "current" : answered(view.questions[i]?.questionId ?? "") ? "done" : "blank")}
-            labelOf={(i) => `Câu ${i + 1}${answered(view.questions[i]?.questionId ?? "") ? " đã trả lời" : ""}`} />
-        </nav>
+        <QuestionListCard count={view.questions.length} index={index} doneCount={view.questions.length - unanswered.length}
+          answered={(i) => answered(view.questions[i]?.questionId ?? "")} setIndex={setIndex} />
       </div>
       {confirming && (
         <Dialog open onClose={() => setConfirming(false)} title="Nộp bài?" tone="warning"
@@ -325,5 +278,100 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
         </Dialog>
       )}
     </div>
+  );
+}
+
+/** Thanh dính trên cùng khi làm quiz: thoát, tên bài, trạng thái lưu, đồng hồ và nút Nộp bài. */
+function TakingToolbar({ title, saveState, saveLabel, remaining, busy, onExit, onRetrySave, onSubmit }: {
+  title: string;
+  saveState: SaveState;
+  saveLabel: string;
+  remaining: number | null;
+  busy: boolean;
+  onExit: () => void;
+  onRetrySave: () => void;
+  onSubmit: () => void;
+}) {
+  return (
+    <Card padding="sm" lifted className="sticky top-[4.25rem] z-20 flex flex-wrap items-center gap-3">
+      <Button size="sm" variant="ghost" onClick={onExit} data-testid="quiz-taking-exit">Thoát</Button>
+      <span className="font-semibold text-ink">{title}</span>
+      <Pill tone="info">Luyện tập</Pill>
+      <span className={cx("text-xs", saveState === "error" ? "font-semibold text-warning" : "text-muted")} role="status" data-testid="quiz-taking-save-state">
+        {saveLabel}
+      </span>
+      {saveState === "error" && (
+        <Button size="sm" icon="refresh" disabled={busy} onClick={onRetrySave} data-testid="quiz-taking-save-retry">
+          Thử lại
+        </Button>
+      )}
+      {remaining !== null && (
+        <span
+          className={cx("ml-auto inline-flex items-center gap-1 font-mono text-sm font-bold", remaining < 60 ? "text-danger" : "text-ink")}
+          data-testid="quiz-taking-timer"
+        >
+          {remaining < 60 && <Icon name="warning" size={15} />}
+          Còn {clockText(remaining)}
+        </span>
+      )}
+      <span className="sr-only" aria-live="assertive" data-testid="quiz-taking-time-milestone">{timeMilestone(remaining)}</span>
+      <Button variant="primary" className={remaining === null ? "ml-auto" : undefined} disabled={busy}
+        onClick={onSubmit} data-testid="quiz-taking-submit">Nộp bài</Button>
+    </Card>
+  );
+}
+
+/** Thẻ câu hỏi đang làm: đề, các đáp án chọn được và nút chuyển câu. */
+function QuestionCard({ question, index, total, answers, busy, choose, setIndex }: {
+  question: TakingView["questions"][number];
+  index: number;
+  total: number;
+  answers: Record<string, string[]>;
+  busy: boolean;
+  choose: (questionId: string, optionId: string, multi: boolean) => void;
+  setIndex: (next: number) => void;
+}) {
+  return (
+    <Card as="section" aria-label={`Câu ${index + 1}`}>
+      <p className="mb-2 text-xs text-muted">
+        Câu {index + 1} / {total} · {question.type === "MCQ_MULTI" ? "Nhiều đáp án" : "Một đáp án"} · {formatPoints(question.points)} điểm
+      </p>
+      <p className="mb-3 whitespace-pre-wrap text-[14px] text-ink">{question.stem}</p>
+      <ul className="flex flex-col gap-2">
+        {question.options.map((option) => {
+          const multi = question.type === "MCQ_MULTI";
+          const checked = (answers[question.questionId] ?? []).includes(option.optionId);
+          return (
+            <li key={option.optionId}>
+              <label className={cx("flex min-h-11 cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2.5 text-[14px]",
+                checked ? "border-primary bg-primary-soft" : "border-line hover:bg-shell")}>
+                <input type={multi ? "checkbox" : "radio"} name={`q-${question.questionId}`} checked={checked} disabled={busy}
+                  onChange={() => choose(question.questionId, option.optionId, multi)} data-testid={`quiz-taking-option-${option.optionId}`} />
+                {option.text}
+              </label>
+            </li>
+          );
+        })}
+      </ul>
+      <QuestionPrevNext count={total} index={index} onChange={setIndex} testIdPrefix="quiz-taking" />
+    </Card>
+  );
+}
+
+/** Thẻ danh sách câu bên phải: số câu đã làm và dải số chuyển nhanh. */
+function QuestionListCard({ count, index, doneCount, answered, setIndex }: {
+  count: number;
+  index: number;
+  doneCount: number;
+  answered: (i: number) => boolean;
+  setIndex: (next: number) => void;
+}) {
+  return (
+    <Card as="nav" padding="sm" className="order-first min-w-0 lg:order-none" aria-label="Danh sách câu">
+      <p className="mb-2 text-xs text-muted">Đã làm {doneCount} / {count}</p>
+      <QuestionNav count={count} index={index} onChange={setIndex}
+        toneOf={(i) => (i === index ? "current" : answered(i) ? "done" : "blank")}
+        labelOf={(i) => `Câu ${i + 1}${answered(i) ? " đã trả lời" : ""}`} />
+    </Card>
   );
 }

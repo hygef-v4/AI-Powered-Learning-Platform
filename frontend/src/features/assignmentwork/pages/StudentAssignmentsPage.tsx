@@ -4,23 +4,7 @@ import Link from "next/link";
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
-import {
-  Alert,
-  ClassFilter,
-  ClickableRow,
-  cx,
-  Icon,
-  PageHeader,
-  PageNav,
-  Pill,
-  Segmented,
-  Select,
-  TableFrame,
-  TableSkeletonRows,
-  Td,
-  TextInput,
-  Th,
-} from "@/shared/ui";
+import { Alert, Card, ClassFilter, ClickableRow, cx, Icon, PageHeader, Pagination, Pill, Segmented, Select, TableFrame, TableSkeletonRows, Td, TextInput, Th } from "@/shared/ui";
 import { compareTermsNewestFirst } from "@/features/academics/model/term";
 import { formatTimeUntil } from "@/shared/dateTime";
 import { errorMessage, formatDateTime } from "../model/format";
@@ -111,7 +95,7 @@ export function StudentAssignmentsPage() {
         <ClassFilter classes={classes} value={classFilter} onChange={(value) => { setClassFilter(value); setPage(0); }} testId="assignment-class-filter" />
       )} />
       {error !== null && <Alert tone="danger" role="alert">{errorMessage(error)}</Alert>}
-      <section aria-label="Danh sách bài tập" className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+      <Card as="section" padding="lg" className="flex flex-col gap-3.5" aria-label="Danh sách bài tập">
         <div className="flex flex-wrap items-center gap-3">
           <Segmented
             as="tab"
@@ -176,8 +160,8 @@ export function StudentAssignmentsPage() {
             )}
           </tbody>
         </TableFrame>
-        <PageNav page={current} size={PAGE_SIZE} total={visible.length} onPage={setPage} />
-      </section>
+        <Pagination page={current} pageSize={PAGE_SIZE} total={visible.length} onPageChange={setPage} summary={false} />
+      </Card>
     </>
   );
 }

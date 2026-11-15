@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { Alert, Button, ClickableRow, Dialog, IconButton, PageNav, Pill, TableFrame, Td, TextInput, Th, cx, showToast } from "@/shared/ui";
+import { Alert, Button, Card, ClickableRow, cx, Dialog, IconButton, Pagination, Pill, showToast, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import { getGroups, saveGroups } from "../api";
 import { GroupFormDialog } from "./GroupFormDialog";
-import { GroupProgressCard } from "./GroupProgressCard";
+import { GroupProgressTable } from "./GroupProgressTable";
 import { byGroupName, draftsFrom, personLabel, saveErrorText, UNGROUPED, type StudentRow } from "../model/groupDrafts";
 import { LeaderRequestList } from "./LeaderRequestList";
 import { ProposalReviewList } from "./ProposalReviewList";
@@ -158,10 +158,10 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
     <div className="flex flex-col gap-4">
       <ProposalReviewList classId={classId} setVersion={set.version} readOnly={readOnly} onGroupsChanged={() => void load()} />
       <LeaderRequestList set={set} groupId={filter || undefined} onChanged={() => void load()} />
-      <GroupProgressCard classId={classId} set={set} />
+      <GroupProgressTable classId={classId} set={set} />
       <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">
         {/* Thẻ Nhóm: mọi việc với nhóm ở đây, mỗi nhóm có sẵn nút sửa, xóa; bấm nhóm để lọc bảng bên cạnh. */}
-        <section aria-label="Nhóm" className="flex min-w-0 flex-col gap-3 rounded-xl border border-line bg-surface p-4">
+        <Card as="section" className="flex min-w-0 flex-col gap-3" aria-label="Nhóm">
           <h2 className="font-display text-[15px] font-bold text-ink">Nhóm</h2>
           {!readOnly && (
             <div className="grid grid-cols-2 gap-2">
@@ -188,10 +188,10 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
             {drafts.length > 0 && shownGroups.length === 0 && <li className="px-2.5 py-3 text-[13px] text-muted">Không có nhóm phù hợp.</li>}
             <GroupItem name="Chưa có nhóm" meta={`${ungroupedCount} sinh viên`} active={filter === UNGROUPED} onPick={() => pick(UNGROUPED)} />
           </ul>
-        </section>
+        </Card>
 
         {/* Bảng sinh viên chỉ để xem. */}
-        <section aria-label="Sinh viên trong lớp" className="flex min-w-0 flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+        <Card as="section" padding="lg" className="flex min-w-0 flex-col gap-3.5" aria-label="Sinh viên trong lớp">
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="min-w-0 flex-1 truncate font-display text-[15px] font-bold text-ink" title={selectedName}>{selectedName}</h2>
             <div role="search" className="w-full sm:w-72">
@@ -231,8 +231,8 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
               {rows.length === 0 && <tr><Td colSpan={5} className="py-10 text-center! text-muted">Không có sinh viên phù hợp.</Td></tr>}
             </tbody>
           </TableFrame>
-          <PageNav page={current} size={PAGE_SIZE} total={visible.length} onPage={setPage} />
-        </section>
+          <Pagination page={current} pageSize={PAGE_SIZE} total={visible.length} onPageChange={setPage} summary={false} />
+        </Card>
       </div>
 
       {(open?.kind === "create" || open?.kind === "edit" || open?.kind === "leader") && (

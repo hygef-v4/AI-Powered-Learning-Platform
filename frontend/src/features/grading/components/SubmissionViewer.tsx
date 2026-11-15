@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { Button, Dialog } from "@/shared/ui";
+import { Button, Card, Dialog } from "@/shared/ui";
 import { apiFetch } from "@/shared/api/client";
 import { formatErrorMessage } from "../model/format";
 import type { SubmissionDocumentDto } from "../model/submissionDocument";
@@ -184,10 +184,7 @@ export function SubmissionViewer({
   evaluationId?: string;
 }) {
   return (
-    <section
-      aria-label="Bài làm đã nộp"
-      className="min-w-0 break-words rounded-xl border border-line bg-surface p-4 text-sm leading-relaxed sm:p-5"
-    >
+    <Card as="section" className="min-w-0 break-words text-sm leading-relaxed sm:p-5" aria-label="Bài làm đã nộp">
       <h2 className="mb-4 text-base font-bold">Bài làm đã nộp — chỉ đọc</h2>
       {document.blocks.map((block) => {
         const c = block.content;
@@ -257,6 +254,6 @@ export function SubmissionViewer({
         );
       })}
       {document.blocks.length === 0 && <p>Chưa có nội dung bài làm khả dụng.</p>}
-    </section>
+    </Card>
   );
 }

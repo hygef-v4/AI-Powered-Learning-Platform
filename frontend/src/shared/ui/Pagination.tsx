@@ -77,6 +77,7 @@ export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "b
               <button
                 key={item}
                 type="button"
+                aria-label={`Trang ${item + 1}`}
                 aria-current={item === page ? "page" : undefined}
                 onClick={() => onPageChange(item)}
                 className={cx(BOX, item === page ? "bg-primary-soft font-mono text-ink" : "font-mono text-muted hover:bg-sunken hover:text-ink")}

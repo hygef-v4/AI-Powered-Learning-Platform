@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { Button, Dialog, Field, Icon, IconButton, Pill, Select, showErrorToast } from "@/shared/ui";
+import { BusyOverlay, Button, Dialog, Field, Icon, IconButton, Pill, Select, showErrorToast, Textarea } from "@/shared/ui";
 import { assignmentsApi } from "../api";
 import { AiDraftPreview } from "./AiDraftPreview";
 import { SearchPicker } from "./SearchPicker";
@@ -339,10 +338,9 @@ export function AiDraftDialog({
               onUpload={sources.add} onRemoveUpload={sources.remove} onRetryUpload={sources.retry} />
           </Field>
           <Field label="Yêu cầu" htmlFor="ai-request">
-            <textarea id="ai-request" rows={4} maxLength={4000} value={request} disabled={awaiting}
+            <Textarea id="ai-request" rows={4} maxLength={4000} value={request} disabled={awaiting}
               placeholder="Ví dụ: Đề phân tích thiết kế hệ thống quản lý thư viện, có vẽ sơ đồ use case và sơ đồ lớp, độ khó trung bình."
-              onChange={(e) => setRequest(e.target.value)}
-              className="w-full rounded-lg border border-field px-3 py-2 text-[13px] outline-none focus:outline-2 focus:outline-focus" />
+              onChange={(e) => setRequest(e.target.value)} />
           </Field>
         </>
       )}
@@ -358,16 +356,10 @@ export function AiDraftDialog({
 
 /** Popup chờ khi AI đang soạn hay đang ghi đề: chỉ vòng xoay và chữ. */
 export function AiProgress() {
-  return typeof document === "undefined" ? null : createPortal(
-    <div className="fixed inset-0 z-[100] flex animate-fade items-center justify-center bg-[var(--c-scrim)] p-4 backdrop-blur-[2px]">
-      <div role="alertdialog" aria-modal="true" aria-busy="true" aria-label="Đang tạo bản nháp" data-testid="ai-progress"
-        className="flex animate-pop items-center gap-3 rounded-xl border border-line bg-surface px-6 py-5 shadow-[var(--shadow-float)]">
-        <span aria-hidden="true"
-          className="size-5 animate-spin rounded-full border-2 border-line-strong border-t-primary motion-reduce:animate-none" />
-        <span className="text-[14px] font-semibold text-ink">Đang tạo bản nháp</span>
-      </div>
-    </div>,
-    document.body,
+  return (
+    <BusyOverlay label="Đang tạo bản nháp" spinner testId="ai-progress">
+      <span className="text-[14px] font-semibold text-ink">Đang tạo bản nháp</span>
+    </BusyOverlay>
   );
 }
 

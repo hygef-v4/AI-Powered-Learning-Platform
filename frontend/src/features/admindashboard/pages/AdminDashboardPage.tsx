@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, type ReactNode, type CSSProperties } from "react";
 import { actionLabel, shortReason } from "@/features/audit/model/labels";
-import { Alert, PageHeader, TableFrame, Td, Th, cx } from "@/shared/ui";
+import { Alert, Card, PageHeader, TableFrame, Td, Th, cx } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { Donut, LineChart, Legend, Reveal, SegmentBar, StackedColumns, formatNumber, type Series } from "../components/DashboardCharts";
 import type { BackupRunItem, SecurityEventItem } from "../model/types";
@@ -229,8 +229,8 @@ function Kpi({ tone, label, value, loading, testId, order, children }: { tone: k
 
 function Panel({ title, subtitle, action, testId, order, children }: { title: string; subtitle: string; action?: ReactNode; testId: string; order: number; children: ReactNode }) {
   return (
-    <section aria-label={title} data-testid={testId} style={createEnterDelay(order)}
-      className={cx("flex min-w-0 flex-col gap-3 rounded-xl border border-line bg-surface p-5", ENTER)}>
+    <Card as="section" padding="lg" aria-label={title} data-testid={testId} style={createEnterDelay(order)}
+      className={cx("flex min-w-0 flex-col gap-3", ENTER)}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="font-display text-[16px] font-bold text-ink">{title}</h2>
@@ -239,7 +239,7 @@ function Panel({ title, subtitle, action, testId, order, children }: { title: st
         {action}
       </div>
       {children}
-    </section>
+    </Card>
   );
 }
 

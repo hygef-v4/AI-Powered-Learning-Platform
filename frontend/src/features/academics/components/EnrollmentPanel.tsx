@@ -3,7 +3,7 @@
 import { useCandidates, type CandidateLoader } from "../hooks/useCandidates";
 import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Button, ClickableRow, Dialog, Icon, IconButton, PageNav, Pill, Section, Segmented, Select, TableFrame, Td, TextInput, Th, showToast } from "@/shared/ui";
+import { Button, Card, ClickableRow, Dialog, Icon, IconButton, Pagination, Pill, Section, Segmented, Select, showToast, TableFrame, Td, Textarea, TextInput, Th } from "@/shared/ui";
 import { formatDate, formatOperationError } from "../model/format";
 import { parseEnrollmentList, type EnrollmentPreviewRow } from "../model/enrollmentList";
 import { readEnrollmentWorkbook } from "../model/enrollmentWorkbook";
@@ -76,7 +76,7 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
   </div> : null;
   return <div className="flex flex-col gap-4">
     {editable && importing && onBatch && <BatchEnrollPanel onBatch={onBatch} onClose={() => setImporting(false)} />}
-    <section aria-label="Sinh viên trong lớp" className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+    <Card as="section" padding="lg" className="flex flex-col gap-3.5" aria-label="Sinh viên trong lớp">
       {/* Một hàng công cụ: tab trạng thái, lọc nhóm, ô tìm. */}
       <div className="flex flex-wrap items-center gap-3">
         {showStatus && <Segmented
@@ -128,8 +128,8 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
           {rows.length === 0 && <tr><Td colSpan={columns} className="py-10 text-center! text-muted">Không có sinh viên phù hợp.</Td></tr>}
         </tbody>
       </TableFrame>
-      <PageNav page={current} size={PAGE_SIZE} total={visible.length} onPage={setPage} />
-    </section>
+      <Pagination page={current} pageSize={PAGE_SIZE} total={visible.length} onPageChange={setPage} summary={false} />
+    </Card>
     {adding && onEnroll && <AddStudentDialog candidates={candidates} students={students} loadCandidates={loadCandidates} onEnroll={onEnroll} onBatch={onBatch} onClose={() => setAdding(false)} />}
     <Dialog open={removing !== null} title="Gỡ sinh viên khỏi lớp?" onClose={() => setRemoving(null)} dismissible={!busy}
       footer={<Button variant="danger" disabled={busy} onClick={() => removing && void handleEnrollmentChange(removing, "REMOVED")} data-testid="enrollment-remove-confirm">Gỡ sinh viên</Button>}>
@@ -259,8 +259,8 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
     <div className="flex flex-col gap-1.5">
       <label htmlFor={`${id}-list`} className="text-xs font-semibold text-body">Danh sách email hoặc MSSV</label>
       <p className="text-xs text-muted">Mỗi dòng một email hoặc MSSV.</p>
-      <textarea id={`${id}-list`} value={input} disabled={busy} onChange={(event) => edit(event.target.value)} data-testid="enrollment-list-input"
-        className="min-h-28 w-full rounded-lg border border-field px-3 py-2 font-mono text-[13px] text-ink outline-none focus:border-focus disabled:bg-sunken" />
+      <Textarea id={`${id}-list`} value={input} disabled={busy} onChange={(event) => edit(event.target.value)} data-testid="enrollment-list-input"
+        className="min-h-28 font-mono text-[13px]" />
     </div>
     <div className="flex flex-wrap items-center gap-3">
       {fileName && <div className="flex min-w-0 items-center gap-2.5 rounded-xl border border-line bg-shell px-3 py-2">
@@ -286,7 +286,7 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
           <Td>{row.error ? <Pill tone="danger">{ENROLLMENT_RESULT_LABELS[row.error]}</Pill> : <Pill tone="success">Hợp lệ</Pill>}</Td>
         </tr>)}</tbody>
       </TableFrame>
-      <PageNav page={page} size={PREVIEW_SIZE} total={preview.length} onPage={setPage} />
+      <Pagination page={page} pageSize={PREVIEW_SIZE} total={preview.length} onPageChange={setPage} summary={false} />
       <div className="flex justify-end gap-2 border-t border-line pt-3.5">
         <Button variant="primary" icon="check" disabled={busy || !valid} onClick={() => void handleSubmit()} data-testid="enrollment-list-submit">{`Thêm ${valid} sinh viên`}</Button>
       </div>

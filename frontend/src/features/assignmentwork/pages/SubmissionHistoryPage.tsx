@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { DocumentEditor, ToolbarButton, outlineOf, publishOutline, type DocumentComment } from "@/shared/document";
-import { Alert, Menu, MenuItem } from "@/shared/ui";
+import { Alert, Card, Menu, MenuItem, ScoreMeter, TotalScoreCard } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { attemptImageUrl, exportUrl, workApi } from "../api";
 import { formatPoints, resultByPart, useAttemptResult, type ResultPart } from "../model/attemptResult";
@@ -124,9 +124,9 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   );
   if (attempts.length === 0) {
     return shell(<TopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot} />,
-      <p className="rounded-xl border border-line bg-surface p-8 text-center text-[13.5px] text-muted">
+      <Card as="p" padding="none" className="p-8 text-center text-[13.5px] text-muted">
         {historyOpen(detail, true) ? "Bạn chưa nộp bài nào." : "Lịch sử nộp bài hiện sau khi đã nộp và qua hạn nộp."}
-      </p>);
+      </Card>);
   }
 
   // Mới nhất trước: ‹ về lượt trước (cũ hơn), › sang lượt sau (mới hơn).
@@ -214,35 +214,19 @@ function scoreCards(result: AttemptResult, attempt: Attempt): DocumentComment[] 
   ];
 }
 
-/** Thanh tỉ lệ điểm đạt / điểm tối đa. */
-function Meter({ awarded, max }: { awarded: number | null; max: number | null }) {
-  const ratio = awarded != null && max ? Math.min(1, Math.max(0, awarded / max)) : 0;
-  return (
-    <span aria-hidden className="mt-2.5 block h-1 overflow-hidden rounded-full bg-sunken">
-      <span className="block h-full rounded-full bg-primary" style={{ width: `${ratio * 100}%` }} />
-    </span>
-  );
-}
-
 function TotalCard({ result }: { result: AttemptResult }) {
   return (
-    <article className="rounded-xl border border-line bg-surface px-4 py-3.5 shadow-[var(--shadow-lift)]">
-      <p className="text-xs font-medium text-muted">Tổng điểm</p>
-      <p className="mt-1 flex items-baseline gap-1.5 tabular-nums">
-        <span className="font-display text-[30px] leading-none tracking-[-0.02em] text-ink">{formatPoints(result.score)}</span>
-        <span className="text-[13px] text-muted">/ {formatPoints(result.maxScore)}</span>
-      </p>
-      <Meter awarded={result.score} max={result.maxScore} />
+    <TotalScoreCard score={result.score} maxScore={result.maxScore} format={formatPoints}>
       <div className="mt-3"><PublishedFeedback feedback={result.feedback} summary={result.summary} /></div>
       {result.memberOverride && <p className="mt-2 text-xs text-muted">Điểm cá nhân đã được giảng viên điều chỉnh riêng.</p>}
-    </article>
+    </TotalScoreCard>
   );
 }
 
 /** Thẻ điểm của một phần: tên phần, điểm đạt / tối đa và thanh tỉ lệ. */
 function PartScoreCard({ part }: { part: ResultPart }) {
   return (
-    <article className="rounded-xl border border-line bg-surface px-4 py-3 shadow-[var(--shadow-lift)]">
+    <Card as="article" padding="none" lifted className="px-4 py-3">
       <p className="flex items-baseline justify-between gap-3">
         <span className="min-w-0 truncate text-[13px] font-semibold text-ink" title={part.title}>{part.title}</span>
         <span className="shrink-0 tabular-nums">
@@ -250,8 +234,8 @@ function PartScoreCard({ part }: { part: ResultPart }) {
           <span className="text-[12.5px] text-muted"> / {formatPoints(part.max)}</span>
         </span>
       </p>
-      <Meter awarded={part.awarded} max={part.max} />
+      <ScoreMeter awarded={part.awarded} max={part.max} />
       <PublishedRubricItems items={part.items} />
-    </article>
+    </Card>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useCallback, useId, useRef, useState, type FormEvent } from "react";
 import { ApiError } from "@/shared/api/client";
-import { Button, Dialog, Field, TextInput } from "@/shared/ui";
+import { Button, Dialog, Field, Textarea, TextInput } from "@/shared/ui";
 import { createSubject } from "../api";
 import { ManagerPicker } from "./ManagerPicker";
 import type { ManagerCandidate, SearchSubjectManagers } from "../model/managerSearch";
@@ -145,7 +145,7 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
             </p>
           )}
           <Field label="Mô tả" htmlFor={`${formId}-description`} error={errors.description}>
-            <textarea
+            <Textarea
               id={`${formId}-description`}
               value={description}
               maxLength={2000}
@@ -155,7 +155,7 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
                 setErrors((current) => ({ ...current, description: undefined }));
               }}
               data-testid="subject-create-description"
-              className="min-h-20 w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus"
+              className="min-h-20"
             />
           </Field>
         </fieldset>

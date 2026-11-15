@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { formatTokens } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, Dialog, Field, IconButton, SettingsGroup, TableFrame, Td, TextInput, Th } from "@/shared/ui";
+import { Alert, Button, Card, Dialog, Field, IconButton, SettingsGroup, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import {
   deleteTeacherQuota,
   findTeachers,
@@ -380,12 +380,9 @@ function TeacherQuotaDialog({
               disabled={busy}
             />
             {shown.length > 0 && (
-              <ul
-                id={ids.list}
+              <Card as="ul" padding="none" className="mt-1 max-h-56 overflow-y-auto py-1" id={ids.list}
                 role="listbox"
-                aria-label="Giảng viên gợi ý"
-                className="mt-1 max-h-56 overflow-y-auto rounded-xl border border-line bg-surface py-1"
-              >
+                aria-label="Giảng viên gợi ý">
                 {shown.map((c) => (
                   <li key={c.accountId} role="option" aria-selected={false}>
                     <button
@@ -398,7 +395,7 @@ function TeacherQuotaDialog({
                     </button>
                   </li>
                 ))}
-              </ul>
+              </Card>
             )}
           </div>
           {teacher && <p className="text-xs text-muted">{teacher.name}</p>}

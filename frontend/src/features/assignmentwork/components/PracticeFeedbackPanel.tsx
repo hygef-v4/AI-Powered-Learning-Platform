@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
-import { Alert, Button, Icon, Pill } from "@/shared/ui";
+import { Alert, Button, Card, Icon, Pill } from "@/shared/ui";
 import { workApi } from "../api";
 import { errorMessage, formatDateTime, requestRef } from "../model/format";
 import type { Feedback } from "../model/types";
@@ -58,10 +58,7 @@ export function PracticeFeedbackPanel({ attemptId, partTitles }: {
   }
 
   return (
-    <section
-      aria-labelledby={headingId}
-      className="flex min-w-0 flex-col gap-3 rounded-xl border border-line bg-surface p-4 shadow-[var(--shadow-lift)]"
-    >
+    <Card as="section" lifted className="flex min-w-0 flex-col gap-3" aria-labelledby={headingId}>
       <h3 id={headingId} className="flex items-center gap-2 text-sm font-semibold text-ink">
         <Icon name="smart_toy" className="text-primary-ink" /> Góp ý AI
       </h3>
@@ -134,6 +131,6 @@ export function PracticeFeedbackPanel({ attemptId, partTitles }: {
       >
         {items?.length ? "Nhận góp ý lại" : "Nhận góp ý AI"}
       </Button>
-    </section>
+    </Card>
   );
 }

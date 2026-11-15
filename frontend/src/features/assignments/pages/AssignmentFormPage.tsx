@@ -20,7 +20,7 @@ import {
   type RubricCriterion,
   type ValidationIssue,
 } from "@/shared/document";
-import { Alert, Button, Dialog, Field, Menu, MenuItem, Pill, showErrorToast, showToast } from "@/shared/ui";
+import { Alert, Button, Dialog, Field, Menu, MenuItem, Pill, showErrorToast, showToast, Textarea } from "@/shared/ui";
 import { AiDraftDialog } from "../components/AiDraftDialog";
 import { AiReviseChat } from "../components/AiReviseChat";
 import { ExamImportDialog } from "../components/ExamImportDialog";
@@ -859,8 +859,7 @@ function RetireDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: 
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       <p>Bạn có chắc muốn ngưng giao bài này không?</p>
       <Field label="Lý do" htmlFor="retire-reason" required>
-        <textarea id="retire-reason" rows={3} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)}
-          className="w-full rounded-lg border border-field px-3 py-2 text-[13px] outline-none focus:outline-2 focus:outline-focus" />
+        <Textarea id="retire-reason" rows={3} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} />
       </Field>
     </Dialog>
   );

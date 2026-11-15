@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, Dialog, Section, Select } from "@/shared/ui";
+import { Alert, Button, Card, Dialog, Section, Select } from "@/shared/ui";
 import { approveRequest, rejectRequest } from "../api";
 import { personLabel } from "../model/groupDrafts";
 import type { GroupSetView, LeaderRequestView } from "../model/types";
@@ -49,7 +49,7 @@ function RequestRow({ request, set, onChanged }: { request: LeaderRequestView; s
   };
 
   return (
-    <li className="flex flex-col gap-2 rounded-xl border border-line bg-surface px-4 py-3" data-testid={`leader-request-${request.groupId}`}>
+    <Card as="li" padding="none" className="flex flex-col gap-2 px-4 py-3" data-testid={`leader-request-${request.groupId}`}>
       <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
         <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold text-ink" title={request.groupName}>{request.groupName}</span>
         <Select aria-label={`Trưởng nhóm mới của ${request.groupName}`} value={leader} onChange={(e) => setLeader(e.target.value)} disabled={busy}
@@ -81,6 +81,6 @@ function RequestRow({ request, set, onChanged }: { request: LeaderRequestView; s
           {error && <p role="alert" className="text-sm text-danger">{error}</p>}
         </Dialog>
       )}
-    </li>
+    </Card>
   );
 }

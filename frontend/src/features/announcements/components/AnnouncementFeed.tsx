@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { IconButton, Pill } from "@/shared/ui";
+import { Card, IconButton, Pill } from "@/shared/ui";
 import { AnnouncementMarkdown } from "./AnnouncementMarkdown";
 import { AnnouncementEditorDialog, DeleteAnnouncementDialog } from "./AnnouncementDialogs";
 import type { Announcement } from "../model/types";
@@ -21,10 +21,7 @@ export function AnnouncementFeed({
   const [editing, setEditing] = useState<Announcement | null>(null);
   const [deleting, setDeleting] = useState<Announcement | null>(null);
   return (
-    <section
-      aria-label="Danh sách thông báo"
-      className="overflow-hidden rounded-xl border border-line bg-surface"
-    >
+    <Card as="section" padding="none" className="overflow-hidden" aria-label="Danh sách thông báo">
       {!items.length && (
         <p className="px-6 py-12 text-center text-[13.5px] text-muted">Chưa có thông báo.</p>
       )}
@@ -93,6 +90,6 @@ export function AnnouncementFeed({
           onSaved={onChanged}
         />
       )}
-    </section>
+    </Card>
   );
 }

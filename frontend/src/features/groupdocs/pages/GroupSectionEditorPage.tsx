@@ -8,7 +8,7 @@ import { ApiError } from "@/shared/api/client";
 import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import { DocumentEditor, DocxImportDialog } from "@/shared/document";
 import { outlineOf, publishOutline } from "@/shared/document/outline";
-import { Alert, Button, ButtonLink, Pill, showToast } from "@/shared/ui";
+import { Alert, Button, ButtonLink, Card, Pill, showToast } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { finishSection, getWorkspace, groupDocImageUrl, previewSectionDocx, saveDraft, sendActivity } from "../api";
 import { useClock } from "../hooks/useClock";
@@ -276,10 +276,10 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
       {deadline && editable && <Alert tone={deadline.tone}>{deadline.title} Nên bấm Xong trước hạn.</Alert>}
 
       {mine.length === 0 ? (
-        <div className="flex flex-col items-start gap-3 rounded-xl border border-line bg-surface p-6">
+        <Card padding="none" className="flex flex-col items-start gap-3 p-6">
           <p className="text-[13.5px] text-body">Bạn chưa giữ mục nào để soạn.</p>
           <ButtonLink href={workspaceHref}>Về tài liệu nhóm</ButtonLink>
-        </div>
+        </Card>
       ) : (
         <DocumentEditor fullWidth document={editorDocument} onChange={edit} mode="student" readOnly={!editable} answerGuidance
           diagramEnabled={view.diagramEnabled} imageUrl={groupDocImageUrl(documentId)}

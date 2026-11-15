@@ -43,6 +43,4 @@ export const ADMIN_ERROR_LABELS: Record<string, string> = {
   ...STUDENT_CODE_ERROR_LABELS,
 };
 
-export function formatDate(value: string) {
-  return new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(value));
-}
+export { formatDate } from "@/shared/dateTime";

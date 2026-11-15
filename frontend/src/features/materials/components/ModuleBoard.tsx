@@ -4,20 +4,7 @@ import { useRouter } from "next/navigation";
 import { useId, useState, type ReactNode } from "react";
 import { getQuiz, reopenQuiz } from "@/features/quizzes/api";
 import { QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "@/features/quizzes/model/labels";
-import {
-  Button,
-  Dialog,
-  Field,
-  Icon,
-  IconButton,
-  Menu,
-  MenuItem,
-  PageHeader,
-  Pill,
-  TextInput,
-  cx,
-  showToast,
-} from "@/shared/ui";
+import { Button, Card, cx, Dialog, Field, Icon, IconButton, Menu, MenuItem, PageHeader, Pill, showToast, TextInput } from "@/shared/ui";
 import { ArchiveItemDialog, ModuleItemDialog, removalAction, removalMessage } from "./MaterialDialogs";
 import { materialError, moduleApi } from "../api";
 import { useModuleCollapse } from "../model/moduleCollapse";
@@ -145,12 +132,9 @@ export function ModuleBoard({
         const addable = writable && (scope.kind === "class" || module.canManage);
         const open = !collapsed.has(module.id);
         return (
-          <section
-            key={module.id}
+          <Card as="section" padding="none" className="flex flex-col" key={module.id}
             aria-label={module.title}
-            data-testid={`module-${module.id}`}
-            className="flex flex-col rounded-xl border border-line bg-surface"
-          >
+            data-testid={`module-${module.id}`}>
             {/* Cả hàng đầu bấm được để thu gọn / mở; các nút thao tác không làm đổi trạng thái. */}
             <div
               className="flex cursor-pointer flex-wrap items-center gap-2 py-3.5 pr-3 pl-5 select-none"
@@ -259,7 +243,7 @@ export function ModuleBoard({
                 ))}
               </ul>
             </CollapseBody>
-          </section>
+          </Card>
         );
       })}
       {dialog?.type === "create" && scope.kind === "subject" && (

@@ -12,7 +12,7 @@ import { TableFrame, Td, Th } from "@/shared/ui/Table";
 import { ROLE_LABELS } from "../../model/types";
 import { commitImport, validateImport, type ImportResult } from "../api";
 import { IMPORT_REASON_LABELS } from "../model/labels";
-import { Pagination } from "./Pagination";
+import { Pagination } from "@/shared/ui";
 
 const ROWS_PER_PAGE = 10;
 
@@ -155,7 +155,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
             </tbody>
           </TableFrame>
           {preview.rows.length > ROWS_PER_PAGE && (
-            <Pagination page={page} size={ROWS_PER_PAGE} total={preview.rows.length} unit="dòng" onPage={setPage} />
+            <Pagination page={page} pageSize={ROWS_PER_PAGE} total={preview.rows.length} itemLabel="dòng" onPageChange={setPage} summary={false} />
           )}
           {!preview.committed && (
             <>

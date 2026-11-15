@@ -1,12 +1,11 @@
 "use client";
 
 import { useId } from "react";
-import { Button, cx, Field, Icon, TextInput } from "@/shared/ui";
+import { Button, cx, Field, Icon, Textarea, TextInput } from "@/shared/ui";
 import { TYPE_LABELS } from "../model/labels";
 import { MAX_OPTIONS, MIN_OPTIONS, nextOptionId, toggleCorrect, withType, type FormErrors, type QuestionForm } from "../model/questionForm";
 import type { QuestionType } from "../model/types";
 
-const TEXTAREA = "w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus disabled:bg-shell";
 
 type Props = {
   value: QuestionForm;
@@ -47,8 +46,8 @@ export function McqEditor({ value, onChange, errors, readOnly = false }: Props) 
       </div>
 
       <Field label="Nội dung câu hỏi" htmlFor={`${id}-stem`} required error={errors.stem}>
-        <textarea id={`${id}-stem`} value={value.stem} rows={4} aria-invalid={!!errors.stem}
-          onChange={(event) => onChange({ ...value, stem: event.target.value })} className={TEXTAREA} data-testid="mcq-editor-stem" />
+        <Textarea id={`${id}-stem`} value={value.stem} rows={4} invalid={!!errors.stem}
+          onChange={(event) => onChange({ ...value, stem: event.target.value })} data-testid="mcq-editor-stem" />
       </Field>
 
       <div className="flex flex-col gap-2">
@@ -95,8 +94,8 @@ export function McqEditor({ value, onChange, errors, readOnly = false }: Props) 
       </Field>
 
       <Field label="Giải thích (tùy chọn)" htmlFor={`${id}-explanation`} error={errors.explanation}>
-        <textarea id={`${id}-explanation`} value={value.explanation} rows={3}
-          onChange={(event) => onChange({ ...value, explanation: event.target.value })} className={TEXTAREA}
+        <Textarea id={`${id}-explanation`} value={value.explanation} rows={3}
+          onChange={(event) => onChange({ ...value, explanation: event.target.value })}
           data-testid="mcq-editor-explanation" />
       </Field>
     </fieldset>

@@ -1,4 +1,4 @@
-import { formatDateTime } from "@/features/groups/model/format";
+import { formatTime } from "@/shared/dateTime";
 import type { WorkspaceView } from "./types";
 
 /** Bắt đầu nhắc hạn trên trang tài liệu nhóm khi còn 30 phút. */
@@ -7,19 +7,11 @@ export const DEADLINE_WARNING_MS = 30 * 60_000;
 export type DeadlineNotice = { tone: "warning" | "danger"; title: string; details: string[] };
 
 function formatClock(iso: string): string {
-  return formatDateTime(iso).slice(-5);
+  return formatTime(iso);
 }
 
 function countMinutes(ms: number): number {
   return Math.max(1, Math.ceil(ms / 60_000));
-}
-
-/** "vừa xong", "5 phút trước", "2 giờ trước" so với `now`. */
-export function formatAgo(iso: string, now: number): string {
-  const elapsed = now - Date.parse(iso);
-  if (elapsed < 60_000) return "vừa xong";
-  if (elapsed < 60 * 60_000) return `${Math.floor(elapsed / 60_000)} phút trước`;
-  return `${Math.floor(elapsed / (60 * 60_000))} giờ trước`;
 }
 
 /**
@@ -56,14 +48,4 @@ export function describeDeadline(
 }
 
 /** Thời gian còn lại tới `deadline` ("2 ngày 3 giờ", "45 phút"); đã qua hạn hoặc không có hạn thì `null`. */
-export function formatRemaining(deadline: string | null, now: number): string | null {
-  if (!deadline) return null;
-  const ms = Date.parse(deadline) - now;
-  if (ms <= 0) return null;
-  const minutes = Math.floor(ms / 60_000);
-  const days = Math.floor(minutes / 1440);
-  const hours = Math.floor((minutes % 1440) / 60);
-  if (days > 0) return `${days} ngày ${hours} giờ`;
-  if (hours > 0) return `${hours} giờ ${minutes % 60} phút`;
-  return `${Math.max(1, minutes)} phút`;
-}
+export { formatRemaining } from "@/shared/dateTime";

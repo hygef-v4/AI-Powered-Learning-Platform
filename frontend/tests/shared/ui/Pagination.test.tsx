@@ -20,11 +20,11 @@ describe("Pagination", () => {
     render(<Pagination page={0} pageSize={50} total={1428} onPageChange={onPageChange} note="50 dòng mỗi trang" />);
 
     expect(screen.getByText("Hiển thị 1–50 trong 1.428 bản ghi · 50 dòng mỗi trang")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "1" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "Trang 1" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("button", { name: "Trang trước" })).toBeDisabled();
 
     fireEvent.click(screen.getByRole("button", { name: "Trang sau" }));
-    fireEvent.click(screen.getByRole("button", { name: "29" }));
+    fireEvent.click(screen.getByRole("button", { name: "Trang 29" }));
     expect(onPageChange.mock.calls).toEqual([[1], [28]]);
   });
 

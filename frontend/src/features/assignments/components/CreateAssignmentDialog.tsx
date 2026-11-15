@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getPolicies, uploadFile } from "@/features/files/api";
 import { acceptAttribute, checkFile, type PurposePolicy } from "@/features/files/model/purposes";
-import { Alert, Button, Dialog, Field, Icon, IconButton, Select, TextInput } from "@/shared/ui";
+import { Alert, Button, Dialog, Field, Icon, IconButton, Select, Textarea, TextInput } from "@/shared/ui";
 import { AiProgress, ReferencePicker, type SourceUpload } from "./AiDraftDialog";
 import { SearchPicker } from "./SearchPicker";
 import { TemplateFileField } from "./TemplateFileField";
@@ -398,10 +398,9 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
                   onUpload={addUploads} onRemoveUpload={removeUpload} onRetryUpload={(item) => void upload(item.file, item.id)} />
               </Field>
               <Field label="Yêu cầu" htmlFor="ai-request">
-                <textarea id="ai-request" rows={2} maxLength={4000} value={request} disabled={busy}
+                <Textarea id="ai-request" rows={2} maxLength={4000} value={request} disabled={busy}
                   placeholder="Mô tả đề bạn cần: chủ đề, nội dung, độ khó…"
-                  onChange={(e) => setRequest(e.target.value)}
-                  className="w-full resize-y rounded-lg border border-field px-3 py-2 text-[13px] outline-none placeholder:text-muted focus:outline-2 focus:outline-focus" />
+                  onChange={(e) => setRequest(e.target.value)} />
               </Field>
             </>
           )}

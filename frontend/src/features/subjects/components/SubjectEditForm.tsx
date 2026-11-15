@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
-import { Button, Field, LockedInput, TextInput } from "@/shared/ui";
+import { Button, Field, LockedInput, Textarea, TextInput } from "@/shared/ui";
 import { updateSubject } from "../api";
 import {
   needsSubjectReload,
@@ -73,7 +73,7 @@ export function SubjectEditForm({
         </Field>
         <div className="sm:col-span-2">
           <Field label="Mô tả" htmlFor={`${id}-description`} error={errors.description}>
-            <textarea
+            <Textarea
               id={`${id}-description`}
               value={description}
               maxLength={2000}
@@ -83,7 +83,7 @@ export function SubjectEditForm({
                 setErrors((current) => ({ ...current, description: undefined }));
               }}
               data-testid="subject-edit-description"
-              className="min-h-28 w-full rounded-lg border border-field px-3 py-2 text-[13.5px] text-ink outline-none focus:border-focus"
+              className="min-h-28"
             />
           </Field>
         </div>

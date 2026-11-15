@@ -30,6 +30,70 @@ export function formatDate(value: string | Date | null | undefined): string {
   return date ? dateFormat.format(date) : "—";
 }
 
+const timeSecondsFormat = new Intl.DateTimeFormat("vi-VN", {
+  timeZone: APP_TIME_ZONE, hour: "2-digit", minute: "2-digit", second: "2-digit",
+});
+const shortFormat = new Intl.DateTimeFormat("vi-VN", {
+  timeZone: APP_TIME_ZONE, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+});
+
+/** Giờ phút "14:32" (thêm giây khi `withSeconds`); thiếu hoặc sai giá trị thì "—". */
+export function formatTime(value: string | Date | null | undefined, withSeconds = false): string {
+  const date = parseDate(value);
+  return date ? (withSeconds ? timeSecondsFormat : timeFormat).format(date) : "—";
+}
+
+/** Ngày tháng gọn kèm giờ "21/10 14:05" theo giờ Việt Nam; thiếu hoặc sai giá trị thì "—". */
+export function formatShort(value: string | Date | null | undefined): string {
+  const date = parseDate(value);
+  if (!date) return "—";
+  const p = Object.fromEntries(shortFormat.formatToParts(date).map((part) => [part.type, part.value]));
+  return `${p.day}/${p.month} ${p.hour}:${p.minute}`;
+}
+
+/** Ngày giờ đủ giây "14/10/2026 17:55:12" theo giờ Việt Nam, cho nhật ký cần phân biệt từng giây. */
+export function formatFull(value: string | Date | null | undefined): string {
+  const date = parseDate(value);
+  return date ? `${dateFormat.format(date)} ${timeSecondsFormat.format(date)}` : "—";
+}
+
+/** Chuỗi ngày thuần `yyyy-MM-dd` (không giờ, không múi giờ) thành "d/M/yyyy"; sai dạng thì "—". */
+export function formatDateOnly(value: string | null | undefined): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value ?? "");
+  return match ? `${Number(match[3])}/${Number(match[2])}/${match[1]}` : "—";
+}
+
+const VN_OFFSET_MS = 7 * HOUR_MS;
+
+/** ISO → giá trị ô `datetime-local` theo giờ Việt Nam. */
+export function toLocalInput(iso: string | null | undefined): string {
+  if (!iso) return "";
+  return new Date(new Date(iso).getTime() + VN_OFFSET_MS).toISOString().slice(0, 16);
+}
+
+/** Giá trị ô `datetime-local` (giờ Việt Nam) → ISO; rỗng thì `null`. */
+export function fromLocalInput(value: string): string | null {
+  if (!value) return null;
+  return new Date(`${value}:00+07:00`).toISOString();
+}
+
+/**
+ * Thời gian còn lại tới `deadline` dạng đếm lùi: "2 ngày 3 giờ", "3 giờ 15 phút", "45 phút", "30 giây"; đã qua hạn
+ * hoặc không có hạn thì `null`.
+ */
+export function formatRemaining(deadline: string | null | undefined, now: number): string | null {
+  if (!deadline) return null;
+  const ms = Date.parse(deadline) - now;
+  if (Number.isNaN(ms) || ms <= 0) return null;
+  const minutes = Math.floor(ms / MINUTE_MS);
+  const days = Math.floor(minutes / 1440);
+  const hours = Math.floor((minutes % 1440) / 60);
+  if (days > 0) return `${days} ngày ${hours} giờ`;
+  if (hours > 0) return `${hours} giờ ${minutes % 60} phút`;
+  if (minutes > 0) return `${minutes} phút`;
+  return `${Math.ceil(ms / 1000)} giây`;
+}
+
 /** Số ngày lịch (theo giờ Việt Nam) từ `earlier` tới `later`. */
 function calendarDaysBetween(earlier: Date, later: Date): number {
   const key = (date: Date) => Date.parse(`${dayKeyFormat.format(date)}T00:00:00Z`);

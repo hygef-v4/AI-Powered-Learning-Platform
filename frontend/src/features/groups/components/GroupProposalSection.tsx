@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Button, Icon, Pill, cx, showToast, useConfirmDialog } from "@/shared/ui";
+import { Alert, Button, Card, cx, Icon, Pill, showToast, useConfirmDialog } from "@/shared/ui";
 import { initials } from "@/shared/layout/navigation";
 import { PersonSubline } from "@/shared/ui/PersonSubline";
 import {
@@ -162,7 +162,7 @@ function InvitationList({ invitations, busy, inProposal, onAccept, onDecline }: 
   onDecline: (proposalId: string) => void;
 }) {
   return (
-    <section aria-label="Lời mời vào nhóm" className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-5">
+    <Card as="section" padding="lg" className="flex flex-col gap-3" aria-label="Lời mời vào nhóm">
       <h2 className="text-[15px] font-bold text-ink">Lời mời vào nhóm ({invitations.length})</h2>
       <ul className="flex flex-col gap-2">
         {invitations.map((i) => (
@@ -186,7 +186,7 @@ function InvitationList({ invitations, busy, inProposal, onAccept, onDecline }: 
           </li>
         ))}
       </ul>
-    </section>
+    </Card>
   );
 }
 
@@ -208,8 +208,7 @@ function ProposalCard({ proposal, formation, busy, candidatesCount, onRename, on
   const submittable = canSubmit(proposal, formation);
   const missing = Math.max(0, formation.minSize - proposal.members.length);
   return (
-    <section aria-label="Đề xuất nhóm của bạn" className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-6"
-      data-testid="proposal-card">
+    <Card as="section" padding="none" className="flex flex-col gap-4 p-6" aria-label="Đề xuất nhóm của bạn" data-testid="proposal-card">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -258,7 +257,7 @@ function ProposalCard({ proposal, formation, busy, candidatesCount, onRename, on
             ) : undefined} />
         ))}
       </ul>
-    </section>
+    </Card>
   );
 }
 

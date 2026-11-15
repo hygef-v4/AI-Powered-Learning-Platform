@@ -1,11 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
-import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { formatDateTime } from "@/features/groups/model/format";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, Dialog, Icon, Menu, MenuItem, Pill, cx, showToast } from "@/shared/ui";
+import { Alert, BusyOverlay, Button, Dialog, Icon, Menu, MenuItem, Pill, cx, showToast } from "@/shared/ui";
 import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import { DocumentEditor, type DocumentComment } from "@/shared/document";
 import { outlineOf, publishOutline } from "@/shared/document/outline";
@@ -349,17 +348,14 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
       >
         <Alert tone="warning">Mục hiện tại đã có người làm.</Alert>
       </Dialog>
-      {autoSubmitting && typeof document !== "undefined" && createPortal(
-        <div role="alertdialog" aria-label="Đang nộp" className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/45">
-          <div className="max-w-[420px] rounded-xl bg-surface p-6 text-center">
-            <p className="text-[16px] font-bold text-ink">Đang nộp…</p>
-            <p className="mt-2 text-[13px] text-body">
-              Đã hết hạn nộp{view.closesAt && ` lúc ${dateTime(view.closesAt)}`}. Hệ thống đang tự nộp bản mới nhất của các mục; trang bị khóa trong
-              lúc nộp.
-            </p>
-          </div>
-        </div>,
-        document.body,
+      {autoSubmitting && (
+        <BusyOverlay label="Đang nộp">
+          <p className="text-[16px] font-bold text-ink">Đang nộp…</p>
+          <p className="mt-2 text-[13px] text-body">
+            Đã hết hạn nộp{view.closesAt && ` lúc ${dateTime(view.closesAt)}`}. Hệ thống đang tự nộp bản mới nhất của các mục; trang bị khóa trong
+            lúc nộp.
+          </p>
+        </BusyOverlay>
       )}
     </div>
   );

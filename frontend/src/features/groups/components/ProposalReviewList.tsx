@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useState } from "react";
-import { Alert, Button, Dialog, Field, Pill, Section, cx, showToast } from "@/shared/ui";
+import { Alert, Button, cx, Dialog, Field, Pill, Section, showToast, Textarea } from "@/shared/ui";
 import { approveProposals, getClassProposals, rejectProposal } from "../api";
 import {
   describeFormation,
@@ -217,8 +217,7 @@ function RejectProposalDialog({ proposal, onClose, onRejected }: {
     <Dialog open title={`Từ chối đề xuất ${proposal.name}?`} tone="danger" onClose={onClose} dismissible={!busy}
       footer={<Button variant="danger" disabled={busy || tooLong} onClick={() => void reject()} data-testid="proposal-reject-confirm">Từ chối</Button>}>
       <Field label="Lý do (tùy chọn)" htmlFor={fieldId} error={tooLong ? "Lý do tối đa 1.000 ký tự." : error}>
-        <textarea id={fieldId} rows={3} value={reason} disabled={busy} onChange={(event) => setReason(event.target.value)}
-          className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-base text-ink sm:text-[13.5px]"
+        <Textarea id={fieldId} rows={3} value={reason} disabled={busy} onChange={(event) => setReason(event.target.value)}
           data-testid="proposal-reject-reason" />
       </Field>
       <p className="text-right text-xs text-muted">{reason.trim().length}/{MAX_REJECT_REASON}</p>

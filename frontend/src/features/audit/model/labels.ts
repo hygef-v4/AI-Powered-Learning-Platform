@@ -207,23 +207,8 @@ function parts(iso: string): Record<string, string> {
   return Object.fromEntries(list.map((part) => [part.type, part.value]));
 }
 
-/** "14/10 17:55" theo giờ Việt Nam. */
-export function formatShort(iso: string): string {
-  const p = parts(iso);
-  return `${p.day}/${p.month} ${p.hour}:${p.minute}`;
-}
-
-/** "17:55 14/10/2026" theo giờ Việt Nam: giờ phút rồi ngày tháng năm. */
-export function formatDateTime(iso: string): string {
-  const p = parts(iso);
-  return `${p.hour}:${p.minute} ${p.day}/${p.month}/${p.year}`;
-}
-
-/** "14/10/2026 17:55:12" theo giờ Việt Nam. */
-export function formatFull(iso: string): string {
-  const p = parts(iso);
-  return `${p.day}/${p.month}/${p.year} ${p.hour}:${p.minute}:${p.second}`;
-}
+/** Ngày giờ hiển thị dùng chung từ shared/dateTime (giờ Việt Nam). */
+export { formatDateTime, formatFull, formatShort } from "@/shared/dateTime";
 
 /** Ngày yyyy-mm-dd theo giờ Việt Nam của một thời điểm. */
 export function vnDate(date: Date): string {

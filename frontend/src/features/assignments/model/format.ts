@@ -1,30 +1,8 @@
 import { ApiError } from "@/shared/api/client";
 import type { ValidationIssue } from "@/shared/document";
 
-const VN_OFFSET_MS = 7 * 3600 * 1000;
-
-/** Ngày giờ theo giờ Việt Nam (UTC+7). */
-export function formatDateTime(iso: string | null | undefined): string {
-  if (!iso) return "–";
-  return new Date(iso).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" });
-}
-
-export function formatTime(iso: string | null | undefined): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleTimeString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit" });
-}
-
-/** ISO → giá trị ô datetime-local theo giờ Việt Nam. */
-export function toLocalInput(iso: string | null | undefined): string {
-  if (!iso) return "";
-  return new Date(new Date(iso).getTime() + VN_OFFSET_MS).toISOString().slice(0, 16);
-}
-
-/** Giá trị ô datetime-local (giờ Việt Nam) → ISO; rỗng thì null. */
-export function fromLocalInput(value: string): string | null {
-  if (!value) return null;
-  return new Date(`${value}:00+07:00`).toISOString();
-}
+/** Ngày giờ theo giờ Việt Nam (UTC+7) và cặp đổi giá trị ô datetime-local, dùng chung từ shared/dateTime. */
+export { formatDateTime, formatTime, fromLocalInput, toLocalInput } from "@/shared/dateTime";
 
 export function problemIssues(error: unknown): ValidationIssue[] {
   if (!(error instanceof ApiError)) return [];

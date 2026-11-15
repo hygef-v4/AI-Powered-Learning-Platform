@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { apiFetch } from "@/shared/api/client";
 import { AutoTextarea, type RubricCriterion } from "@/shared/document";
-import { Icon } from "@/shared/ui";
+import { Card, Icon, TotalScoreCard } from "@/shared/ui";
 import { GradingFeedbackSummary } from "./StructuredFeedbackSection";
 import { matchesPersonQuery } from "@/shared/studentCode";
 import { PersonSubline } from "@/shared/ui/PersonSubline";
@@ -65,27 +65,11 @@ export function noteCriteria(rubric: Rubric): RubricCriterion[] {
   }));
 }
 
-function Meter({ awarded, max }: { awarded: number | null; max: number | null }) {
-  const ratio = awarded != null && max ? Math.min(1, Math.max(0, awarded / max)) : 0;
-  return (
-    <span aria-hidden className="mt-2.5 block h-1 overflow-hidden rounded-full bg-sunken">
-      <span className="block h-full rounded-full bg-primary" style={{ width: `${ratio * 100}%` }} />
-    </span>
-  );
-}
-
+/** Thẻ Tổng điểm tạm tính bên lề trang chấm; dáng chung từ `TotalScoreCard`. */
 export function TotalCard({ total, maxScore }: { total: number; maxScore: number }) {
   return (
-    <article className="rounded-xl border border-line bg-surface px-4 py-3.5 shadow-[var(--shadow-lift)]">
-      <p className="text-xs font-medium text-muted">Tổng điểm</p>
-      <p aria-label="Điểm tạm tính" className="mt-1 flex items-baseline gap-1.5 tabular-nums">
-        <span className="font-display text-[30px] leading-none tracking-[-0.02em] text-ink">
-          {total.toFixed(2)}
-        </span>
-        <span className="text-[13px] text-muted"> / {maxScore.toFixed(2)}</span>
-      </p>
-      <Meter awarded={total} max={maxScore} />
-    </article>
+    <TotalScoreCard score={total} maxScore={maxScore} ariaLabel="Điểm tạm tính"
+      format={(value) => (value ?? 0).toFixed(2)} />
   );
 }
 
@@ -167,7 +151,7 @@ export function StudentPickerDropdown({
         <Icon name="unfold_more" size={14} className="shrink-0 text-muted" />
       </button>
       {open && (
-        <div className="absolute left-1/2 top-full z-20 mt-2 w-[min(22rem,calc(100vw-3rem))] -translate-x-1/2 rounded-xl border border-line bg-surface p-3 shadow-[var(--shadow-float)]">
+        <Card padding="sm" className="absolute left-1/2 top-full z-20 mt-2 w-[min(22rem,calc(100vw-3rem))] -translate-x-1/2 shadow-[var(--shadow-float)]">
           <label className="flex flex-col gap-2 text-sm font-semibold text-ink">
             Tìm sinh viên
             <input
@@ -210,7 +194,7 @@ export function StudentPickerDropdown({
               {!matches.length && <li className="py-3 text-sm text-muted">Không có bài nộp phù hợp.</li>}
             </ul>
           )}
-        </div>
+        </Card>
       )}
     </div>
   );

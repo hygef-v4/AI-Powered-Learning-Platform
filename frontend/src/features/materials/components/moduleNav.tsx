@@ -11,7 +11,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/shared/api/client";
 import { FADE_LABEL, type NavContext, type NavLocation } from "@/shared/layout/navigation";
-import { showErrorToast, showToast } from "@/shared/ui";
+import { Card, showErrorToast, showToast } from "@/shared/ui";
 import { cx } from "@/shared/ui/cx";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import { contextQuery, materialPath } from "../api";
@@ -163,7 +163,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
           <span className={cx("px-2.5 py-2 text-[13px] text-muted", FADE_LABEL)}>Đang tải…</span>
         )}
         {scope && outline && outline.length > 0 && (
-          <div className="flex flex-col rounded-xl border border-line bg-surface p-1 shadow-xs">
+          <Card padding="none" className="flex flex-col p-1 shadow-xs">
             {outline.map(({ module, items }, index) => {
               const open = !collapsed.has(module.id);
               return (
@@ -295,7 +295,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                 </div>
               );
             })}
-          </div>
+          </Card>
         )}
       </nav>
       {dialog?.type === "item" && staff && (

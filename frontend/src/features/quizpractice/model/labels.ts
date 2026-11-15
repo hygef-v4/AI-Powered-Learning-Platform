@@ -31,9 +31,7 @@ export function errorCode(error: unknown): string | undefined {
   return error instanceof ApiError ? error.problem.code : undefined;
 }
 
-export function formatDateTime(value: string | null): string {
-  return value ? new Date(value).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" }) : "—";
-}
+export { formatDateTime } from "@/shared/dateTime";
 
 export function formatPoints(value: number | null | undefined): string {
   return value === null || value === undefined ? "—" : Number(value).toLocaleString("vi-VN", { maximumFractionDigits: 2 });

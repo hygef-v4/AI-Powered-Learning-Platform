@@ -2,7 +2,7 @@
 
 import { type DiagramType } from "@/shared/document";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
-import { Field, InfoTip, Switch } from "@/shared/ui";
+import { Field, InfoTip, Switch, Textarea } from "@/shared/ui";
 import { Choice, ChoiceHint } from "./Choice";
 import { assignmentFormSections, assignmentSettingsSections } from "../slots";
 import { type AssignmentDetail, type GradingMode, type SubmissionMode } from "../model/types";
@@ -78,9 +78,8 @@ export function AssignmentSettingsPanel({ detail, value, onChange, readOnly, cla
       </div>
       {value.activityMonitoringEnabled && (
         <Field label="Lời báo cho sinh viên" htmlFor="activity-notice" required>
-          <textarea id="activity-notice" rows={2} maxLength={1000} value={value.activityNotice} disabled={readOnly}
-            onChange={(e) => onChange({ ...value, activityNotice: e.target.value })}
-            className="w-full rounded-lg border border-field px-3 py-2 text-[13px] outline-none focus:outline-2 focus:outline-focus" />
+          <Textarea id="activity-notice" rows={2} maxLength={1000} value={value.activityNotice} disabled={readOnly}
+            onChange={(e) => onChange({ ...value, activityNotice: e.target.value })} />
         </Field>
       )}
     </div>

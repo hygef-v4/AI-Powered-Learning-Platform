@@ -1,6 +1,6 @@
 "use client";
 
-import { Pagination, Pill, Td } from "@/shared/ui";
+import { Card, Pagination, Pill, Td } from "@/shared/ui";
 import { cx } from "@/shared/ui/cx";
 import { RESULT_LABELS, actionLabel, formatDateTime, formatFull, objectTypeLabel, shortId, shortReason } from "../model/labels";
 import type { AuditLogPage } from "../model/types";
@@ -30,8 +30,7 @@ export function AuditTable({ data, onPageChange }: Props) {
   const first = data.page * data.size;
   return (
     <div className="flex flex-col gap-3">
-      <div className="overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-xl border border-line bg-surface"
-        data-testid="audit-table-scroll">
+      <Card padding="none" className="overflow-x-auto overflow-y-hidden overscroll-x-contain" data-testid="audit-table-scroll">
         <table className="w-full min-w-[980px] table-fixed border-collapse [&_tbody_tr:last-child>td]:border-b-0">
           <colgroup>
             <col className="w-12" /><col className="w-[104px]" /><col className="w-[22%]" /><col className="w-[25%]" />
@@ -92,7 +91,7 @@ export function AuditTable({ data, onPageChange }: Props) {
             })}
           </tbody>
         </table>
-      </div>
+      </Card>
       <Pagination
         page={data.page}
         pageSize={data.size}

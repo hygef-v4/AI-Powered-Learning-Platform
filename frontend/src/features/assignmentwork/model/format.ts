@@ -1,17 +1,10 @@
 import { ApiError } from "@/shared/api/client";
 import type { ValidationIssue } from "@/shared/document";
 
-/** Ngày giờ theo giờ Việt Nam (UTC+7). */
-export function formatDateTime(iso: string | null | undefined): string {
-  if (!iso) return "–";
-  return new Date(iso).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" });
-}
+import { formatRemaining, formatTime as sharedFormatTime } from "@/shared/dateTime";
 
-/** Giờ có giây: hai lần nộp trong cùng một phút vẫn phân biệt được (yêu cầu 2026-11-10). */
-export function formatDateTimeSeconds(iso: string | null | undefined): string {
-  if (!iso) return "–";
-  return new Date(iso).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit", second: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" });
-}
+/** Ngày giờ theo giờ Việt Nam (UTC+7), dùng chung từ shared/dateTime. */
+export { formatDateTime } from "@/shared/dateTime";
 
 /**
  * Bài cá nhân, nhóm (yêu cầu 2026-11-10): lịch sử nộp bài chỉ mở khi đã nộp và đã qua hạn nộp đúng giờ. Bài luyện tập
@@ -33,24 +26,15 @@ export function historyVersions<T extends { status: string; late: boolean; attem
   return [late, onTime].filter((a): a is T => !!a);
 }
 
+/** Giờ có giây: hai lần lưu hoặc nộp trong cùng một phút vẫn phân biệt được. */
 export function formatTime(iso: string | null | undefined): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleTimeString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return iso ? sharedFormatTime(iso, true) : "";
 }
 
 /** Còn lại tới hạn dạng "2 ngày 3 giờ", "15 phút"; quá hạn trả "Đã quá hạn". */
 export function remaining(deadline: string | null, now: number): string {
   if (!deadline) return "";
-  const ms = new Date(deadline).getTime() - now;
-  if (ms <= 0) return "Đã quá hạn";
-  const minutes = Math.floor(ms / 60000);
-  const days = Math.floor(minutes / 1440);
-  const hours = Math.floor((minutes % 1440) / 60);
-  const mins = minutes % 60;
-  if (days > 0) return `${days} ngày ${hours} giờ`;
-  if (hours > 0) return `${hours} giờ ${mins} phút`;
-  if (mins > 0) return `${mins} phút`;
-  return `${Math.ceil(ms / 1000)} giây`;
+  return formatRemaining(deadline, now) ?? "Đã quá hạn";
 }
 
 

@@ -20,7 +20,7 @@ import { listAccounts, type AccountPage } from "../api";
 import { ImportAccountsPanel } from "../components/ImportAccountsPanel";
 import { STATUS_LABELS, STATUS_TONES } from "../model/labels";
 import { NewAccountDialog } from "../components/NewAccountDialog";
-import { Pagination } from "../components/Pagination";
+import { Card, Pagination } from "@/shared/ui";
 
 const ROLE_TABS: { value: Role | ""; label: string }[] = [
   { value: "", label: "Tất cả" },
@@ -112,7 +112,7 @@ export function AccountListPage() {
         />
       )}
 
-      <section className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+      <Card as="section" padding="lg" className="flex flex-col gap-3.5">
         <div role="search">
           <TextInput
             type="search"
@@ -226,8 +226,8 @@ export function AccountListPage() {
           </TableFrame>
         )}
 
-        {data && data.total > 0 && <Pagination page={page} size={data.size} total={data.total} onPage={(p) => navigate({ page: p })} />}
-      </section>
+        {data && data.total > 0 && <Pagination page={page} pageSize={data.size} total={data.total} onPageChange={(p) => navigate({ page: p })} summary={false} />}
+      </Card>
 
       {creating && (
         <NewAccountDialog

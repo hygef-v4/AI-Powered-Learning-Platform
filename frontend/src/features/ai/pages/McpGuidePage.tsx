@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ButtonLink, PageHeader } from "@/shared/ui";
+import { ButtonLink, Card, PageHeader } from "@/shared/ui";
 import { McpClientSetup } from "../components/SetupGuides";
 import { MCP_TOOL_GROUPS } from "../model/mcpGuide";
 
@@ -20,24 +20,15 @@ export function McpGuidePage() {
       subtitle="Kết nối agent của bạn với Nền tảng học tập."
       actions={<ButtonLink href="/ai/connection?tab=mcp" size="sm">Quản lý kết nối MCP</ButtonLink>} />
     <div className="grid min-w-0 gap-8 lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-12">
-      <nav aria-label="Mục lục tài liệu MCP" className="self-start rounded-xl border border-line bg-surface p-4 lg:sticky lg:top-24">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">Trong tài liệu này</p>
-        <ol className="grid gap-1 sm:grid-cols-2 lg:grid-cols-1">
-          {CONTENTS.map(([id, label], index) => <li key={id}>
-            <a href={`#${id}`} className="flex min-w-0 gap-3 rounded-lg px-2 py-2 text-[13px] text-body transition-colors hover:bg-sunken hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
-              <span className="text-faint" aria-hidden="true">{index + 1}</span>{label}
-            </a>
-          </li>)}
-        </ol>
-      </nav>
+      <GuideContents />
       <article aria-label="Hướng dẫn MCP" className="min-w-0 space-y-9 text-[15px] leading-7 text-body">
         <GuideSection id="tong-quan" title="MCP dùng để làm gì?">
           <p>MCP cho phép bạn trò chuyện trong Codex, Claude Code, OpenCode hoặc Antigravity để làm việc với dữ liệu được phép trên hệ thống. Agent dùng mô hình của chính ứng dụng đó; token MCP không phải khóa API AI và không sử dụng khóa API bạn đã lưu ở đây.</p>
           <p>Bạn nêu yêu cầu và trao đổi với agent ở ứng dụng bên ngoài. Khi tạo đề hoặc chấm bài, agent trả liên kết mở đúng bản nháp/đề xuất trên nền tảng để bạn xem và quyết định.</p>
-          <dl className="grid gap-4 rounded-xl border border-line bg-surface p-5 sm:grid-cols-2">
+          <Card as="dl" padding="lg" className="grid gap-4 sm:grid-cols-2">
             <div><dt className="font-semibold text-ink">Chỉ đọc</dt><dd className="mt-1 text-sm">Xem dữ liệu mà vai trò cho phép. Không tạo nháp hay lưu đề xuất.</dd></div>
             <div><dt className="font-semibold text-ink">Đọc và ghi</dt><dd className="mt-1 text-sm">Có thêm các tool ghi được vai trò cho phép, như tạo nháp hoặc lưu góp ý. Không tự chốt/công bố điểm.</dd></div>
-          </dl>
+          </Card>
           <ul className="list-disc space-y-2 pl-5">
             <li>Giảng viên: làm việc trong lớp được phân công. Chủ nhiệm môn: thêm quyền trên nội dung môn phụ trách; chấm bài vẫn cần quyền dạy lớp.</li>
             <li>Sinh viên: xin góp ý cho bài Practice đã nộp của chính mình, không tự chấm điểm chính thức hoặc dùng AI cho bài nhóm.</li>
@@ -47,7 +38,7 @@ export function McpGuidePage() {
 
         <GuideSection id="ket-noi" title="Kết nối ứng dụng">
           <p>Trong Quản lý kết nối MCP, bấm <strong>Kết nối agent mới</strong>, đặt nhãn dễ nhớ và chọn quyền phù hợp. Sau đó chọn ứng dụng bên dưới. Cách nhanh nhất là sao chép prompt tiếng Anh và nhờ agent thiết lập; bạn cũng có thể mở file cấu hình để ghép thủ công.</p>
-          <div className="min-w-0 rounded-xl border border-line bg-surface p-4 sm:p-5"><McpClientSetup /></div>
+          <Card className="min-w-0 sm:p-5"><McpClientSetup /></Card>
           <p className="text-sm text-muted">Hướng dẫn không bắt buộc dùng terminal. Với Codex, cấu hình cá nhân dùng chung cho các giao diện hỗ trợ cùng cấu hình; với Claude Code, đây là cấu hình của Claude Code, không phải file cấu hình Claude Desktop.</p>
           <p className="text-sm">Giữ token trong cấu hình cá nhân. Trang tài liệu chỉ hiển thị chỗ giữ chỗ; không dán token vào cuộc trò chuyện, ảnh chụp, URL hay Git. Nếu lộ token, thu hồi kết nối đó và tạo token mới.</p>
           <p className="text-sm">Để ngắt kết nối, tắt hoặc xóa server nen-tang-hoc-tap trong ứng dụng agent. Nếu không còn sử dụng, quay lại Quản lý kết nối MCP và thu hồi token; các kết nối dùng token đó sẽ không xác thực được nữa.</p>
@@ -79,13 +70,13 @@ export function McpGuidePage() {
               <p className="mt-2">Quiz dùng đề xuất câu hỏi riêng; ngân hàng câu hỏi dành cho Chủ nhiệm môn và vẫn cần duyệt. Sinh viên có thể xin góp ý riêng sau khi nộp bài Practice; góp ý không sửa bài và không tạo điểm vào sổ điểm.</p>
             </div>
           </div>
-          <details className="rounded-xl border border-line bg-surface p-4 text-sm">
+          <Card as="details" className="text-sm">
             <summary className="cursor-pointer font-semibold text-ink">Prompt mẫu để bắt đầu (tiếng Anh)</summary>
             <div className="mt-4 space-y-4">
               <div><p className="font-semibold">Tạo đề</p><pre className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-sunken p-3 font-mono text-xs leading-6">{`Create a graded individual assignment for class SE1933 on software architecture: 3 UML questions, 10 points total, medium difficulty. Confirm the exact class, ask about any missing requirements, and draft questions with a matching rubric. Use the server's AUTHOR_ASSIGNMENT workflow. Return the review link; do not publish.`}</pre></div>
               <div><p className="font-semibold">Chấm bài</p><pre className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-sunken p-3 font-mono text-xs leading-6">{`List the submitted work for the class and assignment I specify. Use GRADE_WITH_RUBRIC, read every current context page, and propose per-item scores with evidence and explanations. Flag uncertainty for teacher review. Save proposals only and return review links; do not save, finalize or publish official grades.`}</pre></div>
             </div>
-          </details>
+          </Card>
           <p className="text-sm text-muted">Không cần tải skill hoặc hook về máy. Giảng viên dùng hướng dẫn trên server qua read_agent_workflow; skill/hook cục bộ chỉ là lựa chọn bổ sung, không cấp thêm quyền.</p>
         </GuideSection>
 
@@ -95,12 +86,12 @@ export function McpGuidePage() {
             {MCP_TOOL_GROUPS.map((group) => <section key={group.title} aria-label={group.title}>
               <h3 className="font-semibold text-ink">{group.title}</h3>
               <p className="mt-1 text-sm text-muted">{group.audience}</p>
-              <dl className="mt-3 divide-y divide-line rounded-xl border border-line bg-surface px-4 sm:px-5">
+              <Card as="dl" padding="none" className="mt-3 divide-y divide-line px-4 sm:px-5">
                 {group.tools.map((tool) => <div key={tool.name} className="grid min-w-0 gap-2 py-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)] xl:gap-5">
                   <dt className="min-w-0"><code className="break-words font-mono text-[13px] font-semibold text-ink">{tool.name}</code><span className="mt-1 block text-xs text-muted">{tool.write ? "Ghi nháp/góp ý" : "Chỉ đọc"}</span></dt>
                   <dd className="min-w-0 text-sm leading-6">{tool.description}</dd>
                 </div>)}
-              </dl>
+              </Card>
             </section>)}
           </div>
         </GuideSection>
@@ -130,6 +121,22 @@ export function McpGuidePage() {
       </article>
     </div>
   </div>;
+}
+
+/** Thẻ mục lục dính bên trái trang tài liệu. */
+function GuideContents() {
+  return (
+    <Card as="nav" className="self-start lg:sticky lg:top-24" aria-label="Mục lục tài liệu MCP">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">Trong tài liệu này</p>
+      <ol className="grid gap-1 sm:grid-cols-2 lg:grid-cols-1">
+        {CONTENTS.map(([id, label], index) => <li key={id}>
+          <a href={`#${id}`} className="flex min-w-0 gap-3 rounded-lg px-2 py-2 text-[13px] text-body transition-colors hover:bg-sunken hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
+            <span className="text-faint" aria-hidden="true">{index + 1}</span>{label}
+          </a>
+        </li>)}
+      </ol>
+    </Card>
+  );
 }
 
 function GuideSection({ id, title, children }: { id: string; title: string; children: ReactNode }) {

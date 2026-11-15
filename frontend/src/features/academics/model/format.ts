@@ -6,10 +6,7 @@ export function formatOperationError(cause: unknown) {
   return cause instanceof ApiError ? "Không thể hoàn tất thao tác. Vui lòng thử lại." : cause instanceof Error ? cause.message : "Không thể hoàn tất thao tác. Vui lòng thử lại.";
 }
 
-export function formatDate(value: string) {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
-}
+export { formatDate } from "@/shared/dateTime";
 
 export type ClassFieldError = { field: "code" | "startsOn"; message: string };
 
@@ -27,7 +24,4 @@ export function formatClassFieldError(cause: unknown): ClassFieldError | null {
 }
 
 /** Formats a class start date `yyyy-MM-dd` as `d/M/yyyy` without timezone shifts (BR-U05-61). */
-export function formatStartDate(value: string | null | undefined) {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value ?? "");
-  return match ? `${Number(match[3])}/${Number(match[2])}/${match[1]}` : "—";
-}
+export { formatDateOnly as formatStartDate } from "@/shared/dateTime";

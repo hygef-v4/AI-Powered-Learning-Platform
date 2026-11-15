@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, Button, Pill } from "@/shared/ui";
+import { Alert, Button, Card, Pill } from "@/shared/ui";
 import { getGroups, getStudentGroup } from "../api";
 import type { GroupSetView, StudentGroup } from "../model/types";
 
@@ -89,7 +89,7 @@ export function GroupAssignmentPanel({ classId }: { classId: string }) {
   if (set.groups.some((g) => !g.leaderId)) errors.push("Có nhóm chưa có trưởng nhóm.");
   if (set.groups.some((g) => !g.members.some((m) => m.active))) errors.push("Có nhóm không có thành viên đang học.");
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-line bg-surface p-4">
+    <Card className="flex flex-col gap-2">
       <p className="text-[13px] font-bold text-ink">Kiểm tra sẵn sàng · {set.groups.length} nhóm</p>
       {errors.length > 0 && (
         <Alert tone="danger" title="Chưa phát hành được">
@@ -110,6 +110,6 @@ export function GroupAssignmentPanel({ classId }: { classId: string }) {
         </Button>
         <span className="text-xs text-muted">Sửa nhóm ở tab mới; quay lại đây hộp này tự cập nhật.</span>
       </div>
-    </div>
+    </Card>
   );
 }

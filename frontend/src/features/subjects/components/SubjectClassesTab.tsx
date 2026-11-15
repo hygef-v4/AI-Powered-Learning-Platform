@@ -1,7 +1,7 @@
 "use client";
 
 import { useUrlState } from "@/shared/navigation/useUrlState";
-import { Segmented, TextInput } from "@/shared/ui";
+import { Card, Segmented, TextInput } from "@/shared/ui";
 import { SubjectClassesTable } from "./SubjectClassesTable";
 import type { SubjectClassStatus, SubjectClassSummary } from "../model/types";
 
@@ -28,7 +28,7 @@ export function SubjectClassesTab({ items }: { items: SubjectClassSummary[] }) {
       (!q || item.code.toLocaleLowerCase("vi").includes(q)),
   );
   return (
-    <section className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+    <Card as="section" padding="lg" className="flex flex-col gap-3.5">
       <div className="flex flex-wrap items-center gap-3">
         <Segmented
           as="tab"
@@ -51,6 +51,6 @@ export function SubjectClassesTab({ items }: { items: SubjectClassSummary[] }) {
         </div>
       </div>
       <SubjectClassesTable items={filtered} />
-    </section>
+    </Card>
   );
 }

@@ -86,27 +86,5 @@ export function describeConstraints(item: SettingItem): string {
   }
 }
 
-function dateParts(iso: string): Record<string, string> {
-  const parts = new Intl.DateTimeFormat("vi-VN", {
-    timeZone: "Asia/Ho_Chi_Minh",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(new Date(iso));
-  return Object.fromEntries(parts.map((part) => [part.type, part.value]));
-}
-
-/** "02/10 14:15" theo giờ Việt Nam. */
-export function formatShortDateTime(iso: string): string {
-  const p = dateParts(iso);
-  return `${p.day}/${p.month} ${p.hour}:${p.minute}`;
-}
-
-/** "02/10/2026 14:15" theo giờ Việt Nam. */
-export function formatDateTime(iso: string): string {
-  const p = dateParts(iso);
-  return `${p.day}/${p.month}/${p.year} ${p.hour}:${p.minute}`;
-}
+/** Ngày giờ hiển thị dùng chung từ shared/dateTime (giờ Việt Nam). */
+export { formatDateTime, formatShort as formatShortDateTime } from "@/shared/dateTime";
