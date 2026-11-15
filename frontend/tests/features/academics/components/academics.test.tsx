@@ -14,13 +14,14 @@ import { parseEnrollmentList } from "@/features/academics/model/enrollmentList";
 import { navEntries } from "@/features/identity/slots";
 import "@/features/academics/register";
 import type { CourseClassView, EnrollmentView } from "@/features/academics/model/types";
+import { ApiError } from "@/shared/api/client";
 
 // Tab của trang lớp đọc `?tab=` qua useSearchParams; trong test lấy thẳng từ URL của jsdom.
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }), useSearchParams: () => new URLSearchParams(window.location.search) }));
 
 const subject = { id: "subject-1", code: "SWP391", name: "Software Development Project", description: "Môn học dự án" };
 const teacher = { id: "teacher-1", name: "Nguyễn Minh Kiên", email: "kien@example.test" };
-const course: CourseClassView = { id: "class-1", subject, code: "SE1801", name: "Nhóm thứ Hai", description: "Lớp sáng thứ Hai",
+const course: CourseClassView = { id: "class-1", subject, code: "SE1801", name: "Nhóm thứ Hai", description: "Lớp sáng thứ Hai", startsOn: "2026-09-07", term: "FA26",
   status: "OPEN", teacher, activeStudentCount: 2, removedStudentCount: 1, createdAt: "2026-09-01", showGradeDistribution: false, version: 3 };
 const student: EnrollmentView = { accountId: "student-1", name: "Nguyễn Văn An", email: "an@example.test", enrolledAt: "2026-09-05", status: "ACTIVE" };
 
@@ -52,20 +53,68 @@ describe("U05 reference UI", () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
-  it("creates a class from its code only (no class name or term) with an optional teacher", async () => {
+  it("filters manager classes by term with the status tab; the term list ignores tabs and unknown URL terms show all", () => {
+    window.history.replaceState(null, "", "/manager/classes?classTerm=SU99");
+    const classes = [course, { ...course, id: "class-2", code: "SE1801", startsOn: "2027-04-03", term: "SP27-BL5", status: "ARCHIVED" as const },
+      { ...course, id: "class-3", code: "SE1901", startsOn: "2027-01-10", term: "SP27" }];
+    render(<ClassListPage classes={classes} subjects={[subject]} onOpen={vi.fn()} onCreate={vi.fn()} />);
+    expect(screen.getByRole("columnheader", { name: "Học kỳ" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /Xem lớp/ })).toHaveLength(3);
+    fireEvent.click(screen.getByRole("tab", { name: "Đang mở" }));
+    expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["Tất cả học kỳ", "SP27-BL5", "SP27", "FA26"]);
+    fireEvent.click(screen.getByRole("menuitem", { name: "SP27" }));
+    expect(window.location.search).toContain("classTerm=SP27");
+    expect(screen.getAllByRole("button", { name: /Xem lớp/ }).map((button) => button.getAttribute("data-testid"))).toEqual(["class-open-class-3"]);
+    fireEvent.click(screen.getByRole("menuitem", { name: "SP27-BL5" }));
+    expect(screen.getByText("Không có lớp phù hợp.")).toBeInTheDocument();
+  });
+
+  it("counts dashboard tabs within the chosen term and shows the term on cards", () => {
+    window.history.replaceState(null, "", "/classes?classTerm=FA26");
+    const classes = [course, { ...course, id: "c2", code: "SE1901", startsOn: "2027-01-10", term: "SP27" },
+      { ...course, id: "c3", code: "SE1701", status: "ARCHIVED" as const, startsOn: "2027-01-10", term: "SP27" }];
+    render(<ClassDashboardPage audience="teacher" classes={classes} onOpen={vi.fn()} />);
+    expect(screen.getByRole("tab", { name: /Đang dạy/ })).toHaveTextContent("1");
+    expect(screen.getByRole("tab", { name: /Kết thúc/ })).toHaveTextContent("0");
+    expect(screen.getByText("SWP391 · FA26")).toBeInTheDocument();
+    expect(screen.queryByText("SE1901")).toBeNull();
+    fireEvent.click(screen.getByRole("menuitem", { name: "Tất cả học kỳ" }));
+    expect(screen.getByRole("tab", { name: /Đang dạy/ })).toHaveTextContent("2");
+    expect(screen.getByText("SE1901")).toBeInTheDocument();
+  });
+
+  it("creates a class from its code and start date; the term is only previewed (D-U04-05)", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(<ClassFormDialog subject={subject} teachers={[teacher]} onSubmit={onSubmit} onClose={vi.fn()} />);
     expect(screen.queryByLabelText(/Tên lớp/)).toBeNull();
     expect(screen.queryByLabelText(/Học kỳ/)).toBeNull();
+    expect(screen.getByLabelText(/Ngày bắt đầu/)).toHaveValue("");
     fireEvent.change(screen.getByLabelText(/Mã lớp/), { target: { value: " SE1902 " } });
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Tạo lớp" }));
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ subjectId: subject.id, code: "SE1902", name: "SE1902", description: "", teacherId: null }));
+    expect(await screen.findByText("Chọn ngày bắt đầu")).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText(/Ngày bắt đầu/), { target: { value: "2027-04-03" } });
+    expect(screen.getByTestId("class-form-term")).toHaveTextContent("Học kỳ: SP27-BL5");
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Tạo lớp" }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ subjectId: subject.id, code: "SE1902", name: "SE1902", description: "", startsOn: "2027-04-03", teacherId: null }));
+  });
+
+  it("shows duplicate code in the same term on the code field", async () => {
+    const onSubmit = vi.fn().mockRejectedValue(new ApiError({ status: 409, code: "CLASS_EXISTS" }));
+    render(<ClassFormDialog subject={subject} teachers={[teacher]} onSubmit={onSubmit} onClose={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText(/Mã lớp/), { target: { value: "SE1902" } });
+    fireEvent.change(screen.getByLabelText(/Ngày bắt đầu/), { target: { value: "2026-11-14" } });
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Tạo lớp" }));
+    expect(await screen.findByText("Mã lớp đã tồn tại trong môn ở học kỳ này")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Mã lớp/)).toHaveAttribute("aria-invalid", "true");
+    expect(screen.queryByText(/Dữ liệu đã thay đổi/)).toBeNull();
   });
 
   it("sends the chosen teacher when creating a class", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(<ClassFormDialog subject={subject} teachers={[teacher]} onSubmit={onSubmit} onClose={vi.fn()} />);
     fireEvent.change(screen.getByLabelText(/Mã lớp/), { target: { value: "SE1902" } });
+    fireEvent.change(screen.getByLabelText(/Ngày bắt đầu/), { target: { value: "2027-01-10" } });
     fireEvent.focus(screen.getByRole("combobox", { name: /Giảng viên/ }));
     fireEvent.click(await screen.findByRole("option", { name: new RegExp(teacher.name) }));
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Tạo lớp" }));
@@ -76,17 +125,29 @@ describe("U05 reference UI", () => {
     const onSave = vi.fn().mockRejectedValue(new Error("Dữ liệu đã thay đổi. Vui lòng tải lại."));
     render(<ClassInfoForm value={course} onSave={onSave} />);
     expect(screen.queryByLabelText(/Tên lớp/)).toBeNull();
-    expect(screen.queryByLabelText(/Học kỳ/)).toBeNull();
+    expect(screen.getByLabelText(/Học kỳ/)).toHaveValue("FA26");
     fireEvent.change(screen.getByLabelText(/Mô tả/), { target: { value: "Mô tả mới" } });
     fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
-    await waitFor(() => expect(onSave).toHaveBeenCalledWith({ name: course.name, description: "Mô tả mới", version: 3 }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith({ name: course.name, description: "Mô tả mới", startsOn: "2026-09-07", version: 3 }));
     expect(await screen.findByRole("alert")).toHaveTextContent("tải lại");
     expect(screen.getByLabelText(/Mô tả/)).toHaveValue("Mô tả mới");
+  });
+
+  it("previews the term change old → new and sends the new start date", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<ClassInfoForm value={course} onSave={onSave} />);
+    expect(screen.queryByTestId("class-info-term-change")).toBeNull();
+    fireEvent.change(screen.getByLabelText(/Ngày bắt đầu/), { target: { value: "2027-04-03" } });
+    expect(screen.getByTestId("class-info-term-change")).toHaveTextContent("Học kỳ: FA26 → SP27-BL5");
+    expect(screen.getByLabelText(/Học kỳ/)).toHaveValue("FA26");
+    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith({ name: course.name, description: course.description, startsOn: "2027-04-03", version: 3 }));
   });
 
   it("does not offer editing for archived classes", () => {
     render(<ClassInfoForm value={{ ...course, status: "ARCHIVED" }} onSave={vi.fn()} />);
     expect(screen.getByLabelText(/Mô tả/)).toBeDisabled();
+    expect(screen.getByLabelText(/Ngày bắt đầu/)).toBeDisabled();
     expect(screen.queryByRole("button", { name: "Lưu thay đổi" })).not.toBeInTheDocument();
   });
 
@@ -245,6 +306,7 @@ describe("U05 reference UI", () => {
     render(<ManagedClassPage value={course} students={[]} teachers={[]} candidates={[]} onBack={vi.fn()} actions={{ onSaveInfo: action, onAssign: action, onChangeStatus: action, onEnrollmentStatus: action, onEnroll: action, onBatch: vi.fn().mockResolvedValue([]) }} />);
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
     expect(screen.queryByText("Phân bố điểm")).not.toBeInTheDocument();
+    expect(screen.getByTestId("class-header-term")).toHaveTextContent("FA26");
   });
 
   it("shows teacher class facts as text, counts active students and safely hides empty descriptions", () => {
@@ -264,6 +326,7 @@ describe("U05 reference UI", () => {
     // Chỉ đếm sinh viên đang học.
     expect(screen.getByText("1", { selector: "dd" })).toBeInTheDocument();
     expect(screen.getByText(`${course.subject.code} · ${course.subject.name}`)).toBeInTheDocument();
+    expect(screen.getByText(course.term, { selector: "dd" })).toBeInTheDocument();
     expect(container.querySelector("input")).toBeNull();
     expect(screen.getByText(description)).toBeInTheDocument();
     expect(container.querySelector("script")).toBeNull();

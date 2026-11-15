@@ -1,7 +1,8 @@
 "use client";
 
 import { useUrlState } from "@/shared/navigation/useUrlState";
-import { Button, ClickableRow, Icon, PageHeader, PageNav, Pill, Segmented, TableFrame, Td, TextInput, Th } from "@/shared/ui";
+import { Button, ClickableRow, Icon, PageHeader, PageNav, Pill, Segmented, TableFrame, Td, TermFilter, TextInput, Th } from "@/shared/ui";
+import { termOptions } from "../model/term";
 import { CLASS_STATUS_LABELS, type ClassStatus, type CourseClassView, type SubjectView } from "../model/types";
 
 const PAGE_SIZE = 20;
@@ -15,7 +16,8 @@ const TONES: Record<ClassStatus, "success" | "warning" | "danger"> = { OPEN: "su
 /**
  * Lớp của môn (Chủ nhiệm môn), cùng bố cục tab Lớp học ở Chi tiết môn của Admin: một thẻ có tab trạng thái và ô tìm theo
  * mã hoặc tên lớp, bảng tiêu đề tô nền; khác ở chỗ bấm dòng để mở chi tiết lớp. Môn là môn đang chọn trên sidebar
- * (`?subjectId=`), không đổi môn ngay trên trang; Tạo lớp ở đầu trang.
+ * (`?subjectId=`), không đổi môn ngay trên trang; Tạo lớp ở đầu trang. Ô Học kỳ (URL `classTerm`) lấy danh sách từ mọi lớp
+ * của môn, không phụ thuộc tab; giá trị lạ coi như Tất cả (D-U04-05, FD Q4).
  */
 export function ClassListPage({ classes, subjects, initialSubjectId, onOpen, onCreate }: { classes: CourseClassView[]; subjects: SubjectView[]; initialSubjectId?: string; onOpen: (id: string) => void; onCreate: (subject: SubjectView) => void }) {
   const subjectId = initialSubjectId ?? subjects[0]?.id ?? "";
@@ -24,9 +26,13 @@ export function ClassListPage({ classes, subjects, initialSubjectId, onOpen, onC
   const [pageValue, setPageValue] = useUrlState<string>("classPage", "0", undefined, "replace");
   const page = /^\d+$/.test(pageValue) && Number.isSafeInteger(Number(pageValue)) ? Number(pageValue) : 0;
   const setPage = (page: number) => setPageValue(String(page));
+  const subjectClasses = classes.filter((course) => course.subject.id === subjectId);
+  const terms = termOptions(subjectClasses);
+  const [termValue, setTerm] = useUrlState<string>("classTerm", "", undefined, "replace");
+  const term = terms.includes(termValue) ? termValue : "";
   const selected = subjects.find((subject) => subject.id === subjectId);
   const q = query.trim().toLocaleLowerCase("vi");
-  const filtered = classes.filter((course) => course.subject.id === subjectId
+  const filtered = subjectClasses.filter((course) => (!term || course.term === term)
     && (status === "ALL" || course.status === status)
     && (!q || course.code.toLocaleLowerCase("vi").includes(q)));
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -46,22 +52,24 @@ export function ClassListPage({ classes, subjects, initialSubjectId, onOpen, onC
           onChange={(value) => { setStatus(value); setPage(0); }}
           options={TABS.map((tab) => ({ ...tab, testId: `class-filter-${tab.value}` }))}
         />
+        <div className="w-full sm:w-44"><TermFilter options={terms} value={term} onChange={(value) => { setTerm(value); setPage(0); }} testId="class-term-filter" /></div>
         <div role="search" className="ml-auto w-full sm:w-72">
           <TextInput type="search" icon="search" aria-label="Lọc theo mã lớp" placeholder="Lọc theo mã lớp"
             value={query} maxLength={200} data-testid="class-search" onChange={(event) => { setQuery(event.target.value); setPage(0); }} />
         </div>
       </div>
-      <TableFrame filledHead className="[&_table]:min-w-[560px] [&_table]:table-fixed">
-        <colgroup><col className="w-[34%]" /><col /><col className="w-[130px]" /><col className="w-[48px]" /></colgroup><thead><tr><Th>Mã lớp</Th><Th>Giảng viên</Th><Th>Trạng thái</Th><Th className="w-10"><span className="sr-only">Chi tiết</span></Th></tr></thead>
+      <TableFrame filledHead className="[&_table]:min-w-[640px] [&_table]:table-fixed">
+        <colgroup><col className="w-[28%]" /><col className="w-[110px]" /><col /><col className="w-[130px]" /><col className="w-[48px]" /></colgroup><thead><tr><Th>Mã lớp</Th><Th>Học kỳ</Th><Th>Giảng viên</Th><Th>Trạng thái</Th><Th className="w-10"><span className="sr-only">Chi tiết</span></Th></tr></thead>
         <tbody>
           {rows.map((course) => <ClickableRow key={course.id} onClick={() => onOpen(course.id)}>
             <Td><button type="button" aria-label={`Xem lớp ${course.code}`} data-testid={`class-open-${course.id}`}
               onClick={(event) => { event.stopPropagation(); onOpen(course.id); }} className="text-left font-mono font-semibold text-ink hover:text-primary-ink">{course.code}</button></Td>
+            <Td className="font-mono text-body">{course.term}</Td>
             <Td>{course.teacher?.name ?? <Pill>Chưa phân công</Pill>}</Td>
             <Td><Pill tone={TONES[course.status]}>{CLASS_STATUS_LABELS[course.status]}</Pill></Td>
             <Td className="text-faint"><Icon name="chevron_right" size={18} /></Td>
           </ClickableRow>)}
-          {rows.length === 0 && <tr><Td colSpan={4} className="py-10 text-center! text-muted">Không có lớp phù hợp.</Td></tr>}
+          {rows.length === 0 && <tr><Td colSpan={5} className="py-10 text-center! text-muted">Không có lớp phù hợp.</Td></tr>}
         </tbody>
       </TableFrame>
       <PageNav page={current} size={PAGE_SIZE} total={filtered.length} onPage={setPage} />

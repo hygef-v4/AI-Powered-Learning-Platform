@@ -19,6 +19,7 @@ export type ListQuery = {
   q?: string;
   status?: string;
   subjectId?: string;
+  term?: string;
 };
 export type ManagedSubject = SubjectView & {
   status?: string;
@@ -33,7 +34,7 @@ function buildQuery(input: ListQuery = {}) {
   const size = Math.max(1, Math.min(100, Math.floor(input.size || 100)));
   const params = new URLSearchParams({ page: String(page), size: String(size) });
 
-  for (const key of ["q", "status", "subjectId"] as const) {
+  for (const key of ["q", "status", "subjectId", "term"] as const) {
     const value = input[key];
     if (value) params.set(key, value);
   }

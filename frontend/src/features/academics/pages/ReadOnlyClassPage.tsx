@@ -80,10 +80,11 @@ export function ReadOnlyClassPage({
         {tab === "info" && (
           <div className="flex flex-col gap-4" data-teacher-overview="true">
             <Section title="Thông tin lớp">
-              <dl className="grid min-w-0 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+              <dl className="grid min-w-0 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-5">
                 {[
                   ["Môn học", `${value.subject.code} · ${value.subject.name}`],
                   ["Mã lớp", value.code],
+                  ["Học kỳ", value.term],
                   ["Sinh viên", String(studentSummaryCount)],
                   ["Trạng thái", CLASS_STATUS_LABELS[value.status]],
                 ].map(([label, content]) => (
