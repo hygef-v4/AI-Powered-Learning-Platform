@@ -8,6 +8,10 @@ export type CourseClassView = {
   code: string;
   name: string;
   description: string;
+  /** Ngày bắt đầu `yyyy-MM-dd` (BR-U05-61). */
+  startsOn: string;
+  /** Học kỳ suy ra từ ngày bắt đầu, ví dụ `SP27-BL5` (D-U04-05). */
+  term: string;
   status: ClassStatus;
   teacher: PersonView | null;
   activeStudentCount: number;
@@ -24,7 +28,7 @@ export type EnrollmentView = {
   status: "ACTIVE" | "REMOVED";
   studentCode?: string | null;
 };
-export type ClassInfoInput = Pick<CourseClassView, "name" | "description" | "version">;
+export type ClassInfoInput = Pick<CourseClassView, "name" | "description" | "startsOn" | "version">;
 export type CreateClassInput = Omit<ClassInfoInput, "version"> & { subjectId: string; code: string; teacherId: string | null };
 export type EnrollmentResult = "ENROLLED" | "RESTORED" | "ALREADY_ENROLLED" | "NOT_FOUND" | "NOT_STUDENT" | "DISABLED" | "IN_OTHER_CLASS" | "INVALID_IDENTIFIER" | "DUPLICATE_IN_LIST";
 /** `email` là giá trị đã nhập: email hoặc MSSV (BR-U05-58). */
