@@ -2,11 +2,13 @@ package edu.aiplatform.academics.model;
 
 import edu.aiplatform.academics.contract.ClassStatus;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
 
 /** Snapshot bất biến. Quyền, role tài khoản và trạng thái môn phải được application xác minh trước. */
 public record CourseClass(UUID id, UUID subjectId, String code, String name, String description,
+        LocalDate startsOn,
         ClassStatus status, UUID teacherId, boolean showGradeDistribution,
         Instant createdAt, Instant updatedAt, long version) {
     /** Validates and normalizes the immutable class snapshot. */
@@ -19,6 +21,7 @@ public record CourseClass(UUID id, UUID subjectId, String code, String name, Str
         code = requireText(code, "Mã lớp", 30, true);
         name = requireText(name, "Tên lớp", 200, true);
         description = requireText(description, "Mô tả", 2000, false);
+        ClassTermPolicy.requireValidStart(startsOn);
         if (version < 0 || updatedAt.isBefore(createdAt)) {
             throw new AcademicRuleException("INVALID_CLASS_SNAPSHOT",
                     "Version hoặc thời gian lớp không hợp lệ");
@@ -27,9 +30,14 @@ public record CourseClass(UUID id, UUID subjectId, String code, String name, Str
 
     /** Creates a draft class with version zero and grade distribution hidden. */
     public static CourseClass createClass(UUID id, UUID subjectId, String code, String name,
-            String description, UUID teacherId, Instant now) {
-        return new CourseClass(id, subjectId, code, name, description, ClassStatus.DRAFT,
-                teacherId, false, now, now, 0);
+            String description, LocalDate startsOn, UUID teacherId, Instant now) {
+        return new CourseClass(id, subjectId, code, name, description, startsOn,
+                ClassStatus.DRAFT, teacherId, false, now, now, 0);
+    }
+
+    /** Returns the term derived from the start date (BR-U05-62). */
+    public String term() {
+        return ClassTermPolicy.termOf(startsOn);
     }
 
     /** Changes class status using locked subject and enrollment facts after authorization. */
@@ -53,28 +61,29 @@ public record CourseClass(UUID id, UUID subjectId, String code, String name, Str
                         "Có sinh viên đang ở lớp khác cùng môn");
             }
         }
-        return copyWithChanges(name, description, next, teacherId, showGradeDistribution,
-                now);
+        return copyWithChanges(name, description, startsOn, next, teacherId,
+                showGradeDistribution, now);
     }
 
-    /** Updates the class name and description and increments its version. */
-    public CourseClass updateInfo(String name, String description, Instant now) {
+    /** Updates name, description and start date (term follows the date) and increments version. */
+    public CourseClass updateInfo(String name, String description, LocalDate startsOn,
+            Instant now) {
         requireEditable();
-        return copyWithChanges(name, description, status, teacherId, showGradeDistribution,
-                now);
+        return copyWithChanges(name, description, startsOn, status, teacherId,
+                showGradeDistribution, now);
     }
 
     /** Reassigns the responsible teacher to this class while incrementing version. */
     public CourseClass assignTeacher(UUID teacherId, Instant now) {
         requireEditable();
-        return copyWithChanges(name, description, status, teacherId, showGradeDistribution,
-                now);
+        return copyWithChanges(name, description, startsOn, status, teacherId,
+                showGradeDistribution, now);
     }
 
     /** Sets whether students can see the grade distribution. */
     public CourseClass setGradeDistribution(boolean enabled, Instant now) {
         requireEditable();
-        return copyWithChanges(name, description, status, teacherId, enabled, now);
+        return copyWithChanges(name, description, startsOn, status, teacherId, enabled, now);
     }
 
     /** Enforces that the class is in a mutable status (not ARCHIVED). */
@@ -84,13 +93,13 @@ public record CourseClass(UUID id, UUID subjectId, String code, String name, Str
     }
 
     /** Copies the class with updated fields and refreshed modification metadata. */
-    private CourseClass copyWithChanges(String name, String description,
+    private CourseClass copyWithChanges(String name, String description, LocalDate startsOn,
             ClassStatus status, UUID teacher, boolean distribution, Instant now) {
         if (Objects.requireNonNull(now).isBefore(updatedAt)) {
             throw new AcademicRuleException("INVALID_CLASS_TIME",
                     "Thời gian cập nhật không thể trước lần cập nhật trước");
         }
-        return new CourseClass(id, subjectId, code, name, description, status, teacher,
+        return new CourseClass(id, subjectId, code, name, description, startsOn, status, teacher,
                 distribution, createdAt, now, Math.addExact(version, 1));
     }
 

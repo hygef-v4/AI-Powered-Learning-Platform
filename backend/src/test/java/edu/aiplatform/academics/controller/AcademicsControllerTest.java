@@ -27,9 +27,9 @@ class AcademicsControllerTest {
     }
     @AfterEach void clear() {SecurityContextHolder.clearContext();}
     @Test void listUsesServerPrincipalAndReturnsArray() throws Exception {
-        when(academicsService.listClasses(actor,"manager",null,null,null,1,20)).thenReturn(List.of());
+        when(academicsService.listClasses(actor,"manager",null,null,null,null,1,20)).thenReturn(List.of());
         mvc.perform(get("/api/v1/manager/classes")).andExpect(status().isOk()).andExpect(content().json("[]"));
-        verify(academicsService).listClasses(actor,"manager",null,null,null,1,20);
+        verify(academicsService).listClasses(actor,"manager",null,null,null,null,1,20);
     }
     @Test void missingVersionIsBadRequest() throws Exception {
         mvc.perform(patch("/api/v1/manager/classes/"+id).contentType("application/json").content("{\"name\":\"New\"}"))

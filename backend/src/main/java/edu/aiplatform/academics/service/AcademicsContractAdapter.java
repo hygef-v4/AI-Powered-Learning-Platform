@@ -104,9 +104,9 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
     @Override
     public List<ClassRef> listOpenClassesOf(UUID accountId) {
         var combined = new LinkedHashMap<UUID, ClassRef>();
-        allPages(offset -> academicsReadRepository.listForTeacher(accountId, null, ClassStatus.OPEN,
+        allPages(offset -> academicsReadRepository.listForTeacher(accountId, null, ClassStatus.OPEN, null,
                 100, offset)).forEach(c -> combined.put(c.id(), mapClassReference(c)));
-        allPages(offset -> academicsReadRepository.listForStudent(accountId, null, ClassStatus.OPEN,
+        allPages(offset -> academicsReadRepository.listForStudent(accountId, null, ClassStatus.OPEN, null,
                 100, offset)).forEach(c -> combined.put(c.id(), mapClassReference(c)));
         return List.copyOf(combined.values());
     }
@@ -144,7 +144,7 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
             long active = counts
                     .getOrDefault(c.id(), new IAcademicsReadRepository.EnrollmentCounts(0, 0))
                     .active();
-            return new SubjectClassSummary(c.id(), c.code(), c.name(), c.status().name(),
+            return new SubjectClassSummary(c.id(), c.code(), c.term(), c.name(), c.status().name(),
                     teacher, Math.toIntExact(active));
         }).toList();
     }
@@ -192,7 +192,7 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
         String subjectCode = subjectQuery.getSubject(c.subjectId()).map(SubjectRef::code)
                 .orElse(null);
         return new ClassRef(c.id(), c.subjectId(), c.code(), c.name(), c.status(), c.teacherId(),
-                c.showGradeDistribution(), subjectCode);
+                c.showGradeDistribution(), subjectCode, c.term());
     }
 
     /** Fetches every page from the supplied repository query. */
