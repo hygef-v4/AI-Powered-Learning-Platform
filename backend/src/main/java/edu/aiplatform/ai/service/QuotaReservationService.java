@@ -10,7 +10,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.UUID;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,7 +66,7 @@ public class QuotaReservationService {
         return new Remaining(own, limit, left, nextReset());
     }
 
-    @Transactional(propagation = Propagation.MANDATORY)
+    @Transactional(propagation = Propagation.MANDATORY, noRollbackFor = QuotaUnavailableException.class)
     public Reservation reserve(UUID accountId, long tokens) {
         QuotaPolicy policy = repository.policy();
         if (!policy.configured()) {
@@ -120,7 +119,7 @@ public class QuotaReservationService {
     }
 
     private ApiException exceeded(String code, String message) {
-        return new ApiException(HttpStatus.TOO_MANY_REQUESTS, code, message + " (cửa sổ mới lúc " + nextReset() + ")");
+        return new QuotaUnavailableException(code, message + " (cửa sổ mới lúc " + nextReset() + ")");
     }
 
     public record Reservation(LocalDate day, long tokens) {

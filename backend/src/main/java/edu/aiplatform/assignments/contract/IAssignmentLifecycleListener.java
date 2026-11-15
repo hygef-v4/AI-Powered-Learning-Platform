@@ -11,4 +11,7 @@ public interface IAssignmentLifecycleListener {
     void onOpened(UUID assignmentId);
 
     void onRetired(UUID assignmentId);
+
+    /** Finalizes saved work in the caller's closing transaction before grades become writable. */
+    void onClosed(UUID assignmentId);
 }

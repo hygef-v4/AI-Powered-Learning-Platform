@@ -105,12 +105,17 @@ public class GroupSubmissionService {
      */
     @Transactional
     public Optional<Receipt> autoSubmit(UUID documentId) {
+        GroupDocument initialDocument = documents.findById(documentId).orElse(null);
+        if (initialDocument == null) {
+            return Optional.empty();
+        }
+        assignments.lockSubmission(initialDocument.assignmentId());
         GroupDocument document = documents.lockDocument(documentId).orElse(null);
         if (document == null || document.status() != GroupDocument.Status.IN_PROGRESS) {
             return Optional.empty();
         }
         Instant now = clock.instant();
-        boolean finalized = closeSections(documentId, !document.submitted(), now);
+        boolean finalized = closeSections(documentId, now);
         if (document.submitted() || (!finalized && !document.changedSinceSubmit())) {
             if (documents.update(document.closed())) {
                 push(document, "document.closed", null);
@@ -130,10 +135,10 @@ public class GroupSubmissionService {
                 warnings(snapshot, result)));
     }
 
-    private boolean closeSections(UUID documentId, boolean finalizeDrafts, Instant now) {
+    private boolean closeSections(UUID documentId, Instant now) {
         boolean finalized = false;
         for (GroupSection section : documents.lockSections(documentId)) {
-            if (finalizeDrafts && section.status() == GroupSection.Status.CLAIMED && section.draftBlocks() != null) {
+            if (section.status() == GroupSection.Status.CLAIMED && section.draftBlocks() != null) {
                 GroupSection done = section.done(now);
                 if (documents.updateSection(done)) {
                     documents.insertRevision(new SectionRevision(UUID.randomUUID(), section.id(), section.claimedBy(),

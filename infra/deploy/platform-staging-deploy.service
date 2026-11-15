@@ -1,0 +1,22 @@
+# Cài vào /etc/systemd/system/. Xem docs/runbooks/deploy-staging.md.
+[Unit]
+Description=Deploy bản mới nhất của staging đã qua CI (tự quay về nếu lỗi)
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+Environment=PLATFORM_DIR=/opt/platform-staging
+Environment=STATE_DIR=/var/lib/platform-staging-deploy
+Environment=BACKUP_DIR=/var/backups/platform-staging
+Environment=DEPLOY_BRANCH=staging
+Environment=DEPLOY_COMPOSE_PROJECT=platform-staging
+Environment="DEPLOY_COMPOSE_FILES=docker-compose.yml docker-compose.staging.yml"
+Environment=DEPLOY_HTTPS_PORT=8443
+Environment=KEEP_DUMPS=3
+# Dùng chung khóa với production (LOCK_FILE mặc định): hai môi trường không deploy cùng lúc trên VPS nhỏ; lượt đến
+# sau báo "đang có một lần deploy khác chạy" và thử lại ở lần hẹn giờ kế tiếp.
+# Bản script riêng, cài từ checkout staging, để sửa script trên staging không đổi script production đang dùng.
+ExecStart=/usr/local/bin/platform-staging-deploy check
+TimeoutStartSec=20min

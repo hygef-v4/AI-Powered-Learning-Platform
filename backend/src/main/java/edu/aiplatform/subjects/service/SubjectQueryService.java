@@ -55,6 +55,7 @@ public class SubjectQueryService implements ISubjectQuery {
                 subject.code().value(),
                 subject.name(),
                 subject.status(),
-                subject.managerId());
+                subject.managerId(),
+                subject.description());
     }
 }

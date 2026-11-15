@@ -189,7 +189,8 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
   const [activePart, setActivePart] = useState<string | null>(null);
   const proposalId = params.get("proposalId") ?? undefined;
-  const [dialog, setDialog] = useState<"ai" | "import" | "retire" | "delete" | "settings" | "schedule" | null>(null);
+  const [dialog, setDialog] = useState<"ai" | "import" | "retire" | "close" | "delete" | "settings" | "schedule" | null>(null);
+  const [closing, setClosing] = useState(false);
   /** Tệp đề cũ chọn ở popup tạo bài: mở popup nhập đề và chuyển đổi ngay khi trang tải xong (BR-U07-87). */
   const [importFiles, setImportFiles] = useState<File[] | undefined>(() => {
     const pending = peekPendingImport(id);
@@ -632,6 +633,8 @@ export function AssignmentFormPage({ id }: { id: string }) {
   // Xóa bản nháp xong về trang Bài tập (tab Bài tập của lớp, hoặc Bài tập của môn), như lối về ở sidebar.
   const backHref = assignmentsHref(detail, classId);
   const permissions = detail.permissions;
+  const canClose = detail.scope === "CLASS" && detail.status === "OPEN"
+    && permissions.canRetire && !permissions.ownerArchived;
   const editable = permissions.canEditContent && !preview;
   // Nhập đề thay khung nên chỉ khi bài chưa phát hành (BR-U07-87).
   const canImport = permissions.canEditContent && (detail.status === "DRAFT" || detail.status === "REVIEWED");
@@ -717,6 +720,8 @@ export function AssignmentFormPage({ id }: { id: string }) {
           ) : (
             <Button icon="visibility" data-testid="assignment-preview" onClick={() => void openPreview()}>Xem trước</Button>
           )}
+          {canClose && <Button icon="lock" data-testid="assignment-close" disabled={closing || conflict}
+            onClick={() => setDialog("close")}>Đóng nhận bài</Button>}
           {permissions.canReview ? (
             <Button variant="primary" icon="check_circle" data-testid="assignment-finalize" onClick={() => void finalizeAssignment()}>Hoàn tất</Button>
           ) : permissions.canPublish ? (
@@ -822,6 +827,21 @@ export function AssignmentFormPage({ id }: { id: string }) {
             setDialog(null);
             notify("Đã ngưng giao", "success");
           }} />
+      )}
+      {dialog === "close" && canClose && (
+        <Dialog open title="Đóng nhận bài?" icon="lock" onClose={() => setDialog(null)} dismissible={!closing}
+          footer={<Button variant="primary" data-testid="assignment-close-confirm" disabled={closing || conflict}
+            onClick={async () => {
+              setClosing(true);
+              try {
+                await act(() => assignmentsApi.closeAssignment(id, version.current), "Đã đóng nhận bài", () => setDialog(null));
+              } finally {
+                setClosing(false);
+              }
+            }}>Đóng nhận bài</Button>}>
+          <p>Sinh viên không thể sửa hoặc nộp bài sau khi đóng. Hệ thống sẽ tự động nộp các lượt đang làm
+            bằng nội dung đã lưu trên máy chủ trước khi cho phép chấm. Hạn nộp gốc được giữ nguyên.</p>
+        </Dialog>
       )}
       {dialog === "delete" && (
         <Dialog open title="Xóa bản nháp?" icon="warning" tone="danger" onClose={() => setDialog(null)}

@@ -46,6 +46,19 @@ class AttemptServiceTest {
 
     private final WorkFixtures f = new WorkFixtures();
 
+    @Test
+    void closingSubmitsSavedWorkEvenIfTheOriginalDeadlineWasExtended() {
+        AssignmentAttempt attempt = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.minusSeconds(60), false);
+        f.view = f.view(AssignmentStatus.CLOSED, SubmissionMode.INDIVIDUAL, GradingMode.GRADED,
+                NOW.plus(Duration.ofDays(2)), null, null);
+        assertThat(code(() -> f.attemptService.save(f.student, attempt.id(), 0, attempt.content())))
+                .isEqualTo("SUBMISSION_CLOSED");
+        new AssignmentRetiredListener(f.attempts, f.submitter, f.clock).onClosed(f.assignmentId);
+        assertThat(f.store.get(attempt.id()).status()).isEqualTo(AttemptStatus.SUBMITTED);
+        assertThat(f.store.get(attempt.id()).content()).isEqualTo(attempt.content());
+        verify(f.listener).onSubmitted(attempt.id());
+    }
+
     private static String code(Runnable action) {
         try {
             action.run();

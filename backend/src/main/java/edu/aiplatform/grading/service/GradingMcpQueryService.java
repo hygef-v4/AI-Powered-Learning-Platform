@@ -319,6 +319,8 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         }
         var out = new LinkedHashMap<>(McpInput.page(rows, page, size));
         out.put("summary", listing.summary());
+        out.put("editable", listing.editable());
+        out.put("readOnlyReason", listing.readOnlyReason());
         return out;
     }
 
@@ -327,7 +329,8 @@ public class GradingMcpQueryService implements IMcpToolProvider {
             int limit) {
         var listing = submissionReviewService.listRows(actor, classId, assignmentId, "ALL", null);
         var page = new GradingViews.SubmissionPage(listing.rows().stream().limit(limit).toList(),
-                listing.rows().size(), 1, limit, listing.summary(), listing.closesAt());
+                listing.rows().size(), 1, limit, listing.summary(), listing.closesAt(),
+                listing.editable(), listing.readOnlyReason());
         var evaluations = new HashMap<UUID, edu.aiplatform.grading.model.Evaluation>();
         listing.evaluations().forEach(e -> evaluations.put(e.id, e));
         Map<String, Long> strengths = new HashMap<>(), improvements = new HashMap<>();

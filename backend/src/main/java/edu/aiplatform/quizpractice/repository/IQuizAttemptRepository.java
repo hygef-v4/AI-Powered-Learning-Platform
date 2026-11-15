@@ -23,6 +23,16 @@ public interface IQuizAttemptRepository {
 
     int countAttempts(UUID quizId, UUID accountId);
 
+    default Optional<QuizAttempt> findInProgress(UUID quizId, UUID accountId, UUID classId) {
+        return listByQuizAndClass(quizId, classId).stream()
+                .filter(a -> a.accountId().equals(accountId) && a.inProgress()).findFirst();
+    }
+
+    default int countAttempts(UUID quizId, UUID accountId, UUID classId) {
+        return (int) listByQuizAndClass(quizId, classId).stream()
+                .filter(a -> a.accountId().equals(accountId)).count();
+    }
+
     /** Quiz đã có lượt nào (đang làm hoặc đã nộp) của bất kỳ ai. */
     boolean existsForQuiz(UUID quizId);
 

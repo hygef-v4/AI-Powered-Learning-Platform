@@ -95,6 +95,10 @@ class WorkAccess {
 
     AssignmentAttempt requireOwnAttemptForUpdate(Actor actor, UUID attemptId, String action) {
         AssignmentAttempt attempt = requireOwnAttempt(actor, attemptId, action);
+        call(() -> {
+            assignments.lockSubmission(attempt.assignmentId());
+            return null;
+        });
         return attempts.findForUpdate(attempt.id()).orElseThrow(() -> ApiException.notFound("ATTEMPT_NOT_FOUND"));
     }
 

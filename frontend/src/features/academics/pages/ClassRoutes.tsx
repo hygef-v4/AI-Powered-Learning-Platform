@@ -166,9 +166,10 @@ export function ManagerRoute({view, id, initialSubjectId}: {view: "overview" | "
   const [creating, setCreating] = useState<SubjectView | null>(null);
   const load = useCallback(async (signal: AbortSignal) => {
     const subjects = await academicsApi.listSubjects(signal);
-    const classes = await allClasses("manager", signal);
+    // Chỉ mục Lớp học cần danh sách lớp; Thông tin môn tự tải lớp đang mở của môn.
+    const classes = view === "classes" ? await allClasses("manager", signal) : [];
     return {subjects, classes, subject: id ? await academicsApi.loadSubject(id, signal) : subjects[0]};
-  }, [id]);
+  }, [id, view]);
   const state = useResource(load);
   const loadTeachers = useCallback((q: string, signal: AbortSignal) => academicsApi.listCandidates("teacher", q, signal), []);
   if (!state.data) return <Pending error={state.error} retry={state.refresh}/>;
@@ -179,7 +180,7 @@ export function ManagerRoute({view, id, initialSubjectId}: {view: "overview" | "
     content = <ManagerDashboardPage subjects={subjects}
       onSubject={id => router.push(`/manager/subjects/${encodeURIComponent(id)}`)}/>;
   } else if (view === "subjects") {
-    content = subject ? <MySubjectPage subject={subject} classes={classes}/>
+    content = subject ? <MySubjectPage subject={subject}/>
       : <EmptyState title="Bạn chưa được giao quản lý môn"/>;
   } else {
     content = <ClassListPage key={initialSubjectId ?? ""} initialSubjectId={initialSubjectId} subjects={subjects} classes={classes}

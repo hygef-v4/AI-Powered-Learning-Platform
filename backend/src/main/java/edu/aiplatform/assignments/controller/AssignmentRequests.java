@@ -73,6 +73,12 @@ final class AssignmentRequests {
         }
     }
 
+    record Close(Long version) {
+        long value() {
+            return requireVersion(version);
+        }
+    }
+
     record Rubric(Long version, List<RubricCriterion> criteria) {
         AssignmentCommands.RubricUpdate command() {
             return new AssignmentCommands.RubricUpdate(requireVersion(version), criteria);

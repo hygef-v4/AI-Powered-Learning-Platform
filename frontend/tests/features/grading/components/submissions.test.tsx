@@ -47,6 +47,17 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
+it("shows why reception prevents grading while preserving the submission link", async () => {
+  mocks.listSubmissions.mockResolvedValue({ ...page, editable: false,
+    readOnlyReason: "Bài tập đang nhận bài. Đóng nhận bài trước khi chấm." });
+  render(<SubmissionDetailPage classId="c" assignmentId="a" />);
+  expect(await screen.findByText("Bài tập đang nhận bài. Đóng nhận bài trước khi chấm.")).toBeInTheDocument();
+  expect(screen.getByRole("checkbox", { name: "Chọn tất cả bài trong trang" })).toBeDisabled();
+  expect(screen.getByRole("checkbox", { name: "Chọn Sinh viên A" })).toBeDisabled();
+  expect(screen.getByRole("link", { name: "Xem bài" })).toHaveAttribute("href", expect.stringContaining("e"));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+
 async function ready() {
   await screen.findByRole("checkbox", { name: "Chọn Sinh viên A" });
 }

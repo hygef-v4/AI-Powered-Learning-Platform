@@ -99,6 +99,7 @@ class GroupSubmissionServiceTest {
         when(classes.isActiveStudent(any(), eq(classId))).thenReturn(true);
         when(classes.getClassRef(classId)).thenReturn(Optional.of(
                 new ClassRef(classId, UUID.randomUUID(), "SE1801", "SWP391", ClassStatus.OPEN, UUID.randomUUID(), true)));
+        when(documents.findById(document.id())).thenReturn(Optional.of(document));
         when(documents.lockDocument(document.id())).thenReturn(Optional.of(document));
         when(groups.findGroup(group.id())).thenReturn(Optional.of(group));
         when(assignments.submissionWindow(eq(assignmentId), any())).thenReturn(SubmissionWindow.ON_TIME);
@@ -230,8 +231,10 @@ class GroupSubmissionServiceTest {
         when(documents.lockSections(document.id())).thenReturn(List.of(heldWithDraft));
         clearInvocations(documents, evaluation, events, audit, sse);
         assertThat(service.autoSubmit(document.id())).isEmpty();
-        verify(documents).updateSection(argThat(s -> s.status() == Status.OPEN && s.claimedBy() == null));
-        verify(documents, never()).insertRevision(any());
+        verify(documents).updateSection(argThat(s -> s.status() == Status.DONE && s.claimedBy() == null
+                && s.publishedBlocks().equals(heldWithDraft.draftBlocks())));
+        verify(documents).insertRevision(argThat(revision -> revision.blocks().equals(heldWithDraft.draftBlocks())
+                && revision.authorId().equals(member.accountId())));
         verify(documents).update(saved.capture());
         assertThat(saved.getValue().status()).isEqualTo(GroupDocument.Status.CLOSED);
         assertThat(saved.getValue().submittedDocument()).isEqualTo(submitted.submittedDocument());

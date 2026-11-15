@@ -136,6 +136,25 @@ public class AssignmentPublicationService {
         return support.detail(actor, saved, List.of());
     }
 
+    /** Closes a teacher's open class assignment after saved work has been finalized. */
+    @Transactional
+    public AssignmentViews.Detail closeAssignment(Actor actor, UUID id, long version) {
+        Assignment current = support.lock(actor, id, version, "ASSIGNMENT_CLOSED");
+        if (current.scope() != AssignmentScope.CLASS || current.status() != AssignmentStatus.OPEN) {
+            throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ đóng nhận bài của lớp đang mở");
+        }
+        if (access.classRef(current.classId()).status() != ClassStatus.OPEN) {
+            throw ApiException.conflict("CLASS_NOT_OPEN", "Lớp không mở, chỉ xem được bài");
+        }
+        Instant now = clock.instant();
+        lifecycle.closeAssignment(id, now, false);
+        Assignment closed = assignments.find(id).orElseThrow();
+        audit.success(actor, "ASSIGNMENT_CLOSED", id, AssignmentAudit.details(
+                "early", current.finalDeadline() != null && now.isBefore(current.finalDeadline()),
+                "closesAt", current.closesAt(), "lateUntil", current.lateUntil()));
+        return support.detail(actor, closed, List.of());
+    }
+
     /** F11 ngưng giao (BR-U07-36): lý do bắt buộc; listener U08, U12 tự nộp bài đang làm trong cùng transaction. */
     @Transactional
     public AssignmentViews.Detail retire(Actor actor, UUID id, AssignmentCommands.Retire command) {

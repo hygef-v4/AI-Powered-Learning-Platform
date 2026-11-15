@@ -83,6 +83,7 @@ export type Evaluation = {
 };
 export type Detail = {
   editable?: boolean;
+  readOnlyReason?: string | null;
   evaluation: Evaluation;
   document: SubmissionDocumentDto;
   rubrics: Rubric[];
@@ -122,6 +123,8 @@ export type AssignmentContext = {
   ownerName: string;
 };
 export type SubmissionPage = {
+  editable?: boolean;
+  readOnlyReason?: string | null;
   rows: SubmissionRow[];
   total: number;
   page: number;

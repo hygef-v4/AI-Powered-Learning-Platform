@@ -120,6 +120,7 @@ function Workspace({
   }
 
   const handleAiGrade = async (input?: AiRequest) => {
+    if (disabled || busy || saving) return;
     if (evaluation.kind === "MEMBER") {
       if (detail.groupEvaluationId && !busy && !saving) navigate(detail.groupEvaluationId);
       return;
@@ -370,6 +371,7 @@ function Workspace({
       />
 
       {!detail.current && <Alert tone="info">Đây là lần nộp cũ, chỉ có thể xem lại.</Alert>}
+      {detail.editable === false && detail.readOnlyReason && <Alert tone="info">{detail.readOnlyReason}</Alert>}
       {error && (
         <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void reload()}>Tải lại phiên bản</Button>}>{error}</Alert>
       )}
@@ -483,7 +485,7 @@ function Workspace({
               aria-label="Chấm bằng AI"
               className="h-9! gap-2! px-3! text-sm! font-semibold!"
               aria-busy={aiGenerating}
-              disabled={evaluation.kind === "MEMBER" ? busy || saving || !detail.groupEvaluationId : disabled || busy || saving || aiGenerating}
+              disabled={disabled || busy || saving || (evaluation.kind === "MEMBER" ? !detail.groupEvaluationId : aiGenerating)}
               onClick={() => void handleAiGrade()}
             >
               {aiGenerating ? "AI đang chấm…" : "Chấm bằng AI"}
@@ -521,7 +523,7 @@ function Workspace({
           />
         </section>
       )}
-      {action && (
+      {action && !disabled && (
         <BatchActionDialog
           action={action}
           items={[{ evaluationId: evaluation.id, version: evaluation.version }]}

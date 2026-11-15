@@ -7,6 +7,7 @@ export { TermFilter } from "./TermFilter";
 export { useConfirmDialog } from "./ConfirmDialog";
 export { cx } from "./cx";
 export { Dialog } from "./Dialog";
+export { DateInput } from "./DateInput";
 export { EmptyState } from "./EmptyState";
 export { Icon, type IconName } from "./Icon";
 export { IconTile } from "./IconTile";

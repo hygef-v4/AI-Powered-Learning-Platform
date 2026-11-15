@@ -112,3 +112,10 @@ Nguồn: [yêu cầu CT-01…09](../../../inception/requirements/2026-11-14-clas
 - Thẻ Thông tin lớp sửa được Ngày bắt đầu khi lớp chưa lưu trữ, hiện "Học kỳ: cũ → mới" khi ngày đổi làm học kỳ đổi.
 - Bộ lọc học kỳ ở trang Lớp học của Chủ nhiệm môn, giảng viên và sinh viên.
 - Nhãn lớp hiện học kỳ ở dòng nhỏ phía trên: `PRJ301 · SP27` (FD Q6).
+
+### Định dạng ngày — 2026-11-15
+
+Ô tạo/sửa Ngày bắt đầu dùng DateInput chung, nhập và hiển thị `dd/MM/yyyy`, vẫn chọn
+được lịch native và kiểm ngày thật/min/max. API và dữ liệu tiếp tục là `yyyy-MM-dd`;
+không đổi cách suy học kỳ. Audit, lịch sử AI, lịch bài tập và hạn tự chia nhóm dùng
+cùng định dạng; ngày giờ vẫn chuyển bằng helper múi giờ Việt Nam hiện có.

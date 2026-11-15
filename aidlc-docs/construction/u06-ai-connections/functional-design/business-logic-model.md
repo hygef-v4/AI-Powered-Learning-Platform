@@ -1,6 +1,6 @@
 # U06 AI Connections — business-logic-model
 
-**Source delta 2026-11-07 (`f68a6ec5`):** PERSONAL/INSTITUTIONAL hỗ trợ nhiều key/provider và ACTIVE/DISABLED/REVOKED; CRUD/test/reveal/status theo connection ID. AiTaskService tự chọn nguồn khi caller để trống: shared nếu có quyền/đủ quota, rồi personal. ConnectionOrder: CLAUDE → OPENAI → GEMINI, model catalog, createdAt, id. Worker retry cùng key với lỗi tạm 429/503/529 (đợi 2 s, 5 s), sau đó xét key kế tiếp; settlement usage/quota giữ riêng REJECTED/UNKNOWN. UNKNOWN vẫn có thể phát sinh chi phí và không tự hoàn reserved usage. Redelivery guard và fallback trong một task là hai trường hợp khác nhau. Các mô tả lịch sử “không tự đổi nguồn/không retry” bên dưới không thay quy tắc source hiện hành này.
+**Source delta 2026-11-07 (`f68a6ec5`):** PERSONAL/INSTITUTIONAL hỗ trợ nhiều key/provider và ACTIVE/DISABLED/REVOKED; CRUD/test/status theo connection ID. API key chỉ ghi từ 2026-11-11 (D15). AiTaskService tự chọn nguồn khi caller để trống: shared nếu có quyền/đủ quota, rồi personal. ConnectionOrder: CLAUDE → OPENAI → GEMINI, model catalog, createdAt, id. Worker retry cùng key với lỗi tạm 429/503/529 (đợi 2 s, 5 s), sau đó xét key kế tiếp; settlement usage/quota giữ riêng REJECTED/UNKNOWN. UNKNOWN vẫn có thể phát sinh chi phí và không tự hoàn reserved usage. Redelivery guard và fallback trong một task là hai trường hợp khác nhau. Các mô tả lịch sử “không tự đổi nguồn/không retry” bên dưới không thay quy tắc source hiện hành này.
 
 
 **AS-BUILT sync 2026-10-30:** [as-built-baseline.md](../code/as-built-baseline.md); source-observed, không phải fresh test/runtime acceptance.
@@ -35,7 +35,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F1 - Thêm hoặc thay API cá nhân (UC 31)
 1. Mở AI Connection từ menu tài khoản, tab API cá nhân; frontend gọi `GET /api/v1/me/ai-connections` và `GET /api/v1/ai/providers` (provider và model cho phép).
-2. Bấm Thêm để POST `/api/v1/me/ai-connections` với provider/key/model; mỗi provider có nhiều key. Thay một key dùng PUT `/api/v1/me/ai-connections/{id}` với version; đổi model không cần nhập lại key. Công tắc dùng PUT `/{id}/status` với enabled/version; owner reveal dùng GET `/{id}/key`.
+2. Bấm Thêm để POST `/api/v1/me/ai-connections` với provider/key/model; mỗi provider có nhiều key. Thay một key dùng PUT `/api/v1/me/ai-connections/{id}` với version; đổi model không cần nhập lại key. Công tắc dùng PUT `/{id}/status` với enabled/version. Khóa đã lưu chỉ dùng phía server (D15).
 3. Kiểm người gọi là Student, Teacher hoặc Subject Manager đang `ACTIVE`, provider hợp lệ, model nằm trong danh sách cho phép, key đúng định dạng cơ bản (BR-U06-01, 02).
 4. Mã hóa key, lưu kết nối `PERSONAL` `ACTIVE` với 4 ký tự cuối; thay thì ghi đè bản mã, tăng `version`, xóa kết quả kiểm tra cũ (BR-U06-03, 06).
 5. Ghi audit `AI_CONNECTION_CHANGED`; trả kết nối dạng che, gợi ý bấm Kiểm tra.
@@ -139,6 +139,6 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ## AI/MCP current flow — 2026-10-30
 
-MCP credential dành ACTIVE Student/Teacher/Subject Manager; Admin bị từ chối. Nhiều institutional keys/provider; repository chọn ACTIVE tạo sớm nhất. Owner reveal ACTIVE MCP token khi có ciphertext; Admin reveal key chung không REVOKED (kể cả DISABLED) và ghi audit. Personal key không có readback cho Admin. Staff write tools có proposal/retry/confirmation theo source, không tự finalize/publish.
+MCP credential dành ACTIVE Student/Teacher/Subject Manager; Admin bị từ chối. Nhiều institutional keys/provider; repository chọn ACTIVE tạo sớm nhất. Owner reveal ACTIVE MCP token khi có ciphertext; API key chung và cá nhân chỉ ghi, danh sách chỉ hiện phần nhận diện đã che (D15). Staff write tools có proposal/retry/confirmation theo source, không tự finalize/publish.
 
-Credential HTTP: GET/POST `/api/v1/me/mcp-credentials`, PATCH/DELETE `/{id}`, GET `/{id}/token`. List DTO có revealable; popup chỉnh label/access không đổi token/hạn. Admin API key reveal là luồng riêng ở AiAdminController; không dùng để đọc personal key. Negative cases: wrong owner, Admin, expired/revoked, ciphertext thiếu và account/role đổi.
+Credential HTTP: GET/POST `/api/v1/me/mcp-credentials`, PATCH/DELETE `/{id}`, GET `/{id}/token`. List DTO có revealable; popup chỉnh label/access không đổi token/hạn. Negative cases: wrong owner, Admin, expired/revoked, ciphertext thiếu và account/role đổi.

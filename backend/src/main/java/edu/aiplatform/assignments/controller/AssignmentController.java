@@ -144,6 +144,12 @@ public class AssignmentController {
         return publication.retire(actor, id, body.command());
     }
 
+    @PostMapping(value = "/close", consumes = "application/json")
+    public AssignmentViews.Detail closeAssignment(@AuthenticationPrincipal Actor actor,
+            @PathVariable UUID id, @RequestBody AssignmentRequests.Close body) {
+        return publication.closeAssignment(actor, id, body.value());
+    }
+
     @PostMapping("/clone")
     public ResponseEntity<AssignmentViews.Detail> cloneAssignment(@AuthenticationPrincipal Actor actor,
                                                                   @PathVariable UUID id) {

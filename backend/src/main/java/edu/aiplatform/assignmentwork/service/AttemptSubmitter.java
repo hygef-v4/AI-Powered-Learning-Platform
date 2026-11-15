@@ -71,13 +71,19 @@ class AttemptSubmitter {
      * Hết hạn mà bài vừa được kéo dài hạn thì lượt nhận hạn mới, chưa nộp.
      */
     boolean autoSubmit(UUID attemptId, SubmitMode mode, Instant now) {
+        AssignmentAttempt snapshot = attempts.find(attemptId).orElse(null);
+        if (snapshot == null) {
+            return false;
+        }
+        assignments.lockSubmission(snapshot.assignmentId());
         AssignmentAttempt attempt = attempts.findForUpdate(attemptId).orElse(null);
         if (attempt == null || !attempt.inProgress()) {
             return false;
         }
         AssignmentView view = assignments.get(attempt.assignmentId()).orElse(null);
         Instant closesAt = view == null ? attempt.snapshot().closesAt() : view.closesAt();
-        if (mode == SubmitMode.AUTO_DEADLINE && view != null) {
+        if (mode == SubmitMode.AUTO_DEADLINE && view != null
+                && view.status() == edu.aiplatform.assignments.contract.AssignmentStatus.OPEN) {
             Instant deadline = view.lateUntil() != null ? view.lateUntil() : view.closesAt();
             if (deadline != null && deadline.isAfter(attempt.deadlineAt())) {
                 attempts.extendDeadline(attempt.id(), deadline);

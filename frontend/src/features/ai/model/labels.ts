@@ -80,15 +80,18 @@ export function errorMessage(code: string | undefined, fallback: string): string
 }
 
 /**
- * Kết quả kiểm tra khóa API rút còn 1–2 từ để đọc lướt (câu đầy đủ của máy chủ để ở tooltip): Đạt, Sai khóa, Sai model,
- * Hết hạn mức, Quá tải, Quá giờ, Mất kết nối, Bị từ chối; không nhận ra thì "Không đạt".
+ * Kết quả kiểm tra khóa API rút gọn để đọc lướt; câu đầy đủ của máy chủ ở tooltip.
  */
 export function shortTestResult(text: string | null | undefined): string {
   const value = text?.trim() ?? "";
   if (value === "Đạt") return "Đạt";
   if (/key api|khóa|HTTP 40[13]/i.test(value)) return "Sai khóa";
   if (/model|HTTP 404/i.test(value)) return "Sai model";
-  if (/HTTP 429|giới hạn|hạn mức/i.test(value)) return "Hết hạn mức";
+  if (/giới hạn token/i.test(value)) return "Giới hạn token";
+  if (/tần suất.*hoặc.*hạn mức/i.test(value)) return "Tần suất / hạn mức";
+  if (/tần suất/i.test(value)) return "Giới hạn tần suất";
+  if (/hạn mức|số dư/i.test(value)) return "Hết hạn mức";
+  if (/HTTP 429/i.test(value)) return "Tần suất / hạn mức";
   if (/quá tải|HTTP 5(03|29)/i.test(value)) return "Quá tải";
   if (/kịp|timeout/i.test(value)) return "Quá giờ";
   if (/kết nối/i.test(value)) return "Mất kết nối";

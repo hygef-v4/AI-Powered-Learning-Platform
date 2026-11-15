@@ -17,4 +17,8 @@ public interface IJobHandler {
     void onFailed(JobMessage message, String error);
 
     Duration timeout();
+
+    default Duration timeout(JobMessage message) {
+        return timeout();
+    }
 }

@@ -41,6 +41,8 @@ public class HttpProviderGateway implements IProviderGateway {
             AiProvider.CLAUDE, "https://api.anthropic.com");
     static final String RESULT_TOOL = "return_result";
     static final String IMAGES_NOT_SUPPORTED = "Model đang dùng không đọc được ảnh; hãy chọn model khác";
+    /** Dưới mức này không đặt ngân sách suy nghĩ (ví dụ lời gọi thử kết nối). */
+    static final int MIN_TOKENS_FOR_THINKING_BUDGET = 2048;
     static final String EMPTY_OUTPUT = "Nhà cung cấp AI không trả nội dung";
     /** Lý do dừng bình thường: không phải chặn, chữ rỗng thì báo chung {@link #EMPTY_OUTPUT}. */
     private static final Set<String> NORMAL_STOPS = Set.of("", "STOP", "stop", "end_turn", "tool_use", "tool_calls",
@@ -84,6 +86,10 @@ public class HttpProviderGateway implements IProviderGateway {
         parts.addObject().put("text", r.user());
         ObjectNode config = body.putObject("generationConfig");
         config.put("maxOutputTokens", r.maxOutputTokens());
+        int thinkingBudget = calculateGeminiThinkingBudget(r.maxOutputTokens());
+        if (thinkingBudget > 0) {
+            config.putObject("thinkingConfig").put("thinkingBudget", thinkingBudget);
+        }
         if (r.outputSchema() != null) {
             config.put("responseMimeType", "application/json");
             JsonNode schema = readSchema(r.outputSchema());
@@ -103,16 +109,29 @@ public class HttpProviderGateway implements IProviderGateway {
         Usage usage = new Usage(number(meta, "promptTokenCount"), output, number(meta, "cachedContentTokenCount"),
                 thoughts);
         String finishReason = reply.path("candidates").path(0).path("finishReason").asText("");
-        requireCompleteOutput(finishReason, usage);
         StringBuilder text = new StringBuilder();
         for (JsonNode part : reply.path("candidates").path(0).path("content").path("parts")) {
             text.append(part.path("text").asText(""));
         }
+        String answer = r.outputSchema() == null ? text.toString()
+                : trimGeminiArraysToSchema(text.toString(), readSchema(r.outputSchema()));
         // Gemini chặn ngay đầu vào thì không có candidate, lý do nằm ở promptFeedback.blockReason.
         String blockReason = reply.path("promptFeedback").path("blockReason").asText("");
-        return response(AiProvider.GEMINI, r.model(), text.toString(), reply.path("responseId").asText(null), usage,
+        return response(AiProvider.GEMINI, r.model(), answer, reply.path("responseId").asText(null), usage,
                 blockReason.isEmpty() || NORMAL_STOPS.contains(blockReason) ? finishReason : blockReason,
                 !blockReason.isEmpty() && !NORMAL_STOPS.contains(blockReason));
+    }
+
+    /**
+     * Gemini trừ token suy nghĩ vào cùng {@code maxOutputTokens}; để mặc định, model có thể suy nghĩ tới hết trần và
+     * trả {@code MAX_TOKENS} trước khi viết xong JSON (đánh giá AI chấm 2026-11-13). Giới hạn suy nghĩ ở 1/4 trần để
+     * phần trả lời luôn còn ít nhất 3/4. Trả 0 khi không đặt.
+     */
+    static int calculateGeminiThinkingBudget(int maxOutputTokens) {
+        if (maxOutputTokens < MIN_TOKENS_FOR_THINKING_BUDGET) {
+            return 0;
+        }
+        return maxOutputTokens / 4;
     }
 
     private Response openAi(Request r) {
@@ -147,7 +166,6 @@ public class HttpProviderGateway implements IProviderGateway {
                 number(u.path("prompt_tokens_details"), "cached_tokens"),
                 number(u.path("completion_tokens_details"), "reasoning_tokens"));
         String finishReason = reply.path("choices").path(0).path("finish_reason").asText("");
-        requireCompleteOutput(finishReason, usage);
         JsonNode message = reply.path("choices").path(0).path("message");
         // Model từ chối trả lời: OpenAI để lời từ chối ở message.refusal thay vì content.
         String reason = message.path("refusal").asText("").isBlank() ? finishReason : "refusal";
@@ -185,7 +203,6 @@ public class HttpProviderGateway implements IProviderGateway {
         Usage usage = new Usage(number(u, "input_tokens"), number(u, "output_tokens"),
                 number(u, "cache_read_input_tokens"), null);
         String stopReason = reply.path("stop_reason").asText("");
-        requireCompleteOutput(stopReason, usage);
         String output = "";
         for (JsonNode block : reply.path("content")) {
             if ("tool_use".equals(block.path("type").asText()) && RESULT_TOOL.equals(block.path("name").asText())) {
@@ -277,9 +294,7 @@ public class HttpProviderGateway implements IProviderGateway {
 
     private static void requireCompleteOutput(String reason, Usage usage) {
         if ("MAX_TOKENS".equals(reason) || "length".equals(reason) || "max_tokens".equals(reason)) {
-            throw new ProviderException(FailureKind.CHARGED, 200,
-                    "AI đã đạt giới hạn token của lần gọi nên phản hồi chưa hoàn chỉnh. Hãy thử lại với bài nhỏ hơn hoặc cấu hình giới hạn đầu ra cao hơn.",
-                    usage);
+            throw new OutputLimitException(usage);
         }
     }
 
@@ -300,8 +315,11 @@ public class HttpProviderGateway implements IProviderGateway {
      */
     private Response response(AiProvider provider, String model, String output, String requestId, Usage usage,
                               String reason, boolean promptBlocked) {
-        if (output == null || output.isBlank()) {
-            log.warn("AI provider returned no output provider={} model={} requestId={} reason={} promptBlocked={}",
+        if (!promptBlocked) {
+            requireCompleteOutput(reason, usage);
+        }
+        if (promptBlocked || !NORMAL_STOPS.contains(reason) || output == null || output.isBlank()) {
+            log.warn("AI provider returned unusable output provider={} model={} requestId={} reason={} promptBlocked={}",
                     provider, model, requestId, reason.isEmpty() ? "-" : reason, promptBlocked);
             throw new ProviderException(FailureKind.CHARGED, 200, emptyOutputMessage(reason, promptBlocked), usage);
         }
@@ -337,6 +355,53 @@ public class HttpProviderGateway implements IProviderGateway {
             object.remove("maxItems");
         }
         schema.forEach(HttpProviderGateway::omitGeminiArrayMaxima);
+    }
+
+    /**
+     * Gemini không thấy {@code maxItems} (đã bỏ khỏi schema gửi đi) nên có lúc trả thừa phần tử, ví dụ 7 ý cải thiện khi
+     * giới hạn là 5 (đánh giá AI chấm 2026-11-15). Cắt về đúng giới hạn của schema gốc, giữ các phần tử đầu, để kết quả
+     * không bị loại chỉ vì vượt số lượng. Output không phải JSON được trả nguyên để bước kiểm schema báo lỗi.
+     */
+    String trimGeminiArraysToSchema(String output, JsonNode schema) {
+        JsonNode value;
+        try {
+            value = json.readTree(output);
+        } catch (JsonProcessingException e) {
+            return output;
+        }
+        if (value == null || !trimArraysToSchema(value, schema)) {
+            return output;
+        }
+        try {
+            return json.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            return output;
+        }
+    }
+
+    private static boolean trimArraysToSchema(JsonNode value, JsonNode schema) {
+        boolean changed = false;
+        if (value instanceof ArrayNode array) {
+            int max = schema.path("maxItems").asInt(-1);
+            while (max >= 0 && array.size() > max) {
+                array.remove(array.size() - 1);
+                changed = true;
+            }
+            JsonNode itemSchema = schema.path("items");
+            for (JsonNode element : array) {
+                changed |= trimArraysToSchema(element, itemSchema);
+            }
+        } else if (value instanceof ObjectNode object) {
+            JsonNode properties = schema.path("properties");
+            var names = object.fieldNames();
+            while (names.hasNext()) {
+                String name = names.next();
+                if (properties.has(name)) {
+                    changed |= trimArraysToSchema(object.get(name), properties.get(name));
+                }
+            }
+        }
+        return changed;
     }
 
     private JsonNode readSchema(String schema) {

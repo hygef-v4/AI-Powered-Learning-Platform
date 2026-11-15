@@ -2,7 +2,7 @@
 
 import { type CandidateLoader } from "../hooks/useCandidates";
 import { useId, useState, type FormEvent } from "react";
-import { Button, Dialog, Field, showToast, Textarea, TextInput } from "@/shared/ui";
+import { Button, DateInput, Dialog, Field, showToast, Textarea, TextInput } from "@/shared/ui";
 import { PersonPicker } from "./PersonPicker";
 import type { CreateClassInput, PersonView, SubjectView } from "../model/types";
 import { CLASS_START_DATE_RANGE, CLASS_START_DATE_REQUIRED, formatClassFieldError, formatOperationError } from "../model/format";
@@ -55,8 +55,8 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
         </Field>
         <div className="flex flex-col gap-1.5">
           <Field label="Ngày bắt đầu" htmlFor={`${id}-starts-on`} required error={errors.startsOn}>
-            <TextInput id={`${id}-starts-on`} type="date" min="2000-01-01" max="2099-12-31" value={values.startsOn} invalid={!!errors.startsOn}
-              onChange={(event) => set("startsOn", event.target.value)} data-testid="class-form-starts-on" />
+            <DateInput id={`${id}-starts-on`} min="2000-01-01" max="2099-12-31" value={values.startsOn} invalid={!!errors.startsOn}
+              onChange={(value) => set("startsOn", value)} data-testid="class-form-starts-on" />
           </Field>
           {term && <p aria-live="polite" className="text-xs text-muted" data-testid="class-form-term">Học kỳ: <span className="font-mono text-ink">{term}</span></p>}
         </div>

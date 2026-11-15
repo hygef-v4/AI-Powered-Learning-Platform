@@ -211,6 +211,14 @@
       "boundary": "Actual PostgreSQL and production rubric repository. This case checks persistence, not all publication guards."
     },
     {
+      "id": "IT-U07-004",
+      "requirements": "BR-U07-34, BR-U08-23, BR-U09-42",
+      "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
+      "method": "earlyCloseRollsBackSavedAttemptOnEvaluationFailureThenRetriesAtomically",
+      "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
+      "boundary": "Production U07/U08/U09 services and PostgreSQL. A test-only evaluation trigger makes closure fail; assignment, saved content and audit roll back, then retry closes atomically and prevents further student edits."
+    },
+    {
       "id": "IT-U08-001",
       "requirements": "BR-U08-10, BR-U08-13, BR-U08-15",
       "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
@@ -270,9 +278,9 @@
       "id": "IT-U09-004",
       "requirements": "BR-U09-04, BR-U09-10, BR-U09-20, BR-U09-22, BR-U09-40, BR-U09-41, BR-U09-42, BR-U09-70",
       "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
-      "method": "individualGradingPublicationAndResubmissionInvalidatePriorStudentScore",
+      "method": "individualResubmissionBeforeCloseSupersedesPriorEvaluationThenAllowsPublication",
       "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
-      "boundary": "Actual U07/U08/U09 services, PostgreSQL and the Student grade lookup service. The assignment allows two attempts."
+      "boundary": "Actual U07/U08/U09 services, PostgreSQL and Student grade lookup. Two attempts are allowed before closure; grading is blocked until closure, then publication succeeds and new attempts are blocked."
     },
     {
       "id": "IT-U10-001",
@@ -350,9 +358,9 @@
       "id": "IT-U12-004",
       "requirements": "BR-U12-40, BR-U12-41, BR-U12-42, BR-U09-40, BR-U09-41, BR-U09-42, BR-U09-50, BR-U09-51",
       "suite": "edu.aiplatform.requirements.PlatformWorkflowIntegrationTest",
-      "method": "groupSubmissionCreatesMemberGradesAndResubmissionResetsThem",
+      "method": "groupResubmissionBeforeCloseCreatesMemberGradesThenLocksStudentWork",
       "source": "backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java",
-      "boundary": "Actual U05/U07/U12/U09 services and PostgreSQL. Two active enrolled students belong to one group; the leader submits."
+      "boundary": "Actual U05/U07/U12/U09 services and PostgreSQL. Two enrolled students form one group; the leader resubmits before closure. Closing permits publication and blocks further section edits or submissions."
     },
     {
       "id": "IT-U12-005",

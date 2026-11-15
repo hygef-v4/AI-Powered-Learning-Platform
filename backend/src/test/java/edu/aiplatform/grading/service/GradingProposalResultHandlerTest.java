@@ -315,9 +315,6 @@ class GradingProposalResultHandlerTest {
                 {"checks":{"%s":[]},"itemScoresByRubric":{"%s":{}},"score":"0.00","feedback":"Tốt","sections":[],"structuredFeedback":{"schemaVersion":1,"summary":{"strengths":[],"improvements":[],"nextSteps":[]},"items":[]}}
                 """.formatted(rubricId, rubricId),
                 """
-                {"checks":{"%s":[]},"itemScoresByRubric":{"%s":{"%s":1.00}},"score":"1.00","feedback":"Tốt","sections":[],"structuredFeedback":{"schemaVersion":1,"summary":{"strengths":[],"improvements":[],"nextSteps":[]},"items":[{"rubricId":"%s","itemId":"%s","evidence":"   ","reason":"Reason","suggestion":"Sug","evidenceBlockId":"part-1","requiresReview":false,"reviewReason":null}]}}
-                """.formatted(rubricId, rubricId, itemId, rubricId, itemId),
-                """
                 {"checks":{"%s":[]},"itemScoresByRubric":{"%s":{"%s":1.00}},"score":"1.00","feedback":"Tốt","sections":[],"structuredFeedback":{"schemaVersion":1,"summary":{"strengths":[],"improvements":[],"nextSteps":[]},"items":[{"rubricId":"%s","itemId":"%s","evidence":"Obs","reason":"Reason","suggestion":"Sug","evidenceBlockId":"unknown-block","requiresReview":false,"reviewReason":null}]}}
                 """.formatted(rubricId, rubricId, itemId, rubricId, itemId),
                 """

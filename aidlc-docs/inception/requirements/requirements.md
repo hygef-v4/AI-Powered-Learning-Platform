@@ -1,6 +1,6 @@
 # Yêu cầu sản phẩm ALAP — Inception revision 2026-10-13
 
-> Quyết định mới nhất 2026-11-02, FR-007/008: FINALIZED/PUBLISHED khóa chỉnh sửa điểm. Nộp lại bỏ hiệu lực điểm cũ: cá nhân SUPERSEDED bản chấm cũ, nhóm reset về PENDING. Không giữ nhiều lượt chấm nhóm, không đổi DB schema. [Quy tắc và acceptance](2026-11-02-locked-grades.md).
+> Điểm nháp hợp lệ được công bố trực tiếp. Giảng viên được phân công có thể sửa điểm đã công bố của bài nộp hiện hành khi lớp còn mở. Chính sách chấm khi nộp lại được mô tả trong [quy tắc U09](../../construction/u09-assignment-grading/functional-design/business-rules.md).
 
 > AS-BUILT synchronization 2026-10-30 at staging@794a4053. Giữ FR IDs và phạm vi đã chốt; source-observed, không thay thế runtime acceptance. Các khác biệt với yêu cầu cũ được ghi tại decision register.
 
@@ -106,21 +106,21 @@ Người soạn có quyền lựa chọn nguồn AI chung hoặc cá nhân; agen
 Chỉ hai loại bài cấp sản phẩm: ASSIGNMENT và QUIZ. Assignment là tài liệu có cấu trúc, cấu hình riêng submissionMode INDIVIDUAL/GROUP và diagramEnabled true/false. Hai thuộc tính độc lập: đủ bốn tổ hợp cá nhân/nhóm × thuần tài liệu/có sơ đồ. Essay, Diagram và Group không là loại bài riêng.
 
 **Tiêu chí chấp nhận:**
-- Giữ review trước publication, trạng thái DRAFT/published/retired, version và snapshot khi làm/nộp.
-- Giữ bài cá nhân cấp môn theo baseline trước; bài nhóm thuộc lớp. Không tự mở nhóm cấp môn.
+- Assignment giữ bước hoàn tất đề trước khi phát hành hoặc lên lịch. Quiz đủ điều kiện phát hành trực tiếp từ DRAFT. Chỉ câu hỏi đề xuất vào ngân hàng môn cần duyệt. Giữ kiểm tra trạng thái, version và snapshot khi làm/nộp.
+- Assignment cấp môn là đề mẫu INDIVIDUAL hoặc GROUP. Giảng viên sao chép đề mẫu về lớp rồi phát hành bài của lớp theo FR-027.
 - Giữ Assignment cá nhân GRADED/PRACTICE; nhóm chỉ GRADED (D02 chốt 2026-10-15).
 - Quiz không bắt buộc Lesson; Quiz chỉ PRACTICE, không lịch mở đóng, không vào sổ điểm (D01 chốt 2026-10-15).
-- Dạng bài, mode, deadline, số lượt và rubric được kiểm server-side; không suy ra mode từ diagramEnabled.
+- Server kiểm dạng bài, mode, deadline và rubric. Chỉ Assignment PRACTICE có giới hạn lượt (1–10). Assignment GRADED được nộp lại trong thời hạn áp dụng.
 
 ### FR-008 - Đánh giá và phản hồi
 
 Quiz chấm xác định bằng đáp án đã snapshot. Assignment chấm rubric theo phần tài liệu, bao gồm yêu cầu sơ đồ khi bật; AI chỉ hỗ trợ phản hồi hoặc đề xuất theo nguồn đã chọn.
 
 **Tiêu chí chấp nhận:**
-- Teacher chấm tay hoặc nhận proposal từ API/MCP; chỉ Teacher lớp xác nhận/chốt/công bố điểm chính thức.
+- Giảng viên được phân công chấm tay hoặc xem đề xuất từ API/MCP. Giảng viên công bố trực tiếp điểm DRAFT hợp lệ và có thể lưu sửa điểm PUBLISHED của bài nộp hiện hành khi lớp OPEN. Điểm đã công bố vẫn hiển thị sau khi lưu sửa. Lớp ARCHIVED chỉ đọc.
 - Kết quả AI phải validate cấu trúc, rubric và version đầu vào; kết quả stale không ghi đè bài/điểm mới.
 - Student phản hồi luyện tập theo FR-030, không vào Gradebook.
-- Nhóm dùng điểm tài liệu chung và điều chỉnh đóng góp thủ công; không AI tự kết luận đóng góp.
+- Nhóm dùng điểm tài liệu chung. Giảng viên tự quyết định điểm riêng và mức đóng góp tùy chọn. Khi nhóm nộp lại, giữ điểm và mức đã công bố. Chỉ bản chưa chính thức được đặt lại theo BR-U09-50.
 - Không test runner, Code Lab hoặc Judge0.
 
 ### FR-009 - Sổ điểm và trạng thái bài nộp
@@ -185,15 +185,15 @@ ASSIGNMENT: submissionMode INDIVIDUAL/GROUP, diagramEnabled true/false; tài li�
 
 ### FR-018 - Lưu nháp, lần nộp và khôi phục bài làm
 
-Hệ thống phải tự động lưu bản nháp theo người học/bài đánh giá, khôi phục an toàn sau gián đoạn và lưu lịch sử các lần nộp; bản nháp không được coi là bài nộp chính thức.
+Hệ thống tự lưu và khôi phục bản nháp theo người học và bài đánh giá. Với Assignment cá nhân GRADED, giao diện coi lần nộp mới là bản thay thế. Sau khi qua hạn, lịch sử hiển thị bản cuối đúng hạn và bản cuối nộp muộn nếu có. Kết quả đã công bố vẫn có lối xem theo quyền. PRACTICE giữ lịch sử theo từng lượt đã nộp.
 
 ### FR-019 - Theo dõi nộp bài và nhắc nhở
 
 Giảng viên phải xem được trạng thái đã nộp, chưa nộp, đang làm và nộp trễ của lớp được phân công. Hệ thống tự nhắc người học chưa nộp 24 giờ trước hạn (một lần mỗi bài); giảng viên không gửi nhắc thủ công.
 
-### FR-020 - Chốt điểm hàng loạt
+### FR-020 - Công bố điểm hàng loạt
 
-Giảng viên phải có thể kiểm tra và chốt điểm hàng loạt cho lớp được phân công; chỉ bài đã đủ điều kiện mới được chốt và mọi thay đổi điểm phải được audit.
+Giảng viên công bố riêng lẻ hoặc hàng loạt các điểm DRAFT hợp lệ trong lớp được phân công. Các bản FINALIZED cũ vẫn công bố được. Server kiểm quyền, bài nộp, version và xác nhận phản hồi AI theo từng mục, trả kết quả riêng và ghi audit khi công bố.
 
 ### FR-021 - Quản trị kết nối và usage AI
 
@@ -224,9 +224,9 @@ Teacher của lớp (hoặc Subject Manager được giao dạy, R4) tạo/cập
 
 Administrator xem Admin Dashboard (UC 66): số tài khoản theo role/status, môn/lớp theo status và enrollment ACTIVE; bổ sung mục Backup gồm lần thành công gần nhất, trạng thái/lịch sử, thời gian, dung lượng và lỗi đã sanitize qua public port U03. Không dữ liệu học vụ cá nhân, tệp backup hoặc dashboard Student; lịch/retention được chỉnh tại UC 15, không Dashboard.
 
-Teacher hoặc Subject Manager được giao dạy lớp R3/R4 xem/xuất GradeBook CSV/XLSX (UC 45). Kiểm toàn bộ bộ lọc trước khi tạo tệp; ghi rõ chưa nộp/chưa chốt, không tính điểm tổng, không xuất quiz hoặc Practice; Admin không có quyền.
+Teacher hoặc Subject Manager được giao dạy lớp R3/R4 xem/xuất GradeBook CSV/XLSX (UC 45). Kiểm bộ lọc trước khi xuất ma trận sinh viên × bài GRADED. Xuất điểm đã lưu, kể cả nháp, điểm 0 và điểm riêng thành viên nhóm. Ô chưa chấm hoặc chưa nộp để trống. Không tính điểm tổng, không xuất Quiz hoặc Practice; Admin không có quyền.
 
-Phân bố điểm ẩn danh là luồng phụ của Student Assignments (UC 37): giảng viên được phân công dạy lớp bật/tắt cho từng cặp bài tập–lớp trong ngữ cảnh bài tập, mặc định tắt; Chủ nhiệm môn chỉ có quyền khi được phân công dạy lớp. Chỉ bài GRADED, không Quiz/Practice; bài SUBJECT có cài đặt độc lập từng lớp. Chỉ tính người đang ghi danh có điểm công bố dùng được (ít nhất 20), ẩn khoảng dưới 5 người và không trả danh tính/điểm cá nhân khác. Quyền chỉ đọc nội dung bài không quyết định quyền cài đặt phân bố. Tiến độ nộp hiện trên Student Submissions (UC 42), chỉ R3/R4 của lớp. AI Grading Proposals thuộc UC 43, chấm/chốt điểm thuộc UC 44, công bố/xem/xuất Gradebook thuộc UC 45. Phân tích chất lượng câu hỏi/độ lệch điểm AI nằm ngoài phạm vi.
+Phân bố điểm ẩn danh là luồng phụ của Student Assignments (UC 37): giảng viên được phân công dạy lớp bật/tắt cho từng cặp bài tập–lớp trong ngữ cảnh bài tập, mặc định tắt; Chủ nhiệm môn chỉ có quyền khi được phân công dạy lớp. Chỉ bài GRADED, không Quiz/Practice; bài SUBJECT có cài đặt độc lập từng lớp. Chỉ tính người đang ghi danh có điểm công bố dùng được (ít nhất 20), ẩn khoảng dưới 5 người và không trả danh tính/điểm cá nhân khác. Quyền chỉ đọc nội dung bài không quyết định quyền cài đặt phân bố. Tiến độ nộp hiện trên Student Submissions (UC 42), chỉ R3/R4 của lớp. AI Grading Proposals thuộc UC 43, chấm và sửa điểm thuộc UC 44, công bố/xem/xuất Gradebook thuộc UC 45. Phân tích chất lượng câu hỏi/độ lệch điểm AI nằm ngoài phạm vi.
 
 ### FR-025 - Quản lý nhóm và trưởng nhóm
 
@@ -255,7 +255,7 @@ GROUP là cách làm của Assignment, không loại bài thứ ba. Giữ nhóm 
 
 ### FR-027 - Assignment cấp môn
 
-Chủ nhiệm môn R2 soạn/duyệt/phát hành Assignment INDIVIDUAL cho các lớp OPEN của môn theo lịch chung; giảng viên từng lớp chấm lớp mình. Draw.io tùy chọn. GROUP thuộc lớp, không tự mở cấp môn. Quiz theo phạm vi lớp/môn được phép, tách khỏi Lesson.
+Chủ nhiệm môn R2 soạn đề mẫu Assignment INDIVIDUAL hoặc GROUP trong môn được phân công. Đề mẫu cấp môn chỉ dùng để sao chép, với Draw.io tùy chọn. Giảng viên sao chép về lớp mình dạy rồi phát hành theo lịch riêng và chấm bài của lớp. Quiz giữ quy tắc riêng theo phạm vi lớp hoặc môn.
 
 ### FR-028 - Sao chép và phiên bản Assignment/Quiz
 
@@ -476,8 +476,8 @@ Construction current docs: [README](../../construction/README.md). Stage approva
 ## AS-BUILT behavior clarifications — 2026-10-30
 
 - FR-003: create lớp vẫn DRAFT; OPEN được phép teacher null. Nếu có teacher phải ACTIVE/đúng role; không cấp teaching scope cho người chưa được gán.
-- FR-007/028: Quiz edit OPEN giữ OPEN; retire mọi trạng thái chưa RETIRED, reason mặc định Lưu trữ; reopen theo publication history (publishedAt nullable); bỏ REVIEWED của Quiz từ 2026-11-01, phát hành thẳng từ DRAFT (Assignment vẫn có REVIEWED).
-- FR-012/034/035: nhiều institutional keys/provider, chọn theo repository (ACTIVE ưu tiên rồi created_at/id); credential/key reveal theo điều kiện ở trên.
+- FR-007/028: Quiz edit OPEN giữ OPEN, retire mọi trạng thái chưa RETIRED với lý do mặc định Lưu trữ, và reopen theo publishedAt. Quiz đủ điều kiện phát hành trực tiếp từ DRAFT. Assignment có bước hoàn tất riêng.
+- FR-012/034/035: nhiều institutional keys/provider, chọn theo repository (ACTIVE ưu tiên rồi created_at/id); API key chỉ ghi theo D15. Chủ credential MCP đủ điều kiện có thể xem lại token nếu còn bản mã giải mã được.
 - FR-025: leader request/reject reason tùy chọn, tối đa 1.000 ký tự.
 - FR-024: U15 activity projection riêng, ngày VN, counts/backup vẫn có; từng nguồn có availability.
 
@@ -495,7 +495,9 @@ Student/Teacher/Subject Manager ACTIVE manage own MCP credentials; Admin is deni
 
 Thiết kế được duyệt ở [proposal](2026-11-09-material-quiz-ui-proposal.md); [đối chiếu unit và bằng chứng](../../construction/build-and-test/2026-11-09-aidlc-doc-sync.md). Không thêm UC/role mới hoặc thay quyết định YouTube đã hủy; runtime provider acceptance còn giới hạn trong báo cáo.
 
-## Approved grading remediation amendment — 2026-11-10
+## Historical grading remediation amendment — 2026-11-10
+
+The [2026-11-11 grading rules](../../construction/u09-assignment-grading/functional-design/business-rules.md) supersede this amendment’s restriction on editing official grades.
 
 Continuation of the reviewed Antigravity plan is authorized for sequential implementation without subagents. FR-008/009/019/020/024/030/039 retain existing role access, publication privacy and immutable official grades. Group resubmission preserves FINALIZED/PUBLISHED grading receipts and scores; only unofficial group drafts reset. Individual resubmission policy is unchanged.
 

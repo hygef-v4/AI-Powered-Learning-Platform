@@ -60,3 +60,4 @@ docker compose -f infra/docker-compose.yml -f infra/docker-compose.local.yml --e
 - Không điền `GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY` thì tệp lưu ở volume `files-local`, backup database ở `backups-local`. Production đặt `U03_REQUIRE_DRIVE=true`: thiếu Drive thì upload, tải và backup báo tạm thời không khả dụng.
 - Backup cần `U03_BACKUP_PUBLIC_KEY` và `BACKUP_DB_PASSWORD`; tạo khóa và khôi phục theo [runbook](docs/runbooks/restore-isolated.md).
 - Test: `mvn test` trong `backend/`; `npm run lint`, `npm run typecheck`, `npm test` trong `frontend/`.
+- Staging dùng chung cho nhóm kiểm thử trên VPS: [docs/runbooks/deploy-staging.md](docs/runbooks/deploy-staging.md).

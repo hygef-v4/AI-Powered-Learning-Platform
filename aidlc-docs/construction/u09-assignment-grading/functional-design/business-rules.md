@@ -34,7 +34,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U09-01 | Chỉ giảng viên chính của lớp (R3/R4) xem bài nộp, chấm, chốt, công bố, sửa điểm và xem, xuất sổ điểm của lớp đó. Chủ nhiệm môn chỉ có R2 không chấm; Admin không vào. Ngoài quyền trả `404` và ghi audit. | UC 42–45, US-GRD-004 S3 |
+| BR-U09-01 | Chỉ giảng viên chính của lớp (R3/R4) xem bài nộp, chấm, công bố, sửa điểm và xem, xuất sổ điểm của lớp đó. Chủ nhiệm môn chỉ có R2 không chấm; Admin không vào. Ngoài quyền trả `404` và ghi audit. | UC 42–45, US-GRD-004 S3 |
 | BR-U09-02 | Bài của lớp và bài của môn đều chấm theo lớp: mỗi đánh giá thuộc đúng một lớp (lớp ghi trên lượt hoặc lớp của nhóm). Bài của môn hiện ở Submission Detail và sổ điểm của từng lớp, mỗi lớp chỉ thấy bài nộp của lớp mình. | FR-027 |
 | BR-U09-03 | Chỉ bài `GRADED` có đánh giá. Bài `PRACTICE` (U08) và Quiz (U11) không vào Submission Detail, sổ điểm, chốt hay công bố; giảng viên không chấm bài Practice. | FR-030 |
 | BR-U09-04 | Người học chỉ thấy điểm `PUBLISHED`, nhận xét và mục rubric đạt của chính mình, trên Student Assignments và Submission History (U08 gắn chỗ hiển thị). Không có trang điểm riêng, không mở sổ điểm. | US-GRD-004 S1 |
@@ -54,7 +54,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U09-20 | Chấm theo rubric snapshot đã khóa; mỗi item cho partial points0..max, tối đa2 decimal, tổng phần/bài từ các item. Dữ liệu checkbox cũ vẫn tương thích; item scores tường minh có ưu tiên. Không nhập điểm phần vượt rubric hoặc dùng AI thành điểm official tự động. | UC 44, BR-U07-22 |
 | BR-U09-21 | Điều chỉnh tùy chọn (cộng hoặc trừ, ví dụ trừ nộp trễ) bắt buộc lý do; điểm cuối kẹp trong 0 tới tổng điểm. Hệ thống không tự trừ điểm trễ. | FR-008 |
-| BR-U09-22 | Nhận xét tùy chọn, ≤ 10.000 ký tự. Lưu thì đánh giá thành `DRAFT`, ghi người chấm và thời điểm; người học chưa thấy cho tới khi công bố. | US-GRD-003 S3 |
+| BR-U09-22 | Nhận xét tùy chọn, ≤ 10.000 ký tự. Lưu trước công bố tạo hoặc cập nhật DRAFT, ghi người chấm và thời điểm. Người học thấy kết quả sau công bố. Lưu sửa PUBLISHED theo BR-U09-42. | US-GRD-003 S3 |
 | BR-U09-23 | Hiển thị "x / tổng điểm", 2 chữ số thập phân, không quy đổi thang 10. | Thiết kế |
 
 ## 4. AI đề xuất (UC 43)
@@ -69,27 +69,27 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U09-34 | Chấm hàng loạt bằng AI: chọn nhiều bài `PENDING` hoặc `DRAFT` trong Submission Detail và một nguồn; mỗi bài một task; trả kết quả từng mục (đã gửi, hết quota, ngoài quyền, không chấm được). Giảng viên xác nhận từng bài trong Grading Workspace. | UC 43 |
 | BR-U09-35 | AI lỗi hoặc đề xuất sai thì bài nộp không mất, không có điểm giả; giảng viên chấm tay hoặc thử lại. | US-GRD-002 S2 |
 
-## 5. Chốt, công bố và sửa điểm (UC 43, 44)
+## 5. Công bố và sửa điểm (UC 44, 45)
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U09-40 | Finalize chỉ DRAFT có điểm/version hợp lệ; structured feedback phải được review/acknowledge theo từng item và điểm hiện hành. Điểm đã đổi sau review cần xác nhận lại tương ứng, không lấy review cũ cho giá trị mới. Batch trả kết quả riêng; publish là thao tác tách biệt. | US-GRD-005 S1, S2, FR-020 |
+| BR-U09-40 | Endpoint finalize cũ chỉ kiểm tra trạng thái, version và xác nhận minh chứng/điểm AI. Bản FINALIZED cũ được đưa về DRAFT khi gọi thành công và thao tác ghi audit GRADE_REVIEWED. Luồng công bố hiện hành dùng BR-U09-41. | FR-020 |
 | BR-U09-41 | Giảng viên công bố trực tiếp bản DRAFT hợp lệ; tương thích FINALIZED cũ. Kiểm tra xác nhận minh chứng/điểm AI trước mọi lần làm điểm hiển thị: công bố và lưu sửa PUBLISHED. Sinh viên chỉ thấy điểm của mình sau công bố. Công bố lại cùng bản không gửi thông báo trùng. | Quyết định người dùng 2026-11-11 |
-| BR-U09-42 | Bỏ bước Chốt điểm. Lưu sửa PUBLISHED giữ PUBLISHED và cập nhật kết quả sinh viên sau transaction thành công; không cần công bố lại. DRAFT/FINALIZED cũ chưa công bố vẫn riêng tư. Lớp OPEN cho sửa qua hạn bài; lớp ARCHIVED/DRAFT không ghi. Giữ scope, receipt hiện hành, version, review AI và audit. Không đưa lại bảng lịch sử sửa điểm lên UI. | Quyết định người dùng 2026-11-11 |
+| BR-U09-42 | Bỏ bước Chốt điểm. Lưu sửa PUBLISHED giữ PUBLISHED và cập nhật kết quả sinh viên sau transaction thành công; không cần công bố lại. DRAFT/FINALIZED cũ chưa công bố vẫn riêng tư. Chỉ ghi khi lớp OPEN và bài đã ngừng nhận bài (CLOSED hoặc RETIRED); lớp ARCHIVED/DRAFT không ghi. Áp dụng chung cho chấm tay/AI, lưu root/member, finalize tương thích, công bố, batch và MCP. Trước đóng chỉ xem, API trả GRADING_ASSIGNMENT_OPEN, detail/danh sách trả editable=false và readOnlyReason. Giữ scope, receipt hiện hành, version, review AI và audit. Không đưa lại bảng lịch sử sửa điểm lên UI. | Quyết định 2026-11-11, bổ sung đã duyệt 2026-11-15 |
 | BR-U09-43 | Lịch sử điểm chỉ thêm, chỉ giảng viên của lớp xem. | FR-009 |
 
 ## 6. Bài nhóm (khi U12 có)
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U09-50 | U12 nộp lại: root/member chưa chốt reset về PENDING cho receipt mới; root FINALIZED/PUBLISHED giữ nguyên receipt, điểm và snapshot đã chốt. Khi chuyển nhóm, MEMBER chưa chốt của nhóm cũ thành SUPERSEDED; không xóa điểm official. | Kế hoạch remediation được duyệt 2026-11-10 |
-| BR-U09-51 | Tài liệu nhóm chấm theo rubric từng phần; điểm thành viên mặc định theo nhóm, giữ override cá nhân. Cho sửa root/member hiện hành kể cả PUBLISHED khi lớp OPEN; cập nhật nguyên vẹn trong transaction. Ghi chú tùy chọn, không suy điểm từ thao tác hay thêm công thức ghép điểm. | Quyết định người dùng 2026-11-11 |
+| BR-U09-50 | Khi nhóm nộp bản mới, giữ điểm, mức đóng góp và biên nhận đã công bố. Bản FINALIZED cũ cũng được giữ. Nếu bản chấm tài liệu nhóm chưa chính thức, dùng lại bản đó và các bản thành viên còn trong nhóm chưa chính thức, đặt về PENDING cho biên nhận mới và xóa điểm/mức nháp. Khi đổi nhóm, bản thành viên chưa chính thức ở nhóm cũ chuyển SUPERSEDED. | FR-026, xác nhận 2026-11-15 |
+| BR-U09-51 | Tài liệu nhóm chấm theo rubric từng phần; điểm thành viên mặc định theo nhóm, giữ override cá nhân. Cho sửa root/member hiện hành kể cả PUBLISHED khi lớp OPEN và bài ngừng nhận bài theo BR-U09-42; cập nhật nguyên vẹn trong transaction. Ghi chú tùy chọn, không suy điểm từ thao tác hay thêm công thức ghép điểm. | Quyết định 2026-11-11, bổ sung đã duyệt 2026-11-15 |
 
 ## 7. Sổ điểm, xuất, phân bố (UC 45)
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U09-60 | Sổ điểm lớp (tab Evals): bài `GRADED` đã giao (`OPEN`, `CLOSED`, `RETIRED`; không lấy `DRAFT`) của lớp và của môn chứa lớp; `/submission-progress` dùng cùng điều kiện; gom theo sinh viên đang ghi danh (mỗi sinh viên một mục đóng mở); mỗi bài là điểm của lượt được chấm "x / tổng" và trạng thái (chưa nộp, trễ, chờ chấm, đã chấm, đã chốt, đã công bố); bài nhóm lấy điểm thành viên. Không có Quiz, `PRACTICE`, đề xuất AI; không tính điểm tổng. | UC 45, US-GRD-004 S2 |
+| BR-U09-60 | Sổ điểm lớp hiển thị ma trận sinh viên × bài GRADED đã giao trong lớp. Điểm của bài nhóm lấy từ bản chấm thành viên. Ô chưa chấm hoặc chưa nộp để trống. Định dạng và quy tắc xuất theo BR-U09-61. | UC 45, US-GRD-004 S2 |
 | BR-U09-61 | Xem/xuất bảng điểm dạng ma trận: một hàng/sinh viên, các cột STT, Họ và tên, Email và từng bài tính điểm (tên bài, điểm tối đa). Lọc một bài hoặc toàn bộ; xuất CSV/XLSX cho mọi sinh viên trong phạm vi bài, không giới hạn bởi tìm kiếm/trang đang xem. Điểm đã lưu DRAFT/FINALIZED cũ/PUBLISHED được xuất, giữ điểm 0 và điểm riêng thành viên nhóm; chưa chấm/chưa nộp để trống. Sinh viên vẫn chỉ thấy PUBLISHED. Giữ quyền đọc/xuất theo lớp, chống công thức, tên tệp theo bài khi chỉ có một cột bài và audit. XLSX dùng ô số cho điểm, cố định hàng tiêu đề/cột định danh. Không tự thêm trọng số hay tổng điểm. | Quyết định người dùng 2026-11-11 |
 | BR-U09-62 | Phân bố điểm ẩn danh cạnh bài trên Student Assignments: chỉ bài `GRADED` (không Quiz/Practice), cài đặt U09 theo cặp assignment–class đã bật (mặc định tắt), lớp có ít nhất 20 người đang ghi danh có điểm công bố dùng được của bài đó; trả khoảng điểm tổng hợp, ẩn khoảng có dưới 5 người; không trả tên hay điểm của người khác. | US-RPT-001 S3, BR-U09-63 |
 | BR-U09-63 | Chỉ giảng viên được phân công dạy lớp hiện tại bật/tắt phân bố cho bài thuộc lớp; Chủ nhiệm môn không được giao dạy và Admin không có quyền. Bài SUBJECT có cài đặt riêng từng lớp; chỉ đọc nội dung bài không hạn chế quyền cài đặt này. U09 lưu cặp `assignmentId,classId`, `enabled`, `version`; không chuyển cờ true lịch sử của lớp. PUT kiểm version, lớp còn cho phép sửa, phạm vi bài và chế độ GRADED; xung đột trả `409`, ngoài quyền từ chối. | FR-024, US-RPT-001 S3 |
@@ -98,13 +98,13 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U09-70 | Audit: GRADE_SAVED, GRADE_FINALIZED, GRADE_PUBLISHED, GRADE_CHANGED (điểm thành viên chưa chốt; lý do tùy chọn), AI_GRADING_REQUESTED, GRADEBOOK_EXPORTED. Không ghi nội dung bài nộp. GRADE_CHANGED của điểm official trong lịch sử giữ nguyên, không tạo mới. | FR-014, BR-U09-42 |
+| BR-U09-70 | Audit: GRADE_SAVED, GRADE_REVIEWED (endpoint finalize tương thích), GRADE_PUBLISHED, GRADE_CHANGED (lưu điểm hoặc mức của thành viên, kể cả sửa bản PUBLISHED theo BR-U09-42), AI_GRADING_REQUESTED, GRADEBOOK_EXPORTED. Audit chỉ ghi dữ liệu cần cho truy vết thao tác. | FR-014, BR-U09-42 |
 | BR-U09-71 | Sửa đánh giá phải kèm `version`; lệch thì `409`. U01, U05, U07, U08 không trả lời thì từ chối (fail closed). | SEC-002 |
 | BR-U09-72 | Xin gia hạn cá nhân, phúc khảo và kiểm tra tương đồng bài nộp nằm ngoài phạm vi. | Phạm vi 2026-09-25 |
 
 ## Remediation amendment — 2026-11-10
 
-Draft score changes append the previous score/checks/feedback/item scores to history. Effective adjustment is the bounded final score minus rubric score; members inherit group adjustment and retain individual override totals when the group draft changes. Member override reasons remain optional; changing official grades remains forbidden.
+Draft score changes append the previous score/checks/feedback/item scores to history. Effective adjustment is the bounded final score minus rubric score; members inherit group adjustment and retain individual override totals when the group draft changes. Member override reasons remain optional. Apply BR-U09-42 to corrections of published grades.
 
 AI output is validated without fabricated missing evidence/scores, clamping, erasing unknown evidence IDs, or rounding invalid precision into valid points. Empty-part zero entries are deterministic; merging them preserves a supplied AI total for validation. Group saves validate current document/class/assignment/hash and evidence anchors. Request references accept up to 200 characters.
 

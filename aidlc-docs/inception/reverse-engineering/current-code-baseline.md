@@ -1,12 +1,12 @@
-# Current code baseline — source snapshot 2026-11-07
+# Current code baseline — staging 2026-11-15
 
-**Source:** `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`, branch `fix/u05-u09-u15`; static source inventory after the staging merge. 66 active UC and 15 logical units retain their ownership. Java 17/Spring Boot modular monolith plus worker; Next.js/React/TypeScript frontend. This documentation update does not run application tests or certify post-merge runtime acceptance.
+**Source:** `staging@7e0e8375`, 2026-11-15. Các bảng controller và migration đã đối chiếu với 50 controller và 43 tệp SQL. Danh mục test và frontend bên dưới giữ phạm vi từng đợt cập nhật. 66 use case và 15 unit. Java 17/Spring Boot modular monolith và worker, Next.js/React/TypeScript frontend.
 
 **Persistence:** [Spring JDBC policy](../../construction/persistence-conventions.md). U05/U09 use JDBC; U04/U13/U14 still use JPA during migration. [U09 current mapping](../../construction/u09-assignment-grading/code/jdbc-persistence.md).
 
 **Mail/deploy:** U01 supports SMTP (default, Mailpit locally) or Brevo HTTPS API via MAIL_TRANSPORT. VPS pulls successful main CI builds; [runbook](../../../docs/runbooks/deploy-vps.md). Source/config presence is not live provider/VPS verification.
 
-**Evidence:** [dated test/build matrix](../../construction/build-and-test/build-and-test-summary.md). The 1,830 backend / 799 frontend results precede this staging merge; do not relabel them as a fresh run on this SHA. Frontend tests/fixtures are under [frontend/tests](../../../frontend/tests); styles under shared/styles or the owning feature.
+**Evidence:** [Kết quả build/test theo phạm vi và phiên bản](../../construction/build-and-test/build-and-test-summary.md). Frontend test và fixture nằm ở [frontend/tests](../../../frontend/tests). Styles nằm ở shared/styles hoặc feature sở hữu.
 
 **Delta 2026-11-10 (`staging@062a43f5`):** danh sách controller, test và migration bên dưới đã đối chiếu lại với source: thêm 15 mục còn thiếu, bỏ 2 liên kết tới file đã xóa. Frontend có thêm `shared/layout/NavTree.tsx` (cây môn/lớp trong sidebar), `app/opengraph-image.tsx` và `shared/siteMetadata.ts` (metadata Open Graph/Twitter, ảnh 1200×630; `/opengraph-image` nằm ngoài `proxy.ts`), `features/assignments/components/AiReviseChat.tsx`; đã xóa `features/assignmentwork/pages/ReceiptPage.tsx` và route `/attempts/[attemptId]/receipt`. Sau khi merge tới `staging@1e77eb79` thêm 4 migration (assignments, grading, quizpractice) và 2 test class; frontend có thêm `shared/document/SectionNumber.tsx`, bỏ `features/assignments/model/templateStore.ts`. Fixture/helper test không liệt kê. [Báo cáo đối chiếu](../../construction/build-and-test/2026-11-10-aidlc-code-sync-gaps.md); không chạy lại test.
 
@@ -68,6 +68,7 @@ Primary UC 01–12; FR-001, FR-002, FR-015.
 
 - [V20260925_0930__create_accounts.sql](../../../backend/src/main/resources/db/migration/identity/V20260925_0930__create_accounts.sql)
 - [V20260925_0931__add_audit_actor_fk.sql](../../../backend/src/main/resources/db/migration/identity/V20260925_0931__add_audit_actor_fk.sql)
+- [V20261113_1600__add_account_student_code.sql](../../../backend/src/main/resources/db/migration/identity/V20261113_1600__add_account_student_code.sql)
 
 ### Frontend
 
@@ -268,6 +269,7 @@ Primary UC 20–30; FR-003, FR-005, FR-024.
 - [V20260925_1100__create_classes_enrollments.sql](../../../backend/src/main/resources/db/migration/classes/V20260925_1100__create_classes_enrollments.sql)
 - [V20261027_1100__allow_open_class_without_teacher.sql](../../../backend/src/main/resources/db/migration/classes/V20261027_1100__allow_open_class_without_teacher.sql)
 - [V20261107_2200__remove_class_term.sql](../../../backend/src/main/resources/db/migration/classes/V20261107_2200__remove_class_term.sql)
+- [V20261114_1100__add_class_start_date_term.sql](../../../backend/src/main/resources/db/migration/classes/V20261114_1100__add_class_start_date_term.sql)
 
 ### Frontend
 
@@ -385,6 +387,7 @@ Primary UC 34–36; FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 - [V20260925_1300__create_assignment_tables.sql](../../../backend/src/main/resources/db/migration/assignments/V20260925_1300__create_assignment_tables.sql)
 - [V20261109_2330__allow_group_subject_templates.sql](../../../backend/src/main/resources/db/migration/assignments/V20261109_2330__allow_group_subject_templates.sql)
 - [V20261110_1200__graded_without_attempt_limit.sql](../../../backend/src/main/resources/db/migration/assignments/V20261110_1200__graded_without_attempt_limit.sql)
+- [V20261111_1300__create_assignment_import_pages.sql](../../../backend/src/main/resources/db/migration/assignments/V20261111_1300__create_assignment_import_pages.sql)
 
 ### Frontend
 

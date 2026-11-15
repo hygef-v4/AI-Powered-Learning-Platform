@@ -68,7 +68,7 @@ public class GroupSectionService {
     public SectionView claim(Actor actor, UUID documentId, UUID sectionId) {
         GroupDocContext ctx = access.read(actor, documentId);
         GroupDocAccess.requireMember(ctx);
-        access.requireEditable(ctx, false);
+        access.requireWritable(ctx, false);
         GroupSection section = lockSection(documentId, sectionId);
         if (actor.accountId().equals(section.claimedBy())) {
             return SectionView.of(section, actor.accountId());
@@ -89,7 +89,7 @@ public class GroupSectionService {
     public SectionView assign(Actor actor, UUID documentId, UUID sectionId, UUID assigneeId, boolean replaceHolder) {
         GroupDocContext ctx = access.read(actor, documentId);
         requireLeader(ctx);
-        access.requireEditable(ctx, false);
+        access.requireWritable(ctx, false);
         if (assigneeId == null || !ctx.group().isMember(assigneeId)) {
             throw ApiException.badRequest("SECTION_ASSIGNEE_INVALID", "Chỉ giao được cho thành viên của nhóm");
         }
@@ -117,7 +117,7 @@ public class GroupSectionService {
     @Transactional
     public SectionView release(Actor actor, UUID documentId, UUID sectionId) {
         GroupDocContext ctx = access.read(actor, documentId);
-        access.requireEditable(ctx, false);
+        access.requireWritable(ctx, false);
         GroupSection section = lockSection(documentId, sectionId);
         refuse(SectionRules.canRelease(section, actor.accountId(), ctx.leader(), ctx.teacher()));
         UUID holder = section.claimedBy();
@@ -137,7 +137,7 @@ public class GroupSectionService {
     public SectionView saveDraft(Actor actor, UUID documentId, UUID sectionId, Long version, List<DocumentBlock> blocks) {
         GroupDocContext ctx = access.read(actor, documentId);
         GroupDocAccess.requireMember(ctx);
-        access.requireEditable(ctx, true);
+        access.requireWritable(ctx, true);
         GroupSection section = lockSection(documentId, sectionId);
         refuse(SectionRules.canEdit(section, actor.accountId()));
         if (version == null || version != section.version()) {
@@ -156,7 +156,7 @@ public class GroupSectionService {
     public SectionView done(Actor actor, UUID documentId, UUID sectionId) {
         GroupDocContext ctx = access.read(actor, documentId);
         GroupDocAccess.requireMember(ctx);
-        access.requireEditable(ctx, false);
+        access.requireWritable(ctx, false);
         GroupSection section = lockSection(documentId, sectionId);
         refuse(SectionRules.canEdit(section, actor.accountId()));
         List<DocumentBlock> content = section.draftBlocks() != null ? section.draftBlocks()

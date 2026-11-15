@@ -75,7 +75,8 @@ public class JobDispatcher {
     }
 
     private void runWithTimeout(IJobHandler handler, JobMessage message) throws Exception {
-        Duration timeout = handler.timeout() == null ? defaultTimeout : handler.timeout();
+        Duration configuredTimeout = handler.timeout(message);
+        Duration timeout = configuredTimeout == null ? defaultTimeout : configuredTimeout;
         // Hết giờ chỉ ngắt được handler chịu interrupt: lần chạy cũ còn sống thì bản gửi lại (retry, sweeper) chờ lượt
         // sau, không chạy song song cùng một việc.
         String key = message.jobType() + ":" + message.idempotencyKey();

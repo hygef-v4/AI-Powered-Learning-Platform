@@ -16,6 +16,7 @@ const OUTCOME_CODE_MESSAGES: Record<string, string> = {
   GRADE_VERSION_CONFLICT: "Bài chấm đã được cập nhật. Tải lại danh sách để dùng phiên bản mới nhất.",
   GRADE_LOCKED: "Điểm đã được khóa. Tải lại danh sách để xem trạng thái hiện tại.",
   GRADING_CLASS_READ_ONLY: "Lớp đã lưu trữ hoặc chưa mở. Không thể chỉnh sửa hay công bố điểm.",
+  GRADING_ASSIGNMENT_OPEN: "Bài tập đang nhận bài. Đóng nhận bài trước khi chấm hoặc công bố điểm.",
   DUPLICATE_ITEM: "Bài bị chọn trùng; chỉ xử lý một lần.",
   INCOMPLETE_BATCH_RESULT: "Chưa nhận đủ kết quả xử lý. Tải lại danh sách để kiểm tra.",
   STRUCTURED_FEEDBACK_REVIEW_REQUIRED:

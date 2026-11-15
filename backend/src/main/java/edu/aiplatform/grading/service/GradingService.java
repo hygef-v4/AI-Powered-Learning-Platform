@@ -8,6 +8,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.assignments.contract.DocumentModel;
+import edu.aiplatform.assignments.contract.AssignmentStatus;
+import edu.aiplatform.assignments.contract.AssignmentView;
+import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.RubricView;
 import edu.aiplatform.assignmentwork.contract.ISubmissionQuery;
 import edu.aiplatform.assignmentwork.contract.SubmissionView;
@@ -47,11 +50,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class GradingService {
+    static final String ASSIGNMENT_OPEN_MESSAGE =
+            "Bài còn nhận bài nộp. Chỉ được chấm và công bố điểm sau khi đóng nhận bài.";
     private final IEvaluationRepository evaluationRepository;
     private final GradingAccess gradingAccess;
     private final IAudit audit;
     private final IEventPublisher eventPublisher;
     private final ISubmissionQuery submissionQuery;
+    private final IAssignmentQuery assignmentQuery;
     private final ObjectMapper objectMapper;
     private final Clock clock;
     private final GradingFeedbackValidator gradingFeedbackValidator;
@@ -60,13 +66,14 @@ public class GradingService {
     /** Creates the grading service with evaluation, authorization, and audit dependencies. */
     public GradingService(IEvaluationRepository evaluationRepository, GradingAccess gradingAccess,
             IAudit audit, IEventPublisher eventPublisher, ISubmissionQuery submissionQuery,
-            ObjectMapper objectMapper, Clock clock,
+            IAssignmentQuery assignmentQuery, ObjectMapper objectMapper, Clock clock,
             ObjectProvider<IGroupSubmissionSource> groupSubmissionSourceProvider) {
         this.evaluationRepository = evaluationRepository;
         this.gradingAccess = gradingAccess;
         this.audit = audit;
         this.eventPublisher = eventPublisher;
         this.submissionQuery = submissionQuery;
+        this.assignmentQuery = assignmentQuery;
         this.objectMapper = objectMapper;
         this.clock = clock;
         this.groupSubmissionSourceProvider = groupSubmissionSourceProvider;
@@ -80,6 +87,7 @@ public class GradingService {
         var evaluation = evaluationRepository.lockById(id)
                 .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
         gradingAccess.requireTeacher(actor, evaluation.classId, Actions.GRADING_WRITE);
+        requireClosedAssignment(evaluation.assignmentId);
         evaluation.checkVersion(version);
         evaluation.requireEditableGrade();
         if (evaluation.kind == EvaluationKind.ATTEMPT) {
@@ -88,6 +96,26 @@ public class GradingService {
             requireGroupSubmission(evaluation);
         }
         return evaluation;
+    }
+
+    static boolean isAssignmentClosed(AssignmentView assignment) {
+        return assignment.status() == AssignmentStatus.CLOSED
+                || assignment.status() == AssignmentStatus.RETIRED;
+    }
+
+    private void requireClosedAssignment(UUID assignmentId) {
+        final AssignmentView assignment;
+        try {
+            assignment = assignmentQuery.get(assignmentId).orElseThrow(() ->
+                    ApiException.unavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
+        } catch (ApiException ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            throw ApiException.unavailable("GRADING_DEPENDENCY_UNAVAILABLE", "Assignment service unavailable");
+        }
+        if (!isAssignmentClosed(assignment)) {
+            throw ApiException.conflict("GRADING_ASSIGNMENT_OPEN", ASSIGNMENT_OPEN_MESSAGE);
+        }
     }
 
     private GroupSubmissionView requireGroupSubmission(Evaluation evaluation) {
@@ -262,6 +290,7 @@ public class GradingService {
         var root = evaluationRepository.findById(rootId)
                 .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
         gradingAccess.requireTeacher(actor, root.classId, Actions.GRADING_WRITE);
+        requireClosedAssignment(root.assignmentId);
         root = evaluationRepository.lockById(rootId).orElseThrow();
         root.requireMutableGrade();
         if (root.kind != EvaluationKind.GROUP_DOCUMENT || root.score == null)

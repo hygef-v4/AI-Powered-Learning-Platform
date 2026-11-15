@@ -77,4 +77,14 @@ public interface IProviderGateway {
             return status;
         }
     }
+
+    /** Provider đã nhận key/model, nhưng nội dung chưa hoàn chỉnh để dùng cho tác vụ. */
+    class OutputLimitException extends ProviderException {
+
+        public OutputLimitException(Usage usage) {
+            super(FailureKind.CHARGED, 200,
+                    "AI đã đạt giới hạn token của lần gọi nên phản hồi chưa hoàn chỉnh. Hãy thử lại với bài nhỏ hơn hoặc cấu hình giới hạn đầu ra cao hơn.",
+                    usage);
+        }
+    }
 }

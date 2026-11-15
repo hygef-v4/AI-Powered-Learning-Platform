@@ -176,6 +176,35 @@ function openAi() {
   const btn = screen.queryByRole("button", { name: "Xem đề xuất AI" }) || screen.getByRole("button", { name: "Chấm bằng AI" });
   fireEvent.click(btn);
 }
+it("displays the server read-only reason and blocks manual, AI, and publication actions", async () => {
+  mocks.loadEvaluation.mockResolvedValue({ ...detail, editable: false,
+    readOnlyReason: "Bài tập đang nhận bài. Đóng nhận bài trước khi chấm." });
+  render(<GradingWorkspacePage evaluationId="e" />);
+  expect(await screen.findByText("Bài tập đang nhận bài. Đóng nhận bài trước khi chấm.")).toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: "Nhận xét chung" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Lưu thay đổi" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Chấm bằng AI" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Công bố điểm" })).toBeDisabled();
+  fireEvent.keyDown(window, { key: "s", ctrlKey: true });
+  expect(mocks.saveEvaluation).not.toHaveBeenCalled();
+  expect(mocks.requestProposal).not.toHaveBeenCalled();
+});
+it("keeps member scoring read-only before reception closes", async () => {
+  const group = mockGroupWorkspace();
+  mocks.loadEvaluation.mockResolvedValue({ ...group, editable: false,
+    readOnlyReason: "Bài tập đang nhận bài." });
+  render(<GradingWorkspacePage evaluationId="e" />);
+  fireEvent.click(await screen.findByRole("button", { name: "Đánh giá Bình" }));
+  expect(screen.getByLabelText("Điểm cá nhân")).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Lưu điểm thành viên" })).toBeDisabled();
+  expect(mocks.saveMemberGrade).not.toHaveBeenCalled();
+});
+it("disables the AI action on a member evaluation when the server marks it read-only", async () => {
+  mocks.loadEvaluation.mockResolvedValue({ ...detail, editable: false, groupEvaluationId: "group",
+    evaluation: { ...detail.evaluation, kind: "MEMBER" } });
+  render(<GradingWorkspacePage evaluationId="e" />);
+  expect(await screen.findByRole("button", { name: "Chấm bằng AI" })).toBeDisabled();
+});
 describe("workspace save", () => {
   it("keeps published grades editable, removes finalize and shows the student-visible save notice", async () => {
     mocks.loadEvaluation.mockResolvedValue({ ...detail, editable: true,

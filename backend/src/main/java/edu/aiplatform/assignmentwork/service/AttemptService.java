@@ -82,6 +82,10 @@ public class AttemptService {
     @Transactional
     public Started start(Actor actor, UUID assignmentId, UUID classId) {
         ClassRef ref = access.requireStudentOfClass(actor, classId, "ATTEMPT_STARTED");
+        WorkAccess.call(() -> {
+            assignments.lockSubmission(assignmentId);
+            return null;
+        });
         AssignmentView view = access.requireVisible(actor, ref, assignmentId, "ATTEMPT_STARTED");
         attempts.lockStart(assignmentId, actor.accountId());
         Optional<AssignmentAttempt> existing = attempts.inProgress(assignmentId, actor.accountId());
@@ -158,6 +162,9 @@ public class AttemptService {
         Instant now = clock.instant();
         AssignmentView view = WorkAccess.call(() -> assignments.get(current.assignmentId()))
                 .orElseThrow(() -> ApiException.notFound("NOT_FOUND"));
+        if (!WorkAccess.openForStudents(view)) {
+            throw reject(actor, current.assignmentId(), "SUBMISSION_CLOSED", "Bài đã đóng nhận bài");
+        }
         if (!now.isBefore(effectiveDeadline(current, view).plus(AssignmentAttempt.GRACE))) {
             throw reject(actor, current.assignmentId(), "DEADLINE_PASSED", "Đã quá hạn nộp bài");
         }
@@ -301,6 +308,9 @@ public class AttemptService {
         AssignmentView view = WorkAccess.call(() -> assignments.get(attempt.assignmentId()))
                 .orElseThrow(() -> ApiException.notFound("NOT_FOUND"));
         Instant deadline = effectiveDeadline(attempt, view);
+        if (!WorkAccess.openForStudents(view)) {
+            throw ApiException.conflict("SUBMISSION_CLOSED", "Bài đã đóng nhận bài");
+        }
         if (deadline.isAfter(attempt.deadlineAt())) {
             attempts.extendDeadline(attempt.id(), deadline);
         }
@@ -361,7 +371,8 @@ public class AttemptService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         Instant now = clock.instant();
         Instant deadline = effectiveDeadline(a, view);
-        boolean editable = a.inProgress() && !now.isAfter(deadline.plus(AssignmentAttempt.GRACE));
+        boolean editable = WorkAccess.openForStudents(view) && a.inProgress()
+                && !now.isAfter(deadline.plus(AssignmentAttempt.GRACE));
         return new WorkViews.Attempt(a.id(), a.assignmentId(), a.classId(), a.snapshot().title(), a.attemptNo(),
                 a.snapshot().maxAttempts(), a.status(), DocumentFiles.hideFiles(a.content()), a.contentVersion(),
                 a.startedAt(), deadline, a.lastSavedAt(), a.submittedAt(), a.late(), a.submitMode(), a.receiptHash(),

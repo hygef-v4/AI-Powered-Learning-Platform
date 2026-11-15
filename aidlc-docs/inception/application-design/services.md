@@ -275,7 +275,6 @@ Generated from the current service directories; includes use-case services and t
 - [GroupDocImageService.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupDocImageService.java)
 - [GroupDocImportService.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupDocImportService.java)
 - [GroupDocumentService](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupDocumentService.java)
-- [GroupPeerReviewService.java](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupPeerReviewService.java)
 - [GroupSectionService](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupSectionService.java)
 - [GroupSnapshot](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupSnapshot.java)
 - [GroupSubmissionService](../../../backend/src/main/java/edu/aiplatform/groupdocs/service/GroupSubmissionService.java)

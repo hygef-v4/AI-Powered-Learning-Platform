@@ -1,16 +1,10 @@
 "use client";
 
-import { useId } from "react";
 import { useUrlState } from "@/shared/navigation/useUrlState";
-import { Field, LockedInput, PageHeader, Section, Segmented } from "@/shared/ui";
+import { PageHeader, Section, Segmented } from "@/shared/ui";
 import type { ManagedSubject } from "../api";
 import { CourseCard, CourseGrid } from "../components/CourseCard";
-import type { CourseClassView, SubjectView } from "../model/types";
-
-/** Số lớp đang hoạt động (đang mở) của một môn. */
-function countOpenClasses(subject: SubjectView, classes: CourseClassView[]) {
-  return classes.filter((course) => course.subject.id === subject.id && course.status === "OPEN").length;
-}
+import { SubjectClassesOverview } from "../components/SubjectClassesOverview";
 
 type SubjectTab = "ACTIVE" | "ARCHIVED";
 
@@ -38,27 +32,39 @@ export function ManagerDashboardPage({ subjects, onSubject }: { subjects: Manage
   </>;
 }
 
+/** Số lớp theo trạng thái do API môn trả (`classCounts`), không cần tải danh sách lớp. */
+function describeClassCounts(subject: ManagedSubject) {
+  const open = subject.classCounts?.OPEN ?? 0;
+  const archived = subject.classCounts?.ARCHIVED ?? 0;
+  return archived > 0 ? `${open} đang mở · ${archived} lưu trữ` : `${open} đang mở`;
+}
+
 /**
- * Thông tin môn của Chủ nhiệm môn: một thẻ như Thông tin môn học bên quản trị (mã môn, tên môn, mô tả) nhưng chỉ xem, thêm ô
- * Số lớp là số lớp đang hoạt động. Không có ô số liệu khác; đổi môn bằng ô chọn môn trên sidebar.
+ * Thông tin môn của Chủ nhiệm môn, cùng bố cục Thông tin lớp của Giảng viên: thẻ chỉ xem (mã môn, tên môn, số lớp, trạng
+ * thái, mô tả) rồi Tổng quan lớp của môn bên dưới. Đổi môn bằng ô chọn môn trên sidebar.
  */
-export function MySubjectPage({ subject, classes }: { subject: SubjectView; classes: CourseClassView[] }) {
-  const id = useId();
+export function MySubjectPage({ subject }: { subject: ManagedSubject }) {
+  const description = subject.description?.trim() ?? "";
   return <>
     <PageHeader title="Thông tin môn" />
-    <Section title="Thông tin môn học">
-      <div className="grid min-w-0 gap-4 sm:grid-cols-[1fr_2fr_1fr]">
-        <Field label="Mã môn" htmlFor={`${id}-code`}><LockedInput id={`${id}-code`} value={subject.code} /></Field>
-        <Field label="Tên môn học" htmlFor={`${id}-name`}><LockedInput id={`${id}-name`} value={subject.name} /></Field>
-        <Field label="Số lớp" htmlFor={`${id}-classes`}><LockedInput id={`${id}-classes`} value={String(countOpenClasses(subject, classes))} /></Field>
-        <div className="sm:col-span-3">
-          <Field label="Mô tả" htmlFor={`${id}-description`}>
-            <p id={`${id}-description`} className="min-h-28 rounded-lg border border-line bg-sunken px-3 py-2 text-[13.5px] whitespace-pre-line text-body [overflow-wrap:anywhere]">
-              {subject.description?.trim() || <span className="text-muted">Chưa có mô tả.</span>}
-            </p>
-          </Field>
-        </div>
-      </div>
-    </Section>
+    <div className="flex flex-col gap-4">
+      <Section title="Thông tin môn">
+        <dl className="grid min-w-0 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            ["Mã môn", subject.code],
+            ["Tên môn học", subject.name],
+            ["Số lớp", describeClassCounts(subject)],
+            ["Trạng thái", subject.status === "ARCHIVED" ? "Lưu trữ" : "Hoạt động"],
+          ].map(([label, content]) => (
+            <div key={label} className="min-w-0">
+              <dt className="mb-1 text-xs text-muted">{label}</dt>
+              <dd className="break-words text-sm font-medium text-ink">{content}</dd>
+            </div>
+          ))}
+        </dl>
+        {description && <p className="text-sm whitespace-pre-line text-body [overflow-wrap:anywhere]">{description}</p>}
+      </Section>
+      <SubjectClassesOverview subjectId={subject.id} />
+    </div>
   </>;
 }

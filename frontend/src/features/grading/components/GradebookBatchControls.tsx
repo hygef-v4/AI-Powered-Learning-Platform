@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button, ClickableRow, Icon, Pill, TableFrame, Td, Th } from "@/shared/ui";
+import { Alert, Button, ClickableRow, Icon, Pill, TableFrame, Td, Th } from "@/shared/ui";
 import { Pagination } from "@/shared/ui/Pagination";
 import { useSubmissionDirectory } from "../hooks/useSubmissionDirectory";
 import { BatchActionDialog } from "./BatchActionDialog";
@@ -28,6 +28,7 @@ export function GradebookBatchControls(props: Props) {
 
 function SubmissionTable({ onDone, query = "", status = "", group = false, directory }: Props & { directory: ReturnType<typeof useSubmissionDirectory> }) {
   const { value, error, refresh } = directory;
+  const readOnly = directory.editable === false;
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(0);
@@ -38,8 +39,8 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
     && (group ? row.student.name.toLocaleLowerCase("vi").includes(search) : matchesPersonQuery(row.student, search)));
   const currentPage = Math.min(page, Math.max(0, Math.ceil(rows.length / PAGE_SIZE) - 1));
   const shown = rows.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
-  const eligible = rows.filter(canSelect);
-  const pageItems = shown.filter(canSelect);
+  const eligible = readOnly ? [] : rows.filter(canSelect);
+  const pageItems = readOnly ? [] : shown.filter(canSelect);
   const selectedRows = eligible.filter(row => selected.has(row.evaluationId!));
   const selectedCount = selectedRows.length;
   const allPageSelected = pageItems.length > 0 && pageItems.every(row => selected.has(row.evaluationId!));
@@ -69,6 +70,7 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
   if (!value) return <p role="status" className="text-sm text-muted">Đang tải bài nộp…</p>;
 
   return <>
+    {readOnly && <Alert tone="info">{directory.readOnlyReason || "Bài tập chỉ cho phép xem bài nộp."}</Alert>}
     {selectedCount > 0 && <div role="toolbar" aria-label="Thao tác bài đã chọn"
       className="sticky top-14 z-10 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface p-3">
       <span className="mr-auto text-sm font-semibold text-ink" aria-live="polite">Đã chọn {selectedCount} bài</span>
@@ -97,11 +99,11 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
       <tbody>{shown.map(row => {
         const state = formatStatus(row.status);
         const href = canSelect(row) ? buildEvaluationHref(row.evaluationId!) : null;
-        const label = group ? `Xem bản nộp chung của ${row.student.name}` : state === "PENDING" ? "Chấm bài" : state === "DRAFT" ? "Tiếp tục chấm" : "Xem điểm";
+        const label = group ? `Xem bản nộp chung của ${row.student.name}` : readOnly ? "Xem bài" : state === "PENDING" ? "Chấm bài" : state === "DRAFT" ? "Tiếp tục chấm" : "Xem điểm";
         const cells = <>
           <Td onClick={(event) => event.stopPropagation()}><input type="checkbox" aria-label={`Chọn ${row.student.name}`} className="size-4 accent-primary"
             checked={!!row.evaluationId && selected.has(row.evaluationId)}
-            disabled={!canSelect(row) || (selectedCount >= MAX_BATCH && !selected.has(row.evaluationId!))}
+            disabled={readOnly || !canSelect(row) || (selectedCount >= MAX_BATCH && !selected.has(row.evaluationId!))}
             onChange={event => toggleRow(row.evaluationId!, event.target.checked)} /></Td>
           <Td className="min-w-0">
             <strong className="block break-words text-ink">{row.student.name}</strong>
@@ -125,7 +127,7 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
       </tbody>
     </TableFrame>
     <Pagination page={currentPage} pageSize={PAGE_SIZE} total={rows.length} summary={false} onPageChange={setPage} />
-    {action && <BatchActionDialog action={action.kind} items={action.items} onClose={() => setAction(null)} onDone={() => {
+    {action && !readOnly && <BatchActionDialog action={action.kind} items={action.items} onClose={() => setAction(null)} onDone={() => {
       setSelected(new Set());
       void refresh().catch(() => {});
       onDone();

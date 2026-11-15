@@ -1,6 +1,10 @@
-# API inventory — source annotations, 2026-11-07
+# API inventory — staging 2026-11-15
 
-Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; đối chiếu lại 2026-11-10 với `staging@1e77eb79`: 48 controller files, 241 mapping annotation khác nhau khớp hoàn toàn với source (không thừa, không thiếu) sau khi thêm ba endpoint đọc của PR #60 (`/ai-drafts/templates`, `/assignment-materials`, `/subjects/{subjectId}/assignments/materials`). `POST /assignments/{id}/ai-drafts` nhận thêm `mode = REVISE` trong body mà không đổi annotation; `GET /api/v1/attempts/{attemptId}/receipt` còn ở backend nhưng frontend không gọi nữa. Entries reproduce class/method mapping annotations from source; compose class-level RequestMapping with each method mapping and retain HTTP method, path arrays, consumes/produces and parameters. They are an annotation inventory, not complete request/response schemas or fresh endpoint acceptance. Non-controller MCP schemas remain owned by IMcpToolProvider. Existing OpenAPI specs are partial coverage.
+Source snapshot: `staging@7e0e8375`, 2026-11-15. Đối chiếu 50 controller và 346 khai báo mapping theo file, gồm mapping cấp lớp và phương thức. Ghép đường dẫn cấp lớp với đường dẫn phương thức, giữ HTTP method, mảng path, consumes và produces. Bảng kê mô tả route. Schema request/response đầy đủ nằm ở DTO, controller và public contract. IMcpToolProvider sở hữu schema tool MCP. Các OpenAPI hiện có chỉ bao phủ một phần.
+
+Delta `fix/date-ai-grading-window`, 2026-11-15: thêm một mapping POST
+`/api/v1/assignments/{id}/close`, body `{ "version": number }`, trả Assignment Detail;
+kiểm quyền giảng viên/lớp OPEN/version và chốt bài đã lưu trong cùng transaction.
 
 ## [academics/controller/AcademicsController.java](../../../backend/src/main/java/edu/aiplatform/academics/controller/AcademicsController.java)
 
@@ -149,6 +153,7 @@ Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; đối chiếu lạ
 @PostMapping(value = "/publish", consumes = "application/json")
 @PatchMapping(value = "/schedule", consumes = "application/json")
 @PostMapping(value = "/retire", consumes = "application/json")
+@PostMapping(value = "/close", consumes = "application/json")
 @PostMapping("/clone")
 @PostMapping("/versions")
 ```
@@ -346,7 +351,7 @@ Thêm 2026-11-11 trên nhánh `feat/exam-image-import`, chưa có ở staging. N
 
 ## [groups/controller/GroupProposalController.java](../../../backend/src/main/java/edu/aiplatform/groups/controller/GroupProposalController.java)
 
-Thêm 2026-11-11 trên nhánh `feat/student-self-grouping` (sinh viên tự chia nhóm, US-GRP-007…010): 15 mapping.
+Có 16 khai báo mapping cho luồng sinh viên tự chia nhóm (US-GRP-007…010).
 
 ```java
 @GetMapping("/api/v1/classes/{classId}/group-formation")

@@ -693,14 +693,14 @@ class QuizPracticeServicesTest {
     }
 
     @Test
-    void subjectScopedQuizCountsAttemptsAcrossClassesAndActivityValidatesLimits() {
+    void subjectScopedQuizSeparatesClassAttemptsAndActivityValidatesLimits() {
         quizScope = QuizScope.SUBJECT;
         monitoring = true;
         var taking = attemptsService.start(student, quizId, classA);
 
         var detailInClassB = queries.detail(student, quizId, classB);
-        assertThat(detailInClassB.attemptsUsed()).isEqualTo(1);
-        assertThat(detailInClassB.inProgressAttemptId()).isEqualTo(taking.attemptId());
+        assertThat(detailInClassB.attemptsUsed()).isZero();
+        assertThat(detailInClassB.inProgressAttemptId()).isNull();
 
         List<ActivityEventInput> tooMany = java.util.stream.IntStream.range(0, 51)
                 .mapToObj(i -> new ActivityEventInput(UUID.randomUUID(), "e" + i, i, ActivityKind.HIDDEN, clock.instant()))
@@ -712,6 +712,22 @@ class QuizPracticeServicesTest {
                 .isEqualTo("ACTIVITY_EVENT_INVALID");
     }
 
+    @Test
+    void retakingSubjectKeepsOldAnswersAndStartsFreshClassAttempt() {
+        quizScope = QuizScope.SUBJECT;
+        settings = new QuizSettings(false, false, null, 1, true, true);
+        var old = attemptsService.start(student, quizId, classA);
+        attemptsService.saveAnswers(student, old.attemptId(), Map.of(q1, List.of("1")), 0);
+        when(classes.getClassRef(classA)).thenReturn(Optional.of(classRef(classA, ClassStatus.ARCHIVED)));
+        var fresh = attemptsService.start(student, quizId, classB);
+        assertThat(fresh.attemptId()).isNotEqualTo(old.attemptId());
+        assertThat(fresh.attemptNo()).isEqualTo(1);
+        assertThat(fresh.answers()).isEmpty();
+        assertThat(store.find(old.attemptId()).orElseThrow().answers()).containsKey(q1);
+        assertThat(store.find(old.attemptId()).orElseThrow().classId()).isEqualTo(classA);
+        assertThat(attemptsService.start(student, quizId, classB).attemptId()).isEqualTo(fresh.attemptId());
+        assertThat(queries.detail(student, quizId, classB).attemptsUsed()).isEqualTo(1);
+    }
     private UUID submitFresh(Actor actor) {
         var taking = attemptsService.start(actor, quizId, classA);
         attemptsService.saveAnswers(actor, taking.attemptId(), Map.of(q1, List.of("1")), taking.answerVersion());

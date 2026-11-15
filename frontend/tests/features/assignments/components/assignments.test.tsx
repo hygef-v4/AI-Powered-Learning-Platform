@@ -411,6 +411,17 @@ describe("rubricIssues", () => {
 });
 
 describe("ScheduleForm", () => {
+  it("rejects an invalid date edit instead of submitting the previous closing date", () => {
+    const submit = vi.fn();
+    const open = { ...reviewed, status: "OPEN", closesAt: "2099-01-01T16:59:00.000Z" } as AssignmentDetail;
+    render(<ScheduleForm assignment={open} mode="change" onSubmit={submit} />);
+    expect(screen.getByLabelText("Hạn nộp (ngày)")).toHaveValue("01/01/2099");
+    fireEvent.change(screen.getByLabelText("Hạn nộp (ngày)"), { target: { value: "31/04/2099" } });
+    fireEvent.click(screen.getByTestId("schedule-submit"));
+    expect(submit).not.toHaveBeenCalled();
+    expect(screen.getByText("Thiếu hạn nộp")).toBeInTheDocument();
+  });
+
   it("một trang: mở ngay mặc định, tích thì mới hiện ngày giờ; chặn nộp muộn quá 30 ngày", async () => {
     const submit = vi.fn();
     render(<ScheduleForm assignment={reviewed} mode="publish" onSubmit={submit} />);
@@ -418,9 +429,9 @@ describe("ScheduleForm", () => {
     fireEvent.click(screen.getByTestId("schedule-later"));
     expect(screen.getByLabelText("Mở lúc (ngày)")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("schedule-later"));
-    fireEvent.change(screen.getByLabelText("Hạn nộp (ngày)"), { target: { value: "2099-11-01" } });
+    fireEvent.change(screen.getByLabelText("Hạn nộp (ngày)"), { target: { value: "01/11/2099" } });
     fireEvent.click(screen.getByTestId("schedule-late"));
-    fireEvent.change(screen.getByLabelText("Nộp muộn đến (ngày)"), { target: { value: "2099-12-15" } });
+    fireEvent.change(screen.getByLabelText("Nộp muộn đến (ngày)"), { target: { value: "15/12/2099" } });
     fireEvent.click(screen.getByTestId("schedule-submit"));
     expect(await screen.findByRole("alert")).toHaveTextContent("quá 30 ngày");
     expect(submit).not.toHaveBeenCalled();
@@ -431,14 +442,14 @@ describe("ScheduleForm", () => {
     const graded = { ...reviewed, gradingMode: "GRADED" } as AssignmentDetail;
     const { unmount } = render(<ScheduleForm assignment={graded} mode="publish" onSubmit={submit} />);
     expect(screen.queryByLabelText(/Số lượt/)).toBeNull();
-    fireEvent.change(screen.getByLabelText("Hạn nộp (ngày)"), { target: { value: "2099-01-01" } });
+    fireEvent.change(screen.getByLabelText("Hạn nộp (ngày)"), { target: { value: "01/01/2099" } });
     fireEvent.click(screen.getByTestId("schedule-submit"));
     await vi.waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
     expect(submit.mock.calls[0]![0]).toMatchObject({ maxAttempts: null });
     unmount();
     const practice = { ...reviewed, gradingMode: "PRACTICE" } as AssignmentDetail;
     render(<ScheduleForm assignment={practice} mode="publish" onSubmit={submit} />);
-    fireEvent.change(screen.getByLabelText("Hạn nộp (ngày)"), { target: { value: "2099-01-01" } });
+    fireEvent.change(screen.getByLabelText("Hạn nộp (ngày)"), { target: { value: "01/01/2099" } });
     fireEvent.change(screen.getByLabelText(/Số lượt làm/), { target: { value: "11" } });
     fireEvent.click(screen.getByTestId("schedule-submit"));
     expect(await screen.findByRole("alert")).toHaveTextContent("Số lượt ngoài 1–10");
@@ -470,7 +481,7 @@ describe("ScheduleForm", () => {
   it("chỉ chọn ngày là đủ: giờ có sẵn mặc định, gửi theo giờ Việt Nam", async () => {
     const submit = vi.fn().mockResolvedValue(undefined);
     render(<ScheduleForm assignment={reviewed} mode="publish" onSubmit={submit} />);
-    fireEvent.change(screen.getByLabelText("Hạn nộp (ngày)"), { target: { value: "2099-01-01" } });
+    fireEvent.change(screen.getByLabelText("Hạn nộp (ngày)"), { target: { value: "01/01/2099" } });
     fireEvent.click(screen.getByTestId("schedule-submit"));
     await vi.waitFor(() => expect(submit).toHaveBeenCalled());
     expect(submit.mock.calls[0]![0]).toMatchObject({ openNow: true, opensAt: null, closesAt: "2098-12-31T17:00:00.000Z", lateUntil: null, maxAttempts: null });
