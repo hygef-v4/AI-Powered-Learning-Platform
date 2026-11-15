@@ -99,3 +99,7 @@ HttpProviderGatewayTest36, AiConnectionServiceTest11, GradingServiceTest38:
 **85/85 qua**, không failure/error/skip. Log `.tmp/date-ai-pre-pr-tests.log`.
 Các kết quả toàn frontend/integration/build ở trên được giữ đúng phạm vi trước
 merge; không thay bằng tuyên bố full-head acceptance. CI cần kiểm head PR.
+
+Đã push và mở [PR #91](https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/91)
+vào staging qua GitHub CLI sau khi connector tạo PR trả 403. Không merge/auto-merge;
+CI và nghiệm thu live giữ giới hạn nêu trên. Tài liệu bàn giao không đổi source.

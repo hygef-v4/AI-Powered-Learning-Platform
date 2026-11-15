@@ -30,8 +30,6 @@ không đổi sau các kiểm thử đã ghi; diff whitespace và guard 5 suite 
 kịch bản kiểm lại trước commit đều qua. Không chạy lại toàn bộ test/build. Chưa
 push, merge, deploy hay gọi provider thật; giới hạn nghiệm thu giữ như báo cáo.
 
-## Đồng bộ tài liệu theo staging — 2026-11-15
-
 ### Bàn giao PR ngày tháng/AI/đóng nhận bài vào staging
 
 User yêu cầu “giúp tôi tạo pr lên staging”. Nhánh `fix/date-ai-grading-window` đã có
@@ -40,6 +38,12 @@ sau merge: HttpProviderGateway36, AiConnection11, GradingService38 qua (85 tổn
 diff whitespace sạch. Bàn giao bằng push nhánh và PR base staging; không merge hay
 auto-merge. Các kết quả toàn frontend/integration/build ở trên thuộc đợt trước merge;
 CI cần kiểm toàn bộ head PR. Không nghiệm thu key thật/browser hoặc tải lớn.
+
+- [x] Push nhánh và mở [PR #91](https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/91)
+  vào staging. GitHub connector bị 403 khi tạo PR; GitHub CLI đã đăng nhập tạo thành
+  công. Không merge hoặc bật auto-merge; trạng thái CI xem trên PR.
+
+## Đồng bộ tài liệu theo staging — 2026-11-15
 
 Đối chiếu `staging@7e0e8375` theo các điểm trong báo cáo của người dùng. Phạm vi là tài liệu AI-DLC.
 

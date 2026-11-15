@@ -14856,7 +14856,7 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **Timestamp**: 2026-11-15T16:52:50Z
 **Requested by:** Quang Hung
 **User Input**: "giúp tôi tạo pr lên staging"
-**AI Response**: "Kiểm tra nhánh fix/date-ai-grading-window và origin/staging sau fetch: working tree sạch, đã có merge staging, không thiếu commit staging. Chưa có PR mở cùng head. Chạy lại HttpProviderGatewayTest, AiConnectionServiceTest, GradingServiceTest sau merge:85/85 qua, không lỗi hoặc skip. Chuẩn bị push nhánh và mở PR base staging với mô tả thay đổi ngày/AI/đóng nhận bài, bằng chứng trước/sau và giới hạn nghiệm thu; dùng GitHub connector để tạo PR. Không merge hoặc bật auto-merge."
+**AI Response**: "Kiểm tra nhánh fix/date-ai-grading-window và origin/staging sau fetch: working tree sạch, đã có merge staging, không thiếu commit staging. Chưa có PR mở cùng head. Chạy lại HttpProviderGatewayTest, AiConnectionServiceTest, GradingServiceTest sau merge:85/85 qua, không lỗi hoặc skip. Push nhánh và mở PR #91 vào staging với mô tả ngày/AI/đóng nhận bài, bằng chứng trước/sau và giới hạn nghiệm thu. GitHub connector tạo PR bị 403 Resource not accessible by integration; chuyển sang GitHub CLI đã đăng nhập và tạo thành công tại https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/91. Không merge hoặc bật auto-merge."
 **Context**: User cho phép push và tạo PR. PR skill dùng cho nội dung; chỉ thêm tài liệu bàn giao, không sửa source. Kết quả1135 frontend/282 tích hợp/build thuộc đợt trước merge; không coi đó là kiểm toàn bộ head sau merge. CI sẽ kiểm head PR. Chưa key thật/browser/tải lớn. Security/Resiliency giữ phạm vi, PBT disabled. GitHub display name xác nhận bằng gh api user --jq .name; giữ requester lịch sử.
 
 ---
