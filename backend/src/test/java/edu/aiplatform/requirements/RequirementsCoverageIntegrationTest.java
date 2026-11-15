@@ -395,8 +395,15 @@ class RequirementsCoverageIntegrationTest {
     void notificationEndpointsUseRealCurrentPrincipalAndPreserveForeignUnreadState(Role role) throws Exception {
         UUID owner = accountIds.get(role);
         UUID foreign = UUID.randomUUID();
-        notificationService.create(UUID.randomUUID(), edu.aiplatform.notifications.model.NotificationType.ENROLLED,
-                List.of(owner, foreign), "Notice", "Open class", "/classes/fixture", null, null);
+        notificationService.createNotification(
+                UUID.randomUUID(),
+                edu.aiplatform.notifications.model.NotificationType.ENROLLED,
+                List.of(owner, foreign),
+                "Notice",
+                "Open class",
+                "/classes/fixture",
+                null,
+                null);
         UUID ownId = jdbc.queryForObject("select id from notifications where recipient_id=?", UUID.class, owner);
         UUID foreignId = jdbc.queryForObject("select id from notifications where recipient_id=?", UUID.class, foreign);
         mvc.perform(signedRequest(get("/api/v1/me/notifications").param("accountId", foreign.toString()), role))
@@ -504,7 +511,10 @@ class RequirementsCoverageIntegrationTest {
         measureP95("U13_EXTRACT_TEN", 1000,
                 () -> assertThat(referenceMaterialService.extractText(manager, ids, 10000)).hasSize(10));
         measureP95("U14_NOTIFICATIONS", 300,
-                () -> assertThat(notificationService.list(student, false, 1, 20).items()).hasSize(20));
+                () -> assertThat(
+                        notificationService
+                                .listNotifications(student, false, 1, 20)
+                                .items()).hasSize(20));
         measureP95("U14_ANNOUNCEMENTS", 300,
                 () -> assertThat(
                         announcementService
@@ -573,11 +583,11 @@ class RequirementsCoverageIntegrationTest {
                 Map.of("classId", classId.toString(), "actorId", accountIds.get(Role.TEACHER).toString(),
                         "announcementId", UUID.randomUUID().toString(), "important", false, "sendEmail", false));
         long started = System.nanoTime();
-        notificationEventService.accept(event);
+        notificationEventService.handleEvent(event);
         long milliseconds = java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
         assertThat(jdbc.queryForObject("select count(*) from notifications", Integer.class)).isEqualTo(200);
         assertThat(jdbc.queryForObject("select count(*) from email_deliveries", Integer.class)).isZero();
-        notificationEventService.accept(event);
+        notificationEventService.handleEvent(event);
         assertThat(jdbc.queryForObject("select count(*) from notifications", Integer.class)).isEqualTo(200);
         System.out.println("LOCAL_NFR_U14_03 recipients=200 elapsedMs=" + milliseconds + " targetMs=5000");
         assertThat(milliseconds).isLessThanOrEqualTo(5000);
@@ -586,8 +596,15 @@ class RequirementsCoverageIntegrationTest {
     @Test
     void actualEmailJobPipelineRetriesBoundedlyPersistsFailureAndKeepsBusinessNotice() {
         UUID recipient = accountIds.get(Role.STUDENT);
-        notificationService.create(UUID.randomUUID(), edu.aiplatform.notifications.model.NotificationType.ENROLLED,
-                List.of(recipient), "Enrollment", "Open class", "/classes/fixture", "ENROLLED", null);
+        notificationService.createNotification(
+                UUID.randomUUID(),
+                edu.aiplatform.notifications.model.NotificationType.ENROLLED,
+                List.of(recipient),
+                "Enrollment",
+                "Open class",
+                "/classes/fixture",
+                "ENROLLED",
+                null);
         UUID deliveryId = jdbc.queryForObject("select id from email_deliveries", UUID.class);
         doThrow(new IllegalStateException("PRIVATE_SMTP_RECIPIENT_SENTINEL")).when(mail).send(any());
         var current = new edu.aiplatform.jobs.contract.JobMessage(1, edu.aiplatform.jobs.contract.JobTypes.EMAIL_SEND,
@@ -612,15 +629,22 @@ class RequirementsCoverageIntegrationTest {
 
     @Test
     void concurrentDeliveryAndDuplicateJobsSendOnceAndSentRemainsTerminal() throws Exception {
-        notificationService.create(UUID.randomUUID(), edu.aiplatform.notifications.model.NotificationType.ENROLLED,
-                List.of(accountIds.get(Role.STUDENT)), "Enrollment", "Open class", "/classes/fixture", "ENROLLED", null);
+        notificationService.createNotification(
+                UUID.randomUUID(),
+                edu.aiplatform.notifications.model.NotificationType.ENROLLED,
+                List.of(accountIds.get(Role.STUDENT)),
+                "Enrollment",
+                "Open class",
+                "/classes/fixture",
+                "ENROLLED",
+                null);
         UUID deliveryId = jdbc.queryForObject("select id from email_deliveries", UUID.class);
         var start = new java.util.concurrent.CountDownLatch(1);
         var executor = java.util.concurrent.Executors.newFixedThreadPool(2);
         try {
             var futures = java.util.stream.IntStream.range(0, 2).mapToObj(index -> executor.submit(() -> {
                 start.await();
-                emailDeliveryService.send(deliveryId);
+                emailDeliveryService.sendEmail(deliveryId);
                 return null;
             })).toList();
             start.countDown();
@@ -631,7 +655,7 @@ class RequirementsCoverageIntegrationTest {
         var replay = new edu.aiplatform.jobs.contract.JobMessage(1, edu.aiplatform.jobs.contract.JobTypes.EMAIL_SEND,
                 "email:" + deliveryId, Map.of("deliveryId", deliveryId.toString()), 0, "fixture");
         assertThat(jobDispatcher.dispatch(replay)).isEqualTo(edu.aiplatform.jobs.service.JobDispatcher.Outcome.DONE);
-        emailDeliveryService.failed(deliveryId);
+        emailDeliveryService.markEmailFailed(deliveryId);
         verify(mail).send(any());
         assertThat(jdbc.queryForObject("select status from email_deliveries where id=?", String.class, deliveryId)).isEqualTo("SENT");
         assertThat(jdbc.queryForObject("select attempts from email_deliveries where id=?", Integer.class, deliveryId)).isEqualTo(1);
@@ -644,8 +668,14 @@ class RequirementsCoverageIntegrationTest {
                 select gen_random_uuid(),?,'ENROLLED',gen_random_uuid(),'Notice','Open class','/classes/fixture',?
                 from generate_series(1,10001)
                 """, accountIds.get(Role.STUDENT), at(NOW.minus(Duration.ofDays(181))));
-        int first = transaction.execute(status -> notificationRepository.deleteOld(NOW.minus(Duration.ofDays(180))));
-        int second = transaction.execute(status -> notificationRepository.deleteOld(NOW.minus(Duration.ofDays(180))));
+        int first =
+                transaction.execute(
+                        status -> notificationRepository.deleteOldNotifications(
+                                NOW.minus(Duration.ofDays(180))));
+        int second =
+                transaction.execute(
+                        status -> notificationRepository.deleteOldNotifications(
+                                NOW.minus(Duration.ofDays(180))));
         assertThat(first).isEqualTo(10000);
         assertThat(second).isEqualTo(1);
     }

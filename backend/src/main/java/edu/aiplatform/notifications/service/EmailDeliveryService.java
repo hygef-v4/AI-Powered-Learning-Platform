@@ -15,23 +15,23 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(timeout = 20)
 public class EmailDeliveryService {
-    private final INotificationRepository repository;
-    private final EmailCapPolicy cap;
-    private final IJob jobs;
-    private final IAccountLookup accounts;
+    private final INotificationRepository notificationRepository;
+    private final EmailCapPolicy emailCapPolicy;
+    private final IJob job;
+    private final IAccountLookup accountLookup;
     private final IMail mail;
     private final Clock clock;
     private final String baseUrl;
-    private final IAssignmentQuery assignments;
+    private final IAssignmentQuery assignmentQuery;
 
     public EmailDeliveryService(
-            INotificationRepository repository,
-            EmailCapPolicy cap,
-            IJob jobs,
-            IAccountLookup accounts,
+            INotificationRepository notificationRepository,
+            EmailCapPolicy emailCapPolicy,
+            IJob job,
+            IAccountLookup accountLookup,
             IMail mail,
             Clock clock,
-            IAssignmentQuery assignments,
+            IAssignmentQuery assignmentQuery,
             @Value("${APP_PUBLIC_URL:http://localhost:3000}") String baseUrl) {
         var uri = URI.create(baseUrl);
         if (!Set.of("http", "https").contains(uri.getScheme())
@@ -40,123 +40,126 @@ public class EmailDeliveryService {
                 || uri.getQuery() != null
                 || uri.getFragment() != null)
             throw new IllegalArgumentException("Invalid U14 public base URL");
-        this.repository = repository;
-        this.cap = cap;
-        this.jobs = jobs;
-        this.accounts = accounts;
+        this.notificationRepository = notificationRepository;
+        this.emailCapPolicy = emailCapPolicy;
+        this.job = job;
+        this.accountLookup = accountLookup;
         this.mail = mail;
         this.clock = clock;
-        this.assignments = assignments;
+        this.assignmentQuery = assignmentQuery;
         this.baseUrl = baseUrl.replaceAll("/+$", "");
     }
 
-    public void schedule(Notification n, String type, Instant expiresAt) {
+    public void scheduleEmail(Notification notification, String type, Instant expiresAt) {
         if (type == null) return;
         Instant now = clock.instant();
-        var e = new EmailDelivery();
-        e.id = UUID.randomUUID();
-        e.notificationId = n.id;
-        e.recipientId = n.recipientId;
-        e.type = type;
-        e.priority = EmailCapPolicy.PRIORITY.get(type);
-        e.createdAt = now;
-        e.scheduledFor = now;
-        e.expiresAt = expiresAt;
+        var delivery = new EmailDelivery();
+        delivery.id = UUID.randomUUID();
+        delivery.notificationId = notification.id;
+        delivery.recipientId = notification.recipientId;
+        delivery.type = type;
+        delivery.priority = EmailCapPolicy.PRIORITY.get(type);
+        delivery.createdAt = now;
+        delivery.scheduledFor = now;
+        delivery.expiresAt = expiresAt;
         if (!type.equals("BACKUP_FAILED")
-                && !repository
-                        .preferences(n.recipientId)
-                        .getOrDefault(type, NotificationPreferenceService.defaultEnabled(type)))
-            e.status = EmailDelivery.Status.SKIPPED;
-        else if (expired(e, now)) e.status = EmailDelivery.Status.SKIPPED;
-        else if (cap.available(now)) e.status = EmailDelivery.Status.PENDING;
+                && !notificationRepository
+                        .findPreferences(notification.recipientId)
+                        .getOrDefault(type, NotificationPreferenceService.isEnabledByDefault(type)))
+            delivery.status = EmailDelivery.Status.SKIPPED;
+        else if (isExpired(delivery, now)) delivery.status = EmailDelivery.Status.SKIPPED;
+        else if (emailCapPolicy.hasCapacity(now)) delivery.status = EmailDelivery.Status.PENDING;
         else {
-            e.status = EmailDelivery.Status.DEFERRED;
-            e.scheduledFor = cap.nextDay(now);
+            delivery.status = EmailDelivery.Status.DEFERRED;
+            delivery.scheduledFor = emailCapPolicy.calculateNextDay(now);
         }
-        repository.addEmail(e);
-        if (e.status == EmailDelivery.Status.PENDING) enqueue(e);
+        notificationRepository.insertEmailDelivery(delivery);
+        if (delivery.status == EmailDelivery.Status.PENDING) enqueueEmail(delivery);
     }
 
     @Transactional(timeout = 30, noRollbackFor = RetryableJobException.class)
-    public void send(UUID id) {
-        repository.lockBudget();
-        var e = repository.lockEmail(id).orElse(null);
-        if (e == null || e.status != EmailDelivery.Status.PENDING) return;
+    public void sendEmail(UUID id) {
+        notificationRepository.lockEmailBudget();
+        var delivery = notificationRepository.lockEmailDelivery(id).orElse(null);
+        if (delivery == null || delivery.status != EmailDelivery.Status.PENDING) return;
         Instant now = clock.instant();
-        if (expired(e, now)) {
-            e.status = EmailDelivery.Status.SKIPPED;
+        if (isExpired(delivery, now)) {
+            delivery.status = EmailDelivery.Status.SKIPPED;
             return;
         }
-        if (!cap.sameDay(e.scheduledFor, now)) {
-            if (!cap.available(now)) {
-                e.status = EmailDelivery.Status.DEFERRED;
-                e.scheduledFor = cap.nextDay(now);
+        if (!emailCapPolicy.isSameDay(delivery.scheduledFor, now)) {
+            if (!emailCapPolicy.hasCapacity(now)) {
+                delivery.status = EmailDelivery.Status.DEFERRED;
+                delivery.scheduledFor = emailCapPolicy.calculateNextDay(now);
                 return;
             }
-            e.scheduledFor = now;
+            delivery.scheduledFor = now;
         }
         AccountContact contact;
         try {
-            contact = accounts.getContact(e.recipientId).orElse(null);
+            contact = accountLookup.getContact(delivery.recipientId).orElse(null);
         } catch (RuntimeException unavailable) {
             throw new RetryableJobException("NOTIFICATION_ACCOUNT_UNAVAILABLE");
         }
         if (contact == null
                 || contact.status() != AccountStatus.ACTIVE
-                || !NotificationPreferenceService.typesFor(contact.role()).contains(e.type)) {
-            e.status = EmailDelivery.Status.SKIPPED;
+                || !NotificationPreferenceService
+                        .listTypesForRole(contact.role())
+                        .contains(delivery.type)) {
+            delivery.status = EmailDelivery.Status.SKIPPED;
             return;
         }
-        var n = repository.find(e.notificationId).orElse(null);
-        if (n == null) {
-            e.status = EmailDelivery.Status.SKIPPED;
+        var notification =
+                notificationRepository.findNotification(delivery.notificationId).orElse(null);
+        if (notification == null) {
+            delivery.status = EmailDelivery.Status.SKIPPED;
             return;
         }
-        if (e.type.equals("DEADLINE_REMINDER")) {
+        if (delivery.type.equals("DEADLINE_REMINDER")) {
             UUID assignmentId;
             try {
-                assignmentId = AssignmentNotificationLink.assignmentId(n.link);
+                assignmentId = AssignmentNotificationLink.parseAssignmentId(notification.link);
             } catch (IllegalArgumentException invalidLink) {
-                e.status = EmailDelivery.Status.SKIPPED;
-                e.lastError = "INVALID_ASSIGNMENT_LINK";
+                delivery.status = EmailDelivery.Status.SKIPPED;
+                delivery.lastError = "INVALID_ASSIGNMENT_LINK";
                 return;
             }
-            AssignmentView a;
+            AssignmentView assignment;
             try {
-                a = assignments.get(assignmentId).orElse(null);
+                assignment = assignmentQuery.get(assignmentId).orElse(null);
             } catch (RuntimeException unavailable) {
                 throw new RetryableJobException("NOTIFICATION_ASSIGNMENT_UNAVAILABLE");
             }
-            if (a == null
-                    || a.status() != AssignmentStatus.OPEN
-                    || !Objects.equals(a.closesAt(), e.expiresAt)) {
-                e.status = EmailDelivery.Status.SKIPPED;
+            if (assignment == null
+                    || assignment.status() != AssignmentStatus.OPEN
+                    || !Objects.equals(assignment.closesAt(), delivery.expiresAt)) {
+                delivery.status = EmailDelivery.Status.SKIPPED;
                 return;
             }
         }
-        e.attempts++;
+        delivery.attempts++;
         // Provider acceptance and DB commit cannot be exactly-once without provider idempotency
         // support.
         try {
             mail.send(
                     new MailMessage(
                             contact.email(),
-                            n.title,
+                            notification.title,
                             "Bạn có thông báo mới trên nền tảng học tập. Đăng nhập để xem: "
                                     + baseUrl
-                                    + n.link,
+                                    + notification.link,
                             null));
         } catch (RuntimeException failure) {
             throw new RetryableJobException("NOTIFICATION_MAIL_UNAVAILABLE");
         }
-        e.status = EmailDelivery.Status.SENT;
-        e.sentAt = now;
-        e.lastError = null;
+        delivery.status = EmailDelivery.Status.SENT;
+        delivery.sentAt = now;
+        delivery.lastError = null;
     }
 
-    public void failed(UUID id) {
-        repository
-                .lockEmail(id)
+    public void markEmailFailed(UUID id) {
+        notificationRepository
+                .lockEmailDelivery(id)
                 .filter(e -> e.status == EmailDelivery.Status.PENDING)
                 .ifPresent(
                         e -> {
@@ -166,31 +169,34 @@ public class EmailDeliveryService {
                         });
     }
 
-    public void releaseDeferred(Instant now) {
+    public void releaseDeferredEmails(Instant now) {
         // All paths take the budget lock before row locks to avoid deadlocks across midnight.
-        repository.lockBudget();
+        notificationRepository.lockEmailBudget();
         for (var candidate :
-                repository.deferred(now).stream()
+                notificationRepository.listDeferredEmails(now).stream()
                         .sorted(Comparator.comparingInt((EmailDelivery e) -> e.priority).reversed())
                         .toList()) {
-            var e = repository.lockEmail(candidate.id).orElse(null);
-            if (e == null || e.status != EmailDelivery.Status.DEFERRED) continue;
-            if (expired(e, now)) {
-                e.status = EmailDelivery.Status.SKIPPED;
+            var delivery = notificationRepository.lockEmailDelivery(candidate.id).orElse(null);
+            if (delivery == null || delivery.status != EmailDelivery.Status.DEFERRED) continue;
+            if (isExpired(delivery, now)) {
+                delivery.status = EmailDelivery.Status.SKIPPED;
                 continue;
             }
-            if (!cap.available(now)) break;
-            e.status = EmailDelivery.Status.PENDING;
-            e.scheduledFor = now;
-            enqueue(e);
+            if (!emailCapPolicy.hasCapacity(now)) break;
+            delivery.status = EmailDelivery.Status.PENDING;
+            delivery.scheduledFor = now;
+            enqueueEmail(delivery);
         }
     }
 
-    private boolean expired(EmailDelivery e, Instant now) {
-        return e.expiresAt != null && !e.expiresAt.isAfter(now);
+    private boolean isExpired(EmailDelivery delivery, Instant now) {
+        return delivery.expiresAt != null && !delivery.expiresAt.isAfter(now);
     }
 
-    private void enqueue(EmailDelivery e) {
-        jobs.enqueue(JobTypes.EMAIL_SEND, Map.of("deliveryId", e.id.toString()), "email:" + e.id);
+    private void enqueueEmail(EmailDelivery delivery) {
+        job.enqueue(
+                JobTypes.EMAIL_SEND,
+                Map.of("deliveryId", delivery.id.toString()),
+                "email:" + delivery.id);
     }
 }

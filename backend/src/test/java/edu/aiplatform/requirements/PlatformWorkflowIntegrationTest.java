@@ -802,9 +802,19 @@ class PlatformWorkflowIntegrationTest {
     }
 
     UUID enqueueEnrollmentEmail() {
-        notificationEventService.accept(new DomainEvent(1, UUID.randomUUID(), EventTypes.ENROLLMENT_ACTIVATED,
-                "U05", Instant.now(), UUID.randomUUID().toString(), Map.of(
-                        "accountId", actor(Role.STUDENT).accountId().toString(), "classId", classId.toString())));
+        notificationEventService.handleEvent(
+                new DomainEvent(
+                        1,
+                        UUID.randomUUID(),
+                        EventTypes.ENROLLMENT_ACTIVATED,
+                        "U05",
+                        Instant.now(),
+                        UUID.randomUUID().toString(),
+                        Map.of(
+                                "accountId",
+                                actor(Role.STUDENT).accountId().toString(),
+                                "classId",
+                                classId.toString())));
         return jdbc.queryForObject("select id from email_deliveries", UUID.class);
     }
 

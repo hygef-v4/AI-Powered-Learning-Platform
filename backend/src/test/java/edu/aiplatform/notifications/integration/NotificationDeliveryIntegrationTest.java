@@ -49,15 +49,15 @@ class NotificationDeliveryIntegrationTest {
 
     static final Instant NOW = Instant.parse("2026-10-25T08:00:00Z");
     @Autowired DataSource dataSource;
-    @Autowired EntityManager em;
-    @Autowired IAssignmentQuery assignments;
-    @Autowired IClassAccess classes;
-    @Autowired ISubmissionQuery submissions;
-    @Autowired IJob jobs;
-    @Autowired IAccountLookup accounts;
-    @Autowired ISseHub sse;
-    @Autowired DeadlineReminderScanner scanner;
-    @Autowired NotificationEventService events;
+    @Autowired EntityManager entityManager;
+    @Autowired IAssignmentQuery assignmentQuery;
+    @Autowired IClassAccess classAccess;
+    @Autowired ISubmissionQuery submissionQuery;
+    @Autowired IJob job;
+    @Autowired IAccountLookup accountLookup;
+    @Autowired ISseHub sseHub;
+    @Autowired DeadlineReminderScanner deadlineReminderScanner;
+    @Autowired NotificationEventService notificationEventService;
     @Autowired INotificationRepository notificationRepository;
     @Autowired PlatformTransactionManager transactionManager;
     @Autowired NotificationService notificationService;
@@ -122,27 +122,27 @@ class NotificationDeliveryIntegrationTest {
         }
 
         @Bean
-        IAssignmentQuery assignments() {
+        IAssignmentQuery assignmentQuery() {
             return mock(IAssignmentQuery.class);
         }
 
         @Bean
-        IClassAccess classes() {
+        IClassAccess classAccess() {
             return mock(IClassAccess.class);
         }
 
         @Bean
-        ISubmissionQuery submissions() {
+        ISubmissionQuery submissionQuery() {
             return mock(ISubmissionQuery.class);
         }
 
         @Bean
-        IJob jobs() {
+        IJob job() {
             return mock(IJob.class);
         }
 
         @Bean
-        IAccountLookup accounts() {
+        IAccountLookup accountLookup() {
             return mock(IAccountLookup.class);
         }
 
@@ -152,7 +152,7 @@ class NotificationDeliveryIntegrationTest {
         }
 
         @Bean
-        ISseHub sse() {
+        ISseHub sseHub() {
             return mock(ISseHub.class);
         }
 
@@ -167,14 +167,14 @@ class NotificationDeliveryIntegrationTest {
         }
 
         @Bean
-        EmailCapPolicy cap(INotificationRepository repo) {
-            return new EmailCapPolicy(repo, 300);
+        EmailCapPolicy emailCapPolicy(INotificationRepository notificationRepository) {
+            return new EmailCapPolicy(notificationRepository, 300);
         }
     }
 
     @BeforeEach
     void clean() {
-        reset(assignments, classes, submissions, jobs, accounts, sse);
+        reset(assignmentQuery, classAccess, submissionQuery, job, accountLookup, sseHub);
         new JdbcTemplate(dataSource)
                 .execute("truncate notifications, email_deliveries, deadline_reminders, notification_preferences, announcements");
     }
@@ -214,11 +214,13 @@ class NotificationDeliveryIntegrationTest {
         var transaction = new org.springframework.transaction.support.TransactionTemplate(transactionManager);
         transaction.executeWithoutResult(tx -> {
             for (var notice : List.of(old, exact, newer)) {
-                assertThat(notificationRepository.insert(notice)).isTrue();
-                notificationRepository.addEmail(createDelivery(notice, "ENROLLED", EmailDelivery.Status.SENT));
+                assertThat(notificationRepository.insertNotification(notice)).isTrue();
+                notificationRepository.insertEmailDelivery(
+                        createDelivery(notice, "ENROLLED", EmailDelivery.Status.SENT));
             }
         });
-        int deletedCount = transaction.execute(tx -> notificationRepository.deleteOld(cutoff));
+        int deletedCount =
+                transaction.execute(tx -> notificationRepository.deleteOldNotifications(cutoff));
         assertThat(deletedCount).isEqualTo(1);
         var jdbc = new JdbcTemplate(dataSource);
         assertThat(jdbc.queryForList("select id from notifications", UUID.class))
@@ -231,23 +233,36 @@ class NotificationDeliveryIntegrationTest {
     void savedOptOutPersistsWhileInAppNoticeAndOwnerOnlyReadStateRemain() {
         UUID recipient = UUID.randomUUID(), other = UUID.randomUUID();
         var transaction = new org.springframework.transaction.support.TransactionTemplate(transactionManager);
-        transaction.executeWithoutResult(tx -> notificationRepository.preference(recipient, "ENROLLED", false));
-        notificationService.create(UUID.randomUUID(), NotificationType.ENROLLED, List.of(recipient, other),
-                "Enrollment", "Open class", "/classes/fixture", "ENROLLED", null);
+        transaction.executeWithoutResult(
+                tx -> notificationRepository.savePreference(recipient, "ENROLLED", false));
+        notificationService.createNotification(
+                UUID.randomUUID(),
+                NotificationType.ENROLLED,
+                List.of(recipient, other),
+                "Enrollment",
+                "Open class",
+                "/classes/fixture",
+                "ENROLLED",
+                null);
         var jdbc = new JdbcTemplate(dataSource);
         UUID ownId = jdbc.queryForObject("select id from notifications where recipient_id=?", UUID.class, recipient);
         UUID otherId = jdbc.queryForObject("select id from notifications where recipient_id=?", UUID.class, other);
         assertThat(jdbc.queryForObject("select status from email_deliveries where notification_id=?",
                 String.class, ownId)).isEqualTo("SKIPPED");
-        Map<String, Boolean> savedPreferences = transaction.execute(tx -> notificationRepository.preferences(recipient));
+        Map<String, Boolean> savedPreferences =
+                transaction.execute(tx -> notificationRepository.findPreferences(recipient));
         assertThat(savedPreferences).containsEntry("ENROLLED", false);
-        boolean foreignRead = transaction.execute(tx -> notificationRepository.read(otherId, recipient, NOW));
-        boolean ownRead = transaction.execute(tx -> notificationRepository.read(ownId, recipient, NOW));
+        boolean foreignRead =
+                transaction.execute(tx -> notificationRepository.markRead(otherId, recipient, NOW));
+        boolean ownRead =
+                transaction.execute(tx -> notificationRepository.markRead(ownId, recipient, NOW));
         assertThat(foreignRead).isFalse();
         assertThat(ownRead).isTrue();
         var ownUnread = createNotice(recipient, NOW.plusSeconds(1));
-        transaction.executeWithoutResult(tx -> notificationRepository.insert(ownUnread));
-        transaction.executeWithoutResult(tx -> notificationRepository.readAll(recipient, NOW.plusSeconds(1)));
+        transaction.executeWithoutResult(
+                tx -> notificationRepository.insertNotification(ownUnread));
+        transaction.executeWithoutResult(
+                tx -> notificationRepository.markAllRead(recipient, NOW.plusSeconds(1)));
         assertThat(jdbc.queryForObject("select read_at from notifications where id=?",
                 java.sql.Timestamp.class, otherId)).isNull();
         assertThat(jdbc.queryForObject("select read_at from notifications where id=?",
@@ -261,16 +276,19 @@ class NotificationDeliveryIntegrationTest {
         var transaction = new org.springframework.transaction.support.TransactionTemplate(transactionManager);
         var notices = java.util.stream.IntStream.range(0, 4)
                 .mapToObj(index -> createNotice(UUID.randomUUID(), NOW)).toList();
-        transaction.executeWithoutResult(tx -> notices.forEach(notificationRepository::insert));
+        transaction.executeWithoutResult(
+                tx -> notices.forEach(notificationRepository::insertNotification));
         var emailDeliveryService = new EmailDeliveryService(notificationRepository,
-                new EmailCapPolicy(notificationRepository, 1), jobs, accounts, mock(IMail.class),
-                Clock.fixed(NOW, ZoneOffset.UTC), assignments, "https://learning.example.test");
+                new EmailCapPolicy(
+                        notificationRepository, 1), job, accountLookup, mock(IMail.class),
+                Clock.fixed(NOW, ZoneOffset.UTC), assignmentQuery, "https://learning.example.test");
         var start = new java.util.concurrent.CountDownLatch(1);
         var executor = java.util.concurrent.Executors.newFixedThreadPool(4);
         try {
             var futures = notices.stream().map(notice -> executor.submit(() -> {
                 start.await();
-                transaction.executeWithoutResult(tx -> emailDeliveryService.schedule(notice, "ENROLLED", null));
+                transaction.executeWithoutResult(
+                        tx -> emailDeliveryService.scheduleEmail(notice, "ENROLLED", null));
                 return null;
             })).toList();
             start.countDown();
@@ -283,7 +301,7 @@ class NotificationDeliveryIntegrationTest {
                 .isEqualTo(1);
         assertThat(jdbc.queryForObject("select count(*) from email_deliveries where status='DEFERRED'", Integer.class))
                 .isEqualTo(3);
-        verify(jobs).enqueue(anyString(), anyMap(), anyString());
+        verify(job).enqueue(anyString(), anyMap(), anyString());
     }
 
     @Test
@@ -294,16 +312,18 @@ class NotificationDeliveryIntegrationTest {
         transaction.executeWithoutResult(tx -> {
             for (String type : types) {
                 var notice = createNotice(UUID.randomUUID(), NOW);
-                notificationRepository.insert(notice);
-                notificationRepository.addEmail(createDelivery(notice, type, EmailDelivery.Status.DEFERRED));
+                notificationRepository.insertNotification(notice);
+                notificationRepository.insertEmailDelivery(
+                        createDelivery(notice, type, EmailDelivery.Status.DEFERRED));
             }
             var future = createNotice(UUID.randomUUID(), NOW);
-            notificationRepository.insert(future);
+            notificationRepository.insertNotification(future);
             var delivery = createDelivery(future, "BACKUP_FAILED", EmailDelivery.Status.DEFERRED);
             delivery.scheduledFor = NOW.plusSeconds(1);
-            notificationRepository.addEmail(delivery);
+            notificationRepository.insertEmailDelivery(delivery);
         });
-        List<EmailDelivery> deferred = transaction.execute(tx -> notificationRepository.deferred(NOW));
+        List<EmailDelivery> deferred =
+                transaction.execute(tx -> notificationRepository.listDeferredEmails(NOW));
         assertThat(deferred)
                 .extracting(delivery -> delivery.type)
                 .containsExactly("BACKUP_FAILED", "DEADLINE_REMINDER", "ANNOUNCEMENT_IMPORTANT",
@@ -361,19 +381,20 @@ class NotificationDeliveryIntegrationTest {
                         false,
                         null,
                         List.of());
-        when(assignments.listClosingBetween(any(), any())).thenReturn(List.of(a));
-        when(assignments.get(assignment)).thenReturn(Optional.of(a));
-        when(classes.listOpenClassesOfSubject(subject))
+        when(assignmentQuery.listClosingBetween(any(), any())).thenReturn(List.of(a));
+        when(assignmentQuery.get(assignment)).thenReturn(Optional.of(a));
+        when(classAccess.listOpenClassesOfSubject(subject))
                 .thenReturn(List.of(course(first, subject), course(second, subject)));
         for (UUID classId : List.of(first, second)) {
-            when(classes.getClassRef(classId)).thenReturn(Optional.of(course(classId, subject)));
-            when(classes.listActiveStudents(classId)).thenReturn(List.of(student));
-            when(submissions.listStudentsWithoutSubmission(assignment, classId))
+            when(classAccess.getClassRef(classId))
+                    .thenReturn(Optional.of(course(classId, subject)));
+            when(classAccess.listActiveStudents(classId)).thenReturn(List.of(student));
+            when(submissionQuery.listStudentsWithoutSubmission(assignment, classId))
                     .thenReturn(List.of(student));
         }
         doAnswer(
                         call -> {
-                            em.flush();
+                            entityManager.flush();
                             assertThat(
                                             new JdbcTemplate(dataSource)
                                                     .queryForObject(
@@ -383,9 +404,9 @@ class NotificationDeliveryIntegrationTest {
                             throw new IllegalStateException("fixture enqueue unavailable");
                         })
                 .doNothing()
-                .when(jobs)
+                .when(job)
                 .enqueue(anyString(), anyMap(), anyString());
-        scanner.scan(NOW);
+        deadlineReminderScanner.scan(NOW);
         var jdbc = new JdbcTemplate(dataSource);
         assertThat(
                         jdbc.queryForObject(
@@ -399,15 +420,15 @@ class NotificationDeliveryIntegrationTest {
                 .isEqualTo(1);
         assertThat(jdbc.queryForObject("select count(*) from email_deliveries", Integer.class))
                 .isEqualTo(1);
-        scanner.scan(NOW.plusSeconds(60));
-        scanner.scan(NOW.plusSeconds(120));
+        deadlineReminderScanner.scan(NOW.plusSeconds(60));
+        deadlineReminderScanner.scan(NOW.plusSeconds(120));
         for (String table : List.of("deadline_reminders", "notifications", "email_deliveries")) {
             assertThat(jdbc.queryForObject("select count(*) from " + table, Integer.class))
                     .as(table)
                     .isEqualTo(2);
         }
-        verify(jobs, times(3)).enqueue(anyString(), anyMap(), anyString());
-        verify(sse, times(2)).publish(anyString(), anyMap());
+        verify(job, times(3)).enqueue(anyString(), anyMap(), anyString());
+        verify(sseHub, times(2)).publish(anyString(), anyMap());
     }
 
     @Test
@@ -416,10 +437,11 @@ class NotificationDeliveryIntegrationTest {
         var ids = List.of(UUID.randomUUID(), UUID.randomUUID());
         for (UUID classId : ids) {
             UUID student = UUID.randomUUID();
-            when(classes.getClassRef(classId)).thenReturn(Optional.of(course(classId, subject)));
-            when(classes.listActiveStudents(classId)).thenReturn(List.of(student));
-            when(classes.isActiveStudent(student, classId)).thenReturn(true);
-            when(accounts.getContact(student))
+            when(classAccess.getClassRef(classId))
+                    .thenReturn(Optional.of(course(classId, subject)));
+            when(classAccess.listActiveStudents(classId)).thenReturn(List.of(student));
+            when(classAccess.isActiveStudent(student, classId)).thenReturn(true);
+            when(accountLookup.getContact(student))
                     .thenReturn(
                             Optional.of(
                                     new AccountContact(
@@ -429,7 +451,7 @@ class NotificationDeliveryIntegrationTest {
                                             Role.STUDENT,
                                             AccountStatus.ACTIVE)));
         }
-        when(classes.listOpenClassesOfSubject(subject))
+        when(classAccess.listOpenClassesOfSubject(subject))
                 .thenReturn(ids.stream().map(id -> course(id, subject)).toList());
         var event =
                 new DomainEvent(
@@ -446,8 +468,8 @@ class NotificationDeliveryIntegrationTest {
                                 "SUBJECT",
                                 "subjectId",
                                 subject.toString()));
-        events.accept(event);
-        events.accept(event);
+        notificationEventService.handleEvent(event);
+        notificationEventService.handleEvent(event);
         var jdbc = new JdbcTemplate(dataSource);
         assertThat(jdbc.queryForList("select link from notifications", String.class))
                 .containsExactlyInAnyOrderElementsOf(
@@ -456,7 +478,7 @@ class NotificationDeliveryIntegrationTest {
                                 .toList());
         assertThat(jdbc.queryForObject("select count(*) from email_deliveries", Integer.class))
                 .isEqualTo(2);
-        verify(jobs, times(2)).enqueue(anyString(), anyMap(), anyString());
-        verify(sse, times(2)).publish(anyString(), anyMap());
+        verify(job, times(2)).enqueue(anyString(), anyMap(), anyString());
+        verify(sseHub, times(2)).publish(anyString(), anyMap());
     }
 }

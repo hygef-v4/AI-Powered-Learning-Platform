@@ -9,20 +9,21 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/me/notification-preferences")
 public class NotificationPreferenceController {
-    private final NotificationPreferenceService service;
+    private final NotificationPreferenceService notificationPreferenceService;
 
-    public NotificationPreferenceController(NotificationPreferenceService service) {
-        this.service = service;
+    public NotificationPreferenceController(
+            NotificationPreferenceService notificationPreferenceService) {
+        this.notificationPreferenceService = notificationPreferenceService;
     }
 
     @GetMapping
-    public Map<String, Boolean> get(@AuthenticationPrincipal Actor actor) {
-        return service.get(actor);
+    public Map<String, Boolean> loadPreferences(@AuthenticationPrincipal Actor actor) {
+        return notificationPreferenceService.loadPreferences(actor);
     }
 
     @PutMapping
-    public Map<String, Boolean> put(
+    public Map<String, Boolean> updatePreferences(
             @AuthenticationPrincipal Actor actor, @RequestBody Map<String, Boolean> input) {
-        return service.put(actor, input);
+        return notificationPreferenceService.updatePreferences(actor, input);
     }
 }

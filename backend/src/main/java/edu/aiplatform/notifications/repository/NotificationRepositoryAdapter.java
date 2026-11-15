@@ -8,33 +8,34 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class NotificationRepositoryAdapter implements INotificationRepository {
-    private final EntityManager em;
+    private final EntityManager entityManager;
 
-    public NotificationRepositoryAdapter(EntityManager em) {
-        this.em = em;
+    public NotificationRepositoryAdapter(EntityManager entityManager) {
+        this.entityManager = entityManager;
     }
 
-    public boolean insert(Notification n) {
-        return em.createNativeQuery(
+    public boolean insertNotification(Notification notification) {
+        return entityManager.createNativeQuery(
                                 "insert into notifications(id,recipient_id,type,source_event_id,title,summary,link,created_at) values (:id,:recipient,:type,:event,:title,:summary,:link,:now) on conflict(source_event_id,recipient_id,type) do nothing")
-                        .setParameter("id", n.id)
-                        .setParameter("recipient", n.recipientId)
-                        .setParameter("type", n.type.name())
-                        .setParameter("event", n.sourceEventId)
-                        .setParameter("title", n.title)
-                        .setParameter("summary", n.summary)
-                        .setParameter("link", n.link)
-                        .setParameter("now", n.createdAt)
+                        .setParameter("id", notification.id)
+                        .setParameter("recipient", notification.recipientId)
+                        .setParameter("type", notification.type.name())
+                        .setParameter("event", notification.sourceEventId)
+                        .setParameter("title", notification.title)
+                        .setParameter("summary", notification.summary)
+                        .setParameter("link", notification.link)
+                        .setParameter("now", notification.createdAt)
                         .executeUpdate()
                 == 1;
     }
 
-    public Optional<Notification> find(UUID id) {
-        return Optional.ofNullable(em.find(Notification.class, id));
+    public Optional<Notification> findNotification(UUID id) {
+        return Optional.ofNullable(entityManager.find(Notification.class, id));
     }
 
-    public List<Notification> list(UUID recipient, boolean unread, int page, int size) {
-        return em.createQuery(
+    public List<Notification> listNotifications(
+            UUID recipient, boolean unread, int page, int size) {
+        return entityManager.createQuery(
                         "select n from Notification n where n.recipientId=:recipient"
                                 + (unread ? " and n.readAt is null" : "")
                                 + " order by n.createdAt desc,n.id desc",
@@ -45,18 +46,19 @@ public class NotificationRepositoryAdapter implements INotificationRepository {
                 .getResultList();
     }
 
-    public long unread(UUID recipient) {
-        return em.createQuery(
+    public long countUnread(UUID recipient) {
+        return entityManager.createQuery(
                         "select count(n) from Notification n where n.recipientId=:id and n.readAt is null",
                         Long.class)
                 .setParameter("id", recipient)
                 .getSingleResult();
     }
 
-    public boolean read(UUID id, UUID recipient, Instant now) {
-        var n = find(id);
-        if (n.isEmpty() || !n.get().recipientId.equals(recipient)) return false;
-        em.createQuery(
+    public boolean markRead(UUID id, UUID recipient, Instant now) {
+        var notification = findNotification(id);
+        if (notification.isEmpty() || !notification.get().recipientId.equals(recipient))
+            return false;
+        entityManager.createQuery(
                         "update Notification n set n.readAt=:now where n.id=:id and n.recipientId=:recipient and n.readAt is null")
                 .setParameter("now", now)
                 .setParameter("id", id)
@@ -65,17 +67,17 @@ public class NotificationRepositoryAdapter implements INotificationRepository {
         return true;
     }
 
-    public void readAll(UUID recipient, Instant now) {
-        em.createQuery(
+    public void markAllRead(UUID recipient, Instant now) {
+        entityManager.createQuery(
                         "update Notification n set n.readAt=:now where n.recipientId=:recipient and n.readAt is null")
                 .setParameter("now", now)
                 .setParameter("recipient", recipient)
                 .executeUpdate();
     }
 
-    public Map<String, Boolean> preferences(UUID account) {
+    public Map<String, Boolean> findPreferences(UUID account) {
         Map<String, Boolean> result = new HashMap<>();
-        em.createQuery(
+        entityManager.createQuery(
                         "select p from NotificationPreference p where p.accountId=:id",
                         NotificationPreference.class)
                 .setParameter("id", account)
@@ -84,8 +86,8 @@ public class NotificationRepositoryAdapter implements INotificationRepository {
         return result;
     }
 
-    public void preference(UUID account, String type, boolean enabled) {
-        em.createNativeQuery(
+    public void savePreference(UUID account, String type, boolean enabled) {
+        entityManager.createNativeQuery(
                         "insert into notification_preferences(account_id,type,email_enabled) values (:id,:type,:enabled) on conflict(account_id,type) do update set email_enabled=excluded.email_enabled")
                 .setParameter("id", account)
                 .setParameter("type", type)
@@ -93,21 +95,21 @@ public class NotificationRepositoryAdapter implements INotificationRepository {
                 .executeUpdate();
     }
 
-    public void addEmail(EmailDelivery delivery) {
-        em.persist(delivery);
+    public void insertEmailDelivery(EmailDelivery delivery) {
+        entityManager.persist(delivery);
     }
 
-    public Optional<EmailDelivery> lockEmail(UUID id) {
+    public Optional<EmailDelivery> lockEmailDelivery(UUID id) {
         return Optional.ofNullable(
-                em.find(
+                entityManager.find(
                         EmailDelivery.class,
                         id,
                         LockModeType.PESSIMISTIC_WRITE,
                         Map.of("jakarta.persistence.lock.timeout", 2000)));
     }
 
-    public List<EmailDelivery> pending(Instant olderThan) {
-        return em.createQuery(
+    public List<EmailDelivery> listPendingEmails(Instant olderThan) {
+        return entityManager.createQuery(
                         "select e from EmailDelivery e where e.status=:status and e.scheduledFor<:time order by e.scheduledFor,e.id",
                         EmailDelivery.class)
                 .setParameter("status", EmailDelivery.Status.PENDING)
@@ -116,8 +118,8 @@ public class NotificationRepositoryAdapter implements INotificationRepository {
                 .getResultList();
     }
 
-    public List<EmailDelivery> deferred(Instant now) {
-        return em.createQuery(
+    public List<EmailDelivery> listDeferredEmails(Instant now) {
+        return entityManager.createQuery(
                         "select e from EmailDelivery e where e.status=:status and e.scheduledFor<=:now order by e.priority desc,e.createdAt,e.id",
                         EmailDelivery.class)
                 .setParameter("status", EmailDelivery.Status.DEFERRED)
@@ -126,8 +128,8 @@ public class NotificationRepositoryAdapter implements INotificationRepository {
                 .getResultList();
     }
 
-    public long reserved(Instant from, Instant to) {
-        return em.createQuery(
+    public long countReservedEmails(Instant from, Instant to) {
+        return entityManager.createQuery(
                         "select count(e) from EmailDelivery e where e.status in :statuses and e.scheduledFor>=:from and e.scheduledFor<:to",
                         Long.class)
                 .setParameter(
@@ -138,14 +140,18 @@ public class NotificationRepositoryAdapter implements INotificationRepository {
                 .getSingleResult();
     }
 
-    public void lockBudget() {
-        em.createNativeQuery("select set_config('lock_timeout','2s',true)").getSingleResult();
-        em.createNativeQuery("select 1 from pg_advisory_xact_lock(14002000)").getSingleResult();
+    public void lockEmailBudget() {
+        entityManager
+                .createNativeQuery("select set_config('lock_timeout','2s',true)")
+                .getSingleResult();
+        entityManager
+                .createNativeQuery("select 1 from pg_advisory_xact_lock(14002000)")
+                .getSingleResult();
     }
 
-    public boolean reminder(
+    public boolean insertReminder(
             UUID assignment, UUID classId, Instant closesAt, String status, Instant now) {
-        return em.createNativeQuery(
+        return entityManager.createNativeQuery(
                                 "insert into deadline_reminders(assignment_id,class_id,closes_at,status,processed_at) values (:assignment,:class,:closes,:status,:now) on conflict do nothing")
                         .setParameter("assignment", assignment)
                         .setParameter("class", classId)
@@ -156,8 +162,8 @@ public class NotificationRepositoryAdapter implements INotificationRepository {
                 == 1;
     }
 
-    public int deleteOld(Instant cutoff) {
-        return em.createNativeQuery(
+    public int deleteOldNotifications(Instant cutoff) {
+        return entityManager.createNativeQuery(
                         "delete from notifications where id in (select id from notifications where created_at<:cutoff order by created_at,id limit 10000)")
                 .setParameter("cutoff", cutoff)
                 .executeUpdate();

@@ -9,12 +9,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class EmailSendJobHandler implements IJobHandler, IPendingSweeper {
-    private final EmailDeliveryService delivery;
-    private final INotificationRepository repository;
+    private final EmailDeliveryService emailDeliveryService;
+    private final INotificationRepository notificationRepository;
 
-    public EmailSendJobHandler(EmailDeliveryService delivery, INotificationRepository repository) {
-        this.delivery = delivery;
-        this.repository = repository;
+    public EmailSendJobHandler(
+            EmailDeliveryService emailDeliveryService,
+            INotificationRepository notificationRepository) {
+        this.emailDeliveryService = emailDeliveryService;
+        this.notificationRepository = notificationRepository;
     }
 
     public String jobType() {
@@ -30,9 +32,9 @@ public class EmailSendJobHandler implements IJobHandler, IPendingSweeper {
     }
 
     public void handle(JobMessage message) {
-        UUID deliveryId = id(message);
+        UUID deliveryId = readDeliveryId(message);
         try {
-            delivery.send(deliveryId);
+            emailDeliveryService.sendEmail(deliveryId);
         } catch (RetryableJobException retry) {
             throw retry;
         } catch (RuntimeException unavailable) {
@@ -41,17 +43,17 @@ public class EmailSendJobHandler implements IJobHandler, IPendingSweeper {
     }
 
     public void onFailed(JobMessage message, String ignored) {
-        delivery.failed(id(message));
+        emailDeliveryService.markEmailFailed(readDeliveryId(message));
     }
 
     @Transactional(readOnly = true, timeout = 5)
     public List<PendingJob> findStalePending(Instant olderThan) {
-        return repository.pending(olderThan).stream()
+        return notificationRepository.listPendingEmails(olderThan).stream()
                 .map(e -> new PendingJob("email:" + e.id, Map.of("deliveryId", e.id.toString())))
                 .toList();
     }
 
-    private UUID id(JobMessage m) {
-        return UUID.fromString(Objects.toString(m.payload().get("deliveryId")));
+    private UUID readDeliveryId(JobMessage message) {
+        return UUID.fromString(Objects.toString(message.payload().get("deliveryId")));
     }
 }

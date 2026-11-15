@@ -14,9 +14,9 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class RecipientResolverTest {
-    IClassAccess classes;
-    IAccountLookup accounts;
-    RecipientResolver resolver;
+    IClassAccess classAccess;
+    IAccountLookup accountLookup;
+    RecipientResolver recipientResolver;
     UUID classId = UUID.randomUUID(),
             subjectId = UUID.randomUUID(),
             student = UUID.randomUUID(),
@@ -24,10 +24,10 @@ class RecipientResolverTest {
 
     @BeforeEach
     void setup() {
-        classes = mock(IClassAccess.class);
-        accounts = mock(IAccountLookup.class);
-        resolver = new RecipientResolver(classes, accounts);
-        when(classes.getClassRef(classId))
+        classAccess = mock(IClassAccess.class);
+        accountLookup = mock(IAccountLookup.class);
+        recipientResolver = new RecipientResolver(classAccess, accountLookup);
+        when(classAccess.getClassRef(classId))
                 .thenReturn(
                         Optional.of(
                                 new ClassRef(
@@ -38,9 +38,9 @@ class RecipientResolverTest {
                                         ClassStatus.OPEN,
                                         teacher,
                                         false)));
-        when(classes.listActiveStudents(classId)).thenReturn(List.of(student));
-        when(classes.isActiveStudent(any(), eq(classId))).thenReturn(true);
-        when(accounts.getContact(any()))
+        when(classAccess.listActiveStudents(classId)).thenReturn(List.of(student));
+        when(classAccess.isActiveStudent(any(), eq(classId))).thenReturn(true);
+        when(accountLookup.getContact(any()))
                 .thenAnswer(
                         i ->
                                 Optional.of(
@@ -66,7 +66,7 @@ class RecipientResolverTest {
     @Test
     void enrollmentUsesAccountId() {
         var r =
-                resolver.resolve(
+                recipientResolver.resolveRecipients(
                                 event(
                                         EventTypes.ENROLLMENT_ACTIVATED,
                                         Map.of(
@@ -82,7 +82,7 @@ class RecipientResolverTest {
     @Test
     void gradeUsesStudentIdsAndNeverScore() {
         var r =
-                resolver.resolve(
+                recipientResolver.resolveRecipients(
                                 event(
                                         EventTypes.GRADE_PUBLISHED,
                                         Map.of(
@@ -100,7 +100,7 @@ class RecipientResolverTest {
     @Test
     void subjectAssignmentFansOutAllOpenClassesAndDeduplicates() {
         var second = UUID.randomUUID();
-        when(classes.listOpenClassesOfSubject(subjectId))
+        when(classAccess.listOpenClassesOfSubject(subjectId))
                 .thenReturn(
                         List.of(
                                 new ClassRef(
@@ -119,9 +119,9 @@ class RecipientResolverTest {
                                         ClassStatus.OPEN,
                                         teacher,
                                         false)));
-        when(classes.listActiveStudents(second)).thenReturn(List.of(student));
+        when(classAccess.listActiveStudents(second)).thenReturn(List.of(student));
         var r =
-                resolver.resolve(
+                recipientResolver.resolveRecipients(
                                 event(
                                         EventTypes.ASSIGNMENT_OPENED,
                                         Map.of(
@@ -138,7 +138,7 @@ class RecipientResolverTest {
     @Test
     void quizHasNoEmail() {
         var r =
-                resolver.resolve(
+                recipientResolver.resolveRecipients(
                                 event(
                                         EventTypes.QUIZ_PUBLISHED,
                                         Map.of(
@@ -153,7 +153,7 @@ class RecipientResolverTest {
     @Test
     void questionProposalNotifiesManagerAndReviewNotifiesProposer() {
         UUID manager = UUID.randomUUID();
-        when(accounts.getContact(manager))
+        when(accountLookup.getContact(manager))
                 .thenReturn(
                         Optional.of(
                                 new AccountContact(
@@ -162,7 +162,7 @@ class RecipientResolverTest {
                                         "M",
                                         Role.SUBJECT_MANAGER,
                                         AccountStatus.ACTIVE)));
-        when(accounts.getContact(teacher))
+        when(accountLookup.getContact(teacher))
                 .thenReturn(
                         Optional.of(
                                 new AccountContact(
@@ -172,7 +172,7 @@ class RecipientResolverTest {
                                         Role.TEACHER,
                                         AccountStatus.ACTIVE)));
         var proposed =
-                resolver.resolve(
+                recipientResolver.resolveRecipients(
                                 event(
                                         EventTypes.QUESTION_PROPOSED,
                                         Map.of(
@@ -188,7 +188,7 @@ class RecipientResolverTest {
                 .isEqualTo("/manager/questions?subjectId=" + subjectId + "&status=PENDING");
         assertThat(proposed.emailType()).isEqualTo("QUESTION_PROPOSED");
         var reviewed =
-                resolver.resolve(
+                recipientResolver.resolveRecipients(
                                 event(
                                         EventTypes.QUESTION_REVIEWED,
                                         Map.of(
@@ -211,7 +211,7 @@ class RecipientResolverTest {
     @Test
     void announcementOpensTheClassAnnouncementsPage() {
         var r =
-                resolver.resolve(
+                recipientResolver.resolveRecipients(
                                 event(
                                         EventTypes.CLASS_ANNOUNCEMENT_POSTED,
                                         Map.of(
@@ -241,14 +241,16 @@ class RecipientResolverTest {
                                 "sendEmail",
                                 true));
         assertThat(
-                        resolver.resolve(event(EventTypes.CLASS_ANNOUNCEMENT_POSTED, p))
+                        recipientResolver.resolveRecipients(
+                                event(EventTypes.CLASS_ANNOUNCEMENT_POSTED, p))
                                 .get(0)
                                 .recipients())
                 .isEmpty();
         p.put("actorId", teacher.toString());
         p.put("important", false);
         assertThat(
-                        resolver.resolve(event(EventTypes.CLASS_ANNOUNCEMENT_POSTED, p))
+                        recipientResolver.resolveRecipients(
+                                event(EventTypes.CLASS_ANNOUNCEMENT_POSTED, p))
                                 .get(0)
                                 .emailType())
                 .isNull();
@@ -258,7 +260,7 @@ class RecipientResolverTest {
     @CsvSource({"false,false", "false,true", "true,false", "true,true"})
     void announcementEmailFlagMatrixKeepsInAppRecipients(boolean important, boolean sendEmail) {
         var resolved =
-                resolver.resolve(
+                recipientResolver.resolveRecipients(
                                 event(
                                         EventTypes.CLASS_ANNOUNCEMENT_POSTED,
                                         Map.of(
@@ -290,8 +292,8 @@ class RecipientResolverTest {
             })
     void currentGroupProducerRecipientIdsAreDeduplicatedAndRechecked(String type) {
         UUID removed = UUID.randomUUID(), disabled = UUID.randomUUID();
-        when(classes.isActiveStudent(removed, classId)).thenReturn(false);
-        when(accounts.getContact(disabled))
+        when(classAccess.isActiveStudent(removed, classId)).thenReturn(false);
+        when(accountLookup.getContact(disabled))
                 .thenReturn(
                         Optional.of(
                                 new AccountContact(
@@ -302,7 +304,7 @@ class RecipientResolverTest {
                                         AccountStatus.DISABLED)));
 
         var resolved =
-                resolver.resolve(
+                recipientResolver.resolveRecipients(
                                 event(
                                         type,
                                         Map.of(
@@ -336,12 +338,13 @@ class RecipientResolverTest {
                                                 Role.ADMIN,
                                                 AccountStatus.ACTIVE))
                         .toList();
-        when(accounts.listActiveAdmins(null, 100)).thenReturn(admins.subList(0, 100));
-        when(accounts.listActiveAdmins(admins.get(99).accountId(), 100))
+        when(accountLookup.listActiveAdmins(null, 100)).thenReturn(admins.subList(0, 100));
+        when(accountLookup.listActiveAdmins(admins.get(99).accountId(), 100))
                 .thenReturn(admins.subList(100, 125));
-        admins.forEach(a -> when(accounts.getContact(a.accountId())).thenReturn(Optional.of(a)));
+        admins.forEach(
+                a -> when(accountLookup.getContact(a.accountId())).thenReturn(Optional.of(a)));
         var r =
-                resolver.resolve(
+                recipientResolver.resolveRecipients(
                                 event(
                                         EventTypes.BACKUP_FAILED,
                                         Map.of("runId", UUID.randomUUID().toString())))
@@ -351,7 +354,7 @@ class RecipientResolverTest {
 
     @Test
     void inactiveAccountNotNotified() {
-        when(accounts.getContact(student))
+        when(accountLookup.getContact(student))
                 .thenReturn(
                         Optional.of(
                                 new AccountContact(
@@ -361,7 +364,7 @@ class RecipientResolverTest {
                                         Role.STUDENT,
                                         AccountStatus.DISABLED)));
         assertThat(
-                        resolver.resolve(
+                        recipientResolver.resolveRecipients(
                                         event(
                                                 EventTypes.ENROLLMENT_ACTIVATED,
                                                 Map.of(
@@ -376,7 +379,7 @@ class RecipientResolverTest {
 
     @Test
     void leaderRequestGoesToTeacherOnly() {
-        when(accounts.getContact(teacher))
+        when(accountLookup.getContact(teacher))
                 .thenReturn(
                         Optional.of(
                                 new AccountContact(
@@ -387,7 +390,7 @@ class RecipientResolverTest {
                                         AccountStatus.ACTIVE)));
         var group = UUID.randomUUID();
         var r =
-                resolver.resolve(
+                recipientResolver.resolveRecipients(
                                 event(
                                         EventTypes.GROUP_LEADER_CHANGE_REQUESTED,
                                         Map.of(
@@ -405,7 +408,7 @@ class RecipientResolverTest {
     @Test
     void groupMembersUseExplicitRecipientList() {
         var r =
-                resolver.resolve(
+                recipientResolver.resolveRecipients(
                                 event(
                                         EventTypes.GROUP_SUBMITTED,
                                         Map.of(
@@ -424,7 +427,7 @@ class RecipientResolverTest {
     void gradeOpensTheGradedAssignment() {
         var assignment = UUID.randomUUID();
         var r =
-                resolver.resolve(
+                recipientResolver.resolveRecipients(
                                 event(
                                         EventTypes.GRADE_PUBLISHED,
                                         Map.of(
@@ -440,8 +443,9 @@ class RecipientResolverTest {
 
     @Test
     void serviceIgnoresUnknownVersionAndRejectsWrongSource() {
-        var service = new NotificationEventService(resolver, mock(NotificationService.class));
-        service.accept(
+        var notificationEventService =
+                new NotificationEventService(recipientResolver, mock(NotificationService.class));
+        notificationEventService.handleEvent(
                 new DomainEvent(
                         2,
                         UUID.randomUUID(),
@@ -452,7 +456,7 @@ class RecipientResolverTest {
                         Map.of()));
         assertThatThrownBy(
                         () ->
-                                service.accept(
+                                notificationEventService.handleEvent(
                                         new DomainEvent(
                                                 1,
                                                 UUID.randomUUID(),

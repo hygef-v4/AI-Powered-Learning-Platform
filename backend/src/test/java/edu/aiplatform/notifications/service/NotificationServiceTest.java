@@ -16,27 +16,34 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 class NotificationServiceTest {
-    INotificationRepository repo;
-    EmailDeliveryService emails;
-    ISseHub sse;
-    IAuthorization auth;
+    INotificationRepository notificationRepository;
+    EmailDeliveryService emailDeliveryService;
+    ISseHub sseHub;
+    IAuthorization authorization;
     IAudit audit;
-    NotificationAccess access;
-    NotificationService service;
+    NotificationAccess notificationAccess;
+    NotificationService notificationService;
     UUID account = UUID.randomUUID();
     Actor actor = new Actor(account, Role.STUDENT);
     Clock clock = Clock.fixed(Instant.parse("2026-10-21T08:00:00Z"), ZoneOffset.UTC);
 
     @BeforeEach
     void setup() {
-        repo = mock(INotificationRepository.class);
-        emails = mock(EmailDeliveryService.class);
-        sse = mock(ISseHub.class);
-        auth = mock(IAuthorization.class);
+        notificationRepository = mock(INotificationRepository.class);
+        emailDeliveryService = mock(EmailDeliveryService.class);
+        sseHub = mock(ISseHub.class);
+        authorization = mock(IAuthorization.class);
         audit = mock(IAudit.class);
-        when(auth.authorize(any(), any(), any())).thenReturn(AuthorizationDecision.allow());
-        access = new NotificationAccess(auth, audit, clock);
-        service = new NotificationService(repo, access, emails, sse, clock);
+        when(authorization.authorize(any(), any(), any()))
+                .thenReturn(AuthorizationDecision.allow());
+        notificationAccess = new NotificationAccess(authorization, audit, clock);
+        notificationService =
+                new NotificationService(
+                        notificationRepository,
+                        notificationAccess,
+                        emailDeliveryService,
+                        sseHub,
+                        clock);
     }
 
     @AfterEach
@@ -47,8 +54,8 @@ class NotificationServiceTest {
 
     @Test
     void duplicateEventDoesNotScheduleMailOrSse() {
-        when(repo.insert(any())).thenReturn(false);
-        service.create(
+        when(notificationRepository.insertNotification(any())).thenReturn(false);
+        notificationService.createNotification(
                 UUID.randomUUID(),
                 NotificationType.ENROLLED,
                 List.of(account),
@@ -57,14 +64,14 @@ class NotificationServiceTest {
                 "/classes/1",
                 "ENROLLED",
                 null);
-        verifyNoInteractions(emails, sse);
+        verifyNoInteractions(emailDeliveryService, sseHub);
     }
 
     @Test
     void sseOnlyAfterCommitAndOneNoticePerRecipient() {
-        when(repo.insert(any())).thenReturn(true);
+        when(notificationRepository.insertNotification(any())).thenReturn(true);
         TransactionSynchronizationManager.initSynchronization();
-        service.create(
+        notificationService.createNotification(
                 UUID.randomUUID(),
                 NotificationType.ENROLLED,
                 List.of(account, account),
@@ -73,20 +80,20 @@ class NotificationServiceTest {
                 "/classes/1",
                 "ENROLLED",
                 null);
-        verify(repo, times(1)).insert(any());
-        verify(emails).schedule(any(), eq("ENROLLED"), isNull());
-        verifyNoInteractions(sse);
+        verify(notificationRepository, times(1)).insertNotification(any());
+        verify(emailDeliveryService).scheduleEmail(any(), eq("ENROLLED"), isNull());
+        verifyNoInteractions(sseHub);
         TransactionSynchronizationManager.getSynchronizations().forEach(sync -> sync.afterCommit());
-        verify(sse).publish(eq(NotificationService.channel(account)), any());
+        verify(sseHub).publish(eq(NotificationService.buildChannel(account)), any());
     }
 
     @Test
     void sseFailureDoesNotFailCommittedFanout() {
-        when(repo.insert(any())).thenReturn(true);
-        doThrow(new IllegalStateException()).when(sse).publish(anyString(), any());
+        when(notificationRepository.insertNotification(any())).thenReturn(true);
+        doThrow(new IllegalStateException()).when(sseHub).publish(anyString(), any());
         assertThatCode(
                         () ->
-                                service.create(
+                                notificationService.createNotification(
                                         UUID.randomUUID(),
                                         NotificationType.ANNOUNCEMENT,
                                         List.of(account),
@@ -100,44 +107,52 @@ class NotificationServiceTest {
 
     @Test
     void foreignReadReturns404AndAudits() {
-        when(repo.read(any(), eq(account), any())).thenReturn(false);
-        assertThatThrownBy(() -> service.read(actor, UUID.randomUUID()))
+        when(notificationRepository.markRead(any(), eq(account), any())).thenReturn(false);
+        assertThatThrownBy(() -> notificationService.markRead(actor, UUID.randomUUID()))
                 .isInstanceOf(ApiException.class);
         verify(audit).record(argThat(e -> e.action().equals("ACCESS_DENIED")));
     }
 
     @Test
     void readAllUsesPrincipalOnly() {
-        service.readAll(actor);
-        verify(repo).readAll(eq(account), any());
-        assertThat(service.authorizedChannel(actor)).isEqualTo("notifications:account:" + account);
+        notificationService.markAllRead(actor);
+        verify(notificationRepository).markAllRead(eq(account), any());
+        assertThat(notificationService.resolveAuthorizedChannel(actor))
+                .isEqualTo("notifications:account:" + account);
     }
 
     @Test
     void disabledAccountCannotReadEvenEmptyFeed() {
-        when(auth.authorize(any(), any(), any()))
+        when(authorization.authorize(any(), any(), any()))
                 .thenReturn(AuthorizationDecision.deny("DISABLED"));
-        assertThatThrownBy(() -> service.unread(actor)).isInstanceOf(ApiException.class);
-        verify(repo, never()).unread(any());
+        assertThatThrownBy(() -> notificationService.countUnread(actor))
+                .isInstanceOf(ApiException.class);
+        verify(notificationRepository, never()).countUnread(any());
     }
 
     @Test
     void preferencesDefaultOnAndWhitelist() {
-        var prefs = new NotificationPreferenceService(repo, access);
-        when(repo.preferences(account)).thenReturn(Map.of());
-        assertThat(prefs.get(actor)).hasSize(5).containsEntry("ANNOUNCEMENT_IMPORTANT", true);
-        assertThatThrownBy(() -> prefs.put(actor, Map.of("BACKUP_FAILED", false)))
+        var notificationPreferenceService =
+                new NotificationPreferenceService(notificationRepository, notificationAccess);
+        when(notificationRepository.findPreferences(account)).thenReturn(Map.of());
+        assertThat(notificationPreferenceService.loadPreferences(actor))
+                .hasSize(5)
+                .containsEntry("ANNOUNCEMENT_IMPORTANT", true);
+        assertThatThrownBy(
+                () -> notificationPreferenceService.updatePreferences(
+                        actor, Map.of("BACKUP_FAILED", false)))
                 .isInstanceOf(ApiException.class);
-        prefs.put(actor, Map.of("ENROLLED", false));
-        verify(repo).preference(account, "ENROLLED", false);
+        notificationPreferenceService.updatePreferences(actor, Map.of("ENROLLED", false));
+        verify(notificationRepository).savePreference(account, "ENROLLED", false);
     }
 
     @ParameterizedTest
     @EnumSource(Role.class)
     void everyRoleHasOnlyItsOwnSettings(Role role) {
-        var prefs = new NotificationPreferenceService(repo, access);
-        when(repo.preferences(account)).thenReturn(Map.of());
-        var values = prefs.get(new Actor(account, role));
+        var notificationPreferenceService =
+                new NotificationPreferenceService(notificationRepository, notificationAccess);
+        when(notificationRepository.findPreferences(account)).thenReturn(Map.of());
+        var values = notificationPreferenceService.loadPreferences(new Actor(account, role));
         var expected =
                 switch (role) {
                     case STUDENT ->
@@ -165,46 +180,62 @@ class NotificationServiceTest {
             value = Role.class,
             names = {"TEACHER", "SUBJECT_MANAGER"})
     void staffCanSaveOwnPreferencesButNotStudentOrBackupTypes(Role role) {
-        var prefs = new NotificationPreferenceService(repo, access);
+        var notificationPreferenceService =
+                new NotificationPreferenceService(notificationRepository, notificationAccess);
         var staff = new Actor(account, role);
-        when(repo.preferences(account))
+        when(notificationRepository.findPreferences(account))
                 .thenReturn(Map.of("QUESTION_REVIEWED", true, "ENROLLED", false));
-        assertThat(prefs.put(staff, Map.of("QUESTION_REVIEWED", true)))
+        assertThat(
+                notificationPreferenceService.updatePreferences(
+                        staff, Map.of("QUESTION_REVIEWED", true)))
                 .containsEntry("QUESTION_REVIEWED", true)
                 .doesNotContainKey("ENROLLED");
-        verify(repo).preference(account, "QUESTION_REVIEWED", true);
-        assertThatThrownBy(() -> prefs.put(staff, Map.of("ENROLLED", false)))
+        verify(notificationRepository).savePreference(account, "QUESTION_REVIEWED", true);
+        assertThatThrownBy(
+                () -> notificationPreferenceService.updatePreferences(
+                        staff, Map.of("ENROLLED", false)))
                 .isInstanceOf(ApiException.class);
-        assertThatThrownBy(() -> prefs.put(staff, Map.of("BACKUP_FAILED", false)))
+        assertThatThrownBy(
+                () -> notificationPreferenceService.updatePreferences(
+                        staff, Map.of("BACKUP_FAILED", false)))
                 .isInstanceOf(ApiException.class);
     }
 
     @Test
     void adminBackupRemainsRequiredEvenWithAnOldDisabledRow() {
-        var prefs = new NotificationPreferenceService(repo, access);
+        var notificationPreferenceService =
+                new NotificationPreferenceService(notificationRepository, notificationAccess);
         var admin = new Actor(account, Role.ADMIN);
-        when(repo.preferences(account)).thenReturn(Map.of("BACKUP_FAILED", false));
-        assertThat(prefs.get(admin)).containsExactlyEntriesOf(Map.of("BACKUP_FAILED", true));
-        assertThatThrownBy(() -> prefs.put(admin, Map.of("BACKUP_FAILED", false)))
+        when(notificationRepository.findPreferences(account))
+                .thenReturn(Map.of("BACKUP_FAILED", false));
+        assertThat(notificationPreferenceService.loadPreferences(admin))
+                .containsExactlyEntriesOf(Map.of("BACKUP_FAILED", true));
+        assertThatThrownBy(
+                () -> notificationPreferenceService.updatePreferences(
+                        admin, Map.of("BACKUP_FAILED", false)))
                 .isInstanceOf(ApiException.class);
-        verify(repo, never()).preference(any(), anyString(), anyBoolean());
+        verify(notificationRepository, never()).savePreference(any(), anyString(), anyBoolean());
     }
 
     @Test
     void storedOptOutIsPreservedWhileOtherDefaultsStayEnabled() {
-        var prefs = new NotificationPreferenceService(repo, access);
-        when(repo.preferences(account)).thenReturn(Map.of("QUESTION_REVIEWED", false));
-        assertThat(prefs.get(new Actor(account, Role.TEACHER))).containsExactlyInAnyOrderEntriesOf(
-                Map.of("QUESTION_REVIEWED", false, "LEADER_CHANGE_REQUESTED", true));
-        verify(repo, never()).preference(any(), anyString(), anyBoolean());
+        var notificationPreferenceService =
+                new NotificationPreferenceService(notificationRepository, notificationAccess);
+        when(notificationRepository.findPreferences(account))
+                .thenReturn(Map.of("QUESTION_REVIEWED", false));
+        assertThat(notificationPreferenceService.loadPreferences(new Actor(account, Role.TEACHER)))
+                .containsExactlyInAnyOrderEntriesOf(
+                        Map.of("QUESTION_REVIEWED", false, "LEADER_CHANGE_REQUESTED", true));
+        verify(notificationRepository, never()).savePreference(any(), anyString(), anyBoolean());
     }
 
     @Test
     void teacherCannotEnableManagerOnlyQuestionProposals() {
-        var prefs = new NotificationPreferenceService(repo, access);
+        var notificationPreferenceService =
+                new NotificationPreferenceService(notificationRepository, notificationAccess);
         assertThatThrownBy(
                         () ->
-                                prefs.put(
+                                notificationPreferenceService.updatePreferences(
                                         new Actor(account, Role.TEACHER),
                                         Map.of("QUESTION_PROPOSED", true)))
                 .isInstanceOf(ApiException.class);
@@ -214,7 +245,7 @@ class NotificationServiceTest {
     void unsafeLinksAndOversizePagesRejected() {
         assertThatThrownBy(
                         () ->
-                                service.create(
+                                notificationService.createNotification(
                                         UUID.randomUUID(),
                                         NotificationType.ENROLLED,
                                         List.of(account),
@@ -224,7 +255,7 @@ class NotificationServiceTest {
                                         null,
                                         null))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> service.list(actor, false, 1, 51))
+        assertThatThrownBy(() -> notificationService.listNotifications(actor, false, 1, 51))
                 .isInstanceOf(ApiException.class);
     }
 
@@ -233,9 +264,10 @@ class NotificationServiceTest {
     void legacyFeedCopyChangesWithoutRewritingHistoryOrReadState(NotificationType type) {
         var n = row(type, "Đăng nhập để xem thông tin liên quan.");
         n.readAt = clock.instant().minusSeconds(60);
-        when(repo.list(account, false, 1, 20)).thenReturn(List.of(n));
+        when(notificationRepository.listNotifications(account, false, 1, 20))
+                .thenReturn(List.of(n));
 
-        var item = service.list(actor, false, 1, 20).items().get(0);
+        var item = notificationService.listNotifications(actor, false, 1, 20).items().get(0);
 
         assertThat(item.summary())
                 .isNotBlank()
@@ -247,8 +279,8 @@ class NotificationServiceTest {
         assertThat(item.readAt()).isEqualTo(n.readAt);
         assertThat(item.createdAt()).isEqualTo(n.createdAt);
         assertThat(n.summary).isEqualTo("Đăng nhập để xem thông tin liên quan.");
-        verify(repo, never()).insert(any());
-        verifyNoInteractions(emails, sse);
+        verify(notificationRepository, never()).insertNotification(any());
+        verifyNoInteractions(emailDeliveryService, sseHub);
     }
 
     @Test
@@ -258,14 +290,15 @@ class NotificationServiceTest {
                 row(
                         NotificationType.LEADER_CHANGE_REQUESTED,
                         "Xem yêu cầu để phê duyệt hoặc từ chối.");
-        when(repo.list(account, true, 1, 20)).thenReturn(List.of(reminder, request));
+        when(notificationRepository.listNotifications(account, true, 1, 20))
+                .thenReturn(List.of(reminder, request));
 
-        assertThat(service.list(actor, true, 1, 20).items())
+        assertThat(notificationService.listNotifications(actor, true, 1, 20).items())
                 .extracting(NotificationService.Item::summary)
                 .containsExactly(reminder.summary, request.summary);
         assertThat(reminder.readAt).isNull();
         assertThat(request.readAt).isNull();
-        verifyNoInteractions(emails, sse);
+        verifyNoInteractions(emailDeliveryService, sseHub);
     }
 
     private Notification row(NotificationType type, String summary) {

@@ -140,7 +140,10 @@ class ClassGroupServiceTest {
         var membership = published.getAllValues().get(0).payload();
         assertThat(membership).containsEntry("groupId", b.id().toString())
                 .containsEntry("recipientIds", List.of(students.get(1).toString()));
-        assertThat(edu.aiplatform.notifications.service.RecipientResolver.id(membership, "groupId")).isEqualTo(b.id());
+        assertThat(
+                edu.aiplatform.notifications.service.RecipientResolver
+                        .readId(membership, "groupId")).isEqualTo(b
+                        .id());
         ArgumentCaptor<AuditEvent> audited = ArgumentCaptor.forClass(AuditEvent.class);
         verify(audit, org.mockito.Mockito.atLeastOnce()).record(audited.capture());
         assertThat(audited.getAllValues()).extracting(AuditEvent::action)
