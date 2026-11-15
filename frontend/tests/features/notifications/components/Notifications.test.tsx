@@ -3,15 +3,15 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { EmailPreferencePanel } from "@/features/notifications/components/EmailPreferencePanel";
 import { NotificationPopup } from "@/features/notifications/components/NotificationPopup";
 import { NotificationBell } from "@/features/notifications/components/NotificationBell";
-import { notificationsApi, safeNotificationLink } from "@/features/notifications/api";
+import { notificationsApi, sanitizeNotificationLink } from "@/features/notifications/api";
 vi.mock("@/features/notifications/api", async (original) => ({
   ...(await original<typeof import("@/features/notifications/api")>()),
   notificationsApi: {
-    count: vi.fn(),
-    list: vi.fn(),
-    read: vi.fn(),
-    readAll: vi.fn(),
-    preferences: vi.fn(),
+    countUnread: vi.fn(),
+    listNotifications: vi.fn(),
+    markRead: vi.fn(),
+    markAllRead: vi.fn(),
+    loadPreferences: vi.fn(),
     savePreferences: vi.fn(),
   },
 }));
@@ -36,14 +36,14 @@ const n = {
 beforeEach(() => {
   vi.clearAllMocks();
   sessionRole.value = "STUDENT";
-  vi.mocked(notificationsApi.count).mockResolvedValue({ count: 1 });
-  vi.mocked(notificationsApi.list).mockResolvedValue({
+  vi.mocked(notificationsApi.countUnread).mockResolvedValue({ count: 1 });
+  vi.mocked(notificationsApi.listNotifications).mockResolvedValue({
     items: [n],
     page: 1,
     size: 20,
     hasMore: false,
   });
-  vi.mocked(notificationsApi.preferences).mockResolvedValue({
+  vi.mocked(notificationsApi.loadPreferences).mockResolvedValue({
     ENROLLED: true,
     ASSIGNMENT_OPENED: true,
     DEADLINE_REMINDER: true,
@@ -56,9 +56,9 @@ afterEach(() => {
   vi.useRealTimers();
 });
 it("rejects external, protocol-relative and escaped notification links", () => {
-  expect(safeNotificationLink("/classes/1")).toBe("/classes/1");
+  expect(sanitizeNotificationLink("/classes/1")).toBe("/classes/1");
   for (const link of ["https://evil.test", "//evil.test", "/\\evil.test", "/\n/evil.test"])
-    expect(safeNotificationLink(link)).toBeNull();
+    expect(sanitizeNotificationLink(link)).toBeNull();
 });
 it("preference update only appears after API success", async () => {
   vi.mocked(notificationsApi.savePreferences).mockRejectedValue(new Error("down"));
@@ -77,22 +77,22 @@ it("shows all five learning preference types including important announcement", 
   expect(screen.getAllByRole("switch")).toHaveLength(5);
 });
 it("notification opens only after read succeeds", async () => {
-  vi.mocked(notificationsApi.read).mockResolvedValue(undefined);
+  vi.mocked(notificationsApi.markRead).mockResolvedValue(undefined);
   render(<NotificationPopup count={1} revision={0} onChanged={vi.fn()} onClose={vi.fn()} />);
   fireEvent.click(await screen.findByTestId("notification-item"));
   await waitFor(() => expect(push).toHaveBeenCalledWith("/classes/1"));
-  expect(notificationsApi.read).toHaveBeenCalledWith("n");
+  expect(notificationsApi.markRead).toHaveBeenCalledWith("n");
   expect(screen.queryByRole("switch")).not.toBeInTheDocument();
 });
 it("failed read does not navigate", async () => {
-  vi.mocked(notificationsApi.read).mockRejectedValue(new Error("down"));
+  vi.mocked(notificationsApi.markRead).mockRejectedValue(new Error("down"));
   render(<NotificationPopup count={1} revision={0} onChanged={vi.fn()} onClose={vi.fn()} />);
   fireEvent.click(await screen.findByTestId("notification-item"));
   expect(await screen.findByRole("alert")).toHaveTextContent("Chưa đánh dấu");
   expect(push).not.toHaveBeenCalled();
 });
 it("read-all is an explicit mutation and unread tab requests unread filter", async () => {
-  vi.mocked(notificationsApi.readAll).mockResolvedValue(undefined);
+  vi.mocked(notificationsApi.markAllRead).mockResolvedValue(undefined);
   const changed = vi.fn();
   render(<NotificationPopup count={2} revision={0} onChanged={changed} onClose={vi.fn()} />);
   await screen.findByTestId("notification-item");
@@ -100,7 +100,11 @@ it("read-all is an explicit mutation and unread tab requests unread filter", asy
   await waitFor(() => expect(changed).toHaveBeenCalled());
   fireEvent.click(screen.getByRole("tab", { name: "Chưa đọc (2)" }));
   await waitFor(() =>
-    expect(notificationsApi.list).toHaveBeenLastCalledWith(true, 1, expect.any(AbortSignal)),
+    expect(notificationsApi.listNotifications).toHaveBeenLastCalledWith(
+      true,
+      1,
+      expect.any(AbortSignal),
+    ),
   );
 });
 it("student opens email settings from the gear as its own view and comes back to the list", async () => {
@@ -126,7 +130,7 @@ it.each(["STUDENT", "TEACHER", "SUBJECT_MANAGER", "ADMIN"])(
         : role === "STUDENT"
           ? { ENROLLED: true }
           : { QUESTION_REVIEWED: false };
-    vi.mocked(notificationsApi.preferences).mockResolvedValue(values);
+    vi.mocked(notificationsApi.loadPreferences).mockResolvedValue(values);
     render(<NotificationBell />);
     fireEvent.click(await screen.findByTestId("notification-bell"));
     fireEvent.click(screen.getByRole("button", { name: "Cài đặt thông báo" }));
@@ -141,7 +145,7 @@ it.each(["STUDENT", "TEACHER", "SUBJECT_MANAGER", "ADMIN"])(
   },
 );
 it("staff switches save only the applicable type and show the persisted response", async () => {
-  vi.mocked(notificationsApi.preferences).mockResolvedValue({
+  vi.mocked(notificationsApi.loadPreferences).mockResolvedValue({
     QUESTION_PROPOSED: false,
     QUESTION_REVIEWED: false,
     LEADER_CHANGE_REQUESTED: false,
@@ -159,7 +163,7 @@ it("staff switches save only the applicable type and show the persisted response
   expect(notificationsApi.savePreferences).toHaveBeenCalledWith({ QUESTION_PROPOSED: true });
 });
 it("mandatory admin backup alert is visible and cannot be disabled", async () => {
-  vi.mocked(notificationsApi.preferences).mockResolvedValue({ BACKUP_FAILED: true });
+  vi.mocked(notificationsApi.loadPreferences).mockResolvedValue({ BACKUP_FAILED: true });
   render(<EmailPreferencePanel />);
   const toggle = await screen.findByRole("switch", { name: "Sao lưu thất bại" });
   expect(toggle).toBeDisabled();
@@ -172,8 +176,8 @@ it("refresh keeps current rows on screen until the new list arrives", async () =
   const props = { count: 1, revision: 0, onChanged: vi.fn(), onClose: vi.fn() };
   const { rerender } = render(<NotificationPopup {...props} />);
   await screen.findByTestId("notification-item");
-  let resolve!: (value: Awaited<ReturnType<typeof notificationsApi.list>>) => void;
-  vi.mocked(notificationsApi.list).mockReturnValueOnce(
+  let resolve!: (value: Awaited<ReturnType<typeof notificationsApi.listNotifications>>) => void;
+  vi.mocked(notificationsApi.listNotifications).mockReturnValueOnce(
     new Promise((r) => {
       resolve = r;
     }),
@@ -198,7 +202,7 @@ it("escape closes popup", () => {
   expect(close).toHaveBeenCalled();
 });
 it("refresh after loading more restarts at newest page", async () => {
-  vi.mocked(notificationsApi.list).mockResolvedValue({
+  vi.mocked(notificationsApi.listNotifications).mockResolvedValue({
     items: [n],
     page: 1,
     size: 20,
@@ -208,17 +212,25 @@ it("refresh after loading more restarts at newest page", async () => {
   const { rerender } = render(<NotificationPopup {...props} />);
   fireEvent.click(await screen.findByText("Tải thêm"));
   await waitFor(() =>
-    expect(notificationsApi.list).toHaveBeenLastCalledWith(false, 2, expect.any(AbortSignal)),
+    expect(notificationsApi.listNotifications).toHaveBeenLastCalledWith(
+      false,
+      2,
+      expect.any(AbortSignal),
+    ),
   );
   rerender(<NotificationPopup {...props} revision={1} />);
   await waitFor(() =>
-    expect(notificationsApi.list).toHaveBeenLastCalledWith(false, 1, expect.any(AbortSignal)),
+    expect(notificationsApi.listNotifications).toHaveBeenLastCalledWith(
+      false,
+      1,
+      expect.any(AbortSignal),
+    ),
   );
 });
 it("unread filter failure never exposes stale read-list rows", async () => {
   render(<NotificationPopup count={1} revision={0} onChanged={vi.fn()} onClose={vi.fn()} />);
   await screen.findByTestId("notification-item");
-  vi.mocked(notificationsApi.list).mockRejectedValueOnce(new Error("unavailable"));
+  vi.mocked(notificationsApi.listNotifications).mockRejectedValueOnce(new Error("unavailable"));
   fireEvent.click(screen.getByRole("tab", { name: "Chưa đọc (1)" }));
   expect(await screen.findByRole("alert")).toHaveTextContent("Không thể tải");
   expect(screen.queryByTestId("notification-item")).not.toBeInTheDocument();
@@ -235,7 +247,7 @@ it("bell connects one account stream and closes it on unmount", async () => {
     }
   }
   vi.stubGlobal("EventSource", FakeEventSource);
-  vi.mocked(notificationsApi.count).mockResolvedValue({ count: 2 });
+  vi.mocked(notificationsApi.countUnread).mockResolvedValue({ count: 2 });
   const { unmount } = render(<NotificationBell />);
   expect(await screen.findByRole("button", { name: "Thông báo, 2 chưa đọc" })).toBeInTheDocument();
   expect(FakeEventSource.instances).toHaveLength(1);
@@ -258,7 +270,7 @@ it("reconnects with bounded backoff and refreshes unread count after an outage",
     }
   }
   vi.stubGlobal("EventSource", ReconnectingStream);
-  vi.mocked(notificationsApi.count).mockResolvedValue({ count: 2 });
+  vi.mocked(notificationsApi.countUnread).mockResolvedValue({ count: 2 });
   const { unmount } = render(<NotificationBell />);
   await act(async () => {});
   for (const delay of [1000, 2000, 4000, 8000, 16000, 30000]) {
@@ -277,7 +289,7 @@ it("reconnects with bounded backoff and refreshes unread count after an outage",
     });
     expect(ReconnectingStream.instances).toHaveLength(size + 1);
   }
-  vi.mocked(notificationsApi.count).mockResolvedValue({ count: 7 });
+  vi.mocked(notificationsApi.countUnread).mockResolvedValue({ count: 7 });
   await act(async () => {
     ReconnectingStream.instances.at(-1)!.onmessage?.();
   });

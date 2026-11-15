@@ -18,11 +18,11 @@ function Bell() {
   const [revision, setRevision] = useState(0);
   const host = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
-  const refresh = useCallback(() => setRevision((r) => r + 1), []);
+  const handleRefresh = useCallback(() => setRevision((r) => r + 1), []);
   useEffect(() => {
     const controller = new AbortController();
     void notificationsApi
-      .count(controller.signal)
+      .countUnread(controller.signal)
       .then((data) => {
         setCount(data.count);
         setFailed(false);
@@ -42,26 +42,26 @@ function Bell() {
       stream = new EventSource("/api/v1/me/notifications/events", { withCredentials: true });
       const changed = () => {
         attempts = 0;
-        refresh();
+        handleRefresh();
       };
       stream.onmessage = changed;
       stream.addEventListener("notification-changed", changed);
       stream.onerror = () => {
         stream?.close();
-        refresh();
+        handleRefresh();
         if (!stopped)
           timer = setTimeout(connect, Math.min(30000, 1000 * 2 ** Math.min(attempts++, 5)));
       };
     }
     connect();
-    const fallback = setInterval(refresh, 30000);
+    const fallback = setInterval(handleRefresh, 30000);
     return () => {
       stopped = true;
       stream?.close();
       if (timer) clearTimeout(timer);
       clearInterval(fallback);
     };
-  }, [refresh]);
+  }, [handleRefresh]);
   useEffect(() => {
     if (!open) return;
     const outside = (e: PointerEvent) => {
@@ -70,7 +70,7 @@ function Bell() {
     document.addEventListener("pointerdown", outside);
     return () => document.removeEventListener("pointerdown", outside);
   }, [open]);
-  function close() {
+  function handleClose() {
     setOpen(false);
     button.current?.focus();
   }
@@ -88,14 +88,19 @@ function Bell() {
         className={styles.bell}
         onClick={() => {
           setOpen((value) => !value);
-          refresh();
+          handleRefresh();
         }}
       >
         <Icon name="notifications" />
         {count > 0 && <span className={styles.count}>{count > 99 ? "99+" : count}</span>}
       </button>
       {open && (
-        <NotificationPopup count={count} revision={revision} onChanged={refresh} onClose={close} />
+        <NotificationPopup
+          count={count}
+          revision={revision}
+          onChanged={handleRefresh}
+          onClose={handleClose}
+        />
       )}
     </div>
   );

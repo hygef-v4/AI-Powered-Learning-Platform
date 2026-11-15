@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/shared/ui/Icon";
 import { handleTabListKey } from "@/shared/ui/tabKeys";
-import { notificationsApi, safeNotificationLink } from "../api";
+import { notificationsApi, sanitizeNotificationLink } from "../api";
 import { EmailPreferencePanel } from "./EmailPreferencePanel";
 import type { NotificationItem } from "../model/types";
 import styles from "../styles/notifications.module.css";
@@ -56,7 +56,7 @@ export function NotificationPopup({
   useEffect(() => {
     const controller = new AbortController();
     void notificationsApi
-      .list(unread, page, controller.signal)
+      .listNotifications(unread, page, controller.signal)
       .then((data) => {
         if (!controller.signal.aborted)
           setResult((previous) => ({
@@ -104,15 +104,15 @@ export function NotificationPopup({
     observer.observe(node);
     return () => observer.disconnect();
   }, [result.hasMore, result.key, loading, base]);
-  async function open(item: NotificationItem) {
-    const link = safeNotificationLink(item.link);
+  async function handleOpen(item: NotificationItem) {
+    const link = sanitizeNotificationLink(item.link);
     if (!link) {
       setMutationError("Liên kết không hợp lệ.");
       return;
     }
     setBusy(true);
     try {
-      await notificationsApi.read(item.id);
+      await notificationsApi.markRead(item.id);
       onChanged();
       onClose();
       router.push(link);
@@ -122,10 +122,10 @@ export function NotificationPopup({
       setBusy(false);
     }
   }
-  async function allRead() {
+  async function handleMarkAllRead() {
     setBusy(true);
     try {
-      await notificationsApi.readAll();
+      await notificationsApi.markAllRead();
       setPage(1);
       onChanged();
     } catch {
@@ -134,7 +134,7 @@ export function NotificationPopup({
       setBusy(false);
     }
   }
-  function showSettings(value: boolean) {
+  function handleShowSettings(value: boolean) {
     setSettings(value);
     requestAnimationFrame(() => (value ? back : gear).current?.focus());
   }
@@ -150,7 +150,7 @@ export function NotificationPopup({
         if (e.key !== "Escape") return;
         if (settings) {
           e.stopPropagation();
-          showSettings(false);
+          handleShowSettings(false);
         } else onClose();
       }}
     >
@@ -163,7 +163,7 @@ export function NotificationPopup({
               aria-label="Quay lại thông báo"
               title="Quay lại thông báo"
               className={styles.iconButton}
-              onClick={() => showSettings(false)}
+              onClick={() => handleShowSettings(false)}
             >
               <Icon name="arrow_back" size={18} />
             </button>
@@ -179,7 +179,7 @@ export function NotificationPopup({
               aria-label="Cài đặt thông báo"
               title="Cài đặt thông báo"
               className={styles.iconButton}
-              onClick={() => showSettings(true)}
+              onClick={() => handleShowSettings(true)}
             >
               <Icon name="settings" size={19} />
             </button>
@@ -220,7 +220,7 @@ export function NotificationPopup({
             type="button"
             className={styles.linkButton}
             disabled={busy || !count}
-            onClick={() => void allRead()}
+            onClick={() => void handleMarkAllRead()}
           >
             <Icon name="check" size={15} />
             Đánh dấu đã đọc
@@ -251,7 +251,7 @@ export function NotificationPopup({
               key={item.id}
               className={`${styles.item} ${item.readAt ? "" : styles.unread}`}
               disabled={busy}
-              onClick={() => void open(item)}
+              onClick={() => void handleOpen(item)}
             >
               <span className={styles.tile}>
                 <Icon name="notifications" size={19} />

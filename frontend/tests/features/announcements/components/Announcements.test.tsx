@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import {
   AnnouncementMarkdown,
-  safeMarkdownUrl,
+  sanitizeMarkdownUrl,
 } from "@/features/announcements/components/AnnouncementMarkdown";
 import { AnnouncementFeed } from "@/features/announcements/components/AnnouncementFeed";
 import {
@@ -13,7 +13,12 @@ import { announcementsApi } from "@/features/announcements/api";
 import type { Announcement } from "@/features/announcements/model/types";
 vi.mock("@/features/announcements/api", async (original) => ({
   ...(await original<typeof import("@/features/announcements/api")>()),
-  announcementsApi: { create: vi.fn(), edit: vi.fn(), remove: vi.fn(), list: vi.fn() },
+  announcementsApi: {
+    createAnnouncement: vi.fn(),
+    editAnnouncement: vi.fn(),
+    deleteAnnouncement: vi.fn(),
+    listAnnouncements: vi.fn(),
+  },
 }));
 const item: Announcement = {
   id: "a",
@@ -45,10 +50,10 @@ it("renders markdown formatting while stripping raw HTML, unsafe links and image
   expect(container.querySelector('a[href^="javascript:"]')).toBeNull();
 });
 it("allows only safe link schemes", () => {
-  expect(safeMarkdownUrl("/classes/1")).toBe("/classes/1");
-  expect(safeMarkdownUrl("https://example.test/a")).toBeTruthy();
+  expect(sanitizeMarkdownUrl("/classes/1")).toBe("/classes/1");
+  expect(sanitizeMarkdownUrl("https://example.test/a")).toBeTruthy();
   for (const url of ["javascript:alert(1)", "//evil.test", "/\\evil.test", "data:text/html,x"])
-    expect(safeMarkdownUrl(url)).toBe("");
+    expect(sanitizeMarkdownUrl(url)).toBe("");
 });
 it("student feed has no mutation actions", () => {
   render(<AnnouncementFeed items={[{ ...item, canManage: false }]} onChanged={vi.fn()} />);
@@ -56,28 +61,28 @@ it("student feed has no mutation actions", () => {
   expect(screen.getByText("Quan trọng")).toBeInTheDocument();
 });
 it("edit sends version but does not send immutable email flags", async () => {
-  vi.mocked(announcementsApi.edit).mockResolvedValue(item);
+  vi.mocked(announcementsApi.editAnnouncement).mockResolvedValue(item);
   const done = vi.fn();
   render(<AnnouncementEditorDialog item={item} onClose={vi.fn()} onSaved={done} />);
   fireEvent.change(screen.getByTestId("announcement-edit-title"), { target: { value: "Sửa" } });
   fireEvent.click(screen.getByTestId("announcement-edit-save"));
   await waitFor(() => expect(done).toHaveBeenCalled());
-  expect(announcementsApi.edit).toHaveBeenCalledWith("a", "Sửa", item.body, 3);
+  expect(announcementsApi.editAnnouncement).toHaveBeenCalledWith("a", "Sửa", item.body, 3);
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
 });
 it("edit conflict preserves entered content and asks to reload", async () => {
-  vi.mocked(announcementsApi.edit).mockRejectedValue(new Error("Thông báo đã thay đổi"));
+  vi.mocked(announcementsApi.editAnnouncement).mockRejectedValue(new Error("Thông báo đã thay đổi"));
   render(<AnnouncementEditorDialog item={item} onClose={vi.fn()} onSaved={vi.fn()} />);
   fireEvent.click(screen.getByTestId("announcement-edit-save"));
   expect(await screen.findByRole("alert")).toHaveTextContent("Thông báo đã thay đổi");
   expect(screen.getByTestId("announcement-edit-title")).toHaveValue(item.title);
 });
 it("delete requires explicit confirmation and includes version", async () => {
-  vi.mocked(announcementsApi.remove).mockResolvedValue(undefined);
+  vi.mocked(announcementsApi.deleteAnnouncement).mockResolvedValue(undefined);
   const done = vi.fn();
   render(<DeleteAnnouncementDialog item={item} onClose={vi.fn()} onSaved={done} />);
-  expect(announcementsApi.remove).not.toHaveBeenCalled();
+  expect(announcementsApi.deleteAnnouncement).not.toHaveBeenCalled();
   fireEvent.click(screen.getByTestId("announcement-delete-confirm"));
   await waitFor(() => expect(done).toHaveBeenCalled());
-  expect(announcementsApi.remove).toHaveBeenCalledWith("a", 3);
+  expect(announcementsApi.deleteAnnouncement).toHaveBeenCalledWith("a", 3);
 });
