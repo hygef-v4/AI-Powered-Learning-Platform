@@ -14806,3 +14806,21 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **Context**: Construction - integration with staging.
 
 ---
+
+## Construction - Merge PR #89 into staging
+**Timestamp**: 2026-11-15T15:43:47Z
+**Requested by:** Đào Chí Cường
+**User Input**: "merge vào staging cho tôi"
+**AI Response**: "Checked PR #89: backend, frontend, deploy-script and GitGuardian checks passed, mergeable CLEAN. Merged with a merge commit (938da1b3) into staging. Branch kept. Outstanding: F7 live check, migration V20261113_1000 on a real database."
+**Context**: Construction - integration with staging.
+
+---
+
+## Construction - Shared staging environment on the VPS
+**Timestamp**: 2026-11-15T16:00:14Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi muốn các thành viên khác vào kiểm thử cùng thì nên làm thế nào" / "Staging on the VPS" / answers: "Cổng riêng 8443 (Recommended)", "Mailpit có mật khẩu (Recommended)", "6Gb", domain "[No preference]"
+**AI Response**: "Added a staging stack beside production: infra/docker-compose.staging.yml (project platform-staging, Nginx on 8443 with its own cert via Cloudflare DNS-01, Mailpit behind basic auth at /mailpit/, local file storage, lower limits ~3.1 GB), infra/nginx/staging template, infra/.env.staging.example (COMPOSE_PROJECT_NAME/COMPOSE_FILE so plain compose commands target staging), systemd service/timer, deploy script parameters (DEPLOY_COMPOSE_PROJECT, DEPLOY_COMPOSE_FILES, DEPLOY_HTTPS_PORT; production defaults unchanged), CI builds images on push to staging, runbook docs/runbooks/deploy-staging.md. Verified: deploy script harness 14/14 (2 new), shellcheck, compose config, nginx -t, and a full local run with GHCR main images and a self-signed cert (all healthy, home 200, Mailpit 401/200, HTTP->HTTPS redirect, activation OTP delivered to Mailpit, ~1 GB idle). Not done: nothing installed on the VPS; nothing committed."
+**Context**: Construction - infrastructure for team testing.
+
+---

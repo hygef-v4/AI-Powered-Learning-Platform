@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
   pull_request:
 
 permissions:
@@ -46,7 +46,8 @@ jobs:
       - run: npm run build
 
   images:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # main: production; staging: môi trường kiểm thử chung (docs/runbooks/deploy-staging.md).
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
     needs: [backend, frontend]
     runs-on: ubuntu-latest
     permissions:
@@ -68,7 +69,7 @@ jobs:
           done
 
   # Deploy: không có job ở đây. Nhà cung cấp VPS chặn kết nối quốc tế nên runner không SSH vào được; VPS tự hỏi
-  # GitHub lần chạy thành công mới nhất của workflow này trên main rồi tự deploy, lỗi thì tự quay về
+  # GitHub lần chạy thành công mới nhất của workflow này trên main (production) hoặc staging rồi tự deploy, lỗi thì tự quay về
   # (infra/deploy/platform-deploy.sh, docs/runbooks/deploy-vps.md mục 10). Job images thành công thì workflow mới
   # thành công, nên image của SHA đó chắc chắn đã có trên GHCR.
 

@@ -23,6 +23,7 @@ setup() {
     cat >"$ROOT/bin/docker" <<'STUB'
 #!/usr/bin/env bash
 tag=$(sed -n 's/^IMAGE_TAG=//p' "$PLATFORM_DIR/infra/.env")
+[[ $* != *" up -d"* ]] || echo "$*" >>"$CALLS.compose"
 case "$*" in
 pull*) [[ -n $FAIL_PULL && $* == *"$FAIL_PULL"* ]] && exit 1; echo "pull ${*: -1}" >>"$CALLS" ;;
 *" ps -a -q") echo c1; echo c2 ;;
@@ -45,6 +46,7 @@ esac
 STUB
     cat >"$ROOT/bin/curl" <<'STUB'
 #!/usr/bin/env bash
+echo "$*" >>"$CALLS.curl"
 if [[ $* == *api.github.com* ]]; then
     [[ -z $API_FAIL ]] || exit 22
     printf '{"workflow_runs":[{"head_sha":"%s"}]}' "$LATEST"
@@ -157,7 +159,21 @@ t_status_and_bad_input() {
     ! run deploy not-a-sha && ! run unknown
 }
 
-for t in t_check_noop t_check_deploys_new t_unhealthy_rolls_back_and_skips t_compose_up_failure_rolls_back t_failed_rollback_reports_its_own_problem \
+t_production_defaults() {
+    setup
+    LATEST=$B run check || return 1
+    grep -qxF "compose --env-file .env up -d --remove-orphans" "$CALLS.compose" &&
+        grep -q "branch=main&" "$CALLS.curl" && grep -q "https://example.test:443/" "$CALLS.curl"
+}
+
+t_staging_uses_its_project_files_branch_and_port() {
+    setup
+    DEPLOY_COMPOSE_PROJECT=platform-staging DEPLOY_COMPOSE_FILES="docker-compose.yml docker-compose.staging.yml"         DEPLOY_HTTPS_PORT=8443 DEPLOY_BRANCH=staging LATEST=$B run check || return 1
+    grep -qxF "compose -p platform-staging -f docker-compose.yml -f docker-compose.staging.yml --env-file .env up -d --remove-orphans"         "$CALLS.compose" && grep -q "branch=staging&" "$CALLS.curl" &&
+        grep -q -- "--resolve example.test:8443:127.0.0.1 https://example.test:8443/" "$CALLS.curl"
+}
+
+for t in t_production_defaults t_staging_uses_its_project_files_branch_and_port t_check_noop t_check_deploys_new t_unhealthy_rolls_back_and_skips t_compose_up_failure_rolls_back t_failed_rollback_reports_its_own_problem \
     t_pull_failure_changes_nothing t_missing_commit_changes_nothing t_api_failure_changes_nothing \
     t_manual_rollback_twice t_rollback_to_sha_and_unskip t_keeps_latest_dumps t_status_and_bad_input; do
     check "$t" "$t"

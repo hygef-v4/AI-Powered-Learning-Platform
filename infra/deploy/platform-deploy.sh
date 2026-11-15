@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Tự động deploy production theo kiểu kéo: VPS hỏi GitHub bản mới nhất trên main đã qua CI rồi tự cập nhật, lỗi thì tự
 # quay về bản trước. GitHub Actions không SSH vào được VPS (nhà cung cấp chặn kết nối quốc tế), nên VPS phải tự kéo.
-# Xem docs/runbooks/deploy-vps.md, mục 10.
+# Xem docs/runbooks/deploy-vps.md, mục 10. Staging dùng cùng script với biến môi trường riêng
+# (PLATFORM_DIR, DEPLOY_BRANCH, DEPLOY_COMPOSE_PROJECT, DEPLOY_COMPOSE_FILES, DEPLOY_HTTPS_PORT): docs/runbooks/deploy-staging.md.
 #
 #   platform-deploy check          # timer gọi: deploy nếu main có bản mới đã qua CI
 #   platform-deploy deploy <sha>   # deploy một commit cụ thể (đã có image trên GHCR)
@@ -22,6 +23,10 @@ BRANCH=${DEPLOY_BRANCH:-main}
 HEALTH_TIMEOUT=${HEALTH_TIMEOUT:-300}
 HEALTH_INTERVAL=${HEALTH_INTERVAL:-10}
 KEEP_DUMPS=${KEEP_DUMPS:-5}
+# Mặc định là production: project "platform" (khai trong docker-compose.yml), chỉ một tệp compose, HTTPS cổng 443.
+COMPOSE_PROJECT=${DEPLOY_COMPOSE_PROJECT:-}
+read -r -a COMPOSE_FILES <<<"${DEPLOY_COMPOSE_FILES:-}"
+HTTPS_PORT=${DEPLOY_HTTPS_PORT:-443}
 
 DEPLOYED="$STATE_DIR/deployed" # các SHA đã deploy thành công, cũ trước mới sau
 SKIP="$STATE_DIR/skip"         # SHA timer không tự deploy: đã lỗi hoặc đã bị rollback
@@ -35,7 +40,14 @@ die() {
     exit 1
 }
 
-compose() { (cd "$INFRA_DIR" && docker compose --env-file .env "$@"); }
+compose() {
+    local args=() file
+    [[ -z $COMPOSE_PROJECT ]] || args+=(-p "$COMPOSE_PROJECT")
+    for file in "${COMPOSE_FILES[@]}"; do
+        args+=(-f "$file")
+    done
+    (cd "$INFRA_DIR" && docker compose "${args[@]}" --env-file .env "$@")
+}
 env_value() { sed -n "s/^$1=//p" "$ENV_FILE" | tail -n 1; }
 valid_sha() { [[ $1 =~ ^[0-9a-f]{40}$ ]]; }
 short() { printf '%s' "${1:0:12}"; }
@@ -141,8 +153,8 @@ containers_ok() {
 site_ok() {
     local domain
     domain=$(env_value DOMAIN)
-    if ! curl -fsS -o /dev/null -m 10 --resolve "$domain:443:127.0.0.1" "https://$domain/"; then
-        LAST_PROBLEM="https://$domain/ không trả 2xx"
+    if ! curl -fsS -o /dev/null -m 10 --resolve "$domain:$HTTPS_PORT:127.0.0.1" "https://$domain:$HTTPS_PORT/"; then
+        LAST_PROBLEM="https://$domain:$HTTPS_PORT/ không trả 2xx"
         return 1
     fi
 }
