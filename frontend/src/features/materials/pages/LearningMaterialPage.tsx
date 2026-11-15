@@ -7,8 +7,8 @@ import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { ArchiveItemDialog, ModuleItemDialog } from "../components/MaterialDialogs";
 import { MaterialPreview } from "../components/MaterialPreview";
 import { ModuleNeighbours, useModulePlace, useModuleScope } from "../components/ModulePlace";
-import { contextQuery, materialApi, materialError, materialPath } from "../api";
-import { boardHref, notifyOutlineChanged, useOutlineChanged } from "../model/outline";
+import { buildContextQuery, materialApi, describeMaterialError, buildMaterialPath } from "../api";
+import { buildBoardHref, notifyOutlineChanged, useOutlineChanged } from "../model/outline";
 import { useMaterialResource } from "../hooks/useMaterialResource";
 import type { Material, ModuleScope } from "../model/types";
 
@@ -27,7 +27,7 @@ export function useMaterialScope(
 export function LearningMaterialPage({ id, classId }: { id: string; classId?: string }) {
   const router = useRouter();
   const resource = useMaterialResource<Material>(
-    `${materialPath(id)}/view${contextQuery(classId)}`,
+    `${buildMaterialPath(id)}/view${buildContextQuery(classId)}`,
   );
   const [updated, setUpdated] = useState<Material | null>(null);
   const m = updated && resource.data && updated.id === resource.data.id && updated.version >= resource.data.version
@@ -46,14 +46,14 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
   if (resource.error)
     return <PageLoadError onRetry={resource.reload}>{resource.error}</PageLoadError>;
   if (!m) return <PageLoading label="Đang tải học liệu…" />;
-  async function changeEnabled(enabled: boolean) {
+  async function handleEnabledChange(enabled: boolean) {
     if (!m || saving) return;
     setSaving(true); setChangeError("");
     try {
-      setUpdated(await materialApi.update(m, m.title, m.description, undefined,
+      setUpdated(await materialApi.updateMaterial(m, m.title, m.description, undefined,
         { enabled, descriptionDocument: m.descriptionDocument ?? null }));
       notifyOutlineChanged();
-    } catch (cause) { setChangeError(materialError(cause)); }
+    } catch (cause) { setChangeError(describeMaterialError(cause)); }
     finally { setSaving(false); }
   }
   return (
@@ -68,7 +68,7 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
           m.canManage &&
           m.status === "ACTIVE" && (
             <>
-              <Switch checked={m.enabled !== false} onChange={changeEnabled} disabled={saving}
+              <Switch checked={m.enabled !== false} onChange={handleEnabledChange} disabled={saving}
                 ariaLabel="Bật học liệu" label={m.enabled !== false ? "Bật" : "Tắt"} />
               <Button
                 icon="edit"
@@ -122,7 +122,7 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
           onSaved={() => {
             showToast("Đã xóa học liệu", "danger");
             notifyOutlineChanged();
-            router.push(scope ? boardHref(scope) : "/");
+            router.push(scope ? buildBoardHref(scope) : "/");
           }}
         />
       )}

@@ -14,7 +14,7 @@ const MIME: Record<string, DocumentKind> = {
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
 };
 
-export function documentKind(mimeType: string | null): DocumentKind | null {
+export function detectDocumentKind(mimeType: string | null): DocumentKind | null {
   return mimeType ? (MIME[mimeType] ?? null) : null;
 }
 
@@ -25,14 +25,14 @@ const FAILED = "Không mở được tệp, hãy tải xuống để xem.";
  * Nonce CSP của trang (layout gắn vào script khởi tạo theme). Trình duyệt ẩn thuộc tính `nonce` khỏi DOM nhưng vẫn đọc
  * được qua thuộc tính `nonce` của phần tử.
  */
-function pageNonce(): string | undefined {
+function readPageNonce(): string | undefined {
   const script = document.querySelector<HTMLScriptElement>("script[nonce]");
   return script?.nonce || script?.getAttribute("nonce") || undefined;
 }
 
 /** Thẻ <style> mới mang nonce của trang, cùng nội dung các thẻ <style> thư viện đã dựng trong `source`. */
-export function noncedStyles(source: Element): HTMLStyleElement[] {
-  const nonce = pageNonce();
+export function applyStyleNonce(source: Element): HTMLStyleElement[] {
+  const nonce = readPageNonce();
   return Array.from(source.querySelectorAll("style")).map((original) => {
     const style = document.createElement("style");
     if (nonce) style.nonce = nonce;
@@ -68,14 +68,14 @@ export function DocumentViewer({
   const [sheets, setSheets] = useState<Sheet[] | null>(null);
   const [active, setActive] = useState(0);
   const [error, setError] = useState("");
-  const failed = useCallback(() => setError(FAILED), []);
+  const handleLoadError = useCallback(() => setError(FAILED), []);
 
   useEffect(() => {
     const changed = () => setFullscreen(document.fullscreenElement === frame.current);
     document.addEventListener("fullscreenchange", changed);
     return () => document.removeEventListener("fullscreenchange", changed);
   }, []);
-  function toggleFullscreen() {
+  function handleToggleFullscreen() {
     if (document.fullscreenElement) void document.exitFullscreen();
     else void frame.current?.requestFullscreen?.();
   }
@@ -111,7 +111,7 @@ export function DocumentViewer({
             ignoreLastRenderedPageBreak: true,
           });
           if (cancelled) return;
-          container.prepend(...noncedStyles(styles));
+          container.prepend(...applyStyleNonce(styles));
           container.querySelectorAll(".docx-wrapper > section").forEach((section, index) => {
             (section as HTMLElement).dataset.page = String(index + 1);
           });
@@ -167,7 +167,7 @@ export function DocumentViewer({
   }, [blob, kind]);
 
   // Trang đang xem: trang có mép trên gần đỉnh khung nhất.
-  function track() {
+  function handleScroll() {
     const element = body.current;
     if (!element || pages === 0) return;
     const top = element.getBoundingClientRect().top + 24;
@@ -177,7 +177,7 @@ export function DocumentViewer({
     });
     setPage(current);
   }
-  const step = (offset: number) =>
+  const handleZoomStep = (offset: number) =>
     setZoom((value) => {
       const index = ZOOMS.findIndex((z) => z >= value - 0.001);
       return ZOOMS[Math.min(ZOOMS.length - 1, Math.max(0, (index < 0 ? 4 : index) + offset))]!;
@@ -227,7 +227,7 @@ export function DocumentViewer({
           </span>
         )}
         <span className="mx-1 h-5 w-px bg-white/15" aria-hidden="true" />
-        <ToolButton label="Thu nhỏ" disabled={zoom <= ZOOMS[0]!} onClick={() => step(-1)}>
+        <ToolButton label="Thu nhỏ" disabled={zoom <= ZOOMS[0]!} onClick={() => handleZoomStep(-1)}>
           <span className="text-lg leading-none">−</span>
         </ToolButton>
         <span className="w-11 shrink-0 text-center font-mono text-xs text-white/85">
@@ -236,14 +236,14 @@ export function DocumentViewer({
         <ToolButton
           label="Phóng to"
           disabled={zoom >= ZOOMS[ZOOMS.length - 1]!}
-          onClick={() => step(1)}
+          onClick={() => handleZoomStep(1)}
         >
           <span className="text-lg leading-none">+</span>
         </ToolButton>
         <span className="mx-1 h-5 w-px bg-white/15" aria-hidden="true" />
         <ToolButton
           label={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
-          onClick={toggleFullscreen}
+          onClick={handleToggleFullscreen}
         >
           <Icon name={fullscreen ? "fullscreen_exit" : "fullscreen"} size={18} />
         </ToolButton>
@@ -255,7 +255,7 @@ export function DocumentViewer({
       </div>
       <div
         ref={body}
-        onScroll={track}
+        onScroll={handleScroll}
         className={cx(
           "overflow-auto px-6 py-6",
           fullscreen ? "h-[calc(100dvh-3rem)]" : "h-[calc(100dvh-13rem)] min-h-[360px] sm:min-h-[560px]",
@@ -266,7 +266,13 @@ export function DocumentViewer({
             {error}
           </p>
         ) : kind === "pdf" ? (
-          <PdfPages blob={blob} zoom={zoom} width={width} onPages={setPages} onError={failed} />
+          <PdfPages
+            blob={blob}
+            zoom={zoom}
+            width={width}
+            onPages={setPages}
+            onError={handleLoadError}
+          />
         ) : kind === "xlsx" ? (
           sheet ? (
             <div
@@ -286,7 +292,7 @@ export function DocumentViewer({
                       </th>
                       {row.map((cell, c) => (
                         <td key={c} className="border border-sheet-line px-2 py-1 whitespace-nowrap">
-                          {cellText(cell)}
+                          {formatCellText(cell)}
                         </td>
                       ))}
                     </tr>
@@ -346,7 +352,7 @@ function ToolButton({
   );
 }
 
-function cellText(value: unknown): string {
+function formatCellText(value: unknown): string {
   if (value === null || value === undefined) return "";
   if (value instanceof Date) return value.toLocaleDateString("vi-VN");
   return String(value);

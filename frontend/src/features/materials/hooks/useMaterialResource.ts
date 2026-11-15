@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/shared/api/client";
-import { materialError } from "../api";
+import { describeMaterialError } from "../api";
 
 type ResourceOptions<T> = {
   pollWhile?: (data: T) => boolean;
@@ -31,7 +31,7 @@ export function useMaterialResource<T>(
             ...(previous.key.startsWith(`${url}:`) && previous.data !== undefined
               ? { data: previous.data }
               : {}),
-            error: materialError(error),
+            error: describeMaterialError(error),
           }));
       },
     );

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiFetch, ApiError } from "@/shared/api/client";
-import { materialApi, materialError, validYoutube } from "@/features/materials/api";
+import { materialApi, describeMaterialError, isValidYoutubeUrl } from "@/features/materials/api";
 import type { Material } from "@/features/materials/model/types";
 vi.mock("@/shared/api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/shared/api/client")>()),
@@ -22,7 +22,7 @@ describe("single video validation", () => {
     "https://www.youtube.com/shorts/abcdefghijk",
     "https://www.youtube.com/live/abcdefghijk?feature=share",
     "https://youtube.com/embed/abcdefghijk",
-  ])("accepts %s", (url) => expect(validYoutube(url)).toBe(true));
+  ])("accepts %s", (url) => expect(isValidYoutubeUrl(url)).toBe(true));
   it.each([
     "javascript:alert(1)",
     "https://youtube.com.evil.test/watch?v=abcdefghijk",
@@ -33,17 +33,17 @@ describe("single video validation", () => {
     "https://youtube.com:8443/watch?v=abcdefghijk",
     "https://youtu.be/short",
     "https://www.youtube.com/@channel",
-  ])("rejects %s", (url) => expect(validYoutube(url)).toBe(false));
+  ])("rejects %s", (url) => expect(isValidYoutubeUrl(url)).toBe(false));
 });
 it("replacement carries the signed file reference and optimistic version", async () => {
-  await materialApi.replace({ id: "id", version: 3 } as Material, { fileRef: "signed-reference" });
+  await materialApi.replaceMaterialVersion({ id: "id", version: 3 } as Material, { fileRef: "signed-reference" });
   expect(apiFetch).toHaveBeenCalledWith("/api/v1/materials/id/versions", {
     method: "POST",
     body: JSON.stringify({ version: 3, source: { fileRef: "signed-reference" } }),
   });
 });
 it("reorder submits all expected versions in requested order", async () => {
-  await materialApi.reorder("/scope/materials", [
+  await materialApi.reorderMaterials("/scope/materials", [
     { id: "b", version: 4 },
     { id: "a", version: 2 },
   ] as Material[]);
@@ -58,15 +58,15 @@ it("reorder submits all expected versions in requested order", async () => {
   });
 });
 it("token request preserves class and historical version", async () => {
-  await materialApi.token("id", "class", 1);
+  await materialApi.issueDownloadToken("id", "class", 1);
   expect(apiFetch).toHaveBeenCalledWith(
     "/api/v1/materials/id/download-token?classId=class&versionNo=1",
     { method: "POST" },
   );
 });
 it("conflict instructs reloading instead of silently retrying write", () => {
-  expect(materialError(new ApiError({ status: 409 }))).toContain("Tải lại");
-  expect(materialError(new ApiError({ status: 404 }))).toContain("không có quyền");
+  expect(describeMaterialError(new ApiError({ status: 409 }))).toContain("Tải lại");
+  expect(describeMaterialError(new ApiError({ status: 404 }))).toContain("không có quyền");
 });
 
 it.each([
@@ -74,5 +74,5 @@ it.each([
   "https://youtu.be/abcdefghijk?list=x&index=2",
   "https://youtube.com/watch?v=abcdefghijk&list=x&%6cist=y",
 ])("accepts a single video with playlist context: %s", (url) =>
-  expect(validYoutube(url)).toBe(true),
+  expect(isValidYoutubeUrl(url)).toBe(true),
 );
