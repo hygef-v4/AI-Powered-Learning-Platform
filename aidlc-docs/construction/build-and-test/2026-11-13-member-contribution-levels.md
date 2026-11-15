@@ -8,7 +8,7 @@
   null khi lưu nghĩa là chưa đánh giá; caller mới gửi null để xóa mức.
 - Endpoint lưu điểm thành viên giữ kiểm quyền, ARCHIVED, submission và version;
   lưu mức/điểm/lý do trong một transaction, audit mức trước/sau kể cả điểm không đổi.
-- Mức không tính điểm. Điểm/căn cứ/mức cá nhân giữ khi chấm lại nhóm; nộp lại xóa.
+- Mức không quy đổi thành điểm. Điểm, căn cứ và mức cá nhân được giữ khi chấm lại nhóm. Khi nhóm nộp lại, giữ điểm và mức đã công bố. Bản FINALIZED cũ cũng được giữ. Việc xóa mức áp dụng cho bản chưa chính thức được reset theo BR-U09-50.
 - Giao diện giữ shared Select/Field/Button, hướng dẫn thu gọn, không tự chọn mức.
   Căn cứ lấy từ đánh giá cá nhân đã lưu, không lấy nhầm ghi chú điểm nhóm.
 - DTO sinh viên chỉ trả mức/căn cứ MEMBER của chính mình sau công bố; sửa bản

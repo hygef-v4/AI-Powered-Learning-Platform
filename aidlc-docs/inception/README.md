@@ -1,6 +1,6 @@
 # Inception — tài liệu theo code hiện hành
 
-**AS-BUILT 2026-10-30**, `staging@794a405304bf02dd2593a9fa2c88662d7cd52845`. 66 active UC; 50 MVP stories + 1 extension; 15 logical units. Scope decisions D01–D04 chốt 15/10 giữ nguyên; thay đổi source khác yêu cầu cũ được ghi riêng, không đồng nghĩa đã nghiệm thu.
+**Đối chiếu staging 2026-11-15** (`7e0e8375`). 66 use case và 15 unit. Các quyết định D01–D04 tiếp tục áp dụng. Xem bảng truy vết để tìm thay đổi theo yêu cầu, thiết kế, code và kết quả kiểm thử của từng đợt.
 
 1. [Requirements](requirements/requirements.md), [66 UC](requirements/use-cases.md), [stories](user-stories/stories.md), [personas](user-stories/personas.md).
 2. [Current code baseline](reverse-engineering/current-code-baseline.md), [traceability](reverse-engineering/doc-code-traceability.md), [decision register](reverse-engineering/decision-register.md).

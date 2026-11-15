@@ -14565,3 +14565,12 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **Context**: Commit cục bộ theo yêu cầu; kiểm thử rộng 306/306 và giới hạn cache Next giữ như báo cáo trước.
 
 ---
+
+## Đồng bộ tài liệu AI-DLC theo staging
+**Timestamp**: 2026-11-15T14:27:31Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi cập nhật doc AI-DLC theo code staging cho các điểm vừa nêu, giữ nguyên code. Riêng mức đóng góp khi nhóm nộp lại thì ghi rõ: giữ điểm và mức đã công bố, chỉ reset bản chưa chính thức."
+**AI Response**: "Đồng bộ yêu cầu, thiết kế, use case, story, truy vết và hướng dẫn kiểm thử theo staging@7e0e8375. Ghi rõ giữ điểm và mức đóng góp đã công bố khi nhóm nộp lại, chỉ reset bản chưa chính thức. Đối chiếu tĩnh 66 use case, 50 controller với 346 mapping, 43 migration và 5 suite PostgreSQL bắt buộc. Giữ kết quả test gốc theo phạm vi từng lần chạy."
+**Context**: Cập nhật Markdown theo yêu cầu đã xác nhận. Kết quả kiểm tra tĩnh không thay cho chạy kiểm thử ứng dụng trên HEAD.
+
+---

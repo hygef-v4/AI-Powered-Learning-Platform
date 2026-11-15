@@ -1,5 +1,14 @@
 # AI-DLC State Tracking
 
+## Đồng bộ tài liệu theo staging — 2026-11-15
+
+Đối chiếu `staging@7e0e8375` theo các điểm trong báo cáo của người dùng. Phạm vi là tài liệu AI-DLC.
+
+- [x] Cập nhật yêu cầu, use case, story và thiết kế liên quan đến công bố/sửa điểm, đề mẫu cấp môn, nộp lại và lịch sử, API key chỉ ghi, phát hành Quiz.
+- [x] Ghi quyết định khi nhóm nộp lại tại BR-U09-50 và BR-U12-42. Giữ điểm và mức đã công bố cùng biên nhận đã chấm, kể cả dữ liệu FINALIZED cũ. Chỉ bản chưa chính thức được đặt lại theo BR-U09-50.
+- [x] Bổ sung [truy vết](inception/reverse-engineering/doc-code-traceability.md), [bảng kê source](inception/reverse-engineering/current-code-baseline.md) và [bằng chứng kiểm thử](construction/build-and-test/build-and-test-summary.md).
+- [x] Đối chiếu tĩnh 66 use case, 50 controller/346 mapping, 43 migration và 5 suite PostgreSQL bắt buộc. Kiểm tra liên kết mới và diff Markdown. Kết quả test ứng dụng giữ phạm vi từng lần chạy đã ghi.
+
 ## U09 — giữ bản nháp khi refresh lỗi, 2026-11-15
 
 Sửa P2 đã xác nhận trong review PR #87 theo yêu cầu người dùng, tiếp tục thiết kế

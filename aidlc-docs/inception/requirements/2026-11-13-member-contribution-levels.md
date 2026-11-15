@@ -57,7 +57,7 @@ chức năng, giảng viên có thể chọn Đạt một phần, nhập 7/10 v�
 - Lưu mức, điểm và lý do trong cùng transaction/version hiện tại. Việc chỉ đổi
   mức cũng phải ghi nhận thay đổi; không chỉ lưu ở state trình duyệt.
 - Khi tải lại, giữ đúng mức và lý do đã lưu. Chấm lại bài nhóm không được ghi đè
-  đánh giá đóng góp riêng; nhóm nộp phiên bản mới thì xóa mức cùng điểm cũ.
+  đánh giá đóng góp riêng. Khi nhóm nộp bản mới, giữ điểm và mức đã công bố cùng biên nhận đã chấm. Bản FINALIZED cũ cũng được giữ. Chỉ bản chấm chưa chính thức được đặt lại về PENDING và xóa điểm/mức nháp theo BR-U09-50.
 - Giữ quyền giảng viên phụ trách, khóa ARCHIVED, kiểm tra bài nộp hiện hành và
   chống ghi đè phiên bản. Không giao AI quyền chọn mức hoặc lưu điểm thành viên.
 - Sinh viên chỉ thấy mức và nhận xét của chính mình khi điểm đã công bố;
