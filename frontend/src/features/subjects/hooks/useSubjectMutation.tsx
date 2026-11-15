@@ -13,12 +13,12 @@ export type SubjectMutationProps = {
   onAccessError?: (error: unknown) => void;
 };
 
-export function subjectProblem(error: unknown): SubjectApiProblem | null {
+export function readSubjectProblem(error: unknown): SubjectApiProblem | null {
   return error instanceof ApiError ? (error.problem as SubjectApiProblem) : null;
 }
 
-export function needsSubjectReload(error: unknown): boolean {
-  const problem = subjectProblem(error);
+export function shouldReloadSubject(error: unknown): boolean {
+  const problem = readSubjectProblem(error);
   return (
     problem?.status === 409 &&
     (problem.code === "SUBJECT_VERSION_CONFLICT" || problem.code === "SUBJECT_DATA_CONFLICT")
@@ -30,7 +30,7 @@ export function useSubjectMutation(onAccessError?: (error: unknown) => void) {
   const pending = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
-  async function run(
+  async function runMutation(
     operation: () => Promise<SubjectDetail>,
     onSaved: (saved: SubjectDetail) => void,
   ) {
@@ -51,7 +51,7 @@ export function useSubjectMutation(onAccessError?: (error: unknown) => void) {
     // Parent đóng editor và đọc lại snapshot/enrichment; giữ khóa đến khi unmount.
     onSaved(saved);
   }
-  return { busy, error, run, canClose: () => !pending.current };
+  return { busy, error, run: runMutation, canClose: () => !pending.current };
 }
 
 export function SubjectMutationFeedback({
@@ -62,8 +62,8 @@ export function SubjectMutationFeedback({
   onReload: () => void;
 }) {
   if (error === null) return null;
-  const problem = subjectProblem(error);
-  const conflict = needsSubjectReload(error);
+  const problem = readSubjectProblem(error);
+  const conflict = shouldReloadSubject(error);
   const message = conflict
     ? "Dữ liệu môn đã thay đổi. Bản nhập được giữ lại; tải lại sẽ bỏ bản nháp hiện tại."
     : problem?.status === 401

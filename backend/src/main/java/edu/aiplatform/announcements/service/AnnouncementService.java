@@ -16,51 +16,61 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(timeout = 10)
 public class AnnouncementService {
-    private final IAnnouncementRepository repository;
-    private final AnnouncementAccessPolicy access;
-    private final IClassAccess classes;
-    private final IAccountLookup accounts;
+    private final IAnnouncementRepository announcementRepository;
+    private final AnnouncementAccessPolicy announcementAccessPolicy;
+    private final IClassAccess classAccess;
+    private final IAccountLookup accountLookup;
     private final IAudit audit;
-    private final IEventPublisher events;
+    private final IEventPublisher eventPublisher;
     private final Clock clock;
 
     public AnnouncementService(
-            IAnnouncementRepository repository,
-            AnnouncementAccessPolicy access,
-            IClassAccess classes,
-            IAccountLookup accounts,
+            IAnnouncementRepository announcementRepository,
+            AnnouncementAccessPolicy announcementAccessPolicy,
+            IClassAccess classAccess,
+            IAccountLookup accountLookup,
             IAudit audit,
-            IEventPublisher events,
+            IEventPublisher eventPublisher,
             Clock clock) {
-        this.repository = repository;
-        this.access = access;
-        this.classes = classes;
-        this.accounts = accounts;
+        this.announcementRepository = announcementRepository;
+        this.announcementAccessPolicy = announcementAccessPolicy;
+        this.classAccess = classAccess;
+        this.accountLookup = accountLookup;
         this.audit = audit;
-        this.events = events;
+        this.eventPublisher = eventPublisher;
         this.clock = clock;
     }
 
     @Transactional(readOnly = true, timeout = 10)
-    public AnnouncementViews.Feed list(Actor actor, UUID classId, int page, int size) {
+    public AnnouncementViews.Feed listAnnouncements(Actor actor, UUID classId, int page, int size) {
         if (page < 1 || page > 100000 || size < 1 || size > 50)
             throw ApiException.badRequest("PAGE_INVALID", "Trang phải từ1, tối đa50 mục");
-        var all = access.list(actor, null);
-        if (classId != null) access.require(actor, classId, false);
+        var all = announcementAccessPolicy.listReadableClasses(actor, null);
+        if (classId != null) announcementAccessPolicy.requireClassAccess(actor, classId, false);
         var allowed =
                 all.stream().filter(c -> classId == null || c.classId().equals(classId)).toList();
         var byId = new HashMap<UUID, ClassRef>();
         allowed.forEach(c -> byId.put(c.classId(), c));
-        var rows = repository.list(allowed.stream().map(ClassRef::classId).toList(), page, size);
+        var rows =
+                announcementRepository.listAnnouncements(
+                        allowed.stream().map(ClassRef::classId).toList(), page, size);
         boolean more =
                 rows.size() == size
-                        && !repository
-                                .list(
+                        && !announcementRepository
+                                .listAnnouncements(
                                         allowed.stream().map(ClassRef::classId).toList(),
                                         page + 1,
                                         size)
                                 .isEmpty();
-        var items = rows.stream().map(a -> view(actor, a, byId.get(a.classId))).toList();
+        var items =
+                rows.stream()
+                        .map(
+                                announcement ->
+                                        buildItemView(
+                                                actor,
+                                                announcement,
+                                                byId.get(announcement.classId)))
+                        .toList();
         var options =
                 all.stream()
                         .map(
@@ -74,16 +84,18 @@ public class AnnouncementService {
                                                                 c.teacherId(), actor.accountId()),
                                                 actor.role() == Role.STUDENT
                                                         ? 0
-                                                        : classes.listActiveStudents(c.classId())
-                                                                .size()))
+                                                        : classAccess.listActiveStudents(
+                                                                c.classId())
+                                                                .size(),
+                                                c.term()))
                         .toList();
         return new AnnouncementViews.Feed(items, options, page, size, more);
     }
 
-    public AnnouncementViews.Item create(
+    public AnnouncementViews.Item createAnnouncement(
             Actor actor, UUID classId, AnnouncementCommands.Create input) {
-        var c = access.require(actor, classId, true);
-        var a =
+        var courseClass = announcementAccessPolicy.requireClassAccess(actor, classId, true);
+        var announcement =
                 Announcement.create(
                         classId,
                         actor.accountId(),
@@ -92,111 +104,119 @@ public class AnnouncementService {
                         input.important(),
                         input.sendEmail(),
                         clock.instant());
-        repository.insert(a);
-        record(actor, "ANNOUNCEMENT_CREATED", a, metadata(a));
-        events.publish(
+        announcementRepository.insertAnnouncement(announcement);
+        recordAudit(actor, "ANNOUNCEMENT_CREATED", announcement, buildAuditMetadata(announcement));
+        eventPublisher.publish(
                 new DomainEvent(
                         1,
                         UUID.randomUUID(),
                         EventTypes.CLASS_ANNOUNCEMENT_POSTED,
                         "U14",
                         clock.instant(),
-                        a.id.toString(),
+                        announcement.id.toString(),
                         Map.of(
                                 "announcementId",
-                                a.id.toString(),
+                                announcement.id.toString(),
                                 "classId",
                                 classId.toString(),
                                 "actorId",
                                 actor.accountId().toString(),
                                 "important",
-                                a.important,
+                                announcement.important,
                                 "sendEmail",
-                                a.sendEmail)));
-        return view(actor, a, c);
+                                announcement.sendEmail)));
+        return buildItemView(actor, announcement, courseClass);
     }
 
-    public AnnouncementViews.Item edit(Actor actor, UUID id, AnnouncementCommands.Edit input) {
-        var a = load(actor, id);
-        var c = access.require(actor, a.classId, true);
-        checkVersion(a, input.version());
-        var before = metadata(a);
-        a.edit(input.title(), input.body(), actor.accountId(), clock.instant());
-        save(a, input.version());
-        record(actor, "ANNOUNCEMENT_UPDATED", a, Map.of("before", before, "after", metadata(a)));
-        return view(actor, a, c);
+    public AnnouncementViews.Item editAnnouncement(
+            Actor actor, UUID id, AnnouncementCommands.Edit input) {
+        var announcement = loadAnnouncement(actor, id);
+        var courseClass =
+                announcementAccessPolicy.requireClassAccess(actor, announcement.classId, true);
+        requireVersion(announcement, input.version());
+        var before = buildAuditMetadata(announcement);
+        announcement.edit(input.title(), input.body(), actor.accountId(), clock.instant());
+        saveAnnouncement(announcement, input.version());
+        recordAudit(
+                actor,
+                "ANNOUNCEMENT_UPDATED",
+                announcement,
+                Map.of("before", before, "after", buildAuditMetadata(announcement)));
+        return buildItemView(actor, announcement, courseClass);
     }
 
-    public void delete(Actor actor, UUID id, long version) {
-        var a = load(actor, id);
-        access.require(actor, a.classId, true);
-        checkVersion(a, version);
-        a.delete(actor.accountId(), clock.instant());
-        save(a, version);
-        record(actor, "ANNOUNCEMENT_DELETED", a, metadata(a));
+    public void deleteAnnouncement(Actor actor, UUID id, long version) {
+        var announcement = loadAnnouncement(actor, id);
+        announcementAccessPolicy.requireClassAccess(actor, announcement.classId, true);
+        requireVersion(announcement, version);
+        announcement.delete(actor.accountId(), clock.instant());
+        saveAnnouncement(announcement, version);
+        recordAudit(actor, "ANNOUNCEMENT_DELETED", announcement, buildAuditMetadata(announcement));
     }
 
-    private Announcement load(Actor actor, UUID id) {
-        return repository
-                .find(id)
-                .filter(a -> a.status == Announcement.Status.ACTIVE)
-                .orElseThrow(() -> access.denied(actor, id));
+    private Announcement loadAnnouncement(Actor actor, UUID id) {
+        return announcementRepository
+                .findAnnouncement(id)
+                .filter(announcement -> announcement.status == Announcement.Status.ACTIVE)
+                .orElseThrow(() -> announcementAccessPolicy.rejectAccess(actor, id));
     }
 
-    private void checkVersion(Announcement a, long version) {
-        if (version < 0 || a.version != version)
+    private void requireVersion(Announcement announcement, long version) {
+        if (version < 0 || announcement.version != version)
             throw ApiException.conflict("ANNOUNCEMENT_STALE", "Thông báo đã thay đổi, hãy tải lại");
     }
 
     /** Ghi có điều kiện version; câu UPDATE tăng version trong database nên bản trả về cũng phải mang version mới. */
-    private void save(Announcement a, long version) {
-        if (!repository.update(a, version))
+    private void saveAnnouncement(Announcement announcement, long version) {
+        if (!announcementRepository.updateAnnouncement(announcement, version))
             throw ApiException.conflict("ANNOUNCEMENT_STALE", "Thông báo đã thay đổi, hãy tải lại");
-        a.version = version + 1;
+        announcement.version = version + 1;
     }
 
-    private AnnouncementViews.Item view(Actor actor, Announcement a, ClassRef c) {
+    private AnnouncementViews.Item buildItemView(
+            Actor actor, Announcement announcement, ClassRef courseClass) {
         String author =
-                accounts.getContact(a.createdBy)
+                accountLookup.getContact(announcement.createdBy)
                         .map(AccountContact::displayName)
                         .orElse("Giảng viên");
         return new AnnouncementViews.Item(
-                a.id,
-                a.classId,
-                c.code(),
-                a.title,
-                a.body,
-                a.important,
-                a.sendEmail,
-                a.createdBy,
+                announcement.id,
+                announcement.classId,
+                courseClass.code(),
+                announcement.title,
+                announcement.body,
+                announcement.important,
+                announcement.sendEmail,
+                announcement.createdBy,
                 author,
-                a.createdAt,
-                a.updatedAt,
-                a.version,
-                actor.role() != Role.STUDENT && Objects.equals(c.teacherId(), actor.accountId()));
+                announcement.createdAt,
+                announcement.updatedAt,
+                announcement.version,
+                actor.role() != Role.STUDENT
+                        && Objects.equals(courseClass.teacherId(), actor.accountId()));
     }
 
-    private Map<String, Object> metadata(Announcement a) {
+    private Map<String, Object> buildAuditMetadata(Announcement announcement) {
         return Map.of(
                 "classId",
-                a.classId.toString(),
+                announcement.classId.toString(),
                 "titleLength",
-                a.title.length(),
+                announcement.title.length(),
                 "bodyLength",
-                a.body.length(),
+                announcement.body.length(),
                 "contentHash",
-                hash(a.title + "\n" + a.body),
+                hashText(announcement.title + "\n" + announcement.body),
                 "important",
-                a.important,
+                announcement.important,
                 "sendEmail",
-                a.sendEmail,
+                announcement.sendEmail,
                 "version",
-                a.version,
+                announcement.version,
                 "status",
-                a.status.name());
+                announcement.status.name());
     }
 
-    private String hash(String text) {
+    private String hashText(String text) {
         try {
             return HexFormat.of()
                     .formatHex(
@@ -209,14 +229,15 @@ public class AnnouncementService {
         }
     }
 
-    private void record(Actor actor, String action, Announcement a, Map<String, Object> details) {
+    private void recordAudit(
+            Actor actor, String action, Announcement announcement, Map<String, Object> details) {
         audit.record(
                 new AuditEvent(
                         UUID.randomUUID(),
                         actor.accountId(),
                         action,
                         "ANNOUNCEMENT",
-                        a.id.toString(),
+                        announcement.id.toString(),
                         AuditResult.SUCCESS,
                         null,
                         details,

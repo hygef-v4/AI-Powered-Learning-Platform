@@ -51,7 +51,7 @@ class AcademicsServiceTest {
         when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(ClassStatus.DRAFT,0)));
     }
     AccountContact contact(UUID id, Role role, AccountStatus status) { return new AccountContact(id,id+"@example.com","Person",role,status); }
-    CourseClass course(ClassStatus status,long version) { return new CourseClass(classId,subjectId,"C","Class",null,status,teacherId,false,now,now,version); }
+    CourseClass course(ClassStatus status,long version) { return new CourseClass(classId,subjectId,"C","Class",null,LocalDate.of(2027, 1, 10),status,teacherId,false,now,now,version); }
     @Test void studentCannotReadDraftClassAndDenialIsAudited() {
         var actor = new Actor(studentId,Role.STUDENT);
         when(accountLookup.getContact(studentId)).thenReturn(Optional.of(contact(studentId,Role.STUDENT,AccountStatus.ACTIVE)));
@@ -61,19 +61,19 @@ class AcademicsServiceTest {
     }
     @Test void createLocksTheSubjectRowThroughU04AndArchivedSubjectBlocksTheClass() {
         doThrow(ApiException.conflict("SUBJECT_ARCHIVED","Môn đã lưu trữ")).when(subjectMutationGuard).lockActive(eq(subjectId),any());
-        assertThatThrownBy(() -> academicsService.createClass(manager,subjectId,"NEW","New class",null,null))
+        assertThatThrownBy(() -> academicsService.createClass(manager,subjectId,"NEW","New class",null,LocalDate.of(2027, 1, 10),null))
                 .isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.code()).isEqualTo("SUBJECT_ARCHIVED"));
         verify(subjectMutationGuard).lockActive(eq(subjectId),eq(java.time.Duration.ofSeconds(1)));
         verify(courseClassRepository,never()).insert(any());
     }
     @Test void adminCannotListClasses() {
         Actor admin = new Actor(UUID.randomUUID(),Role.ADMIN);
-        assertThatThrownBy(() -> academicsService.listClasses(admin,"manager",null,null,null,1,20)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(403));
+        assertThatThrownBy(() -> academicsService.listClasses(admin,"manager",null,null,null,null,1,20)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(403));
         verifyNoInteractions(academicsReadRepository);
     }
     @Test void unauthorizedCallerWithInvalidPagingIsRejectedWithForbiddenAndDeniedAudit() {
         Actor student = new Actor(studentId, Role.STUDENT);
-        assertThatThrownBy(() -> academicsService.listClasses(student, "manager", null, null, null, 0, 20))
+        assertThatThrownBy(() -> academicsService.listClasses(student, "manager", null, null, null, null, 0, 20))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status().value()).isEqualTo(403));
         verify(audit).record(argThat(e -> e.action().equals("ACCESS_DENIED") && e.result() == AuditResult.DENIED));
 
@@ -82,11 +82,11 @@ class AcademicsServiceTest {
         verify(audit, times(2)).record(argThat(e -> e.action().equals("ACCESS_DENIED") && e.result() == AuditResult.DENIED));
     }
     @Test void staleVersionDoesNotWrite() {
-        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,2)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(409));
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,LocalDate.of(2027, 1, 10),2)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(409));
         verify(courseClassRepository,never()).update(any(),anyLong());
     }
     @Test void updateLocksSubjectBeforeRereadingAndPreservesCode() {
-        var result = academicsService.updateClassInfo(manager,classId,"New",null,0);
+        var result = academicsService.updateClassInfo(manager,classId,"New",null,LocalDate.of(2027, 1, 10),0);
         assertThat(result.name()).isEqualTo("New");
         assertThat(result.description()).isEmpty();
         assertThat(result.code()).isEqualTo("C");
@@ -96,7 +96,7 @@ class AcademicsServiceTest {
     }
     @Test void dependencyFailureIsUnavailableAndWritesNothing() {
         when(scope.isSubjectManager(managerId,subjectId)).thenThrow(new IllegalStateException("internal secret"));
-        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,0)).isInstanceOfSatisfying(ApiException.class,e -> {assertThat(e.status().value()).isEqualTo(503);assertThat(e.getMessage()).doesNotContain("secret");});
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,LocalDate.of(2027, 1, 10),0)).isInstanceOfSatisfying(ApiException.class,e -> {assertThat(e.status().value()).isEqualTo(503);assertThat(e.getMessage()).doesNotContain("secret");});
         verify(courseClassRepository,never()).update(any(),anyLong());
     }
     @Test void reopenReturnsConflictingStudents() {
@@ -172,9 +172,30 @@ class AcademicsServiceTest {
         when(enrollmentRepository.find(classId,duplicate)).thenReturn(Optional.of(Enrollment.createEnrollment(classId,duplicate,EnrollmentSource.MANUAL,now)));
         when(enrollmentRepository.activeInOtherClass(other,subjectId,classId)).thenReturn(true);
         var rows = academicsService.enrollStudents(manager,classId,"email\nnew@a.com\nrestore@a.com\nhas@a.com\nmissing@a.com\nteacher@a.com\ndisabled@a.com\nother@a.com\nbad\nnew@a.com");
-        assertThat(rows).extracting(AcademicsDtos.RowResult::result).containsExactly(EnrollmentResult.ENROLLED,EnrollmentResult.RESTORED,EnrollmentResult.ALREADY_ENROLLED,EnrollmentResult.NOT_FOUND,EnrollmentResult.NOT_STUDENT,EnrollmentResult.DISABLED,EnrollmentResult.IN_OTHER_CLASS,EnrollmentResult.INVALID_EMAIL,EnrollmentResult.DUPLICATE_IN_LIST);
+        assertThat(rows).extracting(AcademicsDtos.RowResult::result).containsExactly(EnrollmentResult.ENROLLED,EnrollmentResult.RESTORED,EnrollmentResult.ALREADY_ENROLLED,EnrollmentResult.NOT_FOUND,EnrollmentResult.NOT_STUDENT,EnrollmentResult.DISABLED,EnrollmentResult.IN_OTHER_CLASS,EnrollmentResult.INVALID_IDENTIFIER,EnrollmentResult.DUPLICATE_IN_LIST);
         assertThat(rows.get(0).line()).isEqualTo(2);
         verify(accountLookup,times(1)).findByEmails(any());
+    }
+    /** BR-U05-56…58: trộn email và MSSV; tra mỗi loại một lần; cùng một sinh viên ở dòng sau là ALREADY_ENROLLED. */
+    @Test void batchAcceptsStudentCodesAlongsideEmails() {
+        var byCode = UUID.randomUUID();
+        var viaEmail = new AccountContact(studentId,"new@a.com","N",Role.STUDENT,AccountStatus.ACTIVE,"SE000001");
+        var viaCode = new AccountContact(byCode,"code@a.com","C",Role.STUDENT,AccountStatus.ACTIVE,"SE000002");
+        when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(ClassStatus.OPEN,0)));
+        when(accountLookup.findByEmails(any())).thenReturn(List.of(viaEmail));
+        when(accountLookup.findByStudentCodes(any())).thenReturn(List.of(viaEmail,viaCode));
+        when(accountLookup.lockContact(studentId)).thenReturn(Optional.of(viaEmail));
+        when(accountLookup.lockContact(byCode)).thenReturn(Optional.of(viaCode));
+        when(enrollmentRepository.find(classId,studentId)).thenReturn(Optional.empty())
+                .thenReturn(Optional.of(Enrollment.createEnrollment(classId,studentId,EnrollmentSource.LIST,now)));
+        var rows = academicsService.enrollStudents(manager,classId,"mssv\nnew@a.com\nse000002\nSE000001\nSE999999\nse000002\nS1");
+        assertThat(rows).extracting(AcademicsDtos.RowResult::result).containsExactly(EnrollmentResult.ENROLLED,
+                EnrollmentResult.ENROLLED,EnrollmentResult.ALREADY_ENROLLED,EnrollmentResult.NOT_FOUND,
+                EnrollmentResult.DUPLICATE_IN_LIST,EnrollmentResult.INVALID_IDENTIFIER);
+        assertThat(rows).extracting(AcademicsDtos.RowResult::email).containsExactly("new@a.com","SE000002",
+                "SE000001","SE999999","SE000002","s1");
+        verify(accountLookup,times(1)).findByEmails(List.of("new@a.com"));
+        verify(accountLookup,times(1)).findByStudentCodes(List.of("SE000002","SE000001","SE999999"));
     }
     @Test void removedStudentImmediatelyLosesAccess() {
         var actor = new Actor(studentId,Role.STUDENT);
@@ -185,7 +206,7 @@ class AcademicsServiceTest {
     }
     @Test void viewPermissionDoesNotGrantWritePermission() {
         when(authorization.authorize(eq(manager),eq("CLASS_MANAGE"),any())).thenReturn(AuthorizationDecision.deny("readonly"));
-        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,0)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(404));
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,LocalDate.of(2027, 1, 10),0)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(404));
         verify(courseClassRepository,never()).update(any(),anyLong());
         verify(audit).record(argThat(e -> e.result()==AuditResult.DENIED));
     }
@@ -201,12 +222,48 @@ class AcademicsServiceTest {
             if(event.result()==AuditResult.SUCCESS) assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
             return null;
         }).when(audit).record(any());
-        var result=academicsService.createClass(manager,subjectId,"NEW","New class",null,teacherId);
+        var result=academicsService.createClass(manager,subjectId,"NEW","New class",null,LocalDate.of(2027, 1, 10),teacherId);
         assertThat(result.status()).isEqualTo(ClassStatus.DRAFT);
         assertThat(result.version()).isZero();
         verify(courseClassRepository).insert(argThat(c -> c.code().equals("NEW") && !c.showGradeDistribution()));
         verify(audit).record(argThat(e -> e.action().equals("CLASS_CREATED")));
         verify(audit).record(argThat(e -> e.action().equals("CLASS_TEACHER_CHANGED")));
+    }
+    @Test void createStoresStartDateAndDerivesTerm() {
+        var result = academicsService.createClass(manager, subjectId, "NEW", "New class", null,
+                LocalDate.of(2027, 4, 3), null);
+        assertThat(result.startsOn()).isEqualTo(LocalDate.of(2027, 4, 3));
+        assertThat(result.term()).isEqualTo("SP27-BL5");
+        verify(courseClassRepository).insert(argThat(c -> c.startsOn().equals(LocalDate.of(2027, 4, 3))));
+    }
+    @Test void outOfRangeStartDateIsRejectedBeforeWriting() {
+        assertThatThrownBy(() -> academicsService.createClass(manager, subjectId, "NEW", "New class", null,
+                LocalDate.of(1999, 12, 31), null))
+                .isInstanceOfSatisfying(ApiException.class, e -> {
+                    assertThat(e.status().value()).isEqualTo(400);
+                    assertThat(e.code()).isEqualTo("INVALID_CLASS_START_DATE");
+                });
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager, classId, "New", null,
+                LocalDate.of(2100, 1, 1), 0))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("INVALID_CLASS_START_DATE"));
+        verify(courseClassRepository, never()).insert(any());
+        verify(courseClassRepository, never()).update(any(), anyLong());
+    }
+    @Test void updateRecalculatesTermFromNewStartDate() {
+        var result = academicsService.updateClassInfo(manager, classId, "New", null, LocalDate.of(2026, 9, 7), 0);
+        assertThat(result.term()).isEqualTo("FA26");
+        verify(courseClassRepository).update(argThat(c -> c.term().equals("FA26")), eq(0L));
+    }
+    @Test void termFilterIsForwardedAndMalformedTermIsRejected() {
+        when(scope.listManagedSubjects(managerId)).thenReturn(List.of(subjectId));
+        academicsService.listClasses(manager, "manager", null, null, null, "SP27-BL5", 1, 20);
+        verify(academicsReadRepository).listForManager(List.of(subjectId), null, null, "SP27-BL5", 20, 0);
+        assertThatThrownBy(() -> academicsService.listClasses(manager, "manager", null, null, null, "sp27", 1, 20))
+                .isInstanceOfSatisfying(ApiException.class, e -> {
+                    assertThat(e.status().value()).isEqualTo(400);
+                    assertThat(e.code()).isEqualTo("INVALID_CLASS_TERM");
+                });
     }
     @Test void inactiveTeacherCannotBeAssigned() {
         when(accountLookup.lockContact(teacherId)).thenReturn(Optional.of(contact(teacherId,Role.TEACHER,AccountStatus.DISABLED)));
@@ -215,7 +272,7 @@ class AcademicsServiceTest {
     }
     @Test void teacherLosesReadAccessAfterReassignment() {
         Actor teacher=new Actor(teacherId,Role.TEACHER);
-        when(courseClassRepository.find(classId)).thenReturn(Optional.of(CourseClass.createClass(classId,subjectId,"C","Name",null,UUID.randomUUID(),now)));
+        when(courseClassRepository.find(classId)).thenReturn(Optional.of(CourseClass.createClass(classId,subjectId,"C","Name",null,LocalDate.of(2027, 1, 10),UUID.randomUUID(),now)));
         assertThatThrownBy(() -> academicsService.loadClass(teacher,"teacher",classId)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.status().value()).isEqualTo(404));
     }
     @Test void archivedClassCannotRemoveStudents() {
@@ -232,7 +289,7 @@ class AcademicsServiceTest {
             if(event.result()==AuditResult.FAILURE) assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             return null;
         }).when(audit).record(any());
-        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,99)).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,LocalDate.of(2027, 1, 10),99)).isInstanceOf(ApiException.class);
         verify(audit).record(argThat(e -> e.result()==AuditResult.FAILURE));
     }
     @Test void reopeningDoesNotDuplicateOriginalActivationNotifications() {
@@ -259,7 +316,7 @@ class AcademicsServiceTest {
             return null;
         }).when(audit).record(any());
 
-        var result = academicsService.updateClassInfo(manager, classId, "Updated", "Description", 0);
+        var result = academicsService.updateClassInfo(manager, classId, "Updated", "Description", LocalDate.of(2027, 1, 10), 0);
 
         assertThat(result.name()).isEqualTo("Updated");
         assertThat(result.version()).isEqualTo(1);
@@ -275,7 +332,7 @@ class AcademicsServiceTest {
 
     @Test
     void staleVersionIsRejectedBeforeInvalidClassInformation() {
-        assertThatThrownBy(() -> academicsService.updateClassInfo(manager, classId, "", null, 99)).isInstanceOfSatisfying(ApiException.class,
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager, classId, "", null, LocalDate.of(2027, 1, 10), 99)).isInstanceOfSatisfying(ApiException.class,
                         error -> assertThat(error.code()).isEqualTo("CLASS_VERSION_CONFLICT"));
 
         verify(courseClassRepository, never()).update(any(), anyLong());
@@ -285,7 +342,7 @@ class AcademicsServiceTest {
 
     @Test
     void invalidClassInformationDoesNotWriteOrAuditSuccess() {
-        assertThatThrownBy(() -> academicsService.updateClassInfo(manager, classId, "", null, 0)).isInstanceOfSatisfying(ApiException.class,
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager, classId, "", null, LocalDate.of(2027, 1, 10), 0)).isInstanceOfSatisfying(ApiException.class,
                         error -> assertThat(error.code()).isEqualTo("INVALID_CLASS_FIELD"));
 
         verify(subjectMutationGuard).lockActive(subjectId, Duration.ofSeconds(1));
@@ -294,7 +351,7 @@ class AcademicsServiceTest {
     }
 
     @Test void pagingRejectsOverflowAndOversizedPage() {
-        assertThatThrownBy(() -> academicsService.listClasses(manager,"manager",null,null,null,Integer.MAX_VALUE,100)).isInstanceOf(ApiException.class);
-        assertThatThrownBy(() -> academicsService.listClasses(manager,"manager",null,null,null,1,101)).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> academicsService.listClasses(manager,"manager",null,null,null,null,Integer.MAX_VALUE,100)).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> academicsService.listClasses(manager,"manager",null,null,null,null,1,101)).isInstanceOf(ApiException.class);
     }
 }

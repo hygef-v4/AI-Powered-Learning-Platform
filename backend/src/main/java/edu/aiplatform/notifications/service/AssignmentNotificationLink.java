@@ -18,14 +18,14 @@ final class AssignmentNotificationLink {
 
     private AssignmentNotificationLink() {}
 
-    static String student(UUID assignmentId, UUID classId) {
+    static String buildStudentLink(UUID assignmentId, UUID classId) {
         return "/my-assignments/"
                 + Objects.requireNonNull(assignmentId)
                 + "?classId="
                 + Objects.requireNonNull(classId);
     }
 
-    static UUID assignmentId(String link) {
+    static UUID parseAssignmentId(String link) {
         if (link == null) throw new IllegalArgumentException("Missing assignment link");
         var match = LINK.matcher(link);
         if (!match.matches()) throw new IllegalArgumentException("Invalid assignment link");

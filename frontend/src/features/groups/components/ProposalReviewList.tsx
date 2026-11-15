@@ -179,7 +179,8 @@ function UngroupedStudentsList({ view }: { view: ClassProposalsView }) {
           <li key={u.person.accountId} className="flex flex-wrap items-center justify-between gap-2 py-2 text-[13px]">
             <span className="min-w-0">
               <span className="font-semibold text-ink">{u.person.name ?? u.person.email ?? "Chưa rõ tên"}</span>
-              {u.person.email && <span className="ml-2 text-muted">{u.person.email}</span>}
+              {(u.person.studentCode || u.person.email) && <span className="ml-2 text-muted">
+                {[u.person.studentCode, u.person.email].filter(Boolean).join(" · ")}</span>}
             </span>
             <span className="text-muted">
               {u.proposalName ? `${u.proposalName} · ${PROPOSAL_STATUS_LABELS[u.proposalStatus ?? "DRAFT"]}` : "Chưa có đề xuất"}

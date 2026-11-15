@@ -19,7 +19,7 @@ type Props = {
 };
 
 /** Đã chọn thì ô chỉ ghi email; danh sách gợi ý vẫn có tên và email. */
-const label = (manager: ManagerCandidate) => manager.email;
+const formatManagerLabel = (manager: ManagerCandidate) => manager.email;
 
 /**
  * Một ô chọn Chủ nhiệm môn (design a06, a07c): gõ để tìm, chọn trong danh sách xổ xuống, nút x để bỏ chọn. Danh sách nổi
@@ -69,7 +69,7 @@ export function ManagerPicker({
   const ready = !disabled && !waiting && !resource.loading && !failed;
   const status = resource.error instanceof ApiError ? resource.error.problem.status : null;
 
-  function choose(manager: ManagerCandidate | null) {
+  function handleChoose(manager: ManagerCandidate | null) {
     onChange(manager);
     setSearch("");
     setOpen(false);
@@ -92,7 +92,7 @@ export function ManagerPicker({
           maxLength={200}
           disabled={disabled}
           placeholder="Chưa phân công"
-          value={open ? search : value ? label(value) : ""}
+          value={open ? search : value ? formatManagerLabel(value) : ""}
           onFocus={() => setOpen(true)}
           onChange={(event) => {
             setSearch(event.target.value);
@@ -112,7 +112,7 @@ export function ManagerPicker({
                 aria-label="Bỏ chủ nhiệm"
                 className="flex text-muted hover:text-ink"
                 onMouseDown={(event) => event.preventDefault()}
-                onClick={() => choose(null)}
+                onClick={() => handleChoose(null)}
                 data-testid="subject-manager-clear"
               >
                 <Icon name="close" size={16} />
@@ -154,7 +154,7 @@ export function ManagerPicker({
                   aria-selected={value?.accountId === manager.accountId}
                   className="flex w-full flex-col px-3 py-2 text-left hover:bg-shell aria-selected:bg-primary-soft"
                   onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => choose(manager)}
+                  onClick={() => handleChoose(manager)}
                 >
                   <span className="text-[13px] font-semibold text-ink">{manager.displayName}</span>
                   <span className="text-xs text-muted">{manager.email}</span>

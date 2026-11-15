@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { Button, PageHeader, Section, showToast, tabId, Tabs, type TabItem } from "@/shared/ui";
-import { getSubject, getSubjectClasses } from "../api";
+import { loadSubject, listSubjectClasses } from "../api";
 import { ManagerCard } from "../components/ManagerCard";
 import { ManagerChangeDialog } from "../components/ManagerChangeDialog";
 import type { SearchSubjectManagers } from "../model/managerSearch";
@@ -40,9 +40,9 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
       alive.current = false;
     };
   }, []);
-  const load = useCallback(() => getSubject(subjectId), [subjectId]);
+  const load = useCallback(() => loadSubject(subjectId), [subjectId]);
   const subject = useSubjectRead(`subject:${subjectId}`, load);
-  const loadClasses = useCallback(() => getSubjectClasses(subjectId), [subjectId]);
+  const loadClasses = useCallback(() => listSubjectClasses(subjectId), [subjectId]);
   const classes = useSubjectRead(
     `classes:${subjectId}`,
     loadClasses,
@@ -50,28 +50,28 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
   );
   const accessError =
     mutationAccessError ?? (isSubjectAccessError(classes.error) ? classes.error : null);
-  function reload() {
+  function handleReload() {
     setMode(null);
     setMutationAccessError(null);
     subject.reload();
     classes.reload();
   }
-  function saved(message: string, tone: "success" | "danger" = "success") {
+  function handleSaved(message: string, tone: "success" | "danger" = "success") {
     if (!alive.current) return;
     showToast(message, tone);
-    reload();
+    handleReload();
   }
   if (subject.error !== null || accessError !== null)
     return (
       <>
         <PageHeader title="Môn học" backHref="/admin/subjects" />
-        <SubjectReadError error={subject.error ?? accessError} onRetry={reload} />
+        <SubjectReadError error={subject.error ?? accessError} onRetry={handleReload} />
       </>
     );
   if (!subject.data) return <PageLoading label="Đang tải môn học…" />;
   const data = subject.data;
   const archived = data.status === "ARCHIVED";
-  const base = { subject: data, onReload: reload, onAccessError: setMutationAccessError };
+  const base = { subject: data, onReload: handleReload, onAccessError: setMutationAccessError };
   const tabs: TabItem<Tab>[] = [
     { key: "information", label: "Thông tin" },
     { key: "classes", label: "Lớp học", count: data.classCount ?? undefined },
@@ -98,7 +98,7 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
           aria-labelledby={tabId("subject-tab-panel", tab)}
           className="grid items-start gap-4 lg:grid-cols-[1fr_280px]"
         >
-          <SubjectInfoTab key={data.version} {...base} onSaved={() => saved("Đã lưu thay đổi")} />
+          <SubjectInfoTab key={data.version} {...base} onSaved={() => handleSaved("Đã lưu thay đổi")} />
           <div className="flex flex-col gap-4">
             <SubjectMetaCard
               subject={data}
@@ -141,8 +141,8 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
           searchManagers={searchManagers}
           onSaved={(next: SubjectDetail) =>
             next.managerId === null
-              ? saved("Đã bỏ chủ nhiệm môn", "danger")
-              : saved("Đã đổi chủ nhiệm môn")
+              ? handleSaved("Đã bỏ chủ nhiệm môn", "danger")
+              : handleSaved("Đã đổi chủ nhiệm môn")
           }
           onClose={() => setMode(null)}
         />
@@ -152,8 +152,8 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
           {...base}
           onSaved={(next: SubjectDetail) =>
             next.status === "ARCHIVED"
-              ? saved("Đã lưu trữ môn học", "danger")
-              : saved("Đã mở lại môn học")
+              ? handleSaved("Đã lưu trữ môn học", "danger")
+              : handleSaved("Đã mở lại môn học")
           }
           onClose={() => setMode(null)}
         />

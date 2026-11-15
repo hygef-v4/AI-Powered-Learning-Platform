@@ -15,10 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SubjectMutationGuard implements ISubjectMutationGuard {
-    private final ISubjectRepository repository;
+    private final ISubjectRepository subjectRepository;
 
-    public SubjectMutationGuard(ISubjectRepository repository) {
-        this.repository = repository;
+    public SubjectMutationGuard(ISubjectRepository subjectRepository) {
+        this.subjectRepository = subjectRepository;
     }
 
     @Override
@@ -31,14 +31,14 @@ public class SubjectMutationGuard implements ISubjectMutationGuard {
         Subject subject;
         try {
             subject =
-                    repository
-                            .findByIdForUpdate(subjectId, budget.remaining())
+                    subjectRepository
+                            .findByIdForUpdate(subjectId, budget.calculateRemaining())
                             .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
         } catch (DataAccessException failure) {
             throw ApiException.unavailable(
                     "SUBJECT_LIFECYCLE_UNAVAILABLE", "Chưa khóa được môn, vui lòng thử lại");
         }
-        budget.remaining();
+        budget.calculateRemaining();
         if (subject.status() != SubjectStatus.ACTIVE) {
             throw ApiException.conflict(
                     "SUBJECT_ARCHIVED", "Môn đã lưu trữ, không thể tạo hoặc mở lớp");

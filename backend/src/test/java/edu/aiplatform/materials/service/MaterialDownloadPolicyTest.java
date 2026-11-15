@@ -29,22 +29,53 @@ class MaterialDownloadPolicyTest {
                 UUID.randomUUID(), Material.Kind.FILE, "Title", "", 0, Material.Status.ACTIVE,
                 1, managerId, now, now, 0);
         var current = new AtomicReference<>(material);
-        var repository = mock(IMaterialRepository.class);
-        when(repository.findByFileId("file")).thenAnswer(call -> List.of(current.get()));
-        when(repository.version(material.id(), 1)).thenReturn(Optional.of(new MaterialVersion(material.id(),
-                1, "file", "ref.pdf", "application/pdf", 1L, null, null,
-                MaterialVersion.TextStatus.EXTRACTED, "source", managerId, now)));
+        var materialRepository = mock(IMaterialRepository.class);
+        when(materialRepository.findByFileId("file")).thenAnswer(call -> List.of(current.get()));
+        when(materialRepository.findVersion(material.id(), 1))
+                .thenReturn(
+                        Optional.of(
+                                new MaterialVersion(
+                                        material.id(),
+                                        1,
+                                        "file",
+                                        "ref.pdf",
+                                        "application/pdf",
+                                        1L,
+                                        null,
+                                        null,
+                                        MaterialVersion.TextStatus.EXTRACTED,
+                                        "source",
+                                        managerId,
+                                        now)));
         var authorization = mock(IAuthorization.class);
         when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
-        var subjects = mock(ISubjectQuery.class);
-        when(subjects.getSubject(subject)).thenReturn(Optional.of(new SubjectRef(subject, "S", "Subject",
-                SubjectStatus.ACTIVE, managerId)));
-        var classes = mock(IClassAccess.class);
-        when(classes.listOpenClassesOf(student.accountId())).thenReturn(List.of(new ClassRef(classId, subject,
-                "C", "Class", ClassStatus.OPEN, managerId, false)));
-        when(classes.isActiveStudent(student.accountId(), classId)).thenReturn(true);
-        var access = new MaterialAccessPolicy(authorization, subjects, classes, mock(IClassScope.class),
-                mock(IAudit.class), Clock.fixed(now, ZoneOffset.UTC));
+        var subjectQuery = mock(ISubjectQuery.class);
+        when(subjectQuery.getSubject(subject))
+                .thenReturn(
+                        Optional.of(
+                                new SubjectRef(
+                                        subject, "S", "Subject", SubjectStatus.ACTIVE, managerId)));
+        var classAccess = mock(IClassAccess.class);
+        when(classAccess.listOpenClassesOf(student.accountId()))
+                .thenReturn(
+                        List.of(
+                                new ClassRef(
+                                        classId,
+                                        subject,
+                                        "C",
+                                        "Class",
+                                        ClassStatus.OPEN,
+                                        managerId,
+                                        false)));
+        when(classAccess.isActiveStudent(student.accountId(), classId)).thenReturn(true);
+        var materialAccessPolicy =
+                new MaterialAccessPolicy(
+                        authorization,
+                        subjectQuery,
+                        classAccess,
+                        mock(IClassScope.class),
+                        mock(IAudit.class),
+                        Clock.fixed(now, ZoneOffset.UTC));
         var tokens = mock(DownloadTokenService.class);
         when(tokens.resolve("student-token")).thenReturn(Optional.of(new DownloadTokenService.Grant("file", student.accountId())));
         when(tokens.resolve("staff-token")).thenReturn(Optional.of(new DownloadTokenService.Grant("file", managerId)));
@@ -53,19 +84,19 @@ class MaterialDownloadPolicyTest {
                 ArtifactPurpose.MATERIAL, "ref.pdf", "application/pdf", 1, "sha")));
         when(storage.open("file")).thenAnswer(call -> new ByteArrayInputStream(new byte[] {1}));
         var downloadService = new DownloadService(tokens, storage, mock(FileAudit.class),
-                List.of(new MaterialDownloadPolicy(repository, access)));
+                List.of(new MaterialDownloadPolicy(materialRepository, materialAccessPolicy)));
 
         try (var content = downloadService.open(student, "student-token").content()) {
             assertThat(content.read()).isEqualTo(1);
         }
-        current.set(material.withPresentation(false, null));
+        current.set(material.changePresentation(false, null));
         assertThatThrownBy(() -> downloadService.open(student, "student-token"))
                 .isInstanceOfSatisfying(ApiException.class, failure -> assertThat(failure.code()).isEqualTo("MATERIAL_NOT_FOUND"));
         verify(storage, times(1)).open("file");
         try (var content = downloadService.open(manager, "staff-token").content()) {
             assertThat(content.read()).isEqualTo(1);
         }
-        current.set(material.withPresentation(true, null));
+        current.set(material.changePresentation(true, null));
         try (var content = downloadService.open(student, "student-token").content()) {
             assertThat(content.read()).isEqualTo(1);
         }

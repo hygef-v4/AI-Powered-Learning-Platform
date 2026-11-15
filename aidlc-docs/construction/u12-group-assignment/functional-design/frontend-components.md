@@ -149,3 +149,7 @@ app/classes/[classId]/group/   MyGroupPage           có nhóm chính thức: nh
 ## Thao tác nhóm rõ nghĩa — 2026-11-13
 
 Mỗi nhóm có nút Đổi trưởng nhóm riêng, mở popup chỉ chọn trong thành viên hiện tại và lưu bằng group-set version hiện hữu. Tên/thành viên nhóm không bị sửa qua popup này. Form tạo/sửa nhóm thêm checkbox chọn tất cả kết quả lọc, giữ lựa chọn ngoài bộ lọc và trạng thái chọn một phần; không đưa sinh viên đang ở nhóm khác vào danh sách. Lớp ARCHIVED giữ chế độ chỉ xem. Xác nhận Nhả mục ghi rõ tên mục, người giữ, bản nháp đang làm sẽ bị bỏ và nội dung đã hoàn thành được giữ; quyền nhả không đổi.
+
+## Mã số sinh viên (MSSV) — 2026-11-13
+
+Thay đổi giao diện để hiện và tìm theo MSSV ghi ở mục "Giao diện" của phần MSSV trong [business-rules.md](business-rules.md). Cách hiển thị chung (cột MSSV trước họ tên trong bảng, dòng phụ `SE123456 · email` trong thẻ, ô trống khi chưa có mã) theo [frontend-components U01 mục 6](../../u01-account-and-access/functional-design/frontend-components.md).

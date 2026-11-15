@@ -142,3 +142,16 @@ US-GRP-007…010, [SG-01…09](../../../inception/requirements/2026-11-11-studen
 | BR-U12-94 | Audit: `GROUP_FORMATION_UPDATED`, `GROUP_PROPOSAL_SUBMITTED`, `GROUP_PROPOSAL_APPROVED`, `GROUP_PROPOSAL_REJECTED`, cùng `GROUP_CREATED` của nhóm được tạo. Không audit tạo nháp, mời, chấp nhận, rời. Không ghi họ tên, email hay lý do vào log ứng dụng (SECURITY-03). | FR-014, SG NFR |
 | BR-U12-95 | Thông báo chỉ bốn loại ở bảng sự kiện; thay đổi do hệ thống (BR-U12-85, 88, 89) không thông báo. Sự kiện phát sau commit; lỗi gửi thông báo không hoàn tác thao tác (RESILIENCY-10, theo cơ chế sự kiện hiện có). | SG-08, quyết định Q7, Q8 |
 | BR-U12-96 | Mọi thao tác ghi lên đề xuất là một transaction; lỗi thì hoàn tác toàn bộ, trả lỗi chung không lộ chi tiết nội bộ (SECURITY-15). Thao tác trưởng nhóm gửi `version` đề xuất, lệch thì `409 PROPOSAL_VERSION_CONFLICT`. | SECURITY-15 |
+
+## 9. Mã số sinh viên (MSSV) — 2026-11-13
+
+Nguồn: [yêu cầu SC-10, SC-11](../../../inception/requirements/2026-11-13-student-code.md); [FD Q6, Q7](../../plans/functional-design-plan/2026-11-13-u01-student-code-functional-design-plan.md). MSSV do U01 sở hữu (BR-U01-100…115).
+
+| Mã | Rule | Nguồn |
+|---|---|---|
+| BR-U12-97 | Các DTO người dùng của U12 có thêm trường `studentCode`, có thể rỗng: `ClassGroupService.PersonView`, `ProposalPeople.Person`, `GroupProposalService.MemberView` và DTO ứng viên mời. MSSV chỉ hiện trên những màn vốn đã hiện người đó. Phía giảng viên gồm danh sách nhóm, đề xuất chờ duyệt và sinh viên chưa có nhóm. Phía sinh viên gồm nhóm của tôi, thành viên và lời mời của đề xuất, và danh sách ứng viên mời. Phạm vi ứng viên và quyền xem giữ nguyên. | SC-10, SC-11 |
+| BR-U12-98 | Ô tìm bạn để mời vào đề xuất nhóm khớp theo tên, email hoặc MSSV, không phân biệt hoa thường. Hiện nay danh sách ứng viên được lọc ở frontend, nên chỉ cần thêm MSSV vào dữ liệu ứng viên và vào điều kiện lọc. Không thêm API mới. | SC-11, FD Q7 |
+
+**Giao diện**:
+- `ClassGroupsPanel`, `GroupFormDialog`, `ProposalReviewList`, `MyGroup`, `GroupProposalSection`, `ProposalDialogs`: hiện dòng phụ `SE123456 · email` dưới tên.
+- `InviteMembersDialog`: chữ gợi ý ô tìm đổi thành "Tìm theo tên, email hoặc MSSV".

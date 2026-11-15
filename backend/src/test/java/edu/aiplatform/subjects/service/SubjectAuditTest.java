@@ -22,16 +22,17 @@ class SubjectAuditTest {
     private static final Instant NOW = Instant.parse("2026-10-18T10:00:00Z");
     private final IAuthorization authorization = mock(IAuthorization.class);
     private final IAudit audit = mock(IAudit.class);
-    private final SubjectAuditRecorder recorder = new SubjectAuditRecorder(audit);
-    private final SubjectAdminAccess access =
-            new SubjectAdminAccess(authorization, recorder, Clock.fixed(NOW, ZoneOffset.UTC));
+    private final SubjectAuditRecorder subjectAuditRecorder = new SubjectAuditRecorder(audit);
+    private final SubjectAdminAccess subjectAdminAccess =
+            new SubjectAdminAccess(
+                    authorization, subjectAuditRecorder, Clock.fixed(NOW, ZoneOffset.UTC));
     private final Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
     private final UUID id = UUID.randomUUID();
 
     @Test
     void anonymousDenialRecordsOneSafeEventWithoutAccountOrObjectId() {
         code(
-                () -> access.require(null, "SUBJECT_LIST", ResourceRef.none()),
+                () -> subjectAdminAccess.requireAccess(null, "SUBJECT_LIST", ResourceRef.none()),
                 "AUTHENTICATION_REQUIRED");
         AuditEvent event = event();
         assertThat(event.actorId()).isNull();
@@ -51,7 +52,8 @@ class SubjectAuditTest {
     void nonAdminDenialHasActorAndSubjectButDoesNotCallAuthorization() {
         var student = new Actor(UUID.randomUUID(), Role.STUDENT);
         code(
-                () -> access.require(student, "SUBJECT_UPDATE", ResourceRef.subject(id)),
+                () -> subjectAdminAccess.requireAccess(
+                        student, "SUBJECT_UPDATE", ResourceRef.subject(id)),
                 "SUBJECT_FORBIDDEN");
         assertThat(event().actorId()).isEqualTo(student.accountId());
         assertThat(event().objectId()).isEqualTo(id.toString());
@@ -63,7 +65,8 @@ class SubjectAuditTest {
         when(authorization.authorize(any(), anyString(), any()))
                 .thenReturn(AuthorizationDecision.deny("secret-token-and-internal-reason"));
         code(
-                () -> access.require(admin, "SUBJECT_VIEW", ResourceRef.subject(id)),
+                () -> subjectAdminAccess.requireAccess(
+                        admin, "SUBJECT_VIEW", ResourceRef.subject(id)),
                 "SUBJECT_FORBIDDEN");
         assertThat(event().reason()).isEqualTo("SUBJECT_FORBIDDEN");
         assertThat(event().details().toString())
@@ -75,7 +78,7 @@ class SubjectAuditTest {
         when(authorization.authorize(any(), anyString(), any()))
                 .thenThrow(new IllegalStateException("password=hidden"));
         code(
-                () -> access.require(admin, "SUBJECT_CREATE", ResourceRef.none()),
+                () -> subjectAdminAccess.requireAccess(admin, "SUBJECT_CREATE", ResourceRef.none()),
                 "SUBJECT_AUTHORIZATION_UNAVAILABLE");
         assertThat(event().reason()).isEqualTo("SUBJECT_AUTHORIZATION_UNAVAILABLE");
         assertThat(event().details().toString()).doesNotContain("password");
@@ -84,7 +87,8 @@ class SubjectAuditTest {
     @Test
     void nullDecisionIsAlsoAuditedAndDenied() {
         code(
-                () -> access.require(admin, "SUBJECT_MANAGER_CHANGE", ResourceRef.subject(id)),
+                () -> subjectAdminAccess.requireAccess(
+                        admin, "SUBJECT_MANAGER_CHANGE", ResourceRef.subject(id)),
                 "SUBJECT_AUTHORIZATION_UNAVAILABLE");
         assertThat(event().result()).isEqualTo(AuditResult.DENIED);
     }
@@ -93,7 +97,7 @@ class SubjectAuditTest {
     void auditFailureKeepsAccessClosedAndReturnsSafeUnavailable() {
         doThrow(new IllegalStateException("SQL internal")).when(audit).record(any());
         code(
-                () -> access.require(null, "SUBJECT_LIST", ResourceRef.none()),
+                () -> subjectAdminAccess.requireAccess(null, "SUBJECT_LIST", ResourceRef.none()),
                 "SUBJECT_AUDIT_UNAVAILABLE");
         verify(audit, times(1)).record(any());
         verifyNoInteractions(authorization);
@@ -103,17 +107,17 @@ class SubjectAuditTest {
     void allowedRequestDoesNotRecordDeniedOrReadAudit() {
         when(authorization.authorize(any(), anyString(), any()))
                 .thenReturn(AuthorizationDecision.allow());
-        access.require(admin, "SUBJECT_VIEW", ResourceRef.subject(id));
+        subjectAdminAccess.requireAccess(admin, "SUBJECT_VIEW", ResourceRef.subject(id));
         verifyNoInteractions(audit);
     }
 
     @Test
     void distinctRejectedRequestsHaveDistinctEventIds() {
         code(
-                () -> access.require(null, "SUBJECT_LIST", ResourceRef.none()),
+                () -> subjectAdminAccess.requireAccess(null, "SUBJECT_LIST", ResourceRef.none()),
                 "AUTHENTICATION_REQUIRED");
         code(
-                () -> access.require(null, "SUBJECT_LIST", ResourceRef.none()),
+                () -> subjectAdminAccess.requireAccess(null, "SUBJECT_LIST", ResourceRef.none()),
                 "AUTHENTICATION_REQUIRED");
         var events = ArgumentCaptor.forClass(AuditEvent.class);
         verify(audit, times(2)).record(events.capture());
@@ -131,14 +135,14 @@ class SubjectAuditTest {
                         UUID.randomUUID(),
                         NOW.minusSeconds(10));
         Subject edited = before.updateInformation("New", "new-secret-description", NOW);
-        recorder.informationUpdated(admin, before, edited);
+        subjectAuditRecorder.recordInformationUpdated(admin, before, edited);
         var update = event();
         assertThat(update.details()).containsOnlyKeys("changedFields");
         assertThat(update.details()).containsEntry("changedFields", List.of("name", "description"));
         assertThat(update.details().toString()).doesNotContain("secret-description");
         clearInvocations(audit);
         Subject unassigned = before.changeManager(null, NOW);
-        recorder.managerChanged(admin, before, unassigned);
+        subjectAuditRecorder.recordManagerChanged(admin, before, unassigned);
         assertThat(event().details())
                 .containsOnlyKeys("oldManagerId", "newManagerId")
                 .containsEntry("newManagerId", null);

@@ -13,17 +13,18 @@ import org.junit.jupiter.api.*;
 class MaterialTextExtractJobHandlerTest {
     final UUID id = UUID.randomUUID(), subject = UUID.randomUUID(), actor = UUID.randomUUID();
     final Instant now = Instant.now();
-    IMaterialRepository repo;
-    MaterialTextExtractor extractor;
-    MaterialTextExtractJobHandler handler;
+    IMaterialRepository materialRepository;
+    MaterialTextExtractor materialTextExtractor;
+    MaterialTextExtractJobHandler materialTextExtractJobHandler;
     Material material;
     MaterialVersion version;
 
     @BeforeEach
     void setup() {
-        repo = mock(IMaterialRepository.class);
-        extractor = mock(MaterialTextExtractor.class);
-        handler = new MaterialTextExtractJobHandler(repo, extractor);
+        materialRepository = mock(IMaterialRepository.class);
+        materialTextExtractor = mock(MaterialTextExtractor.class);
+        materialTextExtractJobHandler =
+                new MaterialTextExtractJobHandler(materialRepository, materialTextExtractor);
         material =
                 new Material(
                         id,
@@ -55,8 +56,8 @@ class MaterialTextExtractJobHandlerTest {
                         null,
                         actor,
                         now);
-        when(repo.find(id)).thenReturn(Optional.of(material));
-        when(repo.version(id, 1)).thenReturn(Optional.of(version));
+        when(materialRepository.findMaterial(id)).thenReturn(Optional.of(material));
+        when(materialRepository.findVersion(id, 1)).thenReturn(Optional.of(version));
     }
 
     JobMessage message() {
@@ -71,57 +72,60 @@ class MaterialTextExtractJobHandlerTest {
 
     @Test
     void extractsTextIntoExactVersion() {
-        when(extractor.extract("file"))
+        when(materialTextExtractor.extractText("file"))
                 .thenReturn(new MaterialTextExtractor.Result("a".repeat(100), 1));
-        handler.handle(message());
-        verify(repo).completeText(id, 1, MaterialVersion.TextStatus.EXTRACTED, "a".repeat(100));
+        materialTextExtractJobHandler.handle(message());
+        verify(materialRepository)
+                .completeText(id, 1, MaterialVersion.TextStatus.EXTRACTED, "a".repeat(100));
     }
 
     @Test
     void textDensityBoundaryRequiresFiftyCharactersPerPage() {
-        when(extractor.extract("file"))
+        when(materialTextExtractor.extractText("file"))
                 .thenReturn(new MaterialTextExtractor.Result("a".repeat(98), 2));
-        handler.handle(message());
-        verify(repo).completeText(id, 1, MaterialVersion.TextStatus.NO_TEXT, null);
-        clearInvocations(repo);
-        when(extractor.extract("file"))
+        materialTextExtractJobHandler.handle(message());
+        verify(materialRepository).completeText(id, 1, MaterialVersion.TextStatus.NO_TEXT, null);
+        clearInvocations(materialRepository);
+        when(materialTextExtractor.extractText("file"))
                 .thenReturn(new MaterialTextExtractor.Result("a".repeat(100), 2));
-        handler.handle(message());
-        verify(repo).completeText(id, 1, MaterialVersion.TextStatus.EXTRACTED, "a".repeat(100));
+        materialTextExtractJobHandler.handle(message());
+        verify(materialRepository)
+                .completeText(id, 1, MaterialVersion.TextStatus.EXTRACTED, "a".repeat(100));
     }
 
     @Test
     void extractedTextIsCappedAtOneMillionCharacters() {
-        when(extractor.extract("file"))
+        when(materialTextExtractor.extractText("file"))
                 .thenReturn(new MaterialTextExtractor.Result("a".repeat(1_000_001), 1));
-        handler.handle(message());
-        verify(repo).completeText(id, 1, MaterialVersion.TextStatus.EXTRACTED, "a".repeat(1_000_000));
+        materialTextExtractJobHandler.handle(message());
+        verify(materialRepository)
+                .completeText(id, 1, MaterialVersion.TextStatus.EXTRACTED, "a".repeat(1_000_000));
     }
 
     @Test
     void sparsePagesProduceNoText() {
-        when(extractor.extract("file"))
+        when(materialTextExtractor.extractText("file"))
                 .thenReturn(new MaterialTextExtractor.Result("a".repeat(100), 3));
-        handler.handle(message());
-        verify(repo).completeText(id, 1, MaterialVersion.TextStatus.NO_TEXT, null);
+        materialTextExtractJobHandler.handle(message());
+        verify(materialRepository).completeText(id, 1, MaterialVersion.TextStatus.NO_TEXT, null);
     }
 
     @Test
     void supersededBeforeStartSkipsStorageAndWrite() {
-        when(repo.find(id))
+        when(materialRepository.findMaterial(id))
                 .thenReturn(
                         Optional.of(material.revise("Title", "", 0, 2, material.status(), now)));
-        handler.handle(message());
-        verifyNoInteractions(extractor);
-        verify(repo, never()).completeText(any(), anyInt(), any(), any());
+        materialTextExtractJobHandler.handle(message());
+        verifyNoInteractions(materialTextExtractor);
+        verify(materialRepository, never()).completeText(any(), anyInt(), any(), any());
     }
 
     @Test
     void replacementDuringParsingCannotOverwriteNewVersion() {
-        when(extractor.extract("file"))
+        when(materialTextExtractor.extractText("file"))
                 .thenAnswer(
                         call -> {
-                            when(repo.find(id))
+                            when(materialRepository.findMaterial(id))
                                     .thenReturn(
                                             Optional.of(
                                                     material.revise(
@@ -133,15 +137,16 @@ class MaterialTextExtractJobHandlerTest {
                                                             now)));
                             return new MaterialTextExtractor.Result("a".repeat(100), 1);
                         });
-        handler.handle(message());
-        verify(repo).completeText(id, 1, MaterialVersion.TextStatus.EXTRACTED, "a".repeat(100));
-        verify(repo, never()).update(any(), anyLong());
-        verify(repo, never()).completeText(eq(id), eq(2), any(), any());
+        materialTextExtractJobHandler.handle(message());
+        verify(materialRepository)
+                .completeText(id, 1, MaterialVersion.TextStatus.EXTRACTED, "a".repeat(100));
+        verify(materialRepository, never()).updateMaterial(any(), anyLong());
+        verify(materialRepository, never()).completeText(eq(id), eq(2), any(), any());
     }
 
     @Test
     void completedVersionIsIdempotent() {
-        when(repo.version(id, 1))
+        when(materialRepository.findVersion(id, 1))
                 .thenReturn(
                         Optional.of(
                                 new MaterialVersion(
@@ -157,29 +162,30 @@ class MaterialTextExtractJobHandlerTest {
                                         "done",
                                         actor,
                                         now)));
-        handler.handle(message());
-        verifyNoInteractions(extractor);
+        materialTextExtractJobHandler.handle(message());
+        verifyNoInteractions(materialTextExtractor);
     }
 
     @Test
     void transientParserFailureUsesU03RetryContract() {
-        when(extractor.extract("file")).thenThrow(new IllegalStateException("private data"));
-        assertThatThrownBy(() -> handler.handle(message()))
+        when(materialTextExtractor.extractText("file"))
+                .thenThrow(new IllegalStateException("private data"));
+        assertThatThrownBy(() -> materialTextExtractJobHandler.handle(message()))
                 .isInstanceOf(RetryableJobException.class)
                 .hasMessageNotContaining("private data");
-        verify(repo, never()).completeText(any(), anyInt(), any(), any());
+        verify(materialRepository, never()).completeText(any(), anyInt(), any(), any());
     }
 
     @Test
     void exhaustedRetriesMarkOnlyPendingExactVersionFailed() {
-        handler.onFailed(message(), "private");
-        verify(repo).completeText(id, 1, MaterialVersion.TextStatus.FAILED, null);
+        materialTextExtractJobHandler.onFailed(message(), "private");
+        verify(materialRepository).completeText(id, 1, MaterialVersion.TextStatus.FAILED, null);
     }
 
     @Test
     void sweeperReusesIdempotencyKeyAndPayload() {
-        when(repo.stalePending(now)).thenReturn(List.of(version));
-        var pending = handler.findStalePending(now).get(0);
+        when(materialRepository.listStalePendingVersions(now)).thenReturn(List.of(version));
+        var pending = materialTextExtractJobHandler.findStalePending(now).get(0);
         assertThat(pending.idempotencyKey()).isEqualTo("material:" + id + ":1");
         assertThat(pending.payload()).containsEntry("versionNo", 1);
     }

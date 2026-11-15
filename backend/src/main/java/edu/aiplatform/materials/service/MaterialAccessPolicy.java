@@ -14,28 +14,28 @@ import org.springframework.stereotype.Component;
 @Component
 public class MaterialAccessPolicy {
     private final IAuthorization authorization;
-    private final ISubjectQuery subjects;
-    private final IClassAccess classes;
+    private final ISubjectQuery subjectQuery;
+    private final IClassAccess classAccess;
     private final IClassScope classScope;
     private final IAudit audit;
     private final Clock clock;
 
     public MaterialAccessPolicy(
             IAuthorization authorization,
-            ISubjectQuery subjects,
-            IClassAccess classes,
+            ISubjectQuery subjectQuery,
+            IClassAccess classAccess,
             IClassScope classScope,
             IAudit audit,
             Clock clock) {
         this.authorization = authorization;
-        this.subjects = subjects;
-        this.classes = classes;
+        this.subjectQuery = subjectQuery;
+        this.classAccess = classAccess;
         this.classScope = classScope;
         this.audit = audit;
         this.clock = clock;
     }
 
-    private <T> T dependency(Supplier<T> operation) {
+    private <T> T callDependency(Supplier<T> operation) {
         try {
             return operation.get();
         } catch (ApiException e) {
@@ -47,9 +47,9 @@ public class MaterialAccessPolicy {
         }
     }
 
-    private boolean allowed(Actor actor, String action, ResourceRef ref) {
+    private boolean isAllowed(Actor actor, String action, ResourceRef ref) {
         if (actor == null || actor.accountId() == null || actor.role() == null) return false;
-        var decision = dependency(() -> authorization.authorize(actor, action, ref));
+        var decision = callDependency(() -> authorization.authorize(actor, action, ref));
         if (decision == null || "DEPENDENCY_UNAVAILABLE".equals(decision.reason()))
             throw ApiException.unavailable(
                     "MATERIAL_AUTH_UNAVAILABLE",
@@ -57,131 +57,146 @@ public class MaterialAccessPolicy {
         return decision.allowed();
     }
 
-    public SubjectRef subject(UUID id) {
-        return dependency(() -> subjects.getSubject(id))
+    public SubjectRef requireSubject(UUID id) {
+        return callDependency(() -> subjectQuery.getSubject(id))
                 .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
     }
 
-    public ClassRef courseClass(UUID id) {
-        return dependency(() -> classes.getClassRef(id))
+    public ClassRef requireClass(UUID id) {
+        return callDependency(() -> classAccess.getClassRef(id))
                 .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
     }
 
-    private boolean managesSubject(Actor actor, UUID id) {
+    private boolean isSubjectManager(Actor actor, UUID id) {
         return actor != null
                 && actor.role() == Role.SUBJECT_MANAGER
-                && allowed(actor, Actions.MATERIAL_SUBJECT_MANAGE, ResourceRef.subject(id));
+                && isAllowed(actor, Actions.MATERIAL_SUBJECT_MANAGE, ResourceRef.subject(id));
     }
 
     /** Chủ nhiệm môn sửa được module của môn đang hoạt động. */
-    public void manageModules(Actor actor, UUID subjectId) {
-        if (!managesSubject(actor, subjectId)) deny(actor, subjectId);
-        if (subject(subjectId).status() != SubjectStatus.ACTIVE)
+    public void requireModuleManagement(Actor actor, UUID subjectId) {
+        if (!isSubjectManager(actor, subjectId)) denyAccess(actor, subjectId);
+        if (requireSubject(subjectId).status() != SubjectStatus.ACTIVE)
             throw ApiException.conflict(
                     "MATERIAL_SCOPE_READ_ONLY", "Môn đã lưu trữ, học liệu chỉ đọc");
     }
 
     public boolean canManageModules(Actor actor, UUID subjectId) {
-        return managesSubject(actor, subjectId)
-                && subject(subjectId).status() == SubjectStatus.ACTIVE;
+        return isSubjectManager(actor, subjectId)
+                && requireSubject(subjectId).status() == SubjectStatus.ACTIVE;
     }
 
-    /** Gắn, gỡ Quiz khỏi module: Quiz của môn do Chủ nhiệm môn, Quiz của lớp do giảng viên của lớp (lớp chưa lưu trữ). */
+    /**
+     * Gắn, gỡ Quiz khỏi module: Quiz của môn do Chủ nhiệm môn, Quiz của lớp do giảng viên của lớp
+     * (lớp chưa lưu trữ).
+     */
     public boolean canManageQuiz(Actor actor, UUID subjectId, UUID classId) {
         if (classId == null) return canManageModules(actor, subjectId);
-        ClassRef c = courseClass(classId);
+        ClassRef c = requireClass(classId);
         return subjectId.equals(c.subjectId())
                 && c.status() != ClassStatus.ARCHIVED
-                && staffCanRead(actor, c);
+                && canStaffRead(actor, c);
     }
 
-    public void subjectList(Actor actor, UUID subjectId) {
-        if (!managesSubject(actor, subjectId)) deny(actor, subjectId);
-        subject(subjectId);
+    public void requireSubjectListAccess(Actor actor, UUID subjectId) {
+        if (!isSubjectManager(actor, subjectId)) denyAccess(actor, subjectId);
+        requireSubject(subjectId);
     }
 
-    public ClassRef classList(Actor actor, UUID classId, boolean student) {
-        ClassRef c = courseClass(classId);
-        boolean ok = student ? studentCanRead(actor, c) : staffCanRead(actor, c);
-        if (!ok) deny(actor, classId);
+    public ClassRef requireClassListAccess(Actor actor, UUID classId, boolean student) {
+        ClassRef c = requireClass(classId);
+        boolean ok = student ? canStudentRead(actor, c) : canStaffRead(actor, c);
+        if (!ok) denyAccess(actor, classId);
         return c;
     }
 
-    private boolean staffCanRead(Actor actor, ClassRef c) {
+    private boolean canStaffRead(Actor actor, ClassRef courseClass) {
         return actor != null
                 && (actor.role() == Role.TEACHER || actor.role() == Role.SUBJECT_MANAGER)
-                && actor.accountId().equals(c.teacherId())
-                && allowed(
-                        actor, Actions.MATERIAL_STAFF_READ, ResourceRef.courseClass(c.classId()));
+                && actor.accountId().equals(courseClass.teacherId())
+                && isAllowed(
+                        actor,
+                        Actions.MATERIAL_STAFF_READ,
+                        ResourceRef.courseClass(courseClass.classId()));
     }
 
-    private boolean studentCanRead(Actor actor, ClassRef c) {
+    private boolean canStudentRead(Actor actor, ClassRef courseClass) {
         return actor != null
                 && actor.role() == Role.STUDENT
-                && c.status() == ClassStatus.OPEN
-                && allowed(
-                        actor, Actions.MATERIAL_STUDENT_READ, ResourceRef.courseClass(c.classId()))
-                && dependency(() -> classes.isActiveStudent(actor.accountId(), c.classId()));
+                && courseClass.status() == ClassStatus.OPEN
+                && isAllowed(
+                        actor,
+                        Actions.MATERIAL_STUDENT_READ,
+                        ResourceRef.courseClass(courseClass.classId()))
+                && callDependency(
+                        () -> classAccess.isActiveStudent(
+                                actor.accountId(), courseClass.classId()));
     }
 
-    public boolean canManage(Actor actor, Material m) {
-        if (m.scope() == Material.Scope.SUBJECT) return managesSubject(actor, m.subjectId());
-        ClassRef c = courseClass(m.classId());
-        return Objects.equals(c.subjectId(), m.subjectId()) && staffCanRead(actor, c);
+    public boolean canManageMaterial(Actor actor, Material material) {
+        if (material.scope() == Material.Scope.SUBJECT)
+            return isSubjectManager(actor, material.subjectId());
+        ClassRef c = requireClass(material.classId());
+        return Objects.equals(c.subjectId(), material.subjectId()) && canStaffRead(actor, c);
     }
 
-    public void write(Actor actor, Material m) {
-        if (!canManage(actor, m)) deny(actor, m.id());
-        if (subject(m.subjectId()).status() != SubjectStatus.ACTIVE
-                || (m.classId() != null
-                        && courseClass(m.classId()).status() == ClassStatus.ARCHIVED))
+    public void requireWriteAccess(Actor actor, Material material) {
+        if (!canManageMaterial(actor, material)) denyAccess(actor, material.id());
+        if (requireSubject(material.subjectId()).status() != SubjectStatus.ACTIVE
+                || (material.classId() != null
+                        && requireClass(material.classId()).status() == ClassStatus.ARCHIVED))
             throw ApiException.conflict(
                     "MATERIAL_SCOPE_READ_ONLY", "Môn hoặc lớp đã lưu trữ, học liệu chỉ đọc");
-        if (m.status() != Material.Status.ACTIVE)
+        if (material.status() != Material.Status.ACTIVE)
             throw ApiException.conflict("MATERIAL_ARCHIVED", "Học liệu đã được lưu trữ");
     }
 
-    public void read(Actor actor, Material m, UUID classId) {
+    public void requireReadAccess(Actor actor, Material material, UUID classId) {
         if (actor == null || actor.role() == null || actor.role() == Role.ADMIN) {
-            deny(actor, m.id());
+            denyAccess(actor, material.id());
             return;
         }
         if (actor.role() == Role.STUDENT) {
-            if (m.status() != Material.Status.ACTIVE || !m.enabled()) {
-                deny(actor, m.id());
+            if (material.status() != Material.Status.ACTIVE || !material.enabled()) {
+                denyAccess(actor, material.id());
                 return;
             }
             List<ClassRef> candidates =
                     classId == null
-                            ? dependency(() -> classes.listOpenClassesOf(actor.accountId()))
-                            : List.of(courseClass(classId));
-            for (ClassRef c : candidates) if (matches(m, c) && studentCanRead(actor, c)) return;
+                            ? callDependency(() -> classAccess.listOpenClassesOf(actor.accountId()))
+                            : List.of(requireClass(classId));
+            for (ClassRef c : candidates)
+                if (isMaterialOfClass(material, c) && canStudentRead(actor, c)) return;
         } else {
-            if (m.scope() == Material.Scope.SUBJECT && managesSubject(actor, m.subjectId())) return;
-            if (m.scope() == Material.Scope.CLASS) {
-                ClassRef c = courseClass(m.classId());
+            if (material.scope() == Material.Scope.SUBJECT
+                    && isSubjectManager(actor, material.subjectId())) return;
+            if (material.scope() == Material.Scope.CLASS) {
+                ClassRef c = requireClass(material.classId());
                 if ((classId == null || classId.equals(c.classId()))
-                        && matches(m, c)
-                        && staffCanRead(actor, c)) return;
+                        && isMaterialOfClass(material, c)
+                        && canStaffRead(actor, c)) return;
             } else if (classId != null) {
-                ClassRef c = courseClass(classId);
-                if (matches(m, c) && staffCanRead(actor, c)) return;
+                ClassRef c = requireClass(classId);
+                if (isMaterialOfClass(material, c) && canStaffRead(actor, c)) return;
             } else {
-                for (UUID id : dependency(() -> classScope.listTaughtClasses(actor.accountId()))) {
-                    ClassRef c = courseClass(id);
-                    if (matches(m, c) && staffCanRead(actor, c)) return;
+                List<UUID> taughtClassIds =
+                        callDependency(() -> classScope.listTaughtClasses(actor.accountId()));
+                for (UUID id : taughtClassIds) {
+                    ClassRef c = requireClass(id);
+                    if (isMaterialOfClass(material, c) && canStaffRead(actor, c)) return;
                 }
             }
         }
-        deny(actor, m.id());
+        denyAccess(actor, material.id());
     }
 
-    private boolean matches(Material m, ClassRef c) {
-        return m.subjectId().equals(c.subjectId())
-                && (m.scope() == Material.Scope.SUBJECT || m.classId().equals(c.classId()));
+    private boolean isMaterialOfClass(Material material, ClassRef courseClass) {
+        return material.subjectId().equals(courseClass.subjectId())
+                && (material.scope() == Material.Scope.SUBJECT
+                        || material.classId().equals(courseClass.classId()));
     }
 
-    private void deny(Actor actor, UUID id) {
+    private void denyAccess(Actor actor, UUID id) {
         audit.record(
                 new AuditEvent(
                         UUID.randomUUID(),

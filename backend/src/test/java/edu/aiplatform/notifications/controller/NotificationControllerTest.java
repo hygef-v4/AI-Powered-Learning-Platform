@@ -21,26 +21,26 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 class NotificationControllerTest {
     MockMvc mvc;
-    NotificationService notices;
-    AnnouncementService announcements;
-    NotificationPreferenceService preferences;
-    ISseHub sse;
+    NotificationService notificationService;
+    AnnouncementService announcementService;
+    NotificationPreferenceService notificationPreferenceService;
+    ISseHub sseHub;
     Actor actor = new Actor(UUID.randomUUID(), Role.STUDENT);
 
     @BeforeEach
     void setup() {
-        notices = mock(NotificationService.class);
-        announcements = mock(AnnouncementService.class);
-        preferences = mock(NotificationPreferenceService.class);
-        sse = mock(ISseHub.class);
+        notificationService = mock(NotificationService.class);
+        announcementService = mock(AnnouncementService.class);
+        notificationPreferenceService = mock(NotificationPreferenceService.class);
+        sseHub = mock(ISseHub.class);
         SecurityContextHolder.getContext()
                 .setAuthentication(new UsernamePasswordAuthenticationToken(actor, null, List.of()));
         mvc =
                 MockMvcBuilders.standaloneSetup(
-                                new NotificationController(notices, sse),
-                                new NotificationPreferenceController(preferences),
-                                new AnnouncementController(announcements),
-                                new MyAnnouncementController(announcements))
+                                new NotificationController(notificationService, sseHub),
+                                new NotificationPreferenceController(notificationPreferenceService),
+                                new AnnouncementController(announcementService),
+                                new MyAnnouncementController(announcementService))
                         .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                         .setControllerAdvice(
                                 new GlobalExceptionHandler(), new NotificationExceptionHandler())
@@ -54,7 +54,7 @@ class NotificationControllerTest {
 
     @Test
     void countUsesAuthenticatedActor() throws Exception {
-        when(notices.unread(actor)).thenReturn(4L);
+        when(notificationService.countUnread(actor)).thenReturn(4L);
         mvc.perform(get("/api/v1/me/notifications/unread-count"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.count").value(4));
@@ -63,28 +63,28 @@ class NotificationControllerTest {
     @Test
     void readAllHasExplicitPostRoute() throws Exception {
         mvc.perform(post("/api/v1/me/notifications:read-all")).andExpect(status().isNoContent());
-        verify(notices).readAll(actor);
+        verify(notificationService).markAllRead(actor);
     }
 
     @Test
     void foreignNotificationStays404() throws Exception {
         UUID id = UUID.randomUUID();
         doThrow(edu.aiplatform.shared.error.ApiException.notFound("NOTIFICATION_NOT_FOUND"))
-                .when(notices)
-                .read(actor, id);
+                .when(notificationService)
+                .markRead(actor, id);
         mvc.perform(post("/api/v1/me/notifications/" + id + ":read"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void sseUsesServerAccountChannelAndDisablesProxyBuffering() throws Exception {
-        when(notices.authorizedChannel(actor))
+        when(notificationService.resolveAuthorizedChannel(actor))
                 .thenReturn("notifications:account:" + actor.accountId());
-        when(sse.subscribe(anyString())).thenReturn(new SseEmitter(1000L));
+        when(sseHub.subscribe(anyString())).thenReturn(new SseEmitter(1000L));
         mvc.perform(get("/api/v1/me/notifications/events").param("channel", "attacker"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("X-Accel-Buffering", "no"));
-        verify(sse).subscribe("notifications:account:" + actor.accountId());
+        verify(sseHub).subscribe("notifications:account:" + actor.accountId());
     }
 
     @Test
@@ -94,7 +94,7 @@ class NotificationControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"title\":\"\",\"body\":\"b\"}"))
                 .andExpect(status().isBadRequest());
-        verifyNoInteractions(announcements);
+        verifyNoInteractions(announcementService);
     }
 
     @Test
@@ -108,7 +108,7 @@ class NotificationControllerTest {
 
     @Test
     void preferenceBodyCallsOwnActorOnly() throws Exception {
-        when(preferences.put(actor, Map.of("ENROLLED", false)))
+        when(notificationPreferenceService.updatePreferences(actor, Map.of("ENROLLED", false)))
                 .thenReturn(Map.of("ENROLLED", false));
         mvc.perform(
                         put("/api/v1/me/notification-preferences")

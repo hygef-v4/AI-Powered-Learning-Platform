@@ -11,6 +11,7 @@ import { useResource } from "../hooks/useResource";
 import { GRADE_STATUS_LABELS, type Decimal, type GradebookPage, type GradeCell } from "../model/types";
 import { GradebookBatchControls } from "./GradebookBatchControls";
 import { GradebookMatrix } from "./GradebookMatrix";
+import { PersonSubline } from "@/shared/ui/PersonSubline";
 
 type Assignment = GradebookPage["assignments"][number];
 type Mode = "assignment" | "student";
@@ -94,7 +95,7 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
   matrixParams.set("gradebookView", "matrix");
   const gradebookButton = <ButtonLink href={`/teaching/classes/${encodeURIComponent(classId)}?${matrixParams}`} icon="assignment">Bảng điểm</ButtonLink>;
   const studentSearch = (
-    <TextInput type="search" icon="search" aria-label="Tìm sinh viên" placeholder="Tìm sinh viên" value={query}
+    <TextInput type="search" icon="search" aria-label="Tìm sinh viên" placeholder="Tìm tên, email hoặc MSSV" value={query}
       onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
   );
   const groupSearch = (
@@ -172,7 +173,7 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
                       <GradeTable first="Sinh viên">
                         {assignmentRows.map(({ row, grade }) => (
                           <GradeRow key={row.student.accountId} grade={grade} maxScore={activeAssignment.maxScore}
-                            label={<><strong className="block truncate text-ink">{row.student.name}</strong><p className="truncate text-xs text-muted">{row.student.email}</p></>} />
+                            label={<><strong className="block truncate text-ink">{row.student.name}</strong><PersonSubline className="truncate" studentCode={row.student.studentCode} email={row.student.email} /></>} />
                         ))}
                         {!assignmentRows.length && <EmptyRow text="Không có sinh viên phù hợp." />}
                       </GradeTable>

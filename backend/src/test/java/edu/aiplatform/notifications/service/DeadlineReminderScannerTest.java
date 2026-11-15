@@ -14,12 +14,12 @@ import org.springframework.transaction.*;
 import org.springframework.transaction.support.*;
 
 class DeadlineReminderScannerTest {
-    IAssignmentQuery assignments;
-    IClassAccess classes;
-    ISubmissionQuery submissions;
-    INotificationRepository repo;
-    NotificationService notices;
-    DeadlineReminderScanner scanner;
+    IAssignmentQuery assignmentQuery;
+    IClassAccess classAccess;
+    ISubmissionQuery submissionQuery;
+    INotificationRepository notificationRepository;
+    NotificationService notificationService;
+    DeadlineReminderScanner deadlineReminderScanner;
     Instant now = Instant.parse("2026-10-21T08:00:00Z");
     UUID id = UUID.randomUUID(),
             classId = UUID.randomUUID(),
@@ -28,11 +28,11 @@ class DeadlineReminderScannerTest {
 
     @BeforeEach
     void setup() {
-        assignments = mock(IAssignmentQuery.class);
-        classes = mock(IClassAccess.class);
-        submissions = mock(ISubmissionQuery.class);
-        repo = mock(INotificationRepository.class);
-        notices = mock(NotificationService.class);
+        assignmentQuery = mock(IAssignmentQuery.class);
+        classAccess = mock(IClassAccess.class);
+        submissionQuery = mock(ISubmissionQuery.class);
+        notificationRepository = mock(INotificationRepository.class);
+        notificationService = mock(NotificationService.class);
         var manager =
                 new AbstractPlatformTransactionManager() {
                     protected Object doGetTransaction() {
@@ -45,13 +45,20 @@ class DeadlineReminderScannerTest {
 
                     protected void doRollback(DefaultTransactionStatus s) {}
                 };
-        scanner =
+        deadlineReminderScanner =
                 new DeadlineReminderScanner(
-                        assignments, classes, submissions, repo, notices, manager);
-        when(classes.getClassRef(classId)).thenReturn(Optional.of(course(classId)));
-        when(classes.listActiveStudents(classId)).thenReturn(List.of(student));
-        when(submissions.listStudentsWithoutSubmission(id, classId)).thenReturn(List.of(student));
-        when(repo.reminder(any(), any(), any(), anyString(), any())).thenReturn(true);
+                        assignmentQuery,
+                        classAccess,
+                        submissionQuery,
+                        notificationRepository,
+                        notificationService,
+                        manager);
+        when(classAccess.getClassRef(classId)).thenReturn(Optional.of(course(classId)));
+        when(classAccess.listActiveStudents(classId)).thenReturn(List.of(student));
+        when(submissionQuery.listStudentsWithoutSubmission(id, classId))
+                .thenReturn(List.of(student));
+        when(notificationRepository.insertReminder(any(), any(), any(), anyString(), any()))
+                .thenReturn(true);
     }
 
     ClassRef course(UUID id) {
@@ -80,8 +87,8 @@ class DeadlineReminderScannerTest {
     }
 
     void source(AssignmentView a) {
-        when(assignments.listClosingBetween(any(), any())).thenReturn(List.of(a));
-        when(assignments.get(id)).thenReturn(Optional.of(a));
+        when(assignmentQuery.listClosingBetween(any(), any())).thenReturn(List.of(a));
+        when(assignmentQuery.get(id)).thenReturn(Optional.of(a));
     }
 
     @Test
@@ -94,11 +101,19 @@ class DeadlineReminderScannerTest {
         }).toList();
         var byId = candidates.stream().collect(java.util.stream.Collectors.toMap(AssignmentView::assignmentId,
                 java.util.function.Function.identity()));
-        when(assignments.listClosingBetween(any(), any())).thenReturn(candidates);
-        when(assignments.get(any())).thenAnswer(call -> Optional.ofNullable(byId.get(call.getArgument(0))));
-        scanner.scan(now);
-        verify(repo).reminder(candidates.get(500).assignmentId(), classId, candidates.get(500).closesAt(), "SENT", now);
-        verify(repo, times(501)).reminder(any(), eq(classId), any(), eq("SENT"), eq(now));
+        when(assignmentQuery.listClosingBetween(any(), any())).thenReturn(candidates);
+        when(assignmentQuery.get(any()))
+                .thenAnswer(call -> Optional.ofNullable(byId.get(call.getArgument(0))));
+        deadlineReminderScanner.scan(now);
+        verify(notificationRepository)
+                .insertReminder(
+                        candidates.get(500).assignmentId(),
+                        classId,
+                        candidates.get(500).closesAt(),
+                        "SENT",
+                        now);
+        verify(notificationRepository, times(501))
+                .insertReminder(any(), eq(classId), any(), eq("SENT"), eq(now));
     }
 
     @Test
@@ -108,19 +123,22 @@ class DeadlineReminderScannerTest {
         var targets = java.util.stream.IntStream.range(0, 501).mapToObj(index -> course(UUID.randomUUID())).toList();
         var byId = targets.stream().collect(java.util.stream.Collectors.toMap(ClassRef::classId,
                 java.util.function.Function.identity()));
-        when(classes.listOpenClassesOfSubject(subject)).thenReturn(targets);
-        when(classes.getClassRef(any())).thenAnswer(call -> Optional.ofNullable(byId.get(call.getArgument(0))));
-        scanner.scan(now);
-        verify(repo).reminder(id, targets.get(500).classId(), source.closesAt(), "SENT", now);
-        verify(repo, times(501)).reminder(eq(id), any(), any(), eq("SENT"), eq(now));
+        when(classAccess.listOpenClassesOfSubject(subject)).thenReturn(targets);
+        when(classAccess.getClassRef(any()))
+                .thenAnswer(call -> Optional.ofNullable(byId.get(call.getArgument(0))));
+        deadlineReminderScanner.scan(now);
+        verify(notificationRepository)
+                .insertReminder(id, targets.get(500).classId(), source.closesAt(), "SENT", now);
+        verify(notificationRepository, times(501))
+                .insertReminder(eq(id), any(), any(), eq("SENT"), eq(now));
     }
 
     @Test
     void reminderUsesStudentRouteWithClassContext() {
         source(assignment(now.minusSeconds(1000), now.plus(Duration.ofHours(24)), classId));
-        scanner.scan(now);
-        verify(notices)
-                .create(
+        deadlineReminderScanner.scan(now);
+        verify(notificationService)
+                .createNotification(
                         any(),
                         eq(NotificationType.DEADLINE_REMINDER),
                         eq(List.of(student)),
@@ -155,19 +173,19 @@ class DeadlineReminderScannerTest {
                         null,
                         List.of());
         source(a);
-        when(assignments.listClosingBetween(any(), any())).thenReturn(List.of(a, next));
-        when(assignments.get(next.assignmentId())).thenReturn(Optional.of(next));
-        when(classes.listOpenClassesOfSubject(subject))
+        when(assignmentQuery.listClosingBetween(any(), any())).thenReturn(List.of(a, next));
+        when(assignmentQuery.get(next.assignmentId())).thenReturn(Optional.of(next));
+        when(classAccess.listOpenClassesOfSubject(subject))
                 .thenReturn(List.of(course(classId), course(secondClass)));
-        when(classes.getClassRef(secondClass)).thenReturn(Optional.of(course(secondClass)));
-        when(classes.listActiveStudents(secondClass)).thenReturn(List.of(student));
-        when(submissions.listStudentsWithoutSubmission(id, classId))
+        when(classAccess.getClassRef(secondClass)).thenReturn(Optional.of(course(secondClass)));
+        when(classAccess.listActiveStudents(secondClass)).thenReturn(List.of(student));
+        when(submissionQuery.listStudentsWithoutSubmission(id, classId))
                 .thenThrow(new IllegalStateException("unavailable"));
-        scanner.scan(now);
-        verify(submissions).listStudentsWithoutSubmission(id, secondClass);
-        verify(submissions).listStudentsWithoutSubmission(next.assignmentId(), classId);
-        verify(notices, times(2))
-                .create(
+        deadlineReminderScanner.scan(now);
+        verify(submissionQuery).listStudentsWithoutSubmission(id, secondClass);
+        verify(submissionQuery).listStudentsWithoutSubmission(next.assignmentId(), classId);
+        verify(notificationService, times(2))
+                .createNotification(
                         any(),
                         any(),
                         anyList(),
@@ -201,12 +219,12 @@ class DeadlineReminderScannerTest {
                         null,
                         List.of());
         source(a);
-        when(assignments.listClosingBetween(any(), any())).thenReturn(List.of(broken, a));
-        when(assignments.get(broken.assignmentId()))
+        when(assignmentQuery.listClosingBetween(any(), any())).thenReturn(List.of(broken, a));
+        when(assignmentQuery.get(broken.assignmentId()))
                 .thenThrow(new IllegalStateException("lookup unavailable"));
-        scanner.scan(now);
-        verify(notices)
-                .create(
+        deadlineReminderScanner.scan(now);
+        verify(notificationService)
+                .createNotification(
                         any(),
                         any(),
                         anyList(),
@@ -215,13 +233,13 @@ class DeadlineReminderScannerTest {
                         anyString(),
                         anyString(),
                         any());
-        clearInvocations(notices);
-        doReturn(Optional.of(broken)).when(assignments).get(broken.assignmentId());
-        when(classes.listOpenClassesOfSubject(subject))
+        clearInvocations(notificationService);
+        doReturn(Optional.of(broken)).when(assignmentQuery).get(broken.assignmentId());
+        when(classAccess.listOpenClassesOfSubject(subject))
                 .thenThrow(new IllegalStateException("classes unavailable"));
-        scanner.scan(now);
-        verify(notices)
-                .create(
+        deadlineReminderScanner.scan(now);
+        verify(notificationService)
+                .createNotification(
                         any(),
                         any(),
                         anyList(),
@@ -235,12 +253,12 @@ class DeadlineReminderScannerTest {
     @Test
     void reminderOncePerDeadlineAndOnlyNonSubmitters() {
         source(assignment(now.minusSeconds(5), now.plus(Duration.ofHours(24)), classId));
-        when(repo.reminder(eq(id), eq(classId), any(), eq("SENT"), eq(now)))
+        when(notificationRepository.insertReminder(eq(id), eq(classId), any(), eq("SENT"), eq(now)))
                 .thenReturn(true, false);
-        scanner.scan(now);
-        scanner.scan(now);
-        verify(notices, times(1))
-                .create(
+        deadlineReminderScanner.scan(now);
+        deadlineReminderScanner.scan(now);
+        verify(notificationService, times(1))
+                .createNotification(
                         any(),
                         eq(NotificationType.DEADLINE_REMINDER),
                         eq(List.of(student)),
@@ -254,9 +272,10 @@ class DeadlineReminderScannerTest {
     @Test
     void lateOpenedAssignmentMarkedSkipped() {
         source(assignment(now.plusSeconds(1), now.plus(Duration.ofHours(24)), classId));
-        scanner.scan(now);
-        verify(repo).reminder(id, classId, now.plus(Duration.ofHours(24)), "SKIPPED", now);
-        verifyNoInteractions(notices);
+        deadlineReminderScanner.scan(now);
+        verify(notificationRepository)
+                .insertReminder(id, classId, now.plus(Duration.ofHours(24)), "SKIPPED", now);
+        verifyNoInteractions(notificationService);
     }
 
     @Test
@@ -266,27 +285,28 @@ class DeadlineReminderScannerTest {
                         now.minusSeconds(1000),
                         now.plus(Duration.ofHours(24)).minusSeconds(301),
                         classId));
-        scanner.scan(now);
-        verifyNoInteractions(notices);
-        verify(repo, never()).reminder(any(), any(), any(), anyString(), any());
+        deadlineReminderScanner.scan(now);
+        verifyNoInteractions(notificationService);
+        verify(notificationRepository, never())
+                .insertReminder(any(), any(), any(), anyString(), any());
     }
 
     @Test
     void subjectAssignmentExpandsOpenClasses() {
         var a = assignment(now.minusSeconds(1000), now.plus(Duration.ofHours(24)), null);
         source(a);
-        when(classes.listOpenClassesOfSubject(subject)).thenReturn(List.of(course(classId)));
-        scanner.scan(now);
-        verify(submissions).listStudentsWithoutSubmission(id, classId);
+        when(classAccess.listOpenClassesOfSubject(subject)).thenReturn(List.of(course(classId)));
+        deadlineReminderScanner.scan(now);
+        verify(submissionQuery).listStudentsWithoutSubmission(id, classId);
     }
 
     @Test
     void removedEnrollmentIsNotNotified() {
         source(assignment(now.minusSeconds(1000), now.plus(Duration.ofHours(24)), classId));
-        when(classes.listActiveStudents(classId)).thenReturn(List.of());
-        scanner.scan(now);
-        verify(notices)
-                .create(
+        when(classAccess.listActiveStudents(classId)).thenReturn(List.of());
+        deadlineReminderScanner.scan(now);
+        verify(notificationService)
+                .createNotification(
                         any(),
                         any(),
                         eq(List.of()),
@@ -301,12 +321,13 @@ class DeadlineReminderScannerTest {
     void changedDeadlineGetsNewMarker() {
         var a = assignment(now.minusSeconds(1000), now.plus(Duration.ofHours(24)), classId);
         source(a);
-        scanner.scan(now);
+        deadlineReminderScanner.scan(now);
         var changed = assignment(a.opensAt(), a.closesAt().plusSeconds(60), classId);
         source(changed);
-        scanner.scan(now.plusSeconds(60));
-        verify(repo).reminder(id, classId, a.closesAt(), "SENT", now);
-        verify(repo).reminder(id, classId, changed.closesAt(), "SENT", now.plusSeconds(60));
+        deadlineReminderScanner.scan(now.plusSeconds(60));
+        verify(notificationRepository).insertReminder(id, classId, a.closesAt(), "SENT", now);
+        verify(notificationRepository)
+                .insertReminder(id, classId, changed.closesAt(), "SENT", now.plusSeconds(60));
     }
 
     @Test
@@ -314,17 +335,18 @@ class DeadlineReminderScannerTest {
         var old = assignment(now.minusSeconds(1000), now.plus(Duration.ofHours(24)), classId);
         var changed = assignment(old.opensAt(), old.closesAt().plus(Duration.ofDays(2)), classId);
         source(old);
-        when(assignments.get(id)).thenReturn(Optional.of(changed));
-        scanner.scan(now);
-        verifyNoInteractions(notices);
-        verifyNoInteractions(repo);
+        when(assignmentQuery.get(id)).thenReturn(Optional.of(changed));
+        deadlineReminderScanner.scan(now);
+        verifyNoInteractions(notificationService);
+        verifyNoInteractions(notificationRepository);
         source(changed);
         var later = now.plus(Duration.ofDays(2));
-        when(repo.reminder(id, classId, changed.closesAt(), "SENT", later)).thenReturn(true, false);
-        scanner.scan(later);
-        scanner.scan(later);
-        verify(notices, times(1))
-                .create(
+        when(notificationRepository.insertReminder(id, classId, changed.closesAt(), "SENT", later))
+                .thenReturn(true, false);
+        deadlineReminderScanner.scan(later);
+        deadlineReminderScanner.scan(later);
+        verify(notificationService, times(1))
+                .createNotification(
                         any(),
                         eq(NotificationType.DEADLINE_REMINDER),
                         eq(List.of(student)),
@@ -358,19 +380,21 @@ class DeadlineReminderScannerTest {
                         false,
                         null,
                         List.of());
-        when(assignments.get(id)).thenReturn(Optional.of(a), Optional.of(stopped));
-        scanner.scan(now);
-        verifyNoInteractions(notices);
-        verifyNoInteractions(repo);
+        when(assignmentQuery.get(id)).thenReturn(Optional.of(a), Optional.of(stopped));
+        deadlineReminderScanner.scan(now);
+        verifyNoInteractions(notificationService);
+        verifyNoInteractions(notificationRepository);
     }
 
     @Test
     void reminderTimingWindowIncludesEndpointsAndExcludesOneInstantOutside() {
         var assignment = assignment(now.minusSeconds(60), now.plus(Duration.ofHours(24)), classId);
-        assertThat(DeadlineReminderScanner.eligible(assignment, now.minusNanos(1))).isFalse();
-        assertThat(DeadlineReminderScanner.eligible(assignment, now)).isTrue();
-        assertThat(DeadlineReminderScanner.eligible(assignment, now.plusSeconds(300))).isTrue();
-        assertThat(DeadlineReminderScanner.eligible(assignment, now.plusSeconds(300).plusNanos(1))).isFalse();
+        assertThat(DeadlineReminderScanner.isEligible(assignment, now.minusNanos(1))).isFalse();
+        assertThat(DeadlineReminderScanner.isEligible(assignment, now)).isTrue();
+        assertThat(DeadlineReminderScanner.isEligible(assignment, now.plusSeconds(300))).isTrue();
+        assertThat(
+                DeadlineReminderScanner.isEligible(
+                        assignment, now.plusSeconds(300).plusNanos(1))).isFalse();
     }
 
     @Test
@@ -381,26 +405,26 @@ class DeadlineReminderScannerTest {
                 open.diagramEnabled(), AssignmentStatus.CLOSED, open.opensAt(), open.closesAt(),
                 null, null, false, null, List.of());
         source(closed);
-        scanner.scan(now);
-        verifyNoInteractions(repo, notices, submissions);
+        deadlineReminderScanner.scan(now);
+        verifyNoInteractions(notificationRepository, notificationService, submissionQuery);
     }
 
     @Test
     void dependencyFailureLogContainsSafeCodeButNoPrivateExceptionContent() {
         source(assignment(now.minusSeconds(60), now.plus(Duration.ofHours(24)), classId));
-        when(submissions.listStudentsWithoutSubmission(id, classId))
+        when(submissionQuery.listStudentsWithoutSubmission(id, classId))
                 .thenThrow(new IllegalStateException("PRIVATE_RECIPIENT_BODY_SENTINEL"));
         var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(DeadlineReminderScanner.class);
         var appender = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
         appender.start();
         logger.addAppender(appender);
         try {
-            scanner.scan(now);
+            deadlineReminderScanner.scan(now);
             assertThat(appender.list).hasSize(1);
             assertThat(appender.list.get(0).getFormattedMessage())
                     .contains("REMINDER_CLASS_FAILED").doesNotContain("PRIVATE_RECIPIENT_BODY_SENTINEL");
             assertThat(appender.list.get(0).getThrowableProxy()).isNull();
-            verifyNoInteractions(notices);
+            verifyNoInteractions(notificationService);
         } finally {
             logger.detachAppender(appender);
             appender.stop();
@@ -410,8 +434,8 @@ class DeadlineReminderScannerTest {
     @Test
     void maintenanceRetains180DaysAndDelegatesDeferredPriority() {
         var email = mock(EmailDeliveryService.class);
-        new NotificationMaintenanceScanner(email, repo).scan(now);
-        verify(email).releaseDeferred(now);
-        verify(repo).deleteOld(now.minus(Duration.ofDays(180)));
+        new NotificationMaintenanceScanner(email, notificationRepository).scan(now);
+        verify(email).releaseDeferredEmails(now);
+        verify(notificationRepository).deleteOldNotifications(now.minus(Duration.ofDays(180)));
     }
 }

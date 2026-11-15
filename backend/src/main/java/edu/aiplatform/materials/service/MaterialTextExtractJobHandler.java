@@ -10,13 +10,13 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class MaterialTextExtractJobHandler implements IJobHandler, IPendingSweeper {
-    private final IMaterialRepository repository;
-    private final MaterialTextExtractor extractor;
+    private final IMaterialRepository materialRepository;
+    private final MaterialTextExtractor materialTextExtractor;
 
     public MaterialTextExtractJobHandler(
-            IMaterialRepository repository, MaterialTextExtractor extractor) {
-        this.repository = repository;
-        this.extractor = extractor;
+            IMaterialRepository materialRepository, MaterialTextExtractor materialTextExtractor) {
+        this.materialRepository = materialRepository;
+        this.materialTextExtractor = materialTextExtractor;
     }
 
     @Override
@@ -36,23 +36,23 @@ public class MaterialTextExtractJobHandler implements IJobHandler, IPendingSweep
 
     @Override
     public void handle(JobMessage message) {
-        UUID id = id(message);
-        int number = number(message);
-        var material = repository.find(id);
-        var version = repository.version(id, number);
+        UUID id = readMaterialId(message);
+        int number = readVersionNo(message);
+        var material = materialRepository.findMaterial(id);
+        var version = materialRepository.findVersion(id, number);
         if (material.isEmpty()
                 || version.isEmpty()
                 || material.get().currentVersionNo() != number
                 || version.get().textStatus() != MaterialVersion.TextStatus.PENDING) return;
         MaterialTextExtractor.Result result;
         try {
-            result = extractor.extract(version.get().fileId());
+            result = materialTextExtractor.extractText(version.get().fileId());
         } catch (RuntimeException e) {
             throw new RetryableJobException("Material extraction temporarily unavailable");
         }
         String text = result.text().substring(0, Math.min(1_000_000, result.text().length()));
         boolean hasText = (double) text.strip().length() / Math.max(1, result.pages()) >= 50;
-        repository.completeText(
+        materialRepository.completeText(
                 id,
                 number,
                 hasText ? MaterialVersion.TextStatus.EXTRACTED : MaterialVersion.TextStatus.NO_TEXT,
@@ -61,13 +61,14 @@ public class MaterialTextExtractJobHandler implements IJobHandler, IPendingSweep
 
     @Override
     public void onFailed(JobMessage message, String ignoredError) {
-        repository.completeText(
-                id(message), number(message), MaterialVersion.TextStatus.FAILED, null);
+        materialRepository.completeText(
+                readMaterialId(
+                        message), readVersionNo(message), MaterialVersion.TextStatus.FAILED, null);
     }
 
     @Override
     public List<PendingJob> findStalePending(Instant olderThan) {
-        return repository.stalePending(olderThan).stream()
+        return materialRepository.listStalePendingVersions(olderThan).stream()
                 .map(
                         v ->
                                 new PendingJob(
@@ -80,11 +81,11 @@ public class MaterialTextExtractJobHandler implements IJobHandler, IPendingSweep
                 .toList();
     }
 
-    private UUID id(JobMessage message) {
+    private UUID readMaterialId(JobMessage message) {
         return UUID.fromString(Objects.toString(message.payload().get("materialId")));
     }
 
-    private int number(JobMessage message) {
+    private int readVersionNo(JobMessage message) {
         return Integer.parseInt(Objects.toString(message.payload().get("versionNo")));
     }
 }

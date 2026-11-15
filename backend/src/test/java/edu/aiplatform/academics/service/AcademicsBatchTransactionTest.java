@@ -49,7 +49,7 @@ class AcademicsBatchTransactionTest {
         when(authorization.authorize(any(),anyString(),any())).thenReturn(AuthorizationDecision.allow());
         when(scope.isSubjectManager(managerId,subjectId)).thenReturn(true);
         when(subjectQuery.getSubject(subjectId)).thenReturn(Optional.of(new SubjectRef(subjectId,"S","Subject",SubjectStatus.ACTIVE,managerId)));
-        when(courseClassRepository.find(classId)).thenReturn(Optional.of(new CourseClass(classId,subjectId,"C","Class","",ClassStatus.OPEN,managerId,false,now,now,0)));
+        when(courseClassRepository.find(classId)).thenReturn(Optional.of(new CourseClass(classId,subjectId,"C","Class","",LocalDate.of(2027, 1, 10),ClassStatus.OPEN,managerId,false,now,now,0)));
         var students=List.of(contact(first,"first@example.test",Role.STUDENT),contact(second,"second@example.test",Role.STUDENT),contact(third,"third@example.test",Role.STUDENT));
         when(accountLookup.findByEmails(any())).thenReturn(students);
         when(accountLookup.lockContact(any())).thenAnswer(call->students.stream()
@@ -106,7 +106,7 @@ class AcademicsBatchTransactionTest {
 
     @Test void invalidAndDuplicateRowsDoNotOpenTransactionsButLookupMissIsAnIsolatedOutcome() {
         var rows=academicsService.enrollStudents(manager,classId,"first@example.test\nbad\nfirst@example.test\nmissing@example.test\nthird@example.test");
-        assertThat(rows).extracting(AcademicsDtos.RowResult::result).containsExactly(EnrollmentResult.ENROLLED,EnrollmentResult.INVALID_EMAIL,
+        assertThat(rows).extracting(AcademicsDtos.RowResult::result).containsExactly(EnrollmentResult.ENROLLED,EnrollmentResult.INVALID_IDENTIFIER,
                 EnrollmentResult.DUPLICATE_IN_LIST,EnrollmentResult.NOT_FOUND,EnrollmentResult.ENROLLED);
         assertThat(rows).extracting(AcademicsDtos.RowResult::line).containsExactly(1,2,3,4,5);
         assertThat(recordingTransactions.propagations).hasSize(3).containsOnly(TransactionDefinition.PROPAGATION_REQUIRES_NEW);

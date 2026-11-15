@@ -137,3 +137,26 @@ Mỗi rule có mã `BR-U01-xx` để truy vết sang test. Ngưỡng có ghi "ch
 
 - Tạo/import không gửi OTP, activation hợp lệ/sai/hết hạn/rate limit; recovery không lộ account.
 - Đăng nhập/đăng xuất/phiên revoked; R1 own profile; Admin bị chặn học vụ; Student shared quota bị từ chối.
+
+## 11. Mã số sinh viên (MSSV) — 2026-11-13
+
+Nguồn: [yêu cầu SC-01…11](../../../inception/requirements/2026-11-13-student-code.md) (đã duyệt) và [kế hoạch functional design](../../plans/functional-design-plan/2026-11-13-u01-student-code-functional-design-plan.md) (người dùng chọn A cho cả Q1–Q8). Phạm vi đã thu hẹp: không có chức năng đổi MSSV (Q6), không có bộ lọc "Sinh viên chưa có MSSV" (Q7).
+
+| Mã | Rule | Nguồn |
+|---|---|---|
+| BR-U01-100 | MSSV gồm đúng 2 chữ cái Latin và 6 chữ số. Trước khi kiểm, hệ thống cắt khoảng trắng ở hai đầu và đổi chữ cái sang in hoa. Mã luôn được lưu ở dạng đã chuẩn hóa, ví dụ `se123456` lưu thành `SE123456`. Sai định dạng thì báo `INVALID_STUDENT_CODE`. | SC-01, Q1 |
+| BR-U01-101 | Một MSSV đã chuẩn hóa chỉ thuộc tối đa một tài khoản; trùng thì báo `STUDENT_CODE_EXISTS`. Database bảo đảm điều này bằng unique index, chỉ áp dụng khi cột có giá trị. Nếu hai thao tác ghi cùng lúc gây trùng thì vẫn trả `STUDENT_CODE_EXISTS`, không lộ tài khoản nào đang giữ mã. | SC-01, FD Q1 |
+| BR-U01-102 | Chỉ tài khoản role `STUDENT` được có MSSV. Database có hai check: `role = 'STUDENT' or student_code is null` và check định dạng. Request gửi MSSV cho role khác bị từ chối với lỗi `STUDENT_CODE_NOT_ALLOWED`. Check theo role luôn đúng vì BR-U01-107 không cho đổi role vào hoặc ra khỏi `STUDENT`. | SC-01, SC-04, FD Q1 |
+| BR-U01-103 | Tạo tài khoản `STUDENT` thì bắt buộc có MSSV hợp lệ, dù Admin tạo từng tài khoản (F9) hay nhập từ tệp (F10). Thiếu mã thì báo `MISSING_STUDENT_CODE`. | SC-02 |
+| BR-U01-104 | $1 Không có chức năng gán mã cho các tài khoản này; mọi sinh viên mới đều có MSSV từ lúc tạo (người dùng chốt 2026-11-14). | SC-02 |
+| BR-U01-105 | Admin sửa MSSV bằng `PATCH` sửa tài khoản (F14), dùng chung `version` với các trường khác. Xử lý theo từng trường hợp sau. **Không gửi trường**: giữ nguyên mã. **Gửi đúng mã đang có**: không đổi gì. **Gửi chuỗi rỗng khi chưa có mã**: giữ trống. **Tài khoản đang `PENDING`**: đổi sang mã mới, dùng để sửa lỗi gõ sai. **Tài khoản không còn `PENDING`**: báo `STUDENT_CODE_LOCKED`, kể cả khi tài khoản chưa có mã (không có chức năng gán mã cho tài khoản cũ, 2026-11-14). **Gửi chuỗi rỗng khi đã có mã**: báo `INVALID_STUDENT_CODE`, vì không được xóa trống. **Tài khoản không phải `STUDENT`**: báo `STUDENT_CODE_NOT_ALLOWED`. | SC-02, SC-03, Q6, FD Q2 |
+| BR-U01-106 | Ngoài BR-U01-105 và BR-U01-107, không có đường nào khác để đổi MSSV. Sinh viên không tự sửa được MSSV: DTO hồ sơ không có trường này, và request gửi kèm trường này bị từ chối như mọi trường lạ (mở rộng BR-U01-52). | SC-03, SC-05 |
+| BR-U01-107 | Đổi role (F11) bị từ chối với lỗi `STUDENT_ROLE_CHANGE_NOT_ALLOWED` khi role hiện tại hoặc role mới là `STUDENT`. Quy tắc này được xét trước BR-U01-64…66. Đổi role giữa `TEACHER`, `SUBJECT_MANAGER` và `ADMIN` vẫn chạy như cũ. Request đổi role không có trường `studentCode`; nếu gửi kèm thì bị từ chối như mọi trường lạ. Lần bị từ chối được ghi audit như mọi thao tác quản trị bị từ chối. | SC-04 (chốt 2026-11-13T15:50:59Z) |
+| BR-U01-108 | Nhập tài khoản (F10) có thêm cột tùy chọn `student_code`. Dòng `STUDENT` bắt buộc có giá trị ở cột này; dòng role khác phải để trống. Các lỗi mới theo từng dòng: `MISSING_STUDENT_CODE`, `INVALID_STUDENT_CODE`, `STUDENT_CODE_NOT_ALLOWED`, `DUPLICATE_STUDENT_CODE_IN_FILE`, `STUDENT_CODE_EXISTS`. Tệp không có cột này thì mọi dòng `STUDENT` báo `MISSING_STUDENT_CODE`, các dòng khác vẫn hợp lệ. Hệ thống xét các lỗi hiện có về email, tên và role trước, rồi mới xét lỗi MSSV. | SC-06 |
+| BR-U01-109 | Đã bỏ (2026-11-14): không có luồng gán MSSV hàng loạt (F16). | SC-07 |
+| BR-U01-110 | Đã bỏ (2026-11-14), cùng với F16. | SC-07 |
+| BR-U01-111 | Đã bỏ (2026-11-14), cùng với F16. | SC-07 |
+| BR-U01-112 | Ô tìm `q` ở Account List khớp thêm với MSSV, không phân biệt hoa thường, và khớp được một phần mã. `IAccountLookup.findStudents` và `findAccounts` cũng khớp thêm MSSV. Danh sách tài khoản có cột MSSV; tài khoản chưa có mã thì để trống ô. | SC-08 |
+| BR-U01-113 | MSSV có trong `AccountContact` và trong hồ sơ. Các unit khác chỉ hiện MSSV trên những màn vốn đã hiện người đó, cho Admin, nhân sự có quyền với lớp, chính sinh viên đó và các sinh viên khác (SC-10, SC-11). Không đưa MSSV vào prompt AI, nội dung thông báo hay email (G2). | SC-10, SC-11, NFR-SC-03 |
+| BR-U01-114 | MSSV không dùng để đăng nhập, kích hoạt tài khoản hay đặt lại mật khẩu. Các việc này vẫn chỉ dùng email (BR-U01-04). | G3 |
+| BR-U01-115 | Audit chỉ ghi lại thao tác, không ghi giá trị MSSV: `ACCOUNT_CREATED` ghi `studentCodeSet`. `ACCOUNT_UPDATED` đưa `studentCode` vào danh sách trường đã đổi. `ROLE_CHANGED` không đổi, vì đổi role không còn động tới MSSV. `ACCOUNTS_IMPORTED` giữ nguyên. Log ứng dụng cũng không chứa giá trị MSSV. | NFR-SC-01, SECURITY-03 |

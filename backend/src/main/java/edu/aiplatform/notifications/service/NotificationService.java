@@ -25,26 +25,26 @@ public class NotificationService {
 
     public record Feed(List<Item> items, int page, int size, boolean hasMore) {}
 
-    private final INotificationRepository repository;
-    private final NotificationAccess access;
-    private final EmailDeliveryService emails;
-    private final ISseHub sse;
+    private final INotificationRepository notificationRepository;
+    private final NotificationAccess notificationAccess;
+    private final EmailDeliveryService emailDeliveryService;
+    private final ISseHub sseHub;
     private final Clock clock;
 
     public NotificationService(
-            INotificationRepository repository,
-            NotificationAccess access,
-            EmailDeliveryService emails,
-            ISseHub sse,
+            INotificationRepository notificationRepository,
+            NotificationAccess notificationAccess,
+            EmailDeliveryService emailDeliveryService,
+            ISseHub sseHub,
             Clock clock) {
-        this.repository = repository;
-        this.access = access;
-        this.emails = emails;
-        this.sse = sse;
+        this.notificationRepository = notificationRepository;
+        this.notificationAccess = notificationAccess;
+        this.emailDeliveryService = emailDeliveryService;
+        this.sseHub = sseHub;
         this.clock = clock;
     }
 
-    public void create(
+    public void createNotification(
             UUID eventId,
             NotificationType type,
             Collection<UUID> recipients,
@@ -62,28 +62,28 @@ public class NotificationService {
             throw new IllegalArgumentException("Invalid notification content");
         Set<UUID> changed = new HashSet<>();
         for (UUID recipient : new LinkedHashSet<>(recipients)) {
-            var n = new Notification();
-            n.id = UUID.randomUUID();
-            n.recipientId = recipient;
-            n.type = type;
-            n.sourceEventId = eventId;
-            n.title = title;
-            n.summary = summary;
-            n.link = link;
-            n.createdAt = clock.instant();
-            if (repository.insert(n)) {
-                emails.schedule(n, emailType, expiresAt);
+            var notification = new Notification();
+            notification.id = UUID.randomUUID();
+            notification.recipientId = recipient;
+            notification.type = type;
+            notification.sourceEventId = eventId;
+            notification.title = title;
+            notification.summary = summary;
+            notification.link = link;
+            notification.createdAt = clock.instant();
+            if (notificationRepository.insertNotification(notification)) {
+                emailDeliveryService.scheduleEmail(notification, emailType, expiresAt);
                 changed.add(recipient);
             }
         }
         if (!changed.isEmpty())
-            afterCommit(
+            runAfterCommit(
                     () ->
                             changed.forEach(
                                     id -> {
                                         try {
-                                            sse.publish(
-                                                    channel(id),
+                                            sseHub.publish(
+                                                    buildChannel(id),
                                                     Map.of("type", "notification-changed"));
                                         } catch (RuntimeException ignored) {
                                             /* REST fallback; committed state stays authoritative. */
@@ -92,13 +92,16 @@ public class NotificationService {
     }
 
     @Transactional(readOnly = true, timeout = 5)
-    public Feed list(Actor actor, boolean unread, int page, int size) {
-        UUID owner = access.self(actor);
+    public Feed listNotifications(Actor actor, boolean unread, int page, int size) {
+        UUID owner = notificationAccess.requireSelf(actor);
         if (page < 1 || page > 100000 || size < 1 || size > 50)
             throw ApiException.badRequest("PAGE_INVALID", "Trang phải từ1, tối đa50 mục");
-        var rows = repository.list(owner, unread, page, size);
+        var rows = notificationRepository.listNotifications(owner, unread, page, size);
         boolean more =
-                rows.size() == size && !repository.list(owner, unread, page + 1, size).isEmpty();
+                rows.size() == size
+                        && !notificationRepository
+                                .listNotifications(owner, unread, page + 1, size)
+                                .isEmpty();
         return new Feed(
                 rows.stream()
                         .map(
@@ -107,7 +110,8 @@ public class NotificationService {
                                                 n.id,
                                                 n.type.name(),
                                                 n.title,
-                                                NotificationSummaries.forDisplay(n.type, n.summary),
+                                                NotificationSummaries.resolveDisplaySummary(
+                                                        n.type, n.summary),
                                                 n.link,
                                                 n.readAt,
                                                 n.createdAt))
@@ -118,42 +122,43 @@ public class NotificationService {
     }
 
     @Transactional(readOnly = true, timeout = 5)
-    public long unread(Actor actor) {
-        return repository.unread(access.self(actor));
+    public long countUnread(Actor actor) {
+        return notificationRepository.countUnread(notificationAccess.requireSelf(actor));
     }
 
-    public void read(Actor actor, UUID id) {
-        UUID owner = access.self(actor);
-        if (!repository.read(id, owner, clock.instant())) throw access.denied(actor, id);
+    public void markRead(Actor actor, UUID id) {
+        UUID owner = notificationAccess.requireSelf(actor);
+        if (!notificationRepository.markRead(id, owner, clock.instant()))
+            throw notificationAccess.rejectAccess(actor, id);
         notifyChanged(owner);
     }
 
-    public void readAll(Actor actor) {
-        UUID owner = access.self(actor);
-        repository.readAll(owner, clock.instant());
+    public void markAllRead(Actor actor) {
+        UUID owner = notificationAccess.requireSelf(actor);
+        notificationRepository.markAllRead(owner, clock.instant());
         notifyChanged(owner);
     }
 
-    public String authorizedChannel(Actor actor) {
-        return channel(access.self(actor));
+    public String resolveAuthorizedChannel(Actor actor) {
+        return buildChannel(notificationAccess.requireSelf(actor));
     }
 
-    public static String channel(UUID id) {
+    public static String buildChannel(UUID id) {
         return "notifications:account:" + id;
     }
 
     private void notifyChanged(UUID owner) {
-        afterCommit(
+        runAfterCommit(
                 () -> {
                     try {
-                        sse.publish(channel(owner), Map.of("type", "notification-changed"));
+                        sseHub.publish(buildChannel(owner), Map.of("type", "notification-changed"));
                     } catch (RuntimeException ignored) {
                         /* Refresh fallback. */
                     }
                 });
     }
 
-    private void afterCommit(Runnable work) {
+    private void runAfterCommit(Runnable work) {
         if (TransactionSynchronizationManager.isSynchronizationActive())
             TransactionSynchronizationManager.registerSynchronization(
                     new TransactionSynchronization() {

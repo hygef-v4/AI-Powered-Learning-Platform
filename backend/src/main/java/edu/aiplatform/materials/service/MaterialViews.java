@@ -21,17 +21,17 @@ public final class MaterialViews {
             MaterialVersion.TextStatus textStatus,
             UUID createdBy,
             Instant createdAt) {
-        static Version of(MaterialVersion v) {
+        static Version of(MaterialVersion version) {
             return new Version(
-                    v.versionNo(),
-                    v.fileName(),
-                    v.mimeType(),
-                    v.byteSize(),
-                    v.videoUrl(),
-                    v.videoId(),
-                    v.textStatus(),
-                    v.createdBy(),
-                    v.createdAt());
+                    version.versionNo(),
+                    version.fileName(),
+                    version.mimeType(),
+                    version.byteSize(),
+                    version.videoUrl(),
+                    version.videoId(),
+                    version.textStatus(),
+                    version.createdBy(),
+                    version.createdAt());
         }
     }
 

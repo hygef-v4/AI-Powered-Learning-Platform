@@ -8,13 +8,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class NotificationMaintenanceScanner implements IScheduledScanner {
-    private final EmailDeliveryService emails;
-    private final INotificationRepository repository;
+    private final EmailDeliveryService emailDeliveryService;
+    private final INotificationRepository notificationRepository;
 
     public NotificationMaintenanceScanner(
-            EmailDeliveryService emails, INotificationRepository repository) {
-        this.emails = emails;
-        this.repository = repository;
+            EmailDeliveryService emailDeliveryService,
+            INotificationRepository notificationRepository) {
+        this.emailDeliveryService = emailDeliveryService;
+        this.notificationRepository = notificationRepository;
     }
 
     public String name() {
@@ -23,7 +24,7 @@ public class NotificationMaintenanceScanner implements IScheduledScanner {
 
     @Transactional(timeout = 15)
     public void scan(Instant now) {
-        emails.releaseDeferred(now);
-        repository.deleteOld(now.minus(Duration.ofDays(180)));
+        emailDeliveryService.releaseDeferredEmails(now);
+        notificationRepository.deleteOldNotifications(now.minus(Duration.ofDays(180)));
     }
 }

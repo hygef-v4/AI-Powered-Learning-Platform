@@ -4,6 +4,8 @@ import { useId, useState } from "react";
 import { Alert, Button, Dialog, Field, TextInput, cx } from "@/shared/ui";
 import { MAX_PROPOSAL_NAME, validateProposalName } from "../model/proposals";
 import type { CandidateView } from "../model/types";
+import { matchesPersonQuery } from "@/shared/studentCode";
+import { PersonSubline } from "@/shared/ui/PersonSubline";
 
 /** Popup đặt tên nhóm khi tạo hoặc đổi tên đề xuất (BR-U12-75, 76): bắt buộc, 1–100 ký tự sau khi cắt khoảng trắng. */
 export function ProposalNameDialog({ title, initial = "", confirmLabel, onClose, onSave }: {
@@ -43,7 +45,7 @@ export function ProposalNameDialog({ title, initial = "", confirmLabel, onClose,
 }
 
 /**
- * Popup mời bạn cùng lớp (BR-U12-77, 92): danh sách sinh viên chưa có nhóm, tìm theo tên hoặc email, chọn nhiều tới khi hết
+ * Popup mời bạn cùng lớp (BR-U12-77, 92): danh sách sinh viên chưa có nhóm, tìm theo tên, email hoặc MSSV, chọn nhiều tới khi hết
  * chỗ. Người đang ở đề xuất khác vẫn mời được, kèm ghi chú họ phải rời đề xuất đó trước khi chấp nhận.
  */
 export function InviteMembersDialog({ candidates, freeSeats, onClose, onInvite }: {
@@ -57,7 +59,7 @@ export function InviteMembersDialog({ candidates, freeSeats, onClose, onInvite }
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const q = query.toLocaleLowerCase("vi").trim();
-  const shown = candidates.filter((c) => `${c.name ?? ""} ${c.email ?? ""}`.toLocaleLowerCase("vi").includes(q));
+  const shown = candidates.filter((c) => matchesPersonQuery(c, q));
   const full = picked.length >= freeSeats;
   const toggle = (accountId: string) => {
     setError(null);
@@ -80,7 +82,7 @@ export function InviteMembersDialog({ candidates, freeSeats, onClose, onInvite }
         </Button>
       }>
       <p className="text-[13px] text-muted">Còn {freeSeats} chỗ. Người được mời cần chấp nhận mới vào nhóm.</p>
-      <TextInput type="search" icon="search" aria-label="Tìm theo tên hoặc email" placeholder="Tìm theo tên hoặc email"
+      <TextInput type="search" icon="search" aria-label="Tìm theo tên, email hoặc MSSV" placeholder="Tìm theo tên, email hoặc MSSV"
         value={query} onChange={(event) => setQuery(event.target.value)} />
       {shown.length === 0 ? (
         <p className="py-6 text-center text-[13px] text-muted">Không có sinh viên phù hợp.</p>
@@ -97,7 +99,7 @@ export function InviteMembersDialog({ candidates, freeSeats, onClose, onInvite }
                     onChange={() => toggle(c.accountId)} data-testid={`invite-candidate-${c.accountId}`} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13.5px] font-semibold text-ink">{c.name ?? c.email ?? "Chưa rõ tên"}</span>
-                    {c.email && <span className="block truncate text-xs text-muted">{c.email}</span>}
+                    <PersonSubline className="truncate" studentCode={c.studentCode} email={c.email} />
                   </span>
                   {c.inOtherProposal && <span className="shrink-0 text-xs text-muted">Đang ở đề xuất khác</span>}
                 </label>

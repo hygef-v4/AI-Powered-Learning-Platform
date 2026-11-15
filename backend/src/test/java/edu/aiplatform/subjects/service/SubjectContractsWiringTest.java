@@ -122,7 +122,7 @@ class SubjectContractsWiringTest {
                                     .hasSingleBean(SubjectClassesReader.class);
                             assertThat(
                                             context.getBean(SubjectClassesReader.class)
-                                                    .classes(UUID.randomUUID())
+                                                    .listClasses(UUID.randomUUID())
                                                     .availability())
                                     .isEqualTo(SubjectAdminViews.Availability.UNAVAILABLE);
                         });

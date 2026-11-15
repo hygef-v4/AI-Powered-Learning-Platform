@@ -11,7 +11,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 Thiết kế độc lập công nghệ.
 
-**Quyết định 2026-11-07 — D-U04-04:** Bỏ học kỳ lớp khỏi UI, request/response, domain và dữ liệu hiện hành; xem [quyết định đã duyệt](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Migration mới `V20261107_2200__remove_class_term.sql` xóa cột cũ khi áp dụng; không sửa migration hoặc bằng chứng lịch sử. Các quy tắc khác giữ nguyên phạm vi đã chốt.
+**Quyết định 2026-11-07 — D-U04-04 (đã được D-U04-05 thay thế ngày 2026-11-14, xem mục "Học kỳ của lớp"):** Bỏ học kỳ lớp khỏi UI, request/response, domain và dữ liệu hiện hành; xem [quyết định đã duyệt](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Migration mới `V20261107_2200__remove_class_term.sql` xóa cột cũ khi áp dụng; không sửa migration hoặc bằng chứng lịch sử. Các quy tắc khác giữ nguyên phạm vi đã chốt.
 
 **Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
 
@@ -65,7 +65,7 @@ stateDiagram-v2
 |---|---|---|---|
 | `ISubjectClasses` | `listClassesOfSubject(subjectId)` → `List<SubjectClassSummary>`, `countClasses(subjectIds)` → số lớp theo môn, `countUnarchivedClasses(subjectId)`, `archiveClassesOfSubject(subjectId, actor)` | U05 | Hiện lớp chỉ đọc và tổng số lớp tại Subject Detail; lưu trữ đồng thời các lớp DRAFT/OPEN khi lưu trữ môn trong cùng transaction, không làm U04 phụ thuộc ngược implementation U05 |
 
-`SubjectClassSummary`: `classId`, `code`, `name`, `status`, `teacherName`, `activeStudentCount`.
+`SubjectClassSummary`: `classId`, `code`, `term` (D-U04-05), `name`, `status`, `teacherName`, `activeStudentCount`.
 
 ### Interface U04 dùng
 
@@ -85,3 +85,13 @@ stateDiagram-v2
 | `PATCH /api/v1/admin/subjects/{id}` | 19 |
 | `PUT /api/v1/admin/subjects/{id}/manager` | 17, 19 |
 | `PUT /api/v1/admin/subjects/{id}/status` | 19 |
+
+
+## Học kỳ của lớp — 2026-11-14 (D-U04-05)
+
+Quyết định D-U04-05 thay D-U04-04: lớp có học kỳ suy ra từ Ngày bắt đầu, dùng để lọc lớp; U05 sở hữu dữ liệu và quy tắc (BR-U05-61…72, [yêu cầu CT-01…09](../../../inception/requirements/2026-11-14-class-term.md)). Phần của U04 chỉ là hiển thị:
+
+- `SubjectClassSummary` (đọc qua `ISubjectClasses.listClassesOfSubject`) thêm `term`.
+- Tab Lớp học trong chi tiết môn của Admin (`SubjectClassesTable`) có cột Học kỳ sau Mã lớp. Không thêm bộ lọc học kỳ ở màn này.
+- Mã lớp có thể lặp giữa các học kỳ của cùng môn, nên cột Học kỳ là cách phân biệt hai lớp cùng mã.
+- U04 không có chức năng quản lý học kỳ.

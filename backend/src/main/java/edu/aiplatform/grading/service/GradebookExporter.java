@@ -112,10 +112,10 @@ public class GradebookExporter {
         int columnCount = rows.isEmpty() ? 0 : rows.get(0).size();
         writer.write("<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">");
         if (matrix) {
-            writer.write("<sheetViews><sheetView workbookViewId=\"0\"><pane xSplit=\"3\" ySplit=\"1\" topLeftCell=\"D2\" activePane=\"bottomRight\" state=\"frozen\"/></sheetView></sheetViews>");
-            writer.write("<cols><col min=\"1\" max=\"1\" width=\"6\" customWidth=\"1\"/><col min=\"2\" max=\"2\" width=\"28\" customWidth=\"1\"/><col min=\"3\" max=\"3\" width=\"32\" customWidth=\"1\"/>");
-            if (columnCount > 3)
-                writer.write("<col min=\"4\" max=\"" + columnCount + "\" width=\"24\" customWidth=\"1\"/>");
+            writer.write("<sheetViews><sheetView workbookViewId=\"0\"><pane xSplit=\"4\" ySplit=\"1\" topLeftCell=\"E2\" activePane=\"bottomRight\" state=\"frozen\"/></sheetView></sheetViews>");
+            writer.write("<cols><col min=\"1\" max=\"1\" width=\"6\" customWidth=\"1\"/><col min=\"2\" max=\"2\" width=\"12\" customWidth=\"1\"/><col min=\"3\" max=\"3\" width=\"28\" customWidth=\"1\"/><col min=\"4\" max=\"4\" width=\"32\" customWidth=\"1\"/>");
+            if (columnCount > 4)
+                writer.write("<col min=\"5\" max=\"" + columnCount + "\" width=\"24\" customWidth=\"1\"/>");
             writer.write("</cols>");
         }
         writer.write("<sheetData>");
@@ -126,7 +126,7 @@ public class GradebookExporter {
             for (int columnIndex = 0; columnIndex < row.size(); columnIndex++) {
                 String cell = row.get(columnIndex);
                 String reference = buildColumnName(columnIndex) + (rowIndex + 1);
-                if (matrix && rowIndex > 0 && (columnIndex == 0 || columnIndex >= 3)
+                if (matrix && rowIndex > 0 && (columnIndex == 0 || columnIndex >= 4)
                         && cell != null && cell.matches("-?\\d+(\\.\\d+)?")) {
                     writer.write("<c r=\"" + reference + "\"><v>" + cell + "</v></c>");
                 } else {

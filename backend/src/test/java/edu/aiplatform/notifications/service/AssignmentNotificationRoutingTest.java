@@ -11,11 +11,12 @@ import java.util.*;
 import org.junit.jupiter.api.Test;
 
 class AssignmentNotificationRoutingTest {
-    final IClassAccess classes = mock(IClassAccess.class);
-    final IAccountLookup accounts = mock(IAccountLookup.class);
-    final NotificationService notifications = mock(NotificationService.class);
-    final NotificationEventService service =
-            new NotificationEventService(new RecipientResolver(classes, accounts), notifications);
+    final IClassAccess classAccess = mock(IClassAccess.class);
+    final IAccountLookup accountLookup = mock(IAccountLookup.class);
+    final NotificationService notificationService = mock(NotificationService.class);
+    final NotificationEventService notificationEventService =
+            new NotificationEventService(
+                    new RecipientResolver(classAccess, accountLookup), notificationService);
     final UUID subject = UUID.randomUUID(), assignment = UUID.randomUUID();
     final UUID first = new UUID(0, 1), second = new UUID(0, 2);
     final UUID studentA = UUID.randomUUID(), studentB = UUID.randomUUID();
@@ -25,8 +26,8 @@ class AssignmentNotificationRoutingTest {
     }
 
     void member(UUID student, UUID classId) {
-        when(classes.isActiveStudent(student, classId)).thenReturn(true);
-        when(accounts.getContact(student))
+        when(classAccess.isActiveStudent(student, classId)).thenReturn(true);
+        when(accountLookup.getContact(student))
                 .thenReturn(
                         Optional.of(
                                 new AccountContact(
@@ -52,8 +53,8 @@ class AssignmentNotificationRoutingTest {
     }
 
     void delivery(DomainEvent event, UUID classId, UUID... students) {
-        verify(notifications)
-                .create(
+        verify(notificationService)
+                .createNotification(
                         eq(event.eventId()),
                         eq(NotificationType.ASSIGNMENT_OPENED),
                         eq(List.of(students)),
@@ -67,13 +68,14 @@ class AssignmentNotificationRoutingTest {
     @Test
     void classAssignmentKeepsStudentClassInLinkAndFiltersStaleMembershipAndDisabledAccounts() {
         UUID removed = UUID.randomUUID(), disabled = UUID.randomUUID(), teacher = UUID.randomUUID();
-        when(classes.getClassRef(first)).thenReturn(Optional.of(course(first, ClassStatus.OPEN)));
-        when(classes.listActiveStudents(first))
+        when(classAccess.getClassRef(first))
+                .thenReturn(Optional.of(course(first, ClassStatus.OPEN)));
+        when(classAccess.listActiveStudents(first))
                 .thenReturn(List.of(studentA, removed, disabled, teacher));
         member(studentA, first);
         member(removed, first);
-        when(classes.isActiveStudent(removed, first)).thenReturn(false);
-        when(accounts.getContact(disabled))
+        when(classAccess.isActiveStudent(removed, first)).thenReturn(false);
+        when(accountLookup.getContact(disabled))
                 .thenReturn(
                         Optional.of(
                                 new AccountContact(
@@ -82,7 +84,7 @@ class AssignmentNotificationRoutingTest {
                                         "Disabled",
                                         Role.STUDENT,
                                         AccountStatus.DISABLED)));
-        when(accounts.getContact(teacher))
+        when(accountLookup.getContact(teacher))
                 .thenReturn(
                         Optional.of(
                                 new AccountContact(
@@ -92,9 +94,9 @@ class AssignmentNotificationRoutingTest {
                                         Role.TEACHER,
                                         AccountStatus.ACTIVE)));
         var event = event(Map.of("scope", "CLASS", "classId", first.toString()));
-        service.accept(event);
+        notificationEventService.handleEvent(event);
         delivery(event, first, studentA);
-        verifyNoMoreInteractions(notifications);
+        verifyNoMoreInteractions(notificationService);
     }
 
     @Test
@@ -102,31 +104,32 @@ class AssignmentNotificationRoutingTest {
         var a = course(first, ClassStatus.OPEN);
         var b = course(second, ClassStatus.OPEN);
         var closed = course(UUID.randomUUID(), ClassStatus.ARCHIVED);
-        when(classes.getClassRef(first)).thenReturn(Optional.of(a));
-        when(classes.getClassRef(second)).thenReturn(Optional.of(b));
-        when(classes.listOpenClassesOfSubject(subject))
+        when(classAccess.getClassRef(first)).thenReturn(Optional.of(a));
+        when(classAccess.getClassRef(second)).thenReturn(Optional.of(b));
+        when(classAccess.listOpenClassesOfSubject(subject))
                 .thenReturn(List.of(b, closed, a), List.of(a, b, closed));
-        when(classes.listActiveStudents(first)).thenReturn(List.of(studentA, studentA));
-        when(classes.listActiveStudents(second)).thenReturn(List.of(studentA, studentB));
+        when(classAccess.listActiveStudents(first)).thenReturn(List.of(studentA, studentA));
+        when(classAccess.listActiveStudents(second)).thenReturn(List.of(studentA, studentB));
         member(studentA, first);
         member(studentA, second);
         member(studentB, second);
         for (int attempt = 0; attempt < 2; attempt++) {
-            clearInvocations(notifications);
+            clearInvocations(notificationService);
             var event = event(Map.of("scope", "SUBJECT"));
-            service.accept(event);
+            notificationEventService.handleEvent(event);
             delivery(event, first, studentA);
             delivery(event, second, studentB);
-            verifyNoMoreInteractions(notifications);
+            verifyNoMoreInteractions(notificationService);
         }
-        verify(classes, never()).listActiveStudents(closed.classId());
+        verify(classAccess, never()).listActiveStudents(closed.classId());
     }
 
     @Test
     void closedClassDoesNotNotifyStudents() {
-        when(classes.getClassRef(first))
+        when(classAccess.getClassRef(first))
                 .thenReturn(Optional.of(course(first, ClassStatus.ARCHIVED)));
-        service.accept(event(Map.of("scope", "CLASS", "classId", first.toString())));
-        verifyNoInteractions(notifications);
+        notificationEventService.handleEvent(
+                event(Map.of("scope", "CLASS", "classId", first.toString())));
+        verifyNoInteractions(notificationService);
     }
 }

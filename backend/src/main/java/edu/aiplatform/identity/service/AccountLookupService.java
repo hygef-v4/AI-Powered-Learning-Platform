@@ -7,6 +7,7 @@ import edu.aiplatform.identity.contract.Role;
 import edu.aiplatform.identity.model.Account;
 import edu.aiplatform.identity.repository.AccountRepository;
 import edu.aiplatform.identity.model.EmailPolicy;
+import edu.aiplatform.identity.model.StudentCodePolicy;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -65,6 +66,16 @@ public class AccountLookupService implements IAccountLookup {
     }
 
     @Override
+    public List<AccountContact> findByStudentCodes(Collection<String> studentCodes) {
+        if (studentCodes == null || studentCodes.isEmpty()) {
+            return List.of();
+        }
+        List<String> normalized = studentCodes.stream().map(StudentCodePolicy::normalize)
+                .filter(StudentCodePolicy::isValid).distinct().toList();
+        return accounts.findStudentsByCodes(normalized).stream().map(AccountLookupService::contact).toList();
+    }
+
+    @Override
     public Optional<AccountContact> getContact(UUID accountId) {
         return accountId == null ? Optional.empty() : accounts.findById(accountId).map(AccountLookupService::contact);
     }
@@ -96,6 +107,6 @@ public class AccountLookupService implements IAccountLookup {
 
     private static AccountContact contact(Account account) {
         return new AccountContact(account.id(), account.schoolEmail(), account.displayName(), account.role(),
-                account.status());
+                account.status(), account.studentCode());
     }
 }

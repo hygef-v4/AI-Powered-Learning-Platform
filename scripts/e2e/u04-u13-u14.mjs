@@ -8,6 +8,9 @@ import { Session, activate, check } from "./lib.mjs";
 
 const results = [];
 const runId = Date.now().toString(36) + randomUUID().slice(0, 6);
+/** Two letters + six digits, unique per run and per key. */
+const studentCodeFor = (key) =>
+  `E${key === "student" ? "S" : "O"}${String(Date.now() + Math.floor(Math.random() * 1e6)).slice(-6)}`;
 const prefPath = "/api/v1/me/notification-preferences";
 const root = fileURLToPath(new URL("../../", import.meta.url));
 
@@ -87,6 +90,8 @@ async function main() {
         email,
         displayName: `E2E ${key} ${runId}`,
         role,
+        // Student accounts require a unique student code (BR-U01-103).
+        ...(role === "STUDENT" ? { studentCode: studentCodeFor(key) } : {}),
       }),
       201,
     );
@@ -179,6 +184,7 @@ async function main() {
       code: `E2E-${runId}`.toUpperCase(),
       name: `E2E ${runId}`,
       description: "isolated API E2E",
+      startsOn: new Date().toISOString().slice(0, 10),
       teacherId,
     }),
     201,

@@ -17,13 +17,20 @@ import org.junit.jupiter.params.provider.EnumSource;
 class MaterialAccessPolicyTest {
     @Test
     void disabledMaterialIsPrivateToStaffUntilEnabled() {
-        var disabled = material(false, Material.Status.ACTIVE).withPresentation(false, null);
-        assertThatThrownBy(() -> policy.read(new Actor(account, Role.STUDENT), disabled, classId))
+        var disabled = material(false, Material.Status.ACTIVE).changePresentation(false, null);
+        assertThatThrownBy(
+                () -> materialAccessPolicy.requireReadAccess(
+                        new Actor(account, Role.STUDENT), disabled, classId))
                 .isInstanceOf(ApiException.class);
-        assertThatCode(() -> policy.read(new Actor(account, Role.SUBJECT_MANAGER), disabled, null))
+        assertThatCode(
+                () -> materialAccessPolicy.requireReadAccess(
+                        new Actor(account, Role.SUBJECT_MANAGER), disabled, null))
                 .doesNotThrowAnyException();
-        assertThatCode(() -> policy.read(new Actor(account, Role.STUDENT),
-                disabled.withPresentation(true, null), classId)).doesNotThrowAnyException();
+        assertThatCode(
+                () -> materialAccessPolicy.requireReadAccess(
+                        new Actor(account, Role.STUDENT),
+                        disabled.changePresentation(true, null),
+                        classId)).doesNotThrowAnyException();
     }
 
     final UUID account = UUID.randomUUID(),
@@ -31,34 +38,36 @@ class MaterialAccessPolicyTest {
             classId = UUID.randomUUID(),
             other = UUID.randomUUID();
     final Instant now = Instant.parse("2026-10-21T00:00:00Z");
-    IAuthorization auth;
-    ISubjectQuery subjects;
-    IClassAccess classes;
-    IClassScope scopes;
+    IAuthorization authorization;
+    ISubjectQuery subjectQuery;
+    IClassAccess classAccess;
+    IClassScope classScope;
     IAudit audit;
-    MaterialAccessPolicy policy;
+    MaterialAccessPolicy materialAccessPolicy;
 
     @BeforeEach
     void setup() {
-        auth = mock(IAuthorization.class);
-        subjects = mock(ISubjectQuery.class);
-        classes = mock(IClassAccess.class);
-        scopes = mock(IClassScope.class);
+        authorization = mock(IAuthorization.class);
+        subjectQuery = mock(ISubjectQuery.class);
+        classAccess = mock(IClassAccess.class);
+        classScope = mock(IClassScope.class);
         audit = mock(IAudit.class);
-        policy =
+        materialAccessPolicy =
                 new MaterialAccessPolicy(
-                        auth, subjects, classes, scopes, audit, Clock.fixed(now, ZoneOffset.UTC));
-        when(auth.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
-        when(subjects.getSubject(subject))
+                        authorization, subjectQuery, classAccess, classScope, audit, Clock.fixed(
+                                now, ZoneOffset.UTC));
+        when(authorization.authorize(any(), anyString(), any()))
+                .thenReturn(AuthorizationDecision.allow());
+        when(subjectQuery.getSubject(subject))
                 .thenReturn(
                         Optional.of(
                                 new SubjectRef(
                                         subject, "S", "Subject", SubjectStatus.ACTIVE, account)));
-        when(classes.getClassRef(classId))
+        when(classAccess.getClassRef(classId))
                 .thenReturn(Optional.of(courseClass(ClassStatus.OPEN, account)));
-        when(classes.isActiveStudent(account, classId)).thenReturn(true);
-        when(scopes.listTaughtClasses(account)).thenReturn(List.of(classId));
-        when(classes.listOpenClassesOf(account))
+        when(classAccess.isActiveStudent(account, classId)).thenReturn(true);
+        when(classScope.listTaughtClasses(account)).thenReturn(List.of(classId));
+        when(classAccess.listOpenClassesOf(account))
                 .thenReturn(List.of(courseClass(ClassStatus.OPEN, account)));
     }
 
@@ -92,18 +101,18 @@ class MaterialAccessPolicyTest {
     void assignedTeacherReadsAndWritesOwnClass(Role role) {
         Actor actor = new Actor(account, role);
         var m = material(true, Material.Status.ACTIVE);
-        policy.read(actor, m, classId);
-        policy.write(actor, m);
+        materialAccessPolicy.requireReadAccess(actor, m, classId);
+        materialAccessPolicy.requireWriteAccess(actor, m);
         verifyNoInteractions(audit);
     }
 
     @Test
     void managerWithoutTeachingAssignmentCannotReadPrivateClass() {
-        when(classes.getClassRef(classId))
+        when(classAccess.getClassRef(classId))
                 .thenReturn(Optional.of(courseClass(ClassStatus.OPEN, other)));
         denied(
                 () ->
-                        policy.read(
+                        materialAccessPolicy.requireReadAccess(
                                 new Actor(account, Role.SUBJECT_MANAGER),
                                 material(true, Material.Status.ACTIVE),
                                 classId));
@@ -112,7 +121,7 @@ class MaterialAccessPolicyTest {
     @Test
     void learnerFromOtherClassSameSubjectCannotReadPrivateMaterial() {
         UUID second = UUID.randomUUID();
-        when(classes.getClassRef(second))
+        when(classAccess.getClassRef(second))
                 .thenReturn(
                         Optional.of(
                                 new ClassRef(
@@ -125,7 +134,7 @@ class MaterialAccessPolicyTest {
                                         false)));
         denied(
                 () ->
-                        policy.read(
+                        materialAccessPolicy.requireReadAccess(
                                 new Actor(account, Role.STUDENT),
                                 material(true, Material.Status.ACTIVE),
                                 second));
@@ -133,9 +142,9 @@ class MaterialAccessPolicyTest {
 
     @Test
     void learnerReadsSubjectAndOwnClassActiveMaterial() {
-        policy.read(
+        materialAccessPolicy.requireReadAccess(
                 new Actor(account, Role.STUDENT), material(false, Material.Status.ACTIVE), classId);
-        policy.read(
+        materialAccessPolicy.requireReadAccess(
                 new Actor(account, Role.STUDENT), material(true, Material.Status.ACTIVE), classId);
         verifyNoInteractions(audit);
     }
@@ -144,7 +153,7 @@ class MaterialAccessPolicyTest {
     void archivedMaterialIsHiddenFromStudent() {
         denied(
                 () ->
-                        policy.read(
+                        materialAccessPolicy.requireReadAccess(
                                 new Actor(account, Role.STUDENT),
                                 material(false, Material.Status.ARCHIVED),
                                 classId));
@@ -155,10 +164,11 @@ class MaterialAccessPolicyTest {
             value = ClassStatus.class,
             names = {"DRAFT", "ARCHIVED"})
     void learnerNeedsOpenClass(ClassStatus status) {
-        when(classes.getClassRef(classId)).thenReturn(Optional.of(courseClass(status, account)));
+        when(classAccess.getClassRef(classId))
+                .thenReturn(Optional.of(courseClass(status, account)));
         denied(
                 () ->
-                        policy.read(
+                        materialAccessPolicy.requireReadAccess(
                                 new Actor(account, Role.STUDENT),
                                 material(false, Material.Status.ACTIVE),
                                 classId));
@@ -166,10 +176,10 @@ class MaterialAccessPolicyTest {
 
     @Test
     void removedStudentCannotRead() {
-        when(classes.isActiveStudent(account, classId)).thenReturn(false);
+        when(classAccess.isActiveStudent(account, classId)).thenReturn(false);
         denied(
                 () ->
-                        policy.read(
+                        materialAccessPolicy.requireReadAccess(
                                 new Actor(account, Role.STUDENT),
                                 material(false, Material.Status.ACTIVE),
                                 classId));
@@ -177,37 +187,37 @@ class MaterialAccessPolicyTest {
 
     @Test
     void teacherReadsInheritedSubjectMaterialOfArchivedClass() {
-        when(classes.getClassRef(classId))
+        when(classAccess.getClassRef(classId))
                 .thenReturn(Optional.of(courseClass(ClassStatus.ARCHIVED, account)));
-        policy.read(
+        materialAccessPolicy.requireReadAccess(
                 new Actor(account, Role.TEACHER), material(false, Material.Status.ARCHIVED), null);
     }
 
     @Test
     void archivedClassPreventsWritesButNotStaffRead() {
-        when(classes.getClassRef(classId))
+        when(classAccess.getClassRef(classId))
                 .thenReturn(Optional.of(courseClass(ClassStatus.ARCHIVED, account)));
         var m = material(true, Material.Status.ACTIVE);
         Actor actor = new Actor(account, Role.TEACHER);
-        policy.read(actor, m, classId);
-        assertThatThrownBy(() -> policy.write(actor, m))
+        materialAccessPolicy.requireReadAccess(actor, m, classId);
+        assertThatThrownBy(() -> materialAccessPolicy.requireWriteAccess(actor, m))
                 .isInstanceOfSatisfying(
                         ApiException.class, e -> assertThat(e.status().value()).isEqualTo(409));
     }
 
     @Test
     void archivedSubjectBlocksWritesEvenWhenAuthorizationAllowsAndRetainsTeacherRead() {
-        when(subjects.getSubject(subject)).thenReturn(Optional.of(new SubjectRef(
+        when(subjectQuery.getSubject(subject)).thenReturn(Optional.of(new SubjectRef(
                 subject, "S", "Subject", SubjectStatus.ARCHIVED, null)));
         Actor manager = new Actor(account, Role.SUBJECT_MANAGER);
         Material active = material(false, Material.Status.ACTIVE);
-        policy.read(new Actor(account, Role.TEACHER), active, classId);
-        assertThatThrownBy(() -> policy.write(manager, active))
+        materialAccessPolicy.requireReadAccess(new Actor(account, Role.TEACHER), active, classId);
+        assertThatThrownBy(() -> materialAccessPolicy.requireWriteAccess(manager, active))
                 .isInstanceOfSatisfying(ApiException.class, e -> {
                     assertThat(e.status().value()).isEqualTo(409);
                     assertThat(e.code()).isEqualTo("MATERIAL_SCOPE_READ_ONLY");
                 });
-        assertThatThrownBy(() -> policy.manageModules(manager, subject))
+        assertThatThrownBy(() -> materialAccessPolicy.requireModuleManagement(manager, subject))
                 .isInstanceOfSatisfying(ApiException.class,
                         e -> assertThat(e.code()).isEqualTo("MATERIAL_SCOPE_READ_ONLY"));
         verifyNoInteractions(audit);
@@ -215,14 +225,20 @@ class MaterialAccessPolicyTest {
 
     @Test
     void unavailableSubjectAndClassFailClosedWithoutPrivateDetails() {
-        when(subjects.getSubject(subject)).thenThrow(new IllegalStateException("private-subject"));
-        assertThatThrownBy(() -> policy.subjectList(new Actor(account, Role.SUBJECT_MANAGER), subject))
+        when(subjectQuery.getSubject(subject))
+                .thenThrow(new IllegalStateException("private-subject"));
+        assertThatThrownBy(
+                () -> materialAccessPolicy.requireSubjectListAccess(
+                        new Actor(account, Role.SUBJECT_MANAGER), subject))
                 .isInstanceOfSatisfying(ApiException.class, e -> {
                     assertThat(e.status().value()).isEqualTo(503);
                     assertThat(e.getMessage()).doesNotContain("private-subject");
                 });
-        when(classes.getClassRef(classId)).thenThrow(new IllegalStateException("private-class"));
-        assertThatThrownBy(() -> policy.classList(new Actor(account, Role.TEACHER), classId, false))
+        when(classAccess.getClassRef(classId))
+                .thenThrow(new IllegalStateException("private-class"));
+        assertThatThrownBy(
+                () -> materialAccessPolicy.requireClassListAccess(
+                        new Actor(account, Role.TEACHER), classId, false))
                 .isInstanceOfSatisfying(ApiException.class, e -> {
                     assertThat(e.status().value()).isEqualTo(503);
                     assertThat(e.getMessage()).doesNotContain("private-class");
@@ -233,20 +249,20 @@ class MaterialAccessPolicyTest {
     void adminCannotReadEvenWhenAuthorizationMockAllows() {
         denied(
                 () ->
-                        policy.read(
+                        materialAccessPolicy.requireReadAccess(
                                 new Actor(account, Role.ADMIN),
                                 material(false, Material.Status.ACTIVE),
                                 null));
-        verifyNoInteractions(auth);
+        verifyNoInteractions(authorization);
     }
 
     @Test
     void deniedCurrentAccountOverridesActorRoleAndScope() {
-        when(auth.authorize(any(), anyString(), any()))
+        when(authorization.authorize(any(), anyString(), any()))
                 .thenReturn(AuthorizationDecision.deny("ACCOUNT_NOT_ACTIVE"));
         denied(
                 () ->
-                        policy.read(
+                        materialAccessPolicy.requireReadAccess(
                                 new Actor(account, Role.SUBJECT_MANAGER),
                                 material(false, Material.Status.ACTIVE),
                                 null));
@@ -254,11 +270,11 @@ class MaterialAccessPolicyTest {
 
     @Test
     void unavailableAuthorizationFailsClosed() {
-        when(auth.authorize(any(), anyString(), any()))
+        when(authorization.authorize(any(), anyString(), any()))
                 .thenThrow(new IllegalStateException("private data"));
         assertThatThrownBy(
                         () ->
-                                policy.read(
+                                materialAccessPolicy.requireReadAccess(
                                         new Actor(account, Role.SUBJECT_MANAGER),
                                         material(false, Material.Status.ACTIVE),
                                         null))
@@ -273,27 +289,32 @@ class MaterialAccessPolicyTest {
     @Test
     void managerReadsAndManagesOwnSubjectButCannotListOrReadAnUnassignedSubject() {
         Actor manager = new Actor(account, Role.SUBJECT_MANAGER);
-        policy.subjectList(manager, subject);
-        policy.read(manager, material(false, Material.Status.ARCHIVED), null);
-        policy.write(manager, material(false, Material.Status.ACTIVE));
-        assertThat(policy.canManageModules(manager, subject)).isTrue();
-        verify(auth, atLeastOnce())
+        materialAccessPolicy.requireSubjectListAccess(manager, subject);
+        materialAccessPolicy.requireReadAccess(
+                manager, material(false, Material.Status.ARCHIVED), null);
+        materialAccessPolicy.requireWriteAccess(manager, material(false, Material.Status.ACTIVE));
+        assertThat(materialAccessPolicy.canManageModules(manager, subject)).isTrue();
+        verify(authorization, atLeastOnce())
                 .authorize(manager, Actions.MATERIAL_SUBJECT_MANAGE, ResourceRef.subject(subject));
         verifyNoInteractions(audit);
 
-        when(auth.authorize(manager, Actions.MATERIAL_SUBJECT_MANAGE, ResourceRef.subject(other)))
+        when(
+                authorization.authorize(
+                        manager, Actions.MATERIAL_SUBJECT_MANAGE, ResourceRef.subject(other)))
                 .thenReturn(AuthorizationDecision.deny("OUT_OF_SUBJECT_SCOPE"));
-        denied(() -> policy.subjectList(manager, other));
+        denied(() -> materialAccessPolicy.requireSubjectListAccess(manager, other));
     }
 
     @Test
     void foreignSubjectManagerCannotReadDetailOrChangeModules() {
         Actor manager = new Actor(other, Role.SUBJECT_MANAGER);
-        when(auth.authorize(eq(manager), anyString(), any()))
+        when(authorization.authorize(eq(manager), anyString(), any()))
                 .thenReturn(AuthorizationDecision.deny("OUT_OF_SUBJECT_SCOPE"));
-        denied(() -> policy.read(manager, material(false, Material.Status.ACTIVE), null));
-        assertThat(policy.canManageModules(manager, subject)).isFalse();
-        assertThat(policy.canManageQuiz(manager, subject, null)).isFalse();
+        denied(
+                () -> materialAccessPolicy.requireReadAccess(
+                        manager, material(false, Material.Status.ACTIVE), null));
+        assertThat(materialAccessPolicy.canManageModules(manager, subject)).isFalse();
+        assertThat(materialAccessPolicy.canManageQuiz(manager, subject, null)).isFalse();
     }
 
     void denied(Runnable call) {

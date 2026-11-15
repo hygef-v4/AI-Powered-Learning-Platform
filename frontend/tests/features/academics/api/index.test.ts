@@ -24,3 +24,10 @@ it("rejects unsuccessful enrollment outcomes returned with HTTP 200",async()=>{
  vi.stubGlobal("fetch",vi.fn().mockImplementation(()=>Promise.resolve(Response.json({result:"IN_OTHER_CLASS"}))));
  await expect(academicsApi.enrollStudent("c","s")).rejects.toThrow("Đang ở lớp khác cùng môn");
 });
+it("forwards the class term filter only when it is set", async () => {
+ const fn = vi.fn().mockImplementation(()=>Promise.resolve(Response.json([]))); vi.stubGlobal("fetch",fn);
+ await academicsApi.listClasses("teaching",{term:"SP27-BL5"});
+ await academicsApi.listClasses("teaching",{term:""});
+ expect(fn.mock.calls[0]![0]).toBe("/api/v1/teaching/classes?page=1&size=100&term=SP27-BL5");
+ expect(fn.mock.calls[1]![0]).toBe("/api/v1/teaching/classes?page=1&size=100");
+});

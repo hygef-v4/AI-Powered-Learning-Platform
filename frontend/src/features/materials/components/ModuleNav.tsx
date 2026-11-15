@@ -14,17 +14,17 @@ import { FADE_LABEL, type NavContext, type NavLocation } from "@/shared/layout/n
 import { showErrorToast, showToast } from "@/shared/ui";
 import { cx } from "@/shared/ui/cx";
 import { Icon, type IconName } from "@/shared/ui/Icon";
-import { contextQuery, materialPath } from "../api";
-import { ArchiveItemDialog, ModuleItemDialog, removalAction, removalMessage } from "./MaterialDialogs";
+import { buildContextQuery, buildMaterialPath } from "../api";
+import { ArchiveItemDialog, ModuleItemDialog, resolveRemovalAction, describeRemoval } from "./MaterialDialogs";
 import { CollapseBody, canEditItem, reopen } from "./ModuleBoard";
 import { useModuleCollapse } from "../model/moduleCollapse";
 import { useModuleScope } from "./ModulePlace";
 import {
-  boardHref,
-  itemHref,
-  itemIcon,
-  itemKey,
-  itemTitle,
+  buildBoardHref,
+  buildItemHref,
+  resolveItemIcon,
+  buildItemKey,
+  resolveItemTitle,
   notifyOutlineChanged,
   useModuleOutline,
   type OutlineItem,
@@ -45,7 +45,7 @@ const TOOL =
 const CHEVRON =
   "flex size-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-sunken hover:text-ink md:group-data-[collapsed]/sidebar:mx-auto";
 
-function sourceOf(pathname: string, classId?: string): Source | null {
+function resolveSource(pathname: string, classId?: string): Source | null {
   const material = /^\/materials\/([^/]+)(\/view)?$/.exec(pathname);
   if (material) return { kind: "material", id: decodeURIComponent(material[1]!) };
   const quiz = /^\/quizzes\/([^/]+)$/.exec(pathname);
@@ -55,7 +55,7 @@ function sourceOf(pathname: string, classId?: string): Source | null {
   return null;
 }
 
-export function moduleContext({ pathname, search }: NavLocation): NavContext | null {
+export function resolveModuleContext({ pathname, search }: NavLocation): NavContext | null {
   // Trang làm Quiz, kết quả Quiz (`/quiz-attempts/{id}`, `.../result`) không mang lớp trên địa chỉ: đọc lớp và Quiz từ lượt
   // làm rồi hiện cùng sidebar module với trang Quiz luyện tập (yêu cầu 2026-11-12).
   const attempt = /^\/quiz-attempts\/([^/]+)(\/result)?$/.exec(pathname);
@@ -69,7 +69,7 @@ export function moduleContext({ pathname, search }: NavLocation): NavContext | n
     };
   }
   const classId = search.get("classId") ?? undefined;
-  const source = sourceOf(pathname, classId);
+  const source = resolveSource(pathname, classId);
   if (!source) return null;
   return {
     key: `material-modules:${classId ?? "subject"}`,
@@ -87,9 +87,10 @@ function AttemptModuleNav({ attemptId, submitted }: { attemptId: string; submitt
   useEffect(() => {
     const controller = new AbortController();
     const path = `/api/v1/quiz-attempts/${encodeURIComponent(attemptId)}`;
-    const read = (suffix: string) => apiFetch<AttemptOwner>(`${path}${suffix}`, { signal: controller.signal });
+    const fetchAttemptOwner = (suffix: string) =>
+      apiFetch<AttemptOwner>(`${path}${suffix}`, { signal: controller.signal });
     // Lượt đã nộp chỉ đọc được qua kết quả, lượt đang làm chỉ đọc được qua trang làm: thử đúng loại trước.
-    read(submitted ? "/result" : "").catch(() => read(submitted ? "" : "/result")).then(
+    fetchAttemptOwner(submitted ? "/result" : "").catch(() => fetchAttemptOwner(submitted ? "" : "/result")).then(
       (found) => { if (!controller.signal.aborted) setOwner({ quizId: found.quizId, classId: found.classId }); },
       () => {},
     );
@@ -119,7 +120,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
     classId
       ? null
       : source.kind === "material"
-        ? `${materialPath(source.id)}${contextQuery(classId)}`
+        ? `${buildMaterialPath(source.id)}${buildContextQuery(classId)}`
         : `/api/v1/quizzes/${encodeURIComponent(source.id)}`,
   );
   const quiz = owner.data && "quiz" in owner.data ? owner.data.quiz : undefined;
@@ -136,7 +137,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
   const { outline } = useModuleOutline(scope);
   const [dialog, setDialog] = useState<Dialogs | null>(null);
   const { collapsed, toggle } = useModuleCollapse("nav");
-  const back = scope ? boardHref(scope) : "/manager/materials";
+  const back = scope ? buildBoardHref(scope) : "/manager/materials";
   const staff = scope && scope.kind !== "student" ? scope : null;
   const isActive = (item: OutlineItem) =>
     item.kind === "material"
@@ -230,10 +231,10 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                           item.quiz.canManage &&
                           item.quiz.status === "RETIRED";
                         return (
-                          <div key={itemKey(item)} className="group/item relative">
+                          <div key={buildItemKey(item)} className="group/item relative">
                             <Link
-                              href={itemHref(item, scope)}
-                              title={itemTitle(item)}
+                              href={buildItemHref(item, scope)}
+                              title={resolveItemTitle(item)}
                               aria-current={active ? "page" : undefined}
                               className={cx(
                                 "group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-semibold whitespace-nowrap transition-colors duration-200",
@@ -245,7 +246,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                               )}
                             >
                               <Icon
-                                name={itemIcon(item)}
+                                name={resolveItemIcon(item)}
                                 size={17}
                                 filled={active}
                                 className={cx(
@@ -253,13 +254,13 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                                   active ? "text-primary-ink" : "text-muted group-hover:text-ink",
                                 )}
                               />
-                              <span className={cx("truncate", FADE_LABEL)}>{itemTitle(item)}</span>
+                              <span className={cx("truncate", FADE_LABEL)}>{resolveItemTitle(item)}</span>
                             </Link>
                             {reopenable && (
                               <span className="absolute top-1/2 right-1.5 hidden -translate-y-1/2 items-center group-hover/item:flex group-focus-within/item:flex">
                                 <ItemTool
                                   icon="lock_open"
-                                  label={`Mở lại ${itemTitle(item)}`}
+                                  label={`Mở lại ${resolveItemTitle(item)}`}
                                   onClick={() =>
                                     void reopen(item.quiz.quizId, scope).then(
                                       () => {
@@ -276,13 +277,13 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                               <span className="absolute top-1/2 right-1.5 hidden -translate-y-1/2 items-center gap-0.5 group-hover/item:flex group-focus-within/item:flex">
                                 <ItemTool
                                   icon="edit"
-                                  label={`Sửa ${itemTitle(item)}`}
+                                  label={`Sửa ${resolveItemTitle(item)}`}
                                   onClick={() => setDialog({ type: "item", module, item })}
                                 />
                                 <ItemTool
-                                  icon={removalAction(item).icon}
+                                  icon={resolveRemovalAction(item).icon}
                                   danger
-                                  label={`${removalAction(item).label} ${itemTitle(item)}`}
+                                  label={`${resolveRemovalAction(item).label} ${resolveItemTitle(item)}`}
                                   onClick={() => setDialog({ type: "archive", item, active })}
                                 />
                               </span>
@@ -322,9 +323,9 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
           onClose={() => setDialog(null)}
           onSaved={(removed) => {
             setDialog(null);
-            showToast(removalMessage(dialog.item), "danger");
+            showToast(describeRemoval(dialog.item), "danger");
             notifyOutlineChanged();
-            if (removed && dialog.active && scope) router.push(boardHref(scope));
+            if (removed && dialog.active && scope) router.push(buildBoardHref(scope));
           }}
         />
       )}

@@ -2,6 +2,7 @@
 export { Alert } from "./Alert";
 export { Button, ButtonLink, IconButton } from "./Button";
 export { ClassFilter, ClassLabel, type ClassFilterOption } from "./ClassFilter";
+export { TermFilter } from "./TermFilter";
 export { useConfirmDialog } from "./ConfirmDialog";
 export { cx } from "./cx";
 export { Dialog } from "./Dialog";

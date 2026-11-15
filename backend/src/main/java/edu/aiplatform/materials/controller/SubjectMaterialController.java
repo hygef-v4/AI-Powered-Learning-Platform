@@ -11,36 +11,37 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/subjects/{subjectId}")
 public class SubjectMaterialController {
-    private final MaterialService commands;
-    private final MaterialQueryService queries;
+    private final MaterialService materialService;
+    private final MaterialQueryService materialQueryService;
 
-    public SubjectMaterialController(MaterialService commands, MaterialQueryService queries) {
-        this.commands = commands;
-        this.queries = queries;
+    public SubjectMaterialController(
+            MaterialService materialService, MaterialQueryService materialQueryService) {
+        this.materialService = materialService;
+        this.materialQueryService = materialQueryService;
     }
 
     @GetMapping("/materials")
-    public List<MaterialViews.Detail> list(
+    public List<MaterialViews.Detail> listSubjectMaterials(
             @AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId) {
-        return queries.subjectList(actor, subjectId);
+        return materialQueryService.listSubjectMaterials(actor, subjectId);
     }
 
     @PostMapping("/materials")
     @ResponseStatus(HttpStatus.CREATED)
-    public MaterialViews.Detail create(
+    public MaterialViews.Detail createSubjectMaterial(
             @AuthenticationPrincipal Actor actor,
             @PathVariable UUID subjectId,
             @Valid @RequestBody MaterialCommands.Create input) {
-        var m = commands.create(actor, subjectId, false, input);
-        return queries.detail(actor, m.id(), null);
+        var m = materialService.createMaterial(actor, subjectId, false, input);
+        return materialQueryService.loadMaterial(actor, m.id(), null);
     }
 
     @PutMapping("/materials:reorder")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void reorder(
+    public void reorderSubjectMaterials(
             @AuthenticationPrincipal Actor actor,
             @PathVariable UUID subjectId,
             @Valid @RequestBody MaterialCommands.Reorder input) {
-        commands.reorder(actor, subjectId, false, input);
+        materialService.reorderMaterials(actor, subjectId, false, input);
     }
 }

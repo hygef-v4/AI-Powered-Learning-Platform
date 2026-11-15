@@ -9,17 +9,17 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/me/classes/{classId}/materials")
 public class MyMaterialController {
-    private final MaterialQueryService queries;
+    private final MaterialQueryService materialQueryService;
 
-    public MyMaterialController(MaterialQueryService queries) {
-        this.queries = queries;
+    public MyMaterialController(MaterialQueryService materialQueryService) {
+        this.materialQueryService = materialQueryService;
     }
 
     @GetMapping
-    public List<MaterialViews.Detail> list(
+    public List<MaterialViews.Detail> listMyMaterials(
             @AuthenticationPrincipal Actor actor,
             @PathVariable UUID classId,
             @RequestParam(required = false) List<UUID> ids) {
-        return queries.classList(actor, classId, true, ids);
+        return materialQueryService.listClassMaterials(actor, classId, true, ids);
     }
 }

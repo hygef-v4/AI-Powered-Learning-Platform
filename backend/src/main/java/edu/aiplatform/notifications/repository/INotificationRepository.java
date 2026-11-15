@@ -6,35 +6,36 @@ import java.time.Instant;
 import java.util.*;
 
 public interface INotificationRepository {
-    boolean insert(Notification n);
+    boolean insertNotification(Notification notification);
 
-    Optional<Notification> find(UUID id);
+    Optional<Notification> findNotification(UUID id);
 
-    List<Notification> list(UUID recipient, boolean unread, int page, int size);
+    List<Notification> listNotifications(UUID recipient, boolean unread, int page, int size);
 
-    long unread(UUID recipient);
+    long countUnread(UUID recipient);
 
-    boolean read(UUID id, UUID recipient, Instant now);
+    boolean markRead(UUID id, UUID recipient, Instant now);
 
-    void readAll(UUID recipient, Instant now);
+    void markAllRead(UUID recipient, Instant now);
 
-    Map<String, Boolean> preferences(UUID account);
+    Map<String, Boolean> findPreferences(UUID account);
 
-    void preference(UUID account, String type, boolean enabled);
+    void savePreference(UUID account, String type, boolean enabled);
 
-    void addEmail(EmailDelivery delivery);
+    void insertEmailDelivery(EmailDelivery delivery);
 
-    Optional<EmailDelivery> lockEmail(UUID id);
+    Optional<EmailDelivery> lockEmailDelivery(UUID id);
 
-    List<EmailDelivery> pending(Instant olderThan);
+    List<EmailDelivery> listPendingEmails(Instant olderThan);
 
-    List<EmailDelivery> deferred(Instant now);
+    List<EmailDelivery> listDeferredEmails(Instant now);
 
-    long reserved(Instant from, Instant to);
+    long countReservedEmails(Instant from, Instant to);
 
-    void lockBudget();
+    void lockEmailBudget();
 
-    boolean reminder(UUID assignment, UUID classId, Instant closesAt, String status, Instant now);
+    boolean insertReminder(
+            UUID assignment, UUID classId, Instant closesAt, String status, Instant now);
 
-    int deleteOld(Instant cutoff);
+    int deleteOldNotifications(Instant cutoff);
 }

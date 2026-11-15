@@ -38,8 +38,8 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
     { key: "students", label: "Sinh viên", count: students.filter((student) => student.status === "ACTIVE").length },
   ];
   return <>
-    <PageHeader backHref="/manager/classes" title={<span className="min-w-0 break-words [overflow-wrap:anywhere]">{value.code}</span>}
-      breadcrumb={[{ label: "Lớp học", href: "/manager/classes" }, { label: value.code }]} />
+    <PageHeader backHref="/manager/classes" title={<span className="min-w-0 break-words [overflow-wrap:anywhere]">{value.code}<span className="ml-2 font-mono text-base font-medium text-muted" data-testid="class-header-term">{value.term}</span></span>}
+      breadcrumb={[{ label: "Lớp học", href: "/manager/classes" }, { label: `${value.code} · ${value.term}` }]} />
     {/* Nút thêm sinh viên của tab Sinh viên nằm cùng hàng tab, bên phải. */}
     <div className="relative">
       <Tabs items={tabs} value={tab} onChange={openTab} label="Chi tiết lớp" testIdPrefix="class-tab-" panelId="class-tab-panel" />

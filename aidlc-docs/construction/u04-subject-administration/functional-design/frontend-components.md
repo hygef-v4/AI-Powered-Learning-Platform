@@ -12,7 +12,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://claude.ai/artifact/M5RgKNauBqdxM7GUTRwau4), bản 17/10/2026; `#n` là số màn, mã trong ngoặc (ví dụ `a02`) là artboard.
 
-**Quyết định 2026-11-07 — D-U04-04:** Bỏ học kỳ lớp khỏi UI, request/response, domain và dữ liệu hiện hành; xem [quyết định đã duyệt](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Migration mới `V20261107_2200__remove_class_term.sql` xóa cột cũ khi áp dụng; không sửa migration hoặc bằng chứng lịch sử. Các quy tắc khác giữ nguyên phạm vi đã chốt.
+**Quyết định 2026-11-07 — D-U04-04 (đã được D-U04-05 thay thế ngày 2026-11-14, xem mục "Học kỳ của lớp"):** Bỏ học kỳ lớp khỏi UI, request/response, domain và dữ liệu hiện hành; xem [quyết định đã duyệt](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Migration mới `V20261107_2200__remove_class_term.sql` xóa cột cũ khi áp dụng; không sửa migration hoặc bằng chứng lịch sử. Các quy tắc khác giữ nguyên phạm vi đã chốt.
 
 **Yêu cầu đã chốt 2026-11-08:** Áp dụng các [quyết định U04/U13/U14](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đây là baseline yêu cầu để thiết kế test; không phải xác nhận code/runtime hoặc coverage đã đầy đủ. Các snapshot và số kiểm thử có ngày cũ là lịch sử.
 
@@ -56,6 +56,16 @@ app/admin/subjects/[id]/           SubjectDetailPage   #16 Subject Detail của 
 | `ManagerCard`, `ManagerChangeDialog` | `PUT /api/v1/admin/subjects/{id}/manager` | Thẻ "Chủ nhiệm môn": avatar, họ tên, email, nút Đổi chủ nhiệm. Popup: Chủ nhiệm hiện tại; chọn "Phân công người khác" (dùng `ManagerPicker`) hoặc "Bỏ chủ nhiệm" (môn chưa có chủ nhiệm thì chỉ Admin quản lý cho tới khi phân công lại); Hủy, Xác nhận |
 | `SubjectMetaCard` | - | Trạng thái, ngày tạo, nút Lưu trữ/Mở lại; không thêm bộ đếm lớp vào thẻ |
 | `SubjectStatusActions` | `PUT /api/v1/admin/subjects/{id}/status` | Lưu trữ, Mở lại có xác nhận. Popup lưu trữ báo mọi lớp chưa lưu trữ của môn sẽ được lưu trữ theo và Chủ nhiệm môn bị gỡ (BR-U04-04, BR-U04-11). Design `a07d` (lưu trữ bị từ chối) không còn dùng |
-| `SubjectClassesTable` | `GET /api/v1/admin/subjects/{id}/classes` | Lọc trạng thái (Tất cả, Nháp, Đang mở, Lưu trữ); cột Mã lớp, Giảng viên ("Chưa phân công"), Trạng thái; ghi chú "Chỉ xem. Lớp do Chủ nhiệm môn quản lý."; không có link mở lớp |
+| `SubjectClassesTable` | `GET /api/v1/admin/subjects/{id}/classes` | Lọc trạng thái (Tất cả, Nháp, Đang mở, Lưu trữ); cột Mã lớp, Học kỳ (D-U04-05), Giảng viên ("Chưa phân công"), Trạng thái; ghi chú "Chỉ xem. Lớp do Chủ nhiệm môn quản lý."; không có link mở lớp |
 
 Route dưới `/admin` nên `RoleGuard` của U01 chỉ cho `ADMIN`; API vẫn tự kiểm quyền.
+
+
+## Học kỳ của lớp — 2026-11-14 (D-U04-05)
+
+Quyết định D-U04-05 thay D-U04-04: lớp có học kỳ suy ra từ Ngày bắt đầu, dùng để lọc lớp; U05 sở hữu dữ liệu và quy tắc (BR-U05-61…72, [yêu cầu CT-01…09](../../../inception/requirements/2026-11-14-class-term.md)). Phần của U04 chỉ là hiển thị:
+
+- `SubjectClassSummary` (đọc qua `ISubjectClasses.listClassesOfSubject`) thêm `term`.
+- Tab Lớp học trong chi tiết môn của Admin (`SubjectClassesTable`) có cột Học kỳ sau Mã lớp. Không thêm bộ lọc học kỳ ở màn này.
+- Mã lớp có thể lặp giữa các học kỳ của cùng môn, nên cột Học kỳ là cách phân biệt hai lớp cùng mã.
+- U04 không có chức năng quản lý học kỳ.

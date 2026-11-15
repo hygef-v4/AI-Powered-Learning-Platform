@@ -18,6 +18,7 @@ import edu.aiplatform.identity.repository.AccountRepository;
 import edu.aiplatform.identity.model.AccountSearch;
 import edu.aiplatform.identity.model.EmailPolicy;
 import edu.aiplatform.identity.model.ProfilePolicy;
+import edu.aiplatform.identity.model.StudentCodePolicy;
 import edu.aiplatform.identity.integration.OtpChallengeStore;
 import edu.aiplatform.identity.integration.SessionStore;
 import edu.aiplatform.identity.integration.VerificationTicketStore;
@@ -93,6 +94,12 @@ public class AccountAdminService {
 
     /** F9 (UC 09): tạo {@code PENDING}, không mật khẩu, không gửi mail (BR-U01-10); tạo ADMIN chỉ qua đây (BR-U01-84). */
     public AccountViews.Detail create(Actor actor, String rawEmail, String rawDisplayName, Role role) {
+        return create(actor, rawEmail, rawDisplayName, role, null);
+    }
+
+    /** F9 kèm MSSV: bắt buộc với {@code STUDENT}, không được có với role khác (BR-U01-102, 103). */
+    public AccountViews.Detail create(Actor actor, String rawEmail, String rawDisplayName, Role role,
+                                      String rawStudentCode) {
         require(actor, Actions.ACCOUNT_CREATE, null);
         String email = EmailPolicy.normalize(rawEmail);
         if (!EmailPolicy.isValid(email)) {
@@ -105,18 +112,27 @@ public class AccountAdminService {
         if (role == null) {
             throw ApiException.badRequest("INVALID_ROLE", "Chọn vai trò");
         }
+        String studentCode = StudentCodePolicy.normalize(rawStudentCode);
+        if (role != Role.STUDENT && studentCode != null) {
+            throw studentCodeNotAllowed();
+        }
+        if (role == Role.STUDENT) {
+            requireValidStudentCode(studentCode);
+        }
         Instant now = clock.instant();
-        Account account = Account.newPending(UUID.randomUUID(), email, role, displayName, null, now);
+        Account account = Account.newPending(UUID.randomUUID(), email, role, displayName, null, studentCode, now);
         try {
             transactions.executeWithoutResult(status -> {
                 if (accounts.findByEmail(email).isPresent()) {
                     throw emailExists();
                 }
+                requireStudentCodeFree(studentCode);
                 accounts.insert(account);
-                record(actor, "ACCOUNT_CREATED", account.id(), Map.of("role", role.name()), now);
+                record(actor, "ACCOUNT_CREATED", account.id(),
+                        Map.of("role", role.name(), "studentCodeSet", studentCode != null), now);
             });
         } catch (DuplicateKeyException e) {
-            throw emailExists();
+            throw AccountRepository.isStudentCodeConflict(e) ? studentCodeExists() : emailExists();
         }
         return AccountViews.Detail.of(account);
     }
@@ -124,6 +140,15 @@ public class AccountAdminService {
     /** F14 bước 2 (UC 11): chỉ tên, số điện thoại; email không đổi được (BR-U01-04). */
     public AccountViews.Detail update(Actor actor, UUID id, String rawDisplayName, String rawPhoneNumber,
                                      long version) {
+        return update(actor, id, rawDisplayName, rawPhoneNumber, null, version);
+    }
+
+    /**
+     * F14 kèm MSSV (BR-U01-105): {@code rawStudentCode} rỗng ({@code null}) là không đổi mã; chỉ sửa được khi tài
+     * khoản còn {@code PENDING}, còn lại mã đã khóa.
+     */
+    public AccountViews.Detail update(Actor actor, UUID id, String rawDisplayName, String rawPhoneNumber,
+                                     String rawStudentCode, long version) {
         require(actor, Actions.ACCOUNT_UPDATE, id);
         String displayName = ProfilePolicy.normalizeDisplayName(rawDisplayName);
         String phoneNumber = ProfilePolicy.normalizePhone(rawPhoneNumber);
@@ -141,15 +166,73 @@ public class AccountAdminService {
         if (!Objects.equals(before.phoneNumber(), phoneNumber)) {
             changed.add("phoneNumber");
         }
+        String studentCode = resolveStudentCode(before, rawStudentCode);
+        boolean studentCodeChanged = !Objects.equals(before.studentCode(), studentCode);
+        if (studentCodeChanged) {
+            changed.add("studentCode");
+        }
         Instant now = clock.instant();
-        transactions.executeWithoutResult(status -> {
-            if (accounts.updateProfile(id, displayName, phoneNumber, version, now) == 0) {
-                throw versionConflict();
-            }
-            // Ghi tên trường đã đổi, không ghi giá trị số điện thoại (BR-U01-91).
-            record(actor, "ACCOUNT_UPDATED", id, Map.of("fields", changed), now);
-        });
+        try {
+            transactions.executeWithoutResult(status -> {
+                if (studentCodeChanged) {
+                    requireStudentCodeFree(studentCode);
+                }
+                if (accounts.updateAccountDetails(id, displayName, phoneNumber, studentCode, version, now) == 0) {
+                    throw versionConflict();
+                }
+                // Ghi tên trường đã đổi, không ghi giá trị số điện thoại hay MSSV (BR-U01-91, 115).
+                record(actor, "ACCOUNT_UPDATED", id, Map.of("fields", changed), now);
+            });
+        } catch (DuplicateKeyException e) {
+            throw studentCodeExists();
+        }
         return AccountViews.Detail.of(load(id));
+    }
+
+    /** BR-U01-105: MSSV cuối cùng sau khi xét yêu cầu; trả mã hiện tại khi không đổi. */
+    private static String resolveStudentCode(Account before, String rawStudentCode) {
+        if (rawStudentCode == null) {
+            return before.studentCode();
+        }
+        if (before.role() != Role.STUDENT) {
+            throw studentCodeNotAllowed();
+        }
+        String code = StudentCodePolicy.normalize(rawStudentCode);
+        if (code == null) {
+            if (!before.hasStudentCode()) {
+                return null;
+            }
+            throw invalidStudentCode();
+        }
+        if (!StudentCodePolicy.isValid(code)) {
+            throw invalidStudentCode();
+        }
+        if (code.equals(before.studentCode())) {
+            return code;
+        }
+        // Chỉ sửa lỗi gõ khi sinh viên chưa kích hoạt; không có chức năng gán mã cho tài khoản cũ (người dùng chốt
+        // 2026-11-14).
+        if (before.status() != AccountStatus.PENDING) {
+            throw ApiException.conflict("STUDENT_CODE_LOCKED",
+                    "MSSV đã khóa vì sinh viên đã kích hoạt tài khoản");
+        }
+        return code;
+    }
+
+    private static void requireValidStudentCode(String studentCode) {
+        if (studentCode == null) {
+            throw ApiException.badRequest("MISSING_STUDENT_CODE", "Cần nhập MSSV cho tài khoản sinh viên");
+        }
+        if (!StudentCodePolicy.isValid(studentCode)) {
+            throw invalidStudentCode();
+        }
+    }
+
+    /** Kiểm trước để báo lỗi rõ; unique index vẫn chặn khi hai request ghi cùng lúc (BR-U01-101). */
+    private void requireStudentCodeFree(String studentCode) {
+        if (studentCode != null && !accounts.existingStudentCodes(List.of(studentCode)).isEmpty()) {
+            throw studentCodeExists();
+        }
     }
 
     /** F11 (UC 11): đổi role, xóa mọi phiên của người bị đổi (BR-U01-63). */
@@ -161,6 +244,14 @@ public class AccountAdminService {
         Account target = load(id);
         if (target.role() == newRole) {
             return AccountViews.Detail.of(target);
+        }
+        if (target.role() == Role.STUDENT || newRole == Role.STUDENT) {
+            // BR-U01-107: không đổi role vào hoặc ra khỏi STUDENT; xét trước BR-U01-64…66.
+            audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "ROLE_CHANGE_REJECTED", "ACCOUNT",
+                    id.toString(), AuditResult.DENIED, "STUDENT_ROLE_CHANGE_NOT_ALLOWED",
+                    Map.of("from", target.role().name(), "to", newRole.name()), clock.instant()));
+            throw ApiException.conflict("STUDENT_ROLE_CHANGE_NOT_ALLOWED",
+                    "Không đổi được vai trò vào hoặc ra khỏi Sinh viên");
         }
         if (id.equals(actor.accountId())) {
             // Người đổi role luôn là ADMIN nên mọi thay đổi role của chính mình đều là tự hạ quyền (BR-U01-65).
@@ -286,6 +377,18 @@ public class AccountAdminService {
 
     private static ApiException emailExists() {
         return ApiException.conflict("EMAIL_EXISTS", "Email đã có tài khoản");
+    }
+
+    private static ApiException studentCodeExists() {
+        return ApiException.conflict("STUDENT_CODE_EXISTS", "MSSV này đã được dùng cho tài khoản khác");
+    }
+
+    private static ApiException studentCodeNotAllowed() {
+        return ApiException.badRequest("STUDENT_CODE_NOT_ALLOWED", "Chỉ tài khoản sinh viên mới có MSSV");
+    }
+
+    private static ApiException invalidStudentCode() {
+        return ApiException.badRequest("INVALID_STUDENT_CODE", "MSSV gồm 2 chữ cái và 6 chữ số, ví dụ SE123456");
     }
 
     private static ApiException versionConflict() {

@@ -12,6 +12,8 @@ export type AccountSummary = {
   status: AccountStatus;
   createdAt: string;
   updatedAt: string;
+  /** MSSV, chỉ tài khoản sinh viên; null khi chưa có (BR-U01-102, 104). */
+  studentCode?: string | null;
 };
 
 export type AccountPage = { items: AccountSummary[]; total: number; page: number; size: number };
@@ -19,6 +21,8 @@ export type AccountPage = { items: AccountSummary[]; total: number; page: number
 export type AccountDetail = AccountSummary & {
   phoneNumber: string | null;
   version: number;
+  /** Sinh viên còn PENDING thì Admin sửa được MSSV gõ sai (BR-U01-105). */
+  studentCodeEditable?: boolean;
 };
 
 export type AccountFilters = { role?: Role; status?: AccountStatus; q?: string; page?: number };
@@ -30,6 +34,7 @@ export type ImportRow = {
   role: string;
   outcome: "VALID" | "CREATED" | "REJECTED";
   reason: string | null;
+  studentCode?: string | null;
 };
 
 export type ImportResult = {
@@ -52,18 +57,23 @@ export function listAccounts(filters: AccountFilters) {
   return apiFetch<AccountPage>(`${BASE}?${params}`);
 }
 
-export function createAccount(email: string, displayName: string, role: Role) {
-  return apiFetch<AccountDetail>(BASE, { method: "POST", body: JSON.stringify({ email, displayName, role }) });
+/** `studentCode` bắt buộc với sinh viên, không gửi với vai trò khác (BR-U01-103). */
+export function createAccount(email: string, displayName: string, role: Role, studentCode?: string) {
+  return apiFetch<AccountDetail>(BASE, {
+    method: "POST",
+    body: JSON.stringify({ email, displayName, role, ...(studentCode ? { studentCode } : {}) }),
+  });
 }
 
 export function getAccount(id: string) {
   return apiFetch<AccountDetail>(`${BASE}/${id}`);
 }
 
-export function updateAccount(id: string, displayName: string, phoneNumber: string, version: number) {
+/** Không truyền `studentCode` là giữ nguyên MSSV (BR-U01-105). */
+export function updateAccount(id: string, displayName: string, phoneNumber: string, version: number, studentCode?: string) {
   return apiFetch<AccountDetail>(`${BASE}/${id}`, {
     method: "PATCH",
-    body: JSON.stringify({ displayName, phoneNumber, version }),
+    body: JSON.stringify({ displayName, phoneNumber, version, ...(studentCode !== undefined ? { studentCode } : {}) }),
   });
 }
 

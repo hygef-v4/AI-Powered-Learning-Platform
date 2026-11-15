@@ -131,3 +131,7 @@ GradingHeaderSection offers explicit Vietnamese sentence-to-paragraph formatting
 ### Repeated grade actions — 2026-11-10
 
 Gradebook and submission-detail batch selection share raw-state action eligibility: finalize DRAFT, publish DRAFT/FINALIZED, AI PENDING/DRAFT. Known completed grades are omitted and actions with no candidates disable. BatchActionDialog reconciles only INVALID_GRADE_STATE failures using a fresh read, skips already-completed grades, preserves original-version checks and never auto-finalizes an already published or unconfirmed grade. Outcomes are Vietnamese; mixed new/previously completed counts stay separate and result dialogs can close. [Verification](../../build-and-test/2026-11-10-grading-repeat-actions.md).
+
+## Mã số sinh viên (MSSV) — 2026-11-13
+
+Thay đổi giao diện để hiện và tìm theo MSSV ghi ở mục "Giao diện" của phần MSSV trong [business-rules.md](business-rules.md). Cách hiển thị chung (cột MSSV trước họ tên trong bảng, dòng phụ `SE123456 · email` trong thẻ, ô trống khi chưa có mã) theo [frontend-components U01 mục 6](../../u01-account-and-access/functional-design/frontend-components.md).

@@ -6,12 +6,15 @@ vi.mock("@/features/grading/api", () => ({ gradingApi: mocks }));
 afterEach(() => vi.resetAllMocks());
 it("shows a published group grade and an enabled anonymous distribution", async () => {
   mocks.listMyGrades.mockResolvedValue([{ assignmentId: "a", score: 5, maxScore: 10, feedback: "Đã duyệt",
-    structuredSummary: null, rubricItems: [], memberOverride: true }]);
+    structuredSummary: null, rubricItems: [], memberOverride: true,
+    contributionLevel: "PARTIALLY_MEETS", contributionReason: "Thiếu luồng lỗi" }]);
   mocks.loadMyGradeDistribution.mockResolvedValue([{ label: "5–6", count: 3 }]);
   render(<StudentPublishedFeedback classId="c" assignmentId="a" />);
   expect(await screen.findByText("Đã duyệt")).toBeInTheDocument();
   expect(await screen.findByRole("region", { name: "Phân bố điểm" })).toHaveTextContent("5–6: 3");
   expect(screen.getByText(/điều chỉnh riêng/)).toBeInTheDocument();
+  expect(screen.getByText(/Mức đóng góp: Đạt một phần/)).toBeInTheDocument();
+  expect(screen.getByText("Thiếu luồng lỗi")).toBeInTheDocument();
 });
 it("does not expose an unpublished group grade or query its distribution", async () => {
   mocks.listMyGrades.mockResolvedValue([{ assignmentId: "a", score: null }]);

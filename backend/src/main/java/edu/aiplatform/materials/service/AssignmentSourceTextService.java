@@ -15,10 +15,10 @@ public class AssignmentSourceTextService implements IAssignmentSourceTextExtract
 
     private static final int MAX_FILES = 3;
     private static final long MAX_BYTES_PER_FILE = 2L * 1024 * 1024;
-    private final MaterialTextExtractor extractor;
+    private final MaterialTextExtractor materialTextExtractor;
 
-    public AssignmentSourceTextService(MaterialTextExtractor extractor) {
-        this.extractor = extractor;
+    public AssignmentSourceTextService(MaterialTextExtractor materialTextExtractor) {
+        this.materialTextExtractor = materialTextExtractor;
     }
 
     @Override
@@ -44,7 +44,7 @@ public class AssignmentSourceTextService implements IAssignmentSourceTextExtract
             }
             final String text;
             try {
-                text = extractor.extract(file.fileId(), file.mediaType()).text();
+                text = materialTextExtractor.extractText(file.fileId(), file.mediaType()).text();
             } catch (MaterialTextExtractor.BusyException e) {
                 throw ApiException.unavailable(
                         "ASSIGNMENT_SOURCE_BUSY",

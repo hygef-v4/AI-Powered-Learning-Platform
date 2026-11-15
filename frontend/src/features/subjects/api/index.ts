@@ -11,9 +11,9 @@ import type {
 } from "../model/types";
 
 const BASE = "/api/v1/admin/subjects";
-const subjectPath = (id: string) => `${BASE}/${encodeURIComponent(id)}`;
+const buildSubjectPath = (id: string) => `${BASE}/${encodeURIComponent(id)}`;
 
-export function getSubjects(query: SubjectListQuery = {}): Promise<SubjectPage> {
+export function listSubjects(query: SubjectListQuery = {}): Promise<SubjectPage> {
   const params = new URLSearchParams();
   if (query.q?.trim()) params.set("q", query.q.trim());
   if (query.status) params.set("status", query.status);
@@ -22,12 +22,12 @@ export function getSubjects(query: SubjectListQuery = {}): Promise<SubjectPage> 
   return apiFetch<SubjectPage>(`${BASE}${params.size ? `?${params}` : ""}`);
 }
 
-export function getSubject(id: string): Promise<SubjectDetail> {
-  return apiFetch<SubjectDetail>(subjectPath(id));
+export function loadSubject(id: string): Promise<SubjectDetail> {
+  return apiFetch<SubjectDetail>(buildSubjectPath(id));
 }
 
-export function getSubjectClasses(id: string): Promise<SubjectClasses> {
-  return apiFetch<SubjectClasses>(`${subjectPath(id)}/classes`);
+export function listSubjectClasses(id: string): Promise<SubjectClasses> {
+  return apiFetch<SubjectClasses>(`${buildSubjectPath(id)}/classes`);
 }
 
 export function createSubject(request: CreateSubjectRequest): Promise<SubjectDetail> {
@@ -41,7 +41,7 @@ export function createSubject(request: CreateSubjectRequest): Promise<SubjectDet
 
 export function updateSubject(id: string, request: UpdateSubjectRequest): Promise<SubjectDetail> {
   const { name, description, version } = request;
-  return apiFetch<SubjectDetail>(subjectPath(id), {
+  return apiFetch<SubjectDetail>(buildSubjectPath(id), {
     method: "PATCH",
     body: JSON.stringify({ name, description, version }),
   });
@@ -52,7 +52,7 @@ export function changeSubjectManager(
   request: ChangeSubjectManagerRequest,
 ): Promise<SubjectDetail> {
   const { managerId, version } = request;
-  return apiFetch<SubjectDetail>(`${subjectPath(id)}/manager`, {
+  return apiFetch<SubjectDetail>(`${buildSubjectPath(id)}/manager`, {
     method: "PUT",
     body: JSON.stringify({ managerId, version }),
   });
@@ -63,7 +63,7 @@ export function changeSubjectStatus(
   request: ChangeSubjectStatusRequest,
 ): Promise<SubjectDetail> {
   const { status, version } = request;
-  return apiFetch<SubjectDetail>(`${subjectPath(id)}/status`, {
+  return apiFetch<SubjectDetail>(`${buildSubjectPath(id)}/status`, {
     method: "PUT",
     body: JSON.stringify({ status, version }),
   });

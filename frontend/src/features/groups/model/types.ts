@@ -1,4 +1,5 @@
-export type Person = { accountId: string; name: string | null; email: string | null };
+/** `studentCode`: MSSV, null khi chưa có (BR-U12-97). */
+export type Person = { accountId: string; name: string | null; email: string | null; studentCode?: string | null };
 
 /** `active` sai là "Đã rời lớp" (BR-U12-07). */
 export type Member = Person & { active: boolean; leader: boolean };
@@ -59,7 +60,7 @@ export type MyGroupView = {
   groupId: string | null;
   name: string | null;
   leaderId: string | null;
-  members: { accountId: string; name: string | null; email: string | null; leader: boolean }[];
+  members: { accountId: string; name: string | null; email: string | null; leader: boolean; studentCode?: string | null }[];
   works: {
     assignmentId: string;
     title: string;

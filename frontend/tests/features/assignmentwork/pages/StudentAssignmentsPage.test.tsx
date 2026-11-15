@@ -19,7 +19,7 @@ beforeEach(() => {
   window.history.replaceState(null, "", "/my-assignments");
   vi.mocked(workApi.list).mockResolvedValue([
     row({ assignmentId: "a1", title: "Sơ đồ lớp" }),
-    row({ assignmentId: "a2", title: "Ca kiểm thử", classId: "c2", classCode: "SE1903", subjectCode: "SWT301" }),
+    row({ assignmentId: "a2", title: "Ca kiểm thử", classId: "c2", classCode: "SE1903", classTerm: "SP27-BL5", subjectCode: "SWT301" }),
   ]);
 });
 
@@ -39,7 +39,7 @@ it("trang chung có ô lọc lớp cạnh tiêu đề; chọn một lớp thì c
   fireEvent.click(within(filter).getByRole("menuitem", { name: /SE1903/, hidden: true }));
   expect(screen.queryByText("Sơ đồ lớp")).not.toBeInTheDocument();
   expect(screen.getByText("Ca kiểm thử")).toBeInTheDocument();
-  expect(filter).toHaveTextContent("SWT301");
+  expect(filter).toHaveTextContent("SWT301 · SP27-BL5");
 });
 
 it("trang bài tập của một lớp (?classId=) không có ô lọc lớp", async () => {
@@ -93,4 +93,65 @@ it("bài đang sửa để nộp lại chỉ nằm ở Đang làm, không lẫn 
   expect(screen.queryByText("Đang sửa")).not.toBeInTheDocument();
   expect(screen.getByRole("tab", { name: /Đã nộp/ })).toHaveTextContent("1");
   expect(screen.getByRole("tab", { name: /Đang làm/ })).toHaveTextContent("1");
+});
+
+it.each([
+  { status: "CLOSED", myStatus: "GROUP", submissionMode: "GROUP", group: null },
+  { status: "CLOSED", myStatus: "GROUP", submissionMode: "GROUP", group: { groupDocumentId: "d", submitted: false, submittedAt: null } },
+  { status: "CLOSED", myStatus: "MISSED", submissionMode: "INDIVIDUAL", group: null },
+  { status: "OPEN", myStatus: "MISSED", submissionMode: "INDIVIDUAL", group: null },
+] satisfies Partial<StudentRow>[])("bài chưa nộp $status/$myStatus xuất hiện trong Đã đóng", async patch => {
+  vi.mocked(workApi.list).mockResolvedValue([row({ ...patch, title: "Bệnh viện thông minh" })]);
+  window.history.replaceState(null, "", "/my-assignments?classId=c1&tab=closed");
+  render(<StudentAssignmentsPage />);
+  const closedTab = await screen.findByRole("tab", { name: /Đã đóng/ });
+  expect(await screen.findByRole("link", { name: "Bệnh viện thông minh" })).toHaveAttribute(
+    "href", "/my-assignments/a?classId=c1",
+  );
+  expect(closedTab).toHaveAttribute("aria-selected", "true");
+  expect(closedTab).toHaveTextContent("1");
+  expect(within(screen.getByTestId("student-row-a")).getByText("Hết hạn")).toBeInTheDocument();
+  for (const name of [/^Chưa làm/, /^Đang làm/, /^Đã nộp/]) {
+    expect(screen.getByRole("tab", { name })).toHaveTextContent("0");
+  }
+});
+
+it("bài nhóm đã đóng nhưng đã nộp vẫn chỉ ở Đã nộp, kể cả có bản sửa sau lần nộp", async () => {
+  vi.mocked(workApi.list).mockResolvedValue([row({
+    title: "Nhóm đã nộp", submissionMode: "GROUP", myStatus: "GROUP", status: "CLOSED",
+    group: { groupDocumentId: "d", submitted: true, submittedAt: "2026-11-12T00:00:00Z", changedSinceSubmit: true },
+  })]);
+  window.history.replaceState(null, "", "/my-assignments?tab=submitted");
+  render(<StudentAssignmentsPage />);
+  expect(await screen.findByText("Nhóm đã nộp")).toBeInTheDocument();
+  expect(screen.getByRole("tab", { name: /^Đã nộp/ })).toHaveTextContent("1");
+  expect(screen.getByRole("tab", { name: /Đã đóng/ })).toHaveTextContent("0");
+  expect(within(screen.getByTestId("student-row-a")).getByText("Đã nộp")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("tab", { name: /Đã đóng/ }));
+  expect(screen.queryByTestId("student-row-a")).not.toBeInTheDocument();
+  expect(screen.getByText("Không có bài đã đóng chưa nộp.")).toBeInTheDocument();
+});
+
+it("quay về từ bài đã đóng tự chọn tab chứa bài đó", async () => {
+  vi.mocked(workApi.list).mockResolvedValue([row({ title: "Bài hết hạn", status: "CLOSED", myStatus: "MISSED" })]);
+  window.history.replaceState(null, "", "/my-assignments?classId=c1&focus=a");
+  render(<StudentAssignmentsPage />);
+  expect(await screen.findByText("Bài hết hạn")).toBeInTheDocument();
+  expect(screen.getByRole("tab", { name: /Đã đóng/ })).toHaveAttribute("aria-selected", "true");
+});
+
+it("Đã đóng giữ lọc và phân trang trong URL khi mở lại", async () => {
+  vi.mocked(workApi.list).mockResolvedValue(Array.from({ length: 25 }, (_, index) => row({
+    assignmentId: String(index), title: "Hết hạn " + index, status: "CLOSED", myStatus: "GROUP", submissionMode: "GROUP",
+  })));
+  window.history.replaceState(null, "", "/my-assignments?tab=closed&mode=GROUP&classFilter=c1&q=H%E1%BA%BFt&page=1");
+  const view = render(<StudentAssignmentsPage />);
+  expect(await screen.findByText("Hết hạn 20")).toBeInTheDocument();
+  expect(screen.queryByText("Hết hạn 0")).not.toBeInTheDocument();
+  expect(screen.getByRole("tab", { name: /Đã đóng/ })).toHaveTextContent("25");
+  view.unmount();
+  render(<StudentAssignmentsPage />);
+  expect(await screen.findByText("Hết hạn 20")).toBeInTheDocument();
+  expect(screen.getByLabelText("Loại bài")).toHaveValue("GROUP");
+  expect(screen.getByLabelText("Tìm bài tập")).toHaveValue("Hết");
 });

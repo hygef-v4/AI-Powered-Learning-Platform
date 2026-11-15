@@ -120,3 +120,33 @@ Theo yêu cầu người dùng, sửa U09 trên nhánh grading-gradebook tại b
 RED: 5 regression mới thất bại trên code production cũ, 4 test hiện hữu đạt. GREEN focused ban đầu 12; bổ sung kiểm SHARED payload, disabled workspace và finalize/publish để full suite cuối 446 tests/78 files đạt (tăng 8 test so baseline438). Lint/typecheck và production build đạt. Build dùng NEXT_DIST_DIR=.next-u09-picker-20261022 để giữ output cũ; tsconfig do Next tự sửa được khôi phục từ snapshot trước build. Lượt typecheck đầu thiếu package của staging mới; npm ci theo lockfile giải quyết, không đổi dependency version. Mock integration test đã sửa để giữ ApiError export thật sau khi GREEN đầu phát hiện mock thiếu.
 
 Logs ignored: .tmp/u09-picker-red.log, u09-picker-green.log, u09-picker-full-tests.log, u09-picker-lint.log, u09-picker-typecheck.log và u09-picker-build.log. Backend không chạy lại vì source/contract không đổi. Chưa gọi AI/MCP thật hoặc chạy browser E2E trong lượt này; các gate DB/session/NFR và U15/U03 còn mở. Không commit/push/Jira mutation.
+
+## Năm mức đóng góp thành viên — 2026-11-13
+
+Mỗi MEMBER có contributionLevel nullable trong JSONB hiện hữu; saveMemberGrade lưu
+cùng điểm/căn cứ và audit mức trước/sau. Năm mức có thứ tự: Vượt kỳ vọng, Đạt yêu cầu,
+Đạt một phần, Cần hỗ trợ nhiều, Không hoàn thành. Không tự quy đổi hoặc chọn mức theo
+điểm; dữ liệu cũ chưa có mức vẫn hoạt động. Nhóm nộp lại reset mức, chấm lại điểm nhóm
+giữ đánh giá cá nhân đã lưu. UI dùng select tùy chọn và Cách đánh giá thu gọn.
+Sinh viên chỉ thấy mức/căn cứ của chính mình khi công bố; bản nháp không lộ.
+
+Backend scoped55/55, frontend grading199/199 và API4/4 (ba case trùng trong199), lint
+và isolated TypeScript qua. Normal TypeScript vẫn gặp cache route Next cũ; không đổi
+config sản phẩm hoặc xóa cache. Người dùng tự test UI sau khi backend nạp mã mới.
+Không migration, dependency, MCP/Excel change, live grading writes, commit/push/deploy.
+Xem ../../build-and-test/2026-11-13-member-contribution-levels.md.
+
+## Chấm thành viên cạnh bài nhóm — 2026-11-13
+
+Panel cuối bài được thay bằng khung phải Rubric nhóm/Thành viên. Chọn một người,
+liên kết tới mục phụ trách theo sectionAuthors, nút Đánh giá tại từng mục và điều
+hướng Trước/Sau. Giữ bản nháp khi đổi người/tab/drawer hoặc lưu thành viên khác;
+không âm thầm ghi đè version server mới. Màn hẹp là ngăn kéo modeless. Chặn công bố
+khi có draft cá nhân và cảnh báo rời bài; autosave nhóm không lưu điểm riêng.
+
+Full frontend1056/151file; kiểm cuối50 test, ESLint/isolated TypeScript qua. UI local
+1440/390 kiểm liên kết hai chiều, đúng người, draft chuyển người, Escape/đóng/mở và
+Từng phần; không bấm lưu/công bố/AI. Ghi chú QA đã xóa, viewport554x930 khôi phục.
+Ảnh .tmp/group-grading-desktop.png và group-grading-mobile.png. Không backend delta,
+production build, live grade write, commit/push/deploy. Kết quả chi tiết tại
+../../build-and-test/2026-11-13-group-grading-side-panel.md.

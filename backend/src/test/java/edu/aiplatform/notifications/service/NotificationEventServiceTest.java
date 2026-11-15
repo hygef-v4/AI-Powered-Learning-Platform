@@ -11,9 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 class NotificationEventServiceTest {
-    final RecipientResolver resolver = mock(RecipientResolver.class);
-    final NotificationService notifications = mock(NotificationService.class);
-    final NotificationEventService service = new NotificationEventService(resolver, notifications);
+    final RecipientResolver recipientResolver = mock(RecipientResolver.class);
+    final NotificationService notificationService = mock(NotificationService.class);
+    final NotificationEventService notificationEventService =
+            new NotificationEventService(recipientResolver, notificationService);
     final UUID recipient = UUID.randomUUID();
 
     @Test
@@ -65,19 +66,19 @@ class NotificationEventServiceTest {
                 new DomainEvent(
                         1, UUID.randomUUID(), eventType, source, Instant.now(), "qa-copy", payload);
         String link = "/classes/" + UUID.randomUUID();
-        when(resolver.resolve(event))
+        when(recipientResolver.resolveRecipients(event))
                 .thenReturn(
                         List.of(
                                 new RecipientResolver.Resolved(
                                         type, List.of(recipient), link, emailType)));
-        service.accept(event);
+        notificationEventService.handleEvent(event);
         var copy = ArgumentCaptor.forClass(String.class);
-        verify(notifications)
-                .create(
+        verify(notificationService)
+                .createNotification(
                         eq(event.eventId()),
                         eq(type),
                         eq(List.of(recipient)),
-                        eq(NotificationEventService.title(type)),
+                        eq(NotificationEventService.resolveTitle(type)),
                         copy.capture(),
                         eq(link),
                         eq(emailType),

@@ -128,8 +128,8 @@ class PracticeFeedbackConcurrencyIntegrationTest {
         }
         owner.sql("insert into subjects (id, code, name, created_at, updated_at) values (?, 'TEST', 'Practice', now(), now())")
                 .params(subjectId).update();
-        owner.sql("insert into course_classes (id, subject_id, code, name, status, teacher_id, created_at, updated_at) "
-                        + "values (?, ?, 'C1', 'Class', 'OPEN', ?, now(), now())")
+        owner.sql("insert into course_classes (id, subject_id, code, name, status, teacher_id, starts_on, created_at, updated_at) "
+                        + "values (?, ?, 'C1', 'Class', 'OPEN', ?, DATE '2026-11-14', now(), now())")
                 .params(classId, subjectId, teacher).update();
         for (Actor actor : List.of(student, other)) {
             owner.sql("insert into enrollments (class_id, account_id, status, source, enrolled_at) "

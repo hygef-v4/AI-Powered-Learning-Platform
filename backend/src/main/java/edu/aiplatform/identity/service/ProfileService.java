@@ -48,8 +48,14 @@ public class ProfileService {
     }
 
     /** Không có hash, OTP hay token (BR-U01-53: số điện thoại chỉ chủ tài khoản và Admin xem). */
+    /** {@code studentCode} chỉ đọc; hồ sơ không có thao tác sửa MSSV (BR-U01-106). */
     public record ProfileView(UUID accountId, String email, String displayName, String phoneNumber, Role role,
-                              AccountStatus status, String homePath) {
+                              AccountStatus status, String homePath, String studentCode) {
+
+        public ProfileView(UUID accountId, String email, String displayName, String phoneNumber, Role role,
+                           AccountStatus status, String homePath) {
+            this(accountId, email, displayName, phoneNumber, role, status, homePath, null);
+        }
     }
 
     public ProfileView get(Actor actor) {
@@ -103,6 +109,6 @@ public class ProfileService {
 
     private static ProfileView view(Account account) {
         return new ProfileView(account.id(), account.schoolEmail(), account.displayName(), account.phoneNumber(),
-                account.role(), account.status(), HomePaths.of(account.role()));
+                account.role(), account.status(), HomePaths.of(account.role()), account.studentCode());
     }
 }

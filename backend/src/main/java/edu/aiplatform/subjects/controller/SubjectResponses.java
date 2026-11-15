@@ -7,7 +7,7 @@ public final class SubjectResponses {
     private SubjectResponses() {}
 
     /** Snapshot vừa commit; contact/count chưa enrichment nên unknown=null, không re-read sau write. */
-    public static SubjectAdminViews.Detail detail(Subject subject) {
+    public static SubjectAdminViews.Detail mapSubjectDetail(Subject subject) {
         return new SubjectAdminViews.Detail(
                 subject.id(),
                 subject.code().value(),

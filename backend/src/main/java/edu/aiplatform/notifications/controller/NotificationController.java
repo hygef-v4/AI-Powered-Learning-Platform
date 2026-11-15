@@ -12,50 +12,50 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RestController
 @RequestMapping("/api/v1/me")
 public class NotificationController {
-    private final NotificationService service;
-    private final ISseHub sse;
+    private final NotificationService notificationService;
+    private final ISseHub sseHub;
 
-    public NotificationController(NotificationService service, ISseHub sse) {
-        this.service = service;
-        this.sse = sse;
+    public NotificationController(NotificationService notificationService, ISseHub sseHub) {
+        this.notificationService = notificationService;
+        this.sseHub = sseHub;
     }
 
     @GetMapping("/notifications")
-    public NotificationService.Feed list(
+    public NotificationService.Feed listNotifications(
             @AuthenticationPrincipal Actor actor,
             @RequestParam(defaultValue = "false") boolean unread,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return service.list(actor, unread, page, size);
+        return notificationService.listNotifications(actor, unread, page, size);
     }
 
     @GetMapping("/notifications/unread-count")
-    public Map<String, Long> unread(@AuthenticationPrincipal Actor actor) {
-        return Map.of("count", service.unread(actor));
+    public Map<String, Long> countUnreadNotifications(@AuthenticationPrincipal Actor actor) {
+        return Map.of("count", notificationService.countUnread(actor));
     }
 
     @PostMapping("/notifications/{id}:read")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void read(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        service.read(actor, id);
+    public void markNotificationRead(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        notificationService.markRead(actor, id);
     }
 
     @PostMapping("/notifications:read-all")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void readAll(@AuthenticationPrincipal Actor actor) {
-        service.readAll(actor);
+    public void markAllNotificationsRead(@AuthenticationPrincipal Actor actor) {
+        notificationService.markAllRead(actor);
     }
 
     @GetMapping(value = "/notifications/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ResponseEntity<SseEmitter> events(
+    public ResponseEntity<SseEmitter> streamNotificationEvents(
             @AuthenticationPrincipal Actor actor,
             jakarta.servlet.http.HttpServletResponse response) {
-        String channel = service.authorizedChannel(actor);
+        String channel = notificationService.resolveAuthorizedChannel(actor);
         response.setHeader("X-Accel-Buffering", "no");
         response.setHeader("Cache-Control", "no-store");
         return ResponseEntity.ok()
                 .header("X-Accel-Buffering", "no")
                 .cacheControl(CacheControl.noStore())
-                .body(sse.subscribe(channel));
+                .body(sseHub.subscribe(channel));
     }
 }

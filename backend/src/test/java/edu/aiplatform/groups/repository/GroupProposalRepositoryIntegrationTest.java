@@ -91,8 +91,8 @@ class GroupProposalRepositoryIntegrationTest {
                 + "(?, ?, 'TEACHER', 'ACTIVE', 'GV', 'x')").params(teacher, teacher + "@fpt.edu.vn").update();
         owner.sql("insert into subjects (id, code, name, created_at, updated_at) values (?, ?, 'Môn', now(), now())")
                 .params(subject, "SWP391").update();
-        owner.sql("insert into course_classes (id, subject_id, code, name, status, teacher_id, created_at, updated_at) "
-                + "values (?, ?, 'SE1', 'SE1', 'OPEN', ?, now(), now())").params(classId, subject, teacher).update();
+        owner.sql("insert into course_classes (id, subject_id, code, name, status, teacher_id, starts_on, created_at, updated_at) "
+                + "values (?, ?, 'SE1', 'SE1', 'OPEN', ?, DATE '2026-11-14', now(), now())").params(classId, subject, teacher).update();
     }
 
     @Test

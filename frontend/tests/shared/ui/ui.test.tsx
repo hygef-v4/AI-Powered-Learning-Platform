@@ -6,6 +6,8 @@ import { ChipToggleGroup, Segmented, Switch } from "@/shared/ui/inputs";
 import { Menu, MenuItem } from "@/shared/ui/Menu";
 import { TableSkeletonRows } from "@/shared/ui/Skeleton";
 import { TableFrame, Td } from "@/shared/ui/Table";
+import { ClassLabel } from "@/shared/ui/ClassFilter";
+import { TermFilter } from "@/shared/ui/TermFilter";
 
 describe("Dialog", () => {
   it("đóng khi bấm Esc hoặc nút Đóng", () => {
@@ -166,5 +168,29 @@ describe("Switch", () => {
     fireEvent.click(screen.getByRole("switch", { name: "Bật sao lưu" }));
 
     expect(onChange).toHaveBeenCalledWith(true);
+  });
+});
+
+describe("ClassLabel và TermFilter (D-U04-05)", () => {
+  it("dòng nhỏ ghi mã môn · học kỳ, title gồm cả mã lớp", () => {
+    const { container } = render(<ClassLabel subjectCode="PRJ301" code="SE1801" term="SP27-BL5" />);
+    expect(screen.getByText("PRJ301 · SP27-BL5")).toBeInTheDocument();
+    expect(screen.getByText("SE1801")).toBeInTheDocument();
+    expect(container.firstElementChild).toHaveAttribute("title", "PRJ301 · SE1801 · SP27-BL5");
+  });
+
+  it("không có mã môn thì dòng nhỏ chỉ có học kỳ", () => {
+    render(<ClassLabel subjectCode={null} code="SE1801" term="FA26" />);
+    expect(screen.getByText("FA26")).toBeInTheDocument();
+  });
+
+  it("chọn học kỳ hoặc Tất cả học kỳ", () => {
+    const onChange = vi.fn();
+    render(<TermFilter options={["SP27", "FA26"]} value="FA26" onChange={onChange} testId="term" />);
+    expect(screen.getByTestId("term").querySelector("summary")).toHaveTextContent("FA26");
+    expect(screen.getByRole("menuitem", { name: "FA26" })).toHaveAttribute("aria-current", "true");
+    fireEvent.click(screen.getByRole("menuitem", { name: "SP27" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Tất cả học kỳ" }));
+    expect(onChange.mock.calls).toEqual([["SP27"], [""]]);
   });
 });

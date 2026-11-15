@@ -10,17 +10,17 @@ import java.util.UUID;
 
 /** U05-only scoped read queries; limits/offsets validated by persistence. */
 public interface IAcademicsReadRepository {
-    /** Lists classes in the manager's subjects matching the supplied filters. */
+    /** Lists classes in the manager's subjects matching the supplied filters; null term means all terms. */
     List<CourseClass> listForManager(Collection<UUID> subjectIds, String query, ClassStatus status,
-            int limit, int offset);
+            String term, int limit, int offset);
 
     /** Lists classes assigned to a teacher matching the supplied filters. */
-    List<CourseClass> listForTeacher(UUID accountId, String query, ClassStatus status, int limit,
-            int offset);
+    List<CourseClass> listForTeacher(UUID accountId, String query, ClassStatus status,
+            String term, int limit, int offset);
 
     /** Lists classes in which a student is enrolled. */
-    List<CourseClass> listForStudent(UUID accountId, String query, ClassStatus status, int limit,
-            int offset);
+    List<CourseClass> listForStudent(UUID accountId, String query, ClassStatus status,
+            String term, int limit, int offset);
 
     /** Lists all classes assigned to a teacher. */
     List<CourseClass> listTaught(UUID accountId);
