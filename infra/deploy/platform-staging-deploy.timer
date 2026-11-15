@@ -1,0 +1,11 @@
+# Cài vào /etc/systemd/system/. Xem docs/runbooks/deploy-staging.md.
+[Unit]
+Description=Hỏi GitHub bản mới trên staging mỗi 5 phút
+
+[Timer]
+OnBootSec=4min
+OnUnitInactiveSec=5min
+RandomizedDelaySec=30s
+
+[Install]
+WantedBy=timers.target
