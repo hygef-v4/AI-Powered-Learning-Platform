@@ -14358,3 +14358,12 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **Context**: Sau Build and Test — tích hợp vào staging theo yêu cầu.
 
 ---
+
+## Học kỳ lớp — bỏ chạy lại e2e
+**Timestamp**: 2026-11-15T03:58:40Z
+**Requested by:** Hải Nam
+**User Input**: "nếu không có gì mới từ staging thì không phải chạy e2e lại nữa"
+**AI Response**: "origin/staging (6c0bdc16) đã nằm trong fix/term nên merge không đổi gì; dừng lượt e2e đang chạy, chuyển sang push và mở PR fix/term → staging."
+**Context**: Tích hợp vào staging.
+
+---
