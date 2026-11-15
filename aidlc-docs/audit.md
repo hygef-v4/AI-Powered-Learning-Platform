@@ -14367,3 +14367,12 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **Context**: Tích hợp vào staging.
 
 ---
+
+## Học kỳ lớp — mở PR vào staging
+**Timestamp**: 2026-11-15T04:12:30Z
+**Requested by:** Hải Nam
+**User Input**: "tôi đã chạy xong lệnh trong terminal và đăng nhập rồi"
+**AI Response**: "Kiểm gh đã đăng nhập; mở PR fix/term → staging bằng gh, chờ CI xanh rồi merge vào staging theo yêu cầu trước đó."
+**Context**: Tích hợp vào staging.
+
+---
