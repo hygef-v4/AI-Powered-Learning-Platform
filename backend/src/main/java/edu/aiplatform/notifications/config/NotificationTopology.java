@@ -25,7 +25,7 @@ public class NotificationTopology {
                 .keySet()
                 .forEach(type -> resources.add(BindingBuilder.bind(queue).to(events).with(type)));
         for (int i = 0; i < RETRY_MS.length; i++) {
-            var retry = new FanoutExchange(retryExchange(i), true, false);
+            var retry = new FanoutExchange(buildRetryExchange(i), true, false);
             var waiting =
                     QueueBuilder.durable(retry.getName())
                             .ttl(RETRY_MS[i])
@@ -38,7 +38,7 @@ public class NotificationTopology {
         return new Declarables(resources);
     }
 
-    public static String retryExchange(int attempt) {
+    public static String buildRetryExchange(int attempt) {
         return "notifications.retry." + attempt;
     }
 }

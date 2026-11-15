@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Button } from "@/shared/ui/Button";
 import { ModuleBoard } from "./ModuleBoard";
 import { useMaterialResource } from "../hooks/useMaterialResource";
-import { fileDescription, materialHref, type Material } from "../model/types";
+import { describeFile, buildMaterialHref, type Material } from "../model/types";
 import styles from "../styles/materials.module.css";
 
 export function MaterialLinkList({
@@ -55,11 +55,11 @@ function MaterialLinks({
           <Link
             data-testid={`material-attached-${m.id}`}
             key={m.id}
-            href={materialHref(m.id, classId, true)}
+            href={buildMaterialHref(m.id, classId, true)}
           >
             {i + 1}. {m.title}
             <span className="ml-2 text-xs text-muted">
-              {fileDescription(m)}
+              {describeFile(m)}
               {m.scope === "CLASS" && " · của lớp"}
             </span>
           </Link>

@@ -23,12 +23,26 @@ public record Material(
         long version,
         boolean enabled,
         FormattedText descriptionDocument) {
-    public Material(UUID id, Scope scope, UUID subjectId, UUID classId, UUID moduleId, Kind kind,
-                    String title, String description, int orderNo, Status status, int currentVersionNo,
-                    UUID createdBy, Instant createdAt, Instant updatedAt, long version) {
+    public Material(
+            UUID id,
+            Scope scope,
+            UUID subjectId,
+            UUID classId,
+            UUID moduleId,
+            Kind kind,
+            String title,
+            String description,
+            int orderNo,
+            Status status,
+            int currentVersionNo,
+            UUID createdBy,
+            Instant createdAt,
+            Instant updatedAt,
+            long version) {
         this(id, scope, subjectId, classId, moduleId, kind, title, description, orderNo, status,
                 currentVersionNo, createdBy, createdAt, updatedAt, version, true, null);
     }
+
     public enum Scope {
         SUBJECT,
         CLASS
@@ -88,12 +102,15 @@ public record Material(
                 now,
                 version + 1,
                 enabled,
-                java.util.Objects.toString(this.description, "").strip()
-                        .equals(java.util.Objects.toString(description, "").strip()) ? descriptionDocument : null);
+                java.util.Objects.toString(this.description, "")
+                                .strip()
+                                .equals(java.util.Objects.toString(description, "").strip())
+                        ? descriptionDocument
+                        : null);
     }
 
     /** Cùng học liệu ở module khác của cùng môn; gọi {@link #revise} sau đó để tăng version. */
-    public Material inModule(UUID module) {
+    public Material moveToModule(UUID module) {
         return new Material(
                 id,
                 scope,
@@ -114,8 +131,24 @@ public record Material(
                 descriptionDocument);
     }
 
-    public Material withPresentation(boolean enabled, FormattedText document) {
-        return new Material(id, scope, subjectId, classId, moduleId, kind, title, description, orderNo, status,
-                currentVersionNo, createdBy, createdAt, updatedAt, version, enabled, document);
+    public Material changePresentation(boolean enabled, FormattedText document) {
+        return new Material(
+                id,
+                scope,
+                subjectId,
+                classId,
+                moduleId,
+                kind,
+                title,
+                description,
+                orderNo,
+                status,
+                currentVersionNo,
+                createdBy,
+                createdAt,
+                updatedAt,
+                version,
+                enabled,
+                document);
     }
 }

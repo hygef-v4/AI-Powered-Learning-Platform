@@ -24,18 +24,21 @@ class MaterialMcpTransactionTest {
         when(connection.getTransactionIsolation())
                 .thenReturn(Connection.TRANSACTION_READ_COMMITTED);
         var manager = new DataSourceTransactionManager(source);
-        IMaterialRepository repository = mock(IMaterialRepository.class);
+        IMaterialRepository materialRepository = mock(IMaterialRepository.class);
         UUID id = UUID.randomUUID();
-        when(repository.find(id)).thenReturn(Optional.empty());
-        var queries =
+        when(materialRepository.findMaterial(id)).thenReturn(Optional.empty());
+        var materialQueryService =
                 proxy(
                         new MaterialQueryService(
-                                repository,
+                                materialRepository,
                                 mock(MaterialAccessPolicy.class),
                                 mock(IArtifact.class)),
                         manager);
-        var references = proxy(new ReferenceMaterialService(queries, repository), manager);
-        var tools = proxy(new MaterialMcpTools(queries, repository), manager);
+        var referenceMaterialService =
+                proxy(
+                        new ReferenceMaterialService(materialQueryService, materialRepository),
+                        manager);
+        var tools = proxy(new MaterialMcpTools(materialQueryService, materialRepository), manager);
         var result =
                 tools.call(
                         new Actor(UUID.randomUUID(), Role.TEACHER),

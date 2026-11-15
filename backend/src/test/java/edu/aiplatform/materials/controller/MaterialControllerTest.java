@@ -17,22 +17,23 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.http.MediaType;
 
 class MaterialControllerTest {
-    MaterialService commands;
-    MaterialQueryService queries;
+    MaterialService materialService;
+    MaterialQueryService materialQueryService;
     MockMvc mvc;
     final UUID id = UUID.randomUUID();
     final Actor actor = new Actor(UUID.randomUUID(), Role.SUBJECT_MANAGER);
 
     @BeforeEach
     void setup() {
-        commands = mock(MaterialService.class);
-        queries = mock(MaterialQueryService.class);
+        materialService = mock(MaterialService.class);
+        materialQueryService = mock(MaterialQueryService.class);
         mvc =
                 MockMvcBuilders.standaloneSetup(
-                                new MaterialController(commands, queries),
-                                new SubjectMaterialController(commands, queries),
-                                new ClassMaterialController(commands, queries),
-                                new MyMaterialController(queries))
+                                new MaterialController(materialService, materialQueryService),
+                                new SubjectMaterialController(
+                                        materialService, materialQueryService),
+                                new ClassMaterialController(materialService, materialQueryService),
+                                new MyMaterialController(materialQueryService))
                         .setControllerAdvice(new MaterialExceptionHandler())
                         .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                         .build();
@@ -50,7 +51,7 @@ class MaterialControllerTest {
         UUID classId = UUID.randomUUID();
         mvc.perform(get("/api/v1/materials/" + id + "/view").param("classId", classId.toString()))
                 .andExpect(status().isOk());
-        verify(queries).detail(actor, id, classId);
+        verify(materialQueryService).loadMaterial(actor, id, classId);
     }
 
     @ParameterizedTest
@@ -67,7 +68,7 @@ class MaterialControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(json))
                 .andExpect(status().isBadRequest());
-        verifyNoInteractions(commands, queries);
+        verifyNoInteractions(materialService, materialQueryService);
     }
 
     @Test
@@ -77,7 +78,7 @@ class MaterialControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"kind\":\"FILE\",\"title\":\"A\"}"))
                 .andExpect(status().isBadRequest());
-        verifyNoInteractions(commands);
+        verifyNoInteractions(materialService);
     }
 
     @Test
@@ -87,7 +88,7 @@ class MaterialControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"items\":[]}"))
                 .andExpect(status().isBadRequest());
-        verifyNoInteractions(commands);
+        verifyNoInteractions(materialService);
     }
 
     @Test
@@ -97,12 +98,12 @@ class MaterialControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{}"))
                 .andExpect(status().isBadRequest());
-        verifyNoInteractions(commands);
+        verifyNoInteractions(materialService);
     }
 
     @Test
     void deniedDownloadIs404AndSafe() throws Exception {
-        when(queries.download(actor, id, null, null))
+        when(materialQueryService.issueDownloadToken(actor, id, null, null))
                 .thenThrow(edu.aiplatform.shared.error.ApiException.notFound("MATERIAL_NOT_FOUND"));
         mvc.perform(post("/api/v1/materials/" + id + "/download-token"))
                 .andExpect(status().isNotFound())
@@ -111,7 +112,8 @@ class MaterialControllerTest {
 
     @Test
     void unexpectedProviderErrorDoesNotLeakDetails() throws Exception {
-        when(queries.detail(actor, id, null)).thenThrow(new IllegalStateException("jdbc://secret"));
+        when(materialQueryService.loadMaterial(actor, id, null))
+                .thenThrow(new IllegalStateException("jdbc://secret"));
         mvc.perform(get("/api/v1/materials/" + id))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(
@@ -128,6 +130,6 @@ class MaterialControllerTest {
                         get("/api/v1/me/classes/" + id + "/materials")
                                 .param("ids", materialId.toString()))
                 .andExpect(status().isOk());
-        verify(queries).classList(actor, id, true, List.of(materialId));
+        verify(materialQueryService).listClassMaterials(actor, id, true, List.of(materialId));
     }
 }

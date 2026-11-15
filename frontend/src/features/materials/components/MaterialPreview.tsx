@@ -2,13 +2,13 @@
 import { useEffect, useState } from "react";
 import { apiDownload } from "@/shared/api/client";
 import { Button, Card, Icon } from "@/shared/ui";
-import { materialApi, materialError } from "../api";
-import { DocumentViewer, documentKind } from "./DocumentViewer";
-import { fileDescription, type Material } from "../model/types";
+import { materialApi, describeMaterialError } from "../api";
+import { DocumentViewer, detectDocumentKind } from "./DocumentViewer";
+import { describeFile, type Material } from "../model/types";
 
 /** Tải tệp hiện hành bằng link tải mới. */
-async function download(material: Material, classId?: string) {
-  const fresh = await materialApi.token(material.id, classId);
+async function downloadMaterial(material: Material, classId?: string) {
+  const fresh = await materialApi.issueDownloadToken(material.id, classId);
   window.location.assign(fresh.url);
 }
 
@@ -16,14 +16,14 @@ async function download(material: Material, classId?: string) {
 export function DownloadButton({ material, classId }: { material: Material; classId?: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  async function run() {
+  async function handleDownload() {
     if (busy) return;
     setBusy(true);
     setError("");
     try {
-      await download(material, classId);
+      await downloadMaterial(material, classId);
     } catch (e) {
-      setError(materialError(e));
+      setError(describeMaterialError(e));
     } finally {
       setBusy(false);
     }
@@ -34,7 +34,7 @@ export function DownloadButton({ material, classId }: { material: Material; clas
         data-testid="material-download"
         icon="download"
         disabled={busy}
-        onClick={() => void run()}
+        onClick={() => void handleDownload()}
       >
         Tải xuống
       </Button>
@@ -53,7 +53,7 @@ export function DownloadButton({ material, classId }: { material: Material; clas
  */
 export function MaterialPreview({ material, classId }: { material: Material; classId?: string }) {
   const { id: materialId, kind, currentVersionNo } = material;
-  const viewable = kind === "FILE" ? documentKind(material.current.mimeType) : null;
+  const viewable = kind === "FILE" ? detectDocumentKind(material.current.mimeType) : null;
   const key = `${materialId}:${currentVersionNo}:${classId ?? ""}`;
   const [revision, setRevision] = useState(0);
   const [loaded, setLoaded] = useState<{ key: string; blob?: Blob; error?: string }>({ key: "" });
@@ -64,11 +64,11 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
     const controller = new AbortController();
     (async () => {
       try {
-        const token = await materialApi.token(materialId, classId);
+        const token = await materialApi.issueDownloadToken(materialId, classId);
         const blob = await apiDownload(token.url, { signal: controller.signal });
         if (!cancelled) setLoaded({ key, blob });
       } catch (e) {
-        if (!cancelled) setLoaded({ key, error: materialError(e) });
+        if (!cancelled) setLoaded({ key, error: describeMaterialError(e) });
       }
     })();
     return () => {
@@ -141,7 +141,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
         blob={current.blob}
         kind={viewable}
         title={material.current.fileName ?? material.title}
-        onDownload={() => void download(material, classId)}
+        onDownload={() => void downloadMaterial(material, classId)}
       />
     );
   }
@@ -157,7 +157,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
         <p className="text-[15px] font-semibold text-ink [overflow-wrap:anywhere]">
           {material.current.fileName}
         </p>
-        <p className="text-xs text-muted">{fileDescription(material)}</p>
+        <p className="text-xs text-muted">{describeFile(material)}</p>
       </div>
       <DownloadButton material={material} classId={classId} />
     </Card>

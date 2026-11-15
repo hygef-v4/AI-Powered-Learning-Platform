@@ -1,5 +1,34 @@
 # AI-DLC State Tracking
 
+## U09 — giữ bản nháp khi refresh lỗi, 2026-11-15
+
+Sửa P2 đã xác nhận trong review PR #87 theo yêu cầu người dùng, tiếp tục thiết kế
+chấm cá nhân cạnh bài nhóm đã duyệt. Nhánh `fix/grading-member-drafts`.
+[Kế hoạch](construction/plans/code-generation-plan/2026-11-15-member-draft-refresh-fix.md),
+[kết quả](construction/build-and-test/2026-11-15-member-draft-refresh-fix.md).
+
+- [x] Phạm vi/diagnosis: form bị unmount do `members: []` sau save nhóm/refresh lỗi.
+- [x] Code Generation: test RED rồi giữ members và khóa `editable` trong hook.
+- [x] Kiểm chứng: 306/306 test trong 33 file liên quan qua; ESLint sạch; typecheck
+  src/tests qua bằng config tạm loại cache Next cũ. Typecheck mặc định còn lỗi cache.
+- [x] Tự review và tài liệu. Security/Resiliency giữ phạm vi đã duyệt; PBT tắt.
+
+Không đổi backend/schema. Commit cục bộ theo yêu cầu tiếp theo; chưa push/merge/deploy. Không mở lại requirement
+hoặc design vì đây là sửa lỗi so với yêu cầu giữ draft hiện có.
+
+## U04/U13/U14 — áp dụng quy ước mã nguồn, 2026-11-15
+
+Refactor đặt tên và trình bày theo [code-conventions.md](construction/code-conventions.md) sau lần rà soát cùng ngày; không đổi hành vi, URL, JSON, schema. Nhánh `fix/code-conventions-u04-u13-u14`. Brownfield, dùng lại tài liệu reverse engineering hiện hành. [Câu hỏi xác nhận](inception/requirements/2026-11-15-u04-u13-u14-conventions-questions.md).
+
+- [x] Workspace Detection: brownfield, bỏ qua Reverse Engineering.
+- [x] Requirements Analysis (Minimal): Q1–Q4 = A, Q5 = nhánh `fix/code-conventions-u04-u13-u14` (2026-11-15T09:27:37Z); [yêu cầu CC-01…06](inception/requirements/2026-11-15-u04-u13-u14-conventions.md); người dùng duyệt 2026-11-15T09:29:55Z.
+- [x] User Stories: SKIP (không ảnh hưởng người dùng).
+- [x] Workflow Planning: [execution plan](inception/plans/2026-11-15-u04-u13-u14-conventions-execution-plan.md); chạy Code Generation (một kế hoạch gộp) và Build and Test, bỏ qua các stage khác. người dùng duyệt 2026-11-15T09:29:55Z.
+- [x] Code Generation: Part 1 [kế hoạch 12 bước](construction/plans/code-generation-plan/2026-11-15-u04-u13-u14-code-conventions-code-generation-plan.md) người dùng duyệt 2026-11-15T09:35:28Z; Part 2 xong 12/12 bước, tóm tắt [U04](construction/u04-subject-administration/code/2026-11-15-code-conventions-summary.md), [U13](construction/u13-reference-materials/code/2026-11-15-code-conventions-summary.md), [U14](construction/u14-announcements-and-notifications/code/2026-11-15-code-conventions-summary.md). Backend 493 test, 0 lỗi (40 bỏ qua do không có Docker); frontend tsc, ESLint sạch, Vitest bốn feature 178/178. Chưa commit; người dùng duyệt code 2026-11-15T11:23:27Z.
+- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-15-u04-u13-u14-code-conventions-results.md); dựng lại Docker stack `platform` theo yêu cầu (8 service healthy); `mvn -o -B clean verify` 2.426 test, 0 failure/error/skip, 5 suite PostgreSQL bắt buộc qua; frontend lint, tsc, build qua; Vitest 1.075/1.092, 17 test timeout do tải máy, chạy lại qua (3 file cần `--testTimeout=60000`). E2E `u04-u13-u14` trên stack cô lập `conv041314`: 40/40 qua (2026-11-15T12:19:55Z). Người dùng duyệt 2026-11-15T12:21:14Z.
+- [x] Operations: giai đoạn giữ chỗ, không có bước nào; triển khai theo quy trình merge vào `staging` hiện có. Đã commit cục bộ thành 10 commit trên nhánh `fix/code-conventions-u04-u13-u14` (2026-11-15), chưa push.
+- Extension: Security và Resiliency giữ phạm vi đã duyệt, PBT tắt.
+
 ## U05 (kèm U04) — Học kỳ của lớp, 2026-11-14
 
 Lớp có Ngày bắt đầu bắt buộc; học kỳ (SP/SU/FA + 2 số năm, thêm `-BL5` nếu bắt đầu tháng 4/8/12) do hệ thống tính và dùng để lọc lớp. Không có chức năng quản lý học kỳ. Mã lớp duy nhất theo môn và học kỳ. Quyết định D-U04-05 thay D-U04-04. Nhánh hiện tại `fix/term`. Brownfield, dùng lại tài liệu reverse engineering hiện hành. [Câu hỏi xác nhận](inception/requirements/2026-11-14-class-term-questions.md); [yêu cầu CT-01…09](inception/requirements/2026-11-14-class-term.md).

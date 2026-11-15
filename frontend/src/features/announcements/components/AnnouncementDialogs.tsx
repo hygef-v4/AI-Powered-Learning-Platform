@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Button, ClassLabel, cx, Dialog, Field, Icon, showToast, Textarea, TextInput } from "@/shared/ui";
-import { announcementsApi, announcementError } from "../api";
+import { Button, ClassLabel, Dialog, Field, Icon, Textarea, TextInput, cx, showToast } from "@/shared/ui";
+import { announcementsApi, describeAnnouncementError } from "../api";
 import type { Announcement, ClassOption } from "../model/types";
 
 const CHECK = "flex items-center gap-2 text-[13.5px] text-ink [&:has(input:disabled)]:text-muted";
@@ -32,7 +32,7 @@ export function CreateAnnouncementDialog({
   const [error, setError] = useState("");
   const ready = !!title.trim() && !!body.trim() && chosen.length > 0;
 
-  async function submit() {
+  async function handleSubmit() {
     setBusy(true);
     setError("");
     const input = {
@@ -45,10 +45,10 @@ export function CreateAnnouncementDialog({
     let message = "";
     for (const classId of chosen) {
       try {
-        await announcementsApi.create(classId, input);
+        await announcementsApi.createAnnouncement(classId, input);
       } catch (e) {
         failed.push(classId);
-        message = announcementError(e);
+        message = describeAnnouncementError(e);
       }
     }
     setBusy(false);
@@ -76,7 +76,7 @@ export function CreateAnnouncementDialog({
       footer={
         <Button
           variant="primary"
-          onClick={() => void submit()}
+          onClick={() => void handleSubmit()}
           disabled={busy || !ready}
           data-testid="announcement-create-submit"
         >
@@ -189,7 +189,7 @@ function ClassPicker({
       : classes;
   }, [classes, query]);
   const allShown = shown.length > 0 && shown.every((c) => chosen.includes(c.classId));
-  const toggle = (classId: string) =>
+  const handleToggleClass = (classId: string) =>
     onChange(chosen.includes(classId) ? chosen.filter((x) => x !== classId) : [...chosen, classId]);
   const toggleShown = () =>
     onChange(
@@ -205,7 +205,7 @@ function ClassPicker({
       : codes.length <= 3
         ? codes.join(", ")
         : `${codes.slice(0, 3).join(", ")} +${codes.length - 3}`;
-  const close = () => {
+  const handleClose = () => {
     setOpen(false);
     setQuery("");
   };
@@ -268,11 +268,11 @@ function ClassPicker({
           onKeyDown={(event) => {
             if (event.key === "Escape" && open) {
               event.stopPropagation();
-              close();
+              handleClose();
             }
           }}
           onBlur={(event) => {
-            if (!listRef.current?.contains(event.relatedTarget as Node | null)) close();
+            if (!listRef.current?.contains(event.relatedTarget as Node | null)) handleClose();
           }}
           suffix={
             <span className="text-xs text-muted tabular-nums">
@@ -310,7 +310,7 @@ function ClassPicker({
               row(
                 c.classId,
                 chosen.includes(c.classId),
-                () => toggle(c.classId),
+                () => handleToggleClass(c.classId),
                 <ClassLabel subjectCode={c.subjectCode} code={c.code} term={c.term} />,
               ),
             )}
@@ -336,16 +336,16 @@ export function AnnouncementEditorDialog({
   const [body, setBody] = useState(item.body);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  async function save() {
+  async function handleSave() {
     setBusy(true);
     setError("");
     try {
-      await announcementsApi.edit(item.id, title.trim(), body.trim(), item.version);
+      await announcementsApi.editAnnouncement(item.id, title.trim(), body.trim(), item.version);
       showToast("Đã lưu thay đổi");
       onSaved();
       onClose();
     } catch (e) {
-      setError(announcementError(e));
+      setError(describeAnnouncementError(e));
     } finally {
       setBusy(false);
     }
@@ -362,7 +362,7 @@ export function AnnouncementEditorDialog({
         <Button
           data-testid="announcement-edit-save"
           variant="primary"
-          onClick={() => void save()}
+          onClick={() => void handleSave()}
           disabled={busy || !title.trim() || !body.trim()}
         >
           Lưu
@@ -410,15 +410,15 @@ export function DeleteAnnouncementDialog({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  async function remove() {
+  async function handleRemove() {
     setBusy(true);
     try {
-      await announcementsApi.remove(item.id, item.version);
+      await announcementsApi.deleteAnnouncement(item.id, item.version);
       showToast("Đã xóa thông báo", "danger");
       onSaved();
       onClose();
     } catch (e) {
-      setError(announcementError(e));
+      setError(describeAnnouncementError(e));
     } finally {
       setBusy(false);
     }
@@ -434,7 +434,7 @@ export function DeleteAnnouncementDialog({
         <Button
           data-testid="announcement-delete-confirm"
           variant="danger"
-          onClick={() => void remove()}
+          onClick={() => void handleRemove()}
           disabled={busy}
         >
           Xóa

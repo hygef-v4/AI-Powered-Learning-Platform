@@ -149,7 +149,7 @@ class RequirementsCoverageIntegrationTest {
         Material material = new Material(id, course == null ? Material.Scope.SUBJECT : Material.Scope.CLASS,
                 subject, course, module, Material.Kind.FILE, title, "", 0, status, 1,
                 accountIds.get(Role.SUBJECT_MANAGER), NOW, NOW, 0);
-        transaction.executeWithoutResult(tx -> materialRepository.insert(material,
+        transaction.executeWithoutResult(tx -> materialRepository.insertMaterial(material,
                 new MaterialVersion(id, 1, "file-" + id, "source.pdf", "application/pdf", 100L,
                         null, null, MaterialVersion.TextStatus.EXTRACTED, "Original evidence",
                         accountIds.get(Role.SUBJECT_MANAGER), NOW)));
@@ -171,11 +171,15 @@ class RequirementsCoverageIntegrationTest {
         UUID other = seedMaterial(subjectId, otherClassId, moduleId, "Other class", Material.Status.ACTIVE);
         UUID foreign = seedMaterial(foreignSubjectId, null, seedModule(foreignSubjectId), "Foreign", Material.Status.ACTIVE);
         UUID archived = seedMaterial(subjectId, classId, moduleId, "Archived", Material.Status.ARCHIVED);
-        assertThat(materialRepository.list(subjectId, null)).extracting(Material::id).containsExactly(materialId);
-        assertThat(materialRepository.list(subjectId, classId)).extracting(Material::id)
+        assertThat(materialRepository.listMaterials(subjectId, null))
+                .extracting(Material::id)
+                .containsExactly(materialId);
+        assertThat(materialRepository.listMaterials(subjectId, classId)).extracting(Material::id)
                 .containsExactlyInAnyOrder(materialId, own, archived).doesNotContain(other, foreign);
         Actor student = new Actor(accountIds.get(Role.STUDENT), Role.STUDENT);
-        assertThat(materialQueryService.classList(student, classId, true, List.of(own, other, foreign, archived)))
+        assertThat(
+                materialQueryService.listClassMaterials(
+                        student, classId, true, List.of(own, other, foreign, archived)))
                 .extracting(MaterialViews.Detail::id).containsExactly(own);
         assertThat(referenceMaterialService.listSelectable(student, ResourceRef.courseClass(classId)))
                 .extracting(source -> source.materialId()).containsExactlyInAnyOrder(materialId, own);
@@ -184,14 +188,14 @@ class RequirementsCoverageIntegrationTest {
     @Test
     void materialHistoryAndConditionalTextCompletionSurviveMetadataReplaceArchiveAndStaleCas() {
         Actor manager = new Actor(accountIds.get(Role.SUBJECT_MANAGER), Role.SUBJECT_MANAGER);
-        var changed = materialService.update(manager, materialId,
+        var changed = materialService.updateMaterial(manager, materialId,
                 new MaterialCommands.Update("Renamed", "Description", 1, 0L, null));
         assertThat(changed.currentVersionNo()).isEqualTo(1);
-        assertThat(materialRepository.versions(materialId)).hasSize(1);
+        assertThat(materialRepository.listVersions(materialId)).hasSize(1);
         when(artifact.attach(any(), eq(manager), eq(ArtifactPurpose.MATERIAL))).thenReturn(
                 new StoredFileInfo("new-file", manager.accountId(), ArtifactPurpose.MATERIAL,
                         "new.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 200L, "sha"));
-        materialService.replace(manager, materialId,
+        materialService.replaceMaterialVersion(manager, materialId,
                 new MaterialCommands.Replace(1L, new MaterialCommands.Source("signed", null)));
         transaction.executeWithoutResult(tx -> {
             assertThat(materialRepository.completeText(materialId, 2, MaterialVersion.TextStatus.EXTRACTED, "New evidence")).isTrue();
@@ -201,17 +205,19 @@ class RequirementsCoverageIntegrationTest {
         var text = referenceMaterialService.extractText(manager, List.of(materialId), 100).get(0);
         assertThat(text.versionNo()).isEqualTo(2);
         assertThat(text.text()).isEqualTo("New evidence");
-        assertThatThrownBy(() -> materialService.archive(manager, materialId, 1))
+        assertThatThrownBy(() -> materialService.archiveMaterial(manager, materialId, 1))
                 .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
                         e -> assertThat(e.code()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
-        materialService.archive(manager, materialId, 2);
-        assertThat(materialRepository.versions(materialId)).extracting(MaterialVersion::versionNo).containsExactly(2, 1);
-        var history = materialQueryService.detail(manager, materialId, null);
+        materialService.archiveMaterial(manager, materialId, 2);
+        assertThat(materialRepository.listVersions(materialId))
+                .extracting(MaterialVersion::versionNo)
+                .containsExactly(2, 1);
+        var history = materialQueryService.loadMaterial(manager, materialId, null);
         assertThat(history.versions()).hasSize(2);
         assertThat(history.canManage()).isFalse();
-        materialQueryService.download(manager, materialId, null, 1);
+        materialQueryService.issueDownloadToken(manager, materialId, null, 1);
         verify(artifact).issueDownloadToken("file-" + materialId, manager.accountId());
-        assertThatThrownBy(() -> materialService.update(manager, materialId,
+        assertThatThrownBy(() -> materialService.updateMaterial(manager, materialId,
                 new MaterialCommands.Update("Forbidden", "", 0, 3L, null)))
                 .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
                         e -> assertThat(e.code()).isEqualTo("MATERIAL_ARCHIVED"));
@@ -389,8 +395,15 @@ class RequirementsCoverageIntegrationTest {
     void notificationEndpointsUseRealCurrentPrincipalAndPreserveForeignUnreadState(Role role) throws Exception {
         UUID owner = accountIds.get(role);
         UUID foreign = UUID.randomUUID();
-        notificationService.create(UUID.randomUUID(), edu.aiplatform.notifications.model.NotificationType.ENROLLED,
-                List.of(owner, foreign), "Notice", "Open class", "/classes/fixture", null, null);
+        notificationService.createNotification(
+                UUID.randomUUID(),
+                edu.aiplatform.notifications.model.NotificationType.ENROLLED,
+                List.of(owner, foreign),
+                "Notice",
+                "Open class",
+                "/classes/fixture",
+                null,
+                null);
         UUID ownId = jdbc.queryForObject("select id from notifications where recipient_id=?", UUID.class, owner);
         UUID foreignId = jdbc.queryForObject("select id from notifications where recipient_id=?", UUID.class, foreign);
         mvc.perform(signedRequest(get("/api/v1/me/notifications").param("accountId", foreign.toString()), role))
@@ -430,7 +443,7 @@ class RequirementsCoverageIntegrationTest {
         boolean staff = role == Role.TEACHER || role == Role.SUBJECT_MANAGER;
         if (staff) jdbc.update("update course_classes set teacher_id=? where id=?", accountIds.get(role), classId);
         Actor currentTeacher = new Actor(accountIds.get(staff ? role : Role.TEACHER), staff ? role : Role.TEACHER);
-        var created = announcementService.create(currentTeacher, classId,
+        var created = announcementService.createAnnouncement(currentTeacher, classId,
                 new edu.aiplatform.announcements.service.AnnouncementCommands.Create("Original", "Body", false, false));
         int readStatus = role == Role.ADMIN ? 404 : 200;
         mvc.perform(signedRequest(get("/api/v1/classes/" + classId + "/announcements"), role))
@@ -478,19 +491,35 @@ class RequirementsCoverageIntegrationTest {
         Actor admin = new Actor(accountIds.get(Role.ADMIN), Role.ADMIN);
         Actor manager = new Actor(accountIds.get(Role.SUBJECT_MANAGER), Role.SUBJECT_MANAGER);
         Actor student = new Actor(accountIds.get(Role.STUDENT), Role.STUDENT);
-        var ids = materialRepository.list(subjectId, null).stream().map(Material::id).toList();
+        var ids =
+                materialRepository
+                        .listMaterials(subjectId, null)
+                        .stream()
+                        .map(Material::id)
+                        .toList();
         assertThat(ids).hasSize(10);
         measureP95("U04_SCOPE", 20, () -> assertThat(authorization.authorize(manager,
                 Actions.MATERIAL_SUBJECT_MANAGE, ResourceRef.subject(subjectId)).allowed()).isTrue());
-        measureP95("U04_LIST", 300, () -> subjectAdminService.list(admin, null, null, 0, 20));
-        measureP95("U04_DETAIL", 300, () -> subjectAdminService.detail(admin, subjectId));
-        measureP95("U13_LIST", 300, () -> assertThat(materialQueryService.subjectList(manager, subjectId)).hasSize(10));
+        measureP95(
+                "U04_LIST", 300, () -> subjectAdminService.listSubjects(admin, null, null, 0, 20));
+        measureP95("U04_DETAIL", 300, () -> subjectAdminService.loadSubject(admin, subjectId));
+        measureP95(
+                "U13_LIST",
+                300,
+                () -> assertThat(
+                        materialQueryService.listSubjectMaterials(manager, subjectId)).hasSize(10));
         measureP95("U13_EXTRACT_TEN", 1000,
                 () -> assertThat(referenceMaterialService.extractText(manager, ids, 10000)).hasSize(10));
         measureP95("U14_NOTIFICATIONS", 300,
-                () -> assertThat(notificationService.list(student, false, 1, 20).items()).hasSize(20));
+                () -> assertThat(
+                        notificationService
+                                .listNotifications(student, false, 1, 20)
+                                .items()).hasSize(20));
         measureP95("U14_ANNOUNCEMENTS", 300,
-                () -> assertThat(announcementService.list(student, classId, 1, 20).items()).hasSize(20));
+                () -> assertThat(
+                        announcementService
+                                .listAnnouncements(student, classId, 1, 20)
+                                .items()).hasSize(20));
         assertThat(jdbc.queryForObject("select count(*) from audit_logs", Integer.class)).isZero();
     }
 
@@ -554,11 +583,11 @@ class RequirementsCoverageIntegrationTest {
                 Map.of("classId", classId.toString(), "actorId", accountIds.get(Role.TEACHER).toString(),
                         "announcementId", UUID.randomUUID().toString(), "important", false, "sendEmail", false));
         long started = System.nanoTime();
-        notificationEventService.accept(event);
+        notificationEventService.handleEvent(event);
         long milliseconds = java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
         assertThat(jdbc.queryForObject("select count(*) from notifications", Integer.class)).isEqualTo(200);
         assertThat(jdbc.queryForObject("select count(*) from email_deliveries", Integer.class)).isZero();
-        notificationEventService.accept(event);
+        notificationEventService.handleEvent(event);
         assertThat(jdbc.queryForObject("select count(*) from notifications", Integer.class)).isEqualTo(200);
         System.out.println("LOCAL_NFR_U14_03 recipients=200 elapsedMs=" + milliseconds + " targetMs=5000");
         assertThat(milliseconds).isLessThanOrEqualTo(5000);
@@ -567,8 +596,15 @@ class RequirementsCoverageIntegrationTest {
     @Test
     void actualEmailJobPipelineRetriesBoundedlyPersistsFailureAndKeepsBusinessNotice() {
         UUID recipient = accountIds.get(Role.STUDENT);
-        notificationService.create(UUID.randomUUID(), edu.aiplatform.notifications.model.NotificationType.ENROLLED,
-                List.of(recipient), "Enrollment", "Open class", "/classes/fixture", "ENROLLED", null);
+        notificationService.createNotification(
+                UUID.randomUUID(),
+                edu.aiplatform.notifications.model.NotificationType.ENROLLED,
+                List.of(recipient),
+                "Enrollment",
+                "Open class",
+                "/classes/fixture",
+                "ENROLLED",
+                null);
         UUID deliveryId = jdbc.queryForObject("select id from email_deliveries", UUID.class);
         doThrow(new IllegalStateException("PRIVATE_SMTP_RECIPIENT_SENTINEL")).when(mail).send(any());
         var current = new edu.aiplatform.jobs.contract.JobMessage(1, edu.aiplatform.jobs.contract.JobTypes.EMAIL_SEND,
@@ -593,15 +629,22 @@ class RequirementsCoverageIntegrationTest {
 
     @Test
     void concurrentDeliveryAndDuplicateJobsSendOnceAndSentRemainsTerminal() throws Exception {
-        notificationService.create(UUID.randomUUID(), edu.aiplatform.notifications.model.NotificationType.ENROLLED,
-                List.of(accountIds.get(Role.STUDENT)), "Enrollment", "Open class", "/classes/fixture", "ENROLLED", null);
+        notificationService.createNotification(
+                UUID.randomUUID(),
+                edu.aiplatform.notifications.model.NotificationType.ENROLLED,
+                List.of(accountIds.get(Role.STUDENT)),
+                "Enrollment",
+                "Open class",
+                "/classes/fixture",
+                "ENROLLED",
+                null);
         UUID deliveryId = jdbc.queryForObject("select id from email_deliveries", UUID.class);
         var start = new java.util.concurrent.CountDownLatch(1);
         var executor = java.util.concurrent.Executors.newFixedThreadPool(2);
         try {
             var futures = java.util.stream.IntStream.range(0, 2).mapToObj(index -> executor.submit(() -> {
                 start.await();
-                emailDeliveryService.send(deliveryId);
+                emailDeliveryService.sendEmail(deliveryId);
                 return null;
             })).toList();
             start.countDown();
@@ -612,7 +655,7 @@ class RequirementsCoverageIntegrationTest {
         var replay = new edu.aiplatform.jobs.contract.JobMessage(1, edu.aiplatform.jobs.contract.JobTypes.EMAIL_SEND,
                 "email:" + deliveryId, Map.of("deliveryId", deliveryId.toString()), 0, "fixture");
         assertThat(jobDispatcher.dispatch(replay)).isEqualTo(edu.aiplatform.jobs.service.JobDispatcher.Outcome.DONE);
-        emailDeliveryService.failed(deliveryId);
+        emailDeliveryService.markEmailFailed(deliveryId);
         verify(mail).send(any());
         assertThat(jdbc.queryForObject("select status from email_deliveries where id=?", String.class, deliveryId)).isEqualTo("SENT");
         assertThat(jdbc.queryForObject("select attempts from email_deliveries where id=?", Integer.class, deliveryId)).isEqualTo(1);
@@ -625,8 +668,14 @@ class RequirementsCoverageIntegrationTest {
                 select gen_random_uuid(),?,'ENROLLED',gen_random_uuid(),'Notice','Open class','/classes/fixture',?
                 from generate_series(1,10001)
                 """, accountIds.get(Role.STUDENT), at(NOW.minus(Duration.ofDays(181))));
-        int first = transaction.execute(status -> notificationRepository.deleteOld(NOW.minus(Duration.ofDays(180))));
-        int second = transaction.execute(status -> notificationRepository.deleteOld(NOW.minus(Duration.ofDays(180))));
+        int first =
+                transaction.execute(
+                        status -> notificationRepository.deleteOldNotifications(
+                                NOW.minus(Duration.ofDays(180))));
+        int second =
+                transaction.execute(
+                        status -> notificationRepository.deleteOldNotifications(
+                                NOW.minus(Duration.ofDays(180))));
         assertThat(first).isEqualTo(10000);
         assertThat(second).isEqualTo(1);
     }
@@ -672,7 +721,7 @@ class RequirementsCoverageIntegrationTest {
         doAnswer(call -> { published.add(call.getArgument(0)); return null; }).when(messageSender).sendEvent(any());
         Actor teacher = new Actor(accountIds.get(Role.TEACHER), Role.TEACHER);
         transaction.executeWithoutResult(status -> {
-            announcementService.create(teacher, classId,
+            announcementService.createAnnouncement(teacher, classId,
                     new edu.aiplatform.announcements.service.AnnouncementCommands.Create("Rolled back", "Body", false, false));
             assertThat(published).isEmpty();
             status.setRollbackOnly();
@@ -680,7 +729,7 @@ class RequirementsCoverageIntegrationTest {
         assertThat(published.poll(200, java.util.concurrent.TimeUnit.MILLISECONDS)).isNull();
         assertThat(jdbc.queryForObject("select count(*) from announcements", Integer.class)).isZero();
         transaction.executeWithoutResult(status -> {
-            announcementService.create(teacher, classId,
+            announcementService.createAnnouncement(teacher, classId,
                     new edu.aiplatform.announcements.service.AnnouncementCommands.Create("Committed", "Body", false, false));
             assertThat(published).isEmpty();
         });
@@ -688,7 +737,7 @@ class RequirementsCoverageIntegrationTest {
         assertThat(jdbc.queryForObject("select count(*) from announcements", Integer.class)).isEqualTo(1);
         clearInvocations(messageSender);
         doThrow(new IllegalStateException("PRIVATE_PROVIDER_MESSAGE")).when(messageSender).sendEvent(any());
-        announcementService.create(teacher, classId,
+        announcementService.createAnnouncement(teacher, classId,
                 new edu.aiplatform.announcements.service.AnnouncementCommands.Create("Survives failure", "Body", false, false));
         verify(messageSender, timeout(3000)).sendEvent(any());
         assertThat(jdbc.queryForObject("select count(*) from announcements", Integer.class)).isEqualTo(2);

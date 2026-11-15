@@ -15,21 +15,21 @@ public class NotificationExceptionHandler {
         org.springframework.http.converter.HttpMessageNotReadableException.class,
         org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class
     })
-    public ProblemDetail invalid(Exception ignored) {
-        var p =
+    public ProblemDetail handleInvalidRequest(Exception ignored) {
+        var problem =
                 ProblemDetail.forStatusAndDetail(
                         HttpStatus.BAD_REQUEST,
                         "Dữ liệu không hợp lệ, kiểm tra nội dung và phiên bản");
-        p.setProperty("code", "NOTIFICATION_INPUT_INVALID");
-        return p;
+        problem.setProperty("code", "NOTIFICATION_INPUT_INVALID");
+        return problem;
     }
 
     @ExceptionHandler(PersistenceException.class)
-    public ProblemDetail database(PersistenceException ignored) {
-        var p =
+    public ProblemDetail handleDatabaseFailure(PersistenceException ignored) {
+        var problem =
                 ProblemDetail.forStatusAndDetail(
                         HttpStatus.SERVICE_UNAVAILABLE, "Hệ thống tạm bận, vui lòng thử lại");
-        p.setProperty("code", "NOTIFICATION_UNAVAILABLE");
-        return p;
+        problem.setProperty("code", "NOTIFICATION_UNAVAILABLE");
+        return problem;
     }
 }

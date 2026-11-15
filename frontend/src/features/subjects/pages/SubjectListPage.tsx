@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button, Card, cx, PageHeader, Pagination, showToast } from "@/shared/ui";
-import { getSubjects } from "../api";
+import { Button, Card, Pagination, PageHeader, cx, showToast } from "@/shared/ui";
+import { listSubjects } from "../api";
 import { SubjectFilters } from "../components/SubjectFilters";
 import { SubjectReadError } from "../components/SubjectReadError";
 import { SubjectTable } from "../components/SubjectTable";
@@ -37,7 +37,7 @@ export function SubjectListPage() {
     );
     return () => clearTimeout(timer);
   }, [search]);
-  const load = useCallback(() => getSubjects(query), [query]);
+  const load = useCallback(() => listSubjects(query), [query]);
   const resource = useSubjectRead(JSON.stringify(query), load);
   useEffect(() => {
     if (!resource.loading && focusAfterCreate.current) {

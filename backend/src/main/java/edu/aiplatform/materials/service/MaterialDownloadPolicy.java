@@ -12,11 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class MaterialDownloadPolicy implements IArtifactDownloadPolicy {
-    private final IMaterialRepository repository;
+    private final IMaterialRepository materialRepository;
     private final MaterialAccessPolicy materialAccessPolicy;
 
-    public MaterialDownloadPolicy(IMaterialRepository repository, MaterialAccessPolicy materialAccessPolicy) {
-        this.repository = repository;
+    public MaterialDownloadPolicy(
+            IMaterialRepository materialRepository, MaterialAccessPolicy materialAccessPolicy) {
+        this.materialRepository = materialRepository;
         this.materialAccessPolicy = materialAccessPolicy;
     }
 
@@ -28,11 +29,14 @@ public class MaterialDownloadPolicy implements IArtifactDownloadPolicy {
     @Override
     @Transactional(readOnly = true, timeout = 10)
     public void requireDownload(Actor actor, String fileId) {
-        for (var material : repository.findByFileId(fileId)) {
+        for (var material : materialRepository.findByFileId(fileId)) {
             try {
-                materialAccessPolicy.read(actor, material, null);
-                if (actor.role() == Role.STUDENT && repository.version(material.id(), material.currentVersionNo())
-                        .filter(current -> fileId.equals(current.fileId())).isEmpty()) continue;
+                materialAccessPolicy.requireReadAccess(actor, material, null);
+                if (actor.role() == Role.STUDENT
+                        && materialRepository
+                                .findVersion(material.id(), material.currentVersionNo())
+                                .filter(current -> fileId.equals(current.fileId()))
+                                .isEmpty()) continue;
                 return;
             } catch (ApiException rejected) {
                 if (rejected.status() != HttpStatus.NOT_FOUND) throw rejected;

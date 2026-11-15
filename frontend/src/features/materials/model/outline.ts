@@ -2,10 +2,10 @@
 
 import { useEffect } from "react";
 import type { IconName } from "@/shared/ui/Icon";
-import { outlinePaths } from "../api";
+import { buildOutlinePaths } from "../api";
 import { useMaterialResource } from "../hooks/useMaterialResource";
 import {
-  materialHref,
+  buildMaterialHref,
   type Material,
   type MaterialModule,
   type ModuleQuiz,
@@ -34,7 +34,7 @@ export type OutlineItem =
   | { kind: "quiz"; quiz: ModuleQuiz };
 export type OutlineModule = { module: MaterialModule; items: OutlineItem[] };
 
-function pendingText(materials: Material[]) {
+function describePending(materials: Material[]) {
   return materials.some((m) => m.status === "ACTIVE" && m.current.textStatus === "PENDING");
 }
 
@@ -43,10 +43,10 @@ export function useModuleOutline(
   scope: ModuleScope | null,
   options: { poll?: boolean; pollPaused?: boolean } = {},
 ) {
-  const paths = scope ? outlinePaths(scope) : null;
+  const paths = scope ? buildOutlinePaths(scope) : null;
   const modules = useMaterialResource<MaterialModule[]>(paths?.modules ?? null);
   const materials = useMaterialResource<Material[]>(paths?.materials ?? null, {
-    pollWhile: options.poll ? pendingText : undefined,
+    pollWhile: options.poll ? describePending : undefined,
     pollPaused: options.pollPaused,
   });
   const outline: OutlineModule[] | undefined =
@@ -84,31 +84,31 @@ export function useModuleOutline(
   };
 }
 
-export function itemKey(item: OutlineItem) {
+export function buildItemKey(item: OutlineItem) {
   return item.kind === "material" ? `m:${item.material.id}` : `q:${item.quiz.quizId}`;
 }
 
-export function itemTitle(item: OutlineItem) {
+export function resolveItemTitle(item: OutlineItem) {
   return item.kind === "material" ? item.material.title : item.quiz.title;
 }
 
-export function itemIcon(item: OutlineItem): IconName {
+export function resolveItemIcon(item: OutlineItem): IconName {
   if (item.kind === "quiz") return "quiz";
   if (item.material.kind === "YOUTUBE_LINK") return "link";
   return "description";
 }
 
 /** Trang mở khi bấm một mục: học liệu mở trang xem; Quiz mở trang soạn (môn, lớp dạy) hay trang làm Quiz (sinh viên). */
-export function itemHref(item: OutlineItem, scope: ModuleScope) {
+export function buildItemHref(item: OutlineItem, scope: ModuleScope) {
   const classId = scope.kind === "subject" ? undefined : scope.classId;
-  if (item.kind === "material") return materialHref(item.material.id, classId, true);
+  if (item.kind === "material") return buildMaterialHref(item.material.id, classId, true);
   const id = enc(item.quiz.quizId);
   if (scope.kind === "student") return `/quiz-practice/${id}?classId=${enc(scope.classId)}`;
   return scope.kind === "class" ? `/quizzes/${id}?classId=${enc(scope.classId)}` : `/quizzes/${id}`;
 }
 
 /** Trang danh sách học liệu của nơi xem (lối về trên sidebar module). */
-export function boardHref(scope: ModuleScope) {
+export function buildBoardHref(scope: ModuleScope) {
   if (scope.kind === "subject") return `/manager/materials?subjectId=${enc(scope.subjectId)}`;
   return scope.kind === "class"
     ? `/teaching/classes/${enc(scope.classId)}?tab=materials`

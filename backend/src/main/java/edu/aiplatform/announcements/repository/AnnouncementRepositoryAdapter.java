@@ -7,50 +7,50 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class AnnouncementRepositoryAdapter implements IAnnouncementRepository {
-    private final EntityManager em;
+    private final EntityManager entityManager;
 
-    public AnnouncementRepositoryAdapter(EntityManager em) {
-        this.em = em;
+    public AnnouncementRepositoryAdapter(EntityManager entityManager) {
+        this.entityManager = entityManager;
     }
 
-    public Optional<Announcement> find(UUID id) {
-        return Optional.ofNullable(em.find(Announcement.class, id));
+    public Optional<Announcement> findAnnouncement(UUID id) {
+        return Optional.ofNullable(entityManager.find(Announcement.class, id));
     }
 
-    public List<Announcement> list(List<UUID> classes, int page, int size) {
-        if (classes.isEmpty()) return List.of();
-        return em.createQuery(
+    public List<Announcement> listAnnouncements(List<UUID> classIds, int page, int size) {
+        if (classIds.isEmpty()) return List.of();
+        return entityManager.createQuery(
                         "select a from Announcement a where a.classId in :ids and a.status=:status order by a.createdAt desc,a.id desc",
                         Announcement.class)
-                .setParameter("ids", classes)
+                .setParameter("ids", classIds)
                 .setParameter("status", Announcement.Status.ACTIVE)
                 .setFirstResult((page - 1) * size)
                 .setMaxResults(size)
                 .getResultList();
     }
 
-    public void insert(Announcement a) {
-        em.persist(a);
+    public void insertAnnouncement(Announcement announcement) {
+        entityManager.persist(announcement);
     }
 
-    public boolean update(Announcement a, long version) {
+    public boolean updateAnnouncement(Announcement announcement, long expectedVersion) {
         // Detach before JPQL: a stale entity must not flush an unconditional update first.
-        em.detach(a);
+        entityManager.detach(announcement);
         int changed =
-                em.createQuery(
+                entityManager.createQuery(
                                 "update Announcement a set a.title=:title,a.body=:body,a.status=:status,a.updatedBy=:actor,a.updatedAt=:now,a.deletedBy=:deletedBy,a.deletedAt=:deletedAt,a.version=a.version+1 where a.id=:id and a.version=:version and a.status=:active")
-                        .setParameter("title", a.title)
-                        .setParameter("body", a.body)
-                        .setParameter("status", a.status)
-                        .setParameter("actor", a.updatedBy)
-                        .setParameter("now", a.updatedAt)
-                        .setParameter("deletedBy", a.deletedBy)
-                        .setParameter("deletedAt", a.deletedAt)
-                        .setParameter("id", a.id)
-                        .setParameter("version", version)
+                        .setParameter("title", announcement.title)
+                        .setParameter("body", announcement.body)
+                        .setParameter("status", announcement.status)
+                        .setParameter("actor", announcement.updatedBy)
+                        .setParameter("now", announcement.updatedAt)
+                        .setParameter("deletedBy", announcement.deletedBy)
+                        .setParameter("deletedAt", announcement.deletedAt)
+                        .setParameter("id", announcement.id)
+                        .setParameter("version", expectedVersion)
                         .setParameter("active", Announcement.Status.ACTIVE)
                         .executeUpdate();
-        if (changed == 1) a.version = version + 1;
+        if (changed == 1) announcement.version = expectedVersion + 1;
         return changed == 1;
     }
 }

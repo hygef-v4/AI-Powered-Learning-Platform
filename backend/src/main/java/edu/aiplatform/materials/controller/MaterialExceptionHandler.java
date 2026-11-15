@@ -13,8 +13,8 @@ import edu.aiplatform.shared.error.ApiException;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class MaterialExceptionHandler {
     @ExceptionHandler(ApiException.class)
-    public ProblemDetail api(ApiException e) {
-        return problem(e.status(), e.code(), e.getMessage());
+    public ProblemDetail handleApiException(ApiException failure) {
+        return createProblem(failure.status(), failure.code(), failure.getMessage());
     }
 
     @ExceptionHandler({
@@ -23,22 +23,22 @@ public class MaterialExceptionHandler {
         HttpMessageNotReadableException.class,
         MethodArgumentTypeMismatchException.class
     })
-    public ProblemDetail invalid(Exception ignored) {
-        return problem(
+    public ProblemDetail handleInvalidRequest(Exception ignored) {
+        return createProblem(
                 HttpStatus.BAD_REQUEST,
                 "MATERIAL_REQUEST_INVALID",
                 "Thông tin học liệu không hợp lệ");
     }
 
     @ExceptionHandler(Exception.class)
-    public ProblemDetail unexpected(Exception ignored) {
-        return problem(
+    public ProblemDetail handleUnexpectedFailure(Exception ignored) {
+        return createProblem(
                 HttpStatus.SERVICE_UNAVAILABLE,
                 "MATERIAL_UNAVAILABLE",
                 "Không xử lý được học liệu, vui lòng thử lại");
     }
 
-    private ProblemDetail problem(HttpStatus status, String code, String message) {
+    private ProblemDetail createProblem(HttpStatus status, String code, String message) {
         var detail = ProblemDetail.forStatusAndDetail(status, message);
         detail.setProperty("code", code);
         return detail;

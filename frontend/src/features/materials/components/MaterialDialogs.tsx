@@ -19,7 +19,13 @@ import type { QuizDetail, QuizRow } from "@/features/quizzes/model/types";
 import { Button, Card, Dialog, Field, Segmented, Select, Switch, TextInput } from "@/shared/ui";
 import { FormattedTextEditor } from "@/shared/document/FormattedTextEditor";
 import type { FormattedText } from "@/shared/document/formattedText";
-import { materialApi, materialError, moduleApi, outlinePaths, validYoutube } from "../api";
+import {
+  materialApi,
+  describeMaterialError,
+  moduleApi,
+  buildOutlinePaths,
+  isValidYoutubeUrl,
+} from "../api";
 import type { OutlineItem } from "../model/outline";
 import type { Material, ModuleQuiz, ModuleScope } from "../model/types";
 
@@ -27,7 +33,7 @@ type Content = "FILE" | "YOUTUBE_LINK" | "QUIZ";
 type StaffScope = Extract<ModuleScope, { kind: "subject" } | { kind: "class" }>;
 const NEW_QUIZ = "";
 
-function quizDetails(detail: QuizDetail, title: string, instructions: string,
+function describeQuiz(detail: QuizDetail, title: string, instructions: string,
   document: FormattedText | null, keep = false) {
   const q = detail.quiz;
   return {
@@ -90,7 +96,7 @@ export function ModuleItemDialog({
         setDescription(value.quiz.instructions ?? "");
         setDescriptionDocument(value.quiz.instructionsDocument ?? null);
       },
-      (e: unknown) => setError(materialError(e)),
+      (e: unknown) => setError(describeMaterialError(e)),
     );
   }, [quiz, scope]);
   useEffect(() => {
@@ -110,7 +116,7 @@ export function ModuleItemDialog({
               .filter((row) => !own.some((o) => o.id === row.id))
               .map((row) => ({ ...row, copy: true })),
           ]);
-    load.then(setQuizzes, (e: unknown) => setError(materialError(e)));
+    load.then(setQuizzes, (e: unknown) => setError(describeMaterialError(e)));
   }, [content, editing, quizzes, scope]);
 
   function chooseQuiz(value: string) {
@@ -120,7 +126,7 @@ export function ModuleItemDialog({
     if (row && !title.trim()) setTitle(row.title);
   }
 
-  async function save() {
+  async function handleSave() {
     if (lock.current) return;
     if (!title.trim()) {
       setError("Nhập tên học liệu.");
@@ -129,7 +135,7 @@ export function ModuleItemDialog({
     if (
       content === "YOUTUBE_LINK" &&
       (!editing || url.trim() !== (material?.current.videoUrl ?? "")) &&
-      !validYoutube(url)
+      !isValidYoutubeUrl(url)
     ) {
       setError("Dán link của một video YouTube.");
       return;
@@ -147,17 +153,20 @@ export function ModuleItemDialog({
         const newUrl =
           content === "YOUTUBE_LINK" && url.trim() !== (material.current.videoUrl ?? "");
         if (fileRef || newUrl)
-          current = await materialApi.replace(
+          current = await materialApi.replaceMaterialVersion(
             current,
             fileRef ? { fileRef } : { videoUrl: url.trim() },
           );
-        await materialApi.update(current, title.trim(), description, undefined, { enabled, descriptionDocument });
+        await materialApi.updateMaterial(current, title.trim(), description, undefined, {
+          enabled,
+          descriptionDocument,
+        });
         onSaved("Đã lưu thay đổi");
       } else if (quiz) {
         if (!detail) return;
         await updateQuizDetails(
           quiz.quizId,
-          quizDetails(detail, title.trim(), description, descriptionDocument),
+          describeQuiz(detail, title.trim(), description, descriptionDocument),
           detail.quiz.version,
         );
         onSaved("Đã lưu thay đổi");
@@ -171,7 +180,7 @@ export function ModuleItemDialog({
               : await cloneQuiz(template.id);
           created = await updateQuizDetails(
             created.quiz.id,
-            quizDetails(created, title.trim(), description, descriptionDocument, true),
+            describeQuiz(created, title.trim(), description, descriptionDocument, true),
             created.quiz.version,
           );
         } else {
@@ -182,7 +191,7 @@ export function ModuleItemDialog({
           if (description.trim())
             created = await updateQuizDetails(
               created.quiz.id,
-              quizDetails(created, title.trim(), description, descriptionDocument),
+              describeQuiz(created, title.trim(), description, descriptionDocument),
               created.quiz.version,
             );
         }
@@ -195,7 +204,7 @@ export function ModuleItemDialog({
             : `/quizzes/${encodeURIComponent(created.quiz.id)}`,
         );
       } else {
-        await materialApi.create(outlinePaths(scope).materials, {
+        await materialApi.createMaterial(buildOutlinePaths(scope).materials, {
           kind: content,
           title: title.trim(),
           description,
@@ -208,7 +217,7 @@ export function ModuleItemDialog({
         onSaved("Đã thêm học liệu");
       }
     } catch (e) {
-      setError(materialError(e));
+      setError(describeMaterialError(e));
     } finally {
       lock.current = false;
       setBusy(false);
@@ -227,7 +236,7 @@ export function ModuleItemDialog({
           data-testid="material-source-save"
           variant="primary"
           disabled={busy || (!!quiz && !detail)}
-          onClick={() => void save()}
+          onClick={() => void handleSave()}
         >
           {editing ? "Lưu" : "Tạo"}
         </Button>
@@ -236,7 +245,7 @@ export function ModuleItemDialog({
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          void save();
+          void handleSave();
         }}
         noValidate
         className="flex flex-col gap-4"
@@ -356,14 +365,14 @@ export function isQuizDeletable(quiz: ModuleQuiz) {
 }
 
 /** Nút gỡ một mục khỏi module: học liệu và Quiz nháp là Xóa, Quiz đã phát hành là Lưu trữ. */
-export function removalAction(item: OutlineItem) {
+export function resolveRemovalAction(item: OutlineItem) {
   return item.kind === "quiz" && !isQuizDeletable(item.quiz)
     ? { icon: "archive" as const, label: "Lưu trữ" }
     : { icon: "trash" as const, label: "Xóa" };
 }
 
 /** Thông báo sau khi gỡ mục: học liệu bị ẩn, Quiz nháp bị xóa, Quiz khác bị lưu trữ. */
-export function removalMessage(item: OutlineItem) {
+export function describeRemoval(item: OutlineItem) {
   if (item.kind === "material") return "Đã xóa học liệu";
   return isQuizDeletable(item.quiz) ? "Đã xóa quiz" : "Đã lưu trữ quiz";
 }
@@ -391,7 +400,7 @@ export function ArchiveItemDialog({
   const title = isQuiz ? item.quiz.title : item.material.title;
   const action = isQuiz && !deletesQuiz ? "Lưu trữ" : "Xóa";
   const noun = isQuiz ? "quiz" : "học liệu";
-  async function removeItem() {
+  async function handleRemove() {
     if (lock.current) return;
     lock.current = true;
     setBusy(true);
@@ -401,10 +410,10 @@ export function ArchiveItemDialog({
         const detail = await getQuiz(item.quiz.quizId, classId ?? null);
         if (deletesQuiz) await deleteQuiz(item.quiz.quizId, detail.quiz.version);
         else await retireQuiz(item.quiz.quizId, "", detail.quiz.version);
-      } else await materialApi.archive(item.material);
+      } else await materialApi.archiveMaterial(item.material);
       onSaved(!isQuiz || deletesQuiz);
     } catch (e) {
-      setError(materialError(e));
+      setError(describeMaterialError(e));
     } finally {
       lock.current = false;
       setBusy(false);
@@ -422,7 +431,7 @@ export function ArchiveItemDialog({
           data-testid="material-archive-confirm"
           variant="danger"
           disabled={busy}
-          onClick={() => void removeItem()}
+          onClick={() => void handleRemove()}
         >
           {action}
         </Button>

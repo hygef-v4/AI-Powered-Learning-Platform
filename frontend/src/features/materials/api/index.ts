@@ -8,38 +8,38 @@ import type {
   MaterialSource,
   ModuleScope,
 } from "../model/types";
-const enc = encodeURIComponent;
-export const scopePath = (id: string, kind: "subjects" | "classes") =>
-  `/api/v1/${kind}/${enc(id)}/materials`;
-export const materialPath = (id: string) => `/api/v1/materials/${enc(id)}`;
-const modulePath = (id: string) => `/api/v1/material-modules/${enc(id)}`;
+const encodePathSegment = encodeURIComponent;
+export const buildScopePath = (id: string, kind: "subjects" | "classes") =>
+  `/api/v1/${kind}/${encodePathSegment(id)}/materials`;
+export const buildMaterialPath = (id: string) => `/api/v1/materials/${encodePathSegment(id)}`;
+const buildModulePath = (id: string) => `/api/v1/material-modules/${encodePathSegment(id)}`;
 /** Danh sách module và danh sách học liệu theo nơi xem. */
-export function outlinePaths(scope: ModuleScope): { modules: string; materials: string } {
+export function buildOutlinePaths(scope: ModuleScope): { modules: string; materials: string } {
   if (scope.kind === "subject")
     return {
-      modules: `/api/v1/subjects/${enc(scope.subjectId)}/modules`,
-      materials: scopePath(scope.subjectId, "subjects"),
+      modules: `/api/v1/subjects/${encodePathSegment(scope.subjectId)}/modules`,
+      materials: buildScopePath(scope.subjectId, "subjects"),
     };
   const base =
     scope.kind === "student"
-      ? `/api/v1/me/classes/${enc(scope.classId)}`
-      : `/api/v1/classes/${enc(scope.classId)}`;
+      ? `/api/v1/me/classes/${encodePathSegment(scope.classId)}`
+      : `/api/v1/classes/${encodePathSegment(scope.classId)}`;
   return { modules: `${base}/modules`, materials: `${base}/materials` };
 }
-export function contextQuery(classId?: string) {
-  return classId ? `?classId=${enc(classId)}` : "";
+export function buildContextQuery(classId?: string) {
+  return classId ? `?classId=${encodePathSegment(classId)}` : "";
 }
-function write<T>(path: string, method: string, body?: unknown) {
+function sendWrite<T>(path: string, method: string, body?: unknown) {
   return apiFetch<T>(path, {
     method,
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
 }
 export const materialApi = {
-  create: (path: string, input: CreateMaterial) => write<Material>(path, "POST", input),
-  update: (m: Material, title: string, description: string, moduleId?: string,
+  createMaterial: (path: string, input: CreateMaterial) => sendWrite<Material>(path, "POST", input),
+  updateMaterial: (m: Material, title: string, description: string, moduleId?: string,
     options?: { enabled?: boolean; descriptionDocument?: FormattedText | null }) =>
-    write<Material>(materialPath(m.id), "PATCH", {
+    sendWrite<Material>(buildMaterialPath(m.id), "PATCH", {
       title,
       description,
       orderNo: m.orderNo,
@@ -47,40 +47,40 @@ export const materialApi = {
       moduleId: moduleId ?? m.moduleId,
       ...options,
     }),
-  replace: (m: Material, source: MaterialSource) =>
-    write<Material>(`${materialPath(m.id)}/versions`, "POST", { version: m.version, source }),
-  archive: (m: Material) =>
-    write<Material>(`${materialPath(m.id)}/archive`, "POST", { version: m.version }),
-  reorder: (path: string, items: Material[]) =>
-    write<void>(`${path}:reorder`, "PUT", {
+  replaceMaterialVersion: (m: Material, source: MaterialSource) =>
+    sendWrite<Material>(`${buildMaterialPath(m.id)}/versions`, "POST", { version: m.version, source }),
+  archiveMaterial: (m: Material) =>
+    sendWrite<Material>(`${buildMaterialPath(m.id)}/archive`, "POST", { version: m.version }),
+  reorderMaterials: (path: string, items: Material[]) =>
+    sendWrite<void>(`${path}:reorder`, "PUT", {
       items: items.map(({ id, version }) => ({ id, version })),
     }),
-  token: (id: string, classId?: string, versionNo?: number) => {
+  issueDownloadToken: (id: string, classId?: string, versionNo?: number) => {
     const params = new URLSearchParams();
     if (classId) params.set("classId", classId);
     if (versionNo !== undefined) params.set("versionNo", String(versionNo));
-    return write<DownloadToken>(
-      `${materialPath(id)}/download-token${params.size ? `?${params}` : ""}`,
+    return sendWrite<DownloadToken>(
+      `${buildMaterialPath(id)}/download-token${params.size ? `?${params}` : ""}`,
       "POST",
     );
   },
 };
 export const moduleApi = {
-  create: (subjectId: string, title: string) =>
-    write<MaterialModule>(`/api/v1/subjects/${enc(subjectId)}/modules`, "POST", { title }),
-  rename: (m: MaterialModule, title: string) =>
-    write<void>(modulePath(m.id), "PATCH", { title, version: m.version }),
-  remove: (m: MaterialModule) => write<void>(`${modulePath(m.id)}?version=${m.version}`, "DELETE"),
-  reorder: (subjectId: string, items: MaterialModule[]) =>
-    write<void>(`/api/v1/subjects/${enc(subjectId)}/modules:reorder`, "PUT", {
+  createModule: (subjectId: string, title: string) =>
+    sendWrite<MaterialModule>(`/api/v1/subjects/${encodePathSegment(subjectId)}/modules`, "POST", { title }),
+  renameModule: (m: MaterialModule, title: string) =>
+    sendWrite<void>(buildModulePath(m.id), "PATCH", { title, version: m.version }),
+  deleteModule: (m: MaterialModule) => sendWrite<void>(`${buildModulePath(m.id)}?version=${m.version}`, "DELETE"),
+  reorderModules: (subjectId: string, items: MaterialModule[]) =>
+    sendWrite<void>(`/api/v1/subjects/${encodePathSegment(subjectId)}/modules:reorder`, "PUT", {
       items: items.map(({ id, version }) => ({ id, version })),
     }),
   attachQuiz: (moduleId: string, quizId: string) =>
-    write<void>(`${modulePath(moduleId)}/quizzes`, "POST", { quizId }),
+    sendWrite<void>(`${buildModulePath(moduleId)}/quizzes`, "POST", { quizId }),
   detachQuiz: (moduleId: string, quizId: string) =>
-    write<void>(`${modulePath(moduleId)}/quizzes/${enc(quizId)}`, "DELETE"),
+    sendWrite<void>(`${buildModulePath(moduleId)}/quizzes/${encodePathSegment(quizId)}`, "DELETE"),
 };
-export function materialError(error: unknown): string {
+export function describeMaterialError(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.problem.status === 409)
       return error.problem.code === "MATERIAL_VERSION_CONFLICT" || !error.problem.detail
@@ -105,7 +105,7 @@ const WATCH_HOSTS = [
  * Link chỉ ra một video YouTube (cùng luật với backend): watch, youtu.be, Shorts, embed, live, bản di động, thiếu "https://"
  * hay dùng http đều nhận; phần danh sách phát, thời điểm phát bị bỏ qua. Link chỉ là danh sách phát thì không nhận.
  */
-export function validYoutube(value: string): boolean {
+export function isValidYoutubeUrl(value: string): boolean {
   try {
     const text = value.trim();
     const url = new URL(text.includes("://") ? text : `https://${text}`);

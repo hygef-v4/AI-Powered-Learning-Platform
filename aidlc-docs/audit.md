@@ -14376,3 +14376,192 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **Context**: Tích hợp vào staging.
 
 ---
+
+## Rà soát quy ước mã nguồn U04/U13/U14
+**Timestamp**: 2026-11-15T09:20:05Z
+**Requested by:** Hải Nam
+**User Input**: "check giúp tôi các phần code của unit 04, 13, 14 đã theo quy tắc của code-conventions.md chưa"
+**AI Response**: "Rà soát chỉ đọc backend subjects/materials/announcements/notifications và frontend features tương ứng theo code-conventions.md. Đạt: tên type/file/package, tiền tố I của interface, không có thân method một dòng, thụt lề 4/2 spaces, test đúng hậu tố. Chưa đạt: field dependency service đặt tên chung (service, commands, queries, reads, statuses, modules, notifications, emails, delivery) và interface dependency chưa theo type (repository, classes, accounts, events, sse); nhiều method controller/service/repository là danh từ hoặc động từ thiếu đối tượng (detail, classes, information, manager, status, subject, mine, teaching, unread, read, put, get, list, create, versions, stalePending, proposalLink); dòng code >100 ký tự tập trung ở U13 (MaterialRepositoryAdapter viết lại 2026-11-10, Material, MaterialService, MaterialCommands, MaterialModuleService thụt lề quá sâu); frontend hooks/subjectMutation.tsx chứa hook nhưng không đặt use..., components/moduleNav.tsx chứa component nhưng tên file lowerCamelCase, hàm danh từ (materialError, announcementError, subjectProblem, moduleContext, token, preferences, count). JPA còn ở U04, module U13 và U14 là khoảng cách migration đã ghi trong persistence-conventions.md. Không sửa code."
+**Context**: Rà soát quy ước (ngoài luồng stage AI-DLC), không thay đổi mã nguồn.
+
+---
+
+## Quy ước U04/U13/U14 — yêu cầu sửa, Workspace Detection
+**Timestamp**: 2026-11-15T09:24:51Z
+**Requested by:** Hải Nam
+**User Input**: "sửa giúp tôi"
+**AI Response**: "Bắt đầu workflow AI-DLC cho refactor quy ước mã nguồn U04/U13/U14. Workspace Detection: brownfield, aidlc-state.md có sẵn, dùng lại tài liệu reverse engineering hiện hành; nhánh hiện tại staging, working tree chỉ có audit.md đã sửa. Extension Configuration giữ nguyên (Security/Resiliency bật, PBT tắt). Chuyển sang Requirements Analysis (Minimal)."
+**Context**: Workspace Detection.
+
+---
+
+## Quy ước U04/U13/U14 — Requirements Analysis, câu hỏi phạm vi
+**Timestamp**: 2026-11-15T09:24:51Z
+**Requested by:** Hải Nam
+**User Input**: "sửa giúp tôi"
+**AI Response**: "Intent: refactor đặt tên/trình bày theo code-conventions.md, không đổi hành vi. Độ sâu Minimal. Tạo aidlc-docs/inception/requirements/2026-11-15-u04-u13-u14-conventions-questions.md với 5 câu: phạm vi, mức đổi tên method, public contract U04, JPA còn lại, nhánh làm việc. Chờ người dùng trả lời."
+**Context**: Requirements Analysis — GATE chờ câu trả lời.
+
+---
+
+## Quy ước U04/U13/U14 — câu trả lời Requirements Analysis
+**Timestamp**: 2026-11-15T09:27:37Z
+**Requested by:** Hải Nam
+**User Input**: "4 câu đầu theo khuyến nghị, câu 5 thực hiện trên nhánh fix/code-conventions-u04-u13-u14"
+**AI Response**: "Ghi Q1–Q4 = A, Q5 = nhánh fix/code-conventions-u04-u13-u14 (đã tồn tại, đang checkout, cùng commit staging d5c32804). Viết yêu cầu CC-01…06 (aidlc-docs/inception/requirements/2026-11-15-u04-u13-u14-conventions.md) và execution plan (aidlc-docs/inception/plans/2026-11-15-u04-u13-u14-conventions-execution-plan.md): chỉ chạy Code Generation (một kế hoạch gộp U04→U13→U14→frontend) và Build and Test; bỏ qua User Stories, Application Design, Units Generation, Functional Design, NFR, Infrastructure."
+**Context**: Requirements Analysis và Workflow Planning.
+
+---
+
+## Quy ước U04/U13/U14 — yêu cầu duyệt Requirements và Workflow Planning
+**Timestamp**: 2026-11-15T09:28:42Z
+**Requested by:** Hải Nam
+**User Input**: "(chưa có — đang chờ duyệt)"
+**AI Response**: "Đề nghị người dùng duyệt yêu cầu CC-01…06 và execution plan, hoặc yêu cầu thay đổi (gồm thêm/bớt stage, tách Code Generation theo từng unit)."
+**Context**: Approval prompt — Requirements Analysis và Workflow Planning.
+
+---
+
+## Quy ước U04/U13/U14 — duyệt Requirements và Workflow Planning
+**Timestamp**: 2026-11-15T09:29:55Z
+**Requested by:** Hải Nam
+**User Input**: "Duyệt cả hai"
+**AI Response**: "Ghi duyệt yêu cầu CC-01…06 và execution plan (Code Generation gộp U04→U13→U14→frontend, Build and Test). Bắt đầu Code Generation Part 1: lập danh mục đổi tên chi tiết."
+**Context**: Requirements Analysis và Workflow Planning đã duyệt; vào Code Generation Part 1.
+
+---
+
+## Quy ước U04/U13/U14 — Code Generation Part 1, yêu cầu duyệt kế hoạch
+**Timestamp**: 2026-11-15T09:34:22Z
+**Requested by:** Hải Nam
+**User Input**: "(chưa có — đang chờ duyệt)"
+**AI Response**: "Tạo kế hoạch 12 bước kèm danh mục đổi tên U04/U13/U14 backend và frontend: aidlc-docs/construction/plans/code-generation-plan/2026-11-15-u04-u13-u14-code-conventions-code-generation-plan.md. Giữ contract, method framework, @Bean, factory, logger log. Đề nghị người dùng duyệt kế hoạch hoặc yêu cầu thay đổi."
+**Context**: Code Generation Part 1 — approval prompt.
+
+---
+
+## Quy ước U04/U13/U14 — duyệt kế hoạch Code Generation
+**Timestamp**: 2026-11-15T09:35:28Z
+**Requested by:** Hải Nam
+**User Input**: "Duyệt kế hoạch"
+**AI Response**: "Ghi duyệt kế hoạch 12 bước; bắt đầu Code Generation Part 2 từ bước 1 (U04 backend main)."
+**Context**: Code Generation Part 1 đã duyệt; vào Part 2.
+
+---
+
+## Quy ước U04/U13/U14 — Code Generation Part 2 hoàn tất
+**Timestamp**: 2026-11-15T10:56:56Z
+**Requested by:** Hải Nam
+**User Input**: "(không có — AI hoàn tất các bước đã duyệt)"
+**AI Response**: "Hoàn tất 12/12 bước kế hoạch: đổi tên field, method, biến và callback UI theo code-conventions.md cho U04 subjects, U13 materials, U14 announcements/notifications (backend main/test, frontend/test); git mv useSubjectMutation.tsx và ModuleNav.tsx; xuống dòng code dài hơn 100 ký tự. Giữ contract subjects.contract, method hiện thực interface, @Bean, factory, URL/JSON/SQL/sự kiện/mã lỗi. Kiểm tra: backend mvn clean test 493 test, 0 lỗi, 40 bỏ qua do không có Docker; frontend tsc, ESLint sạch, Vitest bốn feature 23 file 178 test đạt; toàn bộ Vitest 1087/1092 khi chạy song song, 5 file lỗi chạy lại riêng đạt 72/72. Tạo 3 tóm tắt code trong construction/u04|u13|u14/code/2026-11-15-code-conventions-summary.md. Chưa commit."
+**Context**: Code Generation Part 2 — hoàn tất, chuẩn bị yêu cầu duyệt.
+
+---
+
+## Quy ước U04/U13/U14 — Code Generation, yêu cầu duyệt code
+**Timestamp**: 2026-11-15T10:56:56Z
+**Requested by:** Hải Nam
+**User Input**: "(chưa có — đang chờ duyệt)"
+**AI Response**: "Trình bày thông điệp hoàn tất Code Generation chuẩn hai lựa chọn: Request Changes hoặc Continue to Next Stage (Build and Test)."
+**Context**: Code Generation — approval prompt.
+
+---
+
+## Quy ước U04/U13/U14 — duyệt code, vào Build and Test
+**Timestamp**: 2026-11-15T11:23:27Z
+**Requested by:** Hải Nam
+**User Input**: "Continue to Next Stage"
+**AI Response**: "Ghi duyệt Code Generation; bắt đầu Build and Test: chạy mvn -o -B verify đầy đủ, frontend lint, typecheck, Vitest, build; ghi kết quả vào construction/build-and-test/."
+**Context**: Code Generation đã duyệt; vào Build and Test.
+
+---
+
+## Quy ước U04/U13/U14 — Build and Test, build lại Docker
+**Timestamp**: 2026-11-15T11:33:57Z
+**Requested by:** Hải Nam
+**User Input**: "build lại docker rồi tiếp tục"
+**AI Response**: "Docker Desktop đã khởi động (engine 29.7.2, chưa có image hay volume nào). Chạy docker compose -f infra/docker-compose.yml -f infra/docker-compose.local.yml --env-file infra/.env.local up --build -d theo README, rồi tiếp tục Build and Test (mvn -o -B verify có Testcontainers, chạy lại các test Vitest bị timeout, npm run build)."
+**Context**: Build and Test — dựng lại stack local trước khi chạy backend verify.
+
+---
+
+## Quy ước U04/U13/U14 — Build and Test hoàn tất, yêu cầu duyệt
+**Timestamp**: 2026-11-15T12:06:32Z
+**Requested by:** Hải Nam
+**User Input**: "(chưa có — đang chờ duyệt)"
+**AI Response**: "Dựng lại Docker stack platform (lần up đầu RabbitMQ chưa healthy, lần hai đủ 8 service healthy; /health và nginx 200). mvn -o -B clean verify qua 14 phút 20 giây: 2.426 test, 0 failure/error/skip; assert-required-backend-tests.ps1 qua 5 suite, 57 ca integration. Frontend lint, tsc, npm run build qua; Vitest đầy đủ 1.075/1.092, 17 test timeout 5 giây khi Docker đang khởi động; chạy lại 13 file 137/142, 3 file còn lại với --testTimeout=60000 qua 60/60, không import feature đã sửa. E2E u04-u13-u14 chưa chạy vì script chỉ nhận stack cô lập, từ chối cổng 8088. Kết quả: construction/build-and-test/2026-11-15-u04-u13-u14-code-conventions-results.md. Hỏi: Build and test instructions complete. Ready to proceed to Operations stage? Chưa commit."
+**Context**: Build and Test — approval prompt.
+
+---
+
+## Quy ước U04/U13/U14 — Build and Test, chạy e2e trước
+**Timestamp**: 2026-11-15T12:12:38Z
+**Requested by:** Hải Nam
+**User Input**: "Run e2e first"
+**AI Response**: "Dựng stack cô lập Docker Compose project conv041314 (image platform-*:local vừa build, nginx 39088, backend 39080, PostgreSQL 35434, Mailpit 39025, database mới, cấu hình .tmp/conv041314/), mật khẩu thử sinh ngẫu nhiên; chạy scripts/e2e/u04-u13-u14.mjs và ghi kết quả."
+**Context**: Build and Test — e2e U04/U13/U14 trên stack cô lập trước khi sang Operations.
+
+---
+
+## Quy ước U04/U13/U14 — e2e hoàn tất, yêu cầu duyệt Build and Test
+**Timestamp**: 2026-11-15T12:19:55Z
+**Requested by:** Hải Nam
+**User Input**: "(chưa có — đang chờ duyệt)"
+**AI Response**: "Stack cô lập conv041314 lên sau lần up thứ hai (RabbitMQ chậm), worker chậm 131 giây nên restart thì healthy. scripts/e2e/u04-u13-u14.mjs qua 40/40 (fixture 1, U04 9, U13 17, U14 14), exit 0. Cập nhật file kết quả Build and Test và aidlc-state. Hỏi lại: Build and test instructions complete. Ready to proceed to Operations stage? Chưa commit."
+**Context**: Build and Test — approval prompt sau e2e.
+
+---
+
+## Quy ước U04/U13/U14 — duyệt Build and Test, vào Operations
+**Timestamp**: 2026-11-15T12:21:14Z
+**Requested by:** Hải Nam
+**User Input**: "Proceed to Operations"
+**AI Response**: "Ghi duyệt Build and Test. Operations là giai đoạn giữ chỗ theo operations.md, không có bước nào; workflow AIDLC cho U04/U13/U14 kết thúc. Thay đổi vẫn chưa commit; triển khai theo quy trình commit, PR và merge vào staging hiện có khi người dùng yêu cầu."
+**Context**: Build and Test đã duyệt; Operations (placeholder) hoàn tất workflow.
+
+---
+
+## Quy ước U04/U13/U14 — commit thay đổi
+**Timestamp**: 2026-11-15T12:25:48Z
+**Requested by:** Hải Nam
+**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
+**AI Response**: "Rà soát cây làm việc: 161 file (151 sửa, 2 đổi tên, 8 file tài liệu mới), tất cả thuộc phạm vi U04/U13/U14."
+**Context**: Sau Operations — chuẩn bị commit trên nhánh fix/code-conventions-u04-u13-u14.
+
+---
+
+## Quy ước U04/U13/U14 — chia commit nhỏ
+**Timestamp**: 2026-11-15T12:25:48Z
+**Requested by:** Hải Nam
+**User Input**: "chia thành các commit nhỏ, không push"
+**AI Response**: "Chia 10 commit: backend subjects, materials, announcements, notifications; frontend subjects, materials, announcements và notifications; tài liệu yêu cầu và kế hoạch, tóm tắt code, Build and Test cùng state và audit. Tách hunk của RequirementsCoverageIntegrationTest theo unit để mỗi commit compile được; kiểm từng commit trong worktree tạm. Không push."
+**Context**: Commit cục bộ, không push.
+
+---
+
+## Review PR staging lên main — PR 87
+**Timestamp**: 2026-11-15T13:37:25Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi review pr trên đã thay đổi gì, có vấn đề gì ko trc khi tôi merge vào main"
+**AI Response**: "Review ghim base 3b86e57d và head 4b46daea: 33 commit, 369 file. Ngoài MSSV/học kỳ/chấm thành viên/hiển thị bài đã đóng còn có refactor quy ước U04/U13/U14. CI run 43719011999 đúng head: backend, frontend, deploy-script success; images skipped đúng PR. Chạy lại 5 file Vitest liên quan: 115/115 qua. Xác nhận P2 mất draft thành viên: nhập căn cứ -> lưu điểm nhóm thành công -> refresh GET lỗi -> useGradingWorkspace.ts:207 đặt members=[] -> MemberRow bị unmount -> retry tải lại không còn draft. Test hồi quy tạm trên GradingWorkspacePage thất bại đúng lỗi (expected căn cứ chưa lưu, actual chuỗi rỗng); đã xóa test tạm. Đề nghị giữ draft qua lỗi refresh, vẫn khóa thao tác ghi đến khi có phiên bản mới. Hai finding Standards P3: MaterialService còn biến m trong phạm vi dài (CC-03), ClassTermPolicy có method mới termOf/yearOf/seasonRank không theo động từ + đối tượng. Không phát hiện regression nghiệp vụ trong refactor U04/U13/U14 hoặc lỗi spec khác đã xác nhận. Lưu ý migration có starts_on NOT NULL không có default nên rollback image cũ không đủ cho chức năng tạo lớp, theo giới hạn runbook hiện có. Không sửa mã nguồn, không bình luận GitHub, không merge/deploy; chỉ append audit local."
+**Context**: Review chỉ đọc theo ponytail-review và code-review (hai góc Standards/Spec). Security/Resiliency xem trong phạm vi diff, không chứng nhận toàn hệ thống; PBT disabled nên bỏ qua. Chưa chạy lại full backend/frontend/e2e hoặc kiểm database production.
+
+---
+
+## U09 — sửa mất bản nháp thành viên sau refresh lỗi
+**Timestamp**: 2026-11-15T13:43:20Z
+**Requested by:** Quang Hung
+**User Input**: "$ponytail:ponytail giúp tôi sửa lại lỗi này trước"
+**AI Response**: "Tiếp tục thiết kế giữ draft đã duyệt theo yêu cầu sửa P2. Tạo nhánh fix/grading-member-drafts từ staging, giữ audit review đang có. Thêm regression test, chạy RED: sau save nhóm thành công/refresh lỗi không còn ô Căn cứ đánh giá. Sửa một dòng useGradingWorkspace: giữ members và đặt editable=false thay vì members=[]. Test GREEN: giữ điểm/mức/căn cứ, cảnh báo rời trang, khóa ghi/công bố qua refresh lỗi lặp lại và lưu bằng version mới khi reload thành công. Chạy grading/shared document/assignmentwork: 306/306 test, 33 file qua; ESLint hai file sửa sạch. npm run typecheck lỗi cache .next/types của route cũ; typecheck toàn src/tests bằng config tạm loại cache qua, đã xóa config tạm. Tự review và cập nhật kế hoạch/kết quả/state. Không sửa backend/schema hoặc hai P3, không commit/push/merge/deploy."
+**Context**: Sửa tiếp Code Generation và kiểm chứng theo thiết kế hiện có, phạm vi đã được yêu cầu trực tiếp. Security/Resiliency giữ phân quyền/version và khóa ghi khi chưa cập nhật, PBT disabled nên bỏ qua. Chưa chạy live browser/e2e/full suite/build.
+
+---
+
+## U09 — commit bản sửa giữ draft thành viên
+**Timestamp**: 2026-11-15T13:47:17Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit"
+**AI Response**: "Commit bản sửa giữ draft thành viên sau refresh lỗi cùng regression test, kế hoạch, kết quả, state và audit trên nhánh fix/grading-member-drafts. Kiểm lại diff không có thay đổi ngoài phạm vi; 65/65 test workspace, preserve-grading và MemberContributionPanel qua, git diff --check sạch. Không push/merge/deploy."
+**Context**: Commit cục bộ theo yêu cầu; kiểm thử rộng 306/306 và giới hạn cache Next giữ như báo cáo trước.
+
+---

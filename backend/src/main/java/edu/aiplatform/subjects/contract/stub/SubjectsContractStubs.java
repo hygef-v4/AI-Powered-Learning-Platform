@@ -64,27 +64,27 @@ public class SubjectsContractStubs {
                 new ISubjectClasses() {
                     @Override
                     public List<SubjectClassSummary> listClassesOfSubject(UUID subjectId) {
-                        throw classesUnavailable();
+                        throw createClassesUnavailableError();
                     }
 
                     @Override
                     public Map<UUID, Integer> countClasses(Collection<UUID> subjectIds) {
-                        throw classesUnavailable();
+                        throw createClassesUnavailableError();
                     }
 
                     @Override
                     public int countUnarchivedClasses(UUID subjectId) {
-                        throw classesUnavailable();
+                        throw createClassesUnavailableError();
                     }
 
                     @Override
                     public List<UUID> archiveClassesOfSubject(UUID subjectId, Actor actor) {
-                        throw classesUnavailable();
+                        throw createClassesUnavailableError();
                     }
                 });
     }
 
-    private static ApiException classesUnavailable() {
+    private static ApiException createClassesUnavailableError() {
         return ApiException.unavailable(
                 "SUBJECT_CLASSES_UNAVAILABLE", "Chưa kiểm tra được lớp của môn. Hãy thử lại sau");
     }

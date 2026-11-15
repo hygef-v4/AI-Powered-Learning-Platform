@@ -4,15 +4,29 @@ import { useRouter } from "next/navigation";
 import { useId, useState, type ReactNode } from "react";
 import { getQuiz, reopenQuiz } from "@/features/quizzes/api";
 import { QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "@/features/quizzes/model/labels";
-import { Button, Card, cx, Dialog, Field, Icon, IconButton, Menu, MenuItem, PageHeader, Pill, showToast, TextInput } from "@/shared/ui";
-import { ArchiveItemDialog, ModuleItemDialog, removalAction, removalMessage } from "./MaterialDialogs";
-import { materialError, moduleApi } from "../api";
+import {
+  Button,
+  Card,
+  Dialog,
+  Field,
+  Icon,
+  IconButton,
+  Menu,
+  MenuItem,
+  PageHeader,
+  Pill,
+  TextInput,
+  cx,
+  showToast,
+} from "@/shared/ui";
+import { ArchiveItemDialog, ModuleItemDialog, resolveRemovalAction, describeRemoval } from "./MaterialDialogs";
+import { describeMaterialError, moduleApi } from "../api";
 import { useModuleCollapse } from "../model/moduleCollapse";
 import {
-  itemHref,
-  itemIcon,
-  itemKey,
-  itemTitle,
+  buildItemHref,
+  resolveItemIcon,
+  buildItemKey,
+  resolveItemTitle,
   useModuleOutline,
   type OutlineItem,
 } from "../model/outline";
@@ -55,7 +69,7 @@ export function ModuleBoard({
   const writable = staff && !readOnly;
   const canCreate = scope.kind === "subject" && !readOnly && !!data.outline;
 
-  async function run(
+  async function runAction(
     action: () => Promise<unknown>,
     message?: string,
     tone: "success" | "danger" = "success",
@@ -69,23 +83,23 @@ export function ModuleBoard({
       setDialog(null);
       data.reload();
     } catch (e) {
-      setError(materialError(e));
+      setError(describeMaterialError(e));
     } finally {
       setBusy(false);
     }
   }
-  function move(index: number, offset: number) {
+  function handleMove(index: number, offset: number) {
     if (scope.kind !== "subject") return;
     const order = outline.map((m) => m.module);
     const [moved] = order.splice(index, 1);
     order.splice(index + offset, 0, moved!);
-    void run(() => moduleApi.reorder(scope.subjectId, order));
+    void runAction(() => moduleApi.reorderModules(scope.subjectId, order));
   }
   const closed = () => {
     setDialog(null);
     setError("");
   };
-  const saved = (message: string, tone: "success" | "danger" = "success") => {
+  const handleSaved = (message: string, tone: "success" | "danger" = "success") => {
     setDialog(null);
     showToast(message, tone);
     data.reload();
@@ -171,7 +185,7 @@ export function ModuleBoard({
                       icon="chevron_left"
                       className="[&>svg]:rotate-90"
                       disabled={busy || index === 0}
-                      onClick={() => move(index, -1)}
+                      onClick={() => handleMove(index, -1)}
                     >
                       Lên trên
                     </MenuItem>
@@ -179,7 +193,7 @@ export function ModuleBoard({
                       icon="chevron_right"
                       className="[&>svg]:rotate-90"
                       disabled={busy || index === outline.length - 1}
-                      onClick={() => move(index, 1)}
+                      onClick={() => handleMove(index, 1)}
                     >
                       Xuống dưới
                     </MenuItem>
@@ -221,7 +235,7 @@ export function ModuleBoard({
                 )}
                 {items.map((item) => (
                   <ModuleRow
-                    key={itemKey(item)}
+                    key={buildItemKey(item)}
                     item={item}
                     scope={scope}
                     staff={staff}
@@ -235,7 +249,7 @@ export function ModuleBoard({
                     busy={busy}
                     onReopen={() =>
                       item.kind === "quiz" &&
-                      void run(() => reopen(item.quiz.quizId, scope), "Đã mở lại quiz")
+                      void runAction(() => reopen(item.quiz.quizId, scope), "Đã mở lại quiz")
                     }
                     onEdit={() => setDialog({ type: "item", module, item })}
                     onArchive={() => setDialog({ type: "archive", item })}
@@ -254,7 +268,7 @@ export function ModuleBoard({
           error={error}
           onClose={closed}
           onSubmit={(name) =>
-            void run(() => moduleApi.create(scope.subjectId, name), "Đã thêm module")
+            void runAction(() => moduleApi.createModule(scope.subjectId, name), "Đã thêm module")
           }
         />
       )}
@@ -266,7 +280,7 @@ export function ModuleBoard({
           error={error}
           onClose={closed}
           onSubmit={(name) =>
-            void run(() => moduleApi.rename(dialog.module, name), "Đã lưu thay đổi")
+            void runAction(() => moduleApi.renameModule(dialog.module, name), "Đã lưu thay đổi")
           }
         />
       )}
@@ -282,7 +296,7 @@ export function ModuleBoard({
               variant="danger"
               disabled={busy}
               onClick={() =>
-                void run(() => moduleApi.remove(dialog.module), "Đã xóa module", "danger")
+                void runAction(() => moduleApi.deleteModule(dialog.module), "Đã xóa module", "danger")
               }
               data-testid="module-delete-confirm"
             >
@@ -300,12 +314,12 @@ export function ModuleBoard({
       )}
       {dialog?.type === "item" && scope.kind !== "student" && (
         <ModuleItemDialog
-          key={dialog.item ? itemKey(dialog.item) : dialog.module.id}
+          key={dialog.item ? buildItemKey(dialog.item) : dialog.module.id}
           scope={scope}
           moduleId={dialog.module.id}
           item={dialog.item}
           onClose={closed}
-          onSaved={(message) => saved(message)}
+          onSaved={(message) => handleSaved(message)}
         />
       )}
       {dialog?.type === "archive" && (
@@ -317,7 +331,7 @@ export function ModuleBoard({
           }
           classId={scope.kind === "subject" ? undefined : scope.classId}
           onClose={closed}
-          onSaved={() => saved(removalMessage(dialog.item), "danger")}
+          onSaved={() => handleSaved(describeRemoval(dialog.item), "danger")}
         />
       )}
     </div>
@@ -377,15 +391,15 @@ function ModuleRow({
   onArchive: () => void;
 }) {
   const router = useRouter();
-  const href = itemHref(item, scope);
+  const href = buildItemHref(item, scope);
   const quiz = item.kind === "quiz" ? item.quiz : null;
   const material = item.kind === "material" ? item.material : null;
-  const title = itemTitle(item);
-  const removal = removalAction(item);
+  const title = resolveItemTitle(item);
+  const removal = resolveRemovalAction(item);
   return (
     <li
       onClick={() => router.push(href)}
-      data-testid={`module-row-${itemKey(item)}`}
+      data-testid={`module-row-${buildItemKey(item)}`}
       className="group flex cursor-pointer items-center gap-3 border-t border-line px-5 py-2.5 transition-colors hover:bg-canvas"
     >
       <span
@@ -399,11 +413,11 @@ function ModuleRow({
               : "bg-primary-soft text-primary-ink",
         )}
       >
-        <Icon name={itemIcon(item)} size={16} />
+        <Icon name={resolveItemIcon(item)} size={16} />
       </span>
       <Link
         href={href}
-        data-testid={`module-item-${itemKey(item)}`}
+        data-testid={`module-item-${buildItemKey(item)}`}
         onClick={(event) => event.stopPropagation()}
         className="min-w-0 flex-1 truncate text-[13.5px] font-semibold text-ink group-hover:text-primary-ink"
       >
@@ -461,7 +475,7 @@ function ModuleNameDialog({
   const id = useId();
   const [name, setName] = useState(initial);
   const [invalid, setInvalid] = useState(false);
-  function submit() {
+  function handleSubmit() {
     if (!name.trim()) {
       setInvalid(true);
       return;
@@ -475,7 +489,7 @@ function ModuleNameDialog({
       onClose={onClose}
       dismissible={!busy}
       footer={
-        <Button variant="primary" disabled={busy} onClick={submit} data-testid="module-name-save">
+        <Button variant="primary" disabled={busy} onClick={handleSubmit} data-testid="module-name-save">
           Lưu
         </Button>
       }
@@ -483,7 +497,7 @@ function ModuleNameDialog({
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          submit();
+          handleSubmit();
         }}
         noValidate
         className="flex flex-col gap-3"

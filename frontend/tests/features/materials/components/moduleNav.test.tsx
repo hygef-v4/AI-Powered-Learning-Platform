@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { apiFetch } from "@/shared/api/client";
-import { moduleContext } from "@/features/materials/components/moduleNav";
+import { resolveModuleContext } from "@/features/materials/components/ModuleNav";
 
 vi.mock("@/shared/api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/shared/api/client")>()),
@@ -27,7 +27,7 @@ function backend(quiz: { subjectId: string; scope: string; classId: string | nul
 }
 
 function nav(search = "") {
-  const context = moduleContext({ pathname: "/quizzes/q1", search: new URLSearchParams(search) });
+  const context = resolveModuleContext({ pathname: "/quizzes/q1", search: new URLSearchParams(search) });
   render(<>{context?.header}</>);
 }
 

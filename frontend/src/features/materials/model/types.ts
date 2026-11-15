@@ -75,7 +75,7 @@ export const textLabels: Record<TextStatus, string> = {
   NO_TEXT: "Không có chữ",
   FAILED: "Lỗi",
 };
-export function fileDescription(m: Material): string {
+export function describeFile(m: Material): string {
   if (m.kind === "YOUTUBE_LINK") return "YouTube";
   const type = m.current.fileName?.split(".").pop()?.toUpperCase() ?? "Tệp";
   const bytes = m.current.byteSize;
@@ -84,6 +84,6 @@ export function fileDescription(m: Material): string {
     ? `${type} · ${(bytes / 1024 / 1024).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} MB`
     : type;
 }
-export function materialHref(id: string, classId?: string, view = false) {
+export function buildMaterialHref(id: string, classId?: string, view = false) {
   return `/materials/${encodeURIComponent(id)}${view ? "/view" : ""}${classId ? `?classId=${encodeURIComponent(classId)}` : ""}`;
 }

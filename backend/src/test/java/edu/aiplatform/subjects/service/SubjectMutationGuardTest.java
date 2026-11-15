@@ -15,18 +15,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.dao.CannotAcquireLockException;
 
 class SubjectMutationGuardTest {
-    private final ISubjectRepository repository = mock(ISubjectRepository.class);
-    private final SubjectMutationGuard guard = new SubjectMutationGuard(repository);
+    private final ISubjectRepository subjectRepository = mock(ISubjectRepository.class);
+    private final SubjectMutationGuard subjectMutationGuard =
+            new SubjectMutationGuard(subjectRepository);
     private final UUID id = UUID.randomUUID();
 
     @Test
     void activeReturnsContractRefUsingBoundedLock() {
         Subject subject = subject();
-        when(repository.findByIdForUpdate(eq(id), any(Duration.class)))
+        when(subjectRepository.findByIdForUpdate(eq(id), any(Duration.class)))
                 .thenReturn(Optional.of(subject));
-        var ref = guard.lockActive(id, Duration.ofSeconds(5));
+        var ref = subjectMutationGuard.lockActive(id, Duration.ofSeconds(5));
         assertThat(ref.subjectId()).isEqualTo(id);
-        verify(repository)
+        verify(subjectRepository)
                 .findByIdForUpdate(
                         eq(id),
                         argThat(
@@ -38,27 +39,31 @@ class SubjectMutationGuardTest {
 
     @Test
     void archivedAndMissingCannotMutate() {
-        when(repository.findByIdForUpdate(eq(id), any(Duration.class)))
+        when(subjectRepository.findByIdForUpdate(eq(id), any(Duration.class)))
                 .thenReturn(Optional.empty());
-        code(() -> guard.lockActive(id, Duration.ofSeconds(1)), "SUBJECT_NOT_FOUND");
-        when(repository.findByIdForUpdate(eq(id), any(Duration.class)))
+        code(() -> subjectMutationGuard.lockActive(id, Duration.ofSeconds(1)), "SUBJECT_NOT_FOUND");
+        when(subjectRepository.findByIdForUpdate(eq(id), any(Duration.class)))
                 .thenReturn(Optional.of(subject().archive(Instant.now())));
-        code(() -> guard.lockActive(id, Duration.ofSeconds(1)), "SUBJECT_ARCHIVED");
+        code(() -> subjectMutationGuard.lockActive(id, Duration.ofSeconds(1)), "SUBJECT_ARCHIVED");
     }
 
     @Test
     void nullIdOrInvalidBudgetDoesNotReadDatabase() {
-        code(() -> guard.lockActive(null, Duration.ofSeconds(1)), "SUBJECT_ID_REQUIRED");
-        code(() -> guard.lockActive(id, Duration.ZERO), "SUBJECT_TIMEOUT_INVALID");
-        code(() -> guard.lockActive(id, null), "SUBJECT_TIMEOUT_INVALID");
-        verifyNoInteractions(repository);
+        code(
+                () -> subjectMutationGuard.lockActive(null, Duration.ofSeconds(1)),
+                "SUBJECT_ID_REQUIRED");
+        code(() -> subjectMutationGuard.lockActive(id, Duration.ZERO), "SUBJECT_TIMEOUT_INVALID");
+        code(() -> subjectMutationGuard.lockActive(id, null), "SUBJECT_TIMEOUT_INVALID");
+        verifyNoInteractions(subjectRepository);
     }
 
     @Test
     void lockErrorIsFailClosed() {
-        when(repository.findByIdForUpdate(eq(id), any(Duration.class)))
+        when(subjectRepository.findByIdForUpdate(eq(id), any(Duration.class)))
                 .thenThrow(new CannotAcquireLockException("SQL"));
-        code(() -> guard.lockActive(id, Duration.ofSeconds(1)), "SUBJECT_LIFECYCLE_UNAVAILABLE");
+        code(
+                () -> subjectMutationGuard.lockActive(id, Duration.ofSeconds(1)),
+                "SUBJECT_LIFECYCLE_UNAVAILABLE");
     }
 
     private Subject subject() {

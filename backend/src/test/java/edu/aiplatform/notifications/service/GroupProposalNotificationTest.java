@@ -33,18 +33,19 @@ class GroupProposalNotificationTest {
     private final UUID proposalId = UUID.randomUUID();
     private final UUID student = UUID.randomUUID();
     private final UUID teacher = UUID.randomUUID();
-    private final IClassAccess classes = mock(IClassAccess.class);
-    private final IAccountLookup accounts = mock(IAccountLookup.class);
-    private final RecipientResolver resolver = new RecipientResolver(classes, accounts);
+    private final IClassAccess classAccess = mock(IClassAccess.class);
+    private final IAccountLookup accountLookup = mock(IAccountLookup.class);
+    private final RecipientResolver recipientResolver =
+            new RecipientResolver(classAccess, accountLookup);
 
     @BeforeEach
     void setUp() {
-        when(classes.getClassRef(classId)).thenReturn(Optional.of(
+        when(classAccess.getClassRef(classId)).thenReturn(Optional.of(
                 new ClassRef(classId, UUID.randomUUID(), "C", "Class", ClassStatus.OPEN, teacher, false)));
-        when(classes.isActiveStudent(any(), eq(classId))).thenReturn(true);
-        when(accounts.getContact(student)).thenReturn(Optional.of(
+        when(classAccess.isActiveStudent(any(), eq(classId))).thenReturn(true);
+        when(accountLookup.getContact(student)).thenReturn(Optional.of(
                 new AccountContact(student, "s@example.test", "SV", Role.STUDENT, AccountStatus.ACTIVE)));
-        when(accounts.getContact(teacher)).thenReturn(Optional.of(
+        when(accountLookup.getContact(teacher)).thenReturn(Optional.of(
                 new AccountContact(teacher, "t@example.test", "GV", Role.TEACHER, AccountStatus.ACTIVE)));
     }
 
@@ -52,7 +53,8 @@ class GroupProposalNotificationTest {
     void studentEventsGoToRecipientsAndLinkToMyGroup() {
         for (String type : List.of(EventTypes.GROUP_PROPOSAL_INVITED, EventTypes.GROUP_PROPOSAL_APPROVED,
                 EventTypes.GROUP_PROPOSAL_REJECTED)) {
-            var resolved = resolver.resolve(event(type, List.of(student))).get(0);
+            var resolved =
+                    recipientResolver.resolveRecipients(event(type, List.of(student))).get(0);
             assertThat(resolved.recipients()).containsExactly(student);
             assertThat(resolved.link()).isEqualTo("/classes/" + classId + "/group");
             assertThat(resolved.emailType()).isNull();
@@ -61,7 +63,11 @@ class GroupProposalNotificationTest {
 
     @Test
     void submittedProposalGoesToTheClassTeacher() {
-        var resolved = resolver.resolve(event(EventTypes.GROUP_PROPOSAL_SUBMITTED, List.of(student))).get(0);
+        var resolved =
+                recipientResolver
+                        .resolveRecipients(
+                                event(EventTypes.GROUP_PROPOSAL_SUBMITTED, List.of(student)))
+                        .get(0);
 
         assertThat(resolved.type()).isEqualTo(NotificationType.GROUP_PROPOSAL_SUBMITTED);
         assertThat(resolved.recipients()).containsExactly(teacher);
@@ -75,14 +81,14 @@ class GroupProposalNotificationTest {
         DomainEvent membership = new DomainEvent(1, UUID.randomUUID(), EventTypes.GROUP_MEMBERSHIP_CHANGED, "U12",
                 Instant.now(), null, payload);
 
-        assertThat(resolver.resolve(membership)).isEmpty();
+        assertThat(recipientResolver.resolveRecipients(membership)).isEmpty();
     }
 
     @ParameterizedTest
     @EnumSource(value = NotificationType.class, names = "GROUP_PROPOSAL_.*", mode = EnumSource.Mode.MATCH_ALL)
     void everyProposalTypeHasTitleAndSummary(NotificationType type) {
-        assertThat(NotificationEventService.title(type)).isNotBlank();
-        assertThat(NotificationSummaries.forType(type)).isNotBlank();
+        assertThat(NotificationEventService.resolveTitle(type)).isNotBlank();
+        assertThat(NotificationSummaries.summarizeType(type)).isNotBlank();
     }
 
     private DomainEvent event(String type, List<UUID> recipients) {

@@ -7,31 +7,31 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface IMaterialModuleRepository {
-    Optional<MaterialModule> find(UUID id);
+    Optional<MaterialModule> findModule(UUID id);
 
-    List<MaterialModule> list(UUID subjectId);
+    List<MaterialModule> listModules(UUID subjectId);
 
-    void insert(MaterialModule module);
+    void insertModule(MaterialModule module);
 
-    boolean update(MaterialModule module, long expectedVersion);
+    boolean updateModule(MaterialModule module, long expectedVersion);
 
-    boolean delete(UUID id, long expectedVersion);
+    boolean deleteModule(UUID id, long expectedVersion);
 
     /** Số học liệu đang dùng (của môn và của lớp) trong module. */
-    int activeMaterials(UUID moduleId);
+    int countActiveMaterials(UUID moduleId);
 
     /** Dời học liệu đã lưu trữ sang module khác trước khi xóa module (học liệu luôn phải thuộc một module). */
     void moveArchivedMaterials(UUID fromModuleId, UUID toModuleId);
 
-    int archivedMaterials(UUID moduleId);
+    int countArchivedMaterials(UUID moduleId);
 
-    List<MaterialModule.QuizLink> quizLinks(UUID subjectId);
+    List<MaterialModule.QuizLink> listQuizLinks(UUID subjectId);
 
-    Optional<MaterialModule.QuizLink> quizLink(UUID quizId);
+    Optional<MaterialModule.QuizLink> findQuizLink(UUID quizId);
 
-    void link(MaterialModule.QuizLink link);
+    void linkQuiz(MaterialModule.QuizLink quizLink);
 
-    boolean unlink(UUID moduleId, UUID quizId);
+    boolean unlinkModuleQuiz(UUID moduleId, UUID quizId);
 
     /** Gỡ Quiz khỏi mọi module (Quiz sắp bị xóa). */
     void unlinkQuiz(UUID quizId);

@@ -4,11 +4,11 @@ import { useId, useState, type FormEvent } from "react";
 import { Button, Field, LockedInput, Textarea, TextInput } from "@/shared/ui";
 import { updateSubject } from "../api";
 import {
-  needsSubjectReload,
+  shouldReloadSubject,
   SubjectMutationFeedback,
   useSubjectMutation,
   type SubjectMutationProps,
-} from "../hooks/subjectMutation";
+} from "../hooks/useSubjectMutation";
 import { validateSubjectInformation, type SubjectFieldErrors } from "../model/validation";
 
 /** Sửa tên, mô tả ngay trên thẻ; mã môn khóa. Hủy đưa về giá trị đang lưu, hai nút chỉ bấm được khi đã sửa. */
@@ -23,14 +23,14 @@ export function SubjectEditForm({
   const [description, setDescription] = useState(subject.description ?? "");
   const [errors, setErrors] = useState<SubjectFieldErrors>({});
   const mutation = useSubjectMutation(onAccessError);
-  const conflict = needsSubjectReload(mutation.error);
+  const conflict = shouldReloadSubject(mutation.error);
   const dirty = name !== subject.name || description !== (subject.description ?? "");
-  function reset() {
+  function handleReset() {
     setName(subject.name);
     setDescription(subject.description ?? "");
     setErrors({});
   }
-  function submit(event: FormEvent) {
+  function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (mutation.busy || conflict) return;
     const invalid = validateSubjectInformation({ name, description });
@@ -48,7 +48,7 @@ export function SubjectEditForm({
   }
   return (
     <form
-      onSubmit={submit}
+      onSubmit={handleSubmit}
       noValidate
       aria-busy={mutation.busy}
       data-testid="subject-edit-form"
@@ -91,7 +91,7 @@ export function SubjectEditForm({
       <SubjectMutationFeedback error={mutation.error} onReload={onReload} />
       <div className="flex justify-end gap-2 border-t border-line pt-4">
         <Button
-          onClick={reset}
+          onClick={handleReset}
           disabled={!dirty || mutation.busy}
           data-testid="subject-edit-cancel"
         >

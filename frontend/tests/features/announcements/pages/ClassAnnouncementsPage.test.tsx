@@ -5,7 +5,7 @@ import { announcementsApi } from "@/features/announcements/api";
 import type { Announcement, ClassOption } from "@/features/announcements/model/types";
 vi.mock("@/features/announcements/api", async (original) => ({
   ...(await original<typeof import("@/features/announcements/api")>()),
-  announcementsApi: { list: vi.fn(), create: vi.fn() },
+  announcementsApi: { listAnnouncements: vi.fn(), createAnnouncement: vi.fn() },
 }));
 const classes: ClassOption[] = [
   { classId: "c1", code: "SE1801", subjectCode: "SWD392", canManage: true, studentCount: 30 },
@@ -28,7 +28,7 @@ const item: Announcement = {
 };
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(announcementsApi.list).mockResolvedValue({
+  vi.mocked(announcementsApi.listAnnouncements).mockResolvedValue({
     items: [item],
     classes,
     page: 1,
@@ -38,10 +38,15 @@ beforeEach(() => {
 });
 
 it("trong lớp: không có ô chọn lớp, không ghi mã lớp hay đã sửa; tạo thông báo đăng thẳng vào lớp đó", async () => {
-  vi.mocked(announcementsApi.create).mockResolvedValue(item);
+  vi.mocked(announcementsApi.createAnnouncement).mockResolvedValue(item);
   render(<ClassAnnouncementsPage classId="c1" />);
   const card = await screen.findByTestId("announcement-card");
-  expect(announcementsApi.list).toHaveBeenCalledWith("c1", 1, 20, expect.any(AbortSignal));
+  expect(announcementsApi.listAnnouncements).toHaveBeenCalledWith(
+    "c1",
+    1,
+    20,
+    expect.any(AbortSignal),
+  );
   expect(screen.queryByTestId("announcement-class-filter")).not.toBeInTheDocument();
   expect(screen.getByRole("heading", { name: "Thông báo lớp", level: 1 })).toBeInTheDocument();
   expect(within(card).queryByText("SE1801")).not.toBeInTheDocument();
@@ -62,7 +67,7 @@ it("trong lớp: không có ô chọn lớp, không ghi mã lớp hay đã sửa
   });
   fireEvent.click(within(dialog).getByTestId("announcement-create-submit"));
   await waitFor(() =>
-    expect(announcementsApi.create).toHaveBeenCalledWith("c1", {
+    expect(announcementsApi.createAnnouncement).toHaveBeenCalledWith("c1", {
       title: "Mới",
       body: "Nội dung",
       important: false,
@@ -72,7 +77,7 @@ it("trong lớp: không có ô chọn lớp, không ghi mã lớp hay đã sửa
 });
 
 it("menu chính: lọc theo lớp, ghi mã lớp; popup chọn nhiều lớp ngay dưới Tiêu đề và đăng từng lớp", async () => {
-  vi.mocked(announcementsApi.create).mockResolvedValue(item);
+  vi.mocked(announcementsApi.createAnnouncement).mockResolvedValue(item);
   render(<ClassAnnouncementsPage />);
   const card = await screen.findByTestId("announcement-card");
   expect(screen.getByRole("heading", { name: "Tất cả thông báo", level: 1 })).toBeInTheDocument();
@@ -82,7 +87,12 @@ it("menu chính: lọc theo lớp, ghi mã lớp; popup chọn nhiều lớp nga
   expect(screen.getByTestId("announcement-class-filter")).not.toHaveTextContent("LỚP");
   fireEvent.click(screen.getByRole("menuitem", { name: /SE1802/, hidden: true }));
   await waitFor(() =>
-    expect(announcementsApi.list).toHaveBeenLastCalledWith("c2", 1, 20, expect.any(AbortSignal)),
+    expect(announcementsApi.listAnnouncements).toHaveBeenLastCalledWith(
+      "c2",
+      1,
+      20,
+      expect.any(AbortSignal),
+    ),
   );
 
   fireEvent.click(screen.getByTestId("announcement-create"));
@@ -109,15 +119,15 @@ it("menu chính: lọc theo lớp, ghi mã lớp; popup chọn nhiều lớp nga
   expect(within(dialog).queryByRole("listbox")).not.toBeInTheDocument();
   fireEvent.click(await screen.findByRole("option", { name: /Chọn tất cả/ }));
   fireEvent.click(within(dialog).getByTestId("announcement-create-submit"));
-  await waitFor(() => expect(announcementsApi.create).toHaveBeenCalledTimes(2));
-  expect(vi.mocked(announcementsApi.create).mock.calls.map((call) => call[0])).toEqual([
+  await waitFor(() => expect(announcementsApi.createAnnouncement).toHaveBeenCalledTimes(2));
+  expect(vi.mocked(announcementsApi.createAnnouncement).mock.calls.map((call) => call[0])).toEqual([
     "c1",
     "c2",
   ]);
 });
 
 it("đăng lỗi ở một lớp thì giữ lại đúng lớp đó và báo tên lớp", async () => {
-  vi.mocked(announcementsApi.create).mockImplementation(async (classId) => {
+  vi.mocked(announcementsApi.createAnnouncement).mockImplementation(async (classId) => {
     if (classId === "c2") throw new Error("Lớp đã lưu trữ");
     return item;
   });
@@ -149,7 +159,7 @@ it("100 lớp: ô Lớp đóng chỉ một dòng tóm tắt; mở ra tìm đư�
     canManage: true,
     studentCount: 30,
   }));
-  vi.mocked(announcementsApi.list).mockResolvedValue({
+  vi.mocked(announcementsApi.listAnnouncements).mockResolvedValue({
     items: [],
     classes: many,
     page: 1,
@@ -176,7 +186,7 @@ it("100 lớp: ô Lớp đóng chỉ một dòng tóm tắt; mở ra tìm đư�
 });
 
 it("sinh viên không có nút tạo thông báo", async () => {
-  vi.mocked(announcementsApi.list).mockResolvedValue({
+  vi.mocked(announcementsApi.listAnnouncements).mockResolvedValue({
     items: [{ ...item, canManage: false }],
     classes: classes.map((c) => ({ ...c, canManage: false })),
     page: 1,

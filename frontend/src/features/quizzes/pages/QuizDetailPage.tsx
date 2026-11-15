@@ -2,9 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArchiveItemDialog, ModuleItemDialog, removalAction, removalMessage } from "@/features/materials/components/MaterialDialogs";
+import { ArchiveItemDialog, ModuleItemDialog, resolveRemovalAction, describeRemoval } from "@/features/materials/components/MaterialDialogs";
 import { ModuleNeighbours, useModulePlace, useModuleScope } from "@/features/materials/components/ModulePlace";
-import { boardHref, notifyOutlineChanged, useOutlineChanged } from "@/features/materials/model/outline";
+import { buildBoardHref, notifyOutlineChanged, useOutlineChanged } from "@/features/materials/model/outline";
 import { ApiError } from "@/shared/api/client";
 import { FormattedTextView } from "@/shared/document/FormattedTextView";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
@@ -195,7 +195,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
     ? { kind: "class" as const, classId: quiz.classId } : { kind: "subject" as const, subjectId: quiz.subjectId };
   const moduleQuiz = { quizId: quiz.id, title: quiz.title, status: quiz.status, scope: quiz.scope, classId: quiz.classId, canManage: detail.canManage };
   const moduleItem = { kind: "quiz" as const, quiz: moduleQuiz };
-  const removal = removalAction(moduleItem);
+  const removal = resolveRemovalAction(moduleItem);
 
   return (
     <>
@@ -292,9 +292,9 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
       {dialog === "archive" && <ArchiveItemDialog item={{ quiz: moduleQuiz }} classId={classId ?? undefined} onClose={() => setDialog(null)}
         onSaved={(removed) => {
           setDialog(null);
-          showToast(removalMessage(moduleItem), "danger");
+          showToast(describeRemoval(moduleItem), "danger");
           notifyOutlineChanged();
-          if (removed) router.push(scope ? boardHref(scope) : "/manager/materials");
+          if (removed) router.push(scope ? buildBoardHref(scope) : "/manager/materials");
         }} />}
     </>
   );

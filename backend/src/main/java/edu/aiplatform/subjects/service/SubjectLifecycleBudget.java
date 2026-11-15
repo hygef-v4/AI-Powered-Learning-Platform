@@ -19,7 +19,7 @@ final class SubjectLifecycleBudget {
                         : timeout.toNanos();
     }
 
-    Duration remaining() {
+    Duration calculateRemaining() {
         long left = nanos - (System.nanoTime() - start);
         if (left <= 0) {
             throw ApiException.unavailable(
