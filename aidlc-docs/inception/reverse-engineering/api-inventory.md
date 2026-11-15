@@ -28,6 +28,8 @@ Source snapshot: `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; đối chiếu lạ
 @PutMapping("/manager/classes/{id}/enrollments/{accountId}/status")
 ```
 
+2026-11-14 (D-U04-05, học kỳ của lớp): không thêm annotation. Ba endpoint `GET .../classes` nhận thêm `@RequestParam(required = false) String term` (mẫu `^(SP|SU|FA)[0-9]{2}(-BL5)?$`, sai mẫu trả 400 `INVALID_CLASS_TERM`); `POST /manager/classes` và `PATCH /manager/classes/{id}` bắt buộc `startsOn` (`yyyy-MM-dd`, 2000–2099, sai trả 400 `INVALID_CLASS_START_DATE`) và từ chối `term` do client gửi; `ClassView` thêm `startsOn`, `term`. Mã lớp trùng trong cùng môn và học kỳ trả 409 `CLASS_EXISTS`.
+
 ## [admindashboard/controller/AdminDashboardController.java](../../../backend/src/main/java/edu/aiplatform/admindashboard/controller/AdminDashboardController.java)
 
 ```java
