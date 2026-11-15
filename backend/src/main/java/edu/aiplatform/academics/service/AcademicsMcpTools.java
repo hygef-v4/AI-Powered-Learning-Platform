@@ -1,6 +1,7 @@
 package edu.aiplatform.academics.service;
 
 import edu.aiplatform.ai.contract.*;
+import edu.aiplatform.academics.model.*;
 import edu.aiplatform.academics.repository.*;
 import edu.aiplatform.identity.contract.*;
 import edu.aiplatform.subjects.contract.*;
@@ -26,7 +27,8 @@ public class AcademicsMcpTools implements IMcpToolProvider {
                 McpSchemas.read("list_my_classes",
                         "Tìm lớp được phân công giảng dạy, không gồm lớp ngoài quyền.",
                         McpSchemas.PAGE + ",\"query\":" + McpSchemas.TEXT
-                                + ",\"status\":{\"enum\":[\"DRAFT\",\"OPEN\",\"ARCHIVED\"]}"),
+                                + ",\"status\":{\"enum\":[\"DRAFT\",\"OPEN\",\"ARCHIVED\"]}"
+                                + ",\"term\":{\"type\":\"string\",\"pattern\":\"^(SP|SU|FA)[0-9]{2}(-BL5)?$\"}"),
                 McpSchemas.read("list_my_subjects",
                         "Tìm môn từ lớp được dạy và môn được giao phụ trách.",
                         McpSchemas.PAGE + ",\"query\":" + McpSchemas.TEXT));
@@ -47,11 +49,13 @@ public class AcademicsMcpTools implements IMcpToolProvider {
         if ("list_my_classes".equals(name)) {
             var status = in.choice("status", edu.aiplatform.academics.contract.ClassStatus.class,
                     null);
-            var rows = taught.stream().filter(c -> status == null || c.status() == status).filter(
+            String term = parseTermFilter(in.text("term", ""));
+            var rows = taught.stream().filter(c -> status == null || c.status() == status)
+                    .filter(c -> term == null || term.equals(c.term())).filter(
                     c -> (c.code() + " " + c.name()).toLowerCase(Locale.ROOT).contains(query))
                     .map(c -> Map.of("classId", c.id(), "subjectId", c.subjectId(), "code",
-                            c.code(), "title", c.name(), "status", c.status(), "version",
-                            c.version()))
+                            c.code(), "term", c.term(), "title", c.name(), "status", c.status(),
+                            "version", c.version()))
                     .toList();
             return new McpToolResult(false, McpInput.page(rows, page, size));
         }
@@ -71,5 +75,14 @@ public class AcademicsMcpTools implements IMcpToolProvider {
                         actor.accountId().equals(s.managerId())))
                 .toList();
         return new McpToolResult(false, McpInput.page(rows, page, size));
+    }
+
+    /** Validates the optional term filter like the class list API; malformed values are invalid input. */
+    private static String parseTermFilter(String term) {
+        try {
+            return ClassTermPolicy.parseFilter(term);
+        } catch (AcademicRuleException invalid) {
+            throw McpInput.invalid();
+        }
     }
 }

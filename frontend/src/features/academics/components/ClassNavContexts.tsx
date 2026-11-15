@@ -158,9 +158,9 @@ function ClassNavTree({ scope, id, itemsFor }: { scope: ClassScope; id: string |
   const [classes, setClasses] = useState<NavTreeNode[] | null>(null);
   useEffect(() => {
     const request = new AbortController();
-    // Lớp không còn tên (yêu cầu 2026-11-02): mã môn nhỏ ở trên, mã lớp ở dưới.
+    // Lớp không còn tên (yêu cầu 2026-11-02): `mã môn · học kỳ` nhỏ ở trên (D-U04-05), mã lớp ở dưới.
     academicsApi.listClasses(scope, { size: 100 }, request.signal).then(
-      (list) => setClasses(list.map((item) => ({ id: item.id, code: item.subject.code, name: item.code }))),
+      (list) => setClasses(list.map((item) => ({ id: item.id, code: `${item.subject.code} · ${item.term}`, name: item.code }))),
       () => setClasses((previous) => previous ?? []),
     );
     return () => request.abort();

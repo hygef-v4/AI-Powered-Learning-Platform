@@ -5,6 +5,7 @@ import { formatPoints } from "@/features/assignmentwork/model/attemptResult";
 import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
 import { Button, Section } from "@/shared/ui";
+import { CONTRIBUTION_LEVELS } from "../model/contributionLevels";
 
 type Props = { classId: string; assignmentId: string };
 
@@ -29,6 +30,7 @@ export function StudentPublishedFeedback({ classId, assignmentId, partTitles }: 
   }
   const rank = (id: string) => (order.indexOf(id) < 0 ? Infinity : order.indexOf(id));
   const rows = [...parts.entries()].sort(([a], [b]) => rank(a) - rank(b));
+  const contribution = CONTRIBUTION_LEVELS.find(level => level.value === grade.contributionLevel);
   return <Section title="Kết quả">
     <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
       <div className="flex shrink-0 flex-col justify-center rounded-xl bg-shell px-6 py-4 text-center">
@@ -47,6 +49,10 @@ export function StudentPublishedFeedback({ classId, assignmentId, partTitles }: 
       </ul>}
     </div>
     {grade.memberOverride && <p className="text-xs text-muted">Điểm cá nhân đã được giảng viên điều chỉnh riêng.</p>}
+    {(contribution || grade.contributionReason) && <div className="space-y-1 text-sm">
+      {contribution && <p><strong>Mức đóng góp: {contribution.label}</strong></p>}
+      {grade.contributionReason && <p className="whitespace-pre-wrap wrap-break-word">{grade.contributionReason}</p>}
+    </div>}
     <PublishedFeedback feedback={grade.feedback} summary={grade.structuredSummary ?? null} />
     {items.length > 0 && <PublishedRubricItems items={items} />}
     <StudentGradeDistribution classId={classId} assignmentId={assignmentId} />

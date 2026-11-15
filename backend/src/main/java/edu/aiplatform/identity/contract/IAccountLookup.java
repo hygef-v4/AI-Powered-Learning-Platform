@@ -22,6 +22,14 @@ public interface IAccountLookup {
 
     List<AccountContact> findByEmails(Collection<String> emails);
 
+    /**
+     * U05: tài khoản {@code STUDENT} theo MSSV (BR-U05-57); nhận mã thô, tự chuẩn hóa; mã không tìm thấy thì không có
+     * trong kết quả.
+     */
+    default List<AccountContact> findByStudentCodes(Collection<String> studentCodes) {
+        return List.of();
+    }
+
     Optional<AccountContact> getContact(UUID accountId);
 
     /**

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { matchesPersonQuery } from "@/shared/studentCode";
+import { PersonSubline } from "@/shared/ui/PersonSubline";
 import { createPortal } from "react-dom";
 import { Icon, TextInput } from "@/shared/ui";
 import { useCandidates, type CandidateLoader } from "../hooks/useCandidates";
@@ -34,7 +36,7 @@ export function PersonPicker({ label, value, onChange, people = [], loader, clea
   const [place, setPlace] = useState<{ top: number; left: number; width: number } | null>(null);
   const options = useCandidates(people, search, loader);
   const q = search.trim().toLocaleLowerCase("vi");
-  const rows = options.rows.filter((person) => !q || `${person.name} ${person.email}`.toLocaleLowerCase("vi").includes(q)).slice(0, 20);
+  const rows = options.rows.filter((person) => matchesPersonQuery(person, q)).slice(0, 20);
 
   useEffect(() => {
     if (!open) return;
@@ -81,7 +83,7 @@ export function PersonPicker({ label, value, onChange, people = [], loader, clea
         className="flex w-full cursor-pointer flex-col px-3 py-2 text-left hover:bg-shell aria-selected:bg-primary-soft"
         onMouseDown={(event) => event.preventDefault()} onClick={() => choose(person)}>
         <span className="text-[13px] font-semibold text-ink">{person.name}</span>
-        <span className="text-xs text-muted">{person.email}</span>
+        <PersonSubline studentCode={person.studentCode} email={person.email} />
       </button>)}
     </div>, document.body)}
   </div>;

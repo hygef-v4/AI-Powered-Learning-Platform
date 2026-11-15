@@ -94,10 +94,18 @@ class EvaluationTest {
         assertThat(member.score).isEqualByComparingTo("8");
         assertThat(member.adjustment).isEqualByComparingTo("1");
         member.overrideMemberScore(new BigDecimal("5"), new BigDecimal("7"), "contribution", actor, now);
+        member.contributionLevel = ContributionLevel.PARTIALLY_MEETS;
         assertThat(member.adjustment).isEqualByComparingTo("-2");
         root.saveGrade("{}", new BigDecimal("8"), BigDecimal.ONE, "bonus", "new", null, actor, now);
         member.inheritGroupGrade(root, null, actor, now);
         assertThat(member.score).isEqualByComparingTo("5");
         assertThat(member.adjustment).isEqualByComparingTo("-3");
+        assertThat(member.contributionLevel).isEqualTo(ContributionLevel.PARTIALLY_MEETS);
+        assertThat(member.adjustmentReason).isEqualTo("contribution");
+        member.resetForGroupSubmission("new-hash", BigDecimal.TEN, "[]", now.plusSeconds(2));
+        assertThat(member.contributionLevel).isNull();
+        assertThat(member.adjustmentReason).isNull();
+        assertThat(member.score).isNull();
+        assertThat(member.memberOverride).isFalse();
     }
 }

@@ -48,7 +48,7 @@ export function GradebookMatrix({ classId, headerActions }: { classId: string; h
         {assignments.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}
       </Select>
       <div className="w-full sm:ml-auto sm:w-64">
-        <TextInput type="search" icon="search" aria-label="Tìm sinh viên" placeholder="Tìm sinh viên" value={query}
+        <TextInput type="search" icon="search" aria-label="Tìm sinh viên" placeholder="Tìm tên, email hoặc MSSV" value={query}
           onChange={event => { setQuery(event.target.value); setPage("1"); }} />
       </div>
     </div>
@@ -62,7 +62,9 @@ export function GradebookMatrix({ classId, headerActions }: { classId: string; h
         <caption className="sr-only">Điểm theo sinh viên và bài tập</caption>
         <thead><tr>
           <Th className="left-0 z-30! w-12">STT</Th>
-          <Th className="left-12 z-30! min-w-44 sm:min-w-60">Sinh viên</Th>
+          {/* Màn hẹp: MSSV gộp vào ô Sinh viên để các cột cố định không chiếm hết bề ngang. */}
+          <Th className="left-12 z-30! hidden w-28 sm:table-cell">MSSV</Th>
+          <Th className="left-12 z-30! min-w-44 sm:left-40 sm:min-w-60">Sinh viên</Th>
           {columns.map(column => <Th key={column.id} className="whitespace-normal! normal-case! tracking-normal!">
             <span className="block w-44 break-words" title={column.title}>{column.title}</span>
             <span className="mt-1 block text-xs font-normal text-muted">/ {Number(column.maxScore)} điểm</span>
@@ -70,8 +72,10 @@ export function GradebookMatrix({ classId, headerActions }: { classId: string; h
         </tr></thead>
         <tbody>{data.rows.map((row, index) => <tr key={row.student.accountId}>
           <Td className="sticky left-0 z-10 w-12 bg-surface tabular-nums">{(page - 1) * 20 + index + 1}</Td>
-          <Td className="sticky left-12 z-10 min-w-44 bg-surface sm:min-w-60">
+          <Td className="sticky left-12 z-10 hidden w-28 bg-surface font-medium text-body sm:table-cell" data-testid="gradebook-student-code">{row.student.studentCode}</Td>
+          <Td className="sticky left-12 z-10 min-w-44 bg-surface sm:left-40 sm:min-w-60">
             <strong className="block text-sm text-ink">{row.student.name}</strong>
+            {row.student.studentCode && <span className="block text-xs font-semibold text-body sm:hidden">{row.student.studentCode}</span>}
             <span className="block max-w-40 break-all text-xs text-muted sm:max-w-none">{row.student.email}</span>
           </Td>
           {columns.map(column => {
@@ -86,7 +90,7 @@ export function GradebookMatrix({ classId, headerActions }: { classId: string; h
             </Td>;
           })}
         </tr>)}
-          {!data.rows.length && <tr><Td colSpan={columns.length + 2} className="py-8 text-center! text-muted">Không có sinh viên phù hợp.</Td></tr>}
+          {!data.rows.length && <tr><Td colSpan={columns.length + 3} className="py-8 text-center! text-muted">Không có sinh viên phù hợp.</Td></tr>}
         </tbody>
       </TableFrame>
       <Pagination page={page - 1} pageSize={20} total={data.total} itemLabel="sinh viên" onPageChange={next => setPage(String(next + 1))} />

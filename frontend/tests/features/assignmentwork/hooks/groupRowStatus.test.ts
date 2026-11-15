@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { rowStatus, upcoming } from "@/features/assignmentwork/hooks/useStudentAssignments";
+import { doing, rowStatus, upcoming } from "@/features/assignmentwork/hooks/useStudentAssignments";
 import type { StudentRow } from "@/features/assignmentwork/model/types";
 
 const groupRow = (group: StudentRow["group"]) => ({ status: "OPEN", myStatus: "GROUP", group }) as StudentRow;
@@ -15,4 +15,11 @@ it("bài nhóm đã nộp không nằm ở Chưa làm; sửa sau khi nộp thì 
   expect(upcoming(groupRow({ groupDocumentId: null, submitted: false, submittedAt: null }))).toBe(true);
   expect(upcoming(groupRow({ groupDocumentId: "d", submitted: true, submittedAt: "2026-11-12T01:00:00Z" }))).toBe(false);
   expect(upcoming(groupRow({ groupDocumentId: "d", submitted: true, submittedAt: "2026-11-12T01:00:00Z", changedSinceSubmit: true }))).toBe(true);
+});
+
+it.each([null, "d"])("bài nhóm đã đóng chưa nộp hiện Hết hạn thay cho Chưa làm, document=%s", groupDocumentId => {
+  const closed = { ...groupRow({ groupDocumentId, submitted: false, submittedAt: null }), status: "CLOSED", submittedCount: 0 } as StudentRow;
+  expect(rowStatus(closed)).toEqual({ label: "Hết hạn", tone: "danger" });
+  expect(upcoming(closed)).toBe(false);
+  expect(doing(closed)).toBe(false);
 });

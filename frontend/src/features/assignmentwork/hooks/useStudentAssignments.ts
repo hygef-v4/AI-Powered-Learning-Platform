@@ -33,11 +33,17 @@ export function doing(row: StudentRow): boolean {
     || (row.myStatus === "GROUP" && !!row.group?.groupDocumentId && (!row.group.submitted || !!row.group.changedSinceSubmit));
 }
 
+export function isClosedUnsubmitted(row: StudentRow): boolean {
+  return (row.status === "CLOSED" || row.myStatus === "MISSED")
+    && row.submittedCount === 0 && !row.group?.submitted;
+}
+
 /**
  * Trạng thái hiện trên dòng bài: bài nhóm không có nhãn riêng mà theo tiến độ của nhóm (Chưa làm, Đang làm, Đã nộp), như
  * bài cá nhân.
  */
 export function rowStatus(row: StudentRow): { label: string; tone: Tone } {
+  if (isClosedUnsubmitted(row)) return { label: myStatusLabels.MISSED, tone: myStatusTones.MISSED };
   if (doing(row)) return { label: myStatusLabels.IN_PROGRESS, tone: myStatusTones.IN_PROGRESS };
   if (row.myStatus === "GROUP") {
     const key = row.group?.submitted ? "SUBMITTED" : "NOT_STARTED";

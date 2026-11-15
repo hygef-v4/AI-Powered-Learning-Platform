@@ -21,8 +21,15 @@ public final class AnnouncementViews {
             long version,
             boolean canManage) {}
 
+    /** {@code term}: học kỳ của lớp (D-U04-05), có thể null ở chỗ tạo tay. */
     public record ClassOption(
-            UUID classId, String code, String subjectCode, boolean canManage, int studentCount) {}
+            UUID classId, String code, String subjectCode, boolean canManage, int studentCount,
+            String term) {
+        public ClassOption(
+                UUID classId, String code, String subjectCode, boolean canManage, int studentCount) {
+            this(classId, code, subjectCode, canManage, studentCount, null);
+        }
+    }
 
     public record Feed(
             List<Item> items, List<ClassOption> classes, int page, int size, boolean hasMore) {}

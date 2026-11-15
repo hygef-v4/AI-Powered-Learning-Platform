@@ -425,12 +425,12 @@ public class ClassGroupService {
                 }
             });
             return new PersonView(id, c.map(AccountContact::displayName).orElse(null),
-                    c.map(AccountContact::email).orElse(null));
+                    c.map(AccountContact::email).orElse(null), c.map(AccountContact::studentCode).orElse(null));
         }
 
         MemberView member(UUID id, boolean active, boolean leader) {
             PersonView p = person(id);
-            return new MemberView(id, p.name(), p.email(), active, leader);
+            return new MemberView(id, p.name(), p.email(), active, leader, p.studentCode());
         }
     }
 
@@ -448,10 +448,20 @@ public class ClassGroupService {
     }
 
     /** {@code active} sai là "Đã rời lớp" (BR-U12-07). */
-    public record MemberView(UUID accountId, String name, String email, boolean active, boolean leader) {
+    public record MemberView(UUID accountId, String name, String email, boolean active, boolean leader,
+                             String studentCode) {
+
+        public MemberView(UUID accountId, String name, String email, boolean active, boolean leader) {
+            this(accountId, name, email, active, leader, null);
+        }
     }
 
-    public record PersonView(UUID accountId, String name, String email) {
+    /** {@code studentCode}: MSSV, rỗng khi chưa có (BR-U12-97). */
+    public record PersonView(UUID accountId, String name, String email, String studentCode) {
+
+        public PersonView(UUID accountId, String name, String email) {
+            this(accountId, name, email, null);
+        }
     }
 
     public record RequestView(UUID id, UUID groupId, String groupName, PersonView requestedBy, PersonView proposedLeader,

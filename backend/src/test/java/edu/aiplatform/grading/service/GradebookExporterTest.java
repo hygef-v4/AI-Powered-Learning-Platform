@@ -54,12 +54,12 @@ class GradebookExporterTest {
     @Test
     void matrixUsesNumericScoresAndFrozenStudentColumnsWithoutExecutingText() throws Exception {
         var out = new ByteArrayOutputStream();
-        var header = new ArrayList<>(List.of("STT", "Họ và tên", "Email"));
+        var header = new ArrayList<>(List.of("STT", "MSSV", "Họ và tên", "Email"));
         header.addAll(Collections.nCopies(25, "=Tên bài (/10)"));
-        var student = new ArrayList<>(List.of("1", "=SUM(1,2)", "00123"));
+        var student = new ArrayList<>(List.of("1", "SE000123", "=SUM(1,2)", "00123"));
         student.addAll(Collections.nCopies(25, ""));
-        student.set(3, "0");
-        student.set(27, "8.25");
+        student.set(4, "0");
+        student.set(28, "8.25");
         new GradebookExporter().writeGradebook(List.of(header, student), "xlsx", out);
         var entries = new HashMap<String, String>();
         try (var zip = new ZipInputStream(new ByteArrayInputStream(out.toByteArray()))) {
@@ -71,10 +71,11 @@ class GradebookExporterTest {
             }
         }
         assertThat(entries.get("xl/worksheets/sheet1.xml"))
-                .contains("xSplit=\"3\" ySplit=\"1\"", "topLeftCell=\"D2\"", "state=\"frozen\"",
-                        "<c r=\"A2\"><v>1</v></c>", "<c r=\"D2\"><v>0</v></c>",
-                        "<c r=\"AB2\"><v>8.25</v></c>", "<autoFilter ref=\"A1:AB2\"/>",
-                        "r=\"B2\" t=\"inlineStr\"", "r=\"C2\" t=\"inlineStr\"", "=SUM(1,2)", "00123")
+                .contains("xSplit=\"4\" ySplit=\"1\"", "topLeftCell=\"E2\"", "state=\"frozen\"",
+                        "<c r=\"A2\"><v>1</v></c>", "<c r=\"E2\"><v>0</v></c>",
+                        "<c r=\"AC2\"><v>8.25</v></c>", "<autoFilter ref=\"A1:AC2\"/>",
+                        "r=\"B2\" t=\"inlineStr\"", "r=\"C2\" t=\"inlineStr\"", "r=\"D2\" t=\"inlineStr\"",
+                        "SE000123", "=SUM(1,2)", "00123")
                 .doesNotContain("<f>");
         assertThat(entries).containsKey("xl/styles.xml");
     }

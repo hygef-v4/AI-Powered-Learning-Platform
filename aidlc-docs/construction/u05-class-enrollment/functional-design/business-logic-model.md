@@ -9,7 +9,7 @@
 
 Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [stories](../../../inception/user-stories/stories.md).
 
-**Quyết định 2026-11-07 — D-U04-04:** Bỏ học kỳ lớp khỏi UI, request/response, domain và dữ liệu hiện hành; xem [quyết định đã duyệt](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Migration mới `V20261107_2200__remove_class_term.sql` xóa cột cũ khi áp dụng; không sửa migration hoặc bằng chứng lịch sử. Các quy tắc khác giữ nguyên phạm vi đã chốt.
+**Quyết định 2026-11-07 — D-U04-04 (đã được D-U04-05 thay thế ngày 2026-11-14, xem mục 6):** Bỏ học kỳ lớp khỏi UI, request/response, domain và dữ liệu hiện hành; xem [quyết định đã duyệt](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Migration mới `V20261107_2200__remove_class_term.sql` xóa cột cũ khi áp dụng; không sửa migration hoặc bằng chứng lịch sử. Các quy tắc khác giữ nguyên phạm vi đã chốt.
 
 ## 1. Truy vết
 
@@ -75,7 +75,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 1. Trên Class List bấm "Tạo lớp"; popup mở.
 2. Chọn môn, nhập mã, tên, mô tả; tùy chọn chọn giảng viên (ô tìm gọi `GET /api/v1/manager/teacher-candidates`; U05 gọi `IAccountLookup.findAccounts` với role `TEACHER`, `SUBJECT_MANAGER` và chỉ giữ người `ACTIVE`).
 3. Kiểm người gọi là Chủ nhiệm môn của môn và môn `ACTIVE` (BR-U05-10).
-4. Kiểm mã trong môn (BR-U05-11); kiểm giảng viên nếu có (BR-U05-12).
+4. Kiểm mã trong môn và học kỳ (BR-U05-11, từ 2026-11-14 xem F17); kiểm giảng viên nếu có (BR-U05-12).
 5. Tạo lớp `DRAFT`; ghi audit `CLASS_CREATED` (và `CLASS_TEACHER_CHANGED` nếu có giảng viên).
 
 ### F8 - Chi tiết lớp của môn (UC 25)
@@ -112,7 +112,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 4. Thêm lại người đã gỡ: cùng API với `ACTIVE`, chạy F10 bước 3–6.
 
 ### F13 - Sửa thông tin lớp (UC 29)
-1. Sửa tên, mô tả kèm `version`: `PATCH /api/v1/manager/classes/{id}`; mã lớp và môn không sửa được.
+1. Sửa tên, mô tả, Ngày bắt đầu (từ 2026-11-14, F18) kèm `version`: `PATCH /api/v1/manager/classes/{id}`; mã lớp và môn không sửa được.
 2. Kiểm quyền Chủ nhiệm môn và lớp chưa lưu trữ (BR-U05-16); cập nhật có điều kiện `version`, lệch thì `409`.
 3. Ghi audit `CLASS_UPDATED`. Cài đặt phân bố thuộc U09 theo bài–lớp; endpoint manager cũ bị gỡ.
 
@@ -137,3 +137,40 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 CourseClass.create tạo DRAFT. OPEN không bắt buộc teacher: domain, AcademicsService và migration 27/10 đã bỏ guard. Nếu có teacher thì account vẫn phải ACTIVE và đúng role. Scope teaching dựa teacher_id hiện hành, manager dựa subject ownership, Student dựa enrollment/status; không tự cấp teaching cho manager chưa được giao.
 
 [Source/API/schema/test inventory](../code/as-built-baseline.md). Các rule và test cũ trái delta này là thiết kế trước baseline; không tiếp tục áp điều kiện cũ vào AS-BUILT.
+
+## 6. Học kỳ của lớp — 2026-11-14 (D-U04-05)
+
+Nguồn: [yêu cầu CT-01…09](../../../inception/requirements/2026-11-14-class-term.md), BR-U05-61…72.
+
+### F17 - Tạo lớp có Ngày bắt đầu (thay bước 2, 4 của F7)
+
+1. Popup Tạo lớp có thêm ô Ngày bắt đầu bắt buộc, để trống ban đầu. Chọn ngày thì popup hiện "Học kỳ: SP27" tính bằng cùng quy tắc ở frontend (chỉ để xem trước).
+2. `POST /api/v1/manager/classes` gửi `subjectId`, `code`, `name`, `description`, `startsOn`, `teacherId`. Body có `term` thì strict-input từ chối.
+3. Thứ tự kiểm: dữ liệu đầu vào (thiếu `startsOn`, sai định dạng) → quyền Chủ nhiệm môn và môn `ACTIVE` (BR-U05-10) → khoảng ngày (`INVALID_CLASS_START_DATE`) → giảng viên (BR-U05-12).
+4. Domain tạo `CourseClass` `DRAFT` với `term = termOf(startsOn)`.
+5. Insert; trùng `(subject_id, term, code)` thì `CLASS_EXISTS` "Mã lớp đã tồn tại trong môn ở học kỳ này" (BR-U05-64).
+6. Ghi audit `CLASS_CREATED` như F7 bước 5.
+
+### F18 - Sửa Ngày bắt đầu (mở rộng F13)
+
+1. Thẻ Thông tin lớp có ô Ngày bắt đầu (sửa được khi lớp `DRAFT`/`OPEN`) và Học kỳ chỉ đọc. Đổi ngày làm học kỳ đổi thì hiện "Học kỳ: SP27 → SU27" ngay cạnh ô trước khi Lưu; không có hộp xác nhận (FD Q2).
+2. `PATCH /api/v1/manager/classes/{id}` gửi `name`, `description`, `startsOn`, `version`.
+3. Kiểm quyền và lớp chưa lưu trữ; khóa dòng lớp; kiểm `version` (lệch `409`).
+4. Domain `updateInfo(name, description, startsOn, now)`: kiểm khoảng ngày, tính lại `term`, tăng `version`.
+5. Update; trùng `(subject_id, term, code)` thì `CLASS_EXISTS`, rollback, không đổi gì.
+6. Ghi audit `CLASS_UPDATED`.
+
+### F19 - Danh sách lớp lọc theo học kỳ (mở rộng F1, F3, F6)
+
+1. API danh sách lớp nhận `term` tùy chọn; `ClassTermPolicy.parseFilter` kiểm mẫu, sai `INVALID_CLASS_TERM`.
+2. Repository thêm điều kiện `term = :term` khi có giá trị, giữ nguyên điều kiện phạm vi quyền, `q`, `status`; sắp `code`, `starts_on desc`, `id` (BR-U05-65).
+3. Các trang Lớp học hiện tại tải toàn bộ lớp của người dùng rồi lọc phía client; bộ lọc học kỳ cũng lọc phía client trên dữ liệu đã tải (F20 ở frontend-components). Tham số `term` của API dùng cho MCP và client khác.
+
+### F20 - Backfill lớp cũ (migration)
+
+1. Thêm `starts_on DATE`, `term VARCHAR(8)` cho phép trống tạm thời.
+2. `starts_on = (created_at AT TIME ZONE 'Asia/Ho_Chi_Minh')::date` cho mọi dòng.
+3. `term` = `CASE` theo tháng (`SP`/`SU`/`FA`) ‖ `to_char(starts_on, 'YY')` ‖ (`-BL5` nếu tháng 4, 8, 12).
+4. Đặt `NOT NULL`; thêm check mẫu `term` và khoảng `starts_on`.
+5. Bỏ `uq_course_classes_subject_code`, thêm `uq_course_classes_subject_term_code`, thêm `ix_course_classes_subject_term`.
+6. Không đổi `version`, `updated_at` hay bảng khác. Ví dụ biên: `created_at = 2026-03-31T17:30:00Z` là 00:30 ngày 01/04 giờ Việt Nam → `SP26-BL5`.

@@ -14,7 +14,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://claude.ai/artifact/M5RgKNauBqdxM7GUTRwau4), bản 17/10/2026; `#n` là số màn, mã trong ngoặc (ví dụ `a02`) là artboard.
 
-**Quyết định 2026-11-07 — D-U04-04:** Bỏ học kỳ lớp khỏi UI, request/response, domain và dữ liệu hiện hành; xem [quyết định đã duyệt](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Migration mới `V20261107_2200__remove_class_term.sql` xóa cột cũ khi áp dụng; không sửa migration hoặc bằng chứng lịch sử. Các quy tắc khác giữ nguyên phạm vi đã chốt.
+**Quyết định 2026-11-07 — D-U04-04 (đã được D-U04-05 thay thế ngày 2026-11-14, xem mục "Học kỳ của lớp"):** Bỏ học kỳ lớp khỏi UI, request/response, domain và dữ liệu hiện hành; xem [quyết định đã duyệt](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Migration mới `V20261107_2200__remove_class_term.sql` xóa cột cũ khi áp dụng; không sửa migration hoặc bằng chứng lịch sử. Các quy tắc khác giữ nguyên phạm vi đã chốt.
 
 ## 1. Màn hình theo design
 
@@ -74,7 +74,7 @@ features/academics/slots.ts                          StudentClassSection, Teache
 | `ManagerDashboardPage` | `GET /api/v1/manager/subjects` | "Tổng quan", "Các môn bạn phụ trách". Khi đang dạy lớp: hộp "Bạn đang dạy N lớp: … Bài nộp và chấm điểm của lớp nằm ở mục Lớp được phân công." kèm nút mở Class Dashboard. Thẻ môn: mã, tên, số lớp Nháp / Đang mở / Lưu trữ, dòng số học liệu, câu hỏi, Quiz, bài tập (U13, U10, U07 gắn qua `SubjectSummarySection`), link "Truy cập quản lý môn" sang My Subject |
 | `MySubjectPage` | `GET /api/v1/manager/subjects/{id}` | Nút chọn môn; "Thông tin môn": mã, tên, trạng thái, mô tả, ghi chú "Tên và mô tả môn do Quản trị viên quản lý."; "Lớp của môn": bảng Trạng thái lớp, Số lớp kèm link Mở danh sách lớp; thẻ số liệu Học liệu, Câu hỏi trắc nghiệm, Quiz, Bài tập của môn (qua `SubjectSummarySection`) |
 | `ClassListPage` | `GET /api/v1/manager/classes` | "Lớp của môn", nút chọn môn, Tạo lớp; tab Tất cả, Nháp, Đang mở, Lưu trữ (kèm số); ô "Tìm mã lớp, tên, giảng viên"; cột Mã lớp, Tên lớp, Giảng viên ("(bạn)" khi là mình, "Chưa phân công"), Sinh viên, Trạng thái; bấm dòng mở Class Detail |
-| `ClassFormDialog` | `POST /api/v1/manager/classes` | Môn đang chọn; Mã lớp* (duy nhất trong môn, không đổi sau khi tạo; kiểm phía client), Tên lớp*, Mô tả (tùy chọn), Giảng viên (tùy chọn; bắt buộc trước khi mở lớp; chỉ Giảng viên và Chủ nhiệm môn đang hoạt động); ghi chú "Lớp mới ở trạng thái Nháp: sinh viên chưa thấy lớp cho tới khi bạn bấm Mở lớp."; Hủy, Tạo lớp |
+| `ClassFormDialog` | `POST /api/v1/manager/classes` | Môn đang chọn; Mã lớp* (duy nhất trong môn và học kỳ từ 2026-11-14, không đổi sau khi tạo; kiểm phía client), Tên lớp*, Mô tả (tùy chọn), Giảng viên (tùy chọn; bắt buộc trước khi mở lớp; chỉ Giảng viên và Chủ nhiệm môn đang hoạt động); ghi chú "Lớp mới ở trạng thái Nháp: sinh viên chưa thấy lớp cho tới khi bạn bấm Mở lớp."; Hủy, Tạo lớp |
 | `ManagedClassPage` | `GET /api/v1/manager/classes/{id}` | Nút quay lại; "mã môn · mã lớp" kèm nhãn trạng thái; đường dẫn "Lớp của môn › …"; nút Phân công giảng viên và Mở lớp (Nháp), Lưu trữ lớp (Đang mở) hoặc Mở lại lớp (Lưu trữ); tab Thông tin, Sinh viên (kèm số) |
 | `ClassInfoForm` | `PATCH /api/v1/manager/classes/{id}` | Mã lớp (chỉ đọc), Tên lớp*, Mô tả (tùy chọn); Sinh viên "n đang học · n đã gỡ"; Ngày tạo; Hủy, Lưu thay đổi; `409` báo tải lại |
 | `TeacherCard`, `AssignTeacherDialog` | `GET /api/v1/manager/teacher-candidates`, `PUT .../teacher` | Thẻ "Giảng viên": avatar, tên, email, nút Đổi giảng viên. Popup "Phân công giảng viên": ô "Tìm theo tên hoặc email"; danh sách chọn một (avatar, tên, email, vai trò; người đang dạy ghi "hiện tại"); "Chỉ hiện người có vai trò Giảng viên hoặc Chủ nhiệm môn đang hoạt động."; Hủy, Phân công |
@@ -120,3 +120,42 @@ Thêm sinh viên theo danh sách nhận tệp `.xlsx`, sheet đầu có một c�
 ## Chọn nhiều sinh viên — 2026-11-13
 
 Popup Thêm sinh viên dùng danh sách checkbox có tìm kiếm, chọn tất cả kết quả lọc và bộ đếm. Loại sinh viên đang ACTIVE trong lớp khỏi lựa chọn; giữ lựa chọn qua bộ lọc. Tối đa 200 kết quả và 200 người/lượt, cùng giới hạn API batch hiện hữu. Nếu thêm một phần thành công, giữ những người thất bại và hiển thị kết quả để thử lại. API lookup sinh viên mở trần từ 20 lên 200, lookup tài khoản/giảng viên vẫn 20. Không thay quyền quản lý lớp hoặc giới hạn nhập Excel.
+
+## Mã số sinh viên (MSSV) — 2026-11-13
+
+Thay đổi giao diện để hiện và tìm theo MSSV ghi ở mục "Giao diện" của phần MSSV trong [business-rules.md](business-rules.md). Cách hiển thị chung (cột MSSV trước họ tên trong bảng, dòng phụ `SE123456 · email` trong thẻ, ô trống khi chưa có mã) theo [frontend-components U01 mục 6](../../u01-account-and-access/functional-design/frontend-components.md).
+
+## Học kỳ của lớp — 2026-11-14 (D-U04-05)
+
+Nguồn: [yêu cầu CT-06, CT-08](../../../inception/requirements/2026-11-14-class-term.md), BR-U05-61…72, [FD Q1–Q6](../../plans/functional-design-plan/2026-11-14-u05-class-term-functional-design-plan.md).
+
+### Helper dùng chung `features/academics/model/term.ts`
+
+- `termOf(date)`: cùng quy tắc với `ClassTermPolicy.termOf` ở backend; chỉ dùng để xem trước trong form. Giá trị hiển thị sau khi lưu luôn lấy từ `term` trong response.
+- `compareTermsNewestFirst(a, b)`: năm giảm dần, `FA` > `SU` > `SP`, bản `-BL5` trước bản gốc cùng mùa.
+- `termOptions(classes)`: danh sách học kỳ duy nhất từ các lớp đã tải, sắp theo hàm trên.
+
+### Component
+
+| Component | API | Hành vi |
+|---|---|---|
+| `ClassFormDialog` | `POST /api/v1/manager/classes` | Thêm ô **Ngày bắt đầu*** (ô chọn ngày, để trống ban đầu, FD Q1). Chọn ngày thì dưới ô hiện "Học kỳ: SP27". Thiếu ngày: "Chọn ngày bắt đầu". Gửi `startsOn`. `CLASS_EXISTS`: "Mã lớp đã tồn tại trong môn ở học kỳ này" gắn vào ô Mã lớp. `INVALID_CLASS_START_DATE`: "Ngày bắt đầu phải trong khoảng 2000–2099" gắn vào ô ngày. |
+| `ClassInfoForm` | `PATCH /api/v1/manager/classes/{id}` | Thêm ô **Ngày bắt đầu** (sửa được khi lớp chưa lưu trữ) và dòng **Học kỳ** chỉ đọc. Ngày đổi làm học kỳ đổi thì hiện "Học kỳ: SP27 → SU27" cạnh ô, không có hộp xác nhận (FD Q2). Lưu gửi `name`, `description`, `startsOn`, `version`. Hủy về giá trị đang lưu. Lỗi `CLASS_EXISTS` như trên; `409` báo tải lại như hiện có. Lớp lưu trữ chỉ xem. |
+| `TermFilter` (mới, `shared/ui`) | - | Ô chọn một giá trị, cùng kiểu `Menu` với `ClassFilter`: "Tất cả học kỳ" rồi danh sách từ `termOptions`. Nhận `options`, `value`, `onChange`, `testId`. Không có lựa chọn "Chưa có học kỳ" vì mọi lớp đều có học kỳ (BR-U05-67). |
+| `ClassListPage` (Chủ nhiệm môn) | dữ liệu đã tải | `TermFilter` đặt cạnh tab trạng thái. Trạng thái giữ trên URL `classTerm` (mặc định rỗng = Tất cả; giá trị không có trong danh sách thì coi như Tất cả). Danh sách học kỳ lấy từ mọi lớp của môn đang chọn, không phụ thuộc tab (FD Q4). Lọc kết hợp tab trạng thái và ô tìm mã; đổi học kỳ về trang đầu. Bảng thêm cột **Học kỳ** sau Mã lớp. Thứ tự: mã lớp, rồi học kỳ mới trước. |
+| `ClassDashboardPage` (giảng viên, sinh viên) | dữ liệu đã tải | `TermFilter` cạnh tab trạng thái, URL `classTerm`. Danh sách học kỳ lấy từ mọi lớp của người dùng (FD Q4). Số đếm trên tab tính theo học kỳ đang chọn. Tab không có lớp ở học kỳ đã chọn thì hiện trạng thái rỗng hiện có. Thẻ hoặc dòng lớp hiện học kỳ. |
+| `ClassLabel` (`shared/ui/ClassFilter.tsx`) | - | Nhận thêm `term` tùy chọn. Dòng nhỏ phía trên thành `mã môn · học kỳ`, ví dụ `PRJ301 · SP27`; dòng chính vẫn là mã lớp (FD Q6). Không có mã môn thì dòng nhỏ chỉ có học kỳ. `title` gồm cả ba. |
+| `ClassFilter` và các nơi dùng (`ClassAnnouncementsPage`, `AnnouncementDialogs`, `StudentAssignmentsPage`), ô chuyển lớp trên sidebar (`ClassNavContexts`, `shared/layout`) | dữ liệu lớp đã tải | Truyền `term` vào `ClassLabel`. `ClassFilterOption` thêm `term`. |
+| Tiêu đề và đường dẫn trang lớp (`ManagedClassPage`, `TeacherClassPage`, `StudentClassPage`) | `GET .../classes/{id}` | "mã môn · mã lớp" thành "mã môn · mã lớp · học kỳ" (FD Q3). |
+| Hộp chọn lớp nguồn khi tạo bài tập/quiz từ lớp khác (`CreateAssignmentDialog`, `CreateQuizDialog`) | `GET .../assignment-copy-sources` (U07 thêm `term` vào `CopySource` từ `ClassRef.term`); quiz dùng danh sách lớp đã tải | Nhãn lớp nguồn hiện học kỳ như `ClassLabel` (FD Q3). |
+| `SubjectClassesTable` (U04, Admin) | `GET /api/v1/admin/subjects/{id}/classes` (qua `SubjectClassSummary.term`) | Thêm cột **Học kỳ** sau Mã lớp. |
+
+Không đổi: nguồn thông báo, bảng lớp đang giữ khi chặn đổi role, thông báo trong app và email (FD Q3, G2). Ô tìm mã lớp không tìm theo học kỳ (FD Q5).
+
+### Kiểm thử frontend
+
+- `termOf` và `compareTermsNewestFirst`: đủ 12 tháng, `-BL5`, biên năm.
+- `ClassFormDialog`: bắt buộc ngày, xem trước học kỳ, gửi `startsOn`, hiện lỗi `CLASS_EXISTS`.
+- `ClassInfoForm`: hiện "cũ → mới", gửi `startsOn`, lớp lưu trữ không sửa được.
+- `ClassListPage`, `ClassDashboardPage`: lọc theo học kỳ kết hợp tab, URL `classTerm`, giá trị lạ về Tất cả, số đếm tab.
+- `ClassLabel`: dòng nhỏ có học kỳ.

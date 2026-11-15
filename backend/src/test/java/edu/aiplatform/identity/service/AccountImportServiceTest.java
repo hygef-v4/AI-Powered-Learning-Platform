@@ -48,8 +48,8 @@ class AccountImportServiceTest {
     private final Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
 
     private static final String CSV = """
-            ﻿email,display_name,role
-            sv01@fpt.edu.vn,"Nguyễn Văn A, K17",student
+            ﻿email,display_name,role,student_code
+            sv01@fpt.edu.vn,"Nguyễn Văn A, K17",student,se000001
             sv02@,Sai định dạng,STUDENT
             sv01@fpt.edu.vn,Trùng trong tệp,STUDENT
             gv01@fpt.edu.vn,Đã có,TEACHER
@@ -91,8 +91,8 @@ class AccountImportServiceTest {
     @Test
     void acceptsEmailFromAnyDomain() {
         String csv = """
-                email,display_name,role
-                sv@gmail.com,Gmail,STUDENT
+                email,display_name,role,student_code
+                sv@gmail.com,Gmail,STUDENT,SE000002
                 gv@school.example.org,Trường khác,TEACHER
                 """;
 
@@ -147,9 +147,10 @@ class AccountImportServiceTest {
 
     @Test
     void thousandRowsAreAccepted() {
-        StringBuilder csv = new StringBuilder("email,display_name,role\n");
+        StringBuilder csv = new StringBuilder("email,display_name,role,student_code\n");
         for (int i = 0; i < AccountImportService.MAX_ROWS; i++) {
-            csv.append("sv").append(i).append("@fpt.edu.vn,SV ").append(i).append(",STUDENT\n");
+            csv.append("sv").append(i).append("@fpt.edu.vn,SV ").append(i).append(",STUDENT,")
+                    .append(String.format("SE%06d", i)).append('\n');
         }
         assertThat(service.validate(admin, bytes(csv.toString())).validCount()).isEqualTo(1000);
     }
@@ -170,12 +171,12 @@ class AccountImportServiceTest {
 
     @Test
     void validatesExcelUsingTheSameRulesAndCommitsOnlyValidRows() throws IOException {
-        byte[] file = workbook(new String[] {"role", "display_name", "email"},
-                new String[] {"student", "Nguyễn Văn A", "sv01@fpt.edu.vn"},
-                new String[] {"STUDENT", "Trùng", "sv01@fpt.edu.vn"},
-                new String[] {"ADMIN", "Admin", "admin@fpt.edu.vn"},
-                new String[] {"TEACHER", "Đã có", "gv01@fpt.edu.vn"},
-                new String[] {"STUDENT", "Sai", "bad@"});
+        byte[] file = workbook(new String[] {"role", "display_name", "email", "student_code"},
+                new String[] {"student", "Nguyễn Văn A", "sv01@fpt.edu.vn", "se000001"},
+                new String[] {"STUDENT", "Trùng", "sv01@fpt.edu.vn", "SE000002"},
+                new String[] {"ADMIN", "Admin", "admin@fpt.edu.vn", ""},
+                new String[] {"TEACHER", "Đã có", "gv01@fpt.edu.vn", ""},
+                new String[] {"STUDENT", "Sai", "bad@", "SE000003"});
         var preview = service.validate(admin, file);
         assertThat(preview.validCount()).isEqualTo(1);
         assertThat(preview.rows()).extracting(RowResult::reason)
@@ -198,9 +199,9 @@ class AccountImportServiceTest {
         byte[] missing = workbook(new String[] {"email", "display_name"}, new String[] {"sv@fpt.edu.vn", "SV"});
         assertThatThrownBy(() -> service.validate(admin, missing)).isInstanceOf(ApiException.class);
         String[][] rows = new String[AccountImportService.MAX_ROWS + 2][];
-        rows[0] = new String[] {"email", "display_name", "role"};
+        rows[0] = new String[] {"email", "display_name", "role", "student_code"};
         for (int i = 1; i < rows.length; i++) {
-            rows[i] = new String[] {"sv" + i + "@fpt.edu.vn", "SV " + i, "STUDENT"};
+            rows[i] = new String[] {"sv" + i + "@fpt.edu.vn", "SV " + i, "STUDENT", String.format("SE%06d", i)};
         }
         byte[] tooMany = workbook(rows);
         assertThatThrownBy(() -> service.validate(admin, tooMany))
@@ -239,5 +240,44 @@ class AccountImportServiceTest {
                     .isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.getMessage()).contains("công thức"));
         }
         verify(accounts, never()).insert(any());
+    }
+    /** BR-U01-108: MSSV bắt buộc với STUDENT, cấm với role khác, kiểm định dạng và trùng sau các lỗi hiện có. */
+    @Test
+    void studentCodeColumnIsRequiredForStudentsAndCheckedForDuplicates() {
+        when(accounts.existingStudentCodes(anyCollection())).thenReturn(Set.of("SE999999"));
+        String csv = """
+                email,display_name,role,student_code
+                a@fpt.edu.vn,A,STUDENT,se000001
+                b@fpt.edu.vn,B,STUDENT,
+                c@fpt.edu.vn,C,TEACHER,SE000003
+                d@fpt.edu.vn,D,STUDENT,SE-00004
+                e@fpt.edu.vn,E,STUDENT,SE000001
+                f@fpt.edu.vn,F,STUDENT,SE999999
+                g@fpt.edu.vn,G,TEACHER,
+                bad@,H,STUDENT,
+                """;
+
+        var result = service.validate(admin, bytes(csv));
+
+        assertThat(result.rows()).extracting(RowResult::reason).containsExactly(null, "MISSING_STUDENT_CODE",
+                "STUDENT_CODE_NOT_ALLOWED", "INVALID_STUDENT_CODE", "DUPLICATE_STUDENT_CODE_IN_FILE",
+                "STUDENT_CODE_EXISTS", null, "INVALID_EMAIL");
+        assertThat(result.rows().get(0).studentCode()).isEqualTo("SE000001");
+    }
+
+    @Test
+    void fileWithoutStudentCodeColumnRejectsOnlyStudentRows() {
+        var result = service.validate(admin, bytes("email,display_name,role\na@fpt.edu.vn,A,STUDENT\n"
+                + "g@fpt.edu.vn,G,TEACHER\n"));
+
+        assertThat(result.rows()).extracting(RowResult::reason).containsExactly("MISSING_STUDENT_CODE", null);
+    }
+
+    @Test
+    void commitStoresNormalizedStudentCode() {
+        service.commit(admin, bytes("email,display_name,role,student_code\na@fpt.edu.vn,A,STUDENT, se000001 \n"));
+
+        verify(accounts).insert(org.mockito.ArgumentMatchers.argThat(
+                account -> "SE000001".equals(account.studentCode()) && account.role() == Role.STUDENT));
     }
 }

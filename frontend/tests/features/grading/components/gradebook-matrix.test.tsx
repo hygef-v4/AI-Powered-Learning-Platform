@@ -10,7 +10,7 @@ const assignments = [
   { id: "b", title: "Bài nhóm", maxScore: 20, submissionMode: "GROUP" },
 ];
 const data = { assignments, total: 21, page: 1, size: 20, rows: [
-  { student: { accountId: "s", name: "An", email: "an@school.test" }, grades: [
+  { student: { accountId: "s", name: "An", email: "an@school.test", studentCode: "SE000001" }, grades: [
     { assignmentId: "b", evaluationId: "eb", status: "PUBLISHED", score: "8.25", maxScore: 20, memberOverride: true },
     { assignmentId: "a", evaluationId: "ea", status: "DRAFT", score: "0.00", maxScore: 10 },
   ] },
@@ -27,7 +27,7 @@ afterEach(cleanup);
 it("renders students once and aligns grades by assignment ID, preserving zero and member scores", async () => {
   render(<ClassGradebookTab classId="c" />);
   const row = (await screen.findByText("An")).closest("tr")!;
-  expect(within(row).getAllByRole("cell").map(x => x.textContent)).toEqual(["1", "Anan@school.test", "0", "8.25"]);
+  expect(within(row).getAllByRole("cell").map(x => x.textContent)).toEqual(["1", "SE000001", "AnSE000001an@school.test", "0", "8.25"]);
   expect(within(row).getByRole("link", { name: /Kiến trúc.*An/ })).toHaveAttribute("href", "/teaching/evaluations/ea");
   expect(screen.getByText("Bình").closest("tr")).not.toHaveTextContent("9");
   expect(screen.queryByText("Chốt điểm")).not.toBeInTheDocument();

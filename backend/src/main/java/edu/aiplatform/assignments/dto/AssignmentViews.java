@@ -64,12 +64,18 @@ public final class AssignmentViews {
 
     /**
      * Một nhóm bài để copy: {@code kind = CLASS} là một lớp mình dạy ({@code classId} là lớp), {@code SUBJECT} là bài của
-     * cùng môn ({@code classId} là mã môn dùng làm khóa nhóm, {@code status} rỗng).
+     * cùng môn ({@code classId} là mã môn dùng làm khóa nhóm, {@code status} rỗng). {@code term}: học kỳ của lớp nguồn
+     * (D-U04-05), rỗng với nguồn môn.
      */
     public record CopySource(UUID classId, String code, String name, ClassStatus status, List<Row> assignments,
-                             String kind) {
+                             String kind, String term) {
+        public CopySource(UUID classId, String code, String name, ClassStatus status, List<Row> assignments,
+                          String kind) {
+            this(classId, code, name, status, assignments, kind, null);
+        }
+
         public CopySource(UUID classId, String code, String name, ClassStatus status, List<Row> assignments) {
-            this(classId, code, name, status, assignments, "CLASS");
+            this(classId, code, name, status, assignments, "CLASS", null);
         }
     }
 

@@ -6,6 +6,7 @@ import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignmentwork.contract.ActivitySummary;
 import edu.aiplatform.grading.contract.GroupSectionAuthor;
 import edu.aiplatform.grading.model.Evaluation;
+import edu.aiplatform.grading.model.ContributionLevel;
 import edu.aiplatform.grading.model.GradingFeedback;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -27,7 +28,12 @@ public final class GradingViews {
     public record AiEstimate(long estimatedTokens, int items) {
     }
 
-    public record Person(UUID accountId, String name, String email) {
+    /** {@code studentCode}: MSSV, rỗng khi chưa có hoặc là nhóm (BR-U09-75). */
+    public record Person(UUID accountId, String name, String email, String studentCode) {
+
+        public Person(UUID accountId, String name, String email) {
+            this(accountId, name, email, null);
+        }
     }
 
     public record SubmissionRow(Person student, UUID evaluationId, UUID attemptId, String status,
@@ -80,13 +86,13 @@ public final class GradingViews {
             BigDecimal maxScore, String feedback, Instant publishedAt, boolean updated,
             String rubricChecks, GradingFeedback.Summary structuredSummary,
             List<StudentRubricItemView> rubricItems, BigDecimal rubricScore,
-            boolean memberOverride) {
+            boolean memberOverride, ContributionLevel contributionLevel, String contributionReason) {
         /** Creates a student grade view without structured rubric details. */
         public StudentGradeView(UUID assignmentId, UUID attemptId, BigDecimal score,
                 BigDecimal maxScore, String feedback, Instant publishedAt, boolean updated,
                 String rubricChecks) {
             this(assignmentId, attemptId, score, maxScore, feedback, publishedAt, updated,
-                    rubricChecks, null, List.of(), null, false);
+                    rubricChecks, null, List.of(), null, false, null, null);
         }
     }
 }

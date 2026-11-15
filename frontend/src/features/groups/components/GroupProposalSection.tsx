@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Button, Icon, Pill, cx, showToast, useConfirmDialog } from "@/shared/ui";
 import { initials } from "@/shared/layout/navigation";
+import { PersonSubline } from "@/shared/ui/PersonSubline";
 import {
   answerProposal,
   changeProposal,
@@ -270,7 +271,8 @@ function PersonRow({ person, note, invited, action }: { person: ProposalMemberVi
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[13.5px] font-semibold text-ink">{person.name ?? person.email ?? "Chưa rõ tên"}</span>
-        <span className="block truncate text-xs text-muted">{note ?? person.email}</span>
+        {/* Ghi chú (trưởng nhóm, đang chờ trả lời…) thay chỗ email như trước; MSSV vẫn hiện ở đầu (BR-U12-97). */}
+        <PersonSubline className="truncate" studentCode={person.studentCode} email={note ?? person.email} />
       </span>
       {action}
     </li>

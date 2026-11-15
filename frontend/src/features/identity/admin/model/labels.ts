@@ -1,4 +1,5 @@
 import type { Tone } from "@/shared/ui/tones";
+import { STUDENT_CODE_ERROR_LABELS } from "@/shared/studentCode";
 import type { AccountStatus } from "../../model/types";
 
 // Nhãn và màu trạng thái theo README của design: Hoạt động xanh lá, Chờ kích hoạt vàng, Vô hiệu hóa đỏ.
@@ -22,6 +23,11 @@ export const IMPORT_REASON_LABELS: Record<string, string> = {
   EMAIL_EXISTS: "email đã tồn tại",
   INVALID_DISPLAY_NAME: "họ tên quá dài",
   INVALID_ROLE: "vai trò không hợp lệ",
+  MISSING_STUDENT_CODE: "thiếu MSSV của sinh viên",
+  INVALID_STUDENT_CODE: "MSSV sai định dạng",
+  STUDENT_CODE_NOT_ALLOWED: "chỉ sinh viên mới có MSSV",
+  DUPLICATE_STUDENT_CODE_IN_FILE: "MSSV trùng dòng khác trong tệp",
+  STUDENT_CODE_EXISTS: "MSSV đã thuộc tài khoản khác",
 };
 
 /** Lỗi nghiệp vụ khi Admin thao tác tài khoản. */
@@ -32,6 +38,9 @@ export const ADMIN_ERROR_LABELS: Record<string, string> = {
   LAST_ADMIN: "Phải còn ít nhất một Quản trị viên đang hoạt động.",
   SELF_CHANGE_BLOCKED: "Không thể tự đổi vai trò hoặc tự vô hiệu hóa chính mình.",
   ROLE_CHANGE_BLOCKED: "Tài khoản còn phụ trách môn hoặc lớp; hãy đổi phân công trước khi đổi vai trò.",
+  STUDENT_ROLE_CHANGE_NOT_ALLOWED: "Không đổi được vai trò vào hoặc ra khỏi Sinh viên.",
+  IMPORT_CONFLICT: "Dữ liệu vừa thay đổi, hãy kiểm lại tệp.",
+  ...STUDENT_CODE_ERROR_LABELS,
 };
 
 export function formatDate(value: string) {

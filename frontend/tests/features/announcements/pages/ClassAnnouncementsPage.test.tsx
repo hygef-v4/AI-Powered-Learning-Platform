@@ -144,6 +144,7 @@ it("100 lớp: ô Lớp đóng chỉ một dòng tóm tắt; mở ra tìm đư�
   const many = Array.from({ length: 100 }, (_, i) => ({
     classId: `k${i}`,
     code: `SE${1800 + i}`,
+    term: "FA26",
     subjectCode: "SWD392",
     canManage: true,
     studentCount: 30,
@@ -165,6 +166,7 @@ it("100 lớp: ô Lớp đóng chỉ một dòng tóm tắt; mở ra tìm đư�
   fireEvent.focus(input);
   fireEvent.change(input, { target: { value: "SE1899" } });
   expect(within(await screen.findByRole("listbox")).getAllByRole("option")).toHaveLength(1);
+  expect(screen.getByRole("option", { name: /SE1899/ })).toHaveTextContent("SWD392 · FA26");
   fireEvent.change(input, { target: { value: "" } });
   fireEvent.click(await screen.findByRole("option", { name: /Chọn tất cả/ }));
   fireEvent.keyDown(input, { key: "Escape" });

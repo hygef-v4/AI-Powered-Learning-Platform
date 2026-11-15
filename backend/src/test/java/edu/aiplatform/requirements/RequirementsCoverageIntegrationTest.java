@@ -129,8 +129,8 @@ class RequirementsCoverageIntegrationTest {
     private UUID seedClass(UUID subject, String code, String status) {
         UUID id = UUID.randomUUID();
         jdbc.update("""
-                insert into course_classes(id,subject_id,code,name,status,teacher_id,created_at,updated_at)
-                values (?,?,?,?,?,?,?,?)
+                insert into course_classes(id,subject_id,code,name,status,teacher_id,starts_on,created_at,updated_at)
+                values (?,?,?,?,?,?,DATE '2026-11-14',?,?)
                 """, id, subject, code, code, status, accountIds.get(Role.TEACHER), at(NOW), at(NOW));
         return id;
     }

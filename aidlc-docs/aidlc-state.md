@@ -1,5 +1,34 @@
 # AI-DLC State Tracking
 
+## U05 (kèm U04) — Học kỳ của lớp, 2026-11-14
+
+Lớp có Ngày bắt đầu bắt buộc; học kỳ (SP/SU/FA + 2 số năm, thêm `-BL5` nếu bắt đầu tháng 4/8/12) do hệ thống tính và dùng để lọc lớp. Không có chức năng quản lý học kỳ. Mã lớp duy nhất theo môn và học kỳ. Quyết định D-U04-05 thay D-U04-04. Nhánh hiện tại `fix/term`. Brownfield, dùng lại tài liệu reverse engineering hiện hành. [Câu hỏi xác nhận](inception/requirements/2026-11-14-class-term-questions.md); [yêu cầu CT-01…09](inception/requirements/2026-11-14-class-term.md).
+
+- [x] Workspace Detection: brownfield, bỏ qua Reverse Engineering.
+- [x] Requirements Analysis (Standard): CT-01…09, G1–G4; người dùng duyệt 2026-11-14T15:48:47Z.
+- [x] User Stories: SKIP (mở rộng nhỏ trên luồng lớp có sẵn, không thêm persona).
+- [x] Workflow Planning: [execution plan](inception/plans/2026-11-14-class-term-execution-plan.md), người dùng duyệt 2026-11-14T15:51:26Z. Chạy Functional Design U05 (kèm U04), Code Generation, Build and Test; bỏ qua Application Design, Units Generation, NFR Requirements/Design, Infrastructure Design.
+- [x] Functional Design U05 (kèm U04): [kế hoạch 6 bước, 6 câu hỏi](construction/plans/functional-design-plan/2026-11-14-u05-class-term-functional-design-plan.md), A cả 6 câu (2026-11-14T15:54:26Z). Đã viết BR-U05-61…72 (sửa BR-U05-11/13), F17–F20, `ClassTermPolicy`, frontend học kỳ; phần U04 (`SubjectClassSummary.term`) và U07 (`CopySource.term`). Security/Resiliency tuân thủ. Người dùng duyệt 2026-11-14T16:00:54Z.
+- [x] Code Generation: Part 1 [kế hoạch 20 bước](construction/plans/code-generation-plan/2026-11-14-u05-class-term-code-generation-plan.md) người dùng duyệt 2026-11-14T16:05:52Z; Part 2 xong 20/20 bước (2026-11-15T02:21:55Z), [tóm tắt](construction/u05-class-enrollment/code/2026-11-14-class-term-summary.md). Backend 2426 test qua (gồm integration test có Docker), frontend tsc/eslint sạch, Vitest 540 test phần liên quan qua (timeout 60 giây). Chưa commit. Người dùng duyệt mã 2026-11-15T02:29:40Z.
+- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-15-class-term-results.md). Backend `mvn -o -B verify` 2.426 test qua (gồm PostgreSQL); frontend lint/tsc sạch, build qua, Vitest 1.082/1.092 khi chạy cả bộ lúc máy tải nặng (10 test timeout 5 giây, chạy lại riêng hoặc với timeout 60 giây thì qua). Stack riêng `classterm`: API 21/21 qua, thử trên trình duyệt với Chủ nhiệm môn, giảng viên, sinh viên. Chưa commit. Người dùng duyệt 2026-11-15T03:05:31Z. Kiểm bổ sung 2026-11-15: thêm Admin, popup thông báo, trang Bài tập sinh viên, Đề có sẵn; e2e `u04-u13-u14` 40/40, các bộ khác lỗi không liên quan học kỳ (`ASSIGNMENT_NOT_FINALIZED` ở script U12, cấu hình AI, thứ tự chạy). Đã sửa script U12 thêm bước Hoàn tất: `u12b` 36/36, `u12c` 20/20, `u12` 58/59 (dữ liệu lần chạy trước).
+- [x] Operations: giai đoạn giữ chỗ, không có bước nào; triển khai theo quy trình merge vào `staging` hiện có.
+- Extension: Security và Resiliency giữ phạm vi đã duyệt, PBT tắt.
+
+## U01 (kèm U05/U09/U11/U12) — Mã số sinh viên, 2026-11-13
+
+Thêm MSSV (2 chữ cái in hoa + 6 chữ số) cho tài khoản `STUDENT`, ghi danh bằng MSSV. Không có chức năng đổi mã (chỉ sửa khi tài khoản còn `PENDING`), không có bộ lọc sinh viên chưa có mã (người dùng thu hẹp phạm vi 2026-11-13). Ngày 2026-11-14 bỏ thêm chức năng gán MSSV cho tài khoản cũ (F16), cột vẫn cho phép trống. Nhánh hiện tại `fix/student-code`. Brownfield, dùng lại tài liệu reverse engineering hiện hành. [Câu hỏi xác nhận](inception/requirements/2026-11-13-student-code-questions.md); [yêu cầu SC-01…11](inception/requirements/2026-11-13-student-code.md).
+
+- Operations: giai đoạn giữ chỗ, không có bước nào; triển khai theo quy trình merge vào `staging` hiện có.
+
+- [x] Workspace Detection: brownfield, bỏ qua Reverse Engineering.
+- [x] Requirements Analysis (Standard): người dùng duyệt 2026-11-13; G1 đổi thành SC-11 (sinh viên thấy MSSV của mình và người khác), G2–G4 giữ.
+- [x] User Stories: bỏ qua (thuộc tính mới cho vai trò đã có, không thêm persona).
+- [x] Workflow Planning: [execution plan](inception/plans/2026-11-13-student-code-execution-plan.md), người dùng duyệt 2026-11-13 sau khi thu hẹp phạm vi. Chạy Functional Design U01 (kèm U05/U09/U11/U12), Code Generation, Build and Test; bỏ qua Application Design, Units Generation, NFR Requirements/Design, Infrastructure Design.
+- [x] Functional Design U01 (kèm U05/U09/U11/U12): [kế hoạch 9 bước, 8 câu hỏi](construction/plans/functional-design-plan/2026-11-13-u01-student-code-functional-design-plan.md), A cả 8 câu. Đã viết BR-U01-100…115 (kèm F16 gán MSSV hàng loạt; chặn đổi role vào/ra STUDENT theo quyết định 15:50), BR-U05-56…60, BR-U09-73…75, BR-U11-42, BR-U12-97…98; Security/Resiliency tuân thủ. Người dùng duyệt 2026-11-13T15:53:39Z.
+- [x] Code Generation: Part 1 [kế hoạch 20 bước](construction/plans/code-generation-plan/2026-11-13-u01-student-code-code-generation-plan.md) người dùng duyệt 2026-11-13T15:56:03Z; Part 2 xong 20/20 bước (2026-11-13T16:50:20Z), [tóm tắt](construction/u01-account-and-access/code/2026-11-13-student-code-summary.md). Backend 805 test qua (2 lỗi integration vì thiếu Docker), frontend tsc/eslint sạch, Vitest 1043 test qua (5 test timeout khi chạy tải nặng, chạy lại riêng thì qua). Chưa commit. Người dùng duyệt mã 2026-11-13T16:52:38Z.
+- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-14-student-code-results.md). Backend mvn verify 2.366 test qua (gồm PostgreSQL); frontend lint/tsc sạch, Vitest 1042/1045 (3 timeout khi chạy cả bộ, chạy lại riêng qua), build qua; thử trên stack riêng `studentcode` với Admin, Chủ nhiệm môn, sinh viên. Đã thử bổ sung bảng điểm/xuất, chấm bài, quiz, nhóm, màn hẹp, chế độ tối; sửa 3 chỗ frontend (header chấm bài, dòng thành viên đề xuất, bảng điểm màn hẹp). Người dùng duyệt 2026-11-14T10:43:59Z. Đã commit, merge origin/staging, push; e2e u04-u13-u14 40/40; PR #84 vào staging (https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/84), chưa merge.
+- Extension: Security và Resiliency giữ phạm vi đã duyệt, PBT tắt.
+
 ## U06 — Guardrail hai tầng cho prompt AI, PR #77 vào staging, 2026-11-12
 
 Nhánh `feat/ai-prompt-guardrail` từ `main@8923d45d`. Guardrail Tầng 1 (quy tắc/regex) và Tầng 2 (RBAC, máy trạng thái, phân tích trích dẫn, chính sách logic, không regex) chạy tuần tự, fail-closed, trả `400 AI_PROMPT_REJECTED` trước khi lưu draft, giữ quota hay gọi AI. [Thiết kế và vị trí file](construction/u06-ai-connections/code/ai-prompt-guardrail.md); [kế hoạch và kết quả](construction/plans/code-generation-plan/2026-11-11-ai-prompt-guardrail.md).
@@ -832,3 +861,50 @@ Plan/evidence: construction/plans/code-generation-plan/2026-11-13-ai-chat-attach
 - [x] Fresh precommit checks: 217 frontend tests/31 files and 131 targeted backend tests pass; diff whitespace check passes. No code changes since earlier lint/typecheck/build and live UI checks.
 - [x] Fetched origin/staging and merged into fix/u05-u09-u15: Already up to date; no conflicts or merge commit needed. Staging contains no commits missing from this branch.
 - [ ] Push/PR/deploy not requested in this interaction. Live AI rubric/formatting findings remain recorded; no claim they were fixed by committing.
+
+## Student assignment visibility diagnosis — 2026-11-13
+
+- [x] User requested checking a screenshot: notification opens group assessment, class assignment tabs show zero items. Reproduced via actual StudentAssignmentsPage with a mocked API row: OPEN visible, CLOSED/unsubmitted missing from every tab (one passing control, one failing symptom).
+- [x] Located frontend tab partition gap and misleading closed-group status label. Backend list/detail intentionally include CLOSED rows; deadline scanner can close previously published work. Diagnostic failing harness moved out of the discovered test tree.
+- [ ] Await full deployed assignment link to verify that record's status/class; not claiming the screenshot's production root cause is conclusively verified.
+- [ ] Product fix not requested/applied in this diagnosis turn. Proposed discoverable closed/unsubmitted category plus matching labels; preserve actionable class-summary predicates and authorization.
+
+Evidence: construction/build-and-test/2026-11-13-student-assignment-visibility.md. Only diagnosis documents changed; no commit/push/deploy.
+
+### Approved visibility repair — 2026-11-13
+
+- [x] User authorized the proposed repair with Ponytail. Added Đã đóng tab for CLOSED/MISSED rows without an individual/group submission, with existing Hết hạn label shared by list and detail. Closed submitted rows remain in Đã nộp; actionable todo predicates, API, schedules and permissions unchanged.
+- [x] RED: nine new regression failures, seven passing controls before source edits. GREEN: 40 affected tests and full frontend 1047 tests/150 files; full ESLint and isolated TypeScript pass. URL focus/filter/pagination and closed submitted group histories covered.
+- [x] Current U08 frontend doc and evidence updated. Normal typecheck still fails on old generated Next routes; no cache deletion or permanent config change, temporary check config removed.
+- [ ] Deploy-record confirmation and browser acceptance not performed; no link provided. No backend change or new build/backend tests required for this frontend classification delta. No commit/push/deploy.
+
+## Member contribution levels — 2026-11-13
+
+- [x] Read existing member grading UI/API/model/JSON persistence; prepared concrete five-level assessment and in-product scoring guidance.
+- [x] User subsequently approved implementation of inception/requirements/2026-11-13-member-contribution-levels.md. Optional persisted level; teacher decides score; no automatic conversion. See implementation results below.
+- Initial design-only stage changed no source/tests; implementation results below supersede that stage. No commit/push/deploy. Existing security/resiliency scope retained; PBT disabled.
+
+### Member contribution levels implemented — 2026-11-13
+
+- [x] User authorized implementation of the reviewed five-level contribution proposal; direct execution, no subagents. Persisted nullable enum in existing evaluation JSONB/member-save transaction, previous/current level audit, private published student view, reset on resubmission and retained independent assessment on group corrections.
+- [x] Shared Select and collapsed grading guide; no automatic score conversion, saved personal reason restored, initial level unassessed. Source and tests follow existing module boundaries, no new dependency/schema migration.
+- [x] Backend55/55; frontend grading199/199 plus API4/4 (three overlap); scoped lint and isolated source/test TypeScript pass. Normal TypeScript fails only on old generated Next route validators. Temporary typecheck config removed, production config untouched.
+- [x] User will perform UI acceptance. No browser check, production build, live grade changes, AI call, backend restart, commit/push/deploy. Backend must load new code before testing the new strict request field.
+
+Plan: construction/plans/code-generation-plan/2026-11-13-member-contribution-levels.md. Results: construction/build-and-test/2026-11-13-member-contribution-levels.md. Security/Resiliency scope retained, PBT disabled.
+
+### Group grading side panel — implemented 2026-11-13
+
+- [x] User approved the concrete two-column UI proposal. Added optional DocumentEditor sidePanel, group rubric/member tabs and responsive modeless drawer using the existing1280px breakpoint.
+- [x] Member selector/previous/next and actual sectionAuthors links in both directions; multiple authors retained, unknown contribution never inferred. Persistent per-member draft components, version-safe refresh/conflict handling and additional unsaved guards; group autosave excludes member grades.
+- [x] RED3 new failures/44 controls; frontend full1056/151files; final scoped50/50 after local polish, lint/isolated TypeScript pass. Normal stale Next validator issue remains outside this delta; temporary config removed.
+- [x] Live teacher local UI1440/390: two columns/sticky panel, correct member, jump in page/step modes, draft retained across member switch and drawer Escape/reopen. Removed temporary unsaved QA note; restored554x930 viewport. No actual grade save, publish or AI call.
+- No backend delta/restart, production build, commit/push/deploy. Existing five-level feature WIP preserved; no subagents. Security/Resiliency retained, PBT disabled.
+
+Plan: construction/plans/code-generation-plan/2026-11-13-group-grading-side-panel.md. Results: construction/build-and-test/2026-11-13-group-grading-side-panel.md.
+
+### Local commit delivery — member grading
+
+- [x] User authorized clear local commits. Separated optional contribution-level data/API/published-student visibility from group-side-panel UI and unsaved-draft safeguards; plans/evidence/audit recorded in a documentation commit.
+- [x] Fresh precommit backend55/55 and frontend grading/shared document/submission-history276/276 across26 files pass; whitespace/index checks pass. No source edits since verification, no log/screenshot/temp config added to git.
+- No push, merge or deploy requested/performed. Earlier UI/typecheck/full-suite evidence and production-build limitation remain recorded in the reports.

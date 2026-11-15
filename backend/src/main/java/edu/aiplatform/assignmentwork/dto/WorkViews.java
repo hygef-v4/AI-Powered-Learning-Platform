@@ -24,12 +24,24 @@ public final class WorkViews {
     private WorkViews() {
     }
 
-    /** {@code myStatus}: NOT_STARTED, IN_PROGRESS, SUBMITTED, SUBMITTED_LATE, MISSED, GROUP. */
+    /** {@code myStatus}: NOT_STARTED, IN_PROGRESS, SUBMITTED, SUBMITTED_LATE, MISSED, GROUP. {@code classTerm}: học kỳ (D-U04-05). */
     public record Row(UUID assignmentId, UUID classId, String classCode, String subjectCode, AssignmentScope scope,
                       String title, SubmissionMode submissionMode, GradingMode gradingMode, boolean diagramEnabled,
                       AssignmentStatus status, Instant opensAt, Instant closesAt, Instant lateUntil,
                       Integer maxAttempts, String myStatus, int attemptCount, int submittedCount,
-                      UUID inProgressAttemptId, Instant lastSubmittedAt, GroupWork group) {
+                      UUID inProgressAttemptId, Instant lastSubmittedAt, GroupWork group,
+                      String classTerm) {
+
+        /** Creates a row without the class term (hand-built fixtures). */
+        public Row(UUID assignmentId, UUID classId, String classCode, String subjectCode, AssignmentScope scope,
+                   String title, SubmissionMode submissionMode, GradingMode gradingMode, boolean diagramEnabled,
+                   AssignmentStatus status, Instant opensAt, Instant closesAt, Instant lateUntil,
+                   Integer maxAttempts, String myStatus, int attemptCount, int submittedCount,
+                   UUID inProgressAttemptId, Instant lastSubmittedAt, GroupWork group) {
+            this(assignmentId, classId, classCode, subjectCode, scope, title, submissionMode, gradingMode,
+                    diagramEnabled, status, opensAt, closesAt, lateUntil, maxAttempts, myStatus, attemptCount,
+                    submittedCount, inProgressAttemptId, lastSubmittedAt, group, null);
+        }
     }
 
     /** {@code changedSinceSubmit}: nhóm sửa sau lần nộp cuối, bài lại là Đang làm. */

@@ -9,6 +9,8 @@ import { BatchActionDialog } from "./BatchActionDialog";
 import { buildGradeActionItems } from "../model/gradeActions";
 import { GRADE_STATUS_LABELS, type ItemVersion, type SubmissionRow } from "../model/types";
 import { buildEvaluationHref } from "../model/navigation";
+import { matchesPersonQuery } from "@/shared/studentCode";
+import { PersonSubline } from "@/shared/ui/PersonSubline";
 
 type Props = {
   classId: string; assignmentId: string; onDone: () => void;
@@ -32,8 +34,8 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
   const [action, setAction] = useState<{ kind: "ai" | "publish"; items: ItemVersion[] } | null>(null);
   const search = query.trim().toLocaleLowerCase("vi");
   const rows = (value ?? []).filter(row => (!status || formatStatus(row.status) === status)
-    // Bài nhóm: tìm theo tên nhóm; bài cá nhân: theo tên hoặc email sinh viên.
-    && (group ? row.student.name : `${row.student.name} ${row.student.email}`).toLocaleLowerCase("vi").includes(search));
+    // Bài nhóm: tìm theo tên nhóm; bài cá nhân: theo tên, email hoặc MSSV sinh viên.
+    && (group ? row.student.name.toLocaleLowerCase("vi").includes(search) : matchesPersonQuery(row.student, search)));
   const currentPage = Math.min(page, Math.max(0, Math.ceil(rows.length / PAGE_SIZE) - 1));
   const shown = rows.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
   const eligible = rows.filter(canSelect);
@@ -103,7 +105,7 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
             onChange={event => toggleRow(row.evaluationId!, event.target.checked)} /></Td>
           <Td className="min-w-0">
             <strong className="block break-words text-ink">{row.student.name}</strong>
-            {row.student.email && <p className="truncate text-xs text-muted">{row.student.email}</p>}
+            <PersonSubline className="truncate" studentCode={row.student.studentCode} email={row.student.email} />
           </Td>
           <Td className="font-semibold whitespace-nowrap tabular-nums">{row.score == null ? "—" : `${Number(row.score)} / ${Number(row.maxScore ?? 10)}`}</Td>
           <Td><div className="flex flex-wrap gap-1.5">

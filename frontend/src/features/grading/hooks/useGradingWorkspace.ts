@@ -31,7 +31,8 @@ import type {
 
 const UNSAVED_CHANGES_MESSAGE = "Bạn có thay đổi chưa lưu. Rời bài này?";
 
-export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Detail>, filters: NavigationFilters = {}) {
+export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Detail>,
+  filters: NavigationFilters = {}, additionalDirty = false) {
   const [confirmDialog, requestConfirm] = useConfirmDialog();
   const router = useRouter();
   const [detail, setDetail] = useState(initial);
@@ -48,14 +49,16 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   const official = evaluation.state === "FINALIZED" || evaluation.state === "PUBLISHED";
   const disabled = busy || !detail.current || detail.editable === false || evaluation.state === "SUPERSEDED";
   const dirtyRef = useRef(dirty);
+  const additionalDirtyRef = useRef(additionalDirty);
   const { proposals, proposalsLoaded, pollExhausted, addProposal, resumePolling } = useGradingProposals(evaluation.id, busy, setError);
 
   useEffect(() => {
     dirtyRef.current = dirty;
-  }, [dirty]);
+    additionalDirtyRef.current = additionalDirty;
+  }, [dirty, additionalDirty]);
   useEffect(() => {
     function beforeUnload(event: BeforeUnloadEvent) {
-      if (dirtyRef.current) {
+      if (dirtyRef.current || additionalDirtyRef.current) {
         event.preventDefault();
         event.returnValue = "";
       }
@@ -130,7 +133,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
 
   function navigateEvaluation(id: string, keepFilters = true) {
     const go = () => router.push(buildEvaluationHref(id, keepFilters ? filters : {}));
-    if (dirty) requestConfirm(UNSAVED_CHANGES_MESSAGE, go, "Bỏ thay đổi");
+    if (dirty || additionalDirty) requestConfirm(UNSAVED_CHANGES_MESSAGE, go, "Bỏ thay đổi");
     else go();
   }
 

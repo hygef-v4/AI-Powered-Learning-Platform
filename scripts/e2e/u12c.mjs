@@ -71,6 +71,10 @@ for (const part of detail.data.parts || []) {
   await T.put(`/api/v1/assignments/${AID}/parts/${part.partId ?? part.id}/rubric`, { version: cur.data.version, criteria: [{ criterionId: crypto.randomUUID(), title: "Nội dung", description: "", kind: "TEXT", items: [{ itemId: crypto.randomUUID(), text: "Đúng", points: 5 }] }] });
 }
 detail = await T.get(`/api/v1/assignments/${AID}`);
+// Bài phải được Hoàn tất trước khi xếp lịch (từ 2026-11-11), nếu không phát hành trả ASSIGNMENT_NOT_FINALIZED.
+const reviewed = await T.post(`/api/v1/assignments/${AID}/review`, { version: detail.data.version });
+check(R, "Chuẩn bị: hoàn tất bài nhóm 3 phần", reviewed.status === 200, brief(reviewed));
+detail = await T.get(`/api/v1/assignments/${AID}`);
 const pub = await T.post(`/api/v1/assignments/${AID}/publish`, { version: detail.data.version, openNow: true, closesAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(), maxAttempts: 3, confirmUngroupedStudents: true });
 check(R, "Chuẩn bị: phát hành bài nhóm 3 phần", pub.status === 200, brief(pub));
 let D = null;

@@ -5,7 +5,9 @@ import edu.aiplatform.academics.model.AcademicRuleException;
 import edu.aiplatform.academics.model.CourseClass;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class CourseClassRepository implements ICourseClassRepository {
+    private static final String CLASS_EXISTS_MESSAGE = "Mã lớp đã tồn tại trong môn ở học kỳ này";
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     /** Creates the class repository with its named JDBC template. */
@@ -37,7 +40,7 @@ public class CourseClassRepository implements ICourseClassRepository {
     public List<CourseClass> listBySubject(UUID subjectId, int limit, int offset) {
         PersistenceChecks.validatePage(limit, offset);
         return namedParameterJdbcTemplate.query(
-                "select * from course_classes where subject_id = :subjectId order by code, id limit :limit offset :offset",
+                "select * from course_classes where subject_id = :subjectId order by code, starts_on desc, id limit :limit offset :offset",
                 Map.of("subjectId", subjectId, "limit", limit, "offset", offset),
                 CourseClassRepository::mapCourseClass);
     }
@@ -51,15 +54,14 @@ public class CourseClassRepository implements ICourseClassRepository {
         try {
             namedParameterJdbcTemplate.update(
                     """
-                            insert into course_classes (id, subject_id, code, name, description, status, teacher_id,
+                            insert into course_classes (id, subject_id, code, name, description, starts_on, status, teacher_id,
                                 show_grade_distribution, created_at, updated_at, version)
-                            values (:id, :subjectId, :code, :name, :description, :status, :teacherId,
+                            values (:id, :subjectId, :code, :name, :description, :startsOn, :status, :teacherId,
                                 :distribution, :createdAt, :updatedAt, :version)
                             """,
                     params(value));
         } catch (DuplicateKeyException ex) {
-            throw new AcademicRuleException("CLASS_EXISTS",
-                    "Mã lớp trong môn hoặc ID lớp đã tồn tại");
+            throw new AcademicRuleException("CLASS_EXISTS", CLASS_EXISTS_MESSAGE);
         }
     }
 
@@ -74,14 +76,21 @@ public class CourseClassRepository implements ICourseClassRepository {
         }
         var args = params(value);
         args.put("expectedVersion", expectedVersion);
-        int count = namedParameterJdbcTemplate.update(
-                """
-                        update course_classes set name = :name, description = :description,
-                            status = :status, teacher_id = :teacherId, show_grade_distribution = :distribution,
-                            updated_at = :updatedAt, version = :version
-                        where id = :id and version = :expectedVersion
-                        """,
-                args);
+        int count;
+        try {
+            count = namedParameterJdbcTemplate.update(
+                    """
+                            update course_classes set name = :name, description = :description,
+                                starts_on = :startsOn, status = :status, teacher_id = :teacherId,
+                                show_grade_distribution = :distribution,
+                                updated_at = :updatedAt, version = :version
+                            where id = :id and version = :expectedVersion
+                            """,
+                    args);
+        } catch (DuplicateKeyException ex) {
+            // Đổi ngày bắt đầu làm học kỳ đổi có thể trùng mã lớp ở học kỳ mới (BR-U05-64).
+            throw new AcademicRuleException("CLASS_EXISTS", CLASS_EXISTS_MESSAGE);
+        }
         if (count != 1)
             throw new AcademicRuleException("CLASS_VERSION_CONFLICT",
                     "Dữ liệu lớp đã thay đổi. Hãy tải lại");
@@ -95,6 +104,7 @@ public class CourseClassRepository implements ICourseClassRepository {
         args.put("code", value.code());
         args.put("name", value.name());
         args.put("description", value.description());
+        args.put("startsOn", Date.valueOf(value.startsOn()));
         args.put("status", value.status().name());
         args.put("teacherId", value.teacherId());
         args.put("distribution", value.showGradeDistribution());
@@ -108,7 +118,7 @@ public class CourseClassRepository implements ICourseClassRepository {
     static CourseClass mapCourseClass(ResultSet rs, int row) throws SQLException {
         return new CourseClass(rs.getObject("id", UUID.class),
                 rs.getObject("subject_id", UUID.class), rs.getString("code"), rs.getString("name"),
-                rs.getString("description"),
+                rs.getString("description"), rs.getObject("starts_on", LocalDate.class),
                 ClassStatus.valueOf(rs.getString("status")), rs.getObject("teacher_id", UUID.class),
                 rs.getBoolean("show_grade_distribution"), rs.getTimestamp("created_at").toInstant(),
                 rs.getTimestamp("updated_at").toInstant(), rs.getLong("version"));

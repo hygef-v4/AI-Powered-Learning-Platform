@@ -93,9 +93,12 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   const groupAllowed = !isClass || target.groupSupported;
   const existing = method === "EXISTING";
   const ai = method === "AI";
-  // Đề có sẵn: đề mẫu của môn đứng đầu, rồi bài của các lớp mình dạy (thứ tự server trả).
+  // Đề có sẵn: đề mẫu của môn đứng đầu, rồi bài của các lớp mình dạy (thứ tự server trả). Bài của lớp ghi thêm `mã lớp · học kỳ`
+  // để phân biệt lớp cùng mã ở các học kỳ (D-U04-05).
   const candidates = (sources ?? []).flatMap((source) => source.assignments);
-  const options = candidates.filter((item) => item.id !== sourceId).map((item) => ({ id: item.id, label: item.title }));
+  const options = (sources ?? []).flatMap((source) => source.assignments.map((item) => ({
+    id: item.id, label: source.kind === "CLASS" && source.term ? `${item.title} · ${source.code} · ${source.term}` : item.title,
+  }))).filter((option) => option.id !== sourceId);
   const picked = candidates.find((item) => item.id === sourceId);
   const subjectTemplates = (sources ?? []).filter((source) => source.kind === "SUBJECT").flatMap((source) => source.assignments);
   const templateName = aiTemplateFile?.name ?? subjectTemplates.find((item) => item.id === aiTemplateId)?.title;

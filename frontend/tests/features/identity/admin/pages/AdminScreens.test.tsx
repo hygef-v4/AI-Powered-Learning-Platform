@@ -34,6 +34,8 @@ const ACCOUNT: AccountDetail = {
   version: 3,
 };
 
+const TEACHER_ACCOUNT: AccountDetail = { ...ACCOUNT, role: "TEACHER", email: "gv01@fpt.edu.vn", displayName: "Giảng viên 01" };
+
 function signedInAs(accountId: string) {
   vi.mocked(useSession).mockReturnValue({
     status: "authenticated",
@@ -57,7 +59,8 @@ describe("NewAccountDialog", () => {
     fireEvent.click(screen.getByRole("button", { name: "Thêm tài khoản" }));
 
     await waitFor(() => expect(onCreated).toHaveBeenCalled());
-    expect(createAccount).toHaveBeenCalledWith("gv01@fpt.edu.vn", "Giảng viên 01", "TEACHER");
+    expect(createAccount).toHaveBeenCalledWith("gv01@fpt.edu.vn", "Giảng viên 01", "TEACHER", undefined);
+    expect(screen.queryByLabelText(/^Mã số sinh viên/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Người dùng tự kích hoạt/)).not.toBeInTheDocument();
   });
 
@@ -67,9 +70,29 @@ describe("NewAccountDialog", () => {
 
     fireEvent.change(screen.getByLabelText(EMAIL), { target: { value: "sv01@fpt.edu.vn" } });
     fireEvent.change(screen.getByLabelText(NAME), { target: { value: "SV" } });
+    fireEvent.change(screen.getByLabelText(/^Mã số sinh viên/), { target: { value: " se000001 " } });
     fireEvent.click(screen.getByRole("button", { name: "Thêm tài khoản" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Email đã có tài khoản.");
+    expect(createAccount).toHaveBeenCalledWith("sv01@fpt.edu.vn", "SV", "STUDENT", "SE000001");
+  });
+
+  it("sinh viên bắt buộc MSSV đúng định dạng; trùng mã thì báo rõ", async () => {
+    vi.mocked(createAccount).mockRejectedValue(new ApiError({ status: 409, code: "STUDENT_CODE_EXISTS" }));
+    render(<NewAccountDialog onClose={vi.fn()} onCreated={vi.fn()} />);
+
+    fireEvent.change(screen.getByLabelText(EMAIL), { target: { value: "sv02@fpt.edu.vn" } });
+    fireEvent.change(screen.getByLabelText(NAME), { target: { value: "SV" } });
+    fireEvent.click(screen.getByRole("button", { name: "Thêm tài khoản" }));
+    expect(await screen.findByText("Nhập MSSV.")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/^Mã số sinh viên/), { target: { value: "S123" } });
+    fireEvent.click(screen.getByRole("button", { name: "Thêm tài khoản" }));
+    expect(await screen.findByText(/MSSV gồm 2 chữ cái và 6 chữ số/)).toBeInTheDocument();
+    expect(createAccount).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText(/^Mã số sinh viên/), { target: { value: "SE000002" } });
+    fireEvent.click(screen.getByRole("button", { name: "Thêm tài khoản" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("MSSV này đã được dùng cho tài khoản khác.");
   });
 });
 
@@ -121,7 +144,7 @@ describe("AccountDetailPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Dữ liệu đã được thay đổi ở phiên khác");
-    expect(updateAccount).toHaveBeenCalledWith("acc-1", "Tên mới", "", 3);
+    expect(updateAccount).toHaveBeenCalledWith("acc-1", "Tên mới", "", 3, undefined);
     await waitFor(() => expect(getAccount).toHaveBeenCalledTimes(2));
   });
 
@@ -134,12 +157,13 @@ describe("AccountDetailPage", () => {
         classes: [{ id: "class-uuid", code: "SE1801", name: "Lớp SE1801" }],
       } as never),
     );
+    vi.mocked(getAccount).mockResolvedValue(TEACHER_ACCOUNT);
     render(<AccountDetailPage />);
 
     fireEvent.click(await screen.findByRole("button", { name: "Đổi vai trò" }));
     const role = within(screen.getByRole("dialog")).getByLabelText(/^Vai trò/);
-    expect(role).toHaveValue("STUDENT");
-    fireEvent.change(role, { target: { value: "TEACHER" } });
+    expect(role).toHaveValue("TEACHER");
+    fireEvent.change(role, { target: { value: "ADMIN" } });
     fireEvent.click(screen.getAllByRole("button", { name: "Đổi vai trò" })[1]!);
 
     const dialog = await screen.findByRole("dialog", { name: "Không đổi được vai trò" });
@@ -155,26 +179,61 @@ describe("AccountDetailPage", () => {
     vi.mocked(changeRole).mockRejectedValue(
       new ApiError({ status: 409, code: "ROLE_CHANGE_BLOCKED", managedSubjects: [], taughtClasses: ["lop-1"] } as never),
     );
+    vi.mocked(getAccount).mockResolvedValue(TEACHER_ACCOUNT);
     render(<AccountDetailPage />);
 
     fireEvent.click(await screen.findByRole("button", { name: "Đổi vai trò" }));
     expect(screen.getAllByRole("button", { name: "Đổi vai trò" })[1]).toBeDisabled();
     const role = within(screen.getByRole("dialog")).getByLabelText(/^Vai trò/);
-    expect(role).toHaveValue("STUDENT");
-    fireEvent.change(role, { target: { value: "TEACHER" } });
+    expect(role).toHaveValue("TEACHER");
+    expect(within(role).queryByRole("option", { name: "Sinh viên" })).not.toBeInTheDocument();
+    fireEvent.change(role, { target: { value: "ADMIN" } });
     fireEvent.click(screen.getAllByRole("button", { name: "Đổi vai trò" })[1]!);
 
     expect(await screen.findByRole("dialog", { name: "Không đổi được vai trò" })).toHaveTextContent("lop-1");
-    expect(changeRole).toHaveBeenCalledWith("acc-1", "TEACHER", 3);
+    expect(changeRole).toHaveBeenCalledWith("acc-1", "ADMIN", 3);
   });
 
   it("không cho tự đổi vai trò hay tự vô hiệu hóa", async () => {
     signedInAs("acc-1");
+    vi.mocked(getAccount).mockResolvedValue(TEACHER_ACCOUNT);
     render(<AccountDetailPage />);
 
     expect(await screen.findByRole("button", { name: "Đổi vai trò" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Vô hiệu hóa tài khoản" })).toBeDisabled();
     expect(changeStatus).not.toHaveBeenCalled();
+  });
+
+  it("sinh viên: không có nút đổi vai trò; MSSV đã kích hoạt chỉ đọc", async () => {
+    signedInAs("admin-1");
+    vi.mocked(getAccount).mockResolvedValue({ ...ACCOUNT, studentCode: "SE000001", studentCodeEditable: false });
+    render(<AccountDetailPage />);
+
+    expect(await screen.findByText("Không đổi được vai trò của tài khoản sinh viên.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Đổi vai trò" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^Mã số sinh viên/)).toBeDisabled();
+    expect(screen.getByLabelText(/^Mã số sinh viên/)).toHaveValue("SE000001");
+  });
+
+  it("sửa MSSV gõ sai khi sinh viên chưa kích hoạt, gửi kèm mã đã chuẩn hóa", async () => {
+    signedInAs("admin-1");
+    vi.mocked(getAccount).mockResolvedValue({ ...ACCOUNT, status: "PENDING", studentCode: "SE000001", studentCodeEditable: true });
+    vi.mocked(updateAccount).mockResolvedValue({ ...ACCOUNT, status: "PENDING", studentCode: "SE000009", studentCodeEditable: true, version: 4 });
+    render(<AccountDetailPage />);
+
+    fireEvent.change(await screen.findByLabelText(/^Mã số sinh viên/), { target: { value: "se000009" } });
+    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+
+    await waitFor(() => expect(updateAccount).toHaveBeenCalledWith("acc-1", "Sinh viên 01", "", 3, "SE000009"));
+  });
+
+  it("sinh viên cũ chưa có mã chỉ thấy Chưa có MSSV, không gán được", async () => {
+    signedInAs("admin-1");
+    vi.mocked(getAccount).mockResolvedValue({ ...ACCOUNT, studentCode: null, studentCodeEditable: false });
+    render(<AccountDetailPage />);
+
+    expect(await screen.findByLabelText(/^Mã số sinh viên/)).toHaveValue("Chưa có MSSV");
+    expect(screen.getByLabelText(/^Mã số sinh viên/)).toBeDisabled();
   });
 
   it("mở Nhật ký đã lọc theo tài khoản", async () => {

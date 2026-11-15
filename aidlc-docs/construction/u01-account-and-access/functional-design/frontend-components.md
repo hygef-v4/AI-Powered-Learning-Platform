@@ -200,3 +200,62 @@ Nút "Nhập Excel" mở vùng nhập ngay trên Account List; danh sách tải 
 
 - Tạo/import không gửi OTP, activation hợp lệ/sai/hết hạn/rate limit; recovery không lộ account.
 - Đăng nhập/đăng xuất/phiên revoked; R1 own profile; Admin bị chặn học vụ; Student shared quota bị từ chối.
+
+## 6. Mã số sinh viên (MSSV) — 2026-11-13
+
+Nguồn: [BR-U01-100…115](business-rules.md#11-mã-số-sinh-viên-mssv--2026-11-13); [FD Q4, Q6](../../plans/functional-design-plan/2026-11-13-u01-student-code-functional-design-plan.md).
+
+### Quy ước chung
+
+- Ô nhập MSSV có nhãn "Mã số sinh viên".
+  - Khi rời ô, chữ thường được tự đổi thành in hoa.
+  - Frontend kiểm trước theo `^[A-Z]{2}[0-9]{6}$` và báo "MSSV gồm 2 chữ cái và 6 chữ số, ví dụ SE123456." Backend vẫn là nơi kiểm cuối cùng.
+- Câu báo cho từng mã lỗi:
+
+| Mã lỗi | Câu báo |
+|---|---|
+| `STUDENT_CODE_EXISTS` | "MSSV này đã được dùng cho tài khoản khác." |
+| `STUDENT_CODE_LOCKED` | "MSSV đã khóa vì sinh viên đã kích hoạt tài khoản." |
+| `MISSING_STUDENT_CODE` | "Cần nhập MSSV cho tài khoản sinh viên." |
+| `STUDENT_CODE_NOT_ALLOWED` | "Chỉ tài khoản sinh viên mới có MSSV." |
+
+- Trong bảng, cột "MSSV" đứng trước cột họ tên. Ở màn hẹp, MSSV gộp vào ô họ tên thành dòng phụ. Tài khoản chưa có mã thì để trống.
+
+### AccountListPage (bổ sung)
+
+- Thêm cột "MSSV".
+- Chữ gợi ý ô tìm đổi thành "Tìm theo email, tên hoặc MSSV".
+- Không thêm bộ lọc theo tình trạng MSSV (Q7).
+
+### NewAccountDialog (bổ sung)
+
+- Ô "Mã số sinh viên*" chỉ hiện khi chọn vai trò Sinh viên. Đổi sang vai trò khác thì ô bị ẩn và giá trị đã nhập bị xóa.
+- `createAccount` gửi thêm `studentCode`.
+
+### AccountDetailPage (bổ sung)
+
+Vùng Thông tin tài khoản có thêm MSSV khi tài khoản là sinh viên. Cách hiển thị tùy tình huống:
+
+| Tình huống | Hiển thị |
+|---|---|
+| `studentCodeEditable`, đang `PENDING` | Ô có giá trị, sửa được, gợi ý "Chỉ sửa được khi sinh viên chưa kích hoạt." |
+| Không `studentCodeEditable` | Chỉ đọc, gợi ý "MSSV không đổi được sau khi sinh viên kích hoạt tài khoản." Tài khoản cũ chưa có mã thì hiện "Chưa có MSSV" |
+
+`updateAccount` chỉ gửi `studentCode` khi giá trị khác bản đã tải về.
+
+Popup Đổi vai trò:
+
+- Với tài khoản sinh viên, không hiện nút "Đổi vai trò". Thay vào đó hiện ghi chú "Không đổi được vai trò của tài khoản sinh viên."
+- Với các tài khoản khác, danh sách "Vai trò mới" không có lựa chọn Sinh viên.
+- Nếu backend vẫn trả lỗi `STUDENT_ROLE_CHANGE_NOT_ALLOWED`, hiện câu "Không đổi được vai trò vào hoặc ra khỏi Sinh viên."
+
+### ImportAccountsPanel (bổ sung)
+
+- Tệp mẫu có thêm cột `student_code`. Chữ hướng dẫn đổi thành "email, họ tên, vai trò, MSSV (bắt buộc với sinh viên)".
+- Bảng xem trước có thêm cột MSSV và câu báo cho các mã lỗi mới.
+
+### AssignStudentCodesPanel (`a02c`, F16): đã bỏ (2026-11-14)
+
+### ProfilePage (bổ sung)
+
+Tài khoản sinh viên thấy thêm dòng "Mã số sinh viên" ở dạng chỉ đọc. Chưa có mã thì hiện "Chưa có MSSV". Form sửa hồ sơ không có ô này.

@@ -27,7 +27,9 @@ for (const p of people) {
   const list = await admin.get(`/api/v1/admin/accounts?q=${encodeURIComponent(p.email)}`);
   let acc = (list.data?.items || list.data?.content || []).find((a) => a.email === p.email);
   if (!acc) {
-    const r = await admin.post("/api/v1/admin/accounts", { email: p.email, displayName: p.displayName, role: p.role });
+    // Student accounts require a unique student code (BR-U01-103): ST000001…ST000005.
+    const studentCode = p.role === "STUDENT" ? `ST${p.key.replace("sv", "").padStart(6, "0")}` : undefined;
+    const r = await admin.post("/api/v1/admin/accounts", { email: p.email, displayName: p.displayName, role: p.role, ...(studentCode ? { studentCode } : {}) });
     if (r.status >= 300) throw new Error(`create ${p.email}: ${r.status} ${JSON.stringify(r.data)}`);
     acc = r.data;
   }
@@ -51,7 +53,7 @@ await manager.login(out.accounts.manager.email, PW);
 const mine = await manager.get("/api/v1/manager/classes");
 let cls = (mine.data?.items || mine.data?.content || mine.data || []).find?.((c) => c.code === CLASS_CODE);
 if (!cls) {
-  const r = await manager.post("/api/v1/manager/classes", { subjectId: subject.id, code: CLASS_CODE, name: "Lớp chạy thử U06 U12 (" + CLASS_CODE + ")", description: "Lớp thử", teacherId: out.accounts.teacher.id });
+  const r = await manager.post("/api/v1/manager/classes", { subjectId: subject.id, code: CLASS_CODE, name: "Lớp chạy thử U06 U12 (" + CLASS_CODE + ")", description: "Lớp thử", startsOn: new Date().toISOString().slice(0, 10), teacherId: out.accounts.teacher.id });
   if (r.status >= 300) throw new Error(`class: ${r.status} ${JSON.stringify(r.data)}`);
   cls = r.data;
 }

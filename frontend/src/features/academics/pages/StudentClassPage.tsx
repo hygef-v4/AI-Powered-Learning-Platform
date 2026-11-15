@@ -6,9 +6,10 @@ import { Field, LockedInput, PageHeader, Pill, Section } from "@/shared/ui";
 import { initials } from "@/shared/layout/navigation";
 import { studentClassAside, studentClassBoard, studentClassSections } from "../slots";
 import type { CourseClassView } from "../model/types";
+import { formatStartDate } from "../model/format";
 
 /**
- * Lớp của tôi (Sinh viên), cùng bố cục Chi tiết lớp của Chủ nhiệm môn nhưng chỉ xem: thẻ Thông tin lớp (mã môn, mã lớp, mô tả) bên
+ * Lớp của tôi (Sinh viên), cùng bố cục Chi tiết lớp của Chủ nhiệm môn nhưng chỉ xem: thẻ Thông tin lớp (mã môn, mã lớp, ngày bắt đầu, học kỳ, mô tả) bên
  * trái, cột phải có Giảng viên và Nhóm của tôi; bên dưới là Tổng quan bài tập. `?tab=materials`
  * (mục Học liệu trên sidebar) mở danh sách học liệu của lớp.
  */
@@ -30,6 +31,8 @@ export function StudentClassPage({ value, tab }: { value: CourseClassView; tab: 
             <div className="grid min-w-0 gap-4 sm:grid-cols-2">
               <Field label="Mã môn" htmlFor={`${id}-subject`}><LockedInput id={`${id}-subject`} value={value.subject.code} /></Field>
               <Field label="Mã lớp" htmlFor={`${id}-code`}><LockedInput id={`${id}-code`} value={value.code} /></Field>
+              <Field label="Ngày bắt đầu" htmlFor={`${id}-starts-on`}><LockedInput id={`${id}-starts-on`} value={formatStartDate(value.startsOn)} /></Field>
+              <Field label="Học kỳ" htmlFor={`${id}-term`}><LockedInput id={`${id}-term`} value={value.term} /></Field>
               <div className="sm:col-span-2">
                 <Field label="Mô tả" htmlFor={`${id}-description`}>
                   {/* Cùng khung ô Mô tả bên Chủ nhiệm môn (cao tối thiểu như textarea ở đó). */}
