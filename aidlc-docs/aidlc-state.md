@@ -787,3 +787,20 @@ Người dùng yêu cầu "tạo pr vào staging cho tôi". Cho phép commit/pus
 Tích hợp staging `1f713615`; giữ cả hai lịch sử audit/state. Fresh full frontend
 963 test/135 file, ESLint/TypeScript, Docker build và runtime smoke qua. Người dùng
 cho phép push/tạo PR vào staging; không tự merge PR. Xem PR GitHub để biết trạng thái CI.
+
+## Whole-project bug review — 2026-11-12
+
+- [x] Reviewed checkout 65fcc764 on feat/ai-prompt-guardrail with existing AI-DLC conventions and module context.
+- [x] Full backend verify 2,342 tests/no skips and required integration guard; frontend 1,018 tests, lint, production build and clean-cache typecheck passed. MCP hook 14 scenarios and deploy ShellCheck passed.
+- [x] Confirmed four defects with local probes: quiz exit after failed save (P1), quota fallback transaction rollback, quiz resumption in archived prior class, aggregate AI timeout (P2). Findings are reported, not fixed.
+- [x] Vietnamese report and evidence: construction/build-and-test/2026-11-12-project-bug-review.md. Plan: construction/plans/2026-11-12-project-bug-review.md.
+
+No application source edits, live data/provider writes, restart, subagents, commit/push/deploy. Stale generated route types moved to .tmp before rebuilding. Live browser/provider/production/load checks not performed; Python fixture unavailable and deploy shell harness not rerun. Security/Resiliency retained with recovery defects reported, PBT disabled. Concurrent audit additions preserved.
+
+## Whole-project review fixes — 2026-11-13
+
+- [x] Fixed BUG-01–04 from the 12/11 review: failed quiz exit save, quota rollback fallback, class-scoped retake attempts, aggregate AI retry timeout.
+- [x] User policy: retain old work in archived class; new class gets independent attempts and limits. Enrollment restriction unchanged.
+- [x] Final isolated backend 88 tests/no skips, PostgreSQL migration; frontend quiz 35 tests, TypeScript/scoped lint passed.
+- Evidence: construction/build-and-test/2026-11-13-review-fixes-results.md. No live migration/commit/push/deploy; unrelated concurrent work preserved.
+
