@@ -105,6 +105,7 @@ export const ACTION_LABELS: Record<string, string> = {
   ASSIGNMENT_COPIED: "Sao chép bài tập",
   ASSIGNMENT_VERSION_CREATED: "Tạo phiên bản bài tập",
   ASSIGNMENT_SCHEDULE_CHANGED: "Đổi lịch bài tập",
+  ASSIGNMENT_CLOSED: "Đóng nhận bài",
   ASSIGNMENT_DOCX_IMPORTED: "Nhập bài tập từ DOCX",
   ASSIGNMENT_SKELETON_SAVED: "Lưu khung bài làm",
   ASSIGNMENT_AI_DRAFT_REQUESTED: "Yêu cầu AI soạn bài tập",

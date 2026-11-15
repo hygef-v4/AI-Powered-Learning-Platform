@@ -17,6 +17,19 @@ beforeEach(() => {
   mocks.listSubmissions.mockImplementation((_c, _a, _status, page) => Promise.resolve({ rows: rows.slice((page - 1) * 20, page * 20), total: rows.length }));
 });
 afterEach(cleanup);
+it("keeps submitted work readable but prevents batch grading before reception closes", async () => {
+  mocks.listSubmissions.mockImplementation((_c, _a, _status, page) => Promise.resolve({
+    rows: rows.slice((page - 1) * 20, page * 20), total: rows.length, editable: page !== 1,
+    readOnlyReason: page === 1 ? "Bài tập đang nhận bài. Đóng nhận bài trước khi chấm." : null,
+  }));
+  render(<GradebookBatchControls {...props} />);
+  expect(await screen.findByText("Bài tập đang nhận bài. Đóng nhận bài trước khi chấm.")).toBeInTheDocument();
+  expect(screen.getByRole("checkbox", { name: "Chọn tất cả trên trang" })).toBeDisabled();
+  expect(screen.getByRole("checkbox", { name: "Chọn Student 0" })).toBeDisabled();
+  fireEvent.click(screen.getByText("Student 0"));
+  expect(router.push).toHaveBeenCalledWith(expect.stringContaining("e0"));
+  expect(mocks.dialog).not.toHaveBeenCalled();
+});
 it("selects a page, all30 matching submissions, and passes only eligible IDs/versions to publication", async () => {
   render(<GradebookBatchControls {...props} />);
   fireEvent.click(await screen.findByRole("checkbox", { name: "Chọn tất cả trên trang" }));

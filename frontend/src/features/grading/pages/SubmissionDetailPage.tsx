@@ -57,8 +57,9 @@ export function SubmissionDetailPage({
   );
   const resource = useResource(load);
   const data = resource.value;
+  const readOnly = data?.editable === false;
   const selectedRows = data?.rows.filter((row) => row.evaluationId && selected.includes(row.evaluationId)) ?? [];
-  const selectable = data?.rows.filter((r) => r.evaluationId) ?? [];
+  const selectable = readOnly ? [] : data?.rows.filter((r) => r.evaluationId) ?? [];
   return (
     <main className="flex min-w-0 flex-col gap-6">
       <header className="flex flex-col gap-2.5">
@@ -95,6 +96,7 @@ export function SubmissionDetailPage({
         </Alert>
       )}
       {!data && !resource.error && <p role="status" className="text-sm text-muted">Đang tải bài nộp…</p>}
+      {readOnly && <Alert tone="info">{data?.readOnlyReason || "Bài tập chỉ cho phép xem bài nộp."}</Alert>}
       {data && (
         <>
           <div className="flex flex-wrap gap-x-10 gap-y-4 border-b border-line pb-5">
@@ -149,7 +151,7 @@ export function SubmissionDetailPage({
                 <span className="text-[13px] font-semibold text-ink">Đã chọn {selectedRows.length} bài</span>
                 {(["ai", "publish"] as const).map((a) => (
                   <Button key={a} size="sm" variant={a === "publish" ? "primary" : "secondary"}
-                    disabled={!buildGradeActionItems(selectedRows, a).length} onClick={() => setAction(a)}>
+                    disabled={readOnly || !buildGradeActionItems(selectedRows, a).length} onClick={() => setAction(a)}>
                     {a === "ai" ? "AI đề xuất" : "Công bố điểm"}
                   </Button>
                 ))}
@@ -167,6 +169,7 @@ export function SubmissionDetailPage({
                     <input
                       aria-label="Chọn tất cả bài trong trang"
                       type="checkbox"
+                      disabled={readOnly || !selectable.length}
                       className="accent-[var(--c-primary)]"
                       checked={selectable.length > 0 && selectable.every((r) => selected.includes(r.evaluationId!))}
                       onChange={(e) => setSelected(e.target.checked ? selectable.map((r) => r.evaluationId!) : [])}
@@ -185,7 +188,7 @@ export function SubmissionDetailPage({
                     <td className={CELL}>
                       <input
                         aria-label={`Chọn ${r.student.name}`}
-                        disabled={!r.evaluationId}
+                        disabled={readOnly || !r.evaluationId}
                         type="checkbox"
                         className="accent-[var(--c-primary)]"
                         checked={!!r.evaluationId && selected.includes(r.evaluationId)}
@@ -216,7 +219,7 @@ export function SubmissionDetailPage({
                           className="inline-flex items-center gap-1 font-semibold text-primary-ink transition-colors hover:text-ink"
                           href={buildEvaluationHref(r.evaluationId!, { status: filter, late })}
                         >
-                          {rowActionLabel(r.status)}
+                          {readOnly ? "Xem bài" : rowActionLabel(r.status)}
                           <Icon name="chevron_right" size={13} />
                         </Link>
                       ) : r.submittedAt ? (
@@ -242,7 +245,7 @@ export function SubmissionDetailPage({
           />
         </>
       )}
-      {action && (
+      {action && !readOnly && (
         <BatchActionDialog
           action={action}
           items={buildGradeActionItems(selectedRows, action)}

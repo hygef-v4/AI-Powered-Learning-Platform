@@ -36,4 +36,12 @@ public class AssignmentRetiredListener implements IAssignmentLifecycleListener {
             submitter.autoSubmit(attemptId, SubmitMode.AUTO_RETIRED, now);
         }
     }
+
+    @Override
+    public void onClosed(UUID assignmentId) {
+        Instant now = clock.instant();
+        for (UUID attemptId : attempts.inProgressOf(assignmentId)) {
+            submitter.autoSubmit(attemptId, SubmitMode.AUTO_DEADLINE, now);
+        }
+    }
 }

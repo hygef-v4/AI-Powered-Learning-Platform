@@ -170,7 +170,7 @@ export const myStatusTones: Record<MyStatus, Tone> = {
 };
 
 export const submitModeLabels: Record<SubmitMode, string> = {
-  MANUAL: "Nộp tay", AUTO_DEADLINE: "Tự nộp khi hết hạn", AUTO_RETIRED: "Tự nộp khi ngưng giao",
+  MANUAL: "Nộp tay", AUTO_DEADLINE: "Tự nộp khi đóng nhận bài", AUTO_RETIRED: "Tự nộp khi ngưng giao",
 };
 
 export const blockedLabels: Record<string, string> = {

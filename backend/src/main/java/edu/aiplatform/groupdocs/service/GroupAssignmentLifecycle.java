@@ -22,11 +22,14 @@ public class GroupAssignmentLifecycle implements IAssignmentLifecycleListener {
     private final IAssignmentQuery assignments;
     private final GroupDocumentRepository documents;
     private final IJob jobs;
+    private final GroupSubmissionService groupSubmissionService;
 
-    public GroupAssignmentLifecycle(IAssignmentQuery assignments, GroupDocumentRepository documents, IJob jobs) {
+    public GroupAssignmentLifecycle(IAssignmentQuery assignments, GroupDocumentRepository documents, IJob jobs,
+            GroupSubmissionService groupSubmissionService) {
         this.assignments = assignments;
         this.documents = documents;
         this.jobs = jobs;
+        this.groupSubmissionService = groupSubmissionService;
     }
 
     @Override
@@ -41,5 +44,14 @@ public class GroupAssignmentLifecycle implements IAssignmentLifecycleListener {
     @Override
     public void onRetired(UUID assignmentId) {
         documents.markRetired(assignmentId);
+        onClosed(assignmentId);
+    }
+
+    @Override
+    public void onClosed(UUID assignmentId) {
+        documents.listByAssignment(assignmentId).stream()
+                .filter(document -> document.status() == edu.aiplatform.groupdocs.model.GroupDocument.Status.IN_PROGRESS)
+                .sorted(java.util.Comparator.comparing(edu.aiplatform.groupdocs.model.GroupDocument::id))
+                .forEach(document -> groupSubmissionService.autoSubmit(document.id()));
     }
 }

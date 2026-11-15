@@ -38,6 +38,7 @@ class SubmissionReviewNavigationTest {
         when(assignment.scope()).thenReturn(AssignmentScope.CLASS);
         when(assignment.classId()).thenReturn(classId);
         when(assignment.submissionMode()).thenReturn(SubmissionMode.INDIVIDUAL);
+        when(assignment.status()).thenReturn(AssignmentStatus.CLOSED);
         when(assignmentQuery.get(assignmentId)).thenReturn(Optional.of(assignment));
         when(classAccess.getClassRef(classId)).thenReturn(Optional.of(new ClassRef(classId, UUID.randomUUID(),
                 "C", "Class", ClassStatus.OPEN, actor.accountId(), false)));
@@ -59,6 +60,45 @@ class SubmissionReviewNavigationTest {
         when(evaluationRepository.findForAssignmentAndClass(assignmentId, classId)).thenReturn(values);
         when(submissionQuery.listSubmissions(assignmentId, classId)).thenReturn(statuses);
         return values;
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(AssignmentStatus.class)
+    void assignmentStatusControlsPreviewAndBatchMetadata(AssignmentStatus status) {
+        var values = fixture();
+        var assignment = assignmentQuery.get(assignmentId).orElseThrow();
+        when(assignment.assignmentId()).thenReturn(assignmentId);
+        when(assignment.status()).thenReturn(status);
+        when(assignmentQuery.listForClass(classId)).thenReturn(List.of(assignment));
+        when(evaluationRepository.findForClass(classId)).thenReturn(values);
+        boolean expectedEditable = status == AssignmentStatus.CLOSED || status == AssignmentStatus.RETIRED;
+
+        var detail = submissionReviewService.loadEvaluation(actor, values.get(0).id);
+        var listing = submissionReviewService.listSubmissions(actor, classId, assignmentId, null, null, 1, 20);
+
+        assertThat(detail.current()).isTrue();
+        assertThat(detail.document()).isNotNull();
+        assertThat(detail.editable()).isEqualTo(expectedEditable);
+        assertThat(listing.editable()).isEqualTo(expectedEditable);
+        assertThat(detail.readOnlyReason()).isEqualTo(expectedEditable ? null : GradingService.ASSIGNMENT_OPEN_MESSAGE);
+        assertThat(listing.readOnlyReason()).isEqualTo(detail.readOnlyReason());
+        if (status == AssignmentStatus.OPEN || expectedEditable) {
+            var progress = submissionReviewService.loadProgress(actor, classId).get(assignmentId);
+            assertThat(progress.editable()).isEqualTo(expectedEditable);
+            assertThat(progress.readOnlyReason()).isEqualTo(detail.readOnlyReason());
+        }
+    }
+
+    @Test
+    void closedAssignmentDoesNotMakeAnArchivedClassEditable() {
+        var values = fixture();
+        var courseClass = classAccess.getClassRef(classId).orElseThrow();
+        when(classAccess.getClassRef(classId)).thenReturn(Optional.of(new ClassRef(classId,
+                courseClass.subjectId(), "C", "Class", ClassStatus.ARCHIVED, actor.accountId(), false)));
+
+        assertThat(submissionReviewService.loadEvaluation(actor, values.get(0).id).editable()).isFalse();
+        assertThat(submissionReviewService.listSubmissions(actor, classId, assignmentId, null, null, 1, 20)
+                .editable()).isFalse();
     }
 
     @Test void filteredNavigationUsesListingOrderAndExcludesOtherStatesAndLateValues() {

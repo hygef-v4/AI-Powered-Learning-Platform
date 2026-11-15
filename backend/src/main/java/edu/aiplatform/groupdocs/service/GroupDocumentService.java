@@ -49,6 +49,7 @@ public class GroupDocumentService {
     /** Job {@code GROUP_DOC_CREATE}: tài liệu cho mọi nhóm của lớp; trả số tài liệu mới tạo. */
     @Transactional
     public int ensureDocuments(UUID assignmentId) {
+        assignments.lockSubmission(assignmentId);
         Optional<AssignmentView> view = openGroupAssignment(assignmentId);
         if (view.isEmpty()) {
             return 0;
@@ -74,7 +75,9 @@ public class GroupDocumentService {
             return;
         }
         for (AssignmentView view : assignments.listForClass(classId)) {
-            if (!isOpenGroup(view)) {
+            assignments.lockSubmission(view.assignmentId());
+            if (!isOpenGroup(view) || assignments.get(view.assignmentId())
+                    .filter(GroupDocumentService::isOpenGroup).isEmpty()) {
                 continue;
             }
             Optional<AssignmentContent> content = assignments.getContent(view.assignmentId());
@@ -90,6 +93,7 @@ public class GroupDocumentService {
     /** Người học mở trước khi job chạy xong thì tạo ngay khi truy cập (F7 bước 3). */
     @Transactional
     public Optional<GroupDocument> ensureFor(ClassGroup group, UUID assignmentId) {
+        assignments.lockSubmission(assignmentId);
         Optional<GroupDocument> existing = documents.findByGroupAndAssignment(group.id(), assignmentId);
         if (existing.isPresent()) {
             return existing;

@@ -63,6 +63,12 @@ public class AssignmentsContractStubs {
     IAssignmentQuery assignmentQueryStub() {
         return Stubs.announce(IAssignmentQuery.class, new IAssignmentQuery() {
             @Override
+            public void lockSubmission(UUID assignmentId) {
+                throw edu.aiplatform.shared.error.ApiException.unavailable(
+                        "ASSIGNMENT_DEPENDENCY_UNAVAILABLE", "Assignment service unavailable");
+            }
+
+            @Override
             public Optional<AssignmentView> get(UUID assignmentId) {
                 return Optional.of(sampleAssignment(assignmentId));
             }

@@ -46,9 +46,12 @@ public class AssignmentScheduleScanner implements IScheduledScanner {
                 log.warn("Mở bài {} theo lịch lỗi", id, e);
             }
         }
-        List<UUID> closed = transaction.execute(status -> assignments.closeDue(now));
-        if (closed != null && !closed.isEmpty()) {
-            log.info("Đóng {} bài theo lịch", closed.size());
+        for (UUID id : assignments.listDueToClose(now, BATCH)) {
+            try {
+                transaction.executeWithoutResult(status -> lifecycle.closeAssignment(id, now, true));
+            } catch (RuntimeException error) {
+                log.warn("Đóng bài {} theo lịch lỗi, giữ bài để thử lại", id, error);
+            }
         }
     }
 }

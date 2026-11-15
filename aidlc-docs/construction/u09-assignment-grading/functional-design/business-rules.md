@@ -75,7 +75,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U09-40 | Endpoint finalize cũ chỉ kiểm tra trạng thái, version và xác nhận minh chứng/điểm AI. Bản FINALIZED cũ được đưa về DRAFT khi gọi thành công và thao tác ghi audit GRADE_REVIEWED. Luồng công bố hiện hành dùng BR-U09-41. | FR-020 |
 | BR-U09-41 | Giảng viên công bố trực tiếp bản DRAFT hợp lệ; tương thích FINALIZED cũ. Kiểm tra xác nhận minh chứng/điểm AI trước mọi lần làm điểm hiển thị: công bố và lưu sửa PUBLISHED. Sinh viên chỉ thấy điểm của mình sau công bố. Công bố lại cùng bản không gửi thông báo trùng. | Quyết định người dùng 2026-11-11 |
-| BR-U09-42 | Bỏ bước Chốt điểm. Lưu sửa PUBLISHED giữ PUBLISHED và cập nhật kết quả sinh viên sau transaction thành công; không cần công bố lại. DRAFT/FINALIZED cũ chưa công bố vẫn riêng tư. Lớp OPEN cho sửa qua hạn bài; lớp ARCHIVED/DRAFT không ghi. Giữ scope, receipt hiện hành, version, review AI và audit. Không đưa lại bảng lịch sử sửa điểm lên UI. | Quyết định người dùng 2026-11-11 |
+| BR-U09-42 | Bỏ bước Chốt điểm. Lưu sửa PUBLISHED giữ PUBLISHED và cập nhật kết quả sinh viên sau transaction thành công; không cần công bố lại. DRAFT/FINALIZED cũ chưa công bố vẫn riêng tư. Chỉ ghi khi lớp OPEN và bài đã ngừng nhận bài (CLOSED hoặc RETIRED); lớp ARCHIVED/DRAFT không ghi. Áp dụng chung cho chấm tay/AI, lưu root/member, finalize tương thích, công bố, batch và MCP. Trước đóng chỉ xem, API trả GRADING_ASSIGNMENT_OPEN, detail/danh sách trả editable=false và readOnlyReason. Giữ scope, receipt hiện hành, version, review AI và audit. Không đưa lại bảng lịch sử sửa điểm lên UI. | Quyết định 2026-11-11, bổ sung đã duyệt 2026-11-15 |
 | BR-U09-43 | Lịch sử điểm chỉ thêm, chỉ giảng viên của lớp xem. | FR-009 |
 
 ## 6. Bài nhóm (khi U12 có)
@@ -83,7 +83,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U09-50 | Khi nhóm nộp bản mới, giữ điểm, mức đóng góp và biên nhận đã công bố. Bản FINALIZED cũ cũng được giữ. Nếu bản chấm tài liệu nhóm chưa chính thức, dùng lại bản đó và các bản thành viên còn trong nhóm chưa chính thức, đặt về PENDING cho biên nhận mới và xóa điểm/mức nháp. Khi đổi nhóm, bản thành viên chưa chính thức ở nhóm cũ chuyển SUPERSEDED. | FR-026, xác nhận 2026-11-15 |
-| BR-U09-51 | Tài liệu nhóm chấm theo rubric từng phần; điểm thành viên mặc định theo nhóm, giữ override cá nhân. Cho sửa root/member hiện hành kể cả PUBLISHED khi lớp OPEN; cập nhật nguyên vẹn trong transaction. Ghi chú tùy chọn, không suy điểm từ thao tác hay thêm công thức ghép điểm. | Quyết định người dùng 2026-11-11 |
+| BR-U09-51 | Tài liệu nhóm chấm theo rubric từng phần; điểm thành viên mặc định theo nhóm, giữ override cá nhân. Cho sửa root/member hiện hành kể cả PUBLISHED khi lớp OPEN và bài ngừng nhận bài theo BR-U09-42; cập nhật nguyên vẹn trong transaction. Ghi chú tùy chọn, không suy điểm từ thao tác hay thêm công thức ghép điểm. | Quyết định 2026-11-11, bổ sung đã duyệt 2026-11-15 |
 
 ## 7. Sổ điểm, xuất, phân bố (UC 45)
 

@@ -105,7 +105,8 @@ class GroupDocumentServiceTest {
     @Test
     void lifecycleQueuesCreationForGroupAssignmentsAndMarksRetired() {
         IJob jobs = mock(IJob.class);
-        GroupAssignmentLifecycle lifecycle = new GroupAssignmentLifecycle(assignments, documents, jobs);
+        GroupAssignmentLifecycle lifecycle = new GroupAssignmentLifecycle(assignments, documents, jobs,
+                mock(GroupSubmissionService.class));
 
         lifecycle.onOpened(assignmentId);
         lifecycle.onRetired(assignmentId);

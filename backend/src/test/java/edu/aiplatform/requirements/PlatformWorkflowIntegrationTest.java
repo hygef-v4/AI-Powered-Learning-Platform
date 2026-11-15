@@ -615,6 +615,8 @@ class PlatformWorkflowIntegrationTest {
     }
 
     void publishGrade(UUID evaluationId, AssignmentViews.Detail assignment) {
+        var current = assignmentAuthoringService.detail(actor(Role.TEACHER), assignment.id());
+        assignmentPublicationService.closeAssignment(actor(Role.TEACHER), assignment.id(), current.version());
         var rubric = assignmentAuthoringService.rubric(actor(Role.TEACHER), assignment.id(), assignment.parts().get(0).partId());
         var checks = Map.of(rubric.rubricId(), Set.of(rubric.criteria().get(0).items().get(0).itemId()));
         gradingService.saveEvaluation(actor(Role.TEACHER), evaluationId, new GradingCommands.Save(
@@ -650,20 +652,25 @@ class PlatformWorkflowIntegrationTest {
     }
 
     @Test
-    void individualGradingPublicationAndResubmissionInvalidatePriorStudentScore() throws Exception {
+    void individualResubmissionBeforeCloseSupersedesPriorEvaluationThenAllowsPublication() throws Exception {
         var assignment = publishAssignment(GradingMode.GRADED);
         UUID firstAttempt = submitIndividual(assignment);
         UUID firstGrade = evaluationRepository.findByAttemptId(firstAttempt).orElseThrow().id;
-        publishGrade(firstGrade, assignment);
-        assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId)).hasSize(1);
-        assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId).get(0).score()).isEqualByComparingTo(BigDecimal.TEN);
-        assertThat(evaluationRepository.findById(firstGrade).orElseThrow().score).isEqualByComparingTo(BigDecimal.TEN);
+        assertThatThrownBy(() -> gradingService.saveEvaluation(actor(Role.TEACHER), firstGrade,
+                new GradingCommands.Save(evaluationRepository.findById(firstGrade).orElseThrow().version,
+                        Map.of(), BigDecimal.ZERO, null, "Too early", null, null)))
+                .isInstanceOf(ApiException.class).hasMessageContaining("đóng nhận bài");
         UUID secondAttempt = submitIndividual(assignment);
         assertThat(secondAttempt).isNotEqualTo(firstAttempt);
         assertThat(evaluationRepository.findById(firstGrade).orElseThrow().state.name()).isEqualTo("SUPERSEDED");
         assertThat(evaluationRepository.findByAttemptId(secondAttempt).orElseThrow().state.name()).isEqualTo("PENDING");
         assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId)).isEmpty();
         assertThat(count("evaluations")).isEqualTo(2);
+        publishGrade(evaluationRepository.findByAttemptId(secondAttempt).orElseThrow().id, assignment);
+        assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId)).singleElement()
+                .satisfies(grade -> assertThat(grade.score()).isEqualByComparingTo(BigDecimal.TEN));
+        assertThatThrownBy(() -> attemptService.start(actor(Role.STUDENT), assignment.id(), classId))
+                .isInstanceOf(ApiException.class);
         assertThat(jdbc.queryForObject("select count(*) from audit_logs where action='GRADE_PUBLISHED'", Long.class)).isEqualTo(1);
     }
 
@@ -712,6 +719,38 @@ class PlatformWorkflowIntegrationTest {
         return new Actor(id, Role.STUDENT);
     }
 
+    @Test
+    void earlyCloseRollsBackSavedAttemptOnEvaluationFailureThenRetriesAtomically() throws Exception {
+        var teacher = actor(Role.TEACHER);
+        var assignment = publishAssignment(GradingMode.GRADED);
+        var attempt = attemptService.start(actor(Role.STUDENT), assignment.id(), classId).attempt();
+        var saved = attemptService.save(actor(Role.STUDENT), attempt.attemptId(), attempt.contentVersion(),
+                answer(attempt.content()));
+        try {
+            rejectEvaluationInsert("ATTEMPT");
+            assertThatThrownBy(() -> assignmentPublicationService.closeAssignment(teacher, assignment.id(),
+                    assignment.version())).hasStackTraceContaining("INTEGRATION_EVALUATION_FAILURE");
+            assertThat(jdbc.queryForObject("select status from assignments where id=?", String.class,
+                    assignment.id())).isEqualTo("OPEN");
+            assertThat(jdbc.queryForObject("select status from assignment_attempts where id=?", String.class,
+                    attempt.attemptId())).isEqualTo("IN_PROGRESS");
+            assertThat(count("evaluations")).isZero();
+            assertThat(jdbc.queryForObject("select count(*) from audit_logs where action='ASSIGNMENT_CLOSED'",
+                    Long.class)).isZero();
+        } finally {
+            restoreEvaluationInsert();
+        }
+        var closed = assignmentPublicationService.closeAssignment(teacher, assignment.id(), assignment.version());
+        assertThat(closed.status()).isEqualTo(AssignmentStatus.CLOSED);
+        assertThat(closed.closesAt()).isEqualTo(assignment.closesAt());
+        assertThat(jdbc.queryForObject("select status from assignment_attempts where id=?", String.class,
+                attempt.attemptId())).isEqualTo("SUBMITTED");
+        assertThat(attemptService.get(actor(Role.STUDENT), attempt.attemptId()).content()).isEqualTo(saved.content());
+        assertThat(count("evaluations")).isEqualTo(1);
+        assertThatThrownBy(() -> attemptService.save(actor(Role.STUDENT), attempt.attemptId(),
+                saved.contentVersion(), saved.content())).isInstanceOf(ApiException.class);
+    }
+
     GroupWorkspaceService.WorkspaceView prepareGroupSection(UUID assignmentId) {
         var workspace = groupWorkspaceService.myGroupDocument(actor(Role.STUDENT), assignmentId);
         UUID sectionId = workspace.sections().get(0).id();
@@ -725,7 +764,7 @@ class PlatformWorkflowIntegrationTest {
     }
 
     @Test
-    void groupSubmissionCreatesMemberGradesAndResubmissionResetsThem() throws Exception {
+    void groupResubmissionBeforeCloseCreatesMemberGradesThenLocksStudentWork() throws Exception {
         Actor member = addGroupMember();
         var assignment = publishAssignment(GradingMode.GRADED, SubmissionMode.GROUP);
         var workspace = prepareGroupSection(assignment.id());
@@ -736,9 +775,10 @@ class PlatformWorkflowIntegrationTest {
         Set<UUID> identities = new HashSet<>(evaluations.stream().map(e -> e.id).toList());
         assertThat(evaluations.stream().filter(e -> e.kind.name().equals("MEMBER")).map(e -> e.accountId))
                 .containsExactlyInAnyOrder(actor(Role.STUDENT).accountId(), member.accountId());
-        gradingService.saveEvaluation(actor(Role.TEACHER), root, new GradingCommands.Save(
+        assertThatThrownBy(() -> gradingService.saveEvaluation(actor(Role.TEACHER), root, new GradingCommands.Save(
                 evaluationRepository.findById(root).orElseThrow().version, Map.of(), BigDecimal.ZERO,
-                null, "Draft grade", null, null));
+                null, "Draft grade", null, null)))
+                .isInstanceOf(ApiException.class).hasMessageContaining("đóng nhận bài");
         workspace = prepareGroupSection(assignment.id());
         var draftReceipt = groupSubmissionService.submit(actor(Role.STUDENT), workspace.documentId(), workspace.version());
         assertThat(draftReceipt.receiptHash()).isNotEqualTo(firstReceipt.receiptHash());
@@ -753,9 +793,11 @@ class PlatformWorkflowIntegrationTest {
             assertThat(e.state.name()).isEqualTo("PUBLISHED");
             assertThat(e.score).isEqualByComparingTo(BigDecimal.TEN);
         });
-        workspace = prepareGroupSection(assignment.id());
-        var secondReceipt = groupSubmissionService.submit(actor(Role.STUDENT), workspace.documentId(), workspace.version());
-        assertThat(secondReceipt.receiptHash()).isNotEqualTo(firstReceipt.receiptHash());
+        UUID documentId = workspace.documentId();
+        long documentVersion = workspace.version();
+        assertThatThrownBy(() -> prepareGroupSection(assignment.id())).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> groupSubmissionService.submit(actor(Role.STUDENT), documentId, documentVersion))
+                .isInstanceOf(ApiException.class);
         var reset = evaluationRepository.findForAssignmentAndClass(assignment.id(), classId);
         assertThat(reset.stream().map(e -> e.id)).containsExactlyInAnyOrderElementsOf(identities);
         assertThat(reset).allSatisfy(e -> {

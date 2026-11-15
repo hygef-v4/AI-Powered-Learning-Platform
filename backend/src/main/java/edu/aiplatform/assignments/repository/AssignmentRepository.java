@@ -131,11 +131,18 @@ public class AssignmentRepository {
                 .param("id", id).param("now", ts(now)).update();
     }
 
-    /** {@code OPEN → CLOSED} sau 30 giây ân hạn kể từ {@code lateUntil}, hoặc {@code closesAt} nếu không có (BR-U07-34). */
-    public List<UUID> closeDue(Instant now) {
-        return jdbc.sql("update assignments set status = 'CLOSED', updated_at = :now, version = version + 1 "
-                        + "where status = 'OPEN' and coalesce(late_until, closes_at) <= :cutoff returning id")
-                .param("now", ts(now)).param("cutoff", ts(now.minusSeconds(30))).query(UUID.class).list();
+    /** Serializes new submissions and saved work with closing without serializing students. */
+    public void lockSubmission(UUID id) {
+        jdbc.sql("select id from assignments where id = :id for share")
+                .param("id", id).query(UUID.class).optional()
+                .orElseThrow(() -> edu.aiplatform.shared.error.ApiException.notFound("ASSIGNMENT_NOT_FOUND"));
+    }
+
+    public List<UUID> listDueToClose(Instant now, int limit) {
+        return jdbc.sql("select id from assignments where status = 'OPEN' "
+                        + "and coalesce(late_until, closes_at) < :cutoff order by id limit :limit")
+                .param("cutoff", ts(now.minusSeconds(30))).param("limit", limit)
+                .query(UUID.class).list();
     }
 
     /** Chỉ xóa bài chưa từng phát hành (BR-U07-31); rubric và đề xuất AI xóa theo khóa ngoại. */

@@ -42,14 +42,27 @@ public final class GradingViews {
     }
 
     public record SubmissionPage(List<SubmissionRow> rows, int total, int page, int size,
-            Map<String, Long> summary, Instant deadline) {
+            Map<String, Long> summary, Instant deadline, boolean editable, String readOnlyReason) {
+        public SubmissionPage(List<SubmissionRow> rows, int total, int page, int size,
+                Map<String, Long> summary, Instant deadline) {
+            this(rows, total, page, size, summary, deadline, true, null);
+        }
     }
 
     public record EvaluationDetail(Evaluation evaluation, DocumentModel document,
             List<RubricView> rubrics, List<UUID> navigationIds, ActivitySummary activity,
             String activityState, List<Evaluation> members, List<MemberActivity> memberActivities,
             List<GroupSectionAuthor> sectionAuthors, boolean current, UUID groupEvaluationId,
-            boolean editable) {
+            boolean editable, String readOnlyReason) {
+        public EvaluationDetail(Evaluation evaluation, DocumentModel document,
+                List<RubricView> rubrics, List<UUID> navigationIds, ActivitySummary activity,
+                String activityState, List<Evaluation> members, List<MemberActivity> memberActivities,
+                List<GroupSectionAuthor> sectionAuthors, boolean current, UUID groupEvaluationId,
+                boolean editable) {
+            this(evaluation, document, rubrics, navigationIds, activity, activityState, members,
+                    memberActivities, sectionAuthors, current, groupEvaluationId, editable, null);
+        }
+
         public EvaluationDetail(Evaluation evaluation, DocumentModel document,
                 List<RubricView> rubrics, List<UUID> navigationIds, ActivitySummary activity,
                 String activityState, List<Evaluation> members, List<MemberActivity> memberActivities,
