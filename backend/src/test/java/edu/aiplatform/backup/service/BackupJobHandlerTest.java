@@ -119,6 +119,22 @@ class BackupJobHandlerTest {
     }
 
     @Test
+    void runsWithoutPublicKeyAndStoresThePlainDump() throws Exception {
+        when(runs.markRunning(runId, now)).thenReturn(1);
+        when(runs.schemaVersion()).thenReturn("20260925.0920");
+        when(runs.markSuccess(any(), any(), any(), any(), any(), any(), anyLong(), any())).thenReturn(1);
+        LocalBackupStore store = new LocalBackupStore(dir.resolve("backups"));
+
+        handler("", store).handle(message);
+
+        verify(runs).markSuccess(eq(runId), eq(now), eq("20260925.0920"), anyString(), eq(runId.toString()),
+                anyString(), anyLong(), eq(now));
+        Path archive = dir.resolve("backups").resolve(runId.toString()).resolve("archive.alapbk");
+        assertThat(BackupEncryptor.isEncrypted(archive)).isFalse();
+        assertThat(Files.readString(archive)).isEqualTo("-- dump của database");
+    }
+
+    @Test
     void lostSuccessTransitionDoesNotAuditCompletionOrPurgeArchives() {
         when(runs.markRunning(runId, now)).thenReturn(1);
         when(runs.markSuccess(any(), any(), any(), any(), any(), any(), anyLong(), any())).thenReturn(0);
@@ -173,14 +189,6 @@ class BackupJobHandlerTest {
 
         assertThatThrownBy(() -> handler(publicKey(), store).handle(message)).isInstanceOf(RetryableJobException.class);
         verify(store).delete(runId.toString());
-    }
-
-    @Test
-    void missingPublicKeyFailsWithoutRetry() {
-        when(runs.markRunning(runId, now)).thenReturn(1);
-
-        assertThatThrownBy(() -> handler("", mock(IBackupStore.class)).handle(message))
-                .isInstanceOf(BackupFailure.class);
     }
 
     @Test

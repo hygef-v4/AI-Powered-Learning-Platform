@@ -45,6 +45,13 @@ public final class BackupEncryptor {
     private BackupEncryptor() {
     }
 
+    /** Archive có phải bản đã mã hóa không: nhận diện bằng 8 byte {@code "ALAPBK01"} đầu tệp. */
+    public static boolean isEncrypted(java.nio.file.Path archive) throws IOException {
+        try (InputStream in = java.nio.file.Files.newInputStream(archive)) {
+            return Arrays.equals(in.readNBytes(MAGIC.length), MAGIC);
+        }
+    }
+
     public static void encrypt(InputStream in, OutputStream out, PublicKey publicKey) throws IOException {
         try {
             KeyGenerator generator = KeyGenerator.getInstance("AES");

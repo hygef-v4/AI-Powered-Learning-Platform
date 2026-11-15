@@ -45,9 +45,9 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
- * {@code BACKUP_RUN} (B2, B4): dump, mã hóa, tải lên thư mục backup, đối chiếu kích thước và MD5, ghi {@code SUCCESS}
- * rồi dọn bản cũ. Lỗi tạm thì thử lại theo việc nền; lỗi vĩnh viễn hoặc hết lượt thì {@code FAILED}, dọn phần dở,
- * audit và phát {@code backup.failed}.
+ * {@code BACKUP_RUN} (B2, B4): dump, mã hóa khi có {@code U03_BACKUP_PUBLIC_KEY} (không có thì lưu bản dump thường),
+ * tải lên thư mục backup, đối chiếu kích thước và MD5, ghi {@code SUCCESS} rồi dọn bản cũ. Lỗi tạm thì thử lại theo
+ * việc nền; lỗi vĩnh viễn hoặc hết lượt thì {@code FAILED}, dọn phần dở, audit và phát {@code backup.failed}.
  */
 @Component
 public class BackupJobHandler implements IJobHandler {
@@ -180,9 +180,11 @@ public class BackupJobHandler implements IJobHandler {
         }
     }
 
+    /** Khóa mã hóa là tùy chọn: không đặt thì backup vẫn chạy nhưng archive không được mã hóa. */
     private PublicKey publicKey() {
         if (properties.publicKey() == null || properties.publicKey().isBlank()) {
-            throw new BackupFailure("Chưa cấu hình U03_BACKUP_PUBLIC_KEY");
+            log.warn("Chưa đặt U03_BACKUP_PUBLIC_KEY: bản backup sẽ không được mã hóa");
+            return null;
         }
         try {
             return BackupEncryptor.parsePublicKey(properties.publicKey());
@@ -191,8 +193,12 @@ public class BackupJobHandler implements IJobHandler {
         }
     }
 
-    /** Mã hóa dump thành archive, trả SHA-256 của archive. */
+    /** Mã hóa dump thành archive ({@code publicKey} null thì giữ nguyên bản dump), trả SHA-256 của archive. */
     static String encrypt(Path dump, Path archive, PublicKey publicKey) throws IOException {
+        if (publicKey == null) {
+            Files.copy(dump, archive);
+            return digest(archive, "SHA-256");
+        }
         try (InputStream in = Files.newInputStream(dump); OutputStream out = Files.newOutputStream(archive)) {
             BackupEncryptor.encrypt(in, out, publicKey);
         }

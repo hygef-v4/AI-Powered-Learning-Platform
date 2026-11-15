@@ -21,6 +21,12 @@ public final class BackupDecryptTool {
             System.err.println("Cách dùng: BackupDecryptTool <archive> <private-key.pem> <dump.pgc>");
             System.exit(2);
         }
+        // Backup chạy không có U03_BACKUP_PUBLIC_KEY thì archive là bản dump thường: chép nguyên trạng, không cần khóa.
+        if (!BackupEncryptor.isEncrypted(Path.of(args[0]))) {
+            Files.copy(Path.of(args[0]), Path.of(args[2]));
+            System.out.println("Archive không mã hóa, đã chép nguyên trạng " + args[0] + " -> " + args[2]);
+            return;
+        }
         var privateKey = BackupEncryptor.parsePrivateKey(Files.readString(Path.of(args[1])));
         try (InputStream in = Files.newInputStream(Path.of(args[0]));
              OutputStream out = Files.newOutputStream(Path.of(args[2]))) {
