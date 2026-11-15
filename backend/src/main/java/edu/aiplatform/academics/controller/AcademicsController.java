@@ -9,6 +9,7 @@ import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.shared.error.ApiException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import java.time.LocalDate;
 import java.util.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,9 +30,10 @@ public class AcademicsController {
     public List<ClassView> listStudentClasses(@AuthenticationPrincipal Actor actor,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) ClassStatus status,
+            @RequestParam(required = false) String term,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return academicsService.listClasses(actor, "student", null, q, status, page, size);
+        return academicsService.listClasses(actor, "student", null, q, status, term, page, size);
     }
 
     /** Lists classes assigned to the authenticated teacher. */
@@ -39,9 +41,10 @@ public class AcademicsController {
     public List<ClassView> listTeacherClasses(@AuthenticationPrincipal Actor actor,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) ClassStatus status,
+            @RequestParam(required = false) String term,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return academicsService.listClasses(actor, "teacher", null, q, status, page, size);
+        return academicsService.listClasses(actor, "teacher", null, q, status, term, page, size);
     }
 
     /** Lists classes belonging to subjects managed by the subject manager. */
@@ -50,9 +53,11 @@ public class AcademicsController {
             @RequestParam(required = false) UUID subjectId,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) ClassStatus status,
+            @RequestParam(required = false) String term,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return academicsService.listClasses(actor, "manager", subjectId, q, status, page, size);
+        return academicsService.listClasses(actor, "manager", subjectId, q, status, term,
+                page, size);
     }
 
     /** Loads class details for an enrolled student. */
@@ -129,14 +134,15 @@ public class AcademicsController {
     public ClassView createClass(@AuthenticationPrincipal Actor actor,
             @Valid @RequestBody CreateInput input) {
         return academicsService.createClass(actor, input.subjectId(), input.code(), input.name(),
-                input.description(), input.teacherId());
+                input.description(), input.startsOn(), input.teacherId());
     }
 
-    /** Updates the class name and description using the supplied version. */
+    /** Updates the class name, description and start date using the supplied version. */
     @PatchMapping("/manager/classes/{id}")
     public ClassView updateClassInfo(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
             @Valid @RequestBody InfoInput input) {
-        return academicsService.updateClassInfo(actor, id, input.name(), input.description(), input.version());
+        return academicsService.updateClassInfo(actor, id, input.name(), input.description(),
+                input.startsOn(), input.version());
     }
 
     /** Assigns or reassigns the responsible teacher to a class. */
@@ -185,11 +191,13 @@ public class AcademicsController {
 
     public record CreateInput(@NotNull UUID subjectId, @NotBlank @Size(max = 30) String code,
             @NotBlank @Size(max = 200) String name, @Size(max = 2000) String description,
+            @NotNull LocalDate startsOn,
             UUID teacherId) implements IStrictInput {
     }
 
     public record InfoInput(@NotBlank @Size(max = 200) String name,
-            @Size(max = 2000) String description, @NotNull @PositiveOrZero Long version) implements IStrictInput {
+            @Size(max = 2000) String description, @NotNull LocalDate startsOn,
+            @NotNull @PositiveOrZero Long version) implements IStrictInput {
     }
 
     public record TeacherInput(UUID teacherId, @NotNull @PositiveOrZero Long version)

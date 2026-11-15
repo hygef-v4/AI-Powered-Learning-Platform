@@ -253,8 +253,8 @@ class PlatformWorkflowIntegrationTest {
                 values (?,'INTEGRATION','Integration subject','ACTIVE',?,?,?)
                 """, subjectId, actor(Role.SUBJECT_MANAGER).accountId(), Timestamp.from(now), Timestamp.from(now));
         jdbc.update("""
-                insert into course_classes(id,subject_id,code,name,status,teacher_id,created_at,updated_at)
-                values (?,?,'INTEGRATION','Integration class','OPEN',?,?,?)
+                insert into course_classes(id,subject_id,code,name,status,teacher_id,starts_on,created_at,updated_at)
+                values (?,?,'INTEGRATION','Integration class','OPEN',?,DATE '2026-11-14',?,?)
                 """, classId, subjectId, actor(Role.TEACHER).accountId(), Timestamp.from(now), Timestamp.from(now));
         jdbc.update("""
                 insert into enrollments(class_id,account_id,status,source,enrolled_at)
@@ -322,7 +322,7 @@ class PlatformWorkflowIntegrationTest {
     void classCreationEnrollmentRemovalAndReactivationUseActualOwners() {
         var manager = actor(Role.SUBJECT_MANAGER);
         var created = academicsService.createClass(manager, subjectId, "SECOND", "Second class", null,
-                actor(Role.TEACHER).accountId());
+                LocalDate.of(2026, 11, 14), actor(Role.TEACHER).accountId());
         assertThat(created.status()).isEqualTo(ClassStatus.DRAFT);
         academicsService.changeEnrollmentStatus(manager, classId, actor(Role.STUDENT).accountId(),
                 EnrollmentStatus.REMOVED);
@@ -338,8 +338,9 @@ class PlatformWorkflowIntegrationTest {
     void staleClassWriteAndUnauthorizedEnrollmentLeaveCommittedStateUnchanged() {
         var manager = actor(Role.SUBJECT_MANAGER);
         var current = academicsService.loadClass(manager, "manager", classId);
-        academicsService.updateClassInfo(manager, classId, "Renamed", null, current.version());
-        assertThatThrownBy(() -> academicsService.updateClassInfo(manager, classId, "Stale", null, current.version()))
+        academicsService.updateClassInfo(manager, classId, "Renamed", null, current.startsOn(), current.version());
+        assertThatThrownBy(() -> academicsService.updateClassInfo(manager, classId, "Stale", null,
+                current.startsOn(), current.version()))
                 .isInstanceOf(ApiException.class);
         assertThatThrownBy(() -> academicsService.changeEnrollmentStatus(actor(Role.TEACHER), classId,
                 actor(Role.STUDENT).accountId(), EnrollmentStatus.REMOVED)).isInstanceOf(ApiException.class);

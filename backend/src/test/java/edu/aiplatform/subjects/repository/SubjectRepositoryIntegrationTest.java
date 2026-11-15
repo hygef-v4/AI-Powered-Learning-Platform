@@ -1108,6 +1108,7 @@ class SubjectRepositoryIntegrationTest {
                                 new SubjectClassSummary(
                                         row.getObject("id", UUID.class),
                                         "FIXTURE",
+                                        null,
                                         "Fixture class",
                                         row.getString("status"),
                                         null,

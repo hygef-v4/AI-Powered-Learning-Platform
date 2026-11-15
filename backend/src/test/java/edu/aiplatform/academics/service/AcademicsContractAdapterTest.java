@@ -10,6 +10,7 @@ import edu.aiplatform.academics.repository.*;
 import edu.aiplatform.identity.contract.*;
 import edu.aiplatform.subjects.contract.*;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,7 @@ class AcademicsContractAdapterTest {
     final UUID classId=UUID.randomUUID(), subjectId=UUID.randomUUID(), teacher=UUID.randomUUID(), student=UUID.randomUUID();
     final Instant now=Instant.parse("2026-10-18T00:00:00Z");
     CourseClass course(UUID teacherId, ClassStatus status) {
-        return new CourseClass(classId, subjectId, "SE01", "Lop", null, status, teacherId, false, now, now, 0);
+        return new CourseClass(classId, subjectId, "SE01", "Lop", null, LocalDate.of(2027, 1, 10), status, teacherId, false, now, now, 0);
     }
 
     @Test void realCrossUnitContractsReplaceTheirStubs() {
@@ -90,9 +91,10 @@ class AcademicsContractAdapterTest {
 
     @Test void openClassesCombineTeacherAndStudentRelationshipsWithoutDuplicates() {
         var course=course(teacher,ClassStatus.OPEN);
-        when(academicsReadRepository.listForTeacher(teacher,null,ClassStatus.OPEN,100,0)).thenReturn(List.of(course));
-        when(academicsReadRepository.listForStudent(teacher,null,ClassStatus.OPEN,100,0)).thenReturn(List.of(course));
-        assertThat(adapter.listOpenClassesOf(teacher)).hasSize(1).extracting(ClassRef::classId).containsExactly(classId);
+        when(academicsReadRepository.listForTeacher(teacher,null,ClassStatus.OPEN,null,100,0)).thenReturn(List.of(course));
+        when(academicsReadRepository.listForStudent(teacher,null,ClassStatus.OPEN,null,100,0)).thenReturn(List.of(course));
+        assertThat(adapter.listOpenClassesOf(teacher)).hasSize(1).extracting(ClassRef::classId, ClassRef::term)
+                .containsExactly(tuple(classId, "SP27"));
     }
 
     @Test void subjectContractCombinesCountsAndMinimalTeacherContact() {
@@ -100,13 +102,13 @@ class AcademicsContractAdapterTest {
         when(academicsReadRepository.listOfSubject(subjectId)).thenReturn(List.of(course));
         when(academicsReadRepository.enrollmentCounts(List.of(classId))).thenReturn(Map.of(classId,new IAcademicsReadRepository.EnrollmentCounts(3,1)));
         when(accountLookup.getContact(teacher)).thenReturn(Optional.of(new AccountContact(teacher,"hidden@example.test","Teacher",Role.TEACHER,AccountStatus.ACTIVE)));
-        assertThat(adapter.listClassesOfSubject(subjectId)).containsExactly(new SubjectClassSummary(classId,"SE01","Lop","OPEN","Teacher",3));
+        assertThat(adapter.listClassesOfSubject(subjectId)).containsExactly(new SubjectClassSummary(classId,"SE01","SP27","Lop","OPEN","Teacher",3));
     }
 
     @Test void archivingSubjectArchivesDraftAndOpenClassesKeepsArchivedAndAuditsEach() {
-        var draft=new CourseClass(UUID.randomUUID(), subjectId, "D1", "Draft", null, ClassStatus.DRAFT, null, false, now, now, 0);
-        var open=new CourseClass(UUID.randomUUID(), subjectId, "O1", "Open", null, ClassStatus.OPEN, teacher, false, now, now, 3);
-        var archived=new CourseClass(UUID.randomUUID(), subjectId, "A1", "Old", null, ClassStatus.ARCHIVED, teacher, false, now, now, 5);
+        var draft=new CourseClass(UUID.randomUUID(), subjectId, "D1", "Draft", null, LocalDate.of(2027, 1, 10), ClassStatus.DRAFT, null, false, now, now, 0);
+        var open=new CourseClass(UUID.randomUUID(), subjectId, "O1", "Open", null, LocalDate.of(2027, 1, 10), ClassStatus.OPEN, teacher, false, now, now, 3);
+        var archived=new CourseClass(UUID.randomUUID(), subjectId, "A1", "Old", null, LocalDate.of(2027, 1, 10), ClassStatus.ARCHIVED, teacher, false, now, now, 5);
         when(academicsReadRepository.listOfSubject(subjectId)).thenReturn(List.of(draft, open, archived));
         var admin=new edu.aiplatform.identity.contract.Actor(UUID.randomUUID(), edu.aiplatform.identity.contract.Role.ADMIN);
         assertThat(adapter.archiveClassesOfSubject(subjectId, admin)).containsExactly(draft.id(), open.id());

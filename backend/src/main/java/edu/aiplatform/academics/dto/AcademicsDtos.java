@@ -4,6 +4,7 @@ import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.model.*;
 import edu.aiplatform.subjects.contract.SubjectStatus;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.*;
 
 public final class AcademicsDtos {
@@ -36,6 +37,7 @@ public final class AcademicsDtos {
     }
 
     public record ClassView(UUID id, Subject subject, String code, String name, String description,
+            LocalDate startsOn, String term,
             ClassStatus status, Person teacher, long activeStudentCount,
             long removedStudentCount, Instant createdAt, boolean showGradeDistribution,
             long version) {

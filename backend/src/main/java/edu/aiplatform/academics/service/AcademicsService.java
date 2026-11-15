@@ -65,11 +65,12 @@ public class AcademicsService {
      * Lists course classes filtered by audience perspective (student, teacher, manager), query, and status.
      */
     public List<ClassView> listClasses(Actor actor, String audience, UUID subjectId, String query,
-            ClassStatus status, int page, int size) {
+            ClassStatus status, String term, int page, int size) {
         return executeGuarded(actor, "CLASS_LIST", null, () -> {
             requireAudience(actor, audience);
             validatePage(page, size);
             validateQuery(query);
+            String termFilter = ClassTermPolicy.parseFilter(term);
             List<CourseClass> values;
             int offset = (page - 1) * size;
             if (audience.equals("manager")) {
@@ -79,13 +80,14 @@ public class AcademicsService {
                     ids = List.of(subjectId);
                 }
                 values = ids.isEmpty() ? List.of()
-                        : academicsReadRepository.listForManager(ids, query, status, size, offset);
+                        : academicsReadRepository.listForManager(ids, query, status, termFilter,
+                                size, offset);
             } else if (audience.equals("teacher"))
                 values = academicsReadRepository.listForTeacher(actor.accountId(), query, status,
-                        size, offset);
+                        termFilter, size, offset);
             else
                 values = academicsReadRepository.listForStudent(actor.accountId(), query, status,
-                        size, offset);
+                        termFilter, size, offset);
             return mapClassViews(values);
         });
     }
@@ -184,16 +186,17 @@ public class AcademicsService {
      * Creates a new class within a subject managed by the caller.
      */
     public ClassView createClass(Actor actor, UUID subjectId, String code, String name,
-            String description, UUID teacherId) {
+            String description, LocalDate startsOn, UUID teacherId) {
         return executeCommand(actor, "CLASS_CREATED", subjectId, () -> {
             requireAudience(actor, "manager");
             requireManager(actor, subjectId);
+            ClassTermPolicy.requireValidStart(startsOn);
             // Khóa tài khoản giảng viên trước dòng môn: U01 vô hiệu hóa tài khoản khóa tài khoản rồi mới tới môn.
             requireTeacher(teacherId);
             subjectMutationGuard.lockActive(subjectId, SUBJECT_LOCK_WAIT);
             requireManager(actor, subjectId);
             CourseClass value = CourseClass.createClass(UUID.randomUUID(), subjectId, code, name,
-                    description, teacherId, clock.instant());
+                    description, startsOn, teacherId, clock.instant());
             courseClassRepository.insert(value);
             recordSuccess(actor, "CLASS_CREATED", value.id(), Map.of());
             if (teacherId != null)
@@ -204,13 +207,14 @@ public class AcademicsService {
     }
 
     /**
-     * Updates the class name and description after checking the expected version.
+     * Updates the class name, description and start date after checking the expected version.
      */
     public ClassView updateClassInfo(Actor actor, UUID id, String name, String description,
-            long version) {
+            LocalDate startsOn, long version) {
         return executeCommand(actor, "CLASS_UPDATED", id, () -> {
             CourseClass current = loadLockedClass(actor, id, version);
-            CourseClass changed = current.updateInfo(name, description, clock.instant());
+            CourseClass changed = current.updateInfo(name, description, startsOn,
+                    clock.instant());
             courseClassRepository.update(changed, version);
             recordSuccess(actor, "CLASS_UPDATED", id, Map.of());
             return mapClassView(changed);
@@ -539,7 +543,8 @@ public class AcademicsService {
         return new ClassView(courseClass.id(),
                 new Subject(subject.subjectId(), subject.code(), subject.name()),
                 courseClass.code(), courseClass.name(),
-                Objects.requireNonNullElse(courseClass.description(), ""), courseClass.status(), teacher,
+                Objects.requireNonNullElse(courseClass.description(), ""), courseClass.startsOn(),
+                courseClass.term(), courseClass.status(), teacher,
                 counts.active(), counts.removed(), courseClass.createdAt(),
                 courseClass.showGradeDistribution(), courseClass.version());
     }
