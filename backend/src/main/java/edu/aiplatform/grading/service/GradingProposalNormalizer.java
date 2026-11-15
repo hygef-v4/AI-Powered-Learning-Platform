@@ -20,6 +20,8 @@ final class GradingProposalNormalizer {
     private static final List<String> ITEM_STRING_FIELDS = List.of(
             "rubricId", "itemId", "evidence", "reason",
             "suggestion", "evidenceBlockId", "reviewReason");
+    static final String MISSING_EVIDENCE_REVIEW_REASON =
+            "AI không nêu bằng chứng cho mục này; giảng viên cần kiểm tra lại.";
 
     private GradingProposalNormalizer() {
     }
@@ -268,9 +270,22 @@ final class GradingProposalNormalizer {
                     for (String field : ITEM_STRING_FIELDS) {
                         trimTextField(itemObj, field);
                     }
+                    flagItemWithoutEvidence(itemObj);
                 }
             }
         }
+    }
+
+    /** AI để trống bằng chứng mà không tự đánh dấu: đánh dấu cần giảng viên xem, không bịa bằng chứng. */
+    private static void flagItemWithoutEvidence(ObjectNode itemObj) {
+        JsonNode evidence = itemObj.get("evidence");
+        boolean hasEvidence = evidence != null && evidence.isTextual() && !evidence.asText().isBlank();
+        if (hasEvidence || itemObj.path("requiresReview").asBoolean(false)) {
+            return;
+        }
+        itemObj.putNull("evidence");
+        itemObj.put("requiresReview", true);
+        itemObj.put("reviewReason", MISSING_EVIDENCE_REVIEW_REASON);
     }
 
     private static void trimTextField(ObjectNode node, String fieldName) {

@@ -76,6 +76,20 @@ class JobDispatcherTest {
     }
 
     @Test
+    void usesMessageBudgetForMultiCallHandlers() {
+        FakeHandler handler = new FakeHandler(m -> {
+            try { Thread.sleep(300); }
+            catch (InterruptedException e) { throw new IllegalStateException(e); }
+        }) {
+            @Override
+            public Duration timeout(JobMessage message) {
+                return Duration.ofSeconds(3);
+            }
+        };
+        assertThat(dispatcher(handler).dispatch(message(0))).isEqualTo(JobDispatcher.Outcome.DONE);
+    }
+
+    @Test
     void temporaryErrorIsRetriedWithBackoffAndNextAttempt() {
         FakeHandler handler = new FakeHandler(m -> {
             throw new RetryableJobException("429");

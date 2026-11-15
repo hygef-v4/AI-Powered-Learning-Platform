@@ -97,15 +97,18 @@ class GradingPromptSchemaTest {
             """.formatted(rubricId, rubricId, itemId, rubricId, itemId);
         assertThat(checker.check(schemaText, validOutput)).isEmpty();
 
-        // Regression: wire schema must reject the exact missing-evidence combination
-        // rejected by the grading callback, while permitting explicit human review.
+        // Regression: wire schema rejects null evidence without review. Empty evidence passes the schema
+        // (F6, 2026-11-15) because normalization turns it into an explicit teacher review flag.
         var missingEvidence = (com.fasterxml.jackson.databind.node.ObjectNode) json.readTree(validOutput);
         var feedbackItem = (com.fasterxml.jackson.databind.node.ObjectNode)
                 missingEvidence.path("structuredFeedback").path("items").get(0);
         feedbackItem.putNull("evidence");
         assertThat(checker.check(schemaText, missingEvidence)).isPresent();
         feedbackItem.put("evidence", "");
-        assertThat(checker.check(schemaText, missingEvidence)).isPresent();
+        assertThat(checker.check(schemaText, missingEvidence)).isEmpty();
+        var flagged = GradingPromptBuilder.sanitizeAndNormalizeProposal(missingEvidence.deepCopy(),
+                GradingJson.readRubrics(json, evaluation.rubricSnapshot), java.util.Set.of("q1"), json);
+        assertThat(flagged.at("/structuredFeedback/items/0/requiresReview").asBoolean()).isTrue();
         feedbackItem.putNull("evidence");
         feedbackItem.put("requiresReview", true);
         feedbackItem.put("reviewReason", "Không đọc được nội dung sơ đồ; cần giáo viên kiểm tra.");

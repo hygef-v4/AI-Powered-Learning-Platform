@@ -71,6 +71,22 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
     }
 
     @Override
+    public Optional<QuizAttempt> findInProgress(UUID quizId, UUID accountId, UUID classId) {
+        return jdbc.sql("select " + COLUMNS + " from quiz_attempts where quiz_id = :quizId"
+                        + " and account_id = :accountId and class_id = :classId and status = 'IN_PROGRESS'")
+                .param("quizId", quizId).param("accountId", accountId).param("classId", classId)
+                .query(this::map).optional();
+    }
+
+    @Override
+    public int countAttempts(UUID quizId, UUID accountId, UUID classId) {
+        return jdbc.sql("select count(*) from quiz_attempts where quiz_id = :quizId"
+                        + " and account_id = :accountId and class_id = :classId")
+                .param("quizId", quizId).param("accountId", accountId).param("classId", classId)
+                .query(Integer.class).single();
+    }
+
+    @Override
     public boolean existsForQuiz(UUID quizId) {
         return jdbc.sql("select exists (select 1 from quiz_attempts where quiz_id = :quizId)")
                 .param("quizId", quizId).query(Boolean.class).single();

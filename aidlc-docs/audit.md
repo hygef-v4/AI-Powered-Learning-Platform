@@ -13611,6 +13611,229 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 
 ---
 
+## PR77 merge into staging
+**Timestamp**: 2026-11-12T02:52:56Z
+**Requested by:** Đào Chí Cường
+**User Input**: "merge PR 77 vào staging"
+**AI Response**: "Waited for CI on head 65fcc764: backend, frontend, deploy-script and GitGuardian passed, images skipped; GitHub reported MERGEABLE/CLEAN. Merged PR77 into staging with a merge commit pinned to that head (merge commit 3fd7bbee, 2026-11-12T02:54:18Z). No main merge or deployment."
+**Context**: Construction — PR publication; U06 prompt guardrail is on staging.
+
+---
+
+## Whole-project bug review — 2026-11-12
+**Timestamp**: 2026-11-12T03:00:00Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "kiểm tra toàn bộ dự án xem còn bug gì không và báo cáo tôi"
+**AI Response**: "Review current checkout 65fcc764 on feat/ai-prompt-guardrail; inspect all module boundaries, run frontend/backend checks, validate actionable defects and report evidence. No application source fixes requested. Existing AI-DLC context reused; design/code generation/deployment stages not applicable to this review. Security/Resiliency retained; property-based extension disabled. gh is unavailable, so requester identity is not inferred from historical entries."
+**Context**: Review and verification; frontend tests 1018 passed; checking stale generated route types and Docker-based backend verification.
+
+---
+
+## Whole-project bug review completed — 2026-11-12
+**Timestamp**: 2026-11-12T03:15:07Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "kiểm tra toàn bộ dự án xem còn bug gì không và báo cáo tôi"
+**AI Response**: "Reported four locally reproduced defects: quiz exit ignores failed answer saves (P1); AI quota fallback causes rollback-only transaction failure; subject quiz resumes an unusable attempt from an archived prior class; aggregate AI timeout interrupts valid fallback chains (P2). Full Maven verify 2342/2342 with no failures/errors/skips and required integration guard pass. Frontend 1018/1018, lint, production build and clean-cache typecheck pass; 14 MCP hook fixtures and deployment ShellCheck pass. Stale generated Next route types were isolated into .tmp. Report at construction/build-and-test/2026-11-12-project-bug-review.md. No application source fixes, live business writes, provider calls, commit/push/deploy or subagents. Existing concurrent PR77 audit entry preserved."
+**Context**: Review completed, defects remain unfixed. Security/Resiliency retained; PBT disabled. Browser/live provider/production/load testing, Python MCP fixture (Python unavailable) and deploy shell harness remain unverified.
+
+---
+
+## Codebase and architecture cleanliness review — 2026-11-12
+**Timestamp**: 2026-11-12T08:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra codebase và architecture dự án xem đã clean chưa cho tôi, sau đó gửi lại tôi báo cáo"
+**AI Response**: "Review-only: read shared code/persistence conventions; check backend module boundaries, layering, JPA/JDBC gap, naming conventions, contract stubs, file sizes, frontend feature boundaries and repo hygiene; run frontend typecheck/lint and backend test-compile via Maven Docker image. No application source changes."
+**Context**: Review; design/code generation/deployment stages not applicable.
+
+---
+
+## Codebase and architecture cleanliness review completed — 2026-11-12
+**Timestamp**: 2026-11-12T08:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra codebase và architecture dự án xem đã clean chưa cho tôi, sau đó gửi lại tôi báo cáo"
+**AI Response**: "Overall mostly clean, not fully. Frontend typecheck/lint and backend test-compile (Maven Docker, offline) pass. Findings: ARCH-01 contract stubs enabled by default with allow-all permission stubs (P2 fail-open risk); ARCH-02 groups<->groupdocs cycle via internals; ARCH-03 remaining JPA in U04/U13 module/U14 plus Hibernate/JPA exceptions leaking to service/controller; ARCH-04 backup->files and files->settings internal imports; naming debt (Jdbc-prefixed repositories, generic dependency names, SQL in McpWriteRequestService); oversized files (DocumentEditor.tsx 1968 lines); vitest cache committed under backend/node_modules. Report at construction/build-and-test/2026-11-12-codebase-architecture-review.md. No application source changes, commits or subagents."
+**Context**: Review completed; findings unfixed. Full test suite not rerun; runtime stub activation not verified.
+
+---
+
+## Design Research - Login Page Redesign Proposal
+**Timestamp**: 2026-11-12T00:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "đây là giao diện login hiện tại nhưng tôi thấy nó chưa đủ thú vị và vẫn khá xấu, điều này tương tự với giao diện UI-UX của các trang còn lại, có cách nào làm đẹp hơn không, bạn hãy research các form login đẹp hiện hay, các skill liên quan đến UI-UX và gửi tôi 1 hướng giải quyết cụ thể. Trước mắt hãy chỉ tập trung vào trang login" (kèm 2 ảnh chụp trang login sáng/tối)
+**AI Response**: "Researched login design trends (split-screen brand panel, passkey/accessible-auth guidance) and queried ui-ux-pro-max (its education design system targeted kids, only UX rules reused). Built a standalone HTML prototype (scratchpad, not in repo) of a split-screen login: dark brand panel with headline + animated product cards (quiz, AI tutor, weekly progress) and 学 stamp; form column with icon inputs, Caps Lock hint, loading spinner, shake on validation error, stamp animation on success; separate dark-mode CTA colour for contrast. Verified desktop light/dark, validation errors, success state and 375px mobile (no horizontal scroll) in the browser pane. Proposed implementation plan touching AuthLayout.tsx, new AuthShowcase component, LoginForm.tsx, authStyles.ts and globals.css keyframes. No application source changes; temporary launch.json entry added for preview and removed."
+**Context**: Design proposal only, awaiting user decision before Code Generation.
+
+---
+
+## Design Research - Login Logo Options
+**Timestamp**: 2026-11-12T00:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "svg này đang khá xấu, không thể hiện được rõ, bạn có ý tưởng logo nào khác không." (chọn phần tử SVG logo trong mockup login)
+**AI Response**: "Reviewed current LogoMark (brush dipping into inkstone, thin strokes, no container). Drafted 4 filled app-icon style options in a scratchpad comparison page: A open book + AI sparkle (recommended), B 学 seal, C ink drop + AI sparkle keeping orange/teal, D chat bubble + book. Rendered each at 48/28/16px on light and dark backgrounds. No application source changes; temporary launch.json preview entry added and removed."
+**Context**: Design proposal only, awaiting user choice.
+
+---
+
+## Design Research - Login Logo Options v2
+**Timestamp**: 2026-11-12T00:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi không ưng phương án nào, trang web của tôi đối tượng nhắm tới là sinh viên ngành software engineer của trường đại học fpt, đặc biệt dành cho môn software design, chú trọng vào tính năng có thể chấm diagram"
+**AI Response**: "Drafted 4 new logo options themed on Software Design and diagram grading in a scratchpad comparison page: A UML class box + orange grading tick (recommended), B UML generalization tree with one highlighted subclass, C UML composition diamond with tick, D letter D with diagram-editor selection handles. Rendered at 64/28/16px on light and dark. Deliberately did not reuse FPT University branding. No application source changes; temporary launch.json preview entry added and removed."
+**Context**: Design proposal only, awaiting user choice.
+
+---
+
+## Design Research - ALAP Logo
+**Timestamp**: 2026-11-12T00:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Tên dự án là ALAP, có cách nào làm logo chi tiết và đẹp/có liên quan hơn không. Nếu kết nối bạn với higgfield liệu bạn có thể làm lại giao diện đẹp hơn không"
+**AI Response**: "Searched the connector registry: no Higgsfield connector available. Designed an ALAP identity in a scratchpad page: logomark where the letter A is a UML generalization arrowhead whose legs connect to two subclass boxes (one orange with grading tick) on a dot-grid gradient tile; simplified A mark for favicon; wordmark where A = generalization triangle, L = orthogonal connector with arrowhead, P = class box with orange header. Rendered on light and dark at 128/64/32/16px. Explained Higgsfield fits raster illustrations, not logo/UI code. No application source changes; temporary launch.json preview entry added and removed."
+**Context**: Design proposal only, awaiting user feedback.
+
+---
+
+## Design Research - ALAP Logo Refinement
+**Timestamp**: 2026-11-12T00:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Chỉnh logo thêm"
+**AI Response**: "Refined the ALAP identity in a scratchpad page with 3 directions keeping the 'A = UML generalization arrow' idea: (3, recommended) solid A whose triangular counter is the hollow generalization arrowhead, standing on two class boxes (orange one graded), separated by tile-coloured outlines; (1) raised keycap tile with depth, highlights, box shadows and detailed class compartments; (2) navy diagram canvas with the orange subclass selected (dashed frame + handles). Wordmark made heavier and more even, L ends with a smaller solid arrowhead. Checked at 240/96/48/28/16px on light and dark. No application source changes; temporary launch.json preview entry added and removed."
+**Context**: Design proposal only, awaiting user choice.
+
+---
+
+## Design Research - Decision Deferred
+**Timestamp**: 2026-11-12T00:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tạm thời chưa thay đổi gì, tôi sẽ chốt phương án sau"
+**AI Response**: "Acknowledged. No code changes made; login prototype and ALAP logo drafts remain in the session scratchpad only."
+**Context**: Login redesign and ALAP logo decision deferred by user.
+
+---
+
+## Review - Subject Info Screen vs Teacher Class Info
+**Timestamp**: 2026-11-12T08:07:02Z
+**Requested by:** Đào Chí Cường
+**User Input**: "giao diện thông tin môn vẫn đang thiếu thông tin và chưa đồng bộ với giao diện của giảng viên, kiểm tra và gửi tôi 1 bản báo cáo các điểm cần cải thiện/sửa đổi/bổ sung"
+**AI Response**: "Compared MySubjectPage with the teacher class info tab and wrote aidlc-docs/construction/build-and-test/2026-11-12-subject-info-ui-review.md (A: data defects, B: UI alignment, C: additions). Key finding A1: GET /manager/subjects/{id} omits description, so the page always shows 'Chưa có mô tả.'"
+**Context**: Review report only, no code changes.
+
+---
+
+## Code Fix - A1 Subject Description for Subject Manager
+**Timestamp**: 2026-11-12T08:07:02Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa A1"
+**AI Response**: "Added description to SubjectRef (kept a 5-arg constructor for existing callers), filled it in SubjectQueryService and SubjectMutationGuard, added description to SubjectSummary and AcademicsService.mapSubjectSummary. Updated SubjectQueryServiceTest, AcademicsAccessAndReadTest, AcademicsApiContractTest. Targeted mvn test (Docker maven:3.9-eclipse-temurin-17) passed: SubjectQueryServiceTest 6, AcademicsApiContractTest 37, AcademicsAccessAndReadTest 95, AcademicsServiceTest 31, AcademicsContractAdapterTest 9, AcademicsBatchTransactionTest 8, AcademicsMcpToolsTest 2; 0 failures. No frontend change needed (SubjectView already has optional description). Not committed."
+**Context**: Construction - bug fix A1 from subject info review report.
+
+---
+
+## Review - Lecturer Interview Gap Analysis
+**Timestamp**: 2026-11-12T10:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "@"C:\Users\Admin\Downloads\2026-11-12-tom-tat-nghiep-vu-phong-van.docx"
+đây là file phỏng vấn giảng viên của tôi, kiểm tra xem dự án còn thiếu gì, cần phải bổ sung những gì để đáp ứng nhu cầu của giảng viên sau đó gửi lại tôi báo cáo"
+**AI Response**: "Compared interview topics A–K with requirements.md and backend source; wrote aidlc-docs/inception/requirements/2026-11-12-lecturer-interview-gap-analysis.md (22 met, 16 partial, 11 missing, 3 conflicts with locked decisions D01/FR-007/FR-016; prioritized P1–P3 proposals pending advisor approval)."
+**Context**: Requirements review only, no code or FR changes.
+
+---
+
+## Construction - AI Grading Evaluation Harness
+**Timestamp**: 2026-11-12T11:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Làm bộ đánh giá AI"
+**AI Response**: "Added test-only evaluation harness backend/src/test/java/edu/aiplatform/grading/eval (dataset loader, pipeline reusing GradingPromptBuilder/JsonSchemaChecker/GradingProposalValidator/HttpProviderGateway, metrics, recordings, Markdown/JSON report), synthetic dataset ai-eval/grading/badminton-booking (8 cases, labelSource SYNTHETIC_TEAM, not lecturer-verified), GradingEvalHarnessTest (always runs, no AI) and GradingAiEvaluationTest (live/replay only with -Dai.eval.mode). Docs: construction/plans/2026-11-12-ai-grading-evaluation-plan.md and build-and-test/ai-grading-evaluation-instructions.md. Finding: DiagramXml.compact drops edge dash style and rectangle/container info, so AI cannot grade the dashed include/extend and system-boundary criteria. No production code changed."
+**Context**: Construction - test tooling for interview item J4 (P1-3); user chose this option from the gap-analysis next-step box.
+
+---
+
+## Construction - AI Grading Evaluation Live Runs
+**Timestamp**: 2026-11-13T07:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Run with Claude" / "tôi đang dùng key gemini chứ không phải claude" / "mở lại tab terminal" / "Done running"
+**AI Response**: "First live run sent a Gemini key to Anthropic: 24/24 HTTP 401; harness then fixed to report 'no metrics measured', stop on auth rejection and check key prefix. Added Gemini runner script (key entered hidden in terminal; model list check first). Gemini 2.5 Flash run: 9/24 valid, composite 9.35/10, kappa 0.59 and citation 67.7% below threshold, off-topic/injection unmeasured. Findings recorded in construction/build-and-test/2026-11-13-ai-grading-eval-gemini-results.md: F1 MAX_TOKENS on 12 runs (thinking tokens share maxOutputTokens; no thinkingConfig), F2 DiagramXml.clean strips <<include>>/<<extend>> labels. Harness: 503 no longer stops the run, recordings keep httpStatus, replay counts runs per case; GradingEvalHarnessTest 9/9 pass. Warned user that a key typed at the PowerShell prompt is in terminal/PSReadLine history and should be rotated. No production code changed."
+**Context**: Construction - AI evaluation test tooling, live verification.
+
+---
+
+## Construction - Fix AI grading findings F1/F2
+**Timestamp**: 2026-11-13T09:31:12Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Fix F1 and F2"
+**AI Response**: "F1: HttpProviderGateway now sends generationConfig.thinkingConfig.thinkingBudget = maxOutputTokens/4 for Gemini requests of at least 2048 output tokens (6956 -> 1739 for a 13-item rubric), so thinking can no longer use up the output cap before the JSON answer; smaller calls such as connection tests keep the model default. F2: DiagramXml.clean keeps <<include>>/<<extend>> stereotype labels instead of stripping them as HTML tags, and DiagramXml.compact marks dashed edges as '(nét đứt)'. Tests: new HttpProviderGatewayTest and DocumentModelServiceTest cases; GradingEvalHarnessTest characterization test changed to assert the label and line style now reach the AI. HttpProviderGatewayTest, DocumentModelServiceTest and GradingEvalHarnessTest: 47/47 pass, compiled with local Java 21 (--release 17), not through Maven. Gemini evaluation rerun needs the user's key in the terminal. Nothing committed."
+**Context**: Construction - production fix in ai (integration) and assignments (DiagramXml) units, approved by the user.
+
+---
+
+## Code Fix - Subject Info A2, A3, B1-B5
+**Timestamp**: 2026-11-13T13:32:12Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa tiếp A2, A3 và B1–B5"
+**AI Response**: "Reworked MySubjectPage to the teacher class info layout (read-only dl: code, name, class counts from classCounts, status; description paragraph hidden when empty; card titled 'Thông tin môn'). Added SubjectClassesOverview (open classes of the subject: counts, students, classes without teacher, list) using GET /manager/classes?subjectId&status=OPEN. ManagerRoute now loads all classes only for the classes view. Updated academics integration test. vitest academics 69/69, tsc and eslint clean; verified in the local app as the test subject manager. C3 still needs a count API. Not committed."
+**Context**: Construction - fixes from subject info review report.
+
+---
+
+## Whole-project code, architecture and UX review — 2026-11-13
+**Timestamp**: 2026-11-13T14:00:00Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "kiểm tra toàn bộ dự án xem code và architecture đã clean chưa, còn bug nào không, ui-ux đã tối ưu chưa và gửi lại tôi báo cáo"
+**AI Response**: "Review current dirty checkout af245ac3; reuse AI-DLC context, verify prior findings against current source, run existing checks, inspect UI and produce a Vietnamese evidence-based report. Review/report only; implementation/design stages not applicable. Existing Security/Resiliency scope retained; PBT disabled. gh is unavailable, so current requester display name cannot be verified."
+**Context**: Authorized whole-project review; preserve existing changes and concurrent work.
+
+---
+
+## Review fixes and retake policy
+**Timestamp**: 2026-11-13T14:55:39.7069005Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "Sửa toàn bộ các lỗi vừa tìm được cho tôi"; "nhưng khi sinh viên đã vào lớp rồi là không được chuyển lớp nữa"; "Chỉ cấm đổi giữa các lớp đang học; cho phép học lại khi lớp cũ đã lưu trữ"; "Giữ bài cũ tại lớp cũ, cho làm lượt mới tại lớp mới"; "tiếp tục"
+**AI Response**: "Implement quiz exit save guard, typed non-rollback quota rejection, per-job fallback timeout budget, and class-scoped quiz attempts with additive Flyway migration. Preserve old attempts, answers and ownership. Existing enrollment policy unchanged. Preserve unrelated HttpProviderGateway, DiagramXml and evaluation work. Regression verification ongoing."
+**Context**: Authorized bug fixes; baseline advanced to af245ac3 between sessions. No deploy or live migration.
+
+---
+
+## Review fixes verified
+**Timestamp**: 2026-11-13T15:02:44.1584372Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: tiếp tục
+**AI Response**: Completed BUG-01 through BUG-04 under the approved archived-class retake policy. Final isolated backend run: 88 tests, no failures/errors/skips, PostgreSQL migration passed. Frontend quiz: 35 tests; TypeScript and scoped ESLint passed. Details: construction/build-and-test/2026-11-13-review-fixes-results.md. No live migration, provider calls, commit, push or deploy.
+**Context**: Security/Resiliency retained; PBT disabled. Concurrent changes preserved.
+
+---
+
+## Construction - AI grading evaluation rerun after F1/F2
+**Timestamp**: 2026-11-15T13:44:46Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Open terminal" / "mở tab mới cho tôi để tôi nhập key" / "chạy xong"
+**AI Response**: "Opened terminal tabs running the Gemini evaluation script; the user entered the key at the script's hidden prompt. Rerun with gemini-2.5-flash: 11/24 valid, 0 MAX_TOKENS (thinking tokens 1112-1735, so F1 is fixed), d-dashed no longer misgraded (F2 fixed), kappa 0.59 -> 0.85, composite 9.10/10. 9 runs failed with connection errors from the user's machine, so off-topic case 05 is still unmeasured; injection case 06 measured once and resisted. New finding F6: 3/14 Gemini responses failed the full schema (6 strengths > maxItems 5, empty evidence) because maxItems is omitted from the Gemini wire schema. Citation rate 39.2%, requiresReview 0%. Results doc and plan updated. Nothing committed."
+**Context**: Construction - AI evaluation live verification of production fixes.
+
+---
+
+## Construction - AI grading evaluation rerun of cases 04/05/06/08
+**Timestamp**: 2026-11-15T13:58:46Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Rerun 4 cases" / "chạy xong"
+**AI Response**: "Opened a terminal tab running the Gemini evaluation with AI_EVAL_CASES=04-solid-include,05-off-topic,06-prompt-injection,08-wrong-actors; the user entered the key at the hidden prompt. Results: 04 and 08 still unmeasured (HTTP 503, timeout, connection errors). Injection 06 resisted again (0.83 vs 1.25). New finding F7: off-topic case 05 scored 0.25, 2.15, 1.50 (lecturer 0.50); the grading instructions never ask the model to check the work answers this assignment's instructions. F6 recurred (7 improvements > maxItems 5) in 2 runs. Results doc section 6 and plan updated. No code changed, nothing committed."
+**Context**: Construction - AI evaluation live verification.
+
+---
+
+## Construction - Fix AI grading findings F6/F7
+**Timestamp**: 2026-11-15T14:18:08Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Fix F6 and F7"
+**AI Response**: "F6: HttpProviderGateway trims Gemini output arrays back to the original schema maxItems (the wire schema omits them); the grading schema no longer requires minLength 1 on observed evidence, and GradingProposalNormalizer turns blank evidence without a review flag into requiresReview=true with a fixed reviewReason instead of rejecting the whole proposal. F7: GradingPromptBuilder.buildGradingInstructions now tells the model to compare the submission with the assignment instructions, give zero for work about another system or topic and flag those items for review. Tests added/updated in HttpProviderGatewayTest, GradingPromptBuilderTest, GradingPromptSchemaTest; 76/76 affected tests pass on local Java 21, not through Maven. Live rerun pending. Nothing committed."
+**Context**: Construction - production fix in ai (integration) and grading units, approved by the user.
+
+---
+
+## Construction - AI grading evaluation rerun after F6/F7
+**Timestamp**: 2026-11-15T14:23:58Z
+**Requested by:** Đào Chí Cường
+**User Input**: "chạy xong"
+**AI Response**: "Full Gemini rerun (gemini-2.5-flash) after F6/F7: 11/24 valid, 13 runs HTTP 429 (daily quota exhausted), 0 invalid outputs (F6 fixed), kappa 0.89, MAE 1.5%, no fabricated credit, composite 9.06/10. F7 not verified: all 3 off-topic runs hit 429. Case 04 run 1 gave full d-dashed credit for a solid line. Citation rate 14% (evidenceBlockId null on 123/143 items). Results doc section 8 and plan updated. Nothing committed."
+**Context**: Construction - AI evaluation live verification.
 ## Merge PR #76 vào staging
 **Timestamp**: 2026-11-12T02:33:00Z
 **Requested by:** Đào Chí Cường
@@ -14572,5 +14795,14 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **User Input**: "giúp tôi cập nhật doc AI-DLC theo code staging cho các điểm vừa nêu, giữ nguyên code. Riêng mức đóng góp khi nhóm nộp lại thì ghi rõ: giữ điểm và mức đã công bố, chỉ reset bản chưa chính thức."
 **AI Response**: "Đồng bộ yêu cầu, thiết kế, use case, story, truy vết và hướng dẫn kiểm thử theo staging@7e0e8375. Ghi rõ giữ điểm và mức đóng góp đã công bố khi nhóm nộp lại, chỉ reset bản chưa chính thức. Đối chiếu tĩnh 66 use case, 50 controller với 346 mapping, 43 migration và 5 suite PostgreSQL bắt buộc. Giữ kết quả test gốc theo phạm vi từng lần chạy."
 **Context**: Cập nhật Markdown theo yêu cầu đã xác nhận. Kết quả kiểm tra tĩnh không thay cho chạy kiểm thử ứng dụng trên HEAD.
+
+---
+
+## Construction - Staging readiness check and merge
+**Timestamp**: 2026-11-15T15:35:26Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem có thể đưa lên staging chưa" / "xong chưa, có thể đưa lên staging chauw" / "Merge, push, open PR"
+**AI Response**: "Branch was 51 commits behind origin/staging. Trial merge in a temporary worktree: resolved HttpProviderGateway conflict (staging empty-output reasons + F1/F6), removed the blank-evidence rejection case from GradingProposalResultHandlerTest (intended F6 behaviour change), added starts_on to the class insert in JdbcQuizAttemptRepositoryIntegrationTest (staging made it required). Merged tree: backend mvn verify 2447 tests 0 failures 1 skipped, required-suite script passed (57 traced cases); frontend lint, typecheck, 1095 tests and build passed. Merged origin/staging into feat/ai-prompt-guardrail with the same resolutions, audit/state docs union-merged; pushing and opening a PR to staging as requested."
+**Context**: Construction - integration with staging.
 
 ---

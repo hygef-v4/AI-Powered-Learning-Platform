@@ -164,6 +164,32 @@ class GradingPromptBuilderTest {
                 .isInstanceOfSatisfying(ApiException.class, ex ->
                         assertThat(ex.getMessage()).isNotBlank());
     }
+    @Test
+    void blankEvidenceIsFlaggedForTeacherReviewInsteadOfRejectingTheProposal() throws Exception {
+        UUID rubricId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
+        var rubrics = List.of(new RubricView(rubricId, UUID.randomUUID(), "part-1",
+                List.of(new RubricCriterion(UUID.randomUUID(), "Design", "", CriterionKind.TEXT,
+                        List.of(new RubricItem(itemId, "Item", new BigDecimal("2.00"))))),
+                new BigDecimal("2.00")));
+        JsonNode normalized = GradingPromptBuilder.sanitizeAndNormalizeProposal(json.readTree("""
+                {"checks":{"%s":[]},"itemScoresByRubric":{"%s":{"%s":0}},"score":"0.00","feedback":"ok","sections":[],"structuredFeedback":{"schemaVersion":1,"summary":{"strengths":[],"improvements":[],"nextSteps":[]},"items":[{"rubricId":"%s","itemId":"%s","evidence":"  ","reason":"Why","suggestion":"Fix","evidenceBlockId":null,"requiresReview":false,"reviewReason":null}]}}
+                """.formatted(rubricId, rubricId, itemId, rubricId, itemId)), rubrics, Set.of("part-1"), json);
+
+        JsonNode item = normalized.at("/structuredFeedback/items/0");
+        assertThat(item.path("evidence").isNull()).isTrue();
+        assertThat(item.path("requiresReview").asBoolean()).isTrue();
+        assertThat(item.path("reviewReason").asText()).isNotBlank();
+        new GradingProposalValidator(json).validateProposal(normalized, rubrics, Set.of("part-1"));
+    }
+
+    @Test
+    void gradingInstructionsRequireWorkToMatchTheAssignment() {
+        assertThat(new GradingPromptBuilder(json).buildGradingInstructions())
+                .contains("compare the submission with the assignment instructions",
+                        "different system or topic earns zero");
+    }
+
     @org.junit.jupiter.api.Test
     void mergingBlankRubricsPreservesAiTotalForValidation() throws Exception {
         var rubric = new edu.aiplatform.assignments.contract.RubricView(java.util.UUID.randomUUID(),
