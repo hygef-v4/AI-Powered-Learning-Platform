@@ -14340,3 +14340,21 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **Context**: Sau Build and Test — commit theo yêu cầu.
 
 ---
+
+## Học kỳ lớp — push nhánh
+**Timestamp**: 2026-11-15T03:39:20Z
+**Requested by:** Hải Nam
+**User Input**: "Push it"
+**AI Response**: "Đã push fix/term lên origin (6c0bdc16..f7aa3471, 8 commit). Chưa tạo PR."
+**Context**: Sau Build and Test — push theo yêu cầu.
+
+---
+
+## Học kỳ lớp — merge staging, kiểm e2e, mở PR và merge
+**Timestamp**: 2026-11-15T03:42:10Z
+**Requested by:** Hải Nam
+**User Input**: "merge staging vào branch hiện tại, check lại e2e rồi mới mở pr vào staging, check CI xanh thì merge vào staging"
+**AI Response**: "Merge origin/staging vào fix/term, dựng lại stack classterm từ mã đã merge, chạy lại e2e; nếu ổn thì push, mở PR fix/term → staging, chờ CI xanh rồi merge."
+**Context**: Sau Build and Test — tích hợp vào staging theo yêu cầu.
+
+---
