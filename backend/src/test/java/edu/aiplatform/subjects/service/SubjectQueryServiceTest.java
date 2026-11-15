@@ -26,7 +26,7 @@ class SubjectQueryServiceTest {
     private static final Instant NOW = Instant.parse("2026-10-18T00:00:00Z");
 
     @Test
-    void returnsOnlyContractFieldsAndMissingSubjectIsEmpty() {
+    void returnsContractFieldsWithDescriptionAndMissingSubjectIsEmpty() {
         UUID id = UUID.randomUUID();
         UUID manager = UUID.randomUUID();
         when(subjectRepository.findById(id))
@@ -36,13 +36,18 @@ class SubjectQueryServiceTest {
                                         id,
                                         "swr302",
                                         "Requirements",
-                                        "Private note",
+                                        "Course description",
                                         manager,
                                         NOW)));
         assertThat(subjectQueryService.getSubject(id))
                 .contains(
                         new SubjectRef(
-                                id, "SWR302", "Requirements", SubjectStatus.ACTIVE, manager));
+                                id,
+                                "SWR302",
+                                "Requirements",
+                                SubjectStatus.ACTIVE,
+                                manager,
+                                "Course description"));
         UUID missing = UUID.randomUUID();
         when(subjectRepository.findById(missing)).thenReturn(Optional.empty());
         assertThat(subjectQueryService.getSubject(missing)).isEmpty();
