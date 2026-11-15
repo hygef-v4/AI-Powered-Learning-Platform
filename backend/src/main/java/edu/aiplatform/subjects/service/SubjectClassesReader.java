@@ -25,20 +25,20 @@ import org.springframework.stereotype.Component;
 /** Chỉ dùng cho hiển thị Admin; command archive phải có guard/transaction riêng ở B09. */
 @Component
 public class SubjectClassesReader {
-    private final ISubjectClasses provider;
+    private final ISubjectClasses subjectClasses;
     private final ThreadPoolExecutor executor;
     private final Duration timeout;
 
     @Autowired
-    public SubjectClassesReader(ISubjectClasses provider) {
-        this(provider, Duration.ofSeconds(1));
+    public SubjectClassesReader(ISubjectClasses subjectClasses) {
+        this(subjectClasses, Duration.ofSeconds(1));
     }
 
-    SubjectClassesReader(ISubjectClasses provider, Duration timeout) {
+    SubjectClassesReader(ISubjectClasses subjectClasses, Duration timeout) {
         if (timeout.isZero() || timeout.isNegative()) {
             throw new IllegalArgumentException("Timeout phải dương");
         }
-        this.provider = provider;
+        this.subjectClasses = subjectClasses;
         this.timeout = timeout;
         // Không chạy provider trên caller khi đầy; provider bỏ qua interrupt cũng không tạo vô hạn
         // thread.
@@ -58,15 +58,15 @@ public class SubjectClassesReader {
     }
 
     /** Missing key, null hoặc số âm đều là unknown, không suy ra 0 lớp. */
-    public Map<UUID, Integer> counts(Collection<UUID> subjectIds) {
+    public Map<UUID, Integer> countClasses(Collection<UUID> subjectIds) {
         List<UUID> ids = List.copyOf(subjectIds);
         if (ids.isEmpty()) {
             return Map.of();
         }
         Map<UUID, Integer> result =
-                read(
+                readWithTimeout(
                         () -> {
-                            Map<UUID, Integer> raw = provider.countClasses(ids);
+                            Map<UUID, Integer> raw = subjectClasses.countClasses(ids);
                             if (raw == null) {
                                 return Map.of();
                             }
@@ -82,11 +82,11 @@ public class SubjectClassesReader {
         return result == null ? Map.of() : result;
     }
 
-    public SubjectAdminViews.Classes classes(UUID subjectId) {
+    public SubjectAdminViews.Classes listClasses(UUID subjectId) {
         List<SubjectClassSummary> items =
-                read(
+                readWithTimeout(
                         () -> {
-                            var raw = provider.listClassesOfSubject(subjectId);
+                            var raw = subjectClasses.listClassesOfSubject(subjectId);
                             return raw == null ? null : List.copyOf(raw);
                         });
         return new SubjectAdminViews.Classes(
@@ -96,7 +96,7 @@ public class SubjectClassesReader {
                 items);
     }
 
-    private <T> T read(Callable<T> call) {
+    private <T> T readWithTimeout(Callable<T> call) {
         Future<T> future = null;
         try {
             future = executor.submit(call);

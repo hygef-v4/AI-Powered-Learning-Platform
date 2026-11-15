@@ -24,22 +24,23 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class SubjectStatusService {
-    private final ISubjectRepository repository;
-    private final SubjectAdminAccess access;
-    private final ObjectProvider<ISubjectClasses> classes;
-    private final SubjectAuditRecorder audit;
+    private final ISubjectRepository subjectRepository;
+    private final SubjectAdminAccess subjectAdminAccess;
+    private final ObjectProvider<ISubjectClasses> subjectClassesProvider;
+    private final SubjectAuditRecorder subjectAuditRecorder;
     private final Clock clock;
 
     public SubjectStatusService(
-            ISubjectRepository repository,
+            ISubjectRepository subjectRepository,
             IAuthorization authorization,
-            ObjectProvider<ISubjectClasses> classes,
-            SubjectAuditRecorder audit,
+            ObjectProvider<ISubjectClasses> subjectClassesProvider,
+            SubjectAuditRecorder subjectAuditRecorder,
             Clock clock) {
-        this.repository = repository;
-        this.access = new SubjectAdminAccess(authorization, audit, clock);
-        this.classes = classes;
-        this.audit = audit;
+        this.subjectRepository = subjectRepository;
+        this.subjectAdminAccess =
+                new SubjectAdminAccess(authorization, subjectAuditRecorder, clock);
+        this.subjectClassesProvider = subjectClassesProvider;
+        this.subjectAuditRecorder = subjectAuditRecorder;
         this.clock = clock;
     }
 
@@ -47,7 +48,8 @@ public class SubjectStatusService {
 
     @Transactional(isolation = Isolation.READ_COMMITTED, timeout = 1)
     public Subject changeStatus(Actor actor, UUID subjectId, ChangeStatus command) {
-        access.require(actor, Actions.SUBJECT_STATUS_CHANGE, ResourceRef.subject(subjectId));
+        subjectAdminAccess.requireAccess(
+                actor, Actions.SUBJECT_STATUS_CHANGE, ResourceRef.subject(subjectId));
         if (subjectId == null || command == null || command.status() == null) {
             throw ApiException.badRequest("SUBJECT_STATUS_INVALID", "Cần môn và trạng thái hợp lệ");
         }
@@ -58,8 +60,8 @@ public class SubjectStatusService {
         Subject before;
         try {
             before =
-                    repository
-                            .findByIdForUpdate(subjectId, budget.remaining())
+                    subjectRepository
+                            .findByIdForUpdate(subjectId, budget.calculateRemaining())
                             .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
         } catch (DataAccessException failure) {
             throw ApiException.unavailable(
@@ -69,40 +71,40 @@ public class SubjectStatusService {
         if (before.status() == command.status()) {
             return before;
         }
-        budget.remaining();
+        budget.calculateRemaining();
         if (command.status() == SubjectStatus.ARCHIVED) {
-            ISubjectClasses provider = classes.getIfAvailable();
+            ISubjectClasses provider = subjectClassesProvider.getIfAvailable();
             if (provider == null) {
-                throw classesUnavailable();
+                throw createClassesUnavailableError();
             }
             // BR-U04-04: lưu trữ môn thì lưu trữ luôn mọi lớp của môn; U05 lỗi thì cả thao tác
             // rollback.
             try {
                 if (provider.archiveClassesOfSubject(subjectId, actor) == null) {
-                    throw classesUnavailable();
+                    throw createClassesUnavailableError();
                 }
             } catch (RuntimeException failure) {
-                throw classesUnavailable();
+                throw createClassesUnavailableError();
             }
-            budget.remaining();
+            budget.calculateRemaining();
         }
         Subject after =
                 command.status() == SubjectStatus.ARCHIVED
                         ? before.archive(clock.instant())
                         : before.reopen(clock.instant());
-        if (!repository.update(after, command.version())) {
+        if (!subjectRepository.updateSubject(after, command.version())) {
             throw ApiException.conflict(
                     "SUBJECT_VERSION_CONFLICT",
                     "Dữ liệu môn đã thay đổi. Hãy tải lại trước khi sửa");
         }
-        audit.statusChanged(actor, before, after);
+        subjectAuditRecorder.recordStatusChanged(actor, before, after);
         if (before.managerId() != null && after.managerId() == null) {
-            audit.managerChanged(actor, before, after);
+            subjectAuditRecorder.recordManagerChanged(actor, before, after);
         }
         return after;
     }
 
-    private ApiException classesUnavailable() {
+    private ApiException createClassesUnavailableError() {
         return ApiException.unavailable(
                 "SUBJECT_CLASSES_UNAVAILABLE", "Chưa kiểm tra được lớp, vui lòng thử lại");
     }

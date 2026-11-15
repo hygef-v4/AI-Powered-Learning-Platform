@@ -18,75 +18,78 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/admin/subjects")
 public class SubjectAdminController {
-    private final SubjectAdminService reads;
-    private final SubjectCommandService commands;
-    private final SubjectStatusService statuses;
+    private final SubjectAdminService subjectAdminService;
+    private final SubjectCommandService subjectCommandService;
+    private final SubjectStatusService subjectStatusService;
 
     public SubjectAdminController(
-            SubjectAdminService reads,
-            SubjectCommandService commands,
-            SubjectStatusService statuses) {
-        this.reads = reads;
-        this.commands = commands;
-        this.statuses = statuses;
+            SubjectAdminService subjectAdminService,
+            SubjectCommandService subjectCommandService,
+            SubjectStatusService subjectStatusService) {
+        this.subjectAdminService = subjectAdminService;
+        this.subjectCommandService = subjectCommandService;
+        this.subjectStatusService = subjectStatusService;
     }
 
     @GetMapping
-    public SubjectAdminViews.Page list(
+    public SubjectAdminViews.Page listSubjects(
             @AuthenticationPrincipal Actor actor,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) SubjectStatus status,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestParam MultiValueMap<String, String> params) {
-        SubjectRequests.query(params);
-        return reads.list(actor, q, status, page, size);
+        SubjectRequests.validateListQuery(params);
+        return subjectAdminService.listSubjects(actor, q, status, page, size);
     }
 
     @PostMapping(consumes = "application/json")
-    public ResponseEntity<SubjectAdminViews.Detail> create(
+    public ResponseEntity<SubjectAdminViews.Detail> createSubject(
             @AuthenticationPrincipal Actor actor, @RequestBody JsonNode body) {
-        var subject = commands.create(actor, SubjectRequests.create(body));
+        var subject = subjectCommandService.createSubject(actor, SubjectRequests.parseCreate(body));
         return ResponseEntity.created(URI.create("/api/v1/admin/subjects/" + subject.id()))
-                .body(SubjectResponses.detail(subject));
+                .body(SubjectResponses.mapSubjectDetail(subject));
     }
 
     @GetMapping("/{id}")
-    public SubjectAdminViews.Detail detail(
+    public SubjectAdminViews.Detail loadSubject(
             @AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return reads.detail(actor, id);
+        return subjectAdminService.loadSubject(actor, id);
     }
 
     @GetMapping("/{id}/classes")
-    public SubjectAdminViews.Classes classes(
+    public SubjectAdminViews.Classes listSubjectClasses(
             @AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return reads.classes(actor, id);
+        return subjectAdminService.listSubjectClasses(actor, id);
     }
 
     @PatchMapping(value = "/{id}", consumes = "application/json")
-    public SubjectAdminViews.Detail information(
+    public SubjectAdminViews.Detail updateSubjectInformation(
             @AuthenticationPrincipal Actor actor,
             @PathVariable UUID id,
             @RequestBody JsonNode body) {
-        return SubjectResponses.detail(
-                commands.updateInformation(actor, id, SubjectRequests.information(body)));
+        return SubjectResponses.mapSubjectDetail(
+                subjectCommandService.updateInformation(
+                        actor, id, SubjectRequests.parseUpdateInformation(body)));
     }
 
     @PutMapping(value = "/{id}/manager", consumes = "application/json")
-    public SubjectAdminViews.Detail manager(
+    public SubjectAdminViews.Detail changeSubjectManager(
             @AuthenticationPrincipal Actor actor,
             @PathVariable UUID id,
             @RequestBody JsonNode body) {
-        return SubjectResponses.detail(
-                commands.changeManager(actor, id, SubjectRequests.manager(body)));
+        return SubjectResponses.mapSubjectDetail(
+                subjectCommandService.changeManager(
+                        actor, id, SubjectRequests.parseChangeManager(body)));
     }
 
     @PutMapping(value = "/{id}/status", consumes = "application/json")
-    public SubjectAdminViews.Detail status(
+    public SubjectAdminViews.Detail changeSubjectStatus(
             @AuthenticationPrincipal Actor actor,
             @PathVariable UUID id,
             @RequestBody JsonNode body) {
-        return SubjectResponses.detail(
-                statuses.changeStatus(actor, id, SubjectRequests.status(body)));
+        return SubjectResponses.mapSubjectDetail(
+                subjectStatusService.changeStatus(
+                        actor, id, SubjectRequests.parseChangeStatus(body)));
     }
 }

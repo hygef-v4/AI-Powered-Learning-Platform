@@ -99,16 +99,16 @@ class SubjectRepositoryIntegrationTest {
     private static final Instant LATER = CREATED.plusSeconds(60);
     private static DriverManagerDataSource testSource;
 
-    @Autowired private ISubjectRepository repository;
+    @Autowired private ISubjectRepository subjectRepository;
     @Autowired private DataSource dataSource;
     @Autowired private PlatformTransactionManager transactionManager;
     @Autowired private EntityManager entityManager;
     @Autowired private ISubjectQuery subjectQuery;
     @Autowired private ISubjectScope subjectScope;
-    @Autowired private SubjectCommandService commands;
+    @Autowired private SubjectCommandService subjectCommandService;
     @Autowired private IAudit audit;
-    @Autowired private IAccountLookup accounts;
-    @Autowired private SubjectStatusService statuses;
+    @Autowired private IAccountLookup accountLookup;
+    @Autowired private SubjectStatusService subjectStatusService;
     @Autowired private ISubjectMutationGuard mutationGuard;
     @Autowired private ISubjectClasses archiveChecker;
 
@@ -132,7 +132,7 @@ class SubjectRepositoryIntegrationTest {
         }
 
         @Bean
-        IAccountLookup accounts() {
+        IAccountLookup accountLookup() {
             return mock(IAccountLookup.class);
         }
 
@@ -226,11 +226,11 @@ class SubjectRepositoryIntegrationTest {
 
     @BeforeEach
     void resetFixture() {
-        reset(audit, accounts, archiveChecker);
+        reset(audit, accountLookup, archiveChecker);
         when(archiveChecker.archiveClassesOfSubject(any(), any()))
                 .thenAnswer(call -> fixtureArchiveAll(call.getArgument(0)));
         for (UUID id : List.of(MANAGER, OTHER_MANAGER)) {
-            when(accounts.getContact(id))
+            when(accountLookup.getContact(id))
                     .thenReturn(
                             Optional.of(
                                     new AccountContact(
@@ -239,7 +239,7 @@ class SubjectRepositoryIntegrationTest {
                                             "Fixture",
                                             Role.SUBJECT_MANAGER,
                                             AccountStatus.ACTIVE)));
-            when(accounts.lockContact(id))
+            when(accountLookup.lockContact(id))
                     .thenReturn(
                             Optional.of(
                                     new AccountContact(
@@ -274,9 +274,9 @@ class SubjectRepositoryIntegrationTest {
     @Test
     void insertRoundTripsNullableManagerTimestampsAndPublicVersionOne() {
         Subject subject = subject("swr302", "Requirements", null);
-        repository.insert(subject);
-        assertThat(repository.findById(subject.id())).contains(subject);
-        assertThat(repository.existsByCode(new SubjectCode(" swr302 "))).isTrue();
+        subjectRepository.insertSubject(subject);
+        assertThat(subjectRepository.findById(subject.id())).contains(subject);
+        assertThat(subjectRepository.hasSubjectWithCode(new SubjectCode(" swr302 "))).isTrue();
         assertThat(
                         new JdbcTemplate(dataSource)
                                 .queryForObject(
@@ -284,24 +284,27 @@ class SubjectRepositoryIntegrationTest {
                                         Long.class,
                                         subject.id()))
                 .isZero();
-        assertThat(repository.findById(UUID.randomUUID())).isEmpty();
+        assertThat(subjectRepository.findById(UUID.randomUUID())).isEmpty();
     }
 
     @Test
     void updateComparesVersionsAtomicallyAndReadAgainInSameTransactionIsFresh() {
         Subject original = subject("SWR302", "Original", MANAGER);
-        repository.insert(original);
+        subjectRepository.insertSubject(original);
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
         tx.executeWithoutResult(
                 ignored -> {
-                    Subject firstRead = repository.findById(original.id()).orElseThrow();
+                    Subject firstRead = subjectRepository.findById(original.id()).orElseThrow();
                     Subject edited = firstRead.updateInformation("Changed", null, LATER);
-                    assertThat(repository.update(edited, firstRead.version())).isTrue();
-                    assertThat(repository.findById(original.id())).contains(edited);
-                    assertThat(repository.update(firstRead.archive(LATER), firstRead.version()))
+                    assertThat(
+                            subjectRepository.updateSubject(edited, firstRead.version())).isTrue();
+                    assertThat(subjectRepository.findById(original.id())).contains(edited);
+                    assertThat(
+                            subjectRepository.updateSubject(
+                                    firstRead.archive(LATER), firstRead.version()))
                             .isFalse();
                 });
-        Subject saved = repository.findById(original.id()).orElseThrow();
+        Subject saved = subjectRepository.findById(original.id()).orElseThrow();
         assertThat(saved.version()).isEqualTo(2);
         assertThat(saved.status()).isEqualTo(SubjectStatus.ACTIVE);
         assertThat(
@@ -313,15 +316,15 @@ class SubjectRepositoryIntegrationTest {
     @Test
     void managerArchiveAndReopenEachAdvanceExactlyOneVersion() {
         Subject original = subject("SWR302", "Requirements", MANAGER);
-        repository.insert(original);
+        subjectRepository.insertSubject(original);
         Subject archived = original.archive(LATER);
-        assertThat(repository.update(archived, 1)).isTrue();
+        assertThat(subjectRepository.updateSubject(archived, 1)).isTrue();
         assertThat(archived.managerId()).isNull();
         assertThat(archived.version()).isEqualTo(2);
         assertThat(archived.changeManager(null, LATER)).isSameAs(archived);
         Subject reopened = archived.reopen(LATER);
-        assertThat(repository.update(reopened, 2)).isTrue();
-        assertThat(repository.findById(original.id())).contains(reopened);
+        assertThat(subjectRepository.updateSubject(reopened, 2)).isTrue();
+        assertThat(subjectRepository.findById(original.id())).contains(reopened);
         assertThat(reopened.version()).isEqualTo(3);
         assertThat(reopened.managerId()).isNull();
     }
@@ -329,7 +332,7 @@ class SubjectRepositoryIntegrationTest {
     @Test
     void updateCannotChangeCodeOrCreatedAtAndRejectsAnUnchangedSnapshot() {
         Subject original = subject("SWR302", "Requirements", null);
-        repository.insert(original);
+        subjectRepository.insertSubject(original);
         Subject changedCode =
                 new Subject(
                         original.id(),
@@ -341,9 +344,9 @@ class SubjectRepositoryIntegrationTest {
                         CREATED,
                         LATER,
                         2);
-        assertThat(repository.update(changedCode, 1)).isFalse();
-        assertThat(repository.findById(original.id())).contains(original);
-        assertThatThrownBy(() -> repository.update(original, 1))
+        assertThat(subjectRepository.updateSubject(changedCode, 1)).isFalse();
+        assertThat(subjectRepository.findById(original.id())).contains(original);
+        assertThatThrownBy(() -> subjectRepository.updateSubject(original, 1))
                 .isInstanceOf(InvalidDataAccessApiUsageException.class)
                 .hasRootCauseInstanceOf(IllegalArgumentException.class);
         Subject alteredCreation =
@@ -357,8 +360,12 @@ class SubjectRepositoryIntegrationTest {
                         LATER,
                         LATER,
                         2);
-        assertThat(repository.update(alteredCreation, 1)).isTrue();
-        assertThat(repository.findById(original.id()).orElseThrow().createdAt()).isEqualTo(CREATED);
+        assertThat(subjectRepository.updateSubject(alteredCreation, 1)).isTrue();
+        assertThat(
+                subjectRepository
+                        .findById(original.id())
+                        .orElseThrow()
+                        .createdAt()).isEqualTo(CREATED);
     }
 
     @Test
@@ -366,25 +373,25 @@ class SubjectRepositoryIntegrationTest {
         Subject a = subject("AAA", "Requirements A", MANAGER);
         Subject b = subject("BBB", "Requirements B", MANAGER);
         Subject c = subject("CCC", "Other", OTHER_MANAGER);
-        repository.insert(c);
-        repository.insert(b);
-        repository.insert(a);
-        assertThat(repository.update(b.archive(LATER), 1)).isTrue();
-        assertThat(repository.findPage(" requirements ", null, 0, 1))
+        subjectRepository.insertSubject(c);
+        subjectRepository.insertSubject(b);
+        subjectRepository.insertSubject(a);
+        assertThat(subjectRepository.updateSubject(b.archive(LATER), 1)).isTrue();
+        assertThat(subjectRepository.findSubjectPage(" requirements ", null, 0, 1))
                 .extracting(s -> s.code().value())
                 .containsExactly("AAA");
-        assertThat(repository.findPage("REQUIREMENTS", null, 1, 1))
+        assertThat(subjectRepository.findSubjectPage("REQUIREMENTS", null, 1, 1))
                 .extracting(s -> s.code().value())
                 .containsExactly("BBB");
-        assertThat(repository.findPage("requirements", SubjectStatus.ACTIVE, 0, 100))
+        assertThat(subjectRepository.findSubjectPage("requirements", SubjectStatus.ACTIVE, 0, 100))
                 .containsExactly(a);
-        assertThat(repository.findPage("bbb", null, 0, 20)).hasSize(1);
-        assertThat(repository.findPage("requirements", null, 2, 1)).isEmpty();
-        assertThat(repository.count("requirements", null)).isEqualTo(2);
-        assertThat(repository.countByStatus("requirements"))
+        assertThat(subjectRepository.findSubjectPage("bbb", null, 0, 20)).hasSize(1);
+        assertThat(subjectRepository.findSubjectPage("requirements", null, 2, 1)).isEmpty();
+        assertThat(subjectRepository.countSubjects("requirements", null)).isEqualTo(2);
+        assertThat(subjectRepository.countSubjectsByStatus("requirements"))
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(SubjectStatus.ACTIVE, 1L, SubjectStatus.ARCHIVED, 1L));
-        assertThat(repository.countByStatus("missing"))
+        assertThat(subjectRepository.countSubjectsByStatus("missing"))
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(SubjectStatus.ACTIVE, 0L, SubjectStatus.ARCHIVED, 0L));
     }
@@ -392,47 +399,50 @@ class SubjectRepositoryIntegrationTest {
     @Test
     void searchTreatsPercentUnderscoreExclamationAndQuotesAsLiteralText() {
         Subject literal = subject("LITERAL", "100% rate_A! 'quoted'", null);
-        repository.insert(literal);
-        repository.insert(subject("OTHER", "100 rateBA", null));
+        subjectRepository.insertSubject(literal);
+        subjectRepository.insertSubject(subject("OTHER", "100 rateBA", null));
         for (String query : List.of("%", "_", "!", "'quoted'")) {
-            assertThat(repository.findPage(query, null, 0, 20)).containsExactly(literal);
+            assertThat(
+                    subjectRepository.findSubjectPage(query, null, 0, 20)).containsExactly(literal);
         }
-        assertThat(repository.findPage("' or 1=1 --", null, 0, 20)).isEmpty();
+        assertThat(subjectRepository.findSubjectPage("' or 1=1 --", null, 0, 20)).isEmpty();
     }
 
     @Test
     void rejectsInvalidPagesBeforeQuerying() {
         for (int[] page : List.of(new int[] {-1, 20}, new int[] {0, 0}, new int[] {0, 101})) {
-            assertThatThrownBy(() -> repository.findPage(null, null, page[0], page[1]))
+            assertThatThrownBy(
+                    () -> subjectRepository.findSubjectPage(null, null, page[0], page[1]))
                     .hasMessageContaining("Trang phải từ 0");
         }
     }
 
     @Test
     void managedSubjectsReflectActiveReassignmentAndArchiveClearsManagerWithoutCaching() {
-        assertThatThrownBy(() -> repository.findManagedBy(null))
+        assertThatThrownBy(() -> subjectRepository.findSubjectsManagedBy(null))
                 .isInstanceOf(NullPointerException.class);
         Subject a = subject("AAA", "A", MANAGER);
         Subject b = subject("BBB", "B", MANAGER);
-        repository.insert(a);
-        repository.insert(b);
-        assertThat(repository.findManagedBy(MANAGER)).containsExactly(a, b);
+        subjectRepository.insertSubject(a);
+        subjectRepository.insertSubject(b);
+        assertThat(subjectRepository.findSubjectsManagedBy(MANAGER)).containsExactly(a, b);
         Subject reassigned = b.changeManager(OTHER_MANAGER, LATER);
-        assertThat(repository.update(reassigned, 1)).isTrue();
-        assertThat(repository.findManagedBy(MANAGER)).containsExactly(a);
-        assertThat(repository.findManagedBy(OTHER_MANAGER)).containsExactly(reassigned);
+        assertThat(subjectRepository.updateSubject(reassigned, 1)).isTrue();
+        assertThat(subjectRepository.findSubjectsManagedBy(MANAGER)).containsExactly(a);
+        assertThat(
+                subjectRepository.findSubjectsManagedBy(OTHER_MANAGER)).containsExactly(reassigned);
         Subject archived = reassigned.archive(LATER);
-        assertThat(repository.update(archived, 2)).isTrue();
-        assertThat(repository.findById(b.id())).contains(archived);
+        assertThat(subjectRepository.updateSubject(archived, 2)).isTrue();
+        assertThat(subjectRepository.findById(b.id())).contains(archived);
         assertThat(archived.managerId()).isNull();
-        assertThat(repository.findManagedBy(OTHER_MANAGER)).isEmpty();
+        assertThat(subjectRepository.findSubjectsManagedBy(OTHER_MANAGER)).isEmpty();
     }
 
     @Test
     void publicQueryAndScopeReadCurrentAssignmentsThroughTheRealDatabase() {
         Subject original = subject("SWR302", "Requirements", MANAGER);
-        repository.insert(original);
-        repository.insert(subject("SWR303", "Unassigned", null));
+        subjectRepository.insertSubject(original);
+        subjectRepository.insertSubject(subject("SWR303", "Unassigned", null));
         assertThat(subjectQuery.getSubject(original.id()).orElseThrow().managerId())
                 .isEqualTo(MANAGER);
         assertThat(subjectQuery.isActive(original.id())).isTrue();
@@ -445,7 +455,7 @@ class SubjectRepositoryIntegrationTest {
                         Map.of(SubjectStatus.ACTIVE, 2L, SubjectStatus.ARCHIVED, 0L));
 
         Subject reassigned = original.changeManager(OTHER_MANAGER, LATER);
-        assertThat(repository.update(reassigned, 1)).isTrue();
+        assertThat(subjectRepository.updateSubject(reassigned, 1)).isTrue();
         assertThat(subjectScope.isSubjectManager(MANAGER, original.id())).isFalse();
         assertThat(subjectScope.isSubjectManager(OTHER_MANAGER, original.id())).isTrue();
         assertThat(subjectQuery.listManagedSubjects(MANAGER)).isEmpty();
@@ -457,14 +467,14 @@ class SubjectRepositoryIntegrationTest {
         assertThat(subjectScope.listManagedSubjects(OTHER_MANAGER)).containsExactly(original.id());
 
         Subject unassigned = reassigned.changeManager(null, LATER);
-        assertThat(repository.update(unassigned, 2)).isTrue();
+        assertThat(subjectRepository.updateSubject(unassigned, 2)).isTrue();
         assertThat(subjectScope.isSubjectManager(OTHER_MANAGER, original.id())).isFalse();
         assertThat(subjectQuery.getSubject(original.id()).orElseThrow().managerId()).isNull();
         assertThat(subjectScope.listManagedSubjects(OTHER_MANAGER)).isEmpty();
         Subject assignedAgain = unassigned.changeManager(MANAGER, LATER);
-        assertThat(repository.update(assignedAgain, 3)).isTrue();
+        assertThat(subjectRepository.updateSubject(assignedAgain, 3)).isTrue();
         assertThat(subjectScope.isSubjectManager(MANAGER, original.id())).isTrue();
-        assertThat(repository.update(assignedAgain.archive(LATER), 4)).isTrue();
+        assertThat(subjectRepository.updateSubject(assignedAgain.archive(LATER), 4)).isTrue();
         assertThat(subjectQuery.isActive(original.id())).isFalse();
         assertThat(subjectQuery.getSubject(original.id()).orElseThrow().managerId()).isNull();
         assertThat(subjectScope.isSubjectManager(MANAGER, original.id())).isFalse();
@@ -477,13 +487,15 @@ class SubjectRepositoryIntegrationTest {
 
     @Test
     void databaseRejectsDuplicateCodeAndUnknownManager() {
-        repository.insert(subject("SWR302", "First", null));
-        assertThatThrownBy(() -> repository.insert(subject("SWR302", "Duplicate", null)))
+        subjectRepository.insertSubject(subject("SWR302", "First", null));
+        assertThatThrownBy(
+                () -> subjectRepository.insertSubject(subject("SWR302", "Duplicate", null)))
                 .isInstanceOf(DataIntegrityViolationException.class);
         assertThatThrownBy(
-                        () -> repository.insert(subject("MISSING", "Missing", UUID.randomUUID())))
+                        () -> subjectRepository.insertSubject(
+                                subject("MISSING", "Missing", UUID.randomUUID())))
                 .isInstanceOf(DataIntegrityViolationException.class);
-        assertThat(repository.count(null, null)).isEqualTo(1);
+        assertThat(subjectRepository.countSubjects(null, null)).isEqualTo(1);
     }
 
     @Test
@@ -542,15 +554,16 @@ class SubjectRepositoryIntegrationTest {
     void bulkUpdateDoesNotDetachOtherManagedEntitiesInTheCallersTransaction() {
         Subject a = subject("AAA", "A", null);
         Subject b = subject("BBB", "B", null);
-        repository.insert(a);
-        repository.insert(b);
+        subjectRepository.insertSubject(a);
+        subjectRepository.insertSubject(b);
         new TransactionTemplate(transactionManager)
                 .executeWithoutResult(
                         ignored -> {
                             SubjectJpaEntity unrelated =
                                     entityManager.find(SubjectJpaEntity.class, b.id());
                             assertThat(entityManager.contains(unrelated)).isTrue();
-                            assertThat(repository.update(a.archive(LATER), 1)).isTrue();
+                            assertThat(
+                                    subjectRepository.updateSubject(a.archive(LATER), 1)).isTrue();
                             assertThat(entityManager.contains(unrelated)).isTrue();
                         });
     }
@@ -558,20 +571,22 @@ class SubjectRepositoryIntegrationTest {
     @Test
     void callerRollbackAlsoRollsBackRepositoryUpdate() {
         Subject original = subject("SWR302", "Original", null);
-        repository.insert(original);
+        subjectRepository.insertSubject(original);
         new TransactionTemplate(transactionManager)
                 .executeWithoutResult(
                         tx -> {
-                            assertThat(repository.update(original.archive(LATER), 1)).isTrue();
+                            assertThat(
+                                    subjectRepository.updateSubject(
+                                            original.archive(LATER), 1)).isTrue();
                             tx.setRollbackOnly();
                         });
-        assertThat(repository.findById(original.id())).contains(original);
+        assertThat(subjectRepository.findById(original.id())).contains(original);
     }
 
     @Test
     void twoConcurrentUpdatesWithOneVersionHaveExactlyOneWinner() throws Exception {
         Subject original = subject("SWR302", "Original", null);
-        repository.insert(original);
+        subjectRepository.insertSubject(original);
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch start = new CountDownLatch(1);
         ExecutorService workers = Executors.newFixedThreadPool(2);
@@ -594,7 +609,7 @@ class SubjectRepositoryIntegrationTest {
             start.countDown();
             assertThat(List.of(first.get(10, TimeUnit.SECONDS), second.get(10, TimeUnit.SECONDS)))
                     .containsExactlyInAnyOrder(true, false);
-            Subject saved = repository.findById(original.id()).orElseThrow();
+            Subject saved = subjectRepository.findById(original.id()).orElseThrow();
             assertThat(saved.version()).isEqualTo(2);
             assertThat(saved.name()).isIn("First", "Second");
         } finally {
@@ -619,7 +634,7 @@ class SubjectRepositoryIntegrationTest {
             start.countDown();
             assertThat(List.of(first.get(10, TimeUnit.SECONDS), second.get(10, TimeUnit.SECONDS)))
                     .containsExactlyInAnyOrder(true, false);
-            assertThat(repository.count(null, null)).isEqualTo(1);
+            assertThat(subjectRepository.countSubjects(null, null)).isEqualTo(1);
         } finally {
             start.countDown();
             workers.shutdownNow();
@@ -630,19 +645,19 @@ class SubjectRepositoryIntegrationTest {
     void proxiedCommandsCreateAndEditWithRealTransactionsAndPublicVersions() {
         Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
         Subject created =
-                commands.create(
+                subjectCommandService.createSubject(
                         admin, new SubjectCommandService.Create(" abc ", " Name ", null, null));
-        assertThat(repository.findById(created.id()).orElseThrow()).isEqualTo(created);
+        assertThat(subjectRepository.findById(created.id()).orElseThrow()).isEqualTo(created);
         Subject edited =
-                commands.updateInformation(
+                subjectCommandService.updateInformation(
                         admin,
                         created.id(),
                         new SubjectCommandService.UpdateInformation("New", "Description", 1L));
-        assertThat(repository.findById(created.id()).orElseThrow()).isEqualTo(edited);
+        assertThat(subjectRepository.findById(created.id()).orElseThrow()).isEqualTo(edited);
         assertThat(edited.version()).isEqualTo(2);
         assertThatThrownBy(
                         () ->
-                                commands.updateInformation(
+                                subjectCommandService.updateInformation(
                                         admin,
                                         created.id(),
                                         new SubjectCommandService.UpdateInformation(
@@ -657,25 +672,25 @@ class SubjectRepositoryIntegrationTest {
     void auditExceptionRollsBackBothInsertedAndUpdatedSubjects() {
         Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
         Subject before = subject("BEFORE", "Before", null);
-        repository.insert(before);
+        subjectRepository.insertSubject(before);
         doThrow(new IllegalStateException("test audit failure")).when(audit).record(any());
         assertThatThrownBy(
                         () ->
-                                commands.create(
+                                subjectCommandService.createSubject(
                                         admin,
                                         new SubjectCommandService.Create(
                                                 "ROLLBACK", "Name", null, null)))
                 .isInstanceOf(IllegalStateException.class);
-        assertThat(repository.existsByCode(new SubjectCode("ROLLBACK"))).isFalse();
+        assertThat(subjectRepository.hasSubjectWithCode(new SubjectCode("ROLLBACK"))).isFalse();
         assertThatThrownBy(
                         () ->
-                                commands.updateInformation(
+                                subjectCommandService.updateInformation(
                                         admin,
                                         before.id(),
                                         new SubjectCommandService.UpdateInformation(
                                                 "After", null, 1L)))
                 .isInstanceOf(IllegalStateException.class);
-        assertThat(repository.findById(before.id()).orElseThrow()).isEqualTo(before);
+        assertThat(subjectRepository.findById(before.id()).orElseThrow()).isEqualTo(before);
     }
 
     @Test
@@ -689,7 +704,7 @@ class SubjectRepositoryIntegrationTest {
                     if (!start.await(5, TimeUnit.SECONDS))
                         throw new IllegalStateException("Test barrier timeout");
                     try {
-                        commands.create(
+                        subjectCommandService.createSubject(
                                 admin,
                                 new SubjectCommandService.Create("CMD-RACE", "Name", null, null));
                         return "SUCCESS";
@@ -703,7 +718,7 @@ class SubjectRepositoryIntegrationTest {
             start.countDown();
             assertThat(List.of(first.get(10, TimeUnit.SECONDS), second.get(10, TimeUnit.SECONDS)))
                     .containsExactlyInAnyOrder("SUCCESS", "SUBJECT_CODE_DUPLICATE");
-            assertThat(repository.count(null, null)).isEqualTo(1);
+            assertThat(subjectRepository.countSubjects(null, null)).isEqualTo(1);
             verify(audit, times(1)).record(any());
         } finally {
             start.countDown();
@@ -715,10 +730,10 @@ class SubjectRepositoryIntegrationTest {
     void managerCommandsUseFixtureAccountLocksAndRollbackAssignmentOnAuditFailure() {
         Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
         Subject created =
-                commands.create(
+                subjectCommandService.createSubject(
                         admin, new SubjectCommandService.Create("MANAGED", "Name", null, MANAGER));
         Subject reassigned =
-                commands.changeManager(
+                subjectCommandService.changeManager(
                         admin,
                         created.id(),
                         new SubjectCommandService.ChangeManager(OTHER_MANAGER, 1L));
@@ -727,15 +742,15 @@ class SubjectRepositoryIntegrationTest {
         doThrow(new IllegalStateException("test audit failure")).when(audit).record(any());
         assertThatThrownBy(
                         () ->
-                                commands.changeManager(
+                                subjectCommandService.changeManager(
                                         admin,
                                         created.id(),
                                         new SubjectCommandService.ChangeManager(null, 2L)))
                 .isInstanceOf(IllegalStateException.class);
-        assertThat(repository.findById(created.id()).orElseThrow()).isEqualTo(reassigned);
+        assertThat(subjectRepository.findById(created.id()).orElseThrow()).isEqualTo(reassigned);
         reset(audit);
         Subject unassigned =
-                commands.changeManager(
+                subjectCommandService.changeManager(
                         admin, created.id(), new SubjectCommandService.ChangeManager(null, 2L));
         assertThat(unassigned.managerId()).isNull();
         assertThat(unassigned.version()).isEqualTo(3);
@@ -745,14 +760,14 @@ class SubjectRepositoryIntegrationTest {
     @Test
     void subjectLockRequiresCallerTransactionAndSurvivesEntityDetach() {
         Subject original = subject("LOCKED", "Name", null);
-        repository.insert(original);
-        assertThatThrownBy(() -> repository.findByIdForUpdate(original.id()))
+        subjectRepository.insertSubject(original);
+        assertThatThrownBy(() -> subjectRepository.findByIdForUpdate(original.id()))
                 .isInstanceOf(
                         org.springframework.transaction.IllegalTransactionStateException.class);
         new TransactionTemplate(transactionManager)
                 .executeWithoutResult(
                         status -> {
-                            assertThat(repository.findByIdForUpdate(original.id()))
+                            assertThat(subjectRepository.findByIdForUpdate(original.id()))
                                     .contains(original);
                             // Kết nối độc lập: row đã detach nhưng khóa PostgreSQL phải còn đến hết
                             // transaction caller.
@@ -779,18 +794,18 @@ class SubjectRepositoryIntegrationTest {
         new TransactionTemplate(transactionManager)
                 .executeWithoutResult(
                         status ->
-                                assertThat(repository.findByIdForUpdate(original.id()))
+                                assertThat(subjectRepository.findByIdForUpdate(original.id()))
                                         .contains(original));
     }
 
     @Test
     void archiveAndReopenKeepClassHistoryWithoutRestoringManager() {
         Subject original = subject("LIFE", "Lifecycle", MANAGER);
-        repository.insert(original);
+        subjectRepository.insertSubject(original);
         insertFixtureClass(original.id(), "ARCHIVED");
         Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
         Subject archived =
-                statuses.changeStatus(
+                subjectStatusService.changeStatus(
                         admin,
                         original.id(),
                         new SubjectStatusService.ChangeStatus(SubjectStatus.ARCHIVED, 1L));
@@ -798,7 +813,7 @@ class SubjectRepositoryIntegrationTest {
         assertThat(subjectQuery.isActive(original.id())).isFalse();
         assertThat(subjectScope.isSubjectManager(MANAGER, original.id())).isFalse();
         Subject reopened =
-                statuses.changeStatus(
+                subjectStatusService.changeStatus(
                         admin,
                         original.id(),
                         new SubjectStatusService.ChangeStatus(SubjectStatus.ACTIVE, 2L));
@@ -818,11 +833,11 @@ class SubjectRepositoryIntegrationTest {
     @Test
     void archiveAlsoArchivesOpenAndDraftFixtures() {
         Subject original = subject("BLOCKED", "Name", null);
-        repository.insert(original);
+        subjectRepository.insertSubject(original);
         insertFixtureClass(original.id(), "OPEN");
         insertFixtureClass(original.id(), "DRAFT");
         Subject archived =
-                statuses.changeStatus(
+                subjectStatusService.changeStatus(
                         new Actor(UUID.randomUUID(), Role.ADMIN),
                         original.id(),
                         new SubjectStatusService.ChangeStatus(SubjectStatus.ARCHIVED, 1L));
@@ -841,40 +856,40 @@ class SubjectRepositoryIntegrationTest {
     @Test
     void statusAuditFailureRollsBackArchiveAndReopen() {
         Subject original = subject("AUDIT-LIFE", "Name", null);
-        repository.insert(original);
+        subjectRepository.insertSubject(original);
         Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
         doThrow(new IllegalStateException("audit failure")).when(audit).record(any());
         assertThatThrownBy(
                         () ->
-                                statuses.changeStatus(
+                                subjectStatusService.changeStatus(
                                         admin,
                                         original.id(),
                                         new SubjectStatusService.ChangeStatus(
                                                 SubjectStatus.ARCHIVED, 1L)))
                 .isInstanceOf(IllegalStateException.class);
-        assertThat(repository.findById(original.id())).contains(original);
+        assertThat(subjectRepository.findById(original.id())).contains(original);
         reset(audit);
         Subject archived =
-                statuses.changeStatus(
+                subjectStatusService.changeStatus(
                         admin,
                         original.id(),
                         new SubjectStatusService.ChangeStatus(SubjectStatus.ARCHIVED, 1L));
         doThrow(new IllegalStateException("audit failure")).when(audit).record(any());
         assertThatThrownBy(
                         () ->
-                                statuses.changeStatus(
+                                subjectStatusService.changeStatus(
                                         admin,
                                         original.id(),
                                         new SubjectStatusService.ChangeStatus(
                                                 SubjectStatus.ACTIVE, 2L)))
                 .isInstanceOf(IllegalStateException.class);
-        assertThat(repository.findById(original.id())).contains(archived);
+        assertThat(subjectRepository.findById(original.id())).contains(archived);
     }
 
     @Test
     void boundedLockRestoresExistingTimeoutsAndRejectsRepeatableRead() {
         Subject original = subject("BOUNDED", "Name", null);
-        repository.insert(original);
+        subjectRepository.insertSubject(original);
         assertThatThrownBy(() -> mutationGuard.lockActive(original.id(), Duration.ofSeconds(1)))
                 .isInstanceOf(
                         org.springframework.transaction.IllegalTransactionStateException.class);
@@ -915,13 +930,13 @@ class SubjectRepositoryIntegrationTest {
     @Test
     void boundedGuardTimesOutOnActualDatabaseRowLock() throws Exception {
         Subject original = subject("BUSY", "Name", null);
-        repository.insert(original);
+        subjectRepository.insertSubject(original);
         ExecutorService worker = Executors.newSingleThreadExecutor();
         try {
             new TransactionTemplate(transactionManager)
                     .executeWithoutResult(
                             status -> {
-                                repository.findByIdForUpdate(original.id());
+                                subjectRepository.findByIdForUpdate(original.id());
                                 Future<String> contender =
                                         worker.submit(
                                                 () -> {
@@ -956,7 +971,7 @@ class SubjectRepositoryIntegrationTest {
     @Test
     void providerStatementTimeoutRollsBackArchive() {
         Subject original = subject("SLOW", "Name", null);
-        repository.insert(original);
+        subjectRepository.insertSubject(original);
         doAnswer(
                         call -> {
                             JdbcTemplate jdbc = new JdbcTemplate(dataSource);
@@ -968,7 +983,7 @@ class SubjectRepositoryIntegrationTest {
                 .archiveClassesOfSubject(eq(original.id()), any());
         assertThatThrownBy(
                         () ->
-                                statuses.changeStatus(
+                                subjectStatusService.changeStatus(
                                         new Actor(UUID.randomUUID(), Role.ADMIN),
                                         original.id(),
                                         new SubjectStatusService.ChangeStatus(
@@ -976,14 +991,14 @@ class SubjectRepositoryIntegrationTest {
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         error -> assertThat(error.code()).isEqualTo("SUBJECT_CLASSES_UNAVAILABLE"));
-        assertThat(repository.findById(original.id())).contains(original);
+        assertThat(subjectRepository.findById(original.id())).contains(original);
         verifyNoInteractions(audit);
     }
 
     @Test
     void classWriterHoldingGuardFirstMakesArchiveSeeCommittedOpenClass() throws Exception {
         Subject original = subject("WRITER-FIRST", "Name", null);
-        repository.insert(original);
+        subjectRepository.insertSubject(original);
         CountDownLatch writerLocked = new CountDownLatch(1),
                 allowWriterCommit = new CountDownLatch(1);
         ExecutorService workers = Executors.newFixedThreadPool(2);
@@ -1006,7 +1021,7 @@ class SubjectRepositoryIntegrationTest {
             allowWriterCommit.countDown();
             writer.get(5, TimeUnit.SECONDS);
             assertThat(archive.get(5, TimeUnit.SECONDS)).isEqualTo("SUCCESS");
-            Subject archived = repository.findById(original.id()).orElseThrow();
+            Subject archived = subjectRepository.findById(original.id()).orElseThrow();
             assertThat(archived.status()).isEqualTo(SubjectStatus.ARCHIVED);
             assertThat(archived.version()).isEqualTo(2);
             assertThat(
@@ -1026,7 +1041,7 @@ class SubjectRepositoryIntegrationTest {
     @Test
     void archiveHoldingGuardFirstMakesLaterClassWriterRejectArchivedSubject() throws Exception {
         Subject original = subject("ARCHIVE-FIRST", "Name", null);
-        repository.insert(original);
+        subjectRepository.insertSubject(original);
         CountDownLatch archiveLocked = new CountDownLatch(1), allowArchive = new CountDownLatch(1);
         doAnswer(
                         call -> {
@@ -1128,7 +1143,7 @@ class SubjectRepositoryIntegrationTest {
 
     private String archiveOutcome(UUID subjectId) {
         try {
-            statuses.changeStatus(
+            subjectStatusService.changeStatus(
                     new Actor(UUID.randomUUID(), Role.ADMIN),
                     subjectId,
                     new SubjectStatusService.ChangeStatus(SubjectStatus.ARCHIVED, 1L));
@@ -1170,7 +1185,7 @@ class SubjectRepositoryIntegrationTest {
                                 new TransactionTemplate(transactionManager)
                                         .executeWithoutResult(
                                                 outer ->
-                                                        commands.create(
+                                                        subjectCommandService.createSubject(
                                                                 student,
                                                                 new SubjectCommandService.Create(
                                                                         "DENIED", "Name", null,
@@ -1184,7 +1199,7 @@ class SubjectRepositoryIntegrationTest {
                                 "select count(*) from u04_audit_events where action = 'ACCESS_DENIED' and result = 'DENIED'",
                                 Integer.class))
                 .isEqualTo(1);
-        assertThat(repository.count(null, null)).isZero();
+        assertThat(subjectRepository.countSubjects(null, null)).isZero();
         verify(audit, times(1)).record(any());
     }
 
@@ -1204,7 +1219,7 @@ class SubjectRepositoryIntegrationTest {
                 .record(any());
         Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
         Subject committed =
-                commands.create(
+                subjectCommandService.createSubject(
                         admin,
                         new SubjectCommandService.Create("AUDIT-COMMIT", "Name", null, null));
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
@@ -1223,12 +1238,13 @@ class SubjectRepositoryIntegrationTest {
                 .record(any());
         assertThatThrownBy(
                         () ->
-                                commands.create(
+                                subjectCommandService.createSubject(
                                         admin,
                                         new SubjectCommandService.Create(
                                                 "AUDIT-ROLLBACK", "Name", null, null)))
                 .isInstanceOf(IllegalStateException.class);
-        assertThat(repository.existsByCode(new SubjectCode("AUDIT-ROLLBACK"))).isFalse();
+        assertThat(
+                subjectRepository.hasSubjectWithCode(new SubjectCode("AUDIT-ROLLBACK"))).isFalse();
         assertThat(jdbc.queryForObject("select count(*) from u04_audit_events", Integer.class))
                 .isEqualTo(1);
     }
@@ -1248,7 +1264,7 @@ class SubjectRepositoryIntegrationTest {
         ready.countDown();
         if (!start.await(5, TimeUnit.SECONDS))
             throw new IllegalStateException("Hết thời gian chờ test");
-        return repository.update(updated, 1);
+        return subjectRepository.updateSubject(updated, 1);
     }
 
     private boolean insertWhenStarted(Subject subject, CountDownLatch ready, CountDownLatch start)
@@ -1257,7 +1273,7 @@ class SubjectRepositoryIntegrationTest {
         if (!start.await(5, TimeUnit.SECONDS))
             throw new IllegalStateException("Hết thời gian chờ test");
         try {
-            repository.insert(subject);
+            subjectRepository.insertSubject(subject);
             return true;
         } catch (DataIntegrityViolationException expectedDuplicate) {
             return false;

@@ -17,14 +17,14 @@ import org.junit.jupiter.api.Test;
 class SubjectClassesReaderTest {
     @Test
     void saturationRejectsWithoutCallerContextAndTimedOutQueueRecovers() throws Exception {
-        var provider = mock(ISubjectClasses.class);
+        var subjectClasses = mock(ISubjectClasses.class);
         var started = new CountDownLatch(4);
         var release = new java.util.concurrent.Semaphore(0);
         var recovering = new java.util.concurrent.atomic.AtomicBoolean();
         var leakedContext = new java.util.concurrent.atomic.AtomicBoolean();
         var executions = new java.util.concurrent.atomic.AtomicInteger();
         UUID subject = UUID.randomUUID();
-        when(provider.countClasses(any())).thenAnswer(call -> {
+        when(subjectClasses.countClasses(any())).thenAnswer(call -> {
             executions.incrementAndGet();
             if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
                     || org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null) {
@@ -36,18 +36,18 @@ class SubjectClassesReaderTest {
             }
             return Map.of(subject, 0);
         });
-        var reader = new SubjectClassesReader(provider);
+        var subjectClassesReader = new SubjectClassesReader(subjectClasses);
         var callers = java.util.concurrent.Executors.newFixedThreadPool(20);
         var field = SubjectClassesReader.class.getDeclaredField("executor");
         field.setAccessible(true);
-        var pool = (java.util.concurrent.ThreadPoolExecutor) field.get(reader);
+        var pool = (java.util.concurrent.ThreadPoolExecutor) field.get(subjectClassesReader);
         try {
             var pending = java.util.stream.IntStream.range(0, 20).mapToObj(index -> callers.submit(() -> {
                 org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
                 org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
                         new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("caller", "unused"));
                 try {
-                    return reader.counts(List.of(subject));
+                    return subjectClassesReader.countClasses(List.of(subject));
                 } finally {
                     org.springframework.security.core.context.SecurityContextHolder.clearContext();
                     org.springframework.transaction.support.TransactionSynchronizationManager.clear();
@@ -59,7 +59,7 @@ class SubjectClassesReaderTest {
             assertThat(pool.getPoolSize()).isEqualTo(4);
             assertThat(pool.getQueue()).hasSize(16);
             long rejectionStarted = System.nanoTime();
-            assertThat(reader.counts(List.of(subject))).isEmpty();
+            assertThat(subjectClassesReader.countClasses(List.of(subject))).isEmpty();
             assertThat(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - rejectionStarted)).isLessThan(500);
             for (var caller : pending) assertThat(caller.get(2, TimeUnit.SECONDS)).isEmpty();
             assertThat(pool.getQueue()).isEmpty();
@@ -67,63 +67,67 @@ class SubjectClassesReaderTest {
             assertThat(leakedContext.get()).isFalse();
             recovering.set(true);
             release.release(4);
-            assertThat(reader.counts(List.of(subject))).containsEntry(subject, 0);
+            assertThat(
+                    subjectClassesReader.countClasses(List.of(subject))).containsEntry(subject, 0);
         } finally {
             recovering.set(true);
             release.release(20);
-            reader.close();
+            subjectClassesReader.close();
             callers.shutdownNow();
         }
     }
 
     @Test
     void partialOrInvalidCountsStayUnknownAndExtraKeysAreDiscarded() {
-        ISubjectClasses provider = mock(ISubjectClasses.class);
+        ISubjectClasses subjectClasses = mock(ISubjectClasses.class);
         UUID zero = UUID.randomUUID(),
                 missing = UUID.randomUUID(),
                 negative = UUID.randomUUID(),
                 extra = UUID.randomUUID();
         List<UUID> ids = List.of(zero, missing, negative);
-        when(provider.countClasses(ids)).thenReturn(Map.of(zero, 0, negative, -1, extra, 10));
-        var reader = new SubjectClassesReader(provider);
+        when(subjectClasses.countClasses(ids)).thenReturn(Map.of(zero, 0, negative, -1, extra, 10));
+        var subjectClassesReader = new SubjectClassesReader(subjectClasses);
         try {
-            assertThat(reader.counts(ids)).containsExactlyEntriesOf(Map.of(zero, 0));
-            verify(provider).countClasses(ids);
+            assertThat(
+                    subjectClassesReader
+                            .countClasses(ids)).containsExactlyEntriesOf(Map
+                            .of(zero, 0));
+            verify(subjectClasses).countClasses(ids);
         } finally {
-            reader.close();
+            subjectClassesReader.close();
         }
     }
 
     @Test
     void nullCountsAreUnavailableAndNeverFabricatedZero() {
-        var provider = mock(ISubjectClasses.class);
-        when(provider.countClasses(any())).thenReturn(null);
-        var reader = new SubjectClassesReader(provider);
+        var subjectClasses = mock(ISubjectClasses.class);
+        when(subjectClasses.countClasses(any())).thenReturn(null);
+        var subjectClassesReader = new SubjectClassesReader(subjectClasses);
         try {
-            assertThat(reader.counts(List.of(UUID.randomUUID()))).isEmpty();
+            assertThat(subjectClassesReader.countClasses(List.of(UUID.randomUUID()))).isEmpty();
         } finally {
-            reader.close();
+            subjectClassesReader.close();
         }
     }
 
     @Test
     void nullListIsUnavailable() {
-        var provider = mock(ISubjectClasses.class);
-        when(provider.listClassesOfSubject(any())).thenReturn(null);
-        var reader = new SubjectClassesReader(provider);
+        var subjectClasses = mock(ISubjectClasses.class);
+        when(subjectClasses.listClassesOfSubject(any())).thenReturn(null);
+        var subjectClassesReader = new SubjectClassesReader(subjectClasses);
         try {
-            assertThat(reader.classes(UUID.randomUUID()).availability())
+            assertThat(subjectClassesReader.listClasses(UUID.randomUUID()).availability())
                     .isEqualTo(SubjectAdminViews.Availability.UNAVAILABLE);
         } finally {
-            reader.close();
+            subjectClassesReader.close();
         }
     }
 
     @Test
     void deadlineReturnsUnknownAndInterruptsBlockedProvider() throws Exception {
-        var provider = mock(ISubjectClasses.class);
+        var subjectClasses = mock(ISubjectClasses.class);
         CountDownLatch entered = new CountDownLatch(1), interrupted = new CountDownLatch(1);
-        when(provider.countClasses(any()))
+        when(subjectClasses.countClasses(any()))
                 .thenAnswer(
                         call -> {
                             entered.countDown();
@@ -135,44 +139,44 @@ class SubjectClassesReaderTest {
                                 throw expected;
                             }
                         });
-        var reader = new SubjectClassesReader(provider, Duration.ofMillis(100));
+        var subjectClassesReader = new SubjectClassesReader(subjectClasses, Duration.ofMillis(100));
         try {
-            assertThat(reader.counts(List.of(UUID.randomUUID()))).isEmpty();
+            assertThat(subjectClassesReader.countClasses(List.of(UUID.randomUUID()))).isEmpty();
             assertThat(entered.await(2, TimeUnit.SECONDS)).isTrue();
             assertThat(interrupted.await(2, TimeUnit.SECONDS)).isTrue();
         } finally {
-            reader.close();
+            subjectClassesReader.close();
         }
     }
 
     @Test
     void interruptedCallerKeepsInterruptFlagAndGetsUnavailable() {
-        var provider = mock(ISubjectClasses.class);
-        when(provider.listClassesOfSubject(any()))
+        var subjectClasses = mock(ISubjectClasses.class);
+        when(subjectClasses.listClassesOfSubject(any()))
                 .thenAnswer(
                         call -> {
                             new CountDownLatch(1).await();
                             return List.of();
                         });
-        var reader = new SubjectClassesReader(provider);
+        var subjectClassesReader = new SubjectClassesReader(subjectClasses);
         try {
             Thread.currentThread().interrupt();
-            assertThat(reader.classes(UUID.randomUUID()).availability())
+            assertThat(subjectClassesReader.listClasses(UUID.randomUUID()).availability())
                     .isEqualTo(SubjectAdminViews.Availability.UNAVAILABLE);
             assertThat(Thread.currentThread().isInterrupted()).isTrue();
         } finally {
             Thread.interrupted();
-            reader.close();
+            subjectClassesReader.close();
         }
     }
 
     @Test
     void rejectedTaskAfterShutdownIsUnavailable() {
-        var provider = mock(ISubjectClasses.class);
-        var reader = new SubjectClassesReader(provider);
-        reader.close();
-        assertThat(reader.counts(List.of(UUID.randomUUID()))).isEmpty();
-        assertThat(reader.classes(UUID.randomUUID()).items()).isNull();
-        verifyNoInteractions(provider);
+        var subjectClasses = mock(ISubjectClasses.class);
+        var subjectClassesReader = new SubjectClassesReader(subjectClasses);
+        subjectClassesReader.close();
+        assertThat(subjectClassesReader.countClasses(List.of(UUID.randomUUID()))).isEmpty();
+        assertThat(subjectClassesReader.listClasses(UUID.randomUUID()).items()).isNull();
+        verifyNoInteractions(subjectClasses);
     }
 }

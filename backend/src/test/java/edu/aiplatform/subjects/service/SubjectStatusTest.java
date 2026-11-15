@@ -30,7 +30,7 @@ class SubjectStatusTest {
     private static final Instant NOW = Instant.parse("2026-10-18T08:00:00Z");
     private final UUID id = UUID.randomUUID();
     private final Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
-    private final ISubjectRepository repository = mock(ISubjectRepository.class);
+    private final ISubjectRepository subjectRepository = mock(ISubjectRepository.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
     private final ISubjectClasses checker = mock(ISubjectClasses.class);
 
@@ -38,9 +38,9 @@ class SubjectStatusTest {
     private final ObjectProvider<ISubjectClasses> checks = mock(ObjectProvider.class);
 
     private final IAudit audit = mock(IAudit.class);
-    private final SubjectStatusService service =
+    private final SubjectStatusService subjectStatusService =
             new SubjectStatusService(
-                    repository,
+                    subjectRepository,
                     authorization,
                     checks,
                     new SubjectAuditRecorder(audit),
@@ -51,15 +51,17 @@ class SubjectStatusTest {
         when(authorization.authorize(any(), anyString(), any()))
                 .thenReturn(AuthorizationDecision.allow());
         when(checks.getIfAvailable()).thenReturn(checker);
-        when(repository.findByIdForUpdate(eq(id), any(Duration.class)))
+        when(subjectRepository.findByIdForUpdate(eq(id), any(Duration.class)))
                 .thenReturn(Optional.of(active()));
-        when(repository.update(any(), anyLong())).thenReturn(true);
+        when(subjectRepository.updateSubject(any(), anyLong())).thenReturn(true);
     }
 
     @Test
     void anonymousRejectedBeforeRepository() {
-        code(() -> service.changeStatus(null, id, archive()), "AUTHENTICATION_REQUIRED");
-        verifyNoInteractions(repository, checks, checker);
+        code(
+                () -> subjectStatusService.changeStatus(null, id, archive()),
+                "AUTHENTICATION_REQUIRED");
+        verifyNoInteractions(subjectRepository, checks, checker);
         verify(audit)
                 .record(
                         argThat(
@@ -73,9 +75,10 @@ class SubjectStatusTest {
     @EnumSource(value = Role.class, names = "ADMIN", mode = EnumSource.Mode.EXCLUDE)
     void nonAdminRejectedBeforeRepository(Role role) {
         code(
-                () -> service.changeStatus(new Actor(UUID.randomUUID(), role), id, archive()),
+                () -> subjectStatusService.changeStatus(
+                        new Actor(UUID.randomUUID(), role), id, archive()),
                 "SUBJECT_FORBIDDEN");
-        verifyNoInteractions(repository, checks, checker);
+        verifyNoInteractions(subjectRepository, checks, checker);
         verify(audit)
                 .record(
                         argThat(
@@ -89,8 +92,10 @@ class SubjectStatusTest {
     void authorizationErrorFailsClosed() {
         when(authorization.authorize(any(), anyString(), any()))
                 .thenThrow(new IllegalStateException("down"));
-        code(() -> service.changeStatus(admin, id, archive()), "SUBJECT_AUTHORIZATION_UNAVAILABLE");
-        verifyNoInteractions(repository, checks, checker);
+        code(
+                () -> subjectStatusService.changeStatus(admin, id, archive()),
+                "SUBJECT_AUTHORIZATION_UNAVAILABLE");
+        verifyNoInteractions(subjectRepository, checks, checker);
         verify(audit)
                 .record(
                         argThat(
@@ -102,36 +107,38 @@ class SubjectStatusTest {
 
     @Test
     void invalidStatusAndVersionNeverLockOrWrite() {
-        code(() -> service.changeStatus(admin, id, null), "SUBJECT_STATUS_INVALID");
+        code(() -> subjectStatusService.changeStatus(admin, id, null), "SUBJECT_STATUS_INVALID");
         code(
                 () ->
-                        service.changeStatus(
+                        subjectStatusService.changeStatus(
                                 admin, id, new SubjectStatusService.ChangeStatus(null, 1L)),
                 "SUBJECT_STATUS_INVALID");
         code(
                 () ->
-                        service.changeStatus(
+                        subjectStatusService.changeStatus(
                                 admin,
                                 id,
                                 new SubjectStatusService.ChangeStatus(
                                         SubjectStatus.ARCHIVED, null)),
                 "SUBJECT_VERSION_REQUIRED");
-        verifyNoInteractions(repository, checks, checker, audit);
+        verifyNoInteractions(subjectRepository, checks, checker, audit);
     }
 
     @Test
     void missingSubjectIs404BeforeProvider() {
-        when(repository.findByIdForUpdate(eq(id), any(Duration.class)))
+        when(subjectRepository.findByIdForUpdate(eq(id), any(Duration.class)))
                 .thenReturn(Optional.empty());
-        code(() -> service.changeStatus(admin, id, archive()), "SUBJECT_NOT_FOUND");
+        code(() -> subjectStatusService.changeStatus(admin, id, archive()), "SUBJECT_NOT_FOUND");
         verifyNoInteractions(checks, checker, audit);
     }
 
     @Test
     void lockFailureIsUnavailableAndDoesNotAskClasses() {
-        when(repository.findByIdForUpdate(eq(id), any(Duration.class)))
+        when(subjectRepository.findByIdForUpdate(eq(id), any(Duration.class)))
                 .thenThrow(new CannotAcquireLockException("busy"));
-        code(() -> service.changeStatus(admin, id, archive()), "SUBJECT_LIFECYCLE_UNAVAILABLE");
+        code(
+                () -> subjectStatusService.changeStatus(admin, id, archive()),
+                "SUBJECT_LIFECYCLE_UNAVAILABLE");
         verifyNoInteractions(checks, checker, audit);
     }
 
@@ -139,47 +146,53 @@ class SubjectStatusTest {
     void staleVersionRejectedBeforeNoOpOrClasses() {
         code(
                 () ->
-                        service.changeStatus(
+                        subjectStatusService.changeStatus(
                                 admin,
                                 id,
                                 new SubjectStatusService.ChangeStatus(SubjectStatus.ACTIVE, 2L)),
                 "SUBJECT_VERSION_CONFLICT");
         verifyNoInteractions(checks, checker, audit);
-        verify(repository, never()).update(any(), anyLong());
+        verify(subjectRepository, never()).updateSubject(any(), anyLong());
     }
 
     @Test
     void validNoOpDoesNotRequireProviderOrAudit() {
         Subject before = active();
-        when(repository.findByIdForUpdate(eq(id), any(Duration.class)))
+        when(subjectRepository.findByIdForUpdate(eq(id), any(Duration.class)))
                 .thenReturn(Optional.of(before));
         assertThat(
-                        service.changeStatus(
+                        subjectStatusService.changeStatus(
                                 admin,
                                 id,
                                 new SubjectStatusService.ChangeStatus(SubjectStatus.ACTIVE, 1L)))
                 .isSameAs(before);
         verifyNoInteractions(checks, checker, audit);
-        verify(repository, never()).update(any(), anyLong());
+        verify(subjectRepository, never()).updateSubject(any(), anyLong());
     }
 
     @Test
     void nullArchiveResultFailsClosedBeforeSubjectUpdateOrSuccessAudit() {
         when(checker.archiveClassesOfSubject(id, admin)).thenReturn(null);
-        code(() -> service.changeStatus(admin, id, archive()), "SUBJECT_CLASSES_UNAVAILABLE");
-        verify(repository, never()).update(any(), anyLong());
+        code(
+                () -> subjectStatusService.changeStatus(admin, id, archive()),
+                "SUBJECT_CLASSES_UNAVAILABLE");
+        verify(subjectRepository, never()).updateSubject(any(), anyLong());
         verifyNoInteractions(audit);
     }
 
     @Test
     void missingNullAndFailedProviderCannotBecomeZeroClasses() {
         when(checks.getIfAvailable()).thenReturn(null);
-        code(() -> service.changeStatus(admin, id, archive()), "SUBJECT_CLASSES_UNAVAILABLE");
+        code(
+                () -> subjectStatusService.changeStatus(admin, id, archive()),
+                "SUBJECT_CLASSES_UNAVAILABLE");
         when(checks.getIfAvailable()).thenReturn(checker);
         when(checker.archiveClassesOfSubject(id, admin))
                 .thenThrow(new IllegalStateException("SQL internal"));
-        code(() -> service.changeStatus(admin, id, archive()), "SUBJECT_CLASSES_UNAVAILABLE");
-        verify(repository, never()).update(any(), anyLong());
+        code(
+                () -> subjectStatusService.changeStatus(admin, id, archive()),
+                "SUBJECT_CLASSES_UNAVAILABLE");
+        verify(subjectRepository, never()).updateSubject(any(), anyLong());
         verifyNoInteractions(audit);
     }
 
@@ -192,13 +205,13 @@ class SubjectStatusTest {
                             assertThat(Thread.currentThread()).isSameAs(caller);
                             return List.of(UUID.randomUUID(), UUID.randomUUID());
                         });
-        Subject after = service.changeStatus(admin, id, archive());
+        Subject after = subjectStatusService.changeStatus(admin, id, archive());
         assertThat(after.status()).isEqualTo(SubjectStatus.ARCHIVED);
         assertThat(after.version()).isEqualTo(2);
-        var order = inOrder(repository, checker, audit);
-        order.verify(repository).findByIdForUpdate(eq(id), any(Duration.class));
+        var order = inOrder(subjectRepository, checker, audit);
+        order.verify(subjectRepository).findByIdForUpdate(eq(id), any(Duration.class));
         order.verify(checker).archiveClassesOfSubject(id, admin);
-        order.verify(repository).update(after, 1L);
+        order.verify(subjectRepository).updateSubject(after, 1L);
         order.verify(audit).record(any());
         var event = ArgumentCaptor.forClass(AuditEvent.class);
         verify(audit).record(event.capture());
@@ -209,10 +222,10 @@ class SubjectStatusTest {
     @Test
     void reopenDoesNotReadOrReopenClasses() {
         Subject archived = active().archive(NOW.minusSeconds(1));
-        when(repository.findByIdForUpdate(eq(id), any(Duration.class)))
+        when(subjectRepository.findByIdForUpdate(eq(id), any(Duration.class)))
                 .thenReturn(Optional.of(archived));
         Subject reopened =
-                service.changeStatus(
+                subjectStatusService.changeStatus(
                         admin, id, new SubjectStatusService.ChangeStatus(SubjectStatus.ACTIVE, 2L));
         assertThat(reopened.status()).isEqualTo(SubjectStatus.ACTIVE);
         assertThat(reopened.version()).isEqualTo(3);
@@ -230,36 +243,41 @@ class SubjectStatusTest {
                             Thread.sleep(1100);
                             return List.of();
                         });
-        code(() -> service.changeStatus(admin, id, archive()), "SUBJECT_LIFECYCLE_TIMEOUT");
-        verify(repository, never()).update(any(), anyLong());
+        code(
+                () -> subjectStatusService.changeStatus(admin, id, archive()),
+                "SUBJECT_LIFECYCLE_TIMEOUT");
+        verify(subjectRepository, never()).updateSubject(any(), anyLong());
         verifyNoInteractions(audit);
     }
 
     @Test
     void staleCasDoesNotAuditSuccessAndAuditErrorIsNotSwallowed() {
         when(checker.archiveClassesOfSubject(id, admin)).thenReturn(List.of());
-        when(repository.update(any(), anyLong())).thenReturn(false);
-        code(() -> service.changeStatus(admin, id, archive()), "SUBJECT_VERSION_CONFLICT");
+        when(subjectRepository.updateSubject(any(), anyLong())).thenReturn(false);
+        code(
+                () -> subjectStatusService.changeStatus(admin, id, archive()),
+                "SUBJECT_VERSION_CONFLICT");
         verifyNoInteractions(audit);
-        when(repository.update(any(), anyLong())).thenReturn(true);
+        when(subjectRepository.updateSubject(any(), anyLong())).thenReturn(true);
         var failure = new IllegalStateException("audit down");
         doThrow(failure).when(audit).record(any());
-        assertThatThrownBy(() -> service.changeStatus(admin, id, archive())).isSameAs(failure);
+        assertThatThrownBy(
+                () -> subjectStatusService.changeStatus(admin, id, archive())).isSameAs(failure);
     }
 
     @Test
     void archiveWithManagerEmitsBothNamedAuditsForOneVersionChange() {
         UUID managerId = UUID.randomUUID();
         Subject before = Subject.create(id, "ABC", "Name", null, managerId, NOW.minusSeconds(60));
-        when(repository.findByIdForUpdate(eq(id), any(Duration.class)))
+        when(subjectRepository.findByIdForUpdate(eq(id), any(Duration.class)))
                 .thenReturn(Optional.of(before));
         when(checker.archiveClassesOfSubject(id, admin)).thenReturn(List.of());
 
-        Subject after = service.changeStatus(admin, id, archive());
+        Subject after = subjectStatusService.changeStatus(admin, id, archive());
 
         assertThat(after.managerId()).isNull();
         assertThat(after.version()).isEqualTo(2);
-        verify(repository).update(after, 1L);
+        verify(subjectRepository).updateSubject(after, 1L);
         var events = ArgumentCaptor.forClass(AuditEvent.class);
         verify(audit, times(2)).record(events.capture());
         assertThat(events.getAllValues()).extracting(AuditEvent::action)

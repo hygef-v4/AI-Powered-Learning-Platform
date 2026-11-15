@@ -482,8 +482,9 @@ class RequirementsCoverageIntegrationTest {
         assertThat(ids).hasSize(10);
         measureP95("U04_SCOPE", 20, () -> assertThat(authorization.authorize(manager,
                 Actions.MATERIAL_SUBJECT_MANAGE, ResourceRef.subject(subjectId)).allowed()).isTrue());
-        measureP95("U04_LIST", 300, () -> subjectAdminService.list(admin, null, null, 0, 20));
-        measureP95("U04_DETAIL", 300, () -> subjectAdminService.detail(admin, subjectId));
+        measureP95(
+                "U04_LIST", 300, () -> subjectAdminService.listSubjects(admin, null, null, 0, 20));
+        measureP95("U04_DETAIL", 300, () -> subjectAdminService.loadSubject(admin, subjectId));
         measureP95("U13_LIST", 300, () -> assertThat(materialQueryService.subjectList(manager, subjectId)).hasSize(10));
         measureP95("U13_EXTRACT_TEN", 1000,
                 () -> assertThat(referenceMaterialService.extractText(manager, ids, 10000)).hasSize(10));

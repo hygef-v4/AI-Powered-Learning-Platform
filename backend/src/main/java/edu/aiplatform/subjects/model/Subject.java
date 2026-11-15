@@ -64,14 +64,14 @@ public record Subject(
         if (this.name.equals(normalizedName) && Objects.equals(this.description, description)) {
             return this;
         }
-        return changed(normalizedName, description, status, managerId, now);
+        return copyWithChanges(normalizedName, description, status, managerId, now);
     }
 
     /** managerId=null nghĩa là bỏ phân công. Service kiểm SUBJECT_MANAGER/ACTIVE trước khi gán. */
     public Subject changeManager(UUID managerId, Instant now) {
         return Objects.equals(this.managerId, managerId)
                 ? this
-                : changed(name, description, status, managerId, now);
+                : copyWithChanges(name, description, status, managerId, now);
     }
 
     /**
@@ -81,16 +81,16 @@ public record Subject(
     public Subject archive(Instant now) {
         return status == SubjectStatus.ARCHIVED
                 ? this
-                : changed(name, description, SubjectStatus.ARCHIVED, null, now);
+                : copyWithChanges(name, description, SubjectStatus.ARCHIVED, null, now);
     }
 
     public Subject reopen(Instant now) {
         return status == SubjectStatus.ACTIVE
                 ? this
-                : changed(name, description, SubjectStatus.ACTIVE, managerId, now);
+                : copyWithChanges(name, description, SubjectStatus.ACTIVE, managerId, now);
     }
 
-    private Subject changed(
+    private Subject copyWithChanges(
             String name, String description, SubjectStatus status, UUID managerId, Instant now) {
         return new Subject(
                 id,
