@@ -182,6 +182,45 @@ class AssignmentPublicationServiceTest {
         assertThat(f.store.get(scheduled.id()).status()).isEqualTo(AssignmentStatus.OPEN);
         verify(f.listener).onOpened(scheduled.id());
         verify(f.events).publish(any());
-        verify(f.assignments, org.mockito.Mockito.times(2)).closeDue(NOW);
+        verify(f.assignments, org.mockito.Mockito.times(2)).listDueToClose(NOW, AssignmentScheduleScanner.BATCH);
+    }
+
+    @Test
+    void closeStopsSubmissionsAndChotsSavedWorkWithoutChangingTheSchedule() {
+        Assignment draft = reviewed();
+        Instant end = NOW.plus(Duration.ofDays(7));
+        Assignment open = f.withStatus(draft, AssignmentStatus.OPEN, NOW.minusSeconds(60), end);
+        var closed = f.publication.closeAssignment(f.teacher, open.id(), open.version());
+        assertThat(closed.status()).isEqualTo(AssignmentStatus.CLOSED);
+        assertThat(closed.closesAt()).isEqualTo(end);
+        verify(f.listener).onClosed(open.id());
+        verify(f.audit).record(argThat(event -> event.action().equals("ASSIGNMENT_CLOSED")));
+        assertThat(code(() -> f.publication.closeAssignment(f.teacher, open.id(), closed.version())))
+                .isEqualTo("ASSIGNMENT_STATUS_INVALID");
+    }
+
+    @Test
+    void closeChecksVersionClassScopeAndClassState() {
+        Assignment open = f.put(AssignmentScope.CLASS, AssignmentStatus.OPEN, new DocumentModel(List.of()), true);
+        assertThat(code(() -> f.publication.closeAssignment(f.teacher, open.id(), open.version() + 1)))
+                .isEqualTo("ASSIGNMENT_VERSION_CONFLICT");
+        Assignment template = f.put(AssignmentScope.SUBJECT, AssignmentStatus.OPEN, new DocumentModel(List.of()), true);
+        assertThat(code(() -> f.publication.closeAssignment(f.manager, template.id(), template.version())))
+                .isEqualTo("ASSIGNMENT_STATUS_INVALID");
+        when(f.classes.getClassRef(open.classId())).thenReturn(Optional.of(
+                f.classRef(open.classId(), ClassStatus.ARCHIVED)));
+        assertThat(code(() -> f.publication.closeAssignment(f.teacher, open.id(), open.version())))
+                .isEqualTo("ASSIGNMENT_READ_ONLY");
+        verify(f.listener, never()).onClosed(any());
+    }
+
+    @Test
+    void scheduledCloseWaitsForGraceAndRunsListenersBeforeCommit() {
+        Assignment draft = reviewed();
+        Assignment open = f.withStatus(draft, AssignmentStatus.OPEN, NOW.minusSeconds(60), NOW.minusSeconds(30));
+        assertThat(f.lifecycle.closeAssignment(open.id(), NOW, true)).isFalse();
+        assertThat(f.lifecycle.closeAssignment(open.id(), NOW.plusNanos(1), true)).isTrue();
+        verify(f.listener).onClosed(open.id());
+        assertThat(f.store.get(open.id()).status()).isEqualTo(AssignmentStatus.CLOSED);
     }
 }

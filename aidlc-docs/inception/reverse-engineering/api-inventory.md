@@ -2,6 +2,10 @@
 
 Source snapshot: `staging@7e0e8375`, 2026-11-15. Đối chiếu 50 controller và 346 khai báo mapping theo file, gồm mapping cấp lớp và phương thức. Ghép đường dẫn cấp lớp với đường dẫn phương thức, giữ HTTP method, mảng path, consumes và produces. Bảng kê mô tả route. Schema request/response đầy đủ nằm ở DTO, controller và public contract. IMcpToolProvider sở hữu schema tool MCP. Các OpenAPI hiện có chỉ bao phủ một phần.
 
+Delta `fix/date-ai-grading-window`, 2026-11-15: thêm một mapping POST
+`/api/v1/assignments/{id}/close`, body `{ "version": number }`, trả Assignment Detail;
+kiểm quyền giảng viên/lớp OPEN/version và chốt bài đã lưu trong cùng transaction.
+
 ## [academics/controller/AcademicsController.java](../../../backend/src/main/java/edu/aiplatform/academics/controller/AcademicsController.java)
 
 ```java
@@ -149,6 +153,7 @@ Source snapshot: `staging@7e0e8375`, 2026-11-15. Đối chiếu 50 controller v�
 @PostMapping(value = "/publish", consumes = "application/json")
 @PatchMapping(value = "/schedule", consumes = "application/json")
 @PostMapping(value = "/retire", consumes = "application/json")
+@PostMapping(value = "/close", consumes = "application/json")
 @PostMapping("/clone")
 @PostMapping("/versions")
 ```

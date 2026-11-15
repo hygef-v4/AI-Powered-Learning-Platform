@@ -113,12 +113,18 @@ public class SubmissionReviewService {
         var listing = listRows(actor, classId, assignmentId, filter, late);
         return new SubmissionPage(
                 listing.rows().stream().skip((long) (page - 1) * size).limit(size).toList(),
-                listing.rows().size(), page, size, listing.summary(), listing.closesAt());
+                listing.rows().size(), page, size, listing.summary(), listing.closesAt(),
+                listing.editable(), listing.readOnlyReason());
     }
 
     record Listing(List<SubmissionRow> rows,
             List<edu.aiplatform.grading.model.Evaluation> evaluations, Map<String, Long> summary,
-            java.time.Instant closesAt) {
+            java.time.Instant closesAt, boolean editable, String readOnlyReason) {
+        Listing(List<SubmissionRow> rows,
+                List<edu.aiplatform.grading.model.Evaluation> evaluations, Map<String, Long> summary,
+                java.time.Instant closesAt) {
+            this(rows, evaluations, summary, closesAt, true, null);
+        }
     }
 
     /**
@@ -134,7 +140,8 @@ public class SubmissionReviewService {
         var evals = evaluationRepository.findForAssignmentAndClass(assignmentId, classId);
         var students = classAccess.listActiveStudents(classId);
         return buildListing(classId, assignmentId, assignment, evals, filter, late, students,
-                accountLookup.getContacts(students));
+                accountLookup.getContacts(students),
+                courseClass.status() == edu.aiplatform.academics.contract.ClassStatus.OPEN);
     }
 
     public Map<UUID, SubmissionPage> loadProgress(Actor actor, UUID classId) {
@@ -151,16 +158,18 @@ public class SubmissionReviewService {
             if (!GradebookService.isGradable(assignment)) continue;
             requireAssignment(assignment, courseClass);
             var listing = buildListing(classId, assignment.assignmentId(), assignment,
-                    all.getOrDefault(assignment.assignmentId(), List.of()), null, null, students, contacts);
+                    all.getOrDefault(assignment.assignmentId(), List.of()), null, null, students, contacts,
+                    courseClass.status() == edu.aiplatform.academics.contract.ClassStatus.OPEN);
             result.put(assignment.assignmentId(), new SubmissionPage(listing.rows().stream().limit(1).toList(),
-                    listing.rows().size(), 1, 1, listing.summary(), listing.closesAt()));
+                    listing.rows().size(), 1, 1, listing.summary(), listing.closesAt(),
+                    listing.editable(), listing.readOnlyReason()));
         }
         return result;
     }
 
     private Listing buildListing(UUID classId, UUID assignmentId, AssignmentView assignment,
             List<edu.aiplatform.grading.model.Evaluation> evals, String filter, Boolean late, List<UUID> students,
-            Map<UUID, edu.aiplatform.identity.contract.AccountContact> contacts) {
+            Map<UUID, edu.aiplatform.identity.contract.AccountContact> contacts, boolean classEditable) {
         List<SubmissionRow> rows = new ArrayList<>();
         if (assignment.submissionMode() == SubmissionMode.GROUP) {
             var provider = groupSubmissionSourceProvider.getIfAvailable();
@@ -231,7 +240,9 @@ public class SubmissionReviewService {
                 .filter(r -> filter == null || filter.isBlank() || filter.equals("ALL")
                         || r.status().equals(filter))
                 .filter(r -> late == null || r.late() == late).toList();
-        return new Listing(filtered, evals, summary, assignment.closesAt());
+        boolean assignmentClosed = GradingService.isAssignmentClosed(assignment);
+        return new Listing(filtered, evals, summary, assignment.closesAt(), classEditable && assignmentClosed,
+                assignmentClosed ? null : GradingService.ASSIGNMENT_OPEN_MESSAGE);
     }
 
     /**
@@ -352,6 +363,8 @@ public class SubmissionReviewService {
                 GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot), navigationIds,
                 activityValue, activityState, members, memberActivities, authors, current,
                 groupEvaluationId, current
-                        && courseClass.status() == edu.aiplatform.academics.contract.ClassStatus.OPEN);
+                        && courseClass.status() == edu.aiplatform.academics.contract.ClassStatus.OPEN
+                        && GradingService.isAssignmentClosed(assignment),
+                GradingService.isAssignmentClosed(assignment) ? null : GradingService.ASSIGNMENT_OPEN_MESSAGE);
     }
 }

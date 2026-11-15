@@ -93,7 +93,7 @@ describe("U05 reference UI", () => {
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Tạo lớp" }));
     expect(await screen.findByText("Chọn ngày bắt đầu")).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByLabelText(/Ngày bắt đầu/), { target: { value: "2027-04-03" } });
+    fireEvent.change(screen.getByLabelText(/Ngày bắt đầu/), { target: { value: "03/04/2027" } });
     expect(screen.getByTestId("class-form-term")).toHaveTextContent("Học kỳ: SP27-BL5");
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Tạo lớp" }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ subjectId: subject.id, code: "SE1902", name: "SE1902", description: "", startsOn: "2027-04-03", teacherId: null }));
@@ -103,7 +103,7 @@ describe("U05 reference UI", () => {
     const onSubmit = vi.fn().mockRejectedValue(new ApiError({ status: 409, code: "CLASS_EXISTS" }));
     render(<ClassFormDialog subject={subject} teachers={[teacher]} onSubmit={onSubmit} onClose={vi.fn()} />);
     fireEvent.change(screen.getByLabelText(/Mã lớp/), { target: { value: "SE1902" } });
-    fireEvent.change(screen.getByLabelText(/Ngày bắt đầu/), { target: { value: "2026-11-14" } });
+    fireEvent.change(screen.getByLabelText(/Ngày bắt đầu/), { target: { value: "14/11/2026" } });
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Tạo lớp" }));
     expect(await screen.findByText("Mã lớp đã tồn tại trong môn ở học kỳ này")).toBeInTheDocument();
     expect(screen.getByLabelText(/Mã lớp/)).toHaveAttribute("aria-invalid", "true");
@@ -114,7 +114,7 @@ describe("U05 reference UI", () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(<ClassFormDialog subject={subject} teachers={[teacher]} onSubmit={onSubmit} onClose={vi.fn()} />);
     fireEvent.change(screen.getByLabelText(/Mã lớp/), { target: { value: "SE1902" } });
-    fireEvent.change(screen.getByLabelText(/Ngày bắt đầu/), { target: { value: "2027-01-10" } });
+    fireEvent.change(screen.getByLabelText(/Ngày bắt đầu/), { target: { value: "10/01/2027" } });
     fireEvent.focus(screen.getByRole("combobox", { name: /Giảng viên/ }));
     fireEvent.click(await screen.findByRole("option", { name: new RegExp(teacher.name) }));
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Tạo lớp" }));
@@ -137,7 +137,7 @@ describe("U05 reference UI", () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     render(<ClassInfoForm value={course} onSave={onSave} />);
     expect(screen.queryByTestId("class-info-term-change")).toBeNull();
-    fireEvent.change(screen.getByLabelText(/Ngày bắt đầu/), { target: { value: "2027-04-03" } });
+    fireEvent.change(screen.getByLabelText(/Ngày bắt đầu/), { target: { value: "03/04/2027" } });
     expect(screen.getByTestId("class-info-term-change")).toHaveTextContent("Học kỳ: FA26 → SP27-BL5");
     expect(screen.getByLabelText(/Học kỳ/)).toHaveValue("FA26");
     fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
@@ -149,6 +149,34 @@ describe("U05 reference UI", () => {
     expect(screen.getByLabelText(/Mô tả/)).toBeDisabled();
     expect(screen.getByLabelText(/Ngày bắt đầu/)).toBeDisabled();
     expect(screen.queryByRole("button", { name: "Lưu thay đổi" })).not.toBeInTheDocument();
+  });
+
+  it("blocks an invalid date edit instead of saving the previous date and restores it on cancel", () => {
+    const onSave = vi.fn();
+    render(<ClassInfoForm value={course} onSave={onSave} />);
+    const input = screen.getByLabelText(/Ngày bắt đầu/);
+    expect(input).toHaveValue("07/09/2026");
+    fireEvent.change(input, { target: { value: "31/04/2027" } });
+    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+    expect(onSave).not.toHaveBeenCalled();
+    expect(input).toHaveValue("31/04/2027");
+    fireEvent.click(screen.getByRole("button", { name: "Hủy" }));
+    expect(screen.getByLabelText(/Ngày bắt đầu/)).toHaveValue("07/09/2026");
+    expect(screen.getByLabelText(/Ngày bắt đầu/)).not.toHaveAttribute("aria-invalid");
+    expect(screen.getByRole("button", { name: "Lưu thay đổi" })).toBeDisabled();
+  });
+
+  it("cancels an invalid local date draft even when the saved start date is empty", () => {
+    const onSave = vi.fn();
+    render(<ClassInfoForm value={{ ...course, startsOn: "" }} onSave={onSave} />);
+    fireEvent.change(screen.getByLabelText(/Ngày bắt đầu/), { target: { value: "15/" } });
+    expect(screen.getByLabelText(/Ngày bắt đầu/)).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("button", { name: "Hủy" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Hủy" }));
+    expect(screen.getByLabelText(/Ngày bắt đầu/)).toHaveValue("");
+    expect(screen.getByLabelText(/Ngày bắt đầu/)).not.toHaveAttribute("aria-invalid");
+    expect(screen.getByRole("button", { name: "Hủy" })).toBeDisabled();
+    expect(onSave).not.toHaveBeenCalled();
   });
 
   it("refreshes unsaved info when a newer server version arrives", () => {

@@ -69,6 +69,8 @@ export const assignmentsApi = {
     write<AssignmentDetail>(`/assignments/${enc(id)}/publish`, "POST", { ...input, version }),
   changeSchedule: (id: string, version: number, input: ScheduleInput) =>
     write<AssignmentDetail>(`/assignments/${enc(id)}/schedule`, "PATCH", { ...input, version }),
+  closeAssignment: (id: string, version: number) =>
+    write<AssignmentDetail>(`/assignments/${enc(id)}/close`, "POST", { version }),
   retire: (id: string, version: number, reason: string) =>
     write<AssignmentDetail>(`/assignments/${enc(id)}/retire`, "POST", { version, reason }),
   clone: (id: string) => write<AssignmentDetail>(`/assignments/${enc(id)}/clone`, "POST"),

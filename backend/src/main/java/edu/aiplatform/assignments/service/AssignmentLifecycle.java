@@ -46,6 +46,19 @@ class AssignmentLifecycle {
         listeners.orderedStream().forEach(listener -> listener.onRetired(id));
     }
 
+    boolean closeAssignment(UUID id, Instant now, boolean scheduled) {
+        Assignment current = assignments.findForUpdate(id).orElse(null);
+        if (current == null || current.status() != edu.aiplatform.assignments.contract.AssignmentStatus.OPEN
+                || scheduled && (current.finalDeadline() == null
+                        || !now.isAfter(current.finalDeadline().plusSeconds(30)))) {
+            return false;
+        }
+        assignments.save(current.withStatus(
+                edu.aiplatform.assignments.contract.AssignmentStatus.CLOSED, now));
+        listeners.orderedStream().forEach(listener -> listener.onClosed(id));
+        return true;
+    }
+
     private static DomainEvent opened(Assignment a, Instant now) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("assignmentId", a.id().toString());

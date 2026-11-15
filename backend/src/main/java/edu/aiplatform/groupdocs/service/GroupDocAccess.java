@@ -47,6 +47,8 @@ public class GroupDocAccess {
 
     /** Như {@link #read} nhưng khóa dòng tài liệu (nộp, tự nộp). */
     public GroupDocContext lock(Actor actor, UUID documentId) {
+        GroupDocument snapshot = documents.findById(documentId).orElseThrow(GroupAccess::notFound);
+        assignments.lockSubmission(snapshot.assignmentId());
         GroupDocument document = documents.lockDocument(documentId).orElseThrow(GroupAccess::notFound);
         return context(actor, document);
     }
@@ -80,6 +82,11 @@ public class GroupDocAccess {
         if (window(ctx.document().assignmentId(), withGrace) == SubmissionWindow.CLOSED) {
             throw ApiException.conflict("GROUP_DOC_DEADLINE_PASSED", "Đã hết hạn nộp bài");
         }
+    }
+
+    public void requireWritable(GroupDocContext ctx, boolean withGrace) {
+        assignments.lockSubmission(ctx.document().assignmentId());
+        requireEditable(ctx, withGrace);
     }
 
     public SubmissionWindow window(UUID assignmentId, boolean withGrace) {

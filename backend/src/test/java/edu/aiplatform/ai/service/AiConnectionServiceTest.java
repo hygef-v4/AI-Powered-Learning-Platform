@@ -147,12 +147,30 @@ class AiConnectionServiceTest {
         assertThat(view.lastTestResult()).contains("401");
         ArgumentCaptor<IProviderGateway.Request> request = ArgumentCaptor.forClass(IProviderGateway.Request.class);
         verify(gateway).call(eq(AiProvider.GEMINI), request.capture());
-        assertThat(request.getValue().maxOutputTokens()).isEqualTo(5);
+        assertThat(request.getValue().maxOutputTokens()).isEqualTo(1024);
         assertThat(request.getValue().user()).isEqualTo(ConnectionTestService.USER);
         assertThat(request.getValue().apiKey()).isEqualTo("AIzaSy-old-key-0000");
         ArgumentCaptor<AiUsageRecord> usage = ArgumentCaptor.forClass(AiUsageRecord.class);
         verify(usageRepository).insert(usage.capture());
         assertThat(usage.getValue().inputTokens()).as("không biết thì để rỗng, không ghi 0").isNull();
+    }
+
+    @Test
+    void truncatedProbeStoresCanonicalSuccessAndProviderUsage() {
+        AiConnection mine = existing(AiConnection.Scope.PERSONAL);
+        when(repository.findById(mine.id())).thenReturn(Optional.of(mine));
+        when(gateway.call(eq(AiProvider.GEMINI), any())).thenThrow(
+                new IProviderGateway.OutputLimitException(new IProviderGateway.Usage(12L, 1024L, null, 1024L)));
+
+        assertThat(service.testPersonal(teacher, mine.id()).lastTestResult()).isEqualTo("Đạt");
+
+        verify(repository).saveTest(mine.id(), "Đạt", NOW);
+        ArgumentCaptor<AiUsageRecord> usage = ArgumentCaptor.forClass(AiUsageRecord.class);
+        verify(usageRepository).insert(usage.capture());
+        assertThat(usage.getValue().outcome()).isEqualTo("OK");
+        assertThat(usage.getValue().inputTokens()).isEqualTo(12L);
+        assertThat(usage.getValue().outputTokens()).isEqualTo(1024L);
+        assertThat(usage.getValue().reasoningTokens()).isEqualTo(1024L);
     }
 
     @Test

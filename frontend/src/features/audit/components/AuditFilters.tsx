@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Field, Section, Select, TextInput } from "@/shared/ui";
+import { Button, DateInput, Field, Section, Select, TextInput } from "@/shared/ui";
 import { ACTION_LABELS, OBJECT_TYPE_LABELS, RESULT_LABELS } from "../model/labels";
 import type { AuditFilterForm, AuditResult } from "../model/types";
 
@@ -79,24 +79,20 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <Field label="Thời gian" htmlFor="audit-from" error={dateInvalid ? DATE_ORDER_ERROR : null}>
             <div className="flex items-center gap-2">
-              <TextInput
+              <DateInput
                 id="audit-from"
-                type="date"
-                icon="calendar_month"
                 aria-label="Từ ngày"
                 value={value.fromDate}
                 invalid={dateInvalid}
-                onChange={(e) => set("fromDate", e.target.value)}
+                onChange={(date) => set("fromDate", date)}
                 data-testid="audit-filters-from-input"
               />
               <span aria-hidden="true" className="text-muted">–</span>
-              <TextInput
-                type="date"
-                icon="calendar_month"
+              <DateInput
                 aria-label="Đến ngày"
                 value={value.toDate}
                 invalid={dateInvalid}
-                onChange={(e) => set("toDate", e.target.value)}
+                onChange={(date) => set("toDate", date)}
                 data-testid="audit-filters-to-input"
               />
             </div>

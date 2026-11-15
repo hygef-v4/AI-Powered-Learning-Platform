@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
-import { Button, Field, LockedInput, Section, TextInput, showToast } from "@/shared/ui";
+import { Button, DateInput, Field, LockedInput, Section, showToast } from "@/shared/ui";
 import type { ClassInfoInput, CourseClassView } from "../model/types";
 import { CLASS_START_DATE_RANGE, CLASS_START_DATE_REQUIRED, formatClassFieldError, formatOperationError } from "../model/format";
 import { termOf } from "../model/term";
@@ -22,8 +22,10 @@ function InfoEditor({ value, onSave }: { value: CourseClassView; onSave: (value:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [dateError, setDateError] = useState("");
+  const [dateValid, setDateValid] = useState(true);
+  const [dateReset, setDateReset] = useState(0);
   const archived = value.status === "ARCHIVED";
-  const dirty = fields.description !== original.description || fields.startsOn !== original.startsOn;
+  const dirty = !dateValid || fields.description !== original.description || fields.startsOn !== original.startsOn;
   const nextTerm = termOf(fields.startsOn);
   const termChanged = fields.startsOn !== original.startsOn && nextTerm !== null && nextTerm !== value.term;
   async function handleSave(event: FormEvent) {
@@ -48,8 +50,9 @@ function InfoEditor({ value, onSave }: { value: CourseClassView; onSave: (value:
         <Field label="Mã môn" htmlFor={`${id}-subject`}><LockedInput id={`${id}-subject`} value={value.subject.code} /></Field>
         <Field label="Mã lớp" htmlFor={`${id}-code`}><LockedInput id={`${id}-code`} value={value.code} /></Field>
         <Field label="Ngày bắt đầu" htmlFor={`${id}-starts-on`} required={!archived} error={dateError}>
-          <TextInput id={`${id}-starts-on`} type="date" min="2000-01-01" max="2099-12-31" disabled={archived} value={fields.startsOn}
-            invalid={!!dateError} onChange={(event) => { setFields({ ...fields, startsOn: event.target.value }); setDateError(""); }}
+          <DateInput key={dateReset} id={`${id}-starts-on`} min="2000-01-01" max="2099-12-31" disabled={archived} value={fields.startsOn}
+            onValidityChange={setDateValid}
+            invalid={!!dateError} onChange={(startsOn) => { setFields({ ...fields, startsOn }); setDateError(""); }}
             data-testid="class-info-starts-on" />
         </Field>
         <div className="flex flex-col gap-1.5">
@@ -67,7 +70,10 @@ function InfoEditor({ value, onSave }: { value: CourseClassView; onSave: (value:
       </fieldset>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       {!archived && <div className="flex justify-end gap-2 border-t border-line pt-4">
-        <Button disabled={busy || !dirty} onClick={() => { setFields(original); setError(""); setDateError(""); }}>Hủy</Button>
+        <Button disabled={busy || !dirty} onClick={() => {
+          setFields(original); setError(""); setDateError("");
+          setDateValid(true); setDateReset((current) => current + 1);
+        }}>Hủy</Button>
         <Button type="submit" variant="primary" icon="save" disabled={busy || !dirty} data-testid="class-info-save">Lưu thay đổi</Button>
       </div>}
     </form>

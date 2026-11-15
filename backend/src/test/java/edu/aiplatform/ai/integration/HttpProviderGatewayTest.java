@@ -12,12 +12,19 @@ import edu.aiplatform.ai.service.IProviderGateway.Request;
 import edu.aiplatform.ai.service.IProviderGateway.Response;
 import edu.aiplatform.ai.contract.AiImage;
 import edu.aiplatform.ai.contract.AiProvider;
+import edu.aiplatform.ai.config.AiProperties;
+import edu.aiplatform.ai.model.AiConnection;
+import edu.aiplatform.ai.service.ConnectionTestService;
+import edu.aiplatform.ai.service.KeyCipher;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +32,90 @@ import org.junit.jupiter.api.Test;
 
 /** Adapter gọi HTTP server giả của JDK thay cho provider thật (NFR-U06-40). */
 class HttpProviderGatewayTest {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(AiProvider.class)
+    void connectionProbeUsesSelectedModelAndAReasoningBudget(AiProvider provider) throws Exception {
+        reply = switch (provider) {
+            case GEMINI -> "{\"candidates\":[{\"finishReason\":\"STOP\",\"content\":{\"parts\":[{\"text\":\"OK\"}]}}]}";
+            case OPENAI -> "{\"choices\":[{\"finish_reason\":\"stop\",\"message\":{\"content\":\"OK\"}}]}";
+            case CLAUDE -> "{\"stop_reason\":\"end_turn\",\"content\":[{\"type\":\"text\",\"text\":\"OK\"}]}";
+        };
+
+        assertThat(testConnection(provider).ok()).isTrue();
+        JsonNode body = json.readTree(lastBody.get());
+        int budget = switch (provider) {
+            case GEMINI -> body.at("/generationConfig/maxOutputTokens").asInt();
+            case OPENAI -> body.path("max_completion_tokens").asInt();
+            case CLAUDE -> body.path("max_tokens").asInt();
+        };
+        assertThat(budget).isEqualTo(1024);
+        if (provider == AiProvider.GEMINI) {
+            assertThat(lastPath.get()).isEqualTo("/v1beta/models/selected-model:generateContent");
+        } else {
+            assertThat(body.path("model").asText()).isEqualTo("selected-model");
+        }
+        assertThat(lastBody.get()).doesNotContain("json_schema", "responseJsonSchema", "tools");
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(AiProvider.class)
+    void explicitTokenLimitProvesConnectionEvenWithoutVisibleOutput(AiProvider provider) {
+        reply = switch (provider) {
+            case GEMINI -> "{\"candidates\":[{\"finishReason\":\"MAX_TOKENS\"}],\"usageMetadata\":{\"thoughtsTokenCount\":1024}}";
+            case OPENAI -> "{\"choices\":[{\"finish_reason\":\"length\",\"message\":{\"content\":\"\"}}],\"usage\":{\"completion_tokens\":1024}}";
+            case CLAUDE -> "{\"stop_reason\":\"max_tokens\",\"content\":[],\"usage\":{\"output_tokens\":1024}}";
+        };
+
+        var result = testConnection(provider);
+
+        assertThat(result.ok()).isTrue();
+        assertThat(result.message()).isEqualTo("Đạt");
+        assertThat(result.usage().outputTokens()).isEqualTo(1024);
+    }
+
+    @Test
+    void connectionProbeDoesNotAcceptSafetyRefusalOrOtherChargedResponses() {
+        for (String response : List.of(
+                "{\"choices\":[{\"finish_reason\":\"length\",\"message\":{\"content\":\"partial\",\"refusal\":\"secret-key\"}}]}",
+                "{\"choices\":[{\"finish_reason\":\"content_filter\",\"message\":{\"content\":\"partial\"}}]}",
+                "{\"choices\":[{\"finish_reason\":\"stop\",\"message\":{\"content\":\"\"}}]}",
+                "{}")) {
+            reply = response;
+            var result = testConnection(AiProvider.OPENAI);
+            assertThat(result.ok()).as(response).isFalse();
+            assertThat(result.message()).doesNotContain("secret-key");
+        }
+        reply = "{\"promptFeedback\":{\"blockReason\":\"SAFETY\"},\"candidates\":[{\"finishReason\":\"MAX_TOKENS\"}]}";
+        assertThat(testConnection(AiProvider.GEMINI).ok()).isFalse();
+        reply = "{\"stop_reason\":\"refusal\",\"content\":[{\"type\":\"text\",\"text\":\"partial\"}]}";
+        assertThat(testConnection(AiProvider.CLAUDE).ok()).isFalse();
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(ints = {400, 401, 403, 404, 429, 500})
+    void connectionProbeDoesNotAcceptHttpErrors(int responseStatus) {
+        status = responseStatus;
+        reply = "{\"error\":\"secret-key\"}";
+
+        var result = testConnection(AiProvider.OPENAI);
+
+        assertThat(result.ok()).isFalse();
+        assertThat(result.message()).contains("HTTP " + responseStatus).doesNotContain("secret-key");
+        assertThat(result.usage()).isNull();
+    }
+
+    private ConnectionTestService.Result testConnection(AiProvider provider) {
+        AiProperties properties = new AiProperties(Base64.getEncoder().encodeToString(new byte[32]),
+                null, null, Duration.ofSeconds(2), Map.of());
+        KeyCipher cipher = new KeyCipher(properties);
+        UUID id = UUID.randomUUID();
+        UUID ownerId = UUID.randomUUID();
+        AiConnection connection = AiConnection.create(id, AiConnection.Scope.PERSONAL, ownerId, provider,
+                "selected-model", cipher.encryptConnectionKey(id, AiConnection.Scope.PERSONAL, ownerId,
+                        provider, "secret-key"), "-key", Instant.now());
+        return new ConnectionTestService(gateway, cipher, properties).test(connection);
+    }
+
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.EnumSource(AiProvider.class)
     void tokenTruncationIsAnExplicitChargedFailureEvenWhenThePartialJsonParses(AiProvider provider) {
@@ -36,6 +127,7 @@ class HttpProviderGatewayTest {
         assertThatThrownBy(() -> gateway.call(provider, request(SCHEMA)))
                 .isInstanceOfSatisfying(ProviderException.class, e -> {
                     assertThat(e.kind()).isEqualTo(FailureKind.CHARGED);
+                    assertThat(e).isInstanceOf(edu.aiplatform.ai.service.IProviderGateway.OutputLimitException.class);
                     assertThat(e.usage().outputTokens()).isEqualTo(500);
                     assertThat(e.getMessage()).contains("giới hạn token", "phản hồi").doesNotContain("hạn mức");
                 });
@@ -66,6 +158,7 @@ class HttpProviderGatewayTest {
     private HttpServer server;
     private HttpProviderGateway gateway;
     private final AtomicReference<String> lastBody = new AtomicReference<>();
+    private final AtomicReference<String> lastPath = new AtomicReference<>();
     private final AtomicReference<String> lastAuth = new AtomicReference<>();
     private volatile int status = 200;
     private volatile String reply = "{}";
@@ -75,6 +168,7 @@ class HttpProviderGatewayTest {
     void start() throws IOException {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/", exchange -> {
+            lastPath.set(exchange.getRequestURI().getPath());
             lastBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
             String auth = exchange.getRequestHeaders().getFirst("Authorization");
             lastAuth.set(auth != null ? auth : exchange.getRequestHeaders().getFirst("x-api-key") != null

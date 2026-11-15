@@ -172,6 +172,23 @@ describe("AuditLogPage", () => {
     expect(all.has("to")).toBe(false);
   });
 
+  it("accepts day/month/year as ISO filter bounds and clears an unfinished draft", async () => {
+    const fetchMock = vi.fn(() => json(page([ADMIN_ROW])));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<AuditLogPage />);
+    await screen.findByText("phongdt@fpt.edu.vn");
+    const input = screen.getByTestId("audit-filters-from-input");
+    fireEvent.change(input, { target: { value: "01/10/2026" } });
+    await waitFor(() => expect(new URL(auditCalls(fetchMock).at(-1)!, "http://x")
+      .searchParams.get("from")).toBe(dayStart("2026-10-01")));
+    fireEvent.change(input, { target: { value: "15/" } });
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    fireEvent.click(screen.getByTestId("audit-filters-clear-button"));
+    const date = defaultFilter().fromDate.split("-").reverse().join("/");
+    expect(screen.getByTestId("audit-filters-from-input")).toHaveValue(date);
+    expect(screen.getByTestId("audit-filters-from-input")).not.toHaveAttribute("aria-invalid");
+  });
+
   it("bảng chỉ xem: bấm dòng không mở popup chi tiết", async () => {
     vi.stubGlobal("fetch", vi.fn(() => json(page([ADMIN_ROW]))));
     render(<AuditLogPage />);

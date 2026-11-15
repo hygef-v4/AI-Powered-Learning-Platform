@@ -11,6 +11,9 @@ public interface IAssignmentQuery {
 
     Optional<AssignmentView> get(UUID assignmentId);
 
+    /** Holds a shared assignment lock until the caller's write transaction ends. */
+    void lockSubmission(UUID assignmentId);
+
     Optional<AssignmentContent> getContent(UUID assignmentId);
 
     List<AssignmentView> listForClass(UUID classId);

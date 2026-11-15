@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { Alert, Button, Dialog, Field, Switch, TextInput } from "@/shared/ui";
+import { Alert, Button, DateInput, Dialog, Field, Switch, TextInput } from "@/shared/ui";
 import { getFormation, updateFormation } from "../api";
 import {
   fromLocalInput,
@@ -28,7 +28,9 @@ export function SelfGroupingSettingsDialog({ classId, onClose, onSaved }: {
   const [enabled, setEnabled] = useState(false);
   const [minSize, setMinSize] = useState("");
   const [maxSize, setMaxSize] = useState("");
-  const [deadline, setDeadline] = useState("");
+  const [deadlineDate, setDeadlineDate] = useState("");
+  const [deadlineTime, setDeadlineTime] = useState("00:00");
+  const [dateValid, setDateValid] = useState(true);
   const [errors, setErrors] = useState<FormationErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -41,13 +43,17 @@ export function SelfGroupingSettingsDialog({ classId, onClose, onSaved }: {
       setEnabled(view.enabled);
       setMinSize(String(view.minSize));
       setMaxSize(String(view.maxSize));
-      setDeadline(toLocalInput(view.deadline));
+      const local = toLocalInput(view.deadline);
+      setDeadlineDate(local.slice(0, 10));
+      setDeadlineTime(local.slice(11, 16) || "00:00");
+      setDateValid(true);
     }, (e) => { if (active) setError(proposalErrorText(e, "Không tải được cài đặt.")); });
     return () => { active = false; };
   }, [classId]);
 
   const save = async () => {
-    if (!loaded) return;
+    if (!loaded || !dateValid) return;
+    const deadline = deadlineDate ? `${deadlineDate}T${deadlineTime || "00:00"}` : "";
     const checked = validateFormation({ enabled, minSize, maxSize, deadline });
     setErrors(checked);
     if (Object.keys(checked).length > 0) return;
@@ -66,7 +72,7 @@ export function SelfGroupingSettingsDialog({ classId, onClose, onSaved }: {
 
   return (
     <Dialog open title="Sinh viên tự chia nhóm" onClose={onClose} dismissible={!busy}
-      footer={<Button variant="primary" disabled={busy || !loaded} onClick={() => void save()} data-testid="formation-save">Lưu</Button>}>
+      footer={<Button variant="primary" disabled={busy || !loaded || !dateValid} onClick={() => void save()} data-testid="formation-save">Lưu</Button>}>
       {!loaded && !error ? (
         <p role="status" className="text-[13px] text-muted">Đang tải cài đặt…</p>
       ) : (
@@ -88,8 +94,15 @@ export function SelfGroupingSettingsDialog({ classId, onClose, onSaved }: {
             </Field>
           </div>
           <Field label="Hạn chót (tùy chọn, giờ Việt Nam)" htmlFor={`${fieldId}-deadline`} error={errors.deadline}>
-            <TextInput id={`${fieldId}-deadline`} type="datetime-local" value={deadline} invalid={!!errors.deadline} disabled={busy}
-              onChange={(event) => { setDeadline(event.target.value); setErrors({}); }} data-testid="formation-deadline" />
+            <div className="flex gap-2">
+              <DateInput id={`${fieldId}-deadline`} value={deadlineDate} invalid={!!errors.deadline}
+                disabled={busy} wrapperClassName="flex-1" onValidityChange={setDateValid}
+                onChange={(date) => { setDeadlineDate(date); setErrors({}); }} data-testid="formation-deadline" />
+              <TextInput type="time" aria-label="Hạn chót (giờ)" value={deadlineTime}
+                disabled={busy} wrapperClassName="w-28"
+                onChange={(event) => { setDeadlineTime(event.target.value); setErrors({}); }}
+                data-testid="formation-deadline-time" />
+            </div>
           </Field>
           <p className="text-xs text-muted">Đề xuất đang chờ duyệt vẫn duyệt được sau khi đóng đợt.</p>
         </form>

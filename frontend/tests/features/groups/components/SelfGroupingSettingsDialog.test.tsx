@@ -30,7 +30,8 @@ describe("SelfGroupingSettingsDialog", () => {
 
     fireEvent.click(await screen.findByRole("switch"));
     fireEvent.change(screen.getByTestId("formation-max"), { target: { value: "4" } });
-    fireEvent.change(screen.getByTestId("formation-deadline"), { target: { value: "2099-11-20T10:00" } });
+    fireEvent.change(screen.getByTestId("formation-deadline"), { target: { value: "20/11/2099" } });
+    fireEvent.change(screen.getByTestId("formation-deadline-time"), { target: { value: "10:00" } });
     fireEvent.click(screen.getByTestId("formation-save"));
 
     await waitFor(() => expect(onSaved).toHaveBeenCalledWith(saved));
@@ -48,6 +49,19 @@ describe("SelfGroupingSettingsDialog", () => {
 
     expect(await screen.findByText("Tối đa phải lớn hơn hoặc bằng tối thiểu.")).toBeInTheDocument();
     expect(calls.some((c) => c.method === "PUT")).toBe(false);
+  });
+
+  it("does not save an invalid optional deadline as null; clearing it deliberately is allowed", async () => {
+    const calls = stub(() => json(VIEW));
+    render(<SelfGroupingSettingsDialog classId="c1" onClose={vi.fn()} onSaved={vi.fn()} />);
+    const input = await screen.findByTestId("formation-deadline");
+    fireEvent.change(input, { target: { value: "31/04/2099" } });
+    expect(screen.getByTestId("formation-save")).toBeDisabled();
+    fireEvent.submit(input.closest("form")!);
+    expect(calls.some((call) => call.method === "PUT")).toBe(false);
+    fireEvent.change(input, { target: { value: "" } });
+    fireEvent.click(screen.getByTestId("formation-save"));
+    await waitFor(() => expect(calls.at(-1)).toMatchObject({ method: "PUT", body: { deadline: null } }));
   });
 
   it("server từ chối thì hiện thông điệp của server", async () => {

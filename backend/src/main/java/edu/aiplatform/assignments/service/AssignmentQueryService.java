@@ -39,6 +39,12 @@ public class AssignmentQueryService implements IAssignmentQuery {
     }
 
     @Override
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public void lockSubmission(UUID assignmentId) {
+        assignments.lockSubmission(assignmentId);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<AssignmentContent> getContent(UUID assignmentId) {
         return assignments.find(assignmentId).map(a -> new AssignmentContent(a.id(), a.versionNo(), a.instructions(),
