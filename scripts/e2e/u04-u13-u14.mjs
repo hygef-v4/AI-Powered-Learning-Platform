@@ -184,6 +184,7 @@ async function main() {
       code: `E2E-${runId}`.toUpperCase(),
       name: `E2E ${runId}`,
       description: "isolated API E2E",
+      startsOn: new Date().toISOString().slice(0, 10),
       teacherId,
     }),
     201,
