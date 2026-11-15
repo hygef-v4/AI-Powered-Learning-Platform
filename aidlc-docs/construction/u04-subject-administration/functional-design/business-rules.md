@@ -51,3 +51,13 @@ Mỗi rule có mã `BR-U04-xx` để truy vết sang test. Mã giữ như U04 c�
 ## Chẩn đoán lỗi 500 ngoài dự kiến — 2026-11-09
 
 SubjectExceptionHandler.unexpected giữ response SUBJECT_INTERNAL_ERROR chung cho client, đồng thời ghi exception vào log server để chẩn đoán. Không gửi stack trace hoặc nội dung lỗi nội bộ cho frontend. Lượt lỗi local được khôi phục sau restart backend; người dùng xác nhận tải được môn học. Vì không có stack của lỗi gốc, không coi restart là bằng chứng về nguyên nhân code/dữ liệu/CSP. [Bằng chứng và giới hạn](../../build-and-test/2026-11-09-admin-subjects-runtime-diagnosis.md).
+
+
+## Học kỳ của lớp — 2026-11-14 (D-U04-05)
+
+Quyết định D-U04-05 thay D-U04-04: lớp có học kỳ suy ra từ Ngày bắt đầu, dùng để lọc lớp; U05 sở hữu dữ liệu và quy tắc (BR-U05-61…72, [yêu cầu CT-01…09](../../../inception/requirements/2026-11-14-class-term.md)). Phần của U04 chỉ là hiển thị:
+
+- `SubjectClassSummary` (đọc qua `ISubjectClasses.listClassesOfSubject`) thêm `term`.
+- Tab Lớp học trong chi tiết môn của Admin (`SubjectClassesTable`) có cột Học kỳ sau Mã lớp. Không thêm bộ lọc học kỳ ở màn này.
+- Mã lớp có thể lặp giữa các học kỳ của cùng môn, nên cột Học kỳ là cách phân biệt hai lớp cùng mã.
+- U04 không có chức năng quản lý học kỳ.
