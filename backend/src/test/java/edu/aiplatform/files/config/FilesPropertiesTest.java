@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 class FilesPropertiesTest {
 
     private static FilesProperties props(String key, String sharedDrive, String clientId, String secret, String token) {
-        return new FilesProperties("secret", false, null, null, key, sharedDrive, clientId, secret, token);
+        return new FilesProperties("secret", false, null, null, key, sharedDrive, clientId, secret, token, null, null);
     }
 
     @Test

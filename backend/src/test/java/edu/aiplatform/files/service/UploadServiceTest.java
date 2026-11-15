@@ -63,7 +63,7 @@ class UploadServiceTest {
         when(settings.get(any())).thenReturn(Optional.empty());
         storage = spy(new LocalFolderStorageAdapter(dir.resolve("store")));
         FilesProperties props = new FilesProperties("secret-of-at-least-32-bytes-long!!", false, null,
-                dir.resolve("tmp").toString(), null, null, null, null, null);
+                dir.resolve("tmp").toString(), null, null, null, null, null, null, null);
         signer = new FileRefSigner(props, new ObjectMapper());
         service = new UploadService(authorization, new PurposePolicy(settings), new ContentInspector(), storage, signer,
                 fileAudit, jobs, clock, props);
@@ -166,7 +166,7 @@ class UploadServiceTest {
         IStorage down = mock(IStorage.class);
         when(down.available()).thenReturn(false);
         FilesProperties props = new FilesProperties("secret-of-at-least-32-bytes-long!!", false, null,
-                dir.resolve("tmp").toString(), null, null, null, null, null);
+                dir.resolve("tmp").toString(), null, null, null, null, null, null, null);
         UploadService offline = new UploadService(authorization, new PurposePolicy(settings), new ContentInspector(),
                 down, signer, fileAudit, jobs, clock, props);
 
