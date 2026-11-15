@@ -81,7 +81,7 @@ describe("AiUsageHistoryPage", () => {
     await screen.findByText("Chưa có lượt sử dụng nào trong khoảng này.");
 
     fireEvent.click(screen.getByRole("tab", { name: "Agent MCP" }));
-    fireEvent.change(screen.getByLabelText("Từ ngày"), { target: { value: "2026-10-01" } });
+    fireEvent.change(screen.getByLabelText("Từ ngày"), { target: { value: "01/10/2026" } });
 
     await waitFor(() => {
       const last = new URL(String(fetchMock.mock.calls.filter(([u]) => String(u).startsWith("/api/v1/me/ai-usage")).at(-1)![0]), "http://x");

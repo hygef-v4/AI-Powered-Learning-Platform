@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, Field, TextInput } from "@/shared/ui";
+import { Alert, Button, DateInput, Field, TextInput } from "@/shared/ui";
 import { errorMessage, fromLocalInput, toLocalInput } from "../model/format";
 import type { AssignmentDetail, ScheduleInput } from "../model/types";
 
@@ -29,8 +29,8 @@ function DateTime({ id, label, value, disabled, onChange }: { id: string; label:
   return (
     <Field label={label} htmlFor={id}>
       <div className="flex gap-2">
-        <TextInput id={id} type="date" aria-label={`${label} (ngày)`} value={value.date} disabled={disabled} wrapperClassName="flex-1"
-          onChange={(e) => onChange({ ...value, date: e.target.value })} />
+        <DateInput id={id} aria-label={`${label} (ngày)`} value={value.date} disabled={disabled} wrapperClassName="flex-1"
+          onChange={(date) => onChange({ ...value, date })} />
         <TextInput type="time" aria-label={`${label} (giờ)`} value={value.time} disabled={disabled} wrapperClassName="w-28"
           onChange={(e) => onChange({ ...value, time: e.target.value })} />
       </div>

@@ -3,7 +3,7 @@
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useEffect, useRef, useState } from "react";
 import { PROVIDER_LABEL, formatDateTime, formatMaybeTokens, formatTokens, type SourceOption } from "@/shared/ai";
-import { Alert, PageNav, Pill, Segmented, SettingsCard, SettingsGroup, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
+import { Alert, DateInput, PageNav, Pill, Segmented, SettingsCard, SettingsGroup, TableFrame, Td, Th, cx } from "@/shared/ui";
 import { getSources, getUsage } from "../api";
 import { OUTCOME_LABEL, SOURCE_LABEL, TASK_LABEL } from "../model/labels";
 import type { UsagePage, UsageQuery, UsageSource } from "../model/types";
@@ -185,7 +185,7 @@ function DateBox({ id, label, value, invalid = false, onChange }: { id: string; 
       <label htmlFor={id} className="absolute bottom-full left-0 mb-1 text-xs font-semibold whitespace-nowrap text-body">
         {label}
       </label>
-      <TextInput id={id} type="date" value={value} invalid={invalid} onChange={(e) => onChange(e.target.value)} />
+      <DateInput id={id} value={value} invalid={invalid} onChange={onChange} />
     </div>
   );
 }
