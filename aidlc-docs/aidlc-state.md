@@ -1,5 +1,19 @@
 # AI-DLC State Tracking
 
+## U05 (kèm U04) — Học kỳ của lớp, 2026-11-14
+
+Lớp có Ngày bắt đầu bắt buộc; học kỳ (SP/SU/FA + 2 số năm, thêm `-BL5` nếu bắt đầu tháng 4/8/12) do hệ thống tính và dùng để lọc lớp. Không có chức năng quản lý học kỳ. Mã lớp duy nhất theo môn và học kỳ. Quyết định D-U04-05 thay D-U04-04. Nhánh hiện tại `fix/term`. Brownfield, dùng lại tài liệu reverse engineering hiện hành. [Câu hỏi xác nhận](inception/requirements/2026-11-14-class-term-questions.md); [yêu cầu CT-01…09](inception/requirements/2026-11-14-class-term.md).
+
+- [x] Workspace Detection: brownfield, bỏ qua Reverse Engineering.
+- [x] Requirements Analysis (Standard): CT-01…09, G1–G4; người dùng duyệt 2026-11-14T15:48:47Z.
+- [x] User Stories: SKIP (mở rộng nhỏ trên luồng lớp có sẵn, không thêm persona).
+- [x] Workflow Planning: [execution plan](inception/plans/2026-11-14-class-term-execution-plan.md), người dùng duyệt 2026-11-14T15:51:26Z. Chạy Functional Design U05 (kèm U04), Code Generation, Build and Test; bỏ qua Application Design, Units Generation, NFR Requirements/Design, Infrastructure Design.
+- [x] Functional Design U05 (kèm U04): [kế hoạch 6 bước, 6 câu hỏi](construction/plans/functional-design-plan/2026-11-14-u05-class-term-functional-design-plan.md), A cả 6 câu (2026-11-14T15:54:26Z). Đã viết BR-U05-61…72 (sửa BR-U05-11/13), F17–F20, `ClassTermPolicy`, frontend học kỳ; phần U04 (`SubjectClassSummary.term`) và U07 (`CopySource.term`). Security/Resiliency tuân thủ. Người dùng duyệt 2026-11-14T16:00:54Z.
+- [x] Code Generation: Part 1 [kế hoạch 20 bước](construction/plans/code-generation-plan/2026-11-14-u05-class-term-code-generation-plan.md) người dùng duyệt 2026-11-14T16:05:52Z; Part 2 xong 20/20 bước (2026-11-15T02:21:55Z), [tóm tắt](construction/u05-class-enrollment/code/2026-11-14-class-term-summary.md). Backend 2426 test qua (gồm integration test có Docker), frontend tsc/eslint sạch, Vitest 540 test phần liên quan qua (timeout 60 giây). Chưa commit. Người dùng duyệt mã 2026-11-15T02:29:40Z.
+- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-15-class-term-results.md). Backend `mvn -o -B verify` 2.426 test qua (gồm PostgreSQL); frontend lint/tsc sạch, build qua, Vitest 1.082/1.092 khi chạy cả bộ lúc máy tải nặng (10 test timeout 5 giây, chạy lại riêng hoặc với timeout 60 giây thì qua). Stack riêng `classterm`: API 21/21 qua, thử trên trình duyệt với Chủ nhiệm môn, giảng viên, sinh viên. Chưa commit. Người dùng duyệt 2026-11-15T03:05:31Z. Kiểm bổ sung 2026-11-15: thêm Admin, popup thông báo, trang Bài tập sinh viên, Đề có sẵn; e2e `u04-u13-u14` 40/40, các bộ khác lỗi không liên quan học kỳ (`ASSIGNMENT_NOT_FINALIZED` ở script U12, cấu hình AI, thứ tự chạy). Đã sửa script U12 thêm bước Hoàn tất: `u12b` 36/36, `u12c` 20/20, `u12` 58/59 (dữ liệu lần chạy trước).
+- [x] Operations: giai đoạn giữ chỗ, không có bước nào; triển khai theo quy trình merge vào `staging` hiện có.
+- Extension: Security và Resiliency giữ phạm vi đã duyệt, PBT tắt.
+
 ## U01 (kèm U05/U09/U11/U12) — Mã số sinh viên, 2026-11-13
 
 Thêm MSSV (2 chữ cái in hoa + 6 chữ số) cho tài khoản `STUDENT`, ghi danh bằng MSSV. Không có chức năng đổi mã (chỉ sửa khi tài khoản còn `PENDING`), không có bộ lọc sinh viên chưa có mã (người dùng thu hẹp phạm vi 2026-11-13). Ngày 2026-11-14 bỏ thêm chức năng gán MSSV cho tài khoản cũ (F16), cột vẫn cho phép trống. Nhánh hiện tại `fix/student-code`. Brownfield, dùng lại tài liệu reverse engineering hiện hành. [Câu hỏi xác nhận](inception/requirements/2026-11-13-student-code-questions.md); [yêu cầu SC-01…11](inception/requirements/2026-11-13-student-code.md).

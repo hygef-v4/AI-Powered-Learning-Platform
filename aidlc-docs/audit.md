@@ -14127,3 +14127,216 @@ tôi đã trả lời các câu hỏi, câu trả lời nằm ở sau câu hỏi
 **Context**: Giao nhánh hoàn tất.
 
 ---
+
+## Đề xuất học kỳ cho lớp — phân tích ban đầu
+**Timestamp**: 2026-11-14T15:22:15Z
+**Requested by:** Hải Nam
+**User Input**: "tôi muốn thêm trường học kỳ cho lớp, mục đích để lọc lớp theo kỳ. Tôi không muốn thêm các chức năng về quản lý học kỳ, hãy đề xuất phương hướng sửa cho tôi"
+**AI Response**: "Đọc CourseClass, migration lớp (gồm V20261107_2200__remove_class_term.sql theo D-U04-04, commit b49bcc38), AcademicsController/Service list API (q, status), ClassListPage và ClassDashboardPage (lọc phía client). Đề xuất: thêm lại cột term nullable dạng mã chuẩn hóa (năm học + kỳ), không có bảng/màn quản lý học kỳ; bộ lọc lấy giá trị từ các lớp hiện có; thêm tham số term tùy chọn cho 3 API list. Cần quyết định mới thay thế D-U04-04 và trả lời câu hỏi về định dạng, bắt buộc hay không, và ràng buộc mã lớp. Chưa sửa code."
+**Context**: Requirements Analysis — đề xuất hướng, chờ người dùng chọn.
+
+---
+
+## Học kỳ lớp — trả lời câu hỏi 1–3
+**Timestamp**: 2026-11-14T15:32:28Z
+**Requested by:** Hải Nam
+**User Input**: "1. Định dạng: mã chuẩn `YYYY-YYYY.N` (mặc định), hay chữ tự do? - Mã sẽ là 1 trong 3 kỳ SP/SU/FA + 2 chữ số biểu thị năm học (VD: Spring 2027 là SP27)
+2. Bắt buộc hay không: bắt buộc khi tạo lớp mới, còn lớp cũ được để trống (mặc định); hay để tùy chọn hoàn toàn? - Tôi muốn khi tạo lớp, lớp bắt đầu vào thời gian nào thì tự động có trường Học kỳ cho lớp đó; quy định: Tháng 1-4: SP, Tháng 5-8: SU, Tháng 9-12: FA, lớp bắt đầu vào các tháng 4, 8, 12 ở đằng sau mã kỳ có thêm BL5 ngăn cách bằng dấu "- "để biểu hiện lớp block 5. Ví dụ lớp bắt đầu vào 3 tháng 4 năm 2027 sẽ có mã học kỳ là SP27-BL5.
+3. Mã lớp có được lặp giữa các kỳ không? Hiện mã lớp là duy nhất trong mỗi môn, theo ràng buộc `UNIQUE (subject_id, code)`.
+   * Mặc định là giữ nguyên ràng buộc này, đúng ý “chỉ để lọc”.
+   * Nếu muốn mỗi kỳ dùng lại cùng mã lớp, phải đổi ràng buộc thành `(subject_id, term, code)`. Khi đó còn phải xem lại luật “sinh viên không được ở hai lớp cùng môn”, vì sinh viên học lại ở kỳ sau sẽ bị chặn. - Tôi chọn mã lớp có thể dùng lại qua các kỳ
+
+Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi dấu "-" rồi"
+**AI Response**: "Ghi nhận Q1–Q3 vào aidlc-docs/inception/requirements/2026-11-14-class-term-questions.md. Kiểm tra: lớp chưa có ngày bắt đầu (chỉ created_at); luật ENROLLMENT_CONFLICT (EnrollmentRepository.conflictingStudents) chặn sinh viên ACTIVE ở lớp khác cùng môn chưa lưu trữ khi mở lớp; CLASS_EXISTS dựa trên UNIQUE (subject_id, code); PostgreSQL 16. Thêm câu hỏi Q4–Q8 (nguồn ngày bắt đầu, sửa ngày bắt đầu, lớp cũ, luật trùng ghi danh, nơi hiển thị học kỳ) kèm khuyến nghị. Chưa sửa code."
+**Context**: Requirements Analysis — làm rõ học kỳ lớp.
+
+---
+
+## Học kỳ lớp — trả lời câu hỏi 4–8
+**Timestamp**: 2026-11-14T15:44:43Z
+**Requested by:** Hải Nam
+**User Input**: "Theo khuyến nghị"
+**AI Response**: "Ghi Q4–Q8 = A vào 2026-11-14-class-term-questions.md: thêm Ngày bắt đầu bắt buộc, học kỳ tự tính; sửa được khi chưa lưu trữ và tính lại; migration gán ngày bắt đầu = ngày tạo cho lớp cũ; giữ luật ENROLLMENT_CONFLICT/IN_OTHER_CLASS; hiện học kỳ cạnh mã lớp ở mọi nhãn chọn lớp. Viết yêu cầu CT-01…09 (quyết định D-U04-05 thay D-U04-04) trong 2026-11-14-class-term.md, cập nhật aidlc-state.md, trình duyệt yêu cầu."
+**Context**: Requirements Analysis — chốt câu hỏi, viết yêu cầu.
+
+---
+
+## Học kỳ lớp — trình duyệt yêu cầu
+**Timestamp**: 2026-11-14T15:44:43Z
+**Requested by:** Hải Nam
+**User Input**: "(chưa có — lời nhắc duyệt)"
+**AI Response**: "Requirements Analysis Complete. Trình duyệt aidlc-docs/inception/requirements/2026-11-14-class-term.md (CT-01…09, G1–G4, NFR-CT-01…07). Lựa chọn: Request Changes, Add User Stories, Approve & Continue sang Workflow Planning."
+**Context**: Requirements Analysis — lời nhắc duyệt.
+
+---
+
+## Học kỳ lớp — duyệt yêu cầu
+**Timestamp**: 2026-11-14T15:48:47Z
+**Requested by:** Hải Nam
+**User Input**: "Approve & Continue"
+**AI Response**: "Ghi nhận duyệt CT-01…09 và G1–G4; bỏ qua User Stories. Chuyển sang Workflow Planning: viết aidlc-docs/inception/plans/2026-11-14-class-term-execution-plan.md và trình duyệt."
+**Context**: Requirements Analysis hoàn tất → Workflow Planning.
+
+---
+
+## Học kỳ lớp — trình duyệt kế hoạch thực hiện
+**Timestamp**: 2026-11-14T15:48:47Z
+**Requested by:** Hải Nam
+**User Input**: "(chưa có — lời nhắc duyệt)"
+**AI Response**: "Workflow Planning Complete. Trình duyệt aidlc-docs/inception/plans/2026-11-14-class-term-execution-plan.md: chạy Functional Design U05 kèm U04, Code Generation, Build and Test; bỏ qua Reverse Engineering, User Stories, Application Design, Units Generation, NFR Requirements/Design, Infrastructure Design. Rủi ro trung bình (migration backfill + đổi ràng buộc duy nhất, API tạo/sửa lớp bắt buộc startsOn). Lựa chọn: Request Changes, Add Skipped Stages, Approve & Continue sang Functional Design."
+**Context**: Workflow Planning — lời nhắc duyệt.
+
+---
+
+## Học kỳ lớp — duyệt kế hoạch thực hiện
+**Timestamp**: 2026-11-14T15:51:26Z
+**Requested by:** Hải Nam
+**User Input**: "Approve & Continue"
+**AI Response**: "Ghi nhận duyệt execution plan. Bắt đầu Functional Design U05 kèm U04: đọc tài liệu functional design U05/U04, lập kế hoạch có câu hỏi."
+**Context**: Workflow Planning hoàn tất → Functional Design.
+
+---
+
+## Học kỳ lớp — kế hoạch Functional Design
+**Timestamp**: 2026-11-14T15:51:26Z
+**Requested by:** Hải Nam
+**User Input**: "(chưa có — câu hỏi Functional Design)"
+**AI Response**: "Tạo aidlc-docs/construction/plans/functional-design-plan/2026-11-14-u05-class-term-functional-design-plan.md: 6 bước và 6 câu hỏi (giá trị ban đầu ô Ngày bắt đầu, xác nhận khi đổi học kỳ, chỗ khác hiện học kỳ, nguồn danh sách học kỳ trong bộ lọc, tìm theo học kỳ, cách hiện học kỳ trong nhãn lớp), mỗi câu có khuyến nghị. Chờ trả lời."
+**Context**: Functional Design U05 kèm U04 — Part 1 lập kế hoạch.
+
+---
+
+## Học kỳ lớp — trả lời câu hỏi Functional Design
+**Timestamp**: 2026-11-14T15:54:26Z
+**Requested by:** Hải Nam
+**User Input**: "Theo khuyến nghị"
+**AI Response**: "Ghi Q1–Q6 = A vào kế hoạch Functional Design. Không có câu trả lời mơ hồ. Viết tài liệu functional design U05 (domain-entities, business-rules BR-U05-61…, business-logic-model, frontend-components) và phần sửa U04."
+**Context**: Functional Design U05 kèm U04 — Part 2 sinh tài liệu.
+
+---
+
+## Học kỳ lớp — Functional Design hoàn tất, trình duyệt
+**Timestamp**: 2026-11-14T15:59:05Z
+**Requested by:** Hải Nam
+**User Input**: "(chưa có — lời nhắc duyệt)"
+**AI Response**: "Functional Design Complete - U05 kèm U04. Cập nhật U05 domain-entities (ClassTermPolicy, ràng buộc dữ liệu, ClassRef.term), business-rules (sửa BR-U05-11/13, thêm BR-U05-61…72), business-logic-model (F17–F20), frontend-components (TermFilter, ClassFormDialog, ClassInfoForm, ClassLabel, bộ lọc ở ClassListPage/ClassDashboardPage, hộp chọn lớp nguồn); U04 domain-entities/business-rules/frontend-components (SubjectClassSummary.term, cột Học kỳ); U07 CopySource.term. Security/Resiliency tuân thủ hoặc N/A; PBT tắt. Lựa chọn: Request Changes hoặc Continue to Next Stage (Code Generation)."
+**Context**: Functional Design U05 kèm U04 — lời nhắc duyệt.
+
+---
+
+## Học kỳ lớp — duyệt Functional Design
+**Timestamp**: 2026-11-14T16:00:54Z
+**Requested by:** Hải Nam
+**User Input**: "Continue to Next Stage"
+**AI Response**: "Ghi nhận duyệt Functional Design U05 kèm U04. Bắt đầu Code Generation Part 1: đọc code-generation.md, code-conventions.md, lập kế hoạch sinh code."
+**Context**: Functional Design hoàn tất → Code Generation.
+
+---
+
+## Học kỳ lớp — kế hoạch Code Generation, trình duyệt
+**Timestamp**: 2026-11-14T16:04:25Z
+**Requested by:** Hải Nam
+**User Input**: "(chưa có — lời nhắc duyệt)"
+**AI Response**: "Tạo aidlc-docs/construction/plans/code-generation-plan/2026-11-14-u05-class-term-code-generation-plan.md: 20 bước (ClassTermPolicy, CourseClass, migration V20261114_1100 với term là cột generated, test migration, repository, service, contract, controller, MCP, U04/U07/U08/U14 thêm trường học kỳ, frontend model/UI/form/list/sidebar, e2e, tài liệu, kiểm tra nhắm phạm vi). Đọc code-conventions.md. Chờ duyệt kế hoạch."
+**Context**: Code Generation Part 1 — lời nhắc duyệt.
+
+---
+
+## Học kỳ lớp — duyệt kế hoạch Code Generation
+**Timestamp**: 2026-11-14T16:05:52Z
+**Requested by:** Hải Nam
+**User Input**: "Duyệt, viết code"
+**AI Response**: "Ghi nhận duyệt kế hoạch 20 bước. Bắt đầu Code Generation Part 2 theo đúng thứ tự kế hoạch."
+**Context**: Code Generation Part 1 hoàn tất → Part 2.
+
+---
+
+## Học kỳ lớp — tiếp tục Code Generation Part 2 sau khi bị ngắt
+**Timestamp**: 2026-11-15T02:03:02Z
+**Requested by:** Hải Nam
+**User Input**: "tiếp tục phần còn dở"
+**AI Response**: "Bước 1–18 đã làm (backend, frontend, e2e script). Tiếp tục bước 19 (tài liệu code) và bước 20 (kiểm tra: chạy toàn bộ test backend, tsc, eslint, Vitest phần đã sửa), rồi cập nhật kế hoạch, aidlc-state và trình kết quả Code Generation."
+**Context**: Code Generation Part 2 — tiếp tục bước 19–20.
+
+---
+
+## Học kỳ lớp — Code Generation Part 2 hoàn tất, trình duyệt
+**Timestamp**: 2026-11-15T02:21:55Z
+**Requested by:** Hải Nam
+**User Input**: "(chưa có — lời nhắc duyệt)"
+**AI Response**: "Xong 20/20 bước kế hoạch. Backend: ClassTermPolicy, CourseClass.startsOn và term() suy ra, migration V20261114_1100 (starts_on, term generated, khóa duy nhất theo môn–học kỳ–mã), repository/service/controller/MCP lọc theo term, contract và U07/U08/U14 có học kỳ. Frontend: term.ts, TermFilter, ClassLabel có học kỳ, form tạo/sửa lớp có Ngày bắt đầu và xem trước học kỳ, lọc học kỳ ở danh sách lớp, cột Học kỳ ở bảng lớp của môn. E2E script gửi startsOn. Tóm tắt: aidlc-docs/construction/u05-class-enrollment/code/2026-11-14-class-term-summary.md. Kiểm tra: mvn -o test 2426 test qua, 0 bỏ qua; tsc, eslint sạch; Vitest 540 test qua (timeout 60 giây). Khác thiết kế: học kỳ đặt cạnh mã lớp thay vì nối vào tiêu đề; CreateQuizDialog chưa hiện học kỳ vì không có thông tin lớp nguồn. Chưa chạy e2e, chưa kiểm trên trình duyệt, chưa commit. Chờ duyệt: Request Changes hoặc Continue to Next Stage (Build and Test)."
+**Context**: Code Generation Part 2 — lời nhắc duyệt.
+
+---
+
+## Học kỳ lớp — duyệt Code Generation, bắt đầu Build and Test
+**Timestamp**: 2026-11-15T02:29:40Z
+**Requested by:** Hải Nam
+**User Input**: "Continue to Next Stage"
+**AI Response**: "Ghi nhận duyệt mã. Bắt đầu Build and Test: chạy mvn -o -B verify, npm run lint, tsc, vitest run toàn bộ, npm run build; ghi kết quả vào aidlc-docs/construction/build-and-test/2026-11-15-class-term-results.md."
+**Context**: Code Generation hoàn tất → Build and Test.
+
+---
+
+## Học kỳ lớp — Build and Test hoàn tất, trình duyệt
+**Timestamp**: 2026-11-15T03:03:41Z
+**Requested by:** Hải Nam
+**User Input**: "(chưa có — lời nhắc duyệt)"
+**AI Response**: "Tạo aidlc-docs/construction/build-and-test/2026-11-15-class-term-results.md. mvn -o -B verify: 2426 test qua, 0 skipped. npm run lint, tsc, npm run build qua. vitest run cả bộ: 1082/1092, 10 test timeout 5 giây khi máy đang chạy mvn verify; chạy lại riêng và với timeout 60 giây thì qua. Dựng stack riêng classterm (cổng 29088), migration 20261114.1100 áp dụng, ràng buộc và cột generated có đủ; seed.mjs kiểm API 21/21 qua; thử trên trình duyệt: lọc học kỳ và URL classTerm, popup Tạo lớp (bắt buộc ngày, xem trước học kỳ, lỗi trùng mã), sửa ngày hiện cũ → mới, dashboard giảng viên, sidebar, trang lớp của sinh viên. Chưa thử trên trình duyệt trang Admin, popup thông báo, trang bài tập sinh viên, ô Đề có sẵn. Stack classterm vẫn chạy. Chưa commit. Hỏi: Build and test instructions complete. Ready to proceed to Operations stage?"
+**Context**: Build and Test — lời nhắc duyệt.
+
+---
+
+## Học kỳ lớp — duyệt Build and Test, Operations
+**Timestamp**: 2026-11-15T03:05:31Z
+**Requested by:** Hải Nam
+**User Input**: "Sang Operations"
+**AI Response**: "Ghi nhận duyệt Build and Test. Operations là giai đoạn giữ chỗ, không có bước nào; triển khai theo quy trình merge vào staging hiện có. Đánh dấu hoàn tất workflow học kỳ lớp trong aidlc-state.md. Chưa commit; stack classterm vẫn chạy."
+**Context**: Build and Test hoàn tất → Operations (giữ chỗ). Workflow kết thúc.
+
+---
+
+## Học kỳ lớp — kiểm thêm trên trình duyệt và chạy e2e
+**Timestamp**: 2026-11-15T03:07:18Z
+**Requested by:** Hải Nam
+**User Input**: "kiểm trên trình duyệt và e2e"
+**AI Response**: "Kiểm nốt trên trình duyệt (bảng lớp của môn ở trang Admin, popup tạo thông báo, ô lọc lớp ở trang Bài tập của sinh viên, ô Đề có sẵn khi tạo bài tập) và chạy các script e2e trong scripts/e2e/ trên stack classterm; ghi kết quả vào 2026-11-15-class-term-results.md."
+**Context**: Sau Build and Test — kiểm bổ sung theo yêu cầu.
+
+---
+
+## Học kỳ lớp — kết quả kiểm trên trình duyệt và e2e
+**Timestamp**: 2026-11-15T03:16:30Z
+**Requested by:** Hải Nam
+**User Input**: "kiểm trên trình duyệt và e2e"
+**AI Response**: "Đã kiểm trên trình duyệt (stack classterm): bảng lớp của môn ở Admin có cột Học kỳ; ô chọn lớp ở popup Tạo thông báo, ô lọc lớp ở trang Bài tập của sinh viên và ô Đề có sẵn đều ghi học kỳ. E2E: u04-u13-u14 40/40, u12-notify 3/3, u02 15/16, u06 24/25; u12, u12b, u12c dừng vì 409 ASSIGNMENT_NOT_FINALIZED (script chưa gọi bước Hoàn tất, bắt buộc từ 2026-11-11); u06b dừng ở bước kết nối AI. Không lỗi nào liên quan học kỳ. Ghi vào 2026-11-15-class-term-results.md và aidlc-state.md. Không sửa mã, không commit."
+**Context**: Sau Build and Test — kiểm bổ sung hoàn tất.
+
+---
+
+## Học kỳ lớp — sửa script e2e U12 thiếu bước Hoàn tất
+**Timestamp**: 2026-11-15T03:20:12Z
+**Requested by:** Hải Nam
+**User Input**: "Yes, fix them"
+**AI Response**: "Thêm bước POST /assignments/{id}/review (Hoàn tất) trước khi phát hành bài nhóm trong scripts/e2e/u12.mjs, u12b.mjs, u12c.mjs; chạy lại các bộ này trên stack classterm."
+**Context**: Sau Build and Test — sửa script e2e theo câu hỏi ở bước kiểm bổ sung.
+
+---
+
+## Học kỳ lớp — kết quả sửa script e2e U12
+**Timestamp**: 2026-11-15T03:31:40Z
+**Requested by:** Hải Nam
+**User Input**: "Yes, fix them"
+**AI Response**: "Đã thêm bước Hoàn tất (POST /assignments/{id}/review, kiểm 200) trước khi phát hành trong u12.mjs, u12b.mjs, u12c.mjs. Chạy lại trên stack classterm: u12b 36/36, u12c 20/20, u12 58/59. Lỗi còn lại U12-02 là do lần chạy trước đã chia hết sinh viên của SE-TEST1 vào nhóm; ở lần chạy đầu trên lớp mới bước này qua. Ghi vào 2026-11-15-class-term-results.md và aidlc-state.md. Chưa commit."
+**Context**: Sau Build and Test — sửa script e2e hoàn tất.
+
+---
+
+## Học kỳ lớp — commit lên nhánh
+**Timestamp**: 2026-11-15T03:36:05Z
+**Requested by:** Hải Nam
+**User Input**: "chia thành các commit nhỏ, commit lên branch"
+**AI Response**: "Chia thay đổi học kỳ lớp thành các commit nhỏ trên nhánh fix/term: backend academics (ngày bắt đầu, học kỳ, migration, lọc), backend nhãn lớp ở U07/U08/U14, frontend academics và ô dùng chung, frontend các module khác, script e2e gửi startsOn, script e2e U12 thêm bước Hoàn tất, tài liệu AIDLC. Không push."
+**Context**: Sau Build and Test — commit theo yêu cầu.
+
+---
