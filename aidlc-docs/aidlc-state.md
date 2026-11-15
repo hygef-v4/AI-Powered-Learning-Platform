@@ -1,5 +1,21 @@
 # AI-DLC State Tracking
 
+## U09 — giữ bản nháp khi refresh lỗi, 2026-11-15
+
+Sửa P2 đã xác nhận trong review PR #87 theo yêu cầu người dùng, tiếp tục thiết kế
+chấm cá nhân cạnh bài nhóm đã duyệt. Nhánh `fix/grading-member-drafts`.
+[Kế hoạch](construction/plans/code-generation-plan/2026-11-15-member-draft-refresh-fix.md),
+[kết quả](construction/build-and-test/2026-11-15-member-draft-refresh-fix.md).
+
+- [x] Phạm vi/diagnosis: form bị unmount do `members: []` sau save nhóm/refresh lỗi.
+- [x] Code Generation: test RED rồi giữ members và khóa `editable` trong hook.
+- [x] Kiểm chứng: 306/306 test trong 33 file liên quan qua; ESLint sạch; typecheck
+  src/tests qua bằng config tạm loại cache Next cũ. Typecheck mặc định còn lỗi cache.
+- [x] Tự review và tài liệu. Security/Resiliency giữ phạm vi đã duyệt; PBT tắt.
+
+Không đổi backend/schema. Commit cục bộ theo yêu cầu tiếp theo; chưa push/merge/deploy. Không mở lại requirement
+hoặc design vì đây là sửa lỗi so với yêu cầu giữ draft hiện có.
+
 ## U04/U13/U14 — áp dụng quy ước mã nguồn, 2026-11-15
 
 Refactor đặt tên và trình bày theo [code-conventions.md](construction/code-conventions.md) sau lần rà soát cùng ngày; không đổi hành vi, URL, JSON, schema. Nhánh `fix/code-conventions-u04-u13-u14`. Brownfield, dùng lại tài liệu reverse engineering hiện hành. [Câu hỏi xác nhận](inception/requirements/2026-11-15-u04-u13-u14-conventions-questions.md).

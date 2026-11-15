@@ -14538,3 +14538,30 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **Context**: Commit cục bộ, không push.
 
 ---
+
+## Review PR staging lên main — PR 87
+**Timestamp**: 2026-11-15T13:37:25Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi review pr trên đã thay đổi gì, có vấn đề gì ko trc khi tôi merge vào main"
+**AI Response**: "Review ghim base 3b86e57d và head 4b46daea: 33 commit, 369 file. Ngoài MSSV/học kỳ/chấm thành viên/hiển thị bài đã đóng còn có refactor quy ước U04/U13/U14. CI run 43719011999 đúng head: backend, frontend, deploy-script success; images skipped đúng PR. Chạy lại 5 file Vitest liên quan: 115/115 qua. Xác nhận P2 mất draft thành viên: nhập căn cứ -> lưu điểm nhóm thành công -> refresh GET lỗi -> useGradingWorkspace.ts:207 đặt members=[] -> MemberRow bị unmount -> retry tải lại không còn draft. Test hồi quy tạm trên GradingWorkspacePage thất bại đúng lỗi (expected căn cứ chưa lưu, actual chuỗi rỗng); đã xóa test tạm. Đề nghị giữ draft qua lỗi refresh, vẫn khóa thao tác ghi đến khi có phiên bản mới. Hai finding Standards P3: MaterialService còn biến m trong phạm vi dài (CC-03), ClassTermPolicy có method mới termOf/yearOf/seasonRank không theo động từ + đối tượng. Không phát hiện regression nghiệp vụ trong refactor U04/U13/U14 hoặc lỗi spec khác đã xác nhận. Lưu ý migration có starts_on NOT NULL không có default nên rollback image cũ không đủ cho chức năng tạo lớp, theo giới hạn runbook hiện có. Không sửa mã nguồn, không bình luận GitHub, không merge/deploy; chỉ append audit local."
+**Context**: Review chỉ đọc theo ponytail-review và code-review (hai góc Standards/Spec). Security/Resiliency xem trong phạm vi diff, không chứng nhận toàn hệ thống; PBT disabled nên bỏ qua. Chưa chạy lại full backend/frontend/e2e hoặc kiểm database production.
+
+---
+
+## U09 — sửa mất bản nháp thành viên sau refresh lỗi
+**Timestamp**: 2026-11-15T13:43:20Z
+**Requested by:** Quang Hung
+**User Input**: "$ponytail:ponytail giúp tôi sửa lại lỗi này trước"
+**AI Response**: "Tiếp tục thiết kế giữ draft đã duyệt theo yêu cầu sửa P2. Tạo nhánh fix/grading-member-drafts từ staging, giữ audit review đang có. Thêm regression test, chạy RED: sau save nhóm thành công/refresh lỗi không còn ô Căn cứ đánh giá. Sửa một dòng useGradingWorkspace: giữ members và đặt editable=false thay vì members=[]. Test GREEN: giữ điểm/mức/căn cứ, cảnh báo rời trang, khóa ghi/công bố qua refresh lỗi lặp lại và lưu bằng version mới khi reload thành công. Chạy grading/shared document/assignmentwork: 306/306 test, 33 file qua; ESLint hai file sửa sạch. npm run typecheck lỗi cache .next/types của route cũ; typecheck toàn src/tests bằng config tạm loại cache qua, đã xóa config tạm. Tự review và cập nhật kế hoạch/kết quả/state. Không sửa backend/schema hoặc hai P3, không commit/push/merge/deploy."
+**Context**: Sửa tiếp Code Generation và kiểm chứng theo thiết kế hiện có, phạm vi đã được yêu cầu trực tiếp. Security/Resiliency giữ phân quyền/version và khóa ghi khi chưa cập nhật, PBT disabled nên bỏ qua. Chưa chạy live browser/e2e/full suite/build.
+
+---
+
+## U09 — commit bản sửa giữ draft thành viên
+**Timestamp**: 2026-11-15T13:47:17Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit"
+**AI Response**: "Commit bản sửa giữ draft thành viên sau refresh lỗi cùng regression test, kế hoạch, kết quả, state và audit trên nhánh fix/grading-member-drafts. Kiểm lại diff không có thay đổi ngoài phạm vi; 65/65 test workspace, preserve-grading và MemberContributionPanel qua, git diff --check sạch. Không push/merge/deploy."
+**Context**: Commit cục bộ theo yêu cầu; kiểm thử rộng 306/306 và giới hạn cache Next giữ như báo cáo trước.
+
+---

@@ -124,6 +124,43 @@ it("keeps a mobile member draft after closing and reopening the modeless drawer"
   expect(screen.getByLabelText(/Căn cứ đánh giá/)).toHaveValue("Ghi chú trên mobile");
 });
 
+it("keeps member drafts read-only until a failed group refresh is retried successfully", async () => {
+  const group = mockGroupWorkspace();
+  const refreshed = { ...group, evaluation: { ...group.evaluation, version: 3 },
+    members: group.members.map(member => ({ ...member, version: 3 })) };
+  mocks.saveEvaluation.mockResolvedValue(refreshed.evaluation);
+  mocks.loadEvaluation.mockResolvedValue(refreshed).mockResolvedValueOnce(group)
+    .mockRejectedValueOnce(new Error("offline")).mockRejectedValueOnce(new Error("offline"));
+  render(<GradingWorkspacePage evaluationId="e" />);
+  fireEvent.click(await screen.findByRole("button", { name: "Đánh giá Bình" }));
+  fireEvent.change(screen.getByLabelText("Điểm cá nhân"), { target: { value: "7" } });
+  fireEvent.change(screen.getByLabelText("Mức đóng góp (tùy chọn)"), { target: { value: "PARTIALLY_MEETS" } });
+  fireEvent.change(screen.getByLabelText("Căn cứ đánh giá"), { target: { value: "Bản nháp của Bình" } });
+  fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+  await screen.findByText("Đã lưu điểm nhóm. Tải lại bài để cập nhật điểm và phiên bản thành viên.");
+  expect(screen.getByLabelText("Căn cứ đánh giá")).toHaveValue("Bản nháp của Bình");
+  expect(screen.getByRole("button", { name: "Lưu điểm thành viên" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Công bố điểm" })).toBeDisabled();
+  const leaving = new Event("beforeunload", { cancelable: true });
+  window.dispatchEvent(leaving);
+  expect(leaving.defaultPrevented).toBe(true);
+
+  fireEvent.click(screen.getByRole("button", { name: "Tải lại phiên bản" }));
+  await waitFor(() => expect(mocks.loadEvaluation).toHaveBeenCalledTimes(3));
+  expect(screen.getByLabelText("Căn cứ đánh giá")).toHaveValue("Bản nháp của Bình");
+  expect(screen.getByRole("button", { name: "Lưu điểm thành viên" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Tải lại phiên bản" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Lưu điểm thành viên" })).toBeEnabled());
+  expect(screen.getByLabelText("Điểm cá nhân")).toHaveValue(7);
+  expect(screen.getByLabelText("Mức đóng góp (tùy chọn)")).toHaveValue("PARTIALLY_MEETS");
+  expect(screen.getByLabelText("Căn cứ đánh giá")).toHaveValue("Bản nháp của Bình");
+  mocks.saveMemberGrade.mockResolvedValue({ ...refreshed.members[1], version: 4, score: 7,
+    memberOverride: true, adjustmentReason: "Bản nháp của Bình", contributionLevel: "PARTIALLY_MEETS" });
+  fireEvent.click(screen.getByRole("button", { name: "Lưu điểm thành viên" }));
+  await waitFor(() => expect(mocks.saveMemberGrade).toHaveBeenCalledWith(
+    "e", "s2", 3, "7", "Bản nháp của Bình", "PARTIALLY_MEETS"));
+});
+
 it("keeps every recorded author on a shared section and only lists their known parts", async () => {
   const group = mockGroupWorkspace();
   group.sectionAuthors.push({ partId: "p", accountId: "s2" });

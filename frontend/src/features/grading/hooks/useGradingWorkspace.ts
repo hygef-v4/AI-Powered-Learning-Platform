@@ -204,7 +204,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
               replacementForm = createInitialForm(refreshed.evaluation, refreshed.rubrics);
             }
           } catch {
-            setDetail({ ...detail, evaluation: saved, members: [] });
+            setDetail((current) => ({ ...current, evaluation: saved, editable: false }));
             setError("Đã lưu điểm nhóm. Tải lại bài để cập nhật điểm và phiên bản thành viên.");
           }
         }
