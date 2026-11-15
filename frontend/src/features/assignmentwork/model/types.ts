@@ -13,6 +13,8 @@ export type StudentRow = {
   assignmentId: string;
   classId: string;
   classCode: string;
+  /** Học kỳ của lớp (D-U04-05); có thể thiếu ở dữ liệu cũ. */
+  classTerm?: string | null;
   subjectCode: string | null;
   scope: "CLASS" | "SUBJECT";
   title: string;

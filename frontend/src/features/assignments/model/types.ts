@@ -119,6 +119,8 @@ export type CopySource = {
   assignments: AssignmentRow[];
   /** SUBJECT: bài khác của cùng môn (classId là mã môn); CLASS: một lớp mình dạy. */
   kind?: "CLASS" | "SUBJECT";
+  /** Học kỳ của lớp nguồn (D-U04-05); rỗng với nguồn môn. */
+  term?: string | null;
 };
 
 export type DiagramView = {
