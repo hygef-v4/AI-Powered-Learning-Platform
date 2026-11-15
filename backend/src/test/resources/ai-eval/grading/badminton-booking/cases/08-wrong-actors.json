@@ -1,0 +1,96 @@
+{
+  "caseKey": "08-wrong-actors",
+  "description": "Sơ đồ không có system boundary, actor đặt tên chung chung (Người dùng, Admin), thiếu use case; secondary actor trong đặc tả sai.",
+  "labelSource": "SYNTHETIC_TEAM",
+  "tags": [
+    "notation",
+    "partial-credit"
+  ],
+  "offTopic": false,
+  "injection": false,
+  "blocks": [
+    {
+      "heading": "h-diagram"
+    },
+    {
+      "type": "DIAGRAM",
+      "file": "diagrams/wrong-actors.xml"
+    },
+    {
+      "heading": "h-spec"
+    },
+    {
+      "type": "TABLE",
+      "rows": [
+        [
+          "Mục",
+          "Nội dung"
+        ],
+        [
+          "Tên use case",
+          "Đặt sân"
+        ],
+        [
+          "Primary actor",
+          "Khách hàng"
+        ],
+        [
+          "Secondary actor",
+          "Admin"
+        ],
+        [
+          "Precondition",
+          "Khách hàng đã đăng nhập; sân còn khung giờ trống"
+        ],
+        [
+          "Postcondition",
+          "Lịch đặt sân được lưu ở trạng thái Chờ xác nhận và khách hàng nhận email xác nhận"
+        ],
+        [
+          "Trigger",
+          "Khách hàng chọn chức năng Đặt sân trên trang lịch sân"
+        ],
+        [
+          "Normal flow 1 - Đặt sân lẻ theo giờ",
+          "1. Khách hàng chọn sân, ngày và khung giờ. 2. Hệ thống kiểm tra sân còn trống và giữ chỗ. 3. Khách hàng thanh toán qua Cổng thanh toán. 4. Hệ thống lưu lịch đặt và gửi thông báo cho Chủ sân."
+        ],
+        [
+          "Normal flow 2 - Đặt sân cố định theo tuần",
+          "1. Khách hàng chọn sân, thứ trong tuần, khung giờ và số tuần. 2. Hệ thống kiểm tra tất cả các buổi còn trống. 3. Khách hàng thanh toán tổng tiền các buổi. 4. Hệ thống tạo lịch cố định và gửi thông báo cho Chủ sân."
+        ],
+        [
+          "Alternative flow",
+          "2a. Khung giờ đã kín: hệ thống gợi ý khung giờ trống gần nhất, khách hàng chọn khung giờ khác rồi tiếp tục bước 3."
+        ],
+        [
+          "Exception flow",
+          "3a. Thanh toán thất bại: hệ thống hủy giữ chỗ và báo lỗi Thanh toán không thành công. 3b. Quá 10 phút chưa thanh toán: hệ thống tự hủy giữ chỗ."
+        ],
+        [
+          "Business rule",
+          "BR1: Giữ chỗ tối đa 10 phút. BR2: Hủy trước 24 giờ được hoàn 100% tiền, sau thời điểm đó không hoàn tiền. BR3: Đặt sân cố định tối thiểu 4 tuần."
+        ]
+      ]
+    }
+  ],
+  "expected": {
+    "d-boundary": 0,
+    "d-oval": 0.25,
+    "d-dashed": 0,
+    "d-primary": 0.1,
+    "d-secondary": 0,
+    "d-usecases": 0.1,
+    "s-name-actors": 0.1,
+    "s-pre-post": 0.25,
+    "s-trigger": 0.25,
+    "s-normal": 0.5,
+    "s-alt": 0.25,
+    "s-exception": 0.5,
+    "s-rule": 0.5
+  },
+  "absentItems": [
+    "d-boundary",
+    "d-dashed",
+    "d-secondary"
+  ]
+}

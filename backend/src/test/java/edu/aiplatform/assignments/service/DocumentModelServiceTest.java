@@ -353,6 +353,22 @@ class DocumentModelServiceTest {
     }
 
     @Test
+    void compactDiagramXmlKeepsStereotypeLabelsAndMarksDashedEdges() {
+        String model = "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/>"
+                + "<mxCell id=\"a\" value=\"Book\" vertex=\"1\" parent=\"1\"/>"
+                + "<mxCell id=\"b\" value=\"Pay\" vertex=\"1\" parent=\"1\"/>"
+                + "<mxCell id=\"c\" value=\"Cancel\" vertex=\"1\" parent=\"1\"/>"
+                + "<mxCell id=\"e1\" value=\"&lt;&lt;include&gt;&gt;\" style=\"endArrow=open;dashed=1;\" edge=\"1\""
+                + " source=\"a\" target=\"b\" parent=\"1\"/>"
+                + "<mxCell id=\"e2\" value=\"&lt;div&gt;&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;&lt;/div&gt;\""
+                + " style=\"endArrow=open;html=1;\" edge=\"1\" source=\"c\" target=\"b\" parent=\"1\"/>"
+                + "</root></mxGraphModel>";
+        String compact = service.compactDiagramXml(model);
+        assertThat(compact).contains("nối a -> b (nét đứt): <<include>>", "nối c -> b: <<extend>>");
+        assertThat(DiagramXml.clean("<b>Đặt</b> sân<br/>&lt;i&gt;")).isEqualTo("Đặt sân <i>");
+    }
+
+    @Test
     void plainTextMarksTeacherBlocksWhenMixed() {
         DocumentModel document = new DocumentModel(new ArrayList<>(List.of(paragraph(BlockOrigin.TEACHER, "Đề"),
                 paragraph(BlockOrigin.STUDENT, "Bài làm"))));
