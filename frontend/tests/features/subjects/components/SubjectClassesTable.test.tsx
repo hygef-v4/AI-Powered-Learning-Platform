@@ -12,6 +12,7 @@ const items: SubjectClassSummary[] = [
   {
     classId: "a",
     code: "C-A",
+    term: "SP27-BL5",
     name: "Lớp nháp",
     status: "DRAFT",
     teacherName: null,
@@ -20,6 +21,7 @@ const items: SubjectClassSummary[] = [
   {
     classId: "b",
     code: "C-B",
+    term: "FA26",
     name: "Lớp mở",
     status: "OPEN",
     teacherName: "Giảng viên B",
@@ -28,6 +30,7 @@ const items: SubjectClassSummary[] = [
   {
     classId: "c",
     code: "C-C",
+    term: "SU26",
     name: "Lớp lưu trữ",
     status: "ARCHIVED",
     teacherName: "Giảng viên C",
@@ -37,10 +40,11 @@ const items: SubjectClassSummary[] = [
 
 describe("SubjectClassesTable/Tab", () => {
   afterEach(cleanup);
-  it("bảng chỉ đọc có ba cột (mã lớp, giảng viên, trạng thái), không link/class mutation hoặc sĩ số", () => {
+  it("bảng chỉ đọc có bốn cột (mã lớp, học kỳ, giảng viên, trạng thái), không link/class mutation hoặc sĩ số", () => {
     render(<SubjectClassesTab items={items} />);
     const table = screen.getByRole("table");
-    expect(within(table).getAllByRole("columnheader")).toHaveLength(3);
+    expect(within(table).getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual(["Mã lớp", "Học kỳ", "Giảng viên", "Trạng thái"]);
+    expect(within(table).getByText("SP27-BL5")).toBeInTheDocument();
     expect(within(table).queryByRole("link")).not.toBeInTheDocument();
     expect(within(table).queryByRole("button")).not.toBeInTheDocument();
     expect(within(table).getByText("Chưa phân công")).toBeInTheDocument();

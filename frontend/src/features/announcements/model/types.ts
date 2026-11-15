@@ -19,6 +19,8 @@ export type ClassOption = {
   subjectCode: string | null;
   canManage: boolean;
   studentCount: number;
+  /** Học kỳ của lớp (D-U04-05); có thể thiếu ở dữ liệu cũ. */
+  term?: string | null;
 };
 export type AnnouncementFeed = {
   items: Announcement[];

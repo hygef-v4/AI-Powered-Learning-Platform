@@ -19,7 +19,7 @@ beforeEach(() => {
   window.history.replaceState(null, "", "/my-assignments");
   vi.mocked(workApi.list).mockResolvedValue([
     row({ assignmentId: "a1", title: "Sơ đồ lớp" }),
-    row({ assignmentId: "a2", title: "Ca kiểm thử", classId: "c2", classCode: "SE1903", subjectCode: "SWT301" }),
+    row({ assignmentId: "a2", title: "Ca kiểm thử", classId: "c2", classCode: "SE1903", classTerm: "SP27-BL5", subjectCode: "SWT301" }),
   ]);
 });
 
@@ -39,7 +39,7 @@ it("trang chung có ô lọc lớp cạnh tiêu đề; chọn một lớp thì c
   fireEvent.click(within(filter).getByRole("menuitem", { name: /SE1903/, hidden: true }));
   expect(screen.queryByText("Sơ đồ lớp")).not.toBeInTheDocument();
   expect(screen.getByText("Ca kiểm thử")).toBeInTheDocument();
-  expect(filter).toHaveTextContent("SWT301");
+  expect(filter).toHaveTextContent("SWT301 · SP27-BL5");
 });
 
 it("trang bài tập của một lớp (?classId=) không có ô lọc lớp", async () => {

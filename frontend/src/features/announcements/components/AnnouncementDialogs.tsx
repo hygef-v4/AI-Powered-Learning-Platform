@@ -313,7 +313,7 @@ function ClassPicker({
                 c.classId,
                 chosen.includes(c.classId),
                 () => toggle(c.classId),
-                <ClassLabel subjectCode={c.subjectCode} code={c.code} />,
+                <ClassLabel subjectCode={c.subjectCode} code={c.code} term={c.term} />,
               ),
             )}
             {!shown.length && <p className="px-3 py-2 text-xs text-muted">Không có lớp phù hợp.</p>}

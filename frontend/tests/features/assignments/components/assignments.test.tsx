@@ -170,7 +170,7 @@ describe("CreateAssignmentDialog", () => {
     const row = (id: string) => ({ id, title: `Bài ${id}` }) as never;
     vi.spyOn(assignmentsApi, "subjectCopySources").mockResolvedValue([
       { classId: "s1", code: "SWD392", name: "Thiết kế", status: null, kind: "SUBJECT", assignments: [row("m1")] },
-      { classId: "c2", code: "SE01", name: "Lớp 1", status: "OPEN", kind: "CLASS", assignments: [row("k1")] },
+      { classId: "c2", code: "SE01", name: "Lớp 1", status: "OPEN", kind: "CLASS", term: "SP27", assignments: [row("k1")] },
     ]);
     const copy = vi.spyOn(assignmentsApi, "copyToSubject").mockResolvedValue(created);
     const onCreated = vi.fn();
@@ -183,15 +183,15 @@ describe("CreateAssignmentDialog", () => {
     await screen.findByRole("option", { name: "Bài m1" });
     // Chỉ liệt kê bài, không chia nhóm cùng môn / lớp; gõ để tìm.
     expect(screen.queryAllByRole("group")).toHaveLength(0);
-    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Bài m1", "Bài k1"]);
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Bài m1", "Bài k1 · SE01 · SP27"]);
     fireEvent.change(search, { target: { value: "k1" } });
-    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Bài k1"]);
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Bài k1 · SE01 · SP27"]);
     fireEvent.change(search, { target: { value: "" } });
     fireEvent.mouseDown(screen.getByRole("option", { name: "Bài m1" }));
     // Chỉ chọn một bài: bài đã chọn hiện dưới ô tìm, chọn bài khác thì thay.
     expect(screen.getByTestId("copy-source")).toHaveTextContent("Bài m1");
     fireEvent.focus(search);
-    fireEvent.mouseDown(screen.getByRole("option", { name: "Bài k1" }));
+    fireEvent.mouseDown(screen.getByRole("option", { name: "Bài k1 · SE01 · SP27" }));
     expect(screen.getByTestId("copy-source")).toHaveTextContent("Bài k1");
     fireEvent.click(screen.getByRole("button", { name: "Bỏ bài đã chọn" }));
     fireEvent.focus(search);
@@ -229,7 +229,7 @@ describe("CreateAssignmentDialog", () => {
     const row = (id: string) => ({ id, title: `Bài ${id}` }) as never;
     vi.spyOn(assignmentsApi, "copySources").mockResolvedValue([
       { classId: "s1", code: "SWD392", name: "Thiết kế", status: null, kind: "SUBJECT", assignments: [row("m1"), row("m2")] },
-      { classId: "c2", code: "SE01", name: "Lớp 1", status: "OPEN", kind: "CLASS", assignments: [row("k1")] },
+      { classId: "c2", code: "SE01", name: "Lớp 1", status: "OPEN", kind: "CLASS", term: "SP27", assignments: [row("k1")] },
     ]);
     const copy = vi.spyOn(assignmentsApi, "copy").mockResolvedValue(created);
     const onCreated = vi.fn();
@@ -242,7 +242,7 @@ describe("CreateAssignmentDialog", () => {
     const search = screen.getByRole("combobox", { name: "Đề có sẵn" });
     fireEvent.focus(search);
     await screen.findByRole("option", { name: "Bài m2" });
-    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Bài m1", "Bài m2", "Bài k1"]);
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Bài m1", "Bài m2", "Bài k1 · SE01 · SP27"]);
     fireEvent.mouseDown(screen.getByRole("option", { name: "Bài m2" }));
     expect(screen.getByTestId("copy-source")).toHaveTextContent("Bài m2");
     expect(screen.getByTestId("create-assignment-title")).toHaveValue("Lab 1");
