@@ -2,13 +2,13 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import { Toaster } from "@/shared/ui/Toast";
-import { createSubject, getSubjects } from "@/features/subjects/api";
+import { createSubject, listSubjects } from "@/features/subjects/api";
 import { SubjectListPage } from "@/features/subjects/pages/SubjectListPage";
 import type { SubjectDetail, SubjectListItem, SubjectPage } from "@/features/subjects/model/types";
 
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
-vi.mock("@/features/subjects/api", () => ({ getSubjects: vi.fn(), createSubject: vi.fn() }));
+vi.mock("@/features/subjects/api", () => ({ listSubjects: vi.fn(), createSubject: vi.fn() }));
 
 function item(overrides: Partial<SubjectListItem> = {}): SubjectListItem {
   return {
@@ -42,7 +42,7 @@ function deferred<T>() {
 
 describe("SubjectListPage", () => {
   beforeEach(() => {
-    vi.mocked(getSubjects).mockReset().mockResolvedValue(page());
+    vi.mocked(listSubjects).mockReset().mockResolvedValue(page());
     vi.mocked(createSubject).mockReset();
     push.mockReset();
   });
@@ -69,7 +69,7 @@ describe("SubjectListPage", () => {
     fireEvent.click(screen.getByTestId("subjects-create-open"));
     fireEvent.change(screen.getByTestId("subject-create-code"), { target: { value: "ABC" } });
     fireEvent.change(screen.getByTestId("subject-create-name"), { target: { value: "Môn A" } });
-    vi.mocked(getSubjects).mockRejectedValueOnce(new Error("refresh failed"));
+    vi.mocked(listSubjects).mockRejectedValueOnce(new Error("refresh failed"));
     fireEvent.submit(screen.getByTestId("subject-create-form"));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(await screen.findByText("Đã thêm môn học")).toBeInTheDocument();
@@ -105,7 +105,7 @@ describe("SubjectListPage", () => {
       "href",
       "/admin/subjects/subject-a",
     );
-    expect(getSubjects).toHaveBeenCalledWith({ q: "", status: undefined, page: 0, size: 20 });
+    expect(listSubjects).toHaveBeenCalledWith({ q: "", status: undefined, page: 0, size: 20 });
     expect(screen.getByTestId("subjects-filter-ALL")).toHaveAttribute("aria-selected", "true");
     // Không còn dòng đếm số môn dưới tiêu đề.
     expect(screen.queryByText("1 môn học")).not.toBeInTheDocument();
@@ -114,7 +114,7 @@ describe("SubjectListPage", () => {
   });
 
   it("phân biệt chưa phân công và contact không tra được; không có cột Số lớp", async () => {
-    vi.mocked(getSubjects).mockResolvedValue(
+    vi.mocked(listSubjects).mockResolvedValue(
       page([
         item(),
         item({ id: "b", code: "DEF", name: "Môn B", managerId: "missing", classCount: null }),
@@ -139,7 +139,7 @@ describe("SubjectListPage", () => {
     vi.useFakeTimers();
     const first = deferred<SubjectPage>(),
       second = deferred<SubjectPage>();
-    vi.mocked(getSubjects).mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
+    vi.mocked(listSubjects).mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
     render(<SubjectListPage />);
     await act(async () => {});
     fireEvent.change(screen.getByLabelText("Lọc theo mã hoặc tên môn"), {
@@ -148,11 +148,11 @@ describe("SubjectListPage", () => {
     await act(async () => {
       vi.advanceTimersByTime(299);
     });
-    expect(getSubjects).toHaveBeenCalledTimes(1);
+    expect(listSubjects).toHaveBeenCalledTimes(1);
     await act(async () => {
       vi.advanceTimersByTime(1);
     });
-    expect(getSubjects).toHaveBeenLastCalledWith({
+    expect(listSubjects).toHaveBeenLastCalledWith({
       q: "mới",
       status: undefined,
       page: 0,
@@ -170,7 +170,7 @@ describe("SubjectListPage", () => {
   });
 
   it("đổi tab reset trang, thanh trang dùng totalElements API và không có cột STT", async () => {
-    vi.mocked(getSubjects).mockImplementation(async (query) =>
+    vi.mocked(listSubjects).mockImplementation(async (query) =>
       page([item()], {
         page: query?.page ?? 0,
         size: query?.size ?? 20,
@@ -184,7 +184,12 @@ describe("SubjectListPage", () => {
     expect(screen.getByRole("button", { name: "Trang trước" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Trang sau" }));
     await waitFor(() =>
-      expect(getSubjects).toHaveBeenLastCalledWith({ q: "", status: undefined, page: 1, size: 20 }),
+      expect(listSubjects).toHaveBeenLastCalledWith({
+        q: "",
+        status: undefined,
+        page: 1,
+        size: 20,
+      }),
     );
     await waitFor(() =>
       expect(screen.getByRole("button", { name: "Trang 2" })).toHaveAttribute(
@@ -197,7 +202,7 @@ describe("SubjectListPage", () => {
     expect(screen.getByRole("table")).toBeInTheDocument();
     expect(screen.queryByText("Đang tải môn học…")).not.toBeInTheDocument();
     await waitFor(() =>
-      expect(getSubjects).toHaveBeenLastCalledWith({
+      expect(listSubjects).toHaveBeenLastCalledWith({
         q: "",
         status: "ARCHIVED",
         page: 0,
@@ -207,7 +212,7 @@ describe("SubjectListPage", () => {
   });
 
   it("empty không bị coi là lỗi và không bật trang sau", async () => {
-    vi.mocked(getSubjects).mockResolvedValue(page([]));
+    vi.mocked(listSubjects).mockResolvedValue(page([]));
     render(<SubjectListPage />);
     expect(await screen.findByText("Không có môn học phù hợp.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Trang sau" })).not.toBeInTheDocument();
@@ -215,7 +220,7 @@ describe("SubjectListPage", () => {
   });
 
   it("lỗi API hiện retry, không hiển thị mẫu hoặc kết quả rỗng giả", async () => {
-    vi.mocked(getSubjects)
+    vi.mocked(listSubjects)
       .mockRejectedValueOnce(new ApiError({ status: 503, detail: "internal SQL" }))
       .mockResolvedValueOnce(page([]));
     render(<SubjectListPage />);
@@ -224,13 +229,13 @@ describe("SubjectListPage", () => {
     expect(screen.queryByText("Không có môn học phù hợp.")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Thử lại" }));
     expect(await screen.findByText("Không có môn học phù hợp.")).toBeInTheDocument();
-    expect(getSubjects).toHaveBeenCalledTimes(2);
+    expect(listSubjects).toHaveBeenCalledTimes(2);
   });
 
   it.each([401, 403])(
     "HTTP%s không hiển thị dữ liệu hay dùng layout ADMIN làm quyền",
     async (status) => {
-      vi.mocked(getSubjects).mockRejectedValue(new ApiError({ status }));
+      vi.mocked(listSubjects).mockRejectedValue(new ApiError({ status }));
       render(<SubjectListPage />);
       const error = await screen.findByRole("alert");
       expect(error).toHaveTextContent(status === 401 ? "Vui lòng đăng nhập" : "không có quyền");

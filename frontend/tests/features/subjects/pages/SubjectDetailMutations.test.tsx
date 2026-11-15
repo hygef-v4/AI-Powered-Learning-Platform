@@ -9,8 +9,8 @@ import { Toaster } from "@/shared/ui/Toast";
 import {
   changeSubjectManager,
   changeSubjectStatus,
-  getSubject,
-  getSubjectClasses,
+  loadSubject,
+  listSubjectClasses,
   updateSubject,
 } from "@/features/subjects/api";
 import { SubjectDetailPage } from "@/features/subjects/pages/SubjectDetailPage";
@@ -21,8 +21,8 @@ import type {
 import type { SubjectDetail } from "@/features/subjects/model/types";
 
 vi.mock("@/features/subjects/api", () => ({
-  getSubject: vi.fn(),
-  getSubjectClasses: vi.fn(),
+  loadSubject: vi.fn(),
+  listSubjectClasses: vi.fn(),
   updateSubject: vi.fn(),
   changeSubjectManager: vi.fn(),
   changeSubjectStatus: vi.fn(),
@@ -53,10 +53,10 @@ beforeEach(() => {
   window.history.replaceState(null, "", "/");
   server = { ...base };
   search.mockReset().mockResolvedValue([candidate]);
-  vi.mocked(getSubject)
+  vi.mocked(loadSubject)
     .mockReset()
     .mockImplementation(async () => ({ ...server }));
-  vi.mocked(getSubjectClasses)
+  vi.mocked(listSubjectClasses)
     .mockReset()
     .mockResolvedValue({ availability: "AVAILABLE", items: [] });
   vi.mocked(updateSubject)
@@ -131,7 +131,7 @@ describe("Detail mutations dùng chung version và làm mới snapshot", () => {
     });
     await screen.findByRole("button", { name: "Lưu trữ môn học" });
     expect(changeSubjectStatus).toHaveBeenLastCalledWith("a", { status: "ACTIVE", version: 11 });
-    expect(getSubject).toHaveBeenCalledTimes(6);
+    expect(loadSubject).toHaveBeenCalledTimes(6);
   });
 
   it("Hủy đưa form về giá trị đang lưu, không PATCH", async () => {
@@ -154,7 +154,7 @@ describe("Detail mutations dùng chung version và làm mới snapshot", () => {
     fireEvent.submit(screen.getByTestId("subject-edit-form"));
     await screen.findByText(/Bản nhập được giữ lại/);
     server = { ...server, name: "Người khác đã sửa", version: 8 };
-    expect(getSubject).toHaveBeenCalledTimes(1);
+    expect(loadSubject).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId("subject-edit-name")).toHaveValue("Draft");
     fireEvent.click(screen.getByTestId("subject-mutation-reload"));
     await screen.findByRole("heading", { name: /Người khác đã sửa/ });
@@ -176,7 +176,7 @@ describe("Detail mutations dùng chung version và làm mới snapshot", () => {
     );
     await screen.findByDisplayValue("Mô tả môn");
     fireEvent.click(screen.getByTestId("subject-status-open"));
-    vi.mocked(getSubject).mockRejectedValueOnce(new Error("GET failed"));
+    vi.mocked(loadSubject).mockRejectedValueOnce(new Error("GET failed"));
     fireEvent.click(screen.getByTestId("subject-status-confirm"));
     await screen.findByRole("alert");
     expect(await screen.findByText("Đã lưu trữ môn học")).toBeInTheDocument();
@@ -198,7 +198,7 @@ describe("Detail mutations dùng chung version và làm mới snapshot", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId("subjects-read-retry"));
     await screen.findByDisplayValue("Mô tả môn");
-    expect(getSubject).toHaveBeenCalledTimes(2);
+    expect(loadSubject).toHaveBeenCalledTimes(2);
   });
 
   it("đổi subjectId khi PUT đang chờ bỏ draft; response cũ không tác động môn mới", async () => {
@@ -230,6 +230,6 @@ describe("Detail mutations dùng chung version và làm mới snapshot", () => {
     });
     expect(screen.getByDisplayValue("Mô tả B")).toBeInTheDocument();
     expect(screen.queryByText("Đã lưu thay đổi")).not.toBeInTheDocument();
-    expect(getSubject).toHaveBeenCalledTimes(2);
+    expect(loadSubject).toHaveBeenCalledTimes(2);
   });
 });

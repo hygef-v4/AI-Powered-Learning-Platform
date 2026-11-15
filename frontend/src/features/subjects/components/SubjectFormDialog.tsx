@@ -30,11 +30,11 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
   const [manager, setManager] = useState<ManagerCandidate | null>(null);
   const [errors, setErrors] = useState<SubjectFieldErrors & { managerId?: string }>({});
   const [message, setMessage] = useState<string | null>(null);
-  const close = useCallback(() => {
+  const handleClose = useCallback(() => {
     if (!pending.current) onClose();
   }, [onClose]);
 
-  async function submit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (pending.current) return;
     const nextErrors = validateCreateSubject({ code, name, description });
@@ -80,7 +80,7 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
       open
       title="Thêm môn học"
       icon="menu_book"
-      onClose={close}
+      onClose={handleClose}
       dismissible={!busy}
       size="lg"
       footer={
@@ -97,7 +97,7 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
     >
       <form
         id={formId}
-        onSubmit={(event) => void submit(event)}
+        onSubmit={(event) => void handleSubmit(event)}
         noValidate
         aria-busy={busy}
         data-testid="subject-create-form"

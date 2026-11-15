@@ -1,6 +1,6 @@
 import { Section } from "@/shared/ui";
 import { SubjectEditForm } from "./SubjectEditForm";
-import type { SubjectMutationProps } from "../hooks/subjectMutation";
+import type { SubjectMutationProps } from "../hooks/useSubjectMutation";
 
 /** Thẻ Thông tin môn học: sửa ngay trên thẻ như Thông tin tài khoản, không có nút "Chỉnh sửa" riêng. */
 export function SubjectInfoTab(props: SubjectMutationProps) {

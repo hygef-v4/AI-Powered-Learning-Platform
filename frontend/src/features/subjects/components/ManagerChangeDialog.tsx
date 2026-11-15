@@ -6,11 +6,11 @@ import { changeSubjectManager } from "../api";
 import { ManagerPicker } from "./ManagerPicker";
 import type { ManagerCandidate, SearchSubjectManagers } from "../model/managerSearch";
 import {
-  needsSubjectReload,
+  shouldReloadSubject,
   SubjectMutationFeedback,
   useSubjectMutation,
   type SubjectMutationProps,
-} from "../hooks/subjectMutation";
+} from "../hooks/useSubjectMutation";
 
 /**
  * Popup Đổi chủ nhiệm môn, cùng kiểu popup Đổi vai trò: một ô chọn, mặc định là chủ nhiệm hiện tại; bỏ chọn (x) là bỏ
@@ -30,12 +30,12 @@ export function ManagerChangeDialog({
       : null;
   const [manager, setManager] = useState<ManagerCandidate | null>(current);
   const mutation = useSubjectMutation(onAccessError);
-  const close = useCallback(() => {
+  const handleClose = useCallback(() => {
     if (mutation.canClose()) onClose();
   }, [mutation, onClose]);
-  const conflict = needsSubjectReload(mutation.error);
+  const conflict = shouldReloadSubject(mutation.error);
   const changed = (manager?.accountId ?? null) !== subject.managerId;
-  function submit() {
+  function handleSubmit() {
     if (!changed || conflict) return;
     void mutation.run(
       () =>
@@ -51,12 +51,12 @@ export function ManagerChangeDialog({
       open
       title="Đổi chủ nhiệm môn"
       size="lg"
-      onClose={close}
+      onClose={handleClose}
       dismissible={!mutation.busy}
       footer={
         <Button
           variant="primary"
-          onClick={submit}
+          onClick={handleSubmit}
           disabled={mutation.busy || conflict || !changed}
           data-testid="subject-manager-save"
         >

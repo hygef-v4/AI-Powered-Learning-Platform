@@ -5,11 +5,11 @@ vi.mock("next/navigation", () => ({
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
-import { getSubject, getSubjectClasses } from "@/features/subjects/api";
+import { loadSubject, listSubjectClasses } from "@/features/subjects/api";
 import { SubjectDetailPage } from "@/features/subjects/pages/SubjectDetailPage";
 import type { SubjectDetail } from "@/features/subjects/model/types";
 
-vi.mock("@/features/subjects/api", () => ({ getSubject: vi.fn(), getSubjectClasses: vi.fn() }));
+vi.mock("@/features/subjects/api", () => ({ loadSubject: vi.fn(), listSubjectClasses: vi.fn() }));
 
 function detail(overrides: Partial<SubjectDetail> = {}): SubjectDetail {
   return {
@@ -38,19 +38,19 @@ function deferred<T>() {
 describe("SubjectDetailPage", () => {
   beforeEach(() => {
     window.history.replaceState(null, "", "/");
-    vi.mocked(getSubject).mockReset().mockResolvedValue(detail());
-    vi.mocked(getSubjectClasses)
+    vi.mocked(loadSubject).mockReset().mockResolvedValue(detail());
+    vi.mocked(listSubjectClasses)
       .mockReset()
       .mockResolvedValue({ availability: "AVAILABLE", items: [] });
   });
   afterEach(cleanup);
 
   it.each([0, 7])("hiển thị tổng số lớp %s cạnh tab Lớp học", async (classCount) => {
-    vi.mocked(getSubject).mockResolvedValue(detail({ classCount }));
+    vi.mocked(loadSubject).mockResolvedValue(detail({ classCount }));
     render(<SubjectDetailPage subjectId="a" />);
     const classesTab = await screen.findByRole("tab", { name: /Lớp học/ });
     expect(classesTab).toHaveTextContent(`Lớp học${classCount}`);
-    expect(getSubjectClasses).not.toHaveBeenCalled();
+    expect(listSubjectClasses).not.toHaveBeenCalled();
   });
 
   it("đọc detail, ngày Việt Nam, unknown count và chỉ tải lớp khi mở tab", async () => {
@@ -59,14 +59,14 @@ describe("SubjectDetailPage", () => {
     expect(screen.getByText("02/10/2026")).toBeInTheDocument();
     expect(screen.getByText("Chưa phân công")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Lớp học" })).toBeInTheDocument();
-    expect(getSubjectClasses).not.toHaveBeenCalled();
+    expect(listSubjectClasses).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("tab", { name: /Lớp học/ }));
     expect(await screen.findByText("Không có lớp phù hợp.")).toBeInTheDocument();
-    expect(getSubjectClasses).toHaveBeenCalledWith("a");
+    expect(listSubjectClasses).toHaveBeenCalledWith("a");
   });
 
   it("contact thiếu khác chưa phân công; archived vẫn hiển thị dữ liệu lịch sử", async () => {
-    vi.mocked(getSubject).mockResolvedValue(detail({ managerId: "missing", status: "ARCHIVED" }));
+    vi.mocked(loadSubject).mockResolvedValue(detail({ managerId: "missing", status: "ARCHIVED" }));
     render(<SubjectDetailPage subjectId="a" />);
     expect(await screen.findByText("Không tra được thông tin chủ nhiệm môn.")).toBeInTheDocument();
     expect(screen.queryByText("Chưa phân công")).not.toBeInTheDocument();
@@ -75,7 +75,7 @@ describe("SubjectDetailPage", () => {
   });
 
   it("contact có tên/email dùng initials, không có upload avatar", async () => {
-    vi.mocked(getSubject).mockResolvedValue(
+    vi.mocked(loadSubject).mockResolvedValue(
       detail({
         managerId: "m",
         manager: { accountId: "m", displayName: "Nguyễn Bình", email: "binh@example.test" },
@@ -88,7 +88,7 @@ describe("SubjectDetailPage", () => {
   });
 
   it("unavailable của provider có retry và khác verified empty", async () => {
-    vi.mocked(getSubjectClasses)
+    vi.mocked(listSubjectClasses)
       .mockResolvedValueOnce({ availability: "UNAVAILABLE", items: null })
       .mockResolvedValueOnce({ availability: "AVAILABLE", items: [] });
     render(<SubjectDetailPage subjectId="a" />);
@@ -101,15 +101,15 @@ describe("SubjectDetailPage", () => {
   });
 
   it.each([401, 403, 404])("detail HTTP%s không hiển thị metadata hoặc gọi lớp", async (status) => {
-    vi.mocked(getSubject).mockRejectedValue(new ApiError({ status }));
+    vi.mocked(loadSubject).mockRejectedValue(new ApiError({ status }));
     render(<SubjectDetailPage subjectId="a" />);
     expect(await screen.findByRole("alert")).toBeInTheDocument();
     expect(screen.queryByDisplayValue("Mô tả môn")).not.toBeInTheDocument();
-    expect(getSubjectClasses).not.toHaveBeenCalled();
+    expect(listSubjectClasses).not.toHaveBeenCalled();
   });
 
   it("403 khi mở lớp che cả dữ liệu môn; retry xác minh lại detail trước hiển thị", async () => {
-    vi.mocked(getSubjectClasses)
+    vi.mocked(listSubjectClasses)
       .mockRejectedValueOnce(new ApiError({ status: 403 }))
       .mockResolvedValueOnce({ availability: "AVAILABLE", items: [] });
     render(<SubjectDetailPage subjectId="a" />);
@@ -118,22 +118,22 @@ describe("SubjectDetailPage", () => {
     await screen.findByRole("alert");
     expect(screen.queryByText("Môn A")).not.toBeInTheDocument();
     const recheck = deferred<SubjectDetail>();
-    vi.mocked(getSubject).mockReturnValueOnce(recheck.promise);
+    vi.mocked(loadSubject).mockReturnValueOnce(recheck.promise);
     fireEvent.click(screen.getByTestId("subjects-read-retry"));
     expect(screen.queryByText("Môn A")).not.toBeInTheDocument();
     await act(async () => {
       recheck.resolve(detail());
     });
     expect(await screen.findByText("Không có lớp phù hợp.")).toBeInTheDocument();
-    expect(getSubject).toHaveBeenCalledTimes(2);
+    expect(loadSubject).toHaveBeenCalledTimes(2);
   });
 
   it("đổi id bỏ response cũ và không hiển thị nhầm môn", async () => {
     const old = deferred<SubjectDetail>(),
       current = deferred<SubjectDetail>();
-    vi.mocked(getSubject).mockReturnValueOnce(old.promise).mockReturnValueOnce(current.promise);
+    vi.mocked(loadSubject).mockReturnValueOnce(old.promise).mockReturnValueOnce(current.promise);
     const { rerender } = render(<SubjectDetailPage subjectId="a" />);
-    await waitFor(() => expect(getSubject).toHaveBeenCalledWith("a"));
+    await waitFor(() => expect(loadSubject).toHaveBeenCalledWith("a"));
     rerender(<SubjectDetailPage subjectId="b" />);
     await act(async () => {
       current.resolve(detail({ id: "b", name: "Môn B", description: "Mô tả B" }));
@@ -158,8 +158,8 @@ describe("SubjectDetailPage", () => {
 });
 
 it("restores subject tab after remount and history navigation, rejecting unknown tabs", async () => {
-  vi.mocked(getSubject).mockReset().mockResolvedValue(detail());
-  vi.mocked(getSubjectClasses)
+  vi.mocked(loadSubject).mockReset().mockResolvedValue(detail());
+  vi.mocked(listSubjectClasses)
     .mockReset()
     .mockResolvedValue({ availability: "AVAILABLE", items: [] });
   window.history.replaceState(null, "", "/admin/subjects/a?tab=information");
