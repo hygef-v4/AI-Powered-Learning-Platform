@@ -32,6 +32,15 @@ push, merge, deploy hay gọi provider thật; giới hạn nghiệm thu giữ n
 
 ## Đồng bộ tài liệu theo staging — 2026-11-15
 
+### Bàn giao PR ngày tháng/AI/đóng nhận bài vào staging
+
+User yêu cầu “giúp tôi tạo pr lên staging”. Nhánh `fix/date-ai-grading-window` đã có
+merge staging, không thiếu commit origin/staging tại thời điểm chuẩn bị PR. Kiểm
+sau merge: HttpProviderGateway36, AiConnection11, GradingService38 qua (85 tổng),
+diff whitespace sạch. Bàn giao bằng push nhánh và PR base staging; không merge hay
+auto-merge. Các kết quả toàn frontend/integration/build ở trên thuộc đợt trước merge;
+CI cần kiểm toàn bộ head PR. Không nghiệm thu key thật/browser hoặc tải lớn.
+
 Đối chiếu `staging@7e0e8375` theo các điểm trong báo cáo của người dùng. Phạm vi là tài liệu AI-DLC.
 
 - [x] Cập nhật yêu cầu, use case, story và thiết kế liên quan đến công bố/sửa điểm, đề mẫu cấp môn, nộp lại và lịch sử, API key chỉ ghi, phát hành Quiz.

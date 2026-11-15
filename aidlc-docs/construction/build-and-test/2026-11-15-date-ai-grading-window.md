@@ -90,3 +90,12 @@ Người dùng yêu cầu “giúp tôi commit”. Giữ nguyên mã đã kiểm
 AI probe, grading/closure và tài liệu. Kiểm lại diff whitespace và guard bắt buộc:
 5 suite PostgreSQL, 58 kịch bản qua; dùng kết quả ứng dụng ở trên, không chạy lại
 test/build không cần thiết. Không push/merge/deploy hoặc mở rộng kiểm thử live.
+
+## Kiểm trước PR vào staging
+
+User tiếp tục yêu cầu tạo PR. Nhánh đã có commit merge staging; sau fetch không
+thiếu commit từ origin/staging. Vì merge cập nhật AI gateway, chạy lại
+HttpProviderGatewayTest36, AiConnectionServiceTest11, GradingServiceTest38:
+**85/85 qua**, không failure/error/skip. Log `.tmp/date-ai-pre-pr-tests.log`.
+Các kết quả toàn frontend/integration/build ở trên được giữ đúng phạm vi trước
+merge; không thay bằng tuyên bố full-head acceptance. CI cần kiểm head PR.

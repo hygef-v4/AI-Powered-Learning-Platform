@@ -14851,3 +14851,12 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **Context**: User cho phép commit cục bộ. Không yêu cầu push/merge/deploy, không chạy lại test/build khi mã không đổi; các giới hạn key thật/browser/tải lớn giữ nguyên. Attribution xác nhận bằng gh api user --jq .name, không thay requester lịch sử. Không đổi quy tắc Security/Resiliency; PBT disabled, không phát sinh thiết kế hoặc mã mới.
 
 ---
+
+## Bàn giao PR vào staging
+**Timestamp**: 2026-11-15T16:52:50Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi tạo pr lên staging"
+**AI Response**: "Kiểm tra nhánh fix/date-ai-grading-window và origin/staging sau fetch: working tree sạch, đã có merge staging, không thiếu commit staging. Chưa có PR mở cùng head. Chạy lại HttpProviderGatewayTest, AiConnectionServiceTest, GradingServiceTest sau merge:85/85 qua, không lỗi hoặc skip. Chuẩn bị push nhánh và mở PR base staging với mô tả thay đổi ngày/AI/đóng nhận bài, bằng chứng trước/sau và giới hạn nghiệm thu; dùng GitHub connector để tạo PR. Không merge hoặc bật auto-merge."
+**Context**: User cho phép push và tạo PR. PR skill dùng cho nội dung; chỉ thêm tài liệu bàn giao, không sửa source. Kết quả1135 frontend/282 tích hợp/build thuộc đợt trước merge; không coi đó là kiểm toàn bộ head sau merge. CI sẽ kiểm head PR. Chưa key thật/browser/tải lớn. Security/Resiliency giữ phạm vi, PBT disabled. GitHub display name xác nhận bằng gh api user --jq .name; giữ requester lịch sử.
+
+---
