@@ -1,6 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
+// Slot của mọi unit chỉ dùng sau khi đăng nhập, nên nạp phần đăng ký ở đây thay vì ở root layout:
+// trang đăng nhập, kích hoạt và đặt lại mật khẩu không phải tải bundle của các feature.
+import "@/features/register";
 import type { Role } from "@/shared/auth/roles";
 import { AppShell } from "@/shared/layout/AppShell";
 import type { NavLocation } from "@/shared/layout/navigation";

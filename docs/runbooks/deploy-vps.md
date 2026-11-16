@@ -218,6 +218,25 @@ docker stats --no-stream
 
 Mở `https://<DOMAIN>`, kích hoạt Admin đầu tiên bằng OTP gửi tới `U01_BOOTSTRAP_ADMIN_EMAIL`. Không nhận được OTP thì xem `docker compose --env-file .env logs backend worker | grep -iE 'mail|otp'` (OTP do worker gửi) và kiểm thông tin Brevo.
 
+### Số đo hiệu năng
+
+Log truy cập của nginx có thời gian xử lý ở cuối mỗi dòng: `rt` là cả request, `urt` là riêng backend hoặc frontend (giây).
+
+```bash
+# 20 request chậm nhất trong log hiện có
+docker compose --env-file .env logs --no-log-prefix nginx | grep -o '"[A-Z]* [^ ]* HTTP[^"]*" [0-9]* .* rt=[0-9.]*' | sed -E 's/^"([A-Z]+ [^ ?]+).* rt=([0-9.]+)$/ /' | sort -rn | head -20
+```
+
+Postgres ghi mọi truy vấn chậm hơn 500 ms vào log (không ghi giá trị tham số) và nạp sẵn `pg_stat_statements`. Bật thống kê một lần cho mỗi database (production và staging riêng):
+
+```bash
+docker compose --env-file .env exec -T postgres psql -U postgres -d platform -c 'CREATE EXTENSION IF NOT EXISTS pg_stat_statements'
+docker compose --env-file .env logs postgres | grep 'duration:'    # truy vấn chậm
+docker compose --env-file .env exec -T postgres psql -U postgres -d platform -c \n  'SELECT calls, round(mean_exec_time::numeric, 1) AS mean_ms, round(total_exec_time::numeric) AS total_ms, left(query, 100) FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 15'
+```
+
+Bản đầu tiên có cấu hình này sẽ tạo lại container `postgres` (đổi `command`), nên backend và worker mất kết nối database trong vài giây ở lần deploy đó.
+
 ## 10. Tự động deploy và rollback
 
 Staging cho nhóm kiểm thử chạy cạnh production trên cùng VPS (cổng 8443, project `platform-staging`, tự deploy theo nhánh `staging`): [deploy-staging.md](deploy-staging.md).
@@ -234,6 +253,9 @@ Mỗi lần deploy làm theo thứ tự:
 3. `git checkout` đúng SHA, đặt `IMAGE_TAG`, chạy `docker compose up -d`.
 4. Trong 5 phút, mọi container phải `running` và có health `healthy` (hoặc không có healthcheck), và `https://<DOMAIN>/` phải trả 2xx.
 5. Không đạt thì tự quay về bản trước. SHA lỗi vào danh sách bỏ qua để timer không deploy lặp lại. Service kết thúc `failed`.
+6. Deploy đạt thì xóa image backend và frontend không thuộc 5 bản deploy tốt gần nhất (`KEEP_IMAGES`). Image đang chạy, kể cả của staging, Docker không cho xóa. Quay về một bản đã bị xóa image thì script kéo lại từ GHCR.
+
+Trong lúc backend hoặc frontend khởi động lại, nginx trả 503 kèm `Retry-After: 15`: API nhận `application/problem+json`, trang nhận trang bảo trì tĩnh tự tải lại (`infra/nginx/snippets/maintenance.html`). Khoảng gián đoạn này vẫn còn; backend được 2 CPU để khởi động nhanh hơn.
 
 ### Cài lần đầu
 
@@ -284,7 +306,7 @@ Dữ liệu ghi vào sau thời điểm dump sẽ mất. Để tránh tình hu�
 
 ```bash
 platform-deploy deploy <SHA>   # vẫn có sao lưu, kiểm tra sức khỏe và tự quay về
-docker image prune -f          # thỉnh thoảng dọn image cũ
+docker image prune -f          # dọn layer mồ côi; image backend/frontend cũ do platform-deploy tự xóa
 ```
 
 ## Sự cố thường gặp

@@ -257,6 +257,61 @@ it("bell connects one account stream and closes it on unmount", async () => {
   unmount();
   expect(stream.close).toHaveBeenCalled();
 });
+it("polls the unread count only while the stream is down and the tab is visible", async () => {
+  vi.useFakeTimers();
+  class OpenableStream {
+    static instances: OpenableStream[] = [];
+    onopen: (() => void) | null = null;
+    onmessage: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+    addEventListener = vi.fn();
+    close = vi.fn();
+    constructor() {
+      OpenableStream.instances.push(this);
+    }
+  }
+  vi.stubGlobal("EventSource", OpenableStream);
+  const visibility = vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
+  const countUnread = vi.mocked(notificationsApi.countUnread);
+  const { unmount } = render(<NotificationBell />);
+  await act(async () => {});
+  expect(countUnread).toHaveBeenCalledTimes(1);
+
+  // Luồng đang mở: không hỏi định kỳ.
+  await act(async () => {
+    OpenableStream.instances[0]!.onopen?.();
+    await vi.advanceTimersByTimeAsync(90000);
+  });
+  expect(countUnread).toHaveBeenCalledTimes(1);
+
+  // Luồng đứt: hỏi ngay một lần, rồi hỏi định kỳ khi tab đang hiện.
+  await act(async () => {
+    OpenableStream.instances[0]!.onerror?.();
+  });
+  expect(countUnread).toHaveBeenCalledTimes(2);
+  visibility.mockReturnValue("hidden");
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(30000);
+  });
+  expect(countUnread).toHaveBeenCalledTimes(2);
+  visibility.mockReturnValue("visible");
+  await act(async () => {
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  expect(countUnread).toHaveBeenCalledTimes(3);
+
+  // Nối lại được: hỏi một lần để bù thông báo đã lỡ, rồi thôi hỏi định kỳ.
+  await act(async () => {
+    OpenableStream.instances.at(-1)!.onopen?.();
+  });
+  expect(countUnread).toHaveBeenCalledTimes(4);
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(90000);
+  });
+  expect(countUnread).toHaveBeenCalledTimes(4);
+  unmount();
+  visibility.mockRestore();
+});
 it("reconnects with bounded backoff and refreshes unread count after an outage", async () => {
   vi.useFakeTimers();
   class ReconnectingStream {

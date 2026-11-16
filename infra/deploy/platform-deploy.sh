@@ -23,6 +23,7 @@ BRANCH=${DEPLOY_BRANCH:-main}
 HEALTH_TIMEOUT=${HEALTH_TIMEOUT:-300}
 HEALTH_INTERVAL=${HEALTH_INTERVAL:-10}
 KEEP_DUMPS=${KEEP_DUMPS:-5}
+KEEP_IMAGES=${KEEP_IMAGES:-5}
 # Mặc định là production: project "platform" (khai trong docker-compose.yml), chỉ một tệp compose, HTTPS cổng 443.
 COMPOSE_PROJECT=${DEPLOY_COMPOSE_PROJECT:-}
 read -r -a COMPOSE_FILES <<<"${DEPLOY_COMPOSE_FILES:-}"
@@ -111,6 +112,19 @@ pull_images() {
     done
 }
 
+# Xóa image backend/frontend không thuộc KEEP_IMAGES bản deploy tốt gần nhất. Docker từ chối xóa image đang chạy
+# (kể cả của môi trường khác trên cùng VPS); image đã xóa mà cần quay về thì release kéo lại từ GHCR.
+prune_images() {
+    local owner app keep image
+    owner=$(env_value GHCR_OWNER)
+    keep=$(tail -n "$KEEP_IMAGES" "$DEPLOYED")
+    for app in backend frontend; do
+        while read -r image; do
+            grep -qxF "${image##*:}" <<<"$keep" || docker rmi "$image" >/dev/null 2>&1 || true
+        done < <(docker images --format '{{.Repository}}:{{.Tag}}' "ghcr.io/${owner:-max2min}/platform-$app" 2>/dev/null)
+    done
+}
+
 dump_database() {
     mkdir -p "$BACKUP_DIR"
     chmod 700 "$BACKUP_DIR"
@@ -184,6 +198,7 @@ release() {
     if switch_to "$sha" && wait_healthy; then
         printf '%s\n' "$sha" >>"$DEPLOYED"
         record "$reason $sha OK (trước: $prev)"
+        prune_images || true
         log "Deploy $(short "$sha") xong, mọi dịch vụ khỏe"
         return 0
     fi

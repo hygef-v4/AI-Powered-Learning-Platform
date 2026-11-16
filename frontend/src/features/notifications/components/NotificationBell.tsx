@@ -6,6 +6,7 @@ import { notificationsApi } from "../api";
 import { NotificationPopup } from "./NotificationPopup";
 import styles from "../styles/notifications.module.css";
 import { msg } from "@/i18n/msg";
+const FALLBACK_POLL_MS = 30000;
 export function NotificationBell() {
   const session = useSession();
   return session.status === "authenticated" ? (
@@ -38,29 +39,49 @@ function Bell() {
     let stream: EventSource | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let attempts = 0;
+    // Luồng SSE đang mở thì máy chủ tự báo thay đổi; chỉ hỏi định kỳ khi luồng đứt.
+    let connected = false;
+    let reconnecting = false;
     function connect() {
       if (stopped || typeof EventSource === "undefined") return;
       stream = new EventSource("/api/v1/me/notifications/events", { withCredentials: true });
       const syncPermission = () => {
         attempts = 0;
+        connected = true;
         handleRefresh();
+      };
+      stream.onopen = () => {
+        connected = true;
+        // Thông báo phát ra trong lúc mất kết nối không được gửi lại.
+        if (reconnecting) handleRefresh();
+        reconnecting = false;
       };
       stream.onmessage = syncPermission;
       stream.addEventListener("notification-changed", syncPermission);
       stream.onerror = () => {
         stream?.close();
+        connected = false;
+        reconnecting = true;
         handleRefresh();
         if (!stopped)
           timer = setTimeout(connect, Math.min(30000, 1000 * 2 ** Math.min(attempts++, 5)));
       };
     }
     connect();
-    const fallback = setInterval(handleRefresh, 30000);
+    const isTabVisible = () => document.visibilityState === "visible";
+    const fallback = setInterval(() => {
+      if (!connected && isTabVisible()) handleRefresh();
+    }, FALLBACK_POLL_MS);
+    const handleVisibilityChange = () => {
+      if (!connected && isTabVisible()) handleRefresh();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       stopped = true;
       stream?.close();
       if (timer) clearTimeout(timer);
       clearInterval(fallback);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [handleRefresh]);
   useEffect(() => {

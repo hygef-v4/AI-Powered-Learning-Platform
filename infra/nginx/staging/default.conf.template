@@ -1,5 +1,7 @@
 # Staging: chỉ HTTPS, publish ra cổng 8443 của VPS (docker-compose.staging.yml). Cổng 80 trong container chỉ cho
 # healthcheck. Không đặt HSTS để không ảnh hưởng tên miền production.
+include /etc/nginx/snippets/http.conf;
+
 server {
     listen 80;
     server_name _;
