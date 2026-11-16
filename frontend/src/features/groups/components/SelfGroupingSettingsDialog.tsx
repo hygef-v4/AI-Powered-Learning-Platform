@@ -4,11 +4,11 @@ import { useEffect, useId, useState } from "react";
 import { Alert, Button, DateInput, Dialog, Field, Switch, TextInput } from "@/shared/ui";
 import { getFormation, updateFormation } from "../api";
 import {
-  fromLocalInput,
+  convertFromLocalInput,
   MAX_GROUP_SIZE,
   MIN_GROUP_SIZE,
-  proposalErrorText,
-  toLocalInput,
+  describeProposalError,
+  convertToLocalInput,
   validateFormation,
   type FormationErrors,
 } from "../model/proposals";
@@ -44,15 +44,15 @@ export function SelfGroupingSettingsDialog({ classId, onClose, onSaved }: {
       setEnabled(view.enabled);
       setMinSize(String(view.minSize));
       setMaxSize(String(view.maxSize));
-      const local = toLocalInput(view.deadline);
+      const local = convertToLocalInput(view.deadline);
       setDeadlineDate(local.slice(0, 10));
       setDeadlineTime(local.slice(11, 16) || "00:00");
       setDateValid(true);
-    }, (e) => { if (active) setError(proposalErrorText(e, msg("groups.components.SelfGroupingSettingsDialog.khongTaiDuocCaiDat"))); });
+    }, (e) => { if (active) setError(describeProposalError(e, msg("groups.components.SelfGroupingSettingsDialog.khongTaiDuocCaiDat"))); });
     return () => { active = false; };
   }, [classId]);
 
-  const save = async () => {
+  const saveSettings = async () => {
     if (!loaded || !dateValid) return;
     const deadline = deadlineDate ? `${deadlineDate}T${deadlineTime || "00:00"}` : "";
     const checked = validateFormation({ enabled, minSize, maxSize, deadline });
@@ -62,22 +62,22 @@ export function SelfGroupingSettingsDialog({ classId, onClose, onSaved }: {
     setError(null);
     try {
       const saved = await updateFormation(classId, {
-        enabled, minSize: Number(minSize), maxSize: Number(maxSize), deadline: fromLocalInput(deadline), version: loaded.version,
+        enabled, minSize: Number(minSize), maxSize: Number(maxSize), deadline: convertFromLocalInput(deadline), version: loaded.version,
       });
       onSaved(saved);
     } catch (e) {
-      setError(proposalErrorText(e, msg("groups.components.SelfGroupingSettingsDialog.khongLuuDuocCaiDat")));
+      setError(describeProposalError(e, msg("groups.components.SelfGroupingSettingsDialog.khongLuuDuocCaiDat")));
       setBusy(false);
     }
   };
 
   return (
     <Dialog open title={msg("groups.components.SelfGroupingSettingsDialog.sinhVienTuChiaNhom")} onClose={onClose} dismissible={!busy}
-      footer={<Button variant="primary" disabled={busy || !loaded || !dateValid} onClick={() => void save()} data-testid="formation-save">{msg("groups.components.SelfGroupingSettingsDialog.luu")}</Button>}>
+      footer={<Button variant="primary" disabled={busy || !loaded || !dateValid} onClick={() => void saveSettings()} data-testid="formation-save">{msg("groups.components.SelfGroupingSettingsDialog.luu")}</Button>}>
       {!loaded && !error ? (
         <p role="status" className="text-[13px] text-muted">{msg("groups.components.SelfGroupingSettingsDialog.dangTaiCaiDat")}</p>
       ) : (
-        <form className="flex flex-col gap-4" onSubmit={(event) => { event.preventDefault(); void save(); }}>
+        <form className="flex flex-col gap-4" onSubmit={(event) => { event.preventDefault(); void saveSettings(); }}>
           <Switch checked={enabled} onChange={setEnabled} label={msg("groups.components.SelfGroupingSettingsDialog.choSinhVienTuChiaNhom")} disabled={busy || !loaded} />
           <p className="text-[13px] text-muted">
             {msg("groups.components.SelfGroupingSettingsDialog.sinhVienChuaCoNhomTu")}</p>

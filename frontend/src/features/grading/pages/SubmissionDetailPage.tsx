@@ -26,7 +26,7 @@ const STATUS_TONES: Record<string, Tone> = {
   IN_PROGRESS: "neutral",
 };
 
-function rowActionLabel(status: string): string {
+function describeRowAction(status: string): string {
   if (status === "PENDING") return msg("grading.pages.SubmissionDetailPage.chamBai");
   if (status === "DRAFT") return msg("grading.pages.SubmissionDetailPage.tiepTucCham");
   if (status === "FINALIZED" || status === "PUBLISHED" || status === "SUPERSEDED") return msg("grading.pages.SubmissionDetailPage.xemDiem");
@@ -217,7 +217,7 @@ export function SubmissionDetailPage({
                           className="inline-flex items-center gap-1 font-semibold text-primary-ink transition-colors hover:text-ink"
                           href={buildEvaluationHref(r.evaluationId!, { status: filter, late })}
                         >
-                          {readOnly ? msg("grading.pages.SubmissionDetailPage.xemBai") : rowActionLabel(r.status)}
+                          {readOnly ? msg("grading.pages.SubmissionDetailPage.xemBai") : describeRowAction(r.status)}
                           <Icon name="chevron_right" size={13} />
                         </Link>
                       ) : r.submittedAt ? (

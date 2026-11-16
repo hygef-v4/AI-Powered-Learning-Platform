@@ -33,7 +33,7 @@ export function FileUploader({ purpose, label = msg("files.components.FileUpload
   const uploading = state.status === "uploading";
   const shown = file && state.status !== "idle" ? file : null;
 
-  async function handle(picked: File | undefined) {
+  async function handleFile(picked: File | undefined) {
     if (!picked) return;
     setFile({ name: picked.name, size: picked.size });
     const result = await start(picked);
@@ -45,7 +45,7 @@ export function FileUploader({ purpose, label = msg("files.components.FileUpload
       <div className="flex min-w-0 items-center gap-2"
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
-        onDrop={(e) => { e.preventDefault(); setDragging(false); void handle(e.dataTransfer.files[0]); }}>
+        onDrop={(e) => { e.preventDefault(); setDragging(false); void handleFile(e.dataTransfer.files[0]); }}>
         <div className={cx("relative flex h-10 min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-lg border bg-surface px-3",
           dragging ? "border-primary bg-primary-soft" : "border-field")}>
           <Icon name={state.status === "done" ? "check_circle" : "description"} size={18}
@@ -61,7 +61,7 @@ export function FileUploader({ purpose, label = msg("files.components.FileUpload
           : <Button icon="folder_open" disabled={!policy} onClick={() => input.current?.click()}>{label}</Button>}
         <input ref={input} type="file" className="sr-only" aria-label={label} disabled={!policy || uploading}
           accept={policy ? acceptAttribute(policy) : undefined}
-          onChange={(e) => { void handle(e.target.files?.[0]); e.target.value = ""; }} />
+          onChange={(e) => { void handleFile(e.target.files?.[0]); e.target.value = ""; }} />
       </div>
       {state.status === "error" && (
         <p role="alert" className="flex items-center gap-1 text-xs text-danger">

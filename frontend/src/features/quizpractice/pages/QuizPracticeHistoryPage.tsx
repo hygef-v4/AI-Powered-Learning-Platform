@@ -4,11 +4,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Button, PageHeader, Pill, Select, TableFrame, TableSkeletonRows, Td, Th } from "@/shared/ui";
 import { getPracticeHistory, startAttempt } from "../api";
-import { attemptsText, errorMessage, formatDateTime, formatPoints } from "../model/labels";
+import { formatAttempts, describeError, formatDateTime, formatPoints } from "../model/labels";
 import type { PracticeQuizRow } from "../model/types";
 import { msg } from "@/i18n/msg";
 
-const detailHref = (row: PracticeQuizRow) => `/quiz-practice/${row.quizId}?classId=${encodeURIComponent(row.classId)}`;
+const buildDetailHref = (row: PracticeQuizRow) => `/quiz-practice/${row.quizId}?classId=${encodeURIComponent(row.classId)}`;
 
 /** Màn #42 Quiz Practice History (UC 49, BR-U11-02): Quiz đang mở và Quiz đã làm của các lớp đang học. */
 export function QuizPracticeHistoryPage() {
@@ -22,7 +22,7 @@ export function QuizPracticeHistoryPage() {
     let active = true;
     getPracticeHistory()
       .then((list) => active && setRows(list))
-      .catch((failure: unknown) => active && setError(errorMessage(failure)));
+      .catch((failure: unknown) => active && setError(describeError(failure)));
     return () => {
       active = false;
     };
@@ -41,7 +41,7 @@ export function QuizPracticeHistoryPage() {
     try {
       router.push(`/quiz-attempts/${(await startAttempt(row.quizId, row.classId)).attemptId}`);
     } catch (failure) {
-      setError(errorMessage(failure));
+      setError(describeError(failure));
       setBusy(false);
     }
   };
@@ -72,13 +72,13 @@ export function QuizPracticeHistoryPage() {
                   </span>
                 </Td>
                 <Td label={msg("quizpractice.pages.QuizPracticeHistoryPage.lop")}>{row.classCode}</Td>
-                <Td label={msg("quizpractice.pages.QuizPracticeHistoryPage.soLanLam")}>{attemptsText(row.attemptsUsed, row.maxAttempts)}</Td>
+                <Td label={msg("quizpractice.pages.QuizPracticeHistoryPage.soLanLam")}>{formatAttempts(row.attemptsUsed, row.maxAttempts)}</Td>
                 <Td label={msg("quizpractice.pages.QuizPracticeHistoryPage.diemCaoNhat")}>{row.bestScore === null ? "—" : `${formatPoints(row.bestScore)} / ${formatPoints(row.maxScore)}`}</Td>
                 <Td label={msg("quizpractice.pages.QuizPracticeHistoryPage.lanGanNhat")} className="whitespace-nowrap text-muted">{formatDateTime(row.lastAttemptAt)}</Td>
                 <Td className="whitespace-nowrap">
                   {row.attemptsUsed === 0 && row.canStart
                     ? <Button size="sm" variant="primary" disabled={busy} onClick={() => void start(row)} data-testid="practice-history-start">{msg("quizpractice.pages.QuizPracticeHistoryPage.batDau")}</Button>
-                    : <Button size="sm" onClick={() => router.push(detailHref(row))} data-testid="practice-history-view">Xem</Button>}
+                    : <Button size="sm" onClick={() => router.push(buildDetailHref(row))} data-testid="practice-history-view">Xem</Button>}
                 </Td>
               </tr>
             ))}

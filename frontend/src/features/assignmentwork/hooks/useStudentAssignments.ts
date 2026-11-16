@@ -27,7 +27,7 @@ export function useStudentAssignments(classId?: string) {
  * Đang làm: lượt làm dở của mình, hoặc bài nhóm nhóm đã bắt đầu (có tài liệu nhóm) mà chưa nộp hoặc đã sửa sau lần nộp
  * cuối; chỉ bài còn mở.
  */
-export function doing(row: StudentRow): boolean {
+export function isDoing(row: StudentRow): boolean {
   if (row.status !== "OPEN") return false;
   return row.myStatus === "IN_PROGRESS"
     || (row.myStatus === "GROUP" && !!row.group?.groupDocumentId && (!row.group.submitted || !!row.group.changedSinceSubmit));
@@ -42,9 +42,9 @@ export function isClosedUnsubmitted(row: StudentRow): boolean {
  * Trạng thái hiện trên dòng bài: bài nhóm không có nhãn riêng mà theo tiến độ của nhóm (Chưa làm, Đang làm, Đã nộp), như
  * bài cá nhân.
  */
-export function rowStatus(row: StudentRow): { label: string; tone: Tone } {
+export function resolveRowStatus(row: StudentRow): { label: string; tone: Tone } {
   if (isClosedUnsubmitted(row)) return { label: myStatusLabels.MISSED, tone: myStatusTones.MISSED };
-  if (doing(row)) return { label: myStatusLabels.IN_PROGRESS, tone: myStatusTones.IN_PROGRESS };
+  if (isDoing(row)) return { label: myStatusLabels.IN_PROGRESS, tone: myStatusTones.IN_PROGRESS };
   if (row.myStatus === "GROUP") {
     const key = row.group?.submitted ? "SUBMITTED" : "NOT_STARTED";
     return { label: myStatusLabels[key], tone: myStatusTones[key] };
@@ -53,8 +53,8 @@ export function rowStatus(row: StudentRow): { label: string; tone: Tone } {
 }
 
 /** Bài còn làm được: đang mở, chưa nộp hoặc đang làm; bài nhóm đã nộp (chưa sửa gì sau đó) thì không. */
-export function upcoming(row: StudentRow): boolean {
+export function isUpcoming(row: StudentRow): boolean {
   if (row.status !== "OPEN") return false;
-  if (row.myStatus === "GROUP") return !row.group?.submitted || doing(row);
+  if (row.myStatus === "GROUP") return !row.group?.submitted || isDoing(row);
   return row.myStatus === "NOT_STARTED" || row.myStatus === "IN_PROGRESS";
 }

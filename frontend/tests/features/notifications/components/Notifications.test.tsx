@@ -18,7 +18,7 @@ vi.mock("@/features/notifications/api", async (original) => ({
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 const sessionRole = vi.hoisted(() => ({ value: "STUDENT" }));
-vi.mock("@/features/identity/hooks/session", () => ({
+vi.mock("@/features/identity/hooks/SessionProvider", () => ({
   useSession: () => ({
     status: "authenticated",
     profile: { accountId: "a", role: sessionRole.value },

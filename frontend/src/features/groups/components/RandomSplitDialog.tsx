@@ -3,7 +3,7 @@
 import { useId, useState } from "react";
 import { Alert, Button, Dialog, Field, Pill, TableFrame, Td, TextInput, Th, showToast } from "@/shared/ui";
 import { saveGroups } from "../api";
-import { byGroupName, draftsFrom, freeNames, personLabel, saveErrorText, type StudentRow } from "../model/groupDrafts";
+import { compareGroupName, buildDraftsFrom, pickFreeNames, formatPersonLabel, saveErrorText, type StudentRow } from "../model/groupDrafts";
 import type { Draft, GroupSetView } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -27,7 +27,7 @@ export function splitUngrouped(drafts: Draft[], ungroupedIds: string[], max: num
   const next = drafts.map((d) => ({ ...d, memberIds: [...d.memberIds] }));
   const total = next.reduce((sum, d) => sum + d.memberIds.length, 0) + pool.length;
   const count = Math.max(next.length, Math.ceil(total / max));
-  freeNames(next, count - next.length).forEach((name, i) => {
+  pickFreeNames(next, count - next.length).forEach((name, i) => {
     next.push({ key: `random-${i + 1}`, id: null, name, leaderId: null, memberIds: [] });
   });
   for (const id of pool) {
@@ -52,7 +52,7 @@ export function RandomSplitDialog({ classId, set, people, onClose, onSaved }: {
   onSaved: (next: GroupSetView) => void;
 }) {
   const sizeId = useId();
-  const drafts = draftsFrom(set);
+  const drafts = buildDraftsFrom(set);
   const grouped = new Set(drafts.flatMap((d) => d.memberIds));
   const ungrouped = people.filter((p) => !grouped.has(p.accountId));
   const [size, setSize] = useState("");
@@ -64,7 +64,7 @@ export function RandomSplitDialog({ classId, set, people, onClose, onSaved }: {
 
   const split = () => setPreview(splitUngrouped(drafts, ungrouped.map((p) => p.accountId), max));
 
-  const save = async () => {
+  const saveSplit = async () => {
     if (!preview) return;
     setBusy(true);
     setError(null);
@@ -82,14 +82,14 @@ export function RandomSplitDialog({ classId, set, people, onClose, onSaved }: {
   const changed = (preview ?? [])
     .map((d) => ({ d, added: d.memberIds.filter((id) => !drafts.find((x) => x.key === d.key)?.memberIds.includes(id)) }))
     .filter(({ added }) => added.length > 0)
-    .sort((a, b) => byGroupName(a.d, b.d));
-  const nameOf = (accountId: string) => personLabel(people.find((p) => p.accountId === accountId));
+    .sort((a, b) => compareGroupName(a.d, b.d));
+  const resolveName = (accountId: string) => formatPersonLabel(people.find((p) => p.accountId === accountId));
 
   return (
     <Dialog open title={msg("groups.components.RandomSplitDialog.chiaNgauNhien")} size="lg" onClose={onClose} dismissible={!busy}
       footer={preview ? <>
         <Button icon="refresh" disabled={busy} onClick={split}>{msg("groups.components.RandomSplitDialog.chiaLai")}</Button>
-        <Button variant="primary" icon="save" disabled={busy} onClick={() => void save()}>{msg("groups.components.RandomSplitDialog.luu")}{changed.length} {msg("groups.components.RandomSplitDialog.nhom")}</Button>
+        <Button variant="primary" icon="save" disabled={busy} onClick={() => void saveSplit()}>{msg("groups.components.RandomSplitDialog.luu")}{changed.length} {msg("groups.components.RandomSplitDialog.nhom")}</Button>
       </> : (
         <Button variant="primary" onClick={split} disabled={!valid || ungrouped.length === 0}>{msg("groups.components.RandomSplitDialog.xemTruoc")}</Button>
       )}>
@@ -113,7 +113,7 @@ export function RandomSplitDialog({ classId, set, people, onClose, onSaved }: {
                     <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
                       {[...d.memberIds].sort((a, b) => Number(b === d.leaderId) - Number(a === d.leaderId)).map((id, index, all) => (
                         <span key={id} className="inline-flex items-center gap-1.5">
-                          {nameOf(id)}
+                          {resolveName(id)}
                           {id === d.leaderId && <Pill tone="warning">{msg("groups.components.RandomSplitDialog.truongNhom")}</Pill>}
                           {index < all.length - 1 && <span className="text-muted">,</span>}
                         </span>

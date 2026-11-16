@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Alert, Button, ClickableRow, Dialog, Field, Menu, MenuItem, PageHeader, Pagination, Pill, Segmented, Select, TableFrame, Td, Textarea, TextInput, Th } from "@/shared/ui";
 import { bulkQuestions, getDuplicateQuestions, getManagedSubjects, getQuestions } from "../api";
-import { DIFFICULTY_LABELS, DIFFICULTY_TONES, errorMessage, formatDateTime, STATUS_LABELS, STATUS_TONES, TYPE_LABELS } from "../model/labels";
+import { DIFFICULTY_LABELS, DIFFICULTY_TONES, describeError, formatDateTime, STATUS_LABELS, STATUS_TONES, TYPE_LABELS } from "../model/labels";
 import { QuestionAiDraftDialog } from "../components/AiDraftTargets";
 import { QuestionImportDialog } from "../components/QuestionImportDialog";
 import type { BulkResult, Difficulty, DuplicateGroup, ManagedSubject, QuestionPage, QuestionRow, QuestionStatus, QuestionType } from "../model/types";
@@ -54,7 +54,7 @@ export function QuestionListPage() {
     let active = true;
     getManagedSubjects()
       .then((list) => active && setSubjects(list))
-      .catch((failure: unknown) => active && setSubjectsError(errorMessage(failure)));
+      .catch((failure: unknown) => active && setSubjectsError(describeError(failure)));
     return () => {
       active = false;
     };
@@ -85,7 +85,7 @@ export function QuestionListPage() {
         setData(page);
         setSelected([]);
       })
-      .catch((failure: unknown) => active && setError(errorMessage(failure)));
+      .catch((failure: unknown) => active && setError(describeError(failure)));
     return () => {
       active = false;
     };
@@ -118,7 +118,7 @@ export function QuestionListPage() {
       setRejecting(false);
       setReason("");
     } catch (failure) {
-      setError(errorMessage(failure));
+      setError(describeError(failure));
     } finally {
       setBusy(false);
     }
@@ -128,7 +128,7 @@ export function QuestionListPage() {
     try {
       setDuplicates(await getDuplicateQuestions(subject.id));
     } catch (failure) {
-      setError(errorMessage(failure));
+      setError(describeError(failure));
     }
   };
 

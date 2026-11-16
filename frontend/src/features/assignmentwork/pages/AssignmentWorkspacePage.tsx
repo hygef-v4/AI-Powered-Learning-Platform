@@ -8,9 +8,9 @@ import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/u
 import {
   DocumentEditor,
   DocxImportDialog,
-  outlineOf,
+  buildOutline,
   publishOutline,
-  sectionsOf,
+  numberSections,
   type DocumentBlock,
   type DocumentModel,
   type DocumentPart,
@@ -18,7 +18,7 @@ import {
 } from "@/shared/document";
 import { Alert, Button, Dialog, Menu, MenuItem, Pill } from "@/shared/ui";
 import { attemptImageUrl, exportUrl, workApi } from "../api";
-import { errorCode, errorMessage, formatDateTime, formatTime, problemIssues, remaining } from "../model/format";
+import { readErrorCode, describeError, formatDateTime, formatTime, readProblemIssues, describeRemaining } from "../model/format";
 
 import type { Attempt } from "../model/types";
 import { NOOP } from "@/shared/noop";
@@ -46,7 +46,7 @@ export function mergeSaved(local: DocumentModel, saved: DocumentModel): Document
  * chỗ luôn thuộc phần cuối của đề (yêu cầu 2026-10-21: người học chỉ viết trong các phần).
  */
 export function insertIntoPart(content: DocumentModel, parts: DocumentPart[], partId: string | null, added: DocumentBlock[]): DocumentModel {
-  const sections = sectionsOf(content, parts);
+  const sections = numberSections(content, parts);
   let at = -1;
   if (partId) content.blocks.forEach((block, index) => { if (sections.get(block.id) === partId) at = index; });
   if (at < 0) return { blocks: [...content.blocks, ...added] };
@@ -143,7 +143,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
       setContent(recovered ?? value.content);
       setDirty(!!recovered);
       latest.current = { content: recovered ?? value.content, dirty: !!recovered };
-      if (recovered) setBanner({ tone: "warning", text: "Đã khôi phục bản chưa lưu trên thiết bị này" });
+      if (recovered) setBanner({ tone: "warning", text: msg("assignmentwork.pages.AssignmentWorkspacePage.daKhoiPhucBanChuaLuu") });
       setSavedAt(value.lastSavedAt);
       version.current = value.contentVersion;
       setOffset(new Date(value.serverTime).getTime() - Date.now());
@@ -186,21 +186,21 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
         return true;
       } catch (error) {
         // Giữ đánh dấu chưa lưu trong mọi trường hợp: Nộp chỉ đi tiếp khi lần lưu cuối thành công.
-        const code = errorCode(error);
+        const code = readErrorCode(error);
         const transient = !(error instanceof ApiError) || error.problem.status >= 500;
         if (code === "CONTENT_VERSION_CONFLICT") {
           halt.current = "conflict";
           setBanner({ tone: "warning", reload: true, text: msg("assignmentwork.pages.AssignmentWorkspacePage.baiDangMoONoiKhac") });
         } else if (code === "DEADLINE_PASSED" || code === "ATTEMPT_SUBMITTED") {
           halt.current = "closed";
-          setBanner({ tone: "danger", text: errorMessage(error) });
+          setBanner({ tone: "danger", text: describeError(error) });
         } else if (transient) {
           setBanner({ tone: "warning", text: msg("assignmentwork.pages.AssignmentWorkspacePage.matKetNoiChuaLuu") });
           setRetry((value) => value + 1);
         } else {
           halt.current = "invalid";
-          setIssues(problemIssues(error));
-          setBanner({ tone: "danger", text: msg("assignmentwork.pages.AssignmentWorkspacePage.chuaLuu", { value: String(errorMessage(error)) }) });
+          setIssues(readProblemIssues(error));
+          setBanner({ tone: "danger", text: msg("assignmentwork.pages.AssignmentWorkspacePage.chuaLuu", { value: String(describeError(error)) }) });
         }
         return false;
       } finally {
@@ -242,13 +242,13 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
     workApi.activity(attemptId, events, options.keepalive), [attemptId]);
   useActivityTracker({ enabled: !!attempt?.activityMonitoringEnabled && attempt.status === "IN_PROGRESS", send: sendActivity });
 
-  const sections = useMemo(() => sectionsOf(content, attempt?.parts ?? []), [content, attempt?.parts]);
+  const sections = useMemo(() => numberSections(content, attempt?.parts ?? []), [content, attempt?.parts]);
 
   // Sidebar mục lục của bài, như trang soạn của giảng viên; lối về trang bài tập.
   useEffect(() => {
     if (!attempt) return;
     const backHref = `/my-assignments/${encodeURIComponent(attempt.assignmentId)}?classId=${encodeURIComponent(attempt.classId)}`;
-    publishOutline({ assignmentId: attempt.assignmentId, backHref, backLabel: msg("assignmentwork.pages.AssignmentWorkspacePage.baiTap"), entries: outlineOf(content.blocks) });
+    publishOutline({ assignmentId: attempt.assignmentId, backHref, backLabel: msg("assignmentwork.pages.AssignmentWorkspacePage.baiTap"), entries: buildOutline(content.blocks) });
   }, [attempt, content.blocks]);
   useEffect(() => () => publishOutline(null), []);
 
@@ -260,11 +260,11 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
     setDirty(true);
   }
 
-  if (loadError) return <Alert tone="danger" role="alert">{errorMessage(loadError)}</Alert>;
+  if (loadError) return <Alert tone="danger" role="alert">{describeError(loadError)}</Alert>;
   if (!attempt) return <p role="status" className="text-sm text-muted">{msg("assignmentwork.pages.AssignmentWorkspacePage.dangMoBaiLam")}</p>;
 
   const editable = attempt.editable && attempt.status === "IN_PROGRESS";
-  const left = remaining(attempt.deadlineAt, now + offset);
+  const left = describeRemaining(attempt.deadlineAt, now + offset);
   const beforeDeadline = new Date(attempt.deadlineAt).getTime() > now + offset;
   const active = attempt.parts.find((part) => part.partId === activePart);
   const saveText = saving ? msg("assignmentwork.pages.AssignmentWorkspacePage.dangLuu") : dirty ? msg("assignmentwork.pages.AssignmentWorkspacePage.coThayDoiChuaLuu") : savedAt ? msg("assignmentwork.pages.AssignmentWorkspacePage.daLuuLuc", { value: String(formatTime(savedAt)) }) : msg("assignmentwork.pages.AssignmentWorkspacePage.daLuu");
@@ -358,7 +358,7 @@ function SubmitDialog({ onClose, onSubmit }: {
           try {
             await onSubmit();
           } catch (error) {
-            setMessage(errorMessage(error));
+            setMessage(describeError(error));
             setBusy(false);
           }
         }}>{msg("assignmentwork.pages.AssignmentWorkspacePage.nopBai")}</Button>

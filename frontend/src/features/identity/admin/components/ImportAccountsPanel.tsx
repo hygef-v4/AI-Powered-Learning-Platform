@@ -18,7 +18,7 @@ import { msg } from "@/i18n/msg";
 const ROWS_PER_PAGE = 10;
 
 /** Lý do lỗi viết hoa chữ cái đầu. */
-function sentence(text: string) {
+function formatSentence(text: string) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
@@ -35,7 +35,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function run(action: (file: File) => Promise<ImportResult>, target: File) {
+  async function runImport(action: (file: File) => Promise<ImportResult>, target: File) {
     setBusy(true);
     setError(null);
     try {
@@ -64,7 +64,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
   function choose(next: File | null) {
     setFile(next);
     setPreview(null);
-    if (next) void run(validateImport, next);
+    if (next) void runImport(validateImport, next);
   }
 
   const rows = preview?.rows.slice(page * ROWS_PER_PAGE, (page + 1) * ROWS_PER_PAGE) ?? [];
@@ -145,7 +145,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
                   <Td>{row.studentCode}</Td>
                   <Td>
                     {row.reason ? (
-                      <Pill tone="danger">{sentence(IMPORT_REASON_LABELS[row.reason] ?? row.reason)}</Pill>
+                      <Pill tone="danger">{formatSentence(IMPORT_REASON_LABELS[row.reason] ?? row.reason)}</Pill>
                     ) : (
                       <Pill tone="success">{row.outcome === "CREATED" ? msg("identity.admin.components.ImportAccountsPanel.daTao2") : msg("identity.admin.components.ImportAccountsPanel.hopLe2")}</Pill>
                     )}
@@ -166,7 +166,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
                   variant="primary"
                   icon="check"
                   disabled={busy || preview.validCount === 0 || !file}
-                  onClick={() => file && run(commitImport, file)}
+                  onClick={() => file && runImport(commitImport, file)}
                 >
                   {msg("identity.admin.components.ImportAccountsPanel.nhapTaiKhoan", { validCount: String(preview.validCount) })}
                 </Button>

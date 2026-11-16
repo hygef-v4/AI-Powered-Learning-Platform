@@ -2,7 +2,7 @@
 
 import { useState, type InputHTMLAttributes } from "react";
 import { Icon } from "@/shared/ui/Icon";
-import { TextInput } from "@/shared/ui/inputs";
+import { TextInput } from "@/shared/ui/Inputs";
 import { msg } from "@/i18n/msg";
 
 /** Ô mật khẩu trong màn sau đăng nhập: `TextInput` chung kèm nút hiện/ẩn ở cuối ô (design `c06`). */

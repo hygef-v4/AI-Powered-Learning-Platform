@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Alert, Button, Dialog, Pill, Segmented, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import { getBankQuestionsForQuiz, previewRandomItems } from "../api";
-import { DIFFICULTY_LABELS, DIFFICULTY_TONES, errorMessage, TYPE_LABELS } from "../model/labels";
+import { DIFFICULTY_LABELS, DIFFICULTY_TONES, describeError, TYPE_LABELS } from "../model/labels";
 import type { Difficulty, QuestionPage, QuestionView } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -38,7 +38,7 @@ export function BankQuestionPicker({ quizId, freeSlots, onClose, onAdd, inline =
           setError(null);
           setPage(result);
         })
-        .catch((failure: unknown) => active && setError(errorMessage(failure)));
+        .catch((failure: unknown) => active && setError(describeError(failure)));
     }, 250);
     return () => {
       active = false;
@@ -58,7 +58,7 @@ export function BankQuestionPicker({ quizId, freeSlots, onClose, onAdd, inline =
       const result = await previewRandomItems(quizId, n, difficulty || null, tag.trim() || null);
       setRandom({ rows: result.questions, matching: result.matching });
     } catch (failure) {
-      setError(errorMessage(failure));
+      setError(describeError(failure));
     } finally {
       setBusy(false);
     }
@@ -68,13 +68,13 @@ export function BankQuestionPicker({ quizId, freeSlots, onClose, onAdd, inline =
   const tooMany = ids.length > freeSlots;
   useEffect(() => { onDirtyChange?.(ids.length > 0); }, [ids.length, onDirtyChange]);
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
-  const add = async () => {
+  const addQuestions = async () => {
     setBusy(true);
     setError(null);
     try {
       await onAdd(ids);
     } catch (failure) {
-      setError(errorMessage(failure));
+      setError(describeError(failure));
       setBusy(false);
     }
   };
@@ -83,7 +83,7 @@ export function BankQuestionPicker({ quizId, freeSlots, onClose, onAdd, inline =
 
   const footer = <>
         {inline && <Button onClick={onClose} disabled={busy}>{msg("quizzes.components.BankQuestionPicker.huyChonCau")}</Button>}
-        <Button variant="primary" disabled={busy || ids.length === 0 || tooMany} onClick={() => void add()} data-testid="bank-picker-add">
+        <Button variant="primary" disabled={busy || ids.length === 0 || tooMany} onClick={() => void addQuestions()} data-testid="bank-picker-add">
           {tab === "manual" ? msg("quizzes.components.BankQuestionPicker.themCau", { length: String(ids.length) }) : msg("quizzes.components.BankQuestionPicker.luuCauVaoQuiz", { length: String(ids.length) })}
         </Button>
       </>;

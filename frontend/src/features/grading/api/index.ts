@@ -1,4 +1,4 @@
-import { apiFetch, apiDownloadFile } from "@/shared/api/client";
+import { fetchApi, downloadApiFile } from "@/shared/api/client";
 import type { NavigationFilters } from "../model/navigation";
 import type { ContributionLevel } from "../model/contributionLevels";
 import type {
@@ -33,23 +33,23 @@ const buildQuery = (values: Record<string, string | number | undefined>) => {
 };
 
 const writeRequest = <T>(path: string, body: unknown, method = "POST") =>
-  apiFetch<T>(API_ROOT + path, { method, body: JSON.stringify(body) });
+  fetchApi<T>(API_ROOT + path, { method, body: JSON.stringify(body) });
 
 export const gradingApi = {
   loadAssignmentContext: (assignmentId: string) =>
-    apiFetch<AssignmentContext>(`${API_ROOT}/assignments/${encodeURIComponent(assignmentId)}`),
+    fetchApi<AssignmentContext>(`${API_ROOT}/assignments/${encodeURIComponent(assignmentId)}`),
   listSubmissions: (classId: string, assignmentId: string, status = "ALL", page = 1, late?: string) => {
     const params = buildQuery({ status, page, size: 20, late: late || undefined });
-    return apiFetch<SubmissionPage>(
+    return fetchApi<SubmissionPage>(
       `${API_ROOT}/classes/${classId}/assignments/${assignmentId}/submissions?${params}`,
     );
   },
   loadSubmissionProgress: (classId: string) =>
-    apiFetch<Record<string, SubmissionPage>>(`${API_ROOT}/classes/${classId}/submission-progress`),
+    fetchApi<Record<string, SubmissionPage>>(`${API_ROOT}/classes/${classId}/submission-progress`),
 
   loadEvaluation: (id: string, filters: NavigationFilters = {}) => {
     const params = buildQuery(filters);
-    return apiFetch<Detail>(`${API_ROOT}/evaluations/${id}${params ? `?${params}` : ""}`);
+    return fetchApi<Detail>(`${API_ROOT}/evaluations/${id}${params ? `?${params}` : ""}`);
   },
   saveEvaluation: (id: string, body: Save) => writeRequest<Evaluation>(`/evaluations/${id}`, body, "PUT"),
   finalizeGrades: (items: ItemVersion[]) => writeRequest<BatchResult>("/evaluations:finalize", { items }),
@@ -60,10 +60,10 @@ export const gradingApi = {
       { version, score, reason, contributionLevel }, "PUT"),
 
   loadTask: (id: string) =>
-    apiFetch<{ state: string; safeError: string | null }>(
+    fetchApi<{ state: string; safeError: string | null }>(
       `${API_ROOT}/ai/tasks/${encodeURIComponent(id)}`,
     ),
-  listProposals: (id: string) => apiFetch<Proposal[]>(`${API_ROOT}/evaluations/${id}/ai-proposals`),
+  listProposals: (id: string) => fetchApi<Proposal[]>(`${API_ROOT}/evaluations/${id}/ai-proposals`),
   requestProposal: (id: string, input: AiRequest) =>
     writeRequest<Proposal>(`/evaluations/${id}/ai-proposals`, input),
   requestProposals: (items: ItemVersion[], request: AiRequest) =>
@@ -72,16 +72,16 @@ export const gradingApi = {
     writeRequest<AiEstimate>("/evaluations:ai-proposal-estimate", { items }),
 
   loadGradebook: (classId: string, q = "", page = 1, size = 20) =>
-    apiFetch<GradebookPage>(`${API_ROOT}/classes/${classId}/gradebook?${buildQuery({ q, page, size })}`),
+    fetchApi<GradebookPage>(`${API_ROOT}/classes/${classId}/gradebook?${buildQuery({ q, page, size })}`),
   exportGrades: (classId: string, format: string, assignmentId?: string) =>
-    apiDownloadFile(`${API_ROOT}/classes/${classId}/gradebook/export?${buildQuery({ format, assignmentId })}`),
+    downloadApiFile(`${API_ROOT}/classes/${classId}/gradebook/export?${buildQuery({ format, assignmentId })}`),
   loadStudentGrades: (classId: string, studentId: string) =>
-    apiFetch<GradebookRow>(`${API_ROOT}/classes/${classId}/students/${studentId}/grades`),
-  listMyGrades: (classId: string) => apiFetch<StudentGrade[]>(`${API_ROOT}/me/grades?classId=${classId}`),
-  loadAttemptGrade: (attemptId: string) => apiFetch<StudentGrade>(`${API_ROOT}/me/grades/attempts/${attemptId}`),
+    fetchApi<GradebookRow>(`${API_ROOT}/classes/${classId}/students/${studentId}/grades`),
+  listMyGrades: (classId: string) => fetchApi<StudentGrade[]>(`${API_ROOT}/me/grades?classId=${classId}`),
+  loadAttemptGrade: (attemptId: string) => fetchApi<StudentGrade>(`${API_ROOT}/me/grades/attempts/${attemptId}`),
 
   loadDistributionVisibility: (classId: string, assignmentId: string, signal?: AbortSignal) =>
-    apiFetch<GradeDistributionVisibility>(
+    fetchApi<GradeDistributionVisibility>(
       API_ROOT + buildVisibilityPath(classId, assignmentId),
       { signal },
     ),
@@ -97,11 +97,11 @@ export const gradingApi = {
       "PUT",
     ),
   loadMyGradeDistribution: (classId: string, assignmentId: string) =>
-    apiFetch<{ label: string; count: number }[]>(
+    fetchApi<{ label: string; count: number }[]>(
       `${API_ROOT}/me/grade-distributions?${buildQuery({ classId, assignmentId })}`,
     ),
   loadClassGradeDistribution: (classId: string, assignmentId: string) =>
-    apiFetch<{ label: string; count: number }[]>(
+    fetchApi<{ label: string; count: number }[]>(
       `${API_ROOT}/classes/${classId}/grade-distribution?${buildQuery({ assignmentId })}`,
     ),
 };

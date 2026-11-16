@@ -1,7 +1,7 @@
 "use client";
 
 import type { NavContext, NavLocation } from "@/shared/layout/navigation";
-import { AssignmentNav } from "@/features/assignments/components/assignmentNav";
+import { AssignmentNav } from "@/features/assignments/components/AssignmentNav";
 import { msg } from "@/i18n/msg";
 
 /**

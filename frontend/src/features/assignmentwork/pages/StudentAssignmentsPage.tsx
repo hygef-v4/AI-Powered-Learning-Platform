@@ -7,10 +7,10 @@ import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Alert, Card, ClassFilter, ClickableRow, cx, Icon, PageHeader, Pagination, Pill, Segmented, Select, TableFrame, TableSkeletonRows, Td, TextInput, Th } from "@/shared/ui";
 import { compareTermsNewestFirst } from "@/features/academics/model/term";
 import { formatTimeUntil } from "@/shared/dateTime";
-import { errorMessage, formatDateTime } from "../model/format";
+import { describeError, formatDateTime } from "../model/format";
 import { studentAssignmentResults } from "../slots";
 import type { StudentRow } from "../model/types";
-import { doing, isClosedUnsubmitted, rowStatus, upcoming, useStudentAssignments } from "../hooks/useStudentAssignments";
+import { isDoing, isClosedUnsubmitted, resolveRowStatus, isUpcoming, useStudentAssignments } from "../hooks/useStudentAssignments";
 import { msg } from "@/i18n/msg";
 
 type Tab = "upcoming" | "doing" | "submitted" | "closed";
@@ -27,7 +27,7 @@ type Kind = "INDIVIDUAL" | "GROUP" | "PRACTICE";
 const KIND_LABELS: Record<Kind, string> = { INDIVIDUAL: msg("assignmentwork.pages.StudentAssignmentsPage.caNhan"), GROUP: msg("assignmentwork.pages.StudentAssignmentsPage.nhom"), PRACTICE: msg("assignmentwork.pages.StudentAssignmentsPage.luyenTap") };
 
 /** Loại bài hiển thị: bài luyện tập (không chấm điểm) là một loại riêng, còn lại theo cá nhân hay nhóm. */
-function kindOf(row: StudentRow): Kind {
+function classifyKind(row: StudentRow): Kind {
   return row.gradingMode === "PRACTICE" ? "PRACTICE" : row.submissionMode;
 }
 
@@ -43,7 +43,7 @@ function DueIn({ closesAt }: { closesAt: string | null }) {
 }
 
 /** Mở bài từ trang chung thì đánh dấu `from=all` để nút quay lại về trang chung, không về trang bài tập của lớp. */
-function detailHref(row: StudentRow, general: boolean) {
+function buildDetailHref(row: StudentRow, general: boolean) {
   return `/my-assignments/${encodeURIComponent(row.assignmentId)}?classId=${encodeURIComponent(row.classId)}${general ? "&from=all" : ""}`;
 }
 
@@ -74,17 +74,17 @@ export function StudentAssignmentsPage() {
     .sort((a, b) => a.code.localeCompare(b.code, "vi") || compareTermsNewestFirst(a.term ?? "", b.term ?? ""));
   const rows = allRows && classFilter ? allRows.filter((row) => row.classId === classFilter) : allRows;
 
-  const inTab = (row: StudentRow, key: Tab) => {
+  const isInTab = (row: StudentRow, key: Tab) => {
     // Mỗi bài một tab: đang làm (kể cả sửa để nộp lại) thì chỉ ở Đang làm, không ở Đã nộp.
     if (key === "closed") return isClosedUnsubmitted(row);
-    return key === "upcoming" ? upcoming(row) && !doing(row) : key === "doing" ? doing(row) : !doing(row) && (row.submittedCount > 0 || !!row.group?.submitted);
+    return key === "upcoming" ? isUpcoming(row) && !isDoing(row) : key === "doing" ? isDoing(row) : !isDoing(row) && (row.submittedCount > 0 || !!row.group?.submitted);
   };
   const focused = focus ? rows?.find((row) => row.assignmentId === focus) : undefined;
-  const tab: Tab = chosenTab || TABS.find((item) => focused && inTab(focused, item.value))?.value || "upcoming";
+  const tab: Tab = chosenTab || TABS.find((item) => focused && isInTab(focused, item.value))?.value || "upcoming";
   const q = query.toLocaleLowerCase("vi").trim();
-  const visible = (rows ?? []).filter((row) => inTab(row, tab) && (!mode || kindOf(row) === mode)
+  const visible = (rows ?? []).filter((row) => isInTab(row, tab) && (!mode || classifyKind(row) === mode)
     && row.title.toLocaleLowerCase("vi").includes(q));
-  const count = (key: Tab) => (rows ?? []).filter((row) => inTab(row, key)).length;
+  const count = (key: Tab) => (rows ?? []).filter((row) => isInTab(row, key)).length;
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const current = Math.min(page, totalPages - 1);
   const shown = visible.slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE);
@@ -95,7 +95,7 @@ export function StudentAssignmentsPage() {
       <PageHeader title={msg("assignmentwork.pages.StudentAssignmentsPage.baiTap")} actions={!classId && (
         <ClassFilter classes={classes} value={classFilter} onChange={(value) => { setClassFilter(value); setPage(0); }} testId="assignment-class-filter" />
       )} />
-      {error !== null && <Alert tone="danger" role="alert">{errorMessage(error)}</Alert>}
+      {error !== null && <Alert tone="danger" role="alert">{describeError(error)}</Alert>}
       <Card as="section" padding="lg" className="flex flex-col gap-3.5" aria-label={msg("assignmentwork.pages.StudentAssignmentsPage.danhSachBaiTap")}>
         <div className="flex flex-wrap items-center gap-3">
           <Segmented
@@ -135,18 +135,18 @@ export function StudentAssignmentsPage() {
           </thead>
           <tbody>
             {shown.map((row) => (
-              <ClickableRow key={`${row.classId}-${row.assignmentId}`} onClick={() => router.push(detailHref(row, !classId))} data-testid={`student-row-${row.assignmentId}`}>
+              <ClickableRow key={`${row.classId}-${row.assignmentId}`} onClick={() => router.push(buildDetailHref(row, !classId))} data-testid={`student-row-${row.assignmentId}`}>
                 <Td>
-                  <Link href={detailHref(row, !classId)} onClick={(e) => e.stopPropagation()} className="block truncate font-semibold text-ink hover:text-primary-ink">{row.title}</Link>
+                  <Link href={buildDetailHref(row, !classId)} onClick={(e) => e.stopPropagation()} className="block truncate font-semibold text-ink hover:text-primary-ink">{row.title}</Link>
                 </Td>
                 <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.lop")} className="truncate" title={row.classCode || undefined}>{row.classCode || "—"}</Td>
                 <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.monHoc")} className="truncate" title={row.subjectCode || undefined}>{row.subjectCode || "—"}</Td>
-                <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.loai")} className="whitespace-nowrap">{KIND_LABELS[kindOf(row)]}</Td>
+                <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.loai")} className="whitespace-nowrap">{KIND_LABELS[classifyKind(row)]}</Td>
                 <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.hanNop")} className="whitespace-nowrap">
                   <span className="font-mono text-xs text-muted">{formatDateTime(row.closesAt)}</span>
                   {(tab === "upcoming" || tab === "doing") && <DueIn closesAt={row.closesAt} />}
                 </Td>
-                <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.trangThai")}><Pill tone={rowStatus(row).tone}>{rowStatus(row).label}</Pill></Td>
+                <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.trangThai")}><Pill tone={resolveRowStatus(row).tone}>{resolveRowStatus(row).label}</Pill></Td>
                 {tab === "submitted" && (
                   <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.diem")}>
                     {row.gradingMode === "GRADED" ? <SlotOutlet slot={studentAssignmentResults} props={{ assignmentId: row.assignmentId, classId: row.classId }} /> : <span className="text-muted">—</span>}

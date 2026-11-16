@@ -14,7 +14,7 @@ export function checkPassword(password: string): PasswordChecks {
   };
 }
 
-export function passwordAcceptable(password: string): boolean {
+export function isPasswordAcceptable(password: string): boolean {
   const checks = checkPassword(password);
   return checks.minLength && checks.letterAndDigit;
 }

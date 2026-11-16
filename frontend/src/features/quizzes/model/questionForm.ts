@@ -22,7 +22,7 @@ export type QuestionForm = {
 
 export type FormErrors = Partial<Record<"stem" | "options" | "correctOptionIds" | "defaultPoints" | "tags" | "explanation", string>>;
 
-export function emptyForm(): QuestionForm {
+export function createEmptyForm(): QuestionForm {
   return {
     type: "MCQ_SINGLE",
     stem: "",
@@ -35,7 +35,7 @@ export function emptyForm(): QuestionForm {
   };
 }
 
-export function formOf(question: QuestionContent): QuestionForm {
+export function buildFormFrom(question: QuestionContent): QuestionForm {
   return {
     type: question.type,
     stem: question.stem,
@@ -49,7 +49,7 @@ export function formOf(question: QuestionContent): QuestionForm {
 }
 
 /** Mã lựa chọn mới: lớn hơn mọi mã số đang có, để mã không đổi khi xóa lựa chọn ở giữa. */
-export function nextOptionId(options: QuestionOption[]): string {
+export function generateNextOptionId(options: QuestionOption[]): string {
   const max = options.reduce((acc, option) => Math.max(acc, Number(option.id) || 0), 0);
   return String(max + 1);
 }
@@ -63,7 +63,7 @@ export function parseTags(text: string): string[] {
 }
 
 /** Đổi loại câu sang một đáp án thì chỉ giữ đáp án đúng đầu tiên. */
-export function withType(form: QuestionForm, type: QuestionType): QuestionForm {
+export function changeType(form: QuestionForm, type: QuestionType): QuestionForm {
   return { ...form, type, correctOptionIds: type === "MCQ_SINGLE" ? form.correctOptionIds.slice(0, 1) : form.correctOptionIds };
 }
 
@@ -101,7 +101,7 @@ export function validateForm(form: QuestionForm): FormErrors {
   return errors;
 }
 
-export function toContent(form: QuestionForm): QuestionContent {
+export function convertToContent(form: QuestionForm): QuestionContent {
   const ids = new Set(form.options.map((option) => option.id));
   return {
     type: form.type,

@@ -27,7 +27,7 @@ export function ClassLabel({ subjectCode, code, term }: { subjectCode: string | 
  */
 export function ClassFilter({ classes, value, onChange, testId }: { classes: ClassFilterOption[]; value: string; onChange: (classId: string) => void; testId?: string }) {
   const current = classes.find((c) => c.classId === value);
-  const option = (classId: string, subjectCode: string | null, code: string, term?: string | null) => {
+  const buildOption = (classId: string, subjectCode: string | null, code: string, term?: string | null) => {
     const selected = classId === value;
     return (
       <button key={classId || "all"} type="button" role="menuitem" data-menu-item aria-current={selected ? "true" : undefined} onClick={() => onChange(classId)}
@@ -43,8 +43,8 @@ export function ClassFilter({ classes, value, onChange, testId }: { classes: Cla
         summaryClassName="!h-10 w-full rounded-lg border border-line bg-surface !px-2.5 text-left hover:!bg-surface hover:border-line-strong [&>svg:last-child]:ml-auto [&>svg:last-child]:shrink-0"
         label={<ClassLabel subjectCode={current?.subjectCode ?? null} code={current?.code ?? msg("shared.ui.ClassFilter.tatCaLop")} term={current?.term} />}>
         <div className="flex max-h-72 w-[228px] flex-col gap-0.5 overflow-y-auto">
-          {option("", null, msg("shared.ui.ClassFilter.tatCaLop"))}
-          {classes.map((c) => option(c.classId, c.subjectCode, c.code, c.term))}
+          {buildOption("", null, msg("shared.ui.ClassFilter.tatCaLop"))}
+          {classes.map((c) => buildOption(c.classId, c.subjectCode, c.code, c.term))}
         </div>
       </Menu>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useSession } from "@/features/identity/hooks/session";
+import { useSession } from "@/features/identity/hooks/SessionProvider";
 import { Icon } from "@/shared/ui";
 import {
   buildItemHref,

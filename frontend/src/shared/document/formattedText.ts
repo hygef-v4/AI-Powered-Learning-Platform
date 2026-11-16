@@ -8,11 +8,11 @@ export type FormattedBlock = {
 };
 export type FormattedText = { blocks: FormattedBlock[] };
 
-export function formattedTextOf(text: string): FormattedText {
+export function createFormattedText(text: string): FormattedText {
   return { blocks: [{ type: "PARAGRAPH", align: "LEFT", indent: 0, runs: [{ text }] }] };
 }
 
-export function formattedTextPlain(document: FormattedText): string {
+export function convertFormattedTextToPlain(document: FormattedText): string {
   return document.blocks.map((block) => block.runs.map((run) => run.text).join("")).join("\n");
 }
 

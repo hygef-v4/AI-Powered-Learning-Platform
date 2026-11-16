@@ -3,12 +3,12 @@
 import { useId, useState, type FormEvent } from "react";
 import { ApiError } from "@/shared/api/client";
 import { Button } from "@/shared/ui/Button";
-import { Field } from "@/shared/ui/inputs";
+import { Field } from "@/shared/ui/Inputs";
 import { Section } from "@/shared/ui/Section";
 import { changePassword } from "../../api";
 import { PasswordChecklist } from "../../components/PasswordChecklist";
 import { SecretInput } from "../../components/SecretInput";
-import { PASSWORD_VIOLATION_MESSAGES, passwordAcceptable } from "../../model/passwordRules";
+import { PASSWORD_VIOLATION_MESSAGES, isPasswordAcceptable } from "../../model/passwordRules";
 import { msg } from "@/i18n/msg";
 
 export const PASSWORD_CHANGED_MESSAGE = msg("identity.profile.components.PasswordChangeForm.daDoiMatKhau");
@@ -26,7 +26,7 @@ export function PasswordChangeForm({ onChanged }: { onChanged: () => void }) {
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const acceptable = passwordAcceptable(password);
+  const acceptable = isPasswordAcceptable(password);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();

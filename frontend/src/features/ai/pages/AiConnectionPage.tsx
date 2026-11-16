@@ -2,7 +2,7 @@
 
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { PageHeader, SettingsCard, Tabs, type TabItem } from "@/shared/ui";
-import { useSession } from "@/features/identity/hooks/session";
+import { useSession } from "@/features/identity/hooks/SessionProvider";
 import { McpAgentsTab } from "../components/McpAgentsTab";
 import {
   addConnection,

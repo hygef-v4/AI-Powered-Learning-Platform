@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { QuizPracticeHistoryPage } from "@/features/quizpractice/pages/QuizPracticeHistoryPage";
-import { serverMsg } from "@/i18n/server";
+import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await serverMsg("app.quizpractice.page.luyenTapQuiz") };
+  return { title: await translateOnServer("app.quizpractice.page.luyenTapQuiz") };
 }
 
 // U11 #42 Quiz Practice History.

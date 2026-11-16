@@ -36,7 +36,7 @@ export function RubricChecklist({
   onChangeStructuredItem,
   onToggleAcknowledge,
 }: ChecklistProps & { rubric: Rubric }) {
-  function award(itemId: string, max: number, achieved: boolean) {
+  function awardItem(itemId: string, max: number, achieved: boolean) {
     const selected = new Set(checks[rubric.rubricId] ?? []);
     if (achieved) selected.add(itemId); else selected.delete(itemId);
     onChange({ ...checks, [rubric.rubricId]: [...selected] });
@@ -80,7 +80,7 @@ export function RubricChecklist({
             <div className="flex items-start justify-between gap-2">
               <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-2">
                 <input type="checkbox" aria-label={item.text} checked={achieved} disabled={disabled}
-                  onChange={(event) => award(item.itemId, max, event.target.checked)}
+                  onChange={(event) => awardItem(item.itemId, max, event.target.checked)}
                   className="mt-0.5 size-4 shrink-0 accent-primary disabled:cursor-not-allowed" />
                 <span className="min-w-0 flex-1 break-words text-ink">
                   {showCriterion && <span className="block text-xs text-faint">{criterion.title}</span>}

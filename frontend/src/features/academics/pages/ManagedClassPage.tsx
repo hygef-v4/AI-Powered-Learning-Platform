@@ -4,7 +4,7 @@ import type {CandidateLoader} from "../hooks/useCandidates";
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useState } from "react";
 import { Button, PageHeader, Pill, Section, tabId, Tabs, type TabItem } from "@/shared/ui";
-import { initials } from "@/shared/layout/navigation";
+import { extractInitials } from "@/shared/layout/navigation";
 import { ClassInfoForm } from "../components/ClassInfoForm";
 import { AssignTeacherDialog, ClassStateActions } from "../components/ClassDialogs";
 import { EnrollmentPanel } from "../components/EnrollmentPanel";
@@ -58,7 +58,7 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
         </Section>
         <Section title={msg("academics.pages.ManagedClassPage.giangVien")} actions={!archived && <Button size="sm" onClick={() => setAssigning(true)} data-testid="class-assign-teacher">{value.teacher ? msg("academics.pages.ManagedClassPage.doiGiangVien") : msg("academics.pages.ManagedClassPage.phanCong")}</Button>}>
           {value.teacher ? <div className="flex items-center gap-3">
-            <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent">{initials(value.teacher.name)}</span>
+            <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent">{extractInitials(value.teacher.name)}</span>
             <div className="min-w-0"><p className="text-sm font-semibold">{value.teacher.name}</p><p className="break-all text-xs text-muted">{value.teacher.email}</p></div>
           </div> : <div><Pill>{msg("academics.pages.ManagedClassPage.chuaPhanCong")}</Pill></div>}
         </Section>

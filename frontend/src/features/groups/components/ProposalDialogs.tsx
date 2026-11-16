@@ -20,7 +20,7 @@ export function ProposalNameDialog({ title, initial = "", confirmLabel, onClose,
   const [value, setValue] = useState(initial);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const save = async () => {
+  const saveProposal = async () => {
     const checked = validateProposalName(value);
     if (checked.error) {
       setError(checked.error);
@@ -33,8 +33,8 @@ export function ProposalNameDialog({ title, initial = "", confirmLabel, onClose,
   };
   return (
     <Dialog open title={title} onClose={onClose} dismissible={!busy}
-      footer={<Button variant="primary" disabled={busy} onClick={() => void save()} data-testid="proposal-name-save">{confirmLabel}</Button>}>
-      <form onSubmit={(event) => { event.preventDefault(); void save(); }}>
+      footer={<Button variant="primary" disabled={busy} onClick={() => void saveProposal()} data-testid="proposal-name-save">{confirmLabel}</Button>}>
+      <form onSubmit={(event) => { event.preventDefault(); void saveProposal(); }}>
         <Field label={msg("groups.components.ProposalDialogs.tenNhom")} htmlFor={fieldId} required error={error}>
           <TextInput id={fieldId} value={value} maxLength={MAX_PROPOSAL_NAME} invalid={!!error} autoFocus disabled={busy}
             onChange={(event) => { setValue(event.target.value); setError(null); }} data-testid="proposal-name-input" />

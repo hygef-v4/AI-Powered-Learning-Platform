@@ -96,7 +96,7 @@ export function ModuleBoard({
     order.splice(index + offset, 0, moved!);
     void runAction(() => moduleApi.reorderModules(scope.subjectId, order));
   }
-  const closed = () => {
+  const handleClosed = () => {
     setDialog(null);
     setError("");
   };
@@ -257,7 +257,7 @@ export function ModuleBoard({
           initial=""
           busy={busy}
           error={error}
-          onClose={closed}
+          onClose={handleClosed}
           onSubmit={(name) =>
             void runAction(() => moduleApi.createModule(scope.subjectId, name), msg("materials.components.ModuleBoard.daThemModule"))
           }
@@ -269,7 +269,7 @@ export function ModuleBoard({
           initial={dialog.module.title}
           busy={busy}
           error={error}
-          onClose={closed}
+          onClose={handleClosed}
           onSubmit={(name) =>
             void runAction(() => moduleApi.renameModule(dialog.module, name), msg("materials.components.ModuleBoard.daLuuThayDoi"))
           }
@@ -280,7 +280,7 @@ export function ModuleBoard({
           open
           title={msg("materials.components.ModuleBoard.xoaModule2")}
           tone="danger"
-          onClose={closed}
+          onClose={handleClosed}
           dismissible={!busy}
           footer={
             <Button
@@ -308,7 +308,7 @@ export function ModuleBoard({
           scope={scope}
           moduleId={dialog.module.id}
           item={dialog.item}
-          onClose={closed}
+          onClose={handleClosed}
           onSaved={(message) => handleSaved(message)}
         />
       )}
@@ -320,7 +320,7 @@ export function ModuleBoard({
               : { quiz: dialog.item.quiz }
           }
           classId={scope.kind === "subject" ? undefined : scope.classId}
-          onClose={closed}
+          onClose={handleClosed}
           onSaved={() => handleSaved(describeRemoval(dialog.item), "danger")}
         />
       )}

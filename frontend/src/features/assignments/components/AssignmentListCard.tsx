@@ -6,7 +6,7 @@ import { useUrlState } from "@/shared/navigation/useUrlState";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Alert, Button, Card, ClickableRow, Icon, Pagination, Pill, Segmented, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import type { ListFilter } from "../api";
-import { errorMessage, formatDateTime } from "../model/format";
+import { describeError, formatDateTime } from "../model/format";
 import { assignmentRowActions } from "../slots";
 import { rememberAssignmentsPage } from "../model/outline";
 import { statusLabels, statusTones, type AssignmentRow, type AssignmentStatus } from "../model/types";
@@ -29,7 +29,7 @@ const PAGE_SIZE = 10;
 export const ALL_ASSIGNMENTS: ListFilter = { includeClosed: true };
 
 /** Loại bài như trên bảng Bài tập của sinh viên: bài luyện tập là loại riêng, còn lại theo cá nhân hay nhóm. */
-function kindOf(row: AssignmentRow): Kind {
+function classifyKind(row: AssignmentRow): Kind {
   return row.gradingMode === "PRACTICE" ? "PRACTICE" : row.submissionMode;
 }
 
@@ -48,12 +48,12 @@ export function AssignmentListCard({ page, classId }: { page: ReturnType<typeof 
   const setPageNo = (page: number) => setPageValue(String(page));
   const items = page.data?.items ?? [];
   const q = query.toLocaleLowerCase("vi").trim();
-  const inTab = (row: AssignmentRow, value: Tab) => TABS.find((t) => t.value === value)!.statuses.includes(row.status);
-  const visible = items.filter((row) => inTab(row, tab) && (!kind || kindOf(row) === kind) && row.title.toLocaleLowerCase("vi").includes(q));
+  const isInTab = (row: AssignmentRow, value: Tab) => TABS.find((t) => t.value === value)!.statuses.includes(row.status);
+  const visible = items.filter((row) => isInTab(row, tab) && (!kind || classifyKind(row) === kind) && row.title.toLocaleLowerCase("vi").includes(q));
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const current = Math.min(pageNo, totalPages - 1);
   const shown = visible.slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE);
-  const href = (row: AssignmentRow) => `/assignments/${encodeURIComponent(row.id)}${classId ? `?classId=${encodeURIComponent(classId)}` : ""}`;
+  const buildHref = (row: AssignmentRow) => `/assignments/${encodeURIComponent(row.id)}${classId ? `?classId=${encodeURIComponent(classId)}` : ""}`;
   const columns = classId ? 7 : 5;
   const filtered = !!kind || !!q;
 
@@ -61,7 +61,7 @@ export function AssignmentListCard({ page, classId }: { page: ReturnType<typeof 
     <Card as="section" padding="lg" className="flex flex-col gap-3.5" aria-label={msg("assignments.components.AssignmentListCard.danhSachBaiTap")}>
       <div className="flex flex-wrap items-center gap-3">
         <Segmented as="tab" ariaLabel={msg("assignments.components.AssignmentListCard.trangThaiBai")} value={tab} onChange={(value) => { setTab(value); setPageNo(0); }}
-          options={TABS.map((t) => ({ value: t.value, label: <>{t.label}{page.data && <span className="ml-1 tabular-nums text-muted">{items.filter((row) => inTab(row, t.value)).length}</span>}</> }))} />
+          options={TABS.map((t) => ({ value: t.value, label: <>{t.label}{page.data && <span className="ml-1 tabular-nums text-muted">{items.filter((row) => isInTab(row, t.value)).length}</span>}</> }))} />
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <Select aria-label={msg("assignments.components.AssignmentListCard.loaiBai")} value={kind} wrapperClassName="w-36" onChange={(e) => { setKind(e.target.value as Kind | ""); setPageNo(0); }}>
             <option value="">{msg("assignments.components.AssignmentListCard.moiLoai")}</option>
@@ -71,7 +71,7 @@ export function AssignmentListCard({ page, classId }: { page: ReturnType<typeof 
             onChange={(e) => { setQuery(e.target.value); setPageNo(0); }} />
         </div>
       </div>
-      {page.error !== null && <Alert tone="danger" role="alert" action={<Button size="sm" onClick={page.reload}>{msg("assignments.components.AssignmentListCard.thuLai")}</Button>}>{errorMessage(page.error)}</Alert>}
+      {page.error !== null && <Alert tone="danger" role="alert" action={<Button size="sm" onClick={page.reload}>{msg("assignments.components.AssignmentListCard.thuLai")}</Button>}>{describeError(page.error)}</Alert>}
       <TableFrame filledHead className="[&_table]:min-w-[720px] [&_table]:table-fixed">
         <colgroup>
           <col /><col className="w-[110px]" />{classId && <col className="w-[80px]" />}<col className="w-[150px]" /><col className="w-[120px]" />{classId && <col className="w-[100px]" />}<col className="w-[48px]" />
@@ -84,9 +84,9 @@ export function AssignmentListCard({ page, classId }: { page: ReturnType<typeof 
         </thead>
         <tbody>
           {shown.map((row) => (
-            <ClickableRow key={row.id} data-testid={`assignment-row-${row.id}`} onClick={() => { rememberAssignmentsPage(); router.push(href(row)); }}>
-              <Td><Link href={href(row)} onClick={(e) => { e.stopPropagation(); rememberAssignmentsPage(); }} className="block truncate font-semibold text-ink hover:text-primary-ink">{row.title}</Link></Td>
-              <Td className="whitespace-nowrap">{KIND_LABELS[kindOf(row)]}</Td>
+            <ClickableRow key={row.id} data-testid={`assignment-row-${row.id}`} onClick={() => { rememberAssignmentsPage(); router.push(buildHref(row)); }}>
+              <Td><Link href={buildHref(row)} onClick={(e) => { e.stopPropagation(); rememberAssignmentsPage(); }} className="block truncate font-semibold text-ink hover:text-primary-ink">{row.title}</Link></Td>
+              <Td className="whitespace-nowrap">{KIND_LABELS[classifyKind(row)]}</Td>
               {classId && <Td className="whitespace-nowrap">{row.scope === "SUBJECT" ? msg("assignments.components.AssignmentListCard.mon") : msg("assignments.components.AssignmentListCard.lop")}</Td>}
               <Td className="whitespace-nowrap"><span className="font-mono text-xs text-muted">{formatDateTime(row.closesAt)}</span></Td>
               <Td><Pill tone={statusTones[row.status]}>{statusLabels[row.status]}</Pill></Td>

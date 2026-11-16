@@ -37,7 +37,7 @@ export function NavTree({ label, placeholder, nodes, currentId, itemsFor, loadin
   // Đang ở một trang trong nhánh (ví dụ Bài tập của lớp A): đổi lớp trong ô thì sang đúng trang đó của lớp mới (yêu cầu
   // 2026-11-10). Ở ngoài nhánh (đang ở lớp, mở nhánh môn) thì đổi trong ô chỉ đổi các mục bên dưới, không chuyển trang.
   const openIndex = currentId ? itemsFor(currentId).findIndex((item) => item.active) : -1;
-  const hrefFor = (id: string) => (openIndex >= 0 ? itemsFor(id)[openIndex]?.href : undefined);
+  const resolveHref = (id: string) => (openIndex >= 0 ? itemsFor(id)[openIndex]?.href : undefined);
   return (
     <div role="group" aria-label={label} className="ml-[18px] flex flex-col gap-1 border-l border-line py-1 pl-1.5 md:group-data-[collapsed]/sidebar:hidden">
       <Menu
@@ -66,7 +66,7 @@ export function NavTree({ label, placeholder, nodes, currentId, itemsFor, loadin
           {!loading && nodes.length === 0 && <span className="px-2.5 py-2 text-[13px] text-muted">{msg("shared.layout.NavTree.chuaCoMucNao")}</span>}
           {nodes.filter((node) => node.name).map((node) => {
             const selected = node.id === pickedId;
-            const href = hrefFor(node.id);
+            const href = resolveHref(node.id);
             const className = cx("flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] text-ink transition-colors hover:bg-sunken", selected && "bg-primary-soft");
             const body = (
               <>

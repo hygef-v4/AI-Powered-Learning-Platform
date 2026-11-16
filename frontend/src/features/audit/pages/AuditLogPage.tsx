@@ -8,7 +8,7 @@ import { Alert, PageHeader } from "@/shared/ui";
 import { AuditFilters } from "../components/AuditFilters";
 import { AuditTable } from "../components/AuditTable";
 import { getAuditLogs } from "../api";
-import { defaultFilter, toQuery } from "../model/labels";
+import { defaultFilter, buildQuery } from "../model/labels";
 import type { AuditFilterForm, AuditLogPage as Page, AuditQuery } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -16,7 +16,7 @@ export const PAGE_SIZE = 50;
 /** Gõ hay chọn liền nhiều ô thì gom lại một lần tra cứu. */
 export const FILTER_DELAY_MS = 300;
 
-function initialFilter(params: URLSearchParams | null): AuditFilterForm {
+function readInitialFilter(params: URLSearchParams | null): AuditFilterForm {
   return {
     ...defaultFilter(),
     objectType: params?.get("objectType") ?? "",
@@ -33,7 +33,7 @@ function initialFilter(params: URLSearchParams | null): AuditFilterForm {
  */
 export function AuditLogPage() {
   const params = useSearchParams();
-  const [form, setForm] = useState<AuditFilterForm>(() => initialFilter(params));
+  const [form, setForm] = useState<AuditFilterForm>(() => readInitialFilter(params));
   const [data, setData] = useState<Page | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +71,7 @@ export function AuditLogPage() {
     setLoading(false);
   };
 
-  const load = (query: AuditQuery, id: number = ++request.current) => {
+  const loadLogs = (query: AuditQuery, id: number = ++request.current) => {
     applied.current = query;
     return getAuditLogs(query).then(
       (page) => show(id, page),
@@ -82,7 +82,7 @@ export function AuditLogPage() {
   /** Mở màn: tra cứu bộ lọc mặc định (và đối tượng trên URL) một lần; đây là lần duy nhất được ghi audit. */
   useEffect(() => {
     // Mở từ Account Detail: ô Người thực hiện điền sẵn email, kèm actorId nên không phải tra lại.
-    const query = { ...toQuery(initialFilter(params), params?.get("actorId") ?? undefined, 0, PAGE_SIZE), recordView: true };
+    const query = { ...buildQuery(readInitialFilter(params), params?.get("actorId") ?? undefined, 0, PAGE_SIZE), recordView: true };
     const id = ++request.current;
     applied.current = query;
     getAuditLogs(query).then(
@@ -96,7 +96,7 @@ export function AuditLogPage() {
   const search = (filter: AuditFilterForm) => {
     if (filter.fromDate && filter.toDate && filter.fromDate > filter.toDate) return;
     setLoading(true);
-    void load({ ...toQuery(filter, undefined, 0, PAGE_SIZE), recordView: false });
+    void loadLogs({ ...buildQuery(filter, undefined, 0, PAGE_SIZE), recordView: false });
   };
 
   /** Mỗi lần đổi bộ lọc (sau lần mở màn) thì tra cứu lại sau một nhịp ngắn. */
@@ -115,7 +115,7 @@ export function AuditLogPage() {
   const changePage = (page: number) => {
     if (!applied.current) return;
     setLoading(true);
-    void load({ ...applied.current, page, recordView: false });
+    void loadLogs({ ...applied.current, page, recordView: false });
   };
 
   return (

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { shortTestResult } from "@/features/ai/model/labels";
+import { shortenTestResult } from "@/features/ai/model/labels";
 
 describe("kết quả kiểm tra kết nối AI", () => {
   it.each([
@@ -15,6 +15,6 @@ describe("kết quả kiểm tra kết nối AI", () => {
     ["Mất kết nối với nhà cung cấp AI", "Mất kết nối"],
     [null, "Không đạt"],
   ])("%s → %s", (message, label) => {
-    expect(shortTestResult(message)).toBe(label);
+    expect(shortenTestResult(message)).toBe(label);
   });
 });

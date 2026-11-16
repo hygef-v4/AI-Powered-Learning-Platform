@@ -16,7 +16,7 @@ function useGroupSetState(classId: string) {
 
   useEffect(() => {
     let active = true;
-    const load = () =>
+    const loadGroups = () =>
       getGroups(classId).then(
         (loaded) => {
           if (active) setState({ classId, set: loaded, error: false });
@@ -31,11 +31,11 @@ function useGroupSetState(classId: string) {
           }
         },
       );
-    void load();
-    window.addEventListener("focus", load);
+    void loadGroups();
+    window.addEventListener("focus", loadGroups);
     return () => {
       active = false;
-      window.removeEventListener("focus", load);
+      window.removeEventListener("focus", loadGroups);
     };
   }, [classId]);
 

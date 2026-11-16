@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import type { DocumentPart } from "@/shared/document";
 import { ButtonLink, Section } from "@/shared/ui";
 import { workApi } from "../api";
-import { formatPoints, resultByPart, useAttemptResult } from "../model/attemptResult";
+import { formatPoints, groupResultByPart, useAttemptResult } from "../model/attemptResult";
 import { msg } from "@/i18n/msg";
 
 /**
@@ -22,7 +22,7 @@ export function ResultSummaryCard({ attemptId, detailsHref }: { attemptId: strin
     );
     return () => controller.abort();
   }, [attemptId]);
-  const groups = result ? resultByPart(result.items, parts?.attemptId === attemptId ? parts.parts : undefined) : [];
+  const groups = result ? groupResultByPart(result.items, parts?.attemptId === attemptId ? parts.parts : undefined) : [];
 
   return (
     <Section title={msg("assignmentwork.components.ResultSummaryCard.ketQua")}>

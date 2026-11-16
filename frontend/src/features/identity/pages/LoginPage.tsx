@@ -8,7 +8,7 @@ import { AuthLayout } from "../components/AuthLayout";
 import { AuthToast, type AuthNotice } from "../components/AuthToast";
 import { InfoCard } from "../components/InfoCard";
 import { LoginForm } from "../components/LoginForm";
-import { safeNextPath } from "../hooks/session";
+import { resolveSafeNextPath } from "../hooks/SessionProvider";
 import { msg } from "@/i18n/msg";
 
 /**
@@ -23,7 +23,7 @@ export function LoginPage() {
     params.get("reset") === "1" ? { id: 1, text: msg("identity.pages.LoginPage.daDatLaiMatKhau"), tone: "success" } : null,
   );
   const clearNotice = useCallback(() => setNotice(null), []);
-  const next = safeNextPath(params.get("next"));
+  const next = resolveSafeNextPath(params.get("next"));
 
   useEffect(() => {
     getProfile()

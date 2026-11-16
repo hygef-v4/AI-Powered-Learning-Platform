@@ -68,13 +68,13 @@ export function formatDateOnly(value: string | null | undefined): string {
 const VN_OFFSET_MS = 7 * HOUR_MS;
 
 /** ISO → giá trị ô `datetime-local` theo giờ Việt Nam. */
-export function toLocalInput(iso: string | null | undefined): string {
+export function convertToLocalInput(iso: string | null | undefined): string {
   if (!iso) return "";
   return new Date(new Date(iso).getTime() + VN_OFFSET_MS).toISOString().slice(0, 16);
 }
 
 /** Giá trị ô `datetime-local` (giờ Việt Nam) → ISO; rỗng thì `null`. */
-export function fromLocalInput(value: string): string | null {
+export function convertFromLocalInput(value: string): string | null {
   if (!value) return null;
   return new Date(`${value}:00+07:00`).toISOString();
 }
@@ -97,9 +97,9 @@ export function formatRemaining(deadline: string | null | undefined, now: number
 }
 
 /** Số ngày lịch (theo giờ Việt Nam) từ `earlier` tới `later`. */
-function calendarDaysBetween(earlier: Date, later: Date): number {
-  const key = (date: Date) => Date.parse(`${dayKeyFormat.format(date)}T00:00:00Z`);
-  return Math.round((key(later) - key(earlier)) / DAY_MS);
+function countCalendarDaysBetween(earlier: Date, later: Date): number {
+  const toDayKey = (date: Date) => Date.parse(`${dayKeyFormat.format(date)}T00:00:00Z`);
+  return Math.round((toDayKey(later) - toDayKey(earlier)) / DAY_MS);
 }
 
 /**
@@ -112,7 +112,7 @@ export function formatRelativeTime(value: string | Date | null | undefined, now:
   const elapsed = now.getTime() - date.getTime();
   if (elapsed < MINUTE_MS) return msg("shared.dateTime.vuaXong");
   if (elapsed < HOUR_MS) return msg("shared.dateTime.phutTruoc", { value: String(Math.floor(elapsed / MINUTE_MS)) });
-  const days = calendarDaysBetween(date, now);
+  const days = countCalendarDaysBetween(date, now);
   if (days === 0) return msg("shared.dateTime.gioTruoc", { value: String(Math.floor(elapsed / HOUR_MS)) });
   if (days === 1) return msg("shared.dateTime.homQua", { value: String(timeFormat.format(date)) });
   if (days < 7) return msg("shared.dateTime.ngayTruoc", { days: String(days) });

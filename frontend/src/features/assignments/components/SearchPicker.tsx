@@ -49,7 +49,7 @@ export function SearchPicker({ id, label, placeholder, options, onPick, onOpen, 
     if (!open) return;
     let frame = 0;
     let last = "";
-    const follow = () => {
+    const followSelection = () => {
       const box = anchor.current?.getBoundingClientRect();
       if (box) {
         const top = box.bottom + 4;
@@ -61,9 +61,9 @@ export function SearchPicker({ id, label, placeholder, options, onPick, onOpen, 
           setPlace(next);
         }
       }
-      frame = requestAnimationFrame(follow);
+      frame = requestAnimationFrame(followSelection);
     };
-    frame = requestAnimationFrame(follow);
+    frame = requestAnimationFrame(followSelection);
     return () => cancelAnimationFrame(frame);
   }, [open]);
   const needle = query.trim().toLocaleLowerCase("vi");

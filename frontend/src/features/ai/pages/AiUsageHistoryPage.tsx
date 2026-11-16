@@ -19,7 +19,7 @@ const TABS: { key: UsageSource | ""; label: string }[] = [
 ];
 
 /** Ngày "yyyy-mm-dd" (giờ Việt Nam) → đầu ngày hoặc đầu ngày hôm sau, dạng ISO. */
-function dayBound(day: string, end: boolean): string | undefined {
+function toDayBound(day: string, end: boolean): string | undefined {
   if (!day) return undefined;
   const start = new Date(`${day}T00:00:00+07:00`);
   if (end) start.setUTCDate(start.getUTCDate() + 1);
@@ -50,8 +50,8 @@ export function AiUsageHistoryPage({ mcpEnabled = true }: { mcpEnabled?: boolean
     const id = ++request.current;
     const query: UsageQuery = {
       source: source || undefined,
-      from: dayBound(from, false),
-      to: dayBound(to, true),
+      from: toDayBound(from, false),
+      to: toDayBound(to, true),
       page,
       size: PAGE_SIZE,
     };

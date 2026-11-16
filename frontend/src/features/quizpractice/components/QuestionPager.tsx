@@ -51,7 +51,7 @@ export function QuestionPrevNext({ count, index, onChange, testIdPrefix }: {
 }
 
 /** Đọc số câu (đếm từ 1) trên URL thành chỉ số hợp lệ. */
-export function questionIndex(param: string, count: number): number {
+export function resolveQuestionIndex(param: string, count: number): number {
   const value = Number(param);
   return Number.isInteger(value) && value >= 1 ? Math.min(value - 1, Math.max(count - 1, 0)) : 0;
 }

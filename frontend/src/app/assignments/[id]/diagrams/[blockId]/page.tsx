@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { AssignmentDiagramPage } from "@/features/assignments/pages/AssignmentDiagramPage";
-import { serverMsg } from "@/i18n/server";
+import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await serverMsg("app.assignments.id.diagrams.blockId.page.soDoBaiTap") };
+  return { title: await translateOnServer("app.assignments.id.diagrams.blockId.page.soDoBaiTap") };
 }
 
 // U07: trang xem sơ đồ mở từ link trong DOCX của đề.

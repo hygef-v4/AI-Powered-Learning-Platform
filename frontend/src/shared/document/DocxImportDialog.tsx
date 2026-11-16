@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { Alert, Button, Dialog, Field, TableFrame, Td, Th } from "@/shared/ui";
-import { blockText, headingLevel, type DocumentModel, type ValidationIssue } from "./types";
+import { blockText, readHeadingLevel, type DocumentModel, type ValidationIssue } from "./types";
 import { msg } from "@/i18n/msg";
 
-function errorMessage(error: unknown): string {
+function describeError(error: unknown): string {
   if (error instanceof ApiError) return error.problem.detail ?? msg("shared.document.DocxImportDialog.khongDocDuocTepDocx");
   return error instanceof Error && error.message ? error.message : msg("shared.document.DocxImportDialog.khongDocDuocTepDocx");
 }
@@ -38,7 +38,7 @@ export function DocxImportDialog({ title = msg("shared.document.DocxImportDialog
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function read(next: File) {
+  async function readFile(next: File) {
     setFile(next);
     setResult(null);
     setError(null);
@@ -50,7 +50,7 @@ export function DocxImportDialog({ title = msg("shared.document.DocxImportDialog
     try {
       setResult(await preview(next));
     } catch (e) {
-      setError(errorMessage(e));
+      setError(describeError(e));
     } finally {
       setBusy(false);
     }
@@ -63,7 +63,7 @@ export function DocxImportDialog({ title = msg("shared.document.DocxImportDialog
       await onImport(result.document, mode);
       onClose();
     } catch (e) {
-      setError(errorMessage(e));
+      setError(describeError(e));
     } finally {
       setBusy(false);
     }
@@ -71,7 +71,7 @@ export function DocxImportDialog({ title = msg("shared.document.DocxImportDialog
 
   const sections: { title: string; blocks: number }[] = [];
   for (const block of result?.document.blocks ?? []) {
-    if (headingLevel(block) > 0) sections.push({ title: blockText(block), blocks: 0 });
+    if (readHeadingLevel(block) > 0) sections.push({ title: blockText(block), blocks: 0 });
     else {
       const last = sections.at(-1);
       if (last) last.blocks++;
@@ -90,7 +90,7 @@ export function DocxImportDialog({ title = msg("shared.document.DocxImportDialog
         <label className="inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-lg border border-line-strong bg-surface px-3 py-1.5 text-xs font-semibold">
           {file ? msg("shared.document.DocxImportDialog.chonTepKhac") : msg("shared.document.DocxImportDialog.chonTep")}
           <input type="file" accept=".docx" className="sr-only" data-testid="docx-file"
-            onChange={(e) => { const next = e.target.files?.[0]; if (next) void read(next); e.target.value = ""; }} />
+            onChange={(e) => { const next = e.target.files?.[0]; if (next) void readFile(next); e.target.value = ""; }} />
         </label>
         {file && <span className="text-xs text-muted">{file.name}</span>}
       </Field>

@@ -72,7 +72,7 @@ export type AtomicItem = { criterionId: string | null; itemId: string | null; te
 export const ATOMIC_TITLE_MAX = 200;
 
 /** Rubric thành danh sách mục atomic; tiêu chí nhiều mục (bản cũ, đề xuất AI) tách mỗi mục một dòng kèm tên tiêu chí. */
-export function atomicItems(criteria: RubricCriterion[]): AtomicItem[] {
+export function splitAtomicItems(criteria: RubricCriterion[]): AtomicItem[] {
   return criteria.flatMap((criterion): AtomicItem[] => {
     if (criterion.items.length === 0) return [{ criterionId: criterion.criterionId, itemId: null, text: criterion.title, points: null }];
     if (criterion.items.length === 1) {
@@ -89,45 +89,45 @@ export function atomicItems(criteria: RubricCriterion[]): AtomicItem[] {
 }
 
 /** Danh sách mục atomic thành rubric gửi lên: mỗi mục một tiêu chí; mục chưa có id tiêu chí thì cấp id mới. */
-export function criteriaOf(items: AtomicItem[]): RubricCriterion[] {
+export function buildCriteria(items: AtomicItem[]): RubricCriterion[] {
   return items.map((item) => ({
-    criterionId: item.criterionId ?? newId(),
+    criterionId: item.criterionId ?? generateId(),
     title: item.text.trim().slice(0, ATOMIC_TITLE_MAX),
     description: "",
     kind: "TEXT",
-    items: [{ itemId: item.itemId ?? newId(), text: item.text, points: item.points }],
+    items: [{ itemId: item.itemId ?? generateId(), text: item.text, points: item.points }],
   }));
 }
 
 /** BR-U07-21: điểm một mục là số dương, tối đa 2 chữ số thập phân (server từ chối 1.255, không làm tròn). */
-export function pointsValid(points: number | null | undefined): boolean {
+export function isPointsValid(points: number | null | undefined): boolean {
   const value = Number(points);
   return points !== null && points !== undefined && Number.isFinite(value) && value >= 0
     && Math.abs(value * 100 - Math.round(value * 100)) < 1e-6;
 }
 
 /** Điểm đã nhập nhưng sai dạng (quá 2 chữ số thập phân); ô trống, 0, số âm là "chưa có điểm", không tính là sai. */
-export function pointsMalformed(points: number | null | undefined): boolean {
-  return points !== null && points !== undefined && Number(points) >= 0 && !pointsValid(points);
+export function isPointsMalformed(points: number | null | undefined): boolean {
+  return points !== null && points !== undefined && Number(points) >= 0 && !isPointsValid(points);
 }
 
 /** Tổng điểm rubric: cộng điểm hợp lệ của các mục chấm. */
-export function rubricTotal(criteria: RubricCriterion[]): number {
-  return criteria.reduce((sum, criterion) => sum + criterionTotal(criterion), 0);
+export function sumRubricTotal(criteria: RubricCriterion[]): number {
+  return criteria.reduce((sum, criterion) => sum + sumCriterionTotal(criterion), 0);
 }
 
-export function criterionTotal(criterion: RubricCriterion): number {
-  return criterion.items.reduce((sum, item) => sum + (pointsValid(item.points) ? Number(item.points) : 0), 0);
+export function sumCriterionTotal(criterion: RubricCriterion): number {
+  return criterion.items.reduce((sum, item) => sum + (isPointsValid(item.points) ? Number(item.points) : 0), 0);
 }
 
 /** Rubric đủ để duyệt (giống AssignmentRubric.complete): có tiêu chí; tiêu chí có tên và mục chấm; mục có nội dung, điểm hợp lệ. */
-export function rubricComplete(criteria: RubricCriterion[]): boolean {
+export function isRubricComplete(criteria: RubricCriterion[]): boolean {
   return criteria.length > 0 && criteria.every((criterion) => criterion.title.trim() !== "" && criterion.items.length > 0
-    && criterion.items.every((item) => item.text.trim() !== "" && pointsValid(item.points)));
+    && criterion.items.every((item) => item.text.trim() !== "" && isPointsValid(item.points)));
 }
 
 /** Mục chấm có ghi gì đó (chữ hoặc điểm); dòng không chữ không điểm bỏ qua (yêu cầu 2026-11-05). */
-function writtenItems(criteria: RubricCriterion[]) {
+function listWrittenItems(criteria: RubricCriterion[]) {
   return criteria.flatMap((criterion) => criterion.items)
     .filter((item) => item.text.trim() !== "" || (item.points !== null && item.points !== undefined));
 }
@@ -137,14 +137,14 @@ function writtenItems(criteria: RubricCriterion[]) {
  * chưa ghi điểm / ghi điểm chưa ghi chữ. Thẻ chỉ có dòng trống coi như chưa có rubric, không báo.
  */
 /** Có mục chấm ghi dở: có chữ chưa điểm (hoặc điểm sai), có điểm chưa chữ. */
-export function rubricHalfWritten(criteria: RubricCriterion[]): boolean {
-  return writtenItems(criteria).some((item) => item.text.trim() === "" || !pointsValid(item.points));
+export function isRubricHalfWritten(criteria: RubricCriterion[]): boolean {
+  return listWrittenItems(criteria).some((item) => item.text.trim() === "" || !isPointsValid(item.points));
 }
 
-export function rubricPointsMissing(criteria: RubricCriterion[]): boolean {
-  const items = writtenItems(criteria);
+export function isRubricPointsMissing(criteria: RubricCriterion[]): boolean {
+  const items = listWrittenItems(criteria);
   if (items.length === 0) return false;
-  return items.some((item) => item.text.trim() === "" || !pointsValid(item.points)) || rubricTotal(criteria) <= 0;
+  return items.some((item) => item.text.trim() === "" || !isPointsValid(item.points)) || sumRubricTotal(criteria) <= 0;
 }
 
 export const headingLabels: Record<HeadingStyle, string> = {
@@ -161,15 +161,15 @@ export const blockTypeLabels: Record<BlockType, string> = {
   HEADING: msg("shared.document.types.tieuDe"), PARAGRAPH: msg("shared.document.types.doanVan"), LIST: msg("shared.document.types.danhSach"), TABLE: msg("shared.document.types.bang"), IMAGE: msg("shared.document.types.anh"), DIAGRAM: msg("shared.document.types.soDo"),
 };
 
-export function newId(): string {
+export function generateId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : "xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx".replace(/x/g, () => Math.floor(Math.random() * 16).toString(16));
 }
 
 /** Block mới rỗng theo loại; người học không có block tiêu đề. */
-export function newBlock(type: BlockType, origin: BlockOrigin): DocumentBlock {
-  const id = newId();
+export function createBlock(type: BlockType, origin: BlockOrigin): DocumentBlock {
+  const id = generateId();
   switch (type) {
     case "HEADING":
       return { id, origin, type, content: { style: "H1", text: "" } };
@@ -189,7 +189,7 @@ export function newBlock(type: BlockType, origin: BlockOrigin): DocumentBlock {
 export const EMPTY_DIAGRAM =
   '<mxfile><diagram id="page-1" name="Trang 1"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel></diagram></mxfile>';
 
-export function runsText(runs: Run[] | undefined): string {
+export function joinRunsText(runs: Run[] | undefined): string {
   return (runs ?? []).map((run) => run.text ?? "").join("");
 }
 
@@ -199,11 +199,11 @@ export function blockText(block: DocumentBlock): string {
     case "HEADING":
       return block.content.text ?? "";
     case "PARAGRAPH":
-      return runsText(block.content.runs);
+      return joinRunsText(block.content.runs);
     case "LIST":
-      return block.content.items.map((item) => runsText(item.runs)).join("\n");
+      return block.content.items.map((item) => joinRunsText(item.runs)).join("\n");
     case "TABLE":
-      return block.content.rows.map((row) => row.map((cell) => runsText(cell.runs)).join(" | ")).join("\n");
+      return block.content.rows.map((row) => row.map((cell) => joinRunsText(cell.runs)).join(" | ")).join("\n");
     case "IMAGE":
       return block.content.alt ?? "";
     case "DIAGRAM":
@@ -212,11 +212,11 @@ export function blockText(block: DocumentBlock): string {
 }
 
 /** Ảnh SVG xem trước dạng data URI cho thẻ img (không chạy script, không tải tài nguyên ngoài). */
-export function svgDataUri(svg: string): string {
+export function encodeSvgDataUri(svg: string): string {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
-export function headingLevel(block: DocumentBlock): number {
+export function readHeadingLevel(block: DocumentBlock): number {
   if (block.type !== "HEADING") return 0;
   const match = /^H([1-6])$/.exec(block.content.style);
   return match ? Number(match[1]) : 0;
@@ -230,7 +230,7 @@ export const WHOLE_DOCUMENT = "DOCUMENT";
  */
 export function computeParts(document: DocumentModel): DocumentPart[] {
   const headings = document.blocks
-    .map((block) => ({ block, level: headingLevel(block) }))
+    .map((block) => ({ block, level: readHeadingLevel(block) }))
     .filter((h) => h.level > 0)
     .map(({ block, level }) => ({ id: block.id, level, title: blockText(block).trim() }));
   if (headings.length === 0) return [{ partId: WHOLE_DOCUMENT, headingBlockId: null, ancestorHeadingIds: [], title: msg("shared.document.types.toanBai") }];
@@ -242,7 +242,7 @@ export function computeParts(document: DocumentModel): DocumentPart[] {
     while (branch.length > 0 && branch[branch.length - 1]!.level >= heading.level) branch.pop();
     counters.length = branch.length + 1;
     counters[branch.length] = (counters[branch.length] ?? 0) + 1;
-    const label = heading.title || sectionNumber(counters);
+    const label = heading.title || formatSectionNumber(counters);
     const ancestors = branch.map((h) => h.id);
     const path = [...branch.map((h) => h.label), label];
     branch.push({ ...heading, label });
@@ -255,14 +255,14 @@ export function computeParts(document: DocumentModel): DocumentPart[] {
 }
 
 /** Mục chứa từng block: block thuộc mục lá gần nhất phía trên; khung không có Tiêu đề 1–6 thì cả bài là một mục. */
-export function sectionsOf(document: DocumentModel, parts: DocumentPart[]): Map<string, string> {
+export function numberSections(document: DocumentModel, parts: DocumentPart[]): Map<string, string> {
   const leaves = new Set(parts.map((part) => part.headingBlockId));
   const whole = parts.length === 1 && parts[0]!.headingBlockId === null ? parts[0]!.partId : null;
   const sections = new Map<string, string>();
   let current = whole;
   for (const block of document.blocks) {
-    if (!whole && headingLevel(block) > 0) current = leaves.has(block.id) ? block.id : null;
-    else if (!whole && underOf(block) !== null) current = null;
+    if (!whole && readHeadingLevel(block) > 0) current = leaves.has(block.id) ? block.id : null;
+    else if (!whole && findUnderLevel(block) !== null) current = null;
     if (current) sections.set(block.id, current);
   }
   return sections;
@@ -274,7 +274,7 @@ export const MAX_SECTION_DEPTH = 4;
 const ROMAN: [number, string][] = [[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"], [50, "L"],
   [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
 
-function roman(n: number): string {
+function formatRoman(n: number): string {
   let rest = n;
   let out = "";
   for (const [value, symbol] of ROMAN) {
@@ -287,7 +287,7 @@ function roman(n: number): string {
 }
 
 /** a, b, …, z, aa, ab, … */
-function letters(n: number): string {
+function formatLetters(n: number): string {
   let rest = n;
   let out = "";
   while (rest > 0) {
@@ -302,16 +302,16 @@ function letters(n: number): string {
  * Số câu hỏi theo thứ tự ở từng tầng (yêu cầu 2026-11-10), giống SectionNumbering của backend: tầng 1 số La Mã, tầng 2
  * số, tầng 3 chữ thường, tầng 4 chữ thường gấp đôi: [1] → "I.", [1, 2] → "I.2.", [1, 2, 1] → "I.2.a.", [1, 2, 1, 3] → "I.2.a.cc.".
  */
-export function sectionNumber(counters: number[]): string {
+export function formatSectionNumber(counters: number[]): string {
   return counters.map((count, depth) => {
     const n = Math.max(1, count);
-    const part = depth === 0 ? roman(n) : depth === 1 ? String(n) : depth === 2 ? letters(n) : letters(n).repeat(2);
+    const part = depth === 0 ? formatRoman(n) : depth === 1 ? String(n) : depth === 2 ? formatLetters(n) : formatLetters(n).repeat(2);
     return `${part}.`;
   }).join("");
 }
 
 /** Cấp mục mà đoạn {@code block} quay về (đoạn viết ở dòng cuối của mục cha), null nếu là đoạn thường. */
-export function underOf(block: DocumentBlock): number | null {
+export function findUnderLevel(block: DocumentBlock): number | null {
   return block.type !== "HEADING" && typeof block.content.under === "number" ? block.content.under : null;
 }
 
@@ -330,13 +330,13 @@ export type DocSection = {
   leaf: boolean;
 };
 
-export function documentTree(document: DocumentModel): DocSection {
+export function buildDocumentTree(document: DocumentModel): DocSection {
   const root: DocSection = { heading: null, level: 0, depth: 0, blocks: [], children: [], after: [], leaf: false };
   const stack: DocSection[] = [root];
   for (const block of document.blocks) {
-    const level = headingLevel(block);
+    const level = readHeadingLevel(block);
     if (level === 0) {
-      const under = underOf(block);
+      const under = findUnderLevel(block);
       if (under !== null) while (stack.length > 1 && stack.at(-1)!.level > under) stack.pop();
       const owner = stack.at(-1)!;
       (owner.children.length > 0 ? owner.after : owner.blocks).push(block);

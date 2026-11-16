@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
-import { DocumentEditor, ToolbarButton, outlineOf, publishOutline, type DocumentComment } from "@/shared/document";
+import { DocumentEditor, ToolbarButton, buildOutline, publishOutline, type DocumentComment } from "@/shared/document";
 import { Alert, Card, Menu, MenuItem, ScoreMeter, TotalScoreCard } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { attemptImageUrl, exportUrl, workApi } from "../api";
-import { formatPoints, resultByPart, useAttemptResult, type ResultPart } from "../model/attemptResult";
-import { errorMessage, formatDateTime, historyOpen, historyVersions } from "../model/format";
+import { formatPoints, groupResultByPart, useAttemptResult, type ResultPart } from "../model/attemptResult";
+import { describeError, formatDateTime, canOpenHistory, listHistoryVersions } from "../model/format";
 import { PracticeFeedbackPanel } from "../components/PracticeFeedbackPanel";
 import { studentGradeDistributions, type AttemptResult } from "../slots";
 import { PublishedFeedback, PublishedRubricItems } from "../components/PublishedFeedback";
@@ -61,7 +61,7 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
         // Điểm và nhận xét chưa công bố do API kết quả giữ kín.
         const all = list.filter((a) => a.status === "SUBMITTED").sort((a, b) => b.attemptNo - a.attemptNo);
         const submitted = value.gradingMode === "PRACTICE" ? all
-          : historyOpen(value, all.length > 0) ? historyVersions(all) : all.filter((a) => a.graded);
+          : canOpenHistory(value, all.length > 0) ? listHistoryVersions(all) : all.filter((a) => a.graded);
         setAttempts(submitted);
         setSelected(submitted.find((a) => a.attemptId === wanted)?.attemptId ?? submitted[0]?.attemptId ?? null);
       }, (e) => { if (!controller.signal.aborted) setError(e); });
@@ -82,7 +82,7 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
     const focus = `focus=${encodeURIComponent(assignmentId)}`;
     const backHref = general ? `/my-assignments?${focus}` : `/my-assignments?classId=${encodeURIComponent(classId)}&${focus}`;
     const blocks = attempt && attempt.attemptId === selected ? attempt.content.blocks : [];
-    publishOutline({ assignmentId, backHref, backLabel: msg("assignmentwork.pages.SubmissionHistoryPage.baiTap"), entries: outlineOf(blocks) });
+    publishOutline({ assignmentId, backHref, backLabel: msg("assignmentwork.pages.SubmissionHistoryPage.baiTap"), entries: buildOutline(blocks) });
   }, [assignmentId, attempt, classId, detail, general, selected]);
   useEffect(() => () => publishOutline(null), []);
 
@@ -91,20 +91,20 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   const shownResult = result?.score != null && attempt?.attemptId === selected ? result : null;
 
   if (!classId) return <Alert tone="danger" role="alert">{msg("assignmentwork.pages.SubmissionHistoryPage.thieuLopCuaBai")}</Alert>;
-  if (error) return <PageLoadError>{errorMessage(error)}</PageLoadError>;
+  if (error) return <PageLoadError>{describeError(error)}</PageLoadError>;
   if (!detail || !attempts) return <PageLoading label={msg("assignmentwork.pages.SubmissionHistoryPage.dangTaiLichSuNopBai")} />;
 
   // Quay lại nằm ở sidebar mục lục của bài (về trang Bài tập, đúng tab đang chứa bài).
-  const shell = (bar: ReactNode, body: ReactNode) => (
+  const renderShell = (bar: ReactNode, body: ReactNode) => (
     <div data-wide-workspace className="flex flex-col gap-4" style={{ "--doc-toolbar-top": `${56 + headerHeight}px` } as CSSProperties}>
       {bar}
       {body}
     </div>
   );
   if (attempts.length === 0) {
-    return shell(<WorkspaceTopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot} />,
+    return renderShell(<WorkspaceTopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot} />,
       <Card as="p" padding="none" className="p-8 text-center text-[13.5px] text-muted">
-        {historyOpen(detail, true) ? msg("assignmentwork.pages.SubmissionHistoryPage.banChuaNopBaiNao") : msg("assignmentwork.pages.SubmissionHistoryPage.lichSuNopBaiHienSau")}
+        {canOpenHistory(detail, true) ? msg("assignmentwork.pages.SubmissionHistoryPage.banChuaNopBaiNao") : msg("assignmentwork.pages.SubmissionHistoryPage.lichSuNopBaiHienSau")}
       </Card>);
   }
 
@@ -145,7 +145,7 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
     </div>
   );
 
-  return shell(bar, <>
+  return renderShell(bar, <>
     {!shown || !current ? <PageLoading label={msg("assignmentwork.pages.SubmissionHistoryPage.dangTaiBaiNop")} /> : (
       <DocumentEditor fullWidth document={shown.content} onChange={NOOP} mode="student" readOnly diagramEnabled={false}
         imageUrl={attemptImageUrl(current.attemptId)}
@@ -185,7 +185,7 @@ function scoreCards(result: AttemptResult, attempt: Attempt): DocumentComment[] 
   const blockIds = new Set(attempt.content.blocks.map((block) => block.id));
   return [
     { key: "total", anchorBlockId: null, content: <TotalCard result={result} /> },
-    ...resultByPart(result.items, attempt.parts).map((part): DocumentComment => ({
+    ...groupResultByPart(result.items, attempt.parts).map((part): DocumentComment => ({
       key: `part-${part.key}`,
       anchorBlockId: blockIds.has(part.key) ? part.key : null,
       content: <PartScoreCard part={part} />,

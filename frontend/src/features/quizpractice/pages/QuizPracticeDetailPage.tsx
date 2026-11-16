@@ -6,12 +6,12 @@ import { FormattedTextView } from "@/shared/document/FormattedTextView";
 import { ModuleNeighbours, useModulePlace, useModuleScope } from "@/features/materials/components/ModulePlace";
 import { Alert, Button, ClickableRow, Icon, PageHeader, Section, TableFrame, Td, Th } from "@/shared/ui";
 import { getPracticeHistory, getPracticeQuiz, startAttempt } from "../api";
-import { errorMessage, formatDateTime, formatPoints, penaltyRuleText } from "../model/labels";
+import { describeError, formatDateTime, formatPoints, describePenaltyRule } from "../model/labels";
 import type { PracticeQuizDetail, PracticeQuizRow } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { msg } from "@/i18n/msg";
 
-const detailHref = (quizId: string, classId: string) => `/quiz-practice/${encodeURIComponent(quizId)}?classId=${encodeURIComponent(classId)}`;
+const buildDetailHref = (quizId: string, classId: string) => `/quiz-practice/${encodeURIComponent(quizId)}?classId=${encodeURIComponent(classId)}`;
 
 /**
  * Màn #43 Quiz Practice Detail (UC 50, BR-U11-03): cột trái Thông tin (số câu, thời gian) rồi Mô tả; cột phải thẻ Làm bài
@@ -35,10 +35,10 @@ function ClassResolver({ quizId }: { quizId: string }) {
       .then((list) => {
         if (!active) return;
         const matches = list.filter((row) => row.quizId === quizId);
-        if (matches.length === 1 && matches[0]) router.replace(detailHref(quizId, matches[0].classId));
+        if (matches.length === 1 && matches[0]) router.replace(buildDetailHref(quizId, matches[0].classId));
         else setRows(matches);
       })
-      .catch((failure: unknown) => active && setError(errorMessage(failure)));
+      .catch((failure: unknown) => active && setError(describeError(failure)));
     return () => {
       active = false;
     };
@@ -59,7 +59,7 @@ function ClassResolver({ quizId }: { quizId: string }) {
       <ul className="flex flex-col gap-2" data-testid="practice-detail-classes">
         {rows.map((row) => (
           <li key={row.classId}>
-            <Button onClick={() => router.push(detailHref(quizId, row.classId))} data-testid="practice-detail-class">
+            <Button onClick={() => router.push(buildDetailHref(quizId, row.classId))} data-testid="practice-detail-class">
               {row.subjectCode ? `${row.subjectCode} · ` : ""}{row.classCode}
             </Button>
           </li>
@@ -82,7 +82,7 @@ function PracticeDetail({ quizId, classId }: { quizId: string; classId: string }
     let active = true;
     getPracticeQuiz(quizId, classId)
       .then((next) => active && setDetail(next))
-      .catch((failure: unknown) => active && setError(errorMessage(failure)));
+      .catch((failure: unknown) => active && setError(describeError(failure)));
     return () => {
       active = false;
     };
@@ -94,7 +94,7 @@ function PracticeDetail({ quizId, classId }: { quizId: string; classId: string }
     try {
       router.push(`/quiz-attempts/${(await startAttempt(quizId, classId)).attemptId}`);
     } catch (failure) {
-      setError(errorMessage(failure));
+      setError(describeError(failure));
       setBusy(false);
     }
   };
@@ -130,7 +130,7 @@ function PracticeDetail({ quizId, classId }: { quizId: string; classId: string }
               {detail.maxAttempts === null ? msg("quizpractice.pages.QuizPracticeDetailPage.luot", { attemptsUsed: String(detail.attemptsUsed) }) : `${detail.attemptsUsed}/${detail.maxAttempts}`}</span>}>
             {detail.activityNotice && <Alert tone="info">
               {detail.activityNotice}
-              {detail.leavePenalty && <span className="block" data-testid="practice-detail-penalty-rule">{penaltyRuleText(detail.leavePenalty)}</span>}
+              {detail.leavePenalty && <span className="block" data-testid="practice-detail-penalty-rule">{describePenaltyRule(detail.leavePenalty)}</span>}
             </Alert>}
             {action && <Button variant="primary" disabled={busy} onClick={() => void start()} data-testid="practice-detail-start">
               {detail.inProgressAttemptId ? msg("quizpractice.pages.QuizPracticeDetailPage.tiepTucLamBai") : detail.attemptsUsed > 0 ? msg("quizpractice.pages.QuizPracticeDetailPage.lamLai") : msg("quizpractice.pages.QuizPracticeDetailPage.batDauLamBai")}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, type ReactNode, type CSSProperties } from "react";
-import { actionLabel, shortReason } from "@/features/audit/model/labels";
+import { describeAction, shortenReason } from "@/features/audit/model/labels";
 import { Alert, Card, PageHeader, TableFrame, Td, Th, cx } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { Donut, LineChart, Legend, Reveal, SegmentBar, StackedColumns, formatNumber, type Series } from "../components/DashboardCharts";
@@ -252,7 +252,7 @@ function Unavailable({ loading = false }: { loading?: boolean }) {
 function BackupCalendar({ runs }: { runs: BackupRunItem[] }) {
   const byDay = new Map(runs.map((run) => [run.scheduledFor, run]));
   const days = Array.from({ length: 30 }, (_, i) => formatVietnamDay(29 - i));
-  const stateOf = (day: string) => {
+  const resolveDayState = (day: string) => {
     const run = byDay.get(day);
     if (!run) return BACKUP.none;
     return run.state === "SUCCESS" ? BACKUP.ok : run.state === "FAILED" ? BACKUP.failed : BACKUP.running;
@@ -261,7 +261,7 @@ function BackupCalendar({ runs }: { runs: BackupRunItem[] }) {
     <div className="flex flex-col gap-3">
       <ul className="grid grid-cols-7 gap-1.5" aria-label={msg("admindashboard.pages.AdminDashboardPage.ketQuaSaoLuuTheoNgay")}>
         {days.map((day, i) => {
-          const state = stateOf(day);
+          const state = resolveDayState(day);
           return (
             <li key={day} title={`${formatShortDay(day)}: ${state.name}`} aria-label={`${formatShortDay(day)}: ${state.name}`}
               className="aspect-square animate-pop rounded-md transition-transform duration-150 hover:scale-110 motion-reduce:animate-none motion-reduce:transition-none"
@@ -283,13 +283,13 @@ function SecurityTable({ events }: { events: SecurityEventItem[] }) {
       <tbody>
         {events.slice(0, 10).map((event, i) => {
           const time = formatShortTime(event.occurredAt);
-          const label = SECURITY_LABELS[event.action] ?? msg("admindashboard.pages.AdminDashboardPage.biTuChoi", { value: String(actionLabel(event.action)) });
+          const label = SECURITY_LABELS[event.action] ?? msg("admindashboard.pages.AdminDashboardPage.biTuChoi", { value: String(describeAction(event.action)) });
           return (
             <tr key={`${event.occurredAt}-${i}`}>
               <Td className="text-muted tabular-nums">{`${time.hour}:${time.minute} ${time.day}/${time.month}`}</Td>
               <Td className="[overflow-wrap:anywhere]">{label}</Td>
               <Td className="[overflow-wrap:anywhere]">{event.account ?? <span className="text-muted">{msg("admindashboard.pages.AdminDashboardPage.khongRo")}</span>}</Td>
-              <Td className={cx("[overflow-wrap:anywhere]", event.reason ? "text-danger" : "text-muted")} title={event.reason ?? undefined}>{event.reason ? shortReason(event.reason) : "—"}</Td>
+              <Td className={cx("[overflow-wrap:anywhere]", event.reason ? "text-danger" : "text-muted")} title={event.reason ?? undefined}>{event.reason ? shortenReason(event.reason) : "—"}</Td>
             </tr>
           );
         })}

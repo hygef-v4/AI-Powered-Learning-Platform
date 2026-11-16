@@ -4,7 +4,7 @@ import { studentAssignmentFeedback } from "@/features/assignmentwork/slots";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Pill, Section, cx } from "@/shared/ui";
 import { useMyGroupDoc } from "../hooks/useMyGroupDoc";
-import { SECTION_STATUS, isOwnSection, memberName, sectionPerson } from "../model/status";
+import { SECTION_STATUS, isOwnSection, resolveMemberName, resolveSectionPerson } from "../model/status";
 import { msg } from "@/i18n/msg";
 
 /**
@@ -38,7 +38,7 @@ export function GroupProgressCard({ assignmentId, classId }: { assignmentId: str
                     own ? "-mx-2 rounded-lg border-transparent bg-primary-soft px-2" : "border-line")}>
                   <span className="min-w-0 truncate text-[13.5px] text-ink">{s.title}</span>
                   <span className="flex shrink-0 items-center gap-3">
-                    <span className="text-[13px] text-muted">{memberName(view, sectionPerson(s))}</span>
+                    <span className="text-[13px] text-muted">{resolveMemberName(view, resolveSectionPerson(s))}</span>
                     <Pill tone={SECTION_STATUS[s.status].tone}>{SECTION_STATUS[s.status].text}</Pill>
                   </span>
                 </li>

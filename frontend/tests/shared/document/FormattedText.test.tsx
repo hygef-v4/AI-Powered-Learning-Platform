@@ -3,10 +3,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, it } from "vitest";
 import { FormattedTextEditor } from "@/shared/document/FormattedTextEditor";
 import { FormattedTextView } from "@/shared/document/FormattedTextView";
-import { type FormattedText, formattedTextOf } from "@/shared/document/formattedText";
+import { type FormattedText, createFormattedText } from "@/shared/document/formattedText";
 
 function Editor({ maxLength = 2000 }: { maxLength?: number }) {
-  const [value, setValue] = useState<FormattedText>(formattedTextOf("Nội dung cũ"));
+  const [value, setValue] = useState<FormattedText>(createFormattedText("Nội dung cũ"));
   return <><FormattedTextEditor value={value} plainText="Nội dung cũ" maxLength={maxLength}
     aria-label="Mô tả" onChange={(_text, next) => setValue(next)} />
     <output data-testid="document">{JSON.stringify(value)}</output></>;

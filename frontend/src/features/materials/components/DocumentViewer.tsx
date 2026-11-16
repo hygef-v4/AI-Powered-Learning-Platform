@@ -72,9 +72,9 @@ export function DocumentViewer({
   const handleLoadError = useCallback(() => setError(FAILED), []);
 
   useEffect(() => {
-    const changed = () => setFullscreen(document.fullscreenElement === frame.current);
-    document.addEventListener("fullscreenchange", changed);
-    return () => document.removeEventListener("fullscreenchange", changed);
+    const syncFullscreen = () => setFullscreen(document.fullscreenElement === frame.current);
+    document.addEventListener("fullscreenchange", syncFullscreen);
+    return () => document.removeEventListener("fullscreenchange", syncFullscreen);
   }, []);
   function handleToggleFullscreen() {
     if (document.fullscreenElement) void document.exitFullscreen();

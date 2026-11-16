@@ -3,11 +3,11 @@
 import { useId, useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { Button } from "@/shared/ui/Button";
-import { ChipToggleGroup, Select, Switch, TextInput } from "@/shared/ui/inputs";
+import { ChipToggleGroup, Select, Switch, TextInput } from "@/shared/ui/Inputs";
 import { SettingLine } from "@/shared/ui/SettingsCard";
 import { updateSetting } from "../api";
 import type { SettingItem, SettingValue } from "../model/types";
-import { options, unitOf, validateSettingValue } from "../model/validation";
+import { listOptions, readUnit, validateSettingValue } from "../model/validation";
 import { msg } from "@/i18n/msg";
 
 type Props = {
@@ -33,7 +33,7 @@ export function SettingRow({ item, disabled = false, onSaved, onConflict }: Prop
   const error = (dirty ? invalid : null) ?? serverError;
   const locked = disabled || saving;
 
-  async function save(value: SettingValue) {
+  async function saveSetting(value: SettingValue) {
     if (validateSettingValue(item, value)) return;
     setSaving(true);
     setServerError(null);
@@ -66,7 +66,7 @@ export function SettingRow({ item, disabled = false, onSaved, onConflict }: Prop
           checked={item.value === true}
           disabled={locked}
           label=""
-          onChange={(next) => save(next)}
+          onChange={(next) => saveSetting(next)}
         />
       );
       break;
@@ -77,7 +77,7 @@ export function SettingRow({ item, disabled = false, onSaved, onConflict }: Prop
           type="number"
           inputMode="numeric"
           invalid={error !== null}
-          suffix={unitOf(item)}
+          suffix={readUnit(item)}
           wrapperClassName="w-[160px]"
           value={typeof draft === "number" ? draft : ""}
           disabled={locked}
@@ -109,7 +109,7 @@ export function SettingRow({ item, disabled = false, onSaved, onConflict }: Prop
           onChange={(e) => change(e.target.value === "" ? null : e.target.value)}
         >
           {draft === null && <option value="">{msg("settings.components.SettingRow.chuaChon")}</option>}
-          {options(item).map((option) => (
+          {listOptions(item).map((option) => (
             <option key={option} value={option}>
               {option}
             </option>
@@ -121,7 +121,7 @@ export function SettingRow({ item, disabled = false, onSaved, onConflict }: Prop
       control = (
         <ChipToggleGroup
           ariaLabel={item.name}
-          options={options(item)}
+          options={listOptions(item)}
           value={Array.isArray(draft) ? draft : []}
           disabled={locked}
           onChange={change}
@@ -141,7 +141,7 @@ export function SettingRow({ item, disabled = false, onSaved, onConflict }: Prop
       action={
         item.type !== "BOOLEAN" &&
         dirty && (
-          <Button size="sm" variant="primary" disabled={locked || invalid !== null} onClick={() => void save(draft)}>
+          <Button size="sm" variant="primary" disabled={locked || invalid !== null} onClick={() => void saveSetting(draft)}>
             {msg("settings.components.SettingRow.luu")}</Button>
         )
       }

@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Role } from "@/shared/auth/roles";
-import { AVATAR_TONES, initials } from "@/shared/layout/navigation";
+import { AVATAR_TONES, extractInitials } from "@/shared/layout/navigation";
 import { Alert } from "@/shared/ui/Alert";
 import { Button } from "@/shared/ui/Button";
 import { cx } from "@/shared/ui/cx";
 import { Icon } from "@/shared/ui/Icon";
-import { Segmented, Select, TextInput } from "@/shared/ui/inputs";
+import { Segmented, Select, TextInput } from "@/shared/ui/Inputs";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { showToast } from "@/shared/ui/Toast";
 import { Pill } from "@/shared/ui/Pill";
@@ -190,7 +190,7 @@ export function AccountListPage() {
                           SOFT_TONES[AVATAR_TONES[account.role]],
                         )}
                       >
-                        {initials(account.displayName)}
+                        {extractInitials(account.displayName)}
                       </span>
                       <Link
                         href={`/admin/accounts/${account.id}`}

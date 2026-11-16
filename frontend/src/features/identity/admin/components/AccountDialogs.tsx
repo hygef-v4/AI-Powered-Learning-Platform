@@ -7,7 +7,7 @@ import type { Role } from "@/shared/auth/roles";
 import { Alert } from "@/shared/ui/Alert";
 import { Button } from "@/shared/ui/Button";
 import { Dialog } from "@/shared/ui/Dialog";
-import { Field, Select } from "@/shared/ui/inputs";
+import { Field, Select } from "@/shared/ui/Inputs";
 import { TableFrame, Td, Th } from "@/shared/ui/Table";
 import { ROLE_LABELS } from "../../model/types";
 import { changeRole, changeStatus, type AccountDetail } from "../api";
@@ -30,7 +30,7 @@ type BlockedProblem = {
 };
 
 /** Bản backend cũ chỉ trả ID: vẫn hiện được, không có mã và tên. */
-function held(details: HeldAssignment[] | undefined, ids: string[] | undefined): HeldAssignment[] {
+function listHeld(details: HeldAssignment[] | undefined, ids: string[] | undefined): HeldAssignment[] {
   return details ?? (ids ?? []).map((id) => ({ id, code: null, name: null }));
 }
 
@@ -42,7 +42,7 @@ type DialogProps = {
   onConflict: () => Promise<void>;
 };
 
-function errorMessage(error: unknown) {
+function describeError(error: unknown) {
   const code = error instanceof ApiError ? error.problem.code : undefined;
   if (code && ADMIN_ERROR_LABELS[code]) return ADMIN_ERROR_LABELS[code];
   return (error instanceof ApiError && error.problem.detail) || msg("identity.admin.components.AccountDialogs.khongThucHienDuocVuiLong");
@@ -72,12 +72,12 @@ export function RoleChangeDialog({ account, onClose, onChanged, onConflict, onBl
         onBlocked({
           from: account.role,
           to: role,
-          subjects: held(problem.subjects, problem.managedSubjects),
-          classes: held(problem.classes, problem.taughtClasses),
+          subjects: listHeld(problem.subjects, problem.managedSubjects),
+          classes: listHeld(problem.classes, problem.taughtClasses),
         });
         return;
       }
-      setError(errorMessage(e));
+      setError(describeError(e));
       if (problem.code === "VERSION_CONFLICT") await onConflict();
     } finally {
       setBusy(false);
@@ -165,7 +165,7 @@ export function StatusToggleDialog({ account, onClose, onChanged, onConflict }: 
     try {
       onChanged(await changeStatus(account.id, reopening ? "ACTIVE" : "DISABLED", account.version));
     } catch (e) {
-      setError(errorMessage(e));
+      setError(describeError(e));
       if (e instanceof ApiError && e.problem.code === "VERSION_CONFLICT") await onConflict();
     } finally {
       setBusy(false);

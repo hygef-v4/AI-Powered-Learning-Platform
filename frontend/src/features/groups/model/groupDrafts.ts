@@ -8,15 +8,15 @@ export type StudentRow = Person & { enrolledAt?: string | null };
 /** Giá trị lọc "Chưa có nhóm". */
 export const UNGROUPED = "__none";
 
-export function personLabel(p: Pick<Person, "name" | "email"> | null | undefined): string {
+export function formatPersonLabel(p: Pick<Person, "name" | "email"> | null | undefined): string {
   return p?.name || p?.email || msg("groups.model.groupDrafts.khongRoTen");
 }
 
 /** Thứ tự tên nhóm tự nhiên: Nhóm 2 trước Nhóm 10. */
-export const byGroupName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name, "vi", { numeric: true });
+export const compareGroupName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name, "vi", { numeric: true });
 
 /** Bản sửa từ bộ nhóm hiện có; thành viên đã rời lớp bị bỏ khi lưu (BR-U12-07). */
-export function draftsFrom(set: GroupSetView): Draft[] {
+export function buildDraftsFrom(set: GroupSetView): Draft[] {
   return set.groups.map((g) => ({
     key: g.id,
     id: g.id,
@@ -27,7 +27,7 @@ export function draftsFrom(set: GroupSetView): Draft[] {
 }
 
 /** `count` tên "Nhóm n" chưa dùng, bắt đầu từ số nhóm hiện có + 1. */
-export function freeNames(drafts: Draft[], count: number): string[] {
+export function pickFreeNames(drafts: Draft[], count: number): string[] {
   const taken = new Set(drafts.map((d) => d.name.trim().toLowerCase()));
   const names: string[] = [];
   for (let n = drafts.length + 1; names.length < count; n++) {
@@ -40,7 +40,7 @@ export function freeNames(drafts: Draft[], count: number): string[] {
  * Rút `ids` khỏi các nhóm đang có để đưa sang nhóm khác: nhóm mất trưởng nhóm thì người đầu tiên còn lại thay (BR-U12-04);
  * trả cả các nhóm không còn ai.
  */
-export function withdraw(drafts: Draft[], ids: string[]): { rest: Draft[]; emptied: Draft[] } {
+export function withdrawMembers(drafts: Draft[], ids: string[]): { rest: Draft[]; emptied: Draft[] } {
   const rest: Draft[] = [];
   const emptied: Draft[] = [];
   for (const d of drafts) {

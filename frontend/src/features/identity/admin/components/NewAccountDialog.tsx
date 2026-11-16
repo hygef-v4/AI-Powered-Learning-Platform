@@ -7,7 +7,7 @@ import { isValidStudentCode, normalizeStudentCode, STUDENT_CODE_FORMAT_MESSAGE }
 import { Alert } from "@/shared/ui/Alert";
 import { Button } from "@/shared/ui/Button";
 import { Dialog } from "@/shared/ui/Dialog";
-import { Field, Select, TextInput } from "@/shared/ui/inputs";
+import { Field, Select, TextInput } from "@/shared/ui/Inputs";
 import { ROLE_LABELS } from "../../model/types";
 import { createAccount } from "../api";
 import { ADMIN_ERROR_LABELS } from "../model/labels";

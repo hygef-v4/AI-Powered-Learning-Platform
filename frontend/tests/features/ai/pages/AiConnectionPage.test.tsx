@@ -6,7 +6,7 @@ import type { ConnectionView, McpCredential, ProviderInfo } from "@/features/ai/
 import type { SourceOption } from "@/shared/ai";
 
 const session = vi.hoisted(() => ({ role: "TEACHER" }));
-vi.mock("@/features/identity/hooks/session", () => ({
+vi.mock("@/features/identity/hooks/SessionProvider", () => ({
   useSession: () => ({ status: "authenticated", profile: { role: session.role } }),
 }));
 

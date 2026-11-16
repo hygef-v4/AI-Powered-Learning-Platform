@@ -1,9 +1,9 @@
 import { expect, it, vi } from "vitest";
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import { requestQuizDraft, updateQuizDetails } from "@/features/quizzes/api";
 import type { QuizDetailsInput } from "@/features/quizzes/model/types";
 
-vi.mock("@/shared/api/client", () => ({ apiFetch: vi.fn().mockResolvedValue({}) }));
+vi.mock("@/shared/api/client", () => ({ fetchApi: vi.fn().mockResolvedValue({}) }));
 
 it("sends structured instructions with the same versioned quiz update", async () => {
   const input: QuizDetailsInput = {
@@ -14,7 +14,7 @@ it("sends structured instructions with the same versioned quiz update", async ()
     activityMonitoringEnabled: false, activityNotice: null,
   };
   await updateQuizDetails("quiz1", input, 4);
-  const [url, request] = vi.mocked(apiFetch).mock.calls[0]!;
+  const [url, request] = vi.mocked(fetchApi).mock.calls[0]!;
   expect(url).toBe("/api/v1/quizzes/quiz1");
   expect(JSON.parse(String(request?.body))).toMatchObject({ instructionsDocument: input.instructionsDocument, version: 4 });
 });
@@ -23,7 +23,7 @@ it("keeps document IDs separate from the automatically selected AI source", asyn
   await requestQuizDraft("quiz1", {
     instructions: "Tạo câu theo tài liệu", count: 5, type: null, difficulty: null, materialIds: ["material1"],
   }, 3);
-  const [url, request] = vi.mocked(apiFetch).mock.calls.at(-1)!;
+  const [url, request] = vi.mocked(fetchApi).mock.calls.at(-1)!;
   expect(url).toBe("/api/v1/quizzes/quiz1/ai-drafts");
   expect(JSON.parse(String(request?.body))).toMatchObject({
     source: null, provider: null, materialIds: ["material1"], version: 3,

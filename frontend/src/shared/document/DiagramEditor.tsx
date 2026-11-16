@@ -76,12 +76,12 @@ export function DiagramEditor({ xml, title, onSave, onClose }: Props) {
   useEffect(() => {
     if (!dragging) return;
     const move = (event: MouseEvent) => setWidth(clampWidth(window.innerWidth - event.clientX));
-    const up = () => setDragging(false);
+    const stopDragging = () => setDragging(false);
     window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", up);
+    window.addEventListener("mouseup", stopDragging);
     return () => {
       window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", up);
+      window.removeEventListener("mouseup", stopDragging);
     };
   }, [dragging]);
 

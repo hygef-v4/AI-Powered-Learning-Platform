@@ -7,7 +7,7 @@ import { formatDateTime } from "@/features/groups/model/format";
 import { ApiError } from "@/shared/api/client";
 import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import { DocumentEditor, DocxImportDialog } from "@/shared/document";
-import { outlineOf, publishOutline } from "@/shared/document/outline";
+import { buildOutline, publishOutline } from "@/shared/document/outline";
 import { Alert, Button, ButtonLink, Card, Pill, showToast } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { finishSection, getWorkspace, groupDocImageUrl, previewSectionDocx, saveDraft, sendActivity } from "../api";
@@ -24,7 +24,7 @@ export const AUTOSAVE_MS = 10_000;
 
 type Drafts = Record<string, DocumentBlock[]>;
 
-function problemMessage(e: unknown, fallback: string): string {
+function describeProblem(e: unknown, fallback: string): string {
   if (e instanceof ApiError) {
     if (e.problem.status === 409) return e.problem.detail ?? msg("groupdocs.pages.GroupSectionEditorPage.duLieuVuaThayDoiHay");
     return e.problem.detail ?? fallback;
@@ -32,11 +32,11 @@ function problemMessage(e: unknown, fallback: string): string {
   return fallback;
 }
 
-function heldBy(view: WorkspaceView): SectionView[] {
+function listHeldSections(view: WorkspaceView): SectionView[] {
   return view.sections.filter((s) => s.status === "CLAIMED" && s.holderId === view.viewerId);
 }
 
-function sameBlocks(a: DocumentBlock[] | undefined, b: DocumentBlock[] | undefined): boolean {
+function hasSameBlocks(a: DocumentBlock[] | undefined, b: DocumentBlock[] | undefined): boolean {
   return !!a && !!b && a.length === b.length && a.every((block, i) => block === b[i]);
 }
 
@@ -88,7 +88,7 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
 
   // Bản xem mới: thêm mục vừa nhận, giữ nguyên bài đang viết của mục còn giữ, bỏ mục đã mất và báo.
   const applyView = useCallback((loaded: WorkspaceView) => {
-    const mine = heldBy(loaded);
+    const mine = listHeldSections(loaded);
     const ids = new Set(mine.map((s) => s.id));
     const lost = [...held.current].filter(([id]) => !ids.has(id) && !finished.current.has(id)).map(([, title]) => `“${title}”`);
     held.current = new Map(mine.map((s) => [s.id, s.title]));
@@ -143,7 +143,7 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
         setDirty((prev) => (unchanged ? prev.filter((d) => d !== id) : prev));
         setError(null);
       } catch (e) {
-        setError(problemMessage(e, msg("groupdocs.pages.GroupSectionEditorPage.khongLuuDuocBanNhap")));
+        setError(describeProblem(e, msg("groupdocs.pages.GroupSectionEditorPage.khongLuuDuocBanNhap")));
         ok = false;
       }
     }
@@ -172,18 +172,18 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
   const editorDocument = useMemo(() => (view ? assembleEditorDocument(view.sharedBlocks, view.sections, drafts) : null), [view, drafts]);
   // Số thứ tự như trang tài liệu nhóm (cả đề, kể cả mục của người khác), không đánh lại theo các phần đang hiện.
   const numbers = useMemo(
-    () => (view ? Object.fromEntries(outlineOf(assembleGroupDocument(view.sharedBlocks, view.sections).blocks).map((e) => [e.id, e.number])) : {}),
+    () => (view ? Object.fromEntries(buildOutline(assembleGroupDocument(view.sharedBlocks, view.sections).blocks).map((e) => [e.id, e.number])) : {}),
     [view],
   );
   // Các mục mình giữ: có ô Bài làm, viết được khi còn hạn (hết hạn thì cả trang chỉ đọc).
-  const writable = useMemo(() => new Set(view ? heldBy(view).map((s) => s.partId) : []), [view]);
+  const writable = useMemo(() => new Set(view ? listHeldSections(view).map((s) => s.partId) : []), [view]);
 
   // Sidebar: mục lục của chính các phần trên trang, lối về tài liệu nhóm.
   const headings = editorDocument?.blocks.filter((b) => b.type === "HEADING") ?? [];
   const headingKey = headings.map((b) => b.id).join(",");
   useEffect(() => {
     if (!view || !editorDocument) return;
-    const entries = outlineOf(editorDocument.blocks).map((entry) => {
+    const entries = buildOutline(editorDocument.blocks).map((entry) => {
       const number = numbers[entry.id] ?? entry.number;
       const title = number && entry.title.startsWith(number) ? entry.title.slice(number.length).trim() : entry.title;
       return { ...entry, number, title };
@@ -205,13 +205,13 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
   const edit = (next: DocumentModel) => {
     if (!view) return;
     const split = splitDrafts(next, view.sections, new Set(Object.keys(drafts)));
-    const changed = Object.keys(split).filter((id) => !sameBlocks(split[id], drafts[id]));
+    const changed = Object.keys(split).filter((id) => !hasSameBlocks(split[id], drafts[id]));
     if (changed.length === 0) return;
     setDrafts((prev) => ({ ...prev, ...Object.fromEntries(changed.map((id) => [id, split[id]!])) }));
     setDirty((prev) => [...new Set([...prev, ...changed])]);
   };
 
-  const done = async (s: SectionView) => {
+  const markSectionDone = async (s: SectionView) => {
     setBusy(s.id);
     if (!(await save(s.id))) {
       setBusy(null);
@@ -224,7 +224,7 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
       await reload();
       if (held.current.size === 0) router.push(workspaceHref);
     } catch (e) {
-      setError(problemMessage(e, msg("groupdocs.pages.GroupSectionEditorPage.khongDanhDauXongDuoc")));
+      setError(describeProblem(e, msg("groupdocs.pages.GroupSectionEditorPage.khongDanhDauXongDuoc")));
     }
     setBusy(null);
   };
@@ -238,14 +238,14 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
       return;
     }
     try {
-      for (const s of heldBy(view)) {
+      for (const s of listHeldSections(view)) {
         await finishSection(documentId, s.id);
         finished.current.add(s.id);
       }
       showToast(msg("groupdocs.pages.GroupSectionEditorPage.daHoanThanhTatCaCac"));
       router.push(workspaceHref);
     } catch (e) {
-      setError(problemMessage(e, msg("groupdocs.pages.GroupSectionEditorPage.khongDanhDauXongDuoc")));
+      setError(describeProblem(e, msg("groupdocs.pages.GroupSectionEditorPage.khongDanhDauXongDuoc")));
       void reload();
       setBusy(null);
     }
@@ -254,7 +254,7 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
   if (loadError && !view) return <PageLoadError>{loadError}</PageLoadError>;
   if (!view || !editorDocument) return <PageLoading label={msg("groupdocs.pages.GroupSectionEditorPage.dangMoTrangSoan")} />;
 
-  const mine = heldBy(view);
+  const mine = listHeldSections(view);
   const title = view.assignmentTitle ?? msg("groupdocs.pages.GroupSectionEditorPage.baiNhom");
   const deadline = describeDeadline(view, now);
   const cutoff = view.window === "LATE" ? view.lateUntil : view.closesAt;
@@ -262,7 +262,7 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
   const actions = Object.fromEntries(mine.map((s) => [s.partId, (
     <div key={s.id} role="group" aria-label={s.title} className="flex items-center gap-1.5">
       <Button size="sm" variant="ghost" icon="upload_file" disabled={!editable || busy !== null} onClick={() => setImporting(s)}>{msg("groupdocs.pages.GroupSectionEditorPage.nhapDocx")}</Button>
-      <Button size="sm" variant="primary" icon="check" disabled={!editable || busy !== null} onClick={() => void done(s)}>Xong</Button>
+      <Button size="sm" variant="primary" icon="check" disabled={!editable || busy !== null} onClick={() => void markSectionDone(s)}>Xong</Button>
     </div>
   )]));
   const header = (

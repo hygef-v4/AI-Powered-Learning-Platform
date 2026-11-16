@@ -13,7 +13,7 @@ import { OtpInput } from "../../components/OtpInput";
 import { PasswordChecklist } from "../../components/PasswordChecklist";
 import { FieldError, PasswordField } from "../../components/PasswordField";
 import { Stepper } from "../../components/Stepper";
-import { PASSWORD_VIOLATION_MESSAGES, passwordAcceptable } from "../../model/passwordRules";
+import { PASSWORD_VIOLATION_MESSAGES, isPasswordAcceptable } from "../../model/passwordRules";
 import type { OtpPurpose } from "../../model/types";
 import { formatMmSs, useCountdown } from "../../hooks/useCountdown";
 import { msg } from "@/i18n/msg";
@@ -106,7 +106,7 @@ export function OtpFlow({ copy, onComplete }: { copy: OtpFlowCopy; onComplete: (
   );
 }
 
-function errorProblem(error: unknown) {
+function readErrorProblem(error: unknown) {
   return (error instanceof ApiError ? error.problem : { status: 0 }) as { status: number; code?: string; violations?: string[] };
 }
 
@@ -203,14 +203,14 @@ function VerifyStep({
     try {
       onVerified((await verifyOtp(copy.purpose, email, code)).otpTicket);
     } catch (e) {
-      setError(errorProblem(e).status === 400 ? OTP_INVALID_MESSAGE : BUSY_MESSAGE);
+      setError(readErrorProblem(e).status === 400 ? OTP_INVALID_MESSAGE : BUSY_MESSAGE);
       setCode("");
     } finally {
       setBusy(false);
     }
   }
 
-  async function resend() {
+  async function resendCode() {
     setError(null);
     setResending(true);
     try {
@@ -241,7 +241,7 @@ function VerifyStep({
         {/* Khóa đến khi được phép gửi lại (60 giây) và trong lúc đang gửi. */}
         <button
           type="button"
-          onClick={resend}
+          onClick={resendCode}
           disabled={resendIn > 0 || resending}
           className="font-semibold text-primary-ink hover:underline disabled:cursor-not-allowed disabled:text-muted disabled:no-underline"
         >
@@ -267,7 +267,7 @@ function PasswordStep({
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const acceptable = passwordAcceptable(password);
+  const acceptable = isPasswordAcceptable(password);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -284,7 +284,7 @@ function PasswordStep({
     try {
       await onSubmit(password);
     } catch (e) {
-      const problem = errorProblem(e);
+      const problem = readErrorProblem(e);
       if (problem.code === "TICKET_EXPIRED") {
         onTicketExpired();
         return;

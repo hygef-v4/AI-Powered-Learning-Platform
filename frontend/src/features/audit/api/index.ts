@@ -1,4 +1,4 @@
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import type { AuditLogPage, AuditQuery } from "../model/types";
 
 const BASE = "/api/v1/admin/audit-logs";
@@ -8,5 +8,5 @@ export function getAuditLogs(query: AuditQuery): Promise<AuditLogPage> {
   for (const [key, value] of Object.entries(query)) {
     if (value !== undefined && value !== "") params.set(key, String(value));
   }
-  return apiFetch<AuditLogPage>(`${BASE}?${params.toString()}`);
+  return fetchApi<AuditLogPage>(`${BASE}?${params.toString()}`);
 }

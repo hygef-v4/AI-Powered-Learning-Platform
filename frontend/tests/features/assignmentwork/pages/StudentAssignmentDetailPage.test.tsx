@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 vi.mock("@/features/assignmentwork/hooks/useStudentAssignments", () => ({
-  useStudentAssignments: () => ({ rows: [] }), rowStatus: vi.fn(),
+  useStudentAssignments: () => ({ rows: [] }), resolveRowStatus: vi.fn(),
 }));
 
 const submitted = { attemptId: "submitted", attemptNo: 2, status: "SUBMITTED", graded: true } as AttemptSummary;

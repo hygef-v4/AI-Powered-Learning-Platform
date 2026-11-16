@@ -1665,7 +1665,8 @@
         "baiCoGhiNhanHoatDong": "Activity is monitored",
         "baiChuaLuu": "Work not saved",
         "nhapDocxVaoPhan": "Import DOCX into part “{value}”",
-        "nhapDocxVaoPhanCuoiCua": "Import DOCX into the last part"
+        "nhapDocxVaoPhanCuoiCua": "Import DOCX into the last part",
+        "daKhoiPhucBanChuaLuu": "Restored the unsaved version on this device"
       },
       "StudentAssignmentDetailPage": {
         "luyenTap": "Practice",
@@ -4675,7 +4676,8 @@
       "mssvNayDaDuocDungCho": "This student ID is already used by another account.",
       "mssvDaKhoaViSinhVien": "The student ID is locked because the student has activated the account.",
       "canNhapMssvChoTaiKhoan": "A student ID is required for student accounts.",
-      "chiTaiKhoanSinhVienMoi": "Only student accounts have a student ID."
+      "chiTaiKhoanSinhVienMoi": "Only student accounts have a student ID.",
+      "khongRoTen": "Unknown name"
     },
     "ui": {
       "ClassFilter": {

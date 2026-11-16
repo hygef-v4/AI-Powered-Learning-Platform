@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { PageHeader, Pill, Section } from "@/shared/ui";
-import { diagramTypeLabels, svgDataUri, type DiagramType } from "./types";
+import { diagramTypeLabels, encodeSvgDataUri, type DiagramType } from "./types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { msg } from "@/i18n/msg";
 
-function errorMessage(error: unknown): string {
+function describeError(error: unknown): string {
   if (error instanceof ApiError && error.problem.status === 404) return msg("shared.document.DiagramViewPage.khongTimThaySoDoHoac");
   if (error instanceof ApiError) return error.problem.detail ?? msg("shared.document.DiagramViewPage.khongTaiDuocSoDo");
   return msg("shared.document.DiagramViewPage.khongTaiDuocSoDo");
@@ -25,7 +25,7 @@ export function DiagramViewPage({ load, backHref }: { load: (signal: AbortSignal
       (e) => { if (!controller.signal.aborted) setError(e); });
     return () => controller.abort();
   }, [load]);
-  if (error) return <PageLoadError>{errorMessage(error)}</PageLoadError>;
+  if (error) return <PageLoadError>{describeError(error)}</PageLoadError>;
   if (!data) return <PageLoading label={msg("shared.document.DiagramViewPage.dangTaiSoDo")} />;
   const file = `data:application/xml;charset=utf-8,${encodeURIComponent(data.xml)}`;
   return (
@@ -35,7 +35,7 @@ export function DiagramViewPage({ load, backHref }: { load: (signal: AbortSignal
         actions={<a href={file} download="so-do.drawio" className="text-xs font-semibold text-primary-ink">{msg("shared.document.DiagramViewPage.taiTepDrawio")}</a>}>
         {data.svgPreview ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={svgDataUri(data.svgPreview)} alt={data.alt || msg("shared.document.DiagramViewPage.soDo")} className="max-w-full" />
+          <img src={encodeSvgDataUri(data.svgPreview)} alt={data.alt || msg("shared.document.DiagramViewPage.soDo")} className="max-w-full" />
         ) : <p className="text-sm text-muted">{msg("shared.document.DiagramViewPage.soDoChuaCoAnhXem")}</p>}
       </Section>
     </div>

@@ -190,7 +190,7 @@ export function TeacherQuotaTable() {
     };
   }, []);
 
-  const remove = async (quota: TeacherQuota) => {
+  const removeQuota = async (quota: TeacherQuota) => {
     setRemoving(null);
     try {
       await deleteTeacherQuota(quota.accountId);
@@ -272,7 +272,7 @@ export function TeacherQuotaTable() {
         tone="warning"
         onClose={() => setRemoving(null)}
         footer={
-          <Button variant="danger" onClick={() => removing && void remove(removing)}>
+          <Button variant="danger" onClick={() => removing && void removeQuota(removing)}>
             {msg("ai.admin.components.QuotaSections.xoa")}</Button>
         }
       >
@@ -322,7 +322,7 @@ function TeacherQuotaDialog({
 
   const shown = teacher || typed === "" ? [] : candidates;
 
-  const save = async () => {
+  const saveQuota = async () => {
     if (!teacher || value === null) return;
     setBusy(true);
     setError(null);
@@ -344,7 +344,7 @@ function TeacherQuotaDialog({
       onClose={onClose}
       dismissible={!busy}
       footer={
-        <Button variant="primary" onClick={() => void save()} disabled={busy || !teacher || value === null}>
+        <Button variant="primary" onClick={() => void saveQuota()} disabled={busy || !teacher || value === null}>
           {msg("ai.admin.components.QuotaSections.luu")}</Button>
       }
     >

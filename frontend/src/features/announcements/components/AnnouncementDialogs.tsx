@@ -167,17 +167,17 @@ function ClassPicker({
   const [place, setPlace] = useState<{ top: number; left: number; width: number } | null>(null);
   useEffect(() => {
     if (!open) return;
-    const update = () => {
+    const updateAnnouncement = () => {
       const rect = anchorRef.current?.getBoundingClientRect();
       if (rect) setPlace({ top: rect.bottom + 4, left: rect.left, width: rect.width });
     };
-    const frame = requestAnimationFrame(update);
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
+    const frame = requestAnimationFrame(updateAnnouncement);
+    window.addEventListener("resize", updateAnnouncement);
+    window.addEventListener("scroll", updateAnnouncement, true);
     return () => {
       cancelAnimationFrame(frame);
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", updateAnnouncement);
+      window.removeEventListener("scroll", updateAnnouncement, true);
     };
   }, [open]);
   const shown = useMemo(() => {
@@ -207,7 +207,7 @@ function ClassPicker({
     setOpen(false);
     setQuery("");
   };
-  const row = (
+  const renderRow = (
     key: string,
     checked: boolean,
     onToggle: () => void,
@@ -297,7 +297,7 @@ function ClassPicker({
             className="fixed z-[105] max-h-64 overflow-auto overscroll-contain rounded-lg border border-line bg-surface shadow-[var(--shadow-float)]"
           >
             {shown.length > 1 &&
-              row(
+              renderRow(
                 "all",
                 allShown,
                 toggleShown,
@@ -305,7 +305,7 @@ function ClassPicker({
                 true,
               )}
             {shown.map((c) =>
-              row(
+              renderRow(
                 c.classId,
                 chosen.includes(c.classId),
                 () => handleToggleClass(c.classId),

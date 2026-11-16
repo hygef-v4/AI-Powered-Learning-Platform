@@ -27,7 +27,7 @@ export function formatDuration(value: string | number): string {
     .filter(Boolean).join(" ");
 }
 
-function time(value: string | null) {
+function formatTime(value: string | null) {
   return value ? new Date(value).toLocaleTimeString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "?";
 }
 
@@ -45,7 +45,7 @@ export function ActivityTimeline({ summary }: { summary: ActivitySummary }) {
         {summary.intervals.map((interval, index) => (
           <li key={index} className="flex items-center gap-2">
             <Pill tone={interval.certainty === "KNOWN" ? "warning" : "neutral"}>{interval.certainty === "KNOWN" ? msg("shared.activity.ActivityTimeline.roiTrang2") : msg("shared.activity.ActivityTimeline.khongRo")}</Pill>
-            {time(interval.start)} – {time(interval.end)}
+            {formatTime(interval.start)} – {formatTime(interval.end)}
           </li>
         ))}
       </ul>

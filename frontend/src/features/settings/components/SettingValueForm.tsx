@@ -4,10 +4,10 @@ import { useId, useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { Alert } from "@/shared/ui/Alert";
 import { Button } from "@/shared/ui/Button";
-import { ChipToggleGroup, Field, Select, Switch, TextInput } from "@/shared/ui/inputs";
+import { ChipToggleGroup, Field, Select, Switch, TextInput } from "@/shared/ui/Inputs";
 import { updateSetting } from "../api";
 import type { SettingItem, SettingValue } from "../model/types";
-import { canBeEmpty, options, unitOf, validateSettingValue } from "../model/validation";
+import { canBeEmpty, listOptions, readUnit, validateSettingValue } from "../model/validation";
 import { msg } from "@/i18n/msg";
 
 type Props = {
@@ -39,7 +39,7 @@ export function SettingValueForm({ item, onSaved, onReload }: Props) {
     setServerError(null);
   }
 
-  async function save(value: SettingValue) {
+  async function saveSetting(value: SettingValue) {
     if (validateSettingValue(item, value)) return;
     setSaving(true);
     setServerError(null);
@@ -65,7 +65,7 @@ export function SettingValueForm({ item, onSaved, onReload }: Props) {
       className="flex flex-col gap-3.5"
       onSubmit={(event) => {
         event.preventDefault();
-        void save(draft);
+        void saveSetting(draft);
       }}
     >
       {conflict && (
@@ -83,7 +83,7 @@ export function SettingValueForm({ item, onSaved, onReload }: Props) {
       <ValueField item={item} value={draft} error={error} onChange={change} disabled={saving} />
       <div className="flex items-center justify-end gap-2">
         {canBeEmpty(item) && item.value !== null && (
-          <Button disabled={saving} onClick={() => void save(null)} className="mr-auto">
+          <Button disabled={saving} onClick={() => void saveSetting(null)} className="mr-auto">
             {msg("settings.components.SettingValueForm.boTrong")}</Button>
         )}
         <Button
@@ -123,7 +123,7 @@ function ValueField({ item, value, error, onChange, disabled }: FieldProps) {
             type="number"
             inputMode="numeric"
             invalid={error !== null}
-            suffix={unitOf(item)}
+            suffix={readUnit(item)}
             wrapperClassName="w-[220px]"
             value={typeof value === "number" ? value : ""}
             min={Number(item.constraints?.min)}
@@ -172,7 +172,7 @@ function ValueField({ item, value, error, onChange, disabled }: FieldProps) {
             onChange={(e) => onChange(e.target.value === "" ? null : e.target.value)}
           >
             {value === null && <option value="">{msg("settings.components.SettingValueForm.chuaChon")}</option>}
-            {options(item).map((option) => (
+            {listOptions(item).map((option) => (
               <option key={option} value={option}>
                 {option}
               </option>
@@ -185,7 +185,7 @@ function ValueField({ item, value, error, onChange, disabled }: FieldProps) {
         <Field label={LABEL} required={required} error={error}>
           <ChipToggleGroup
             ariaLabel={LABEL}
-            options={options(item)}
+            options={listOptions(item)}
             value={Array.isArray(value) ? value : []}
             disabled={disabled}
             onChange={onChange}

@@ -65,7 +65,7 @@ export function BatchActionDialog({
       active = false;
     };
   }, [action, items]);
-  async function run(choice?: SourceChoice) {
+  async function runBatch(choice?: SourceChoice) {
     if (busy || items.length === 0) return;
     setBusy(true);
     setError("");
@@ -134,7 +134,7 @@ export function BatchActionDialog({
           {result ? <Button onClick={onClose}>{msg("grading.components.BatchActionDialog.dong")}</Button> : <Button
             variant="primary"
             disabled={busy || items.length === 0}
-            onClick={() => void run()}
+            onClick={() => void runBatch()}
           >
             {busy ? msg("grading.components.BatchActionDialog.dangXuLy") : msg("grading.components.BatchActionDialog.xacNhan")}
           </Button>}

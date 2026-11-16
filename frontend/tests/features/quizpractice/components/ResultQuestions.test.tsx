@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { questionIndex } from "@/features/quizpractice/components/QuestionPager";
+import { resolveQuestionIndex } from "@/features/quizpractice/components/QuestionPager";
 import { ResultQuestions } from "@/features/quizpractice/components/ResultQuestions";
 import type { ResultQuestion } from "@/features/quizpractice/model/types";
 
@@ -44,10 +44,10 @@ describe("ResultQuestions: mỗi câu một trang", () => {
   });
 
   it("số câu trên URL sai thì về câu hợp lệ", () => {
-    expect(questionIndex("2", 3)).toBe(1);
-    expect(questionIndex("99", 3)).toBe(2);
-    expect(questionIndex("abc", 3)).toBe(0);
-    expect(questionIndex("0", 3)).toBe(0);
-    expect(questionIndex("1", 0)).toBe(0);
+    expect(resolveQuestionIndex("2", 3)).toBe(1);
+    expect(resolveQuestionIndex("99", 3)).toBe(2);
+    expect(resolveQuestionIndex("abc", 3)).toBe(0);
+    expect(resolveQuestionIndex("0", 3)).toBe(0);
+    expect(resolveQuestionIndex("1", 0)).toBe(0);
   });
 });

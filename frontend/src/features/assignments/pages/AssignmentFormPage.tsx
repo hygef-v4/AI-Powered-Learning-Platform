@@ -9,10 +9,10 @@ import {
   RubricNote,
   ToolbarButton,
   computeParts,
-  rubricHalfWritten,
-  rubricPointsMissing,
-  rubricTotal,
-  sectionsOf,
+  isRubricHalfWritten,
+  isRubricPointsMissing,
+  sumRubricTotal,
+  numberSections,
   type DocumentBlock,
   type DocumentComment,
   type DocumentModel,
@@ -25,14 +25,14 @@ import { AiDraftDialog } from "../components/AiDraftDialog";
 import { AiReviseChat } from "../components/AiReviseChat";
 import { ExamImportDialog } from "../components/ExamImportDialog";
 import { clearPendingImport, peekPendingImport } from "../model/pendingImports";
-import { assignmentsApi, downloadDocx, imageUrlFor } from "../api";
-import { AssignmentSettingsPanel, settingsOf, type Settings } from "../components/AssignmentSettingsPanel";
-import { errorMessage, formatTime, problemCode, problemIssues } from "../model/format";
-import { RubricEditor, cleanCriteria, rubricPointsMalformed } from "../components/RubricEditor";
+import { assignmentsApi, downloadDocx, buildImageUrl } from "../api";
+import { AssignmentSettingsPanel, readSettings, type Settings } from "../components/AssignmentSettingsPanel";
+import { describeError, formatTime, readProblemCode, readProblemIssues } from "../model/format";
+import { RubricEditor, cleanCriteria, isRubricPointsMalformed } from "../components/RubricEditor";
 import { ScheduleForm } from "../components/ScheduleForm";
 import { statusLabels, statusTones, submissionLabels, type AssignmentDetail, type RubricDetail } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
-import { assignmentsReturn, outlineOf, publishOutline } from "../model/outline";
+import { resolveAssignmentsReturn, outlineOf, publishOutline } from "../model/outline";
 import { WorkspaceTopBar } from "@/shared/layout/WorkspaceTopBar";
 import { msg } from "@/i18n/msg";
 
@@ -51,7 +51,7 @@ type Local = {
 
 /** Sau khi lưu: ảnh vừa tải lên đã được gắn (server trả {@code hasFile}); bản đang sửa bỏ {@code fileRef} để không gắn lại. */
 /** Phần mới có trong {@code parts} (chưa có trong {@code before}) mà trang còn giữ tiêu chí: cần lưu lại rubric đó. */
-export function reappearedParts(before: Set<string>, parts: DocumentPart[], criteria: Record<string, RubricCriterion[]>): string[] {
+export function findReappearedParts(before: Set<string>, parts: DocumentPart[], criteria: Record<string, RubricCriterion[]>): string[] {
   return parts.filter((part) => !before.has(part.partId) && (criteria[part.partId]?.length ?? 0) > 0).map((part) => part.partId);
 }
 
@@ -102,7 +102,7 @@ export const RUBRIC_HALF = msg("assignments.pages.AssignmentFormPage.coMucChamTh
  * thì chỉ ghi "Bài làm chưa có rubric chấm điểm"; rubric lỗi trên thẻ thì báo số thẻ viền đỏ; lỗi trong đề thì báo chỗ đánh
  * dấu đỏ; lỗi không gắn được vào đâu (cài đặt, nhóm…) ghi nguyên văn.
  */
-export function missingText(issues: ValidationIssue[]): string {
+export function describeMissing(issues: ValidationIssue[]): string {
   const parts: string[] = [];
   if (issues.some((issue) => issue.code === "TITLE_REQUIRED")) parts.push(msg("assignments.pages.AssignmentFormPage.baiCanTieuDe"));
   if (issues.some((issue) => issue.code === RUBRIC_MISSING)) parts.push(msg("assignments.pages.AssignmentFormPage.baiLamChuaCoRubricCham"));
@@ -115,7 +115,7 @@ export function missingText(issues: ValidationIssue[]): string {
 }
 
 /** Lỗi rubric hiện trên thẻ của {@code part}: thẻ có tiêu đề theo tiêu đề, thẻ Toàn bài theo mã RUBRIC_WHOLE…. */
-export function cardIssues(issues: ValidationIssue[], part: DocumentPart): ValidationIssue[] {
+export function filterCardIssues(issues: ValidationIssue[], part: DocumentPart): ValidationIssue[] {
   return issues.filter((issue) => issue.code.startsWith("RUBRIC") && issue.code !== RUBRIC_MISSING && (part.headingBlockId
     ? issue.blockId === part.headingBlockId
     : !issue.blockId && issue.code.startsWith(WHOLE_ISSUE)));
@@ -126,14 +126,14 @@ export function cardIssues(issues: ValidationIssue[], part: DocumentPart): Valid
  * rubric chấm điểm", không tô đỏ thẻ nào; còn lại thẻ có mục chấm mà tổng không quá 0, hoặc mục ghi dở, thì viền đỏ và ghi
  * rõ lý do; thẻ chỉ có dòng trống bỏ qua.
  */
-export function rubricIssues(cards: DocumentPart[], criteria: Record<string, RubricCriterion[]>): ValidationIssue[] {
-  const total = cards.reduce((sum, part) => sum + rubricTotal(criteria[part.partId] ?? []), 0);
+export function listRubricIssues(cards: DocumentPart[], criteria: Record<string, RubricCriterion[]>): ValidationIssue[] {
+  const total = cards.reduce((sum, part) => sum + sumRubricTotal(criteria[part.partId] ?? []), 0);
   if (total <= 0) return [{ code: RUBRIC_MISSING, blockId: null, message: msg("assignments.pages.AssignmentFormPage.baiLamChuaCoRubricCham") }];
   return cards.flatMap((part) => {
     const list = criteria[part.partId] ?? [];
-    if (!rubricPointsMissing(list)) return [];
+    if (!isRubricPointsMissing(list)) return [];
     const code = part.headingBlockId ? "RUBRIC_POINTS_MISSING" : "RUBRIC_WHOLE_POINTS_MISSING";
-    const reasons = [...(rubricHalfWritten(list) ? [RUBRIC_HALF] : []), ...(rubricTotal(list) <= 0 ? [RUBRIC_ZERO] : [])];
+    const reasons = [...(isRubricHalfWritten(list) ? [RUBRIC_HALF] : []), ...(sumRubricTotal(list) <= 0 ? [RUBRIC_ZERO] : [])];
     return reasons.map((message) => ({ code, blockId: part.headingBlockId, message }));
   });
 }
@@ -148,7 +148,7 @@ function notify(text: string, tone: "danger" | "success") {
 }
 
 /** Chạy {@code task} sau mọi lệnh ghi đang chờ (lưu, duyệt…) để lệnh nào cũng gửi đúng version của bài. */
-function chain<T>(queue: { current: Promise<unknown> }, task: () => Promise<T>): Promise<T> {
+function chainTask<T>(queue: { current: Promise<unknown> }, task: () => Promise<T>): Promise<T> {
   const run = queue.current.then(task, task);
   queue.current = run.catch(() => undefined);
   return run;
@@ -228,7 +228,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     detailRef.current = next;
     version.current = next.version;
     if (!replaceLocal) return;
-    const nextSettings = settingsOf(next);
+    const nextSettings = readSettings(next);
     setTitle(next.title);
     setInstructions(next.instructions);
     setSettings(nextSettings);
@@ -284,7 +284,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     }, (error) => {
       done = true;
       missing.forEach((partId) => fetched.current.parts.delete(partId));
-      if (!controller.signal.aborted) setRubricLoadError(errorMessage(error));
+      if (!controller.signal.aborted) setRubricLoadError(describeError(error));
     });
     return () => {
       controller.abort();
@@ -292,7 +292,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     };
   }, [id, partsKey, rubricEpoch]);
 
-  const save = useCallback((): Promise<boolean> => chain(queue, async () => {
+  const save = useCallback((): Promise<boolean> => chainTask(queue, async () => {
     const work = dirty.current;
     if (conflictRef.current) return false;
     if (!work.details && !work.skeleton && work.rubrics.size === 0) return true;
@@ -317,7 +317,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
         version.current = next.version;
         // Mục thành phần chấm lại (ví dụ xóa mục con vừa thêm): server tạo rubric trống mới, trang vẫn giữ tiêu chí cũ. Lưu lại
         // tiêu chí cũ lên server để thẻ trên trang và server khớp nhau, không báo thiếu rubric khi phát hành (yêu cầu 2026-11-04).
-        reappearedParts(before, next.parts, values.criteria).forEach((partId) => work.rubrics.add(partId));
+        findReappearedParts(before, next.parts, values.criteria).forEach((partId) => work.rubrics.add(partId));
         const saved = next.skeleton;
         latest.current = { ...latest.current, skeleton: mergeSaved(latest.current.skeleton, saved) };
         setSkeleton((current) => mergeSaved(current, saved));
@@ -335,7 +335,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
             continue;
           }
           const partCriteria = latest.current.criteria[partId] ?? [];
-          if (rubricPointsMalformed(partCriteria)) {
+          if (isRubricPointsMalformed(partCriteria)) {
             // Điểm quá 2 chữ số thập phân: không làm tròn, không gửi; giữ chưa lưu tới khi sửa (BR-U07-21).
             dirty.current.rubrics.add(partId);
             const headingBlockId = localParts.find((part) => part.partId === partId)?.headingBlockId ?? null;
@@ -366,18 +366,18 @@ export function AssignmentFormPage({ id }: { id: string }) {
     } catch (error) {
       if (next) apply(next, false);
       const transient = !(error instanceof ApiError) || error.problem.status >= 500;
-      if (problemCode(error) === VERSION_CONFLICT || transient) {
+      if (readProblemCode(error) === VERSION_CONFLICT || transient) {
         // Giữ đánh dấu chưa lưu: lỗi mạng thì lần lưu sau gửi lại; xung đột thì chờ người dùng tải lại.
         dirty.current.details ||= work.details;
         dirty.current.skeleton ||= work.skeleton;
         work.rubrics.forEach((partId) => dirty.current.rubrics.add(partId));
       }
-      if (problemCode(error) === VERSION_CONFLICT) {
+      if (readProblemCode(error) === VERSION_CONFLICT) {
         conflictRef.current = true;
         setConflict(true);
       } else {
-        setIssues(problemIssues(error));
-        notify(msg("assignments.pages.AssignmentFormPage.chuaLuu2", { value: String(errorMessage(error)) }), "danger");
+        setIssues(readProblemIssues(error));
+        notify(msg("assignments.pages.AssignmentFormPage.chuaLuu2", { value: String(describeError(error)) }), "danger");
       }
       return false;
     } finally {
@@ -393,7 +393,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
   }, [tick, save]);
 
   useEffect(() => {
-    const keys = (event: KeyboardEvent) => {
+    const handleShortcutKeys = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
         void save();
@@ -403,15 +403,15 @@ export function AssignmentFormPage({ id }: { id: string }) {
       const pending = dirty.current;
       if (pending.details || pending.skeleton || pending.rubrics.size > 0) event.preventDefault();
     };
-    window.addEventListener("keydown", keys);
+    window.addEventListener("keydown", handleShortcutKeys);
     window.addEventListener("beforeunload", leave);
     return () => {
-      window.removeEventListener("keydown", keys);
+      window.removeEventListener("keydown", handleShortcutKeys);
       window.removeEventListener("beforeunload", leave);
     };
   }, [save]);
 
-  const reload = useCallback(() => chain(queue, async () => {
+  const reload = useCallback(() => chainTask(queue, async () => {
     try {
       const next = await assignmentsApi.detail(id);
       conflictRef.current = false;
@@ -446,9 +446,9 @@ export function AssignmentFormPage({ id }: { id: string }) {
   }, [reload]);
 
   const parts = useMemo(() => computeParts(skeleton), [skeleton]);
-  const sections = useMemo(() => sectionsOf(skeleton, parts), [skeleton, parts]);
+  const sections = useMemo(() => numberSections(skeleton, parts), [skeleton, parts]);
 
-  function changed() {
+  function markChanged() {
     setUnsaved(true);
     setTick((value) => value + 1);
     // Sửa bài đã hoàn tất thì bài về nháp (server cũng đổi khi lưu): nút lại là "Hoàn tất" (yêu cầu 2026-11-11).
@@ -465,13 +465,13 @@ export function AssignmentFormPage({ id }: { id: string }) {
     setIssues((current) => current.filter((issue) => issue.code !== "TITLE_REQUIRED"));
     latest.current = { ...latest.current, title: value };
     dirty.current.details = true;
-    changed();
+    markChanged();
   }
   function editSettings(value: Settings) {
     setSettings(value);
     latest.current = { ...latest.current, settings: value };
     dirty.current.details = true;
-    changed();
+    markChanged();
   }
   /** Đưa hướng dẫn và tiêu chí về bản đã chụp, đánh dấu chưa lưu để lần lưu tới ghi lên máy chủ sau khung đề. */
   function restoreAuthoring(document: DocumentModel, snapshot: AuthoringSnapshot) {
@@ -503,7 +503,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     setSkeleton(value);
     latest.current = { ...latest.current, skeleton: value };
     dirty.current.skeleton = true;
-    changed();
+    markChanged();
   }
   function editRubric(part: DocumentPart, value: RubricCriterion[]) {
     setCriteria((current) => ({ ...current, [part.partId]: value }));
@@ -511,29 +511,29 @@ export function AssignmentFormPage({ id }: { id: string }) {
     dirty.current.rubrics.add(part.partId);
     // Sửa thẻ: bỏ lỗi của thẻ đó và báo chung "chưa có rubric" (có thể vừa được bổ sung).
     setIssues((current) => {
-      const own = new Set(cardIssues(current, part));
+      const own = new Set(filterCardIssues(current, part));
       return current.filter((issue) => !own.has(issue) && issue.code !== RUBRIC_MISSING);
     });
-    changed();
+    markChanged();
   }
 
   /** Lưu bản đang sửa rồi mới gọi thao tác (duyệt, nhân bản…), nối vào hàng ghi để dùng đúng version. */
-  async function act(action: () => Promise<AssignmentDetail | void>, success: string | null, after?: () => void) {
+  async function runAction(action: () => Promise<AssignmentDetail | void>, success: string | null, after?: () => void) {
     if (!(await save())) return;
     try {
-      const result = await chain(queue, action);
+      const result = await chainTask(queue, action);
       if (result) apply(result, false);
       setIssues([]);
       if (success) notify(success, "success");
       after?.();
     } catch (error) {
-      if (problemCode(error) === VERSION_CONFLICT) {
+      if (readProblemCode(error) === VERSION_CONFLICT) {
         conflictRef.current = true;
         setConflict(true);
         return;
       }
-      setIssues(problemIssues(error));
-      notify(errorMessage(error), "danger");
+      setIssues(readProblemIssues(error));
+      notify(describeError(error), "danger");
     }
   }
 
@@ -546,7 +546,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
       const name = (latest.current.title.trim() || "bai-tap").replace(/[\\/:*?"<>|\r\n]+/g, " ");
       await downloadDocx(id, what, `${what === "rubric" ? "Rubric - " : ""}${name}.docx`);
     } catch (error) {
-      notify(msg("assignments.pages.AssignmentFormPage.khongTaiDuocTep", { value: String(what === "rubric" ? "rubric" : msg("assignments.pages.AssignmentFormPage.de")), value2: String(errorMessage(error)) }), "danger");
+      notify(msg("assignments.pages.AssignmentFormPage.khongTaiDuocTep", { value: String(what === "rubric" ? "rubric" : msg("assignments.pages.AssignmentFormPage.de")), value2: String(describeError(error)) }), "danger");
     } finally {
       exporting.current = false;
     }
@@ -561,11 +561,11 @@ export function AssignmentFormPage({ id }: { id: string }) {
   }
 
   /** Bài còn thiếu mà trang tự thấy được (tên bài, rubric các phần); luật đầy đủ server kiểm khi phát hành. */
-  function localMissing(): ValidationIssue[] {
+  function listLocalMissing(): ValidationIssue[] {
     const found: ValidationIssue[] = [];
     if (!title.trim()) found.push({ code: "TITLE_REQUIRED", blockId: null, message: msg("assignments.pages.AssignmentFormPage.baiCanTieuDe") });
     const cards = hasWholePart(parts) ? [WHOLE_PART, ...parts] : parts;
-    found.push(...rubricIssues(cards, criteria));
+    found.push(...listRubricIssues(cards, criteria));
     return found;
   }
 
@@ -573,7 +573,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
   function showMissing(found: ValidationIssue[]) {
     setPreview(false);
     setIssues(found);
-    notify(missingText(found), "danger");
+    notify(describeMissing(found), "danger");
   }
 
   /** Lưu bản mới nhất, bỏ dòng mục chấm trống, kiểm sơ bộ tên bài và rubric; còn thiếu thì báo và trả false. */
@@ -585,7 +585,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
       setPreview(false);
       return false;
     }
-    const found = localMissing();
+    const found = listLocalMissing();
     if (found.length > 0) {
       showMissing(found);
       return false;
@@ -600,13 +600,13 @@ export function AssignmentFormPage({ id }: { id: string }) {
   async function finalizeAssignment() {
     if (!(await saveAndCheck())) return;
     try {
-      const next = await chain(queue, () => assignmentsApi.review(id, version.current));
+      const next = await chainTask(queue, () => assignmentsApi.review(id, version.current));
       // Không hiện thông báo nổi: nút đổi thành "Xếp lịch" và nhãn trạng thái thành "Hoàn tất" là đủ.
       apply(next, false);
     } catch (error) {
-      const serverIssues = problemIssues(error);
+      const serverIssues = readProblemIssues(error);
       if (serverIssues.length > 0) showMissing(serverIssues);
-      else notify(errorMessage(error), "danger");
+      else notify(describeError(error), "danger");
     }
   }
 
@@ -620,20 +620,20 @@ export function AssignmentFormPage({ id }: { id: string }) {
   useEffect(() => {
     if (!detail) return;
     // Lối về đúng tab, bộ lọc của trang danh sách đã mở bài này (Nháp, Đang mở, Đã đóng…).
-    const backHref = assignmentsReturn(assignmentsHref(detail, params.get("classId") ?? detail.classId));
+    const backHref = resolveAssignmentsReturn(buildAssignmentsHref(detail, params.get("classId") ?? detail.classId));
     const editable = detail.permissions.canEditContent && !preview;
     publishOutline({ assignmentId: detail.id, backHref, backLabel: msg("assignments.pages.AssignmentFormPage.baiTap"), entries: outlineOf(skeleton.blocks), editable });
   }, [detail, skeleton, params, preview]);
   useEffect(() => () => publishOutline(null), []);
 
   if (loadError) {
-    return <PageLoadError onRetry={() => void reload()}>{errorMessage(loadError)}</PageLoadError>;
+    return <PageLoadError onRetry={() => void reload()}>{describeError(loadError)}</PageLoadError>;
   }
   if (!detail || !settings) return <PageLoading label={msg("assignments.pages.AssignmentFormPage.dangTaiBaiTap")} />;
 
   const classId = params.get("classId") ?? detail.classId;
   // Xóa bản nháp xong về trang Bài tập (tab Bài tập của lớp, hoặc Bài tập của môn), như lối về ở sidebar.
-  const backHref = assignmentsHref(detail, classId);
+  const backHref = buildAssignmentsHref(detail, classId);
   const permissions = detail.permissions;
   const canClose = detail.scope === "CLASS" && detail.status === "OPEN"
     && permissions.canRetire && !permissions.ownerArchived;
@@ -648,7 +648,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
 
   // Thẻ rubric ghi số mục như trong trang: "1.2. Tên", mục chưa đặt tên chỉ có số (yêu cầu 2026-11-04).
   const numberOf = new Map(outlineOf(skeleton.blocks).map((entry) => [entry.id, entry.number]));
-  const rubricTitle = (part: DocumentPart) => {
+  const resolveRubricTitle = (part: DocumentPart) => {
     const name = part.title.split(" › ").at(-1) ?? part.title;
     const number = part.headingBlockId ? numberOf.get(part.headingBlockId) : undefined;
     return number && name !== number ? `${number} ${name}` : name;
@@ -656,7 +656,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
   // Thẻ Toàn bài đứng đầu, ghi tổng điểm cả bài (mọi mục và toàn bài).
   const whole = hasWholePart(parts);
   const cardParts = whole ? [WHOLE_PART, ...parts] : parts;
-  const totalPoints = cardParts.reduce((sum, part) => sum + rubricTotal(criteria[part.partId] ?? []), 0);
+  const totalPoints = cardParts.reduce((sum, part) => sum + sumRubricTotal(criteria[part.partId] ?? []), 0);
   const comments: DocumentComment[] = cardParts.map((part) => {
     const isWhole = part.partId === WHOLE_PART.partId;
     const list = criteria[part.partId] ?? [];
@@ -669,9 +669,9 @@ export function AssignmentFormPage({ id }: { id: string }) {
       content: awaitingRubric ? <p role="status" className="rounded-lg border border-line bg-surface p-3 text-xs text-muted">
         {rubricLoadError ? msg("assignments.pages.AssignmentFormPage.chuaTaiDuocTieuChiCham") : msg("assignments.pages.AssignmentFormPage.dangTaiTieuChiCham")}
       </p> : (
-        <RubricNote title={isWhole ? part.title : rubricTitle(part)} criteria={list} active={activePart === part.partId} onActivate={() => setActivePart(part.partId)}
+        <RubricNote title={isWhole ? part.title : resolveRubricTitle(part)} criteria={list} active={activePart === part.partId} onActivate={() => setActivePart(part.partId)}
           total={isWhole ? totalPoints : undefined} editOnActive
-          issues={cardIssues(issues, part).map((issue) => issue.message)}
+          issues={filterCardIssues(issues, part).map((issue) => issue.message)}
           editor={editable && !locked
             ? <RubricEditor criteria={list} onChange={(value) => editRubric(part, value)} />
             : undefined} />
@@ -707,7 +707,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
             <MenuItem icon="download" onClick={() => void exportDocx("skeleton")}>{msg("assignments.pages.AssignmentFormPage.taiDeDocx")}</MenuItem>
             <MenuItem icon="download" onClick={() => void exportDocx("rubric")}>{msg("assignments.pages.AssignmentFormPage.taiRubricDocx")}</MenuItem>
             {permissions.canCreateVersion && (
-              <MenuItem icon="history" onClick={() => void act(async () => {
+              <MenuItem icon="history" onClick={() => void runAction(async () => {
                 const copy = await assignmentsApi.newVersion(id);
                 router.push(`/assignments/${copy.id}${classId ? `?classId=${classId}` : ""}`);
               }, null)}>{msg("assignments.pages.AssignmentFormPage.taoVersionMoi")}</MenuItem>
@@ -749,7 +749,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
       {detail.status === "RETIRED" && detail.retiredReason && <Alert tone="warning" title={msg("assignments.pages.AssignmentFormPage.daNgungGiao")}>{detail.retiredReason}</Alert>}
 
       <DocumentEditor fullWidth document={skeleton} mode={preview ? "student" : "author"} diagramEnabled readOnly={!editable}
-        imageUrl={imageUrlFor(detail.id)} issues={preview ? [] : issues.filter((issue) => !issue.code.startsWith("RUBRIC"))}
+        imageUrl={buildImageUrl(detail.id)} issues={preview ? [] : issues.filter((issue) => !issue.code.startsWith("RUBRIC"))}
         uploadImage={async (file) => (await uploadFile(file, "DOCUMENT_IMAGE", () => {}).promise).fileRef.value}
         onChange={editSkeleton}
         externalEdit={aiEdit}
@@ -774,7 +774,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
           {permissions.canPublish ? (
             <ScheduleForm assignment={detail} mode="publish" onSubmit={async (input) => {
               try {
-                const next = await chain(queue, () => assignmentsApi.publish(id, version.current, input));
+                const next = await chainTask(queue, () => assignmentsApi.publish(id, version.current, input));
                 apply(next, false);
                 // Phát hành khóa rubric trên server: lấy lại để thẻ hiện "Đã khóa" và thôi cho sửa.
                 setRubricEpoch((epoch) => epoch + 1);
@@ -782,14 +782,14 @@ export function AssignmentFormPage({ id }: { id: string }) {
                 setIssues([]);
                 notify(next.status === "OPEN" ? msg("assignments.pages.AssignmentFormPage.daPhatHanh") : msg("assignments.pages.AssignmentFormPage.daLenLich"), "success");
               } catch (error) {
-                if (problemCode(error) !== NOT_READY) throw error;
+                if (readProblemCode(error) !== NOT_READY) throw error;
                 setDialog(null);
-                showMissing(problemIssues(error));
+                showMissing(readProblemIssues(error));
               }
             }} />
           ) : permissions.canChangeSchedule && (
             <ScheduleForm assignment={detail} mode="change" onSubmit={async (input) => {
-              apply(await chain(queue, () => assignmentsApi.changeSchedule(id, version.current, input)), false);
+              apply(await chainTask(queue, () => assignmentsApi.changeSchedule(id, version.current, input)), false);
               setDialog(null);
               notify(msg("assignments.pages.AssignmentFormPage.daLuuLich"), "success");
             }} />
@@ -820,7 +820,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
       {dialog === "retire" && (
         <RetireDialog onClose={() => setDialog(null)}
           onConfirm={async (reason) => {
-            apply(await chain(queue, () => assignmentsApi.retire(id, version.current, reason)), false);
+            apply(await chainTask(queue, () => assignmentsApi.retire(id, version.current, reason)), false);
             setDialog(null);
             notify(msg("assignments.pages.AssignmentFormPage.daNgungGiao"), "success");
           }} />
@@ -831,7 +831,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
             onClick={async () => {
               setClosing(true);
               try {
-                await act(() => assignmentsApi.closeAssignment(id, version.current), msg("assignments.pages.AssignmentFormPage.daDongNhanBai"), () => setDialog(null));
+                await runAction(() => assignmentsApi.closeAssignment(id, version.current), msg("assignments.pages.AssignmentFormPage.daDongNhanBai"), () => setDialog(null));
               } finally {
                 setClosing(false);
               }
@@ -842,9 +842,9 @@ export function AssignmentFormPage({ id }: { id: string }) {
       {dialog === "delete" && (
         <Dialog open title={msg("assignments.pages.AssignmentFormPage.xoaBanNhap2")} icon="warning" tone="danger" onClose={() => setDialog(null)}
           footer={<>
-            <Button variant="danger" data-testid="assignment-delete-confirm" onClick={() => void act(async () => {
+            <Button variant="danger" data-testid="assignment-delete-confirm" onClick={() => void runAction(async () => {
               await assignmentsApi.remove(id, version.current);
-              router.push(assignmentsReturn(backHref));
+              router.push(resolveAssignmentsReturn(backHref));
             }, null)}>{msg("assignments.pages.AssignmentFormPage.xoa")}</Button>
           </>}>
           <p>{msg("assignments.pages.AssignmentFormPage.banCoChacMuonXoaBan")}</p>
@@ -855,7 +855,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
 }
 
 /** Trang Bài tập chứa bài: tab Bài tập của lớp, bài chung của môn thì trang Bài tập của môn. */
-function assignmentsHref(detail: { scope: string; subjectId: string }, classId: string | null | undefined) {
+function buildAssignmentsHref(detail: { scope: string; subjectId: string }, classId: string | null | undefined) {
   if (detail.scope === "SUBJECT" && !classId) return `/manager/assignments?subjectId=${encodeURIComponent(detail.subjectId)}`;
   return classId ? `/teaching/classes/${encodeURIComponent(classId)}?tab=evals` : "/teaching/classes";
 }
@@ -869,7 +869,7 @@ function RetireDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: 
       footer={<>
         <Button variant="danger" disabled={busy || !reason.trim()} data-testid="retire-confirm" onClick={async () => {
           setBusy(true);
-          try { await onConfirm(reason.trim()); } catch (e) { setError(errorMessage(e)); } finally { setBusy(false); }
+          try { await onConfirm(reason.trim()); } catch (e) { setError(describeError(e)); } finally { setBusy(false); }
         }}>{msg("assignments.pages.AssignmentFormPage.ngungGiao")}</Button>
       </>}>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}

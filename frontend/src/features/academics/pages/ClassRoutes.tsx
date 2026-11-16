@@ -59,7 +59,7 @@ function useResource<T>(load: ResourceLoader<T>) {
   return {...(state.key === load ? state : {loading: true}), refresh};
 }
 
-async function allClasses(scope: Scope, signal: AbortSignal) {
+async function listAllClasses(scope: Scope, signal: AbortSignal) {
   const rows: CourseClassView[] = [];
   for (let page = 1; ; page++) {
     const next = await academicsApi.listClasses(scope, {page, size: 100}, signal);
@@ -68,7 +68,7 @@ async function allClasses(scope: Scope, signal: AbortSignal) {
   }
 }
 
-async function allStudents(scope: "manager" | "teaching", id: string, signal: AbortSignal) {
+async function listAllStudents(scope: "manager" | "teaching", id: string, signal: AbortSignal) {
   const rows: EnrollmentView[] = [];
   for (let page = 1; ; page++) {
     const next = await academicsApi.listStudents(scope, id, {page, size: 100}, signal);
@@ -92,7 +92,7 @@ export function ClassesRoute({teaching = false}: {teaching?: boolean}) {
     return {
       ...mode,
       classes: mode.classes.length === 100
-        ? await allClasses(mode.audience === "student" ? "me" : "teaching", signal)
+        ? await listAllClasses(mode.audience === "student" ? "me" : "teaching", signal)
         : mode.classes,
     };
   }, [teaching]);
@@ -108,7 +108,7 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
   const router = useRouter();
   const load = useCallback(async (signal: AbortSignal) => ({
     value: await academicsApi.loadClass(scope, id, signal),
-    students: scope === "me" ? [] : await allStudents(scope, id, signal),
+    students: scope === "me" ? [] : await listAllStudents(scope, id, signal),
   }), [id, scope]);
   const state = useResource(load);
   const loadTeachers = useCallback((q: string, signal: AbortSignal) => academicsApi.listCandidates("teacher", q, signal), []);
@@ -167,7 +167,7 @@ export function ManagerRoute({view, id, initialSubjectId}: {view: "overview" | "
   const load = useCallback(async (signal: AbortSignal) => {
     const subjects = await academicsApi.listSubjects(signal);
     // Chỉ mục Lớp học cần danh sách lớp; Thông tin môn tự tải lớp đang mở của môn.
-    const classes = view === "classes" ? await allClasses("manager", signal) : [];
+    const classes = view === "classes" ? await listAllClasses("manager", signal) : [];
     return {subjects, classes, subject: id ? await academicsApi.loadSubject(id, signal) : subjects[0]};
   }, [id, view]);
   const state = useResource(load);

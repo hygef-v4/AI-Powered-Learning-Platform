@@ -13,7 +13,7 @@ const WHEN_OPEN = "md:group-data-[collapsed]/sidebar:hidden";
 const WHEN_COLLAPSED = "hidden md:group-data-[collapsed]/sidebar:block";
 
 /** Trang soạn một bài tập (`/assignments/{id}`) hoặc trang chấm bài (`/teaching/evaluations/{id}`): sidebar là các phần của bài thay cho menu chung. */
-export function assignmentContext({ pathname }: NavLocation): NavContext | null {
+export function resolveAssignmentContext({ pathname }: NavLocation): NavContext | null {
   const match = /^\/assignments\/([^/]+)$/.exec(pathname) ?? /^\/teaching\/evaluations\/([^/]+)$/.exec(pathname);
   if (!match) return null;
   return { key: `assignment:${match[1]}`, label: msg("assignments.components.assignmentNav.cacPhanCuaBai"), header: <AssignmentNav />, items: [] };
@@ -23,7 +23,7 @@ export function assignmentContext({ pathname }: NavLocation): NavContext | null 
  * Trang làm bài (`/attempts/{id}`) và lịch sử nộp bài (`/my-assignments/{id}/history`) của sinh viên: cùng sidebar mục lục
  * với trang soạn, xem trước của giảng viên, chỉ không có nút thêm mục (yêu cầu 2026-11-05).
  */
-export function studentAssignmentContext({ pathname }: NavLocation): NavContext | null {
+export function resolveStudentAssignmentContext({ pathname }: NavLocation): NavContext | null {
   const match = /^\/attempts\/([^/]+)$/.exec(pathname) ?? /^\/my-assignments\/([^/]+)\/history$/.exec(pathname);
   if (!match) return null;
   return { key: `assignment-work:${match[1]}`, label: msg("assignments.components.assignmentNav.cacPhanCuaBai"), header: <AssignmentNav />, items: [] };
@@ -39,9 +39,9 @@ export function AssignmentNav() {
   const [activeId, setActiveId] = useState<string | null>(null);
   // Sáng theo mục trình soạn đang hiện (cuộn tới hay đang mở ở chế độ Từng phần).
   useEffect(() => {
-    const follow = (event: Event) => setActiveId((event as CustomEvent<{ headingId: string | null }>).detail?.headingId ?? null);
-    window.addEventListener("document:current-part", follow);
-    return () => window.removeEventListener("document:current-part", follow);
+    const followHeading = (event: Event) => setActiveId((event as CustomEvent<{ headingId: string | null }>).detail?.headingId ?? null);
+    window.addEventListener("document:current-part", followHeading);
+    return () => window.removeEventListener("document:current-part", followHeading);
   }, []);
   return (
     <div className="flex min-h-0 flex-1 flex-col">

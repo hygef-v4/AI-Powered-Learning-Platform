@@ -6,7 +6,7 @@ import { BatchActionDialog } from "@/features/grading/components/BatchActionDial
 
 const mocks = vi.hoisted(() => ({ fetch: vi.fn(), requestBatch: vi.fn(), estimateBatch: vi.fn() }));
 vi.mock("@/shared/api/client", async (importOriginal) => ({
-  ...await importOriginal<typeof import("@/shared/api/client")>(), apiFetch: mocks.fetch,
+  ...await importOriginal<typeof import("@/shared/api/client")>(), fetchApi: mocks.fetch,
 }));
 vi.mock("@/features/grading/api", () => ({ gradingApi: {
   requestProposals: mocks.requestBatch,

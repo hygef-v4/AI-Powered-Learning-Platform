@@ -1,5 +1,5 @@
 import { cx } from "./cx";
-import { TextInput } from "./inputs";
+import { TextInput } from "./Inputs";
 
 /**
  * Ô không sửa được (email trường, vai trò, mã môn…): `disabled` nên không bấm, không focus được; chỉ đổi sang màu disable

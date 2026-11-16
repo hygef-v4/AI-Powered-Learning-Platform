@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import { usePollStatus } from "@/shared/status/usePollStatus";
 import { Button, Pill, type Tone } from "@/shared/ui";
 import type { AiTaskState, AiTaskView } from "./types";
@@ -28,7 +28,7 @@ type Props = {
 export function AiTaskStatus({ taskId, onFinished }: Props) {
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
-  const fetcher = useCallback(() => apiFetch<AiTaskView>(`/api/v1/ai/tasks/${encodeURIComponent(taskId)}`), [taskId]);
+  const fetcher = useCallback(() => fetchApi<AiTaskView>(`/api/v1/ai/tasks/${encodeURIComponent(taskId)}`), [taskId]);
   const isFinal = useCallback(
     (task: AiTaskView) => {
       const done = FINAL.includes(task.state);
@@ -43,7 +43,7 @@ export function AiTaskStatus({ taskId, onFinished }: Props) {
     setCancelling(true);
     setCancelError(null);
     try {
-      await apiFetch<void>(`/api/v1/ai/tasks/${encodeURIComponent(taskId)}:cancel`, { method: "POST" });
+      await fetchApi<void>(`/api/v1/ai/tasks/${encodeURIComponent(taskId)}:cancel`, { method: "POST" });
     } catch {
       setCancelError(msg("shared.ai.AiTaskStatus.khongHuyDuocTaskCoThe"));
     } finally {

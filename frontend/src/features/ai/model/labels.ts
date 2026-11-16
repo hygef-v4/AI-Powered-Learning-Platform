@@ -66,7 +66,7 @@ export const TASK_LABEL: Record<string, string> = {
 export const MAX_AGENTS = 5;
 
 /** Thông báo an toàn cho lỗi API của màn AI Connection theo mã lỗi backend. */
-export function errorMessage(code: string | undefined, fallback: string): string {
+export function describeErrorCode(code: string | undefined, fallback: string): string {
   switch (code) {
     case "AI_KEY_ENCRYPTION_NOT_CONFIGURED":
       return msg("ai.model.labels.heThongChuaBatMaHoa");
@@ -83,7 +83,7 @@ export function errorMessage(code: string | undefined, fallback: string): string
 /**
  * Kết quả kiểm tra khóa API rút gọn để đọc lướt; câu đầy đủ của máy chủ ở tooltip.
  */
-export function shortTestResult(text: string | null | undefined): string {
+export function shortenTestResult(text: string | null | undefined): string {
   const value = text?.trim() ?? "";
   if (value === msg("ai.model.labels.dat")) return msg("ai.model.labels.dat");
   if (/key api|khóa|HTTP 40[13]/i.test(value)) return msg("ai.model.labels.saiKhoa");

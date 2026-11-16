@@ -1,5 +1,5 @@
 import { Button, Pill, Section } from "@/shared/ui";
-import { initials } from "@/shared/layout/navigation";
+import { extractInitials } from "@/shared/layout/navigation";
 import type { SubjectDetail } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -41,7 +41,7 @@ export function ManagerCard({
             aria-hidden="true"
             className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent"
           >
-            {initials(subject.manager.displayName)}
+            {extractInitials(subject.manager.displayName)}
           </span>
           <div className="min-w-0">
             <p className="text-sm font-semibold">{subject.manager.displayName}</p>

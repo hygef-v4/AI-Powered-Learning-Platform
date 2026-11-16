@@ -5,11 +5,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { Alert, Button, Dialog, Field, PageHeader, Pill, Section, Textarea } from "@/shared/ui";
 import { activateQuestion, approveQuestion, createQuestion, deleteQuestion, getQuestion, openDraft, rejectQuestion, retireQuestion, updateQuestion } from "../api";
-import { errorCode, errorMessage, STATUS_LABELS, STATUS_TONES } from "../model/labels";
+import { readErrorCode, describeError, STATUS_LABELS, STATUS_TONES } from "../model/labels";
 import { McqEditor } from "../components/McqEditor";
 import { QuestionMetaPanel, QuestionVersionPanel } from "../components/QuestionSidePanels";
 import { SimilarQuestionsAlert } from "../components/SimilarQuestionsAlert";
-import { emptyForm, formOf, toContent, validateForm, type FormErrors, type QuestionForm } from "../model/questionForm";
+import { createEmptyForm, buildFormFrom, convertToContent, validateForm, type FormErrors, type QuestionForm } from "../model/questionForm";
 import type { QuestionDetail, Violation } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { msg } from "@/i18n/msg";
@@ -27,7 +27,7 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
   const router = useRouter();
   const creating = id === "new";
   const [detail, setDetail] = useState<QuestionDetail | null>(null);
-  const [form, setForm] = useState<QuestionForm>(emptyForm);
+  const [form, setForm] = useState<QuestionForm>(createEmptyForm);
   const [errors, setErrors] = useState<FormErrors>({});
   const [violations, setViolations] = useState<Violation[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -38,7 +38,7 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
 
   const show = useCallback((next: QuestionDetail) => {
     setDetail(next);
-    setForm(formOf(next.question));
+    setForm(buildFormFrom(next.question));
     setErrors({});
     setViolations([]);
   }, []);
@@ -56,7 +56,7 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
         show(next);
       })
       .catch((error: unknown) => {
-        if (active) setLoadError(errorMessage(error));
+        if (active) setLoadError(describeError(error));
       });
     return () => {
       active = false;
@@ -65,7 +65,7 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
 
   const question = detail?.question;
   const ownerSubject = question?.subjectId ?? subjectId ?? null;
-  const dirty = useMemo(() => !question || JSON.stringify(form) !== JSON.stringify(formOf(question)), [form, question]);
+  const dirty = useMemo(() => !question || JSON.stringify(form) !== JSON.stringify(buildFormFrom(question)), [form, question]);
   const pending = question?.status === "PENDING";
   const rejected = question?.status === "REJECTED";
   const readOnly = question?.status === "RETIRED" || pending || rejected;
@@ -76,11 +76,11 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
       setNotice({ tone: "danger", text: msg("quizzes.pages.QuestionDetailPage.noiDungCauHoiChuaHop") });
       return;
     }
-    setNotice({ tone: "danger", text: errorMessage(error) });
-    if (errorCode(error) === "QUESTION_VERSION_CONFLICT") reload();
+    setNotice({ tone: "danger", text: describeError(error) });
+    if (readErrorCode(error) === "QUESTION_VERSION_CONFLICT") reload();
   };
 
-  const run = async (action: () => Promise<void>) => {
+  const runAction = async (action: () => Promise<void>) => {
     setBusy(true);
     setNotice(null);
     try {
@@ -92,13 +92,13 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
     }
   };
 
-  const save = () => {
+  const saveQuestion = () => {
     const found = validateForm(form);
     setErrors(found);
     setViolations([]);
     if (Object.keys(found).length > 0) return;
-    const content = toContent(form);
-    void run(async () => {
+    const content = convertToContent(form);
+    void runAction(async () => {
       if (creating) {
         if (!subjectId) throw new Error("missing subject");
         const created = await createQuestion(subjectId, content);
@@ -118,17 +118,17 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
     });
   };
 
-  const activate = () => question && void run(async () => {
+  const activate = () => question && void runAction(async () => {
     show(await activateQuestion(question.id, question.version));
     setNotice({ tone: "success", text: msg("quizzes.pages.QuestionDetailPage.daKichHoatCauHoi") });
   });
 
-  const approve = () => question && void run(async () => {
+  const approve = () => question && void runAction(async () => {
     show(await approveQuestion(question.id, question.version));
     setNotice({ tone: "success", text: msg("quizzes.pages.QuestionDetailPage.daDuyetCauDaVaoNgan") });
   });
 
-  const confirmAction = () => question && void run(async () => {
+  const confirmAction = () => question && void runAction(async () => {
     if (confirm === "retire") {
       const next = await retireQuestion(question.id, question.version);
       show(next);
@@ -171,7 +171,7 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
           )}
           {pending && <Button disabled={busy} onClick={() => setConfirm("reject")} data-testid="question-detail-reject">{msg("quizzes.pages.QuestionDetailPage.tuChoi")}</Button>}
           {pending && <Button variant="primary" disabled={busy} onClick={approve} data-testid="question-detail-approve">{msg("quizzes.pages.QuestionDetailPage.duyetVaoNganHang")}</Button>}
-          {!readOnly && <Button variant="primary" icon="save" disabled={busy || !dirty} onClick={save} data-testid="question-detail-save">{msg("quizzes.pages.QuestionDetailPage.luuThayDoi")}</Button>}
+          {!readOnly && <Button variant="primary" icon="save" disabled={busy || !dirty} onClick={saveQuestion} data-testid="question-detail-save">{msg("quizzes.pages.QuestionDetailPage.luuThayDoi")}</Button>}
         </div>}
       />
       {notice && <Alert tone={notice.tone} role={notice.tone === "danger" ? "alert" : "status"}>{notice.text}</Alert>}

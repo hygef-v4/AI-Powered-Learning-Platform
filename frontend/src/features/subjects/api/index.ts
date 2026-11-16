@@ -1,4 +1,4 @@
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import type {
   ChangeSubjectManagerRequest,
   ChangeSubjectStatusRequest,
@@ -19,21 +19,21 @@ export function listSubjects(query: SubjectListQuery = {}): Promise<SubjectPage>
   if (query.status) params.set("status", query.status);
   if (query.page !== undefined) params.set("page", String(query.page));
   if (query.size !== undefined) params.set("size", String(query.size));
-  return apiFetch<SubjectPage>(`${BASE}${params.size ? `?${params}` : ""}`);
+  return fetchApi<SubjectPage>(`${BASE}${params.size ? `?${params}` : ""}`);
 }
 
 export function loadSubject(id: string): Promise<SubjectDetail> {
-  return apiFetch<SubjectDetail>(buildSubjectPath(id));
+  return fetchApi<SubjectDetail>(buildSubjectPath(id));
 }
 
 export function listSubjectClasses(id: string): Promise<SubjectClasses> {
-  return apiFetch<SubjectClasses>(`${buildSubjectPath(id)}/classes`);
+  return fetchApi<SubjectClasses>(`${buildSubjectPath(id)}/classes`);
 }
 
 export function createSubject(request: CreateSubjectRequest): Promise<SubjectDetail> {
   // Whitelist field ở boundary client; server B11 vẫn phải validate/reject field lạ độc lập.
   const { code, name, description, managerId } = request;
-  return apiFetch<SubjectDetail>(BASE, {
+  return fetchApi<SubjectDetail>(BASE, {
     method: "POST",
     body: JSON.stringify({ code, name, description, managerId }),
   });
@@ -41,7 +41,7 @@ export function createSubject(request: CreateSubjectRequest): Promise<SubjectDet
 
 export function updateSubject(id: string, request: UpdateSubjectRequest): Promise<SubjectDetail> {
   const { name, description, version } = request;
-  return apiFetch<SubjectDetail>(buildSubjectPath(id), {
+  return fetchApi<SubjectDetail>(buildSubjectPath(id), {
     method: "PATCH",
     body: JSON.stringify({ name, description, version }),
   });
@@ -52,7 +52,7 @@ export function changeSubjectManager(
   request: ChangeSubjectManagerRequest,
 ): Promise<SubjectDetail> {
   const { managerId, version } = request;
-  return apiFetch<SubjectDetail>(`${buildSubjectPath(id)}/manager`, {
+  return fetchApi<SubjectDetail>(`${buildSubjectPath(id)}/manager`, {
     method: "PUT",
     body: JSON.stringify({ managerId, version }),
   });
@@ -63,7 +63,7 @@ export function changeSubjectStatus(
   request: ChangeSubjectStatusRequest,
 ): Promise<SubjectDetail> {
   const { status, version } = request;
-  return apiFetch<SubjectDetail>(`${buildSubjectPath(id)}/status`, {
+  return fetchApi<SubjectDetail>(`${buildSubjectPath(id)}/status`, {
     method: "PUT",
     body: JSON.stringify({ status, version }),
   });

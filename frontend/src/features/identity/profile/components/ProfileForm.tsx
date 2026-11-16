@@ -2,10 +2,10 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { ApiError } from "@/shared/api/client";
-import { initials } from "@/shared/layout/navigation";
+import { extractInitials } from "@/shared/layout/navigation";
 import { Alert } from "@/shared/ui/Alert";
 import { Button } from "@/shared/ui/Button";
-import { Field, TextInput } from "@/shared/ui/inputs";
+import { Field, TextInput } from "@/shared/ui/Inputs";
 import { LockedInput } from "@/shared/ui/LockedInput";
 import { Pill } from "@/shared/ui/Pill";
 import { Section } from "@/shared/ui/Section";
@@ -77,7 +77,7 @@ export function ProfileForm({
           aria-hidden="true"
           className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary text-xl font-bold text-on-primary"
         >
-          {initials(profile.displayName)}
+          {extractInitials(profile.displayName)}
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-bold text-ink">{profile.displayName}</p>

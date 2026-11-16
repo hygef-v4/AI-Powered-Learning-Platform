@@ -18,7 +18,7 @@ export const DATE_ORDER_ERROR = msg("audit.components.AuditFilters.ngayBatDauPha
  * thực hiện theo một phần email hay tên, hành động, đối tượng, kết quả); hàng dưới là khoảng thời gian và Xóa lọc.
  */
 export function AuditFilters({ value, onChange, onClear }: Props) {
-  const set = <K extends keyof AuditFilterForm>(key: K, next: AuditFilterForm[K]) => onChange({ ...value, [key]: next });
+  const setField = <K extends keyof AuditFilterForm>(key: K, next: AuditFilterForm[K]) => onChange({ ...value, [key]: next });
   const dateInvalid = value.fromDate !== "" && value.toDate !== "" && value.fromDate > value.toDate;
 
   return (
@@ -32,12 +32,12 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
               icon="person"
               placeholder="email@fpt.edu.vn"
               value={value.actorEmail}
-              onChange={(e) => set("actorEmail", e.target.value)}
+              onChange={(e) => setField("actorEmail", e.target.value)}
               data-testid="audit-filters-actor-input"
             />
           </Field>
           <Field label={msg("audit.components.AuditFilters.hanhDong")} htmlFor="audit-action">
-            <Select id="audit-action" value={value.action} onChange={(e) => set("action", e.target.value)} data-testid="audit-filters-action-select">
+            <Select id="audit-action" value={value.action} onChange={(e) => setField("action", e.target.value)} data-testid="audit-filters-action-select">
               <option value="">{msg("audit.components.AuditFilters.tatCa")}</option>
               {Object.entries(ACTION_LABELS).map(([code, label]) => (
                 <option key={code} value={code}>
@@ -65,7 +65,7 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
             <Select
               id="audit-result"
               value={value.result}
-              onChange={(e) => set("result", e.target.value as AuditResult | "")}
+              onChange={(e) => setField("result", e.target.value as AuditResult | "")}
               data-testid="audit-filters-result-select"
             >
               <option value="">{msg("audit.components.AuditFilters.tatCa")}</option>
@@ -85,7 +85,7 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
                 aria-label={msg("audit.components.AuditFilters.tuNgay")}
                 value={value.fromDate}
                 invalid={dateInvalid}
-                onChange={(date) => set("fromDate", date)}
+                onChange={(date) => setField("fromDate", date)}
                 data-testid="audit-filters-from-input"
               />
               <span aria-hidden="true" className="text-muted">–</span>
@@ -93,7 +93,7 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
                 aria-label={msg("audit.components.AuditFilters.denNgay")}
                 value={value.toDate}
                 invalid={dateInvalid}
-                onChange={(date) => set("toDate", date)}
+                onChange={(date) => setField("toDate", date)}
                 data-testid="audit-filters-to-input"
               />
             </div>

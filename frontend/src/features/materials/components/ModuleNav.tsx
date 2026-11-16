@@ -9,7 +9,7 @@ import Link from "next/link";
 import { BackLink } from "@/shared/navigation/BackLink";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import { FADE_LABEL, type NavContext, type NavLocation } from "@/shared/layout/navigation";
 import { Card, showErrorToast, showToast } from "@/shared/ui";
 import { cx } from "@/shared/ui/cx";
@@ -86,7 +86,7 @@ function AttemptModuleNav({ attemptId, submitted }: { attemptId: string; submitt
     const controller = new AbortController();
     const path = `/api/v1/quiz-attempts/${encodeURIComponent(attemptId)}`;
     const fetchAttemptOwner = (suffix: string) =>
-      apiFetch<AttemptOwner>(`${path}${suffix}`, { signal: controller.signal });
+      fetchApi<AttemptOwner>(`${path}${suffix}`, { signal: controller.signal });
     // Lượt đã nộp chỉ đọc được qua kết quả, lượt đang làm chỉ đọc được qua trang làm: thử đúng loại trước.
     fetchAttemptOwner(submitted ? "/result" : "").catch(() => fetchAttemptOwner(submitted ? "" : "/result")).then(
       (found) => { if (!controller.signal.aborted) setOwner({ quizId: found.quizId, classId: found.classId }); },

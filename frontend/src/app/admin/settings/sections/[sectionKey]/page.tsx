@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { SettingsSectionHost } from "@/features/settings/components/SettingsSectionHost";
-import { serverMsg } from "@/i18n/server";
+import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await serverMsg("app.admin.settings.sections.sectionKey.page.caiDat") };
+  return { title: await translateOnServer("app.admin.settings.sections.sectionKey.page.caiDat") };
 }
 
 export default async function Page({

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AssignmentFormPage } from "@/features/assignments/pages/AssignmentFormPage";
-import { serverMsg } from "@/i18n/server";
+import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await serverMsg("app.assignments.id.page.baiTap") };
+  return { title: await translateOnServer("app.assignments.id.page.baiTap") };
 }
 
 // U07 #26 Assignment Form.

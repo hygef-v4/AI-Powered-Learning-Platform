@@ -28,7 +28,7 @@ export const STUDENT_CODE_ERROR_LABELS: Record<string, string> = {
 export function formatStudentLabel(
   person: { name?: string | null; email?: string | null; studentCode?: string | null } | null | undefined,
 ): string {
-  return [person?.name || person?.email || "Không rõ tên", person?.studentCode].filter(Boolean).join(" · ");
+  return [person?.name || person?.email || msg("shared.studentCode.khongRoTen"), person?.studentCode].filter(Boolean).join(" · ");
 }
 
 /** So khớp ô tìm theo tên, email hoặc MSSV, không phân biệt hoa thường. */

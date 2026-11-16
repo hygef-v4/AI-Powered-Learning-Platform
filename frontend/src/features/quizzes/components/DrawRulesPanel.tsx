@@ -10,10 +10,10 @@ import { msg } from "@/i18n/msg";
 type Row = { key: number; tag: string; difficulty: Difficulty | ""; questionCount: string; pointsEach: string };
 
 const POINTS = /^\d+([.,]\d{1,2})?$/;
-const decimal = (value: string) => Number(value.trim().replace(",", "."));
-const validRow = (r: Row) => r.tag.trim() !== "" && Number.isInteger(Number(r.questionCount)) && Number(r.questionCount) >= 1
-  && POINTS.test(r.pointsEach.trim()) && decimal(r.pointsEach) > 0;
-const rowsOf = (detail: QuizDetail): Row[] => detail.drawRules.map((r) => ({ key: r.position, tag: r.tag, difficulty: r.difficulty ?? "",
+const parseDecimal = (value: string) => Number(value.trim().replace(",", "."));
+const isValidRow = (r: Row) => r.tag.trim() !== "" && Number.isInteger(Number(r.questionCount)) && Number(r.questionCount) >= 1
+  && POINTS.test(r.pointsEach.trim()) && parseDecimal(r.pointsEach) > 0;
+const buildRows = (detail: QuizDetail): Row[] => detail.drawRules.map((r) => ({ key: r.position, tag: r.tag, difficulty: r.difficulty ?? "",
   questionCount: String(r.questionCount), pointsEach: String(r.pointsEach) }));
 
 /**
@@ -31,14 +31,14 @@ export function DrawRulesPanel({ detail, editable, disabled, onSaved, onError }:
 }) {
   const id = useId();
   const [mode, setMode] = useState<QuizPaperMode>(detail.quiz.paperMode);
-  const [rows, setRows] = useState<Row[]>(() => rowsOf(detail));
+  const [rows, setRows] = useState<Row[]>(() => buildRows(detail));
   const [tags, setTags] = useState<BankTag[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<PaperPreview | null>(null);
   const [nextKey, setNextKey] = useState(1000);
 
   const quizId = detail.quiz.id;
-  const saved = useMemo(() => JSON.stringify([detail.quiz.paperMode, rowsOf(detail).map(({ tag, difficulty, questionCount, pointsEach }) => [tag, difficulty, questionCount, pointsEach])]), [detail]);
+  const saved = useMemo(() => JSON.stringify([detail.quiz.paperMode, buildRows(detail).map(({ tag, difficulty, questionCount, pointsEach }) => [tag, difficulty, questionCount, pointsEach])]), [detail]);
   const current = JSON.stringify([mode, rows.map(({ tag, difficulty, questionCount, pointsEach }) => [tag, difficulty, questionCount, pointsEach])]);
   const dirty = saved !== current;
 
@@ -50,22 +50,22 @@ export function DrawRulesPanel({ detail, editable, disabled, onSaved, onError }:
   }, [editable, mode, quizId]);
 
   // Số câu trong kho khớp thẻ và độ khó của quy tắc; null khi chưa tải được danh sách thẻ.
-  const available = (row: Row) => {
+  const countAvailable = (row: Row) => {
     if (!tags) return null;
     const found = tags.find((t) => t.tag.toLowerCase() === row.tag.trim().toLowerCase());
     if (!found) return 0;
     return row.difficulty ? found.byDifficulty[row.difficulty] ?? 0 : found.activeCount;
   };
-  const update = (key: number, patch: Partial<Row>) => setRows((list) => list.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  const updateRow = (key: number, patch: Partial<Row>) => setRows((list) => list.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   const total = rows.reduce((sum, r) => sum + (Number(r.questionCount) || 0), 0);
-  const totalPoints = rows.reduce((sum, r) => sum + (Number(r.questionCount) || 0) * (decimal(r.pointsEach) || 0), 0);
-  const invalid = mode === "GENERATED" && (rows.length === 0 || rows.some((r) => !validRow(r)));
+  const totalPoints = rows.reduce((sum, r) => sum + (Number(r.questionCount) || 0) * (parseDecimal(r.pointsEach) || 0), 0);
+  const invalid = mode === "GENERATED" && (rows.length === 0 || rows.some((r) => !isValidRow(r)));
 
-  const save = async () => {
+  const saveRules = async () => {
     setBusy(true);
     try {
       onSaved(await saveDrawRules(quizId, mode, rows.map((r) => ({ tag: r.tag.trim(), difficulty: r.difficulty || null,
-        questionCount: Number(r.questionCount), pointsEach: decimal(r.pointsEach) })), detail.quiz.version));
+        questionCount: Number(r.questionCount), pointsEach: parseDecimal(r.pointsEach) })), detail.quiz.version));
     } catch (failure) {
       onError(failure);
     } finally {
@@ -86,7 +86,7 @@ export function DrawRulesPanel({ detail, editable, disabled, onSaved, onError }:
 
   return (
     <Section title={msg("quizzes.components.DrawRulesPanel.cachLapDe")} icon="tune" actions={editable && dirty
-      ? <Button size="sm" variant="primary" disabled={busy || disabled || invalid} onClick={() => void save()} data-testid="draw-rules-save">{msg("quizzes.components.DrawRulesPanel.luuCachLapDe")}</Button>
+      ? <Button size="sm" variant="primary" disabled={busy || disabled || invalid} onClick={() => void saveRules()} data-testid="draw-rules-save">{msg("quizzes.components.DrawRulesPanel.luuCachLapDe")}</Button>
       : undefined}>
       <fieldset disabled={!editable || busy} className="flex flex-col gap-3" data-testid="draw-rules">
         <Select aria-label={msg("quizzes.components.DrawRulesPanel.cachLapDe")} value={mode} onChange={(event) => setMode(event.target.value as QuizPaperMode)} data-testid="draw-rules-mode">
@@ -98,23 +98,23 @@ export function DrawRulesPanel({ detail, editable, disabled, onSaved, onError }:
           <ul className="flex flex-col gap-2">
             {rows.map((row, index) => {
               const hasTag = row.tag.trim() !== "";
-              const count = available(row);
+              const count = countAvailable(row);
               const level = row.difficulty ? msg("quizzes.components.DrawRulesPanel.muc", { value: String(DIFFICULTY_LABELS[row.difficulty]) }) : "";
               const requested = Number(row.questionCount);
               const short = hasTag && count !== null && Number.isInteger(requested) && requested > count;
               return (
                 <li key={row.key} className="flex flex-col gap-1 rounded-lg border border-line p-2" data-testid="draw-rule">
                   <TextInput aria-label={msg("quizzes.components.DrawRulesPanel.theCuaQuyTac", { value: String(index + 1) })} placeholder={msg("quizzes.components.DrawRulesPanel.theViDuChuong1")} list={`${id}-tags`} value={row.tag}
-                    onChange={(event) => update(row.key, { tag: event.target.value })} data-testid={`draw-rule-tag-${index}`} />
+                    onChange={(event) => updateRow(row.key, { tag: event.target.value })} data-testid={`draw-rule-tag-${index}`} />
                   <div className="grid grid-cols-3 gap-1">
-                    <Select aria-label={msg("quizzes.components.DrawRulesPanel.doKhoCuaQuyTac", { value: String(index + 1) })} value={row.difficulty} onChange={(event) => update(row.key, { difficulty: event.target.value as Difficulty | "" })}>
+                    <Select aria-label={msg("quizzes.components.DrawRulesPanel.doKhoCuaQuyTac", { value: String(index + 1) })} value={row.difficulty} onChange={(event) => updateRow(row.key, { difficulty: event.target.value as Difficulty | "" })}>
                       <option value="">{msg("quizzes.components.DrawRulesPanel.moiDoKho")}</option>
                       {(Object.keys(DIFFICULTY_LABELS) as Difficulty[]).map((d) => <option key={d} value={d}>{DIFFICULTY_LABELS[d]}</option>)}
                     </Select>
                     <TextInput aria-label={msg("quizzes.components.DrawRulesPanel.soCauCuaQuyTac", { value: String(index + 1) })} inputMode="numeric" suffix={msg("quizzes.components.DrawRulesPanel.cau2")} value={row.questionCount}
-                      onChange={(event) => update(row.key, { questionCount: event.target.value })} data-testid={`draw-rule-count-${index}`} />
+                      onChange={(event) => updateRow(row.key, { questionCount: event.target.value })} data-testid={`draw-rule-count-${index}`} />
                     <TextInput aria-label={msg("quizzes.components.DrawRulesPanel.diemMoiCauCuaQuyTac", { value: String(index + 1) })} inputMode="decimal" suffix={msg("quizzes.components.DrawRulesPanel.diem")} value={row.pointsEach}
-                      onChange={(event) => update(row.key, { pointsEach: event.target.value })} data-testid={`draw-rule-points-${index}`} />
+                      onChange={(event) => updateRow(row.key, { pointsEach: event.target.value })} data-testid={`draw-rule-points-${index}`} />
                   </div>
                   {short && <p role="status" className="text-xs font-medium text-warning" data-testid={`draw-rule-shortage-${index}`}>{msg("quizzes.components.DrawRulesPanel.can")}{requested} {msg("quizzes.components.DrawRulesPanel.cauKhoChiCo")}{count} {msg("quizzes.components.DrawRulesPanel.cauChuaPhatHanhDuoc")}</p>}
                   <div className="flex items-center justify-between gap-2 text-xs text-muted">

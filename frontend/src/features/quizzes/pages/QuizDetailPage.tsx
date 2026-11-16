@@ -13,10 +13,10 @@ import { addInlineQuestion, getQuiz, proposeQuestion, reopenQuiz, publishQuiz, s
 import { QuizAiDraftPanel } from "../components/AiDraftTargets";
 import { BankQuestionPicker } from "../components/BankQuestionPicker";
 import { DrawRulesPanel } from "../components/DrawRulesPanel";
-import { errorCode, errorMessage, formatPoints, QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "../model/labels";
+import { readErrorCode, describeError, formatPoints, QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "../model/labels";
 import { quizDetailSections } from "../slots";
 import {
-  InlineQuestionDialog, QuizItemList, QuizPreviewDialog, QuizSettingsPanel, settingsFormOf, settingsInput, type DraftItem,
+  InlineQuestionDialog, QuizItemList, QuizPreviewDialog, QuizSettingsPanel, buildSettingsForm, buildSettingsInput, type DraftItem,
   type SettingsForm,
 } from "../components/QuizDetailParts";
 import type { QuizDetail, QuizItemView, Violation } from "../model/types";
@@ -28,7 +28,7 @@ const MAX_ITEMS = 200;
 type Dialogs = "picker" | "inline" | "ai" | "preview" | "edit" | "archive" | "publish" | null;
 
 const draftItems = (detail: QuizDetail): DraftItem[] => detail.items.map((item) => ({ item, points: String(item.points) }));
-const validPoints = (value: string) => /^\d+([.,]\d{1,2})?$/.test(value.trim()) && Number(value.replace(",", ".")) > 0
+const isValidPoints = (value: string) => /^\d+([.,]\d{1,2})?$/.test(value.trim()) && Number(value.replace(",", ".")) > 0
   && Number(value.replace(",", ".")) <= 9999.99;
 
 /**
@@ -58,7 +58,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
     setDetail(next);
     setViolations([]);
     setItems(draftItems(next));
-    setSettings(settingsFormOf(next.quiz));
+    setSettings(buildSettingsForm(next.quiz));
     setSettingsErrors({});
   }, []);
 
@@ -70,7 +70,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
         setLoadError(null);
         show(next);
       })
-      .catch((failure: unknown) => active && setLoadError(errorMessage(failure)));
+      .catch((failure: unknown) => active && setLoadError(describeError(failure)));
     return () => {
       active = false;
     };
@@ -82,7 +82,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
   const editable = !!detail?.canManage && !!quiz && quiz.status !== "RETIRED";
   const itemsDirty = useMemo(() => !!detail && JSON.stringify(items.map((d) => [d.item.question.id, d.points]))
     !== JSON.stringify(draftItems(detail).map((d) => [d.item.question.id, d.points])), [items, detail]);
-  const settingsDirty = useMemo(() => !!quiz && !!settings && JSON.stringify(settings) !== JSON.stringify(settingsFormOf(quiz)), [settings, quiz]);
+  const settingsDirty = useMemo(() => !!quiz && !!settings && JSON.stringify(settings) !== JSON.stringify(buildSettingsForm(quiz)), [settings, quiz]);
   const dirty = itemsDirty || settingsDirty;
   const confirmDiscard = useAuthoringGuard(authorDirty || dirty);
   const chooseDialog = (next: Dialogs, item: QuizItemView | null = null) => {
@@ -95,7 +95,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
     return true;
   };
 
-  const run = async (action: () => Promise<void>) => {
+  const runAction = async (action: () => Promise<void>) => {
     setBusy(true);
     setError(null);
     setViolations([]);
@@ -104,19 +104,19 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
     } catch (failure) {
       const problem = failure instanceof ApiError ? (failure.problem as { violations?: Violation[] }) : {};
       if (problem.violations?.length) setViolations(problem.violations);
-      setError(errorMessage(failure));
-      if (errorCode(failure) === "QUIZ_VERSION_CONFLICT") setReloadKey((k) => k + 1);
+      setError(describeError(failure));
+      if (readErrorCode(failure) === "QUIZ_VERSION_CONFLICT") setReloadKey((k) => k + 1);
     } finally {
       setBusy(false);
     }
   };
 
   // Kiểm cả cấu hình lẫn điểm trước khi gọi API; lỗi phía trình duyệt báo thẳng, không ném cho `run` (chỉ dịch lỗi API).
-  const save = () => detail && settings && void run(async () => {
-    const { errors, input } = settingsDirty ? settingsInput(settings) : { errors: {}, input: undefined };
+  const saveSettings = () => detail && settings && void runAction(async () => {
+    const { errors, input } = settingsDirty ? buildSettingsInput(settings) : { errors: {}, input: undefined };
     setSettingsErrors(errors);
     const invalid = settingsDirty && !input ? msg("quizzes.pages.QuizDetailPage.cauHinhChuaHopLe")
-      : itemsDirty && items.some((d) => !validPoints(d.points)) ? msg("quizzes.pages.QuizDetailPage.diemMoiCauPhaiLonHon") : null;
+      : itemsDirty && items.some((d) => !isValidPoints(d.points)) ? msg("quizzes.pages.QuizDetailPage.diemMoiCauPhaiLonHon") : null;
     if (invalid) {
       setError(invalid);
       return;
@@ -162,14 +162,14 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
         ? await updateInlineQuestion(detail.quiz.id, editing.question.id, content, detail.quiz.version)
         : await addInlineQuestion(detail.quiz.id, content, detail.quiz.version));
     } catch (failure) {
-      throw new Error(errorMessage(failure));
+      throw new Error(describeError(failure));
     } finally { setBusy(false); }
     setDialog(null);
     setEditing(null);
   };
 
   // Phát hành thẳng từ nháp (BR-U10-21): máy chủ vẫn kiểm đủ điều kiện, lỗi trả danh sách cần sửa.
-  const publish = () => quiz && void run(async () => {
+  const publish = () => quiz && void runAction(async () => {
     setDialog(null);
     show(await publishQuiz(quiz.id, quiz.version));
     showToast(msg("quizzes.pages.QuizDetailPage.daPhatHanhQuiz"));
@@ -177,7 +177,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
   });
 
   // Giảng viên gửi câu riêng vào ngân hàng của môn để Chủ nhiệm môn duyệt (BR-U10-09); câu trong quiz giữ nguyên.
-  const propose = (item: QuizItemView) => quiz?.classId && void run(async () => {
+  const propose = (item: QuizItemView) => quiz?.classId && void runAction(async () => {
     await proposeQuestion(quiz.classId as string, item.question);
     showToast(msg("quizzes.pages.QuizDetailPage.daGuiDeXuatChoChu"));
   });
@@ -205,14 +205,14 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
         breadcrumb={place.moduleTitle ? [{ label: place.moduleTitle }, { label: quiz.title }] : undefined}
         actions={<>
           {!generated && <Button icon="visibility" disabled={busy} onClick={() => chooseDialog("preview")} data-testid="quiz-detail-preview">{msg("quizzes.pages.QuizDetailPage.xemTruoc")}</Button>}
-          {editable && dirty && <Button icon="save" disabled={busy || authorDirty} onClick={save} data-testid="quiz-detail-save">{msg("quizzes.pages.QuizDetailPage.luuThayDoi")}</Button>}
+          {editable && dirty && <Button icon="save" disabled={busy || authorDirty} onClick={saveSettings} data-testid="quiz-detail-save">{msg("quizzes.pages.QuizDetailPage.luuThayDoi")}</Button>}
           {detail.canManage && quiz.status === "DRAFT" && (
             <Button variant="primary" disabled={busy || dirty || authorDirty} title={dirty || authorDirty ? msg("quizzes.pages.QuizDetailPage.luuThayDoiTruocKhiPhat") : undefined}
               onClick={() => chooseDialog("publish")} data-testid="quiz-detail-publish">{msg("quizzes.pages.QuizDetailPage.phatHanh")}</Button>
           )}
           {detail.canManage && quiz.status === "RETIRED" && (
             <Button variant="primary" icon="lock_open" disabled={busy} data-testid="quiz-detail-reopen"
-              onClick={() => void run(async () => { show(await reopenQuiz(quiz.id, quiz.version)); showToast(msg("quizzes.pages.QuizDetailPage.daMoLaiQuiz")); notifyOutlineChanged(); })}>{msg("quizzes.pages.QuizDetailPage.moLai")}</Button>
+              onClick={() => void runAction(async () => { show(await reopenQuiz(quiz.id, quiz.version)); showToast(msg("quizzes.pages.QuizDetailPage.daMoLaiQuiz")); notifyOutlineChanged(); })}>{msg("quizzes.pages.QuizDetailPage.moLai")}</Button>
           )}
           {editable && <>
             <Button icon="edit" disabled={busy} onClick={() => chooseDialog("edit")} data-testid="quiz-detail-edit">{msg("quizzes.pages.QuizDetailPage.sua")}</Button>
@@ -235,8 +235,8 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
             onError={(failure) => {
               const problem = failure instanceof ApiError ? (failure.problem as { violations?: Violation[] }) : {};
               setViolations(problem.violations ?? []);
-              setError(errorMessage(failure));
-              if (errorCode(failure) === "QUIZ_VERSION_CONFLICT") setReloadKey((k) => k + 1);
+              setError(describeError(failure));
+              if (readErrorCode(failure) === "QUIZ_VERSION_CONFLICT") setReloadKey((k) => k + 1);
             }} />
         )}
         {!generated && <Section title={msg("quizzes.pages.QuizDetailPage.cauHoi")}

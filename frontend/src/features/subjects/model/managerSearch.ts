@@ -1,4 +1,4 @@
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import type { SubjectManager } from "./types";
 
 /** Ứng viên Chủ nhiệm môn lấy từ danh sách tài khoản của U01 (UC 08), chỉ role SUBJECT_MANAGER đang ACTIVE. */
@@ -18,7 +18,7 @@ export const searchSubjectManagers: SearchSubjectManagers = async ({ q, limit })
     size: String(limit),
   });
   if (q.trim()) params.set("q", q.trim());
-  const page = await apiFetch<{ items: AccountItem[] }>(`/api/v1/admin/accounts?${params}`);
+  const page = await fetchApi<{ items: AccountItem[] }>(`/api/v1/admin/accounts?${params}`);
   return page.items.map((account) => ({
     accountId: account.id,
     displayName: account.displayName,

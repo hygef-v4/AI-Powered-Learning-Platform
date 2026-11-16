@@ -27,7 +27,7 @@ const GRADING_HINTS: Record<GradingMode, string> = {
   PRACTICE: msg("assignments.components.AssignmentSettingsPanel.tuLuyenKhongTinhDiem"),
 };
 
-export function settingsOf(detail: AssignmentDetail): Settings {
+export function readSettings(detail: AssignmentDetail): Settings {
   return {
     gradingMode: detail.gradingMode,
     diagramEnabled: detail.diagramEnabled,

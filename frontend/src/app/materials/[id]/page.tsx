@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { serverMsg } from "@/i18n/server";
+import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await serverMsg("app.materials.id.page.hocLieu") };
+  return { title: await translateOnServer("app.materials.id.page.hocLieu") };
 }
 
 /** Trang sửa học liệu cũ: nay sửa và lưu trữ ngay trên trang chi tiết (`/view`). */

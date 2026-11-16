@@ -2,7 +2,7 @@
 
 import { Card, Pagination, Pill, Td } from "@/shared/ui";
 import { cx } from "@/shared/ui/cx";
-import { RESULT_LABELS, actionLabel, formatDateTime, formatFull, objectTypeLabel, shortId, shortReason } from "../model/labels";
+import { RESULT_LABELS, describeAction, formatDateTime, formatFull, describeObjectType, shortenId, shortenReason } from "../model/labels";
 import type { AuditLogPage } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -58,8 +58,8 @@ export function AuditTable({ data, onPageChange }: Props) {
             {data.items.map((item, index) => {
               const when = formatDateTime(item.occurredAt);
               const [time, date] = [when.slice(0, 5), when.slice(6)];
-              const action = actionLabel(item.action);
-              const object = item.objectLabel ?? (item.objectType ? objectTypeLabel(item.objectType) : "—");
+              const action = describeAction(item.action);
+              const object = item.objectLabel ?? (item.objectType ? describeObjectType(item.objectType) : "—");
               return (
                 <tr key={item.id} data-testid={`audit-table-row-${item.id}`}>
                   <Td className="px-3 text-right text-muted tabular-nums first:pl-3">{first + index + 1}</Td>
@@ -69,7 +69,7 @@ export function AuditTable({ data, onPageChange }: Props) {
                   </Td>
                   <Td className="px-3">
                     {item.actorId ? (
-                      <span className={CLAMP + " font-mono text-xs break-all"} title={item.actorEmail ?? item.actorId}>{item.actorEmail ?? shortId(item.actorId)}</span>
+                      <span className={CLAMP + " font-mono text-xs break-all"} title={item.actorEmail ?? item.actorId}>{item.actorEmail ?? shortenId(item.actorId)}</span>
                     ) : (
                       <i className="text-muted">{SYSTEM_ACTOR}</i>
                     )}
@@ -78,13 +78,13 @@ export function AuditTable({ data, onPageChange }: Props) {
                     <span className={CLAMP + " font-semibold [overflow-wrap:anywhere]"} title={action === item.action ? item.action : `${action} (${item.action})`}>{action}</span>
                   </Td>
                   <Td className="px-3">
-                    <span className={CLAMP + " [overflow-wrap:anywhere]"} title={item.objectType ? `${objectTypeLabel(item.objectType)}: ${object}` : object}>{object}</span>
+                    <span className={CLAMP + " [overflow-wrap:anywhere]"} title={item.objectType ? `${describeObjectType(item.objectType)}: ${object}` : object}>{object}</span>
                   </Td>
                   <Td className="px-3">
                     <Pill tone={RESULT_LABELS[item.result].tone}>{RESULT_LABELS[item.result].label}</Pill>
                   </Td>
                   <Td className="px-3 last:pr-3">
-                    <span className="block truncate text-body" title={item.reason ?? undefined}>{shortReason(item.reason)}</span>
+                    <span className="block truncate text-body" title={item.reason ?? undefined}>{shortenReason(item.reason)}</span>
                   </Td>
                 </tr>
               );

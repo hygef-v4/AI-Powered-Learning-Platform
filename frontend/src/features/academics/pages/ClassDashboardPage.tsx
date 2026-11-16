@@ -6,7 +6,7 @@ import { PageHeader, Segmented, TermFilter } from "@/shared/ui";
 import { CourseCard, CourseGrid } from "../components/CourseCard";
 import { classCardSections } from "../slots";
 import type { ClassStatus, CourseClassView } from "../model/types";
-import { compareTermsNewestFirst, termOptions } from "../model/term";
+import { compareTermsNewestFirst, listTermOptions } from "../model/term";
 import { msg } from "@/i18n/msg";
 
 /**
@@ -17,7 +17,7 @@ import { msg } from "@/i18n/msg";
  */
 export function ClassDashboardPage({ audience, classes, onOpen }: { audience: "student" | "teacher"; classes: CourseClassView[]; onOpen: (id: string) => void }) {
   const [status, setStatus] = useUrlState<ClassStatus>("classStatus", "OPEN", audience === "student" ? ["OPEN", "ARCHIVED"] : ["OPEN", "DRAFT", "ARCHIVED"]);
-  const terms = termOptions(classes);
+  const terms = listTermOptions(classes);
   const [termValue, setTerm] = useUrlState<string>("classTerm", "", undefined, "replace");
   const term = terms.includes(termValue) ? termValue : "";
   const inTerm = term ? classes.filter((course) => course.term === term) : classes;

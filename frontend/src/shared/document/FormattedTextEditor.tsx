@@ -3,8 +3,8 @@
 import { useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { cx } from "@/shared/ui";
 import { RichText, getCaret, setCaret, type Caret } from "./RichText";
-import { normalizeRuns, runsLength, splitRuns, toggleFlagRange, type RunFlag } from "./runs";
-import { FORMATTED_ALIGN, formattedTextOf, formattedTextPlain, type FormattedText, type FormattedBlock } from "./formattedText";
+import { normalizeRuns, measureRunsLength, splitRuns, toggleFlagRange, type RunFlag } from "./runs";
+import { FORMATTED_ALIGN, createFormattedText, convertFormattedTextToPlain, type FormattedText, type FormattedBlock } from "./formattedText";
 import { FormattedTextView } from "./FormattedTextView";
 import { Glyph } from "./Glyph";
 import { ToolbarButton } from "./ToolbarButton";
@@ -19,7 +19,7 @@ export function FormattedTextEditor({ value, plainText, onChange, maxLength, dis
   disabled?: boolean;
   "aria-label": string;
 }) {
-  const document = value?.blocks.length ? value : formattedTextOf(plainText);
+  const document = value?.blocks.length ? value : createFormattedText(plainText);
   const root = useRef<HTMLDivElement>(null);
   const focusAfter = useRef<{ index: number; at: number } | null>(null);
   const [history, setHistory] = useState<{ past: FormattedText[]; future: FormattedText[] }>({ past: [], future: [] });
@@ -29,22 +29,22 @@ export function FormattedTextEditor({ value, plainText, onChange, maxLength, dis
   const selected = Math.min(active, document.blocks.length - 1);
   const block = document.blocks[selected]!;
 
-  const field = (index: number) => root.current?.querySelector<HTMLElement>(`[data-formatted-block="${index}"] [role="textbox"]`);
+  const findField = (index: number) => root.current?.querySelector<HTMLElement>(`[data-formatted-block="${index}"] [role="textbox"]`);
   useLayoutEffect(() => {
     const next = focusAfter.current;
     if (!next) return;
-    const target = field(next.index);
+    const target = findField(next.index);
     if (target) { target.focus(); setCaret(target, Math.min(next.at, (target.textContent ?? "").length)); }
     focusAfter.current = null;
   });
 
   function commit(next: FormattedText, record = true) {
-    const text = formattedTextPlain(next);
+    const text = convertFormattedTextToPlain(next);
     if (text.length > maxLength || next.blocks.length > 100
       || next.blocks.some((item) => item.runs.length > 200)
       || next.blocks.reduce((count, item) => count + item.runs.length, 0) > 1000) {
       setError(text.length > maxLength ? msg("shared.document.FormattedTextEditor.toiDaKyTu", { label: String(label), value: String(maxLength.toLocaleString("vi-VN")) }) : msg("shared.document.FormattedTextEditor.noiDungCoQuaNhieuDoan"));
-      const current = field(selected);
+      const current = findField(selected);
       focusAfter.current = { index: selected, at: current ? getCaret(current).start : 0 };
       setRevision((number) => number + 1);
       return;
@@ -61,9 +61,9 @@ export function FormattedTextEditor({ value, plainText, onChange, maxLength, dis
   }
 
   function format(flag: RunFlag) {
-    const current = field(selected);
+    const current = findField(selected);
     const caret = current ? getCaret(current) : { start: 0, end: 0 };
-    const length = runsLength(block.runs);
+    const length = measureRunsLength(block.runs);
     const start = caret.start === caret.end ? 0 : caret.start;
     const end = caret.start === caret.end ? length : caret.end;
     changeBlock({ runs: length ? toggleFlagRange(block.runs, start, end, flag)
@@ -71,7 +71,7 @@ export function FormattedTextEditor({ value, plainText, onChange, maxLength, dis
     current?.focus();
   }
 
-  function travel(direction: "past" | "future") {
+  function travelHistory(direction: "past" | "future") {
     const stack = history[direction];
     const next = stack.at(-1);
     if (!next) return;
@@ -80,11 +80,11 @@ export function FormattedTextEditor({ value, plainText, onChange, maxLength, dis
     commit(next, false);
   }
 
-  function key(event: KeyboardEvent<HTMLDivElement>, index: number, caret: Caret) {
+  function handleKey(event: KeyboardEvent<HTMLDivElement>, index: number, caret: Caret) {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       const current = document.blocks[index]!;
-      if (current.type !== "PARAGRAPH" && runsLength(current.runs) === 0) {
+      if (current.type !== "PARAGRAPH" && measureRunsLength(current.runs) === 0) {
         changeBlock({ type: "PARAGRAPH", indent: 0 });
         return;
       }
@@ -95,7 +95,7 @@ export function FormattedTextEditor({ value, plainText, onChange, maxLength, dis
     } else if (event.key === "Backspace" && caret.start === 0 && caret.end === 0 && index > 0) {
       event.preventDefault();
       const previous = document.blocks[index - 1]!;
-      focusAfter.current = { index: index - 1, at: runsLength(previous.runs) };
+      focusAfter.current = { index: index - 1, at: measureRunsLength(previous.runs) };
       commit({ blocks: [...document.blocks.slice(0, index - 1),
         { ...previous, runs: normalizeRuns([...previous.runs, ...document.blocks[index]!.runs]) },
         ...document.blocks.slice(index + 1)] });
@@ -111,7 +111,7 @@ export function FormattedTextEditor({ value, plainText, onChange, maxLength, dis
       if (disabled) return;
       if (!(event.ctrlKey || event.metaKey) || event.nativeEvent.isComposing) return;
       const name = event.key.toLowerCase();
-      if (name === "z" || name === "y") { event.preventDefault(); travel(name === "y" || event.shiftKey ? "future" : "past"); }
+      if (name === "z" || name === "y") { event.preventDefault(); travelHistory(name === "y" || event.shiftKey ? "future" : "past"); }
       if (name === "b" || name === "i" || name === "u") { event.preventDefault(); format(name === "b" ? "bold" : name === "i" ? "italic" : "underline"); }
     }}>
     <div role="toolbar" aria-label={msg("shared.document.FormattedTextEditor.dinhDang", { label: String(label) })} className="flex flex-wrap items-center gap-0.5 border-b border-line bg-sunken px-2 py-1">
@@ -128,8 +128,8 @@ export function FormattedTextEditor({ value, plainText, onChange, maxLength, dis
       <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.giamThutLe")} title={msg("shared.document.FormattedTextEditor.giamThutLe")} disabled={disabled || block.indent <= 0} onClick={() => changeBlock({ indent: block.indent - 1 })}><Glyph name="outdent" /></ToolbarButton>
       <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.tangThutLe")} title={msg("shared.document.FormattedTextEditor.tangThutLe")} disabled={disabled || block.indent >= 6} onClick={() => changeBlock({ indent: block.indent + 1 })}><Glyph name="indent" /></ToolbarButton>
       <span className="mx-1 h-4 border-l border-line" aria-hidden />
-      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.hoanTac")} title={msg("shared.document.FormattedTextEditor.hoanTac")} disabled={disabled || history.past.length === 0} onClick={() => travel("past")}><Glyph name="undo" /></ToolbarButton>
-      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.lamLai")} title={msg("shared.document.FormattedTextEditor.lamLai")} disabled={disabled || history.future.length === 0} onClick={() => travel("future")}><Glyph name="redo" /></ToolbarButton>
+      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.hoanTac")} title={msg("shared.document.FormattedTextEditor.hoanTac")} disabled={disabled || history.past.length === 0} onClick={() => travelHistory("past")}><Glyph name="undo" /></ToolbarButton>
+      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.lamLai")} title={msg("shared.document.FormattedTextEditor.lamLai")} disabled={disabled || history.future.length === 0} onClick={() => travelHistory("future")}><Glyph name="redo" /></ToolbarButton>
     </div>
     {disabled ? <div className="min-h-24 px-3 py-2 text-[13.5px]"><FormattedTextView document={document} text={plainText} /></div>
       : <div className="min-h-24 px-3 py-2 text-[13.5px] leading-relaxed">
@@ -138,12 +138,12 @@ export function FormattedTextEditor({ value, plainText, onChange, maxLength, dis
           style={{ textAlign: FORMATTED_ALIGN[item.align], marginInlineStart: `${item.indent * 1.25 + (item.type === "PARAGRAPH" ? 0 : 2)}rem` }}
           className={cx(item.type !== "PARAGRAPH" && "list-item", item.type === "UL" && "list-disc", item.type === "OL" && "list-decimal")}>
           <RichText runs={item.runs} aria-label={index === 0 ? label : msg("shared.document.FormattedTextEditor.doan", { label: String(label), value: String(index + 1) })}
-            onKey={(event, caret) => key(event, index, caret)}
+            onKey={(event, caret) => handleKey(event, index, caret)}
             onChange={(runs: Run[]) => commit({ blocks: document.blocks.map((current, position) => position === index
               ? { ...current, runs: runs.map(({ text, bold, italic, underline }) => ({ text, bold, italic, underline })) } : current) })} />
         </div>)}
       </div>}
     {error && <p role="alert" className="px-3 pb-2 text-xs text-danger">{error}</p>}
-    <p className="px-3 pb-2 text-right text-xs text-muted">{formattedTextPlain(document).length.toLocaleString("vi-VN")} / {maxLength.toLocaleString("vi-VN")}</p>
+    <p className="px-3 pb-2 text-right text-xs text-muted">{convertFormattedTextToPlain(document).length.toLocaleString("vi-VN")} / {maxLength.toLocaleString("vi-VN")}</p>
   </div>;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loginPathFor, safeNextPath } from "@/features/identity/hooks/session";
+import { loginPathFor, resolveSafeNextPath } from "@/features/identity/hooks/SessionProvider";
 
 describe("đường dẫn quay lại sau đăng nhập", () => {
   it("giữ trang đang mở trong ?next=, trừ trang gốc và trang công khai", () => {
@@ -11,15 +11,15 @@ describe("đường dẫn quay lại sau đăng nhập", () => {
   });
 
   it("chỉ nhận đường dẫn nội bộ không phải trang công khai", () => {
-    expect(safeNextPath("/admin/accounts?page=2")).toBe("/admin/accounts?page=2");
-    expect(safeNextPath(null)).toBeNull();
-    expect(safeNextPath("https://evil.example")).toBeNull();
-    expect(safeNextPath("//evil.example")).toBeNull();
-    expect(safeNextPath("/\\evil.example")).toBeNull();
+    expect(resolveSafeNextPath("/admin/accounts?page=2")).toBe("/admin/accounts?page=2");
+    expect(resolveSafeNextPath(null)).toBeNull();
+    expect(resolveSafeNextPath("https://evil.example")).toBeNull();
+    expect(resolveSafeNextPath("//evil.example")).toBeNull();
+    expect(resolveSafeNextPath("/\\evil.example")).toBeNull();
     // Trình duyệt bỏ tab, xuống dòng trong URL: "/\t/evil" thành "//evil".
-    expect(safeNextPath("/\t/evil.example")).toBeNull();
-    expect(safeNextPath("/\n/evil.example")).toBeNull();
-    expect(safeNextPath("/%09/evil.example")).toBe("/%09/evil.example");
-    expect(safeNextPath("/login?next=/x")).toBeNull();
+    expect(resolveSafeNextPath("/\t/evil.example")).toBeNull();
+    expect(resolveSafeNextPath("/\n/evil.example")).toBeNull();
+    expect(resolveSafeNextPath("/%09/evil.example")).toBe("/%09/evil.example");
+    expect(resolveSafeNextPath("/login?next=/x")).toBeNull();
   });
 });

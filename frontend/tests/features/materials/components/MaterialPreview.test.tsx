@@ -1,12 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { apiDownload, apiFetch } from "@/shared/api/client";
+import { downloadApi, fetchApi } from "@/shared/api/client";
 import { MaterialPreview } from "@/features/materials/components/MaterialPreview";
 import type { Material } from "@/features/materials/model/types";
 vi.mock("@/shared/api/client", async (original) => ({
   ...(await original<typeof import("@/shared/api/client")>()),
-  apiFetch: vi.fn(),
-  apiDownload: vi.fn(),
+  fetchApi: vi.fn(),
+  downloadApi: vi.fn(),
 }));
 // pdf.js cần canvas và worker thật; ở đây chỉ kiểm tệp được tải đúng và đưa vào trình xem.
 vi.mock("@/features/materials/components/PdfPages", () => ({
@@ -26,16 +26,16 @@ const token = {
   expiresAt: new Date(Date.now() + 300_000).toISOString(),
 };
 beforeEach(() => {
-  vi.mocked(apiFetch).mockReset();
-  vi.mocked(apiDownload).mockReset();
+  vi.mocked(fetchApi).mockReset();
+  vi.mocked(downloadApi).mockReset();
 });
 
 it("downloads the PDF through an authorized token into the dark document viewer", async () => {
-  vi.mocked(apiFetch).mockResolvedValue(token);
-  vi.mocked(apiDownload).mockResolvedValue(new Blob(["pdf"], { type: "application/pdf" }));
+  vi.mocked(fetchApi).mockResolvedValue(token);
+  vi.mocked(downloadApi).mockResolvedValue(new Blob(["pdf"], { type: "application/pdf" }));
   render(<MaterialPreview material={file} classId="class1" />);
   expect(await screen.findByTestId("material-pdf-viewer")).toHaveTextContent("3 bytes");
-  expect(apiDownload).toHaveBeenCalledWith(
+  expect(downloadApi).toHaveBeenCalledWith(
     "/api/v1/files/download/signed",
     expect.objectContaining({ signal: expect.any(AbortSignal) }),
   );
@@ -44,13 +44,13 @@ it("downloads the PDF through an authorized token into the dark document viewer"
 });
 
 it("retries token acquisition after failure", async () => {
-  vi.mocked(apiFetch).mockRejectedValueOnce(new Error("offline")).mockResolvedValue(token);
-  vi.mocked(apiDownload).mockResolvedValue(new Blob(["pdf"]));
+  vi.mocked(fetchApi).mockRejectedValueOnce(new Error("offline")).mockResolvedValue(token);
+  vi.mocked(downloadApi).mockResolvedValue(new Blob(["pdf"]));
   render(<MaterialPreview material={file} />);
   await screen.findByRole("alert");
   fireEvent.click(screen.getByTestId("material-token-retry"));
   await screen.findByTestId("material-pdf-viewer");
-  expect(apiFetch).toHaveBeenCalledTimes(2);
+  expect(fetchApi).toHaveBeenCalledTimes(2);
 });
 
 it("embeds only a validated ID using youtube-nocookie", () => {
@@ -67,7 +67,7 @@ it("embeds only a validated ID using youtube-nocookie", () => {
     "src",
     "https://www.youtube-nocookie.com/embed/abcdefghijk",
   );
-  expect(apiFetch).not.toHaveBeenCalled();
+  expect(fetchApi).not.toHaveBeenCalled();
 });
 
 it("does not embed a malformed video ID", () => {

@@ -2,7 +2,7 @@
 
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { Button, Card, ClickableRow, Icon, PageHeader, Pagination, Pill, Segmented, TableFrame, Td, TermFilter, TextInput, Th } from "@/shared/ui";
-import { termOptions } from "../model/term";
+import { listTermOptions } from "../model/term";
 import { CLASS_STATUS_LABELS, type ClassStatus, type CourseClassView, type SubjectView } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -28,7 +28,7 @@ export function ClassListPage({ classes, subjects, initialSubjectId, onOpen, onC
   const page = /^\d+$/.test(pageValue) && Number.isSafeInteger(Number(pageValue)) ? Number(pageValue) : 0;
   const setPage = (page: number) => setPageValue(String(page));
   const subjectClasses = classes.filter((course) => course.subject.id === subjectId);
-  const terms = termOptions(subjectClasses);
+  const terms = listTermOptions(subjectClasses);
   const [termValue, setTerm] = useUrlState<string>("classTerm", "", undefined, "replace");
   const term = terms.includes(termValue) ? termValue : "";
   const selected = subjects.find((subject) => subject.id === subjectId);

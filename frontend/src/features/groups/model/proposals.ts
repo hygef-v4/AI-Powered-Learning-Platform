@@ -62,11 +62,11 @@ export function validateFormation(input: { enabled: boolean; minSize: string; ma
   const errors: FormationErrors = {};
   const min = Number(input.minSize);
   const max = Number(input.maxSize);
-  const inRange = (value: number) => Number.isInteger(value) && value >= MIN_GROUP_SIZE && value <= MAX_GROUP_SIZE;
-  if (!inRange(min)) errors.minSize = msg("groups.model.proposals.nhapSoNguyenTu2Den");
-  if (!inRange(max)) errors.maxSize = msg("groups.model.proposals.nhapSoNguyenTu2Den");
-  else if (inRange(min) && min > max) errors.maxSize = msg("groups.model.proposals.toiDaPhaiLonHonHoac");
-  const deadline = fromLocalInput(input.deadline);
+  const isInRange = (value: number) => Number.isInteger(value) && value >= MIN_GROUP_SIZE && value <= MAX_GROUP_SIZE;
+  if (!isInRange(min)) errors.minSize = msg("groups.model.proposals.nhapSoNguyenTu2Den");
+  if (!isInRange(max)) errors.maxSize = msg("groups.model.proposals.nhapSoNguyenTu2Den");
+  else if (isInRange(min) && min > max) errors.maxSize = msg("groups.model.proposals.toiDaPhaiLonHonHoac");
+  const deadline = convertFromLocalInput(input.deadline);
   if (input.enabled && deadline && new Date(deadline).getTime() <= now.getTime()) {
     errors.deadline = msg("groups.model.proposals.hanChotPhaiOTuongLai");
   }
@@ -74,20 +74,20 @@ export function validateFormation(input: { enabled: boolean; minSize: string; ma
 }
 
 /** ISO → giá trị ô datetime-local theo giờ Việt Nam. */
-export function toLocalInput(iso: string | null | undefined): string {
+export function convertToLocalInput(iso: string | null | undefined): string {
   if (!iso) return "";
   return new Date(new Date(iso).getTime() + VN_OFFSET_MS).toISOString().slice(0, 16);
 }
 
 /** Giá trị ô datetime-local (giờ Việt Nam) → ISO; rỗng thì null. */
-export function fromLocalInput(value: string): string | null {
+export function convertFromLocalInput(value: string): string | null {
   if (!value) return null;
   const date = new Date(`${value}:00+07:00`);
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 /** Lời báo lỗi cho người dùng: lấy thông điệp tiếng Việt của server, 404 thì báo chung. */
-export function proposalErrorText(error: unknown, fallback = msg("groups.model.proposals.khongThucHienDuocThuLai")): string {
+export function describeProposalError(error: unknown, fallback = msg("groups.model.proposals.khongThucHienDuocThuLai")): string {
   if (error instanceof ApiError) {
     if (error.problem.status === 404) return msg("groups.model.proposals.khongTimThayDeXuatHoac");
     if (error.problem.status === 409 && error.problem.code?.endsWith("VERSION_CONFLICT")) {

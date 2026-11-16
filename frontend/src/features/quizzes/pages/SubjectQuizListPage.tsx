@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Alert, Button, ClickableRow, PageHeader, Pagination, Pill, Segmented, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import { createSubjectQuiz, getManagedSubjects, getSubjectQuizzes } from "../api";
 import { CreateQuizDialog } from "../components/CreateQuizDialog";
-import { errorMessage, formatDateTime, formatPoints, QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "../model/labels";
+import { describeError, formatDateTime, formatPoints, QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "../model/labels";
 import type { ManagedSubject, QuizPage, QuizStatus } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { msg } from "@/i18n/msg";
@@ -37,7 +37,7 @@ export function SubjectQuizListPage() {
     let active = true;
     getManagedSubjects()
       .then((list) => active && setSubjects(list))
-      .catch((failure: unknown) => active && setSubjectsError(errorMessage(failure)));
+      .catch((failure: unknown) => active && setSubjectsError(describeError(failure)));
     return () => {
       active = false;
     };
@@ -60,7 +60,7 @@ export function SubjectQuizListPage() {
         setError(null);
         setData(page);
       })
-      .catch((failure: unknown) => active && setError(errorMessage(failure)));
+      .catch((failure: unknown) => active && setError(describeError(failure)));
     return () => {
       active = false;
     };

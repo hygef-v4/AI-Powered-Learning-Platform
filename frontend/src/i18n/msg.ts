@@ -15,14 +15,14 @@ type Values = Record<string, string>;
 type Translate = (key: string, values?: Values) => string;
 
 /** Ngôn ngữ trên trình duyệt đọc từ cookie lúc nạp trang; trên máy chủ (và trong test) là tiếng Việt. */
-function browserLocale(): Locale {
+function readBrowserLocale(): Locale {
   if (typeof document === "undefined") return DEFAULT_LOCALE;
   const match = new RegExp(`(?:^|; )${LOCALE_COOKIE}=([^;]*)`).exec(document.cookie);
   return parseLocale(match?.[1]);
 }
 
 /** Ngôn ngữ đang dùng trên trình duyệt; đổi ngôn ngữ là tải lại trang ({@link chooseLocale}). */
-export const LOCALE: Locale = browserLocale();
+export const LOCALE: Locale = readBrowserLocale();
 
 function hasMessage(messages: AbstractIntlMessages, key: string): boolean {
   let current: unknown = messages;
@@ -36,11 +36,11 @@ function hasMessage(messages: AbstractIntlMessages, key: string): boolean {
 const translators = new Map<Locale, Translate>();
 
 /** Hàm dịch của một ngôn ngữ (dùng lại giữa các lần gọi). */
-export function translatorFor(locale: Locale): Translate {
+export function buildTranslator(locale: Locale): Translate {
   const cached = translators.get(locale);
   if (cached) return cached;
   const own = createTranslator({ locale, messages: MESSAGES[locale] });
-  const fallback = locale === DEFAULT_LOCALE ? null : translatorFor(DEFAULT_LOCALE);
+  const fallback = locale === DEFAULT_LOCALE ? null : buildTranslator(DEFAULT_LOCALE);
   const translate: Translate = (key, values) => fallback && !hasMessage(MESSAGES[locale], key)
     ? fallback(key, values)
     : own(key as never, values as never);
@@ -54,7 +54,7 @@ type RichTags = Record<string, (chunks: ReactNode) => ReactNode>;
  * Câu có thẻ định dạng trong tệp ngôn ngữ (ví dụ `<b>…</b>`), trả về phần tử React; `tags` nói mỗi thẻ vẽ thành gì.
  * Khóa thiếu ở một ngôn ngữ thì dùng câu tiếng Việt.
  */
-export function richTranslatorFor(locale: Locale) {
+export function buildRichTranslator(locale: Locale) {
   const own = createTranslator({ locale, messages: MESSAGES[locale] });
   const fallback = createTranslator({ locale: DEFAULT_LOCALE, messages: MESSAGES[DEFAULT_LOCALE] });
   return (key: string, tags: RichTags): ReactNode => (hasMessage(MESSAGES[locale], key) ? own : fallback)
@@ -66,5 +66,5 @@ export function richTranslatorFor(locale: Locale) {
  * chữ (`{ count: String(count) }`) để không bị định dạng lại như số.
  */
 export function msg(key: string, values?: Values): string {
-  return translatorFor(LOCALE)(key, values);
+  return buildTranslator(LOCALE)(key, values);
 }

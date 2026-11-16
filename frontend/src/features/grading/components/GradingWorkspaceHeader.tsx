@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import { AutoTextarea, type RubricCriterion } from "@/shared/document";
 import { Card, Icon, TotalScoreCard } from "@/shared/ui";
 import { GradingFeedbackSummary } from "./StructuredFeedbackSection";
@@ -31,7 +31,7 @@ export function useSubmissionImages(
       images.map(async (block): Promise<[string, string] | null> => {
         if (!block.content.fileId) return null;
         try {
-          const token = await apiFetch<{ url: string }>(
+          const token = await fetchApi<{ url: string }>(
             `/api/v1/evaluations/${evaluationId}/images/${encodeURIComponent(block.content.fileId)}`,
           );
           const parsed = new URL(token.url, window.location.origin);
@@ -52,7 +52,7 @@ export function useSubmissionImages(
   return urls;
 }
 
-export function noteCriteria(rubric: Rubric): RubricCriterion[] {
+export function listNoteCriteria(rubric: Rubric): RubricCriterion[] {
   return rubric.criteria.map((criterion) => ({
     criterionId: criterion.criterionId,
     title: criterion.title,

@@ -60,7 +60,7 @@ export function ApiSetupGuide() {
 /** Đoạn cấu hình MCP mẫu: URL /mcp trên địa chỉ hiện tại, token đặt trong header Authorization; thụt 4 dấu cách. */
 export type McpClient = "codex" | "claude-code" | "opencode" | "antigravity";
 
-export function mcpConfigSample(endpoint: string, token = msg("ai.components.SetupGuides.tokenCuaBan"), client: McpClient = "codex") {
+export function buildMcpConfigSample(endpoint: string, token = msg("ai.components.SetupGuides.tokenCuaBan"), client: McpClient = "codex") {
   if (client === "codex") return '[mcp_servers.nen-tang-hoc-tap]\nurl = ' + JSON.stringify(endpoint)
     + '\nhttp_headers = { Authorization = ' + JSON.stringify(`Bearer ${token}`) + ' }';
   const server = client === "opencode"
@@ -71,14 +71,14 @@ export function mcpConfigSample(endpoint: string, token = msg("ai.components.Set
   return JSON.stringify({ [client === "opencode" ? "mcp" : "mcpServers"]: { "nen-tang-hoc-tap": server } }, null, 4);
 }
 
-export function mcpEndpoint(): string {
+export function resolveMcpEndpoint(): string {
   return typeof window === "undefined"
     ? "/mcp"
     : `${window.location.origin}/mcp`;
 }
 
 const subscribeToOrigin = () => () => {};
-const serverEndpoint = () => "/mcp";
+const resolveServerEndpoint = () => "/mcp";
 
 const JSON_TOKEN = /("(?:[^"\\]|\\.)*"|[{}[\]]|[:,])/g;
 
@@ -138,8 +138,8 @@ export function McpClientSetup({ token }: { token?: string }) {
   const id = useId();
   const [client, setClient] = useState<McpClient>("codex");
   const [copyState, setCopyState] = useState("");
-  const endpoint = useSyncExternalStore(subscribeToOrigin, mcpEndpoint, serverEndpoint);
-  const config = mcpConfigSample(endpoint, token, client);
+  const endpoint = useSyncExternalStore(subscribeToOrigin, resolveMcpEndpoint, resolveServerEndpoint);
+  const config = buildMcpConfigSample(endpoint, token, client);
   const locations = { codex: "~/.codex/config.toml", "claude-code": "~/.claude.json",
     opencode: "~/.config/opencode/opencode.json",
     antigravity: "~/.gemini/config/mcp_config.json" };
@@ -149,7 +149,7 @@ ${client === "antigravity" ? "Confirm the active file through Settings → Custo
 ${token ? "The configuration below contains the real token I explicitly provided. Do not repeat it in your response, log it, or commit it." : msg("ai.components.SetupGuides.noRealTokenIsProvidedGuide")}
 Merge this configuration using the exact client-specific format${client === "claude-code" ? "; place mcpServers at the top level of ~/.claude.json" : ""}:
 
-${mcpConfigSample(endpoint, token ?? "<your MCP token>", client)}
+${buildMcpConfigSample(endpoint, token ?? "<your MCP token>", client)}
 
 After saving, reload MCP if supported. If restarting the application is required, explain what I need to do and wait; do not close my running session. Check the connection, then call get_my_capabilities and one read-only tool allowed by the returned capabilities. Do not create assignments, save proposals, or publish grades to test the connection. Report success only after an actual read succeeds. If the token is missing or you cannot verify the connection, clearly state the remaining step. Never send the token to another endpoint.`;
   return <div className="space-y-3">

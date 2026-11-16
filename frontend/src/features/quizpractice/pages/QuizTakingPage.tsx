@@ -6,8 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import { Alert, Button, Card, cx, Dialog, Icon, Pill } from "@/shared/ui";
 import { getAttempt, recordQuizActivity, saveAnswers, submitAttempt } from "../api";
-import { QuestionNav, QuestionPrevNext, questionIndex } from "../components/QuestionPager";
-import { errorCode, errorMessage, formatPoints, penaltyRuleText } from "../model/labels";
+import { QuestionNav, QuestionPrevNext, resolveQuestionIndex } from "../components/QuestionPager";
+import { readErrorCode, describeError, formatPoints, describePenaltyRule } from "../model/labels";
 import type { TakingView } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { msg } from "@/i18n/msg";
@@ -19,20 +19,20 @@ type SaveState = "saved" | "dirty" | "saving" | "error";
 /** `time-up`: máy chủ không nhận lưu vì đã quá hạn cộng ân hạn; `failed`: còn câu trả lời chưa lưu được. */
 type SaveOutcome = "saved" | "time-up" | "failed";
 
-function remainingSeconds(view: TakingView, skewMs: number): number | null {
+function calculateRemainingSeconds(view: TakingView, skewMs: number): number | null {
   if (!view.deadlineAt) return null;
   return Math.max(0, Math.floor((new Date(view.deadlineAt).getTime() - (Date.now() + skewMs)) / 1000));
 }
 
 /** Mốc thời gian đọc cho trình đọc màn hình; chữ chỉ đổi khi qua mốc nên mỗi mốc được đọc một lần. */
-function timeMilestone(seconds: number | null): string {
+function resolveTimeMilestone(seconds: number | null): string {
   if (seconds === null || seconds > 300) return "";
   if (seconds > 60) return msg("quizpractice.pages.QuizTakingPage.conDuoi5Phut");
   if (seconds > 10) return msg("quizpractice.pages.QuizTakingPage.conDuoi1Phut");
   return msg("quizpractice.pages.QuizTakingPage.con10Giay");
 }
 
-function clockText(seconds: number): string {
+function formatClock(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
@@ -82,12 +82,12 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
         setView(next);
         setAnswers(next.answers);
         setSaveState("saved");
-        setRemaining(remainingSeconds(next, skewRef.current));
+        setRemaining(calculateRemainingSeconds(next, skewRef.current));
       })
       .catch((failure: unknown) => {
         if (!active) return;
-        if (errorCode(failure) === "ATTEMPT_SUBMITTED") toResult();
-        else setError(errorMessage(failure));
+        if (readErrorCode(failure) === "ATTEMPT_SUBMITTED") toResult();
+        else setError(describeError(failure));
       });
     return () => {
       active = false;
@@ -109,17 +109,17 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
       setSaveState(dirtyRef.current ? "dirty" : "saved");
       return "saved";
     } catch (failure) {
-      const code = errorCode(failure);
+      const code = readErrorCode(failure);
       if (code === "ATTEMPT_TIME_UP") return "time-up";
       if (code === "ANSWER_VERSION_CONFLICT") {
-        setError(errorMessage(failure));
+        setError(describeError(failure));
         setReloadKey((k) => k + 1);
       } else if (code === "ATTEMPT_SUBMITTED") {
         toResult();
       } else {
         dirtyRef.current = true;
         setSaveState("error");
-        setError(errorMessage(failure));
+        setError(describeError(failure));
       }
       return "failed";
     }
@@ -168,20 +168,20 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
       toResult();
     } catch (failure) {
       // Hết giờ quá ân hạn: máy chủ tự nộp trong vòng 1 phút, vẫn chuyển sang kết quả.
-      if (mode === "timeup" || errorCode(failure) === "ATTEMPT_SUBMITTED") {
+      if (mode === "timeup" || readErrorCode(failure) === "ATTEMPT_SUBMITTED") {
         toResult();
         return;
       }
       finishingRef.current = false;
       setFinishing(null);
-      setError(errorMessage(failure));
+      setError(describeError(failure));
     }
   }, [attemptId, drainActivity, flush, toResult]);
 
   useEffect(() => {
     if (!view?.deadlineAt) return;
     const tick = setInterval(() => {
-      const left = remainingSeconds(view, skewRef.current);
+      const left = calculateRemainingSeconds(view, skewRef.current);
       setRemaining(left);
       if (left === 0) void finish("timeup");
     }, 1000);
@@ -191,14 +191,14 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
   // Rời trang, đóng tab hoặc chuyển ứng dụng trên điện thoại (trang bị ẩn, có thể bị hủy mà không có pagehide).
   useEffect(() => {
     const leave = () => void flush(true);
-    const hidden = () => {
+    const handleHidden = () => {
       if (document.visibilityState === "hidden") void flush(true);
     };
     window.addEventListener("pagehide", leave);
-    document.addEventListener("visibilitychange", hidden);
+    document.addEventListener("visibilitychange", handleHidden);
     return () => {
       window.removeEventListener("pagehide", leave);
-      document.removeEventListener("visibilitychange", hidden);
+      document.removeEventListener("visibilitychange", handleHidden);
       void flush();
     };
   }, [flush]);
@@ -220,11 +220,11 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
   if (!view) {
     return error ? <PageLoadError>{error}</PageLoadError> : <PageLoading label={msg("quizpractice.pages.QuizTakingPage.dangTaiDe")} />;
   }
-  const index = questionIndex(questionParam, view.questions.length);
+  const index = resolveQuestionIndex(questionParam, view.questions.length);
   const setIndex = (next: number) => setQuestionParam(String(next + 1));
   const question = view.questions[index];
-  const answered = (id: string) => (answers[id]?.length ?? 0) > 0;
-  const unanswered = view.questions.map((q, i) => (answered(q.questionId) ? null : i + 1)).filter((n): n is number => n !== null);
+  const isAnswered = (id: string) => (answers[id]?.length ?? 0) > 0;
+  const unanswered = view.questions.map((q, i) => (isAnswered(q.questionId) ? null : i + 1)).filter((n): n is number => n !== null);
   const saveLabel = { saved: msg("quizpractice.pages.QuizTakingPage.daTuDongLuu"), dirty: msg("quizpractice.pages.QuizTakingPage.chuaLuu"), saving: msg("quizpractice.pages.QuizTakingPage.dangLuu"), error: msg("quizpractice.pages.QuizTakingPage.chuaLuuDuoc") }[saveState];
   const exit = () => void flush().then((outcome) => {
     if (outcome === "saved") router.push("/quiz-practice");
@@ -241,7 +241,7 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
         <div data-testid="quiz-taking-activity-notice">
           <Alert tone="info">
             {msg("quizpractice.pages.QuizTakingPage.quizNayGhiNhanHoatDong")}{view.activityNotice ? `: ${view.activityNotice}` : "."}
-            {view.leavePenalty && <span className="block" data-testid="quiz-taking-penalty-rule">{penaltyRuleText(view.leavePenalty)}</span>}
+            {view.leavePenalty && <span className="block" data-testid="quiz-taking-penalty-rule">{describePenaltyRule(view.leavePenalty)}</span>}
           </Alert>
         </div>
       )}
@@ -251,7 +251,7 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
             busy={finishing !== null} choose={choose} setIndex={setIndex} />
         )}
         <QuestionListCard count={view.questions.length} index={index} doneCount={view.questions.length - unanswered.length}
-          answered={(i) => answered(view.questions[i]?.questionId ?? "")} setIndex={setIndex} />
+          answered={(i) => isAnswered(view.questions[i]?.questionId ?? "")} setIndex={setIndex} />
       </div>
       {confirming && (
         <Dialog open onClose={() => setConfirming(false)} title={msg("quizpractice.pages.QuizTakingPage.nopBai")} tone="warning"
@@ -263,7 +263,7 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
             {unanswered.length > 0
               ? <p>{msg("quizpractice.pages.QuizTakingPage.con")}{unanswered.length} {msg("quizpractice.pages.QuizTakingPage.cauChuaTraLoiCau")}{unanswered.join(", ")}{msg("quizpractice.pages.QuizTakingPage.cauChuaTraLoiDuocTinh")}</p>
               : <p>{msg("quizpractice.pages.QuizTakingPage.banDaTraLoiTatCa")}</p>}
-            {remaining !== null && <p>{msg("quizpractice.pages.QuizTakingPage.thoiGianConLai")}{clockText(remaining)}.</p>}
+            {remaining !== null && <p>{msg("quizpractice.pages.QuizTakingPage.thoiGianConLai")}{formatClock(remaining)}.</p>}
             <p>{msg("quizpractice.pages.QuizTakingPage.sauKhiNopLuotNayKet")}</p>
           </div>
         </Dialog>
@@ -313,10 +313,10 @@ function TakingToolbar({ title, saveState, saveLabel, remaining, busy, onExit, o
           data-testid="quiz-taking-timer"
         >
           {remaining < 60 && <Icon name="warning" size={15} />}
-          {msg("quizpractice.pages.QuizTakingPage.con")}{clockText(remaining)}
+          {msg("quizpractice.pages.QuizTakingPage.con")}{formatClock(remaining)}
         </span>
       )}
-      <span className="sr-only" aria-live="assertive" data-testid="quiz-taking-time-milestone">{timeMilestone(remaining)}</span>
+      <span className="sr-only" aria-live="assertive" data-testid="quiz-taking-time-milestone">{resolveTimeMilestone(remaining)}</span>
       <Button variant="primary" className={remaining === null ? "ml-auto" : undefined} disabled={busy}
         onClick={onSubmit} data-testid="quiz-taking-submit">{msg("quizpractice.pages.QuizTakingPage.nopBai2")}</Button>
     </Card>

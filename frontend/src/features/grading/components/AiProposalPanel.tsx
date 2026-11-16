@@ -35,13 +35,13 @@ const STATUS_META: Record<string, { label: string; tone: Tone; icon: string }> =
   REJECTED: { label: msg("grading.components.AiProposalPanel.deXuatKhongHopLe"), tone: "danger", icon: "✕" },
 };
 
-function pendingStageLabel(taskState?: string | null): string {
+function describePendingStage(taskState?: string | null): string {
   if (taskState === "READY") return msg("grading.components.AiProposalPanel.daNhanKetQuaAiDang");
   if (taskState === "RUNNING") return msg("grading.components.AiProposalPanel.aiDangChamBai");
   return msg("grading.components.AiProposalPanel.dangChoXuLy");
 }
 
-function pendingStageDetail(taskState?: string | null): string {
+function describePendingStageDetail(taskState?: string | null): string {
   if (taskState === "READY") {
     return msg("grading.components.AiProposalPanel.daNhanKetQuaTuNha");
   }
@@ -105,7 +105,7 @@ export function AiProposalPanel({
         {p.provider && <p className="mt-1 text-xs text-muted">{p.provider}{p.model && ` · ${p.model}`}</p>}
         {p.status === "PENDING" && !pollExhausted && (
           <p role="status" className="mt-2 text-muted">
-            {pendingStageDetail(p.taskState)}
+            {describePendingStageDetail(p.taskState)}
           </p>
         )}
         {p.status === "PENDING" && pollExhausted && (
@@ -302,7 +302,7 @@ export function AiProposalPanel({
       )}
       {visibleProposals.map((p, index) => {
         const baseMeta = STATUS_META[p.status] ?? { label: msg("grading.components.AiProposalPanel.chuaKhaDung"), tone: "neutral" as Tone, icon: "•" };
-        const meta = p.status === "PENDING" ? { ...baseMeta, label: pendingStageLabel(p.taskState) } : baseMeta;
+        const meta = p.status === "PENDING" ? { ...baseMeta, label: describePendingStage(p.taskState) } : baseMeta;
         const sourceLabel = msg("grading.components.AiProposalPanel.lan", { versionNo: String(p.versionNo), value: String(p.origin === "MCP" ? (p.agentLabel ?? "Agent") : p.source === "PERSONAL" ? msg("grading.components.AiProposalPanel.apiCaNhan") : msg("grading.components.AiProposalPanel.apiTruong")) });
         const createdAt = p.createdAt && Number.isFinite(Date.parse(p.createdAt))
           ? <time dateTime={p.createdAt} className="block text-xs font-normal text-muted">{msg("grading.components.AiProposalPanel.taoLuc")}{formatDateTime(p.createdAt)}</time>

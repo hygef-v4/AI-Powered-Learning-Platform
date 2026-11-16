@@ -7,7 +7,7 @@ import type { ResultQuestion } from "../model/types";
 import { QuestionNav, QuestionPrevNext, type PagerTone } from "./QuestionPager";
 import { msg } from "@/i18n/msg";
 
-const toneOf = (q: ResultQuestion | undefined): PagerTone =>
+const resolveTone = (q: ResultQuestion | undefined): PagerTone =>
   !q || q.selectedOptionIds.length === 0 ? "blank" : q.correct ? "right" : q.correct === false ? "wrong" : "done";
 
 /**
@@ -53,7 +53,7 @@ export function ResultQuestions({ questions, showScore, index, onIndex }: {
         <QuestionPrevNext count={questions.length} index={current} onChange={go} testIdPrefix="result-question" />
       </Card>
       <Card as="nav" padding="sm" aria-label={msg("quizpractice.components.ResultQuestions.danhSachCau")} data-testid="result-question-nav">
-        <QuestionNav count={questions.length} index={current} onChange={go} toneOf={(i) => toneOf(questions[i])} />
+        <QuestionNav count={questions.length} index={current} onChange={go} toneOf={(i) => resolveTone(questions[i])} />
       </Card>
     </div>
   );

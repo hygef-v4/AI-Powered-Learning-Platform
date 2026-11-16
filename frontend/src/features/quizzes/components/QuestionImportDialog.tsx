@@ -3,7 +3,7 @@
 import { useId, useState } from "react";
 import { Alert, Button, Dialog, Pill, TableFrame, Td, Th } from "@/shared/ui";
 import { importQuestions } from "../api";
-import { errorMessage } from "../model/labels";
+import { describeError } from "../model/labels";
 import type { ImportResult } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -35,7 +35,7 @@ export function QuestionImportDialog({ subjectId, onClose, onImported }: Props) 
     try {
       setPreview(await importQuestions(subjectId, next, true));
     } catch (failure) {
-      setError(errorMessage(failure));
+      setError(describeError(failure));
     } finally {
       setBusy(false);
     }
@@ -49,7 +49,7 @@ export function QuestionImportDialog({ subjectId, onClose, onImported }: Props) 
       const result = await importQuestions(subjectId, file, false);
       onImported(result.created);
     } catch (failure) {
-      setError(errorMessage(failure));
+      setError(describeError(failure));
     } finally {
       setBusy(false);
     }

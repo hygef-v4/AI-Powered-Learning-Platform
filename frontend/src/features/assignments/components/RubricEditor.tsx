@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { AutoTextarea, atomicItems, criteriaOf, newId, pointsMalformed, type AtomicItem, type RubricCriterion } from "@/shared/document";
+import { AutoTextarea, splitAtomicItems, buildCriteria, generateId, isPointsMalformed, type AtomicItem, type RubricCriterion } from "@/shared/document";
 import { cx } from "@/shared/ui";
 import { msg } from "@/i18n/msg";
 
@@ -16,7 +16,7 @@ const LIMIT = 20;
 
 /**
  * Rubric gửi lên server: bỏ dòng vừa thêm mà chưa gõ gì (chưa có chữ, chưa có điểm); ô trống hoặc số âm là chưa có điểm,
- * 0 điểm là hợp lệ (yêu cầu 2026-11-05). Không làm tròn: điểm quá 2 chữ số thập phân thì trang không lưu và báo lỗi (xem {@link rubricPointsMalformed}).
+ * 0 điểm là hợp lệ (yêu cầu 2026-11-05). Không làm tròn: điểm quá 2 chữ số thập phân thì trang không lưu và báo lỗi (xem {@link isRubricPointsMalformed}).
  */
 export function cleanCriteria(criteria: RubricCriterion[]): RubricCriterion[] {
   return criteria
@@ -33,8 +33,8 @@ export function cleanCriteria(criteria: RubricCriterion[]): RubricCriterion[] {
 }
 
 /** Có mục nhập điểm quá 2 chữ số thập phân (BR-U07-21): chưa lưu rubric này, báo lỗi ở thẻ. */
-export function rubricPointsMalformed(criteria: RubricCriterion[]): boolean {
-  return criteria.some((criterion) => criterion.items.some((item) => pointsMalformed(item.points)));
+export function isRubricPointsMalformed(criteria: RubricCriterion[]): boolean {
+  return criteria.some((criterion) => criterion.items.some((item) => isPointsMalformed(item.points)));
 }
 
 function parsePoints(value: string): number | null {
@@ -52,7 +52,7 @@ export function RubricEditor({ criteria, onChange }: {
 }) {
   const root = useRef<HTMLDivElement>(null);
   const focus = useRef<number | null>(null);
-  const items = atomicItems(criteria);
+  const items = splitAtomicItems(criteria);
   useEffect(() => {
     const index = focus.current;
     if (index === null) return;
@@ -60,16 +60,16 @@ export function RubricEditor({ criteria, onChange }: {
     root.current?.querySelectorAll<HTMLElement>("[data-atomic-text]")[index]?.focus();
   });
 
-  function set(next: AtomicItem[]) {
-    onChange(criteriaOf(next));
+  function setItems(next: AtomicItem[]) {
+    onChange(buildCriteria(next));
   }
   function edit(index: number, patch: Partial<AtomicItem>) {
-    set(items.map((x, j) => (j === index ? { ...x, ...patch } : x)));
+    setItems(items.map((x, j) => (j === index ? { ...x, ...patch } : x)));
   }
-  function add(at: number) {
+  function addItem(at: number) {
     if (items.length >= LIMIT) return;
     focus.current = at;
-    set([...items.slice(0, at), { criterionId: newId(), itemId: newId(), text: "", points: null }, ...items.slice(at)]);
+    setItems([...items.slice(0, at), { criterionId: generateId(), itemId: generateId(), text: "", points: null }, ...items.slice(at)]);
   }
 
   return (
@@ -84,30 +84,30 @@ export function RubricEditor({ criteria, onChange }: {
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.nativeEvent.isComposing) {
                 e.preventDefault();
-                add(i + 1);
+                addItem(i + 1);
               }
             }} />
           <input data-atomic-points aria-label={msg("assignments.components.RubricEditor.diemMuc", { value: String(i + 1) })} type="number" step="0.01" min="0" max="1000" placeholder={msg("assignments.components.RubricEditor.diem")}
             value={item.points ?? ""}
-            aria-invalid={pointsMalformed(item.points) || undefined}
-            title={pointsMalformed(item.points) ? msg("assignments.components.RubricEditor.diemToiDa2ChuSo") : undefined}
-            className={cx(pointsMalformed(item.points) ? POINTS_INVALID : POINTS,
+            aria-invalid={isPointsMalformed(item.points) || undefined}
+            title={isPointsMalformed(item.points) ? msg("assignments.components.RubricEditor.diemToiDa2ChuSo") : undefined}
+            className={cx(isPointsMalformed(item.points) ? POINTS_INVALID : POINTS,
               "w-11 shrink-0 px-1 text-right placeholder:text-xs placeholder:text-muted [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none")}
             onChange={(e) => edit(i, { points: parsePoints(e.target.value) })}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.nativeEvent.isComposing) {
                 e.preventDefault();
-                add(i + 1);
+                addItem(i + 1);
               }
             }} />
-          <button type="button" aria-label={msg("assignments.components.RubricEditor.xoaMucCham", { value: String(i + 1) })} title={msg("assignments.components.RubricEditor.xoa")} onClick={() => set(items.filter((_, j) => j !== i))}
+          <button type="button" aria-label={msg("assignments.components.RubricEditor.xoaMucCham", { value: String(i + 1) })} title={msg("assignments.components.RubricEditor.xoa")} onClick={() => setItems(items.filter((_, j) => j !== i))}
             className="inline-flex size-5 shrink-0 items-center justify-center rounded text-xs text-muted opacity-0 group-hover/row:opacity-100 hover:bg-danger-soft hover:text-danger focus:opacity-100">
             ✕
           </button>
         </div>
       ))}
       {items.length < LIMIT && (
-        <button type="button" aria-label={msg("assignments.components.RubricEditor.themMucCham")} title={msg("assignments.components.RubricEditor.themMucCham")} onClick={() => add(items.length)}
+        <button type="button" aria-label={msg("assignments.components.RubricEditor.themMucCham")} title={msg("assignments.components.RubricEditor.themMucCham")} onClick={() => addItem(items.length)}
           className="flex h-6 w-full items-center justify-center gap-1 rounded-md text-sm leading-none text-muted hover:bg-shell hover:text-primary-ink">
           {/* Thẻ chưa có mục chấm: ghi rõ nút làm gì cho người mới (yêu cầu 2026-11-10). */}
           +{items.length === 0 && <span className="text-xs">{msg("assignments.components.RubricEditor.themMucCham")}</span>}

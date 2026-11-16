@@ -24,7 +24,7 @@ import { Menu, MenuItem } from "@/shared/ui/Menu";
 import { SOFT_TONES } from "@/shared/ui/tones";
 import { LanguageDialog } from "./LanguageDialog";
 import { LogoutDialog } from "./LogoutDialog";
-import { AVATAR_TONES, FADE_LABEL, ROLE_LABELS, activeHref, initials, type NavContext, type NavItem, type NavLocation } from "./navigation";
+import { AVATAR_TONES, FADE_LABEL, ROLE_LABELS, findActiveHref, extractInitials, type NavContext, type NavItem, type NavLocation } from "./navigation";
 import { msg } from "@/i18n/msg";
 
 export type HeaderLink = { href: string; label: string; icon?: IconName };
@@ -64,7 +64,7 @@ function useWide() {
   );
 }
 
-function storedCollapsed() {
+function readStoredCollapsed() {
   try {
     return typeof window !== "undefined" && localStorage.getItem(COLLAPSED_KEY) === "1";
   } catch {
@@ -88,7 +88,7 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [drawer, setDrawer] = useState<string | null>(null);
-  const [collapsed, setCollapsed] = useState(storedCollapsed);
+  const [collapsed, setCollapsed] = useState(readStoredCollapsed);
   const wide = useWide();
   const closeLogout = useCallback(() => setLogoutOpen(false), []);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -184,7 +184,7 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
             label={
               <>
                 <span className={cx("flex size-8 items-center justify-center rounded-full text-xs font-bold", SOFT_TONES[AVATAR_TONES[role]])}>
-                  {user ? initials(user.displayName) : <Icon name="person" size={16} />}
+                  {user ? extractInitials(user.displayName) : <Icon name="person" size={16} />}
                 </span>
                 <span className="hidden flex-col text-left leading-tight sm:flex">
                   {user && <span className="text-[13px] font-semibold text-ink">{user.displayName}</span>}
@@ -279,7 +279,7 @@ type NavBranch = { content: ReactNode; current: boolean };
  */
 function NavList({ label, items, pathname, header, collapsed, branches }: { label: string; items: NavItem[]; pathname: string; header?: ReactNode; collapsed: boolean; branches?: Map<string, NavBranch> }) {
   const inBranch = [...(branches?.entries() ?? [])].find(([, branch]) => branch.current)?.[0];
-  const current = inBranch ?? activeHref(items, pathname);
+  const current = inBranch ?? findActiveHref(items, pathname);
   const [toggled, setToggled] = useState<Record<string, boolean>>({});
   const isOpen = (href: string) => toggled[href] ?? (href === inBranch || pathname === href);
   const [tip, setTip] = useState<{ label: string; top: number } | null>(null);

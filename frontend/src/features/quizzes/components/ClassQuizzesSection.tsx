@@ -6,7 +6,7 @@ import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Alert, Button, ClickableRow, Pill, Section, TableFrame, Td, Th } from "@/shared/ui";
 import { copyQuizToClass, createClassQuiz, getClassQuizzes, getCopySources } from "../api";
 import { CreateQuizDialog } from "./CreateQuizDialog";
-import { errorMessage, QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "../model/labels";
+import { describeError, QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "../model/labels";
 import { quizRowActions } from "../slots";
 import type { QuizRow } from "../model/types";
 import { msg } from "@/i18n/msg";
@@ -31,7 +31,7 @@ export function ClassQuizzesSection({ classId }: { classId: string }) {
     let active = true;
     getClassQuizzes(classId)
       .then((list) => active && setRows(list))
-      .catch((failure: unknown) => active && setError(errorMessage(failure)));
+      .catch((failure: unknown) => active && setError(describeError(failure)));
     return () => {
       active = false;
     };

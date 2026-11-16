@@ -20,12 +20,12 @@ export function hasFormat(run: Run | undefined): boolean {
   return Object.keys(formatOf(run)).length > 0;
 }
 
-export function sameFormat(a: RunFormat, b: RunFormat): boolean {
+export function hasSameFormat(a: RunFormat, b: RunFormat): boolean {
   return FLAGS.every((flag) => !!a[flag] === !!b[flag]) && (a.color ?? "") === (b.color ?? "") && (a.highlight ?? "") === (b.highlight ?? "");
 }
 
-export function sameRuns(a: Run[], b: Run[]): boolean {
-  return a.length === b.length && a.every((run, i) => run.text === b[i]!.text && sameFormat(run, b[i]!));
+export function hasSameRuns(a: Run[], b: Run[]): boolean {
+  return a.length === b.length && a.every((run, i) => run.text === b[i]!.text && hasSameFormat(run, b[i]!));
 }
 
 /** Gộp các run liền nhau cùng định dạng, bỏ run rỗng; đoạn trống còn một run rỗng giữ định dạng của run đầu. */
@@ -34,13 +34,13 @@ export function normalizeRuns(runs: Run[]): Run[] {
   for (const run of runs) {
     if (!run.text) continue;
     const last = out.at(-1);
-    if (last && sameFormat(last, run)) out[out.length - 1] = { ...last, text: last.text + run.text };
+    if (last && hasSameFormat(last, run)) out[out.length - 1] = { ...last, text: last.text + run.text };
     else out.push({ ...formatOf(run), text: run.text });
   }
   return out.length > 0 ? out : [{ ...formatOf(runs[0]), text: "" }];
 }
 
-export function runsLength(runs: Run[]): number {
+export function measureRunsLength(runs: Run[]): number {
   return runs.reduce((sum, run) => sum + run.text.length, 0);
 }
 
@@ -106,7 +106,7 @@ export function formatAt(runs: Run[], at: number): RunFormat {
 export function splitRuns(runs: Run[], start: number, end = start): [Run[], Run[]] {
   const format = formatAt(runs, start);
   const before = sliceRuns(runs, 0, start);
-  const after = sliceRuns(runs, end, runsLength(runs));
+  const after = sliceRuns(runs, end, measureRunsLength(runs));
   return [
     before.length > 0 ? normalizeRuns(before) : [{ ...format, text: "" }],
     after.length > 0 ? normalizeRuns(after) : [{ ...format, text: "" }],
@@ -116,7 +116,7 @@ export function splitRuns(runs: Run[], start: number, end = start): [Run[], Run[
 /** Thay [start, end) bằng {@code text} (dán), chữ mới theo định dạng tại con trỏ. */
 export function insertText(runs: Run[], start: number, end: number, text: string): Run[] {
   const format = formatAt(runs, start);
-  return normalizeRuns([...sliceRuns(runs, 0, start), { ...format, text }, ...sliceRuns(runs, end, runsLength(runs))]);
+  return normalizeRuns([...sliceRuns(runs, 0, start), { ...format, text }, ...sliceRuns(runs, end, measureRunsLength(runs))]);
 }
 
 /** Tách đoạn theo dòng (đoạn thành danh sách), mỗi dòng giữ định dạng. */

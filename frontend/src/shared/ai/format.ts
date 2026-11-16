@@ -22,6 +22,6 @@ export function formatMaybeTokens(value: number | null | undefined): string {
 export { formatDate, formatDateTime, formatShort } from "@/shared/dateTime";
 
 /** "••••3kQf": chỉ 4 ký tự cuối của khóa hoặc token. */
-export function masked(hint: string | null | undefined): string {
+export function maskHint(hint: string | null | undefined): string {
   return hint ? `••••${hint}` : "—";
 }

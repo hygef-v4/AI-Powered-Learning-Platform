@@ -1665,7 +1665,8 @@
         "baiCoGhiNhanHoatDong": "アクティビティが記録されます",
         "baiChuaLuu": "解答が保存されていません",
         "nhapDocxVaoPhan": "パート「{value}」に DOCX を取り込む",
-        "nhapDocxVaoPhanCuoiCua": "最後のパートに DOCX を取り込む"
+        "nhapDocxVaoPhanCuoiCua": "最後のパートに DOCX を取り込む",
+        "daKhoiPhucBanChuaLuu": "この端末に残っていた未保存の内容を復元しました"
       },
       "StudentAssignmentDetailPage": {
         "luyenTap": "練習",
@@ -4675,7 +4676,8 @@
       "mssvNayDaDuocDungCho": "この学籍番号はすでに別のアカウントで使用されています。",
       "mssvDaKhoaViSinhVien": "学生がアカウントを有効化したため、学籍番号はロックされています。",
       "canNhapMssvChoTaiKhoan": "学生アカウントには学籍番号が必要です。",
-      "chiTaiKhoanSinhVienMoi": "学籍番号を持てるのは学生アカウントのみです。"
+      "chiTaiKhoanSinhVienMoi": "学籍番号を持てるのは学生アカウントのみです。",
+      "khongRoTen": "名前不明"
     },
     "ui": {
       "ClassFilter": {

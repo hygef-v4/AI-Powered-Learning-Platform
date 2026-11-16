@@ -1,4 +1,4 @@
-import { apiFetch, ApiError } from "@/shared/api/client";
+import { fetchApi, ApiError } from "@/shared/api/client";
 import type { FormattedText } from "@/shared/document/formattedText";
 import type {
   CreateMaterial,
@@ -31,7 +31,7 @@ export function buildContextQuery(classId?: string) {
   return classId ? `?classId=${encodePathSegment(classId)}` : "";
 }
 function sendWrite<T>(path: string, method: string, body?: unknown) {
-  return apiFetch<T>(path, {
+  return fetchApi<T>(path, {
     method,
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });

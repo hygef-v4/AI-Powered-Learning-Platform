@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { getPolicies, uploadFile } from "@/features/files/api";
 import { acceptAttribute, checkFile, type PurposePolicy } from "@/features/files/model/purposes";
 import { assignmentsApi } from "../api";
-import { errorMessage } from "../model/format";
-import { templateText } from "../model/templateText";
+import { describeError } from "../model/format";
+import { extractTemplateText } from "../model/templateText";
 import type { AiSourcePreview } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -30,11 +30,11 @@ export async function readTemplateFile(assignmentId: string, file: File): Promis
     if (!file.name.toLowerCase().endsWith(".docx")) throw new Error(msg("assignments.components.sourceUploads.mauDePhaiLaDocx"));
     if (file.size < 1 || file.size > 20 * 1024 * 1024) throw new Error(msg("assignments.components.sourceUploads.tepDocxPhaiCoNoiDung"));
     const preview = await assignmentsApi.importDocx(assignmentId, file);
-    const { text, questionCount } = templateText(preview.document);
+    const { text, questionCount } = extractTemplateText(preview.document);
     if (!text.trim()) throw new Error(msg("assignments.components.sourceUploads.mauDeKhongCoNoiDung"));
     return { file, status: "READY", text, questionCount };
   } catch (cause) {
-    return { file, status: "ERROR", error: errorMessage(cause) };
+    return { file, status: "ERROR", error: describeError(cause) };
   }
 }
 
@@ -81,7 +81,7 @@ export function useSourceUploads(assignmentId: string, onError: (message: string
     setUploads(files);
   }
 
-  function update(id: string, change: (item: SourceUpload) => SourceUpload) {
+  function updateUpload(id: string, change: (item: SourceUpload) => SourceUpload) {
     commit(current.current.map(item => item.id === id ? change(item) : item));
   }
 
@@ -100,35 +100,35 @@ export function useSourceUploads(assignmentId: string, onError: (message: string
     if (issue) return start;
     const controller = new AbortController();
     let stopUpload: (() => void) | undefined;
-    const abort = () => { controller.abort(); stopUpload?.(); };
-    aborts.current.set(id, abort);
-    const active = () => aborts.current.get(id) === abort && !controller.signal.aborted;
+    const abortUpload = () => { controller.abort(); stopUpload?.(); };
+    aborts.current.set(id, abortUpload);
+    const isUploadActive = () => aborts.current.get(id) === abortUpload && !controller.signal.aborted;
     try {
       const handle = uploadFile(file, "ASSIGNMENT_SOURCE", percent => {
-        if (active()) update(id, item => ({ ...item, percent }));
+        if (isUploadActive()) updateUpload(id, item => ({ ...item, percent }));
       });
       stopUpload = handle.abort;
       const result = await handle.promise;
-      if (!active()) return;
-      update(id, item => ({ ...item, status: "READING", percent: 100, fileRef: result.fileRef.value }));
+      if (!isUploadActive()) return;
+      updateUpload(id, item => ({ ...item, status: "READING", percent: 100, fileRef: result.fileRef.value }));
       const previews = await assignmentsApi.previewAiSources(assignmentId, [result.fileRef.value], controller.signal);
-      if (!active()) return;
+      if (!isUploadActive()) return;
       if (!previews[0]) throw new Error(msg("assignments.components.sourceUploads.khongDocDuocNoiDungTep"));
       const ready: SourceUpload = { id, file, status: "READY", percent: 100, fileRef: result.fileRef.value, preview: previews[0] };
-      update(id, () => ready);
+      updateUpload(id, () => ready);
       return ready;
     } catch (cause) {
-      if (!active()) return;
+      if (!isUploadActive()) return;
       const failed: SourceUpload = { id, file, status: "ERROR", percent: 0,
         error: cause instanceof Error ? cause.message : msg("assignments.components.sourceUploads.taiTepLenKhongThanhCong") };
-      update(id, () => failed);
+      updateUpload(id, () => failed);
       return failed;
     } finally {
-      if (aborts.current.get(id) === abort) aborts.current.delete(id);
+      if (aborts.current.get(id) === abortUpload) aborts.current.delete(id);
     }
   }
 
-  function add(files: FileList | File[] | null) {
+  function addFiles(files: FileList | File[] | null) {
     if (!files) return;
     const unique = [...new Set(Array.from(files))].filter(file => !current.current.some(item => item.file === file));
     const remaining = MAX_SOURCE_FILES - current.current.length;
@@ -136,7 +136,7 @@ export function useSourceUploads(assignmentId: string, onError: (message: string
     unique.slice(0, Math.max(0, remaining)).forEach(file => void upload(file));
   }
 
-  function remove(item: SourceUpload) {
+  function removeUpload(item: SourceUpload) {
     aborts.current.get(item.id)?.();
     aborts.current.delete(item.id);
     commit(current.current.filter(file => file.id !== item.id));
@@ -159,9 +159,9 @@ export function useSourceUploads(assignmentId: string, onError: (message: string
     accept: policy ? acceptAttribute(policy) : undefined,
     pending: uploads.some(item => item.status !== "READY"),
     fileRefs: uploads.flatMap(item => item.status === "READY" && item.fileRef ? [item.fileRef] : []),
-    add,
+    add: addFiles,
     addOne: (file: File) => upload(file),
-    remove,
+    remove: removeUpload,
     retry: (item: SourceUpload) => void upload(item.file, item.id),
     restore,
     clear,

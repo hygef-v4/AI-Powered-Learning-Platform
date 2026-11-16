@@ -4,7 +4,7 @@ import { ApiError } from "@/shared/api/client";
 import { gradingApi } from "@/features/grading/api";
 import { assignmentsApi } from "@/features/assignments/api";
 import { GradeDistributionSettings } from "@/features/grading/components/GradeDistributionSettings";
-import { AssignmentSettingsPanel, settingsOf } from "@/features/assignments/components/AssignmentSettingsPanel";
+import { AssignmentSettingsPanel, readSettings } from "@/features/assignments/components/AssignmentSettingsPanel";
 import { AssignmentFormPage } from "@/features/assignments/pages/AssignmentFormPage";
 import type { AssignmentDetail } from "@/features/assignments/model/types";
 import "@/features/grading/register";
@@ -126,7 +126,7 @@ describe("assignment/class grade distribution visibility", () => {
     const load = vi.spyOn(gradingApi, "loadDistributionVisibility").mockImplementationOnce(() => new Promise((resolve) => { oldResponse = resolve; }))
       .mockResolvedValue(initial);
     const save = vi.spyOn(gradingApi, "saveDistributionVisibility").mockResolvedValue({ ...initial, enabled: true, version: 1 });
-    const props = { detail: subjectAssignment, value: settingsOf(subjectAssignment), onChange: vi.fn(), readOnly: true };
+    const props = { detail: subjectAssignment, value: readSettings(subjectAssignment), onChange: vi.fn(), readOnly: true };
     const { rerender } = render(<AssignmentSettingsPanel {...props} classId="c1" />);
     rerender(<AssignmentSettingsPanel {...props} classId="c2" />);
     const toggle = await screen.findByRole("switch", { name: label });
@@ -141,7 +141,7 @@ describe("assignment/class grade distribution visibility", () => {
 
   it("loads no settings for a SUBJECT assignment without a class context", () => {
     const load = vi.spyOn(gradingApi, "loadDistributionVisibility");
-    render(<AssignmentSettingsPanel detail={subjectAssignment} value={settingsOf(subjectAssignment)} onChange={vi.fn()} readOnly />);
+    render(<AssignmentSettingsPanel detail={subjectAssignment} value={readSettings(subjectAssignment)} onChange={vi.fn()} readOnly />);
     expect(load).not.toHaveBeenCalled();
   });
 

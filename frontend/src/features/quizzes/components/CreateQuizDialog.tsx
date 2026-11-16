@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState } from "react";
 import { Alert, Button, Dialog, Field, Icon, Select, TextInput } from "@/shared/ui";
-import { errorMessage } from "../model/labels";
+import { describeError } from "../model/labels";
 import type { QuizDetail, QuizRow } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -29,7 +29,7 @@ export function CreateQuizDialog({ onClose, onCreate, onCreated, copy }: Props) 
   const loadSources = () => {
     if (!copy || sources || loading.current) return;
     loading.current = true;
-    copy.load().then(setSources, (failure: unknown) => setError(errorMessage(failure))).finally(() => { loading.current = false; });
+    copy.load().then(setSources, (failure: unknown) => setError(describeError(failure))).finally(() => { loading.current = false; });
   };
 
   const submit = async () => {
@@ -42,7 +42,7 @@ export function CreateQuizDialog({ onClose, onCreate, onCreated, copy }: Props) 
     try {
       onCreated(copying && copy ? await copy.run(sourceId) : await onCreate(title.trim()));
     } catch (failure) {
-      setError(errorMessage(failure));
+      setError(describeError(failure));
       setBusy(false);
     }
   };

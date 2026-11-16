@@ -6,7 +6,7 @@ import "@/features/register";
 import { SITE_URL } from "@/shared/siteMetadata";
 import { LocaleGate } from "@/i18n/LocaleGate";
 import { DEFAULT_LOCALE, OG_LOCALES } from "@/i18n/locales";
-import { requestLocale, serverTranslator } from "@/i18n/server";
+import { requestLocale, loadServerTranslator } from "@/i18n/server";
 import { THEME_BOOT_SCRIPT } from "@/shared/themeBoot";
 import { Toaster } from "@/shared/ui/Toast";
 import { ClientRegistrations } from "./ClientRegistrations";
@@ -16,7 +16,7 @@ import "../shared/styles/fonts.css";
 /** Tên, mô tả của trang theo ngôn ngữ người dùng đã chọn. */
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await requestLocale();
-  const t = await serverTranslator();
+  const t = await loadServerTranslator();
   const name = t("shared.siteMetadata.nenTangHocTap");
   const title = `${name} – ${t("shared.siteMetadata.dayVaHocHieuQuaHon")}`;
   const description = t("shared.siteMetadata.quanLyLopHocTaiLieu");

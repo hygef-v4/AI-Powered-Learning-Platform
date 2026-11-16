@@ -3,7 +3,7 @@
 import { useId } from "react";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Field, LockedInput, PageHeader, Pill, Section } from "@/shared/ui";
-import { initials } from "@/shared/layout/navigation";
+import { extractInitials } from "@/shared/layout/navigation";
 import { studentClassAside, studentClassBoard, studentClassSections } from "../slots";
 import type { CourseClassView } from "../model/types";
 import { formatStartDate } from "../model/format";
@@ -49,7 +49,7 @@ export function StudentClassPage({ value, tab }: { value: CourseClassView; tab: 
             <Section title={msg("academics.pages.StudentClassPage.giangVien")}>
               {value.teacher ? (
                 <div className="flex items-center gap-3">
-                  <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent">{initials(value.teacher.name)}</span>
+                  <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent">{extractInitials(value.teacher.name)}</span>
                   <div className="min-w-0"><p className="text-sm font-semibold">{value.teacher.name}</p><p className="break-all text-xs text-muted">{value.teacher.email}</p></div>
                 </div>
               ) : <div><Pill>{msg("academics.pages.StudentClassPage.chuaPhanCong")}</Pill></div>}

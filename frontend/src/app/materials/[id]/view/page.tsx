@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { LearningMaterialPage } from "@/features/materials/pages/LearningMaterialPage";
-import { serverMsg } from "@/i18n/server";
+import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await serverMsg("app.materials.id.view.page.hocLieu") };
+  return { title: await translateOnServer("app.materials.id.view.page.hocLieu") };
 }
 export default async function Page({
   params,

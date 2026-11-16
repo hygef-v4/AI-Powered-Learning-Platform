@@ -185,17 +185,17 @@ export const OBJECT_TYPE_LABELS: Record<string, string> = {
   ATTEMPT: msg("audit.model.labels.luotLamBai"),
 };
 
-export const actionLabel = (code: string) => ACTION_LABELS[code] ?? code;
-export const objectTypeLabel = (code: string) => OBJECT_TYPE_LABELS[code] ?? code;
+export const describeAction = (code: string) => ACTION_LABELS[code] ?? code;
+export const describeObjectType = (code: string) => OBJECT_TYPE_LABELS[code] ?? code;
 
 /** Mã dài (UUID) rút gọn "3f9c2a…e81" trong bảng; popup chi tiết hiện đầy đủ. */
-export function shortId(id: string): string {
+export function shortenId(id: string): string {
   return id.length > 14 ? `${id.slice(0, 6)}…${id.slice(-3)}` : id;
 }
 
 const VN_TIME = "Asia/Ho_Chi_Minh";
 
-function parts(iso: string): Record<string, string> {
+function splitDateParts(iso: string): Record<string, string> {
   const list = new Intl.DateTimeFormat("vi-VN", {
     timeZone: VN_TIME,
     day: "2-digit",
@@ -213,28 +213,28 @@ function parts(iso: string): Record<string, string> {
 export { formatDateTime, formatFull, formatShort } from "@/shared/dateTime";
 
 /** Ngày yyyy-mm-dd theo giờ Việt Nam của một thời điểm. */
-export function vnDate(date: Date): string {
-  const p = parts(date.toISOString());
+export function formatVnDate(date: Date): string {
+  const p = splitDateParts(date.toISOString());
   return `${p.year}-${p.month}-${p.day}`;
 }
 
 /** Mặc định 7 ngày gần nhất: từ 6 ngày trước tới hôm nay (theo giờ Việt Nam). */
 export function defaultFilter(now: Date = new Date()): AuditFilterForm {
   const from = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000);
-  return { actorEmail: "", action: "", objectType: "", objectId: "", result: "", fromDate: vnDate(from), toDate: vnDate(now) };
+  return { actorEmail: "", action: "", objectType: "", objectId: "", result: "", fromDate: formatVnDate(from), toDate: formatVnDate(now) };
 }
 
 /** Đầu ngày và cuối ngày theo giờ Việt Nam (UTC+7) đổi sang ISO-8601. */
-export function dayStart(date: string): string {
+export function toDayStart(date: string): string {
   return new Date(`${date}T00:00:00+07:00`).toISOString();
 }
 
-export function dayEnd(date: string): string {
+export function toDayEnd(date: string): string {
   return new Date(`${date}T23:59:59.999+07:00`).toISOString();
 }
 
 /** Form bộ lọc → tham số API; có actorId (mở từ Account Detail) thì lọc đúng tài khoản đó, không thì gửi chữ đã gõ. */
-export function toQuery(form: AuditFilterForm, actorId: string | undefined, page: number, size: number): AuditQuery {
+export function buildQuery(form: AuditFilterForm, actorId: string | undefined, page: number, size: number): AuditQuery {
   return {
     actorId,
     actor: actorId ? undefined : form.actorEmail.trim() || undefined,
@@ -242,8 +242,8 @@ export function toQuery(form: AuditFilterForm, actorId: string | undefined, page
     objectType: form.objectType.trim() || undefined,
     objectId: form.objectId.trim() || undefined,
     result: form.result || undefined,
-    from: form.fromDate ? dayStart(form.fromDate) : undefined,
-    to: form.toDate ? dayEnd(form.toDate) : undefined,
+    from: form.fromDate ? toDayStart(form.fromDate) : undefined,
+    to: form.toDate ? toDayEnd(form.toDate) : undefined,
     page,
     size,
   };
@@ -277,7 +277,7 @@ const REASON_LABELS: Record<string, string> = {
  * Lý do trên bảng audit, ngắn 2–3 chữ: mã quen thì dịch, mã lạ đoán theo đuôi mã, câu chữ (thường là lỗi nhà cung cấp AI) thì
  * rút theo mã HTTP; còn lại lấy 3 chữ đầu. Lý do đầy đủ hiện khi rê chuột.
  */
-export function shortReason(reason: string | null | undefined): string {
+export function shortenReason(reason: string | null | undefined): string {
   const value = reason?.trim() ?? "";
   if (!value) return "—";
   if (REASON_LABELS[value]) return REASON_LABELS[value];

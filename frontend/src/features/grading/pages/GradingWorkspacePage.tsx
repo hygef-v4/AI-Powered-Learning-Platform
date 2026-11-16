@@ -5,7 +5,7 @@ import {
   DocumentEditor,
   RubricNote,
   ToolbarButton,
-  outlineOf,
+  buildOutline,
   publishOutline,
   type DocumentComment,
 } from "@/shared/document";
@@ -29,11 +29,11 @@ import {
   StudentPickerDropdown,
   TopBar,
   TotalCard,
-  noteCriteria,
+  listNoteCriteria,
   useSubmissionImages,
 } from "../components/GradingWorkspaceHeader";
 import { formatPoints, GRADE_STATUS_LABELS, type AiRequest, type Detail } from "../model/types";
-import { toEditorDocument } from "../model/submissionDocument";
+import { convertToEditorDocument } from "../model/submissionDocument";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import type { NavigationFilters } from "../model/navigation";
 import { setGradingAiLabel } from "../model/gradingAiTasks";
@@ -172,7 +172,7 @@ function Workspace({
     (evaluation.kind === "GROUP_DOCUMENT" ? msg("grading.pages.GradingWorkspacePage.baiLamNhom") : msg("grading.pages.GradingWorkspacePage.baiLamSinhVien"));
   const studentEmail = [...new Set(submitters.map((row) => row.student.email))].join(", ") || "";
   const studentCode = [...new Set(submitters.map((row) => row.student.studentCode).filter(Boolean))].join(", ");
-  const paper = useMemo(() => toEditorDocument(detail.document), [detail.document]);
+  const paper = useMemo(() => convertToEditorDocument(detail.document), [detail.document]);
   const imageUrls = useSubmissionImages(evaluation.id, detail.document);
   const partTitles: Record<string, string> = {
     ASSIGNMENT: msg("grading.pages.GradingWorkspacePage.toanBai"),
@@ -234,14 +234,14 @@ function Workspace({
   }, [dirty, aiAutoApplied, disabled, busy, saving, aiOpen, error, form]);
 
   useEffect(() => {
-    const keys = (event: KeyboardEvent) => {
+    const handleShortcutKeys = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
         void save(false);
       }
     };
-    window.addEventListener("keydown", keys);
-    return () => window.removeEventListener("keydown", keys);
+    window.addEventListener("keydown", handleShortcutKeys);
+    return () => window.removeEventListener("keydown", handleShortcutKeys);
   }, [save]);
 
   useEffect(() => {
@@ -250,7 +250,7 @@ function Workspace({
       assignmentId: evaluation.assignmentId,
       backHref,
       backLabel: msg("grading.pages.GradingWorkspacePage.chamDiem"),
-      entries: outlineOf(paper.blocks),
+      entries: buildOutline(paper.blocks),
       editable: false,
     });
   }, [evaluation.assignmentId, evaluation.classId, paper.blocks]);
@@ -268,7 +268,7 @@ function Workspace({
       content: (
         <RubricNote
           title={partTitles[rubric.partId] || msg("grading.pages.GradingWorkspacePage.phan", { value: String(index + 1) })}
-          criteria={noteCriteria(rubric)}
+          criteria={listNoteCriteria(rubric)}
           active={activePart === rubric.rubricId}
           onActivate={() => setActivePart(rubric.rubricId)}
           badge={

@@ -5,7 +5,7 @@ import { Alert, Button, Dialog, Field, Icon, Pill, Section, Switch, Textarea, Te
 import { formatPoints, TYPE_LABELS } from "../model/labels";
 import { McqEditor } from "./McqEditor";
 import { QuestionMetaPanel } from "./QuestionSidePanels";
-import { emptyForm, formOf, toContent, validateForm, type FormErrors, type QuestionForm } from "../model/questionForm";
+import { createEmptyForm, buildFormFrom, convertToContent, validateForm, type FormErrors, type QuestionForm } from "../model/questionForm";
 import type { LeavePenalty, QuestionContent, QuizDetailsInput, QuizItemView, QuizSettings } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -91,22 +91,22 @@ export function InlineQuestionDialog({ initial, onClose, onSave, title, inline =
   inline?: boolean;
   onDirtyChange?: (dirty: boolean) => void;
 }) {
-  const [form, setForm] = useState<QuestionForm>(() => (initial ? formOf(initial.question) : emptyForm()));
+  const [form, setForm] = useState<QuestionForm>(() => (initial ? buildFormFrom(initial.question) : createEmptyForm()));
   const [errors, setErrors] = useState<FormErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
-    onDirtyChange?.(JSON.stringify(form) !== JSON.stringify(initial ? formOf(initial.question) : emptyForm()));
+    onDirtyChange?.(JSON.stringify(form) !== JSON.stringify(initial ? buildFormFrom(initial.question) : createEmptyForm()));
   }, [form, initial, onDirtyChange]);
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
-  const save = async () => {
+  const saveDetails = async () => {
     const found = validateForm(form);
     setErrors(found);
     if (Object.keys(found).length > 0) return;
     setBusy(true);
     setError(null);
     try {
-      await onSave(toContent(form));
+      await onSave(convertToContent(form));
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : msg("quizzes.components.QuizDetailParts.chuaLuuDuocCauHoi"));
       setBusy(false);
@@ -114,7 +114,7 @@ export function InlineQuestionDialog({ initial, onClose, onSave, title, inline =
   };
   const footer = <>
     {inline && <Button onClick={onClose} disabled={busy} aria-label={msg("quizzes.components.QuizDetailParts.huySoanCau")}>{msg("quizzes.components.QuizDetailParts.huy")}</Button>}
-    <Button variant="primary" onClick={() => void save()} disabled={busy} data-testid="inline-question-save">{msg("quizzes.components.QuizDetailParts.luuCau")}</Button>
+    <Button variant="primary" onClick={() => void saveDetails()} disabled={busy} data-testid="inline-question-save">{msg("quizzes.components.QuizDetailParts.luuCau")}</Button>
   </>;
   const body = (
       <div className="flex flex-col gap-4">
@@ -149,7 +149,7 @@ export type SettingsForm = {
   minAwaySeconds: string;
 };
 
-export function settingsFormOf(quiz: QuizDetailsInput): SettingsForm {
+export function buildSettingsForm(quiz: QuizDetailsInput): SettingsForm {
   const s = quiz.settings;
   return {
     title: quiz.title,
@@ -172,23 +172,23 @@ export function settingsFormOf(quiz: QuizDetailsInput): SettingsForm {
 }
 
 const POINTS = /^\d+([.,]\d{1,2})?$/;
-const decimal = (value: string) => Number(value.trim().replace(",", "."));
+const parseDecimal = (value: string) => Number(value.trim().replace(",", "."));
 
 /** Gợi ý trừ điểm khi rời trang (BR-U10-15): cần bật ghi nhận hoạt động. */
-function penaltyInput(form: SettingsForm, errors: Record<string, string>): LeavePenalty | null {
+function buildPenaltyInput(form: SettingsForm, errors: Record<string, string>): LeavePenalty | null {
   if (!form.activityMonitoringEnabled) errors.penalty = msg("quizzes.components.QuizDetailParts.canBatGhiNhanHoatDong");
   const free = Number(form.freeLeaves);
   if (!Number.isInteger(free) || free < 0 || free > 50) errors.freeLeaves = msg("quizzes.components.QuizDetailParts.tu0Den50Lan");
-  if (!POINTS.test(form.pointsPerLeave.trim()) || decimal(form.pointsPerLeave) <= 0) errors.pointsPerLeave = msg("quizzes.components.QuizDetailParts.lonHon0ToiDa2");
+  if (!POINTS.test(form.pointsPerLeave.trim()) || parseDecimal(form.pointsPerLeave) <= 0) errors.pointsPerLeave = msg("quizzes.components.QuizDetailParts.lonHon0ToiDa2");
   const hasMax = form.maxPenalty.trim() !== "";
-  if (hasMax && (!POINTS.test(form.maxPenalty.trim()) || decimal(form.maxPenalty) <= 0)) errors.maxPenalty = msg("quizzes.components.QuizDetailParts.lonHon0HoacDeTrong");
+  if (hasMax && (!POINTS.test(form.maxPenalty.trim()) || parseDecimal(form.maxPenalty) <= 0)) errors.maxPenalty = msg("quizzes.components.QuizDetailParts.lonHon0HoacDeTrong");
   const minAway = Number(form.minAwaySeconds);
   if (!Number.isInteger(minAway) || minAway < 0 || minAway > 600) errors.minAwaySeconds = msg("quizzes.components.QuizDetailParts.tu0Den600Giay");
-  return { freeLeaves: free, pointsPerLeave: decimal(form.pointsPerLeave), maxPenalty: hasMax ? decimal(form.maxPenalty) : null, minAwaySeconds: minAway };
+  return { freeLeaves: free, pointsPerLeave: parseDecimal(form.pointsPerLeave), maxPenalty: hasMax ? parseDecimal(form.maxPenalty) : null, minAwaySeconds: minAway };
 }
 
 /** Kiểm cấu hình theo BR-U10-15; trả lỗi theo trường hoặc dữ liệu gửi API. */
-export function settingsInput(form: SettingsForm): { errors: Record<string, string>; input?: QuizDetailsInput } {
+export function buildSettingsInput(form: SettingsForm): { errors: Record<string, string>; input?: QuizDetailsInput } {
   const errors: Record<string, string> = {};
   if (!form.title.trim() || form.title.trim().length > 200) errors.title = msg("quizzes.components.QuizDetailParts.tenQuizTu1Den200");
   const time = form.timeLimit.trim() === "" ? null : Number(form.timeLimit);
@@ -197,7 +197,7 @@ export function settingsInput(form: SettingsForm): { errors: Record<string, stri
   if (attempts !== null && (!Number.isInteger(attempts) || attempts < 1 || attempts > 10)) errors.maxAttempts = msg("quizzes.components.QuizDetailParts.tu1Den10HoacDe");
   if (form.activityMonitoringEnabled && !form.activityNotice.trim()) errors.activityNotice = msg("quizzes.components.QuizDetailParts.canLoiBaoChoSinhVien");
   if (form.activityNotice.trim().length > 1000) errors.activityNotice = msg("quizzes.components.QuizDetailParts.loiBaoToiDa1000");
-  const penalty = form.penaltyEnabled ? penaltyInput(form, errors) : null;
+  const penalty = form.penaltyEnabled ? buildPenaltyInput(form, errors) : null;
   if (Object.keys(errors).length > 0) return { errors };
   const settings: QuizSettings = {
     shuffleQuestions: form.shuffleQuestions,
@@ -229,49 +229,49 @@ export function QuizSettingsPanel({ value, onChange, errors, readOnly }: {
   readOnly: boolean;
 }) {
   const id = useId();
-  const set = <K extends keyof SettingsForm>(key: K, v: SettingsForm[K]) => onChange({ ...value, [key]: v });
+  const setField = <K extends keyof SettingsForm>(key: K, v: SettingsForm[K]) => onChange({ ...value, [key]: v });
   return (
     <Section title={msg("quizzes.components.QuizDetailParts.cauHinh")} icon="tune">
       <fieldset disabled={readOnly} className="flex flex-col gap-3">
         <Field label={msg("quizzes.components.QuizDetailParts.thoiGianLamBai")} htmlFor={`${id}-time`} hint={msg("quizzes.components.QuizDetailParts.deTrongLaKhongGioiHan")} error={errors.timeLimit}>
           <TextInput id={`${id}-time`} inputMode="numeric" placeholder={msg("quizzes.components.QuizDetailParts.khongGioiHan")} suffix={msg("quizzes.components.QuizDetailParts.phut")} value={value.timeLimit} invalid={!!errors.timeLimit}
-            onChange={(e) => set("timeLimit", e.target.value)} data-testid="quiz-settings-time" />
+            onChange={(e) => setField("timeLimit", e.target.value)} data-testid="quiz-settings-time" />
         </Field>
         <Field label={msg("quizzes.components.QuizDetailParts.soLuotToiDa")} htmlFor={`${id}-attempts`} hint={msg("quizzes.components.QuizDetailParts.deTrongLaKhongGioiHan")} error={errors.maxAttempts}>
           <TextInput id={`${id}-attempts`} inputMode="numeric" placeholder={msg("quizzes.components.QuizDetailParts.khongGioiHan")} value={value.maxAttempts} invalid={!!errors.maxAttempts}
-            onChange={(e) => set("maxAttempts", e.target.value)} data-testid="quiz-settings-attempts" />
+            onChange={(e) => setField("maxAttempts", e.target.value)} data-testid="quiz-settings-attempts" />
         </Field>
-        <Switch checked={value.showScoreAfterSubmit} onChange={(v) => set("showScoreAfterSubmit", v)} label={msg("quizzes.components.QuizDetailParts.hienDiemSauKhiNop")} ariaLabel={msg("quizzes.components.QuizDetailParts.hienDiemSauKhiNop")} disabled={readOnly} />
-        <Switch checked={value.showCorrectAnswers} onChange={(v) => set("showCorrectAnswers", v)} label={msg("quizzes.components.QuizDetailParts.hienDapAnSauKhiNop")} ariaLabel={msg("quizzes.components.QuizDetailParts.hienDapAnSauKhiNop")} disabled={readOnly} />
-        <Switch checked={value.shuffleQuestions} onChange={(v) => set("shuffleQuestions", v)} label={msg("quizzes.components.QuizDetailParts.daoThuTuCau")} ariaLabel={msg("quizzes.components.QuizDetailParts.daoThuTuCau")} disabled={readOnly} />
-        <Switch checked={value.shuffleOptions} onChange={(v) => set("shuffleOptions", v)} label={msg("quizzes.components.QuizDetailParts.daoThuTuLuaChon")} ariaLabel={msg("quizzes.components.QuizDetailParts.daoThuTuLuaChon")} disabled={readOnly} />
-        <Switch checked={value.activityMonitoringEnabled} onChange={(v) => set("activityMonitoringEnabled", v)} label={msg("quizzes.components.QuizDetailParts.ghiNhanHoatDong")} ariaLabel={msg("quizzes.components.QuizDetailParts.ghiNhanHoatDong")}
+        <Switch checked={value.showScoreAfterSubmit} onChange={(v) => setField("showScoreAfterSubmit", v)} label={msg("quizzes.components.QuizDetailParts.hienDiemSauKhiNop")} ariaLabel={msg("quizzes.components.QuizDetailParts.hienDiemSauKhiNop")} disabled={readOnly} />
+        <Switch checked={value.showCorrectAnswers} onChange={(v) => setField("showCorrectAnswers", v)} label={msg("quizzes.components.QuizDetailParts.hienDapAnSauKhiNop")} ariaLabel={msg("quizzes.components.QuizDetailParts.hienDapAnSauKhiNop")} disabled={readOnly} />
+        <Switch checked={value.shuffleQuestions} onChange={(v) => setField("shuffleQuestions", v)} label={msg("quizzes.components.QuizDetailParts.daoThuTuCau")} ariaLabel={msg("quizzes.components.QuizDetailParts.daoThuTuCau")} disabled={readOnly} />
+        <Switch checked={value.shuffleOptions} onChange={(v) => setField("shuffleOptions", v)} label={msg("quizzes.components.QuizDetailParts.daoThuTuLuaChon")} ariaLabel={msg("quizzes.components.QuizDetailParts.daoThuTuLuaChon")} disabled={readOnly} />
+        <Switch checked={value.activityMonitoringEnabled} onChange={(v) => setField("activityMonitoringEnabled", v)} label={msg("quizzes.components.QuizDetailParts.ghiNhanHoatDong")} ariaLabel={msg("quizzes.components.QuizDetailParts.ghiNhanHoatDong")}
           disabled={readOnly} />
         {value.activityMonitoringEnabled && (
           <Field label={msg("quizzes.components.QuizDetailParts.loiBaoChoSinhVien")} htmlFor={`${id}-notice`} required error={errors.activityNotice}
             hint={msg("quizzes.components.QuizDetailParts.sinhVienThayLoiBaoNay")}>
             <Textarea id={`${id}-notice`} rows={2} maxLength={1000} value={value.activityNotice}
-              invalid={!!errors.activityNotice} onChange={(e) => set("activityNotice", e.target.value)}
+              invalid={!!errors.activityNotice} onChange={(e) => setField("activityNotice", e.target.value)}
               data-testid="quiz-settings-activity-notice" />
           </Field>
         )}
         {value.activityMonitoringEnabled && (
-          <Switch checked={value.penaltyEnabled} onChange={(v) => set("penaltyEnabled", v)} label={msg("quizzes.components.QuizDetailParts.goiYTruDiemKhiRoi")} ariaLabel={msg("quizzes.components.QuizDetailParts.goiYTruDiemKhiRoi")} disabled={readOnly} />
+          <Switch checked={value.penaltyEnabled} onChange={(v) => setField("penaltyEnabled", v)} label={msg("quizzes.components.QuizDetailParts.goiYTruDiemKhiRoi")} ariaLabel={msg("quizzes.components.QuizDetailParts.goiYTruDiemKhiRoi")} disabled={readOnly} />
         )}
         {errors.penalty && <p className="text-xs text-danger" role="alert">{errors.penalty}</p>}
         {value.activityMonitoringEnabled && value.penaltyEnabled && (
           <div className="grid grid-cols-2 gap-2" data-testid="quiz-settings-penalty">
             <Field label={msg("quizzes.components.QuizDetailParts.soLanDuocMien")} htmlFor={`${id}-free`} error={errors.freeLeaves}>
-              <TextInput id={`${id}-free`} inputMode="numeric" value={value.freeLeaves} invalid={!!errors.freeLeaves} onChange={(e) => set("freeLeaves", e.target.value)} data-testid="quiz-settings-free-leaves" />
+              <TextInput id={`${id}-free`} inputMode="numeric" value={value.freeLeaves} invalid={!!errors.freeLeaves} onChange={(e) => setField("freeLeaves", e.target.value)} data-testid="quiz-settings-free-leaves" />
             </Field>
             <Field label={msg("quizzes.components.QuizDetailParts.diemTruMoiLan")} htmlFor={`${id}-per`} error={errors.pointsPerLeave}>
-              <TextInput id={`${id}-per`} inputMode="decimal" value={value.pointsPerLeave} invalid={!!errors.pointsPerLeave} onChange={(e) => set("pointsPerLeave", e.target.value)} data-testid="quiz-settings-points-per-leave" />
+              <TextInput id={`${id}-per`} inputMode="decimal" value={value.pointsPerLeave} invalid={!!errors.pointsPerLeave} onChange={(e) => setField("pointsPerLeave", e.target.value)} data-testid="quiz-settings-points-per-leave" />
             </Field>
             <Field label={msg("quizzes.components.QuizDetailParts.truToiDa")} htmlFor={`${id}-max`} hint={msg("quizzes.components.QuizDetailParts.trongLaKhongGioiHan")} error={errors.maxPenalty}>
-              <TextInput id={`${id}-max`} inputMode="decimal" value={value.maxPenalty} invalid={!!errors.maxPenalty} onChange={(e) => set("maxPenalty", e.target.value)} data-testid="quiz-settings-max-penalty" />
+              <TextInput id={`${id}-max`} inputMode="decimal" value={value.maxPenalty} invalid={!!errors.maxPenalty} onChange={(e) => setField("maxPenalty", e.target.value)} data-testid="quiz-settings-max-penalty" />
             </Field>
             <Field label={msg("quizzes.components.QuizDetailParts.chiTinhKhiRoiTu")} htmlFor={`${id}-min`} error={errors.minAwaySeconds}>
-              <TextInput id={`${id}-min`} inputMode="numeric" suffix={msg("quizzes.components.QuizDetailParts.giay")} value={value.minAwaySeconds} invalid={!!errors.minAwaySeconds} onChange={(e) => set("minAwaySeconds", e.target.value)} data-testid="quiz-settings-min-away" />
+              <TextInput id={`${id}-min`} inputMode="numeric" suffix={msg("quizzes.components.QuizDetailParts.giay")} value={value.minAwaySeconds} invalid={!!errors.minAwaySeconds} onChange={(e) => setField("minAwaySeconds", e.target.value)} data-testid="quiz-settings-min-away" />
             </Field>
             <p className="col-span-2 text-xs text-muted">{msg("quizzes.components.QuizDetailParts.heThongKhongTuTruDiem")}</p>
           </div>

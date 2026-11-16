@@ -3,7 +3,7 @@ import en from "@/i18n/messages/en.json";
 import ja from "@/i18n/messages/ja.json";
 import vi from "@/i18n/messages/vi.json";
 import { DEFAULT_LOCALE, LOCALES, LOCALE_NAMES, parseLocale } from "@/i18n/locales";
-import { LOCALE, msg, translatorFor } from "@/i18n/msg";
+import { LOCALE, msg, buildTranslator } from "@/i18n/msg";
 
 function keys(obj: object, prefix = ""): string[] {
   return Object.entries(obj).flatMap(([key, value]) =>
@@ -23,9 +23,9 @@ describe("ngôn ngữ giao diện", () => {
   });
 
   it("mỗi ngôn ngữ dịch theo tệp của nó, giá trị chèn vào câu giữ nguyên", () => {
-    expect(translatorFor("en")("shared.layout.AppShell.ngonNgu")).toBe("Language");
-    expect(translatorFor("ja")("shared.layout.AppShell.ngonNgu")).toBe("言語");
-    expect(translatorFor("en")("grading.components.BatchActionDialog.daCongBoDiemChoBai", { changed: "1234" }))
+    expect(buildTranslator("en")("shared.layout.AppShell.ngonNgu")).toBe("Language");
+    expect(buildTranslator("ja")("shared.layout.AppShell.ngonNgu")).toBe("言語");
+    expect(buildTranslator("en")("grading.components.BatchActionDialog.daCongBoDiemChoBai", { changed: "1234" }))
       .toBe("Grades published for 1234 submissions.");
   });
 

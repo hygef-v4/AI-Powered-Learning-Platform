@@ -25,15 +25,15 @@ import { colorRange, formatOf, joinLines, runLines, sliceRuns, splitRuns, toggle
 import {
   blockText,
   computeParts,
-  documentTree,
-  newBlock,
-  newId,
-  runsText,
-  sectionsOf,
+  buildDocumentTree,
+  createBlock,
+  generateId,
+  joinRunsText,
+  numberSections,
   type TitleContent,
   MAX_SECTION_DEPTH,
-  sectionNumber,
-  underOf,
+  formatSectionNumber,
+  findUnderLevel,
   type Align,
   type BlockOrigin,
   type DocSection,
@@ -114,7 +114,7 @@ type Props = {
 };
 
 /** Chỉ giữ các block thuộc phần được viết ({@code writable}: ID tiêu đề phần lá); không giới hạn thì giữ nguyên. */
-function writableOnly(sections: Map<string, string>, writable: ReadonlySet<string> | undefined): Map<string, string> {
+function filterWritable(sections: Map<string, string>, writable: ReadonlySet<string> | undefined): Map<string, string> {
   if (!writable) return sections;
   return new Map([...sections].filter(([, leaf]) => writable.has(leaf)));
 }
@@ -157,41 +157,41 @@ const IMAGE_TYPES = ".png,.jpg,.jpeg";
 const HISTORY_GAP_MS = 700;
 
 /** Run của tiêu đề mục: tiêu đề cũ chỉ có chữ thì coi như một run. */
-function headingRuns(block: Extract<DocumentBlock, { type: "HEADING" }>): Run[] {
+function readHeadingRuns(block: Extract<DocumentBlock, { type: "HEADING" }>): Run[] {
   return block.content.runs ?? [{ text: block.content.text }];
 }
 
-function runsOf(block: DocumentBlock | undefined): Run[] {
-  if (block?.type === "HEADING") return headingRuns(block);
+function readRuns(block: DocumentBlock | undefined): Run[] {
+  if (block?.type === "HEADING") return readHeadingRuns(block);
   if (block?.type === "PARAGRAPH") return block.content.runs;
   if (block?.type === "LIST") return block.content.items.flatMap((item) => item.runs);
   return [];
 }
 
-function tableCell(block: Extract<DocumentBlock, { type: "TABLE" }>, field: number): TableCell | undefined {
-  const columns = tableColumns(block);
+function findTableCell(block: Extract<DocumentBlock, { type: "TABLE" }>, field: number): TableCell | undefined {
+  const columns = countTableColumns(block);
   return block.content.rows[Math.floor(field / columns)]?.[field % columns];
 }
 
 /** Số cột của bảng (hàng thiếu ô vẫn vẽ đủ cột): ô thứ {@code field} là hàng {@code field / cột}, cột {@code field % cột}. */
-function tableColumns(block: Extract<DocumentBlock, { type: "TABLE" }>): number {
+function countTableColumns(block: Extract<DocumentBlock, { type: "TABLE" }>): number {
   return Math.max(1, ...block.content.rows.map((row) => row.length));
 }
 
 /** Run của ô thứ {@code field} trong block chữ (đoạn: ô 0; danh sách: mục thứ field). */
-function fieldRuns(block: DocumentBlock, field: number): Run[] {
-  if (block.type === "HEADING") return headingRuns(block);
+function readFieldRuns(block: DocumentBlock, field: number): Run[] {
+  if (block.type === "HEADING") return readHeadingRuns(block);
   if (block.type === "PARAGRAPH") return block.content.runs;
   if (block.type === "LIST") return block.content.items[field]?.runs ?? [];
   if (block.type === "TABLE") {
-    const columns = tableColumns(block);
+    const columns = countTableColumns(block);
     return block.content.rows[Math.floor(field / columns)]?.[field % columns]?.runs ?? [];
   }
   return [];
 }
 
 function mapField(block: DocumentBlock, field: number, change: (runs: Run[]) => Run[]): DocumentBlock {
-  if (block.type === "HEADING") return withHeadingRuns(block, change(headingRuns(block)));
+  if (block.type === "HEADING") return replaceHeadingRuns(block, change(readHeadingRuns(block)));
   if (block.type === "PARAGRAPH") return { ...block, content: { ...block.content, runs: change(block.content.runs) } };
   if (block.type === "LIST") {
     return { ...block, content: { ...block.content, items: block.content.items.map((item, i) => (i === field ? { ...item, runs: change(item.runs) } : item)) } };
@@ -202,7 +202,7 @@ function mapField(block: DocumentBlock, field: number, change: (runs: Run[]) => 
 
 /** Đổi ô thứ {@code field} của bảng (hàng rồi cột). */
 function mapCell(block: Extract<DocumentBlock, { type: "TABLE" }>, field: number, change: (cell: TableCell) => TableCell): DocumentBlock {
-  const columns = tableColumns(block);
+  const columns = countTableColumns(block);
   const row = Math.floor(field / columns);
   const column = field % columns;
   return { ...block, content: { ...block.content, rows: block.content.rows.map((cells, r) => r !== row ? cells
@@ -212,7 +212,7 @@ function mapCell(block: Extract<DocumentBlock, { type: "TABLE" }>, field: number
     })) } };
 }
 
-function styleOf(block: DocumentBlock | undefined): StyleValue | "" {
+function resolveStyle(block: DocumentBlock | undefined): StyleValue | "" {
   if (block?.type === "PARAGRAPH") return "P";
   if (block?.type === "HEADING") return block.content.style;
   if (block?.type === "LIST") return block.content.ordered ? "OL" : "UL";
@@ -223,8 +223,8 @@ function alignOf(block: DocumentBlock | undefined): Align | undefined {
   return block?.type === "PARAGRAPH" || block?.type === "HEADING" || block?.type === "LIST" ? block.content.align : undefined;
 }
 
-function paragraph(origin: BlockOrigin, runs: Run[] = [{ text: "" }], align?: Align): DocumentBlock {
-  return { id: newId(), origin, type: "PARAGRAPH", content: { runs, ...(align ? { align } : {}) } };
+function createParagraph(origin: BlockOrigin, runs: Run[] = [{ text: "" }], align?: Align): DocumentBlock {
+  return { id: generateId(), origin, type: "PARAGRAPH", content: { runs, ...(align ? { align } : {}) } };
 }
 
 /** Đổi kiểu block chữ (đoạn, tiêu đề, danh sách), giữ id, nguồn, chữ, định dạng từng phần và căn lề. */
@@ -240,16 +240,16 @@ export function convertBlock(block: DocumentBlock, style: StyleValue): DocumentB
     if (block.type === "LIST") return { ...block, content: { ...block.content, ordered: style === "OL" } };
     return { id, origin, type: "LIST", content: { ordered: style === "OL", items: runLines(runs).map((line) => ({ level: 0, runs: line })), ...keep } };
   }
-  return { id, origin, type: "HEADING", content: { style, text: runsText(runs).replace(/\s*\n\s*/g, " ").slice(0, 500), ...keep } };
+  return { id, origin, type: "HEADING", content: { style, text: joinRunsText(runs).replace(/\s*\n\s*/g, " ").slice(0, 500), ...keep } };
 }
 
 /** Tiêu đề giữ cả chữ thuần (đánh số, dàn ý, xuất file dùng) và run có định dạng. */
-function withHeadingRuns(block: Extract<DocumentBlock, { type: "HEADING" }>, runs: Run[]): DocumentBlock {
-  return { ...block, content: { ...block.content, runs, text: runsText(runs).replace(/\s*\n\s*/g, " ").slice(0, 500) } };
+function replaceHeadingRuns(block: Extract<DocumentBlock, { type: "HEADING" }>, runs: Run[]): DocumentBlock {
+  return { ...block, content: { ...block.content, runs, text: joinRunsText(runs).replace(/\s*\n\s*/g, " ").slice(0, 500) } };
 }
 
 function mapRuns(block: DocumentBlock, change: (run: Run) => Run): DocumentBlock {
-  if (block.type === "HEADING") return withHeadingRuns(block, headingRuns(block).map(change));
+  if (block.type === "HEADING") return replaceHeadingRuns(block, readHeadingRuns(block).map(change));
   if (block.type === "PARAGRAPH") return { ...block, content: { ...block.content, runs: block.content.runs.map(change) } };
   if (block.type === "LIST") return { ...block, content: { ...block.content, items: block.content.items.map((item) => ({ ...item, runs: item.runs.map(change) })) } };
   return block;
@@ -257,7 +257,7 @@ function mapRuns(block: DocumentBlock, change: (run: Run) => Run): DocumentBlock
 
 /** Bật hoặc tắt một định dạng cho cả đoạn hoặc cả danh sách (khi không bôi đen). */
 export function toggleFlag(block: DocumentBlock, flag: RunFlag): DocumentBlock {
-  const runs = runsOf(block);
+  const runs = readRuns(block);
   const active = runs.length > 0 && runs.every((run) => run[flag]);
   return mapRuns(block, (run) => ({ ...run, [flag]: !active || undefined }));
 }
@@ -274,7 +274,7 @@ export function setAlign(block: DocumentBlock, align: Align): DocumentBlock {
 }
 
 /** Vùng chọn trong ô chữ có định dạng đang có con trỏ, nếu ô đó thuộc trang {@code root}. */
-function selectionIn(root: HTMLElement | null): Selected | null {
+function readSelection(root: HTMLElement | null): Selected | null {
   const active = globalThis.document.activeElement;
   if (!(active instanceof HTMLElement) || !active.hasAttribute("data-rich") || !root?.contains(active)) return null;
   const block = active.closest<HTMLElement>("[data-block-id]");
@@ -285,7 +285,7 @@ function selectionIn(root: HTMLElement | null): Selected | null {
 }
 
 /** Đặt con trỏ ở đầu hoặc cuối một ô (ô chữ thường hoặc ô chữ có định dạng). */
-function caretTo(field: HTMLElement, at: "start" | "end") {
+function moveCaret(field: HTMLElement, at: "start" | "end") {
   field.focus();
   if (field instanceof HTMLTextAreaElement) {
     const position = at === "start" ? 0 : field.value.length;
@@ -304,7 +304,7 @@ function focusField(root: HTMLElement | null, target: FocusTarget) {
     block.focus();
     return;
   }
-  caretTo(field, target.at);
+  moveCaret(field, target.at);
 }
 
 type KeyHandlers = {
@@ -314,7 +314,7 @@ type KeyHandlers = {
 };
 
 /** Phím của ô chữ: Enter tách tại con trỏ, Backspace ở ô trống thì xóa block, mũi tên ở mép thì sang block bên cạnh. */
-function keys(event: KeyboardEvent<HTMLElement>, caret: Caret, handlers: KeyHandlers) {
+function handleKeys(event: KeyboardEvent<HTMLElement>, caret: Caret, handlers: KeyHandlers) {
   if (event.key === "Enter" && handlers.enter) {
     event.preventDefault();
     handlers.enter(caret);
@@ -371,14 +371,14 @@ type TailStyle = { format: Omit<Run, "text">; align?: Align; list?: "UL" | "OL" 
 const EMPTY_TAIL: TailStyle = { format: {} };
 
 /** Khối (không phải tiêu đề) mang dấu thuộc lại mục cấp {@code level} sau các mục con. */
-function withUnder(block: DocumentBlock, level: number): DocumentBlock {
+function setUnderLevel(block: DocumentBlock, level: number): DocumentBlock {
   return block.type === "HEADING" ? block : { ...block, content: { ...block.content, under: level } } as DocumentBlock;
 }
 
 /** Run của tên bài: định dạng trong JSON nếu cùng chữ với tên đang có, không thì chữ thuần (tên đổi ở chỗ khác, bài cũ). */
-function currentTitleRuns(document: DocumentModel, text: string): Run[] {
+function buildTitleRuns(document: DocumentModel, text: string): Run[] {
   const runs = document.title?.runs;
-  return runs && runsText(runs) === text ? runs : [{ text }];
+  return runs && joinRunsText(runs) === text ? runs : [{ text }];
 }
 
 /** Dòng cuối đã chọn kiểu danh sách: hiện dấu đầu dòng trước chỗ gõ. */
@@ -392,14 +392,14 @@ function TailList({ list, children }: { list?: "UL" | "OL"; children: ReactNode 
 function toggleCellList(runs: Run[], kind: "UL" | "OL"): Run[] {
   const marker = kind === "UL" ? /^• / : /^\d+\. /;
   const lines = runLines(runs);
-  const marked = lines.every((line) => marker.test(runsText(line)));
-  const plain = (line: Run[]) => {
-    const text = runsText(line);
+  const marked = lines.every((line) => marker.test(joinRunsText(line)));
+  const joinPlain = (line: Run[]) => {
+    const text = joinRunsText(line);
     const found = /^• |^\d+\. /.exec(text);
     return found ? sliceRuns(line, found[0].length, text.length) : line;
   };
   return joinLines(lines.map((line, i) => {
-    const rest = plain(line);
+    const rest = joinPlain(line);
     if (marked) return rest;
     const prefix = kind === "UL" ? "• " : `${i + 1}. `;
     return [{ ...formatOf(rest[0]), text: prefix }, ...rest];
@@ -584,7 +584,7 @@ export function DocumentEditor({
   const [cursorLine, setCursorLine] = useState<{ afterId: string | null; sectionKey: string; tailKey: string } | null>(null);
   /** Định dạng, căn lề, kiểu danh sách đặt sẵn cho dòng cuối (chưa có chữ); gõ vào thì đoạn mới mang theo. */
   const [tailStyles, setTailStyles] = useState<Record<string, TailStyle>>({});
-  const tailRuns = (key: string): Run[] => {
+  const readTailRuns = (key: string): Run[] => {
     const format = tailStyles[key]?.format;
     return format && Object.values(format).some((value) => value !== undefined) ? [{ ...format, text: "" }] : EMPTY_RUNS;
   };
@@ -596,12 +596,12 @@ export function DocumentEditor({
   const [hoverSection, setHoverSection] = useState<string | null>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** Rê vào một mục: hiện nút ngay; rời ra: đợi một lúc mới ẩn, để kịp đưa chuột tới nút ở ngoài khung. */
-  function hoverOn(key: string) {
+  function startHover(key: string) {
     if (hoverTimer.current) clearTimeout(hoverTimer.current);
     hoverTimer.current = null;
     if (hoverSection !== key) setHoverSection(key);
   }
-  function hoverOff() {
+  function stopHover() {
     if (hoverTimer.current || !hoverSection) return;
     hoverTimer.current = setTimeout(() => { hoverTimer.current = null; setHoverSection(null); }, 700);
   }
@@ -720,16 +720,16 @@ export function DocumentEditor({
   // Sau mỗi lần vẽ (đổi trang, đổi chế độ xem, thêm bớt mục) báo lại mục đang xem; trùng mục cũ thì không báo.
   useEffect(() => { reportCurrent.current(); });
   useEffect(() => {
-    const add = (event: Event) => addPartFrom.current((event as CustomEvent<{ parentId: string | null }>).detail?.parentId ?? null);
-    window.addEventListener("document:add-part", add);
-    return () => window.removeEventListener("document:add-part", add);
+    const addPart = (event: Event) => addPartFrom.current((event as CustomEvent<{ parentId: string | null }>).detail?.parentId ?? null);
+    window.addEventListener("document:add-part", addPart);
+    return () => window.removeEventListener("document:add-part", addPart);
   }, []);
 
   // Vùng bôi đen để thanh công cụ hiện đúng định dạng của phần đang chọn.
   useEffect(() => {
     const owner = globalThis.document;
     const track = () => {
-      const next = selectionIn(paper.current);
+      const next = readSelection(paper.current);
       setSelected((current) => (current && next && current.blockId === next.blockId && current.field === next.field
         && current.start === next.start && current.end === next.end) || (!current && !next) ? current : next);
     };
@@ -743,13 +743,13 @@ export function DocumentEditor({
   const authoring = !student && !readOnly;
   const guided = student && answerGuidance;
   // Người học chỉ viết trong phần: block nằm từ tiêu đề lá tới tiêu đề kế; khung không có tiêu đề thì cả bài.
-  const sections = student ? writableOnly(sectionsOf(document, computeParts(document)), writableParts) : null;
-  const inPart = (blockId: string | undefined) => !sections || (!!blockId && sections.has(blockId));
+  const sections = student ? filterWritable(numberSections(document, computeParts(document)), writableParts) : null;
+  const isInPart = (blockId: string | undefined) => !sections || (!!blockId && sections.has(blockId));
   // Tài liệu trống không có tiêu đề nên cả bài là một phần; còn lại cuối tài liệu luôn thuộc tiêu đề cuối (là lá).
-  const atEndInPart = blocks.length === 0 || inPart(blocks.at(-1)!.id);
+  const atEndInPart = blocks.length === 0 || isInPart(blocks.at(-1)!.id);
   // Bảng của người soạn trong phần: người học điền thẳng vào (yêu cầu 2026-10-22), không xóa bảng.
-  const fillable = (block: DocumentBlock) => student && !readOnly && block.origin === "TEACHER" && block.type === "TABLE" && inPart(block.id);
-  const locked = (block: DocumentBlock) => readOnly || (student && block.origin === "TEACHER" && !fillable(block));
+  const isFillable = (block: DocumentBlock) => student && !readOnly && block.origin === "TEACHER" && block.type === "TABLE" && isInPart(block.id);
+  const isBlockLocked = (block: DocumentBlock) => readOnly || (student && block.origin === "TEACHER" && !isFillable(block));
   const focused = blocks.find((b) => b.id === focusedId);
   // Thanh công cụ theo chỗ con trỏ (yêu cầu 2026-11-04): + Mục chỉ ở đoạn văn và dòng cuối; chèn bảng, ảnh, sơ đồ ở đoạn văn,
   // danh sách, dòng cuối; không ở tên bài, tiêu đề mục, ô bảng, ảnh, sơ đồ.
@@ -758,14 +758,14 @@ export function DocumentEditor({
   // ở đoạn văn, dòng cuối thì thêm tại con trỏ; chỉ khóa ở chỗ không được thêm (bảng, ảnh, sơ đồ, danh sách).
   const addAtEnd = inHeader || (cursorLine === null && (!focused || focused.type === "HEADING"));
   const addSectionAllowed = addAtEnd || cursorLine !== null || onText;
-  const insertAllowed = !inHeader && (cursorLine !== null || onText) && (focused ? inPart(focused.id) : atEndInPart);
+  const insertAllowed = !inHeader && (cursorLine !== null || onText) && (focused ? isInPart(focused.id) : atEndInPart);
   // Ở tên bài hay ở dòng cuối (chưa phải đoạn văn) thì không có khối nào để định dạng.
-  const target = focused && !locked(focused) && !inHeader && !cursorLine ? focused : undefined;
-  const style = styleOf(target);
+  const target = focused && !isBlockLocked(focused) && !inHeader && !cursorLine ? focused : undefined;
+  const style = resolveStyle(target);
   const textTarget = target?.type === "PARAGRAPH" || target?.type === "LIST";
   // Ô bảng đang trỏ (theo vùng chọn): căn lề từng ô (yêu cầu 2026-11-04).
   const cellField = target?.type === "TABLE" && selected?.blockId === target.id ? selected.field : null;
-  const cellAlign = target?.type === "TABLE" && cellField !== null ? tableCell(target, cellField)?.align : undefined;
+  const cellAlign = target?.type === "TABLE" && cellField !== null ? findTableCell(target, cellField)?.align : undefined;
   // Đậm, nghiêng, màu… dùng được cả trong ô bảng (yêu cầu 2026-11-04); danh sách, căn lề thì không.
   const titleOn = inHeader && !!titleField && !titleField.readOnly;
   const tailStyle = cursorLine ? tailStyles[cursorLine.tailKey] ?? EMPTY_TAIL : null;
@@ -773,12 +773,12 @@ export function DocumentEditor({
   const formatTarget = textTarget || target?.type === "TABLE" || target?.type === "HEADING" || titleOn || !!tailStyle;
   const listAllowed = textTarget || target?.type === "TABLE" || !!tailStyle;
   // Định dạng hiện trên thanh công cụ: của vùng bôi đen nếu có, không thì của cả đoạn (ô bảng: cả ô đang trỏ).
-  const titleRuns = currentTitleRuns(document, titleField?.text ?? "");
+  const titleRuns = buildTitleRuns(document, titleField?.text ?? "");
   const shownRuns = titleOn ? (selected?.blockId === "TITLE" && selected.start !== selected.end ? sliceRuns(titleRuns, selected.start, selected.end) : titleRuns)
     : tailStyle ? [{ ...tailStyle.format, text: "" }]
     : !target || !formatTarget ? [] : selected?.blockId === target.id && (selected.start !== selected.end || target.type === "TABLE")
-    ? (selected.start !== selected.end ? sliceRuns(fieldRuns(target, selected.field), selected.start, selected.end) : fieldRuns(target, selected.field))
-    : runsOf(target);
+    ? (selected.start !== selected.end ? sliceRuns(readFieldRuns(target, selected.field), selected.start, selected.end) : readFieldRuns(target, selected.field))
+    : readRuns(target);
 
   function remember() {
     const now = Date.now();
@@ -789,7 +789,7 @@ export function DocumentEditor({
     }
     lastPush.current = now;
   }
-  function update(next: DocumentBlock[], focus?: FocusTarget) {
+  function updateBlocks(next: DocumentBlock[], focus?: FocusTarget) {
     remember();
     if (focus) pendingFocus.current = focus;
     onChange({ ...document, blocks: next });
@@ -798,14 +798,14 @@ export function DocumentEditor({
   function setTitle(next: TitleContent) {
     remember();
     onChange({ ...document, title: next });
-    titleField?.onText(runsText(next.runs).replace(/\s*\n\s*/g, " "));
+    titleField?.onText(joinRunsText(next.runs).replace(/\s*\n\s*/g, " "));
   }
   /** Hoàn tác, làm lại đổi cả tên bài thì báo lại chữ thuần cho trang. */
   function restore(model: DocumentModel) {
     onChange(model);
-    if (titleField && model.title && runsText(model.title.runs) !== titleField.text) titleField.onText(runsText(model.title.runs));
+    if (titleField && model.title && joinRunsText(model.title.runs) !== titleField.text) titleField.onText(joinRunsText(model.title.runs));
   }
-  function undo() {
+  function undoChange() {
     const previous = past.current.at(-1);
     if (!previous) return;
     past.current = past.current.slice(0, -1);
@@ -814,7 +814,7 @@ export function DocumentEditor({
     setHistory({ past: past.current.length, future: future.current.length });
     restore(previous);
   }
-  function redo() {
+  function redoChange() {
     const next = future.current.at(-1);
     if (!next) return;
     future.current = future.current.slice(0, -1);
@@ -824,36 +824,36 @@ export function DocumentEditor({
     restore(next);
   }
   function replace(id: string, block: DocumentBlock, focus?: FocusTarget) {
-    update(blocks.map((b) => (b.id === id ? block : b)), focus);
+    updateBlocks(blocks.map((b) => (b.id === id ? block : b)), focus);
   }
   function insertAfter(afterId: string | null, block: DocumentBlock) {
     const index = afterId ? blocks.findIndex((b) => b.id === afterId) : -1;
     const at = index < 0 ? blocks.length : index + 1;
     setFocusedId(block.id);
-    update([...blocks.slice(0, at), block, ...blocks.slice(at)], { id: block.id, at: "start" });
+    updateBlocks([...blocks.slice(0, at), block, ...blocks.slice(at)], { id: block.id, at: "start" });
   }
   function split(current: DocumentBlock, next: DocumentBlock) {
     const index = blocks.findIndex((b) => b.id === current.id);
     setFocusedId(next.id);
-    update([...blocks.slice(0, index), current, next, ...blocks.slice(index + 1)], { id: next.id, at: "start" });
+    updateBlocks([...blocks.slice(0, index), current, next, ...blocks.slice(index + 1)], { id: next.id, at: "start" });
   }
   /** Block chữ gần nhất theo hướng {@code direction} mà người dùng sửa được. */
-  function neighbour(list: DocumentBlock[], from: number, direction: -1 | 1): DocumentBlock | undefined {
+  function findNeighbour(list: DocumentBlock[], from: number, direction: -1 | 1): DocumentBlock | undefined {
     for (let i = from; i >= 0 && i < list.length; i += direction) {
       const block = list[i]!;
-      if (!locked(block) && block.type !== "IMAGE" && block.type !== "DIAGRAM") return block;
+      if (!isBlockLocked(block) && block.type !== "IMAGE" && block.type !== "DIAGRAM") return block;
     }
     return undefined;
   }
-  function remove(id: string, focusPrevious = false) {
+  function removeBlock(id: string, focusPrevious = false) {
     const index = blocks.findIndex((b) => b.id === id);
-    const next = without(blocks, id);
-    const previous = focusPrevious ? neighbour(next, index - 1, -1) ?? neighbour(next, index, 1) : undefined;
-    update(next, previous ? { id: previous.id, at: index > 0 ? "end" : "start" } : undefined);
+    const next = removeFromList(blocks, id);
+    const previous = focusPrevious ? findNeighbour(next, index - 1, -1) ?? findNeighbour(next, index, 1) : undefined;
+    updateBlocks(next, previous ? { id: previous.id, at: index > 0 ? "end" : "start" } : undefined);
   }
   function step(id: string, direction: -1 | 1) {
     const index = blocks.findIndex((b) => b.id === id);
-    const next = neighbour(blocks, index + direction, direction);
+    const next = findNeighbour(blocks, index + direction, direction);
     if (next) focusField(paper.current, { id: next.id, at: direction < 0 ? "end" : "start" });
   }
   function focusBlock(id: string) {
@@ -865,45 +865,45 @@ export function DocumentEditor({
   /** Viết tiếp ở cuối một phần: đoạn trống cuối cùng của mình thì đặt con trỏ vào, không thì thêm đoạn mới. */
   function continueAfter(lastId: string) {
     const last = blocks.find((b) => b.id === lastId);
-    if (last && last.type === "PARAGRAPH" && !locked(last) && !runsText(last.content.runs)) focusField(paper.current, { id: last.id, at: "end" });
-    else insertAfter(lastId, newBlock("PARAGRAPH", origin));
+    if (last && last.type === "PARAGRAPH" && !isBlockLocked(last) && !joinRunsText(last.content.runs)) focusField(paper.current, { id: last.id, at: "end" });
+    else insertAfter(lastId, createBlock("PARAGRAPH", origin));
   }
   function continueAtEnd() {
     if (!atEndInPart) return;
     const last = blocks.at(-1);
     if (last) continueAfter(last.id);
-    else insertAfter(null, newBlock("PARAGRAPH", origin));
+    else insertAfter(null, createBlock("PARAGRAPH", origin));
   }
   /**
    * Thêm tiêu đề mục ngay sau {@code afterId} (cuối bài nếu null); con trỏ vào ô tiêu đề. Nội dung viết ở dòng cuối của ô
    * văn bản, luôn có sẵn nên không cần thêm đoạn văn.
    */
   function addHeading(afterId: string | null, style: HeadingStyle) {
-    const heading: DocumentBlock = { id: newId(), origin, type: "HEADING", content: { style, text: "" } };
+    const heading: DocumentBlock = { id: generateId(), origin, type: "HEADING", content: { style, text: "" } };
     const index = afterId ? blocks.findIndex((b) => b.id === afterId) : blocks.length - 1;
     const at = index + 1;
     setFocusedId(heading.id);
-    update([...blocks.slice(0, at), heading, ...blocks.slice(at)], { id: heading.id, at: "start" });
+    updateBlocks([...blocks.slice(0, at), heading, ...blocks.slice(at)], { id: heading.id, at: "start" });
   }
   /** Dải block liền nhau của cả mục (tiêu đề, văn bản, mục con, văn bản sau mục con). */
-  function rangeOf(section: DocSection): [number, number] {
+  function findRange(section: DocSection): [number, number] {
     const start = blocks.findIndex((block) => block.id === section.heading?.id);
-    const last = lastOf(section);
+    const last = findLast(section);
     return [start, last ? blocks.findIndex((block) => block.id === last.id) : start];
   }
   /** Đưa mục {@code section} tới trước hoặc sau mục {@code target} cùng cha (yêu cầu 2026-11-04). */
   function moveSection(section: DocSection, target: DocSection, place: "before" | "after") {
     if (section === target) return;
-    const [from, to] = rangeOf(section);
+    const [from, to] = findRange(section);
     if (from < 0) return;
     const moving = blocks.slice(from, to + 1);
     const rest = [...blocks.slice(0, from), ...blocks.slice(to + 1)];
-    const targetLast = lastOf(target);
+    const targetLast = findLast(target);
     const anchor = place === "before" ? target.heading?.id : targetLast?.id;
     const index = rest.findIndex((block) => block.id === anchor);
     if (index < 0) return;
     const at = place === "before" ? index : index + 1;
-    update([...rest.slice(0, at), ...moving, ...rest.slice(at)]);
+    updateBlocks([...rest.slice(0, at), ...moving, ...rest.slice(at)]);
   }
   /** Thả mục đang kéo vào chỗ đang xem trước (trước, sau một mục cùng cha). */
   function commitDrop() {
@@ -931,18 +931,18 @@ export function DocumentEditor({
     walk(section);
     const index = blocks.findIndex((block) => block.id === section.heading?.id);
     const next = blocks.filter((block) => !ids.has(block.id));
-    const previous = neighbour(next, index - 1, -1);
-    update(next, previous ? { id: previous.id, at: "end" } : undefined);
+    const previous = findNeighbour(next, index - 1, -1);
+    updateBlocks(next, previous ? { id: previous.id, at: "end" } : undefined);
   }
   /** Bỏ block {@code id}; nếu đó là khối đầu của phần viết sau các mục con thì khối kế tiếp nhận dấu {@code under}. */
-  function without(list: DocumentBlock[], id: string): DocumentBlock[] {
+  function removeFromList(list: DocumentBlock[], id: string): DocumentBlock[] {
     const index = list.findIndex((b) => b.id === id);
     const removed = list[index];
-    const under = removed ? underOf(removed) : null;
+    const under = removed ? findUnderLevel(removed) : null;
     const next = list.filter((b) => b.id !== id);
     const follower = next[index];
-    if (under === null || !follower || follower.type === "HEADING" || underOf(follower) !== null) return next;
-    return next.map((b, i) => (i === index ? withUnder(b, under) : b));
+    if (under === null || !follower || follower.type === "HEADING" || findUnderLevel(follower) !== null) return next;
+    return next.map((b, i) => (i === index ? setUnderLevel(b, under) : b));
   }
 
   /**
@@ -959,13 +959,13 @@ export function DocumentEditor({
     const sectionKey = cursorLine?.sectionKey ?? cursorSection?.heading?.id ?? "DOCUMENT";
     const ownTail = cursorLine?.tailKey ?? (cursorSection && cursorSection.children.length === 0 ? `tail-${sectionKey}` : null);
     setFocusedId(block.id);
-    if (next && (next.type === "PARAGRAPH" || next.type === "LIST") && underOf(next) === null) {
-      update([...blocks.slice(0, at), block, ...blocks.slice(at)], { id: next.id, at: "start" });
+    if (next && (next.type === "PARAGRAPH" || next.type === "LIST") && findUnderLevel(next) === null) {
+      updateBlocks([...blocks.slice(0, at), block, ...blocks.slice(at)], { id: next.id, at: "start" });
     } else if (ownTail && (!next || next.type === "HEADING")) {
-      update([...blocks.slice(0, at), block, ...blocks.slice(at)], { id: ownTail, at: "start" });
+      updateBlocks([...blocks.slice(0, at), block, ...blocks.slice(at)], { id: ownTail, at: "start" });
     } else {
-      const line = paragraph(origin);
-      update([...blocks.slice(0, at), block, line, ...blocks.slice(at)], { id: line.id, at: "start" });
+      const line = createParagraph(origin);
+      updateBlocks([...blocks.slice(0, at), block, line, ...blocks.slice(at)], { id: line.id, at: "start" });
     }
   }
   async function upload(blockId: string, file: File) {
@@ -987,27 +987,27 @@ export function DocumentEditor({
   }
   function insertImage(file: File) {
     if (!insertAllowed) return;
-    const block = newBlock("IMAGE", origin);
+    const block = createBlock("IMAGE", origin);
     insert(block);
     void upload(block.id, file);
   }
   function insertTable(rows: number, cols: number) {
-    const empty = (): TableCell => ({ runs: [{ text: "" }] });
-    insert({ id: newId(), origin, type: "TABLE", content: { rows: Array.from({ length: rows }, () => Array.from({ length: cols }, empty)) } });
+    const createEmptyCell = (): TableCell => ({ runs: [{ text: "" }] });
+    insert({ id: generateId(), origin, type: "TABLE", content: { rows: Array.from({ length: rows }, () => Array.from({ length: cols }, createEmptyCell)) } });
   }
   /** Chèn khung sơ đồ trống; Draw.io chỉ mở khi người dùng bấm vào khung (yêu cầu 2026-11-04). */
   function insertDiagram() {
     if (!insertAllowed) return;
-    insert(newBlock("DIAGRAM", origin));
+    insert(createBlock("DIAGRAM", origin));
   }
   /** Định dạng chữ (yêu cầu 2026-10-22): có vùng bôi đen trong ô thì chỉ đổi phần bôi đen, không thì cả đoạn. */
   function formatText(range: (runs: Run[], start: number, end: number) => Run[], whole: (block: DocumentBlock) => DocumentBlock) {
     if (!target || !formatTarget) return;
-    const selection = selectionIn(paper.current);
+    const selection = readSelection(paper.current);
     if (target.type === "TABLE") {
       // Ô bảng: bôi đen thì chỉ phần đó, không thì cả ô đang trỏ.
       if (!selection || selection.blockId !== target.id) return;
-      const length = runsText(fieldRuns(target, selection.field)).length;
+      const length = joinRunsText(readFieldRuns(target, selection.field)).length;
       const [start, end] = selection.start !== selection.end ? [selection.start, selection.end] : [0, length];
       replace(target.id, mapField(target, selection.field, (runs) => range(runs, start, end)));
       return;
@@ -1020,8 +1020,8 @@ export function DocumentEditor({
   }
   /** Tên bài: bôi đen thì chỉ phần đó, không thì cả tên. */
   function formatTitle(range: (runs: Run[], start: number, end: number) => Run[]) {
-    const selection = selectionIn(paper.current);
-    const [start, end] = selection?.blockId === "TITLE" && selection.start !== selection.end ? [selection.start, selection.end] : [0, runsText(titleRuns).length];
+    const selection = readSelection(paper.current);
+    const [start, end] = selection?.blockId === "TITLE" && selection.start !== selection.end ? [selection.start, selection.end] : [0, joinRunsText(titleRuns).length];
     setTitle({ ...document.title, runs: range(titleRuns, start, end) });
   }
   function setTail(change: (style: TailStyle) => TailStyle) {
@@ -1046,7 +1046,7 @@ export function DocumentEditor({
       // trống xóa danh sách (yêu cầu 2026-11-04).
       const section = sectionByKey.get(cursorLine.sectionKey);
       const end = cursorLine.tailKey.startsWith("tail-end-");
-      const list: DocumentBlock = { id: newId(), origin, type: "LIST", content: {
+      const list: DocumentBlock = { id: generateId(), origin, type: "LIST", content: {
         ordered: kind === "OL", items: [{ level: 0, runs: [{ ...tailStyle.format, text: "" }] }],
         ...(tailStyle.align ? { align: tailStyle.align } : {}), ...(end && section ? { under: section.level } : {}) } };
       const at = cursorLine.afterId ? blocks.findIndex((b) => b.id === cursorLine.afterId) + 1 : 0;
@@ -1054,12 +1054,12 @@ export function DocumentEditor({
       setTailStyles((current) => { const next = { ...current }; delete next[key]; return next; });
       setCursorLine(null);
       setFocusedId(list.id);
-      update([...blocks.slice(0, at), list, ...blocks.slice(at)], { id: list.id, at: "start" });
+      updateBlocks([...blocks.slice(0, at), list, ...blocks.slice(at)], { id: list.id, at: "start" });
       return;
     }
     if (!target) return;
     if (target.type === "TABLE") {
-      const field = selectionIn(paper.current)?.field ?? cellField;
+      const field = readSelection(paper.current)?.field ?? cellField;
       if (field === null || field < 0) return;
       replace(target.id, mapField(target, field, (runs) => toggleCellList(runs, kind)));
       return;
@@ -1072,7 +1072,7 @@ export function DocumentEditor({
     if (tailStyle) return setTail((style) => ({ ...style, align }));
     if (!target) return;
     if (target.type !== "TABLE") { replace(target.id, setAlign(target, value)); return; }
-    const field = selectionIn(paper.current)?.field ?? cellField;
+    const field = readSelection(paper.current)?.field ?? cellField;
     if (field === null || field < 0) return;
     replace(target.id, mapCell(target, field, (cell) => ({ ...cell, align })));
   }
@@ -1080,7 +1080,7 @@ export function DocumentEditor({
     : target?.type === "TABLE" ? cellAlign : alignOf(target);
   const alignAllowed = titleOn || !!tailStyle || (!!target && target.type !== "IMAGE" && target.type !== "DIAGRAM" && (target.type !== "TABLE" || cellField !== null));
 
-  const tree = documentTree(document);
+  const tree = buildDocumentTree(document);
   // Chế độ Từng phần (yêu cầu 2026-11-04): mỗi mục là một trang (văn bản của riêng mục, kèm khung các mục cha), theo thứ tự
   // trong bài; văn bản ở ngoài mọi mục là một trang riêng ở đầu.
   const leaves: DocSection[] = [];
@@ -1098,9 +1098,9 @@ export function DocumentEditor({
   // Từng phần: chỉ các mục đang hiện (mục của trang và các mục cha) mới có ghi chú bên lề, không để cột ghi chú kéo dài trang.
   const shownHeadings = new Set<string>();
   if (currentLeaf) {
-    const reaches = (section: DocSection): boolean => section === currentLeaf || section.children.some(reaches);
+    const reachesCurrent = (section: DocSection): boolean => section === currentLeaf || section.children.some(reachesCurrent);
     const mark = (section: DocSection) => {
-      if (!reaches(section)) return;
+      if (!reachesCurrent(section)) return;
       if (section.heading) shownHeadings.add(section.heading.id);
       section.children.forEach(mark);
     };
@@ -1111,30 +1111,30 @@ export function DocumentEditor({
   const visible = editing ? [] : (comments ?? []).filter((c) => !c.anchorBlockId
     || (currentLeaf ? shownHeadings.has(c.anchorBlockId) : blocks.some((b) => b.id === c.anchorBlockId)));
   const rail = wide && (Boolean(sidePanel) || visible.length > 0);
-  const inlineComments = (anchor: string | null) => rail || sidePanel ? null : visible.filter((c) => c.anchorBlockId === anchor).map((c) => (
+  const listInlineComments = (anchor: string | null) => rail || sidePanel ? null : visible.filter((c) => c.anchorBlockId === anchor).map((c) => (
     <div key={c.key} className="my-2" data-comment={c.key}>{c.content}</div>
   ));
 
   function renderBlock(block: DocumentBlock): ReactNode {
     const byline = block.type === "HEADING" ? sectionBylines?.[block.id] : undefined;
-    const isLocked = locked(block);
+    const isLocked = isBlockLocked(block);
     const teacherBlock = student && block.origin === "TEACHER";
-    const drawable = !readOnly && teacherBlock && block.type === "DIAGRAM" && inPart(block.id);
-    const muted = teacherBlock && !drawable && !fillable(block) && block.type !== "HEADING";
+    const drawable = !readOnly && teacherBlock && block.type === "DIAGRAM" && isInPart(block.id);
+    const muted = teacherBlock && !drawable && !isFillable(block) && block.type !== "HEADING";
     const removeLabel = !readOnly && !isLocked && !teacherBlock ? REMOVE_LABELS[block.type] : undefined;
-    const lockedLabel = !readOnly && teacherBlock && inPart(block.id) ? LOCKED_LABELS[block.type] : undefined;
+    const lockedLabel = !readOnly && teacherBlock && isInPart(block.id) ? LOCKED_LABELS[block.type] : undefined;
     const blockIssues = issues.filter((issue) => issue.blockId === block.id);
     return (
       <div key={block.id} data-testid={`block-${block.id}`} data-block-id={block.id} tabIndex={-1}
         title={muted && !readOnly ? msg("shared.document.DocumentEditor.deCuaGiangVienKhongSua") : undefined}
         onFocusCapture={() => focusBlock(block.id)} onMouseDownCapture={() => focusBlock(block.id)}
-        onKeyDown={removeLabel ? (event) => { if ((event.key === "Delete" || event.key === "Backspace") && event.target === event.currentTarget) { event.preventDefault(); remove(block.id, true); } } : undefined}
+        onKeyDown={removeLabel ? (event) => { if ((event.key === "Delete" || event.key === "Backspace") && event.target === event.currentTarget) { event.preventDefault(); removeBlock(block.id, true); } } : undefined}
         className={cx("group/block relative -mx-1 rounded px-1 py-0.5 outline-none",
           fullWidth && (block.type === "PARAGRAPH" || block.type === "LIST") && "[&_.text-sm]:text-base [&_.text-sm]:leading-7",
           muted && "opacity-70", muted && !readOnly && "cursor-not-allowed",
           blockIssues.length > 0 && "shadow-[inset_3px_0_0_var(--color-danger)]")}>
         {/* Ảnh, sơ đồ: nút ✕ luôn hiện mờ ở góc (rê vào thì rõ), để xóa được cả khung chưa vẽ (yêu cầu 2026-11-04). */}
-        {removeLabel && <CornerDelete always label={removeLabel} onClick={() => remove(block.id)} />}
+        {removeLabel && <CornerDelete always label={removeLabel} onClick={() => removeBlock(block.id)} />}
         {lockedLabel && <CornerDelete label={lockedLabel} disabled onClick={() => {}} />}
         {isLocked ? (
           <BlockView block={block} imageUrl={imageUrl} previewUrl={previews[block.id]}
@@ -1147,22 +1147,22 @@ export function DocumentEditor({
               change: (next, focus) => {
                 // Đoạn cuối của khung bị xóa hết chữ: bỏ đoạn đó, con trỏ về dòng cuối (luôn có) của khung.
                 const tail = authoring ? tailOf.get(block.id) : undefined;
-                if (tail && next.type === "PARAGRAPH" && !runsText(next.content.runs)) {
-                  update(without(blocks, block.id), { id: tail, at: "start" });
+                if (tail && next.type === "PARAGRAPH" && !joinRunsText(next.content.runs)) {
+                  updateBlocks(removeFromList(blocks, block.id), { id: tail, at: "start" });
                   return;
                 }
                 replace(block.id, next, focus);
               },
               split,
-              removeEmpty: () => remove(block.id, true),
-              remove: () => remove(block.id, true),
+              removeEmpty: () => removeBlock(block.id, true),
+              remove: () => removeBlock(block.id, true),
               step: (direction) => step(block.id, direction),
               openDiagram: () => setDiagram(block.id),
             }} />
         )}
         {byline && <p className="mt-1 wrap-break-word text-xs text-muted">{byline}</p>}
         {blockIssues.map((issue, i) => <p key={i} role="alert" className="text-xs text-danger">{issue.message}</p>)}
-        {inlineComments(block.id)}
+        {listInlineComments(block.id)}
       </div>
     );
   }
@@ -1171,12 +1171,12 @@ export function DocumentEditor({
    * Chỗ viết của phần lá chưa có nội dung (người học: chưa có bài làm; người soạn: mới có tiêu đề): một dòng trống, bấm
    * vào là viết, không có chữ gợi ý (yêu cầu 2026-10-22).
    */
-  function emptyLeaf(section: DocSection, key: string): ReactNode {
+  function renderEmptyLeaf(section: DocSection, key: string): ReactNode {
     const last = section.blocks.at(-1) ?? section.heading;
     if (!last) return null;
     if (student && section.blocks.some((b) => b.origin === "STUDENT" && (!guided || b.type === "PARAGRAPH" || b.type === "LIST"))) return null;
     if (authoring || (!student && section.blocks.length > 0)) return null;
-    if (student && !readOnly && section.heading && !inPart(section.heading.id)) return null;
+    if (student && !readOnly && section.heading && !isInPart(section.heading.id)) return null;
     if (readOnly) {
       return student && emptyLeafLabel
         ? <p data-testid={`empty-part-${key}`} className="py-1 text-xs text-muted">{emptyLeafLabel}</p>
@@ -1184,7 +1184,7 @@ export function DocumentEditor({
     }
     return (
       <button type="button" aria-label={msg("shared.document.DocumentEditor.vietVaoPhanNay")} data-testid={`write-part-${key}`}
-        onClick={() => insertAfter(last.id, newBlock("PARAGRAPH", origin))} className={cx("block w-full cursor-text text-left text-sm text-muted", guided ? "min-h-16 rounded-md px-2 focus-visible:ring-2 focus-visible:ring-focus" : "h-7")}>
+        onClick={() => insertAfter(last.id, createBlock("PARAGRAPH", origin))} className={cx("block w-full cursor-text text-left text-sm text-muted", guided ? "min-h-16 rounded-md px-2 focus-visible:ring-2 focus-visible:ring-focus" : "h-7")}>
         {guided && ANSWER_PLACEHOLDER}
       </button>
     );
@@ -1201,10 +1201,10 @@ export function DocumentEditor({
     mark(tree);
   }
 
-  function leafContent(section: DocSection, key: string): ReactNode {
+  function renderLeafContent(section: DocSection, key: string): ReactNode {
     // Phần người học không viết được (phần chung của bài nhóm) thì không có ô Bài làm.
-    const answerable = !section.heading || inPart(section.heading.id);
-    if (!guided || !answerable) return <>{section.blocks.map(renderBlock)}{emptyLeaf(section, key)}</>;
+    const answerable = !section.heading || isInPart(section.heading.id);
+    if (!guided || !answerable) return <>{section.blocks.map(renderBlock)}{renderEmptyLeaf(section, key)}</>;
     const firstAnswer = section.blocks.findIndex((block) => block.origin === "STUDENT" || block.type === "DIAGRAM" || block.type === "TABLE");
     const splitAt = firstAnswer < 0 ? section.blocks.length : firstAnswer;
     return <>
@@ -1214,26 +1214,26 @@ export function DocumentEditor({
           <p className="text-sm font-semibold text-ink">{msg("shared.document.DocumentEditor.baiLamCuaBan")}</p>
         </div>
         {section.blocks.slice(splitAt).map(renderBlock)}
-        {emptyLeaf(section, key)}
+        {renderEmptyLeaf(section, key)}
       </div>
     </>;
   }
 
   /** Khối cuối cùng của cả phần (kể cả các phần con). */
-  const lastOf = (section: DocSection): DocumentBlock | null => {
+  const findLast = (section: DocSection): DocumentBlock | null => {
     const child = section.children.at(-1);
-    return section.after.at(-1) ?? (child && lastOf(child)) ?? section.blocks.at(-1) ?? section.heading;
+    return section.after.at(-1) ?? (child && findLast(child)) ?? section.blocks.at(-1) ?? section.heading;
   };
   /** Khối cuối của riêng phần (chưa tính phần con): đoạn gõ ở dòng cuối của khung chèn ngay sau nó. */
-  const ownEnd = (section: DocSection) => section.blocks.at(-1) ?? section.heading;
+  const findOwnEnd = (section: DocSection) => section.blocks.at(-1) ?? section.heading;
   const contains = (section: DocSection, target: DocSection): boolean => section === target || section.children.some((child) => contains(child, target));
 
   /**
    * Dòng cuối của khung văn bản (người soạn, yêu cầu 2026-11-02): luôn có một dòng trống ở cuối khung; gõ gì vào là thành
    * đoạn mới cuối phần (và lại có dòng cuối mới); xóa hết chữ của đoạn cuối thì đoạn đó mất, chỉ còn dòng cuối.
    */
-  function tailLine(section: DocSection, key: string, end = false): ReactNode {
-    const anchor = end ? lastOf(section) : ownEnd(section);
+  function renderTailLine(section: DocSection, key: string, end = false): ReactNode {
+    const anchor = end ? findLast(section) : findOwnEnd(section);
     const tailKey = end ? `tail-end-${key}` : `tail-${key}`;
     // Ô còn trống: gợi ý cho người mới (yêu cầu 2026-11-10); ngoài mọi câu hỏi chỉ nhắc bấm + để thêm câu hỏi.
     const placeholder = hasOwnText(section) || section.children.length > 0 ? undefined
@@ -1247,28 +1247,28 @@ export function DocumentEditor({
           setCursorLine({ afterId: anchor?.id ?? null, sectionKey: key, tailKey });
         }}>
         <TailList list={tailStyles[tailKey]?.list}>
-        <RichText runs={tailRuns(tailKey)} aria-label={msg("shared.document.DocumentEditor.dongCuoi")} placeholder={placeholder} className={cx(PARAGRAPH_CLASS, alignClass(tailStyles[tailKey]?.align))}
+        <RichText runs={readTailRuns(tailKey)} aria-label={msg("shared.document.DocumentEditor.dongCuoi")} placeholder={placeholder} className={cx(PARAGRAPH_CLASS, alignClass(tailStyles[tailKey]?.align))}
           onChange={(runs) => {
-            if (!runsText(runs)) return;
+            if (!joinRunsText(runs)) return;
             const preset = tailStyles[tailKey];
             const align = preset?.align ? { align: preset.align } : {};
             // Dòng cuối ở đáy ô (sau các mục con): đoạn mang cấp của phần để vẫn thuộc phần này. Đã chọn danh sách thì thành
             // danh sách một mục.
             const block: DocumentBlock = preset?.list
-              ? { id: newId(), origin, type: "LIST", content: { ordered: preset.list === "OL", items: [{ level: 0, runs }], ...align } }
-              : { id: newId(), origin, type: "PARAGRAPH", content: { runs, ...align, ...(end ? { under: section.level } : {}) } };
+              ? { id: generateId(), origin, type: "LIST", content: { ordered: preset.list === "OL", items: [{ level: 0, runs }], ...align } }
+              : { id: generateId(), origin, type: "PARAGRAPH", content: { runs, ...align, ...(end ? { under: section.level } : {}) } };
             if (preset) setTailStyles((current) => { const next = { ...current }; delete next[tailKey]; return next; });
             const at = anchor ? blocks.findIndex((b) => b.id === anchor.id) + 1 : 0;
             setFocusedId(block.id);
-            update([...blocks.slice(0, at), block, ...blocks.slice(at)], { id: block.id, at: "end" });
+            updateBlocks([...blocks.slice(0, at), block, ...blocks.slice(at)], { id: block.id, at: "end" });
           }}
           onKey={(event, caret) => {
             if (event.key === "Enter") {
               // Enter ở dòng cuối: thêm một dòng trống, dòng cuối xuống dưới (yêu cầu 2026-11-04).
               event.preventDefault();
-              const line: DocumentBlock = { id: newId(), origin, type: "PARAGRAPH", content: { runs: EMPTY_RUNS, ...(end ? { under: section.level } : {}) } };
+              const line: DocumentBlock = { id: generateId(), origin, type: "PARAGRAPH", content: { runs: EMPTY_RUNS, ...(end ? { under: section.level } : {}) } };
               const at = anchor ? blocks.findIndex((b) => b.id === anchor.id) + 1 : 0;
-              update([...blocks.slice(0, at), line, ...blocks.slice(at)], { id: tailKey, at: "start" });
+              updateBlocks([...blocks.slice(0, at), line, ...blocks.slice(at)], { id: tailKey, at: "start" });
             } else if (event.key === "Backspace" && caret.start === 0 && caret.end === 0 && tailStyles[tailKey]) {
               // Dòng cuối chưa có chữ mà đã đặt định dạng, căn lề: Backspace bỏ các thứ đặt sẵn.
               event.preventDefault();
@@ -1284,14 +1284,14 @@ export function DocumentEditor({
   }
 
   /** Cấp tiêu đề của mục con trong {@code section}: theo mục con đang có, không thì sâu hơn một cấp (tối đa Tiêu đề 6). */
-  const childLevel = (section: DocSection) => section.children[0]?.level ?? section.level + 1;
+  const resolveChildLevel = (section: DocSection) => section.children[0]?.level ?? section.level + 1;
   /** Câu hỏi lồng tối đa 4 tầng (I.1.a.aa.), yêu cầu 2026-11-10: tầng 4 không thêm ý. */
-  const canAddChild = (section: DocSection) => section.depth < MAX_SECTION_DEPTH && childLevel(section) <= 6;
+  const canAddChild = (section: DocSection) => section.depth < MAX_SECTION_DEPTH && resolveChildLevel(section) <= 6;
   /** Thêm mục con vào cuối {@code section} (sau các mục con đang có); gốc tài liệu thì là mục ngoài cùng. */
   function addChild(section: DocSection) {
-    const level = childLevel(section);
+    const level = resolveChildLevel(section);
     if (!canAddChild(section)) return;
-    addHeading(lastOf(section)?.id ?? null, `H${level}` as HeadingStyle);
+    addHeading(findLast(section)?.id ?? null, `H${level}` as HeadingStyle);
   }
   /**
    * "+ Mục" trên thanh công cụ (yêu cầu 2026-11-04): thêm mục con của mục đang có con trỏ, ngay tại chỗ con trỏ (phần viết sau
@@ -1304,18 +1304,18 @@ export function DocumentEditor({
     // Văn bản, bảng, ảnh, sơ đồ nằm dưới con trỏ vẫn thuộc mục cha, hiện dưới mục con mới (yêu cầu 2026-11-04).
     const index = afterId ? blocks.findIndex((b) => b.id === afterId) : blocks.length - 1;
     const next = blocks[index + 1];
-    const keep = next && next.type !== "HEADING" && underOf(next) === null && sectionOfBlock.get(next.id) === parent;
-    const heading: DocumentBlock = { id: newId(), origin, type: "HEADING", content: { style: `H${childLevel(parent)}` as HeadingStyle, text: "" } };
-    const rest = blocks.slice(index + 1).map((b, i) => (i === 0 && keep ? withUnder(b, parent.level) : b));
+    const keep = next && next.type !== "HEADING" && findUnderLevel(next) === null && sectionOfBlock.get(next.id) === parent;
+    const heading: DocumentBlock = { id: generateId(), origin, type: "HEADING", content: { style: `H${resolveChildLevel(parent)}` as HeadingStyle, text: "" } };
+    const rest = blocks.slice(index + 1).map((b, i) => (i === 0 && keep ? setUnderLevel(b, parent.level) : b));
     setFocusedId(heading.id);
-    update([...blocks.slice(0, index + 1), heading, ...rest], { id: heading.id, at: "start" });
+    updateBlocks([...blocks.slice(0, index + 1), heading, ...rest], { id: heading.id, at: "start" });
   }
 
   /**
    * Thanh "+" ở đáy mỗi ô văn bản (cả ô ngoài cùng của tài liệu): thêm mục nằm trong ô văn bản đó, tức nhánh
    * con của mục (ở ô ngoài cùng là mục ngoài cùng).
    */
-  function quickAdd(section: DocSection): ReactNode {
+  function renderQuickAdd(section: DocSection): ReactNode {
     // Luôn hiện để người mới thấy chỗ thêm mục (yêu cầu 2026-11-10); mục tầng 3 không thêm mục con.
     if (!canAddChild(section)) return null;
     return (
@@ -1339,25 +1339,25 @@ export function DocumentEditor({
     if (!heading) {
       return (
         <Fragment key={key}>
-          {guided && section.leaf && blocks.length > 0 ? leafContent(section, key) : <>
+          {guided && section.leaf && blocks.length > 0 ? renderLeafContent(section, key) : <>
             {section.blocks.map(renderBlock)}
-            {section.leaf && blocks.length > 0 && emptyLeaf(section, key)}
+            {section.leaf && blocks.length > 0 && renderEmptyLeaf(section, key)}
           </>}
-          {authoring && section.children.length === 0 && <>{tailLine(section, key)}{quickAdd(section)}</>}
+          {authoring && section.children.length === 0 && <>{renderTailLine(section, key)}{renderQuickAdd(section)}</>}
           {children.map((child) => renderSection(child, null, only))}
           {section.after.map(renderBlock)}
-          {authoring && !only && section.children.length > 0 && <>{tailLine(section, key, true)}{quickAdd(section)}</>}
+          {authoring && !only && section.children.length > 0 && <>{renderTailLine(section, key, true)}{renderQuickAdd(section)}</>}
         </Fragment>
       );
     }
     const owner = heading.type === "HEADING" && heading.content.style === "H1" ? section : problem;
     const active = highlightBlockId === heading.id;
-    const writable = !readOnly && (!student || inPart(heading.id));
+    const writable = !readOnly && (!student || isInPart(heading.id));
     const headingStyle = heading.type === "HEADING" ? heading.content.style : "H1";
     // Kéo một mục cùng cha qua mục này: hiện bản xem trước mờ ở chỗ sẽ thả.
     const dragged = dragKey ? sectionByKey.get(dragKey) : undefined;
     const droppable = !!dragged && dragged !== section && parentOf.get(dragged) === parentOf.get(section);
-    const ghost = (place: "before" | "after") => droppable && dropAt?.key === key && dropAt.place === place && dragged?.heading ? (
+    const showGhost = (place: "before" | "after") => droppable && dropAt?.key === key && dropAt.place === place && dragged?.heading ? (
       <div data-testid="drop-preview" aria-hidden className="my-2 rounded-lg border-2 border-dashed border-primary/60 px-3 py-2 opacity-50"
         onDragOver={(event) => { event.preventDefault(); event.stopPropagation(); }}
         onDrop={(event) => { event.preventDefault(); event.stopPropagation(); commitDrop(); }}
@@ -1369,10 +1369,10 @@ export function DocumentEditor({
     ) : null;
     return (
       <Fragment key={key}>
-      {ghost("before")}
+      {showGhost("before")}
       <section data-section={key} data-leaf={section.leaf || undefined}
         style={{ backgroundColor: SECTION_BG[Math.min(section.depth - 1, SECTION_BG.length - 1)] }}
-        onMouseOver={authoring ? (event) => { event.stopPropagation(); hoverOn(key); } : undefined}
+        onMouseOver={authoring ? (event) => { event.stopPropagation(); startHover(key); } : undefined}
         onDragOver={droppable ? (event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -1411,20 +1411,20 @@ export function DocumentEditor({
             if (authoring) focusField(paper.current, { id: children.length > 0 ? `tail-end-${key}` : `tail-${key}`, at: "end" });
             else if (section.leaf && writable) continueAfter((section.blocks.at(-1) ?? heading).id);
           }}>
-          {section.leaf ? leafContent(section, key) : section.blocks.map(renderBlock)}
-          {authoring && children.length === 0 && tailLine(section, key)}
+          {section.leaf ? renderLeafContent(section, key) : section.blocks.map(renderBlock)}
+          {authoring && children.length === 0 && renderTailLine(section, key)}
           {children.map((child) => renderSection(child, owner, only))}
           {section.after.map(renderBlock)}
-          {authoring && children.length > 0 && tailLine(section, key, true)}
-          {authoring && quickAdd(section)}
+          {authoring && children.length > 0 && renderTailLine(section, key, true)}
+          {authoring && renderQuickAdd(section)}
         </div>
       </section>
-      {ghost("after")}
+      {showGhost("after")}
       </Fragment>
     );
   }
 
-  const topOf = (target: DocSection) => tree.children.find((child) => contains(child, target)) ?? target;
+  const findTop = (target: DocSection) => tree.children.find((child) => contains(child, target)) ?? target;
   latestLeaves.current = leaves;
   reportCurrent.current = () => {
     let current: string | null = currentLeaf ? currentLeaf.heading?.id ?? "DOCUMENT" : pinned.current;
@@ -1497,7 +1497,7 @@ export function DocumentEditor({
   const numbers = new Map<string, string>();
   const numberParts = (section: DocSection, path: number[]) => section.children.forEach((child, i) => {
     const counters = [...path, i + 1];
-    if (child.heading) numbers.set(child.heading.id, sectionNumbers?.[child.heading.id] ?? sectionNumber(counters));
+    if (child.heading) numbers.set(child.heading.id, sectionNumbers?.[child.heading.id] ?? formatSectionNumber(counters));
     numberParts(child, counters);
   });
   numberParts(tree, []);
@@ -1530,8 +1530,8 @@ export function DocumentEditor({
       onKeyDownCapture={(event) => {
         if (readOnly || !(event.ctrlKey || event.metaKey)) return;
         const key = event.key.toLowerCase();
-        if (key === "z" && !event.shiftKey) { event.preventDefault(); undo(); }
-        else if (key === "y" || (key === "z" && event.shiftKey)) { event.preventDefault(); redo(); }
+        if (key === "z" && !event.shiftKey) { event.preventDefault(); undoChange(); }
+        else if (key === "y" || (key === "z" && event.shiftKey)) { event.preventDefault(); redoChange(); }
         else if ((key === "b" || key === "i" || key === "u") && formatTarget) {
           event.preventDefault();
           toggle(key === "b" ? "bold" : key === "i" ? "italic" : "underline");
@@ -1555,8 +1555,8 @@ export function DocumentEditor({
           className={`sticky top-[var(--doc-toolbar-top,4rem)] z-20 flex flex-wrap items-center gap-0.5 rounded-xl bg-sunken px-3 py-1 border border-line ${TOOLBAR_COVER}`}>
           {!readOnly && (
             <>
-              <ToolbarButton title={msg("shared.document.DocumentEditor.hoanTacCtrlZ")} aria-label={msg("shared.document.DocumentEditor.hoanTac")} disabled={history.past === 0} onClick={undo}><Glyph name="undo" /></ToolbarButton>
-              <ToolbarButton title={msg("shared.document.DocumentEditor.lamLaiCtrlY")} aria-label={msg("shared.document.DocumentEditor.lamLai")} disabled={history.future === 0} onClick={redo}><Glyph name="redo" /></ToolbarButton>
+              <ToolbarButton title={msg("shared.document.DocumentEditor.hoanTacCtrlZ")} aria-label={msg("shared.document.DocumentEditor.hoanTac")} disabled={history.past === 0} onClick={undoChange}><Glyph name="undo" /></ToolbarButton>
+              <ToolbarButton title={msg("shared.document.DocumentEditor.lamLaiCtrlY")} aria-label={msg("shared.document.DocumentEditor.lamLai")} disabled={history.future === 0} onClick={redoChange}><Glyph name="redo" /></ToolbarButton>
               <Separator />
               {!student && (
                 <>
@@ -1622,7 +1622,7 @@ export function DocumentEditor({
       )}
 
       <div className={rail ? cx("grid items-start gap-5", fullWidth ? "grid-cols-[minmax(0,1fr)_300px]" : "grid-cols-[minmax(0,816px)_300px] justify-center") : cx("mx-auto w-full", !fullWidth && "max-w-[816px]")}>
-        <div ref={paper} data-testid="document-paper" onMouseLeave={hoverOff} onMouseOver={hoverOff}
+        <div ref={paper} data-testid="document-paper" onMouseLeave={stopHover} onMouseOver={stopHover}
           onBlurCapture={(event) => {
             // Con trỏ rời trang (bấm ra ngoài): không còn chỗ con trỏ, "+ Câu hỏi" thêm xuống cuối (yêu cầu 2026-11-10). Nút trên
             // thanh công cụ giữ con trỏ (chặn mousedown) nên không làm mất chỗ con trỏ.
@@ -1654,12 +1654,12 @@ export function DocumentEditor({
               </div>
             )}
             {header}
-            {inlineComments(null)}
+            {listInlineComments(null)}
             {blocks.length === 0 && (readOnly
               ? <div className="h-16" />
               : student && <button type="button" aria-label={msg("shared.document.DocumentEditor.batDauViet")} data-testid="write-document"
-                onClick={() => insertAfter(null, newBlock("PARAGRAPH", origin))} className="block h-16 w-full cursor-text" />)}
-            {currentLeaf ? renderSection(topOf(currentLeaf), null, currentLeaf) : renderSection(tree)}
+                onClick={() => insertAfter(null, createBlock("PARAGRAPH", origin))} className="block h-16 w-full cursor-text" />)}
+            {currentLeaf ? renderSection(findTop(currentLeaf), null, currentLeaf) : renderSection(tree)}
           </div>
           {student && !readOnly && !stepping && blocks.length > 0 && atEndInPart && (
             <button type="button" aria-label={msg("shared.document.DocumentEditor.vietTiepOCuoiTaiLieu")} onClick={continueAtEnd} className="block h-14 w-full cursor-text" />
@@ -1710,11 +1710,11 @@ function BlockEditor({ block, ops, imageUrl, previewUrl, onUpload, uploadError, 
     case "HEADING":
       // Tiêu đề mục định dạng được (đậm, nghiêng, màu…, yêu cầu 2026-11-04), một dòng: Enter mở đoạn mới bên dưới.
       return (
-        <RichText aria-label={msg("shared.document.DocumentEditor.noiDungTieuDe")} placeholder={msg("shared.document.DocumentEditor.tenCauHoi")} runs={headingRuns(block)}
+        <RichText aria-label={msg("shared.document.DocumentEditor.noiDungTieuDe")} placeholder={msg("shared.document.DocumentEditor.tenCauHoi")} runs={readHeadingRuns(block)}
           className={cx(HEADING_CLASS[block.content.style] ?? HEADING_CLASS.H1, alignClass(block.content.align))}
-          onChange={(runs) => ops.change(withHeadingRuns(block, runs))}
-          onKey={(event, caret) => keys(event, caret, {
-            enter: () => ops.split(block, paragraph(block.origin)),
+          onChange={(runs) => ops.change(replaceHeadingRuns(block, runs))}
+          onKey={(event, caret) => handleKeys(event, caret, {
+            enter: () => ops.split(block, createParagraph(block.origin)),
             removeEmpty: ops.removeEmpty,
             step: ops.step,
           })} />
@@ -1723,10 +1723,10 @@ function BlockEditor({ block, ops, imageUrl, previewUrl, onUpload, uploadError, 
       return (
         <RichText aria-label={msg("shared.document.DocumentEditor.doanVan")} placeholder={placeholder} runs={block.content.runs} className={cx(PARAGRAPH_CLASS, alignClass(block.content.align))}
           onChange={(runs) => ops.change({ ...block, content: { ...block.content, runs } })}
-          onKey={(event, caret) => keys(event, caret, {
+          onKey={(event, caret) => handleKeys(event, caret, {
             enter: ({ start, end }) => {
               const [before, after] = splitRuns(block.content.runs, start, end);
-              ops.split({ ...block, content: { ...block.content, runs: before } }, paragraph(block.origin, after, block.content.align));
+              ops.split({ ...block, content: { ...block.content, runs: before } }, createParagraph(block.origin, after, block.content.align));
             },
             removeEmpty: ops.removeEmpty,
             step: ops.step,
@@ -1774,42 +1774,42 @@ function BlockEditor({ block, ops, imageUrl, previewUrl, onUpload, uploadError, 
 function ListEditor({ block, ops }: { block: Extract<DocumentBlock, { type: "LIST" }>; ops: Ops }) {
   const items = block.content.items;
   const Tag = block.content.ordered ? "ol" : "ul";
-  function set(next: ListItem[], focus?: { field: number; at: "start" | "end" }) {
+  function setItems(next: ListItem[], focus?: { field: number; at: "start" | "end" }) {
     ops.change({ ...block, content: { ...block.content, items: next } }, focus ? { id: block.id, ...focus } : undefined);
   }
-  function sibling(field: HTMLElement, direction: -1 | 1): HTMLElement | null {
+  function findSibling(field: HTMLElement, direction: -1 | 1): HTMLElement | null {
     const li = field.closest("li");
     const other = direction < 0 ? li?.previousElementSibling : li?.nextElementSibling;
     return other?.querySelector<HTMLElement>("[data-editable]") ?? null;
   }
-  function itemKeys(event: KeyboardEvent<HTMLDivElement>, caret: Caret, item: ListItem, i: number) {
+  function handleItemKeys(event: KeyboardEvent<HTMLDivElement>, caret: Caret, item: ListItem, i: number) {
     const field = event.currentTarget;
     if (event.key === "Tab") {
       event.preventDefault();
       const level = Math.min(4, Math.max(0, (item.level ?? 0) + (event.shiftKey ? -1 : 1)));
-      set(items.map((x, j) => (j === i ? { ...x, level } : x)));
+      setItems(items.map((x, j) => (j === i ? { ...x, level } : x)));
     } else if (event.key === "Enter") {
       event.preventDefault();
       if (caret.length === 0) {
         const rest = items.filter((_, j) => j !== i);
         if (rest.length === 0) ops.change(convertBlock(block, "P"), { id: block.id, at: "start" });
-        else ops.split({ ...block, content: { ...block.content, items: rest } }, paragraph(block.origin, [{ ...formatOf(item.runs[0]), text: "" }]));
+        else ops.split({ ...block, content: { ...block.content, items: rest } }, createParagraph(block.origin, [{ ...formatOf(item.runs[0]), text: "" }]));
         return;
       }
       const [before, after] = splitRuns(item.runs, caret.start, caret.end);
-      set([...items.slice(0, i), { ...item, runs: before }, { level: item.level ?? 0, runs: after }, ...items.slice(i + 1)], { field: i + 1, at: "start" });
+      setItems([...items.slice(0, i), { ...item, runs: before }, { level: item.level ?? 0, runs: after }, ...items.slice(i + 1)], { field: i + 1, at: "start" });
     } else if (event.key === "Backspace" && caret.length === 0) {
       event.preventDefault();
       if (items.length === 1) ops.removeEmpty();
-      else set(items.filter((_, j) => j !== i), { field: Math.max(0, i - 1), at: i > 0 ? "end" : "start" });
+      else setItems(items.filter((_, j) => j !== i), { field: Math.max(0, i - 1), at: i > 0 ? "end" : "start" });
     } else if (event.key === "ArrowUp" && caret.start === 0 && caret.end === 0) {
       event.preventDefault();
-      const other = sibling(field, -1);
-      if (other) caretTo(other, "end"); else ops.step(-1);
+      const other = findSibling(field, -1);
+      if (other) moveCaret(other, "end"); else ops.step(-1);
     } else if (event.key === "ArrowDown" && caret.start === caret.length) {
       event.preventDefault();
-      const other = sibling(field, 1);
-      if (other) caretTo(other, "start"); else ops.step(1);
+      const other = findSibling(field, 1);
+      if (other) moveCaret(other, "start"); else ops.step(1);
     }
   }
   return (
@@ -1817,8 +1817,8 @@ function ListEditor({ block, ops }: { block: Extract<DocumentBlock, { type: "LIS
       {items.map((item, i) => (
         <li key={i} style={{ marginLeft: `${(item.level ?? 0) * 24}px` }}>
           <RichText aria-label={msg("shared.document.DocumentEditor.muc", { value: String(i + 1) })} runs={item.runs} className={cx(PARAGRAPH_CLASS, alignClass(block.content.align))}
-            onChange={(runs) => set(items.map((x, j) => (j === i ? { ...x, runs } : x)))}
-            onKey={(event, caret) => itemKeys(event, caret, item, i)} />
+            onChange={(runs) => setItems(items.map((x, j) => (j === i ? { ...x, runs } : x)))}
+            onKey={(event, caret) => handleItemKeys(event, caret, item, i)} />
         </li>
       ))}
     </Tag>
@@ -1843,11 +1843,11 @@ function TableEditor({ block, onChange, onRemove, guard }: {
   const rows = block.content.rows;
   const columns = Math.max(1, ...rows.map((row) => row.length));
   const header = !!block.content.headerRow;
-  const empty = (): TableCell => ({ runs: [{ text: "" }] });
-  const fresh = (): TableCell => (guard ? { runs: [{ text: "" }], added: true } : empty());
-  const full = (cells: TableCell[]) => Array.from({ length: columns }, (_, j) => cells[j] ?? empty());
+  const createEmptyCell = (): TableCell => ({ runs: [{ text: "" }] });
+  const createFreshCell = (): TableCell => (guard ? { runs: [{ text: "" }], added: true } : createEmptyCell());
+  const fillRow = (cells: TableCell[]) => Array.from({ length: columns }, (_, j) => cells[j] ?? createEmptyCell());
   // Đổi số cột thì bỏ độ rộng đã kéo, các cột lại bằng nhau.
-  function set(next: TableCell[][]) {
+  function setCells(next: TableCell[][]) {
     const count = Math.max(1, ...next.map((row) => row.length));
     const { widths, ...rest } = block.content;
     onChange({ ...block, content: { ...rest, rows: next, ...(widths && widths.length === count ? { widths } : {}) } });
@@ -1868,18 +1868,18 @@ function TableEditor({ block, onChange, onRemove, guard }: {
       next[c + 1] = Math.round((start[c]! + start[c + 1]! - left) * 10) / 10;
       onChange({ ...block, content: { ...block.content, widths: next } });
     };
-    const up = () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
+    const stopResize = () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", stopResize); };
     window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", up);
+    window.addEventListener("mouseup", stopResize);
   }
   const canDeleteRow = (r: number) => !guard || rows[r]!.every((cell) => cell.added);
   const canDeleteColumn = (c: number) => !guard || rows.every((cells) => !cells[c] || cells[c]!.added);
-  const insertRow = (r: number) => set([...rows.slice(0, r + 1), Array.from({ length: columns }, fresh), ...rows.slice(r + 1)]);
-  const insertColumn = (c: number) => set(rows.map((cells) => { const all = full(cells); return [...all.slice(0, c + 1), fresh(), ...all.slice(c + 1)]; }));
-  const deleteRow = (r: number) => (rows.length <= 1 && !guard ? onRemove() : set(rows.filter((_, i) => i !== r)));
-  const deleteColumn = (c: number) => (columns <= 1 && !guard ? onRemove() : set(rows.map((cells) => full(cells).filter((_, j) => j !== c))));
-  const rowLabel = (r: number) => (!canDeleteRow(r) ? msg("shared.document.DocumentEditor.hangCuaDe") : rows.length <= 1 && !guard ? msg("shared.document.DocumentEditor.xoaBang") : msg("shared.document.DocumentEditor.xoaHang"));
-  const columnLabel = (c: number) => (!canDeleteColumn(c) ? msg("shared.document.DocumentEditor.cotCuaDe") : columns <= 1 && !guard ? msg("shared.document.DocumentEditor.xoaBang") : msg("shared.document.DocumentEditor.xoaCot"));
+  const insertRow = (r: number) => setCells([...rows.slice(0, r + 1), Array.from({ length: columns }, createFreshCell), ...rows.slice(r + 1)]);
+  const insertColumn = (c: number) => setCells(rows.map((cells) => { const all = fillRow(cells); return [...all.slice(0, c + 1), createFreshCell(), ...all.slice(c + 1)]; }));
+  const deleteRow = (r: number) => (rows.length <= 1 && !guard ? onRemove() : setCells(rows.filter((_, i) => i !== r)));
+  const deleteColumn = (c: number) => (columns <= 1 && !guard ? onRemove() : setCells(rows.map((cells) => fillRow(cells).filter((_, j) => j !== c))));
+  const describeRow = (r: number) => (!canDeleteRow(r) ? msg("shared.document.DocumentEditor.hangCuaDe") : rows.length <= 1 && !guard ? msg("shared.document.DocumentEditor.xoaBang") : msg("shared.document.DocumentEditor.xoaHang"));
+  const describeColumn = (c: number) => (!canDeleteColumn(c) ? msg("shared.document.DocumentEditor.cotCuaDe") : columns <= 1 && !guard ? msg("shared.document.DocumentEditor.xoaBang") : msg("shared.document.DocumentEditor.xoaCot"));
   return (
     <div className="py-1" onMouseLeave={() => setHoverCol(null)}
       onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocusCol(null); }}>
@@ -1894,7 +1894,7 @@ function TableEditor({ block, onChange, onRemove, guard }: {
                   {/* Ô chữ định dạng được như đoạn văn: bôi đen rồi đậm, nghiêng, màu (yêu cầu 2026-11-04). */}
                   <RichText aria-label={msg("shared.document.DocumentEditor.o", { value: String(r + 1), value2: String(c + 1) })} runs={row[c]?.runs ?? EMPTY_RUNS} onFocus={() => setFocusCol(c)}
                     className={cx("px-2 py-1.5 text-[13px] leading-snug text-ink", header && r === 0 && "font-semibold", alignClass(row[c]?.align))}
-                    onChange={(runs) => set(rows.map((cells, i) => i !== r ? cells : full(cells).map((cell, j) =>
+                    onChange={(runs) => setCells(rows.map((cells, i) => i !== r ? cells : fillRow(cells).map((cell, j) =>
                       j === c ? { ...cell, runs } : cell)))} />
                   {r === 0 && c < columns - 1 && (
                     <span role="separator" aria-orientation="vertical" aria-label={msg("shared.document.DocumentEditor.keoDeDoiDoRongCot", { value: String(c + 1) })} data-testid={`column-resize-${c}`}
@@ -1907,14 +1907,14 @@ function TableEditor({ block, onChange, onRemove, guard }: {
                       className={cx("absolute bottom-full left-1/2 z-10 flex -translate-x-1/2 gap-[3px] pb-[3px] transition-opacity",
                         activeCol === c ? "opacity-100" : "pointer-events-none opacity-0")}>
                       {columns < 30 && <Square label={msg("shared.document.DocumentEditor.chenCotBenPhai")} onClick={() => insertColumn(c)}>+</Square>}
-                      <Square danger label={columnLabel(c)} disabled={!canDeleteColumn(c)} onClick={() => deleteColumn(c)}>−</Square>
+                      <Square danger label={describeColumn(c)} disabled={!canDeleteColumn(c)} onClick={() => deleteColumn(c)}>−</Square>
                     </span>
                   )}
                   {c === 0 && (
                     <span data-testid={`row-tools-${r}`}
                       className="pointer-events-none absolute top-1/2 right-full z-10 flex -translate-y-1/2 gap-[3px] pr-1.5 opacity-0 transition-opacity group-focus-within/row:pointer-events-auto group-focus-within/row:opacity-100 group-hover/row:pointer-events-auto group-hover/row:opacity-100">
                       {rows.length < 200 && <Square label={msg("shared.document.DocumentEditor.chenHangBenDuoi")} onClick={() => insertRow(r)}>+</Square>}
-                      <Square danger label={rowLabel(r)} disabled={!canDeleteRow(r)} onClick={() => deleteRow(r)}>−</Square>
+                      <Square danger label={describeRow(r)} disabled={!canDeleteRow(r)} onClick={() => deleteRow(r)}>−</Square>
                     </span>
                   )}
                   {r === 0 && c === 0 && (

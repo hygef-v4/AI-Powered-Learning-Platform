@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import { assignmentContext } from "@/features/assignments/components/assignmentNav";
+import { resolveAssignmentContext } from "@/features/assignments/components/AssignmentNav";
 import { outlineOf, publishOutline } from "@/features/assignments/model/outline";
 import type { DocumentBlock } from "@/shared/document";
 
@@ -27,8 +27,8 @@ it("dàn ý theo cây câu hỏi, đánh số I., I.1., I.2.a. như trong trang;
 });
 
 it("sidebar của bài: lối về Bài tập, mỗi phần một dòng; bấm thì báo trình soạn chuyển tới phần đó", () => {
-  const context = assignmentContext({ pathname: "/assignments/a1", search: new URLSearchParams() })!;
-  expect(assignmentContext({ pathname: "/assignments/a1/history", search: new URLSearchParams() })).toBeNull();
+  const context = resolveAssignmentContext({ pathname: "/assignments/a1", search: new URLSearchParams() })!;
+  expect(resolveAssignmentContext({ pathname: "/assignments/a1/history", search: new URLSearchParams() })).toBeNull();
   render(<>{context.header}</>);
   act(() => publishOutline({ assignmentId: "a1", backHref: "/teaching/classes/c1?tab=evals", backLabel: "Bài tập", entries: outlineOf(blocks) }));
   expect(screen.getByRole("link", { name: /Bài tập/ })).toHaveAttribute("href", "/teaching/classes/c1?tab=evals");
@@ -43,7 +43,7 @@ it("sidebar của bài: lối về Bài tập, mỗi phần một dòng; bấm t
 });
 
 it("sidebar có header Câu hỏi với nút + thêm câu hỏi ngoài cùng; mỗi hàng có + thêm ý tới tầng 4; chỉ khi sửa được", () => {
-  const context = assignmentContext({ pathname: "/assignments/a1", search: new URLSearchParams() })!;
+  const context = resolveAssignmentContext({ pathname: "/assignments/a1", search: new URLSearchParams() })!;
   render(<>{context.header}</>);
   act(() => publishOutline({ assignmentId: "a1", backHref: "/x", backLabel: "Bài tập", entries: outlineOf(blocks), editable: true }));
   expect(screen.getByText("Câu hỏi")).toBeInTheDocument();
@@ -63,7 +63,7 @@ it("văn bản ngoài mọi mục là một dòng tầng 0 trong Mục lục: m�
   const loose: DocumentBlock[] = [{ id: "r", origin: "TEACHER", type: "PARAGRAPH", content: { runs: [{ text: "Đọc kỹ đề trước khi làm" }] } }, ...blocks];
   const entries = outlineOf(loose);
   expect(entries[0]).toEqual({ id: "DOCUMENT", depth: 0, title: "Đọc kỹ đề trước khi làm", number: "" });
-  const context = assignmentContext({ pathname: "/assignments/a1", search: new URLSearchParams() })!;
+  const context = resolveAssignmentContext({ pathname: "/assignments/a1", search: new URLSearchParams() })!;
   render(<>{context.header}</>);
   act(() => publishOutline({ assignmentId: "a1", backHref: "/x", backLabel: "Bài tập", entries, editable: true }));
   const row = screen.getByRole("button", { name: /Đọc kỹ đề/ });
@@ -72,7 +72,7 @@ it("văn bản ngoài mọi mục là một dòng tầng 0 trong Mục lục: m�
 });
 
 it("Mục lục sáng theo mục trình soạn đang hiện", () => {
-  const context = assignmentContext({ pathname: "/assignments/a1", search: new URLSearchParams() })!;
+  const context = resolveAssignmentContext({ pathname: "/assignments/a1", search: new URLSearchParams() })!;
   render(<>{context.header}</>);
   act(() => publishOutline({ assignmentId: "a1", backHref: "/x", backLabel: "Bài tập", entries: outlineOf(blocks), editable: true }));
   act(() => { window.dispatchEvent(new CustomEvent("document:current-part", { detail: { headingId: "q1" } })); });

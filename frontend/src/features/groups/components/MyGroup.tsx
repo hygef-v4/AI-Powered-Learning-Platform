@@ -4,20 +4,21 @@ import { formatStudentLabel } from "@/shared/studentCode";
 import Link from "next/link";
 import { useCallback, useEffect, useId, useState } from "react";
 import { ApiError } from "@/shared/api/client";
-import { Button, ButtonLink, Dialog, Field, Icon, IconButton, LockedInput, PageHeader, Section, Select, TextInput, cx, showToast } from "@/shared/ui";
+import { Button, ButtonLink, Card, cx, Dialog, Field, Icon, IconButton, LockedInput, PageHeader, Section, Select, showToast, TextInput } from "@/shared/ui";
 import { getMyGroup, renameGroup, submitLeaderRequest } from "../api";
 import { describeFormation } from "../model/proposals";
 import { GroupProposalSection, useMyProposal } from "./GroupProposalSection";
 import type { MyGroupView } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
-import { initials } from "@/shared/layout/navigation";
+import { extractInitials } from "@/shared/layout/navigation";
 import { PersonSubline } from "@/shared/ui/PersonSubline";
+import { msg } from "@/i18n/msg";
 
 function useMyGroup(classId: string) {
   const [view, setView] = useState<MyGroupView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const reload = useCallback(
-    () => getMyGroup(classId).then(setView, () => setError("Không tải được nhóm của bạn.")),
+    () => getMyGroup(classId).then(setView, () => setError(msg("groups.components.MyGroup.khongTaiDuocNhomCuaBan"))),
     [classId],
   );
   useEffect(() => {
@@ -27,7 +28,7 @@ function useMyGroup(classId: string) {
         if (active) setView(loaded);
       },
       () => {
-        if (active) setError("Không tải được nhóm của bạn.");
+        if (active) setError(msg("groups.components.MyGroup.khongTaiDuocNhomCuaBan"));
       },
     );
     return () => {
@@ -46,28 +47,28 @@ export function MyGroupCard({ classId }: { classId: string }) {
   const leader = view?.members.find((m) => m.leader);
   return (
     <Section
-      title="Nhóm của tôi"
+      title={msg("groups.components.MyGroup.nhomCuaToi")}
       className="flex-1"
-      actions={view?.groupId ? <ButtonLink href={`/classes/${classId}/group`} size="sm">Mở nhóm</ButtonLink> : undefined}
+      actions={view?.groupId ? <ButtonLink href={`/classes/${classId}/group`} size="sm">{msg("groups.components.MyGroup.moNhom")}</ButtonLink> : undefined}
     >
       {!view ? (
-        <p role="status" className="text-[13px] text-muted">Đang tải nhóm…</p>
+        <p role="status" className="text-[13px] text-muted">{msg("groups.components.MyGroup.dangTaiNhom")}</p>
       ) : view.groupId ? (
         <dl className="flex flex-col gap-2.5 text-[13px]">
-          <div className="flex items-center justify-between gap-3"><dt className="text-muted">Nhóm</dt><dd className="truncate font-semibold text-ink">{view.name}</dd></div>
-          <div className="flex items-center justify-between gap-3"><dt className="text-muted">Thành viên</dt><dd className="text-ink">{view.members.length}</dd></div>
+          <div className="flex items-center justify-between gap-3"><dt className="text-muted">{msg("groups.components.MyGroup.nhom")}</dt><dd className="truncate font-semibold text-ink">{view.name}</dd></div>
+          <div className="flex items-center justify-between gap-3"><dt className="text-muted">{msg("groups.components.MyGroup.thanhVien")}</dt><dd className="text-ink">{view.members.length}</dd></div>
           <div className="flex flex-col gap-2">
-            <dt className="text-muted">Trưởng nhóm</dt>
+            <dt className="text-muted">{msg("groups.components.MyGroup.truongNhom")}</dt>
             <dd>
               {leader ? (
                 <div className="flex items-center gap-3">
-                  <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent">{initials(leader.name ?? "?")}</span>
+                  <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent">{extractInitials(leader.name ?? "?")}</span>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-ink">{leader.name ?? "Chưa rõ tên"}</p>
+                    <p className="truncate text-sm font-semibold text-ink">{leader.name ?? msg("groups.components.MyGroup.chuaRoTen")}</p>
                     <PersonSubline studentCode={leader.studentCode} email={leader.email} />
                   </div>
                 </div>
-              ) : <span className="text-muted">Chưa có</span>}
+              ) : <span className="text-muted">{msg("groups.components.MyGroup.chuaCo")}</span>}
             </dd>
           </div>
         </dl>
@@ -86,18 +87,16 @@ function ProposalSummary({ classId }: { classId: string }) {
   const active = !!view && (view.formation.open || !!proposal || invitations > 0);
   return (
     <div className="flex flex-col gap-2.5 text-[13px]">
-      <p className="text-muted">Bạn chưa có nhóm trong lớp này.</p>
-      {view?.formation.enabled && <p className="text-ink">Tự chia nhóm: {describeFormation(view.formation)}</p>}
+      <p className="text-muted">{msg("groups.components.MyGroup.banChuaCoNhomTrongLop")}</p>
+      {view?.formation.enabled && <p className="text-ink">{msg("groups.components.MyGroup.tuChiaNhom")}{describeFormation(view.formation)}</p>}
       {proposal && (
         <p className="text-ink">
-          Đề xuất <span className="font-semibold">{proposal.name}</span> · {proposal.members.length} thành viên
-        </p>
+          {msg("groups.components.MyGroup.deXuat")}<span className="font-semibold">{proposal.name}</span> · {proposal.members.length} {msg("groups.components.MyGroup.thanhVien2")}</p>
       )}
-      {invitations > 0 && <p className="text-ink">Bạn có {invitations} lời mời vào nhóm.</p>}
+      {invitations > 0 && <p className="text-ink">{msg("groups.components.MyGroup.banCo")}{invitations} {msg("groups.components.MyGroup.loiMoiVaoNhom")}</p>}
       {active && (
         <ButtonLink href={`/classes/${classId}/group`} size="sm" className="self-start" data-testid="my-group-open-proposal">
-          Mở Nhóm của tôi
-        </ButtonLink>
+          {msg("groups.components.MyGroup.moNhomCuaToi")}</ButtonLink>
       )}
     </div>
   );
@@ -120,12 +119,12 @@ export function MyGroupPage({ classId }: { classId: string }) {
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        title="Nhóm của tôi"
+        title={msg("groups.components.MyGroup.nhomCuaToi")}
         actions={
           view.groupId && open ? (
             <Button icon={view.pendingRequest ? "schedule" : "swap_horiz"} onClick={() => setRequesting(true)} disabled={view.pendingRequest}
               data-testid="leader-request-open">
-              {view.pendingRequest ? "Đang chờ duyệt" : "Yêu cầu đổi trưởng nhóm"}
+              {view.pendingRequest ? msg("groups.components.MyGroup.dangChoDuyet") : msg("groups.components.MyGroup.yeuCauDoiTruongNhom")}
             </Button>
           ) : undefined
         }
@@ -133,21 +132,21 @@ export function MyGroupPage({ classId }: { classId: string }) {
       {!view.groupId ? (
         <GroupProposalSection classId={classId} onGrouped={reloadGroup} />
       ) : (
-        <section aria-label="Thành viên nhóm" className="flex flex-col gap-5 rounded-xl border border-line bg-surface p-6">
+        <Card as="section" padding="none" className="flex flex-col gap-5 p-6" aria-label={msg("groups.components.MyGroup.thanhVienNhom")}>
           <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
             <div className="min-w-0 flex-1">
               <GroupName view={view} editable={view.amLeader && open} onRenamed={() => void reload()} />
-              <p className="mt-0.5 text-[13px] text-muted">{view.members.length} thành viên</p>
+              <p className="mt-0.5 text-[13px] text-muted">{view.members.length} {msg("groups.components.MyGroup.thanhVien2")}</p>
             </div>
             <Link href={`/my-assignments?classId=${encodeURIComponent(classId)}&mode=GROUP`} data-testid="group-works-link"
               className="inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-[13px] font-semibold text-primary-ink transition-colors hover:bg-primary-soft">
-              Bài nhóm<Icon name="arrow_forward" size={15} />
+              {msg("groups.components.MyGroup.baiNhom")}<Icon name="arrow_forward" size={15} />
             </Link>
           </div>
           <ul className="grid grid-cols-[repeat(auto-fill,minmax(156px,1fr))] gap-3">
             {view.members.map((m) => <MemberCard key={m.accountId} member={m} />)}
           </ul>
-        </section>
+        </Card>
       )}
       {requesting && view.groupId && (
         <LeaderChangeRequestDialog
@@ -169,19 +168,19 @@ function GroupName({ view, editable, onRenamed }: { view: MyGroupView; editable:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const cancel = () => { setDraft(null); setError(null); };
-  const save = async () => {
+  const saveLeader = async () => {
     const name = (draft ?? "").trim();
-    if (!name || name.length > 100) { setError("Tên nhóm cần 1–100 ký tự."); return; }
+    if (!name || name.length > 100) { setError(msg("groups.components.MyGroup.tenNhomCan1100Ky")); return; }
     if (name === view.name) { cancel(); return; }
     setBusy(true);
     setError(null);
     try {
       await renameGroup(view.groupId!, name);
       setDraft(null);
-      showToast("Đã đổi tên nhóm");
+      showToast(msg("groups.components.MyGroup.daDoiTenNhom"));
       onRenamed();
     } catch (e) {
-      setError(e instanceof ApiError ? (e.problem.detail ?? "Không đổi được tên nhóm.") : "Không đổi được tên nhóm.");
+      setError(e instanceof ApiError ? (e.problem.detail ?? msg("groups.components.MyGroup.khongDoiDuocTenNhom")) : msg("groups.components.MyGroup.khongDoiDuocTenNhom"));
     } finally {
       setBusy(false);
     }
@@ -191,18 +190,18 @@ function GroupName({ view, editable, onRenamed }: { view: MyGroupView; editable:
     return (
       <div className="flex min-w-0 items-center gap-1">
         <h2 className="min-w-0 text-xl font-bold tracking-[-0.01em] text-ink [overflow-wrap:anywhere]">{view.name}</h2>
-        {editable && <IconButton icon="edit" label="Sửa tên nhóm" onClick={() => setDraft(view.name ?? "")} data-testid="group-rename" />}
+        {editable && <IconButton icon="edit" label={msg("groups.components.MyGroup.suaTenNhom")} onClick={() => setDraft(view.name ?? "")} data-testid="group-rename" />}
       </div>
     );
   }
   return (
-    <form className="flex max-w-md flex-col gap-1.5" onSubmit={(event) => { event.preventDefault(); void save(); }}>
+    <form className="flex max-w-md flex-col gap-1.5" onSubmit={(event) => { event.preventDefault(); void saveLeader(); }}>
       <div className="flex items-center gap-2">
-        <TextInput aria-label="Tên nhóm" value={draft} maxLength={100} disabled={busy} invalid={!!error} autoFocus
+        <TextInput aria-label={msg("groups.components.MyGroup.tenNhom")} value={draft} maxLength={100} disabled={busy} invalid={!!error} autoFocus
           onChange={(event) => { setDraft(event.target.value); setError(null); }}
           onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); cancel(); } }} data-testid="group-rename-input" />
-        <Button type="submit" variant="primary" size="sm" disabled={busy}>Lưu</Button>
-        <Button type="button" size="sm" disabled={busy} onClick={cancel}>Hủy</Button>
+        <Button type="submit" variant="primary" size="sm" disabled={busy}>{msg("groups.components.MyGroup.luu")}</Button>
+        <Button type="button" size="sm" disabled={busy} onClick={cancel}>{msg("groups.components.MyGroup.huy")}</Button>
       </div>
       {error && <p role="alert" className="text-xs text-danger">{error}</p>}
     </form>
@@ -216,15 +215,15 @@ function MemberCard({ member }: { member: MyGroupView["members"][number] }) {
       className={cx("flex aspect-[3/4] min-w-0 flex-col items-center justify-center gap-2.5 rounded-xl border px-3 py-5 text-center",
         member.leader ? "border-warning/50 bg-warning-soft/35" : "border-line bg-surface")}>
       <span className={cx("inline-flex h-5 items-center gap-1 rounded-full px-2.5 text-xs font-semibold", member.leader ? "bg-warning-soft text-warning" : "invisible")}>
-        {member.leader && <><Icon name="crown" size={13} filled />Trưởng nhóm</>}
+        {member.leader && <><Icon name="crown" size={13} filled />{msg("groups.components.MyGroup.truongNhom")}</>}
       </span>
       <span aria-hidden="true"
         className={cx("flex size-16 shrink-0 items-center justify-center rounded-full text-lg font-bold",
           member.leader ? "bg-warning-soft text-warning" : "bg-primary-soft text-primary-ink")}>
-        {initials(member.name ?? member.email ?? "?")}
+        {extractInitials(member.name ?? member.email ?? "?")}
       </span>
       <div className="flex min-w-0 flex-col gap-0.5">
-        <p className="text-sm font-semibold text-ink [overflow-wrap:anywhere]">{member.name ?? "Chưa rõ tên"}</p>
+        <p className="text-sm font-semibold text-ink [overflow-wrap:anywhere]">{member.name ?? msg("groups.components.MyGroup.chuaRoTen")}</p>
         <PersonSubline studentCode={member.studentCode} email={member.email} />
       </div>
     </li>
@@ -238,38 +237,37 @@ export function LeaderChangeRequestDialog({ view, onClose, onSent }: { view: MyG
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const leader = view.members.find((m) => m.leader);
-  const send = async () => {
+  const sendRequest = async () => {
     setBusy(true);
     setError(null);
     try {
       await submitLeaderRequest(view.groupId!, proposed || null);
       onSent();
     } catch (e) {
-      setError(e instanceof ApiError ? (e.problem.detail ?? "Không gửi được yêu cầu") : "Không gửi được yêu cầu");
+      setError(e instanceof ApiError ? (e.problem.detail ?? msg("groups.components.MyGroup.khongGuiDuocYeuCau")) : msg("groups.components.MyGroup.khongGuiDuocYeuCau"));
       setBusy(false);
     }
   };
   return (
     <Dialog
       open
-      title="Yêu cầu đổi trưởng nhóm"
+      title={msg("groups.components.MyGroup.yeuCauDoiTruongNhom")}
       icon="swap_horiz"
       onClose={onClose}
       dismissible={!busy}
       footer={
         <>
-          <Button variant="primary" onClick={() => void send()} disabled={busy}>
-            Gửi yêu cầu
-          </Button>
+          <Button variant="primary" onClick={() => void sendRequest()} disabled={busy}>
+            {msg("groups.components.MyGroup.guiYeuCau")}</Button>
         </>
       }
     >
-      <Field label="Trưởng nhóm hiện tại" htmlFor={`${fieldId}-current`}>
-        <LockedInput id={`${fieldId}-current`} value={leader ? formatStudentLabel(leader) : "Chưa có"} />
+      <Field label={msg("groups.components.MyGroup.truongNhomHienTai")} htmlFor={`${fieldId}-current`}>
+        <LockedInput id={`${fieldId}-current`} value={leader ? formatStudentLabel(leader) : msg("groups.components.MyGroup.chuaCo")} />
       </Field>
-      <Field label="Trưởng nhóm mới" htmlFor={`${fieldId}-p`} error={error}>
+      <Field label={msg("groups.components.MyGroup.truongNhomMoi")} htmlFor={`${fieldId}-p`} error={error}>
         <Select id={`${fieldId}-p`} value={proposed} onChange={(e) => setProposed(e.target.value)}>
-          <option value="">Không đề xuất</option>
+          <option value="">{msg("groups.components.MyGroup.khongDeXuat")}</option>
           {view.members.filter((m) => !m.leader).map((m) => (
             <option key={m.accountId} value={m.accountId}>
               {formatStudentLabel(m)}

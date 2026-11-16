@@ -7,7 +7,7 @@ import {
   getQuizMaterials, getSubjectMaterials, requestBankDraft, requestQuizDraft,
 } from "../api";
 import { AiDraftDialog, type DraftTargetApi } from "./AiDrafts";
-import { errorMessage, failureLabel, formatDateTime } from "../model/labels";
+import { describeError, describeFailure, formatDateTime } from "../model/labels";
 import type { AiDraft, AiDraftStatus, QuizDetail } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -87,7 +87,7 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
         setError(null);
         setDrafts(list);
       })
-      .catch((failure: unknown) => !controller.signal.aborted && setError(errorMessage(failure)));
+      .catch((failure: unknown) => !controller.signal.aborted && setError(describeError(failure)));
     return () => controller.abort();
   }, [quizId, reloadKey]);
 
@@ -147,7 +147,7 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
               <Pill tone={STATUS_TONES[draft.status]}>{STATUS_LABELS[draft.status]}</Pill>
               <span>{draft.origin === "MCP" ? `Agent: ${draft.agentLabel ?? "Agent"}` : "AI"}</span>
               <span className="text-muted">
-                {draft.status === "FAILED" ? failureLabel(draft.failureCode, draft.failureMessage)
+                {draft.status === "FAILED" ? describeFailure(draft.failureCode, draft.failureMessage)
                   : msg("quizzes.components.AiDraftTargets.cau", { value: String(draft.questions.length || draft.requestedCount || 0), value2: String(formatDateTime(draft.createdAt)) })}
               </span>
               <Button size="sm" className="ml-auto" disabled={disabled} aria-expanded={expanded} onClick={() => {

@@ -2,5 +2,5 @@
 export { AiSourcePicker } from "./AiSourcePicker";
 export { AiTaskStatus } from "./AiTaskStatus";
 export { getSourcePreference, saveSourcePreference, usePreferredSource } from "./preference";
-export { PROVIDER_LABEL, PROVIDERS, formatDate, formatDateTime, formatMaybeTokens, formatShort, formatTokens, masked } from "./format";
+export { PROVIDER_LABEL, PROVIDERS, formatDate, formatDateTime, formatMaybeTokens, formatShort, formatTokens, maskHint as masked } from "./format";
 export type { AiProvider, AiSource, AiTaskState, AiTaskView, SourceChoice, SourceOption, SourcePreference, SourceQuota } from "./types";

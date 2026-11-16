@@ -42,7 +42,7 @@ const ERROR_LABELS: Record<string, string> = {
 };
 
 /** Lý do đề xuất lỗi: nhãn theo mã, không có thì thông điệp an toàn của U06. */
-export function failureLabel(code: string | null, message: string | null): string {
+export function describeFailure(code: string | null, message: string | null): string {
   return (code && ERROR_LABELS[code]) || message || msg("quizzes.model.labels.aiChuaSoanDuocDeXuat");
 }
 
@@ -54,7 +54,7 @@ export function formatPoints(value: number): string {
 }
 
 /** Thông điệp cho người dùng: ưu tiên nhãn theo mã, sau đó thông điệp an toàn của server. */
-export function errorMessage(error: unknown): string {
+export function describeError(error: unknown): string {
   if (error instanceof ApiError) {
     const code = error.problem.code;
     const label = code ? ERROR_LABELS[code] : undefined;
@@ -65,7 +65,7 @@ export function errorMessage(error: unknown): string {
   return SYSTEM_BUSY;
 }
 
-export function errorCode(error: unknown): string | undefined {
+export function readErrorCode(error: unknown): string | undefined {
   return error instanceof ApiError ? error.problem.code : undefined;
 }
 

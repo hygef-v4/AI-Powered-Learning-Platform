@@ -33,7 +33,7 @@ export function useAiChatAttachments(assignmentId: string, onError: (message: st
     sources.remove(item);
   }
 
-  async function demote() {
+  async function demoteAttachment() {
     if (!template || changing.current) return;
     const version = ++operation.current;
     changing.current = true;
@@ -78,7 +78,7 @@ export function useAiChatAttachments(assignmentId: string, onError: (message: st
     sources, template, templateId, replacement, processing,
     pending: sources.pending || processing,
     addFiles: sources.add,
-    promote, demote, chooseExisting, removeTemplate, clear, restore,
+    promote, demote: demoteAttachment, chooseExisting, removeTemplate, clear, restore,
     snapshot: (): AttachmentSnapshot => ({ template, templateId, uploads: [...sources.uploads] }),
     cancelReplacement: () => setReplacement(null),
     confirmReplacement: async () => {

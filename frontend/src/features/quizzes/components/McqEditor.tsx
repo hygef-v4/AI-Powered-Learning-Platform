@@ -3,7 +3,7 @@
 import { useId } from "react";
 import { Button, cx, Field, Icon, Textarea, TextInput } from "@/shared/ui";
 import { TYPE_LABELS } from "../model/labels";
-import { MAX_OPTIONS, MIN_OPTIONS, nextOptionId, toggleCorrect, withType, type FormErrors, type QuestionForm } from "../model/questionForm";
+import { MAX_OPTIONS, MIN_OPTIONS, generateNextOptionId, toggleCorrect, changeType, type FormErrors, type QuestionForm } from "../model/questionForm";
 import type { QuestionType } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -31,14 +31,14 @@ export function McqEditor({ value, onChange, errors, readOnly = false }: Props) 
       options: value.options.filter((option) => option.id !== optionId),
       correctOptionIds: value.correctOptionIds.filter((correct) => correct !== optionId),
     });
-  const addOption = () => onChange({ ...value, options: [...value.options, { id: nextOptionId(value.options), text: "" }] });
+  const addOption = () => onChange({ ...value, options: [...value.options, { id: generateNextOptionId(value.options), text: "" }] });
 
   return (
     <fieldset disabled={readOnly} className="flex min-w-0 flex-col gap-4" data-testid="mcq-editor">
       <div role="radiogroup" aria-label={msg("quizzes.components.McqEditor.loaiCauHoi")} className="flex flex-wrap gap-2">
         {(Object.keys(TYPE_LABELS) as QuestionType[]).map((type) => (
           <button key={type} type="button" role="radio" aria-checked={value.type === type}
-            onClick={() => onChange(withType(value, type))} data-testid={`mcq-editor-type-${type}`}
+            onClick={() => onChange(changeType(value, type))} data-testid={`mcq-editor-type-${type}`}
             className={cx("rounded-full border px-3 py-1 text-xs font-semibold",
               value.type === type ? "border-primary/30 bg-primary-soft text-primary-ink" : "border-line-strong bg-surface text-body hover:bg-shell")}>
             {TYPE_LABELS[type]}

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AuditLogPage } from "@/features/audit/pages/AuditLogPage";
-import { serverMsg } from "@/i18n/server";
+import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await serverMsg("app.admin.audit.page.nhatKyAudit") };
+  return { title: await translateOnServer("app.admin.audit.page.nhatKyAudit") };
 }
 
 export default function Page() {

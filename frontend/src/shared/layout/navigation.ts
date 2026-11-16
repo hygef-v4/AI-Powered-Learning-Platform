@@ -43,7 +43,7 @@ export const AVATAR_TONES: Record<Role, Tone> = {
 };
 
 /** Mục đang mở: đường dẫn dài nhất khớp đầu pathname. */
-export function activeHref(items: NavItem[], pathname: string): string | null {
+export function findActiveHref(items: NavItem[], pathname: string): string | null {
   let best: string | null = null;
   for (const { href } of items) {
     const matches = pathname === href || pathname.startsWith(`${href}/`);
@@ -53,7 +53,7 @@ export function activeHref(items: NavItem[], pathname: string): string | null {
 }
 
 /** Chữ viết tắt trên avatar: chữ đầu của hai từ cuối (tên gọi), một từ thì hai chữ đầu. */
-export function initials(name: string): string {
+export function extractInitials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return "?";
   if (words.length === 1) return words[0]!.slice(0, 2).toUpperCase();

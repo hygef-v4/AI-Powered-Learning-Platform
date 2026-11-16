@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Button, Pill, Section, showToast } from "@/shared/ui";
 import { getProposals, proposeQuestion, resubmitProposal, withdrawProposal } from "../api";
-import { errorMessage, STATUS_LABELS, STATUS_TONES } from "../model/labels";
+import { describeError, STATUS_LABELS, STATUS_TONES } from "../model/labels";
 import type { ProposalView, QuestionContent } from "../model/types";
 import { InlineQuestionDialog } from "./QuizDetailParts";
 import { SimilarQuestionsAlert } from "./SimilarQuestionsAlert";
@@ -22,7 +22,7 @@ export function QuestionProposalsSection({ classId }: { classId: string }) {
   const load = useCallback((signal?: AbortSignal) => {
     getProposals(classId, signal)
       .then((list) => { setRows(list); setError(null); })
-      .catch((failure: unknown) => { if (!signal?.aborted) setError(errorMessage(failure)); });
+      .catch((failure: unknown) => { if (!signal?.aborted) setError(describeError(failure)); });
   }, [classId]);
 
   useEffect(() => {
@@ -31,26 +31,26 @@ export function QuestionProposalsSection({ classId }: { classId: string }) {
     return () => controller.abort();
   }, [load]);
 
-  const save = async (content: QuestionContent) => {
+  const saveProposal = async (content: QuestionContent) => {
     try {
       if (editing === "new" || !editing) await proposeQuestion(classId, content);
       else await resubmitProposal(classId, editing.question.id, content, editing.question.version);
     } catch (failure) {
-      throw new Error(errorMessage(failure));
+      throw new Error(describeError(failure));
     }
     setEditing(null);
     showToast(msg("quizzes.components.QuestionProposalsSection.daGuiDeXuatChoChu"));
     load();
   };
 
-  const withdraw = async (row: ProposalView) => {
+  const handleWithdraw = async (row: ProposalView) => {
     setBusy(true);
     try {
       await withdrawProposal(classId, row.question.id, row.question.version);
       showToast(msg("quizzes.components.QuestionProposalsSection.daRutDeXuat"));
       load();
     } catch (failure) {
-      setError(errorMessage(failure));
+      setError(describeError(failure));
     } finally {
       setBusy(false);
     }
@@ -79,7 +79,7 @@ export function QuestionProposalsSection({ classId }: { classId: string }) {
               {open && (
                 <div className="flex gap-1">
                   <Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditing(row)} data-testid="proposal-edit">{msg("quizzes.components.QuestionProposalsSection.suaVaGuiLai")}</Button>
-                  <Button size="sm" variant="ghost" disabled={busy} onClick={() => void withdraw(row)} data-testid="proposal-withdraw">{msg("quizzes.components.QuestionProposalsSection.rutDeXuat")}</Button>
+                  <Button size="sm" variant="ghost" disabled={busy} onClick={() => void handleWithdraw(row)} data-testid="proposal-withdraw">{msg("quizzes.components.QuestionProposalsSection.rutDeXuat")}</Button>
                 </div>
               )}
             </li>
@@ -88,7 +88,7 @@ export function QuestionProposalsSection({ classId }: { classId: string }) {
       </ul>
       {editing && (
         <InlineQuestionDialog initial={editing === "new" ? null : editing} title={editing === "new" ? msg("quizzes.components.QuestionProposalsSection.deXuatCauHoi") : msg("quizzes.components.QuestionProposalsSection.suaCauDeXuat")}
-          onClose={() => setEditing(null)} onSave={save} />
+          onClose={() => setEditing(null)} onSave={saveProposal} />
       )}
     </Section>
   );

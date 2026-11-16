@@ -6,7 +6,7 @@ import type { PurposePolicy } from "@/features/files/model/purposes";
 import { DocumentViewer, type DocumentModel } from "@/shared/document";
 import { Alert, Button, Dialog, Icon, IconButton } from "@/shared/ui";
 import { assignmentsApi } from "../api";
-import { errorMessage, requestRef } from "../model/format";
+import { describeError, requestRef } from "../model/format";
 import { checkImportFiles, IMPORT_ACCEPT, importKindOf } from "../model/importFiles";
 import type { ImportDraft, ImportPlacement, ImportProposal, ImportWarning } from "../model/types";
 import { msg } from "@/i18n/msg";
@@ -61,7 +61,7 @@ export function ExamImportDialog({ assignmentId, currentSkeleton, prepare, initi
   useEffect(() => {
     if (!draft || draft.status !== "PENDING") return;
     const timer = setTimeout(() => {
-      assignmentsApi.importDraft(assignmentId, draft.draftId).then(receive, (e) => fail(errorMessage(e)));
+      assignmentsApi.importDraft(assignmentId, draft.draftId).then(receive, (e) => fail(describeError(e)));
     }, POLL_MS);
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -133,7 +133,7 @@ export function ExamImportDialog({ assignmentId, currentSkeleton, prepare, initi
       }
       receive(await assignmentsApi.startImport(assignmentId, chosen, ref.current));
     } catch (e) {
-      fail(errorMessage(e));
+      fail(describeError(e));
     }
   }
 
@@ -152,7 +152,7 @@ export function ExamImportDialog({ assignmentId, currentSkeleton, prepare, initi
     onClose();
   }
 
-  async function apply(placement: ImportPlacement) {
+  async function applyImport(placement: ImportPlacement) {
     if (!preview) return;
     setPhase("applying");
     setError(null);
@@ -168,7 +168,7 @@ export function ExamImportDialog({ assignmentId, currentSkeleton, prepare, initi
       setDraft(null);
       await onApplied(APPLIED_MESSAGE);
     } catch (e) {
-      setError(errorMessage(e));
+      setError(describeError(e));
       setPhase("preview");
     }
   }
@@ -183,11 +183,11 @@ export function ExamImportDialog({ assignmentId, currentSkeleton, prepare, initi
     <div className="flex flex-wrap justify-end gap-2">
       <Button data-testid="exam-import-discard" disabled={busy} onClick={() => void close()}>{msg("assignments.components.ExamImportDialog.bo")}</Button>
       {hasContent ? <>
-        <Button data-testid="exam-import-append" disabled={busy} onClick={() => void apply("APPEND")}>{msg("assignments.components.ExamImportDialog.chenVaoCuoi")}</Button>
-        <Button variant="primary" data-testid="exam-import-replace" disabled={busy} onClick={() => void apply("REPLACE")}>
+        <Button data-testid="exam-import-append" disabled={busy} onClick={() => void applyImport("APPEND")}>{msg("assignments.components.ExamImportDialog.chenVaoCuoi")}</Button>
+        <Button variant="primary" data-testid="exam-import-replace" disabled={busy} onClick={() => void applyImport("REPLACE")}>
           {msg("assignments.components.ExamImportDialog.thayToanBo")}</Button>
       </> : (
-        <Button variant="primary" data-testid="exam-import-apply" disabled={busy} onClick={() => void apply("REPLACE")}>
+        <Button variant="primary" data-testid="exam-import-apply" disabled={busy} onClick={() => void applyImport("REPLACE")}>
           {msg("assignments.components.ExamImportDialog.ghiVaoDe")}</Button>
       )}
     </div>

@@ -2,7 +2,7 @@
 
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { showToast } from "@/shared/ui/Toast";
-import { useSession } from "../../hooks/session";
+import { useSession } from "../../hooks/SessionProvider";
 import { PASSWORD_CHANGED_MESSAGE, PasswordChangeForm } from "../components/PasswordChangeForm";
 import { ProfileForm } from "../components/ProfileForm";
 import { msg } from "@/i18n/msg";

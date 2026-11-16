@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, apiFetch, apiDownloadFile, CONCURRENT_REFRESH_WAIT_MS, setUnauthenticatedHandler } from "@/shared/api/client";
+import { ApiError, fetchApi, downloadApiFile, CONCURRENT_REFRESH_WAIT_MS, setUnauthenticatedHandler } from "@/shared/api/client";
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status });
 }
 
-describe("apiFetch", () => {
+describe("fetchApi", () => {
   it.each([
     ["attachment; filename=\"fallback.xlsx\"; filename*=UTF-8''B%C3%A0i%20t%E1%BA%ADp.xlsx", "Bài tập.xlsx"],
     ["attachment; filename=\"gradebook.csv\"", "gradebook.csv"],
@@ -16,7 +16,7 @@ describe("apiFetch", () => {
       headers: { "Content-Disposition": disposition },
     }));
     vi.stubGlobal("fetch", fetchMock);
-    const result = await apiDownloadFile("/api/v1/export");
+    const result = await downloadApiFile("/api/v1/export");
     expect(result.filename).toBe(filename);
     expect(result.blob.size).toBe(8);
     expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ credentials: "include" });
@@ -32,7 +32,7 @@ describe("apiFetch", () => {
     const fetchMock = vi.fn().mockResolvedValue(json({ ok: true }));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(apiFetch<{ ok: boolean }>("/api/v1/x")).resolves.toEqual({ ok: true });
+    await expect(fetchApi<{ ok: boolean }>("/api/v1/x")).resolves.toEqual({ ok: true });
     expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ credentials: "include" });
   });
 
@@ -40,7 +40,7 @@ describe("apiFetch", () => {
     const body = JSON.stringify({ title: "Conflict", detail: "Version lệch" });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(body, { status: 409 })));
 
-    const error = await apiFetch("/api/v1/x").catch((e: unknown) => e);
+    const error = await fetchApi("/api/v1/x").catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).problem).toMatchObject({ status: 409, detail: "Version lệch" });
   });
@@ -50,8 +50,8 @@ describe("apiFetch", () => {
     const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(json({})));
     vi.stubGlobal("fetch", fetchMock);
 
-    await apiFetch("/api/v1/x", { method: "PATCH", body: "{}" });
-    await apiFetch("/api/v1/x");
+    await fetchApi("/api/v1/x", { method: "PATCH", body: "{}" });
+    await fetchApi("/api/v1/x");
 
     expect(new Headers(fetchMock.mock.calls[0]?.[1].headers).get("X-XSRF-TOKEN")).toBe("abc");
     expect(new Headers(fetchMock.mock.calls[1]?.[1].headers).get("X-XSRF-TOKEN")).toBeNull();
@@ -65,7 +65,7 @@ describe("apiFetch", () => {
       .mockResolvedValueOnce(json({ ok: true }));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(apiFetch("/api/v1/me/profile")).resolves.toEqual({ ok: true });
+    await expect(fetchApi("/api/v1/me/profile")).resolves.toEqual({ ok: true });
     expect(fetchMock.mock.calls[1]?.[0]).toBe("/api/v1/auth/refresh");
   });
 
@@ -80,7 +80,7 @@ describe("apiFetch", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const started = Date.now();
-    await expect(apiFetch("/api/v1/me/profile")).resolves.toEqual({ ok: true });
+    await expect(fetchApi("/api/v1/me/profile")).resolves.toEqual({ ok: true });
     expect(Date.now() - started).toBeGreaterThanOrEqual(CONCURRENT_REFRESH_WAIT_MS - 50);
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(handler).not.toHaveBeenCalled();
@@ -98,7 +98,7 @@ describe("apiFetch", () => {
       .mockResolvedValueOnce(json({ ok: true }));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(apiFetch("/api/v1/me/profile")).resolves.toEqual({ ok: true });
+    await expect(fetchApi("/api/v1/me/profile")).resolves.toEqual({ ok: true });
     expect(fetchMock.mock.calls[3]?.[0]).toBe("/api/v1/auth/refresh");
     expect(handler).not.toHaveBeenCalled();
   });
@@ -114,7 +114,7 @@ describe("apiFetch", () => {
         .mockResolvedValueOnce(new Response(null, { status: 503 })),
     );
 
-    const error = await apiFetch("/api/v1/me/profile").catch((e: unknown) => e);
+    const error = await fetchApi("/api/v1/me/profile").catch((e: unknown) => e);
     expect((error as ApiError).problem).toMatchObject({ status: 503, code: "SYSTEM_BUSY" });
     expect(handler).not.toHaveBeenCalled();
   });
@@ -127,7 +127,7 @@ describe("apiFetch", () => {
       vi.fn().mockImplementation(() => Promise.resolve(new Response(null, { status: 401 }))),
     );
 
-    const error = await apiFetch("/api/v1/me/profile").catch((e: unknown) => e);
+    const error = await fetchApi("/api/v1/me/profile").catch((e: unknown) => e);
     expect((error as ApiError).problem.status).toBe(401);
     expect(handler).toHaveBeenCalledOnce();
   });
@@ -136,7 +136,7 @@ describe("apiFetch", () => {
     const fetchMock = vi.fn().mockResolvedValue(json({ code: "AUTH_FAILED" }, 401));
     vi.stubGlobal("fetch", fetchMock);
 
-    await apiFetch("/api/v1/auth/login", { method: "POST", body: "{}" }).catch(() => undefined);
+    await fetchApi("/api/v1/auth/login", { method: "POST", body: "{}" }).catch(() => undefined);
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 });

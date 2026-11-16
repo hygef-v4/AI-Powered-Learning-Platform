@@ -4,7 +4,7 @@ import { Fragment, type CSSProperties, type ReactNode } from "react";
 import { Icon, cx } from "@/shared/ui";
 import {
   diagramTypeLabels,
-  svgDataUri,
+  encodeSvgDataUri,
   type Align,
   type DocumentBlock,
   type DocumentModel,
@@ -161,7 +161,7 @@ export function BlockView({ block, imageUrl, previewUrl, onOpenDiagram }: {
                 : drawn ? "cursor-default border border-line" : "cursor-default border-2 border-dashed border-line-strong")}>
             {svg ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={svgDataUri(svg)} alt={block.content.alt || diagramTypeLabels[block.content.diagramType]}
+              <img src={encodeSvgDataUri(svg)} alt={block.content.alt || diagramTypeLabels[block.content.diagramType]}
                 className="mx-auto block h-auto max-h-[560px] max-w-full p-3" />
             ) : (
               <span className="flex flex-col items-center gap-2 text-[13px] text-muted">

@@ -7,7 +7,7 @@ import { Alert, Button, Dialog, IconButton, SettingsGroup, Switch, TableFrame, T
 import type { AiProvider } from "@/shared/ai";
 import { ApiKeyDialog } from "./ApiKeyDialog";
 import { getProviders } from "../api";
-import { errorMessage, shortTestResult } from "../model/labels";
+import { describeErrorCode, shortenTestResult } from "../model/labels";
 import type { ConnectionView, ProviderInfo, SaveConnection } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -71,7 +71,7 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
     };
   }, [api, loadError]);
 
-  const run = async (id: string, action: () => Promise<unknown>, fallback: string) => {
+  const runAction = async (id: string, action: () => Promise<unknown>, fallback: string) => {
     setBusy(id);
     setError(null);
     try {
@@ -79,7 +79,7 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
       await reload();
     } catch (e) {
       const problem = e instanceof ApiError ? e.problem : undefined;
-      setError(problem?.status === 409 ? CONFLICT : errorMessage(problem?.code, fallback));
+      setError(problem?.status === 409 ? CONFLICT : describeErrorCode(problem?.code, fallback));
     } finally {
       setBusy(null);
     }
@@ -93,7 +93,7 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
       await reload();
     } catch (e) {
       const problem = e instanceof ApiError ? e.problem : undefined;
-      setError(problem?.status === 409 ? CONFLICT : errorMessage(problem?.code, msg("ai.components.KeysSection.khongDoiDuocTrangThaiKhoa")));
+      setError(problem?.status === 409 ? CONFLICT : describeErrorCode(problem?.code, msg("ai.components.KeysSection.khongDoiDuocTrangThaiKhoa")));
     }
   };
 
@@ -151,7 +151,7 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
                             c.lastTestResult === OK ? "bg-success-soft text-success" : "bg-danger-soft text-danger",
                           )}
                         >
-                          {shortTestResult(c.lastTestResult)}
+                          {shortenTestResult(c.lastTestResult)}
                         </span>
                       ) : (
                         <span />
@@ -160,7 +160,7 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
                         size="sm"
                         className="shrink-0"
                         disabled={busy !== null}
-                        onClick={() => void run(id, () => api.test(id), msg("ai.components.KeysSection.khongKiemTraDuocKetNoi"))}
+                        onClick={() => void runAction(id, () => api.test(id), msg("ai.components.KeysSection.khongKiemTraDuocKetNoi"))}
                       >
                         {busy === id ? msg("ai.components.KeysSection.dangKiemTra") : msg("ai.components.KeysSection.kiemTra")}
                       </Button>
@@ -222,7 +222,7 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
             onClick={() => {
               const target = revoking;
               setRevoking(null);
-              if (target?.id) void run(target.id, () => api.revoke(target.id as string), msg("ai.components.KeysSection.khongThuHoiDuocKhoa"));
+              if (target?.id) void runAction(target.id, () => api.revoke(target.id as string), msg("ai.components.KeysSection.khongThuHoiDuocKhoa"));
             }}
           >
             {msg("ai.components.KeysSection.thuHoi")}</Button>

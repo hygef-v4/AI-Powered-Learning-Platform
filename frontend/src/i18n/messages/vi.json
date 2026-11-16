@@ -1665,7 +1665,8 @@
         "baiCoGhiNhanHoatDong": "Bài có ghi nhận hoạt động",
         "baiChuaLuu": "Bài chưa lưu",
         "nhapDocxVaoPhan": "Nhập DOCX vào phần “{value}”",
-        "nhapDocxVaoPhanCuoiCua": "Nhập DOCX vào phần cuối của bài"
+        "nhapDocxVaoPhanCuoiCua": "Nhập DOCX vào phần cuối của bài",
+        "daKhoiPhucBanChuaLuu": "Đã khôi phục bản chưa lưu trên thiết bị này"
       },
       "StudentAssignmentDetailPage": {
         "luyenTap": "Luyện tập",
@@ -4675,7 +4676,8 @@
       "mssvNayDaDuocDungCho": "MSSV này đã được dùng cho tài khoản khác.",
       "mssvDaKhoaViSinhVien": "MSSV đã khóa vì sinh viên đã kích hoạt tài khoản.",
       "canNhapMssvChoTaiKhoan": "Cần nhập MSSV cho tài khoản sinh viên.",
-      "chiTaiKhoanSinhVienMoi": "Chỉ tài khoản sinh viên mới có MSSV."
+      "chiTaiKhoanSinhVienMoi": "Chỉ tài khoản sinh viên mới có MSSV.",
+      "khongRoTen": "Không rõ tên"
     },
     "ui": {
       "ClassFilter": {

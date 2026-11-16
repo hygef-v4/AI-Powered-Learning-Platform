@@ -5,7 +5,7 @@ import { BusyOverlay, Button, Dialog, Field, Icon, IconButton, Pill, Select, sho
 import { assignmentsApi } from "../api";
 import { AiDraftPreview } from "./AiDraftPreview";
 import { SearchPicker } from "./SearchPicker";
-import { errorMessage, requestRef } from "../model/format";
+import { describeError, requestRef } from "../model/format";
 import { MAX_SOURCE_FILES, readTemplateFile, useSourceUploads, type SourceUpload, type TemplateFile } from "./sourceUploads";
 import type { AiDraft, GradingMode, Material } from "../model/types";
 
@@ -92,7 +92,7 @@ export function AiDraftDialog({
     const controller = new AbortController();
     assignmentsApi.aiDraft(assignmentId, initialDraftId, controller.signal).then(
       loaded => { if (!controller.signal.aborted) { receive(loaded); setBusy(false); } },
-      error => { if (!controller.signal.aborted) { setError(errorMessage(error)); setBusy(false); } },
+      error => { if (!controller.signal.aborted) { setError(describeError(error)); setBusy(false); } },
     );
     return () => controller.abort();
   }, [assignmentId, initialDraftId]);
@@ -120,7 +120,7 @@ export function AiDraftDialog({
   useEffect(() => {
     if (!draft || draft.status !== "PENDING") return;
     const timer = setTimeout(() => {
-      assignmentsApi.aiDraft(assignmentId, draft.draftId).then(receive, (e) => setError(errorMessage(e)));
+      assignmentsApi.aiDraft(assignmentId, draft.draftId).then(receive, (e) => setError(describeError(e)));
     }, POLL_MS);
     return () => clearTimeout(timer);
   }, [assignmentId, draft]);
@@ -142,7 +142,7 @@ export function AiDraftDialog({
     try {
       receive(await assignmentsApi.requestAiDraft(assignmentId, input));
     } catch (e) {
-      setError(errorMessage(e));
+      setError(describeError(e));
       ref.current = requestRef();
     } finally {
       setPhase("idle");
@@ -150,7 +150,7 @@ export function AiDraftDialog({
   }
 
   // Không trường nào bắt buộc (yêu cầu 2026-11-09): bỏ trống thì AI tự quyết; nút Tạo đề không bị khóa.
-  async function send() {
+  async function sendRequest() {
     if (countError || pointsError) {
       setError(countError ?? pointsError ?? null);
       return;
@@ -174,7 +174,7 @@ export function AiDraftDialog({
     await submit(input);
   }
 
-  async function apply() {
+  async function applyDraft() {
     if (!draft) return;
     setPhase("applying");
     try {
@@ -189,7 +189,7 @@ export function AiDraftDialog({
       onApplied();
     } catch (e) {
       applied.current = false;
-      setError(errorMessage(e));
+      setError(describeError(e));
       // Quay về popup cũ, giữ nguyên nội dung đã nhập; bản nháp lỗi bỏ đi để tạo lại được.
       void assignmentsApi.discardAiDraft(assignmentId, draft.draftId).catch(() => {});
       setDraft(null);
@@ -203,7 +203,7 @@ export function AiDraftDialog({
   useEffect(() => {
     if (!proposal || invalid || applied.current) return;
     applied.current = true;
-    void apply();
+    void applyDraft();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proposal, invalid]);
 
@@ -215,7 +215,7 @@ export function AiDraftDialog({
       setDraft(null);
       ref.current = requestRef();
     } catch (cause) {
-      setError(errorMessage(cause));
+      setError(describeError(cause));
     } finally {
       setBusy(false);
     }
@@ -259,7 +259,7 @@ export function AiDraftDialog({
         ) : (
           <Button
             variant="primary"
-            onClick={() => void send()}
+            onClick={() => void sendRequest()}
             disabled={awaiting || proposal !== null}
             data-testid="ai-send"
           >

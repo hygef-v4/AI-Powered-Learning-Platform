@@ -55,13 +55,13 @@ export function Toaster() {
 
   useEffect(() => {
     const pending = timers.current;
-    const listener = (item: ToastItem) => {
+    const handleToast = (item: ToastItem) => {
       setItems((current) => [...current, item]);
       scheduleDismiss(item);
     };
-    listeners.add(listener);
+    listeners.add(handleToast);
     return () => {
-      listeners.delete(listener);
+      listeners.delete(handleToast);
       pending.forEach(clearTimeout);
       pending.clear();
     };

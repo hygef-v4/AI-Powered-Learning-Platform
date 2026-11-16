@@ -25,7 +25,7 @@ export function loginPathFor(location: { pathname: string; search: string }) {
  * Chỉ nhận đường dẫn nội bộ (bắt đầu bằng một `/`, không phải `//` hay `/\`) để `next` không bị dùng chuyển hướng ra
  * trang ngoài; trang công khai cũng bỏ qua. Không hợp lệ thì `null` (về homePath).
  */
-export function safeNextPath(next: string | null): string | null {
+export function resolveSafeNextPath(next: string | null): string | null {
   if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return null;
   // Trình phân tích URL bỏ tab và xuống dòng, đổi `\` thành `/`: "/\t/evil.com" thành "//evil.com". Có ký tự điều
   // khiển hay khoảng trắng thì bỏ, rồi kiểm lại bằng chính URL parser cho chắc cùng origin.

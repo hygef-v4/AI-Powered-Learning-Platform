@@ -7,15 +7,15 @@ import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Alert, Button, ButtonLink, PageHeader, Pill, Section } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { workApi } from "../api";
-import { errorMessage, formatDateTime, historyOpen } from "../model/format";
+import { describeError, formatDateTime, canOpenHistory } from "../model/format";
 import { ResultSummaryCard } from "../components/ResultSummaryCard";
 import { assignmentMaterialSections, groupProgressSections, groupWorkEntries } from "../slots";
 import { myStatusLabels, myStatusTones, type AttemptSummary, type StudentDetail } from "../model/types";
-import { rowStatus, useStudentAssignments } from "../hooks/useStudentAssignments";
+import { resolveRowStatus, useStudentAssignments } from "../hooks/useStudentAssignments";
 import { msg } from "@/i18n/msg";
 
 /** Loại bài như trên bảng Bài tập: luyện tập là loại riêng, còn lại theo cá nhân hay nhóm. */
-function kindLabel(detail: StudentDetail) {
+function describeKind(detail: StudentDetail) {
   if (detail.gradingMode === "PRACTICE") return msg("assignmentwork.pages.StudentAssignmentDetailPage.luyenTap");
   return detail.submissionMode === "GROUP" ? msg("assignmentwork.pages.StudentAssignmentDetailPage.nhom") : msg("assignmentwork.pages.StudentAssignmentDetailPage.caNhan");
 }
@@ -66,7 +66,7 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
   }
 
   if (!classId) return <Alert tone="danger" role="alert">{msg("assignmentwork.pages.StudentAssignmentDetailPage.thieuLopCuaBai")}</Alert>;
-  if (error && !detail) return <PageLoadError>{errorMessage(error)}</PageLoadError>;
+  if (error && !detail) return <PageLoadError>{describeError(error)}</PageLoadError>;
   if (!detail) return <PageLoading label={msg("assignmentwork.pages.StudentAssignmentDetailPage.dangTaiBaiTap")} />;
 
   // Quay lại về danh sách kèm `focus`: danh sách tự mở đúng tab của bài theo trạng thái mới nhất lúc quay về
@@ -78,9 +78,9 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
   const submitted = !!row && (row.submittedCount > 0 || !!row.group?.submitted);
   // Hạn nộp trễ chỉ có nghĩa với bài chưa nộp mà đã quá hạn nộp.
   const lateDeadline = pastDeadline && !!detail.lateUntil && !submitted;
-  const status = row ? rowStatus(row) : null;
+  const status = row ? resolveRowStatus(row) : null;
   const latest = detail.latestAttempt;
-  const statusKey = (a: { status: string; late: boolean }) => (a.status === "IN_PROGRESS" ? "IN_PROGRESS" : a.late ? "SUBMITTED_LATE" : "SUBMITTED");
+  const resolveStatusKey = (a: { status: string; late: boolean }) => (a.status === "IN_PROGRESS" ? "IN_PROGRESS" : a.late ? "SUBMITTED_LATE" : "SUBMITTED");
   // Bài luyện tập: mỗi lượt một dòng, có bộ đếm lượt (chỉ ở trang này). Bài cá nhân (yêu cầu 2026-11-10): chỉ một bài
   // nộp, nộp lại là ghi đè bản cũ, không đếm số lần: một dòng là bản đang sửa nếu có, không thì bản nộp mới nhất.
   const practice = detail.gradingMode === "PRACTICE";
@@ -96,12 +96,12 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
   return (
     <div className="flex flex-col gap-4">
       <PageHeader backHref={back} title={detail.title} breadcrumb={[{ label: msg("assignmentwork.pages.StudentAssignmentDetailPage.baiTap"), href: back }, { label: detail.title }]} />
-      {error !== null && <Alert tone="danger" role="alert">{errorMessage(error)}</Alert>}
+      {error !== null && <Alert tone="danger" role="alert">{describeError(error)}</Alert>}
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex min-w-0 flex-col gap-4">
           <Section title={msg("assignmentwork.pages.StudentAssignmentDetailPage.thongTinBai")}>
             <dl className="grid gap-x-6 gap-y-3 text-[13px] sm:grid-cols-2" data-testid="assignment-info">
-              <div><dt className="text-xs text-muted">{msg("assignmentwork.pages.StudentAssignmentDetailPage.loai")}</dt><dd className="mt-0.5 font-semibold text-ink">{kindLabel(detail)}</dd></div>
+              <div><dt className="text-xs text-muted">{msg("assignmentwork.pages.StudentAssignmentDetailPage.loai")}</dt><dd className="mt-0.5 font-semibold text-ink">{describeKind(detail)}</dd></div>
               <div><dt className="text-xs text-muted">{msg("assignmentwork.pages.StudentAssignmentDetailPage.trangThai")}</dt><dd className="mt-0.5">{status ? <Pill tone={status.tone}>{status.label}</Pill> : <span className="text-muted">—</span>}</dd></div>
               <div>
                 <dt className="text-xs text-muted">{lateDeadline ? msg("assignmentwork.pages.StudentAssignmentDetailPage.hanNopTre") : msg("assignmentwork.pages.StudentAssignmentDetailPage.hanNop")}</dt>
@@ -127,7 +127,7 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
             // Mỗi lượt một dòng; bấm để mở lịch sử nộp bài đúng lượt đó (lượt đang làm thì mở trang làm bài).
             <ul aria-label={practice ? msg("assignmentwork.pages.StudentAssignmentDetailPage.cacLuotLam") : msg("assignmentwork.pages.StudentAssignmentDetailPage.baiNop")} className="-mx-2 flex flex-col">
               {rowsOfAttempts.map((a) => {
-                const key = statusKey(a);
+                const key = resolveStatusKey(a);
                 const href = a.status === "IN_PROGRESS" ? `/attempts/${encodeURIComponent(a.attemptId)}` : `${history}&attempt=${encodeURIComponent(a.attemptId)}`;
                 return (
                   <li key={a.attemptId}>
@@ -154,7 +154,7 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
             </Button>
           ) : null}
           {/* Bài cá nhân, nhóm: lịch sử chỉ có khi đã nộp và qua hạn nộp đúng giờ (yêu cầu 2026-11-10). */}
-          {historyOpen(detail, submitted || !!attempts?.some((a) => a.status === "SUBMITTED")) && (
+          {canOpenHistory(detail, submitted || !!attempts?.some((a) => a.status === "SUBMITTED")) && (
             <ButtonLink href={history}>{msg("assignmentwork.pages.StudentAssignmentDetailPage.xemLichSuNopBai")}</ButtonLink>
           )}
         </Section>

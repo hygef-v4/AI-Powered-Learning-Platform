@@ -6,7 +6,7 @@ import { Button, DateInput, Dialog, Field, showToast, Textarea, TextInput } from
 import { PersonPicker } from "./PersonPicker";
 import type { CreateClassInput, PersonView, SubjectView } from "../model/types";
 import { CLASS_START_DATE_RANGE, CLASS_START_DATE_REQUIRED, formatClassFieldError, formatOperationError } from "../model/format";
-import { termOf } from "../model/term";
+import { deriveTerm } from "../model/term";
 import { msg } from "@/i18n/msg";
 
 type Errors = { code?: string; startsOn?: string };
@@ -22,8 +22,8 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
   const [errors, setErrors] = useState<Errors>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const term = termOf(values.startsOn);
-  function set(key: keyof typeof values, value: string) {
+  const term = deriveTerm(values.startsOn);
+  function setValue(key: keyof typeof values, value: string) {
     setValues({ ...values, [key]: value });
     setErrors((current) => ({ ...current, [key]: undefined }));
   }
@@ -52,18 +52,18 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
     <form id={`${id}-form`} onSubmit={(event) => void handleSubmit(event)} noValidate className="flex flex-col gap-3.5">
       <fieldset disabled={busy} className="flex min-w-0 flex-col gap-3.5">
         <Field label={msg("academics.components.ClassFormDialog.maLop")} htmlFor={`${id}-code`} required error={errors.code}>
-          <TextInput id={`${id}-code`} maxLength={30} value={values.code} invalid={!!errors.code} onChange={(event) => set("code", event.target.value)} data-testid="class-form-code" />
+          <TextInput id={`${id}-code`} maxLength={30} value={values.code} invalid={!!errors.code} onChange={(event) => setValue("code", event.target.value)} data-testid="class-form-code" />
         </Field>
         <div className="flex flex-col gap-1.5">
           <Field label={msg("academics.components.ClassFormDialog.ngayBatDau")} htmlFor={`${id}-starts-on`} required error={errors.startsOn}>
             <DateInput id={`${id}-starts-on`} min="2000-01-01" max="2099-12-31" value={values.startsOn} invalid={!!errors.startsOn}
-              onChange={(value) => set("startsOn", value)} data-testid="class-form-starts-on" />
+              onChange={(value) => setValue("startsOn", value)} data-testid="class-form-starts-on" />
           </Field>
           {term && <p aria-live="polite" className="text-xs text-muted" data-testid="class-form-term">{msg("academics.components.ClassFormDialog.hocKy")}<span className="font-mono text-ink">{term}</span></p>}
         </div>
         <PersonPicker label={msg("academics.components.ClassFormDialog.giangVien")} value={teacher} onChange={setTeacher} people={teachers} loader={loadTeachers} clearable disabled={busy} />
         <Field label={msg("academics.components.ClassFormDialog.moTa")} htmlFor={`${id}-description`}>
-          <Textarea id={`${id}-description`} maxLength={2000} value={values.description} onChange={(event) => set("description", event.target.value)}
+          <Textarea id={`${id}-description`} maxLength={2000} value={values.description} onChange={(event) => setValue("description", event.target.value)}
             className="min-h-20" />
         </Field>
       </fieldset>

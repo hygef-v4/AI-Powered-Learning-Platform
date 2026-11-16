@@ -5,7 +5,7 @@ import { useAiChatAttachments } from "../hooks/useAiChatAttachments";
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ClipboardEvent, type DragEvent } from "react";
 import { Button, Dialog, Icon, IconButton, MenuItem, cx, showErrorToast, type IconName } from "@/shared/ui";
 import { assignmentsApi } from "../api";
-import { errorMessage, requestRef } from "../model/format";
+import { describeError, requestRef } from "../model/format";
 import type { AiDraft, Material } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -126,7 +126,7 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
     setMenu(next);
   }
 
-  function say(message: Omit<Message, "id">) {
+  function addMessage(message: Omit<Message, "id">) {
     setMessages((current) => [...current, { ...message, id: nextId.current++ }]);
   }
 
@@ -135,7 +135,7 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
   const hasTemplate = Boolean(template || pickedTemplate);
   const hasReferences = pickedMaterials.length > 0 || sources.uploads.length > 0;
 
-  async function send(event?: FormEvent) {
+  async function sendMessage(event?: FormEvent) {
     event?.preventDefault();
     const text = input.trim();
     if (!text || submitting.current) return;
@@ -166,24 +166,24 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
       if (!alive.current) return;
       accepted = true;
       pendingRequest.current = null;
-      say({ role: "user", text, template: templateName, references });
+      addMessage({ role: "user", text, template: templateName, references });
       setInput("");
       attachments.clear();
       setChosen([]);
       draft = await waitForResult(assignmentId, requested, () => alive.current);
       if (!alive.current) return;
       if (draft.status !== "READY" || !draft.proposal) {
-        say({ role: "ai", text: msg("assignments.components.AiReviseChat.deChuaThayDoi", { value: String(draft.safeError ?? msg("assignments.components.AiReviseChat.aiKhongTraKetQua")) }), tone: "danger", recover });
+        addMessage({ role: "ai", text: msg("assignments.components.AiReviseChat.deChuaThayDoi", { value: String(draft.safeError ?? msg("assignments.components.AiReviseChat.aiKhongTraKetQua")) }), tone: "danger", recover });
         return;
       }
       if (draft.proposal.unchanged) {
-        say({ role: "ai", text: msg("assignments.components.AiReviseChat.aiChuaThayDoiGiHay"), recover });
+        addMessage({ role: "ai", text: msg("assignments.components.AiReviseChat.aiChuaThayDoiGiHay"), recover });
         void assignmentsApi.discardAiDraft(assignmentId, draft.draftId).catch(() => {});
         return;
       }
       const validation = draft.proposal.validation;
       if (validation?.status === "INVALID") {
-        say({ role: "ai", text: msg("assignments.components.AiReviseChat.khongApDungDuoc", { value: String(validation.issues.map(issue => issue.message).join(" ")) }), tone: "danger", recover });
+        addMessage({ role: "ai", text: msg("assignments.components.AiReviseChat.khongApDungDuoc", { value: String(validation.issues.map(issue => issue.message).join(" ")) }), tone: "danger", recover });
         void assignmentsApi.discardAiDraft(assignmentId, draft.draftId).catch(() => {});
         return;
       }
@@ -197,12 +197,12 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
       const warnings = validation?.issues.filter(issue => issue.severity === "WARNING") ?? [];
       const shown = warnings.slice(0, MAX_WARNINGS).map(issue => msg("assignments.components.AiReviseChat.luuY", { message: String(issue.message) }));
       if (warnings.length > MAX_WARNINGS) shown.push(msg("assignments.components.AiReviseChat.vaLuuYKhac", { value: String(warnings.length - MAX_WARNINGS) }));
-      say({ role: "ai", text: [msg("assignments.components.AiReviseChat.daSuaDeTheoYeuCau"), ...shown].join("\n") });
+      addMessage({ role: "ai", text: [msg("assignments.components.AiReviseChat.daSuaDeTheoYeuCau"), ...shown].join("\n") });
     } catch (error) {
       if (!alive.current) return;
-      say({ role: "ai", text: applied ? msg("assignments.components.AiReviseChat.deDaDuocCapNhatNhung")
-        : applying ? msg("assignments.components.AiReviseChat.chuaXacNhanDuocKetQua", { value: String(errorMessage(error)) })
-        : `${errorMessage(error)} ${accepted ? msg("assignments.components.AiReviseChat.deChuaThayDoi2") : msg("assignments.components.AiReviseChat.yeuCauChuaDuocXacNhan")}`,
+      addMessage({ role: "ai", text: applied ? msg("assignments.components.AiReviseChat.deDaDuocCapNhatNhung")
+        : applying ? msg("assignments.components.AiReviseChat.chuaXacNhanDuocKetQua", { value: String(describeError(error)) })
+        : `${describeError(error)} ${accepted ? msg("assignments.components.AiReviseChat.deChuaThayDoi2") : msg("assignments.components.AiReviseChat.yeuCauChuaDuocXacNhan")}`,
         tone: "danger", recover: accepted && !applying ? recover : undefined });
       if (!applying && draft?.status === "READY") void assignmentsApi.discardAiDraft(assignmentId, draft.draftId).catch(() => {});
     } finally {
@@ -260,7 +260,7 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
-      void send();
+      void sendMessage();
     }
     if (event.key === "Escape") closeChat();
   }
@@ -307,7 +307,7 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
         <div className="flex shrink-0 flex-col gap-2 border-t border-line px-3 py-2.5">
           <AiChatAttachments attachments={attachments} templateName={template?.file.name ?? pickedTemplate?.title}
             materials={pickedMaterials} disabled={busy} onUnchoose={id => setChosen(current => current.filter(value => value !== id))} />
-          <form onSubmit={(event) => void send(event)} className="flex items-end gap-1.5">
+          <form onSubmit={(event) => void sendMessage(event)} className="flex items-end gap-1.5">
             <div ref={attach} className="relative shrink-0">
               <IconButton icon="add" label={msg("assignments.components.AiReviseChat.themMauDeHoacTaiLieu")} data-testid="ai-revise-attach" disabled={busy || attachments.processing}
                 aria-haspopup="menu" aria-expanded={menu !== null} onClick={() => showMenu(menu ? null : "root")}

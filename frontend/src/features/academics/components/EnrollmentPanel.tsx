@@ -160,7 +160,7 @@ function AddStudentDialog({ candidates, students, loadCandidates, onEnroll, onBa
     setSelected(current => allSelected ? current.filter(person => !rows.some(row => row.id === person.id))
       : [...current, ...rows.filter(person => !current.some(item => item.id === person.id))]);
   }
-  async function add() {
+  async function addStudent() {
     if (!selected.length || busy) return;
     setBusy(true); setError(""); setResults([]);
     try {
@@ -182,7 +182,7 @@ function AddStudentDialog({ candidates, students, loadCandidates, onEnroll, onBa
     } catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
   }
   return <Dialog open title={msg("academics.components.EnrollmentPanel.themSinhVien")} size="lg" onClose={onClose} dismissible={!busy}
-    footer={<Button variant="primary" disabled={busy || !selected.length || selected.length > 200} onClick={() => void add()} data-testid="enrollment-add-submit">{msg("academics.components.EnrollmentPanel.them")}{selected.length} {msg("academics.components.EnrollmentPanel.sinhVien")}</Button>}>
+    footer={<Button variant="primary" disabled={busy || !selected.length || selected.length > 200} onClick={() => void addStudent()} data-testid="enrollment-add-submit">{msg("academics.components.EnrollmentPanel.them")}{selected.length} {msg("academics.components.EnrollmentPanel.sinhVien")}</Button>}>
     <TextInput type="search" icon="search" aria-label={msg("academics.components.EnrollmentPanel.timSinhVien")} placeholder={msg("academics.components.EnrollmentPanel.timTenEmailHoacMssv")} value={query} disabled={busy} onChange={event => setQuery(event.target.value)} />
     <label className="flex items-center gap-3 text-sm">
       <input type="checkbox" className="size-4 accent-primary" checked={allSelected} disabled={busy || options.loading || !rows.length}

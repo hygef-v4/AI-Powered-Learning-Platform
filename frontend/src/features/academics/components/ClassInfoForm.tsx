@@ -4,7 +4,7 @@ import { useId, useState, type FormEvent } from "react";
 import { Button, DateInput, Field, LockedInput, Section, showToast, Textarea } from "@/shared/ui";
 import type { ClassInfoInput, CourseClassView } from "../model/types";
 import { CLASS_START_DATE_RANGE, CLASS_START_DATE_REQUIRED, formatClassFieldError, formatOperationError } from "../model/format";
-import { termOf } from "../model/term";
+import { deriveTerm } from "../model/term";
 import { msg } from "@/i18n/msg";
 
 /**
@@ -27,7 +27,7 @@ function InfoEditor({ value, onSave }: { value: CourseClassView; onSave: (value:
   const [dateReset, setDateReset] = useState(0);
   const archived = value.status === "ARCHIVED";
   const dirty = !dateValid || fields.description !== original.description || fields.startsOn !== original.startsOn;
-  const nextTerm = termOf(fields.startsOn);
+  const nextTerm = deriveTerm(fields.startsOn);
   const termChanged = fields.startsOn !== original.startsOn && nextTerm !== null && nextTerm !== value.term;
   async function handleSave(event: FormEvent) {
     event.preventDefault();

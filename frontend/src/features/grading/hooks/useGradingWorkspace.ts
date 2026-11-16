@@ -58,14 +58,14 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     additionalDirtyRef.current = additionalDirty;
   }, [dirty, additionalDirty]);
   useEffect(() => {
-    function beforeUnload(event: BeforeUnloadEvent) {
+    function warnBeforeUnload(event: BeforeUnloadEvent) {
       if (dirtyRef.current || additionalDirtyRef.current) {
         event.preventDefault();
         event.returnValue = "";
       }
     }
-    window.addEventListener("beforeunload", beforeUnload);
-    return () => window.removeEventListener("beforeunload", beforeUnload);
+    window.addEventListener("beforeunload", warnBeforeUnload);
+    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
   }, []);
 
   function updateForm(patch: Partial<GradingFormValues>) {

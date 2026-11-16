@@ -7,13 +7,13 @@ import { ApiError } from "@/shared/api/client";
 import { isValidStudentCode, normalizeStudentCode, STUDENT_CODE_FORMAT_MESSAGE } from "@/shared/studentCode";
 import { Alert } from "@/shared/ui/Alert";
 import { Button, IconButton } from "@/shared/ui/Button";
-import { Field, TextInput } from "@/shared/ui/inputs";
+import { Field, TextInput } from "@/shared/ui/Inputs";
 import { LockedInput } from "@/shared/ui/LockedInput";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { Pill } from "@/shared/ui/Pill";
 import { Section } from "@/shared/ui/Section";
 import { showToast, type ToastTone } from "@/shared/ui/Toast";
-import { useSession } from "../../hooks/session";
+import { useSession } from "../../hooks/SessionProvider";
 import { ROLE_LABELS } from "../../model/types";
 import { RoleChangeDialog, RoleChangeRejectedDialog, StatusToggleDialog, type RoleChangeBlock } from "../components/AccountDialogs";
 import { getAccount, updateAccount, type AccountDetail } from "../api";
@@ -72,7 +72,7 @@ export function AccountDetailPage() {
   const isSelf = session.status === "authenticated" && session.profile.accountId === account.id;
   const reopening = account.status === "DISABLED";
 
-  function changed(saved: AccountDetail, message: string, tone: ToastTone = "success") {
+  function applyChanged(saved: AccountDetail, message: string, tone: ToastTone = "success") {
     setAccount(saved);
     setPopup(null);
     showToast(message, tone);
@@ -90,7 +90,7 @@ export function AccountDetailPage() {
           key={account.version}
           account={account}
           isSelf={isSelf}
-          onSaved={(saved) => changed(saved, msg("identity.admin.pages.AccountDetailPage.daLuuThayDoi"))}
+          onSaved={(saved) => applyChanged(saved, msg("identity.admin.pages.AccountDetailPage.daLuuThayDoi"))}
           onConflict={reload}
           onChangeRole={() => setPopup({ kind: "role" })}
         />
@@ -131,7 +131,7 @@ export function AccountDetailPage() {
         <RoleChangeDialog
           account={account}
           onClose={() => setPopup(null)}
-          onChanged={(saved) => changed(saved, msg("identity.admin.pages.AccountDetailPage.daDoiVaiTro"))}
+          onChanged={(saved) => applyChanged(saved, msg("identity.admin.pages.AccountDetailPage.daDoiVaiTro"))}
           onConflict={reload}
           onBlocked={(block) => setPopup({ kind: "blocked", block })}
         />
@@ -141,7 +141,7 @@ export function AccountDetailPage() {
         <StatusToggleDialog
           account={account}
           onClose={() => setPopup(null)}
-          onChanged={(saved) => saved.status === "DISABLED" ? changed(saved, msg("identity.admin.pages.AccountDetailPage.daVoHieuHoaTaiKhoan"), "danger") : changed(saved, msg("identity.admin.pages.AccountDetailPage.daMoLaiTaiKhoan"))}
+          onChanged={(saved) => saved.status === "DISABLED" ? applyChanged(saved, msg("identity.admin.pages.AccountDetailPage.daVoHieuHoaTaiKhoan"), "danger") : applyChanged(saved, msg("identity.admin.pages.AccountDetailPage.daMoLaiTaiKhoan"))}
           onConflict={reload}
         />
       )}

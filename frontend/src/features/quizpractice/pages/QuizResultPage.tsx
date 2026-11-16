@@ -5,8 +5,8 @@ import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useEffect, useState } from "react";
 import { Alert, Button, PageHeader, Section } from "@/shared/ui";
 import { getResult, startAttempt } from "../api";
-import { errorCode, errorMessage, formatDateTime, formatDuration, formatPoints, penaltyResultText, submitModeText } from "../model/labels";
-import { questionIndex } from "../components/QuestionPager";
+import { readErrorCode, describeError, formatDateTime, formatDuration, formatPoints, describePenaltyResult, submitModeText } from "../model/labels";
+import { resolveQuestionIndex } from "../components/QuestionPager";
 import { ResultQuestions } from "../components/ResultQuestions";
 import type { ResultView } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
@@ -29,8 +29,8 @@ export function QuizResultPage({ attemptId }: { attemptId: string }) {
       .then((next) => active && setResult(next))
       .catch((failure: unknown) => {
         if (!active) return;
-        if (errorCode(failure) === "ATTEMPT_IN_PROGRESS") router.replace(`/quiz-attempts/${attemptId}`);
-        else setError(errorMessage(failure));
+        if (readErrorCode(failure) === "ATTEMPT_IN_PROGRESS") router.replace(`/quiz-attempts/${attemptId}`);
+        else setError(describeError(failure));
       });
     return () => {
       active = false;
@@ -46,7 +46,7 @@ export function QuizResultPage({ attemptId }: { attemptId: string }) {
     try {
       router.push(`/quiz-attempts/${(await startAttempt(result.quizId, result.classId)).attemptId}`);
     } catch (failure) {
-      setError(errorMessage(failure));
+      setError(describeError(failure));
       setBusy(false);
     }
   };
@@ -66,8 +66,8 @@ export function QuizResultPage({ attemptId }: { attemptId: string }) {
         <Section title={msg("quizpractice.pages.QuizResultPage.diem")} icon="check_circle">
           <p className="text-2xl font-bold text-ink" data-testid="result-score">{formatPoints(result.score)} / {formatPoints(result.maxScore)}</p>
           <p className="text-[13px] text-body">{msg("quizpractice.pages.QuizResultPage.dung")}{result.correctCount} · Sai {result.wrongCount} {msg("quizpractice.pages.QuizResultPage.boTrong")}{result.blankCount}</p>
-          {result.penalty && penaltyResultText(result.penalty) && (
-            <p className="text-[13px] text-body" data-testid="result-penalty">{penaltyResultText(result.penalty)}</p>
+          {result.penalty && describePenaltyResult(result.penalty) && (
+            <p className="text-[13px] text-body" data-testid="result-penalty">{describePenaltyResult(result.penalty)}</p>
           )}
           <p className="text-xs text-muted">{msg("quizpractice.pages.QuizResultPage.practiceKhongTinhVaoSoDiem")}</p>
         </Section>
@@ -79,7 +79,7 @@ export function QuizResultPage({ attemptId }: { attemptId: string }) {
       <div className="mt-4">
         {result.showAnswers
           ? <ResultQuestions questions={result.questions} showScore={result.showScore}
-              index={questionIndex(questionParam, result.questions.length)} onIndex={(next) => setQuestionParam(String(next + 1))} />
+              index={resolveQuestionIndex(questionParam, result.questions.length)} onIndex={(next) => setQuestionParam(String(next + 1))} />
           : <p className="text-[13px] text-muted">{msg("quizpractice.pages.QuizResultPage.quizNayKhongHienDapAn")}</p>}
       </div>
     </>

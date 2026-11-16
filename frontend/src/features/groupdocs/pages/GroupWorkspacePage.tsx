@@ -7,7 +7,7 @@ import { ApiError } from "@/shared/api/client";
 import { Alert, BusyOverlay, Button, Dialog, Icon, Menu, MenuItem, Pill, cx, showToast } from "@/shared/ui";
 import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import { DocumentEditor, type DocumentComment } from "@/shared/document";
-import { outlineOf, publishOutline } from "@/shared/document/outline";
+import { buildOutline, publishOutline } from "@/shared/document/outline";
 import { claimSection, downloadDocx, getWorkspace, groupDocImageUrl, releaseSection, sendActivity } from "../api";
 import { AssignSectionDialog, SubmitGroupDialog } from "../components/SectionDialogs";
 import { SectionHistoryDialog } from "../components/SectionHistoryDialog";
@@ -16,7 +16,7 @@ import { useGroupDocStream } from "../hooks/useGroupDocStream";
 import { useClock } from "../hooks/useClock";
 import { describeDeadline, formatRemaining } from "../model/deadline";
 import { assembleGroupDocument } from "../model/document";
-import { SECTION_STATUS, memberName, sectionPerson } from "../model/status";
+import { SECTION_STATUS, resolveMemberName, resolveSectionPerson } from "../model/status";
 import { findSectionForHeading } from "../model/outline";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { NOOP } from "@/shared/noop";
@@ -24,7 +24,7 @@ import { WorkspaceTopBar } from "@/shared/layout/WorkspaceTopBar";
 import { msg } from "@/i18n/msg";
 
 
-function dateTime(iso: string | null | undefined): string {
+function formatOptionalDateTime(iso: string | null | undefined): string {
   return iso ? formatDateTime(iso) : "—";
 }
 
@@ -118,7 +118,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
       ? `/teaching/classes/${encodeURIComponent(view.classId)}?tab=students`
       : `/my-assignments/${encodeURIComponent(view.assignmentId)}?classId=${encodeURIComponent(view.classId)}`;
     // Đề có heading tự gõ số ("1. Đặc tả") thì bỏ số trùng với số sidebar tự đánh, tránh "1. 1. Đặc tả".
-    const entries = outlineOf(view.sharedBlocks.blocks).map((entry) =>
+    const entries = buildOutline(view.sharedBlocks.blocks).map((entry) =>
       entry.number && entry.title.startsWith(entry.number) ? { ...entry, title: entry.title.slice(entry.number.length).trim() } : entry,
     );
     publishOutline({ assignmentId: view.assignmentId, backHref, backLabel: msg("groupdocs.pages.GroupWorkspacePage.baiTap"), entries });
@@ -145,7 +145,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     }
   };
 
-  const act = async (action: () => Promise<unknown>, fallback: string, sectionId?: string) => {
+  const runAction = async (action: () => Promise<unknown>, fallback: string, sectionId?: string) => {
     setNotice(null);
     try {
       await action();
@@ -178,9 +178,9 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   const cutoff = view.window === "LATE" ? view.lateUntil : view.closesAt;
   const left = editable ? formatRemaining(cutoff, now) : null;
   const myId = view.viewerId;
-  const name = (id: string | null) => memberName(view, id);
+  const resolveName = (id: string | null) => resolveMemberName(view, id);
   const isMine = (s: SectionView) => s.status === "CLAIMED" && s.holderId === myId;
-  const claimable = (s: SectionView) => editable && me.member && s.status !== "CLAIMED";
+  const isClaimable = (s: SectionView) => editable && me.member && s.status !== "CLAIMED";
   const failed = new Set(invalid);
   // Mục Xong do người khác viết: hỏi lại trước khi nhận để sửa.
   const handleClaim = (s: SectionView) => {
@@ -188,8 +188,8 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     else void claimAndEdit(s);
   };
   // Số thứ tự như trên trang (I., I.1.), đặt trước tên mục ở thẻ phân công như thẻ rubric.
-  const numbers = new Map(outlineOf(groupDocument.blocks).map((entry) => [entry.id, entry.number]));
-  const sectionName = (s: SectionView) => [numbers.get(s.partId), s.title].filter(Boolean).join(" ");
+  const numbers = new Map(buildOutline(groupDocument.blocks).map((entry) => [entry.id, entry.number]));
+  const formatSectionName = (s: SectionView) => [numbers.get(s.partId), s.title].filter(Boolean).join(" ");
   // Trên tiêu đề mục chỉ còn trạng thái và Lịch sử.
   const nodeActions = Object.fromEntries(view.sections.map((s) => [s.partId, (
     <div key={s.id} role="group" aria-label={s.title} className="flex items-center gap-1.5">
@@ -207,16 +207,16 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         <section aria-label={s.title} data-own={mine || undefined} data-invalid={failed.has(s.id) || undefined}
           className={cx("flex flex-col gap-2.5 rounded-xl border bg-surface p-3 shadow-sm",
             failed.has(s.id) ? "border-danger bg-danger-soft" : mine ? "border-primary" : "border-line")}>
-          <p className="truncate text-[13px] font-semibold text-ink" title={sectionName(s)}>{sectionName(s)}</p>
+          <p className="truncate text-[13px] font-semibold text-ink" title={formatSectionName(s)}>{formatSectionName(s)}</p>
           <p className="flex items-center gap-2 text-[13px]">
-            <Icon name="person" size={16} filled={sectionPerson(s) !== null}
-              className={cx("shrink-0", sectionPerson(s) !== null ? "text-primary-ink" : "text-muted")} />
+            <Icon name="person" size={16} filled={resolveSectionPerson(s) !== null}
+              className={cx("shrink-0", resolveSectionPerson(s) !== null ? "text-primary-ink" : "text-muted")} />
             <span className="text-muted">{msg("groupdocs.pages.GroupWorkspacePage.nguoiLam")}</span>
-            <span className="ml-auto min-w-0 truncate font-semibold text-ink">{name(sectionPerson(s))}</span>
+            <span className="ml-auto min-w-0 truncate font-semibold text-ink">{resolveName(resolveSectionPerson(s))}</span>
           </p>
           {editable && (me.member || me.teacher) && (
             <div className="flex flex-wrap gap-1.5">
-              {claimable(s) && (
+              {isClaimable(s) && (
                 <Button size="sm" variant="primary" onClick={() => handleClaim(s)}>{s.status === "DONE" ? msg("groupdocs.pages.GroupWorkspacePage.suaMuc") : msg("groupdocs.pages.GroupWorkspacePage.nhanMuc")}</Button>
               )}
               {mine && <Button size="sm" variant="primary" onClick={() => openEditor(s)}>{msg("groupdocs.pages.GroupWorkspacePage.soanTiep")}</Button>}
@@ -242,7 +242,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     <div data-wide-workspace className="flex flex-col gap-4" style={{ "--doc-toolbar-top": `${56 + headerHeight}px` } as CSSProperties}>
       <WorkspaceTopBar barRef={headerRef} title={title} setViewSlot={setViewSlot}
         status={<>
-          {left && <span title={msg("groupdocs.pages.GroupWorkspacePage.hanNop", { value: String(dateTime(cutoff)) })}><Pill tone="warning">{msg("groupdocs.pages.GroupWorkspacePage.con")}{left}</Pill></span>}
+          {left && <span title={msg("groupdocs.pages.GroupWorkspacePage.hanNop", { value: String(formatOptionalDateTime(cutoff)) })}><Pill tone="warning">{msg("groupdocs.pages.GroupWorkspacePage.con")}{left}</Pill></span>}
         </>}
         actions={<>
           {me.member && (
@@ -312,14 +312,14 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
               onClick={() => {
                 const s = releasing;
                 setReleasing(null);
-                if (s) void act(() => releaseSection(view.documentId, s.id), msg("groupdocs.pages.GroupWorkspacePage.khongNhaDuocMuc"), s.id);
+                if (s) void runAction(() => releaseSection(view.documentId, s.id), msg("groupdocs.pages.GroupWorkspacePage.khongNhaDuocMuc"), s.id);
               }}
             >
               {msg("groupdocs.pages.GroupWorkspacePage.nhaMuc")}</Button>
           </>
         }
       >
-        {releasing && <p>{msg("groupdocs.pages.GroupWorkspacePage.nhaMuc2")}<strong>{sectionName(releasing)}</strong> {msg("groupdocs.pages.GroupWorkspacePage.cua")}<strong>{name(sectionPerson(releasing))}</strong>{msg("groupdocs.pages.GroupWorkspacePage.banNhapDangLamCuaMuc")}</p>}
+        {releasing && <p>{msg("groupdocs.pages.GroupWorkspacePage.nhaMuc2")}<strong>{formatSectionName(releasing)}</strong> {msg("groupdocs.pages.GroupWorkspacePage.cua")}<strong>{resolveName(resolveSectionPerson(releasing))}</strong>{msg("groupdocs.pages.GroupWorkspacePage.banNhapDangLamCuaMuc")}</p>}
       </Dialog>
       <Dialog
         open={confirmingEdit !== null}
@@ -347,7 +347,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         <BusyOverlay label={msg("groupdocs.pages.GroupWorkspacePage.dangNop")}>
           <p className="text-[16px] font-bold text-ink">{msg("groupdocs.pages.GroupWorkspacePage.dangNop2")}</p>
           <p className="mt-2 text-[13px] text-body">
-            {msg("groupdocs.pages.GroupWorkspacePage.daHetHanNop")}{view.closesAt && msg("groupdocs.pages.GroupWorkspacePage.luc", { value: String(dateTime(view.closesAt)) })}{msg("groupdocs.pages.GroupWorkspacePage.heThongDangTuNopBan")}</p>
+            {msg("groupdocs.pages.GroupWorkspacePage.daHetHanNop")}{view.closesAt && msg("groupdocs.pages.GroupWorkspacePage.luc", { value: String(formatOptionalDateTime(view.closesAt)) })}{msg("groupdocs.pages.GroupWorkspacePage.heThongDangTuNopBan")}</p>
         </BusyOverlay>
       )}
     </div>

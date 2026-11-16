@@ -21,7 +21,7 @@ type Props = {
 const NUMBER = new Intl.NumberFormat("vi-VN");
 
 /** Các trang cần hiện: đầu, cuối, quanh trang hiện tại; khoảng trống thành "…". */
-export function pageItems(current: number, count: number): (number | "gap")[] {
+export function listPageItems(current: number, count: number): (number | "gap")[] {
   if (count <= 7) return Array.from({ length: count }, (_, i) => i);
   const wanted = new Set([0, count - 1, current - 1, current, current + 1].filter((p) => p >= 0 && p < count));
   if (current <= 2) [1, 2, 3].forEach((p) => wanted.add(p));
@@ -69,7 +69,7 @@ export function Pagination({ page, pageSize, total, onPageChange, itemLabel = ms
           >
             <Icon name="chevron_left" size={16} />
           </button>
-          {pageItems(page, count).map((item, i) =>
+          {listPageItems(page, count).map((item, i) =>
             item === "gap" ? (
               <span key={`gap-${i}`} className={cx(BOX, "text-muted")} aria-hidden>
                 …

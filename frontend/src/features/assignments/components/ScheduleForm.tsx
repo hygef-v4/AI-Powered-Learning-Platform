@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { Alert, Button, DateInput, Field, TextInput } from "@/shared/ui";
-import { errorMessage, fromLocalInput, toLocalInput } from "../model/format";
+import { describeError, fromLocalInput, toLocalInput } from "../model/format";
 import type { AssignmentDetail, ScheduleInput } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -58,7 +58,7 @@ export function ScheduleForm({ assignment, mode, onSubmit }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  function check(): string | null {
+  function validateSchedule(): string | null {
     const close = join(closes);
     if (!close) return msg("assignments.components.ScheduleForm.thieuHanNop");
     const start = scheduled ? join(opens) : new Date().toISOString();
@@ -77,7 +77,7 @@ export function ScheduleForm({ assignment, mode, onSubmit }: Props) {
   }
 
   async function submit() {
-    const problem = check();
+    const problem = validateSchedule();
     setError(problem);
     if (problem) return;
     setBusy(true);
@@ -95,7 +95,7 @@ export function ScheduleForm({ assignment, mode, onSubmit }: Props) {
     } catch (e) {
       const problem = e instanceof ApiError ? (e.problem as { code?: string; warnings?: string[]; errors?: string[] }) : null;
       if (problem?.code === "GROUP_CONFIRMATION_REQUIRED") setGroupWarnings(problem.warnings ?? []);
-      setError(problem?.errors?.length ? `${errorMessage(e)}: ${problem.errors.join(", ")}` : errorMessage(e));
+      setError(problem?.errors?.length ? `${describeError(e)}: ${problem.errors.join(", ")}` : describeError(e));
     } finally {
       setBusy(false);
     }

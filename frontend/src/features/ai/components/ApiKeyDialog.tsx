@@ -4,7 +4,7 @@ import { useId, useState } from "react";
 import { PROVIDER_LABEL, PROVIDERS, type AiProvider } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
 import { Button, Dialog, Field, IconButton, Select, cx } from "@/shared/ui";
-import { PROVIDER_CONSOLE, defaultModel, errorMessage, shortTestResult } from "../model/labels";
+import { PROVIDER_CONSOLE, defaultModel, describeErrorCode, shortenTestResult } from "../model/labels";
 import type { ConnectionView, ProviderInfo, SaveConnection } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -57,13 +57,13 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
     setTest(null);
   };
 
-  const body = (): SaveConnection => ({
+  const buildBody = (): SaveConnection => ({
     apiKey: apiKey.trim() || undefined,
     model,
     version: editing ? current?.version : undefined,
   });
 
-  const save = async () => {
+  const saveConnection = async () => {
     if (!editing && !apiKey.trim()) {
       setError(msg("ai.components.ApiKeyDialog.hayNhapKhoaApi"));
       return;
@@ -71,11 +71,11 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
     setBusy(true);
     setError(null);
     try {
-      await onSave(provider, body());
+      await onSave(provider, buildBody());
       setApiKey("");
     } catch (e) {
       const problem = e instanceof ApiError ? e.problem : undefined;
-      setError(errorMessage(problem?.code, problem?.detail ?? msg("ai.components.ApiKeyDialog.khongLuuDuocKhoaThuLai")));
+      setError(describeErrorCode(problem?.code, problem?.detail ?? msg("ai.components.ApiKeyDialog.khongLuuDuocKhoaThuLai")));
     } finally {
       setBusy(false);
     }
@@ -90,10 +90,10 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
     setBusy(true);
     setError(null);
     try {
-      setTest(await onTest(provider, body()));
+      setTest(await onTest(provider, buildBody()));
     } catch (e) {
       const problem = e instanceof ApiError ? e.problem : undefined;
-      setTest({ ok: false, text: errorMessage(problem?.code, problem?.detail ?? msg("ai.components.ApiKeyDialog.khongKiemTraDuoc")) });
+      setTest({ ok: false, text: describeErrorCode(problem?.code, problem?.detail ?? msg("ai.components.ApiKeyDialog.khongKiemTraDuoc")) });
     } finally {
       setBusy(false);
     }
@@ -108,7 +108,7 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
       onClose={onClose}
       dismissible={!busy}
       footer={
-        <Button variant="primary" onClick={() => void save()} disabled={busy || !model}>
+        <Button variant="primary" onClick={() => void saveConnection()} disabled={busy || !model}>
           {msg("ai.components.ApiKeyDialog.luuKhoa")}</Button>
       }
     >
@@ -197,7 +197,7 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
                     : "rounded-md bg-danger-soft px-2 py-0.5 text-[13px] font-medium text-danger"
                 }
               >
-                {test.ok ? test.text : shortTestResult(test.text)}
+                {test.ok ? test.text : shortenTestResult(test.text)}
               </span>
             )}
           </div>

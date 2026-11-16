@@ -9,7 +9,7 @@ import { msg } from "@/i18n/msg";
 
 const COMPACT = new Intl.NumberFormat("vi-VN", { notation: "compact", maximumFractionDigits: 1 });
 
-function dayLabel(day: string) {
+function formatDayLabel(day: string) {
   const [, month, date] = day.split("-");
   return `${date}/${month}`;
 }
@@ -107,7 +107,7 @@ export function SharedUsageTab() {
               className="flex h-16 w-full max-w-[320px] items-end gap-[3px]"
             >
               {data.byDay.map((d) => (
-                <span key={d.day} title={`${dayLabel(d.day)}: ${formatTokens(d.tokens)} token`} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-0.5">
+                <span key={d.day} title={`${formatDayLabel(d.day)}: ${formatTokens(d.tokens)} token`} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-0.5">
                   {values && d.tokens > 0 && (
                     <span className="text-xs leading-none font-semibold whitespace-nowrap tabular-nums">{COMPACT.format(d.tokens)}</span>
                   )}

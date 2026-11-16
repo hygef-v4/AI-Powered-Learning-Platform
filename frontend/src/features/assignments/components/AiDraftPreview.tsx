@@ -20,7 +20,7 @@ function Paragraphs({ text, format }: { text: string; format?: AiTextFormat }) {
   </div>;
 }
 
-function points(section: AiProposalSection) {
+function sumPoints(section: AiProposalSection) {
   return section.rubric.reduce((sum, criterion) => sum + criterion.items.reduce(
     (itemSum, item) => itemSum + Math.round((item.points ?? 0) * 100), 0), 0) / 100;
 }
@@ -72,7 +72,7 @@ export function AiDraftPreview({ proposal, targetPoints }: { proposal: Proposal;
             <header className="flex items-start gap-3 border-b border-line bg-canvas px-4 py-3">
               <span className="rounded-md bg-primary/10 px-2 py-1 text-xs font-bold text-primary-ink">{index + 1}</span>
               <h4 className={`min-w-0 flex-1 break-words font-semibold leading-6 text-ink ${alignClass(section.titleFormat?.align)}`}><FormattedRuns text={section.title} format={section.titleFormat} /></h4>
-              {!parent && <Pill>{points(section)} {msg("assignments.components.AiDraftPreview.diem")}</Pill>}
+              {!parent && <Pill>{sumPoints(section)} {msg("assignments.components.AiDraftPreview.diem")}</Pill>}
             </header>
             <div className="grid lg:grid-cols-2">
               <div className="min-w-0 p-4"><p className="mb-2 text-xs font-semibold uppercase text-muted">{msg("assignments.components.AiDraftPreview.yeuCauSanPhamCanNop")}</p>

@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { Button, Card, Dialog } from "@/shared/ui";
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import { formatErrorMessage } from "../model/format";
 import type { SubmissionDocumentDto } from "../model/submissionDocument";
 import { RunsView, alignClass } from "@/shared/document/DocumentViewer";
@@ -51,11 +51,11 @@ function SubmittedImage({
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  async function load() {
+  async function loadSubmission() {
     setBusy(true);
     setError("");
     try {
-      const token = await apiFetch<{ url: string }>(
+      const token = await fetchApi<{ url: string }>(
         `/api/v1/evaluations/${evaluationId}/images/${encodeURIComponent(fileId)}`,
       );
       const parsed = new URL(token.url, window.location.origin);
@@ -81,7 +81,7 @@ function SubmittedImage({
           className="h-auto max-w-full"
         />
       )}
-      <button disabled={!evaluationId || busy} onClick={() => void load()}>
+      <button disabled={!evaluationId || busy} onClick={() => void loadSubmission()}>
         {busy ? msg("grading.components.SubmissionViewer.dangTaiAnh") : url ? msg("grading.components.SubmissionViewer.taiLaiAnh") : msg("grading.components.SubmissionViewer.xemAnhBaiNop")}
       </button>
       {error && <p role="alert">{error}</p>}

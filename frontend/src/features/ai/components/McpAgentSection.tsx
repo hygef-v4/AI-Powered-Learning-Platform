@@ -5,7 +5,7 @@ import { formatDate, masked } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
 import { Button, Dialog, Field, IconButton, Pill, SettingsGroup, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
 import { revealMcpToken } from "../api";
-import { ACCESS_LABEL, MAX_AGENTS, MCP_STATUS, errorMessage } from "../model/labels";
+import { ACCESS_LABEL, MAX_AGENTS, MCP_STATUS, describeErrorCode } from "../model/labels";
 import { McpClientSetup } from "./SetupGuides";
 import type { McpAccess, McpCreated, McpCredential } from "../model/types";
 import { msg } from "@/i18n/msg";
@@ -178,7 +178,7 @@ export function McpCredentialDialog({
       await onSubmit(name, access, days);
     } catch (e) {
       const problem = e instanceof ApiError ? e.problem : undefined;
-      setError(errorMessage(problem?.code, problem?.detail ?? (editing ? msg("ai.components.McpAgentSection.khongLuuDuocAgentThuLai") : msg("ai.components.McpAgentSection.khongTaoDuocTokenThuLai"))));
+      setError(describeErrorCode(problem?.code, problem?.detail ?? (editing ? msg("ai.components.McpAgentSection.khongLuuDuocAgentThuLai") : msg("ai.components.McpAgentSection.khongTaoDuocTokenThuLai"))));
       setBusy(false);
     }
   };
@@ -256,7 +256,7 @@ function TokenField({ credential }: { credential: McpCredential }) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
+  const loadAgents = async () => {
     if (token) return token;
     try {
       const loaded = (await revealMcpToken(credential.id)).token;
@@ -278,14 +278,14 @@ function TokenField({ credential }: { credential: McpCredential }) {
           disabled={!credential.revealable}
           onClick={() => {
             if (shown) setShown(false);
-            else void load().then((t) => t && setShown(true));
+            else void loadAgents().then((t) => t && setShown(true));
           }}
         />
         <IconButton
           icon={copied ? "check" : "copy"}
           label={!credential.revealable ? msg("ai.components.McpAgentSection.tokenCuKhongSaoChepDuoc") : copied ? msg("ai.components.McpAgentSection.daSaoChep") : msg("ai.components.McpAgentSection.saoChepToken")}
           disabled={!credential.revealable}
-          onClick={() => void load().then(async (t) => t && setCopied(await copyText(t)))}
+          onClick={() => void loadAgents().then(async (t) => t && setCopied(await copyText(t)))}
         />
       </TokenCard>
       {error && <p className="text-xs text-danger">{error}</p>}

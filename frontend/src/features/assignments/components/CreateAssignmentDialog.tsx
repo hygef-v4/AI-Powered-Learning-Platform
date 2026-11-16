@@ -11,8 +11,8 @@ import { checkImportFiles, IMPORT_ACCEPT, importKindOf } from "../model/importFi
 import { savePendingImport } from "../model/pendingImports";
 import { assignmentsApi, type CreateInput } from "../api";
 import { Choice, ChoiceHint as Hint } from "./Choice";
-import { errorMessage, requestRef } from "../model/format";
-import { templateText } from "../model/templateText";
+import { describeError, requestRef } from "../model/format";
+import { extractTemplateText } from "../model/templateText";
 import { type AiDraft, type AssignmentDetail, type CopySource, type Material } from "../model/types";
 import { msg } from "@/i18n/msg";
 import { LOCALES, LOCALE_NAMES } from "@/i18n/locales";
@@ -122,7 +122,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     if (sources || loadingSources.current) return;
     loadingSources.current = true;
     (target.kind === "class" ? assignmentsApi.copySources(target.classId) : assignmentsApi.subjectCopySources(target.subjectId))
-      .then(setSources, (e) => setError(errorMessage(e)))
+      .then(setSources, (e) => setError(describeError(e)))
       .finally(() => { loadingSources.current = false; });
   }
 
@@ -207,7 +207,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     let formatText: string | undefined;
     if (aiTemplateFile) {
       const imported = await assignmentsApi.importDocx(assignment.id, aiTemplateFile);
-      formatText = templateText(imported.document).text;
+      formatText = extractTemplateText(imported.document).text;
       if (!formatText.trim()) throw new Error(msg("assignments.components.CreateAssignmentDialog.mauDeKhongCoNoiDung"));
     }
     let draft: AiDraft = await assignmentsApi.requestAiDraft(assignment.id, {
@@ -292,8 +292,8 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
       }
       onCreated(assignment);
     } catch (e) {
-      setError(ai ? errorMessage(e, msg("assignments.components.CreateAssignmentDialog.aiKhongTraKetQua"))
-        : assignment ? msg("assignments.components.CreateAssignmentDialog.daTaoBaiChuaNhapTep", { value: String(errorMessage(e)) }) : errorMessage(e));
+      setError(ai ? describeError(e, msg("assignments.components.CreateAssignmentDialog.aiKhongTraKetQua"))
+        : assignment ? msg("assignments.components.CreateAssignmentDialog.daTaoBaiChuaNhapTep", { value: String(describeError(e)) }) : describeError(e));
     } finally {
       setBusy(false);
     }

@@ -29,7 +29,7 @@ vi.mock("@/features/quizpractice/api", () => ({
 const push = vi.fn();
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace }), useSearchParams: () => new URLSearchParams(window.location.search) }));
-vi.mock("@/features/identity/hooks/session", () => ({ useSession: () => ({ status: "authenticated", profile: { role: "STUDENT" } }) }));
+vi.mock("@/features/identity/hooks/SessionProvider", () => ({ useSession: () => ({ status: "authenticated", profile: { role: "STUDENT" } }) }));
 vi.mock("@/features/materials/components/ModulePlace", () => ({ useModuleScope: () => null, useModulePlace: () => ({ reload: () => {} }), ModuleNeighbours: () => null }));
 
 const TAKING: TakingView = {

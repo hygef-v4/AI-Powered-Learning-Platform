@@ -1,16 +1,16 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { Pagination, pageItems } from "@/shared/ui/Pagination";
+import { Pagination, listPageItems } from "@/shared/ui/Pagination";
 
-describe("pageItems", () => {
+describe("listPageItems", () => {
   it("hiện hết khi ít trang", () => {
-    expect(pageItems(0, 5)).toEqual([0, 1, 2, 3, 4]);
+    expect(listPageItems(0, 5)).toEqual([0, 1, 2, 3, 4]);
   });
 
   it("rút gọn bằng dấu … quanh trang hiện tại", () => {
-    expect(pageItems(0, 29)).toEqual([0, 1, 2, 3, "gap", 28]);
-    expect(pageItems(14, 29)).toEqual([0, "gap", 13, 14, 15, "gap", 28]);
-    expect(pageItems(28, 29)).toEqual([0, "gap", 25, 26, 27, 28]);
+    expect(listPageItems(0, 29)).toEqual([0, 1, 2, 3, "gap", 28]);
+    expect(listPageItems(14, 29)).toEqual([0, "gap", 13, 14, 15, "gap", 28]);
+    expect(listPageItems(28, 29)).toEqual([0, "gap", 25, 26, 27, 28]);
   });
 });
 

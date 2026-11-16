@@ -6,7 +6,7 @@ import { useUrlState } from "@/shared/navigation/useUrlState";
 import { Section, Segmented } from "@/shared/ui";
 import { DeadlineChip } from "./DeadlineChip";
 import type { StudentRow } from "../model/types";
-import { doing, upcoming, useStudentAssignments } from "../hooks/useStudentAssignments";
+import { isDoing, isUpcoming, useStudentAssignments } from "../hooks/useStudentAssignments";
 import { msg } from "@/i18n/msg";
 
 type Kind = "INDIVIDUAL" | "GROUP" | "PRACTICE";
@@ -18,7 +18,7 @@ const TABS: { mode: Kind; label: string; empty: string }[] = [
 ];
 
 /** Loại bài như trên bảng Bài tập: bài luyện tập là loại riêng, còn lại theo cá nhân hay nhóm. */
-function kindOf(row: StudentRow): Kind {
+function classifyKind(row: StudentRow): Kind {
   return row.gradingMode === "PRACTICE" ? "PRACTICE" : row.submissionMode;
 }
 
@@ -31,16 +31,16 @@ export function ClassTodoCard({ classId }: { classId: string }) {
   // Mốc "còn hạn" lấy một lần lúc mở trang.
   const [now] = useState(() => Date.now());
   const todo = (rows ?? [])
-    .filter((row) => upcoming(row) && (!row.closesAt || new Date(row.closesAt).getTime() > now))
+    .filter((row) => isUpcoming(row) && (!row.closesAt || new Date(row.closesAt).getTime() > now))
     .sort((a, b) => (a.closesAt ? new Date(a.closesAt).getTime() : Infinity) - (b.closesAt ? new Date(b.closesAt).getTime() : Infinity));
-  const shown = todo.filter((row) => kindOf(row) === mode);
+  const shown = todo.filter((row) => classifyKind(row) === mode);
   const assignmentsHref = `/my-assignments?classId=${encodeURIComponent(classId)}`;
   return (
     <Section title={msg("assignmentwork.components.ClassTodoCard.tongQuanBaiTap")}>
       {rows && !error && <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { label: msg("assignmentwork.components.ClassTodoCard.chuaLam"), tab: "upcoming", count: rows.filter(row => upcoming(row) && !doing(row)).length },
-          { label: msg("assignmentwork.components.ClassTodoCard.dangLam"), tab: "doing", count: rows.filter(doing).length },
+          { label: msg("assignmentwork.components.ClassTodoCard.chuaLam"), tab: "upcoming", count: rows.filter(row => isUpcoming(row) && !isDoing(row)).length },
+          { label: msg("assignmentwork.components.ClassTodoCard.dangLam"), tab: "doing", count: rows.filter(isDoing).length },
           { label: msg("assignmentwork.components.ClassTodoCard.daNop"), tab: "submitted", count: rows.filter(row => row.submittedCount > 0 || row.group?.submitted).length },
         ].map(item => <Link key={item.tab} href={`${assignmentsHref}&tab=${item.tab}`}
           aria-label={`${item.count} ${item.label}`}
@@ -63,7 +63,7 @@ export function ClassTodoCard({ classId }: { classId: string }) {
           options={TABS.map((tab) => ({
             value: tab.mode,
             label: tab.label,
-            count: rows ? todo.filter((row) => kindOf(row) === tab.mode).length : undefined,
+            count: rows ? todo.filter((row) => classifyKind(row) === tab.mode).length : undefined,
           }))}
         />
         {/* Tối đa5 dòng; ít bài thì thẻ co theo nội dung. */}

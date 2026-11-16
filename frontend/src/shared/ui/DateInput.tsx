@@ -3,7 +3,7 @@
 import { useId, useRef, useState, type InputHTMLAttributes } from "react";
 import { cx } from "./cx";
 import { Icon } from "./Icon";
-import { TextInput } from "./inputs";
+import { TextInput } from "./Inputs";
 import { msg } from "@/i18n/msg";
 
 type DateInputProps = Omit<InputHTMLAttributes<HTMLInputElement>,

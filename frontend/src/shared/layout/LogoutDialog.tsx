@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import { clearCurrentUser } from "@/shared/auth/useCurrentUser";
 import { Button } from "@/shared/ui/Button";
 import { Dialog } from "@/shared/ui/Dialog";
@@ -18,7 +18,7 @@ export function LogoutDialog({ open, onClose }: { open: boolean; onClose: () => 
     setBusy(true);
     setError(null);
     try {
-      await apiFetch("/api/v1/auth/logout", { method: "POST" });
+      await fetchApi("/api/v1/auth/logout", { method: "POST" });
       clearCurrentUser();
       router.replace("/login");
     } catch {

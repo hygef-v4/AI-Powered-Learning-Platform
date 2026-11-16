@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import { Alert, Button, Dialog, Pill, cx } from "@/shared/ui";
-import { PROVIDER_LABEL, formatTokens, masked } from "./format";
+import { PROVIDER_LABEL, formatTokens, maskHint } from "./format";
 import type { SourceChoice, SourceOption } from "./types";
 import { msg } from "@/i18n/msg";
 
@@ -19,7 +19,7 @@ type Props = {
   onSubmit: (choice: SourceChoice) => void;
 };
 
-function keyOf(option: SourceOption) {
+function buildKey(option: SourceOption) {
   return `${option.source}:${option.provider ?? ""}`;
 }
 
@@ -42,13 +42,13 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
   useEffect(() => {
     if (!open) return;
     let active = true;
-    apiFetch<SourceOption[]>("/api/v1/ai/sources").then(
+    fetchApi<SourceOption[]>("/api/v1/ai/sources").then(
       (loaded) => {
         if (!active) return;
         setOptions(loaded);
         setError(null);
         const preferred = loaded.find((option) => option.preferred && option.available);
-        setSelected(preferred ? keyOf(preferred) : null);
+        setSelected(preferred ? buildKey(preferred) : null);
         setAutoSent(!!preferred);
         if (preferred) submitRef.current({ source: preferred.source, provider: preferred.provider });
       },
@@ -61,7 +61,7 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
     };
   }, [open]);
 
-  const choice = options?.find((option) => keyOf(option) === selected && option.available);
+  const choice = options?.find((option) => buildKey(option) === selected && option.available);
   const preferred = options?.find((option) => option.preferred);
 
   return (
@@ -105,11 +105,11 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
         <div role="radiogroup" aria-label={msg("shared.ai.AiSourcePicker.nguonAi")} className="flex flex-col gap-2">
           {options.map((option) => (
             <SourceRow
-              key={keyOf(option)}
+              key={buildKey(option)}
               option={option}
-              checked={selected === keyOf(option)}
+              checked={selected === buildKey(option)}
               estimatedTokens={estimatedTokens}
-              onSelect={() => setSelected(keyOf(option))}
+              onSelect={() => setSelected(buildKey(option))}
             />
           ))}
         </div>
@@ -157,7 +157,7 @@ function SourceRow({
     >
       <span className="flex items-center gap-2 text-[13px] font-semibold text-ink">
         {title}
-        {option.keyHint && <span className="font-normal text-muted">{masked(option.keyHint)}</span>}
+        {option.keyHint && <span className="font-normal text-muted">{maskHint(option.keyHint)}</span>}
         {option.preferred && <Pill tone="neutral">{msg("shared.ai.AiSourcePicker.macDinh")}</Pill>}
         <Pill tone={shared ? "primary" : "accent"} className="ml-auto">
           {shared ? msg("shared.ai.AiSourcePicker.truongChiuChiPhi") : msg("shared.ai.AiSourcePicker.banChiuChiPhi")}

@@ -4,7 +4,7 @@ import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { Alert, Button, Card, Icon, Pill } from "@/shared/ui";
 import { workApi } from "../api";
-import { errorMessage, formatDateTime, requestRef } from "../model/format";
+import { describeError, formatDateTime, requestRef } from "../model/format";
 import type { Feedback } from "../model/types";
 import { msg } from "@/i18n/msg";
 
@@ -64,11 +64,11 @@ export function PracticeFeedbackPanel({ attemptId, partTitles }: {
         <Icon name="smart_toy" className="text-primary-ink" /> {msg("assignmentwork.components.PracticeFeedbackPanel.gopYAi")}</h3>
       {loadError !== null && (
         <div className="space-y-2">
-          <Alert tone="danger" role="alert">{errorMessage(loadError)}</Alert>
+          <Alert tone="danger" role="alert">{describeError(loadError)}</Alert>
           <Button size="sm" onClick={() => setRefreshCount((value) => value + 1)}>{msg("assignmentwork.components.PracticeFeedbackPanel.taiLaiGopY")}</Button>
         </div>
       )}
-      {requestError !== null && <Alert tone="danger" role="alert">{errorMessage(requestError)}</Alert>}
+      {requestError !== null && <Alert tone="danger" role="alert">{describeError(requestError)}</Alert>}
       {(isRequesting || hasPending) && <p role="status" className="text-xs text-muted">{msg("assignmentwork.components.PracticeFeedbackPanel.aiDangGopY")}</p>}
       {!items && loadError === null && <p role="status" className="text-sm text-muted">{msg("assignmentwork.components.PracticeFeedbackPanel.dangTaiGopY")}</p>}
       {items && items.length === 0 && <p className="text-sm text-muted">{msg("assignmentwork.components.PracticeFeedbackPanel.chuaCoGopY")}</p>}

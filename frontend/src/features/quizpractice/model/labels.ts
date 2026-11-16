@@ -17,7 +17,7 @@ const ERROR_LABELS: Record<string, string> = {
   SYSTEM_BUSY,
 };
 
-export function errorMessage(error: unknown): string {
+export function describeError(error: unknown): string {
   if (error instanceof ApiError) {
     const code = error.problem.code;
     const label = code ? ERROR_LABELS[code] : undefined;
@@ -28,7 +28,7 @@ export function errorMessage(error: unknown): string {
   return SYSTEM_BUSY;
 }
 
-export function errorCode(error: unknown): string | undefined {
+export function readErrorCode(error: unknown): string | undefined {
   return error instanceof ApiError ? error.problem.code : undefined;
 }
 
@@ -44,19 +44,19 @@ export function formatDuration(fromIso: string, toIso: string | null): string {
   return msg("quizpractice.model.labels.phut", { minutes: String(minutes) });
 }
 
-export function attemptsText(used: number, max: number | null): string {
+export function formatAttempts(used: number, max: number | null): string {
   return max === null ? msg("quizpractice.model.labels.luotKhongGioiHan", { used: String(used) }) : msg("quizpractice.model.labels.luot", { used: String(used), max: String(max) });
 }
 
 /** Cờ tín hiệu cho giảng viên (BR-U11-32); chỉ là dấu hiệu, tín hiệu tốt thì không hiện gì. */
-export function signalText(signal: ActivitySignal | null | undefined): string | null {
+export function describeSignal(signal: ActivitySignal | null | undefined): string | null {
   return signal === "NO_SIGNAL" ? msg("quizpractice.model.labels.khongNhanDuocTinHieu")
     : signal === "SIGNAL_LOST" ? msg("quizpractice.model.labels.matTinHieuMotPhan")
       : signal === "UNAVAILABLE" ? msg("quizpractice.model.labels.khongDocDuocDuLieuLuc") : null;
 }
 
 /** Quy tắc gợi ý trừ điểm để báo sinh viên trước và trong khi làm bài (BR-U11-33): giảng viên mới là người quyết định. */
-export function penaltyRuleText(rule: LeavePenalty): string {
+export function describePenaltyRule(rule: LeavePenalty): string {
   const free = rule.freeLeaves > 0 ? msg("quizpractice.model.labels.duocMienLanDauRoiTrang", { freeLeaves: String(rule.freeLeaves) }) : msg("quizpractice.model.labels.moiLanRoiTrang");
   const max = rule.maxPenalty === null ? "" : msg("quizpractice.model.labels.toiDaDiem", { value: String(formatPoints(rule.maxPenalty)) });
   const min = rule.minAwaySeconds > 0 ? msg("quizpractice.model.labels.chiTinhKhiRoiTuGiay", { minAwaySeconds: String(rule.minAwaySeconds) }) : "";
@@ -64,7 +64,7 @@ export function penaltyRuleText(rule: LeavePenalty): string {
 }
 
 /** Dòng rời trang và điểm trừ trên kết quả của sinh viên (BR-U11-33); không có gì để báo thì trả về null. */
-export function penaltyResultText(penalty: PenaltyView): string | null {
+export function describePenaltyResult(penalty: PenaltyView): string | null {
   const leaves = msg("quizpractice.model.labels.roiTrangLan", { value: String(penalty.leaveCount ?? 0) });
   if (penalty.decision === "APPLIED") {
     return msg("quizpractice.model.labels.diemGocGiangVienTruDiem", { value: String(formatPoints(penalty.rawScore)), value2: String(leaves.toLowerCase()), value3: String(formatPoints(penalty.penaltyPoints)), decisionReason: String(penalty.decisionReason) });

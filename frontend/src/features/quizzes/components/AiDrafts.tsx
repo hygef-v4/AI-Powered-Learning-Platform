@@ -4,10 +4,10 @@ import { useEffect, useId, useRef, useState } from "react";
 import { AiTaskStatus, PROVIDER_LABEL, type AiProvider, type SourceChoice } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
 import { Alert, Button, cx, Dialog, Field, Icon, Pill, Select, Textarea, TextInput, useConfirmDialog } from "@/shared/ui";
-import { DIFFICULTY_LABELS, errorMessage, failureLabel, formatDateTime, TYPE_LABELS } from "../model/labels";
+import { DIFFICULTY_LABELS, describeError, describeFailure, formatDateTime, TYPE_LABELS } from "../model/labels";
 import { McqEditor } from "./McqEditor";
 import { MaterialSourceSelect } from "./MaterialSourceSelect";
-import { formOf, toContent, validateForm, type FormErrors, type QuestionForm } from "../model/questionForm";
+import { buildFormFrom, convertToContent, validateForm, type FormErrors, type QuestionForm } from "../model/questionForm";
 import type {
   AiDraft, AiDraftRequest, Difficulty, QuestionContent, QuestionType, SelectableMaterial, Violation,
 } from "../model/types";
@@ -36,8 +36,8 @@ export type DraftTargetApi = {
 type EntryState = "open" | "accepted" | "dropped";
 export type ProposalEntry = { form: QuestionForm; state: EntryState; editing: boolean; errors: FormErrors; serverViolations: Violation[] };
 
-const entriesOf = (draft: AiDraft): ProposalEntry[] => draft.questions.map((q) => ({
-  form: formOf(q.content), state: "open", editing: false, errors: {}, serverViolations: q.violations,
+const listEntries = (draft: AiDraft): ProposalEntry[] => draft.questions.map((q) => ({
+  form: buildFormFrom(q.content), state: "open", editing: false, errors: {}, serverViolations: q.violations,
 }));
 
 /**
@@ -65,14 +65,14 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
   const shown = useRef<AiDraft | null>(null);
   useEffect(() => { onDraftShown?.(draft?.id ?? null); }, [draft?.id, onDraftShown]);
   useEffect(() => {
-    if (mode !== "form") onDirtyChange?.(draft?.status === "READY" && JSON.stringify(entries) !== JSON.stringify(entriesOf(draft)));
+    if (mode !== "form") onDirtyChange?.(draft?.status === "READY" && JSON.stringify(entries) !== JSON.stringify(listEntries(draft)));
   }, [draft, entries, mode, onDirtyChange]);
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
 
   /** Chỉ dựng lại danh sách câu khi đổi đề xuất hoặc trạng thái, để không mất phần người soạn đang sửa. */
   const showDraft = (next: AiDraft | null) => {
     const current = shown.current;
-    if (next && (current?.id !== next.id || current.status !== next.status)) setEntries(entriesOf(next));
+    if (next && (current?.id !== next.id || current.status !== next.status)) setEntries(listEntries(next));
     if (!next) setEntries([]);
     shown.current = next;
     setDraft(next);
@@ -91,7 +91,7 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
       })
       .catch((failure: unknown) => {
         if (controller.signal.aborted) return;
-        setError(errorMessage(failure));
+        setError(describeError(failure));
         setMode("form");
       });
     return () => controller.abort();
@@ -106,7 +106,7 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
     const timer = setTimeout(() => {
       api.get(pendingId)
         .then((next) => active && showDraft(next))
-        .catch((failure: unknown) => active && setError(errorMessage(failure)));
+        .catch((failure: unknown) => active && setError(describeError(failure)));
     }, POLL_MS);
     return () => {
       active = false;
@@ -115,7 +115,7 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingId, draft]);
 
-  const run = async (action: () => Promise<void>) => {
+  const runAction = async (action: () => Promise<void>) => {
     setBusy(true);
     onBusyChange?.(true);
     setError(null);
@@ -125,23 +125,23 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
     } catch (failure) {
       const problem = failure instanceof ApiError ? (failure.problem as { violations?: Violation[] }) : {};
       setProblems(problem.violations ?? []);
-      setError(errorMessage(failure));
+      setError(describeError(failure));
     } finally {
       setBusy(false);
       onBusyChange?.(false);
     }
   };
 
-  const send = (values: AiDraftRequest) => void run(async () => {
+  const sendRequest = (values: AiDraftRequest) => void runAction(async () => {
     showDraft(await api.request(values));
   });
   const refresh = (draftId: string) => {
-    api.get(draftId).then(showDraft).catch((failure: unknown) => setError(errorMessage(failure)));
+    api.get(draftId).then(showDraft).catch((failure: unknown) => setError(describeError(failure)));
   };
 
   const accepted = entries.filter((e) => e.state === "accepted");
-  const saveAccepted = () => draft && void run(async () => {
-    await api.accept(draft.id, accepted.map((e) => toContent(e.form)));
+  const saveAccepted = () => draft && void runAction(async () => {
+    await api.accept(draft.id, accepted.map((e) => convertToContent(e.form)));
     onAccepted(accepted.length);
   });
   const acceptAll = () => {
@@ -152,10 +152,10 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
       setError(msg("quizzes.components.AiDrafts.coCauChuaHopLeHay"));
       return;
     }
-    const questions = checked.filter((entry) => entry.state !== "dropped").map((entry) => toContent(entry.form));
-    void run(async () => { await api.accept(draft.id, questions); onAccepted(questions.length); });
+    const questions = checked.filter((entry) => entry.state !== "dropped").map((entry) => convertToContent(entry.form));
+    void runAction(async () => { await api.accept(draft.id, questions); onAccepted(questions.length); });
   };
-  const discard = () => draft && void run(async () => {
+  const discard = () => draft && void runAction(async () => {
     await api.discard(draft.id);
     setRequest(null);
     showDraft(null);
@@ -170,7 +170,7 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
             if (draft.status !== "FAILED") setRequest(null);
             showDraft(null);
           };
-          if (draft.status === "READY" && JSON.stringify(entries) !== JSON.stringify(entriesOf(draft))) {
+          if (draft.status === "READY" && JSON.stringify(entries) !== JSON.stringify(listEntries(draft))) {
             requestConfirm(msg("quizzes.components.AiDrafts.boCacChinhSuaDeXuat"), startNewRequest);
             return;
           }
@@ -202,7 +202,7 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
           <DraftRequestForm api={api} busy={busy} initial={request} onDirtyChange={onDirtyChange}
             onSubmit={(values) => {
               setRequest(values);
-              send(values);
+              sendRequest(values);
             }} />
         )}
         {mode === "draft" && draft && (
@@ -329,13 +329,13 @@ function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
     : draft.source === "PERSONAL"
       ? draft.provider ? msg("quizzes.components.AiDrafts.caNhan", { value: String(PROVIDER_LABEL[draft.provider as AiProvider] ?? draft.provider) }) : msg("quizzes.components.AiDrafts.apiCaNhan")
       : msg("quizzes.components.AiDrafts.heThongTuChonNguonAi2");
-  const update = (index: number, change: Partial<ProposalEntry>) =>
+  const updateEntry = (index: number, change: Partial<ProposalEntry>) =>
     onEntries(entries.map((entry, i) => (i === index ? { ...entry, ...change } : entry)));
   const accept = (index: number) => {
     const entry = entries[index];
     if (!entry) return;
     const errors = validateForm(entry.form);
-    update(index, Object.keys(errors).length > 0 ? { errors, editing: true } : { errors, state: "accepted", editing: false });
+    updateEntry(index, Object.keys(errors).length > 0 ? { errors, editing: true } : { errors, state: "accepted", editing: false });
   };
   const acceptedCount = entries.filter((e) => e.state === "accepted").length;
 
@@ -357,7 +357,7 @@ function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
       )}
       {draft.status === "FAILED" && (
         <div data-testid="ai-draft-failed">
-          <Alert tone="danger" role="alert">{failureLabel(draft.failureCode, draft.failureMessage)}</Alert>
+          <Alert tone="danger" role="alert">{describeFailure(draft.failureCode, draft.failureMessage)}</Alert>
         </div>
       )}
       {draft.status === "READY" && (
@@ -365,7 +365,7 @@ function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
           <p className="text-[13px] font-semibold text-ink">{msg("quizzes.components.AiDrafts.deXuat")}{acceptedCount} {msg("quizzes.components.AiDrafts.daChapNhan")}{entries.length})</p>
           <ol className="flex flex-col gap-3">
             {entries.map((entry, index) => (
-              <ProposalCard key={index} index={index} entry={entry} onChange={(change) => update(index, change)}
+              <ProposalCard key={index} index={index} entry={entry} onChange={(change) => updateEntry(index, change)}
                 onAccept={() => accept(index)} />
             ))}
           </ol>

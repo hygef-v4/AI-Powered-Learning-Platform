@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { apiDownload } from "@/shared/api/client";
+import { downloadApi } from "@/shared/api/client";
 import { Button, Card, Icon } from "@/shared/ui";
 import { materialApi, describeMaterialError } from "../api";
 import { DocumentViewer, detectDocumentKind } from "./DocumentViewer";
@@ -65,7 +65,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
     (async () => {
       try {
         const token = await materialApi.issueDownloadToken(materialId, classId);
-        const blob = await apiDownload(token.url, { signal: controller.signal });
+        const blob = await downloadApi(token.url, { signal: controller.signal });
         if (!cancelled) setLoaded({ key, blob });
       } catch (e) {
         if (!cancelled) setLoaded({ key, error: describeMaterialError(e) });

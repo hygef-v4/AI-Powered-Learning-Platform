@@ -28,7 +28,7 @@ export type ResultPart = { key: string; title: string; awarded: number; max: num
  * Điểm theo từng bài: gom các mục rubric về nhánh con trực tiếp của gốc tài liệu (heading cấp cao nhất của phần), giữ thứ tự
  * các bài trong tài liệu. Không có danh sách phần thì mỗi phần của rubric là một bài.
  */
-export function resultByPart(items: AttemptResultItem[], parts: DocumentPart[] | undefined): ResultPart[] {
+export function groupResultByPart(items: AttemptResultItem[], parts: DocumentPart[] | undefined): ResultPart[] {
   const partOf = new Map((parts ?? []).map((part) => [part.partId, part]));
   const order = new Map<string, number>();
   (parts ?? []).forEach((part, index) => {
