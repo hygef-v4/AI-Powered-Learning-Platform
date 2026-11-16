@@ -14,7 +14,6 @@ const OUTCOME_CODE_MESSAGES: Record<string, string> = {
   ALREADY_PUBLISHED: msg("grading.components.BatchActionDialog.thisSubmissionsGradeWasAlready2"),
   INVALID_GRADE_STATE: msg("grading.components.BatchActionDialog.theSubmissionStatusHasChanged"),
   GRADE_VERSION_CONFLICT: msg("grading.components.BatchActionDialog.theGradingWasUpdatedReload"),
-  GRADE_LOCKED: msg("grading.components.BatchActionDialog.theGradeIsLockedReload"),
   GRADING_CLASS_READ_ONLY: msg("grading.components.BatchActionDialog.theClassIsArchivedOr"),
   GRADING_ASSIGNMENT_OPEN: msg("grading.components.BatchActionDialog.theAssignmentIsStillAccepting"),
   DUPLICATE_ITEM: msg("grading.components.BatchActionDialog.aSubmissionWasSelectedTwice"),

@@ -12,8 +12,6 @@ export function formatErrorMessage(error: unknown) {
     switch (error.problem.code) {
       case "GRADING_CLASS_READ_ONLY":
         return msg("grading.model.format.theClassIsArchivedOr");
-      case "GRADE_LOCKED":
-        return msg("grading.model.format.finalizedGradesCannotBeEdited");
       case "SUBMISSION_CHANGED":
       case "NOT_LATEST_ATTEMPT":
         return msg("grading.model.format.theSubmissionHasChangedOpen");

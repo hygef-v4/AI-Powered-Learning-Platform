@@ -1885,7 +1885,6 @@
         "changeGradeDistributionVisibility": "Change grade distribution visibility",
         "exportGradebook": "Export gradebook",
         "importGroupDocument": "Import group document",
-        "savePeerReview": "Save peer review",
         "lockGroupDocumentAssignments": "Lock group document assignments",
         "unlockGroupDocumentAssignments": "Unlock group document assignments",
         "lockGroupDocumentSection": "Lock group document section",
@@ -2058,7 +2057,6 @@
         "thisSubmissionsGradeWasAlready2": "This submission''s grade was already published. The score is kept.",
         "theSubmissionStatusHasChanged": "The submission status has changed or does not suit this action. Reload the list to check.",
         "theGradingWasUpdatedReload": "The grading was updated. Reload the list to use the latest version.",
-        "theGradeIsLockedReload": "The grade is locked. Reload the list to see the current status.",
         "theClassIsArchivedOr": "The class is archived or not open. Grades cannot be edited or published.",
         "theAssignmentIsStillAccepting": "The assignment is still accepting submissions. Close submissions before grading or publishing grades.",
         "aSubmissionWasSelectedTwice": "A submission was selected twice; it is processed only once.",
@@ -2371,7 +2369,6 @@
       "format": {
         "enterAReasonWhenAdding": "Enter a reason when adding or deducting points.",
         "theClassIsArchivedOr": "The class is archived or not open. You can only view grades; your edits are kept.",
-        "finalizedGradesCannotBeEdited": "Finalized grades cannot be edited. Reload to see the locked grading; your edits are kept.",
         "theSubmissionHasChangedOpen": "The submission has changed. Open the current submission to check before continuing to grade; your edits are kept.",
         "theRubricHasChangedReload": "The rubric has changed. Reload and check the rubric before continuing to grade; your edits are kept.",
         "theDataHasChangedReload": "The data has changed. Reload to check the new version; your edits are kept."

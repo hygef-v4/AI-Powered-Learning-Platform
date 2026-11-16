@@ -14,7 +14,7 @@ final class NotificationSummaries {
             case ASSIGNMENT_OPENED -> "Xem nội dung và hạn nộp bài.";
             case QUIZ_PUBLISHED -> "Mở Quiz để xem và bắt đầu luyện tập.";
             case GRADE_PUBLISHED -> "Xem kết quả chấm bài của bạn.";
-            case DEADLINE_REMINDER -> "Hạn nộp bài còn khoảng 24 giờ.";
+            case DEADLINE_REMINDER -> "Hạn nộp bài còn dưới 24 giờ.";
             case ANNOUNCEMENT -> "Xem nội dung thông báo từ giảng viên.";
             case LEADER_CHANGE_REQUESTED -> "Xem yêu cầu để phê duyệt hoặc từ chối.";
             case LEADER_CHANGED -> "Xem thông tin trưởng nhóm mới.";

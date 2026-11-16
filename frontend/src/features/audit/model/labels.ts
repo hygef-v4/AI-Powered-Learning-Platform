@@ -130,7 +130,6 @@ export const ACTION_LABELS: Record<string, string> = {
   GRADEBOOK_EXPORTED: msg("audit.model.labels.exportGradebook"),
   // U12 Tài liệu nhóm
   GROUP_DOC_IMPORTED: msg("audit.model.labels.importGroupDocument"),
-  GROUP_PEER_REVIEW_SAVED: msg("audit.model.labels.savePeerReview"),
   GROUP_ASSIGNMENT_LOCKED: msg("audit.model.labels.lockGroupDocumentAssignments"),
   GROUP_ASSIGNMENT_UNLOCKED: msg("audit.model.labels.unlockGroupDocumentAssignments"),
   GROUP_SECTION_LOCKED: msg("audit.model.labels.lockGroupDocumentSection"),

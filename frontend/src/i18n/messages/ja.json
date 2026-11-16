@@ -1885,7 +1885,6 @@
         "changeGradeDistributionVisibility": "成績分布の表示設定の変更",
         "exportGradebook": "成績表の書き出し",
         "importGroupDocument": "グループ文書の取り込み",
-        "savePeerReview": "相互評価の保存",
         "lockGroupDocumentAssignments": "グループ文書の担当の確定",
         "unlockGroupDocumentAssignments": "グループ文書の担当の確定解除",
         "lockGroupDocumentSection": "グループ文書のセクションのロック",
@@ -2058,7 +2057,6 @@
         "thisSubmissionsGradeWasAlready2": "この提出物の成績はすでに公開済みです。点数はそのまま維持されます。",
         "theSubmissionStatusHasChanged": "提出物の状態が変わったか、この操作に適していません。一覧を再読み込みして確認してください。",
         "theGradingWasUpdatedReload": "採点が更新されました。一覧を再読み込みして最新のバージョンを使ってください。",
-        "theGradeIsLockedReload": "成績はロックされています。一覧を再読み込みして現在の状態を確認してください。",
         "theClassIsArchivedOr": "クラスがアーカイブ済みか未開講のため、成績の編集や公開はできません。",
         "theAssignmentIsStillAccepting": "課題はまだ提出を受け付けています。採点や成績の公開の前に受付を締め切ってください。",
         "aSubmissionWasSelectedTwice": "同じ提出物が重複して選択されたため、1回だけ処理します。",
@@ -2371,7 +2369,6 @@
       "format": {
         "enterAReasonWhenAdding": "加点・減点する場合は理由を入力してください。",
         "theClassIsArchivedOr": "クラスがアーカイブ済みか未開講のため、成績の閲覧のみ可能です。編集中の内容は保持されます。",
-        "finalizedGradesCannotBeEdited": "確定済みの成績は編集できません。再読み込みしてロックされた採点を確認してください。編集中の内容は保持されます。",
         "theSubmissionHasChangedOpen": "提出物が変更されました。採点を続ける前に現在の提出物を開いて確認してください。編集中の内容は保持されます。",
         "theRubricHasChangedReload": "ルーブリックが変更されました。採点を続ける前に再読み込みしてルーブリックを確認してください。編集中の内容は保持されます。",
         "theDataHasChangedReload": "データが変更されました。再読み込みして新しいバージョンを確認してください。編集中の内容は保持されます。"

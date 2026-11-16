@@ -15311,3 +15311,120 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **Context**: Build and Test, tiếp tục sửa GitGuardian trên PR #96.
 
 ---
+
+## Project-wide review request
+**Timestamp**: 2026-11-15T10:22:30Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra toàn bộ dự án xem còn bug nào không, doc đã đúng chưa, còn nghiệp vụ nào chưa rõ ràng không và gửi tôi báo cáo"
+**AI Response**: "Rà soát chỉ đọc trên chi-cuongg/haddock@3b86e57d. Frontend typecheck, lint và 1.038/1.038 test qua. Backend chạy bằng JDK 21: 2.215 test, 0 thất bại, 5 lỗi và 159 bỏ qua do không có Docker. Đối chiếu API inventory (346/346 khớp), liên kết Markdown và biến môi trường bằng script. Báo cáo ghi 3 lỗi logic (nhóm nộp lại sau khi điểm đã công bố, lượt nộp lại bỏ dở tự nộp làm mất điểm đã công bố, nhắc hạn không quét bù), 2 chỗ mã thừa, 8 chỗ tài liệu lệch code và 6 quy tắc nghiệp vụ cần người dùng quyết định. Các lỗi logic xác nhận bằng đọc code, chưa tái hiện trên ứng dụng đang chạy."
+**Context**: Review only; no AI-DLC stage started. No source, test, schema, config or design document changed; no commit or push. Tests needing PostgreSQL/Redis/RabbitMQ, E2E, browser and provider checks were not run.
+
+---
+
+## Workspace Detection — fix review findings
+**Timestamp**: 2026-11-15T13:46:47Z
+**Requested by:** Đào Chí Cường
+**User Input**: "sửa toàn bộ các điểm trên cho tôi. Chặn nộp lại khi điểm đã công bố cho cả 2 loại bài"
+**AI Response**: "Tiếp nhận yêu cầu sửa các điểm trong báo cáo rà soát 2026-11-15 và quyết định chặn nộp lại khi điểm đã công bố cho bài cá nhân và bài nhóm. Brownfield, dùng lại tài liệu reverse engineering hiện có; hiển thị welcome message; đọc code U08/U09/U12/U14 và frontend liên quan trước khi lập kế hoạch."
+**Context**: Workspace Detection. Branch chi-cuongg/haddock@3b86e57d, working tree chỉ có thay đổi audit.md của lượt rà soát trước.
+
+---
+
+## Requirements Analysis, Workflow Planning and Code Generation — review fixes
+**Timestamp**: 2026-11-15T14:06:30Z
+**Requested by:** Đào Chí Cường
+**User Input**: "sửa toàn bộ các điểm trên cho tôi. Chặn nộp lại khi điểm đã công bố cho cả 2 loại bài"
+**AI Response**: "Coi lệnh này là duyệt phạm vi (danh sách của báo cáo rà soát) và kế hoạch; không dừng xin duyệt riêng cho Requirements, Workflow Planning và kế hoạch Code Generation. Lập quy tắc 2026-11-15 và kế hoạch 11 bước, thực hiện đủ 11 bước: U09 IOfficialGradeQuery, từ chối bản nộp sau điểm chính thức (409 GRADE_PUBLISHED) và từ chối công bố khi sinh viên đang có lượt nộp lại chưa nộp (409 RESUBMISSION_IN_PROGRESS); U08 chặn mở lượt nộp lại; U12 tài liệu nhóm chỉ đọc; U14 quét bù nhắc hạn; migration bỏ group_peer_reviews; frontend bỏ GRADE_LOCKED; đồng bộ requirements, use-cases, stories, BR của U08/U09/U12/U14, OpenAPI grading, api-inventory. Backend 2.224 test 0 thất bại (5 lỗi, 159 bỏ qua do không có Docker); frontend lint, typecheck, 1.039/1.039 test qua."
+**Context**: Code Generation hoàn tất, chờ người dùng duyệt mã. Quy tắc từ chối công bố khi có lượt nộp lại đang làm là bổ sung của AI, cần người dùng xác nhận. Chưa commit, push, deploy; test PostgreSQL, E2E và trình duyệt chưa chạy.
+
+---
+
+## Code Generation — completion prompt
+**Timestamp**: 2026-11-15T14:06:30Z
+**Requested by:** Đào Chí Cường
+**User Input**: "(chưa có phản hồi)"
+**AI Response**: "Trình bày thông báo hoàn tất Code Generation với hai lựa chọn Request Changes hoặc Continue to Next Stage (Build and Test)."
+**Context**: Chờ người dùng duyệt mã.
+
+---
+
+## Code Generation — change request
+**Timestamp**: 2026-11-15T14:44:28Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Tôi muốn giảng viên luôn công bố được, thêm trạng thái đã huỷ cho lượt làm"
+**AI Response**: "Request Changes: gỡ quy tắc 409 RESUBMISSION_IN_PROGRESS; thêm trạng thái CANCELLED cho lượt làm kèm migration; khi công bố điểm, lượt nộp lại còn dở của sinh viên bị hủy trong cùng transaction qua contract của U08."
+**Context**: Code Generation, sửa theo yêu cầu của người dùng trước khi duyệt mã.
+
+---
+
+## Code Generation — change request completed
+**Timestamp**: 2026-11-16T02:07:46Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Tôi muốn giảng viên luôn công bố được, thêm trạng thái đã huỷ cho lượt làm"
+**AI Response**: "Gỡ 409 RESUBMISSION_IN_PROGRESS. Thêm AttemptStatus.CANCELLED, contract IAttemptCancellation và AttemptCancellationService của U08; GradingService.publishEvaluation hủy lượt nộp lại còn dở trong cùng transaction, theo thứ tự khóa lượt làm, định danh chấm, bản chấm. Lượt đã hủy không hiện trong danh sách, mở/lưu/nộp trả 409 ATTEMPT_CANCELLED; bộ tự nộp hủy lượt dở của bài đã có điểm chính thức. Migration V20261115_1100 thêm CANCELLED vào ràng buộc và bỏ trần 10 của attempt_no (lượt thứ 11 của bài có chấm trước đây bị database từ chối). Backend 2.225 test 0 thất bại (5 lỗi, 159 bỏ qua do không có Docker); frontend lint, typecheck, 1.038/1.038 test qua. Trình bày lại thông báo hoàn tất Code Generation với hai lựa chọn."
+**Context**: Code Generation, chờ người dùng duyệt mã. Chưa commit, push, deploy; SQL mới và hai migration chưa chạy trên database thật.
+
+---
+
+## Code Generation — change request
+**Timestamp**: 2026-11-16T02:09:24Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi muốn có hộp xác nhận"
+**AI Response**: "Request Changes: thêm hộp xác nhận ở trang chấm điểm trước khi công bố, khi sinh viên đang làm dở lượt nộp lại."
+**Context**: Code Generation, sửa theo yêu cầu của người dùng trước khi duyệt mã.
+
+---
+
+## Code Generation — change request completed
+**Timestamp**: 2026-11-16T02:17:40Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi muốn có hộp xác nhận"
+**AI Response**: "Hộp xác nhận công bố điểm (BatchActionDialog, dùng ở bảng điểm, chi tiết bài nộp và trang chấm) hiện cảnh báo khi trong các bài đang chọn có sinh viên làm dở lượt nộp lại: nêu số sinh viên và việc lượt đang làm sẽ bị hủy. Backend thêm resubmissionInProgress vào SubmissionRow và EvaluationDetail; OpenAPI grading và quy tắc 2026-11-15 cập nhật. Backend 2.226 test 0 thất bại (5 lỗi, 159 bỏ qua do không có Docker); frontend lint, typecheck, 1.039/1.039 test qua. Trình bày lại thông báo hoàn tất Code Generation với hai lựa chọn."
+**Context**: Code Generation, chờ người dùng duyệt mã. Cảnh báo dựa trên dữ liệu lúc tải trang; bài nhóm chưa có cảnh báo tương tự. Chưa commit, push, deploy; chưa kiểm trên trình duyệt.
+
+---
+
+## Code Generation — change request and staging readiness
+**Timestamp**: 2026-11-16T02:28:56Z
+**Requested by:** Đào Chí Cường
+**User Input**: "sửa nốt sau đó kiểm tra cho tôi xem có thể đưa lên staging chưa"
+**AI Response**: "Sửa nốt hai giới hạn của hộp xác nhận công bố (dữ liệu cũ, bài nhóm), sau đó kiểm tra điều kiện đưa lên staging: build, test, khả năng gộp với staging."
+**Context**: Code Generation, rồi kiểm tra trước khi giao.
+
+---
+
+## Code Generation — change request completed; staging readiness
+**Timestamp**: 2026-11-16T02:39:08Z
+**Requested by:** Đào Chí Cường
+**User Input**: "sửa nốt sau đó kiểm tra cho tôi xem có thể đưa lên staging chưa"
+**AI Response**: "Sửa nốt: máy chủ từ chối 409 RESUBMISSION_IN_PROGRESS khi chưa xác nhận và hộp thoại hỏi lại trước khi hủy lượt; cảnh báo cả bài nhóm qua GroupSubmissionStatus.changedSinceSubmit. Backend 2.227 test 0 thất bại (5 lỗi, 159 bỏ qua do không có Docker); frontend lint, typecheck, 1.040/1.040 test và production build qua. Đánh giá staging: chưa đưa lên được. origin/staging (f1c351dd) đi trước 54 commit; gộp thử không đổi nhánh báo 21 file xung đột; staging đã có quy tắc chỉ chấm khi bài đã đóng (fe492df5) làm phần chặn nộp lại, trạng thái CANCELLED và hộp hỏi lại chỉ còn tác dụng với dữ liệu cũ. Đề xuất người dùng chọn phạm vi giữ lại trước khi gộp."
+**Context**: Chờ người dùng quyết định phạm vi. Không commit, không gộp, không push; không tạo stash (chỉ tạo commit tạm không tham chiếu để gộp thử).
+
+---
+
+## Code Generation — scope decision and delivery on staging
+**Timestamp**: 2026-11-16T07:44:06Z
+**Requested by:** Đào Chí Cường
+**User Input**: "1"
+**AI Response**: "Người dùng chọn phương án 1: chỉ mang phần staging còn thiếu. Lưu toàn bộ bản sửa đầu vào nhánh cục bộ backup/review-fixes-full-2026-11-15 (e8908f0e), fast-forward nhánh làm việc lên origin/staging@f1c351dd rồi áp lại: quét bù nhắc hạn 24 giờ, migration bỏ trần 10 của attempt_no và bỏ bảng group_peer_reviews, bỏ GRADE_LOCKED và nhãn đánh giá chéo ở frontend, OpenAPI grading và các sửa tài liệu còn đúng với staging. Không mang chặn nộp lại, trạng thái CANCELLED và hộp xác nhận công bố. Bật Docker Desktop để chạy test có database: backend mvn -B verify 2.492 test, 0 thất bại, 0 lỗi, 1 bỏ qua; bộ kiểm bắt buộc của CI qua; 48 migration áp trên PostgreSQL thật; frontend lint, typecheck, 1.134/1.134 test và production build qua. Commit cục bộ, không push."
+**Context**: Các mục audit của phiên này từ 2026-11-15 được chuyển nguyên văn từ nhánh sao lưu vào cuối file. Người dùng nhắn "tiếp tục" khi lượt trước bị ngắt giữa chừng. Chờ người dùng duyệt mã và quyết định push, mở PR.
+
+---
+
+## Staging readiness check and merge
+**Timestamp**: 2026-11-16T10:26:40Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem đưa lên staging được chưa cho tôi"
+**AI Response**: "Fetch lại: origin/staging đã đi thêm 35 commit tới 5f9c0173 (giao diện đa ngôn ngữ, Google Drive); gộp thử xung đột 5 file nên nhánh chưa lên được. Gộp origin/staging vào nhánh, xử lý xung đột ở aidlc-state.md, audit.md và ba file frontend đã chuyển sang khóa thông báo; bỏ ba khóa thông báo không còn dùng ở en/ja/vi. Chạy lại toàn bộ kiểm tra của CI trên bản đã gộp: backend mvn -B verify có Docker 2.546 test, 0 thất bại, 0 lỗi, 1 bỏ qua; bộ kiểm bắt buộc qua; frontend npm ci, lint, typecheck, 1.159/1.159 test và production build qua. Commit gộp cục bộ, không push."
+**Context**: Người dùng nhắn "tiếp tục" khi lượt bị ngắt giữa chừng. Chờ người dùng quyết định push và mở PR vào staging.
+
+---
+
+## Delivery to staging
+**Timestamp**: 2026-11-16T10:34:13Z
+**Requested by:** Đào Chí Cường
+**User Input**: "đưa lên staging cho tôi"
+**AI Response**: "Kiểm lại nhánh vẫn ngang origin/staging mới nhất, push chi-cuongg/audit-project-bugs-docs và mở PR vào staging; theo dõi CI của PR. Trạng thái PR và CI ghi trên GitHub và trong phản hồi cuối."
+**Context**: Người dùng cho phép đưa lên staging. Kết quả kiểm tra của bản đã gộp giữ nguyên; mục audit này là thay đổi duy nhất sau lần kiểm đó.
+
+---

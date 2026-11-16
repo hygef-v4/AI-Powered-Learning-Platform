@@ -1885,7 +1885,6 @@
         "changeGradeDistributionVisibility": "Đổi hiển thị phân bố điểm",
         "exportGradebook": "Xuất sổ điểm",
         "importGroupDocument": "Nhập tài liệu nhóm",
-        "savePeerReview": "Lưu đánh giá chéo",
         "lockGroupDocumentAssignments": "Chốt phân công tài liệu nhóm",
         "unlockGroupDocumentAssignments": "Mở chốt phân công tài liệu nhóm",
         "lockGroupDocumentSection": "Khóa mục tài liệu nhóm",
@@ -2058,7 +2057,6 @@
         "thisSubmissionsGradeWasAlready2": "Bài này đã được công bố điểm trước đó. Điểm được giữ nguyên.",
         "theSubmissionStatusHasChanged": "Trạng thái bài đã thay đổi hoặc chưa phù hợp với thao tác này. Tải lại danh sách để kiểm tra.",
         "theGradingWasUpdatedReload": "Bài chấm đã được cập nhật. Tải lại danh sách để dùng phiên bản mới nhất.",
-        "theGradeIsLockedReload": "Điểm đã được khóa. Tải lại danh sách để xem trạng thái hiện tại.",
         "theClassIsArchivedOr": "Lớp đã lưu trữ hoặc chưa mở. Không thể chỉnh sửa hay công bố điểm.",
         "theAssignmentIsStillAccepting": "Bài tập đang nhận bài. Đóng nhận bài trước khi chấm hoặc công bố điểm.",
         "aSubmissionWasSelectedTwice": "Bài bị chọn trùng; chỉ xử lý một lần.",
@@ -2371,7 +2369,6 @@
       "format": {
         "enterAReasonWhenAdding": "Nhập lý do khi cộng hoặc trừ điểm.",
         "theClassIsArchivedOr": "Lớp đã lưu trữ hoặc chưa mở. Bạn chỉ có thể xem điểm; nội dung đang sửa vẫn được giữ.",
-        "finalizedGradesCannotBeEdited": "Điểm đã chốt không thể chỉnh sửa. Tải lại để xem bản chấm đã khóa; nội dung bạn đang sửa vẫn được giữ.",
         "theSubmissionHasChangedOpen": "Bài nộp đã thay đổi. Mở bài nộp hiện tại để kiểm tra trước khi chấm tiếp; nội dung bạn đang sửa vẫn được giữ.",
         "theRubricHasChangedReload": "Rubric đã thay đổi. Tải lại và kiểm tra rubric trước khi chấm tiếp; nội dung bạn đang sửa vẫn được giữ.",
         "theDataHasChangedReload": "Dữ liệu đã thay đổi. Tải lại để kiểm tra phiên bản mới; nội dung bạn đang sửa vẫn được giữ."
