@@ -15561,3 +15561,11 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **Context**: Người dùng duyệt mã bằng yêu cầu commit. Chưa push, chưa mở PR.
 
 ---
+## Performance fixes — pull request
+**Timestamp**: 2026-11-16T14:55:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Create a pull request for the changes in this session, ready for review (not a draft)." (lệnh Create PR của ứng dụng; đích ghi base branch main)
+**AI Response**: "Push nhánh perf/production-fixes và mở PR vào staging, không vào main: nhánh tạo từ staging nên PR vào main sẽ kéo theo các commit của staging chưa lên main, và kế hoạch đã duyệt ghi PR vào staging."
+**Context**: Không tự merge. Số PR ghi trên GitHub và trong phản hồi cuối.
+
+---
