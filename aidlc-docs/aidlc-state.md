@@ -1,5 +1,17 @@
 # AI-DLC State Tracking
 
+## Script deploy tự khởi động lại nginx khi cấu hình nginx đổi — 2026-11-16
+
+Phát hiện khi đưa PR 101 lên staging: `platform-deploy` không tạo lại container nginx, nên thay đổi trong `infra/nginx` không được nạp và `nginx -t` trên container cũ báo `unknown log format "timed"`; phải restart tay. Người dùng đồng ý sửa ("Có, sửa đi"). Nhánh `fix/deploy-restart-nginx` từ `origin/staging@e2014177`, worktree riêng.
+
+- [x] Requirements Analysis (Minimal) và Workflow Planning: một thay đổi trong script deploy, chỉ Code Generation và Build and Test.
+- [x] Code Generation: `switch_to` so `infra/nginx` giữa bản đang chạy và bản mới, khác thì `compose restart nginx` sau `compose up`; áp cho cả lúc quay về. Thêm test, cập nhật runbook mục 10.
+- [x] Build and Test: `test-platform-deploy.sh` 16/16 (chạy trong thư mục tạm trên VPS vì máy phát triển không có `jq`, `flock`). Chưa chạy với Docker và nginx thật.
+- [x] Người dùng yêu cầu commit cục bộ (2026-11-16).
+- [ ] Người dùng quyết định push và mở PR vào staging.
+
+Sau khi bản này lên VPS phải cài lại `/usr/local/bin/platform-deploy` và `/usr/local/bin/platform-staging-deploy` một lần nữa. Security/Resiliency trong phạm vi đã duyệt; PBT tắt.
+
 ## Sửa các điểm trong báo cáo hiệu năng production — 2026-11-16
 
 Người dùng yêu cầu kiểm tra hiệu năng production, rồi yêu cầu "sửa toàn bộ". [Báo cáo](construction/build-and-test/2026-11-16-performance-report.md); [kế hoạch](construction/plans/code-generation-plan/2026-11-16-performance-fixes.md).

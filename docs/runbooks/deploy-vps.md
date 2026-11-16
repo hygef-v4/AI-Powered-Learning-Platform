@@ -250,7 +250,7 @@ GitHub Actions không SSH vào VPS. Lý do: nhà cung cấp chặn kết nối t
 Mỗi lần deploy làm theo thứ tự:
 1. Kéo image backend và frontend của SHA mới, `git fetch`. Lỗi ở bước này thì dừng, chưa đổi gì.
 2. Sao lưu database vào `/var/backups/platform/predeploy-<thời điểm>-<SHA cũ>.dump`, giữ 5 bản gần nhất.
-3. `git checkout` đúng SHA, đặt `IMAGE_TAG`, chạy `docker compose up -d`.
+3. `git checkout` đúng SHA, đặt `IMAGE_TAG`, chạy `docker compose up -d`. Nếu `infra/nginx` khác bản đang chạy thì khởi động lại container nginx để nạp cấu hình mới (gián đoạn một hai giây); quay về bản trước cũng làm như vậy.
 4. Trong 5 phút, mọi container phải `running` và có health `healthy` (hoặc không có healthcheck), và `https://<DOMAIN>/` phải trả 2xx.
 5. Không đạt thì tự quay về bản trước. SHA lỗi vào danh sách bỏ qua để timer không deploy lặp lại. Service kết thúc `failed`.
 6. Deploy đạt thì xóa image backend và frontend không thuộc 5 bản deploy tốt gần nhất (`KEEP_IMAGES`). Image đang chạy, kể cả của staging, Docker không cho xóa. Quay về một bản đã bị xóa image thì script kéo lại từ GHCR.
