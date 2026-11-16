@@ -13,6 +13,8 @@ KEY=$(cd "$(dirname "$2")" && pwd)/$(basename "$2")
 IMAGE=$3
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 WORK=$(mktemp -d)
+trap 'rm -f "$WORK/private-key.pem" "$WORK/dump.pgc" "$WORK/archive.alapbk"' EXIT
+trap 'exit 1' HUP INT TERM
 NAME="platform-restore-$STAMP"
 EVIDENCE="restore-evidence-$STAMP.txt"
 PASSWORD=$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')
@@ -27,7 +29,7 @@ chmod 600 "$WORK/private-key.pem"
 
 echo "1. Giải mã archive"
 docker run --rm --user "$(id -u):$(id -g)" -v "$WORK:/work" --entrypoint java "$IMAGE" -cp /app/app.jar \
-    -Dloader.main=edu.aiplatform.backup.infrastructure.BackupDecryptTool \
+    -Dloader.main=edu.aiplatform.backup.integration.BackupDecryptTool \
     org.springframework.boot.loader.launch.PropertiesLauncher \
     /work/archive.alapbk /work/private-key.pem /work/dump.pgc
 rm -f "$WORK/private-key.pem"
