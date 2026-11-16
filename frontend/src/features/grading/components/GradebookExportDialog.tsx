@@ -26,7 +26,7 @@ export function GradebookExportDialog({
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = filename || `${assignments.find((item) => item.id === assignment)?.title || msg("grading.components.GradebookExportDialog.bangDiemTongHop")}.${format}`;
+      anchor.download = filename || `${assignments.find((item) => item.id === assignment)?.title || msg("grading.components.GradebookExportDialog.summaryGradebook")}.${format}`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
@@ -41,26 +41,26 @@ export function GradebookExportDialog({
   return (
     <Dialog
       open
-      title={msg("grading.components.GradebookExportDialog.xuatBangDiem")}
+      title={msg("grading.components.GradebookExportDialog.exportGradebook")}
       onClose={onClose}
       dismissible={!busy}
       footer={
         <>
           <Button variant="primary" icon="download" disabled={busy} onClick={() => void handleDownload()}>
-            {busy ? msg("grading.components.GradebookExportDialog.dangTaoTep") : msg("grading.components.GradebookExportDialog.xuatTep")}
+            {busy ? msg("grading.components.GradebookExportDialog.creatingFile") : msg("grading.components.GradebookExportDialog.exportFile")}
           </Button>
         </>
       }
     >
-      <Field label={msg("grading.components.GradebookExportDialog.dinhDang")}>
-        <Segmented ariaLabel={msg("grading.components.GradebookExportDialog.dinhDang")} value={format} onChange={setFormat} options={[{ value: "xlsx", label: "Excel" }, { value: "csv", label: "CSV" }]} />
+      <Field label={msg("grading.components.GradebookExportDialog.format")}>
+        <Segmented ariaLabel={msg("grading.components.GradebookExportDialog.format")} value={format} onChange={setFormat} options={[{ value: "xlsx", label: "Excel" }, { value: "csv", label: "CSV" }]} />
       </Field>
       <label className="flex flex-col gap-1.5 text-xs font-semibold text-body">
-        {msg("grading.components.GradebookExportDialog.phamVi")}<Select
+        {msg("grading.components.GradebookExportDialog.scope")}<Select
           value={assignment}
           onChange={(e) => setAssignment(e.target.value)}
         >
-          <option value="">{msg("grading.components.GradebookExportDialog.toanBoBaiTinhDiem")}</option>
+          <option value="">{msg("grading.components.GradebookExportDialog.allGradedAssignments")}</option>
           {assignments.map((a) => (
             <option key={a.id} value={a.id}>
               {a.title}
@@ -68,7 +68,7 @@ export function GradebookExportDialog({
           ))}
         </Select>
       </label>
-      <p className="text-xs text-muted">{msg("grading.components.GradebookExportDialog.xuatTatCaSinhVienTrong")}</p>
+      <p className="text-xs text-muted">{msg("grading.components.GradebookExportDialog.exportsAllStudentsInThe")}</p>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
     </Dialog>
   );

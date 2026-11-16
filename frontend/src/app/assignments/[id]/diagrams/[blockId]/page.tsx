@@ -3,7 +3,7 @@ import { AssignmentDiagramPage } from "@/features/assignments/pages/AssignmentDi
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.assignments.id.diagrams.blockId.page.soDoBaiTap") };
+  return { title: await translateOnServer("app.assignments.id.diagrams.blockId.page.assignmentDiagram") };
 }
 
 // U07: trang xem sơ đồ mở từ link trong DOCX của đề.

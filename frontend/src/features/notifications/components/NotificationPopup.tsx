@@ -82,7 +82,7 @@ export function NotificationPopup({
             key,
             items: previous.filter === filter ? previous.items : [],
             hasMore: false,
-            error: msg("notifications.components.NotificationPopup.khongTheTaiThongBao"),
+            error: msg("notifications.components.NotificationPopup.couldNotLoadNotifications"),
           }));
       });
     return () => controller.abort();
@@ -108,7 +108,7 @@ export function NotificationPopup({
   async function handleOpen(item: NotificationItem) {
     const link = sanitizeNotificationLink(item.link);
     if (!link) {
-      setMutationError(msg("notifications.components.NotificationPopup.lienKetKhongHopLe"));
+      setMutationError(msg("notifications.components.NotificationPopup.invalidLink"));
       return;
     }
     setBusy(true);
@@ -118,7 +118,7 @@ export function NotificationPopup({
       onClose();
       router.push(link);
     } catch {
-      setMutationError(msg("notifications.components.NotificationPopup.chuaDanhDauDaDocDuoc"));
+      setMutationError(msg("notifications.components.NotificationPopup.couldNotMarkAsRead"));
     } finally {
       setBusy(false);
     }
@@ -130,7 +130,7 @@ export function NotificationPopup({
       setPage(1);
       onChanged();
     } catch {
-      setMutationError(msg("notifications.components.NotificationPopup.khongTheDanhDauTatCa"));
+      setMutationError(msg("notifications.components.NotificationPopup.couldNotMarkAllAs"));
     } finally {
       setBusy(false);
     }
@@ -145,7 +145,7 @@ export function NotificationPopup({
       ref={panel}
       tabIndex={-1}
       role="dialog"
-      aria-label={msg("notifications.components.NotificationPopup.thongBao")}
+      aria-label={msg("notifications.components.NotificationPopup.notifications")}
       className={styles.popup}
       onKeyDown={(e) => {
         if (e.key !== "Escape") return;
@@ -161,24 +161,24 @@ export function NotificationPopup({
             <button
               ref={back}
               type="button"
-              aria-label={msg("notifications.components.NotificationPopup.quayLaiThongBao")}
-              title={msg("notifications.components.NotificationPopup.quayLaiThongBao")}
+              aria-label={msg("notifications.components.NotificationPopup.backToNotifications")}
+              title={msg("notifications.components.NotificationPopup.backToNotifications")}
               className={styles.iconButton}
               onClick={() => handleShowSettings(false)}
             >
               <Icon name="arrow_back" size={18} />
             </button>
-            <h2>{msg("notifications.components.NotificationPopup.caiDat")}</h2>
+            <h2>{msg("notifications.components.NotificationPopup.settings")}</h2>
           </>
         ) : (
           <>
-            <h2>{msg("notifications.components.NotificationPopup.thongBao")}</h2>
+            <h2>{msg("notifications.components.NotificationPopup.notifications")}</h2>
             <button
               ref={gear}
               type="button"
               data-testid="notification-settings"
-              aria-label={msg("notifications.components.NotificationPopup.caiDatThongBao")}
-              title={msg("notifications.components.NotificationPopup.caiDatThongBao")}
+              aria-label={msg("notifications.components.NotificationPopup.notificationSettings")}
+              title={msg("notifications.components.NotificationPopup.notificationSettings")}
               className={styles.iconButton}
               onClick={() => handleShowSettings(true)}
             >
@@ -192,7 +192,7 @@ export function NotificationPopup({
       </div>
       <div hidden={settings} className={styles.listView}>
         <div className={styles.tabbar}>
-          <div role="tablist" aria-label={msg("notifications.components.NotificationPopup.locThongBao")} onKeyDown={handleTabListKey} className={styles.tabs}>
+          <div role="tablist" aria-label={msg("notifications.components.NotificationPopup.filterNotifications")} onKeyDown={handleTabListKey} className={styles.tabs}>
             <button
               role="tab"
               aria-selected={!unread}
@@ -202,7 +202,7 @@ export function NotificationPopup({
                 setPage(1);
               }}
             >
-              {msg("notifications.components.NotificationPopup.tatCa")}</button>
+              {msg("notifications.components.NotificationPopup.all")}</button>
             <button
               role="tab"
               aria-selected={unread}
@@ -212,7 +212,7 @@ export function NotificationPopup({
                 setPage(1);
               }}
             >
-              {msg("notifications.components.NotificationPopup.chuaDoc")}{count})
+              {msg("notifications.components.NotificationPopup.unread")}{count})
             </button>
           </div>
           <button
@@ -223,7 +223,7 @@ export function NotificationPopup({
             onClick={() => void handleMarkAllRead()}
           >
             <Icon name="check" size={15} />
-            {msg("notifications.components.NotificationPopup.danhDauDaDoc")}</button>
+            {msg("notifications.components.NotificationPopup.markAsRead")}</button>
         </div>
         <div className={styles.scroll} aria-busy={loading}>
           {mutationError && (
@@ -240,7 +240,7 @@ export function NotificationPopup({
                   onChanged();
                 }}
               >
-                {msg("notifications.components.NotificationPopup.thuLai")}</button>
+                {msg("notifications.components.NotificationPopup.retry")}</button>
             </p>
           )}
           {items.map((item) => (
@@ -264,13 +264,13 @@ export function NotificationPopup({
           ))}
           {loading && !items.length ? (
             <p role="status" className={styles.empty}>
-              {msg("notifications.components.NotificationPopup.dangTai")}</p>
+              {msg("notifications.components.NotificationPopup.loading")}</p>
           ) : (
             !loading &&
             !items.length &&
             !(result.filter === filter && result.error) && (
               <p className={styles.empty}>
-                {unread ? msg("notifications.components.NotificationPopup.banDaDocTatCaThong") : msg("notifications.components.NotificationPopup.chuaCoThongBao")}
+                {unread ? msg("notifications.components.NotificationPopup.youHaveReadAllNotifications") : msg("notifications.components.NotificationPopup.noNotificationsYet")}
               </p>
             )
           )}
@@ -281,7 +281,7 @@ export function NotificationPopup({
               className={styles.loadMore}
               onClick={() => setPage((p) => p + 1)}
             >
-              {loading ? msg("notifications.components.NotificationPopup.dangTai") : msg("notifications.components.NotificationPopup.taiThem")}
+              {loading ? msg("notifications.components.NotificationPopup.loading") : msg("notifications.components.NotificationPopup.loadMore")}
             </button>
           )}
         </div>

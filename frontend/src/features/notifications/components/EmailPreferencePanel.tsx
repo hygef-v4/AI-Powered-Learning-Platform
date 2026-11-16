@@ -15,7 +15,7 @@ export function EmailPreferencePanel() {
       .loadPreferences(controller.signal)
       .then(setValues)
       .catch(() => {
-        if (!controller.signal.aborted) setError(msg("notifications.components.EmailPreferencePanel.khongTheTaiTuyChonEmail"));
+        if (!controller.signal.aborted) setError(msg("notifications.components.EmailPreferencePanel.couldNotLoadEmailPreferences"));
       });
     return () => controller.abort();
   }, [revision]);
@@ -30,7 +30,7 @@ export function EmailPreferencePanel() {
         previous ? { ...previous, [type]: saved[type] ?? value } : previous,
       );
     } catch {
-      setError(msg("notifications.components.EmailPreferencePanel.chuaLuuDuocTuyChonHay"));
+      setError(msg("notifications.components.EmailPreferencePanel.couldNotSaveThePreference"));
     } finally {
       setPending((previous) => {
         const next = { ...previous };
@@ -41,7 +41,7 @@ export function EmailPreferencePanel() {
   }
   return (
     <section className={styles.preferences}>
-      <h3>{msg("notifications.components.EmailPreferencePanel.guiEmailChoToiKhiCo")}</h3>
+      <h3>{msg("notifications.components.EmailPreferencePanel.emailMeWhenThereIs")}</h3>
       {error && (
         <p role="alert" className={styles.error}>
           {error}{" "}
@@ -52,14 +52,14 @@ export function EmailPreferencePanel() {
                 setRevision((r) => r + 1);
               }}
             >
-              {msg("notifications.components.EmailPreferencePanel.thuLai")}</button>
+              {msg("notifications.components.EmailPreferencePanel.retry")}</button>
           )}
         </p>
       )}
       {!values
         ? !error && (
             <p role="status" className={styles.empty}>
-              {msg("notifications.components.EmailPreferencePanel.dangTai")}</p>
+              {msg("notifications.components.EmailPreferencePanel.loading")}</p>
           )
         : Object.entries(values).map(([type, enabled]) => (
             <div key={type} className={styles.preference}>
@@ -78,9 +78,9 @@ export function EmailPreferencePanel() {
             </div>
           ))}
       {values?.BACKUP_FAILED && (
-        <p className={styles.help}>{msg("notifications.components.EmailPreferencePanel.emailSaoLuuThatBaiLa")}</p>
+        <p className={styles.help}>{msg("notifications.components.EmailPreferencePanel.backupFailureEmailsAreMandatory")}</p>
       )}
-      <p className={styles.help}>{msg("notifications.components.EmailPreferencePanel.tatEmailVanNhanThongBao")}</p>
+      <p className={styles.help}>{msg("notifications.components.EmailPreferencePanel.turningOffEmailStillDelivers")}</p>
     </section>
   );
 }

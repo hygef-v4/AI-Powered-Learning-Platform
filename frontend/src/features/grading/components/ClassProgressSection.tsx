@@ -41,21 +41,21 @@ export function ClassProgressSection({ classId }: { classId: string; layout?: "s
     .slice(0, 3);
 
   return (
-    <Section title={msg("grading.components.ClassProgressSection.tongQuanBaiTap")}>
+    <Section title={msg("grading.components.ClassProgressSection.assignmentOverview")}>
       {error ? (
         <div className="flex flex-col items-start gap-3">
           <p role="alert" className="text-sm text-danger">{error}</p>
-          <Button size="sm" variant="secondary" onClick={() => void refresh().catch(() => {})}>{msg("grading.components.ClassProgressSection.thuTaiLai")}</Button>
+          <Button size="sm" variant="secondary" onClick={() => void refresh().catch(() => {})}>{msg("grading.components.ClassProgressSection.tryAgain")}</Button>
         </div>
       ) : !value ? (
-        <p role="status" className="text-sm text-muted">{msg("grading.components.ClassProgressSection.dangTaiTongQuan")}</p>
+        <p role="status" className="text-sm text-muted">{msg("grading.components.ClassProgressSection.loadingOverview")}</p>
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-3">
             {[
-              { label: msg("grading.components.ClassProgressSection.baiDangMo"), count: value.assignments.length, href: assignmentsHref },
-              { label: msg("grading.components.ClassProgressSection.baiNopChoCham"), count: pending, href: `${buildGradebookHref(classId, { assignment: pendingAssignment })}&gradebookStatus=PENDING` },
-              { label: msg("grading.components.ClassProgressSection.baiDaChamChuaCongBo"), count: unpublished, href: `${buildGradebookHref(classId, { assignment: unpublishedAssignment })}&gradebookStatus=DRAFT` },
+              { label: msg("grading.components.ClassProgressSection.openAssignments"), count: value.assignments.length, href: assignmentsHref },
+              { label: msg("grading.components.ClassProgressSection.submissionsAwaitingGrading"), count: pending, href: `${buildGradebookHref(classId, { assignment: pendingAssignment })}&gradebookStatus=PENDING` },
+              { label: msg("grading.components.ClassProgressSection.gradedButNotPublished"), count: unpublished, href: `${buildGradebookHref(classId, { assignment: unpublishedAssignment })}&gradebookStatus=DRAFT` },
             ].map(item => (
               <Link key={item.label} href={item.href} aria-label={`${item.count} ${item.label}`} className="row-interactive flex items-baseline gap-3 rounded-lg px-2 py-3 hover:bg-shell">
                 <span className="text-2xl font-semibold tabular-nums text-ink">{item.count}</span>
@@ -65,10 +65,10 @@ export function ClassProgressSection({ classId }: { classId: string; layout?: "s
           </div>
           <div className="border-t border-line pt-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold text-ink">{msg("grading.components.ClassProgressSection.hanNopSapToi")}</h3>
-              <Link href={assignmentsHref} className="text-[13px] font-semibold text-primary-ink hover:underline">{msg("grading.components.ClassProgressSection.tatCaBaiTap")}</Link>
+              <h3 className="text-sm font-semibold text-ink">{msg("grading.components.ClassProgressSection.upcomingDeadlines")}</h3>
+              <Link href={assignmentsHref} className="text-[13px] font-semibold text-primary-ink hover:underline">{msg("grading.components.ClassProgressSection.allAssignments")}</Link>
             </div>
-            {upcoming.length === 0 ? <p className="text-sm text-muted">{msg("grading.components.ClassProgressSection.chuaCoHanNopSapToi")}</p> : (
+            {upcoming.length === 0 ? <p className="text-sm text-muted">{msg("grading.components.ClassProgressSection.noUpcomingDeadlines")}</p> : (
               <ul className="divide-y divide-line">
                 {upcoming.map(assignment => (
                   <li key={assignment.id} data-testid="upcoming-assignment">
@@ -76,7 +76,7 @@ export function ClassProgressSection({ classId }: { classId: string; layout?: "s
                       className="row-interactive -mx-2 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 rounded-lg px-2 py-3 hover:bg-shell">
                       <span className="min-w-0 flex-1 basis-48">
                         <span className="block break-words text-sm font-semibold text-ink">{assignment.title}</span>
-                        <span className="text-xs text-muted">{assignment.gradingMode === "PRACTICE" ? msg("grading.components.ClassProgressSection.luyenTap") : assignment.submissionMode === "GROUP" ? msg("grading.components.ClassProgressSection.nhom") : msg("grading.components.ClassProgressSection.caNhan")}</span>
+                        <span className="text-xs text-muted">{assignment.gradingMode === "PRACTICE" ? msg("grading.components.ClassProgressSection.practice") : assignment.submissionMode === "GROUP" ? msg("grading.components.ClassProgressSection.group") : msg("grading.components.ClassProgressSection.individual")}</span>
                       </span>
                       <time dateTime={assignment.closesAt!} className="text-[13px] tabular-nums text-muted">{formatDateTime(assignment.closesAt)}</time>
                     </Link>

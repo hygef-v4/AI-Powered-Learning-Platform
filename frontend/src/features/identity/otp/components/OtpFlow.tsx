@@ -22,10 +22,10 @@ const OTP_TTL_SECONDS = 10 * 60;
 const RESEND_COOLDOWN_SECONDS = 60;
 const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export const OTP_INVALID_MESSAGE = msg("identity.otp.components.OtpFlow.maSaiHoacDaHetHan");
-export const TICKET_EXPIRED_MESSAGE = msg("identity.otp.components.OtpFlow.phienDaHetHan");
-export const RESENT_MESSAGE = msg("identity.otp.components.OtpFlow.daGuiLaiMa");
-const BUSY_MESSAGE = msg("identity.otp.components.OtpFlow.heThongBanThuLaiSau");
+export const OTP_INVALID_MESSAGE = msg("identity.otp.components.OtpFlow.theCodeIsWrongOr");
+export const TICKET_EXPIRED_MESSAGE = msg("identity.otp.components.OtpFlow.theSessionHasExpired");
+export const RESENT_MESSAGE = msg("identity.otp.components.OtpFlow.aNewCodeHasBeen");
+const BUSY_MESSAGE = msg("identity.otp.components.OtpFlow.theSystemIsBusyPlease");
 
 type Step = 0 | 1 | 2;
 
@@ -64,7 +64,7 @@ export function OtpFlow({ copy, onComplete }: { copy: OtpFlowCopy; onComplete: (
     >
       <Link href="/login" className="inline-flex items-center gap-1.5 text-xs font-medium text-muted hover:text-ink">
         <Icon name="arrow_back" size={15} />
-        {msg("identity.otp.components.OtpFlow.quayLaiDangNhap")}</Link>
+        {msg("identity.otp.components.OtpFlow.backToSignIn")}</Link>
       <h1 className="mt-5 font-display text-[32px] leading-[1.05] tracking-[-0.03em] text-ink">{copy.title(step)}</h1>
       <div className="mt-5">
         <Stepper steps={copy.steps} current={step} />
@@ -137,7 +137,7 @@ function EmailStep({
     event.preventDefault();
     const value = email.trim();
     if (!EMAIL_FORMAT.test(value)) {
-      setError(msg("identity.otp.components.OtpFlow.nhapDungEmailDoTruongCap"));
+      setError(msg("identity.otp.components.OtpFlow.enterTheEmailIssuedBy"));
       return;
     }
     setBusy(true);
@@ -155,7 +155,7 @@ function EmailStep({
   return (
     <form onSubmit={submit} noValidate className="mt-6">
       <label htmlFor={id} className={AUTH_LABEL}>
-        {msg("identity.otp.components.OtpFlow.emailTruong")}</label>
+        {msg("identity.otp.components.OtpFlow.schoolEmail")}</label>
       <div className="relative mt-1.5">
         <input
           id={id}
@@ -195,7 +195,7 @@ function VerifyStep({
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!/^\d{6}$/.test(code)) {
-      setError(msg("identity.otp.components.OtpFlow.nhapDu6ChuSo"));
+      setError(msg("identity.otp.components.OtpFlow.enterAll6Digits"));
       return;
     }
     setBusy(true);
@@ -233,7 +233,7 @@ function VerifyStep({
       <div className="mt-3 flex items-center justify-between text-xs">
         <span
           className={cx("flex items-center gap-1.5 font-semibold tabular-nums", expiresIn > 0 ? "text-ink" : "text-danger")}
-          aria-label={msg("identity.otp.components.OtpFlow.thoiGianHieuLucCuaMa", { value: String(formatMmSs(expiresIn)) })}
+          aria-label={msg("identity.otp.components.OtpFlow.codeValidFor", { value: String(formatMmSs(expiresIn)) })}
         >
           <Icon name="schedule" size={14} className="text-muted" />
           {formatMmSs(expiresIn)}
@@ -245,11 +245,11 @@ function VerifyStep({
           disabled={resendIn > 0 || resending}
           className="font-semibold text-primary-ink hover:underline disabled:cursor-not-allowed disabled:text-muted disabled:no-underline"
         >
-          {msg("identity.otp.components.OtpFlow.guiLaiMa")}</button>
+          {msg("identity.otp.components.OtpFlow.resendCode")}</button>
       </div>
       {error && <FieldError>{error}</FieldError>}
       <SubmitButton busy={busy} disabled={code.length < 6}>
-        {msg("identity.otp.components.OtpFlow.xacNhanMa")}</SubmitButton>
+        {msg("identity.otp.components.OtpFlow.confirmCode")}</SubmitButton>
     </form>
   );
 }
@@ -272,11 +272,11 @@ function PasswordStep({
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!acceptable) {
-      setError(msg("identity.otp.components.OtpFlow.matKhauCanItNhat8"));
+      setError(msg("identity.otp.components.OtpFlow.thePasswordNeedsAtLeast"));
       return;
     }
     if (password !== confirm) {
-      setError(msg("identity.otp.components.OtpFlow.haiMatKhauChuaKhop"));
+      setError(msg("identity.otp.components.OtpFlow.theTwoPasswordsDoNot"));
       return;
     }
     setBusy(true);
@@ -291,7 +291,7 @@ function PasswordStep({
       }
       setError(
         problem.code === "PASSWORD_POLICY"
-          ? (problem.violations ?? []).map((v) => PASSWORD_VIOLATION_MESSAGES[v] ?? v).join(" ") || msg("identity.otp.components.OtpFlow.matKhauChuaDatYeuCau")
+          ? (problem.violations ?? []).map((v) => PASSWORD_VIOLATION_MESSAGES[v] ?? v).join(" ") || msg("identity.otp.components.OtpFlow.thePasswordDoesNotMeet")
           : BUSY_MESSAGE,
       );
     } finally {
@@ -302,7 +302,7 @@ function PasswordStep({
   return (
     <form onSubmit={submit} noValidate className="mt-6">
       <PasswordField
-        label={msg("identity.otp.components.OtpFlow.matKhauMoi")}
+        label={msg("identity.otp.components.OtpFlow.newPassword")}
         autoComplete="new-password"
         value={password}
         valid={acceptable}
@@ -310,7 +310,7 @@ function PasswordStep({
       />
       <PasswordField
         className="mt-4"
-        label={msg("identity.otp.components.OtpFlow.nhapLaiMatKhau")}
+        label={msg("identity.otp.components.OtpFlow.reEnterPassword")}
         autoComplete="new-password"
         value={confirm}
         valid={confirm.length > 0 && confirm === password}

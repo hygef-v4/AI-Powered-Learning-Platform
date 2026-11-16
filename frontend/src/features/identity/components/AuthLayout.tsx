@@ -37,7 +37,7 @@ export function AuthLayout({
         <button
           type="button"
           onClick={toggleTheme}
-          aria-label={theme === "dark" ? msg("identity.components.AuthLayout.chuyenGiaoDienSang") : msg("identity.components.AuthLayout.chuyenGiaoDienToi")}
+          aria-label={theme === "dark" ? msg("identity.components.AuthLayout.switchToLightMode") : msg("identity.components.AuthLayout.switchToDarkMode")}
           className="inline-flex size-10 items-center justify-center rounded-lg text-body transition-colors hover:bg-sunken hover:text-ink"
         >
           <Icon name={theme === "dark" ? "sun" : "moon"} size={17} />
@@ -46,8 +46,8 @@ export function AuthLayout({
         <button
           type="button"
           onClick={() => setLanguageOpen(true)}
-          aria-label={msg("shared.layout.AppShell.ngonNgu")}
-          title={msg("shared.layout.AppShell.ngonNgu")}
+          aria-label={msg("shared.layout.AppShell.language")}
+          title={msg("shared.layout.AppShell.language")}
           data-testid="auth-language"
           className="inline-flex size-10 items-center justify-center rounded-lg text-body transition-colors hover:bg-sunken hover:text-ink"
         >
@@ -67,7 +67,7 @@ export function AuthLayout({
       <footer className="px-6 pb-6 text-center text-xs text-muted">
         {/* Chữ chân trang mở trang chính sách quyền riêng tư (yêu cầu 2026-11-16). */}
         <Link href="/privacy" className="underline-offset-4 transition-colors hover:text-ink hover:underline">
-          {msg("identity.components.AuthLayout.t2026NenTangHocTap")}
+          {msg("identity.components.AuthLayout.n2026LearningPlatform")}
         </Link>
       </footer>
     </div>

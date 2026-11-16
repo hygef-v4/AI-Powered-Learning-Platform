@@ -26,5 +26,5 @@ export function PostLoginRedirect() {
   if (unavailable) {
     return <ErrorPage kind="unavailable" />;
   }
-  return <FullPageStatus>{msg("identity.components.PostLoginRedirect.dangChuyenTrang")}</FullPageStatus>;
+  return <FullPageStatus>{msg("identity.components.PostLoginRedirect.redirecting")}</FullPageStatus>;
 }

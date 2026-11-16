@@ -37,20 +37,20 @@ export function SubjectClassesOverview({ subjectId }: { subjectId: string }) {
   const classesHref = `/manager/classes?subjectId=${encodeURIComponent(subjectId)}`;
   const classes = current.classes ?? [];
   const stats = [
-    { label: msg("academics.components.SubjectClassesOverview.lopDangMo"), count: classes.length },
-    { label: msg("academics.components.SubjectClassesOverview.sinhVien"), count: classes.reduce((sum, course) => sum + course.activeStudentCount, 0) },
-    { label: msg("academics.components.SubjectClassesOverview.lopChuaCoGiangVien"), count: classes.filter((course) => !course.teacher).length },
+    { label: msg("academics.components.SubjectClassesOverview.openClasses"), count: classes.length },
+    { label: msg("academics.components.SubjectClassesOverview.students"), count: classes.reduce((sum, course) => sum + course.activeStudentCount, 0) },
+    { label: msg("academics.components.SubjectClassesOverview.classesWithoutALecturer"), count: classes.filter((course) => !course.teacher).length },
   ];
 
   return (
-    <Section title={msg("academics.components.SubjectClassesOverview.tongQuanLop")}>
+    <Section title={msg("academics.components.SubjectClassesOverview.classOverview")}>
       {current.error ? (
         <div className="flex flex-col items-start gap-3">
           <p role="alert" className="text-sm text-danger">{current.error}</p>
-          <Button size="sm" variant="secondary" onClick={() => setAttempt((value) => value + 1)}>{msg("academics.components.SubjectClassesOverview.thuTaiLai")}</Button>
+          <Button size="sm" variant="secondary" onClick={() => setAttempt((value) => value + 1)}>{msg("academics.components.SubjectClassesOverview.tryAgain")}</Button>
         </div>
       ) : !current.classes ? (
-        <p role="status" className="text-sm text-muted">{msg("academics.components.SubjectClassesOverview.dangTaiTongQuan")}</p>
+        <p role="status" className="text-sm text-muted">{msg("academics.components.SubjectClassesOverview.loadingOverview")}</p>
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-3">
@@ -64,10 +64,10 @@ export function SubjectClassesOverview({ subjectId }: { subjectId: string }) {
           </div>
           <div className="border-t border-line pt-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold text-ink">{msg("academics.components.SubjectClassesOverview.lopDangMo")}</h3>
-              <Link href={classesHref} className="text-[13px] font-semibold text-primary-ink hover:underline">{msg("academics.components.SubjectClassesOverview.tatCaLop")}</Link>
+              <h3 className="text-sm font-semibold text-ink">{msg("academics.components.SubjectClassesOverview.openClasses")}</h3>
+              <Link href={classesHref} className="text-[13px] font-semibold text-primary-ink hover:underline">{msg("academics.components.SubjectClassesOverview.allClasses")}</Link>
             </div>
-            {classes.length === 0 ? <p className="text-sm text-muted">{msg("academics.components.SubjectClassesOverview.chuaCoLopDangMo")}</p> : (
+            {classes.length === 0 ? <p className="text-sm text-muted">{msg("academics.components.SubjectClassesOverview.noOpenClassesYet")}</p> : (
               <ul className="divide-y divide-line">
                 {classes.map((course) => (
                   <li key={course.id} data-testid="subject-open-class">
@@ -75,9 +75,9 @@ export function SubjectClassesOverview({ subjectId }: { subjectId: string }) {
                       className="row-interactive -mx-2 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 rounded-lg px-2 py-3 hover:bg-shell">
                       <span className="min-w-0 flex-1 basis-48">
                         <span className="block break-words text-sm font-semibold text-ink">{course.code}</span>
-                        <span className="text-xs text-muted">{course.teacher?.name ?? msg("academics.components.SubjectClassesOverview.chuaPhanCongGiangVien")}</span>
+                        <span className="text-xs text-muted">{course.teacher?.name ?? msg("academics.components.SubjectClassesOverview.noLecturerAssigned")}</span>
                       </span>
-                      <span className="text-[13px] tabular-nums text-muted">{course.activeStudentCount} {msg("academics.components.SubjectClassesOverview.sinhVien2")}</span>
+                      <span className="text-[13px] tabular-nums text-muted">{course.activeStudentCount} {msg("academics.components.SubjectClassesOverview.students2")}</span>
                     </Link>
                   </li>
                 ))}

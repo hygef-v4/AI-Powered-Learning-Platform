@@ -10,9 +10,9 @@ export function normalizeSubjectCode(code: string): string {
 export function validateSubjectInformation(input: SubjectInformationInput): SubjectFieldErrors {
   const errors: SubjectFieldErrors = {};
   const name = input.name.trim();
-  if (!name || name.length > 200) errors.name = msg("subjects.model.validation.tenMonLaBatBuocVa");
+  if (!name || name.length > 200) errors.name = msg("subjects.model.validation.theSubjectNameIsRequired");
   if (input.description != null && input.description.length > 2000) {
-    errors.description = msg("subjects.model.validation.moTaMonToiDa2");
+    errors.description = msg("subjects.model.validation.theSubjectDescriptionCanBe");
   }
   return errors;
 }
@@ -22,7 +22,7 @@ export function validateCreateSubject(
 ): SubjectFieldErrors {
   const errors = validateSubjectInformation(input);
   if (!/^[A-Z0-9-]{1,20}$/.test(normalizeSubjectCode(input.code))) {
-    errors.code = msg("subjects.model.validation.maMonPhaiGom120");
+    errors.code = msg("subjects.model.validation.theSubjectCodeMustBe");
   }
   return errors;
 }

@@ -21,11 +21,11 @@ export function TermFilter({ options, value, onChange, testId }: { options: read
   };
   return (
     <div data-testid={testId}>
-      <Menu ariaLabel={msg("shared.ui.TermFilter.locTheoHocKy")} variant="tool" align="right" className="w-44"
+      <Menu ariaLabel={msg("shared.ui.TermFilter.filterByTerm")} variant="tool" align="right" className="w-44"
         summaryClassName="!h-10 w-full rounded-lg border border-line bg-surface !px-2.5 text-left text-[13px] hover:!bg-surface hover:border-line-strong [&>svg:last-child]:ml-auto [&>svg:last-child]:shrink-0"
-        label={<span className={cx("min-w-0 flex-1 truncate text-ink", value && "font-mono")}>{value || msg("shared.ui.TermFilter.tatCaHocKy")}</span>}>
+        label={<span className={cx("min-w-0 flex-1 truncate text-ink", value && "font-mono")}>{value || msg("shared.ui.TermFilter.allTerms")}</span>}>
         <div className="flex max-h-72 w-[160px] flex-col gap-0.5 overflow-y-auto">
-          {buildOption("", msg("shared.ui.TermFilter.tatCaHocKy"))}
+          {buildOption("", msg("shared.ui.TermFilter.allTerms"))}
           {options.map((term) => buildOption(term, term))}
         </div>
       </Menu>

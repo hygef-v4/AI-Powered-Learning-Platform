@@ -56,7 +56,7 @@ export function SubjectListPage() {
   return (
     <>
       <PageHeader
-        title={msg("subjects.pages.SubjectListPage.monHoc")}
+        title={msg("subjects.pages.SubjectListPage.subjects")}
         actions={
           <Button
             id="subjects-create-open"
@@ -66,7 +66,7 @@ export function SubjectListPage() {
             disabled={resource.error !== null}
             data-testid="subjects-create-open"
           >
-            {msg("subjects.pages.SubjectListPage.themMonHoc")}</Button>
+            {msg("subjects.pages.SubjectListPage.addSubject")}</Button>
         }
       />
       {creating && (
@@ -75,7 +75,7 @@ export function SubjectListPage() {
           onCreated={() => {
             setCreating(false);
             focusAfterCreate.current = true;
-            showToast(msg("subjects.pages.SubjectListPage.daThemMonHoc"));
+            showToast(msg("subjects.pages.SubjectListPage.subjectAdded"));
             resource.reload();
           }}
         />
@@ -91,7 +91,7 @@ export function SubjectListPage() {
         />
         {!data && resource.loading && (
           <p role="status" className="py-8 text-center text-sm text-muted">
-            {msg("subjects.pages.SubjectListPage.dangTaiMonHoc")}</p>
+            {msg("subjects.pages.SubjectListPage.loadingSubjects")}</p>
         )}
         {resource.error !== null && (
           <SubjectReadError error={resource.error} onRetry={resource.reload} />

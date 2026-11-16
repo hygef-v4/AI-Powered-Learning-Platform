@@ -12,7 +12,7 @@ import { msg } from "@/i18n/msg";
 
 function describeProblem(e: unknown, fallback: string): string {
   if (e instanceof ApiError) {
-    if (e.problem.status === 409) return e.problem.detail ?? msg("groupdocs.components.SectionDialogs.duLieuVuaThayDoiHay");
+    if (e.problem.status === 409) return e.problem.detail ?? msg("groupdocs.components.SectionDialogs.theDataJustChangedPlease");
     return e.problem.detail ?? fallback;
   }
   return fallback;
@@ -46,29 +46,29 @@ export function AssignSectionDialog({
       onChanged();
       onClose();
     } catch (e) {
-      setError(describeProblem(e, msg("groupdocs.components.SectionDialogs.khongGiaoDuocMuc")));
+      setError(describeProblem(e, msg("groupdocs.components.SectionDialogs.couldNotAssignTheSection")));
       setBusy(false);
     }
   };
   return (
     <Dialog
       open
-      title={msg("groupdocs.components.SectionDialogs.giaoMuc")}
+      title={msg("groupdocs.components.SectionDialogs.assignSection")}
       icon="person_add"
       onClose={onClose}
       footer={
         <Button variant="primary" onClick={() => void assign()} disabled={!changed || busy}>
-          {msg("groupdocs.components.SectionDialogs.giaoMuc")}</Button>
+          {msg("groupdocs.components.SectionDialogs.assignSection")}</Button>
       }
     >
-      <Field label={msg("groupdocs.components.SectionDialogs.thanhVienNhanMuc")} htmlFor="assign-member">
-        <SearchPicker id="assign-member" label={msg("groupdocs.components.SectionDialogs.thanhVienNhanMuc")} placeholder={msg("groupdocs.components.SectionDialogs.timThanhVien")} optionIcon="person"
-          emptyText={msg("groupdocs.components.SectionDialogs.khongCoThanhVienPhuHop")}
+      <Field label={msg("groupdocs.components.SectionDialogs.memberTakingTheSection")} htmlFor="assign-member">
+        <SearchPicker id="assign-member" label={msg("groupdocs.components.SectionDialogs.memberTakingTheSection")} placeholder={msg("groupdocs.components.SectionDialogs.findMembers")} optionIcon="person"
+          emptyText={msg("groupdocs.components.SectionDialogs.noMatchingMembers")}
           options={view.members.filter((m) => m.accountId !== assignee).map((m) => ({ id: m.accountId, label: formatStudentLabel({ ...m, name: m.name ?? m.accountId }) }))}
           onPick={setAssignee}
-          selected={chosen ? { label: formatStudentLabel({ ...chosen, name: chosen.name ?? chosen.accountId }), clearLabel: msg("groupdocs.components.SectionDialogs.boChonThanhVien"), onClear: () => setAssignee("") } : undefined} />
+          selected={chosen ? { label: formatStudentLabel({ ...chosen, name: chosen.name ?? chosen.accountId }), clearLabel: msg("groupdocs.components.SectionDialogs.deselectMember"), onClear: () => setAssignee("") } : undefined} />
       </Field>
-      {heldByOther && <Alert tone="warning">{msg("groupdocs.components.SectionDialogs.giaoChoNguoiKhacSeNha")}</Alert>}
+      {heldByOther && <Alert tone="warning">{msg("groupdocs.components.SectionDialogs.assigningItToSomeoneElse")}</Alert>}
       {error && (
         <Alert tone="danger" role="alert">
           {error}
@@ -97,7 +97,7 @@ export function SubmitGroupDialog({
   const undone = view.sections.filter((s) => s.status !== "DONE");
   const resolveName = (id: string | null) => {
     const member = view.members.find((m) => m.accountId === id);
-    return formatStudentLabel({ name: member?.name ?? msg("groupdocs.components.SectionDialogs.chuaAiNhan"), studentCode: member?.studentCode });
+    return formatStudentLabel({ name: member?.name ?? msg("groupdocs.components.SectionDialogs.unclaimed"), studentCode: member?.studentCode });
   };
   const submit = async () => {
     setBusy(true);
@@ -107,13 +107,13 @@ export function SubmitGroupDialog({
       const problem = e instanceof ApiError ? (e.problem as ApiError["problem"] & { issues?: { blockId?: string }[] }) : undefined;
       const blockIds = (problem?.issues ?? []).map((i) => i.blockId ?? "").filter(Boolean);
       const invalid = problem?.issues !== undefined;
-      onFailed(invalid ? msg("groupdocs.components.SectionDialogs.chuaNopDuocViConMuc") : describeProblem(e, msg("groupdocs.components.SectionDialogs.khongNopDuocThuLaiSau")), blockIds);
+      onFailed(invalid ? msg("groupdocs.components.SectionDialogs.cannotSubmitYetBecauseSome") : describeProblem(e, msg("groupdocs.components.SectionDialogs.couldNotSubmitPleaseTry")), blockIds);
     }
   };
   return (
     <Dialog
       open
-      title={msg("groupdocs.components.SectionDialogs.nopTaiLieuNhom")}
+      title={msg("groupdocs.components.SectionDialogs.submitGroupDocument")}
       icon="upload_file"
       size="lg"
       onClose={onClose}
@@ -121,9 +121,9 @@ export function SubmitGroupDialog({
       footer={
         <>
           <Button onClick={onClose} disabled={busy}>
-            {msg("groupdocs.components.SectionDialogs.quayLai")}</Button>
+            {msg("groupdocs.components.SectionDialogs.back")}</Button>
           <Button variant="primary" onClick={() => void submit()} disabled={busy}>
-            {undone.length ? msg("groupdocs.components.SectionDialogs.vanNop") : msg("groupdocs.components.SectionDialogs.nop")}
+            {undone.length ? msg("groupdocs.components.SectionDialogs.submitAnyway") : msg("groupdocs.components.SectionDialogs.submit")}
           </Button>
         </>
       }
@@ -132,9 +132,9 @@ export function SubmitGroupDialog({
         <TableFrame filledHead className="[&_table]:table-fixed">
           <colgroup><col /><col className="w-[32%]" /><col className="w-[140px]" /></colgroup><thead>
             <tr>
-              <Th>{msg("groupdocs.components.SectionDialogs.muc")}</Th>
-              <Th>{msg("groupdocs.components.SectionDialogs.nguoiGiu")}</Th>
-              <Th>{msg("groupdocs.components.SectionDialogs.trangThai")}</Th>
+              <Th>{msg("groupdocs.components.SectionDialogs.section")}</Th>
+              <Th>{msg("groupdocs.components.SectionDialogs.holder")}</Th>
+              <Th>{msg("groupdocs.components.SectionDialogs.status")}</Th>
             </tr>
           </thead>
           <tbody>

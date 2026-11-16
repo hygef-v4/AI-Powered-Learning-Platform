@@ -28,7 +28,7 @@ export function SettingListPage() {
         setOverview(loaded);
         setError(null);
       })
-      .catch(() => setError(msg("settings.pages.SettingListPage.khongTaiDuocCaiDatThu")));
+      .catch(() => setError(msg("settings.pages.SettingListPage.couldNotLoadTheSettings")));
   }, []);
 
   useEffect(load, [load]);
@@ -47,13 +47,13 @@ export function SettingListPage() {
 
   return (
     <>
-      <PageHeader title={msg("settings.pages.SettingListPage.caiDat")} />
+      <PageHeader title={msg("settings.pages.SettingListPage.settings")} />
       {error && (
         <Alert tone="danger" role="alert">
           {error}
         </Alert>
       )}
-      {!overview && !error && <p className="text-[13px] text-muted">{msg("settings.pages.SettingListPage.dangTai")}</p>}
+      {!overview && !error && <p className="text-[13px] text-muted">{msg("settings.pages.SettingListPage.loading")}</p>}
       {overview && (
         <SettingsCard>
           {ai && (
@@ -64,14 +64,14 @@ export function SettingListPage() {
                   className="my-1 flex items-center gap-4 rounded-xl border border-line bg-canvas p-4 transition-colors hover:border-line-strong hover:bg-sunken"
                 >
                   <IconTile icon="smart_toy" />
-                  <span className="min-w-0 flex-1 text-[15px] font-semibold text-ink">{msg("settings.pages.SettingListPage.caiDatAi")}</span>
+                  <span className="min-w-0 flex-1 text-[15px] font-semibold text-ink">{msg("settings.pages.SettingListPage.aiSettings")}</span>
                   <Icon name="chevron_right" size={18} className="text-muted" />
                 </Link>
               ) : (
                 <div className="my-1 flex items-center gap-4 rounded-xl border border-line p-4 text-muted">
                   <IconTile icon="smart_toy" />
-                  <span className="min-w-0 flex-1 text-[15px] font-semibold">{msg("settings.pages.SettingListPage.caiDatAi")}</span>
-                  <Pill tone="warning">{msg("settings.pages.SettingListPage.khongKhaDung")}</Pill>
+                  <span className="min-w-0 flex-1 text-[15px] font-semibold">{msg("settings.pages.SettingListPage.aiSettings")}</span>
+                  <Pill tone="warning">{msg("settings.pages.SettingListPage.unavailable")}</Pill>
                 </div>
               )}
             </SettingsGroup>

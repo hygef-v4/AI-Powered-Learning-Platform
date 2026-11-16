@@ -4,7 +4,7 @@ import { StudentAssignmentDetailPage } from "@/features/assignmentwork/pages/Stu
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.myassignments.assignmentId.page.baiTap") };
+  return { title: await translateOnServer("app.myassignments.assignmentId.page.assignment") };
 }
 
 // U08 #39 Assignment Detail (classId trong query).

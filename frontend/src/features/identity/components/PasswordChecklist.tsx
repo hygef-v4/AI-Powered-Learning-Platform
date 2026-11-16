@@ -9,8 +9,8 @@ import { msg } from "@/i18n/msg";
 export function PasswordChecklist({ password, chips }: { password: string; chips?: boolean }) {
   const checks = checkPassword(password);
   const items = [
-    { ok: checks.minLength, label: msg("identity.components.PasswordChecklist.itNhat8KyTu") },
-    { ok: checks.letterAndDigit, label: msg("identity.components.PasswordChecklist.coCaChuVaSo") },
+    { ok: checks.minLength, label: msg("identity.components.PasswordChecklist.atLeast8Characters") },
+    { ok: checks.letterAndDigit, label: msg("identity.components.PasswordChecklist.bothLettersAndNumbers") },
   ];
   return (
     <ul className={chips ? "flex flex-wrap gap-2" : "mt-2.5 flex flex-wrap gap-4 text-xs font-medium"}>
@@ -24,13 +24,13 @@ export function PasswordChecklist({ password, chips }: { password: string; chips
           >
             <Icon name="check_circle" size={14} />
             {item.label}
-            <span className="sr-only">{item.ok ? msg("identity.components.PasswordChecklist.dat") : msg("identity.components.PasswordChecklist.chuaDat")}</span>
+            <span className="sr-only">{item.ok ? msg("identity.components.PasswordChecklist.met") : msg("identity.components.PasswordChecklist.notMet")}</span>
           </li>
         ) : (
           <li key={item.label} className={`flex items-center gap-1 ${item.ok ? "text-success" : "text-muted"}`}>
             <Icon name="check" size={14} />
             {item.label}
-            <span className="sr-only">{item.ok ? msg("identity.components.PasswordChecklist.dat") : msg("identity.components.PasswordChecklist.chuaDat")}</span>
+            <span className="sr-only">{item.ok ? msg("identity.components.PasswordChecklist.met") : msg("identity.components.PasswordChecklist.notMet")}</span>
           </li>
         ),
       )}

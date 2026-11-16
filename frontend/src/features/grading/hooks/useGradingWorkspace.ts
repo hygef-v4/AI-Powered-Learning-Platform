@@ -30,7 +30,7 @@ import type {
 } from "../model/types";
 import { msg } from "@/i18n/msg";
 
-const UNSAVED_CHANGES_MESSAGE = msg("grading.hooks.useGradingWorkspace.banCoThayDoiChuaLuu");
+const UNSAVED_CHANGES_MESSAGE = msg("grading.hooks.useGradingWorkspace.youHaveUnsavedChangesLeave");
 
 export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Detail>,
   filters: NavigationFilters = {}, additionalDirty = false) {
@@ -134,7 +134,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
 
   function navigateEvaluation(id: string, keepFilters = true) {
     const go = () => router.push(buildEvaluationHref(id, keepFilters ? filters : {}));
-    if (dirty || additionalDirty) requestConfirm(UNSAVED_CHANGES_MESSAGE, go, msg("grading.hooks.useGradingWorkspace.boThayDoi"));
+    if (dirty || additionalDirty) requestConfirm(UNSAVED_CHANGES_MESSAGE, go, msg("grading.hooks.useGradingWorkspace.discardChanges"));
     else go();
   }
 
@@ -150,11 +150,11 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     setError("");
     try {
       if (hasInvalidItemScores(detail.rubrics, form.itemScores)) {
-        throw new Error(msg("grading.hooks.useGradingWorkspace.kiemTraDiemTungMucTu"));
+        throw new Error(msg("grading.hooks.useGradingWorkspace.checkEachItemsPointsFrom"));
       }
       const supportsItemScores = evaluation.rubricItemScores !== undefined;
       if (!supportsItemScores && hasPartialPoints(detail.rubrics, form.checks, form.itemScores)) {
-        throw new Error(msg("grading.hooks.useGradingWorkspace.mayChuChuaHoTroLuu"));
+        throw new Error(msg("grading.hooks.useGradingWorkspace.theServerDoesNotSupport"));
       }
       const hasStructuredPayload = Boolean(
         form.structuredFeedback ||
@@ -206,7 +206,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
             }
           } catch {
             setDetail((current) => ({ ...current, evaluation: saved, editable: false }));
-            setError(msg("grading.hooks.useGradingWorkspace.daLuuDiemNhomTaiLai"));
+            setError(msg("grading.hooks.useGradingWorkspace.groupScoreSavedReloadThe"));
           }
         }
         const preserveEdits = !replacementForm && editRevision.current !== savedRevision;

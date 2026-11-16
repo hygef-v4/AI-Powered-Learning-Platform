@@ -15,9 +15,9 @@ export function readProblemCode(error: unknown): string | undefined {
   return error instanceof ApiError ? error.problem.code : undefined;
 }
 
-export function describeError(error: unknown, fallback = msg("assignments.model.format.khongThucHienDuocHayThu")): string {
+export function describeError(error: unknown, fallback = msg("assignments.model.format.couldNotCompleteItPlease")): string {
   if (error instanceof ApiError) {
-    if (error.problem.status === 404) return msg("assignments.model.format.khongTimThayHoacBanKhong");
+    if (error.problem.status === 404) return msg("assignments.model.format.notFoundOrYouDo");
     return error.problem.detail ?? fallback;
   }
   return error instanceof Error && error.message ? error.message : fallback;

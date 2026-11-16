@@ -27,7 +27,7 @@ export function SubjectStatusActions({
   return (
     <Dialog
       open
-      title={archived ? msg("subjects.components.SubjectStatusActions.moLaiMonHoc") : msg("subjects.components.SubjectStatusActions.luuTruMonHoc")}
+      title={archived ? msg("subjects.components.SubjectStatusActions.reopenSubject") : msg("subjects.components.SubjectStatusActions.archiveSubject")}
       icon={archived ? "lock_open" : "archive"}
       tone={archived ? "primary" : "danger"}
       onClose={handleClose}
@@ -50,15 +50,15 @@ export function SubjectStatusActions({
               );
           }}
         >
-          {archived ? msg("subjects.components.SubjectStatusActions.moLai") : msg("subjects.components.SubjectStatusActions.luuTru")}
+          {archived ? msg("subjects.components.SubjectStatusActions.reopen") : msg("subjects.components.SubjectStatusActions.archive")}
         </Button>
       }
     >
       <p>
-        {msg("subjects.components.SubjectStatusActions.banCoChacMuon")}{archived ? msg("subjects.components.SubjectStatusActions.moLai2") : msg("subjects.components.SubjectStatusActions.luuTru2")} {msg("subjects.components.SubjectStatusActions.monHoc")}{subject.name} {msg("subjects.components.SubjectStatusActions.khong")}</p>
+        {msg("subjects.components.SubjectStatusActions.areYouSureYouWant")}{archived ? msg("subjects.components.SubjectStatusActions.reopen2") : msg("subjects.components.SubjectStatusActions.archive2")} {msg("subjects.components.SubjectStatusActions.theSubject")}{subject.name} {msg("subjects.components.SubjectStatusActions.text")}</p>
       {!archived && (
         <p>
-          {msg("subjects.components.SubjectStatusActions.cacLopNhapVaDangMo")}</p>
+          {msg("subjects.components.SubjectStatusActions.draftAndOpenClassesWill")}</p>
       )}
       {mutation.error !== null && (
         <SubjectMutationFeedback error={mutation.error} onReload={onReload} />

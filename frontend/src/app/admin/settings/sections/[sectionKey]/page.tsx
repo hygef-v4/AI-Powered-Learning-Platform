@@ -3,7 +3,7 @@ import { SettingsSectionHost } from "@/features/settings/components/SettingsSect
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.admin.settings.sections.sectionKey.page.caiDat") };
+  return { title: await translateOnServer("app.admin.settings.sections.sectionKey.page.settings") };
 }
 
 export default async function Page({

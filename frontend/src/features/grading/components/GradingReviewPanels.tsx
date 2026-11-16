@@ -8,13 +8,13 @@ export function ActivityReview({ detail }: { detail: Detail }) {
   return (
     <Card as="details" padding="none" className="px-4 py-3 text-sm" open={hasData}>
       <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2">
-        <h2 className="inline text-sm font-bold text-ink">{msg("grading.components.GradingReviewPanels.hoatDongKhiLamBai")}</h2>
+        <h2 className="inline text-sm font-bold text-ink">{msg("grading.components.GradingReviewPanels.activityWhileWorking")}</h2>
         <span className="text-xs text-muted">{ACTIVITY_LABELS[detail.activityState] ?? detail.activityState}</span>
       </summary>
       <div className="mt-2 space-y-1.5 border-t border-line-soft pt-2">
         {detail.activity && (
           <p>
-            {detail.activity.awayCount} {msg("grading.components.GradingReviewPanels.lanRoiTrang")}{detail.activity.unknownGaps} {msg("grading.components.GradingReviewPanels.khoangThieuDuLieu")}{detail.activity.reliabilityNote}
+            {detail.activity.awayCount} {msg("grading.components.GradingReviewPanels.timesLeftThePage")}{detail.activity.unknownGaps} {msg("grading.components.GradingReviewPanels.gapsInTheData")}{detail.activity.reliabilityNote}
           </p>
         )}
         <div>
@@ -22,13 +22,13 @@ export function ActivityReview({ detail }: { detail: Detail }) {
             <p key={m.student.accountId}>
               {formatStudentLabel(m.student)}: {ACTIVITY_LABELS[m.state] ?? m.state}
               {m.activity
-                ? msg("grading.components.GradingReviewPanels.lanRoiTrangKhoangThieuDu", { awayCount: String(m.activity.awayCount), unknownGaps: String(m.activity.unknownGaps) })
+                ? msg("grading.components.GradingReviewPanels.leftThePageTimesGaps", { awayCount: String(m.activity.awayCount), unknownGaps: String(m.activity.unknownGaps) })
                 : ""}
             </p>
           ))}
         </div>
         <p className="text-xs text-muted">
-          {msg("grading.components.GradingReviewPanels.chiDeThamKhaoNenTang")}</p>
+          {msg("grading.components.GradingReviewPanels.forReferenceOnlyThePlatform")}</p>
       </div>
     </Card>
   );

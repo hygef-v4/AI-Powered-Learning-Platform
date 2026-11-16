@@ -44,10 +44,10 @@ export function NewAccountDialog({ onClose, onCreated }: { onClose: () => void; 
     event.preventDefault();
     const code = normalizeStudentCode(studentCode);
     const errors = {
-      email: EMAIL_FORMAT.test(email.trim()) ? undefined : msg("identity.admin.components.NewAccountDialog.emailKhongHopLe"),
-      name: displayName.trim().length === 0 ? msg("identity.admin.components.NewAccountDialog.nhapHoVaTen") : undefined,
+      email: EMAIL_FORMAT.test(email.trim()) ? undefined : msg("identity.admin.components.NewAccountDialog.invalidEmail"),
+      name: displayName.trim().length === 0 ? msg("identity.admin.components.NewAccountDialog.enterTheFullName") : undefined,
       studentCode: !student ? undefined
-        : !code ? msg("identity.admin.components.NewAccountDialog.nhapMssv")
+        : !code ? msg("identity.admin.components.NewAccountDialog.enterTheStudentId")
           : isValidStudentCode(code) ? undefined : STUDENT_CODE_FORMAT_MESSAGE,
     };
     setFieldError(errors);
@@ -59,7 +59,7 @@ export function NewAccountDialog({ onClose, onCreated }: { onClose: () => void; 
       onCreated();
     } catch (e) {
       const code = e instanceof ApiError ? e.problem.code : undefined;
-      setError((code && ADMIN_ERROR_LABELS[code]) ?? msg("identity.admin.components.NewAccountDialog.khongTaoDuocTaiKhoanVui"));
+      setError((code && ADMIN_ERROR_LABELS[code]) ?? msg("identity.admin.components.NewAccountDialog.couldNotCreateTheAccount"));
     } finally {
       setBusy(false);
     }
@@ -68,19 +68,19 @@ export function NewAccountDialog({ onClose, onCreated }: { onClose: () => void; 
   return (
     <Dialog
       open
-      title={msg("identity.admin.components.NewAccountDialog.themTaiKhoan")}
+      title={msg("identity.admin.components.NewAccountDialog.addAccount")}
       icon="person_add"
       onClose={onClose}
       footer={
         <>
           <Button type="submit" form={formId} variant="primary" icon="person_add" disabled={busy}>
-            {msg("identity.admin.components.NewAccountDialog.themTaiKhoan")}</Button>
+            {msg("identity.admin.components.NewAccountDialog.addAccount")}</Button>
         </>
       }
     >
       <form id={formId} onSubmit={submit} noValidate className="flex flex-col gap-3.5">
         <Field
-          label={msg("identity.admin.components.NewAccountDialog.emailTruong")}
+          label={msg("identity.admin.components.NewAccountDialog.schoolEmail")}
           htmlFor={emailId}
           required
           error={fieldError.email}
@@ -94,10 +94,10 @@ export function NewAccountDialog({ onClose, onCreated }: { onClose: () => void; 
             onChange={(e) => setEmail(e.target.value)}
           />
         </Field>
-        <Field label={msg("identity.admin.components.NewAccountDialog.hoVaTen")} htmlFor={nameId} required error={fieldError.name}>
+        <Field label={msg("identity.admin.components.NewAccountDialog.fullName")} htmlFor={nameId} required error={fieldError.name}>
           <TextInput id={nameId} value={displayName} invalid={!!fieldError.name} onChange={(e) => setDisplayName(e.target.value)} />
         </Field>
-        <Field label={msg("identity.admin.components.NewAccountDialog.vaiTro")} htmlFor={roleId} required>
+        <Field label={msg("identity.admin.components.NewAccountDialog.role")} htmlFor={roleId} required>
           <Select id={roleId} value={role} onChange={(e) => chooseRole(e.target.value as Role)}>
             {ROLES.map((r) => (
               <option key={r} value={r}>
@@ -107,7 +107,7 @@ export function NewAccountDialog({ onClose, onCreated }: { onClose: () => void; 
           </Select>
         </Field>
         {student && (
-          <Field label={msg("identity.admin.components.NewAccountDialog.maSoSinhVien")} htmlFor={codeId} required error={fieldError.studentCode}>
+          <Field label={msg("identity.admin.components.NewAccountDialog.studentId")} htmlFor={codeId} required error={fieldError.studentCode}>
             <TextInput
               id={codeId}
               value={studentCode}

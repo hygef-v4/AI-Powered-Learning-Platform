@@ -3,7 +3,7 @@ import { GroupWorkspacePage } from "@/features/groupdocs";
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.groupdocs.id.page.taiLieuNhom") };
+  return { title: await translateOnServer("app.groupdocs.id.page.groupDocument") };
 }
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {

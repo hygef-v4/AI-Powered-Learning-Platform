@@ -45,7 +45,7 @@ type DialogProps = {
 function describeError(error: unknown) {
   const code = error instanceof ApiError ? error.problem.code : undefined;
   if (code && ADMIN_ERROR_LABELS[code]) return ADMIN_ERROR_LABELS[code];
-  return (error instanceof ApiError && error.problem.detail) || msg("identity.admin.components.AccountDialogs.khongThucHienDuocVuiLong");
+  return (error instanceof ApiError && error.problem.detail) || msg("identity.admin.components.AccountDialogs.couldNotCompleteItPlease");
 }
 
 /** Không đổi vai trò vào hoặc ra khỏi Sinh viên (BR-U01-107): popup chỉ mở cho tài khoản khác sinh viên. */
@@ -87,17 +87,17 @@ export function RoleChangeDialog({ account, onClose, onChanged, onConflict, onBl
   return (
     <Dialog
       open
-      title={msg("identity.admin.components.AccountDialogs.doiVaiTro")}
+      title={msg("identity.admin.components.AccountDialogs.changeRole")}
       icon="swap_horiz"
       onClose={onClose}
       footer={
         <>
           <Button variant="primary" onClick={confirm} disabled={busy || role === account.role}>
-            {msg("identity.admin.components.AccountDialogs.doiVaiTro")}</Button>
+            {msg("identity.admin.components.AccountDialogs.changeRole")}</Button>
         </>
       }
     >
-      <Field label={msg("identity.admin.components.AccountDialogs.vaiTro")} htmlFor={roleId}>
+      <Field label={msg("identity.admin.components.AccountDialogs.role")} htmlFor={roleId}>
         <Select id={roleId} value={role} onChange={(e) => setRole(e.target.value as Role)}>
           {STAFF_ROLES.map((r) => (
             <option key={r} value={r}>
@@ -118,19 +118,19 @@ export function RoleChangeDialog({ account, onClose, onChanged, onConflict, onBl
 /** Popup Không đổi được vai trò (design `a04c`): một câu ngắn và bảng Loại, Mã, Tên; môn có link tới trang môn. */
 export function RoleChangeRejectedDialog({ account, block, onClose }: { account: AccountDetail; block: RoleChangeBlock; onClose: () => void }) {
   const items = [
-    ...block.subjects.map((item) => ({ kind: msg("identity.admin.components.AccountDialogs.mon"), item, href: `/admin/subjects/${item.id}` })),
-    ...block.classes.map((item) => ({ kind: msg("identity.admin.components.AccountDialogs.lop"), item, href: null })),
+    ...block.subjects.map((item) => ({ kind: msg("identity.admin.components.AccountDialogs.subjects"), item, href: `/admin/subjects/${item.id}` })),
+    ...block.classes.map((item) => ({ kind: msg("identity.admin.components.AccountDialogs.classes"), item, href: null })),
   ];
   return (
-    <Dialog open title={msg("identity.admin.components.AccountDialogs.khongDoiDuocVaiTro")} icon="block" tone="danger" onClose={onClose}>
+    <Dialog open title={msg("identity.admin.components.AccountDialogs.couldNotChangeTheRole")} icon="block" tone="danger" onClose={onClose}>
       <Alert tone="danger" role="alert">
-        {account.displayName} {msg("identity.admin.components.AccountDialogs.dangGiuCacMonHoacLop")}</Alert>
+        {account.displayName} {msg("identity.admin.components.AccountDialogs.stillHoldsSubjectsOrClasses")}</Alert>
       <TableFrame filledHead className="[&_table]:table-fixed">
         <colgroup><col className="w-[110px]" /><col className="w-[140px]" /><col /></colgroup><thead>
           <tr>
-            <Th>{msg("identity.admin.components.AccountDialogs.loai")}</Th>
-            <Th>{msg("identity.admin.components.AccountDialogs.ma")}</Th>
-            <Th>{msg("identity.admin.components.AccountDialogs.ten")}</Th>
+            <Th>{msg("identity.admin.components.AccountDialogs.type")}</Th>
+            <Th>{msg("identity.admin.components.AccountDialogs.code")}</Th>
+            <Th>{msg("identity.admin.components.AccountDialogs.name")}</Th>
           </tr>
         </thead>
         <tbody>
@@ -141,7 +141,7 @@ export function RoleChangeRejectedDialog({ account, block, onClose }: { account:
                 {item.code ? (
                   href ? <Link href={href} className="font-medium text-ink hover:underline">{item.code}</Link> : <span className="font-medium">{item.code}</span>
                 ) : (
-                  <span className="font-mono text-xs break-all text-muted" title={msg("identity.admin.components.AccountDialogs.chuaTaiDuocMa")}>{item.id}</span>
+                  <span className="font-mono text-xs break-all text-muted" title={msg("identity.admin.components.AccountDialogs.couldNotLoadTheCode")}>{item.id}</span>
                 )}
               </Td>
               <Td>{item.name ?? "—"}</Td>
@@ -175,19 +175,19 @@ export function StatusToggleDialog({ account, onClose, onChanged, onConflict }: 
   return (
     <Dialog
       open
-      title={reopening ? msg("identity.admin.components.AccountDialogs.moLaiTaiKhoan") : msg("identity.admin.components.AccountDialogs.voHieuHoaTaiKhoan")}
+      title={reopening ? msg("identity.admin.components.AccountDialogs.reopenAccount") : msg("identity.admin.components.AccountDialogs.disableAccount")}
       icon={reopening ? "lock_open" : "block"}
       tone={reopening ? "primary" : "danger"}
       onClose={onClose}
       footer={
         <>
           <Button variant={reopening ? "primary" : "danger"} className="w-full" onClick={confirm} disabled={busy}>
-            {reopening ? msg("identity.admin.components.AccountDialogs.moLai") : msg("identity.admin.components.AccountDialogs.voHieuHoa")}
+            {reopening ? msg("identity.admin.components.AccountDialogs.reopen") : msg("identity.admin.components.AccountDialogs.disable")}
           </Button>
         </>
       }
     >
-      <p>{msg("identity.admin.components.AccountDialogs.banCoChacMuon")}{reopening ? msg("identity.admin.components.AccountDialogs.moLai2") : msg("identity.admin.components.AccountDialogs.voHieuHoa2")} {msg("identity.admin.components.AccountDialogs.taiKhoan")}{account.displayName} {msg("identity.admin.components.AccountDialogs.khong")}</p>
+      <p>{msg("identity.admin.components.AccountDialogs.areYouSureYouWant")}{reopening ? msg("identity.admin.components.AccountDialogs.reopen2") : msg("identity.admin.components.AccountDialogs.disable2")} {msg("identity.admin.components.AccountDialogs.theAccount")}{account.displayName} {msg("identity.admin.components.AccountDialogs.text")}</p>
       {error && (
         <Alert tone="danger" role="alert">
           {error}

@@ -29,10 +29,10 @@ export type NavLocation = { pathname: string; search: URLSearchParams };
 export type NavContext = { key: string; label: string; header: ReactNode; items: NavItem[]; parentHref?: string };
 
 export const ROLE_LABELS: Record<Role, string> = {
-  STUDENT: msg("shared.layout.navigation.sinhVien"),
-  TEACHER: msg("shared.layout.navigation.giangVien"),
-  SUBJECT_MANAGER: msg("shared.layout.navigation.chuNhiemMon"),
-  ADMIN: msg("shared.layout.navigation.quanTriVien"),
+  STUDENT: msg("shared.layout.navigation.student"),
+  TEACHER: msg("shared.layout.navigation.lecturer"),
+  SUBJECT_MANAGER: msg("shared.layout.navigation.subjectManager"),
+  ADMIN: msg("shared.layout.navigation.administrator"),
 };
 
 export const AVATAR_TONES: Record<Role, Tone> = {

@@ -21,10 +21,10 @@ export function SubjectMaterialListPage({ initialSubjectId = "" }: { initialSubj
     );
   return (
     <>
-      <PageHeader title={msg("materials.components.MaterialList.hocLieu")} />
+      <PageHeader title={msg("materials.components.MaterialList.learningMaterials")} />
       {subjects.loading && (
         <p role="status" className="py-10 text-center text-sm text-muted">
-          {msg("materials.components.MaterialList.dangTaiMonHoc")}</p>
+          {msg("materials.components.MaterialList.loadingSubjects")}</p>
       )}
       {subjects.error && (
         <p role="alert" className="text-sm text-danger">
@@ -32,7 +32,7 @@ export function SubjectMaterialListPage({ initialSubjectId = "" }: { initialSubj
         </p>
       )}
       {subjects.data && (
-        <p className="py-10 text-center text-sm text-muted">{msg("materials.components.MaterialList.banChuaDuocPhanCongMon")}</p>
+        <p className="py-10 text-center text-sm text-muted">{msg("materials.components.MaterialList.youHaveNotBeenAssigned")}</p>
       )}
     </>
   );

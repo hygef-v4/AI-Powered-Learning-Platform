@@ -3,7 +3,7 @@ import { ClassAnnouncementsPage } from "@/features/announcements/pages/ClassAnno
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.teaching.classes.id.announcements.page.thongBaoLop") };
+  return { title: await translateOnServer("app.teaching.classes.id.announcements.page.classAnnouncements") };
 }
 
 // U14: Thông báo lớp của một lớp, nằm trong nhánh trang lớp để chuyển qua lại giữa các mục của lớp không dựng lại khung trang.

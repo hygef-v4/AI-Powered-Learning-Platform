@@ -724,9 +724,9 @@ public class AssignmentAiDraftService {
 
     private static AssignmentCommands.DraftOptions normalizeOptions(AssignmentCommands.DraftOptions requested) {
         AssignmentCommands.DraftOptions options = requested == null
-                ? new AssignmentCommands.DraftOptions("AUTO", "VI", null, null) : requested;
+                ? new AssignmentCommands.DraftOptions("AUTO", "EN", null, null) : requested;
         String profile = options.profile() == null ? "AUTO" : options.profile().strip().toUpperCase(Locale.ROOT);
-        String language = options.language() == null ? "VI" : options.language().strip().toUpperCase(Locale.ROOT);
+        String language = options.language() == null ? "EN" : options.language().strip().toUpperCase(Locale.ROOT);
         // AUTO: theo mẫu đề (yêu cầu 2026-11-05).
         if (!Set.of("AUTO", "GENERAL", "SWR", "SWD").contains(profile) || !Set.of("VI", "EN", "JA", "AUTO").contains(language)
                 || (options.questionCount() != null && (options.questionCount() < 1 || options.questionCount() > 10))

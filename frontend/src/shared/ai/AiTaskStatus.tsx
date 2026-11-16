@@ -10,12 +10,12 @@ import { msg } from "@/i18n/msg";
 const FINAL: AiTaskState[] = ["READY", "FAILED", "UNKNOWN", "CANCELLED"];
 
 const LABEL: Record<AiTaskState, { text: string; tone: Tone }> = {
-  QUEUED: { text: msg("shared.ai.AiTaskStatus.dangCho"), tone: "neutral" },
-  RUNNING: { text: msg("shared.ai.AiTaskStatus.dangChay"), tone: "info" },
+  QUEUED: { text: msg("shared.ai.AiTaskStatus.pending"), tone: "neutral" },
+  RUNNING: { text: msg("shared.ai.AiTaskStatus.running"), tone: "info" },
   READY: { text: "Xong", tone: "success" },
-  FAILED: { text: msg("shared.ai.AiTaskStatus.loi"), tone: "danger" },
-  UNKNOWN: { text: msg("shared.ai.AiTaskStatus.khongRoKetQua"), tone: "warning" },
-  CANCELLED: { text: msg("shared.ai.AiTaskStatus.daHuy"), tone: "neutral" },
+  FAILED: { text: msg("shared.ai.AiTaskStatus.error"), tone: "danger" },
+  UNKNOWN: { text: msg("shared.ai.AiTaskStatus.unknownResult"), tone: "warning" },
+  CANCELLED: { text: msg("shared.ai.AiTaskStatus.cancelled"), tone: "neutral" },
 };
 
 type Props = {
@@ -45,26 +45,26 @@ export function AiTaskStatus({ taskId, onFinished }: Props) {
     try {
       await fetchApi<void>(`/api/v1/ai/tasks/${encodeURIComponent(taskId)}:cancel`, { method: "POST" });
     } catch {
-      setCancelError(msg("shared.ai.AiTaskStatus.khongHuyDuocTaskCoThe"));
+      setCancelError(msg("shared.ai.AiTaskStatus.couldNotCancelTheTask"));
     } finally {
       setCancelling(false);
     }
   };
 
-  if (error && !data) return <p className="text-xs text-danger">{msg("shared.ai.AiTaskStatus.khongXemDuocTrangThaiYeu")}</p>;
-  if (!data) return <p className="text-xs text-muted">{msg("shared.ai.AiTaskStatus.dangTaiTrangThai")}</p>;
+  if (error && !data) return <p className="text-xs text-danger">{msg("shared.ai.AiTaskStatus.couldNotViewTheAi")}</p>;
+  if (!data) return <p className="text-xs text-muted">{msg("shared.ai.AiTaskStatus.loadingStatus")}</p>;
   const label = LABEL[data.state];
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs" aria-live="polite">
       <Pill tone={label.tone}>{label.text}</Pill>
       {data.state === "UNKNOWN" && (
-        <span className="text-muted">{msg("shared.ai.AiTaskStatus.nhaCungCapKhongTraKet")}</span>
+        <span className="text-muted">{msg("shared.ai.AiTaskStatus.theProviderDidNotReturn")}</span>
       )}
       {data.safeError && data.state !== "UNKNOWN" && <span className="text-danger">{data.safeError}</span>}
-      {data.applyResult === "STALE" && <span className="text-warning">{msg("shared.ai.AiTaskStatus.duLieuDaDoiTrongLuc")}</span>}
+      {data.applyResult === "STALE" && <span className="text-warning">{msg("shared.ai.AiTaskStatus.theDataChangedWhileWaiting")}</span>}
       {data.state === "QUEUED" && (
         <Button size="sm" onClick={() => void cancel()} disabled={cancelling}>
-          {msg("shared.ai.AiTaskStatus.huy")}</Button>
+          {msg("shared.ai.AiTaskStatus.cancel")}</Button>
       )}
       {cancelError && <span className="text-danger">{cancelError}</span>}
     </div>

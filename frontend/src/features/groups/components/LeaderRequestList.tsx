@@ -17,7 +17,7 @@ export function LeaderRequestList({ set, groupId, onChanged }: { set: GroupSetVi
   const requests = groupId ? set.pendingRequests.filter((r) => r.groupId === groupId) : set.pendingRequests;
   if (requests.length === 0) return null;
   return (
-    <Section title={msg("groups.components.LeaderRequestList.yeuCauDoiTruongNhom")} icon="swap_horiz" tone="warning">
+    <Section title={msg("groups.components.LeaderRequestList.leaderChangeRequests")} icon="swap_horiz" tone="warning">
       <ul className="flex flex-col gap-2">
         {requests.map((r) => (
           <RequestRow key={r.id} request={r} set={set} onChanged={onChanged} />
@@ -43,7 +43,7 @@ function RequestRow({ request, set, onChanged }: { request: LeaderRequestView; s
       setConfirming(false);
       onChanged();
     } catch (e) {
-      setError(e instanceof ApiError ? (e.problem.detail ?? msg("groups.components.LeaderRequestList.khongXuLyDuocYeuCau")) : msg("groups.components.LeaderRequestList.khongXuLyDuocYeuCau"));
+      setError(e instanceof ApiError ? (e.problem.detail ?? msg("groups.components.LeaderRequestList.couldNotProcessTheRequest")) : msg("groups.components.LeaderRequestList.couldNotProcessTheRequest"));
     } finally {
       setBusy(false);
     }
@@ -53,20 +53,20 @@ function RequestRow({ request, set, onChanged }: { request: LeaderRequestView; s
     <Card as="li" padding="none" className="flex flex-col gap-2 px-4 py-3" data-testid={`leader-request-${request.groupId}`}>
       <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
         <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold text-ink" title={request.groupName}>{request.groupName}</span>
-        <Select aria-label={msg("groups.components.LeaderRequestList.truongNhomMoiCua", { groupName: String(request.groupName) })} value={leader} onChange={(e) => setLeader(e.target.value)} disabled={busy}
+        <Select aria-label={msg("groups.components.LeaderRequestList.newLeaderOf", { groupName: String(request.groupName) })} value={leader} onChange={(e) => setLeader(e.target.value)} disabled={busy}
           wrapperClassName="w-full sm:w-64">
-          <option value="">{msg("groups.components.LeaderRequestList.chonTruongNhomMoi")}</option>
+          <option value="">{msg("groups.components.LeaderRequestList.chooseANewLeader")}</option>
           {candidates.map((m) => (
             <option key={m.accountId} value={m.accountId}>
               {formatStudentLabel(m)}
-              {request.proposedLeader?.accountId === m.accountId ? msg("groups.components.LeaderRequestList.duocDeXuat") : ""}
+              {request.proposedLeader?.accountId === m.accountId ? msg("groups.components.LeaderRequestList.proposed") : ""}
             </option>
           ))}
         </Select>
         <Button size="sm" variant="danger" onClick={() => setConfirming(true)} disabled={busy}>
-          {msg("groups.components.LeaderRequestList.tuChoi")}</Button>
+          {msg("groups.components.LeaderRequestList.reject")}</Button>
         <Button size="sm" variant="primary" onClick={() => void runAction(() => approveRequest(request.id, leader || null))} disabled={busy || !leader}>
-          {msg("groups.components.LeaderRequestList.duyet")}</Button>
+          {msg("groups.components.LeaderRequestList.approve")}</Button>
       </div>
       {error && !confirming && (
         <Alert tone="danger" role="alert">
@@ -74,9 +74,9 @@ function RequestRow({ request, set, onChanged }: { request: LeaderRequestView; s
         </Alert>
       )}
       {confirming && (
-        <Dialog open title={msg("groups.components.LeaderRequestList.tuChoiYeuCau")} tone="danger" onClose={() => { setConfirming(false); setError(null); }} dismissible={!busy}
-          footer={<Button variant="danger" disabled={busy} onClick={() => void runAction(() => rejectRequest(request.id))} data-testid="leader-request-reject-confirm">{msg("groups.components.LeaderRequestList.tuChoi")}</Button>}>
-          <p>{msg("groups.components.LeaderRequestList.banCoChacMuonTuChoi")}{request.groupName} {msg("groups.components.LeaderRequestList.khong")}</p>
+        <Dialog open title={msg("groups.components.LeaderRequestList.rejectRequest")} tone="danger" onClose={() => { setConfirming(false); setError(null); }} dismissible={!busy}
+          footer={<Button variant="danger" disabled={busy} onClick={() => void runAction(() => rejectRequest(request.id))} data-testid="leader-request-reject-confirm">{msg("groups.components.LeaderRequestList.reject")}</Button>}>
+          <p>{msg("groups.components.LeaderRequestList.areYouSureYouWant")}{request.groupName} {msg("groups.components.LeaderRequestList.text")}</p>
           {error && <p role="alert" className="text-sm text-danger">{error}</p>}
         </Dialog>
       )}

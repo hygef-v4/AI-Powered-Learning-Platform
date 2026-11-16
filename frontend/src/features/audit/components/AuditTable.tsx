@@ -11,7 +11,7 @@ type Props = {
   onPageChange: (page: number) => void;
 };
 
-export const SYSTEM_ACTOR = msg("audit.components.AuditTable.heThong");
+export const SYSTEM_ACTOR = msg("audit.components.AuditTable.system");
 
 /** Ô chữ dài: tối đa 2 dòng, dài hơn thì cắt (đủ chữ khi rê chuột). */
 const CLAMP = "line-clamp-2 leading-snug";
@@ -40,19 +40,19 @@ export function AuditTable({ data, onPageChange }: Props) {
           <thead>
             <tr>
               <th scope="col" className={cx(HEAD, "text-right")}>STT</th>
-              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.thoiGian")}</th>
-              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.nguoiThucHien")}</th>
-              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.hanhDong")}</th>
-              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.doiTuong")}</th>
-              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.ketQua")}</th>
-              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.lyDo")}</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.time")}</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.actor")}</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.action")}</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.object")}</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.result")}</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.reason")}</th>
             </tr>
           </thead>
           <tbody>
             {data.items.length === 0 && (
               <tr>
                 <Td colSpan={7} className="px-3 text-muted" data-testid="audit-table-empty">
-                  {msg("audit.components.AuditTable.khongCoBanGhiNaoPhu")}</Td>
+                  {msg("audit.components.AuditTable.noMatchingRecords")}</Td>
               </tr>
             )}
             {data.items.map((item, index) => {

@@ -27,9 +27,9 @@ function calculateRemainingSeconds(view: TakingView, skewMs: number): number | n
 /** Mốc thời gian đọc cho trình đọc màn hình; chữ chỉ đổi khi qua mốc nên mỗi mốc được đọc một lần. */
 function resolveTimeMilestone(seconds: number | null): string {
   if (seconds === null || seconds > 300) return "";
-  if (seconds > 60) return msg("quizpractice.pages.QuizTakingPage.conDuoi5Phut");
-  if (seconds > 10) return msg("quizpractice.pages.QuizTakingPage.conDuoi1Phut");
-  return msg("quizpractice.pages.QuizTakingPage.con10Giay");
+  if (seconds > 60) return msg("quizpractice.pages.QuizTakingPage.lessThan5MinutesLeft");
+  if (seconds > 10) return msg("quizpractice.pages.QuizTakingPage.lessThan1MinuteLeft");
+  return msg("quizpractice.pages.QuizTakingPage.n10SecondsLeft");
 }
 
 function formatClock(seconds: number): string {
@@ -218,14 +218,14 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
   };
 
   if (!view) {
-    return error ? <PageLoadError>{error}</PageLoadError> : <PageLoading label={msg("quizpractice.pages.QuizTakingPage.dangTaiDe")} />;
+    return error ? <PageLoadError>{error}</PageLoadError> : <PageLoading label={msg("quizpractice.pages.QuizTakingPage.loadingQuestions")} />;
   }
   const index = resolveQuestionIndex(questionParam, view.questions.length);
   const setIndex = (next: number) => setQuestionParam(String(next + 1));
   const question = view.questions[index];
   const isAnswered = (id: string) => (answers[id]?.length ?? 0) > 0;
   const unanswered = view.questions.map((q, i) => (isAnswered(q.questionId) ? null : i + 1)).filter((n): n is number => n !== null);
-  const saveLabel = { saved: msg("quizpractice.pages.QuizTakingPage.daTuDongLuu"), dirty: msg("quizpractice.pages.QuizTakingPage.chuaLuu"), saving: msg("quizpractice.pages.QuizTakingPage.dangLuu"), error: msg("quizpractice.pages.QuizTakingPage.chuaLuuDuoc") }[saveState];
+  const saveLabel = { saved: msg("quizpractice.pages.QuizTakingPage.savedAutomatically"), dirty: msg("quizpractice.pages.QuizTakingPage.notSaved"), saving: msg("quizpractice.pages.QuizTakingPage.saving"), error: msg("quizpractice.pages.QuizTakingPage.couldNotSave") }[saveState];
   const exit = () => void flush().then((outcome) => {
     if (outcome === "saved") router.push("/quiz-practice");
     else setLeaving(false);
@@ -240,7 +240,7 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
       {view.activityMonitoringEnabled && (
         <div data-testid="quiz-taking-activity-notice">
           <Alert tone="info">
-            {msg("quizpractice.pages.QuizTakingPage.quizNayGhiNhanHoatDong")}{view.activityNotice ? `: ${view.activityNotice}` : "."}
+            {msg("quizpractice.pages.QuizTakingPage.thisQuizMonitorsActivityWhile")}{view.activityNotice ? `: ${view.activityNotice}` : "."}
             {view.leavePenalty && <span className="block" data-testid="quiz-taking-penalty-rule">{describePenaltyRule(view.leavePenalty)}</span>}
           </Alert>
         </div>
@@ -254,30 +254,30 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
           answered={(i) => isAnswered(view.questions[i]?.questionId ?? "")} setIndex={setIndex} />
       </div>
       {confirming && (
-        <Dialog open onClose={() => setConfirming(false)} title={msg("quizpractice.pages.QuizTakingPage.nopBai")} tone="warning"
+        <Dialog open onClose={() => setConfirming(false)} title={msg("quizpractice.pages.QuizTakingPage.submit")} tone="warning"
           footer={<>
-            <Button onClick={() => setConfirming(false)}>{msg("quizpractice.pages.QuizTakingPage.lamTiep")}</Button>
-            <Button variant="primary" onClick={() => void finish("manual")} data-testid="quiz-taking-confirm-submit">{msg("quizpractice.pages.QuizTakingPage.nopBai2")}</Button>
+            <Button onClick={() => setConfirming(false)}>{msg("quizpractice.pages.QuizTakingPage.keepWorking")}</Button>
+            <Button variant="primary" onClick={() => void finish("manual")} data-testid="quiz-taking-confirm-submit">{msg("quizpractice.pages.QuizTakingPage.submit2")}</Button>
           </>}>
           <div className="flex flex-col gap-2 text-[13px]" data-testid="quiz-taking-confirm">
             {unanswered.length > 0
-              ? <p>{msg("quizpractice.pages.QuizTakingPage.con")}{unanswered.length} {msg("quizpractice.pages.QuizTakingPage.cauChuaTraLoiCau")}{unanswered.join(", ")}{msg("quizpractice.pages.QuizTakingPage.cauChuaTraLoiDuocTinh")}</p>
-              : <p>{msg("quizpractice.pages.QuizTakingPage.banDaTraLoiTatCa")}</p>}
-            {remaining !== null && <p>{msg("quizpractice.pages.QuizTakingPage.thoiGianConLai")}{formatClock(remaining)}.</p>}
-            <p>{msg("quizpractice.pages.QuizTakingPage.sauKhiNopLuotNayKet")}</p>
+              ? <p>{msg("quizpractice.pages.QuizTakingPage.text")}{unanswered.length} {msg("quizpractice.pages.QuizTakingPage.questionsUnansweredQuestion")}{unanswered.join(", ")}{msg("quizpractice.pages.QuizTakingPage.unansweredQuestionsAreMarkedWrong")}</p>
+              : <p>{msg("quizpractice.pages.QuizTakingPage.youHaveAnsweredAllQuestions")}</p>}
+            {remaining !== null && <p>{msg("quizpractice.pages.QuizTakingPage.timeLeft")}{formatClock(remaining)}.</p>}
+            <p>{msg("quizpractice.pages.QuizTakingPage.afterSubmittingThisAttemptEnds")}</p>
           </div>
         </Dialog>
       )}
       {leaving && (
-        <Dialog open onClose={() => setLeaving(false)} title={msg("quizpractice.pages.QuizTakingPage.thoatKhoiBai")} tone="warning"
-          footer={<Button variant="primary" onClick={exit} data-testid="quiz-taking-confirm-exit">{msg("quizpractice.pages.QuizTakingPage.thoat")}</Button>}>
+        <Dialog open onClose={() => setLeaving(false)} title={msg("quizpractice.pages.QuizTakingPage.leaveTheQuiz")} tone="warning"
+          footer={<Button variant="primary" onClick={exit} data-testid="quiz-taking-confirm-exit">{msg("quizpractice.pages.QuizTakingPage.leave")}</Button>}>
           <p className="text-[13px]" data-testid="quiz-taking-exit-notice">
-            {msg("quizpractice.pages.QuizTakingPage.cacCauDaChonDuocLuu")}</p>
+            {msg("quizpractice.pages.QuizTakingPage.yourSelectedAnswersAreSaved")}</p>
         </Dialog>
       )}
       {finishing === "timeup" && (
-        <Dialog open onClose={() => undefined} dismissible={false} title={msg("quizpractice.pages.QuizTakingPage.hetThoiGianLamBai")} tone="warning">
-          <p className="text-[13px]" data-testid="quiz-taking-timeup">{msg("quizpractice.pages.QuizTakingPage.cacCauDaChonDuocTu")}</p>
+        <Dialog open onClose={() => undefined} dismissible={false} title={msg("quizpractice.pages.QuizTakingPage.timeIsUp")} tone="warning">
+          <p className="text-[13px]" data-testid="quiz-taking-timeup">{msg("quizpractice.pages.QuizTakingPage.yourSelectedAnswersWereSaved")}</p>
         </Dialog>
       )}
     </div>
@@ -297,15 +297,15 @@ function TakingToolbar({ title, saveState, saveLabel, remaining, busy, onExit, o
 }) {
   return (
     <Card padding="sm" lifted className="sticky top-[4.25rem] z-20 flex flex-wrap items-center gap-3">
-      <Button size="sm" variant="ghost" onClick={onExit} data-testid="quiz-taking-exit">{msg("quizpractice.pages.QuizTakingPage.thoat")}</Button>
+      <Button size="sm" variant="ghost" onClick={onExit} data-testid="quiz-taking-exit">{msg("quizpractice.pages.QuizTakingPage.leave")}</Button>
       <span className="font-semibold text-ink">{title}</span>
-      <Pill tone="info">{msg("quizpractice.pages.QuizTakingPage.luyenTap")}</Pill>
+      <Pill tone="info">{msg("quizpractice.pages.QuizTakingPage.practice")}</Pill>
       <span className={cx("text-xs", saveState === "error" ? "font-semibold text-warning" : "text-muted")} role="status" data-testid="quiz-taking-save-state">
         {saveLabel}
       </span>
       {saveState === "error" && (
         <Button size="sm" icon="refresh" disabled={busy} onClick={onRetrySave} data-testid="quiz-taking-save-retry">
-          {msg("quizpractice.pages.QuizTakingPage.thuLai")}</Button>
+          {msg("quizpractice.pages.QuizTakingPage.retry")}</Button>
       )}
       {remaining !== null && (
         <span
@@ -313,12 +313,12 @@ function TakingToolbar({ title, saveState, saveLabel, remaining, busy, onExit, o
           data-testid="quiz-taking-timer"
         >
           {remaining < 60 && <Icon name="warning" size={15} />}
-          {msg("quizpractice.pages.QuizTakingPage.con")}{formatClock(remaining)}
+          {msg("quizpractice.pages.QuizTakingPage.text")}{formatClock(remaining)}
         </span>
       )}
       <span className="sr-only" aria-live="assertive" data-testid="quiz-taking-time-milestone">{resolveTimeMilestone(remaining)}</span>
       <Button variant="primary" className={remaining === null ? "ml-auto" : undefined} disabled={busy}
-        onClick={onSubmit} data-testid="quiz-taking-submit">{msg("quizpractice.pages.QuizTakingPage.nopBai2")}</Button>
+        onClick={onSubmit} data-testid="quiz-taking-submit">{msg("quizpractice.pages.QuizTakingPage.submit2")}</Button>
     </Card>
   );
 }
@@ -334,9 +334,9 @@ function QuestionCard({ question, index, total, answers, busy, choose, setIndex 
   setIndex: (next: number) => void;
 }) {
   return (
-    <Card as="section" aria-label={msg("quizpractice.pages.QuizTakingPage.cau", { value: String(index + 1) })}>
+    <Card as="section" aria-label={msg("quizpractice.pages.QuizTakingPage.question", { value: String(index + 1) })}>
       <p className="mb-2 text-xs text-muted">
-        {msg("quizpractice.pages.QuizTakingPage.cau2")}{index + 1} / {total} · {question.type === "MCQ_MULTI" ? msg("quizpractice.pages.QuizTakingPage.nhieuDapAn") : msg("quizpractice.pages.QuizTakingPage.motDapAn")} · {formatPoints(question.points)} {msg("quizpractice.pages.QuizTakingPage.diem")}</p>
+        {msg("quizpractice.pages.QuizTakingPage.question2")}{index + 1} / {total} · {question.type === "MCQ_MULTI" ? msg("quizpractice.pages.QuizTakingPage.multipleAnswers") : msg("quizpractice.pages.QuizTakingPage.singleAnswer")} · {formatPoints(question.points)} {msg("quizpractice.pages.QuizTakingPage.points")}</p>
       <p className="mb-3 whitespace-pre-wrap text-[14px] text-ink">{question.stem}</p>
       <ul className="flex flex-col gap-2">
         {question.options.map((option) => {
@@ -368,11 +368,11 @@ function QuestionListCard({ count, index, doneCount, answered, setIndex }: {
   setIndex: (next: number) => void;
 }) {
   return (
-    <Card as="nav" padding="sm" className="order-first min-w-0 lg:order-none" aria-label={msg("quizpractice.pages.QuizTakingPage.danhSachCau")}>
-      <p className="mb-2 text-xs text-muted">{msg("quizpractice.pages.QuizTakingPage.daLam")}{doneCount} / {count}</p>
+    <Card as="nav" padding="sm" className="order-first min-w-0 lg:order-none" aria-label={msg("quizpractice.pages.QuizTakingPage.questionList")}>
+      <p className="mb-2 text-xs text-muted">{msg("quizpractice.pages.QuizTakingPage.done")}{doneCount} / {count}</p>
       <QuestionNav count={count} index={index} onChange={setIndex}
         toneOf={(i) => (i === index ? "current" : answered(i) ? "done" : "blank")}
-        labelOf={(i) => msg("quizpractice.pages.QuizTakingPage.cau3", { value: String(i + 1), value2: String(answered(i) ? msg("quizpractice.pages.QuizTakingPage.daTraLoi") : "") })} />
+        labelOf={(i) => msg("quizpractice.pages.QuizTakingPage.question3", { value: String(i + 1), value2: String(answered(i) ? msg("quizpractice.pages.QuizTakingPage.answered") : "") })} />
     </Card>
   );
 }

@@ -61,36 +61,36 @@ export function PracticeFeedbackPanel({ attemptId, partTitles }: {
   return (
     <Card as="section" lifted className="flex min-w-0 flex-col gap-3" aria-labelledby={headingId}>
       <h3 id={headingId} className="flex items-center gap-2 text-sm font-semibold text-ink">
-        <Icon name="smart_toy" className="text-primary-ink" /> {msg("assignmentwork.components.PracticeFeedbackPanel.gopYAi")}</h3>
+        <Icon name="smart_toy" className="text-primary-ink" /> {msg("assignmentwork.components.PracticeFeedbackPanel.aiFeedback")}</h3>
       {loadError !== null && (
         <div className="space-y-2">
           <Alert tone="danger" role="alert">{describeError(loadError)}</Alert>
-          <Button size="sm" onClick={() => setRefreshCount((value) => value + 1)}>{msg("assignmentwork.components.PracticeFeedbackPanel.taiLaiGopY")}</Button>
+          <Button size="sm" onClick={() => setRefreshCount((value) => value + 1)}>{msg("assignmentwork.components.PracticeFeedbackPanel.reloadFeedback")}</Button>
         </div>
       )}
       {requestError !== null && <Alert tone="danger" role="alert">{describeError(requestError)}</Alert>}
-      {(isRequesting || hasPending) && <p role="status" className="text-xs text-muted">{msg("assignmentwork.components.PracticeFeedbackPanel.aiDangGopY")}</p>}
-      {!items && loadError === null && <p role="status" className="text-sm text-muted">{msg("assignmentwork.components.PracticeFeedbackPanel.dangTaiGopY")}</p>}
-      {items && items.length === 0 && <p className="text-sm text-muted">{msg("assignmentwork.components.PracticeFeedbackPanel.chuaCoGopY")}</p>}
+      {(isRequesting || hasPending) && <p role="status" className="text-xs text-muted">{msg("assignmentwork.components.PracticeFeedbackPanel.theAiIsWritingFeedback")}</p>}
+      {!items && loadError === null && <p role="status" className="text-sm text-muted">{msg("assignmentwork.components.PracticeFeedbackPanel.loadingFeedback")}</p>}
+      {items && items.length === 0 && <p className="text-sm text-muted">{msg("assignmentwork.components.PracticeFeedbackPanel.noFeedbackYet")}</p>}
       {items?.map((item) => (
         <article key={item.feedbackId} className="flex flex-col gap-2 rounded-lg border border-line p-3 wrap-anywhere">
           <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
-            {item.status === "READY" && <Pill tone="warning">{msg("assignmentwork.components.PracticeFeedbackPanel.gopYThamKhao")}</Pill>}
-            {item.status === "PENDING" && <Pill tone="info">{msg("assignmentwork.components.PracticeFeedbackPanel.dangCho")}</Pill>}
-            {item.status === "FAILED" && <Pill tone="danger">{msg("assignmentwork.components.PracticeFeedbackPanel.khongNhanDuocGopY")}</Pill>}
-            {item.origin === "MCP" ? <Pill tone="accent">Agent</Pill> : <Pill>{String(item.provenance.provider ?? msg("assignmentwork.components.PracticeFeedbackPanel.apiCaNhan"))}</Pill>}
+            {item.status === "READY" && <Pill tone="warning">{msg("assignmentwork.components.PracticeFeedbackPanel.referenceFeedback")}</Pill>}
+            {item.status === "PENDING" && <Pill tone="info">{msg("assignmentwork.components.PracticeFeedbackPanel.pending")}</Pill>}
+            {item.status === "FAILED" && <Pill tone="danger">{msg("assignmentwork.components.PracticeFeedbackPanel.noFeedbackReceived")}</Pill>}
+            {item.origin === "MCP" ? <Pill tone="accent">Agent</Pill> : <Pill>{String(item.provenance.provider ?? msg("assignmentwork.components.PracticeFeedbackPanel.personalApi"))}</Pill>}
             {formatDateTime(item.completedAt ?? item.createdAt)}
           </p>
-          {item.status === "FAILED" && <p className="text-xs text-danger">{item.safeError ?? msg("assignmentwork.components.PracticeFeedbackPanel.khongNhanDuocGopY")}</p>}
+          {item.status === "FAILED" && <p className="text-xs text-danger">{item.safeError ?? msg("assignmentwork.components.PracticeFeedbackPanel.noFeedbackReceived")}</p>}
           {item.status === "READY" && item.feedback && (
             <>
               <div>
-                <p className="text-xs font-semibold text-ink">{msg("assignmentwork.components.PracticeFeedbackPanel.nhanXetChung")}</p>
+                <p className="text-xs font-semibold text-ink">{msg("assignmentwork.components.PracticeFeedbackPanel.overallComments")}</p>
                 <p className="text-[13px] text-body">{item.feedback.summary}</p>
               </div>
               {item.feedback.strengths.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-success">{msg("assignmentwork.components.PracticeFeedbackPanel.diemManh")}</p>
+                  <p className="text-xs font-semibold text-success">{msg("assignmentwork.components.PracticeFeedbackPanel.strengths")}</p>
                   <ul className="list-disc pl-5 text-[13px]">
                     {item.feedback.strengths.map((strength, i) => <li key={i}>{strength}</li>)}
                   </ul>
@@ -98,7 +98,7 @@ export function PracticeFeedbackPanel({ attemptId, partTitles }: {
               )}
               {item.feedback.suggestions.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-warning">{msg("assignmentwork.components.PracticeFeedbackPanel.canCaiThien")}</p>
+                  <p className="text-xs font-semibold text-warning">{msg("assignmentwork.components.PracticeFeedbackPanel.toImprove")}</p>
                   <ul className="list-disc pl-5 text-[13px]">
                     {item.feedback.suggestions.map((suggestion, i) => <li key={i}>{suggestion}</li>)}
                   </ul>
@@ -106,7 +106,7 @@ export function PracticeFeedbackPanel({ attemptId, partTitles }: {
               )}
               {item.feedback.parts.filter((part) => part.comment).length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-body">{msg("assignmentwork.components.PracticeFeedbackPanel.theoTungPhan")}</p>
+                  <p className="text-xs font-semibold text-body">{msg("assignmentwork.components.PracticeFeedbackPanel.byPart")}</p>
                   <ul className="list-disc pl-5 text-[13px]">
                     {item.feedback.parts.filter((part) => part.comment).map((part, i) => (
                       <li key={i}>{partTitles[part.partId] ? `${partTitles[part.partId]}: ` : ""}{part.comment}</li>
@@ -119,17 +119,17 @@ export function PracticeFeedbackPanel({ attemptId, partTitles }: {
         </article>
       ))}
       {hasPending && refreshCount >= MAX_POLLS && <p role="status" className="text-xs text-muted">
-        {msg("assignmentwork.components.PracticeFeedbackPanel.aiVanDangXuLy")}<Button size="sm" onClick={() => setRefreshCount(0)}>{msg("assignmentwork.components.PracticeFeedbackPanel.kiemTraLaiGopY")}</Button>
+        {msg("assignmentwork.components.PracticeFeedbackPanel.theAiIsStillProcessing")}<Button size="sm" onClick={() => setRefreshCount(0)}>{msg("assignmentwork.components.PracticeFeedbackPanel.checkFeedbackAgain")}</Button>
       </p>}
       <p className="text-xs text-muted">
-        {msg("assignmentwork.components.PracticeFeedbackPanel.banCoTheQuanLyKhoa")}{" "}
-        <Link href="/ai/connection" className="font-semibold text-primary-ink">{msg("assignmentwork.components.PracticeFeedbackPanel.ketNoiAi")}</Link>.
+        {msg("assignmentwork.components.PracticeFeedbackPanel.youCanManageYourPersonal")}{" "}
+        <Link href="/ai/connection" className="font-semibold text-primary-ink">{msg("assignmentwork.components.PracticeFeedbackPanel.aiConnection")}</Link>.
       </p>
       <Button
         variant="primary" icon="smart_toy" disabled={!items || isRequesting || hasPending}
         data-testid="ask-feedback" onClick={() => void handleRequestFeedback()}
       >
-        {items?.length ? msg("assignmentwork.components.PracticeFeedbackPanel.nhanGopYLai") : msg("assignmentwork.components.PracticeFeedbackPanel.nhanGopYAi")}
+        {items?.length ? msg("assignmentwork.components.PracticeFeedbackPanel.getFeedbackAgain") : msg("assignmentwork.components.PracticeFeedbackPanel.getAiFeedback")}
       </Button>
     </Card>
   );

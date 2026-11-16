@@ -9,7 +9,7 @@ export type StudentRow = Person & { enrolledAt?: string | null };
 export const UNGROUPED = "__none";
 
 export function formatPersonLabel(p: Pick<Person, "name" | "email"> | null | undefined): string {
-  return p?.name || p?.email || msg("groups.model.groupDrafts.khongRoTen");
+  return p?.name || p?.email || msg("groups.model.groupDrafts.unknownName");
 }
 
 /** Thứ tự tên nhóm tự nhiên: Nhóm 2 trước Nhóm 10. */
@@ -31,7 +31,7 @@ export function pickFreeNames(drafts: Draft[], count: number): string[] {
   const taken = new Set(drafts.map((d) => d.name.trim().toLowerCase()));
   const names: string[] = [];
   for (let n = drafts.length + 1; names.length < count; n++) {
-    if (!taken.has(msg("groups.model.groupDrafts.nhom", { n: String(n) }))) names.push(msg("groups.model.groupDrafts.nhom2", { n: String(n) }));
+    if (!taken.has(msg("groups.model.groupDrafts.group", { n: String(n) }))) names.push(msg("groups.model.groupDrafts.group2", { n: String(n) }));
   }
   return names;
 }
@@ -63,10 +63,10 @@ export function saveErrorText(e: unknown, drafts: Draft[]): string {
       const d = drafts.find((x) => x.key === i.groupKey);
       return d ? `${d.name}: ${i.message}` : i.message;
     });
-    return msg("groups.model.groupDrafts.chuaLuu", { value: String(lines.join("; ")) });
+    return msg("groups.model.groupDrafts.notSaved", { value: String(lines.join("; ")) });
   }
   if (problem?.status === 409) {
-    return problem.code === "GROUP_CLASS_ARCHIVED" ? msg("groups.model.groupDrafts.lopDaLuuTruChiXem") : msg("groups.model.groupDrafts.nhomVuaDuocThayDoiO");
+    return problem.code === "GROUP_CLASS_ARCHIVED" ? msg("groups.model.groupDrafts.theClassIsArchivedGroups") : msg("groups.model.groupDrafts.theGroupsWereJustChanged");
   }
-  return problem?.detail ?? msg("groups.model.groupDrafts.khongLuuDuocNhomThuLai");
+  return problem?.detail ?? msg("groups.model.groupDrafts.couldNotSaveTheGroups");
 }

@@ -22,7 +22,7 @@ export function LogoutDialog({ open, onClose }: { open: boolean; onClose: () => 
       clearCurrentUser();
       router.replace("/login");
     } catch {
-      setError(msg("shared.layout.LogoutDialog.khongDangXuatDuocThuLai"));
+      setError(msg("shared.layout.LogoutDialog.couldNotSignOutPlease"));
       setBusy(false);
     }
   }
@@ -30,13 +30,13 @@ export function LogoutDialog({ open, onClose }: { open: boolean; onClose: () => 
   return (
     <Dialog
       open={open}
-      title={msg("shared.layout.LogoutDialog.dangXuat")}
+      title={msg("shared.layout.LogoutDialog.signOut")}
       onClose={onClose}
       dismissible={!busy}
       footer={
         <>
           <Button variant="danger" icon="logout" onClick={() => void logout()} disabled={busy}>
-            {msg("shared.layout.LogoutDialog.dangXuat2")}</Button>
+            {msg("shared.layout.LogoutDialog.signOut2")}</Button>
         </>
       }
     >

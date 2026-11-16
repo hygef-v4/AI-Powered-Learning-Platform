@@ -22,9 +22,9 @@ export function AnnouncementFeed({
   const [editing, setEditing] = useState<Announcement | null>(null);
   const [deleting, setDeleting] = useState<Announcement | null>(null);
   return (
-    <Card as="section" padding="none" className="overflow-hidden" aria-label={msg("announcements.components.AnnouncementFeed.danhSachThongBao")}>
+    <Card as="section" padding="none" className="overflow-hidden" aria-label={msg("announcements.components.AnnouncementFeed.announcementList")}>
       {!items.length && (
-        <p className="px-6 py-12 text-center text-[13.5px] text-muted">{msg("announcements.components.AnnouncementFeed.chuaCoThongBao")}</p>
+        <p className="px-6 py-12 text-center text-[13.5px] text-muted">{msg("announcements.components.AnnouncementFeed.noAnnouncementsYet")}</p>
       )}
       {items.map((item) => (
         <article
@@ -45,19 +45,19 @@ export function AnnouncementFeed({
               <h2 className="min-w-0 text-[15.5px] font-bold text-ink [overflow-wrap:anywhere]">
                 {item.title}
               </h2>
-              {item.important && <Pill tone="warning">{msg("announcements.components.AnnouncementFeed.quanTrong")}</Pill>}
+              {item.important && <Pill tone="warning">{msg("announcements.components.AnnouncementFeed.important")}</Pill>}
             </div>
             {item.canManage && (
               <div className="-mt-1 -mr-2 flex shrink-0 items-center">
                 <IconButton
                   icon="edit"
-                  label={msg("announcements.components.AnnouncementFeed.sua", { title: String(item.title) })}
+                  label={msg("announcements.components.AnnouncementFeed.edit", { title: String(item.title) })}
                   onClick={() => setEditing(item)}
                   data-testid={`announcement-edit-${item.id}`}
                 />
                 <IconButton
                   icon="trash"
-                  label={msg("announcements.components.AnnouncementFeed.xoa", { title: String(item.title) })}
+                  label={msg("announcements.components.AnnouncementFeed.delete", { title: String(item.title) })}
                   className="text-danger! hover:bg-danger-soft"
                   onClick={() => setDeleting(item)}
                   data-testid={`announcement-delete-${item.id}`}

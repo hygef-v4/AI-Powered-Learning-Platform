@@ -55,7 +55,7 @@ export function CreateAnnouncementDialog({
     setBusy(false);
     if (failed.length < chosen.length) onCreated();
     if (!failed.length) {
-      showToast(msg("announcements.components.AnnouncementDialogs.daDangThongBao"));
+      showToast(msg("announcements.components.AnnouncementDialogs.announcementPosted"));
       onClose();
       return;
     }
@@ -63,13 +63,13 @@ export function CreateAnnouncementDialog({
     const names = failed
       .map((classId) => classes.find((c) => c.classId === classId)?.code ?? classId)
       .join(", ");
-    setError(fixedClassId ? message : msg("announcements.components.AnnouncementDialogs.chuaDangDuocO", { names: String(names), message: String(message) }));
+    setError(fixedClassId ? message : msg("announcements.components.AnnouncementDialogs.couldNotPostTo", { names: String(names), message: String(message) }));
   }
 
   return (
     <Dialog
       open
-      title={msg("announcements.components.AnnouncementDialogs.taoThongBao")}
+      title={msg("announcements.components.AnnouncementDialogs.createAnnouncement")}
       icon="campaign"
       onClose={onClose}
       dismissible={!busy}
@@ -81,10 +81,10 @@ export function CreateAnnouncementDialog({
           disabled={busy || !ready}
           data-testid="announcement-create-submit"
         >
-          {msg("announcements.components.AnnouncementDialogs.dang")}</Button>
+          {msg("announcements.components.AnnouncementDialogs.post")}</Button>
       }
     >
-      <Field label={msg("announcements.components.AnnouncementDialogs.tieuDe")} htmlFor={`${id}-title`} required>
+      <Field label={msg("announcements.components.AnnouncementDialogs.title")} htmlFor={`${id}-title`} required>
         <TextInput
           id={`${id}-title`}
           maxLength={200}
@@ -98,7 +98,7 @@ export function CreateAnnouncementDialog({
       {!fixedClassId && (
         <ClassPicker classes={classes} chosen={chosen} disabled={busy} onChange={setChosen} />
       )}
-      <Field label={msg("announcements.components.AnnouncementDialogs.noiDung")} htmlFor={`${id}-body`} required>
+      <Field label={msg("announcements.components.AnnouncementDialogs.content")} htmlFor={`${id}-body`} required>
         <Textarea
           id={`${id}-body`}
           maxLength={5000}
@@ -122,7 +122,7 @@ export function CreateAnnouncementDialog({
               if (!e.target.checked) setEmail(false);
             }}
           />
-          {msg("announcements.components.AnnouncementDialogs.quanTrong")}</label>
+          {msg("announcements.components.AnnouncementDialogs.important")}</label>
         <label className={CHECK}>
           <input
             type="checkbox"
@@ -132,7 +132,7 @@ export function CreateAnnouncementDialog({
             data-testid="announcement-email"
             onChange={(e) => setEmail(e.target.checked)}
           />
-          {msg("announcements.components.AnnouncementDialogs.guiEmail")}</label>
+          {msg("announcements.components.AnnouncementDialogs.sendEmail")}</label>
       </div>
       {error && (
         <p role="alert" className="text-[13px] text-danger">
@@ -199,7 +199,7 @@ function ClassPicker({
   const summary = !codes.length
     ? ""
     : codes.length === classes.length && classes.length > 1
-      ? msg("announcements.components.AnnouncementDialogs.tatCaLop", { length: String(codes.length) })
+      ? msg("announcements.components.AnnouncementDialogs.allClasses", { length: String(codes.length) })
       : codes.length <= 3
         ? codes.join(", ")
         : `${codes.slice(0, 3).join(", ")} +${codes.length - 3}`;
@@ -241,7 +241,7 @@ function ClassPicker({
   return (
     <div className="flex min-w-0 flex-col gap-1.5" data-testid="announcement-classes">
       <label htmlFor={`${id}-input`} className="text-[13px] font-semibold text-ink">
-        {msg("announcements.components.AnnouncementDialogs.lop")}<span className="text-danger">*</span>
+        {msg("announcements.components.AnnouncementDialogs.class")}<span className="text-danger">*</span>
       </label>
       <div ref={anchorRef}>
         <TextInput
@@ -254,7 +254,7 @@ function ClassPicker({
           autoComplete="off"
           maxLength={100}
           disabled={disabled}
-          placeholder={open ? msg("announcements.components.AnnouncementDialogs.goMaLopHoacMaMon") : msg("announcements.components.AnnouncementDialogs.chonLop")}
+          placeholder={open ? msg("announcements.components.AnnouncementDialogs.typeAClassOrSubject") : msg("announcements.components.AnnouncementDialogs.chooseClasses")}
           data-testid="announcement-classes-input"
           value={open ? query : summary}
           title={codes.join(", ")}
@@ -288,7 +288,7 @@ function ClassPicker({
             id={`${id}-list`}
             role="listbox"
             aria-multiselectable
-            aria-label={msg("announcements.components.AnnouncementDialogs.lop2")}
+            aria-label={msg("announcements.components.AnnouncementDialogs.classes")}
             style={
               place
                 ? { top: place.top, left: place.left, width: place.width }
@@ -301,7 +301,7 @@ function ClassPicker({
                 "all",
                 allShown,
                 toggleShown,
-                <span className="flex-1">{query ? msg("announcements.components.AnnouncementDialogs.chonCacLopDangTim") : msg("announcements.components.AnnouncementDialogs.chonTatCa")}</span>,
+                <span className="flex-1">{query ? msg("announcements.components.AnnouncementDialogs.selectTheMatchingClasses") : msg("announcements.components.AnnouncementDialogs.selectAll")}</span>,
                 true,
               )}
             {shown.map((c) =>
@@ -312,7 +312,7 @@ function ClassPicker({
                 <ClassLabel subjectCode={c.subjectCode} code={c.code} term={c.term} />,
               ),
             )}
-            {!shown.length && <p className="px-3 py-2 text-xs text-muted">{msg("announcements.components.AnnouncementDialogs.khongCoLopPhuHop")}</p>}
+            {!shown.length && <p className="px-3 py-2 text-xs text-muted">{msg("announcements.components.AnnouncementDialogs.noMatchingClasses")}</p>}
           </div>,
           document.body,
         )}
@@ -339,7 +339,7 @@ export function AnnouncementEditorDialog({
     setError("");
     try {
       await announcementsApi.editAnnouncement(item.id, title.trim(), body.trim(), item.version);
-      showToast(msg("announcements.components.AnnouncementDialogs.daLuuThayDoi"));
+      showToast(msg("announcements.components.AnnouncementDialogs.changesSaved"));
       onSaved();
       onClose();
     } catch (e) {
@@ -351,7 +351,7 @@ export function AnnouncementEditorDialog({
   return (
     <Dialog
       open
-      title={msg("announcements.components.AnnouncementDialogs.suaThongBao")}
+      title={msg("announcements.components.AnnouncementDialogs.editAnnouncement")}
       icon="edit"
       onClose={onClose}
       dismissible={!busy}
@@ -363,10 +363,10 @@ export function AnnouncementEditorDialog({
           onClick={() => void handleSave()}
           disabled={busy || !title.trim() || !body.trim()}
         >
-          {msg("announcements.components.AnnouncementDialogs.luu")}</Button>
+          {msg("announcements.components.AnnouncementDialogs.save")}</Button>
       }
     >
-      <Field label={msg("announcements.components.AnnouncementDialogs.tieuDe")} htmlFor={`${id}-title`} required>
+      <Field label={msg("announcements.components.AnnouncementDialogs.title")} htmlFor={`${id}-title`} required>
         <TextInput
           id={`${id}-title`}
           data-testid="announcement-edit-title"
@@ -376,7 +376,7 @@ export function AnnouncementEditorDialog({
           onChange={(e) => setTitle(e.target.value)}
         />
       </Field>
-      <Field label={msg("announcements.components.AnnouncementDialogs.noiDung")} htmlFor={`${id}-body`} required>
+      <Field label={msg("announcements.components.AnnouncementDialogs.content")} htmlFor={`${id}-body`} required>
         <Textarea
           id={`${id}-body`}
           data-testid="announcement-edit-body"
@@ -411,7 +411,7 @@ export function DeleteAnnouncementDialog({
     setBusy(true);
     try {
       await announcementsApi.deleteAnnouncement(item.id, item.version);
-      showToast(msg("announcements.components.AnnouncementDialogs.daXoaThongBao"), "danger");
+      showToast(msg("announcements.components.AnnouncementDialogs.announcementDeleted"), "danger");
       onSaved();
       onClose();
     } catch (e) {
@@ -423,7 +423,7 @@ export function DeleteAnnouncementDialog({
   return (
     <Dialog
       open
-      title={msg("announcements.components.AnnouncementDialogs.xoaThongBao")}
+      title={msg("announcements.components.AnnouncementDialogs.deleteAnnouncement")}
       onClose={onClose}
       dismissible={!busy}
       tone="danger"
@@ -434,10 +434,10 @@ export function DeleteAnnouncementDialog({
           onClick={() => void handleRemove()}
           disabled={busy}
         >
-          {msg("announcements.components.AnnouncementDialogs.xoa")}</Button>
+          {msg("announcements.components.AnnouncementDialogs.delete")}</Button>
       }
     >
-      <p>{msg("announcements.components.AnnouncementDialogs.banCoChacMuonXoaThong")}{item.title}{msg("announcements.components.AnnouncementDialogs.khong")}</p>
+      <p>{msg("announcements.components.AnnouncementDialogs.areYouSureYouWant")}{item.title}{msg("announcements.components.AnnouncementDialogs.text")}</p>
       {error && (
         <p role="alert" className="text-[13px] text-danger">
           {error}

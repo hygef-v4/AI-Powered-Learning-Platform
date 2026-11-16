@@ -3,7 +3,7 @@ import { SubjectListPage } from "@/features/subjects/pages/SubjectListPage";
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.admin.subjects.page.monHoc") };
+  return { title: await translateOnServer("app.admin.subjects.page.subjects") };
 }
 
 export default function Page() {

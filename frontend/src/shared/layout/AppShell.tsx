@@ -149,28 +149,28 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
         href="#main"
         className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-2 focus-visible:left-2 focus-visible:z-[120] focus-visible:rounded-lg focus-visible:bg-primary focus-visible:px-3.5 focus-visible:py-2 focus-visible:text-[13px] focus-visible:font-semibold focus-visible:text-on-primary"
       >
-        {msg("shared.layout.AppShell.boQuaToiNoiDung")}</a>
+        {msg("shared.layout.AppShell.skipToContent")}</a>
       <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-1.5 border-b border-line bg-nav pr-3 pl-2.5 md:pr-4">
         <button
           ref={menuButton}
           type="button"
-          aria-label={sidebarOpen ? msg("shared.layout.AppShell.thuGonMenu") : msg("shared.layout.AppShell.moMenu")}
+          aria-label={sidebarOpen ? msg("shared.layout.AppShell.collapseMenu") : msg("shared.layout.AppShell.openMenu")}
           aria-expanded={sidebarOpen}
-          title={sidebarOpen ? msg("shared.layout.AppShell.thuGonMenu") : msg("shared.layout.AppShell.moMenu")}
+          title={sidebarOpen ? msg("shared.layout.AppShell.collapseMenu") : msg("shared.layout.AppShell.openMenu")}
           onClick={toggleSidebar}
           className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-body transition-colors hover:bg-sunken hover:text-ink"
         >
           <ToggleIcon open={sidebarOpen} />
         </button>
-        <Link href="/" className="rounded-lg px-1.5 py-1" aria-label={msg("shared.layout.AppShell.nenTangHocTapTrangChu")}>
+        <Link href="/" className="rounded-lg px-1.5 py-1" aria-label={msg("shared.layout.AppShell.learningPlatformHomePage")}>
           <Logo className="[&>span:last-child]:hidden sm:[&>span:last-child]:inline" />
         </Link>
         <div className="ml-auto flex items-center gap-1">
           <button
             type="button"
             onClick={toggleTheme}
-            aria-label={theme === "dark" ? msg("shared.layout.AppShell.chuyenGiaoDienSang") : msg("shared.layout.AppShell.chuyenGiaoDienToi")}
-            title={theme === "dark" ? msg("shared.layout.AppShell.giaoDienSang") : msg("shared.layout.AppShell.giaoDienToi")}
+            aria-label={theme === "dark" ? msg("shared.layout.AppShell.switchToLightMode") : msg("shared.layout.AppShell.switchToDarkMode")}
+            title={theme === "dark" ? msg("shared.layout.AppShell.lightMode") : msg("shared.layout.AppShell.darkMode")}
             className="inline-flex size-9 items-center justify-center rounded-lg text-body transition-colors hover:bg-sunken hover:text-ink"
           >
             <Icon name={theme === "dark" ? "sun" : "moon"} size={17} />
@@ -179,7 +179,7 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
           <Menu
             align="right"
             variant="tool"
-            ariaLabel={msg("shared.layout.AppShell.taiKhoan")}
+            ariaLabel={msg("shared.layout.AppShell.account")}
             summaryClassName="!h-10 gap-2.5 !pl-1.5 !pr-2"
             label={
               <>
@@ -193,16 +193,16 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
               </>
             }
           >
-            <AccountLink href="/profile" icon="person" label={msg("shared.layout.AppShell.hoSo")} />
+            <AccountLink href="/profile" icon="person" label={msg("shared.layout.AppShell.profile")} />
             {headerLinks.map((link) => (
               <AccountLink key={link.href} href={link.href} icon={link.icon} label={link.label} />
             ))}
             {/* Ngôn ngữ (yêu cầu 2026-11-16): một dòng trong menu, bấm mở popup chọn ngôn ngữ. */}
             <MenuItem icon="language" data-testid="open-language" onClick={() => setLanguageOpen(true)}>
-              {msg("shared.layout.AppShell.ngonNgu")}</MenuItem>
+              {msg("shared.layout.AppShell.language")}</MenuItem>
             <hr className="my-1 border-line" />
             <MenuItem icon="logout" tone="danger" onClick={() => setLogoutOpen(true)}>
-              {msg("shared.layout.AppShell.dangXuat")}</MenuItem>
+              {msg("shared.layout.AppShell.signOut")}</MenuItem>
           </Menu>
         </div>
       </header>
@@ -353,8 +353,8 @@ function NavList({ label, items, pathname, header, collapsed, branches }: { labe
             </Link>
             {/* Mũi tên cuối hàng: chỉ mở, đóng nhánh; nằm đè lên hàng nên trông như một phần của mục, không phải nút thêm. */}
             {isParent && (
-              <button type="button" aria-expanded={open} aria-label={`${open ? msg("shared.layout.AppShell.thuGon") : msg("shared.layout.AppShell.mo")} ${item.label}`}
-                title={open ? msg("shared.layout.AppShell.thuGon") : msg("shared.layout.AppShell.mo")}
+              <button type="button" aria-expanded={open} aria-label={`${open ? msg("shared.layout.AppShell.collapse") : msg("shared.layout.AppShell.expand")} ${item.label}`}
+                title={open ? msg("shared.layout.AppShell.collapse") : msg("shared.layout.AppShell.expand")}
                 onClick={() => setToggled((previous) => ({ ...previous, [item.href]: !open }))}
                 className="absolute top-1/2 right-1 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md text-muted transition-colors hover:bg-sidebar-hover hover:text-ink pointer-coarse:right-0 pointer-coarse:size-10 md:group-data-[collapsed]/sidebar:hidden">
                 <Icon name="expand_more" size={16} className={cx("transition-transform duration-200", !open && "-rotate-90")} />

@@ -41,20 +41,20 @@ export type GroupMeta = { label: string; description: string; icon: IconName; to
 
 export const GROUP_META: Record<string, GroupMeta> = {
   FILES: {
-    label: msg("settings.model.types.tep"),
-    description: msg("settings.model.types.gioiHanKhiTaiHocLieu"),
+    label: msg("settings.model.types.files"),
+    description: msg("settings.model.types.limitsWhenUploadingLearningMaterials"),
     icon: "folder",
     tone: "primary",
   },
   BACKUP: {
-    label: msg("settings.model.types.saoLuu"),
-    description: msg("settings.model.types.saoLuuCoSoDuLieu"),
+    label: msg("settings.model.types.backup"),
+    description: msg("settings.model.types.backUpTheDatabaseTo"),
     icon: "backup",
     tone: "success",
   },
   ACTIVITY: {
-    label: msg("settings.model.types.hoatDongLamBai"),
-    description: msg("settings.model.types.duLieuRoiTrangAnTab"),
+    label: msg("settings.model.types.workActivity"),
+    description: msg("settings.model.types.pageLeaveAndTabHide"),
     icon: "monitoring",
     tone: "warning",
   },
@@ -65,9 +65,9 @@ export function groupMeta(group: string): GroupMeta {
 }
 
 export const TYPE_LABELS: Record<SettingType, string> = {
-  INTEGER: msg("settings.model.types.soNguyen"),
-  BOOLEAN: msg("settings.model.types.batTat"),
-  TIME_OF_DAY: msg("settings.model.types.gioPhut"),
-  ENUM: msg("settings.model.types.chonMot"),
-  ENUM_SET: msg("settings.model.types.chonNhieu"),
+  INTEGER: msg("settings.model.types.integer"),
+  BOOLEAN: msg("settings.model.types.onOff"),
+  TIME_OF_DAY: msg("settings.model.types.hourMinute"),
+  ENUM: msg("settings.model.types.singleChoice"),
+  ENUM_SET: msg("settings.model.types.multipleChoice"),
 };

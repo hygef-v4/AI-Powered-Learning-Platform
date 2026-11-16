@@ -20,32 +20,32 @@ export function canBeEmpty(item: SettingItem): boolean {
 
 export function validateSettingValue(item: SettingItem, value: SettingValue): string | null {
   if (value === null) {
-    return canBeEmpty(item) ? null : msg("settings.model.validation.mucNayPhaiCoGiaTri");
+    return canBeEmpty(item) ? null : msg("settings.model.validation.thisFieldMustHaveA");
   }
   switch (item.type) {
     case "INTEGER": {
-      if (typeof value !== "number" || !Number.isInteger(value)) return msg("settings.model.validation.giaTriPhaiLaSoNguyen");
+      if (typeof value !== "number" || !Number.isInteger(value)) return msg("settings.model.validation.theValueMustBeAn");
       const min = Number(item.constraints?.min);
       const max = Number(item.constraints?.max);
       if ((!Number.isNaN(min) && value < min) || (!Number.isNaN(max) && value > max)) {
-        return msg("settings.model.validation.giaTriPhaiTuDen", { min: String(min), max: String(max) });
+        return msg("settings.model.validation.theValueMustBeFrom", { min: String(min), max: String(max) });
       }
       return null;
     }
     case "BOOLEAN":
-      return typeof value === "boolean" ? null : msg("settings.model.validation.giaTriPhaiLaBatHoac");
+      return typeof value === "boolean" ? null : msg("settings.model.validation.theValueMustBeOn");
     case "TIME_OF_DAY":
       return typeof value === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(value)
         ? null
-        : msg("settings.model.validation.gioPhaiCoDangGioPhut");
+        : msg("settings.model.validation.theTimeMustBeIn");
     case "ENUM":
       return typeof value === "string" && listOptions(item).includes(value)
         ? null
-        : msg("settings.model.validation.giaTriKhongNamTrongDanh");
+        : msg("settings.model.validation.theValueIsNotIn");
     case "ENUM_SET": {
-      if (!Array.isArray(value)) return msg("settings.model.validation.giaTriPhaiLaDanhSach");
-      if (value.some((v) => !listOptions(item).includes(v))) return msg("settings.model.validation.coGiaTriKhongNamTrong");
-      if (value.length === 0 && item.constraints?.nonEmpty === true) return msg("settings.model.validation.phaiChonItNhatMotGia");
+      if (!Array.isArray(value)) return msg("settings.model.validation.theValueMustBeA");
+      if (value.some((v) => !listOptions(item).includes(v))) return msg("settings.model.validation.someValuesAreNotIn");
+      if (value.length === 0 && item.constraints?.nonEmpty === true) return msg("settings.model.validation.chooseAtLeastOneValue");
       return null;
     }
   }
@@ -57,8 +57,8 @@ export function isEmptyValue(value: SettingValue): boolean {
 
 export function formatSettingValue(item: Pick<SettingItem, "type" | "value"> & Partial<Pick<SettingItem, "constraints">>): string {
   const { value } = item;
-  if (isEmptyValue(value)) return msg("settings.model.validation.chuaCauHinh");
-  if (item.type === "BOOLEAN") return value ? msg("settings.model.validation.bat") : msg("settings.model.validation.tat");
+  if (isEmptyValue(value)) return msg("settings.model.validation.notConfigured");
+  if (item.type === "BOOLEAN") return value ? msg("settings.model.validation.on") : msg("settings.model.validation.off");
   if (Array.isArray(value)) return value.join(", ");
   const unit = readUnit({ constraints: item.constraints ?? null });
   return unit && item.type === "INTEGER" ? `${value} ${unit}` : String(value);
@@ -71,18 +71,18 @@ export function describeConstraints(item: SettingItem): string {
     case "INTEGER": {
       const min = item.constraints?.min;
       const max = item.constraints?.max;
-      const range = min !== undefined && max !== undefined ? msg("settings.model.validation.soNguyenTuDen", { min: String(min), max: String(max) }) : msg("settings.model.validation.soNguyen");
+      const range = min !== undefined && max !== undefined ? msg("settings.model.validation.integerFromTo", { min: String(min), max: String(max) }) : msg("settings.model.validation.integer");
       return unit ? `${range} (${unit})` : range;
     }
     case "BOOLEAN":
-      return msg("settings.model.validation.batHoacTat");
+      return msg("settings.model.validation.onOrOff");
     case "TIME_OF_DAY":
-      return msg("settings.model.validation.gioPhutTheoGioVietNam");
+      return msg("settings.model.validation.hourMinuteInVietnamTime");
     case "ENUM":
-      return msg("settings.model.validation.motTrong", { value: String(listOptions(item).join(", ")) });
+      return msg("settings.model.validation.oneOf", { value: String(listOptions(item).join(", ")) });
     case "ENUM_SET": {
-      const base = msg("settings.model.validation.chonTrong", { value: String(listOptions(item).join(", ")) });
-      return item.constraints?.nonEmpty === true ? msg("settings.model.validation.itNhatMot", { base: String(base) }) : base;
+      const base = msg("settings.model.validation.chooseFrom", { value: String(listOptions(item).join(", ")) });
+      return item.constraints?.nonEmpty === true ? msg("settings.model.validation.atLeastOne", { base: String(base) }) : base;
     }
   }
 }

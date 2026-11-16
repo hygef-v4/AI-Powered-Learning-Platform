@@ -43,7 +43,7 @@ export function AccountDetailPage() {
         if (active) setAccount(detail);
       })
       .catch((e: unknown) => {
-        if (active) setLoadError(e instanceof ApiError && e.problem.status === 404 ? msg("identity.admin.pages.AccountDetailPage.khongTimThayTaiKhoan") : msg("identity.admin.pages.AccountDetailPage.khongTaiDuocTaiKhoan"));
+        if (active) setLoadError(e instanceof ApiError && e.problem.status === 404 ? msg("identity.admin.pages.AccountDetailPage.accountNotFound") : msg("identity.admin.pages.AccountDetailPage.couldNotLoadTheAccount"));
       });
     return () => {
       active = false;
@@ -55,14 +55,14 @@ export function AccountDetailPage() {
     try {
       setAccount(await getAccount(id));
     } catch {
-      setLoadError(msg("identity.admin.pages.AccountDetailPage.khongTaiLaiDuocTaiKhoan"));
+      setLoadError(msg("identity.admin.pages.AccountDetailPage.couldNotReloadTheAccount"));
     }
   }
 
   if (loadError) {
     return (
       <>
-        <PageHeader title={msg("identity.admin.pages.AccountDetailPage.taiKhoan")} backHref="/admin/accounts" />
+        <PageHeader title={msg("identity.admin.pages.AccountDetailPage.accounts")} backHref="/admin/accounts" />
         <PageLoadError onRetry={reload}>{loadError}</PageLoadError>
       </>
     );
@@ -83,28 +83,28 @@ export function AccountDetailPage() {
       <PageHeader
         backHref="/admin/accounts"
         title={account.displayName}
-        breadcrumb={[{ label: msg("identity.admin.pages.AccountDetailPage.taiKhoan"), href: "/admin/accounts" }, { label: account.email }]}
+        breadcrumb={[{ label: msg("identity.admin.pages.AccountDetailPage.accounts"), href: "/admin/accounts" }, { label: account.email }]}
       />
       <div className="grid items-start gap-4 lg:grid-cols-[1fr_280px]">
         <AccountEditForm
           key={account.version}
           account={account}
           isSelf={isSelf}
-          onSaved={(saved) => applyChanged(saved, msg("identity.admin.pages.AccountDetailPage.daLuuThayDoi"))}
+          onSaved={(saved) => applyChanged(saved, msg("identity.admin.pages.AccountDetailPage.changesSaved"))}
           onConflict={reload}
           onChangeRole={() => setPopup({ kind: "role" })}
         />
         <div className="flex flex-col gap-4">
-          <Section title={msg("identity.admin.pages.AccountDetailPage.trangThai")}>
+          <Section title={msg("identity.admin.pages.AccountDetailPage.status")}>
             <dl className="flex flex-col gap-2.5 text-[13px]">
               <div className="flex items-center justify-between">
-                <dt className="text-muted">{msg("identity.admin.pages.AccountDetailPage.trangThai")}</dt>
+                <dt className="text-muted">{msg("identity.admin.pages.AccountDetailPage.status")}</dt>
                 <dd>
                   <Pill tone={STATUS_TONES[account.status]}>{STATUS_LABELS[account.status]}</Pill>
                 </dd>
               </div>
               <div className="flex items-center justify-between">
-                <dt className="text-muted">{msg("identity.admin.pages.AccountDetailPage.ngayTao")}</dt>
+                <dt className="text-muted">{msg("identity.admin.pages.AccountDetailPage.created")}</dt>
                 <dd className="text-ink">{formatDate(account.createdAt)}</dd>
               </div>
             </dl>
@@ -114,15 +114,15 @@ export function AccountDetailPage() {
               disabled={isSelf && !reopening}
               onClick={() => setPopup({ kind: "status" })}
             >
-              {reopening ? msg("identity.admin.pages.AccountDetailPage.moLaiTaiKhoan") : msg("identity.admin.pages.AccountDetailPage.voHieuHoaTaiKhoan")}
+              {reopening ? msg("identity.admin.pages.AccountDetailPage.reopenAccount") : msg("identity.admin.pages.AccountDetailPage.disableAccount")}
             </Button>
           </Section>
-          <Section title={msg("identity.admin.pages.AccountDetailPage.lichSu")}>
+          <Section title={msg("identity.admin.pages.AccountDetailPage.history")}>
             <Link
               href={`/admin/audit?actorEmail=${encodeURIComponent(account.email)}&actorId=${account.id}`}
               className="inline-flex items-center gap-1 text-[13px] font-semibold text-primary-ink hover:underline"
             >
-              {msg("identity.admin.pages.AccountDetailPage.moNhatKyCuaTaiKhoan")}</Link>
+              {msg("identity.admin.pages.AccountDetailPage.openTheAccountsLog")}</Link>
           </Section>
         </div>
       </div>
@@ -131,7 +131,7 @@ export function AccountDetailPage() {
         <RoleChangeDialog
           account={account}
           onClose={() => setPopup(null)}
-          onChanged={(saved) => applyChanged(saved, msg("identity.admin.pages.AccountDetailPage.daDoiVaiTro"))}
+          onChanged={(saved) => applyChanged(saved, msg("identity.admin.pages.AccountDetailPage.roleChanged"))}
           onConflict={reload}
           onBlocked={(block) => setPopup({ kind: "blocked", block })}
         />
@@ -141,7 +141,7 @@ export function AccountDetailPage() {
         <StatusToggleDialog
           account={account}
           onClose={() => setPopup(null)}
-          onChanged={(saved) => saved.status === "DISABLED" ? applyChanged(saved, msg("identity.admin.pages.AccountDetailPage.daVoHieuHoaTaiKhoan"), "danger") : applyChanged(saved, msg("identity.admin.pages.AccountDetailPage.daMoLaiTaiKhoan"))}
+          onChanged={(saved) => saved.status === "DISABLED" ? applyChanged(saved, msg("identity.admin.pages.AccountDetailPage.accountDisabled"), "danger") : applyChanged(saved, msg("identity.admin.pages.AccountDetailPage.accountReopened"))}
           onConflict={reload}
         />
       )}
@@ -190,11 +190,11 @@ function AccountEditForm({
     event.preventDefault();
     const code = normalizeStudentCode(studentCode);
     const errors = {
-      name: displayName.trim().length === 0 ? msg("identity.admin.pages.AccountDetailPage.nhapHoVaTen") : undefined,
-      phone: phoneNumber.trim() && !PHONE_FORMAT.test(phoneNumber.trim()) ? msg("identity.admin.pages.AccountDetailPage.soDienThoaiGom815") : undefined,
+      name: displayName.trim().length === 0 ? msg("identity.admin.pages.AccountDetailPage.enterTheFullName") : undefined,
+      phone: phoneNumber.trim() && !PHONE_FORMAT.test(phoneNumber.trim()) ? msg("identity.admin.pages.AccountDetailPage.thePhoneNumberHas8") : undefined,
       // Đã có mã thì không được xóa trống (BR-U01-105).
       studentCode: !codeChanged ? undefined
-        : !code ? msg("identity.admin.pages.AccountDetailPage.khongXoaTrongDuocMssvDa")
+        : !code ? msg("identity.admin.pages.AccountDetailPage.anExistingStudentIdCannot")
           : isValidStudentCode(code) ? undefined : STUDENT_CODE_FORMAT_MESSAGE,
     };
     setFieldError(errors);
@@ -206,7 +206,7 @@ function AccountEditForm({
         codeChanged ? code : undefined));
     } catch (e) {
       const code = e instanceof ApiError ? e.problem.code : undefined;
-      setError((code && ADMIN_ERROR_LABELS[code]) ?? msg("identity.admin.pages.AccountDetailPage.khongLuuDuocVuiLongThu"));
+      setError((code && ADMIN_ERROR_LABELS[code]) ?? msg("identity.admin.pages.AccountDetailPage.couldNotSavePleaseTry"));
       if (code === "VERSION_CONFLICT") await onConflict();
     } finally {
       setBusy(false);
@@ -214,13 +214,13 @@ function AccountEditForm({
   }
 
   return (
-    <Section title={msg("identity.admin.pages.AccountDetailPage.thongTinTaiKhoan")}>
+    <Section title={msg("identity.admin.pages.AccountDetailPage.accountInformation")}>
       <form onSubmit={submit} noValidate className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={msg("identity.admin.pages.AccountDetailPage.hoVaTen")} htmlFor={nameId} required error={fieldError.name}>
+          <Field label={msg("identity.admin.pages.AccountDetailPage.fullName")} htmlFor={nameId} required error={fieldError.name}>
             <TextInput id={nameId} value={displayName} invalid={!!fieldError.name} onChange={(e) => setDisplayName(e.target.value)} />
           </Field>
-          <Field label={msg("identity.admin.pages.AccountDetailPage.soDienThoaiTuyChon")} htmlFor={phoneId} error={fieldError.phone}>
+          <Field label={msg("identity.admin.pages.AccountDetailPage.phoneNumberOptional")} htmlFor={phoneId} error={fieldError.phone}>
             <TextInput
               id={phoneId}
               inputMode="tel"
@@ -229,25 +229,25 @@ function AccountEditForm({
               onChange={(e) => setPhoneNumber(e.target.value)}
             />
           </Field>
-          <Field label={msg("identity.admin.pages.AccountDetailPage.emailTruong")} htmlFor={emailId}>
+          <Field label={msg("identity.admin.pages.AccountDetailPage.schoolEmail")} htmlFor={emailId}>
             <LockedInput id={emailId} value={account.email} className="min-w-0" />
           </Field>
           <div className="flex min-w-0 flex-col gap-1">
-            <Field label={msg("identity.admin.pages.AccountDetailPage.vaiTro")} htmlFor={roleId}>
+            <Field label={msg("identity.admin.pages.AccountDetailPage.role")} htmlFor={roleId}>
               <div className="flex min-w-0 gap-2">
                 <LockedInput id={roleId} value={ROLE_LABELS[account.role]} className="min-w-0 flex-1" />
                 {!student && (
-                  <IconButton icon="swap_horiz" label={msg("identity.admin.pages.AccountDetailPage.doiVaiTro")} size={40} onClick={onChangeRole} disabled={isSelf}
+                  <IconButton icon="swap_horiz" label={msg("identity.admin.pages.AccountDetailPage.changeRole")} size={40} onClick={onChangeRole} disabled={isSelf}
                     className="border border-line-strong bg-surface text-ink hover:bg-sunken" />
                 )}
               </div>
             </Field>
             {/* BR-U01-107: không đổi vai trò vào hoặc ra khỏi Sinh viên. */}
-            {student && <p className="text-xs text-muted">{msg("identity.admin.pages.AccountDetailPage.khongDoiDuocVaiTroCua")}</p>}
+            {student && <p className="text-xs text-muted">{msg("identity.admin.pages.AccountDetailPage.theRoleOfAStudent")}</p>}
           </div>
           {student && (
             <div className="flex min-w-0 flex-col gap-1">
-              <Field label={msg("identity.admin.pages.AccountDetailPage.maSoSinhVien")} htmlFor={codeId} error={fieldError.studentCode}>
+              <Field label={msg("identity.admin.pages.AccountDetailPage.studentId")} htmlFor={codeId} error={fieldError.studentCode}>
                 {account.studentCodeEditable ? (
                   <TextInput
                     id={codeId}
@@ -260,12 +260,12 @@ function AccountEditForm({
                     onBlur={() => setStudentCode(normalizeStudentCode(studentCode))}
                   />
                 ) : (
-                  <LockedInput id={codeId} value={savedCode || msg("identity.admin.pages.AccountDetailPage.chuaCoMssv")} className="min-w-0" />
+                  <LockedInput id={codeId} value={savedCode || msg("identity.admin.pages.AccountDetailPage.noStudentIdYet")} className="min-w-0" />
                 )}
               </Field>
               <p className="text-xs text-muted" data-testid="account-detail-student-code-hint">
-                {account.studentCodeEditable ? msg("identity.admin.pages.AccountDetailPage.chiSuaDuocKhiSinhVien")
-                  : msg("identity.admin.pages.AccountDetailPage.mssvKhongDoiDuocSauKhi")}
+                {account.studentCodeEditable ? msg("identity.admin.pages.AccountDetailPage.canOnlyBeEditedBefore")
+                  : msg("identity.admin.pages.AccountDetailPage.theStudentIdCannotBe")}
               </p>
             </div>
           )}
@@ -277,9 +277,9 @@ function AccountEditForm({
         )}
         <div className="flex justify-end gap-2 border-t border-line pt-4">
           <Button onClick={reset} disabled={!dirty || busy}>
-            {msg("identity.admin.pages.AccountDetailPage.huy")}</Button>
+            {msg("identity.admin.pages.AccountDetailPage.cancel")}</Button>
           <Button type="submit" variant="primary" icon="save" disabled={!dirty || busy}>
-            {msg("identity.admin.pages.AccountDetailPage.luuThayDoi")}</Button>
+            {msg("identity.admin.pages.AccountDetailPage.saveChanges")}</Button>
         </div>
       </form>
     </Section>

@@ -8,25 +8,25 @@ const KEY_STEPS: { provider: string; steps: string[] }[] = [
   {
     provider: "Gemini",
     steps: [
-      msg("ai.components.SetupGuides.moGoogleAiStudioAistudioGoogle"),
-      msg("ai.components.SetupGuides.chonGetApiKeyCreateApi"),
-      msg("ai.components.SetupGuides.saoChepKhoaVaDanVao"),
+      msg("ai.components.SetupGuides.openGoogleAiStudioAistudio"),
+      msg("ai.components.SetupGuides.chooseGetApiKeyCreate"),
+      msg("ai.components.SetupGuides.copyTheKeyAndPaste"),
     ],
   },
   {
     provider: "OpenAI",
     steps: [
-      msg("ai.components.SetupGuides.moPlatformOpenaiComApiKeys"),
-      msg("ai.components.SetupGuides.bamCreateNewSecretKeyDat"),
-      msg("ai.components.SetupGuides.napTinDungChoTaiKhoan"),
+      msg("ai.components.SetupGuides.openPlatformOpenaiComApi"),
+      msg("ai.components.SetupGuides.clickCreateNewSecretKey"),
+      msg("ai.components.SetupGuides.addCreditToTheAccount"),
     ],
   },
   {
     provider: "Claude",
     steps: [
-      msg("ai.components.SetupGuides.moConsoleAnthropicComApiKeys"),
-      msg("ai.components.SetupGuides.bamCreateKeyChonWorkspace"),
-      msg("ai.components.SetupGuides.saoChepKhoaChiHienMot"),
+      msg("ai.components.SetupGuides.openConsoleAnthropicComApi"),
+      msg("ai.components.SetupGuides.clickCreateKeyAndChoose"),
+      msg("ai.components.SetupGuides.copyTheKeyShownOnly"),
     ],
   },
 ];
@@ -34,7 +34,7 @@ const KEY_STEPS: { provider: string; steps: string[] }[] = [
 /** Hướng dẫn lấy khóa API từng nhà cung cấp; các bước có thể đổi theo trang của nhà cung cấp. */
 export function ApiSetupGuide() {
   return (
-    <SettingsGroup title={msg("ai.components.SetupGuides.huongDanLayKhoaApi")}>
+    <SettingsGroup title={msg("ai.components.SetupGuides.howToGetAnApi")}>
       <div className="mt-2 grid gap-3 md:grid-cols-3">
         {KEY_STEPS.map((guide) => (
           <div
@@ -52,7 +52,7 @@ export function ApiSetupGuide() {
           </div>
         ))}
       </div>
-      <p className="mt-3 text-xs text-muted">{msg("ai.components.SetupGuides.khongChiaSeKhoaChoNguoi")}</p>
+      <p className="mt-3 text-xs text-muted">{msg("ai.components.SetupGuides.doNotShareYourKey")}</p>
     </SettingsGroup>
   );
 }
@@ -60,7 +60,7 @@ export function ApiSetupGuide() {
 /** Đoạn cấu hình MCP mẫu: URL /mcp trên địa chỉ hiện tại, token đặt trong header Authorization; thụt 4 dấu cách. */
 export type McpClient = "codex" | "claude-code" | "opencode" | "antigravity";
 
-export function buildMcpConfigSample(endpoint: string, token = msg("ai.components.SetupGuides.tokenCuaBan"), client: McpClient = "codex") {
+export function buildMcpConfigSample(endpoint: string, token = msg("ai.components.SetupGuides.yourToken"), client: McpClient = "codex") {
   if (client === "codex") return '[mcp_servers.nen-tang-hoc-tap]\nurl = ' + JSON.stringify(endpoint)
     + '\nhttp_headers = { Authorization = ' + JSON.stringify(`Bearer ${token}`) + ' }';
   const server = client === "opencode"
@@ -146,56 +146,56 @@ export function McpClientSetup({ token }: { token?: string }) {
   const prompt = `Set up the nen-tang-hoc-tap MCP server for ${client} on this machine.
 Personal configuration file: ${locations[client]} (~ means the current user's home directory).
 ${client === "antigravity" ? "Confirm the active file through Settings → Customizations → Installed MCP Servers → Open MCP Config; older versions may use MCP Servers → Manage MCP Servers → View raw config and ~/.gemini/antigravity/mcp_config.json.\n" : ""}Read the existing file before editing. Add or update only nen-tang-hoc-tap; preserve all other servers and settings. If the file is invalid, report the problem instead of overwriting it. Make a private local backup before editing. Keep configuration files and backups containing tokens out of Git.
-${token ? "The configuration below contains the real token I explicitly provided. Do not repeat it in your response, log it, or commit it." : msg("ai.components.SetupGuides.noRealTokenIsProvidedGuide")}
+${token ? "The configuration below contains the real token I explicitly provided. Do not repeat it in your response, log it, or commit it." : msg("ai.components.SetupGuides.noRealTokenIsProvided")}
 Merge this configuration using the exact client-specific format${client === "claude-code" ? "; place mcpServers at the top level of ~/.claude.json" : ""}:
 
 ${buildMcpConfigSample(endpoint, token ?? "<your MCP token>", client)}
 
 After saving, reload MCP if supported. If restarting the application is required, explain what I need to do and wait; do not close my running session. Check the connection, then call get_my_capabilities and one read-only tool allowed by the returned capabilities. Do not create assignments, save proposals, or publish grades to test the connection. Report success only after an actual read succeeds. If the token is missing or you cannot verify the connection, clearly state the remaining step. Never send the token to another endpoint.`;
   return <div className="space-y-3">
-    <label htmlFor={id} className="block text-xs font-semibold text-body">{msg("ai.components.SetupGuides.ungDungAgent")}</label>
+    <label htmlFor={id} className="block text-xs font-semibold text-body">{msg("ai.components.SetupGuides.agentApp")}</label>
     <Select id={id} value={client} onChange={(event) => { setClient(event.target.value as McpClient); setCopyState(""); }}>
       <option value="codex">Codex</option>
       <option value="claude-code">Claude Code</option>
       <option value="opencode">OpenCode</option><option value="antigravity">Antigravity</option>
     </Select>
-    {client !== "codex" && <p className="text-xs text-muted">{msg("ai.components.SetupGuides.mauTheoTaiLieuChinhThuc")}</p>}
+    {client !== "codex" && <p className="text-xs text-muted">{msg("ai.components.SetupGuides.sampleBasedOnTheOfficial")}</p>}
     <div className="flex flex-wrap items-center gap-2">
       <Button size="sm" icon="copy" onClick={async () => {
         try {
           await navigator.clipboard.writeText(prompt);
-          setCopyState(msg("ai.components.SetupGuides.daSaoChepPromptDanVao"));
+          setCopyState(msg("ai.components.SetupGuides.promptCopiedPasteItInto"));
         } catch {
-          setCopyState(msg("ai.components.SetupGuides.khongSaoChepDuocMoXem"));
+          setCopyState(msg("ai.components.SetupGuides.couldNotCopyOpenView"));
         }
-      }}>{msg("ai.components.SetupGuides.saoChepPrompt")}</Button>
-      <span className="text-xs text-muted">{msg("ai.components.SetupGuides.danVaoAgentDeNhoTu")}</span>
+      }}>{msg("ai.components.SetupGuides.copyPrompt")}</Button>
+      <span className="text-xs text-muted">{msg("ai.components.SetupGuides.pasteItIntoTheAgent")}</span>
     </div>
-    {token && <p className="text-xs text-muted">{msg("ai.components.SetupGuides.promptChuaTokenCuaBanChi")}</p>}
+    {token && <p className="text-xs text-muted">{msg("ai.components.SetupGuides.thePromptContainsYourToken")}</p>}
     <details className="text-xs text-body">
       <summary className="cursor-pointer font-semibold">Xem prompt</summary>
       <pre className="mt-2 max-h-72 overflow-y-auto rounded-lg bg-sunken p-3 font-mono text-xs whitespace-pre-wrap break-words">{prompt}</pre>
     </details>
     <ol className="list-decimal space-y-2 pl-4 text-[13px] text-body">
-      <li><strong>{msg("ai.components.SetupGuides.taoToken")}</strong> {msg("ai.components.SetupGuides.bamKetNoiAgentMoiChon")}</li>
-      <li><strong>{msg("ai.components.SetupGuides.moCauHinh")}</strong> {client === "antigravity" ? msg("ai.components.SetupGuides.moSettingsCustomizationsInstalledMcpServers") : msg("ai.components.SetupGuides.moFileBenDuoiBangTrinh")} <code className="break-words">{locations[client]}</code>{msg("ai.components.SetupGuides.dauLaThuMucNguoiDung")}</li>
-      <li><strong>{msg("ai.components.SetupGuides.danCauHinhBenDuoi")}</strong> {msg("ai.components.SetupGuides.ghepVaoCauHinhHienCo")}{token ? msg("ai.components.SetupGuides.cauHinhDaChuaTokenVua") : msg("ai.components.SetupGuides.thayTokenCuaBanBangToken")} {msg("ai.components.SetupGuides.luuTrongCauHinhCaNhan")}</li>
+      <li><strong>{msg("ai.components.SetupGuides.createAToken")}</strong> {msg("ai.components.SetupGuides.clickConnectNewAgentChoose")}</li>
+      <li><strong>{msg("ai.components.SetupGuides.openTheConfiguration")}</strong> {client === "antigravity" ? msg("ai.components.SetupGuides.openSettingsCustomizationsInstalledMcp") : msg("ai.components.SetupGuides.openTheFileBelowIn")} <code className="break-words">{locations[client]}</code>{msg("ai.components.SetupGuides.isYourHomeFolderUsually")}</li>
+      <li><strong>{msg("ai.components.SetupGuides.pasteTheConfigurationBelow")}</strong> {msg("ai.components.SetupGuides.mergeItIntoYourExisting")}{token ? msg("ai.components.SetupGuides.theConfigurationAlreadyContainsThe") : msg("ai.components.SetupGuides.replaceYourTokenWithThe")} {msg("ai.components.SetupGuides.keepItInYourPersonal")}</li>
     </ol>
-    <JsonCode text={config} action={token ? <IconButton icon="copy" label={msg("ai.components.SetupGuides.saoChepCauHinh")}
+    <JsonCode text={config} action={token ? <IconButton icon="copy" label={msg("ai.components.SetupGuides.copyConfiguration")}
       className="text-code-ink hover:bg-white/10 hover:text-white" onClick={() => {
-        void navigator.clipboard.writeText(config).then(() => setCopyState(msg("ai.components.SetupGuides.daSaoChep")), () => setCopyState(msg("ai.components.SetupGuides.khongSaoChepDuocHayChon")));
+        void navigator.clipboard.writeText(config).then(() => setCopyState(msg("ai.components.SetupGuides.copied")), () => setCopyState(msg("ai.components.SetupGuides.couldNotCopySelectAnd")));
       }} /> : undefined} />
-    <p className="text-[13px] text-body"><strong>{msg("ai.components.SetupGuides.t4KiemTraKetNoi")}</strong> {msg("ai.components.SetupGuides.taiLaiMcpTrongUngDung")}</p>
+    <p className="text-[13px] text-body"><strong>{msg("ai.components.SetupGuides.n4CheckTheConnection")}</strong> {msg("ai.components.SetupGuides.reloadMcpInTheApp")}</p>
     <p role="status" className="text-xs text-muted">{copyState}</p>
   </div>;
 }
 
 export function McpSetupGuide() {
-  return <Card as="section" padding="lg" className="flex flex-wrap items-center justify-between gap-4" aria-label={msg("ai.components.SetupGuides.troGiupMcp")}>
+  return <Card as="section" padding="lg" className="flex flex-wrap items-center justify-between gap-4" aria-label={msg("ai.components.SetupGuides.mcpHelp")}>
     <div className="min-w-0">
-      <h2 className="text-sm font-semibold text-ink">{msg("ai.components.SetupGuides.taiLieuMcp")}</h2>
-      <p className="mt-1 text-[13px] text-muted">{msg("ai.components.SetupGuides.cachKetNoiUngDungTao")}</p>
+      <h2 className="text-sm font-semibold text-ink">{msg("ai.components.SetupGuides.mcpDocumentation")}</h2>
+      <p className="mt-1 text-[13px] text-muted">{msg("ai.components.SetupGuides.howToConnectAppsCreate")}</p>
     </div>
-    <ButtonLink href="/ai/mcp-guide" size="sm">{msg("ai.components.SetupGuides.xemTaiLieuMcp")}</ButtonLink>
+    <ButtonLink href="/ai/mcp-guide" size="sm">{msg("ai.components.SetupGuides.viewMcpDocumentation")}</ButtonLink>
   </Card>;
 }

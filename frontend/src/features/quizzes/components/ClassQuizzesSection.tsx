@@ -41,19 +41,19 @@ export function ClassQuizzesSection({ classId }: { classId: string }) {
 
   return (
     <Section title="Quiz" icon="quiz" actions={
-      <Button size="sm" variant="primary" icon="add" onClick={() => setCreating(true)} data-testid="class-quizzes-create">{msg("quizzes.components.ClassQuizzesSection.taoQuiz")}</Button>
+      <Button size="sm" variant="primary" icon="add" onClick={() => setCreating(true)} data-testid="class-quizzes-create">{msg("quizzes.components.ClassQuizzesSection.createQuiz")}</Button>
     }>
-      {error && <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => { setError(null); setAttempt((n) => n + 1); }}>{msg("quizzes.components.ClassQuizzesSection.thuLai")}</Button>}>{error}</Alert>}
-      {!error && !rows && <p role="status" className="text-sm text-muted">{msg("quizzes.components.ClassQuizzesSection.dangTaiQuiz")}</p>}
+      {error && <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => { setError(null); setAttempt((n) => n + 1); }}>{msg("quizzes.components.ClassQuizzesSection.retry")}</Button>}>{error}</Alert>}
+      {!error && !rows && <p role="status" className="text-sm text-muted">{msg("quizzes.components.ClassQuizzesSection.loadingQuizzes")}</p>}
       {rows && (
         <TableFrame className="[&_table]:min-w-[560px] [&_table]:table-fixed">
-          <colgroup><col /><col className="w-[110px]" /><col className="w-[130px]" /><col className="w-[160px]" /></colgroup><thead><tr><Th>Quiz</Th><Th className="max-sm:hidden">{msg("quizzes.components.ClassQuizzesSection.phamVi")}</Th><Th>{msg("quizzes.components.ClassQuizzesSection.trangThai")}</Th><Th className="max-sm:hidden">{msg("quizzes.components.ClassQuizzesSection.baiNop")}</Th></tr></thead>
+          <colgroup><col /><col className="w-[110px]" /><col className="w-[130px]" /><col className="w-[160px]" /></colgroup><thead><tr><Th>Quiz</Th><Th className="max-sm:hidden">{msg("quizzes.components.ClassQuizzesSection.scope")}</Th><Th>{msg("quizzes.components.ClassQuizzesSection.status")}</Th><Th className="max-sm:hidden">{msg("quizzes.components.ClassQuizzesSection.submissions")}</Th></tr></thead>
           <tbody>
-            {rows.length === 0 && <tr><Td colSpan={4} className="py-6 text-center text-muted">{msg("quizzes.components.ClassQuizzesSection.lopChuaCoQuiz")}</Td></tr>}
+            {rows.length === 0 && <tr><Td colSpan={4} className="py-6 text-center text-muted">{msg("quizzes.components.ClassQuizzesSection.theClassHasNoQuizzes")}</Td></tr>}
             {rows.map((row) => (
               <ClickableRow key={row.id} onClick={() => open(row)} data-testid="class-quizzes-row">
-                <Td><span className="font-semibold [overflow-wrap:anywhere]">{row.title}</span><span className="block text-xs text-muted">{row.itemCount} {msg("quizzes.components.ClassQuizzesSection.cauLuyenTap")}<span className="sm:hidden"> · {row.readOnly ? msg("quizzes.components.ClassQuizzesSection.cuaMon") : msg("quizzes.components.ClassQuizzesSection.cuaLop")}</span></span></Td>
-                <Td className="max-sm:hidden">{row.readOnly ? <Pill tone="info">{msg("quizzes.components.ClassQuizzesSection.cuaMon")}</Pill> : <Pill>{msg("quizzes.components.ClassQuizzesSection.cuaLop")}</Pill>}</Td>
+                <Td><span className="font-semibold [overflow-wrap:anywhere]">{row.title}</span><span className="block text-xs text-muted">{row.itemCount} {msg("quizzes.components.ClassQuizzesSection.questionsPractice")}<span className="sm:hidden"> · {row.readOnly ? msg("quizzes.components.ClassQuizzesSection.subject") : msg("quizzes.components.ClassQuizzesSection.class")}</span></span></Td>
+                <Td className="max-sm:hidden">{row.readOnly ? <Pill tone="info">{msg("quizzes.components.ClassQuizzesSection.subject")}</Pill> : <Pill>{msg("quizzes.components.ClassQuizzesSection.class")}</Pill>}</Td>
                 <Td><Pill tone={QUIZ_STATUS_TONES[row.status]}>{QUIZ_STATUS_LABELS[row.status]}</Pill></Td>
                 <Td className="max-sm:hidden"><SlotOutlet slot={quizRowActions} props={{ quizId: row.id, classId }} /></Td>
               </ClickableRow>

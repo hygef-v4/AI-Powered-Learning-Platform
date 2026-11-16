@@ -76,7 +76,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
   }, [onGroupNamesLoaded]);
 
   const load = useCallback(
-    () => getGroups(classId).then(receive, () => setError(msg("groups.components.ClassGroupsPanel.khongTaiDuocNhomCuaLop"))),
+    () => getGroups(classId).then(receive, () => setError(msg("groups.components.ClassGroupsPanel.couldNotLoadTheClass"))),
     [classId, receive],
   );
 
@@ -87,7 +87,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
         if (active) receive(loaded);
       },
       () => {
-        if (active) setError(msg("groups.components.ClassGroupsPanel.khongTaiDuocNhomCuaLop"));
+        if (active) setError(msg("groups.components.ClassGroupsPanel.couldNotLoadTheClass"));
       },
     );
     return () => {
@@ -97,12 +97,12 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
 
   if (error && !set) {
     return (
-      <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void load()}>{msg("groups.components.ClassGroupsPanel.taiLai")}</Button>}>
+      <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void load()}>{msg("groups.components.ClassGroupsPanel.reload")}</Button>}>
         {error}
       </Alert>
     );
   }
-  if (!set) return <p role="status" className="text-[13px] text-muted">{msg("groups.components.ClassGroupsPanel.dangTaiSinhVienVaNhom")}</p>;
+  if (!set) return <p role="status" className="text-[13px] text-muted">{msg("groups.components.ClassGroupsPanel.loadingStudentsAndGroups")}</p>;
 
   const readOnly = set.classStatus === "ARCHIVED";
   const drafts = buildDraftsFrom(set);
@@ -141,7 +141,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
     setDeleteError(null);
     try {
       applySaved(await saveGroups(classId, set.version, next));
-      showToast(msg("groups.components.ClassGroupsPanel.daXoa", { name: String(group.name) }), "danger");
+      showToast(msg("groups.components.ClassGroupsPanel.deleted", { name: String(group.name) }), "danger");
     } catch (e) {
       setDeleteError(saveErrorText(e, drafts));
     } finally {
@@ -152,7 +152,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
   const gq = groupQuery.toLocaleLowerCase("vi").trim();
   const shownGroups = sorted.filter((d) => d.name.toLocaleLowerCase("vi").includes(gq));
   const pick = (key: string) => { setFilter(key); setPage(0); };
-  const selectedName = filter === UNGROUPED ? msg("groups.components.ClassGroupsPanel.chuaCoNhom") : (drafts.find((d) => d.key === filter)?.name ?? msg("groups.components.ClassGroupsPanel.tatCaSinhVien"));
+  const selectedName = filter === UNGROUPED ? msg("groups.components.ClassGroupsPanel.noGroup") : (drafts.find((d) => d.key === filter)?.name ?? msg("groups.components.ClassGroupsPanel.allStudents"));
 
   return (
     <div className="flex flex-col gap-4">
@@ -161,47 +161,47 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
       <GroupProgressTable classId={classId} set={set} />
       <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">
         {/* Thẻ Nhóm: mọi việc với nhóm ở đây, mỗi nhóm có sẵn nút sửa, xóa; bấm nhóm để lọc bảng bên cạnh. */}
-        <Card as="section" className="flex min-w-0 flex-col gap-3" aria-label={msg("groups.components.ClassGroupsPanel.nhom")}>
-          <h2 className="font-display text-[15px] font-bold text-ink">{msg("groups.components.ClassGroupsPanel.nhom")}</h2>
+        <Card as="section" className="flex min-w-0 flex-col gap-3" aria-label={msg("groups.components.ClassGroupsPanel.groups")}>
+          <h2 className="font-display text-[15px] font-bold text-ink">{msg("groups.components.ClassGroupsPanel.groups")}</h2>
           {!readOnly && (
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="primary" icon="add" disabled={all.length === 0} onClick={() => setOpen({ kind: "create" })}>{msg("groups.components.ClassGroupsPanel.taoNhom")}</Button>
-              <Button icon="shuffle" disabled={all.length === 0} onClick={() => setOpen({ kind: "random" })}>{msg("groups.components.ClassGroupsPanel.chiaNgauNhien")}</Button>
+              <Button variant="primary" icon="add" disabled={all.length === 0} onClick={() => setOpen({ kind: "create" })}>{msg("groups.components.ClassGroupsPanel.createGroup")}</Button>
+              <Button icon="shuffle" disabled={all.length === 0} onClick={() => setOpen({ kind: "random" })}>{msg("groups.components.ClassGroupsPanel.randomSplit")}</Button>
             </div>
           )}
           {drafts.length > 6 && (
-            <TextInput type="search" icon="search" aria-label={msg("groups.components.ClassGroupsPanel.timNhom")} placeholder={msg("groups.components.ClassGroupsPanel.timNhom")} value={groupQuery} onChange={(e) => setGroupQuery(e.target.value)} />
+            <TextInput type="search" icon="search" aria-label={msg("groups.components.ClassGroupsPanel.findGroups")} placeholder={msg("groups.components.ClassGroupsPanel.findGroups")} value={groupQuery} onChange={(e) => setGroupQuery(e.target.value)} />
           )}
-          <ul aria-label={msg("groups.components.ClassGroupsPanel.danhSachNhom")} className="-mx-1 flex max-h-[60vh] flex-col gap-0.5 overflow-y-auto px-1 [scrollbar-color:var(--c-muted)_transparent]">
-            <GroupItem name={msg("groups.components.ClassGroupsPanel.tatCa")} meta={msg("groups.components.ClassGroupsPanel.sinhVien", { length: String(all.length) })} active={!filter} onPick={() => pick("")} />
+          <ul aria-label={msg("groups.components.ClassGroupsPanel.groupList")} className="-mx-1 flex max-h-[60vh] flex-col gap-0.5 overflow-y-auto px-1 [scrollbar-color:var(--c-muted)_transparent]">
+            <GroupItem name={msg("groups.components.ClassGroupsPanel.all")} meta={msg("groups.components.ClassGroupsPanel.students", { length: String(all.length) })} active={!filter} onPick={() => pick("")} />
             {shownGroups.map((d) => (
-              <GroupItem key={d.key} name={d.name} meta={msg("groups.components.ClassGroupsPanel.sinhVien", { length: String(d.memberIds.length) })}
+              <GroupItem key={d.key} name={d.name} meta={msg("groups.components.ClassGroupsPanel.students", { length: String(d.memberIds.length) })}
                 active={filter === d.key} onPick={() => pick(d.key)}
                 actions={!readOnly && <>
-                  <Button size="sm" variant="ghost" aria-label={msg("groups.components.ClassGroupsPanel.doiTruongNhom", { name: String(d.name) })} onClick={() => setOpen({ kind: "leader", group: d })}>{msg("groups.components.ClassGroupsPanel.doiTruongNhom2")}</Button>
-                  <IconButton icon="edit" size={28} label={msg("groups.components.ClassGroupsPanel.sua", { name: String(d.name) })} onClick={() => setOpen({ kind: "edit", group: d })} />
+                  <Button size="sm" variant="ghost" aria-label={msg("groups.components.ClassGroupsPanel.changeLeaderOf", { name: String(d.name) })} onClick={() => setOpen({ kind: "leader", group: d })}>{msg("groups.components.ClassGroupsPanel.changeLeader")}</Button>
+                  <IconButton icon="edit" size={28} label={msg("groups.components.ClassGroupsPanel.edit", { name: String(d.name) })} onClick={() => setOpen({ kind: "edit", group: d })} />
                   <IconButton icon="trash" size={28} disabled={isUsed(d)} className="text-danger! hover:bg-danger-soft"
-                    label={isUsed(d) ? msg("groups.components.ClassGroupsPanel.khongXoaDuocNhomDaCo", { name: String(d.name) }) : msg("groups.components.ClassGroupsPanel.xoa", { name: String(d.name) })}
+                    label={isUsed(d) ? msg("groups.components.ClassGroupsPanel.cannotDeleteTheGroupAlready", { name: String(d.name) }) : msg("groups.components.ClassGroupsPanel.delete", { name: String(d.name) })}
                     onClick={() => { setDeleteError(null); setOpen({ kind: "delete", group: d }); }} />
                 </>} />
             ))}
-            {drafts.length > 0 && shownGroups.length === 0 && <li className="px-2.5 py-3 text-[13px] text-muted">{msg("groups.components.ClassGroupsPanel.khongCoNhomPhuHop")}</li>}
-            <GroupItem name={msg("groups.components.ClassGroupsPanel.chuaCoNhom")} meta={msg("groups.components.ClassGroupsPanel.sinhVien2", { ungroupedCount: String(ungroupedCount) })} active={filter === UNGROUPED} onPick={() => pick(UNGROUPED)} />
+            {drafts.length > 0 && shownGroups.length === 0 && <li className="px-2.5 py-3 text-[13px] text-muted">{msg("groups.components.ClassGroupsPanel.noMatchingGroups")}</li>}
+            <GroupItem name={msg("groups.components.ClassGroupsPanel.noGroup")} meta={msg("groups.components.ClassGroupsPanel.students2", { ungroupedCount: String(ungroupedCount) })} active={filter === UNGROUPED} onPick={() => pick(UNGROUPED)} />
           </ul>
         </Card>
 
         {/* Bảng sinh viên chỉ để xem. */}
-        <Card as="section" padding="lg" className="flex min-w-0 flex-col gap-3.5" aria-label={msg("groups.components.ClassGroupsPanel.sinhVienTrongLop")}>
+        <Card as="section" padding="lg" className="flex min-w-0 flex-col gap-3.5" aria-label={msg("groups.components.ClassGroupsPanel.studentsInClass")}>
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="min-w-0 flex-1 truncate font-display text-[15px] font-bold text-ink" title={selectedName}>{selectedName}</h2>
             <div role="search" className="w-full sm:w-72">
-              <TextInput type="search" icon="search" aria-label={msg("groups.components.ClassGroupsPanel.locTheoTenEmailHoacMssv")} placeholder={msg("groups.components.ClassGroupsPanel.locTheoTenEmailHoacMssv")} value={query}
+              <TextInput type="search" icon="search" aria-label={msg("groups.components.ClassGroupsPanel.filterByNameEmailOr")} placeholder={msg("groups.components.ClassGroupsPanel.filterByNameEmailOr")} value={query}
                 onChange={(e) => { setQuery(e.target.value); setPage(0); }} />
             </div>
           </div>
           <TableFrame filledHead className="[&_table]:min-w-[980px] [&_table]:table-fixed">
             <colgroup><col className="w-[112px]" /><col className="w-[220px]" /><col className="w-[28%]" /><col /><col className="w-[120px]" /><col className="w-[104px]" /></colgroup>
-            <thead><tr><Th>MSSV</Th><Th>{msg("groups.components.ClassGroupsPanel.hoTen")}</Th><Th>Email</Th><Th>{msg("groups.components.ClassGroupsPanel.nhom")}</Th><Th>{msg("groups.components.ClassGroupsPanel.ngayVaoLop")}</Th><Th><span className="sr-only">{msg("groups.components.ClassGroupsPanel.bangDiem")}</span></Th></tr></thead>
+            <thead><tr><Th>MSSV</Th><Th>{msg("groups.components.ClassGroupsPanel.fullName")}</Th><Th>Email</Th><Th>{msg("groups.components.ClassGroupsPanel.groups")}</Th><Th>{msg("groups.components.ClassGroupsPanel.joined")}</Th><Th><span className="sr-only">{msg("groups.components.ClassGroupsPanel.gradebook")}</span></Th></tr></thead>
             <tbody>
               {rows.map((p) => {
                 const g = groupOf(p.accountId);
@@ -210,25 +210,25 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
                   <Td>
                     <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                       <span className="max-w-full truncate font-semibold text-ink" title={formatPersonLabel(p)}>{formatPersonLabel(p)}</span>
-                      {g?.leaderId === p.accountId && <Pill tone="warning">{msg("groups.components.ClassGroupsPanel.truongNhom")}</Pill>}
+                      {g?.leaderId === p.accountId && <Pill tone="warning">{msg("groups.components.ClassGroupsPanel.groupLeader")}</Pill>}
                     </span>
                   </Td>
                   <Td className="truncate text-muted" title={p.email ?? undefined}>{p.email ?? "—"}</Td>
-                  <Td className="truncate" title={g?.name}>{g?.name ?? <span className="text-muted">{msg("groups.components.ClassGroupsPanel.chuaCoNhom")}</span>}</Td>
+                  <Td className="truncate" title={g?.name}>{g?.name ?? <span className="text-muted">{msg("groups.components.ClassGroupsPanel.noGroup")}</span>}</Td>
                   <Td className="whitespace-nowrap text-muted tabular-nums">{formatDate(p.enrolledAt)}</Td>
                   <Td className="text-right">
                     {/* Sang trang Chấm điểm, chế độ Theo sinh viên với người này. */}
                     <Link href={`/teaching/classes/${encodeURIComponent(classId)}?tab=gradebook&student=${encodeURIComponent(p.accountId)}`}
                       onClick={(event) => event.stopPropagation()}
                       className="inline-flex h-8 items-center rounded-lg border border-line-strong bg-surface px-2.5 text-xs font-semibold whitespace-nowrap text-ink transition-colors hover:border-primary hover:bg-primary-soft hover:text-primary-ink">
-                      {msg("groups.components.ClassGroupsPanel.bangDiem")}</Link>
+                      {msg("groups.components.ClassGroupsPanel.gradebook")}</Link>
                   </Td>
                 </>;
                 return onView
                   ? <ClickableRow key={p.accountId} onClick={() => onView(p.accountId)}>{cells}</ClickableRow>
                   : <tr key={p.accountId}>{cells}</tr>;
               })}
-              {rows.length === 0 && <tr><Td colSpan={6} className="py-10 text-center! text-muted">{msg("groups.components.ClassGroupsPanel.khongCoSinhVienPhuHop")}</Td></tr>}
+              {rows.length === 0 && <tr><Td colSpan={6} className="py-10 text-center! text-muted">{msg("groups.components.ClassGroupsPanel.noMatchingStudents")}</Td></tr>}
             </tbody>
           </TableFrame>
           <Pagination page={current} pageSize={PAGE_SIZE} total={visible.length} onPageChange={setPage} summary={false} />
@@ -243,9 +243,9 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
         <RandomSplitDialog classId={classId} set={set} people={all} onClose={() => setOpen(null)} onSaved={(next) => applySaved(next)} />
       )}
       {open?.kind === "delete" && (
-        <Dialog open title={msg("groups.components.ClassGroupsPanel.xoa2", { name: String(open.group.name) })} onClose={() => setOpen(null)} dismissible={!busy}
-          footer={<Button variant="danger" disabled={busy} onClick={() => void removeGroup(open.group)}>{msg("groups.components.ClassGroupsPanel.xoaNhom")}</Button>}>
-          <p>{msg("groups.components.ClassGroupsPanel.banCoChacMuonXoa")}{open.group.name} {msg("groups.components.ClassGroupsPanel.khong")}</p>
+        <Dialog open title={msg("groups.components.ClassGroupsPanel.delete2", { name: String(open.group.name) })} onClose={() => setOpen(null)} dismissible={!busy}
+          footer={<Button variant="danger" disabled={busy} onClick={() => void removeGroup(open.group)}>{msg("groups.components.ClassGroupsPanel.deleteGroup")}</Button>}>
+          <p>{msg("groups.components.ClassGroupsPanel.areYouSureYouWant")}{open.group.name} {msg("groups.components.ClassGroupsPanel.text")}</p>
           {deleteError && <Alert tone="danger" role="alert">{deleteError}</Alert>}
         </Dialog>
       )}

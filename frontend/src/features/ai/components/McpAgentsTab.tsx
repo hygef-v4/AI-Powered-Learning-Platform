@@ -30,9 +30,9 @@ export function McpAgentsTab() {
   }, []);
   return (
     <>
-      {error && <Alert tone="danger" role="alert" action={<Button onClick={() => void reload()}>{msg("ai.components.McpAgentsTab.taiLai")}</Button>}>
-        {msg("ai.components.McpAgentsTab.khongTaiDuocAgentMcpThu")}</Alert>}
-      {!credentials && !error && <p className="text-[13px] text-muted">{msg("ai.components.McpAgentsTab.dangTai")}</p>}
+      {error && <Alert tone="danger" role="alert" action={<Button onClick={() => void reload()}>{msg("ai.components.McpAgentsTab.reload")}</Button>}>
+        {msg("ai.components.McpAgentsTab.couldNotLoadMcpAgents")}</Alert>}
+      {!credentials && !error && <p className="text-[13px] text-muted">{msg("ai.components.McpAgentsTab.loading")}</p>}
       {credentials && <SettingsCard>
         <McpAgentSection credentials={credentials}
           onCreate={async (label, access, days) => {

@@ -11,7 +11,7 @@ type Props = {
   onClear: () => void;
 };
 
-export const DATE_ORDER_ERROR = msg("audit.components.AuditFilters.ngayBatDauPhaiTruocNgay");
+export const DATE_ORDER_ERROR = msg("audit.components.AuditFilters.theStartDateMustBe");
 
 /**
  * Bộ lọc màn Audit Log (artboard a13): đổi ô nào lọc ngay ô đó, không có nút Lọc. Hàng trên 4 ô bằng nhau (người
@@ -25,7 +25,7 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
     <Section className="p-4">
       <div className="flex flex-col gap-3" data-testid="audit-filters-form">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Field label={msg("audit.components.AuditFilters.nguoiThucHien")} htmlFor="audit-actor">
+          <Field label={msg("audit.components.AuditFilters.actor")} htmlFor="audit-actor">
             <TextInput
               id="audit-actor"
               type="search"
@@ -36,9 +36,9 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
               data-testid="audit-filters-actor-input"
             />
           </Field>
-          <Field label={msg("audit.components.AuditFilters.hanhDong")} htmlFor="audit-action">
+          <Field label={msg("audit.components.AuditFilters.action")} htmlFor="audit-action">
             <Select id="audit-action" value={value.action} onChange={(e) => setField("action", e.target.value)} data-testid="audit-filters-action-select">
-              <option value="">{msg("audit.components.AuditFilters.tatCa")}</option>
+              <option value="">{msg("audit.components.AuditFilters.all")}</option>
               {Object.entries(ACTION_LABELS).map(([code, label]) => (
                 <option key={code} value={code}>
                   {label}
@@ -46,14 +46,14 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
               ))}
             </Select>
           </Field>
-          <Field label={msg("audit.components.AuditFilters.doiTuong")} htmlFor="audit-object-type">
+          <Field label={msg("audit.components.AuditFilters.object")} htmlFor="audit-object-type">
             <Select
               id="audit-object-type"
               value={value.objectType}
               onChange={(e) => onChange({ ...value, objectType: e.target.value, objectId: "" })}
               data-testid="audit-filters-object-type-select"
             >
-              <option value="">{msg("audit.components.AuditFilters.tatCa")}</option>
+              <option value="">{msg("audit.components.AuditFilters.all")}</option>
               {Object.entries(OBJECT_TYPE_LABELS).map(([code, label]) => (
                 <option key={code} value={code}>
                   {label}
@@ -61,14 +61,14 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
               ))}
             </Select>
           </Field>
-          <Field label={msg("audit.components.AuditFilters.ketQua")} htmlFor="audit-result">
+          <Field label={msg("audit.components.AuditFilters.result")} htmlFor="audit-result">
             <Select
               id="audit-result"
               value={value.result}
               onChange={(e) => setField("result", e.target.value as AuditResult | "")}
               data-testid="audit-filters-result-select"
             >
-              <option value="">{msg("audit.components.AuditFilters.tatCa")}</option>
+              <option value="">{msg("audit.components.AuditFilters.all")}</option>
               {(Object.keys(RESULT_LABELS) as AuditResult[]).map((code) => (
                 <option key={code} value={code}>
                   {RESULT_LABELS[code].label}
@@ -78,11 +78,11 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
           </Field>
         </div>
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <Field label={msg("audit.components.AuditFilters.thoiGian")} htmlFor="audit-from" error={dateInvalid ? DATE_ORDER_ERROR : null}>
+          <Field label={msg("audit.components.AuditFilters.time")} htmlFor="audit-from" error={dateInvalid ? DATE_ORDER_ERROR : null}>
             <div className="flex items-center gap-2">
               <DateInput
                 id="audit-from"
-                aria-label={msg("audit.components.AuditFilters.tuNgay")}
+                aria-label={msg("audit.components.AuditFilters.from")}
                 value={value.fromDate}
                 invalid={dateInvalid}
                 onChange={(date) => setField("fromDate", date)}
@@ -90,7 +90,7 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
               />
               <span aria-hidden="true" className="text-muted">–</span>
               <DateInput
-                aria-label={msg("audit.components.AuditFilters.denNgay")}
+                aria-label={msg("audit.components.AuditFilters.to")}
                 value={value.toDate}
                 invalid={dateInvalid}
                 onChange={(date) => setField("toDate", date)}
@@ -99,7 +99,7 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
             </div>
           </Field>
           <Button type="button" variant="danger" icon="filter_alt_off" onClick={onClear} data-testid="audit-filters-clear-button">
-            {msg("audit.components.AuditFilters.xoaLoc")}</Button>
+            {msg("audit.components.AuditFilters.clearFilters")}</Button>
         </div>
       </div>
     </Section>

@@ -139,7 +139,7 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
     event?.preventDefault();
     const text = input.trim();
     if (!text || submitting.current) return;
-    if (attachments.pending) { showErrorToast(msg("assignments.components.AiReviseChat.hayDoiTaiXongHoacGo")); return; }
+    if (attachments.pending) { showErrorToast(msg("assignments.components.AiReviseChat.waitForUploadsToFinish")); return; }
     const snapshot = attachments.snapshot();
     const materialIds = [...chosen];
     const templateName = template ? template.file.name : pickedTemplate?.title;
@@ -173,17 +173,17 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
       draft = await waitForResult(assignmentId, requested, () => alive.current);
       if (!alive.current) return;
       if (draft.status !== "READY" || !draft.proposal) {
-        addMessage({ role: "ai", text: msg("assignments.components.AiReviseChat.deChuaThayDoi", { value: String(draft.safeError ?? msg("assignments.components.AiReviseChat.aiKhongTraKetQua")) }), tone: "danger", recover });
+        addMessage({ role: "ai", text: msg("assignments.components.AiReviseChat.theAssignmentWasNotChanged", { value: String(draft.safeError ?? msg("assignments.components.AiReviseChat.theAiReturnedNoResult")) }), tone: "danger", recover });
         return;
       }
       if (draft.proposal.unchanged) {
-        addMessage({ role: "ai", text: msg("assignments.components.AiReviseChat.aiChuaThayDoiGiHay"), recover });
+        addMessage({ role: "ai", text: msg("assignments.components.AiReviseChat.theAiDidNotChange"), recover });
         void assignmentsApi.discardAiDraft(assignmentId, draft.draftId).catch(() => {});
         return;
       }
       const validation = draft.proposal.validation;
       if (validation?.status === "INVALID") {
-        addMessage({ role: "ai", text: msg("assignments.components.AiReviseChat.khongApDungDuoc", { value: String(validation.issues.map(issue => issue.message).join(" ")) }), tone: "danger", recover });
+        addMessage({ role: "ai", text: msg("assignments.components.AiReviseChat.couldNotApply", { value: String(validation.issues.map(issue => issue.message).join(" ")) }), tone: "danger", recover });
         void assignmentsApi.discardAiDraft(assignmentId, draft.draftId).catch(() => {});
         return;
       }
@@ -195,14 +195,14 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
       await onApplied();
       if (!alive.current) return;
       const warnings = validation?.issues.filter(issue => issue.severity === "WARNING") ?? [];
-      const shown = warnings.slice(0, MAX_WARNINGS).map(issue => msg("assignments.components.AiReviseChat.luuY", { message: String(issue.message) }));
-      if (warnings.length > MAX_WARNINGS) shown.push(msg("assignments.components.AiReviseChat.vaLuuYKhac", { value: String(warnings.length - MAX_WARNINGS) }));
-      addMessage({ role: "ai", text: [msg("assignments.components.AiReviseChat.daSuaDeTheoYeuCau"), ...shown].join("\n") });
+      const shown = warnings.slice(0, MAX_WARNINGS).map(issue => msg("assignments.components.AiReviseChat.note", { message: String(issue.message) }));
+      if (warnings.length > MAX_WARNINGS) shown.push(msg("assignments.components.AiReviseChat.andMoreNotes", { value: String(warnings.length - MAX_WARNINGS) }));
+      addMessage({ role: "ai", text: [msg("assignments.components.AiReviseChat.theAssignmentWasEditedAs"), ...shown].join("\n") });
     } catch (error) {
       if (!alive.current) return;
-      addMessage({ role: "ai", text: applied ? msg("assignments.components.AiReviseChat.deDaDuocCapNhatNhung")
-        : applying ? msg("assignments.components.AiReviseChat.chuaXacNhanDuocKetQua", { value: String(describeError(error)) })
-        : `${describeError(error)} ${accepted ? msg("assignments.components.AiReviseChat.deChuaThayDoi2") : msg("assignments.components.AiReviseChat.yeuCauChuaDuocXacNhan")}`,
+      addMessage({ role: "ai", text: applied ? msg("assignments.components.AiReviseChat.theAssignmentWasUpdatedBut")
+        : applying ? msg("assignments.components.AiReviseChat.couldNotConfirmTheResult", { value: String(describeError(error)) })
+        : `${describeError(error)} ${accepted ? msg("assignments.components.AiReviseChat.theAssignmentWasNotChanged2") : msg("assignments.components.AiReviseChat.theRequestWasNotConfirmed")}`,
         tone: "danger", recover: accepted && !applying ? recover : undefined });
       if (!applying && draft?.status === "READY") void assignmentsApi.discardAiDraft(assignmentId, draft.draftId).catch(() => {});
     } finally {
@@ -221,7 +221,7 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
     if (!files.length) return;
     event.preventDefault();
     if (busy) return;
-    if (attachments.processing) showErrorToast(msg("assignments.components.AiReviseChat.doiChuyenVaiTroTepXong"));
+    if (attachments.processing) showErrorToast(msg("assignments.components.AiReviseChat.waitUntilTheFileRole"));
     else addFiles(files);
     const text = event.clipboardData.getData("text/plain");
     if (text) {
@@ -251,7 +251,7 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
       const file = item.kind === "file" ? item.getAsFile() : null;
       return file ? [file] : [];
     }) : Array.from(event.dataTransfer.files);
-    if (hasDirectory) showErrorToast(msg("assignments.components.AiReviseChat.chonTepCuTheKhongKeo"));
+    if (hasDirectory) showErrorToast(msg("assignments.components.AiReviseChat.chooseSpecificFilesDoNot"));
     addFiles(files);
   }
 
@@ -273,18 +273,18 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
   return (
     <>
       {/* Popup giữ nguyên khi đóng (chỉ ẩn) để cuộc trò chuyện và lượt AI đang chạy không mất. */}
-      <section id="ai-revise-panel" aria-label={msg("assignments.components.AiReviseChat.suaDeBangAi")} data-testid="ai-revise-chat" hidden={!open}
+      <section id="ai-revise-panel" aria-label={msg("assignments.components.AiReviseChat.editAssignmentWithAi")} data-testid="ai-revise-chat" hidden={!open}
         onDragEnter={event => dragFiles(event, true)} onDragLeave={event => dragFiles(event, false)}
         onDragOver={event => { if (Array.from(event.dataTransfer.types).includes("Files")) { event.preventDefault(); event.dataTransfer.dropEffect = busy ? "none" : "copy"; } }}
         onDrop={dropFiles}
         className={cx("fixed right-4 bottom-20 z-40 w-[min(22rem,calc(100vw-2rem))] flex-col rounded-2xl border",
           "border-line bg-surface shadow-[var(--shadow-float)] h-[min(30rem,calc(100dvh-9.5rem))]",
           open && "flex animate-pop")}>
-        {dragging && <div role="status" className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center rounded-2xl border-2 border-dashed border-primary bg-surface/95 text-sm font-semibold text-primary-ink">{msg("assignments.components.AiReviseChat.thaTepDeDinhKem")}</div>}
+        {dragging && <div role="status" className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center rounded-2xl border-2 border-dashed border-primary bg-surface/95 text-sm font-semibold text-primary-ink">{msg("assignments.components.AiReviseChat.dropFilesToAttach")}</div>}
         <header className="flex shrink-0 items-center gap-2 border-b border-line py-2 pr-2 pl-3.5">
           <Icon name="smart_toy" size={17} className="text-primary" />
-          <h2 className="flex-1 text-[13.5px] font-semibold text-ink">{msg("assignments.components.AiReviseChat.suaDeBangAi")}</h2>
-          <IconButton icon="close" label={msg("assignments.components.AiReviseChat.dongTroLyAi")} size={28} onClick={closeChat} />
+          <h2 className="flex-1 text-[13.5px] font-semibold text-ink">{msg("assignments.components.AiReviseChat.editAssignmentWithAi")}</h2>
+          <IconButton icon="close" label={msg("assignments.components.AiReviseChat.closeAiAssistant")} size={28} onClick={closeChat} />
         </header>
         <div ref={list} role="log" aria-live="polite" className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-3.5 py-3">
           {messages.map((message) => (
@@ -293,41 +293,41 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
                 : message.tone === "danger" ? "self-start bg-danger-soft text-danger" : "self-start bg-sunken text-ink")}>
               <p className="whitespace-pre-line">{message.text}</p>
               {message.recover && <button type="button" disabled={busy || !!input || hasTemplate || hasReferences}
-                onClick={message.recover} className="mt-1 text-[11px] font-semibold underline disabled:opacity-40">{msg("assignments.components.AiReviseChat.khoiPhucYeuCau")}</button>}
+                onClick={message.recover} className="mt-1 text-[11px] font-semibold underline disabled:opacity-40">{msg("assignments.components.AiReviseChat.restoreRequest")}</button>}
               {(message.template || (message.references?.length ?? 0) > 0) && (
-                <ul className="mt-1.5 flex flex-col gap-0.5 border-t border-white/30 pt-1.5 text-[11px]" aria-label={msg("assignments.components.AiReviseChat.tepGuiKem")}>
-                  {message.template && <li><b>{msg("assignments.components.AiReviseChat.mauDe")}</b> {message.template}</li>}
-                  {(message.references?.length ?? 0) > 0 && <li><b>{msg("assignments.components.AiReviseChat.taiLieuThamKhao")}</b> {message.references!.join(", ")}</li>}
+                <ul className="mt-1.5 flex flex-col gap-0.5 border-t border-white/30 pt-1.5 text-[11px]" aria-label={msg("assignments.components.AiReviseChat.attachedFiles")}>
+                  {message.template && <li><b>{msg("assignments.components.AiReviseChat.template")}</b> {message.template}</li>}
+                  {(message.references?.length ?? 0) > 0 && <li><b>{msg("assignments.components.AiReviseChat.references")}</b> {message.references!.join(", ")}</li>}
                 </ul>
               )}
             </div>
           ))}
-          {busy && <p role="status" className="self-start rounded-lg bg-sunken px-2.5 py-1.5 text-xs text-muted">{msg("assignments.components.AiReviseChat.aiDangSuaDe")}</p>}
+          {busy && <p role="status" className="self-start rounded-lg bg-sunken px-2.5 py-1.5 text-xs text-muted">{msg("assignments.components.AiReviseChat.theAiIsEditingThe")}</p>}
         </div>
         <div className="flex shrink-0 flex-col gap-2 border-t border-line px-3 py-2.5">
           <AiChatAttachments attachments={attachments} templateName={template?.file.name ?? pickedTemplate?.title}
             materials={pickedMaterials} disabled={busy} onUnchoose={id => setChosen(current => current.filter(value => value !== id))} />
           <form onSubmit={(event) => void sendMessage(event)} className="flex items-end gap-1.5">
             <div ref={attach} className="relative shrink-0">
-              <IconButton icon="add" label={msg("assignments.components.AiReviseChat.themMauDeHoacTaiLieu")} data-testid="ai-revise-attach" disabled={busy || attachments.processing}
+              <IconButton icon="add" label={msg("assignments.components.AiReviseChat.addATemplateOrReferences")} data-testid="ai-revise-attach" disabled={busy || attachments.processing}
                 aria-haspopup="menu" aria-expanded={menu !== null} onClick={() => showMenu(menu ? null : "root")}
                 className="border border-line-strong" />
               {menu && (
-                <div role="menu" aria-label={msg("assignments.components.AiReviseChat.tepGuiKem")} data-testid="ai-revise-attach-menu"
+                <div role="menu" aria-label={msg("assignments.components.AiReviseChat.attachedFiles")} data-testid="ai-revise-attach-menu"
                   onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); setMenu(null); } }}
                   className="absolute bottom-full left-0 z-10 mb-1.5 flex max-h-52 w-56 animate-pop flex-col overflow-hidden rounded-xl border border-line bg-surface p-1 shadow-[var(--shadow-float)]">
                   {menu === "root" ? (
                     <>
-                      <MenuItem icon={TEMPLATE_ICON} className="w-full" onClick={() => showMenu("templates")}>{msg("assignments.components.AiReviseChat.chonDeMauCoSan")}</MenuItem>
-                      <MenuItem icon={REFERENCE_ICON} className="w-full" onClick={() => showMenu("materials")}>{msg("assignments.components.AiReviseChat.chonHocLieuCuaMon")}</MenuItem>
-                      <MenuItem icon="upload_file" className="w-full" disabled={!sources.canUpload} onClick={() => { setMenu(null); referenceInput.current?.click(); }}>{msg("assignments.components.AiReviseChat.taiTuMay")}</MenuItem>
+                      <MenuItem icon={TEMPLATE_ICON} className="w-full" onClick={() => showMenu("templates")}>{msg("assignments.components.AiReviseChat.chooseAnExistingTemplate")}</MenuItem>
+                      <MenuItem icon={REFERENCE_ICON} className="w-full" onClick={() => showMenu("materials")}>{msg("assignments.components.AiReviseChat.chooseSubjectMaterials")}</MenuItem>
+                      <MenuItem icon="upload_file" className="w-full" disabled={!sources.canUpload} onClick={() => { setMenu(null); referenceInput.current?.click(); }}>{msg("assignments.components.AiReviseChat.uploadFromComputer")}</MenuItem>
                     </>
                   ) : (
                     <>
                       <div className="flex shrink-0 items-center gap-1 border-b border-line px-1.5 pb-1">
-                        <IconButton icon="arrow_back" label={msg("assignments.components.AiReviseChat.quayLai")} size={26} onClick={() => showMenu("root")} />
+                        <IconButton icon="arrow_back" label={msg("assignments.components.AiReviseChat.back")} size={26} onClick={() => showMenu("root")} />
                         <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)}
-                          aria-label={menu === "templates" ? msg("assignments.components.AiReviseChat.timMauDe") : msg("assignments.components.AiReviseChat.timTaiLieuThamKhao")} placeholder={msg("assignments.components.AiReviseChat.timTheoTen")}
+                          aria-label={menu === "templates" ? msg("assignments.components.AiReviseChat.findTemplates") : msg("assignments.components.AiReviseChat.findReferences")} placeholder={msg("assignments.components.AiReviseChat.searchByName")}
                           className="h-7 min-w-0 flex-1 bg-transparent text-xs text-ink outline-none placeholder:text-muted" />
                       </div>
                       {/* Danh sách chỉ chứa nguồn có sẵn; tải từ máy nằm ở menu gốc. */}
@@ -349,24 +349,24 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
                 </div>
               )}
             </div>
-            <textarea ref={field} aria-label={msg("assignments.components.AiReviseChat.yeuCauSuaDe")} data-testid="ai-revise-input" rows={1} maxLength={MAX_REQUEST}
+            <textarea ref={field} aria-label={msg("assignments.components.AiReviseChat.editRequest")} data-testid="ai-revise-input" rows={1} maxLength={MAX_REQUEST}
               value={input} disabled={busy} onPaste={pasteImages} onChange={(event) => setInput(event.target.value)} onKeyDown={handleKeyDown}
-              placeholder={msg("assignments.components.AiReviseChat.viDuDichToanBoDe")}
+              placeholder={msg("assignments.components.AiReviseChat.exampleTranslateTheWholeAssignment")}
               className="min-h-8 flex-1 resize-none rounded-lg border border-field bg-surface px-2.5 py-1.5 text-xs leading-4 text-ink outline-none focus:outline-2 focus:outline-focus disabled:opacity-60" />
-            <IconButton type="submit" icon="arrow_forward" label={msg("assignments.components.AiReviseChat.guiYeuCau")} data-testid="ai-revise-send"
+            <IconButton type="submit" icon="arrow_forward" label={msg("assignments.components.AiReviseChat.sendRequest")} data-testid="ai-revise-send"
               disabled={busy || !input.trim() || attachments.pending} className="bg-primary text-on-primary hover:bg-primary-strong hover:text-on-primary" />
           </form>
-          <input ref={referenceInput} type="file" multiple accept=".docx,.pdf,.txt,.png,.jpg,.jpeg" hidden aria-label={msg("assignments.components.AiReviseChat.taiTepTuMay")}
+          <input ref={referenceInput} type="file" multiple accept=".docx,.pdf,.txt,.png,.jpg,.jpeg" hidden aria-label={msg("assignments.components.AiReviseChat.uploadAFileFromComputer")}
             data-testid="ai-revise-reference-file"
             onChange={event => { addFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} />
         </div>
       </section>
-      <Dialog open={attachments.replacement !== null} title={msg("assignments.components.AiReviseChat.thayMauDe")} onClose={attachments.cancelReplacement}
-        footer={<Button variant="primary" onClick={() => void attachments.confirmReplacement()}>{msg("assignments.components.AiReviseChat.thayMauDe2")}</Button>}>
-        <p>{msg("assignments.components.AiReviseChat.mauMoiSeThayMauDang")}</p>
+      <Dialog open={attachments.replacement !== null} title={msg("assignments.components.AiReviseChat.replaceTemplate")} onClose={attachments.cancelReplacement}
+        footer={<Button variant="primary" onClick={() => void attachments.confirmReplacement()}>{msg("assignments.components.AiReviseChat.replaceTemplate2")}</Button>}>
+        <p>{msg("assignments.components.AiReviseChat.theNewTemplateReplacesThe")}</p>
       </Dialog>
       <button type="button" data-testid="ai-revise-toggle" aria-expanded={open} aria-controls="ai-revise-panel" onClick={toggle}
-        aria-label={open ? msg("assignments.components.AiReviseChat.dongTroLyAi") : msg("assignments.components.AiReviseChat.suaDeBangAi")} title={open ? msg("assignments.components.AiReviseChat.dongTroLyAi") : msg("assignments.components.AiReviseChat.suaDeBangAi")}
+        aria-label={open ? msg("assignments.components.AiReviseChat.closeAiAssistant") : msg("assignments.components.AiReviseChat.editAssignmentWithAi")} title={open ? msg("assignments.components.AiReviseChat.closeAiAssistant") : msg("assignments.components.AiReviseChat.editAssignmentWithAi")}
         className={cx("fixed right-4 bottom-5 z-40 inline-flex size-12 items-center justify-center rounded-full bg-primary",
           "text-on-primary shadow-[var(--shadow-float)] transition-colors hover:bg-primary-strong",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus")}>
@@ -384,7 +384,7 @@ async function waitForResult(assignmentId: string, draft: AiDraft, alive: () => 
   while (current.status === "PENDING" && alive()) {
     if (Date.now() > deadline) {
       void assignmentsApi.discardAiDraft(assignmentId, current.draftId).catch(() => {});
-      return { ...current, status: "FAILED", safeError: msg("assignments.components.AiReviseChat.aiPhanHoiQuaLau") };
+      return { ...current, status: "FAILED", safeError: msg("assignments.components.AiReviseChat.theAiTookTooLong") };
     }
     await new Promise((resolve) => setTimeout(resolve, POLL_MS));
     current = await assignmentsApi.aiDraft(assignmentId, current.draftId);

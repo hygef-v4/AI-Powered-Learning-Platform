@@ -5,8 +5,8 @@ import { msg } from "@/i18n/msg";
 
 /** Nhãn và màu trạng thái mục, dùng chung cho trang tài liệu nhóm và thẻ Tiến độ. */
 export const SECTION_STATUS: Record<SectionView["status"], { text: string; tone: Tone }> = {
-  OPEN: { text: msg("groupdocs.model.status.chuaLam"), tone: "neutral" },
-  CLAIMED: { text: msg("groupdocs.model.status.dangLam"), tone: "info" },
+  OPEN: { text: msg("groupdocs.model.status.notStarted"), tone: "neutral" },
+  CLAIMED: { text: msg("groupdocs.model.status.inProgress"), tone: "info" },
   DONE: { text: "Xong", tone: "success" },
 };
 
@@ -19,9 +19,9 @@ export function resolveSectionPerson(section: SectionView): string | null {
 
 /** Tên thành viên để hiện: chính mình là "Bạn". */
 export function resolveMemberName(view: Pick<WorkspaceView, "members" | "viewerId">, id: string | null): string {
-  if (id === null) return msg("groupdocs.model.status.chuaAiNhan");
+  if (id === null) return msg("groupdocs.model.status.unclaimed");
   const member = view.members.find((m) => m.accountId === id);
-  return formatStudentLabel({ name: id === view.viewerId ? msg("groupdocs.model.status.ban") : member?.name ?? msg("groupdocs.model.status.thanhVien"), studentCode: member?.studentCode });
+  return formatStudentLabel({ name: id === view.viewerId ? msg("groupdocs.model.status.you") : member?.name ?? msg("groupdocs.model.status.member"), studentCode: member?.studentCode });
 }
 
 /** Mục của mình: đang giữ, hoặc đã Xong do mình viết. */

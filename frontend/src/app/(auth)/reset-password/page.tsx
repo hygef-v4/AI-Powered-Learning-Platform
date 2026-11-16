@@ -3,7 +3,7 @@ import { PasswordResetPage } from "@/features/identity/otp/pages/PasswordResetPa
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.auth.resetpassword.page.khoiPhucMatKhau") };
+  return { title: await translateOnServer("app.auth.resetpassword.page.resetPassword") };
 }
 
 export default function Page() {

@@ -82,7 +82,7 @@ export function AiDraftDialog({
       setDraft(next);
       return;
     }
-    showErrorToast(msg("assignments.components.AiDraftDialog.banVanSoanThuCongDuoc", { value: String(next.safeError ?? msg("assignments.components.AiDraftDialog.aiKhongTraKetQua")) }));
+    showErrorToast(msg("assignments.components.AiDraftDialog.youCanStillWriteIt", { value: String(next.safeError ?? msg("assignments.components.AiDraftDialog.theAiReturnedNoResult")) }));
     setDraft(null);
     ref.current = requestRef();
   }
@@ -157,7 +157,7 @@ export function AiDraftDialog({
     }
     const count = countValid ? countNumber : undefined;
     if (uploading) {
-      setError(msg("assignments.components.AiDraftDialog.hayDoiTaiXongHoacGo"));
+      setError(msg("assignments.components.AiDraftDialog.waitForUploadsToFinish"));
       return;
     }
     applied.current = false;
@@ -184,7 +184,7 @@ export function AiDraftDialog({
         draft.draftId,
         latestVersion,
         !currentInstructions.trim(),
-        !currentTitle.trim() || currentTitle.trim() === msg("assignments.components.AiDraftDialog.baiTapChuaDatTen"),
+        !currentTitle.trim() || currentTitle.trim() === msg("assignments.components.AiDraftDialog.untitledAssignment"),
       );
       onApplied();
     } catch (e) {
@@ -233,12 +233,12 @@ export function AiDraftDialog({
   const countNumber = Number(questionCount);
   const countValid = questionCount.trim() !== "" && Number.isInteger(countNumber) && countNumber >= 1 && countNumber <= 10;
   // Số câu hỏi sai hiện đỏ ngay dưới ô; ô trống thì AI tự quyết.
-  const countError = questionCount.trim() !== "" && !countValid ? msg("assignments.components.AiDraftDialog.soCauHoiTu1Den") : undefined;
+  const countError = questionCount.trim() !== "" && !countValid ? msg("assignments.components.AiDraftDialog.theNumberOfQuestionsMust") : undefined;
   // Tổng điểm như luật của server: lớn hơn 0, tối đa 1.000, không quá 2 chữ số thập phân; ô trống thì AI tự chia điểm.
   const pointsNumber = Number(targetPoints);
   const pointsValid = targetPoints.trim() !== "" && Number.isFinite(pointsNumber) && pointsNumber > 0 && pointsNumber <= 1000
     && Math.round(pointsNumber * 100) === pointsNumber * 100;
-  const pointsError = targetPoints.trim() !== "" && !pointsValid ? msg("assignments.components.AiDraftDialog.tongDiemLonHon0Toi") : undefined;
+  const pointsError = targetPoints.trim() !== "" && !pointsValid ? msg("assignments.components.AiDraftDialog.totalPointsMustBeGreater") : undefined;
   const working = phase !== "idle" || draft?.status === "PENDING" || (busy && !draft) || (proposal !== null && !invalid);
   // Popup chờ riêng: popup soạn vẫn giữ nguyên trạng thái để quay về khi lỗi.
   if (working) return <AiProgress />;
@@ -247,14 +247,14 @@ export function AiDraftDialog({
       open
       size="xl"
       icon="smart_toy"
-      title={msg("assignments.components.AiDraftDialog.taoNhapBangAi")}
+      title={msg("assignments.components.AiDraftDialog.draftWithAi")}
       onClose={() => void discard()}
       dismissible={!busy}
       footer={
         showPreview ? (
           <>
-            <Button onClick={() => void discard()} disabled={busy}>{msg("assignments.components.AiDraftDialog.boDeXuat")}</Button>
-            <Button variant="primary" onClick={() => void revise()} disabled={busy}>{msg("assignments.components.AiDraftDialog.suaYeuCauVaTaoLai")}</Button>
+            <Button onClick={() => void discard()} disabled={busy}>{msg("assignments.components.AiDraftDialog.discardProposal")}</Button>
+            <Button variant="primary" onClick={() => void revise()} disabled={busy}>{msg("assignments.components.AiDraftDialog.editRequestAndRegenerate")}</Button>
           </>
         ) : (
           <Button
@@ -263,7 +263,7 @@ export function AiDraftDialog({
             disabled={awaiting || proposal !== null}
             data-testid="ai-send"
           >
-            {msg("assignments.components.AiDraftDialog.taoDe")}</Button>
+            {msg("assignments.components.AiDraftDialog.createAssignment")}</Button>
         )
       }
     >
@@ -271,10 +271,10 @@ export function AiDraftDialog({
         <>
           {/* Lời dẫn cho người mới dùng (yêu cầu 2026-11-10): ô nào cũng không bắt buộc, đề tạo xong ghi thẳng lên trang. */}
           <p className="text-[13px] leading-relaxed text-muted" data-testid="ai-intro">
-            {msg("assignments.components.AiDraftDialog.moTaDeBanCanAi")}</p>
+            {msg("assignments.components.AiDraftDialog.describeTheAssignmentYouNeed")}</p>
           {/* Mẫu đề và tài liệu tham khảo chỉ thêm ngữ cảnh, không bắt buộc (yêu cầu 2026-11-09). */}
-          <Field label={msg("assignments.components.AiDraftDialog.mauDe")} htmlFor="ai-template">
-            <Select id="ai-template" aria-label={msg("assignments.components.AiDraftDialog.mauDe")} disabled={awaiting} data-testid="ai-template"
+          <Field label={msg("assignments.components.AiDraftDialog.template")} htmlFor="ai-template">
+            <Select id="ai-template" aria-label={msg("assignments.components.AiDraftDialog.template")} disabled={awaiting} data-testid="ai-template"
               value={template ? "__file__" : templateId}
               onChange={(e) => {
                 const value = e.target.value;
@@ -285,16 +285,16 @@ export function AiDraftDialog({
                   setTemplateId(value);
                 }
               }}>
-              <option value="">{msg("assignments.components.AiDraftDialog.khongDungDeMau")}</option>
+              <option value="">{msg("assignments.components.AiDraftDialog.noTemplate")}</option>
               {template && <option value="__file__">{template.file.name}</option>}
               {templates.length > 0 && (
-                <optgroup label={msg("assignments.components.AiDraftDialog.deMauCuaMon")}>
+                <optgroup label={msg("assignments.components.AiDraftDialog.subjectTemplates")}>
                   {templates.map((item) => <option key={item.assignmentId} value={item.assignmentId}>{item.title}</option>)}
                 </optgroup>
               )}
-              <option value="__upload__">{msg("assignments.components.AiDraftDialog.taiDeMauLen")}</option>
+              <option value="__upload__">{msg("assignments.components.AiDraftDialog.uploadATemplate")}</option>
             </Select>
-            <input ref={templateInput} type="file" accept=".docx" hidden aria-label={msg("assignments.components.AiDraftDialog.taiDeMauLen2")} data-testid="ai-format"
+            <input ref={templateInput} type="file" accept=".docx" hidden aria-label={msg("assignments.components.AiDraftDialog.uploadATemplate2")} data-testid="ai-format"
               onChange={(event) => {
                 const file = event.target.files?.[0];
                 event.target.value = "";
@@ -307,44 +307,44 @@ export function AiDraftDialog({
             )}
           </Field>
           <div className="grid gap-3 sm:grid-cols-3">
-            <Field label={msg("assignments.components.AiDraftDialog.ngonNgu")} htmlFor="ai-language">
-              <Select id="ai-language" aria-label={msg("assignments.components.AiDraftDialog.ngonNgu")} value={language} disabled={awaiting}
+            <Field label={msg("assignments.components.AiDraftDialog.language")} htmlFor="ai-language">
+              <Select id="ai-language" aria-label={msg("assignments.components.AiDraftDialog.language")} value={language} disabled={awaiting}
                 onChange={(e) => setLanguage(e.target.value as typeof language)}>
                 {LOCALES.map((code) => <option key={code} value={code.toUpperCase()} lang={code}>{LOCALE_NAMES[code]}</option>)}
               </Select>
             </Field>
-            <Field label={msg("assignments.components.AiDraftDialog.soCauHoi")} htmlFor="ai-count" error={countError}>
-              <input id="ai-count" aria-label={msg("assignments.components.AiDraftDialog.soCauHoi")} type="number" min={1} max={10} step={1} value={questionCount}
-                placeholder={msg("assignments.components.AiDraftDialog.aiTuChon")} disabled={awaiting} onChange={(e) => setQuestionCount(e.target.value)}
+            <Field label={msg("assignments.components.AiDraftDialog.numberOfQuestions")} htmlFor="ai-count" error={countError}>
+              <input id="ai-count" aria-label={msg("assignments.components.AiDraftDialog.numberOfQuestions")} type="number" min={1} max={10} step={1} value={questionCount}
+                placeholder={msg("assignments.components.AiDraftDialog.aiDecides")} disabled={awaiting} onChange={(e) => setQuestionCount(e.target.value)}
                 aria-invalid={countError ? true : undefined}
                 className={`w-full rounded-lg border px-3 py-2 text-[13px] disabled:cursor-not-allowed disabled:bg-sunken disabled:text-muted ${
                   countError ? "border-danger" : "border-line-strong"}`} />
             </Field>
-            <Field label={msg("assignments.components.AiDraftDialog.tongDiem")} htmlFor="ai-points" error={pointsError}>
-              <input id="ai-points" aria-label={msg("assignments.components.AiDraftDialog.tongDiem")} type="number" min={0.01} max={1000} step={0.5} value={targetPoints}
-                placeholder={msg("assignments.components.AiDraftDialog.aiTuChia")} disabled={awaiting} onChange={(e) => setTargetPoints(e.target.value)}
+            <Field label={msg("assignments.components.AiDraftDialog.totalPoints")} htmlFor="ai-points" error={pointsError}>
+              <input id="ai-points" aria-label={msg("assignments.components.AiDraftDialog.totalPoints")} type="number" min={0.01} max={1000} step={0.5} value={targetPoints}
+                placeholder={msg("assignments.components.AiDraftDialog.aiDistributes")} disabled={awaiting} onChange={(e) => setTargetPoints(e.target.value)}
                 aria-invalid={pointsError ? true : undefined} data-testid="ai-points"
                 className={`w-full rounded-lg border px-3 py-2 text-[13px] disabled:cursor-not-allowed disabled:bg-sunken disabled:text-muted ${
                   pointsError ? "border-danger" : "border-line-strong"}`} />
             </Field>
           </div>
-          <Field label={msg("assignments.components.AiDraftDialog.taiLieuThamKhao")} htmlFor="ai-reference">
+          <Field label={msg("assignments.components.AiDraftDialog.references")} htmlFor="ai-reference">
             <ReferencePicker materials={materials} chosen={chosen} uploads={sources.uploads} disabled={awaiting}
               canUpload={sources.canUpload} accept={sources.accept}
               onChoose={(id) => setChosen((c) => (c.includes(id) ? c : [...c, id].slice(0, 10)))}
               onUnchoose={(id) => setChosen((c) => c.filter((item) => item !== id))}
               onUpload={sources.add} onRemoveUpload={sources.remove} onRetryUpload={sources.retry} />
           </Field>
-          <Field label={msg("assignments.components.AiDraftDialog.yeuCau")} htmlFor="ai-request">
+          <Field label={msg("assignments.components.AiDraftDialog.request")} htmlFor="ai-request">
             <Textarea id="ai-request" rows={4} maxLength={4000} value={request} disabled={awaiting}
-              placeholder={msg("assignments.components.AiDraftDialog.viDuDePhanTichThiet")}
+              placeholder={msg("assignments.components.AiDraftDialog.exampleAnAnalysisAndDesign")}
               onChange={(e) => setRequest(e.target.value)} />
           </Field>
         </>
       )}
       {showPreview && proposal && (
         <div className="flex flex-col gap-4" data-testid="ai-proposal">
-          {currentPartCount > 0 && <p className="text-xs text-muted">{msg("assignments.components.AiDraftDialog.baiChuaBiThayDoi")}</p>}
+          {currentPartCount > 0 && <p className="text-xs text-muted">{msg("assignments.components.AiDraftDialog.theAssignmentHasNotBeen")}</p>}
           <AiDraftPreview proposal={proposal} targetPoints={pointsValid ? pointsNumber : undefined} />
         </div>
       )}
@@ -355,20 +355,20 @@ export function AiDraftDialog({
 /** Popup chờ khi AI đang soạn hay đang ghi đề: chỉ vòng xoay và chữ. */
 export function AiProgress() {
   return (
-    <BusyOverlay label={msg("assignments.components.AiDraftDialog.dangTaoBanNhap")} spinner testId="ai-progress">
-      <span className="text-[14px] font-semibold text-ink">{msg("assignments.components.AiDraftDialog.dangTaoBanNhap")}</span>
+    <BusyOverlay label={msg("assignments.components.AiDraftDialog.creatingDraft")} spinner testId="ai-progress">
+      <span className="text-[14px] font-semibold text-ink">{msg("assignments.components.AiDraftDialog.creatingDraft")}</span>
     </BusyOverlay>
   );
 }
 
 function TemplateStatus({ template, onRetry }: { template: Template; onRetry: () => void }) {
-  if (template.status === "READING") return <span role="status" className="text-xs text-muted">{msg("assignments.components.AiDraftDialog.dangDoc")}</span>;
+  if (template.status === "READING") return <span role="status" className="text-xs text-muted">{msg("assignments.components.AiDraftDialog.reading")}</span>;
   if (template.status === "READY") {
-    return <Pill tone="success">{template.questionCount ? msg("assignments.components.AiDraftDialog.cauHoi", { questionCount: String(template.questionCount) }) : msg("assignments.components.AiDraftDialog.daDoc")}</Pill>;
+    return <Pill tone="success">{template.questionCount ? msg("assignments.components.AiDraftDialog.questions", { questionCount: String(template.questionCount) }) : msg("assignments.components.AiDraftDialog.read")}</Pill>;
   }
   return <>
     <span className="text-xs text-danger">{template.error}</span>
-    <Button size="sm" onClick={onRetry}>{msg("assignments.components.AiDraftDialog.thuLai")}</Button>
+    <Button size="sm" onClick={onRetry}>{msg("assignments.components.AiDraftDialog.retry")}</Button>
   </>;
 }
 
@@ -399,20 +399,20 @@ export function ReferencePicker({ id = "ai-reference", materials, chosen, upload
   return (
     <>
       {/* Tài liệu đã chọn xếp hàng ngay trong thanh tìm, dài thì xuống dòng (yêu cầu 2026-11-05). */}
-      <SearchPicker id={id} label={msg("assignments.components.AiDraftDialog.taiLieuThamKhao")} disabled={disabled} optionIcon="menu_book" multiple
-        placeholder={msg("assignments.components.AiDraftDialog.chonHocLieuCuaMonHoac")}
+      <SearchPicker id={id} label={msg("assignments.components.AiDraftDialog.references")} disabled={disabled} optionIcon="menu_book" multiple
+        placeholder={msg("assignments.components.AiDraftDialog.chooseSubjectMaterialsOrUpload")}
         options={materials.filter((m) => !chosen.includes(m.materialId)).map((m) => ({ id: m.materialId, label: m.title }))}
-        emptyText={materials.length === 0 ? msg("assignments.components.AiDraftDialog.chuaCoHocLieuDungDuoc") : msg("assignments.components.AiDraftDialog.khongTimThayHocLieu")}
+        emptyText={materials.length === 0 ? msg("assignments.components.AiDraftDialog.noUsableMaterialsYet") : msg("assignments.components.AiDraftDialog.noMaterialsFound")}
         onPick={onChoose}
-        footer={{ label: msg("assignments.components.AiDraftDialog.taiTaiLieuLen", { value: String(uploads.length > 0 ? ` (${uploads.length}/${MAX_SOURCE_FILES})` : "") }),
+        footer={{ label: msg("assignments.components.AiDraftDialog.uploadDocuments", { value: String(uploads.length > 0 ? ` (${uploads.length}/${MAX_SOURCE_FILES})` : "") }),
           icon: "upload_file", disabled: !canUpload, onPick: () => fileInput.current?.click() }}
         chips={(picked.length > 0 || uploads.length > 0) && (
-          <ul className="contents" aria-label={msg("assignments.components.AiDraftDialog.taiLieuDaChon")}>
+          <ul className="contents" aria-label={msg("assignments.components.AiDraftDialog.selectedDocuments")}>
             {picked.map((m) => (
               <li key={m.materialId} className={chip}>
                 <Icon name="menu_book" size={13} className="shrink-0 text-primary-ink" />
                 <span className="min-w-0 truncate font-medium text-ink" title={m.title}>{m.title}</span>
-                <IconButton icon="close" label={msg("assignments.components.AiDraftDialog.bo", { title: String(m.title) })} size={22} disabled={disabled} onClick={() => onUnchoose(m.materialId)} />
+                <IconButton icon="close" label={msg("assignments.components.AiDraftDialog.remove", { title: String(m.title) })} size={22} disabled={disabled} onClick={() => onUnchoose(m.materialId)} />
               </li>
             ))}
             {uploads.map((item) => (
@@ -421,11 +421,11 @@ export function ReferencePicker({ id = "ai-reference", materials, chosen, upload
                 <Icon name="description" size={13} className="shrink-0 text-primary-ink" />
                 <span className="min-w-0 truncate font-medium text-ink">{item.file.name}</span>
                 {item.status === "UPLOADING" && <span role="status" className="shrink-0 text-muted">{item.percent}%</span>}
-                {item.status === "READING" && <span role="status" className="shrink-0 text-muted">{msg("assignments.components.AiDraftDialog.dangDoc")}</span>}
+                {item.status === "READING" && <span role="status" className="shrink-0 text-muted">{msg("assignments.components.AiDraftDialog.reading")}</span>}
                 {item.status === "ERROR" && (
-                  <IconButton icon="refresh" label={msg("assignments.components.AiDraftDialog.thuLai2", { name: String(item.file.name) })} size={22} onClick={() => onRetryUpload(item)} />
+                  <IconButton icon="refresh" label={msg("assignments.components.AiDraftDialog.retry2", { name: String(item.file.name) })} size={22} onClick={() => onRetryUpload(item)} />
                 )}
-                <IconButton icon="close" label={msg("assignments.components.AiDraftDialog.go", { name: String(item.file.name) })} size={22} onClick={() => onRemoveUpload(item)} />
+                <IconButton icon="close" label={msg("assignments.components.AiDraftDialog.remove2", { name: String(item.file.name) })} size={22} onClick={() => onRemoveUpload(item)} />
               </li>
             ))}
           </ul>
@@ -433,7 +433,7 @@ export function ReferencePicker({ id = "ai-reference", materials, chosen, upload
       {uploads.some(item => item.file.type.startsWith("image/")) && <div className="flex flex-wrap gap-2">
         {uploads.filter(item => item.file.type.startsWith("image/")).map(item => <SourceImagePreview key={item.id} file={item.file} />)}
       </div>}
-      <input ref={fileInput} aria-label={msg("assignments.components.AiDraftDialog.taiTaiLieuLen2")} type="file" multiple accept={accept} hidden
+      <input ref={fileInput} aria-label={msg("assignments.components.AiDraftDialog.uploadDocuments2")} type="file" multiple accept={accept} hidden
         onChange={(event) => { onUpload(event.target.files); event.target.value = ""; }} />
     </>
   );

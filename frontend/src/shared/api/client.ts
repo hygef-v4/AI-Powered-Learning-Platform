@@ -27,7 +27,7 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const AUTH_PREFIX = "/api/v1/auth/";
 /** Chờ response refresh của tab kia đặt cookie mới trước khi gửi lại (refresh trả 409). */
 export const CONCURRENT_REFRESH_WAIT_MS = 500;
-const SYSTEM_BUSY: ApiProblem = { status: 503, code: "SYSTEM_BUSY", detail: msg("shared.api.client.heThongTamBanVuiLong") };
+const SYSTEM_BUSY: ApiProblem = { status: 503, code: "SYSTEM_BUSY", detail: msg("shared.api.client.theSystemIsBusyPlease") };
 
 /** `concurrent`: tab khác vừa xoay cùng refresh token (409), phiên vẫn còn; cookie mới do response của tab kia đặt. */
 export type RefreshOutcome = "refreshed" | "concurrent" | "expired" | "unavailable";

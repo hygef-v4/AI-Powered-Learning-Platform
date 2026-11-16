@@ -14,7 +14,7 @@ export function ProfilePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5">
-      <PageHeader title={msg("identity.profile.pages.ProfilePage.hoSo")} />
+      <PageHeader title={msg("identity.profile.pages.ProfilePage.profile")} />
       <ProfileForm
         key={session.profile.accountId}
         profile={session.profile}

@@ -12,7 +12,7 @@ import type { AiDraft, AiDraftStatus, QuizDetail } from "../model/types";
 import { msg } from "@/i18n/msg";
 
 const STATUS_LABELS: Record<AiDraftStatus, string> = {
-  PENDING: msg("quizzes.components.AiDraftTargets.aiDangSoan"), READY: msg("quizzes.components.AiDraftTargets.choChapNhan"), ACCEPTED: msg("quizzes.components.AiDraftTargets.daChapNhan"), DISCARDED: msg("quizzes.components.AiDraftTargets.daBo"), FAILED: msg("quizzes.components.AiDraftTargets.loi"),
+  PENDING: msg("quizzes.components.AiDraftTargets.theAiIsWriting"), READY: msg("quizzes.components.AiDraftTargets.awaitingAcceptance"), ACCEPTED: msg("quizzes.components.AiDraftTargets.accepted"), DISCARDED: msg("quizzes.components.AiDraftTargets.discarded"), FAILED: msg("quizzes.components.AiDraftTargets.error"),
 };
 const STATUS_TONES = { PENDING: "info", READY: "warning", ACCEPTED: "success", DISCARDED: "neutral", FAILED: "danger" } as const;
 
@@ -23,9 +23,9 @@ export function QuestionAiDraftDialog({ subjectId, onClose, onAccepted }: {
   onAccepted: (count: number) => void;
 }) {
   const api = useMemo<DraftTargetApi>(() => ({
-    title: msg("quizzes.components.AiDraftTargets.taoNhapBangAi"),
-    taskLabel: msg("quizzes.components.AiDraftTargets.sinhCauHoiNganHangCau"),
-    acceptNote: msg("quizzes.components.AiDraftTargets.cauDuocChapNhanVaoNgan"),
+    title: msg("quizzes.components.AiDraftTargets.draftWithAi"),
+    taskLabel: msg("quizzes.components.AiDraftTargets.generateQuestionsSubjectQuestionBank"),
+    acceptNote: msg("quizzes.components.AiDraftTargets.acceptedQuestionsEnterTheBank"),
     loadMaterials: (signal) => getSubjectMaterials(subjectId, signal),
     list: (signal) => getBankDrafts(subjectId, signal),
     request: (input) => requestBankDraft(subjectId, input),
@@ -92,9 +92,9 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
   }, [quizId, reloadKey]);
 
   const api = useMemo<DraftTargetApi>(() => ({
-    title: msg("quizzes.components.AiDraftTargets.taoNhapBangAi"),
-    taskLabel: msg("quizzes.components.AiDraftTargets.sinhCauHoi", { quizTitle: String(quizTitle) }),
-    acceptNote: msg("quizzes.components.AiDraftTargets.cauDuocChapNhanThanhCau"),
+    title: msg("quizzes.components.AiDraftTargets.draftWithAi"),
+    taskLabel: msg("quizzes.components.AiDraftTargets.generateQuestions", { quizTitle: String(quizTitle) }),
+    acceptNote: msg("quizzes.components.AiDraftTargets.acceptedQuestionsBecomeSeparateQuestions"),
     loadMaterials: (signal) => getQuizMaterials(quizId, signal),
     list: (signal) => getQuizDrafts(quizId, signal),
     request: (input) => requestQuizDraft(quizId, input, version.current),
@@ -121,7 +121,7 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
       return;
     }
     if (draftDirty.current) {
-      requestConfirm(msg("quizzes.components.AiDraftTargets.boCacChinhSuaDeXuat"), complete);
+      requestConfirm(msg("quizzes.components.AiDraftTargets.discardUnsavedProposalEdits"), complete);
       return;
     }
     complete();
@@ -148,7 +148,7 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
               <span>{draft.origin === "MCP" ? `Agent: ${draft.agentLabel ?? "Agent"}` : "AI"}</span>
               <span className="text-muted">
                 {draft.status === "FAILED" ? describeFailure(draft.failureCode, draft.failureMessage)
-                  : msg("quizzes.components.AiDraftTargets.cau", { value: String(draft.questions.length || draft.requestedCount || 0), value2: String(formatDateTime(draft.createdAt)) })}
+                  : msg("quizzes.components.AiDraftTargets.questions", { value: String(draft.questions.length || draft.requestedCount || 0), value2: String(formatDateTime(draft.createdAt)) })}
               </span>
               <Button size="sm" className="ml-auto" disabled={disabled} aria-expanded={expanded} onClick={() => {
                 if (expanded) { close(); return; }
@@ -156,12 +156,12 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
                   if (!onRequestOpen || onRequestOpen()) setOpen({ draftId: draft.id });
                 };
                 if (draftDirty.current) {
-                  requestConfirm(msg("quizzes.components.AiDraftTargets.boCacChinhSuaChuaLuu"), viewDraft);
+                  requestConfirm(msg("quizzes.components.AiDraftTargets.discardUnsavedEditsToView"), viewDraft);
                   return;
                 }
                 viewDraft();
               }}
-                data-testid="quiz-ai-draft-view">{expanded ? msg("quizzes.components.AiDraftTargets.thuGon") : "Xem"}</Button>
+                data-testid="quiz-ai-draft-view">{expanded ? msg("quizzes.components.AiDraftTargets.collapse") : "Xem"}</Button>
             </li>
             );
           })}
@@ -173,5 +173,5 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
       )}
       {confirmDialog}
     </>;
-  return inline ? <div className="mt-4 flex flex-col gap-3" aria-label={msg("quizzes.components.AiDraftTargets.deXuatAi")}>{body}</div> : <Section title={msg("quizzes.components.AiDraftTargets.deXuatAi")}>{body}</Section>;
+  return inline ? <div className="mt-4 flex flex-col gap-3" aria-label={msg("quizzes.components.AiDraftTargets.aiProposal")}>{body}</div> : <Section title={msg("quizzes.components.AiDraftTargets.aiProposal")}>{body}</Section>;
 }

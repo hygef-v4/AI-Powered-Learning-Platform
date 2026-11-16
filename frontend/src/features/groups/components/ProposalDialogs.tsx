@@ -35,7 +35,7 @@ export function ProposalNameDialog({ title, initial = "", confirmLabel, onClose,
     <Dialog open title={title} onClose={onClose} dismissible={!busy}
       footer={<Button variant="primary" disabled={busy} onClick={() => void saveProposal()} data-testid="proposal-name-save">{confirmLabel}</Button>}>
       <form onSubmit={(event) => { event.preventDefault(); void saveProposal(); }}>
-        <Field label={msg("groups.components.ProposalDialogs.tenNhom")} htmlFor={fieldId} required error={error}>
+        <Field label={msg("groups.components.ProposalDialogs.groupName")} htmlFor={fieldId} required error={error}>
           <TextInput id={fieldId} value={value} maxLength={MAX_PROPOSAL_NAME} invalid={!!error} autoFocus disabled={busy}
             onChange={(event) => { setValue(event.target.value); setError(null); }} data-testid="proposal-name-input" />
         </Field>
@@ -75,20 +75,20 @@ export function InviteMembersDialog({ candidates, freeSeats, onClose, onInvite }
     if (failed) setError(failed);
   };
   return (
-    <Dialog open title={msg("groups.components.ProposalDialogs.moiBanVaoNhom")} size="lg" onClose={onClose} dismissible={!busy}
+    <Dialog open title={msg("groups.components.ProposalDialogs.inviteToTheGroup")} size="lg" onClose={onClose} dismissible={!busy}
       footer={
         <Button variant="primary" icon="person_add" disabled={busy || picked.length === 0} onClick={() => void invite()}
           data-testid="invite-members-submit">
-          {picked.length > 0 ? msg("groups.components.ProposalDialogs.moiNguoi", { length: String(picked.length) }) : msg("groups.components.ProposalDialogs.moi")}
+          {picked.length > 0 ? msg("groups.components.ProposalDialogs.invitePeople", { length: String(picked.length) }) : msg("groups.components.ProposalDialogs.invite")}
         </Button>
       }>
-      <p className="text-[13px] text-muted">{msg("groups.components.ProposalDialogs.con")}{freeSeats} {msg("groups.components.ProposalDialogs.choNguoiDuocMoiCanChap")}</p>
-      <TextInput type="search" icon="search" aria-label={msg("groups.components.ProposalDialogs.timTheoTenEmailHoacMssv")} placeholder={msg("groups.components.ProposalDialogs.timTheoTenEmailHoacMssv")}
+      <p className="text-[13px] text-muted">{msg("groups.components.ProposalDialogs.text")}{freeSeats} {msg("groups.components.ProposalDialogs.spotsLeftInviteesMustAccept")}</p>
+      <TextInput type="search" icon="search" aria-label={msg("groups.components.ProposalDialogs.searchByNameEmailOr")} placeholder={msg("groups.components.ProposalDialogs.searchByNameEmailOr")}
         value={query} onChange={(event) => setQuery(event.target.value)} />
       {shown.length === 0 ? (
-        <p className="py-6 text-center text-[13px] text-muted">{msg("groups.components.ProposalDialogs.khongCoSinhVienPhuHop")}</p>
+        <p className="py-6 text-center text-[13px] text-muted">{msg("groups.components.ProposalDialogs.noMatchingStudents")}</p>
       ) : (
-        <ul aria-label={msg("groups.components.ProposalDialogs.sinhVienChuaCoNhom")} className="flex max-h-[50vh] flex-col gap-1 overflow-y-auto">
+        <ul aria-label={msg("groups.components.ProposalDialogs.studentsWithoutAGroup")} className="flex max-h-[50vh] flex-col gap-1 overflow-y-auto">
           {shown.map((c) => {
             const checked = picked.includes(c.accountId);
             const disabled = busy || (!checked && full);
@@ -99,10 +99,10 @@ export function InviteMembersDialog({ candidates, freeSeats, onClose, onInvite }
                   <input type="checkbox" className="size-4 accent-[var(--c-primary)]" checked={checked} disabled={disabled}
                     onChange={() => toggle(c.accountId)} data-testid={`invite-candidate-${c.accountId}`} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13.5px] font-semibold text-ink">{c.name ?? c.email ?? msg("groups.components.ProposalDialogs.chuaRoTen")}</span>
+                    <span className="block truncate text-[13.5px] font-semibold text-ink">{c.name ?? c.email ?? msg("groups.components.ProposalDialogs.unknownName")}</span>
                     <PersonSubline className="truncate" studentCode={c.studentCode} email={c.email} />
                   </span>
-                  {c.inOtherProposal && <span className="shrink-0 text-xs text-muted">{msg("groups.components.ProposalDialogs.dangODeXuatKhac")}</span>}
+                  {c.inOtherProposal && <span className="shrink-0 text-xs text-muted">{msg("groups.components.ProposalDialogs.inAnotherProposal")}</span>}
                 </label>
               </li>
             );

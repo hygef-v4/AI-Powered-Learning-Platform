@@ -25,11 +25,11 @@ function FeedbackSummaryList({ label, items, disabled, onChange }: {
       <ul className="list-disc space-y-3 pl-5 marker:text-muted">
         {rows.map((item, index) => <li key={index}>
           <div className="flex items-start gap-1.5">
-            <AutoTextarea aria-label={msg("grading.components.StructuredFeedbackSection.y", { label: String(label), value: String(index + 1) })} value={item} maxLength={500}
+            <AutoTextarea aria-label={msg("grading.components.StructuredFeedbackSection.point", { label: String(label), value: String(index + 1) })} value={item} maxLength={500}
               disabled={disabled} rows={2}
               onChange={(event) => onChange(rows.map((entry, at) => at === index ? event.target.value : entry))}
               className="min-h-16 min-w-0 flex-1 rounded-lg border! border-line bg-surface! px-3! py-2! text-sm font-normal leading-6 text-ink focus:border-focus" />
-            {items.length > 0 && <button type="button" aria-label={msg("grading.components.StructuredFeedbackSection.xoaY", { value: String(index + 1), label: String(label) })} disabled={disabled}
+            {items.length > 0 && <button type="button" aria-label={msg("grading.components.StructuredFeedbackSection.deletePoint", { value: String(index + 1), label: String(label) })} disabled={disabled}
               onClick={() => onChange(items.filter((_, at) => at !== index))}
               className="mt-1 inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted hover:bg-danger-soft hover:text-danger focus-visible:outline-2 focus-visible:outline-focus disabled:opacity-40">
               <Icon name="close" size={16} />
@@ -38,16 +38,16 @@ function FeedbackSummaryList({ label, items, disabled, onChange }: {
         </li>)}
       </ul>
     {items.length > 0 && <div className="mt-2 flex items-center justify-between gap-2">
-      <Button size="sm" variant="ghost" icon="add" aria-label={msg("grading.components.StructuredFeedbackSection.themY", { label: String(label) })}
-        disabled={disabled || items.length >= 5} onClick={() => onChange([...items, ""])}>{msg("grading.components.StructuredFeedbackSection.themY2")}</Button>
-      {items.length >= 4 && <span className="text-xs text-muted">{items.length}{msg("grading.components.StructuredFeedbackSection.t5Y")}</span>}
+      <Button size="sm" variant="ghost" icon="add" aria-label={msg("grading.components.StructuredFeedbackSection.addPoint", { label: String(label) })}
+        disabled={disabled || items.length >= 5} onClick={() => onChange([...items, ""])}>{msg("grading.components.StructuredFeedbackSection.addPoint2")}</Button>
+      {items.length >= 4 && <span className="text-xs text-muted">{items.length}{msg("grading.components.StructuredFeedbackSection.n5Points")}</span>}
     </div>}
   </fieldset>;
 }
 
 export function GradingFeedbackSummary({
   summary,
-  title = msg("grading.components.StructuredFeedbackSection.tomTatNhanXetCauTruc"),
+  title = msg("grading.components.StructuredFeedbackSection.summaryOfStructuredFeedback"),
   editable = false,
   disabled = false,
   onChange,
@@ -67,9 +67,9 @@ export function GradingFeedbackSummary({
         className="mt-3 border-t border-line-soft pt-3 text-sm leading-6">
         <summary className="cursor-pointer font-semibold text-ink">{title}</summary>
         <div className="mt-4 grid gap-5 md:grid-cols-2">
-          <FeedbackSummaryList label={msg("grading.components.StructuredFeedbackSection.diemManh")} items={values.strengths} disabled={disabled}
+          <FeedbackSummaryList label={msg("grading.components.StructuredFeedbackSection.strengths")} items={values.strengths} disabled={disabled}
             onChange={(strengths) => onChange({ ...values, strengths })} />
-          <FeedbackSummaryList label={msg("grading.components.StructuredFeedbackSection.diemCanCaiThien")} items={values.improvements} disabled={disabled}
+          <FeedbackSummaryList label={msg("grading.components.StructuredFeedbackSection.areasToImprove")} items={values.improvements} disabled={disabled}
             onChange={(improvements) => onChange({ ...values, improvements })} />
         </div>
       </details>
@@ -88,7 +88,7 @@ export function GradingFeedbackSummary({
         <div className={`mt-2 grid gap-2.5 ${summary.strengths.length > 0 && summary.improvements.length > 0 ? "sm:grid-cols-2" : ""}`}>
           {summary.strengths.length > 0 && (
             <div className="rounded-lg border border-line-soft bg-surface p-2.5">
-              <p className="font-semibold text-success">{msg("grading.components.StructuredFeedbackSection.lamTot")}</p>
+              <p className="font-semibold text-success">{msg("grading.components.StructuredFeedbackSection.doneWell")}</p>
               <ul className="mt-2 list-disc space-y-2 pl-5 text-ink">
                 {summary.strengths.map((entry, idx) => (
                   <li key={idx} className="whitespace-pre-wrap break-words">{entry}</li>
@@ -98,7 +98,7 @@ export function GradingFeedbackSummary({
           )}
           {summary.improvements.length > 0 && (
             <div className="rounded-lg border border-line-soft bg-surface p-2.5">
-              <p className="font-semibold text-warning">{msg("grading.components.StructuredFeedbackSection.canSua")}</p>
+              <p className="font-semibold text-warning">{msg("grading.components.StructuredFeedbackSection.needsFixing")}</p>
               <ul className="mt-2 list-disc space-y-2 pl-5 text-ink">
                 {summary.improvements.map((entry, idx) => (
                   <li key={idx} className="whitespace-pre-wrap break-words">{entry}</li>
@@ -161,7 +161,7 @@ export function RubricItemFeedback({
         : false
     : false;
   const canNavigateToBlock = Boolean(blockId && hasValidBlock);
-  const suggestionLabel = isFullMarks ? msg("grading.components.StructuredFeedbackSection.goiYThemKhongTruDiem") : msg("grading.components.StructuredFeedbackSection.cachCaiThien");
+  const suggestionLabel = isFullMarks ? msg("grading.components.StructuredFeedbackSection.additionalSuggestionNoDeduction") : msg("grading.components.StructuredFeedbackSection.howToImprove");
 
   return (
     <details
@@ -174,17 +174,17 @@ export function RubricItemFeedback({
     >
       <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 font-semibold text-ink">
         <span className="inline-flex flex-wrap items-center gap-1.5">
-          <span>{msg("grading.components.StructuredFeedbackSection.nhanXetMinhChung")}</span>
+          <span>{msg("grading.components.StructuredFeedbackSection.feedbackEvidence")}</span>
           {needsAiReview && (
             <Pill tone="warning">
               <span aria-hidden="true">⚠</span>
-              <span>{msg("grading.components.StructuredFeedbackSection.canGiangVienKiemTra")}</span>
+              <span>{msg("grading.components.StructuredFeedbackSection.needsLecturerReview")}</span>
             </Pill>
           )}
           {!needsAiReview && acknowledged && (
             <Pill tone="success">
               <span aria-hidden="true">✓</span>
-              <span>{msg("grading.components.StructuredFeedbackSection.daXacNhan")}</span>
+              <span>{msg("grading.components.StructuredFeedbackSection.confirmed")}</span>
             </Pill>
           )}
         </span>
@@ -197,10 +197,10 @@ export function RubricItemFeedback({
             className="rounded-md border border-warning bg-surface px-2.5 py-2 text-xs text-ink"
           >
             <p className="font-semibold text-warning">
-              {msg("grading.components.StructuredFeedbackSection.canGiangVienKiemTraThu")}{" "}
+              {msg("grading.components.StructuredFeedbackSection.needsManualReviewByThe")}{" "}
               <span className="font-normal text-ink">
                 {itemFeedback.reviewReason ||
-                  msg("grading.components.StructuredFeedbackSection.minhChungChuaDocRoHoac")}
+                  msg("grading.components.StructuredFeedbackSection.theEvidenceCouldNotBe")}
               </span>
             </p>
           </div>
@@ -209,8 +209,8 @@ export function RubricItemFeedback({
         {editable && onChangeItem ? (
           <div className="space-y-2">
             <label className="block font-medium text-ink">
-              {msg("grading.components.StructuredFeedbackSection.minhChungTuBaiLam")}<AutoTextarea
-                aria-label={msg("grading.components.StructuredFeedbackSection.minhChung", { itemText: String(itemText) })}
+              {msg("grading.components.StructuredFeedbackSection.evidenceFromTheWork")}<AutoTextarea
+                aria-label={msg("grading.components.StructuredFeedbackSection.evidence", { itemText: String(itemText) })}
                 disabled={disabled}
                 rows={3}
                 maxLength={1000}
@@ -222,8 +222,8 @@ export function RubricItemFeedback({
               />
             </label>
             <label className="block font-medium text-ink">
-              {msg("grading.components.StructuredFeedbackSection.giaiThichDiem")}<AutoTextarea
-                aria-label={msg("grading.components.StructuredFeedbackSection.giaiThichDiem2", { itemText: String(itemText) })}
+              {msg("grading.components.StructuredFeedbackSection.scoreExplanation")}<AutoTextarea
+                aria-label={msg("grading.components.StructuredFeedbackSection.scoreExplanation2", { itemText: String(itemText) })}
                 disabled={disabled}
                 rows={3}
                 maxLength={1000}
@@ -237,7 +237,7 @@ export function RubricItemFeedback({
             <label className="block font-medium text-ink">
               {suggestionLabel}
               <AutoTextarea
-                aria-label={msg("grading.components.StructuredFeedbackSection.goiY", { itemText: String(itemText) })}
+                aria-label={msg("grading.components.StructuredFeedbackSection.suggestion", { itemText: String(itemText) })}
                 disabled={disabled}
                 rows={3}
                 maxLength={1000}
@@ -253,12 +253,12 @@ export function RubricItemFeedback({
           <div className="space-y-1.5">
             {itemFeedback.evidence && (
               <p className="break-words">
-                <strong className="text-body">{msg("grading.components.StructuredFeedbackSection.minhChung2")}</strong>
+                <strong className="text-body">{msg("grading.components.StructuredFeedbackSection.evidence2")}</strong>
                 <span>{itemFeedback.evidence}</span>
               </p>
             )}
             {itemFeedback.reason?.trim() && <p className="break-words">
-              <strong className="text-body">{msg("grading.components.StructuredFeedbackSection.giaiThichDiem3")}</strong>
+              <strong className="text-body">{msg("grading.components.StructuredFeedbackSection.scoreExplanation3")}</strong>
               <span>{itemFeedback.reason}</span>
             </p>}
             {itemFeedback.suggestion && (
@@ -284,10 +284,10 @@ export function RubricItemFeedback({
                 }}
                 className="font-semibold text-primary-ink underline underline-offset-2 hover:text-ink"
               >
-                {msg("grading.components.StructuredFeedbackSection.diToiDoanBaiLam")}</a>
+                {msg("grading.components.StructuredFeedbackSection.goToThePassageIn")}</a>
             ) : (
               <span className="text-muted">
-                {msg("grading.components.StructuredFeedbackSection.doanThamChieuKhongConTrong")}</span>
+                {msg("grading.components.StructuredFeedbackSection.theReferencedPassageIsNo")}</span>
             )}
           </div>
         )}
@@ -298,11 +298,11 @@ export function RubricItemFeedback({
               type="checkbox"
               disabled={disabled}
               checked={acknowledged}
-              aria-label={msg("grading.components.StructuredFeedbackSection.daKiemTraVaXacNhan", { itemText: String(itemText) })}
+              aria-label={msg("grading.components.StructuredFeedbackSection.checkedAndConfirmedTheExplanation", { itemText: String(itemText) })}
               onChange={(e) => onToggleAcknowledge(e.target.checked)}
               className="h-4 w-4 rounded border-line-strong text-primary-ink focus:ring-focus"
             />
-            <span>{msg("grading.components.StructuredFeedbackSection.daKiemTraNhanXetVa")}</span>
+            <span>{msg("grading.components.StructuredFeedbackSection.feedbackAndScoreChecked")}</span>
           </label>
         )}
       </div>

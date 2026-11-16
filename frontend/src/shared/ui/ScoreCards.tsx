@@ -32,7 +32,7 @@ export function TotalScoreCard({
 }) {
   return (
     <Card as="article" padding="none" lifted className="px-4 py-3.5">
-      <p className="text-xs font-medium text-muted">{msg("shared.ui.ScoreCards.tongDiem")}</p>
+      <p className="text-xs font-medium text-muted">{msg("shared.ui.ScoreCards.totalPoints")}</p>
       <p aria-label={ariaLabel} className="mt-1 flex items-baseline gap-1.5 tabular-nums">
         <span className="font-display text-[30px] leading-none tracking-[-0.02em] text-ink">{format(score)}</span>
         <span className="text-[13px] text-muted"> / {format(maxScore)}</span>

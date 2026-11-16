@@ -78,26 +78,26 @@ export function toggleCorrect(form: QuestionForm, optionId: string): QuestionFor
 
 export function validateForm(form: QuestionForm): FormErrors {
   const errors: FormErrors = {};
-  if (!form.stem.trim()) errors.stem = msg("quizzes.model.questionForm.noiDungCauHoiKhongDuoc");
-  else if ([...form.stem].length > MAX_TEXT) errors.stem = msg("quizzes.model.questionForm.noiDungCauHoiToiDa");
-  if ([...form.explanation].length > MAX_TEXT) errors.explanation = msg("quizzes.model.questionForm.giaiThichToiDa20000");
+  if (!form.stem.trim()) errors.stem = msg("quizzes.model.questionForm.theQuestionContentCannotBe");
+  else if ([...form.stem].length > MAX_TEXT) errors.stem = msg("quizzes.model.questionForm.theQuestionContentCanBe");
+  if ([...form.explanation].length > MAX_TEXT) errors.explanation = msg("quizzes.model.questionForm.theExplanationCanBeAt");
 
   const texts = form.options.map((option) => option.text.trim());
-  if (form.options.length < MIN_OPTIONS || form.options.length > MAX_OPTIONS) errors.options = msg("quizzes.model.questionForm.can26LuaChon");
-  else if (texts.some((text) => !text)) errors.options = msg("quizzes.model.questionForm.luaChonKhongDuocDeTrong");
-  else if (new Set(texts.map((text) => text.toLowerCase())).size !== texts.length) errors.options = msg("quizzes.model.questionForm.cacLuaChonKhongDuocTrung");
+  if (form.options.length < MIN_OPTIONS || form.options.length > MAX_OPTIONS) errors.options = msg("quizzes.model.questionForm.n26OptionsAreRequired");
+  else if (texts.some((text) => !text)) errors.options = msg("quizzes.model.questionForm.optionsCannotBeEmpty");
+  else if (new Set(texts.map((text) => text.toLowerCase())).size !== texts.length) errors.options = msg("quizzes.model.questionForm.optionsMustNotHaveThe");
 
   const ids = new Set(form.options.map((option) => option.id));
   const correct = form.correctOptionIds.filter((id) => ids.has(id));
-  if (form.type === "MCQ_SINGLE" && correct.length !== 1) errors.correctOptionIds = msg("quizzes.model.questionForm.chonDung1DapAnDung");
-  if (form.type === "MCQ_MULTI" && correct.length < 1) errors.correctOptionIds = msg("quizzes.model.questionForm.chonItNhat1DapAn");
+  if (form.type === "MCQ_SINGLE" && correct.length !== 1) errors.correctOptionIds = msg("quizzes.model.questionForm.chooseExactly1CorrectAnswer");
+  if (form.type === "MCQ_MULTI" && correct.length < 1) errors.correctOptionIds = msg("quizzes.model.questionForm.chooseAtLeast1Correct");
 
   const points = Number(form.defaultPoints.replace(",", "."));
   if (!form.defaultPoints.trim() || !Number.isFinite(points) || points <= 0 || points > 9999.99
     || !/^\d+([.,]\d{1,2})?$/.test(form.defaultPoints.trim())) {
-    errors.defaultPoints = msg("quizzes.model.questionForm.diemPhaiLonHon0Toi");
+    errors.defaultPoints = msg("quizzes.model.questionForm.pointsMustBeGreaterThan");
   }
-  if (parseTags(form.tagsText).length > MAX_TAGS) errors.tags = msg("quizzes.model.questionForm.toiDa10The");
+  if (parseTags(form.tagsText).length > MAX_TAGS) errors.tags = msg("quizzes.model.questionForm.atMost10Tags");
   return errors;
 }
 

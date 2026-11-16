@@ -44,7 +44,7 @@ export function InkMark({ state, size = 160, className }: { state: "grinding" | 
 const CENTER = "flex min-h-[calc(100dvh-3.5rem-6.5rem)] flex-1 flex-col items-center justify-center";
 
 /** Cả trang đang tải: chỉ có bút mài nghiên ở giữa, không chữ (trình đọc màn hình vẫn đọc `label`). */
-export function PageLoading({ label = msg("shared.ui.PageStatus.dangTai"), className }: { label?: string; className?: string }) {
+export function PageLoading({ label = msg("shared.ui.PageStatus.loading"), className }: { label?: string; className?: string }) {
   return (
     <div role="status" className={cx(CENTER, className)}>
       <InkMark state="grinding" />
@@ -60,7 +60,7 @@ export function PageLoadError({ children, onRetry, className }: { children: Reac
       <InkMark state="resting" />
       <p className="max-w-sm text-[14px] leading-relaxed text-body">{children}</p>
       <Button variant="primary" onClick={onRetry ?? (() => window.location.reload())}>
-        {msg("shared.ui.PageStatus.taiLaiTrang")}</Button>
+        {msg("shared.ui.PageStatus.reloadPage")}</Button>
     </div>
   );
 }

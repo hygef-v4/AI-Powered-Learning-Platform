@@ -4,7 +4,7 @@ import { SubjectAssignmentListPage } from "@/features/assignments/pages/SubjectA
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.manager.assignments.page.baiTap") };
+  return { title: await translateOnServer("app.manager.assignments.page.assignments") };
 }
 
 // U07 #25 Assignment List của Chủ nhiệm môn.

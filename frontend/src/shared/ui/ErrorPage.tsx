@@ -12,21 +12,21 @@ import { msg } from "@/i18n/msg";
 const COPY: Record<ErrorKind, { code?: string; title: string; description: string }> = {
   "not-found": {
     code: "404",
-    title: msg("shared.ui.ErrorPage.khongTimThayTrang"),
-    description: msg("shared.ui.ErrorPage.duongDanKhongTonTaiHoac"),
+    title: msg("shared.ui.ErrorPage.pageNotFound"),
+    description: msg("shared.ui.ErrorPage.theLinkDoesNotExist"),
   },
   unavailable: {
     code: "503",
-    title: msg("shared.ui.ErrorPage.heThongDangBan"),
-    description: msg("shared.ui.ErrorPage.mayChuChuaPhanHoi"),
+    title: msg("shared.ui.ErrorPage.theSystemIsBusy"),
+    description: msg("shared.ui.ErrorPage.theServerHasNotResponded"),
   },
   offline: {
-    title: msg("shared.ui.ErrorPage.matKetNoiMang"),
-    description: msg("shared.ui.ErrorPage.thietBiDangKhongCoMang"),
+    title: msg("shared.ui.ErrorPage.networkConnectionLost"),
+    description: msg("shared.ui.ErrorPage.yourDeviceIsOffline"),
   },
   generic: {
-    title: msg("shared.ui.ErrorPage.daXayRaLoi"),
-    description: msg("shared.ui.ErrorPage.heThongKhongHoanTatDuoc"),
+    title: msg("shared.ui.ErrorPage.somethingWentWrong"),
+    description: msg("shared.ui.ErrorPage.theSystemCouldNotComplete"),
   },
 };
 
@@ -42,33 +42,33 @@ export function ErrorPage({ kind, retry }: { kind: ErrorKind; retry?: () => void
   return (
     <main className={styles.page}>
       <div className={styles.top}>
-        <Link className={styles.brand} href="/" aria-label={msg("shared.ui.ErrorPage.nenTangHocTapTrangChu")}>
+        <Link className={styles.brand} href="/" aria-label={msg("shared.ui.ErrorPage.learningPlatformHome")}>
           <Logo />
         </Link>
         <button
           className={styles.themeToggle}
           type="button"
           onClick={toggleTheme}
-          aria-label={theme === "dark" ? msg("shared.ui.ErrorPage.chuyenGiaoDienSang") : msg("shared.ui.ErrorPage.chuyenGiaoDienToi")}
+          aria-label={theme === "dark" ? msg("shared.ui.ErrorPage.switchToLightMode") : msg("shared.ui.ErrorPage.switchToDarkMode")}
         >
           <Icon name={theme === "dark" ? "sun" : "moon"} size={17} />
         </button>
       </div>
       <section className={styles.content} aria-labelledby="error-title">
         <ErrorMark kind={kind} />
-        {copy.code && <span className={styles.code}>{msg("shared.ui.ErrorPage.loi")}{copy.code}</span>}
+        {copy.code && <span className={styles.code}>{msg("shared.ui.ErrorPage.error")}{copy.code}</span>}
         <h1 id="error-title">{copy.title}</h1>
         <p>{copy.description}</p>
         <div className={styles.actions}>
           {reloadable && (
             <button className={styles.primary} type="button" onClick={retry ?? (() => window.location.reload())}>
-              {msg("shared.ui.ErrorPage.taiLaiTrang")}</button>
+              {msg("shared.ui.ErrorPage.reloadPage")}</button>
           )}
           <Link className={styles.secondary} href="/">
-            {msg("shared.ui.ErrorPage.veTrangChu")}</Link>
+            {msg("shared.ui.ErrorPage.goToHomePage")}</Link>
         </div>
       </section>
-      <footer className={styles.footer}>{msg("shared.ui.ErrorPage.t2026NenTangHocTap")}</footer>
+      <footer className={styles.footer}>{msg("shared.ui.ErrorPage.n2026LearningPlatform")}</footer>
     </main>
   );
 }

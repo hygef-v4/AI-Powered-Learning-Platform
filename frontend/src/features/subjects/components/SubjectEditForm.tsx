@@ -56,10 +56,10 @@ export function SubjectEditForm({
       className="flex flex-col gap-4"
     >
       <fieldset disabled={mutation.busy} className="grid min-w-0 gap-4 sm:grid-cols-2">
-        <Field label={msg("subjects.components.SubjectEditForm.maMon")} htmlFor={`${id}-code`}>
+        <Field label={msg("subjects.components.SubjectEditForm.subjectCode")} htmlFor={`${id}-code`}>
           <LockedInput id={`${id}-code`} value={subject.code} />
         </Field>
-        <Field label={msg("subjects.components.SubjectEditForm.tenMonHoc")} htmlFor={`${id}-name`} required error={errors.name}>
+        <Field label={msg("subjects.components.SubjectEditForm.subjectName")} htmlFor={`${id}-name`} required error={errors.name}>
           <TextInput
             id={`${id}-name`}
             value={name}
@@ -73,7 +73,7 @@ export function SubjectEditForm({
           />
         </Field>
         <div className="sm:col-span-2">
-          <Field label={msg("subjects.components.SubjectEditForm.moTa")} htmlFor={`${id}-description`} error={errors.description}>
+          <Field label={msg("subjects.components.SubjectEditForm.description")} htmlFor={`${id}-description`} error={errors.description}>
             <Textarea
               id={`${id}-description`}
               value={description}
@@ -96,7 +96,7 @@ export function SubjectEditForm({
           disabled={!dirty || mutation.busy}
           data-testid="subject-edit-cancel"
         >
-          {msg("subjects.components.SubjectEditForm.huy")}</Button>
+          {msg("subjects.components.SubjectEditForm.cancel")}</Button>
         <Button
           type="submit"
           variant="primary"
@@ -104,7 +104,7 @@ export function SubjectEditForm({
           disabled={!dirty || mutation.busy || conflict}
           data-testid="subject-edit-save"
         >
-          {msg("subjects.components.SubjectEditForm.luuThayDoi")}</Button>
+          {msg("subjects.components.SubjectEditForm.saveChanges")}</Button>
       </div>
     </form>
   );

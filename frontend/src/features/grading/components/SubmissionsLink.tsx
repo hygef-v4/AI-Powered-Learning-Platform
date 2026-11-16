@@ -12,6 +12,6 @@ export function SubmissionsLink({ assignmentId, classId, practice }: { assignmen
   return (
     <Link href={buildGradebookHref(classId, { assignment: assignmentId })} onClick={(event) => event.stopPropagation()}
       className="inline-flex h-8 items-center justify-center rounded-lg border border-line-strong bg-surface px-2.5 text-xs font-semibold whitespace-nowrap text-ink transition-colors hover:border-primary hover:bg-primary-soft hover:text-primary-ink">
-      {msg("grading.components.SubmissionsLink.chamDiem")}</Link>
+      {msg("grading.components.SubmissionsLink.grading")}</Link>
   );
 }

@@ -14,7 +14,7 @@ describe("LanguageDialog", () => {
   it("hiện ba ngôn ngữ dạng radio, ngôn ngữ đang dùng được chọn sẵn", () => {
     render(<LanguageDialog open onClose={vi.fn()} />);
     const radios = screen.getAllByRole("radio");
-    expect(radios.map((radio) => radio.closest("label")?.textContent)).toEqual(["Tiếng Việt", "English", "日本語"]);
+    expect(radios.map((radio) => radio.closest("label")?.textContent)).toEqual(["English", "Tiếng Việt", "日本語"]);
     expect(screen.getByRole("radio", { name: "Tiếng Việt" })).toBeChecked();
   });
 

@@ -17,16 +17,16 @@ export function OpenGroupWorkButton({ assignmentId }: { assignmentId: string; cl
   return (
     <>
       {submission && (
-        <ul aria-label={msg("groupdocs.components.OpenGroupWorkButton.baiNop")} className="-mx-2 flex flex-col">
+        <ul aria-label={msg("groupdocs.components.OpenGroupWorkButton.submission")} className="-mx-2 flex flex-col">
           <li>
             <Link href={href} className="row-interactive flex items-center justify-between gap-3 rounded-lg px-2 py-2 text-[13px] hover:bg-shell">
               <span className="font-mono text-xs text-muted">{formatDateTime(submission.submittedAt)}</span>
-              <Pill tone={submission.late ? "accent" : "success"}>{submission.late ? msg("groupdocs.components.OpenGroupWorkButton.nopTre") : msg("groupdocs.components.OpenGroupWorkButton.daNop")}</Pill>
+              <Pill tone={submission.late ? "accent" : "success"}>{submission.late ? msg("groupdocs.components.OpenGroupWorkButton.submittedLate") : msg("groupdocs.components.OpenGroupWorkButton.submitted")}</Pill>
             </Link>
           </li>
         </ul>
       )}
-      <ButtonLink href={href} variant="primary">{msg("groupdocs.components.OpenGroupWorkButton.moTaiLieuNhom")}</ButtonLink>
+      <ButtonLink href={href} variant="primary">{msg("groupdocs.components.OpenGroupWorkButton.openGroupDocument")}</ButtonLink>
     </>
   );
 }

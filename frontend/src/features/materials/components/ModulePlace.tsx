@@ -57,7 +57,7 @@ export function ModuleNeighbours({
   return (
     <nav
       aria-label={
-        position === "top" ? msg("materials.components.ModulePlace.hocLieuTruocVaSauDau") : msg("materials.components.ModulePlace.hocLieuTruocVaSau")
+        position === "top" ? msg("materials.components.ModulePlace.previousAndNextMaterialsTop") : msg("materials.components.ModulePlace.previousAndNextMaterials")
       }
       className={`grid gap-3 sm:grid-cols-2 ${position === "bottom" ? "border-t border-line pt-4" : ""}`}
     >
@@ -80,7 +80,7 @@ function Neighbour({
     <Link
       href={buildItemHref(item, scope)}
       data-testid={`material-${after ? "next" : "previous"}-${buildItemKey(item)}`}
-      aria-label={`${after ? "Sau" : msg("materials.components.ModulePlace.truoc")}: ${resolveItemTitle(item)}`}
+      aria-label={`${after ? "Sau" : msg("materials.components.ModulePlace.previous")}: ${resolveItemTitle(item)}`}
       className={`group flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:border-line-strong ${after ? "sm:col-start-2 sm:justify-end sm:text-right" : ""}`}
     >
       {!after && (

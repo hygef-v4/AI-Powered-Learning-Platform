@@ -16,7 +16,7 @@ const WHEN_COLLAPSED = "hidden md:group-data-[collapsed]/sidebar:block";
 export function resolveAssignmentContext({ pathname }: NavLocation): NavContext | null {
   const match = /^\/assignments\/([^/]+)$/.exec(pathname) ?? /^\/teaching\/evaluations\/([^/]+)$/.exec(pathname);
   if (!match) return null;
-  return { key: `assignment:${match[1]}`, label: msg("assignments.components.assignmentNav.cacPhanCuaBai"), header: <AssignmentNav />, items: [] };
+  return { key: `assignment:${match[1]}`, label: msg("assignments.components.assignmentNav.assignmentParts"), header: <AssignmentNav />, items: [] };
 }
 
 /**
@@ -26,7 +26,7 @@ export function resolveAssignmentContext({ pathname }: NavLocation): NavContext 
 export function resolveStudentAssignmentContext({ pathname }: NavLocation): NavContext | null {
   const match = /^\/attempts\/([^/]+)$/.exec(pathname) ?? /^\/my-assignments\/([^/]+)\/history$/.exec(pathname);
   if (!match) return null;
-  return { key: `assignment-work:${match[1]}`, label: msg("assignments.components.assignmentNav.cacPhanCuaBai"), header: <AssignmentNav />, items: [] };
+  return { key: `assignment-work:${match[1]}`, label: msg("assignments.components.assignmentNav.assignmentParts"), header: <AssignmentNav />, items: [] };
 }
 
 /**
@@ -46,21 +46,21 @@ export function AssignmentNav() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="mb-3 shrink-0 border-b border-line pb-3.5">
-        <BackLink href={outline?.backHref ?? "/teaching/classes"} title={outline?.backLabel ?? msg("assignments.components.assignmentNav.baiTap")}
+        <BackLink href={outline?.backHref ?? "/teaching/classes"} title={outline?.backLabel ?? msg("assignments.components.assignmentNav.assignment")}
           className="inline-flex max-w-full items-center gap-2.5 rounded-md px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-muted transition-colors hover:text-ink">
           <Icon name="arrow_back" size={17} className="shrink-0" />
-          <span className={FADE_LABEL}>{outline?.backLabel ?? msg("assignments.components.assignmentNav.baiTap")}</span>
+          <span className={FADE_LABEL}>{outline?.backLabel ?? msg("assignments.components.assignmentNav.assignment")}</span>
         </BackLink>
       </div>
-      <nav aria-label={msg("assignments.components.assignmentNav.cacPhanCuaBai")} className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
-        {!outline && <span className={cx("px-2.5 py-2 text-[13px] text-muted", FADE_LABEL)}>{msg("assignments.components.assignmentNav.dangTai")}</span>}
+      <nav aria-label={msg("assignments.components.assignmentNav.assignmentParts")} className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
+        {!outline && <span className={cx("px-2.5 py-2 text-[13px] text-muted", FADE_LABEL)}>{msg("assignments.components.assignmentNav.loading")}</span>}
         {outline && (
           <Card padding="none" className="flex flex-col p-1 shadow-xs">
           <div className={cx(WHEN_OPEN, "flex items-center justify-between gap-2 border-b border-line py-1 pr-1 pl-2.5")}>
-            <span className="text-xs font-semibold tracking-[.04em] text-muted uppercase">{msg("assignments.components.assignmentNav.cauHoi")}</span>
-            {outline.editable && <SidebarToolButton icon="add" tone="primary" iconSize={15} label={msg("assignments.components.assignmentNav.themCauHoi")} onClick={() => addPart(null)} />}
+            <span className="text-xs font-semibold tracking-[.04em] text-muted uppercase">{msg("assignments.components.assignmentNav.questions")}</span>
+            {outline.editable && <SidebarToolButton icon="add" tone="primary" iconSize={15} label={msg("assignments.components.assignmentNav.addQuestion")} onClick={() => addPart(null)} />}
           </div>
-          {outline.entries.length === 0 && <span className={cx("px-2.5 py-2 text-[12.5px] text-faint", FADE_LABEL)}>{msg("assignments.components.assignmentNav.baiChuaCoCauHoi")}</span>}
+          {outline.entries.length === 0 && <span className={cx("px-2.5 py-2 text-[12.5px] text-faint", FADE_LABEL)}>{msg("assignments.components.assignmentNav.theAssignmentHasNoQuestions")}</span>}
           {outline.entries.length > 0 && (
           <ol className="flex flex-col gap-0.5 pt-1" data-testid="assignment-outline">
             {outline.entries.map((entry) => {
@@ -83,7 +83,7 @@ export function AssignmentNav() {
                       {loose ? title : <><SectionNumber value={entry.number} />{entry.title ? ` ${entry.title}` : ""}</>}
                     </span>
                   </button>
-                  {outline.editable && !loose && entry.depth < MAX_SECTION_DEPTH && <SidebarToolButton icon="add" tone="primary" iconSize={15} label={msg("assignments.components.assignmentNav.themYVao", { number: String(entry.number) })} onClick={() => addPart(entry.id)} />}
+                  {outline.editable && !loose && entry.depth < MAX_SECTION_DEPTH && <SidebarToolButton icon="add" tone="primary" iconSize={15} label={msg("assignments.components.assignmentNav.addAPointTo", { number: String(entry.number) })} onClick={() => addPart(entry.id)} />}
                 </li>
               );
             })}

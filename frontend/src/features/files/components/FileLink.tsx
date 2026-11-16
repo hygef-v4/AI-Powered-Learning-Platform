@@ -24,7 +24,7 @@ export function FileLink({ fetchUrl, children }: Props) {
             const { url } = await fetchUrl();
             window.open(url, "_blank", "noopener");
           } catch {
-            setError(msg("files.components.FileLink.khongMoDuocTep"));
+            setError(msg("files.components.FileLink.couldNotOpenTheFile"));
           }
         }}
       >

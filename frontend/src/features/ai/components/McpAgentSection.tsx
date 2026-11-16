@@ -30,7 +30,7 @@ export function McpAgentSection({ credentials, onCreate, onUpdate, onRevoke }: P
     try {
       await onRevoke(credential.id);
     } catch {
-      setError(msg("ai.components.McpAgentSection.khongThuHoiDuocAgentThu"));
+      setError(msg("ai.components.McpAgentSection.couldNotRevokeTheAgent"));
     } finally {
       setRevoking(null);
     }
@@ -41,7 +41,7 @@ export function McpAgentSection({ credentials, onCreate, onUpdate, onRevoke }: P
       title="Agent MCP"
       action={
         <Button variant="primary" size="sm" icon="add" onClick={() => setEditing("new")} disabled={active >= MAX_AGENTS}>
-          {msg("ai.components.McpAgentSection.ketNoiAgentMoi")}</Button>
+          {msg("ai.components.McpAgentSection.connectNewAgent")}</Button>
       }
     >
       {error && (
@@ -53,12 +53,12 @@ export function McpAgentSection({ credentials, onCreate, onUpdate, onRevoke }: P
         <colgroup><col /><col className="w-[120px]" /><col className="w-[120px]" /><col className="w-[110px]" /><col className="w-[84px]" /></colgroup>
         <thead>
           <tr>
-            <Th>{msg("ai.components.McpAgentSection.nhanVaToken")}</Th>
-            <Th>{msg("ai.components.McpAgentSection.quyen")}</Th>
-            <Th>{msg("ai.components.McpAgentSection.hanDung")}</Th>
-            <Th>{msg("ai.components.McpAgentSection.trangThai")}</Th>
+            <Th>{msg("ai.components.McpAgentSection.labelAndToken")}</Th>
+            <Th>{msg("ai.components.McpAgentSection.permissions")}</Th>
+            <Th>{msg("ai.components.McpAgentSection.expires")}</Th>
+            <Th>{msg("ai.components.McpAgentSection.status")}</Th>
             <Th>
-              <span className="sr-only">{msg("ai.components.McpAgentSection.thaoTac")}</span>
+              <span className="sr-only">{msg("ai.components.McpAgentSection.actions")}</span>
             </Th>
           </tr>
         </thead>
@@ -66,7 +66,7 @@ export function McpAgentSection({ credentials, onCreate, onUpdate, onRevoke }: P
           {credentials.length === 0 && (
             <tr>
               <Td colSpan={5} className="py-6 text-center! text-muted">
-                {msg("ai.components.McpAgentSection.chuaCoAgent")}</Td>
+                {msg("ai.components.McpAgentSection.noAgentsYet")}</Td>
             </tr>
           )}
           {credentials.map((c) => (
@@ -83,10 +83,10 @@ export function McpAgentSection({ credentials, onCreate, onUpdate, onRevoke }: P
               <Td>
                 {c.status === "ACTIVE" && (
                   <div className="flex justify-end gap-1">
-                    <IconButton icon="edit" label={msg("ai.components.McpAgentSection.suaAgent", { label: String(c.label) })} onClick={() => setEditing(c)} />
+                    <IconButton icon="edit" label={msg("ai.components.McpAgentSection.editAgent", { label: String(c.label) })} onClick={() => setEditing(c)} />
                     <IconButton
                       icon="trash"
-                      label={msg("ai.components.McpAgentSection.thuHoiAgent", { label: String(c.label) })}
+                      label={msg("ai.components.McpAgentSection.revokeAgent", { label: String(c.label) })}
                       className="text-danger! hover:bg-danger-soft"
                       onClick={() => setRevoking(c)}
                     />
@@ -117,16 +117,16 @@ export function McpAgentSection({ credentials, onCreate, onUpdate, onRevoke }: P
       {created && <McpTokenDialog created={created} onClose={() => setCreated(null)} />}
       <Dialog
         open={revoking !== null}
-        title={msg("ai.components.McpAgentSection.thuHoiAgent2")}
+        title={msg("ai.components.McpAgentSection.revokeAgent2")}
         icon="warning"
         tone="danger"
         onClose={() => setRevoking(null)}
         footer={
           <Button variant="danger" onClick={() => revoking && void revoke(revoking)}>
-            {msg("ai.components.McpAgentSection.thuHoi")}</Button>
+            {msg("ai.components.McpAgentSection.revoke")}</Button>
         }
       >
-        <p>{msg("ai.components.McpAgentSection.banCoChacMuonThuHoi")}{revoking?.label}{msg("ai.components.McpAgentSection.khong")}</p>
+        <p>{msg("ai.components.McpAgentSection.areYouSureYouWant")}{revoking?.label}{msg("ai.components.McpAgentSection.text")}</p>
       </Dialog>
     </SettingsGroup>
   );
@@ -169,7 +169,7 @@ export function McpCredentialDialog({
   const submit = async () => {
     const name = label.trim();
     if (!name || name.length > 60) {
-      setError(msg("ai.components.McpAgentSection.nhanCan160KyTu"));
+      setError(msg("ai.components.McpAgentSection.theLabelMustBe1"));
       return;
     }
     setBusy(true);
@@ -178,7 +178,7 @@ export function McpCredentialDialog({
       await onSubmit(name, access, days);
     } catch (e) {
       const problem = e instanceof ApiError ? e.problem : undefined;
-      setError(describeErrorCode(problem?.code, problem?.detail ?? (editing ? msg("ai.components.McpAgentSection.khongLuuDuocAgentThuLai") : msg("ai.components.McpAgentSection.khongTaoDuocTokenThuLai"))));
+      setError(describeErrorCode(problem?.code, problem?.detail ?? (editing ? msg("ai.components.McpAgentSection.couldNotSaveTheAgent") : msg("ai.components.McpAgentSection.couldNotCreateTheToken"))));
       setBusy(false);
     }
   };
@@ -186,7 +186,7 @@ export function McpCredentialDialog({
   return (
     <Dialog
       open
-      title={editing ? msg("ai.components.McpAgentSection.suaAgent2") : msg("ai.components.McpAgentSection.ketNoiAgentMoi")}
+      title={editing ? msg("ai.components.McpAgentSection.editAgent2") : msg("ai.components.McpAgentSection.connectNewAgent")}
       icon="smart_toy"
       tone="accent"
       size={editing ? "lg" : "md"}
@@ -194,17 +194,17 @@ export function McpCredentialDialog({
       dismissible={!busy}
       footer={
         <Button variant="primary" onClick={() => void submit()} disabled={busy}>
-          {editing ? msg("ai.components.McpAgentSection.luu") : msg("ai.components.McpAgentSection.taoToken")}
+          {editing ? msg("ai.components.McpAgentSection.save") : msg("ai.components.McpAgentSection.createToken")}
         </Button>
       }
     >
-      <Field label={msg("ai.components.McpAgentSection.nhan")} htmlFor={labelId} required error={error}>
+      <Field label={msg("ai.components.McpAgentSection.label")} htmlFor={labelId} required error={error}>
         <TextInput id={labelId} value={label} maxLength={60} onChange={(e) => setLabel(e.target.value)} disabled={busy} />
       </Field>
       {current && <TokenField credential={current} />}
       <fieldset className="flex flex-col gap-1.5">
         <legend className="mb-1.5 text-xs font-semibold text-body">
-          {msg("ai.components.McpAgentSection.quyen")}<span className="text-danger"> *</span>
+          {msg("ai.components.McpAgentSection.permissions")}<span className="text-danger"> *</span>
         </legend>
         {(["READ_ONLY", "READ_WRITE"] as McpAccess[]).map((option) => (
           <label
@@ -222,8 +222,8 @@ export function McpCredentialDialog({
       {!editing && (
         <>
           <fieldset>
-            <legend className="mb-1.5 text-xs font-semibold text-body">{msg("ai.components.McpAgentSection.hanDung")}</legend>
-            <div className="flex gap-1.5" role="radiogroup" aria-label={msg("ai.components.McpAgentSection.hanDung")}>
+            <legend className="mb-1.5 text-xs font-semibold text-body">{msg("ai.components.McpAgentSection.expires")}</legend>
+            <div className="flex gap-1.5" role="radiogroup" aria-label={msg("ai.components.McpAgentSection.expires")}>
               {DAYS.map((d) => (
                 <button
                   key={d}
@@ -237,12 +237,12 @@ export function McpCredentialDialog({
                     days === d ? "border-primary/30 bg-primary-soft text-primary-ink" : "border-line-strong bg-surface text-body",
                   )}
                 >
-                  {d} {msg("ai.components.McpAgentSection.ngay")}</button>
+                  {d} {msg("ai.components.McpAgentSection.days")}</button>
               ))}
             </div>
           </fieldset>
           <p className="text-xs text-muted">
-            {msg("ai.components.McpAgentSection.banDangCo")}{active}/{MAX_AGENTS} {msg("ai.components.McpAgentSection.agentConHieuLuc")}</p>
+            {msg("ai.components.McpAgentSection.youHave")}{active}/{MAX_AGENTS} {msg("ai.components.McpAgentSection.activeAgents")}</p>
         </>
       )}
     </Dialog>
@@ -263,7 +263,7 @@ function TokenField({ credential }: { credential: McpCredential }) {
       setToken(loaded);
       return loaded;
     } catch {
-      setError(msg("ai.components.McpAgentSection.khongXemDuocTokenThuLai"));
+      setError(msg("ai.components.McpAgentSection.couldNotViewTheToken"));
       return null;
     }
   };
@@ -274,7 +274,7 @@ function TokenField({ credential }: { credential: McpCredential }) {
       <TokenCard value={shown && token ? token : `mcp_••••••••${credential.tokenHint}`}>
         <IconButton
           icon={shown ? "visibility_off" : "visibility"}
-          label={!credential.revealable ? msg("ai.components.McpAgentSection.tokenCuKhongXemLaiDuoc") : shown ? msg("ai.components.McpAgentSection.anToken") : "Xem token"}
+          label={!credential.revealable ? msg("ai.components.McpAgentSection.oldTokenCannotBeViewed") : shown ? msg("ai.components.McpAgentSection.hideToken") : "Xem token"}
           disabled={!credential.revealable}
           onClick={() => {
             if (shown) setShown(false);
@@ -283,7 +283,7 @@ function TokenField({ credential }: { credential: McpCredential }) {
         />
         <IconButton
           icon={copied ? "check" : "copy"}
-          label={!credential.revealable ? msg("ai.components.McpAgentSection.tokenCuKhongSaoChepDuoc") : copied ? msg("ai.components.McpAgentSection.daSaoChep") : msg("ai.components.McpAgentSection.saoChepToken")}
+          label={!credential.revealable ? msg("ai.components.McpAgentSection.oldTokenCannotBeCopied") : copied ? msg("ai.components.McpAgentSection.copied") : msg("ai.components.McpAgentSection.copyToken")}
           disabled={!credential.revealable}
           onClick={() => void loadAgents().then(async (t) => t && setCopied(await copyText(t)))}
         />
@@ -316,27 +316,27 @@ export function McpTokenDialog({ created, onClose }: { created: McpCreated; onCl
       onClose={onClose}
       footer={
         <Button variant="primary" onClick={onClose}>
-          {msg("ai.components.McpAgentSection.dong")}</Button>
+          {msg("ai.components.McpAgentSection.close")}</Button>
       }
     >
       <TokenCard value={created.token}>
         <IconButton
           icon={copied === "token" ? "check" : "copy"}
-          label={copied === "token" ? msg("ai.components.McpAgentSection.daSaoChep") : msg("ai.components.McpAgentSection.saoChepToken")}
+          label={copied === "token" ? msg("ai.components.McpAgentSection.copied") : msg("ai.components.McpAgentSection.copyToken")}
           onClick={() => void copy("token", created.token)}
         />
       </TokenCard>
       <dl className="grid grid-cols-[110px_1fr] gap-x-3 gap-y-1 text-xs">
-        <dt className="text-muted">{msg("ai.components.McpAgentSection.nhan")}</dt>
+        <dt className="text-muted">{msg("ai.components.McpAgentSection.label")}</dt>
         <dd className="text-ink">{created.credential.label}</dd>
-        <dt className="text-muted">{msg("ai.components.McpAgentSection.quyen")}</dt>
+        <dt className="text-muted">{msg("ai.components.McpAgentSection.permissions")}</dt>
         <dd className="text-ink">{ACCESS_LABEL[created.credential.access]}</dd>
-        <dt className="text-muted">{msg("ai.components.McpAgentSection.hetHan")}</dt>
+        <dt className="text-muted">{msg("ai.components.McpAgentSection.expired")}</dt>
         <dd className="text-ink">{formatDate(created.credential.expiresAt)}</dd>
       </dl>
       <McpClientSetup token={created.token} />
       <span className="sr-only" role="status">
-        {copied ? msg("ai.components.McpAgentSection.daSaoChep") : ""}
+        {copied ? msg("ai.components.McpAgentSection.copied") : ""}
       </span>
     </Dialog>
   );

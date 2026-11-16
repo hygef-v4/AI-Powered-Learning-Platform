@@ -39,7 +39,7 @@ export function groupResultByPart(items: AttemptResultItem[], parts: DocumentPar
   for (const item of items) {
     const part = partOf.get(item.partId);
     const key = part ? part.ancestorHeadingIds[0] ?? part.partId : item.partId;
-    const title = part ? part.title.split(" › ")[0]! : item.criterionTitle || msg("assignmentwork.model.attemptResult.bai");
+    const title = part ? part.title.split(" › ")[0]! : item.criterionTitle || msg("assignmentwork.model.attemptResult.assignment");
     const group = groups.get(key) ?? { key, title, awarded: 0, max: 0, items: [] };
     group.awarded += item.awarded;
     group.max += item.max;

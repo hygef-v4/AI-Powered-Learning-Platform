@@ -31,7 +31,7 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
     event.preventDefault();
     if (busy) return;
     const next: Errors = {};
-    if (!values.code.trim()) next.code = msg("academics.components.ClassFormDialog.nhapMaLop");
+    if (!values.code.trim()) next.code = msg("academics.components.ClassFormDialog.enterTheClassCode");
     if (!values.startsOn) next.startsOn = CLASS_START_DATE_REQUIRED;
     else if (!term) next.startsOn = CLASS_START_DATE_RANGE;
     setErrors(next);
@@ -39,7 +39,7 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
     setBusy(true); setError("");
     try {
       await onSubmit({ subjectId: subject.id, code: values.code.trim(), name: values.code.trim(), description: values.description.trim(), startsOn: values.startsOn, teacherId: teacher?.id ?? null });
-      showToast(msg("academics.components.ClassFormDialog.daTaoLop"));
+      showToast(msg("academics.components.ClassFormDialog.classCreated"));
       onClose();
     } catch (cause) {
       const fieldError = formatClassFieldError(cause);
@@ -47,22 +47,22 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
       else setError(formatOperationError(cause));
     } finally { setBusy(false); }
   }
-  return <Dialog open title={msg("academics.components.ClassFormDialog.taoLop")} size="lg" onClose={onClose} dismissible={!busy}
-    footer={<Button type="submit" form={`${id}-form`} variant="primary" disabled={busy} data-testid="class-form-submit">{msg("academics.components.ClassFormDialog.taoLop")}</Button>}>
+  return <Dialog open title={msg("academics.components.ClassFormDialog.createClass")} size="lg" onClose={onClose} dismissible={!busy}
+    footer={<Button type="submit" form={`${id}-form`} variant="primary" disabled={busy} data-testid="class-form-submit">{msg("academics.components.ClassFormDialog.createClass")}</Button>}>
     <form id={`${id}-form`} onSubmit={(event) => void handleSubmit(event)} noValidate className="flex flex-col gap-3.5">
       <fieldset disabled={busy} className="flex min-w-0 flex-col gap-3.5">
-        <Field label={msg("academics.components.ClassFormDialog.maLop")} htmlFor={`${id}-code`} required error={errors.code}>
+        <Field label={msg("academics.components.ClassFormDialog.classCode")} htmlFor={`${id}-code`} required error={errors.code}>
           <TextInput id={`${id}-code`} maxLength={30} value={values.code} invalid={!!errors.code} onChange={(event) => setValue("code", event.target.value)} data-testid="class-form-code" />
         </Field>
         <div className="flex flex-col gap-1.5">
-          <Field label={msg("academics.components.ClassFormDialog.ngayBatDau")} htmlFor={`${id}-starts-on`} required error={errors.startsOn}>
+          <Field label={msg("academics.components.ClassFormDialog.startDate")} htmlFor={`${id}-starts-on`} required error={errors.startsOn}>
             <DateInput id={`${id}-starts-on`} min="2000-01-01" max="2099-12-31" value={values.startsOn} invalid={!!errors.startsOn}
               onChange={(value) => setValue("startsOn", value)} data-testid="class-form-starts-on" />
           </Field>
-          {term && <p aria-live="polite" className="text-xs text-muted" data-testid="class-form-term">{msg("academics.components.ClassFormDialog.hocKy")}<span className="font-mono text-ink">{term}</span></p>}
+          {term && <p aria-live="polite" className="text-xs text-muted" data-testid="class-form-term">{msg("academics.components.ClassFormDialog.term")}<span className="font-mono text-ink">{term}</span></p>}
         </div>
-        <PersonPicker label={msg("academics.components.ClassFormDialog.giangVien")} value={teacher} onChange={setTeacher} people={teachers} loader={loadTeachers} clearable disabled={busy} />
-        <Field label={msg("academics.components.ClassFormDialog.moTa")} htmlFor={`${id}-description`}>
+        <PersonPicker label={msg("academics.components.ClassFormDialog.lecturer")} value={teacher} onChange={setTeacher} people={teachers} loader={loadTeachers} clearable disabled={busy} />
+        <Field label={msg("academics.components.ClassFormDialog.description")} htmlFor={`${id}-description`}>
           <Textarea id={`${id}-description`} maxLength={2000} value={values.description} onChange={(event) => setValue("description", event.target.value)}
             className="min-h-20" />
         </Field>

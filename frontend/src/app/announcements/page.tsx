@@ -3,7 +3,7 @@ import { ClassAnnouncementsPage } from "@/features/announcements/pages/ClassAnno
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.announcements.page.tatCaThongBao") };
+  return { title: await translateOnServer("app.announcements.page.allAnnouncements") };
 }
 
 // U14: Thông báo lớp ở menu chính, mọi lớp; link cũ `?classId=` mở sẵn ô lọc ở lớp đó.

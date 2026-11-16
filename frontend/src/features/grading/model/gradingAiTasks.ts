@@ -24,7 +24,7 @@ function findEntry(evaluationId: string): Entry {
   if (!entry) {
     entry = { snapshot: { proposals: [], loaded: false, pollExhausted: false, error: "" },
       listeners: new Set(), inFlight: false, generation: 0, revision: 0, attempts: 0, errors: 0,
-      notifyFor: new Set(), diagnostics: new Map(), label: msg("grading.model.gradingAiTasks.baiCham") };
+      notifyFor: new Set(), diagnostics: new Map(), label: msg("grading.model.gradingAiTasks.grading") };
     entries.set(evaluationId, entry);
   }
   return entry;
@@ -75,9 +75,9 @@ async function pollProposals(evaluationId: string, entry: Entry) {
     for (const proposal of next) {
       if (proposal.status === "PENDING") entry.notifyFor.add(proposal.id);
       else if (entry.notifyFor.delete(proposal.id)) {
-        if (proposal.status === "READY") showToast(msg("grading.model.gradingAiTasks.deXuatAiChoDaSan", { label: String(entry.label) }));
+        if (proposal.status === "READY") showToast(msg("grading.model.gradingAiTasks.theAiProposalForIs", { label: String(entry.label) }));
         else if (proposal.status === "FAILED" || proposal.status === "REJECTED") {
-          showErrorToast(proposal.safeError || msg("grading.model.gradingAiTasks.khongTaoDuocDeXuatAi", { label: String(entry.label) }));
+          showErrorToast(proposal.safeError || msg("grading.model.gradingAiTasks.couldNotCreateAnAi", { label: String(entry.label) }));
         }
       }
     }

@@ -4,7 +4,7 @@ import { StudentAssignmentsPage } from "@/features/assignmentwork/pages/StudentA
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.myassignments.page.baiTap") };
+  return { title: await translateOnServer("app.myassignments.page.assignments") };
 }
 
 // U08 #38 Student Assignments.

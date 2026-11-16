@@ -14,7 +14,7 @@ export function ManagerCard({
 }) {
   return (
     <Section
-      title={msg("subjects.components.ManagerCard.chuNhiemMon")}
+      title={msg("subjects.components.ManagerCard.subjectManager")}
       actions={
         onChange && (
           <Button
@@ -24,17 +24,17 @@ export function ManagerCard({
             disabled={disabled}
             data-testid="subject-manager-open"
           >
-            {subject.managerId === null ? msg("subjects.components.ManagerCard.phanCong") : msg("subjects.components.ManagerCard.doiChuNhiem")}
+            {subject.managerId === null ? msg("subjects.components.ManagerCard.assign") : msg("subjects.components.ManagerCard.changeManager")}
           </Button>
         )
       }
     >
       {subject.managerId === null ? (
         <div>
-          <Pill>{msg("subjects.components.ManagerCard.chuaPhanCong")}</Pill>
+          <Pill>{msg("subjects.components.ManagerCard.notAssigned")}</Pill>
         </div>
       ) : subject.manager === null ? (
-        <p className="text-sm text-muted">{msg("subjects.components.ManagerCard.khongTraDuocThongTinChu")}</p>
+        <p className="text-sm text-muted">{msg("subjects.components.ManagerCard.couldNotLookUpThe")}</p>
       ) : (
         <div className="flex items-center gap-3">
           <span

@@ -12,7 +12,7 @@ const WIDTHS = ["w-3/4", "w-1/2", "w-2/3", "w-2/5"];
  * Các dòng giữ chỗ của một bảng đang tải: đủ số cột để bảng không nhảy bố cục khi dữ liệu về. Dòng đầu mang nhãn cho
  * trình đọc màn hình.
  */
-export function TableSkeletonRows({ rows = 5, columns, label = msg("shared.ui.Skeleton.dangTai") }: { rows?: number; columns: number; label?: string }) {
+export function TableSkeletonRows({ rows = 5, columns, label = msg("shared.ui.Skeleton.loading") }: { rows?: number; columns: number; label?: string }) {
   return (
     <>
       {Array.from({ length: rows }, (_, row) => (

@@ -3,7 +3,7 @@ import { AssignmentWorkspacePage } from "@/features/assignmentwork/pages/Assignm
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.attempts.attemptId.page.lamBaiTap") };
+  return { title: await translateOnServer("app.attempts.attemptId.page.doAssignment") };
 }
 
 // U08 #40 Assignment Workspace.

@@ -19,12 +19,12 @@ export type Settings = {
 
 /** Một câu ngắn dưới mỗi lựa chọn, giống popup tạo bài (yêu cầu 2026-11-10). */
 const SUBMISSION_HINTS: Record<SubmissionMode, string> = {
-  INDIVIDUAL: msg("assignments.components.AssignmentSettingsPanel.moiSinhVienNopMotBai"),
-  GROUP: msg("assignments.components.AssignmentSettingsPanel.moiNhomNopChungMotBai"),
+  INDIVIDUAL: msg("assignments.components.AssignmentSettingsPanel.eachStudentSubmitsTheirOwn"),
+  GROUP: msg("assignments.components.AssignmentSettingsPanel.eachGroupSubmitsOneShared"),
 };
 const GRADING_HINTS: Record<GradingMode, string> = {
-  GRADED: msg("assignments.components.AssignmentSettingsPanel.tinhVaoSoDiem"),
-  PRACTICE: msg("assignments.components.AssignmentSettingsPanel.tuLuyenKhongTinhDiem"),
+  GRADED: msg("assignments.components.AssignmentSettingsPanel.countsTowardTheGradebook"),
+  PRACTICE: msg("assignments.components.AssignmentSettingsPanel.selfPracticeNotGraded"),
 };
 
 export function readSettings(detail: AssignmentDetail): Settings {
@@ -53,16 +53,16 @@ export function AssignmentSettingsPanel({ detail, value, onChange, readOnly, cla
   const group = detail.submissionMode === "GROUP";
   return (
     <div className="flex flex-col gap-4" data-testid="assignment-settings">
-      <Field label={msg("assignments.components.AssignmentSettingsPanel.hinhThuc")}>
-        <Choice<SubmissionMode> name={msg("assignments.components.AssignmentSettingsPanel.hinhThuc")} value={detail.submissionMode} disabled onChange={() => {}} options={[
-          { value: "INDIVIDUAL", label: msg("assignments.components.AssignmentSettingsPanel.caNhan") },
-          { value: "GROUP", label: msg("assignments.components.AssignmentSettingsPanel.nhom") },
+      <Field label={msg("assignments.components.AssignmentSettingsPanel.format")}>
+        <Choice<SubmissionMode> name={msg("assignments.components.AssignmentSettingsPanel.format")} value={detail.submissionMode} disabled onChange={() => {}} options={[
+          { value: "INDIVIDUAL", label: msg("assignments.components.AssignmentSettingsPanel.individual") },
+          { value: "GROUP", label: msg("assignments.components.AssignmentSettingsPanel.group") },
         ]} />
         <ChoiceHint>{SUBMISSION_HINTS[detail.submissionMode]}</ChoiceHint>
       </Field>
       {group && detail.classId && <SlotOutlet slot={assignmentFormSections} props={{ assignmentId: detail.id, classId: detail.classId }} />}
-      <Field label={msg("assignments.components.AssignmentSettingsPanel.cheDo")}>
-        <Choice<GradingMode> name={msg("assignments.components.AssignmentSettingsPanel.cheDo")} value={value.gradingMode} disabled={readOnly || group}
+      <Field label={msg("assignments.components.AssignmentSettingsPanel.mode")}>
+        <Choice<GradingMode> name={msg("assignments.components.AssignmentSettingsPanel.mode")} value={value.gradingMode} disabled={readOnly || group}
           onChange={(gradingMode) => onChange({ ...value, gradingMode })} options={[
             { value: "GRADED", label: "Graded" },
             { value: "PRACTICE", label: "Practice" },
@@ -71,14 +71,14 @@ export function AssignmentSettingsPanel({ detail, value, onChange, readOnly, cla
       </Field>
       {classId && <SlotOutlet slot={assignmentSettingsSections} props={{ assignmentId: detail.id, classId, gradingMode: value.gradingMode }} />}
       <div className="flex items-center gap-1">
-        <Switch checked={value.activityMonitoringEnabled} label={msg("assignments.components.AssignmentSettingsPanel.ghiNhanHoatDong")}
+        <Switch checked={value.activityMonitoringEnabled} label={msg("assignments.components.AssignmentSettingsPanel.activityMonitoring")}
           disabled={readOnly}
           onChange={(checked) => onChange({ ...value, activityMonitoringEnabled: checked })} />
-        <InfoTip label={msg("assignments.components.AssignmentSettingsPanel.ghiNhanHoatDong")}
-          text={msg("assignments.components.AssignmentSettingsPanel.ghiLaiKhiSinhVienRoi")} />
+        <InfoTip label={msg("assignments.components.AssignmentSettingsPanel.activityMonitoring")}
+          text={msg("assignments.components.AssignmentSettingsPanel.recordsWhenStudentsLeaveThe")} />
       </div>
       {value.activityMonitoringEnabled && (
-        <Field label={msg("assignments.components.AssignmentSettingsPanel.loiBaoChoSinhVien")} htmlFor="activity-notice" required>
+        <Field label={msg("assignments.components.AssignmentSettingsPanel.noticeToStudents")} htmlFor="activity-notice" required>
           <Textarea id="activity-notice" rows={2} maxLength={1000} value={value.activityNotice} disabled={readOnly}
             onChange={(e) => onChange({ ...value, activityNotice: e.target.value })} />
         </Field>

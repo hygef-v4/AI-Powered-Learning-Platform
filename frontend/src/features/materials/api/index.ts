@@ -85,14 +85,14 @@ export function describeMaterialError(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.problem.status === 409)
       return error.problem.code === "MATERIAL_VERSION_CONFLICT" || !error.problem.detail
-        ? msg("materials.api.index.hocLieuDaThayDoiHoac")
+        ? msg("materials.api.index.theLearningMaterialHasChanged")
         : error.problem.detail;
     if (error.problem.status === 404)
-      return msg("materials.api.index.khongTimThayHocLieuHoac");
-    if (error.problem.status === 401) return msg("materials.api.index.phienDangNhapDaHetHan");
+      return msg("materials.api.index.learningMaterialNotFoundOr");
+    if (error.problem.status === 401) return msg("materials.api.index.yourSessionHasExpired");
     return error.message;
   }
-  return msg("materials.api.index.khongTaiDuocHocLieuVui");
+  return msg("materials.api.index.couldNotLoadTheLearning");
 }
 const WATCH_HOSTS = [
   "youtube.com",

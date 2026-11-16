@@ -3,7 +3,7 @@ import { QuizPracticeHistoryPage } from "@/features/quizpractice/pages/QuizPract
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.quizpractice.page.luyenTapQuiz") };
+  return { title: await translateOnServer("app.quizpractice.page.quizPractice") };
 }
 
 // U11 #42 Quiz Practice History.

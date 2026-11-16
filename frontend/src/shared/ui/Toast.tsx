@@ -114,7 +114,7 @@ export function ToastStack({ items, className, onDismiss, onPause, onResume }: T
           {onDismiss && (
             <button
               type="button"
-              aria-label={msg("shared.ui.Toast.dongThongBao")}
+              aria-label={msg("shared.ui.Toast.closeNotification")}
               onClick={() => onDismiss(item.id)}
               className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink"
             >

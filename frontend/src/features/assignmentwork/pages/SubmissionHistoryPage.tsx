@@ -82,7 +82,7 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
     const focus = `focus=${encodeURIComponent(assignmentId)}`;
     const backHref = general ? `/my-assignments?${focus}` : `/my-assignments?classId=${encodeURIComponent(classId)}&${focus}`;
     const blocks = attempt && attempt.attemptId === selected ? attempt.content.blocks : [];
-    publishOutline({ assignmentId, backHref, backLabel: msg("assignmentwork.pages.SubmissionHistoryPage.baiTap"), entries: buildOutline(blocks) });
+    publishOutline({ assignmentId, backHref, backLabel: msg("assignmentwork.pages.SubmissionHistoryPage.assignment"), entries: buildOutline(blocks) });
   }, [assignmentId, attempt, classId, detail, general, selected]);
   useEffect(() => () => publishOutline(null), []);
 
@@ -90,9 +90,9 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   const { result } = useAttemptResult(current?.graded ? current.attemptId : null);
   const shownResult = result?.score != null && attempt?.attemptId === selected ? result : null;
 
-  if (!classId) return <Alert tone="danger" role="alert">{msg("assignmentwork.pages.SubmissionHistoryPage.thieuLopCuaBai")}</Alert>;
+  if (!classId) return <Alert tone="danger" role="alert">{msg("assignmentwork.pages.SubmissionHistoryPage.theAssignmentsClassIsMissing")}</Alert>;
   if (error) return <PageLoadError>{describeError(error)}</PageLoadError>;
-  if (!detail || !attempts) return <PageLoading label={msg("assignmentwork.pages.SubmissionHistoryPage.dangTaiLichSuNopBai")} />;
+  if (!detail || !attempts) return <PageLoading label={msg("assignmentwork.pages.SubmissionHistoryPage.loadingSubmissionHistory")} />;
 
   // Quay lại nằm ở sidebar mục lục của bài (về trang Bài tập, đúng tab đang chứa bài).
   const renderShell = (bar: ReactNode, body: ReactNode) => (
@@ -104,7 +104,7 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   if (attempts.length === 0) {
     return renderShell(<WorkspaceTopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot} />,
       <Card as="p" padding="none" className="p-8 text-center text-[13.5px] text-muted">
-        {canOpenHistory(detail, true) ? msg("assignmentwork.pages.SubmissionHistoryPage.banChuaNopBaiNao") : msg("assignmentwork.pages.SubmissionHistoryPage.lichSuNopBaiHienSau")}
+        {canOpenHistory(detail, true) ? msg("assignmentwork.pages.SubmissionHistoryPage.youHaveNotSubmittedAnything") : msg("assignmentwork.pages.SubmissionHistoryPage.submissionHistoryAppearsAfterYou")}
       </Card>);
   }
 
@@ -121,7 +121,7 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
         <PracticeFeedbackPanel
           attemptId={shown.attemptId}
           partTitles={{
-            ASSIGNMENT: msg("assignmentwork.pages.SubmissionHistoryPage.toanBai"),
+            ASSIGNMENT: msg("assignmentwork.pages.SubmissionHistoryPage.wholeAssignment"),
             ...Object.fromEntries(shown.parts.map((part) => [part.partId, part.title])),
           }}
         />
@@ -132,41 +132,41 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   const bar = (
     <WorkspaceTopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot}
       actions={current && (
-        <Menu label="" icon="more_horiz" ariaLabel={msg("assignmentwork.pages.SubmissionHistoryPage.thaoTacKhac")} align="right">
-          <MenuItem icon="download" onClick={() => { window.location.href = exportUrl(current.attemptId); }}>{msg("assignmentwork.pages.SubmissionHistoryPage.taiDocx")}</MenuItem>
+        <Menu label="" icon="more_horiz" ariaLabel={msg("assignmentwork.pages.SubmissionHistoryPage.moreActions")} align="right">
+          <MenuItem icon="download" onClick={() => { window.location.href = exportUrl(current.attemptId); }}>{msg("assignmentwork.pages.SubmissionHistoryPage.downloadDocx")}</MenuItem>
         </Menu>
       )} />
   );
   const kind = (
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
       <p className="text-[13px] text-muted" data-testid="assignment-kind">
-        {detail.gradingMode === "PRACTICE" ? msg("assignmentwork.pages.SubmissionHistoryPage.luyenTap") : detail.submissionMode === "GROUP" ? msg("assignmentwork.pages.SubmissionHistoryPage.nhom") : msg("assignmentwork.pages.SubmissionHistoryPage.caNhan")}
+        {detail.gradingMode === "PRACTICE" ? msg("assignmentwork.pages.SubmissionHistoryPage.practice") : detail.submissionMode === "GROUP" ? msg("assignmentwork.pages.SubmissionHistoryPage.group") : msg("assignmentwork.pages.SubmissionHistoryPage.individual")}
       </p>
     </div>
   );
 
   return renderShell(bar, <>
-    {!shown || !current ? <PageLoading label={msg("assignmentwork.pages.SubmissionHistoryPage.dangTaiBaiNop")} /> : (
+    {!shown || !current ? <PageLoading label={msg("assignmentwork.pages.SubmissionHistoryPage.loadingSubmission")} /> : (
       <DocumentEditor fullWidth document={shown.content} onChange={NOOP} mode="student" readOnly diagramEnabled={false}
         imageUrl={attemptImageUrl(current.attemptId)}
-        emptyLeafLabel={msg("assignmentwork.pages.SubmissionHistoryPage.chuaLamPhanNay")}
+        emptyLeafLabel={msg("assignmentwork.pages.SubmissionHistoryPage.thisPartWasNotDone")}
         comments={comments}
         titleField={{ text: detail.title, readOnly: true, onText: NOOP }}
         header={kind}
         viewSlot={viewSlot}
         // Chuyển qua lại giữa các bài nộp; chỉ có khi có hơn một bản (bài cá nhân: bản đúng hạn và bản nộp muộn).
         toolbarCenter={ordered.length < 2 ? undefined : <>
-          <ToolbarButton icon="chevron_left" title={msg("assignmentwork.pages.SubmissionHistoryPage.baiNopTruoc")} aria-label={msg("assignmentwork.pages.SubmissionHistoryPage.baiNopTruoc")} disabled={index < 0 || index >= ordered.length - 1}
+          <ToolbarButton icon="chevron_left" title={msg("assignmentwork.pages.SubmissionHistoryPage.previousSubmission")} aria-label={msg("assignmentwork.pages.SubmissionHistoryPage.previousSubmission")} disabled={index < 0 || index >= ordered.length - 1}
             onClick={() => setSelected(ordered[index + 1]!.attemptId)} />
-          <select aria-label={msg("assignmentwork.pages.SubmissionHistoryPage.chonBaiNop")} value={selected ?? ""} onChange={(e) => setSelected(e.target.value)}
+          <select aria-label={msg("assignmentwork.pages.SubmissionHistoryPage.chooseSubmission")} value={selected ?? ""} onChange={(e) => setSelected(e.target.value)}
             className="h-7 rounded-md border border-line bg-surface px-2 font-mono text-xs text-ink outline-none focus:border-focus">
             {ordered.map((a) => (
               <option key={a.attemptId} value={a.attemptId}>
-                {detail.gradingMode === "PRACTICE" ? attemptTime(a) : `${a.late ? msg("assignmentwork.pages.SubmissionHistoryPage.banNopMuon") : msg("assignmentwork.pages.SubmissionHistoryPage.banDungHan")} – ${attemptTime(a)}`}
+                {detail.gradingMode === "PRACTICE" ? attemptTime(a) : `${a.late ? msg("assignmentwork.pages.SubmissionHistoryPage.lateVersion") : msg("assignmentwork.pages.SubmissionHistoryPage.onTimeVersion")} – ${attemptTime(a)}`}
               </option>
             ))}
           </select>
-          <ToolbarButton icon="chevron_right" title={msg("assignmentwork.pages.SubmissionHistoryPage.baiNopSau")} aria-label={msg("assignmentwork.pages.SubmissionHistoryPage.baiNopSau")} disabled={index <= 0}
+          <ToolbarButton icon="chevron_right" title={msg("assignmentwork.pages.SubmissionHistoryPage.nextSubmission")} aria-label={msg("assignmentwork.pages.SubmissionHistoryPage.nextSubmission")} disabled={index <= 0}
             onClick={() => setSelected(ordered[index - 1]!.attemptId)} />
         </>}
       />
@@ -197,7 +197,7 @@ function TotalCard({ result }: { result: AttemptResult }) {
   return (
     <TotalScoreCard score={result.score} maxScore={result.maxScore} format={formatPoints}>
       <div className="mt-3"><PublishedFeedback feedback={result.feedback} summary={result.summary} /></div>
-      {result.memberOverride && <p className="mt-2 text-xs text-muted">{msg("assignmentwork.pages.SubmissionHistoryPage.diemCaNhanDaDuocGiang")}</p>}
+      {result.memberOverride && <p className="mt-2 text-xs text-muted">{msg("assignmentwork.pages.SubmissionHistoryPage.yourIndividualScoreWasAdjusted")}</p>}
     </TotalScoreCard>
   );
 }

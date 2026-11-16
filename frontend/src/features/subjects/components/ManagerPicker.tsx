@@ -79,7 +79,7 @@ export function ManagerPicker({
   return (
     <div className="flex min-w-0 flex-col gap-1.5" data-testid="subject-manager-picker">
       <label htmlFor={`${id}-input`} className="text-xs font-semibold text-body">
-        {msg("subjects.components.ManagerPicker.chuNhiemMon")}</label>
+        {msg("subjects.components.ManagerPicker.subjectManager")}</label>
       <div ref={anchorRef}>
         <TextInput
           id={`${id}-input`}
@@ -91,7 +91,7 @@ export function ManagerPicker({
           autoComplete="off"
           maxLength={200}
           disabled={disabled}
-          placeholder={msg("subjects.components.ManagerPicker.chuaPhanCong")}
+          placeholder={msg("subjects.components.ManagerPicker.notAssigned")}
           value={open ? search : value ? formatManagerLabel(value) : ""}
           onFocus={() => setOpen(true)}
           onChange={(event) => {
@@ -109,7 +109,7 @@ export function ManagerPicker({
             value && !disabled ? (
               <button
                 type="button"
-                aria-label={msg("subjects.components.ManagerPicker.boChuNhiem")}
+                aria-label={msg("subjects.components.ManagerPicker.removeManager")}
                 className="flex text-muted hover:text-ink"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => handleChoose(null)}
@@ -129,7 +129,7 @@ export function ManagerPicker({
             ref={listRef}
             id={`${id}-list`}
             role="listbox"
-            aria-label={msg("subjects.components.ManagerPicker.chuNhiemMon")}
+            aria-label={msg("subjects.components.ManagerPicker.subjectManager")}
             style={
               place
                 ? { top: place.top, left: place.left, width: place.width }
@@ -139,10 +139,10 @@ export function ManagerPicker({
           >
             {(resource.loading || waiting) && (
               <p role="status" className="px-3 py-2 text-xs text-muted">
-                {msg("subjects.components.ManagerPicker.dangTimChuNhiem")}</p>
+                {msg("subjects.components.ManagerPicker.searchingForManagers")}</p>
             )}
             {ready && candidates.length === 0 && (
-              <p className="px-3 py-2 text-xs text-muted">{msg("subjects.components.ManagerPicker.khongCoChuNhiemPhuHop")}</p>
+              <p className="px-3 py-2 text-xs text-muted">{msg("subjects.components.ManagerPicker.noMatchingManagers")}</p>
             )}
             {ready &&
               candidates.map((manager) => (
@@ -166,13 +166,13 @@ export function ManagerPicker({
         <div role="alert" className="flex items-center gap-2 text-xs text-danger">
           <p>
             {status === 401
-              ? msg("subjects.components.ManagerPicker.vuiLongDangNhapLaiDe")
+              ? msg("subjects.components.ManagerPicker.pleaseSignInAgainTo")
               : status === 403
-                ? msg("subjects.components.ManagerPicker.banKhongCoQuyenTimChu")
-                : msg("subjects.components.ManagerPicker.khongTaiDuocDanhSachChu")}
+                ? msg("subjects.components.ManagerPicker.youDoNotHavePermission")
+                : msg("subjects.components.ManagerPicker.couldNotLoadTheList")}
           </p>
           <Button size="sm" onClick={resource.reload} data-testid="subject-manager-retry">
-            {msg("subjects.components.ManagerPicker.thuLai")}</Button>
+            {msg("subjects.components.ManagerPicker.retry")}</Button>
         </div>
       )}
     </div>

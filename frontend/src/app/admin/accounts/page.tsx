@@ -4,7 +4,7 @@ import { AccountListPage } from "@/features/identity/admin/pages/AccountListPage
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.admin.accounts.page.taiKhoan") };
+  return { title: await translateOnServer("app.admin.accounts.page.accounts") };
 }
 
 // AccountListPage đọc bộ lọc từ URL (useSearchParams) nên cần Suspense.

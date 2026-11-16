@@ -32,19 +32,19 @@ export function MaterialSourceSelect({ materials, value, onChange, disabled = fa
     }}>
       <summary aria-disabled={disabled} onClick={(event) => disabled && event.preventDefault()}
         className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-field bg-surface px-3 py-2 text-[13px] text-ink focus-visible:outline-focus">
-        <span>{value.length ? msg("quizzes.components.MaterialSourceSelect.taiLieuDaChon", { length: String(value.length) }) : msg("quizzes.components.MaterialSourceSelect.chonTaiLieuNguon")}</span>
+        <span>{value.length ? msg("quizzes.components.MaterialSourceSelect.documentsSelected", { length: String(value.length) }) : msg("quizzes.components.MaterialSourceSelect.chooseSourceDocuments")}</span>
         <Icon name="expand_more" size={18} />
       </summary>
-      <fieldset disabled={disabled} aria-label={msg("quizzes.components.MaterialSourceSelect.taiLieuNguonChoAi")}
+      <fieldset disabled={disabled} aria-label={msg("quizzes.components.MaterialSourceSelect.sourceDocumentsForTheAi")}
         className="absolute inset-x-0 top-full z-30 mt-1 flex min-w-0 flex-col gap-2 rounded-xl border border-line bg-surface p-3 shadow-lg">
-        <TextInput type="search" aria-label={msg("quizzes.components.MaterialSourceSelect.timTaiLieuNguon")} icon="search" value={search}
-          placeholder={msg("quizzes.components.MaterialSourceSelect.timTaiLieu")} onChange={(event) => setSearch(event.target.value)} />
+        <TextInput type="search" aria-label={msg("quizzes.components.MaterialSourceSelect.findSourceDocuments")} icon="search" value={search}
+          placeholder={msg("quizzes.components.MaterialSourceSelect.searchDocuments")} onChange={(event) => setSearch(event.target.value)} />
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="ghost" disabled={value.length >= MAX_MATERIALS || !matches.some((material) => material.hasText && !value.includes(material.materialId))}
-            onClick={selectMatches}>{msg("quizzes.components.MaterialSourceSelect.chonKetQuaTimKiem")}</Button>
-          <Button size="sm" variant="ghost" disabled={!value.length} onClick={() => onChange([])}>{msg("quizzes.components.MaterialSourceSelect.boChonTatCa")}</Button>
+            onClick={selectMatches}>{msg("quizzes.components.MaterialSourceSelect.selectSearchResults")}</Button>
+          <Button size="sm" variant="ghost" disabled={!value.length} onClick={() => onChange([])}>{msg("quizzes.components.MaterialSourceSelect.deselectAll")}</Button>
         </div>
-        <ul id={id} className="flex max-h-64 flex-col gap-1 overflow-y-auto" aria-label={msg("quizzes.components.MaterialSourceSelect.danhSachTaiLieuNguon")}>
+        <ul id={id} className="flex max-h-64 flex-col gap-1 overflow-y-auto" aria-label={msg("quizzes.components.MaterialSourceSelect.sourceDocumentList")}>
           {matches.map((material) => {
             const checked = value.includes(material.materialId);
             return <li key={material.materialId}>
@@ -53,25 +53,25 @@ export function MaterialSourceSelect({ materials, value, onChange, disabled = fa
                   disabled={!checked && (!material.hasText || value.length >= MAX_MATERIALS)}
                   onChange={() => toggle(material.materialId)} data-testid="ai-draft-material" />
                 <span className="min-w-0 break-words">{material.title}
-                  {!material.hasText && <span className="block text-xs text-muted">{msg("quizzes.components.MaterialSourceSelect.chuaCoNoiDungVanBan")}</span>}
+                  {!material.hasText && <span className="block text-xs text-muted">{msg("quizzes.components.MaterialSourceSelect.noTextContentYet")}</span>}
                 </span>
               </label>
             </li>;
           })}
         </ul>
-        {!materials && <p role="status" className="text-xs text-muted">{msg("quizzes.components.MaterialSourceSelect.dangTaiTaiLieu")}</p>}
-        {materials && !matches.length && <p className="text-xs text-muted">{msg("quizzes.components.MaterialSourceSelect.khongCoTaiLieuPhuHop")}</p>}
+        {!materials && <p role="status" className="text-xs text-muted">{msg("quizzes.components.MaterialSourceSelect.loadingDocuments")}</p>}
+        {materials && !matches.length && <p className="text-xs text-muted">{msg("quizzes.components.MaterialSourceSelect.noMatchingDocuments")}</p>}
         {materials?.length !== 0 && materials?.every((material) => !material.hasText) &&
-          <p className="text-xs text-muted">{msg("quizzes.components.MaterialSourceSelect.chuaCoNguonVanBanDung")}</p>}
-        <p className="border-t border-line pt-2 text-xs text-muted" aria-live="polite">{msg("quizzes.components.MaterialSourceSelect.daChon")}{value.length}/{MAX_MATERIALS} {msg("quizzes.components.MaterialSourceSelect.taiLieu")}</p>
+          <p className="text-xs text-muted">{msg("quizzes.components.MaterialSourceSelect.noUsableTextSourcesYet")}</p>}
+        <p className="border-t border-line pt-2 text-xs text-muted" aria-live="polite">{msg("quizzes.components.MaterialSourceSelect.selected")}{value.length}/{MAX_MATERIALS} {msg("quizzes.components.MaterialSourceSelect.documents")}</p>
       </fieldset>
     </details>
-    {value.length > 0 && <ul className="flex flex-wrap gap-1.5" aria-label={msg("quizzes.components.MaterialSourceSelect.taiLieuDaChon2")}>
+    {value.length > 0 && <ul className="flex flex-wrap gap-1.5" aria-label={msg("quizzes.components.MaterialSourceSelect.selectedDocuments")}>
       {value.map((materialId) => {
-        const title = materials?.find((material) => material.materialId === materialId)?.title ?? msg("quizzes.components.MaterialSourceSelect.taiLieuKhongConKhaDung");
+        const title = materials?.find((material) => material.materialId === materialId)?.title ?? msg("quizzes.components.MaterialSourceSelect.documentNoLongerAvailable");
         return <li key={materialId} className="inline-flex max-w-full items-center gap-1 rounded-lg bg-primary-soft px-2 py-1 text-xs text-primary-ink">
           <span className="min-w-0 truncate">{title}</span>
-          <button type="button" disabled={disabled} onClick={() => toggle(materialId)} aria-label={msg("quizzes.components.MaterialSourceSelect.bo", { title: String(title) })}
+          <button type="button" disabled={disabled} onClick={() => toggle(materialId)} aria-label={msg("quizzes.components.MaterialSourceSelect.remove", { title: String(title) })}
             className="rounded focus-visible:outline-focus"><Icon name="close" size={14} /></button>
         </li>;
       })}

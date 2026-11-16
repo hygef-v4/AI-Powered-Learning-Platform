@@ -27,7 +27,7 @@ export function useAiChatAttachments(assignmentId: string, onError: (message: st
     if (version !== operation.current) return;
     changing.current = false;
     setProcessing(false);
-    if (result.status !== "READY") { onError(result.error ?? msg("assignments.hooks.useAiChatAttachments.khongDocDuocMauDe")); return; }
+    if (result.status !== "READY") { onError(result.error ?? msg("assignments.hooks.useAiChatAttachments.couldNotReadTheTemplate")); return; }
     setTemplate(result);
     setTemplateId("");
     sources.remove(item);
@@ -43,7 +43,7 @@ export function useAiChatAttachments(assignmentId: string, onError: (message: st
     changing.current = false;
     setProcessing(false);
     if (result?.status === "READY") setTemplate(null);
-    else if (result) { sources.remove(result); onError(result.error ?? msg("assignments.hooks.useAiChatAttachments.khongTheDungTepLamTham")); }
+    else if (result) { sources.remove(result); onError(result.error ?? msg("assignments.hooks.useAiChatAttachments.thisFileCannotBeUsed")); }
   }
 
   function chooseExisting(id: string, confirmed = false) {

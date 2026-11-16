@@ -3,7 +3,7 @@ import { AccountDetailPage } from "@/features/identity/admin/pages/AccountDetail
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.admin.accounts.id.page.taiKhoan") };
+  return { title: await translateOnServer("app.admin.accounts.id.page.accounts") };
 }
 
 export default function Page() {

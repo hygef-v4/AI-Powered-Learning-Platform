@@ -43,7 +43,7 @@ export function FormattedTextEditor({ value, plainText, onChange, maxLength, dis
     if (text.length > maxLength || next.blocks.length > 100
       || next.blocks.some((item) => item.runs.length > 200)
       || next.blocks.reduce((count, item) => count + item.runs.length, 0) > 1000) {
-      setError(text.length > maxLength ? msg("shared.document.FormattedTextEditor.toiDaKyTu", { label: String(label), value: String(maxLength.toLocaleString("vi-VN")) }) : msg("shared.document.FormattedTextEditor.noiDungCoQuaNhieuDoan"));
+      setError(text.length > maxLength ? msg("shared.document.FormattedTextEditor.canBeAtMostCharacters", { label: String(label), value: String(maxLength.toLocaleString("vi-VN")) }) : msg("shared.document.FormattedTextEditor.theContentHasTooMany"));
       const current = findField(selected);
       focusAfter.current = { index: selected, at: current ? getCaret(current).start : 0 };
       setRevision((number) => number + 1);
@@ -105,7 +105,7 @@ export function FormattedTextEditor({ value, plainText, onChange, maxLength, dis
     }
   }
 
-  return <div ref={root} role="group" aria-label={msg("shared.document.FormattedTextEditor.boSoan", { label: String(label) })}
+  return <div ref={root} role="group" aria-label={msg("shared.document.FormattedTextEditor.editor", { label: String(label) })}
     className="overflow-hidden rounded-lg border border-field bg-surface"
     onKeyDown={(event) => {
       if (disabled) return;
@@ -114,22 +114,22 @@ export function FormattedTextEditor({ value, plainText, onChange, maxLength, dis
       if (name === "z" || name === "y") { event.preventDefault(); travelHistory(name === "y" || event.shiftKey ? "future" : "past"); }
       if (name === "b" || name === "i" || name === "u") { event.preventDefault(); format(name === "b" ? "bold" : name === "i" ? "italic" : "underline"); }
     }}>
-    <div role="toolbar" aria-label={msg("shared.document.FormattedTextEditor.dinhDang", { label: String(label) })} className="flex flex-wrap items-center gap-0.5 border-b border-line bg-sunken px-2 py-1">
-      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.dam")} title={msg("shared.document.FormattedTextEditor.dam")} onClick={() => format("bold")} disabled={disabled} active={block.runs.every((run) => !!run.bold)}><b>B</b></ToolbarButton>
-      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.nghieng")} title={msg("shared.document.FormattedTextEditor.nghieng")} onClick={() => format("italic")} disabled={disabled} active={block.runs.every((run) => !!run.italic)}><i>I</i></ToolbarButton>
-      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.gachChan")} title={msg("shared.document.FormattedTextEditor.gachChan")} onClick={() => format("underline")} disabled={disabled} active={block.runs.every((run) => !!run.underline)}><u>U</u></ToolbarButton>
+    <div role="toolbar" aria-label={msg("shared.document.FormattedTextEditor.format", { label: String(label) })} className="flex flex-wrap items-center gap-0.5 border-b border-line bg-sunken px-2 py-1">
+      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.bold")} title={msg("shared.document.FormattedTextEditor.bold")} onClick={() => format("bold")} disabled={disabled} active={block.runs.every((run) => !!run.bold)}><b>B</b></ToolbarButton>
+      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.italic")} title={msg("shared.document.FormattedTextEditor.italic")} onClick={() => format("italic")} disabled={disabled} active={block.runs.every((run) => !!run.italic)}><i>I</i></ToolbarButton>
+      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.underline")} title={msg("shared.document.FormattedTextEditor.underline")} onClick={() => format("underline")} disabled={disabled} active={block.runs.every((run) => !!run.underline)}><u>U</u></ToolbarButton>
       <span className="mx-1 h-4 border-l border-line" aria-hidden />
-      {([ ["LEFT", msg("shared.document.FormattedTextEditor.canTrai"), "alignLeft"], ["CENTER", msg("shared.document.FormattedTextEditor.canGiua"), "alignCenter"], ["RIGHT", msg("shared.document.FormattedTextEditor.canPhai"), "alignRight"], ["JUSTIFY", msg("shared.document.FormattedTextEditor.canDeu"), "justify"] ] as const)
+      {([ ["LEFT", msg("shared.document.FormattedTextEditor.alignLeft"), "alignLeft"], ["CENTER", msg("shared.document.FormattedTextEditor.alignCenter"), "alignCenter"], ["RIGHT", msg("shared.document.FormattedTextEditor.alignRight"), "alignRight"], ["JUSTIFY", msg("shared.document.FormattedTextEditor.justify"), "justify"] ] as const)
         .map(([align, title, icon]) => <ToolbarButton key={align} aria-label={title} title={title} disabled={disabled}
           onClick={() => changeBlock({ align: align as Align })} active={block.align === align}><Glyph name={icon} /></ToolbarButton>)}
       <span className="mx-1 h-4 border-l border-line" aria-hidden />
-      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.danhSachCham")} title={msg("shared.document.FormattedTextEditor.danhSachCham")} disabled={disabled} onClick={() => changeBlock({ type: block.type === "UL" ? "PARAGRAPH" : "UL" })} active={block.type === "UL"}><Glyph name="bullets" /></ToolbarButton>
-      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.danhSachSo")} title={msg("shared.document.FormattedTextEditor.danhSachSo")} disabled={disabled} onClick={() => changeBlock({ type: block.type === "OL" ? "PARAGRAPH" : "OL" })} active={block.type === "OL"}><Glyph name="numbers" /></ToolbarButton>
-      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.giamThutLe")} title={msg("shared.document.FormattedTextEditor.giamThutLe")} disabled={disabled || block.indent <= 0} onClick={() => changeBlock({ indent: block.indent - 1 })}><Glyph name="outdent" /></ToolbarButton>
-      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.tangThutLe")} title={msg("shared.document.FormattedTextEditor.tangThutLe")} disabled={disabled || block.indent >= 6} onClick={() => changeBlock({ indent: block.indent + 1 })}><Glyph name="indent" /></ToolbarButton>
+      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.bulletedList")} title={msg("shared.document.FormattedTextEditor.bulletedList")} disabled={disabled} onClick={() => changeBlock({ type: block.type === "UL" ? "PARAGRAPH" : "UL" })} active={block.type === "UL"}><Glyph name="bullets" /></ToolbarButton>
+      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.numberedList")} title={msg("shared.document.FormattedTextEditor.numberedList")} disabled={disabled} onClick={() => changeBlock({ type: block.type === "OL" ? "PARAGRAPH" : "OL" })} active={block.type === "OL"}><Glyph name="numbers" /></ToolbarButton>
+      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.decreaseIndent")} title={msg("shared.document.FormattedTextEditor.decreaseIndent")} disabled={disabled || block.indent <= 0} onClick={() => changeBlock({ indent: block.indent - 1 })}><Glyph name="outdent" /></ToolbarButton>
+      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.increaseIndent")} title={msg("shared.document.FormattedTextEditor.increaseIndent")} disabled={disabled || block.indent >= 6} onClick={() => changeBlock({ indent: block.indent + 1 })}><Glyph name="indent" /></ToolbarButton>
       <span className="mx-1 h-4 border-l border-line" aria-hidden />
-      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.hoanTac")} title={msg("shared.document.FormattedTextEditor.hoanTac")} disabled={disabled || history.past.length === 0} onClick={() => travelHistory("past")}><Glyph name="undo" /></ToolbarButton>
-      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.lamLai")} title={msg("shared.document.FormattedTextEditor.lamLai")} disabled={disabled || history.future.length === 0} onClick={() => travelHistory("future")}><Glyph name="redo" /></ToolbarButton>
+      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.undo")} title={msg("shared.document.FormattedTextEditor.undo")} disabled={disabled || history.past.length === 0} onClick={() => travelHistory("past")}><Glyph name="undo" /></ToolbarButton>
+      <ToolbarButton aria-label={msg("shared.document.FormattedTextEditor.redo")} title={msg("shared.document.FormattedTextEditor.redo")} disabled={disabled || history.future.length === 0} onClick={() => travelHistory("future")}><Glyph name="redo" /></ToolbarButton>
     </div>
     {disabled ? <div className="min-h-24 px-3 py-2 text-[13.5px]"><FormattedTextView document={document} text={plainText} /></div>
       : <div className="min-h-24 px-3 py-2 text-[13.5px] leading-relaxed">
@@ -137,7 +137,7 @@ export function FormattedTextEditor({ value, plainText, onChange, maxLength, dis
           onFocusCapture={() => setActive(index)}
           style={{ textAlign: FORMATTED_ALIGN[item.align], marginInlineStart: `${item.indent * 1.25 + (item.type === "PARAGRAPH" ? 0 : 2)}rem` }}
           className={cx(item.type !== "PARAGRAPH" && "list-item", item.type === "UL" && "list-disc", item.type === "OL" && "list-decimal")}>
-          <RichText runs={item.runs} aria-label={index === 0 ? label : msg("shared.document.FormattedTextEditor.doan", { label: String(label), value: String(index + 1) })}
+          <RichText runs={item.runs} aria-label={index === 0 ? label : msg("shared.document.FormattedTextEditor.paragraph", { label: String(label), value: String(index + 1) })}
             onKey={(event, caret) => handleKey(event, index, caret)}
             onChange={(runs: Run[]) => commit({ blocks: document.blocks.map((current, position) => position === index
               ? { ...current, runs: runs.map(({ text, bold, italic, underline }) => ({ text, bold, italic, underline })) } : current) })} />

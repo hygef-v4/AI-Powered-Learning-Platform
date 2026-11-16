@@ -78,8 +78,8 @@ export function RubricEditor({ criteria, onChange }: {
         <div key={item.itemId ?? i} className="group/row flex items-start gap-0.5">
           <span aria-hidden className="w-3 pt-1 text-center text-xs text-muted">☐</span>
           {/* Ô nhiều dòng, tự cao theo chữ: lúc sửa thấy đủ nội dung mục, không bị cắt (yêu cầu 2026-11-05). */}
-          <AutoTextarea data-atomic-text aria-label={msg("assignments.components.RubricEditor.mucCham", { value: String(i + 1) })} value={item.text} maxLength={1000}
-            placeholder={msg("assignments.components.RubricEditor.tieuChi")} className={cx(INPUT, "flex-1 leading-snug")}
+          <AutoTextarea data-atomic-text aria-label={msg("assignments.components.RubricEditor.criterion", { value: String(i + 1) })} value={item.text} maxLength={1000}
+            placeholder={msg("assignments.components.RubricEditor.criterion2")} className={cx(INPUT, "flex-1 leading-snug")}
             onChange={(e) => edit(i, { text: e.target.value.replace(/\n/g, " ") })}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.nativeEvent.isComposing) {
@@ -87,10 +87,10 @@ export function RubricEditor({ criteria, onChange }: {
                 addItem(i + 1);
               }
             }} />
-          <input data-atomic-points aria-label={msg("assignments.components.RubricEditor.diemMuc", { value: String(i + 1) })} type="number" step="0.01" min="0" max="1000" placeholder={msg("assignments.components.RubricEditor.diem")}
+          <input data-atomic-points aria-label={msg("assignments.components.RubricEditor.pointsForItem", { value: String(i + 1) })} type="number" step="0.01" min="0" max="1000" placeholder={msg("assignments.components.RubricEditor.points")}
             value={item.points ?? ""}
             aria-invalid={isPointsMalformed(item.points) || undefined}
-            title={isPointsMalformed(item.points) ? msg("assignments.components.RubricEditor.diemToiDa2ChuSo") : undefined}
+            title={isPointsMalformed(item.points) ? msg("assignments.components.RubricEditor.pointsCanHaveAtMost") : undefined}
             className={cx(isPointsMalformed(item.points) ? POINTS_INVALID : POINTS,
               "w-11 shrink-0 px-1 text-right placeholder:text-xs placeholder:text-muted [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none")}
             onChange={(e) => edit(i, { points: parsePoints(e.target.value) })}
@@ -100,17 +100,17 @@ export function RubricEditor({ criteria, onChange }: {
                 addItem(i + 1);
               }
             }} />
-          <button type="button" aria-label={msg("assignments.components.RubricEditor.xoaMucCham", { value: String(i + 1) })} title={msg("assignments.components.RubricEditor.xoa")} onClick={() => setItems(items.filter((_, j) => j !== i))}
+          <button type="button" aria-label={msg("assignments.components.RubricEditor.deleteCriterion", { value: String(i + 1) })} title={msg("assignments.components.RubricEditor.delete")} onClick={() => setItems(items.filter((_, j) => j !== i))}
             className="inline-flex size-5 shrink-0 items-center justify-center rounded text-xs text-muted opacity-0 group-hover/row:opacity-100 hover:bg-danger-soft hover:text-danger focus:opacity-100">
             ✕
           </button>
         </div>
       ))}
       {items.length < LIMIT && (
-        <button type="button" aria-label={msg("assignments.components.RubricEditor.themMucCham")} title={msg("assignments.components.RubricEditor.themMucCham")} onClick={() => addItem(items.length)}
+        <button type="button" aria-label={msg("assignments.components.RubricEditor.addCriterion")} title={msg("assignments.components.RubricEditor.addCriterion")} onClick={() => addItem(items.length)}
           className="flex h-6 w-full items-center justify-center gap-1 rounded-md text-sm leading-none text-muted hover:bg-shell hover:text-primary-ink">
           {/* Thẻ chưa có mục chấm: ghi rõ nút làm gì cho người mới (yêu cầu 2026-11-10). */}
-          +{items.length === 0 && <span className="text-xs">{msg("assignments.components.RubricEditor.themMucCham")}</span>}
+          +{items.length === 0 && <span className="text-xs">{msg("assignments.components.RubricEditor.addCriterion")}</span>}
         </button>
       )}
     </div>

@@ -35,7 +35,7 @@ export function formatTime(iso: string | null | undefined): string {
 /** Còn lại tới hạn dạng "2 ngày 3 giờ", "15 phút"; quá hạn trả "Đã quá hạn". */
 export function describeRemaining(deadline: string | null, now: number): string {
   if (!deadline) return "";
-  return formatRemaining(deadline, now) ?? msg("assignmentwork.model.format.daQuaHan");
+  return formatRemaining(deadline, now) ?? msg("assignmentwork.model.format.overdue");
 }
 
 
@@ -45,9 +45,9 @@ export function readProblemIssues(error: unknown): ValidationIssue[] {
   return Array.isArray(issues) ? issues : [];
 }
 
-export function describeError(error: unknown, fallback = msg("assignmentwork.model.format.khongThucHienDuocHayThu")): string {
+export function describeError(error: unknown, fallback = msg("assignmentwork.model.format.couldNotCompleteItPlease")): string {
   if (error instanceof ApiError) {
-    if (error.problem.status === 404) return msg("assignmentwork.model.format.khongTimThayHoacBanKhong");
+    if (error.problem.status === 404) return msg("assignmentwork.model.format.notFoundOrYouDo");
     return error.problem.detail ?? fallback;
   }
   return error instanceof Error && error.message ? error.message : fallback;

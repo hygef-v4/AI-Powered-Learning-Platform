@@ -3,50 +3,50 @@ import type { Tone } from "@/shared/ui";
 import type { Difficulty, QuestionStatus, QuestionType, QuizStatus } from "./types";
 import { msg } from "@/i18n/msg";
 
-export const TYPE_LABELS: Record<QuestionType, string> = { MCQ_SINGLE: msg("quizzes.model.labels.motDapAn"), MCQ_MULTI: msg("quizzes.model.labels.nhieuDapAn") };
-export const DIFFICULTY_LABELS: Record<Difficulty, string> = { EASY: msg("quizzes.model.labels.de"), MEDIUM: msg("quizzes.model.labels.trungBinh"), HARD: msg("quizzes.model.labels.kho") };
-export const STATUS_LABELS: Record<QuestionStatus, string> = { DRAFT: msg("quizzes.model.labels.nhap"), PENDING: msg("quizzes.model.labels.choDuyet"), REJECTED: msg("quizzes.model.labels.biTuChoi"), ACTIVE: msg("quizzes.model.labels.dangDung"), RETIRED: msg("quizzes.model.labels.ngung") };
+export const TYPE_LABELS: Record<QuestionType, string> = { MCQ_SINGLE: msg("quizzes.model.labels.singleAnswer"), MCQ_MULTI: msg("quizzes.model.labels.multipleAnswers") };
+export const DIFFICULTY_LABELS: Record<Difficulty, string> = { EASY: msg("quizzes.model.labels.easy"), MEDIUM: msg("quizzes.model.labels.medium"), HARD: msg("quizzes.model.labels.hard") };
+export const STATUS_LABELS: Record<QuestionStatus, string> = { DRAFT: msg("quizzes.model.labels.draft"), PENDING: msg("quizzes.model.labels.awaitingApproval"), REJECTED: msg("quizzes.model.labels.rejected"), ACTIVE: msg("quizzes.model.labels.active"), RETIRED: msg("quizzes.model.labels.retired") };
 export const STATUS_TONES: Record<QuestionStatus, Tone> = { DRAFT: "warning", PENDING: "info", REJECTED: "danger", ACTIVE: "success", RETIRED: "neutral" };
 export const DIFFICULTY_TONES: Record<Difficulty, Tone> = { EASY: "success", MEDIUM: "info", HARD: "danger" };
 
-const SYSTEM_BUSY = msg("quizzes.model.labels.heThongTamBanVuiLong");
+const SYSTEM_BUSY = msg("quizzes.model.labels.theSystemIsBusyPlease");
 
 const ERROR_LABELS: Record<string, string> = {
-  QUESTION_NOT_FOUND: msg("quizzes.model.labels.khongTimThayCauHoiHoac"),
-  SUBJECT_NOT_FOUND: msg("quizzes.model.labels.khongTimThayMonHoacBan"),
-  SUBJECT_NOT_ACTIVE: msg("quizzes.model.labels.monDaLuuTruNganHang"),
-  QUESTION_VERSION_CONFLICT: msg("quizzes.model.labels.cauHoiDaDuocThayDoi"),
-  QUESTION_DELETE_BLOCKED: msg("quizzes.model.labels.cauDaKichHoatKhongXoa"),
-  IMPORT_FILE_TYPE: msg("quizzes.model.labels.chiNhanTepXlsxHoacCsv"),
-  IMPORT_FILE_TOO_LARGE: msg("quizzes.model.labels.tepToiDa5Mb"),
-  IMPORT_TOO_MANY_ROWS: msg("quizzes.model.labels.toiDa500DongMoiLan"),
-  QUIZ_NOT_FOUND: msg("quizzes.model.labels.khongTimThayQuizHoacBan"),
-  CLASS_NOT_FOUND: msg("quizzes.model.labels.khongTimThayLopHoacBan"),
-  QUIZ_VERSION_CONFLICT: msg("quizzes.model.labels.quizDaDuocThayDoiO"),
-  QUIZ_NOT_EDITABLE: msg("quizzes.model.labels.quizDaPhatHanhKhongSua"),
-  QUIZ_DELETE_BLOCKED: msg("quizzes.model.labels.quizDaPhatHanhKhongXoa"),
-  QUIZ_VERSION_EXISTS: msg("quizzes.model.labels.quizNayDaCoMotVersion"),
-  CLASS_NOT_OPEN: msg("quizzes.model.labels.lopChuaMoNenChuaPhat"),
-  CLASS_ARCHIVED: msg("quizzes.model.labels.lopDaLuuTruQuizCua"),
-  QUIZ_COPY_SUBJECT_MISMATCH: msg("quizzes.model.labels.chiCopyQuizGiuaCacLop"),
-  QUIZ_FULL: msg("quizzes.model.labels.quizToiDa200Cau"),
-  AI_DRAFT_NOT_FOUND: msg("quizzes.model.labels.khongTimThayDeXuatAi"),
-  AI_DRAFT_CLOSED: msg("quizzes.model.labels.deXuatDaDuocChapNhan"),
-  AI_DRAFT_NOT_READY: msg("quizzes.model.labels.aiChuaSoanXongDeXuat"),
-  AI_DRAFT_INVALID: msg("quizzes.model.labels.coCauChuaHopLeHay"),
-  MATERIAL_NOT_SELECTABLE: msg("quizzes.model.labels.coTaiLieuKhongChonDuoc"),
-  MATERIAL_SERVICE_UNAVAILABLE: msg("quizzes.model.labels.chuaLayDuocTaiLieuNguon"),
-  AI_SERVICE_UNAVAILABLE: msg("quizzes.model.labels.chuaGuiDuocYeuCauAi"),
-  AI_OUTPUT_INVALID: msg("quizzes.model.labels.ketQuaAiKhongDungDinh"),
+  QUESTION_NOT_FOUND: msg("quizzes.model.labels.questionNotFoundOrYou"),
+  SUBJECT_NOT_FOUND: msg("quizzes.model.labels.subjectNotFoundOrYou"),
+  SUBJECT_NOT_ACTIVE: msg("quizzes.model.labels.theSubjectIsArchivedThe"),
+  QUESTION_VERSION_CONFLICT: msg("quizzes.model.labels.theQuestionWasChangedIn"),
+  QUESTION_DELETE_BLOCKED: msg("quizzes.model.labels.activatedQuestionsCannotBeDeleted"),
+  IMPORT_FILE_TYPE: msg("quizzes.model.labels.onlyXlsxOrUtf8"),
+  IMPORT_FILE_TOO_LARGE: msg("quizzes.model.labels.filesCanBeAtMost"),
+  IMPORT_TOO_MANY_ROWS: msg("quizzes.model.labels.atMost500RowsPer"),
+  QUIZ_NOT_FOUND: msg("quizzes.model.labels.quizNotFoundOrYou"),
+  CLASS_NOT_FOUND: msg("quizzes.model.labels.classNotFoundOrYou"),
+  QUIZ_VERSION_CONFLICT: msg("quizzes.model.labels.theQuizWasChangedIn"),
+  QUIZ_NOT_EDITABLE: msg("quizzes.model.labels.publishedQuizzesCannotBeEdited"),
+  QUIZ_DELETE_BLOCKED: msg("quizzes.model.labels.publishedQuizzesCannotBeDeleted"),
+  QUIZ_VERSION_EXISTS: msg("quizzes.model.labels.thisQuizAlreadyHasA"),
+  CLASS_NOT_OPEN: msg("quizzes.model.labels.theClassIsNotOpen"),
+  CLASS_ARCHIVED: msg("quizzes.model.labels.theClassIsArchivedIts"),
+  QUIZ_COPY_SUBJECT_MISMATCH: msg("quizzes.model.labels.quizzesCanOnlyBeCopied"),
+  QUIZ_FULL: msg("quizzes.model.labels.aQuizCanHaveAt"),
+  AI_DRAFT_NOT_FOUND: msg("quizzes.model.labels.aiProposalNotFound"),
+  AI_DRAFT_CLOSED: msg("quizzes.model.labels.theProposalWasAcceptedOr"),
+  AI_DRAFT_NOT_READY: msg("quizzes.model.labels.theAiHasNotFinished"),
+  AI_DRAFT_INVALID: msg("quizzes.model.labels.someQuestionsAreInvalidFix"),
+  MATERIAL_NOT_SELECTABLE: msg("quizzes.model.labels.someDocumentsCannotBeSelected"),
+  MATERIAL_SERVICE_UNAVAILABLE: msg("quizzes.model.labels.couldNotGetTheSource"),
+  AI_SERVICE_UNAVAILABLE: msg("quizzes.model.labels.couldNotSendTheAi"),
+  AI_OUTPUT_INVALID: msg("quizzes.model.labels.theAiResultIsNot"),
   SYSTEM_BUSY,
 };
 
 /** Lý do đề xuất lỗi: nhãn theo mã, không có thì thông điệp an toàn của U06. */
 export function describeFailure(code: string | null, message: string | null): string {
-  return (code && ERROR_LABELS[code]) || message || msg("quizzes.model.labels.aiChuaSoanDuocDeXuat");
+  return (code && ERROR_LABELS[code]) || message || msg("quizzes.model.labels.theAiCouldNotWrite");
 }
 
-export const QUIZ_STATUS_LABELS: Record<QuizStatus, string> = { DRAFT: msg("quizzes.model.labels.nhap"), OPEN: msg("quizzes.model.labels.dangMo"), RETIRED: msg("quizzes.model.labels.luuTru") };
+export const QUIZ_STATUS_LABELS: Record<QuizStatus, string> = { DRAFT: msg("quizzes.model.labels.draft"), OPEN: msg("quizzes.model.labels.open"), RETIRED: msg("quizzes.model.labels.archived") };
 export const QUIZ_STATUS_TONES: Record<QuizStatus, Tone> = { DRAFT: "warning", OPEN: "success", RETIRED: "danger" };
 
 export function formatPoints(value: number): string {

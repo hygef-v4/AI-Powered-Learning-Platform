@@ -46,7 +46,7 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
 
   if (resource.error)
     return <PageLoadError onRetry={resource.reload}>{resource.error}</PageLoadError>;
-  if (!m) return <PageLoading label={msg("materials.pages.LearningMaterialPage.dangTaiHocLieu")} />;
+  if (!m) return <PageLoading label={msg("materials.pages.LearningMaterialPage.loadingLearningMaterial")} />;
   async function handleEnabledChange(enabled: boolean) {
     if (!m || saving) return;
     setSaving(true); setChangeError("");
@@ -70,14 +70,14 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
           m.status === "ACTIVE" && (
             <>
               <Switch checked={m.enabled !== false} onChange={handleEnabledChange} disabled={saving}
-                ariaLabel={msg("materials.pages.LearningMaterialPage.batHocLieu")} label={m.enabled !== false ? msg("materials.pages.LearningMaterialPage.bat") : msg("materials.pages.LearningMaterialPage.tat")} />
+                ariaLabel={msg("materials.pages.LearningMaterialPage.enableLearningMaterial")} label={m.enabled !== false ? msg("materials.pages.LearningMaterialPage.on") : msg("materials.pages.LearningMaterialPage.off")} />
               <Button
                 icon="edit"
                 onClick={() => setDialog("edit")}
                 data-testid="material-edit-open"
                 disabled={saving}
               >
-                {msg("materials.pages.LearningMaterialPage.sua")}</Button>
+                {msg("materials.pages.LearningMaterialPage.edit")}</Button>
               <Button
                 variant="danger"
                 icon="trash"
@@ -85,7 +85,7 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
                 data-testid="material-archive-open"
                 disabled={saving}
               >
-                {msg("materials.pages.LearningMaterialPage.xoa")}</Button>
+                {msg("materials.pages.LearningMaterialPage.delete")}</Button>
             </>
           )
         }
@@ -94,7 +94,7 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
       <ModuleNeighbours scope={scope} previous={place.previous} next={place.next} position="top" />
       <MaterialPreview material={m} classId={classId} />
       {m.description && (
-        <Section title={msg("materials.pages.LearningMaterialPage.moTa")}>
+        <Section title={msg("materials.pages.LearningMaterialPage.description")}>
           <FormattedTextView document={m.descriptionDocument} text={m.description}
             className="text-[14px] leading-relaxed" />
         </Section>
@@ -119,7 +119,7 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
           classId={classId}
           onClose={() => setDialog(null)}
           onSaved={() => {
-            showToast(msg("materials.pages.LearningMaterialPage.daXoaHocLieu"), "danger");
+            showToast(msg("materials.pages.LearningMaterialPage.learningMaterialDeleted"), "danger");
             notifyOutlineChanged();
             router.push(scope ? buildBoardHref(scope) : "/");
           }}

@@ -66,29 +66,29 @@ export function SubjectMutationFeedback({
   const problem = readSubjectProblem(error);
   const conflict = shouldReloadSubject(error);
   const message = conflict
-    ? msg("subjects.hooks.useSubjectMutation.duLieuMonDaThayDoi")
+    ? msg("subjects.hooks.useSubjectMutation.theSubjectDataHasChanged")
     : problem?.status === 401
-      ? msg("subjects.hooks.useSubjectMutation.phienDangNhapKhongConHop")
+      ? msg("subjects.hooks.useSubjectMutation.yourSessionIsNoLonger")
       : problem?.status === 403
-        ? msg("subjects.hooks.useSubjectMutation.banKhongCoQuyenThucHien")
+        ? msg("subjects.hooks.useSubjectMutation.youDoNotHavePermission")
         : problem?.status === 404
-          ? msg("subjects.hooks.useSubjectMutation.monHocKhongConTonTai")
+          ? msg("subjects.hooks.useSubjectMutation.theSubjectNoLongerExists")
           : problem?.code === "SUBJECT_MANAGER_INVALID"
-            ? msg("subjects.hooks.useSubjectMutation.chuNhiemDaChonKhongCon")
+            ? msg("subjects.hooks.useSubjectMutation.theSelectedManagerIsNo")
             : problem?.code === "SUBJECT_NAME_INVALID"
-              ? msg("subjects.hooks.useSubjectMutation.tenMonLaBatBuocVa")
+              ? msg("subjects.hooks.useSubjectMutation.theSubjectNameIsRequired")
               : problem?.code === "SUBJECT_DESCRIPTION_INVALID"
-                ? msg("subjects.hooks.useSubjectMutation.moTaMonToiDa2")
+                ? msg("subjects.hooks.useSubjectMutation.theSubjectDescriptionCanBe")
                 : problem?.code === "SUBJECT_CLASSES_UNAVAILABLE"
-                  ? msg("subjects.hooks.useSubjectMutation.chuaKiemTraDuocLopCua")
-                  : msg("subjects.hooks.useSubjectMutation.chuaXacNhanLuuThayDoi");
+                  ? msg("subjects.hooks.useSubjectMutation.couldNotCheckTheSubjects")
+                  : msg("subjects.hooks.useSubjectMutation.couldNotConfirmTheChanges");
   return (
     <div className="flex flex-col items-start gap-2">
       <p role="alert" className="text-sm text-danger">
         {message}
       </p>
       <Button size="sm" onClick={onReload} data-testid="subject-mutation-reload">
-        {msg("subjects.hooks.useSubjectMutation.taiLaiDuLieuVaBo")}</Button>
+        {msg("subjects.hooks.useSubjectMutation.reloadDataAndDiscardDraft")}</Button>
     </div>
   );
 }

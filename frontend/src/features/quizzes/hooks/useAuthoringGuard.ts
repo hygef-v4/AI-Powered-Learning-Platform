@@ -5,7 +5,7 @@ import { msg } from "@/i18n/msg";
 
 /** Giữ bản soạn tại chỗ khi đóng trang hoặc chuyển liên kết trước khi lưu. */
 export function useAuthoringGuard(dirty: boolean) {
-  const confirmDiscard = useCallback(() => !dirty || window.confirm(msg("quizzes.hooks.useAuthoringGuard.banCoNoiDungChuaLuu")), [dirty]);
+  const confirmDiscard = useCallback(() => !dirty || window.confirm(msg("quizzes.hooks.useAuthoringGuard.youHaveUnsavedContentDiscard")), [dirty]);
   useEffect(() => {
     if (!dirty) return;
     const currentUrl = window.location.href;

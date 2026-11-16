@@ -93,6 +93,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
 export function useSession() {
   const value = useContext(SessionContext);
-  if (!value) throw new Error(msg("identity.hooks.session.usesessionPhaiNamTrongSessionprovider"));
+  if (!value) throw new Error(msg("identity.hooks.session.usesessionMustBeUsedInside"));
   return value;
 }

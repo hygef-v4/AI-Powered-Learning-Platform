@@ -102,7 +102,7 @@ export const academicsApi = {
       { accountId },
     );
     if (!["ENROLLED", "RESTORED", "ALREADY_ENROLLED"].includes(response.result)) {
-      throw new Error(ENROLLMENT_RESULT_LABELS[response.result] ?? msg("academics.api.index.khongTheGhiDanhSinhVien"));
+      throw new Error(ENROLLMENT_RESULT_LABELS[response.result] ?? msg("academics.api.index.couldNotEnrollTheStudent"));
     }
     return response;
   },

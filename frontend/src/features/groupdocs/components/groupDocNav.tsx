@@ -11,5 +11,5 @@ import { msg } from "@/i18n/msg";
 export function groupDocContext({ pathname }: NavLocation): NavContext | null {
   const match = /^\/group-docs\/([^/]+)(?:\/edit)?$/.exec(pathname);
   if (!match) return null;
-  return { key: `group-doc:${match[1]}`, label: msg("groupdocs.components.groupDocNav.cacPhanCuaBai"), header: <AssignmentNav />, items: [] };
+  return { key: `group-doc:${match[1]}`, label: msg("groupdocs.components.groupDocNav.assignmentParts"), header: <AssignmentNav />, items: [] };
 }

@@ -82,7 +82,7 @@ export function DateInput({ value, onChange, onValidityChange, min, max, invalid
             openCalendar();
           }
         }}
-        suffix={<button type="button" aria-label={msg("shared.ui.DateInput.chonNgayTuLich")} disabled={disabled || readOnly}
+        suffix={<button type="button" aria-label={msg("shared.ui.DateInput.pickADateFromThe")} disabled={disabled || readOnly}
           data-testid={props["data-testid"] ? `${props["data-testid"]}-calendar` : undefined}
           onClick={openCalendar}
           className="flex size-7 items-center justify-center rounded text-muted hover:bg-sunken focus-visible:outline-2 focus-visible:outline-focus disabled:cursor-not-allowed">
@@ -94,7 +94,7 @@ export function DateInput({ value, onChange, onValidityChange, min, max, invalid
         className="pointer-events-none absolute bottom-0 left-0 size-px opacity-0"
         onChange={(event) => updateDate(formatDate(event.target.value))} />
       {dateInvalid && <p id={errorId} role="alert" className="mt-1.5 text-xs text-danger">
-        {msg("shared.ui.DateInput.nhapNgayHopLeTheoDd")}</p>}
+        {msg("shared.ui.DateInput.enterAValidDateIn")}</p>}
     </div>
   );
 }

@@ -11,7 +11,7 @@ import { SecretInput } from "../../components/SecretInput";
 import { PASSWORD_VIOLATION_MESSAGES, isPasswordAcceptable } from "../../model/passwordRules";
 import { msg } from "@/i18n/msg";
 
-export const PASSWORD_CHANGED_MESSAGE = msg("identity.profile.components.PasswordChangeForm.daDoiMatKhau");
+export const PASSWORD_CHANGED_MESSAGE = msg("identity.profile.components.PasswordChangeForm.passwordChanged");
 
 /**
  * Khối Đổi mật khẩu nằm ngay trên trang Hồ sơ (UC 05, design `c06`): mật khẩu hiện tại, mật khẩu mới và nhập lại
@@ -31,15 +31,15 @@ export function PasswordChangeForm({ onChanged }: { onChanged: () => void }) {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (current.length === 0) {
-      setError(msg("identity.profile.components.PasswordChangeForm.nhapMatKhauHienTai"));
+      setError(msg("identity.profile.components.PasswordChangeForm.enterYourCurrentPassword"));
       return;
     }
     if (!acceptable) {
-      setError(msg("identity.profile.components.PasswordChangeForm.matKhauMoiCanItNhat"));
+      setError(msg("identity.profile.components.PasswordChangeForm.theNewPasswordNeedsAt"));
       return;
     }
     if (password !== confirm) {
-      setError(msg("identity.profile.components.PasswordChangeForm.haiMatKhauMoiChuaKhop"));
+      setError(msg("identity.profile.components.PasswordChangeForm.theTwoNewPasswordsDo"));
       return;
     }
     setBusy(true);
@@ -57,15 +57,15 @@ export function PasswordChangeForm({ onChanged }: { onChanged: () => void }) {
         violations?: string[];
       };
       if (problem.code === "CURRENT_PASSWORD_INVALID") {
-        setError(msg("identity.profile.components.PasswordChangeForm.matKhauHienTaiKhongDung"));
+        setError(msg("identity.profile.components.PasswordChangeForm.theCurrentPasswordIsIncorrect"));
         setCurrent("");
       } else if (problem.code === "TOO_MANY_ATTEMPTS") {
-        setError(msg("identity.profile.components.PasswordChangeForm.nhapSaiMatKhauHienTai"));
+        setError(msg("identity.profile.components.PasswordChangeForm.tooManyWrongAttemptsFor"));
         setCurrent("");
       } else if (problem.code === "PASSWORD_POLICY") {
         setError((problem.violations ?? []).map((v) => PASSWORD_VIOLATION_MESSAGES[v] ?? v).join(" "));
       } else {
-        setError(msg("identity.profile.components.PasswordChangeForm.heThongTamBanVuiLong"));
+        setError(msg("identity.profile.components.PasswordChangeForm.theSystemIsBusyPlease"));
       }
     } finally {
       setBusy(false);
@@ -74,13 +74,13 @@ export function PasswordChangeForm({ onChanged }: { onChanged: () => void }) {
 
   return (
     <Section
-      title={msg("identity.profile.components.PasswordChangeForm.doiMatKhau")}
+      title={msg("identity.profile.components.PasswordChangeForm.changePassword")}
       icon="lock_reset"
-      description={msg("identity.profile.components.PasswordChangeForm.cacThietBiKhacSeBi")}
+      description={msg("identity.profile.components.PasswordChangeForm.otherDevicesWillBeSigned")}
     >
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={msg("identity.profile.components.PasswordChangeForm.matKhauHienTai")} htmlFor={currentId}>
+          <Field label={msg("identity.profile.components.PasswordChangeForm.currentPassword")} htmlFor={currentId}>
             <SecretInput
               id={currentId}
               autoComplete="current-password"
@@ -90,7 +90,7 @@ export function PasswordChangeForm({ onChanged }: { onChanged: () => void }) {
           </Field>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={msg("identity.profile.components.PasswordChangeForm.matKhauMoi")} htmlFor={newId}>
+          <Field label={msg("identity.profile.components.PasswordChangeForm.newPassword")} htmlFor={newId}>
             <SecretInput
               id={newId}
               autoComplete="new-password"
@@ -98,7 +98,7 @@ export function PasswordChangeForm({ onChanged }: { onChanged: () => void }) {
               onChange={(e) => setPassword(e.target.value)}
             />
           </Field>
-          <Field label={msg("identity.profile.components.PasswordChangeForm.nhapLaiMatKhauMoi")} htmlFor={confirmId}>
+          <Field label={msg("identity.profile.components.PasswordChangeForm.reEnterNewPassword")} htmlFor={confirmId}>
             <SecretInput
               id={confirmId}
               autoComplete="new-password"
@@ -115,7 +115,7 @@ export function PasswordChangeForm({ onChanged }: { onChanged: () => void }) {
         )}
         <div className="flex justify-end border-t border-line pt-5">
           <Button type="submit" icon="key" disabled={busy}>
-            {msg("identity.profile.components.PasswordChangeForm.doiMatKhau")}</Button>
+            {msg("identity.profile.components.PasswordChangeForm.changePassword")}</Button>
         </div>
       </form>
     </Section>

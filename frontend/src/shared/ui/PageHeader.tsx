@@ -22,11 +22,11 @@ export function PageHeader({ title, subtitle, breadcrumb, backHref, actions }: P
     <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 pb-1">
       <div className="flex min-w-0 flex-[1_1_22rem] flex-col gap-2.5">
         {(backHref || trail.length > 0) && (
-          <nav aria-label={msg("shared.ui.PageHeader.duongDan")} className="flex flex-wrap items-center gap-1 text-[12.5px] font-semibold text-muted">
+          <nav aria-label={msg("shared.ui.PageHeader.breadcrumb")} className="flex flex-wrap items-center gap-1 text-[12.5px] font-semibold text-muted">
             {backHref && (
               <BackLink
                 href={backHref}
-                aria-label={msg("shared.ui.PageHeader.quayLai")}
+                aria-label={msg("shared.ui.PageHeader.back")}
                 className="-ml-1 inline-flex size-6 items-center justify-center rounded-md transition-colors hover:bg-sunken hover:text-ink"
               >
                 <Icon name="arrow_back" size={14} />

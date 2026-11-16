@@ -66,42 +66,42 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
   }
 
   if (error) return <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-danger">
-    {error}<Button size="sm" onClick={() => void refresh().catch(() => {})}>{msg("grading.components.GradebookBatchControls.thuLai")}</Button>
+    {error}<Button size="sm" onClick={() => void refresh().catch(() => {})}>{msg("grading.components.GradebookBatchControls.retry")}</Button>
   </div>;
-  if (!value) return <p role="status" className="text-sm text-muted">{msg("grading.components.GradebookBatchControls.dangTaiBaiNop")}</p>;
+  if (!value) return <p role="status" className="text-sm text-muted">{msg("grading.components.GradebookBatchControls.loadingSubmissions")}</p>;
 
   return <>
-    {readOnly && <Alert tone="info">{directory.readOnlyReason || msg("grading.components.GradebookBatchControls.baiTapChiChoPhepXem")}</Alert>}
-    {selectedCount > 0 && <div role="toolbar" aria-label={msg("grading.components.GradebookBatchControls.thaoTacBaiDaChon")}
+    {readOnly && <Alert tone="info">{directory.readOnlyReason || msg("grading.components.GradebookBatchControls.thisAssignmentOnlyAllowsViewing")}</Alert>}
+    {selectedCount > 0 && <div role="toolbar" aria-label={msg("grading.components.GradebookBatchControls.actionsOnSelectedSubmissions")}
       className="sticky top-14 z-10 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface p-3">
-      <span className="mr-auto text-sm font-semibold text-ink" aria-live="polite">{msg("grading.components.GradebookBatchControls.daChon")}{selectedCount} {msg("grading.components.GradebookBatchControls.bai")}</span>
-      <Button size="sm" disabled={!aiItems.length} onClick={() => setAction({ kind: "ai", items: aiItems })}>{msg("grading.components.GradebookBatchControls.chamBangAi")}{aiItems.length})</Button>
-      <Button size="sm" disabled={!publishItems.length} onClick={() => setAction({ kind: "publish", items: publishItems })}>{msg("grading.components.GradebookBatchControls.congBoDiem")}{publishItems.length})</Button>
-      <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>{msg("grading.components.GradebookBatchControls.boChon")}</Button>
+      <span className="mr-auto text-sm font-semibold text-ink" aria-live="polite">{msg("grading.components.GradebookBatchControls.selected")}{selectedCount} {msg("grading.components.GradebookBatchControls.submissions")}</span>
+      <Button size="sm" disabled={!aiItems.length} onClick={() => setAction({ kind: "ai", items: aiItems })}>{msg("grading.components.GradebookBatchControls.gradeWithAi")}{aiItems.length})</Button>
+      <Button size="sm" disabled={!publishItems.length} onClick={() => setAction({ kind: "publish", items: publishItems })}>{msg("grading.components.GradebookBatchControls.publishGrades")}{publishItems.length})</Button>
+      <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>{msg("grading.components.GradebookBatchControls.deselect")}</Button>
     </div>}
     {allPageSelected && selectedCount < eligible.length && <div className="flex flex-wrap items-center gap-2 text-sm">
       <Button size="sm" variant="secondary" disabled={eligible.length > MAX_BATCH}
         onClick={() => setSelected(new Set(eligible.map(row => row.evaluationId!)))}>
-        {msg("grading.components.GradebookBatchControls.chonToanBo")}{eligible.length} {msg("grading.components.GradebookBatchControls.baiPhuHop")}</Button>
-      {eligible.length > MAX_BATCH && <span className="text-muted">{msg("grading.components.GradebookBatchControls.toiDa100BaiMoiLan")}</span>}
+        {msg("grading.components.GradebookBatchControls.selectAll")}{eligible.length} {msg("grading.components.GradebookBatchControls.matchingSubmissions")}</Button>
+      {eligible.length > MAX_BATCH && <span className="text-muted">{msg("grading.components.GradebookBatchControls.upTo100SubmissionsAt")}</span>}
     </div>}
-    {selectedCount === MAX_BATCH && <p className="text-xs text-muted">{msg("grading.components.GradebookBatchControls.toiDa100BaiMoiLan")}</p>}
+    {selectedCount === MAX_BATCH && <p className="text-xs text-muted">{msg("grading.components.GradebookBatchControls.upTo100SubmissionsAt")}</p>}
     <TableFrame filledHead className="[&_table]:min-w-[560px] [&_table]:table-fixed">
-      <caption className="sr-only">{group ? msg("grading.components.GradebookBatchControls.baiNopCuaNhom") : msg("grading.components.GradebookBatchControls.baiNopCuaSinhVien")}</caption>
+      <caption className="sr-only">{group ? msg("grading.components.GradebookBatchControls.groupSubmissions") : msg("grading.components.GradebookBatchControls.studentSubmissions")}</caption>
       <colgroup><col className="w-11" /><col /><col className="w-24" /><col className="w-36" /><col className="w-11" /></colgroup>
       <thead><tr>
-        <Th><input type="checkbox" aria-label={msg("grading.components.GradebookBatchControls.chonTatCaTrenTrang")} className="size-4 accent-primary"
+        <Th><input type="checkbox" aria-label={msg("grading.components.GradebookBatchControls.selectAllOnPage")} className="size-4 accent-primary"
           checked={allPageSelected} disabled={!pageItems.length || (!allPageSelected && !pageFits)}
           ref={node => { if (node) node.indeterminate = somePageSelected && !allPageSelected; }}
           onChange={event => togglePage(event.target.checked)} /></Th>
-        <Th>{group ? msg("grading.components.GradebookBatchControls.nhom") : msg("grading.components.GradebookBatchControls.sinhVien")}</Th><Th>{msg("grading.components.GradebookBatchControls.diem")}</Th><Th>{msg("grading.components.GradebookBatchControls.trangThai")}</Th><Th><span className="sr-only">{msg("grading.components.GradebookBatchControls.thaoTac")}</span></Th>
+        <Th>{group ? msg("grading.components.GradebookBatchControls.group") : msg("grading.components.GradebookBatchControls.student")}</Th><Th>{msg("grading.components.GradebookBatchControls.score")}</Th><Th>{msg("grading.components.GradebookBatchControls.status")}</Th><Th><span className="sr-only">{msg("grading.components.GradebookBatchControls.actions")}</span></Th>
       </tr></thead>
       <tbody>{shown.map(row => {
         const state = formatStatus(row.status);
         const href = canSelect(row) ? buildEvaluationHref(row.evaluationId!) : null;
-        const label = group ? msg("grading.components.GradebookBatchControls.xemBanNopChungCua", { name: String(row.student.name) }) : readOnly ? msg("grading.components.GradebookBatchControls.xemBai") : state === "PENDING" ? msg("grading.components.GradebookBatchControls.chamBai") : state === "DRAFT" ? msg("grading.components.GradebookBatchControls.tiepTucCham") : msg("grading.components.GradebookBatchControls.xemDiem");
+        const label = group ? msg("grading.components.GradebookBatchControls.viewTheSharedSubmissionOf", { name: String(row.student.name) }) : readOnly ? msg("grading.components.GradebookBatchControls.viewWork") : state === "PENDING" ? msg("grading.components.GradebookBatchControls.grade") : state === "DRAFT" ? msg("grading.components.GradebookBatchControls.continueGrading") : msg("grading.components.GradebookBatchControls.viewGrade");
         const cells = <>
-          <Td onClick={(event) => event.stopPropagation()}><input type="checkbox" aria-label={msg("grading.components.GradebookBatchControls.chon", { name: String(row.student.name) })} className="size-4 accent-primary"
+          <Td onClick={(event) => event.stopPropagation()}><input type="checkbox" aria-label={msg("grading.components.GradebookBatchControls.select", { name: String(row.student.name) })} className="size-4 accent-primary"
             checked={!!row.evaluationId && selected.has(row.evaluationId)}
             disabled={readOnly || !canSelect(row) || (selectedCount >= MAX_BATCH && !selected.has(row.evaluationId!))}
             onChange={event => toggleRow(row.evaluationId!, event.target.checked)} /></Td>
@@ -112,7 +112,7 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
           <Td className="font-semibold whitespace-nowrap tabular-nums">{row.score == null ? "—" : `${Number(row.score)} / ${Number(row.maxScore ?? 10)}`}</Td>
           <Td><div className="flex flex-wrap gap-1.5">
             <Pill tone={state === "PUBLISHED" ? "success" : state === "DRAFT" ? "info" : state === "PENDING" ? "warning" : "neutral"}>{GRADE_STATUS_LABELS[state] ?? state}</Pill>
-            {row.late && <Pill tone="danger">{msg("grading.components.GradebookBatchControls.tre")}</Pill>}
+            {row.late && <Pill tone="danger">{msg("grading.components.GradebookBatchControls.late")}</Pill>}
           </div></Td>
           <Td>{href && <Link href={href} aria-label={label} title={label}
             onClick={(event) => event.stopPropagation()}
@@ -123,7 +123,7 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
           ? <ClickableRow key={row.student.accountId} onClick={() => router.push(href)}>{cells}</ClickableRow>
           : <tr key={row.student.accountId}>{cells}</tr>;
       })}
-        {!shown.length && <tr><Td colSpan={5} className="py-8 text-center! text-muted">{msg("grading.components.GradebookBatchControls.khongCoBaiPhuHop")}</Td></tr>}
+        {!shown.length && <tr><Td colSpan={5} className="py-8 text-center! text-muted">{msg("grading.components.GradebookBatchControls.noMatchingSubmissions")}</Td></tr>}
       </tbody>
     </TableFrame>
     <Pagination page={currentPage} pageSize={PAGE_SIZE} total={rows.length} summary={false} onPageChange={setPage} />

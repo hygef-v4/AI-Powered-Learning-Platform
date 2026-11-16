@@ -227,7 +227,7 @@ export type ScheduleInput = {
 
 export const statusLabels: Record<AssignmentStatus, string> = {
   // Không còn bước duyệt (yêu cầu 2026-10-22): bài đã duyệt từ trước hiện như bản nháp.
-  DRAFT: msg("assignments.model.types.nhap"), REVIEWED: msg("assignments.model.types.hoanTat"), SCHEDULED: msg("assignments.model.types.daLenLich"), OPEN: msg("assignments.model.types.dangMo"), CLOSED: msg("assignments.model.types.daDong"), RETIRED: msg("assignments.model.types.ngungGiao"),
+  DRAFT: msg("assignments.model.types.draft"), REVIEWED: msg("assignments.model.types.finalized"), SCHEDULED: msg("assignments.model.types.scheduled"), OPEN: msg("assignments.model.types.open"), CLOSED: msg("assignments.model.types.closed"), RETIRED: msg("assignments.model.types.withdrawn"),
 };
 
 export const statusTones: Record<AssignmentStatus, Tone> = {
@@ -235,7 +235,7 @@ export const statusTones: Record<AssignmentStatus, Tone> = {
 };
 
 export const gradingLabels: Record<GradingMode, string> = { GRADED: "Graded", PRACTICE: "Practice" };
-export const submissionLabels: Record<SubmissionMode, string> = { INDIVIDUAL: msg("assignments.model.types.caNhan"), GROUP: msg("assignments.model.types.nhom") };
+export const submissionLabels: Record<SubmissionMode, string> = { INDIVIDUAL: msg("assignments.model.types.individual"), GROUP: msg("assignments.model.types.group") };
 export const originLabels: Record<AssignmentOrigin, string> = {
-  MANUAL: msg("assignments.model.types.taoMoi"), CLONE: msg("assignments.model.types.nhanBan"), NEW_VERSION: msg("assignments.model.types.versionMoi"), CLASS_COPY: msg("assignments.model.types.copyTuBaiKhac"),
+  MANUAL: msg("assignments.model.types.new"), CLONE: msg("assignments.model.types.duplicate"), NEW_VERSION: msg("assignments.model.types.newVersion"), CLASS_COPY: msg("assignments.model.types.copiedFromAnotherAssignment"),
 };

@@ -60,7 +60,7 @@ function SubmittedImage({
       );
       const parsed = new URL(token.url, window.location.origin);
       if (!["https:", "http:"].includes(parsed.protocol))
-        throw new Error(msg("grading.components.SubmissionViewer.lienKetAnhKhongHopLe"));
+        throw new Error(msg("grading.components.SubmissionViewer.invalidImageLink"));
       setUrl(parsed.href);
     } catch (e) {
       setError(formatErrorMessage(e));
@@ -82,7 +82,7 @@ function SubmittedImage({
         />
       )}
       <button disabled={!evaluationId || busy} onClick={() => void loadSubmission()}>
-        {busy ? msg("grading.components.SubmissionViewer.dangTaiAnh") : url ? msg("grading.components.SubmissionViewer.taiLaiAnh") : msg("grading.components.SubmissionViewer.xemAnhBaiNop")}
+        {busy ? msg("grading.components.SubmissionViewer.loadingImage") : url ? msg("grading.components.SubmissionViewer.reloadImage") : msg("grading.components.SubmissionViewer.viewSubmittedImage")}
       </button>
       {error && <p role="alert">{error}</p>}
     </figure>
@@ -158,22 +158,22 @@ function sanitizeDiagramPreview(value: unknown): string {
 function Diagram({ blockId, content }: { blockId: string; content: DiagramContent }) {
   const [expanded, setExpanded] = useState(false);
   const preview = useMemo(() => sanitizeDiagramPreview(content.svgPreview), [content.svgPreview]);
-  const title = typeof content.alt === "string" && content.alt ? content.alt : msg("grading.components.SubmissionViewer.soDoBaiNop");
+  const title = typeof content.alt === "string" && content.alt ? content.alt : msg("grading.components.SubmissionViewer.submittedDiagram");
   return <figure id={`submission-block-${blockId}`} className="my-4 min-w-0 scroll-mt-24 rounded-lg border border-line bg-shell/30 p-3">
     <figcaption className="mb-2 text-xs font-medium text-muted">{title}</figcaption>
     {preview ? <>
       <Image src={preview} alt={title} width={1000} height={700} unoptimized className="h-auto w-full rounded bg-surface" />
-      <Button size="sm" className="mt-2" onClick={() => setExpanded(true)}>{msg("grading.components.SubmissionViewer.xemSoDo")}</Button>
+      <Button size="sm" className="mt-2" onClick={() => setExpanded(true)}>{msg("grading.components.SubmissionViewer.viewDiagram")}</Button>
       <Dialog open={expanded} title={title} size="xl" onClose={() => setExpanded(false)}>
         <div className="max-h-[70vh] overflow-auto rounded border border-line bg-surface p-3">
           <Image src={preview} alt={title} width={1600} height={1200} unoptimized className="h-auto max-w-none" />
         </div>
-        <p className="mt-2 text-sm text-muted">{msg("grading.components.SubmissionViewer.cuonNgangVaDocDeXem")}</p>
+        <p className="mt-2 text-sm text-muted">{msg("grading.components.SubmissionViewer.scrollHorizontallyAndVerticallyTo")}</p>
       </Dialog>
-    </> : <p className="text-sm text-muted">{msg("grading.components.SubmissionViewer.chuaCoAnhXemTruocSo")}</p>}
+    </> : <p className="text-sm text-muted">{msg("grading.components.SubmissionViewer.noDiagramPreviewIsAvailable")}</p>}
     <details className="mt-3 text-xs text-muted">
-      <summary className="cursor-pointer">{msg("grading.components.SubmissionViewer.duLieuSoDoDrawIo")}</summary>
-      <pre className="mt-2 max-h-48 overflow-auto whitespace-pre rounded border border-line bg-surface p-2">{typeof content.xml === "string" ? content.xml : msg("grading.components.SubmissionViewer.khongCoXml")}</pre>
+      <summary className="cursor-pointer">{msg("grading.components.SubmissionViewer.drawIoDiagramData")}</summary>
+      <pre className="mt-2 max-h-48 overflow-auto whitespace-pre rounded border border-line bg-surface p-2">{typeof content.xml === "string" ? content.xml : msg("grading.components.SubmissionViewer.noXml")}</pre>
     </details>
   </figure>;
 }
@@ -185,8 +185,8 @@ export function SubmissionViewer({
   evaluationId?: string;
 }) {
   return (
-    <Card as="section" className="min-w-0 break-words text-sm leading-relaxed sm:p-5" aria-label={msg("grading.components.SubmissionViewer.baiLamDaNop")}>
-      <h2 className="mb-4 text-base font-bold">{msg("grading.components.SubmissionViewer.baiLamDaNopChiDoc")}</h2>
+    <Card as="section" className="min-w-0 break-words text-sm leading-relaxed sm:p-5" aria-label={msg("grading.components.SubmissionViewer.submittedWork")}>
+      <h2 className="mb-4 text-base font-bold">{msg("grading.components.SubmissionViewer.submittedWorkReadOnly")}</h2>
       {document.blocks.map((block) => {
         const c = block.content;
         const anchorId = `submission-block-${block.id}`;
@@ -198,7 +198,7 @@ export function SubmissionViewer({
               blockId={block.id}
               evaluationId={evaluationId}
               fileId={String(block.content.fileId ?? "")}
-              alt={typeof block.content.alt === "string" ? block.content.alt : msg("grading.components.SubmissionViewer.anhBaiNop")}
+              alt={typeof block.content.alt === "string" ? block.content.alt : msg("grading.components.SubmissionViewer.submittedImage")}
             />
           );
         if (block.type === "TABLE" && Array.isArray(block.content.rows)) {
@@ -254,7 +254,7 @@ export function SubmissionViewer({
           </p>
         );
       })}
-      {document.blocks.length === 0 && <p>{msg("grading.components.SubmissionViewer.chuaCoNoiDungBaiLam")}</p>}
+      {document.blocks.length === 0 && <p>{msg("grading.components.SubmissionViewer.noWorkContentAvailableYet")}</p>}
     </Card>
   );
 }

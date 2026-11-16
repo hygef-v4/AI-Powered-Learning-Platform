@@ -10,19 +10,19 @@ import type { BatchResult, ItemVersion } from "../model/types";
 import { msg } from "@/i18n/msg";
 
 const OUTCOME_CODE_MESSAGES: Record<string, string> = {
-  ALREADY_FINALIZED: msg("grading.components.BatchActionDialog.baiNayDaDuocChotDiem"),
-  ALREADY_PUBLISHED: msg("grading.components.BatchActionDialog.baiNayDaDuocCongBo"),
-  INVALID_GRADE_STATE: msg("grading.components.BatchActionDialog.trangThaiBaiDaThayDoi"),
-  GRADE_VERSION_CONFLICT: msg("grading.components.BatchActionDialog.baiChamDaDuocCapNhat"),
-  GRADE_LOCKED: msg("grading.components.BatchActionDialog.diemDaDuocKhoaTaiLai"),
-  GRADING_CLASS_READ_ONLY: msg("grading.components.BatchActionDialog.lopDaLuuTruHoacChua"),
-  GRADING_ASSIGNMENT_OPEN: msg("grading.components.BatchActionDialog.baiTapDangNhanBaiDong"),
-  DUPLICATE_ITEM: msg("grading.components.BatchActionDialog.baiBiChonTrungChiXu"),
-  INCOMPLETE_BATCH_RESULT: msg("grading.components.BatchActionDialog.chuaNhanDuKetQuaXu"),
+  ALREADY_FINALIZED: msg("grading.components.BatchActionDialog.thisSubmissionsGradeWasAlready"),
+  ALREADY_PUBLISHED: msg("grading.components.BatchActionDialog.thisSubmissionsGradeWasAlready2"),
+  INVALID_GRADE_STATE: msg("grading.components.BatchActionDialog.theSubmissionStatusHasChanged"),
+  GRADE_VERSION_CONFLICT: msg("grading.components.BatchActionDialog.theGradingWasUpdatedReload"),
+  GRADE_LOCKED: msg("grading.components.BatchActionDialog.theGradeIsLockedReload"),
+  GRADING_CLASS_READ_ONLY: msg("grading.components.BatchActionDialog.theClassIsArchivedOr"),
+  GRADING_ASSIGNMENT_OPEN: msg("grading.components.BatchActionDialog.theAssignmentIsStillAccepting"),
+  DUPLICATE_ITEM: msg("grading.components.BatchActionDialog.aSubmissionWasSelectedTwice"),
+  INCOMPLETE_BATCH_RESULT: msg("grading.components.BatchActionDialog.notAllResultsWereReceived"),
   STRUCTURED_FEEDBACK_REVIEW_REQUIRED:
-    msg("grading.components.BatchActionDialog.conMucNhanXetCanGiang"),
+    msg("grading.components.BatchActionDialog.someFeedbackItemsStillNeed"),
   STRUCTURED_FEEDBACK_SCORE_MISMATCH:
-    msg("grading.components.BatchActionDialog.coMucDaThayDoiDiem"),
+    msg("grading.components.BatchActionDialog.someItemsHadTheirPoints"),
 };
 
 function isAlreadyCompleted(row: BatchResult["items"][number]) {
@@ -101,9 +101,9 @@ export function BatchActionDialog({
         const skipped = completed.items.filter(isAlreadyCompleted).length;
         const changed = items.length - skipped;
         const message = changed > 0
-          ? action === "publish" ? msg("grading.components.BatchActionDialog.daCongBoDiemChoBai", { changed: String(changed) }) : msg("grading.components.BatchActionDialog.daChotDiemChoBai", { changed: String(changed) })
-          : msg("grading.components.BatchActionDialog.cacBaiDaDuocChotHoac");
-        showToast(message + (skipped > 0 && changed > 0 ? msg("grading.components.BatchActionDialog.baiDaHoanTatTruocDo", { skipped: String(skipped) }) : ""));
+          ? action === "publish" ? msg("grading.components.BatchActionDialog.gradesPublishedForSubmissions", { changed: String(changed) }) : msg("grading.components.BatchActionDialog.gradesFinalizedForSubmissions", { changed: String(changed) })
+          : msg("grading.components.BatchActionDialog.theSubmissionsWereAlreadyFinalized");
+        showToast(message + (skipped > 0 && changed > 0 ? msg("grading.components.BatchActionDialog.submissionsWereAlreadyCompletedTheir", { skipped: String(skipped) }) : ""));
         setCompleted(true);
         onClose();
       }
@@ -116,10 +116,10 @@ export function BatchActionDialog({
   }
   const title =
     action === "publish"
-      ? msg("grading.components.BatchActionDialog.congBoDiem")
+      ? msg("grading.components.BatchActionDialog.publishGrades")
       : action === "finalize"
-        ? msg("grading.components.BatchActionDialog.chotDiem")
-        : msg("grading.components.BatchActionDialog.deXuatAiHangLoat");
+        ? msg("grading.components.BatchActionDialog.finalizeGrades")
+        : msg("grading.components.BatchActionDialog.batchAiProposals");
   const estimateIsCurrent = estimate.key === JSON.stringify(items);
   const estimateState = estimateIsCurrent ? estimate.state : "loading";
   if (completed) return null;
@@ -131,36 +131,36 @@ export function BatchActionDialog({
       dismissible={!busy}
       footer={
         <>
-          {result ? <Button onClick={onClose}>{msg("grading.components.BatchActionDialog.dong")}</Button> : <Button
+          {result ? <Button onClick={onClose}>{msg("grading.components.BatchActionDialog.close")}</Button> : <Button
             variant="primary"
             disabled={busy || items.length === 0}
             onClick={() => void runBatch()}
           >
-            {busy ? msg("grading.components.BatchActionDialog.dangXuLy") : msg("grading.components.BatchActionDialog.xacNhan")}
+            {busy ? msg("grading.components.BatchActionDialog.processing") : msg("grading.components.BatchActionDialog.confirm")}
           </Button>}
         </>
       }
     >
       {/* Popup công bố điểm bỏ phần nội dung (yêu cầu 2026-11-07). */}
       {action !== "publish" && (
-        <p className="font-display text-[34px] leading-none text-ink">{items.length} <span className="font-sans text-[13.5px] text-muted">{msg("grading.components.BatchActionDialog.baiDaChon")}</span></p>
+        <p className="font-display text-[34px] leading-none text-ink">{items.length} <span className="font-sans text-[13.5px] text-muted">{msg("grading.components.BatchActionDialog.selectedSubmissions")}</span></p>
       )}
       {/* Nguồn AI do hệ thống tự chọn: API chung nếu còn đủ hạn mức cho lượt này, không thì khóa cá nhân (yêu cầu 2026-11-05). */}
       {action === "ai" && (
         <p className="text-xs text-muted">
-          {estimateState === "loading" ? msg("grading.components.BatchActionDialog.dangUocTinhToken") : estimateState === "ready" && estimate.tokens != null
-            ? msg("grading.components.BatchActionDialog.uocTinhKhoangToken", { value: String(estimate.tokens.toLocaleString("vi-VN")) }) : msg("grading.components.BatchActionDialog.chuaUocTinhDuocToken")}
+          {estimateState === "loading" ? msg("grading.components.BatchActionDialog.estimatingTokens") : estimateState === "ready" && estimate.tokens != null
+            ? msg("grading.components.BatchActionDialog.estimatedAboutTokens", { value: String(estimate.tokens.toLocaleString("vi-VN")) }) : msg("grading.components.BatchActionDialog.couldNotEstimateTokens")}
         </p>
       )}
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {result && (
         <ul className="flex flex-col">
           {result.items.map((r, index) => {
-            const detailMsg = r.code ? OUTCOME_CODE_MESSAGES[r.code] ?? msg("grading.components.BatchActionDialog.khongTheThucHienThaoTac") : undefined;
+            const detailMsg = r.code ? OUTCOME_CODE_MESSAGES[r.code] ?? msg("grading.components.BatchActionDialog.couldNotPerformTheAction") : undefined;
             return (
               <li key={`${r.evaluationId}-${index}`} className="border-b border-line py-2 last:border-b-0">
                 <p>
-                  {msg("grading.components.BatchActionDialog.bai")}{index + 1}: {r.outcome === "SUCCESS" ? msg("grading.components.BatchActionDialog.thanhCong") : r.outcome === "QUEUED" || r.outcome === "PENDING" ? msg("grading.components.BatchActionDialog.daGuiYeuCauAi") : r.outcome === "READY" ? msg("grading.components.BatchActionDialog.daCoDeXuatAi") : r.outcome === "SKIPPED" ? msg("grading.components.BatchActionDialog.boQua") : msg("grading.components.BatchActionDialog.chuaThucHienDuoc")}
+                  {msg("grading.components.BatchActionDialog.submission")}{index + 1}: {r.outcome === "SUCCESS" ? msg("grading.components.BatchActionDialog.succeeded") : r.outcome === "QUEUED" || r.outcome === "PENDING" ? msg("grading.components.BatchActionDialog.aiRequestSent") : r.outcome === "READY" ? msg("grading.components.BatchActionDialog.aiProposalAvailable") : r.outcome === "SKIPPED" ? msg("grading.components.BatchActionDialog.skipped") : msg("grading.components.BatchActionDialog.notDoneYet")}
                 </p>
                 {detailMsg && (
                   <p role={r.outcome === "FAILED" ? "alert" : undefined}

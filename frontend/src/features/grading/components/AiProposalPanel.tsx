@@ -28,27 +28,27 @@ export function buildAiRequest(choice?: SourceChoice): AiRequest {
 }
 
 const STATUS_META: Record<string, { label: string; tone: Tone; icon: string }> = {
-  PENDING: { label: msg("grading.components.AiProposalPanel.dangChoXuLy"), tone: "warning", icon: "⏳" },
-  READY: { label: msg("grading.components.AiProposalPanel.sanSangDeXem"), tone: "success", icon: "✓" },
-  FAILED: { label: msg("grading.components.AiProposalPanel.khongTaoDuocDeXuat"), tone: "danger", icon: "✕" },
-  STALE: { label: msg("grading.components.AiProposalPanel.deXuatDaCu"), tone: "neutral", icon: "•" },
-  REJECTED: { label: msg("grading.components.AiProposalPanel.deXuatKhongHopLe"), tone: "danger", icon: "✕" },
+  PENDING: { label: msg("grading.components.AiProposalPanel.waitingToBeProcessed"), tone: "warning", icon: "⏳" },
+  READY: { label: msg("grading.components.AiProposalPanel.readyToReview"), tone: "success", icon: "✓" },
+  FAILED: { label: msg("grading.components.AiProposalPanel.couldNotCreateAProposal"), tone: "danger", icon: "✕" },
+  STALE: { label: msg("grading.components.AiProposalPanel.theProposalIsOutdated"), tone: "neutral", icon: "•" },
+  REJECTED: { label: msg("grading.components.AiProposalPanel.theProposalIsInvalid"), tone: "danger", icon: "✕" },
 };
 
 function describePendingStage(taskState?: string | null): string {
-  if (taskState === "READY") return msg("grading.components.AiProposalPanel.daNhanKetQuaAiDang");
-  if (taskState === "RUNNING") return msg("grading.components.AiProposalPanel.aiDangChamBai");
-  return msg("grading.components.AiProposalPanel.dangChoXuLy");
+  if (taskState === "READY") return msg("grading.components.AiProposalPanel.aiResultReceivedProcessingThe");
+  if (taskState === "RUNNING") return msg("grading.components.AiProposalPanel.theAiIsGrading");
+  return msg("grading.components.AiProposalPanel.waitingToBeProcessed");
 }
 
 function describePendingStageDetail(taskState?: string | null): string {
   if (taskState === "READY") {
-    return msg("grading.components.AiProposalPanel.daNhanKetQuaTuNha");
+    return msg("grading.components.AiProposalPanel.theResultFromTheAi");
   }
   if (taskState === "RUNNING") {
-    return msg("grading.components.AiProposalPanel.aiDangDocBaiLamVa");
+    return msg("grading.components.AiProposalPanel.theAiIsReadingThe");
   }
-  return msg("grading.components.AiProposalPanel.yeuCauChamAiDangXep");
+  return msg("grading.components.AiProposalPanel.theAiGradingRequestIs");
 }
 
 export function AiProposalPanel({
@@ -110,38 +110,38 @@ export function AiProposalPanel({
         )}
         {p.status === "PENDING" && pollExhausted && (
           <div role="status" className="mt-2 rounded-lg border border-warning bg-warning-soft/60 p-3 text-xs text-ink">
-            <p className="font-semibold">{msg("grading.components.AiProposalPanel.phanHoiAiDangMatNhieu")}</p>
+            <p className="font-semibold">{msg("grading.components.AiProposalPanel.theAiResponseIsTaking")}</p>
             <p className="mt-1 text-muted">
-              {msg("grading.components.AiProposalPanel.yeuCauHienTaiVanDang")}</p>
+              {msg("grading.components.AiProposalPanel.theCurrentRequestIsStill")}</p>
             {onRecheck && (
               <button
                 type="button"
                 onClick={onRecheck}
                 className="mt-2 rounded-lg border border-primary bg-surface px-3 py-1.5 text-xs font-semibold text-primary-ink hover:bg-primary-soft"
               >
-                {msg("grading.components.AiProposalPanel.kiemTraLai")}</button>
+                {msg("grading.components.AiProposalPanel.checkAgain")}</button>
             )}
           </div>
         )}
-        {p.status === "STALE" && <p className="mt-2 text-muted">{msg("grading.components.AiProposalPanel.baiNopHoacRubricDaThay")}</p>}
+        {p.status === "STALE" && <p className="mt-2 text-muted">{msg("grading.components.AiProposalPanel.theSubmissionOrRubricHas")}</p>}
         {p.proposal && <>
           <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-line bg-surface px-3 py-2">
             <div>
-              <span className="text-xs font-medium text-muted">{msg("grading.components.AiProposalPanel.diemAiDeXuat")}</span>
+              <span className="text-xs font-medium text-muted">{msg("grading.components.AiProposalPanel.aiProposedScore")}</span>
               <strong className="text-base font-bold tabular-nums text-success">{aiTotal.toFixed(2)}</strong>
             </div>
             {hasComparison && (
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 {hasInvalidCurrent ? (
-                  <span className="font-semibold text-danger">{msg("grading.components.AiProposalPanel.diemDangNhapChuaHopLe")}</span>
+                  <span className="font-semibold text-danger">{msg("grading.components.AiProposalPanel.theEnteredScoreIsInvalid")}</span>
                 ) : (
                   <>
-                    <span className="font-medium tabular-nums text-body">{msg("grading.components.AiProposalPanel.diemDangCham")}{currentSubtotal.toFixed(2)}</span>
-                    <span className="font-medium tabular-nums text-body">{msg("grading.components.AiProposalPanel.aiDeXuat")}{aiTotal.toFixed(2)}</span>
+                    <span className="font-medium tabular-nums text-body">{msg("grading.components.AiProposalPanel.currentScore")}{currentSubtotal.toFixed(2)}</span>
+                    <span className="font-medium tabular-nums text-body">{msg("grading.components.AiProposalPanel.aiProposal")}{aiTotal.toFixed(2)}</span>
                     {totalDiff !== 0 ? (
-                      <Pill tone="warning">{msg("grading.components.AiProposalPanel.lech")}{totalDiff > 0 ? `+${totalDiff.toFixed(2)}` : totalDiff.toFixed(2)}</Pill>
+                      <Pill tone="warning">{msg("grading.components.AiProposalPanel.difference")}{totalDiff > 0 ? `+${totalDiff.toFixed(2)}` : totalDiff.toFixed(2)}</Pill>
                     ) : (
-                      <Pill tone="success">{msg("grading.components.AiProposalPanel.khopDiemRubric")}</Pill>
+                      <Pill tone="success">{msg("grading.components.AiProposalPanel.matchesRubricPoints")}</Pill>
                     )}
                   </>
                 )}
@@ -150,30 +150,30 @@ export function AiProposalPanel({
           </div>
           {reviewFlagCount > 0 && (
             <div role="note" className="mt-2 rounded-lg border border-warning bg-warning-soft/60 px-3 py-2 text-xs text-ink">
-              <strong className="text-warning">{msg("grading.components.AiProposalPanel.co")}{reviewFlagCount} {msg("grading.components.AiProposalPanel.mucAiDanhDauCanGiang")}</strong>{" "}
-              {msg("grading.components.AiProposalPanel.viDuMinhChungChuaDoc")}</div>
+              <strong className="text-warning">{msg("grading.components.AiProposalPanel.text")}{reviewFlagCount} {msg("grading.components.AiProposalPanel.itemsFlaggedByTheAi")}</strong>{" "}
+              {msg("grading.components.AiProposalPanel.forExampleEvidenceThatCould")}</div>
           )}
           {aiStructured && (
             <GradingFeedbackSummary
               summary={aiStructured.summary}
-              title={msg("grading.components.AiProposalPanel.tomTatNhanXetCauTruc")}
+              title={msg("grading.components.AiProposalPanel.summaryOfStructuredAiFeedback")}
             />
           )}
           {hasComparison && currentValues && (
             <div className="mt-2 space-y-1.5 rounded-lg border border-line bg-surface p-2.5 text-xs">
-              <p className="font-semibold text-ink">{msg("grading.components.AiProposalPanel.soSanhTheoTungPhanMuc")}</p>
+              <p className="font-semibold text-ink">{msg("grading.components.AiProposalPanel.comparisonByPartRubricItem")}</p>
               {rubrics.map((rubric, rIdx) => {
-                const secTitle = partTitles[rubric.partId] || msg("grading.components.AiProposalPanel.phan", { value: String(rIdx + 1) });
+                const secTitle = partTitles[rubric.partId] || msg("grading.components.AiProposalPanel.part", { value: String(rIdx + 1) });
                 const hasAiRubric = Object.prototype.hasOwnProperty.call(aiScores, rubric.rubricId) || Object.prototype.hasOwnProperty.call(aiChecks, rubric.rubricId);
-                const secAi = hasAiRubric ? calculateChecklistPoints([rubric], aiChecks, aiScores).toFixed(2) : msg("grading.components.AiProposalPanel.chuaCoDuLieu");
+                const secAi = hasAiRubric ? calculateChecklistPoints([rubric], aiChecks, aiScores).toFixed(2) : msg("grading.components.AiProposalPanel.noDataYet");
                 const secCurInvalid = hasInvalidItemScores([rubric], currentValues.itemScores);
-                const secCur = secCurInvalid ? msg("grading.components.AiProposalPanel.chuaHopLe") : calculateChecklistPoints([rubric], currentValues.checks, currentValues.itemScores).toFixed(2);
+                const secCur = secCurInvalid ? msg("grading.components.AiProposalPanel.invalid") : calculateChecklistPoints([rubric], currentValues.checks, currentValues.itemScores).toFixed(2);
                 return (
                   <div key={rubric.rubricId} className="rounded-lg border border-line bg-shell p-3">
                     <div className="flex flex-wrap items-center justify-between gap-1 font-semibold text-ink">
                       <span>{secTitle}</span>
                       <span className="tabular-nums text-body">
-                        {msg("grading.components.AiProposalPanel.dangCham")}{secCur} · AI: {secAi} / {Number(rubric.maxPoints).toFixed(2)}
+                        {msg("grading.components.AiProposalPanel.current")}{secCur} · AI: {secAi} / {Number(rubric.maxPoints).toFixed(2)}
                       </span>
                     </div>
                     <div className="mt-1.5 space-y-1">
@@ -201,8 +201,8 @@ export function AiProposalPanel({
                             <p className="break-words leading-snug">{item.text}</p>
                             <div className="flex flex-wrap items-center justify-between gap-2 font-medium tabular-nums">
                               <span>
-                                {msg("grading.components.AiProposalPanel.dangCham")}{curValid ? Number(curRaw).toFixed(2) : msg("grading.components.AiProposalPanel.chuaHopLe")} · AI:{" "}
-                                {aiVal !== null && Number.isFinite(aiVal) ? aiVal.toFixed(2) : msg("grading.components.AiProposalPanel.chuaCoDuLieu")} / {max.toFixed(2)}
+                                {msg("grading.components.AiProposalPanel.current")}{curValid ? Number(curRaw).toFixed(2) : msg("grading.components.AiProposalPanel.invalid")} · AI:{" "}
+                                {aiVal !== null && Number.isFinite(aiVal) ? aiVal.toFixed(2) : msg("grading.components.AiProposalPanel.noDataYet")} / {max.toFixed(2)}
                               </span>
                               {curValid && aiVal !== null && itemDiff !== 0 && (
                                 <span className="font-semibold text-warning">
@@ -233,15 +233,15 @@ export function AiProposalPanel({
           )}
           {p.proposal.feedback && (
             <details open={!aiStructured && p.proposal.feedback.length <= 280} className="mt-2 rounded-lg border border-line-soft bg-surface p-2.5">
-              <summary className="cursor-pointer text-xs font-semibold text-body">{msg("grading.components.AiProposalPanel.nhanXetTongHopTuAi")}</summary>
+              <summary className="cursor-pointer text-xs font-semibold text-body">{msg("grading.components.AiProposalPanel.overallAiFeedback")}</summary>
               <p className="mt-1.5 whitespace-pre-wrap leading-relaxed text-ink">{p.proposal.feedback}</p>
             </details>
           )}
           {!!p.proposal.sections?.length && <details className="mt-2 rounded-lg border border-line-soft bg-surface p-2.5">
-            <summary className="cursor-pointer text-xs font-semibold text-primary-ink">{msg("grading.components.AiProposalPanel.nhanXetTungPhan")}{p.proposal.sections.length})</summary>
+            <summary className="cursor-pointer text-xs font-semibold text-primary-ink">{msg("grading.components.AiProposalPanel.feedbackByPart")}{p.proposal.sections.length})</summary>
             {p.proposal.sections.map((section, sectionIndex) => (
               <p key={section.partId} className="mt-2 text-xs leading-relaxed">
-                <strong>{partTitles[section.partId] || msg("grading.components.AiProposalPanel.phan", { value: String(sectionIndex + 1) })}:</strong> {section.feedback}
+                <strong>{partTitles[section.partId] || msg("grading.components.AiProposalPanel.part", { value: String(sectionIndex + 1) })}:</strong> {section.feedback}
               </p>
             ))}
           </details>}
@@ -268,19 +268,19 @@ export function AiProposalPanel({
               }
             }}
           >
-            {msg("grading.components.AiProposalPanel.apDungVaoBanNhap")}</button>
-          <span className="text-xs text-muted">{msg("grading.components.AiProposalPanel.chiTichSanChecklistVaDien")}</span>
+            {msg("grading.components.AiProposalPanel.applyToDraft")}</button>
+          <span className="text-xs text-muted">{msg("grading.components.AiProposalPanel.onlyPreTicksTheChecklist")}</span>
         </div>
       </>
     );
   }
 
   return (
-    <Card as="section" padding="none" className="p-3.5 sm:p-4" aria-label={msg("grading.components.AiProposalPanel.deXuatAi")}>
+    <Card as="section" padding="none" className="p-3.5 sm:p-4" aria-label={msg("grading.components.AiProposalPanel.aiProposal2")}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-base font-bold text-ink">{msg("grading.components.AiProposalPanel.deXuatAi")}</h2>
-          <p className="mt-0.5 text-xs leading-relaxed text-muted">{msg("grading.components.AiProposalPanel.kiemTraDeXuatVaLuu")}</p>
+          <h2 className="text-base font-bold text-ink">{msg("grading.components.AiProposalPanel.aiProposal2")}</h2>
+          <p className="mt-0.5 text-xs leading-relaxed text-muted">{msg("grading.components.AiProposalPanel.reviewTheProposalAndSave")}</p>
         </div>
         <button
           type="button"
@@ -288,24 +288,24 @@ export function AiProposalPanel({
           disabled={disabled || proposals.some((proposal) => proposal.status === "PENDING")}
           onClick={() => { if (!disabled) onRequest(buildAiRequest()); }}
         >
-          {msg("grading.components.AiProposalPanel.yeuCauDeXuatMoi")}</button>
+          {msg("grading.components.AiProposalPanel.requestANewProposal")}</button>
       </div>
       {latestFailure && <div role="alert" className="mt-3 rounded-lg bg-danger/5 p-3 text-sm">
-        <p className="font-semibold text-danger">{msg("grading.components.AiProposalPanel.khongTaoDuocDeXuat")}</p>
-        <p className="mt-1">{latestFailure.safeError && !/^AI task (failed|unavailable or failed)$/.test(latestFailure.safeError) ? latestFailure.safeError : msg("grading.components.AiProposalPanel.tacVuAiKhongThanhCong")}</p>
-        <p className="mt-1 text-muted">{msg("grading.components.AiProposalPanel.banVanCoTheChamThu")}</p>
-        <a href="/ai/connection" className="mt-2 inline-block font-semibold text-primary-ink underline underline-offset-2">{msg("grading.components.AiProposalPanel.kiemTraKetNoiAi")}</a>
+        <p className="font-semibold text-danger">{msg("grading.components.AiProposalPanel.couldNotCreateAProposal")}</p>
+        <p className="mt-1">{latestFailure.safeError && !/^AI task (failed|unavailable or failed)$/.test(latestFailure.safeError) ? latestFailure.safeError : msg("grading.components.AiProposalPanel.theAiTaskFailedCheck")}</p>
+        <p className="mt-1 text-muted">{msg("grading.components.AiProposalPanel.youCanStillGradeManually")}</p>
+        <a href="/ai/connection" className="mt-2 inline-block font-semibold text-primary-ink underline underline-offset-2">{msg("grading.components.AiProposalPanel.checkAiConnection")}</a>
       </div>}
-      {visibleProposals.length === 0 && <p className="mt-3 text-sm text-muted">{msg("grading.components.AiProposalPanel.chuaCoDeXuatBanCo")}</p>}
+      {visibleProposals.length === 0 && <p className="mt-3 text-sm text-muted">{msg("grading.components.AiProposalPanel.noProposalYetYouCan")}</p>}
       {selectedProposalId && proposalsLoaded && !proposals.some((p) => p.id === selectedProposalId) && (
-        <p role="alert" className="mt-3 text-sm text-danger">{msg("grading.components.AiProposalPanel.khongTimThayDeXuatTu")}</p>
+        <p role="alert" className="mt-3 text-sm text-danger">{msg("grading.components.AiProposalPanel.theProposalFromTheLink")}</p>
       )}
       {visibleProposals.map((p, index) => {
-        const baseMeta = STATUS_META[p.status] ?? { label: msg("grading.components.AiProposalPanel.chuaKhaDung"), tone: "neutral" as Tone, icon: "•" };
+        const baseMeta = STATUS_META[p.status] ?? { label: msg("grading.components.AiProposalPanel.notAvailableYet"), tone: "neutral" as Tone, icon: "•" };
         const meta = p.status === "PENDING" ? { ...baseMeta, label: describePendingStage(p.taskState) } : baseMeta;
-        const sourceLabel = msg("grading.components.AiProposalPanel.lan", { versionNo: String(p.versionNo), value: String(p.origin === "MCP" ? (p.agentLabel ?? "Agent") : p.source === "PERSONAL" ? msg("grading.components.AiProposalPanel.apiCaNhan") : msg("grading.components.AiProposalPanel.apiTruong")) });
+        const sourceLabel = msg("grading.components.AiProposalPanel.run", { versionNo: String(p.versionNo), value: String(p.origin === "MCP" ? (p.agentLabel ?? "Agent") : p.source === "PERSONAL" ? msg("grading.components.AiProposalPanel.personalApi") : msg("grading.components.AiProposalPanel.schoolApi")) });
         const createdAt = p.createdAt && Number.isFinite(Date.parse(p.createdAt))
-          ? <time dateTime={p.createdAt} className="block text-xs font-normal text-muted">{msg("grading.components.AiProposalPanel.taoLuc")}{formatDateTime(p.createdAt)}</time>
+          ? <time dateTime={p.createdAt} className="block text-xs font-normal text-muted">{msg("grading.components.AiProposalPanel.createdAt")}{formatDateTime(p.createdAt)}</time>
           : null;
         const keepExpanded = p.id === selectedProposalId || index === 0 || p.status === "PENDING";
         if (!keepExpanded) {
@@ -324,11 +324,11 @@ export function AiProposalPanel({
                     <span aria-hidden="true">{meta.icon}</span>
                     <span>{meta.label}</span>
                   </Pill>
-                  <span className="text-xs text-muted">{msg("grading.components.AiProposalPanel.deXuatTruocDo")}</span>
+                  <span className="text-xs text-muted">{msg("grading.components.AiProposalPanel.previousProposals")}</span>
                 </span>
                 <span className="text-xs text-muted">
                   {sourceLabel}
-                  {p.proposal ? msg("grading.components.AiProposalPanel.diem", { value: String(Number(p.proposal.score).toFixed(2)) }) : ""}
+                  {p.proposal ? msg("grading.components.AiProposalPanel.points", { value: String(Number(p.proposal.score).toFixed(2)) }) : ""}
                   {createdAt}
                 </span>
               </button>
@@ -340,7 +340,7 @@ export function AiProposalPanel({
         }
         return (
           <article key={p.id} id={`grading-proposal-${p.id}`} className="mt-3 scroll-mt-52 rounded-lg border border-line bg-shell/40 p-3 text-sm">
-            {p.id === selectedProposalId && <p className="mb-2 text-xs font-semibold text-primary-ink">{msg("grading.components.AiProposalPanel.deXuatTuLienKet")}</p>}
+            {p.id === selectedProposalId && <p className="mb-2 text-xs font-semibold text-primary-ink">{msg("grading.components.AiProposalPanel.proposalFromLink")}</p>}
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Pill tone={meta.tone}>
                 <span aria-hidden="true">{meta.icon}</span>
@@ -348,7 +348,7 @@ export function AiProposalPanel({
               </Pill>
               <span className="text-xs text-muted">{sourceLabel}{createdAt}</span>
             </div>
-            {index > 0 && <p className="mt-1 text-xs text-muted">{msg("grading.components.AiProposalPanel.deXuatTruocDo")}</p>}
+            {index > 0 && <p className="mt-1 text-xs text-muted">{msg("grading.components.AiProposalPanel.previousProposals")}</p>}
             {renderProposalContent(p, index === 0)}
           </article>
         );

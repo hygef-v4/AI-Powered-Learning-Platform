@@ -23,7 +23,7 @@ type Props = {
  * Ô tải đề mẫu: kéo thả hoặc bấm để chọn một tệp; chọn xong chỉ hiện tên tệp và nút bỏ. Dùng chung cho Tạo bài tập (đề mẫu
  * DOCX) và Soạn bằng AI (định dạng đề, yêu cầu 2026-11-05).
  */
-export function TemplateFileField({ file, onChange, disabled, label = msg("assignments.components.TemplateFileField.uploadDeMau"), accept = ".docx", testId = "create-docx", status,
+export function TemplateFileField({ file, onChange, disabled, label = msg("assignments.components.TemplateFileField.uploadTemplate"), accept = ".docx", testId = "create-docx", status,
   files, onFilesChange }: Props) {
   const [over, setOver] = useState(false);
   const multiple = !!onFilesChange;
@@ -38,9 +38,9 @@ export function TemplateFileField({ file, onChange, disabled, label = msg("assig
       <div className="flex animate-fade items-center gap-3 rounded-[10px] border border-line bg-sunken px-3.5 py-3 text-[13.5px]" data-testid="docx-file">
         <Icon name="description" size={18} className="text-primary-ink" />
         <span className="min-w-0 flex-1 truncate font-semibold text-ink" title={file.name}>{file.name}</span>
-        {extra > 0 && <span className="shrink-0 text-xs text-muted">+{extra} {msg("assignments.components.TemplateFileField.tep")}</span>}
+        {extra > 0 && <span className="shrink-0 text-xs text-muted">+{extra} {msg("assignments.components.TemplateFileField.files")}</span>}
         {status}
-        <IconButton icon="close" label={msg("assignments.components.TemplateFileField.boTep")} size={28} disabled={disabled}
+        <IconButton icon="close" label={msg("assignments.components.TemplateFileField.removeFile")} size={28} disabled={disabled}
           onClick={() => (multiple ? onFilesChange([]) : onChange(null))} />
       </div>
     );

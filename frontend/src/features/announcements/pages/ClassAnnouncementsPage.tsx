@@ -55,7 +55,7 @@ export function ClassAnnouncementsPage({
     return error ? (
       <PageLoadError>{error}</PageLoadError>
     ) : (
-      <PageLoading label={msg("announcements.pages.ClassAnnouncementsPage.dangTaiThongBao")} />
+      <PageLoading label={msg("announcements.pages.ClassAnnouncementsPage.loadingAnnouncements")} />
     );
   const manageable = data.classes.filter(
     (c) => c.canManage && (!fixedClassId || c.classId === fixedClassId),
@@ -67,7 +67,7 @@ export function ClassAnnouncementsPage({
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        title={fixedClassId ? msg("announcements.pages.ClassAnnouncementsPage.thongBaoLop") : msg("announcements.pages.ClassAnnouncementsPage.tatCaThongBao")}
+        title={fixedClassId ? msg("announcements.pages.ClassAnnouncementsPage.classAnnouncements") : msg("announcements.pages.ClassAnnouncementsPage.allAnnouncements")}
         actions={
           <>
             {!fixedClassId && (
@@ -85,7 +85,7 @@ export function ClassAnnouncementsPage({
                 onClick={() => setCreating(true)}
                 data-testid="announcement-create"
               >
-                {msg("announcements.pages.ClassAnnouncementsPage.taoThongBao")}</Button>
+                {msg("announcements.pages.ClassAnnouncementsPage.createAnnouncement")}</Button>
             )}
           </>
         }
@@ -94,14 +94,14 @@ export function ClassAnnouncementsPage({
         <div role="alert" className="flex items-center gap-3 text-[13px] text-danger">
           {error}
           <Button size="sm" onClick={handleReload}>
-            {msg("announcements.pages.ClassAnnouncementsPage.thuLai")}</Button>
+            {msg("announcements.pages.ClassAnnouncementsPage.tryAgain")}</Button>
         </div>
       )}
       <AnnouncementFeed items={data.items} classCodes={codes} onChanged={handleReload} />
       {(page > 1 || data.hasMore) && (
-        <nav className="flex items-center justify-end gap-2" aria-label={msg("announcements.pages.ClassAnnouncementsPage.phanTrangThongBao")}>
+        <nav className="flex items-center justify-end gap-2" aria-label={msg("announcements.pages.ClassAnnouncementsPage.announcementPages")}>
           <Button size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>
-            {msg("announcements.pages.ClassAnnouncementsPage.truoc")}</Button>
+            {msg("announcements.pages.ClassAnnouncementsPage.previous")}</Button>
           <span className="text-[13px] text-muted tabular-nums">Trang {page}</span>
           <Button size="sm" disabled={!data.hasMore} onClick={() => setPage(page + 1)}>
             Sau

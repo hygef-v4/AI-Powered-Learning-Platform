@@ -53,8 +53,8 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
     } catch (e) {
       setError(
         e instanceof ApiError && e.problem.status === 400
-          ? (e.problem.detail ?? msg("identity.admin.components.ImportAccountsPanel.tepKhongHopLe"))
-          : msg("identity.admin.components.ImportAccountsPanel.khongXuLyDuocTepVui"),
+          ? (e.problem.detail ?? msg("identity.admin.components.ImportAccountsPanel.invalidFile"))
+          : msg("identity.admin.components.ImportAccountsPanel.couldNotProcessTheFile"),
       );
     } finally {
       setBusy(false);
@@ -71,20 +71,20 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
 
   return (
     <Section
-      title={msg("identity.admin.components.ImportAccountsPanel.nhapTaiKhoanTuExcel")}
+      title={msg("identity.admin.components.ImportAccountsPanel.importAccountsFromExcel")}
       icon="upload_file"
       actions={
-        <button type="button" onClick={onClose} aria-label={msg("identity.admin.components.ImportAccountsPanel.dong")} className="text-muted hover:text-ink">
+        <button type="button" onClick={onClose} aria-label={msg("identity.admin.components.ImportAccountsPanel.close")} className="text-muted hover:text-ink">
           <Icon name="close" />
         </button>
       }
     >
-      <p className="text-xs text-muted">{msg("identity.admin.components.ImportAccountsPanel.cotEmailDisplayNameRoleStudent")}</p>
+      <p className="text-xs text-muted">{msg("identity.admin.components.ImportAccountsPanel.columnsEmailDisplayNameRole")}</p>
       <input
         ref={input}
         type="file"
         accept=".xlsx"
-        aria-label={msg("identity.admin.components.ImportAccountsPanel.chonTepExcel")}
+        aria-label={msg("identity.admin.components.ImportAccountsPanel.chooseAnExcelFile")}
         disabled={busy}
         className="sr-only"
         onChange={(e) => choose(e.target.files?.[0] ?? null)}
@@ -97,7 +97,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
           </div>
         )}
         <Button icon="folder_open" onClick={() => input.current?.click()} disabled={busy}>
-          {file ? msg("identity.admin.components.ImportAccountsPanel.chonTepKhac") : msg("identity.admin.components.ImportAccountsPanel.chonTep")}
+          {file ? msg("identity.admin.components.ImportAccountsPanel.chooseAnotherFile") : msg("identity.admin.components.ImportAccountsPanel.chooseFile")}
         </Button>
         <a
           href="/templates/account-import.xlsx"
@@ -105,10 +105,10 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
           className="inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline"
         >
           <Icon name="download" size={16} />
-          {msg("identity.admin.components.ImportAccountsPanel.taiTepMau")}</a>
+          {msg("identity.admin.components.ImportAccountsPanel.downloadTemplate")}</a>
       </div>
 
-      {busy && !preview && <p className="text-xs text-muted">{msg("identity.admin.components.ImportAccountsPanel.dangKiemTraTep")}</p>}
+      {busy && !preview && <p className="text-xs text-muted">{msg("identity.admin.components.ImportAccountsPanel.checkingFile")}</p>}
       {error && (
         <Alert tone="danger" role="alert">
           {error}
@@ -118,21 +118,21 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
       {preview && (
         <>
           <div className="flex flex-wrap items-center gap-2" role="status">
-            <Pill>{preview.rows.length} {msg("identity.admin.components.ImportAccountsPanel.dong2")}</Pill>
+            <Pill>{preview.rows.length} {msg("identity.admin.components.ImportAccountsPanel.rows")}</Pill>
             <Pill tone="success">
-              {preview.validCount} {preview.committed ? msg("identity.admin.components.ImportAccountsPanel.daTao") : msg("identity.admin.components.ImportAccountsPanel.hopLe")}
+              {preview.validCount} {preview.committed ? msg("identity.admin.components.ImportAccountsPanel.created") : msg("identity.admin.components.ImportAccountsPanel.valid")}
             </Pill>
-            {preview.rejectedCount > 0 && <Pill tone="danger">{preview.rejectedCount} {msg("identity.admin.components.ImportAccountsPanel.loi")}</Pill>}
+            {preview.rejectedCount > 0 && <Pill tone="danger">{preview.rejectedCount} {msg("identity.admin.components.ImportAccountsPanel.errors")}</Pill>}
           </div>
           <TableFrame filledHead className="[&_table]:min-w-[820px] [&_table]:table-fixed">
             <colgroup><col className="w-[72px]" /><col className="w-[28%]" /><col /><col className="w-[120px]" /><col className="w-[110px]" /><col className="w-[200px]" /></colgroup><thead>
               <tr>
-                <Th className="w-16">{msg("identity.admin.components.ImportAccountsPanel.dong3")}</Th>
+                <Th className="w-16">{msg("identity.admin.components.ImportAccountsPanel.row")}</Th>
                 <Th>Email</Th>
-                <Th>{msg("identity.admin.components.ImportAccountsPanel.hoTen")}</Th>
-                <Th>{msg("identity.admin.components.ImportAccountsPanel.vaiTro")}</Th>
+                <Th>{msg("identity.admin.components.ImportAccountsPanel.fullName")}</Th>
+                <Th>{msg("identity.admin.components.ImportAccountsPanel.role")}</Th>
                 <Th>MSSV</Th>
-                <Th>{msg("identity.admin.components.ImportAccountsPanel.ketQuaKiemTra")}</Th>
+                <Th>{msg("identity.admin.components.ImportAccountsPanel.checkResults")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -147,7 +147,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
                     {row.reason ? (
                       <Pill tone="danger">{formatSentence(IMPORT_REASON_LABELS[row.reason] ?? row.reason)}</Pill>
                     ) : (
-                      <Pill tone="success">{row.outcome === "CREATED" ? msg("identity.admin.components.ImportAccountsPanel.daTao2") : msg("identity.admin.components.ImportAccountsPanel.hopLe2")}</Pill>
+                      <Pill tone="success">{row.outcome === "CREATED" ? msg("identity.admin.components.ImportAccountsPanel.created2") : msg("identity.admin.components.ImportAccountsPanel.valid2")}</Pill>
                     )}
                   </Td>
                 </tr>
@@ -155,20 +155,20 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
             </tbody>
           </TableFrame>
           {preview.rows.length > ROWS_PER_PAGE && (
-            <Pagination page={page} pageSize={ROWS_PER_PAGE} total={preview.rows.length} itemLabel={msg("identity.admin.components.ImportAccountsPanel.dong4")} onPageChange={setPage} summary={false} />
+            <Pagination page={page} pageSize={ROWS_PER_PAGE} total={preview.rows.length} itemLabel={msg("identity.admin.components.ImportAccountsPanel.rows2")} onPageChange={setPage} summary={false} />
           )}
           {!preview.committed && (
             <>
               <div className="flex justify-end gap-2 border-t border-line pt-3.5">
                 <Button onClick={onClose} disabled={busy}>
-                  {msg("identity.admin.components.ImportAccountsPanel.huy")}</Button>
+                  {msg("identity.admin.components.ImportAccountsPanel.cancel")}</Button>
                 <Button
                   variant="primary"
                   icon="check"
                   disabled={busy || preview.validCount === 0 || !file}
                   onClick={() => file && runImport(commitImport, file)}
                 >
-                  {msg("identity.admin.components.ImportAccountsPanel.nhapTaiKhoan", { validCount: String(preview.validCount) })}
+                  {msg("identity.admin.components.ImportAccountsPanel.importAccounts", { validCount: String(preview.validCount) })}
                 </Button>
               </div>
             </>

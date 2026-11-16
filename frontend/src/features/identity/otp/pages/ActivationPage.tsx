@@ -9,16 +9,16 @@ import { msg } from "@/i18n/msg";
 // Chữ theo design `c02a`, `c02b`, `c02`.
 const COPY: OtpFlowCopy = {
   purpose: "ACTIVATION",
-  title: () => msg("identity.otp.pages.ActivationPage.kichHoatTaiKhoan"),
-  steps: ["Email", msg("identity.otp.pages.ActivationPage.maOtp"), msg("identity.otp.pages.ActivationPage.datMatKhau")],
-  sendLabel: msg("identity.otp.pages.ActivationPage.guiMaKichHoat"),
-  codeLabel: msg("identity.otp.pages.ActivationPage.maKichHoat"),
-  submitLabel: msg("identity.otp.pages.ActivationPage.kichHoatVaDangNhap"),
+  title: () => msg("identity.otp.pages.ActivationPage.activateAccount"),
+  steps: ["Email", msg("identity.otp.pages.ActivationPage.otpCode"), msg("identity.otp.pages.ActivationPage.setPassword")],
+  sendLabel: msg("identity.otp.pages.ActivationPage.sendActivationCode"),
+  codeLabel: msg("identity.otp.pages.ActivationPage.activationCode"),
+  submitLabel: msg("identity.otp.pages.ActivationPage.activateAndSignIn"),
   aside: () => (
     <InfoCard
-      title={msg("identity.otp.pages.ActivationPage.lanDauSuDung")}
-      subtitle={msg("identity.otp.pages.ActivationPage.huongDanKichHoatTaiKhoan")}
-      points={[msg("identity.otp.pages.ActivationPage.dungEmailTruongDaDuocCap"), msg("identity.otp.pages.ActivationPage.maOtpCoHieuLuc10")]}
+      title={msg("identity.otp.pages.ActivationPage.firstTimeHere")}
+      subtitle={msg("identity.otp.pages.ActivationPage.howToActivateYourAccount")}
+      points={[msg("identity.otp.pages.ActivationPage.useTheSchoolEmailIssued"), msg("identity.otp.pages.ActivationPage.theOtpCodeIsValid")]}
     />
   ),
 };

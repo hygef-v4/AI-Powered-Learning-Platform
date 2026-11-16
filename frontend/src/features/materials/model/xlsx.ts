@@ -13,7 +13,7 @@ const MAX_COLUMNS = 200;
 export async function readWorkbook(blob: Blob): Promise<Sheet[]> {
   const XLSX = await import("xlsx");
   const workbook = XLSX.read(await blob.arrayBuffer(), { type: "array" });
-  if (workbook.SheetNames.length === 0) throw new Error(msg("materials.model.xlsx.khongPhaiTepExcel"));
+  if (workbook.SheetNames.length === 0) throw new Error(msg("materials.model.xlsx.notAnExcelFile"));
   return workbook.SheetNames.map((name) => {
     const sheet = workbook.Sheets[name];
     const rows = sheet

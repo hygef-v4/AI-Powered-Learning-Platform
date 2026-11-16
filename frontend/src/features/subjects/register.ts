@@ -6,7 +6,7 @@ import { msg } from "@/i18n/msg";
 navEntries.register({
   key: "admin-subjects",
   order: 40,
-  title: msg("subjects.register.monHoc"),
+  title: msg("subjects.register.subjects"),
   href: "/admin/subjects",
   icon: "menu_book",
   roles: ["ADMIN"],

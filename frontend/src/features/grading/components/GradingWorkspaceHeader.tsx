@@ -69,7 +69,7 @@ export function listNoteCriteria(rubric: Rubric): RubricCriterion[] {
 /** Thẻ Tổng điểm tạm tính bên lề trang chấm; dáng chung từ `TotalScoreCard`. */
 export function TotalCard({ total, maxScore }: { total: number; maxScore: number }) {
   return (
-    <TotalScoreCard score={total} maxScore={maxScore} ariaLabel={msg("grading.components.GradingWorkspaceHeader.diemTamTinh")}
+    <TotalScoreCard score={total} maxScore={maxScore} ariaLabel={msg("grading.components.GradingWorkspaceHeader.provisionalScore")}
       format={(value) => (value ?? 0).toFixed(2)} />
   );
 }
@@ -140,7 +140,7 @@ export function StudentPickerDropdown({
     <div ref={dropdownRef} className="relative">
       <button
         type="button"
-        aria-label={msg("grading.components.GradingWorkspaceHeader.chonSinhVien")}
+        aria-label={msg("grading.components.GradingWorkspaceHeader.chooseAStudent")}
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
         className="flex max-w-[min(18rem,40vw)] cursor-pointer items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 py-1 text-left transition-colors hover:bg-sunken"
@@ -154,9 +154,9 @@ export function StudentPickerDropdown({
       {open && (
         <Card padding="sm" className="absolute left-1/2 top-full z-20 mt-2 w-[min(22rem,calc(100vw-3rem))] -translate-x-1/2 shadow-[var(--shadow-float)]">
           <label className="flex flex-col gap-2 text-sm font-semibold text-ink">
-            {msg("grading.components.GradingWorkspaceHeader.timSinhVien")}<input
+            {msg("grading.components.GradingWorkspaceHeader.findStudents")}<input
               type="search"
-              placeholder={msg("grading.components.GradingWorkspaceHeader.tenEmailHoacMssv")}
+              placeholder={msg("grading.components.GradingWorkspaceHeader.nameEmailOrStudentId")}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               className="w-full rounded-lg border border-field px-3 py-2 text-sm font-normal"
@@ -164,15 +164,15 @@ export function StudentPickerDropdown({
           </label>
           {directory.error ? (
             <p role="alert" className="mt-3 text-sm text-danger">
-              {msg("grading.components.GradingWorkspaceHeader.khongTaiDuocDanhSach")}{" "}
+              {msg("grading.components.GradingWorkspaceHeader.couldNotLoadTheList")}{" "}
               <button type="button" className="underline" onClick={() => void directory.refresh().catch(() => {})}>
-                {msg("grading.components.GradingWorkspaceHeader.thuLai")}</button>
+                {msg("grading.components.GradingWorkspaceHeader.retry")}</button>
             </p>
           ) : !directory.value ? (
             <p role="status" className="mt-3 text-sm text-muted">
-              {msg("grading.components.GradingWorkspaceHeader.dangTaiSinhVien")}</p>
+              {msg("grading.components.GradingWorkspaceHeader.loadingStudents")}</p>
           ) : (
-            <ul aria-label={msg("grading.components.GradingWorkspaceHeader.baiNopSinhVien")} className="mt-2 max-h-64 overflow-y-auto">
+            <ul aria-label={msg("grading.components.GradingWorkspaceHeader.studentSubmissions")} className="mt-2 max-h-64 overflow-y-auto">
               {matches.map((row) => (
                 <li key={row.student.accountId}>
                   <button
@@ -189,7 +189,7 @@ export function StudentPickerDropdown({
                   </button>
                 </li>
               ))}
-              {!matches.length && <li className="py-3 text-sm text-muted">{msg("grading.components.GradingWorkspaceHeader.khongCoBaiNopPhuHop")}</li>}
+              {!matches.length && <li className="py-3 text-sm text-muted">{msg("grading.components.GradingWorkspaceHeader.noMatchingSubmissions")}</li>}
             </ul>
           )}
         </Card>
@@ -223,29 +223,29 @@ export function GradingHeaderSection({
         {assignmentKind}
       </p>
       {unanchoredAuthors.length > 0 && (
-        <p className="text-xs text-muted">{msg("grading.components.GradingWorkspaceHeader.nguoiThucHien")}{unanchoredAuthors.join(", ")}</p>
+        <p className="text-xs text-muted">{msg("grading.components.GradingWorkspaceHeader.doneBy")}{unanchoredAuthors.join(", ")}</p>
       )}
-      <section aria-label={msg("grading.components.GradingWorkspaceHeader.nhanXetChung")} className="mt-1 text-sm leading-relaxed text-body">
-        <label htmlFor="grading-general-feedback" className="text-sm font-semibold text-ink">{msg("grading.components.GradingWorkspaceHeader.nhanXetChung")}</label>
+      <section aria-label={msg("grading.components.GradingWorkspaceHeader.overallComments")} className="mt-1 text-sm leading-relaxed text-body">
+        <label htmlFor="grading-general-feedback" className="text-sm font-semibold text-ink">{msg("grading.components.GradingWorkspaceHeader.overallComments")}</label>
         <AutoTextarea
           id="grading-general-feedback"
-          aria-label={msg("grading.components.GradingWorkspaceHeader.nhanXetChung")}
+          aria-label={msg("grading.components.GradingWorkspaceHeader.overallComments")}
           disabled={disabled}
           rows={3}
           maxLength={10000}
           value={form.feedback}
           onChange={(event) => setFeedback(event.target.value)}
-          placeholder={msg("grading.components.GradingWorkspaceHeader.nhapNhanXetChungChoBai")}
+          placeholder={msg("grading.components.GradingWorkspaceHeader.enterOverallCommentsForThe")}
           className="mt-2 min-h-28 rounded-lg border! border-line bg-surface! p-3! text-sm font-normal leading-6 text-ink focus:border-focus disabled:opacity-60"
         />
         {form.feedback.trim() && <p className="sr-only">{form.feedback}</p>}
       </section>
       <div className="flex flex-wrap items-end gap-3">
         <label className="block text-xs font-semibold text-ink">
-          {msg("grading.components.GradingWorkspaceHeader.diemCongTru")}<input
+          {msg("grading.components.GradingWorkspaceHeader.bonusPenaltyPoints")}<input
             type="number"
             step="0.25"
-            aria-label={msg("grading.components.GradingWorkspaceHeader.diemCongTru")}
+            aria-label={msg("grading.components.GradingWorkspaceHeader.bonusPenaltyPoints")}
             disabled={disabled}
             value={form.adjustment}
             onChange={(event) => setAdjustment(event.target.value)}
@@ -254,14 +254,14 @@ export function GradingHeaderSection({
         </label>
       </div>
       {!disabled && <details className="text-xs text-muted">
-        <summary className="cursor-pointer">{msg("grading.components.GradingWorkspaceHeader.ghiChuThayDoiTuyChon")}</summary>
-        <input aria-label={msg("grading.components.GradingWorkspaceHeader.ghiChuThayDoi")} value={form.changeReason}
+        <summary className="cursor-pointer">{msg("grading.components.GradingWorkspaceHeader.changeNoteOptional")}</summary>
+        <input aria-label={msg("grading.components.GradingWorkspaceHeader.changeNote")} value={form.changeReason}
           onChange={event => setChangeReason(event.target.value)}
           className="mt-2 block w-full rounded-lg border border-line bg-surface px-2.5 py-1 text-xs font-normal text-ink focus:border-focus focus:outline-none" />
       </details>}
       <GradingFeedbackSummary
         summary={form.structuredFeedback?.summary}
-        title={msg("grading.components.GradingWorkspaceHeader.diemManhVaDiemCanCai")}
+        title={msg("grading.components.GradingWorkspaceHeader.strengthsAndAreasToImprove")}
         editable={!disabled}
         disabled={disabled}
         onChange={updateStructuredSummary}

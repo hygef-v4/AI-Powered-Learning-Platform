@@ -26,7 +26,7 @@ export function QuestionNav({ count, index, onChange, toneOf, labelOf }: {
     <div className="flex flex-wrap gap-1.5 max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:p-0.5">
       {Array.from({ length: count }, (_, i) => (
         <button key={i} type="button" onClick={() => onChange(i)} aria-current={i === index ? "true" : undefined}
-          aria-label={labelOf ? labelOf(i) : msg("quizpractice.components.QuestionPager.cau", { value: String(i + 1) })}
+          aria-label={labelOf ? labelOf(i) : msg("quizpractice.components.QuestionPager.question", { value: String(i + 1) })}
           className={cx("h-8 w-8 shrink-0 rounded-lg border text-xs font-semibold pointer-coarse:size-11", TONES[toneOf(i)], i === index && "ring-2 ring-primary")}>
           {i + 1}
         </button>
@@ -44,8 +44,8 @@ export function QuestionPrevNext({ count, index, onChange, testIdPrefix }: {
 }) {
   return (
     <div className="mt-4 flex justify-between">
-      <Button size="sm" disabled={index === 0} onClick={() => onChange(index - 1)} data-testid={`${testIdPrefix}-prev`}>{msg("quizpractice.components.QuestionPager.cauTruoc")}</Button>
-      <Button size="sm" disabled={index >= count - 1} onClick={() => onChange(index + 1)} data-testid={`${testIdPrefix}-next`}>{msg("quizpractice.components.QuestionPager.cauTiep")}</Button>
+      <Button size="sm" disabled={index === 0} onClick={() => onChange(index - 1)} data-testid={`${testIdPrefix}-prev`}>{msg("quizpractice.components.QuestionPager.previousQuestion")}</Button>
+      <Button size="sm" disabled={index >= count - 1} onClick={() => onChange(index + 1)} data-testid={`${testIdPrefix}-next`}>{msg("quizpractice.components.QuestionPager.nextQuestion")}</Button>
     </div>
   );
 }

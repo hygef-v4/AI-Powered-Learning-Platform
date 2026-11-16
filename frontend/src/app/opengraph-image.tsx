@@ -14,7 +14,7 @@ const INK = "#27272a";
 const MUTED = "#62626b";
 const PRIMARY = "#466a96";
 const PRIMARY_SOFT = "#eef2f7";
-const HIGHLIGHTS = [msg("app.opengraphimage.lopHocTaiLieu"), msg("app.opengraphimage.baiTapDeThi"), msg("app.opengraphimage.troLyAi")];
+const HIGHLIGHTS = [msg("app.opengraphimage.classesMaterials"), msg("app.opengraphimage.assignmentsExams"), msg("app.opengraphimage.aiAssistant")];
 
 // Satori không đọc được woff2 nên dùng bản TTF tĩnh tách từ font của giao diện; ảnh được tạo lúc build.
 const FONT_DIRECTORY = join(process.cwd(), "assets", "og");
@@ -65,13 +65,13 @@ export default async function OpengraphImage() {
           <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
             <img src={logoUrl} width={92} height={92} alt="" />
             <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 52, fontWeight: 800, letterSpacing: -1.5 }}>
-              <span>{msg("app.opengraphimage.nenTang")}</span>
-              <span style={{ background: PRIMARY, color: "#ffffff", borderRadius: 14, padding: "0 16px 6px" }}>{msg("app.opengraphimage.hocTap")}</span>
+              <span>{msg("app.opengraphimage.learning")}</span>
+              <span style={{ background: PRIMARY, color: "#ffffff", borderRadius: 14, padding: "0 16px 6px" }}>{msg("app.opengraphimage.platform")}</span>
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
             <div style={{ fontSize: 68, fontWeight: 800, lineHeight: 1.12, letterSpacing: -2, maxWidth: 900 }}>
-              {msg("app.opengraphimage.dayVaHocHieuQuaHon")}</div>
+              {msg("app.opengraphimage.teachAndLearnBetterWith")}</div>
             <div style={{ display: "flex", gap: 14 }}>
               {HIGHLIGHTS.map((highlight) => (
                 <span

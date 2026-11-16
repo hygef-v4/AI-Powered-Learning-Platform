@@ -65,7 +65,7 @@ export function Logo({ className }: { className?: string }) {
     <span className={cx("inline-flex items-center gap-2.5 text-ink", className)}>
       <LogoMark />
       <span className="font-display text-[17px] leading-none tracking-[-0.02em] whitespace-nowrap">
-        {msg("shared.ui.Logo.nenTang")}<i className="rounded-md bg-primary px-1.5 pb-0.5 text-on-primary">{msg("shared.ui.Logo.hocTap")}</i>
+        {msg("shared.ui.Logo.learning")}<i className="rounded-md bg-primary px-1.5 pb-0.5 text-on-primary">{msg("shared.ui.Logo.platform")}</i>
       </span>
     </span>
   );

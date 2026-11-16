@@ -7,7 +7,7 @@ export function SimilarQuestionsAlert({ similar }: { similar: SimilarQuestion[] 
   if (similar.length === 0) return null;
   return (
     <div data-testid="similar-questions">
-      <Alert tone="warning" title={msg("quizzes.components.SimilarQuestionsAlert.coCauGanGiongTrongNgan")}>
+      <Alert tone="warning" title={msg("quizzes.components.SimilarQuestionsAlert.thereIsASimilarQuestion")}>
         <ul className="list-disc pl-4">
           {similar.map((s) => <li key={s.id}>{s.percent}%: <span className="line-clamp-2 inline whitespace-pre-wrap">{s.stem}</span></li>)}
         </ul>

@@ -27,11 +27,11 @@ export type TemplateFile = { file: File; status: "READING" | "READY" | "ERROR"; 
 /** Đọc mẫu đề bằng bộ nhập DOCX; số câu hỏi là số mục ngoài cùng của mẫu. Không đọc được thì trả trạng thái lỗi. */
 export async function readTemplateFile(assignmentId: string, file: File): Promise<TemplateFile> {
   try {
-    if (!file.name.toLowerCase().endsWith(".docx")) throw new Error(msg("assignments.components.sourceUploads.mauDePhaiLaDocx"));
-    if (file.size < 1 || file.size > 20 * 1024 * 1024) throw new Error(msg("assignments.components.sourceUploads.tepDocxPhaiCoNoiDung"));
+    if (!file.name.toLowerCase().endsWith(".docx")) throw new Error(msg("assignments.components.sourceUploads.theTemplateMustBeA"));
+    if (file.size < 1 || file.size > 20 * 1024 * 1024) throw new Error(msg("assignments.components.sourceUploads.theDocxFileMustHave"));
     const preview = await assignmentsApi.importDocx(assignmentId, file);
     const { text, questionCount } = extractTemplateText(preview.document);
-    if (!text.trim()) throw new Error(msg("assignments.components.sourceUploads.mauDeKhongCoNoiDung"));
+    if (!text.trim()) throw new Error(msg("assignments.components.sourceUploads.theTemplateHasNoReadable"));
     return { file, status: "READY", text, questionCount };
   } catch (cause) {
     return { file, status: "ERROR", error: describeError(cause) };
@@ -60,7 +60,7 @@ export function useSourceUploads(assignmentId: string, onError: (message: string
         if (active) setPolicy(policies.find((item) => item.purpose === "ASSIGNMENT_SOURCE") ?? null);
       })
       .catch(() => {
-        if (active) report.current(msg("assignments.components.sourceUploads.khongTaiDuocGioiHanTep"));
+        if (active) report.current(msg("assignments.components.sourceUploads.couldNotLoadTheSource"));
       });
     return () => {
       active = false;
@@ -86,13 +86,13 @@ export function useSourceUploads(assignmentId: string, onError: (message: string
   }
 
   async function upload(file: File, id: string = crypto.randomUUID()): Promise<SourceUpload | undefined> {
-    if (!policy) { report.current(msg("assignments.components.sourceUploads.chuaTaiDuocChinhSachTep")); return; }
+    if (!policy) { report.current(msg("assignments.components.sourceUploads.theSourceFilePolicyHas")); return; }
     if (!current.current.some(item => item.id === id) && current.current.length >= MAX_SOURCE_FILES) {
-      report.current(msg("assignments.components.sourceUploads.chiChonToiDa3Tep")); return;
+      report.current(msg("assignments.components.sourceUploads.chooseAtMost3Source")); return;
     }
     aborts.current.get(id)?.();
     aborts.current.delete(id);
-    const issue = file.size < 1 ? msg("assignments.components.sourceUploads.tepKhongCoNoiDung") : checkFile(file, policy);
+    const issue = file.size < 1 ? msg("assignments.components.sourceUploads.theFileHasNoContent") : checkFile(file, policy);
     const start: SourceUpload = issue ? { id, file, status: "ERROR", percent: 0, error: issue }
       : { id, file, status: "UPLOADING", percent: 0 };
     commit(current.current.some(item => item.id === id)
@@ -113,14 +113,14 @@ export function useSourceUploads(assignmentId: string, onError: (message: string
       updateUpload(id, item => ({ ...item, status: "READING", percent: 100, fileRef: result.fileRef.value }));
       const previews = await assignmentsApi.previewAiSources(assignmentId, [result.fileRef.value], controller.signal);
       if (!isUploadActive()) return;
-      if (!previews[0]) throw new Error(msg("assignments.components.sourceUploads.khongDocDuocNoiDungTep"));
+      if (!previews[0]) throw new Error(msg("assignments.components.sourceUploads.couldNotReadTheFile"));
       const ready: SourceUpload = { id, file, status: "READY", percent: 100, fileRef: result.fileRef.value, preview: previews[0] };
       updateUpload(id, () => ready);
       return ready;
     } catch (cause) {
       if (!isUploadActive()) return;
       const failed: SourceUpload = { id, file, status: "ERROR", percent: 0,
-        error: cause instanceof Error ? cause.message : msg("assignments.components.sourceUploads.taiTepLenKhongThanhCong") };
+        error: cause instanceof Error ? cause.message : msg("assignments.components.sourceUploads.uploadFailed") };
       updateUpload(id, () => failed);
       return failed;
     } finally {
@@ -132,7 +132,7 @@ export function useSourceUploads(assignmentId: string, onError: (message: string
     if (!files) return;
     const unique = [...new Set(Array.from(files))].filter(file => !current.current.some(item => item.file === file));
     const remaining = MAX_SOURCE_FILES - current.current.length;
-    if (unique.length > remaining) report.current(msg("assignments.components.sourceUploads.chiChonToiDa3Tep2", { value: String(unique.length - Math.max(remaining, 0)) }));
+    if (unique.length > remaining) report.current(msg("assignments.components.sourceUploads.chooseAtMost3Source2", { value: String(unique.length - Math.max(remaining, 0)) }));
     unique.slice(0, Math.max(0, remaining)).forEach(file => void upload(file));
   }
 

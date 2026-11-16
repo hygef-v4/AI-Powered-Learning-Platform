@@ -29,7 +29,7 @@ export function Reveal({ label, className, children }: { label: string; classNam
     if (event.key === "Escape") setShown(false);
   };
   return (
-    <div ref={ref} role="button" tabIndex={0} aria-pressed={shown} aria-label={msg("admindashboard.components.DashboardCharts.bamDeSo", { label: String(label), value: String(shown ? msg("admindashboard.components.DashboardCharts.giu") : msg("admindashboard.components.DashboardCharts.hien")) })}
+    <div ref={ref} role="button" tabIndex={0} aria-pressed={shown} aria-label={msg("admindashboard.components.DashboardCharts.clickToTheNumbers", { label: String(label), value: String(shown ? msg("admindashboard.components.DashboardCharts.pin") : msg("admindashboard.components.DashboardCharts.show")) })}
       onClick={() => setShown(true)} onKeyDown={onKeyDown}
       className={cx("cursor-pointer rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-focus/40", className)}>
       {children(shown)}

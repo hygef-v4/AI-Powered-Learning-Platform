@@ -53,7 +53,7 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
         if (preferred) submitRef.current({ source: preferred.source, provider: preferred.provider });
       },
       () => {
-        if (active) setError(msg("shared.ai.AiSourcePicker.khongTaiDuocDanhSachNguon"));
+        if (active) setError(msg("shared.ai.AiSourcePicker.couldNotLoadTheAi"));
       },
     );
     return () => {
@@ -67,7 +67,7 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
   return (
     <Dialog
       open={open}
-      title={msg("shared.ai.AiSourcePicker.chonNguonAi")}
+      title={msg("shared.ai.AiSourcePicker.chooseAiSource")}
       icon="smart_toy"
       size="lg"
       onClose={onCancel}
@@ -75,34 +75,34 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
       footer={
         <>
           <Button onClick={onCancel} disabled={busy}>
-            {msg("shared.ai.AiSourcePicker.huy")}</Button>
+            {msg("shared.ai.AiSourcePicker.cancel")}</Button>
           <Button
             variant="primary"
             disabled={!choice || busy}
             onClick={() => choice && onSubmit({ source: choice.source, provider: choice.provider })}
           >
-            {msg("shared.ai.AiSourcePicker.guiYeuCau")}</Button>
+            {msg("shared.ai.AiSourcePicker.sendRequest")}</Button>
         </>
       }
     >
       <p className="text-muted">{task}</p>
       {autoSent && choice && (
         <Alert tone="info" role="status">
-          {msg("shared.ai.AiSourcePicker.dangGuiBangNguonMacDinh")}{label(choice)}.
+          {msg("shared.ai.AiSourcePicker.sendingWithTheDefaultSource")}{label(choice)}.
         </Alert>
       )}
       {preferred && !preferred.available && (
         <Alert tone="warning" role="status">
-          {msg("shared.ai.AiSourcePicker.nguonMacDinh")}{label(preferred)} {msg("shared.ai.AiSourcePicker.chuaDungDuoc")}{preferred.reason ? `: ${preferred.reason}` : ""}{msg("shared.ai.AiSourcePicker.chonNguonKhacChoLanNay")}</Alert>
+          {msg("shared.ai.AiSourcePicker.defaultSource")}{label(preferred)} {msg("shared.ai.AiSourcePicker.isNotUsable")}{preferred.reason ? `: ${preferred.reason}` : ""}{msg("shared.ai.AiSourcePicker.chooseAnotherSourceForThis")}</Alert>
       )}
       {error && (
         <Alert tone="danger" role="alert">
           {error}
         </Alert>
       )}
-      {!options && !error && <p className="text-muted">{msg("shared.ai.AiSourcePicker.dangTai")}</p>}
+      {!options && !error && <p className="text-muted">{msg("shared.ai.AiSourcePicker.loading")}</p>}
       {options && (
-        <div role="radiogroup" aria-label={msg("shared.ai.AiSourcePicker.nguonAi")} className="flex flex-col gap-2">
+        <div role="radiogroup" aria-label={msg("shared.ai.AiSourcePicker.aiSource")} className="flex flex-col gap-2">
           {options.map((option) => (
             <SourceRow
               key={buildKey(option)}
@@ -115,16 +115,16 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
         </div>
       )}
       <p className="text-xs text-muted">
-        {preferred ? msg("shared.ai.AiSourcePicker.doiNguonMacDinh") : msg("shared.ai.AiSourcePicker.khongMuonChonMoiLanDat")} {msg("shared.ai.AiSourcePicker.o")}{" "}
+        {preferred ? msg("shared.ai.AiSourcePicker.changeDefaultSource") : msg("shared.ai.AiSourcePicker.dontWantToChooseEvery")} {msg("shared.ai.AiSourcePicker.in")}{" "}
         <Link href="/ai/connection?tab=settings" className="font-semibold text-primary-ink underline">
-          {msg("shared.ai.AiSourcePicker.ketNoiAi")}</Link>
-        {msg("shared.ai.AiSourcePicker.agentMcpKhongPhaiNguonO")}</p>
+          {msg("shared.ai.AiSourcePicker.aiConnection")}</Link>
+        {msg("shared.ai.AiSourcePicker.mcpAgentsAreNotA")}</p>
     </Dialog>
   );
 }
 
 function label(option: SourceOption) {
-  return option.source === "SHARED" ? msg("shared.ai.AiSourcePicker.apiCuaTruong") : msg("shared.ai.AiSourcePicker.apiCaNhan", { value: String(option.provider ? PROVIDER_LABEL[option.provider] : "") });
+  return option.source === "SHARED" ? msg("shared.ai.AiSourcePicker.schoolApi") : msg("shared.ai.AiSourcePicker.personalApi", { value: String(option.provider ? PROVIDER_LABEL[option.provider] : "") });
 }
 
 function SourceRow({
@@ -158,16 +158,16 @@ function SourceRow({
       <span className="flex items-center gap-2 text-[13px] font-semibold text-ink">
         {title}
         {option.keyHint && <span className="font-normal text-muted">{maskHint(option.keyHint)}</span>}
-        {option.preferred && <Pill tone="neutral">{msg("shared.ai.AiSourcePicker.macDinh")}</Pill>}
+        {option.preferred && <Pill tone="neutral">{msg("shared.ai.AiSourcePicker.default")}</Pill>}
         <Pill tone={shared ? "primary" : "accent"} className="ml-auto">
-          {shared ? msg("shared.ai.AiSourcePicker.truongChiuChiPhi") : msg("shared.ai.AiSourcePicker.banChiuChiPhi")}
+          {shared ? msg("shared.ai.AiSourcePicker.paidByTheSchool") : msg("shared.ai.AiSourcePicker.paidByYou")}
         </Pill>
       </span>
       <span className="text-xs text-muted">
-        {option.model ? msg("shared.ai.AiSourcePicker.moHinh", { model: String(option.model) }) : shared ? msg("shared.ai.AiSourcePicker.moHinhDoQuanTriVien") : ""}
-        {shared && option.quota && msg("shared.ai.AiSourcePicker.conTokenHomNay", { value: String(formatTokens(option.quota.left)), value2: String(formatTokens(option.quota.limit)) })}
-        {!shared && option.available && msg("shared.ai.AiSourcePicker.khongGioiHanBoiTruong")}
-        {option.available && estimatedTokens !== undefined && msg("shared.ai.AiSourcePicker.uocTinhToken", { value: String(formatTokens(estimatedTokens)) })}
+        {option.model ? msg("shared.ai.AiSourcePicker.model", { model: String(option.model) }) : shared ? msg("shared.ai.AiSourcePicker.modelConfiguredByAnAdministrator") : ""}
+        {shared && option.quota && msg("shared.ai.AiSourcePicker.tokensLeftToday", { value: String(formatTokens(option.quota.left)), value2: String(formatTokens(option.quota.limit)) })}
+        {!shared && option.available && msg("shared.ai.AiSourcePicker.notLimitedByTheSchool")}
+        {option.available && estimatedTokens !== undefined && msg("shared.ai.AiSourcePicker.aboutTokens", { value: String(formatTokens(estimatedTokens)) })}
       </span>
       {!option.available && option.reason && <span className="text-xs text-warning">{option.reason}</span>}
     </button>

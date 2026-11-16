@@ -18,7 +18,7 @@ export function useMyGroupDoc(assignmentId: string) {
       },
       (e: unknown) => {
         if (!active) return;
-        const message = e instanceof ApiError && e.problem.code === "GROUP_NONE" ? msg("groupdocs.hooks.useMyGroupDoc.banChuaCoNhomChoBai") : msg("groupdocs.hooks.useMyGroupDoc.chuaMoDuocTaiLieuNhom");
+        const message = e instanceof ApiError && e.problem.code === "GROUP_NONE" ? msg("groupdocs.hooks.useMyGroupDoc.youDoNotHaveA") : msg("groupdocs.hooks.useMyGroupDoc.theGroupDocumentCouldNot");
         setState({ assignmentId, view: null, message });
       },
     );

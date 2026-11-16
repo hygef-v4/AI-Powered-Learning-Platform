@@ -26,7 +26,7 @@ function ClassAssignments({ classId, headerActions }: { classId: string; headerA
   const page = useAssignmentPage(load, ALL_ASSIGNMENTS);
   const create = (
     <Button variant="primary" icon="add" onClick={() => setCreating(true)}
-      disabled={!page.data || page.data.ownerArchived} data-testid="class-assignment-create">{msg("assignments.components.ClassAssignmentsSection.taoBaiTap")}</Button>
+      disabled={!page.data || page.data.ownerArchived} data-testid="class-assignment-create">{msg("assignments.components.ClassAssignmentsSection.createAssignment")}</Button>
   );
   return (
     <div className="flex flex-col gap-3">

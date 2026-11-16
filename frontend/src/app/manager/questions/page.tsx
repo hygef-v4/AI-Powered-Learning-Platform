@@ -4,7 +4,7 @@ import { QuestionListPage } from "@/features/quizzes/pages/QuestionListPage";
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.manager.questions.page.cauHoi") };
+  return { title: await translateOnServer("app.manager.questions.page.questions") };
 }
 
 // U10 #19 Question List. Trang đọc ?subjectId= bằng useSearchParams nên cần Suspense để vẫn prerender được.

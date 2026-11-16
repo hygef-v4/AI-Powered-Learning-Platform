@@ -17,13 +17,13 @@ type Tab = "open" | "draft" | "finalized" | "closed";
 type Kind = "INDIVIDUAL" | "GROUP" | "PRACTICE";
 
 const TABS: { value: Tab; label: string; statuses: AssignmentStatus[]; empty: string }[] = [
-  { value: "open", label: msg("assignments.components.AssignmentListCard.dangMo"), statuses: ["OPEN", "SCHEDULED"], empty: msg("assignments.components.AssignmentListCard.khongCoBaiDangMo") },
-  { value: "draft", label: msg("assignments.components.AssignmentListCard.nhap"), statuses: ["DRAFT"], empty: msg("assignments.components.AssignmentListCard.khongCoBaiNhap") },
+  { value: "open", label: msg("assignments.components.AssignmentListCard.open"), statuses: ["OPEN", "SCHEDULED"], empty: msg("assignments.components.AssignmentListCard.noOpenAssignments") },
+  { value: "draft", label: msg("assignments.components.AssignmentListCard.draft"), statuses: ["DRAFT"], empty: msg("assignments.components.AssignmentListCard.noDraftAssignments") },
   // Bài đã hoàn tất, chờ xếp lịch giao (yêu cầu 2026-11-11).
-  { value: "finalized", label: msg("assignments.components.AssignmentListCard.hoanTat"), statuses: ["REVIEWED"], empty: msg("assignments.components.AssignmentListCard.khongCoBaiHoanTat") },
-  { value: "closed", label: msg("assignments.components.AssignmentListCard.daDong"), statuses: ["CLOSED", "RETIRED"], empty: msg("assignments.components.AssignmentListCard.chuaCoBaiDaDong") },
+  { value: "finalized", label: msg("assignments.components.AssignmentListCard.finalized"), statuses: ["REVIEWED"], empty: msg("assignments.components.AssignmentListCard.noFinalizedAssignments") },
+  { value: "closed", label: msg("assignments.components.AssignmentListCard.closed"), statuses: ["CLOSED", "RETIRED"], empty: msg("assignments.components.AssignmentListCard.noClosedAssignmentsYet") },
 ];
-const KIND_LABELS: Record<Kind, string> = { INDIVIDUAL: msg("assignments.components.AssignmentListCard.caNhan"), GROUP: msg("assignments.components.AssignmentListCard.nhom"), PRACTICE: msg("assignments.components.AssignmentListCard.luyenTap") };
+const KIND_LABELS: Record<Kind, string> = { INDIVIDUAL: msg("assignments.components.AssignmentListCard.individual"), GROUP: msg("assignments.components.AssignmentListCard.group"), PRACTICE: msg("assignments.components.AssignmentListCard.practice") };
 const PAGE_SIZE = 10;
 /** Thẻ lọc tại chỗ nên tải mọi bài một lần (kể cả bài đã đóng). */
 export const ALL_ASSIGNMENTS: ListFilter = { includeClosed: true };
@@ -58,28 +58,28 @@ export function AssignmentListCard({ page, classId }: { page: ReturnType<typeof 
   const filtered = !!kind || !!q;
 
   return (
-    <Card as="section" padding="lg" className="flex flex-col gap-3.5" aria-label={msg("assignments.components.AssignmentListCard.danhSachBaiTap")}>
+    <Card as="section" padding="lg" className="flex flex-col gap-3.5" aria-label={msg("assignments.components.AssignmentListCard.assignmentList")}>
       <div className="flex flex-wrap items-center gap-3">
-        <Segmented as="tab" ariaLabel={msg("assignments.components.AssignmentListCard.trangThaiBai")} value={tab} onChange={(value) => { setTab(value); setPageNo(0); }}
+        <Segmented as="tab" ariaLabel={msg("assignments.components.AssignmentListCard.assignmentStatus")} value={tab} onChange={(value) => { setTab(value); setPageNo(0); }}
           options={TABS.map((t) => ({ value: t.value, label: <>{t.label}{page.data && <span className="ml-1 tabular-nums text-muted">{items.filter((row) => isInTab(row, t.value)).length}</span>}</> }))} />
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <Select aria-label={msg("assignments.components.AssignmentListCard.loaiBai")} value={kind} wrapperClassName="w-36" onChange={(e) => { setKind(e.target.value as Kind | ""); setPageNo(0); }}>
-            <option value="">{msg("assignments.components.AssignmentListCard.moiLoai")}</option>
+          <Select aria-label={msg("assignments.components.AssignmentListCard.assignmentType")} value={kind} wrapperClassName="w-36" onChange={(e) => { setKind(e.target.value as Kind | ""); setPageNo(0); }}>
+            <option value="">{msg("assignments.components.AssignmentListCard.allTypes")}</option>
             {(Object.keys(KIND_LABELS) as Kind[]).map((value) => <option key={value} value={value}>{KIND_LABELS[value]}</option>)}
           </Select>
-          <TextInput type="search" icon="search" aria-label={msg("assignments.components.AssignmentListCard.timBaiTap")} placeholder={msg("assignments.components.AssignmentListCard.timTheoTen")} value={query} wrapperClassName="w-56"
+          <TextInput type="search" icon="search" aria-label={msg("assignments.components.AssignmentListCard.findAssignments")} placeholder={msg("assignments.components.AssignmentListCard.searchByName")} value={query} wrapperClassName="w-56"
             onChange={(e) => { setQuery(e.target.value); setPageNo(0); }} />
         </div>
       </div>
-      {page.error !== null && <Alert tone="danger" role="alert" action={<Button size="sm" onClick={page.reload}>{msg("assignments.components.AssignmentListCard.thuLai")}</Button>}>{describeError(page.error)}</Alert>}
+      {page.error !== null && <Alert tone="danger" role="alert" action={<Button size="sm" onClick={page.reload}>{msg("assignments.components.AssignmentListCard.retry")}</Button>}>{describeError(page.error)}</Alert>}
       <TableFrame filledHead className="[&_table]:min-w-[720px] [&_table]:table-fixed">
         <colgroup>
           <col /><col className="w-[110px]" />{classId && <col className="w-[80px]" />}<col className="w-[150px]" /><col className="w-[120px]" />{classId && <col className="w-[100px]" />}<col className="w-[48px]" />
         </colgroup>
         <thead>
           <tr>
-            <Th>{msg("assignments.components.AssignmentListCard.baiTap")}</Th><Th>{msg("assignments.components.AssignmentListCard.loai")}</Th>{classId && <Th>{msg("assignments.components.AssignmentListCard.phamVi")}</Th>}<Th>{msg("assignments.components.AssignmentListCard.hanNop")}</Th><Th>{msg("assignments.components.AssignmentListCard.trangThai")}</Th>{classId && <Th><span className="sr-only">{msg("assignments.components.AssignmentListCard.baiNop")}</span></Th>}
-            <Th><span className="sr-only">{msg("assignments.components.AssignmentListCard.moBai")}</span></Th>
+            <Th>{msg("assignments.components.AssignmentListCard.assignment")}</Th><Th>{msg("assignments.components.AssignmentListCard.type")}</Th>{classId && <Th>{msg("assignments.components.AssignmentListCard.scope")}</Th>}<Th>{msg("assignments.components.AssignmentListCard.deadline")}</Th><Th>{msg("assignments.components.AssignmentListCard.status")}</Th>{classId && <Th><span className="sr-only">{msg("assignments.components.AssignmentListCard.submissions")}</span></Th>}
+            <Th><span className="sr-only">{msg("assignments.components.AssignmentListCard.openAssignment")}</span></Th>
           </tr>
         </thead>
         <tbody>
@@ -87,7 +87,7 @@ export function AssignmentListCard({ page, classId }: { page: ReturnType<typeof 
             <ClickableRow key={row.id} data-testid={`assignment-row-${row.id}`} onClick={() => { rememberAssignmentsPage(); router.push(buildHref(row)); }}>
               <Td><Link href={buildHref(row)} onClick={(e) => { e.stopPropagation(); rememberAssignmentsPage(); }} className="block truncate font-semibold text-ink hover:text-primary-ink">{row.title}</Link></Td>
               <Td className="whitespace-nowrap">{KIND_LABELS[classifyKind(row)]}</Td>
-              {classId && <Td className="whitespace-nowrap">{row.scope === "SUBJECT" ? msg("assignments.components.AssignmentListCard.mon") : msg("assignments.components.AssignmentListCard.lop")}</Td>}
+              {classId && <Td className="whitespace-nowrap">{row.scope === "SUBJECT" ? msg("assignments.components.AssignmentListCard.subject") : msg("assignments.components.AssignmentListCard.class")}</Td>}
               <Td className="whitespace-nowrap"><span className="font-mono text-xs text-muted">{formatDateTime(row.closesAt)}</span></Td>
               <Td><Pill tone={statusTones[row.status]}>{statusLabels[row.status]}</Pill></Td>
               {classId && (
@@ -101,9 +101,9 @@ export function AssignmentListCard({ page, classId }: { page: ReturnType<typeof 
               <Td className="text-faint"><Icon name="chevron_right" size={18} /></Td>
             </ClickableRow>
           ))}
-          {page.loading && !page.data && <tr><Td colSpan={columns} className="py-10 text-center! text-muted"><span role="status">{msg("assignments.components.AssignmentListCard.dangTaiBaiTap")}</span></Td></tr>}
+          {page.loading && !page.data && <tr><Td colSpan={columns} className="py-10 text-center! text-muted"><span role="status">{msg("assignments.components.AssignmentListCard.loadingAssignments")}</span></Td></tr>}
           {page.data && shown.length === 0 && (
-            <tr><Td colSpan={columns} className="py-10 text-center! text-muted">{filtered ? msg("assignments.components.AssignmentListCard.khongCoBaiTapPhuHop") : TABS.find((t) => t.value === tab)!.empty}</Td></tr>
+            <tr><Td colSpan={columns} className="py-10 text-center! text-muted">{filtered ? msg("assignments.components.AssignmentListCard.noMatchingAssignments") : TABS.find((t) => t.value === tab)!.empty}</Td></tr>
           )}
         </tbody>
       </TableFrame>

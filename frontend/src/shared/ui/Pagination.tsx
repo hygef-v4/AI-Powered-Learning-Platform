@@ -42,12 +42,12 @@ const BOX =
   "pointer-coarse:h-11 pointer-coarse:min-w-11";
 
 /** Dòng "Hiển thị a–b trong N …" và nút chuyển trang, theo design. */
-export function Pagination({ page, pageSize, total, onPageChange, itemLabel = msg("shared.ui.Pagination.banGhi"), note, summary: showSummary = true, testId = "pagination" }: Props) {
+export function Pagination({ page, pageSize, total, onPageChange, itemLabel = msg("shared.ui.Pagination.records"), note, summary: showSummary = true, testId = "pagination" }: Props) {
   const count = Math.max(1, Math.ceil(total / pageSize));
   const from = total === 0 ? 0 : page * pageSize + 1;
   const to = Math.min(total, (page + 1) * pageSize);
   const summary =
-    total === 0 ? msg("shared.ui.Pagination.khongCo", { itemLabel: String(itemLabel) }) : msg("shared.ui.Pagination.hienThiTrong", { value: String(NUMBER.format(from)), value2: String(NUMBER.format(to)), value3: String(NUMBER.format(total)), itemLabel: String(itemLabel) });
+    total === 0 ? msg("shared.ui.Pagination.no", { itemLabel: String(itemLabel) }) : msg("shared.ui.Pagination.showingOf", { value: String(NUMBER.format(from)), value2: String(NUMBER.format(to)), value3: String(NUMBER.format(total)), itemLabel: String(itemLabel) });
 
   return (
     <div className={cx("flex flex-wrap items-center gap-3", showSummary ? "justify-between" : "justify-center")} data-testid={testId}>
@@ -58,10 +58,10 @@ export function Pagination({ page, pageSize, total, onPageChange, itemLabel = ms
         </p>
       )}
       {count > 1 && (
-        <nav aria-label={msg("shared.ui.Pagination.phanTrang")} className="flex max-w-full flex-wrap items-center justify-center gap-1.5">
+        <nav aria-label={msg("shared.ui.Pagination.pagination")} className="flex max-w-full flex-wrap items-center justify-center gap-1.5">
           <button
             type="button"
-            aria-label={msg("shared.ui.Pagination.trangTruoc")}
+            aria-label={msg("shared.ui.Pagination.previousPage")}
             disabled={page === 0}
             onClick={() => onPageChange(page - 1)}
             className={cx(BOX, "text-body hover:bg-sunken disabled:cursor-not-allowed disabled:opacity-35")}

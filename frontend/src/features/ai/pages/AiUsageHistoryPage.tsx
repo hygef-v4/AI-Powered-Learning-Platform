@@ -12,9 +12,9 @@ import { msg } from "@/i18n/msg";
 
 export const PAGE_SIZE = 50;
 const TABS: { key: UsageSource | ""; label: string }[] = [
-  { key: "", label: msg("ai.pages.AiUsageHistoryPage.tatCa") },
+  { key: "", label: msg("ai.pages.AiUsageHistoryPage.all") },
   { key: "SHARED", label: SOURCE_LABEL.SHARED },
-  { key: "PERSONAL", label: msg("ai.pages.AiUsageHistoryPage.apiCaNhan") },
+  { key: "PERSONAL", label: msg("ai.pages.AiUsageHistoryPage.personalApi") },
   { key: "MCP", label: "Agent MCP" },
 ];
 
@@ -62,7 +62,7 @@ export function AiUsageHistoryPage({ mcpEnabled = true }: { mcpEnabled?: boolean
         setError(null);
       },
       () => {
-        if (id === request.current) setError(msg("ai.pages.AiUsageHistoryPage.khongTaiDuocLichSuSu"));
+        if (id === request.current) setError(msg("ai.pages.AiUsageHistoryPage.couldNotLoadAiUsage"));
       },
     );
   }, [source, from, to, page, rangeInvalid]);
@@ -85,7 +85,7 @@ export function AiUsageHistoryPage({ mcpEnabled = true }: { mcpEnabled?: boolean
     <>
       <div className={cx("grid gap-3", shared?.quota ? "md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]" : "md:grid-cols-2")}>
         {shared?.quota && (
-          <TokenCard title={msg("ai.pages.AiUsageHistoryPage.apiHeThong")} className={cx("justify-between", mcpEnabled && "md:row-span-2")}>
+          <TokenCard title={msg("ai.pages.AiUsageHistoryPage.systemApi")} className={cx("justify-between", mcpEnabled && "md:row-span-2")}>
             <p className="break-words">
               <span className="text-[100px] leading-none font-bold tracking-[-0.03em] tabular-nums md:text-[120px]">{formatTokens(shared.quota.used)}</span>
               <span className="text-[35px] font-semibold opacity-85"> / {formatTokens(shared.quota.limit)} token</span>
@@ -93,15 +93,15 @@ export function AiUsageHistoryPage({ mcpEnabled = true }: { mcpEnabled?: boolean
           </TokenCard>
         )}
         {/* Không có thẻ API hệ thống (sinh viên): API cá nhân là thẻ chính, màu cam. */}
-        <CountCard title={msg("ai.pages.AiUsageHistoryPage.apiCaNhan")} accent={!shared?.quota} value={data ? formatTokens(data.personal.requests) : "—"} />
+        <CountCard title={msg("ai.pages.AiUsageHistoryPage.personalApi")} accent={!shared?.quota} value={data ? formatTokens(data.personal.requests) : "—"} />
         {mcpEnabled && <CountCard title="Agent MCP" value={data ? formatTokens(data.mcp.requests) : "—"} />}
       </div>
       <SettingsCard>
-        <SettingsGroup title={msg("ai.pages.AiUsageHistoryPage.lichSuSuDung")}>
+        <SettingsGroup title={msg("ai.pages.AiUsageHistoryPage.usageHistory")}>
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-6">
             <Segmented
               as="tab"
-              ariaLabel={msg("ai.pages.AiUsageHistoryPage.nguon")}
+              ariaLabel={msg("ai.pages.AiUsageHistoryPage.source")}
               value={source}
               onChange={(value) => {
                 setSource(value);
@@ -111,35 +111,35 @@ export function AiUsageHistoryPage({ mcpEnabled = true }: { mcpEnabled?: boolean
             />
             {/* Nhãn ngày nằm ngay trên ô, tràn lên dòng tiêu đề nên hàng tab không bị đẩy xuống. */}
             <div className="flex items-center gap-2">
-              <DateBox id="usage-from" label={msg("ai.pages.AiUsageHistoryPage.tuNgay")} value={from} onChange={(value) => { setFrom(value); setPage(0); }} />
+              <DateBox id="usage-from" label={msg("ai.pages.AiUsageHistoryPage.from")} value={from} onChange={(value) => { setFrom(value); setPage(0); }} />
               <span aria-hidden="true" className="text-muted">–</span>
-              <DateBox id="usage-to" label={msg("ai.pages.AiUsageHistoryPage.denNgay")} value={to} invalid={rangeInvalid} onChange={(value) => { setTo(value); setPage(0); }} />
+              <DateBox id="usage-to" label={msg("ai.pages.AiUsageHistoryPage.to")} value={to} invalid={rangeInvalid} onChange={(value) => { setTo(value); setPage(0); }} />
             </div>
           </div>
-          {rangeInvalid && <p role="alert" className="mt-2 text-right text-xs text-danger">{msg("ai.pages.AiUsageHistoryPage.denNgayPhaiSauTuNgay")}</p>}
+          {rangeInvalid && <p role="alert" className="mt-2 text-right text-xs text-danger">{msg("ai.pages.AiUsageHistoryPage.toMustBeAfterFrom")}</p>}
           {error && (
             <Alert tone="danger" role="alert" className="mt-3">
               {error}
             </Alert>
           )}
-          {!data && !error && <p className="py-3 text-[13px] text-muted">{msg("ai.pages.AiUsageHistoryPage.dangTai")}</p>}
+          {!data && !error && <p className="py-3 text-[13px] text-muted">{msg("ai.pages.AiUsageHistoryPage.loading")}</p>}
           {data && (
             <TableFrame filledHead className="mt-3 [&_table]:min-w-[820px] [&_table]:table-fixed">
               <colgroup><col className="w-[150px]" /><col /><col className="w-[130px]" /><col className="w-[170px]" /><col className="w-[140px]" /><col className="w-[120px]" /></colgroup><thead>
                 <tr>
-                  <Th>{msg("ai.pages.AiUsageHistoryPage.thoiGian")}</Th>
-                  <Th>{msg("ai.pages.AiUsageHistoryPage.tacVu")}</Th>
-                  <Th>{msg("ai.pages.AiUsageHistoryPage.nguon")}</Th>
-                  <Th>{msg("ai.pages.AiUsageHistoryPage.moHinh")}</Th>
-                  <Th className="text-right">{msg("ai.pages.AiUsageHistoryPage.tokenVaoRa")}</Th>
-                  <Th>{msg("ai.pages.AiUsageHistoryPage.trangThai")}</Th>
+                  <Th>{msg("ai.pages.AiUsageHistoryPage.time")}</Th>
+                  <Th>{msg("ai.pages.AiUsageHistoryPage.task")}</Th>
+                  <Th>{msg("ai.pages.AiUsageHistoryPage.source")}</Th>
+                  <Th>{msg("ai.pages.AiUsageHistoryPage.model")}</Th>
+                  <Th className="text-right">{msg("ai.pages.AiUsageHistoryPage.tokensInOut")}</Th>
+                  <Th>{msg("ai.pages.AiUsageHistoryPage.status")}</Th>
                 </tr>
               </thead>
               <tbody>
                 {data.items.length === 0 && (
                   <tr>
                     <Td colSpan={6} className="py-6 text-center! text-muted">
-                      {msg("ai.pages.AiUsageHistoryPage.chuaCoLuotSuDungNao")}</Td>
+                      {msg("ai.pages.AiUsageHistoryPage.noUsageInThisPeriod")}</Td>
                   </tr>
                 )}
                 {data.items.map((item) => {
@@ -153,7 +153,7 @@ export function AiUsageHistoryPage({ mcpEnabled = true }: { mcpEnabled?: boolean
                       <Td className="whitespace-nowrap">{item.model ?? (item.provider ? PROVIDER_LABEL[item.provider] : "—")}</Td>
                       <Td className="text-right whitespace-nowrap">
                         {unknown ? (
-                          <span className="text-muted">{msg("ai.pages.AiUsageHistoryPage.khongCoSoLieu")}</span>
+                          <span className="text-muted">{msg("ai.pages.AiUsageHistoryPage.noData")}</span>
                         ) : (
                           `${formatMaybeTokens(item.inputTokens)} / ${formatMaybeTokens(item.outputTokens)}`
                         )}

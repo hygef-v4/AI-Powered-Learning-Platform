@@ -148,17 +148,17 @@ export function isRubricPointsMissing(criteria: RubricCriterion[]): boolean {
 }
 
 export const headingLabels: Record<HeadingStyle, string> = {
-  TITLE: msg("shared.document.types.tieuDe"), SUBTITLE: msg("shared.document.types.phuDe"), H1: msg("shared.document.types.tieuDe1"), H2: msg("shared.document.types.tieuDe2"), H3: msg("shared.document.types.tieuDe3"),
-  H4: msg("shared.document.types.tieuDe4"), H5: msg("shared.document.types.tieuDe5"), H6: msg("shared.document.types.tieuDe6"),
+  TITLE: msg("shared.document.types.title"), SUBTITLE: msg("shared.document.types.subtitle"), H1: msg("shared.document.types.heading1"), H2: msg("shared.document.types.heading2"), H3: msg("shared.document.types.heading3"),
+  H4: msg("shared.document.types.heading4"), H5: msg("shared.document.types.heading5"), H6: msg("shared.document.types.heading6"),
 };
 
 export const diagramTypeLabels: Record<DiagramType, string> = {
-  USE_CASE: "Use case", CLASS: msg("shared.document.types.soDoLop"), SEQUENCE: msg("shared.document.types.soDoTuanTu"), ACTIVITY: msg("shared.document.types.soDoHoatDong"),
-  ER: msg("shared.document.types.soDoEr"), COMPONENT: msg("shared.document.types.soDoThanhPhan"), STATE: msg("shared.document.types.soDoTrangThai"), OTHER: msg("shared.document.types.loaiKhac"),
+  USE_CASE: "Use case", CLASS: msg("shared.document.types.classDiagram"), SEQUENCE: msg("shared.document.types.sequenceDiagram"), ACTIVITY: msg("shared.document.types.activityDiagram"),
+  ER: msg("shared.document.types.erDiagram"), COMPONENT: msg("shared.document.types.componentDiagram"), STATE: msg("shared.document.types.stateDiagram"), OTHER: msg("shared.document.types.other"),
 };
 
 export const blockTypeLabels: Record<BlockType, string> = {
-  HEADING: msg("shared.document.types.tieuDe"), PARAGRAPH: msg("shared.document.types.doanVan"), LIST: msg("shared.document.types.danhSach"), TABLE: msg("shared.document.types.bang"), IMAGE: msg("shared.document.types.anh"), DIAGRAM: msg("shared.document.types.soDo"),
+  HEADING: msg("shared.document.types.title"), PARAGRAPH: msg("shared.document.types.paragraph"), LIST: msg("shared.document.types.list"), TABLE: msg("shared.document.types.table"), IMAGE: msg("shared.document.types.image"), DIAGRAM: msg("shared.document.types.diagram"),
 };
 
 export function generateId(): string {
@@ -233,7 +233,7 @@ export function computeParts(document: DocumentModel): DocumentPart[] {
     .map((block) => ({ block, level: readHeadingLevel(block) }))
     .filter((h) => h.level > 0)
     .map(({ block, level }) => ({ id: block.id, level, title: blockText(block).trim() }));
-  if (headings.length === 0) return [{ partId: WHOLE_DOCUMENT, headingBlockId: null, ancestorHeadingIds: [], title: msg("shared.document.types.toanBai") }];
+  if (headings.length === 0) return [{ partId: WHOLE_DOCUMENT, headingBlockId: null, ancestorHeadingIds: [], title: msg("shared.document.types.wholeAssignment") }];
   const parts: DocumentPart[] = [];
   const branch: (typeof headings[number] & { label: string })[] = [];
   // Số thứ tự như trong trang (I., I.1.): câu hỏi chưa đặt tên thì gọi bằng số của nó.

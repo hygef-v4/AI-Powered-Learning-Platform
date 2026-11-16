@@ -27,8 +27,8 @@ export type Profile = {
 };
 
 export const ROLE_LABELS: Record<Role, string> = {
-  STUDENT: msg("identity.model.types.sinhVien"),
-  TEACHER: msg("identity.model.types.giangVien"),
-  SUBJECT_MANAGER: msg("identity.model.types.chuNhiemMon"),
-  ADMIN: msg("identity.model.types.quanTriVien"),
+  STUDENT: msg("identity.model.types.student"),
+  TEACHER: msg("identity.model.types.lecturer"),
+  SUBJECT_MANAGER: msg("identity.model.types.subjectManager"),
+  ADMIN: msg("identity.model.types.administrator"),
 };

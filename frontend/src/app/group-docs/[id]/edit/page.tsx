@@ -3,7 +3,7 @@ import { GroupSectionEditorPage } from "@/features/groupdocs";
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.groupdocs.id.edit.page.soanBaiNhom") };
+  return { title: await translateOnServer("app.groupdocs.id.edit.page.editGroupWork") };
 }
 
 export default async function Page({ params, searchParams }: {

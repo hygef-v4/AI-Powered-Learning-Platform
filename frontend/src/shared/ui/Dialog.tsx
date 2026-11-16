@@ -118,7 +118,7 @@ export function Dialog({ open, title, onClose, dismissible = true, size = "md", 
           </h2>
           <button
             type="button"
-            aria-label={msg("shared.ui.Dialog.dong")}
+            aria-label={msg("shared.ui.Dialog.close")}
             onClick={onClose}
             disabled={!dismissible}
             className="-mr-1.5 inline-flex size-8 cursor-pointer pointer-coarse:size-11 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink disabled:cursor-not-allowed disabled:opacity-45"

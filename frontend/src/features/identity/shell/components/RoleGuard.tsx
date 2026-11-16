@@ -26,7 +26,7 @@ export function RoleGuard({ roles, children }: { roles?: Role[]; children: React
     return <ErrorPage kind="unavailable" />;
   }
   if (!allowed) {
-    return <FullPageStatus>{msg("identity.shell.components.RoleGuard.dangTai")}</FullPageStatus>;
+    return <FullPageStatus>{msg("identity.shell.components.RoleGuard.loading")}</FullPageStatus>;
   }
   return <>{children}</>;
 }

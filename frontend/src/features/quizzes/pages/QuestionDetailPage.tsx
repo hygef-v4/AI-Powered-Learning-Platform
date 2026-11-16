@@ -73,7 +73,7 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
   const fail = (error: unknown) => {
     if (error instanceof ApiError && error.problem.code === "QUESTION_INVALID") {
       setViolations((error.problem as { violations?: Violation[] }).violations ?? []);
-      setNotice({ tone: "danger", text: msg("quizzes.pages.QuestionDetailPage.noiDungCauHoiChuaHop") });
+      setNotice({ tone: "danger", text: msg("quizzes.pages.QuestionDetailPage.theQuestionContentIsInvalid") });
       return;
     }
     setNotice({ tone: "danger", text: describeError(error) });
@@ -108,7 +108,7 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
       if (!question) return;
       if (question.status === "DRAFT") {
         show(await updateQuestion(question.id, content, question.version));
-        setNotice({ tone: "success", text: msg("quizzes.pages.QuestionDetailPage.daLuuBanNhap") });
+        setNotice({ tone: "success", text: msg("quizzes.pages.QuestionDetailPage.draftSaved") });
         return;
       }
       // Câu đang dùng: mở bản nháp mới rồi lưu nội dung vào đó; quiz đã phát hành vẫn dùng phiên bản đã ghim.
@@ -120,12 +120,12 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
 
   const activate = () => question && void runAction(async () => {
     show(await activateQuestion(question.id, question.version));
-    setNotice({ tone: "success", text: msg("quizzes.pages.QuestionDetailPage.daKichHoatCauHoi") });
+    setNotice({ tone: "success", text: msg("quizzes.pages.QuestionDetailPage.questionActivated") });
   });
 
   const approve = () => question && void runAction(async () => {
     show(await approveQuestion(question.id, question.version));
-    setNotice({ tone: "success", text: msg("quizzes.pages.QuestionDetailPage.daDuyetCauDaVaoNgan") });
+    setNotice({ tone: "success", text: msg("quizzes.pages.QuestionDetailPage.approvedTheQuestionIsNow") });
   });
 
   const confirmAction = () => question && void runAction(async () => {
@@ -133,12 +133,12 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
       const next = await retireQuestion(question.id, question.version);
       show(next);
       setNotice(next.quizzesShortOfQuestions?.length
-        ? { tone: "warning", text: msg("quizzes.pages.QuestionDetailPage.daNgungDungCauHoiCac", { value: String(next.quizzesShortOfQuestions.join(", ")) }) }
-        : { tone: "success", text: msg("quizzes.pages.QuestionDetailPage.daNgungDungCauHoi") });
+        ? { tone: "warning", text: msg("quizzes.pages.QuestionDetailPage.questionRetiredOpenGeneratedQuizzes", { value: String(next.quizzesShortOfQuestions.join(", ")) }) }
+        : { tone: "success", text: msg("quizzes.pages.QuestionDetailPage.questionRetired") });
     } else if (confirm === "reject") {
       show(await rejectQuestion(question.id, reason.trim(), question.version));
       setReason("");
-      setNotice({ tone: "success", text: msg("quizzes.pages.QuestionDetailPage.daTuChoiVaBaoCho") });
+      setNotice({ tone: "success", text: msg("quizzes.pages.QuestionDetailPage.rejectedAndNotifiedTheProposer") });
     } else if (confirm === "delete") {
       await deleteQuestion(question.id, question.version);
       router.push(listHref(question.subjectId));
@@ -147,31 +147,31 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
   });
 
   if (creating && !subjectId) {
-    return <Alert tone="warning" title={msg("quizzes.pages.QuestionDetailPage.chuaChonMon")}>{msg("quizzes.pages.QuestionDetailPage.hayMoNganHangCauHoi")}</Alert>;
+    return <Alert tone="warning" title={msg("quizzes.pages.QuestionDetailPage.noSubjectSelected")}>{msg("quizzes.pages.QuestionDetailPage.openTheQuestionBankAnd")}</Alert>;
   }
   if (loadError) {
     return <PageLoadError onRetry={reload}>{loadError}</PageLoadError>;
   }
-  if (!creating && !question) return <PageLoading label={msg("quizzes.pages.QuestionDetailPage.dangTaiCauHoi")} />;
+  if (!creating && !question) return <PageLoading label={msg("quizzes.pages.QuestionDetailPage.loadingQuestion")} />;
 
   return (
     <>
       <PageHeader
         backHref={listHref(ownerSubject)}
-        breadcrumb={[{ label: msg("quizzes.pages.QuestionDetailPage.nganHangCauHoi"), href: listHref(ownerSubject) }, { label: creating ? msg("quizzes.pages.QuestionDetailPage.cauHoiMoi") : msg("quizzes.pages.QuestionDetailPage.cauHoi") }]}
-        title={creating ? msg("quizzes.pages.QuestionDetailPage.cauHoiMoi") : msg("quizzes.pages.QuestionDetailPage.cauHoi")}
+        breadcrumb={[{ label: msg("quizzes.pages.QuestionDetailPage.questionBank"), href: listHref(ownerSubject) }, { label: creating ? msg("quizzes.pages.QuestionDetailPage.newQuestion") : msg("quizzes.pages.QuestionDetailPage.question") }]}
+        title={creating ? msg("quizzes.pages.QuestionDetailPage.newQuestion") : msg("quizzes.pages.QuestionDetailPage.question")}
         subtitle={question && <span className="inline-flex items-center gap-2">
-          <Pill tone={STATUS_TONES[question.status]}>{STATUS_LABELS[question.status]}</Pill>{msg("quizzes.pages.QuestionDetailPage.phienBan")}{question.versionNo}
+          <Pill tone={STATUS_TONES[question.status]}>{STATUS_LABELS[question.status]}</Pill>{msg("quizzes.pages.QuestionDetailPage.version")}{question.versionNo}
         </span>}
         actions={<div className="flex flex-wrap gap-2">
-          {question?.status === "DRAFT" && <Button variant="ghost" disabled={busy} onClick={() => setConfirm("delete")} data-testid="question-detail-delete">{msg("quizzes.pages.QuestionDetailPage.xoa")}</Button>}
-          {question?.status === "ACTIVE" && <Button disabled={busy} onClick={() => setConfirm("retire")} data-testid="question-detail-retire">{msg("quizzes.pages.QuestionDetailPage.ngung")}</Button>}
+          {question?.status === "DRAFT" && <Button variant="ghost" disabled={busy} onClick={() => setConfirm("delete")} data-testid="question-detail-delete">{msg("quizzes.pages.QuestionDetailPage.delete")}</Button>}
+          {question?.status === "ACTIVE" && <Button disabled={busy} onClick={() => setConfirm("retire")} data-testid="question-detail-retire">{msg("quizzes.pages.QuestionDetailPage.retire")}</Button>}
           {question?.status === "DRAFT" && (
-            <Button disabled={busy || dirty} title={dirty ? msg("quizzes.pages.QuestionDetailPage.luuThayDoiTruocKhiKich") : undefined} onClick={activate} data-testid="question-detail-activate">{msg("quizzes.pages.QuestionDetailPage.kichHoat")}</Button>
+            <Button disabled={busy || dirty} title={dirty ? msg("quizzes.pages.QuestionDetailPage.saveChangesBeforeActivating") : undefined} onClick={activate} data-testid="question-detail-activate">{msg("quizzes.pages.QuestionDetailPage.activate")}</Button>
           )}
-          {pending && <Button disabled={busy} onClick={() => setConfirm("reject")} data-testid="question-detail-reject">{msg("quizzes.pages.QuestionDetailPage.tuChoi")}</Button>}
-          {pending && <Button variant="primary" disabled={busy} onClick={approve} data-testid="question-detail-approve">{msg("quizzes.pages.QuestionDetailPage.duyetVaoNganHang")}</Button>}
-          {!readOnly && <Button variant="primary" icon="save" disabled={busy || !dirty} onClick={saveQuestion} data-testid="question-detail-save">{msg("quizzes.pages.QuestionDetailPage.luuThayDoi")}</Button>}
+          {pending && <Button disabled={busy} onClick={() => setConfirm("reject")} data-testid="question-detail-reject">{msg("quizzes.pages.QuestionDetailPage.reject")}</Button>}
+          {pending && <Button variant="primary" disabled={busy} onClick={approve} data-testid="question-detail-approve">{msg("quizzes.pages.QuestionDetailPage.approveIntoTheBank")}</Button>}
+          {!readOnly && <Button variant="primary" icon="save" disabled={busy || !dirty} onClick={saveQuestion} data-testid="question-detail-save">{msg("quizzes.pages.QuestionDetailPage.saveChanges")}</Button>}
         </div>}
       />
       {notice && <Alert tone={notice.tone} role={notice.tone === "danger" ? "alert" : "status"}>{notice.text}</Alert>}
@@ -181,14 +181,14 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
         </Alert>
       )}
       {question?.status === "ACTIVE" && (
-        <Alert tone="info">{msg("quizzes.pages.QuestionDetailPage.dangDungTrong")}{detail?.usedInQuizzes ?? 0} quiz.</Alert>
+        <Alert tone="info">{msg("quizzes.pages.QuestionDetailPage.usedIn")}{detail?.usedInQuizzes ?? 0} quiz.</Alert>
       )}
-      {question?.status === "RETIRED" && <Alert tone="warning">{msg("quizzes.pages.QuestionDetailPage.cauDaNgungDung")}</Alert>}
-      {pending && <Alert tone="info">{msg("quizzes.pages.QuestionDetailPage.cauDoGiangVienDeXuat")}</Alert>}
-      {rejected && <Alert tone="warning" title={msg("quizzes.pages.QuestionDetailPage.daTuChoi")}>{detail?.review?.reason ?? msg("quizzes.pages.QuestionDetailPage.khongCoLyDo")}</Alert>}
+      {question?.status === "RETIRED" && <Alert tone="warning">{msg("quizzes.pages.QuestionDetailPage.thisQuestionIsRetired")}</Alert>}
+      {pending && <Alert tone="info">{msg("quizzes.pages.QuestionDetailPage.proposedByALecturerAwaiting")}</Alert>}
+      {rejected && <Alert tone="warning" title={msg("quizzes.pages.QuestionDetailPage.rejected")}>{detail?.review?.reason ?? msg("quizzes.pages.QuestionDetailPage.noReasonGiven")}</Alert>}
       {detail && <SimilarQuestionsAlert similar={detail.similar ?? []} />}
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <Section title={msg("quizzes.pages.QuestionDetailPage.noiDung")}>
+        <Section title={msg("quizzes.pages.QuestionDetailPage.content")}>
           <McqEditor value={form} onChange={setForm} errors={errors} readOnly={readOnly} />
         </Section>
         <div className="flex flex-col gap-4">
@@ -197,17 +197,17 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
         </div>
       </div>
       <Dialog open={confirm !== null} onClose={() => setConfirm(null)} tone={confirm === "delete" ? "danger" : "warning"}
-        title={confirm === "delete" ? msg("quizzes.pages.QuestionDetailPage.xoaCauNhap") : confirm === "reject" ? msg("quizzes.pages.QuestionDetailPage.tuChoiCauDeXuat") : msg("quizzes.pages.QuestionDetailPage.ngungDungCauHoi")}
+        title={confirm === "delete" ? msg("quizzes.pages.QuestionDetailPage.deleteDraftQuestion") : confirm === "reject" ? msg("quizzes.pages.QuestionDetailPage.rejectProposedQuestion") : msg("quizzes.pages.QuestionDetailPage.retireQuestion")}
         footer={<>
           <Button variant={confirm === "delete" ? "danger" : "primary"} disabled={busy || (confirm === "reject" && !reason.trim())} onClick={confirmAction} data-testid="question-detail-confirm">
-            {confirm === "delete" ? msg("quizzes.pages.QuestionDetailPage.xoa") : confirm === "reject" ? msg("quizzes.pages.QuestionDetailPage.tuChoi") : msg("quizzes.pages.QuestionDetailPage.ngungDung")}
+            {confirm === "delete" ? msg("quizzes.pages.QuestionDetailPage.delete") : confirm === "reject" ? msg("quizzes.pages.QuestionDetailPage.reject") : msg("quizzes.pages.QuestionDetailPage.retire2")}
           </Button>
         </>}>
         {confirm === "reject" ? (
-          <Field label={msg("quizzes.pages.QuestionDetailPage.lyDoTuChoi")} required htmlFor="question-reject-reason" hint={msg("quizzes.pages.QuestionDetailPage.giangVienThayLyDoNay")}>
+          <Field label={msg("quizzes.pages.QuestionDetailPage.rejectionReason")} required htmlFor="question-reject-reason" hint={msg("quizzes.pages.QuestionDetailPage.theLecturerSeesThisReason")}>
             <Textarea id="question-reject-reason" rows={3} maxLength={1000} value={reason} onChange={(e) => setReason(e.target.value)} data-testid="question-detail-reason" />
           </Field>
-        ) : <p>{confirm === "delete" ? msg("quizzes.pages.QuestionDetailPage.banCoChacMuonXoaCau") : msg("quizzes.pages.QuestionDetailPage.banCoChacMuonNgungDung")}</p>}
+        ) : <p>{confirm === "delete" ? msg("quizzes.pages.QuestionDetailPage.areYouSureYouWant") : msg("quizzes.pages.QuestionDetailPage.areYouSureYouWant2")}</p>}
       </Dialog>
     </>
   );

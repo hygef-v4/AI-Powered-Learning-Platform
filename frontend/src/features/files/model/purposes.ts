@@ -28,10 +28,10 @@ export function acceptAttribute(policy: PurposePolicy): string {
 export function checkFile(file: { name: string; size: number }, policy: PurposePolicy): string | null {
   const ext = file.name.includes(".") ? file.name.split(".").pop()!.toLowerCase() : "";
   if (!policy.extensions.includes(ext)) {
-    return msg("files.model.purposes.chiNhanTep", { value: String(policy.allowedTypes.join(", ")) });
+    return msg("files.model.purposes.onlyFilesAreAccepted", { value: String(policy.allowedTypes.join(", ")) });
   }
   if (file.size > policy.maxSizeMb * 1024 * 1024) {
-    return msg("files.model.purposes.tepVuotMb", { maxSizeMb: String(policy.maxSizeMb) });
+    return msg("files.model.purposes.theFileExceedsMb", { maxSizeMb: String(policy.maxSizeMb) });
   }
   return null;
 }

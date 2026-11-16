@@ -23,7 +23,7 @@ export function formatDuration(value: string | number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const rest = seconds % 60;
-  return [hours && msg("shared.activity.ActivityTimeline.gio", { hours: String(hours) }), minutes && msg("shared.activity.ActivityTimeline.phut", { minutes: String(minutes) }), (rest || (!hours && !minutes)) && msg("shared.activity.ActivityTimeline.giay", { rest: String(rest) })]
+  return [hours && msg("shared.activity.ActivityTimeline.h", { hours: String(hours) }), minutes && msg("shared.activity.ActivityTimeline.min", { minutes: String(minutes) }), (rest || (!hours && !minutes)) && msg("shared.activity.ActivityTimeline.s", { rest: String(rest) })]
     .filter(Boolean).join(" ");
 }
 
@@ -33,18 +33,18 @@ function formatTime(value: string | null) {
 
 /** Dòng thời gian rời trang cho giảng viên (U09, U11): chỉ là dấu hiệu, không kết luận gian lận (BR-U08-53). */
 export function ActivityTimeline({ summary }: { summary: ActivitySummary }) {
-  if (summary.policyState === "DISABLED") return <p className="text-xs text-muted">{msg("shared.activity.ActivityTimeline.baiKhongBatGhiNhanHoat")}</p>;
-  if (summary.policyState === "EXPIRED") return <p className="text-xs text-muted">{msg("shared.activity.ActivityTimeline.duLieuDaQuaThoiHan")}</p>;
-  if (summary.policyState === "NO_DATA") return <p className="text-xs text-muted">{msg("shared.activity.ActivityTimeline.chuaCoDuLieuHoatDong")}</p>;
+  if (summary.policyState === "DISABLED") return <p className="text-xs text-muted">{msg("shared.activity.ActivityTimeline.activityMonitoringIsNotOn")}</p>;
+  if (summary.policyState === "EXPIRED") return <p className="text-xs text-muted">{msg("shared.activity.ActivityTimeline.theDataIsPastIts")}</p>;
+  if (summary.policyState === "NO_DATA") return <p className="text-xs text-muted">{msg("shared.activity.ActivityTimeline.noActivityDataYet")}</p>;
   return (
     <div className="flex flex-col gap-2">
       <p className="text-[13px] text-ink">
-        {msg("shared.activity.ActivityTimeline.roiTrang")}{summary.awayCount} {msg("shared.activity.ActivityTimeline.lanTongThoiGianDaBiet")}{formatDuration(summary.knownAwayDuration)}
+        {msg("shared.activity.ActivityTimeline.leftThePage")}{summary.awayCount} {msg("shared.activity.ActivityTimeline.timesTotalKnownTime")}{formatDuration(summary.knownAwayDuration)}
       </p>
       <ul className="flex flex-col gap-1 text-xs">
         {summary.intervals.map((interval, index) => (
           <li key={index} className="flex items-center gap-2">
-            <Pill tone={interval.certainty === "KNOWN" ? "warning" : "neutral"}>{interval.certainty === "KNOWN" ? msg("shared.activity.ActivityTimeline.roiTrang2") : msg("shared.activity.ActivityTimeline.khongRo")}</Pill>
+            <Pill tone={interval.certainty === "KNOWN" ? "warning" : "neutral"}>{interval.certainty === "KNOWN" ? msg("shared.activity.ActivityTimeline.leftThePage2") : msg("shared.activity.ActivityTimeline.unknown")}</Pill>
             {formatTime(interval.start)} – {formatTime(interval.end)}
           </li>
         ))}

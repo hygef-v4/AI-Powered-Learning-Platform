@@ -4,7 +4,7 @@ import { msg } from "@/i18n/msg";
 
 export const STUDENT_CODE_PATTERN = /^[A-Z]{2}[0-9]{6}$/;
 
-export const STUDENT_CODE_FORMAT_MESSAGE = msg("shared.studentCode.mssvGom2ChuCaiVa");
+export const STUDENT_CODE_FORMAT_MESSAGE = msg("shared.studentCode.aStudentIdHas2");
 
 /** Cắt khoảng trắng hai đầu và đổi chữ in hoa; giữ ký tự ở giữa để kiểm định dạng báo lỗi. */
 export function normalizeStudentCode(raw: string) {
@@ -17,10 +17,10 @@ export function isValidStudentCode(code: string) {
 
 /** Câu báo cho lỗi MSSV từ backend (frontend-components U01 mục 6). */
 export const STUDENT_CODE_ERROR_LABELS: Record<string, string> = {
-  STUDENT_CODE_EXISTS: msg("shared.studentCode.mssvNayDaDuocDungCho"),
-  STUDENT_CODE_LOCKED: msg("shared.studentCode.mssvDaKhoaViSinhVien"),
-  MISSING_STUDENT_CODE: msg("shared.studentCode.canNhapMssvChoTaiKhoan"),
-  STUDENT_CODE_NOT_ALLOWED: msg("shared.studentCode.chiTaiKhoanSinhVienMoi"),
+  STUDENT_CODE_EXISTS: msg("shared.studentCode.thisStudentIdIsAlready"),
+  STUDENT_CODE_LOCKED: msg("shared.studentCode.theStudentIdIsLocked"),
+  MISSING_STUDENT_CODE: msg("shared.studentCode.aStudentIdIsRequired"),
+  STUDENT_CODE_NOT_ALLOWED: msg("shared.studentCode.onlyStudentAccountsHaveA"),
   INVALID_STUDENT_CODE: STUDENT_CODE_FORMAT_MESSAGE,
 };
 
@@ -28,7 +28,7 @@ export const STUDENT_CODE_ERROR_LABELS: Record<string, string> = {
 export function formatStudentLabel(
   person: { name?: string | null; email?: string | null; studentCode?: string | null } | null | undefined,
 ): string {
-  return [person?.name || person?.email || msg("shared.studentCode.khongRoTen"), person?.studentCode].filter(Boolean).join(" · ");
+  return [person?.name || person?.email || msg("shared.studentCode.unknownName"), person?.studentCode].filter(Boolean).join(" · ");
 }
 
 /** So khớp ô tìm theo tên, email hoặc MSSV, không phân biệt hoa thường. */

@@ -37,14 +37,14 @@ const AI_TARGET_POINTS = 10;
 
 /** Một câu ngắn dưới mỗi lựa chọn (yêu cầu 2026-11-10). */
 const METHOD_HINTS: Record<Method, string> = {
-  NEW: msg("assignments.components.CreateAssignmentDialog.soanTuDauCoTheTai"),
-  EXISTING: msg("assignments.components.CreateAssignmentDialog.copyMotDeCoSanRoi"),
-  AI: msg("assignments.components.CreateAssignmentDialog.aiSoanDeKemRubricTong"),
+  NEW: msg("assignments.components.CreateAssignmentDialog.writeFromScratchYouCan"),
+  EXISTING: msg("assignments.components.CreateAssignmentDialog.copyAnExistingAssignmentAnd"),
+  AI: msg("assignments.components.CreateAssignmentDialog.theAiWritesTheAssignment"),
 };
 const KIND_HINTS: Record<Kind, string> = {
-  INDIVIDUAL: msg("assignments.components.CreateAssignmentDialog.moiSinhVienNopMotBai"),
-  GROUP: msg("assignments.components.CreateAssignmentDialog.moiNhomNopChungMotBai"),
-  PRACTICE: msg("assignments.components.CreateAssignmentDialog.tuLuyenKhongTinhDiem"),
+  INDIVIDUAL: msg("assignments.components.CreateAssignmentDialog.eachStudentSubmitsTheirOwn"),
+  GROUP: msg("assignments.components.CreateAssignmentDialog.eachGroupSubmitsOneShared"),
+  PRACTICE: msg("assignments.components.CreateAssignmentDialog.selfPracticeNotGraded"),
 };
 
 
@@ -183,7 +183,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
       const result = await handle.promise;
       updateUpload(id, (item) => ({ ...item, status: "READY", percent: 100, fileRef: result.fileRef.value }));
     } catch (cause) {
-      updateUpload(id, (item) => ({ ...item, status: "ERROR", error: cause instanceof Error ? cause.message : msg("assignments.components.CreateAssignmentDialog.taiTepLenKhongThanhCong") }));
+      updateUpload(id, (item) => ({ ...item, status: "ERROR", error: cause instanceof Error ? cause.message : msg("assignments.components.CreateAssignmentDialog.uploadFailed") }));
     } finally {
       abortUploads.current.delete(id);
     }
@@ -192,7 +192,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   function addUploads(files: FileList | null) {
     if (!files) return;
     const remaining = MAX_SOURCE_FILES - uploads.length;
-    if (files.length > remaining) setError(msg("assignments.components.CreateAssignmentDialog.chiChonToiDa3Tep"));
+    if (files.length > remaining) setError(msg("assignments.components.CreateAssignmentDialog.chooseAtMost3Source"));
     Array.from(files).slice(0, Math.max(0, remaining)).forEach((item) => void upload(item));
   }
 
@@ -208,7 +208,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     if (aiTemplateFile) {
       const imported = await assignmentsApi.importDocx(assignment.id, aiTemplateFile);
       formatText = extractTemplateText(imported.document).text;
-      if (!formatText.trim()) throw new Error(msg("assignments.components.CreateAssignmentDialog.mauDeKhongCoNoiDung"));
+      if (!formatText.trim()) throw new Error(msg("assignments.components.CreateAssignmentDialog.theTemplateHasNoReadable"));
     }
     let draft: AiDraft = await assignmentsApi.requestAiDraft(assignment.id, {
       request: request.trim(),
@@ -221,15 +221,15 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     });
     while (draft.status === "PENDING") {
       await wait(POLL_MS);
-      if (!alive.current) throw new Error(msg("assignments.components.CreateAssignmentDialog.daDongPopup"));
+      if (!alive.current) throw new Error(msg("assignments.components.CreateAssignmentDialog.thePopupWasClosed"));
       draft = await assignmentsApi.aiDraft(assignment.id, draft.draftId);
     }
-    if (draft.status !== "READY" || !draft.proposal) throw new Error(draft.safeError ?? msg("assignments.components.CreateAssignmentDialog.aiKhongTraKetQua"));
+    if (draft.status !== "READY" || !draft.proposal) throw new Error(draft.safeError ?? msg("assignments.components.CreateAssignmentDialog.theAiReturnedNoResult"));
     const validation = draft.proposal.validation;
     if (!validation || validation.status === "INVALID" || draft.proposal.sections.length === 0) {
       await assignmentsApi.discardAiDraft(assignment.id, draft.draftId).catch(() => {});
       const reason = validation?.issues.find((issue) => issue.severity === "ERROR")?.message;
-      throw new Error(reason ? msg("assignments.components.CreateAssignmentDialog.aiChuaSoanDuocDeHop", { reason: String(reason) }) : msg("assignments.components.CreateAssignmentDialog.aiChuaSoanDuocDeHop2"));
+      throw new Error(reason ? msg("assignments.components.CreateAssignmentDialog.theAiCouldNotProduce", { reason: String(reason) }) : msg("assignments.components.CreateAssignmentDialog.theAiCouldNotProduce2"));
     }
     return assignmentsApi.applyAiDraft(assignment.id, draft.draftId, assignment.version, true, false);
   }
@@ -237,15 +237,15 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   async function submit() {
     const name = title.trim();
     if (!created && !aiCreated && !name) {
-      setTitleError(msg("assignments.components.CreateAssignmentDialog.nhapTieuDeBaiTap"));
+      setTitleError(msg("assignments.components.CreateAssignmentDialog.enterAnAssignmentTitle"));
       return;
     }
     if (existing && !sourceId) {
-      setError(msg("assignments.components.CreateAssignmentDialog.chonMotDeCoSanDe"));
+      setError(msg("assignments.components.CreateAssignmentDialog.chooseAnExistingAssignmentTo"));
       return;
     }
     if (ai && uploads.some((item) => item.status !== "READY")) {
-      setError(msg("assignments.components.CreateAssignmentDialog.hayDoiTaiXongHoacGo"));
+      setError(msg("assignments.components.CreateAssignmentDialog.waitForUploadsToFinish"));
       return;
     }
     if (method === "NEW" && file && importKindOf(file) !== "DOCX") {
@@ -292,8 +292,8 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
       }
       onCreated(assignment);
     } catch (e) {
-      setError(ai ? describeError(e, msg("assignments.components.CreateAssignmentDialog.aiKhongTraKetQua"))
-        : assignment ? msg("assignments.components.CreateAssignmentDialog.daTaoBaiChuaNhapTep", { value: String(describeError(e)) }) : describeError(e));
+      setError(ai ? describeError(e, msg("assignments.components.CreateAssignmentDialog.theAiReturnedNoResult"))
+        : assignment ? msg("assignments.components.CreateAssignmentDialog.assignmentCreatedFileNotImported", { value: String(describeError(e)) }) : describeError(e));
     } finally {
       setBusy(false);
     }
@@ -308,55 +308,55 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   if (aiRunning) return <AiProgress />;
 
   return (
-    <Dialog open title={isClass ? msg("assignments.components.CreateAssignmentDialog.baiTapMoi") : msg("assignments.components.CreateAssignmentDialog.deMauMoi")} size="lg" onClose={() => void close()} dismissible={!busy}
+    <Dialog open title={isClass ? msg("assignments.components.CreateAssignmentDialog.newAssignment") : msg("assignments.components.CreateAssignmentDialog.newTemplate")} size="lg" onClose={() => void close()} dismissible={!busy}
       footer={<>
-        {created && <Button onClick={() => onCreated(created)} disabled={busy}>{msg("assignments.components.CreateAssignmentDialog.moBai")}</Button>}
+        {created && <Button onClick={() => onCreated(created)} disabled={busy}>{msg("assignments.components.CreateAssignmentDialog.openAssignment")}</Button>}
         <Button variant="primary" onClick={() => void submit()} disabled={busy} data-testid="create-assignment-submit">
-          {created || aiCreated ? msg("assignments.components.CreateAssignmentDialog.thuLai") : msg("assignments.components.CreateAssignmentDialog.tao")}
+          {created || aiCreated ? msg("assignments.components.CreateAssignmentDialog.retry") : msg("assignments.components.CreateAssignmentDialog.create")}
         </Button>
       </>}>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
-      <Field label={msg("assignments.components.CreateAssignmentDialog.tieuDe")} htmlFor="create-assignment-title" required error={titleError}>
+      <Field label={msg("assignments.components.CreateAssignmentDialog.title")} htmlFor="create-assignment-title" required error={titleError}>
         <TextInput id="create-assignment-title" value={title} maxLength={TITLE_MAX} disabled={setupLocked} invalid={!!titleError}
           data-testid="create-assignment-title"
           onChange={(e) => { setTitle(e.target.value); if (e.target.value.trim()) setTitleError(null); }} />
       </Field>
-      <Field label={msg("assignments.components.CreateAssignmentDialog.loai")}>
-        <Choice name={msg("assignments.components.CreateAssignmentDialog.loai")} value={kind} disabled={setupLocked} onChange={setKind} options={[
-          { value: "INDIVIDUAL", label: msg("assignments.components.CreateAssignmentDialog.caNhan") },
-          { value: "GROUP", label: msg("assignments.components.CreateAssignmentDialog.nhom"), disabled: !groupAllowed, title: groupAllowed ? undefined : msg("assignments.components.CreateAssignmentDialog.lopChuaDungDuocBaiNhom") },
-          { value: "PRACTICE", label: msg("assignments.components.CreateAssignmentDialog.luyenTap") },
+      <Field label={msg("assignments.components.CreateAssignmentDialog.type")}>
+        <Choice name={msg("assignments.components.CreateAssignmentDialog.type")} value={kind} disabled={setupLocked} onChange={setKind} options={[
+          { value: "INDIVIDUAL", label: msg("assignments.components.CreateAssignmentDialog.individual") },
+          { value: "GROUP", label: msg("assignments.components.CreateAssignmentDialog.group"), disabled: !groupAllowed, title: groupAllowed ? undefined : msg("assignments.components.CreateAssignmentDialog.thisClassCannotUseGroup") },
+          { value: "PRACTICE", label: msg("assignments.components.CreateAssignmentDialog.practice") },
         ]} />
         <Hint key={kind}>{KIND_HINTS[kind]}</Hint>
       </Field>
-      <Field label={msg("assignments.components.CreateAssignmentDialog.cachTao")}>
-        <Choice name={msg("assignments.components.CreateAssignmentDialog.cachTao")} value={method} disabled={setupLocked} onChange={changeMethod} options={[
-          { value: "EXISTING", label: msg("assignments.components.CreateAssignmentDialog.deCoSan") },
-          { value: "NEW", label: msg("assignments.components.CreateAssignmentDialog.deMoi") },
-          { value: "AI", label: msg("assignments.components.CreateAssignmentDialog.taoTuAi") },
+      <Field label={msg("assignments.components.CreateAssignmentDialog.howToCreate")}>
+        <Choice name={msg("assignments.components.CreateAssignmentDialog.howToCreate")} value={method} disabled={setupLocked} onChange={changeMethod} options={[
+          { value: "EXISTING", label: msg("assignments.components.CreateAssignmentDialog.existingAssignment") },
+          { value: "NEW", label: msg("assignments.components.CreateAssignmentDialog.newAssignment2") },
+          { value: "AI", label: msg("assignments.components.CreateAssignmentDialog.createWithAi") },
         ]} />
         <Hint key={method}>{METHOD_HINTS[method]}</Hint>
       </Field>
       {existing ? (
-        <Field label={msg("assignments.components.CreateAssignmentDialog.deCoSan")} required>
-          <SearchPicker id="copy-sources" label={msg("assignments.components.CreateAssignmentDialog.deCoSan")} placeholder={msg("assignments.components.CreateAssignmentDialog.timTheoTenBai")} disabled={locked}
-            optionIcon="assignment" loading={sources === null} emptyText={msg("assignments.components.CreateAssignmentDialog.chuaCoDeNaoDeCopy")} onOpen={loadSources}
+        <Field label={msg("assignments.components.CreateAssignmentDialog.existingAssignment")} required>
+          <SearchPicker id="copy-sources" label={msg("assignments.components.CreateAssignmentDialog.existingAssignment")} placeholder={msg("assignments.components.CreateAssignmentDialog.searchByAssignmentName")} disabled={locked}
+            optionIcon="assignment" loading={sources === null} emptyText={msg("assignments.components.CreateAssignmentDialog.noAssignmentsToCopyYet")} onOpen={loadSources}
             options={options} onPick={pickSource} />
           {picked && (
             <div className="flex animate-fade items-center gap-3 rounded-[10px] border border-line bg-sunken px-3.5 py-3 text-[13.5px]"
               data-testid="copy-source">
               <Icon name="assignment" size={18} className="text-primary-ink" />
               <span className="min-w-0 flex-1 truncate font-semibold text-ink" title={picked.title}>{picked.title}</span>
-              <IconButton icon="close" label={msg("assignments.components.CreateAssignmentDialog.boBaiDaChon")} size={28} disabled={locked} onClick={() => setSourceId("")} />
+              <IconButton icon="close" label={msg("assignments.components.CreateAssignmentDialog.clearSelectedAssignment")} size={28} disabled={locked} onClick={() => setSourceId("")} />
             </div>
           )}
         </Field>
       ) : (
         <>
           {method === "NEW" && (
-            <Field label={msg("assignments.components.CreateAssignmentDialog.mauDe")}>
+            <Field label={msg("assignments.components.CreateAssignmentDialog.template")}>
               <TemplateFileField file={file} files={templateFiles} disabled={locked} accept={IMPORT_ACCEPT}
-                label={msg("assignments.components.CreateAssignmentDialog.taiDocxAnhHoacPdfDe")} onChange={(next) => setTemplateFiles(next ? [next] : [])}
+                label={msg("assignments.components.CreateAssignmentDialog.uploadAnOldAssignmentAs")} onChange={(next) => setTemplateFiles(next ? [next] : [])}
                 onFilesChange={setTemplateFiles} />
             </Field>
           )}
@@ -365,22 +365,22 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
               {/* Mẫu đề, Tài liệu tham khảo, Yêu cầu: mỗi ô một dòng (yêu cầu 2026-11-10). */}
               {/* Ngôn ngữ bên trái Mẫu đề trên cùng một dòng (yêu cầu 2026-11-10). */}
               <div className="grid gap-3 sm:grid-cols-[9rem_minmax(0,1fr)]">
-                <Field label={msg("assignments.components.CreateAssignmentDialog.ngonNgu")} htmlFor="ai-language">
-                  <Select id="ai-language" aria-label={msg("assignments.components.CreateAssignmentDialog.ngonNgu")} value={language} disabled={busy}
+                <Field label={msg("assignments.components.CreateAssignmentDialog.language")} htmlFor="ai-language">
+                  <Select id="ai-language" aria-label={msg("assignments.components.CreateAssignmentDialog.language")} value={language} disabled={busy}
                     onChange={(e) => setLanguage(e.target.value as "VI" | "EN" | "JA")}>
                     {LOCALES.map((code) => <option key={code} value={code.toUpperCase()} lang={code}>{LOCALE_NAMES[code]}</option>)}
                   </Select>
                 </Field>
                 {/* Mẫu đề như ô copy bài cũ: tìm đề mẫu của môn, dòng cuối là tải DOCX lên; đã chọn thì tên hiện ngay trong ô. */}
-                <Field label={msg("assignments.components.CreateAssignmentDialog.mauDe")} htmlFor="ai-template">
-                  <SearchPicker id="ai-template" label={msg("assignments.components.CreateAssignmentDialog.mauDe")} placeholder={msg("assignments.components.CreateAssignmentDialog.chonDeMauHoacTaiDocx")} disabled={busy}
-                    optionIcon="assignment" loading={sources === null} emptyText={msg("assignments.components.CreateAssignmentDialog.monChuaCoDeMau")} onOpen={loadSources}
+                <Field label={msg("assignments.components.CreateAssignmentDialog.template")} htmlFor="ai-template">
+                  <SearchPicker id="ai-template" label={msg("assignments.components.CreateAssignmentDialog.template")} placeholder={msg("assignments.components.CreateAssignmentDialog.chooseATemplateOrUpload")} disabled={busy}
+                    optionIcon="assignment" loading={sources === null} emptyText={msg("assignments.components.CreateAssignmentDialog.theSubjectHasNoTemplates")} onOpen={loadSources}
                     options={subjectTemplates.filter((item) => item.id !== aiTemplateId).map((item) => ({ id: item.id, label: item.title }))}
                     onPick={(id) => { setAiTemplateFile(null); setAiTemplateId(id); }}
-                    selected={templateName ? { label: templateName, clearLabel: msg("assignments.components.CreateAssignmentDialog.boMauDe"),
+                    selected={templateName ? { label: templateName, clearLabel: msg("assignments.components.CreateAssignmentDialog.removeTemplate"),
                       onClear: () => { setAiTemplateId(""); setAiTemplateFile(null); } } : undefined}
-                    footer={{ label: msg("assignments.components.CreateAssignmentDialog.taiDeMauLen"), icon: "upload_file", onPick: () => templateInput.current?.click() }} />
-                  <input ref={templateInput} type="file" accept=".docx" hidden aria-label={msg("assignments.components.CreateAssignmentDialog.taiDeMauLen")} data-testid="ai-format"
+                    footer={{ label: msg("assignments.components.CreateAssignmentDialog.uploadATemplate"), icon: "upload_file", onPick: () => templateInput.current?.click() }} />
+                  <input ref={templateInput} type="file" accept=".docx" hidden aria-label={msg("assignments.components.CreateAssignmentDialog.uploadATemplate")} data-testid="ai-format"
                     onChange={(event) => {
                       const templateFile = event.target.files?.[0];
                       event.target.value = "";
@@ -390,7 +390,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
                     }} />
                 </Field>
               </div>
-              <Field label={msg("assignments.components.CreateAssignmentDialog.taiLieuThamKhao")} htmlFor="ai-reference">
+              <Field label={msg("assignments.components.CreateAssignmentDialog.references")} htmlFor="ai-reference">
                 <ReferencePicker materials={materials ?? []} chosen={chosen} uploads={uploads} disabled={busy}
                   canUpload={!!sourcePolicy && uploads.length < MAX_SOURCE_FILES}
                   accept={sourcePolicy ? acceptAttribute(sourcePolicy) : undefined}
@@ -398,9 +398,9 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
                   onUnchoose={(id) => setChosen((list) => list.filter((item) => item !== id))}
                   onUpload={addUploads} onRemoveUpload={removeUpload} onRetryUpload={(item) => void upload(item.file, item.id)} />
               </Field>
-              <Field label={msg("assignments.components.CreateAssignmentDialog.yeuCau")} htmlFor="ai-request">
+              <Field label={msg("assignments.components.CreateAssignmentDialog.request")} htmlFor="ai-request">
                 <Textarea id="ai-request" rows={2} maxLength={4000} value={request} disabled={busy}
-                  placeholder={msg("assignments.components.CreateAssignmentDialog.moTaDeBanCanChu")}
+                  placeholder={msg("assignments.components.CreateAssignmentDialog.describeTheAssignmentYouNeed")}
                   onChange={(e) => setRequest(e.target.value)} />
               </Field>
             </>

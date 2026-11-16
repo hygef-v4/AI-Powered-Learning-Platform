@@ -27,10 +27,10 @@ const STATUS_TONES: Record<string, Tone> = {
 };
 
 function describeRowAction(status: string): string {
-  if (status === "PENDING") return msg("grading.pages.SubmissionDetailPage.chamBai");
-  if (status === "DRAFT") return msg("grading.pages.SubmissionDetailPage.tiepTucCham");
-  if (status === "FINALIZED" || status === "PUBLISHED" || status === "SUPERSEDED") return msg("grading.pages.SubmissionDetailPage.xemDiem");
-  return msg("grading.pages.SubmissionDetailPage.chamXem");
+  if (status === "PENDING") return msg("grading.pages.SubmissionDetailPage.grade");
+  if (status === "DRAFT") return msg("grading.pages.SubmissionDetailPage.continueGrading");
+  if (status === "FINALIZED" || status === "PUBLISHED" || status === "SUPERSEDED") return msg("grading.pages.SubmissionDetailPage.viewGrade");
+  return msg("grading.pages.SubmissionDetailPage.gradeView");
 }
 
 const CELL = "border-b border-line px-3 py-3 align-middle first:pl-1 last:pr-1";
@@ -65,13 +65,13 @@ export function SubmissionDetailPage({
     <main className="flex min-w-0 flex-col gap-6">
       <header className="flex flex-col gap-2.5">
         <BackLink className="inline-flex w-fit items-center gap-1.5 text-[12.5px] font-semibold text-muted transition-colors hover:text-ink" href={`/teaching/classes/${classId}`}>
-          <Icon name="arrow_back" size={14} />{msg("grading.pages.SubmissionDetailPage.veLopHoc")}</BackLink>
+          <Icon name="arrow_back" size={14} />{msg("grading.pages.SubmissionDetailPage.backToClass")}</BackLink>
         <h1 className="font-display text-[28px] leading-[1.1] tracking-[-0.025em] break-words text-ink [overflow-wrap:anywhere] sm:text-[32px]">
-          {context.value ? msg("grading.pages.SubmissionDetailPage.baiNop", { value: String(context.value.title.trim() || msg("grading.pages.SubmissionDetailPage.baiTapChuaCoTieuDe")) }) : msg("grading.pages.SubmissionDetailPage.baiNop2")}
+          {context.value ? msg("grading.pages.SubmissionDetailPage.submissions", { value: String(context.value.title.trim() || msg("grading.pages.SubmissionDetailPage.untitledAssignment")) }) : msg("grading.pages.SubmissionDetailPage.submissions2")}
         </h1>
         {context.value ? (
           <p className="text-[13.5px] break-words text-muted [overflow-wrap:anywhere]">
-            {context.value.ownerName.trim() ? msg("grading.pages.SubmissionDetailPage.lop", { ownerName: String(context.value.ownerName) }) : msg("grading.pages.SubmissionDetailPage.chuaCoThongTinLop")}
+            {context.value.ownerName.trim() ? msg("grading.pages.SubmissionDetailPage.class", { ownerName: String(context.value.ownerName) }) : msg("grading.pages.SubmissionDetailPage.noClassInformationYet")}
           </p>
         ) : context.error ? (
           <div role="alert" className="flex items-center gap-3 text-[13.5px] text-muted">
@@ -80,30 +80,30 @@ export function SubmissionDetailPage({
               type="button"
               className="font-semibold text-primary-ink"
               data-testid="submissions-context-retry"
-              aria-label={msg("grading.pages.SubmissionDetailPage.thuTaiLaiThongTinBai")}
+              aria-label={msg("grading.pages.SubmissionDetailPage.tryReloadingTheAssignmentClass")}
               onClick={() => void context.refresh()}
             >
-              {msg("grading.pages.SubmissionDetailPage.thuLai")}</button>
+              {msg("grading.pages.SubmissionDetailPage.retry")}</button>
           </div>
         ) : (
-          <p role="status" className="text-[13.5px] text-muted">{msg("grading.pages.SubmissionDetailPage.dangTaiThongTinBaiTap")}</p>
+          <p role="status" className="text-[13.5px] text-muted">{msg("grading.pages.SubmissionDetailPage.loadingAssignmentClassInformation")}</p>
         )}
       </header>
       {resource.error && (
-        <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void resource.refresh().catch(() => {})}>{msg("grading.pages.SubmissionDetailPage.thuLai")}</Button>}>
+        <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void resource.refresh().catch(() => {})}>{msg("grading.pages.SubmissionDetailPage.retry")}</Button>}>
           {resource.error}
         </Alert>
       )}
-      {!data && !resource.error && <p role="status" className="text-sm text-muted">{msg("grading.pages.SubmissionDetailPage.dangTaiBaiNop")}</p>}
-      {readOnly && <Alert tone="info">{data?.readOnlyReason || msg("grading.pages.SubmissionDetailPage.baiTapChiChoPhepXem")}</Alert>}
+      {!data && !resource.error && <p role="status" className="text-sm text-muted">{msg("grading.pages.SubmissionDetailPage.loadingSubmissions")}</p>}
+      {readOnly && <Alert tone="info">{data?.readOnlyReason || msg("grading.pages.SubmissionDetailPage.thisAssignmentOnlyAllowsViewing")}</Alert>}
       {data && (
         <>
           <div className="flex flex-wrap gap-x-10 gap-y-4 border-b border-line pb-5">
             {[
-              ["submitted", msg("grading.pages.SubmissionDetailPage.daNop")],
-              ["inProgress", msg("grading.pages.SubmissionDetailPage.dangLam")],
-              ["notSubmitted", msg("grading.pages.SubmissionDetailPage.chuaNop")],
-              ["late", msg("grading.pages.SubmissionDetailPage.nopTre")],
+              ["submitted", msg("grading.pages.SubmissionDetailPage.submitted")],
+              ["inProgress", msg("grading.pages.SubmissionDetailPage.inProgress")],
+              ["notSubmitted", msg("grading.pages.SubmissionDetailPage.notSubmitted")],
+              ["late", msg("grading.pages.SubmissionDetailPage.submittedLate")],
             ].map(([key, label]) => (
               <section key={key} className="flex flex-col gap-1">
                 <strong className="font-display text-[28px] leading-none text-ink tabular-nums">{data.summary[key!] ?? 0}</strong>
@@ -113,7 +113,7 @@ export function SubmissionDetailPage({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Select
-              aria-label={msg("grading.pages.SubmissionDetailPage.trangThai")}
+              aria-label={msg("grading.pages.SubmissionDetailPage.status")}
               data-testid="submissions-status-filter"
               wrapperClassName="w-48"
               value={filter}
@@ -123,7 +123,7 @@ export function SubmissionDetailPage({
                 setSelected([]);
               }}
             >
-              <option value="ALL">{msg("grading.pages.SubmissionDetailPage.moiTrangThai")}</option>
+              <option value="ALL">{msg("grading.pages.SubmissionDetailPage.allStatuses")}</option>
               {["PENDING", "DRAFT", "FINALIZED", "PUBLISHED", "IN_PROGRESS", "NOT_SUBMITTED"].map((s) => (
                 <option key={s} value={s}>
                   {GRADE_STATUS_LABELS[s]}
@@ -131,7 +131,7 @@ export function SubmissionDetailPage({
               ))}
             </Select>
             <Select
-              aria-label={msg("grading.pages.SubmissionDetailPage.nopBai")}
+              aria-label={msg("grading.pages.SubmissionDetailPage.submission")}
               data-testid="submissions-late-filter"
               wrapperClassName="w-40"
               value={late}
@@ -141,21 +141,21 @@ export function SubmissionDetailPage({
                 setSelected([]);
               }}
             >
-              <option value="">{msg("grading.pages.SubmissionDetailPage.dungHanVaTre")}</option>
-              <option value="false">{msg("grading.pages.SubmissionDetailPage.dungHan")}</option>
-              <option value="true">{msg("grading.pages.SubmissionDetailPage.nopTre")}</option>
+              <option value="">{msg("grading.pages.SubmissionDetailPage.onTimeAndLate")}</option>
+              <option value="false">{msg("grading.pages.SubmissionDetailPage.onTime")}</option>
+              <option value="true">{msg("grading.pages.SubmissionDetailPage.submittedLate")}</option>
             </Select>
             {selectedRows.length > 0 && (
               <div className="ml-auto flex animate-pop flex-wrap items-center gap-2 rounded-lg bg-primary-soft py-1 pr-1 pl-3">
-                <span className="text-[13px] font-semibold text-ink">{msg("grading.pages.SubmissionDetailPage.daChon")}{selectedRows.length} {msg("grading.pages.SubmissionDetailPage.bai")}</span>
+                <span className="text-[13px] font-semibold text-ink">{msg("grading.pages.SubmissionDetailPage.selected")}{selectedRows.length} {msg("grading.pages.SubmissionDetailPage.submissions3")}</span>
                 {(["ai", "publish"] as const).map((a) => (
                   <Button key={a} size="sm" variant={a === "publish" ? "primary" : "secondary"}
                     disabled={readOnly || !buildGradeActionItems(selectedRows, a).length} onClick={() => setAction(a)}>
-                    {a === "ai" ? msg("grading.pages.SubmissionDetailPage.aiDeXuat") : msg("grading.pages.SubmissionDetailPage.congBoDiem")}
+                    {a === "ai" ? msg("grading.pages.SubmissionDetailPage.aiProposal") : msg("grading.pages.SubmissionDetailPage.publishGrades")}
                   </Button>
                 ))}
                 <Button size="sm" variant="ghost" onClick={() => setSelected([])}>
-                  {msg("grading.pages.SubmissionDetailPage.boChon")}</Button>
+                  {msg("grading.pages.SubmissionDetailPage.deselect")}</Button>
               </div>
             )}
           </div>
@@ -165,7 +165,7 @@ export function SubmissionDetailPage({
                 <tr>
                   <th className={HEAD}>
                     <input
-                      aria-label={msg("grading.pages.SubmissionDetailPage.chonTatCaBaiTrongTrang")}
+                      aria-label={msg("grading.pages.SubmissionDetailPage.selectAllSubmissionsOnThe")}
                       type="checkbox"
                       disabled={readOnly || !selectable.length}
                       className="accent-[var(--c-primary)]"
@@ -173,7 +173,7 @@ export function SubmissionDetailPage({
                       onChange={(e) => setSelected(e.target.checked ? selectable.map((r) => r.evaluationId!) : [])}
                     />
                   </th>
-                  {[msg("grading.pages.SubmissionDetailPage.sinhVienNhom"), msg("grading.pages.SubmissionDetailPage.nopLuc"), msg("grading.pages.SubmissionDetailPage.trangThai"), msg("grading.pages.SubmissionDetailPage.diem"), ""].map((s, i) => (
+                  {[msg("grading.pages.SubmissionDetailPage.studentGroup"), msg("grading.pages.SubmissionDetailPage.submittedAt"), msg("grading.pages.SubmissionDetailPage.status"), msg("grading.pages.SubmissionDetailPage.score"), ""].map((s, i) => (
                     <th key={i} className={HEAD}>
                       {s}
                     </th>
@@ -185,7 +185,7 @@ export function SubmissionDetailPage({
                   <tr key={r.student.accountId} className="transition-colors duration-200 hover:bg-surface">
                     <td className={CELL}>
                       <input
-                        aria-label={msg("grading.pages.SubmissionDetailPage.chon", { name: String(r.student.name) })}
+                        aria-label={msg("grading.pages.SubmissionDetailPage.select", { name: String(r.student.name) })}
                         disabled={readOnly || !r.evaluationId}
                         type="checkbox"
                         className="accent-[var(--c-primary)]"
@@ -205,7 +205,7 @@ export function SubmissionDetailPage({
                     </td>
                     <td className={`${CELL} font-mono text-xs whitespace-nowrap text-body`}>
                       {formatDateTime(r.submittedAt)}
-                      {r.late && <span className="ml-2 font-sans font-semibold text-danger">{msg("grading.pages.SubmissionDetailPage.tre")}</span>}
+                      {r.late && <span className="ml-2 font-sans font-semibold text-danger">{msg("grading.pages.SubmissionDetailPage.late")}</span>}
                     </td>
                     <td className={CELL}>
                       <Pill tone={STATUS_TONES[r.status] ?? "neutral"}>{GRADE_STATUS_LABELS[r.status] ?? r.status}</Pill>
@@ -217,11 +217,11 @@ export function SubmissionDetailPage({
                           className="inline-flex items-center gap-1 font-semibold text-primary-ink transition-colors hover:text-ink"
                           href={buildEvaluationHref(r.evaluationId!, { status: filter, late })}
                         >
-                          {readOnly ? msg("grading.pages.SubmissionDetailPage.xemBai") : describeRowAction(r.status)}
+                          {readOnly ? msg("grading.pages.SubmissionDetailPage.viewWork") : describeRowAction(r.status)}
                           <Icon name="chevron_right" size={13} />
                         </Link>
                       ) : r.submittedAt ? (
-                        <span className="text-xs text-muted">{msg("grading.pages.SubmissionDetailPage.danhGiaChuaSanSang")}</span>
+                        <span className="text-xs text-muted">{msg("grading.pages.SubmissionDetailPage.assessmentNotReady")}</span>
                       ) : (
                         "—"
                       )}
@@ -230,7 +230,7 @@ export function SubmissionDetailPage({
                 ))}
               </tbody>
             </table>
-            {!data.rows.length && <EmptyState title={msg("grading.pages.SubmissionDetailPage.khongCoBaiNopPhuHop")} />}
+            {!data.rows.length && <EmptyState title={msg("grading.pages.SubmissionDetailPage.noMatchingSubmissions")} />}
           </div>
           <Pagination
             page={page - 1}

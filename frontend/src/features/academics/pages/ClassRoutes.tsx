@@ -124,7 +124,7 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
       return result;
     } catch (error) {
       if (error instanceof ApiError && error.problem.status === 409) {
-        setMutationConflict({classId: id, message: msg("academics.pages.ClassRoutes.duLieuDaThayDoiDa")});
+        setMutationConflict({classId: id, message: msg("academics.pages.ClassRoutes.theDataHasChangedThe")});
         await state.refresh().catch(() => {});
         const details = error.problem as typeof error.problem & {conflictingStudents?: unknown[]};
         if (details.conflictingStudents?.length) {
@@ -181,7 +181,7 @@ export function ManagerRoute({view, id, initialSubjectId}: {view: "overview" | "
       onSubject={id => router.push(`/manager/subjects/${encodeURIComponent(id)}`)}/>;
   } else if (view === "subjects") {
     content = subject ? <MySubjectPage subject={subject}/>
-      : <EmptyState title={msg("academics.pages.ClassRoutes.banChuaDuocGiaoQuanLy")}/>;
+      : <EmptyState title={msg("academics.pages.ClassRoutes.youHaveNotBeenAssigned")}/>;
   } else {
     content = <ClassListPage key={initialSubjectId ?? ""} initialSubjectId={initialSubjectId} subjects={subjects} classes={classes}
       onOpen={id => router.push(`/manager/classes/${encodeURIComponent(id)}`)} onCreate={setCreating}/>;

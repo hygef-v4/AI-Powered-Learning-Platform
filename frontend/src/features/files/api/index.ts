@@ -31,8 +31,8 @@ export function uploadFile(file: File, purpose: ArtifactPurpose, onProgress: (pe
       if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
     };
     xhr.onload = () => resolve(xhr);
-    xhr.onerror = () => reject(new Error(msg("files.api.index.matKetNoiKhiTaiTep")));
-    xhr.onabort = () => reject(new Error(msg("files.api.index.daHuy")));
+    xhr.onerror = () => reject(new Error(msg("files.api.index.connectionLostWhileUploadingThe")));
+    xhr.onabort = () => reject(new Error(msg("files.api.index.cancelled")));
     const form = new FormData();
     form.append("purpose", purpose);
     form.append("file", file);
@@ -42,13 +42,13 @@ export function uploadFile(file: File, purpose: ArtifactPurpose, onProgress: (pe
     let xhr = await sendRequest();
     if (xhr.status === 401) {
       const outcome = await refreshSession();
-      if (aborted) throw new Error(msg("files.api.index.daHuy"));
-      if (outcome === "unavailable") throw new Error(msg("files.api.index.heThongTamBanVuiLong"));
+      if (aborted) throw new Error(msg("files.api.index.cancelled"));
+      if (outcome === "unavailable") throw new Error(msg("files.api.index.theSystemIsBusyPlease"));
       if (outcome !== "expired") xhr = await sendRequest();
     }
     if (xhr.status >= 200 && xhr.status < 300) return xhr.response as UploadResult;
     const detail = (xhr.response as { detail?: string } | null)?.detail;
-    throw new Error(detail ?? msg("files.api.index.taiTepLenKhongThanhCong"));
+    throw new Error(detail ?? msg("files.api.index.uploadFailed"));
   })();
   return {
     promise,

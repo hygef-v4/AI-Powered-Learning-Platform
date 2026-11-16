@@ -17,9 +17,9 @@ import "../shared/styles/fonts.css";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await requestLocale();
   const t = await loadServerTranslator();
-  const name = t("shared.siteMetadata.nenTangHocTap");
-  const title = `${name} – ${t("shared.siteMetadata.dayVaHocHieuQuaHon")}`;
-  const description = t("shared.siteMetadata.quanLyLopHocTaiLieu");
+  const name = t("shared.siteMetadata.learningPlatform");
+  const title = `${name} – ${t("shared.siteMetadata.teachAndLearnBetterWith")}`;
+  const description = t("shared.siteMetadata.manageClassesMaterialsAssignmentsAnd");
   return {
     metadataBase: new URL(SITE_URL),
     title: { default: title, template: `%s · ${name}` },

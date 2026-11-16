@@ -39,11 +39,11 @@ export function ClassFilter({ classes, value, onChange, testId }: { classes: Cla
   };
   return (
     <div data-testid={testId}>
-      <Menu ariaLabel={msg("shared.ui.ClassFilter.locTheoLop")} variant="tool" align="right" className="w-60"
+      <Menu ariaLabel={msg("shared.ui.ClassFilter.filterByClass")} variant="tool" align="right" className="w-60"
         summaryClassName="!h-10 w-full rounded-lg border border-line bg-surface !px-2.5 text-left hover:!bg-surface hover:border-line-strong [&>svg:last-child]:ml-auto [&>svg:last-child]:shrink-0"
-        label={<ClassLabel subjectCode={current?.subjectCode ?? null} code={current?.code ?? msg("shared.ui.ClassFilter.tatCaLop")} term={current?.term} />}>
+        label={<ClassLabel subjectCode={current?.subjectCode ?? null} code={current?.code ?? msg("shared.ui.ClassFilter.allClasses")} term={current?.term} />}>
         <div className="flex max-h-72 w-[228px] flex-col gap-0.5 overflow-y-auto">
-          {buildOption("", null, msg("shared.ui.ClassFilter.tatCaLop"))}
+          {buildOption("", null, msg("shared.ui.ClassFilter.allClasses"))}
           {classes.map((c) => buildOption(c.classId, c.subjectCode, c.code, c.term))}
         </div>
       </Menu>

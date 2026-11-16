@@ -34,7 +34,7 @@ export function CreateQuizDialog({ onClose, onCreate, onCreated, copy }: Props) 
 
   const submit = async () => {
     if (!copying && invalid) {
-      setError(msg("quizzes.components.CreateQuizDialog.tenQuizTu1Den200"));
+      setError(msg("quizzes.components.CreateQuizDialog.theQuizNameMustBe"));
       return;
     }
     setBusy(true);
@@ -48,25 +48,25 @@ export function CreateQuizDialog({ onClose, onCreate, onCreated, copy }: Props) 
   };
 
   return (
-    <Dialog open onClose={onClose} dismissible={!busy} title={msg("quizzes.components.CreateQuizDialog.quizMoi")}
+    <Dialog open onClose={onClose} dismissible={!busy} title={msg("quizzes.components.CreateQuizDialog.newQuiz")}
       footer={
         <Button variant="primary" onClick={() => void submit()} disabled={busy} data-testid="create-quiz-submit">
-          {copying ? "Copy quiz" : msg("quizzes.components.CreateQuizDialog.taoQuiz")}
+          {copying ? "Copy quiz" : msg("quizzes.components.CreateQuizDialog.createQuiz")}
           {!busy && <Icon name="arrow_forward" size={15} />}
         </Button>
       }>
       <div className={copying ? "opacity-45 transition-opacity" : "transition-opacity"}>
-        <Field label={msg("quizzes.components.CreateQuizDialog.tenQuiz")} htmlFor={`${id}-title`} required={!copying}>
-          <TextInput id={`${id}-title`} value={title} maxLength={200} disabled={copying} placeholder={msg("quizzes.components.CreateQuizDialog.onTapChuong3")}
+        <Field label={msg("quizzes.components.CreateQuizDialog.quizName")} htmlFor={`${id}-title`} required={!copying}>
+          <TextInput id={`${id}-title`} value={title} maxLength={200} disabled={copying} placeholder={msg("quizzes.components.CreateQuizDialog.chapter3Review")}
             onChange={(event) => setTitle(event.target.value)}
             onKeyDown={(event) => { if (event.key === "Enter") void submit(); }} data-testid="create-quiz-title" />
         </Field>
       </div>
       {copy && (
-        <Select aria-label={msg("quizzes.components.CreateQuizDialog.copyQuizTuLopKhac")} value={sourceId} disabled={busy} data-testid="class-quizzes-copy"
+        <Select aria-label={msg("quizzes.components.CreateQuizDialog.copyAQuizFromAnother")} value={sourceId} disabled={busy} data-testid="class-quizzes-copy"
           onFocus={loadSources} onMouseDown={loadSources} onChange={(event) => setSourceId(event.target.value)}>
-          <option value="">{sources && sources.length === 0 ? msg("quizzes.components.CreateQuizDialog.khongCoQuizOLopKhac") : msg("quizzes.components.CreateQuizDialog.copyTuLopKhac")}</option>
-          {sources?.map((source) => <option key={source.id} value={source.id}>{source.title} · {source.itemCount} {msg("quizzes.components.CreateQuizDialog.cau")}</option>)}
+          <option value="">{sources && sources.length === 0 ? msg("quizzes.components.CreateQuizDialog.noQuizzesInOtherClasses") : msg("quizzes.components.CreateQuizDialog.copyFromAnotherClass")}</option>
+          {sources?.map((source) => <option key={source.id} value={source.id}>{source.title} · {source.itemCount} {msg("quizzes.components.CreateQuizDialog.questions")}</option>)}
         </Select>
       )}
       {error && <Alert tone="danger" role="alert">{error}</Alert>}

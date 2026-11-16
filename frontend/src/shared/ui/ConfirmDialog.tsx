@@ -15,7 +15,7 @@ type PendingConfirm = { title: string; confirmLabel: string; onConfirm: () => vo
 export function useConfirmDialog(): [ReactNode, (title: string, onConfirm: () => void, confirmLabel?: string) => void] {
   const [pending, setPending] = useState<PendingConfirm | null>(null);
 
-  const requestConfirm = useCallback((title: string, onConfirm: () => void, confirmLabel = msg("shared.ui.ConfirmDialog.boChinhSua")) => {
+  const requestConfirm = useCallback((title: string, onConfirm: () => void, confirmLabel = msg("shared.ui.ConfirmDialog.discardEdits")) => {
     setPending({ title, confirmLabel, onConfirm });
   }, []);
 

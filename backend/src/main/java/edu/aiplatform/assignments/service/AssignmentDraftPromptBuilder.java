@@ -21,13 +21,13 @@ final class AssignmentDraftPromptBuilder {
     static AiPrompt buildPrompt(Assignment assignment, String request, List<MaterialText> materials,
                           AssignmentCommands.DraftOptions requestedOptions) {
         AssignmentCommands.DraftOptions options = requestedOptions == null
-                ? new AssignmentCommands.DraftOptions("AUTO", "VI", null, null) : requestedOptions;
-        // Ngôn ngữ của đề AI (yêu cầu 2026-11-16 thêm tiếng Nhật); AUTO theo mẫu đề.
-        String language = switch (options.language() == null ? "VI" : options.language()) {
-            case "EN" -> "English";
+                ? new AssignmentCommands.DraftOptions("AUTO", "EN", null, null) : requestedOptions;
+        // Ngôn ngữ của đề AI (2026-11-16: thêm tiếng Nhật, mặc định tiếng Anh); AUTO theo mẫu đề.
+        String language = switch (options.language() == null ? "EN" : options.language()) {
+            case "VI" -> "Vietnamese";
             case "JA" -> "Japanese";
             case "AUTO" -> "the same language as the instructor's format template";
-            default -> "Vietnamese";
+            default -> "English";
         };
         String system = "You help university instructors prepare assessment drafts. Write all student-facing content in "
                 + language + ". This language setting takes priority over any language mentioned in the instructor "

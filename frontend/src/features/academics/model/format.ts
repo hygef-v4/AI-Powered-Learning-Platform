@@ -2,19 +2,19 @@ import { ApiError } from "@/shared/api/client";
 import { msg } from "@/i18n/msg";
 
 export function formatOperationError(cause: unknown) {
-  if (cause instanceof ApiError && cause.problem.status === 409) return msg("academics.model.format.duLieuDaThayDoiVui");
+  if (cause instanceof ApiError && cause.problem.status === 409) return msg("academics.model.format.theDataHasChangedPlease");
   // Nội dung server chưa kiểm chứng không được hiển thị SQL/stack trace cho người dùng.
-  return cause instanceof ApiError ? msg("academics.model.format.khongTheHoanTatThaoTac") : cause instanceof Error ? cause.message : msg("academics.model.format.khongTheHoanTatThaoTac");
+  return cause instanceof ApiError ? msg("academics.model.format.couldNotCompleteTheAction") : cause instanceof Error ? cause.message : msg("academics.model.format.couldNotCompleteTheAction");
 }
 
 export { formatDate } from "@/shared/dateTime";
 
 export type ClassFieldError = { field: "code" | "startsOn"; message: string };
 
-export const CLASS_START_DATE_REQUIRED = msg("academics.model.format.chonNgayBatDau");
-export const CLASS_START_DATE_RANGE = msg("academics.model.format.ngayBatDauPhaiTrongKhoang");
+export const CLASS_START_DATE_REQUIRED = msg("academics.model.format.chooseAStartDate");
+export const CLASS_START_DATE_RANGE = msg("academics.model.format.theStartDateMustBe");
 const CLASS_FIELD_ERRORS: Record<string, ClassFieldError> = {
-  CLASS_EXISTS: { field: "code", message: msg("academics.model.format.maLopDaTonTaiTrong") },
+  CLASS_EXISTS: { field: "code", message: msg("academics.model.format.thisClassCodeAlreadyExists") },
   INVALID_CLASS_START_DATE: { field: "startsOn", message: CLASS_START_DATE_RANGE },
 };
 

@@ -3,7 +3,7 @@ import { MyGroupPage } from "@/features/groups";
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.classes.id.group.page.nhom") };
+  return { title: await translateOnServer("app.classes.id.group.page.group") };
 }
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {

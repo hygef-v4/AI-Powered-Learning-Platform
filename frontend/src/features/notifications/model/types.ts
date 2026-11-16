@@ -17,13 +17,13 @@ export type NotificationFeed = {
 };
 export type EmailPreferences = Record<string, boolean>;
 export const preferenceLabels: Record<string, string> = {
-  ENROLLED: msg("notifications.model.types.ghiDanhVaoLop"),
-  ASSIGNMENT_OPENED: msg("notifications.model.types.baiTapMoiMo"),
-  DEADLINE_REMINDER: msg("notifications.model.types.nhacHanNop"),
-  GRADE_PUBLISHED: msg("notifications.model.types.congBoDiem"),
-  ANNOUNCEMENT_IMPORTANT: msg("notifications.model.types.thongBaoQuanTrongCuaLop"),
-  LEADER_CHANGE_REQUESTED: msg("notifications.model.types.yeuCauDoiTruongNhom"),
-  QUESTION_PROPOSED: msg("notifications.model.types.deXuatCauHoiChoDuyet"),
-  QUESTION_REVIEWED: msg("notifications.model.types.ketQuaDuyetCauHoi"),
-  BACKUP_FAILED: msg("notifications.model.types.saoLuuThatBai"),
+  ENROLLED: msg("notifications.model.types.enrolledInAClass"),
+  ASSIGNMENT_OPENED: msg("notifications.model.types.newAssignmentOpened"),
+  DEADLINE_REMINDER: msg("notifications.model.types.deadlineReminder"),
+  GRADE_PUBLISHED: msg("notifications.model.types.gradesPublished"),
+  ANNOUNCEMENT_IMPORTANT: msg("notifications.model.types.importantClassAnnouncement"),
+  LEADER_CHANGE_REQUESTED: msg("notifications.model.types.leaderChangeRequest"),
+  QUESTION_PROPOSED: msg("notifications.model.types.questionProposalsAwaitingApproval"),
+  QUESTION_REVIEWED: msg("notifications.model.types.questionReviewResults"),
+  BACKUP_FAILED: msg("notifications.model.types.backupFailed"),
 };

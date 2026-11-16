@@ -12,19 +12,19 @@ export function SubjectReadError({ error, onRetry }: { error: unknown; onRetry: 
   const status = error instanceof ApiError ? error.problem.status : null;
   const message =
     status === 401
-      ? msg("subjects.components.SubjectReadError.vuiLongDangNhapDeXem")
+      ? msg("subjects.components.SubjectReadError.pleaseSignInToView")
       : status === 403
-        ? msg("subjects.components.SubjectReadError.banKhongCoQuyenQuanTri")
+        ? msg("subjects.components.SubjectReadError.youDoNotHavePermission")
         : status === 404
-          ? msg("subjects.components.SubjectReadError.khongTimThayMonHoc")
-          : msg("subjects.components.SubjectReadError.khongTaiDuocDuLieuMon");
+          ? msg("subjects.components.SubjectReadError.subjectNotFound")
+          : msg("subjects.components.SubjectReadError.couldNotLoadSubjectData");
   return (
     <Alert
       tone="danger"
       role="alert"
       action={
         <Button size="sm" onClick={onRetry} data-testid="subjects-read-retry">
-          {msg("subjects.components.SubjectReadError.thuLai")}</Button>
+          {msg("subjects.components.SubjectReadError.retry")}</Button>
       }
     >
       {message}

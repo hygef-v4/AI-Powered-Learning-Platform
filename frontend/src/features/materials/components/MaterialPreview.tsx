@@ -37,7 +37,7 @@ export function DownloadButton({ material, classId }: { material: Material; clas
         disabled={busy}
         onClick={() => void handleDownload()}
       >
-        {msg("materials.components.MaterialPreview.taiXuong")}</Button>
+        {msg("materials.components.MaterialPreview.download")}</Button>
       {error && (
         <span role="alert" className="text-xs text-danger">
           {error}
@@ -89,7 +89,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
           target="_blank"
           rel="noopener noreferrer"
         >
-          {msg("materials.components.MaterialPreview.moTrenYoutube")}<Icon name="arrow_forward" size={13} className="-rotate-45" />
+          {msg("materials.components.MaterialPreview.openOnYoutube")}<Icon name="arrow_forward" size={13} className="-rotate-45" />
         </a>
         {valid ? (
           <iframe
@@ -103,7 +103,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
           />
         ) : (
           <div className="flex aspect-video w-full items-center justify-center rounded-xl bg-black text-sm text-white/70">
-            {msg("materials.components.MaterialPreview.khongPhatDuocVideo")}</div>
+            {msg("materials.components.MaterialPreview.couldNotPlayTheVideo")}</div>
         )}
       </div>
     );
@@ -122,7 +122,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
             icon="refresh"
             onClick={() => setRevision((v) => v + 1)}
           >
-            {msg("materials.components.MaterialPreview.thuLai")}</Button>
+            {msg("materials.components.MaterialPreview.retry")}</Button>
         </div>
       );
     if (!current?.blob)
@@ -131,7 +131,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
           role="status"
           className="flex h-[calc(100dvh-13rem)] min-h-[360px] sm:min-h-[560px] items-center justify-center rounded-xl bg-viewer text-sm text-white/75"
         >
-          {msg("materials.components.MaterialPreview.dangMoTep")}</div>
+          {msg("materials.components.MaterialPreview.openingFile")}</div>
       );
     return (
       <DocumentViewer

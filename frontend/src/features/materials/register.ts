@@ -16,7 +16,7 @@ contextNavEntries.register({
   roles: ["SUBJECT_MANAGER", "TEACHER", "STUDENT"],
   resolve: resolveModuleContext,
 });
-subjectNavEntries.register({ key: "manager-materials", order: 30, title: msg("materials.register.hocLieu"), icon: "folder_open", path: "/manager/materials" });
+subjectNavEntries.register({ key: "manager-materials", order: 30, title: msg("materials.register.learningMaterial"), icon: "folder_open", path: "/manager/materials" });
 teacherClassTabs.register({ key: "u13-materials", order: 50, component: ({ classId, tab }) => tab === "materials" ? createElement(ClassMaterialsTab, { classId }) : null });
 studentClassSections.register({ key: "u13-materials", order: 10, component: ClassMaterialsCard });
 assignmentMaterialSections.register({ key: "u13-materials", order: 30, component: MaterialLinkList });

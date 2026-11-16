@@ -4,7 +4,7 @@ import { AuditLogPage } from "@/features/audit/pages/AuditLogPage";
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.admin.audit.page.nhatKyAudit") };
+  return { title: await translateOnServer("app.admin.audit.page.auditLog") };
 }
 
 export default function Page() {

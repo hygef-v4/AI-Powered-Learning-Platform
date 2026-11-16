@@ -3,7 +3,7 @@ import { SubjectMaterialListPage } from "@/features/materials/components/Materia
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.manager.materials.page.hocLieu") };
+  return { title: await translateOnServer("app.manager.materials.page.learningMaterials") };
 }
 
 // U13 Học liệu của môn; `?subjectId=` chọn sẵn môn (sidebar của môn).

@@ -8,5 +8,5 @@ import { QuestionProposalsSection } from "./components/QuestionProposalsSection"
 import { msg } from "@/i18n/msg";
 
 teacherClassTabs.register({ key: "quiz-question-proposals", order: 60, component: ({ classId, tab }) => tab === "materials" ? createElement(QuestionProposalsSection, { classId }) : null });
-subjectNavEntries.register({ key: "manager-questions", order: 50, title: msg("quizzes.register.nganHangCauHoi"), icon: "help_center", path: "/manager/questions" });
+subjectNavEntries.register({ key: "manager-questions", order: 50, title: msg("quizzes.register.questionBank"), icon: "help_center", path: "/manager/questions" });
 

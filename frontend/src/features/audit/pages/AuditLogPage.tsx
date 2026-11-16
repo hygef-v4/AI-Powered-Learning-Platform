@@ -65,8 +65,8 @@ export function AuditLogPage() {
     setData(null);
     setError(
       e instanceof ApiError && e.problem.status === 403
-        ? msg("audit.pages.AuditLogPage.banKhongCoQuyenXemNhat")
-        : msg("audit.pages.AuditLogPage.khongTaiDuocNhatKyAudit"),
+        ? msg("audit.pages.AuditLogPage.youDoNotHavePermission")
+        : msg("audit.pages.AuditLogPage.couldNotLoadTheAudit"),
     );
     setLoading(false);
   };
@@ -120,7 +120,7 @@ export function AuditLogPage() {
 
   return (
     <>
-      <PageHeader title={msg("audit.pages.AuditLogPage.nhatKy")} />
+      <PageHeader title={msg("audit.pages.AuditLogPage.log")} />
       {/* Bộ lọc dính dưới thanh trên cùng khi cuộn; khi dính thì phủ nền cả khoảng trên card để dòng bảng không lộ ra. */}
       <div ref={sentinel} aria-hidden="true" className="-mb-7 h-px" />
       <div
@@ -139,7 +139,7 @@ export function AuditLogPage() {
       )}
       {loading && !data && (
         <p className="text-[13px] text-muted" data-testid="audit-loading">
-          {msg("audit.pages.AuditLogPage.dangTai")}</p>
+          {msg("audit.pages.AuditLogPage.loading")}</p>
       )}
       {data && (
         <div className={loading ? "opacity-60" : undefined} aria-busy={loading}>

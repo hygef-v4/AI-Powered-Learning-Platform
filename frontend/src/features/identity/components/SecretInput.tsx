@@ -16,7 +16,7 @@ export function SecretInput(props: Omit<InputHTMLAttributes<HTMLInputElement>, "
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          aria-label={visible ? msg("identity.components.SecretInput.anMatKhau") : msg("identity.components.SecretInput.hienMatKhau")}
+          aria-label={visible ? msg("identity.components.SecretInput.hidePassword") : msg("identity.components.SecretInput.showPassword")}
           className="-mr-1.5 flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink"
         >
           <Icon name={visible ? "visibility_off" : "visibility"} size={18} />

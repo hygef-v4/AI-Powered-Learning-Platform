@@ -3,7 +3,7 @@ import { QuestionDetailPage } from "@/features/quizzes/pages/QuestionDetailPage"
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.manager.questions.id.page.cauHoi") };
+  return { title: await translateOnServer("app.manager.questions.id.page.questions") };
 }
 
 // U10 #20 Question Detail; id "new" là thêm câu vào môn ?subjectId=.

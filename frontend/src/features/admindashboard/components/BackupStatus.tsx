@@ -9,7 +9,7 @@ import type { BackupHistoryPage, BackupRunItem, BackupSectionView } from "../mod
 import { msg } from "@/i18n/msg";
 
 const BACKUP_STATE_LABELS: Record<BackupRunItem["state"], string> = {
-  CREATED: msg("admindashboard.components.BackupStatus.dangCho"), RUNNING: msg("admindashboard.components.BackupStatus.dangChay"), SUCCESS: msg("admindashboard.components.BackupStatus.thanhCong"), FAILED: msg("admindashboard.components.BackupStatus.thatBai"),
+  CREATED: msg("admindashboard.components.BackupStatus.pending"), RUNNING: msg("admindashboard.components.BackupStatus.running"), SUCCESS: msg("admindashboard.components.BackupStatus.succeeded"), FAILED: msg("admindashboard.components.BackupStatus.failed"),
 };
 const formatDateTime = (value: string | null) => value
   ? new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", dateStyle: "short", timeStyle: "short" }).format(new Date(value))
@@ -21,26 +21,26 @@ export function BackupStatus({ backup }: { backup: BackupSectionView }) {
   const schedule = backup.schedule.data;
   const latest = backup.latest.data;
   return (
-    <section aria-label={msg("admindashboard.components.BackupStatus.trangThaiSaoLuu")} className="space-y-3 border-t border-line pt-3 text-xs">
+    <section aria-label={msg("admindashboard.components.BackupStatus.backupStatus")} className="space-y-3 border-t border-line pt-3 text-xs">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-semibold">{!schedule ? msg("admindashboard.components.BackupStatus.khongKhaDung") : schedule.enabled ? msg("admindashboard.components.BackupStatus.saoLuuDaBat") : msg("admindashboard.components.BackupStatus.saoLuuChuaBat")}</p>
-        <Link href="/admin/settings" className="font-semibold text-primary-ink underline underline-offset-2">{msg("admindashboard.components.BackupStatus.caiDatSaoLuu")}</Link>
+        <p className="font-semibold">{!schedule ? msg("admindashboard.components.BackupStatus.unavailable") : schedule.enabled ? msg("admindashboard.components.BackupStatus.backupEnabled") : msg("admindashboard.components.BackupStatus.backupNotEnabled")}</p>
+        <Link href="/admin/settings" className="font-semibold text-primary-ink underline underline-offset-2">{msg("admindashboard.components.BackupStatus.backupSettings")}</Link>
       </div>
       {schedule?.enabled && (
-        <p className="text-muted">{msg("admindashboard.components.BackupStatus.hangNgay")}{schedule.dailyAt ?? "—"} ({schedule.timeZone}{msg("admindashboard.components.BackupStatus.lanToi")}{formatDateTime(schedule.nextPlannedAt)}</p>
+        <p className="text-muted">{msg("admindashboard.components.BackupStatus.dailyAt")}{schedule.dailyAt ?? "—"} ({schedule.timeZone}{msg("admindashboard.components.BackupStatus.nextRun")}{formatDateTime(schedule.nextPlannedAt)}</p>
       )}
       <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1.5 [&_dd]:break-words [&_dd]:text-right">
-        <dt>{msg("admindashboard.components.BackupStatus.lanGanNhat")}</dt><dd>{backup.latest.availability === "UNAVAILABLE" ? msg("admindashboard.components.BackupStatus.khongKhaDung") : latest ? BACKUP_STATE_LABELS[latest.state] : msg("admindashboard.components.BackupStatus.chuaCoLanSaoLuuNao")}</dd>
+        <dt>{msg("admindashboard.components.BackupStatus.lastRun")}</dt><dd>{backup.latest.availability === "UNAVAILABLE" ? msg("admindashboard.components.BackupStatus.unavailable") : latest ? BACKUP_STATE_LABELS[latest.state] : msg("admindashboard.components.BackupStatus.noBackupsYet")}</dd>
         {latest && <>
-          <dt>{msg("admindashboard.components.BackupStatus.batDau")}</dt><dd>{formatDateTime(latest.startedAt)}</dd>
-          <dt>{msg("admindashboard.components.BackupStatus.ketThuc")}</dt><dd>{formatDateTime(latest.completedAt)}</dd>
-          <dt>{msg("admindashboard.components.BackupStatus.dungLuong")}</dt><dd>{formatBytes(latest.byteSize)}</dd>
+          <dt>{msg("admindashboard.components.BackupStatus.start")}</dt><dd>{formatDateTime(latest.startedAt)}</dd>
+          <dt>{msg("admindashboard.components.BackupStatus.end")}</dt><dd>{formatDateTime(latest.completedAt)}</dd>
+          <dt>{msg("admindashboard.components.BackupStatus.size")}</dt><dd>{formatBytes(latest.byteSize)}</dd>
         </>}
-        <dt>{msg("admindashboard.components.BackupStatus.thanhCongGanNhat")}</dt>
-        <dd>{backup.latestSuccessfulAt.availability === "UNAVAILABLE" ? msg("admindashboard.components.BackupStatus.khongKhaDung") : backup.latestSuccessfulAt.data ? formatDateTime(backup.latestSuccessfulAt.data) : msg("admindashboard.components.BackupStatus.chuaCoBanSaoLuuThanh")}</dd>
+        <dt>{msg("admindashboard.components.BackupStatus.lastSuccess")}</dt>
+        <dd>{backup.latestSuccessfulAt.availability === "UNAVAILABLE" ? msg("admindashboard.components.BackupStatus.unavailable") : backup.latestSuccessfulAt.data ? formatDateTime(backup.latestSuccessfulAt.data) : msg("admindashboard.components.BackupStatus.noSuccessfulBackupYet")}</dd>
       </dl>
       {latest?.safeError && <p className="break-words text-danger" role="status">{latest.safeError}</p>}
-      <p className="text-muted">{msg("admindashboard.components.BackupStatus.thatBaiTrong7Ngay")}{backup.failuresLast7Days.data?.count ?? msg("admindashboard.components.BackupStatus.khongKhaDung")}</p>
+      <p className="text-muted">{msg("admindashboard.components.BackupStatus.failuresIn7Days")}{backup.failuresLast7Days.data?.count ?? msg("admindashboard.components.BackupStatus.unavailable")}</p>
       <BackupHistory />
     </section>
   );
@@ -68,22 +68,22 @@ function BackupHistory() {
   }, [open, page, attempt]);
   return <>
     <Button size="sm" variant="secondary" aria-expanded={open} aria-controls="backup-history" onClick={() => setOpen(!open)}>
-      {open ? msg("admindashboard.components.BackupStatus.anLichSuSaoLuu") : msg("admindashboard.components.BackupStatus.xemLichSuSaoLuu")}
+      {open ? msg("admindashboard.components.BackupStatus.hideBackupHistory") : msg("admindashboard.components.BackupStatus.viewBackupHistory")}
     </Button>
-    {open && <section id="backup-history" aria-label={msg("admindashboard.components.BackupStatus.lichSuSaoLuu")} className="min-w-0 space-y-3">
-      {result.error ? <Alert tone="danger" action={<Button size="sm" onClick={() => setAttempt(attempt + 1)}>{msg("admindashboard.components.BackupStatus.thuLai")}</Button>}>{msg("admindashboard.components.BackupStatus.khongTaiDuocLichSuSao")}</Alert>
-        : !result.data ? <p role="status">{msg("admindashboard.components.BackupStatus.dangTaiLichSuSaoLuu")}</p>
+    {open && <section id="backup-history" aria-label={msg("admindashboard.components.BackupStatus.backupHistory")} className="min-w-0 space-y-3">
+      {result.error ? <Alert tone="danger" action={<Button size="sm" onClick={() => setAttempt(attempt + 1)}>{msg("admindashboard.components.BackupStatus.retry")}</Button>}>{msg("admindashboard.components.BackupStatus.couldNotLoadBackupHistory")}</Alert>
+        : !result.data ? <p role="status">{msg("admindashboard.components.BackupStatus.loadingBackupHistory")}</p>
           : <>
-            {result.data.items.length === 0 ? <p>{msg("admindashboard.components.BackupStatus.chuaCoLichSuSaoLuu")}</p> : <TableFrame>
-              <caption className="sr-only">{msg("admindashboard.components.BackupStatus.cacLanSaoLuu")}</caption>
-              <thead><tr><Th>{msg("admindashboard.components.BackupStatus.ngay")}</Th><Th>{msg("admindashboard.components.BackupStatus.trangThai")}</Th><Th>{msg("admindashboard.components.BackupStatus.batDauKetThuc")}</Th><Th>{msg("admindashboard.components.BackupStatus.dungLuong")}</Th><Th>{msg("admindashboard.components.BackupStatus.loi")}</Th></tr></thead>
+            {result.data.items.length === 0 ? <p>{msg("admindashboard.components.BackupStatus.noBackupHistoryYet")}</p> : <TableFrame>
+              <caption className="sr-only">{msg("admindashboard.components.BackupStatus.backupRuns")}</caption>
+              <thead><tr><Th>{msg("admindashboard.components.BackupStatus.date")}</Th><Th>{msg("admindashboard.components.BackupStatus.status")}</Th><Th>{msg("admindashboard.components.BackupStatus.startEnd")}</Th><Th>{msg("admindashboard.components.BackupStatus.size")}</Th><Th>{msg("admindashboard.components.BackupStatus.error")}</Th></tr></thead>
               <tbody>{result.data.items.map((run) => <tr key={run.scheduledFor}>
                 <Td>{run.scheduledFor}</Td><Td>{BACKUP_STATE_LABELS[run.state]}</Td>
                 <Td>{formatDateTime(run.startedAt)} / {formatDateTime(run.completedAt)}</Td><Td>{formatBytes(run.byteSize)}</Td>
                 <Td className="max-w-64 whitespace-normal break-words">{run.safeError ?? "—"}</Td>
               </tr>)}</tbody>
             </TableFrame>}
-            {result.data.totalElements > 0 && <Pagination page={page} pageSize={20} total={result.data.totalElements} onPageChange={setPage} itemLabel={msg("admindashboard.components.BackupStatus.lanSaoLuu")} />}
+            {result.data.totalElements > 0 && <Pagination page={page} pageSize={20} total={result.data.totalElements} onPageChange={setPage} itemLabel={msg("admindashboard.components.BackupStatus.backupRuns2")} />}
           </>}
     </section>}
   </>;

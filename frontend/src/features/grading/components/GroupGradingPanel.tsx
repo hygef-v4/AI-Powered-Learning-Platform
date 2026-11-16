@@ -27,7 +27,7 @@ export function GroupGradingPanel({ mode, onModeChange, open, onClose, rubric, c
     panel.current?.focus({ preventScroll: true });
     return () => { if (previous?.isConnected) previous.focus({ preventScroll: true }); };
   }, [wide, open]);
-  return <div ref={panel} role="region" aria-label={msg("grading.components.GroupGradingPanel.chamBaiNhom")} tabIndex={-1}
+  return <div ref={panel} role="region" aria-label={msg("grading.components.GroupGradingPanel.gradeGroupWork")} tabIndex={-1}
     hidden={!wide && !open}
     onKeyDown={(event) => {
       if (!wide && event.key === "Escape") { event.stopPropagation(); onClose(); }
@@ -35,10 +35,10 @@ export function GroupGradingPanel({ mode, onModeChange, open, onClose, rubric, c
     className={wide ? "min-w-0 rounded-xl border border-line bg-surface p-3"
       : "fixed inset-x-3 bottom-3 z-40 max-h-[75dvh] overflow-y-auto rounded-xl border border-line-strong bg-surface p-3 shadow-xl"}>
     <div className="flex items-center gap-2">
-      <Tabs items={[{ key: "rubric", label: msg("grading.components.GroupGradingPanel.rubricNhom") }, { key: "members", label: msg("grading.components.GroupGradingPanel.thanhVien") }]}
-        value={mode} onChange={onModeChange} label={msg("grading.components.GroupGradingPanel.chamNhom")} className="min-w-0 flex-1 gap-4" panelId="group-grading-content" />
-      {!wide && <Button size="sm" variant="ghost" icon="close" aria-label={msg("grading.components.GroupGradingPanel.dongKhungCham")} onClick={onClose}>
-        <span className="sr-only">{msg("grading.components.GroupGradingPanel.dong")}</span>
+      <Tabs items={[{ key: "rubric", label: msg("grading.components.GroupGradingPanel.groupRubric") }, { key: "members", label: msg("grading.components.GroupGradingPanel.members") }]}
+        value={mode} onChange={onModeChange} label={msg("grading.components.GroupGradingPanel.groupGrading")} className="min-w-0 flex-1 gap-4" panelId="group-grading-content" />
+      {!wide && <Button size="sm" variant="ghost" icon="close" aria-label={msg("grading.components.GroupGradingPanel.closeGradingPanel")} onClick={onClose}>
+        <span className="sr-only">{msg("grading.components.GroupGradingPanel.close")}</span>
       </Button>}
     </div>
     <div id="group-grading-content" role="tabpanel" aria-labelledby={tabId("group-grading-content", mode)} className="mt-3">

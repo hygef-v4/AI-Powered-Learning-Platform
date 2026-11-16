@@ -61,7 +61,7 @@ export function resolveModuleContext({ pathname, search }: NavLocation): NavCont
     const attemptId = decodeURIComponent(attempt[1]!);
     return {
       key: `quiz-attempt-modules:${attemptId}`,
-      label: msg("materials.components.ModuleNav.danhSachModule"),
+      label: msg("materials.components.ModuleNav.moduleList"),
       header: <AttemptModuleNav attemptId={attemptId} submitted={Boolean(attempt[2])} />,
       items: [],
     };
@@ -71,7 +71,7 @@ export function resolveModuleContext({ pathname, search }: NavLocation): NavCont
   if (!source) return null;
   return {
     key: `material-modules:${classId ?? "subject"}`,
-    label: msg("materials.components.ModuleNav.danhSachModule"),
+    label: msg("materials.components.ModuleNav.moduleList"),
     header: <ModuleNav source={source} classId={classId} />,
     items: [],
   };
@@ -97,10 +97,10 @@ function AttemptModuleNav({ attemptId, submitted }: { attemptId: string; submitt
   if (!owner) {
     return (
       <div className="mb-3 shrink-0 border-b border-line pb-3.5">
-        <BackLink href="/quiz-practice" title={msg("materials.components.ModuleNav.luyenTapQuiz")}
+        <BackLink href="/quiz-practice" title={msg("materials.components.ModuleNav.quizPractice")}
           className="inline-flex max-w-full items-center gap-2.5 rounded-md px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-muted transition-colors hover:text-ink">
           <Icon name="arrow_back" size={17} className="shrink-0" />
-          <span className={FADE_LABEL}>{msg("materials.components.ModuleNav.luyenTapQuiz")}</span>
+          <span className={FADE_LABEL}>{msg("materials.components.ModuleNav.quizPractice")}</span>
         </BackLink>
       </div>
     );
@@ -147,19 +147,19 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
       <div className="mb-3 shrink-0 border-b border-line pb-3.5">
         <BackLink
           href={back}
-          title={msg("materials.components.ModuleNav.hocLieu")}
+          title={msg("materials.components.ModuleNav.learningMaterials")}
           className="inline-flex max-w-full items-center gap-2.5 rounded-md px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-muted transition-colors hover:text-ink"
         >
           <Icon name="arrow_back" size={17} className="shrink-0" />
-          <span className={FADE_LABEL}>{msg("materials.components.ModuleNav.hocLieu")}</span>
+          <span className={FADE_LABEL}>{msg("materials.components.ModuleNav.learningMaterials")}</span>
         </BackLink>
       </div>
       <nav
-        aria-label={msg("materials.components.ModuleNav.danhSachModule")}
+        aria-label={msg("materials.components.ModuleNav.moduleList")}
         className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto"
       >
         {!outline && (
-          <span className={cx("px-2.5 py-2 text-[13px] text-muted", FADE_LABEL)}>{msg("materials.components.ModuleNav.dangTai")}</span>
+          <span className={cx("px-2.5 py-2 text-[13px] text-muted", FADE_LABEL)}>{msg("materials.components.ModuleNav.loading")}</span>
         )}
         {scope && outline && outline.length > 0 && (
           <Card padding="none" className="flex flex-col p-1 shadow-xs">
@@ -185,8 +185,8 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                       <SidebarToolButton
                         icon="add"
                         iconSize={15}
-                        label={msg("materials.components.ModuleNav.taoHocLieuTrong", { title: String(module.title) })}
-                        title={msg("materials.components.ModuleNav.taoHocLieu")}
+                        label={msg("materials.components.ModuleNav.createLearningMaterialIn", { title: String(module.title) })}
+                        title={msg("materials.components.ModuleNav.createLearningMaterial")}
                         onClick={(event) => {
                           event.stopPropagation();
                           setDialog({ type: "item", module });
@@ -198,8 +198,8 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                       className={CHEVRON}
                       aria-expanded={open}
                       aria-controls={`nav-module-${module.id}`}
-                      aria-label={open ? msg("materials.components.ModuleNav.thuGon", { title: String(module.title) }) : msg("materials.components.ModuleNav.mo", { title: String(module.title) })}
-                      title={open ? msg("materials.components.ModuleNav.thuGon2") : msg("materials.components.ModuleNav.mo2")}
+                      aria-label={open ? msg("materials.components.ModuleNav.collapse", { title: String(module.title) }) : msg("materials.components.ModuleNav.expand", { title: String(module.title) })}
+                      title={open ? msg("materials.components.ModuleNav.collapse2") : msg("materials.components.ModuleNav.expand2")}
                     >
                       <Icon
                         name="expand_more"
@@ -215,7 +215,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                     <div className="flex flex-col gap-0.5 pb-0.5">
                       {items.length === 0 && (
                         <span className={cx("px-2.5 py-1 text-[12.5px] text-faint", FADE_LABEL)}>
-                          {msg("materials.components.ModuleNav.chuaCoHocLieu")}</span>
+                          {msg("materials.components.ModuleNav.noLearningMaterialsYet")}</span>
                       )}
                       {items.map((item) => {
                         const active = isActive(item);
@@ -255,14 +255,14 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                               <span className="absolute top-1/2 right-1.5 hidden -translate-y-1/2 items-center group-hover/item:flex group-focus-within/item:flex">
                                 <SidebarToolButton
                                   icon="lock_open"
-                                  label={msg("materials.components.ModuleNav.moLai", { value: String(resolveItemTitle(item)) })}
+                                  label={msg("materials.components.ModuleNav.reopen", { value: String(resolveItemTitle(item)) })}
                                   onClick={() =>
                                     void reopen(item.quiz.quizId, scope).then(
                                       () => {
-                                        showToast(msg("materials.components.ModuleNav.daMoLaiQuiz"));
+                                        showToast(msg("materials.components.ModuleNav.quizReopened"));
                                         notifyOutlineChanged();
                                       },
-                                      () => showErrorToast(msg("materials.components.ModuleNav.khongMoLaiDuocQuiz")),
+                                      () => showErrorToast(msg("materials.components.ModuleNav.couldNotReopenTheQuiz")),
                                     )
                                   }
                                 />
@@ -272,7 +272,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                               <span className="absolute top-1/2 right-1.5 hidden -translate-y-1/2 items-center gap-0.5 group-hover/item:flex group-focus-within/item:flex">
                                 <SidebarToolButton
                                   icon="edit"
-                                  label={msg("materials.components.ModuleNav.sua", { value: String(resolveItemTitle(item)) })}
+                                  label={msg("materials.components.ModuleNav.edit", { value: String(resolveItemTitle(item)) })}
                                   onClick={() => setDialog({ type: "item", module, item })}
                                 />
                                 <SidebarToolButton

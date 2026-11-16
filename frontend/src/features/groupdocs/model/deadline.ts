@@ -34,17 +34,17 @@ export function describeDeadline(
   if (remaining <= 0 || (!late && remaining > DEADLINE_WARNING_MS)) return null;
 
   const title = late
-    ? msg("groupdocs.model.deadline.daQuaHanNopBayGio", { value: String(formatClock(view.closesAt)), value2: String(countMinutes(remaining)), value3: String(formatClock(cutoffIso)) })
-    : msg("groupdocs.model.deadline.conPhutToiHanNop", { value: String(countMinutes(remaining)), value2: String(formatClock(view.closesAt)) });
+    ? msg("groupdocs.model.deadline.theDeadlineHasPassedSubmitting", { value: String(formatClock(view.closesAt)), value2: String(countMinutes(remaining)), value3: String(formatClock(cutoffIso)) })
+    : msg("groupdocs.model.deadline.minutesLeftUntilTheDeadline", { value: String(countMinutes(remaining)), value2: String(formatClock(view.closesAt)) });
   const open = view.sections.filter((s) => s.status === "OPEN").length;
   const claimed = view.sections.filter((s) => s.status === "CLAIMED").length;
   const details: string[] = [];
-  if (open > 0) details.push(msg("groupdocs.model.deadline.mucChuaAiLamSeKhong", { open: String(open) }));
+  if (open > 0) details.push(msg("groupdocs.model.deadline.sectionsNobodyHasWorkedOn", { open: String(open) }));
   if (claimed > 0) {
-    details.push(msg("groupdocs.model.deadline.mucDangSoanHayBamXong", { claimed: String(claimed) }));
+    details.push(msg("groupdocs.model.deadline.sectionsAreBeingWrittenClick", { claimed: String(claimed) }));
   }
-  if (open === 0 && claimed === 0) details.push(msg("groupdocs.model.deadline.moiMucDaXong"));
-  if (!view.lastSubmission) details.push(msg("groupdocs.model.deadline.nhomChuaNopBanNaoTruong"));
+  if (open === 0 && claimed === 0) details.push(msg("groupdocs.model.deadline.allSectionsAreDone"));
+  if (!view.lastSubmission) details.push(msg("groupdocs.model.deadline.theGroupHasNotSubmitted"));
   return { tone: late || remaining <= 5 * 60_000 ? "danger" : "warning", title, details };
 }
 

@@ -68,7 +68,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
           setView(loaded);
           setError(null);
         },
-        (e: unknown) => setError(e instanceof ApiError && e.problem.status === 404 ? msg("groupdocs.pages.GroupWorkspacePage.khongTimThayTaiLieuNhom") : msg("groupdocs.pages.GroupWorkspacePage.khongTaiDuocTaiLieuNhom")),
+        (e: unknown) => setError(e instanceof ApiError && e.problem.status === 404 ? msg("groupdocs.pages.GroupWorkspacePage.groupDocumentNotFound") : msg("groupdocs.pages.GroupWorkspacePage.couldNotLoadTheGroup")),
       ),
     [documentId],
   );
@@ -80,7 +80,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         if (active) setView(loaded);
       },
       (e: unknown) => {
-        if (active) setError(e instanceof ApiError && e.problem.status === 404 ? msg("groupdocs.pages.GroupWorkspacePage.khongTimThayTaiLieuNhom") : msg("groupdocs.pages.GroupWorkspacePage.khongTaiDuocTaiLieuNhom"));
+        if (active) setError(e instanceof ApiError && e.problem.status === 404 ? msg("groupdocs.pages.GroupWorkspacePage.groupDocumentNotFound") : msg("groupdocs.pages.GroupWorkspacePage.couldNotLoadTheGroup"));
       },
     );
     return () => {
@@ -121,7 +121,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     const entries = buildOutline(view.sharedBlocks.blocks).map((entry) =>
       entry.number && entry.title.startsWith(entry.number) ? { ...entry, title: entry.title.slice(entry.number.length).trim() } : entry,
     );
-    publishOutline({ assignmentId: view.assignmentId, backHref, backLabel: msg("groupdocs.pages.GroupWorkspacePage.baiTap"), entries });
+    publishOutline({ assignmentId: view.assignmentId, backHref, backLabel: msg("groupdocs.pages.GroupWorkspacePage.assignment"), entries });
   }, [view]);
   useEffect(() => () => publishOutline(null), []);
 
@@ -141,7 +141,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      setNotice(msg("groupdocs.pages.GroupWorkspacePage.khongTaiDuocDocx"));
+      setNotice(msg("groupdocs.pages.GroupWorkspacePage.couldNotDownloadTheDocx"));
     }
   };
 
@@ -164,12 +164,12 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
       clearInvalid(s.id);
       openEditor(claimed);
     } catch (e) {
-      setNotice(e instanceof ApiError ? (e.problem.detail ?? msg("groupdocs.pages.GroupWorkspacePage.khongNhanDuocMuc")) : msg("groupdocs.pages.GroupWorkspacePage.khongNhanDuocMuc"));
+      setNotice(e instanceof ApiError ? (e.problem.detail ?? msg("groupdocs.pages.GroupWorkspacePage.couldNotTakeTheSection")) : msg("groupdocs.pages.GroupWorkspacePage.couldNotTakeTheSection"));
     }
   };
 
   if (error && !view) return <PageLoadError>{error}</PageLoadError>;
-  if (!view || !groupDocument) return <PageLoading label={msg("groupdocs.pages.GroupWorkspacePage.dangTaiTaiLieuNhom")} />;
+  if (!view || !groupDocument) return <PageLoading label={msg("groupdocs.pages.GroupWorkspacePage.loadingGroupDocument")} />;
 
   const me = view.role;
   const editable = view.status === "IN_PROGRESS" && view.window !== "CLOSED";
@@ -194,7 +194,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   const nodeActions = Object.fromEntries(view.sections.map((s) => [s.partId, (
     <div key={s.id} role="group" aria-label={s.title} className="flex items-center gap-1.5">
       <Pill tone={SECTION_STATUS[s.status].tone}>{SECTION_STATUS[s.status].text}</Pill>
-      <Button size="sm" variant="ghost" icon="history" onClick={() => setHistory(s)}>{msg("groupdocs.pages.GroupWorkspacePage.lichSu")}</Button>
+      <Button size="sm" variant="ghost" icon="history" onClick={() => setHistory(s)}>{msg("groupdocs.pages.GroupWorkspacePage.history")}</Button>
     </div>
   )]));
   // Thẻ phân công bên phải, ngang tiêu đề mục như thẻ rubric: người làm và các nút nhận, giao, nhả mục.
@@ -211,30 +211,30 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
           <p className="flex items-center gap-2 text-[13px]">
             <Icon name="person" size={16} filled={resolveSectionPerson(s) !== null}
               className={cx("shrink-0", resolveSectionPerson(s) !== null ? "text-primary-ink" : "text-muted")} />
-            <span className="text-muted">{msg("groupdocs.pages.GroupWorkspacePage.nguoiLam")}</span>
+            <span className="text-muted">{msg("groupdocs.pages.GroupWorkspacePage.author")}</span>
             <span className="ml-auto min-w-0 truncate font-semibold text-ink">{resolveName(resolveSectionPerson(s))}</span>
           </p>
           {editable && (me.member || me.teacher) && (
             <div className="flex flex-wrap gap-1.5">
               {isClaimable(s) && (
-                <Button size="sm" variant="primary" onClick={() => handleClaim(s)}>{s.status === "DONE" ? msg("groupdocs.pages.GroupWorkspacePage.suaMuc") : msg("groupdocs.pages.GroupWorkspacePage.nhanMuc")}</Button>
+                <Button size="sm" variant="primary" onClick={() => handleClaim(s)}>{s.status === "DONE" ? msg("groupdocs.pages.GroupWorkspacePage.editSection") : msg("groupdocs.pages.GroupWorkspacePage.takeSection")}</Button>
               )}
-              {mine && <Button size="sm" variant="primary" onClick={() => openEditor(s)}>{msg("groupdocs.pages.GroupWorkspacePage.soanTiep")}</Button>}
-              {me.leader && <Button size="sm" onClick={() => setAssigning(s)}>{msg("groupdocs.pages.GroupWorkspacePage.giaoMuc")}</Button>}
+              {mine && <Button size="sm" variant="primary" onClick={() => openEditor(s)}>{msg("groupdocs.pages.GroupWorkspacePage.continueWriting")}</Button>}
+              {me.leader && <Button size="sm" onClick={() => setAssigning(s)}>{msg("groupdocs.pages.GroupWorkspacePage.assignSection")}</Button>}
               {s.status === "CLAIMED" && (mine || me.leader || me.teacher) && (
-                <Button size="sm" variant="ghost" className="text-danger! hover:bg-danger-soft" onClick={() => setReleasing(s)}>{msg("groupdocs.pages.GroupWorkspacePage.nhaMuc")}</Button>
+                <Button size="sm" variant="ghost" className="text-danger! hover:bg-danger-soft" onClick={() => setReleasing(s)}>{msg("groupdocs.pages.GroupWorkspacePage.releaseSection")}</Button>
               )}
             </div>
           )}
-          {failed.has(s.id) && <p className="text-xs text-danger">{msg("groupdocs.pages.GroupWorkspacePage.mucNayChuaXong")}</p>}
+          {failed.has(s.id) && <p className="text-xs text-danger">{msg("groupdocs.pages.GroupWorkspacePage.thisSectionIsNotDone")}</p>}
         </section>
       ),
     };
   });
-  const title = view.assignmentTitle ?? msg("groupdocs.pages.GroupWorkspacePage.baiNhom");
+  const title = view.assignmentTitle ?? msg("groupdocs.pages.GroupWorkspacePage.groupAssignment");
   const header = (
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
-      <p className="text-[13px] text-muted" data-testid="assignment-kind">{msg("groupdocs.pages.GroupWorkspacePage.nhom")}</p>
+      <p className="text-[13px] text-muted" data-testid="assignment-kind">{msg("groupdocs.pages.GroupWorkspacePage.group")}</p>
     </div>
   );
 
@@ -242,22 +242,22 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     <div data-wide-workspace className="flex flex-col gap-4" style={{ "--doc-toolbar-top": `${56 + headerHeight}px` } as CSSProperties}>
       <WorkspaceTopBar barRef={headerRef} title={title} setViewSlot={setViewSlot}
         status={<>
-          {left && <span title={msg("groupdocs.pages.GroupWorkspacePage.hanNop", { value: String(formatOptionalDateTime(cutoff)) })}><Pill tone="warning">{msg("groupdocs.pages.GroupWorkspacePage.con")}{left}</Pill></span>}
+          {left && <span title={msg("groupdocs.pages.GroupWorkspacePage.deadline", { value: String(formatOptionalDateTime(cutoff)) })}><Pill tone="warning">{msg("groupdocs.pages.GroupWorkspacePage.text")}{left}</Pill></span>}
         </>}
         actions={<>
           {me.member && (
-            <Menu label="" icon="more_horiz" ariaLabel={msg("groupdocs.pages.GroupWorkspacePage.thaoTacKhac")} align="right">
-              {me.member && <MenuItem icon="download" onClick={() => void download()}>{msg("groupdocs.pages.GroupWorkspacePage.taiDocx")}</MenuItem>}
+            <Menu label="" icon="more_horiz" ariaLabel={msg("groupdocs.pages.GroupWorkspacePage.moreActions")} align="right">
+              {me.member && <MenuItem icon="download" onClick={() => void download()}>{msg("groupdocs.pages.GroupWorkspacePage.downloadDocx")}</MenuItem>}
             </Menu>
           )}
           {me.leader && editable && (
             <Button variant="primary" icon="check_circle" onClick={() => setSubmitting(true)}>
-              {msg("groupdocs.pages.GroupWorkspacePage.nopTaiLieu")}</Button>
+              {msg("groupdocs.pages.GroupWorkspacePage.submitDocument")}</Button>
           )}
         </>} />
 
       {notice && <Alert tone="danger" role="alert">{notice}</Alert>}
-      {!editable && view.status === "IN_PROGRESS" && <Alert tone="info">{msg("groupdocs.pages.GroupWorkspacePage.daHetHanNopTaiLieu")}</Alert>}
+      {!editable && view.status === "IN_PROGRESS" && <Alert tone="info">{msg("groupdocs.pages.GroupWorkspacePage.theDeadlineHasPassedThe")}</Alert>}
       {deadline && !me.teacher && (
         <Alert tone={deadline.tone} title={deadline.title}>
           <ul className="list-disc pl-4">
@@ -272,7 +272,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         header={header}
         sectionActions={nodeActions}
         comments={assignmentCards}
-        emptyLeafLabel={msg("groupdocs.pages.GroupWorkspacePage.chuaCoNoiDung")}
+        emptyLeafLabel={msg("groupdocs.pages.GroupWorkspacePage.noContentYet")}
         viewSlot={viewSlot} />
 
       {history && <SectionHistoryDialog view={view} section={history} onClose={() => setHistory(null)} />}
@@ -285,7 +285,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
             setSubmitting(false);
             setNotice(null);
             setInvalid([]);
-            showToast(msg("groupdocs.pages.GroupWorkspacePage.daNopTaiLieuNhom"));
+            showToast(msg("groupdocs.pages.GroupWorkspacePage.groupDocumentSubmitted"));
             // Nộp xong về trang chi tiết bài.
             router.push(`/my-assignments/${encodeURIComponent(view.assignmentId)}?classId=${encodeURIComponent(view.classId)}`);
           }}
@@ -301,7 +301,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
       )}
       <Dialog
         open={releasing !== null}
-        title={msg("groupdocs.pages.GroupWorkspacePage.nhaMuc")}
+        title={msg("groupdocs.pages.GroupWorkspacePage.releaseSection")}
         icon="warning"
         tone="warning"
         onClose={() => setReleasing(null)}
@@ -312,23 +312,23 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
               onClick={() => {
                 const s = releasing;
                 setReleasing(null);
-                if (s) void runAction(() => releaseSection(view.documentId, s.id), msg("groupdocs.pages.GroupWorkspacePage.khongNhaDuocMuc"), s.id);
+                if (s) void runAction(() => releaseSection(view.documentId, s.id), msg("groupdocs.pages.GroupWorkspacePage.couldNotReleaseTheSection"), s.id);
               }}
             >
-              {msg("groupdocs.pages.GroupWorkspacePage.nhaMuc")}</Button>
+              {msg("groupdocs.pages.GroupWorkspacePage.releaseSection")}</Button>
           </>
         }
       >
-        {releasing && <p>{msg("groupdocs.pages.GroupWorkspacePage.nhaMuc2")}<strong>{formatSectionName(releasing)}</strong> {msg("groupdocs.pages.GroupWorkspacePage.cua")}<strong>{resolveName(resolveSectionPerson(releasing))}</strong>{msg("groupdocs.pages.GroupWorkspacePage.banNhapDangLamCuaMuc")}</p>}
+        {releasing && <p>{msg("groupdocs.pages.GroupWorkspacePage.releaseSection2")}<strong>{formatSectionName(releasing)}</strong> {msg("groupdocs.pages.GroupWorkspacePage.of")}<strong>{resolveName(resolveSectionPerson(releasing))}</strong>{msg("groupdocs.pages.GroupWorkspacePage.theDraftInProgressFor")}</p>}
       </Dialog>
       <Dialog
         open={confirmingEdit !== null}
-        title={msg("groupdocs.pages.GroupWorkspacePage.suaMuc")}
+        title={msg("groupdocs.pages.GroupWorkspacePage.editSection")}
         icon="edit"
         onClose={() => setConfirmingEdit(null)}
         footer={
           <>
-            <Button onClick={() => setConfirmingEdit(null)}>{msg("groupdocs.pages.GroupWorkspacePage.quayLai")}</Button>
+            <Button onClick={() => setConfirmingEdit(null)}>{msg("groupdocs.pages.GroupWorkspacePage.back")}</Button>
             <Button
               variant="primary"
               onClick={() => {
@@ -337,17 +337,17 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
                 if (s) void claimAndEdit(s);
               }}
             >
-              {msg("groupdocs.pages.GroupWorkspacePage.suaMuc")}</Button>
+              {msg("groupdocs.pages.GroupWorkspacePage.editSection")}</Button>
           </>
         }
       >
-        <Alert tone="warning">{msg("groupdocs.pages.GroupWorkspacePage.mucHienTaiDaCoNguoi")}</Alert>
+        <Alert tone="warning">{msg("groupdocs.pages.GroupWorkspacePage.someoneIsAlreadyWorkingOn")}</Alert>
       </Dialog>
       {autoSubmitting && (
-        <BusyOverlay label={msg("groupdocs.pages.GroupWorkspacePage.dangNop")}>
-          <p className="text-[16px] font-bold text-ink">{msg("groupdocs.pages.GroupWorkspacePage.dangNop2")}</p>
+        <BusyOverlay label={msg("groupdocs.pages.GroupWorkspacePage.submitting")}>
+          <p className="text-[16px] font-bold text-ink">{msg("groupdocs.pages.GroupWorkspacePage.submitting2")}</p>
           <p className="mt-2 text-[13px] text-body">
-            {msg("groupdocs.pages.GroupWorkspacePage.daHetHanNop")}{view.closesAt && msg("groupdocs.pages.GroupWorkspacePage.luc", { value: String(formatOptionalDateTime(view.closesAt)) })}{msg("groupdocs.pages.GroupWorkspacePage.heThongDangTuNopBan")}</p>
+            {msg("groupdocs.pages.GroupWorkspacePage.theDeadlineHasPassed")}{view.closesAt && msg("groupdocs.pages.GroupWorkspacePage.at", { value: String(formatOptionalDateTime(view.closesAt)) })}{msg("groupdocs.pages.GroupWorkspacePage.theSystemIsAutomaticallySubmitting")}</p>
         </BusyOverlay>
       )}
     </div>

@@ -25,7 +25,7 @@ export function InfoTip({ text, label }: { text: string; label: string }) {
     >
       <button
         type="button"
-        aria-label={msg("shared.ui.InfoTip.giaiThich", { label: String(label) })}
+        aria-label={msg("shared.ui.InfoTip.explanation", { label: String(label) })}
         aria-describedby={id}
         className="inline-flex size-5 items-center justify-center rounded-full text-faint transition-colors hover:text-primary-ink focus-visible:text-primary-ink"
       >

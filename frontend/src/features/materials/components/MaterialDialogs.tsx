@@ -130,7 +130,7 @@ export function ModuleItemDialog({
   async function handleSave() {
     if (lock.current) return;
     if (!title.trim()) {
-      setError(msg("materials.components.MaterialDialogs.nhapTenHocLieu"));
+      setError(msg("materials.components.MaterialDialogs.enterTheMaterialName"));
       return;
     }
     if (
@@ -138,11 +138,11 @@ export function ModuleItemDialog({
       (!editing || url.trim() !== (material?.current.videoUrl ?? "")) &&
       !isValidYoutubeUrl(url)
     ) {
-      setError(msg("materials.components.MaterialDialogs.danLinkCuaMotVideoYoutube"));
+      setError(msg("materials.components.MaterialDialogs.pasteTheLinkOfA"));
       return;
     }
     if (content === "FILE" && !editing && !fileRef) {
-      setError(msg("materials.components.MaterialDialogs.chonTep"));
+      setError(msg("materials.components.MaterialDialogs.chooseAFile"));
       return;
     }
     lock.current = true;
@@ -162,7 +162,7 @@ export function ModuleItemDialog({
           enabled,
           descriptionDocument,
         });
-        onSaved(msg("materials.components.MaterialDialogs.daLuuThayDoi"));
+        onSaved(msg("materials.components.MaterialDialogs.changesSaved"));
       } else if (quiz) {
         if (!detail) return;
         await updateQuizDetails(
@@ -170,7 +170,7 @@ export function ModuleItemDialog({
           describeQuiz(detail, title.trim(), description, descriptionDocument),
           detail.quiz.version,
         );
-        onSaved(msg("materials.components.MaterialDialogs.daLuuThayDoi"));
+        onSaved(msg("materials.components.MaterialDialogs.changesSaved"));
       } else if (content === "QUIZ") {
         const template = quizzes?.find((q) => q.id === quizId);
         let created: QuizDetail;
@@ -198,7 +198,7 @@ export function ModuleItemDialog({
         }
         await moduleApi.attachQuiz(moduleId, created.quiz.id);
         // Đóng popup trước khi điều hướng từ sidebar sang quiz vừa tạo.
-        onSaved(msg("materials.components.MaterialDialogs.daTaoQuiz"));
+        onSaved(msg("materials.components.MaterialDialogs.quizCreated"));
         router.push(
           scope.kind === "class"
             ? `/quizzes/${encodeURIComponent(created.quiz.id)}?classId=${encodeURIComponent(scope.classId)}`
@@ -215,7 +215,7 @@ export function ModuleItemDialog({
           source: content === "FILE" ? { fileRef } : { videoUrl: url.trim() },
           moduleId,
         });
-        onSaved(msg("materials.components.MaterialDialogs.daThemHocLieu"));
+        onSaved(msg("materials.components.MaterialDialogs.learningMaterialAdded"));
       }
     } catch (e) {
       setError(describeMaterialError(e));
@@ -229,7 +229,7 @@ export function ModuleItemDialog({
     <Dialog
       open
       size="lg"
-      title={editing ? msg("materials.components.MaterialDialogs.suaHocLieu") : msg("materials.components.MaterialDialogs.taoHocLieu")}
+      title={editing ? msg("materials.components.MaterialDialogs.editLearningMaterial") : msg("materials.components.MaterialDialogs.createLearningMaterial")}
       onClose={onClose}
       dismissible={!busy}
       footer={
@@ -239,7 +239,7 @@ export function ModuleItemDialog({
           disabled={busy || (!!quiz && !detail)}
           onClick={() => void handleSave()}
         >
-          {editing ? msg("materials.components.MaterialDialogs.luu") : msg("materials.components.MaterialDialogs.tao")}
+          {editing ? msg("materials.components.MaterialDialogs.save") : msg("materials.components.MaterialDialogs.create")}
         </Button>
       }
     >
@@ -251,7 +251,7 @@ export function ModuleItemDialog({
         noValidate
         className="flex flex-col gap-4"
       >
-        <Field label={msg("materials.components.MaterialDialogs.tenHocLieu")} htmlFor={`${id}-title`} required>
+        <Field label={msg("materials.components.MaterialDialogs.materialName")} htmlFor={`${id}-title`} required>
           <TextInput
             id={`${id}-title`}
             data-testid="material-source-title"
@@ -265,16 +265,16 @@ export function ModuleItemDialog({
           />
         </Field>
         {content !== "QUIZ" && <div className="flex flex-wrap items-center justify-between gap-2">
-          <Switch checked={enabled} onChange={setEnabled} ariaLabel={msg("materials.components.MaterialDialogs.batHocLieu")} disabled={busy}
-            label={enabled ? msg("materials.components.MaterialDialogs.bat") : msg("materials.components.MaterialDialogs.tat")} />
-          <span className="text-xs text-muted">{msg("materials.components.MaterialDialogs.tatDeAnVoiSinhVien")}</span>
+          <Switch checked={enabled} onChange={setEnabled} ariaLabel={msg("materials.components.MaterialDialogs.enableLearningMaterial")} disabled={busy}
+            label={enabled ? msg("materials.components.MaterialDialogs.on") : msg("materials.components.MaterialDialogs.off")} />
+          <span className="text-xs text-muted">{msg("materials.components.MaterialDialogs.turnOffToHideIt")}</span>
         </div>}
         <div className="flex flex-col gap-3">
           <span className="text-xs font-semibold text-body">
-            {msg("materials.components.MaterialDialogs.noiDung")}<span className="text-primary-ink">*</span>
+            {msg("materials.components.MaterialDialogs.content")}<span className="text-primary-ink">*</span>
           </span>
           <Segmented<Content>
-            ariaLabel={msg("materials.components.MaterialDialogs.noiDung2")}
+            ariaLabel={msg("materials.components.MaterialDialogs.content2")}
             value={content}
             onChange={(value) => {
               if (!editing) {
@@ -283,7 +283,7 @@ export function ModuleItemDialog({
               }
             }}
             options={[
-              { value: "FILE", label: msg("materials.components.MaterialDialogs.tep"), disabled: editing && content !== "FILE" },
+              { value: "FILE", label: msg("materials.components.MaterialDialogs.file"), disabled: editing && content !== "FILE" },
               {
                 value: "YOUTUBE_LINK",
                 label: "YouTube",
@@ -330,9 +330,9 @@ export function ModuleItemDialog({
                   onChange={(e) => chooseQuiz(e.target.value)}
                   data-testid="module-quiz-select"
                 >
-                  <option value={NEW_QUIZ}>{msg("materials.components.MaterialDialogs.quizTrong")}</option>
+                  <option value={NEW_QUIZ}>{msg("materials.components.MaterialDialogs.emptyQuiz")}</option>
                   {quizzes && quizzes.length > 0 && (
-                    <optgroup label={msg("materials.components.MaterialDialogs.taoTuQuizCu")}>
+                    <optgroup label={msg("materials.components.MaterialDialogs.createFromAnOldQuiz")}>
                       {quizzes.map((row) => (
                         <option key={row.id} value={row.id}>
                           {row.title}
@@ -345,9 +345,9 @@ export function ModuleItemDialog({
             </Card>
           )}
         </div>
-        <Field label={msg("materials.components.MaterialDialogs.moTa")}>
+        <Field label={msg("materials.components.MaterialDialogs.description")}>
           <FormattedTextEditor value={descriptionDocument} plainText={description}
-            maxLength={content === "QUIZ" ? 5000 : 2000} disabled={busy} aria-label={msg("materials.components.MaterialDialogs.moTa")}
+            maxLength={content === "QUIZ" ? 5000 : 2000} disabled={busy} aria-label={msg("materials.components.MaterialDialogs.description")}
             onChange={(text, document) => { setDescription(text); setDescriptionDocument(document); }} />
         </Field>
         {error && (
@@ -368,14 +368,14 @@ export function isQuizDeletable(quiz: ModuleQuiz) {
 /** Nút gỡ một mục khỏi module: học liệu và Quiz nháp là Xóa, Quiz đã phát hành là Lưu trữ. */
 export function resolveRemovalAction(item: OutlineItem) {
   return item.kind === "quiz" && !isQuizDeletable(item.quiz)
-    ? { icon: "archive" as const, label: msg("materials.components.MaterialDialogs.luuTru") }
-    : { icon: "trash" as const, label: msg("materials.components.MaterialDialogs.xoa") };
+    ? { icon: "archive" as const, label: msg("materials.components.MaterialDialogs.archive") }
+    : { icon: "trash" as const, label: msg("materials.components.MaterialDialogs.delete") };
 }
 
 /** Thông báo sau khi gỡ mục: học liệu bị ẩn, Quiz nháp bị xóa, Quiz khác bị lưu trữ. */
 export function describeRemoval(item: OutlineItem) {
-  if (item.kind === "material") return msg("materials.components.MaterialDialogs.daXoaHocLieu");
-  return isQuizDeletable(item.quiz) ? msg("materials.components.MaterialDialogs.daXoaQuiz") : msg("materials.components.MaterialDialogs.daLuuTruQuiz");
+  if (item.kind === "material") return msg("materials.components.MaterialDialogs.learningMaterialDeleted");
+  return isQuizDeletable(item.quiz) ? msg("materials.components.MaterialDialogs.quizDeleted") : msg("materials.components.MaterialDialogs.quizArchived");
 }
 
 /**
@@ -399,8 +399,8 @@ export function ArchiveItemDialog({
   const isQuiz = "quiz" in item;
   const deletesQuiz = isQuiz && isQuizDeletable(item.quiz);
   const title = isQuiz ? item.quiz.title : item.material.title;
-  const action = isQuiz && !deletesQuiz ? msg("materials.components.MaterialDialogs.luuTru") : msg("materials.components.MaterialDialogs.xoa");
-  const noun = isQuiz ? "quiz" : msg("materials.components.MaterialDialogs.hocLieu");
+  const action = isQuiz && !deletesQuiz ? msg("materials.components.MaterialDialogs.archive") : msg("materials.components.MaterialDialogs.delete");
+  const noun = isQuiz ? "quiz" : msg("materials.components.MaterialDialogs.learningMaterial");
   async function handleRemove() {
     if (lock.current) return;
     lock.current = true;
@@ -439,7 +439,7 @@ export function ArchiveItemDialog({
       }
     >
       <p>
-        {msg("materials.components.MaterialDialogs.banCoChacMuon")}{action.toLowerCase()} {noun} {title} {msg("materials.components.MaterialDialogs.khong")}{deletesQuiz && msg("materials.components.MaterialDialogs.quizNhapSeBiXoaVinh")}
+        {msg("materials.components.MaterialDialogs.areYouSureYouWant")}{action.toLowerCase()} {noun} {title} {msg("materials.components.MaterialDialogs.text")}{deletesQuiz && msg("materials.components.MaterialDialogs.theDraftQuizWillBe")}
       </p>
       {error && (
         <p role="alert" className="text-sm text-danger">

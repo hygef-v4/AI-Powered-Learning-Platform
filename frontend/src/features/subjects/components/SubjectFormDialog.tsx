@@ -55,18 +55,18 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
     } catch (error: unknown) {
       const problem = error instanceof ApiError ? error.problem : null;
       if (problem?.code === "SUBJECT_CODE_DUPLICATE")
-        setErrors({ code: msg("subjects.components.SubjectFormDialog.maMonDaTonTaiHay") });
+        setErrors({ code: msg("subjects.components.SubjectFormDialog.theSubjectCodeAlreadyExists") });
       else if (problem?.code === "SUBJECT_MANAGER_INVALID")
         setErrors({
-          managerId: msg("subjects.components.SubjectFormDialog.chuNhiemDaChonKhongCon"),
+          managerId: msg("subjects.components.SubjectFormDialog.theSelectedManagerIsNo"),
         });
       else
         setMessage(
           problem?.status === 401
-            ? msg("subjects.components.SubjectFormDialog.phienDangNhapKhongConHop")
+            ? msg("subjects.components.SubjectFormDialog.yourSessionIsNoLonger")
             : problem?.status === 403
-              ? msg("subjects.components.SubjectFormDialog.banKhongCoQuyenThemMon")
-              : msg("subjects.components.SubjectFormDialog.chuaXacNhanTaoMonThanh"),
+              ? msg("subjects.components.SubjectFormDialog.youDoNotHavePermission")
+              : msg("subjects.components.SubjectFormDialog.couldNotConfirmThatThe"),
         );
       pending.current = false;
       setBusy(false);
@@ -79,7 +79,7 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
   return (
     <Dialog
       open
-      title={msg("subjects.components.SubjectFormDialog.themMonHoc")}
+      title={msg("subjects.components.SubjectFormDialog.addSubject")}
       icon="menu_book"
       onClose={handleClose}
       dismissible={!busy}
@@ -92,7 +92,7 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
           disabled={busy}
           data-testid="subject-create-submit"
         >
-          {busy ? msg("subjects.components.SubjectFormDialog.dangThem") : msg("subjects.components.SubjectFormDialog.themMonHoc")}
+          {busy ? msg("subjects.components.SubjectFormDialog.adding") : msg("subjects.components.SubjectFormDialog.addSubject")}
         </Button>
       }
     >
@@ -105,7 +105,7 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
         className="flex flex-col gap-3.5"
       >
         <fieldset disabled={busy} className="flex min-w-0 flex-col gap-3.5">
-          <Field label={msg("subjects.components.SubjectFormDialog.maMon")} htmlFor={`${formId}-code`} required error={errors.code}>
+          <Field label={msg("subjects.components.SubjectFormDialog.subjectCode")} htmlFor={`${formId}-code`} required error={errors.code}>
             <TextInput
               id={`${formId}-code`}
               value={code}
@@ -118,7 +118,7 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
               data-testid="subject-create-code"
             />
           </Field>
-          <Field label={msg("subjects.components.SubjectFormDialog.tenMon")} htmlFor={`${formId}-name`} required error={errors.name}>
+          <Field label={msg("subjects.components.SubjectFormDialog.subjectName")} htmlFor={`${formId}-name`} required error={errors.name}>
             <TextInput
               id={`${formId}-name`}
               value={name}
@@ -145,7 +145,7 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
               {errors.managerId}
             </p>
           )}
-          <Field label={msg("subjects.components.SubjectFormDialog.moTa")} htmlFor={`${formId}-description`} error={errors.description}>
+          <Field label={msg("subjects.components.SubjectFormDialog.description")} htmlFor={`${formId}-description`} error={errors.description}>
             <Textarea
               id={`${formId}-description`}
               value={description}

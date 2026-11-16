@@ -7,14 +7,14 @@ import { DEFAULT_LOCALE, LOCALE_COOKIE, parseLocale, type Locale } from "./local
 
 /**
  * Chuỗi giao diện nằm trong `src/i18n/messages/<mã ngôn ngữ>.json`, viết theo cú pháp ICU của next-intl, cùng khóa ở mọi
- * ngôn ngữ. Khóa thiếu ở một ngôn ngữ thì dùng câu tiếng Việt.
+ * ngôn ngữ. Khóa thiếu ở một ngôn ngữ thì dùng câu tiếng Anh (ngôn ngữ mặc định).
  */
-const MESSAGES = { vi, en, ja } as unknown as Record<Locale, AbstractIntlMessages>;
+const MESSAGES = { en, vi, ja } as unknown as Record<Locale, AbstractIntlMessages>;
 
 type Values = Record<string, string>;
 type Translate = (key: string, values?: Values) => string;
 
-/** Ngôn ngữ trên trình duyệt đọc từ cookie lúc nạp trang; trên máy chủ (và trong test) là tiếng Việt. */
+/** Ngôn ngữ trên trình duyệt đọc từ cookie lúc nạp trang; trên máy chủ là ngôn ngữ mặc định (tiếng Anh). */
 function readBrowserLocale(): Locale {
   if (typeof document === "undefined") return DEFAULT_LOCALE;
   const match = new RegExp(`(?:^|; )${LOCALE_COOKIE}=([^;]*)`).exec(document.cookie);
@@ -52,7 +52,7 @@ type RichTags = Record<string, (chunks: ReactNode) => ReactNode>;
 
 /**
  * Câu có thẻ định dạng trong tệp ngôn ngữ (ví dụ `<b>…</b>`), trả về phần tử React; `tags` nói mỗi thẻ vẽ thành gì.
- * Khóa thiếu ở một ngôn ngữ thì dùng câu tiếng Việt.
+ * Khóa thiếu ở một ngôn ngữ thì dùng câu tiếng Anh.
  */
 export function buildRichTranslator(locale: Locale) {
   const own = createTranslator({ locale, messages: MESSAGES[locale] });
@@ -62,7 +62,7 @@ export function buildRichTranslator(locale: Locale) {
 }
 
 /**
- * Chuỗi giao diện theo khóa, ví dụ `msg("grading.components.BatchActionDialog.congBoDiem")`. Giá trị chèn vào câu đều là
+ * Chuỗi giao diện theo khóa, ví dụ `msg("grading.components.BatchActionDialog.publishGrades")`. Giá trị chèn vào câu đều là
  * chữ (`{ count: String(count) }`) để không bị định dạng lại như số.
  */
 export function msg(key: string, values?: Values): string {

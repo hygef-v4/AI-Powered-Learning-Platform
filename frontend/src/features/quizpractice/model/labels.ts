@@ -2,18 +2,18 @@ import { ApiError } from "@/shared/api/client";
 import type { ActivitySignal, LeavePenalty, PenaltyView, SubmitMode } from "./types";
 import { msg } from "@/i18n/msg";
 
-const SYSTEM_BUSY = msg("quizpractice.model.labels.heThongTamBanVuiLong");
+const SYSTEM_BUSY = msg("quizpractice.model.labels.theSystemIsBusyPlease");
 
 const ERROR_LABELS: Record<string, string> = {
-  QUIZ_NOT_FOUND: msg("quizpractice.model.labels.khongTimThayQuizHoacBan"),
-  QUIZ_ATTEMPT_NOT_FOUND: msg("quizpractice.model.labels.khongTimThayLuotLam"),
-  QUIZ_NOT_OPEN: msg("quizpractice.model.labels.quizDaNgungHoacLopKhong"),
-  ANSWER_VERSION_CONFLICT: msg("quizpractice.model.labels.cauTraLoiVuaDuocLuu"),
-  ATTEMPT_TIME_UP: msg("quizpractice.model.labels.daHetThoiGianLamBai"),
-  ATTEMPT_SUBMITTED: msg("quizpractice.model.labels.luotNayDaNop"),
-  QUIZ_PRACTICE_STUDENT_ONLY: msg("quizpractice.model.labels.chiSinhVienLamQuizPractice"),
-  PENALTY_NOT_DECIDABLE: msg("quizpractice.model.labels.luotNayKhongCoMucTru"),
-  PENALTY_POINTS_INVALID: msg("quizpractice.model.labels.diemTruPhaiLonHon0"),
+  QUIZ_NOT_FOUND: msg("quizpractice.model.labels.quizNotFoundOrYou"),
+  QUIZ_ATTEMPT_NOT_FOUND: msg("quizpractice.model.labels.attemptNotFound"),
+  QUIZ_NOT_OPEN: msg("quizpractice.model.labels.theQuizWasWithdrawnOr"),
+  ANSWER_VERSION_CONFLICT: msg("quizpractice.model.labels.answersWereJustSavedFrom"),
+  ATTEMPT_TIME_UP: msg("quizpractice.model.labels.timeIsUp"),
+  ATTEMPT_SUBMITTED: msg("quizpractice.model.labels.thisAttemptHasBeenSubmitted"),
+  QUIZ_PRACTICE_STUDENT_ONLY: msg("quizpractice.model.labels.onlyStudentsTakeQuizPractice"),
+  PENALTY_NOT_DECIDABLE: msg("quizpractice.model.labels.thisAttemptHasNoSuggested"),
+  PENALTY_POINTS_INVALID: msg("quizpractice.model.labels.theDeductionMustBeGreater"),
   SYSTEM_BUSY,
 };
 
@@ -41,40 +41,40 @@ export function formatPoints(value: number | null | undefined): string {
 export function formatDuration(fromIso: string, toIso: string | null): string {
   if (!toIso) return "—";
   const minutes = Math.max(0, Math.round((new Date(toIso).getTime() - new Date(fromIso).getTime()) / 60000));
-  return msg("quizpractice.model.labels.phut", { minutes: String(minutes) });
+  return msg("quizpractice.model.labels.min", { minutes: String(minutes) });
 }
 
 export function formatAttempts(used: number, max: number | null): string {
-  return max === null ? msg("quizpractice.model.labels.luotKhongGioiHan", { used: String(used) }) : msg("quizpractice.model.labels.luot", { used: String(used), max: String(max) });
+  return max === null ? msg("quizpractice.model.labels.attemptsUnlimited", { used: String(used) }) : msg("quizpractice.model.labels.attempts", { used: String(used), max: String(max) });
 }
 
 /** Cờ tín hiệu cho giảng viên (BR-U11-32); chỉ là dấu hiệu, tín hiệu tốt thì không hiện gì. */
 export function describeSignal(signal: ActivitySignal | null | undefined): string | null {
-  return signal === "NO_SIGNAL" ? msg("quizpractice.model.labels.khongNhanDuocTinHieu")
-    : signal === "SIGNAL_LOST" ? msg("quizpractice.model.labels.matTinHieuMotPhan")
-      : signal === "UNAVAILABLE" ? msg("quizpractice.model.labels.khongDocDuocDuLieuLuc") : null;
+  return signal === "NO_SIGNAL" ? msg("quizpractice.model.labels.noSignalReceived")
+    : signal === "SIGNAL_LOST" ? msg("quizpractice.model.labels.signalPartlyLost")
+      : signal === "UNAVAILABLE" ? msg("quizpractice.model.labels.couldNotReadDataAt") : null;
 }
 
 /** Quy tắc gợi ý trừ điểm để báo sinh viên trước và trong khi làm bài (BR-U11-33): giảng viên mới là người quyết định. */
 export function describePenaltyRule(rule: LeavePenalty): string {
-  const free = rule.freeLeaves > 0 ? msg("quizpractice.model.labels.duocMienLanDauRoiTrang", { freeLeaves: String(rule.freeLeaves) }) : msg("quizpractice.model.labels.moiLanRoiTrang");
-  const max = rule.maxPenalty === null ? "" : msg("quizpractice.model.labels.toiDaDiem", { value: String(formatPoints(rule.maxPenalty)) });
-  const min = rule.minAwaySeconds > 0 ? msg("quizpractice.model.labels.chiTinhKhiRoiTuGiay", { minAwaySeconds: String(rule.minAwaySeconds) }) : "";
-  return msg("quizpractice.model.labels.coTheBiTruDiemDo", { free: String(free), value: String(formatPoints(rule.pointsPerLeave)), max: String(max), min: String(min) });
+  const free = rule.freeLeaves > 0 ? msg("quizpractice.model.labels.theFirstPageLeavesAre", { freeLeaves: String(rule.freeLeaves) }) : msg("quizpractice.model.labels.eachPageLeave");
+  const max = rule.maxPenalty === null ? "" : msg("quizpractice.model.labels.upToPoints", { value: String(formatPoints(rule.maxPenalty)) });
+  const min = rule.minAwaySeconds > 0 ? msg("quizpractice.model.labels.onlyCountedWhenAwayFor", { minAwaySeconds: String(rule.minAwaySeconds) }) : "";
+  return msg("quizpractice.model.labels.mayLosePointsDecidedBy", { free: String(free), value: String(formatPoints(rule.pointsPerLeave)), max: String(max), min: String(min) });
 }
 
 /** Dòng rời trang và điểm trừ trên kết quả của sinh viên (BR-U11-33); không có gì để báo thì trả về null. */
 export function describePenaltyResult(penalty: PenaltyView): string | null {
-  const leaves = msg("quizpractice.model.labels.roiTrangLan", { value: String(penalty.leaveCount ?? 0) });
+  const leaves = msg("quizpractice.model.labels.leftThePageTimes", { value: String(penalty.leaveCount ?? 0) });
   if (penalty.decision === "APPLIED") {
-    return msg("quizpractice.model.labels.diemGocGiangVienTruDiem", { value: String(formatPoints(penalty.rawScore)), value2: String(leaves.toLowerCase()), value3: String(formatPoints(penalty.penaltyPoints)), decisionReason: String(penalty.decisionReason) });
+    return msg("quizpractice.model.labels.originalScoreLecturerDeductedPoints", { value: String(formatPoints(penalty.rawScore)), value2: String(leaves.toLowerCase()), value3: String(formatPoints(penalty.penaltyPoints)), decisionReason: String(penalty.decisionReason) });
   }
-  if (penalty.decision === "DISMISSED") return msg("quizpractice.model.labels.giangVienQuyetDinhKhongTru", { leaves: String(leaves), decisionReason: String(penalty.decisionReason) });
-  if (penalty.decisionPending) return msg("quizpractice.model.labels.chuaBiTruDiemGiangVien", { leaves: String(leaves) });
+  if (penalty.decision === "DISMISSED") return msg("quizpractice.model.labels.theLecturerDecidedNotTo", { leaves: String(leaves), decisionReason: String(penalty.decisionReason) });
+  if (penalty.decisionPending) return msg("quizpractice.model.labels.noPointsDeductedYetThe", { leaves: String(leaves) });
   return (penalty.leaveCount ?? 0) > 0 ? `${leaves}.` : null;
 }
 
 /** Lượt được hệ thống tự nộp thì ghi rõ lý do (L4); nộp tay thì không có nhãn. */
 export function submitModeText(mode: SubmitMode): string | null {
-  return mode === "AUTO_TIME_LIMIT" ? msg("quizpractice.model.labels.tuNopKhiHetGio") : mode === "AUTO_RETIRED" ? msg("quizpractice.model.labels.tuNopKhiQuizBiNgung") : null;
+  return mode === "AUTO_TIME_LIMIT" ? msg("quizpractice.model.labels.autoSubmittedWhenTimeRan") : mode === "AUTO_RETIRED" ? msg("quizpractice.model.labels.autoSubmittedWhenTheQuiz") : null;
 }

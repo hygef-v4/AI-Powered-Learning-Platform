@@ -26,7 +26,7 @@ type Drafts = Record<string, DocumentBlock[]>;
 
 function describeProblem(e: unknown, fallback: string): string {
   if (e instanceof ApiError) {
-    if (e.problem.status === 409) return e.problem.detail ?? msg("groupdocs.pages.GroupSectionEditorPage.duLieuVuaThayDoiHay");
+    if (e.problem.status === 409) return e.problem.detail ?? msg("groupdocs.pages.GroupSectionEditorPage.theDataJustChangedPlease");
     return e.problem.detail ?? fallback;
   }
   return fallback;
@@ -96,14 +96,14 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
     setDrafts((prev) => Object.fromEntries(mine.map((s) => [s.id, prev[s.id] ?? s.draftBlocks ?? s.publishedBlocks ?? []])));
     setDirty((prev) => prev.filter((id) => ids.has(id)));
     if (lost.length > 0) {
-      setNotice(msg("groupdocs.pages.GroupSectionEditorPage.banKhongConGiuMucDa", { value: String(lost.join(", ")) }));
+      setNotice(msg("groupdocs.pages.GroupSectionEditorPage.youNoLongerHoldSection", { value: String(lost.join(", ")) }));
     }
     setView(loaded);
   }, []);
 
   const reload = useCallback(
     () => getWorkspace(documentId).then(applyView, (e: unknown) => {
-      setLoadError(e instanceof ApiError && e.problem.status === 404 ? msg("groupdocs.pages.GroupSectionEditorPage.khongTimThayTaiLieuNhom") : msg("groupdocs.pages.GroupSectionEditorPage.khongTaiDuocTaiLieuNhom"));
+      setLoadError(e instanceof ApiError && e.problem.status === 404 ? msg("groupdocs.pages.GroupSectionEditorPage.groupDocumentNotFound") : msg("groupdocs.pages.GroupSectionEditorPage.couldNotLoadTheGroup"));
     }),
     [documentId, applyView],
   );
@@ -143,7 +143,7 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
         setDirty((prev) => (unchanged ? prev.filter((d) => d !== id) : prev));
         setError(null);
       } catch (e) {
-        setError(describeProblem(e, msg("groupdocs.pages.GroupSectionEditorPage.khongLuuDuocBanNhap")));
+        setError(describeProblem(e, msg("groupdocs.pages.GroupSectionEditorPage.couldNotSaveTheDraft")));
         ok = false;
       }
     }
@@ -188,7 +188,7 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
       const title = number && entry.title.startsWith(number) ? entry.title.slice(number.length).trim() : entry.title;
       return { ...entry, number, title };
     });
-    publishOutline({ assignmentId: view.assignmentId, backHref: workspaceHref, backLabel: msg("groupdocs.pages.GroupSectionEditorPage.taiLieuNhom"), entries });
+    publishOutline({ assignmentId: view.assignmentId, backHref: workspaceHref, backLabel: msg("groupdocs.pages.GroupSectionEditorPage.groupDocument"), entries });
     // Chỉ đăng lại khi đổi các phần, không đăng lại mỗi lần gõ.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, headingKey, workspaceHref, numbers]);
@@ -220,11 +220,11 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
     try {
       await finishSection(documentId, s.id);
       finished.current.add(s.id);
-      showToast(msg("groupdocs.pages.GroupSectionEditorPage.daXongMuc", { title: String(s.title) }));
+      showToast(msg("groupdocs.pages.GroupSectionEditorPage.sectionMarkedDone", { title: String(s.title) }));
       await reload();
       if (held.current.size === 0) router.push(workspaceHref);
     } catch (e) {
-      setError(describeProblem(e, msg("groupdocs.pages.GroupSectionEditorPage.khongDanhDauXongDuoc")));
+      setError(describeProblem(e, msg("groupdocs.pages.GroupSectionEditorPage.couldNotMarkAsDone")));
     }
     setBusy(null);
   };
@@ -242,32 +242,32 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
         await finishSection(documentId, s.id);
         finished.current.add(s.id);
       }
-      showToast(msg("groupdocs.pages.GroupSectionEditorPage.daHoanThanhTatCaCac"));
+      showToast(msg("groupdocs.pages.GroupSectionEditorPage.allSectionsCompleted"));
       router.push(workspaceHref);
     } catch (e) {
-      setError(describeProblem(e, msg("groupdocs.pages.GroupSectionEditorPage.khongDanhDauXongDuoc")));
+      setError(describeProblem(e, msg("groupdocs.pages.GroupSectionEditorPage.couldNotMarkAsDone")));
       void reload();
       setBusy(null);
     }
   };
 
   if (loadError && !view) return <PageLoadError>{loadError}</PageLoadError>;
-  if (!view || !editorDocument) return <PageLoading label={msg("groupdocs.pages.GroupSectionEditorPage.dangMoTrangSoan")} />;
+  if (!view || !editorDocument) return <PageLoading label={msg("groupdocs.pages.GroupSectionEditorPage.openingTheEditor")} />;
 
   const mine = listHeldSections(view);
-  const title = view.assignmentTitle ?? msg("groupdocs.pages.GroupSectionEditorPage.baiNhom");
+  const title = view.assignmentTitle ?? msg("groupdocs.pages.GroupSectionEditorPage.groupAssignment");
   const deadline = describeDeadline(view, now);
   const cutoff = view.window === "LATE" ? view.lateUntil : view.closesAt;
   const left = editable ? formatRemaining(cutoff, now) : null;
   const actions = Object.fromEntries(mine.map((s) => [s.partId, (
     <div key={s.id} role="group" aria-label={s.title} className="flex items-center gap-1.5">
-      <Button size="sm" variant="ghost" icon="upload_file" disabled={!editable || busy !== null} onClick={() => setImporting(s)}>{msg("groupdocs.pages.GroupSectionEditorPage.nhapDocx")}</Button>
+      <Button size="sm" variant="ghost" icon="upload_file" disabled={!editable || busy !== null} onClick={() => setImporting(s)}>{msg("groupdocs.pages.GroupSectionEditorPage.importDocx")}</Button>
       <Button size="sm" variant="primary" icon="check" disabled={!editable || busy !== null} onClick={() => void markSectionDone(s)}>Xong</Button>
     </div>
   )]));
   const header = (
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
-      <p className="text-[13px] text-muted" data-testid="assignment-kind">{msg("groupdocs.pages.GroupSectionEditorPage.nhom")}</p>
+      <p className="text-[13px] text-muted" data-testid="assignment-kind">{msg("groupdocs.pages.GroupSectionEditorPage.group")}</p>
     </div>
   );
 
@@ -275,24 +275,24 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
     <div data-wide-workspace className="flex flex-col gap-4" style={{ "--doc-toolbar-top": `${56 + headerHeight}px` } as CSSProperties}>
       <WorkspaceTopBar barRef={headerRef} title={title} setViewSlot={setViewSlot}
         status={<>
-          {left && <span title={msg("groupdocs.pages.GroupSectionEditorPage.hanNop", { value: String(formatDateTime(cutoff!)) })}><Pill tone="warning">{msg("groupdocs.pages.GroupSectionEditorPage.con")}{left}</Pill></span>}
+          {left && <span title={msg("groupdocs.pages.GroupSectionEditorPage.deadline", { value: String(formatDateTime(cutoff!)) })}><Pill tone="warning">{msg("groupdocs.pages.GroupSectionEditorPage.text")}{left}</Pill></span>}
         </>}
         actions={<>
           {editable && mine.length > 0 && (
             <Button variant="primary" icon="check_circle" disabled={busy !== null || saving} onClick={() => void finishAll()}>
-              {msg("groupdocs.pages.GroupSectionEditorPage.hoanThanhTatCa")}</Button>
+              {msg("groupdocs.pages.GroupSectionEditorPage.completeAll")}</Button>
           )}
         </>} />
 
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {notice && <Alert tone="warning">{notice}</Alert>}
-      {!editable && <Alert tone="info">{msg("groupdocs.pages.GroupSectionEditorPage.daHetHanNopTaiLieu")}</Alert>}
-      {deadline && editable && <Alert tone={deadline.tone}>{deadline.title} {msg("groupdocs.pages.GroupSectionEditorPage.nenBamXongTruocHan")}</Alert>}
+      {!editable && <Alert tone="info">{msg("groupdocs.pages.GroupSectionEditorPage.theDeadlineHasPassedThe")}</Alert>}
+      {deadline && editable && <Alert tone={deadline.tone}>{deadline.title} {msg("groupdocs.pages.GroupSectionEditorPage.clickDoneBeforeTheDeadline")}</Alert>}
 
       {mine.length === 0 ? (
         <Card padding="none" className="flex flex-col items-start gap-3 p-6">
-          <p className="text-[13.5px] text-body">{msg("groupdocs.pages.GroupSectionEditorPage.banChuaGiuMucNaoDe")}</p>
-          <ButtonLink href={workspaceHref}>{msg("groupdocs.pages.GroupSectionEditorPage.veTaiLieuNhom")}</ButtonLink>
+          <p className="text-[13.5px] text-body">{msg("groupdocs.pages.GroupSectionEditorPage.youAreNotHoldingAny")}</p>
+          <ButtonLink href={workspaceHref}>{msg("groupdocs.pages.GroupSectionEditorPage.backToGroupDocument")}</ButtonLink>
         </Card>
       ) : (
         <DocumentEditor fullWidth document={editorDocument} onChange={edit} mode="student" readOnly={!editable} answerGuidance
@@ -310,7 +310,7 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
       {importing && (
         <DocxImportDialog
           allowReplace={false}
-          title={msg("groupdocs.pages.GroupSectionEditorPage.nhapDocxVaoMuc", { title: String(importing.title) })}
+          title={msg("groupdocs.pages.GroupSectionEditorPage.importDocxIntoSection", { title: String(importing.title) })}
           preview={(file) => previewSectionDocx(documentId, importing.id, file)}
           onClose={() => setImporting(null)}
           onImport={(imported) => {

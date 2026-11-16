@@ -3,4 +3,4 @@
 import { navEntries } from "@/features/identity/slots";
 import { msg } from "@/i18n/msg";
 
-navEntries.register({ key: "admin-audit", order: 50, title: msg("audit.register.nhatKy"), href: "/admin/audit", icon: "history", roles: ["ADMIN"] });
+navEntries.register({ key: "admin-audit", order: 50, title: msg("audit.register.log"), href: "/admin/audit", icon: "history", roles: ["ADMIN"] });

@@ -112,18 +112,18 @@ export function ModuleBoard({
       onClick={() => setDialog({ type: "create" })}
       data-testid="module-create"
     >
-      {msg("materials.components.ModuleBoard.themModule")}</Button>
+      {msg("materials.components.ModuleBoard.addModule")}</Button>
   );
 
   return (
     <div className="flex flex-col gap-4">
-      {header && <PageHeader title={msg("materials.components.ModuleBoard.hocLieu")} actions={canCreate && createButton} />}
+      {header && <PageHeader title={msg("materials.components.ModuleBoard.learningMaterials")} actions={canCreate && createButton} />}
       {!header && canCreate && <div className="flex justify-end">{createButton}</div>}
       {data.error && (
         <p role="alert" className="text-sm text-danger">
           {data.error}{" "}
           <Button size="sm" onClick={data.reload}>
-            {msg("materials.components.ModuleBoard.taiLai")}</Button>
+            {msg("materials.components.ModuleBoard.reload")}</Button>
         </p>
       )}
       {error && !dialog && (
@@ -133,11 +133,11 @@ export function ModuleBoard({
       )}
       {!data.outline && !data.error && (
         <p role="status" className="py-10 text-center text-sm text-muted">
-          {msg("materials.components.ModuleBoard.dangTaiHocLieu")}</p>
+          {msg("materials.components.ModuleBoard.loadingLearningMaterials")}</p>
       )}
       {data.outline && outline.length === 0 && (
         <section className="rounded-xl border border-dashed border-line-strong bg-surface p-10 text-center text-sm text-muted">
-          {msg("materials.components.ModuleBoard.chuaCoModule")}</section>
+          {msg("materials.components.ModuleBoard.noModulesYet")}</section>
       )}
       {outline.map(({ module, items }, index) => {
         const addable = writable && (scope.kind === "class" || module.canManage);
@@ -163,39 +163,39 @@ export function ModuleBoard({
                     onClick={() => setDialog({ type: "item", module })}
                     data-testid={`module-add-${module.id}`}
                   >
-                    {msg("materials.components.ModuleBoard.taoHocLieu")}</Button>
+                    {msg("materials.components.ModuleBoard.createLearningMaterial")}</Button>
                 )}
                 {scope.kind === "subject" && module.canManage && !readOnly && (
                   <Menu
                     label={null}
                     icon="more_horiz"
-                    ariaLabel={msg("materials.components.ModuleBoard.thaoTacModule", { title: String(module.title) })}
+                    ariaLabel={msg("materials.components.ModuleBoard.actionsForModule", { title: String(module.title) })}
                     variant="tool"
                     align="right"
                     summaryClassName="[&>svg:last-child]:hidden"
                   >
                     <MenuItem icon="edit" onClick={() => setDialog({ type: "rename", module })}>
-                      {msg("materials.components.ModuleBoard.doiTen")}</MenuItem>
+                      {msg("materials.components.ModuleBoard.rename")}</MenuItem>
                     <MenuItem
                       icon="chevron_left"
                       className="[&>svg]:rotate-90"
                       disabled={busy || index === 0}
                       onClick={() => handleMove(index, -1)}
                     >
-                      {msg("materials.components.ModuleBoard.lenTren")}</MenuItem>
+                      {msg("materials.components.ModuleBoard.moveUp")}</MenuItem>
                     <MenuItem
                       icon="chevron_right"
                       className="[&>svg]:rotate-90"
                       disabled={busy || index === outline.length - 1}
                       onClick={() => handleMove(index, 1)}
                     >
-                      {msg("materials.components.ModuleBoard.xuongDuoi")}</MenuItem>
+                      {msg("materials.components.ModuleBoard.moveDown")}</MenuItem>
                     <MenuItem
                       icon="trash"
                       tone="danger"
                       onClick={() => setDialog({ type: "delete", module })}
                     >
-                      {msg("materials.components.ModuleBoard.xoaModule")}</MenuItem>
+                      {msg("materials.components.ModuleBoard.deleteModule")}</MenuItem>
                   </Menu>
                 )}
               </span>
@@ -204,8 +204,8 @@ export function ModuleBoard({
                 aria-expanded={open}
                 aria-controls={`module-body-${module.id}`}
                 data-testid={`module-toggle-${module.id}`}
-                aria-label={open ? msg("materials.components.ModuleBoard.thuGon", { title: String(module.title) }) : msg("materials.components.ModuleBoard.mo", { title: String(module.title) })}
-                title={open ? msg("materials.components.ModuleBoard.thuGon2") : msg("materials.components.ModuleBoard.mo2")}
+                aria-label={open ? msg("materials.components.ModuleBoard.collapse", { title: String(module.title) }) : msg("materials.components.ModuleBoard.expand", { title: String(module.title) })}
+                title={open ? msg("materials.components.ModuleBoard.collapse2") : msg("materials.components.ModuleBoard.expand2")}
                 className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink"
               >
                 <Icon
@@ -222,7 +222,7 @@ export function ModuleBoard({
               <ul className="flex flex-col">
                 {items.length === 0 && (
                   <li className="border-t border-line px-5 py-4 text-[13px] text-muted">
-                    {msg("materials.components.ModuleBoard.chuaCoHocLieu")}</li>
+                    {msg("materials.components.ModuleBoard.noLearningMaterialsYet")}</li>
                 )}
                 {items.map((item) => (
                   <ModuleRow
@@ -240,7 +240,7 @@ export function ModuleBoard({
                     busy={busy}
                     onReopen={() =>
                       item.kind === "quiz" &&
-                      void runAction(() => reopen(item.quiz.quizId, scope), msg("materials.components.ModuleBoard.daMoLaiQuiz"))
+                      void runAction(() => reopen(item.quiz.quizId, scope), msg("materials.components.ModuleBoard.quizReopened"))
                     }
                     onEdit={() => setDialog({ type: "item", module, item })}
                     onArchive={() => setDialog({ type: "archive", item })}
@@ -253,32 +253,32 @@ export function ModuleBoard({
       })}
       {dialog?.type === "create" && scope.kind === "subject" && (
         <ModuleNameDialog
-          title={msg("materials.components.ModuleBoard.themModule")}
+          title={msg("materials.components.ModuleBoard.addModule")}
           initial=""
           busy={busy}
           error={error}
           onClose={handleClosed}
           onSubmit={(name) =>
-            void runAction(() => moduleApi.createModule(scope.subjectId, name), msg("materials.components.ModuleBoard.daThemModule"))
+            void runAction(() => moduleApi.createModule(scope.subjectId, name), msg("materials.components.ModuleBoard.moduleAdded"))
           }
         />
       )}
       {dialog?.type === "rename" && (
         <ModuleNameDialog
-          title={msg("materials.components.ModuleBoard.doiTenModule")}
+          title={msg("materials.components.ModuleBoard.renameModule")}
           initial={dialog.module.title}
           busy={busy}
           error={error}
           onClose={handleClosed}
           onSubmit={(name) =>
-            void runAction(() => moduleApi.renameModule(dialog.module, name), msg("materials.components.ModuleBoard.daLuuThayDoi"))
+            void runAction(() => moduleApi.renameModule(dialog.module, name), msg("materials.components.ModuleBoard.changesSaved"))
           }
         />
       )}
       {dialog?.type === "delete" && (
         <Dialog
           open
-          title={msg("materials.components.ModuleBoard.xoaModule2")}
+          title={msg("materials.components.ModuleBoard.deleteModule2")}
           tone="danger"
           onClose={handleClosed}
           dismissible={!busy}
@@ -287,14 +287,14 @@ export function ModuleBoard({
               variant="danger"
               disabled={busy}
               onClick={() =>
-                void runAction(() => moduleApi.deleteModule(dialog.module), msg("materials.components.ModuleBoard.daXoaModule"), "danger")
+                void runAction(() => moduleApi.deleteModule(dialog.module), msg("materials.components.ModuleBoard.moduleDeleted"), "danger")
               }
               data-testid="module-delete-confirm"
             >
-              {msg("materials.components.ModuleBoard.xoa")}</Button>
+              {msg("materials.components.ModuleBoard.delete")}</Button>
           }
         >
-          <p>{msg("materials.components.ModuleBoard.banCoChacMuonXoaModule")}{dialog.module.title} {msg("materials.components.ModuleBoard.khong")}</p>
+          <p>{msg("materials.components.ModuleBoard.areYouSureYouWant")}{dialog.module.title} {msg("materials.components.ModuleBoard.text")}</p>
           {error && (
             <p role="alert" className="text-sm text-danger">
               {error}
@@ -416,12 +416,12 @@ function ModuleRow({
       {quiz && staff && (
         <Pill tone={QUIZ_STATUS_TONES[quiz.status]}>{QUIZ_STATUS_LABELS[quiz.status]}</Pill>
       )}
-      {material && staff && material.enabled === false && <Pill>{msg("materials.components.ModuleBoard.tat")}</Pill>}
+      {material && staff && material.enabled === false && <Pill>{msg("materials.components.ModuleBoard.off")}</Pill>}
       {reopenable && (
         <span className="flex shrink-0 items-center" onClick={(event) => event.stopPropagation()}>
           <IconButton
             icon="lock_open"
-            label={msg("materials.components.ModuleBoard.moLai", { title: String(title) })}
+            label={msg("materials.components.ModuleBoard.reopen", { title: String(title) })}
             disabled={busy}
             className="text-success! hover:bg-success-soft"
             onClick={onReopen}
@@ -433,7 +433,7 @@ function ModuleRow({
           className="flex shrink-0 items-center gap-0.5"
           onClick={(event) => event.stopPropagation()}
         >
-          <IconButton icon="edit" label={msg("materials.components.ModuleBoard.sua", { title: String(title) })} onClick={onEdit} />
+          <IconButton icon="edit" label={msg("materials.components.ModuleBoard.edit", { title: String(title) })} onClick={onEdit} />
           <IconButton
             icon={removal.icon}
             label={`${removal.label} ${title}`}
@@ -480,7 +480,7 @@ function ModuleNameDialog({
       dismissible={!busy}
       footer={
         <Button variant="primary" disabled={busy} onClick={handleSubmit} data-testid="module-name-save">
-          {msg("materials.components.ModuleBoard.luu")}</Button>
+          {msg("materials.components.ModuleBoard.save")}</Button>
       }
     >
       <form
@@ -492,10 +492,10 @@ function ModuleNameDialog({
         className="flex flex-col gap-3"
       >
         <Field
-          label={msg("materials.components.ModuleBoard.tenModule")}
+          label={msg("materials.components.ModuleBoard.moduleName")}
           htmlFor={`${id}-name`}
           required
-          error={invalid ? msg("materials.components.ModuleBoard.nhapTenModule") : null}
+          error={invalid ? msg("materials.components.ModuleBoard.enterTheModuleName") : null}
         >
           <TextInput
             id={`${id}-name`}

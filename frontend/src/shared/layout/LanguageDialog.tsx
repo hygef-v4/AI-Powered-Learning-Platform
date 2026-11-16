@@ -29,8 +29,8 @@ export function LanguageDialog({ open, onClose }: { open: boolean; onClose: () =
   }
 
   return (
-    <Dialog open={open} title={msg("shared.layout.AppShell.ngonNgu")} onClose={onClose}>
-      <div role="radiogroup" aria-label={msg("shared.layout.AppShell.ngonNgu")} className="flex flex-col gap-1.5">
+    <Dialog open={open} title={msg("shared.layout.AppShell.language")} onClose={onClose}>
+      <div role="radiogroup" aria-label={msg("shared.layout.AppShell.language")} className="flex flex-col gap-1.5">
         {LOCALES.map((code) => {
           const checked = picked === code;
           return (

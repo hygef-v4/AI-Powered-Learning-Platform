@@ -6,7 +6,7 @@ import { resolveAssignmentContext, resolveStudentAssignmentContext } from "./com
 import { ClassAssignmentsSection } from "./components/ClassAssignmentsSection";
 import { msg } from "@/i18n/msg";
 
-subjectNavEntries.register({ key: "manager-assignments", order: 40, title: msg("assignments.register.deMau"), icon: "assignment", path: "/manager/assignments" });
+subjectNavEntries.register({ key: "manager-assignments", order: 40, title: msg("assignments.register.templates"), icon: "assignment", path: "/manager/assignments" });
 teacherClassTabs.register({ key: "assignments", order: 10, component: ClassAssignmentsSection });
 contextNavEntries.register({ key: "assignment-outline", order: 4, roles: ["SUBJECT_MANAGER", "TEACHER"], resolve: resolveAssignmentContext });
 contextNavEntries.register({ key: "assignment-work-outline", order: 4, roles: ["STUDENT"], resolve: resolveStudentAssignmentContext });

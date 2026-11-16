@@ -16,7 +16,7 @@ type Props = {
   onReload: () => void;
 };
 
-const LABEL = msg("settings.components.SettingValueForm.giaTriMoi");
+const LABEL = msg("settings.components.SettingValueForm.newValue");
 
 /**
  * Ô nhập theo kiểu (UC 15). Kiểm ngay khi sửa và khóa nút Lưu khi giá trị sai; 400 hiện lý do,
@@ -50,9 +50,9 @@ export function SettingValueForm({ item, onSaved, onReload }: Props) {
       if (e instanceof ApiError && e.problem.status === 409) {
         setConflict(true);
       } else if (e instanceof ApiError && e.problem.status === 400) {
-        setServerError(e.problem.detail ?? msg("settings.components.SettingValueForm.giaTriKhongHopLe"));
+        setServerError(e.problem.detail ?? msg("settings.components.SettingValueForm.invalidValue"));
       } else {
-        setServerError(msg("settings.components.SettingValueForm.khongLuuDuocThuLaiSau"));
+        setServerError(msg("settings.components.SettingValueForm.couldNotSavePleaseTry"));
       }
     } finally {
       setSaving(false);
@@ -72,19 +72,19 @@ export function SettingValueForm({ item, onSaved, onReload }: Props) {
         <Alert
           tone="warning"
           role="alert"
-          title={msg("settings.components.SettingValueForm.nguoiKhacVuaSua")}
+          title={msg("settings.components.SettingValueForm.someoneElseJustEditedIt")}
           action={
             <Button size="sm" icon="refresh" onClick={onReload}>
-              {msg("settings.components.SettingValueForm.taiLai")}</Button>
+              {msg("settings.components.SettingValueForm.reload")}</Button>
           }
         >
-          {msg("settings.components.SettingValueForm.caiDatDaDuocNguoiKhac")}</Alert>
+          {msg("settings.components.SettingValueForm.theSettingWasEditedBy")}</Alert>
       )}
       <ValueField item={item} value={draft} error={error} onChange={change} disabled={saving} />
       <div className="flex items-center justify-end gap-2">
         {canBeEmpty(item) && item.value !== null && (
           <Button disabled={saving} onClick={() => void saveSetting(null)} className="mr-auto">
-            {msg("settings.components.SettingValueForm.boTrong")}</Button>
+            {msg("settings.components.SettingValueForm.leaveEmpty")}</Button>
         )}
         <Button
           disabled={saving || !changed}
@@ -94,9 +94,9 @@ export function SettingValueForm({ item, onSaved, onReload }: Props) {
             setServerError(null);
           }}
         >
-          {msg("settings.components.SettingValueForm.huy")}</Button>
+          {msg("settings.components.SettingValueForm.cancel")}</Button>
         <Button type="submit" variant="primary" icon="save" disabled={saving || !changed || invalid !== null}>
-          {saving ? msg("settings.components.SettingValueForm.dangLuu") : msg("settings.components.SettingValueForm.luu")}
+          {saving ? msg("settings.components.SettingValueForm.saving") : msg("settings.components.SettingValueForm.save")}
         </Button>
       </div>
     </form>
@@ -140,14 +140,14 @@ function ValueField({ item, value, error, onChange, disabled }: FieldProps) {
             ariaLabel={LABEL}
             checked={value === true}
             disabled={disabled}
-            label={value === true ? msg("settings.components.SettingValueForm.bat") : msg("settings.components.SettingValueForm.tat")}
+            label={value === true ? msg("settings.components.SettingValueForm.on") : msg("settings.components.SettingValueForm.off")}
             onChange={onChange}
           />
         </Field>
       );
     case "TIME_OF_DAY":
       return (
-        <Field label={LABEL} htmlFor={id} required={required} error={error} hint={msg("settings.components.SettingValueForm.gioVietNamAsiaHoChi")}>
+        <Field label={LABEL} htmlFor={id} required={required} error={error} hint={msg("settings.components.SettingValueForm.vietnamTimeAsiaHoChi")}>
           <TextInput
             id={id}
             type="time"
@@ -171,7 +171,7 @@ function ValueField({ item, value, error, onChange, disabled }: FieldProps) {
             disabled={disabled}
             onChange={(e) => onChange(e.target.value === "" ? null : e.target.value)}
           >
-            {value === null && <option value="">{msg("settings.components.SettingValueForm.chuaChon")}</option>}
+            {value === null && <option value="">{msg("settings.components.SettingValueForm.notSelected")}</option>}
             {listOptions(item).map((option) => (
               <option key={option} value={option}>
                 {option}

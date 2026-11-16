@@ -3,7 +3,7 @@ import { LearningMaterialPage } from "@/features/materials/pages/LearningMateria
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.materials.id.view.page.hocLieu") };
+  return { title: await translateOnServer("app.materials.id.view.page.learningMaterials") };
 }
 export default async function Page({
   params,

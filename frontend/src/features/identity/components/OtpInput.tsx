@@ -14,7 +14,7 @@ export function OtpInput({
   value,
   onChange,
   invalid,
-  label = msg("identity.components.OtpInput.maXacThucOtp"),
+  label = msg("identity.components.OtpInput.otpVerificationCode"),
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -80,7 +80,7 @@ export function OtpInput({
             onPaste={onPaste}
             inputMode="numeric"
             autoComplete={index === 0 ? "one-time-code" : "off"}
-            aria-label={msg("identity.components.OtpInput.chuSo", { value: String(index + 1) })}
+            aria-label={msg("identity.components.OtpInput.digit", { value: String(index + 1) })}
             aria-invalid={invalid || undefined}
             className={`h-[52px] w-[46px] rounded-xl bg-surface text-center text-xl font-bold text-ink outline-none focus:ring-2 focus:ring-focus/20 ${
               invalid ? "border-2 border-danger" : digit ? "border-2 border-primary-strong" : "border border-line focus:border-focus"

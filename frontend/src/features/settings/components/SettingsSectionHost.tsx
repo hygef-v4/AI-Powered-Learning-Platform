@@ -14,9 +14,9 @@ export function SettingsSectionHost({ sectionKey, tab }: { sectionKey: string; t
   if (!entry) {
     return (
       <>
-        <PageHeader backHref="/admin/settings" title={msg("settings.components.SettingsSectionHost.caiDat")} />
+        <PageHeader backHref="/admin/settings" title={msg("settings.components.SettingsSectionHost.settings")} />
         <Alert tone="warning" className="max-w-[680px]">
-          {msg("settings.components.SettingsSectionHost.phanCaiDatNayHienKhong")}</Alert>
+          {msg("settings.components.SettingsSectionHost.thisSettingsSectionIsCurrently")}</Alert>
       </>
     );
   }

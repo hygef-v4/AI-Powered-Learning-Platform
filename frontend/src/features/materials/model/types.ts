@@ -71,14 +71,14 @@ export type ModuleScope =
   | { kind: "student"; classId: string };
 export type DownloadToken = { url: string; expiresAt: string };
 export const textLabels: Record<TextStatus, string> = {
-  PENDING: msg("materials.model.types.dangXuLy"),
-  EXTRACTED: msg("materials.model.types.daTrich"),
-  NO_TEXT: msg("materials.model.types.khongCoChu"),
-  FAILED: msg("materials.model.types.loi"),
+  PENDING: msg("materials.model.types.processing"),
+  EXTRACTED: msg("materials.model.types.extracted"),
+  NO_TEXT: msg("materials.model.types.noText"),
+  FAILED: msg("materials.model.types.error"),
 };
 export function describeFile(m: Material): string {
   if (m.kind === "YOUTUBE_LINK") return "YouTube";
-  const type = m.current.fileName?.split(".").pop()?.toUpperCase() ?? msg("materials.model.types.tep");
+  const type = m.current.fileName?.split(".").pop()?.toUpperCase() ?? msg("materials.model.types.file");
   const bytes = m.current.byteSize;
   if (bytes && bytes < 1024 * 1024) return `${type} · ${Math.max(1, Math.round(bytes / 1024))} KB`;
   return bytes

@@ -8,7 +8,7 @@ export function useCandidates(initial:PersonView[],query:string,load?:CandidateL
  useEffect(()=>{if(!load)return; const abort=new AbortController(); const timer=setTimeout(()=>{
   // Ô tìm trống vẫn tải 20 người đầu để mở popup là có danh sách chọn ngay.
   setState({rows:[],error:"",loading:true,query});
-  load(query.trim(),abort.signal).then(rows=>{if(!abort.signal.aborted)setState({rows:rows.slice(0,limit),error:"",loading:false,query});},()=>{if(!abort.signal.aborted)setState({rows:[],error:msg("academics.hooks.useCandidates.khongTaiDuocDanhSachVui"),loading:false,query});});
+  load(query.trim(),abort.signal).then(rows=>{if(!abort.signal.aborted)setState({rows:rows.slice(0,limit),error:"",loading:false,query});},()=>{if(!abort.signal.aborted)setState({rows:[],error:msg("academics.hooks.useCandidates.couldNotLoadTheList"),loading:false,query});});
  },300);return()=>{clearTimeout(timer);abort.abort();};},[query,load,limit]);
  return load ? state.query===query?state:{rows:[],error:"",loading:true} : {rows:initial,error:"",loading:false};
 }

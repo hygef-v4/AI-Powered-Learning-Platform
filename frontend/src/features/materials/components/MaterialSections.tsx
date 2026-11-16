@@ -15,7 +15,7 @@ export function MaterialLinkList({
   materialIds: string[];
 }) {
   const ids = [...new Set(materialIds)].sort();
-  return <MaterialLinks classId={classId} ids={ids} title={msg("materials.components.MaterialSections.hocLieuGanKem")} />;
+  return <MaterialLinks classId={classId} ids={ids} title={msg("materials.components.MaterialSections.attachedLearningMaterials")} />;
 }
 /** Học liệu của lớp (sinh viên): module của môn với học liệu và Quiz đang mở của lớp. */
 export function ClassMaterialsCard({ classId }: { classId: string }) {
@@ -43,14 +43,14 @@ function MaterialLinks({
         {title}
         {resource.data && ` (${resource.data.length})`}
       </h2>
-      {resource.loading && <p role="status">{msg("materials.components.MaterialSections.dangTaiHocLieu")}</p>}
+      {resource.loading && <p role="status">{msg("materials.components.MaterialSections.loadingLearningMaterials")}</p>}
       {resource.error && (
         <p role="alert" className={styles.error}>
           {resource.error}
-          <Button onClick={resource.reload}>{msg("materials.components.MaterialSections.thuLai")}</Button>
+          <Button onClick={resource.reload}>{msg("materials.components.MaterialSections.retry")}</Button>
         </p>
       )}
-      {resource.data?.length === 0 && <p className={styles.muted}>{msg("materials.components.MaterialSections.chuaCoHocLieu")}</p>}
+      {resource.data?.length === 0 && <p className={styles.muted}>{msg("materials.components.MaterialSections.noLearningMaterialsYet")}</p>}
       <div className={styles.linkList}>
         {resource.data?.map((m, i) => (
           <Link
@@ -61,7 +61,7 @@ function MaterialLinks({
             {i + 1}. {m.title}
             <span className="ml-2 text-xs text-muted">
               {describeFile(m)}
-              {m.scope === "CLASS" && msg("materials.components.MaterialSections.cuaLop")}
+              {m.scope === "CLASS" && msg("materials.components.MaterialSections.class")}
             </span>
           </Link>
         ))}

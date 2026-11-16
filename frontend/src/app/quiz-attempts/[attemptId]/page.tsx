@@ -3,7 +3,7 @@ import { QuizTakingPage } from "@/features/quizpractice/pages/QuizTakingPage";
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.quizattempts.attemptId.page.lamQuiz") };
+  return { title: await translateOnServer("app.quizattempts.attemptId.page.takeQuiz") };
 }
 
 // U11 #44 Quiz Taking.

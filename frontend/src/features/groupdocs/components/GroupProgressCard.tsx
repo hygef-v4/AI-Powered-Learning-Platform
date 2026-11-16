@@ -21,15 +21,15 @@ export function GroupProgressCard({ assignmentId, classId }: { assignmentId: str
   const done = view.sections.filter((s) => s.status === "DONE").length;
   return (
     <>
-    <Section title={msg("groupdocs.components.GroupProgressCard.tienDo")}>
+    <Section title={msg("groupdocs.components.GroupProgressCard.progress")}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
         <div className="flex shrink-0 flex-col justify-center rounded-xl bg-shell px-6 py-4 text-center">
-          <span className="text-xs text-muted">{msg("groupdocs.components.GroupProgressCard.mucXong")}</span>
+          <span className="text-xs text-muted">{msg("groupdocs.components.GroupProgressCard.sectionsDone")}</span>
           <span className="mt-1 font-display text-[34px] leading-none tracking-[-0.02em] text-ink tabular-nums">{done}</span>
           <span className="mt-1 text-xs text-muted tabular-nums">/ {view.sections.length}</span>
         </div>
         {view.sections.length > 0 && (
-          <ul className="flex min-w-0 flex-1 flex-col" aria-label={msg("groupdocs.components.GroupProgressCard.cacMuc")}>
+          <ul className="flex min-w-0 flex-1 flex-col" aria-label={msg("groupdocs.components.GroupProgressCard.sections")}>
             {view.sections.map((s) => {
               const own = isOwnSection(s, view.viewerId);
               return (

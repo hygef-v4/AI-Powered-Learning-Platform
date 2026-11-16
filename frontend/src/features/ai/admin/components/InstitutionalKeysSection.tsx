@@ -24,6 +24,6 @@ const API: KeysApi = {
 
 /** Khóa API của trường (UC 14, 15): nhiều khóa cho mỗi nhà cung cấp, cùng bảng với khóa cá nhân. */
 export function InstitutionalKeysSection() {
-  return <KeysSection title={msg("ai.admin.components.InstitutionalKeysSection.khoaApiCuaTruong")} api={API} revokeTitle={msg("ai.admin.components.InstitutionalKeysSection.thuHoiKhoaCuaTruong")}
-    loadError={msg("ai.admin.components.InstitutionalKeysSection.khongTaiDuocKhoaApiCua")} />;
+  return <KeysSection title={msg("ai.admin.components.InstitutionalKeysSection.schoolApiKeys")} api={API} revokeTitle={msg("ai.admin.components.InstitutionalKeysSection.revokeTheSchoolKey")}
+    loadError={msg("ai.admin.components.InstitutionalKeysSection.couldNotLoadTheSchool")} />;
 }

@@ -39,14 +39,14 @@ export function ProposalReviewList({ classId, setVersion, readOnly, onGroupsChan
     setView(loaded);
     setLoadError(null);
     setPicked((current) => current.filter((id) => loaded.proposals.some((p) => p.id === id && p.status === "SUBMITTED")));
-  }, () => setLoadError(msg("groups.components.ProposalReviewList.khongTaiDuocDeXuatNhom"))), [classId]);
+  }, () => setLoadError(msg("groups.components.ProposalReviewList.couldNotLoadGroupProposals"))), [classId]);
 
   useEffect(() => {
     void load();
   }, [load, setVersion]);
 
   if (loadError && !view) {
-    return <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void load()}>{msg("groups.components.ProposalReviewList.taiLai")}</Button>}>{loadError}</Alert>;
+    return <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void load()}>{msg("groups.components.ProposalReviewList.reload")}</Button>}>{loadError}</Alert>;
   }
   if (!view) return null;
 
@@ -63,13 +63,13 @@ export function ProposalReviewList({ classId, setVersion, readOnly, onGroupsChan
       const result = await approveProposals(classId, ids);
       setFailures(Object.fromEntries(result.failed.map((f) => [f.proposalId, f.message])));
       if (result.approved.length > 0) {
-        showToast(msg("groups.components.ProposalReviewList.daDuyetDeXuatThanhNhom", { length: String(result.approved.length) }));
+        showToast(msg("groups.components.ProposalReviewList.approvedProposalsAsGroups", { length: String(result.approved.length) }));
         onGroupsChanged();
       }
-      if (result.failed.length > 0) setError(msg("groups.components.ProposalReviewList.deXuatChuaDuyetDuocXem", { length: String(result.failed.length) }));
+      if (result.failed.length > 0) setError(msg("groups.components.ProposalReviewList.proposalsCouldNotBeApproved", { length: String(result.failed.length) }));
       await load();
     } catch (e) {
-      setError(describeProposalError(e, msg("groups.components.ProposalReviewList.khongDuyetDuocDeXuat")));
+      setError(describeProposalError(e, msg("groups.components.ProposalReviewList.couldNotApproveTheProposal")));
       await load();
     } finally {
       setBusy(false);
@@ -79,23 +79,23 @@ export function ProposalReviewList({ classId, setVersion, readOnly, onGroupsChan
   const toggle = (id: string) => setPicked((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
 
   return (
-    <Section title={msg("groups.components.ProposalReviewList.sinhVienTuChiaNhom")} icon="groups" description={msg("groups.components.ProposalReviewList.tuChiaNhom", { value: String(describeFormation(formation)) })}
-      actions={!readOnly && <Button size="sm" icon="settings" onClick={() => setSettingsOpen(true)} data-testid="formation-open">{msg("groups.components.ProposalReviewList.caiDat")}</Button>}>
+    <Section title={msg("groups.components.ProposalReviewList.studentSelfGrouping")} icon="groups" description={msg("groups.components.ProposalReviewList.selfGrouping", { value: String(describeFormation(formation)) })}
+      actions={!readOnly && <Button size="sm" icon="settings" onClick={() => setSettingsOpen(true)} data-testid="formation-open">{msg("groups.components.ProposalReviewList.settings")}</Button>}>
       {idle ? (
-        <p className="text-[13px] text-muted">{msg("groups.components.ProposalReviewList.batDeSinhVienTuLap")}</p>
+        <p className="text-[13px] text-muted">{msg("groups.components.ProposalReviewList.turnOnToLetStudents")}</p>
       ) : (
         <div className="flex flex-col gap-4">
           {error && <Alert tone="danger" role="alert">{error}</Alert>}
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-[13.5px] font-semibold text-ink">{msg("groups.components.ProposalReviewList.choDuyet")}{submitted.length})</h3>
+            <h3 className="text-[13.5px] font-semibold text-ink">{msg("groups.components.ProposalReviewList.awaitingApproval")}{submitted.length})</h3>
             {!readOnly && submitted.length > 0 && (
               <Button size="sm" variant="primary" icon="check" disabled={busy || picked.length === 0}
                 onClick={() => void approve(picked)} data-testid="proposals-approve-selected">
-                {msg("groups.components.ProposalReviewList.duyetDaChon")}{picked.length})
+                {msg("groups.components.ProposalReviewList.approveSelected")}{picked.length})
               </Button>
             )}
           </div>
-          {submitted.length === 0 && <p className="text-[13px] text-muted">{msg("groups.components.ProposalReviewList.chuaCoDeXuatChoDuyet")}</p>}
+          {submitted.length === 0 && <p className="text-[13px] text-muted">{msg("groups.components.ProposalReviewList.noProposalsAwaitingApproval")}</p>}
           <ul className="flex flex-col gap-2">
             {submitted.map((p) => (
               <ProposalRow key={p.id} proposal={p} failure={failures[p.id]} busy={busy} readOnly={readOnly}
@@ -105,7 +105,7 @@ export function ProposalReviewList({ classId, setVersion, readOnly, onGroupsChan
           </ul>
           {drafts.length > 0 && (
             <details className="rounded-lg border border-line px-4 py-2">
-              <summary className="cursor-pointer py-1 text-[13.5px] font-semibold text-ink">{msg("groups.components.ProposalReviewList.dangLap")}{drafts.length})</summary>
+              <summary className="cursor-pointer py-1 text-[13.5px] font-semibold text-ink">{msg("groups.components.ProposalReviewList.forming")}{drafts.length})</summary>
               <ul className="mt-2 flex flex-col gap-2">
                 {drafts.map((p) => <ProposalRow key={p.id} proposal={p} busy={busy} readOnly />)}
               </ul>
@@ -117,11 +117,11 @@ export function ProposalReviewList({ classId, setVersion, readOnly, onGroupsChan
 
       {settingsOpen && (
         <SelfGroupingSettingsDialog classId={classId} onClose={() => setSettingsOpen(false)}
-          onSaved={() => { setSettingsOpen(false); showToast(msg("groups.components.ProposalReviewList.daLuuCaiDatTuChia")); void load(); }} />
+          onSaved={() => { setSettingsOpen(false); showToast(msg("groups.components.ProposalReviewList.selfGroupingSettingsSaved")); void load(); }} />
       )}
       {rejecting && (
         <RejectProposalDialog proposal={rejecting} onClose={() => setRejecting(null)}
-          onRejected={(next) => { setRejecting(null); setView(next); showToast(msg("groups.components.ProposalReviewList.daTuChoi", { name: String(rejecting.name) }), "danger"); }} />
+          onRejected={(next) => { setRejecting(null); setView(next); showToast(msg("groups.components.ProposalReviewList.rejected", { name: String(rejecting.name) }), "danger"); }} />
       )}
     </Section>
   );
@@ -144,7 +144,7 @@ function ProposalRow({ proposal, failure, busy, readOnly, checked, onToggle, onA
       <div className="flex flex-wrap items-start gap-3">
         {reviewable && (
           <input type="checkbox" className="mt-1 size-4 accent-[var(--c-primary)]" checked={!!checked} disabled={busy}
-            onChange={onToggle} aria-label={msg("groups.components.ProposalReviewList.chon", { name: String(proposal.name) })} />
+            onChange={onToggle} aria-label={msg("groups.components.ProposalReviewList.select", { name: String(proposal.name) })} />
         )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -152,15 +152,15 @@ function ProposalRow({ proposal, failure, busy, readOnly, checked, onToggle, onA
             <Pill tone={proposal.status === "SUBMITTED" ? "warning" : "neutral"}>{PROPOSAL_STATUS_LABELS[proposal.status]}</Pill>
           </div>
           <p className="text-xs text-muted">
-            {msg("groups.components.ProposalReviewList.truongNhom")}{formatStudentLabel({ ...proposal.leader, name: proposal.leader.name ?? proposal.leader.email ?? msg("groups.components.ProposalReviewList.chuaRoTen") })} · {proposal.members.length} {msg("groups.components.ProposalReviewList.thanhVien")}{proposal.pendingInvitations > 0 && msg("groups.components.ProposalReviewList.loiMoiCho", { pendingInvitations: String(proposal.pendingInvitations) })}
+            {msg("groups.components.ProposalReviewList.leader")}{formatStudentLabel({ ...proposal.leader, name: proposal.leader.name ?? proposal.leader.email ?? msg("groups.components.ProposalReviewList.unknownName") })} · {proposal.members.length} {msg("groups.components.ProposalReviewList.members")}{proposal.pendingInvitations > 0 && msg("groups.components.ProposalReviewList.pendingInvitations", { pendingInvitations: String(proposal.pendingInvitations) })}
           </p>
           <p className="mt-1 text-[13px] text-ink">{proposal.members.map(formatStudentLabel).join(", ")}</p>
           {proposal.warnings.map((w) => <p key={w} className="mt-1 text-xs text-warning">{WARNING_LABELS[w]}</p>)}
         </div>
         {reviewable && (
           <div className="flex gap-2">
-            <Button size="sm" variant="danger" disabled={busy} onClick={onReject} data-testid={`proposal-reject-${proposal.id}`}>{msg("groups.components.ProposalReviewList.tuChoi")}</Button>
-            <Button size="sm" variant="primary" disabled={busy} onClick={onApprove} data-testid={`proposal-approve-${proposal.id}`}>{msg("groups.components.ProposalReviewList.duyet")}</Button>
+            <Button size="sm" variant="danger" disabled={busy} onClick={onReject} data-testid={`proposal-reject-${proposal.id}`}>{msg("groups.components.ProposalReviewList.reject")}</Button>
+            <Button size="sm" variant="primary" disabled={busy} onClick={onApprove} data-testid={`proposal-approve-${proposal.id}`}>{msg("groups.components.ProposalReviewList.approve")}</Button>
           </div>
         )}
       </div>
@@ -171,20 +171,20 @@ function ProposalRow({ proposal, failure, busy, readOnly, checked, onToggle, onA
 
 /** Sinh viên đang học chưa có nhóm, kèm đề xuất họ đang ở; dùng cùng dữ liệu với Chia ngẫu nhiên. */
 function UngroupedStudentsList({ view }: { view: ClassProposalsView }) {
-  if (view.ungrouped.length === 0) return <p className="text-[13px] text-muted">{msg("groups.components.ProposalReviewList.moiSinhVienDaCoNhom")}</p>;
+  if (view.ungrouped.length === 0) return <p className="text-[13px] text-muted">{msg("groups.components.ProposalReviewList.allStudentsAlreadyHaveA")}</p>;
   return (
     <details className="rounded-lg border border-line px-4 py-2" data-testid="ungrouped-students">
-      <summary className="cursor-pointer py-1 text-[13.5px] font-semibold text-ink">{msg("groups.components.ProposalReviewList.chuaCoNhom")}{view.ungrouped.length})</summary>
+      <summary className="cursor-pointer py-1 text-[13.5px] font-semibold text-ink">{msg("groups.components.ProposalReviewList.noGroup")}{view.ungrouped.length})</summary>
       <ul className="mt-2 flex flex-col divide-y divide-line">
         {view.ungrouped.map((u) => (
           <li key={u.person.accountId} className="flex flex-wrap items-center justify-between gap-2 py-2 text-[13px]">
             <span className="min-w-0">
-              <span className="font-semibold text-ink">{u.person.name ?? u.person.email ?? msg("groups.components.ProposalReviewList.chuaRoTen2")}</span>
+              <span className="font-semibold text-ink">{u.person.name ?? u.person.email ?? msg("groups.components.ProposalReviewList.unknownName2")}</span>
               {(u.person.studentCode || u.person.email) && <span className="ml-2 text-muted">
                 {[u.person.studentCode, u.person.email].filter(Boolean).join(" · ")}</span>}
             </span>
             <span className="text-muted">
-              {u.proposalName ? `${u.proposalName} · ${PROPOSAL_STATUS_LABELS[u.proposalStatus ?? "DRAFT"]}` : msg("groups.components.ProposalReviewList.chuaCoDeXuat")}
+              {u.proposalName ? `${u.proposalName} · ${PROPOSAL_STATUS_LABELS[u.proposalStatus ?? "DRAFT"]}` : msg("groups.components.ProposalReviewList.noProposalYet")}
             </span>
           </li>
         ))}
@@ -210,19 +210,19 @@ function RejectProposalDialog({ proposal, onClose, onRejected }: {
     try {
       onRejected(await rejectProposal(proposal.id, reason.trim() || null));
     } catch (e) {
-      setError(describeProposalError(e, msg("groups.components.ProposalReviewList.khongTuChoiDuocDeXuat")));
+      setError(describeProposalError(e, msg("groups.components.ProposalReviewList.couldNotRejectTheProposal")));
       setBusy(false);
     }
   };
   return (
-    <Dialog open title={msg("groups.components.ProposalReviewList.tuChoiDeXuat", { name: String(proposal.name) })} tone="danger" onClose={onClose} dismissible={!busy}
-      footer={<Button variant="danger" disabled={busy || tooLong} onClick={() => void reject()} data-testid="proposal-reject-confirm">{msg("groups.components.ProposalReviewList.tuChoi")}</Button>}>
-      <Field label={msg("groups.components.ProposalReviewList.lyDoTuyChon")} htmlFor={fieldId} error={tooLong ? msg("groups.components.ProposalReviewList.lyDoToiDa1000") : error}>
+    <Dialog open title={msg("groups.components.ProposalReviewList.rejectProposal", { name: String(proposal.name) })} tone="danger" onClose={onClose} dismissible={!busy}
+      footer={<Button variant="danger" disabled={busy || tooLong} onClick={() => void reject()} data-testid="proposal-reject-confirm">{msg("groups.components.ProposalReviewList.reject")}</Button>}>
+      <Field label={msg("groups.components.ProposalReviewList.reasonOptional")} htmlFor={fieldId} error={tooLong ? msg("groups.components.ProposalReviewList.theReasonCanBeAt") : error}>
         <Textarea id={fieldId} rows={3} value={reason} disabled={busy} onChange={(event) => setReason(event.target.value)}
           data-testid="proposal-reject-reason" />
       </Field>
       <p className="text-right text-xs text-muted">{reason.trim().length}/{MAX_REJECT_REASON}</p>
-      <p className="text-[13px] text-muted">{msg("groups.components.ProposalReviewList.thanhVienDuocBaoVaCo")}</p>
+      <p className="text-[13px] text-muted">{msg("groups.components.ProposalReviewList.membersAreNotifiedAndCan")}</p>
     </Dialog>
   );
 }

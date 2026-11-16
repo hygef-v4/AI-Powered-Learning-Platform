@@ -143,7 +143,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
       setContent(recovered ?? value.content);
       setDirty(!!recovered);
       latest.current = { content: recovered ?? value.content, dirty: !!recovered };
-      if (recovered) setBanner({ tone: "warning", text: msg("assignmentwork.pages.AssignmentWorkspacePage.daKhoiPhucBanChuaLuu") });
+      if (recovered) setBanner({ tone: "warning", text: msg("assignmentwork.pages.AssignmentWorkspacePage.restoredTheUnsavedVersionOn") });
       setSavedAt(value.lastSavedAt);
       version.current = value.contentVersion;
       setOffset(new Date(value.serverTime).getTime() - Date.now());
@@ -190,17 +190,17 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
         const transient = !(error instanceof ApiError) || error.problem.status >= 500;
         if (code === "CONTENT_VERSION_CONFLICT") {
           halt.current = "conflict";
-          setBanner({ tone: "warning", reload: true, text: msg("assignmentwork.pages.AssignmentWorkspacePage.baiDangMoONoiKhac") });
+          setBanner({ tone: "warning", reload: true, text: msg("assignmentwork.pages.AssignmentWorkspacePage.theWorkIsOpenElsewhere") });
         } else if (code === "DEADLINE_PASSED" || code === "ATTEMPT_SUBMITTED") {
           halt.current = "closed";
           setBanner({ tone: "danger", text: describeError(error) });
         } else if (transient) {
-          setBanner({ tone: "warning", text: msg("assignmentwork.pages.AssignmentWorkspacePage.matKetNoiChuaLuu") });
+          setBanner({ tone: "warning", text: msg("assignmentwork.pages.AssignmentWorkspacePage.connectionLostNotSaved") });
           setRetry((value) => value + 1);
         } else {
           halt.current = "invalid";
           setIssues(readProblemIssues(error));
-          setBanner({ tone: "danger", text: msg("assignmentwork.pages.AssignmentWorkspacePage.chuaLuu", { value: String(describeError(error)) }) });
+          setBanner({ tone: "danger", text: msg("assignmentwork.pages.AssignmentWorkspacePage.notSaved", { value: String(describeError(error)) }) });
         }
         return false;
       } finally {
@@ -248,7 +248,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   useEffect(() => {
     if (!attempt) return;
     const backHref = `/my-assignments/${encodeURIComponent(attempt.assignmentId)}?classId=${encodeURIComponent(attempt.classId)}`;
-    publishOutline({ assignmentId: attempt.assignmentId, backHref, backLabel: msg("assignmentwork.pages.AssignmentWorkspacePage.baiTap"), entries: buildOutline(content.blocks) });
+    publishOutline({ assignmentId: attempt.assignmentId, backHref, backLabel: msg("assignmentwork.pages.AssignmentWorkspacePage.assignment"), entries: buildOutline(content.blocks) });
   }, [attempt, content.blocks]);
   useEffect(() => () => publishOutline(null), []);
 
@@ -261,19 +261,19 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   }
 
   if (loadError) return <Alert tone="danger" role="alert">{describeError(loadError)}</Alert>;
-  if (!attempt) return <p role="status" className="text-sm text-muted">{msg("assignmentwork.pages.AssignmentWorkspacePage.dangMoBaiLam")}</p>;
+  if (!attempt) return <p role="status" className="text-sm text-muted">{msg("assignmentwork.pages.AssignmentWorkspacePage.openingYourWork")}</p>;
 
   const editable = attempt.editable && attempt.status === "IN_PROGRESS";
   const left = describeRemaining(attempt.deadlineAt, now + offset);
   const beforeDeadline = new Date(attempt.deadlineAt).getTime() > now + offset;
   const active = attempt.parts.find((part) => part.partId === activePart);
-  const saveText = saving ? msg("assignmentwork.pages.AssignmentWorkspacePage.dangLuu") : dirty ? msg("assignmentwork.pages.AssignmentWorkspacePage.coThayDoiChuaLuu") : savedAt ? msg("assignmentwork.pages.AssignmentWorkspacePage.daLuuLuc", { value: String(formatTime(savedAt)) }) : msg("assignmentwork.pages.AssignmentWorkspacePage.daLuu");
+  const saveText = saving ? msg("assignmentwork.pages.AssignmentWorkspacePage.saving") : dirty ? msg("assignmentwork.pages.AssignmentWorkspacePage.unsavedChanges") : savedAt ? msg("assignmentwork.pages.AssignmentWorkspacePage.savedAt", { value: String(formatTime(savedAt)) }) : msg("assignmentwork.pages.AssignmentWorkspacePage.saved");
 
   // Dòng dưới tên bài như trang xem trước: chỉ ghi loại bài (Luyện tập, hoặc Cá nhân / Nhóm).
   const header = (
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
       <p className="text-[13px] text-muted" data-testid="assignment-kind">
-        {attempt.gradingMode === "PRACTICE" ? msg("assignmentwork.pages.AssignmentWorkspacePage.luyenTap") : attempt.submissionMode === "GROUP" ? msg("assignmentwork.pages.AssignmentWorkspacePage.nhom") : msg("assignmentwork.pages.AssignmentWorkspacePage.caNhan")}
+        {attempt.gradingMode === "PRACTICE" ? msg("assignmentwork.pages.AssignmentWorkspacePage.practice") : attempt.submissionMode === "GROUP" ? msg("assignmentwork.pages.AssignmentWorkspacePage.group") : msg("assignmentwork.pages.AssignmentWorkspacePage.individual")}
       </p>
     </div>
   );
@@ -285,31 +285,31 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
         status={<>
           {/* Cạnh tên bài chỉ có thời gian còn lại (yêu cầu 2026-11-05). */}
           {editable && beforeDeadline && (
-            <span title={msg("assignmentwork.pages.AssignmentWorkspacePage.hanNop", { value: String(formatDateTime(attempt.deadlineAt)) })}><Pill tone="warning">{msg("assignmentwork.pages.AssignmentWorkspacePage.con")}{left}</Pill></span>
+            <span title={msg("assignmentwork.pages.AssignmentWorkspacePage.deadline", { value: String(formatDateTime(attempt.deadlineAt)) })}><Pill tone="warning">{msg("assignmentwork.pages.AssignmentWorkspacePage.text")}{left}</Pill></span>
           )}
           <span data-testid="save-state" className="sr-only" role="status">{saveText}</span>
         </>}
         actions={<>
-          <Menu label="" icon="more_horiz" ariaLabel={msg("assignmentwork.pages.AssignmentWorkspacePage.thaoTacKhac")} align="right">
-            <MenuItem icon="download" onClick={() => { window.location.href = exportUrl(attempt.attemptId); }}>{msg("assignmentwork.pages.AssignmentWorkspacePage.taiDocx")}</MenuItem>
-            {editable && <MenuItem icon="upload_file" onClick={() => setDialog("docx")}>{msg("assignmentwork.pages.AssignmentWorkspacePage.nhapDocx")}</MenuItem>}
+          <Menu label="" icon="more_horiz" ariaLabel={msg("assignmentwork.pages.AssignmentWorkspacePage.moreActions")} align="right">
+            <MenuItem icon="download" onClick={() => { window.location.href = exportUrl(attempt.attemptId); }}>{msg("assignmentwork.pages.AssignmentWorkspacePage.downloadDocx")}</MenuItem>
+            {editable && <MenuItem icon="upload_file" onClick={() => setDialog("docx")}>{msg("assignmentwork.pages.AssignmentWorkspacePage.importDocx")}</MenuItem>}
           </Menu>
           {editable && (
             <Button variant="primary" icon="check_circle" data-testid="open-submit" onClick={() => {
               // Lưu ngay khi mở popup: lưu xong thì popup dùng kết quả kiểm nộp của server cho đúng bản đang có.
               setDialog("submit");
               void save();
-            }}>{msg("assignmentwork.pages.AssignmentWorkspacePage.nopBai")}</Button>
+            }}>{msg("assignmentwork.pages.AssignmentWorkspacePage.submit")}</Button>
           )}
         </>} />
 
-      {banner && <Alert tone={banner.tone} role="alert" action={banner.reload ? <Button size="sm" onClick={() => window.location.reload()}>{msg("assignmentwork.pages.AssignmentWorkspacePage.taiLai")}</Button> : undefined}>
+      {banner && <Alert tone={banner.tone} role="alert" action={banner.reload ? <Button size="sm" onClick={() => window.location.reload()}>{msg("assignmentwork.pages.AssignmentWorkspacePage.reload")}</Button> : undefined}>
         {banner.text}
         {issues.length > 0 && <ul className="mt-1 list-disc pl-4">{issues.slice(0, 8).map((issue, i) => <li key={i}>{issue.message}</li>)}</ul>}
       </Alert>}
-      {attempt.status === "SUBMITTED" && <Alert tone="info">{msg("assignmentwork.pages.AssignmentWorkspacePage.daNopLuc")}{formatTime(attempt.submittedAt)} {msg("assignmentwork.pages.AssignmentWorkspacePage.chiXem")}</Alert>}
-      {!attempt.editable && attempt.status === "IN_PROGRESS" && <Alert tone="warning">{msg("assignmentwork.pages.AssignmentWorkspacePage.daQuaHan")}</Alert>}
-      {attempt.activityMonitoringEnabled && attempt.activityNotice && <Alert tone="info" title={msg("assignmentwork.pages.AssignmentWorkspacePage.baiCoGhiNhanHoatDong")}>{attempt.activityNotice}</Alert>}
+      {attempt.status === "SUBMITTED" && <Alert tone="info">{msg("assignmentwork.pages.AssignmentWorkspacePage.submittedAt")}{formatTime(attempt.submittedAt)} {msg("assignmentwork.pages.AssignmentWorkspacePage.viewOnly")}</Alert>}
+      {!attempt.editable && attempt.status === "IN_PROGRESS" && <Alert tone="warning">{msg("assignmentwork.pages.AssignmentWorkspacePage.pastDeadline")}</Alert>}
+      {attempt.activityMonitoringEnabled && attempt.activityNotice && <Alert tone="info" title={msg("assignmentwork.pages.AssignmentWorkspacePage.activityIsMonitored")}>{attempt.activityNotice}</Alert>}
 
       <DocumentEditor fullWidth document={content} mode="student" answerGuidance diagramEnabled={attempt.diagramEnabled} readOnly={!editable}
         imageUrl={attemptImageUrl(attempt.attemptId)} issues={issues}
@@ -324,7 +324,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
       {dialog === "submit" && (
         <SubmitDialog onClose={() => setDialog(null)}
           onSubmit={async () => {
-            if (!(await save())) throw new Error(msg("assignmentwork.pages.AssignmentWorkspacePage.baiChuaLuu"));
+            if (!(await save())) throw new Error(msg("assignmentwork.pages.AssignmentWorkspacePage.workNotSaved"));
             await workApi.submit(attempt.attemptId, version.current);
             const target = attempt.classId
               ? `/my-assignments/${encodeURIComponent(attempt.assignmentId)}?classId=${encodeURIComponent(attempt.classId)}`
@@ -334,7 +334,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
       )}
       {dialog === "docx" && (
         <DocxImportDialog allowReplace={false}
-          title={active ? msg("assignmentwork.pages.AssignmentWorkspacePage.nhapDocxVaoPhan", { value: String(active.title.split(" › ").at(-1)) }) : msg("assignmentwork.pages.AssignmentWorkspacePage.nhapDocxVaoPhanCuoiCua")}
+          title={active ? msg("assignmentwork.pages.AssignmentWorkspacePage.importDocxIntoPart", { value: String(active.title.split(" › ").at(-1)) }) : msg("assignmentwork.pages.AssignmentWorkspacePage.importDocxIntoTheLast")}
           preview={(file) => workApi.importDocx(attempt.attemptId, file)}
           onClose={() => setDialog(null)}
           onImport={(document) => edit(insertIntoPart(latest.current.content, attempt.parts, activePart, document.blocks))} />
@@ -350,7 +350,7 @@ function SubmitDialog({ onClose, onSubmit }: {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   return (
-    <Dialog open title={msg("assignmentwork.pages.AssignmentWorkspacePage.nopBai")} onClose={onClose} dismissible={!busy}
+    <Dialog open title={msg("assignmentwork.pages.AssignmentWorkspacePage.submit")} onClose={onClose} dismissible={!busy}
       footer={<>
         <Button variant="primary" disabled={busy} data-testid="confirm-submit" onClick={async () => {
           setBusy(true);
@@ -361,7 +361,7 @@ function SubmitDialog({ onClose, onSubmit }: {
             setMessage(describeError(error));
             setBusy(false);
           }
-        }}>{msg("assignmentwork.pages.AssignmentWorkspacePage.nopBai")}</Button>
+        }}>{msg("assignmentwork.pages.AssignmentWorkspacePage.submit")}</Button>
       </>}>
       {message && <Alert tone="danger" role="alert">{message}</Alert>}
     </Dialog>

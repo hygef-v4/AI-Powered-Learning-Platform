@@ -6,7 +6,7 @@ import { academicsApi } from "@/features/academics/api";
 import type { AssignmentContext } from "../model/types";
 import { msg } from "@/i18n/msg";
 
-const CONTEXT_ERROR = msg("grading.hooks.useSubmissionContext.khongTaiDuocThongTinBai");
+const CONTEXT_ERROR = msg("grading.hooks.useSubmissionContext.couldNotLoadTheAssignment");
 type ContextState = { key: string; value: AssignmentContext | null; error: string };
 
 /** Independent of submission filters; stale route responses never supply page labels. */

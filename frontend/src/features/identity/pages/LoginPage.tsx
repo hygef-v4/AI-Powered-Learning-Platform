@@ -20,7 +20,7 @@ export function LoginPage() {
   const params = useSearchParams();
   // Vừa đặt lại mật khẩu (`?reset=1`): báo một câu ngắn rồi tự ẩn.
   const [notice, setNotice] = useState<AuthNotice | null>(() =>
-    params.get("reset") === "1" ? { id: 1, text: msg("identity.pages.LoginPage.daDatLaiMatKhau"), tone: "success" } : null,
+    params.get("reset") === "1" ? { id: 1, text: msg("identity.pages.LoginPage.passwordReset"), tone: "success" } : null,
   );
   const clearNotice = useCallback(() => setNotice(null), []);
   const next = resolveSafeNextPath(params.get("next"));
@@ -37,9 +37,9 @@ export function LoginPage() {
       toast={<AuthToast notice={notice} onDone={clearNotice} />}
       aside={
         <InfoCard
-          title={msg("identity.pages.LoginPage.lanDauSuDung")}
-          subtitle={msg("identity.pages.LoginPage.taiKhoanDoPhongDaoTao")}
-          text={msg("identity.pages.LoginPage.kichHoatBangEmailTruongVa")}
+          title={msg("identity.pages.LoginPage.firstTimeHere")}
+          subtitle={msg("identity.pages.LoginPage.accountsAreIssuedByThe")}
+          text={msg("identity.pages.LoginPage.activateWithYourSchoolEmail")}
         />
       }
     >

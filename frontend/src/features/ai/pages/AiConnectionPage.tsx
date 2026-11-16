@@ -28,8 +28,8 @@ export function AiConnectionPage({ initialTab }: { initialTab?: string }) {
   const mcpEnabled = session.status === "authenticated" &&
     (session.profile.role === "STUDENT" || session.profile.role === "TEACHER" || session.profile.role === "SUBJECT_MANAGER");
   const tabs: TabItem<Tab>[] = [
-    { key: "usage", label: msg("ai.pages.AiConnectionPage.lichSuSuDung") },
-    { key: "settings", label: msg("ai.pages.AiConnectionPage.apiCaNhan") },
+    { key: "usage", label: msg("ai.pages.AiConnectionPage.usageHistory") },
+    { key: "settings", label: msg("ai.pages.AiConnectionPage.personalApi") },
     ...(mcpEnabled ? [{ key: "mcp" as const, label: "Agent MCP" }] : []),
   ];
   const [chosen, setChosen] = useUrlState<Tab>("tab", initialTab === "settings" || initialTab === "mcp" ? initialTab : "usage", ["usage", "settings", "mcp"]);
@@ -37,8 +37,8 @@ export function AiConnectionPage({ initialTab }: { initialTab?: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title={msg("ai.pages.AiConnectionPage.ketNoiAi")} />
-      <Tabs items={tabs} value={tab} onChange={setChosen} label={msg("ai.pages.AiConnectionPage.ketNoiAi")} />
+      <PageHeader title={msg("ai.pages.AiConnectionPage.aiConnection")} />
+      <Tabs items={tabs} value={tab} onChange={setChosen} label={msg("ai.pages.AiConnectionPage.aiConnection")} />
       {tab === "usage" && <AiUsageHistoryPage mcpEnabled={mcpEnabled} />}
       {tab === "settings" && <PersonalKeysTab />}
       {tab === "mcp" && <McpAgentsTab />}
@@ -63,8 +63,8 @@ const PERSONAL: KeysApi = {
 function PersonalKeysTab() {
   return (
     <SettingsCard>
-      <KeysSection title={msg("ai.pages.AiConnectionPage.khoaApiCaNhan")} api={PERSONAL} revokeTitle={msg("ai.pages.AiConnectionPage.thuHoiKhoaApi")}
-        loadError={msg("ai.pages.AiConnectionPage.khongTaiDuocKetNoiAi")} />
+      <KeysSection title={msg("ai.pages.AiConnectionPage.personalApiKeys")} api={PERSONAL} revokeTitle={msg("ai.pages.AiConnectionPage.revokeApiKey")}
+        loadError={msg("ai.pages.AiConnectionPage.couldNotLoadAiConnections")} />
       <ApiSetupGuide />
     </SettingsCard>
   );

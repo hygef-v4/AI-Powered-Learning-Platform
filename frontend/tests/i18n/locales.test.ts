@@ -11,9 +11,10 @@ function keys(obj: object, prefix = ""): string[] {
 }
 
 describe("ngôn ngữ giao diện", () => {
-  it("mặc định là tiếng Việt khi chưa chọn ngôn ngữ", () => {
-    expect(LOCALE).toBe(DEFAULT_LOCALE);
-    expect(msg("shared.layout.AppShell.ngonNgu")).toBe("Ngôn ngữ");
+  it("ngôn ngữ mặc định là tiếng Anh; trình duyệt dùng ngôn ngữ trong cookie (test đặt tiếng Việt)", () => {
+    expect(DEFAULT_LOCALE).toBe("en");
+    expect(LOCALE).toBe("vi");
+    expect(msg("shared.layout.AppShell.language")).toBe("Ngôn ngữ");
   });
 
   it("tiếng Anh và tiếng Nhật có đủ mọi khóa của tiếng Việt", () => {
@@ -23,16 +24,16 @@ describe("ngôn ngữ giao diện", () => {
   });
 
   it("mỗi ngôn ngữ dịch theo tệp của nó, giá trị chèn vào câu giữ nguyên", () => {
-    expect(buildTranslator("en")("shared.layout.AppShell.ngonNgu")).toBe("Language");
-    expect(buildTranslator("ja")("shared.layout.AppShell.ngonNgu")).toBe("言語");
-    expect(buildTranslator("en")("grading.components.BatchActionDialog.daCongBoDiemChoBai", { changed: "1234" }))
+    expect(buildTranslator("en")("shared.layout.AppShell.language")).toBe("Language");
+    expect(buildTranslator("ja")("shared.layout.AppShell.language")).toBe("言語");
+    expect(buildTranslator("en")("grading.components.BatchActionDialog.gradesPublishedForSubmissions", { changed: "1234" }))
       .toBe("Grades published for 1234 submissions.");
   });
 
-  it("mã ngôn ngữ lạ quay về tiếng Việt; menu ghi tên ngôn ngữ bằng chính nó", () => {
-    expect(parseLocale("fr")).toBe("vi");
-    expect(parseLocale(undefined)).toBe("vi");
+  it("mã ngôn ngữ lạ quay về tiếng Anh; menu ghi tên ngôn ngữ bằng chính nó", () => {
+    expect(parseLocale("fr")).toBe("en");
+    expect(parseLocale(undefined)).toBe("en");
     expect(parseLocale("ja")).toBe("ja");
-    expect(LOCALES.map((code) => LOCALE_NAMES[code])).toEqual(["Tiếng Việt", "English", "日本語"]);
+    expect(LOCALES.map((code) => LOCALE_NAMES[code])).toEqual(["English", "Tiếng Việt", "日本語"]);
   });
 });

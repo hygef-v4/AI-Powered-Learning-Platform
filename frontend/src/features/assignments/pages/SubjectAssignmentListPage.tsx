@@ -43,11 +43,11 @@ export function SubjectAssignmentListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title={msg("assignments.pages.SubjectAssignmentListPage.deMauBaiTap")}
+      <PageHeader title={msg("assignments.pages.SubjectAssignmentListPage.assignmentTemplates")}
         actions={<Button variant="primary" icon="add" disabled={!subjectId || !page.data || page.data.ownerArchived}
-          onClick={() => setCreating(true)} data-testid="subject-assignment-create">{msg("assignments.pages.SubjectAssignmentListPage.taoDeMau")}</Button>} />
+          onClick={() => setCreating(true)} data-testid="subject-assignment-create">{msg("assignments.pages.SubjectAssignmentListPage.createTemplate")}</Button>} />
       {subjectsError !== null && <Alert tone="danger" role="alert">{describeError(subjectsError)}</Alert>}
-      {subjects && subjects.length === 0 && <Alert tone="info">{msg("assignments.pages.SubjectAssignmentListPage.banChuaDuocGiaoQuanLy")}</Alert>}
+      {subjects && subjects.length === 0 && <Alert tone="info">{msg("assignments.pages.SubjectAssignmentListPage.youHaveNotBeenAssigned")}</Alert>}
       {subjectId && <AssignmentListCard page={page} />}
       {creating && subjectId && (
         <CreateAssignmentDialog target={{ kind: "subject", subjectId }} onClose={() => setCreating(false)}

@@ -39,7 +39,7 @@ export function QuestionProposalsSection({ classId }: { classId: string }) {
       throw new Error(describeError(failure));
     }
     setEditing(null);
-    showToast(msg("quizzes.components.QuestionProposalsSection.daGuiDeXuatChoChu"));
+    showToast(msg("quizzes.components.QuestionProposalsSection.proposalSentToTheSubject"));
     load();
   };
 
@@ -47,7 +47,7 @@ export function QuestionProposalsSection({ classId }: { classId: string }) {
     setBusy(true);
     try {
       await withdrawProposal(classId, row.question.id, row.question.version);
-      showToast(msg("quizzes.components.QuestionProposalsSection.daRutDeXuat"));
+      showToast(msg("quizzes.components.QuestionProposalsSection.proposalWithdrawn"));
       load();
     } catch (failure) {
       setError(describeError(failure));
@@ -57,12 +57,12 @@ export function QuestionProposalsSection({ classId }: { classId: string }) {
   };
 
   return (
-    <Section title={msg("quizzes.components.QuestionProposalsSection.cauHoiDeXuatVaoNgan")} icon="help_center" className="mt-4" actions={
-      <Button size="sm" icon="add" onClick={() => setEditing("new")} data-testid="proposals-new">{msg("quizzes.components.QuestionProposalsSection.deXuatCau")}</Button>
+    <Section title={msg("quizzes.components.QuestionProposalsSection.questionsProposedToTheBank")} icon="help_center" className="mt-4" actions={
+      <Button size="sm" icon="add" onClick={() => setEditing("new")} data-testid="proposals-new">{msg("quizzes.components.QuestionProposalsSection.proposeQuestions")}</Button>
     }>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
-      {!error && !rows && <p role="status" className="text-sm text-muted">{msg("quizzes.components.QuestionProposalsSection.dangTaiDeXuat")}</p>}
-      {rows?.length === 0 && <p className="text-[13px] text-muted">{msg("quizzes.components.QuestionProposalsSection.chuaCoDeXuatChuNhiem")}</p>}
+      {!error && !rows && <p role="status" className="text-sm text-muted">{msg("quizzes.components.QuestionProposalsSection.loadingProposals")}</p>}
+      {rows?.length === 0 && <p className="text-[13px] text-muted">{msg("quizzes.components.QuestionProposalsSection.noProposalsYetOnceThe")}</p>}
       <ul className="flex flex-col gap-2">
         {rows?.map((row) => {
           const open = row.question.status === "PENDING" || row.question.status === "REJECTED";
@@ -73,13 +73,13 @@ export function QuestionProposalsSection({ classId }: { classId: string }) {
                 <span className="line-clamp-2 whitespace-pre-wrap text-ink">{row.question.stem}</span>
               </p>
               {row.question.status === "REJECTED" && row.review?.reason && (
-                <p className="text-danger" data-testid="proposal-reason">{msg("quizzes.components.QuestionProposalsSection.lyDoTuChoi")}{row.review.reason}</p>
+                <p className="text-danger" data-testid="proposal-reason">{msg("quizzes.components.QuestionProposalsSection.rejectionReason")}{row.review.reason}</p>
               )}
               <SimilarQuestionsAlert similar={row.similar} />
               {open && (
                 <div className="flex gap-1">
-                  <Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditing(row)} data-testid="proposal-edit">{msg("quizzes.components.QuestionProposalsSection.suaVaGuiLai")}</Button>
-                  <Button size="sm" variant="ghost" disabled={busy} onClick={() => void handleWithdraw(row)} data-testid="proposal-withdraw">{msg("quizzes.components.QuestionProposalsSection.rutDeXuat")}</Button>
+                  <Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditing(row)} data-testid="proposal-edit">{msg("quizzes.components.QuestionProposalsSection.editAndResubmit")}</Button>
+                  <Button size="sm" variant="ghost" disabled={busy} onClick={() => void handleWithdraw(row)} data-testid="proposal-withdraw">{msg("quizzes.components.QuestionProposalsSection.withdrawProposal")}</Button>
                 </div>
               )}
             </li>
@@ -87,7 +87,7 @@ export function QuestionProposalsSection({ classId }: { classId: string }) {
         })}
       </ul>
       {editing && (
-        <InlineQuestionDialog initial={editing === "new" ? null : editing} title={editing === "new" ? msg("quizzes.components.QuestionProposalsSection.deXuatCauHoi") : msg("quizzes.components.QuestionProposalsSection.suaCauDeXuat")}
+        <InlineQuestionDialog initial={editing === "new" ? null : editing} title={editing === "new" ? msg("quizzes.components.QuestionProposalsSection.proposeAQuestion") : msg("quizzes.components.QuestionProposalsSection.editProposedQuestion")}
           onClose={() => setEditing(null)} onSave={saveProposal} />
       )}
     </Section>

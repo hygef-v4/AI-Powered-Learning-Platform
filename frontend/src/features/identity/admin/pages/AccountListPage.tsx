@@ -24,7 +24,7 @@ import { Card, Pagination } from "@/shared/ui";
 import { msg } from "@/i18n/msg";
 
 const ROLE_TABS: { value: Role | ""; label: string }[] = [
-  { value: "", label: msg("identity.admin.pages.AccountListPage.tatCa") },
+  { value: "", label: msg("identity.admin.pages.AccountListPage.all") },
   { value: "STUDENT", label: ROLE_LABELS.STUDENT },
   { value: "TEACHER", label: ROLE_LABELS.TEACHER },
   { value: "SUBJECT_MANAGER", label: ROLE_LABELS.SUBJECT_MANAGER },
@@ -62,7 +62,7 @@ export function AccountListPage() {
         setError(null);
       })
       .catch(() => {
-        if (active) setError(msg("identity.admin.pages.AccountListPage.khongTaiDuocDanhSachTai"));
+        if (active) setError(msg("identity.admin.pages.AccountListPage.couldNotLoadTheAccount"));
       });
     return () => {
       active = false;
@@ -90,13 +90,13 @@ export function AccountListPage() {
   return (
     <>
       <PageHeader
-        title={msg("identity.admin.pages.AccountListPage.taiKhoan")}
+        title={msg("identity.admin.pages.AccountListPage.accounts")}
         actions={
           <>
             <Button icon="upload_file" onClick={() => setImporting((v) => !v)} aria-expanded={importing}>
-              {msg("identity.admin.pages.AccountListPage.nhapExcel")}</Button>
+              {msg("identity.admin.pages.AccountListPage.importExcel")}</Button>
             <Button variant="primary" icon="add" onClick={() => setCreating(true)}>
-              {msg("identity.admin.pages.AccountListPage.themTaiKhoan")}</Button>
+              {msg("identity.admin.pages.AccountListPage.addAccount")}</Button>
           </>
         }
       />
@@ -104,7 +104,7 @@ export function AccountListPage() {
       {importing && (
         <ImportAccountsPanel
           onImported={(count) => {
-            showToast(msg("identity.admin.pages.AccountListPage.daTaoTaiKhoan", { count: String(count) }));
+            showToast(msg("identity.admin.pages.AccountListPage.createdAccounts", { count: String(count) }));
             setReloadKey((k) => k + 1);
           }}
           onClose={() => setImporting(false)}
@@ -116,8 +116,8 @@ export function AccountListPage() {
           <TextInput
             type="search"
             icon="search"
-            aria-label={msg("identity.admin.pages.AccountListPage.timTheoEmailTenHoacMssv")}
-            placeholder={msg("identity.admin.pages.AccountListPage.timTheoEmailTenHoacMssv")}
+            aria-label={msg("identity.admin.pages.AccountListPage.searchByEmailNameOr")}
+            placeholder={msg("identity.admin.pages.AccountListPage.searchByEmailNameOr")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -125,21 +125,21 @@ export function AccountListPage() {
         <div className="flex flex-wrap items-center gap-3">
           <Segmented
             as="tab"
-            ariaLabel={msg("identity.admin.pages.AccountListPage.vaiTro")}
+            ariaLabel={msg("identity.admin.pages.AccountListPage.role")}
             value={role}
             onChange={(value) => navigate({ role: value, page: 0 })}
             options={ROLE_TABS}
           />
           <Select
-            aria-label={msg("identity.admin.pages.AccountListPage.trangThai")}
+            aria-label={msg("identity.admin.pages.AccountListPage.status")}
             value={status}
             onChange={(e) => navigate({ status: e.target.value, page: 0 })}
             wrapperClassName="ml-auto w-48"
           >
-            <option value="">{msg("identity.admin.pages.AccountListPage.trangThaiTatCa")}</option>
+            <option value="">{msg("identity.admin.pages.AccountListPage.statusAll")}</option>
             {STATUSES.map((s) => (
               <option key={s} value={s}>
-                {msg("identity.admin.pages.AccountListPage.trangThai2")}{STATUS_LABELS[s]}
+                {msg("identity.admin.pages.AccountListPage.status2")}{STATUS_LABELS[s]}
               </option>
             ))}
           </Select>
@@ -151,7 +151,7 @@ export function AccountListPage() {
             role="alert"
             action={
               <Button size="sm" icon="refresh" onClick={() => setReloadKey((k) => k + 1)}>
-                {msg("identity.admin.pages.AccountListPage.taiLai")}</Button>
+                {msg("identity.admin.pages.AccountListPage.reload")}</Button>
             }
           >
             {error}
@@ -162,12 +162,12 @@ export function AccountListPage() {
             <thead>
               <tr>
                 <Th>MSSV</Th>
-                <Th>{msg("identity.admin.pages.AccountListPage.hoTen")}</Th>
+                <Th>{msg("identity.admin.pages.AccountListPage.fullName")}</Th>
                 <Th>Email</Th>
-                <Th>{msg("identity.admin.pages.AccountListPage.vaiTro")}</Th>
-                <Th>{msg("identity.admin.pages.AccountListPage.trangThai")}</Th>
+                <Th>{msg("identity.admin.pages.AccountListPage.role")}</Th>
+                <Th>{msg("identity.admin.pages.AccountListPage.status")}</Th>
                 <Th className="w-10">
-                  <span className="sr-only">{msg("identity.admin.pages.AccountListPage.mo")}</span>
+                  <span className="sr-only">{msg("identity.admin.pages.AccountListPage.open")}</span>
                 </Th>
               </tr>
             </thead>
@@ -175,7 +175,7 @@ export function AccountListPage() {
               {!data && (
                 <tr>
                   <Td colSpan={6} className="py-8 text-center text-muted">
-                    {msg("identity.admin.pages.AccountListPage.dangTai")}</Td>
+                    {msg("identity.admin.pages.AccountListPage.loading")}</Td>
                 </tr>
               )}
               {data?.items.map((account) => (
@@ -215,7 +215,7 @@ export function AccountListPage() {
               {data && data.items.length === 0 && (
                 <tr>
                   <Td colSpan={6} className="py-10 text-center text-muted">
-                    {msg("identity.admin.pages.AccountListPage.khongCoTaiKhoanPhuHop")}</Td>
+                    {msg("identity.admin.pages.AccountListPage.noMatchingAccounts")}</Td>
                 </tr>
               )}
             </tbody>
@@ -230,7 +230,7 @@ export function AccountListPage() {
           onClose={() => setCreating(false)}
           onCreated={() => {
             setCreating(false);
-            showToast(msg("identity.admin.pages.AccountListPage.daThemTaiKhoan"));
+            showToast(msg("identity.admin.pages.AccountListPage.accountAdded"));
             setReloadKey((k) => k + 1);
           }}
         />

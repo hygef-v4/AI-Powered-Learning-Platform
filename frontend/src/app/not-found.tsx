@@ -3,7 +3,7 @@ import { ErrorPage } from "@/shared/ui/ErrorPage";
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.notfound.khongTimThayTrang") };
+  return { title: await translateOnServer("app.notfound.pageNotFound") };
 }
 
 export default function NotFound() {

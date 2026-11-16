@@ -6,7 +6,7 @@ import { msg } from "@/i18n/msg";
 navEntries.register({
   key: "class-announcements",
   order: 40,
-  title: msg("announcements.register.tatCaThongBao"),
+  title: msg("announcements.register.allAnnouncements"),
   href: "/announcements",
   icon: "campaign",
   roles: ["TEACHER", "STUDENT"],
@@ -14,7 +14,7 @@ navEntries.register({
 navEntries.register({
   key: "manager-class-announcements",
   order: 40,
-  title: msg("announcements.register.tatCaThongBao"),
+  title: msg("announcements.register.allAnnouncements"),
   href: "/announcements",
   icon: "campaign",
   roles: ["SUBJECT_MANAGER"],

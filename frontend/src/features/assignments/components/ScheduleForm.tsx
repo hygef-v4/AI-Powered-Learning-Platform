@@ -30,9 +30,9 @@ function DateTime({ id, label, value, disabled, onChange }: { id: string; label:
   return (
     <Field label={label} htmlFor={id}>
       <div className="flex gap-2">
-        <DateInput id={id} aria-label={msg("assignments.components.ScheduleForm.ngay", { label: String(label) })} value={value.date} disabled={disabled} wrapperClassName="flex-1"
+        <DateInput id={id} aria-label={msg("assignments.components.ScheduleForm.date", { label: String(label) })} value={value.date} disabled={disabled} wrapperClassName="flex-1"
           onChange={(date) => onChange({ ...value, date })} />
-        <TextInput type="time" aria-label={msg("assignments.components.ScheduleForm.gio", { label: String(label) })} value={value.time} disabled={disabled} wrapperClassName="w-28"
+        <TextInput type="time" aria-label={msg("assignments.components.ScheduleForm.time", { label: String(label) })} value={value.time} disabled={disabled} wrapperClassName="w-28"
           onChange={(e) => onChange({ ...value, time: e.target.value })} />
       </div>
     </Field>
@@ -60,19 +60,19 @@ export function ScheduleForm({ assignment, mode, onSubmit }: Props) {
 
   function validateSchedule(): string | null {
     const close = join(closes);
-    if (!close) return msg("assignments.components.ScheduleForm.thieuHanNop");
+    if (!close) return msg("assignments.components.ScheduleForm.missingDeadline");
     const start = scheduled ? join(opens) : new Date().toISOString();
-    if (!start) return msg("assignments.components.ScheduleForm.thieuNgayMo");
-    if (new Date(close) <= new Date(start)) return msg("assignments.components.ScheduleForm.hanNopKhongSauLucMo");
+    if (!start) return msg("assignments.components.ScheduleForm.missingOpeningDate");
+    if (new Date(close) <= new Date(start)) return msg("assignments.components.ScheduleForm.theDeadlineMustBeAfter");
     if (allowLate) {
       const until = join(late);
-      if (!until) return msg("assignments.components.ScheduleForm.thieuHanNopMuon");
+      if (!until) return msg("assignments.components.ScheduleForm.missingLateDeadline");
       const gap = new Date(until).getTime() - new Date(close).getTime();
-      if (gap <= 0) return msg("assignments.components.ScheduleForm.hanNopMuonKhongSauHan");
-      if (gap > 30 * 24 * 3600 * 1000) return msg("assignments.components.ScheduleForm.hanNopMuonQua30Ngay");
+      if (gap <= 0) return msg("assignments.components.ScheduleForm.theLateDeadlineMustBe");
+      if (gap > 30 * 24 * 3600 * 1000) return msg("assignments.components.ScheduleForm.theLateDeadlineIsMore");
     }
     const attempts = Number(maxAttempts);
-    if (practice && (!Number.isInteger(attempts) || attempts < 1 || attempts > 10)) return msg("assignments.components.ScheduleForm.soLuotNgoai110");
+    if (practice && (!Number.isInteger(attempts) || attempts < 1 || attempts > 10)) return msg("assignments.components.ScheduleForm.attemptsMustBe110");
     return null;
   }
 
@@ -106,29 +106,29 @@ export function ScheduleForm({ assignment, mode, onSubmit }: Props) {
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {!(mode === "change" && open) && (
         <label className="flex items-center gap-2 text-[13px]">
-          <input type="checkbox" checked={scheduled} onChange={(e) => setScheduled(e.target.checked)} data-testid="schedule-later" />{msg("assignments.components.ScheduleForm.henGioMo")}</label>
+          <input type="checkbox" checked={scheduled} onChange={(e) => setScheduled(e.target.checked)} data-testid="schedule-later" />{msg("assignments.components.ScheduleForm.scheduleOpening")}</label>
       )}
       {/* Ngày mở tùy chọn: chỉ hiện khi tích "Hẹn giờ mở"; bài đang mở thì không còn gì để chọn nên ẩn hẳn. */}
-      {scheduled && !open && <DateTime id="schedule-opens" label={msg("assignments.components.ScheduleForm.moLuc")} value={opens} onChange={setOpens} />}
-      <DateTime id="schedule-closes" label={msg("assignments.components.ScheduleForm.hanNop")} value={closes} onChange={setCloses} />
+      {scheduled && !open && <DateTime id="schedule-opens" label={msg("assignments.components.ScheduleForm.opensAt")} value={opens} onChange={setOpens} />}
+      <DateTime id="schedule-closes" label={msg("assignments.components.ScheduleForm.deadline")} value={closes} onChange={setCloses} />
       <label className="flex items-center gap-2 text-[13px]">
-        <input type="checkbox" checked={allowLate} onChange={(e) => setAllowLate(e.target.checked)} data-testid="schedule-late" />{msg("assignments.components.ScheduleForm.choNopMuon")}</label>
-      {allowLate && <DateTime id="schedule-late-until" label={msg("assignments.components.ScheduleForm.nopMuonDen")} value={late} onChange={setLate} />}
+        <input type="checkbox" checked={allowLate} onChange={(e) => setAllowLate(e.target.checked)} data-testid="schedule-late" />{msg("assignments.components.ScheduleForm.allowLateSubmission")}</label>
+      {allowLate && <DateTime id="schedule-late-until" label={msg("assignments.components.ScheduleForm.lateSubmissionUntil")} value={late} onChange={setLate} />}
       {practice && (
-        <Field label={msg("assignments.components.ScheduleForm.soLuotLam")} htmlFor="schedule-attempts">
+        <Field label={msg("assignments.components.ScheduleForm.attempts")} htmlFor="schedule-attempts">
           <TextInput id="schedule-attempts" type="number" min={1} max={10} value={maxAttempts} disabled={open} wrapperClassName="w-24"
             onChange={(e) => setMaxAttempts(e.target.value)} />
         </Field>
       )}
       {groupWarnings.length > 0 && (
-        <Alert tone="warning" title={msg("assignments.components.ScheduleForm.coSinhVienChuaCoNhom")}>
+        <Alert tone="warning" title={msg("assignments.components.ScheduleForm.someStudentsHaveNoGroup")}>
           <ul className="list-disc pl-4">{groupWarnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
-          <label className="mt-1 flex items-center gap-2"><input type="checkbox" checked={confirmGroups} onChange={(e) => setConfirmGroups(e.target.checked)} />{msg("assignments.components.ScheduleForm.vanPhatHanh")}</label>
+          <label className="mt-1 flex items-center gap-2"><input type="checkbox" checked={confirmGroups} onChange={(e) => setConfirmGroups(e.target.checked)} />{msg("assignments.components.ScheduleForm.publishAnyway")}</label>
         </Alert>
       )}
       <div>
         <Button variant="primary" onClick={() => void submit()} disabled={busy} data-testid="schedule-submit">
-          {mode === "publish" ? (scheduled ? msg("assignments.components.ScheduleForm.xepLich") : msg("assignments.components.ScheduleForm.phatHanhNgay")) : msg("assignments.components.ScheduleForm.luuLich")}
+          {mode === "publish" ? (scheduled ? msg("assignments.components.ScheduleForm.schedule") : msg("assignments.components.ScheduleForm.publishNow")) : msg("assignments.components.ScheduleForm.saveSchedule")}
         </Button>
       </div>
     </div>

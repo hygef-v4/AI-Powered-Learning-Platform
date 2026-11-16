@@ -90,10 +90,10 @@ export function formatRemaining(deadline: string | null | undefined, now: number
   const minutes = Math.floor(ms / MINUTE_MS);
   const days = Math.floor(minutes / 1440);
   const hours = Math.floor((minutes % 1440) / 60);
-  if (days > 0) return msg("shared.dateTime.ngayGio", { days: String(days), hours: String(hours) });
-  if (hours > 0) return msg("shared.dateTime.gioPhut", { hours: String(hours), value: String(minutes % 60) });
-  if (minutes > 0) return msg("shared.dateTime.phut", { minutes: String(minutes) });
-  return msg("shared.dateTime.giay", { value: String(Math.ceil(ms / 1000)) });
+  if (days > 0) return msg("shared.dateTime.dH", { days: String(days), hours: String(hours) });
+  if (hours > 0) return msg("shared.dateTime.hMin", { hours: String(hours), value: String(minutes % 60) });
+  if (minutes > 0) return msg("shared.dateTime.min", { minutes: String(minutes) });
+  return msg("shared.dateTime.s", { value: String(Math.ceil(ms / 1000)) });
 }
 
 /** Số ngày lịch (theo giờ Việt Nam) từ `earlier` tới `later`. */
@@ -110,12 +110,12 @@ export function formatRelativeTime(value: string | Date | null | undefined, now:
   const date = parseDate(value);
   if (!date) return "—";
   const elapsed = now.getTime() - date.getTime();
-  if (elapsed < MINUTE_MS) return msg("shared.dateTime.vuaXong");
-  if (elapsed < HOUR_MS) return msg("shared.dateTime.phutTruoc", { value: String(Math.floor(elapsed / MINUTE_MS)) });
+  if (elapsed < MINUTE_MS) return msg("shared.dateTime.justNow");
+  if (elapsed < HOUR_MS) return msg("shared.dateTime.minAgo", { value: String(Math.floor(elapsed / MINUTE_MS)) });
   const days = countCalendarDaysBetween(date, now);
-  if (days === 0) return msg("shared.dateTime.gioTruoc", { value: String(Math.floor(elapsed / HOUR_MS)) });
-  if (days === 1) return msg("shared.dateTime.homQua", { value: String(timeFormat.format(date)) });
-  if (days < 7) return msg("shared.dateTime.ngayTruoc", { days: String(days) });
+  if (days === 0) return msg("shared.dateTime.hAgo", { value: String(Math.floor(elapsed / HOUR_MS)) });
+  if (days === 1) return msg("shared.dateTime.yesterday", { value: String(timeFormat.format(date)) });
+  if (days < 7) return msg("shared.dateTime.daysAgo", { days: String(days) });
   return formatDateTime(date);
 }
 
@@ -131,7 +131,7 @@ export function formatTimeUntil(
   if (!date) return null;
   const left = date.getTime() - now.getTime();
   if (left <= 0) return null;
-  if (left < HOUR_MS) return { text: msg("shared.dateTime.conPhut", { value: String(Math.max(1, Math.floor(left / MINUTE_MS))) }), urgent: true };
-  if (left < DAY_MS) return { text: msg("shared.dateTime.conGio", { value: String(Math.floor(left / HOUR_MS)) }), urgent: true };
-  return { text: msg("shared.dateTime.conNgay", { value: String(Math.floor(left / DAY_MS)) }), urgent: false };
+  if (left < HOUR_MS) return { text: msg("shared.dateTime.minLeft", { value: String(Math.max(1, Math.floor(left / MINUTE_MS))) }), urgent: true };
+  if (left < DAY_MS) return { text: msg("shared.dateTime.hLeft", { value: String(Math.floor(left / HOUR_MS)) }), urgent: true };
+  return { text: msg("shared.dateTime.daysLeft", { value: String(Math.floor(left / DAY_MS)) }), urgent: false };
 }

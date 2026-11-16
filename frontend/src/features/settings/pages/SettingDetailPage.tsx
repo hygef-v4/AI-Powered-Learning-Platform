@@ -23,7 +23,7 @@ export function SettingDetailPage({ settingKey }: { settingKey: string }) {
         setItem(loaded);
         setError(null);
       })
-      .catch(() => setError(msg("settings.pages.SettingDetailPage.khongTaiDuocCaiDatThu")));
+      .catch(() => setError(msg("settings.pages.SettingDetailPage.couldNotLoadTheSettings")));
   }, [settingKey]);
 
   useEffect(load, [load]);
@@ -31,13 +31,13 @@ export function SettingDetailPage({ settingKey }: { settingKey: string }) {
   if (!item) {
     return (
       <>
-        <PageHeader backHref={BACK} title={msg("settings.pages.SettingDetailPage.caiDat")} />
+        <PageHeader backHref={BACK} title={msg("settings.pages.SettingDetailPage.settings")} />
         {error ? (
           <Alert tone="danger" role="alert">
             {error}
           </Alert>
         ) : (
-          <p className="text-[13px] text-muted">{msg("settings.pages.SettingDetailPage.dangTai")}</p>
+          <p className="text-[13px] text-muted">{msg("settings.pages.SettingDetailPage.loading")}</p>
         )}
       </>
     );
@@ -49,26 +49,26 @@ export function SettingDetailPage({ settingKey }: { settingKey: string }) {
       <PageHeader
         backHref={BACK}
         title={item.name}
-        breadcrumb={[{ label: msg("settings.pages.SettingDetailPage.caiDat"), href: BACK }, { label: group.label }, { label: item.name }]}
+        breadcrumb={[{ label: msg("settings.pages.SettingDetailPage.settings"), href: BACK }, { label: group.label }, { label: item.name }]}
       />
-      <Section title={msg("settings.pages.SettingDetailPage.giaTri")} description={msg("settings.pages.SettingDetailPage.kieu", { value: String(TYPE_LABELS[item.type]) })} className="max-w-[680px]">
+      <Section title={msg("settings.pages.SettingDetailPage.value")} description={msg("settings.pages.SettingDetailPage.type", { value: String(TYPE_LABELS[item.type]) })} className="max-w-[680px]">
         {item.description && <p className="text-[13px] leading-normal text-body">{item.description}</p>}
         <dl className="grid grid-cols-[140px_1fr] gap-x-4 gap-y-2.5 text-[13px]">
-          <dt className="text-muted">{msg("settings.pages.SettingDetailPage.giaTriHienHanh")}</dt>
+          <dt className="text-muted">{msg("settings.pages.SettingDetailPage.currentValue")}</dt>
           <dd className="min-w-0 text-ink">
             {isEmptyValue(item.value) ? (
-              <span className="text-muted">{msg("settings.pages.SettingDetailPage.chuaCauHinh")}</span>
+              <span className="text-muted">{msg("settings.pages.SettingDetailPage.notConfigured")}</span>
             ) : (
               <b>{formatSettingValue(item)}</b>
             )}
           </dd>
-          <dt className="text-muted">{msg("settings.pages.SettingDetailPage.gioiHanHopLe")}</dt>
+          <dt className="text-muted">{msg("settings.pages.SettingDetailPage.validRange")}</dt>
           <dd className="min-w-0 text-ink">{describeConstraints(item)}</dd>
-          <dt className="text-muted">{msg("settings.pages.SettingDetailPage.suaGanNhat")}</dt>
+          <dt className="text-muted">{msg("settings.pages.SettingDetailPage.lastEdited")}</dt>
           <dd className="min-w-0 text-ink">
             {item.updatedAt
-              ? `${item.updatedBy ?? msg("settings.pages.SettingDetailPage.khongRo")} · ${formatDateTime(item.updatedAt)}`
-              : msg("settings.pages.SettingDetailPage.chuaSuaDangDungGiaTri")}
+              ? `${item.updatedBy ?? msg("settings.pages.SettingDetailPage.unknown")} · ${formatDateTime(item.updatedAt)}`
+              : msg("settings.pages.SettingDetailPage.notEditedUsingTheInitial")}
           </dd>
         </dl>
         <div className="h-px bg-line-soft" />

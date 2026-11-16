@@ -39,7 +39,7 @@ import { msg } from "@/i18n/msg";
 const AUTOSAVE_MS = 1500;
 const VERSION_CONFLICT = "ASSIGNMENT_VERSION_CONFLICT";
 const NOT_READY = "ASSIGNMENT_NOT_READY";
-const POINTS_INVALID = msg("assignments.pages.AssignmentFormPage.diemMoiMucToiDa2");
+const POINTS_INVALID = msg("assignments.pages.AssignmentFormPage.pointsPerItemCanHave");
 
 type Local = {
   title: string;
@@ -77,7 +77,7 @@ export function listRestoredCriteria(
  * Rubric "Toàn bài" (yêu cầu 2026-11-04): tiêu chí chấm cả bài, không gắn với mục nào, luôn có ở bài có mục (có thể trống);
  * thẻ của nó đứng đầu và ghi tổng điểm cả bài. Bài không có mục thì phần duy nhất đã là cả bài.
  */
-export const WHOLE_PART: DocumentPart = { partId: "ASSIGNMENT", headingBlockId: null, ancestorHeadingIds: [], title: msg("assignments.pages.AssignmentFormPage.toanBai") };
+export const WHOLE_PART: DocumentPart = { partId: "ASSIGNMENT", headingBlockId: null, ancestorHeadingIds: [], title: msg("assignments.pages.AssignmentFormPage.wholeAssignment") };
 export function hasWholePart(parts: DocumentPart[]): boolean {
   return !(parts.length === 1 && parts[0]!.headingBlockId === null);
 }
@@ -94,8 +94,8 @@ export function mergeSaved(local: DocumentModel, saved: DocumentModel): Document
 const RUBRIC_MISSING = "RUBRIC_MISSING";
 /** Lỗi của thẻ Toàn bài, hoặc phần duy nhất của bài không có mục: không gắn tiêu đề nào. */
 const WHOLE_ISSUE = "RUBRIC_WHOLE";
-export const RUBRIC_ZERO = msg("assignments.pages.AssignmentFormPage.tongDiemCuaRubricPhaiLon");
-export const RUBRIC_HALF = msg("assignments.pages.AssignmentFormPage.coMucChamThieuNoiDung");
+export const RUBRIC_ZERO = msg("assignments.pages.AssignmentFormPage.theRubricsTotalPointsMust");
+export const RUBRIC_HALF = msg("assignments.pages.AssignmentFormPage.someCriteriaAreMissingContent");
 
 /**
  * Thông báo khi xếp lịch mà bài còn thiếu (yêu cầu 2026-11-05): nói rõ thiếu gì, không ghi chung chung. Cả bài chưa có điểm
@@ -104,11 +104,11 @@ export const RUBRIC_HALF = msg("assignments.pages.AssignmentFormPage.coMucChamTh
  */
 export function describeMissing(issues: ValidationIssue[]): string {
   const parts: string[] = [];
-  if (issues.some((issue) => issue.code === "TITLE_REQUIRED")) parts.push(msg("assignments.pages.AssignmentFormPage.baiCanTieuDe"));
-  if (issues.some((issue) => issue.code === RUBRIC_MISSING)) parts.push(msg("assignments.pages.AssignmentFormPage.baiLamChuaCoRubricCham"));
+  if (issues.some((issue) => issue.code === "TITLE_REQUIRED")) parts.push(msg("assignments.pages.AssignmentFormPage.theAssignmentNeedsATitle"));
+  if (issues.some((issue) => issue.code === RUBRIC_MISSING)) parts.push(msg("assignments.pages.AssignmentFormPage.theAssignmentHasNoGrading"));
   const cards = issues.filter((issue) => issue.code.startsWith("RUBRIC") && issue.code !== RUBRIC_MISSING);
-  if (cards.length > 0) parts.push(msg("assignments.pages.AssignmentFormPage.rubricBiLoiDiem", { length: String(cards.length) }));
-  if (issues.some((issue) => issue.blockId && !issue.code.startsWith("RUBRIC"))) parts.push(msg("assignments.pages.AssignmentFormPage.deConChoLoi"));
+  if (cards.length > 0) parts.push(msg("assignments.pages.AssignmentFormPage.rubricsHavePointErrors", { length: String(cards.length) }));
+  if (issues.some((issue) => issue.blockId && !issue.code.startsWith("RUBRIC"))) parts.push(msg("assignments.pages.AssignmentFormPage.theAssignmentStillHasErrors"));
   issues.filter((issue) => !issue.blockId && issue.code !== "TITLE_REQUIRED" && !issue.code.startsWith("RUBRIC"))
     .forEach((issue) => parts.push(issue.message));
   return parts.join("; ");
@@ -128,7 +128,7 @@ export function filterCardIssues(issues: ValidationIssue[], part: DocumentPart):
  */
 export function listRubricIssues(cards: DocumentPart[], criteria: Record<string, RubricCriterion[]>): ValidationIssue[] {
   const total = cards.reduce((sum, part) => sum + sumRubricTotal(criteria[part.partId] ?? []), 0);
-  if (total <= 0) return [{ code: RUBRIC_MISSING, blockId: null, message: msg("assignments.pages.AssignmentFormPage.baiLamChuaCoRubricCham") }];
+  if (total <= 0) return [{ code: RUBRIC_MISSING, blockId: null, message: msg("assignments.pages.AssignmentFormPage.theAssignmentHasNoGrading") }];
   return cards.flatMap((part) => {
     const list = criteria[part.partId] ?? [];
     if (!isRubricPointsMissing(list)) return [];
@@ -357,7 +357,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
       if (next) apply(next, false);
       if (malformed.length > 0) {
         setIssues((current) => [...current.filter((issue) => !issue.code.endsWith("POINTS_INVALID")), ...malformed]);
-        notify(msg("assignments.pages.AssignmentFormPage.chuaLuu", { POINTS_INVALID: String(POINTS_INVALID) }), "danger");
+        notify(msg("assignments.pages.AssignmentFormPage.notSaved", { POINTS_INVALID: String(POINTS_INVALID) }), "danger");
         return false;
       }
       setSavedAt(new Date().toISOString());
@@ -377,7 +377,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
         setConflict(true);
       } else {
         setIssues(readProblemIssues(error));
-        notify(msg("assignments.pages.AssignmentFormPage.chuaLuu2", { value: String(describeError(error)) }), "danger");
+        notify(msg("assignments.pages.AssignmentFormPage.notSaved2", { value: String(describeError(error)) }), "danger");
       }
       return false;
     } finally {
@@ -429,7 +429,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
 
   /** Lưu trước khi AI đọc hoặc ghi đè đề; trả version mới nhất. */
   const saveForAi = useCallback(async () => {
-    if (!await save()) throw new Error(msg("assignments.pages.AssignmentFormPage.khongApDungDuocViCon"));
+    if (!await save()) throw new Error(msg("assignments.pages.AssignmentFormPage.cannotApplyBecauseThereIs"));
     return version.current;
   }, [save]);
 
@@ -546,7 +546,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
       const name = (latest.current.title.trim() || "bai-tap").replace(/[\\/:*?"<>|\r\n]+/g, " ");
       await downloadDocx(id, what, `${what === "rubric" ? "Rubric - " : ""}${name}.docx`);
     } catch (error) {
-      notify(msg("assignments.pages.AssignmentFormPage.khongTaiDuocTep", { value: String(what === "rubric" ? "rubric" : msg("assignments.pages.AssignmentFormPage.de")), value2: String(describeError(error)) }), "danger");
+      notify(msg("assignments.pages.AssignmentFormPage.couldNotDownloadTheFile", { value: String(what === "rubric" ? "rubric" : msg("assignments.pages.AssignmentFormPage.assignment")), value2: String(describeError(error)) }), "danger");
     } finally {
       exporting.current = false;
     }
@@ -563,7 +563,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
   /** Bài còn thiếu mà trang tự thấy được (tên bài, rubric các phần); luật đầy đủ server kiểm khi phát hành. */
   function listLocalMissing(): ValidationIssue[] {
     const found: ValidationIssue[] = [];
-    if (!title.trim()) found.push({ code: "TITLE_REQUIRED", blockId: null, message: msg("assignments.pages.AssignmentFormPage.baiCanTieuDe") });
+    if (!title.trim()) found.push({ code: "TITLE_REQUIRED", blockId: null, message: msg("assignments.pages.AssignmentFormPage.theAssignmentNeedsATitle") });
     const cards = hasWholePart(parts) ? [WHOLE_PART, ...parts] : parts;
     found.push(...listRubricIssues(cards, criteria));
     return found;
@@ -622,14 +622,14 @@ export function AssignmentFormPage({ id }: { id: string }) {
     // Lối về đúng tab, bộ lọc của trang danh sách đã mở bài này (Nháp, Đang mở, Đã đóng…).
     const backHref = resolveAssignmentsReturn(buildAssignmentsHref(detail, params.get("classId") ?? detail.classId));
     const editable = detail.permissions.canEditContent && !preview;
-    publishOutline({ assignmentId: detail.id, backHref, backLabel: msg("assignments.pages.AssignmentFormPage.baiTap"), entries: outlineOf(skeleton.blocks), editable });
+    publishOutline({ assignmentId: detail.id, backHref, backLabel: msg("assignments.pages.AssignmentFormPage.assignment2"), entries: outlineOf(skeleton.blocks), editable });
   }, [detail, skeleton, params, preview]);
   useEffect(() => () => publishOutline(null), []);
 
   if (loadError) {
     return <PageLoadError onRetry={() => void reload()}>{describeError(loadError)}</PageLoadError>;
   }
-  if (!detail || !settings) return <PageLoading label={msg("assignments.pages.AssignmentFormPage.dangTaiBaiTap")} />;
+  if (!detail || !settings) return <PageLoading label={msg("assignments.pages.AssignmentFormPage.loadingAssignment")} />;
 
   const classId = params.get("classId") ?? detail.classId;
   // Xóa bản nháp xong về trang Bài tập (tab Bài tập của lớp, hoặc Bài tập của môn), như lối về ở sidebar.
@@ -643,8 +643,8 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const rubricItemCount = Object.values(criteria).reduce((sum, list) => sum + list.reduce((partSum, criterion) => partSum + criterion.items.length, 0), 0);
   const active = parts.find((part) => part.partId === activePart);
   const titleMissing = issues.some((issue) => issue.code === "TITLE_REQUIRED");
-  const saveText = !permissions.canEditContent ? msg("assignments.pages.AssignmentFormPage.chiXem") : saving ? msg("assignments.pages.AssignmentFormPage.dangLuu") : conflict ? msg("assignments.pages.AssignmentFormPage.chuaLuu3")
-    : unsaved ? msg("assignments.pages.AssignmentFormPage.chuaLuu3") : savedAt ? msg("assignments.pages.AssignmentFormPage.daLuuLuc", { value: String(formatTime(savedAt)) }) : msg("assignments.pages.AssignmentFormPage.daLuu");
+  const saveText = !permissions.canEditContent ? msg("assignments.pages.AssignmentFormPage.viewOnly") : saving ? msg("assignments.pages.AssignmentFormPage.saving") : conflict ? msg("assignments.pages.AssignmentFormPage.notSaved3")
+    : unsaved ? msg("assignments.pages.AssignmentFormPage.notSaved3") : savedAt ? msg("assignments.pages.AssignmentFormPage.savedAt", { value: String(formatTime(savedAt)) }) : msg("assignments.pages.AssignmentFormPage.saved");
 
   // Thẻ rubric ghi số mục như trong trang: "1.2. Tên", mục chưa đặt tên chỉ có số (yêu cầu 2026-11-04).
   const numberOf = new Map(outlineOf(skeleton.blocks).map((entry) => [entry.id, entry.number]));
@@ -667,7 +667,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
       key: part.partId,
       anchorBlockId: part.headingBlockId,
       content: awaitingRubric ? <p role="status" className="rounded-lg border border-line bg-surface p-3 text-xs text-muted">
-        {rubricLoadError ? msg("assignments.pages.AssignmentFormPage.chuaTaiDuocTieuChiCham") : msg("assignments.pages.AssignmentFormPage.dangTaiTieuChiCham")}
+        {rubricLoadError ? msg("assignments.pages.AssignmentFormPage.couldNotLoadTheGrading") : msg("assignments.pages.AssignmentFormPage.loadingGradingCriteria")}
       </p> : (
         <RubricNote title={isWhole ? part.title : resolveRubricTitle(part)} criteria={list} active={activePart === part.partId} onActivate={() => setActivePart(part.partId)}
           total={isWhole ? totalPoints : undefined} editOnActive
@@ -686,7 +686,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
       {/* Tên bài do trình soạn vẽ ngay trên dòng này (định dạng được, lưu trong khung đề). */}
       {/* Dòng cuối chỉ ghi loại bài (yêu cầu 2026-11-02): Luyện tập, hoặc Cá nhân / Nhóm. */}
       <p className="text-[13px] text-muted" data-testid="assignment-kind">
-        {settings.gradingMode === "PRACTICE" ? msg("assignments.pages.AssignmentFormPage.luyenTap") : submissionLabels[detail.submissionMode]}
+        {settings.gradingMode === "PRACTICE" ? msg("assignments.pages.AssignmentFormPage.practice") : submissionLabels[detail.submissionMode]}
       </p>
     </div>
   );
@@ -694,66 +694,66 @@ export function AssignmentFormPage({ id }: { id: string }) {
   return (
     <div data-wide-workspace className="flex flex-col gap-4" style={{ "--doc-toolbar-top": `${56 + headerHeight}px` } as CSSProperties}>
       {/* Quay lại nằm ở sidebar của bài; đầu trang chỉ còn tên bài (đổi theo ô tên đang sửa) và trạng thái. */}
-      <WorkspaceTopBar barRef={headerRef} title={title || detail.title || msg("assignments.pages.AssignmentFormPage.baiChuaDatTen")} setViewSlot={setViewSlot}
+      <WorkspaceTopBar barRef={headerRef} title={title || detail.title || msg("assignments.pages.AssignmentFormPage.untitledAssignment")} setViewSlot={setViewSlot}
         status={<>
           <Pill tone={statusTones[detail.status]}>{statusLabels[detail.status]}</Pill>
           <span data-testid="save-state" className="sr-only" role="status">{saveText}</span>
         </>}
         actions={<>
-          <Menu label="" icon="more_horiz" ariaLabel={msg("assignments.pages.AssignmentFormPage.thaoTacKhac")} align="right">
+          <Menu label="" icon="more_horiz" ariaLabel={msg("assignments.pages.AssignmentFormPage.moreActions")} align="right">
             {canImport && (
-              <MenuItem icon="upload_file" onClick={() => { setImportFiles(undefined); setDialog("import"); }}>{msg("assignments.pages.AssignmentFormPage.nhapDeTuTep")}</MenuItem>
+              <MenuItem icon="upload_file" onClick={() => { setImportFiles(undefined); setDialog("import"); }}>{msg("assignments.pages.AssignmentFormPage.importAssignmentFromFile")}</MenuItem>
             )}
-            <MenuItem icon="download" onClick={() => void exportDocx("skeleton")}>{msg("assignments.pages.AssignmentFormPage.taiDeDocx")}</MenuItem>
-            <MenuItem icon="download" onClick={() => void exportDocx("rubric")}>{msg("assignments.pages.AssignmentFormPage.taiRubricDocx")}</MenuItem>
+            <MenuItem icon="download" onClick={() => void exportDocx("skeleton")}>{msg("assignments.pages.AssignmentFormPage.downloadAssignmentDocx")}</MenuItem>
+            <MenuItem icon="download" onClick={() => void exportDocx("rubric")}>{msg("assignments.pages.AssignmentFormPage.downloadRubricDocx")}</MenuItem>
             {permissions.canCreateVersion && (
               <MenuItem icon="history" onClick={() => void runAction(async () => {
                 const copy = await assignmentsApi.newVersion(id);
                 router.push(`/assignments/${copy.id}${classId ? `?classId=${classId}` : ""}`);
-              }, null)}>{msg("assignments.pages.AssignmentFormPage.taoVersionMoi")}</MenuItem>
+              }, null)}>{msg("assignments.pages.AssignmentFormPage.createNewVersion")}</MenuItem>
             )}
-            {permissions.canRetire && <MenuItem icon="block" tone="danger" onClick={() => setDialog("retire")}>{msg("assignments.pages.AssignmentFormPage.ngungGiao")}</MenuItem>}
-            {permissions.canDelete && <MenuItem icon="close" tone="danger" onClick={() => setDialog("delete")}>{msg("assignments.pages.AssignmentFormPage.xoaBanNhap")}</MenuItem>}
+            {permissions.canRetire && <MenuItem icon="block" tone="danger" onClick={() => setDialog("retire")}>{msg("assignments.pages.AssignmentFormPage.withdraw")}</MenuItem>}
+            {permissions.canDelete && <MenuItem icon="close" tone="danger" onClick={() => setDialog("delete")}>{msg("assignments.pages.AssignmentFormPage.deleteDraft")}</MenuItem>}
           </Menu>
           {preview ? (
-            <Button icon="edit" data-testid="preview-back" onClick={() => setPreview(false)}>{msg("assignments.pages.AssignmentFormPage.chinhSua")}</Button>
+            <Button icon="edit" data-testid="preview-back" onClick={() => setPreview(false)}>{msg("assignments.pages.AssignmentFormPage.edit")}</Button>
           ) : (
-            <Button icon="visibility" data-testid="assignment-preview" onClick={() => void openPreview()}>{msg("assignments.pages.AssignmentFormPage.xemTruoc")}</Button>
+            <Button icon="visibility" data-testid="assignment-preview" onClick={() => void openPreview()}>{msg("assignments.pages.AssignmentFormPage.preview")}</Button>
           )}
           {canClose && <Button icon="lock" data-testid="assignment-close" disabled={closing || conflict}
-            onClick={() => setDialog("close")}>{msg("assignments.pages.AssignmentFormPage.dongNhanBai")}</Button>}
+            onClick={() => setDialog("close")}>{msg("assignments.pages.AssignmentFormPage.closeSubmissions")}</Button>}
           {permissions.canReview ? (
-            <Button variant="primary" icon="check_circle" data-testid="assignment-finalize" onClick={() => void finalizeAssignment()}>{msg("assignments.pages.AssignmentFormPage.hoanTat")}</Button>
+            <Button variant="primary" icon="check_circle" data-testid="assignment-finalize" onClick={() => void finalizeAssignment()}>{msg("assignments.pages.AssignmentFormPage.finalize")}</Button>
           ) : permissions.canPublish ? (
-            <Button variant="primary" icon="calendar_month" data-testid="assignment-schedule" onClick={() => void openSchedule()}>{msg("assignments.pages.AssignmentFormPage.xepLich")}</Button>
+            <Button variant="primary" icon="calendar_month" data-testid="assignment-schedule" onClick={() => void openSchedule()}>{msg("assignments.pages.AssignmentFormPage.schedule")}</Button>
           ) : permissions.canChangeSchedule && (
-            <Button variant="primary" icon="calendar_month" data-testid="assignment-change-schedule" onClick={() => setDialog("schedule")}>{msg("assignments.pages.AssignmentFormPage.doiLich")}</Button>
+            <Button variant="primary" icon="calendar_month" data-testid="assignment-change-schedule" onClick={() => setDialog("schedule")}>{msg("assignments.pages.AssignmentFormPage.changeSchedule")}</Button>
           )}
         </>} />
 
       {conflict && (
-        <Alert tone="warning" role="alert" action={<Button size="sm" onClick={() => void reload()}>{msg("assignments.pages.AssignmentFormPage.taiLai")}</Button>}>
-          {msg("assignments.pages.AssignmentFormPage.baiDaThayDoiONoi")}</Alert>
+        <Alert tone="warning" role="alert" action={<Button size="sm" onClick={() => void reload()}>{msg("assignments.pages.AssignmentFormPage.reload")}</Button>}>
+          {msg("assignments.pages.AssignmentFormPage.theAssignmentChangedElsewhereYour")}</Alert>
       )}
       {detail.gradingMode === "GRADED" && detail.maxAiGradingRubricItems !== undefined
         && rubricItemCount > detail.maxAiGradingRubricItems && (
         <Alert tone="warning" role="status">
-          {msg("assignments.pages.AssignmentFormPage.rubricCo")}{rubricItemCount} {msg("assignments.pages.AssignmentFormPage.mucVuotGioiHan")}{detail.maxAiGradingRubricItems} {msg("assignments.pages.AssignmentFormPage.mucChoMotLuotChamAi")}</Alert>
+          {msg("assignments.pages.AssignmentFormPage.theRubricHas")}{rubricItemCount} {msg("assignments.pages.AssignmentFormPage.itemsOverTheLimitOf")}{detail.maxAiGradingRubricItems} {msg("assignments.pages.AssignmentFormPage.itemsForOneAiGrading")}</Alert>
       )}
       {rubricLoadError && !preview && <Alert tone="warning" role="alert" action={<Button size="sm" onClick={() => {
         setRubricLoadError(null);
         setRubricEpoch((value) => value + 1);
-      }}>{msg("assignments.pages.AssignmentFormPage.taiLaiTieuChi")}</Button>}>{msg("assignments.pages.AssignmentFormPage.khongTaiDuocTieuChiCham")}{rubricLoadError}</Alert>}
-      {permissions.ownerArchived && <Alert tone="info">{detail.scope === "CLASS" ? msg("assignments.pages.AssignmentFormPage.lop") : msg("assignments.pages.AssignmentFormPage.mon")} {msg("assignments.pages.AssignmentFormPage.daLuuTruChiXem")}</Alert>}
-      {!permissions.canManage && <Alert tone="info">{msg("assignments.pages.AssignmentFormPage.baiCuaMonChiXem")}</Alert>}
-      {detail.status === "RETIRED" && detail.retiredReason && <Alert tone="warning" title={msg("assignments.pages.AssignmentFormPage.daNgungGiao")}>{detail.retiredReason}</Alert>}
+      }}>{msg("assignments.pages.AssignmentFormPage.reloadCriteria")}</Button>}>{msg("assignments.pages.AssignmentFormPage.couldNotLoadGradingCriteria")}{rubricLoadError}</Alert>}
+      {permissions.ownerArchived && <Alert tone="info">{detail.scope === "CLASS" ? msg("assignments.pages.AssignmentFormPage.class") : msg("assignments.pages.AssignmentFormPage.subject")} {msg("assignments.pages.AssignmentFormPage.archivedViewOnly")}</Alert>}
+      {!permissions.canManage && <Alert tone="info">{msg("assignments.pages.AssignmentFormPage.subjectAssignmentViewOnly")}</Alert>}
+      {detail.status === "RETIRED" && detail.retiredReason && <Alert tone="warning" title={msg("assignments.pages.AssignmentFormPage.withdrawn")}>{detail.retiredReason}</Alert>}
 
       <DocumentEditor fullWidth document={skeleton} mode={preview ? "student" : "author"} diagramEnabled readOnly={!editable}
         imageUrl={buildImageUrl(detail.id)} issues={preview ? [] : issues.filter((issue) => !issue.code.startsWith("RUBRIC"))}
         uploadImage={async (file) => (await uploadFile(file, "DOCUMENT_IMAGE", () => {}).promise).fileRef.value}
         onChange={editSkeleton}
         externalEdit={aiEdit}
-        titleField={{ text: title, placeholder: msg("assignments.pages.AssignmentFormPage.tenBaiTap"), invalid: titleMissing, readOnly: !editable, onText: (value) => editTitle(value.slice(0, 200)) }}
+        titleField={{ text: title, placeholder: msg("assignments.pages.AssignmentFormPage.assignmentName"), invalid: titleMissing, readOnly: !editable, onText: (value) => editTitle(value.slice(0, 200)) }}
         header={header}
         comments={preview ? undefined : comments}
         activeComment={activePart}
@@ -761,16 +761,16 @@ export function AssignmentFormPage({ id }: { id: string }) {
         onFocusBlock={(blockId) => { const part = sections.get(blockId); if (part) setActivePart(part); }}
         viewSlot={viewSlot}
         toolbarExtra={preview ? undefined : <>
-          <ToolbarButton icon="tune" title={msg("assignments.pages.AssignmentFormPage.caiDatBai")} aria-label={msg("assignments.pages.AssignmentFormPage.caiDatBai")} onClick={() => setDialog("settings")} />
+          <ToolbarButton icon="tune" title={msg("assignments.pages.AssignmentFormPage.assignmentSettings")} aria-label={msg("assignments.pages.AssignmentFormPage.assignmentSettings")} onClick={() => setDialog("settings")} />
         </>} />
 
       {dialog === "settings" && (
-        <Dialog open size="lg" title={msg("assignments.pages.AssignmentFormPage.caiDatBai")} onClose={() => setDialog(null)}>
+        <Dialog open size="lg" title={msg("assignments.pages.AssignmentFormPage.assignmentSettings")} onClose={() => setDialog(null)}>
           <AssignmentSettingsPanel detail={detail} classId={classId} value={settings} readOnly={!permissions.canEditContent} onChange={editSettings} />
         </Dialog>
       )}
       {dialog === "schedule" && (
-        <Dialog open size="lg" icon="calendar_month" title={permissions.canPublish ? msg("assignments.pages.AssignmentFormPage.xepLich") : msg("assignments.pages.AssignmentFormPage.doiLich")} onClose={() => setDialog(null)}>
+        <Dialog open size="lg" icon="calendar_month" title={permissions.canPublish ? msg("assignments.pages.AssignmentFormPage.schedule") : msg("assignments.pages.AssignmentFormPage.changeSchedule")} onClose={() => setDialog(null)}>
           {permissions.canPublish ? (
             <ScheduleForm assignment={detail} mode="publish" onSubmit={async (input) => {
               try {
@@ -780,7 +780,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
                 setRubricEpoch((epoch) => epoch + 1);
                 setDialog(null);
                 setIssues([]);
-                notify(next.status === "OPEN" ? msg("assignments.pages.AssignmentFormPage.daPhatHanh") : msg("assignments.pages.AssignmentFormPage.daLenLich"), "success");
+                notify(next.status === "OPEN" ? msg("assignments.pages.AssignmentFormPage.published") : msg("assignments.pages.AssignmentFormPage.scheduled"), "success");
               } catch (error) {
                 if (readProblemCode(error) !== NOT_READY) throw error;
                 setDialog(null);
@@ -791,7 +791,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
             <ScheduleForm assignment={detail} mode="change" onSubmit={async (input) => {
               apply(await chainTask(queue, () => assignmentsApi.changeSchedule(id, version.current, input)), false);
               setDialog(null);
-              notify(msg("assignments.pages.AssignmentFormPage.daLuuLich"), "success");
+              notify(msg("assignments.pages.AssignmentFormPage.scheduleSaved"), "success");
             }} />
           )}
         </Dialog>
@@ -802,7 +802,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
           prepareApply={saveForAi}
           onClose={() => setDialog(null)} onApplied={async () => {
             setDialog(null);
-            await showAiResult(msg("assignments.pages.AssignmentFormPage.daGhiDeAiLenTrang"));
+            await showAiResult(msg("assignments.pages.AssignmentFormPage.theAiAssignmentWasWritten"));
           }} />
       )}
       {dialog === "import" && canImport && (
@@ -815,39 +815,39 @@ export function AssignmentFormPage({ id }: { id: string }) {
       {/* Trợ lý AI sửa đề: popup nổi ở góc phải dưới, bấm để mở / đóng (yêu cầu 2026-11-12). */}
       {editable && (detail.status === "DRAFT" || detail.status === "REVIEWED") && !preview && (
         <AiReviseChat assignmentId={id} prepare={saveForAi}
-          onApplied={() => showAiResult(msg("assignments.pages.AssignmentFormPage.daSuaDeBangAiNhan"))} />
+          onApplied={() => showAiResult(msg("assignments.pages.AssignmentFormPage.theAssignmentWasEditedWith"))} />
       )}
       {dialog === "retire" && (
         <RetireDialog onClose={() => setDialog(null)}
           onConfirm={async (reason) => {
             apply(await chainTask(queue, () => assignmentsApi.retire(id, version.current, reason)), false);
             setDialog(null);
-            notify(msg("assignments.pages.AssignmentFormPage.daNgungGiao"), "success");
+            notify(msg("assignments.pages.AssignmentFormPage.withdrawn"), "success");
           }} />
       )}
       {dialog === "close" && canClose && (
-        <Dialog open title={msg("assignments.pages.AssignmentFormPage.dongNhanBai2")} icon="lock" onClose={() => setDialog(null)} dismissible={!closing}
+        <Dialog open title={msg("assignments.pages.AssignmentFormPage.closeSubmissions2")} icon="lock" onClose={() => setDialog(null)} dismissible={!closing}
           footer={<Button variant="primary" data-testid="assignment-close-confirm" disabled={closing || conflict}
             onClick={async () => {
               setClosing(true);
               try {
-                await runAction(() => assignmentsApi.closeAssignment(id, version.current), msg("assignments.pages.AssignmentFormPage.daDongNhanBai"), () => setDialog(null));
+                await runAction(() => assignmentsApi.closeAssignment(id, version.current), msg("assignments.pages.AssignmentFormPage.submissionsClosed"), () => setDialog(null));
               } finally {
                 setClosing(false);
               }
-            }}>{msg("assignments.pages.AssignmentFormPage.dongNhanBai")}</Button>}>
-          <p>{msg("assignments.pages.AssignmentFormPage.sinhVienKhongTheSuaHoac")}</p>
+            }}>{msg("assignments.pages.AssignmentFormPage.closeSubmissions")}</Button>}>
+          <p>{msg("assignments.pages.AssignmentFormPage.studentsCannotEditOrSubmit")}</p>
         </Dialog>
       )}
       {dialog === "delete" && (
-        <Dialog open title={msg("assignments.pages.AssignmentFormPage.xoaBanNhap2")} icon="warning" tone="danger" onClose={() => setDialog(null)}
+        <Dialog open title={msg("assignments.pages.AssignmentFormPage.deleteDraft2")} icon="warning" tone="danger" onClose={() => setDialog(null)}
           footer={<>
             <Button variant="danger" data-testid="assignment-delete-confirm" onClick={() => void runAction(async () => {
               await assignmentsApi.remove(id, version.current);
               router.push(resolveAssignmentsReturn(backHref));
-            }, null)}>{msg("assignments.pages.AssignmentFormPage.xoa")}</Button>
+            }, null)}>{msg("assignments.pages.AssignmentFormPage.delete")}</Button>
           </>}>
-          <p>{msg("assignments.pages.AssignmentFormPage.banCoChacMuonXoaBan")}</p>
+          <p>{msg("assignments.pages.AssignmentFormPage.areYouSureYouWant")}</p>
         </Dialog>
       )}
     </div>
@@ -865,16 +865,16 @@ function RetireDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: 
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   return (
-    <Dialog open title={msg("assignments.pages.AssignmentFormPage.ngungGiaoBai")} icon="block" tone="danger" onClose={onClose} dismissible={!busy}
+    <Dialog open title={msg("assignments.pages.AssignmentFormPage.withdrawAssignment")} icon="block" tone="danger" onClose={onClose} dismissible={!busy}
       footer={<>
         <Button variant="danger" disabled={busy || !reason.trim()} data-testid="retire-confirm" onClick={async () => {
           setBusy(true);
           try { await onConfirm(reason.trim()); } catch (e) { setError(describeError(e)); } finally { setBusy(false); }
-        }}>{msg("assignments.pages.AssignmentFormPage.ngungGiao")}</Button>
+        }}>{msg("assignments.pages.AssignmentFormPage.withdraw")}</Button>
       </>}>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
-      <p>{msg("assignments.pages.AssignmentFormPage.banCoChacMuonNgungGiao")}</p>
-      <Field label={msg("assignments.pages.AssignmentFormPage.lyDo")} htmlFor="retire-reason" required>
+      <p>{msg("assignments.pages.AssignmentFormPage.areYouSureYouWant2")}</p>
+      <Field label={msg("assignments.pages.AssignmentFormPage.reason")} htmlFor="retire-reason" required>
         <Textarea id="retire-reason" rows={3} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} />
       </Field>
     </Dialog>

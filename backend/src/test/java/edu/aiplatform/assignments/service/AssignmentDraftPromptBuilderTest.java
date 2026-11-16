@@ -51,4 +51,17 @@ class AssignmentDraftPromptBuilderTest {
         assertThat(prompt.system()).contains("Write all student-facing content in Japanese");
         assertThat(prompt.user()).contains("outputLanguage=Japanese");
     }
+
+    @Test
+    void missingLanguageDefaultsToEnglish() {
+        Assignment assignment = new Assignment(UUID.randomUUID(), AssignmentScope.CLASS, UUID.randomUUID(),
+                UUID.randomUUID(), null, AssignmentOrigin.MANUAL, 1, SubmissionMode.INDIVIDUAL, true, GradingMode.GRADED,
+                "Draft", "", new DocumentModel(List.of()), List.of(), Map.of(), List.of(), false, null,
+                AssignmentStatus.DRAFT, null, null, null, null, null, UUID.randomUUID(), Instant.now(), Instant.now(), 0);
+
+        var prompt = AssignmentDraftPromptBuilder.buildPrompt(assignment, "Create an exam.", List.of(), null);
+
+        assertThat(prompt.system()).contains("Write all student-facing content in English");
+        assertThat(prompt.user()).contains("outputLanguage=English");
+    }
 }

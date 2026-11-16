@@ -62,8 +62,8 @@ export function NavTree({ label, placeholder, nodes, currentId, itemsFor, loadin
         }
       >
         <div className="flex max-h-72 w-[208px] flex-col gap-0.5 overflow-y-auto">
-          {loading && nodes.length === 0 && <span className="px-2.5 py-2 text-[13px] text-muted">{msg("shared.layout.NavTree.dangTai")}</span>}
-          {!loading && nodes.length === 0 && <span className="px-2.5 py-2 text-[13px] text-muted">{msg("shared.layout.NavTree.chuaCoMucNao")}</span>}
+          {loading && nodes.length === 0 && <span className="px-2.5 py-2 text-[13px] text-muted">{msg("shared.layout.NavTree.loading")}</span>}
+          {!loading && nodes.length === 0 && <span className="px-2.5 py-2 text-[13px] text-muted">{msg("shared.layout.NavTree.noItemsYet")}</span>}
           {nodes.filter((node) => node.name).map((node) => {
             const selected = node.id === pickedId;
             const href = resolveHref(node.id);

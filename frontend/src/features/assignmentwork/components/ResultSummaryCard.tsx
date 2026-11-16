@@ -25,15 +25,15 @@ export function ResultSummaryCard({ attemptId, detailsHref }: { attemptId: strin
   const groups = result ? groupResultByPart(result.items, parts?.attemptId === attemptId ? parts.parts : undefined) : [];
 
   return (
-    <Section title={msg("assignmentwork.components.ResultSummaryCard.ketQua")}>
-      {failed ? <p role="alert" className="text-[13px] text-danger">{msg("assignmentwork.components.ResultSummaryCard.khongTaiDuocKetQua")}</p>
-        : loading ? <p role="status" className="text-[13px] text-muted">{msg("assignmentwork.components.ResultSummaryCard.dangTaiKetQua")}</p>
-        : result?.score == null ? <p className="text-[13px] text-muted">{msg("assignmentwork.components.ResultSummaryCard.chuaCoDiemCongBo")}</p>
+    <Section title={msg("assignmentwork.components.ResultSummaryCard.result")}>
+      {failed ? <p role="alert" className="text-[13px] text-danger">{msg("assignmentwork.components.ResultSummaryCard.couldNotLoadTheResult")}</p>
+        : loading ? <p role="status" className="text-[13px] text-muted">{msg("assignmentwork.components.ResultSummaryCard.loadingResult")}</p>
+        : result?.score == null ? <p className="text-[13px] text-muted">{msg("assignmentwork.components.ResultSummaryCard.noPublishedGradeYet")}</p>
         : (
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
               <div className="flex shrink-0 flex-col justify-center rounded-xl bg-shell px-6 py-4 text-center">
-                <span className="text-xs text-muted">{msg("assignmentwork.components.ResultSummaryCard.tongDiem")}</span>
+                <span className="text-xs text-muted">{msg("assignmentwork.components.ResultSummaryCard.totalPoints")}</span>
                 <span className="mt-1 font-display text-[34px] leading-none tracking-[-0.02em] text-ink tabular-nums">{formatPoints(result.score)}</span>
                 <span className="mt-1 text-xs text-muted tabular-nums">/ {formatPoints(result.maxScore)}</span>
               </div>
@@ -51,7 +51,7 @@ export function ResultSummaryCard({ attemptId, detailsHref }: { attemptId: strin
                 </ul>
               )}
             </div>
-            <ButtonLink href={detailsHref} className="self-start">{msg("assignmentwork.components.ResultSummaryCard.xemChiTietChamDiem")}</ButtonLink>
+            <ButtonLink href={detailsHref} className="self-start">{msg("assignmentwork.components.ResultSummaryCard.viewGradingDetails")}</ButtonLink>
           </div>
         )}
     </Section>

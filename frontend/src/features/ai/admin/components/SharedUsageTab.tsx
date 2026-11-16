@@ -44,7 +44,7 @@ export function SharedUsageTab() {
         setError(null);
       },
       () => {
-        if (active) setError(msg("ai.admin.components.SharedUsageTab.khongTaiDuocUsageApiCua"));
+        if (active) setError(msg("ai.admin.components.SharedUsageTab.couldNotLoadTheSchool"));
       },
     );
     return () => {
@@ -59,7 +59,7 @@ export function SharedUsageTab() {
       </Alert>
     );
   }
-  if (!data) return <p className="text-[13px] text-muted">{msg("ai.admin.components.SharedUsageTab.dangTai")}</p>;
+  if (!data) return <p className="text-[13px] text-muted">{msg("ai.admin.components.SharedUsageTab.loading")}</p>;
 
   const max = Math.max(1, ...data.byDay.map((d) => d.tokens));
   const teachersToday = data.byTeacher.filter((t) => t.todayTokens > 0).length;
@@ -67,18 +67,18 @@ export function SharedUsageTab() {
   return (
     <>
       <div className="grid gap-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <TokenCard title={msg("ai.admin.components.SharedUsageTab.homNay")}>
+        <TokenCard title={msg("ai.admin.components.SharedUsageTab.today")}>
           <Big>{formatTokens(data.todayTokens)}</Big>
           {data.globalDayTokens !== null && <span className="text-sm opacity-85"> / {formatTokens(data.globalDayTokens)} token</span>}
         </TokenCard>
-        <CountCard title={msg("ai.admin.components.SharedUsageTab.giangVienDaDungHomNay")} value={teachersToday} />
+        <CountCard title={msg("ai.admin.components.SharedUsageTab.lecturersWhoUsedItToday")} value={teachersToday} />
         {/* Bấm vào thẻ là hiện số trên từng cột. */}
         <div ref={chartCard} className="contents" onClick={() => setValues(true)}>
         <TokenCard
           className="cursor-pointer"
-          title={msg("ai.admin.components.SharedUsageTab.ngay", { days: String(data.days) })}
+          title={msg("ai.admin.components.SharedUsageTab.days", { days: String(data.days) })}
           action={
-            <div role="radiogroup" aria-label={msg("ai.admin.components.SharedUsageTab.khoangThoiGian")} className="flex gap-1 rounded-full bg-on-primary/10 p-0.5">
+            <div role="radiogroup" aria-label={msg("ai.admin.components.SharedUsageTab.period")} className="flex gap-1 rounded-full bg-on-primary/10 p-0.5">
               {([7, 30] as const).map((d) => (
                 <button
                   key={d}
@@ -91,7 +91,7 @@ export function SharedUsageTab() {
                     days === d ? "bg-surface text-ink" : "text-on-primary hover:bg-on-primary/10",
                   )}
                 >
-                  {d} {msg("ai.admin.components.SharedUsageTab.ngay2")}</button>
+                  {d} {msg("ai.admin.components.SharedUsageTab.days2")}</button>
               ))}
             </div>
           }
@@ -103,7 +103,7 @@ export function SharedUsageTab() {
             </p>
             <div
               role="img"
-              aria-label={msg("ai.admin.components.SharedUsageTab.tokenTheoNgayTrongNgay", { days: String(data.days) })}
+              aria-label={msg("ai.admin.components.SharedUsageTab.tokensPerDayOverDays", { days: String(data.days) })}
               className="flex h-16 w-full max-w-[320px] items-end gap-[3px]"
             >
               {data.byDay.map((d) => (
@@ -121,25 +121,25 @@ export function SharedUsageTab() {
           </div>
         </TokenCard>
         </div>
-        <CountCard title={msg("ai.admin.components.SharedUsageTab.giangVienDaDungTrongNgay", { days: String(data.days) })} value={data.teachersUsed} />
+        <CountCard title={msg("ai.admin.components.SharedUsageTab.lecturersWhoUsedItIn", { days: String(data.days) })} value={data.teachersUsed} />
       </div>
 
       <SettingsCard>
-        <SettingsGroup title={msg("ai.admin.components.SharedUsageTab.theoGiangVien")}>
+        <SettingsGroup title={msg("ai.admin.components.SharedUsageTab.byLecturer")}>
           <TableFrame filledHead className="mt-2 [&_table]:min-w-[640px] [&_table]:table-fixed">
             <colgroup><col /><col className="w-[110px]" /><col className="w-[190px]" /><col className="w-[160px]" /></colgroup><thead>
               <tr>
-                <Th>{msg("ai.admin.components.SharedUsageTab.giangVien")}</Th>
-                <Th className="text-right">{msg("ai.admin.components.SharedUsageTab.yeuCau")}</Th>
-                <Th className="text-right">{msg("ai.admin.components.SharedUsageTab.homNayHanMucNgay")}</Th>
-                <Th className="text-right">{msg("ai.admin.components.SharedUsageTab.tokenTrongNgay", { days: String(data.days) })}</Th>
+                <Th>{msg("ai.admin.components.SharedUsageTab.lecturer")}</Th>
+                <Th className="text-right">{msg("ai.admin.components.SharedUsageTab.requests")}</Th>
+                <Th className="text-right">{msg("ai.admin.components.SharedUsageTab.todayDailyQuota")}</Th>
+                <Th className="text-right">{msg("ai.admin.components.SharedUsageTab.tokensInDays", { days: String(data.days) })}</Th>
               </tr>
             </thead>
             <tbody>
               {data.byTeacher.length === 0 && (
                 <tr>
                   <Td colSpan={4} className="py-6 text-center! text-muted">
-                    {msg("ai.admin.components.SharedUsageTab.chuaGiangVienNaoDungTrong")}</Td>
+                    {msg("ai.admin.components.SharedUsageTab.noLecturerUsedItIn")}</Td>
                 </tr>
               )}
               {data.byTeacher.map((t) => (
@@ -150,7 +150,7 @@ export function SharedUsageTab() {
                   </Td>
                   <Td className="text-right tabular-nums">{formatTokens(t.requests)}</Td>
                   <Td className="text-right whitespace-nowrap tabular-nums">
-                    {formatTokens(t.todayTokens)} / {t.dayLimit === null ? "—" : t.dayLimit === 0 ? msg("ai.admin.components.SharedUsageTab.chan") : formatTokens(t.dayLimit)}
+                    {formatTokens(t.todayTokens)} / {t.dayLimit === null ? "—" : t.dayLimit === 0 ? msg("ai.admin.components.SharedUsageTab.blocked") : formatTokens(t.dayLimit)}
                   </Td>
                   <Td className="text-right tabular-nums">{formatTokens(t.periodTokens)}</Td>
                 </tr>
@@ -158,21 +158,21 @@ export function SharedUsageTab() {
             </tbody>
           </TableFrame>
         </SettingsGroup>
-        <SettingsGroup title={msg("ai.admin.components.SharedUsageTab.theoNhaCungCap")}>
+        <SettingsGroup title={msg("ai.admin.components.SharedUsageTab.byProvider")}>
           <TableFrame filledHead className="mt-2 [&_table]:min-w-[600px] [&_table]:table-fixed">
             <colgroup><col className="w-[160px]" /><col /><col className="w-[130px]" /><col className="w-[160px]" /></colgroup><thead>
               <tr>
-                <Th>{msg("ai.admin.components.SharedUsageTab.nhaCungCap")}</Th>
-                <Th>{msg("ai.admin.components.SharedUsageTab.moHinh")}</Th>
-                <Th className="text-right">{msg("ai.admin.components.SharedUsageTab.homNay")}</Th>
-                <Th className="text-right">{msg("ai.admin.components.SharedUsageTab.tokenTrongNgay", { days: String(data.days) })}</Th>
+                <Th>{msg("ai.admin.components.SharedUsageTab.provider")}</Th>
+                <Th>{msg("ai.admin.components.SharedUsageTab.model")}</Th>
+                <Th className="text-right">{msg("ai.admin.components.SharedUsageTab.today")}</Th>
+                <Th className="text-right">{msg("ai.admin.components.SharedUsageTab.tokensInDays", { days: String(data.days) })}</Th>
               </tr>
             </thead>
             <tbody>
               {data.byModel.length === 0 && (
                 <tr>
                   <Td colSpan={4} className="py-6 text-center! text-muted">
-                    {msg("ai.admin.components.SharedUsageTab.chuaCoYeuCauTrongKy")}</Td>
+                    {msg("ai.admin.components.SharedUsageTab.noRequestsInThisPeriod")}</Td>
                 </tr>
               )}
               {data.byModel.map((m) => (

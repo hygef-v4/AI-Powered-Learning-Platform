@@ -9,21 +9,21 @@ import { msg } from "@/i18n/msg";
 export function DeadlineChip({ closesAt }: { closesAt: string | null }) {
   // Mốc "bây giờ" chụp một lần khi vẽ để nhãn ổn định giữa các lần render.
   const [now] = useState(() => Date.now());
-  if (!closesAt) return <Pill>{msg("assignmentwork.components.DeadlineChip.khongHan")}</Pill>;
+  if (!closesAt) return <Pill>{msg("assignmentwork.components.DeadlineChip.noDeadline")}</Pill>;
   const left = new Date(closesAt).getTime() - now;
   const hours = Math.floor(left / 3_600_000);
   let tone: Tone = "neutral";
   let label: string;
   if (left <= 0) {
     tone = "danger";
-    label = msg("assignmentwork.components.DeadlineChip.quaHan");
+    label = msg("assignmentwork.components.DeadlineChip.overdue");
   } else if (hours < 24) {
     tone = "danger";
-    label = hours < 1 ? msg("assignmentwork.components.DeadlineChip.conDuoi1Gio") : msg("assignmentwork.components.DeadlineChip.conGio", { hours: String(hours) });
+    label = hours < 1 ? msg("assignmentwork.components.DeadlineChip.lessThan1HourLeft") : msg("assignmentwork.components.DeadlineChip.hoursLeft", { hours: String(hours) });
   } else {
     const days = Math.floor(hours / 24);
     tone = days <= 3 ? "warning" : days <= 7 ? "info" : "success";
-    label = msg("assignmentwork.components.DeadlineChip.conNgay", { days: String(days) });
+    label = msg("assignmentwork.components.DeadlineChip.daysLeft", { days: String(days) });
   }
   return <Pill tone={tone}>{label}</Pill>;
 }

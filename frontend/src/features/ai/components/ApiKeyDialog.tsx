@@ -65,7 +65,7 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
 
   const saveConnection = async () => {
     if (!editing && !apiKey.trim()) {
-      setError(msg("ai.components.ApiKeyDialog.hayNhapKhoaApi"));
+      setError(msg("ai.components.ApiKeyDialog.enterAnApiKey"));
       return;
     }
     setBusy(true);
@@ -75,7 +75,7 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
       setApiKey("");
     } catch (e) {
       const problem = e instanceof ApiError ? e.problem : undefined;
-      setError(describeErrorCode(problem?.code, problem?.detail ?? msg("ai.components.ApiKeyDialog.khongLuuDuocKhoaThuLai")));
+      setError(describeErrorCode(problem?.code, problem?.detail ?? msg("ai.components.ApiKeyDialog.couldNotSaveTheKey")));
     } finally {
       setBusy(false);
     }
@@ -84,7 +84,7 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
   const runTest = async () => {
     if (!onTest) return;
     if (!editing && !apiKey.trim()) {
-      setError(msg("ai.components.ApiKeyDialog.hayNhapKhoaApi"));
+      setError(msg("ai.components.ApiKeyDialog.enterAnApiKey"));
       return;
     }
     setBusy(true);
@@ -93,7 +93,7 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
       setTest(await onTest(provider, buildBody()));
     } catch (e) {
       const problem = e instanceof ApiError ? e.problem : undefined;
-      setTest({ ok: false, text: describeErrorCode(problem?.code, problem?.detail ?? msg("ai.components.ApiKeyDialog.khongKiemTraDuoc")) });
+      setTest({ ok: false, text: describeErrorCode(problem?.code, problem?.detail ?? msg("ai.components.ApiKeyDialog.couldNotCheck")) });
     } finally {
       setBusy(false);
     }
@@ -102,17 +102,17 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
   return (
     <Dialog
       open
-      title={editing ? msg("ai.components.ApiKeyDialog.suaKhoaApi") : msg("ai.components.ApiKeyDialog.themKhoaApi")}
+      title={editing ? msg("ai.components.ApiKeyDialog.editApiKey") : msg("ai.components.ApiKeyDialog.addApiKey")}
       icon="key"
       size="lg"
       onClose={onClose}
       dismissible={!busy}
       footer={
         <Button variant="primary" onClick={() => void saveConnection()} disabled={busy || !model}>
-          {msg("ai.components.ApiKeyDialog.luuKhoa")}</Button>
+          {msg("ai.components.ApiKeyDialog.saveKey")}</Button>
       }
     >
-      <Field label={msg("ai.components.ApiKeyDialog.nhaCungCap")} htmlFor={ids.provider} required>
+      <Field label={msg("ai.components.ApiKeyDialog.provider")} htmlFor={ids.provider} required>
         <Select
           id={ids.provider}
           value={provider}
@@ -126,7 +126,7 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
           ))}
         </Select>
       </Field>
-      <Field label={msg("ai.components.ApiKeyDialog.khoaApi")} htmlFor={ids.key} required={!editing} error={error}>
+      <Field label={msg("ai.components.ApiKeyDialog.apiKey")} htmlFor={ids.key} required={!editing} error={error}>
         <div
           className={cx(
             "flex items-center gap-1 py-1 pr-1 pl-3 focus-within:border-focus",
@@ -148,24 +148,24 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
               setTest(null);
               setCopied(false);
             }}
-            placeholder={editing ? `••••••••${current?.keyHint ?? ""}` : msg("ai.components.ApiKeyDialog.danKhoaApi")}
+            placeholder={editing ? `••••••••${current?.keyHint ?? ""}` : msg("ai.components.ApiKeyDialog.pasteTheApiKey")}
             className="min-w-0 flex-1 bg-transparent font-mono text-xs text-ink outline-none placeholder:text-muted"
           />
           <IconButton
             icon={shown ? "visibility_off" : "visibility"}
-            label={shown ? msg("ai.components.ApiKeyDialog.anKhoa") : msg("ai.components.ApiKeyDialog.xemKhoa")}
+            label={shown ? msg("ai.components.ApiKeyDialog.hideKey") : msg("ai.components.ApiKeyDialog.showKey")}
             disabled={busy || !apiKey}
             onClick={() => setShown((value) => !value)}
           />
           <IconButton
             icon={copied ? "check" : "copy"}
-            label={copied ? msg("ai.components.ApiKeyDialog.daSaoChep") : msg("ai.components.ApiKeyDialog.saoChepKhoa")}
+            label={copied ? msg("ai.components.ApiKeyDialog.copied") : msg("ai.components.ApiKeyDialog.copyKey")}
             disabled={busy || !apiKey}
             onClick={() => void copyKey()}
           />
         </div>
       </Field>
-      <Field label={msg("ai.components.ApiKeyDialog.moHinh")} htmlFor={ids.model} required>
+      <Field label={msg("ai.components.ApiKeyDialog.model")} htmlFor={ids.model} required>
         <Select
           id={ids.model}
           value={model}
@@ -186,7 +186,7 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
         <div className="flex flex-col gap-1.5">
           <div className="flex min-h-8 items-center gap-3">
             <Button size="sm" onClick={() => void runTest()} disabled={busy || !model}>
-              {msg("ai.components.ApiKeyDialog.kiemTra")}</Button>
+              {msg("ai.components.ApiKeyDialog.check")}</Button>
             {test && (
               <span
                 role="status"
@@ -201,7 +201,7 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
               </span>
             )}
           </div>
-          <p className="text-xs text-muted">{msg("ai.components.ApiKeyDialog.kiemTraCoTheTinhPhi")}</p>
+          <p className="text-xs text-muted">{msg("ai.components.ApiKeyDialog.checkingMayIncurASmall")}</p>
         </div>
       )}
     </Dialog>

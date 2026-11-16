@@ -82,7 +82,7 @@ function Bell() {
         data-testid="notification-bell"
         type="button"
         aria-label={
-          failed ? msg("notifications.components.NotificationBell.thongBaoChuaTaiDuocSo") : msg("notifications.components.NotificationBell.thongBaoChuaDoc", { count: String(count) })
+          failed ? msg("notifications.components.NotificationBell.notificationsUnreadCountNotLoaded") : msg("notifications.components.NotificationBell.notificationsUnread", { count: String(count) })
         }
         aria-expanded={open}
         aria-controls={open ? "notification-popup" : undefined}

@@ -221,25 +221,25 @@ export type StudentGrade = {
   contributionReason?: string | null;
 };
 export const GRADE_STATUS_LABELS: Record<string, string> = {
-  PENDING: msg("grading.model.types.choCham"),
-  DRAFT: msg("grading.model.types.daCham"),
-  FINALIZED: msg("grading.model.types.daCham"),
-  PUBLISHED: msg("grading.model.types.daCongBo"),
-  SUPERSEDED: msg("grading.model.types.baiNopCu"),
-  NOT_SUBMITTED: msg("grading.model.types.chuaNop"),
-  IN_PROGRESS: msg("grading.model.types.chuaNop"),
+  PENDING: msg("grading.model.types.awaitingGrading"),
+  DRAFT: msg("grading.model.types.graded"),
+  FINALIZED: msg("grading.model.types.graded"),
+  PUBLISHED: msg("grading.model.types.published"),
+  SUPERSEDED: msg("grading.model.types.oldSubmission"),
+  NOT_SUBMITTED: msg("grading.model.types.notSubmitted"),
+  IN_PROGRESS: msg("grading.model.types.notSubmitted"),
 };
 export function formatPoints(score: Decimal | null | undefined, max: Decimal | null | undefined) {
   return score == null ? "—" : `${Number(score).toFixed(2)} / ${Number(max ?? 0).toFixed(2)}`;
 }
 
 export const ACTIVITY_LABELS: Record<string, string> = {
-  DISABLED: msg("grading.model.types.khongBatTheoDoiHoatDong"),
-  NO_DATA: msg("grading.model.types.chuaCoDuLieuHoatDong"),
-  AVAILABLE: msg("grading.model.types.coDuLieuHoatDong"),
-  EXPIRED: msg("grading.model.types.duLieuHoatDongDaHet"),
-  UNAVAILABLE: msg("grading.model.types.tamThoiKhongDocDuocDu"),
-  PER_MEMBER: msg("grading.model.types.hoatDongTheoTungThanhVien"),
+  DISABLED: msg("grading.model.types.activityMonitoringOff"),
+  NO_DATA: msg("grading.model.types.noActivityDataYet"),
+  AVAILABLE: msg("grading.model.types.activityDataAvailable"),
+  EXPIRED: msg("grading.model.types.activityDataRetentionPeriodHas"),
+  UNAVAILABLE: msg("grading.model.types.activityDataTemporarilyUnavailable"),
+  PER_MEMBER: msg("grading.model.types.activityByMember"),
 };
 
 export type GradingFormValues = {

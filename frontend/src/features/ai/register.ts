@@ -7,7 +7,7 @@ import { msg } from "@/i18n/msg";
 
 accountMenuEntries.register({
   key: "ai-connection",
-  title: msg("ai.register.ketNoiAi"),
+  title: msg("ai.register.aiConnection"),
   href: "/ai/connection",
   icon: "smart_toy",
   roles: ["STUDENT", "TEACHER", "SUBJECT_MANAGER"],

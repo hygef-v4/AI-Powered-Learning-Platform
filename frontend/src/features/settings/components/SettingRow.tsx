@@ -42,10 +42,10 @@ export function SettingRow({ item, disabled = false, onSaved, onConflict }: Prop
     } catch (e) {
       const problem = e instanceof ApiError ? e.problem : undefined;
       if (problem?.status === 409) {
-        setServerError(msg("settings.components.SettingRow.vuaCoNguoiSuaMucNay"));
+        setServerError(msg("settings.components.SettingRow.someoneJustEditedThisItem"));
         onConflict();
       } else {
-        setServerError(problem?.status === 400 ? (problem.detail ?? msg("settings.components.SettingRow.giaTriKhongHopLe")) : msg("settings.components.SettingRow.khongLuuDuocThuLaiSau"));
+        setServerError(problem?.status === 400 ? (problem.detail ?? msg("settings.components.SettingRow.invalidValue")) : msg("settings.components.SettingRow.couldNotSavePleaseTry"));
       }
     } finally {
       setSaving(false);
@@ -108,7 +108,7 @@ export function SettingRow({ item, disabled = false, onSaved, onConflict }: Prop
           disabled={locked}
           onChange={(e) => change(e.target.value === "" ? null : e.target.value)}
         >
-          {draft === null && <option value="">{msg("settings.components.SettingRow.chuaChon")}</option>}
+          {draft === null && <option value="">{msg("settings.components.SettingRow.notSelected")}</option>}
           {listOptions(item).map((option) => (
             <option key={option} value={option}>
               {option}
@@ -142,7 +142,7 @@ export function SettingRow({ item, disabled = false, onSaved, onConflict }: Prop
         item.type !== "BOOLEAN" &&
         dirty && (
           <Button size="sm" variant="primary" disabled={locked || invalid !== null} onClick={() => void saveSetting(draft)}>
-            {msg("settings.components.SettingRow.luu")}</Button>
+            {msg("settings.components.SettingRow.save")}</Button>
         )
       }
     />

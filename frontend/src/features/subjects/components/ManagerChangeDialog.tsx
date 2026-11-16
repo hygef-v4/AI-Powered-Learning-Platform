@@ -50,7 +50,7 @@ export function ManagerChangeDialog({
   return (
     <Dialog
       open
-      title={msg("subjects.components.ManagerChangeDialog.doiChuNhiemMon")}
+      title={msg("subjects.components.ManagerChangeDialog.changeSubjectManager")}
       size="lg"
       onClose={handleClose}
       dismissible={!mutation.busy}
@@ -61,7 +61,7 @@ export function ManagerChangeDialog({
           disabled={mutation.busy || conflict || !changed}
           data-testid="subject-manager-save"
         >
-          {msg("subjects.components.ManagerChangeDialog.luu")}</Button>
+          {msg("subjects.components.ManagerChangeDialog.save")}</Button>
       }
     >
       <ManagerPicker

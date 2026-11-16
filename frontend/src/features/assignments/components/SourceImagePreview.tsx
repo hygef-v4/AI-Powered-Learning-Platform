@@ -14,5 +14,5 @@ export function SourceImagePreview({ file, className = "h-20 max-w-40" }: { file
   if (!file.type.startsWith("image/")) return null;
   // Local blobs have no public URL for the Next image optimizer.
   // eslint-disable-next-line @next/next/no-img-element
-  return <img ref={image} alt={msg("assignments.components.SourceImagePreview.anhNguon", { name: String(file.name) })} className={`rounded-lg border border-line object-contain ${className}`} />;
+  return <img ref={image} alt={msg("assignments.components.SourceImagePreview.sourceImage", { name: String(file.name) })} className={`rounded-lg border border-line object-contain ${className}`} />;
 }

@@ -49,7 +49,7 @@ export function PasswordField({ label, valid, error, inputRef, className, ...inp
           <button
             type="button"
             onClick={() => setVisible((v) => !v)}
-            aria-label={visible ? msg("identity.components.PasswordField.anMatKhau") : msg("identity.components.PasswordField.hienMatKhau")}
+            aria-label={visible ? msg("identity.components.PasswordField.hidePassword") : msg("identity.components.PasswordField.showPassword")}
             className="-mr-1 flex size-8 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink"
           >
             <Icon name={visible ? "visibility_off" : "visibility"} size={18} />

@@ -149,7 +149,7 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
     const checked = entries.map((entry) => entry.state === "dropped" ? entry : { ...entry, errors: validateForm(entry.form) });
     if (checked.some((entry) => entry.state !== "dropped" && Object.keys(entry.errors).length > 0)) {
       setEntries(checked.map((entry) => Object.keys(entry.errors).length ? { ...entry, editing: true } : entry));
-      setError(msg("quizzes.components.AiDrafts.coCauChuaHopLeHay"));
+      setError(msg("quizzes.components.AiDrafts.someQuestionsAreInvalidFix"));
       return;
     }
     const questions = checked.filter((entry) => entry.state !== "dropped").map((entry) => convertToContent(entry.form));
@@ -171,19 +171,19 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
             showDraft(null);
           };
           if (draft.status === "READY" && JSON.stringify(entries) !== JSON.stringify(listEntries(draft))) {
-            requestConfirm(msg("quizzes.components.AiDrafts.boCacChinhSuaDeXuat"), startNewRequest);
+            requestConfirm(msg("quizzes.components.AiDrafts.discardUnsavedProposalEditsTo"), startNewRequest);
             return;
           }
           startNewRequest();
-        }} disabled={busy} data-testid="ai-draft-new">{draft.status === "FAILED" && request ? msg("quizzes.components.AiDrafts.thuLaiYeuCau") : msg("quizzes.components.AiDrafts.yeuCauMoi")}</Button>
+        }} disabled={busy} data-testid="ai-draft-new">{draft.status === "FAILED" && request ? msg("quizzes.components.AiDrafts.retryRequest") : msg("quizzes.components.AiDrafts.newRequest")}</Button>
       )}
       {draft?.status === "READY" && (
         <>
-          <Button variant="danger" onClick={discard} disabled={busy} data-testid="ai-draft-discard">{msg("quizzes.components.AiDrafts.boDeXuat")}</Button>
+          <Button variant="danger" onClick={discard} disabled={busy} data-testid="ai-draft-discard">{msg("quizzes.components.AiDrafts.discardProposal")}</Button>
           <Button onClick={acceptAll} disabled={busy || entries.every((entry) => entry.state === "dropped")}
-            data-testid="ai-draft-accept-all">{msg("quizzes.components.AiDrafts.chapNhanTatCa")}</Button>
+            data-testid="ai-draft-accept-all">{msg("quizzes.components.AiDrafts.acceptAll")}</Button>
           <Button variant="primary" onClick={saveAccepted} disabled={busy || accepted.length === 0} data-testid="ai-draft-accept">
-            {msg("quizzes.components.AiDrafts.luu")}{accepted.length} {msg("quizzes.components.AiDrafts.cauDaChapNhan")}</Button>
+            {msg("quizzes.components.AiDrafts.save")}{accepted.length} {msg("quizzes.components.AiDrafts.acceptedQuestions")}</Button>
         </>
       )}
     </>
@@ -197,7 +197,7 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
             {problems.length > 0 && <ul className="mt-1 list-disc pl-4">{problems.map((p, i) => <li key={i}>{p.message}</li>)}</ul>}
           </Alert>
         )}
-        {mode === "loading" && <p role="status" className="py-6 text-center text-sm text-muted">{msg("quizzes.components.AiDrafts.dangTai")}</p>}
+        {mode === "loading" && <p role="status" className="py-6 text-center text-sm text-muted">{msg("quizzes.components.AiDrafts.loading")}</p>}
         {mode === "form" && (
           <DraftRequestForm api={api} busy={busy} initial={request} onDirtyChange={onDirtyChange}
             onSubmit={(values) => {
@@ -213,9 +213,9 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
         )}
       </div>
   );
-  if (inline) return <div role="region" aria-label={msg("quizzes.components.AiDrafts.soanBangAi")} className="mt-3 flex min-w-0 flex-col gap-3">
+  if (inline) return <div role="region" aria-label={msg("quizzes.components.AiDrafts.writeWithAi")} className="mt-3 flex min-w-0 flex-col gap-3">
     {body}<div className="flex flex-wrap justify-end gap-2 border-t border-line pt-3">
-      <Button onClick={onClose} disabled={busy}>{msg("quizzes.components.AiDrafts.dongSoanAi")}</Button>{footer}
+      <Button onClick={onClose} disabled={busy}>{msg("quizzes.components.AiDrafts.closeAiWriter")}</Button>{footer}
     </div>
     {confirmDialog}
   </div>;
@@ -263,10 +263,10 @@ function DraftRequestForm({ api, busy, initial, onSubmit, onDirtyChange }: {
   const submit = () => {
     const found: Record<string, string> = {};
     const n = Number(count);
-    if ((!instructions.trim() && materialIds.length === 0) || instructions.trim().length > 2000) found.instructions = msg("quizzes.components.AiDrafts.nhapYeuCauHoacChonTai");
-    if (!Number.isInteger(n) || n < 1 || n > MAX_COUNT) found.count = msg("quizzes.components.AiDrafts.tu1Den50Cau");
+    if ((!instructions.trim() && materialIds.length === 0) || instructions.trim().length > 2000) found.instructions = msg("quizzes.components.AiDrafts.enterARequestOrChoose");
+    if (!Number.isInteger(n) || n < 1 || n > MAX_COUNT) found.count = msg("quizzes.components.AiDrafts.from1To50Questions");
     if (materialIds.length > MAX_MATERIALS || materialIds.some((id) => !materials?.some((material) => material.materialId === id && material.hasText))) {
-      found.materialIds = msg("quizzes.components.AiDrafts.coTaiLieuNguonKhongCon");
+      found.materialIds = msg("quizzes.components.AiDrafts.someSourceDocumentsAreNo");
     }
     setErrors(found);
     if (Object.keys(found).length > 0) return;
@@ -275,42 +275,42 @@ function DraftRequestForm({ api, busy, initial, onSubmit, onDirtyChange }: {
 
   return (
     <fieldset disabled={busy} className="flex flex-col gap-3" data-testid="ai-draft-form">
-      <Field label={msg("quizzes.components.AiDrafts.yeuCau")} htmlFor={`${id}-instructions`} required={materialIds.length === 0} error={errors.instructions}
-        hint={msg("quizzes.components.AiDrafts.khiDaChonTaiLieuCo")}>
+      <Field label={msg("quizzes.components.AiDrafts.request")} htmlFor={`${id}-instructions`} required={materialIds.length === 0} error={errors.instructions}
+        hint={msg("quizzes.components.AiDrafts.withDocumentsSelectedThisCan")}>
         <Textarea id={`${id}-instructions`} rows={3} maxLength={2000} value={instructions}
-          placeholder={msg("quizzes.components.AiDrafts.taoQuizTheoNoiDungTai")}
+          placeholder={msg("quizzes.components.AiDrafts.createAQuizFromThe")}
           onChange={(event) => setInstructions(event.target.value)} data-testid="ai-draft-instructions" />
       </Field>
       <div className="grid gap-3 sm:grid-cols-3">
-        <Field label={msg("quizzes.components.AiDrafts.soCau")} htmlFor={`${id}-count`} required error={errors.count}>
+        <Field label={msg("quizzes.components.AiDrafts.questions")} htmlFor={`${id}-count`} required error={errors.count}>
           <TextInput id={`${id}-count`} inputMode="numeric" value={count} invalid={!!errors.count}
             onChange={(event) => setCount(event.target.value)} data-testid="ai-draft-count" />
         </Field>
-        <Field label={msg("quizzes.components.AiDrafts.loaiCau")} htmlFor={`${id}-type`}>
+        <Field label={msg("quizzes.components.AiDrafts.questionType")} htmlFor={`${id}-type`}>
           <Select id={`${id}-type`} value={type} onChange={(event) => setType(event.target.value as QuestionType | "")}>
-            <option value="">{msg("quizzes.components.AiDrafts.tuyNoiDung")}</option>
+            <option value="">{msg("quizzes.components.AiDrafts.dependsOnContent")}</option>
             {(Object.keys(TYPE_LABELS) as QuestionType[]).map((t) => <option key={t} value={t}>{TYPE_LABELS[t]}</option>)}
           </Select>
         </Field>
-        <Field label={msg("quizzes.components.AiDrafts.doKho")} htmlFor={`${id}-difficulty`}>
+        <Field label={msg("quizzes.components.AiDrafts.difficulty")} htmlFor={`${id}-difficulty`}>
           <Select id={`${id}-difficulty`} value={difficulty} onChange={(event) => setDifficulty(event.target.value as Difficulty | "")}>
-            <option value="">{msg("quizzes.components.AiDrafts.phanBoHopLy")}</option>
+            <option value="">{msg("quizzes.components.AiDrafts.balancedMix")}</option>
             {(Object.keys(DIFFICULTY_LABELS) as Difficulty[]).map((d) => <option key={d} value={d}>{DIFFICULTY_LABELS[d]}</option>)}
           </Select>
         </Field>
       </div>
       <div className="flex flex-col gap-1.5">
-        <p className="text-xs font-semibold text-body">{msg("quizzes.components.AiDrafts.taiLieuNguonChoAi")}<span className="font-normal text-muted">{msg("quizzes.components.AiDrafts.toiDa10ChiHocLieu")}</span></p>
+        <p className="text-xs font-semibold text-body">{msg("quizzes.components.AiDrafts.sourceDocumentsForTheAi")}<span className="font-normal text-muted">{msg("quizzes.components.AiDrafts.upTo10OnlyMaterials")}</span></p>
         {materialsError && <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-muted">
-          {msg("quizzes.components.AiDrafts.chuaLayDuocDanhSachTai")}<Button size="sm" onClick={() => { setMaterialsError(false); setMaterials(null); setMaterialsReload((value) => value + 1); }}>{msg("quizzes.components.AiDrafts.taiLaiTaiLieu")}</Button>
+          {msg("quizzes.components.AiDrafts.couldNotGetTheDocument")}<Button size="sm" onClick={() => { setMaterialsError(false); setMaterials(null); setMaterialsReload((value) => value + 1); }}>{msg("quizzes.components.AiDrafts.reloadDocuments")}</Button>
         </div>}
-        {materials?.length === 0 && <p className="text-xs text-muted">{msg("quizzes.components.AiDrafts.chuaCoHocLieuNao")}</p>}
+        {materials?.length === 0 && <p className="text-xs text-muted">{msg("quizzes.components.AiDrafts.noLearningMaterialsYet")}</p>}
         <MaterialSourceSelect materials={materialsError ? [] : materials} value={materialIds} onChange={setMaterialIds} disabled={busy} />
         {errors.materialIds && <p role="alert" className="text-xs text-danger">{errors.materialIds}</p>}
       </div>
-      <p className="text-xs text-muted">{msg("quizzes.components.AiDrafts.heThongTuChonNguonAi")}</p>
+      <p className="text-xs text-muted">{msg("quizzes.components.AiDrafts.theSystemPicksAnAvailable")}</p>
       <div className="flex justify-end">
-        <Button variant="primary" icon="smart_toy" onClick={submit} data-testid="ai-draft-submit">{msg("quizzes.components.AiDrafts.guiYeuCau")}</Button>
+        <Button variant="primary" icon="smart_toy" onClick={submit} data-testid="ai-draft-submit">{msg("quizzes.components.AiDrafts.sendRequest")}</Button>
       </div>
     </fieldset>
   );
@@ -325,10 +325,10 @@ function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
   onTaskFinished: () => void;
 }) {
   const origin = draft.origin === "MCP" ? `Agent: ${draft.agentLabel ?? "Agent"}`
-    : draft.source === "SHARED" ? msg("quizzes.components.AiDrafts.apiCuaTruong")
+    : draft.source === "SHARED" ? msg("quizzes.components.AiDrafts.schoolApi")
     : draft.source === "PERSONAL"
-      ? draft.provider ? msg("quizzes.components.AiDrafts.caNhan", { value: String(PROVIDER_LABEL[draft.provider as AiProvider] ?? draft.provider) }) : msg("quizzes.components.AiDrafts.apiCaNhan")
-      : msg("quizzes.components.AiDrafts.heThongTuChonNguonAi2");
+      ? draft.provider ? msg("quizzes.components.AiDrafts.personal", { value: String(PROVIDER_LABEL[draft.provider as AiProvider] ?? draft.provider) }) : msg("quizzes.components.AiDrafts.personalApi")
+      : msg("quizzes.components.AiDrafts.theSystemPicksTheAi");
   const updateEntry = (index: number, change: Partial<ProposalEntry>) =>
     onEntries(entries.map((entry, i) => (i === index ? { ...entry, ...change } : entry)));
   const accept = (index: number) => {
@@ -345,12 +345,12 @@ function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
         <ul className="list-disc pl-4">{draft.sourceWarnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>
       </Alert>}
       <p className="text-[12px] text-muted">
-        {origin} {msg("quizzes.components.AiDrafts.guiLuc")}{formatDateTime(draft.createdAt)}
-        {draft.materials.length > 0 && <> {msg("quizzes.components.AiDrafts.taiLieu")}{draft.materials.map((m) => m.title).join(", ")}</>}
+        {origin} {msg("quizzes.components.AiDrafts.sentAt")}{formatDateTime(draft.createdAt)}
+        {draft.materials.length > 0 && <> {msg("quizzes.components.AiDrafts.documents")}{draft.materials.map((m) => m.title).join(", ")}</>}
       </p>
       {draft.status === "PENDING" && (
         <>
-          <Alert tone="info" role="status">{msg("quizzes.components.AiDrafts.aiDangSoanDeXuatBan")}</Alert>
+          <Alert tone="info" role="status">{msg("quizzes.components.AiDrafts.theAiIsWritingProposals")}</Alert>
           {/* M3: trạng thái task của U06 (cho hủy khi còn chờ); xong thì tải lại đề xuất ngay. */}
           {draft.taskId && <AiTaskStatus taskId={draft.taskId} onFinished={onTaskFinished} />}
         </>
@@ -362,7 +362,7 @@ function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
       )}
       {draft.status === "READY" && (
         <>
-          <p className="text-[13px] font-semibold text-ink">{msg("quizzes.components.AiDrafts.deXuat")}{acceptedCount} {msg("quizzes.components.AiDrafts.daChapNhan")}{entries.length})</p>
+          <p className="text-[13px] font-semibold text-ink">{msg("quizzes.components.AiDrafts.proposals")}{acceptedCount} {msg("quizzes.components.AiDrafts.accepted")}{entries.length})</p>
           <ol className="flex flex-col gap-3">
             {entries.map((entry, index) => (
               <ProposalCard key={index} index={index} entry={entry} onChange={(change) => updateEntry(index, change)}
@@ -387,18 +387,18 @@ function ProposalCard({ index, entry, onChange, onAccept }: {
     <li className={cx("rounded-xl border p-3", state === "accepted" ? "border-success/40 bg-success-soft/40"
       : state === "dropped" ? "border-line bg-shell opacity-60" : "border-line")} data-testid="ai-draft-question">
       <div className="mb-2 flex flex-wrap items-center gap-2">
-        <span className="text-[12px] font-semibold text-body">{msg("quizzes.components.AiDrafts.cau")}{index + 1} · {TYPE_LABELS[form.type]}</span>
-        {state === "accepted" && <Pill tone="success">{msg("quizzes.components.AiDrafts.daChapNhan2")}</Pill>}
-        {state === "dropped" && <Pill tone="neutral">{msg("quizzes.components.AiDrafts.daBo")}</Pill>}
+        <span className="text-[12px] font-semibold text-body">{msg("quizzes.components.AiDrafts.question")}{index + 1} · {TYPE_LABELS[form.type]}</span>
+        {state === "accepted" && <Pill tone="success">{msg("quizzes.components.AiDrafts.accepted2")}</Pill>}
+        {state === "dropped" && <Pill tone="neutral">{msg("quizzes.components.AiDrafts.discarded")}</Pill>}
         <span className="ml-auto flex gap-1.5">
           {state !== "dropped" && (
             <Button size="sm" onClick={() => onChange({ editing: !entry.editing, state: "open" })} data-testid="ai-draft-edit">
-              {entry.editing ? "Xong" : msg("quizzes.components.AiDrafts.sua")}
+              {entry.editing ? "Xong" : msg("quizzes.components.AiDrafts.edit")}
             </Button>
           )}
           <Button size="sm" onClick={() => onChange({ state: state === "dropped" ? "open" : "dropped", editing: false })}
-            data-testid="ai-draft-drop">{state === "dropped" ? msg("quizzes.components.AiDrafts.layLai") : msg("quizzes.components.AiDrafts.bo")}</Button>
-          {state === "open" && <Button size="sm" variant="primary" onClick={onAccept} data-testid="ai-draft-accept-one">{msg("quizzes.components.AiDrafts.chapNhan")}</Button>}
+            data-testid="ai-draft-drop">{state === "dropped" ? msg("quizzes.components.AiDrafts.restore") : msg("quizzes.components.AiDrafts.discard")}</Button>
+          {state === "open" && <Button size="sm" variant="primary" onClick={onAccept} data-testid="ai-draft-accept-one">{msg("quizzes.components.AiDrafts.accept")}</Button>}
         </span>
       </div>
       {entry.editing ? (
@@ -412,14 +412,14 @@ function ProposalCard({ index, entry, onChange, onAccept }: {
               return (
                 <li key={option.id} className={cx("flex items-center gap-1.5 text-[12.5px]", correct ? "font-semibold text-success" : "text-body")}>
                   {correct ? <Icon name="check_circle" size={15} /> : <span aria-hidden className="inline-block size-[15px] text-center">·</span>}
-                  {option.text}{correct && <span className="sr-only"> {msg("quizzes.components.AiDrafts.dapAnDung")}</span>}
+                  {option.text}{correct && <span className="sr-only"> {msg("quizzes.components.AiDrafts.correctAnswer")}</span>}
                 </li>
               );
             })}
           </ul>
-          {form.explanation && <p className="mt-1.5 text-[12px] text-muted">{msg("quizzes.components.AiDrafts.giaiThich")}{form.explanation}</p>}
+          {form.explanation && <p className="mt-1.5 text-[12px] text-muted">{msg("quizzes.components.AiDrafts.explanation")}{form.explanation}</p>}
           {entry.serverViolations.length > 0 && state === "open" && (
-            <p className="mt-1.5 text-xs text-danger">{msg("quizzes.components.AiDrafts.canSua")}{entry.serverViolations.map((v) => v.message).join("; ")}</p>
+            <p className="mt-1.5 text-xs text-danger">{msg("quizzes.components.AiDrafts.needsFixing")}{entry.serverViolations.map((v) => v.message).join("; ")}</p>
           )}
         </>
       )}

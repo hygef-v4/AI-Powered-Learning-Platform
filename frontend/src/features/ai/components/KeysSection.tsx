@@ -22,8 +22,8 @@ export type KeysApi = {
   revoke: (id: string) => Promise<unknown>;
 };
 
-const CONFLICT = msg("ai.components.KeysSection.khoaVuaDuocThayDoiO");
-const OK = msg("ai.components.KeysSection.dat");
+const CONFLICT = msg("ai.components.KeysSection.theKeyWasJustChanged");
+const OK = msg("ai.components.KeysSection.passed");
 
 /**
  * Bảng khóa API dùng chung cho khóa của trường (UC 14, 15) và khóa cá nhân (UC 31; yêu cầu 2026-11-05): nhiều khóa cho
@@ -93,7 +93,7 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
       await reload();
     } catch (e) {
       const problem = e instanceof ApiError ? e.problem : undefined;
-      setError(problem?.status === 409 ? CONFLICT : describeErrorCode(problem?.code, msg("ai.components.KeysSection.khongDoiDuocTrangThaiKhoa")));
+      setError(problem?.status === 409 ? CONFLICT : describeErrorCode(problem?.code, msg("ai.components.KeysSection.couldNotChangeTheKey")));
     }
   };
 
@@ -104,25 +104,25 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
       title={title}
       action={
         <Button variant="primary" size="sm" icon="add" onClick={() => setEditing("new")}>
-          {msg("ai.components.KeysSection.themKhoa")}</Button>
+          {msg("ai.components.KeysSection.addKey")}</Button>
       }
     >
       {error && (
-        <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void reload()}>{msg("ai.components.KeysSection.taiLai")}</Button>}>
+        <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void reload()}>{msg("ai.components.KeysSection.reload")}</Button>}>
           {error}
         </Alert>
       )}
-      {!connections && !error && <p className="py-3 text-[13px] text-muted">{msg("ai.components.KeysSection.dangTai")}</p>}
+      {!connections && !error && <p className="py-3 text-[13px] text-muted">{msg("ai.components.KeysSection.loading")}</p>}
       {connections && (
         <TableFrame filledHead className="mt-2 [&_table]:min-w-[800px] [&_table]:table-fixed">
           <colgroup><col className="w-[140px]" /><col className="w-[150px]" /><col /><col className="w-[240px]" /><col className="w-[140px]" /></colgroup><thead>
             <tr>
-              <Th>{msg("ai.components.KeysSection.nhaCungCap")}</Th>
-              <Th>{msg("ai.components.KeysSection.khoa")}</Th>
-              <Th>{msg("ai.components.KeysSection.moHinh")}</Th>
-              <Th>{msg("ai.components.KeysSection.kiemTra")}</Th>
+              <Th>{msg("ai.components.KeysSection.provider")}</Th>
+              <Th>{msg("ai.components.KeysSection.key")}</Th>
+              <Th>{msg("ai.components.KeysSection.model")}</Th>
+              <Th>{msg("ai.components.KeysSection.check")}</Th>
               <Th>
-                <span className="sr-only">{msg("ai.components.KeysSection.batVaThaoTac")}</span>
+                <span className="sr-only">{msg("ai.components.KeysSection.enableAndActions")}</span>
               </Th>
             </tr>
           </thead>
@@ -130,7 +130,7 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
             {connections.length === 0 && (
               <tr>
                 <Td colSpan={5} className="py-6 text-center! text-muted">
-                  {msg("ai.components.KeysSection.chuaCoKhoa")}</Td>
+                  {msg("ai.components.KeysSection.noKeysYet")}</Td>
               </tr>
             )}
             {connections.map((c) => {
@@ -160,9 +160,9 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
                         size="sm"
                         className="shrink-0"
                         disabled={busy !== null}
-                        onClick={() => void runAction(id, () => api.test(id), msg("ai.components.KeysSection.khongKiemTraDuocKetNoi"))}
+                        onClick={() => void runAction(id, () => api.test(id), msg("ai.components.KeysSection.couldNotCheckTheConnection"))}
                       >
-                        {busy === id ? msg("ai.components.KeysSection.dangKiemTra") : msg("ai.components.KeysSection.kiemTra")}
+                        {busy === id ? msg("ai.components.KeysSection.checking") : msg("ai.components.KeysSection.check")}
                       </Button>
                     </div>
                   </Td>
@@ -171,13 +171,13 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
                       <Switch
                         checked={c.status === "ACTIVE"}
                         label=""
-                        ariaLabel={msg("ai.components.KeysSection.batKhoa", { label: String(label), value: String(c.keyHint ?? "") })}
+                        ariaLabel={msg("ai.components.KeysSection.enableKey", { label: String(label), value: String(c.keyHint ?? "") })}
                         onChange={(enabled) => toggle(id, enabled, c.version)}
                       />
-                      <IconButton icon="edit" label={msg("ai.components.KeysSection.thayKhoa", { label: String(label) })} disabled={busy !== null} onClick={() => setEditing(c)} />
+                      <IconButton icon="edit" label={msg("ai.components.KeysSection.replaceKey", { label: String(label) })} disabled={busy !== null} onClick={() => setEditing(c)} />
                       <IconButton
                         icon="trash"
-                        label={msg("ai.components.KeysSection.thuHoiKhoa", { label: String(label) })}
+                        label={msg("ai.components.KeysSection.revokeKey", { label: String(label) })}
                         disabled={busy !== null}
                         className="text-danger! hover:bg-danger-soft"
                         onClick={() => setRevoking(c)}
@@ -190,7 +190,7 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
           </tbody>
         </TableFrame>
       )}
-      <p className="pt-2 text-xs text-muted">{msg("ai.components.KeysSection.kiemTraCoTheTinhPhi")}</p>
+      <p className="pt-2 text-xs text-muted">{msg("ai.components.KeysSection.checkingMayIncurASmall")}</p>
       {editing && (
         <ApiKeyDialog
           key={current ? `${current.id}-${current.version}` : "new"}
@@ -222,13 +222,13 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
             onClick={() => {
               const target = revoking;
               setRevoking(null);
-              if (target?.id) void runAction(target.id, () => api.revoke(target.id as string), msg("ai.components.KeysSection.khongThuHoiDuocKhoa"));
+              if (target?.id) void runAction(target.id, () => api.revoke(target.id as string), msg("ai.components.KeysSection.couldNotRevokeTheKey"));
             }}
           >
-            {msg("ai.components.KeysSection.thuHoi")}</Button>
+            {msg("ai.components.KeysSection.revoke")}</Button>
         }
       >
-        <p>{msg("ai.components.KeysSection.banCoChacMuonThuHoi")}{revoking ? `${PROVIDER_LABEL[revoking.provider]} ••••${revoking.keyHint ?? ""}` : ""} {msg("ai.components.KeysSection.khong")}</p>
+        <p>{msg("ai.components.KeysSection.areYouSureYouWant")}{revoking ? `${PROVIDER_LABEL[revoking.provider]} ••••${revoking.keyHint ?? ""}` : ""} {msg("ai.components.KeysSection.text")}</p>
       </Dialog>
     </SettingsGroup>
   );
